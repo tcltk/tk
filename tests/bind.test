@@ -45,7 +45,7 @@ toplevel .top
 wm geometry .top 50x50-50-50
 update
 event generate .top <Button-1> -warp 1
-update
+controlPointerWarpTiming
 destroy .top
 
 test bind-1.1 {bind command} -body {
@@ -1047,6 +1047,7 @@ test bind-13.45 {Tk_BindEvent procedure: error in script} -setup {
 test bind-15.1 {MatchPatterns procedure, ignoring type mismatches} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1063,6 +1064,7 @@ test bind-15.1 {MatchPatterns procedure, ignoring type mismatches} -setup {
 test bind-15.2 {MatchPatterns procedure, ignoring type mismatches} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1474,6 +1476,7 @@ test bind-15.26 {MatchPatterns procedure, reject a virtual event} -setup {
 test bind-15.27 {MatchPatterns procedure, conflict resolution} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1488,6 +1491,7 @@ test bind-15.27 {MatchPatterns procedure, conflict resolution} -setup {
 test bind-15.28 {MatchPatterns procedure, conflict resolution} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -1502,6 +1506,7 @@ test bind-15.28 {MatchPatterns procedure, conflict resolution} -setup {
 test bind-15.29 {MatchPatterns procedure, conflict resolution} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
+    update idletasks
     focus -force .t.f
     update
 } -body {
@@ -6248,7 +6253,7 @@ test bind-32.1 {-warp, window was destroyed before the idle callback DoWarp} -se
     update
 } -body {
     event generate .t.f <Button-1> -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     event generate .t.f <ButtonRelease-1>
     destroy .t.f
     update  ;  # shall simply not crash
@@ -6505,7 +6510,7 @@ test bind-33.2 {prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {Double}
+} -result Double
 test bind-33.3 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6521,7 +6526,7 @@ test bind-33.3 {prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {Double}
+} -result Double
 test bind-33.4 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6613,7 +6618,7 @@ test bind-33.9 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.10 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6630,7 +6635,7 @@ test bind-33.10 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.11 {should prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6651,7 +6656,7 @@ test bind-33.11 {should prefer most specific} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {first}
+} -result first
 test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6665,15 +6670,15 @@ test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.13 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
     set x {}
 } -body {
-    bind .t.f <Button-1><Control-1> { lappend x "first" }
-    bind .t.f <Control-1><Button-1> { lappend x "last" }
+    bind .t.f <Button-1><Control-Button-1> { lappend x "first" }
+    bind .t.f <Control-Button-1><Button-1> { lappend x "last" }
     event generate .t.f <Control-Button-1>
     event generate .t.f <Control-Button-1>
     set x
@@ -6682,7 +6687,7 @@ test bind-33.13 {prefer last in case of homogeneous equal patterns} -setup {
     # Old implementation failed, and returned "first", but this was wrong,
     # because both bindings are homogeneous equal, so the most recently defined
     # must be preferred.
-} -result {last}
+} -result last
 test bind-33.14 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6698,7 +6703,7 @@ test bind-33.14 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6717,7 +6722,7 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     # Old implementation failed, and returned "first", but this was wrong,
     # because both bindings are homogeneous equal, so the most recently defined
     # must be preferred.
-} -result {last}
+} -result last
 test bind-33.16 {simulate use of the keyboard to trigger a pattern sequence with modifier - bug [16ef161925]} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6820,21 +6825,21 @@ test bind-33.21 {simulate use of the keyboard to trigger a pattern sequence with
 test bind-34.1 {-warp works relatively to a window} -setup {
     toplevel .top
     wm geometry .top +100+100
-    update
+    after 10 ; update
 } -body {
     # In order to avoid platform-dependent coordinate results due to
     # decorations and borders, this test warps the pointer twice
     # relatively to a window that moved in the meantime, and checks
     # how much the pointer moved
     wm geometry .top +200+200
-    update
+    after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     set pointerPos1 [winfo pointerxy .top]
     wm geometry .top +600+600
-    update
+    after 10 ; update
     event generate .top <Motion> -x 20 -y 20 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     set pointerPos2 [winfo pointerxy .top]
     # from the first warped position to the second one, the mouse
     # pointer should have moved the same amount as the window moved
@@ -6852,10 +6857,10 @@ test bind-34.2 {-warp works relatively to the screen} -setup {
 } -body {
     # Contrary to bind-34.1, we're directly checking screen coordinates
     event generate {} <Motion> -x 20 -y 20 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     set res [winfo pointerxy .]
     event generate {} <Motion> -x 200 -y 200 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     lappend res {*}[winfo pointerxy .]
 } -cleanup {
 } -result {20 20 200 200}
@@ -6873,7 +6878,7 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
     set res {}
 } -body {
     event generate {} <Motion> -x 0 -y 0 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6882,9 +6887,9 @@ test bind-34.3 {-warp works with null or negative coordinates} -setup {
         }
     }
     event generate {} <Motion> -x 100 -y 100 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     event generate {} <Motion> -x -1 -y -1 -warp 1
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     foreach dim [winfo pointerxy .] {
         if {$dim <= $halo} {
             lappend res ok
@@ -6996,8 +7001,8 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
     global keyInfo numericalKeysym
     set result {}
     bind . <Key> {
-    	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-    	set numericalKeysym [format "0x%x" %N]
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericalKeysym [format "0x%x" %N]
     }
     foreach event {
 	{<Control_L> -control}
@@ -7029,7 +7034,7 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 
 test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     event generate {} <Motion> -warp 1 -x 50 -y 50
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     toplevel .top
     grab release .top
     wm geometry .top 200x200+300+300
@@ -7045,13 +7050,13 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
 } -body {
     grab .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     grab release .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
-    after 50  ; # Win specific - wait for SendInput to be executed
+    controlPointerWarpTiming
     foreach {x2 y2} [winfo pointerxy .top.l] {}
     # success if the coords are the same with or without the grab, and if they
     # are at (10,10) inside the label widget as requested by the warping

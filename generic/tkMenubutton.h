@@ -64,7 +64,7 @@ typedef struct {
 
     char *text;			/* Text to display in button (malloc'ed) or
 				 * NULL. */
-    int underline;		/* Index of character to underline. */
+    int underline;		/* Index of character to underline. INT_MIN means no underline */
     char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
 				 * non-NULL, button displays the contents of
 				 * this variable. */

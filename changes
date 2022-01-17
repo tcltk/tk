@@ -7437,7 +7437,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2017-08-28 (TIP 166) Extended color notation for alpha channel (bachmann)
 
---- Released 8.7a1, September 8, 2017 --- http://core.tcl.tk/tk/ for details
+--- Released 8.7a1, September 8, 2017 --- https://core.tcl-lang.org/tk/ for details
 
 2017-08-24 (bug)[f1a3ca] Memory leak in [text] B-tree (edhume3)
 
@@ -7806,7 +7806,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2020-07-02 (bug)[2d2459] default style for combobox (bll)
 
-2020-07-06 (bug)[40c4bf] double free, entry-19.21 (vogel)
+2020-07-06 (bug)[40e4bf] double free, entry-19.21 (vogel)
 
 2020-07-06 (bug)[e3888d] grab & warp, bind-36.1 (vogel)
 
@@ -7866,6 +7866,67 @@ in this changeset (new minor version) rather than bug fixes:
 
 - Released 8.6.11, Dec 31, 2020 - https://core.tcl-lang.org/tk/ for details
 
+2021-01-04 (bug)[19fb7a] Mac: [tk_messageBox] use proper icons (ericwb,culler)
+
+2021-01-11 (bug)[7beaed] ttk::bindMouseWheel syntax error (nemethi)
+
+2021-01-15 (new) support 4 new keycodes: CodeInput, SingleCandidate,
+	MultipleCandidate, PreviousCandidate (nijtmans)
+
+2021-01-18 (new) Portable keycodes: OE, oe, Ydiaeresis (nijtmans)
+
+2021-01-27 (bug)[bdcab8] Mac crash on non-BMP menu label (nab,culler)
+
+2021-02-07 (bug)[9e1312] <Enter> to parent after child destroyed (leunissen)
+
+2021-02-10 (bug)[d3cd4c] more robust notebook processing (nemethi)
+
+2021-02-25 (bug)[234ee4] crash in [clipboard get] invalid encoding (nijtmans)
+
+2021-02-25 (bug)[be9cad] Poor trace housekeeping -> tkwait segfault (michael)
+
+2021-03-02 (bug)[1626ed] Mac: crash with dead key as menu accelerator (culler)
+
+2021-03-22 (bug)[9b6065] restore Tcl [update], see window-2.12 (leunissen)
+
+2021-04-07 (bug)[58222c] Mac: entry and spinbox bg colors (chavez,culler)
+
+2021-04-18 (bug)[34db75,ea876b] cursor motion in peer text (vogel)
+
+2021-04-26 (bug)[c97464] memleak in TkpDrawAngledChars (nab,culler)
+
+2021-04-29 Mac: explicit backing CALayer to fix rendering issues (culler)
+
+2021-05-02 Mac: respect key repeat system setting (culler)
+
+2021-05-10 (bug)[171ba7] crash when grab and focus are not coordinated (culler)
+
+2021-05-24 crash due to failed transient record housekeeping (culler)
+
+2021-05-25 (bug)[7bda98] Mac: <Double-1> bindings fire twice on app activation
+
+2021-06-03 (bug)[4401d3] Mac: improved support of pixel formats (chavez,culler)
+
+2021-06-03 (bug)[8ecc3e] Mac: window exposed by Mission Control (chavez,culler)
+
+2021-06-04 (bug)[099109] segfault reusing a container toplevel (culler)
+
+2021-06-22 (bug)[4efbfe] static package init order in wish (werner)
+
+2021-09-21 (bug)[033886] Win: hang in font loading (e-paine,vogel)
+
+2021-10-14 (bug)[8ebed3] multi-thread safety in Xft use (werner)
+
+2021-10-22 (new)[TIP 608] New virtual event <<TkWorldChanged>> (griffin)
+
+2021-10-27 (bug) file dialog compatibility with Mac OS 12 (culler)
+
+2021-10-29 (bug) Mac: stop crash when non-Tk windows go full screen (werner)
+
+2021-10-30 (bug)[6ea0b3] Mac: grab from menu makes dead window (culler)
+
+- Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details
+
 Changes to 8.7a3 include all changes to the 8.6 line through 8.6.10,
 plus the following, which focuses on the high-level feature changes
 in this changeset (new minor version) rather than bug fixes:
@@ -7885,7 +7946,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2018-11-06 [TIP 415] New option -height for [$canvas create arc] (geard)
 
-2018-11-06 [TIP 518] New event <<NoMangedChild>> (oehlmann)
+2018-11-06 [TIP 518] New event <<NoManagedChild>> (oehlmann)
 
 2019-04-14 [TIP 164] New subcommand [$canvas rotate] (fellows)
 
@@ -7901,4 +7962,81 @@ in this changeset (new minor version) rather than bug fixes:
 
 2019-08-19 [TIP 545] Revised options for photo image format 'svg' (oehlmann)
 
---- Released 8.7a3, November 25, 2019 --- http://core.tcl.tk/tk/ for details
+--- Released 8.7a3, November 25, 2019 --- https://core.tcl-lang.org/tk/ for details
+
+Changes to 8.7a5 include all changes to the 8.6 line through 8.6.11,
+plus the following, which focuses on the high-level feature changes
+in this changeset (new minor version) rather than bug fixes:
+
+2020-02-22 [TIP 565] Gracefully ignore non-existent tags in canvas raise/lower
+
+2020-02-22 [TIP 564] Specify ttk font sizes in points on X11
+
+2020-02-24 [TIP 563] Scrollwheel on Horizontal Scrollbar Scrolls Without Shift too
+
+2020-02-28 [TIP 557] C++ support
+
+2020-03-12 (bug)[355180] solve XKeycodeToKeysym deprecation
+        *** POTENTIAL INCOMPATIBILITY -- Tk 8.7 now requires X11R6 ***
+
+2020-03-18 [TIP 569] Eliminate comments that serve lint
+
+2020-05-17 [d87dc2] Remove TkMacOSXGetStringObjFromCFString()
+
+2020-05-24 [TIP 574] Add a 'tag delete' command to the ttk::treeview widget
+
+2020-06-27 (bug)[50ed1e] spinbox with duplicate values
+
+2020-07-03 [TIP 578] Death to TCL_DBGX
+
+2020-08-23 (bug)[bb85d2] valgrind on TIP 489
+
+2020-08024 (bug)[d30c21] default colors for TIP 496
+
+2020-09-02 [TIP 580] Export Tk_GetDoublePixelsFromObj and 5 more
+
+2020-10-21 [TIP 474] Uniform mouse wheel events
+
+2020-11-15 [TIP 584] Better introspection for ttk
+
+2020-11-16 [TIP 588] Unicode for (X11) keysyms
+
+2020-12-03 [TIP 590] Recommend lowercase package names
+
+2020-12-09 (bug)[d6e9b4] SVG memory overflow
+
+2020-12-11 [TIP 591] Rotate ttk::notebook window with mousewheel on tab
+
+2020-12-12 [TIP 325] System tray and system notification
+
+2021-01-08 [TIP 592] End support: Windows XP, Server 2003, Vista, Server 2008
+
+2021-01-08 (bug)[822330] Prevent buffer overflow in SVG image.
+
+2021-01-28 (bug)[237971] 'end' argument to [$canvas insert]
+
+2021-02-25 (bug)[be9cad] crash in [tkwait]
+
+2021-02-27 [TIP 529] Add metadata dictionary property to tk photo image
+
+2021-03-02 (bug)[1626ed] Aqua crash: dead keys as meny accelerator
+
+2021-03-29 (bug)[9b6065] Restore Tcl [update] when Tk is destroyed
+
+2021-04-08 (bug)[58222c] background colors
+
+2021-04-09 [TIP 595] Unicode-aware/case-sensitive Loadable Library handling
+
+2021-04-21 (bug)[cde766] update scrollbars on treeview
+
+2021-04-26 (bug)[c97464] memleak in aqua fonts
+
+2021-05-02 (bug)[2ecb09] Follow Mac OSX Key-repeat setting
+
+2021-05-03 (bug)[8a5086] ttk::entry issue
+
+2021-05-22 (bug)[3e3360] bind substitution %S
+
+2021-05-25 (bug)[7bda98] aqua: double click bind with changing focus
+
+- Released 8.7a5, Jun 18, 2021 --- https://core.tcl-lang.org/tcl/ for details -

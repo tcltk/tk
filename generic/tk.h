@@ -68,10 +68,10 @@ extern "C" {
 #define TK_MAJOR_VERSION	8
 #define TK_MINOR_VERSION	7
 #define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	4
+#define TK_RELEASE_SERIAL	6
 
 #define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a4"
+#define TK_PATCH_LEVEL		"8.7a6"
 
 /*
  * A special definition used to allow this header file to be included from
@@ -168,7 +168,8 @@ typedef enum {
     TK_OPTION_WINDOW,
     TK_OPTION_END,
     TK_OPTION_CUSTOM,
-    TK_OPTION_STYLE
+    TK_OPTION_STYLE,
+    TK_OPTION_INDEX
 } Tk_OptionType;
 
 /*
@@ -1436,6 +1437,36 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 #endif /* USE_OLD_IMAGE */
 
 /*
+ * The following alternate definitions are used with the Tk8.7 file format
+ * supporting a metadata dict, internal dstring and close file flag
+ */
+
+typedef struct Tk_PhotoImageFormatVersion3 Tk_PhotoImageFormatVersion3;
+typedef int (Tk_ImageFileMatchProcVersion3) (Tcl_Interp *interp,
+	Tcl_Channel chan, const char *fileName, Tcl_Obj *format,
+	Tcl_Obj *metadataIn, int *widthPtr, int *heightPtr,
+	Tcl_Obj *metadataOut);
+typedef int (Tk_ImageStringMatchProcVersion3) (Tcl_Interp *interp,
+	Tcl_Obj *dataObj, Tcl_Obj *format, Tcl_Obj *metadataIn, int *widthPtr,
+	int *heightPtr, Tcl_Obj *metadataOut);
+typedef int (Tk_ImageFileReadProcVersion3) (Tcl_Interp *interp,
+	Tcl_Channel chan,
+	const char *fileName, Tcl_Obj *format, Tcl_Obj *metadataIn,
+	Tk_PhotoHandle imageHandle,
+	int destX, int destY, int width, int height, int srcX, int srcY,
+	Tcl_Obj *metadataOut);
+typedef int (Tk_ImageStringReadProcVersion3) (Tcl_Interp *interp,
+	Tcl_Obj *dataObj, Tcl_Obj *format, Tcl_Obj *metadataIn,
+	Tk_PhotoHandle imageHandle, int destX, int destY, int width, int height,
+	int srcX, int srcY, Tcl_Obj *metadataOut);
+typedef int (Tk_ImageFileWriteProcVersion3) (Tcl_Interp *interp,
+	const char *fileName, Tcl_Obj *format, Tcl_Obj *metadataIn,
+	Tk_PhotoImageBlock *blockPtr);
+typedef int (Tk_ImageStringWriteProcVersion3) (Tcl_Interp *interp,
+	Tcl_Obj *format, Tcl_Obj *metadataIn, Tk_PhotoImageBlock *blockPtr);
+
+
+/*
  * The following structure represents a particular file format for storing
  * images (e.g., PPM, GIF, JPEG, etc.). It provides information to allow image
  * files of that format to be recognized and read into a photo image.
@@ -1463,6 +1494,38 @@ struct Tk_PhotoImageFormat {
 				 * representation of the data in a photo
 				 * image.*/
     struct Tk_PhotoImageFormat *nextPtr;
+				/* Next in list of all photo image formats
+				 * currently known. Filled in by Tk, not by
+				 * image format handler. */
+};
+
+/*
+ * The following structure is the same plus added support for the metadata
+ * structure.
+ */
+
+struct Tk_PhotoImageFormatVersion3 {
+    const char *name;		/* Name of image file format */
+    Tk_ImageFileMatchProcVersion3 *fileMatchProc;
+				/* Procedure to call to determine whether an
+				 * image file matches this format. */
+    Tk_ImageStringMatchProcVersion3 *stringMatchProc;
+				/* Procedure to call to determine whether the
+				 * data in a string matches this format. */
+    Tk_ImageFileReadProcVersion3 *fileReadProc;
+				/* Procedure to call to read data from an
+				 * image file into a photo image. */
+    Tk_ImageStringReadProcVersion3 *stringReadProc;
+				/* Procedure to call to read data from a
+				 * string into a photo image. */
+    Tk_ImageFileWriteProcVersion3 *fileWriteProc;
+				/* Procedure to call to write data from a
+				 * photo image to a file. */
+    Tk_ImageStringWriteProcVersion3 *stringWriteProc;
+				/* Procedure to call to obtain a string
+				 * representation of the data in a photo
+				 * image.*/
+    struct Tk_PhotoImageFormatVersion3 *nextPtr;
 				/* Next in list of all photo image formats
 				 * currently known. Filled in by Tk, not by
 				 * image format handler. */

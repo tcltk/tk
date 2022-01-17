@@ -15,7 +15,7 @@ SHELL=/bin/sh
 TK_VERSION=8.7
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a4"
+TK_PATCH_LEVEL="a6"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -113,7 +113,8 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]], [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
+    [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
@@ -195,7 +196,7 @@ if test "$tcl_ok" = "yes" ; then
     #
     SC_ZIPFS_SUPPORT
 	ZIPFS_BUILD=1
-	TK_ZIP_FILE=libtcl_${TK_MAJOR_VERSION}_${TK_MINOR_VERSION}_${TK_PATCH_LEVEL}.zip
+	TK_ZIP_FILE=libtk${TK_MAJOR_VERSION}.${TK_MINOR_VERSION}${TK_PATCH_LEVEL}.zip
 else
 	ZIPFS_BUILD=0
 	TCL_ZIP_FILE=
@@ -240,18 +241,33 @@ TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
 
+eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
+eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
+if test ${TCL_MAJOR_VERSION} = 8 ; then
 eval "TK_DLL_FILE=tk$VER${DLLSUFFIX}"
 if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
  eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${LIBSUFFIX}"
 else
  eval "TK_LIB_FILE=${LIBPREFIX}tk${VER}${DLLSUFFIX}.a"
 fi
+else
+eval "TK_DLL_FILE=tcl9tk$VER${DLLSUFFIX}"
+if test ${SHARED_BUILD} = 0 -o "$GCC" != "yes" ; then
+ eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${LIBSUFFIX}"
+else
+ eval "TK_LIB_FILE=${LIBPREFIX}tcl9tk${VER}${DLLSUFFIX}.a"
+fi
+fi
 
 eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
-eval "TK_LIB_FLAG=\"-ltk${VER}${LIBFLAGSUFFIX}\""
+TK_LIB_FLAG="-l"
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    TK_LIB_FLAG="${TK_LIB_FLAG}tcl9"
+fi
+eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
 TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
 
@@ -303,6 +319,8 @@ AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
+AC_SUBST(TK_DLL_FILE_TCL8)
+AC_SUBST(TK_DLL_FILE_TCL9)
 AC_SUBST(TK_STUB_LIB_FILE)
 AC_SUBST(TK_STUB_LIB_FLAG)
 AC_SUBST(TK_BUILD_STUB_LIB_SPEC)

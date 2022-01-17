@@ -93,6 +93,12 @@ USE_WIDECHAR_API  = 0
 # the build configuration, macros, output directories etc.
 !include "rules-ext.vc"
 
+!if ($(TCL_MAJOR_VERSION) > 8) || ($(TCL_MAJOR_VERSION) == 8 && $(TCL_MINOR_VERSION) > 6)
+USING_PRE87_TCL = 0
+!else
+USING_PRE87_TCL = 1
+!endif
+
 # TCLINSTALL is set to 1 by rules.vc to indicate we are building against
 # an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
 !if $(TCLINSTALL)
@@ -126,6 +132,10 @@ TK_EMBED_SCRIPTS = 0
 !message *** Tk script library will be appended to the binary.
 TK_EMBED_SCRIPTS = $(STATIC_BUILD)
 !endif
+!endif
+
+!if $(USING_PRE87_TCL)
+TK_EMBED_SCRIPTS = 0
 !endif
 
 TK_NO_DEPRECATED = 0
@@ -178,6 +188,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinDraw.obj \
 	$(TMP_DIR)\tkWinEmbed.obj \
 	$(TMP_DIR)\tkWinFont.obj \
+	$(TMP_DIR)\tkWinGDI.obj \
 	$(TMP_DIR)\tkWinIco.obj \
 	$(TMP_DIR)\tkWinImage.obj \
 	$(TMP_DIR)\tkWinInit.obj \
@@ -349,8 +360,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
-
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
@@ -364,7 +374,10 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 # Project specific targets
 #---------------------------------------------------------------------
 
-release:  setup $(TKSTUBLIB) $(WISH) libtkzip embed
+release:  setup $(TKSTUBLIB) $(WISH)
+!if !$(USING_PRE87_TCL)
+release:  libtkzip embed
+!endif
 all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
 cwish:	  $(WISHC)
@@ -528,7 +541,7 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -609,6 +622,13 @@ $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+$(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
@@ -629,6 +649,14 @@ $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) /DUNICODE /D_UNICODE -Fo$@ $?
+
+$(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
+	$(cc32) $(pkgcflags) 		\
+		-DCFG_RUNTIME_DLLFILE="\"$(TKLIBNAME)\"" \
+		-Fo$@ $?
+
+$(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
@@ -727,12 +755,20 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {[catch {package present Tcl 8.6-}]} { return }
+if {![package vsatisfies [package provide Tcl] 8.6-]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
+    if {[package vsatisfies [package provide Tcl] 9.0]} {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
+    } else {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
+    }
 } else {
-    package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME)]]]
+    if {[package vsatisfies [package provide Tcl] 9.0]} {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME9)]]]
+    } else {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME8)]]]
+    }
 }
 package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
@@ -748,7 +784,9 @@ install-libraries:
 	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
+!if !$(USING_PRE87_TCL)
 	@$(CPY) "$(TKSCRIPTZIP)" "$(LIB_INSTALL_DIR)"
+!endif
 !if !$(TK_EMBED_SCRIPTS)
 	@echo installing script library
 	@$(CPY) "$(LIBDIR)\*" "$(SCRIPT_INSTALL_DIR)\"

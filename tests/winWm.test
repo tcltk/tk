@@ -15,6 +15,7 @@ tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
     destroy .t
@@ -279,12 +280,11 @@ test winWm-6.2 {wm attributes} -constraints win -setup {
 test winWm-6.3 {wm attributes} -constraints win -setup {
     destroy .t
 } -body {
-    # This isn't quite the correct error message yet, but it works.
     toplevel .t
     wm attributes .t -foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
+} -returnCodes error -result {bad attribute "-foo": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 
 test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
@@ -533,7 +533,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
     destroy .tx .t .sd
 } -result ok
 
-test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints failsOnUbuntu -setup {
+test winWm-9.2 "check wm forget for unmapped parent (#3205464,#2967911)" -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     destroy .t
     toplevel .t
     set winwm92 {}

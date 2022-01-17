@@ -1199,11 +1199,11 @@ test menu-2.223 {entry configuration options 0 -underline 3p tearoff} -body {
 
 test menu-2.224 {entry configuration options 1 -underline 3p command} -body {
     .m1 entryconfigure 1 -underline 3p
-} -returnCodes error -result {expected integer but got "3p"}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 
 test menu-2.225 {entry configuration options 2 -underline 3p cascade} -body {
     .m1 entryconfigure 2 -underline 3p
-} -returnCodes error -result {expected integer but got "3p"}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 
 test menu-2.226 {entry configuration options 3 -underline 3p separator} -body {
     .m1 entryconfigure 3 -underline 3p
@@ -1211,11 +1211,11 @@ test menu-2.226 {entry configuration options 3 -underline 3p separator} -body {
 
 test menu-2.227 {entry configuration options 4 -underline 3p checkbutton} -body {
     .m1 entryconfigure 4 -underline 3p
-} -returnCodes error -result {expected integer but got "3p"}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 
 test menu-2.228 {entry configuration options 5 -underline 3p radiobutton} -body {
     .m1 entryconfigure 5 -underline 3p
-} -returnCodes error -result {expected integer but got "3p"}
+} -returnCodes error -result {bad index "3p": must be integer?[+-]integer? or end?[+-]integer?}
 
 deleteWindows
 if {[testConstraint hasEarthPhoto]} {
@@ -1679,7 +1679,7 @@ test menu-3.54 {MenuWidgetCmd procedure, "postcascade" option} -setup {
     menu .m2
     .m1 add cascade -menu .m2 -label "menu-3.57 - hit Escape"
     .m1 postcascade 1
-    .m1 postcascade none
+    .m1 postcascade {}
 } -cleanup {
 	destroy .m1 .m2
 } -result {}
@@ -1862,10 +1862,10 @@ test menu-3.71 {MenuWidgetCmd procedure, "index end" option, bug [f3cd942e9e]} -
     destroy .m1
 } -body {
     menu .m1
-    list [.m1 index "end"]
+    .m1 index "end"
 } -cleanup {
     destroy .m1
-} -result none
+} -result {}
 
 
 test menu-4.1 {TkInvokeMenu: disabled} -setup {
@@ -2836,7 +2836,7 @@ test menu-13.6 {TkGetMenuIndex} -setup {
     .m1 add command -label "test2"
     .m1 add command -label "test3"
     .m1 activate 2
-    .m1 entrycget none -label
+    .m1 entrycget {} -label
 } -cleanup {
     deleteWindows
 } -result {}
@@ -3947,7 +3947,7 @@ test menu-37.1 {menubar menues cannot be posted - bug 2160206} -setup {
 } -result {1 {a menubar menu cannot be posted}}
 
 test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over it - bug fa32290898} -setup {
-} -constraints {userInteraction} -body {
+} -constraints {x11} -body {
     toplevel .top
     ttk::menubutton .top.mb -text "Some menu";
     menu .top.mb.m;
@@ -3958,8 +3958,7 @@ test menu-38.1 {Can't dismiss ttk::menubutton menu until mouse has hovered over 
     update
     # simulate mouse click on the menubutton, which posts its menu
     event generate .top.mb <Button-1> -warp 1
-    update
-    after 50
+    controlPointerWarpTiming
     event generate .top.mb <ButtonRelease-1>
     update
     # simulate mouse click on the menu again, i.e. without

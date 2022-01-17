@@ -59,6 +59,7 @@ static const char launchURLProc[] = "::tk::mac::LaunchURL";
 static const char printDocProc[] = "::tk::mac::PrintDocument";
 static const char scriptFileProc[] = "::tk::mac::DoScriptFile";
 static const char scriptTextProc[] = "::tk::mac::DoScriptText";
+static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
 #pragma mark TKApplication(TKHLEvents)
 
@@ -236,9 +237,7 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = openDocumentProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
     AEInfo->retryCount = 0;
-
     if (Tcl_FindCommand(_eventInterp, "::tk::mac::OpenDocuments", NULL, 0)){
 	ProcessAppleEvent((ClientData)AEInfo);
     } else {
@@ -262,7 +261,6 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = printDocProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
     AEInfo->retryCount = 0;
     ProcessAppleEvent((ClientData)AEInfo);
 }
@@ -325,7 +323,6 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
                 AEInfo->interp = _eventInterp;
                 AEInfo->procedure = scriptFileProc;
                 AEInfo->replyEvent = nil;
-                Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
 		AEInfo->retryCount = 0;
                 ProcessAppleEvent((ClientData)AEInfo);
             }
@@ -357,7 +354,6 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
                     ProcessAppleEvent(AEInfo);
                 } else {
                     AEInfo->replyEvent = nil;
-                    Tcl_DoWhenIdle(ProcessAppleEvent, AEInfo);
                     ProcessAppleEvent(AEInfo);
                 }
 	    }
@@ -381,9 +377,24 @@ static const char scriptTextProc[] = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = launchURLProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
     AEInfo->retryCount = 0;
     ProcessAppleEvent((ClientData)AEInfo);
+}
+
+- (void)handleGetSDEFEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+     AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+    Tcl_DString *sdefCommand = &AEInfo->command;
+    (void)event;
+    (void)replyEvent;
+
+    Tcl_DStringInit(sdefCommand);
+    Tcl_DStringAppend(sdefCommand, getSdefProc, -1);
+    AEInfo->interp = _eventInterp;
+    AEInfo->procedure =  getSdefProc;
+    AEInfo->replyEvent = nil;
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
+
 }
 
 @end
@@ -522,6 +533,15 @@ TkMacOSXInitAppleEvents(
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleURLEvent:withReplyEvent:)
 	    forEventClass:kInternetEventClass andEventID:kAEGetURL];
+
+	/*
+	 * We do not load our sdef dynamically but this event handler
+         * is required to silence error messages from inline execution
+         * of AppleScript at the Objective-C level.
+	 */
+	[aeManager setEventHandler:NSApp
+	    andSelector:@selector(handleGetSDEFEvent:withReplyEvent:)
+	    forEventClass:'ascr' andEventID:'gsdf'];
 
     }
 }

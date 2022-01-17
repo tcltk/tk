@@ -13,23 +13,27 @@
  */
 
 #include "tk.h"
-#include "tkWinInt.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #undef WIN32_LEAN_AND_MEAN
 #include <locale.h>
 #include <stdlib.h>
 #include <tchar.h>
+#if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
+#   define Tcl_LibraryInitProc Tcl_PackageInitProc
+#   define Tcl_StaticLibrary Tcl_StaticPackage
+#endif
 
 #if defined(__GNUC__)
 int _CRT_glob = 0;
 #endif /* __GNUC__ */
 
-#ifdef TK_TEST
 #ifdef __cplusplus
 extern "C" {
 #endif
-extern Tcl_PackageInitProc Tktest_Init;
+
+#ifdef TK_TEST
+extern Tcl_LibraryInitProc Tktest_Init;
 #endif /* TK_TEST */
 
 #if !defined(TCL_USE_STATIC_PACKAGES)
@@ -41,9 +45,9 @@ extern Tcl_PackageInitProc Tktest_Init;
 #endif
 
 #if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
-extern Tcl_PackageInitProc Registry_Init;
-extern Tcl_PackageInitProc Dde_Init;
-extern Tcl_PackageInitProc Dde_SafeInit;
+extern Tcl_LibraryInitProc Registry_Init;
+extern Tcl_LibraryInitProc Dde_Init;
+extern Tcl_LibraryInitProc Dde_SafeInit;
 #endif
 
 #ifdef __cplusplus
@@ -90,8 +94,6 @@ MODULE_SCOPE int TK_LOCAL_MAIN_HOOK(int *argc, TCHAR ***argv);
 /* Make sure the stubbed variants of those are never used. */
 #undef Tcl_ObjSetVar2
 #undef Tcl_NewStringObj
-
-
 
 /*
  *----------------------------------------------------------------------
@@ -205,10 +207,21 @@ Tcl_AppInit(
     if ((Tcl_Init)(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
+#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
+    if (Registry_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    Tcl_StaticLibrary(interp, "Registry", Registry_Init, 0);
+
+    if (Dde_Init(interp) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    Tcl_StaticLibrary(interp, "Dde", Dde_Init, Dde_SafeInit);
+#endif
     if (Tk_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "Tk", Tk_Init, Tk_SafeInit);
+    Tcl_StaticLibrary(interp, "Tk", Tk_Init, Tk_SafeInit);
 
     /*
      * Initialize the console only if we are running as an interactive
@@ -220,23 +233,11 @@ Tcl_AppInit(
 	    return TCL_ERROR;
 	}
     }
-#if defined(STATIC_BUILD) && TCL_USE_STATIC_PACKAGES
-    if (Registry_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Registry", Registry_Init, 0);
-
-    if (Dde_Init(interp) == TCL_ERROR) {
-	return TCL_ERROR;
-    }
-    Tcl_StaticPackage(interp, "Dde", Dde_Init, Dde_SafeInit);
-#endif
-
 #ifdef TK_TEST
     if (Tktest_Init(interp) == TCL_ERROR) {
 	return TCL_ERROR;
     }
-    Tcl_StaticPackage(interp, "Tktest", Tktest_Init, 0);
+    Tcl_StaticLibrary(interp, "Tktest", Tktest_Init, 0);
 #endif /* TK_TEST */
 
     /*
@@ -265,7 +266,6 @@ Tcl_AppInit(
 
     Tcl_ObjSetVar2(interp, Tcl_NewStringObj("tcl_rcFileName", -1), NULL,
 	    Tcl_NewStringObj("~/wishrc.tcl", -1), TCL_GLOBAL_ONLY);
-
     return TCL_OK;
 }
 

@@ -436,7 +436,7 @@ TkTextMakeByteIndex(
 		 */
 
 		start = segPtr->body.chars + (byteIndex - index);
-		p = TkUtfPrev(start, segPtr->body.chars);
+		p = Tcl_UtfPrev(start, segPtr->body.chars);
 		p += TkUtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }
@@ -480,7 +480,7 @@ TkTextMakeCharIndex(
     TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
-    int ch;
+    Tcl_UniChar ch = 0;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -527,7 +527,7 @@ TkTextMakeCharIndex(
 		    return indexPtr;
 		}
 		charIndex--;
-		offset = TkUtfToUniChar(p, &ch);
+		offset = Tcl_UtfToUniChar(p, &ch);
 		index += offset;
 	    }
 	} else {
@@ -761,11 +761,11 @@ GetIndex(
 	goto done;
     }
 
-    if (TkTextWindowIndex(textPtr, string, indexPtr) != 0) {
+    if (TkTextWindowIndex(textPtr, string, indexPtr) == TCL_OK) {
 	goto done;
     }
 
-    if (TkTextImageIndex(textPtr, string, indexPtr) != 0) {
+    if (TkTextImageIndex(textPtr, string, indexPtr) == TCL_OK) {
 	goto done;
     }
 
@@ -917,7 +917,7 @@ GetIndex(
 	*endOfBase = 0;
 	result = TkTextWindowIndex(textPtr, Tcl_DStringValue(&copy), indexPtr);
 	*endOfBase = c;
-	if (result != 0) {
+	if (result == TCL_OK) {
 	    goto gotBase;
 	}
     }
@@ -954,7 +954,7 @@ GetIndex(
 	*endOfBase = 0;
 	result = TkTextImageIndex(textPtr, Tcl_DStringValue(&copy), indexPtr);
 	*endOfBase = c;
-	if (result != 0) {
+	if (result == TCL_OK) {
 	    goto gotBase;
 	}
     }
@@ -997,6 +997,7 @@ GetIndex(
     if (indexPtr->linePtr == NULL) {
 	Tcl_Panic("Bad index created");
     }
+    TkTextIndexAdjustToStartEnd(textPtr, indexPtr, 0);
     return TCL_OK;
 
   error:
@@ -1004,6 +1005,67 @@ GetIndex(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", NULL);
     return TCL_ERROR;
+}
+
+/*
+ *---------------------------------------------------------------------------
+ *
+ * TkTextIndexAdjustToStartEnd --
+ *
+ *      Adjust indexPtr to the -startline/-endline range, or just check
+ *      if indexPtr is out of this range.
+ *
+ * Results:
+ *	The return value is a standard Tcl return result. If check is true,
+ *      return TCL_ERROR if indexPtr is outside the -startline/-endline
+ *      range (indexPtr is not modified).
+ *      If check is false, adjust indexPtr to -startline/-endline.
+ *
+ * Side effects:
+ *	None.
+ *
+ *---------------------------------------------------------------------------
+ */
+
+int
+TkTextIndexAdjustToStartEnd(
+    TkText *textPtr,
+    TkTextIndex *indexPtr,  /* Pointer to index. */
+    int check)		    /* 1 means only check indexPtr against
+			     * the -startline/-endline range
+			     * 0 means adjust to this range */
+{
+    int bound;
+    TkTextIndex indexBound;
+
+    if (!textPtr) {
+	return TCL_OK;
+    }
+    if (textPtr->start != NULL) {
+	bound = TkBTreeLinesTo(NULL, textPtr->start);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+		&indexBound);
+	if (TkTextIndexCmp(indexPtr, &indexBound) < 0) {
+	    if (check) {
+		return TCL_ERROR;
+	    }
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+		    indexPtr);
+	}
+    }
+    if (textPtr->end != NULL) {
+	bound = TkBTreeLinesTo(NULL, textPtr->end);
+	TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+		&indexBound);
+	if (TkTextIndexCmp(indexPtr, &indexBound) > 0) {
+	    if (check) {
+		return TCL_ERROR;
+	    }
+	    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, NULL, bound, 0,
+		    indexPtr);
+	}
+    }
+    return TCL_OK;
 }
 
 /*
@@ -2126,7 +2188,7 @@ TkTextIndexBackChars(
 	    if (segPtr->typePtr == &tkTextCharType) {
 		start = segPtr->body.chars;
 		end = segPtr->body.chars + segSize;
-		for (p = end; ; p = TkUtfPrev(p, start)) {
+		for (p = end; ; p = Tcl_UtfPrev(p, start)) {
 		    if (charCount == 0) {
 			dstPtr->byteIndex -= (end - p);
 			goto backwardCharDone;
@@ -2367,7 +2429,7 @@ StartEnd(
 		}
 		if (offset + 1 > 1) {
 		    chSize = (segPtr->body.chars + offset
-			    - TkUtfPrev(segPtr->body.chars + offset,
+			    - Tcl_UtfPrev(segPtr->body.chars + offset,
 			    segPtr->body.chars));
 		}
 		firstChar = 0;

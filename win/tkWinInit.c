@@ -35,14 +35,14 @@ int
 TkpInit(
     Tcl_Interp *interp)
 {
-    (void)interp;
     /*
      * This is necessary for static initialization, and is ok otherwise
      * because TkWinXInit flips a static bit to do its work just once. Also,
-     * initialize the Windows systray command here.
+     * initialize printing and systray API's here.
      */
 
     WinIcoInit(interp);
+    Winprint_Init(interp);
     TkWinXInit(Tk_GetHINSTANCE());
     return TCL_OK;
 }

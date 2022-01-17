@@ -72,6 +72,18 @@ static NSUInteger textInputModifiers;
     }
 
     /*
+     * Discard repeating KeyDown events if the repeat speed has been set to
+     * "off" in System Preferences.  It is unclear why we get these, but we do.
+     * See ticket [2ecb09d118].
+     */
+
+    if ([theEvent type] ==  NSKeyDown &&
+	[theEvent isARepeat] &&
+	[NSEvent keyRepeatDelay] < 0) {
+            return theEvent;
+	}
+
+    /*
      * If a local grab is in effect, key events for windows in the
      * grabber's application are redirected to the grabber.  Key events
      * for other applications are delivered normally.  If a global
@@ -82,7 +94,10 @@ static NSUInteger textInputModifiers;
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
-	    winPtr =winPtr->dispPtr->focusPtr;
+	    winPtr = winPtr->dispPtr->focusPtr;
+	    if (!winPtr) {
+		return theEvent;
+	    }
 	    tkwin = (Tk_Window)winPtr;
 	}
     }
@@ -92,26 +107,33 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyUp || type == NSKeyDown) {
-	if ([[theEvent characters] length] > 0) {
-	    keychar = [[theEvent characters] characterAtIndex:0];
+	NSString *characters = [theEvent characters];
+	if (characters.length > 0) {
+	    keychar = [characters characterAtIndex:0];
 
 	    /*
 	     * Currently, real keys always send BMP characters, but who knows?
 	     */
 
 	    if (CFStringIsSurrogateHighCharacter(keychar)) {
-		UniChar lowChar = [[theEvent characters] characterAtIndex:1];
+		UniChar lowChar = [characters characterAtIndex:1];
 		keychar = CFStringGetLongCharacterForSurrogatePair(
 		    keychar, lowChar);
 	    }
 	} else {
 
 	    /*
-	     * This is a dead key, such as Option-e, so it should go to the
-	     * TextInputClient.
+	     * This is a dead key, such as Option-e, so it usually should get
+	     * passed to the TextInputClient.  But if it has a Command modifier
+	     * then it is not functioning as a dead key and should not be
+	     * handled by the TextInputClient.  See ticket [1626ed65b8] and the
+	     * method performKeyEquivalent which is implemented in
+	     * tkMacOSXMenu.c.
 	     */
 
-	    use_text_input = YES;
+	    if (!(modifiers & NSCommandKeyMask)) {
+		use_text_input = YES;
+	    }
 	}
 
 	/*
@@ -255,7 +277,6 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyDown && [theEvent isARepeat]) {
-
 	xEvent.xany.type = KeyRelease;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
@@ -604,11 +625,12 @@ static void
 setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
     unsigned int state = 0;
-    Display *display = Tk_Display(tkwin);
+    Display *display;
 
     if (tkwin == NULL) {
 	return;
     }
+    display = Tk_Display(tkwin);
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
 	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
@@ -705,8 +727,12 @@ XGrabKeyboard(
 	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
-	    if (modalSession) {
-		Tcl_Panic("XGrabKeyboard: already grabbed");
+	    if (modalSession ) {
+		if (keyboardGrabNSWindow == w) {
+		    return GrabSuccess;
+		} else {
+		    Tcl_Panic("XGrabKeyboard: already grabbed");
+		}
 	    }
 	    keyboardGrabNSWindow = w;
 	    [w retain];

@@ -126,6 +126,7 @@ TCL_SRC_DIR_NATIVE		= $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
 EXESUFFIX		= @EXESUFFIX@
+TCLVER			= @TCL_MAJOR_VERSION@@TCL_MINOR_VERSION@
 VER			= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER			= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
 
@@ -136,6 +137,8 @@ TK_VFS_ROOT		= libtk.vfs
 TK_STUB_LIB_FILE	= @TK_STUB_LIB_FILE@
 TK_LIB_FILE		= @TK_LIB_FILE@
 TK_DLL_FILE		= @TK_DLL_FILE@
+TK_DLL_FILE_TCL8	= @TK_DLL_FILE_TCL8@
+TK_DLL_FILE_TCL9	= @TK_DLL_FILE_TCL9@
 TEST_DLL_FILE		= tktest$(VER)${DLLSUFFIX}
 TEST_LIB_FILE		= @LIBPREFIX@tktest$(VER)${DLLSUFFIX}${LIBSUFFIX}
 
@@ -200,8 +203,6 @@ SHELL		= @SHELL@
 RM		= rm -f
 COPY		= cp
 LN		= ln
-
-BUILD_TCLSH	= @BUILD_TCLSH@
 
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
@@ -306,6 +307,7 @@ TK_OBJS = \
 	tkWinDraw.$(OBJEXT) \
 	tkWinEmbed.$(OBJEXT) \
 	tkWinFont.$(OBJEXT) \
+	tkWinGDI.$(OBJEXT) \
 	tkWinIco.$(OBJEXT) \
 	tkWinImage.$(OBJEXT) \
 	tkWinInit.$(OBJEXT) \
@@ -531,12 +533,20 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {[catch {package present Tcl 8.6-}]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 8.6-]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
+	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtcl9tk$(VERSION).dll]]]";\
+	echo "    } else {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin libtk$(VERSION).dll]]]";\
+	echo "    }";\
 	echo "} else {";\
-	echo "    package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE)]]]";\
+	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE_TCL9)]]]";\
+	echo "    } else {";\
+	echo "	package ifneeded tk $(VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir .. .. bin $(TK_DLL_FILE_TCL8)]]]";\
+	echo "    }";\
 	echo "}";\
 	echo "package ifneeded Tk $(VERSION)$(PATCH_LEVEL) [list package require -exact tk $(VERSION)$(PATCH_LEVEL)]";\
 	) > $(PKG_INDEX);
@@ -656,11 +666,16 @@ install-private-headers: libraries
 	    $(INSTALL_DATA) $$i $(PRIVATE_INCLUDE_INSTALL_DIR); \
 	    done;
 
-$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES)
+$(WISH): $(WISH_OBJS) @LIBRARIES@ $(TK_STUB_LIB_FILE) wish.$(RES) ${TK_ZIP_FILE}
 	$(CC) $(CFLAGS) $(WISH_OBJS) $(TK_LIB_FILE) \
 	$(TK_STUB_LIB_FILE) $(TCL_LIB_FILE) $(LIBS) \
 	wish.$(RES) $(CC_EXENAME) $(LDFLAGS_WINDOW)
 	@VC_MANIFEST_EMBED_EXE@
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+		cat ${TK_ZIP_FILE} >> ${WISH}; \
+		${NATIVE_ZIP} -A ${WISH} \
+		  || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 tktest: $(TKTEST)
 
@@ -672,6 +687,15 @@ $(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) w
 
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
 	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
+
+$(TOP_DIR)/manifest.uuid:
+	printf "git-" >$(TOP_DIR)/manifest.uuid
+	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
+
+tkUuid.h:	$(TOP_DIR)/manifest.uuid
+	echo "#define TK_VERSION_UUID \\" >$@
+	cat $(TOP_DIR)/manifest.uuid >>$@
+	echo "" >>$@
 
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
@@ -685,18 +709,19 @@ $(CAT32): cat32.${OBJEXT}
 tkzipfile: ${TK_ZIP_FILE}
 
 ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
-	@rm -rf ${TK_VFS_ROOT}
+	@$(RMDIR) ${TK_VFS_ROOT}
 	@mkdir -p ${TK_VFS_PATH}
 	@echo "creating ${TK_VFS_PATH} (prepare compression)"
 	@( \
-	  $(LN) $$(find $(TOP_DIR)/library/* -maxdepth 0 -type f) ${TK_VFS_PATH}/ && \
-	  (for D in $$(find $(TOP_DIR)/library/* -maxdepth 0 -type d); do \
-	    mkdir -p "${TK_VFS_PATH}/$$(basename $$D)"; \
-	    $(LN) -s $$D/* ${TK_VFS_PATH}/$$(basename $$D)/; \
-	  done) \
-	) || ( \
 	  $(COPY) -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
 	)
+	@$(RMDIR) $(TK_VFS_PATH)/demos
+	-@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cp ${TCL_BIN_DIR}/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
 	(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 	  (echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
 	  cd ${TK_VFS_ROOT} && \
@@ -763,11 +788,19 @@ tkUnixMenubu.$(OBJEXT): ${UNIX_DIR}/tkUnixMenubu.c
 tkUnixScale.$(OBJEXT): ${UNIX_DIR}/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) -DBUILD_tk -DBUILD_ttk @DEPARG@ $(CC_OBJNAME)
 
+tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)	 -DBUILD_tk -DBUILD_ttk		\
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_DLL_FILE)\"" \
+		@DEPARG@ $(CC_OBJNAME)
+
+
+tkWindow.$(OBJEXT): ${GENERIC_DIR}/tkWindow.c configure Makefile tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
+
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
 tkMain.$(OBJEXT): configure Makefile
 tkMain2.$(OBJEXT): configure Makefile
-tkWindow.$(OBJEXT): configure Makefile
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.

@@ -350,49 +350,42 @@ static NSInteger showOpenSavePanel(
     FilePanelCallbackInfo *callbackInfo)
 {
     NSInteger modalReturnCode;
+    int OSVersion = [NSApp macOSVersion];
+
+    /*
+     * Use a sheet if -parent is specified (unless there is already a sheet).
+     */
 
     if (parent && ![parent attachedSheet]) {
-	[panel beginSheetModalForWindow:parent
-	       completionHandler:^(NSModalResponse returnCode) {
-	    [NSApp tkFilePanelDidEnd:panel
-		       returnCode:returnCode
-		       contextInfo:callbackInfo ];
-	    }];
-
-	/*
-	 * The sheet has been prepared, so now we have to run it as a modal
-	 * window.  Using [NSApp runModalForWindow:] on macOS 10.15 or later
-	 * generates warnings on stderr.  But using [NSOpenPanel runModal] or
-	 * [NSSavePanel runModal] on 10.14 or earler does not cause the
-	 * completion handler to run when the panel is closed.
-	 */
-
-	if ([NSApp macOSVersion] > 101400) {
+	if (OSVersion < 101500) {
+	    [panel beginSheetModalForWindow:parent
+			  completionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+				  returnCode:returnCode
+				 contextInfo:callbackInfo ];
+		}];
+	    modalReturnCode = [NSApp runModalForWindow:panel];
+	} else if (OSVersion < 110000) {
+	    [panel beginSheetModalForWindow:parent
+			  completionHandler:^(NSModalResponse returnCode) {
+		    [NSApp tkFilePanelDidEnd:panel
+				  returnCode:returnCode
+				 contextInfo:callbackInfo ];
+		}];
 	    modalReturnCode = [panel runModal];
 	} else {
-	    modalReturnCode = [NSApp runModalForWindow:panel];
+	    [parent beginSheet: panel completionHandler:nil];
+	    modalReturnCode = [panel runModal];
+	    [NSApp tkFilePanelDidEnd:panel
+			  returnCode:modalReturnCode
+			 contextInfo:callbackInfo ];
+	    [parent endSheet:panel];
 	}
     } else {
-
-	/*
-	 * For the standalone file dialog, completion handlers do not work
-	 * at all on macOS 10.14 and earlier.
-	 */
-
-	if ([NSApp macOSVersion] > 101400) {
-	    [panel beginWithCompletionHandler:^(NSModalResponse returnCode) {
-		    [NSApp tkFilePanelDidEnd:panel
-			          returnCode:returnCode
-			         contextInfo:callbackInfo ];
-	    }];
-	    modalReturnCode = [panel runModal];
-	} else {
-	    modalReturnCode = [panel runModal];
-	    [NSApp tkFilePanelDidEnd:panel
-		   	  returnCode:modalReturnCode
-		         contextInfo:callbackInfo ];
-	    [panel close];
-	}
+	modalReturnCode = [panel runModal];
+	[NSApp tkFilePanelDidEnd:panel
+		      returnCode:modalReturnCode
+		     contextInfo:callbackInfo ];
     }
     return callbackInfo->cmdObj ? modalOther : modalReturnCode;
 }

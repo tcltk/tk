@@ -1191,7 +1191,7 @@ TkSelInit(
      * Using UTF8_STRING instead of the XA_UTF8_STRING macro allows us to
      * support older X servers that didn't have UTF8_STRING yet. This is
      * necessary on Unix systems. For more information, see:
-     *	  http://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
+     *	  https://www.cl.cam.ac.uk/~mgk25/unicode.html#x11
      */
 
 #if !defined(_WIN32)
@@ -1399,12 +1399,12 @@ HandleTclCommand(
 		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
 		cmdInfoPtr->buffer[0] = '\0';
 	    } else {
-		int ch;
+		Tcl_UniChar ch = 0;
 		p = string;
 		string += count;
 		numChars = 0;
 		while (p < string) {
-		    p += TkUtfToUniChar(p, &ch);
+		    p += Tcl_UtfToUniChar(p, &ch);
 		    numChars++;
 		}
 		cmdInfoPtr->charOffset += numChars;

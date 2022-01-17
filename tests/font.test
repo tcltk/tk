@@ -523,16 +523,16 @@ test font-12.2 {UpdateDependantFonts procedure: pings the widgets} -setup {
     destroy .t.f
     catch {font delete xyz}
     pack [label .t.f]
-    update
+    update idletasks
 } -body {
     font create xyz -family times -size 20
     .t.f config -font xyz -text "abcd" -padx 0 -bd 0 -highlightthickness 0
     set a1 [font measure xyz "abcd"]
-    update
+    update idletasks
     set b1 [winfo reqwidth .t.f]
     font configure xyz -family helvetica -size 20
     set a2 [font measure xyz "abcd"]
-    update
+    update idletasks
     set b2 [winfo reqwidth .t.f]
     expr {$a1==$b1 && $a2==$b2}
 } -cleanup {
@@ -1683,14 +1683,14 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
-    .t.f config -text "foo" -underline -1
+    .t.f config -text "foo" -underline {}
 } -result {}
 test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 10
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -underline -1
+    .t.f config -wrap -1 -underline {}
 } -result {}
 destroy .t.f
 
@@ -1765,7 +1765,7 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-29.1 {Tk_CharBBox procedure: index < 0} -body {
-    .t.f config -text "000" -underline -1
+    .t.f config -text "000" -underline {}
 } -result {}
 test font-29.2 {Tk_CharBBox procedure: loop} -body {
     .t.f config -text "000\t000\t000\t000" -underline 9
@@ -2407,6 +2407,147 @@ test font-47.1 {Bug f214b8ad5b} -body {
     interp delete one
     interp delete two
 } -result {}
+
+test font-47.2 {Bug 3049518 - Canvas} -body {
+    if {"MyFont" ni [font names]} {
+	font create MyFont -family "Liberation Sans" -size 13
+    }
+    set text Hello!
+    destroy .t.c
+    set c [canvas .t.c]
+    set textid [$c create text 20 20 -font MyFont -text $text -anchor nw]
+    set twidth [font measure MyFont $text]
+    set theight [font metrics MyFont -linespace]
+    set circid [$c create polygon \
+		    15                    15 \
+		    [expr {15 + $twidth}] 15 \
+		    [expr {15 + $twidth}] [expr {15 + $theight}] \
+		    15                    [expr {15 + $theight}] \
+		    -width 1 -joinstyle round -smooth true -fill {} -outline blue]
+    pack $c -fill both -expand 1 -side top
+    tkwait visibility $c
+
+    # Lamda test functions
+    set circle_text {{w user_data text circ} {
+	if {[winfo class $w] ne "Canvas"} {
+	    puts "Wrong widget type: $w"
+	    return
+	}
+	if {$user_data ne "FontChanged"} {
+	    return
+	}
+	lappend ::results called-$w
+	lassign [$w bbox $text] x0 y0 x1 y1
+	set offset 5
+	set coord [lmap expr {
+			      $x0-5 $y0-5   $x1+5 $y0-5
+			      $x1+5 $y1+5   $x0-5 $y1+5
+			  } {expr $expr}]
+	if {[catch {$w coord $circ $coord} err]} {
+	    puts Error:$err
+	}
+    }}
+    set waitfor {{tag {time 333}} {after $time incr ::wait4; vwait ::wait4}}
+    set enclosed {{can id} {$can find enclosed {*}[$can bbox $id]}}
+
+    set results {}
+    apply $circle_text $c FontChanged $textid $circid
+    bind $c <<TkWorldChanged>> [list apply $circle_text %W %d $textid $circid]
+    apply $waitfor 1
+
+    # Begin test:
+    set results {}
+    lappend results [apply $enclosed $c $circid]
+    font configure MyFont -size 26
+    apply $waitfor 2
+    lappend results [apply $enclosed $c $circid]
+    font configure MyFont -size 9
+    apply $waitfor 3
+    lappend results [apply $enclosed $c $circid]
+    apply $waitfor 4
+    font configure MyFont -size 12
+    apply $waitfor 5
+    lappend results [apply $enclosed $c $circid]
+} -cleanup {
+    destroy $c
+    unset -nocomplain ::results
+} -result {{1 2} called-.t.c {1 2} called-.t.c {1 2} called-.t.c {1 2}}
+
+test font-47.3 {Bug 3049518 - Label} -body {
+    if {"MyFont" ni [font names]} {
+	font create MyFont -family "Liberation Sans" -size 13
+    }
+    set text "Label Test"
+    destroy .t.l
+
+    set make-img {{size} {
+	set img [image create photo -width $size -height $size]
+	$img blank
+	set max [expr {$size - 1}]
+	for {set x 0} {$x < $size} {incr x} {
+	    $img put red -to $x $x
+	    $img put black -to 0 $x
+	    $img put black -to $x 0
+	    $img put black -to $max $x
+	    $img put black -to $x $max
+	}
+	return $img
+    }}
+
+    set testWorldChanged {{w user_data} {
+	global make-img
+	if {$user_data ne "FontChanged"} {
+	    return
+	}
+	if {![winfo exists $w] || [winfo class $w] ne "Label"} {
+	    return
+	}
+	if {[$w cget -image] ne ""} {
+	    image delete [$w cget -image]
+	}
+	set size [font metrics [$w cget -font] -linespace]
+	set img [apply ${make-img} $size]
+	$w configure -image $img
+    }}
+
+    set waitfor {{tag {time 500}} {
+	after $time incr ::wait4
+	vwait ::wait4
+    }}
+
+    set check {{w} {
+	global results
+	set f [$w cget -font]
+	set i [$w cget -image]
+	set fs [font metrics $f -linespace]
+	set ish [image height $i]
+	set isw [image width $i]
+	lappend results [list [expr {$fs == $ish ? 1 : [list $fs $ish]}] [expr {$fs == $isw ? 1 : [list $fs $isw]}]]
+    }}
+
+    set size [font metrics MyFont -linespace]
+    set img [apply ${make-img} $size]
+    set l [label .t.l -compound left -image $img -text $text -font MyFont]
+    pack $l -side top -fill both -expand 1
+    bind $l <<TkWorldChanged>> [list apply $testWorldChanged %W %d]
+    set ::results {}
+
+    apply $waitfor 0
+    apply $check $l
+    font configure MyFont -size 26
+    apply $waitfor 1
+    apply $check $l
+    font configure MyFont -size 9
+    apply $waitfor 2
+    apply $check $l
+    font configure MyFont -size 13
+    apply $waitfor 3
+    apply $check $l
+    set results
+} -cleanup {
+    destroy $l
+    unset -nocomplain ::results
+} -result {{1 1} {1 1} {1 1} {1 1}}
 
 # cleanup
 cleanupTests

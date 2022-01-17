@@ -1113,14 +1113,16 @@ Tk_TkwaitObjCmd(
 static char *
 WaitVariableProc(
     ClientData clientData,	/* Pointer to integer to set to 1. */
-    TCL_UNUSED(Tcl_Interp *),		/* Interpreter containing variable. */
-    TCL_UNUSED(const char *),		/* Name of variable. */
+    Tcl_Interp *interp,		/* Interpreter containing variable. */
+    const char *name1,		/* Name of variable. */
     TCL_UNUSED(const char *),		/* Second part of variable name. */
     TCL_UNUSED(int))			/* Information about what happened. */
 {
     int *donePtr = (int *)clientData;
 
     *donePtr = 1;
+    Tcl_UntraceVar(interp, name1, TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+	    WaitVariableProc, clientData);
     return NULL;
 }
 

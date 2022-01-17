@@ -3,7 +3,7 @@ on: [push]
 jobs:
   linux:
     name: Linux
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-18.04
     defaults:
       run:
         shell: bash
@@ -24,7 +24,6 @@ jobs:
       - name: Setup Environment
         run: |
           sudo apt-get install libxss-dev
-          mkdir -p install/1dist.vfs
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
@@ -36,7 +35,7 @@ jobs:
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
-          make binaries libraries tclzipfile install
+          make binaries libraries install
           make shell SCRIPT="$VER_PATH $GITHUB_ENV"
         working-directory: tcl/unix
       - name: Configure Tk
@@ -48,33 +47,27 @@ jobs:
           make binaries libraries install
         working-directory: tk/unix
         # TODO: need the Tk version separately for distro naming below
-      - name: Pack Tk Library Files into Library Zip
-        run: |
-          unzip ../lib/libtcl*.zip
-          cp -a ../lib/tk[0-9]* .
-          zip -r ../1dist.zip .
-        working-directory: ${{ env.INST_DIR }}/1dist.vfs
       - name: Package
         run: |
-          cat ../tk/unix/wish 1dist.zip >> ${BUILD_NAME}
+          cp bin/wish8.7 ${BUILD_NAME}
           chmod +x ${BUILD_NAME}
           tar -cf ${BUILD_NAME}.tar ${BUILD_NAME}
         working-directory: ${{ env.INST_DIR }}
         env:
-          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial
+          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (unofficial)
+          name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.tar
       - name: Describe Installation Zip Contents
         if: ${{ always() }}
         run: |
-          unzip -l 1dist.zip || true
+          unzip -l wish${{ env.TCL_PATCHLEVEL }}_snapshot || true
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
-    runs-on: macos-11.0
+    runs-on: macos-11
     defaults:
       run:
         shell: bash
@@ -100,12 +93,13 @@ jobs:
           path: create-dmg
       - name: Setup Environment
         run: |
-          mkdir -p install/1dist.vfs install/contents
+          mkdir -p install/contents
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
           echo "VER_PATH=$(cd tcl/tools; pwd)/addVerToFile.tcl" >> $GITHUB_ENV
           echo "CREATE_DMG=$(cd create-dmg;pwd)/create-dmg" >> $GITHUB_ENV
+          echo "CFLAGS=-arch x86_64 -arch arm64e" >> $GITHUB_ENV
         working-directory: "."
       - name: Configure Tcl
         run: |
@@ -113,7 +107,7 @@ jobs:
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
-          make binaries libraries tclzipfile install
+          make binaries libraries install
           make shell SCRIPT="$VER_PATH $GITHUB_ENV"
         working-directory: tcl/unix
       - name: Configure Tk
@@ -126,15 +120,9 @@ jobs:
           make binaries libraries install
         working-directory: tk/unix
         # TODO: need the Tk version separately for distro naming below
-      - name: Pack Tk Library Files into Library Zip
-        run: |
-          unzip ../lib/libtcl*.zip
-          cp -a ../lib/tk[0-9]* .
-          zip -r ../1dist.zip .
-        working-directory: ${{ env.INST_DIR }}/1dist.vfs
       - name: Package
         run: |
-          cat ../tk/unix/wish 1dist.zip >> contents/${BUILD_NAME}
+          cp ../tk/unix/wish contents/${BUILD_NAME}
           chmod +x contents/${BUILD_NAME}
           cat > contents/README.txt <<EOF
           This is a single-file executable developer preview of Tcl/Tk $TCL_PATCHLEVEL
@@ -147,29 +135,34 @@ jobs:
           to mark the executable as runnable on your machine.
           EOF
           $CREATE_DMG \
-              --volname "TclTk $TCL_PATCHLEVEL (unofficial)" \
+              --volname "TclTk $TCL_PATCHLEVEL (snapshot)" \
               --window-pos 200 120 \
               --window-size 800 400 \
-              "TclTk-$TCL_PATCHLEVEL-(unofficial).dmg" \
+              "TclTk-$TCL_PATCHLEVEL-(snapshot).dmg" \
               "contents/"
         working-directory: ${{ env.INST_DIR }}
         env:
-          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial
+          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (unofficial)
+          name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.dmg
   win:
     name: Windows
     runs-on: windows-latest
     defaults:
       run:
-        shell: bash
+        shell: msys2 {0}
     env:
       CC: gcc
       CFGOPT: --disable-symbols --disable-shared
     steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
         uses: actions/checkout@v2
         with:
@@ -180,11 +173,8 @@ jobs:
           repository: tcltk/tcl
           ref: core-8-branch
           path: tcl
-      - name: Install MSYS2, Make, Zip
-        run: choco install -y msys2 make zip
       - name: Setup Environment
         run: |
-          mkdir -p install/1dist
           mkdir -p install/combined
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
@@ -197,8 +187,7 @@ jobs:
         working-directory: tcl/win
       - name: Build & Install Tcl
         run: |
-          make binaries libraries tclzipfile install
-          echo "TCL_ZIP=`pwd`/`echo libtcl*.zip`" >> $GITHUB_ENV
+          make binaries libraries install
           $INST_DIR/bin/tclsh* $VER_PATH $GITHUB_ENV
         working-directory: tcl/win
       - name: Configure Tk
@@ -211,20 +200,14 @@ jobs:
           echo "TK_BIN=`pwd`/`echo wish*.exe`" >> $GITHUB_ENV
         working-directory: tk/win
         # TODO: need the Tk version separately for distro naming below
-      - name: Pack Tk Library Files into Library Zip
-        run: |
-          unzip $TCL_ZIP
-          cp -R ../lib/tk[0-9]* .
-          zip -o -r ../1dist.zip *
-        working-directory: install/1dist
       - name: Package
         run: |
-          cat ${TK_BIN} 1dist.zip > combined/${BUILD_NAME}.exe
+          cp ${TK_BIN} combined/${BUILD_NAME}.exe
         working-directory: install
         env:
-          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_unofficial
+          BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
         uses: actions/upload-artifact@v2
         with:
-          name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (unofficial)
-          path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_unofficial.exe
+          name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (snapshot)
+          path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_snapshot.exe
