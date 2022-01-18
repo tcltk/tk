@@ -12,13 +12,21 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
-
 #include "tkWinInt.h"
 #include <windows.h>
 #include <wtypes.h>
 #include <shobjidl.h>
 #include <shlguid.h>
 #include <shellapi.h>
+//***HaO
+/*
+ * Macro CurrentTime is defined in X.h.
+ * CurrentTime is used as a variable name in the following include.
+ * Thus, undefine it and define it back afterwards
+ */
+#undef CurrentTime
+#include<wtsapi32.h>
+#define CurrentTime          0L	/* special Time */
 #include "tkWinIco.h"
 /*
  * These next two defines are only valid on Win2K/XP+.
@@ -4931,12 +4939,21 @@ WmProtocolCmd(
     }
     cmd = Tcl_GetStringFromObj(objv[4], &cmdLength);
     if (cmdLength > 0) {
-	protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
+        const char *item;
+        TkSizeT itemLength;
+        item = Tcl_GetStringFromObj(objv[3], &itemLength);
+        protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
 	memcpy(protPtr->command, cmd, cmdLength + 1);
+	//***HaO
+	if (itemLength > 4 && 0 == memcmp(item,"WTS_", 4) ) {
+	    WTSRegisterSessionNotification(
+		TkWinGetHWND(winPtr),
+		NOTIFY_FOR_THIS_SESSION);
+	}
     }
     return TCL_OK;
 }
@@ -7952,6 +7969,43 @@ WmProc(
 	    Tk_InternAtom((Tk_Window) winPtr, "WM_SAVE_YOURSELF");
 	TkWmProtocolEventProc(winPtr, &event);
 	break;
+    }
+
+    case WM_WTSSESSION_CHANGE: {
+	XEvent event;
+	winPtr = GetTopLevel(hwnd);
+
+	/*
+	 * Synthesize WM_SAVE_YOURSELF wm protocol message on Windows session
+	 * disconnect or reconnect.
+	 */
+	// ***HaO
+	// DWORD SessionID
+	// if (!ProcessIdToSessionId(GetCurrentProcessId(),&SessionID
+	//	&& SessionID == lParam)
+	switch (wParam) {
+	case WTS_CONSOLE_CONNECT:
+	    event.xclient.message_type =
+		Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
+	    event.xclient.data.l[0] =
+		Tk_InternAtom((Tk_Window) winPtr, "WTS_CONSOLE_CONNECT");
+	    TkWmProtocolEventProc(winPtr, &event);
+	    break;
+	case WTS_CONSOLE_DISCONNECT:
+	    event.xclient.message_type =
+		Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
+	    event.xclient.data.l[0] =
+		Tk_InternAtom((Tk_Window) winPtr, "WTS_CONSOLE_DISCONNECT");
+	    TkWmProtocolEventProc(winPtr, &event);
+	    break;
+	case WTS_REMOTE_CONNECT:
+	case WTS_REMOTE_DISCONNECT:
+	case WTS_SESSION_LOGON:
+	case WTS_SESSION_LOGOFF:
+	case WTS_SESSION_LOCK:
+	case WTS_SESSION_UNLOCK:
+	    break;
+	}
     }
 
     default:

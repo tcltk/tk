@@ -360,7 +360,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib wtsapi32.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
