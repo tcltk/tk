@@ -414,6 +414,8 @@ Add a Tk binding script for the event sequence \fIsequence\fR
 to the tag \fItagName\fR.  When an X event is delivered to an item,
 binding scripts for each of the item's \fB\-tags\fR are evaluated
 in order as per \fIbindtags(n)\fR.
+If the event can be associated with a cell (i.e. mouse events) any
+bindings for the cell's \fB\-tags\fR are evaluated as well.
 .RS
 .PP
 \fB<Key>\fR, \fB<KeyRelease>\fR, and virtual events
@@ -427,6 +429,7 @@ evaluation; see \fBbind(n)\fR for details.
 .RE
 .TP
 \fIpathName \fBtag cell \fIsubcmd...\fR
+Manages tags on individual cells.
 A \fIcellList\fR argument may be a single cell or a list of cells.
 .RS
 .TP

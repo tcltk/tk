@@ -1313,7 +1313,6 @@ test treeview-column0-leak "Test for leak in tree column" -setup {
     }
     tcl::unsupported::representation $heading
 } -match glob -result {*refcount of 3,*}
-exit
 
 test treeview-11.1 "style command" -body {
     ttk::treeview .w
@@ -1328,5 +1327,48 @@ test treeview-11.2 "style command" -body {
 } -cleanup {
     destroy .w
 } -result {customStyle.Treeview customStyle.Treeview Treeview}
+
+test treeview-12.1 "tag bindings" -setup {
+    tvSetupWithItems
+    .tv tag configure t1 -background red
+    .tv tag configure t2 -background blue
+    .tv item nn -open 1
+    # Tags on item and cell to spot the difference
+    .tv tag add t1 "nn.n1"
+    .tv tag cell add t2 "nn.n1 a"
+    .tv tag cell add t2 "nn.n2 c"
+    update
+    proc cellEvent {item col} {
+        # Find midpoint of cell
+        lassign [.tv bbox $item $col] aX aY aW aH
+        set aX [expr {$aX + $aW / 2}]
+        set aY [expr {$aY + $aH / 2}]
+        event generate .tv <Button-1> -x $aX -y $aY
+    }
+} -body {
+    .tv tag bind t1 <Button-1> {lappend ::tagtest t1}
+    .tv tag bind t2 <Button-1> {lappend ::tagtest t2}
+    # Cell with both binds
+    set ::tagtest a
+    cellEvent nn.n1 a
+    # Cell with just item tag
+    lappend ::tagtest b
+    cellEvent nn.n1 b
+    # Cell with just cell tag
+    lappend ::tagtest c
+    cellEvent nn.n2 c
+    # Same tag on both cell and item should fire once
+    .tv tag cell add t1 "nn.n1 b"
+    lappend ::tagtest b
+    cellEvent nn.n1 b
+    # Break in first bind
+    .tv tag bind t1 <Button-1> {lappend ::tagtest t1;break}
+    lappend ::tagtest a
+    cellEvent nn.n1 a
+    set ::tagtest
+} -cleanup {
+    rename cellEvent {}
+    destroy .tv
+} -result {a t1 t2 b t1 c t2 b t1 a t1}
 
 tcltest::cleanupTests
