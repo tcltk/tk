@@ -1113,6 +1113,21 @@ test treeview-rowheight-3 "rowheight adapts to font" -body {
     expr {0 < $diff ? "OK" : $diff}
 } -result OK
 
+test treeview-rowheight-3b "rowheight adapts to named font" -body {
+    ttk::style configure Treeview -rowheight {}
+    font create __tf -family Courier -size -20
+    ttk::style configure Treeview -font __tf
+    update
+    set baseline [lindex [.tv bbox nn a] 3]
+    font configure __tf -size -50
+    update
+    set after [lindex [.tv bbox nn a] 3]
+    set diff [expr {$after - $baseline}]
+    # We only want to check there is an increase,
+    # its exact magnitude does not matter
+    expr {0 < $diff ? "OK" : $diff}
+} -result OK
+
 test treeview-rowheight-4 "rowheight adapts to item padding" -body {
     # Test that things from Item style is picked up.
     ttk::style configure Item -padding "2 2 2 2"
