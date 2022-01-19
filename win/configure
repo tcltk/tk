@@ -4503,7 +4503,7 @@ printf %s "checking compiler flags... " >&6; }
 	SHLIB_LD_LIBS='${LIBS}'
 	LIBS="-lnetapi32 -lkernel32 -luser32 -ladvapi32 -luserenv -lws2_32"
 	# mingw needs to link ole32 and oleaut32 for [send], but MSVC doesn't
-	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32 -lwinspool"
+	LIBS_GUI="-lgdi32 -lcomdlg32 -limm32 -lcomctl32 -lshell32 -luuid -lole32 -loleaut32 -lwinspool -lwtsapi32"
 	STLIB_LD='${AR} cr'
 	RC_OUT=-o
 	RC_TYPE=
@@ -4709,7 +4709,7 @@ printf "%s\n" "   Using 64-bit $MACHINE mode" >&6; }
 	    LINKBIN="link"
 	fi
 
-	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib"
+	LIBS_GUI="gdi32.lib comdlg32.lib imm32.lib comctl32.lib shell32.lib uuid.lib winspool.lib wtsapi32.lib"
 
 	SHLIB_LD="${LINKBIN} -dll -incremental:no ${lflags}"
 	SHLIB_LD_LIBS='${LIBS}'
@@ -5990,7 +5990,6 @@ TK_WIN_VERSION="$TK_VERSION.$TK_RELEASE_LEVEL.`echo $TK_PATCH_LEVEL | tr -d ab.`
 
 
 ac_config_files="$ac_config_files Makefile tkConfig.sh wish.exe.manifest"
-
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure
