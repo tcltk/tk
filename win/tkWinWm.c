@@ -4941,7 +4941,6 @@ WmProtocolCmd(
     if (cmdLength > 0) {
         const char *item;
         TkSizeT itemLength;
-        item = Tcl_GetStringFromObj(objv[3], &itemLength);
         protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
 	protPtr->protocol = protocol;
 	protPtr->nextPtr = wmPtr->protPtr;
@@ -4949,9 +4948,10 @@ WmProtocolCmd(
 	protPtr->interp = interp;
 	memcpy(protPtr->command, cmd, cmdLength + 1);
 	//***HaO
+        item = Tcl_GetStringFromObj(objv[3], &itemLength);
 	if (itemLength > 4 && 0 == memcmp(item,"WTS_", 4) ) {
 	    WTSRegisterSessionNotification(
-		TkWinGetHWND(winPtr),
+		winPtr->wmInfoPtr->wrapper,
 		NOTIFY_FOR_THIS_SESSION);
 	}
     }
