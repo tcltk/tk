@@ -1156,7 +1156,7 @@ static TreeCell *GetCellListFromObj(
  */
 
 static TreeItem *IdentifyItem(Treeview *tv, int y); /*forward*/
-static int IdentifyDisplayColumn(Treeview *tv, int x, int *x1); /*forward*/
+static TkSizeT IdentifyDisplayColumn(Treeview *tv, int x, int *x1); /*forward*/
 
 static const unsigned long TreeviewBindEventMask =
       KeyPressMask|KeyReleaseMask
