@@ -463,7 +463,7 @@ typedef struct {
 
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
-    int nTitleColumns;		/* -titlecolumns */
+    TkSizeT nTitleColumns;		/* -titlecolumns */
     int nTitleItems;		/* -titleitems */
     int striped;		/* -striped option */
 
@@ -1088,7 +1088,7 @@ static int GetCellFromObj(
     /* colObj is short lived and do not keep a reference counted */
     cell->colObj = elements[1];
     if (displayColumnOnly) {
-	int i = FirstColumn(tv);
+	TkSizeT i = FirstColumn(tv);
 	while (i < tv->tree.nDisplayColumns) {
 	    if (tv->tree.displayColumns[i] == cell->column) {
 		break;
@@ -2044,7 +2044,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
     DisplayItem displayItem;
     Ttk_Style style = Ttk_LayoutStyle(tv->tree.separatorLayout);
     int x = tv->tree.treeArea.x;
-    int i;
+    TkSizeT i;
 
     Ttk_TagSetDefaults(tv->tree.tagTable, style, &displayItem);
 
@@ -2098,7 +2098,8 @@ static void PrepareItem(
 static void PrepareCells(
    Treeview *tv, TreeItem *item)
 {
-    int i, nValues = 0;
+    TkSizeT i;
+    int nValues = 0;
     Tcl_Obj **values = NULL;
     TreeColumn *column;
 
@@ -2825,7 +2826,7 @@ static int TreeviewIdentifyCommand(
 	    if (item && colno >= 0) {
 		Tcl_Obj *elem[2];
 		elem[0] = ItemID(tv, item);
-		elem[1] = Tcl_ObjPrintf("#%d", colno);
+		elem[1] = Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno);
 		Tcl_SetObjResult(interp, Tcl_NewListObj(2, elem));
 	    }
 	    break;
@@ -3966,7 +3967,8 @@ static int TreeviewCtagHasCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeCell cell;
-    int i, columnNumber;
+    TkSizeT i;
+    int columnNumber;
 
     if (objc == 5) {	/* Return list of all cells with tag */
 	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
