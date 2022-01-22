@@ -1369,7 +1369,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     }
     if (tv->tree.nTitleColumns < 0) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "\"%d\" is out of range",
+                "\"#%" TKSIZET_MODIFIER "u\" is out of range",
                 tv->tree.nTitleColumns));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "TITLECOLUMNS", NULL);
 	return TCL_ERROR;
@@ -2099,7 +2099,7 @@ static void PrepareCells(
    Treeview *tv, TreeItem *item)
 {
     TkSizeT i;
-    int nValues = 0;
+    TkSizeT nValues = 0;
     Tcl_Obj **values = NULL;
     TreeColumn *column;
 
