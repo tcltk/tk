@@ -11,9 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
-
-
 proc killTables {} {
     # Note: it's important to delete chain2 before chain1, because
     # chain2 depends on chain1.  If chain1 is deleted first, the
