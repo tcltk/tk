@@ -4511,7 +4511,7 @@ DisplayText(
 #ifndef TK_NO_DOUBLE_BUFFERING
 		    Tk_FreePixmap(Tk_Display(textPtr->tkwin), pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
-		    return;
+		    goto end;
 		}
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
