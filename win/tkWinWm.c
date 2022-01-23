@@ -4947,12 +4947,41 @@ WmProtocolCmd(
 	wmPtr->protPtr = protPtr;
 	protPtr->interp = interp;
 	memcpy(protPtr->command, cmd, cmdLength + 1);
-	//***HaO
+
+	/*
+	 * Activate notification by WM_WTSSESSION_CHANGE, for relevant
+	 * messages. Note: this does not harm, if activated errorneously,
+	 * so be relax on the protocol name and only check for prefix
+	 * "WTS_".
+	 */
+
         item = Tcl_GetStringFromObj(objv[3], &itemLength);
-	if (itemLength > 4 && 0 == memcmp(item,"WTS_", 4) ) {
-	    WTSRegisterSessionNotification(
-		winPtr->wmInfoPtr->wrapper,
-		NOTIFY_FOR_THIS_SESSION);
+	if ((itemLength > 4) && (0 == memcmp(item,"WTS_", 4))) {
+	    
+	    /*
+	     * Be sure that the window exists. If not, try to make it exist.
+	     */
+
+	    if (NULL == winPtr->wmInfoPtr
+		    || NULL == winPtr->wmInfoPtr->wrapper) {
+		// Tk_MakeWindowExist(winPtr);
+	    }
+	    if (NULL != winPtr->wmInfoPtr
+		    && NULL != winPtr->wmInfoPtr->wrapper) {
+		
+		/*
+		 * Activate notification by message WM_WTSSESSION_CHANGE.
+		 */
+
+		WTSRegisterSessionNotification(
+		    winPtr->wmInfoPtr->wrapper,
+		    NOTIFY_FOR_THIS_SESSION);
+		
+		/*
+		 * Note: the result of the call may be checked
+		 * and a Windows error may be reported if not true.
+		 */
+	    }
 	}
     }
     return TCL_OK;
@@ -7972,38 +8001,77 @@ WmProc(
     }
 
     case WM_WTSSESSION_CHANGE: {
+	DWORD SessionID;
 	XEvent event;
-	winPtr = GetTopLevel(hwnd);
 
 	/*
-	 * Synthesize WM_SAVE_YOURSELF wm protocol message on Windows session
-	 * disconnect or reconnect.
+	 * Check, if it is my session.
+	 * Normally, we get only notifications about our session.
+	 * But, if WTSRegisterSessionNotification is called somewhere else
+	 * with all sessions, filtering may be helpful.
 	 */
-	// ***HaO
-	// DWORD SessionID
-	// if (!ProcessIdToSessionId(GetCurrentProcessId(),&SessionID
-	//	&& SessionID == lParam)
+
+	if ( 0 == ProcessIdToSessionId(GetCurrentProcessId(),&SessionID)
+		|| SessionID != lParam) {
+	    break;
+	}
+	
+	/*
+	 * Filter the notification items we take.
+	 * Note, that the following notifications are not reported:
+	 * WTS_SESSION_REMOTE_CONTROL, WTS_SESSION_CREATE,
+	 * WTS_SESSION_TERMINATE.
+	 */
+
 	switch (wParam) {
 	case WTS_CONSOLE_CONNECT:
-	    event.xclient.message_type =
-		Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
-	    event.xclient.data.l[0] =
-		Tk_InternAtom((Tk_Window) winPtr, "WTS_CONSOLE_CONNECT");
-	    TkWmProtocolEventProc(winPtr, &event);
-	    break;
 	case WTS_CONSOLE_DISCONNECT:
-	    event.xclient.message_type =
-		Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
-	    event.xclient.data.l[0] =
-		Tk_InternAtom((Tk_Window) winPtr, "WTS_CONSOLE_DISCONNECT");
-	    TkWmProtocolEventProc(winPtr, &event);
-	    break;
 	case WTS_REMOTE_CONNECT:
 	case WTS_REMOTE_DISCONNECT:
 	case WTS_SESSION_LOGON:
 	case WTS_SESSION_LOGOFF:
 	case WTS_SESSION_LOCK:
 	case WTS_SESSION_UNLOCK:
+
+	    winPtr = GetTopLevel(hwnd);
+	    event.xclient.message_type =
+		Tk_InternAtom((Tk_Window) winPtr, "WM_PROTOCOLS");
+
+	    switch (wParam) {
+	    case WTS_CONSOLE_CONNECT:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_CONSOLE_CONNECT");
+		break;
+	    case WTS_CONSOLE_DISCONNECT:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_CONSOLE_DISCONNECT");
+		break;
+	    case WTS_REMOTE_CONNECT:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_REMOTE_CONNECT");
+		break;
+	    case WTS_REMOTE_DISCONNECT:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_REMOTE_DISCONNECT");
+		break;
+	    case WTS_SESSION_LOGON:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_SESSION_LOGON");
+		break;
+	    case WTS_SESSION_LOGOFF:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_SESSION_LOGOFF");
+		break;
+	    case WTS_SESSION_LOCK:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_SESSION_LOCK");
+		break;
+	    case WTS_SESSION_UNLOCK:
+		event.xclient.data.l[0] =
+		    Tk_InternAtom((Tk_Window) winPtr, "WTS_SESSION_UNLOCK");
+	        break;
+	    }
+	    TkWmProtocolEventProc(winPtr, &event);
 	    break;
 	}
     }
