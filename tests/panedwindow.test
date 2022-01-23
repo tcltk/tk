@@ -11,8 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
-
 deleteWindows
 # Panedwindow for tests 1.*
 panedwindow .p
