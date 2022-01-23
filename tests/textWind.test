@@ -1618,6 +1618,21 @@ test textWind-18.1 {embedded window deletion triggered by a script bound to <Map
     destroy .t .f .f2
 } -result {}
 
+test textWind-18.2 {text widget deletion triggered by a script bound to embedded window mapping} -constraints knownBug -setup {
+    catch {destroy .t .f}
+} -body {
+    pack [text .t]
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Line $i\n"}
+    .t window create end -window [frame .f -background red -width 80 -height 80]
+    bind .f <Map> {destroy .t}
+    updateText
+    # this shall not crash (bug 1501749)
+    after 100 {.t yview end}
+    tkwait window .t
+} -cleanup {
+    destroy .t .f
+} -result {}
+
 option clear
 
 # cleanup
