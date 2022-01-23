@@ -345,7 +345,9 @@ such as \fBTk_SetOptions\fR, and it supports the \fBTK_OPTION_NULL_OK\fR flag.
 .TP
 \fBTK_OPTION_BOOLEAN\fR
 The value must be a standard boolean value such as \fBtrue\fR or
-\fBno\fR.  The internal form is an integer with value 0 or 1.
+\fBno\fR.  The internal form is an integer with value 0 or 1.  This option
+type supports the \fBTK_OPTION_NULL_OK\fR flag; if a NULL value is set, the
+internal representation is set to -1.
 .TP
 \fBTK_OPTION_BORDER\fR
 The value must be a standard color name such as \fBred\fR or \fB#ff8080\fR.
