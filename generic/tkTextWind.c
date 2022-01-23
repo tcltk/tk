@@ -1143,13 +1143,16 @@ TkTextEmbWinDisplayProc(
 
     /*
      * Mark the window as displayed so that it won't get unmapped.
-     * <TODO>: Tk_MaintainGeometry/Tk_MapWindow may run event handlers,
-     *         in particular for the <Map> event. If the bound script
-     *         deletes the embedded window or the text widget we will
-     *         soon crash.
+     * Warning: Tk_MaintainGeometry/Tk_MapWindow may run event handlers,
+     * in particular for the <Map> event. If a bound script deletes the
+     * embedded window, then its client is gone and we would soon crash.
+     * Prevent this by getting the client again.
      */
 
-    client->displayed = 1;
+    client = EmbWinGetClient(textPtr, ewPtr);
+    if (client != NULL) {
+	client->displayed = 1;
+    }
 }
 
 /*
