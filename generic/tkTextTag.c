@@ -16,16 +16,6 @@
 #include "tkText.h"
 #include "default.h"
 
-#ifdef __GNUC__
-/* This is a copy of tkTextTabStyleStrings (in tkInt.h). */
-/* Without this here, textDisp.test crashes. gcc optimization bug? */
-static const char *const tabStyleStrings[] = {
-    "tabular", "wordprocessor", NULL
-};
-#else
-#   define tabStyleStrings tkTextTabStyleStrings
-#endif
-
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
@@ -79,7 +69,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle),
-	TK_OPTION_NULL_OK, tabStyleStrings, 0},
+	TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
     {TK_OPTION_STRING, "-underline", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineString),
 	TK_OPTION_NULL_OK, 0, 0},
