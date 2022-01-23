@@ -1619,7 +1619,7 @@ test textWind-18.1 {embedded window deletion triggered by a script bound to <Map
     destroy .t .f .f2
 } -result {}
 
-test textWind-18.2 {text widget deletion triggered by a script bound to embedded window mapping} -constraints knownBug -setup {
+test textWind-18.2 {text widget deletion triggered by a script bound to embedded window mapping} -setup {
     catch {destroy .t .f}
 } -body {
     pack [text .t]
