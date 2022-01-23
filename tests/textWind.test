@@ -1613,6 +1613,7 @@ test textWind-18.1 {embedded window deletion triggered by a script bound to <Map
     # this shall not crash (bug 1501749)
     after 100 {.t yview end}
     tkwait visibility .f2
+    after 200
     updateText
 } -cleanup {
     destroy .t .f .f2
