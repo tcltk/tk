@@ -18,12 +18,13 @@
 #include <shobjidl.h>
 #include <shlguid.h>
 #include <shellapi.h>
-//***HaO
+
 /*
  * Macro CurrentTime is defined in X.h.
  * CurrentTime is used as a variable name in the following include.
  * Thus, undefine it and define it back afterwards
  */
+
 #undef CurrentTime
 #include<wtsapi32.h>
 #define CurrentTime          0L	/* special Time */
@@ -4954,14 +4955,17 @@ WmProtocolCmd(
 
 	    /*
 	     * Unregister callback on Windows level.
-	     * This is required, as we may give multiple notifications
-	     * on multiple registrations. To avoid this, we first clear
-	     * an eventual registration here and recreate it back below.
+	     * This is required, to avoid multiple notifications due to
+	     * multiple registrations. We first clear an eventual registration
+	     * here and recreate it back below. If there was no prior
+	     * registration, the call fails, which is ok and is ignored.
 	     *
-	     * Note: the Windows API requires the call always in
-	     * pairs. This would require to store the registration fact
-	     * somewhere and to call unregister on windows destroy if
-	     * registered. This is currently not implemented.
+	     * Note: the Windows API requires to call
+	     * WTSUnRegisterSessionNotification for each prior call to
+	     * WTSRegisterSessionNotification.  This would require to store
+	     * the registration fact somewhere and to call unregister on
+	     * windows destroy if registered. This is currently not implemented
+	     * and has probably no negative impacts.
 	     */
 
 	    if (NULL != winPtr->wmInfoPtr
