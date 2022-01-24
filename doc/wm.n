@@ -660,9 +660,16 @@ handler by one which responds differently.
 .RS
 .PP
 The list of available window manager protocols depends on the window manager,
-but all window managers supported by Tk provide \fBWM_DELETE_WINDOW\fR. On the
-Windows platform, a \fBWM_SAVE_YOURSELF\fR message is sent on user logout
-or system restart.
+but all window managers supported by Tk provide \fBWM_DELETE_WINDOW\fR.
+.RE
+.RS
+.PP
+On the Windows platform, the following additional messages are implemented.
+\fBWM_SAVE_YOURSELF\fR is sent on user logout or system restart.
+\fBWTS_CONSOLE_CONNECT\fR and \fBWTS_CONSOLE_DISCONNECT\fR are sent on console connect/disconnect like a user change.
+\fBWTS_REMOTE_CONNECT\fR and \fBWTS_REMOTE_DISCONNECT\fR are sent on remote connect/disconnect.
+\fBWTS_SESSION_LOGON\fR and \fBWTS_SESSION_LOGOFF\fR are sent on session logon/logoff.
+\fBWTS_SESSION_LOCK\fR and \fBWTS_SESSION_UNLOCK\fR are sent when the session is locked by the user or on any upper action (as session lock is a side effect).
 .RE
 .RS
 .PP
