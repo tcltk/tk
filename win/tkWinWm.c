@@ -4951,6 +4951,24 @@ WmProtocolCmd(
 
         item = Tcl_GetStringFromObj(objv[3], &itemLength);
 	if ((itemLength > 4) && (0 == memcmp(item,"WTS_", 4))) {
+
+	    /*
+	     * Unregister callback on Windows level.
+	     * This is required, as we may give multiple notifications
+	     * on multiple registrations. To avoid this, we first clear
+	     * an eventual registration here and recreate it back below.
+	     *
+	     * Note: the Windows API requires the call always in
+	     * pairs. This would require to store the registration fact
+	     * somewhere and to call unregister on windows destroy if
+	     * registered. This is currently not implemented.
+	     */
+
+	    if (NULL != winPtr->wmInfoPtr
+		    && NULL != winPtr->wmInfoPtr->wrapper) {
+		WTSUnRegisterSessionNotification(
+			winPtr->wmInfoPtr->wrapper);
+	    }
 	    
 	    /*
 	     * Be sure that the window exists. If not, try to make it exist.
