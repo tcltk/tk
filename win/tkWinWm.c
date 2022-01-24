@@ -4941,12 +4941,6 @@ WmProtocolCmd(
     if (cmdLength > 0) {
         const char *item;
         TkSizeT itemLength;
-        protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
-	protPtr->protocol = protocol;
-	protPtr->nextPtr = wmPtr->protPtr;
-	wmPtr->protPtr = protPtr;
-	protPtr->interp = interp;
-	memcpy(protPtr->command, cmd, cmdLength + 1);
 
 	/*
 	 * Activate notification by WM_WTSSESSION_CHANGE, for relevant
@@ -4960,29 +4954,40 @@ WmProtocolCmd(
 	    
 	    /*
 	     * Be sure that the window exists. If not, try to make it exist.
+	     * This is required, if no "update" was run after windows
+	     * creation.
 	     */
 
 	    if (NULL == winPtr->wmInfoPtr
 		    || NULL == winPtr->wmInfoPtr->wrapper) {
-		// Tk_MakeWindowExist(winPtr);
+		Tk_MakeWindowExist((Tk_Window)winPtr);
 	    }
-	    if (NULL != winPtr->wmInfoPtr
-		    && NULL != winPtr->wmInfoPtr->wrapper) {
-		
-		/*
-		 * Activate notification by message WM_WTSSESSION_CHANGE.
-		 */
 
-		WTSRegisterSessionNotification(
-		    winPtr->wmInfoPtr->wrapper,
-		    NOTIFY_FOR_THIS_SESSION);
-		
-		/*
-		 * Note: the result of the call may be checked
-		 * and a Windows error may be reported if not true.
-		 */
+	    /*
+	     * Activate notification by message WM_WTSSESSION_CHANGE.
+	     */
+
+	    if (NULL == winPtr->wmInfoPtr
+		    || NULL == winPtr->wmInfoPtr->wrapper
+		    || ! WTSRegisterSessionNotification(
+			winPtr->wmInfoPtr->wrapper,
+			NOTIFY_FOR_THIS_SESSION)
+	    ) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"registration failed for window \"%s\"",
+			Tk_PathName(winPtr)));
+		Tcl_SetErrorCode(interp, "TK", "WM", "PROTOCOL", "FAIL",
+			objv[3]);
+		return TCL_ERROR;
 	    }
 	}
+
+        protPtr = (ProtocolHandler *)ckalloc(HANDLER_SIZE(cmdLength));
+	protPtr->protocol = protocol;
+	protPtr->nextPtr = wmPtr->protPtr;
+	wmPtr->protPtr = protPtr;
+	protPtr->interp = interp;
+	memcpy(protPtr->command, cmd, cmdLength + 1);
     }
     return TCL_OK;
 }
