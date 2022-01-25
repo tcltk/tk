@@ -194,7 +194,7 @@ Tk_UseWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Create an actual window system window object based on the current
  *	attributes of the specified TkWindow.
@@ -209,13 +209,14 @@ Tk_UseWindow(
  */
 
 Window
-TkpMakeWindow(
-    TkWindow *winPtr,		/* Tk's information about the window that is
+Tk_MakeWindow(
+    Tk_Window tkwin,		/* Tk's information about the window that is
 				 * to be instantiated. */
     Window parent)		/* Window system token for the parent in which
 				 * the window is to be created. */
 {
     Container *containerPtr;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 

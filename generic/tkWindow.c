@@ -1793,7 +1793,7 @@ Tk_MakeWindowExist(
     if (createProc != NULL && parent != None) {
 	winPtr->window = createProc(tkwin, parent, winPtr->instanceData);
     } else {
-	winPtr->window = TkpMakeWindow(winPtr, parent);
+	winPtr->window = Tk_MakeWindow(tkwin, parent);
     }
 
     hPtr = Tcl_CreateHashEntry(&winPtr->dispPtr->winTable,

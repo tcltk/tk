@@ -69,6 +69,7 @@ static int TkWinGetPlatformId(void) {
 #   define TkpGetOtherWindow 0
 #   define TkpGetSystemDefault 0
 #   define TkpMakeContainer 0
+#   define TkpMakeWindow 0
 #endif
 
 static int
@@ -1354,6 +1355,7 @@ const TkStubs tkStubs = {
     Tk_MakeContainer, /* 287 */
     Tk_GetOtherWindow, /* 288 */
     Tk_Get3BorderColors, /* 289 */
+    Tk_MakeWindow, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */
