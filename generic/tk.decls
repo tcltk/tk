@@ -1068,7 +1068,7 @@ declare 272 {
 declare 273 {
     void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
-declare 280 {
+declare 290 {
     void TkUnusedStubEntry(void)
 }
 
