@@ -617,7 +617,11 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newBool = -1;
-	} else if (Tcl_GetBooleanFromObj(interp, valuePtr, &newBool) != TCL_OK) {
+	} else if (Tcl_GetBooleanFromObj(nullOK ? NULL : interp, valuePtr, &newBool) != TCL_OK) {
+	    if (nullOK && interp) {
+		Tcl_AppendResult(interp, "expected boolean value or \"\" but got \"",
+			Tcl_GetString(valuePtr), "\"", NULL);
+	    }
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -629,7 +633,14 @@ DoObjConfig(
     case TK_OPTION_INT: {
 	int newInt;
 
-	if (Tcl_GetIntFromObj(interp, valuePtr, &newInt) != TCL_OK) {
+	if (nullOK && ObjectIsEmpty(valuePtr)) {
+	    valuePtr = NULL;
+	    newInt = 0;
+	} else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
+	    if (nullOK && interp) {
+		Tcl_AppendResult(interp, "expected integer or \"\" but got \"",
+			Tcl_GetString(valuePtr), "\"", NULL);
+	    }
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -666,7 +677,11 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newDbl = 0;
 	} else {
-	    if (Tcl_GetDoubleFromObj(interp, valuePtr, &newDbl) != TCL_OK) {
+	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
+	        if (nullOK && interp) {
+	    	Tcl_AppendResult(interp, "expected floating-point number or \"\" but got \"",
+	    		Tcl_GetString(valuePtr), "\"", NULL);
+	        }
 		return TCL_ERROR;
 	    }
 	}

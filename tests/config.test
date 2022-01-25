@@ -277,7 +277,7 @@ test config-4.7 {DoObjConfig - invalid boolean} -constraints {
     testobjconfig alltypes .foo -boolean foo
 } -cleanup {
     killTables
-} -returnCodes error -result {expected boolean value but got "foo"}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test config-4.8 {DoObjConfig - boolean internal value} -constraints {
     testobjconfig
 } -setup {
