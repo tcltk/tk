@@ -75,11 +75,12 @@ static void	EmbedWindowDeleted(TkWindow *winPtr);
  */
 
 Window
-TkpMakeWindow(
-    TkWindow *winPtr,
+Tk_MakeWindow(
+    Tk_Window tkwin,
     Window parent)
 {
     MacDrawable *macWin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     (void)parent;
 
     /*

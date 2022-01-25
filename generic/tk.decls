@@ -1130,6 +1130,9 @@ declare 289 {
     void Tk_Get3BorderColors(Tk_3DBorder *borderPtr, XColor *bgColorPtr, XColor *darkColorPtr,
 	    XColor *lightColorPtr)
 }
+declare 290 {
+    Window Tk_MakeWindow(Tk_Window tkwin, Window parent)
+}
 
 
 # Define the platform specific public Tk interface.  These functions are

@@ -1212,6 +1212,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TkpGetOtherWindow
 #undef TkpGetSystemDefault
 #undef TkpMakeContainer
+#undef TkpMakeWindow
 
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION == 8)
 #   define TkSetWindowMenuBar Tk_SetWindowMenuBar
@@ -1221,6 +1222,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #   define TkpGetOtherWindow ((TkWindow *(*)(TkWindow *))(void *)Tk_GetOtherWindow)
 #   define TkpGetSystemDefault Tk_GetSystemDefault
 #   define TkpMakeContainer Tk_MakeContainer
+#   define TkpMakeWindow ((Window (*)(TkWindow *, Window))(void *)Tk_MakeWindow)
 #endif
 
 #if !defined(MAC_OSX_TK)

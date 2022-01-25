@@ -924,6 +924,8 @@ EXTERN Tk_Window	Tk_GetOtherWindow(Tk_Window winPtr);
 EXTERN void		Tk_Get3BorderColors(Tk_3DBorder *borderPtr,
 				XColor *bgColorPtr, XColor *darkColorPtr,
 				XColor *lightColorPtr);
+/* 290 */
+EXTERN Window		Tk_MakeWindow(Tk_Window tkwin, Window parent);
 
 typedef struct {
     const struct TkPlatStubs *tkPlatStubs;
@@ -1226,6 +1228,7 @@ typedef struct TkStubs {
     void (*tk_MakeContainer) (Tk_Window tkwin); /* 287 */
     Tk_Window (*tk_GetOtherWindow) (Tk_Window winPtr); /* 288 */
     void (*tk_Get3BorderColors) (Tk_3DBorder *borderPtr, XColor *bgColorPtr, XColor *darkColorPtr, XColor *lightColorPtr); /* 289 */
+    Window (*tk_MakeWindow) (Tk_Window tkwin, Window parent); /* 290 */
 } TkStubs;
 
 extern const TkStubs *tkStubsPtr;
@@ -1818,6 +1821,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_GetOtherWindow) /* 288 */
 #define Tk_Get3BorderColors \
 	(tkStubsPtr->tk_Get3BorderColors) /* 289 */
+#define Tk_MakeWindow \
+	(tkStubsPtr->tk_MakeWindow) /* 290 */
 
 #endif /* defined(USE_TK_STUBS) */
 

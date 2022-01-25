@@ -7046,7 +7046,7 @@ CreateWrapper(
 
     /*
      * The code below is copied from CreateTopLevelWindow, Tk_MakeWindowExist,
-     * and TkpMakeWindow. The idea is to create an "official" Tk window (so
+     * and Tk_MakeWindow. The idea is to create an "official" Tk window (so
      * that we can get events on it), but to hide the window outside the
      * official Tk hierarchy so that it isn't visible to the application. See
      * the comments for the other functions if you have questions about this
