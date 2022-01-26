@@ -4999,7 +4999,7 @@ WmProtocolCmd(
 			"registration failed for window \"%s\"",
 			Tk_PathName(winPtr)));
 		Tcl_SetErrorCode(interp, "TK", "WM", "PROTOCOL", "FAIL",
-			objv[3]);
+			objv[3], NULL);
 		return TCL_ERROR;
 	    }
 	}
