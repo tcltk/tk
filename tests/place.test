@@ -79,7 +79,7 @@ test place-2.3 {ConfigureContent procedure, -height option} -setup {
 
 test place-3.1 {ConfigureContent procedure, -relheight option} -body {
     place .t.f2 -relheight abcd
-} -returnCodes error -result {expected floating-point number but got "abcd"}
+} -returnCodes error -result {expected floating-point number or "" but got "abcd"}
 test place-3.2 {ConfigureContent procedure, -relheight option} -setup {
     place forget .t.f2
 } -body {
@@ -144,7 +144,7 @@ test place-4.7 {prevent management loops} -setup {
 
 test place-5.1 {ConfigureContent procedure, -relwidth option} -body {
     place .t.f2 -relwidth abcd
-} -returnCodes error -result {expected floating-point number but got "abcd"}
+} -returnCodes error -result {expected floating-point number or "" but got "abcd"}
 test place-5.2 {ConfigureContent procedure, -relwidth option} -setup {
     place forget .t.f2
 } -body {

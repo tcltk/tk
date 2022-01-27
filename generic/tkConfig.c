@@ -637,10 +637,14 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newInt = 0;
 	} else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
-	    if (nullOK && interp) {
-		Tcl_AppendResult(interp, "expected integer or \"\" but got \"",
-			Tcl_GetString(valuePtr), "\"", NULL);
-	    }
+		if (nullOK && interp) {
+		    Tcl_Obj *msg = Tcl_NewStringObj("expected integer or \"\" but got \"", -1);
+
+		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), -1, 50, "");
+		    Tcl_AppendToObj(msg, "\"", -1);
+		    Tcl_SetObjResult(interp, msg);
+		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
+		}
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -678,10 +682,14 @@ DoObjConfig(
 	    newDbl = 0;
 	} else {
 	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
-	        if (nullOK && interp) {
-	    	Tcl_AppendResult(interp, "expected floating-point number or \"\" but got \"",
-	    		Tcl_GetString(valuePtr), "\"", NULL);
-	        }
+		if (nullOK && interp) {
+		    Tcl_Obj *msg = Tcl_NewStringObj("expected floating-point number or \"\" but got \"", -1);
+
+		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), -1, 50, "");
+		    Tcl_AppendToObj(msg, "\"", -1);
+		    Tcl_SetObjResult(interp, msg);
+		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
+		}
 		return TCL_ERROR;
 	    }
 	}
