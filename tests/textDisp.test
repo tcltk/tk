@@ -123,7 +123,7 @@ if {([winfo rooty .] < 50) || ([winfo rootx .] < 50)} {
     wm geom . +50+50
 }
 
-test textDisp-0.1 {double tag elide transition} {
+test textDisp-0.1 {double tag elide transition} winCrash {
     # Example from tkchat crash.  For some reason can only
     # get this test case to crash when first.
     catch {destroy .top}
@@ -153,7 +153,7 @@ test textDisp-0.1 {double tag elide transition} {
     destroy .top
 } {}
 
-test textDisp-0.2 {double tag elide transition} {
+test textDisp-0.2 {double tag elide transition} winCrash {
     # Example from tkchat crash.  For some reason can only
     # get this test case to crash when first.
     catch {destroy .top}
@@ -183,7 +183,7 @@ test textDisp-0.2 {double tag elide transition} {
     destroy .top
 } {}
 
-test textDisp-0.3 {double tag elide transition} {
+test textDisp-0.3 {double tag elide transition} winCrash {
     catch {destroy .txt}
     pack [text .txt]
     # Note that TRAFFIC should have a higher priority than SYSTEM
@@ -195,7 +195,7 @@ test textDisp-0.3 {double tag elide transition} {
     destroy .txt
 } {}
 
-test textDisp-0.4 {double tag elide transition} {
+test textDisp-0.4 {double tag elide transition} winCrash {
     catch {destroy .txt}
     pack [text .txt]
     # Note that TRAFFIC should have a higher priority than SYSTEM
@@ -208,7 +208,7 @@ test textDisp-0.4 {double tag elide transition} {
     destroy .txt
 } {}
 
-test textDisp-0.5 {double tag elide transition} {
+test textDisp-0.5 {double tag elide transition} winCrash {
     catch {destroy .txt}
     pack [text .txt]
     .txt tag configure WELCOME -elide 1
