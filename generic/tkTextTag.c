@@ -16,6 +16,10 @@
 #include "tkText.h"
 #include "default.h"
 
+#ifdef __GNUC__
+#pragma GCC optimize ("O0")
+#endif
+
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
