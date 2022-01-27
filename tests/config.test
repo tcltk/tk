@@ -210,13 +210,13 @@ test config-3.8 {Tk_InitOptions - bad initial value} -constraints {
     testobjconfig
 } -body {
     testobjconfig configerror
-} -returnCodes error -result {expected integer but got "bogus"}
+} -returnCodes error -result {expected integer or "" but got "bogus"}
 test config-3.9 {Tk_InitOptions - bad initial value} -constraints {
     testobjconfig
 } -body {
     catch {testobjconfig configerror}
     return $errorInfo
-} -result {expected integer but got "bogus"
+} -result {expected integer or "" but got "bogus"
     (default value for "-int")
     invoked from within
 "testobjconfig configerror"}
