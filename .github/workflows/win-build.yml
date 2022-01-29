@@ -148,7 +148,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test-classic TESTFLAGS="-verbose bepst" | tee out-classic.txt
+          make test-classic TESTFLAGS="-file textDisp.test -verbose bepst" | tee out-classic.txt
           make test-ttk | tee out-ttk.txt
           grep -q "Failed	0" out-classic.txt || {
             echo "::error::Failure during Test"
