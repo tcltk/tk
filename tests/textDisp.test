@@ -208,7 +208,7 @@ test textDisp-0.4 {double tag elide transition} winCrash {
     destroy .txt
 } {}
 
-test textDisp-0.5 {double tag elide transition} winCrash {
+test textDisp-0.5 {double tag elide transition} {
     catch {destroy .txt}
     pack [text .txt]
     .txt tag configure WELCOME -elide 1
