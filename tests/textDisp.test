@@ -153,7 +153,7 @@ test textDisp-0.1 {double tag elide transition} winCrash {
     destroy .top
 } {}
 
-test textDisp-0.2 {double tag elide transition} winCrash {
+test textDisp-0.2 {double tag elide transition} {
     # Example from tkchat crash.  For some reason can only
     # get this test case to crash when first.
     catch {destroy .top}
