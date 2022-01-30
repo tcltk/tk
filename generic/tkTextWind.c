@@ -1098,6 +1098,11 @@ TkTextEmbWinDisplayProc(
     TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
 
+    if (ewPtr == NULL) {
+printf("\t HERE\n");fflush(stdout);
+	return;
+    }
+
     if (client == NULL) {
 	return;
     }
@@ -1129,6 +1134,16 @@ TkTextEmbWinDisplayProc(
 	    &lineX, &windowY, &width, &height);
     windowX = lineX - chunkPtr->x + x;
 
+    /*
+     * Mark the window as displayed so that it won't get unmapped.
+     * This needs to be done before the next instruction block because
+     * Tk_MaintainGeometry/Tk_MapWindow will run event handlers, in
+     * particular for the <Map> event, and if the bound script deletes
+     * the embedded window its clients will get freed.
+     */
+
+    client->displayed = 1;
+
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if ((windowX != Tk_X(tkwin)) || (windowY != Tk_Y(tkwin))
 		|| (Tk_ReqWidth(tkwin) != Tk_Width(tkwin))
@@ -1139,19 +1154,6 @@ TkTextEmbWinDisplayProc(
     } else {
 	Tk_MaintainGeometry(tkwin, textPtr->tkwin, windowX, windowY,
 		width, height);
-    }
-
-    /*
-     * Mark the window as displayed so that it won't get unmapped.
-     * Warning: Tk_MaintainGeometry/Tk_MapWindow may run event handlers,
-     * in particular for the <Map> event. If a bound script deletes the
-     * embedded window, then its client is gone and we would soon crash.
-     * Prevent this by getting the client again.
-     */
-
-    client = EmbWinGetClient(textPtr, ewPtr);
-    if (client != NULL) {
-	client->displayed = 1;
     }
 }
 
