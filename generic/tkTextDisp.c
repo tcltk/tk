@@ -2566,6 +2566,13 @@ DisplayDLine(
 		    display, pixmap, dlPtr->y + dlPtr->spaceAbove);
 	}
 
+	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+	    /*
+	     * A displayProc called in the loop above invoked a binding
+	     * that caused the widget to be deleted. Don't do anything.
+	     */
+	    return;
+	}
 	if (dInfoPtr->dLinesInvalidated) {
 	    return;
 	}
