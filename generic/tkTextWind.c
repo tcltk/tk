@@ -1098,11 +1098,6 @@ TkTextEmbWinDisplayProc(
     TkTextSegment *ewPtr = (TkTextSegment *)chunkPtr->clientData;
     TkTextEmbWindowClient *client = EmbWinGetClient(textPtr, ewPtr);
 
-    if (ewPtr == NULL) {
-printf("\t HERE\n");fflush(stdout);
-	return;
-    }
-
     if (client == NULL) {
 	return;
     }
