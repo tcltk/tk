@@ -663,7 +663,15 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newDbl = 0;
 	} else {
-	    if (Tcl_GetDoubleFromObj(interp, valuePtr, &newDbl) != TCL_OK) {
+	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
+		if (nullOK && interp) {
+		    Tcl_Obj *msg = Tcl_NewStringObj("expected floating-point number or \"\" but got \"", -1);
+
+		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), -1, 50, "");
+		    Tcl_AppendToObj(msg, "\"", -1);
+		    Tcl_SetObjResult(interp, msg);
+		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
+		}
 		return TCL_ERROR;
 	    }
 	}
