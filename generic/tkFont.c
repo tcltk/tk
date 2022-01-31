@@ -3671,7 +3671,8 @@ ParseFontNameObj(
 				 * default values. */
 {
     const char *dash;
-    int objc, result, i, n;
+    int result, n;
+    TkSizeT objc, i;
     Tcl_Obj **objv;
     const char *string;
 

@@ -777,7 +777,8 @@ GetStyle(
     StyleValues styleValues;
     TextStyle *stylePtr;
     Tcl_HashEntry *hPtr;
-    int numTags, isNew, i;
+    TkSizeT numTags, i;
+    int isNew;
     int isSelected;
     XGCValues gcValues;
     unsigned long mask;

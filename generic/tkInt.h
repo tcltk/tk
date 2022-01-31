@@ -838,7 +838,7 @@ typedef struct TkWindow {
     ClientData *tagPtr;		/* Points to array of tags used for bindings
 				 * on this window. Each tag is a Tk_Uid.
 				 * Malloc'ed. NULL means no tags. */
-    int numTags;		/* Number of tags at *tagPtr. */
+    TkSizeT numTags;		/* Number of tags at *tagPtr. */
 
     /*
      * Information used by tkOption.c to manage options for the window.

@@ -835,7 +835,11 @@ typedef struct Tk_FakeWin {
     XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
     ClientData *dummy10;	/* tagPtr */
+#if TCL_MAJOR_VERSION > 8
+    size_t dummy11;		/* numTags */
+#else
     int dummy11;		/* numTags */
+#endif
     int dummy12;		/* optionLevel */
     char *dummy13;		/* selHandlerList */
     char *dummy14;		/* geomMgrPtr */
