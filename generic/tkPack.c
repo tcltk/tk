@@ -1111,7 +1111,8 @@ PackAfter(
     Packer *packPtr;
     Tk_Window tkwin, ancestor, parent;
     Tcl_Obj **options;
-    int index, optionCount, c;
+    int c;
+    TkSizeT index, optionCount;
 
     /*
      * Iterate over all of the window specifiers, each consisting of two
@@ -1206,7 +1207,7 @@ PackAfter(
 	    } else if ((length == 5) && (strcmp(curOpt, "filly")) == 0) {
 		packPtr->flags |= FILLY;
 	    } else if ((c == 'p') && (strcmp(curOpt, "padx")) == 0) {
-		if (optionCount < (index+2)) {
+		if (optionCount <= (index+1)) {
 		missingPad:
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "wrong # args: \"%s\" option must be"
@@ -1224,7 +1225,7 @@ PackAfter(
 		packPtr->iPadX = 0;
 		index++;
 	    } else if ((c == 'p') && (strcmp(curOpt, "pady")) == 0) {
-		if (optionCount < (index+2)) {
+		if (optionCount <= (index+1)) {
 		    goto missingPad;
 		}
 		if (TkParsePadAmount(interp, tkwin, options[index+1],
@@ -1237,7 +1238,7 @@ PackAfter(
 		index++;
 	    } else if ((c == 'f') && (length > 1)
 		    && (strncmp(curOpt, "frame", length) == 0)) {
-		if (optionCount < (index+2)) {
+		if (optionCount <= (index+1)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "wrong # args: \"frame\""
 			    " option must be followed by anchor point", -1));

@@ -2966,7 +2966,8 @@ TextUndoRedoCallback(
 				 * shared text data structure. */
 {
     TkSharedText *sharedPtr = (TkSharedText *)clientData;
-    int res, objc;
+    int res;
+    TkSizeT objc;
     Tcl_Obj **objv;
     TkText *textPtr;
 
@@ -3131,7 +3132,7 @@ DeleteIndexRange(
     int pixels[2*PIXEL_CLIENTS];
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
-    int i;
+    TkSizeT i;
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -3177,7 +3178,7 @@ DeleteIndexRange(
     line2 = TkBTreeLinesTo(textPtr, index2.linePtr);
     if (line2 == TkBTreeNumLines(sharedTextPtr->tree, textPtr)) {
 	TkTextTag **arrayPtr;
-	int arraySize;
+	TkSizeT arraySize;
 	TkTextIndex oldIndex2;
 
 	oldIndex2 = index2;
@@ -3739,12 +3740,12 @@ TextInsertCmd(
 	if (objc > (j+1)) {
 	    Tcl_Obj **tagNamePtrs;
 	    TkTextTag **oldTagArrayPtr;
-	    int numTags;
+	    TkSizeT numTags;
 
 	    TkTextIndexForwBytes(textPtr, &index1, length, &index2);
 	    oldTagArrayPtr = TkBTreeGetTags(&index1, NULL, &numTags);
 	    if (oldTagArrayPtr != NULL) {
-		int i;
+		TkSizeT i;
 
 		for (i = 0; i < numTags; i++) {
 		    TkBTreeTag(&index1, &index2, oldTagArrayPtr[i], 0);
@@ -3755,7 +3756,7 @@ TextInsertCmd(
 		    &tagNamePtrs) != TCL_OK) {
 		return TCL_ERROR;
 	    } else {
-		int i;
+		TkSizeT i;
 
 		for (i = 0; i < numTags; i++) {
 		    const char *strTag = Tcl_GetString(tagNamePtrs[i]);
@@ -4501,7 +4502,7 @@ TkTextGetTabs(
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
-    int objc, i, count;
+    TkSizeT objc, i, count;
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;

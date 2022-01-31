@@ -2701,7 +2701,8 @@ CloneMenu(
     				 * menubar, or a tearoff? */
 {
     int returnResult;
-    int menuType, i;
+    int menuType;
+    TkSizeT i;
     TkMenuReferences *menuRefPtr;
     Tcl_Obj *menuDupCommandArray[4];
 
@@ -2741,7 +2742,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int numElements;
+	TkSizeT numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance
@@ -2812,7 +2813,7 @@ CloneMenu(
 	 * Clone all of the cascade menus that this menu points to.
 	 */
 
-	for (i = 0; i < (int)menuPtr->numEntries; i++) {
+	for (i = 0; i < menuPtr->numEntries; i++) {
 	    TkMenuReferences *cascadeRefPtr;
 	    TkMenu *oldCascadePtr;
 
