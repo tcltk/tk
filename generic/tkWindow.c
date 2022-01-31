@@ -658,7 +658,7 @@ TkAllocWindow(
     winPtr->inputContext = NULL;
     winPtr->tagPtr = NULL;
     winPtr->numTags = 0;
-    winPtr->optionLevel = -1;
+    winPtr->optionLevel = TCL_INDEX_NONE;
     winPtr->selHandlerList = NULL;
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
