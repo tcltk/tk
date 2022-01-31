@@ -1679,6 +1679,16 @@ EmbWinDisplayProc(
 	    &lineX, &windowY, &width, &height);
     windowX = lineX - chunkPtr->x + x;
 
+    /*
+     * Mark the window as displayed so that it won't get unmapped.
+     * This needs to be done before the next instruction block because
+     * Tk_MaintainGeometry/Tk_MapWindow will run event handlers, in
+     * particular for the <Map> event, and if the bound script deletes
+     * the embedded window its clients will get freed.
+     */
+
+    client->displayed = 1;
+
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if (windowX != Tk_X(tkwin)
 		|| windowY != Tk_Y(tkwin)
@@ -1705,16 +1715,6 @@ EmbWinDisplayProc(
     } else {
 	Tk_MaintainGeometry(tkwin, textPtr->tkwin, windowX, windowY, width, height);
     }
-
-    /*
-     * Mark the window as displayed so that it won't get unmapped.
-     * <TODO>: Tk_MaintainGeometry/Tk_MapWindow may run event handlers,
-     *         in particular for the <Map> event. If the bound script
-     *         deletes the embedded window or the text widget we will
-     *         soon crash.
-     */
-
-    client->displayed = 1;
 }
 
 /*
