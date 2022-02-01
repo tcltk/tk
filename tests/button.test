@@ -13,8 +13,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
-
 proc bogusTrace args {
     error "trace aborted"
 }
