@@ -2567,6 +2567,13 @@ DisplayDLine(
 		    display, pixmap, dlPtr->y + dlPtr->spaceAbove);
 	}
 
+	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+	    /*
+	     * A displayProc called in the loop above invoked a binding
+	     * that caused the widget to be deleted. Don't do anything.
+	     */
+	    return;
+	}
 	if (dInfoPtr->dLinesInvalidated) {
 	    return;
 	}
@@ -4223,7 +4230,7 @@ DisplayText(
 
     /*
      * Choose a new current item if that is needed (this could cause event
-     * handlers to be invoked, hence the preserve/release calls and the loop,
+     * handlers to be invoked, hence the refcount management and the loop,
      * since the handlers could conceivably necessitate yet another current
      * item calculation). The tkwin check is because the whole window could go
      * away in the Tcl_Release call.
@@ -4502,11 +4509,18 @@ DisplayText(
 		    LOG("tk_textRedraw", string);
 		}
 		DisplayDLine(textPtr, dlPtr, prevPtr, pixmap);
+		if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+		    /*
+		     * DisplayDLine called a displayProc which invoked a binding
+		     * that caused the widget to be deleted. Don't do anything.
+		     */
+		    goto end;
+		}
 		if (dInfoPtr->dLinesInvalidated) {
 #ifndef TK_NO_DOUBLE_BUFFERING
 		    Tk_FreePixmap(Tk_Display(textPtr->tkwin), pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
-		    return;
+		    goto end;
 		}
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
