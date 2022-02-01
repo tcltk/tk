@@ -1952,8 +1952,10 @@ GetObjectForOption(
 	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), -1);
 	    break;
 	case TK_OPTION_STRING_TABLE:
-	    objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
-		    *((int *) internalPtr)], -1);
+	    if (*((int *) internalPtr) >= 0) {
+		objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
+			*((int *) internalPtr)], -1);
+	    }
 	    break;
 	case TK_OPTION_COLOR: {
 	    XColor *colorPtr = *((XColor **)internalPtr);
