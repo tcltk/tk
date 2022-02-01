@@ -349,7 +349,8 @@ Tk_BindtagsObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr, *winPtr2;
-    TkSizeT i, length;
+    TkSizeT i;
+    int length;
     const char *p;
     Tcl_Obj *listPtr, **tags;
 
@@ -400,7 +401,7 @@ Tk_BindtagsObjCmd(
 
     winPtr->numTags = length;
     winPtr->tagPtr = (void **)ckalloc(length * sizeof(void *));
-    for (i = 0; i < length; i++) {
+    for (i = 0; i < (TkSizeT)length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
 	    char *copy;
