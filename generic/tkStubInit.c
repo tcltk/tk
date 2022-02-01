@@ -1354,7 +1354,7 @@ const TkStubs tkStubs = {
     Tk_UseWindow, /* 286 */
     Tk_MakeContainer, /* 287 */
     Tk_GetOtherWindow, /* 288 */
-    Tk_Get3BorderColors, /* 289 */
+    Tk_Get3DBorderColors, /* 289 */
     Tk_MakeWindow, /* 290 */
 };
 

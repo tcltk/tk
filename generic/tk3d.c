@@ -1405,20 +1405,20 @@ TkDebugBorder(
  */
 
 void
-Tk_Get3BorderColors(
-    Tk_3DBorder * borderPtr,
-    XColor * bgColorPtr,
-    XColor * darkColorPtr,
-    XColor * lightColorPtr)
+Tk_Get3DBorderColors(
+    Tk_3DBorder border,
+    XColor *bgColorPtr,
+    XColor *darkColorPtr,
+    XColor *lightColorPtr)
 {
     if (bgColorPtr) {
-	*bgColorPtr = *((TkBorder *)borderPtr)->bgColorPtr;
+	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
     }
     if (darkColorPtr) {
-	*darkColorPtr = *((TkBorder *) borderPtr)->darkColorPtr;
+	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
     }
     if (lightColorPtr) {
-	*lightColorPtr = *((TkBorder *) borderPtr)->lightColorPtr;
+	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
     }
 }
 
