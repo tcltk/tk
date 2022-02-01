@@ -269,7 +269,7 @@ TkBindEventProc(
 #define MAX_OBJS 20
     ClientData objects[MAX_OBJS], *objPtr;
     TkWindow *topLevPtr;
-    int i, count;
+    TkSizeT i, count;
     const char *p;
     Tcl_HashEntry *hPtr;
 
@@ -349,7 +349,7 @@ Tk_BindtagsObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr, *winPtr2;
-    int i, length;
+    TkSizeT i, length;
     const char *p;
     Tcl_Obj *listPtr, **tags;
 
@@ -444,7 +444,7 @@ void
 TkFreeBindingTags(
     TkWindow *winPtr)		/* Window whose tags are to be released. */
 {
-    int i;
+    TkSizeT i;
     const char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
