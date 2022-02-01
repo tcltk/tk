@@ -1927,6 +1927,10 @@ GetObjectForOption(
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
 	case TK_OPTION_BOOLEAN:
+	    if (*((int *) internalPtr) < 0) {
+		break;
+	    }
+	    /* FALLTHRU */
 	case TK_OPTION_INT:
 	    objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    break;
