@@ -799,7 +799,7 @@ TestobjconfigObjCmd(
 	ErrorWidgetRecord widgetRecord;
 	static const Tk_OptionSpec errorSpecs[] = {
 	    {TK_OPTION_INT, "-int", "integer", "Integer", "bogus",
-		offsetof(ErrorWidgetRecord, intPtr), 0, 0, NULL, 0},
+		offsetof(ErrorWidgetRecord, intPtr), 0, TK_OPTION_NULL_OK, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;

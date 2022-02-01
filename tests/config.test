@@ -11,9 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
-
-
 proc killTables {} {
     # Note: it's important to delete chain2 before chain1, because
     # chain2 depends on chain1.  If chain1 is deleted first, the
@@ -213,13 +210,13 @@ test config-3.8 {Tk_InitOptions - bad initial value} -constraints {
     testobjconfig
 } -body {
     testobjconfig configerror
-} -returnCodes error -result {expected integer but got "bogus"}
+} -returnCodes error -result {expected integer or "" but got "bogus"}
 test config-3.9 {Tk_InitOptions - bad initial value} -constraints {
     testobjconfig
 } -body {
     catch {testobjconfig configerror}
     return $errorInfo
-} -result {expected integer but got "bogus"
+} -result {expected integer or "" but got "bogus"
     (default value for "-int")
     invoked from within
 "testobjconfig configerror"}
@@ -280,7 +277,7 @@ test config-4.7 {DoObjConfig - invalid boolean} -constraints {
     testobjconfig alltypes .foo -boolean foo
 } -cleanup {
     killTables
-} -returnCodes error -result {expected boolean value but got "foo"}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test config-4.8 {DoObjConfig - boolean internal value} -constraints {
     testobjconfig
 } -setup {
