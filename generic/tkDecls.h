@@ -919,9 +919,9 @@ EXTERN int		Tk_UseWindow(Tcl_Interp *interp, Tk_Window tkwin,
 /* 287 */
 EXTERN void		Tk_MakeContainer(Tk_Window tkwin);
 /* 288 */
-EXTERN Tk_Window	Tk_GetOtherWindow(Tk_Window winPtr);
+EXTERN Tk_Window	Tk_GetOtherWindow(Tk_Window tkwin);
 /* 289 */
-EXTERN void		Tk_Get3BorderColors(Tk_3DBorder *borderPtr,
+EXTERN void		Tk_Get3DBorderColors(Tk_3DBorder border,
 				XColor *bgColorPtr, XColor *darkColorPtr,
 				XColor *lightColorPtr);
 /* 290 */
@@ -1226,8 +1226,8 @@ typedef struct TkStubs {
     Tcl_Obj * (*tk_GetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 285 */
     int (*tk_UseWindow) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 286 */
     void (*tk_MakeContainer) (Tk_Window tkwin); /* 287 */
-    Tk_Window (*tk_GetOtherWindow) (Tk_Window winPtr); /* 288 */
-    void (*tk_Get3BorderColors) (Tk_3DBorder *borderPtr, XColor *bgColorPtr, XColor *darkColorPtr, XColor *lightColorPtr); /* 289 */
+    Tk_Window (*tk_GetOtherWindow) (Tk_Window tkwin); /* 288 */
+    void (*tk_Get3DBorderColors) (Tk_3DBorder border, XColor *bgColorPtr, XColor *darkColorPtr, XColor *lightColorPtr); /* 289 */
     Window (*tk_MakeWindow) (Tk_Window tkwin, Window parent); /* 290 */
 } TkStubs;
 
@@ -1819,8 +1819,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_MakeContainer) /* 287 */
 #define Tk_GetOtherWindow \
 	(tkStubsPtr->tk_GetOtherWindow) /* 288 */
-#define Tk_Get3BorderColors \
-	(tkStubsPtr->tk_Get3BorderColors) /* 289 */
+#define Tk_Get3DBorderColors \
+	(tkStubsPtr->tk_Get3DBorderColors) /* 289 */
 #define Tk_MakeWindow \
 	(tkStubsPtr->tk_MakeWindow) /* 290 */
 

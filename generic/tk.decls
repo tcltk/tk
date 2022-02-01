@@ -1124,10 +1124,10 @@ declare 287 {
     void Tk_MakeContainer(Tk_Window tkwin)
 }
 declare 288 {
-    Tk_Window Tk_GetOtherWindow(Tk_Window winPtr)
+    Tk_Window Tk_GetOtherWindow(Tk_Window tkwin)
 }
 declare 289 {
-    void Tk_Get3BorderColors(Tk_3DBorder *borderPtr, XColor *bgColorPtr, XColor *darkColorPtr,
+    void Tk_Get3DBorderColors(Tk_3DBorder border, XColor *bgColorPtr, XColor *darkColorPtr,
 	    XColor *lightColorPtr)
 }
 declare 290 {

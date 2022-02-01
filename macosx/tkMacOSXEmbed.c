@@ -644,7 +644,7 @@ TkpRedirectKeyEvent(
  *	this procedure will return either one, given the other.
  *
  * Results:
- *	If winPtr is a container, the return value is the token for the
+ *	If tkwin is a container, the return value is the token for the
  *	embedded window, and vice versa. If the "other" window isn't in this
  *	process, NULL is returned.
  *
@@ -656,7 +656,7 @@ TkpRedirectKeyEvent(
 
 Tk_Window
 Tk_GetOtherWindow(
-    Tk_Window winPtr)		/* Tk's structure for a container or embedded
+    Tk_Window tkwin)		/* Tk's structure for a container or embedded
 				 * window. */
 {
     Container *containerPtr;
@@ -666,15 +666,15 @@ Tk_GetOtherWindow(
      * process...
      */
 
-    if (!(((TkWindow *)winPtr)->flags & TK_BOTH_HALVES)) {
+    if (!(((TkWindow *)tkwin)->flags & TK_BOTH_HALVES)) {
 	return NULL;
     }
 
     for (containerPtr = firstContainerPtr; containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
-	if ((Tk_Window)containerPtr->embeddedPtr == winPtr) {
+	if ((Tk_Window)containerPtr->embeddedPtr == tkwin) {
 	    return (Tk_Window)containerPtr->parentPtr;
-	} else if ((Tk_Window)containerPtr->parentPtr == winPtr) {
+	} else if ((Tk_Window)containerPtr->parentPtr == tkwin) {
 	    return (Tk_Window)containerPtr->embeddedPtr;
 	}
     }
