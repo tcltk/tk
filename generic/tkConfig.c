@@ -679,13 +679,12 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-#if (TCL_MAJOR_VERSION > 8 || defined(TK_NO_DEPRECATED)) && defined(NAN)
+#if defined(NAN)
 	    if (optionPtr->specPtr->flags & TK_OPTION_NULL_OK) {
 		newDbl = NAN;
 	    } else
-#else
-	    newDbl = 0.0;
 #endif
+	    newDbl = 0.0;
 	} else {
 	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
 		if (nullOK && interp) {
