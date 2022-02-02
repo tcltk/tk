@@ -358,8 +358,9 @@ typedef struct TkTextTag {
 				 * baseline of line. Used for superscripts and
 				 * subscripts. Only valid if offsetString is
 				 * non-NULL. */
-    Tcl_Obj *overstrikeObj;	/* -overstrike option string (malloc-ed). NULL
-				 * means option not specified. */
+#if TCL_MAJOR_VERSION < 9
+    char *overstrikeString;	/* (not used any more) */
+#endif
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
@@ -396,8 +397,9 @@ typedef struct TkTextTag {
 				 * NULL. Corresponds to tabString. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-    Tcl_Obj *underlineObj;	/* -underline option. NULL
-				 * means option not specified. */
+#if TCL_MAJOR_VERSION < 9
+    char *underlineString;	/* (not used any more) */
+#endif
     int underline;		/* > 0 means draw underline underneath
 				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
@@ -407,8 +409,9 @@ typedef struct TkTextTag {
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
 				 * TEXT_WRAPMODE_NULL to use wrapmode for
 				 * whole widget. */
-    Tcl_Obj *elideObj;		/* -elide option. NULL
-				 * means option not specified. */
+#if TCL_MAJOR_VERSION < 9
+    char *elideString;		/* (not used any more) */
+#endif
     int elide;			/* > 0 means that data under this tag
 				 * should not be displayed. -1 means not specified. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
