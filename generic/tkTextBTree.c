@@ -3616,7 +3616,7 @@ TkTextIsElided(
 		    summaryPtr = summaryPtr->nextPtr) {
 		if (summaryPtr->toggleCount & 1) {
 		    tagPtr = summaryPtr->tagPtr;
-		    if (tagPtr->elideObj != NULL) {
+		    if (tagPtr->elide >= 0) {
 			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 			infoPtr->tagCnts[tagPtr->priority] +=
 				summaryPtr->toggleCount;
