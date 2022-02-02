@@ -383,7 +383,7 @@ option type.  See the section \fBCUSTOM OPTION TYPES\fR below for details.
 The string value must be a floating-point number in
 the format accepted by \fBstrtol\fR.  The internal form is a C
 \fBdouble\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
-flag; if a NULL value is set, the internal representation is set to zero.
+flag; if a NULL value is set, the internal representation is set to NaN.
 .TP
 \fBTK_OPTION_END\fR
 Marks the end of the template.  There must be a Tk_OptionSpec structure
@@ -406,7 +406,7 @@ The string value must be an integer in the format accepted by
 \fBstrtol\fR (e.g. \fB0\fR and \fB0x\fR prefixes may be used to
 specify octal or hexadecimal numbers, respectively).  The internal
 form is a C \fBint\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
-flag; if a NULL value is set, the internal representation is set to 0.0.
+flag; if a NULL value is set, the internal representation is set to INT_MIN.
 .TP
 \fBTK_OPTION_JUSTIFY\fR
 The value must be a standard justification value such as \fBleft\fR.
@@ -423,7 +423,7 @@ distance in pixels, like the values returned by
 used then information about the original value of this option will be lost.
 See \fBOBJOFFSET VS. INTERNALOFFSET\fR below for details.  This option
 type supports the \fBTK_OPTION_NULL_OK\fR flag; if a NULL value is set, the
-internal representation is set to zero.
+internal representation is set to INT_MIN.
 .TP
 \fBTK_OPTION_RELIEF\fR
 The value must be standard relief such as \fBraised\fR.

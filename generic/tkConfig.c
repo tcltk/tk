@@ -635,7 +635,7 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newInt = 0;
+	    newInt = INT_MIN;
 	} else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
 		if (nullOK && interp) {
 		    Tcl_Obj *msg = Tcl_NewStringObj("expected integer or \"\" but got \"", -1);
@@ -679,7 +679,13 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newDbl = 0;
+#if (TCL_MAJOR_VERSION > 8 || defined(TK_NO_DEPRECATED)) && defined(NAN)
+	    if (optionPtr->specPtr->flags & TK_OPTION_NULL_OK) {
+		newDbl = NAN;
+	    } else
+#else
+	    newDbl = 0.0;
+#endif
 	} else {
 	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
 		if (nullOK && interp) {
@@ -902,7 +908,7 @@ DoObjConfig(
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
-	    newPixels = 0;
+	    newPixels = INT_MIN;
 	} else if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
 		&newPixels) != TCL_OK) {
 	    return TCL_ERROR;
@@ -1927,12 +1933,14 @@ GetObjectForOption(
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
 	case TK_OPTION_BOOLEAN:
-	    if (*((int *) internalPtr) < 0) {
-		break;
+	    if (*((int *) internalPtr) != -1) {
+		objPtr = Tcl_NewBooleanObj(*((int *)internalPtr));
 	    }
-	    /* FALLTHRU */
+	    break;
 	case TK_OPTION_INT:
-	    objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) && *((int *) internalPtr) != INT_MIN) {
+		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
+	    }
 	    break;
 	case TK_OPTION_INDEX:
 	    if (*((int *) internalPtr) == INT_MIN) {
@@ -1950,7 +1958,9 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) && !TkIsNaN(*((double *) internalPtr))) {
+		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
+	    }
 	    break;
 	case TK_OPTION_STRING:
 	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), -1);
@@ -2023,7 +2033,9 @@ GetObjectForOption(
 		    *((Tk_Anchor *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_PIXELS:
-	    objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) && *((int *) internalPtr) != INT_MIN) {
+		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
+	    }
 	    break;
 	case TK_OPTION_WINDOW: {
 	    tkwin = *((Tk_Window *) internalPtr);
