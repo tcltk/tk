@@ -24,8 +24,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
 	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
-    {TK_OPTION_STRING, "-elide", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elideString),
+    {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
+	NULL, offsetof(TkTextTag, elideObj), offsetof(TkTextTag, elide),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BITMAP, "-fgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, fgStipple), TK_OPTION_NULL_OK, 0, 0},
@@ -43,8 +43,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-offset", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-overstrike", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeString),
+    {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
+	NULL, offsetof(TkTextTag, overstrikeObj), offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor),
@@ -70,8 +70,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle),
 	TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
-    {TK_OPTION_STRING, "-underline", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineString),
+    {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
+	NULL, offsetof(TkTextTag, underlineObj), offsetof(TkTextTag, underline),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor),
@@ -161,7 +161,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
-	if (tagPtr->elide) {
+	if (tagPtr->elide > 0) {
 		/*
 		* Indices are potentially obsolete after adding or removing
 		* elided character ranges, especially indices having "display"
@@ -397,8 +397,8 @@ TkTextTagCmd(
 		    return TCL_ERROR;
 		}
 	    }
-	    if (tagPtr->overstrikeString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->overstrikeString,
+	    if (tagPtr->overstrikeObj != NULL) {
+		if (Tcl_GetBoolean(interp, Tcl_GetString(tagPtr->overstrikeObj),
 			&tagPtr->overstrike) != TCL_OK) {
 		    return TCL_ERROR;
 		}
@@ -447,14 +447,14 @@ TkTextTagCmd(
 		    return TCL_ERROR;
 		}
 	    }
-	    if (tagPtr->underlineString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->underlineString,
+	    if (tagPtr->underlineObj != NULL) {
+		if (Tcl_GetBoolean(interp, Tcl_GetString(tagPtr->underlineObj),
 			&tagPtr->underline) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 	    }
-	    if (tagPtr->elideString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->elideString,
+	    if (tagPtr->elide >= 0) {
+		if (Tcl_GetBoolean(interp, Tcl_GetString(tagPtr->elideObj),
 			&tagPtr->elide) != TCL_OK) {
 		    return TCL_ERROR;
 		}
@@ -493,7 +493,7 @@ TkTextTagCmd(
 
 	    tagPtr->affectsDisplay = 0;
 	    tagPtr->affectsDisplayGeometry = 0;
-	    if ((tagPtr->elideString != NULL)
+	    if ((tagPtr->elide >= 0)
 		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justifyString != NULL)
 		    || (tagPtr->lMargin1String != NULL)
@@ -519,9 +519,9 @@ TkTextTagCmd(
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
-		    || (tagPtr->overstrikeString != NULL)
+		    || (tagPtr->overstrike >= 0)
                     || (tagPtr->overstrikeColor != NULL)
-		    || (tagPtr->underlineString != NULL)
+		    || (tagPtr->underline >= 0)
                     || (tagPtr->underlineColor != NULL)
                     || (tagPtr->lMarginColor != NULL)
                     || (tagPtr->rMarginColor != NULL)) {
@@ -1024,8 +1024,8 @@ TkTextCreateTag(
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetString = NULL;
     tagPtr->offset = 0;
-    tagPtr->overstrikeString = NULL;
-    tagPtr->overstrike = 0;
+    tagPtr->overstrikeObj = NULL;
+    tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
     tagPtr->rMargin = 0;
@@ -1041,11 +1041,11 @@ TkTextCreateTag(
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
-    tagPtr->underlineString = NULL;
-    tagPtr->underline = 0;
+    tagPtr->underlineObj = NULL;
+    tagPtr->underline = -1;
     tagPtr->underlineColor = NULL;
-    tagPtr->elideString = NULL;
-    tagPtr->elide = 0;
+    tagPtr->elideObj = NULL;
+    tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
