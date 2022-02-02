@@ -1938,7 +1938,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_INT:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) && *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
@@ -1958,7 +1958,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) && !TkIsNaN(*((double *) internalPtr))) {
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || !TkIsNaN(*((double *) internalPtr))) {
 		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
 	    }
 	    break;
@@ -2033,7 +2033,7 @@ GetObjectForOption(
 		    *((Tk_Anchor *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_PIXELS:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) && *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
