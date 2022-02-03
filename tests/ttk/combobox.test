@@ -63,7 +63,7 @@ test combobox-2.7 {current -- set to 0 index when empty [bug 924835c36d]} -body 
 test combobox-2.8 "current -- set to end index in an empty combobox" -body {
     .cb configure -values {}
     .cb current end
-} -returnCodes error -result {Index end out of range}
+} -returnCodes error -result {Index "end" out of range}
 
 test combobox-2.end "Cleanup" -body { destroy .cb }
 
