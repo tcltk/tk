@@ -1851,7 +1851,7 @@ static int ComboboxCurrentCommand(
 	        /* "end" index */
 		if (nValues <= 0) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "Index \"end\" out of range"));
+			    "index \"end\" out of range"));
 		    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
 		    return TCL_ERROR;
 		}
