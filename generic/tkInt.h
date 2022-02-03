@@ -937,6 +937,9 @@ MODULE_SCOPE const char *const tkJustifyStrings[];
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
 #ifdef _WIN32
+#   ifndef XMaxTransChars
+#	define XMaxTransChars 7
+#   endif
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;
