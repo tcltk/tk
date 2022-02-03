@@ -1849,10 +1849,20 @@ static int ComboboxCurrentCommand(
 	    switch (index) {
 	    case INDEX_END:
 	        /* "end" index */
+		if (nValues <= 0) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "index \"end\" out of range"));
+		    Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
+		    return TCL_ERROR;
+		}
                 currentIndex = nValues - 1;
                 break;
+ 	    default:
+		Tcl_Panic("Unknown named index");
+		return TCL_ERROR;
 	    }
-        } else {
+ 
+	} else {
 
             /*
              * The index should be just an integer.
