@@ -1445,7 +1445,7 @@ GetTranslatedKey(
 
     xkey->nbytes = 0;
 
-    while ((xkey->nbytes < XMaxTransChars)
+    while ((xkey->nbytes < sizeof(xkey->trans_chars))
 	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
 	if (msg.message != type) {
 	    break;
