@@ -175,11 +175,17 @@ Tk_MainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
+    int i=0;			/* argv[i] index */
     Tcl_Obj *path, *argvPtr, *appName;
     const char *encodingName;
     int code, nullStdin = 0;
     Tcl_Channel chan;
     InteractiveState is;
+
+    if (0 < argc) {
+	--argc;			/* "consume" argv[0] */
+	++i;
+    }
 
     /*
      * Ensure that we are getting a compatible version of Tcl.
@@ -256,23 +262,25 @@ Tk_MainEx(
 	 *  -file FILENAME		(ancient history support only)
 	 */
 
-	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
+	/* mind argc is being adjusted as we proceed */
+	if ((argc >= 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
 		&& (TEXT('-') != argv[3][0])) {
 	    Tcl_Obj *value = NewNativeObj(argv[2]);
-	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
+	    Tcl_SetStartupScript(NewNativeObj(argv[3]),
+		    Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
-	    argv += 3;
-	} else if ((argc > 1) && (TEXT('-') != argv[1][0])) {
+	    i += 3;
+	} else if ((argc >= 1) && (TEXT('-') != argv[1][0])) {
 	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
-	    argv++;
-	} else if ((argc > 2) && (length = _tcslen(argv[1]))
+	    i++;
+	} else if ((argc >= 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
 		&& (TEXT('-') != argv[2][0])) {
 	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
 	    argc -= 2;
-	    argv += 2;
+	    i += 2;
 	}
     }
 
@@ -283,14 +291,12 @@ Tk_MainEx(
 	appName = path;
     }
     Tcl_SetVar2Ex(interp, "argv0", NULL, appName, TCL_GLOBAL_ONLY);
-    argc--;
-    argv++;
 
     Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
-	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(*argv++));
+	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(argv[i++]));
     }
     Tcl_SetVar2Ex(interp, "argv", NULL, argvPtr, TCL_GLOBAL_ONLY);
 
@@ -409,7 +415,7 @@ Tk_MainEx(
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
-    TCL_UNUSED(int))
+    TCL_UNUSED(int) /*mask*/)
 {
     char *cmd;
     int code;
@@ -426,7 +432,7 @@ StdinProc(
     Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
     Tcl_DStringFree(&savedEncoding);
 
-    if ((length < 0) && isPtr->prompt == PROMPT_START) {
+    if ((length < 0) && (isPtr->prompt == PROMPT_START)) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
