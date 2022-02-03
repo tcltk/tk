@@ -72,7 +72,7 @@ NewNativeObj(
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
-    Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
+    Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
 #endif
     obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
@@ -118,7 +118,13 @@ static int WinIsTty(int fd) {
 extern int		isatty(int fd);
 #endif
 
-typedef struct InteractiveState {
+typedef enum {
+    PROMPT_NONE,		/* Print no prompt */
+    PROMPT_START,		/* Print prompt for command start */
+    PROMPT_CONTINUE		/* Print prompt for command continuation */
+} PromptType;
+
+typedef struct {
     Tcl_Channel input;		/* The standard input channel from which lines
 				 * are read. */
     int tty;			/* Non-zero means standard input is a
@@ -128,7 +134,7 @@ typedef struct InteractiveState {
 				 * into Tcl commands. */
     Tcl_DString line;		/* Used to read the next line from the
 				 * terminal input. */
-    int gotPartial;
+    PromptType prompt;		/* Next prompt to print */
     Tcl_Interp *interp;		/* Interpreter that evaluates interactive
 				 * commands. */
 } InteractiveState;
@@ -215,7 +221,7 @@ Tk_MainEx(
     Tcl_InitMemory(interp);
 
     is.interp = interp;
-    is.gotPartial = 0;
+    is.prompt = PROMPT_START;
     Tcl_Preserve(interp);
 
 #if defined(_WIN32)
@@ -407,7 +413,7 @@ StdinProc(
 {
     char *cmd;
     int code;
-    TkSizeT count;
+    int length;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
@@ -416,11 +422,11 @@ StdinProc(
     Tcl_DStringInit(&savedEncoding);
     Tcl_GetChannelOption(NULL, chan, "-encoding", &savedEncoding);
     Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
-    count = Tcl_Gets(chan, &isPtr->line);
+    length = Tcl_Gets(chan, &isPtr->line);
     Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
     Tcl_DStringFree(&savedEncoding);
 
-    if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
+    if ((length < 0) && isPtr->prompt == PROMPT_START) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
@@ -433,10 +439,10 @@ StdinProc(
     cmd = Tcl_DStringAppend(&isPtr->command, "\n", -1);
     Tcl_DStringFree(&isPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
-	isPtr->gotPartial = 1;
+	isPtr->prompt = PROMPT_CONTINUE;
 	goto prompt;
     }
-    isPtr->gotPartial = 0;
+    isPtr->prompt = PROMPT_START;
 
     /*
      * Disable the stdin channel handler while evaluating the command;
@@ -494,17 +500,27 @@ StdinProc(
 static void
 Prompt(
     Tcl_Interp *interp,		/* Interpreter to use for prompting. */
-    InteractiveState *isPtr) /* InteractiveState. */
+    InteractiveState *isPtr)	/* InteractiveState. Filled with PROMPT_NONE
+				 * after a prompt is printed. */
 {
     Tcl_Obj *promptCmdPtr;
     int code;
     Tcl_Channel chan;
 
+    if (isPtr->prompt == PROMPT_NONE) {
+	return;
+    }
+
     promptCmdPtr = Tcl_GetVar2Ex(interp,
-	isPtr->gotPartial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
+	    (isPtr->prompt==PROMPT_CONTINUE ? "tcl_prompt2" : "tcl_prompt1"),
+	    NULL, TCL_GLOBAL_ONLY);
+
+    if (Tcl_InterpDeleted(interp)) {
+	return;
+    }
     if (promptCmdPtr == NULL) {
     defaultPrompt:
-	if (!isPtr->gotPartial) {
+	if (isPtr->prompt == PROMPT_START) {
 	    chan = Tcl_GetStdChannel(TCL_STDOUT);
 	    if (chan != NULL) {
 		Tcl_WriteChars(chan, DEFAULT_PRIMARY_PROMPT,
@@ -531,6 +547,7 @@ Prompt(
     if (chan != NULL) {
 	Tcl_Flush(chan);
     }
+    isPtr->prompt = PROMPT_NONE;
 }
 
 /*
