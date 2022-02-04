@@ -118,12 +118,6 @@ static int WinIsTty(int fd) {
 extern int		isatty(int fd);
 #endif
 
-typedef enum {
-    PROMPT_NONE,		/* Print no prompt */
-    PROMPT_START,		/* Print prompt for command start */
-    PROMPT_CONTINUE		/* Print prompt for command continuation */
-} PromptType;
-
 typedef struct {
     Tcl_Channel input;		/* The standard input channel from which lines
 				 * are read. */
@@ -134,7 +128,7 @@ typedef struct {
 				 * into Tcl commands. */
     Tcl_DString line;		/* Used to read the next line from the
 				 * terminal input. */
-    PromptType prompt;		/* Next prompt to print */
+    int gotPartial;
     Tcl_Interp *interp;		/* Interpreter that evaluates interactive
 				 * commands. */
 } InteractiveState;
@@ -227,7 +221,7 @@ Tk_MainEx(
     Tcl_InitMemory(interp);
 
     is.interp = interp;
-    is.prompt = PROMPT_START;
+    is.gotPartial = 0;
     Tcl_Preserve(interp);
 
 #if defined(_WIN32)
@@ -432,7 +426,7 @@ StdinProc(
     Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
     Tcl_DStringFree(&savedEncoding);
 
-    if ((length < 0) && (isPtr->prompt == PROMPT_START)) {
+    if ((length < 0) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
@@ -445,10 +439,10 @@ StdinProc(
     cmd = Tcl_DStringAppend(&isPtr->command, "\n", -1);
     Tcl_DStringFree(&isPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
-	isPtr->prompt = PROMPT_CONTINUE;
+	isPtr->gotPartial = 1;
 	goto prompt;
     }
-    isPtr->prompt = PROMPT_START;
+    isPtr->gotPartial = 0;
 
     /*
      * Disable the stdin channel handler while evaluating the command;
@@ -506,27 +500,17 @@ StdinProc(
 static void
 Prompt(
     Tcl_Interp *interp,		/* Interpreter to use for prompting. */
-    InteractiveState *isPtr)	/* InteractiveState. Filled with PROMPT_NONE
-				 * after a prompt is printed. */
+    InteractiveState *isPtr) /* InteractiveState. */
 {
     Tcl_Obj *promptCmdPtr;
     int code;
     Tcl_Channel chan;
 
-    if (isPtr->prompt == PROMPT_NONE) {
-	return;
-    }
-
     promptCmdPtr = Tcl_GetVar2Ex(interp,
-	    (isPtr->prompt==PROMPT_CONTINUE ? "tcl_prompt2" : "tcl_prompt1"),
-	    NULL, TCL_GLOBAL_ONLY);
-
-    if (Tcl_InterpDeleted(interp)) {
-	return;
-    }
+	isPtr->gotPartial ? "tcl_prompt2" : "tcl_prompt1", NULL, TCL_GLOBAL_ONLY);
     if (promptCmdPtr == NULL) {
     defaultPrompt:
-	if (isPtr->prompt == PROMPT_START) {
+	if (!isPtr->gotPartial) {
 	    chan = Tcl_GetStdChannel(TCL_STDOUT);
 	    if (chan != NULL) {
 		Tcl_WriteChars(chan, DEFAULT_PRIMARY_PROMPT,
@@ -553,7 +537,6 @@ Prompt(
     if (chan != NULL) {
 	Tcl_Flush(chan);
     }
-    isPtr->prompt = PROMPT_NONE;
 }
 
 /*
