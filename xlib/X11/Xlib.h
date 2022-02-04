@@ -586,8 +586,6 @@ typedef struct _XDisplay {
 #endif
 #ifndef _XEVENT_
 
-#define XMaxTransChars 7
-
 /*
  * Definitions of specific events.
  */
@@ -1720,7 +1718,8 @@ EXTERN XHostAddress *XListHosts(
     int*		/* nhosts_return */,
     Bool*		/* state_return */
 );
-EXTERN _X_DEPRECATED KeySym XKeycodeToKeysym(
+_X_DEPRECATED
+EXTERN KeySym XKeycodeToKeysym(
     Display*		/* display */,
 #if NeedWidePrototypes
     unsigned int	/* keycode */,
