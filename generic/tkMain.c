@@ -258,20 +258,20 @@ Tk_MainEx(
 
 	/* mind argc is being adjusted as we proceed */
 	if ((argc >= 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
-		&& (TEXT('-') != argv[3][0])) {
+		&& ('-' != argv[3][0])) {
 	    Tcl_Obj *value = NewNativeObj(argv[2]);
 	    Tcl_SetStartupScript(NewNativeObj(argv[3]),
 		    Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
 	    i += 3;
-	} else if ((argc >= 1) && (TEXT('-') != argv[1][0])) {
+	} else if ((argc >= 1) && ('-' != argv[1][0])) {
 	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
 	    i++;
 	} else if ((argc >= 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
-		&& (TEXT('-') != argv[2][0])) {
+		&& ('-' != argv[2][0])) {
 	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
 	    argc -= 2;
 	    i += 2;
