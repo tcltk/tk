@@ -1152,7 +1152,9 @@ TkWmDeadWindow(
 	}
 	[deadNSWindow close];
 	[deadNSWindow release];
-	[NSApp _resetAutoreleasePool];
+	#if 0
+        [NSApp _resetAutoreleasePool];
+	#endif
 
 #if DEBUG_ZOMBIES > 1
 	fprintf(stderr, "================= Pool dump ===================\n");
