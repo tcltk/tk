@@ -18,7 +18,6 @@
 static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
 static const int DEFAULT_INDENT 	= 20;
 static const int HALO   		= 4;	/* heading separator */
-static const int COLUMN_SEPARATOR       = 1;    /* column separator width */
 
 #define TTK_STATE_OPEN TTK_STATE_USER1
 #define TTK_STATE_LEAF TTK_STATE_USER2
@@ -280,6 +279,7 @@ typedef struct {
     int 	width;		/* Column width, in pixels */
     int 	minWidth;	/* Minimum column width, in pixels */
     int 	stretch;	/* Should column stretch while resizing? */
+    int         separator;      /* Should this column have a separator? */
     Tcl_Obj	*idObj;		/* Column identifier, from -columns option */
 
     Tcl_Obj	*anchorObj;	/* -anchor for cell data <<NOTE-ANCHOR>> */
@@ -305,6 +305,7 @@ static void InitColumn(TreeColumn *column)
     column->width = 200;
     column->minWidth = 20;
     column->stretch = 1;
+    column->separator = 0;
     column->idObj = 0;
     column->anchorObj = 0;
 
@@ -339,6 +340,9 @@ static const Tk_OptionSpec ColumnOptionSpecs[] = {
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-minwidth", "minWidth", "MinWidth",
 	DEF_MINWIDTH, TCL_INDEX_NONE, offsetof(TreeColumn,minWidth),
+	0,0,0 },
+    {TK_OPTION_BOOLEAN, "-separator", "separator", "Separator",
+	"0", TCL_INDEX_NONE, offsetof(TreeColumn,separator),
 	0,0,0 },
     {TK_OPTION_BOOLEAN, "-stretch", "stretch", "Stretch",
 	"1", TCL_INDEX_NONE, offsetof(TreeColumn,stretch),
@@ -378,12 +382,11 @@ static const Tk_OptionSpec HeadingOptionSpecs[] = {
 
 #define SHOW_TREE 	(0x1) 	/* Show tree column? */
 #define SHOW_HEADINGS	(0x2)	/* Show heading row? */
-#define SHOW_SEPARATORS	(0x4)	/* Show vertical separators? */
 
 #define DEFAULT_SHOW	"tree headings"
 
 static const char *const showStrings[] = {
-    "tree", "headings", "columnseparators", NULL
+    "tree", "headings", NULL
 };
 
 static int GetEnumSetFromObj(
@@ -442,6 +445,7 @@ typedef struct {
 
     int headingHeight;		/* Space for headings */
     int rowHeight;		/* Height of each item */
+    int colSeparatorWidth;	/* Width of column separator, if used */
     int indent;			/* #pixels horizontal offset for child items */
 
     /* Tree data:
@@ -1270,6 +1274,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
 	= tv->tree.separatorLayout
 	= 0;
     tv->tree.headingHeight = tv->tree.rowHeight = 0;
+    tv->tree.colSeparatorWidth = 1;
     tv->tree.indent = DEFAULT_INDENT;
 
     Tcl_InitHashTable(&tv->tree.columnNames, TCL_STRING_KEYS);
@@ -1911,6 +1916,9 @@ static Ttk_Layout TreeviewGetLayout(
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
     }
+    if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
+	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.colSeparatorWidth);
+    }
 
     /* Get item indent from style:
      * @@@ TODO: sanity-check.
@@ -2058,12 +2066,16 @@ static void DrawSeparators(Treeview *tv, Drawable d)
 	Ttk_Box parcel;
 	int xDraw = x + column->width;
 	x += column->width;
+
+	if (!column->separator) continue;
+
 	if (i >= tv->tree.nTitleColumns) {
 	    xDraw -= tv->tree.xscroll.first;
 	    if (xDraw < tv->tree.titleWidth) continue;
 	}
 
-	parcel = Ttk_MakeBox(xDraw - COLUMN_SEPARATOR, y0, COLUMN_SEPARATOR, h0);
+	parcel = Ttk_MakeBox(xDraw - (tv->tree.colSeparatorWidth+1)/2, y0,
+		tv->tree.colSeparatorWidth, h0);
 	DisplayLayout(tv->tree.separatorLayout, &displayItem, 0, parcel, d);
     }
 }
@@ -2122,7 +2134,7 @@ static void PrepareCells(
 
     if (item->selObj != NULL) {
 	Tcl_ListObjGetElements(NULL, item->selObj, &nValues, &values);
-	for (i = 0; i < (size_t)nValues; ++i) {
+	for (i = 0; i < (TkSizeT)nValues; ++i) {
 	    column = FindColumn(NULL, tv, values[i]);
 	    /* Just in case. It should not be possible for column to be NULL */
 	    if (column != NULL) {
@@ -2152,13 +2164,23 @@ static void DrawCells(
     Ttk_Padding cellPadding = {4, 0, 4, 0};
     DisplayItem displayItemLocal;
     int rowHeight = tv->tree.rowHeight * item->height;
+    int xPad = 0;
     TkSizeT i;
+
+    /* Adjust if the tree column has a separator */
+    if (tv->tree.showFlags & SHOW_TREE && tv->tree.column0.separator) {
+	xPad = tv->tree.colSeparatorWidth/2;
+    }
 
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
-	Ttk_Box parcel = Ttk_MakeBox(x, y, column->width, rowHeight);
+	int parcelX = x + xPad;
+	int parcelWidth = column->separator ?
+		column->width - tv->tree.colSeparatorWidth : column->width;
+	Ttk_Box parcel = Ttk_MakeBox(parcelX, y, parcelWidth, rowHeight);
 	DisplayItem *displayItemUsed = displayItem;
 	Ttk_State stateCell = state;
+	xPad = column->separator ? tv->tree.colSeparatorWidth/2 : 0;
 
 	x += column->width;
 	if (title  && i >= tv->tree.nTitleColumns) break;
@@ -2244,7 +2266,7 @@ static void DrawItem(
 	TreeColumn *column = &tv->tree.column0;
 	int indent = depth * tv->tree.indent;
 	int colwidth = tv->tree.column0.width -
-		(tv->tree.showFlags & SHOW_SEPARATORS ? COLUMN_SEPARATOR : 0);
+		(tv->tree.column0.separator ? tv->tree.colSeparatorWidth/2 : 0);
 	int xTree = tv->tree.nTitleColumns >= 1 ? xTitle : x;
 	Ttk_Box parcel = Ttk_MakeBox(xTree, y, colwidth, rowHeight);
 	DisplayItem *displayItemUsed = &displayItem;
@@ -2344,9 +2366,7 @@ static void TreeviewDisplay(void *clientData, Drawable d)
 	DrawHeadings(tv, d);
     }
     DrawForest(tv, tv->tree.root->children, d, 0);
-    if (tv->tree.showFlags & SHOW_SEPARATORS) {
-	DrawSeparators(tv, d);
-    }
+    DrawSeparators(tv, d);
 }
 
 /*------------------------------------------------------------------------
