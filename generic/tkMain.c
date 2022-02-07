@@ -25,11 +25,10 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
 
 /*
- * This file can be compiled on Windows in UNICODE mode, as well as
- * on all other platforms using the native encoding. This is done
- * by using the normal Windows functions like _tcscmp, but on
- * platforms which don't have <tchar.h> we have to translate that
- * to strcmp here.
+ * This file can be compiled on Windows in UNICODE mode, as well as on all
+ * other platforms using the native encoding. This is done by using the normal
+ * Windows functions like _tcscmp, but on platforms which don't have <tchar.h>
+ * we have to translate that to strcmp here.
  */
 #ifdef _WIN32
 #ifdef __cplusplus
@@ -68,7 +67,7 @@ NewNativeObj(
     Tcl_Obj *obj;
     Tcl_DString ds;
 
-#ifdef UNICODE
+#if defined(_WIN32) && defined(UNICODE)
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
