@@ -87,8 +87,6 @@ which elements of the tree to display.
 Display tree labels in column #0.
 .IP \fBheadings\fR
 Display the heading row.
-.IP \fBcolumnseparators\fR
-Display column separators in the cell area.
 .PP
 The default is \fBtree headings\fR.
 .PP
@@ -201,6 +199,10 @@ The minimum width of the column in pixels.
 The treeview widget will not make the column any smaller than
 \fB\-minwidth\fR when the widget is resized or the user drags a
 heading column separator.  Default is 20 pixels.
+.TP
+\fB\-separator \fIboolean\fR
+Specifies whether or not a column separator should be drawn to the right
+of the column.  Default is false.
 .TP
 \fB\-stretch \fIboolean\fR
 Specifies whether or not the column width should be adjusted
@@ -595,6 +597,8 @@ are:
 \fB\-font\fP \fIfont\fP
 .br
 \fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-columnseparatorwidth\fP \fIpixels\fP
 .br
 \fB\-rowheight\fP \fIpixels\fP
 .RS

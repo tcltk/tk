@@ -130,6 +130,7 @@ test panedwindow-3.end "cleanup" -body { destroy .pw }
 
 
 test panedwindow-4.1 "forget" -body {
+    wm geometry . {}
     pack [ttk::panedwindow .pw -orient vertical] -expand true -fill both
     .pw add [label .pw.l1 -text "L1"]
     .pw add [label .pw.l2 -text "L2"]
