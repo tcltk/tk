@@ -206,10 +206,10 @@ Tk_MainEx(
 		return;
 	    }
 	} else {
-	    int i;
+	    int j;
 
-	    for (i = 1; i < argc; ++i) {
-		if (!_tcscmp(argv[i], TEXT("-display"))) {
+	    for (j = 1; j < argc; ++j) {
+		if (!strcmp(argv[j], "-display")) {
 		    goto loadCygwinTk;
 		}
 	    }
@@ -252,7 +252,7 @@ Tk_MainEx(
 	 * or like
 	 *  FILENAME
 	 * or like
-	 *  -file FILENAME		(ancient history support only)
+	 *  -file FILENAME (ancient history support only, removed with Tcl 9.0)
 	 */
 
 	/* mind argc is being adjusted as we proceed */
@@ -268,6 +268,7 @@ Tk_MainEx(
 	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
 	    i++;
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 	} else if ((argc >= 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
 		&& ('-' != argv[2][0])) {
@@ -275,6 +276,7 @@ Tk_MainEx(
 	    argc -= 2;
 	    i += 2;
 	}
+#endif
     }
 
     path = Tcl_GetStartupScript(&encodingName);
