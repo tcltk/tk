@@ -4945,7 +4945,7 @@ WmProtocolCmd(
 
 	/*
 	 * Activate notification by WM_WTSSESSION_CHANGE, for relevant
-	 * messages. Note: this does not harm, if activated errorneously,
+	 * messages. Note: this does not harm, if activated erroneously,
 	 * so be relax on the protocol name and only check for prefix
 	 * "WTS_".
 	 */
