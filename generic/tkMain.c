@@ -244,7 +244,9 @@ Tk_MainEx(
      */
 
     if (NULL == Tcl_GetStartupScript(NULL)) {
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 	size_t length;
+#endif
 
 	/*
 	 * Check whether first 3 args (argv[1] - argv[3]) look like
@@ -275,8 +277,8 @@ Tk_MainEx(
 	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
 	    argc -= 2;
 	    i += 2;
-	}
 #endif
+	}
     }
 
     path = Tcl_GetStartupScript(&encodingName);
