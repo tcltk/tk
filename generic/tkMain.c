@@ -25,11 +25,10 @@ extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
 
 /*
- * This file can be compiled on Windows in UNICODE mode, as well as
- * on all other platforms using the native encoding. This is done
- * by using the normal Windows functions like _tcscmp, but on
- * platforms which don't have <tchar.h> we have to translate that
- * to strcmp here.
+ * This file can be compiled on Windows in UNICODE mode, as well as on all
+ * other platforms using the native encoding. This is done by using the normal
+ * Windows functions like _tcscmp, but on platforms which don't have <tchar.h>
+ * we have to translate that to strcmp here.
  */
 #ifdef _WIN32
 #ifdef __cplusplus
@@ -68,11 +67,11 @@ NewNativeObj(
     Tcl_Obj *obj;
     Tcl_DString ds;
 
-#ifdef UNICODE
+#if defined(_WIN32) && defined(UNICODE)
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
-    Tcl_ExternalToUtfDString(NULL, (char *) string, -1, &ds);
+    Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
 #endif
     obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
@@ -118,7 +117,7 @@ static int WinIsTty(int fd) {
 extern int		isatty(int fd);
 #endif
 
-typedef struct InteractiveState {
+typedef struct {
     Tcl_Channel input;		/* The standard input channel from which lines
 				 * are read. */
     int tty;			/* Non-zero means standard input is a
@@ -169,11 +168,17 @@ Tk_MainEx(
 				 * but before starting to execute commands. */
     Tcl_Interp *interp)
 {
+    int i=0;			/* argv[i] index */
     Tcl_Obj *path, *argvPtr, *appName;
     const char *encodingName;
     int code, nullStdin = 0;
     Tcl_Channel chan;
     InteractiveState is;
+
+    if (0 < argc) {
+	--argc;			/* "consume" argv[0] */
+	++i;
+    }
 
     /*
      * Ensure that we are getting a compatible version of Tcl.
@@ -201,10 +206,10 @@ Tk_MainEx(
 		return;
 	    }
 	} else {
-	    int i;
+	    int j;
 
-	    for (i = 1; i < argc; ++i) {
-		if (!_tcscmp(argv[i], TEXT("-display"))) {
+	    for (j = 1; j < argc; ++j) {
+		if (!strcmp(argv[j], "-display")) {
 		    goto loadCygwinTk;
 		}
 	    }
@@ -239,7 +244,9 @@ Tk_MainEx(
      */
 
     if (NULL == Tcl_GetStartupScript(NULL)) {
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 	size_t length;
+#endif
 
 	/*
 	 * Check whether first 3 args (argv[1] - argv[3]) look like
@@ -247,26 +254,30 @@ Tk_MainEx(
 	 * or like
 	 *  FILENAME
 	 * or like
-	 *  -file FILENAME		(ancient history support only)
+	 *  -file FILENAME (ancient history support only, removed with Tcl 9.0)
 	 */
 
-	if ((argc > 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
-		&& (TEXT('-') != argv[3][0])) {
+	/* mind argc is being adjusted as we proceed */
+	if ((argc >= 3) && (0 == _tcscmp(TEXT("-encoding"), argv[1]))
+		&& ('-' != argv[3][0])) {
 	    Tcl_Obj *value = NewNativeObj(argv[2]);
-	    Tcl_SetStartupScript(NewNativeObj(argv[3]), Tcl_GetString(value));
+	    Tcl_SetStartupScript(NewNativeObj(argv[3]),
+		    Tcl_GetString(value));
 	    Tcl_DecrRefCount(value);
 	    argc -= 3;
-	    argv += 3;
-	} else if ((argc > 1) && (TEXT('-') != argv[1][0])) {
+	    i += 3;
+	} else if ((argc >= 1) && ('-' != argv[1][0])) {
 	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
-	    argv++;
-	} else if ((argc > 2) && (length = _tcslen(argv[1]))
+	    i++;
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
+	} else if ((argc >= 2) && (length = _tcslen(argv[1]))
 		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
-		&& (TEXT('-') != argv[2][0])) {
+		&& ('-' != argv[2][0])) {
 	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
 	    argc -= 2;
-	    argv += 2;
+	    i += 2;
+#endif
 	}
     }
 
@@ -277,14 +288,12 @@ Tk_MainEx(
 	appName = path;
     }
     Tcl_SetVar2Ex(interp, "argv0", NULL, appName, TCL_GLOBAL_ONLY);
-    argc--;
-    argv++;
 
     Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
-	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(*argv++));
+	Tcl_ListObjAppendElement(NULL, argvPtr, NewNativeObj(argv[i++]));
     }
     Tcl_SetVar2Ex(interp, "argv", NULL, argvPtr, TCL_GLOBAL_ONLY);
 
@@ -403,11 +412,11 @@ Tk_MainEx(
 static void
 StdinProc(
     ClientData clientData,	/* The state of interactive cmd line */
-    TCL_UNUSED(int))
+    TCL_UNUSED(int) /*mask*/)
 {
     char *cmd;
     int code;
-    TkSizeT count;
+    int length;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
@@ -416,11 +425,11 @@ StdinProc(
     Tcl_DStringInit(&savedEncoding);
     Tcl_GetChannelOption(NULL, chan, "-encoding", &savedEncoding);
     Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
-    count = Tcl_Gets(chan, &isPtr->line);
+    length = Tcl_Gets(chan, &isPtr->line);
     Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
     Tcl_DStringFree(&savedEncoding);
 
-    if ((count == TCL_IO_FAILURE) && !isPtr->gotPartial) {
+    if ((length < 0) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    Tcl_Exit(0);
 	} else {
