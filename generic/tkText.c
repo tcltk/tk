@@ -9441,6 +9441,12 @@ TextGetText(
 
     lastPtr = TkTextIndexGetContentSegment(indexPtr2, &offset2);
 
+    if (visibleOnly && TkTextSegmentIsElided(textPtr, lastPtr)) {
+	index = *indexPtr2;
+	TkTextSkipElidedRegion(&index);
+	lastPtr = TkTextIndexGetContentSegment(&index, &offset2);
+    }
+
     if (segPtr == lastPtr) {
 	if (segPtr->typePtr == &tkTextCharType) {
 	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1,
