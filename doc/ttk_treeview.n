@@ -94,7 +94,7 @@ The default is \fBtree headings\fR.
 even if \fB\-show tree\fR is not specified.
 .RE
 .OP \-striped striped Striped
-Boolean specifying zebra striped row coloring.
+Boolean specifying zebra striped item coloring.
 Note:
 Striped items uses the \fB\-stripedbackground\fR option if set by the theme or a tag.
 If not supported by the current theme, it will not show.
@@ -153,10 +153,10 @@ Remove \fIcellList\fR from the cell selection
 The rectangle defined is removed from the cell selection.
 .TP
 \fIpathname \fBcellselection toggle \fIcellList\fR
-Toggle the cell selection state of each item in \fIcellList\fR.
+Toggle the cell selection state of each cell in \fIcellList\fR.
 .TP
 \fIpathname \fBcellselection toggle \fIfirstCell\fR \fIlastCell\fR
-Toggle the cell selection state of each item in the rectangle defined.
+Toggle the cell selection state of each cell in the rectangle defined.
 .RE
 .TP
 \fIpathname \fBchildren \fIitem\fR ?\fInewchildren\fR?
@@ -402,7 +402,7 @@ See also \fBCOLUMN IDENTIFIERS\fR.
 Manages tags. Tags can be set on items as well as on cells.
 The set of tags is shared between items and cells. However item tagging is
 independent from cell tagging (for instance adding a tag on an item does
-not also add this tag on the cells in that row).
+not also add this tag on the cells in that item).
 The following subcommands are supported:
 .RS
 .TP
@@ -488,7 +488,7 @@ then the \fB\-tags\fR for that item are unchanged.
 The following item options may be specified for items
 in the \fBinsert\fR and \fBitem\fR widget commands.
 .IP \fB\-text\fR
-The textual label to display for the item.
+The textual label to display for the item in the tree column.
 .IP \fB\-height\fR
 The height for the item, in integer multiples of \fB\-rowheight\fP. Default is 1.
 .IP \fB\-image\fR
