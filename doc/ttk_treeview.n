@@ -492,7 +492,7 @@ The textual label to display for the item in the tree column.
 .IP \fB\-height\fR
 The height for the item, in integer multiples of \fB\-rowheight\fP. Default is 1.
 .IP \fB\-image\fR
-A Tk image, displayed next to the label, placed according to \fB-imageanchor\fR.
+A Tk image, displayed next to the label in the tree column, placed according to \fB-imageanchor\fR.
 .IP \fB\-imageanchor\fR
 Specifies how the \fB-image\fR is displayed relative to the text. Default is \fBw\fR.
 One of the standard Tk anchor values.
@@ -526,18 +526,22 @@ Specifies the cell or item background color.
 .IP \fB\-font\fR
 Specifies the font to use when drawing text.
 .IP \fB\-image\fR
-Specifies the item image, in case the item's \fB\-image\fR option is empty.
+Specifies the cell or item image.
 .IP \fB\-imageanchor\fR
-Specifies the item image anchor, in case the item's \fB\-imageanchor\fR option is empty.
+Specifies the cell or item image anchor.
 .IP \fB\-stripedbackground\fR
 Specifies the cell or item background color for alternate lines, if \fB\-striped\fR is true.
 .PP
-Note that \fB\-image\fR and \fB\-imageanchor\fR currently have no effect on cell tags.
 .\" .PP
 .\" \fI(@@@ TODO: sort out order of precedence for options)\fR
 .PP
 Tags on cells have precedence over tags on items. Then, tag priority is
 decided by the creation order: tags created first receive higher priority.
+An item's options, like \fB\-image\fR and \fB\-imageanchor\fR, have priority over tags.
+.SH "IMAGES"
+The -image option on an item, and on an item tag, controls the image next to the label
+in the tree column.
+Other cells can have images through the cell tag -image option.
 .SH "COLUMN IDENTIFIERS"
 .PP
 Column identifiers take any of the following forms:

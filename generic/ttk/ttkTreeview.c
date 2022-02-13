@@ -2163,6 +2163,7 @@ static void DrawCells(
     Ttk_State state = ItemState(tv, item);
     Ttk_Padding cellPadding = {4, 0, 4, 0};
     DisplayItem displayItemLocal;
+    DisplayItem displayItemCell, displayItemCellSel;
     int rowHeight = tv->tree.rowHeight * item->height;
     int xPad = 0;
     TkSizeT i;
@@ -2172,14 +2173,24 @@ static void DrawCells(
 	xPad = tv->tree.colSeparatorWidth/2;
     }
 
+    /* An Item's image should not propagate to a Cell.
+       A Cell's image can only be set by cell tags. */
+    displayItemCell = *displayItem;
+    displayItemCellSel = *displayItemSel;
+    displayItemCell.imageObj = NULL;
+    displayItemCellSel.imageObj = NULL;
+    displayItemCell.imageAnchorObj = NULL;
+    displayItemCellSel.imageAnchorObj = NULL;
+
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	int parcelX = x + xPad;
 	int parcelWidth = column->separator ?
 		column->width - tv->tree.colSeparatorWidth : column->width;
 	Ttk_Box parcel = Ttk_MakeBox(parcelX, y, parcelWidth, rowHeight);
-	DisplayItem *displayItemUsed = displayItem;
+	DisplayItem *displayItemUsed = &displayItemCell;
 	Ttk_State stateCell = state;
+	Tk_Anchor textAnchor, imageAnchor;
 	xPad = column->separator ? tv->tree.colSeparatorWidth/2 : 0;
 
 	x += column->width;
@@ -2188,7 +2199,7 @@ static void DrawCells(
 	if (!title && x <  tv->tree.titleWidth) continue;
 
 	if (column->selected) {
-	    displayItemUsed = displayItemSel;
+	    displayItemUsed = &displayItemCellSel;
 	    stateCell |= TTK_STATE_SELECTED;
 	}
 
@@ -2204,14 +2215,23 @@ static void DrawCells(
 
 	displayItemUsed->textObj = column->data;
 	displayItemUsed->anchorObj = column->anchorObj;/* <<NOTE-ANCHOR>> */
+	Tk_GetAnchorFromObj(NULL, column->anchorObj, &textAnchor);
 
-	if (displayItemUsed != displayItem) {
+	imageAnchor = DEFAULT_IMAGEANCHOR;
+	if (displayItemUsed->imageAnchorObj) {
+	    Tk_GetAnchorFromObj(NULL, displayItemUsed->imageAnchorObj,
+		    &imageAnchor);
+	}
+	/* displayItem was used to draw the full item backgound.
+	   Redraw cell background if needed. */
+	if (displayItemUsed != &displayItemCell) {
 	    DisplayLayout(tv->tree.rowLayout, displayItemUsed, stateCell,
 		    parcel, d);
 	}
 
 	parcel = Ttk_PadBox(parcel, cellPadding);
-	DisplayLayout(layout, displayItemUsed, state, parcel, d);
+	DisplayLayoutTree(imageAnchor, textAnchor,
+		layout, displayItemUsed, state, parcel, d);
     }
 }
 
@@ -4370,6 +4390,7 @@ TTK_LAYOUT("Item",
 
 TTK_LAYOUT("Cell",
     TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,
+	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
 TTK_LAYOUT("Heading",
