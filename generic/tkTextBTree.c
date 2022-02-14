@@ -9052,7 +9052,11 @@ ResizeLengths(
            data->lengths = (int32_t *)realloc(data->lengths, bufSize);
         }
     } else {
-        data->lengths = (int32_t *)realloc(NULL, bufSize);
+        int32_t *dl;
+
+        dl = (int32_t *)malloc(bufSize);
+        memcpy(dl, data->lengths, sizeof(data->lengthsBuf));
+        data->lengths = dl;
     }
     data->capacityOfLengths = capacity;
 }
