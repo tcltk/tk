@@ -9044,11 +9044,15 @@ ResizeLengths(
 {
     unsigned bufSize = capacity * sizeof(data->lengths[0]);
 
-    if (data->lengths == data->lengthsBuf) {
-	data->lengths = (int32_t *)malloc(bufSize);
-	memcpy(data->lengths, data->lengthsBuf, bufSize);
+    if (capacity < 200) {
+        if (data->lengths == data->lengthsBuf) {
+            data->lengths = (int32_t *)malloc(bufSize);
+            memcpy(data->lengths, data->lengthsBuf, bufSize);
+        } else {
+           data->lengths = (int32_t *)realloc(data->lengths, bufSize);
+        }
     } else {
-	data->lengths = (int32_t *)realloc(data->lengths, bufSize);
+        data->lengths = (int32_t *)realloc(NULL, bufSize);
     }
     data->capacityOfLengths = capacity;
 }
