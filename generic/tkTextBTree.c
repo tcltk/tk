@@ -9044,11 +9044,7 @@ ResizeLengths(
 {
     unsigned bufSize = capacity * sizeof(data->lengths[0]);
 
-    /*
-     * 200 is the size of the lengthsBuff array in the TreeTagData struct.
-     */
-
-    if (capacity < 200) {
+    if (capacity < sizeof(data->lengthsBuf)/sizeof(data->lengthsBuf[0])) {
         if (data->lengths == data->lengthsBuf) {
             data->lengths = (int32_t *)malloc(bufSize);
             memcpy(data->lengths, data->lengthsBuf, bufSize);
