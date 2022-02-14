@@ -3482,7 +3482,7 @@ echo "${ECHO_T}$ac_cv_cross" >&6
 		RC="x86_64-w64-mingw32-windres"
 	    ;;
 	    arm64|aarch64)
-		CC="aarch64-w64-mingw32-${CC}"
+		CC="aarch64-w64-mingw32-clang"
 		LD="aarch64-w64-mingw32-ld"
 		AR="aarch64-w64-mingw32-ar"
 		RANLIB="aarch64-w64-mingw32-ranlib"
@@ -3606,7 +3606,7 @@ echo "${ECHO_T}$ac_cv_win32" >&6
 echo "$as_me: error: ${CC} cannot produce win32 executables." >&2;}
    { (exit 1); exit 1; }; }
 	fi
-	if test "$MACHINE" != "ARM64"; then
+	if test "$do64bit" != "arm64"; then
 	    extra_cflags="$extra_cflags -DHAVE_CPUID=1"
 	fi
 
@@ -3964,9 +3964,9 @@ tcl_win_64bit=no
 fi
 rm -f conftest.err conftest.$ac_objext conftest.$ac_ext
 		if test "$tcl_win_64bit" = "yes" ; then
-			do64bit=amd64
-			MACHINE="AMD64"
-			echo "$as_me:$LINENO: result:    Using 64-bit $MACHINE mode" >&5
+		    do64bit=amd64
+		    MACHINE="AMD64"
+		    echo "$as_me:$LINENO: result:    Using 64-bit $MACHINE mode" >&5
 echo "${ECHO_T}   Using 64-bit $MACHINE mode" >&6
 		fi
 		;;
