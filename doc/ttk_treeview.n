@@ -402,7 +402,8 @@ See also \fBCOLUMN IDENTIFIERS\fR.
 Manages tags. Tags can be set on items as well as on cells.
 The set of tags is shared between items and cells. However item tagging is
 independent from cell tagging (for instance adding a tag on an item does
-not also add this tag on the cells in that item).
+not also add this tag on the cells in that item). Cell tags take precedence
+over item tags when drawing.
 The following subcommands are supported:
 .RS
 .TP
