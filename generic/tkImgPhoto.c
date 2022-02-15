@@ -4094,8 +4094,10 @@ Tk_PhotoBlank(
      * arrays for each instance.
      */
 
-    memset(modelPtr->pix32, 0,
-	    ((size_t)modelPtr->width * modelPtr->height * 4));
+    if (modelPtr->pix32) {
+	memset(modelPtr->pix32, 0,
+		((size_t)modelPtr->width * modelPtr->height * 4));
+    }
     for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
 	TkImgResetDither(instancePtr);
