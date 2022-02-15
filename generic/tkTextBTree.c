@@ -9044,19 +9044,32 @@ ResizeLengths(
 {
     unsigned bufSize = capacity * sizeof(data->lengths[0]);
 
-    if (capacity < sizeof(data->lengthsBuf)/sizeof(data->lengthsBuf[0])) {
-        if (data->lengths == data->lengthsBuf) {
-            data->lengths = (int32_t *)malloc(bufSize);
-            memcpy(data->lengths, data->lengthsBuf, bufSize);
-        } else {
-           data->lengths = (int32_t *)realloc(data->lengths, bufSize);
-        }
-    } else {
-        int32_t *dl;
+    if (capacity <= sizeof(data->lengthsBuf)/sizeof(data->lengthsBuf[0])) {
 
-        dl = (int32_t *)malloc(bufSize);
-        memcpy(dl, data->lengths, sizeof(data->lengthsBuf));
-        data->lengths = dl;
+        /*
+         * The new capacity still fits in the lengthsBuf array size.
+         */
+
+        assert(data->lengths == data->lengthsBuf);
+        data->lengths = (int32_t *)malloc(bufSize);
+        memcpy(data->lengths, data->lengthsBuf, bufSize);
+    } else {
+        if (data->lengths == data->lengthsBuf) {
+
+            /*
+             * First time the capacity exceeds the lengthsBuf array size.
+             * Switch to allocation in memory instead of using the
+             * lengthsBuf array from the TreeTagData structure.
+             */
+
+            int32_t *dl;
+
+            dl = (int32_t *)malloc(bufSize);
+            memcpy(dl, data->lengths, sizeof(data->lengthsBuf));
+            data->lengths = dl;
+        } else {
+            data->lengths = (int32_t *)realloc(data->lengths, bufSize);
+        }
     }
     data->capacityOfLengths = capacity;
 }
