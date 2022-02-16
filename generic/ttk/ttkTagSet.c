@@ -140,7 +140,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
     }
 
     tagset->tags = (Ttk_Tag *)ckalloc((objc+1) * sizeof(Ttk_Tag));
-    for (i = 0; i<objc; ++i) {
+    for (i = 0; i < objc; ++i) {
 	tagset->tags[i] = Ttk_GetTagFromObj(tagTable, objv[i]);
     }
     tagset->tags[i] = NULL;

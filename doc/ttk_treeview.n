@@ -609,7 +609,7 @@ are:
 .RS
 This is the standard height for an item.
 If \fB\-rowheight\fP is not set by the style, it is set by measuring an
-Item and a Cell layout with the style's settings.
+item and a cell layout with the style's settings.
 This thus picks up the font and
 any focus ring or padding from the theme's layout.
 The \fB\-rowheight\fP may need to be set to make sure that a row
