@@ -14417,7 +14417,9 @@ TkBTreeNextDisplayLine(
 
     while (parentPtr) {
 	if (!nodePtr || (!HasLeftNode(nodePtr) && offset >= parentPtr->pixelInfo[ref].numDispLines)) {
-	    offset -= parentPtr->pixelInfo[ref].numDispLines;
+	    if (nodePtr) {
+		offset -= parentPtr->pixelInfo[ref].numDispLines;
+	    }
 	    nodePtr = parentPtr->nextPtr;
 	    parentPtr = parentPtr->parentPtr;
 	} else {
