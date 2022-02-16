@@ -896,6 +896,7 @@ test textIndex-19.15 {Display lines with elided lines} {
     .t tag configure Elided -elide 1
     .t tag add Elided 6.0 951.0
     update
+    .t sync
     set res [.t index "951.0 + 1 displaylines"]
 } {952.0}
 
