@@ -14459,6 +14459,8 @@ TkBTreeNextDisplayLine(
      * We should never reach this return point.
      */
 
+    assert(0);
+
     return GetLastDisplayLine(textPtr, displayLineNo);
 }
 
@@ -14610,6 +14612,8 @@ TkBTreePrevDisplayLine(
     /*
      * We should never reach this return point.
      */
+
+    assert(0);
 
     return GetFirstDisplayLine(textPtr, displayLineNo);
 }
