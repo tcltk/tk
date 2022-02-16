@@ -467,7 +467,7 @@ typedef struct {
 
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
-    TkSizeT nTitleColumns;		/* -titlecolumns */
+    TkSizeT nTitleColumns;	/* -titlecolumns */
     int nTitleItems;		/* -titleitems */
     int striped;		/* -striped option */
 
@@ -3043,7 +3043,7 @@ static int TreeviewSetCommand(
 	 */
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
 	Tcl_Obj *value;
-	for (columnNumber = 0; columnNumber<tv->tree.nColumns; ++columnNumber) {
+	for (columnNumber = 0; columnNumber < tv->tree.nColumns; ++columnNumber) {
 	    Tcl_ListObjIndex(interp, item->valuesObj, columnNumber, &value);
 	    if (value) {
 		Tcl_ListObjAppendElement(NULL, result,

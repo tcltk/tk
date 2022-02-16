@@ -21,8 +21,8 @@ namespace eval ttk::treeview {
     # For pressmode == "heading"
     set State(heading)  	{}
 
-    set State(cellAnchor) {}
-    set State(cellAnchorOp) "set"
+    set State(cellAnchor)	{}
+    set State(cellAnchorOp)	"set"
 }
 
 ### Widget bindings.
