@@ -898,7 +898,8 @@ test textIndex-19.15 {Display lines with elided lines} {
     update
     .t sync
     set res [.t index "951.0 + 1 displaylines"]
-} {952.0}
+    lappend res [.t index "951.0 + 7 displaylines"]
+} {952.0 958.0}
 
 test textIndex-19.16 {Display lines with elided lines} {
     catch {destroy .t}
