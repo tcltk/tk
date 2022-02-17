@@ -1188,6 +1188,7 @@ static void DrawDarkFocusRing(
     CGPathRef path = CGPathCreateWithRoundedRect(insetBounds, 4, 4, NULL);
     CGContextBeginPath(context);
     CGContextAddPath(context, path);
+    CGPathRelease(path);
     CGContextAddRect(context, bounds);
     CGContextEOFillPath(context);
     CGContextRestoreGState(context);

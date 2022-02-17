@@ -81,16 +81,6 @@
 #   endif
 #endif
 
-#ifdef _MSC_VER
-#    define TkIsNaN(d)		(_isnan((d)))
-#else
-#    ifdef NO_ISNAN
-#	 define TkIsNaN(d)	((d) != (d))
-#    else
-#	 define TkIsNaN(d)	(isnan(d))
-#    endif
-#endif
-
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
 # define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
@@ -950,6 +940,9 @@ MODULE_SCOPE const char *const tkJustifyStrings[];
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
 #ifdef _WIN32
+#   ifndef XMaxTransChars
+#	define XMaxTransChars 7
+#   endif
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;
