@@ -791,23 +791,23 @@ PlaceInfoCommand(
     Tcl_AppendPrintfToObj(infoObj,
 	    "-x %d -relx %.4g -y %d -rely %.4g",
 	    contentPtr->x, contentPtr->relX, contentPtr->y, contentPtr->relY);
-    if (contentPtr->width != INT_MIN) {
+    if (contentPtr->widthPtr) {
 	Tcl_AppendPrintfToObj(infoObj, " -width %d", contentPtr->width);
     } else {
 	Tcl_AppendToObj(infoObj, " -width {}", -1);
     }
-    if (!TkIsNaN(contentPtr->relWidth)) {
+    if (contentPtr->relWidthPtr) {
 	Tcl_AppendPrintfToObj(infoObj,
 		" -relwidth %.4g", contentPtr->relWidth);
     } else {
 	Tcl_AppendToObj(infoObj, " -relwidth {}", -1);
     }
-    if (contentPtr->height != INT_MIN) {
+    if (contentPtr->heightPtr) {
 	Tcl_AppendPrintfToObj(infoObj, " -height %d", contentPtr->height);
     } else {
 	Tcl_AppendToObj(infoObj, " -height {}", -1);
     }
-    if (!TkIsNaN(contentPtr->relHeight)) {
+    if (contentPtr->relHeightPtr) {
 	Tcl_AppendPrintfToObj(infoObj,
 		" -relheight %.4g", contentPtr->relHeight);
     } else {
@@ -903,12 +903,12 @@ RecomputePlacement(
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
 	y1 = contentPtr->y + containerY + (contentPtr->relY*containerHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
-	if ((contentPtr->width != INT_MIN) || !TkIsNaN(contentPtr->relWidth)) {
+	if ((contentPtr->widthPtr) || contentPtr->relWidthPtr) {
 	    width = 0;
-	    if (contentPtr->width != INT_MIN) {
+	    if (contentPtr->widthPtr) {
 		width += contentPtr->width;
 	    }
-	    if (!TkIsNaN(contentPtr->relWidth)) {
+	    if (contentPtr->relWidthPtr) {
 		/*
 		 * The code below is a bit tricky. In order to round correctly
 		 * when both relX and relWidth are specified, compute the
@@ -925,12 +925,12 @@ RecomputePlacement(
 	    width = Tk_ReqWidth(contentPtr->tkwin)
 		    + 2*Tk_Changes(contentPtr->tkwin)->border_width;
 	}
-	if (((contentPtr->height != INT_MIN)) || !TkIsNaN(contentPtr->relHeight)) {
+	if (contentPtr->heightPtr || contentPtr->relHeightPtr) {
 	    height = 0;
-	    if (contentPtr->height != INT_MIN) {
+	    if (contentPtr->heightPtr) {
 		height += contentPtr->height;
 	    }
-	    if (!TkIsNaN(contentPtr->relHeight)) {
+	    if (contentPtr->relHeightPtr) {
 		/*
 		 * See note above for rounding errors in width computation.
 		 */
@@ -1181,8 +1181,8 @@ PlaceRequestProc(
     Content *contentPtr = (Content *)clientData;
     Container *containerPtr;
 
-    if (((contentPtr->width != INT_MIN) || !TkIsNaN(contentPtr->relWidth))
-	    && ((contentPtr->height != INT_MIN) || !TkIsNaN(contentPtr->relHeight))) {
+    if ((contentPtr->widthPtr || contentPtr->relWidthPtr)
+	    && (contentPtr->heightPtr || contentPtr->relHeightPtr)) {
         /*
          * Send a ConfigureNotify to indicate that the size change
          * request was rejected.
