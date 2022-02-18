@@ -58,7 +58,7 @@ static const char *const stateStrings[] = {
  * table below.
  */
 
-static const char *const wrapStrings[] = {
+const char *const tkTextWrapStrings[] = {
     "char", "none", "word", NULL
 };
 
@@ -68,7 +68,7 @@ static const char *const wrapStrings[] = {
  * the string table below.
  */
 
-static const char *const tabStyleStrings[] = {
+const char *const tkTextTabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
@@ -236,7 +236,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle),
-	0, tabStyleStrings, TK_TEXT_LINE_GEOMETRY},
+	0, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -248,7 +248,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
 	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode),
-	0, wrapStrings, TK_TEXT_LINE_GEOMETRY},
+	0, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
