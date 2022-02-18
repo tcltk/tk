@@ -1957,7 +1957,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || !TkIsNaN(*((double *) internalPtr))) {
+	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || !isnan(*((double *) internalPtr))) {
 		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
 	    }
 	    break;
