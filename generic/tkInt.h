@@ -81,6 +81,16 @@
 #   endif
 #endif
 
+#ifdef _MSC_VER
+#    define TkIsNaN(d)		(_isnan((d)))
+#else
+#    ifdef NO_ISNAN
+#	 define TkIsNaN(d)	((d) != (d))
+#    else
+#	 define TkIsNaN(d)	(isnan(d))
+#    endif
+#endif
+
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
 # define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
@@ -125,11 +135,14 @@
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE).
+ * (TCL_INDEX_TEMP_TABLE) or not having TIP #613 (TCL_INDEX_NULL_OK).
  */
 
 #if !defined(TCL_INDEX_TEMP_TABLE)
 #   define TCL_INDEX_TEMP_TABLE 2
+#endif
+#if !defined(TCL_INDEX_NULL_OK)
+#   define TCL_INDEX_NULL_OK 4
 #endif
 
 #ifndef TCL_Z_MODIFIER

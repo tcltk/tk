@@ -282,9 +282,11 @@ struct TkTextDispChunk {
  */
 
 typedef enum {
-    TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD,
-    TEXT_WRAPMODE_NULL
+    TEXT_WRAPMODE_NULL = -1,
+    TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD
 } TkWrapMode;
+
+MODULE_SCOPE const char *const tkTextWrapStrings[];
 
 typedef struct TkTextTag {
     const char *name;		/* Name of this tag. This field is actually a
@@ -335,7 +337,7 @@ typedef struct TkTextTag {
     char *justifyString;	/* -justify option string (malloc-ed). NULL
 				 * means option not specified. */
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT,
-				 * TK_JUSTIFY_RIGHT, or TK_JUSTIFY_CENTER.
+				 * TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER, or TK_JUSTIFY_NULL.
 				 * Only valid if justifyString is non-NULL. */
     char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
 				 * means option not specified. */
@@ -393,8 +395,8 @@ typedef struct TkTextTag {
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
 				 * NULL. Corresponds to tabString. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if
-				 * not specified). */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
+				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
     char *underlineString;	/* -underline option string (malloc-ed). NULL
 				 * means option not specified. */
     int underline;		/* Non-zero means draw underline underneath
@@ -466,14 +468,16 @@ typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
 
 /*
  * The following are the supported styles of tabbing, used for the -tabstyle
- * option of the text widget. The last element is only used for tag options.
+ * option of the text widget. The first element is only used for tag options.
  */
 
 typedef enum {
+    TK_TEXT_TABSTYLE_NULL = -1,
     TK_TEXT_TABSTYLE_TABULAR,
-    TK_TEXT_TABSTYLE_WORDPROCESSOR,
-    TK_TEXT_TABSTYLE_NONE
+    TK_TEXT_TABSTYLE_WORDPROCESSOR
 } TkTextTabStyle;
+
+MODULE_SCOPE const char *const tkTextTabStyleStrings[];
 
 typedef struct TkTextTab {
     int location;		/* Offset in pixels of this tab stop from the
@@ -695,7 +699,7 @@ typedef struct TkText {
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
 				 * behavior. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
 
     /*
      * Additional information used for displaying:

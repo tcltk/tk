@@ -1744,7 +1744,7 @@ test button-1.177 {configuration option: "overrelief" for button} -setup {
 } -cleanup {
     destroy .b
 } -result {}
-test button-1.178 {configuration option: "overrelief" for button} -setup {
+test button-1.178 {configuration option: "overrelief" for button} -constraints needsTcl87 -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
     update
@@ -1752,7 +1752,7 @@ test button-1.178 {configuration option: "overrelief" for button} -setup {
     .b configure -overrelief 1.5
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test button-1.179 {configuration option: "overrelief" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1763,7 +1763,7 @@ test button-1.179 {configuration option: "overrelief" for checkbutton} -setup {
 } -cleanup {
     destroy .c
 } -result {}
-test button-1.180 {configuration option: "overrelief" for checkbutton} -setup {
+test button-1.180 {configuration option: "overrelief" for checkbutton} -constraints needsTcl87 -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
     update
@@ -1771,7 +1771,7 @@ test button-1.180 {configuration option: "overrelief" for checkbutton} -setup {
     .c configure -overrelief 1.5
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test button-1.181 {configuration option: "overrelief" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1782,7 +1782,7 @@ test button-1.181 {configuration option: "overrelief" for radiobutton} -setup {
 } -cleanup {
     destroy .r
 } -result {}
-test button-1.182 {configuration option: "overrelief" for radiobutton} -setup {
+test button-1.182 {configuration option: "overrelief" for radiobutton} -constraints needsTcl87 -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
     update
@@ -1790,7 +1790,7 @@ test button-1.182 {configuration option: "overrelief" for radiobutton} -setup {
     .r configure -overrelief 1.5
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 
 test button-1.183 {configuration option: "padx" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
