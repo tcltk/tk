@@ -25,7 +25,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elide),
+	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elide),
 	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_BITMAP, "-fgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, fgStipple), TK_OPTION_NULL_OK, 0, 0},
@@ -44,7 +44,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-offset", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike),
+	NULL, offsetof(TkTextTag, overstrikePtr), offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor),
@@ -71,7 +71,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle),
 	TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
     {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underline),
+	NULL, offsetof(TkTextTag, underlinePtr), offsetof(TkTextTag, underline),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor),
@@ -1007,9 +1007,7 @@ TkTextCreateTag(
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetString = NULL;
     tagPtr->offset = 0;
-#if TCL_MAJOR_VERSION < 9
-    tagPtr->overstrikeString = NULL;
-#endif
+    tagPtr->overstrikePtr = NULL;
     tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
@@ -1026,14 +1024,10 @@ TkTextCreateTag(
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
-#if TCL_MAJOR_VERSION < 9
-    tagPtr->underlineString = NULL;
-#endif
+    tagPtr->underlinePtr = NULL;
     tagPtr->underline = -1;
     tagPtr->underlineColor = NULL;
-#if TCL_MAJOR_VERSION < 9
-    tagPtr->elideString = NULL;
-#endif
+    tagPtr->elidePtr = NULL;
     tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;

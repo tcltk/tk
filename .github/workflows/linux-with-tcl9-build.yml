@@ -1,4 +1,4 @@
-name: Linux (with Tcl 8.7)
+name: Linux (with Tcl 9.0)
 on: [push]
 defaults:
   run:
@@ -30,7 +30,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -101,20 +101,6 @@ jobs:
         run: |
           cd /tmp/dist
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
-      - name: Upload Source Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: Tk ${{ env.VERSION }} Source distribution (snapshot)
-          path: |
-            /tmp/dist/tk*
-            !/tmp/dist/tk*/html/**
-      - name: Upload Documentation Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
-          path: /tmp/dist/tk*/html
   test:
     runs-on: ubuntu-20.04
     strategy:
@@ -133,7 +119,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
