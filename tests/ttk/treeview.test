@@ -1240,7 +1240,6 @@ test treeview-ce470f20fd-2 "changing -stretch resizes columns" -setup {
     }
     nostretch .tv
     .tv column colA -width 50 ; .tv column colB -width 50 ; # slack created
-    wm geometry . {}
     update idletasks ; # redisplay treeview
 } -body {
     # when no column is stretchable and one of them becomes stretchable
