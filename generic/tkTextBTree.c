@@ -8935,11 +8935,6 @@ UpdateElideInfo(
 	TkTextInvalidateLineMetrics(sharedTextPtr, NULL, startLinePtr,
 		lineNo2 - lineNo1, TK_TEXT_INVALIDATE_ELIDE);
     }
-
-    if (tagPtr && reason == ELISION_WILL_BE_REMOVED) {
-	/* Re-enable the tag. */
-	tagPtr->textPtr = oldTextPtr;
-    }
 }
 
 void
