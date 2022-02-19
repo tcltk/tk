@@ -8739,6 +8739,14 @@ UpdateElideInfo(
 
 	    segPtr = linePtr->segPtr;
 	}
+
+	if (segPtr == *lastSegPtr && tagPtr && reason == ELISION_WILL_BE_REMOVED) {
+	    /*
+	     * Reinstate tag so elided status of final branches can be detected
+	     */
+	    tagPtr->textPtr = oldTextPtr;
+	}
+
 	if (segPtr->tagInfoPtr) {
 	    int shouldBeElidden = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
