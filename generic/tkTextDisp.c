@@ -4941,7 +4941,7 @@ SaveDisplayLines(
  *	of the missing display lines.
  *
  *	If additional display line computation is required for the line
- *	metric computation, then these lines will ba cached, but only
+ *	metric computation, then these lines will be cached, but only
  *	the last produced lines which can fit into the widget (this means:
  *	no more lines than fitting into the widget will be cached).
  *
@@ -5186,7 +5186,7 @@ ComputeDisplayLineInfo(
  *	display line metric, which can only happen if a logical line
  *	is wrapping into several display lines. It may not be required
  *	to compute all missing display lines, the computation stops
- *	until the threshold has been reached. But the compuation will
+ *	until the threshold has been reached. But the computation will
  *	always stop at the end of the logical line.
  *
  *	Possible threshold types are THRESHOLD_BYTE_OFFSET,
@@ -5196,7 +5196,7 @@ ComputeDisplayLineInfo(
  *	relative to info->displayLineNo.
  *
  *	If additional display line computation is required for the line
- *	metric computation, then these lines will ba cached, but only
+ *	metric computation, then these lines will be cached, but only
  *	the last produced lines which can fit into the widget (this means:
  *	no more lines than fitting into the widget will be cached).
  *
