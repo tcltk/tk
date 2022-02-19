@@ -1191,7 +1191,19 @@ test textTag-13.3 {TkTextTagCmd - "remove" option} -setup {
     destroy .t.e
     .t tag remove sel 1.0 end
 } -result {Text}
-
+test textTag-13.4 {TkTextTagCmd - "remove" option} -setup {
+    text .tt
+} -body {
+    for {set n 1} {$n <= 10} {incr n} {
+        .tt insert end "Line $n\n"
+    }
+    .tt tag configure Elided -elide 1
+    .tt tag add Elided 6.0 end
+    .tt tag remove Elided 6.0 8.0 ;  # used to crash
+    .tt tag ranges Elided
+} -cleanup {
+    destroy .tt
+} -result {8.0 12.0}
 
 test textTag-14.1 {SortTags} -setup {
     .t tag delete a b c d
