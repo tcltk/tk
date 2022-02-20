@@ -2273,7 +2273,7 @@ ConfigureText(
     }
     textPtr->selTagPtr->affectsDisplay = 0;
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
-    if ((textPtr->selTagPtr->elideString != NULL)
+    if ((textPtr->selTagPtr->elide >= 0)
 	    || (textPtr->selTagPtr->tkfont != NULL)
 	    || (textPtr->selTagPtr->justifyString != NULL)
 	    || (textPtr->selTagPtr->lMargin1String != NULL)
@@ -2299,9 +2299,9 @@ ConfigureText(
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
 	    || (textPtr->selTagPtr->fgStipple != None)
-	    || (textPtr->selTagPtr->overstrikeString != NULL)
+	    || (textPtr->selTagPtr->overstrike >= 0)
 	    || (textPtr->selTagPtr->overstrikeColor != NULL)
-	    || (textPtr->selTagPtr->underlineString != NULL)
+	    || (textPtr->selTagPtr->underline >= 0)
 	    || (textPtr->selTagPtr->underlineColor != NULL)
 	    || (textPtr->selTagPtr->lMarginColor != NULL)
 	    || (textPtr->selTagPtr->rMarginColor != NULL)) {

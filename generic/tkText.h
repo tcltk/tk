@@ -358,11 +358,10 @@ typedef struct TkTextTag {
 				 * baseline of line. Used for superscripts and
 				 * subscripts. Only valid if offsetString is
 				 * non-NULL. */
-    char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
+    Tcl_Obj *overstrikePtr;	/* -overstrike option. NULL
 				 * means option not specified. */
-    int overstrike;		/* Non-zero means draw horizontal line through
-				 * middle of text. Only valid if
-				 * overstrikeString is non-NULL. */
+    int overstrike;		/* > 0 means draw horizontal line through
+				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
     char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
@@ -397,11 +396,10 @@ typedef struct TkTextTag {
 				 * NULL. Corresponds to tabString. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-    char *underlineString;	/* -underline option string (malloc-ed). NULL
+    Tcl_Obj *underlinePtr;	/* -underline option. NULL
 				 * means option not specified. */
-    int underline;		/* Non-zero means draw underline underneath
-				 * text. Only valid if underlineString is
-				 * non-NULL. */
+    int underline;		/* > 0 means draw underline underneath
+				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
                                  * color as foreground. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
@@ -409,10 +407,10 @@ typedef struct TkTextTag {
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
 				 * TEXT_WRAPMODE_NULL to use wrapmode for
 				 * whole widget. */
-    char *elideString;		/* -elide option string (malloc-ed). NULL
+    Tcl_Obj *elidePtr;	/* -elide option. NULL
 				 * means option not specified. */
-    int elide;			/* Non-zero means that data under this tag
-				 * should not be displayed. */
+    int elide;			/* > 0 means that data under this tag
+				 * should not be displayed. -1 means not specified. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
