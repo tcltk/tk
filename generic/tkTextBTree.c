@@ -8745,6 +8745,7 @@ UpdateElideInfo(
 	     * Reinstate tag so elided status of final branches can be detected
 	     */
 	    tagPtr->textPtr = oldTextPtr;
+	    textPtr = NULL;
 	}
 
 	if (segPtr->tagInfoPtr) {
@@ -8935,6 +8936,9 @@ UpdateElideInfo(
 	TkTextInvalidateLineMetrics(sharedTextPtr, NULL, startLinePtr,
 		lineNo2 - lineNo1, TK_TEXT_INVALIDATE_ELIDE);
     }
+
+    assert(!tagPtr || reason != ELISION_WILL_BE_REMOVED ||
+	    (tagPtr && reason == ELISION_WILL_BE_REMOVED && tagPtr->textPtr == oldTextPtr));
 }
 
 void
