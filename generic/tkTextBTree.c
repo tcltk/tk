@@ -8937,8 +8937,7 @@ UpdateElideInfo(
 		lineNo2 - lineNo1, TK_TEXT_INVALIDATE_ELIDE);
     }
 
-    assert(!tagPtr || reason != ELISION_WILL_BE_REMOVED ||
-	    (tagPtr && reason == ELISION_WILL_BE_REMOVED && tagPtr->textPtr == oldTextPtr));
+    assert(!(tagPtr && reason == ELISION_WILL_BE_REMOVED) || tagPtr->textPtr == oldTextPtr);
 }
 
 void
