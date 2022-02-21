@@ -2551,7 +2551,7 @@ TkTextDrawBlockCursor(
     TkText *textPtr)		/* The current text widget. */
 {
     if (textPtr->blockCursorType) {
-	if (textPtr->flags & HAVE_FOCUS) {
+	if (textPtr->flags & GOT_FOCUS) {
 	    if ((textPtr->flags & INSERT_ON) || textPtr->selAttrs.border == textPtr->insertBorder) {
 		return 1;
 	    }
@@ -2766,7 +2766,7 @@ TkrTextInsertDisplayProc(
      * the cursor.
      */
 
-    if (textPtr->flags & HAVE_FOCUS) {
+    if (textPtr->flags & GOT_FOCUS) {
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder, x, y,
 		    width, height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);

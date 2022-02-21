@@ -334,38 +334,45 @@ typedef struct TkTextMark {
  */
 
 typedef struct TkTextEmbWindowClient {
-    struct TkText *textPtr;	/* Information about the overall text widget. */
-    Tk_Window tkwin;		/* Window for this segment. NULL means that the window
-    				 * hasn't been created yet. */
+    struct TkText *textPtr;	/* Information about the overall text
+				 * widget. */
+    Tk_Window tkwin;		/* Window for this segment. NULL means that
+				 * the window hasn't been created yet. */
     Tcl_HashEntry *hPtr;	/* Pointer to hash table entry for mark
 				 * (in sharedTextPtr->windowTable). */
-    unsigned chunkCount;	/* Number of display chunks that refer to this window. */
-    int displayed;		/* Non-zero means that the window has been displayed on
-    				 * the screen recently. */
+    unsigned chunkCount;		/* Number of display chunks that refer to this
+				 * window. */
+    int displayed;		/* Non-zero means that the window has been
+				 * displayed on the screen recently. */
     struct TkTextSegment *parent;
     struct TkTextEmbWindowClient *next;
 } TkTextEmbWindowClient;
 
 typedef struct TkTextEmbWindow {
     struct TkSharedText *sharedTextPtr;
-				/* Information about the shared portion of the text widget. */
-    Tk_Window tkwin;		/* Window for this segment. This is just a temporary value,
-    				 * copied from 'clients', to make option table updating easier.
-				 * NULL means that the window hasn't been created yet. */
-    char *create;		/* Script to create window on-demand. NULL means no such script.
-    				 * Malloc-ed. */
-    int align;			/* How to align window in vertical space. See definitions in
-    				 * tkTextWind.c. */
-    int padX, padY;		/* Padding to leave around each side of window, in pixels. */
-    int stretch;		/* Should window stretch to fill vertical space of line
-    				 * (except for pady)? */
+				/* Information about the shared portion of the
+				 * text widget. */
+    Tk_Window tkwin;		/* Window for this segment. This is just a
+				 * temporary value, copied from 'clients', to
+				 * make option table updating easier. NULL
+				 * means that the window hasn't been created
+				 * yet. */
+    char *create;		/* Script to create window on-demand. NULL
+				 * means no such script. Malloc-ed. */
+    int align;			/* How to align window in vertical space. See
+				 * definitions in tkTextWind.c. */
+    int padX, padY;		/* Padding to leave around each side of
+				 * window, in pixels. */
+    int stretch;		/* Should window stretch to fill vertical
+				 * space of line (except for pady)? 0 or 1. */
     int isOwner;		/* Should destroy the window when un-embed? This will only be
 				 * done if the text widget is the owner. Default is true
 				 * (this is compatible to older versions). */
-    Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
+    Tk_OptionTable optionTable;	/* Token representing the configuration
+				 * specifications. */
     TkTextEmbWindowClient *clients;
-				/* Linked list of peer-widget specific information for this
-				 * embedded window. */
+				/* Linked list of peer-widget specific
+				 * information for this embedded window. */
 } TkTextEmbWindow;
 
 /*
@@ -375,23 +382,27 @@ typedef struct TkTextEmbWindow {
 
 typedef struct TkTextEmbImage {
     struct TkSharedText *sharedTextPtr;
-				/* Information about the shared portion of the text widget.
-				 * This is used when the image changes or is deleted. */
+				/* Information about the shared portion of the
+				 * text widget. This is used when the image
+				 * changes or is deleted. */
     char *imageString;		/* Name of the image for this segment. */
-    char *imageName;		/* Name used by text widget to identify this image.
-    				 * May be unique-ified. */
-    char *name;			/* Name used in the hash table. Used by "image names" to
-    				 * identify this instance of the image. */
-    Tk_Image image;		/* Image for this segment. NULL means that the image hasn't
-    				 * been created yet. */
+    char *imageName;		/* Name used by text widget to identify this
+				 * image. May be unique-ified. */
+    char *name;			/* Name used in the hash table. Used by
+				 * "image names" to identify this instance of
+				 * the image. */
+    Tk_Image image;		/* Image for this segment. NULL means that the
+				 * image hasn't been created yet. */
     int imgWidth;		/* Width of displayed image. */
     int imgHeight;		/* Height of displayed image. */
     Tcl_HashEntry *hPtr;	/* Pointer to hash table entry for image
     				 * (in sharedTextPtr->imageTable).*/
-    int align;			/* How to align image in vertical space. See definitions in
-    				 * tkTextImage.c. */
-    int padX, padY;		/* Padding to leave around each side of image, in pixels. */
-    Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
+    int align;			/* How to align image in vertical space. See
+				 * definitions in tkTextImage.c. */
+    int padX, padY;		/* Padding to leave around each side of image,
+				 * in pixels. */
+    Tk_OptionTable optionTable;	/* Token representing the configuration
+				 * specifications. */
 } TkTextEmbImage;
 
 /*
@@ -412,9 +423,11 @@ typedef struct TkTextHyphen {
 
 typedef struct TkTextSegment {
     const struct Tk_SegType *typePtr;
-				/* Pointer to record describing segment's type. */
+				/* Pointer to record describing segment's
+				 * type. */
     struct TkTextSegment *nextPtr;
-				/* Next in list of segments for this line, or NULL for end of list. */
+				/* Next in list of segments for this line, or
+				 * NULL for end of list. */
     struct TkTextSegment *prevPtr;
 				/* Previous in list of segments for this line, or NULL for start
 				 * of list. */
@@ -706,12 +719,14 @@ typedef struct TkTextDispLine {
  */
 
 typedef enum {
+    TEXT_WRAPMODE_NULL = -1,
     TEXT_WRAPMODE_CHAR,
     TEXT_WRAPMODE_NONE,
     TEXT_WRAPMODE_WORD,
-    TEXT_WRAPMODE_CODEPOINT,
-    TEXT_WRAPMODE_NULL
+    TEXT_WRAPMODE_CODEPOINT
 } TkWrapMode;
+
+MODULE_SCOPE const char *const tkTextWrapStrings[];
 
 /*
  * The spacing mode of the text widget:
@@ -857,82 +872,99 @@ typedef struct TkTextTag {
 				 * be shared with attributes from "sel" tag. */
     Tcl_Obj *reliefPtr;		/* -relief option object. NULL means option not specified. */
     int relief;			/* 3-D relief for background. */
-    Pixmap bgStipple;		/* Stipple bitmap for background. None means no value specified here. */
+    Pixmap bgStipple;		/* Stipple bitmap for background. None means
+				 * no value specified here. */
     char *indentBgString;	/* Background will be indented accordingly to the -lmargin1, and
     				 * -lmargin2 options. */
     int indentBg;		/* Background will be indented accordingly to the -lmargin1, and
     				 * -lmargin2 options. */
-    Tk_Font tkfont;		/* Font for displaying text. NULL means no value specified here. */
-    Pixmap fgStipple;		/* Stipple bitmap for text and other foreground stuff. None means
-    				 * no value specified here.*/
-    char *justifyString;	/* -justify option string (malloc-ed). NULL means option not
-    				 * specified. */
+    Tk_Font tkfont;		/* Font for displaying text. NULL means no
+				 * value specified here. */
+    Pixmap fgStipple;		/* Stipple bitmap for text and other
+				 * foreground stuff. None means no value
+				 * specified here.*/
+    char *justifyString;	/* -justify option string (malloc-ed). NULL
+				 * means option not specified. */
     TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
     				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. Only valid if
 				 * justifyString is non-NULL. */
-    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL means option not
-				 * specified. */
-    int lMargin1;		/* Left margin for first display line of each text line, in pixels.
-    				 * Only valid if lMargin1String is non-NULL. */
-    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL means option not
-    				 * specified. */
-    int lMargin2;		/* Left margin for second and later display lines of each text line,
-    				 * in pixels. Only valid if lMargin2String is non-NULL. */
-    Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins. This is used for both
-    				 * lmargin1 and lmargin2. NULL means no value specified here. */
-    char *offsetString;		/* -offset option string (malloc-ed). NULL means option not specified. */
-    int offset;			/* Vertical offset of text's baseline from baseline of line. Used
-    				 * for superscripts and subscripts. Only valid if offsetString is
+    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
+				 * means option not specified. */
+    int lMargin1;		/* Left margin for first display line of each
+				 * text line, in pixels. Only valid if
+				 * lMargin1String is non-NULL. */
+    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
+				 * means option not specified. */
+    int lMargin2;		/* Left margin for second and later display
+				 * lines of each text line, in pixels. Only
+				 * valid if lMargin2String is non-NULL. */
+    Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
+                                 * This is used for both lmargin1 and lmargin2.
+				 * NULL means no value specified here. */
+    char *offsetString;		/* -offset option string (malloc-ed). NULL
+				 * means option not specified. */
+    int offset;			/* Vertical offset of text's baseline from
+				 * baseline of line. Used for superscripts and
+				 * subscripts. Only valid if offsetString is
 				 * non-NULL. */
     char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL means option not
     				 * specified. */
-    int overstrike;		/* True means draw horizontal line through middle of text. Only
-    				 * valid if overstrikeString is non-NULL. */
-    XColor *overstrikeColor;    /* Color for the overstrike. NULL means same color as foreground. */
-    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL means option not
-    				 * specified. */
-    int rMargin;		/* Right margin for text, in pixels. Only valid if rMarginString
-    				 * is non-NULL. */
-    Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin. NULL means no value
-    				 * specified here. */
+    int overstrike;		/* > 0 means draw horizontal line through
+				 * middle of text. -1 means not specified. */
+    XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
+                                 * color as foreground. */
+    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
+				 * means option not specified. */
+    int rMargin;		/* Right margin for text, in pixels. Only
+				 * valid if rMarginString is non-NULL. */
+    Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
+				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
 				 * NULL means no value specified here. */
-    XColor *selFgColor;		/* Foreground color for selected text. NULL means no value specified
-    				 * here. */
+    XColor *selFgColor;		/* Foreground color for selected text. NULL means
+				 * no value specified here. */
     Tk_3DBorder inactiveSelBorder;
     				/* Used for drawing background for inactive selected text.
 				 * NULL means no value specified here. */
     XColor *inactiveSelFgColor;	/* Foreground color for inactive selected text. NULL means no value
     				 * specified here. */
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL means option not
-    				 * specified. */
-    int spacing1;		/* Extra spacing above first display line for text line. Only valid
-    				 * if spacing1String is non-NULL. */
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL means option not
-    				 * specified. */
-    int spacing2;		/* Extra spacing between display lines for the same text line. Only
-    				 * valid if spacing2String is non-NULL. */
-    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL means option not
-    				 * specified. */
-    int spacing3;		/* Extra spacing below last display line for text line. Only valid
-    				 * if spacing3String is non-NULL. */
-    Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not specified. */
+    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
+				 * means option not specified. */
+    int spacing1;		/* Extra spacing above first display line for
+				 * text line. Only valid if spacing1String is
+				 * non-NULL. */
+    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
+				 * means option not specified. */
+    int spacing2;		/* Extra spacing between display lines for the
+				 * same text line. Only valid if
+				 * spacing2String is non-NULL. */
+    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL
+				 * means option not specified. */
+    int spacing3;		/* Extra spacing below last display line for
+				 * text line. Only valid if spacing3String is
+				 * non-NULL. */
+    Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
+				 * specified. */
     struct TkTextTabArray *tabArrayPtr;
-				/* Info about tabs for tag (malloc-ed) or NULL. Corresponds to
-				 * tabString. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if not specified). */
+				/* Info about tabs for tag (malloc-ed) or
+				 * NULL. Corresponds to tabString. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
+				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
     char *underlineString;	/* -underline option string (malloc-ed). NULL means option not
     				 * specified. */
-    int	 underline;		/* True means draw underline underneath text. Only valid if
-    				 * underlineString is non-NULL. */
-    XColor *underlineColor;     /* Color for the underline. NULL means same color as foreground. */
+    int underline;		/* > 0 means draw underline underneath
+				 * text. -1 means not specified. */
+    XColor *underlineColor;     /* Color for the underline. NULL means same
+                                 * color as foreground. */
     XColor *eolColor;		/* Color for the end of line symbol. NULL means same color as
     				 * foreground. */
     XColor *hyphenColor;	/* Color for the soft hyphen character. NULL means same color as
     				 * foreground. */
-    TkWrapMode wrapMode;	/* How to handle wrap-around for this tag. Must be TEXT_WRAPMODE_CHAR,
-				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, TEXT_WRAPMODE_CODEPOINT, or
-				 * TEXT_WRAPMODE_NULL to use wrapmode for whole widget. */
+    TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
+				 * Must be TEXT_WRAPMODE_CHAR,
+				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
+				 * TEXT_WRAPMODE_NULL to use wrapmode for
+				 * whole widget. */
     TkTextSpaceMode spaceMode;	/* How to handle displaying spaces. Must be TEXT_SPACEMODE_NULL,
     				 * TEXT_SPACEMODE_NONE, TEXT_SPACEMODE_EXACT, or TEXT_SPACEMODE_TRIM. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
@@ -975,14 +1007,18 @@ typedef enum {
  */
 
 typedef struct TkTextSearch {
-    TkTextIndex curIndex;	/* Position of last tag transition returned by TkBTreeNextTag,
-    				 * or index of start of segment containing starting position
-				 * for search if TkBTreeNextTag hasn't been called yet, or
-				 * same as stopIndex if search is over. */
-    TkTextSegment *segPtr;	/* Actual tag segment returned by last call to TkBTreeNextTag,
-    				 * or NULL if TkBTreeNextTag hasn't returned anything yet. */
+    TkTextIndex curIndex;	/* Position of last tag transition returned by
+				 * TkBTreeNextTag, or index of start of
+				 * segment containing starting position for
+				 * search if TkBTreeNextTag hasn't been called
+				 * yet, or same as stopIndex if search is
+				 * over. */
+    TkTextSegment *segPtr;	/* Actual tag segment returned by last call to
+				 * TkBTreeNextTag, or NULL if TkBTreeNextTag
+				 * hasn't returned anything yet. */
     TkTextSegment *resultPtr;	/* Actual result of last search. */
-    TkTextSegment *lastPtr;	/* Stop search before just before considering this segment. */
+    TkTextSegment *lastPtr;	/* Stop search before just before considering
+				 * this segment. */
     TkTextLine *lastLinePtr;	/* The last line of the search range. */
     const TkTextTag *tagPtr;	/* Tag to search for. */
     struct TkText *textPtr;	/* Where we are searching. */
@@ -999,32 +1035,38 @@ typedef struct TkTextSearch {
  * in sync with the 'tabOptionStrings' array in the function 'TkTextGetTabs'
  */
 
-typedef enum { LEFT, RIGHT, CENTER, NUMERIC } TkTextTabAlign;
+typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
 
 /*
  * The following are the supported styles of tabbing, used for the -tabstyle
- * option of the text widget. The last element is only used for tag options.
+ * option of the text widget. The first element is only used for tag options.
  */
 
 typedef enum {
+    TK_TEXT_TABSTYLE_NULL = -1,
     TK_TEXT_TABSTYLE_TABULAR,
-    TK_TEXT_TABSTYLE_WORDPROCESSOR,
-    TK_TEXT_TABSTYLE_NONE
+    TK_TEXT_TABSTYLE_WORDPROCESSOR
 } TkTextTabStyle;
 
+MODULE_SCOPE const char *const tkTextTabStyleStrings[];
+
 typedef struct TkTextTab {
-    int location;		/* Offset in pixels of this tab stop from the left margin
-    				 * (lmargin2) of the text. */
-    TkTextTabAlign alignment;	/* Where the tab stop appears relative to the text. */
+    int location;		/* Offset in pixels of this tab stop from the
+				 * left margin (lmargin2) of the text. */
+    TkTextTabAlign alignment;	/* Where the tab stop appears relative to the
+				 * text. */
 } TkTextTab;
 
 typedef struct TkTextTabArray {
     int numTabs;		/* Number of tab stops. */
-    double lastTab;		/* The accurate fractional pixel position of the last tab. */
-    double tabIncrement;	/* The accurate fractional pixel increment between interpolated
-    				 * tabs we have to create when we exceed numTabs. */
-    TkTextTab tabs[1];		/* Array of tabs. The actual size will be numTabs. THIS FIELD
-    				 * MUST BE THE LAST IN THE STRUCTURE. */
+    double lastTab;		/* The accurate fractional pixel position of
+				 * the last tab. */
+    double tabIncrement;	/* The accurate fractional pixel increment
+				 * between interpolated tabs we have to create
+				 * when we exceed numTabs. */
+    TkTextTab tabs[1];/* Array of tabs. The actual size will be
+				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
+				 * STRUCTURE. */
 } TkTextTabArray;
 
 /*
@@ -1214,7 +1256,7 @@ typedef struct TkSharedText {
 				 * 'insert' and 'delete'. */
 
     /*
-     * Keep track of all the peers.
+     * Keep track of all the peers
      */
 
     struct TkText *peers;
@@ -1257,7 +1299,8 @@ struct TkTextStringList;
 
 typedef struct TkText {
     /*
-     * Information related to and accessed by widget peers and the TkSharedText handling routines.
+     * Information related to and accessed by widget peers and the
+     * TkSharedText handling routines.
      */
 
     TkSharedText *sharedTextPtr;/* Shared section of all peers. */
@@ -1274,11 +1317,12 @@ typedef struct TkText {
     TkTextSegment *endMarker;	/* Last B-Tree segment (mark) belonging to this widget */
     Tcl_Obj *newStartIndex;	/* New position for start marker. */
     Tcl_Obj *newEndIndex;	/* New position for end marker. */
-    int pixelReference;		/* Counter into the current tree reference index corresponding
-    				 * to this widget. */
-    int abortSelections;	/* Set to true whenever the text is modified in a way that interferes
-    				 * with selection retrieval: used to abort incremental selection
-				 * retrievals. */
+    int pixelReference;		/* Counter into the current tree reference
+				 * index corresponding to this widget. */
+    int abortSelections;	/* Set to 1 whenever the text is modified in a
+				 * way that interferes with selection
+				 * retrieval: used to abort incremental
+				 * selection retrievals. */
     int pendingAfterSync;	/* RunAfterSyncCmd is in event queue. */
     int pendingFireEvent;	/* FireWidgetViewSyncEvent is in event queue. */
     int sendSyncEvent;		/* Send <<WidgetViewSync>> event as soon as the line metric is
@@ -1288,14 +1332,18 @@ typedef struct TkText {
     				 * is greater than zero. */
 
     /*
-     * Standard Tk widget information and text-widget specific items.
+     * Standard Tk widget information and text-widget specific items
      */
 
-    Tk_Window tkwin;		/* Window that embodies the text. NULL means that the window has been
-    				 * destroyed but the data structures haven't yet been cleaned up.*/
-    Display *display;		/* Display for widget. Needed, among other things, to allow resources
-    				 * to be freed even after tkwin has gone away. */
-    Tcl_Interp *interp;		/* Interpreter associated with widget. Used to delete widget command. */
+    Tk_Window tkwin;		/* Window that embodies the text. NULL means
+				 * that the window has been destroyed but the
+				 * data structures haven't yet been cleaned
+				 * up.*/
+    Display *display;		/* Display for widget. Needed, among other
+				 * things, to allow resources to be freed even
+				 * after tkwin has gone away. */
+    Tcl_Interp *interp;		/* Interpreter associated with widget. Used to
+				 * delete widget command. */
     Tcl_Command widgetCmd;	/* Token for text's widget command. */
     TkTextState state;		/* Either TK_TEXT_STATE_NORMAL, TK_TEXT_STATE_READONLY, or
     				 * TK_TEXT_STATE_DISABLED. A text widget is also read-only when
@@ -1306,13 +1354,19 @@ typedef struct TkText {
      * to ranges of characters).
      */
 
-    Tk_3DBorder border;		/* Structure used to draw 3-D border and default background. */
-    int borderWidth;		/* Width of 3-D border to draw around entire widget. */
+    Tk_3DBorder border;		/* Structure used to draw 3-D border and
+				 * default background. */
+    int borderWidth;		/* Width of 3-D border to draw around entire
+				 * widget. */
     int padX, padY;		/* Padding between text and window border. */
-    int relief;			/* 3-d effect for border around entire widget: TK_RELIEF_RAISED etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around widget when it
-    				 * has the focus. <= 0 means don't draw a highlight. */
-    XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area when highlight is off. */
+    int relief;			/* 3-d effect for border around entire widget:
+				 * TK_RELIEF_RAISED etc. */
+    int highlightWidth;		/* Width in pixels of highlight to draw around
+				 * widget when it has the focus. <= 0 means
+				 * don't draw a highlight. */
+    XColor *highlightBgColorPtr;
+				/* Color for drawing traversal highlight area
+				 * when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     XColor *fgColor;		/* Default foreground color for text. */
@@ -1324,17 +1378,22 @@ typedef struct TkText {
     				 * in this case the default char U+00B6 (pilcrow) will be used. */
     XColor *hyphenColor;	/* Foreground color for soft hyphens, can be NULL. */
     Tk_Font tkfont;		/* Default font for displaying text. */
-    int charWidth;		/* Width of average character in default font. */
+    int charWidth;		/* Width of average character in default
+				 * font. */
     int spaceWidth;		/* Width of space character in default font. */
     int lineHeight;		/* Height of line in default font, including line spacing. */
-    int spacing1;		/* Default extra spacing above first display line for each text line. */
-    int spacing2;		/* Default extra spacing between display lines for the same text line. */
-    int spacing3;		/* Default extra spacing below last display line for each text line. */
+    int spacing1;		/* Default extra spacing above first display
+				 * line for each text line. */
+    int spacing2;		/* Default extra spacing between display lines
+				 * for the same text line. */
+    int spacing3;		/* Default extra spacing below last display
+				 * line for each text line. */
     Tcl_Obj *tabOptionPtr; 	/* Value of -tabs option string. */
     TkTextTabArray *tabArrayPtr;
-				/* Information about tab stops (malloc'ed). NULL means perform
-				 * default tabbing behavior. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+				/* Information about tab stops (malloc'ed).
+				 * NULL means perform default tabbing
+				 * behavior. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
     				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
@@ -1356,10 +1415,14 @@ typedef struct TkText {
     				 * (if not in state TK_TEXT_STATE_NORMAL). */
     int useUniBreak;		/* Use library libunibreak for line break computation, otherwise the
     				 * internal algorithm will be used. */
-    int width, height;		/* Desired dimensions for window, measured in characters. */
-    int setGrid;		/* Non-zero means pass gridding information to window manager. */
-    int prevWidth, prevHeight;	/* Last known dimensions of window; used to detect changes in size. */
-    TkTextIndex topIndex;	/* Identifies first character in top display line of window. */
+    int width, height;		/* Desired dimensions for window, measured in
+				 * characters. */
+    int setGrid;		/* Non-zero means pass gridding information to
+				 * window manager. */
+    int prevWidth, prevHeight;	/* Last known dimensions of window; used to
+				 * detect changes in size. */
+    TkTextIndex topIndex;	/* Identifies first character in top display
+				 * line of window. */
     struct TextDInfo *dInfoPtr;	/* Information maintained by tkTextDisp.c. */
     int showEndOfLine;		/* Flag whether the end of line symbol will be shown at end of
     				 * each logical line. */
@@ -1380,10 +1443,12 @@ typedef struct TkText {
     				/* Contains the original attributes of the "sel" tag. */
     TkTextTag *selTagPtr;	/* Pointer to "sel" tag. Used to tell when a new selection
     				 * has been made. */
-    int exportSelection;	/* Non-zero means tie "sel" tag to X selection. */
+    int exportSelection;	/* Non-zero means tie "sel" tag to X
+				 * selection. */
     TkTextSearch selSearch;	/* Used during multi-pass selection retrievals. */
-    TkTextIndex selIndex;	/* Used during multi-pass selection retrievals. This index
-    				 * identifies the next character to be returned from the
+    TkTextIndex selIndex;	/* Used during multi-pass selection
+				 * retrievals. This index identifies the next
+				 * character to be returned from the
 				 * selection. */
 
     /*
@@ -1392,7 +1457,8 @@ typedef struct TkText {
 
     TkTextSegment *insertMarkPtr;
 				/* Points to segment for "insert" mark. */
-    Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion cursor. */
+    Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
+				 * cursor. */
     XColor *insertFgColor;	/* Foreground color for text behind a block cursor.
     				 * NULL means no value specified here. */
     int showInsertFgColor;	/* Flag whether insertFgColor is relevant. */
@@ -1406,7 +1472,8 @@ typedef struct TkText {
     int insertOffTime;		/* Number of milliseconds cursor should spend
 				 * in "off" state for each blink. */
     Tcl_TimerToken insertBlinkHandler;
-				/* Timer handler used to blink cursor on and off. */
+				/* Timer handler used to blink cursor on and
+				 * off. */
     TkTextTagging tagging;	/* Tagging mode, used when inserting chars; the mode how to extend
 				 * tagged ranges of characters. */
 
@@ -1454,12 +1521,13 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-    char *takeFocus;		/* Value of -takeFocus option; not used in the C code, but
-    				 * used by keyboard traversal scripts. Malloc'ed, but may be NULL. */
-    char *xScrollCmd;		/* Prefix of command to issue to update horizontal scrollbar
-    				 * when view changes. */
-    char *yScrollCmd;		/* Prefix of command to issue to update vertical scrollbar when
-    				 * view changes. */
+    char *takeFocus;		/* Value of -takeFocus option; not used in the
+				 * C code, but used by keyboard traversal
+				 * scripts. Malloc'ed, but may be NULL. */
+    char *xScrollCmd;		/* Prefix of command to issue to update
+				 * horizontal scrollbar when view changes. */
+    char *yScrollCmd;		/* Prefix of command to issue to update
+				 * vertical scrollbar when view changes. */
     unsigned flags;		/* Miscellaneous flags; see below for definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
     unsigned refCount;		/* Number of objects referring to us. */
@@ -1484,7 +1552,8 @@ typedef struct TkText {
      * Copies of information from the shared section relating to the undo/redo functionality:
      */
 
-    int undo;			/* Non-zero means the undo/redo behaviour is enabled. */
+    int undo;			/* Non-zero means the undo/redo behaviour is
+				 * enabled. */
     int maxUndoDepth;		/* The maximum depth of the undo stack expressed as the
     				 * maximum number of compound statements. */
     int maxRedoDepth;		/* The maximum depth of the redo stack expressed as the
@@ -1507,28 +1576,33 @@ typedef struct TkText {
 /*
  * Flag values for TkText records:
  *
- * GOT_SELECTION:		Non-zero means we've already claimed the selection.
- * INSERT_ON:			Non-zero means insertion cursor should be displayed on screen.
- * HAVE_FOCUS:			Non-zero means this window has the input focus.
+ * GOT_SELECTION:		Non-zero means we've already claimed the
+ *				selection.
+ * INSERT_ON:			Non-zero means insertion cursor should be
+ *				displayed on screen.
+ * GOT_FOCUS:			Non-zero means this window has the input
+ *				focus.
  * BUTTON_DOWN:			1 means that a mouse button is currently down;
- *				this is used to implement grabs for the duration of button presses.
+ *				this is used to implement grabs for the
+ *				duration of button presses.
  * UPDATE_SCROLLBARS:		Non-zero means scrollbar(s) should be updated
  *				during next redisplay operation.
- * NEED_REPICK			This appears unused and should probably be ignored.
+ * NEED_REPICK			This appears unused and should probably be
+ *				ignored.
  * OPTIONS_FREED		The widget's options have been freed.
  * DESTROYED			The widget is going away.
  * MEM_RELEASED			The memory of text widget has been released (only for debugging).
  */
 
-#define GOT_SELECTION		(1 << 0)
-#define INSERT_ON		(1 << 1)
-#define HAVE_FOCUS		(1 << 2)
-#define BUTTON_DOWN		(1 << 3)
-#define UPDATE_SCROLLBARS	(1 << 4)
-#define NEED_REPICK		(1 << 5)
-#define OPTIONS_FREED		(1 << 6)
-#define DESTROYED		(1 << 7)
-#define MEM_RELEASED		(1 << 8)
+#define GOT_SELECTION		1
+#define INSERT_ON		2
+#define GOT_FOCUS		4
+#define BUTTON_DOWN		8
+#define UPDATE_SCROLLBARS	0x10
+#define NEED_REPICK		0x20
+#define OPTIONS_FREED		0x40
+#define DESTROYED		0x80
+#define MEM_RELEASED		0x100
 
 /*
  * The categories of segment types:
@@ -1716,8 +1790,8 @@ typedef enum {
  * Declarations for variables shared among the text-related files:
  */
 
-MODULE_SCOPE int tkBTreeDebug;
-MODULE_SCOPE int tkTextDebug;
+MODULE_SCOPE int	tkBTreeDebug;
+MODULE_SCOPE int	tkTextDebug;
 MODULE_SCOPE const Tk_SegType tkTextCharType;
 MODULE_SCOPE const Tk_SegType tkTextBranchType;
 MODULE_SCOPE const Tk_SegType tkTextLinkType;
@@ -2198,11 +2272,11 @@ MODULE_SCOPE void		TkrTextInsertDisplayProc(struct TkText *textPtr,
 # include "tkTextPriv.h"
 #endif
 #endif /* _TKTEXT */
+
 /*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
- * fill-column: 105
+ * fill-column: 78
  * End:
- * vi:set ts=8 sw=4:
  */
