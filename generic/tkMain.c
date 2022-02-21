@@ -420,21 +420,20 @@ StdinProc(
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
-    Tcl_DString savedEncoding;
 
-    Tcl_DStringInit(&savedEncoding);
-    Tcl_GetChannelOption(NULL, chan, "-encoding", &savedEncoding);
-    Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
     length = Tcl_Gets(chan, &isPtr->line);
-    Tcl_SetChannelOption(NULL, chan, "-encoding", Tcl_DStringValue(&savedEncoding));
-    Tcl_DStringFree(&savedEncoding);
 
     if ((length < 0) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
+	    /*
+	     * Would be better to find a way to exit the mainLoop? Or perhaps
+	     * evaluate [exit]? Leaving as is for now due to compatibility
+	     * concerns.
+	     */
+
 	    Tcl_Exit(0);
-	} else {
-	    Tcl_DeleteChannelHandler(chan, StdinProc, isPtr);
 	}
+	Tcl_DeleteChannelHandler(chan, StdinProc, isPtr);
 	return;
     }
 
@@ -456,20 +455,29 @@ StdinProc(
 
     Tcl_CreateChannelHandler(chan, 0, StdinProc, isPtr);
     code = Tcl_RecordAndEval(interp, cmd, TCL_EVAL_GLOBAL);
-
-    isPtr->input = Tcl_GetStdChannel(TCL_STDIN);
-    if (isPtr->input) {
-	Tcl_CreateChannelHandler(isPtr->input, TCL_READABLE, StdinProc, isPtr);
+    isPtr->input = chan = Tcl_GetStdChannel(TCL_STDIN);
+    if (chan != NULL) {
+	Tcl_CreateChannelHandler(chan, TCL_READABLE, StdinProc, isPtr);
     }
     Tcl_DStringFree(&isPtr->command);
-    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
-	if ((code != TCL_OK) || (isPtr->tty)) {
-	    chan = Tcl_GetStdChannel((code != TCL_OK) ? TCL_STDERR : TCL_STDOUT);
-	    if (chan) {
-		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
-		Tcl_WriteChars(chan, "\n", 1);
-	    }
+    if (code != TCL_OK) {
+	chan = Tcl_GetStdChannel(TCL_STDERR);
+
+	if (chan != NULL) {
+	    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+	    Tcl_WriteChars(chan, "\n", 1);
 	}
+    } else if (isPtr->tty) {
+	Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
+	chan = Tcl_GetStdChannel(TCL_STDOUT);
+
+	Tcl_IncrRefCount(resultPtr);
+	(void)Tcl_GetStringFromObj(resultPtr, &length);
+	if ((length > 0) && (chan != NULL)) {
+	    Tcl_WriteObj(chan, resultPtr);
+	    Tcl_WriteChars(chan, "\n", 1);
+	}
+	Tcl_DecrRefCount(resultPtr);
     }
 
     /*
@@ -525,12 +533,10 @@ Prompt(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
-	    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
-		chan = Tcl_GetStdChannel(TCL_STDERR);
-		if (chan != NULL) {
-		    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
-		    Tcl_WriteChars(chan, "\n", 1);
-		}
+	    chan = Tcl_GetStdChannel(TCL_STDERR);
+	    if (chan != NULL) {
+		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+		Tcl_WriteChars(chan, "\n", 1);
 	    }
 	    goto defaultPrompt;
 	}
