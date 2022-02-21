@@ -8739,6 +8739,15 @@ UpdateElideInfo(
 
 	    segPtr = linePtr->segPtr;
 	}
+
+	if (segPtr == *lastSegPtr && tagPtr && reason == ELISION_WILL_BE_REMOVED) {
+	    /*
+	     * Reinstate tag so elided status of final branches can be detected
+	     */
+	    tagPtr->textPtr = oldTextPtr;
+	    textPtr = NULL;
+	}
+
 	if (segPtr->tagInfoPtr) {
 	    int shouldBeElidden = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
@@ -8928,10 +8937,7 @@ UpdateElideInfo(
 		lineNo2 - lineNo1, TK_TEXT_INVALIDATE_ELIDE);
     }
 
-    if (tagPtr && reason == ELISION_WILL_BE_REMOVED) {
-	/* Re-enable the tag. */
-	tagPtr->textPtr = oldTextPtr;
-    }
+    assert(!(tagPtr && reason == ELISION_WILL_BE_REMOVED) || tagPtr->textPtr == oldTextPtr);
 }
 
 void
