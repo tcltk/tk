@@ -115,7 +115,7 @@ static const char *const justifyStrings[] = {
  * table below.
  */
 
-static const char *const wrapStrings[] = {
+const char *const tkTextWrapStrings[] = {
     "char", "none", "word", "codepoint", NULL
 };
 
@@ -135,7 +135,7 @@ static const char *const spaceModeStrings[] = {
  * the string table below.
  */
 
-static const char *const tabStyleStrings[] = {
+const char *const tkTextTabStyleStrings[] = {
     "tabular", "wordprocessor", NULL
 };
 
@@ -356,7 +356,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, offsetof(TkText, tabOptionPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
-	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle), 0, tabStyleStrings, TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle), 0, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tagging", "tagging", "Tagging",
 	"within", TCL_INDEX_NONE, offsetof(TkText, tagging), 0, taggingStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
@@ -370,7 +370,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_TEXT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, width), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
-	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode), 0, wrapStrings, TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode), 0, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
@@ -4356,7 +4356,7 @@ TkConfigureText(
      * Account for state changes that would reenable blinking cursor state.
      */
 
-    if (textPtr->flags & HAVE_FOCUS) {
+    if (textPtr->flags & GOT_FOCUS) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
 	textPtr->insertBlinkHandler = NULL;
 	TextBlinkProc(textPtr);
@@ -4641,9 +4641,9 @@ ProcessFocusInOut(
 	    || eventPtr->xfocus.detail == NotifyAncestor
 	    || eventPtr->xfocus.detail == NotifyNonlinear) {
 	if (eventPtr->type == FocusIn) {
-	    textPtr->flags |= HAVE_FOCUS | INSERT_ON;
+	    textPtr->flags |= GOT_FOCUS | INSERT_ON;
 	} else {
-	    textPtr->flags &= ~(HAVE_FOCUS | INSERT_ON);
+	    textPtr->flags &= ~(GOT_FOCUS | INSERT_ON);
 	}
 	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
 	    if (eventPtr->type == FocusOut) {
@@ -6155,9 +6155,9 @@ TextBlinkProc(
     unsigned oldFlags = textPtr->flags;
 
     if (textPtr->state == TK_TEXT_STATE_DISABLED
-	    || !(textPtr->flags & HAVE_FOCUS)
+	    || !(textPtr->flags & GOT_FOCUS)
 	    || textPtr->insertOffTime == 0) {
-	if (!(textPtr->flags & HAVE_FOCUS) && textPtr->insertUnfocussed != TK_TEXT_INSERT_NOFOCUS_NONE) {
+	if (!(textPtr->flags & GOT_FOCUS) && textPtr->insertUnfocussed != TK_TEXT_INSERT_NOFOCUS_NONE) {
 	    /*
 	     * The widget doesn't have the focus yet it is configured to
 	     * display the cursor when it doesn't have the focus. Act now!

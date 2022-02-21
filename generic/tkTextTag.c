@@ -33,28 +33,6 @@
 # define DEBUG(expr) expr
 #endif
 
-/*
- * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
- * option of tags in a Text widget. These values are used as indices into the
- * string table below. Tags are allowed an empty wrap value, but the widget as
- * a whole is not.
- */
-
-static const char *const wrapStrings[] = {
-    "char", "none", "word", "codepoint", NULL
-};
-
-/*
- * The 'TkTextTabStyle' enum in tkText.h is used to define a type for the
- * -tabstyle option of the Text widget. These values are used as indices into
- * the string table below. Tags are allowed an empty wrap value, but the
- * widget as a whole is not.
- */
-
-static const char *const tabStyleStrings[] = {
-    "tabular", "wordprocessor", "", NULL
-};
-
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, attrs.border), TK_OPTION_NULL_OK, 0, 0},
@@ -128,7 +106,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tabStyleStrings, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
     {TK_OPTION_STRING, "-underline", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
@@ -140,7 +118,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-undo", NULL, NULL,
 	"1", TCL_INDEX_NONE, offsetof(TkTextTag, undo), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK, wrapStrings, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK, tkTextWrapStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -2026,7 +2004,7 @@ TkTextCreateTag(
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
     tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
-    tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
+    tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;
     tagPtr->sharedTextPtr = sharedTextPtr;

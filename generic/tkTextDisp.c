@@ -2077,7 +2077,7 @@ MakeStyle(
     styleValues.lang = textPtr->lang;
     styleValues.hyphenRules = textPtr->hyphenRules;
 
-    haveFocus = !!(textPtr->flags & HAVE_FOCUS);
+    haveFocus = !!(textPtr->flags & GOT_FOCUS);
     borderPrio = -1;
 
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
@@ -8860,7 +8860,7 @@ DisplayText(
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr, Tk_WindowId(textPtr->tkwin));
-	    if (textPtr->flags & HAVE_FOCUS) {
+	    if (textPtr->flags & GOT_FOCUS) {
 		fgGC = Tk_GCForColor(textPtr->highlightColorPtr, Tk_WindowId(textPtr->tkwin));
 		TkpDrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
 			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
