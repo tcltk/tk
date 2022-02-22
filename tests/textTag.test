@@ -181,7 +181,7 @@ test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.21a {tag configuration options} -body {
     .t tag configure x -overstrikecolor red
     .t tag cget x -overstrikecolor
@@ -302,7 +302,7 @@ test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.36 {tag configuration options} -body {
     .t tag configure x -underlinecolor red
     .t tag cget x -underlinecolor
@@ -552,13 +552,13 @@ test textTag-5.6 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -overstrike foo
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "foo"}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test textTag-5.7 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify left
