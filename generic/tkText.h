@@ -582,7 +582,8 @@ struct TkTextDispChunk {
 				 * of the y position.
 				 */
     struct TkTextDispChunk *nextPtr;
-				/* Next chunk in the display line or NULL for the end of the list. */
+				/* Next chunk in the display line or NULL for
+				 * the end of the list. */
     struct TkTextDispChunk *prevPtr;
 				/* Previous chunk in the display line or NULL for the start of the
 				 * list. */
@@ -874,10 +875,11 @@ typedef struct TkTextTag {
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
-    char *indentBgString;	/* Background will be indented accordingly to the -lmargin1, and
-    				 * -lmargin2 options. */
-    int indentBg;		/* Background will be indented accordingly to the -lmargin1, and
-    				 * -lmargin2 options. */
+    Tcl_Obj *indentBgPtr;	/* -indentbackground option. Background will be indented
+				 * accordingly to the -lmargin1, and -lmargin2 options. NULL means
+				 * option not specified. */
+    int indentBg;		/* If 1, Background will be indented accordingly to the -lmargin1
+    				 * and -lmargin2 options. -1 means not specified */
     Tk_Font tkfont;		/* Font for displaying text. NULL means no
 				 * value specified here. */
     Pixmap fgStipple;		/* Stipple bitmap for text and other
@@ -907,8 +909,8 @@ typedef struct TkTextTag {
 				 * baseline of line. Used for superscripts and
 				 * subscripts. Only valid if offsetString is
 				 * non-NULL. */
-    char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL means option not
-    				 * specified. */
+    Tcl_Obj *overstrikePtr;	/* -overstrike option. NULL
+				 * means option not specified. */
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
@@ -950,8 +952,8 @@ typedef struct TkTextTag {
 				 * NULL. Corresponds to tabString. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-    char *underlineString;	/* -underline option string (malloc-ed). NULL means option not
-    				 * specified. */
+    Tcl_Obj *underlinePtr;	/* -underline option. NULL
+				 * means option not specified. */
     int underline;		/* > 0 means draw underline underneath
 				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same

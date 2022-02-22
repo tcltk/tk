@@ -64,8 +64,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-inactiveselectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelFgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-indentbackground", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextTag, indentBgString),
+    {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL,
+	"0", offsetof(TkTextTag, indentBgPtr), offsetof(TkTextTag, indentBg),
 	TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0, 0},
@@ -79,8 +79,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-offset", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-overstrike", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
+	NULL, offsetof(TkTextTag, overstrikePtr), offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
@@ -107,8 +107,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
-    {TK_OPTION_STRING, "-underline", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
+	NULL, offsetof(TkTextTag, underlinePtr), offsetof(TkTextTag, underline), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
@@ -1028,7 +1028,7 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->inactiveSelBorder
 	    || tagPtr->reliefPtr
 	    || tagPtr->bgStipple != None
-	    || tagPtr->indentBgString
+	    || tagPtr->indentBg >= 0
 	    || tagPtr->attrs.fgColor
 	    || tagPtr->attrs.inactiveFgColor
 	    || tagPtr->selFgColor
@@ -1036,9 +1036,9 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->fgStipple != None
 	    || tagPtr->eolColor
 	    || tagPtr->hyphenColor
-	    || tagPtr->overstrikeString
+	    || tagPtr->overstrike >= 0
 	    || tagPtr->overstrikeColor
-	    || tagPtr->underlineString
+	    || tagPtr->underline >= 0
 	    || tagPtr->underlineColor
 	    || tagPtr->lMarginColor
 	    || tagPtr->rMarginColor) {
@@ -1163,11 +1163,6 @@ TkConfigureTag(
     } else {
 	memset(tagPtr->lang, 0, 3);
     }
-    if (tagPtr->indentBgString) {
-	if (Tcl_GetBoolean(interp, tagPtr->indentBgString, &tagPtr->indentBg) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
     if (tagPtr->reliefPtr) {
 	if (Tk_GetReliefFromObj(interp, tagPtr->reliefPtr, &tagPtr->relief) != TCL_OK) {
 	    rc = TCL_ERROR;
@@ -1217,11 +1212,6 @@ TkConfigureTag(
 	    rc = TCL_ERROR;
 	}
     }
-    if (tagPtr->overstrikeString) {
-	if (Tcl_GetBoolean(interp, tagPtr->overstrikeString, &tagPtr->overstrike) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
     if (tagPtr->rMarginString) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
@@ -1266,11 +1256,6 @@ TkConfigureTag(
 	}
 	if (oldHyphenRules != tagPtr->hyphenRules && textPtr->hyphenate) {
 	    affectsDisplay = 1;
-	}
-    }
-    if (tagPtr->underlineString) {
-	if (Tcl_GetBoolean(interp, tagPtr->underlineString, &tagPtr->underline) != TCL_OK) {
-	    rc = TCL_ERROR;
 	}
     }
     if (tagPtr->elideString) {

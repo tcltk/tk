@@ -1985,7 +1985,7 @@ FillStyle(
     if (fgColor != NULL)                { stylePtr->fgColor = fgColor; }
     if (tagPtr->reliefPtr)              { stylePtr->relief = tagPtr->relief; }
     if (tagPtr->bgStipple != None)      { stylePtr->bgStipple = tagPtr->bgStipple; }
-    if (tagPtr->indentBgString != NULL) { stylePtr->indentBg = tagPtr->indentBg; }
+    if (tagPtr->indentBg >= 0)          { stylePtr->indentBg = tagPtr->indentBg; }
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
     if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
@@ -2016,7 +2016,7 @@ FillStyle(
 	stylePtr->borderWidth = tagPtr->attrs.borderWidth;
     }
 
-    if (tagPtr->overstrikeString) {
+    if (tagPtr->overstrike >= 0) {
 	stylePtr->overstrike = tagPtr->overstrike;
 	if (tagPtr->overstrikeColor != NULL) {
 	     stylePtr->overstrikeColor = tagPtr->overstrikeColor;
@@ -2025,7 +2025,7 @@ FillStyle(
 	}
     }
 
-    if (tagPtr->underlineString) {
+    if (tagPtr->underline >= 0) {
 	stylePtr->underline = tagPtr->underline;
 	if (tagPtr->underlineColor != NULL) {
 	    stylePtr->underlineColor = tagPtr->underlineColor;
