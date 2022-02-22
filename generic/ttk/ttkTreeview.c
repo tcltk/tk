@@ -1144,7 +1144,7 @@ static TreeCell *GetCellListFromObj(
 	    Tcl_ResetResult(interp);
 	}
     }
- 
+
     cells = (TreeCell *) ckalloc(n * sizeof(TreeCell));
     for (i = 0; i < (TkSizeT)n; ++i) {
 	if (GetCellFromObj(interp, tv, elements[i], 0, NULL, &cells[i]) != TCL_OK) {
@@ -1449,7 +1449,7 @@ static int ConfigureItem(
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "HEIGHT", NULL);
 	goto error;
     }
-    
+
     /* Check -image.
      */
     if ((mask & ITEM_OPTION_IMAGE_CHANGED) && item->imageObj) {
@@ -1610,7 +1610,7 @@ static void UpdatePositionItem(
     if (item->hidden) {
 	hidden = 1;
     }
-    
+
     if (hidden) {
 	item->rowPos = -1;
 	item->visiblePos = -1;
@@ -1912,7 +1912,7 @@ static Ttk_Layout TreeviewGetLayout(
     if (cellHeight > tv->tree.rowHeight) {
 	tv->tree.rowHeight = cellHeight;
     }
-    
+
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
     }
@@ -2103,7 +2103,7 @@ static void PrepareItem(
     Treeview *tv, TreeItem *item, DisplayItem *displayItem, Ttk_State state)
 {
     Ttk_Style style = Ttk_LayoutStyle(tv->core.layout);
-    
+
     Ttk_TagSetDefaults(tv->tree.tagTable, style, displayItem);
     OverrideStriped(tv, item, displayItem);
     Ttk_TagSetValues(tv->tree.tagTable, item->tagset, displayItem);
@@ -3707,7 +3707,7 @@ static int CellSelectionRange(
 	cellFrom.item = cellTo.item;
 	cellTo.item = item;
     }
-    
+
     /* Go through all items in this rectangle.
      */
     for (item = cellFrom.item; item; item = NextPreorder(item)) {
@@ -3731,8 +3731,8 @@ static int CellSelectionRange(
 	    break;
 	}
     }
-    
-    Tcl_DecrRefCount(columns); 
+
+    Tcl_DecrRefCount(columns);
 
     Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     TtkRedisplayWidget(&tv->core);
@@ -4058,7 +4058,7 @@ static int TreeviewCtagHasCommand(
 	    result = Ttk_TagSetContains(cell.item->cellTagSets[columnNumber],
 		    tag);
 	}
-	
+
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
 	return TCL_OK;
     } else {

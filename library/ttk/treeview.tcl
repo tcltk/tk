@@ -72,7 +72,7 @@ proc ttk::treeview::Keynav {w dir} {
             set colAnchor "#1"
         }
     }
-   
+
     switch -- $dir {
 	up {
 	    if {[set up [$w prev $focus]] eq ""} {
@@ -232,7 +232,7 @@ proc ttk::treeview::Press {w x y} {
 	cell {
 	    set item [$w identify item $x $y]
             set cell [IdentifyCell $w $x $y]
-            
+
 	    SelectOp $w $item $cell choose
 	    switch -glob -- [$w identify element $x $y] {
 		*indicator -
