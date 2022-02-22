@@ -1263,6 +1263,7 @@ static Ttk_PositionSpec AnchorToPosition(Tk_Anchor anchor)
 	case TK_ANCHOR_SW:	return TTK_PACK_LEFT|TTK_STICK_S;
 	case TK_ANCHOR_W:	return TTK_PACK_LEFT;
 	case TK_ANCHOR_CENTER:	return 0;
+	default:;
     }
     return TTK_PACK_LEFT;
 }

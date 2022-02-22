@@ -210,13 +210,13 @@ test config-3.8 {Tk_InitOptions - bad initial value} -constraints {
     testobjconfig
 } -body {
     testobjconfig configerror
-} -returnCodes error -result {expected integer but got "bogus"}
+} -returnCodes error -result {expected integer or "" but got "bogus"}
 test config-3.9 {Tk_InitOptions - bad initial value} -constraints {
     testobjconfig
 } -body {
     catch {testobjconfig configerror}
     return $errorInfo
-} -result {expected integer but got "bogus"
+} -result {expected integer or "" but got "bogus"
     (default value for "-int")
     invoked from within
 "testobjconfig configerror"}
@@ -274,10 +274,10 @@ test config-4.7 {DoObjConfig - invalid boolean} -constraints {
 } -setup {
     catch {rename .foo {}}
 } -body {
-    testobjconfig alltypes .foo -boolean {}
+    testobjconfig alltypes .foo -boolean foo
 } -cleanup {
     killTables
-} -returnCodes error -result {expected boolean value but got ""}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test config-4.8 {DoObjConfig - boolean internal value} -constraints {
     testobjconfig
 } -setup {
@@ -458,19 +458,20 @@ test config-4.28 {DoObjConfig - string table} -constraints testobjconfig -body {
     killTables
 } -returnCodes ok
 test config-4.29 {DoObjConfig - invalid string table} -constraints {
-    testobjconfig
+    testobjconfig needsTcl87
 } -body {
     testobjconfig alltypes .foo -stringtable foo
 } -cleanup {
     killTables
-} -returnCodes error -result {bad stringtable "foo": must be one, two, three, or four}
+} -returnCodes error -result {bad stringtable "foo": must be one, two, three, four, or ""}
 test config-4.29a {DoObjConfig - invalid string table} -constraints {
-    testobjconfig
+    testobjconfig needsTcl87
 } -body {
     testobjconfig alltypes .foo -stringtable2 foo
 } -cleanup {
     killTables
-} -returnCodes error -result {bad stringtable2 "foo": must be one or two}
+} -returnCodes error -result {bad stringtable2 "foo": must be one, two, or ""}
+
 test config-4.30 {DoObjConfig - new string table} -constraints {
     testobjconfig
 } -body {
@@ -780,12 +781,12 @@ test config-4.70 {DoObjConfig - relief} -constraints testobjconfig -body {
     killTables
 } -returnCodes ok -result flat
 test config-4.71 {DoObjConfig - invalid relief} -constraints {
-    testobjconfig
+    testobjconfig needsTcl87
 } -body {
     testobjconfig alltypes .foo -relief foo
 } -cleanup {
     killTables
-} -returnCodes error -result {bad relief "foo": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "foo": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test config-4.72 {DoObjConfig - relief internal value} -constraints testobjconfig -setup {
     catch {rename .foo {}}
 } -body {
@@ -874,11 +875,11 @@ test config-4.84 {DoObjConfig - justify} -constraints testobjconfig -body {
 } -cleanup {
     killTables
 } -returnCodes ok -result center
-test config-4.85 {DoObjConfig - invalid justify} -constraints testobjconfig -body {
+test config-4.85 {DoObjConfig - invalid justify} -constraints {testobjconfig needsTcl87} -body {
     testobjconfig alltypes .foo -justify foo
 } -cleanup {
     killTables
-} -returnCodes error -result {bad justification "foo": must be left, right, or center}
+} -returnCodes error -result {bad justification "foo": must be left, right, center, or ""}
 test config-4.86 {DoObjConfig - new justify} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -justify left
     .foo configure -justify right
@@ -916,9 +917,9 @@ test config-4.90 {DoObjConfig - anchor} -constraints testobjconfig -body {
 } -returnCodes ok -result center
 test config-4.91 {DoObjConfig - invalid anchor} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -anchor foo
-} -cleanup {
+} -constraints needsTcl87 -cleanup {
     killTables
-} -returnCodes error -result {bad anchor "foo": must be n, ne, e, se, s, sw, w, nw, or center}
+} -returnCodes error -result {bad anchor "foo": must be n, ne, e, se, s, sw, w, nw, center, or ""}
 test config-4.92 {DoObjConfig - new anchor} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -anchor e
     .foo configure -anchor n
@@ -1587,7 +1588,7 @@ test config-10.3 {Tk_GetOptionInfo - all items} -constraints {
     .foo configure
 } -cleanup {
     destroy .foo
-} -result {{-boolean boolean Boolean 1 1} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-stringtable2 StringTable2 stringTable2 two two} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief {} {}} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor center center} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}
+} -result {{-boolean boolean Boolean {} {}} {-integer integer Integer 7 13563} {-double double Double 3.14159 3.14159} {-string string String foo foo} {-stringtable StringTable stringTable one one} {-stringtable2 StringTable2 stringTable2 two two} {-color color Color red red} {-font font Font {Helvetica 12} {Helvetica 18}} {-bitmap bitmap Bitmap gray50 gray50} {-border border Border blue blue} {-relief relief Relief {} {}} {-cursor cursor Cursor xterm xterm} {-justify {} {} left left} {-anchor anchor Anchor center center} {-pixel pixel Pixel 1 1} {-custom {} {} {} {}} {-synonym -color}}
 test config-10.4 {Tk_GetOptionInfo - chaining through tables} -constraints testobjconfig -body {
     testobjconfig chain2 .foo -one asdf -three xyzzy
     .foo configure

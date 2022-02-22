@@ -364,7 +364,7 @@ test treeview-5.14 "set illegal height" -body {
 } -returnCodes 1 -result {expected integer but got "1.5"}
 
 test treeview-5.15 "set illegal height" -body {
-    .tv item newnode -height 0 
+    .tv item newnode -height 0
 } -returnCodes 1 -result "Invalid item height 0"
 
 test treeview-5.16 "no change after illegal attempt" -body {

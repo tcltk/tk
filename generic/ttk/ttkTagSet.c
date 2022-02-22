@@ -313,7 +313,7 @@ void Ttk_TagSetDefaults(Ttk_TagTable tagTable, Ttk_Style style, void *record)
 	++optionSpec;
     }
 }
-    
+
 void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 {
     const int LOWEST_PRIORITY = 0x7FFFFFFF;
