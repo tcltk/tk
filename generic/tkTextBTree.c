@@ -1268,12 +1268,10 @@ UndoGetRange(
 
 static Tcl_Obj *
 UndoDeleteGetCommand(
-    const TkSharedText *sharedTextPtr,
-    const TkTextUndoToken *item)
+    TCL_UNUSED(const TkSharedText *),
+    TCL_UNUSED(const TkTextUndoToken *))
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
-    (void)item;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("delete", -1));
     return objPtr;
@@ -1312,7 +1310,7 @@ UndoDeletePerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     TkTextLine *linePtr, *startLinePtr, *newLinePtr;
     TkTextSegment *segPtr, *prevPtr, *nextPtr;
@@ -1334,7 +1332,6 @@ UndoDeletePerform(
     int size = 0;
     unsigned i;
     DEBUG(int hasZeroSize);
-    (void)isRedo;
 
     assert(segments);
     assert(segments[0]);
@@ -1623,11 +1620,10 @@ RedoDeletePerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     const UndoTokenDelete *token = (const UndoTokenDelete *) undoInfo->token;
     int flags = 0;
-    (void)isRedo;
 
     if (token->surrogate) {
 	flags = DELETE_LASTLINE;
@@ -1678,12 +1674,10 @@ RedoDeletePerform(
 
 static Tcl_Obj *
 UndoInsertGetCommand(
-    const TkSharedText *sharedTextPtr,
-    const TkTextUndoToken *item)
+    TCL_UNUSED(const TkSharedText *),
+    TCL_UNUSED(const TkTextUndoToken *))
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
-    (void)item;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", -1));
     return objPtr;
@@ -1694,11 +1688,10 @@ UndoInsertPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     struct UndoTokenInsert *token = (UndoTokenInsert *) undoInfo->token;
     TkTextIndex index1, index2;
-    (void)isRedo;
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->startIndex, &index1);
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->endIndex, &index2);
@@ -1732,14 +1725,13 @@ RedoInsertInspect(
 
 static Tcl_Obj *
 UndoTagGetCommand(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextUndoToken *item)
 {
     const UndoTokenTagChange *token = (const UndoTokenTagChange *) item;
     int isRedo = (item->undoType == &redoTokenTagType);
     int add = (isRedo == POINTER_IS_MARKED(token->tagPtr));
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(add ? "add" : "remove", -1));
@@ -1826,12 +1818,10 @@ UndoTagDestroy(
 
 static Tcl_Obj *
 UndoClearTagsGetCommand(
-    const TkSharedText *sharedTextPtr,
-    const TkTextUndoToken *item)
+    TCL_UNUSED(const TkSharedText *),
+    TCL_UNUSED(const TkTextUndoToken *))
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
-    (void)item;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("clear", -1));
@@ -1865,7 +1855,7 @@ UndoClearTagsPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     UndoTokenTagClear *token = (UndoTokenTagClear *) undoInfo->token;
     const UndoTagChange *entry = token->changeList;
@@ -1880,7 +1870,6 @@ UndoClearTagsPerform(
     Node *nodePtr;
     int offs = 0;
     unsigned i;
-    (void)isRedo;
 
     assert(token->changeListSize > 0);
 
@@ -2015,7 +2004,7 @@ UndoClearTagsPerform(
 
 static void
 UndoClearTagsDestroy(
-    TkSharedText *sharedTextPtr,
+    TCL_UNUSED(TkSharedText *),
     TkTextUndoToken *token,
     int reused)
 {
@@ -2023,7 +2012,6 @@ UndoClearTagsDestroy(
 	UndoTokenTagClear *myToken = (UndoTokenTagClear *) token;
 	UndoTagChange *changeList = myToken->changeList;
 	unsigned i, n = myToken->changeListSize;
-	(void)sharedTextPtr;
 
 	for (i = 0; i < n; ++i) {
 	    TkTextTagSetDecrRefCount(changeList[i].tagInfoPtr);
@@ -2038,11 +2026,10 @@ RedoClearTagsPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     RedoTokenClearTags *token = (RedoTokenClearTags *) undoInfo->token;
     TkTextIndex index1, index2;
-    (void)isRedo;
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->startIndex, &index1);
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->endIndex, &index2);
@@ -2589,14 +2576,12 @@ RemovePixelClient(
 int
 TkBTreeJoinUndoInsert(
     TkTextUndoToken *token1,
-    unsigned byteSize1,
+    TCL_UNUSED(unsigned),
     TkTextUndoToken *token2,
-    unsigned byteSize2)
+    TCL_UNUSED(unsigned))
 {
     struct UndoTokenInsert *myToken1 = (UndoTokenInsert *) token1;
     struct UndoTokenInsert *myToken2 = (UndoTokenInsert *) token2;
-    (void)byteSize1;
-    (void)byteSize2;
 
     if (UndoIndexIsEqual(&myToken1->endIndex, &myToken2->startIndex)) {
 	/* append to first token */
@@ -5922,7 +5907,6 @@ RebuildSections(
     TkTextSegment *segPtr;
     unsigned length;
     int changeToNumBranches;
-    (void)sharedTextPtr;
 
     prevSectionPtr = NULL;
     sectionPtr = linePtr->segPtr->sectionPtr;
@@ -14687,11 +14671,10 @@ SearchBranchInLine(
 static const Node *
 FindNodeWithBranch(
     const TkSharedText *sharedTextPtr,
-    const TkText *textPtr,		/* can be NULL */
+    TCL_UNUSED(const TkText *),		/* can be NULL */
     const Node *nodePtr)
 {
     const Node *parentPtr;
-    (void)textPtr;
 
     assert(nodePtr);
 
@@ -15335,10 +15318,8 @@ TkBTreeRootTagInfo(
 
 unsigned
 TkBTreeLinesPerNode(
-    const TkTextBTree tree)
+    TCL_UNUSED(const TkTextBTree))
 {
-    (void)tree;
-
     return MIN_CHILDREN;
 }
 
@@ -15363,14 +15344,13 @@ TkBTreeLinesPerNode(
 
 unsigned
 TkBTreeChildNumber(
-    const TkTextBTree tree,
+    TCL_UNUSED(const TkTextBTree),
     const TkTextLine *linePtr,
     unsigned *depth)
 {
     const Node *childPtr;
     const Node *nodePtr;
     unsigned number = 0;
-    (void)tree;
 
     assert(linePtr);
 
@@ -15446,8 +15426,6 @@ CleanupSplitPoint(
     TkTextSegment *segPtr,
     TkSharedText *sharedTextPtr)
 {
-    (void)sharedTextPtr;
-
     if (!segPtr || !segPtr->protectionFlag) {
 	return;
     }
@@ -15490,11 +15468,10 @@ CleanupSplitPoint(
 
 static TkTextSegment *
 JoinCharSegments(
-    const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
+    TCL_UNUSED(const TkSharedText *),	/* Handle to shared text resource. */
     TkTextSegment *segPtr)		/* Pointer to first of two adjacent segments to join. */
 {
     TkTextSegment *nextPtr, *newPtr;
-    (void)sharedTextPtr;
 
     assert(segPtr);
     assert(segPtr->typePtr == &tkTextCharType);
@@ -15600,13 +15577,10 @@ CleanupCharSegments(
 
 static int
 CharDeleteProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to delete. */
-    int flags)			/* Flags controlling the deletion. */
+    TCL_UNUSED(int))			/* Flags controlling the deletion. */
 {
-    (void)sharedTextPtr;
-    (void)flags;
-
     TkBTreeFreeSegment(segPtr);
     return 1;
 }
@@ -15661,11 +15635,9 @@ CharInspectProc(
 
 static void
 CharCheckProc(
-    const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
+    TCL_UNUSED(const TkSharedText *),	/* Handle to shared text resource. */
     const TkTextSegment *segPtr)	/* Segment to check. */
 {
-    (void)sharedTextPtr;
-
     /*
      * Make sure that the segment contains the number of characters indicated
      * by its header, and that the last segment in a line ends in a newline.
@@ -15708,13 +15680,10 @@ CharCheckProc(
 
 static int
 HyphenDeleteProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
-    int flags)			/* Flags controlling the deletion. */
+    TCL_UNUSED(int))			/* Flags controlling the deletion. */
 {
-    (void)sharedTextPtr;
-    (void)flags;
-
     TkBTreeFreeSegment(segPtr);
     return 1;
 }
@@ -15768,11 +15737,9 @@ HyphenInspectProc(
 
 static void
 HyphenCheckProc(
-    const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
+    TCL_UNUSED(const TkSharedText *),	/* Handle to shared text resource. */
     const TkTextSegment *segPtr)	/* Segment to check. */
 {
-    (void)sharedTextPtr;
-
     if (segPtr->size != 1) {
 	Tcl_Panic("HyphenCheckProc: hyphen has size %d", segPtr->size);
     }
@@ -15797,12 +15764,10 @@ HyphenCheckProc(
 
 static int
 BranchDeleteProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
-    (void)sharedTextPtr;
-
     if (flags & TREE_GONE) {
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
@@ -15838,11 +15803,9 @@ BranchDeleteProc(
 
 static int
 BranchRestoreProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
-    (void)sharedTextPtr;
-
     /* Restore old relationship. */
     segPtr->body.branch.nextPtr = (TkTextSegment *) segPtr->tagInfoPtr;
     assert(segPtr->body.branch.nextPtr->typePtr == &tkTextLinkType);
@@ -15870,11 +15833,10 @@ BranchRestoreProc(
 
 static Tcl_Obj *
 BranchInspectProc(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextSegment *segPtr)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     return objPtr;
@@ -15991,12 +15953,10 @@ BranchCheckProc(
 
 static int
 LinkDeleteProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr,	/* Segment to check. */
     int flags)			/* Flags controlling the deletion. */
 {
-    (void)sharedTextPtr;
-
     if (flags & TREE_GONE) {
 	FREE_SEGMENT(segPtr);
 	DEBUG_ALLOC(tkTextCountDestroySegment++);
@@ -16032,11 +15992,9 @@ LinkDeleteProc(
 
 static int
 LinkRestoreProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
     TkTextSegment *segPtr)	/* Segment to reuse. */
 {
-    (void)sharedTextPtr;
-
     /* Restore old relationship (misuse of an unused pointer). */
     segPtr->body.link.prevPtr = (TkTextSegment *) segPtr->tagInfoPtr;
     assert(segPtr->body.link.prevPtr->typePtr == &tkTextBranchType);
@@ -16064,11 +16022,10 @@ LinkRestoreProc(
 
 static Tcl_Obj *
 LinkInspectProc(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextSegment *segPtr)
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
     return objPtr;
@@ -16178,12 +16135,9 @@ LinkCheckProc(
 
 static void
 ProtectionMarkCheckProc(
-    const TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
-    const TkTextSegment *segPtr)	/* Segment to check. */
+    TCL_UNUSED(const TkSharedText *),	/* Handle to shared text resource. */
+    TCL_UNUSED(const TkTextSegment *))	/* Segment to check. */
 {
-    (void)sharedTextPtr;
-    (void)segPtr;
-
     Tcl_Panic("ProtectionMarkCheckProc: protection mark detected");
 }
 
@@ -16205,14 +16159,10 @@ ProtectionMarkCheckProc(
 
 static int
 ProtectionMarkDeleteProc(
-    TkSharedText *sharedTextPtr,/* Handle to shared text resource. */
-    TkTextSegment *segPtr,	/* Segment to check. */
-    int flags)			/* Flags controlling the deletion. */
+    TCL_UNUSED(TkSharedText *),/* Handle to shared text resource. */
+    TCL_UNUSED(TkTextSegment *),	/* Segment to check. */
+    TCL_UNUSED(int))			/* Flags controlling the deletion. */
 {
-    (void)sharedTextPtr;
-    (void)segPtr;
-    (void)flags;
-
     return 1;
 }
 

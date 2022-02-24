@@ -199,12 +199,11 @@ typedef struct UndoTokenTagPriority {
 
 static Tcl_Obj *
 UndoChangeTagPriorityGetCommand(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextUndoToken *item)
 {
     const UndoTokenTagPriority *token = (const UndoTokenTagPriority *) item;
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("priority", -1));
@@ -229,11 +228,10 @@ UndoChangeTagPriorityPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) undoInfo->token;
     unsigned oldPriority = token->tagPtr->priority;
-    (void)isRedo;
 
     ChangeTagPriority(sharedTextPtr, token->tagPtr, token->priority, 1);
 
@@ -248,10 +246,9 @@ static void
 UndoChangeTagPriorityDestroy(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *item,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
-    (void)isRedo;
 
     TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
 }
@@ -1681,17 +1678,15 @@ TkTextTagChangedUndoRedo(
 static void
 GrabSelection(
     TkText *textPtr,		/* Info about overall widget. */
-    const TkTextTag *tagPtr,	/* Tag which has been modified. */
+    TCL_UNUSED(const TkTextTag *),	/* Tag which has been modified. */
     int add,			/* 'true' means that we have added the "sel" tag;
 				 * 'false' means we have removed the "sel" tag. */
     int changed)		/* 'false' means that the selection has not changed, nevertheless
     				 * the text widget should become the owner again. */
 {
     int ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
-    (void)tagPtr;
 
     assert(textPtr);
-    assert(tagPtr == textPtr->selTagPtr);
 
     if (changed || ownSelection) {
 	/*
@@ -3484,8 +3479,6 @@ AddSet(
     const TkTextTagSet *src)
 {
     TkBitField *cmpl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
-    (void)sharedTextPtr;
-    (void)src;
 
     dst = AddBits(dst, cmpl);
     TkBitDecrRefCount(cmpl);
@@ -3499,8 +3492,6 @@ AddComplementSet(
     const TkTextTagSet *src)
 {
     TkBitField *cmpl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
-    (void)sharedTextPtr;
-    (void)src;
 
     dst = AddComplementBits(dst, cmpl);
     TkBitDecrRefCount(cmpl);

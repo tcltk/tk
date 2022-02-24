@@ -2977,7 +2977,6 @@ LayoutFinalizeCharInfo(
     int gotTab)
 {
     CharInfo *ciPtr = (CharInfo *)data->chunkPtr->clientData;
-    (void)gotTab;
 
     assert(data->trimSpaces ?
 	    (TkSizeT)data->chunkPtr->numBytes >= ciPtr->numBytes :
@@ -3011,7 +3010,8 @@ LayoutFinalizeCharInfo(
     if (gotTab) {
 	data->baseChunkPtr = NULL;
     }
-
+#else
+    (void)gotTab;
 #endif
 }
 
@@ -3191,12 +3191,10 @@ LayoutMakeNewChunk(
 static void
 LayoutSkipBytes(
     LayoutData *data,
-    DLine *dlPtr,
+    TCL_UNUSED(DLine *),
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2)
 {
-    (void)dlPtr;
-
     LayoutMakeNewChunk(data);
     data->chunkPtr->layoutProcs = &layoutElideProcs;
     data->chunkPtr->numBytes = TkTextIndexCountBytes(indexPtr1, indexPtr2);
@@ -12694,22 +12692,17 @@ TkTextGetDLineInfo(
 
 static void
 ElideBboxProc(
-    TkText *textPtr,
+    TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    int index,			/* Index of desired character within the chunk. */
+    TCL_UNUSED(int),			/* Index of desired character within the chunk. */
     int y,			/* Topmost pixel in area allocated for this line. */
-    int lineHeight,		/* Height of line, in pixels. */
-    int baseline,		/* Location of line's baseline, in pixels measured down from y. */
+    TCL_UNUSED(int),		/* Height of line, in pixels. */
+    TCL_UNUSED(int),		/* Location of line's baseline, in pixels measured down from y. */
     int *xPtr, int *yPtr,	/* Gets filled in with coords of character's upper-left pixel.
     				 * X-coord is in same coordinate system as chunkPtr->x. */
     int *widthPtr,		/* Gets filled in with width of character, in pixels. */
     int *heightPtr)		/* Gets filled in with height of character, in pixels. */
 {
-    (void)textPtr;
-    (void)index;
-    (void)lineHeight;
-    (void)baseline;
-
     *xPtr = chunkPtr->x;
     *yPtr = y;
     *widthPtr = *heightPtr = 0;
@@ -12721,12 +12714,9 @@ ElideBboxProc(
 
 static int
 ElideMeasureProc(
-    TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
-    int x)			/* X-coordinate, in same coordinate system as chunkPtr->x. */
+    TCL_UNUSED(TkTextDispChunk *),	/* Chunk containing desired coord. */
+    TCL_UNUSED(int))			/* X-coordinate, in same coordinate system as chunkPtr->x. */
 {
-    (void)chunkPtr;
-    (void)x;
-
     return 0;
 }
 
@@ -12789,7 +12779,7 @@ CharBboxProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
     int byteIndex,		/* Byte offset of desired character within the chunk */
     int y,			/* Topmost pixel in area allocated for this line. */
-    int lineHeight,		/* Height of line, in pixels. */
+    TCL_UNUSED(int),		/* Height of line, in pixels. */
     int baseline,		/* Location of line's baseline, in pixels measured down from y. */
     int *xPtr, int *yPtr,	/* Gets filled in with coords of character's upper-left pixel.
     				 * X-coord is in same coordinate system as chunkPtr->x. */
@@ -12800,7 +12790,6 @@ CharBboxProc(
     int offset = ciPtr->baseOffset + byteIndex;
     int maxX = chunkPtr->width + chunkPtr->x;
     int nextX;
-    (void)lineHeight;
 
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, textPtr->spaceMode, 0, xPtr);
 
@@ -13635,15 +13624,13 @@ static int
 TkpMeasureChars(
     Tk_Font tkfont,
     const char *source,
-    int numBytes,
+    TCL_UNUSED(int),
     int rangeStart,
     int rangeLength,
     int maxLength,
     int flags,
     int *lengthPtr)
 {
-    (void)numBytes;
-
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength, maxLength, flags, lengthPtr);
 }
 
@@ -13914,15 +13901,13 @@ FreeCharInfo(
 
 static int
 ComputeBreakIndex(
-    TkText *textPtr,
+    TCL_UNUSED(TkText *),
     const TkTextDispChunk *chunkPtr,
     TkTextSegment *segPtr,
     int byteOffset,
     TkWrapMode wrapMode,
     TkTextSpaceMode spaceMode)
 {
-    (void)textPtr;
-
     switch (wrapMode) {
     case TEXT_WRAPMODE_NONE:
 	break;
@@ -14631,15 +14616,12 @@ CharDisplayProc(
     int x,			/* X-position in dst at which to draw this chunk (may differ from
     				 * the x-position in the chunk because of scrolling). */
     int y,			/* Y-position at which to draw this chunk in dst. */
-    int height,			/* Total height of line. */
+    TCL_UNUSED(int),			/* Total height of line. */
     int baseline,		/* Offset of baseline from y. */
     Display *display,		/* Display to use for drawing. */
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
-    int screenY)		/* Y-coordinate in text window that corresponds to y. */
+    TCL_UNUSED(int))		/* Y-coordinate in text window that corresponds to y. */
 {
-    (void)height;
-    (void)screenY;
-
     if (chunkPtr->width > 0 && x + chunkPtr->width > 0) {
 	/* The chunk has displayable content, and is not off-screen. */
 	DisplayChars(textPtr, chunkPtr, x, y, baseline, display, dst);
@@ -14732,11 +14714,10 @@ CharUndisplayProc(
 
 static void
 HyphenUndisplayProc(
-    TkText *textPtr,		/* Overall information about text widget. */
+    TCL_UNUSED(TkText *),		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
     TkTextSegment *hyphenPtr = (TkTextSegment *)chunkPtr->clientData;
-    (void)textPtr;
 
     if (hyphenPtr) {
 	TkBTreeFreeSegment(hyphenPtr);
@@ -14917,7 +14898,7 @@ static void
 DrawChars(
     TkText *textPtr,
     TkTextDispChunk *chunkPtr,	/* Display the content of this chunk. */
-    int x,			/* X-position in dst at which to draw. */
+    TCL_UNUSED(int),			/* X-position in dst at which to draw. */
     int y,			/* Y-position at which to draw. */
     int offsetX,		/* Offset from x. */
     int offsetBytes,		/* Offset in display string. */
@@ -14926,7 +14907,6 @@ DrawChars(
 {
     const CharInfo *ciPtr;
     int numBytes;
-    (void)x;
 
     ciPtr = (const CharInfo *)chunkPtr->clientData;
     numBytes = ciPtr->numBytes;

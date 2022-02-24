@@ -1225,7 +1225,7 @@ ErrorNotAllowed(
 
 int
 TkTextAttemptToModifyDisabledWidget(
-    Tcl_Interp *dummy)
+    TCL_UNUSED(Tcl_Interp *))
 {
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
     static int showWarning = 1;
@@ -1238,7 +1238,6 @@ TkTextAttemptToModifyDisabledWidget(
     ErrorNotAllowed(interp, "attempt to modify disabled widget");
     return TCL_ERROR;
 #endif
-    (void)dummy;
 }
 
 /*
@@ -1260,10 +1259,11 @@ TkTextAttemptToModifyDisabledWidget(
 
 int
 TkTextAttemptToModifyDeadWidget(
-    Tcl_Interp *dummy)
+    Tcl_Interp *interp)
 {
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
     static int showWarning = 1;
+    (void)interp;
     if (showWarning) {
 	fprintf(stderr, "tk::text: Attempt to modify a dead widget is deprecated.\n");
 	showWarning = 0;
@@ -1273,7 +1273,6 @@ TkTextAttemptToModifyDeadWidget(
     ErrorNotAllowed(interp, "attempt to modify dead widget");
     return TCL_ERROR;
 #endif
-    (void)dummy;
 }
 
 /*
@@ -5689,11 +5688,10 @@ TkTextGetUndeletableNewline(
 
 static int
 DeleteOnLastLine(
-    TkSharedText *sharedTextPtr,
+    TCL_UNUSED(TkSharedText *),
     const TkTextLine *lastLinePtr,
     int flags) /* deletion flags */
 {
-	(void)sharedTextPtr;
     assert(lastLinePtr);
     assert(!lastLinePtr->nextPtr);
 
@@ -8059,11 +8057,10 @@ DumpSegment(
     const char *value,		/* Segment value. */
     Tcl_Obj *command,		/* Script callback. */
     const TkTextIndex *index,	/* index with line/byte position info. */
-    int what)			/* Look for TK_DUMP_INDEX bit. */
+    TCL_UNUSED(int))			/* Look for TK_DUMP_INDEX bit. */
 {
     char buffer[TK_POS_CHARS];
     Tcl_Obj *values[3], *tuple;
-    (void)what;
 
     TkrTextPrintIndex(textPtr, index, buffer);
     values[0] = Tcl_NewStringObj(key, -1);
@@ -9729,14 +9726,13 @@ TkTextPerformWatchCmd(
     const char *arg1,			/* 3rd argument for watch command, can be NULL. */
     const char *arg2,			/* 3rd argument for watch command, can be NULL. */
     const char *arg3,			/* 3rd argument for watch command, can be NULL. */
-    int userFlag)			/* 4rd argument for watch command. */
+    TCL_UNUSED(int))			/* 4rd argument for watch command. */
 {
     TkText *peerArr[20];
     TkText **peers = peerArr;
     TkText *tPtr;
     unsigned numPeers = 0;
     unsigned i;
-    (void)userFlag;
 
     assert(sharedTextPtr);
     assert(sharedTextPtr->triggerWatchCmd);
@@ -10826,7 +10822,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if (info.extendStart < 0) {
+		    if (info.extendStart == TCL_INDEX_NONE) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -10920,7 +10916,7 @@ SearchCore(
 
 			if ((match  && firstOffset + (int)info.matches[0].end != lastTotal
 				    && firstOffset + (int)info.matches[0].end < prevFullLine)
-				|| info.extendStart < 0) {
+				|| info.extendStart == TCL_INDEX_NONE) {
 			    break;
 			}
 
@@ -11341,8 +11337,8 @@ SearchCore(
 
 static Tcl_Obj *
 GetTextStartEnd(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *recordPtr,		/* Pointer to widget record. */
     TkSizeT internalOffset)		/* Offset within *recordPtr containing the start object. */
 {
@@ -11353,8 +11349,6 @@ GetTextStartEnd(
     Tcl_Obj **objPtr = (Tcl_Obj **) (recordPtr + internalOffset);
     const TkTextSegment *sharedMarker;
     TkTextSegment *marker;
-    (void)dummy;
-    (void)tkwin;
 
     if (objPtr == &textPtr->newStartIndex) {
 	marker = textPtr->startMarker;
@@ -11399,9 +11393,9 @@ ObjectIsEmpty(
 
 static int
 SetTextStartEnd(
-    ClientData dummy,
-    Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    Tk_Window tkwin,		/* Window for which option is being set. */
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tcl_Interp *),		/* Current interp; may be used for errors. */
+    TCL_UNUSED(Tk_Window),		/* Window for which option is being set. */
     Tcl_Obj **value,		/* Pointer to the pointer to the value object.
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
@@ -11414,9 +11408,6 @@ SetTextStartEnd(
     Tcl_Obj **objPtr = (Tcl_Obj **) (recordPtr + internalOffset);
     Tcl_Obj **oldObjPtr = (Tcl_Obj **) oldInternalPtr;
     const TkText *textPtr = (const TkText *) recordPtr;
-    (void)dummy;
-    (void)interp;
-    (void)tkwin;
 
     assert(!*objPtr);
     *oldObjPtr = NULL;
@@ -11450,15 +11441,13 @@ SetTextStartEnd(
 
 static void
 RestoreTextStartEnd(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *internalPtr,		/* Pointer to storage for value. */
     char *oldInternalPtr)	/* Pointer to old value. */
 {
     Tcl_Obj **newValue = (Tcl_Obj **) internalPtr;
     Tcl_Obj **oldValue = (Tcl_Obj **) oldInternalPtr;
-    (void)dummy;
-    (void)tkwin;
 
     if (*oldValue) {
 	Tcl_IncrRefCount(*oldValue);
@@ -11485,13 +11474,11 @@ RestoreTextStartEnd(
 
 static void
 FreeTextStartEnd(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *internalPtr)
 {
     Tcl_Obj *objPtr = *(Tcl_Obj **) internalPtr;
-    (void)dummy;
-    (void)tkwin;
 
     if (objPtr) {
 	Tcl_GuardedDecrRefCount(objPtr);
@@ -11518,15 +11505,13 @@ FreeTextStartEnd(
 
 static Tcl_Obj *
 GetLineStartEnd(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *recordPtr,		/* Pointer to widget record. */
     TkSizeT internalOffset)		/* Offset within *recordPtr containing the line value. */
 {
     TkText *textPtr;
     TkTextLine *linePtr = *(TkTextLine **)(recordPtr + internalOffset);
-    (void)dummy;
-    (void)tkwin;
 
     if (!linePtr) {
 	return Tcl_NewObj();
@@ -11556,25 +11541,27 @@ GetLineStartEnd(
 
 static int
 SetLineStartEnd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interp; may be used for errors. */
-    Tk_Window tkwin,		/* Window for which option is being set. */
+    TCL_UNUSED(Tk_Window),		/* Window for which option is being set. */
     Tcl_Obj **value,		/* Pointer to the pointer to the value object.
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
+    TkSizeT internalOffset,	/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
 {
     TkTextLine *linePtr = NULL;
     char *internalPtr;
-    TkText *textPtr = (TkText *) recordPtr;
-    (void)dummy;
-    (void)tkwin;
+    TkText *textPtr = (TkText *)recordPtr;
 
-    internalPtr = internalOffset >= 0 ? recordPtr + internalOffset : NULL;
+    if (internalOffset != TCL_INDEX_NONE) {
+	internalPtr = (char *)recordPtr + internalOffset;
+    } else {
+	internalPtr = NULL;
+    }
 
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(*value)) {
 	*value = NULL;
@@ -11613,14 +11600,11 @@ SetLineStartEnd(
 
 static void
 RestoreLineStartEnd(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *internalPtr,		/* Pointer to storage for value. */
     char *oldInternalPtr)	/* Pointer to old value. */
 {
-    (void)dummy;
-    (void)tkwin;
-
     *(TkTextLine **) internalPtr = *(TkTextLine **) oldInternalPtr;
 }
 
@@ -11648,7 +11632,7 @@ RestoreLineStartEnd(
 
 int
 TkrTesttextCmd(
-    ClientData dummy,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -11660,7 +11644,6 @@ TkrTesttextCmd(
     char buf[TK_POS_CHARS];
     Tcl_CmdInfo info;
     Tcl_Obj *watchCmd;
-    (void)dummy;
 
     if (objc < 3) {
 	return TCL_ERROR;
