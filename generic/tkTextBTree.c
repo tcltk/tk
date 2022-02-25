@@ -6889,6 +6889,8 @@ DeleteRange(
     TkTextSegment *prevLinkPtr;
     TkTextSegment *beforeSurrogate;
     TkTextSegment *prevSavePtr;
+    TkTextSegment *savedBranchPtr;
+    TkTextSegment *savedLinkPtr;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -6965,6 +6967,7 @@ DeleteRange(
     insertSurrogate = 0;
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
+    savedBranchPtr = savedLinkPtr = NULL;
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE)
 	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
@@ -7092,6 +7095,26 @@ DeleteRange(
 		(savePtr = segPtr)->refCount += 1;
 	    } else {
 		savePtr = NULL;
+	    }
+
+	    /*
+	     * Save branch or link segment before deletion
+	     */
+
+	    if (segPtr->typePtr == &tkTextBranchType) {
+		assert(!savedBranchPtr);
+		savedBranchPtr = segPtr;
+		savedBranchPtr->refCount += 1;
+	    } else if (segPtr->typePtr == &tkTextLinkType) {
+		if (segPtr->body.link.prevPtr == savedBranchPtr) {
+		    /* Branch and link will both be deleted - dispose of saved branch */
+		    TkBTreeFreeSegment(savedBranchPtr);
+		    savedBranchPtr = NULL;
+		} else {
+		    assert(!savedLinkPtr);
+		    savedLinkPtr = segPtr;
+		    savedLinkPtr->refCount += 1;
+		}
 	    }
 
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
@@ -7303,6 +7326,22 @@ DeleteRange(
 		linkPtr = prevPtr;
 	    } while (linkPtr && linkPtr->typePtr == &tkTextLinkType);
 	}
+    }
+
+    /*
+     * Add saved branch or link to the end of the deleted range
+     */
+
+    if (savedBranchPtr) {
+	savedBranchPtr->sectionPtr = NULL;
+	LinkSwitch(linePtr1, lastSegPtr->prevPtr, savedBranchPtr);
+	linePtr1->numBranches = 1;
+	linePtr1->numLinks = 0;
+    } else if (savedLinkPtr) {
+	savedLinkPtr->sectionPtr = NULL;
+	LinkSwitch(linePtr1, lastSegPtr->prevPtr, savedLinkPtr);
+	linePtr1->numBranches = 0;
+	linePtr1->numLinks = 1;
     }
 
     /*
