@@ -188,7 +188,7 @@ test canvPs-5.1 {test ps generation with bitmap, bug 424773a00c} -body {
     pack [canvas .c]
     update
     .c create bitmap 50 50 -bitmap questhead
-    .c postscript  ; # crashes on macOS
+    .c postscript  ; # was crashing on macOS
 } -cleanup {
     destroy .c
 } -returnCodes ok -match glob -result *
