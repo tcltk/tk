@@ -4,14 +4,9 @@
  * Core widget utilities.
  */
 
-#include <string.h>
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
-
-#ifdef MAC_OSX_TK
-#define TK_NO_DOUBLE_BUFFERING 1
-#endif
 
 /*------------------------------------------------------------------------
  * +++ Internal helper routines.

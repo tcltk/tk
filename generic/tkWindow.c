@@ -13,12 +13,13 @@
  */
 
 #include "tkInt.h"
-
+#include "tkPort.h"
 #ifdef _WIN32
 #include "tkWinInt.h"
 #elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
 #endif
+#include "tkUuid.h"
 
 /*
  * Type used to keep track of Window objects that were only partially
@@ -93,6 +94,7 @@ static const XSetWindowAttributes defAtts= {
 #define PASSMAINWINDOW 2
 #define WINMACONLY 4
 #define USEINITPROC 8
+#define SAVEUPDATECMD 16 /* better only be one of these! */
 
 typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
 typedef struct {
@@ -126,7 +128,7 @@ static const TkCmd commands[] = {
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
     {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
-    {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE},
+    {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE|SAVEUPDATECMD},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"wm",		Tk_WmObjCmd,		PASSMAINWINDOW},
 
@@ -316,10 +318,10 @@ CreateTopLevelWindow(
 				 * parent. */
     unsigned int flags)		/* Additional flags to set on the window. */
 {
-    register TkWindow *winPtr;
-    register TkDisplay *dispPtr;
+    TkWindow *winPtr;
+    TkDisplay *dispPtr;
     int screenId;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->initialized) {
@@ -419,11 +421,11 @@ GetScreen(
 				 * DISPLAY envariable. */
     int *screenPtr)		/* Where to store screen number. */
 {
-    register TkDisplay *dispPtr;
+    TkDisplay *dispPtr;
     const char *p;
     int screenId;
     size_t length;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -487,7 +489,7 @@ GetScreen(
 
 	    Tcl_InitHashTable(&dispPtr->winTable, TCL_ONE_WORD_KEYS);
 
-	    dispPtr->name = ckalloc(length + 1);
+	    dispPtr->name = (char *)ckalloc(length + 1);
 	    strncpy(dispPtr->name, screenName, length);
 	    dispPtr->name[length] = '\0';
 	    break;
@@ -530,7 +532,7 @@ TkGetDisplay(
     Display *display)		/* X's display pointer */
 {
     TkDisplay *dispPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
@@ -563,7 +565,7 @@ TkGetDisplay(
 TkDisplay *
 TkGetDisplayList(void)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->displayList;
@@ -590,7 +592,7 @@ TkGetDisplayList(void)
 TkMainInfo *
 TkGetMainInfoList(void)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->mainWindowList;
@@ -620,7 +622,7 @@ TkAllocWindow(
 				 * inherit visual information. NULL means use
 				 * screen defaults instead of inheriting. */
 {
-    register TkWindow *winPtr = ckalloc(sizeof(TkWindow));
+    TkWindow *winPtr = (TkWindow *)ckalloc(sizeof(TkWindow));
 
     winPtr->display = dispPtr->display;
     winPtr->dispPtr = dispPtr;
@@ -701,7 +703,7 @@ TkAllocWindow(
 static int
 NameWindow(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
-    register TkWindow *winPtr,	/* Window that is to be named and inserted. */
+    TkWindow *winPtr,	/* Window that is to be named and inserted. */
     TkWindow *parentPtr,	/* Pointer to logical parent for winPtr (used
 				 * for naming, options, etc.). */
     const char *name)		/* Name for winPtr; must be unique among
@@ -771,7 +773,7 @@ NameWindow(
     if ((length1 + length2 + 2) <= FIXED_SIZE) {
 	pathName = staticSpace;
     } else {
-	pathName = ckalloc(length1 + length2 + 2);
+	pathName = (char *)ckalloc(length1 + length2 + 2);
     }
     if (length1 == 1) {
 	pathName[0] = '.';
@@ -793,7 +795,7 @@ NameWindow(
 	return TCL_ERROR;
     }
     Tcl_SetHashValue(hPtr, winPtr);
-    winPtr->pathName = Tcl_GetHashKey(&parentPtr->mainPtr->nameTable, hPtr);
+    winPtr->pathName = (char *)Tcl_GetHashKey(&parentPtr->mainPtr->nameTable, hPtr);
     return TCL_OK;
 }
 
@@ -820,6 +822,11 @@ NameWindow(
  *----------------------------------------------------------------------
  */
 
+#ifndef STRINGIFY
+#  define STRINGIFY(x) STRINGIFY1(x)
+#  define STRINGIFY1(x) #x
+#endif
+
 Tk_Window
 TkCreateMainWindow(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
@@ -832,11 +839,12 @@ TkCreateMainWindow(
     Tk_Window tkwin;
     int dummy, isSafe;
     Tcl_HashEntry *hPtr;
-    register TkMainInfo *mainPtr;
-    register TkWindow *winPtr;
-    register const TkCmd *cmdPtr;
+    TkMainInfo *mainPtr;
+    TkWindow *winPtr;
+    const TkCmd *cmdPtr;
     ClientData clientData;
-    ThreadSpecificData *tsdPtr =
+    Tcl_CmdInfo info;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -864,7 +872,7 @@ TkCreateMainWindow(
      */
 
     winPtr = (TkWindow *) tkwin;
-    mainPtr = ckalloc(sizeof(TkMainInfo));
+    mainPtr = (TkMainInfo *)ckalloc(sizeof(TkMainInfo));
     mainPtr->winPtr = winPtr;
     mainPtr->refCount = 1;
     mainPtr->interp = interp;
@@ -880,6 +888,7 @@ TkCreateMainWindow(
     Tcl_InitHashTable(&mainPtr->imageTable, TCL_STRING_KEYS);
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
+    mainPtr->tclUpdateObjProc = NULL;
     if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
@@ -897,7 +906,7 @@ TkCreateMainWindow(
     winPtr->mainPtr = mainPtr;
     hPtr = Tcl_CreateHashEntry(&mainPtr->nameTable, ".", &dummy);
     Tcl_SetHashValue(hPtr, winPtr);
-    winPtr->pathName = Tcl_GetHashKey(&mainPtr->nameTable, hPtr);
+    winPtr->pathName = (char *)Tcl_GetHashKey(&mainPtr->nameTable, hPtr);
     Tcl_InitHashTable(&mainPtr->busyTable, TCL_ONE_WORD_KEYS);
 
     /*
@@ -919,6 +928,8 @@ TkCreateMainWindow(
 
     isSafe = Tcl_IsSafe(interp);
     for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
+	Tcl_CmdInfo cmdInfo;
+
 	if (cmdPtr->objProc == NULL) {
 	    Tcl_Panic("TkCreateMainWindow: builtin command with NULL string and object procs");
 	}
@@ -938,6 +949,11 @@ TkCreateMainWindow(
 	} else {
 	    clientData = NULL;
 	}
+	if ((cmdPtr->flags & SAVEUPDATECMD) &&
+	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
+	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
+	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
@@ -948,9 +964,83 @@ TkCreateMainWindow(
 	    Tcl_HideCommand(interp, cmdPtr->name, cmdPtr->name);
 	}
     }
+    if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
+	Tcl_CreateObjCommand(interp, "::tk::build-info",
+		info.objProc, (void *)
+		(TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
+#if defined(MAC_OSX_TK)
+		".aqua"
+#endif
+#if defined(__clang__) && defined(__clang_major__)
+		".clang-" STRINGIFY(__clang_major__)
+#if __clang_minor__ < 10
+		"0"
+#endif
+		STRINGIFY(__clang_minor__)
+#endif
+#if defined(__cplusplus) && !defined(__OBJC__)
+		".cplusplus"
+#endif
+#ifndef NDEBUG
+		".debug"
+#endif
+#if !defined(__clang__) && !defined(__INTEL_COMPILER) && defined(__GNUC__)
+		".gcc-" STRINGIFY(__GNUC__)
+#if __GNUC_MINOR__ < 10
+		"0"
+#endif
+		STRINGIFY(__GNUC_MINOR__)
+#endif
+#ifdef __INTEL_COMPILER
+		".icc-" STRINGIFY(__INTEL_COMPILER)
+#endif
+#ifdef TCL_MEM_DEBUG
+		".memdebug"
+#endif
+#if defined(_MSC_VER)
+		".msvc-" STRINGIFY(_MSC_VER)
+#endif
+#ifdef USE_NMAKE
+		".nmake"
+#endif
+#ifdef TK_NO_DEPRECATED
+		".no-deprecate"
+#endif
+#ifndef TCL_CFG_OPTIMIZED
+		".no-optimize"
+#endif
+#ifdef __OBJC__
+		".objective-c"
+#if defined(__cplusplus)
+		"plusplus"
+#endif
+#endif
+#ifdef TCL_CFG_PROFILED
+		".profile"
+#endif
+#ifdef PURIFY
+		".purify"
+#endif
+#ifdef STATIC_BUILD
+		".static"
+#endif
+#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+		".utf-16"
+#endif
+#if defined(_WIN32)
+		".win32"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+		".x11"
+#if !defined(HAVE_XFT)
+		".no-xft"
+#endif
+#endif
+		), NULL);
+    }
 
     /*
-     * Set variables for the intepreter.
+     * Set variables for the interpreter.
      */
 
     Tcl_SetVar2(interp, "tk_patchLevel", NULL, TK_PATCH_LEVEL, TCL_GLOBAL_ONLY);
@@ -1146,7 +1236,7 @@ Tk_CreateWindowFromPath(
      * the situation where the parent is ".".
      */
 
-    p = strrchr(pathName, '.');
+    p = (char *)strrchr(pathName, '.');
     if (p == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad window path name \"%s\"", pathName));
@@ -1155,7 +1245,7 @@ Tk_CreateWindowFromPath(
     }
     numChars = (int) (p-pathName);
     if (numChars > FIXED_SPACE) {
-	p = ckalloc(numChars + 1);
+	p = (char *)ckalloc(numChars + 1);
     } else {
 	p = fixedSpace;
     }
@@ -1163,7 +1253,7 @@ Tk_CreateWindowFromPath(
 	*p = '.';
 	p[1] = '\0';
     } else {
-	strncpy(p, pathName, (size_t) numChars);
+	strncpy(p, pathName, numChars);
 	p[numChars] = '\0';
     }
 
@@ -1240,7 +1330,7 @@ Tk_DestroyWindow(
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr->flags & TK_ALREADY_DEAD) {
@@ -1263,7 +1353,7 @@ Tk_DestroyWindow(
 	    (tsdPtr->halfdeadWindowList->winPtr == winPtr)) {
 	halfdeadPtr = tsdPtr->halfdeadWindowList;
     } else {
-	halfdeadPtr = ckalloc(sizeof(TkHalfdeadWindow));
+	halfdeadPtr = (TkHalfdeadWindow *)ckalloc(sizeof(TkHalfdeadWindow));
 	halfdeadPtr->flags = 0;
 	halfdeadPtr->winPtr = winPtr;
 	halfdeadPtr->nextPtr = tsdPtr->halfdeadWindowList;
@@ -1272,7 +1362,7 @@ Tk_DestroyWindow(
 
     /*
      * Some cleanup needs to be done immediately, rather than later, because
-     * it needs information that will be destoyed before we get to the main
+     * it needs information that will be destroyed before we get to the main
      * cleanup point. For example, TkFocusDeadWindow needs to access the
      * parentPtr field from a window, but if a Destroy event handler deletes
      * the window's parent this field will be NULL before the main cleanup
@@ -1488,7 +1578,7 @@ Tk_DestroyWindow(
 	    winPtr->mainPtr->deletionEpoch++;
 	}
 	if (winPtr->mainPtr->refCount-- <= 1) {
-	    register const TkCmd *cmdPtr;
+	    const TkCmd *cmdPtr;
 
 	    /*
 	     * We just deleted the last window in the application. Delete the
@@ -1502,10 +1592,20 @@ Tk_DestroyWindow(
 	     */
 
 	    if ((winPtr->mainPtr->interp != NULL) &&
-		    !Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
+		!Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-		    Tcl_CreateObjCommand(winPtr->mainPtr->interp, cmdPtr->name,
-			    TkDeadAppObjCmd, NULL, NULL);
+		    if ((cmdPtr->flags & SAVEUPDATECMD) &&
+			winPtr->mainPtr->tclUpdateObjProc != NULL) {
+			/* Restore Tcl's version of [update] */
+			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+					     cmdPtr->name,
+					     winPtr->mainPtr->tclUpdateObjProc,
+					     NULL, NULL);
+		    } else {
+			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+					     cmdPtr->name, TkDeadAppObjCmd,
+					     NULL, NULL);
+		    }
 		}
 		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
 			TkDeadAppObjCmd, NULL, NULL);
@@ -1648,7 +1748,7 @@ Tk_MapWindow(
     event.xmap.event = winPtr->window;
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    Tk_HandleEvent(&event);
+    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
 }
 
 /*
@@ -1675,7 +1775,7 @@ void
 Tk_MakeWindowExist(
     Tk_Window tkwin)		/* Token for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *winPtr2;
     Window parent;
     Tcl_HashEntry *hPtr;
@@ -1784,7 +1884,7 @@ void
 Tk_UnmapWindow(
     Tk_Window tkwin)		/* Token for window to unmap. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (!(winPtr->flags & TK_MAPPED) || (winPtr->flags & TK_ALREADY_DEAD)) {
 	return;
@@ -1810,7 +1910,7 @@ Tk_UnmapWindow(
 	event.xunmap.event = winPtr->window;
 	event.xunmap.window = winPtr->window;
 	event.xunmap.from_configure = False;
-	Tk_HandleEvent(&event);
+	TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
     }
 }
 
@@ -1821,7 +1921,7 @@ Tk_ConfigureWindow(
 				 * are to be used. */
     XWindowChanges *valuePtr)	/* New values. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (valueMask & CWX) {
 	winPtr->changes.x = valuePtr->x;
@@ -1857,7 +1957,7 @@ Tk_MoveWindow(
     Tk_Window tkwin,		/* Window to move. */
     int x, int y)		/* New location for window (within parent). */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
@@ -1875,7 +1975,7 @@ Tk_ResizeWindow(
     Tk_Window tkwin,		/* Window to resize. */
     int width, int height)	/* New dimensions for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.width = (unsigned) width;
     winPtr->changes.height = (unsigned) height;
@@ -1895,7 +1995,7 @@ Tk_MoveResizeWindow(
     int x, int y,		/* New location for window (within parent). */
     int width, int height)	/* New dimensions for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
@@ -1916,7 +2016,7 @@ Tk_SetWindowBorderWidth(
     Tk_Window tkwin,		/* Window to modify. */
     int width)			/* New border width for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->changes.border_width = width;
     if (winPtr->window != None) {
@@ -1934,10 +2034,10 @@ Tk_ChangeWindowAttributes(
     Tk_Window tkwin,		/* Window to manipulate. */
     unsigned long valueMask,	/* OR'ed combination of bits, indicating which
 				 * fields of *attsPtr are to be used. */
-    register XSetWindowAttributes *attsPtr)
+    XSetWindowAttributes *attsPtr)
 				/* New values for some attributes. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (valueMask & CWBackPixmap) {
 	winPtr->atts.background_pixmap = attsPtr->background_pixmap;
@@ -2000,7 +2100,7 @@ Tk_SetWindowBackground(
     unsigned long pixel)	/* Pixel value to use for window's
 				 * background. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.background_pixel = pixel;
 
@@ -2017,7 +2117,7 @@ Tk_SetWindowBackgroundPixmap(
     Tk_Window tkwin,		/* Window to manipulate. */
     Pixmap pixmap)		/* Pixmap to use for window's background. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.background_pixmap = pixmap;
 
@@ -2035,7 +2135,7 @@ Tk_SetWindowBorder(
     Tk_Window tkwin,		/* Window to manipulate. */
     unsigned long pixel)	/* Pixel value to use for window's border. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.border_pixel = pixel;
 
@@ -2052,7 +2152,7 @@ Tk_SetWindowBorderPixmap(
     Tk_Window tkwin,		/* Window to manipulate. */
     Pixmap pixmap)		/* Pixmap to use for window's border. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.border_pixmap = pixmap;
 
@@ -2070,7 +2170,7 @@ Tk_DefineCursor(
     Tk_Window tkwin,		/* Window to manipulate. */
     Tk_Cursor cursor)		/* Cursor to use for window (may be None). */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
 #if defined(MAC_OSX_TK)
     winPtr->atts.cursor = (XCursor) cursor;
@@ -2097,7 +2197,7 @@ Tk_SetWindowColormap(
     Tk_Window tkwin,		/* Window to manipulate. */
     Colormap colormap)		/* Colormap to use for window. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->atts.colormap = colormap;
 
@@ -2139,7 +2239,7 @@ Tk_SetWindowVisual(
     int depth,			/* New depth for window. */
     Colormap colormap)		/* An appropriate colormap for the visual. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->window != None) {
 	/* Too late! */
@@ -2182,7 +2282,7 @@ Tk_SetWindowVisual(
 
 void
 TkDoConfigureNotify(
-    register TkWindow *winPtr)	/* Window whose configuration was just
+    TkWindow *winPtr)	/* Window whose configuration was just
 				 * changed. */
 {
     XEvent event;
@@ -2228,7 +2328,7 @@ Tk_SetClass(
     Tk_Window tkwin,		/* Token for window to assign class. */
     const char *className)	/* New class for tkwin. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->classUid = Tk_GetUid(className);
     if (winPtr->flags & TK_WIN_MANAGED) {
@@ -2261,7 +2361,7 @@ Tk_SetClassProcs(
     const Tk_ClassProcs *procs,	/* Class procs structure. */
     ClientData instanceData)	/* Data to be passed to class functions. */
 {
-    register TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *) tkwin;
 
     winPtr->classProcsPtr = procs;
     winPtr->instanceData = instanceData;
@@ -2320,7 +2420,7 @@ Tk_NameToWindow(
 	}
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Tk_Window)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -2366,7 +2466,7 @@ Tk_IdToWindow(
     if (hPtr == NULL) {
 	return NULL;
     }
-    return Tcl_GetHashValue(hPtr);
+    return (Tk_Window)Tcl_GetHashValue(hPtr);
 }
 
 /*
@@ -2624,7 +2724,7 @@ Tk_MainWindow(
 	return NULL;
     }
 #endif
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     for (mainPtr = tsdPtr->mainWindowList; mainPtr != NULL;
 	    mainPtr = mainPtr->nextPtr) {
@@ -2694,7 +2794,7 @@ Tk_GetNumMainWindows(void)
     }
 #endif
 
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     return tsdPtr->numMainWindows;
 }
@@ -2752,7 +2852,7 @@ DeleteWindowsExitProc(
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
-    ThreadSpecificData *tsdPtr = clientData;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)clientData;
 
     if (tsdPtr == NULL) {
 	return;
@@ -2834,7 +2934,7 @@ static HMODULE tkcygwindll = NULL;
 /*
  * Run Tk_MainEx from libtk8.?.dll
  *
- * This function is only ever called from wish8.4.exe, the cygwin port of Tcl.
+ * This function is only ever called from wish8.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
@@ -2854,7 +2954,7 @@ TkCygwinMainEx(
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
-    len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
+    len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
@@ -2969,7 +3069,7 @@ Tk_SafeInit(
      * Current risks:
      *
      * - No CPU time limit, no memory allocation limits, no color limits.
-     *   CPU time limits can be imposed by an unsafe master interpreter.
+     *   CPU time limits can be imposed by an unsafe parent interpreter.
      *
      * The actual code called is the same as Tk_Init but Tcl_IsSafe() is
      * checked at several places to differentiate the two initialisations.
@@ -3011,7 +3111,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 static int
 CopyValue(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Obj *objPtr,
     void *dstPtr)
 {
@@ -3041,17 +3141,17 @@ Initialize(
     const Tcl_ArgvInfo table[] = {
 	{TCL_ARGV_CONSTANT, "-sync", INT2PTR(1), &sync,
 		"Use synchronous mode for display server", NULL},
-	{TCL_ARGV_FUNC, "-colormap", CopyValue, &colorMapObj,
+	{TCL_ARGV_FUNC, "-colormap", (void *)CopyValue, &colorMapObj,
 		"Colormap for main window", NULL},
-	{TCL_ARGV_FUNC, "-display", CopyValue, &displayObj,
+	{TCL_ARGV_FUNC, "-display", (void *)CopyValue, &displayObj,
 		"Display to use", NULL},
-	{TCL_ARGV_FUNC, "-geometry", CopyValue, &geometryObj,
+	{TCL_ARGV_FUNC, "-geometry", (void *)CopyValue, &geometryObj,
 		"Initial geometry for window", NULL},
-	{TCL_ARGV_FUNC, "-name", CopyValue, &nameObj,
+	{TCL_ARGV_FUNC, "-name", (void *)CopyValue, &nameObj,
 		"Name to use for application", NULL},
-	{TCL_ARGV_FUNC, "-visual", CopyValue, &visualObj,
+	{TCL_ARGV_FUNC, "-visual", (void *)CopyValue, &visualObj,
 		"Visual for main window", NULL},
-	{TCL_ARGV_FUNC, "-use", CopyValue, &useObj,
+	{TCL_ARGV_FUNC, "-use", (void *)CopyValue, &useObj,
 		"Id of window in which to embed application", NULL},
 	TCL_ARGV_AUTO_REST, TCL_ARGV_AUTO_HELP, TCL_ARGV_TABLE_END
     };
@@ -3070,7 +3170,7 @@ Initialize(
 
     TkRegisterObjTypes();
 
-    tsdPtr = Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    tsdPtr = (ThreadSpecificData *)Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * We start by resetting the result because it might not be clean.
@@ -3081,23 +3181,23 @@ Initialize(
     if (Tcl_IsSafe(interp)) {
 	/*
 	 * Get the clearance to start Tk and the "argv" parameters from the
-	 * master.
+	 * parent.
 	 */
 
 	/*
-	 * Step 1 : find the master and construct the interp name (could be a
+	 * Step 1 : find the parent and construct the interp name (could be a
 	 * function if new APIs were ok). We could also construct the path
 	 * while walking, but there is no API to get the name of an interp
 	 * either.
 	 */
 
-	Tcl_Interp *master = interp;
+	Tcl_Interp *parent = interp;
 
-	while (Tcl_IsSafe(master)) {
-	    master = Tcl_GetMaster(master);
-	    if (master == NULL) {
+	while (Tcl_IsSafe(parent)) {
+	    parent = Tcl_GetParent(parent);
+	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"no controlling master interpreter", -1));
+			"no controlling parent interpreter", -1));
 		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_MASTER", NULL);
 		return TCL_ERROR;
 	    }
@@ -3107,35 +3207,35 @@ Initialize(
 	 * Construct the name (rewalk...)
 	 */
 
-	code = Tcl_GetInterpPath(master, interp);
+	code = Tcl_GetInterpPath(parent, interp);
 	if (code != TCL_OK) {
 	    Tcl_Panic("Tcl_GetInterpPath broken!");
 	}
 
 	/*
-	 * Build the command to eval in trusted master.
+	 * Build the command to eval in trusted parent.
 	 */
 
 	cmd = Tcl_NewListObj(2, NULL);
 	Tcl_ListObjAppendElement(NULL, cmd,
 		Tcl_NewStringObj("::safe::TkInit", -1));
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(master));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(parent));
 
 	/*
-	 * Step 2 : Eval in the master. The argument is the *reversed* interp
-	 * path of the slave.
+	 * Step 2 : Eval in the parent. The argument is the *reversed* interp
+	 * path of the child.
 	 */
 
 	Tcl_IncrRefCount(cmd);
-	code = Tcl_EvalObjEx(master, cmd, 0);
+	code = Tcl_EvalObjEx(parent, cmd, 0);
 	Tcl_DecrRefCount(cmd);
-	Tcl_TransferResult(master, code, interp);
+	Tcl_TransferResult(parent, code, interp);
 	if (code != TCL_OK) {
 	    return code;
 	}
 
 	/*
-	 * Use the master's result as argv. Note: We don't use the Obj
+	 * Use the parent's result as argv. Note: We don't use the Obj
 	 * interfaces to avoid dealing with cross interp refcounting and
 	 * changing the code below.
 	 */
@@ -3170,7 +3270,7 @@ Initialize(
 	    Tcl_SetVar2Ex(interp, "argv", NULL,
 		    Tcl_NewListObj(objc-1, rest+1), TCL_GLOBAL_ONLY);
 	    Tcl_SetVar2Ex(interp, "argc", NULL,
-		    Tcl_NewIntObj(objc-1), TCL_GLOBAL_ONLY);
+		    Tcl_NewWideIntObj(objc-1), TCL_GLOBAL_ONLY);
 	    ckfree(rest);
 	}
 	Tcl_DecrRefCount(parseList);

@@ -4,7 +4,8 @@
  *	Macros and declarations that are purely internal & private to TkAqua.
  *
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
+ * Copyright (c) 2008-2009 Apple Inc.
+ * Copyright (c) 2020 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -26,6 +27,7 @@
 #define TextStyle MacTextStyle
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
+#import <QuartzCore/QuartzCore.h>
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -102,11 +104,11 @@
  * debug message in case of failure.
  */
 #define ChkErr(f, ...) ({ \
-	OSStatus err = f(__VA_ARGS__); \
-	if (err != noErr) { \
-	    TkMacOSXDbgOSErr(f, err); \
+	OSStatus err_ = f(__VA_ARGS__); \
+	if (err_ != noErr) { \
+	    TkMacOSXDbgOSErr(f, err_); \
 	} \
-	err;})
+	err_;})
 
 #else /* TK_MAC_DEBUG */
 #define TKLog(f, ...)
@@ -134,7 +136,7 @@
 typedef struct keycode_v_t {
     unsigned keychar: 22;    /* UCS-32 character */
     unsigned o_s: 2;         /* State of Option and Shift keys. */
-    unsigned virtual: 8;     /* 8-bit virtual keycode - identifies a key. */
+    unsigned virt: 8;     /* 8-bit virtual keycode - identifies a key. */
 } keycode_v;
 
 typedef struct keycode_x_t {
@@ -156,7 +158,7 @@ typedef union MacKeycode_t {
  * Note that 0x7f is del and 0xF8FF is the Apple Logo character.
  */
 
-#define ON_KEYPAD(virtual) ((virtual >= 0x41) && (virtual <= 0x5C))
+#define ON_KEYPAD(virt) ((virt >= 0x41) && (virt <= 0x5C))
 #define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar != 0x7f) && \
                                ((keychar < 0xF700) || keychar >= 0xF8FF))
 
@@ -202,7 +204,6 @@ typedef struct TkMacOSXDrawingContext {
     CGContextRef context;
     NSView *view;
     HIShapeRef clipRgn;
-    CGRect portBounds;
 } TkMacOSXDrawingContext;
 
 /*
@@ -218,24 +219,20 @@ MODULE_SCOPE long tkMacOSXMacOSXVersion;
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
 MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
 			    HIShapeRef rgn);
-MODULE_SCOPE void	TkMacOSXOffsetRegion(TkRegion r, short dx, short dy);
 MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
 MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
 			    const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
 			    HIMutableShapeRef inDestShape,
 			    HIShapeRef inSrcShape);
-#if 0
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-#endif
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
 			    const CGRect *inRect);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
 			    HIShapeRef inShape2, HIMutableShapeRef outResult);
-
+MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
+MODULE_SCOPE void       TkMacOSXPrintRectsInRegion(HIShapeRef shape);
 /*
  * Prototypes of TkAqua internal procs.
  */
@@ -249,45 +246,31 @@ MODULE_SCOPE int	TkMacOSXUseAntialiasedText(Tcl_Interp *interp,
 			    int enable);
 MODULE_SCOPE int	TkMacOSXInitCGDrawing(Tcl_Interp *interp, int enable,
 			    int antiAlias);
-MODULE_SCOPE int	TkMacOSXGenerateFocusEvent(TkWindow *winPtr,
-			    int activeFlag);
-MODULE_SCOPE WindowClass TkMacOSXWindowClass(TkWindow *winPtr);
 MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
-MODULE_SCOPE EventModifiers TkMacOSXModifierState(void);
-MODULE_SCOPE NSBitmapImageRep* TkMacOSXBitmapRepFromDrawableRect(Drawable drawable,
-			    int x, int y, unsigned int width, unsigned int height);
-MODULE_SCOPE CGImageRef TkMacOSXCreateCGImageWithXImage(XImage *image);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
 			    unsigned long imageBackground, CGRect imageBounds,
 			    CGRect srcBounds, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
-			    int useCG, TkMacOSXDrawingContext *dcPtr);
+			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-MODULE_SCOPE int	TkMacOSXMakeFullscreen(TkWindow *winPtr,
-			    NSWindow *window, int fullscreen,
-			    Tcl_Interp *interp);
-MODULE_SCOPE void	TkMacOSXEnterExitFullscreen(TkWindow *winPtr,
-			    int active);
-MODULE_SCOPE NSWindow*	TkMacOSXDrawableWindow(Drawable drawable);
-MODULE_SCOPE NSView*	TkMacOSXDrawableView(MacDrawable *macWin);
+#define TkMacOSXGetTkWindow(window) (TkWindow *)Tk_MacOSXGetTkWindow(window)
+#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow*)TkMacOSXDrawable(drawable))
+#define TkMacOSXGetNSViewForDrawable(macWin) (NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
 			    HIShapeRef rgn);
 MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
-MODULE_SCOPE CGImageRef	TkMacOSXCreateCGImageWithDrawable(Drawable drawable);
-MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithTkImage(Display *display,
+MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromTkImage(Display *display,
 			    Tk_Image image, int width, int height);
-MODULE_SCOPE NSImage*	TkMacOSXGetNSImageWithBitmap(Display *display,
+MODULE_SCOPE NSImage*	TkMacOSXGetNSImageFromBitmap(Display *display,
 			    Pixmap bitmap, GC gc, int width, int height);
-MODULE_SCOPE CGColorRef	TkMacOSXCreateCGColor(GC gc, unsigned long pixel);
 MODULE_SCOPE NSColor*	TkMacOSXGetNSColor(GC gc, unsigned long pixel);
-MODULE_SCOPE TkWindow*	TkMacOSXGetTkWindow(NSWindow *w);
 MODULE_SCOPE NSFont*	TkMacOSXNSFontForFont(Tk_Font tkfont);
 MODULE_SCOPE NSDictionary* TkMacOSXNSFontAttributesForFont(Tk_Font tkfont);
 MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
@@ -304,9 +287,13 @@ MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
 MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
+MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
+					    NSRect *bounds);
+MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
+MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
+MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 
 #pragma mark Private Objective-C Classes
 
@@ -337,16 +324,37 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
+    NSThread *_backgoundLoop;
+    Bool _tkLiveResizeEnded;
+
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
     int _poolLock;
     int _macOSVersion;  /* 10000 * major + 100*minor */
     Bool _isDrawing;
+    Bool _needsToDraw;
+    Bool _tkLiveResizeEnded;
+    TkWindow *_tkPointerWindow;
+    TkWindow *_tkEventTarget;
+    TkWindow *_tkDragTarget;
+    unsigned int _tkButtonState;
 #endif
+
 }
 @property int poolLock;
 @property int macOSVersion;
 @property Bool isDrawing;
+@property Bool needsToDraw;
+@property Bool tkLiveResizeEnded;
+
+/*
+ * Persistent state variables used by processMouseEvent.
+ */
+
+@property TkWindow *tkPointerWindow;
+@property TkWindow *tkEventTarget;
+@property TkWindow *tkDragTarget;
+@property unsigned int tkButtonState;
 
 @end
 @interface TKApplication(TKInit)
@@ -372,6 +380,7 @@ VISIBILITY_HIDDEN
 @interface NSApplication(TKNotify)
 /* We need to declare this hidden method. */
 - (void) _modalSession: (NSModalSession) session sendEvent: (NSEvent *) event;
+- (void) _runBackgroundLoop;
 @end
 @interface TKApplication(TKEvent)
 - (NSEvent *)tkProcessEvent:(NSEvent *)theEvent;
@@ -388,6 +397,7 @@ VISIBILITY_HIDDEN
 @end
 @interface TKApplication(TKHLEvents)
 - (void) terminate: (id) sender;
+- (void) superTerminate: (id) sender;
 - (void) preferences: (id) sender;
 - (void) handleQuitApplicationEvent:   (NSAppleEventDescriptor *)event
 		     withReplyEvent:   (NSAppleEventDescriptor *)replyEvent;
@@ -417,9 +427,12 @@ VISIBILITY_HIDDEN
 {
 @private
     NSString *privateWorkingText;
-    Bool _needsRedisplay;
+    Bool _tkNeedsDisplay;
+    NSRect _tkDirtyRect;
+    NSTrackingArea *trackingArea;
 }
-@property Bool needsRedisplay;
+@property Bool tkNeedsDisplay;
+@property NSRect tkDirtyRect;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -428,7 +441,9 @@ VISIBILITY_HIDDEN
 @end
 
 @interface TKContentView(TKWindowEvent)
-- (void) generateExposeEvents: (HIShapeRef) shape;
+- (void) addTkDirtyRect: (NSRect) rect;
+- (void) clearTkDirtyRect;
+- (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
 @end
 
@@ -439,16 +454,38 @@ VISIBILITY_HIDDEN
 
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
+}
+@property Window tkWindow;
 @end
 
 @interface TKWindow(TKWm)
 - (void)    tkLayoutChanged;
 @end
 
-@interface NSDrawerWindow : NSWindow
+@interface TKDrawerWindow : NSWindow
 {
     id _i1, _i2;
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
 }
+@property Window tkWindow;
+@end
+
+@interface TKPanel : NSPanel
+{
+#ifdef __i386__
+    /* The Objective C runtime used on i386 requires this. */
+    Window _tkWindow;
+#endif
+}
+@property Window tkWindow;
 @end
 
 #pragma mark NSMenu & NSMenuItem Utilities
@@ -536,6 +573,7 @@ VISIBILITY_HIDDEN
 @private
     Tcl_DString _ds;
     NSString *_string;
+    const char *_UTF8String;
 }
 @property const char *UTF8String;
 @property (readonly) Tcl_DString DString;
@@ -544,9 +582,7 @@ VISIBILITY_HIDDEN
 @end
 
 #endif /* _TKMACPRIV */
-
-int TkMacOSXGetAppPath(ClientData cd, Tcl_Interp *ip, int objc, Tcl_Obj *const objv[]);
-
+
 /*
  * Local Variables:
  * mode: objc

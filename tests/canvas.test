@@ -7,7 +7,7 @@
 # Copyright (c) 2008 Donal K. Fellows
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
@@ -537,10 +537,10 @@ test canvas-12.1 {canvas mm obj, patch SF-403327, 102471} -setup {
     destroy .c
     pack [canvas .c]
 } -body {
-    set qx [expr {1.+1.}] 
-    # qx has type double and no string representation 
+    set qx [expr {1.+1.}]
+    # qx has type double and no string representation
     .c scale all $qx 0 1. 1.
-    # qx has now type MMRep and no string representation 
+    # qx has now type MMRep and no string representation
     list $qx [string length $qx]
 } -result {2.0 3}
 test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
@@ -549,9 +549,9 @@ test canvas-12.2 {canvas mm obj, patch SF-403327, 102471} -setup {
 } -body {
     set val 10
     incr val
-    # qx has type double and no string representation 
+    # qx has type double and no string representation
     .c scale all $val 0 1 1
-    # qx has now type MMRep and no string representation 
+    # qx has now type MMRep and no string representation
     incr val
 } -result 12
 
@@ -727,9 +727,25 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
     destroy .c
     canvas .c
 } -body {
-    set id [.c create rect 0 0 1cm 1cm] 
+    set id [.c create rect 0 0 1cm 1cm]
     expr {[lindex [.c coords $id] 2]>1}
 } -result {1}
+test canvas-15.20 {bug [237971ce]} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create line {0 0 50 50 100 50}]
+    .c insert $id end {200 200}
+    .c coords $id
+} -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
+test canvas-15.21 {bug [237971ce]} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create poly {0 0 50 50 100 50}]
+    .c insert $id end {200 200}
+    .c coords $id
+} -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
 destroy .c
 
 test canvas-16.1 {arc coords check} -setup {

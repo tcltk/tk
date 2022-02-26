@@ -636,11 +636,14 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 aqua {
+declare 185 macosx {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 aqua {
+declare 186 macosx {
     int TkpWillDrawWidget(Tk_Window tkwin)
+}
+declare 187 {
+    void TkUnusedStubEntry(void)
 }
 
 
@@ -956,9 +959,10 @@ declare 24 aqua {
 declare 25 aqua {
     void TkMacOSXMenuClick(void)
 }
-declare 26 aqua {
-    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
-}
+# The corresponding Unregister was not a stub, and this should be static.
+#declare 26 aqua {
+#    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
+#}
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
 }
@@ -977,9 +981,10 @@ declare 31 aqua {
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
-declare 33 aqua {
-    void TkMacOSXUnregisterMacWindow(void *portPtr)
-}
+# This was not implemented.  Perhaps meant to be OffScreen ?
+#declare 33 aqua {
+#    void TkMacOSXUnregisterMacWindow(void *portPtr)
+#}
 declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }
@@ -1823,6 +1828,10 @@ declare 90 aqua {
 declare 91 aqua {
     int XSync(Display *display, Bool discard)
 }
+declare 106 aqua {
+    int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
+       int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+}
 declare 107 aqua {
     int XFlush(Display *display)
 }
@@ -1844,10 +1853,31 @@ declare 112 aqua {
 declare 114 aqua {
     VisualID XVisualIDFromVisual(Visual *visual)
 }
+declare 120 aqua {
+    int XOffsetRegion(void *rgn, int dx, int dy)
+}
+declare 129 aqua {
+    int XLowerWindow(Display *d, Window w)
+}
 declare 137 aqua {
     int XPutImage(Display *d, Drawable dr, GC gc, XImage *im,
 	    int sx, int sy, int dx, int dy,
 	    unsigned int w, unsigned int h)
+}
+declare 144 aqua {
+    void XDestroyIC(XIC xic)
+}
+declare 145 aqua {
+    Cursor XCreatePixmapCursor(Display *d, Pixmap p1, Pixmap p2,
+	    XColor *x1, XColor *x2, unsigned int ui1, unsigned int ui2)
+}
+declare 146 aqua {
+    Cursor XCreateGlyphCursor(Display *d, Font f1, Font f2,
+	    unsigned int ui1, unsigned int ui2, XColor _Xconst *x1,
+	    XColor _Xconst *x2)
+}
+declare 157 aqua {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
 }
 declare 158 aqua {
     void TkUnusedStubEntry(void)

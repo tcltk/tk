@@ -4,9 +4,7 @@
  * ttk::scale widget.
  */
 
-#include <tk.h>
-#include <string.h>
-#include <stdio.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -63,7 +61,7 @@ static Tk_OptionSpec ScaleOptionSpecs[] =
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	Tk_Offset(Scale,scale.orientObj),
 	Tk_Offset(Scale,scale.orient), 0,
-	(ClientData)ttkOrientStrings, STYLE_CHANGED },
+	(void *)ttkOrientStrings, STYLE_CHANGED },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
 	Tk_Offset(Scale,scale.fromObj), -1, 0, 0, 0},

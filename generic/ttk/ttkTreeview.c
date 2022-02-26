@@ -4,8 +4,6 @@
  * ttk::treeview widget implementation.
  */
 
-#include <string.h>
-#include <stdio.h>
 #include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
@@ -197,8 +195,8 @@ static Tk_OptionSpec TagOptionSpecs[] = {
 	NULL, Tk_Offset(DisplayItem,imageObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, Tk_Offset(DisplayItem,anchorObj), -1,
-	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
+	"center", Tk_Offset(DisplayItem,anchorObj), -1,
+	0, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, Tk_Offset(DisplayItem,backgroundObj), -1,
 	TK_OPTION_NULL_OK,0,0 },
@@ -1779,7 +1777,7 @@ static void DrawItem(
 		x+indent, y, colwidth-indent, rowHeight);
 	if (item->textObj) { displayItem.textObj = item->textObj; }
 	if (item->imageObj) { displayItem.imageObj = item->imageObj; }
-	/* ??? displayItem.anchorObj = 0; <<NOTE-ANCHOR>> */
+        displayItem.anchorObj = tv->tree.column0.anchorObj;
 	DisplayLayout(tv->tree.itemLayout, &displayItem, state, parcel, d);
 	x += colwidth;
     }
@@ -2681,7 +2679,7 @@ static int TreeviewDeleteCommand(
 {
     Treeview *tv = recordPtr;
     TreeItem **items, *delq;
-    int i, selItemDeleted = 0;
+    int i, selChange = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -2709,7 +2707,7 @@ static int TreeviewDeleteCommand(
     delq = 0;
     for (i=0; items[i]; ++i) {
         if (items[i]->state & TTK_STATE_SELECTED) {
-            selItemDeleted = 1;
+            selChange = 1;
         }
 	delq = DeleteItems(items[i], delq);
     }
@@ -2727,7 +2725,7 @@ static int TreeviewDeleteCommand(
     }
 
     ckfree(items);
-    if (selItemDeleted) {
+    if (selChange) {
         TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
     }
     TtkRedisplayWidget(&tv->core);
@@ -2956,7 +2954,7 @@ static int TreeviewSelectionCommand(
     };
 
     Treeview *tv = recordPtr;
-    int selop, i;
+    int selop, i, selChange = 0;
     TreeItem *item, **items;
 
     if (objc == 2) {
@@ -2988,28 +2986,59 @@ static int TreeviewSelectionCommand(
     {
 	case SELECTION_SET:
 	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
+		int inSetList = 0;
+
+		for (i=0; items[i]; ++i) {
+		    if (item == items[i]) {
+			inSetList = 1;
+			if (!(item->state & TTK_STATE_SELECTED)) {
+			    /* Item newly selected */
+			    selChange = 1;
+			}
+			break;
+		    }
+		}
+		if (!inSetList && (item->state & TTK_STATE_SELECTED)) {
+		    /* Item newly deselected */
+		    selChange = 1;
+		}
+		if (selChange) break;
+	    }
+	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
 		item->state &= ~TTK_STATE_SELECTED;
 	    }
-	    /*FALLTHRU*/
-	case SELECTION_ADD:
 	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
 	    }
 	    break;
+	case SELECTION_ADD:
+	    for (i=0; items[i]; ++i) {
+		if (!(items[i]->state & TTK_STATE_SELECTED)) {
+		    items[i]->state |= TTK_STATE_SELECTED;
+		    selChange = 1;
+		}
+	    }
+	    break;
 	case SELECTION_REMOVE:
 	    for (i=0; items[i]; ++i) {
-		items[i]->state &= ~TTK_STATE_SELECTED;
+		if (items[i]->state & TTK_STATE_SELECTED) {
+		    items[i]->state &= ~TTK_STATE_SELECTED;
+		    selChange = 1;
+		}
 	    }
 	    break;
 	case SELECTION_TOGGLE:
 	    for (i=0; items[i]; ++i) {
 		items[i]->state ^= TTK_STATE_SELECTED;
+		selChange = 1;
 	    }
 	    break;
     }
 
     ckfree(items);
-    TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    if (selChange) {
+	TtkSendVirtualEvent(tv->core.tkwin, "TreeviewSelect");
+    }
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;
@@ -3320,8 +3349,7 @@ TTK_LAYOUT("Item",
     TTK_GROUP("Treeitem.padding", TTK_FILL_BOTH,
 	TTK_NODE("Treeitem.indicator", TTK_PACK_LEFT)
 	TTK_NODE("Treeitem.image", TTK_PACK_LEFT)
-	TTK_GROUP("Treeitem.focus", TTK_PACK_LEFT,
-	    TTK_NODE("Treeitem.text", TTK_PACK_LEFT))))
+	TTK_NODE("Treeitem.text", TTK_FILL_BOTH)))
 
 TTK_LAYOUT("Cell",
     TTK_GROUP("Treedata.padding", TTK_FILL_BOTH,

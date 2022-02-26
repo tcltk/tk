@@ -15,13 +15,13 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
+#define WINVER 0x0501	/* Requires Windows XP APIs */
+
+#include <tkWinInt.h>
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
-#include <tkWinInt.h>
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
-
-#define WINVER 0x0501	/* Requires Windows XP APIs */
 
 #include <windows.h>
 #include <uxtheme.h>
@@ -30,8 +30,6 @@ int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
 #else
 #   include <tmschema.h>
 #endif
-
-#include <tkWinInt.h>
 
 #include "ttk/ttkTheme.h"
 
@@ -397,7 +395,7 @@ typedef struct
     /*
      * Static data, initialized when element is registered:
      */
-    ElementInfo	*info;
+    const ElementInfo	*info;
     XPThemeProcs *procs;	/* Pointer to theme procedure table */
 
     /*
@@ -413,7 +411,7 @@ typedef struct
 } ElementData;
 
 static ElementData *
-NewElementData(XPThemeProcs *procs, ElementInfo *info)
+NewElementData(XPThemeProcs *procs, const ElementInfo *info)
 {
     ElementData *elementData = (ElementData *)ckalloc(sizeof(ElementData));
 
@@ -799,7 +797,7 @@ static Ttk_ElementSpec TreeIndicatorElementSpec =
     TreeIndicatorElementDraw
 };
 
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
 
 /*
  *----------------------------------------------------------------------
@@ -851,7 +849,7 @@ static void TextElementSize(
 	    Ttk_StateTableLookup(elementData->info->statemap, 0),
 	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    NULL,
 	    &rc);
 
@@ -890,7 +888,7 @@ static void TextElementDraw(
 	    Ttk_StateTableLookup(elementData->info->statemap, state),
 	    Tcl_UtfToWCharDString(src, len, &ds),
 	    -1,
-	    DT_LEFT,// | DT_BOTTOM | DT_NOPREFIX,
+	    DT_LEFT /* | DT_BOTTOM | DT_NOPREFIX */,
 	    (state & TTK_STATE_DISABLED) ? DTT_GRAYED : 0,
 	    &rc);
 
@@ -923,8 +921,8 @@ TTK_LAYOUT("TButton",
 
 TTK_LAYOUT("TMenubutton",
     TTK_NODE("Menubutton.dropdown", TTK_PACK_RIGHT|TTK_FILL_Y)
-    TTK_GROUP("Menubutton.button", TTK_PACK_RIGHT|TTK_EXPAND|TTK_FILL_BOTH,
-	    TTK_GROUP("Menubutton.padding", TTK_PACK_LEFT|TTK_EXPAND|TTK_FILL_X,
+    TTK_GROUP("Menubutton.button", TTK_FILL_BOTH,
+	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
 	        TTK_NODE("Menubutton.label", 0))))
 
 TTK_LAYOUT("Horizontal.TScrollbar",
@@ -942,14 +940,14 @@ TTK_LAYOUT("Vertical.TScrollbar",
 	    TTK_NODE("Vertical.Scrollbar.grip", 0))))
 
 TTK_LAYOUT("Horizontal.TScale",
-    TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
-	TTK_GROUP("Horizontal.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
+    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
 	    TTK_NODE("Horizontal.Scale.track", TTK_FILL_X)
 	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )))
 
 TTK_LAYOUT("Vertical.TScale",
-    TTK_GROUP("Scale.focus", TTK_EXPAND|TTK_FILL_BOTH,
-	TTK_GROUP("Vertical.Scale.trough", TTK_EXPAND|TTK_FILL_BOTH,
+    TTK_GROUP("Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
 	    TTK_NODE("Vertical.Scale.track", TTK_FILL_Y)
 	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )))
 
@@ -1050,12 +1048,10 @@ static ElementInfo ElementInfoTable[] = {
     { "Spinbox.downarrow", &SpinboxArrowElementSpec, L"SPIN",
 	SPNP_DOWN, spinbutton_statemap, NOPAD,
 	PAD_MARGINS | ((SM_CXVSCROLL << 8) | SM_CYVSCROLL) },
-
-#if BROKEN_TEXT_ELEMENT
+#ifdef BROKEN_TEXT_ELEMENT
     { "Labelframe.text", &TextElementSpec, L"BUTTON",
     	BP_GROUPBOX, groupbox_statemap, NOPAD,0 },
 #endif
-
     { 0,0,0,0,0,NOPAD,0 }
 };
 #undef PAD
@@ -1288,7 +1284,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
     XPThemeProcs *procs;
     HINSTANCE hlibrary;
     Ttk_Theme themePtr, parentPtr, vistaPtr;
-    ElementInfo *infoPtr;
+    const ElementInfo *infoPtr;
 
     procs = LoadXPThemeProcs(&hlibrary);
     if (!procs)

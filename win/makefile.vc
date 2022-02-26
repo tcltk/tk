@@ -307,7 +307,6 @@ PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STDLIB_H=1 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
 		 /DHAVE_STRINGS_H=1 \
-		 /DSUPPORT_CONFIG_EMBEDDED \
 !if $(HAVE_UXTHEME_H)
 		 /DHAVE_UXTHEME_H=1 \
 !endif
@@ -456,7 +455,7 @@ $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -470,6 +469,7 @@ genstubs:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR)\ttk $(GENERICDIR)\ttk\ttk.decls
 !endif
 
 
@@ -535,6 +535,13 @@ $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
 	    -Fo$@ $?
 
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+$(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
@@ -554,6 +561,9 @@ $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) /DUNICODE /D_UNICODE -Fo$@ $?
+
+$(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
@@ -652,12 +662,12 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {[catch {package present Tcl 8.6.0}]} { return }
+if {![package vsatisfies [package provide Tcl] 8.6.0]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll] Tk]
+    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]
 } else {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk]
+    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)]]
 }
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"

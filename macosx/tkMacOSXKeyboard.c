@@ -143,7 +143,7 @@ static BOOL keyboardChanged = YES;
 static void	InitHashTables(void);
 static void     UpdateKeymaps(void);
 static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
-			UInt16 keyaction, UInt32 virtual, UInt32 modifiers,
+			UInt16 keyaction, UInt32 virt, UInt32 modifiers,
 			UInt32 * deadKeyStatePtr);
 
 #pragma mark TKApplication(TKKeyboard)
@@ -151,8 +151,11 @@ static int	KeyDataToUnicode(UniChar *uniChars, int maxChars,
 @implementation TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification
 {
+    (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
     TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+#else
+    (void)notification;
 #endif
     keyboardChanged = YES;
     UpdateKeymaps();
@@ -187,15 +190,15 @@ InitHashTables(void)
 
     Tcl_InitHashTable(&special2keysym, TCL_ONE_WORD_KEYS);
     Tcl_InitHashTable(&keysym2keycode, TCL_ONE_WORD_KEYS);
-    for (kPtr = keyArray; kPtr->virtual != 0; kPtr++) {
+    for (kPtr = keyArray; kPtr->virt != 0; kPtr++) {
 	MacKeycode macKC;
 	macKC.v.o_s = 0;
-	hPtr = Tcl_CreateHashEntry(&special2keysym, INT2PTR(kPtr->virtual),
+	hPtr = Tcl_CreateHashEntry(&special2keysym, INT2PTR(kPtr->virt),
 				   &dummy);
 	Tcl_SetHashValue(hPtr, INT2PTR(kPtr->keysym));
 	hPtr = Tcl_CreateHashEntry(&keysym2keycode, INT2PTR(kPtr->keysym),
 				   &dummy);
-	macKC.v.virtual = kPtr->virtual;
+	macKC.v.virt = kPtr->virt;
 	macKC.v.keychar = kPtr->keychar;
 	Tcl_SetHashValue(hPtr, INT2PTR(macKC.uint));
 
@@ -251,7 +254,7 @@ UpdateKeymaps()
 {
     static Bool keymapInitialized = false;
     Tcl_HashEntry *hPtr;
-    int virtual, index, dummy;
+    int virt, index, dummy;
 
     if (!keymapInitialized) {
 	Tcl_InitHashTable(&unichar2xvirtual, TCL_ONE_WORD_KEYS);
@@ -267,12 +270,12 @@ UpdateKeymaps()
      */
 
     for (index = 3; index >= 0; index--) {
-        for (virtual = 0; virtual < 128; virtual++) {
+        for (virt = 0; virt < 128; virt++) {
 	    MacKeycode macKC;
-	    macKC.v = (keycode_v) {.virtual = virtual, .o_s = index, .keychar = 0};
+	    macKC.v = (keycode_v) {.virt = virt, .o_s = index, .keychar = 0};
 	    int modifiers = INDEX2CARBON(index), result;
 	    UniChar keychar = 0;
-	    result = KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, virtual,
+	    result = KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, virt,
 				      modifiers, NULL);
 	    if (keychar == 0x10) {
 
@@ -283,7 +286,7 @@ UpdateKeymaps()
 		continue;
 	    }
 	    macKC.v.keychar = keychar;
-	    if (! ON_KEYPAD(virtual)) {
+	    if (! ON_KEYPAD(virt)) {
 		hPtr = Tcl_CreateHashEntry(&unichar2xvirtual,
 					   INT2PTR(macKC.x.keychar), &dummy);
 		Tcl_SetHashValue(hPtr, INT2PTR(macKC.x.xvirtual));
@@ -325,7 +328,7 @@ KeyDataToUnicode(
     UniChar *uniChars,
     int maxChars,
     UInt16 keyaction,
-    UInt32 virtual,
+    UInt32 virt,
     UInt32 modifiers,
     UInt32 *deadKeyStatePtr)
 {
@@ -354,14 +357,14 @@ KeyDataToUnicode(
 	UInt32 dummyState;
 	OSStatus err;
 
-	virtual &= 0xFF;
+	virt &= 0xFF;
 	modifiers = (modifiers >> 8) & 0xFF;
 	if (!deadKeyStatePtr) {
 	    options = kUCKeyTranslateNoDeadKeysMask;
 	    dummyState = 0;
 	    deadKeyStatePtr = &dummyState;
 	}
-	err = ChkErr(UCKeyTranslate, layoutData, virtual, keyaction, modifiers,
+	err = ChkErr(UCKeyTranslate, (const UCKeyboardLayout *)layoutData, virt, keyaction, modifiers,
 		keyboardType, options, deadKeyStatePtr, maxChars,
 		&actuallength, uniChars);
 	if (!actuallength && *deadKeyStatePtr) {
@@ -401,14 +404,14 @@ KeyDataToUnicode(
  */
 
 KeySym
-XKeycodeToKeysym(
-    Display* display,
-    KeyCode keycode,
+XkbKeycodeToKeysym(
+    TCL_UNUSED(Display *),
+    unsigned int keycode,
+    TCL_UNUSED(int),
     int index)
 {
     Tcl_HashEntry *hPtr;
     MacKeycode macKC;
-    (void) display; /*unused*/
     int modifiers, result;
     UniChar keychar = 0;
 
@@ -423,7 +426,7 @@ XKeycodeToKeysym(
      * an Fn function key or Tab, Backspace, Home, End, etc.
      */
 
-    hPtr = Tcl_FindHashEntry(&special2keysym, INT2PTR(macKC.v.virtual));
+    hPtr = Tcl_FindHashEntry(&special2keysym, INT2PTR(macKC.v.virt));
     if (hPtr != NULL) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
@@ -434,7 +437,7 @@ XKeycodeToKeysym(
      * keysym.
      */
 
-    if (macKC.v.virtual > 127) {
+    if (macKC.v.virt > 127) {
 	hPtr = Tcl_FindHashEntry(&unichar2keysym, INT2PTR(macKC.v.keychar));
 	if (hPtr != NULL) {
 	    return (KeySym) Tcl_GetHashValue(hPtr);
@@ -449,7 +452,7 @@ XKeycodeToKeysym(
      */
 
     modifiers = INDEX2CARBON(macKC.v.o_s);
-    result = KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, macKC.v.virtual,
+    result = KeyDataToUnicode(&keychar, 1, kUCKeyActionDown, macKC.v.virt,
 			      modifiers, NULL);
     if (result) {
 	hPtr = Tcl_FindHashEntry(&unichar2keysym, INT2PTR(keychar));
@@ -458,6 +461,15 @@ XKeycodeToKeysym(
 	}
     }
     return NoSymbol;
+}
+
+KeySym
+XKeycodeToKeysym(
+    TCL_UNUSED(Display *),
+    KeyCode keycode,
+    int index)
+{
+    return XkbKeycodeToKeysym(NULL, keycode, 0, index);
 }
 
 /*
@@ -479,13 +491,12 @@ XKeycodeToKeysym(
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: Needed to get
+    TCL_UNUSED(TkWindow *),	/* Window where event occurred: Needed to get
 				 * input context. */
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
 				 * result. */
 {
-    (void) winPtr; /*unused*/
     MacKeycode macKC;
     char utfChars[8];
     int length = 0;
@@ -519,11 +530,11 @@ TkpGetString(
 
 XModifierKeymap *
 XGetModifierMapping(
-    Display *display)
+    TCL_UNUSED(Display *))
 {
     XModifierKeymap *modmap;
 
-    modmap = ckalloc(sizeof(XModifierKeymap));
+    modmap = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
     modmap->max_keypermod = 0;
     modmap->modifiermap = NULL;
     return modmap;
@@ -578,14 +589,14 @@ XFreeModifiermap(
 
 char *
 XKeysymToString(
-    KeySym keysym)
+    TCL_UNUSED(KeySym))
 {
     return NULL;
 }
 
 KeySym
 XStringToKeysym(
-    const char* string)
+    TCL_UNUSED(const char *))
 {
     return NoSymbol;
 }
@@ -613,7 +624,7 @@ XStringToKeysym(
 
 KeyCode
 XKeysymToKeycode(
-    Display *display,
+    TCL_UNUSED(Display *),
     KeySym keysym)
 {
     Tcl_HashEntry *hPtr;
@@ -628,7 +639,7 @@ XKeysymToKeycode(
 
     hPtr = Tcl_FindHashEntry(&keysym2keycode, INT2PTR(keysym));
     if (hPtr != NULL) {
-	return (KeyCode) Tcl_GetHashValue(hPtr);
+	return (KeyCode) PTR2INT(Tcl_GetHashValue(hPtr));
     }
 
     /*
@@ -636,7 +647,7 @@ XKeysymToKeycode(
      * else.
      */
 
-    macKC.v.virtual = NO_VIRTUAL;
+    macKC.v.virt = NO_VIRTUAL;
     macKC.v.o_s = 0;
     macKC.v.keychar = 0;
 
@@ -652,7 +663,7 @@ XKeysymToKeycode(
 	macKC.x.keychar = (unsigned int) data;
 	hPtr = Tcl_FindHashEntry(&unichar2xvirtual, INT2PTR(macKC.x.keychar));
 	if (hPtr != NULL) {
-	    unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
+	    data = (unsigned long) Tcl_GetHashValue(hPtr);
 	    macKC.x.xvirtual = (unsigned int) data;
 	}
     }
@@ -681,7 +692,7 @@ XKeysymToKeycode(
  */
 void
 TkpSetKeycodeAndState(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     KeySym keysym,
     XEvent *eventPtr)
 {
@@ -710,7 +721,7 @@ TkpSetKeycodeAndState(
 	if (macKC.v.keychar < 0xF700) {
 	    UniChar keychar = macKC.v.keychar;
 	    NSString *str, *lower, *upper;
-	    if (macKC.v.virtual != NO_VIRTUAL) {
+	    if (macKC.v.virt != NO_VIRTUAL) {
 		macKC.x.keychar = xvirtual2unichar[macKC.x.xvirtual];
 	    } else {
 		str = [[NSString alloc] initWithCharacters:&keychar length:1];
@@ -772,7 +783,7 @@ TkpGetKeySym(
      */
 
     if (macKC.v.keychar == MOD_KEYCHAR) {
-	switch (macKC.v.virtual) {
+	switch (macKC.v.virt) {
 	case 54:
 	    return XK_Meta_R;
 	case 55:
@@ -813,7 +824,7 @@ TkpGetKeySym(
      * First do the straightforward lookup.
      */
 
-    sym = XKeycodeToKeysym(dispPtr->display, macKC.uint, index);
+    sym = XkbKeycodeToKeysym(dispPtr->display, macKC.uint, 0, index);
 
     /*
      * Special handling: If the key was shifted because of Lock, which is only
@@ -823,7 +834,7 @@ TkpGetKeySym(
 
     if ((index & INDEX_SHIFT) && !(eventPtr->xkey.state & ShiftMask)) {
 	if ((sym == NoSymbol) || !Tcl_UniCharIsUpper(sym)) {
-	    sym = XKeycodeToKeysym(dispPtr->display, macKC.uint,
+	    sym = XkbKeycodeToKeysym(dispPtr->display, macKC.uint, 0,
 				   index & ~INDEX_SHIFT);
 	}
     }
@@ -834,7 +845,7 @@ TkpGetKeySym(
      */
 
     if ((index & INDEX_SHIFT) && (sym == NoSymbol)) {
-	sym = XKeycodeToKeysym(dispPtr->display, macKC.uint,
+	sym = XkbKeycodeToKeysym(dispPtr->display, macKC.uint, 0,
 			       index & ~INDEX_SHIFT);
     }
     return sym;
@@ -944,7 +955,7 @@ TkMacOSXAddVirtual(
 	unsigned long data = (unsigned long) Tcl_GetHashValue(hPtr);
 	macKC.x.xvirtual = (unsigned int) data;
     } else {
-	macKC.v.virtual = NO_VIRTUAL;
+	macKC.v.virt = NO_VIRTUAL;
     }
     return macKC.uint;
 }

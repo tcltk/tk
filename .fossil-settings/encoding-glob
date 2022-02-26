@@ -2,4 +2,10 @@ win/buildall.vc.bat
 win/makefile.vc
 win/mkd.bat
 win/rmd.bat
+win/rules-ext.vc
 win/rules.vc
+win/targets.vc
+win/rc/*.bmp
+win/rc/*.cur
+win/rc/*.ico
+win/rc/*.rc

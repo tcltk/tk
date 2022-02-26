@@ -51,9 +51,9 @@ static NSUInteger textInputModifiers;
 #endif
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window)winPtr;
     NSEventType type = [theEvent type];
-    NSUInteger virtual = [theEvent keyCode];
+    NSUInteger virt = [theEvent keyCode];
     NSUInteger modifiers = ([theEvent modifierFlags] &
 			    NSDeviceIndependentModifierFlagsMask);
     XEvent xEvent;
@@ -72,6 +72,18 @@ static NSUInteger textInputModifiers;
     }
 
     /*
+     * Discard repeating KeyDown events if the repeat speed has been set to
+     * "off" in System Preferences.  It is unclear why we get these, but we do.
+     * See ticket [2ecb09d118].
+     */
+
+    if ([theEvent type] ==  NSKeyDown &&
+	[theEvent isARepeat] &&
+	[NSEvent keyRepeatDelay] < 0) {
+            return theEvent;
+	}
+
+    /*
      * If a local grab is in effect, key events for windows in the
      * grabber's application are redirected to the grabber.  Key events
      * for other applications are delivered normally.  If a global
@@ -82,8 +94,11 @@ static NSUInteger textInputModifiers;
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
-	    winPtr =winPtr->dispPtr->focusPtr;
-	    tkwin = (Tk_Window) winPtr;
+	    winPtr = winPtr->dispPtr->focusPtr;
+	    if (!winPtr) {
+		return theEvent;
+	    }
+	    tkwin = (Tk_Window)winPtr;
 	}
     }
 
@@ -92,26 +107,33 @@ static NSUInteger textInputModifiers;
      */
 
     if (type == NSKeyUp || type == NSKeyDown) {
-	if ([[theEvent characters] length] > 0) {
-	    keychar = [[theEvent characters] characterAtIndex:0];
+	NSString *characters = [theEvent characters];
+	if (characters.length > 0) {
+	    keychar = [characters characterAtIndex:0];
 
 	    /*
 	     * Currently, real keys always send BMP characters, but who knows?
 	     */
 
 	    if (CFStringIsSurrogateHighCharacter(keychar)) {
-		UniChar lowChar = [[theEvent characters] characterAtIndex:1];
+		UniChar lowChar = [characters characterAtIndex:1];
 		keychar = CFStringGetLongCharacterForSurrogatePair(
 		    keychar, lowChar);
 	    }
 	} else {
 
 	    /*
-	     * This is a dead key, such as Option-e, so it should go to the
-	     * TextInputClient.
+	     * This is a dead key, such as Option-e, so it usually should get
+	     * passed to the TextInputClient.  But if it has a Command modifier
+	     * then it is not functioning as a dead key and should not be
+	     * handled by the TextInputClient.  See ticket [1626ed65b8] and the
+	     * method performKeyEquivalent which is implemented in
+	     * tkMacOSXMenu.c.
 	     */
 
-	    use_text_input = YES;
+	    if (!(modifiers & NSCommandKeyMask)) {
+		use_text_input = YES;
+	    }
 	}
 
 	/*
@@ -126,7 +148,7 @@ static NSUInteger textInputModifiers;
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
 	      [self class], self, _cmd,
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
-	      virtual, w, type);
+	      virt, w, type);
 #endif
 
     }
@@ -215,7 +237,7 @@ static NSUInteger textInputModifiers;
 
     macKC.v.o_s =  ((modifiers & NSShiftKeyMask ? INDEX_SHIFT : 0) |
 		    (modifiers & NSAlternateKeyMask ? INDEX_OPTION : 0));
-    macKC.v.virtual = virtual;
+    macKC.v.virt = virt;
     switch (type) {
     case NSFlagsChanged:
 
@@ -259,8 +281,6 @@ static NSUInteger textInputModifiers;
 	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	xEvent.xany.type = KeyPress;
     }
-    if (xEvent.xany.type == KeyPress) {
-    }
     Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
     return theEvent;
 }
@@ -268,14 +288,8 @@ static NSUInteger textInputModifiers;
 
 
 @implementation TKContentView
-
--(id)init {
-    self = [super init];
-    if (self) {
-        _needsRedisplay = NO;
-    }
-    return self;
-}
+@synthesize tkDirtyRect = _tkDirtyRect;
+@synthesize tkNeedsDisplay = _tkNeedsDisplay;
 
 /*
  * Implementation of the NSTextInputClient protocol.
@@ -293,7 +307,7 @@ static NSUInteger textInputModifiers;
     XEvent xEvent;
     NSString *str, *keystr, *lower;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window tkwin = (Tk_Window)winPtr;
     Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
@@ -329,7 +343,7 @@ static NSUInteger textInputModifiers;
      */
 
     if (repRange.location == 0) {
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
 	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
@@ -356,9 +370,9 @@ static NSUInteger textInputModifiers;
 	    UniChar lowChar = [str characterAtIndex:++i];
 	    macKC.v.keychar = CFStringGetLongCharacterForSurrogatePair(
 				  (UniChar)keychar, lowChar);
-	    macKC.v.virtual = NON_BMP_VIRTUAL;
+	    macKC.v.virt = NON_BMP_VIRTUAL;
 	} else if (repRange.location == 0 || sendingIMEText) {
-	    macKC.v.virtual = REPLACEMENT_VIRTUAL;
+	    macKC.v.virt = REPLACEMENT_VIRTUAL;
 	} else {
 	    macKC.uint = TkMacOSXAddVirtual(macKC.uint);
 	    xEvent.xkey.state |= INDEX2STATE(macKC.x.xvirtual);
@@ -400,7 +414,7 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
 
@@ -505,7 +519,7 @@ static NSUInteger textInputModifiers;
     processingCompose = NO;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-	Tk_Window focusWin = (Tk_Window) winPtr->dispPtr->focusPtr;
+	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
 	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
@@ -552,7 +566,6 @@ static NSUInteger textInputModifiers;
 }
 /* End of NSTextInputClient implementation. */
 
-@synthesize needsRedisplay = _needsRedisplay;
 @end
 
 
@@ -602,11 +615,12 @@ static void
 setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
 {
     unsigned int state = 0;
-    Display *display = Tk_Display(tkwin);
+    Display *display;
 
     if (tkwin == NULL) {
 	return;
     }
+    display = Tk_Display(tkwin);
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
 	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
@@ -695,12 +709,16 @@ XGrabKeyboard(
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
 
     if (keyboardGrabWinPtr && captureWinPtr) {
-	NSWindow *w = TkMacOSXDrawableWindow(grab_window);
-	MacDrawable *macWin = (MacDrawable *) grab_window;
+	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
+	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
-	    if (modalSession) {
-		Tcl_Panic("XGrabKeyboard: already grabbed");
+	    if (modalSession ) {
+		if (keyboardGrabNSWindow == w) {
+		    return GrabSuccess;
+		} else {
+		    Tcl_Panic("XGrabKeyboard: already grabbed");
+		}
 	    }
 	    keyboardGrabNSWindow = w;
 	    [w retain];
@@ -797,7 +815,7 @@ Tk_SetCaretPos(
  {
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkCaret *caretPtr = &(winPtr->dispPtr->caret);
-    NSWindow *w = TkMacOSXDrawableWindow(Tk_WindowId(tkwin));
+    NSWindow *w = TkMacOSXGetNSWindowForDrawable(Tk_WindowId(tkwin));
 
     /*
      * Register this widget as being capable of text input, so we know we

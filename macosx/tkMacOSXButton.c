@@ -95,6 +95,8 @@ static void	PulseDefaultButtonProc(ClientData clientData);
 const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
+    NULL,
+	NULL
 };
 
 static int bCount;
@@ -143,7 +145,7 @@ TkButton *
 TkpCreateButton(
     Tk_Window tkwin)
 {
-    MacButton *macButtonPtr = ckalloc(sizeof(MacButton));
+    MacButton *macButtonPtr = (MacButton *)ckalloc(sizeof(MacButton));
 
     Tk_CreateEventHandler(tkwin, ActivateMask,
 	    ButtonEventProc, macButtonPtr);
@@ -179,8 +181,8 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    MacButton *macButtonPtr = clientData;
-    TkButton *butPtr = clientData;
+    MacButton *macButtonPtr = (MacButton *)clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     Tk_Window tkwin = butPtr->tkwin;
     Pixmap pixmap;
     DrawParams* dpPtr = &macButtonPtr->drawParams;
@@ -191,13 +193,6 @@ TkpDisplayButton(
 	return;
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
-
-    /*
-     * Set up clipping region. Make sure the we are using the port
-     * for this button, or we will set the wrong window's clip.
-     */
-
-    TkMacOSXSetUpClippingRgn(Tk_WindowId(tkwin));
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
 	macButtonPtr->useTkText = 0;
@@ -724,7 +719,7 @@ TkpDestroyButton(
 static void
 TkMacOSXDrawButton(
     MacButton *mbPtr,    /* Mac button. */
-    GC gc,               /* The GC we are drawing into - needed for
+    TCL_UNUSED(GC),      /* The GC we are drawing into - needed for
                           * the bevel button */
     Pixmap pixmap)       /* The pixmap we are drawing into - needed
                           * for the bevel button */
@@ -749,7 +744,7 @@ TkMacOSXDrawButton(
 
         ButtonBackgroundDrawCB(&cntrRect, mbPtr, 32, true);
 
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
@@ -770,10 +765,12 @@ TkMacOSXDrawButton(
 	 * Using a ttk::button would be a much better choice, however.
 	 */
 
-	if (TkMacOSXInDarkMode(butPtr->tkwin) &&
-	    mbPtr->drawinfo.state != kThemeStatePressed &&
-	    !(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
-	    hiinfo.state = kThemeStateInactive;
+	if ([NSApp macOSVersion] < 101500) {
+	    if (TkMacOSXInDarkMode(butPtr->tkwin) &&
+		mbPtr->drawinfo.state != kThemeStatePressed &&
+		!(mbPtr->drawinfo.adornment & kThemeAdornmentDefault)) {
+		hiinfo.state = kThemeStateInactive;
+	    }
 	}
 	HIThemeDrawButton(&cntrRect, &hiinfo, dc.context,
 		kHIThemeOrientationNormal, &contHIRec);
@@ -782,7 +779,7 @@ TkMacOSXDrawButton(
         ButtonContentDrawCB(&contHIRec, mbPtr->btnkind, &mbPtr->drawinfo,
 		(MacButton *) mbPtr, 32, true);
     } else {
-	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, 1, &dc)) {
+	if (!TkMacOSXSetupDrawingContext(pixmap, dpPtr->gc, &dc)) {
 	    return;
 	}
 
@@ -810,10 +807,10 @@ TkMacOSXDrawButton(
 
 static void
 ButtonBackgroundDrawCB(
-    const HIRect *btnbounds,
+    TCL_UNUSED(const HIRect *),
     MacButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     MacButton *mbPtr = (MacButton *) ptr;
     TkButton *butPtr = (TkButton *) mbPtr;
@@ -862,12 +859,12 @@ ButtonBackgroundDrawCB(
  */
 static void
 ButtonContentDrawCB (
-    const HIRect * btnbounds,
-    ThemeButtonKind kind,
-    const HIThemeButtonDrawInfo *drawinfo,
+    TCL_UNUSED(const HIRect *),
+    TCL_UNUSED(ThemeButtonKind),
+    TCL_UNUSED(const HIThemeButtonDrawInfo *),
     MacButton *ptr,
-    SInt16 depth,
-    Boolean isColorDev)
+    TCL_UNUSED(SInt16),
+    TCL_UNUSED(Boolean))
 {
     TkButton *butPtr = (TkButton *) ptr;
     Tk_Window tkwin = butPtr->tkwin;
@@ -906,8 +903,8 @@ ButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkButton *buttonPtr = clientData;
-    MacButton *mbPtr = clientData;
+    TkButton *buttonPtr = (TkButton *)clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     if (eventPtr->type == ActivateNotify
 	    || eventPtr->type == DeactivateNotify) {
@@ -962,7 +959,7 @@ TkMacOSXComputeButtonParams(
         *btnkind = kThemePushButton;
     }
 
-    if ((butPtr->image == None) && (butPtr->bitmap == None)) {
+    if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
         switch (butPtr->type) {
 	case TYPE_BUTTON:
 	    *btnkind = kThemePushButton;
@@ -1179,7 +1176,7 @@ TkMacOSXComputeButtonDrawParams(
 static void
 PulseDefaultButtonProc(ClientData clientData)
 {
-    MacButton *mbPtr = clientData;
+    MacButton *mbPtr = (MacButton *)clientData;
 
     TkpDisplayButton(clientData);
     /*

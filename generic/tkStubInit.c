@@ -24,6 +24,7 @@
 #if defined(MAC_OSX_TK)
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -45,6 +46,7 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef XGrabServer
 #undef XFree
 #undef XFlush
+#undef Tk_FreeStyleFromObj
 #define TkUnusedStubEntry 0
 
 #define TkpCmapStressed_ TkpCmapStressed
@@ -55,13 +57,29 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkWmCleanup_ TkWmCleanup
 #define TkSendCleanup_ TkSendCleanup
 #define TkpTestsendCmd_ TkpTestsendCmd
-#define Tk_MacOSXSetEmbedHandler_ Tk_MacOSXSetEmbedHandler
-#define Tk_MacOSXTurnOffMenus_ Tk_MacOSXTurnOffMenus
-#define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
-#define TkMacOSXInitMenus_ TkMacOSXInitMenus
-#define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
+
+#if !defined(MAC_OSX_TK) && defined(MAC_OSX_TCL)
+#   undef TkpWillDrawWidget
+#   undef TkpRedrawWidget
+static int
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+    return 0;
+}
+#   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
+#   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
+#endif
+
+#if defined(MAC_OSX_TK)
+#   define Tk_MacOSXGetNSWindowForDrawable TkMacOSXDrawable
+#   define Tk_MacOSXGetCGContextForDrawable GetCGContextForDrawable
+static void *GetCGContextForDrawable(Drawable d) {
+	return TkMacOSXGetCGContextForDrawable(d);
+}
+#endif
 
 #ifdef _WIN32
 
@@ -485,26 +503,25 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 185 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 185 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 185 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpRedrawWidget, /* 185 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
+#endif /* MACOSX */
+#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
     0, /* 186 */
-#endif /* X11 */
+#endif /* UNIX */
 #if defined(_WIN32) /* WIN */
     0, /* 186 */
 #endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 186 */ /* Dummy entry for stubs table backwards compatibility */
+#ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
-#endif /* AQUA */
+#endif /* MACOSX */
+    TkUnusedStubEntry, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -587,14 +604,14 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXMakeRealWindowExist, /* 23 */
     TkMacOSXMakeStippleMap, /* 24 */
     TkMacOSXMenuClick, /* 25 */
-    TkMacOSXRegisterOffScreenWindow, /* 26 */
+    0, /* 26 */
     TkMacOSXResizable, /* 27 */
     TkMacOSXSetHelpMenuItemCount, /* 28 */
     TkMacOSXSetScrollbarGrow, /* 29 */
     TkMacOSXSetUpClippingRgn, /* 30 */
     TkMacOSXSetUpGraphicsPort, /* 31 */
     TkMacOSXUpdateClipRgn, /* 32 */
-    TkMacOSXUnregisterMacWindow, /* 33 */
+    0, /* 33 */
     TkMacOSXUseMenuID, /* 34 */
     TkMacOSXVisableClipRgn, /* 35 */
     TkMacOSXWinBounds, /* 36 */
@@ -939,7 +956,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 103 */
     0, /* 104 */
     0, /* 105 */
-    0, /* 106 */
+    XSetClipRectangles, /* 106 */
     XFlush, /* 107 */
     XGrabServer, /* 108 */
     XUngrabServer, /* 109 */
@@ -953,7 +970,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 117 */
     0, /* 118 */
     0, /* 119 */
-    0, /* 120 */
+    XOffsetRegion, /* 120 */
     0, /* 121 */
     0, /* 122 */
     0, /* 123 */
@@ -962,7 +979,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 126 */
     0, /* 127 */
     0, /* 128 */
-    0, /* 129 */
+    XLowerWindow, /* 129 */
     0, /* 130 */
     0, /* 131 */
     0, /* 132 */
@@ -977,9 +994,9 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 141 */
     0, /* 142 */
     0, /* 143 */
-    0, /* 144 */
-    0, /* 145 */
-    0, /* 146 */
+    XDestroyIC, /* 144 */
+    XCreatePixmapCursor, /* 145 */
+    XCreateGlyphCursor, /* 146 */
     0, /* 147 */
     0, /* 148 */
     0, /* 149 */
@@ -990,7 +1007,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     0, /* 154 */
     0, /* 155 */
     0, /* 156 */
-    0, /* 157 */
+    XkbKeycodeToKeysym, /* 157 */
     TkUnusedStubEntry, /* 158 */
 #endif /* AQUA */
 };
@@ -1018,11 +1035,11 @@ static const TkPlatStubs tkPlatStubs = {
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
-    Tk_MacOSXSetEmbedHandler_, /* 11 */
-    Tk_MacOSXTurnOffMenus_, /* 12 */
-    Tk_MacOSXTkOwnsCursor_, /* 13 */
-    TkMacOSXInitMenus_, /* 14 */
-    TkMacOSXInitAppleEvents_, /* 15 */
+    Tk_MacOSXGetTkWindow, /* 11 */
+    Tk_MacOSXGetCGContextForDrawable, /* 12 */
+    Tk_MacOSXGetNSWindowForDrawable, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
     TkGenWMConfigureEvent_, /* 16 */
 #endif /* AQUA */
 };
@@ -1311,6 +1328,23 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    0, /* 274 */
+    0, /* 275 */
+    0, /* 276 */
+    0, /* 277 */
+    0, /* 278 */
+    0, /* 279 */
+    0, /* 280 */
+    0, /* 281 */
+    0, /* 282 */
+    0, /* 283 */
+    0, /* 284 */
+    0, /* 285 */
+    0, /* 286 */
+    0, /* 287 */
+    0, /* 288 */
+    0, /* 289 */
+    TkUnusedStubEntry, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */
