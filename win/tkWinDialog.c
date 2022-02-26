@@ -782,7 +782,7 @@ Tk_ChooseColorObjCmd(
     }
 
     parent			= tkwin;
-    chooseColor.lStructSize	= sizeof(CHOOSECOLOR);
+    chooseColor.lStructSize	= sizeof(CHOOSECOLORW);
     chooseColor.hwndOwner	= NULL;
     chooseColor.hInstance	= NULL;
     chooseColor.rgbResult	= oldColor;
@@ -908,7 +908,7 @@ ColorDlgHookProc(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *title;
-    CHOOSECOLOR *ccPtr;
+    CHOOSECOLORW *ccPtr;
     (void)wParam;
 
     if (WM_INITDIALOG == uMsg) {
@@ -917,7 +917,7 @@ ColorDlgHookProc(
 	 * Set the title string of the dialog.
 	 */
 
-	ccPtr = (CHOOSECOLOR *) lParam;
+	ccPtr = (CHOOSECOLORW *) lParam;
 	title = (const char *) ccPtr->lCustData;
 
 	if ((title != NULL) && (title[0] != '\0')) {
@@ -1086,7 +1086,7 @@ ParseOFNOptions(
     }
 
     ZeroMemory(optsPtr, sizeof(*optsPtr));
-    // optsPtr->forceXPStyle = 1;
+    /* optsPtr->forceXPStyle = 1; */
     optsPtr->tkwin = (Tk_Window)clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
     Tcl_DStringInit(&optsPtr->utfDirString);
@@ -2711,10 +2711,10 @@ ChooseDirectoryValidateProc(
 
 	if (SHGetPathFromIDListW((LPITEMIDLIST) lParam, selDir)) {
 	    SendMessageW(hwnd, BFFM_SETSTATUSTEXTW, 0, (LPARAM) selDir);
-	    // enable the OK button
+	    /* enable the OK button */
 	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 1);
 	} else {
-	    // disable the OK button
+	    /* disable the OK button */
 	    SendMessageW(hwnd, BFFM_ENABLEOK, 0, (LPARAM) 0);
 	}
 	UpdateWindow(hwnd);
@@ -3151,7 +3151,7 @@ HookProc(
     WPARAM wParam,
     LPARAM lParam)
 {
-    CHOOSEFONT *pcf = (CHOOSEFONT *) lParam;
+    CHOOSEFONTW *pcf = (CHOOSEFONTW *) lParam;
     HWND hwndCtrl;
     static HookData *phd = NULL;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -3463,10 +3463,10 @@ FontchooserShowCmd(
 
     Tk_MakeWindowExist(parent);
 
-    ZeroMemory(&cf, sizeof(CHOOSEFONT));
-    ZeroMemory(&lf, sizeof(LOGFONT));
+    ZeroMemory(&cf, sizeof(CHOOSEFONTW));
+    ZeroMemory(&lf, sizeof(LOGFONTW));
     lf.lfCharSet = DEFAULT_CHARSET;
-    cf.lStructSize = sizeof(CHOOSEFONT);
+    cf.lStructSize = sizeof(CHOOSEFONTW);
     cf.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));
     cf.lpLogFont = &lf;
     cf.nFontType = SCREEN_FONTTYPE;

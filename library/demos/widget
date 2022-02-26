@@ -516,7 +516,7 @@ proc invoke index {
     .t configure -cursor [::ttk::cursor busy]
     update
     set demo [string range [lindex $tags $i] 5 end]
-    uplevel 1 [list source [file join $tk_demoDirectory $demo.tcl]]
+    uplevel 1 [list source -encoding utf-8 [file join $tk_demoDirectory $demo.tcl]]
     update
     .t configure -cursor $cursor
 
@@ -624,6 +624,7 @@ proc showCode w {
     wm title $top [mc "Demo code: %s" [file join $tk_demoDirectory $file]]
     wm iconname $top $file
     set id [open [file join $tk_demoDirectory $file]]
+    fconfigure $id -encoding utf-8 -eofchar "\032 {}"
     $top.f.text delete 1.0 end
     $top.f.text insert 1.0 [read $id]
     $top.f.text mark set insert 1.0
@@ -722,10 +723,10 @@ proc PrintTextWin32 {filename} {
 proc tkAboutDialog {} {
     tk_messageBox -icon info -type ok -title [mc "About Widget Demo"] \
 	    -message [mc "Tk widget demonstration application"] -detail \
-"[mc "Copyright \u00a9 %s" {1996-1997 Sun Microsystems, Inc.}]
-[mc "Copyright \u00a9 %s" {1997-2000 Ajuba Solutions, Inc.}]
-[mc "Copyright \u00a9 %s" {2001-2009 Donal K. Fellows}]
-[mc "Copyright \u00a9 %s" {2002-2007 Daniel A. Steffen}]"
+"[mc "Copyright \xA9 %s" {1996-1997 Sun Microsystems, Inc.}]
+[mc "Copyright \xA9 %s" {1997-2000 Ajuba Solutions, Inc.}]
+[mc "Copyright \xA9 %s" {2001-2009 Donal K. Fellows}]
+[mc "Copyright \xA9 %s" {2002-2007 Daniel A. Steffen}]"
 }
 
 # Local Variables:

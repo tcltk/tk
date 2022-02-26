@@ -26,7 +26,7 @@
 typedef struct {
     TkWindow *grabWinPtr;	/* Window that defines the top of the grab
 				 * tree in a global grab. */
-    int lastState;		/* Last known state flags. */
+    unsigned lastState;		/* Last known state flags. */
     XPoint lastPos;		/* Last reported mouse position. */
     TkWindow *lastWinPtr;	/* Last reported mouse window. */
     TkWindow *restrictWinPtr;	/* Window to which all mouse events will be
@@ -225,8 +225,9 @@ Tk_UpdatePointer(
     TkWindow *targetWinPtr;
     XPoint pos;
     XEvent event;
-    int changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
-    int type, b, mask;
+    unsigned changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
+    int type, b;
+    unsigned mask;
 
     pos.x = x;
     pos.y = y;
@@ -494,7 +495,7 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	tsdPtr->lastWinPtr = NULL;
+	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
     }
     if (winPtr == tsdPtr->grabWinPtr) {
 	tsdPtr->grabWinPtr = NULL;

@@ -4,9 +4,7 @@
  * ttk::progressbar widget.
  */
 
-#include <math.h>
-#include <tk.h>
-
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -48,14 +46,14 @@ static Tk_OptionSpec ProgressbarOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	"horizontal", Tk_Offset(Progressbar,progress.orientObj), -1,
-	0, (ClientData)ttkOrientStrings, STYLE_CHANGED },
+	0, (void *)ttkOrientStrings, STYLE_CHANGED },
     {TK_OPTION_PIXELS, "-length", "length", "Length",
         DEF_PROGRESSBAR_LENGTH, Tk_Offset(Progressbar,progress.lengthObj), -1,
 	0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-mode", "mode", "ProgressMode", "determinate",
 	Tk_Offset(Progressbar,progress.modeObj),
 	Tk_Offset(Progressbar,progress.mode),
-	0, (ClientData)ProgressbarModeStrings, 0 },
+	0, (void *)ProgressbarModeStrings, 0 },
     {TK_OPTION_DOUBLE, "-maximum", "maximum", "Maximum",
 	"100", Tk_Offset(Progressbar,progress.maximumObj), -1,
 	0, 0, 0 },
@@ -103,7 +101,6 @@ static void AnimateProgressProc(ClientData clientData)
     Progressbar *pb = (Progressbar *)clientData;
 
     pb->progress.timer = 0;
-
     if (AnimationEnabled(pb)) {
 	int phase = 0;
 	Tcl_GetIntFromObj(NULL, pb->progress.phaseObj, &phase);
@@ -111,9 +108,11 @@ static void AnimateProgressProc(ClientData clientData)
 	/*
 	 * Update -phase:
 	 */
+
 	++phase;
-	if (pb->progress.maxPhase)
-	    phase %= pb->progress.maxPhase;
+	if (phase > pb->progress.maxPhase) {
+	    phase = 0;
+	}
 	Tcl_DecrRefCount(pb->progress.phaseObj);
 	pb->progress.phaseObj = Tcl_NewIntObj(phase);
 	Tcl_IncrRefCount(pb->progress.phaseObj);
@@ -121,9 +120,9 @@ static void AnimateProgressProc(ClientData clientData)
 	/*
 	 * Reschedule:
 	 */
+
 	pb->progress.timer = Tcl_CreateTimerHandler(
 	    pb->progress.period, AnimateProgressProc, clientData);
-
 	TtkRedisplayWidget(&pb->core);
     }
 }

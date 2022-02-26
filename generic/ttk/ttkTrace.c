@@ -7,7 +7,7 @@
  * from other errors (which are not).
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -53,7 +53,7 @@ VarTraceProc(
 	 */
 	if (tracePtr->interp == NULL) {
 	    Tcl_DecrRefCount(tracePtr->varnameObj);
-	    ckfree((ClientData)tracePtr);
+	    ckfree(tracePtr);
 	    return NULL;
 	}
 	Tcl_TraceVar2(interp, name, NULL,
@@ -98,7 +98,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 
     status = Tcl_TraceVar2(interp, Tcl_GetString(varnameObj),
 	    NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-	    VarTraceProc, (ClientData)h);
+	    VarTraceProc, h);
 
     if (status != TCL_OK) {
 	Tcl_DecrRefCount(h->varnameObj);
@@ -139,7 +139,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	 */
 	while ((cd = Tcl_VarTraceInfo(h->interp, Tcl_GetString(h->varnameObj),
 		TCL_GLOBAL_ONLY, VarTraceProc, cd)) != NULL) {
-	    if (cd == (ClientData) h) {
+	    if (cd == h) {
 		break;
 	    }
 	}
@@ -154,7 +154,7 @@ void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 	}
 	Tcl_UntraceVar2(h->interp, Tcl_GetString(h->varnameObj),
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		VarTraceProc, (ClientData)h);
+		VarTraceProc, h);
 	Tcl_DecrRefCount(h->varnameObj);
 	ckfree(h);
     }

@@ -285,7 +285,7 @@ CC_SEARCH_FLAGS	= @CC_SEARCH_FLAGS@
 LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 
 # support for embedded libraries on Darwin / Mac OS X
-DYLIB_INSTALL_DIR	= ${LIB_RUNTIME_DIR}
+DYLIB_INSTALL_DIR	= $(libdir)
 
 # support for building the Aqua resource file
 TK_RSRC_FILE		= @TK_RSRC_FILE@
@@ -634,8 +634,8 @@ $(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real: ${TK_STUB_LIB_FILE}
-	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) ${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
+	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ $(WISH_LIBS) \
+		${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # # FIXME: This xttest rule seems to be broken in a number of ways.  It should
 # # use CC_SEARCH_FLAGS, it does not include the shared lib location logic from
@@ -729,16 +729,16 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f "$(PKG_INDEX)"; \
 	    (\
-	    echo "if {[catch {package present Tcl 8.6.0}]} return";\
+	    echo "if {![package vsatisfies [package provide Tcl] 8.6.0]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
-	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]] Tk]";\
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]]]";\
 	    else \
 	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	    echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)]] Tk]";\
+	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)]]]";\
 	    echo "} else {";\
-	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]] Tk]";\
+	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
 	    echo "}";\
 	    fi \
 	    ) > "$(PKG_INDEX)"; \
@@ -749,8 +749,8 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@if test -f "tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    $(INSTALL_LIBRARY) "tk${MAJOR_VERSION}${MINOR_VERSION}.dll" "$(DLL_INSTALL_DIR)";\
 	    chmod 555 "$(DLL_INSTALL_DIR)/tk${MAJOR_VERSION}${MINOR_VERSION}.dll";\
-	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.a" "$(LIB_INSTALL_DIR)";\
-	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.a";\
+	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a" "$(LIB_INSTALL_DIR)";\
+	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a";\
 	fi
 	@echo "Installing ${WISH_EXE} as $(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
 	@$(INSTALL_PROGRAM) ${WISH_EXE} "$(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
@@ -904,8 +904,10 @@ Makefile: $(UNIX_DIR)/Makefile.in
 #	$(SHELL) config.status
 
 clean:
+	rm -rf *.vfs
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
-		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
+		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
+		 *.zip
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
@@ -1030,8 +1032,8 @@ tkUtil.o: $(GENERIC_DIR)/tkUtil.c
 tkVisual.o: $(GENERIC_DIR)/tkVisual.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkVisual.c
 
-tkWindow.o: $(GENERIC_DIR)/tkWindow.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkWindow.c
+tkWindow.o: $(GENERIC_DIR)/tkWindow.c tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. $(GENERIC_DIR)/tkWindow.c
 
 tkButton.o: $(GENERIC_DIR)/tkButton.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkButton.c
@@ -1129,7 +1131,7 @@ tkImgPhInstance.o: $(GENERIC_DIR)/tkImgPhInstance.c $(GENERIC_DIR)/tkImgPhoto.h
 tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkOldTest.c
 
-tkTest.o: $(GENERIC_DIR)/tkTest.c
+tkTest.o: $(GENERIC_DIR)/tkTest.c tkUuid.h
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkTest.c
 
 tkText.o: $(GENERIC_DIR)/tkText.c
@@ -1163,7 +1165,7 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 # even though they will be placed in a static archive
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
 
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
@@ -1433,7 +1435,7 @@ ttkStubInit.o: $(TTK_DIR)/ttkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubInit.c
 
 ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
 
 ttkTagSet.o: $(TTK_DIR)/ttkTagSet.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTagSet.c
@@ -1455,6 +1457,11 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
+
+tkUuid.h: $(TOP_DIR)/manifest.uuid
+	echo "#define TK_VERSION_UUID \\" >$@
+	cat $(TOP_DIR)/manifest.uuid >>$@
+	echo "" >>$@
 
 .c.o:
 	$(CC) -c $(CC_SWITCHES) $<
@@ -1531,7 +1538,7 @@ rpm: all
 
 #
 # Target to create a proper Tk distribution from information in the
-# master source directory.  DISTDIR must be defined to indicate where
+# source directory.  DISTDIR must be defined to indicate where
 # to put the distribution.  DISTDIR must be an absolute path name.
 #
 
@@ -1548,10 +1555,10 @@ $(UNIX_DIR)/tkConfig.h.in: $(MAC_OSX_DIR)/configure
 	cd $(MAC_OSX_DIR); autoheader; touch $@
 
 $(TOP_DIR)/manifest.uuid:
-	printf "git." >$(TOP_DIR)/manifest.uuid
-	git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid
+	printf "git-" >$(TOP_DIR)/manifest.uuid
+	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
 
-dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
+dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
 	rm -rf $(DISTDIR)
 	mkdir -p $(DISTDIR)/unix
 	cp -p $(TOP_DIR)/manifest.uuid $(DISTDIR)
@@ -1563,7 +1570,7 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(UNIX_DIR)/tkConfig.sh.in $(UNIX_DIR)/install-sh \
 		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
 		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(DISTDIR)/unix
-	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.in
+	chmod 775 $(DISTDIR)/unix/configure
 	mkdir $(DISTDIR)/bitmaps
 	@(cd $(TOP_DIR); for i in bitmaps/* ; do \
 	    if [ -f $$i ] ; then \
@@ -1584,9 +1591,8 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TTK_DIR)/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
 	mkdir $(DISTDIR)/win
 	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
-	cp $(TOP_DIR)/win/configure.in \
-		$(TOP_DIR)/win/configure \
-		$(TOP_DIR)/win/tkConfig.sh.in \
+	cp $(TOP_DIR)/win/configure \
+		$(TOP_DIR)/win/*.in \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
 		$(DISTDIR)/win
 	cp -p $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
@@ -1668,6 +1674,9 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
 	mkdir $(DISTDIR)/tests/ttk
 	cp -p $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk
+	cp -p $(TOP_DIR)/.travis.yml $(DISTDIR)
+	mkdir -p $(DISTDIR)/.github/workflows
+	cp -p $(TOP_DIR)/.github/workflows/*.yml $(DISTDIR)/.github/workflows
 
 alldist: dist
 	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)

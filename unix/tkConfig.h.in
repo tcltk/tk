@@ -34,9 +34,6 @@
 /* Define to 1 if you have the `lseek64' function. */
 #undef HAVE_LSEEK64
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
 
@@ -51,6 +48,9 @@
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -142,7 +142,9 @@
 /* Is this a static build? */
 #undef STATIC_BUILD
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Is this a 64-bit build? */
@@ -172,7 +174,8 @@
 /* What type should be used to define wide integers? */
 #undef TCL_WIDE_INT_TYPE
 
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. This
+   macro is obsolete. */
 #undef TIME_WITH_SYS_TIME
 
 /* Is Tk built as a framework? */
@@ -229,7 +232,8 @@
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+/* Define to 1 if type `char' is unsigned and your compiler does not
+   predefine this macro.  */
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
@@ -249,7 +253,7 @@
 /* Define to `int' if <sys/types.h> does not define. */
 #undef mode_t
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define as a signed integer type capable of holding a process identifier. */
 #undef pid_t
 
 /* Define to `unsigned int' if <sys/types.h> does not define. */
@@ -265,6 +269,7 @@
     /* Undef unused package specific autoheader defines so that we can
      * include both tclConfig.h and tkConfig.h at the same time: */
     /* override */ #undef PACKAGE_NAME
-    /* override */ #undef PACKAGE_STRING
     /* override */ #undef PACKAGE_TARNAME
+    /* override */ #undef PACKAGE_VERSION
+    /* override */ #undef PACKAGE_STRING
     #endif /* _TKCONFIG */

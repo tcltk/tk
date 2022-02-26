@@ -57,8 +57,7 @@ TkStateParseProc(
     int flags = PTR2INT(clientData);
     size_t length;
     Tcl_Obj *msgObj;
-
-    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
     if (value == NULL || *value == 0) {
 	*statePtr = TK_STATE_NULL;
@@ -134,7 +133,7 @@ TkStatePrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Tk_State *statePtr = (Tk_State *) (widgRec + offset);
+    Tk_State *statePtr = (Tk_State *) (widgRec + offset);
 
     switch (*statePtr) {
     case TK_STATE_NORMAL:
@@ -179,8 +178,7 @@ TkOrientParseProc(
 {
     int c;
     size_t length;
-
-    register int *orientPtr = (int *) (widgRec + offset);
+    int *orientPtr = (int *) (widgRec + offset);
 
     if (value == NULL || *value == 0) {
 	*orientPtr = 0;
@@ -237,7 +235,7 @@ TkOrientPrintProc(
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register int *statePtr = (int *) (widgRec + offset);
+    int *statePtr = (int *) (widgRec + offset);
 
     if (*statePtr) {
 	return "vertical";
@@ -424,7 +422,7 @@ TkOffsetPrintProc(
 	if (offsetPtr->flags >= INT_MAX) {
 	    return "end";
 	}
-	p = ckalloc(32);
+	p = (char *)ckalloc(32);
 	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
@@ -454,7 +452,7 @@ TkOffsetPrintProc(
 	    return "se";
 	}
     }
-    q = p = ckalloc(32);
+    q = p = (char *)ckalloc(32);
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
@@ -519,7 +517,7 @@ TkPixelPrintProc(
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
-    char *p = ckalloc(24);
+    char *p = (char *)ckalloc(24);
 
     Tcl_PrintDouble(NULL, *doublePtr, p);
     *freeProcPtr = TCL_DYNAMIC;
@@ -1088,7 +1086,7 @@ TkBackgroundEvalObjv(
 Tcl_Command
 TkMakeEnsemble(
     Tcl_Interp *interp,
-    const char *namespace,
+    const char *namesp,
     const char *name,
     ClientData clientData,
     const TkEnsemble map[])
@@ -1105,11 +1103,11 @@ TkMakeEnsemble(
 
     Tcl_DStringInit(&ds);
 
-    namespacePtr = Tcl_FindNamespace(interp, namespace, NULL, 0);
+    namespacePtr = Tcl_FindNamespace(interp, namesp, NULL, 0);
     if (namespacePtr == NULL) {
-	namespacePtr = Tcl_CreateNamespace(interp, namespace, NULL, NULL);
+	namespacePtr = Tcl_CreateNamespace(interp, namesp, NULL, NULL);
 	if (namespacePtr == NULL) {
-	    Tcl_Panic("failed to create namespace \"%s\"", namespace);
+	    Tcl_Panic("failed to create namespace \"%s\"", namesp);
 	}
     }
 
@@ -1125,15 +1123,15 @@ TkMakeEnsemble(
     }
 
     Tcl_DStringSetLength(&ds, 0);
-    Tcl_DStringAppend(&ds, namespace, -1);
-    if (!(strlen(namespace) == 2 && namespace[1] == ':')) {
+    Tcl_DStringAppend(&ds, namesp, -1);
+    if (!(strlen(namesp) == 2 && namesp[1] == ':')) {
 	Tcl_DStringAppend(&ds, "::", -1);
     }
     Tcl_DStringAppend(&ds, name, -1);
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
-	Tcl_Obj *nameObj, *fqdnObj;
+	Tcl_Obj *fqdnObj;
 
 	nameObj = Tcl_NewStringObj(map[i].name, -1);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -1188,11 +1186,13 @@ TkSendVirtualEvent(
     event.general.xany.display = Tk_Display(target);
     event.virt.name = Tk_GetUid(eventName);
     event.virt.user_data = detail;
+    if (detail) Tcl_IncrRefCount(detail); // Event code will DecrRefCount
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
-#if TCL_UTF_MAX <= 4
+/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
+#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
 /*
  *---------------------------------------------------------------------------
  *
@@ -1221,11 +1221,11 @@ TkUtfToUniChar(
     Tcl_UniChar uniChar = 0;
 
     int len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((sizeof(Tcl_UniChar) == 2) && ((uniChar & 0xFC00) == 0xD800)) {
+    if ((uniChar & 0xFC00) == 0xD800) {
 	Tcl_UniChar low = uniChar;
-	/* This can only happen if Tcl is compiled with TCL_UTF_MAX=4,
-	 * or when a high surrogate character is detected in UTF-8 form */
-	int len2 = Tcl_UtfToUniChar(src+len, &low);
+	/* This can only happen if sizeof(Tcl_UniChar)== 2 and src points
+	 * to a character > U+FFFF  */
+	size_t len2 = Tcl_UtfToUniChar(src+len, &low);
 	if ((low & 0xFC00) == 0xDC00) {
 	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
 	    return len + len2;
@@ -1256,7 +1256,7 @@ TkUtfToUniChar(
 
 int TkUniCharToUtf(int ch, char *buf)
 {
-    if ((sizeof(Tcl_UniChar) == 2) && (((unsigned)(ch - 0x10000) <= 0xFFFFF))) {
+    if ((unsigned)(ch - 0x10000) <= 0xFFFFF) {
 	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
 	 * version and/or TCL_UTF_MAX build value */
 	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
@@ -1333,7 +1333,6 @@ TkUtfAtIndex(
     return p;
 }
 #endif
-
 /*
  * Local Variables:
  * mode: c

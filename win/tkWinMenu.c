@@ -511,7 +511,7 @@ GetEntryText(
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
-	int ch;
+	Tcl_UniChar ch = 0;
 
 	/*
 	 * We have to construct the string with an ampersand preceeding the
@@ -528,16 +528,17 @@ GetEntryText(
 	    if (*p == '&') {
 		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	}
+	ch = 0;
 	if (mePtr->accelLength > 0) {
 	    Tcl_DStringAppend(&itemString, "\t", 1);
 	    for (p = accel, i = 0; *p != '\0'; i++, p = next) {
 		if (*p == '&') {
 		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
-		next = p + TkUtfToUniChar(p, &ch);
+		next = p + Tcl_UtfToUniChar(p, &ch);
 		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
 	}
@@ -1689,7 +1690,7 @@ GetTearoffEntryGeometry(
     (void)mePtr;
     (void)tkfont;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
     } else {
 	*heightPtr = fmPtr->linespace;
@@ -2597,7 +2598,7 @@ DrawTearoffEntry(
     (void)tkfont;
     (void)fmPtr;
 
-    if (menuPtr->menuType != MASTER_MENU) {
+    if (menuPtr->menuType != MAIN_MENU) {
 	return;
     }
 
