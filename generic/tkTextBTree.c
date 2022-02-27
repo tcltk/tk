@@ -6889,8 +6889,7 @@ DeleteRange(
     TkTextSegment *prevLinkPtr;
     TkTextSegment *beforeSurrogate;
     TkTextSegment *prevSavePtr;
-    TkTextSegment *savedBranchPtr;
-    TkTextSegment *savedLinkPtr;
+    TkTextSegment *savedSegPtr;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -6967,7 +6966,7 @@ DeleteRange(
     insertSurrogate = 0;
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
-    savedBranchPtr = savedLinkPtr = NULL;
+    savedSegPtr = NULL;
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE)
 	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
@@ -7098,23 +7097,31 @@ DeleteRange(
 	    }
 
 	    /*
-	     * Save branch or link segment before deletion
+	     * Save branch or link segment before deletion.
+	     * These are restored after deletion to prevent orphaned branch/links.
 	     */
 
 	    if (segPtr->typePtr == &tkTextBranchType) {
-		assert(!savedBranchPtr);
-		savedBranchPtr = segPtr;
-		savedBranchPtr->refCount += 1;
+		assert(!savedSegPtr);
+		/* Prevent deletion of this segment */
+		savedSegPtr = segPtr;
+		savedSegPtr->refCount += 1;
+		curLinePtr->numBranches -= 1;
+		PropagateChangeOfNumBranches(curLinePtr->parentPtr, -1);
 	    } else if (segPtr->typePtr == &tkTextLinkType) {
-		if (segPtr->body.link.prevPtr == savedBranchPtr) {
-		    /* Branch and link will both be deleted - dispose of saved branch */
-		    TkBTreeFreeSegment(savedBranchPtr);
-		    savedBranchPtr = NULL;
+		if (segPtr->body.link.prevPtr == savedSegPtr) {
+		    /*
+		     * Branch and link are both within deleted range - dispose of saved branch.
+		     */
+		    TkBTreeFreeSegment(savedSegPtr);
+		    savedSegPtr = NULL;
 		} else {
-		    assert(!savedLinkPtr);
-		    savedLinkPtr = segPtr;
-		    savedLinkPtr->refCount += 1;
+		    assert(!savedSegPtr);
+		    /* Prevent deletion of this segment */
+		    savedSegPtr = segPtr;
+		    savedSegPtr->refCount += 1;
 		}
+		curLinePtr->numLinks -= 1;
 	    }
 
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
@@ -7329,19 +7336,19 @@ DeleteRange(
     }
 
     /*
-     * Add saved branch or link to the end of the deleted range
+     * Re-add saved branch or link segment to the start of the deleted range.
      */
 
-    if (savedBranchPtr) {
-	savedBranchPtr->sectionPtr = NULL;
-	LinkSwitch(linePtr1, lastSegPtr->prevPtr, savedBranchPtr);
-	linePtr1->numBranches = 1;
-	linePtr1->numLinks = 0;
-    } else if (savedLinkPtr) {
-	savedLinkPtr->sectionPtr = NULL;
-	LinkSwitch(linePtr1, lastSegPtr->prevPtr, savedLinkPtr);
-	linePtr1->numBranches = 0;
-	linePtr1->numLinks = 1;
+    if (savedSegPtr) {
+	savedSegPtr->sectionPtr = NULL;
+	LinkSwitch(linePtr1, firstSegPtr, savedSegPtr);
+
+	if (savedSegPtr->typePtr == &tkTextBranchType) {
+	    linePtr1->numBranches += 1;
+	    PropagateChangeOfNumBranches(linePtr1->parentPtr, 1);
+	} else if (savedSegPtr->typePtr == &tkTextLinkType) {
+	    linePtr1->numLinks += 1;
+	}
     }
 
     /*
