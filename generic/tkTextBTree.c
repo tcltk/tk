@@ -7340,7 +7340,7 @@ DeleteRange(
      */
 
     if (savedSegPtr) {
-	savedSegPtr->sectionPtr = NULL;
+	savedSegPtr->sectionPtr = NULL; /* sections are rebuilt just below */
 	LinkSwitch(linePtr1, firstSegPtr, savedSegPtr);
 
 	if (savedSegPtr->typePtr == &tkTextBranchType) {
@@ -7348,6 +7348,8 @@ DeleteRange(
 	    PropagateChangeOfNumBranches(linePtr1->parentPtr, 1);
 	} else if (savedSegPtr->typePtr == &tkTextLinkType) {
 	    linePtr1->numLinks += 1;
+	} else {
+	    assert(!"wrong savedSegPtr type in DeleteRange"); /* this should not happen */
 	}
     }
 
