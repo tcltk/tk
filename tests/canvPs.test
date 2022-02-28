@@ -195,7 +195,7 @@ test canvPs-5.1 {test ps generation with bitmap, bug 424773a00c} -body {
 test canvPs-5.2 {test ps generation with image} -body {
     pack [canvas .c]
     update
-    .c create bitmap 50 50 -image ::tk::icons::information
+    .c create image 50 50 -image ::tk::icons::information
     .c postscript
 } -cleanup {
     destroy .c
