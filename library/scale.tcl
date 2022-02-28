@@ -213,7 +213,7 @@ proc ::tk::ScaleIncrement {w dir big repeat} {
 
     if {![winfo exists $w]} return
 
-    # give the cancel callback a chance to fire if the execution time of
+    # give the cancel callback a chance to be serviced if the execution time of
     # the -command script lasts longer than -repeatdelay
     set clockms [clock milliseconds]
     if {$repeat eq "again" &&
