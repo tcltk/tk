@@ -677,9 +677,6 @@ XQueryPointer(
 {
     int getGlobal = (root_x_return && root_y_return);
     int getLocal = (win_x_return && win_y_return && w != None);
-    (void)display;
-    (void)root_return;
-    (void)child_return;
 
     if (getGlobal || getLocal) {
 	NSPoint global = [NSEvent mouseLocation];
