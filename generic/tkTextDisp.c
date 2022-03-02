@@ -2001,7 +2001,7 @@ FillStyle(
     if (tagPtr->tabStringPtr)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
     if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
     if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
-    if (tagPtr->elideString)            { stylePtr->elide = tagPtr->elide; }
+    if (tagPtr->elidePtr)               { stylePtr->elide = tagPtr->elide; }
     if (tagPtr->langPtr)                { stylePtr->lang = tagPtr->lang; }
     if (tagPtr->hyphenRulesPtr)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
 
