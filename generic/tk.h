@@ -547,6 +547,7 @@ typedef enum {
  */
 
 typedef enum {
+    TK_ANCHOR_NULL = -1,
     TK_ANCHOR_N, TK_ANCHOR_NE, TK_ANCHOR_E, TK_ANCHOR_SE,
     TK_ANCHOR_S, TK_ANCHOR_SW, TK_ANCHOR_W, TK_ANCHOR_NW,
     TK_ANCHOR_CENTER
@@ -557,6 +558,7 @@ typedef enum {
  */
 
 typedef enum {
+    TK_JUSTIFY_NULL = -1,
     TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER
 } Tk_Justify;
 
