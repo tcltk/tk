@@ -73,7 +73,7 @@ proc ::tk::fontchooser::Setup {} {
 ::tk::fontchooser::Setup
 
 proc ::tk::fontchooser::Show {} {
-    variable S 
+    variable S
 
     Canonical
 
