@@ -6889,6 +6889,7 @@ DeleteRange(
     TkTextSegment *prevLinkPtr;
     TkTextSegment *beforeSurrogate;
     TkTextSegment *prevSavePtr;
+    TkTextSegment *savedSegPtr;
     TkTextSection *firstSectionPtr;
     TkTextSection *prevSectionPtr;
     TkTextSection *lastSectionPtr;
@@ -6965,6 +6966,7 @@ DeleteRange(
     insertSurrogate = 0;
     beforeSurrogate = NULL;	/* prevent compiler warning */
     prevSavePtr = NULL;		/* prevent compiler warning */
+    savedSegPtr = NULL;
     assert(firstSegPtr->size == 0);
     deleteFirst = (flags & DELETE_INCLUSIVE)
 	    && firstSegPtr->typePtr != &tkTextProtectionMarkType
@@ -7092,6 +7094,34 @@ DeleteRange(
 		(savePtr = segPtr)->refCount += 1;
 	    } else {
 		savePtr = NULL;
+	    }
+
+	    /*
+	     * Save branch or link segment before deletion.
+	     * These are restored after deletion to prevent orphaned branch/links.
+	     */
+
+	    if (segPtr->typePtr == &tkTextBranchType) {
+		assert(!savedSegPtr);
+		/* Prevent deletion of this segment */
+		savedSegPtr = segPtr;
+		savedSegPtr->refCount += 1;
+		curLinePtr->numBranches -= 1;
+		PropagateChangeOfNumBranches(curLinePtr->parentPtr, -1);
+	    } else if (segPtr->typePtr == &tkTextLinkType) {
+		if (segPtr->body.link.prevPtr == savedSegPtr) {
+		    /*
+		     * Branch and link are both within deleted range - dispose of saved branch.
+		     */
+		    TkBTreeFreeSegment(savedSegPtr);
+		    savedSegPtr = NULL;
+		} else {
+		    assert(!savedSegPtr);
+		    /* Prevent deletion of this segment */
+		    savedSegPtr = segPtr;
+		    savedSegPtr->refCount += 1;
+		}
+		curLinePtr->numLinks -= 1;
 	    }
 
 	    assert(segPtr->sectionPtr->linePtr == curLinePtr);
@@ -7302,6 +7332,24 @@ DeleteRange(
 		MoveSegmentToRight(rightPtr, linkPtr);
 		linkPtr = prevPtr;
 	    } while (linkPtr && linkPtr->typePtr == &tkTextLinkType);
+	}
+    }
+
+    /*
+     * Re-add saved branch or link segment to the start of the deleted range.
+     */
+
+    if (savedSegPtr) {
+	savedSegPtr->sectionPtr = NULL; /* sections are rebuilt just below */
+	LinkSwitch(linePtr1, firstSegPtr, savedSegPtr);
+
+	if (savedSegPtr->typePtr == &tkTextBranchType) {
+	    linePtr1->numBranches += 1;
+	    PropagateChangeOfNumBranches(linePtr1->parentPtr, 1);
+	} else if (savedSegPtr->typePtr == &tkTextLinkType) {
+	    linePtr1->numLinks += 1;
+	} else {
+	    assert(!"wrong savedSegPtr type in DeleteRange"); /* this should not happen */
 	}
     }
 
