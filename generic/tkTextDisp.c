@@ -1989,15 +1989,15 @@ FillStyle(
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
     if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
-    if (tagPtr->lMargin1String)         { stylePtr->lMargin1 = tagPtr->lMargin1; }
-    if (tagPtr->lMargin2String)         { stylePtr->lMargin2 = tagPtr->lMargin2; }
+    if (tagPtr->lMargin1Ptr)            { stylePtr->lMargin1 = tagPtr->lMargin1; }
+    if (tagPtr->lMargin2Ptr)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
-    if (tagPtr->offsetString)           { stylePtr->offset = tagPtr->offset; }
-    if (tagPtr->rMarginString)          { stylePtr->rMargin = tagPtr->rMargin; }
+    if (tagPtr->offsetPtr)              { stylePtr->offset = tagPtr->offset; }
+    if (tagPtr->rMarginPtr)             { stylePtr->rMargin = tagPtr->rMargin; }
     if (tagPtr->rMarginColor)           { stylePtr->rMarginColor = tagPtr->rMarginColor; }
-    if (tagPtr->spacing1String)         { stylePtr->spacing1 = tagPtr->spacing1; }
-    if (tagPtr->spacing2String)         { stylePtr->spacing2 = tagPtr->spacing2; }
-    if (tagPtr->spacing3String)         { stylePtr->spacing3 = tagPtr->spacing3; }
+    if (tagPtr->spacing1Ptr)            { stylePtr->spacing1 = tagPtr->spacing1; }
+    if (tagPtr->spacing2Ptr)            { stylePtr->spacing2 = tagPtr->spacing2; }
+    if (tagPtr->spacing3Ptr)            { stylePtr->spacing3 = tagPtr->spacing3; }
     if (tagPtr->tabStringPtr)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
     if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
     if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
