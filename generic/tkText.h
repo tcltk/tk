@@ -890,24 +890,24 @@ typedef struct TkTextTag {
     TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
     				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. Only valid if
 				 * justifyString is non-NULL. */
-    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
+    Tcl_Obj *lMargin1Ptr;	/* -lmargin1 option. NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
 				 * text line, in pixels. Only valid if
-				 * lMargin1String is non-NULL. */
-    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
+				 * lMargin1Ptr is non-NULL. */
+    Tcl_Obj *lMargin2Ptr;	/* -lmargin2 option. NULL
 				 * means option not specified. */
     int lMargin2;		/* Left margin for second and later display
 				 * lines of each text line, in pixels. Only
-				 * valid if lMargin2String is non-NULL. */
+				 * valid if lMargin2Ptr is non-NULL. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
                                  * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-    char *offsetString;		/* -offset option string (malloc-ed). NULL
+    Tcl_Obj *offsetPtr;		/* -offset option. NULL
 				 * means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
-				 * subscripts. Only valid if offsetString is
+				 * subscripts. Only valid if offsetPtr is
 				 * non-NULL. */
     Tcl_Obj *overstrikePtr;	/* -overstrike option. NULL
 				 * means option not specified. */
@@ -915,10 +915,10 @@ typedef struct TkTextTag {
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
-    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
+    Tcl_Obj *rMarginPtr;	/* -rmargin option. NULL
 				 * means option not specified. */
     int rMargin;		/* Right margin for text, in pixels. Only
-				 * valid if rMarginString is non-NULL. */
+				 * valid if rMarginPtr is non-NULL. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
@@ -930,17 +930,17 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     XColor *inactiveSelFgColor;	/* Foreground color for inactive selected text. NULL means no value
     				 * specified here. */
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
+    Tcl_Obj *spacing1Ptr;	/* -spacing1 option. NULL
 				 * means option not specified. */
     int spacing1;		/* Extra spacing above first display line for
-				 * text line. Only valid if spacing1String is
+				 * text line. Only valid if spacing1Ptr is
 				 * non-NULL. */
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
+    Tcl_Obj *spacing2Ptr;	/* -spacing2 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing2;		/* Extra spacing between display lines for the
 				 * same text line. Only valid if
 				 * spacing2String is non-NULL. */
-    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL
+    Tcl_Obj *spacing3Ptr;	/* -spacing2 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing3;		/* Extra spacing below last display line for
 				 * text line. Only valid if spacing3String is
