@@ -654,12 +654,11 @@ ConfigureText(
 
 static void
 DeleteText(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),	/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    (void)canvas;
 
     if (textPtr->color != NULL) {
 	Tk_FreeColor(textPtr->color);
@@ -722,7 +721,7 @@ ComputeTextBbox(
     TextItem *textPtr)		/* Item whose bbox is to be recomputed. */
 {
     Tk_CanvasTextInfo *textInfoPtr;
-    int leftX, topY, width, height, fudge, i;
+    int width, height, fudge, i;
     Tk_State state = textPtr->header.state;
     double x[4], y[4], dx[4], dy[4], sinA, cosA, tmp;
 
@@ -744,8 +743,6 @@ ComputeTextBbox(
      * bounding box for the text item.
      */
 
-    leftX = ROUND(textPtr->x);
-    topY = ROUND(textPtr->y);
     for (i=0 ; i<4 ; i++) {
 	dx[i] = dy[i] = 0.0;
     }
@@ -758,14 +755,12 @@ ComputeTextBbox(
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
-	topY -= height;
 	for (i=0 ; i<4 ; i++) {
 	    dy[i] = -height;
 	}
 	break;
 
     default:
-	topY -= height / 2;
 	for (i=0 ; i<4 ; i++) {
 	    dy[i] = -height / 2;
 	}
@@ -780,14 +775,12 @@ ComputeTextBbox(
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
-	leftX -= width;
 	for (i=0 ; i<4 ; i++) {
 	    dx[i] = -width;
 	}
 	break;
 
     default:
-	leftX -= width / 2;
 	for (i=0 ; i<4 ; i++) {
 	    dx[i] = -width / 2;
 	}

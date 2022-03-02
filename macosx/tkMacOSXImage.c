@@ -144,33 +144,34 @@ TkMacOSXCreateCGImageWithXImage(
 
 	bitsPerComponent = 1;
 	bitsPerPixel = 1;
-	if (image->bitmap_bit_order != MSBFirst) {
-	    char *srcPtr = image->data + image->xoffset;
-	    char *endPtr = srcPtr + len;
-	    char *destPtr = (data = (char *)ckalloc(len));
-
-	    while (srcPtr < endPtr) {
-		*destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
-	    }
-	} else {
-	    data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
-	}
+	data = (char *)ckalloc(len);
 	if (data) {
+	    if (image->bitmap_bit_order != MSBFirst) {
+		char *srcPtr = image->data + image->xoffset;
+		char *endPtr = srcPtr + len;
+		char *destPtr = data;
+
+		while (srcPtr < endPtr) {
+		    *destPtr++ = xBitReverseTable[(unsigned char)(*(srcPtr++))];
+		}
+	    } else {
+		memcpy(data, image->data + image->xoffset, len);
+	    }
 	    provider = CGDataProviderCreateWithData(data, data, len,
 		    releaseData);
-	}
-	if (provider) {
+	    if (!provider) {
+		ckfree(data);
+	    }
 	    img = CGImageMaskCreate(image->width, image->height,
 		    bitsPerComponent, bitsPerPixel, image->bytes_per_line,
 		    provider, decode, 0);
+	    CGDataProviderRelease(provider);
 	}
     } else if ((image->format == ZPixmap) && (image->bits_per_pixel == 32)) {
 
 	/*
 	 * Color image
 	 */
-
-	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 
 	if (image->width == 0 && image->height == 0) {
 
@@ -180,19 +181,22 @@ TkMacOSXCreateCGImageWithXImage(
 
 	    return NULL;
 	}
+	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
 	bitmapInfo = kCGBitmapByteOrder32Big | alphaInfo;
-	data = (char *)memcpy(ckalloc(len), image->data + image->xoffset, len);
+	data = (char *)ckalloc(len);
 	if (data) {
+	    memcpy(data, image->data + image->xoffset, len);
 	    provider = CGDataProviderCreateWithData(data, data, len,
 		    releaseData);
-	}
-	if (provider) {
+	    if (!provider) {
+		ckfree(data);
+	    }
 	    img = CGImageCreate(image->width, image->height, bitsPerComponent,
 		    bitsPerPixel, image->bytes_per_line, colorspace, bitmapInfo,
 		    provider, decode, 0, kCGRenderingIntentDefault);
-	    CFRelease(provider);
+	    CGDataProviderRelease(provider);
 	}
 	if (colorspace) {
 	    CFRelease(colorspace);
@@ -635,6 +639,7 @@ CreateCGImageFromDrawableRect(
     CGImageRef cg_image = NULL, result = NULL;
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
+	CGContextRetain(cg_context);
     } else {
 	NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
 	if (view == nil) {
