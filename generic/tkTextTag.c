@@ -41,8 +41,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
 	NULL, offsetof(TkTextTag, attrs.borderWidthPtr), offsetof(TkTextTag, attrs.borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-elide", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elideString),
+    {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
+	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elide),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-eolcolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, eolColor), TK_OPTION_NULL_OK, 0, 0},
@@ -317,7 +317,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
-	if (tagPtr->elide) {
+	if (tagPtr->elide >= 0) {
 	    /*
 	     * Indices are potentially obsolete after adding or removing
 	     * elided character ranges, especially indices having "display"
@@ -1000,7 +1000,7 @@ TkTextUpdateTagDisplayFlags(
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
 
-    if (tagPtr->elideString
+    if (tagPtr->elidePtr
 	    || tagPtr->tkfont
 	    || tagPtr->justifyString
 	    || tagPtr->lMargin1String
@@ -1090,7 +1090,7 @@ TkConfigureTag(
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
     Tcl_Obj *reliefPtr = tagPtr->reliefPtr;
-    const char *elideString = tagPtr->elideString;
+    Tcl_Obj *elidePtr = tagPtr->elidePtr;
     int elide = tagPtr->elide;
     int undo = tagPtr->undo;
     int affectsDisplay = tagPtr->affectsDisplay;
@@ -1255,8 +1255,8 @@ TkConfigureTag(
 	    affectsDisplay = 1;
 	}
     }
-    if (tagPtr->elideString) {
-	if (!elideString) {
+    if (tagPtr->elidePtr) {
+	if (!elidePtr) {
 	    sharedTextPtr->numElisionTags += 1;
 	}
 
@@ -1266,16 +1266,12 @@ TkConfigureTag(
 	     * to 'true' (this would cause errors, because this case is not implemented).
 	     */
 
-	    free(tagPtr->elideString);
-	    tagPtr->elideString = NULL;
-	    tagPtr->elide = 0;
+	    Tcl_DecrRefCount(tagPtr->elidePtr);
+	    tagPtr->elidePtr = NULL;
+	    tagPtr->elide = -1;
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                     "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
             Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
-	    rc = TCL_ERROR;
-	}
-
-	if (Tcl_GetBoolean(interp, tagPtr->elideString, &tagPtr->elide) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 
@@ -1287,7 +1283,7 @@ TkConfigureTag(
 
 	TkBTreeIncrEpoch(sharedTextPtr->tree);
     } else {
-	if (elideString) {
+	if (elidePtr) {
 	    sharedTextPtr->numElisionTags -= 1;
 	}
 	tagPtr->elide = 0;
@@ -1335,7 +1331,7 @@ TkConfigureTag(
 	}
     }
 
-    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elideString);
+    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elidePtr);
     TkBitPut(sharedTextPtr->affectDisplayTags, tagPtr->index, tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->notAffectDisplayTags, tagPtr->index, !tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->affectGeometryTags, tagPtr->index, tagPtr->affectsDisplayGeometry);
@@ -1347,7 +1343,7 @@ TkConfigureTag(
 		tagPtr->affectsDisplayGeometry);
     }
 
-    if (!tagPtr->elideString != !elideString || (tagPtr->elideString && elide != tagPtr->elide)) {
+    if (!tagPtr->elidePtr != !elidePtr || (tagPtr->elidePtr && elide != tagPtr->elide)) {
 	/*
 	 * Eventually we have to insert/remove branches and links according to
 	 * the elide information of this tag.

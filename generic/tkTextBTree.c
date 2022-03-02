@@ -4468,7 +4468,7 @@ TkBTreeInsertChars(
 	    if (!TkTextTagSetTest(linePtr->parentPtr->tagonPtr, tagPtr1->index)) {
 		AddTagToNode(linePtr->parentPtr, tagPtr1, 1);
 	    }
-	    if (tagPtr1->elideString
+	    if (tagPtr1->elidePtr
 		    && (int) tagPtr1->priority > highestPriority
 		    && (!tagPtr1->textPtr || tagPtr1->textPtr == textPtr)) {
 		highestPriority = (hyphenElideTagPtr = tagPtr1)->priority;
@@ -4785,7 +4785,7 @@ TkBTreeInsertChars(
 	    assert(tPtr);
 	    assert(!tPtr->isDisabled);
 
-	    if (tPtr->elideString
+	    if (tPtr->elidePtr
 		    && (int) tPtr->priority > highestPriority
 		    && (!tPtr->textPtr || tPtr->textPtr == textPtr)) {
 		highestPriority = (tagPtr = tPtr)->priority;
@@ -5898,7 +5898,7 @@ PropagateChangeOfNumBranches(
 
 static void
 RebuildSections(
-    TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
+    TCL_UNUSED(TkSharedText *),	/* Handle to shared text resource. */
     TkTextLine *linePtr,		/* Pointer to existing line */
     int propagateChangeOfNumBranches)	/* Should we propagate a change in number of branches
     					 * to B-Tree? */
@@ -8668,7 +8668,7 @@ UpdateElideInfo(
      */
 
     if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
-	tagPtr->elide = !tagPtr->elide;
+	if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
     }
 
     /*
@@ -8703,7 +8703,7 @@ UpdateElideInfo(
 
     if (tagPtr) {
 	if (reason == ELISION_HAS_BEEN_CHANGED) {
-	    tagPtr->elide = !tagPtr->elide;
+	    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
 	} else if (reason == ELISION_WILL_BE_REMOVED) {
 	    oldTextPtr = tagPtr->textPtr;
 	    /* this little trick is disabling the tag */
@@ -8903,9 +8903,9 @@ UpdateElideInfo(
 	 */
 
 	if (!lastLinkPtr) {
-	    if (reason == ELISION_HAS_BEEN_CHANGED) { tagPtr->elide = !tagPtr->elide; }
+	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 	    actualElidden = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
-	    if (reason == ELISION_HAS_BEEN_CHANGED) { tagPtr->elide = !tagPtr->elide; }
+	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 
 	    if (actualElidden) {
 		/*
@@ -8986,7 +8986,7 @@ TkBTreeUpdateElideInfo(
 
     sharedTextPtr = textPtr->sharedTextPtr;
 
-    if (!tagPtr->elide && !TkBTreeHaveElidedSegments(sharedTextPtr)) {
+    if (tagPtr->elide < 1 && !TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	return;
     }
 
@@ -9749,7 +9749,7 @@ TkBTreeTag(
     segPtr1->protectionFlag = 1;
     segPtr2->protectionFlag = 1;
 
-    if (!add && tagPtr->elideString) {
+    if (!add && tagPtr->elidePtr) {
 	/*
 	 * In case of elision we have to inspect each segment, because a
 	 * Branch or a Link segment has to be inserted/removed if required.
@@ -9801,7 +9801,7 @@ TkBTreeTag(
 
     TreeTagNode(rootPtr, &data, 0, firstPtr, lastPtr, 1);
 
-    if (add && tagPtr->elideString) {
+    if (add && tagPtr->elidePtr) {
 	/*
 	 * In case of elision we have to inspect each segment, because a
 	 * Branch or a Link segment has to be inserted/removed if required.
@@ -12710,8 +12710,8 @@ TkBTreeGetSegmentTags(
 		    if (textPtr && tagPtr->isSelTag && textPtr == tagPtr->textPtr) {
 			*flags |= TK_TEXT_IS_SELECTED;
 		    }
-		    if (tagPtr->elideString && (int) tagPtr->priority > highestPriority) {
-			if (tagPtr->elide) {
+		    if (tagPtr->elidePtr && (int) tagPtr->priority > highestPriority) {
+			if (tagPtr->elide > 0) {
 			    *flags |= TK_TEXT_IS_ELIDED;
 			} else {
 			    *flags &= ~TK_TEXT_IS_ELIDED;
@@ -13074,7 +13074,7 @@ TkBTreeCheck(
 
 	assert(tagPtr->index < treePtr->sharedTextPtr->tagInfoSize);
 
-	if (TkBitTest(treePtr->sharedTextPtr->selectionTags, tagPtr->index) && tagPtr->elideString) {
+	if (TkBitTest(treePtr->sharedTextPtr->selectionTags, tagPtr->index) && tagPtr->elidePtr) {
 	    Tcl_Panic("TkBTreeCheck: the selection tag '%s' is not allowed to elide (or un-elide)",
 		    tagPtr->name);
 	}

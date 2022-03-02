@@ -974,8 +974,10 @@ typedef struct TkTextTag {
     Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */
     char lang[3];		/* The specified language for the text content, only enabled if not
     				 * NUL. */
-    char *elideString;		/* -elide option string (malloc-ed). NULL means option not specified. */
-    int elide;			/* True means that data under this tag should not be displayed. */
+    Tcl_Obj *elidePtr;	/* -elide option. NULL
+				 * means option not specified. */
+    int elide;			/* > 0 means that data under this tag
+				 * should not be displayed. -1 means not specified. */
     int undo;			/* True means that any change of tagging with this tag will be pushed
     				 * on the undo stack (if undo stack is enabled), otherwise this tag
 				 * will not regarded in the undo/redo process. */
@@ -1171,7 +1173,7 @@ typedef struct TkSharedText {
     				/* Empty tag information. */
     unsigned numMotionEventBindings;
 				/* Number of tags with bindings to motion events. */
-    unsigned numElisionTags;	/* Number of tags with elideString. */
+    unsigned numElisionTags;	/* Number of tags with elidePtr. */
     int allowUpdateLineMetrics;
 				/* We don't allow line height computations before first Configure
 				 * event has been accepted. */
