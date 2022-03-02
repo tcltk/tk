@@ -595,8 +595,8 @@ TestobjconfigObjCmd(
 	    "one", "two", NULL
 	};
 	static const Tk_OptionSpec typesSpecs[] = {
-	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		offsetof(TypesRecord, booleanPtr), TCL_INDEX_NONE, 0, 0, 0x1},
+	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", NULL,
+		offsetof(TypesRecord, booleanPtr), TCL_INDEX_NONE, TK_CONFIG_NULL_OK, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "7",
 		offsetof(TypesRecord, integerPtr), TCL_INDEX_NONE, 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
@@ -607,11 +607,11 @@ TestobjconfigObjCmd(
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable", "StringTable", "stringTable",
 		"one", offsetof(TypesRecord, stringTablePtr), TCL_INDEX_NONE,
-		0, stringTable, 0x10},
+		TK_CONFIG_NULL_OK, stringTable, 0x10},
 	    {TK_OPTION_STRING_TABLE,
 		"-stringtable2", "StringTable2", "stringTable2",
 		"two", offsetof(TypesRecord, stringTablePtr2), TCL_INDEX_NONE,
-		0, stringTable2, 0x10},
+		TK_CONFIG_NULL_OK, stringTable2, 0x10},
 	    {TK_OPTION_COLOR, "-color", "color", "Color",
 		"red", offsetof(TypesRecord, colorPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, "black", 0x20},
@@ -635,7 +635,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, 0, 0x800},
 	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", "center",
 		offsetof(TypesRecord, anchorPtr), TCL_INDEX_NONE,
-		0, 0, 0x1000},
+		TK_CONFIG_NULL_OK, 0, 0x1000},
 	    {TK_OPTION_PIXELS, "-pixel", "pixel", "Pixel",
 		"1", offsetof(TypesRecord, pixelPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x2000},
@@ -799,7 +799,7 @@ TestobjconfigObjCmd(
 	ErrorWidgetRecord widgetRecord;
 	static const Tk_OptionSpec errorSpecs[] = {
 	    {TK_OPTION_INT, "-int", "integer", "Integer", "bogus",
-		offsetof(ErrorWidgetRecord, intPtr), 0, 0, NULL, 0},
+		offsetof(ErrorWidgetRecord, intPtr), 0, TK_OPTION_NULL_OK, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
 	Tk_OptionTable optionTable;
@@ -873,7 +873,7 @@ TestobjconfigObjCmd(
 	};
 	static const Tk_OptionSpec internalSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		TCL_INDEX_NONE, offsetof(InternalRecord, boolean), 0, 0, 0x1},
+		TCL_INDEX_NONE, offsetof(InternalRecord, boolean), TK_CONFIG_NULL_OK, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "148962237",
 		TCL_INDEX_NONE, offsetof(InternalRecord, integer), 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
@@ -908,7 +908,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, 0, 0x800},
 	    {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", "center",
 		TCL_INDEX_NONE, offsetof(InternalRecord, anchor),
-		0, 0, 0x1000},
+		TK_CONFIG_NULL_OK, 0, 0x1000},
 	    {TK_OPTION_PIXELS, "-pixel", "pixel", "Pixel", "1",
 		TCL_INDEX_NONE, offsetof(InternalRecord, pixels),
 		TK_CONFIG_NULL_OK, 0, 0x2000},
