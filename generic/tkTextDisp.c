@@ -925,9 +925,9 @@ GetStyle(
 	    styleValues.offset = tagPtr->offset;
 	    offsetPrio = tagPtr->priority;
 	}
-	if ((tagPtr->overstrikeString != NULL)
+	if ((tagPtr->overstrike >= 0)
 		&& (tagPtr->priority > overstrikePrio)) {
-	    styleValues.overstrike = tagPtr->overstrike;
+	    styleValues.overstrike = tagPtr->overstrike > 0;
 	    overstrikePrio = tagPtr->priority;
             if (tagPtr->overstrikeColor != NULL) {
                  styleValues.overstrikeColor = tagPtr->overstrikeColor;
@@ -971,9 +971,9 @@ GetStyle(
 	    styleValues.tabStyle = tagPtr->tabStyle;
 	    tabStylePrio = tagPtr->priority;
 	}
-	if ((tagPtr->underlineString != NULL)
+	if ((tagPtr->underline >= 0)
 		&& (tagPtr->priority > underlinePrio)) {
-	    styleValues.underline = tagPtr->underline;
+	    styleValues.underline = tagPtr->underline > 0;
 	    underlinePrio = tagPtr->priority;
             if (tagPtr->underlineColor != NULL) {
                  styleValues.underlineColor = tagPtr->underlineColor;
@@ -981,9 +981,9 @@ GetStyle(
                  styleValues.underlineColor = fgColor;
             }
 	}
-	if ((tagPtr->elideString != NULL)
+	if ((tagPtr->elide >= 0)
 		&& (tagPtr->priority > elidePrio)) {
-	    styleValues.elide = tagPtr->elide;
+	    styleValues.elide = tagPtr->elide > 0;
 	    elidePrio = tagPtr->priority;
 	}
 	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
@@ -1247,7 +1247,7 @@ LayoutDLine(
 		 * toggled off), or it's a new tag with higher priority.
 		 */
 
-		if (tagPtr->elideString != NULL) {
+		if (tagPtr->elide >= 0) {
 		    info.tagCnts[tagPtr->priority]++;
 		    if (info.tagCnts[tagPtr->priority] & 1) {
 			info.tagPtrs[tagPtr->priority] = tagPtr;
@@ -1273,12 +1273,12 @@ LayoutDLine(
 			    while (--info.elidePriority > 0) {
 				if (info.tagCnts[info.elidePriority] & 1) {
 				    elide = info.tagPtrs[info.elidePriority]
-					    ->elide;
+					    ->elide > 0;
 				    break;
 				}
 			    }
 			} else {
-			    elide = tagPtr->elide;
+			    elide = tagPtr->elide > 0;
 			    info.elidePriority = tagPtr->priority;
 			}
 		    }
@@ -1394,9 +1394,9 @@ LayoutDLine(
 		 */
 	    } else if ((segPtr->typePtr == &tkTextToggleOffType)
 		    || (segPtr->typePtr == &tkTextToggleOnType)) {
-		if (segPtr->body.toggle.tagPtr->elideString != NULL) {
+		if (segPtr->body.toggle.tagPtr->elide >= 0) {
 		    elide = (segPtr->typePtr == &tkTextToggleOffType)
-			    ^ segPtr->body.toggle.tagPtr->elide;
+			    ^ (segPtr->body.toggle.tagPtr->elide > 0);
 		}
 	    }
 
@@ -2567,6 +2567,13 @@ DisplayDLine(
 		    display, pixmap, dlPtr->y + dlPtr->spaceAbove);
 	}
 
+	if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+	    /*
+	     * A displayProc called in the loop above invoked a binding
+	     * that caused the widget to be deleted. Don't do anything.
+	     */
+	    return;
+	}
 	if (dInfoPtr->dLinesInvalidated) {
 	    return;
 	}
@@ -4223,7 +4230,7 @@ DisplayText(
 
     /*
      * Choose a new current item if that is needed (this could cause event
-     * handlers to be invoked, hence the preserve/release calls and the loop,
+     * handlers to be invoked, hence the refcount management and the loop,
      * since the handlers could conceivably necessitate yet another current
      * item calculation). The tkwin check is because the whole window could go
      * away in the Tcl_Release call.
@@ -4502,11 +4509,18 @@ DisplayText(
 		    LOG("tk_textRedraw", string);
 		}
 		DisplayDLine(textPtr, dlPtr, prevPtr, pixmap);
+		if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+		    /*
+		     * DisplayDLine called a displayProc which invoked a binding
+		     * that caused the widget to be deleted. Don't do anything.
+		     */
+		    goto end;
+		}
 		if (dInfoPtr->dLinesInvalidated) {
 #ifndef TK_NO_DOUBLE_BUFFERING
 		    Tk_FreePixmap(Tk_Display(textPtr->tkwin), pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
-		    return;
+		    goto end;
 		}
 		dlPtr->oldY = dlPtr->y;
 		dlPtr->flags &= ~(NEW_LAYOUT | OLD_Y_INVALID);
