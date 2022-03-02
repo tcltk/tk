@@ -2193,7 +2193,7 @@ static int TreeviewHorribleIdentify(
     TreeItem *item = 0;
     Tcl_Obj *result;
     TkSizeT dColumnNumber;
-    char dcolbuf[16];
+    char dcolbuf[32];
     int x, y, x1;
     (void)objc;
 
