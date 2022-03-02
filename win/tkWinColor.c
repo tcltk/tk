@@ -301,14 +301,13 @@ TkWinIndexOfColor(
 
 int
 XAllocColor(
-    Display *display,
+    TCL_UNUSED(Display *),
     Colormap colormap,
     XColor *color)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     PALETTEENTRY entry, closeEntry;
     HDC dc = GetDC(NULL);
-    (void)display;
 
     entry.peRed = (color->red) >> 8;
     entry.peGreen = (color->green) >> 8;
@@ -402,11 +401,11 @@ XAllocColor(
 
 int
 XFreeColors(
-    Display *display,
+    TCL_UNUSED(Display *),
     Colormap colormap,
     unsigned long *pixels,
     int npixels,
-    unsigned long planes)
+    TCL_UNUSED(unsigned long))
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
     COLORREF cref;
@@ -416,8 +415,6 @@ XFreeColors(
     PALETTEENTRY entry, *entries;
     Tcl_HashEntry *entryPtr;
     HDC dc = GetDC(NULL);
-    (void)display;
-    (void)planes;
 
     /*
      * We don't have to do anything for non-palette devices.
@@ -476,10 +473,10 @@ XFreeColors(
 
 Colormap
 XCreateColormap(
-    Display *display,
-    Window w,
-    Visual *visual,
-    int alloc)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Visual *),
+    TCL_UNUSED(int))
 {
     char logPalBuf[sizeof(LOGPALETTE) + 256 * sizeof(PALETTEENTRY)];
     LOGPALETTE *logPalettePtr;
@@ -489,10 +486,6 @@ XCreateColormap(
     int isNew;
     UINT i;
     HPALETTE sysPal;
-    (void)display;
-    (void)w;
-    (void)visual;
-    (void)alloc;
 
     /*
      * Allocate a starting palette with all of the reserved colors.
@@ -543,11 +536,10 @@ XCreateColormap(
 
 int
 XFreeColormap(
-    Display *display,
+    TCL_UNUSED(Display *),
     Colormap colormap)
 {
     TkWinColormap *cmap = (TkWinColormap *) colormap;
-    (void)display;
 
     if (!DeleteObject(cmap->palette)) {
 	Tcl_Panic("Unable to free colormap, palette is still selected");

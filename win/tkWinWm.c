@@ -4973,7 +4973,7 @@ WmProtocolCmd(
 		WTSUnRegisterSessionNotification(
 			winPtr->wmInfoPtr->wrapper);
 	    }
-	    
+
 	    /*
 	     * Be sure that the window exists. If not, try to make it exist.
 	     * This is required, if no "update" was run after windows
@@ -8042,7 +8042,7 @@ WmProc(
 		|| SessionID != lParam) {
 	    break;
 	}
-	
+
 	/*
 	 * Filter the notification items we take.
 	 * Note, that the following notifications are not reported:

@@ -190,6 +190,7 @@ Tk_NameOfAnchor(
     case TK_ANCHOR_W: return "w";
     case TK_ANCHOR_NW: return "nw";
     case TK_ANCHOR_CENTER: return "center";
+    case TK_ANCHOR_NULL: return "";
     }
     return "unknown anchor position";
 }
@@ -471,7 +472,7 @@ Tk_NameOfJustify(
     case TK_JUSTIFY_LEFT: return "left";
     case TK_JUSTIFY_RIGHT: return "right";
     case TK_JUSTIFY_CENTER: return "center";
-    default: break;
+    case TK_JUSTIFY_NULL: return "";
     }
     return "unknown justification style";
 }
