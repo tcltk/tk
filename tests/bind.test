@@ -13,7 +13,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 tk useinputmethods 0
 
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
 testConstraint failsOnWindows [expr {![info exists ::env(CI)] || [tk windowingsystem] ne "win32"}]
 
 
