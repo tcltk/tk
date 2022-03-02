@@ -974,8 +974,7 @@ typedef struct TkTextTag {
     Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */
     char lang[3];		/* The specified language for the text content, only enabled if not
     				 * NUL. */
-    Tcl_Obj *elidePtr;	/* -elide option. NULL
-				 * means option not specified. */
+    Tcl_Obj *elidePtr;		/* -elide option. NULL means option not specified. */
     int elide;			/* > 0 means that data under this tag
 				 * should not be displayed. -1 means not specified. */
     int undo;			/* True means that any change of tagging with this tag will be pushed

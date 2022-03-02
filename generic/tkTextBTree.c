@@ -5898,7 +5898,7 @@ PropagateChangeOfNumBranches(
 
 static void
 RebuildSections(
-    TCL_UNUSED(TkSharedText *),	/* Handle to shared text resource. */
+    TkSharedText *sharedTextPtr,	/* Handle to shared text resource. */
     TkTextLine *linePtr,		/* Pointer to existing line */
     int propagateChangeOfNumBranches)	/* Should we propagate a change in number of branches
     					 * to B-Tree? */
