@@ -895,16 +895,14 @@ typedef struct TkTextTag {
     int lMargin1;		/* Left margin for first display line of each
 				 * text line, in pixels. Only valid if
 				 * lMargin1Ptr is non-NULL. */
-    Tcl_Obj *lMargin2Ptr;	/* -lmargin2 option. NULL
-				 * means option not specified. */
+    Tcl_Obj *lMargin2Ptr;	/* -lmargin2 option. NULL means option not specified. */
     int lMargin2;		/* Left margin for second and later display
 				 * lines of each text line, in pixels. Only
 				 * valid if lMargin2Ptr is non-NULL. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
                                  * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-    Tcl_Obj *offsetPtr;		/* -offset option. NULL
-				 * means option not specified. */
+    Tcl_Obj *offsetPtr;		/* -offset option. NULL means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
 				 * subscripts. Only valid if offsetPtr is
@@ -915,8 +913,7 @@ typedef struct TkTextTag {
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
-    Tcl_Obj *rMarginPtr;	/* -rmargin option. NULL
-				 * means option not specified. */
+    Tcl_Obj *rMarginPtr;	/* -rmargin option. NULL means option not specified. */
     int rMargin;		/* Right margin for text, in pixels. Only
 				 * valid if rMarginPtr is non-NULL. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
@@ -930,20 +927,16 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     XColor *inactiveSelFgColor;	/* Foreground color for inactive selected text. NULL means no value
     				 * specified here. */
-    Tcl_Obj *spacing1Ptr;	/* -spacing1 option. NULL
-				 * means option not specified. */
+    Tcl_Obj *spacing1Ptr;	/* -spacing1 option. NULL means option not specified. */
     int spacing1;		/* Extra spacing above first display line for
-				 * text line. Only valid if spacing1Ptr is
-				 * non-NULL. */
-    Tcl_Obj *spacing2Ptr;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
+				 * text line. Only valid if spacing1Ptr is non-NULL. */
+    Tcl_Obj *spacing2Ptr;	/* -spacing2 option. NULL means option not specified. */
     int spacing2;		/* Extra spacing between display lines for the
 				 * same text line. Only valid if
 				 * spacing2String is non-NULL. */
-    Tcl_Obj *spacing3Ptr;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
+    Tcl_Obj *spacing3Ptr;	/* -spacing2 option. NULL means option not specified. */
     int spacing3;		/* Extra spacing below last display line for
-				 * text line. Only valid if spacing3String is
+				 * text line. Only valid if spacing3Ptr is
 				 * non-NULL. */
     Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
 				 * specified. */
