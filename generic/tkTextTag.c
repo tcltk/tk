@@ -72,7 +72,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-lang", NULL, NULL,
 	NULL, offsetof(TkTextTag, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin1), offsetof(TkTextTag, lMargin1Ptr), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, lMargin1Ptr), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
 	NULL, offsetof(TkTextTag, lMargin2Ptr), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
