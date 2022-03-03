@@ -5907,6 +5907,9 @@ RebuildSections(
     TkTextSegment *segPtr;
     unsigned length;
     int changeToNumBranches;
+#ifdef NDEBUG
+    (void)sharedTextPtr;
+#endif
 
     prevSectionPtr = NULL;
     sectionPtr = linePtr->segPtr->sectionPtr;
