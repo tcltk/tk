@@ -90,7 +90,7 @@ static KeySym		KeycodeToKeysym(unsigned int keycode,
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: needed to get
+    TCL_UNUSED(TkWindow *),		/* Window where event occurred: needed to get
 				 * input context. */
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
@@ -99,7 +99,6 @@ TkpGetString(
     XKeyEvent *keyEv = &eventPtr->xkey;
     int len;
     char buf[6];
-    (void)winPtr;
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
@@ -152,12 +151,11 @@ TkpGetString(
 
 KeySym
 XKeycodeToKeysym(
-    Display *display,
+    TCL_UNUSED(Display *),
     unsigned int keycode,
     int index)
 {
     int state = 0;
-    (void)display;
 
     if (index & 0x01) {
 	state |= ShiftMask;
@@ -568,14 +566,13 @@ TkpInitKeymapInfo(
 
 void
 TkpSetKeycodeAndState(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     KeySym keySym,
     XEvent *eventPtr)
 {
     int i;
     SHORT result;
     int shift;
-    (void)tkwin;
 
     eventPtr->xkey.keycode = 0;
     if (keySym == NoSymbol) {
@@ -627,12 +624,11 @@ TkpSetKeycodeAndState(
 
 KeyCode
 XKeysymToKeycode(
-    Display *display,
+    TCL_UNUSED(Display *),
     KeySym keysym)
 {
     int i;
     SHORT result;
-    (void)display;
 
     /*
      * We check our private map first for a virtual keycode, as VkKeyScan will
@@ -676,10 +672,9 @@ XKeysymToKeycode(
 
 XModifierKeymap	*
 XGetModifierMapping(
-    Display *display)
+    TCL_UNUSED(Display *))
 {
     XModifierKeymap *map = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
-    (void)display;
 
     map->max_keypermod = 1;
     map->modifiermap = (KeyCode *)ckalloc(sizeof(KeyCode) * 8);
@@ -738,10 +733,8 @@ XFreeModifiermap(
 
 KeySym
 XStringToKeysym(
-    _Xconst char *string)
+    TCL_UNUSED(_Xconst char *))
 {
-    (void)string;
-
     return NoSymbol;
 }
 
@@ -763,10 +756,8 @@ XStringToKeysym(
 
 char *
 XKeysymToString(
-    KeySym keysym)
+    TCL_UNUSED(KeySym))
 {
-    (void)keysym;
-
     return NULL;
 }
 
