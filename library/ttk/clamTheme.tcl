@@ -129,7 +129,10 @@ namespace eval ttk::theme::clam {
 	# Treeview:
 	ttk::style configure Heading \
 	    -font TkHeadingFont -relief raised -padding {3}
-	ttk::style configure Treeview -background $colors(-window)
+	ttk::style configure Treeview -background $colors(-window) \
+                -stripedbackground $colors(-lighter)
+	ttk::style configure Treeview.Separator \
+                -background $colors(-lighter)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
 				selected $colors(-selectbg)] \
