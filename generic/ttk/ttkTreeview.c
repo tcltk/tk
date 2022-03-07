@@ -570,18 +570,18 @@ static void foreachHashEntry(Tcl_HashTable *ht, HashEntryIterator func)
     }
 }
 
-static void CellSelectionClearCB(void *clientData)
+static int CellSelectionClear(Treeview *tv)
 {
-    TreeItem *item = (TreeItem *) clientData;
-    if (item->selObj != NULL) {
-	Tcl_DecrRefCount(item->selObj);
-	item->selObj = NULL;
+    TreeItem *item;
+    int anyChange = 0;
+    for (item=tv->tree.root; item; item = NextPreorder(item)) {
+	if (item->selObj != NULL) {
+	    Tcl_DecrRefCount(item->selObj);
+	    item->selObj = NULL;
+	    anyChange = 1;
+	}
     }
-}
-
-static void CellSelectionClear(Treeview *tv)
-{
-    foreachHashEntry(&tv->tree.items, CellSelectionClearCB);
+    return anyChange;
 }
 
 /* + unshareObj(objPtr) --
@@ -3272,9 +3272,15 @@ static int TreeviewDeleteCommand(
      */
     delq = 0;
     for (i = 0; items[i]; ++i) {
-        if (items[i]->state & TTK_STATE_SELECTED || items[i]->selObj != NULL) {
+        if (items[i]->state & TTK_STATE_SELECTED) {
             selChange = 1;
-        }
+        } else if (items[i]->selObj != NULL) {
+	    int length;
+	    Tcl_ListObjLength(interp, items[i]->selObj, &length);
+	    if (length > 0) {
+		selChange = 1;
+	    }
+	}
 	delq = DeleteItems(items[i], delq);
     }
 
@@ -3565,30 +3571,16 @@ static int TreeviewSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
+	    /* Clear */
 	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
-		int inSetList = 0;
-
-		for (i=0; items[i]; ++i) {
-		    if (item == items[i]) {
-			inSetList = 1;
-			if (!(item->state & TTK_STATE_SELECTED)) {
-			    /* Item newly selected */
-			    selChange = 1;
-			}
-			break;
-		    }
-		}
-		if (!inSetList && (item->state & TTK_STATE_SELECTED)) {
-		    /* Item newly deselected */
+		if (item->state & TTK_STATE_SELECTED) {
+		    item->state &= ~TTK_STATE_SELECTED;
 		    selChange = 1;
 		}
-		if (selChange) break;
-	    }
-	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
-		item->state &= ~TTK_STATE_SELECTED;
 	    }
 	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
+		selChange = 1;
 	    }
 	    break;
 	case SELECTION_ADD:
@@ -3627,11 +3619,11 @@ static int TreeviewSelectionCommand(
 /* + SelObjChangeElement --
  * 	Change an element in a cell selection list.
  */
-static void SelObjChangeElement(
+static int SelObjChangeElement(
     Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
     int add, TCL_UNUSED(int) /*remove*/, int toggle)
 {
-    int i, nElements;
+    int i, nElements, anyChange = 0;
     TreeColumn *column, *elemColumn;
     Tcl_Obj **elements;
 
@@ -3641,15 +3633,18 @@ static void SelObjChangeElement(
 	column = FindColumn(NULL, tv, elements[i]);
 	if (column == elemColumn) {
 	    if (add) {
-		return;
+		return anyChange;
 	    }
 	    Tcl_ListObjReplace(NULL, listPtr, i, 1, 0, NULL);
-	    return;
+	    anyChange = 1;
+	    return anyChange;
 	}
     }
     if (add || toggle) {
 	Tcl_ListObjAppendElement(NULL, listPtr, elemColumn->idObj);
+	anyChange = 1;
     }
+    return anyChange;
 }
 
 /* + $tree cellselection ?add|remove|set|toggle $items?
@@ -3661,7 +3656,7 @@ static int CellSelectionRange(
     TreeCell cellFrom, cellTo;
     TreeItem *item;
     Tcl_Obj *columns, **elements;
-    int colno, nElements, i, fromNo, toNo;
+    int colno, nElements, i, fromNo, toNo, anyChange = 0;
     int set = !(add || remove || toggle);
 
     if (GetCellFromObj(interp, tv, fromCell, 1, &fromNo, &cellFrom)
@@ -3694,7 +3689,7 @@ static int CellSelectionRange(
      * Start with clearing out.
      */
     if (set) {
-	CellSelectionClear(tv);
+	anyChange = CellSelectionClear(tv);
     }
 
     /* Correct order.
@@ -3716,7 +3711,7 @@ static int CellSelectionRange(
 
 	    Tcl_ListObjGetElements(NULL, columns, &nElements, &elements);
 	    for (i = 0; i < nElements; ++i) {
-		SelObjChangeElement(tv, item->selObj, elements[i],
+		anyChange |= SelObjChangeElement(tv, item->selObj, elements[i],
 			add, remove, toggle);
 	    }
 	} else {
@@ -3725,6 +3720,7 @@ static int CellSelectionRange(
 	    if (!remove) {
 		item->selObj = columns;
 		Tcl_IncrRefCount(item->selObj);
+		anyChange = 1;
 	    }
 	}
 	if (item == cellTo.item) {
@@ -3734,7 +3730,9 @@ static int CellSelectionRange(
 
     Tcl_DecrRefCount(columns);
 
-    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
+    if (anyChange) {
+	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
+    }
     TtkRedisplayWidget(&tv->core);
     return TCL_OK;
 }
@@ -3752,7 +3750,7 @@ static int TreeviewCellSelectionCommand(
     };
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop;
+    int selop, anyChange = 0;
     TkSizeT i, nCells;
     TreeCell *cells;
     TreeItem *item;
@@ -3812,7 +3810,7 @@ static int TreeviewCellSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
-	    CellSelectionClear(tv);
+	    anyChange = CellSelectionClear(tv);
 	    /*FALLTHRU*/
 	case SELECTION_ADD:
 	    for (i = 0; i < nCells; i++) {
@@ -3822,7 +3820,8 @@ static int TreeviewCellSelectionCommand(
 		    Tcl_IncrRefCount(item->selObj);
 		}
 		item->selObj = unshareObj(item->selObj);
-		SelObjChangeElement(tv, item->selObj, cells[i].colObj, 1, 0, 0);
+		anyChange |= SelObjChangeElement(tv, item->selObj,
+			cells[i].colObj, 1, 0, 0);
 	    }
 	    break;
 	case SELECTION_REMOVE:
@@ -3832,7 +3831,8 @@ static int TreeviewCellSelectionCommand(
 		    continue;
 		}
 		item->selObj = unshareObj(item->selObj);
-		SelObjChangeElement(tv, item->selObj, cells[i].colObj, 0, 1, 0);
+		anyChange |= SelObjChangeElement(tv, item->selObj,
+			cells[i].colObj, 0, 1, 0);
 	    }
 	    break;
 	case SELECTION_TOGGLE:
@@ -3843,13 +3843,16 @@ static int TreeviewCellSelectionCommand(
 		    Tcl_IncrRefCount(item->selObj);
 		}
 		item->selObj = unshareObj(item->selObj);
-		SelObjChangeElement(tv, item->selObj, cells[i].colObj, 0, 0, 1);
+		anyChange = SelObjChangeElement(tv, item->selObj,
+			cells[i].colObj, 0, 0, 1);
 	    }
 	    break;
     }
 
     ckfree(cells);
-    Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
+    if (anyChange) {
+	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
+    }
     TtkRedisplayWidget(&tv->core);
 
     return TCL_OK;
