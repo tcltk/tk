@@ -21,7 +21,10 @@ ttk::label $w.msg -font $font -wraplength 4i -justify left -anchor n -padding {1
 pack $w.msg -fill x
 
 ## See Code / Dismiss
-pack [addSeeDismiss $w.seeDismiss $w] -side bottom -fill x
+pack [addSeeDismiss $w.seeDismiss $w {} {
+    ttk::checkbutton $w.seeDismiss.cb1 -text Grid -variable mclistGrid -command tglGrid
+}] -side bottom -fill x
+
 
 ttk::frame $w.container
 ttk::treeview $w.tree -columns {country capital currency} -show headings \
@@ -115,5 +118,20 @@ proc SortBy {tree col direction} {
 	$tree heading $col state "user1"
     } else {
 	$tree heading $col -image [expr {$direction?"upArrow":"downArrow"}]
+    }
+}
+
+set mclistGrid 0
+proc tglGrid {} {
+    if {$::mclistGrid} {
+        .mclist.tree configure -stripe 1
+        foreach col [.mclist.tree cget -columns] {
+            .mclist.tree column $col -separator 1
+        }
+    } else {
+        .mclist.tree configure -stripe 0
+        foreach col [.mclist.tree cget -columns] {
+            .mclist.tree column $col -separator 0
+        }
     }
 }
