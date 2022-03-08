@@ -1000,16 +1000,16 @@ TkTextUpdateTagDisplayFlags(
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
 
-    if (tagPtr->elideString
+    if (tagPtr->elidePtr
 	    || tagPtr->tkfont
 	    || tagPtr->justifyString
-	    || tagPtr->lMargin1String
-	    || tagPtr->lMargin2String
-	    || tagPtr->offsetString
+	    || tagPtr->lMargin1Ptr
+	    || tagPtr->lMargin2Ptr
+	    || tagPtr->offsetPtr
 	    || tagPtr->rMarginString
-	    || tagPtr->spacing1String
-	    || tagPtr->spacing2String
-	    || tagPtr->spacing3String
+	    || tagPtr->spacing1Ptr
+	    || tagPtr->spacing2Ptr
+	    || tagPtr->spacing3Ptr
 	    || tagPtr->tabStringPtr
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR
@@ -1090,7 +1090,7 @@ TkConfigureTag(
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
     Tcl_Obj *reliefPtr = tagPtr->reliefPtr;
-    const char *elideString = tagPtr->elideString;
+    Tcl_Obj *elidePtr = tagPtr->elidePtr;
     int elide = tagPtr->elide;
     int undo = tagPtr->undo;
     int affectsDisplay = tagPtr->affectsDisplay;
@@ -1191,19 +1191,19 @@ TkConfigureTag(
 	    tagPtr->justify = (TkTextJustify)j;
 	}
     }
-    if (tagPtr->lMargin1String) {
+    if (tagPtr->lMargin1Ptr) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
     }
-    if (tagPtr->lMargin2String) {
+    if (tagPtr->lMargin2Ptr) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
     }
-    if (tagPtr->offsetString) {
+    if (tagPtr->offsetPtr) {
 	if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
 		&tagPtr->offset) != TCL_OK) {
 	    rc = TCL_ERROR;
@@ -1215,21 +1215,21 @@ TkConfigureTag(
 	    rc = TCL_ERROR;
 	}
     }
-    if (tagPtr->spacing1String) {
+    if (tagPtr->spacing1Ptr) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
     }
-    if (tagPtr->spacing2String) {
+    if (tagPtr->spacing2Ptr) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 	tagPtr->spacing2 = MAX(0, tagPtr->spacing2);
     }
-    if (tagPtr->spacing3String) {
+    if (tagPtr->spacing3Ptr) {
 	if (Tk_GetPixels(interp, textPtr->tkwin,
 		tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
 	    rc = TCL_ERROR;
@@ -1255,8 +1255,8 @@ TkConfigureTag(
 	    affectsDisplay = 1;
 	}
     }
-    if (tagPtr->elideString) {
-	if (!elideString) {
+    if (tagPtr->elidePtr) {
+	if (!elidePtr) {
 	    sharedTextPtr->numElisionTags += 1;
 	}
 
@@ -1266,16 +1266,16 @@ TkConfigureTag(
 	     * to 'true' (this would cause errors, because this case is not implemented).
 	     */
 
+	    Tcl_DecrRefCount(tagPtr->elidePtr);
+	    tagPtr->elidePtr = NULL;
 	    free(tagPtr->elideString);
 	    tagPtr->elideString = NULL;
 	    tagPtr->elide = 0;
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
-            Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
 	    rc = TCL_ERROR;
-	}
-
-	if (Tcl_GetBoolean(interp, tagPtr->elideString, &tagPtr->elide) != TCL_OK) {
+	} else if (Tcl_GetBooleanFromObj(interp, tagPtr->elidePtr, &tagPtr->elide) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 
@@ -1287,7 +1287,7 @@ TkConfigureTag(
 
 	TkBTreeIncrEpoch(sharedTextPtr->tree);
     } else {
-	if (elideString) {
+	if (elidePtr) {
 	    sharedTextPtr->numElisionTags -= 1;
 	}
 	tagPtr->elide = 0;
@@ -1335,7 +1335,7 @@ TkConfigureTag(
 	}
     }
 
-    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elideString);
+    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elidePtr);
     TkBitPut(sharedTextPtr->affectDisplayTags, tagPtr->index, tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->notAffectDisplayTags, tagPtr->index, !tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->affectGeometryTags, tagPtr->index, tagPtr->affectsDisplayGeometry);
@@ -1347,7 +1347,7 @@ TkConfigureTag(
 		tagPtr->affectsDisplayGeometry);
     }
 
-    if (!tagPtr->elideString != !elideString || (tagPtr->elideString && elide != tagPtr->elide)) {
+    if (!tagPtr->elidePtr != !elidePtr || (tagPtr->elidePtr && elide != tagPtr->elide)) {
 	/*
 	 * Eventually we have to insert/remove branches and links according to
 	 * the elide information of this tag.
