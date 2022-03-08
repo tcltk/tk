@@ -4468,7 +4468,7 @@ TkBTreeInsertChars(
 	    if (!TkTextTagSetTest(linePtr->parentPtr->tagonPtr, tagPtr1->index)) {
 		AddTagToNode(linePtr->parentPtr, tagPtr1, 1);
 	    }
-	    if (tagPtr1->elideString
+	    if (tagPtr1->elidePtr
 		    && (int) tagPtr1->priority > highestPriority
 		    && (!tagPtr1->textPtr || tagPtr1->textPtr == textPtr)) {
 		highestPriority = (hyphenElideTagPtr = tagPtr1)->priority;
@@ -4785,7 +4785,7 @@ TkBTreeInsertChars(
 	    assert(tPtr);
 	    assert(!tPtr->isDisabled);
 
-	    if (tPtr->elideString
+	    if (tPtr->elidePtr
 		    && (int) tPtr->priority > highestPriority
 		    && (!tPtr->textPtr || tPtr->textPtr == textPtr)) {
 		highestPriority = (tagPtr = tPtr)->priority;
@@ -9752,7 +9752,7 @@ TkBTreeTag(
     segPtr1->protectionFlag = 1;
     segPtr2->protectionFlag = 1;
 
-    if (!add && tagPtr->elideString) {
+    if (!add && tagPtr->elidePtr) {
 	/*
 	 * In case of elision we have to inspect each segment, because a
 	 * Branch or a Link segment has to be inserted/removed if required.
@@ -9804,7 +9804,7 @@ TkBTreeTag(
 
     TreeTagNode(rootPtr, &data, 0, firstPtr, lastPtr, 1);
 
-    if (add && tagPtr->elideString) {
+    if (add && tagPtr->elidePtr) {
 	/*
 	 * In case of elision we have to inspect each segment, because a
 	 * Branch or a Link segment has to be inserted/removed if required.
@@ -12713,7 +12713,7 @@ TkBTreeGetSegmentTags(
 		    if (textPtr && tagPtr->isSelTag && textPtr == tagPtr->textPtr) {
 			*flags |= TK_TEXT_IS_SELECTED;
 		    }
-		    if (tagPtr->elideString && (int) tagPtr->priority > highestPriority) {
+		    if (tagPtr->elidePtr && (int) tagPtr->priority > highestPriority) {
 			if (tagPtr->elide) {
 			    *flags |= TK_TEXT_IS_ELIDED;
 			} else {
@@ -13077,7 +13077,7 @@ TkBTreeCheck(
 
 	assert(tagPtr->index < treePtr->sharedTextPtr->tagInfoSize);
 
-	if (TkBitTest(treePtr->sharedTextPtr->selectionTags, tagPtr->index) && tagPtr->elideString) {
+	if (TkBitTest(treePtr->sharedTextPtr->selectionTags, tagPtr->index) && tagPtr->elidePtr) {
 	    Tcl_Panic("TkBTreeCheck: the selection tag '%s' is not allowed to elide (or un-elide)",
 		    tagPtr->name);
 	}
