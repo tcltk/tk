@@ -1744,6 +1744,9 @@ characters in the text.
 .IP [4] 4
 Whenever the \fBsel\fR tag range changes a virtual event \fB<<Selection>>\fR
 is generated.
+It might also be generated when selection is affected but not actually changed.
+Further, multiple selection changes could happen before events can be processed
+leading to multiple events with the same visible selection.
 .PP
 The \fBsel\fR tag is automatically defined when a text widget is created, and
 it may not be deleted with the

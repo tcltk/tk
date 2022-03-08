@@ -57,7 +57,8 @@ namespace eval ttk::theme::xpnative {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Treeview -background SystemWindow \
+                -stripedbackground System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
