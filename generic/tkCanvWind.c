@@ -619,6 +619,16 @@ DisplayWinItem(
 		|| (width != Tk_Width(winItemPtr->tkwin))
 		|| (height != Tk_Height(winItemPtr->tkwin))) {
 	    Tk_MoveResizeWindow(winItemPtr->tkwin, x, y, width, height);
+
+	    /*
+	     * Tk_MoveResizeWindow runs a Configure event which in turn may run
+	     * the event loop and do anything, including destruction of the 
+	     * canvas window. Catch this case or we would crash in Tk_MapWindow.
+	     */
+
+	    if (!winItemPtr->tkwin) {
+		return;
+	    }
 	}
 	Tk_MapWindow(winItemPtr->tkwin);
     } else {
