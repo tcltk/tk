@@ -254,7 +254,7 @@ Icu_Init(
 	    strcpy(symbol, "ubrk_" #name ); \
 	    strcat(symbol, icuversion); \
 	    icu_fns.name = (fn_icu_ ## name)				\
-		Tcl_FindSymbol(NULL, icu_fns.lib, symbol); \
+		Tcl_FindSymbol(NULL, icu_fns.lib, symbol)
 	    ICU_SYM(open);
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
