@@ -1106,7 +1106,7 @@ TkpSetWindowMenuBar(
 /*
  *----------------------------------------------------------------------
  *
- * TkpSetMainMenubar --
+ * Tk_SetMainMenubar --
  *
  *	Puts the menu associated with a window into the menubar. Should only be
  *	called when the window is in front.
@@ -1126,7 +1126,7 @@ TkpSetWindowMenuBar(
  */
 
 void
-TkpSetMainMenubar(
+Tk_SetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
     const char *menuName)	/* The name of the menu to put in front. */

@@ -665,7 +665,7 @@ setXEventPoint(
     int win_x, win_y;
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow(tkwin);
 	if (Tk_IsTopLevel(contPtr)) {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
