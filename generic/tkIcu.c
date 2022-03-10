@@ -241,7 +241,7 @@ Icu_Init(
 			== TCL_OK) {
 		    if (p == NULL) {
 			icuversion[0] = '\0';
-			}
+		    }
 		    Tcl_DecrRefCount(nameobj);
 		    break;
 		}

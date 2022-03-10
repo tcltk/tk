@@ -25,6 +25,8 @@
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
 #include "tkMacOSXPrivate.h"
+#else
+#   define Tk_ClipDrawableToRect 0
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -57,6 +59,17 @@ static int TkWinGetPlatformId(void) {
 #   define Tk_TranslateWinEvent 0
 #   define Tk_PointerEvent 0
 #   define TkWinGetPlatformId 0
+#endif
+
+#if defined(TK_NO_DEPRECATED) || (TCL_MAJOR_VERSION > 8)
+#   define TkSetWindowMenuBar 0
+#   define TkpDrawHighlightBorder 0
+#   define TkpUseWindow 0
+#   define TkpSetMainMenubar 0
+#   define TkpGetOtherWindow 0
+#   define TkpGetSystemDefault 0
+#   define TkpMakeContainer 0
+#   define TkpMakeWindow 0
 #endif
 
 static int
@@ -1332,7 +1345,17 @@ const TkStubs tkStubs = {
     Tk_NewWindowObj, /* 277 */
     Tk_SendVirtualEvent, /* 278 */
     Tk_FontGetDescription, /* 279 */
-    Tk_CreatePhotoImageFormatVersion3 /* 280 */
+    Tk_CreatePhotoImageFormatVersion3, /* 280 */
+    Tk_DrawHighlightBorder, /* 281 */
+    Tk_SetMainMenubar, /* 282 */
+    Tk_SetWindowMenuBar, /* 283 */
+    Tk_ClipDrawableToRect, /* 284 */
+    Tk_GetSystemDefault, /* 285 */
+    Tk_UseWindow, /* 286 */
+    Tk_MakeContainer, /* 287 */
+    Tk_GetOtherWindow, /* 288 */
+    Tk_Get3DBorderColors, /* 289 */
+    Tk_MakeWindow, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */
