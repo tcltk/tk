@@ -293,7 +293,7 @@ TkpDisplayScrollbar(
     	} else {
     	    fgGC = bgGC;
     	}
-    	TkpDrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
+    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
     		(Pixmap) macWin);
     }
 

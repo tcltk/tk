@@ -580,14 +580,14 @@ Tk_MenuObjCmd(
 
 	while (topLevelListPtr != NULL) {
     	    /*
-    	     * Need to get the next pointer first. TkSetWindowMenuBar changes
+    	     * Need to get the next pointer first. Tk_SetWindowMenuBar changes
     	     * the list, so that the next pointer is different after calling
     	     * it.
     	     */
 
     	    nextPtr = topLevelListPtr->nextPtr;
     	    listtkwin = topLevelListPtr->tkwin;
-    	    TkSetWindowMenuBar(menuPtr->interp, listtkwin,
+    	    Tk_SetWindowMenuBar(menuPtr->interp, listtkwin,
     	    	    Tk_PathName(menuPtr->tkwin), Tk_PathName(menuPtr->tkwin));
     	    topLevelListPtr = nextPtr;
     	}
@@ -3139,7 +3139,7 @@ TkNewMenuName(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetWindowMenuBar --
+ * Tk_SetWindowMenuBar --
  *
  *	Associates a menu with a window. Called by ConfigureFrame in in
  *	response to a "-menu .foo" configuration option for a top level.
@@ -3155,7 +3155,7 @@ TkNewMenuName(
  */
 
 void
-TkSetWindowMenuBar(
+Tk_SetWindowMenuBar(
     Tcl_Interp *interp,		/* The interpreter the toplevel lives in. */
     Tk_Window tkwin,		/* The toplevel window. */
     const char *oldMenuName, /* The name of the menubar previously set in
@@ -3297,7 +3297,7 @@ TkSetWindowMenuBar(
     } else {
 	TkpSetWindowMenuBar(tkwin, NULL);
     }
-    TkpSetMainMenubar(interp, tkwin, menuName);
+    Tk_SetMainMenubar(interp, tkwin, menuName);
 }
 
 /*
