@@ -194,14 +194,16 @@ Icu_Init(
 {
     Tcl_MutexLock(&icu_mutex);
     char symbol[24];
-    char icuversion[3] = "70"; /* Highest ICU version + 1 */
+    char icuversion[4] = "_75"; /* Highest ICU version + 1 */
 
     if (icu_fns.nopen == 0) {
 	int i = 0;
 	Tcl_Obj *nameobj;
 	static const char *iculibs[] = {
 #if defined(_WIN32)
-	    "icuuc??.dll", /* When running under Windows */
+	    "icuuc??.dll", /* When running under Windows, user-provided */
+	    "icu.dll", /* Windows 10 1903 (May 2019 Update) or later */
+	    "icuuc.dll", /* Windows 10 1703 (Creators Update) or later */
 	    NULL,
 	    "cygicuuc??.dll", /* When running under Cygwin */
 #elif defined(__CYGWIN__)
@@ -215,14 +217,14 @@ Icu_Init(
 	};
 
 	/* Going back down to ICU version 50 */
-	while ((icu_fns.lib == NULL) && (icuversion[0] >= '5')) {
-	    if (icuversion[1]-- < '0') {
-		icuversion[0]--; icuversion[1] = '9';
+	while ((icu_fns.lib == NULL) && (icuversion[1] >= '5')) {
+	    if (icuversion[2]-- < '0') {
+		icuversion[1]--; icuversion[2] = '9';
 	    }
 #if defined(_WIN32) && !defined(STATIC_BUILD)
 	    if (tclStubsPtr->tcl_CreateFileHandler) {
 		/* Running on Cygwin, so try to load the cygwin icu dll */
-		i = 2;
+		i = 4;
 	    } else
 #endif
 	    i = 0;
@@ -232,11 +234,14 @@ Icu_Init(
 		char *nameStr = Tcl_GetString(nameobj);
 		char *p = strchr(nameStr, '?');
 		if (p != NULL) {
-		    memcpy(p, icuversion, 2);
+		    memcpy(p, icuversion+1, 2);
 		}
 		Tcl_IncrRefCount(nameobj);
 		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
 			== TCL_OK) {
+		    if (p == NULL) {
+			icuversion[0] = '\0';
+			}
 		    Tcl_DecrRefCount(nameobj);
 		    break;
 		}
@@ -246,10 +251,10 @@ Icu_Init(
 	}
 	if (icu_fns.lib != NULL) {
 #define ICU_SYM(name)							\
-	    strcpy(symbol, "ubrk_" #name "_" ); \
+	    strcpy(symbol, "ubrk_" #name ); \
 	    strcat(symbol, icuversion); \
 	    icu_fns.name = (fn_icu_ ## name)				\
-		Tcl_FindSymbol(NULL, icu_fns.lib, symbol);
+		Tcl_FindSymbol(NULL, icu_fns.lib, symbol); \
 	    ICU_SYM(open);
 	    ICU_SYM(close);
 	    ICU_SYM(preceding);
