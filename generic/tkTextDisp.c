@@ -2468,7 +2468,7 @@ DisplayDLine(
     }
 
 #ifdef TK_NO_DOUBLE_BUFFERING
-    TkpClipDrawableToRect(display, pixmap, dInfoPtr->x, y + y_off,
+    Tk_ClipDrawableToRect(display, pixmap, dInfoPtr->x, y + y_off,
 	    dInfoPtr->maxX - dInfoPtr->x, height);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
@@ -2593,7 +2593,7 @@ DisplayDLine(
 	    dInfoPtr->x, y + y_off, (unsigned) (dInfoPtr->maxX - dInfoPtr->x),
 	    (unsigned) height, dInfoPtr->x, dlPtr->y + y_off);
 #else
-    TkpClipDrawableToRect(display, pixmap, 0, 0, -1, -1);
+    Tk_ClipDrawableToRect(display, pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */
     linesRedrawn++;
 }
@@ -4424,10 +4424,10 @@ DisplayText(
 	    if (textPtr->flags & GOT_FOCUS) {
 		fgGC = Tk_GCForColor(textPtr->highlightColorPtr,
 			Tk_WindowId(textPtr->tkwin));
-		TkpDrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
+		Tk_DrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
 			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    } else {
-		TkpDrawHighlightBorder(textPtr->tkwin, bgGC, bgGC,
+		Tk_DrawHighlightBorder(textPtr->tkwin, bgGC, bgGC,
 			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    }
 	}

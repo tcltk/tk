@@ -1097,6 +1097,44 @@ declare 280 {
 	    const Tk_PhotoImageFormatVersion3 *formatPtr)
 }
 
+# TIP#606
+declare 281 {
+    void Tk_DrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
+	    int highlightWidth, Drawable drawable)
+}
+declare 282 {
+    void Tk_SetMainMenubar(Tcl_Interp *interp, Tk_Window tkwin, const char *menuName)
+}
+declare 283 {
+    void Tk_SetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
+	    const char *oldMenuName, const char *menuName)
+}
+declare 284 {
+    void Tk_ClipDrawableToRect(Display *display, Drawable d, int x,
+	    int y, int width, int height)
+}
+declare 285 {
+    Tcl_Obj *Tk_GetSystemDefault(Tk_Window tkwin,
+	    const char *dbName, const char *className)
+}
+declare 286 {
+    int Tk_UseWindow(Tcl_Interp *interp, Tk_Window tkwin, const char *string)
+}
+declare 287 {
+    void Tk_MakeContainer(Tk_Window tkwin)
+}
+declare 288 {
+    Tk_Window Tk_GetOtherWindow(Tk_Window tkwin)
+}
+declare 289 {
+    void Tk_Get3DBorderColors(Tk_3DBorder border, XColor *bgColorPtr, XColor *darkColorPtr,
+	    XColor *lightColorPtr)
+}
+declare 290 {
+    Window Tk_MakeWindow(Tk_Window tkwin, Window parent)
+}
+
+
 # Define the platform specific public Tk interface.  These functions are
 # only available on the designated platform.
 
