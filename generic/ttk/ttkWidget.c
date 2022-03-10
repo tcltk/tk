@@ -329,6 +329,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 static void WidgetWorldChanged(ClientData clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
+    (void)UpdateLayout(corePtr->interp, corePtr);
     SizeChanged(corePtr);
     TtkRedisplayWidget(corePtr);
 }
