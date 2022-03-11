@@ -1927,9 +1927,9 @@ DisplayEntry(
 	    bgGC = Tk_GCForColor(entryPtr->highlightBgColorPtr, pixmap);
 	    if (entryPtr->flags & GOT_FOCUS) {
 		fgGC = Tk_GCForColor(entryPtr->highlightColorPtr, pixmap);
-		TkpDrawHighlightBorder(tkwin, fgGC, bgGC, xBound, pixmap);
+		Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, xBound, pixmap);
 	    } else {
-		TkpDrawHighlightBorder(tkwin, bgGC, bgGC, xBound, pixmap);
+		Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, xBound, pixmap);
 	    }
 	}
     }
