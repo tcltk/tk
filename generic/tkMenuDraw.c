@@ -775,7 +775,7 @@ TkMenuEventProc(
 	TkEventuallyRedrawMenu(menuPtr, NULL);
     } else if (eventPtr->type == ActivateNotify) {
 	if (menuPtr->menuType == TEAROFF_MENU) {
-	    TkpSetMainMenubar(menuPtr->interp, menuPtr->tkwin, NULL);
+	    Tk_SetMainMenubar(menuPtr->interp, menuPtr->tkwin, NULL);
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	if (menuPtr->tkwin != NULL) {
