@@ -572,7 +572,7 @@ GenerateUpdates(
      */
 
     if (Tk_IsContainer(winPtr)) {
-	childPtr = TkpGetOtherWindow(winPtr);
+	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
 	    GenerateUpdates(updateBounds, childPtr);
 	}

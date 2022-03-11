@@ -267,7 +267,8 @@ EXTERN void		TkSelInit(Tk_Window tkwin);
 EXTERN void		TkSelPropProc(XEvent *eventPtr);
 /* Slot 84 is reserved */
 /* 85 */
-EXTERN void		TkSetWindowMenuBar(Tcl_Interp *interp,
+TK_DEPRECATED("renamed to Tk_SetWindowMenuBar")
+void			TkSetWindowMenuBar(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *oldMenuName,
 				const char *menuName);
 /* 86 */
@@ -660,7 +661,7 @@ typedef struct TkIntStubs {
     void (*tkSelInit) (Tk_Window tkwin); /* 82 */
     void (*tkSelPropProc) (XEvent *eventPtr); /* 83 */
     void (*reserved84)(void);
-    void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
+    TCL_DEPRECATED_API("renamed to Tk_SetWindowMenuBar") void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
     KeySym (*tkStringToKeysym) (const char *name); /* 86 */
     int (*tkThickPolyLineToArea) (double *coordPtr, int numPoints, double width, int capStyle, int joinStyle, double *rectPtr); /* 87 */
     void (*tkWmAddToColormapWindows) (TkWindow *winPtr); /* 88 */
@@ -1204,6 +1205,25 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TkWmCleanup_
 #undef TkSendCleanup_
 #undef TkpTestsendCmd_
+#undef TkSetWindowMenuBar
+#undef TkpDrawHighlightBorder
+#undef TkpUseWindow
+#undef TkpSetMainMenubar
+#undef TkpGetOtherWindow
+#undef TkpGetSystemDefault
+#undef TkpMakeContainer
+#undef TkpMakeWindow
+
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION == 8)
+#   define TkSetWindowMenuBar Tk_SetWindowMenuBar
+#   define TkpDrawHighlightBorder Tk_DrawHighlightBorder
+#   define TkpUseWindow Tk_UseWindow
+#   define TkpSetMainMenubar Tk_SetMainMenubar
+#   define TkpGetOtherWindow ((TkWindow *(*)(TkWindow *))(void *)Tk_GetOtherWindow)
+#   define TkpGetSystemDefault Tk_GetSystemDefault
+#   define TkpMakeContainer Tk_MakeContainer
+#   define TkpMakeWindow ((Window (*)(TkWindow *, Window))(void *)Tk_MakeWindow)
+#endif
 
 #if !defined(MAC_OSX_TK)
 #   undef TkpWillDrawWidget

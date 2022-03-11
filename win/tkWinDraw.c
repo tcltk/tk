@@ -1457,7 +1457,7 @@ TkWinFillRect(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawHighlightBorder --
+ * Tk_DrawHighlightBorder --
  *
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
@@ -1477,7 +1477,7 @@ TkWinFillRect(
  */
 
 void
-TkpDrawHighlightBorder(
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,

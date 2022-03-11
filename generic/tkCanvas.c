@@ -3163,7 +3163,7 @@ DisplayCanvas(
 	canvasPtr->drawableXOrigin = canvasPtr->xOrigin;
 	canvasPtr->drawableYOrigin = canvasPtr->yOrigin;
 	pixmap = Tk_WindowId(tkwin);
-	TkpClipDrawableToRect(Tk_Display(tkwin), pixmap,
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap,
 		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
 		width, height);
 #endif /* TK_NO_DOUBLE_BUFFERING */
@@ -3222,7 +3222,7 @@ DisplayCanvas(
 		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin);
 	Tk_FreePixmap(Tk_Display(tkwin), pixmap);
 #else
-	TkpClipDrawableToRect(Tk_Display(tkwin), pixmap, 0, 0, -1, -1);
+	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap, 0, 0, -1, -1);
 #endif /* TK_NO_DOUBLE_BUFFERING */
     }
 
@@ -3249,10 +3249,10 @@ DisplayCanvas(
 	    if (canvasPtr->textInfo.gotFocus) {
 		fgGC = Tk_GCForColor(canvasPtr->highlightColorPtr,
 			Tk_WindowId(tkwin));
-	    	TkpDrawHighlightBorder(tkwin, fgGC, bgGC,
+	    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
 			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    } else {
-	    	TkpDrawHighlightBorder(tkwin, bgGC, bgGC,
+	    	Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
 			canvasPtr->highlightWidth, Tk_WindowId(tkwin));
 	    }
 	}
