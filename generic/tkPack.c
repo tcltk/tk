@@ -643,12 +643,6 @@ ArrangePacking(
 	    Tk_InternalBorderBottom(containerPtr->tkwin);
     for (contentPtr = containerPtr->contentPtr; contentPtr != NULL;
 	    contentPtr = contentPtr->nextPtr) {
-	if (contentPtr == (Packer*)-1) {
-	    if (containerPtr->abortPtr != NULL) {
-		*containerPtr->abortPtr = 1;
-	    }
-	    goto done;
-	}
 	if ((contentPtr->side == TOP) || (contentPtr->side == BOTTOM)) {
 	    tmp = Tk_ReqWidth(contentPtr->tkwin) + contentPtr->doubleBw
 		    + contentPtr->padX + contentPtr->iPadX + width;
@@ -1400,6 +1394,7 @@ DestroyPacker(
 {
     Packer *packPtr = (Packer *)memPtr;
 
+    Tcl_CancelIdleCall(ArrangePacking, packPtr);
     ckfree(packPtr);
 }
 
