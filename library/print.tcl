@@ -7,6 +7,7 @@
 # Copyright © 2009 Michael I. Schwartz.
 # Copyright © 2021 Kevin Walzer/WordTech Communications LLC.
 # Copyright © 2021 Harald Oehlmann, Elmicron GmbH
+# Copyright © 2022 Emiliano Gavilan
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
