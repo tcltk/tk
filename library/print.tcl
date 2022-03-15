@@ -651,11 +651,60 @@ namespace eval ::tk::print {
     # canvas postscript command.
 
     if {[tk windowingsystem] eq "x11"} {
-	variable printcmd ""
-	variable printlist {}
-	variable choosepaper
-	variable chooseprinter {}
-	variable p
+	variable printcmd {}
+
+	# print options
+	variable optlist
+	set optlist(printer) {}
+	set optlist(paper)   [list [mc "Letter"] [mc "Legal"] [mc "A4"]]
+	set optlist(orient)  [list [mc "Portrait"] [mc "Landscape"]]
+	set optlist(color)   [list [mc "Grayscale"] [mc "RGB"]]
+	set optlist(zoom)    {100 90 80 70 60 50 40 30 20 10}
+
+	# selected options
+	variable sel
+	array set sel {
+	    printer {}
+	    copies  {}
+	    paper   {}
+	    orient  {}
+	    color   {}
+	    zoom    {}
+	}
+
+	# default values for dialog widgets
+	option add *Printdialog*TLabel.anchor e
+	option add *Printdialog*TMenubutton.Menu.tearOff 0
+	option add *Printdialog*TMenubutton.width 12
+	option add *Printdialog*TSpinbox.width 12
+	# this is tempting to add, but it's better to leave it to user's taste
+	# option add *Printdialog*Menu.background snow
+
+	# returns the full qualified var name
+	proc myvar {varname} {
+	    set fqvar [uplevel 1 [list namespace which -variable $varname]]
+	    # assert var existence
+	    if {$fqvar eq ""} {
+		return -code error "Wrong varname \"$varname\""
+	    }
+	    return $fqvar
+	}
+
+	# ttk version of [tk_optionMenu]
+	# var should be a full qualified varname
+	proc ttk_optionMenu {w var args} {
+	    ttk::menubutton $w \
+		-textvariable $var \
+		-menu $w.menu
+	    menu $w.menu
+	    foreach option $args {
+		$w.menu add command \
+		    -label $option \
+		    -command [list set $var $option]
+	    }
+	    # return the same value as tk_optionMenu
+	    return $w.menu
+	}
 
 	# _setprintenv
 	#  Set the print environtment - print command, and list of printers.
@@ -664,7 +713,7 @@ namespace eval ::tk::print {
 
 	proc _setprintenv {} {
 	    variable printcmd
-	    variable printlist
+	    variable optlist
 
 	    #Test for existence of lpstat command to obtain list of printers. Return error
 	    #if not found.
@@ -676,8 +725,8 @@ namespace eval ::tk::print {
 		for your system."
 		return
 	    }
-	    set notfound "No destinations added"
-	    if {[string first $notfound $msg] >= 0} {
+ 	    set notfound "No destinations added"
+ 	    if {[string first $notfound $msg] != -1} {
 		error "Please check or update your CUPS installation."
 		return
 	    }
@@ -690,11 +739,14 @@ namespace eval ::tk::print {
 		set printcmd lp
 	    }
 
-	    #Build list of printers.
+	    #Build list of printers
+	    set printers {}
 	    set printdata [exec lpstat -a]
 	    foreach item [split $printdata \n] {
-		lappend printlist [lindex [split $item] 0]
+		lappend printers [lindex [split $item] 0]
 	    }
+	    # filter out duplicates
+	    set optlist(printer) [lsort -unique $printers]
 	}
 
 	# _print
@@ -705,136 +757,95 @@ namespace eval ::tk::print {
 	#
 
 	proc _print {w} {
-	    variable printlist
-	    variable printcmd
-	    variable chooseprinter
-	    variable printcopies
-	    variable printorientation
-	    variable choosepaper
-	    variable color
-	    variable p
-	    variable zoomnumber
+	# TODO: revise padding
+	    variable optlist
+	    variable sel
 
+	    # should this be called with every invocaton?
 	    _setprintenv
-
-	    set chooseprinter [lindex $printlist 0]
+	    if {$sel(printer) eq "" && [llength $optlist(printer)] > 0} {
+		set sel(printer) [lindex $optlist(printer) 0]
+	    }
 
 	    set p ._print
 	    catch {destroy $p}
 
-	    toplevel $p
-	    wm title $p "Print"
+	    # copy the current values to a dialog's temorary variable
+	    # this allow us to cancel the dialog discarding any changes
+	    # made to the options
+	    namespace eval dlg {variable sel}
+	    array set dlg::sel [array get sel]
+
+	    # The toplevel of our dialog
+	    toplevel $p -class Printdialog
+	    place [ttk::frame $p.background] -x 0 -y 0 -relwidth 1.0 -relheight 1.0
+	    wm title $p [mc "Print"]
 	    wm resizable $p 0 0
+	    wm attributes $p -type dialog
 
-	    frame $p.frame -padx 10 -pady 10
-	    pack $p.frame -fill x -expand no
+	    # The printer to use
+	    set pf [ttk::frame $p.printerf]
+	    pack $pf -side top -fill x -expand no -padx 12 -pady 12
 
-	    #The main dialog
-	    frame $p.frame.printframe -padx 5 -pady 5
-	    pack $p.frame.printframe -side top -fill x -expand no
+	    ttk::label $pf.printerl -text "[mc "Printer"] :"
+	    ttk::combobox $pf.printer \
+		-textvariable [myvar dlg::sel](printer) \
+		-state readonly \
+		-values $optlist(printer)
+	    pack $pf.printerl -side left -padx {0 6}
+	    pack $pf.printer  -side left
 
-	    label $p.frame.printframe.printlabel -text [mc "Printer"]
-	    ttk::combobox $p.frame.printframe.mb \
-		-textvariable [namespace which -variable chooseprinter] \
-		-state readonly -values [lsort -unique $printlist]
-	    pack $p.frame.printframe.printlabel $p.frame.printframe.mb \
-		-side left -fill x -expand no
+	    # Start of printing options
+	    set of [ttk::labelframe $p.optionsframe -text [mc "Options"]]
+	    pack $of -fill x -padx 12 -pady {0 12} -ipadx 3 -ipady 3
 
-	    bind $p.frame.printframe.mb <<ComboboxSelected>>  {
-		set chooseprinter {$p.frame.printframe.mb get}
-	    }
+	    # COPIES
+	    ttk::label $of.copiesl -text "[mc "Copies"] :"
+	    ttk::spinbox $of.copies -from 1 -to 1000 \
+		-textvariable [myvar dlg::sel](copies) \
+		-width 5
+	    grid  $of.copiesl $of.copies -sticky ew -padx 3 -pady 3
 
-	    set paperlist [list [mc Letter] [mc Legal] [mc A4]]
-	    set colorlist [list [mc Grayscale] [mc RGB]]
+	    # PAPER SIZE
+	    ttk::label $of.paperl -text "[mc "Paper"] :"
+	    ttk_optionMenu $of.paper [myvar dlg::sel](paper) {*}$optlist(paper)
+	    grid $of.paperl $of.paper -sticky ew -padx 3 -pady 3
 
-	    #Initialize with sane defaults.
-	    set printcopies 1
-	    set choosepaper [mc A4]
-	    set color [mc RGB]
-	    set printorientation portrait
-
-	    set percentlist {100 90 80 70 60 50 40 30 20 10}
-
-	    #Base widgets to load.
-	    labelframe $p.frame.copyframe -text [mc "Options"] -padx 5 -pady 5
-	    pack $p.frame.copyframe -fill x -expand no
-
-	    frame $p.frame.copyframe.l -padx 5 -pady 5
-	    pack $p.frame.copyframe.l -side top -fill x -expand no
-
-	    label $p.frame.copyframe.l.copylabel -text [mc "Copies"]
-	    spinbox $p.frame.copyframe.l.field -from 1 -to 1000 \
-		-textvariable [namespace which -variable printcopies] -width 5
-
-	    pack  $p.frame.copyframe.l.copylabel $p.frame.copyframe.l.field \
-		-side left -fill x -expand  no
-
-	    set printcopies [$p.frame.copyframe.l.field get]
-
-	    frame $p.frame.copyframe.r -padx 5 -pady 5
-	    pack $p.frame.copyframe.r -fill x -expand no
-
-	    label $p.frame.copyframe.r.paper -text [mc "Paper"]
-	    tk_optionMenu $p.frame.copyframe.r.menu \
-		[namespace which -variable choosepaper] \
-		{*}$paperlist
-
-	    pack $p.frame.copyframe.r.paper $p.frame.copyframe.r.menu \
-		-side left -fill x -expand no
-
-	    #Widgets with additional options for canvas output.
+	    # additional options for canvas output
 	    if {[winfo class $w] eq "Canvas"} {
+		# SCALE
+		ttk::label $of.percentl -text "[mc "Scale"] :"
+		ttk_optionMenu $of.percent [myvar dlg::sel](zoom) {*}$optlist(zoom)
+		grid $of.percentl $of.percent -sticky ew -padx 3 -pady 3
 
-		frame $p.frame.copyframe.z -padx 5 -pady 5
-		pack $p.frame.copyframe.z  -fill x -expand no
+		# ORIENT
+		ttk::label $of.orientl -text "[mc "Orientation"] :"
+		ttk_optionMenu $of.orient [myvar dlg::sel](orient) {*}$optlist(orient)
+		grid $of.orientl $of.orient -sticky ew -padx 3 -pady 3
 
-		label $p.frame.copyframe.z.zlabel -text [mc "Scale"]
-		tk_optionMenu $p.frame.copyframe.z.zentry \
-		    [namespace which -variable zoomnumber] \
-		    {*}$percentlist
-
-		pack $p.frame.copyframe.z.zlabel $p.frame.copyframe.z.zentry \
-		    -side left -fill x -expand no
-
-		frame $p.frame.copyframe.orient -padx 5 -pady 5
-		pack $p.frame.copyframe.orient  -fill x -expand no
-
-		label $p.frame.copyframe.orient.text -text [mc "Orientation"]
-		radiobutton $p.frame.copyframe.orient.v -text [mc "Portrait"] \
-		    -value portrait -compound left \
-		    -variable [namespace which -variable printorientation]
-		radiobutton $p.frame.copyframe.orient.h -text [mc "Landscape"] \
-		    -value landscape -compound left \
-		    -variable [namespace which -variable printorientation]
-
-		pack $p.frame.copyframe.orient.text \
-		    $p.frame.copyframe.orient.v $p.frame.copyframe.orient.h \
-		    -side left -fill x -expand no
-
-		frame $p.frame.copyframe.c -padx 5 -pady 5
-		pack $p.frame.copyframe.c  -fill x -expand no
-
-		label $p.frame.copyframe.c.l -text [mc "Output"]
-		tk_optionMenu $p.frame.copyframe.c.c \
-		    [namespace which -variable color] \
-		    {*}$colorlist
-		pack $p.frame.copyframe.c.l $p.frame.copyframe.c.c -side left \
-		    -fill x -expand no
+		# COLOR
+		ttk::label $of.colorl -text "[mc "Output"] :"
+		ttk_optionMenu $of.color [myvar dlg::sel](color) {*}$optlist(color)
+		grid $of.colorl $of.color -sticky ew -padx 3 -pady 3
 	    }
 
-	    #Build rest of GUI.
-	    frame $p.frame.buttonframe
-	    pack $p.frame.buttonframe -fill x -expand no -side bottom
+	    # The buttons frame.
+	    set bf [ttk::frame $p.buttonf]
+	    pack $bf -fill x -expand no -side bottom -padx 12 -pady {0 12}
 
-	    button $p.frame.buttonframe.printbutton -text [mc "Print"] \
-		-command [namespace code [list _runprint $w]]
-	    button $p.frame.buttonframe.cancel -text [mc "Cancel"] \
-		-command {destroy ._print}
-
-	    pack $p.frame.buttonframe.printbutton $p.frame.buttonframe.cancel \
-		-side right -fill x -expand no
+	    ttk::button $bf.print -text [mc "Print"] \
+		-command [namespace code [list _runprint $w $p]]
+	    ttk::button $bf.cancel -text [mc "Cancel"] \
+		-command [namespace code [list _cancel $p]]
+	    pack $bf.print  -side right
+	    pack $bf.cancel -side right -padx {0 6}
 	    #Center the window as a dialog.
 	    ::tk::PlaceWindow $p
+	}
+
+	proc _cancel {p} {
+	    namespace delete dlg
+	    destroy $p
 	}
 
 	# _runprint -
@@ -842,59 +853,58 @@ namespace eval ::tk::print {
 	# Arguments:
 	#  w - widget with contents to print.
 	#
-	proc _runprint {w} {
-	    variable printlist
+	proc _runprint {w p} {
 	    variable printcmd
-	    variable choosepaper
-	    variable chooseprinter
-	    variable color
-	    variable printcopies
-	    variable printorientation
-	    variable zoomnumber
-	    variable p
+	    variable sel
+
+	    # copy the values back from the dialog
+	    array set sel [array get dlg::sel]
+	    namespace delete dlg
 
 	    #First, generate print file.
-
 	    if {[winfo class $w] eq "Text"} {
 		set file [makeTempFile tk_text.txt [$w get 1.0 end]]
 	    }
 
 	    if {[winfo class $w] eq "Canvas"} {
-		if {$color eq [mc "RGB"]} {
+		if {$sel(color) eq [mc "RGB"]} {
 		    set colormode color
 		} else {
 		    set colormode gray
 		}
 
-		if {$printorientation eq "landscape"} {
+		if {$sel(orient) eq [mc "Landscape"]} {
 		    set willrotate "1"
 		} else {
 		    set willrotate "0"
 		}
 
 		#Scale based on size of widget, not size of paper.
-		set printwidth [expr {$zoomnumber / 100.00 * [winfo width $w]}]
+		set printwidth [expr {$sel(zoom) / 100.00 * [winfo width $w]}]
 		set file [makeTempFile tk_canvas.ps]
 		$w postscript -file $file -colormode $colormode \
 		    -rotate $willrotate -pagewidth $printwidth
 	    }
 
 	    #Build list of args to pass to print command.
-
 	    set printargs {}
-	    set printcopies [$p.frame.copyframe.l.field get]
 	    if {$printcmd eq "lpr"} {
-		lappend printargs -P $chooseprinter -# $printcopies
+		lappend printargs -P $sel(printer) -# $sel(copies)
 	    } else {
-		lappend printargs -d $chooseprinter -n $printcopies
+		lappend printargs -d $sel(printer) -n $sel(copies)
 	    }
 
-	    after 500
-	    exec $printcmd {*}$printargs -o PageSize=$choosepaper $file
-
-	    after 500
-	    destroy ._print
+	    # launch the job in the background
+	    after 0 [list exec $printcmd {*}$printargs -o PageSize=$sel(paper) $file]
+	    destroy $p
 	}
+
+	# Initialize with sane defaults.
+	set sel(copies)  1
+	set sel(paper)   [mc "A4"]
+	set sel(orient)  [mc "Portrait"]
+	set sel(color)   [mc "RGB"]
+	set sel(zoom)    100
     }
     #end X11 procedures
 
