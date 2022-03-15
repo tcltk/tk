@@ -202,8 +202,6 @@ Icu_Init(
 	static const char *iculibs[] = {
 #if defined(_WIN32)
 	    "icuuc??.dll", /* When running under Windows, user-provided */
-	    "icu.dll", /* Windows 10 1903 (May 2019 Update) or later */
-	    "icuuc.dll", /* Windows 10 1703 (Creators Update) or later */
 	    NULL,
 	    "cygicuuc??.dll", /* When running under Cygwin */
 #elif defined(__CYGWIN__)
@@ -224,7 +222,7 @@ Icu_Init(
 #if defined(_WIN32) && !defined(STATIC_BUILD)
 	    if (tclStubsPtr->tcl_CreateFileHandler) {
 		/* Running on Cygwin, so try to load the cygwin icu dll */
-		i = 4;
+		i = 2;
 	    } else
 #endif
 	    i = 0;
@@ -249,6 +247,28 @@ Icu_Init(
 		++i;
 	    }
 	}
+#if defined(_WIN32) && !defined(STATIC_BUILD)
+	if (icu_fns.lib == NULL) {
+	    Tcl_ResetResult(interp);
+		nameobj = Tcl_NewStringObj("icu.dll", -1);
+		Tcl_IncrRefCount(nameobj);
+		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
+			== TCL_OK) {
+		    icuversion[0] = '\0';
+		}
+		Tcl_DecrRefCount(nameobj);
+	}
+	if (icu_fns.lib == NULL) {
+	    Tcl_ResetResult(interp);
+		nameobj = Tcl_NewStringObj("icuuc.dll", -1);
+		Tcl_IncrRefCount(nameobj);
+		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
+			== TCL_OK) {
+		    icuversion[0] = '\0';
+		}
+		Tcl_DecrRefCount(nameobj);
+	}
+#endif
 	if (icu_fns.lib != NULL) {
 #define ICU_SYM(name)							\
 	    strcpy(symbol, "ubrk_" #name ); \
