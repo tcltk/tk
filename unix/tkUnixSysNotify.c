@@ -108,7 +108,6 @@ SysNotifyCmd(
     const char *title;
     const char *message;
     const char *icon;
-    const char *appname = "Wish";
     void *notif;
 
     if (objc < 3) {
@@ -125,15 +124,6 @@ SysNotifyCmd(
     message = Tcl_GetString(objv[2]);
     icon = "dialog-information";
 
-
-    /* Use the appname for libnotify initialization
-     * See bug f63c37be3a for a discussion whether this should be
-     * allowed at all on safe interpreters
-     */
-    if (!Tcl_IsSafe(interp)) {
-	appname = ((TkWindow *)Tk_MainWindow(interp))->nameUid;
-    }
-
     /*
      * Call to notify_init should go here to prevent test suite failure.
      */
@@ -142,14 +132,11 @@ SysNotifyCmd(
 	Tcl_Encoding enc;
 	Tcl_DString dst, dsm;
 
-	Tcl_DStringInit(&dst);
-	Tcl_DStringInit(&dsm);
 	enc = Tcl_GetEncoding(NULL, "utf-8");
-	Tcl_UtfToExternalDString(enc, title, -1, &dst);
-	Tcl_UtfToExternalDString(enc, message, -1, &dsm);
-	notify_init(appname);
-	notif = notify_notification_new(Tcl_DStringValue(&dst),
-	    Tcl_DStringValue(&dsm), icon, NULL);
+	Tcl_ExternalToUtfDString(enc, title, -1, &dst);
+	Tcl_ExternalToUtfDString(enc, message, -1, &dsm);
+	notify_init("Wish");
+	notif = notify_notification_new(title, message, icon, NULL);
 	notify_notification_show(notif, NULL);
 	Tcl_DStringFree(&dsm);
 	Tcl_DStringFree(&dst);
