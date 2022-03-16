@@ -227,8 +227,8 @@ test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} 
 	deleteWindows
 } -result {{XXX .f2 {} .t2} {XXX .f1 {} .t1}}
 
-# Can't think of any way to test the procedures TkpMakeWindow,
-# TkpMakeContainer, or EmbedErrorProc.
+# Can't think of any way to test the procedures Tk_MakeWindow,
+# Tk_MakeContainer, or EmbedErrorProc.
 
 
 test unixEmbed-2.1 {EmbeddedEventProc procedure} -constraints {
