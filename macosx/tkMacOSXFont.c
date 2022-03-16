@@ -463,7 +463,7 @@ startOfClusterObjCmd(
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
     if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\": must be integer or end",
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
@@ -503,7 +503,7 @@ endOfClusterObjCmd(
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
     if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\": must be integer or end",
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;

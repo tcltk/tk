@@ -101,7 +101,7 @@ startEndOfCmd(
     len = Tcl_DStringLength(&ds)/2;
     if (TkGetIntForIndex(objv[2], len-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", Tcl_GetString(objv[2])));
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
 	return TCL_ERROR;
     }
