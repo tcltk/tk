@@ -191,7 +191,7 @@ test treetags-3.2 "tag configure - enumerate" -body {
 } -cleanup {
     treeConstraints $tv
 } -result [list \
-    -image {} -imageanchor {} -background red -stripedbackground {} -foreground blue -font {} \
+    -image {} -imageanchor {} -background red -stripedbackground {} -foreground blue -font {} -padding {} \
                   ]
 test treetags-4.1 "tag cell add" -body {
     $tv tag cell add _thetag
