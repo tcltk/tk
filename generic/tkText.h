@@ -890,15 +890,11 @@ typedef struct TkTextTag {
     TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
     				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. Only valid if
 				 * justifyString is non-NULL. */
-    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *lMargin1Ptr;	/* -lmargin1 option. NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
 				 * text line, in pixels. Only valid if
 				 * lMargin1Ptr is non-NULL. */
-    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *lMargin2Ptr;	/* -lmargin2 option. NULL means option not specified. */
     int lMargin2;		/* Left margin for second and later display
 				 * lines of each text line, in pixels. Only
@@ -906,8 +902,6 @@ typedef struct TkTextTag {
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
                                  * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-    char *offsetString;		/* -offset option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *offsetPtr;		/* -offset option. NULL means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
@@ -919,8 +913,6 @@ typedef struct TkTextTag {
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
-    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *rMarginPtr;	/* -rmargin option. NULL means option not specified. */
     int rMargin;		/* Right margin for text, in pixels. Only
 				 * valid if rMarginPtr is non-NULL. */
@@ -935,19 +927,13 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     XColor *inactiveSelFgColor;	/* Foreground color for inactive selected text. NULL means no value
     				 * specified here. */
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *spacing1Ptr;	/* -spacing1 option. NULL means option not specified. */
     int spacing1;		/* Extra spacing above first display line for
 				 * text line. Only valid if spacing1Ptr is non-NULL. */
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *spacing2Ptr;	/* -spacing2 option. NULL means option not specified. */
     int spacing2;		/* Extra spacing between display lines for the
 				 * same text line. Only valid if
 				 * spacing2String is non-NULL. */
-    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
     Tcl_Obj *spacing3Ptr;	/* -spacing2 option. NULL means option not specified. */
     int spacing3;		/* Extra spacing below last display line for
 				 * text line. Only valid if spacing3Ptr is
@@ -981,7 +967,6 @@ typedef struct TkTextTag {
     Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */
     char lang[3];		/* The specified language for the text content, only enabled if not
     				 * NUL. */
-    char *elideString;		/* -elide option string (malloc-ed). NULL means option not specified. */
     Tcl_Obj *elidePtr;		/* -elide option. NULL means option not specified. */
     int elide;			/* > 0 means that data under this tag
 				 * should not be displayed. -1 means not specified. */
@@ -999,6 +984,14 @@ typedef struct TkTextTag {
     				 * information is displayed on the screen (so need to recalculate
 				 * line dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
+    /* TODO: to be eliminated */
+    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
+				 * means option not specified. */
+    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
+				 * means option not specified. */
+    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL
+				 * means option not specified. */
+    char *elideString;		/* -elide option string (malloc-ed). NULL means option not specified. */
 } TkTextTag;
 
 /*
