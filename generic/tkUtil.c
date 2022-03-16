@@ -584,7 +584,7 @@ TkDrawInsetFocusHighlight(
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
  *
- *	This function is now deprecated. Use TkpDrawHighlightBorder instead,
+ *	This function is now deprecated. Use Tk_DrawHighlightBorder instead,
  *	since this function does not handle drawing the Focus ring properly on
  *	the Macintosh - you need to know the background GC as well as the
  *	foreground since the Mac focus ring separated from the widget by a 1

@@ -550,7 +550,7 @@ proc ::tk::TextButton1 {w x y} {
 	set Priv(pressX) $x
 	set pos [TextCursorPos $w $x $y]
 	set thisLineNo [$w lineno @last,$y]
-	if {[$w lineno $pos] ne $thisLineNo} {
+	if {[$w lineno $pos] == [expr {$thisLineNo + 1}]} {
 	    # The button has been pressed at an x position after last character.
 	    # In this case [$w index @$x,$y] is returning the start of next line,
 	    # but we want the end of this line.

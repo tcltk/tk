@@ -8228,7 +8228,7 @@ TkTextInspectOptions(
 		    const char *cls = Tcl_GetString(argv[2]);
 		    Tcl_Obj *dfltObj;
 
-		    dfltObj = TkpGetSystemDefault(textPtr->tkwin, name, cls);
+		    dfltObj = Tk_GetSystemDefault(textPtr->tkwin, name, cls);
 
 		    if (dfltObj) {
 			const char *dflt = Tcl_GetString(dfltObj);
