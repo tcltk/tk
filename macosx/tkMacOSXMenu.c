@@ -1369,7 +1369,7 @@ TkpComputeStandardMenuGeometry(
 {
     NSSize menuSize;
     Tk_Font tkfont, menuFont;
-    Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
+    Tk_FontMetrics menuMetrics, entryMetrics;
     int modifierCharWidth, menuModifierCharWidth;
     int x, y, modifierWidth, labelWidth, indicatorSpace;
     int windowWidth, windowHeight, accelWidth;
@@ -1424,12 +1424,10 @@ TkpComputeStandardMenuGeometry(
 	}
 	if (mePtr->fontPtr == NULL) {
 	    tkfont = menuFont;
-	    fmPtr = &menuMetrics;
 	    modifierCharWidth = menuModifierCharWidth;
 	} else {
 	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr);
 	    Tk_GetFontMetrics(tkfont, &entryMetrics);
-	    fmPtr = &entryMetrics;
 	    modifierCharWidth = ModifierCharWidth(tkfont);
 	}
 	accelWidth = modifierWidth = indicatorSpace = 0;
