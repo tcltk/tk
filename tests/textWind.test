@@ -1634,6 +1634,24 @@ test textWind-18.2 {text widget deletion triggered by a script bound to embedded
     destroy .t .f
 } -result {}
 
+test textWind-18.3 {embedded window destruction in cascade} -setup {
+    catch {destroy .t .f}
+    set x 0
+} -body {
+    pack [text .t]
+    button .t.b1
+    .t window create 1.0 -window .t.b1
+    bind .t.b1 <Destroy> {destroy .t.b2 ; set x 1}
+    button .t.b2
+    .t window create 2.0 -window .t.b2
+    updateText
+    # this shall not crash (bug 54fe7a5e71)
+    after 100 {.t delete 1.0 end}
+    tkwait variable x
+} -cleanup {
+    destroy .t .f
+} -result {}
+
 option clear
 
 # cleanup
