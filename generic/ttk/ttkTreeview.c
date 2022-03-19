@@ -2985,30 +2985,16 @@ static int TreeviewSelectionCommand(
     switch (selop)
     {
 	case SELECTION_SET:
+	    /* Clear */
 	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
-		int inSetList = 0;
-
-		for (i=0; items[i]; ++i) {
-		    if (item == items[i]) {
-			inSetList = 1;
-			if (!(item->state & TTK_STATE_SELECTED)) {
-			    /* Item newly selected */
-			    selChange = 1;
-			}
-			break;
-		    }
-		}
-		if (!inSetList && (item->state & TTK_STATE_SELECTED)) {
-		    /* Item newly deselected */
+		if (item->state & TTK_STATE_SELECTED) {
+		    item->state &= ~TTK_STATE_SELECTED;
 		    selChange = 1;
 		}
-		if (selChange) break;
-	    }
-	    for (item=tv->tree.root; item; item=NextPreorder(item)) {
-		item->state &= ~TTK_STATE_SELECTED;
 	    }
 	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
+		selChange = 1;
 	    }
 	    break;
 	case SELECTION_ADD:

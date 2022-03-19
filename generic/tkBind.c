@@ -332,7 +332,7 @@ typedef struct PatSeq {
 
 /*
  * Constants that define how close together two events must be in milliseconds
- * or pixels to meet the PAT_NEARBY constraint:
+ * or pixels to be considered close in space or time.
  */
 
 #define NEARBY_PIXELS	5

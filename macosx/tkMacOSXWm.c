@@ -1122,6 +1122,13 @@ TkWmDeadWindow(
 	 * preventing zombies is to set the key window to nil.
 	 */
 
+
+	/*
+	 * Fix bug 5692042764:
+	 * set tkEventTarget to NULL when there is no window to send Tk events to.
+	 */
+	TkWindow *newTkEventTarget = NULL;
+
 	for (NSWindow *w in [NSApp orderedWindows]) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 	    BOOL isOnScreen;
@@ -1134,10 +1141,12 @@ TkWmDeadWindow(
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
 		[w makeKeyAndOrderFront:NSApp];
-		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(w)];
+		newTkEventTarget = TkMacOSXGetTkWindow(w);
 		break;
 	    }
 	}
+
+	[NSApp setTkEventTarget:newTkEventTarget];
 
 	/*
 	 * Prevent zombies on systems with a TouchBar.
@@ -1149,7 +1158,6 @@ TkWmDeadWindow(
 	}
 	[deadNSWindow close];
 	[deadNSWindow release];
-	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 1
 	fprintf(stderr, "================= Pool dump ===================\n");
@@ -4848,14 +4856,12 @@ Tk_TopCoordsToWindow(
     TkWindow *nextPtr;		/* Coordinates of highest child found so far
 				 * that contains point. */
     int x, y;			/* Coordinates in winPtr. */
-    Window *children;		/* Children of winPtr, or NULL. */
 
     winPtr = (TkWindow *)tkwin;
     x = rootX;
     y = rootY;
     while (1) {
 	nextPtr = NULL;
-	children = NULL;
 
 	/*
 	 * Container windows cannot have children. So if it is a container,
