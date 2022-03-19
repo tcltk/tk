@@ -4,7 +4,7 @@
  *	This file implements functions that decode & handle mouse events on
  *	MacOS X.
  *
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -396,12 +396,15 @@ enum {
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
 
+
+    grabWinPtr = winPtr->dispPtr->grabWinPtr;
+
     /*
      * Ignore the event if a local grab is in effect and the Tk window is
      * not in the grabber's subtree.
      */
 
-    grabWinPtr = winPtr->dispPtr->grabWinPtr;
+
     if (grabWinPtr && /* There is a grab in effect ... */
 	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
@@ -416,6 +419,29 @@ enum {
 	}
 	if (w != (Tk_Window)grabWinPtr) {
 	    return theEvent;
+	}
+    }
+
+    /*
+     * Ignore the event if a global grab is in effect and the Tk window is
+     * not in the grabber's subtree.
+     */
+
+    if (grabWinPtr && /* There is a grab in effect ... */
+	winPtr->dispPtr->grabFlags && /* and it is a global grab ... */
+	grabWinPtr->mainPtr == winPtr->mainPtr) { /* in the same application. */
+	Tk_Window w;
+	if (!target) {
+	    return theEvent;
+	}
+	for (w = target; !Tk_IsTopLevel(w); w = Tk_Parent(w)) {
+	    if (w == (Tk_Window)grabWinPtr) {
+		break;
+	    }
+	}
+	if (w != (Tk_Window)grabWinPtr) {
+	    /* Force the focus back to the grab window. */
+	    TkpChangeFocus(grabWinPtr, 1);
 	}
     }
 
@@ -608,10 +634,10 @@ TkMacOSXButtonKeyState(void)
 
 Bool
 XQueryPointer(
-    Display *display,
+    TCL_UNUSED(Display *),
     Window w,
-    Window *root_return,
-    Window *child_return,
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Window *),
     int *root_x_return,
     int *root_y_return,
     int *win_x_return,
@@ -768,7 +794,7 @@ GenerateButtonEvent(
     int dummy;
     TkDisplay *dispPtr;
 
-#if UNUSED
+#ifdef UNUSED
 
     /*
      * ButtonDown events will always occur in the front window. ButtonUp
