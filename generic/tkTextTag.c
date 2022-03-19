@@ -1307,7 +1307,7 @@ TkConfigureTag(
 		tagPtr->affectsDisplayGeometry);
     }
 
-    if (elide != tagPtr->elide) {
+    if (!tagPtr->elidePtr != !elidePtr || (tagPtr->elidePtr && elide != tagPtr->elide)) {
 	/*
 	 * Eventually we have to insert/remove branches and links according to
 	 * the elide information of this tag.
