@@ -1408,6 +1408,9 @@ DestroyPacker(
 {
     Packer *packPtr = (Packer *)memPtr;
 
+    if (packPtr->flags & REQUESTED_REPACK) {
+	Tcl_CancelIdleCall(ArrangePacking, packPtr);
+    }
     ckfree(packPtr);
 }
 
