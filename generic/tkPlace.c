@@ -425,7 +425,7 @@ static void
 FreeContent(
     Content *contentPtr)
 {
-    if (contentPtr->flags & PARENT_RECONFIG_PENDING) {
+    if (contentPtr->containerPtr && (contentPtr->containerPtr->flags & PARENT_RECONFIG_PENDING)) {
 	Tcl_CancelIdleCall(RecomputePlacement, contentPtr);
     }
     Tk_FreeConfigOptions((char *) contentPtr, contentPtr->optionTable,
