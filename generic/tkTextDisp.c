@@ -1993,7 +1993,7 @@ FillStyle(
     if (tagPtr->lMargin2Ptr)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
     if (tagPtr->offsetPtr)              { stylePtr->offset = tagPtr->offset; }
-    if (tagPtr->rMarginPtr)          { stylePtr->rMargin = tagPtr->rMargin; }
+    if (tagPtr->rMarginPtr)             { stylePtr->rMargin = tagPtr->rMargin; }
     if (tagPtr->rMarginColor)           { stylePtr->rMarginColor = tagPtr->rMarginColor; }
     if (tagPtr->spacing1Ptr)            { stylePtr->spacing1 = tagPtr->spacing1; }
     if (tagPtr->spacing2Ptr)            { stylePtr->spacing2 = tagPtr->spacing2; }

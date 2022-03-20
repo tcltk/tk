@@ -984,14 +984,6 @@ typedef struct TkTextTag {
     				 * information is displayed on the screen (so need to recalculate
 				 * line dimensions if tag changes). */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
-    /* TODO: to be eliminated */
-    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
-				 * means option not specified. */
-    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
-    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL
-				 * means option not specified. */
-    char *elideString;		/* -elide option string (malloc-ed). NULL means option not specified. */
 } TkTextTag;
 
 /*

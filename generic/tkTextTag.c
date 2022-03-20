@@ -41,8 +41,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
 	NULL, offsetof(TkTextTag, attrs.borderWidthPtr), offsetof(TkTextTag, attrs.borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-elide", NULL, NULL,
-	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elideString),
+    {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
+	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elide),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-eolcolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, eolColor), TK_OPTION_NULL_OK, 0, 0},
@@ -97,12 +97,12 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing1", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing1Ptr), offsetof(TkTextTag, spacing1String), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing2", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing2Ptr), offsetof(TkTextTag, spacing2String), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing3", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing3Ptr), offsetof(TkTextTag, spacing3String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-spacing1", NULL, NULL,
+	NULL, offsetof(TkTextTag, spacing1Ptr), offsetof(TkTextTag, spacing1), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-spacing2", NULL, NULL,
+	NULL, offsetof(TkTextTag, spacing2Ptr), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
+	NULL, offsetof(TkTextTag, spacing3Ptr), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
@@ -317,7 +317,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
-	if (tagPtr->elide) {
+	if (tagPtr->elide >= 0) {
 	    /*
 	     * Indices are potentially obsolete after adding or removing
 	     * elided character ranges, especially indices having "display"
@@ -1192,24 +1192,12 @@ TkConfigureTag(
 	}
     }
     if (tagPtr->spacing1Ptr) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
 	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
     }
     if (tagPtr->spacing2Ptr) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
 	tagPtr->spacing2 = MAX(0, tagPtr->spacing2);
     }
     if (tagPtr->spacing3Ptr) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
 	tagPtr->spacing3 = MAX(0, tagPtr->spacing3);
     }
     if (tagPtr->tabArrayPtr) {
@@ -1244,14 +1232,10 @@ TkConfigureTag(
 
 	    Tcl_DecrRefCount(tagPtr->elidePtr);
 	    tagPtr->elidePtr = NULL;
-	    free(tagPtr->elideString);
-	    tagPtr->elideString = NULL;
-	    tagPtr->elide = 0;
+	    tagPtr->elide = -1;
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
-	    rc = TCL_ERROR;
-	} else if (Tcl_GetBooleanFromObj(interp, tagPtr->elidePtr, &tagPtr->elide) != TCL_OK) {
 	    rc = TCL_ERROR;
 	}
 

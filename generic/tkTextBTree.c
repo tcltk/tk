@@ -8671,7 +8671,7 @@ UpdateElideInfo(
      */
 
     if (tagPtr && reason == ELISION_HAS_BEEN_CHANGED) {
-	tagPtr->elide = !tagPtr->elide;
+	if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
     }
 
     /*
@@ -8706,7 +8706,7 @@ UpdateElideInfo(
 
     if (tagPtr) {
 	if (reason == ELISION_HAS_BEEN_CHANGED) {
-	    tagPtr->elide = !tagPtr->elide;
+	    if (tagPtr->elide >= 0) tagPtr->elide = !tagPtr->elide;
 	} else if (reason == ELISION_WILL_BE_REMOVED) {
 	    oldTextPtr = tagPtr->textPtr;
 	    /* this little trick is disabling the tag */
@@ -8906,9 +8906,9 @@ UpdateElideInfo(
 	 */
 
 	if (!lastLinkPtr) {
-	    if (reason == ELISION_HAS_BEEN_CHANGED) { tagPtr->elide = !tagPtr->elide; }
+	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 	    actualElidden = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
-	    if (reason == ELISION_HAS_BEEN_CHANGED) { tagPtr->elide = !tagPtr->elide; }
+	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 
 	    if (actualElidden) {
 		/*
@@ -8989,7 +8989,7 @@ TkBTreeUpdateElideInfo(
 
     sharedTextPtr = textPtr->sharedTextPtr;
 
-    if (!tagPtr->elide && !TkBTreeHaveElidedSegments(sharedTextPtr)) {
+    if (tagPtr->elide < 1 && !TkBTreeHaveElidedSegments(sharedTextPtr)) {
 	return;
     }
 
@@ -12714,7 +12714,7 @@ TkBTreeGetSegmentTags(
 			*flags |= TK_TEXT_IS_SELECTED;
 		    }
 		    if (tagPtr->elidePtr && (int) tagPtr->priority > highestPriority) {
-			if (tagPtr->elide) {
+			if (tagPtr->elide > 0) {
 			    *flags |= TK_TEXT_IS_ELIDED;
 			} else {
 			    *flags &= ~TK_TEXT_IS_ELIDED;
