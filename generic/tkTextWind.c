@@ -993,21 +993,19 @@ EmbWinRequestProc(
     assert(ewPtr->typePtr);
     assert(ewPtr->sectionPtr);
 
-    if (ewPtr->sectionPtr) {
-	TkTextIndexClear(&index, client->textPtr);
+    TkTextIndexClear(&index, client->textPtr);
 
-	/*
-	 * ewPtr->body.ew.tkwin == NULL means the embedded window is already
-	 * destroyed. The ewPtr segment is no longer linked.
-	 */
+    /*
+	* ewPtr->body.ew.tkwin == NULL means the embedded window is already
+	* destroyed. The ewPtr segment is no longer linked.
+	*/
 
-	if (ewPtr->body.ew.tkwin) {
-	    TkTextIndexSetSegment(&index, ewPtr);
-	} else {
-	    TkTextIndexSetByteIndex2(&index, ewPtr->sectionPtr->linePtr, 0);
-	}
-	TextChanged(&index);
+    if (ewPtr->body.ew.tkwin) {
+	TkTextIndexSetSegment(&index, ewPtr);
+    } else {
+	TkTextIndexSetByteIndex2(&index, ewPtr->sectionPtr->linePtr, 0);
     }
+    TextChanged(&index);
 }
 
 /*
