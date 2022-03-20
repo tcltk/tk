@@ -984,18 +984,28 @@ EmbWinStructureProc(
 static void
 EmbWinRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
-    TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
+    TCL_UNUSED(Tk_Window))	/* Window that changed its desired size. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
     TkTextSegment *ewPtr = client->parent;
     TkTextIndex index;
 
     assert(ewPtr->typePtr);
+    assert(ewPtr->sectionPtr);
 
     if (ewPtr->sectionPtr) {
-	assert(ewPtr->sectionPtr);
 	TkTextIndexClear(&index, client->textPtr);
-	TkTextIndexSetSegment(&index, ewPtr);
+
+	/*
+	 * ewPtr->body.ew.tkwin == NULL means the embedded window is already
+	 * destroyed. The ewPtr segment is no longer linked.
+	 */
+
+	if (ewPtr->body.ew.tkwin) {
+	    TkTextIndexSetSegment(&index, ewPtr);
+	} else {
+	    TkTextIndexSetByteIndex2(&index, ewPtr->sectionPtr->linePtr, 0);
+	}
 	TextChanged(&index);
     }
 }
