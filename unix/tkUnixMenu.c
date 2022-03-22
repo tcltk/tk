@@ -854,7 +854,7 @@ DrawMenuUnderline(
     if (mePtr->labelPtr != NULL) {
 	int len;
 
-	len = Tcl_GetCharLength(mePtr->labelPtr));
+	len = Tcl_GetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len && mePtr->underline >= -len) {
 	    int activeBorderWidth, leftEdge, ch;
 	    const char *label, *start, *end;
