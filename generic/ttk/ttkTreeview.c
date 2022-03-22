@@ -1377,7 +1377,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     if (mask & COLUMNS_CHANGED) {
 	CellSelectionClear(tv);
     }
-    if (tv->tree.nTitleColumns < 0) {
+    if (tv->tree.nTitleColumns == TCL_INDEX_NONE) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                 "\"#%" TKSIZET_MODIFIER "u\" is out of range",
                 tv->tree.nTitleColumns));
@@ -2868,7 +2868,7 @@ static int TreeviewIdentifyCommand(
 	    break;
 
 	case I_CELL :
-	    if (item && colno >= 0) {
+	    if (item && colno != TCL_INDEX_NONE) {
 		Tcl_Obj *elem[2];
 		elem[0] = ItemID(tv, item);
 		elem[1] = Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno);
