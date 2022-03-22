@@ -2001,7 +2001,7 @@ Tk_ComputeTextLayout(
     height = fmPtr->ascent + fmPtr->descent;
 
     if (numChars < 0) {
-	numChars = TkNumUtfChars(string, -1);
+	numChars = Tcl_NumUtfChars(string, -1);
     }
     if (wrapLength == 0) {
 	wrapLength = -1;
@@ -2024,7 +2024,7 @@ Tk_ComputeTextLayout(
 
     curX = 0;
 
-    endp = TkUtfAtIndex(string, numChars);
+    endp = Tcl_UtfAtIndex(string, numChars);
     special = string;
 
     flags &= TK_IGNORE_TABS | TK_IGNORE_NEWLINES;
@@ -2141,7 +2141,7 @@ Tk_ComputeTextLayout(
 		bytesThisChunk = Tk_MeasureChars(tkfont, end, bytesThisChunk,
 			-1, 0, &chunkPtr->totalWidth);
 		chunkPtr->numBytes += bytesThisChunk;
-		chunkPtr->numChars += TkNumUtfChars(end, bytesThisChunk);
+		chunkPtr->numChars += Tcl_NumUtfChars(end, bytesThisChunk);
 		chunkPtr->totalWidth += curX;
 	    }
 	}
@@ -2332,14 +2332,14 @@ Tk_DrawTextLayout(
 		firstChar = 0;
 		firstByte = chunkPtr->start;
 	    } else {
-		firstByte = TkUtfAtIndex(chunkPtr->start, firstChar);
+		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
 		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
 			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
-	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
+	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
 #ifdef TK_DRAW_IN_CONTEXT
 	    TkpDrawCharsInContext(display, drawable, gc, layoutPtr->tkfont,
 		    chunkPtr->start, chunkPtr->numBytes,
@@ -2402,14 +2402,14 @@ TkDrawAngledTextLayout(
 		firstChar = 0;
 		firstByte = chunkPtr->start;
 	    } else {
-		firstByte = TkUtfAtIndex(chunkPtr->start, firstChar);
+		firstByte = Tcl_UtfAtIndex(chunkPtr->start, firstChar);
 		Tk_MeasureChars(layoutPtr->tkfont, chunkPtr->start,
 			firstByte - chunkPtr->start, -1, 0, &drawX);
 	    }
 	    if (lastChar < numDisplayChars) {
 		numDisplayChars = lastChar;
 	    }
-	    lastByte = TkUtfAtIndex(chunkPtr->start, numDisplayChars);
+	    lastByte = Tcl_UtfAtIndex(chunkPtr->start, numDisplayChars);
 #ifdef TK_DRAW_IN_CONTEXT
 	    dx = cosA * (chunkPtr->x) + sinA * (chunkPtr->y);
 	    dy = -sinA * (chunkPtr->x) + cosA * (chunkPtr->y);
@@ -2662,7 +2662,7 @@ Tk_PointToChar(
 		    }
 		    n = Tk_MeasureChars((Tk_Font) fontPtr, chunkPtr->start,
 			    chunkPtr->numBytes, x - chunkPtr->x, 0, &dummy);
-		    return numChars + TkNumUtfChars(chunkPtr->start, n);
+		    return numChars + Tcl_NumUtfChars(chunkPtr->start, n);
 		}
 		numChars += chunkPtr->numChars;
 		lastPtr = chunkPtr;
@@ -2771,7 +2771,7 @@ Tk_CharBbox(
 		goto check;
 	    }
 	} else if (index < chunkPtr->numChars) {
-	    end = TkUtfAtIndex(chunkPtr->start, index);
+	    end = Tcl_UtfAtIndex(chunkPtr->start, index);
 	    if (xPtr != NULL) {
 		Tk_MeasureChars(tkfont, chunkPtr->start,
 			end - chunkPtr->start, -1, 0, &x);
@@ -3844,7 +3844,7 @@ NewChunk(
 	*layoutPtrPtr = layoutPtr;
 	*maxPtr = maxChunks;
     }
-    numChars = TkNumUtfChars(start, numBytes);
+    numChars = Tcl_NumUtfChars(start, numBytes);
     chunkPtr = &layoutPtr->chunks[layoutPtr->numChunks];
     chunkPtr->start		= start;
     chunkPtr->numBytes		= numBytes;

@@ -2167,7 +2167,7 @@ InsertChars(
     char *newStr;
 
     string = entryPtr->string;
-    byteIndex = TkUtfAtIndex(string, index) - string;
+    byteIndex = Tcl_UtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
 	return TCL_OK;
@@ -2194,13 +2194,13 @@ InsertChars(
      * The following construction is used because inserting improperly formed
      * UTF-8 sequences between other improperly formed UTF-8 sequences could
      * result in actually forming valid UTF-8 sequences; the number of
-     * characters added may not be TkNumUtfChars(string, -1), because of
+     * characters added may not be Tcl_NumUtfChars(string, -1), because of
      * context. The actual number of characters added is how many characters
      * are in the string now minus the number that used to be there.
      */
 
     oldChars = entryPtr->numChars;
-    entryPtr->numChars = TkNumUtfChars(newStr, TCL_INDEX_NONE);
+    entryPtr->numChars = Tcl_NumUtfChars(newStr, TCL_INDEX_NONE);
     charsAdded = entryPtr->numChars - oldChars;
     entryPtr->numBytes += byteCount;
 
@@ -2271,8 +2271,8 @@ DeleteChars(
     }
 
     string = entryPtr->string;
-    byteIndex = TkUtfAtIndex(string, index) - string;
-    byteCount = TkUtfAtIndex(string + byteIndex, count) - (string+byteIndex);
+    byteIndex = Tcl_UtfAtIndex(string, index) - string;
+    byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
     newStr = (char *)ckalloc(newByteCount);
@@ -2500,7 +2500,7 @@ EntrySetValue(
 	entryPtr->string = tmp;
     }
     entryPtr->numBytes = valueLen;
-    entryPtr->numChars = TkNumUtfChars(value, valueLen);
+    entryPtr->numChars = Tcl_NumUtfChars(value, valueLen);
 
     if (entryPtr->displayString == oldSource) {
 	entryPtr->displayString = entryPtr->string;
@@ -2930,8 +2930,8 @@ EntryFetchSelection(
 	return -1;
     }
     string = entryPtr->displayString;
-    selStart = TkUtfAtIndex(string, entryPtr->selectFirst);
-    selEnd = TkUtfAtIndex(selStart,
+    selStart = Tcl_UtfAtIndex(string, entryPtr->selectFirst);
+    selEnd = Tcl_UtfAtIndex(selStart,
 	    entryPtr->selectLast - entryPtr->selectFirst);
     if (selEnd <= selStart + offset) {
 	return 0;

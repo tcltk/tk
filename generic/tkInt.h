@@ -1470,8 +1470,6 @@ MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
     MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
-MODULE_SCOPE const char *TkUtfAtIndex(const char *,size_t);
-MODULE_SCOPE size_t TkNumUtfChars(const char *, size_t);
 
 #if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
 #   define tcl_CreateFileHandler reserved9
