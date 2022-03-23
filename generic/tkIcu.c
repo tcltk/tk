@@ -247,7 +247,7 @@ Icu_Init(
 		++i;
 	    }
 	}
-#if defined(_WIN32) && !defined(STATIC_BUILD)
+#if defined(_WIN32)
 	if (icu_fns.lib == NULL) {
 	    Tcl_ResetResult(interp);
 		nameobj = Tcl_NewStringObj("icu.dll", -1);
