@@ -156,13 +156,13 @@ test font-4.12 {font command: actual} -body {
 test font-4.13 {font command: actual} -body {
     font actual {-family times} -- \uDC00
 } -match glob -result {*}
-test font-4.14 {font command: actual} -constraints {utfcompat win} -body {
+test font-4.14 {font command: actual} -constraints {utfcompat win knownBug} -body {
     font actual {-family times} -family -- \uD800\uDC00
 } -result {times}
 test font-4.15 {font command: actual} -body {
     font actual {-family times} -- \uDC00\uD800
 } -returnCodes 1 -match glob -result {expected a single character but got "*"}
-test font-4.16 {font command: actual} -constraints {fullutf win} -body {
+test font-4.16 {font command: actual} -constraints {fullutf win knownBug} -body {
     font actual {-family times} -family -- \U10000
 } -result {times}
 
