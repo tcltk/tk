@@ -592,11 +592,10 @@ TkpGetColor(
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
     static Bool initialized = NO;
-    static NSColorSpace* sRGB = nil;
 
     if (!initialized) {
 	initialized = YES;
-	sRGB = [NSColorSpace sRGBColorSpace];
+	(void)[NSColorSpace sRGBColorSpace];
 	initColorTable();
     }
     if (tkwin) {
