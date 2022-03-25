@@ -85,7 +85,6 @@ StartPrint(
     NSPrintPanel * printPanel = [NSPrintPanel printPanel];
     int accepted;
     PMPrintSession printSession;
-    PMPageFormat pageFormat;
     PMPrintSettings printSettings;
     OSStatus status = noErr;
 
@@ -121,7 +120,7 @@ StartPrint(
     }
 
     printSession = (PMPrintSession)[printInfo PMPrintSession];
-    pageFormat = (PMPageFormat)[printInfo PMPageFormat];
+    (void)(PMPageFormat)[printInfo PMPageFormat];
     printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
 
     accepted = [printPanel runModalWithPrintInfo: printInfo];
