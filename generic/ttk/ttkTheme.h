@@ -308,6 +308,7 @@ MODULE_SCOPE Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_Element);
 MODULE_SCOPE void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_Element, int *w, int *h);
 
 MODULE_SCOPE void Ttk_PlaceElement(Ttk_Layout, Ttk_Element, Ttk_Box);
+MODULE_SCOPE void Ttk_AnchorElement(Ttk_Element node, Tk_Anchor anchor);
 MODULE_SCOPE void Ttk_ChangeElementState(Ttk_Element,unsigned set,unsigned clr);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);

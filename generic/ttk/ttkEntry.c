@@ -1308,7 +1308,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	if (Tcl_GetCharLength(es.placeholderForegroundObj) > 0) {
 	    foregroundObj = es.placeholderForegroundObj;
 	} else {
-            foregroundObj = es.foregroundObj;
+	    foregroundObj = es.foregroundObj;
 	}
 	/* Use placeholder text width */
 	leftIndex = 0;

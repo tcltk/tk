@@ -28,7 +28,7 @@
 ::msgcat::mcset en "numbered lines below describes a demonstration;  you can click on"
 ::msgcat::mcset en "it to invoke the demonstration.  Once the demonstration window"
 ::msgcat::mcset en "appears, you can click the"
-::msgcat::mcset en "See Code"  "Bekijk Code"	;# This is also button text!
+::msgcat::mcset en "See Code"  "See Code"	;# This is also button text!
 ::msgcat::mcset en "button to see the Tcl/Tk code that created the demonstration.  If"
 ::msgcat::mcset en "you wish, you can edit the code and click the"
 ::msgcat::mcset en "button in the code window to reinvoke the demonstration with the"

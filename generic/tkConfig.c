@@ -459,7 +459,7 @@ Tk_InitOptions(
 
 	if ((valuePtr == NULL)
 		&& (optionPtr->dbNameUID != NULL)) {
-	    valuePtr = TkpGetSystemDefault(tkwin, optionPtr->dbNameUID,
+	    valuePtr = Tk_GetSystemDefault(tkwin, optionPtr->dbNameUID,
 		    optionPtr->dbClassUID);
 	    if (valuePtr != NULL) {
 		source = SYSTEM_DEFAULT;

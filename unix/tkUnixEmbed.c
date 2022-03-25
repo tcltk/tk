@@ -71,7 +71,7 @@ static void		EmbedWindowDeleted(TkWindow *winPtr);
 /*
  *----------------------------------------------------------------------
  *
- * TkpUseWindow --
+ * Tk_UseWindow --
  *
  *	This function causes a Tk window to use a given X window as its parent
  *	window, rather than the root window for the screen. It is invoked by
@@ -91,7 +91,7 @@ static void		EmbedWindowDeleted(TkWindow *winPtr);
  */
 
 int
-TkpUseWindow(
+Tk_UseWindow(
     Tcl_Interp *interp,		/* If not NULL, used for error reporting if
 				 * string is bogus. */
     Tk_Window tkwin,		/* Tk window that does not yet have an
@@ -194,7 +194,7 @@ TkpUseWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Create an actual window system window object based on the current
  *	attributes of the specified TkWindow.
@@ -209,13 +209,14 @@ TkpUseWindow(
  */
 
 Window
-TkpMakeWindow(
-    TkWindow *winPtr,		/* Tk's information about the window that is
+Tk_MakeWindow(
+    Tk_Window tkwin,		/* Tk's information about the window that is
 				 * to be instantiated. */
     Window parent)		/* Window system token for the parent in which
 				 * the window is to be created. */
 {
     Container *containerPtr;
+    TkWindow *winPtr = (TkWindow *) tkwin;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -250,7 +251,7 @@ TkpMakeWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeContainer --
+ * Tk_MakeContainer --
  *
  *	This function is called to indicate that a particular window will be a
  *	container for an embedded application. This changes certain aspects of
@@ -266,7 +267,7 @@ TkpMakeWindow(
  */
 
 void
-TkpMakeContainer(
+Tk_MakeContainer(
     Tk_Window tkwin)		/* Token for a window that is about to become
 				 * a container. */
 {
@@ -691,13 +692,13 @@ EmbedSendConfigure(
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetOtherWindow --
+ * Tk_GetOtherWindow --
  *
  *	If both the container and embedded window are in the same process,
  *	this function will return either one, given the other.
  *
  * Results:
- *	If winPtr is a container, the return value is the token for the
+ *	If tkwin is a container, the return value is the token for the
  *	embedded window, and vice versa. If the "other" window isn't in this
  *	process, NULL is returned.
  *
@@ -707,9 +708,9 @@ EmbedSendConfigure(
  *----------------------------------------------------------------------
  */
 
-TkWindow *
-TkpGetOtherWindow(
-    TkWindow *winPtr)		/* Tk's structure for a container or embedded
+Tk_Window
+Tk_GetOtherWindow(
+    Tk_Window tkwin)		/* Tk's structure for a container or embedded
 				 * window. */
 {
     Container *containerPtr;
@@ -719,10 +720,10 @@ TkpGetOtherWindow(
     for (containerPtr = tsdPtr->firstContainerPtr;
             containerPtr != NULL;
 	    containerPtr = containerPtr->nextPtr) {
-	if (containerPtr->embeddedPtr == winPtr) {
-	    return containerPtr->parentPtr;
-	} else if (containerPtr->parentPtr == winPtr) {
-	    return containerPtr->embeddedPtr;
+	if ((Tk_Window)containerPtr->embeddedPtr == tkwin) {
+	    return (Tk_Window)containerPtr->parentPtr;
+	} else if ((Tk_Window)containerPtr->parentPtr == tkwin) {
+	    return (Tk_Window)containerPtr->embeddedPtr;
 	}
     }
     return NULL;
