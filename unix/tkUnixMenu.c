@@ -938,13 +938,6 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (index >= menuPtr->numEntries) {
-	index = menuPtr->numEntries - 1;
-    }
-    if (index >= 0) {
-	y -= menuPtr->entries[index]->y;
-    }
-
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
@@ -959,6 +952,18 @@ TkpPostTearoffMenu(
 
     if (menuPtr->tkwin == NULL) {
     	return TCL_OK;
+    }
+
+    /*
+     * Adjust the menu y position so that the specified entry will be located
+     * at the given coordinates.
+     */
+
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     /*
