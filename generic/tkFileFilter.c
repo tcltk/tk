@@ -286,7 +286,7 @@ AddClause(
 		 * be 4 macRoman characters long
 		 */
 
-		Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+		Tcl_UtfToExternalDStringEx(macRoman, strType, len, TCL_ENCODING_NOCOMPLAIN, &osTypeDS);
 		len = Tcl_DStringLength(&osTypeDS);
 		Tcl_DStringFree(&osTypeDS);
 	    }
@@ -385,7 +385,7 @@ AddClause(
 	     * macRoman characters long
 	     */
 
-	    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+	    Tcl_UtfToExternalDStringEx(macRoman, strType, len, TCL_ENCODING_NOCOMPLAIN, &osTypeDS);
 	    string = Tcl_DStringValue(&osTypeDS);
 	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 		    (OSType) string[2] <<  8 | (OSType) string[3];

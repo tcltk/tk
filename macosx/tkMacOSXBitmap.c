@@ -205,7 +205,7 @@ OSTypeFromString(const char *s, OSType *t) {
     Tcl_DString ds;
     Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-    Tcl_UtfToExternalDString(encoding, s, -1, &ds);
+    Tcl_UtfToExternalDStringEx(encoding, s, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     if (Tcl_DStringLength(&ds) <= 4) {
 	char string[4] = {};
 	memcpy(string, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
@@ -384,7 +384,7 @@ TkMacOSXIconBitmapObjCmd(
 	Tcl_DString ds;
  	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-	Tcl_UtfToExternalDString(encoding, value, -1, &ds);
+	Tcl_UtfToExternalDStringEx(encoding, value, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	len = Tcl_DStringLength(&ds);
 	Tcl_DStringFree(&ds);
 	Tcl_FreeEncoding(encoding);
