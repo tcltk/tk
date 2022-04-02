@@ -930,7 +930,7 @@ TkpPostMenu(
 
 int
 TkpPostTearoffMenu(
-    TCL_UNUSED(Tcl_Interp *),		/* The interpreter of the menu */
+    TCL_UNUSED(Tcl_Interp *),	/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y, int index)	/* The root X,Y coordinates where the
 				 * specified entry will be posted */
