@@ -849,7 +849,7 @@ Tk_MeasureChars(
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
-	    Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
+	    (void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
 		    p - start, TCL_ENCODING_NOCOMPLAIN, &runString);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
@@ -877,7 +877,7 @@ Tk_MeasureChars(
 	 */
 
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
+	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
 		p - start, TCL_ENCODING_NOCOMPLAIN, &runString);
 	size.cx = 0;
 	familyPtr->getTextExtentPoint32Proc(hdc, (WCHAR *) Tcl_DStringValue(&runString),
@@ -1493,7 +1493,7 @@ MultiFontTextOut(
 	if ((thisSubFontPtr != lastSubFontPtr) || (p-source > 200)) {
 	    if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
- 		Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
 			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 			(WCHAR *)Tcl_DStringValue(&runString),
@@ -1515,7 +1515,7 @@ MultiFontTextOut(
     }
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
- 	Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
 		p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 		(WCHAR *)Tcl_DStringValue(&runString),

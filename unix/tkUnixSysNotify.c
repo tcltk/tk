@@ -145,8 +145,8 @@ SysNotifyCmd(
 	Tcl_DStringInit(&dst);
 	Tcl_DStringInit(&dsm);
 	enc = Tcl_GetEncoding(NULL, "utf-8");
-	Tcl_UtfToExternalDStringEx(enc, title, -1, TCL_ENCODING_NOCOMPLAIN, &dst);
-	Tcl_UtfToExternalDStringEx(enc, message, -1, TCL_ENCODING_NOCOMPLAIN, &dsm);
+	(void)Tcl_UtfToExternalDStringEx(enc, title, -1, TCL_ENCODING_NOCOMPLAIN, &dst);
+	(void)Tcl_UtfToExternalDStringEx(enc, message, -1, TCL_ENCODING_NOCOMPLAIN, &dsm);
 	notify_init(appname);
 	notif = notify_notification_new(Tcl_DStringValue(&dst),
 	    Tcl_DStringValue(&dsm), icon, NULL);

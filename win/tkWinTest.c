@@ -381,7 +381,7 @@ TestwineventObjCmd(
         SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
                      (LPARAM) buf);
 #endif
-	Tcl_ExternalToUtfDStringEx(NULL, buf, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_ExternalToUtfDStringEx(NULL, buf, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
 	Tcl_DStringFree(&ds);
 	break;
@@ -396,7 +396,7 @@ TestwineventObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToExternalDStringEx(NULL, Tcl_GetString(objv[4]), -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, Tcl_GetString(objv[4]), -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	result = SendMessageA(control, WM_SETTEXT, 0,
 		(LPARAM) Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);

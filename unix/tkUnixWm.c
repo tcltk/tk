@@ -713,7 +713,7 @@ TkWmMapWindow(
 	    UpdateCommand(winPtr);
 	}
 	if (wmPtr->clientMachine != NULL) {
-	    Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	    (void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
 		unsigned long pid = (unsigned long) getpid();
@@ -985,8 +985,8 @@ TkWmSetClass(
 	XClassHint *classPtr;
 	Tcl_DString name, ds;
 
-	Tcl_UtfToExternalDStringEx(NULL, winPtr->nameUid, -1, TCL_ENCODING_NOCOMPLAIN, &name);
-	Tcl_UtfToExternalDStringEx(NULL, winPtr->classUid, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->nameUid, -1, TCL_ENCODING_NOCOMPLAIN, &name);
+	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->classUid, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	classPtr = XAllocClassHint();
 	classPtr->res_name = Tcl_DStringValue(&name);
 	classPtr->res_class = Tcl_DStringValue(&ds);
@@ -1494,7 +1494,7 @@ WmClientCmd(
 	XTextProperty textProp;
 	Tcl_DString ds;
 
-	Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		&textProp) != 0) {
 	    unsigned long pid = (unsigned long) getpid();
@@ -4979,7 +4979,7 @@ UpdateTitle(
      */
 
     string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
-    Tcl_UtfToExternalDStringEx(NULL, string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+    (void)Tcl_UtfToExternalDStringEx(NULL, string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     XStoreName(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
@@ -4992,7 +4992,7 @@ UpdateTitle(
      */
 
     if (wmPtr->iconName != NULL) {
-	Tcl_UtfToExternalDStringEx(NULL, wmPtr->iconName, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->iconName, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
 		Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
@@ -5512,7 +5512,7 @@ SetNetWmType(
 	char *name = Tcl_GetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);
-	Tcl_UtfToExternalDStringEx(NULL, name, len, TCL_ENCODING_NOCOMPLAIN, &dsName);
+	(void)Tcl_UtfToExternalDStringEx(NULL, name, len, TCL_ENCODING_NOCOMPLAIN, &dsName);
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "_NET_WM_WINDOW_TYPE_", 20);
 	Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsName),
@@ -5576,7 +5576,7 @@ GetNetWmType(
 	    const char *name = Tk_GetAtomName(tkwin, atoms[n]);
 
 	    if (strncmp("_NET_WM_WINDOW_TYPE_", name, 20) == 0) {
-		Tcl_ExternalToUtfDStringEx(NULL, name+20, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+		(void)Tcl_ExternalToUtfDStringEx(NULL, name+20, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 		Tcl_UtfToLower(Tcl_DStringValue(&ds));
 		Tcl_ListObjAppendElement(interp, typePtr,
 			Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -7386,7 +7386,7 @@ UpdateCommand(
     offsets = (int *)ckalloc(sizeof(int) * wmPtr->cmdArgc);
     Tcl_DStringInit(&cmds);
     for (i = 0; i < wmPtr->cmdArgc; i++) {
-	Tcl_UtfToExternalDStringEx(NULL, wmPtr->cmdArgv[i], -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->cmdArgv[i], -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	offsets[i] = Tcl_DStringLength(&cmds);
 	Tcl_DStringAppend(&cmds, Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds)+1);
