@@ -207,6 +207,17 @@ test treetags-4.3 "tag cell has" -body {
     $tv tag cell has
 } -returnCodes 1 -result {wrong # args: should be ".tv tag cell has tagName ?cell?"}
 
+test treetags-4.3.1 "tag cell has" -body {
+    $tv tag cell add tag1 "item1 #2"
+    set res [$tv tag cell has tag1 "item1 #2"]
+    lappend res [$tv tag cell has tag1 "item1 #1"]
+    lappend res [$tv tag cell has tag1 "item1 #3"]
+    lappend res {*}[$tv tag cell has tag1]
+    $tv tag cell remove tag1 "item1 B"
+    lappend res {*}[$tv tag cell has tag1]
+    lappend res [$tv tag cell has tag1 "item1 #2"]
+} -result {1 0 0 {item1 B} 0}
+
 test treetags-4.4 "tag cell add" -body {
     $tv tag cell add tag1 "item1 A"
     $tv tag cell add tag1 "item1 #3"
