@@ -1334,7 +1334,17 @@ const TkStubs tkStubs = {
     0, /* 277 */
     0, /* 278 */
     0, /* 279 */
-    TkUnusedStubEntry, /* 280 */
+    0, /* 280 */
+    0, /* 281 */
+    0, /* 282 */
+    0, /* 283 */
+    0, /* 284 */
+    0, /* 285 */
+    0, /* 286 */
+    0, /* 287 */
+    0, /* 288 */
+    0, /* 289 */
+    TkUnusedStubEntry, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */

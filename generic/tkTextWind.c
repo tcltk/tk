@@ -526,7 +526,6 @@ EmbWinStructureProc(
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
     TkTextSegment *ewPtr = client->parent;
-    TkTextIndex index;
     Tcl_HashEntry *hPtr;
 
     if (eventPtr->type != DestroyNotify) {
@@ -545,12 +544,7 @@ EmbWinStructureProc(
 
     ewPtr->body.ew.tkwin = NULL;
     client->tkwin = NULL;
-    index.tree = ewPtr->body.ew.sharedTextPtr->tree;
-    index.linePtr = ewPtr->body.ew.linePtr;
-    index.byteIndex = TkTextSegToOffset(ewPtr, ewPtr->body.ew.linePtr);
-    TkTextChanged(ewPtr->body.ew.sharedTextPtr, NULL, &index, &index);
-    TkTextInvalidateLineMetrics(ewPtr->body.ew.sharedTextPtr, NULL,
-	    index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
+    EmbWinRequestProc(client, NULL);
 }
 
 /*
@@ -574,7 +568,7 @@ EmbWinStructureProc(
 static void
 EmbWinRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
-    TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
+    TCL_UNUSED(Tk_Window))	/* Window that changed its desired size. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
     TkTextSegment *ewPtr = client->parent;
@@ -582,7 +576,15 @@ EmbWinRequestProc(
 
     index.tree = ewPtr->body.ew.sharedTextPtr->tree;
     index.linePtr = ewPtr->body.ew.linePtr;
-    index.byteIndex = TkTextSegToOffset(ewPtr, ewPtr->body.ew.linePtr);
+
+    /*
+     * ewPtr->body.ew.tkwin == NULL means the embedded window is already
+     * destroyed. The ewPtr segment is no longer linked, TkTextSegToOffset
+     * cannot find it within the line pointed by ewPtr->body.ew.linePtr.
+     */
+
+    index.byteIndex =  ewPtr->body.ew.tkwin ?
+	    TkTextSegToOffset(ewPtr, ewPtr->body.ew.linePtr) : 0;
     TkTextChanged(ewPtr->body.ew.sharedTextPtr, NULL, &index, &index);
     TkTextInvalidateLineMetrics(ewPtr->body.ew.sharedTextPtr, NULL,
 	    index.linePtr, 0, TK_TEXT_INVALIDATE_ONLY);
@@ -1129,6 +1131,16 @@ TkTextEmbWinDisplayProc(
 	    &lineX, &windowY, &width, &height);
     windowX = lineX - chunkPtr->x + x;
 
+    /*
+     * Mark the window as displayed so that it won't get unmapped.
+     * This needs to be done before the next instruction block because
+     * Tk_MaintainGeometry/Tk_MapWindow will run event handlers, in
+     * particular for the <Map> event, and if the bound script deletes
+     * the embedded window its clients will get freed.
+     */
+
+    client->displayed = 1;
+
     if (textPtr->tkwin == Tk_Parent(tkwin)) {
 	if ((windowX != Tk_X(tkwin)) || (windowY != Tk_Y(tkwin))
 		|| (Tk_ReqWidth(tkwin) != Tk_Width(tkwin))
@@ -1140,16 +1152,6 @@ TkTextEmbWinDisplayProc(
 	Tk_MaintainGeometry(tkwin, textPtr->tkwin, windowX, windowY,
 		width, height);
     }
-
-    /*
-     * Mark the window as displayed so that it won't get unmapped.
-     * <TODO>: Tk_MaintainGeometry/Tk_MapWindow may run event handlers,
-     *         in particular for the <Map> event. If the bound script
-     *         deletes the embedded window or the text widget we will
-     *         soon crash.
-     */
-
-    client->displayed = 1;
 }
 
 /*
