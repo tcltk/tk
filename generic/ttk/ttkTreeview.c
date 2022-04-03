@@ -1381,7 +1381,7 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     if (mask & COLUMNS_CHANGED) {
 	CellSelectionClear(tv);
     }
-    if (tv->tree.nTitleColumns < 0) {
+    if (tv->tree.nTitleColumns == TCL_INDEX_NONE) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
                 "\"#%" TKSIZET_MODIFIER "u\" is out of range",
                 tv->tree.nTitleColumns));
@@ -2755,7 +2755,7 @@ static int TreeviewHorribleIdentify(
     TreeItem *item = 0;
     Tcl_Obj *result;
     TkSizeT dColumnNumber;
-    char dcolbuf[16];
+    char dcolbuf[32];
     int x, y, x1;
     (void)objc;
 
@@ -2882,7 +2882,7 @@ static int TreeviewIdentifyCommand(
 	    break;
 
 	case I_CELL :
-	    if (item && colno >= 0) {
+	    if (item && colno != TCL_INDEX_NONE) {
 		Tcl_Obj *elem[2];
 		elem[0] = ItemID(tv, item);
 		elem[1] = Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno);
@@ -4063,7 +4063,7 @@ static int TreeviewCtagHasCommand(
     } else if (objc == 6) {	/* Test if cell has specified tag */
 	Ttk_Tag tag = Ttk_GetTagFromObj(tv->tree.tagTable, objv[4]);
 	int result = 0;
-	if (GetCellFromObj(interp, tv, objv[4], 0, NULL, &cell) != TCL_OK) {
+	if (GetCellFromObj(interp, tv, objv[5], 0, NULL, &cell) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (cell.column == &tv->tree.column0) {
@@ -4072,8 +4072,11 @@ static int TreeviewCtagHasCommand(
 	    columnNumber = cell.column - tv->tree.columns + 1;
 	}
 	if (columnNumber < cell.item->nTagSets) {
-	    result = Ttk_TagSetContains(cell.item->cellTagSets[columnNumber],
-		    tag);
+	    if (cell.item->cellTagSets[columnNumber] != NULL) {
+		result = Ttk_TagSetContains(
+			cell.item->cellTagSets[columnNumber],
+			tag);
+	    }
 	}
 
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));

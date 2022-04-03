@@ -2196,7 +2196,12 @@ TkTextIndexBackChars(
 		    if (p == start) {
 			break;
 		    }
-		    charCount--;
+		    if ((sizeof(Tcl_UniChar) == 2) &&  (unsigned)(UCHAR(*p) - 0xF0) <= 5) {
+			charCount--; /* Characters > U+FFFF count as 2 here */
+		    }
+		    if (charCount != 0) {
+			charCount--;
+		    }
 		}
 	    } else {
 		if (type & COUNT_INDICES) {
@@ -2434,18 +2439,18 @@ StartEnd(
 		}
 		firstChar = 0;
 	    }
-            if (offset == 0) {
-                if (modifier == TKINDEX_DISPLAY) {
-                    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
-                        COUNT_DISPLAY_INDICES);
-                } else {
-                    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr,
-                        COUNT_INDICES);
-                }
-            } else {
-                indexPtr->byteIndex -= chSize;
-            }
-            offset -= chSize;
+	    if (offset == 0) {
+		if (modifier == TKINDEX_DISPLAY) {
+		    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
+			    COUNT_DISPLAY_INDICES);
+		} else {
+		    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr,
+			    COUNT_INDICES);
+		}
+	    } else {
+		indexPtr->byteIndex -= chSize;
+	    }
+	    offset -= chSize;
 	    if ((int)offset < 0) {
 		if (indexPtr->byteIndex == 0) {
 		    goto done;

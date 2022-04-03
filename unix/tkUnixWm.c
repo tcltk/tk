@@ -713,7 +713,7 @@ TkWmMapWindow(
 	    UpdateCommand(winPtr);
 	}
 	if (wmPtr->clientMachine != NULL) {
-	    Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, -1, &ds);
+	    (void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
 		unsigned long pid = (unsigned long) getpid();
@@ -985,8 +985,8 @@ TkWmSetClass(
 	XClassHint *classPtr;
 	Tcl_DString name, ds;
 
-	Tcl_UtfToExternalDString(NULL, winPtr->nameUid, -1, &name);
-	Tcl_UtfToExternalDString(NULL, winPtr->classUid, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->nameUid, -1, TCL_ENCODING_NOCOMPLAIN, &name);
+	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->classUid, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	classPtr = XAllocClassHint();
 	classPtr->res_name = Tcl_DStringValue(&name);
 	classPtr->res_class = Tcl_DStringValue(&ds);
@@ -1494,7 +1494,7 @@ WmClientCmd(
 	XTextProperty textProp;
 	Tcl_DString ds;
 
-	Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		&textProp) != 0) {
 	    unsigned long pid = (unsigned long) getpid();
@@ -4756,7 +4756,7 @@ UpdateGeometryInfo(
 
     if ((winPtr->flags & (TK_EMBEDDED|TK_BOTH_HALVES))
 	    == (TK_EMBEDDED|TK_BOTH_HALVES)) {
-	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
+	Tk_Window childPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	/*
 	 * This window is embedded and the container is also in this process,
@@ -4770,7 +4770,7 @@ UpdateGeometryInfo(
 	wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
 	height += wmPtr->menuHeight;
 	if (childPtr != NULL) {
-	    Tk_GeometryRequest((Tk_Window) childPtr, width, height);
+	    Tk_GeometryRequest(childPtr, width, height);
 	}
 	return;
     }
@@ -4979,7 +4979,7 @@ UpdateTitle(
      */
 
     string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
-    Tcl_UtfToExternalDString(NULL, string, -1, &ds);
+    (void)Tcl_UtfToExternalDStringEx(NULL, string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     XStoreName(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
@@ -4992,7 +4992,7 @@ UpdateTitle(
      */
 
     if (wmPtr->iconName != NULL) {
-	Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->iconName, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
 		Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
@@ -5512,7 +5512,7 @@ SetNetWmType(
 	char *name = Tcl_GetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);
-	Tcl_UtfToExternalDString(NULL, name, len, &dsName);
+	(void)Tcl_UtfToExternalDStringEx(NULL, name, len, TCL_ENCODING_NOCOMPLAIN, &dsName);
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "_NET_WM_WINDOW_TYPE_", 20);
 	Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsName),
@@ -5576,7 +5576,7 @@ GetNetWmType(
 	    const char *name = Tk_GetAtomName(tkwin, atoms[n]);
 
 	    if (strncmp("_NET_WM_WINDOW_TYPE_", name, 20) == 0) {
-		Tcl_ExternalToUtfDString(NULL, name+20, -1, &ds);
+		(void)Tcl_ExternalToUtfDStringEx(NULL, name+20, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 		Tcl_UtfToLower(Tcl_DStringValue(&ds));
 		Tcl_ListObjAppendElement(interp, typePtr,
 			Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -5776,12 +5776,12 @@ Tk_GetRootCoords(
 	    continue;
 	}
 	if (winPtr->flags & TK_TOP_LEVEL) {
-	    TkWindow *otherPtr;
+	    Tk_Window otherPtr;
 
 	    if (!(winPtr->flags & TK_EMBEDDED)) {
 		break;
 	    }
-	    otherPtr = TkpGetOtherWindow(winPtr);
+	    otherPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (otherPtr == NULL) {
 		/*
 		 * The container window is not in the same application. Query
@@ -5806,7 +5806,7 @@ Tk_GetRootCoords(
 		 * query its coordinates.
 		 */
 
-		winPtr = otherPtr;
+		winPtr = (TkWindow *)otherPtr;
 		continue;
 	    }
 	}
@@ -5940,7 +5940,7 @@ Tk_CoordsToWindow(
 		if (child == wmPtr->wrapperPtr->window) {
 		    goto gotToplevel;
 		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
-                           TkpGetOtherWindow(wmPtr->winPtr) == NULL) {
+                           Tk_GetOtherWindow((Tk_Window)wmPtr->winPtr) == NULL) {
 
                     /*
                      * This toplevel is embedded in a window belonging to
@@ -6040,7 +6040,7 @@ Tk_CoordsToWindow(
 	     * the toplevel for the embedded application and start processing
 	     * that toplevel from scratch.
 	     */
-	    winPtr = TkpGetOtherWindow(nextPtr);
+	    winPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)nextPtr);
 	    if (winPtr == NULL) {
 		return (Tk_Window) nextPtr;
 	    }
@@ -7046,7 +7046,7 @@ CreateWrapper(
 
     /*
      * The code below is copied from CreateTopLevelWindow, Tk_MakeWindowExist,
-     * and TkpMakeWindow. The idea is to create an "official" Tk window (so
+     * and Tk_MakeWindow. The idea is to create an "official" Tk window (so
      * that we can get events on it), but to hide the window outside the
      * official Tk hierarchy so that it isn't visible to the application. See
      * the comments for the other functions if you have questions about this
@@ -7386,7 +7386,7 @@ UpdateCommand(
     offsets = (int *)ckalloc(sizeof(int) * wmPtr->cmdArgc);
     Tcl_DStringInit(&cmds);
     for (i = 0; i < wmPtr->cmdArgc; i++) {
-	Tcl_UtfToExternalDString(NULL, wmPtr->cmdArgv[i], -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->cmdArgv[i], -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	offsets[i] = Tcl_DStringLength(&cmds);
 	Tcl_DStringAppend(&cmds, Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds)+1);
