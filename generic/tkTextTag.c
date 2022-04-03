@@ -33,39 +33,17 @@
 # define DEBUG(expr) expr
 #endif
 
-/*
- * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
- * option of tags in a Text widget. These values are used as indices into the
- * string table below. Tags are allowed an empty wrap value, but the widget as
- * a whole is not.
- */
-
-static const char *const wrapStrings[] = {
-    "char", "none", "word", "codepoint", NULL
-};
-
-/*
- * The 'TkTextTabStyle' enum in tkText.h is used to define a type for the
- * -tabstyle option of the Text widget. These values are used as indices into
- * the string table below. Tags are allowed an empty wrap value, but the
- * widget as a whole is not.
- */
-
-static const char *const tabStyleStrings[] = {
-    "tabular", "wordprocessor", "", NULL
-};
-
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, attrs.border), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-bgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
-	"0", offsetof(TkTextTag, attrs.borderWidthPtr), offsetof(TkTextTag, attrs.borderWidth),
-	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
-    {TK_OPTION_STRING, "-elide", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextTag, elideString),
-	TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
+	NULL, offsetof(TkTextTag, attrs.borderWidthPtr), offsetof(TkTextTag, attrs.borderWidth),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
+	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elide),
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-eolcolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, eolColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-fgstipple", NULL, NULL,
@@ -86,23 +64,23 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-inactiveselectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, inactiveSelFgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-indentbackground", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextTag, indentBgString),
-	TK_OPTION_DONT_SET_DEFAULT|TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL,
+	NULL, offsetof(TkTextTag, indentBgPtr), offsetof(TkTextTag, indentBg),
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-lang", NULL, NULL,
 	NULL, offsetof(TkTextTag, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-lmargin1", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMargin1String), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-lmargin2", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMargin2String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
+	NULL, offsetof(TkTextTag, lMargin1Ptr), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
+	NULL, offsetof(TkTextTag, lMargin2Ptr), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-offset", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-overstrike", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-offset", NULL, NULL,
+	NULL, offsetof(TkTextTag, offsetPtr), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
+	NULL, offsetof(TkTextTag, overstrikePtr), offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
@@ -111,26 +89,26 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 #endif /* SUPPORT_DEPRECATED_TAG_OPTIONS */
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, offsetof(TkTextTag, reliefPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-rmargin", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
+	NULL, offsetof(TkTextTag, rMarginPtr), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing1", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, spacing1String), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing2", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, spacing2String), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing3", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, spacing3String), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-spacing1", NULL, NULL,
+	NULL, offsetof(TkTextTag, spacing1Ptr), offsetof(TkTextTag, spacing1), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-spacing2", NULL, NULL,
+	NULL, offsetof(TkTextTag, spacing2Ptr), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
+	NULL, offsetof(TkTextTag, spacing3Ptr), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tabStyleStrings, 0},
-    {TK_OPTION_STRING, "-underline", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineString), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
+    {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
+	NULL, offsetof(TkTextTag, underlinePtr), offsetof(TkTextTag, underline), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
@@ -140,7 +118,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-undo", NULL, NULL,
 	"1", TCL_INDEX_NONE, offsetof(TkTextTag, undo), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK, wrapStrings, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK, tkTextWrapStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -221,12 +199,11 @@ typedef struct UndoTokenTagPriority {
 
 static Tcl_Obj *
 UndoChangeTagPriorityGetCommand(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextUndoToken *item)
 {
     const UndoTokenTagPriority *token = (const UndoTokenTagPriority *) item;
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("priority", -1));
@@ -251,11 +228,10 @@ UndoChangeTagPriorityPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) undoInfo->token;
     unsigned oldPriority = token->tagPtr->priority;
-    (void)isRedo;
 
     ChangeTagPriority(sharedTextPtr, token->tagPtr, token->priority, 1);
 
@@ -270,10 +246,9 @@ static void
 UndoChangeTagPriorityDestroy(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *item,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     UndoTokenTagPriority *token = (UndoTokenTagPriority *) item;
-    (void)isRedo;
 
     TkTextReleaseTag(sharedTextPtr, token->tagPtr, NULL);
 }
@@ -342,7 +317,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
-	if (tagPtr->elide) {
+	if (tagPtr->elide >= 0) {
 	    /*
 	     * Indices are potentially obsolete after adding or removing
 	     * elided character ranges, especially indices having "display"
@@ -1025,16 +1000,16 @@ TkTextUpdateTagDisplayFlags(
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
 
-    if (tagPtr->elideString
+    if (tagPtr->elidePtr
 	    || tagPtr->tkfont
 	    || tagPtr->justifyString
-	    || tagPtr->lMargin1String
-	    || tagPtr->lMargin2String
-	    || tagPtr->offsetString
-	    || tagPtr->rMarginString
-	    || tagPtr->spacing1String
-	    || tagPtr->spacing2String
-	    || tagPtr->spacing3String
+	    || tagPtr->lMargin1Ptr
+	    || tagPtr->lMargin2Ptr
+	    || tagPtr->offsetPtr
+	    || tagPtr->rMarginPtr
+	    || tagPtr->spacing1Ptr
+	    || tagPtr->spacing2Ptr
+	    || tagPtr->spacing3Ptr
 	    || tagPtr->tabStringPtr
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR
@@ -1050,7 +1025,7 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->inactiveSelBorder
 	    || tagPtr->reliefPtr
 	    || tagPtr->bgStipple != None
-	    || tagPtr->indentBgString
+	    || tagPtr->indentBg >= 0
 	    || tagPtr->attrs.fgColor
 	    || tagPtr->attrs.inactiveFgColor
 	    || tagPtr->selFgColor
@@ -1058,9 +1033,9 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->fgStipple != None
 	    || tagPtr->eolColor
 	    || tagPtr->hyphenColor
-	    || tagPtr->overstrikeString
+	    || tagPtr->overstrike >= 0
 	    || tagPtr->overstrikeColor
-	    || tagPtr->underlineString
+	    || tagPtr->underline >= 0
 	    || tagPtr->underlineColor
 	    || tagPtr->lMarginColor
 	    || tagPtr->rMarginColor) {
@@ -1115,7 +1090,7 @@ TkConfigureTag(
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
     Tcl_Obj *reliefPtr = tagPtr->reliefPtr;
-    const char *elideString = tagPtr->elideString;
+    Tcl_Obj *elidePtr = tagPtr->elidePtr;
     int elide = tagPtr->elide;
     int undo = tagPtr->undo;
     int affectsDisplay = tagPtr->affectsDisplay;
@@ -1185,11 +1160,6 @@ TkConfigureTag(
     } else {
 	memset(tagPtr->lang, 0, 3);
     }
-    if (tagPtr->indentBgString) {
-	if (Tcl_GetBoolean(interp, tagPtr->indentBgString, &tagPtr->indentBg) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
     if (tagPtr->reliefPtr) {
 	if (Tk_GetReliefFromObj(interp, tagPtr->reliefPtr, &tagPtr->relief) != TCL_OK) {
 	    rc = TCL_ERROR;
@@ -1221,54 +1191,13 @@ TkConfigureTag(
 	    tagPtr->justify = (TkTextJustify)j;
 	}
     }
-    if (tagPtr->lMargin1String) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
-    if (tagPtr->lMargin2String) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
-    if (tagPtr->offsetString) {
-	if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
-		&tagPtr->offset) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
-    if (tagPtr->overstrikeString) {
-	if (Tcl_GetBoolean(interp, tagPtr->overstrikeString, &tagPtr->overstrike) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
-    if (tagPtr->rMarginString) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
-    if (tagPtr->spacing1String) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
+    if (tagPtr->spacing1Ptr) {
 	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
     }
-    if (tagPtr->spacing2String) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
+    if (tagPtr->spacing2Ptr) {
 	tagPtr->spacing2 = MAX(0, tagPtr->spacing2);
     }
-    if (tagPtr->spacing3String) {
-	if (Tk_GetPixels(interp, textPtr->tkwin,
-		tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
+    if (tagPtr->spacing3Ptr) {
 	tagPtr->spacing3 = MAX(0, tagPtr->spacing3);
     }
     if (tagPtr->tabArrayPtr) {
@@ -1290,13 +1219,8 @@ TkConfigureTag(
 	    affectsDisplay = 1;
 	}
     }
-    if (tagPtr->underlineString) {
-	if (Tcl_GetBoolean(interp, tagPtr->underlineString, &tagPtr->underline) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    }
-    if (tagPtr->elideString) {
-	if (!elideString) {
+    if (tagPtr->elidePtr) {
+	if (!elidePtr) {
 	    sharedTextPtr->numElisionTags += 1;
 	}
 
@@ -1306,16 +1230,12 @@ TkConfigureTag(
 	     * to 'true' (this would cause errors, because this case is not implemented).
 	     */
 
-	    free(tagPtr->elideString);
-	    tagPtr->elideString = NULL;
-	    tagPtr->elide = 0;
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
-            Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
-	    rc = TCL_ERROR;
-	}
-
-	if (Tcl_GetBoolean(interp, tagPtr->elideString, &tagPtr->elide) != TCL_OK) {
+	    Tcl_DecrRefCount(tagPtr->elidePtr);
+	    tagPtr->elidePtr = NULL;
+	    tagPtr->elide = -1;
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
 	    rc = TCL_ERROR;
 	}
 
@@ -1327,7 +1247,7 @@ TkConfigureTag(
 
 	TkBTreeIncrEpoch(sharedTextPtr->tree);
     } else {
-	if (elideString) {
+	if (elidePtr) {
 	    sharedTextPtr->numElisionTags -= 1;
 	}
 	tagPtr->elide = 0;
@@ -1375,7 +1295,7 @@ TkConfigureTag(
 	}
     }
 
-    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elideString);
+    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elidePtr);
     TkBitPut(sharedTextPtr->affectDisplayTags, tagPtr->index, tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->notAffectDisplayTags, tagPtr->index, !tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->affectGeometryTags, tagPtr->index, tagPtr->affectsDisplayGeometry);
@@ -1387,7 +1307,7 @@ TkConfigureTag(
 		tagPtr->affectsDisplayGeometry);
     }
 
-    if (!tagPtr->elideString != !elideString || (tagPtr->elideString && elide != tagPtr->elide)) {
+    if (!tagPtr->elidePtr != !elidePtr || (tagPtr->elidePtr && elide != tagPtr->elide)) {
 	/*
 	 * Eventually we have to insert/remove branches and links according to
 	 * the elide information of this tag.
@@ -1718,17 +1638,15 @@ TkTextTagChangedUndoRedo(
 static void
 GrabSelection(
     TkText *textPtr,		/* Info about overall widget. */
-    const TkTextTag *tagPtr,	/* Tag which has been modified. */
+    TCL_UNUSED(const TkTextTag *),	/* Tag which has been modified. */
     int add,			/* 'true' means that we have added the "sel" tag;
 				 * 'false' means we have removed the "sel" tag. */
     int changed)		/* 'false' means that the selection has not changed, nevertheless
     				 * the text widget should become the owner again. */
 {
     int ownSelection = add && textPtr->exportSelection && !(textPtr->flags & GOT_SELECTION);
-    (void)tagPtr;
 
     assert(textPtr);
-    assert(tagPtr == textPtr->selTagPtr);
 
     if (changed || ownSelection) {
 	/*
@@ -2026,7 +1944,7 @@ TkTextCreateTag(
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
     tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
-    tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
+    tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;
     tagPtr->sharedTextPtr = sharedTextPtr;
@@ -3521,8 +3439,6 @@ AddSet(
     const TkTextTagSet *src)
 {
     TkBitField *cmpl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
-    (void)sharedTextPtr;
-    (void)src;
 
     dst = AddBits(dst, cmpl);
     TkBitDecrRefCount(cmpl);
@@ -3536,8 +3452,6 @@ AddComplementSet(
     const TkTextTagSet *src)
 {
     TkBitField *cmpl = TkTextTagSetToBits(src, TkBitSize(sharedTextPtr->usedTags));
-    (void)sharedTextPtr;
-    (void)src;
 
     dst = AddComplementBits(dst, cmpl);
     TkBitDecrRefCount(cmpl);

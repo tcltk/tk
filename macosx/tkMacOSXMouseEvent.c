@@ -361,7 +361,7 @@ enum {
     local.x = floor(local.x);
     local.y = floor(eventWindow.frame.size.height - local.y);
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	if (Tk_IsTopLevel(contPtr)) {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
@@ -406,12 +406,15 @@ enum {
 	target = Tk_TopCoordsToWindow(tkwin, local.x, local.y, &win_x, &win_y);
     }
 
+
+    grabWinPtr = winPtr->dispPtr->grabWinPtr;
+
     /*
      * Ignore the event if a local grab is in effect and the Tk window is
      * not in the grabber's subtree.
      */
 
-    grabWinPtr = winPtr->dispPtr->grabWinPtr;
+
     if (grabWinPtr && /* There is a grab in effect ... */
 	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
@@ -426,6 +429,29 @@ enum {
 	}
 	if (w != (Tk_Window)grabWinPtr) {
 	    return theEvent;
+	}
+    }
+
+    /*
+     * Ignore the event if a global grab is in effect and the Tk window is
+     * not in the grabber's subtree.
+     */
+
+    if (grabWinPtr && /* There is a grab in effect ... */
+	winPtr->dispPtr->grabFlags && /* and it is a global grab ... */
+	grabWinPtr->mainPtr == winPtr->mainPtr) { /* in the same application. */
+	Tk_Window w;
+	if (!target) {
+	    return theEvent;
+	}
+	for (w = target; !Tk_IsTopLevel(w); w = Tk_Parent(w)) {
+	    if (w == (Tk_Window)grabWinPtr) {
+		break;
+	    }
+	}
+	if (w != (Tk_Window)grabWinPtr) {
+	    /* Force the focus back to the grab window. */
+	    TkpChangeFocus(grabWinPtr, 1);
 	}
     }
 
@@ -639,10 +665,10 @@ TkMacOSXButtonKeyState(void)
 
 Bool
 XQueryPointer(
-    Display *display,
+    TCL_UNUSED(Display *),
     Window w,
-    Window *root_return,
-    Window *child_return,
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Window *),
     int *root_x_return,
     int *root_y_return,
     int *win_x_return,
@@ -651,9 +677,6 @@ XQueryPointer(
 {
     int getGlobal = (root_x_return && root_y_return);
     int getLocal = (win_x_return && win_y_return && w != None);
-    (void)display;
-    (void)root_return;
-    (void)child_return;
 
     if (getGlobal || getLocal) {
 	NSPoint global = [NSEvent mouseLocation];
