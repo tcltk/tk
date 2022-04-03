@@ -14,6 +14,18 @@ tcltest::loadTestedCommands
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
+# Platform specific procedure for updating the spinbox widget.
+
+if {[tk windowingsystem] == "aqua"} {
+    proc updateSpin {} {
+	update idletasks
+    }
+} else {
+    proc updateSpin {} {
+	update
+    }
+}
+
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -2017,15 +2029,14 @@ test spinbox-5.7 {ConfigureSpinbox procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    update idletasks
-    set timeout [after 500 {set scrollInfo {-1000000 -1000000}}]
+    updateSpin
+    set scrollInfo wrong
     .e configure -width 5
-    vwait scrollInfo
+    updateSpin
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
-    after cancel $timeout
-} -result {0.000000 0.363636}
+} -result {0.000000 0.454545}
 
 test spinbox-5.8 {ConfigureSpinbox procedure} -constraints {
     fonts
