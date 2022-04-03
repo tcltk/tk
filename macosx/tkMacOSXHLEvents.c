@@ -227,7 +227,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 	if (fileURL == nil) {
 	    continue;
 	}
-	Tcl_ExternalToUtfDStringEx(utf8, [[fileURL path] UTF8String], -1,
+	(void)Tcl_ExternalToUtfDStringEx(utf8, [[fileURL path] UTF8String], -1,
 		TCL_ENCODING_NOCOMPLAIN, &pathName);
 	Tcl_DStringAppendElement(openCommand, Tcl_DStringValue(&pathName));
 	Tcl_DStringFree(&pathName);

@@ -175,7 +175,7 @@ TkpGetString(
 	    len = 0;
 	}
 	Tcl_DStringSetLength(&buf, len);
-	Tcl_ExternalToUtfDStringEx(NULL, Tcl_DStringValue(&buf), len, TCL_ENCODING_NOCOMPLAIN, dsPtr);
+	(void)Tcl_ExternalToUtfDStringEx(NULL, Tcl_DStringValue(&buf), len, TCL_ENCODING_NOCOMPLAIN, dsPtr);
 	Tcl_DStringFree(&buf);
 #endif /* X_HAVE_UTF8_STRING */
     } else

@@ -132,7 +132,7 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = (char *)GlobalLock(handle);
-	Tcl_ExternalToUtfDStringEx(encoding, data, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_ExternalToUtfDStringEx(encoding, data, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	GlobalUnlock(handle);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);

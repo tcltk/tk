@@ -1064,7 +1064,7 @@ Tk_MeasureChars(
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
 			TCL_ENCODING_NOCOMPLAIN, p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1082,7 +1082,7 @@ Tk_MeasureChars(
 	    p = next;
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDStringEx(familyPtr->encoding, source, p - source,
+	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source, p - source,
 		TCL_ENCODING_NOCOMPLAIN, &runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1331,7 +1331,7 @@ Tk_DrawChars(
 		do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
 
-		Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
 			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y,
