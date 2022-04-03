@@ -4755,6 +4755,20 @@ test textDisp-32.3 "NULL undisplayProc problems: #1791052" -setup {
     image delete $img
     destroy .tt
 }
+test textDisp-32.4 {Button-1 click with elided lines - Bug 18371b7ce7} -setup {
+    pack [text .tt -borderwidth 0 -highlightthickness 0]
+    for {set n 1} {$n <= 5} {incr n} {
+	.tt insert end "Line $n\n"
+    }
+    .tt tag configure Elided -elide 1
+    .tt tag add Elided 1.2 4.0
+    update
+} -body {
+    event generate .tt <Button-1> -x 1 -y 1
+    .tt index insert
+} -cleanup {
+    destroy .tt
+} -result {1.0}
 
 test textDisp-33.0 {one line longer than fits in the widget} {
     pack [text .tt -wrap char]

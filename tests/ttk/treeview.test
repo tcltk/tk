@@ -490,8 +490,9 @@ test treeview-8.8 "<<TreeviewSelect>> when setting the selection" -body {
     set val 2
     .tv selection set myItem1  ; # <<TreeviewSelect>> triggers
     update
+    # Current implementation generates an event for this case
     set val 3
-    .tv selection set myItem1  ; # no <<TreeviewSelect>> (already selected)
+    .tv selection set myItem1  ; # (already selected)
     update
     set val 4
     .tv selection set {myItem1 myItem2}  ; # <<TreeviewSelect>> triggers
@@ -500,7 +501,9 @@ test treeview-8.8 "<<TreeviewSelect>> when setting the selection" -body {
     .tv selection set {myItem2}  ; # <<TreeviewSelect>> triggers
     update
     set res
-} -result {2 4 5}
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
+} -result {2 3 4 5}
 
 test treeview-8.9 "<<TreeviewSelect>> when removing items from the selection" -body {
     .tv delete [.tv children {}]
@@ -519,6 +522,8 @@ test treeview-8.9 "<<TreeviewSelect>> when removing items from the selection" -b
     .tv selection remove myItem1  ; # no <<TreeviewSelect>> (selection unchanged)
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {2}
 
 test treeview-8.10 "<<TreeviewSelect>> when adding items in the selection" -body {
@@ -539,6 +544,8 @@ test treeview-8.10 "<<TreeviewSelect>> when adding items in the selection" -body
     .tv selection add myItem3  ; # <<TreeviewSelect>> triggers
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {1 3}
 
 test treeview-8.11 "<<TreeviewSelect>> when toggling" -body {
@@ -562,6 +569,8 @@ test treeview-8.11 "<<TreeviewSelect>> when toggling" -body {
     .tv selection toggle {myItem3 myItem2}  ; # <<TreeviewSelect>> triggers
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {2 3 4}
 
 ### NEED: more tests for see/yview/scrolling
