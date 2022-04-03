@@ -278,12 +278,10 @@ AppendName(
 
 static Tcl_Obj *
 UndoToggleGravityGetCommand(
-    const TkSharedText *sharedTextPtr,
-    const TkTextUndoToken *item)
+    TCL_UNUSED(const TkSharedText *),
+    TCL_UNUSED(const TkTextUndoToken *))
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
-    (void)item;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("gravity", -1));
@@ -375,13 +373,12 @@ UndoMoveMarkDestroy(
 
 static Tcl_Obj *
 UndoSetMarkGetCommand(
-    const TkSharedText *sharedTextPtr,
+    TCL_UNUSED(const TkSharedText *),
     const TkTextUndoToken *item)
 {
     const UndoTokenSetMark *token = (const UndoTokenSetMark *) item;
     const char *operation = POINTER_IS_MARKED(token->markPtr) ? "unset" : "set";
     Tcl_Obj *objPtr = Tcl_NewObj();
-    (void)sharedTextPtr;
 
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", -1));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(operation, -1));
@@ -428,13 +425,11 @@ static void
 UndoSetMarkDestroy(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *item,
-    int reused)
+    TCL_UNUSED(int))
 {
     UndoTokenSetMark *token = (UndoTokenSetMark *) item;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
-    (void)reused;
 
-    assert(!reused);
     assert(!markPtr->body.mark.changePtr);
 
     MarkDeleteProc(sharedTextPtr, markPtr, DELETE_CLEANUP);
@@ -445,11 +440,10 @@ RedoSetMarkPerform(
     TkSharedText *sharedTextPtr,
     TkTextUndoInfo *undoInfo,
     TkTextUndoInfo *redoInfo,
-    int isRedo)
+    TCL_UNUSED(int))
 {
     RedoTokenSetMark *token = (RedoTokenSetMark *) undoInfo->token;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
-    (void)isRedo;
 
     assert(!markPtr->body.mark.changePtr);
     assert(TkTextIsNormalMark(markPtr));
@@ -478,13 +472,11 @@ static void
 RedoSetMarkDestroy(
     TkSharedText *sharedTextPtr,
     TkTextUndoToken *item,
-    int reused)
+    TCL_UNUSED(int))
 {
     RedoTokenSetMark *token = (RedoTokenSetMark *) item;
     TkTextSegment *markPtr = (TkTextSegment *)GET_POINTER(token->markPtr);
-    (void)reused;
 
-    assert(!reused);
     assert(!markPtr->body.mark.changePtr);
     MarkDeleteProc(sharedTextPtr, markPtr, DELETE_MARKS);
 }
@@ -1545,11 +1537,9 @@ TriggerWatchCursor(
 
 void
 TkTextReleaseUndoMarkTokens(
-    TkSharedText *sharedTextPtr,
+    TCL_UNUSED(TkSharedText *),
     TkTextMarkChange *changePtr)
 {
-    (void)sharedTextPtr;
-    assert(sharedTextPtr);
     assert(changePtr);
 
     if (!changePtr->markPtr) {
@@ -2489,22 +2479,16 @@ static int
 MarkLayoutProc(
     const TkTextIndex *indexPtr,/* Identifies first character in chunk. */
     TkTextSegment *segPtr,	/* Segment corresponding to indexPtr. */
-    int offset,			/* Offset within segPtr corresponding to indexPtr (always 0). */
-    int maxX,			/* Chunk must not occupy pixels at this position or higher. */
-    int maxChars,		/* Chunk must not include more than this many characters. */
-    int noCharsYet,		/* 'true' means no characters have been assigned to this line yet. */
-    TkWrapMode wrapMode,	/* Not used. */
-    TkTextSpaceMode spaceMode,	/* Not used. */
+    TCL_UNUSED(int),			/* Offset within segPtr corresponding to indexPtr (always 0). */
+    TCL_UNUSED(int),			/* Chunk must not occupy pixels at this position or higher. */
+    TCL_UNUSED(int),		/* Chunk must not include more than this many characters. */
+    TCL_UNUSED(int),		/* 'true' means no characters have been assigned to this line yet. */
+    TCL_UNUSED(TkWrapMode),	/* Not used. */
+    TCL_UNUSED(TkTextSpaceMode),	/* Not used. */
     TkTextDispChunk *chunkPtr)	/* Structure to fill in with information about this chunk. The x
     				 * field has already been set by the caller. */
 {
     TkText *textPtr = indexPtr->textPtr;
-    (void)offset;
-    (void)maxX;
-    (void)maxChars;
-    (void)noCharsYet;
-    (void)wrapMode;
-    (void)spaceMode;
 
     assert(indexPtr->textPtr);
 
@@ -2551,7 +2535,7 @@ TkTextDrawBlockCursor(
     TkText *textPtr)		/* The current text widget. */
 {
     if (textPtr->blockCursorType) {
-	if (textPtr->flags & HAVE_FOCUS) {
+	if (textPtr->flags & GOT_FOCUS) {
 	    if ((textPtr->flags & INSERT_ON) || textPtr->selAttrs.border == textPtr->insertBorder) {
 		return 1;
 	    }
@@ -2672,12 +2656,11 @@ TkTextGetCursorBbox(
 unsigned
 TkTextGetCursorWidth(
     TkText *textPtr,		/* The current text widget. */
-    int *x,			/* Shift x coordinate, can be NULL. */
+    TCL_UNUSED(int *),			/* Shift x coordinate, can be NULL. */
     int *extent)		/* Extent of cursor to left side, can be NULL. */
 {
     int width;
     int cursorExtent = MAX(1, textPtr->insertWidth/2);
-    (void)x;
 
     if (extent) {
 	*extent = -cursorExtent;
@@ -2721,16 +2704,14 @@ TkrTextInsertDisplayProc(
     int y,			/* Y-position at which to draw this chunk in dst (x-position
     				 * is in the chunk itself). */
     int height,			/* Total height of line. */
-    int baseline,		/* Offset of baseline from y. */
-    Display *display,		/* Display to use for drawing. */
+    TCL_UNUSED(int),		/* Offset of baseline from y. */
+    TCL_UNUSED(Display *),		/* Display to use for drawing. */
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
     int screenY)		/* Y-coordinate in text window that corresponds to y. */
 {
     int halfWidth = textPtr->insertWidth/2;
     int width = TkTextGetCursorWidth(textPtr, &x, NULL);
     int rightSideWidth = MAX(1, width + halfWidth - textPtr->insertWidth);
-    (void)baseline;
-    (void)display;
 
     if ((x + rightSideWidth) < 0) {
 	/*
@@ -2766,7 +2747,7 @@ TkrTextInsertDisplayProc(
      * the cursor.
      */
 
-    if (textPtr->flags & HAVE_FOCUS) {
+    if (textPtr->flags & GOT_FOCUS) {
 	if (textPtr->flags & INSERT_ON) {
 	    Tk_Fill3DRectangle(textPtr->tkwin, dst, textPtr->insertBorder, x, y,
 		    width, height, textPtr->insertBorderWidth, TK_RELIEF_RAISED);
@@ -2813,11 +2794,9 @@ TkrTextInsertDisplayProc(
 
 static void
 InsertUndisplayProc(
-    TkText *textPtr,		/* Overall information about text widget. */
+    TCL_UNUSED(TkText *),		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
-    (void)textPtr;
-
     chunkPtr->clientData = NULL;
     return;
 }

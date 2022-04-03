@@ -125,11 +125,14 @@
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE).
+ * (TCL_INDEX_TEMP_TABLE) or not having TIP #613 (TCL_INDEX_NULL_OK).
  */
 
 #if !defined(TCL_INDEX_TEMP_TABLE)
 #   define TCL_INDEX_TEMP_TABLE 2
+#endif
+#if !defined(TCL_INDEX_NULL_OK)
+#   define TCL_INDEX_NULL_OK 4
 #endif
 
 /*
@@ -456,8 +459,14 @@ typedef struct TkDisplay {
 				 * by that container. */
     int geomInit;
 
-#define TkGetContainer(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
-    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+    /*
+     * Information used by tkGrid.c, tkPack.c, tkPlace.c, tkPointer.c,
+     * and ttkMacOSXTheme.c:
+     */
+
+#define TkGetContainer(tkwin) (Tk_TopWinHierarchy((TkWindow *)tkwin) ? NULL : \
+	(((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+	 ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr))
 
     /*
      * Information used by tkGet.c only:
@@ -893,13 +902,13 @@ typedef struct TkWindow {
     ClientData *tagPtr;		/* Points to array of tags used for bindings
 				 * on this window. Each tag is a Tk_Uid.
 				 * Malloc'ed. NULL means no tags. */
-    int numTags;		/* Number of tags at *tagPtr. */
+    TkSizeT numTags;		/* Number of tags at *tagPtr. */
 
     /*
      * Information used by tkOption.c to manage options for the window.
      */
 
-    int optionLevel;		/* -1 means no option information is currently
+    TkSizeT optionLevel;		/* TCL_INDEX_NONE means no option information is currently
 				 * cached for this window. Otherwise this
 				 * gives the level in the option stack at
 				 * which info is cached. */
@@ -992,6 +1001,9 @@ MODULE_SCOPE const char *const tkJustifyStrings[];
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
 #ifdef _WIN32
+#   ifndef XMaxTransChars
+#	define XMaxTransChars 7
+#   endif
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;

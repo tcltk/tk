@@ -1568,7 +1568,7 @@ TkMacOSXGetClipRgn(
 /*
  *----------------------------------------------------------------------
  *
- * TkpClipDrawableToRect --
+ * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
  *	or height are negative, reset to no clipping.
@@ -1583,7 +1583,7 @@ TkMacOSXGetClipRgn(
  */
 
 void
-TkpClipDrawableToRect(
+Tk_ClipDrawableToRect(
     TCL_UNUSED(Display *),
     Drawable d,
     int x, int y,
@@ -1684,7 +1684,7 @@ TkMacOSXMakeStippleMap(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawHighlightBorder --
+ * Tk_DrawHighlightBorder --
  *
  *	This procedure draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
@@ -1706,7 +1706,7 @@ TkMacOSXMakeStippleMap(
  */
 
 void
-TkpDrawHighlightBorder (
+Tk_DrawHighlightBorder (
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,

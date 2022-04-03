@@ -323,7 +323,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 static const Tk_OptionSpec itemAttrOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, border),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     TK_OPTION_NULL_OK,
      DEF_LISTBOX_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
      NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
@@ -331,14 +331,14 @@ static const Tk_OptionSpec itemAttrOptionSpecs[] = {
      NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, fgColor),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
+     TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, selBorder),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     TK_OPTION_NULL_OK,
      DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, selFgColor),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
+     TK_OPTION_NULL_OK,
      DEF_LISTBOX_SELECT_FG_MONO, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
@@ -2192,10 +2192,10 @@ DisplayListbox(
 	bgGC = Tk_GCForColor(listPtr->highlightBgColorPtr, pixmap);
 	if (listPtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(listPtr->highlightColorPtr, pixmap);
-	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC,
 		    listPtr->highlightWidth, pixmap);
 	} else {
-	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC,
 		    listPtr->highlightWidth, pixmap);
 	}
     }

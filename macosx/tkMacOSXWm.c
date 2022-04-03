@@ -1125,6 +1125,13 @@ TkWmDeadWindow(
 	 * preventing zombies is to set the key window to nil.
 	 */
 
+
+	/*
+	 * Fix bug 5692042764:
+	 * set tkEventTarget to NULL when there is no window to send Tk events to.
+	 */
+	TkWindow *newTkEventTarget = NULL;
+
 	for (NSWindow *w in [NSApp orderedWindows]) {
 	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 	    BOOL isOnScreen;
@@ -1137,10 +1144,12 @@ TkWmDeadWindow(
 			  wmPtr2->hints.initial_state != WithdrawnState);
 	    if (w != deadNSWindow && isOnScreen && [w canBecomeKeyWindow]) {
 		[w makeKeyAndOrderFront:NSApp];
-		[NSApp setTkEventTarget:TkMacOSXGetTkWindow(w)];
+		newTkEventTarget = TkMacOSXGetTkWindow(w);
 		break;
 	    }
 	}
+
+	[NSApp setTkEventTarget:newTkEventTarget];
 
 	/*
 	 * Prevent zombies on systems with a TouchBar.
@@ -1152,7 +1161,6 @@ TkWmDeadWindow(
 	}
 	[deadNSWindow close];
 	[deadNSWindow release];
-	[NSApp _resetAutoreleasePool];
 
 #if DEBUG_ZOMBIES > 1
 	fprintf(stderr, "================= Pool dump ===================\n");
@@ -4448,7 +4456,7 @@ UpdateGeometryInfo(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+	Tk_Window contWinPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	/*
 	 * TODO: Here we should handle out of process embedding.
@@ -4465,7 +4473,7 @@ UpdateGeometryInfo(
 
 	    wmPtr->x = wmPtr->y = 0;
 	    wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
-	    Tk_GeometryRequest((Tk_Window)contWinPtr, width, height);
+	    Tk_GeometryRequest(contWinPtr, width, height);
 	}
 	return;
     }
@@ -4738,7 +4746,7 @@ Tk_GetRootCoords(
 		break;
 	    }
 
-	    otherPtr = TkpGetOtherWindow(winPtr);
+	    otherPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (otherPtr == NULL) {
 		break;
 	    }
@@ -4821,7 +4829,7 @@ Tk_CoordsToWindow(
 	 */
 
 	if (Tk_IsContainer(winPtr)) {
-	    childPtr = TkpGetOtherWindow(winPtr);
+	    childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (childPtr != NULL) {
 		if (Tk_IsMapped(childPtr)) {
 		    tmpx = x - childPtr->changes.x;
@@ -4902,14 +4910,12 @@ Tk_TopCoordsToWindow(
     TkWindow *nextPtr;		/* Coordinates of highest child found so far
 				 * that contains point. */
     int x, y;			/* Coordinates in winPtr. */
-    Window *children;		/* Children of winPtr, or NULL. */
 
     winPtr = (TkWindow *)tkwin;
     x = rootX;
     y = rootY;
     while (1) {
 	nextPtr = NULL;
-	children = NULL;
 
 	/*
 	 * Container windows cannot have children. So if it is a container,
@@ -4917,7 +4923,7 @@ Tk_TopCoordsToWindow(
 	 */
 
 	if (Tk_IsContainer(winPtr)) {
-	    childPtr = TkpGetOtherWindow(winPtr);
+	    childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (childPtr != NULL) {
 		if (Tk_IsMapped(childPtr) &&
 			x > childPtr->changes.x &&
@@ -6267,7 +6273,7 @@ TkMacOSXMakeRealWindowExist(
      */
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	if (contWinPtr != NULL) {
 	    TkMacOSXMakeRealWindowExist(

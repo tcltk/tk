@@ -1985,23 +1985,23 @@ FillStyle(
     if (fgColor != NULL)                { stylePtr->fgColor = fgColor; }
     if (tagPtr->reliefPtr)              { stylePtr->relief = tagPtr->relief; }
     if (tagPtr->bgStipple != None)      { stylePtr->bgStipple = tagPtr->bgStipple; }
-    if (tagPtr->indentBgString != NULL) { stylePtr->indentBg = tagPtr->indentBg; }
+    if (tagPtr->indentBg >= 0)          { stylePtr->indentBg = tagPtr->indentBg; }
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
     if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
-    if (tagPtr->lMargin1String)         { stylePtr->lMargin1 = tagPtr->lMargin1; }
-    if (tagPtr->lMargin2String)         { stylePtr->lMargin2 = tagPtr->lMargin2; }
+    if (tagPtr->lMargin1Ptr)            { stylePtr->lMargin1 = tagPtr->lMargin1; }
+    if (tagPtr->lMargin2Ptr)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
-    if (tagPtr->offsetString)           { stylePtr->offset = tagPtr->offset; }
-    if (tagPtr->rMarginString)          { stylePtr->rMargin = tagPtr->rMargin; }
+    if (tagPtr->offsetPtr)              { stylePtr->offset = tagPtr->offset; }
+    if (tagPtr->rMarginPtr)             { stylePtr->rMargin = tagPtr->rMargin; }
     if (tagPtr->rMarginColor)           { stylePtr->rMarginColor = tagPtr->rMarginColor; }
-    if (tagPtr->spacing1String)         { stylePtr->spacing1 = tagPtr->spacing1; }
-    if (tagPtr->spacing2String)         { stylePtr->spacing2 = tagPtr->spacing2; }
-    if (tagPtr->spacing3String)         { stylePtr->spacing3 = tagPtr->spacing3; }
+    if (tagPtr->spacing1Ptr)            { stylePtr->spacing1 = tagPtr->spacing1; }
+    if (tagPtr->spacing2Ptr)            { stylePtr->spacing2 = tagPtr->spacing2; }
+    if (tagPtr->spacing3Ptr)            { stylePtr->spacing3 = tagPtr->spacing3; }
     if (tagPtr->tabStringPtr)           { stylePtr->tabArrayPtr = tagPtr->tabArrayPtr; }
     if (tagPtr->eolColor)               { stylePtr->eolColor = tagPtr->eolColor; }
     if (tagPtr->hyphenColor)            { stylePtr->hyphenColor = tagPtr->hyphenColor; }
-    if (tagPtr->elideString)            { stylePtr->elide = tagPtr->elide; }
+    if (tagPtr->elidePtr)               { stylePtr->elide = tagPtr->elide; }
     if (tagPtr->langPtr)                { stylePtr->lang = tagPtr->lang; }
     if (tagPtr->hyphenRulesPtr)         { stylePtr->hyphenRules = tagPtr->hyphenRules; }
 
@@ -2016,7 +2016,7 @@ FillStyle(
 	stylePtr->borderWidth = tagPtr->attrs.borderWidth;
     }
 
-    if (tagPtr->overstrikeString) {
+    if (tagPtr->overstrike >= 0) {
 	stylePtr->overstrike = tagPtr->overstrike;
 	if (tagPtr->overstrikeColor != NULL) {
 	     stylePtr->overstrikeColor = tagPtr->overstrikeColor;
@@ -2025,7 +2025,7 @@ FillStyle(
 	}
     }
 
-    if (tagPtr->underlineString) {
+    if (tagPtr->underline >= 0) {
 	stylePtr->underline = tagPtr->underline;
 	if (tagPtr->underlineColor != NULL) {
 	    stylePtr->underlineColor = tagPtr->underlineColor;
@@ -2077,7 +2077,7 @@ MakeStyle(
     styleValues.lang = textPtr->lang;
     styleValues.hyphenRules = textPtr->hyphenRules;
 
-    haveFocus = !!(textPtr->flags & HAVE_FOCUS);
+    haveFocus = !!(textPtr->flags & GOT_FOCUS);
     borderPrio = -1;
 
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
@@ -2977,7 +2977,6 @@ LayoutFinalizeCharInfo(
     int gotTab)
 {
     CharInfo *ciPtr = (CharInfo *)data->chunkPtr->clientData;
-    (void)gotTab;
 
     assert(data->trimSpaces ?
 	    (TkSizeT)data->chunkPtr->numBytes >= ciPtr->numBytes :
@@ -3011,7 +3010,8 @@ LayoutFinalizeCharInfo(
     if (gotTab) {
 	data->baseChunkPtr = NULL;
     }
-
+#else
+    (void)gotTab;
 #endif
 }
 
@@ -3191,12 +3191,10 @@ LayoutMakeNewChunk(
 static void
 LayoutSkipBytes(
     LayoutData *data,
-    DLine *dlPtr,
+    TCL_UNUSED(DLine *),
     const TkTextIndex *indexPtr1,
     const TkTextIndex *indexPtr2)
 {
-    (void)dlPtr;
-
     LayoutMakeNewChunk(data);
     data->chunkPtr->layoutProcs = &layoutElideProcs;
     data->chunkPtr->numBytes = TkTextIndexCountBytes(indexPtr1, indexPtr2);
@@ -4941,7 +4939,7 @@ SaveDisplayLines(
  *	of the missing display lines.
  *
  *	If additional display line computation is required for the line
- *	metric computation, then these lines will ba cached, but only
+ *	metric computation, then these lines will be cached, but only
  *	the last produced lines which can fit into the widget (this means:
  *	no more lines than fitting into the widget will be cached).
  *
@@ -5186,7 +5184,7 @@ ComputeDisplayLineInfo(
  *	display line metric, which can only happen if a logical line
  *	is wrapping into several display lines. It may not be required
  *	to compute all missing display lines, the computation stops
- *	until the threshold has been reached. But the compuation will
+ *	until the threshold has been reached. But the computation will
  *	always stop at the end of the logical line.
  *
  *	Possible threshold types are THRESHOLD_BYTE_OFFSET,
@@ -5196,7 +5194,7 @@ ComputeDisplayLineInfo(
  *	relative to info->displayLineNo.
  *
  *	If additional display line computation is required for the line
- *	metric computation, then these lines will ba cached, but only
+ *	metric computation, then these lines will be cached, but only
  *	the last produced lines which can fit into the widget (this means:
  *	no more lines than fitting into the widget will be cached).
  *
@@ -6423,8 +6421,23 @@ DisplayDLine(
 		x = -chunkPtr->width;
 	    }
 
+            /*
+             * Refcount gymnastics here to prevent the resource from being released
+             * in case the displayProc destroys the widget.
+             */
+
+            textPtr->refCount += 1;
 	    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
 		    baseline, display, pixmap, screenY);
+            textPtr->refCount -= 1;
+
+	    if (TkTextReleaseIfDestroyed(textPtr)) {
+		/*
+	         * The displayProc invoked a binding that caused the widget
+	         * to be deleted. Don't do anything.
+	         */
+	        return;
+	    }
 
 	    if (dInfoPtr->dLinesInvalidated) {
 		/*
@@ -8636,7 +8649,7 @@ DisplayText(
 
     /*
      * Choose a new current item if that is needed (this could cause event
-     * handlers to be invoked, hence the preserve/release calls and the loop,
+     * handlers to be invoked, hence the refcount management and the loop,
      * since the handlers could conceivably necessitate yet another current
      * item calculation). The textPtr check is because the whole window could go
      * away in the meanwhile.
@@ -8845,12 +8858,12 @@ DisplayText(
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr, Tk_WindowId(textPtr->tkwin));
-	    if (textPtr->flags & HAVE_FOCUS) {
+	    if (textPtr->flags & GOT_FOCUS) {
 		fgGC = Tk_GCForColor(textPtr->highlightColorPtr, Tk_WindowId(textPtr->tkwin));
-		TkpDrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
+		Tk_DrawHighlightBorder(textPtr->tkwin, fgGC, bgGC,
 			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    } else {
-		TkpDrawHighlightBorder(textPtr->tkwin, bgGC, bgGC,
+		Tk_DrawHighlightBorder(textPtr->tkwin, bgGC, bgGC,
 			textPtr->highlightWidth, Tk_WindowId(textPtr->tkwin));
 	    }
 	}
@@ -8925,6 +8938,13 @@ DisplayText(
 		    LOG("tk_textRedraw", string);
 		}
 		DisplayDLine(textPtr, dlPtr, dlPtr->prevPtr, pixmap);
+		if ((textPtr->tkwin == NULL) || (textPtr->flags & DESTROYED)) {
+		    /*
+		     * DisplayDLine called a displayProc which invoked a binding
+		     * that caused the widget to be deleted. Don't do anything.
+		     */
+		    goto end;
+		}
 		if (dInfoPtr->dLinesInvalidated) {
 		    Tk_FreePixmap(Tk_Display(textPtr->tkwin), pixmap);
 		    goto doScrollbars;
@@ -12672,22 +12692,17 @@ TkTextGetDLineInfo(
 
 static void
 ElideBboxProc(
-    TkText *textPtr,
+    TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    int index,			/* Index of desired character within the chunk. */
+    TCL_UNUSED(int),			/* Index of desired character within the chunk. */
     int y,			/* Topmost pixel in area allocated for this line. */
-    int lineHeight,		/* Height of line, in pixels. */
-    int baseline,		/* Location of line's baseline, in pixels measured down from y. */
+    TCL_UNUSED(int),		/* Height of line, in pixels. */
+    TCL_UNUSED(int),		/* Location of line's baseline, in pixels measured down from y. */
     int *xPtr, int *yPtr,	/* Gets filled in with coords of character's upper-left pixel.
     				 * X-coord is in same coordinate system as chunkPtr->x. */
     int *widthPtr,		/* Gets filled in with width of character, in pixels. */
     int *heightPtr)		/* Gets filled in with height of character, in pixels. */
 {
-    (void)textPtr;
-    (void)index;
-    (void)lineHeight;
-    (void)baseline;
-
     *xPtr = chunkPtr->x;
     *yPtr = y;
     *widthPtr = *heightPtr = 0;
@@ -12699,12 +12714,9 @@ ElideBboxProc(
 
 static int
 ElideMeasureProc(
-    TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
-    int x)			/* X-coordinate, in same coordinate system as chunkPtr->x. */
+    TCL_UNUSED(TkTextDispChunk *),	/* Chunk containing desired coord. */
+    TCL_UNUSED(int))			/* X-coordinate, in same coordinate system as chunkPtr->x. */
 {
-    (void)chunkPtr;
-    (void)x;
-
     return 0;
 }
 
@@ -12767,7 +12779,7 @@ CharBboxProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
     int byteIndex,		/* Byte offset of desired character within the chunk */
     int y,			/* Topmost pixel in area allocated for this line. */
-    int lineHeight,		/* Height of line, in pixels. */
+    TCL_UNUSED(int),		/* Height of line, in pixels. */
     int baseline,		/* Location of line's baseline, in pixels measured down from y. */
     int *xPtr, int *yPtr,	/* Gets filled in with coords of character's upper-left pixel.
     				 * X-coord is in same coordinate system as chunkPtr->x. */
@@ -12778,7 +12790,6 @@ CharBboxProc(
     int offset = ciPtr->baseOffset + byteIndex;
     int maxX = chunkPtr->width + chunkPtr->x;
     int nextX;
-    (void)lineHeight;
 
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, textPtr->spaceMode, 0, xPtr);
 
@@ -13613,15 +13624,13 @@ static int
 TkpMeasureChars(
     Tk_Font tkfont,
     const char *source,
-    int numBytes,
+    TCL_UNUSED(int),
     int rangeStart,
     int rangeLength,
     int maxLength,
     int flags,
     int *lengthPtr)
 {
-    (void)numBytes;
-
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength, maxLength, flags, lengthPtr);
 }
 
@@ -13892,15 +13901,13 @@ FreeCharInfo(
 
 static int
 ComputeBreakIndex(
-    TkText *textPtr,
+    TCL_UNUSED(TkText *),
     const TkTextDispChunk *chunkPtr,
     TkTextSegment *segPtr,
     int byteOffset,
     TkWrapMode wrapMode,
     TkTextSpaceMode spaceMode)
 {
-    (void)textPtr;
-
     switch (wrapMode) {
     case TEXT_WRAPMODE_NONE:
 	break;
@@ -14609,15 +14616,12 @@ CharDisplayProc(
     int x,			/* X-position in dst at which to draw this chunk (may differ from
     				 * the x-position in the chunk because of scrolling). */
     int y,			/* Y-position at which to draw this chunk in dst. */
-    int height,			/* Total height of line. */
+    TCL_UNUSED(int),			/* Total height of line. */
     int baseline,		/* Offset of baseline from y. */
     Display *display,		/* Display to use for drawing. */
     Drawable dst,		/* Pixmap or window in which to draw chunk. */
-    int screenY)		/* Y-coordinate in text window that corresponds to y. */
+    TCL_UNUSED(int))		/* Y-coordinate in text window that corresponds to y. */
 {
-    (void)height;
-    (void)screenY;
-
     if (chunkPtr->width > 0 && x + chunkPtr->width > 0) {
 	/* The chunk has displayable content, and is not off-screen. */
 	DisplayChars(textPtr, chunkPtr, x, y, baseline, display, dst);
@@ -14710,11 +14714,10 @@ CharUndisplayProc(
 
 static void
 HyphenUndisplayProc(
-    TkText *textPtr,		/* Overall information about text widget. */
+    TCL_UNUSED(TkText *),		/* Overall information about text widget. */
     TkTextDispChunk *chunkPtr)	/* Chunk that is about to be freed. */
 {
     TkTextSegment *hyphenPtr = (TkTextSegment *)chunkPtr->clientData;
-    (void)textPtr;
 
     if (hyphenPtr) {
 	TkBTreeFreeSegment(hyphenPtr);
@@ -14895,7 +14898,7 @@ static void
 DrawChars(
     TkText *textPtr,
     TkTextDispChunk *chunkPtr,	/* Display the content of this chunk. */
-    int x,			/* X-position in dst at which to draw. */
+    TCL_UNUSED(int),			/* X-position in dst at which to draw. */
     int y,			/* Y-position at which to draw. */
     int offsetX,		/* Offset from x. */
     int offsetBytes,		/* Offset in display string. */
@@ -14904,7 +14907,6 @@ DrawChars(
 {
     const CharInfo *ciPtr;
     int numBytes;
-    (void)x;
 
     ciPtr = (const CharInfo *)chunkPtr->clientData;
     numBytes = ciPtr->numBytes;
