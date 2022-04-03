@@ -2836,7 +2836,7 @@ test textDisp-19.14 {GetYView procedure} {
     # Need to update so everything is calculated.
     updateText
     .t count -update -ypixels 1.0 end
-    updateText
+    delay
     set scrollInfo "unchanged"
     .t mark set insert 3.0
     .t tag configure x -background red
