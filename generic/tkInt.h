@@ -94,8 +94,22 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
-#   define Tcl_GetParent Tcl_GetMaster
+#if TCL_MAJOR_VERSION < 9
+#   undef Tcl_ExternalToUtfDStringEx
+#   undef Tcl_UtfToExternalDStringEx
+    /* just assume 'flags' is TCL_ENCODING_NOCOMPLAIN, and return value not used. */
+#   define Tcl_ExternalToUtfDStringEx(encoding, data, length, flags, ds) \
+	(Tcl_ExternalToUtfDString(encoding, data, length, ds), TCL_INDEX_NONE)
+#   define Tcl_UtfToExternalDStringEx(encoding, data, length, flags, ds) \
+	(Tcl_UtfToExternalDString(encoding, data, length, ds), TCL_INDEX_NONE)
+#   if !defined(Tcl_GetParent) && (TCL_MINOR_VERSION < 7)
+#	define Tcl_GetParent Tcl_GetMaster
+#   endif
+#endif
+
+
+#ifndef TCL_ENCODING_NOCOMPLAIN
+#   define TCL_ENCODING_NOCOMPLAIN 0
 #endif
 
 /*
