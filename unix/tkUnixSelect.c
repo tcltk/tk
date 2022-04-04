@@ -620,7 +620,7 @@ TkSelEventProc(
 	    } else {
 		encoding = Tcl_GetEncoding(NULL, "iso8859-1");
 	    }
-	    Tcl_ExternalToUtfDString(encoding, propInfo, (int)numItems, &ds);
+	    (void)Tcl_ExternalToUtfDStringEx(encoding, propInfo, numItems, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    if (encoding) {
 		Tcl_FreeEncoding(encoding);
 	    }
@@ -995,7 +995,7 @@ ConvertSelection(
 	    } else {
 		encoding = Tcl_GetEncoding(NULL, "iso2022");
 	    }
-	    Tcl_UtfToExternalDString(encoding, (char *) buffer, -1, &ds);
+	    (void)Tcl_UtfToExternalDStringEx(encoding, (char *) buffer, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    XChangeProperty(reply.xsel.display, reply.xsel.requestor,
 		    property, type, 8, PropModeReplace,
 		    (unsigned char *) Tcl_DStringValue(&ds),
