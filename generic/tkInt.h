@@ -107,11 +107,6 @@
 #   endif
 #endif
 
-
-#ifndef TCL_ENCODING_NOCOMPLAIN
-#   define TCL_ENCODING_NOCOMPLAIN 0
-#endif
-
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast

@@ -1065,7 +1065,7 @@ Tk_MeasureChars(
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
 		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			TCL_ENCODING_NOCOMPLAIN, p - source, &runString);
+			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 			    (XChar2b *) Tcl_DStringValue(&runString),
