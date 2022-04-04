@@ -71,7 +71,7 @@ NewNativeObj(
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
-    Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
+    Tcl_ExternalToUtfDStringEx(NULL, (char *)string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 #endif
     obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
@@ -80,7 +80,7 @@ NewNativeObj(
 
 /*
  * Declarations for various library functions and variables (don't want to
- * include tkInt.h or tkPort.h here, because people might copy this file out
+ * include tclInt.h or tclPort.h here, because people might copy this file out
  * of the Tk source directory to make their own modified versions). Note: do
  * not declare "exit" here even though a declaration is really needed, because
  * it will conflict with a declaration elsewhere on some systems.

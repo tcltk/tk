@@ -3436,6 +3436,28 @@ test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
     deleteWindows
 } -result 0
 
+test menu-22.6 {tk_popup on separator entry} -setup {
+    deleteWindows
+} -constraints {x11} -body {
+    menu .m1
+    label .l -text ClickMe!
+    .m1 add command -label "Example 1" -command bell
+    .m1 add command -label "Example 2" -command bell
+    .m1 add separator
+    .m1 add command -label "Example Other" -command "bell;bell"
+    tk_popup .m1 100 100 2
+    set waiting 0
+    tkwait visibility .m1
+    after 333 incr waiting
+    vwait waiting
+    .m1 invoke 4
+    after 333 incr waiting
+    vwait waiting
+    destroy .m1
+} -cleanup {
+    deleteWindows
+} -result {}
+
 test menu-23.1 {RecursivelyDeleteMenu} -setup {
     deleteWindows
 } -body {
