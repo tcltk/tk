@@ -1064,8 +1064,8 @@ Tk_MeasureChars(
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			p - source, &runString);
+		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1082,8 +1082,8 @@ Tk_MeasureChars(
 	    p = next;
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
-		&runString);
+	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source, p - source,
+		TCL_ENCODING_NOCOMPLAIN, &runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 		    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1331,8 +1331,8 @@ Tk_DrawChars(
 		do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
 
-		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			p - source, &runString);
+		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y,
 			    (XChar2b *) Tcl_DStringValue(&runString),
