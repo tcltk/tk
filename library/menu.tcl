@@ -1242,7 +1242,8 @@ if {[tk windowingsystem] ne "win32"} {
     proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	if {$entry ne ""} {
 	    $menu post $x $y $entry
-	    if {[$menu entrycget $entry -state] ne "disabled"} {
+	    if {[$menu type $entry] ni {separator tearoff} &&
+		[$menu entrycget $entry -state] ne "disabled"} {
 		$menu activate $entry
 		GenerateMenuSelect $menu
 	    }
