@@ -311,7 +311,7 @@ TestwineventObjCmd(
     if ((objc == 3) && (strcmp(Tcl_GetString(objv[1]), "debug") == 0)) {
 	int b;
 
-	if (Tcl_GetBoolean(interp, Tcl_GetString(objv[2]), &b) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, objv[2], &b) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	TkWinDialogDebug(b);
@@ -381,7 +381,7 @@ TestwineventObjCmd(
         SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
                      (LPARAM) buf);
 #endif
-	Tcl_ExternalToUtfDString(NULL, buf, -1, &ds);
+	(void)Tcl_ExternalToUtfDStringEx(NULL, buf, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
 	Tcl_DStringFree(&ds);
 	break;
@@ -396,7 +396,7 @@ TestwineventObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, Tcl_GetString(objv[4]), -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	result = SendMessageA(control, WM_SETTEXT, 0,
 		(LPARAM) Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
