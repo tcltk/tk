@@ -708,15 +708,12 @@ TkpConfigureMenuEntry(
     GC gc = (mePtr->textGC ? mePtr->textGC : mePtr->menuPtr->textGC);
     Tcl_Obj *fontPtr = (mePtr->fontPtr ?
 			mePtr->fontPtr : mePtr->menuPtr->fontPtr);
-    static unsigned long defaultBg, defaultFg;
     static int initialized = 0;
 
     if (!initialized) {
 	TkColor *tkColPtr = TkpGetColor(NULL, DEF_MENU_BG_COLOR);
-	defaultBg = tkColPtr->color.pixel;
 	ckfree(tkColPtr);
 	tkColPtr = TkpGetColor(NULL, DEF_MENU_FG);
-	defaultFg = tkColPtr->color.pixel;
 	ckfree(tkColPtr);
     }
 
@@ -1365,7 +1362,7 @@ TkpComputeStandardMenuGeometry(
 {
     NSSize menuSize;
     Tk_Font tkfont, menuFont;
-    Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
+    Tk_FontMetrics menuMetrics, entryMetrics;
     int modifierCharWidth, menuModifierCharWidth;
     int x, y, modifierWidth, labelWidth, indicatorSpace;
     int windowWidth, windowHeight, accelWidth;
@@ -1420,12 +1417,10 @@ TkpComputeStandardMenuGeometry(
 	}
 	if (mePtr->fontPtr == NULL) {
 	    tkfont = menuFont;
-	    fmPtr = &menuMetrics;
 	    modifierCharWidth = menuModifierCharWidth;
 	} else {
 	    tkfont = Tk_GetFontFromObj(menuPtr->tkwin, mePtr->fontPtr);
 	    Tk_GetFontMetrics(tkfont, &entryMetrics);
-	    fmPtr = &entryMetrics;
 	    modifierCharWidth = ModifierCharWidth(tkfont);
 	}
 	accelWidth = modifierWidth = indicatorSpace = 0;
