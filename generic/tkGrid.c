@@ -2828,6 +2828,9 @@ DestroyGrid(
 {
     Gridder *gridPtr = (Gridder *)memPtr;
 
+    if (gridPtr->flags & REQUESTED_RELAYOUT) {
+	Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
+    }
     if (gridPtr->containerDataPtr != NULL) {
 	if (gridPtr->containerDataPtr->rowPtr != NULL) {
 	    ckfree(gridPtr->containerDataPtr -> rowPtr);
