@@ -107,11 +107,6 @@
 #   endif
 #endif
 
-
-#ifndef TCL_ENCODING_NOCOMPLAIN
-#   define TCL_ENCODING_NOCOMPLAIN 0
-#endif
-
 /*
  * Macros used to cast between pointers and integers (e.g. when storing an int
  * in ClientData), on 64-bit architectures they avoid gcc warning about "cast
@@ -139,14 +134,11 @@
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE) or not having TIP #613 (TCL_INDEX_NULL_OK).
+ * (TCL_INDEX_TEMP_TABLE)
  */
 
 #if !defined(TCL_INDEX_TEMP_TABLE)
 #   define TCL_INDEX_TEMP_TABLE 2
-#endif
-#if !defined(TCL_INDEX_NULL_OK)
-#   define TCL_INDEX_NULL_OK 4
 #endif
 
 #ifndef TCL_Z_MODIFIER
