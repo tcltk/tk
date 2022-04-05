@@ -228,7 +228,11 @@ typedef struct Tk_OptionSpec {
  * Tk_ConfigSpec structures, so be sure to coordinate any changes carefully.
  */
 
-#define TK_OPTION_NULL_OK		(1 << 0)
+#if TCL_MAJOR_VERSION > 8
+#   define TK_OPTION_NULL_OK		TCL_NULL_OK
+#else
+#   define TK_OPTION_NULL_OK		(1 << 0)
+#endif
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
 
 /*
@@ -440,7 +444,11 @@ typedef enum {
  * (internal-use-only flags are defined there).
  */
 
-#define TK_CONFIG_NULL_OK		(1 << 0)
+#if TCL_MAJOR_VERSION > 8
+#   define TK_CONFIG_NULL_OK		TCL_NULL_OK
+#else
+#   define TK_CONFIG_NULL_OK		(1 << 0)
+#endif
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
