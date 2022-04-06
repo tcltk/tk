@@ -137,7 +137,6 @@ namespace eval tk {
             destroy .focus
 	}
 
-
         namespace export imageInit imageFinish imageCleanup imageNames
         variable ImageNames
         proc imageInit {} {
@@ -232,6 +231,18 @@ namespace eval tk {
 		}
 	}
 	namespace export controlPointerWarpTiming
+
+	namespace export updateWidgets
+	# Platform specific procedure for updating the display.
+	if {[tk windowingsystem] == "aqua"} {
+	    proc updateWidgets {} {
+		update idletasks
+	    }
+	} else {
+	    proc updateWidgets {} {
+		update
+	    }
+	}
 
     }
 }

@@ -14,18 +14,6 @@ tcltest::loadTestedCommands
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
-# Platform specific procedure for updating the spinbox widget.
-
-if {[tk windowingsystem] == "aqua"} {
-    proc updateSpin {} {
-	update idletasks
-    }
-} else {
-    proc updateSpin {} {
-	update
-    }
-}
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -2029,10 +2017,10 @@ test spinbox-5.7 {ConfigureSpinbox procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e configure -width 5
-    updateSpin
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2220,10 +2208,10 @@ test spinbox-7.1 {InsertChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e insert 2 XXX
-    updateSpin
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2237,10 +2225,10 @@ test spinbox-7.2 {InsertChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e insert 500 XXX
-    updateSpin
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2371,10 +2359,10 @@ test spinbox-8.1 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e delete 2 4
-    updateSpin
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2387,10 +2375,10 @@ test spinbox-8.2 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e delete -1 2
-    updateSpin
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2403,10 +2391,10 @@ test spinbox-8.3 {DeleteChars procedure} -setup {
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
     .e insert 0 abcde
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e delete 3 1000
-    updateSpin
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -3189,11 +3177,11 @@ test spinbox-16.2 {SpinboxVisibleRange procedure} -body {
 test spinbox-17.1 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e delete 0 end
     .e insert 0 123
-    updateSpin
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -3202,10 +3190,10 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
     .e insert 0 0123456789abcdef
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e xview 3
-    updateSpin
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -3213,11 +3201,11 @@ test spinbox-17.2 {SpinboxUpdateScrollbar procedure} -body {
 test spinbox-17.3 {SpinboxUpdateScrollbar procedure} -body {
     spinbox .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcdefghijklmnopqrs
     .e xview
-    updateSpin
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -3230,10 +3218,10 @@ test spinbox-17.4 {SpinboxUpdateScrollbar procedure} -setup {
 } -body {
     spinbox .e -width 5
     pack .e
-    updateSpin
+    updateWidgets
     set scrollInfo wrong
     .e configure -xscrollcommand thisisnotacommand
-    updateSpin
+    updateWidgets
     list $x $errorInfo
 } -cleanup {
     destroy .e
