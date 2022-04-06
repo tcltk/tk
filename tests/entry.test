@@ -15,18 +15,6 @@ testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match L
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
-# Platform specific procedure for updating the entry widget.
-
-if {[tk windowingsystem] == "aqua"} {
-    proc updateEntry {} {
-	update idletasks
-    }
-} else {
-    proc updateEntry {} {
-	update
-    }
-}
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -1688,10 +1676,10 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 } -body {
     .e configure -font {Courier -12} -width 4 -xscrollcommand scroll
     .e insert end "01234567890"
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e configure -width 5
-    updateEntry
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -1933,11 +1921,11 @@ test entry-7.1 {InsertChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcde
     .e insert 2 XXX
-    updateEntry
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -1950,11 +1938,11 @@ test entry-7.2 {InsertChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcde
     .e insert 500 XXX
-    updateEntry
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2084,11 +2072,11 @@ test entry-8.1 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcde
     .e delete 2 4
-    updateEntry
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2100,11 +2088,11 @@ test entry-8.2 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcde
     .e delete -1 2
-    updateEntry
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2116,11 +2104,11 @@ test entry-8.3 {DeleteChars procedure} -setup {
     focus .e
 } -body {
     .e configure -textvariable contents -xscrollcommand scroll
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcde
     .e delete 3 1000
-    updateEntry
+    updateWidgets
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
     destroy .e
@@ -2954,11 +2942,11 @@ test entry-16.4 {EntryVisibleRange procedure} -body {
 test entry-17.1 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e delete 0 end
     .e insert 0 123
-    updateEntry
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2966,11 +2954,11 @@ test entry-17.1 {EntryUpdateScrollbar procedure} -body {
 test entry-17.2 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 0123456789abcdef
     .e xview 3
-    updateEntry
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2978,11 +2966,11 @@ test entry-17.2 {EntryUpdateScrollbar procedure} -body {
 test entry-17.3 {EntryUpdateScrollbar procedure} -body {
     entry .e -width 10 -xscrollcommand scroll -font {Courier -12}
     pack .e
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e insert 0 abcdefghijklmnopqrs
     .e xview 6
-    updateEntry
+    updateWidgets
     format {%.6f %.6f} {*}$scrollInfo
 } -cleanup {
     destroy .e
@@ -2995,10 +2983,10 @@ test entry-17.4 {EntryUpdateScrollbar procedure} -setup {
 } -body {
     entry .e -width 5
     pack .e
-    updateEntry
+    updateWidgets
     set scrollInfo wrong
     .e configure -xscrollcommand thisisnotacommand
-    updateEntry
+    updateWidgets
     list $x $errorInfo
 } -cleanup {
     destroy .e
