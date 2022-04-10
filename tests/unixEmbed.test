@@ -1236,33 +1236,33 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
 
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-    unix failsOnUbuntu failsOnXQuarz
+    unix
 } -setup {
     deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    update idletasks
+    updateWidgets
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80
-    update idletasks
+    updateWidgets
     wm geometry .t1 +40+50
-    update idletasks
+    updateWidgets
     wm geometry .t1
 } -cleanup {
 	deleteWindows
 } -result {150x80+0+0}
 test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-    unix failsOnUbuntu failsOnXQuarz
+    unix
 } -setup {
     deleteWindows
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    update idletasks
+    updateWidgets
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80
-    update idletasks
+    updateWidgets
     wm geometry .t1 70x300+10+20
-    update idletasks
+    updateWidgets
     wm geometry .t1
 } -cleanup {
 	deleteWindows
