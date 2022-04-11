@@ -578,7 +578,7 @@ proc ::tk::EntryTranspose w {
     if {$i < 2} {
 	return
     }
-    set first [expr {$i-2}]
+    set first $i-2
     set data [$w get]
     set new [string index $data $i-1][string index $data $first]
     $w delete $first $i
