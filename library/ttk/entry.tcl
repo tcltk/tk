@@ -281,8 +281,8 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::RelIndex {w where {index insert}} {
     switch -- $where {
-	prevchar	{ expr {[$w index $index] - 1} }
-	nextchar	{ expr {[$w index $index] + 1} }
+	prevchar	{ return [$w index $index]-1 }
+	nextchar	{ return [$w index $index]+1 }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
 	home		{ return 0 }
