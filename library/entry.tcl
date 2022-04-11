@@ -119,17 +119,17 @@ bind Entry <Control-Button-1> {
 }
 
 bind Entry <<PrevChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert]-1}]
+    tk::EntrySetCursor %W [%W index insert]-1
 }
 bind Entry <<NextChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert]+1}]
+    tk::EntrySetCursor %W [%W index insert]+1
 }
 bind Entry <<SelectPrevChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert]-1}]
+    tk::EntryKeySelect %W [%W index insert]-1
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert]+1}]
+    tk::EntryKeySelect %W [%W index insert]+1
     tk::EntrySeeInsert %W
 }
 bind Entry <<PrevWord>> {
@@ -518,7 +518,7 @@ proc ::tk::EntryBackspace w {
     } else {
 	set x [$w index insert]
 	if {$x > 0} {
-	    $w delete [expr {$x-1}]
+	    $w delete $x-1
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -576,7 +576,7 @@ proc ::tk::EntryTranspose w {
     if {$i < 2} {
 	return
     }
-    set first [expr {$i-2}]
+    set first $i-2
     set data [$w get]
     set new [string index $data $i-1][string index $data $first]
     $w delete $first $i
