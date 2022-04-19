@@ -205,7 +205,7 @@ bind Spinbox <Key> {
     ::tk::EntryInsert %W %A
 }
 
-# Ignore all Alt, Meta, Control, and Mod4 keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, and Fn keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
 # <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
@@ -220,7 +220,7 @@ bind Spinbox <Tab> {# nothing}
 bind Spinbox <Prior> {# nothing}
 bind Spinbox <Next> {# nothing}
 bind Spinbox <Command-Key> {# nothing}
-bind Spinbox <Mod4-Key> {# nothing}
+bind Spinbox <Fn-Key> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.

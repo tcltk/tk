@@ -106,7 +106,7 @@ Modifiers consist of any of the following values:
 .ta 6c
 \fBControl\fR	\fBMod1\fR, \fBM1\fR, \fBCommand\fR
 \fBAlt\fR	\fBMod2\fR, \fBM2\fR, \fBOption\fR
-\fBShift\fR	\fBMod3\fR, \fBM3\fR
+\fBShift\fR	\fBMod3\fR, \fBM3\fR, \fBFunction\fR
 \fBLock\fR	\fBMod4\fR, \fBM4\fR
 \fBExtended\fR	\fBMod5\fR, \fBM5\fR
 \fBButton1\fR, \fBB1\fR	\fBMeta\fR, \fBM\fR
