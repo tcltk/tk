@@ -85,8 +85,6 @@ typedef struct TkOption {
 
 #define OPTION_NEEDS_FREEING		1
 
-#define INDEX_NULL_OK (32+4) /* Combination of TCL_INDEX_NULL_OK (TIP #613) and TCL_NULL_OK (TIP #618) */
-
 /*
  * One of the following exists for each Tk_OptionSpec array that has been
  * passed to Tk_CreateOptionTable.
@@ -611,7 +609,7 @@ DoObjConfig(
     } else {
 	oldInternalPtr = (char *) &internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & TK_OPTION_NULL_OK);
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK));
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;
@@ -682,11 +680,10 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 #if defined(NAN)
-	    if (optionPtr->specPtr->flags & TK_OPTION_NULL_OK) {
-		newDbl = NAN;
-	    } else
-#endif
+	    newDbl = NAN;
+#else
 	    newDbl = 0.0;
+#endif
 	} else {
 	    if (Tcl_GetDoubleFromObj(nullOK ? NULL : interp, valuePtr, &newDbl) != TCL_OK) {
 		if (nullOK && interp) {
@@ -737,7 +734,7 @@ DoObjConfig(
 	} else {
 	    if (Tcl_GetIndexFromObjStruct(interp, valuePtr,
 		    optionPtr->specPtr->clientData, sizeof(char *),
-		    optionPtr->specPtr->optionName+1, (nullOK ? INDEX_NULL_OK : 0), &newValue) != TCL_OK) {
+		    optionPtr->specPtr->optionName+1, (nullOK ? TCL_INDEX_NULL_OK : 0), &newValue) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	}
@@ -844,7 +841,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newRelief = TK_RELIEF_NULL;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkReliefStrings,
-		"relief", (nullOK ? INDEX_NULL_OK : 0), &newRelief) != TCL_OK) {
+		"relief", (nullOK ? TCL_INDEX_NULL_OK : 0), &newRelief) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -879,7 +876,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newJustify = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
-		"justification", (nullOK ? INDEX_NULL_OK : 0), &newJustify) != TCL_OK) {
+		"justification", (nullOK ? TCL_INDEX_NULL_OK : 0), &newJustify) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -895,7 +892,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newAnchor = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
-		"anchor", (nullOK ? INDEX_NULL_OK : 0), &newAnchor) != TCL_OK) {
+		"anchor", (nullOK ? TCL_INDEX_NULL_OK : 0), &newAnchor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -1925,11 +1922,9 @@ GetObjectForOption(
 				 * *recordPtr. */
     Tk_Window tkwin)		/* Window corresponding to recordPtr. */
 {
-    Tcl_Obj *objPtr;
-    void *internalPtr;		/* Points to internal value of option in
-				 * record. */
+    Tcl_Obj *objPtr = NULL;
+    void *internalPtr;		/* Points to internal value of option in record. */
 
-    objPtr = NULL;
     if (optionPtr->specPtr->internalOffset != TCL_INDEX_NONE) {
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
@@ -1939,7 +1934,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_INT:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
@@ -1959,7 +1954,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || !isnan(*((double *) internalPtr))) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK)) || !isnan(*((double *) internalPtr))) {
 		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
 	    }
 	    break;
@@ -2034,7 +2029,7 @@ GetObjectForOption(
 		    *((Tk_Anchor *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_PIXELS:
-	    if (!(optionPtr->specPtr->flags & TK_OPTION_NULL_OK) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
