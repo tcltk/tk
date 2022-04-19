@@ -424,7 +424,7 @@ proc ::tk::ConsoleBind {w} {
     # gets and overhaul of how it handles input -- hobbs
     bind Console <Control-t> {}
 
-    # Ignore all Alt, Meta, Control, and Fn keypresses unless explicitly bound.
+    # Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
     # Otherwise, if a widget binding for one of these is defined, the
     # <Keypress> class binding will also fire and insert the character
     # which is wrong.
