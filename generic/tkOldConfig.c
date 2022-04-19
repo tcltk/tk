@@ -18,12 +18,7 @@
  * Values for "flags" field of Tk_ConfigSpec structures. Be sure to coordinate
  * these values with those defined in tk.h (TK_CONFIG_COLOR_ONLY, etc.) There
  * must not be overlap!
- *
- * INIT -		Non-zero means (char *) things have been converted to
- *			Tk_Uid's.
  */
-
-#define INIT		0x20
 
 #ifndef TK_CONFIG_OPTION_SPECIFIED
 #  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
@@ -352,7 +347,7 @@ DoConfig(
     int nullValue;
 
     nullValue = 0;
-    if ((*value == 0) && (specPtr->specFlags & TK_CONFIG_NULL_OK)) {
+    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_INDEX_NULL_OK))) {
 	nullValue = 1;
     }
 

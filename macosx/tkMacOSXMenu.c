@@ -1007,13 +1007,6 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    if (index >= (int) menuPtr->numEntries) {
-	index = menuPtr->numEntries - 1;
-    }
-    if (index >= 0) {
-	y -= menuPtr->entries[index]->y;
-    }
-
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
@@ -1028,6 +1021,18 @@ TkpPostTearoffMenu(
 
     if (menuPtr->tkwin == NULL) {
     	return TCL_OK;
+    }
+
+    /*
+     * Adjust the menu y position so that the specified entry will be located
+     * at the given coordinates.
+     */
+
+    if (index >= menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     /*
@@ -1594,26 +1599,26 @@ void
 MenuSelectEvent(
     TkMenu *menuPtr)		/* the menu we have selected. */
 {
-    XVirtualEvent event;
+    union {XEvent general; XVirtualEvent virt;} event;
 
-    bzero(&event, sizeof(XVirtualEvent));
-    event.type = VirtualEvent;
-    event.serial = LastKnownRequestProcessed(menuPtr->display);
-    event.send_event = false;
-    event.display = menuPtr->display;
-    event.event = Tk_WindowId(menuPtr->tkwin);
-    event.root = XRootWindow(menuPtr->display, 0);
-    event.subwindow = None;
-    event.time = TkpGetMS();
-    XQueryPointer(NULL, None, NULL, NULL, &event.x_root, &event.y_root, NULL,
-	    NULL, &event.state);
-    event.same_screen = true;
-    event.name = Tk_GetUid("MenuSelect");
+    bzero(&event, sizeof(event));
+    event.virt.type = VirtualEvent;
+    event.virt.serial = LastKnownRequestProcessed(menuPtr->display);
+    event.virt.send_event = false;
+    event.virt.display = menuPtr->display;
+    event.virt.event = Tk_WindowId(menuPtr->tkwin);
+    event.virt.root = XRootWindow(menuPtr->display, 0);
+    event.virt.subwindow = None;
+    event.virt.time = TkpGetMS();
+    XQueryPointer(NULL, None, NULL, NULL, &event.virt.x_root, &event.virt.y_root, NULL,
+	    NULL, &event.virt.state);
+    event.virt.same_screen = true;
+    event.virt.name = Tk_GetUid("MenuSelect");
     Tk_MakeWindowExist(menuPtr->tkwin);
     if (Tcl_GetServiceMode() != TCL_SERVICE_NONE) {
-	Tk_HandleEvent((XEvent *) &event);
+	Tk_HandleEvent(&event.general);
     } else {
-	Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+	Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
     }
 }
 
