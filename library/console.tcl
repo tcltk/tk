@@ -429,9 +429,13 @@ proc ::tk::ConsoleBind {w} {
     # <Keypress> class binding will also fire and insert the character
     # which is wrong.
 
-    bind Console <Alt-KeyPress> {# nothing }
-    bind Console <Meta-KeyPress> {# nothing}
-    bind Console <Control-KeyPress> {# nothing}
+    bind Console <Alt-Key> {# nothing }
+    bind Console <Meta-Key> {# nothing}
+    bind Console <Control-Key> {# nothing}
+    if {[tk windowingsystem] eq "aqua"} {
+	bind Console <Command-Key> {# nothing}
+	bind Console <Mod4-Key> {# nothing}
+    }
 
     foreach {ev key} {
 	<<Console_NextImmediate>>	<Control-Key-n>
@@ -587,7 +591,7 @@ proc ::tk::ConsoleBind {w} {
     bind Console <Insert> {
 	catch {tk::ConsoleInsert %W [::tk::GetSelection %W PRIMARY]}
     }
-    bind Console <KeyPress> {
+    bind Console <Key> {
 	tk::ConsoleInsert %W %A
     }
     bind Console <F9> {
@@ -650,7 +654,7 @@ proc ::tk::ConsoleBind {w} {
 	}
     }
 
-    bind PostConsole <KeyPress> {
+    bind PostConsole <Key> {
 	if {"%A" ne ""} {
 	    ::tk::console::TagProc %W
 	}
