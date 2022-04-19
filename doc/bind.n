@@ -106,8 +106,8 @@ Modifiers consist of any of the following values:
 .ta 6c
 \fBControl\fR	\fBMod1\fR, \fBM1\fR, \fBCommand\fR
 \fBAlt\fR	\fBMod2\fR, \fBM2\fR, \fBOption\fR
-\fBShift\fR	\fBMod3\fR, \fBM3\fR, \fBFunction\fR
-\fBLock\fR	\fBMod4\fR, \fBM4\fR
+\fBShift\fR	\fBMod3\fR, \fBM3\fR
+\fBLock\fR	\fBMod4\fR, \fBM4\fR, \fBFn\fR
 \fBExtended\fR	\fBMod5\fR, \fBM5\fR
 \fBButton1\fR, \fBB1\fR	\fBMeta\fR, \fBM\fR
 \fBButton2\fR, \fBB2\fR	\fBDouble\fR
@@ -149,8 +149,8 @@ substantial mouse motion in between.  For example, \fB<Double\-Button\-1>\fR
 is equivalent to \fB<Button\-1><Button\-1>\fR with the extra time and space
 requirement.
 .PP
-The \fBCommand\fR and \fBOption\fR modifiers are equivalents of \fBMod1\fR
-resp. \fBMod2\fR, they correspond to Macintosh-specific modifier keys.
+The \fBCommand\fR, \fBOption\fR and \fBFn\fRmodifiers are equivalents of \fBMod1\fR
+\fBMod2\fR, resp. \fBMod4\fR, they correspond to Macintosh-specific modifier keys.
 .PP
 The \fBExtended\fR modifier is, at present, specific to Windows.  It
 appears on events that are associated with the keys on the
