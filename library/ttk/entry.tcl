@@ -119,7 +119,7 @@ bind TEntry <Key> 			{ ttk::entry::Insert %W %A }
 bind TEntry <Delete>			{ ttk::entry::Delete %W }
 bind TEntry <BackSpace> 		{ ttk::entry::Backspace %W }
 
-# Ignore all Alt, Meta, Control, and Fn keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, the <Key> class binding will fire and insert the character.
 # Ditto for Escape, Return, and Tab.
 #

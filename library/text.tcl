@@ -298,7 +298,7 @@ bind Text <Key> {
     tk::TextInsert %W %A
 }
 
-# Ignore all Alt, Meta, Control, and Fn keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
 # <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for <Escape>.
