@@ -119,7 +119,7 @@ bind TEntry <Key> 			{ ttk::entry::Insert %W %A }
 bind TEntry <Delete>			{ ttk::entry::Delete %W }
 bind TEntry <BackSpace> 		{ ttk::entry::Backspace %W }
 
-# Ignore all Alt, Meta, Control, and Mod4 keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, and Fn keypresses unless explicitly bound.
 # Otherwise, the <Key> class binding will fire and insert the character.
 # Ditto for Escape, Return, and Tab.
 #
@@ -131,7 +131,7 @@ bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
 bind TEntry <Command-Key>		{# nothing}
-bind TEntry <Mod4-Key>			{# nothing}
+bind TEntry <Fn-Key>			{# nothing}
 
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
