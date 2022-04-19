@@ -131,6 +131,7 @@ bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
 bind TEntry <Command-Key>		{# nothing}
+bind TEntry <Mod4-Key>			{# nothing}
 
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
