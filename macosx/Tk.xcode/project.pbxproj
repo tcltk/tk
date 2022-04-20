@@ -4747,8 +4747,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Tk-Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_GC = supported;
 				GCC_ENABLE_PASCAL_STRINGS = NO;
@@ -5059,8 +5059,8 @@
 		F97258AC0A86873D00096C78 /* ReleaseUniversal */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				GCC_INPUT_FILETYPE = sourcecode.c.c;
 				HEADER_SEARCH_PATHS = (
 					/usr/X11R6/include,
@@ -5392,8 +5392,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Tk-Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_GC = supported;
 				GCC_ENABLE_PASCAL_STRINGS = NO;
@@ -5426,8 +5426,8 @@
 		F9988BB40D81586D00B6B03B /* ReleaseUniversal gcc40 */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				GCC_INPUT_FILETYPE = sourcecode.c.c;
 				HEADER_SEARCH_PATHS = (
 					/usr/X11R6/include,
@@ -5446,8 +5446,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Tk-Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				GCC = "llvm-gcc";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -5483,8 +5483,8 @@
 		F9988BB80D81587400B6B03B /* ReleaseUniversal llvm-gcc */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				GCC_INPUT_FILETYPE = sourcecode.c.c;
 				HEADER_SEARCH_PATHS = (
 					/usr/X11R6/include,
@@ -5636,8 +5636,8 @@
 		F9EEED980C2FEFD300396116 /* ReleaseUniversal10.5SDK */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				GCC_INPUT_FILETYPE = sourcecode.c.c;
 				HEADER_SEARCH_PATHS = (
 					/usr/X11R6/include,
@@ -5656,8 +5656,8 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = F97AE82B0B65C69B00310EA2 /* Tk-Release.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
-				CFLAGS = "-arch i386 -arch x86_64 -arch ppc $(CFLAGS)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CFLAGS = "-arch x86_64 -arch arm64e $(CFLAGS)";
 				CPPFLAGS = "-isysroot $(SDKROOT) $(CPPFLAGS)";
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_ENABLE_OBJC_GC = supported;
