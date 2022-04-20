@@ -391,14 +391,12 @@ trees in a common parent directory.
 
 - The following instructions assume the Tcl and Tk source trees are named
 "tcl${ver}" and "tk${ver}" (where ${ver} is a shell variable containing the
-Tcl/Tk version number, e.g. '8.6').
+Tcl/Tk version number, e.g. '8.7').
 Setup this shell variable as follows:
 	ver="8.6"
-If you are building from CVS, omit this step (CVS source tree names usually do
-not contain a version number).
 
 - Setup environment variables as desired, e.g. for a universal build on 10.5:
-	CFLAGS="-arch i386 -arch x86_64 -arch ppc -mmacosx-version-min=10.5"
+	CFLAGS="-arch x86_64 -arch arm64e -mmacosx-version-min=10.5"
 	export CFLAGS
 
 - Change to the directory containing the Tcl and Tk source trees and build:
