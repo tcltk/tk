@@ -60,6 +60,7 @@ MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
  */
 
 static const TkEnsemble tkCmdMap[] = {
+    {"fontchooser",	NULL, tkFontchooserEnsemble},
     {"appname",		AppnameCmd, NULL },
     {"busy",		Tk_BusyObjCmd, NULL },
     {"caret",		CaretCmd, NULL },
@@ -67,7 +68,6 @@ static const TkEnsemble tkCmdMap[] = {
     {"scaling",		ScalingCmd, NULL },
     {"useinputmethods",	UseinputmethodsCmd, NULL },
     {"windowingsystem",	WindowingsystemCmd, NULL },
-    {"fontchooser",	NULL, tkFontchooserEnsemble},
     {NULL, NULL, NULL}
 };
 
@@ -650,9 +650,13 @@ TkInitTkCmd(
     Tcl_Interp *interp,
     ClientData clientData)
 {
-    TkMakeEnsemble(interp, "::", "tk", clientData, tkCmdMap);
+    /* If the interp is safe, leave out "fontchooser" */
+    int isSafe = Tcl_IsSafe(interp);
+    TkMakeEnsemble(interp, "::", "tk", clientData, tkCmdMap + isSafe);
 #if defined(_WIN32) || defined(MAC_OSX_TK)
-    TkInitFontchooser(interp, clientData);
+    if (!isSafe) {
+	TkInitFontchooser(interp, clientData);
+    }
 #endif
     return TCL_OK;
 }
