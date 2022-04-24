@@ -964,7 +964,7 @@ test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     destroy .f
     place forget .t
     pack .t
-# Make sure the Text is mapped before we start
+    # Make sure the Text is mapped before we start
     updateText
 } -body {
     .t insert 1.0 "Some sample text"
@@ -984,7 +984,7 @@ test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     destroy .t.f
     place forget .t
     pack .t
-# Make sure the Text is mapped before we start
+    # Make sure the Text is mapped before we start
     updateText
 } -body {
     .t insert 1.0 "Some sample text"
@@ -1005,7 +1005,7 @@ test textWind-11.3 {EmbWinDisplayProc procedure, configuration optimization} -se
     destroy .f
     place forget .t
     pack .t
-# Make sure the Text is mapped before we start
+    # Make sure the Text is mapped before we start
     updateText
 } -body {
     .t insert 1.0 "Some sample text"
