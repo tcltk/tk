@@ -338,6 +338,7 @@ test textWind-3.2 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     frame .f -width 10 -height 20 -bg $color
     .t window create 1.3 -window .f
     updateWidgets
@@ -352,6 +353,7 @@ test textWind-3.3 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     frame .f -width 10 -height 20 -bg $color
     .t window create 1.3 -window .f
     updateWidgets
@@ -368,6 +370,7 @@ test textWind-3.4 {EmbWinConfigure procedure} -setup {
     destroy .t.f
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     frame .t.f -width 10 -height 20 -bg $color
     .t window create 1.3 -window .t.f
     updateWidgets
@@ -382,6 +385,7 @@ test textWind-3.5 {EmbWinConfigure procedure} -setup {
     destroy .t.f
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     frame .t.f -width 10 -height 20 -bg $color
     .t window create 1.3 -window .t.f
     updateWidgets
@@ -398,6 +402,7 @@ test textWind-3.6 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     frame .f -width 10 -height 20 -bg $color
     .t window create 1.3
     updateWidgets
@@ -413,6 +418,7 @@ test textWind-3.7 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     frame .f
     frame .f.f -width 15 -height 20 -bg $color
     pack .f.f
@@ -424,6 +430,7 @@ test textWind-3.8 {EmbWinConfigure procedure} -setup {
     destroy .t2
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     toplevel .t2 -width 20 -height 10 -bg $color
     .t window create 1.3
     .t window configure 1.3 -window .t2
@@ -434,6 +441,7 @@ test textWind-3.9 {EmbWinConfigure procedure} -setup {
     destroy .t2
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     toplevel .t2 -width 20 -height 10 -bg $color
     .t window create 1.3
     catch {.t window configure 1.3 -window .t2}
@@ -445,6 +453,7 @@ test textWind-3.10 {EmbWinConfigure procedure} -setup {
     .t delete 1.0 end
 } -body {
     .t insert 1.0 "Some sample text"
+    update
     .t window create 1.3
     .t window configure 1.3 -window .t
 } -returnCodes error -result {can't embed .t in .t}
@@ -454,6 +463,7 @@ test textWind-3.11 {EmbWinConfigure procedure} -setup {
     # This test checks for various errors when the text claims
     # a window away from itself.
     .t insert 1.0 "Some sample text"
+    update
     button .t.b -text "Hello!"
     .t window create 1.4 -window .t.b
     .t window create 1.6 -window .t.b
