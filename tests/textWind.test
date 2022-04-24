@@ -1076,6 +1076,7 @@ test textWind-12.1 {EmbWinUndisplayProc procedure, mapping/unmapping} -setup {
     lappend x replaced
     .t window configure .f -window {}
     .t delete 1.1
+    updateWidgets
     .t window create 1.4 -window .f
     updateWidgets
     lappend x off-screen
