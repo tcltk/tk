@@ -4922,7 +4922,7 @@ test panedwindow-23.29 {ConfigurePanes, -hide works} -setup {
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
             [winfo width .f4] [winfo width .p]
     .p paneconfigure .f2 -hide 1
-    update
+    update ; after 100 ; update
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
@@ -4951,7 +4951,7 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
             [winfo width .f4] [winfo width .p]
     .p paneconfigure .f2 -hide 1
-    update
+    update ; after 100 ; update
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
