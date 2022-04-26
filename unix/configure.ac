@@ -230,29 +230,6 @@ if test "`uname -s`" = "Darwin" ; then
 	fi
     fi
     AC_MSG_RESULT([$tk_aqua])
-    if test "$fat_32_64" = yes; then
-	if test $tk_aqua = no; then
-	    AC_CACHE_CHECK([for 64-bit X11], tcl_cv_lib_x11_64, [
-		for v in CFLAGS CPPFLAGS LDFLAGS; do
-		    eval 'hold_'$v'="$'$v'";'$v'="`echo "$'$v' "|sed -e "s/-arch ppc / /g" -e "s/-arch i386 / /g"`"'
-		done
-		CPPFLAGS="$CPPFLAGS -I/usr/X11R6/include"
-		LDFLAGS="$LDFLAGS -L/usr/X11R6/lib -lX11"
-		AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <X11/Xlib.h>]], [[XrmInitialize();]])],
-		[tcl_cv_lib_x11_64=yes],[tcl_cv_lib_x11_64=no])
-		for v in CFLAGS CPPFLAGS LDFLAGS; do
-		    eval $v'="$hold_'$v'"'
-		done])
-	fi
-	# remove 64-bit arch flags from CFLAGS et al. for combined 32 & 64 bit
-	# fat builds if configuration does not support 64-bit.
-	if test "$tcl_cv_lib_x11_64" = no; then
-	    AC_MSG_NOTICE([Removing 64-bit architectures from compiler & linker flags])
-	    for v in CFLAGS CPPFLAGS LDFLAGS; do
-		eval $v'="`echo "$'$v' "|sed -e "s/-arch ppc64 / /g" -e "s/-arch x86_64 / /g"`"'
-	    done
-	fi
-    fi
     if test $tk_aqua = no; then
 	# check if weak linking whole libraries is possible.
 	AC_CACHE_CHECK([if ld accepts -weak-l flag], tcl_cv_ld_weak_l, [
@@ -311,7 +288,7 @@ if test $tk_aqua = yes; then
     if test -d /System/Library/Frameworks/UserNotifications.framework; then
         LIBS="$LIBS -framework UserNotifications"
     fi
-    EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
+    EXTRA_CC_SWITCHES='-x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then
         AC_DEFINE(TK_MAC_DEBUG, 1, [Are TkAqua debug messages enabled?])

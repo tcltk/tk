@@ -1028,7 +1028,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index >= menuPtr->numEntries) {
+    if (index < 0 || (TkSizeT)index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
