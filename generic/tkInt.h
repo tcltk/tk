@@ -137,11 +137,11 @@
  * (TCL_INDEX_TEMP_TABLE) or TIP #613 (TCL_INDEX_NULL_OK)
  */
 
-#if !defined(TCL_INDEX_TEMP_TABLE)
-#   define TCL_INDEX_TEMP_TABLE 2
-#endif
 #ifndef TCL_INDEX_NULL_OK
 #   define TCL_INDEX_NULL_OK 32
+#endif
+#if !defined(TCL_INDEX_TEMP_TABLE)
+#   define TCL_INDEX_TEMP_TABLE 64
 #endif
 
 #ifndef TCL_Z_MODIFIER
