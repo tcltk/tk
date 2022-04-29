@@ -113,23 +113,17 @@
  * to/from pointer from/to integer of different size".
  */
 
-#if !defined(INT2PTR) && !defined(PTR2INT)
-#   if defined(HAVE_INTPTR_T) || defined(intptr_t)
-#	define INT2PTR(p) ((void*)(intptr_t)(p))
-#	define PTR2INT(p) ((intptr_t)(p))
-#   else
-#	define INT2PTR(p) ((void*)(p))
-#	define PTR2INT(p) ((long)(p))
-#   endif
+#if !defined(INT2PTR)
+#   define INT2PTR(p) ((void *)(ptrdiff_t)(p))
 #endif
-#if !defined(UINT2PTR) && !defined(PTR2UINT)
-#   if defined(HAVE_UINTPTR_T) || defined(uintptr_t)
-#	define UINT2PTR(p) ((void*)(uintptr_t)(p))
-#	define PTR2UINT(p) ((uintptr_t)(p))
-#   else
-#	define UINT2PTR(p) ((void*)(p))
-#	define PTR2UINT(p) ((unsigned long)(p))
-#   endif
+#if !defined(PTR2INT)
+#   define PTR2INT(p) ((ptrdiff_t)(p))
+#endif
+#if !defined(UINT2PTR)
+#   define UINT2PTR(p) ((void *)(size_t)(p))
+#endif
+#if !defined(PTR2UINT)
+#   define PTR2UINT(p) ((size_t)(p))
 #endif
 
 /*
