@@ -3969,6 +3969,7 @@ static int TreeviewTagDeleteCommand(
 	item = NextPreorder(item);
     }
     /* then remove the tag from the tag table */
+    Tk_DeleteAllBindings(tv->tree.bindingTable, tag);
     Ttk_DeleteTagFromTable(tagTable, tag);
     TtkRedisplayWidget(&tv->core);
 
