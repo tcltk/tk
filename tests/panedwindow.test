@@ -4940,11 +4940,11 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
     frame .f4 -width 40 -bg green
     .p add .f1 .f2 .f3 .f4
     pack .p
-    update
-    # On macOS, the above update does the job of mapping .p and its children
+    updateWidgets
+    # On macOS, the above updateWidgets does the job of mapping .p and its children
     # but then getting the correct mapping state (0) of .f4 needs another
-    # update because .f4 does not fit in the width of .p
-    update
+    # updateWidgets because .f4 does not fit in the width of .p
+    updateWidgets
     set result [list]
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
