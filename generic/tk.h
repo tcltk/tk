@@ -230,6 +230,8 @@ typedef struct Tk_OptionSpec {
 
 #define TK_OPTION_NULL_OK		(1 << 0)
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
+#define TK_OPTION_BOOL_VAR		((int)(sizeof(bool)&(sizeof(int)-1))<<6)
+#define TK_OPTION_ENUM_VAR		((int)(sizeof(Tk_OptionType)&(sizeof(int)-1))<<6)
 
 /*
  * The following structure and function types are used by TK_OPTION_CUSTOM
