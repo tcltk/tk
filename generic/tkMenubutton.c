@@ -87,7 +87,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	DEF_MENUBUTTON_DIRECTION, TCL_INDEX_NONE, offsetof(TkMenuButton, direction),
-	0, directionStrings, 0},
+	TK_OPTION_ENUM_VAR, directionStrings, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENUBUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,

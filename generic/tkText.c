@@ -248,7 +248,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
 	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode),
-	0, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
+	TK_OPTION_ENUM_VAR, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
