@@ -34,15 +34,6 @@ static const char *const orientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
-/*
- * The following table defines the legal values for the -state option. It is
- * used together with the "enum state" declaration in tkScale.h.
- */
-
-static const char *const stateStrings[] = {
-    "active", "disabled", "normal", NULL
-};
-
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_SCALE_ACTIVE_BG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, activeBorder),
@@ -118,7 +109,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_SCALE_STATE, TCL_INDEX_NONE, offsetof(TkScale, state),
-	TK_OPTION_ENUM_VAR, stateStrings, 0},
+	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
