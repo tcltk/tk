@@ -72,7 +72,7 @@ static const Tk_OptionSpec SquareOptionSpecs[] =
      NULL, offsetof(Square,square.reliefObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
 
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-     "center", offsetof(Square,square.anchorObj), TCL_INDEX_NONE, 0, 0, 0},
+     "center", offsetof(Square,square.anchorObj), TCL_INDEX_NONE, TK_OPTION_ENUM_VAR, 0, 0},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)

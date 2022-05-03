@@ -89,7 +89,7 @@ static const Tk_OptionSpec ItemOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,ITEM_OPTION_IMAGE_CHANGED },
     {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
 	NULL, offsetof(TreeItem,imageAnchorObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,0 },
+	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR,0,0 },
     {TK_OPTION_STRING, "-values", "values", "Values",
 	NULL, offsetof(TreeItem,valuesObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
@@ -240,7 +240,7 @@ static const Tk_OptionSpec DisplayOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"center", offsetof(DisplayItem,anchorObj), TCL_INDEX_NONE,
-	0, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
+	TK_OPTION_ENUM_VAR, 0, GEOMETRY_CHANGED},	/* <<NOTE-ANCHOR>> */
     /* From here down are the tags options. The index in TagOptionSpecs
      * below should be kept in synch with this position.
      */
@@ -249,7 +249,7 @@ static const Tk_OptionSpec DisplayOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_ANCHOR, "-imageanchor", "imageAnchor", "ImageAnchor",
 	NULL, offsetof(DisplayItem,imageAnchorObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,0 },
+	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR,0,0 },
     {TK_OPTION_COLOR, "-background", "windowColor", "WindowColor",
 	NULL, offsetof(DisplayItem,backgroundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
@@ -349,7 +349,7 @@ static const Tk_OptionSpec ColumnOptionSpecs[] = {
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"w", offsetof(TreeColumn,anchorObj), TCL_INDEX_NONE,	/* <<NOTE-ANCHOR>> */
-	0,0,0 },
+	TK_OPTION_ENUM_VAR,0,0 },
     {TK_OPTION_STRING, "-id", "id", "ID",
 	NULL, offsetof(TreeColumn,idObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,READONLY_OPTION },
@@ -365,7 +365,7 @@ static const Tk_OptionSpec HeadingOptionSpecs[] = {
 	0,0,0 },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"center", offsetof(TreeColumn,headingAnchorObj), TCL_INDEX_NONE,
-	0,0,0 },
+	TK_OPTION_ENUM_VAR,0,0 },
     {TK_OPTION_STRING, "-command", "", "",
 	"", offsetof(TreeColumn,headingCommandObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,0 },
