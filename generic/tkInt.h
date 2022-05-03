@@ -931,6 +931,8 @@ typedef struct TkWindow {
  * String tables:
  */
 
+MODULE_SCOPE const char *const tkStateStrings[];
+MODULE_SCOPE const char *const tkCompoundStrings[];
 MODULE_SCOPE const char *const tkAnchorStrings[];
 MODULE_SCOPE const char *const tkReliefStrings[];
 MODULE_SCOPE const char *const tkJustifyStrings[];

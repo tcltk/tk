@@ -101,19 +101,8 @@ TCL_DECLARE_MUTEX(menuMutex)
  * to update code in TkpMenuInit that changes the font string entry.
  */
 
-static const char *const menuStateStrings[] = {"active", "normal", "disabled", NULL};
-
 static const char *const menuEntryTypeStrings[] = {
     "cascade", "checkbutton", "command", "radiobutton", "separator", NULL
-};
-
-/*
- * The following table defines the legal values for the -compound option. It
- * is used with the "enum compound" declaration in tkMenu.h
- */
-
-static const char *const compoundStrings[] = {
-    "bottom", "center", "left", "none", "right", "top", NULL
 };
 
 static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
@@ -140,7 +129,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, commandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	DEF_MENU_ENTRY_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuEntry, compound), 0,
-	(ClientData) compoundStrings, 0},
+	tkCompoundStrings, 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	DEF_MENU_ENTRY_FONT,
 	offsetof(TkMenuEntry, fontPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -159,7 +148,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE,
 	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
-	(ClientData) menuStateStrings, 0},
+	tkStateStrings, 0},
     {TK_OPTION_INDEX, "-underline", NULL, NULL,
 	TK_OPTION_UNDERLINE_DEF(TkMenuEntry, underline), 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
@@ -229,7 +218,7 @@ static const Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE, TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
-	(ClientData) menuStateStrings, 0},
+	tkStateStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
