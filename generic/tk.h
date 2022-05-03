@@ -519,13 +519,14 @@ typedef enum {
  * Relief values returned by Tk_GetRelief:
  */
 
-#define TK_RELIEF_NULL		-1
-#define TK_RELIEF_FLAT		0
-#define TK_RELIEF_GROOVE	1
-#define TK_RELIEF_RAISED	2
-#define TK_RELIEF_RIDGE		3
-#define TK_RELIEF_SOLID		4
-#define TK_RELIEF_SUNKEN	5
+typedef enum {
+    TK_RELIEF_NULL = -1,
+    TK_RELIEF_FLAT, TK_RELIEF_GROOVE, TK_RELIEF_RAISED,
+	TK_RELIEF_RIDGE, TK_RELIEF_SOLID, TK_RELIEF_SUNKEN
+} Tk_Relief;
+#if TCL_MAJOR_VERSION < 9
+#   define Tk_Relief int
+#endif
 
 /*
  * "Which" argument values for Tk_3DBorderGC:

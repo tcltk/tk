@@ -90,7 +90,7 @@ typedef struct {
 				 * background when window is active. NULL
 				 * means no such border exists. */
     int borderWidth;		/* Width of border. */
-    int relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
+    Tk_Relief relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
     int highlightWidth;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */

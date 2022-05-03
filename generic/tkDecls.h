@@ -52,12 +52,12 @@ EXTERN GC		Tk_3DBorderGC(Tk_Window tkwin, Tk_3DBorder border,
 EXTERN void		Tk_3DHorizontalBevel(Tk_Window tkwin,
 				Drawable drawable, Tk_3DBorder border, int x,
 				int y, int width, int height, int leftIn,
-				int rightIn, int topBevel, int relief);
+				int rightIn, int topBevel, Tk_Relief relief);
 /* 4 */
 EXTERN void		Tk_3DVerticalBevel(Tk_Window tkwin,
 				Drawable drawable, Tk_3DBorder border, int x,
 				int y, int width, int height, int leftBevel,
-				int relief);
+				Tk_Relief relief);
 /* 5 */
 EXTERN void		Tk_AddOption(Tk_Window tkwin, const char *name,
 				const char *value, int priority);
@@ -231,12 +231,12 @@ EXTERN int		Tk_DistanceToTextLayout(Tk_TextLayout layout, int x,
 EXTERN void		Tk_Draw3DPolygon(Tk_Window tkwin, Drawable drawable,
 				Tk_3DBorder border, XPoint *pointPtr,
 				int numPoints, int borderWidth,
-				int leftRelief);
+				Tk_Relief leftRelief);
 /* 58 */
 EXTERN void		Tk_Draw3DRectangle(Tk_Window tkwin,
 				Drawable drawable, Tk_3DBorder border, int x,
 				int y, int width, int height,
-				int borderWidth, int relief);
+				int borderWidth, Tk_Relief relief);
 /* 59 */
 EXTERN void		Tk_DrawChars(Display *display, Drawable drawable,
 				GC gc, Tk_Font tkfont, const char *source,
@@ -253,12 +253,12 @@ EXTERN void		Tk_DrawTextLayout(Display *display,
 EXTERN void		Tk_Fill3DPolygon(Tk_Window tkwin, Drawable drawable,
 				Tk_3DBorder border, XPoint *pointPtr,
 				int numPoints, int borderWidth,
-				int leftRelief);
+				Tk_Relief leftRelief);
 /* 63 */
 EXTERN void		Tk_Fill3DRectangle(Tk_Window tkwin,
 				Drawable drawable, Tk_3DBorder border, int x,
 				int y, int width, int height,
-				int borderWidth, int relief);
+				int borderWidth, Tk_Relief relief);
 /* 64 */
 EXTERN Tk_PhotoHandle	Tk_FindPhoto(Tcl_Interp *interp,
 				const char *imageName);
@@ -379,7 +379,7 @@ EXTERN Pixmap		Tk_GetPixmap(Display *display, Drawable d, int width,
 				int height, int depth);
 /* 106 */
 EXTERN int		Tk_GetRelief(Tcl_Interp *interp, const char *name,
-				int *reliefPtr);
+				Tk_Relief *reliefPtr);
 /* 107 */
 EXTERN void		Tk_GetRootCoords(Tk_Window tkwin, int *xPtr,
 				int *yPtr);
@@ -467,7 +467,7 @@ EXTERN const char *	Tk_NameOfJoinStyle(int join);
 /* 139 */
 EXTERN const char *	Tk_NameOfJustify(Tk_Justify justify);
 /* 140 */
-EXTERN const char *	Tk_NameOfRelief(int relief);
+EXTERN const char *	Tk_NameOfRelief(Tk_Relief relief);
 /* 141 */
 EXTERN Tk_Window	Tk_NameToWindow(Tcl_Interp *interp,
 				const char *pathName, Tk_Window tkwin);
@@ -673,7 +673,7 @@ EXTERN int		Tk_GetPixelsFromObj(Tcl_Interp *interp,
 				int *intPtr);
 /* 209 */
 EXTERN int		Tk_GetReliefFromObj(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *resultPtr);
+				Tcl_Obj *objPtr, Tk_Relief *resultPtr);
 /* 210 */
 EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp, int objc,
 				Tcl_Obj *const objv[], double *dblPtr,
@@ -941,8 +941,8 @@ typedef struct TkStubs {
     void (*tk_MainLoop) (void); /* 0 */
     XColor * (*tk_3DBorderColor) (Tk_3DBorder border); /* 1 */
     GC (*tk_3DBorderGC) (Tk_Window tkwin, Tk_3DBorder border, int which); /* 2 */
-    void (*tk_3DHorizontalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftIn, int rightIn, int topBevel, int relief); /* 3 */
-    void (*tk_3DVerticalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftBevel, int relief); /* 4 */
+    void (*tk_3DHorizontalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftIn, int rightIn, int topBevel, Tk_Relief relief); /* 3 */
+    void (*tk_3DVerticalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftBevel, Tk_Relief relief); /* 4 */
     void (*tk_AddOption) (Tk_Window tkwin, const char *name, const char *value, int priority); /* 5 */
     void (*tk_BindEvent) (Tk_BindingTable bindingTable, XEvent *eventPtr, Tk_Window tkwin, int numObjects, ClientData *objectPtr); /* 6 */
     void (*tk_CanvasDrawableCoords) (Tk_Canvas canvas, double x, double y, short *drawableXPtr, short *drawableYPtr); /* 7 */
@@ -995,13 +995,13 @@ typedef struct TkStubs {
     void (*tk_DestroyWindow) (Tk_Window tkwin); /* 54 */
     const char * (*tk_DisplayName) (Tk_Window tkwin); /* 55 */
     int (*tk_DistanceToTextLayout) (Tk_TextLayout layout, int x, int y); /* 56 */
-    void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 57 */
-    void (*tk_Draw3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 58 */
+    void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, Tk_Relief leftRelief); /* 57 */
+    void (*tk_Draw3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, Tk_Relief relief); /* 58 */
     void (*tk_DrawChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, int x, int y); /* 59 */
     void (*tk_DrawFocusHighlight) (Tk_Window tkwin, GC gc, int width, Drawable drawable); /* 60 */
     void (*tk_DrawTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int firstChar, int lastChar); /* 61 */
-    void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 62 */
-    void (*tk_Fill3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 63 */
+    void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, Tk_Relief leftRelief); /* 62 */
+    void (*tk_Fill3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, Tk_Relief relief); /* 63 */
     Tk_PhotoHandle (*tk_FindPhoto) (Tcl_Interp *interp, const char *imageName); /* 64 */
     Font (*tk_FontId) (Tk_Font font); /* 65 */
     void (*tk_Free3DBorder) (Tk_3DBorder border); /* 66 */
@@ -1044,7 +1044,7 @@ typedef struct TkStubs {
     Tk_Uid (*tk_GetOption) (Tk_Window tkwin, const char *name, const char *className); /* 103 */
     int (*tk_GetPixels) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, int *intPtr); /* 104 */
     Pixmap (*tk_GetPixmap) (Display *display, Drawable d, int width, int height, int depth); /* 105 */
-    int (*tk_GetRelief) (Tcl_Interp *interp, const char *name, int *reliefPtr); /* 106 */
+    int (*tk_GetRelief) (Tcl_Interp *interp, const char *name, Tk_Relief *reliefPtr); /* 106 */
     void (*tk_GetRootCoords) (Tk_Window tkwin, int *xPtr, int *yPtr); /* 107 */
     int (*tk_GetScrollInfo) (Tcl_Interp *interp, int argc, const char **argv, double *dblPtr, int *intPtr); /* 108 */
     int (*tk_GetScreenMM) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, double *doublePtr); /* 109 */
@@ -1078,7 +1078,7 @@ typedef struct TkStubs {
     const char * (*tk_NameOfImage) (Tk_ImageModel model); /* 137 */
     const char * (*tk_NameOfJoinStyle) (int join); /* 138 */
     const char * (*tk_NameOfJustify) (Tk_Justify justify); /* 139 */
-    const char * (*tk_NameOfRelief) (int relief); /* 140 */
+    const char * (*tk_NameOfRelief) (Tk_Relief relief); /* 140 */
     Tk_Window (*tk_NameToWindow) (Tcl_Interp *interp, const char *pathName, Tk_Window tkwin); /* 141 */
     void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc *proc, ClientData clientData); /* 142 */
     int (*tk_ParseArgv) (Tcl_Interp *interp, Tk_Window tkwin, int *argcPtr, const char **argv, const Tk_ArgvInfo *argTable, int flags); /* 143 */
@@ -1147,7 +1147,7 @@ typedef struct TkStubs {
     int (*tk_GetJustifyFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tk_Justify *justifyPtr); /* 206 */
     int (*tk_GetMMFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 207 */
     int (*tk_GetPixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, int *intPtr); /* 208 */
-    int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
+    int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Tk_Relief *resultPtr); /* 209 */
     int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
     TCL_DEPRECATED_API("Don't use this function in a stub-enabled extension") void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */

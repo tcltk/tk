@@ -37,7 +37,7 @@ static RECT BoxToRect(Ttk_Box b)
  * 	to TK_RELIEF_SOLID. TK_RELIEF_FLAT can be implemented by not
  *	drawing anything.
  */
-static unsigned int ReliefToEdge(int relief)
+static unsigned int ReliefToEdge(Tk_Relief relief)
 {
     switch (relief) {
 	case TK_RELIEF_RAISED: return EDGE_RAISED;
@@ -217,7 +217,7 @@ static void BorderElementDraw(
 {
     BorderElement *border = (BorderElement *)elementRecord;
     RECT rc = BoxToRect(b);
-    int relief = TK_RELIEF_FLAT;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     TkWinDCState dcState;
     HDC hdc;
     (void)dummy;
@@ -324,7 +324,7 @@ static void ButtonBorderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     short int cx, cy;
     (void)dummy;
@@ -356,7 +356,7 @@ static void ButtonBorderElementDraw(
     Drawable d, Ttk_Box b, unsigned int state)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
-    int relief = TK_RELIEF_FLAT;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     TkWinDCState dcState;
     HDC hdc;

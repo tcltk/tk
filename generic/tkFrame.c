@@ -62,7 +62,7 @@ typedef struct {
 				 * background. NULL means no background or
 				 * border. */
     int borderWidth;		/* Width of 3-D border (if any). */
-    int relief;			/* 3-d effect: TK_RELIEF_RAISED etc. */
+    Tk_Relief relief;			/* 3-d effect: TK_RELIEF_RAISED etc. */
     int highlightWidth;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. 0 means don't
 				 * draw a highlight. */
@@ -241,7 +241,7 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_FRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
+	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BOOLEAN, "-tile", "tile", "Tile",
 	DEF_FRAME_BG_TILE, TCL_INDEX_NONE, offsetof(Frame, tile), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
@@ -264,7 +264,7 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
 	DEF_TOPLEVEL_MENU, TCL_INDEX_NONE, offsetof(Frame, menuName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
+	DEF_FRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-screen", "screen", "Screen",
 	DEF_TOPLEVEL_SCREEN, TCL_INDEX_NONE, offsetof(Frame, screenName),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -297,7 +297,7 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget",
 	NULL, TCL_INDEX_NONE, offsetof(Labelframe, labelWin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_LABELFRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), 0, 0, 0},
+	DEF_LABELFRAME_RELIEF, TCL_INDEX_NONE, offsetof(Frame, relief), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-text", "text", "Text",
 	DEF_LABELFRAME_TEXT, offsetof(Labelframe, textPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -1703,7 +1703,7 @@ TkpDrawFrame(
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
-    int relief)
+    Tk_Relief relief)
 {
     /*
      * Legacy shim to allow for external callers. Internal ones use

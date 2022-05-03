@@ -114,7 +114,7 @@ typedef struct {
 				 * width of border in pixels. */
     int borderWidth;		/* Integer value corresponding to
 				 * borderWidthPtr. Always >= 0. */
-    int relief;			/* Value of -relief option: specifies 3-d
+    Tk_Relief relief;			/* Value of -relief option: specifies 3-d
 				 * effect for border, such as
 				 * TK_RELIEF_RAISED. */
     int overRelief;		/* Value of -overrelief option: specifies a

@@ -631,7 +631,7 @@ DisplayMenu(
     int width;
     int borderWidth;
     Tk_3DBorder border;
-    int relief;
+    Tk_Relief relief;
 
 
     menuPtr->menuFlags &= ~REDRAW_PENDING;

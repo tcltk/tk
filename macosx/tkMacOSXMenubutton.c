@@ -27,7 +27,7 @@
 
 typedef struct {
     Tk_3DBorder border;
-    int relief;
+    Tk_Relief relief;
     GC gc;
     int hasImageOrBitmap;
 } DrawParams;

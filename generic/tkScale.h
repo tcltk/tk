@@ -100,7 +100,7 @@ typedef struct TkScale {
     Tk_3DBorder bgBorder;	/* Used for drawing slider and other
 				 * background areas. */
     Tk_3DBorder activeBorder;	/* For drawing the slider when active. */
-    int sliderRelief;		/* Is slider to be drawn raised, sunken,
+    Tk_Relief sliderRelief;		/* Is slider to be drawn raised, sunken,
 				 * etc. */
     XColor *troughColorPtr;	/* Color for drawing trough. */
     GC troughGC;		/* For drawing trough. */
@@ -108,7 +108,7 @@ typedef struct TkScale {
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *textColorPtr;	/* Color for drawing text. */
     GC textGC;			/* GC for drawing text in normal mode. */
-    int relief;			/* Indicates whether window as a whole is
+    Tk_Relief relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
     int highlightWidth;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means

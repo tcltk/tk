@@ -129,7 +129,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MENUBUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkMenuButton, relief),
-	0, 0, 0},
+	TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuButton, compound), 0,
 	 compoundStrings, 0},

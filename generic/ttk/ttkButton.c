@@ -256,7 +256,7 @@ static const Tk_OptionSpec LabelOptionSpecs[] =
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	NULL, offsetof(Label,label.reliefObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"w", offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED},

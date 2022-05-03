@@ -626,7 +626,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, "white", 0x100},
 	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", NULL,
 		offsetof(TypesRecord, reliefPtr), TCL_INDEX_NONE,
-		TK_CONFIG_NULL_OK, 0, 0x200},
+		TK_CONFIG_NULL_OK|TK_OPTION_ENUM_VAR, 0, 0x200},
 	    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", "xterm",
 		offsetof(TypesRecord, cursorPtr), TCL_INDEX_NONE,
 		TK_CONFIG_NULL_OK, 0, 0x400},
@@ -858,7 +858,7 @@ TestobjconfigObjCmd(
 	    Tk_Font tkfont;
 	    Pixmap bitmap;
 	    Tk_3DBorder border;
-	    int relief;
+	    Tk_Relief relief;
 	    Tk_Cursor cursor;
 	    Tk_Justify justify;
 	    Tk_Anchor anchor;
@@ -899,7 +899,7 @@ TestobjconfigObjCmd(
 		TK_CONFIG_NULL_OK, "white", 0x100},
 	    {TK_OPTION_RELIEF, "-relief", "relief", "Relief", NULL,
 		TCL_INDEX_NONE, offsetof(InternalRecord, relief),
-		TK_CONFIG_NULL_OK, 0, 0x200},
+		TK_CONFIG_NULL_OK|TK_OPTION_ENUM_VAR, 0, 0x200},
 	    {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", "xterm",
 		TCL_INDEX_NONE, offsetof(InternalRecord, cursor),
 		TK_CONFIG_NULL_OK, 0, 0x400},

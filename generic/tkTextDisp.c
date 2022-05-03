@@ -127,7 +127,7 @@ typedef struct StyleValues {
     Tk_3DBorder border;		/* Used for drawing background under text.
 				 * NULL means use widget background. */
     int borderWidth;		/* Width of 3-D border for background. */
-    int relief;			/* 3-D relief for background. */
+    Tk_Relief relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * draw solid. */
     XColor *fgColor;		/* Foreground color for text. */

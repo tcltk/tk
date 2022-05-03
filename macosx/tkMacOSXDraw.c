@@ -1743,7 +1743,7 @@ TkpDrawFrameEx(
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
-    int relief)
+    Tk_Relief relief)
 {
     if (useThemedToplevel && Tk_IsTopLevel(tkwin)) {
 	static Tk_3DBorder themedBorder = NULL;

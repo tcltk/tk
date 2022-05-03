@@ -2155,7 +2155,7 @@ GetObjectForOption(
 	    } else {
 		value = *((int *)internalPtr);
 	    }
-	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(value), -1);
+	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief((Tk_Relief)value), -1);
 	    break;
 	case TK_OPTION_CURSOR: {
 	    Tk_Cursor cursor = *((Tk_Cursor *)internalPtr);

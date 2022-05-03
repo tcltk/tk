@@ -69,7 +69,7 @@ static const Tk_OptionSpec SquareOptionSpecs[] =
      TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-     NULL, offsetof(Square,square.reliefObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+     NULL, offsetof(Square,square.reliefObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, 0, 0},
 
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
      "center", offsetof(Square,square.anchorObj), TCL_INDEX_NONE, 0, 0, 0},
@@ -229,7 +229,8 @@ static void SquareElementDraw(
 {
     SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;
-    int borderWidth = 1, relief = TK_RELIEF_FLAT;
+    int borderWidth = 1;
+    Tk_Relief relief = TK_RELIEF_FLAT;
 
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
     Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);

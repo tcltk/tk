@@ -156,7 +156,8 @@ static void BorderElementDraw(
 {
     BorderElement *bd = (BorderElement *)elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 1, relief = TK_RELIEF_FLAT;
+    int borderWidth = 1;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     (void)dummy;
     (void)state;
 
@@ -265,7 +266,7 @@ static void PaddingElementSize(
 {
     PaddingElement *padding = (PaddingElement *)elementRecord;
     int shiftRelief = 0;
-    int relief = TK_RELIEF_FLAT;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     Ttk_Padding pad;
     (void)dummy;
     (void)widthPtr;
@@ -586,7 +587,7 @@ static void SquareIndicatorElementDraw(
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Tk_3DBorder border = 0, interior = 0;
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     Ttk_Padding padding;
     int borderWidth = 2;
     int diameter;
@@ -634,7 +635,7 @@ static void DiamondIndicatorElementDraw(
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Tk_3DBorder border = 0, interior = 0;
     int borderWidth = 2;
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     int diameter, radius;
     XPoint points[4];
     Ttk_Padding padding;
@@ -814,7 +815,7 @@ static void ArrowElementDraw(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     int borderWidth = 1;
     (void)state;
 
@@ -877,7 +878,8 @@ static void TroughElementDraw(
 {
     TroughElement *troughPtr = (TroughElement *)elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 2, relief = TK_RELIEF_SUNKEN;
+    int borderWidth = 2;
+    Tk_Relief relief = TK_RELIEF_SUNKEN;
     (void)dummy;
     (void)state;
 
@@ -954,7 +956,8 @@ static void ThumbElementDraw(
 {
     ThumbElement *thumb = (ThumbElement *)elementRecord;
     Tk_3DBorder  border = Tk_Get3DBorderFromObj(tkwin, thumb->borderObj);
-    int borderWidth = 2, relief = TK_RELIEF_RAISED;
+    int borderWidth = 2;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     (void)dummy;
     (void)state;
 
@@ -1037,7 +1040,8 @@ static void SliderElementDraw(
 {
     SliderElement *slider = (SliderElement *)elementRecord;
     Tk_3DBorder border = NULL;
-    int relief = TK_RELIEF_RAISED, borderWidth = 2;
+    Tk_Relief relief = TK_RELIEF_RAISED;
+    int borderWidth = 2;
     Ttk_Orient orient;
     (void)dummy;
     (void)state;
@@ -1154,7 +1158,8 @@ static void PbarElementDraw(
 {
     PbarElement *pbar = (PbarElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, pbar->borderObj);
-    int relief = TK_RELIEF_RAISED, borderWidth = 2;
+    Tk_Relief relief = TK_RELIEF_RAISED;
+    int borderWidth = 2;
     (void)dummy;
     (void)state;
 

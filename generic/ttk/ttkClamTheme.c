@@ -148,7 +148,7 @@ static void BorderElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     BorderElement *border = (BorderElement *)elementRecord;
-    int relief = TK_RELIEF_FLAT;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     int borderWidth = 2;
     Tcl_Obj *outer = 0, *upper = 0, *lower = 0;
     (void)dummy;
@@ -175,7 +175,7 @@ static void BorderElementDraw(
 	case TK_RELIEF_FLAT :
 	    outer = upper = lower = 0;
 	    break;
-	case TK_RELIEF_SOLID :
+	default :
 	    outer = upper = lower = border->borderColorObj;
 	    break;
     }

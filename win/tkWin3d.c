@@ -116,7 +116,7 @@ Tk_3DVerticalBevel(
     int leftBevel,		/* Non-zero means this bevel forms the left
 				 * side of the object; 0 means it forms the
 				 * right side. */
-    int relief)			/* Kind of bevel to draw. For example,
+    Tk_Relief relief)			/* Kind of bevel to draw. For example,
 				 * TK_RELIEF_RAISED means interior of object
 				 * should appear higher than exterior. */
 {
@@ -211,7 +211,7 @@ Tk_3DHorizontalBevel(
     int topBevel,		/* Non-zero means this bevel forms the top
 				 * side of the object; 0 means it forms the
 				 * bottom side. */
-    int relief)			/* Kind of bevel to draw. For example,
+    Tk_Relief relief)			/* Kind of bevel to draw. For example,
 				 * TK_RELIEF_RAISED means interior of object
 				 * should appear higher than exterior. */
 {

@@ -133,7 +133,8 @@ static void ButtonBorderElementDraw(
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 1, relief = TK_RELIEF_FLAT;
+    int borderWidth = 1;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int inset = 0;
     (void)dummy;
@@ -240,7 +241,7 @@ static void ArrowElementDraw(
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 2;
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     int size = b.width < b.height ? b.width : b.height;
     XPoint points[3];
     (void)state;
@@ -360,7 +361,7 @@ static void SashElementDraw(
     SashElement *sash = (SashElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, sash->borderObj);
     GC gc1,gc2;
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     int handleSize = 8, handlePad = 8;
     Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
     Ttk_Box hb;
