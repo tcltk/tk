@@ -40,13 +40,13 @@ declare 3 {
     void Tk_3DHorizontalBevel(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border, int x,
 	    int y, int width, int height, int leftIn,
-	    int rightIn, int topBevel, int relief)
+	    int rightIn, int topBevel, Tk_Relief relief)
 }
 declare 4 {
     void Tk_3DVerticalBevel(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border, int x,
 	    int y, int width, int height, int leftBevel,
-	    int relief)
+	    Tk_Relief relief)
 }
 declare 5 {
     void Tk_AddOption(Tk_Window tkwin, const char *name,
@@ -254,12 +254,12 @@ declare 57 {
     void Tk_Draw3DPolygon(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border,
 	    XPoint *pointPtr, int numPoints, int borderWidth,
-	    int leftRelief)
+	    Tk_Relief leftRelief)
 }
 declare 58 {
     void Tk_Draw3DRectangle(Tk_Window tkwin, Drawable drawable,
 	    Tk_3DBorder border, int x, int y, int width, int height,
-	    int borderWidth, int relief)
+	    int borderWidth, Tk_Relief relief)
 }
 declare 59 {
     void Tk_DrawChars(Display *display, Drawable drawable, GC gc,
@@ -278,13 +278,13 @@ declare 62 {
     void Tk_Fill3DPolygon(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border,
 	    XPoint *pointPtr, int numPoints, int borderWidth,
-	    int leftRelief)
+	    Tk_Relief leftRelief)
 }
 declare 63 {
     void Tk_Fill3DRectangle(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border, int x,
 	    int y, int width, int height, int borderWidth,
-	    int relief)
+	    Tk_Relief relief)
 }
 declare 64 {
     Tk_PhotoHandle Tk_FindPhoto(Tcl_Interp *interp, const char *imageName)
@@ -432,7 +432,7 @@ declare 105 {
 	    int width, int height, int depth)
 }
 declare 106 {
-    int Tk_GetRelief(Tcl_Interp *interp, const char *name, int *reliefPtr)
+    int Tk_GetRelief(Tcl_Interp *interp, const char *name, Tk_Relief *reliefPtr)
 }
 declare 107 {
     void Tk_GetRootCoords(Tk_Window tkwin, int *xPtr, int *yPtr)
@@ -548,7 +548,7 @@ declare 139 {
     const char *Tk_NameOfJustify(Tk_Justify justify)
 }
 declare 140 {
-    const char *Tk_NameOfRelief(int relief)
+    const char *Tk_NameOfRelief(Tk_Relief relief)
 }
 declare 141 {
     Tk_Window Tk_NameToWindow(Tcl_Interp *interp,
@@ -795,7 +795,7 @@ declare 208 {
 }
 declare 209 {
     int	 Tk_GetReliefFromObj(Tcl_Interp *interp,
-	    Tcl_Obj *objPtr, int *resultPtr)
+	    Tcl_Obj *objPtr, Tk_Relief *resultPtr)
 }
 declare 210 {
     int	 Tk_GetScrollInfoObj(Tcl_Interp *interp,

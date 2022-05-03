@@ -48,7 +48,7 @@ typedef struct {
 				 * background. NULL means a border hasn't been
 				 * created yet. */
     int borderWidth;		/* Width of border. */
-    int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
+    Tk_Relief relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
     int highlightWidth;		/* Width in pixels of highlight to draw
 				 * around widget when it has the focus.
 				 * <= 0 means don't draw a highlight. */
@@ -149,7 +149,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_MESSAGE_PADY, offsetof(Message, padYPtr),
 	 offsetof(Message, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_MESSAGE_RELIEF, TCL_INDEX_NONE, offsetof(Message, relief), 0, 0, 0},
+	DEF_MESSAGE_RELIEF, TCL_INDEX_NONE, offsetof(Message, relief), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MESSAGE_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Message, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},

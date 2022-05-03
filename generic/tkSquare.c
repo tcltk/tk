@@ -479,7 +479,8 @@ SquareDisplay(
     Tk_Window tkwin = squarePtr->tkwin;
     Pixmap pm = None;
     Drawable d;
-    int borderWidth, size, relief;
+    int borderWidth, size;
+    Tk_Relief relief;
     Tk_3DBorder bgBorder, fgBorder;
     int doubleBuffer;
 
@@ -585,8 +586,8 @@ static void
 KeepInWindow(
     Square *squarePtr)	/* Pointer to widget record. */
 {
-    int i, bd, relief;
-    int borderWidth, size;
+    Tk_Relief relief;
+    int i, bd, borderWidth, size;
 
     Tk_GetPixelsFromObj(NULL, squarePtr->tkwin, squarePtr->borderWidthPtr,
 	    &borderWidth);

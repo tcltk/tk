@@ -2974,7 +2974,7 @@ DrawMenuEntryBackground(
 {
     if (mePtr->state == ENTRY_ACTIVE
 		|| (mePtr->entryFlags & ENTRY_PLATFORM_FLAG1)!=0 ) {
-	int relief;
+	Tk_Relief relief;
 	int activeBorderWidth;
 
 	bgBorder = activeBorder;

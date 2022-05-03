@@ -114,8 +114,8 @@ TTKAPI Ttk_Padding	Ttk_UniformPadding(short borderWidth);
 /* 25 */
 TTKAPI Ttk_Padding	Ttk_AddPadding(Ttk_Padding pad1, Ttk_Padding pad2);
 /* 26 */
-TTKAPI Ttk_Padding	Ttk_RelievePadding(Ttk_Padding padding, int relief,
-				int n);
+TTKAPI Ttk_Padding	Ttk_RelievePadding(Ttk_Padding padding,
+				Tk_Relief relief, int n);
 /* 27 */
 TTKAPI Ttk_Box		Ttk_MakeBox(int x, int y, int width, int height);
 /* 28 */
@@ -179,7 +179,7 @@ typedef struct TtkStubs {
     Ttk_Padding (*ttk_MakePadding) (short l, short t, short r, short b); /* 23 */
     Ttk_Padding (*ttk_UniformPadding) (short borderWidth); /* 24 */
     Ttk_Padding (*ttk_AddPadding) (Ttk_Padding pad1, Ttk_Padding pad2); /* 25 */
-    Ttk_Padding (*ttk_RelievePadding) (Ttk_Padding padding, int relief, int n); /* 26 */
+    Ttk_Padding (*ttk_RelievePadding) (Ttk_Padding padding, Tk_Relief relief, int n); /* 26 */
     Ttk_Box (*ttk_MakeBox) (int x, int y, int width, int height); /* 27 */
     int (*ttk_BoxContains) (Ttk_Box box, int x, int y); /* 28 */
     Ttk_Box (*ttk_PackBox) (Ttk_Box *cavity, int w, int h, Ttk_Side side); /* 29 */

@@ -202,7 +202,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	DEF_TEXT_PADY, TCL_INDEX_NONE, offsetof(TkText, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_TEXT_RELIEF, TCL_INDEX_NONE, offsetof(TkText, relief), 0, 0, 0},
+	DEF_TEXT_RELIEF, TCL_INDEX_NONE, offsetof(TkText, relief), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
 	DEF_TEXT_SELECT_COLOR, TCL_INDEX_NONE, offsetof(TkText, selBorder),
 	0, DEF_TEXT_SELECT_MONO, 0},

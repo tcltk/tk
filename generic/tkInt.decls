@@ -495,7 +495,7 @@ declare 151 {
 }
 declare 152 {
     void TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
-	    int highlightWidth, int borderWidth, int relief)
+	    int highlightWidth, int borderWidth, Tk_Relief relief)
 }
 declare 153 {
     void TkCreateThreadExitHandler(Tcl_ExitProc *proc, ClientData clientData)

@@ -15,6 +15,7 @@
 #ifndef _TKINT
 #include "tkInt.h"
 #endif
+#include <stdbool.h>
 
 enum EntryType {
     TK_ENTRY, TK_SPINBOX
@@ -83,7 +84,7 @@ typedef struct {
 				 * background. */
     int borderWidth;		/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
-    int exportSelection;	/* Non-zero means tie internal entry selection
+    bool exportSelection;	/* true means tie internal entry selection
 				 * to X selection. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Text color in normal mode. */
@@ -104,7 +105,7 @@ typedef struct {
     int insertWidth;		/* Total width of insert cursor. */
     Tk_Justify justify;		/* Justification to use for text within
 				 * window. */
-    int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
+    Tk_Relief relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
     Tk_3DBorder selBorder;	/* Border and background for selected
 				 * characters. */
     int selBorderWidth;		/* Width of border around selection. */
@@ -215,7 +216,7 @@ typedef struct {
      * Spinbox specific fields for use with configuration settings above.
      */
 
-    int wrap;			/* whether to wrap around when spinning */
+    bool wrap;			/* whether to wrap around when spinning */
 
     int selElement;		/* currently selected control */
     int curElement;		/* currently mouseover control */

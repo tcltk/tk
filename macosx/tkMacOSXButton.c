@@ -44,7 +44,7 @@
 
 typedef struct {
     Tk_3DBorder border;
-    int relief;
+    Tk_Relief relief;
     int offset;			/* 0 means this is a normal widget. 1 means
 				 * it is an image button, so we offset the
 				 * image to make the button appear to move

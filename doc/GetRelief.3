@@ -40,12 +40,12 @@ the internal rep will be modified to cache corresponding relief value.
 .AP char *string in
 Same as \fIobjPtr\fR except description of relief is passed as
 a string.
-.AP int *reliefPtr out
+.AP Tk_Relief *reliefPtr out
 Pointer to location in which to store relief value corresponding to
 \fIobjPtr\fR or \fIname\fR.
 .AP "const char" *name
 Name of the relief.
-.AP int relief in
+.AP Tk_Relief relief in
 Relief value (one of \fBTK_RELIEF_FLAT\fR, \fBTK_RELIEF_RAISED\fR,
 \fBTK_RELIEF_SUNKEN\fR, \fBTK_RELIEF_GROOVE\fR, \fBTK_RELIEF_SOLID\fR,
 or \fBTK_RELIEF_RIDGE\fR).

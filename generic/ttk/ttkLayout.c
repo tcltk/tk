@@ -427,7 +427,7 @@ Ttk_Padding Ttk_AddPadding(Ttk_Padding p1, Ttk_Padding p2)
  * 	This may be used in element geometry procedures to simulate
  * 	a "pressed-in" look for pushbuttons.
  */
-Ttk_Padding Ttk_RelievePadding(Ttk_Padding padding, int relief, int n)
+Ttk_Padding Ttk_RelievePadding(Ttk_Padding padding, Tk_Relief relief, int n)
 {
     switch (relief)
     {

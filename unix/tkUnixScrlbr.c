@@ -101,7 +101,8 @@ TkpDisplayScrollbar(
     Tk_Window tkwin = scrollPtr->tkwin;
     XPoint points[7];
     Tk_3DBorder border;
-    int relief, width, elementBorderWidth;
+    Tk_Relief relief;
+    int width, elementBorderWidth;
     Pixmap pixmap;
 
     if ((scrollPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {

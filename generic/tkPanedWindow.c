@@ -124,7 +124,7 @@ typedef struct PanedWindow {
     Tk_OptionTable paneOpts;	/* Token for pane cget table. */
     Tk_3DBorder background;	/* Background color. */
     int borderWidth;		/* Value of -borderwidth option. */
-    int relief;			/* 3D border effect (TK_RELIEF_RAISED, etc) */
+    Tk_Relief relief;			/* 3D border effect (TK_RELIEF_RAISED, etc) */
     Tcl_Obj *widthPtr;		/* Tcl_Obj rep for width. */
     Tcl_Obj *heightPtr;		/* Tcl_Obj rep for height. */
     int width, height;		/* Width and height of the widget. */
@@ -132,7 +132,7 @@ typedef struct PanedWindow {
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
     int resizeOpaque;		/* Boolean indicating whether resize should be
 				 * opaque or rubberband style. */
-    int sashRelief;		/* Relief used to draw sash. */
+    Tk_Relief sashRelief;		/* Relief used to draw sash. */
     int sashWidth;		/* Width of each sash, in pixels. */
     Tcl_Obj *sashWidthPtr;	/* Tcl_Obj rep for sash width. */
     int sashPad;		/* Additional padding around each sash. */
@@ -150,7 +150,7 @@ typedef struct PanedWindow {
     Tk_3DBorder proxyBackground;/* Background color used to draw proxy. If NULL, use background. */
     Tcl_Obj *proxyBorderWidthPtr; /* Tcl_Obj rep for proxyBorderWidth */
     int proxyBorderWidth;	/* Borderwidth used to draw proxy. */
-    int proxyRelief;		/* Relief used to draw proxy, if TK_RELIEF_NULL then use relief. */
+    Tk_Relief proxyRelief;		/* Relief used to draw proxy, if TK_RELIEF_NULL then use relief. */
     Pane **panes;		/* Pointer to array of Panes. */
     int numPanes;		/* Number of panes. */
     int sizeofPanes;		/* Number of elements in the panes array. */
@@ -310,9 +310,9 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 offsetof(PanedWindow, proxyBorderWidth), 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-proxyrelief", "proxyRelief", "Relief",
 	 0, TCL_INDEX_NONE, offsetof(PanedWindow, proxyRelief),
-	 TK_OPTION_NULL_OK, 0, 0},
+	 TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	 DEF_PANEDWINDOW_RELIEF, TCL_INDEX_NONE, offsetof(PanedWindow, relief), 0, 0, 0},
+	 DEF_PANEDWINDOW_RELIEF, TCL_INDEX_NONE, offsetof(PanedWindow, relief), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_CURSOR, "-sashcursor", "sashCursor", "Cursor",
 	 DEF_PANEDWINDOW_SASHCURSOR, TCL_INDEX_NONE, offsetof(PanedWindow, sashCursor),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -321,7 +321,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 0, 0, GEOMETRY},
     {TK_OPTION_RELIEF, "-sashrelief", "sashRelief", "Relief",
 	 DEF_PANEDWINDOW_SASHRELIEF, TCL_INDEX_NONE, offsetof(PanedWindow, sashRelief),
-	 0, 0, 0},
+	 TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-sashwidth", "sashWidth", "Width",
 	 DEF_PANEDWINDOW_SASHWIDTH, offsetof(PanedWindow, sashWidthPtr),
 	 offsetof(PanedWindow, sashWidth), 0, 0, GEOMETRY},

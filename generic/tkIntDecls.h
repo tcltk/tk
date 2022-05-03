@@ -426,7 +426,7 @@ EXTERN void		TkMakeRawCurvePostscript(Tcl_Interp *interp,
 /* 152 */
 EXTERN void		TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
 				int highlightWidth, int borderWidth,
-				int relief);
+				Tk_Relief relief);
 /* 153 */
 EXTERN void		TkCreateThreadExitHandler(Tcl_ExitProc *proc,
 				ClientData clientData);
@@ -755,7 +755,7 @@ typedef struct TkIntStubs {
     const Tk_OptionSpec * (*tkGetOptionSpec) (const char *name, Tk_OptionTable optionTable); /* 149 */
     int (*tkMakeRawCurve) (Tk_Canvas canvas, double *pointPtr, int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]); /* 150 */
     void (*tkMakeRawCurvePostscript) (Tcl_Interp *interp, Tk_Canvas canvas, double *pointPtr, int numPoints); /* 151 */
-    void (*tkpDrawFrame) (Tk_Window tkwin, Tk_3DBorder border, int highlightWidth, int borderWidth, int relief); /* 152 */
+    void (*tkpDrawFrame) (Tk_Window tkwin, Tk_3DBorder border, int highlightWidth, int borderWidth, Tk_Relief relief); /* 152 */
     void (*tkCreateThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 153 */
     void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 154 */
     void (*reserved155)(void);

@@ -129,7 +129,7 @@ jobs:
           }
           echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
         env:
-          CFGOPT: --enable-64bit --enable-symbols=${{ matrix.symbols }}
+          CFGOPT: CFLAGS=-fshort-enums --enable-64bit --enable-symbols=${{ matrix.symbols }}
         working-directory: tcl/win
       - name: Configure (symbols=${{ matrix.symbols }})
         run: |

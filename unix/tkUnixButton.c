@@ -352,7 +352,7 @@ TkpCreateButton(
 static void
 ShiftByOffset(
     TkButton *butPtr,
-    int relief,
+    Tk_Relief relief,
     int *x,		/* shift this x coordinate */
     int *y,		/* shift this y coordinate */
     int width,		/* width of image/text */
@@ -398,9 +398,9 @@ TkpDisplayButton(
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
-    int x = 0;			/* Initialization only needed to stop compiler
+    int x = 0, y;			/* Initialization only needed to stop compiler
 				 * warning. */
-    int y, relief;
+    Tk_Relief relief;
     Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, fullWidth, fullHeight;
     int textXOffset, textYOffset;

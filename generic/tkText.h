@@ -324,7 +324,7 @@ typedef struct TkTextTag {
     Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
     char *reliefString;		/* -relief option string (malloc-ed). NULL
 				 * means option not specified. */
-    int relief;			/* 3-D relief for background. */
+    Tk_Relief relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
     XColor *fgColor;		/* Foreground color for text. NULL means no
@@ -670,7 +670,7 @@ typedef struct TkText {
     int borderWidth;		/* Width of 3-D border to draw around entire
 				 * widget. */
     int padX, padY;		/* Padding between text and window border. */
-    int relief;			/* 3-d effect for border around entire widget:
+    Tk_Relief relief;			/* 3-d effect for border around entire widget:
 				 * TK_RELIEF_RAISED etc. */
     int highlightWidth;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means

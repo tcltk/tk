@@ -15,12 +15,7 @@ jobs:
           - "gcc"
           - "clang"
         cfgopt:
-          - ""
-          - "CFLAGS=-DTK_NO_DEPRECATED=1"
-          - "--disable-shared"
-          - "--disable-xft"
-          - "--disable-xss"
-          - "--enable-symbols"
+          - "CFLAGS=-fshort-enums"
     steps:
       - name: Checkout
         uses: actions/checkout@v2

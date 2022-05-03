@@ -467,7 +467,7 @@ DoConfig(
 	}
 	case TK_CONFIG_RELIEF:
 	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetRelief(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetRelief(interp, uid, (Tk_Relief *) ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -831,7 +831,7 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_RELIEF:
-	result = Tk_NameOfRelief(*((int *)ptr));
+	result = Tk_NameOfRelief(*((Tk_Relief *)ptr));
 	break;
     case TK_CONFIG_CURSOR:
     case TK_CONFIG_ACTIVE_CURSOR: {

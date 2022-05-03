@@ -83,7 +83,7 @@ static void DrawCorner(
 
 static void DrawBorder(
     Tk_Window tkwin, Drawable d, Tk_3DBorder border, XColor *borderColor,
-    Ttk_Box b, int borderWidth, int relief)
+    Ttk_Box b, int borderWidth, Tk_Relief relief)
 {
     GC borderGC = Tk_GCForColor(borderColor, d);
 
@@ -286,7 +286,7 @@ static void BorderElementDraw(
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, bd->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, bd->borderColorObj);
     int borderWidth = 2;
-    int relief = TK_RELIEF_FLAT;
+    Tk_Relief relief = TK_RELIEF_FLAT;
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     (void)dummy;
     (void)state;
@@ -711,7 +711,7 @@ static void ArrowElementDraw(
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     int borderWidth = 2;
     (void)state;
 
@@ -878,7 +878,8 @@ static void TroughElementDraw(
 {
     TroughElement *troughPtr = (TroughElement *)elementRecord;
     Tk_3DBorder border = NULL;
-    int borderWidth = 2, relief = TK_RELIEF_SUNKEN, groove = -1;
+    int borderWidth = 2, groove = -1;
+    Tk_Relief relief = TK_RELIEF_SUNKEN;
     Ttk_Orient orient;
     (void)dummy;
     (void)state;
@@ -967,7 +968,7 @@ static void ThumbElementDraw(
     ThumbElement *thumb = (ThumbElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, thumb->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, thumb->borderColorObj);
-    int relief = TK_RELIEF_RAISED;
+    Tk_Relief relief = TK_RELIEF_RAISED;
     int borderWidth = 2;
     (void)dummy;
     (void)state;
@@ -1068,7 +1069,8 @@ static void SliderElementDraw(
     SliderElement *slider = (SliderElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, slider->borderColorObj);
-    int relief = TK_RELIEF_RAISED, borderWidth = 2;
+    Tk_Relief relief = TK_RELIEF_RAISED;
+    int borderWidth = 2;
     (void)dummy;
     (void)state;
 

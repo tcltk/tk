@@ -62,7 +62,7 @@ typedef struct TkCanvas {
 
     int borderWidth;		/* Width of 3-D border around window. */
     Tk_3DBorder bgBorder;	/* Used for canvas background. */
-    int relief;			/* Indicates whether window as a whole is
+    Tk_Relief relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
     int highlightWidth;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means

@@ -230,7 +230,7 @@ TkpDrawFrameEx(
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
-    int relief)
+    Tk_Relief relief)
 {
     Tk_Fill3DRectangle(tkwin, drawable, border, highlightWidth,
 	    highlightWidth, Tk_Width(tkwin) - 2*highlightWidth,

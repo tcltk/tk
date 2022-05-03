@@ -109,7 +109,7 @@ declare 25 {
 }
 declare 26 {
     Ttk_Padding Ttk_RelievePadding(
-    	Ttk_Padding padding, int relief, int n)
+    	Ttk_Padding padding, Tk_Relief relief, int n)
 }
 declare 27 {
     Ttk_Box Ttk_MakeBox(int x, int y, int width, int height)

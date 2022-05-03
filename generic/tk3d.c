@@ -281,7 +281,7 @@ Tk_Draw3DRectangle(
 				/* Outside area of region in which border will
 				 * be drawn. */
     int borderWidth,		/* Desired width for border, in pixels. */
-    int relief)			/* Type of relief: TK_RELIEF_RAISED,
+    Tk_Relief relief)			/* Type of relief: TK_RELIEF_RAISED,
 				 * TK_RELIEF_SUNKEN, TK_RELIEF_GROOVE, etc. */
 {
     if (width < 2*borderWidth) {
@@ -621,7 +621,7 @@ Tk_GetReliefFromObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tcl_Obj *objPtr,		/* The object we are trying to get the value
 				 * from. */
-    int *resultPtr)		/* Where to place the answer. */
+    Tk_Relief *resultPtr)		/* Where to place the answer. */
 {
     return Tcl_GetIndexFromObjStruct(interp, objPtr, tkReliefStrings,
 	    sizeof(char *), "relief", 0, resultPtr);
@@ -650,7 +650,7 @@ int
 Tk_GetRelief(
     Tcl_Interp *interp,		/* For error messages. */
     const char *name,		/* Name of a relief type. */
-    int *reliefPtr)		/* Where to store converted relief. */
+    Tk_Relief *reliefPtr)		/* Where to store converted relief. */
 {
     char c;
     size_t length;
@@ -699,7 +699,7 @@ Tk_GetRelief(
 
 const char *
 Tk_NameOfRelief(
-    int relief)		/* One of TK_RELIEF_FLAT, TK_RELIEF_RAISED, or
+    Tk_Relief relief)		/* One of TK_RELIEF_FLAT, TK_RELIEF_RAISED, or
 			 * TK_RELIEF_SUNKEN. */
 {
     if (relief == TK_RELIEF_FLAT) {
@@ -752,7 +752,7 @@ Tk_Draw3DPolygon(
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
-    int leftRelief)		/* TK_RELIEF_RAISED or TK_RELIEF_SUNKEN:
+    Tk_Relief leftRelief)		/* TK_RELIEF_RAISED or TK_RELIEF_SUNKEN:
 				 * indicates how stuff to left of trajectory
 				 * looks relative to stuff on right. */
 {
@@ -952,7 +952,7 @@ Tk_Fill3DRectangle(
 				/* Outside area of rectangular region. */
     int borderWidth,		/* Desired width for border, in pixels. Border
 				 * will be *inside* region. */
-    int relief)			/* Indicates 3D effect: TK_RELIEF_FLAT,
+    Tk_Relief relief)			/* Indicates 3D effect: TK_RELIEF_FLAT,
 				 * TK_RELIEF_RAISED, or TK_RELIEF_SUNKEN. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
@@ -1021,7 +1021,7 @@ Tk_Fill3DPolygon(
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
-    int leftRelief)		/* Indicates 3D effect of left side of
+    Tk_Relief leftRelief)		/* Indicates 3D effect of left side of
 				 * trajectory relative to right:
 				 * TK_RELIEF_FLAT, TK_RELIEF_RAISED, or
 				 * TK_RELIEF_SUNKEN. */

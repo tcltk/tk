@@ -54,7 +54,7 @@ typedef struct TkScrollbar {
     Tk_3DBorder activeBorder;	/* For drawing backgrounds when active (i.e.
 				 * when mouse is positioned over element). */
     XColor *troughColorPtr;	/* Color for drawing trough. */
-    int relief;			/* Indicates whether window as a whole is
+    Tk_Relief relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
     int highlightWidth;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
@@ -83,7 +83,7 @@ typedef struct TkScrollbar {
     int activeField;		/* Names field to be displayed in active
 				 * colors, such as TOP_ARROW, or 0 for no
 				 * field. */
-    int activeRelief;		/* Value of -activeRelief option: relief to
+    Tk_Relief activeRelief;		/* Value of -activeRelief option: relief to
 				 * use for active element. */
 
     /*

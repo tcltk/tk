@@ -432,7 +432,7 @@ DrawMenuEntryBackground(
     int height)			/* Height of entry rect */
 {
     if (mePtr->state == ENTRY_ACTIVE) {
-	int relief;
+	Tk_Relief relief;
 	int activeBorderWidth;
 
     	bgBorder = activeBorder;

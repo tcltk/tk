@@ -35,7 +35,7 @@ static const Tk_OptionSpec FrameOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief", NULL,
 	offsetof(Frame,frame.reliefObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,0 },
+	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR,0,0 },
     {TK_OPTION_PIXELS, "-width", "width", "Width", "0",
 	offsetof(Frame,frame.widthObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
