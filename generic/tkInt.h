@@ -881,6 +881,13 @@ typedef struct TkWindow {
 } TkWindow;
 
 /*
+ * String tables:
+ */
+
+MODULE_SCOPE const char *const tkStateStrings[];
+MODULE_SCOPE const char *const tkCompoundStrings[];
+
+/*
  * Real definition of some events. Note that these events come from outside
  * but have internally generated pieces added to them.
  */
@@ -1254,7 +1261,7 @@ MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
-			    ClientData clientData);
+			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;

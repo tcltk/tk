@@ -220,10 +220,6 @@ enum state {
     STATE_DISABLED, STATE_NORMAL
 };
 
-static const char *const stateStrings[] = {
-    "disabled", "normal", NULL
-};
-
 enum activeStyle {
     ACTIVE_STYLE_DOTBOX, ACTIVE_STYLE_NONE, ACTIVE_STYLE_UNDERLINE
 };
@@ -297,7 +293,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_SET_GRID, -1, Tk_Offset(Listbox, setGrid), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_LISTBOX_STATE, -1, Tk_Offset(Listbox, state),
-	0, stateStrings, 0},
+	0, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	 DEF_LISTBOX_TAKE_FOCUS, -1, Tk_Offset(Listbox, takeFocus),
 	 TK_OPTION_NULL_OK, 0, 0},

@@ -29,20 +29,11 @@ static Tcl_ThreadDataKey dataKey;
 static const char *const classNames[] = {"Label", "Button", "Checkbutton", "Radiobutton"};
 
 /*
- * The following table defines the legal values for the -default option. It is
- * used together with the "enum defaultValue" declaration in tkButton.h.
+ * The following table defines the legal values for the -default/-state options.
+ * It is used together with the "enum defaultValue/state" declarations in tkButton.h.
  */
 
-static const char *const defaultStrings[] = {
-    "active", "disabled", "normal", NULL
-};
-
-/*
- * The following table defines the legal values for the -state option.
- * It is used together with the "enum state" declaration in tkButton.h.
- */
-
-static const char *const stateStrings[] = {
+const char *const tkStateStrings[] = {
     "active", "disabled", "normal", NULL
 };
 
@@ -51,7 +42,7 @@ static const char *const stateStrings[] = {
  * It is used with the "enum compound" declaration in tkButton.h
  */
 
-static const char *const compoundStrings[] = {
+const char *const tkCompoundStrings[] = {
     "bottom", "center", "left", "none", "right", "top", NULL
 };
 
@@ -92,7 +83,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	Tk_Offset(TkButton, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
-	 compoundStrings, 0},
+	 tkCompoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -134,7 +125,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_LABCHKRAD_RELIEF, -1, Tk_Offset(TkButton, relief), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
-	0, stateStrings, 0},
+	0, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_LABEL_TAKE_FOCUS, Tk_Offset(TkButton, takeFocusPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -180,13 +171,13 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
-	 compoundStrings, 0},
+	 tkCompoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-default", "default", "Default",
         DEF_BUTTON_DEFAULT, -1, Tk_Offset(TkButton, defaultState),
-	0, defaultStrings, 0},
+	0, tkStateStrings, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	-1, Tk_Offset(TkButton, disabledFg), TK_OPTION_NULL_OK,
@@ -235,7 +226,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
-	0, stateStrings, 0},
+	0, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_BUTTON_TAKE_FOCUS, Tk_Offset(TkButton, takeFocusPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -281,7 +272,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
-	 compoundStrings, 0},
+	 tkCompoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -340,7 +331,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
-	0, stateStrings, 0},
+	0, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_BUTTON_TAKE_FOCUS, Tk_Offset(TkButton, takeFocusPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -394,7 +385,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound), 0,
-	 compoundStrings, 0},
+	 tkCompoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -450,7 +441,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_BUTTON_STATE, -1, Tk_Offset(TkButton, state),
-	0, stateStrings, 0},
+	0, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_BUTTON_TAKE_FOCUS, Tk_Offset(TkButton, takeFocusPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},

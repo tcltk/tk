@@ -107,15 +107,6 @@ static const char *const menuEntryTypeStrings[] = {
     "cascade", "checkbutton", "command", "radiobutton", "separator", NULL
 };
 
-/*
- * The following table defines the legal values for the -compound option. It
- * is used with the "enum compound" declaration in tkMenu.h
- */
-
-static const char *const compoundStrings[] = {
-    "bottom", "center", "left", "none", "right", "top", NULL
-};
-
 static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", NULL, NULL,
 	DEF_MENU_ENTRY_ACTIVE_BG, Tk_Offset(TkMenuEntry, activeBorderPtr), -1,
@@ -140,7 +131,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	Tk_Offset(TkMenuEntry, commandPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	DEF_MENU_ENTRY_COMPOUND, -1, Tk_Offset(TkMenuEntry, compound), 0,
-	(ClientData) compoundStrings, 0},
+	tkCompoundStrings, 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	DEF_MENU_ENTRY_FONT,
 	Tk_Offset(TkMenuEntry, fontPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
