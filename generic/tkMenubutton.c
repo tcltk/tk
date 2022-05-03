@@ -36,24 +36,6 @@ static const char *const directionStrings[] = {
 };
 
 /*
- * The following table defines the legal values for the -state option. It is
- * used together with the "enum state" declaration in tkMenubutton.h.
- */
-
-static const char *const stateStrings[] = {
-    "active", "disabled", "normal", NULL
-};
-
-/*
- * The following table defines the legal values for the -compound option. It
- * is used with the "enum compound" declaration in tkMenuButton.h
- */
-
-static const char *const compoundStrings[] = {
-    "bottom", "center", "left", "none", "right", "top", NULL
-};
-
-/*
  * Information used for parsing configuration specs:
  */
 
@@ -87,7 +69,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	DEF_MENUBUTTON_DIRECTION, TCL_INDEX_NONE, offsetof(TkMenuButton, direction),
-	0, directionStrings, 0},
+	TK_OPTION_ENUM_VAR, directionStrings, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENUBUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
@@ -132,10 +114,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	 DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuButton, compound), 0,
-	 compoundStrings, 0},
+	 tkCompoundStrings, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_MENUBUTTON_STATE, TCL_INDEX_NONE, offsetof(TkMenuButton, state),
-	0, stateStrings, 0},
+	0, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENUBUTTON_TAKE_FOCUS, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, takeFocus), TK_OPTION_NULL_OK, 0, 0},
