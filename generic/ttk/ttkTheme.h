@@ -351,9 +351,9 @@ TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Ttk_State);
  */
 typedef enum 			/* -default option values */
 {
-    TTK_BUTTON_DEFAULT_NORMAL,	/* widget defaultable */
     TTK_BUTTON_DEFAULT_ACTIVE,	/* currently the default widget */
-    TTK_BUTTON_DEFAULT_DISABLED	/* not defaultable */
+    TTK_BUTTON_DEFAULT_DISABLED,	/* not defaultable */
+    TTK_BUTTON_DEFAULT_NORMAL	/* widget defaultable */
 } Ttk_ButtonDefaultState;
 
 TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_ButtonDefaultState *);

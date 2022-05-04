@@ -1587,11 +1587,11 @@ static NSFont *fontPanelFont = nil;
 static NSMutableDictionary *fontPanelFontAttributes = nil;
 
 static const char *const fontchooserOptionStrings[] = {
-    "-parent", "-title", "-font", "-command",
+    "-command", "-font", "-parent", "-title",
     "-visible", NULL
 };
 enum FontchooserOption {
-    FontchooserParent, FontchooserTitle, FontchooserFont, FontchooserCmd,
+    FontchooserCmd, FontchooserFont, FontchooserParent, FontchooserTitle,
     FontchooserVisible
 };
 
