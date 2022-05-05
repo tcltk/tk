@@ -448,7 +448,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", Tk_Offset(Treeview,tree.selectModeObj), -1,
-	0,(ClientData)SelectModeStrings,0 },
+	0,SelectModeStrings,0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, Tk_Offset(Treeview,tree.heightObj), -1,
