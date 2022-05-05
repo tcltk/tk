@@ -147,8 +147,8 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, labelPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
-	tkStateStrings, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, state),
+	0, tkStateStrings, 0},
     {TK_OPTION_INDEX, "-underline", NULL, NULL,
 	TK_OPTION_UNDERLINE_DEF(TkMenuEntry, underline), 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
@@ -217,8 +217,8 @@ static const Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
 	DEF_MENU_ENTRY_BG,
 	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
-	DEF_MENU_ENTRY_STATE, TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
-	tkStateStrings, 0},
+	DEF_MENU_ENTRY_STATE, TCL_INDEX_NONE, offsetof(TkMenuEntry, state),
+	0, tkStateStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
@@ -294,8 +294,8 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TITLE,	 offsetof(TkMenu, titlePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-type", "type", "Type",
-	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE, 0,
-	(ClientData) menuTypeStrings, 0},
+	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE,
+	0, menuTypeStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
