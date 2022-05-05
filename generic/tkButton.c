@@ -271,7 +271,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_BUTTON_COMMAND, Tk_Offset(TkButton, commandPtr), -1,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	0, -1, Tk_Offset(TkButton, compound),
+	DEF_BUTTON_COMPOUND, -1, Tk_Offset(TkButton, compound),
 	0, tkCompoundStrings, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_BUTTON_CURSOR, -1, Tk_Offset(TkButton, cursor),
