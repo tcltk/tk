@@ -77,7 +77,7 @@ typedef struct {
 static Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Paned,paned.orientObj), Tk_Offset(Paned,paned.orient),
-	0, (void *)ttkOrientStrings, READONLY_OPTION|STYLE_CHANGED },
+	0, ttkOrientStrings, READONLY_OPTION|STYLE_CHANGED },
     {TK_OPTION_INT, "-width", "width", "Width", "0",
 	-1,Tk_Offset(Paned,paned.width),
 	0, 0, GEOMETRY_CHANGED },
