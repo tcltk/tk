@@ -27,6 +27,16 @@
 #include "tkFont.h"
 
 /*
+ * The following encoding is used in TYPE_FLAGS:
+ *
+ * if sizeof(type) == sizeof(int)     =>    TYPE_FLAGS(type) = 0
+ * if sizeof(type) == 1               =>    TYPE_FLAGS(type) = 64
+ * if sizeof(type) == 2               =>    TYPE_FLAGS(type) = 128
+ */
+#define TYPE_FLAGS(type) (((int)(sizeof(type)&(sizeof(int)-1))<<6))
+#define TYPE_MASK        (((((int)sizeof(int)-1))|3)<<6)
+
+/*
  * The following definition keeps track of all of
  * the option tables that have been created for a thread.
  */
@@ -739,8 +749,20 @@ DoObjConfig(
 	    }
 	}
 	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newValue;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+		    *((char *) oldInternalPtr) = *((char *) internalPtr);
+		    *((char *) internalPtr) = newValue;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+		    *((short *) oldInternalPtr) = *((short *) internalPtr);
+		    *((short *) internalPtr) = newValue;
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
+		}
+	    } else {
+		*((int *) oldInternalPtr) = *((int *) internalPtr);
+		*((int *) internalPtr) = newValue;
+	    }
 	}
 	break;
     }
@@ -1470,7 +1492,17 @@ Tk_RestoreSavedOptions(
 		*((char **) internalPtr) = *((char **) ptr);
 		break;
 	    case TK_OPTION_STRING_TABLE:
-		*((int *) internalPtr) = *((int *) ptr);
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+			*((char *) internalPtr) = *((char *) ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+			*((short *) internalPtr) = *((short *) ptr);
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
+		    }
+		} else {
+		    *((int *) internalPtr) = *((int *) ptr);
+		}
 		break;
 	    case TK_OPTION_COLOR:
 		*((XColor **) internalPtr) = *((XColor **) ptr);
@@ -1961,12 +1993,25 @@ GetObjectForOption(
 	case TK_OPTION_STRING:
 	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), -1);
 	    break;
-	case TK_OPTION_STRING_TABLE:
-	    if (*((int *) internalPtr) >= 0) {
+	case TK_OPTION_STRING_TABLE: {
+	    int value;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+		    value = *((signed char *)internalPtr);
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+		    value = *((short *)internalPtr);
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
+		}
+	    } else {
+		value = *((int *)internalPtr);
+	    }
+	    if (value >= 0) {
 		objPtr = Tcl_NewStringObj(((char **) optionPtr->specPtr->clientData)[
-			*((int *) internalPtr)], -1);
+			value], -1);
 	    }
 	    break;
+	}
 	case TK_OPTION_COLOR: {
 	    XColor *colorPtr = *((XColor **)internalPtr);
 

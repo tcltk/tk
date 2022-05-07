@@ -78,7 +78,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode),
-	TK_OPTION_NULL_OK, tkTextWrapStrings, 0},
+	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, tkTextWrapStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
