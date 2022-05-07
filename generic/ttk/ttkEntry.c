@@ -174,7 +174,7 @@ static Tk_OptionSpec EntryOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
 	"none", -1, Tk_Offset(Entry, entry.validate),
-	0, validateStrings, 0},
+	TK_OPTION_ENUM_VAR, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
 	NULL, -1, Tk_Offset(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},

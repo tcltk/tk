@@ -60,7 +60,7 @@ static Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
 	"normal", -1,Tk_Offset(Tab,state),
-	0, TabStateStrings, 0 },
+	TK_OPTION_ENUM_VAR, TabStateStrings, 0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	Tk_Offset(Tab,textObj), -1, 0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
