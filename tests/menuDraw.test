@@ -132,7 +132,7 @@ test menuDraw-6.6 {TkMenuConfigureEntryDrawOptions - bad state} -setup {
     .m1 entryconfigure 1 -state foo
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {bad state "foo": must be active, normal, or disabled}
+} -returnCodes error -result {bad state "foo": must be active, disabled, or normal}
 test menuDraw-6.7 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     deleteWindows
 } -body {

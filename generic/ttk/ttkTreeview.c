@@ -523,10 +523,10 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
-	0, (void *)SelectModeStrings, 0 },
+	0, SelectModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
 	"item", offsetof(Treeview,tree.selectTypeObj), TCL_INDEX_NONE,
-	0,(ClientData)SelectTypeStrings,0 },
+	0, SelectTypeStrings, 0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
