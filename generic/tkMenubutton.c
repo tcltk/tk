@@ -36,24 +36,6 @@ static const char *const directionStrings[] = {
 };
 
 /*
- * The following table defines the legal values for the -state option. It is
- * used together with the "enum state" declaration in tkMenubutton.h.
- */
-
-static const char *const stateStrings[] = {
-    "active", "disabled", "normal", NULL
-};
-
-/*
- * The following table defines the legal values for the -compound option. It
- * is used with the "enum compound" declaration in tkMenuButton.h
- */
-
-static const char *const compoundStrings[] = {
-    "bottom", "center", "left", "none", "right", "top", NULL
-};
-
-/*
  * Information used for parsing configuration specs:
  */
 
@@ -64,18 +46,18 @@ static const Tk_OptionSpec optionSpecs[] = {
 	(ClientData) DEF_MENUBUTTON_ACTIVE_BG_MONO, 0},
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground", "Background",
 	DEF_MENUBUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE,
-	 offsetof(TkMenuButton, activeFg),
-	 0, DEF_MENUBUTTON_ACTIVE_FG_MONO, 0},
+	offsetof(TkMenuButton, activeFg),
+	0, DEF_MENUBUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	DEF_MENUBUTTON_ANCHOR, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, anchor), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENUBUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkMenuButton, normalBorder),
 	0, DEF_MENUBUTTON_BG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
-	(ClientData) "-borderwidth", 0},
-    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
-	(ClientData) "-background", 0},
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, TCL_INDEX_NONE,
+	0, "-borderwidth", 0},
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE,
+	0, "-background", 0},
     {TK_OPTION_BITMAP, "-bitmap", "bitmap", "Bitmap",
 	DEF_MENUBUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkMenuButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -87,13 +69,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	DEF_MENUBUTTON_DIRECTION, TCL_INDEX_NONE, offsetof(TkMenuButton, direction),
-	0, directionStrings, 0},
+	TK_OPTION_ENUM_VAR, directionStrings, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENUBUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
 	(ClientData) DEF_MENUBUTTON_DISABLED_FG_MONO, 0},
-    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL, NULL, 0, TCL_INDEX_NONE, 0,
-	(ClientData) "-foreground", 0},
+    {TK_OPTION_SYNONYM, "-fg", "foreground", NULL, NULL, 0, TCL_INDEX_NONE,
+	0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MENUBUTTON_FONT, TCL_INDEX_NONE, offsetof(TkMenuButton, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
@@ -131,11 +113,11 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkMenuButton, relief),
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuButton, compound), 0,
-	 compoundStrings, 0},
+	DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuButton, compound),
+	0, tkCompoundStrings, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_MENUBUTTON_STATE, TCL_INDEX_NONE, offsetof(TkMenuButton, state),
-	0, stateStrings, 0},
+	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENUBUTTON_TAKE_FOCUS, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, takeFocus), TK_OPTION_NULL_OK, 0, 0},

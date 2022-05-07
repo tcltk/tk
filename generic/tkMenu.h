@@ -244,8 +244,8 @@ typedef struct TkMenuEntry {
  */
 
 #define ENTRY_ACTIVE 0
-#define ENTRY_NORMAL 1
-#define ENTRY_DISABLED 2
+#define ENTRY_DISABLED 1
+#define ENTRY_NORMAL 2
 
 /*
  * A data structure of the following type is kept for each menu widget:
