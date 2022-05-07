@@ -59,7 +59,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
 	"normal", TCL_INDEX_NONE, offsetof(Tab,state),
-	0, TabStateStrings, 0 },
+	TK_OPTION_ENUM_VAR, TabStateStrings, 0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Tab,textObj), TCL_INDEX_NONE, 0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,

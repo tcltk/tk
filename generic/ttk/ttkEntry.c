@@ -181,7 +181,7 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,TEXTVAR_CHANGED},
     {TK_OPTION_STRING_TABLE, "-validate", "validate", "Validate",
 	"none", TCL_INDEX_NONE, offsetof(Entry, entry.validate),
-	0, validateStrings, 0},
+	TK_OPTION_ENUM_VAR, validateStrings, 0},
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
 	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},
