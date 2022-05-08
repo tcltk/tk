@@ -16,7 +16,7 @@ loadTestedCommands
 #	follows ->prev links, this should cover all invariants.
 #
 proc consistencyCheck {tv {item {}}} {
-    set i 0;
+    set i 0
     foreach child [$tv children $item] {
 	assert {[$tv parent $child] == $item} "parent $child = $item"
 	assert {[$tv index $child] == $i} "index $child [$tv index $child]=$i"
@@ -1410,5 +1410,14 @@ test treeview-12.1 "tag bindings" -setup {
     rename cellEvent {}
     destroy .tv
 } -result {a t1 t2 b t1 c t2 b t1 a t1}
+test treeview-12.2 "tag bindings deletion on tag delete" -setup {
+    tvSetupWithItems
+    .tv tag bind nn.n1 <Button-1> {puts Triggered}
+} -body {
+    .tv tag delete nn.n1
+    .tv tag bind nn.n1
+} -cleanup {
+    destroy .tv
+} -result {}
 
 tcltest::cleanupTests
