@@ -1015,6 +1015,8 @@ ConfigurePanes(
 	/*
 	 * If none of the existing panes have to be moved, just copy the old
 	 * and append the new.
+	 * Be careful about the case pwPtr->numPanes == 0 since in this case
+	 * pwPtr->panes is NULL, and the memcpy would have undefined behavior.
 	 */
 	if (pwPtr->numPanes) {
 	    memcpy(newPanes, pwPtr->panes,
