@@ -215,28 +215,28 @@ static SearchUids *	GetStaticUids(void);
  * Prototypes for functions defined later in this file:
  */
 
-static void		CanvasBindProc(ClientData clientData,
+static void		CanvasBindProc(void *clientData,
 			    XEvent *eventPtr);
-static void		CanvasBlinkProc(ClientData clientData);
-static void		CanvasCmdDeletedProc(ClientData clientData);
+static void		CanvasBlinkProc(void *clientData);
+static void		CanvasCmdDeletedProc(void *clientData);
 static void		CanvasDoEvent(TkCanvas *canvasPtr, XEvent *eventPtr);
-static void		CanvasEventProc(ClientData clientData,
+static void		CanvasEventProc(void *clientData,
 			    XEvent *eventPtr);
-static TkSizeT	CanvasFetchSelection(ClientData clientData, TkSizeT offset,
+static TkSizeT	CanvasFetchSelection(void *clientData, TkSizeT offset,
 			    char *buffer, TkSizeT maxBytes);
 static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
 			    double coords[2]);
 static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
-static void		CanvasLostSelection(ClientData clientData);
+static void		CanvasLostSelection(void *clientData);
 static void		CanvasSelectTo(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr, TkSizeT index);
 static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
-static int		CanvasWidgetCmd(ClientData clientData,
+static int		CanvasWidgetCmd(void *clientData,
 			    Tcl_Interp *interp, int argc,
 			    Tcl_Obj *const *argv);
-static void		CanvasWorldChanged(ClientData instanceData);
+static void		CanvasWorldChanged(void *instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
@@ -244,8 +244,8 @@ static void		DefaultRotateImplementation(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr, double x, double y,
 			    double angleRadians);
 static void		DestroyCanvas(void *memPtr);
-static int		DrawCanvas(Tcl_Interp *interp, ClientData clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
-static void		DisplayCanvas(ClientData clientData);
+static int		DrawCanvas(Tcl_Interp *interp, void *clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
+static void		DisplayCanvas(void *clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
 static void		EventuallyRedrawItem(TkCanvas *canvasPtr,
@@ -678,7 +678,7 @@ DefaultRotateImplementation(
 
 int
 Tk_CanvasObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
     Tcl_Obj *const argv[])	/* Argument objects. */
@@ -826,7 +826,7 @@ Tk_CanvasObjCmd(
 
 static int
 CanvasWidgetCmd(
-    ClientData clientData,	/* Information about canvas widget. */
+    void *clientData,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2464,7 +2464,7 @@ ConfigureCanvas(
 
 static void
 CanvasWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)instanceData;
     Tk_Item *itemPtr;
@@ -2574,7 +2574,7 @@ DecomposeMaskToShiftAndBits(
 static int
 DrawCanvas(
     Tcl_Interp *interp,           /* As passed to the widget command, and we will leave errors here */
-    ClientData clientData,
+    void *clientData,
     Tk_PhotoHandle photohandle,   /* The photo we are rendering into */
     int subsample,                /* If either subsample or zoom are not 1 then we call Tk_PhotoPutZoomedBlock() */
     int zoom)
@@ -3029,7 +3029,7 @@ done:
 
 static void
 DisplayCanvas(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
     Tk_Window tkwin = canvasPtr->tkwin;
@@ -3286,7 +3286,7 @@ DisplayCanvas(
 
 static void
 CanvasEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
@@ -3377,7 +3377,7 @@ CanvasEventProc(
 
 static void
 CanvasCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
     Tk_Window tkwin = canvasPtr->tkwin;
@@ -4631,7 +4631,7 @@ DoItem(
 
 	itemPtr->tagSpace += 5;
 	newTagPtr = (Tk_Uid *)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
-	memcpy((void *) newTagPtr, itemPtr->tagPtr,
+	memcpy(newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree(itemPtr->tagPtr);
@@ -5112,7 +5112,7 @@ RelinkItems(
 
 static void
 CanvasBindProc(
-    ClientData clientData,	/* Pointer to canvas structure. */
+    void *clientData,	/* Pointer to canvas structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
@@ -5575,7 +5575,7 @@ CanvasDoEvent(
 
 static void
 CanvasBlinkProc(
-    ClientData clientData)	/* Pointer to record describing entry. */
+    void *clientData)	/* Pointer to record describing entry. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
 
@@ -5725,7 +5725,7 @@ CanvasSelectTo(
 
 static TkSizeT
 CanvasFetchSelection(
-    ClientData clientData,	/* Information about canvas widget. */
+    void *clientData,	/* Information about canvas widget. */
     TkSizeT offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
@@ -5759,7 +5759,7 @@ CanvasFetchSelection(
 
 static void
 CanvasLostSelection(
-    ClientData clientData)	/* Information about entry widget. */
+    void *clientData)	/* Information about entry widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
 
