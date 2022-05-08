@@ -1015,9 +1015,13 @@ ConfigurePanes(
 	/*
 	 * If none of the existing panes have to be moved, just copy the old
 	 * and append the new.
+	 * Be careful about the case pwPtr->numPanes == 0 since in this case
+	 * pwPtr->panes is NULL, and the memcpy would have undefined behavior.
 	 */
-	memcpy((void *)&(newPanes[0]), pwPtr->panes,
-		sizeof(Pane *) * pwPtr->numPanes);
+	if (pwPtr->numPanes != 0) {
+	    memcpy((void *)&(newPanes[0]), pwPtr->panes,
+		    sizeof(Pane *) * pwPtr->numPanes);
+	}
 	memcpy((void *)&(newPanes[pwPtr->numPanes]), inserts,
 		sizeof(Pane *) * numNewPanes);
     } else {
