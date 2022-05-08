@@ -1016,9 +1016,11 @@ ConfigurePanes(
 	 * If none of the existing panes have to be moved, just copy the old
 	 * and append the new.
 	 */
-	memcpy((void *)&(newPanes[0]), pwPtr->panes,
-		sizeof(Pane *) * pwPtr->numPanes);
-	memcpy((void *)&(newPanes[pwPtr->numPanes]), inserts,
+	if (pwPtr->numPanes) {
+	    memcpy(newPanes, pwPtr->panes,
+		    sizeof(Pane *) * pwPtr->numPanes);
+	}
+	memcpy(&newPanes[pwPtr->numPanes], inserts,
 		sizeof(Pane *) * numNewPanes);
     } else {
 	/*
@@ -1037,7 +1039,7 @@ ConfigurePanes(
 	    }
 	}
 
-	memcpy((void *)&(newPanes[j]), inserts, sizeof(Pane *)*insertIndex);
+	memcpy(&newPanes[j], inserts, sizeof(Pane *)*insertIndex);
 	j += firstOptionArg - 2;
 
 	for (i = index; i < pwPtr->numPanes; i++) {
