@@ -254,12 +254,6 @@ getFileURL(
     } else if (returnCode == modalCancel) {
 	Tcl_ResetResult(callbackInfo->interp);
     }
-    if (callbackInfo->cmdObj) {
-	Tcl_DecrRefCount(callbackInfo->cmdObj);
-    }
-    if (callbackInfo) {
-	ckfree(callbackInfo);
-    }
     [NSApp stopModalWithCode:returnCode];
 }
 
@@ -292,10 +286,6 @@ getFileURL(
     }
     if ([alert window] == [NSApp modalWindow]) {
 	[NSApp stopModalWithCode:returnCode];
-    }
-    if (callbackInfo->cmdObj) {
-	Tcl_DecrRefCount(callbackInfo->cmdObj);
-	ckfree(callbackInfo);
     }
 }
 
@@ -833,7 +823,6 @@ Tk_GetOpenFileObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = (FilePanelCallbackInfo *)ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = multiple;
@@ -850,6 +839,9 @@ Tk_GetOpenFileObjCmd(
 	parentIsKey = False;
     }
     modalReturnCode = showOpenSavePanel(openpanel, parent, callbackInfo);
+    if (cmdObj) {
+	Tcl_DecrRefCount(cmdObj);
+    }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
@@ -1109,7 +1101,6 @@ Tk_GetSaveFileObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = (FilePanelCallbackInfo *)ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
@@ -1136,6 +1127,9 @@ Tk_GetSaveFileObjCmd(
 	parentIsKey = False;
     }
     modalReturnCode = showOpenSavePanel(savepanel, parent, callbackInfo);
+    if (cmdObj) {
+	Tcl_DecrRefCount(cmdObj);
+    }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
@@ -1258,7 +1252,6 @@ Tk_ChooseDirectoryObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = (FilePanelCallbackInfo *)ckalloc(sizeof(FilePanelCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->multiple = 0;
@@ -1281,6 +1274,9 @@ Tk_ChooseDirectoryObjCmd(
 	parentIsKey = False;
     }
     modalReturnCode = showOpenSavePanel(panel, parent, callbackInfo);
+    if (cmdObj) {
+	Tcl_DecrRefCount(cmdObj);
+    }
     result = (modalReturnCode != modalError) ? TCL_OK : TCL_ERROR;
     if (parentIsKey) {
 	[parent makeKeyWindow];
@@ -1499,7 +1495,6 @@ Tk_MessageBoxObjCmd(
 	}
 	Tcl_IncrRefCount(cmdObj);
     }
-    callbackInfo = (AlertCallbackInfo *)ckalloc(sizeof(AlertCallbackInfo));
     callbackInfo->cmdObj = cmdObj;
     callbackInfo->interp = interp;
     callbackInfo->typeIndex = typeIndex;
@@ -1525,6 +1520,9 @@ Tk_MessageBoxObjCmd(
 	modalReturnCode = [alert runModal];
 	[NSApp tkAlertDidEnd:alert returnCode:modalReturnCode
 		contextInfo:callbackInfo];
+    }
+    if (cmdObj) {
+	Tcl_DecrRefCount(cmdObj);
     }
     result = (modalReturnCode >= NSAlertFirstButtonReturn) ? TCL_OK : TCL_ERROR;
   end:
