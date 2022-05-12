@@ -1115,7 +1115,7 @@ test entry-3.44 {EntryWidgetCmd procedure, "scan" widget command} -setup {
     .e scan foobar 20
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad scan option "foobar": must be mark or dragto}
+} -returnCodes error -result {bad scan option "foobar": must be dragto or mark}
 test entry-3.45 {EntryWidgetCmd procedure, "scan" widget command} -setup {
     entry .e
     pack .e ; update idletasks

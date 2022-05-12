@@ -25,10 +25,10 @@
  */
 
 static const char *const borderModeStrings[] = {
-    "inside", "outside", "ignore", NULL
+    "inside", "ignore", "outside", NULL
 };
 
-typedef enum {BM_INSIDE, BM_OUTSIDE, BM_IGNORE} BorderMode;
+typedef enum {BM_INSIDE, BM_IGNORE, BM_OUTSIDE} BorderMode;
 
 /*
  * For each window whose geometry is managed by the placer there is a

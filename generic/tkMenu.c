@@ -233,27 +233,27 @@ static const Tk_OptionSpec *specsArray[] = {
  */
 
 static const char *const menuTypeStrings[] = {
-    "normal", "tearoff", "menubar", NULL
+    "menubar", "normal", "tearoff", NULL
 };
 
 static const Tk_OptionSpec tkMenuConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground",
 	"Foreground", DEF_MENU_ACTIVE_BG_COLOR,
 	offsetof(TkMenu, activeBorderPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_ACTIVE_BG_MONO, 0},
+	DEF_MENU_ACTIVE_BG_MONO, 0},
     {TK_OPTION_PIXELS, "-activeborderwidth", "activeBorderWidth",
 	"BorderWidth", DEF_MENU_ACTIVE_BORDER_WIDTH,
 	offsetof(TkMenu, activeBorderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground",
 	"Background", DEF_MENU_ACTIVE_FG_COLOR,
 	offsetof(TkMenu, activeFgPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+	DEF_MENU_ACTIVE_FG_MONO, 0},
     {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
 	DEF_MENU_ACTIVE_RELIEF, offsetof(TkMenu, activeReliefPtr),
 	TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, offsetof(TkMenu, borderPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_BG_MONO, 0},
+	DEF_MENU_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
@@ -267,7 +267,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENU_DISABLED_FG_COLOR,
 	offsetof(TkMenu, disabledFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK,
-	(ClientData) DEF_MENU_DISABLED_FG_MONO, 0},
+	DEF_MENU_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -281,7 +281,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_RELIEF, offsetof(TkMenu, reliefPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "Background",
 	DEF_MENU_SELECT_COLOR, offsetof(TkMenu, indicatorFgPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_SELECT_MONO, 0},
+	DEF_MENU_SELECT_MONO, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENU_TAKE_FOCUS,
 	offsetof(TkMenu, takeFocusPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -2511,14 +2511,14 @@ MenuVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        ClientData probe = NULL;
+        void *probe = NULL;
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
 
         do {
                 probe = Tcl_VarTraceInfo(interp, name,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         MenuVarProc, probe);
-                if (probe == (ClientData)mePtr) {
+                if (probe == (void *)mePtr) {
                     break;
                 }
         } while (probe);

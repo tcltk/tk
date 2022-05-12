@@ -90,7 +90,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -102,7 +102,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -181,7 +181,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -193,7 +193,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -279,7 +279,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -291,7 +291,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -392,7 +392,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -404,7 +404,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -1617,14 +1617,14 @@ ButtonVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
 	if (!Tcl_InterpDeleted(interp)) {
-	    ClientData probe = NULL;
+	    void *probe = NULL;
 
 	    do {
 		probe = Tcl_VarTraceInfo(interp,
 			Tcl_GetString(butPtr->selVarNamePtr),
 			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 			ButtonVarProc, probe);
-		if (probe == (ClientData)butPtr) {
+		if (probe == (void *)butPtr) {
 		    break;
 		}
 	    } while (probe);
@@ -1736,14 +1736,14 @@ ButtonTextVarProc(
 	     * the variable we have stored in butPtr->textVarNamePtr ?
 	     */
 
-	    ClientData probe = NULL;
+	    void *probe = NULL;
 
 	    do {
 		probe = Tcl_VarTraceInfo(interp,
 			Tcl_GetString(butPtr->textVarNamePtr),
 			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 			ButtonTextVarProc, probe);
-		if (probe == (ClientData)butPtr) {
+		if (probe == (void *)butPtr) {
 		    break;
 		}
 	    } while (probe);
