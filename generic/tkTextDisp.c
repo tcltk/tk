@@ -11398,7 +11398,7 @@ TkTextScanCmd(
 	dInfoPtr->scanMarkY = y;
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad scan option \"%s\": must be mark or dragto", Tcl_GetString(objv[2])));
+		"bad scan option \"%s\": must be dragto or mark", Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option", Tcl_GetString(objv[2]), NULL);
 	return TCL_ERROR;
     }
