@@ -109,7 +109,7 @@ MODULE_SCOPE int TtkWidgetConstructorObjCmd(
 
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \
-	TtkWidgetConstructorObjCmd, (ClientData)specPtr,NULL)
+	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --

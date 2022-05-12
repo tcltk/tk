@@ -1917,7 +1917,7 @@ CanvasWidgetCmd(
     case CANV_SCAN: {
 	int x, y, gain = 10;
 	static const char *const optionStrings[] = {
-	    "mark", "dragto", NULL
+	    "dragto", "mark", NULL
 	};
 
 	if (objc < 5) {
@@ -1926,8 +1926,8 @@ CanvasWidgetCmd(
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
 		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 5+idx)) {
-	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y ?gain?":"x y");
+	} else if ((objc != 5) && (objc != 6-idx)) {
+	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y":"x y ?gain?");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK)){
@@ -1935,7 +1935,7 @@ CanvasWidgetCmd(
 	} else if ((objc == 6) &&
 		(Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK)) {
 	    result = TCL_ERROR;
-	} else if (!idx) {
+	} else if (idx) {
 	    canvasPtr->scanX = x;
 	    canvasPtr->scanXOrigin = canvasPtr->xOrigin;
 	    canvasPtr->scanY = y;

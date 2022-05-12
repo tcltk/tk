@@ -1263,7 +1263,7 @@ test pack-12.29 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side bac
-} -returnCodes error -result {bad side "bac": must be top, bottom, left, or right}
+} -returnCodes error -result {bad side "bac": must be bottom, left, right, or top}
 test pack-12.30 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
