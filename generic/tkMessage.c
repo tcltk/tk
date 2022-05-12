@@ -848,14 +848,14 @@ MessageTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && msgPtr->textVarName) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         msgPtr->textVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         MessageTextVarProc, probe);
-                if (probe == (ClientData)msgPtr) {
+                if (probe == (void *)msgPtr) {
                     break;
                 }
             } while (probe);

@@ -16,9 +16,9 @@
 
 #define DEFAULT_MIN_TAB_WIDTH 24
 
-static const char *const TabStateStrings[] = { "normal", "disabled", "hidden", 0 };
+static const char *const TabStateStrings[] = { "disabled", "hidden", "normal", 0 };
 typedef enum {
-    TAB_STATE_NORMAL, TAB_STATE_DISABLED, TAB_STATE_HIDDEN
+    TAB_STATE_DISABLED, TAB_STATE_HIDDEN, TAB_STATE_NORMAL
 } TAB_STATE;
 
 typedef struct

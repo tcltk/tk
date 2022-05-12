@@ -1782,7 +1782,7 @@ TkTextFreeDInfo(
      */
 
     if (dInfoPtr->pendingUpdateLineMetricsFinished) {
-	Tcl_CancelIdleCall(RunUpdateLineMetricsFinished, (ClientData) textPtr);
+	Tcl_CancelIdleCall(RunUpdateLineMetricsFinished, textPtr);
     }
     if (dInfoPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayText, textPtr);
@@ -4814,7 +4814,7 @@ CheckIfLineMetricIsUpToDate(
 
 	if (!textPtr->dInfoPtr->pendingUpdateLineMetricsFinished) {
 	    textPtr->dInfoPtr->pendingUpdateLineMetricsFinished = 1;
-	    Tcl_DoWhenIdle(RunUpdateLineMetricsFinished, (ClientData) textPtr);
+	    Tcl_DoWhenIdle(RunUpdateLineMetricsFinished, textPtr);
 	}
 
 	if (tkBTreeDebug) {

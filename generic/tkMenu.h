@@ -461,9 +461,9 @@ typedef struct TkMenuReferences {
  */
 
 #define UNKNOWN_TYPE		-1
-#define MAIN_MENU 		0
-#define TEAROFF_MENU 		1
-#define MENUBAR 		2
+#define MENUBAR 		0
+#define MAIN_MENU 		1
+#define TEAROFF_MENU 		2
 
 /*
  * Various geometry definitions:

@@ -66,7 +66,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_FONT, TCL_INDEX_NONE, offsetof(TkScale, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_SCALE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, textColorPtr), 0,
-	(ClientData) DEF_SCALE_FG_MONO, 0},
+	DEF_SCALE_FG_MONO, 0},
     {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, TCL_INDEX_NONE,
 	offsetof(TkScale, fromValue), 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -1350,14 +1350,14 @@ ScaleVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && scalePtr->varNamePtr) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         Tcl_GetString(scalePtr->varNamePtr),
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         ScaleVarProc, probe);
-                if (probe == (ClientData)scalePtr) {
+                if (probe == (void *)scalePtr) {
                     break;
                 }
             } while (probe);
