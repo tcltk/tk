@@ -169,7 +169,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, TCL_INDEX_NONE,
 	offsetof(TkText, insertBorderWidth), 0,
-	(ClientData) DEF_TEXT_INSERT_BD_MONO, 0},
+	DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_TEXT_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(TkText, insertOffTime),
 	0, 0, 0},
@@ -1533,7 +1533,7 @@ TextWidgetObjCmd(
 		textPtr->afterSyncCmd = cmd;
 	    } else {
 		textPtr->afterSyncCmd = cmd;
-		Tcl_DoWhenIdle(TkTextRunAfterSyncCmd, (ClientData) textPtr);
+		Tcl_DoWhenIdle(TkTextRunAfterSyncCmd, textPtr);
 	    }
 	    break;
 	} else if (objc != 2) {
@@ -5599,13 +5599,13 @@ TkTextRunAfterSyncCmd(
 	return;
     }
 
-    Tcl_Preserve((ClientData) textPtr->interp);
+    Tcl_Preserve(textPtr->interp);
     code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
     if (code == TCL_ERROR) {
 	Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
 	Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
     }
-    Tcl_Release((ClientData) textPtr->interp);
+    Tcl_Release(textPtr->interp);
     Tcl_DecrRefCount(textPtr->afterSyncCmd);
     textPtr->afterSyncCmd = NULL;
 }

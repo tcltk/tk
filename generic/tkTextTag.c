@@ -257,7 +257,7 @@ TkTextTagCmd(
 	    if (fifth[0] == 0) {
 		return Tk_DeleteBinding(interp,
 			textPtr->sharedTextPtr->bindingTable,
-			(ClientData) tagPtr->name, Tcl_GetString(objv[4]));
+			(void *) tagPtr->name, Tcl_GetString(objv[4]));
 	    }
 	    if (fifth[0] == '+') {
 		fifth++;
@@ -265,7 +265,7 @@ TkTextTagCmd(
 	    }
 	    mask = Tk_CreateBinding(interp,
 		    textPtr->sharedTextPtr->bindingTable,
-		    (ClientData) tagPtr->name, Tcl_GetString(objv[4]), fifth,
+		    (void *) tagPtr->name, Tcl_GetString(objv[4]), fifth,
 		    append);
 	    if (mask == 0) {
 		return TCL_ERROR;
@@ -276,7 +276,7 @@ TkTextTagCmd(
 		    |EnterWindowMask|LeaveWindowMask|KeyPressMask
 		    |KeyReleaseMask|PointerMotionMask|VirtualEventMask)) {
 		Tk_DeleteBinding(interp, textPtr->sharedTextPtr->bindingTable,
-			(ClientData) tagPtr->name, Tcl_GetString(objv[4]));
+			(void *) tagPtr->name, Tcl_GetString(objv[4]));
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"requested illegal events; only key, button, motion,"
 			" enter, leave, and virtual events may be used", -1));
@@ -288,7 +288,7 @@ TkTextTagCmd(
 
 	    command = Tk_GetBinding(interp,
 		    textPtr->sharedTextPtr->bindingTable,
-		    (ClientData) tagPtr->name, Tcl_GetString(objv[4]));
+		    (void *) tagPtr->name, Tcl_GetString(objv[4]));
 	    if (command == NULL) {
 		const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
@@ -307,7 +307,7 @@ TkTextTagCmd(
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, textPtr->sharedTextPtr->bindingTable,
-		    (ClientData) tagPtr->name);
+		    (void *) tagPtr->name);
 	}
 	break;
     case TAG_CGET:
@@ -1147,7 +1147,7 @@ TkTextDeleteTag(
 
 	if (textPtr->sharedTextPtr->bindingTable != NULL) {
 	    Tk_DeleteAllBindings(textPtr->sharedTextPtr->bindingTable,
-		    (ClientData) tagPtr->name);
+		    (void *) tagPtr->name);
 	}
     }
 

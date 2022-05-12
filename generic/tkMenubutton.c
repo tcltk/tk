@@ -43,7 +43,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_MENUBUTTON_ACTIVE_BG_COLOR, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, activeBorder), 0,
-	(ClientData) DEF_MENUBUTTON_ACTIVE_BG_MONO, 0},
+	DEF_MENUBUTTON_ACTIVE_BG_MONO, 0},
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground", "Background",
 	DEF_MENUBUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE,
 	offsetof(TkMenuButton, activeFg),
@@ -73,7 +73,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENUBUTTON_DISABLED_FG_COLOR,
 	TCL_INDEX_NONE, offsetof(TkMenuButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_MENUBUTTON_DISABLED_FG_MONO, 0},
+	DEF_MENUBUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL, NULL, 0, TCL_INDEX_NONE,
 	0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -870,14 +870,14 @@ MenuButtonTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && mbPtr->textVarName) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         mbPtr->textVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         MenuButtonTextVarProc, probe);
-                if (probe == (ClientData)mbPtr) {
+                if (probe == (void *)mbPtr) {
                     break;
                 }
             } while (probe);

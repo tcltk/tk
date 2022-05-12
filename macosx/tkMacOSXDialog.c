@@ -68,32 +68,32 @@ enum colorOptions {
 };
 
 static const char *const openOptionStrings[] = {
-    "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-    "-message", "-multiple", "-parent", "-title", "-typevariable",
-    "-command", NULL
+    "-command", "-defaultextension", "-filetypes", "-initialdir",
+    "-initialfile", "-message", "-multiple", "-parent", "-title",
+    "-typevariable", NULL
 };
 enum openOptions {
-    OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR, OPEN_INITFILE,
-    OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
-    OPEN_TYPEVARIABLE, OPEN_COMMAND,
+    OPEN_COMMAND, OPEN_DEFAULT, OPEN_FILETYPES, OPEN_INITDIR,
+    OPEN_INITFILE, OPEN_MESSAGE, OPEN_MULTIPLE, OPEN_PARENT, OPEN_TITLE,
+    OPEN_TYPEVARIABLE
 };
 static const char *const saveOptionStrings[] = {
-    "-defaultextension", "-filetypes", "-initialdir", "-initialfile",
-    "-message", "-parent", "-title", "-typevariable", "-command",
-    "-confirmoverwrite", NULL
+    "-command", "-confirmoverwrite", "-defaultextension", "-filetypes",
+    "-initialdir", "-initialfile", "-message", "-parent", "-title",
+    "-typevariable", NULL
 };
 enum saveOptions {
-    SAVE_DEFAULT, SAVE_FILETYPES, SAVE_INITDIR, SAVE_INITFILE,
-    SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE, SAVE_TYPEVARIABLE, SAVE_COMMAND,
-    SAVE_CONFIRMOW
+    SAVE_COMMAND, SAVE_CONFIRMOW, SAVE_DEFAULT, SAVE_FILETYPES,
+    SAVE_INITDIR, SAVE_INITFILE, SAVE_MESSAGE, SAVE_PARENT, SAVE_TITLE,
+    SAVE_TYPEVARIABLE
 };
 static const char *const chooseOptionStrings[] = {
-    "-initialdir", "-message", "-mustexist", "-parent", "-title", "-command",
+    "-command", "-initialdir", "-message", "-mustexist", "-parent", "-title",
     NULL
 };
 enum chooseOptions {
-    CHOOSE_INITDIR, CHOOSE_MESSAGE, CHOOSE_MUSTEXIST, CHOOSE_PARENT,
-    CHOOSE_TITLE, CHOOSE_COMMAND,
+    CHOOSE_COMMAND, CHOOSE_INITDIR, CHOOSE_MESSAGE, CHOOSE_MUSTEXIST,
+    CHOOSE_PARENT, CHOOSE_TITLE
 };
 typedef struct {
     Tcl_Interp *interp;
@@ -107,7 +107,7 @@ static const char *const alertOptionStrings[] = {
 };
 enum alertOptions {
     ALERT_DEFAULT, ALERT_DETAIL, ALERT_ICON, ALERT_MESSAGE, ALERT_PARENT,
-    ALERT_TITLE, ALERT_TYPE, ALERT_COMMAND,
+    ALERT_TITLE, ALERT_TYPE, ALERT_COMMAND
 };
 typedef struct {
     Tcl_Interp *interp;

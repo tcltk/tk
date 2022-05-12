@@ -366,10 +366,10 @@ enum selcommand {
 };
 
 static const char *const scanCommandNames[] = {
-    "mark", "dragto", NULL
+    "dragto", "mark", NULL
 };
 enum scancommand {
-    SCAN_MARK, SCAN_DRAGTO
+    SCAN_DRAGTO, SCAN_MARK
 };
 
 static const char *const indexNames[] = {
@@ -3451,14 +3451,14 @@ ListboxListVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 
         if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         listPtr->listVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         ListboxListVarProc, probe);
-                if (probe == (ClientData)listPtr) {
+                if (probe == (void *)listPtr) {
                     break;
                 }
             } while (probe);
