@@ -441,7 +441,7 @@ static Tcl_TimerToken ticker = NULL;
 
 static void
 Heartbeat(
-    TCL_UNUSED(ClientData))
+    TCL_UNUSED(void *))
 {
 
     if (ticker) {
@@ -520,7 +520,7 @@ TkMacOSXEventsSetupProc(
  */
 static void
 TkMacOSXEventsCheckProc(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];

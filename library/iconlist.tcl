@@ -456,8 +456,11 @@ package require tk
 	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
 	bind $canvas <Key>		[namespace code {my KeyPress %A}]
-	bind $canvas <Control-Key> ";"
-	bind $canvas <Alt-Key>	";"
+	bind $canvas <Alt-Key>		{# nothing}
+	bind $canvas <Meta-Key> 	{# nothing}
+	bind $canvas <Control-Key> 	{# nothing}
+	bind $canvas <Command-Key> 	{# nothing}
+	bind $canvas <Mod4-Key> 	{# nothing}
 
 	bind $canvas <FocusIn>		[namespace code {my FocusIn}]
 	bind $canvas <FocusOut>		[namespace code {my FocusOut}]

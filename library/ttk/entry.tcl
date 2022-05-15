@@ -131,6 +131,7 @@ bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
 bind TEntry <Command-Key>		{# nothing}
+bind TEntry <Mod4-Key>			{# nothing}
 
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
@@ -281,8 +282,8 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::RelIndex {w where {index insert}} {
     switch -- $where {
-	prevchar	{ expr {[$w index $index] - 1} }
-	nextchar	{ expr {[$w index $index] + 1} }
+	prevchar	{ return [$w index $index]-1 }
+	nextchar	{ return [$w index $index]+1 }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
 	home		{ return 0 }

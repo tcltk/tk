@@ -1782,7 +1782,7 @@ TkTextFreeDInfo(
      */
 
     if (dInfoPtr->pendingUpdateLineMetricsFinished) {
-	Tcl_CancelIdleCall(RunUpdateLineMetricsFinished, (ClientData) textPtr);
+	Tcl_CancelIdleCall(RunUpdateLineMetricsFinished, textPtr);
     }
     if (dInfoPtr->flags & REDRAW_PENDING) {
 	Tcl_CancelIdleCall(DisplayText, textPtr);
@@ -4814,7 +4814,7 @@ CheckIfLineMetricIsUpToDate(
 
 	if (!textPtr->dInfoPtr->pendingUpdateLineMetricsFinished) {
 	    textPtr->dInfoPtr->pendingUpdateLineMetricsFinished = 1;
-	    Tcl_DoWhenIdle(RunUpdateLineMetricsFinished, (ClientData) textPtr);
+	    Tcl_DoWhenIdle(RunUpdateLineMetricsFinished, textPtr);
 	}
 
 	if (tkBTreeDebug) {
@@ -11398,7 +11398,7 @@ TkTextScanCmd(
 	dInfoPtr->scanMarkY = y;
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad scan option \"%s\": must be mark or dragto", Tcl_GetString(objv[2])));
+		"bad scan option \"%s\": must be dragto or mark", Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option", Tcl_GetString(objv[2]), NULL);
 	return TCL_ERROR;
     }
