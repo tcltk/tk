@@ -279,13 +279,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_INACTIVE_SELECT_BG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selAttrs.inactiveBorder),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_COLOR, "-inactiveselectforeground", "inactiveSelectForeground", "Background",
-    	DEF_TEXT_INACTIVE_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selAttrs.inactiveFgColor),
+	DEF_TEXT_INACTIVE_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selAttrs.inactiveFgColor),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_FG_MONO, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_TEXT_INSERT_BG, TCL_INDEX_NONE, offsetof(TkText, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, TCL_INDEX_NONE, offsetof(TkText, insertBorderWidth), 0,
-	(ClientData) DEF_TEXT_INSERT_BD_MONO, 0},
+	DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-insertforeground", "insertForeground", "InsertForeground",
 	DEF_TEXT_BG_COLOR, TCL_INDEX_NONE, offsetof(TkText, insertFgColor), 0, 0, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
@@ -295,11 +295,11 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE,
 	"-insertunfocussed", "insertUnfocussed", "InsertUnfocussed",
 	DEF_TEXT_INSERT_UNFOCUSSED, TCL_INDEX_NONE, offsetof(TkText, insertUnfocussed),
-	0, insertUnfocussedStrings, 0},
+	TK_OPTION_ENUM_VAR, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, insertWidth), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-justify", "justify", "Justify",
-	"left", TCL_INDEX_NONE, offsetof(TkText, justify), 0, justifyStrings, TK_TEXT_LINE_GEOMETRY},
+	"left", TCL_INDEX_NONE, offsetof(TkText, justify), TK_OPTION_ENUM_VAR, justifyStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-lang", "lang", "Lang",
 	 NULL, offsetof(TkText, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
@@ -334,7 +334,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-showinsertforeground", "showInsertForeground", "ShowInsertForeground",
 	"0", TCL_INDEX_NONE, offsetof(TkText, showInsertFgColor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-spacemode", "spaceMode", "SpaceMode",
-	"none", TCL_INDEX_NONE, offsetof(TkText, spaceMode), 0, spaceModeStrings, TK_TEXT_LINE_GEOMETRY},
+	"none", TCL_INDEX_NONE, offsetof(TkText, spaceMode), TK_OPTION_ENUM_VAR, spaceModeStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
 	DEF_TEXT_SPACING1, TCL_INDEX_NONE, offsetof(TkText, spacing1), 0, 0 , TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
@@ -348,7 +348,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 NULL, TCL_INDEX_NONE, offsetof(TkText, startLine), TK_OPTION_NULL_OK, &lineOption, TK_TEXT_LINE_RANGE},
 #endif
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_TEXT_STATE, TCL_INDEX_NONE, offsetof(TkText, state), 0, stateStrings, 0},
+	DEF_TEXT_STATE, TCL_INDEX_NONE, offsetof(TkText, state), TK_OPTION_ENUM_VAR, stateStrings, 0},
     {TK_OPTION_BOOLEAN, "-steadymarks", "steadyMarks", "SteadyMarks",
 	"0", TCL_INDEX_NONE, offsetof(TkText, steadyMarks), TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_INT, "-synctime", "syncTime", "SyncTime",
@@ -358,7 +358,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle), 0, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tagging", "tagging", "Tagging",
-	"within", TCL_INDEX_NONE, offsetof(TkText, tagging), 0, taggingStrings, 0},
+	"within", TCL_INDEX_NONE, offsetof(TkText, tagging), TK_OPTION_ENUM_VAR, taggingStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
@@ -370,7 +370,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_TEXT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, width), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
-	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode), 0, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
+	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode), TK_OPTION_ENUM_VAR, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
@@ -2581,7 +2581,7 @@ TextWidgetObjCmd(
 	    } else {
 		if (!append && *script == '\0') {
 		    if (textPtr->pendingAfterSync) {
-			Tcl_CancelIdleCall(RunAfterSyncCmd, (ClientData) textPtr);
+			Tcl_CancelIdleCall(RunAfterSyncCmd, textPtr);
 			textPtr->pendingAfterSync = 0;
 		    }
 		    cmd = NULL;
@@ -2597,7 +2597,7 @@ TextWidgetObjCmd(
 	    if (!textPtr->pendingAfterSync) {
 		textPtr->pendingAfterSync = 1;
 		if (!TkTextPendingSync(textPtr)) {
-		    Tcl_DoWhenIdle(RunAfterSyncCmd, (ClientData) textPtr);
+		    Tcl_DoWhenIdle(RunAfterSyncCmd, textPtr);
 		}
 	    }
 	} else {
@@ -3452,11 +3452,11 @@ DestroyText(
      */
 
     if (textPtr->pendingAfterSync) {
-	Tcl_CancelIdleCall(RunAfterSyncCmd, (ClientData) textPtr);
+	Tcl_CancelIdleCall(RunAfterSyncCmd, textPtr);
 	textPtr->pendingAfterSync = 0;
     }
     if (textPtr->pendingFireEvent) {
-	Tcl_CancelIdleCall(FireWidgetViewSyncEvent, (ClientData) textPtr);
+	Tcl_CancelIdleCall(FireWidgetViewSyncEvent, textPtr);
 	textPtr->pendingFireEvent = 0;
     }
     if (textPtr->afterSyncCmd) {
@@ -8360,13 +8360,13 @@ GetBindings(
     Tcl_Obj **argv;
     int argc, i;
 
-    Tk_GetAllBindings(interp, bindingTable, (ClientData) name);
+    Tk_GetAllBindings(interp, bindingTable, (void *)name);
     Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &argc, &argv);
     Tcl_DStringInit(&str2);
 
     for (i = 0; i < argc; ++i) {
 	const char *event = Tcl_GetString(argv[i]);
-	const char *binding = Tk_GetBinding(interp, bindingTable, (ClientData) name, event);
+	const char *binding = Tk_GetBinding(interp, bindingTable, (void *)name, event);
 	char *p;
 
 	Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &argc, &argv);
@@ -9837,12 +9837,12 @@ TkTextTriggerWatchCmd(
 
     textPtr->refCount += 1;
 
-    Tcl_Preserve((ClientData) textPtr->interp);
+    Tcl_Preserve(textPtr->interp);
     if (Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(&cmd), Tcl_DStringLength(&cmd), 0) != TCL_OK) {
 	Tcl_AddErrorInfo(textPtr->interp, "\n    (triggering the \"watch\" command failed)");
 	Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
     }
-    Tcl_Release((ClientData) textPtr->interp);
+    Tcl_Release(textPtr->interp);
 
     Tcl_DStringFree(&cmd);
     return !TkTextDecrRefCountAndTestIfDestroyed(textPtr);
@@ -10006,7 +10006,7 @@ TkTextRunAfterSyncCmd(
     textPtr->afterSyncCmd = NULL;
     textPtr->refCount += 1;
 
-    Tcl_Preserve((ClientData) textPtr->interp);
+    Tcl_Preserve(textPtr->interp);
     if (!(textPtr->flags & DESTROYED)) {
 	code = Tcl_EvalObjEx(textPtr->interp, afterSyncCmd, TCL_EVAL_GLOBAL);
 	if (code == TCL_ERROR && !error) {
@@ -10016,7 +10016,7 @@ TkTextRunAfterSyncCmd(
 	}
     }
     Tcl_GuardedDecrRefCount(afterSyncCmd);
-    Tcl_Release((ClientData) textPtr->interp);
+    Tcl_Release(textPtr->interp);
     TkTextDecrRefCountAndTestIfDestroyed(textPtr);
 }
 
@@ -10124,7 +10124,7 @@ FireWidgetViewSyncEvent(
     textPtr->prevSyncState = syncState;
 
     interp = textPtr->interp;
-    Tcl_Preserve((ClientData) interp);
+    Tcl_Preserve(interp);
     /*
      * OSX 10.14 needs to be told to display the window when the Text Widget
      * is in sync.  (That is, to run DisplayText inside of the drawRect
@@ -10138,7 +10138,7 @@ FireWidgetViewSyncEvent(
     }
 
     Tk_SendVirtualEvent(textPtr->tkwin, "WidgetViewSync", Tcl_NewBooleanObj(syncState));
-    Tcl_Release((ClientData) interp);
+    Tcl_Release(interp);
 }
 
 void
@@ -10149,9 +10149,9 @@ TkTextGenerateWidgetViewSyncEvent(
     if (!textPtr->pendingFireEvent) {
 	textPtr->pendingFireEvent = 1;
 	if (sendImmediately) {
-	    FireWidgetViewSyncEvent((ClientData) textPtr);
+	    FireWidgetViewSyncEvent(textPtr);
 	} else {
-	    Tcl_DoWhenIdle(FireWidgetViewSyncEvent, (ClientData) textPtr);
+	    Tcl_DoWhenIdle(FireWidgetViewSyncEvent, textPtr);
 	}
     }
 }

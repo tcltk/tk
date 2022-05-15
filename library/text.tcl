@@ -329,6 +329,7 @@ bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
 bind Text <Command-Key> {# nothing}
+bind Text <Mod4-Key> {# nothing}
 
 # Additional emacs-like bindings:
 

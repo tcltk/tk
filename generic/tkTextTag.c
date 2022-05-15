@@ -118,7 +118,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-undo", NULL, NULL,
 	"1", TCL_INDEX_NONE, offsetof(TkTextTag, undo), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-wrap", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK, tkTextWrapStrings, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, wrapMode), TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, tkTextWrapStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -1776,19 +1776,19 @@ TkTextBindEvent(
 	const char *fifth = Tcl_GetString(objv[1]);
 
 	if (fifth[0] == '\0') {
-	    return Tk_DeleteBinding(interp, *bindingTablePtr, (ClientData) name, eventString);
+	    return Tk_DeleteBinding(interp, *bindingTablePtr, (void *)name, eventString);
 	}
 	if (fifth[0] == '+') {
 	    fifth += 1;
 	    append = 1;
 	}
-	mask = Tk_CreateBinding(interp, *bindingTablePtr, (ClientData) name, eventString, fifth, append);
+	mask = Tk_CreateBinding(interp, *bindingTablePtr, (void *)name, eventString, fifth, append);
 	if (mask == 0) {
 	    return TCL_ERROR;
 	}
 	if (mask & (unsigned) ~(motionMask|ButtonPressMask|ButtonReleaseMask|EnterWindowMask
 		|LeaveWindowMask|KeyPressMask|KeyReleaseMask|VirtualEventMask)) {
-	    Tk_DeleteBinding(interp, *bindingTablePtr, (ClientData) name, eventString);
+	    Tk_DeleteBinding(interp, *bindingTablePtr, (void *)name, eventString);
 	    Tcl_ResetResult(interp);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "requested illegal events; only key, button, motion,"
@@ -1813,7 +1813,7 @@ TkTextBindEvent(
     } else if (objc == 1) {
 	const char *command;
 
-	command = Tk_GetBinding(interp, *bindingTablePtr, (ClientData) name, Tcl_GetString(objv[0]));
+	command = Tk_GetBinding(interp, *bindingTablePtr, (void *)name, Tcl_GetString(objv[0]));
 	if (!command) {
 	    const char *string = Tcl_GetString(Tcl_GetObjResult(interp));
 
@@ -1830,7 +1830,7 @@ TkTextBindEvent(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
 	}
     } else {
-	Tk_GetAllBindings(interp, *bindingTablePtr, (ClientData) name);
+	Tk_GetAllBindings(interp, *bindingTablePtr, (void *)name);
     }
 
     return TCL_OK;
@@ -2142,7 +2142,7 @@ TkTextReleaseTag(
     }
 
     if (sharedTextPtr->tagBindingTable) {
-	Tk_DeleteAllBindings(sharedTextPtr->tagBindingTable, (ClientData) tagPtr->name);
+	Tk_DeleteAllBindings(sharedTextPtr->tagBindingTable, (void *)tagPtr->name);
     }
 
     /*

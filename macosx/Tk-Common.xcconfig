@@ -33,7 +33,6 @@ FRAMEWORK_INSTALL_PATH = /Library/Frameworks
 INCLUDEDIR = $(PREFIX)/include
 LIBDIR = $(PREFIX)/lib
 MANDIR = $(PREFIX)/man
-PER_ARCH_CFLAGS_ppc = -mcpu=G3 -mtune=G4 $(PER_ARCH_CFLAGS_ppc)
 PREFIX = /usr/local
 TCL_BUILD_DIR = $(OBJROOT)/../tcl/Tcl.build/$(CONFIGURATION)/Tcl.build/Objects
 TCL_CONFIGURE_ARGS = --enable-dtrace

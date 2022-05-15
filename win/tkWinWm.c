@@ -2721,8 +2721,8 @@ Tk_WmObjCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings,
+	    "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3514,8 +3514,8 @@ WmFocusmodelCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-	    sizeof(char *), "argument", 0,&index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+	    "argument", 0,&index) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (index == OPT_ACTIVE) {
@@ -4829,8 +4829,8 @@ WmPositionfromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
     } else {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -5056,8 +5056,8 @@ WmSizefromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
     } else {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -5186,8 +5186,8 @@ WmStackorderCmd(
 
 	ckfree(windows);
 
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_ISABOVE) {
@@ -5227,10 +5227,10 @@ WmStateCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
-	"normal", "iconic", "withdrawn", "zoomed", NULL
+	"iconic", "normal", "withdrawn", "zoomed", NULL
     };
     enum options {
-	OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN, OPT_ZOOMED
+	OPT_ICONIC, OPT_NORMAL, OPT_WITHDRAWN, OPT_ZOOMED
     };
     int index;
 
@@ -5246,8 +5246,8 @@ WmStateCmd(
 	    Tcl_SetErrorCode(interp, "TK", "WM", "STATE", "ICON", NULL);
 	    return TCL_ERROR;
 	}
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 

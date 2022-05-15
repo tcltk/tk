@@ -3538,13 +3538,13 @@ int Winprint_Init(
      */
 
     namespacePtr = Tcl_CreateNamespace(interp, gdiName,
-	    (ClientData) NULL, (Tcl_NamespaceDeleteProc *) NULL);
+	    NULL, (Tcl_NamespaceDeleteProc *) NULL);
     for (i=0; i<numCommands; i++) {
 	char buffer[100];
 
 	sprintf(buffer, "%s::%s", gdiName, gdi_commands[i].command_string);
 	Tcl_CreateCommand(interp, buffer, gdi_commands[i].command,
-		(ClientData) 0, (Tcl_CmdDeleteProc *) 0);
+		NULL, (Tcl_CmdDeleteProc *) 0);
 	Tcl_Export(interp, namespacePtr, gdi_commands[i].command_string, 0);
     }
     Tcl_CreateEnsemble(interp, gdiName, namespacePtr, 0);
@@ -3802,7 +3802,7 @@ int PrintOpenDoc(
  */
 
 int PrintCloseDoc(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))

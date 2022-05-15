@@ -523,10 +523,10 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
-	0, (void *)SelectModeStrings, 0 },
+	0, SelectModeStrings, 0 },
     {TK_OPTION_STRING_TABLE, "-selecttype", "selectType", "SelectType",
 	"item", offsetof(Treeview,tree.selectTypeObj), TCL_INDEX_NONE,
-	0,(ClientData)SelectTypeStrings,0 },
+	0, SelectTypeStrings, 0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
@@ -822,10 +822,10 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
 
 	InitColumn(tv->tree.columns + i);
 	Tk_InitOptions(
-	    interp, (ClientData)(tv->tree.columns + i),
+	    interp, tv->tree.columns + i,
 	    tv->tree.columnOptionTable, tv->core.tkwin);
 	Tk_InitOptions(
-	    interp, (ClientData)(tv->tree.columns + i),
+	    interp, tv->tree.columns + i,
 	    tv->tree.headingOptionTable, tv->core.tkwin);
 	Tcl_IncrRefCount(columnName);
 	tv->tree.columns[i].idObj = columnName;
@@ -1294,10 +1294,10 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     tv->tree.column0.idObj = Tcl_NewStringObj("#0", 2);
     Tcl_IncrRefCount(tv->tree.column0.idObj);
     Tk_InitOptions(
-	interp, (ClientData)(&tv->tree.column0),
+	interp, &tv->tree.column0,
 	tv->tree.columnOptionTable, tv->core.tkwin);
     Tk_InitOptions(
-	interp, (ClientData)(&tv->tree.column0),
+	interp, &tv->tree.column0,
 	tv->tree.headingOptionTable, tv->core.tkwin);
 
     Tcl_InitHashTable(&tv->tree.items, TCL_STRING_KEYS);
@@ -1308,7 +1308,7 @@ static void TreeviewInitialize(Tcl_Interp *interp, void *recordPtr)
     /* Create root item "":
      */
     tv->tree.root = NewItem();
-    Tk_InitOptions(interp, (ClientData)tv->tree.root,
+    Tk_InitOptions(interp, tv->tree.root,
 	tv->tree.itemOptionTable, tv->core.tkwin);
     tv->tree.root->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     tv->tree.root->entryPtr = Tcl_CreateHashEntry(&tv->tree.items, "", &unused);
@@ -1344,7 +1344,7 @@ static void TreeviewCleanup(void *recordPtr)
     TreeviewFreeColumns(tv);
 
     if (tv->tree.displayColumns)
-	ckfree((ClientData)tv->tree.displayColumns);
+	ckfree(tv->tree.displayColumns);
 
     foreachHashEntry(&tv->tree.items, FreeItemCB);
     Tcl_DeleteHashTable(&tv->tree.items);
@@ -3169,7 +3169,7 @@ static int TreeviewInsertCommand(
      */
     newItem = NewItem();
     Tk_InitOptions(
-	interp, (ClientData)newItem, tv->tree.itemOptionTable, tv->core.tkwin);
+	interp, newItem, tv->tree.itemOptionTable, tv->core.tkwin);
     newItem->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     if (ConfigureItem(interp, tv, newItem, objc, objv) != TCL_OK) {
     	Tcl_DeleteHashEntry(entryPtr);
@@ -3969,6 +3969,7 @@ static int TreeviewTagDeleteCommand(
 	item = NextPreorder(item);
     }
     /* then remove the tag from the tag table */
+    Tk_DeleteAllBindings(tv->tree.bindingTable, tag);
     Ttk_DeleteTagFromTable(tagTable, tag);
     TtkRedisplayWidget(&tv->core);
 

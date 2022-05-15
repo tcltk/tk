@@ -744,7 +744,7 @@ Tk_FontObjCmd(
 	int skip, i;
 	const TkFontMetrics *fmPtr;
 	static const char *const switches[] = {
-	    "-ascent", "-descent", "-linespace", "-fixed", NULL
+	    "-ascent", "-descent", "-fixed", "-linespace", NULL
 	};
 
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
@@ -778,8 +778,8 @@ Tk_FontObjCmd(
 	    switch (index) {
 	    case 0: i = fmPtr->ascent;			break;
 	    case 1: i = fmPtr->descent;			break;
-	    case 2: i = fmPtr->ascent + fmPtr->descent;	break;
-	    case 3: i = fmPtr->fixed;			break;
+	    case 2: i = fmPtr->fixed;			break;
+	    case 3: i = fmPtr->ascent + fmPtr->descent;	break;
 	    }
 	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(i));
 	}
