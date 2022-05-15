@@ -755,7 +755,7 @@ int TtkWidgetIdentifyCommand(
 {
     WidgetCore *corePtr = recordPtr;
     Ttk_Element element;
-    static const char *whatTable[] = { "element", NULL };
+    static const char *const whatTable[] = { "element", NULL };
     int x, y, what;
 
     if (objc < 4 || objc > 5) {

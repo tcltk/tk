@@ -43,16 +43,6 @@
 #define PIXEL_CLIENTS 5
 
 /*
- * The 'TkTextState' enum in tkText.h is used to define a type for the -state
- * option of the Text widget. These values are used as indices into the string
- * table below.
- */
-
-static const char *const stateStrings[] = {
-    "disabled", "normal", NULL
-};
-
-/*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
  * option of the Text widget. These values are used as indices into the string
  * table below.
@@ -189,7 +179,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE,
 	"-insertunfocussed", "insertUnfocussed", "InsertUnfocussed",
 	DEF_TEXT_INSERT_UNFOCUSSED, -1, Tk_Offset(TkText, insertUnfocussed),
-	0, insertUnfocussedStrings, 0},
+	TK_OPTION_ENUM_VAR, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, -1, Tk_Offset(TkText, insertWidth),
 	0, 0, 0},
@@ -230,7 +220,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_TEXT_STATE, -1, Tk_Offset(TkText, state),
-	0, stateStrings, 0},
+	0, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, Tk_Offset(TkText, tabOptionPtr), -1,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
@@ -248,7 +238,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
 	DEF_TEXT_WRAP, -1, Tk_Offset(TkText, wrapMode),
-	0, wrapStrings, TK_TEXT_LINE_GEOMETRY},
+	TK_OPTION_ENUM_VAR, wrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, -1, Tk_Offset(TkText, xScrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
