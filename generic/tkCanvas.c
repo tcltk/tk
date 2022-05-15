@@ -267,7 +267,7 @@ static void		CanvasWorldChanged(ClientData instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int argc,
 			    Tcl_Obj *const *argv, int flags);
-static void		DestroyCanvas(char *memPtr);
+static void		DestroyCanvas(void *memPtr);
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
@@ -963,7 +963,7 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	} else {
-    	    object = (ClientData) searchPtr->expr->uid;
+	    object = (void *)searchPtr->expr->uid;
 	}
 #endif /* USE_OLD_TAG_SEARCH */
 
@@ -2168,9 +2168,9 @@ CanvasWidgetCmd(
 
 static void
 DestroyCanvas(
-    char *memPtr)		/* Info about canvas widget. */
+    void *memPtr)		/* Info about canvas widget. */
 {
-    TkCanvas *canvasPtr = (TkCanvas *) memPtr;
+    TkCanvas *canvasPtr = (TkCanvas *)memPtr;
     Tk_Item *itemPtr;
 #ifndef USE_OLD_TAG_SEARCH
     TagSearchExpr *expr, *next;
@@ -4248,7 +4248,7 @@ DoItem(
 
 	itemPtr->tagSpace += 5;
 	newTagPtr = (Tk_Uid *)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
-	memcpy((void *) newTagPtr, itemPtr->tagPtr,
+	memcpy(newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree(itemPtr->tagPtr);
@@ -5185,17 +5185,17 @@ CanvasDoEvent(
     if (numObjects <= NUM_STATIC) {
 	objectPtr = staticObjects;
     } else {
-	objectPtr = ckalloc(numObjects * sizeof(ClientData));
+	objectPtr = (void **)ckalloc(numObjects * sizeof(void *));
     }
 #ifdef USE_OLD_TAG_SEARCH
-    objectPtr[0] = (ClientData) Tk_GetUid("all");
+    objectPtr[0] = (void *)Tk_GetUid("all");
 #else /* USE_OLD_TAG_SEARCH */
-    objectPtr[0] = (ClientData) searchUids->allUid;
+    objectPtr[0] = (void *)searchUids->allUid;
 #endif /* USE_OLD_TAG_SEARCH */
-    for (i = itemPtr->numTags-1; i >= 0; i--) {
-	objectPtr[i+1] = (ClientData) itemPtr->tagPtr[i];
+    for (i = itemPtr->numTags - 1; i >= 0; i--) {
+	objectPtr[i+1] = (void *)itemPtr->tagPtr[i];
     }
-    objectPtr[itemPtr->numTags+1] = itemPtr;
+    objectPtr[itemPtr->numTags + 1] = itemPtr;
 
 #ifndef USE_OLD_TAG_SEARCH
     /*

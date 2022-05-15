@@ -12,7 +12,7 @@
  * Legal values for the button -default option.
  * See also: enum Ttk_ButtonDefaultState.
  */
-const char *ttkDefaultStrings[] = {
+const char *const ttkDefaultStrings[] = {
     "normal", "active", "disabled", NULL
 };
 
@@ -28,7 +28,7 @@ int Ttk_GetButtonDefaultStateFromObj(
  * Legal values for the -compound option.
  * See also: enum Ttk_Compound.
  */
-const char *ttkCompoundStrings[] = {
+const char *const ttkCompoundStrings[] = {
     "none", "text", "image", "center",
     "top", "bottom", "left", "right", NULL
 };
@@ -45,7 +45,7 @@ int Ttk_GetCompoundFromObj(
  * Legal values for the -orient option.
  * See also: enum Ttk_Orient.
  */
-const char *ttkOrientStrings[] = {
+const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
@@ -61,7 +61,7 @@ int Ttk_GetOrientFromObj(
  * Recognized values for the -state compatibility option.
  * Other options are accepted and interpreted as synonyms for "normal".
  */
-static const char *ttkStateStrings[] = {
+static const char *const ttkStateStrings[] = {
     "normal", "readonly", "disabled", "active", NULL
 };
 enum {
