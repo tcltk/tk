@@ -112,7 +112,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     self = [self init];
     if (self) {
 	Tcl_DStringInit(&_ds);
-	Tcl_UtfToUniCharDString((const char *)bytes, len, &_ds);
+	Tcl_UtfToChar16DString((const char *)bytes, len, &_ds);
 	_string = [[NSString alloc]
 	     initWithCharactersNoCopy:(unichar *)Tcl_DStringValue(&_ds)
 			       length:Tcl_DStringLength(&_ds)>>1
