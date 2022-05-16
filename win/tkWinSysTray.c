@@ -925,9 +925,9 @@ WinSystrayCmd(
     };
     enum { CMD_ADD, CMD_DELETE, CMD_MODIFY };
     static const char *const optStrings[] = {
-        "-image", "-text", "-callback", NULL
+        "-callback", "-image", "-text", NULL
     };
-    enum { OPT_IMAGE, OPT_TEXT, OPT_CALLBACK };
+    enum { OPT_CALLBACK, OPT_IMAGE, OPT_TEXT };
     int cmd, opt;
 
     HICON hIcon;

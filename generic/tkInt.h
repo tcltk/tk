@@ -19,6 +19,8 @@
 #include "tkPort.h"
 #endif
 
+#define TK_OPTION_ENUM_VAR		((int)(sizeof(Tk_OptionType)&(sizeof(int)-1))<<6)
+
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:
  * Needs to happen here in addition to configure to work with fat compiles on
@@ -113,23 +115,17 @@
  * to/from pointer from/to integer of different size".
  */
 
-#if !defined(INT2PTR) && !defined(PTR2INT)
-#   if defined(HAVE_INTPTR_T) || defined(intptr_t)
-#	define INT2PTR(p) ((void*)(intptr_t)(p))
-#	define PTR2INT(p) ((intptr_t)(p))
-#   else
-#	define INT2PTR(p) ((void*)(p))
-#	define PTR2INT(p) ((long)(p))
-#   endif
+#if !defined(INT2PTR)
+#   define INT2PTR(p) ((void *)(ptrdiff_t)(p))
 #endif
-#if !defined(UINT2PTR) && !defined(PTR2UINT)
-#   if defined(HAVE_UINTPTR_T) || defined(uintptr_t)
-#	define UINT2PTR(p) ((void*)(uintptr_t)(p))
-#	define PTR2UINT(p) ((uintptr_t)(p))
-#   else
-#	define UINT2PTR(p) ((void*)(p))
-#	define PTR2UINT(p) ((unsigned long)(p))
-#   endif
+#if !defined(PTR2INT)
+#   define PTR2INT(p) ((ptrdiff_t)(p))
+#endif
+#if !defined(UINT2PTR)
+#   define UINT2PTR(p) ((void *)(size_t)(p))
+#endif
+#if !defined(PTR2UINT)
+#   define PTR2UINT(p) ((size_t)(p))
 #endif
 
 /*
@@ -137,11 +133,11 @@
  * (TCL_INDEX_TEMP_TABLE) or TIP #613 (TCL_INDEX_NULL_OK)
  */
 
-#if !defined(TCL_INDEX_TEMP_TABLE)
-#   define TCL_INDEX_TEMP_TABLE 2
-#endif
 #ifndef TCL_INDEX_NULL_OK
 #   define TCL_INDEX_NULL_OK 32
+#endif
+#if !defined(TCL_INDEX_TEMP_TABLE)
+#   define TCL_INDEX_TEMP_TABLE 64
 #endif
 
 #ifndef TCL_Z_MODIFIER
@@ -937,6 +933,8 @@ typedef struct TkWindow {
  * String tables:
  */
 
+MODULE_SCOPE const char *const tkStateStrings[];
+MODULE_SCOPE const char *const tkCompoundStrings[];
 MODULE_SCOPE const char *const tkAnchorStrings[];
 MODULE_SCOPE const char *const tkReliefStrings[];
 MODULE_SCOPE const char *const tkJustifyStrings[];

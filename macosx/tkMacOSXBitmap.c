@@ -59,12 +59,12 @@ typedef struct {
 } IconBitmap;
 
 static const char *const iconBitmapOptionStrings[] = {
-    "-file", "-fileType", "-osType", "-systemType", "-namedImage",
-    "-imageFile", NULL
+    "-file", "-fileType", "-imageFile", "-namedImage", "-osType",
+    "-systemType", NULL
 };
 enum iconBitmapOptions {
-    ICON_FILE, ICON_FILETYPE, ICON_OSTYPE, ICON_SYSTEMTYPE, ICON_NAMEDIMAGE,
-    ICON_IMAGEFILE,
+    ICON_FILE, ICON_FILETYPE, ICON_IMAGEFILE, ICON_NAMEDIMAGE, ICON_OSTYPE,
+    ICON_SYSTEMTYPE
 };
 
 

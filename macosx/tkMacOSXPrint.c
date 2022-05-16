@@ -341,7 +341,7 @@ FinishPrint(
 
 int MacPrint_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand(interp, "::tk::print::_print", StartPrint, (ClientData) NULL, (Tcl_CmdDeleteProc * ) NULL);
+    Tcl_CreateObjCommand(interp, "::tk::print::_print", StartPrint, NULL, NULL);
     [pool release];
     return TCL_OK;
 }
