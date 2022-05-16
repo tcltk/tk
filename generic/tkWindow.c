@@ -987,7 +987,6 @@ TkCreateMainWindow(
 #endif
 		STRINGIFY(__GNUC_MINOR__)
 #endif
-		".glyph-indexing-2"
 #ifdef __INTEL_COMPILER
 		".icc-" STRINGIFY(__INTEL_COMPILER)
 #endif
