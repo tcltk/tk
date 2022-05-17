@@ -507,7 +507,9 @@ if {$::tk_library ne ""} {
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
-	SourceLibFile systray
+	if {![interp issafe]} {
+	    SourceLibFile systray
+	}
 	SourceLibFile text
     }
 }

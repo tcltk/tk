@@ -220,10 +220,6 @@ enum state {
     STATE_DISABLED, STATE_NORMAL
 };
 
-static const char *const stateStrings[] = {
-    "disabled", "normal", NULL
-};
-
 enum activeStyle {
     ACTIVE_STYLE_DOTBOX, ACTIVE_STYLE_NONE, ACTIVE_STYLE_UNDERLINE
 };
@@ -297,7 +293,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_SET_GRID, TCL_INDEX_NONE, offsetof(Listbox, setGrid), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_LISTBOX_STATE, TCL_INDEX_NONE, offsetof(Listbox, state),
-	0, stateStrings, 0},
+	0, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	 DEF_LISTBOX_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Listbox, takeFocus),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -370,10 +366,10 @@ enum selcommand {
 };
 
 static const char *const scanCommandNames[] = {
-    "mark", "dragto", NULL
+    "dragto", "mark", NULL
 };
 enum scancommand {
-    SCAN_MARK, SCAN_DRAGTO
+    SCAN_DRAGTO, SCAN_MARK
 };
 
 static const char *const indexNames[] = {
@@ -3455,14 +3451,14 @@ ListboxListVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 
         if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         listPtr->listVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         ListboxListVarProc, probe);
-                if (probe == (ClientData)listPtr) {
+                if (probe == (void *)listPtr) {
                     break;
                 }
             } while (probe);

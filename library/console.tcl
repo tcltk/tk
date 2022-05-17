@@ -432,6 +432,8 @@ proc ::tk::ConsoleBind {w} {
     bind Console <Alt-Key> {# nothing }
     bind Console <Meta-Key> {# nothing}
     bind Console <Control-Key> {# nothing}
+    bind Console <Command-Key> {# nothing}
+    bind Console <Mod4-Key> {# nothing}
 
     foreach {ev key} {
 	<<Console_NextImmediate>>	<Control-n>
