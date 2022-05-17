@@ -168,7 +168,7 @@ bind Menu <<PrevLine>> {
 bind Menu <<NextLine>> {
     tk::MenuDownArrow %W
 }
-bind Menu <KeyPress> {
+bind Menu <Key> {
     tk::TraverseWithinMenu %W %A
     break
 }
@@ -177,7 +177,7 @@ bind Menu <KeyPress> {
 # implement keyboard menu traversal.
 
 if {[tk windowingsystem] eq "x11"} {
-    bind all <Alt-KeyPress> {
+    bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
@@ -185,7 +185,7 @@ if {[tk windowingsystem] eq "x11"} {
 	tk::FirstMenu %W
     }
 } else {
-    bind Menubutton <Alt-KeyPress> {
+    bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
