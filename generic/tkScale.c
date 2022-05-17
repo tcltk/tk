@@ -34,15 +34,6 @@ static const char *const orientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
-/*
- * The following table defines the legal values for the -state option. It is
- * used together with the "enum state" declaration in tkScale.h.
- */
-
-static const char *const stateStrings[] = {
-    "active", "disabled", "normal", NULL
-};
-
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
 	DEF_SCALE_ACTIVE_BG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, activeBorder),
@@ -75,7 +66,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_FONT, TCL_INDEX_NONE, offsetof(TkScale, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_SCALE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, textColorPtr), 0,
-	(ClientData) DEF_SCALE_FG_MONO, 0},
+	DEF_SCALE_FG_MONO, 0},
     {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, TCL_INDEX_NONE,
 	offsetof(TkScale, fromValue), 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
@@ -95,7 +86,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_LENGTH, TCL_INDEX_NONE, offsetof(TkScale, length), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	DEF_SCALE_ORIENT, TCL_INDEX_NONE, offsetof(TkScale, orient),
-	0, orientStrings, 0},
+	TK_OPTION_ENUM_VAR, orientStrings, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_SCALE_RELIEF, TCL_INDEX_NONE, offsetof(TkScale, relief), 0, 0, 0},
     {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
@@ -118,7 +109,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_SCALE_STATE, TCL_INDEX_NONE, offsetof(TkScale, state),
-	0, stateStrings, 0},
+	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -1359,14 +1350,14 @@ ScaleVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && scalePtr->varNamePtr) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         Tcl_GetString(scalePtr->varNamePtr),
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         ScaleVarProc, probe);
-                if (probe == (ClientData)scalePtr) {
+                if (probe == (void *)scalePtr) {
                     break;
                 }
             } while (probe);

@@ -1127,10 +1127,10 @@ Ttk_CreateVsapiElement(
     Tcl_DString classBuf;
 
     static const char *const optionStrings[] =
-	{ "-padding","-width","-height","-margins", "-syssize",
-	  "-halfheight", "-halfwidth", NULL };
-    enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS, O_SYSSIZE,
-	   O_HALFHEIGHT, O_HALFWIDTH };
+	{ "-halfheight", "-halfwidth", "-height", "-margins", "-padding",
+	  "-syssize", "-width", NULL };
+    enum { O_HALFHEIGHT, O_HALFWIDTH, O_HEIGHT, O_MARGINS, O_PADDING,
+	   O_SYSSIZE, O_WIDTH };
 
     if (objc < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -1158,8 +1158,8 @@ Ttk_CreateVsapiElement(
 		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
 		goto retErr;
 	    }
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
-		    sizeof(char *), "option", 0, &option) != TCL_OK)
+	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
+		    "option", 0, &option) != TCL_OK)
 		goto retErr;
 	    switch (option) {
 	    case O_PADDING:

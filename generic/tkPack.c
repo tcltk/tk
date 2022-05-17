@@ -13,9 +13,9 @@
 
 #include "tkInt.h"
 
-typedef enum {TOP, BOTTOM, LEFT, RIGHT} Side;
+typedef enum {BOTTOM, LEFT, RIGHT, TOP} Side;
 static const char *const sideNames[] = {
-    "top", "bottom", "left", "right", NULL
+    "bottom", "left", "right", "top", NULL
 };
 
 /*

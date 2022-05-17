@@ -1452,7 +1452,7 @@ test spinbox-3.44 {SpinboxWidgetCmd procedure, "scan" widget command} -setup {
     .e scan foobar 20
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad scan option "foobar": must be mark or dragto}
+} -returnCodes error -result {bad scan option "foobar": must be dragto or mark}
 test spinbox-3.45 {SpinboxWidgetCmd procedure, "scan" widget command} -setup {
     spinbox .e
     pack .e

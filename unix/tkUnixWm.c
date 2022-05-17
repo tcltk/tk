@@ -3415,9 +3415,9 @@ WmStateCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
-	"normal", "iconic", "withdrawn", NULL };
+	"iconic", "normal", "withdrawn", NULL };
     enum options {
-	OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN };
+	OPT_ICONIC, OPT_NORMAL, OPT_WITHDRAWN };
     int index;
 
     if ((objc < 3) || (objc > 4)) {

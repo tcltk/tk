@@ -2371,7 +2371,7 @@ test textDisp-17.4 {TkTextScanCmd procedure} {
 } {1 {expected integer but got "bogus"}}
 test textDisp-17.5 {TkTextScanCmd procedure} {
     list [catch {.t scan stupid 123 456} msg] $msg
-} {1 {bad scan option "stupid": must be mark or dragto}}
+} {1 {bad scan option "stupid": must be dragto or mark}}
 test textDisp-17.6 {TkTextScanCmd procedure} {textfonts} {
     .t yview 1.0
     .t xview moveto 0

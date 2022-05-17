@@ -3088,14 +3088,14 @@ AsyncUpdateLineMetrics(
         if (textPtr->afterSyncCmd) {
             int code;
 	    Tcl_CancelIdleCall(TkTextRunAfterSyncCmd, textPtr);
-            Tcl_Preserve((ClientData) textPtr->interp);
+            Tcl_Preserve(textPtr->interp);
             code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd,
                     TCL_EVAL_GLOBAL);
 	    if (code == TCL_ERROR) {
                 Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
                 Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
 	    }
-            Tcl_Release((ClientData) textPtr->interp);
+            Tcl_Release(textPtr->interp);
             Tcl_DecrRefCount(textPtr->afterSyncCmd);
             textPtr->afterSyncCmd = NULL;
 	}
@@ -6460,7 +6460,7 @@ TkTextScanCmd(
 	dInfoPtr->scanMarkY = y;
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad scan option \"%s\": must be mark or dragto",
+		"bad scan option \"%s\": must be dragto or mark",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
 		Tcl_GetString(objv[2]), NULL);

@@ -335,7 +335,7 @@ CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
 ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
 ${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} -DTCL_UTF_MAX=3 @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
@@ -1736,10 +1736,6 @@ dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC
 		$(DISTDIR)/macosx
 	$(DIST_INSTALL_SCRIPT) $(MAC_OSX_DIR)/configure $(DISTDIR)/macosx
 	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/macosx
-	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx/Tk.xcode
-	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/Tk.xcode/project.pbxproj \
-		$(MAC_OSX_DIR)/Tk.xcode/default.pbxuser \
-		$(DISTDIR)/macosx/Tk.xcode
 	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx/Tk.xcodeproj
 	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/Tk.xcodeproj/project.pbxproj \
 		$(MAC_OSX_DIR)/Tk.xcodeproj/default.pbxuser \

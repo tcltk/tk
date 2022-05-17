@@ -25,10 +25,10 @@
  */
 
 static const char *const borderModeStrings[] = {
-    "inside", "outside", "ignore", NULL
+    "inside", "ignore", "outside", NULL
 };
 
-typedef enum {BM_INSIDE, BM_OUTSIDE, BM_IGNORE} BorderMode;
+typedef enum {BM_INSIDE, BM_IGNORE, BM_OUTSIDE} BorderMode;
 
 /*
  * For each window whose geometry is managed by the placer there is a
@@ -82,7 +82,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", TCL_INDEX_NONE,
 	 offsetof(Content, anchor), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
-	 offsetof(Content, borderMode), 0, borderModeStrings, 0},
+	 offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Content, heightPtr),
 	 offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Content, inTkwin),

@@ -816,7 +816,7 @@ test listbox-3.78 {ListboxWidgetCmd procedure, "scan" option} -constraints {
 } -result {{0.249364 0.427481} {0.0714286 0.428571}}
 test listbox-3.79 {ListboxWidgetCmd procedure, "scan" option} -body {
     .l scan foo 2 4
-} -returnCodes error -result {bad option "foo": must be mark or dragto}
+} -returnCodes error -result {bad option "foo": must be dragto or mark}
 test listbox-3.80 {ListboxWidgetCmd procedure, "see" option} -body {
     .l see
 } -returnCodes error -result {wrong # args: should be ".l see index"}
