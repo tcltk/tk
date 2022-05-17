@@ -9239,7 +9239,11 @@ TextInvalidateRegion(
      * consider a possible increasement of the padding area.
      */
 
-    if (!RectContainsRect(&textRect, &clipRect)) {
+    if ((clipRect.x < (inset + textPtr->padX))
+	|| (clipRect.y < (inset + textPtr->padY))
+	|| ((int) (clipRect.x + clipRect.width) >
+	    (Tk_Width(textPtr->tkwin) - inset - textPtr->padX))
+	|| (maxY > (Tk_Height(textPtr->tkwin) - inset - textPtr->padY))) {
 	dInfoPtr->flags |= REDRAW_BORDERS;
     }
 }
