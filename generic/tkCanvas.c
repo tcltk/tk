@@ -4631,7 +4631,7 @@ DoItem(
 
 	itemPtr->tagSpace += 5;
 	newTagPtr = (Tk_Uid *)ckalloc(itemPtr->tagSpace * sizeof(Tk_Uid));
-	memcpy(newTagPtr, itemPtr->tagPtr,
+	memcpy((void *) newTagPtr, itemPtr->tagPtr,
 		itemPtr->numTags * sizeof(Tk_Uid));
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
 	    ckfree(itemPtr->tagPtr);
