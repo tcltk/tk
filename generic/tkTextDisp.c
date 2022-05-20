@@ -1008,7 +1008,6 @@ RectIntersects(
 	&& rect2->y < (int) rect1->y + (int) rect1->height;
 }
 
-#if 0
 static int
 RectContainsRect(
     const DRect *rect1,		/* this rectangle */
@@ -1019,7 +1018,6 @@ RectContainsRect(
 	&& rect1->y <= (int) rect2->y
 	&& (int) rect2->y + (int) rect2->height <= rect1->y + rect1->height;
 }
-#endif
 
 static int RegionIsEmpty(const DRegion *region) { return region->y1 >= region->y2; }
 
@@ -9207,11 +9205,11 @@ TextInvalidateRegion(
     ComputeCursorExtents(textPtr, &extent1, &extent2);
     inset = textPtr->borderWidth + textPtr->highlightWidth;
 
-    textRect.x = inset+ textPtr->padX - extent1;
-    textRect.width = Tk_Width(textPtr->tkwin) - inset - textPtr->padX + extent1 + extent2;
+    textRect.x = inset + textPtr->padX - extent1;
+    textRect.width = Tk_Width(textPtr->tkwin) - 2 * (inset + textPtr->padX) + extent1 + extent2;
     textRect.y = inset + textPtr->padY;
-    textRect.height = Tk_Height(textPtr->tkwin) - textPtr->borderWidth - textPtr->highlightWidth - textPtr->padY;
-    
+    textRect.height = Tk_Height(textPtr->tkwin) - 2 * (inset + textPtr->padY);
+
     /*
      * Find all lines that overlap the given region and mark them for redisplay.
      */
@@ -9241,11 +9239,7 @@ TextInvalidateRegion(
      * consider a possible increasement of the padding area.
      */
 
-    if ((clipRect.x < (inset + textPtr->padX))
-	|| (clipRect.y < (inset + textPtr->padY))
-	|| ((int) (clipRect.x + clipRect.width) >
-	    (Tk_Width(textPtr->tkwin) - inset - textPtr->padX))
-	|| (maxY > (Tk_Height(textPtr->tkwin) - inset - textPtr->padY))) {
+    if (!RectContainsRect(&textRect, &clipRect)) {
 	dInfoPtr->flags |= REDRAW_BORDERS;
     }
 }
