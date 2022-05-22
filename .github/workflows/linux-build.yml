@@ -1,5 +1,7 @@
 name: Linux
 on: [push]
+permissions:
+  contents: read
 defaults:
   run:
     shell: bash
