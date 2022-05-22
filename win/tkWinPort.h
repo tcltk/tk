@@ -84,11 +84,16 @@
  */
 #if defined(_MSC_VER)
 #   pragma warning(disable:4047)
+#   pragma warning(disable:4090) /* see: https://developercommunity.visualstudio.com/t/c-compiler-incorrect-propagation-of-const-qualifie/390711 */
+#   pragma warning(disable:4146)
 #   pragma warning(disable:4267)
 #   pragma warning(disable:4244)
 #   pragma warning(disable:4311)
 #   pragma warning(disable:4312)
 #   pragma warning(disable:4996)
+#if !defined(_WIN64)
+#   pragma warning(disable:4305)
+#endif
 #endif
 
 /*
