@@ -338,8 +338,8 @@ package require tk
 	    set i_dy [expr {($dy - $iH)/2}]
 	    set t_dy [expr {($dy - $tH)/2}]
 
-	    $canvas coords $iTag $x                    [expr {$y + $i_dy}]
-	    $canvas coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
+	    $canvas coords $iTag $x [expr {$y + $i_dy}]
+	    $canvas coords $tTag [expr {$x + $shift}] [expr {$y + $t_dy}]
 	    $canvas coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
 
 	    incr y $dy

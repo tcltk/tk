@@ -224,16 +224,16 @@ Tk_PackObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(NULL, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(NULL, objv[1], optionStrings,
+	    "option", 0, &index) != TCL_OK) {
 	/*
 	 * Call it again without the deprecated ones to get a proper error
 	 * message. This works well since there can't be any ambiguity between
 	 * deprecated and new options.
 	 */
 
-	Tcl_GetIndexFromObjStruct(interp, objv[1], optionStringsNoDep,
-		sizeof(char *), "option", 0, &index);
+	Tcl_GetIndexFromObj(interp, objv[1], optionStringsNoDep,
+		"option", 0, &index);
 	return TCL_ERROR;
     }
 
@@ -1206,7 +1206,7 @@ PackAfter(
 	    } else if ((length == 5) && (strcmp(curOpt, "filly")) == 0) {
 		packPtr->flags |= FILLY;
 	    } else if ((c == 'p') && (strcmp(curOpt, "padx")) == 0) {
-		if (optionCount < (index+2)) {
+		if (optionCount <= (index+1)) {
 		missingPad:
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "wrong # args: \"%s\" option must be"
@@ -1224,7 +1224,7 @@ PackAfter(
 		packPtr->iPadX = 0;
 		index++;
 	    } else if ((c == 'p') && (strcmp(curOpt, "pady")) == 0) {
-		if (optionCount < (index+2)) {
+		if (optionCount <= (index+1)) {
 		    goto missingPad;
 		}
 		if (TkParsePadAmount(interp, tkwin, options[index+1],
@@ -1237,7 +1237,7 @@ PackAfter(
 		index++;
 	    } else if ((c == 'f') && (length > 1)
 		    && (strncmp(curOpt, "frame", length) == 0)) {
-		if (optionCount < (index+2)) {
+		if (optionCount <= (index+1)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "wrong # args: \"frame\""
 			    " option must be followed by anchor point", -1));
@@ -1611,8 +1611,8 @@ ConfigureContent(
 		Tcl_SetErrorCode(interp, "TK", "PACK", "BAD_PARAMETER", NULL);
 		return TCL_ERROR;
 	    }
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
-		    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
+		    "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 
@@ -1743,8 +1743,8 @@ ConfigureContent(
 		}
 		break;
 	    case CONF_SIDE:
-		if (Tcl_GetIndexFromObjStruct(interp, objv[i+1], sideNames,
-			sizeof(char *), "side", TCL_EXACT, &side) != TCL_OK) {
+		if (Tcl_GetIndexFromObj(interp, objv[i+1], sideNames,
+			"side", TCL_EXACT, &side) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		contentPtr->side = (Side) side;
