@@ -276,8 +276,8 @@ Tk_PlaceObjCmd(
 	dispPtr->placeInit = 1;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings,
+	    "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -330,8 +330,8 @@ Tk_PlaceObjCmd(
 	}
 	return PlaceInfoCommand(interp, tkwin);
 
-    case PLACE_CONTENT:
-    case PLACE_SLAVES: {
+    case PLACE_SLAVES:
+    case PLACE_CONTENT: {
 	Container *containerPtr;
 
 	if (objc != 3) {
@@ -471,7 +471,7 @@ FindContent(
  *
  * UnlinkContent --
  *
- *	This function removes a content window from the chain of content in its
+ *	This function removes a content window from the chain of content windows in its
  *	container.
  *
  * Results:
@@ -676,7 +676,7 @@ ConfigureContent(
 
 	/*
 	 * Make sure that the new container is either the logical parent of the
-	 * content or a descendant of that window, and that the container and content
+	 * content window or a descendant of that window, and that the container and content
 	 * aren't the same.
 	 */
 
@@ -891,7 +891,7 @@ RecomputePlacement(
     Tcl_Preserve(containerPtr);
 
     /*
-     * Iterate over all the content for the container. Each content's geometry can
+     * Iterate over all the content windows for the container. Each content's geometry can
      * be computed independently of the other content. Changes to the window's
      * structure could cause almost anything to happen, including deleting the
      * parent or child. If this happens, we'll be told to abort.
