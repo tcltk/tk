@@ -1020,7 +1020,7 @@ test textDisp-7.2 {TkTextRedrawRegion} {
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{} {borders 1.0 1.20 1.40 2.0 3.0}}
+} {{} {1.0 1.20 1.40 2.0 3.0}}
 test textDisp-7.3 {TkTextRedrawRegion} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.5 -relwidth 0.5 -rely 0.5 -relheight 0.5
@@ -1028,7 +1028,7 @@ test textDisp-7.3 {TkTextRedrawRegion} {
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{} {borders 4.0 5.0 6.0 7.0 8.0}}
+} {{} {4.0 5.0 6.0 7.0 8.0}}
 test textDisp-7.4 {TkTextRedrawRegion} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 0 -relheight 0.2 \
