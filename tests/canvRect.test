@@ -157,8 +157,7 @@ test canvRect-4.3 {ConfigureRectOval procedure} -body {
 } -cleanup {
     .c delete withtag all
 } -returnCodes error -result {bad screen distance "-5"}
-test canvRect-4.4 {ConfigureRectOval procedure} -constraints nonPortable -body {
-    # Non-portable due to rounding differences
+test canvRect-4.4 {ConfigureRectOval procedure} -body {
     .c create rectangle 10 20 30 40 -tags x -width 1
     .c itemconfigure x -width 10
     .c bbox x
