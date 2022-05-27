@@ -25,11 +25,11 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
@@ -115,7 +115,7 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Setup Environment (compiler=${{ matrix.compiler }})
