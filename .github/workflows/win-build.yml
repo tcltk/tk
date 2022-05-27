@@ -14,11 +14,11 @@ jobs:
     # Using powershell means we need to explicitly stop on failure
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
@@ -104,9 +104,9 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
