@@ -20,7 +20,7 @@ jobs:
         working-directory: unix
     steps:
       - name: Check out Tk
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
       - name: Prepare checked out repository
         run: |
           touch ../generic/tkStubInit.c ../doc/man.macros
