@@ -196,8 +196,7 @@ ParseFormatOptions(
                                        * this struct */
 
 {
-    int index, optIndex, first;
-    enum ColorFormatType typeIndex;
+    int index, optIndex, first, typeIndex;
     const char *option;
 
     first = 1;
@@ -258,7 +257,7 @@ ParseFormatOptions(
                 return TCL_ERROR;
             }
             if (Tcl_GetIndexFromObj(NULL, objv[index], colorFormatNames, "",
-                    TCL_EXACT, (int *)&typeIndex) != TCL_OK
+                    TCL_EXACT, &typeIndex) != TCL_OK
                     || (typeIndex != COLORFORMAT_LIST
                     && typeIndex != COLORFORMAT_RGB2
                     && typeIndex != COLORFORMAT_RGBA2) ) {
@@ -269,7 +268,7 @@ ParseFormatOptions(
                         "BAD_COLOR_FORMAT", NULL);
                 return TCL_ERROR;
             }
-            optPtr->colorFormat = typeIndex;
+            optPtr->colorFormat = (enum ColorFormatType)typeIndex;
             break;
         default:
             Tcl_Panic("ParseFormatOptions: unexpected switch fallthrough");
