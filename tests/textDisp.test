@@ -931,7 +931,7 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
-test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortable} {
+test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
     .t configure -wrap char
     frame .f2 -bg red
     place .f2 -in .t -relx 0.5 -rely 0.5 -relwidth 0.5 -relheight 0.5
@@ -946,7 +946,7 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {nonPortabl
     destroy .f2
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
-test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unix nonPortable} {
+test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqua} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
     frame .f2 -bg #ff0000
@@ -962,7 +962,7 @@ test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {unix n
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{1.0 9.0 10.0} {borders 1.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
+} {{1.0 9.0 10.0} {1.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0}}
 .t configure -bd 0
 test textDisp-6.7 {DisplayText, vertical scrollbar updates} {
     .t configure -wrap char
@@ -1020,17 +1020,13 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll.} {aqua
 } {{4.0 6.0}}
 
 
-# The following group of tests is marked non-portable because
-# they result in a lot of extra redisplay under Ultrix.  I don't
-# know why this is so.
-
 .t configure -bd 2 -relief raised -wrap char
 .t delete 1.0 end
 .t insert 1.0 "Line 1 is so long that it wraps around, a couple of times"
 foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
     .t insert end "\nLine $i"
 }
-test textDisp-7.1 {TkTextRedrawRegion} {nonPortable} {
+test textDisp-7.1 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.2 -relwidth 0.6 -rely 0.22 -relheight 0.55
     updateText
@@ -1038,23 +1034,23 @@ test textDisp-7.1 {TkTextRedrawRegion} {nonPortable} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {1.40 2.0 3.0 4.0 5.0 6.0}}
-test textDisp-7.2 {TkTextRedrawRegion} {nonPortable} {
+test textDisp-7.2 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0 -relwidth 0.5 -rely 0 -relheight 0.5
     updateText
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{} {borders 1.0 1.20 1.40 2.0 3.0}}
-test textDisp-7.3 {TkTextRedrawRegion} {nonPortable} {
+} {{} {1.0 1.20 1.40 2.0 3.0}}
+test textDisp-7.3 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.5 -relwidth 0.5 -rely 0.5 -relheight 0.5
     updateText
     destroy .f2
     updateText
     list $tk_textRelayout $tk_textRedraw
-} {{} {borders 4.0 5.0 6.0 7.0 8.0}}
-test textDisp-7.4 {TkTextRedrawRegion} {nonPortable} {
+} {{} {4.0 5.0 6.0 7.0 8.0}}
+test textDisp-7.4 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 0 -relheight 0.2 \
 	    -bordermode ignore
@@ -1063,7 +1059,7 @@ test textDisp-7.4 {TkTextRedrawRegion} {nonPortable} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 1.0 1.20}}
-test textDisp-7.5 {TkTextRedrawRegion} {nonPortable} {
+test textDisp-7.5 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 1.0 -relheight 0.2 \
 	    -anchor s -bordermode ignore
@@ -1072,7 +1068,7 @@ test textDisp-7.5 {TkTextRedrawRegion} {nonPortable} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 7.0 8.0}}
-test textDisp-7.6 {TkTextRedrawRegion} {nonPortable} {
+test textDisp-7.6 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor w -bordermode ignore
@@ -1081,7 +1077,7 @@ test textDisp-7.6 {TkTextRedrawRegion} {nonPortable} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
-test textDisp-7.7 {TkTextRedrawRegion} {nonPortable} {
+test textDisp-7.7 {TkTextRedrawRegion} {notAqua} {
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 1.0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor e -bordermode ignore
@@ -1090,7 +1086,7 @@ test textDisp-7.7 {TkTextRedrawRegion} {nonPortable} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
-test textDisp-7.8 {TkTextRedrawRegion} {nonPortable} {
+test textDisp-7.8 {TkTextRedrawRegion} {notAqua} {
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\n"
     frame .f2 -bg #ff0000
