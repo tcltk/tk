@@ -1051,9 +1051,6 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     updateText
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
-# Next test is currently constrained to not run on mac (aqua) because on
-# aqua its result is  {1.0 9.0 10.0} {1.0 9.0 10.0}  despite the rendering on
-# screen is correct. This seems to be a logging bug.
 test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
     .t configure -wrap char
     frame .f2 -bg red
@@ -1069,9 +1066,6 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
     destroy .f2
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
-# Next test is currently constrained to not run on mac (aqua) because on
-# aqua its result is  {1.0 9.0 10.0} {1.0 9.0 10.0}  despite the rendering on
-# screen is correct. This seems to be a logging bug.
 test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqua} {
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
@@ -1146,10 +1140,6 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua}
     list $tk_textEmbWinDisplay
 } {{4.0 6.0}}
 
-
-# The following group of tests is currently constrained to not run on mac (aqua)
-# because on aqua the obtained logging results are different from the expected results,
-# despite the rendering on screen is correct. This seems to be a logging bug.
 
 .t configure -bd 2 -relief raised -wrap char
 .t delete 1.0 end

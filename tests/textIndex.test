@@ -268,7 +268,7 @@ test textIndex-4.8 {TkTextGetIndex, tags} {
     set result
 } {1.0 1.1}
 
-test textIndex-5.1 {TkTextGetIndex, "@"} {nonPortable fonts} {
+test textIndex-5.1 {TkTextGetIndex, "@"} {fonts} {
     .t index @12,9
 } 1.1
 test textIndex-5.2 {TkTextGetIndex, "@"} {fonts} {
