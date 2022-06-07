@@ -9206,9 +9206,9 @@ TextInvalidateRegion(
     inset = textPtr->borderWidth + textPtr->highlightWidth;
 
     textRect.x = inset + textPtr->padX - extent1;
-    textRect.width = Tk_Width(textPtr->tkwin) + extent1 + extent2;
+    textRect.width = Tk_Width(textPtr->tkwin) - 2 * (inset + textPtr->padX) + extent1 + extent2;
     textRect.y = inset + textPtr->padY;
-    textRect.height = Tk_Height(textPtr->tkwin);
+    textRect.height = Tk_Height(textPtr->tkwin) - 2 * (inset + textPtr->padY);
 
     /*
      * Find all lines that overlap the given region and mark them for redisplay.
