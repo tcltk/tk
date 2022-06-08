@@ -1045,7 +1045,7 @@ RegionIntersects(
     int y1,
     int y2)
 {
-    return y1 <= region->y2 && region->y1 < y2;
+    return y1 < region->y2 && region->y1 < y2;
 }
 
 static void ClearRegion(DRegion* region) { region->y1 = region->y2 = 0; }
