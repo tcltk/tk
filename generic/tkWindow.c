@@ -3249,7 +3249,7 @@ Initialize(
     }
 
     if (value) {
-	int objc;
+	TkSizeT objc;
 	Tcl_Obj **objv, **rest;
 	Tcl_Obj *parseList = Tcl_NewListObj(1, NULL);
 

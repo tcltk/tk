@@ -1111,7 +1111,8 @@ PackAfter(
     Packer *packPtr;
     Tk_Window tkwin, ancestor, parent;
     Tcl_Obj **options;
-    int index, optionCount, c;
+    int c;
+    TkSizeT index, optionCount;
 
     /*
      * Iterate over all of the window specifiers, each consisting of two

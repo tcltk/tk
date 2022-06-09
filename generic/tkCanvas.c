@@ -598,7 +598,8 @@ DefaultRotateImplementation(
     double y,
     double angleRadians)
 {
-    int objc, i, ok = 1;
+    TkSizeT i, objc;
+    int ok = 1;
     Tcl_Obj **objv, **newObjv;
     double *coordv;
     double s = sin(angleRadians);
@@ -2382,7 +2383,7 @@ ConfigureCanvas(
     canvasPtr->scrollX2 = 0;
     canvasPtr->scrollY2 = 0;
     if (canvasPtr->regionString != NULL) {
-	int argc2;
+	TkSizeT argc2;
 	const char **argv2;
 
 	if (Tcl_SplitList(canvasPtr->interp, canvasPtr->regionString,
