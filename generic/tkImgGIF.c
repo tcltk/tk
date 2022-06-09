@@ -1067,7 +1067,12 @@ DoExtension(
 
     switch (label) {
     case 0x01:			/* Plain Text Extension */
-        /* this extension is ignored, skip below */
+	/*
+	 * This extension starts a new scope, so Graphic control Extension
+	 * data should be cleared
+	 */
+	*transparent = -1;
+	/* this extension is ignored, skip below */
 	break;
     case 0xf9:			/* Graphic Control Extension */
 	count = GetDataBlock(gifConfPtr, chan, buf);
