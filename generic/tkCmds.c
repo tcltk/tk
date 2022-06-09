@@ -349,8 +349,7 @@ Tk_BindtagsObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr, *winPtr2;
-    TkSizeT i;
-    int length;
+    TkSizeT i, length;
     const char *p;
     Tcl_Obj *listPtr, **tags;
 

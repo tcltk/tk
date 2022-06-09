@@ -729,7 +729,7 @@ static TreeItem **GetItemListFromObj(
 {
     TreeItem **items;
     Tcl_Obj **elements;
-    int i, nElements;
+    TkSizeT i, nElements;
 
     if (Tcl_ListObjGetElements(interp,objPtr,&nElements,&elements) != TCL_OK) {
 	return NULL;

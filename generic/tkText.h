@@ -1026,7 +1026,7 @@ MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
 			    const TkText *textPtr, int pixels,
 			    int *pixelOffset);
 MODULE_SCOPE TkTextTag **TkBTreeGetTags(const TkTextIndex *indexPtr,
-			    const TkText *textPtr, int *numTagsPtr);
+			    const TkText *textPtr, TkSizeT *numTagsPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree,
 			    TkTextIndex *indexPtr, const char *string);
 MODULE_SCOPE int	TkBTreeLinesTo(const TkText *textPtr,
