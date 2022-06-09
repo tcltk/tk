@@ -4442,7 +4442,7 @@ TkTextParseHyphenRules(
 {
     int rules = 0;
     Tcl_Obj **argv;
-    int argc, i;
+    TkSizeT argc, i;
     unsigned k;
 
     assert(rulesPtr);
@@ -6229,7 +6229,7 @@ TextInsertCmd(
     TkSharedText *sharedTextPtr;
     TkTextTag *hyphenTagPtr = NULL;
     int rc = TCL_OK;
-    int j;
+    TkSizeT j;
 
     assert(textPtr);
     assert(!TkTextIsDeadPeer(textPtr));
@@ -6237,7 +6237,7 @@ TextInsertCmd(
     sharedTextPtr = textPtr->sharedTextPtr;
 
     if (parseHyphens && objc > 1 && *Tcl_GetString(objv[0]) == '-') {
-	int argc;
+	TkSizeT argc;
 	Tcl_Obj **argv;
 
 	if (strcmp(Tcl_GetString(objv[0]), "-hyphentags") != 0) {
@@ -6258,26 +6258,26 @@ TextInsertCmd(
 	objv += 2;
     }
 
-    for (j = 0; j < objc && GetByteLength(objv[j]) == 0; j += 2) {
+    for (j = 0; j < (TkSizeT)objc && GetByteLength(objv[j]) == 0; j += 2) {
 	/* empty loop body */
     }
     index1 = *indexPtr;
 
-    while (j < objc) {
+    while (j < (TkSizeT)objc) {
 	Tcl_Obj *stringPtr = objv[j];
-	Tcl_Obj *tagPtr = (j + 1 < objc) ? objv[j + 1] : NULL;
+	Tcl_Obj *tagPtr = (j + 1 < (TkSizeT)objc) ? objv[j + 1] : NULL;
 	char const *string = Tcl_GetString(stringPtr);
 	unsigned length = GetByteLength(stringPtr);
-	int k = j + 2;
+	size_t k = j + 2;
 	int final;
 
-	while (k < objc && GetByteLength(objv[k]) == 0) {
+	while (k < (size_t)objc && GetByteLength(objv[k]) == 0) {
 	    k += 2;
 	}
-	final = objc <= k;
+	final = (size_t)objc <= k;
 
 	if (length > 0) {
-	    int numTags = 0;
+	    TkSizeT numTags = 0;
 	    Tcl_Obj **tagNamePtrs = NULL;
 	    TkTextTagSet *tagInfoPtr = NULL;
 
@@ -6295,7 +6295,7 @@ TextInsertCmd(
 	    }
 
 	    if (tagPtr) {
-		int i;
+		TkSizeT i;
 
 		if (Tcl_ListObjGetElements(interp, tagPtr, &numTags, &tagNamePtrs) != TCL_OK) {
 		    rc = TCL_ERROR;
@@ -6852,7 +6852,6 @@ TextSearchFoundMatch(
     TkTextSegment *segPtr;
     TkTextLine *linePtr, *startLinePtr;
     TkText *textPtr = (TkText *)searchSpecPtr->clientData;
-    int byteIndex;
 
     if (lineNum == searchSpecPtr->stopLine) {
 	/*
@@ -6917,7 +6916,6 @@ TextSearchFoundMatch(
 	 */
 
 	segPtr = (linePtr == startLinePtr) ? textPtr->startMarker : linePtr->segPtr;
-	byteIndex = TkTextSegToIndex(segPtr);
 
 	/*
 	 * TODO: Use new elide structure, but this requires a redesign of the whole
@@ -6945,7 +6943,6 @@ TextSearchFoundMatch(
 		assert(segPtr->size <= 1);
 		matchOffset += segPtr->size;
 	    }
-	    byteIndex += segPtr->size;
 	}
 
 	assert(!segPtr || leftToScan < 0 || TkBTreeNextLine(textPtr, linePtr));
@@ -7008,7 +7005,6 @@ TextSearchFoundMatch(
 	    assert(TkBTreeNextLine(textPtr, linePtr));
 	    linePtr = linePtr->nextPtr;
 	    segPtr = linePtr->segPtr;
-	    byteIndex = 0;
 	}
 
 	isCharSeg = (segPtr->typePtr == &tkTextCharType);
@@ -7074,7 +7070,7 @@ TkTextGetTabs(
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
-    int objc, i, count;
+    TkSizeT objc, i, count;
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
@@ -7111,7 +7107,7 @@ TkTextGetTabs(
     tabArrayPtr->numTabs = 0;
     prevStop = 0.0;
     lastStop = 0.0;
-    for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i < objc; i++, tabPtr++) {
+    for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i < (TkSizeT)objc; i++, tabPtr++) {
 	int index;
 
 	/*
@@ -8181,15 +8177,14 @@ TkTextInspectOptions(
 
     if ((objPtr = Tk_GetOptionInfo(interp, (char *) recordPtr, optionTable, NULL, textPtr->tkwin))) {
 	Tcl_Obj **objv;
-	int objc = 0;
-	int i;
+	TkSizeT i, objc = 0;
 
 	Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
 
 
 	for (i = 0; i < objc; ++i) {
 	    Tcl_Obj **argv;
-	    int argc = 0;
+	    TkSizeT argc = 0;
 
 	    Tcl_ListObjGetElements(interp, objv[i], &argc, &argv);
 
@@ -8358,7 +8353,7 @@ GetBindings(
     Tcl_Interp *interp = textPtr->interp;
     Tcl_DString str2;
     Tcl_Obj **argv;
-    int argc, i;
+    TkSizeT argc, i;
 
     Tk_GetAllBindings(interp, bindingTable, (void *)name);
     Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &argc, &argv);
@@ -8722,8 +8717,8 @@ InspectRetainedUndoItems(
 {
     if (sharedTextPtr->undoTagListCount > 0 || sharedTextPtr->undoMarkListCount > 0) {
 	Tcl_Obj *resultPtr = Tcl_NewObj();
-	unsigned i;
-	int len;
+	size_t i;
+	TkSizeT len;
 
 	for (i = 0; i < sharedTextPtr->undoTagListCount; ++i) {
 	    TkTextInspectUndoTagItem(sharedTextPtr, sharedTextPtr->undoTagList[i], resultPtr);
@@ -11795,7 +11790,7 @@ TkpTextInspect(
     Tcl_Obj *resultPtr;
     Tcl_Obj *objv[8];
     Tcl_Obj **argv;
-    int argc, i;
+    TkSizeT argc, i;
 
     Tcl_IncrRefCount(resultPtr = Tcl_GetObjResult(textPtr->interp));
     Tcl_ResetResult(textPtr->interp);
@@ -11846,7 +11841,7 @@ TkpTextDump(
     Tcl_Obj *resultPtr;
     Tcl_Obj *objv[4];
     Tcl_Obj **argv;
-    int argc, i;
+    TkSizeT argc, i;
 
     Tcl_IncrRefCount(resultPtr = Tcl_GetObjResult(textPtr->interp));
     Tcl_ResetResult(textPtr->interp);
