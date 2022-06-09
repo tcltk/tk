@@ -634,6 +634,13 @@ FileReadGIF(
 		    imageHeight, colorMap, 0, 0, 0, -1) != TCL_OK) {
 		goto error;
 	    }
+
+	    /*
+	     * This extension starts a new scope, so Graphic control Extension
+	     * data should be cleared
+	     */
+	    transparent = -1;
+
 	    continue;
 	}
 	break;
