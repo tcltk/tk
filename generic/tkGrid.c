@@ -983,10 +983,11 @@ GridRowColumnConfigureCommand(
     int slot;			/* the column or row number */
     int slotType;		/* COLUMN or ROW */
     int size;			/* the configuration value */
-    int lObjc;			/* Number of items in index list */
+    TkSizeT lObjc;		/* Number of items in index list */
     Tcl_Obj **lObjv;		/* array of indices */
     int ok;			/* temporary TCL result code */
-    int i, j, first, last;
+    int i, first, last;
+    TkSizeT j;
     const char *string;
     static const char *const optionStrings[] = {
 	"-minsize", "-pad", "-uniform", "-weight", NULL
