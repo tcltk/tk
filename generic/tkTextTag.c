@@ -1451,7 +1451,7 @@ TkTextReplaceTags(
     int altered = 0;
     int anyChanges = 0;
     Tcl_Obj **objs;
-    int objn = 0, k;
+    TkSizeT objn = 0, k;
     unsigned j;
 
     assert(textPtr);
@@ -1465,7 +1465,7 @@ TkTextReplaceTags(
     TkrTextIndexForwBytes(textPtr, &index[0], 1, &index[1]);
     TkTextTagSetIncrRefCount(oldTagInfoPtr = segPtr->tagInfoPtr);
 
-    if (objn > (int) (sizeof(tagArrBuf)/sizeof(tagArrBuf[0]))) {
+    if ((size_t)objn > sizeof(tagArrBuf)/sizeof(tagArrBuf[0])) {
 	tagArrPtr = (TkTextTag**)malloc(objn*sizeof(tagArrPtr[0]));
     }
 
