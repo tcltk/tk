@@ -1261,7 +1261,7 @@ ConfigureEntry(
 		sbPtr->listObj = NULL;
 		if (sbPtr->valueStr != NULL) {
 		    Tcl_Obj *newObjPtr;
-		    int nelems;
+		    TkSizeT nelems;
 
 		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, -1);
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
@@ -4426,7 +4426,7 @@ SpinboxInvoke(
 		 * there. If not, move to the first element of the list.
 		 */
 
-		int i, listc;
+		TkSizeT i, listc;
 		TkSizeT elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;

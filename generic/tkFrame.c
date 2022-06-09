@@ -489,7 +489,7 @@ TkListCreateFrame(
 				 * Gives the base name to use for the new
 				 * application. */
 {
-    int objc;
+    TkSizeT objc;
     Tcl_Obj **objv;
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
