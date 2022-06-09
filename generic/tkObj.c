@@ -1116,7 +1116,7 @@ TkParsePadAmount(
     int *allPtr)		/* Write the total padding here */
 {
     int firstInt, secondInt;    /* The two components of the padding */
-    int objc;			/* The length of the list (should be 1 or 2) */
+    TkSizeT objc;			/* The length of the list (should be 1 or 2) */
     Tcl_Obj **objv;		/* The objects in the list */
 
     /*

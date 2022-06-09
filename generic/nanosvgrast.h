@@ -25,6 +25,8 @@
 #ifndef NANOSVGRAST_H
 #define NANOSVGRAST_H
 
+#include "nanosvg.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -84,11 +86,11 @@ NANOSVG_SCOPE void nsvgDeleteRasterizer(NSVGrasterizer*);
 }
 #endif
 
-#endif /* NANOSVGRAST_H */
-
 #ifdef NANOSVGRAST_IMPLEMENTATION
 
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NSVG__SUBSAMPLES	5
 #define NSVG__FIXSHIFT		10
@@ -1469,3 +1471,5 @@ void nsvgRasterize(NSVGrasterizer* r,
 }
 
 #endif
+
+#endif /* NANOSVGRAST_H */
