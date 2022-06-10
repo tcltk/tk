@@ -748,51 +748,77 @@ FileReadGIF(
     }
     
     /*
-     * Copy the Graphic Control Extension Block data to the metadata dictionary
+     * Update the metadata dictionary with current image data
      */
     
-    if (metadataOutObj != NULL &&
-	    gifGraphicControlExtensionBlock.blockPresent) {
-	if ( gifGraphicControlExtensionBlock.delayTime != 0) {
+    if (NULL != metadataOutObj) {
+
+	/*
+	 * Save the update box, if not the whole image
+	 */
+
+	if ( width != fileWidth || height != fileHeight) {
+	    Tcl_Obj *itemList[4];
+	    itemList[0] = Tcl_NewIntObj(destX);
+	    itemList[1] = Tcl_NewIntObj(destY);
+	    itemList[2] = Tcl_NewIntObj(width);
+	    itemList[3] = Tcl_NewIntObj(height);
 	    if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
-		    Tcl_NewStringObj("delay time",-1),
-		    Tcl_NewIntObj(gifGraphicControlExtensionBlock.delayTime))) {
+		    Tcl_NewStringObj("update region",-1),
+		    Tcl_NewListObj(4, itemList) )) {
 		result = TCL_ERROR;
 		goto error;
 	    }
 	}
-	switch ( gifGraphicControlExtensionBlock.disposalMethod ) {
-	case 1: /* Do not dispose */
-	    if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
-		    Tcl_NewStringObj("disposal method",-1),
-		    Tcl_NewStringObj("do not dispose",-1))) {
-		result = TCL_ERROR;
-		goto error;
+
+	/*
+	 * Copy the Graphic Control Extension Block data to the metadata
+	 * dictionary
+	 */
+
+	if (gifGraphicControlExtensionBlock.blockPresent) {
+	    if ( gifGraphicControlExtensionBlock.delayTime != 0) {
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("delay time",-1),
+			Tcl_NewIntObj(gifGraphicControlExtensionBlock.delayTime)
+			)) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
 	    }
-	    break;
-	case 2: /* Restore to background color */
-	    if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
-		    Tcl_NewStringObj("disposal method",-1),
-		    Tcl_NewStringObj("restore to background color",-1))) {
-		result = TCL_ERROR;
-		goto error;
+	    switch ( gifGraphicControlExtensionBlock.disposalMethod ) {
+	    case 1: /* Do not dispose */
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("disposal method",-1),
+			Tcl_NewStringObj("do not dispose",-1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+		break;
+	    case 2: /* Restore to background color */
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("disposal method",-1),
+			Tcl_NewStringObj("restore to background color",-1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+		break;
+	    case 3: /* Restore to previous */
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("disposal method",-1),
+			Tcl_NewStringObj("restore to previous",-1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+		break;
 	    }
-	    break;
-	case 3: /* Restore to previous */
-	    if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
-		    Tcl_NewStringObj("disposal method",-1),
-		    Tcl_NewStringObj("restore to previous",-1))) {
-		result = TCL_ERROR;
-		goto error;
-	    }
-	    break;
-	}
-	if ( gifGraphicControlExtensionBlock.userInteraction != 0) {
-	    if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
-		    Tcl_NewStringObj("user interaction",-1),
-		    Tcl_NewBooleanObj(1))) {
-		result = TCL_ERROR;
-		goto error;
+	    if ( gifGraphicControlExtensionBlock.userInteraction != 0) {
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("user interaction",-1),
+			Tcl_NewBooleanObj(1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
 	    }
 	}
     }
