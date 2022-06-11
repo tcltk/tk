@@ -480,8 +480,8 @@ test textWind-3.11 {EmbWinConfigure procedure} -setup {
     waitForMap .t.b
     .t index .t.b
 } -result {1.6}
-rename waiForMap {}
-rename waiForUnmap {}
+rename waitForMap {}
+rename waitForUnmap {}
 
 
 .t delete 1.0 end
