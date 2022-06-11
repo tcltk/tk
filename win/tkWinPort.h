@@ -95,6 +95,7 @@
  * See ticket [916c1095438eae56]: GetVersionExW triggers warnings
  */
 #if defined(_MSC_VER)
+#   pragma warning(disable:4090) /* see: https://developercommunity.visualstudio.com/t/c-compiler-incorrect-propagation-of-const-qualifie/390711 */
 #   pragma warning(disable:4146)
 #   pragma warning(disable:4267)
 #   pragma warning(disable:4244)

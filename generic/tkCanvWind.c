@@ -571,9 +571,9 @@ DisplayWinItem(
     if (winItemPtr->tkwin == NULL) {
 	return;
     }
-    
+
     Tcl_Preserve(canvas);
-    
+
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
@@ -629,7 +629,7 @@ DisplayWinItem(
 	if (winItemPtr->tkwin) {
 	    Tk_MapWindow(winItemPtr->tkwin);
 	}
-	
+
     } else {
 	Tk_MaintainGeometry(winItemPtr->tkwin, canvasTkwin, x, y,
 		width, height);
