@@ -281,7 +281,7 @@ typedef struct TkTextUndoInfo {
 /*
  * The data structure below defines the body of a segment that represents
  * a branch. A branch is adjusting the chain of segments, depending whether
- * elidden text will be processed or not.
+ * elided text will be processed or not.
  */
 
 typedef struct TkTextBranch {
@@ -290,7 +290,7 @@ typedef struct TkTextBranch {
 
 /*
  * The data structure below defines the body of a segment that represents
- * a link. A link is the connection point for a segment chain of elidden
+ * a link. A link is the connection point for a segment chain of elided
  * text.
  */
 
