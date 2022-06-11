@@ -4745,11 +4745,16 @@ TkTextRedrawRegion(
 
     TextInvalidateRegion(textPtr, damageRgn);
 
+    TkDestroyRegion(damageRgn);
+
+    /*
+     * Schedule the redisplay operation if there isn't one already scheduled.
+     */
+
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	dInfoPtr->flags |= REDRAW_PENDING;
 	Tcl_DoWhenIdle(DisplayText, textPtr);
     }
-    TkDestroyRegion(damageRgn);
 }
 
 /*
@@ -4796,10 +4801,6 @@ TextInvalidateRegion(
     if (dInfoPtr->topOfEof < maxY) {
 	dInfoPtr->topOfEof = maxY;
     }
-
-    /*
-     * Schedule the redisplay operation if there isn't one already scheduled.
-     */
 
     inset = textPtr->borderWidth + textPtr->highlightWidth;
     if ((rect.x < (inset + textPtr->padX))

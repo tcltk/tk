@@ -298,9 +298,6 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
-testConstraint textfonts [expr {
-    [testConstraint fonts] || [tk windowingsystem] eq "win32"
-}]
 
 # constraints for the visuals available..
 testConstraint pseudocolor8 [expr {
