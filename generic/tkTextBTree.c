@@ -8604,7 +8604,7 @@ UpdateElideInfo(
     TkText *textPtr;
     Node *nodePtr;
     int anyChanges;
-    int actualElidden;
+    int actualElided;
     int changeToLogicalLineCount;
 
     /*
@@ -8686,7 +8686,7 @@ UpdateElideInfo(
 	}
     } while (startSegPtr && !startSegPtr->tagInfoPtr);
 
-    actualElidden = startSegPtr && SegmentIsElided(sharedTextPtr, startSegPtr, NULL);
+    actualElided = startSegPtr && SegmentIsElided(sharedTextPtr, startSegPtr, NULL);
 
     /*
      * Now find next segment for start of range.
@@ -8744,13 +8744,13 @@ UpdateElideInfo(
 			&& linePtr->numBranches == 0
 			&& !TestTag(linePtr->tagonPtr, tagPtr)) {
 		    /* Skip (nearly) unaffected line. */
-		    if (linePtr->logicalLine == actualElidden) {
+		    if (linePtr->logicalLine == actualElided) {
 			if (nodePtr && linePtr->parentPtr != nodePtr) {
 			    PropagateChangeToLineCount(nodePtr, changeToLogicalLineCount);
 			    changeToLogicalLineCount = 0;
 			}
 			changeToLogicalLineCount += linePtr->logicalLine ? -1 : +1;
-			linePtr->logicalLine = !actualElidden;
+			linePtr->logicalLine = !actualElided;
 			nodePtr = linePtr->parentPtr;
 			endLinePtr = linePtr;
 		    }
@@ -8761,13 +8761,13 @@ UpdateElideInfo(
 		}
 	    }
 
-	    if (linePtr->logicalLine == actualElidden) {
+	    if (linePtr->logicalLine == actualElided) {
 		if (nodePtr && linePtr->parentPtr != nodePtr) {
 		    PropagateChangeToLineCount(nodePtr, changeToLogicalLineCount);
 		    changeToLogicalLineCount = 0;
 		}
 		changeToLogicalLineCount += linePtr->logicalLine ? -1 : +1;
-		linePtr->logicalLine = !actualElidden;
+		linePtr->logicalLine = !actualElided;
 		nodePtr = linePtr->parentPtr;
 		endLinePtr = linePtr;
 	    }
@@ -8784,11 +8784,11 @@ UpdateElideInfo(
 	}
 
 	if (segPtr->tagInfoPtr) {
-	    int shouldBeElidden = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
+	    int shouldBeElided = tagPtr ? SegmentIsElided(sharedTextPtr, segPtr, textPtr) : 0;
 	    int somethingHasChanged = 0;
 
 	    if (prevBranchPtr) {
-		if (!shouldBeElidden || actualElidden) {
+		if (!shouldBeElided || actualElided) {
 		    /*
 		     * Remove expired branch.
 		     */
@@ -8812,7 +8812,7 @@ UpdateElideInfo(
 		    somethingHasChanged = 1;
 		}
 	    } else if (prevLinkPtr) {
-		if (shouldBeElidden || !actualElidden) {
+		if (shouldBeElided || !actualElided) {
 		    /*
 		     * Remove expired link.
 		     */
@@ -8832,8 +8832,8 @@ UpdateElideInfo(
 		    lastBranchPtr = NULL;
 		    somethingHasChanged = 1;
 		}
-	    } else if (actualElidden != shouldBeElidden) {
-		if (shouldBeElidden) {
+	    } else if (actualElided != shouldBeElided) {
+		if (shouldBeElided) {
 		    /*
 		     * We have to insert a branch.
 		     */
@@ -8847,7 +8847,7 @@ UpdateElideInfo(
 		    LinkSwitch(linePtr, segPtr->prevPtr, lastBranchPtr);
 		    newBranchPtr = lastBranchPtr;
 		    somethingHasChanged = 1;
-		} else { /* if (!actualElidden) */
+		} else { /* if (!actualElided) */
 		    /*
 		     * We have to insert a link.
 		     */
@@ -8885,7 +8885,7 @@ UpdateElideInfo(
 		anyChanges = 1;
 	    }
 
-	    actualElidden = shouldBeElidden;
+	    actualElided = shouldBeElided;
 	    prevBranchPtr = prevLinkPtr = NULL;
 	} else if (segPtr->typePtr == &tkTextBranchType) {
 	    lastBranchPtr = prevBranchPtr = segPtr;
@@ -8907,10 +8907,10 @@ UpdateElideInfo(
 
 	if (!lastLinkPtr) {
 	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
-	    actualElidden = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
+	    actualElided = SegmentIsElided(sharedTextPtr, endSegPtr, NULL);
 	    if (reason == ELISION_HAS_BEEN_CHANGED && tagPtr->elide >= 0) { tagPtr->elide = !tagPtr->elide; }
 
-	    if (actualElidden) {
+	    if (actualElided) {
 		/*
 		 * In this case the related link is outside of the range,
 		 * so we have to search for it.
