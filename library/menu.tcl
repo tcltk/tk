@@ -168,7 +168,7 @@ bind Menu <<PrevLine>> {
 bind Menu <<NextLine>> {
     tk::MenuDownArrow %W
 }
-bind Menu <KeyPress> {
+bind Menu <Key> {
     tk::TraverseWithinMenu %W %A
     break
 }
@@ -177,7 +177,7 @@ bind Menu <KeyPress> {
 # implement keyboard menu traversal.
 
 if {[tk windowingsystem] eq "x11"} {
-    bind all <Alt-KeyPress> {
+    bind all <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
@@ -185,7 +185,7 @@ if {[tk windowingsystem] eq "x11"} {
 	tk::FirstMenu %W
     }
 } else {
-    bind Menubutton <Alt-KeyPress> {
+    bind Menubutton <Alt-Key> {
 	tk::TraverseToMenu %W %A
     }
 
@@ -1242,7 +1242,8 @@ if {[tk windowingsystem] ne "win32"} {
     proc ::tk::PostOverPoint {menu x y {entry {}}}  {
 	if {$entry ne ""} {
 	    $menu post $x $y $entry
-	    if {[$menu entrycget $entry -state] ne "disabled"} {
+	    if {[$menu type $entry] ni {separator tearoff} &&
+		[$menu entrycget $entry -state] ne "disabled"} {
 		$menu activate $entry
 		GenerateMenuSelect $menu
 	    }

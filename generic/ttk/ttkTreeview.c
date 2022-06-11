@@ -319,14 +319,14 @@ static Tk_OptionSpec HeadingOptionSpecs[] = {
 
 #define DEFAULT_SHOW	"tree headings"
 
-static const char *showStrings[] = {
+static const char *const showStrings[] = {
     "tree", "headings", NULL
 };
 
 static int GetEnumSetFromObj(
     Tcl_Interp *interp,
     Tcl_Obj *objPtr,
-    const char *table[],
+    const char *const table[],
     unsigned *resultPtr)
 {
     unsigned result = 0;
@@ -433,7 +433,7 @@ typedef struct {
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
 #define SHOW_CHANGED 		(USER_MASK<<3)
 
-static const char *SelectModeStrings[] = { "none", "browse", "extended", NULL };
+static const char *const SelectModeStrings[] = { "none", "browse", "extended", NULL };
 
 static Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
@@ -448,7 +448,7 @@ static Tk_OptionSpec TreeviewOptionSpecs[] = {
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", Tk_Offset(Treeview,tree.selectModeObj), -1,
-	0,(ClientData)SelectModeStrings,0 },
+	0,SelectModeStrings,0 },
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, Tk_Offset(Treeview,tree.heightObj), -1,
@@ -1501,7 +1501,7 @@ typedef enum {
     REGION_CELL
 } TreeRegion;
 
-static const char *regionStrings[] = {
+static const char *const regionStrings[] = {
     "nothing", "heading", "separator", "tree", "cell", 0
 };
 
@@ -2263,7 +2263,7 @@ done:
 static int TreeviewIdentifyCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
-    static const char *submethodStrings[] =
+    static const char *const submethodStrings[] =
 	 { "region", "item", "column", "row", "element", NULL };
     enum { I_REGION, I_ITEM, I_COLUMN, I_ROW, I_ELEMENT };
 
@@ -2949,7 +2949,7 @@ static int TreeviewSelectionCommand(
     enum {
 	SELECTION_SET, SELECTION_ADD, SELECTION_REMOVE, SELECTION_TOGGLE
     };
-    static const char *selopStrings[] = {
+    static const char *const selopStrings[] = {
 	"set", "add", "remove", "toggle", NULL
     };
 
