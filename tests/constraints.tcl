@@ -256,6 +256,9 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
 }]
+# constraint for running a test on all windowing system except aqua
+# where the test fails due to a known bug
+testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}] 
 
 # constraints for testing facilities defined in the tktest executable...
 testConstraint testImageType [expr {"test" in [image types]}]
