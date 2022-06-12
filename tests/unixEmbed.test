@@ -722,6 +722,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
+    update
     dobg "set w1 [winfo id .f1]"
     dobg {
 	eval destroy [winfo child .]
@@ -746,6 +747,7 @@ test unixEmbed-5.1a {EmbedFocusProc procedure, FocusIn events} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
+    update
     child alias w1 winfo id .f1
     child eval {
         destroy [winfo child .]
@@ -769,6 +771,7 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
+    update
     dobg "set w1 [winfo id .f1]"
     dobg {
 	eval destroy [winfo child .]
@@ -794,6 +797,7 @@ test unixEmbed-5.2a {EmbedFocusProc procedure, focusing on dead window} -constra
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
+    update
     child alias w1 winfo id .f1
     child eval {
         destroy [winfo child .]
@@ -815,6 +819,7 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
+    update
     dobg "set w1 [winfo id .f1]"
     dobg {
 	eval destroy [winfo child .]
@@ -842,6 +847,7 @@ test unixEmbed-5.3a {EmbedFocusProc procedure, FocusOut events} -constraints {
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
+    update
     child alias w1 winfo id .f1
     child eval {
         destroy [winfo child .]
