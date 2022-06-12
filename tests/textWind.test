@@ -334,7 +334,9 @@ test textWind-3.1 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -returnCodes error -result {unknown option "-foo"}
 
-test textWind-3.2 {EmbWinConfigure procedure} -setup {
+# The next 4 tests are constrained by aquaKnownBug until the fix for ticket
+# [61e0bb8aab] gets merged
+test textWind-3.2 {EmbWinConfigure procedure} -constraints {aquaKnownBug} -setup {
     destroy .f
 } -body {
     .t insert 1.0 "Some sample text"
@@ -348,7 +350,7 @@ test textWind-3.2 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -returnCodes error -result {bad text index ".f"}
 
-test textWind-3.3 {EmbWinConfigure procedure} -setup {
+test textWind-3.3 {EmbWinConfigure procedure} -constraints {aquaKnownBug} -setup {
     destroy .f
 } -body {
     .t insert 1.0 "Some sample text"
@@ -364,7 +366,7 @@ test textWind-3.3 {EmbWinConfigure procedure} -setup {
 } -result [list 1 0 \
     [list [expr {$padx+3*$fixedWidth}] $pady $fixedWidth $fixedHeight]]
 
-test textWind-3.4 {EmbWinConfigure procedure} -setup {
+test textWind-3.4 {EmbWinConfigure procedure} -constraints {aquaKnownBug} -setup {
     destroy .t.f
 } -body {
     .t insert 1.0 "Some sample text"
@@ -378,7 +380,7 @@ test textWind-3.4 {EmbWinConfigure procedure} -setup {
     destroy .t.f
 } -returnCodes error -result {bad text index ".t.f"}
 
-test textWind-3.5 {EmbWinConfigure procedure} -setup {
+test textWind-3.5 {EmbWinConfigure procedure} -constraints {aquaKnownBug} -setup {
     destroy .t.f
 } -body {
     .t insert 1.0 "Some sample text"
