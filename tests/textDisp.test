@@ -1045,7 +1045,8 @@ test textDisp-6.4 {scrolling in DisplayText, scrolls interfere} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 2.40 2.60 4.0 4.20} {2.0 2.20 2.40 2.60 4.0 4.20 6.0}}
-test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
+test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     .t configure -wrap char
     frame .f2 -bg red
     place .f2 -in .t -relx 0.5 -rely 0.5 -relwidth 0.5 -relheight 0.5
@@ -1060,7 +1061,8 @@ test textDisp-6.5 {scrolling in DisplayText, scroll source obscured} {notAqua} {
     destroy .f2
     list $tk_textRelayout $tk_textRedraw
 } {{1.0 9.0 10.0} {1.0 4.0 5.0 9.0 10.0}}
-test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {notAqua} {
+test textDisp-6.6 {scrolling in DisplayText, Expose events after scroll} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     # this test depends on all of the expose events being handled at once
     .t configure -wrap char
     frame .f2 -bg #ff0000
@@ -1141,7 +1143,8 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua}
 foreach i {2 3 4 5 6 7 8 9 10 11 12 13 14 15} {
     .t insert end "\nLine $i"
 }
-test textDisp-7.1 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.1 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.2 -relwidth 0.6 -rely 0.22 -relheight 0.55
     updateWidgets
@@ -1149,7 +1152,8 @@ test textDisp-7.1 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {1.40 2.0 3.0 4.0 5.0 6.0}}
-test textDisp-7.2 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.2 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0 -relwidth 0.5 -rely 0 -relheight 0.5
     updateWidgets
@@ -1157,7 +1161,8 @@ test textDisp-7.2 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {1.0 1.20 1.40 2.0 3.0}}
-test textDisp-7.3 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.3 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.5 -relwidth 0.5 -rely 0.5 -relheight 0.5
     updateWidgets
@@ -1165,8 +1170,9 @@ test textDisp-7.3 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {4.0 5.0 6.0 7.0 8.0}}
-test textDisp-7.4 {TkTextRedrawRegion} {notAqua} {
-    frame .f2 -bg #ff0000
+test textDisp-7.4 {TkTextRedrawRegion} {aquaKnownBug} {
+ # constrained by aquaKnownBug until ticket [aad0231f07] is fixed
+   frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 0 -relheight 0.2 \
 	    -bordermode ignore
     updateWidgets
@@ -1174,7 +1180,8 @@ test textDisp-7.4 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 1.0 1.20}}
-test textDisp-7.5 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.5 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0.4 -relwidth 0.2 -rely 1.0 -relheight 0.2 \
 	    -anchor s -bordermode ignore
@@ -1183,7 +1190,8 @@ test textDisp-7.5 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 7.0 8.0}}
-test textDisp-7.6 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.6 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor w -bordermode ignore
@@ -1192,7 +1200,8 @@ test textDisp-7.6 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
-test textDisp-7.7 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.7 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     frame .f2 -bg #ff0000
     place .f2 -in .t -relx 1.0 -relwidth 0.2 -rely 0.55 -relheight 0.2 \
 	    -anchor e -bordermode ignore
@@ -1201,7 +1210,8 @@ test textDisp-7.7 {TkTextRedrawRegion} {notAqua} {
     updateWidgets
     list $tk_textRelayout $tk_textRedraw
 } {{} {borders 3.0 4.0 5.0}}
-test textDisp-7.8 {TkTextRedrawRegion} {notAqua} {
+test textDisp-7.8 {TkTextRedrawRegion} {aquaKnownBug} {
+# constrained by aquaKnownBug until ticket [aad0231f07] is fixed
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\n"
     frame .f2 -bg #ff0000
