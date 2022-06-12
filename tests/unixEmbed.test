@@ -1300,7 +1300,7 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     pack [button .embed.b -text "Emb Button" \
 	    -command {lappend result ".embed.b"}] -padx 30 -pady 30
     update
-    updateWidgets
+    waitForMap .embed.b
     focus -force .main
     after 100
     set x [expr {[winfo x .main ] + [winfo x .main.b] + 40}]
