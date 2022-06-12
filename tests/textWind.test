@@ -324,22 +324,6 @@ test textWind-2.25 {TkTextWindowCmd procedure, "names" option} -setup {
 } -result {.f .f2 .t.f .t.f2}
 
 
-proc waitForMap {w} {
-    set count 0
-    while {$count < 10 && ![winfo ismapped $w]} {
-        updateWidgets
-        incr count
-        after 50
-    }
-}
-proc waitForUnmap {w} {
-    set count 0
-    while {$count < 10 && [winfo ismapped $w]} {
-        updateWidgets
-        incr count
-        after 50
-    }
-}
 test textWind-3.1 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -body {
@@ -480,8 +464,6 @@ test textWind-3.11 {EmbWinConfigure procedure} -setup {
     waitForMap .t.b
     .t index .t.b
 } -result {1.6}
-rename waitForMap {}
-rename waitForUnmap {}
 
 
 .t delete 1.0 end
