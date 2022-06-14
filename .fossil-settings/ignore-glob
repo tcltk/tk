@@ -25,6 +25,7 @@
 */version.vc
 */libtk.vfs
 */libtk*.zip
+*/tkUuid.h
 html
 macosx/configure
 win/Debug*
