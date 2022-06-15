@@ -676,7 +676,9 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
     updateWidgets
     option add *x.use [winfo id .t]
     toplevel .x -width 140 -height 300 -bg green
-    tkwait visibility .x
+    if {[tk windowingsystem] ne "aqua"} {
+        tkwait visibility .x
+    }
     updateWidgets
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
