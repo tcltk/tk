@@ -4942,9 +4942,9 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
     pack .p
     updateWidgets
     # On macOS, the above updateWidgets does the job of mapping .p and its children
-    # but then getting the correct mapping state (0) of .f4 needs another
+    # but then getting the correct mapping state (0) of .f4 needs further
     # updateWidgets because .f4 does not fit in the width of .p
-    updateWidgets
+    waitForMap .f4
     set result [list]
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
