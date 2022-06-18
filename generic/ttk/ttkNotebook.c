@@ -681,6 +681,7 @@ static void SelectNearestTab(Notebook *nb)
     int nextIndex = NextTab(nb, currentIndex);
 
     if (currentIndex >= 0) {
+        nb->notebook.currentIndex = -1;
 	Ttk_UnmapContent(nb->notebook.mgr, currentIndex);
     }
     if (currentIndex != nextIndex) {
@@ -1040,9 +1041,9 @@ static int NotebookHideCommand(
     tab->state = TAB_STATE_HIDDEN;
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
+    } else {
+        TtkRedisplayWidget(&nb->core);
     }
-
-    TtkRedisplayWidget(&nb->core);
 
     return TCL_OK;
 }
