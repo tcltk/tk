@@ -253,6 +253,9 @@ namespace eval tk {
 		incr count
 		after 50
 	    }
+	    if {$count > 9} {
+		puts "waitForMap $w: timeout!"
+	    }
 	}
 	proc waitForUnmap {w} {
 	    set count 0
@@ -260,6 +263,9 @@ namespace eval tk {
 		updateWidgets
 		incr count
 		after 50
+	    }
+	    if {$count > 9} {
+		puts "waitForUnmap $w: timeout!"
 	    }
 	}
 
