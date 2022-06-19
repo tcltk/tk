@@ -233,6 +233,36 @@ namespace eval tk {
 	}
 	namespace export controlPointerWarpTiming
 
+	namespace export updateWidgets
+	# Platform specific procedure for updating the display.
+	if {[tk windowingsystem] == "aqua"} {
+	    proc updateWidgets {} {
+		update idletasks
+	    }
+	} else {
+	    proc updateWidgets {} {
+		update
+	    }
+	}
+
+	namespace export waitForMap waitForUnmap
+	# Procedures waiting for a window to be mapped or unmapped, with timeout
+	proc waitForMap {w} {
+	    set count 0
+	    while {$count < 10 && ![winfo ismapped $w]} {
+		updateWidgets
+		incr count
+		after 50
+	    }
+	}
+	proc waitForUnmap {w} {
+	    set count 0
+	    while {$count < 10 && [winfo ismapped $w]} {
+		updateWidgets
+		incr count
+		after 50
+	    }
+	}
     }
 }
 
@@ -256,6 +286,9 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
 }]
+# constraint for running a test on all windowing system except aqua
+# where the test fails due to a known bug
+testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}] 
 
 # constraints for testing facilities defined in the tktest executable...
 testConstraint testImageType [expr {"test" in [image types]}]
@@ -296,9 +329,6 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
-testConstraint textfonts [expr {
-    [testConstraint fonts] || [tk windowingsystem] eq "win32"
-}]
 
 # constraints for the visuals available..
 testConstraint pseudocolor8 [expr {
