@@ -964,11 +964,10 @@ TkpMeasureCharsInContext(
 	}
 
         /*
-         * Trim right whitespace/lineending characters.
+         * Trim lineending characters.
          */
 
-	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
-		whitespaceCharacterSet : lineendingCharacterSet;
+	cs = lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
 	    index--;
@@ -1036,7 +1035,7 @@ TkpMeasureCharsInContext(
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
-	    "flags='%s%s%s%s' -> width=%d bytesFit=%d\n", source, rangeLength,
+	    "flags='%s%s%s%s'-> width=%d bytes, Fit=%d\n", source, rangeLength,
 	    source+rangeStart, maxLength,
 	    flags & TK_PARTIAL_OK   ? "partialOk "  : "",
 	    flags & TK_WHOLE_WORDS  ? "wholeWords " : "",
