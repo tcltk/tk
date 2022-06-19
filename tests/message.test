@@ -497,6 +497,12 @@ test message-4.2 {Bug [5d991b822e]} {
     destroy .b
     unset new
 } {}
+test message-4.3 {Bug [adb6352846]} {
+    pack [message .m -text foo\ \nbar -pady 0 -borderwidth 0 -highlightthickness 0]
+    update
+    # must render on two lines (bug is rendering on 3 lines on macOS)
+    expr {[winfo height .m] == 2 * [font metrics [.m cget -font] -linespace]}
+} {1}
 
 cleanupTests
 return
