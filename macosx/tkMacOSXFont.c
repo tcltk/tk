@@ -964,13 +964,25 @@ TkpMeasureCharsInContext(
 	}
 
         /*
-         * Trim lineending characters.
+         * Ignore lineending characters.
          */
 
 	cs = lineendingCharacterSet;
 	while (index > start &&
 		[cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
 	    index--;
+	}
+
+	/*
+	 * Also ignore trailing spaces when text is being wrapped.
+	 */
+
+	if ((flags & TK_WHOLE_WORDS) && !(flags & TK_ISOLATE_END)) {
+	    cs = whitespaceCharacterSet;
+	    while (index > start &&
+		   [cs characterIsMember:[string characterAtIndex:(index - 1)]]) {
+		index--;
+	    }
 	}
 
         /*
