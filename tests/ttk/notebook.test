@@ -96,11 +96,11 @@ test notebook-5.1 "Virtual events" -body {
     bind .t <<NotebookTabChanged>> { lappend events changed %W }
 
     pack [set nb [ttk::notebook .t.nb]] -expand true -fill both; update
-    $nb add [frame $nb.f1]
+    $nb add [frame $nb.f1] ;  # triggers <<NotebookTabChanged>> (first tab gets autoselected)
     $nb add [frame $nb.f2]
     $nb add [frame $nb.f3]
-
-    $nb select $nb.f1
+    update
+    $nb select $nb.f1 ; # does not trigger <<NotebookTabChanged>> (tab to select is already selected)
     update; set events
 } -result [list changed .t.nb]
 
