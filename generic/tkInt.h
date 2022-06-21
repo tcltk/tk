@@ -83,6 +83,11 @@
 #   endif
 #endif
 
+#if TCL_MAJOR_VERSION < 9
+#   define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
+#   define Tcl_CreateObjCommand2 Tcl_CreateObjCommand
+#endif
+
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
 # define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
@@ -730,7 +735,7 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
-    Tcl_ObjCmdProc *tclUpdateObjProc;
+    Tcl_ObjCmdProc2 *tclUpdateObjProc;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
@@ -1337,7 +1342,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const argv[]);
+			    Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const argv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);

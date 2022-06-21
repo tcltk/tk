@@ -47,7 +47,7 @@ static const Tk_OptionSpec FrameOptionSpecs[] = {
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
-static const Ttk_Ensemble FrameCommands[] = {
+static const Ttk_Ensemble2 FrameCommands[] = {
     { "cget",   	TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },

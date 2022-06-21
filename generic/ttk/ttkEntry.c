@@ -1472,7 +1472,7 @@ badIndex:
  */
 static int
 EntryBBoxCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Ttk_Box b;
@@ -1502,7 +1502,7 @@ EntryBBoxCommand(
  */
 static int
 EntryDeleteCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     TkSizeT first, last;
@@ -1531,7 +1531,7 @@ EntryDeleteCommand(
  */
 static int
 EntryGetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 2) {
@@ -1547,7 +1547,7 @@ EntryGetCommand(
  */
 static int
 EntryICursorCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 3) {
@@ -1567,7 +1567,7 @@ EntryICursorCommand(
  */
 static int
 EntryIndexCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     TkSizeT index;
@@ -1589,7 +1589,7 @@ EntryIndexCommand(
  */
 static int
 EntryInsertCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     TkSizeT index;
@@ -1611,7 +1611,7 @@ EntryInsertCommand(
  * 	Clear selection.
  */
 static int EntrySelectionClearCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
 
@@ -1628,7 +1628,7 @@ static int EntrySelectionClearCommand(
  * 	Returns 1 if any characters are selected, 0 otherwise.
  */
 static int EntrySelectionPresentCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 3) {
@@ -1644,7 +1644,7 @@ static int EntrySelectionPresentCommand(
  * 	Explicitly set the selection range.
  */
 static int EntrySelectionRangeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     TkSizeT start, end;
@@ -1671,7 +1671,7 @@ static int EntrySelectionRangeCommand(
     return TCL_OK;
 }
 
-static const Ttk_Ensemble EntrySelectionCommands[] = {
+static const Ttk_Ensemble2 EntrySelectionCommands[] = {
     { "clear",   EntrySelectionClearCommand,0 },
     { "present", EntrySelectionPresentCommand,0 },
     { "range",   EntrySelectionRangeCommand,0 },
@@ -1682,7 +1682,7 @@ static const Ttk_Ensemble EntrySelectionCommands[] = {
  * 	Sets the value of an entry widget.
  */
 static int EntrySetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 3) {
@@ -1698,7 +1698,7 @@ static int EntrySetCommand(
  * 	or error status from -validatecommand / -invalidcommand.
  */
 static int EntryValidateCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     int code;
@@ -1720,7 +1720,7 @@ static int EntryValidateCommand(
 /* $entry xview	-- horizontal scrolling interface
  */
 static int EntryXViewCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc == 3) {
@@ -1734,7 +1734,7 @@ static int EntryXViewCommand(
     return TtkScrollviewCommand(interp, objc, objv, entryPtr->entry.xscrollHandle);
 }
 
-static const Ttk_Ensemble EntryCommands[] = {
+static const Ttk_Ensemble2 EntryCommands[] = {
     { "bbox", 		EntryBBoxCommand,0 },
     { "cget", 		TtkWidgetCgetCommand,0 },
     { "configure", 	TtkWidgetConfigureCommand,0 },
@@ -1839,7 +1839,7 @@ ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * 	in sync at all times, [$cb current] double-checks
  */
 static int ComboboxCurrentCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Combobox *cbPtr = (Combobox *)recordPtr;
     TkSizeT currentIndex = cbPtr->combobox.currentIndex;
@@ -1903,7 +1903,7 @@ static int ComboboxCurrentCommand(
 /*------------------------------------------------------------------------
  * +++ Combobox widget definition.
  */
-static const Ttk_Ensemble ComboboxCommands[] = {
+static const Ttk_Ensemble2 ComboboxCommands[] = {
     { "bbox", 		EntryBBoxCommand,0 },
     { "cget", 		TtkWidgetCgetCommand,0 },
     { "configure", 	TtkWidgetConfigureCommand,0 },
@@ -2017,7 +2017,7 @@ SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     return EntryConfigure(interp, recordPtr, mask);
 }
 
-static const Ttk_Ensemble SpinboxCommands[] = {
+static const Ttk_Ensemble2 SpinboxCommands[] = {
     { "bbox", 		EntryBBoxCommand,0 },
     { "cget", 		TtkWidgetCgetCommand,0 },
     { "configure", 	TtkWidgetConfigureCommand,0 },

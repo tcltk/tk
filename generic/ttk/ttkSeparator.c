@@ -47,7 +47,7 @@ static Ttk_Layout SeparatorGetLayout(
 /*
  * Widget commands:
  */
-static const Ttk_Ensemble SeparatorCommands[] = {
+static const Ttk_Ensemble2 SeparatorCommands[] = {
     { "cget",		TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
@@ -89,7 +89,7 @@ static const Tk_OptionSpec SizegripOptionSpecs[] = {
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
 
-static const Ttk_Ensemble SizegripCommands[] = {
+static const Ttk_Ensemble2 SizegripCommands[] = {
     { "cget",		TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },

@@ -146,10 +146,10 @@ void TtkWidgetChangeState(WidgetCore *corePtr,
  */
 static int
 WidgetInstanceObjCmd(
-    ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    ClientData clientData, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
-    const Ttk_Ensemble *commands = corePtr->widgetSpec->commands;
+    const Ttk_Ensemble2 *commands = corePtr->widgetSpec->commands;
     int status;
 
     Tcl_Preserve(clientData);
@@ -347,7 +347,7 @@ static const Tk_ClassProcs widgetClassProcs = {
  *	ClientData is a WidgetSpec *.
  */
 int TtkWidgetConstructorObjCmd(
-    ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    ClientData clientData, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetSpec *widgetSpec = (WidgetSpec *)clientData;
     const char *className = widgetSpec->className;
@@ -357,7 +357,7 @@ int TtkWidgetConstructorObjCmd(
     void *recordPtr;
     WidgetCore *corePtr;
     Tk_SavedOptions savedOptions;
-    int i;
+    TkSizeT i;
 
     if (objc < 2 || objc % 2 == 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -390,7 +390,7 @@ int TtkWidgetConstructorObjCmd(
     corePtr->tkwin	= tkwin;
     corePtr->interp 	= interp;
     corePtr->widgetSpec	= widgetSpec;
-    corePtr->widgetCmd	= Tcl_CreateObjCommand(interp, Tk_PathName(tkwin),
+    corePtr->widgetCmd	= Tcl_CreateObjCommand2(interp, Tk_PathName(tkwin),
 	WidgetInstanceObjCmd, recordPtr, WidgetInstanceObjCmdDeleted);
     corePtr->optionTable = optionTable;
     corePtr->layout	= NULL;
@@ -598,7 +598,7 @@ int TtkWidgetSize(void *recordPtr, int *widthPtr, int *heightPtr)
 /* $w cget -option
  */
 int TtkWidgetCgetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tcl_Obj *result;
@@ -618,7 +618,7 @@ int TtkWidgetCgetCommand(
 /* $w configure ?-option ?value ....??
  */
 int TtkWidgetConfigureCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Tcl_Obj *result;
@@ -688,7 +688,7 @@ int TtkWidgetConfigureCommand(
  */
 
 int TtkWidgetStateCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_StateSpec spec;
@@ -728,7 +728,7 @@ int TtkWidgetStateCommand(
  */
 
 int TtkWidgetInstateCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_State state = corePtr->state;
@@ -759,7 +759,7 @@ int TtkWidgetInstateCommand(
  * 	Returns: name of element at $x, $y
  */
 int TtkWidgetIdentifyCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
     Ttk_Element element;
@@ -799,7 +799,7 @@ int TtkWidgetIdentifyCommand(
  */
 
 int TtkWidgetStyleCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
 

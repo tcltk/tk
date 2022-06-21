@@ -354,7 +354,7 @@ Ttk_CreateImageElement(
     void *dummy,
     Ttk_Theme theme,
     const char *elementName,
-    int objc, Tcl_Obj *const objv[])
+    TkSizeT objc, Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] =
 	 { "-border","-height","-padding","-sticky","-width",NULL };
@@ -363,7 +363,7 @@ Ttk_CreateImageElement(
     Ttk_ImageSpec *imageSpec = 0;
     ImageData *imageData = 0;
     int padding_specified = 0;
-    int i;
+    TkSizeT i;
     (void)dummy;
 
     if (objc <= 0) {

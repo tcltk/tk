@@ -56,7 +56,7 @@ struct WidgetSpec_
     const char 		*className;	/* Widget class name */
     size_t 		recordSize;	/* #bytes in widget record */
     const Tk_OptionSpec	*optionSpecs;	/* Option specifications */
-    const Ttk_Ensemble	*commands;	/* Widget instance subcommands */
+    const Ttk_Ensemble2	*commands;	/* Widget instance subcommands */
 
     /*
      * Hooks:
@@ -89,26 +89,20 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 
 /* Common widget commands:
  */
-MODULE_SCOPE int TtkWidgetCgetCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetConfigureCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetIdentifyCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetInstateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetStateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
-MODULE_SCOPE int TtkWidgetStyleCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetCgetCommand;
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetConfigureCommand;
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetIdentifyCommand;
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetInstateCommand;
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetStateCommand;
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetStyleCommand;
 
 /* Widget constructor:
  */
 MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	ClientData, Tcl_Interp*, int, Tcl_Obj*const[]);
+	ClientData, Tcl_Interp*, TkSizeT, Tcl_Obj*const[]);
 
 #define RegisterWidget(interp, name, specPtr) \
-    Tcl_CreateObjCommand(interp, name, \
+    Tcl_CreateObjCommand2(interp, name, \
 	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
 
 /* WIDGET_TAKEFOCUS_TRUE --
@@ -190,7 +184,7 @@ MODULE_SCOPE ScrollHandle TtkCreateScrollHandle(WidgetCore *, Scrollable *);
 MODULE_SCOPE void TtkFreeScrollHandle(ScrollHandle);
 
 MODULE_SCOPE int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle);
+    Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[], ScrollHandle);
 
 MODULE_SCOPE void TtkUpdateScrollInfo(ScrollHandle h);
 MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst, int updateScrollInfo);
@@ -227,7 +221,7 @@ MODULE_SCOPE void Ttk_DeleteTagFromTable(Ttk_TagTable, Ttk_Tag);
 
 MODULE_SCOPE int Ttk_ConfigureTag(
     Tcl_Interp *interp, Ttk_TagTable tagTable, Ttk_Tag tag,
-    int objc, Tcl_Obj *const objv[]);
+    TkSizeT objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE Ttk_TagSet Ttk_GetTagSetFromObj(
     Tcl_Interp *interp, Ttk_TagTable, Tcl_Obj *objPtr);

@@ -206,7 +206,7 @@ void TtkUpdateScrollInfo(ScrollHandle h)
  *  $w [xy]view scroll $number $what -- scrollbar interface
  */
 int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle h)
+    Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
     int newFirst;

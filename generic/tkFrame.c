@@ -351,7 +351,7 @@ static void		FrameRequestProc(ClientData clientData,
 static void		FrameStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		FrameWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static void		FrameWorldChanged(ClientData instanceData);
 static void		MapFrame(ClientData clientData);
@@ -688,7 +688,7 @@ CreateFrame(
     framePtr->tkwin = newWin;
     framePtr->display = Tk_Display(newWin);
     framePtr->interp = interp;
-    framePtr->widgetCmd	= Tcl_CreateObjCommand(interp, Tk_PathName(newWin),
+    framePtr->widgetCmd	= Tcl_CreateObjCommand2(interp, Tk_PathName(newWin),
 	    FrameWidgetObjCmd, framePtr, FrameCmdDeletedProc);
     framePtr->optionTable = optionTable;
     framePtr->type = type;
@@ -764,7 +764,7 @@ static int
 FrameWidgetObjCmd(
     ClientData clientData,	/* Information about frame widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const frameOptions[] = {
@@ -774,9 +774,8 @@ FrameWidgetObjCmd(
 	FRAME_CGET, FRAME_CONFIGURE
     };
     Frame *framePtr = (Frame *)clientData;
-    int result = TCL_OK, index;
-    int c, i;
-    TkSizeT length;
+    int c, result = TCL_OK, index;
+    TkSizeT i, length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
@@ -2122,10 +2121,19 @@ TkToplevelWindowForCommand(
     if (Tcl_GetCommandInfo(interp, cmdName, &cmdInfo) == 0) {
 	return NULL;
     }
-    if (cmdInfo.objProc != FrameWidgetObjCmd) {
+#if TCL_MAJOR_VERSION > 8
+    if (cmdInfo.isNativeObjectProc == 2) {
+	if (cmdInfo.objProc2 != FrameWidgetObjCmd) {
+	    return NULL;
+	}
+	framePtr = (Frame *)cmdInfo.objClientData2;
+    } else
+#endif
+    if (cmdInfo.objProc != (Tcl_ObjCmdProc *)FrameWidgetObjCmd) {
 	return NULL;
+    } else {
+	framePtr = (Frame *)cmdInfo.objClientData;
     }
-    framePtr = (Frame *)cmdInfo.objClientData;
     if (framePtr->type != TYPE_TOPLEVEL) {
 	return NULL;
     }
