@@ -288,7 +288,7 @@ int Ttk_ConfigureTag(
     Tcl_Interp *interp,
     Ttk_TagTable tagTable,
     Ttk_Tag tag,
-    int objc, Tcl_Obj *const objv[])
+    TkSizeT objc, Tcl_Obj *const objv[])
 {
     return Tk_SetOptions(
 	interp, tag->tagRecord, tagTable->optionTable,

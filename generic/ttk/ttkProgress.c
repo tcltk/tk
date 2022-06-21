@@ -423,7 +423,7 @@ static Ttk_Layout ProgressbarGetLayout(
 /* $sb step ?amount?
  */
 static int ProgressbarStepCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Progressbar *pb = (Progressbar *)recordPtr;
     double value = 0.0, stepAmount = 1.0;
@@ -479,7 +479,7 @@ static int ProgressbarStepCommand(
  * and pass to interpreter.
  */
 static int ProgressbarStartStopCommand(
-    Tcl_Interp *interp, const char *cmdName, int objc, Tcl_Obj *const objv[])
+    Tcl_Interp *interp, const char *cmdName, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Tcl_Obj *cmd = Tcl_NewListObj(objc, objv);
     Tcl_Obj *prefix[2];
@@ -501,7 +501,7 @@ static int ProgressbarStartStopCommand(
 static int ProgressbarStartCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
@@ -511,14 +511,14 @@ static int ProgressbarStartCommand(
 static int ProgressbarStopCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+	TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
 	    interp, "::ttk::progressbar::stop", objc, objv);
 }
 
-static const Ttk_Ensemble ProgressbarCommands[] = {
+static const Ttk_Ensemble2 ProgressbarCommands[] = {
     { "cget",		TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },

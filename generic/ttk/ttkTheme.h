@@ -231,7 +231,7 @@ typedef struct Ttk_ElementSpec {
 
 typedef int (*Ttk_ElementFactory)
 	(Tcl_Interp *, void *clientData,
-	 Ttk_Theme, const char *elementName, int objc, Tcl_Obj *const objv[]);
+	 Ttk_Theme, const char *elementName, TkSizeT objc, Tcl_Obj *const objv[]);
 
 /*
  * Null element implementation:
@@ -390,9 +390,15 @@ typedef struct TtkEnsemble {
     const struct TtkEnsemble *ensemble;	/* subcommand ensemble */
 } Ttk_Ensemble;
 
+typedef struct TtkEnsemble2 {
+    const char *name;			/* subcommand name */
+    Tcl_ObjCmdProc2 *command; 		/* subcommand implementation, OR: */
+    const struct TtkEnsemble2 *ensemble;	/* subcommand ensemble */
+} Ttk_Ensemble2;
+
 MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
-    const Ttk_Ensemble *commands, int cmdIndex,
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+    const Ttk_Ensemble2 *commands, TkSizeT cmdIndex,
+    void *clientData, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
 

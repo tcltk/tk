@@ -133,7 +133,7 @@ static void ScrollbarDoLayout(void *recordPtr)
  */
 static int
 ScrollbarSetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *firstObj, *lastObj;
@@ -184,7 +184,7 @@ ScrollbarSetCommand(
  */
 static int
 ScrollbarGetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *result[2];
@@ -207,7 +207,7 @@ ScrollbarGetCommand(
  */
 static int
 ScrollbarDeltaCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
     double dx, dy;
@@ -247,7 +247,7 @@ ScrollbarDeltaCommand(
  */
 static int
 ScrollbarFractionCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
     Ttk_Box b = sb->scrollbar.troughBox;
@@ -281,7 +281,7 @@ ScrollbarFractionCommand(
     return TCL_OK;
 }
 
-static const Ttk_Ensemble ScrollbarCommands[] = {
+static const Ttk_Ensemble2 ScrollbarCommands[] = {
     { "cget",		TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "delta",    	ScrollbarDeltaCommand,0 },

@@ -128,7 +128,7 @@ SquareDoLayout(void *clientData)
  * that are sufficient for our needs.
  */
 
-static const Ttk_Ensemble SquareCommands[] = {
+static const Ttk_Ensemble2 SquareCommands[] = {
     { "cget",		TtkWidgetCgetCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },

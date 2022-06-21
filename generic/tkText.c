@@ -6935,6 +6935,11 @@ TkpTesttextCmd(
     if (Tcl_GetCommandInfo(interp, Tcl_GetString(objv[1]), &info) == 0) {
 	return TCL_ERROR;
     }
+#if TCL_MAJOR_VERSION > 8
+    if (info.isNativeObjectProc == 2) {
+	textPtr = (TkText *)info.objClientData2;
+    } else
+#endif
     textPtr = (TkText *)info.objClientData;
     len = strlen(Tcl_GetString(objv[2]));
     if (strncmp(Tcl_GetString(objv[2]), "byteindex", len) == 0) {
