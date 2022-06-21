@@ -248,12 +248,12 @@ namespace eval tk {
 	# Procedures waiting for a window to be mapped or unmapped, with timeout
 	proc waitForMap {w} {
 	    set count 0
-	    while {$count < 10 && (![winfo exists $w] || ![winfo ismapped $w])} {
+	    while {$count < 20 && (![winfo exists $w] || ![winfo ismapped $w])} {
 		updateWidgets
 		incr count
 		after 50
 	    }
-	    if {$count > 9} {
+	    if {$count > 19} {
 		puts "waitForMap $w: timeout!"
 	    }
 	}
