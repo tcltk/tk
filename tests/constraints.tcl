@@ -255,17 +255,19 @@ namespace eval tk {
 	    }
 	    if {$count > 19} {
 		puts "waitForMap $w: timeout!"
+		puts "  exists state is [winfo exists $w]"
+		catch {puts "  mapping state is [winfo ismapped $w]"}
 	    }
 	}
 	proc waitForUnmap {w} {
 	    set count 0
-	    while {$count < 10 && [winfo ismapped $w]} {
+	    while {$count < 20 && [winfo ismapped $w]} {
 		updateWidgets
 		incr count
 		after 50
 	    }
-	    if {$count > 9} {
-		puts "waitForUnmap $w: timeout!"
+	    if {$count > 19} {
+		puts "waitForUnmap $w: timeout! mapping state is [winfo ismapped $w]"
 	    }
 	}
 
