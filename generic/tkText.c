@@ -373,7 +373,7 @@ static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    TkSizeT objc, Tcl_Obj *const objv[]);
 static int		SharedTextObjCmd(ClientData clientData,
 			    Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
@@ -519,7 +519,7 @@ CreateWidget(
     textPtr->tkwin = newWin;
     textPtr->display = Tk_Display(newWin);
     textPtr->interp = interp;
-    textPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    textPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(textPtr->tkwin), TextWidgetObjCmd,
 	    textPtr, TextCmdDeletedProc);
 
@@ -686,7 +686,7 @@ static int
 TextWidgetObjCmd(
     ClientData clientData,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+	TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -831,7 +831,8 @@ TextWidgetObjCmd(
 	break;
     case TEXT_COUNT: {
 	const TkTextIndex *indexFromPtr, *indexToPtr;
-	int i, found = 0, update = 0;
+	TkSizeT i;
+	int found = 0, update = 0;
 	Tcl_Obj *objPtr = NULL;
 
 	if (objc < 4) {
@@ -1111,7 +1112,7 @@ TextWidgetObjCmd(
 
 		TkTextIndex *indices, *ixStart, *ixEnd, *lastStart;
 		char *useIdx;
-		int i;
+		TkSizeT i;
 
 		objc -= 2;
 		objv += 2;
@@ -1247,7 +1248,8 @@ TextWidgetObjCmd(
 	break;
     case TEXT_GET: {
 	Tcl_Obj *objPtr = NULL;
-	int i, found = 0, visible = 0;
+	TkSizeT i;
+	int found = 0, visible = 0;
 	const char *name;
 	TkSizeT length;
 
@@ -1452,7 +1454,8 @@ TextWidgetObjCmd(
 		 * unnecessarily.
 		 */
 
-		int deleteInsertOffset, insertLength, j, indexFromLine, indexFromByteOffset;
+		int deleteInsertOffset, insertLength, indexFromLine, indexFromByteOffset;
+		TkSizeT j;
 
 		insertLength = 0;
 		for (j = 4; j < objc; j += 2) {

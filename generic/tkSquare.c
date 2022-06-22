@@ -104,7 +104,7 @@ static void		KeepInWindow(Square *squarePtr);
 static void		SquareObjEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		SquareWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
+			    Tcl_Interp *, TkSizeT objc, Tcl_Obj * const objv[]);
 
 /*
  *--------------------------------------------------------------
@@ -127,7 +127,7 @@ int
 SquareObjCmd(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Square *squarePtr;
@@ -167,7 +167,7 @@ SquareObjCmd(
     squarePtr->tkwin = tkwin;
     squarePtr->display = Tk_Display(tkwin);
     squarePtr->interp = interp;
-    squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    squarePtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd, squarePtr,
 	    SquareDeletedProc);
     squarePtr->gc = NULL;
@@ -221,7 +221,7 @@ static int
 SquareWidgetObjCmd(
     ClientData clientData,	/* Information about square widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
     Square *squarePtr = (Square *)clientData;

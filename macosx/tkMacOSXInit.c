@@ -34,7 +34,7 @@ static char scriptPath[PATH_MAX + 1] = "";
  */
 
 static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
+			    TkSizeT objc, Tcl_Obj *const objv[]);
 
 #pragma mark TKApplication(TKInit)
 
@@ -619,11 +619,11 @@ TkpInit(
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
 
-    Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
@@ -688,7 +688,7 @@ static int
 TkMacOSXGetAppPathCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     if (objc != 1) {

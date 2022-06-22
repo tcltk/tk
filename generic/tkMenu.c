@@ -351,7 +351,7 @@ static char *		MenuVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		MenuWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuWorldChanged(ClientData instanceData);
 static int		PostProcessEntry(TkMenuEntry *mePtr);
@@ -445,7 +445,7 @@ Tk_MenuObjCmd(
     menuPtr->tkwin = newWin;
     menuPtr->display = Tk_Display(newWin);
     menuPtr->interp = interp;
-    menuPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    menuPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd, menuPtr,
 	    MenuCmdDeletedProc);
     menuPtr->active = TCL_INDEX_NONE;
@@ -608,7 +608,7 @@ static int
 MenuWidgetObjCmd(
     ClientData clientData,	/* Information about menu widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     TkMenu *menuPtr = (TkMenu *)clientData;

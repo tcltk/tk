@@ -165,7 +165,7 @@ static char *		MenuButtonTextVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		MenuButtonWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static int		ConfigureMenuButton(Tcl_Interp *interp,
 			    TkMenuButton *mbPtr, int objc,
@@ -236,7 +236,7 @@ Tk_MenubuttonObjCmd(
     mbPtr->tkwin = tkwin;
     mbPtr->display = Tk_Display(tkwin);
     mbPtr->interp = interp;
-    mbPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    mbPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(mbPtr->tkwin), MenuButtonWidgetObjCmd, mbPtr,
 	    MenuButtonCmdDeletedProc);
     mbPtr->optionTable = optionTable;
@@ -325,7 +325,7 @@ static int
 MenuButtonWidgetObjCmd(
     ClientData clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;

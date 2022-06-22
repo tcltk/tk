@@ -836,7 +836,7 @@ Tk_SetAppName(
 	    riPtr->nextPtr = tsdPtr->interpListPtr;
 	    tsdPtr->interpListPtr = riPtr;
 	    riPtr->name = NULL;
-	    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr, DeleteProc);
+	    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr, DeleteProc);
 	    if (Tcl_IsSafe(interp)) {
 		Tcl_HideCommand(interp, "send", "send");
 	    }
@@ -946,7 +946,7 @@ Tk_SendObjCmd(
     TCL_UNUSED(void *),	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     enum {

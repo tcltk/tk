@@ -101,7 +101,7 @@ static int		ConfigureScrollbar(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int flags);
 static void		ScrollbarCmdDeletedProc(ClientData clientData);
 static int		ScrollbarWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj *const objv[]);
+			    Tcl_Interp *, TkSizeT objc, Tcl_Obj *const objv[]);
 
 /*
  *--------------------------------------------------------------
@@ -155,7 +155,7 @@ Tk_ScrollbarObjCmd(
     scrollPtr->tkwin = newWin;
     scrollPtr->display = Tk_Display(newWin);
     scrollPtr->interp = interp;
-    scrollPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    scrollPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(scrollPtr->tkwin), ScrollbarWidgetObjCmd,
 	    scrollPtr, ScrollbarCmdDeletedProc);
     scrollPtr->vertical = 0;
@@ -222,7 +222,7 @@ static int
 ScrollbarWidgetObjCmd(
     ClientData clientData,	/* Information about scrollbar widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;

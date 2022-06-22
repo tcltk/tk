@@ -47,7 +47,7 @@ TCL_DECLARE_MUTEX(ln_mutex);
  */
 
 static void	SysNotifyDeleteCmd(void *);
-static int	SysNotifyCmd(void *, Tcl_Interp *, int, Tcl_Obj * const*);
+static int	SysNotifyCmd(void *, Tcl_Interp *, TkSizeT, Tcl_Obj * const*);
 
 /*
  *----------------------------------------------------------------------
@@ -102,7 +102,7 @@ static int
 SysNotifyCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const *objv)
 {
     const char *title;
@@ -218,7 +218,7 @@ SysNotify_Init(
     ln_fns.nopen++;
     Tcl_MutexUnlock(&ln_mutex);
 
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyCmd,
+    Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", SysNotifyCmd,
 	    interp, SysNotifyDeleteCmd);
     return TCL_OK;
 }

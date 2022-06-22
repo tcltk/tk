@@ -947,13 +947,15 @@ TkCreateMainWindow(
 	}
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
-	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
+	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
 #if TCL_MAJOR_VERSION > 8
-	    if (cmdInfo.isNativeObjectProc == 2) {
+	    if (cmdInfo.isNativeObjectProc == 2 && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc = cmdInfo.objProc2;
 	    } else
 #endif
-	    mainPtr->tclUpdateObjProc = (Tcl_ObjCmdProc2 *)cmdInfo.objProc;
+	    if (!cmdInfo.objClientData) {
+		mainPtr->tclUpdateObjProc = (Tcl_ObjCmdProc2 *)cmdInfo.objProc;
+	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);

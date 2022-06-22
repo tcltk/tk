@@ -199,7 +199,7 @@ static void		ProxyWindowEventProc(void *clientData,
 static void		DisplayProxyWindow(void *clientData);
 static void		PanedWindowWorldChanged(void *instanceData);
 static int		PanedWindowWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj * const objv[]);
+			    Tcl_Interp *, TkSizeT objc, Tcl_Obj * const objv[]);
 static void		PanedWindowLostPaneProc(void *clientData,
 			    Tk_Window tkwin);
 static void		PanedWindowReqProc(void *clientData,
@@ -442,7 +442,7 @@ Tk_PanedWindowObjCmd(
     pwPtr->tkwin = tkwin;
     pwPtr->display = Tk_Display(tkwin);
     pwPtr->interp = interp;
-    pwPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    pwPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(pwPtr->tkwin), PanedWindowWidgetObjCmd, pwPtr,
 	    PanedWindowCmdDeletedProc);
     pwPtr->optionTable = pwOpts->pwOptions;
@@ -532,7 +532,7 @@ static int
 PanedWindowWidgetObjCmd(
     void *clientData,	/* Information about square widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
     PanedWindow *pwPtr = (PanedWindow *)clientData;

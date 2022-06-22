@@ -292,7 +292,7 @@ Tk_SetAppName(
      * TODO: DeleteProc
      */
 
-    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr, NULL);
+    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr, NULL);
     if (Tcl_IsSafe(interp)) {
 	Tcl_HideCommand(interp, "send", "send");
     }
@@ -322,13 +322,14 @@ int
 Tk_SendObjCmd(
     ClientData dummy,	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
-    int objc,			/* Number of arguments */
+    TkSizeT objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
 {
     const char *const sendOptions[] = {"-async", "-displayof", "--", NULL};
     char *stringRep, *destName;
     /*int async = 0;*/
-    int i, index, firstArg;
+    TkSizeT i;
+    int index, firstArg;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;

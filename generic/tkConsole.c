@@ -52,14 +52,14 @@ static int	ConsoleHandle(ClientData instanceData, int direction,
 static int	ConsoleInput(ClientData instanceData, char *buf, int toRead,
 		    int *errorCode);
 static int	ConsoleObjCmd(ClientData clientData, Tcl_Interp *interp,
-		    int objc, Tcl_Obj *const objv[]);
+		    TkSizeT objc, Tcl_Obj *const objv[]);
 static int	ConsoleOutput(ClientData instanceData, const char *buf,
 		    int toWrite, int *errorCode);
 static void	ConsoleWatch(ClientData instanceData, int mask);
 static void	DeleteConsoleInterp(ClientData clientData);
 static void	InterpDeleteProc(ClientData clientData, Tcl_Interp *interp);
 static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
-		    int objc, Tcl_Obj *const objv[]);
+		    TkSizeT objc, Tcl_Obj *const objv[]);
 
 /*
  * This structure describes the channel type structure for file based IO:
@@ -423,7 +423,7 @@ Tk_CreateConsoleWindow(
      * Add console commands to the interp
      */
 
-    token = Tcl_CreateObjCommand(interp, "console", ConsoleObjCmd, info,
+    token = Tcl_CreateObjCommand2(interp, "console", ConsoleObjCmd, info,
 	    ConsoleDeleteProc);
     info->refCount++;
 
@@ -432,7 +432,7 @@ Tk_CreateConsoleWindow(
      * in the consoleInterp.  The ref held by the consoleInterp delete
      * handler takes care of us.
      */
-    Tcl_CreateObjCommand(consoleInterp, "consoleinterp", InterpreterObjCmd,
+    Tcl_CreateObjCommand2(consoleInterp, "consoleinterp", InterpreterObjCmd,
 	    info, NULL);
 
     mainWindow = Tk_MainWindow(interp);
@@ -695,7 +695,7 @@ static int
 ConsoleObjCmd(
     ClientData clientData,	/* Access to the console interp */
     Tcl_Interp *interp,		/* Current interpreter */
-    int objc,			/* Number of arguments */
+    TkSizeT objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* Argument objects */
 {
     int index, result;
@@ -787,7 +787,7 @@ static int
 InterpreterObjCmd(
     ClientData clientData,	/* */
     Tcl_Interp *interp,		/* Current interpreter */
-    int objc,			/* Number of arguments */
+    TkSizeT objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* Argument objects */
 {
     int index, result = TCL_OK;
