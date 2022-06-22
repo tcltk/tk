@@ -1547,13 +1547,13 @@ static void		FontchooserEvent(int kind);
 static Tcl_Obj *	FontchooserCget(FontchooserData *fcdPtr,
 			    int optionIndex);
 static int		FontchooserConfigureCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static int		FontchooserShowCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static int		FontchooserHideCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static void		FontchooserParentEventHandler(ClientData clientData,
 			    XEvent *eventPtr);
@@ -1776,13 +1776,14 @@ static int
 FontchooserConfigureCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     FontchooserData *fcdPtr = (FontchooserData *)Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
-    int i, r = TCL_OK;
+    TkSizeT i;
+    int r = TCL_OK;
 
     /*
      * With no arguments we return all the options in a dict
@@ -1941,7 +1942,7 @@ static int
 FontchooserShowCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(TkSizeT),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     FontchooserData *fcdPtr = (FontchooserData *)Tcl_GetAssocData(interp, "::tk::fontchooser",
@@ -1989,7 +1990,7 @@ static int
 FontchooserHideCmd(
     TCL_UNUSED(void *),	/* Main window */
     TCL_UNUSED(Tcl_Interp *),
-    TCL_UNUSED(int),
+    TCL_UNUSED(TkSizeT),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];

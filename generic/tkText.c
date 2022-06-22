@@ -6921,7 +6921,7 @@ int
 TkpTesttextCmd(
     TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkText *textPtr;

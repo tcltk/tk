@@ -473,7 +473,7 @@ ExpandPercents(
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
-		sprintf(numStorage, "%d", (int)index);
+		sprintf(numStorage, "%" TKSIZET_MODIFIER "u", index);
 		string = numStorage;
 		break;
 	    case 'P': /* 'Peeked' new value of the string */
