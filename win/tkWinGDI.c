@@ -100,22 +100,22 @@ static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    const char *str[], int numargs);
 static int		PrintSelectPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintOpenPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintClosePrinter(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintOpenDoc(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		PrintCloseDoc(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		PrintOpenPage(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		PrintClosePage(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 
 /*
