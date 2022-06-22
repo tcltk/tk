@@ -162,7 +162,7 @@ static char *		ScaleVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		ScaleWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static void		ScaleWorldChanged(ClientData instanceData);
 static void		ScaleSetVariable(TkScale *scalePtr);
@@ -279,7 +279,7 @@ Tk_ScaleObjCmd(
     scalePtr->tkwin		= tkwin;
     scalePtr->display		= Tk_Display(tkwin);
     scalePtr->interp		= interp;
-    scalePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+    scalePtr->widgetCmd		= Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(scalePtr->tkwin), ScaleWidgetObjCmd,
 	    scalePtr, ScaleCmdDeletedProc);
     scalePtr->optionTable	= optionTable;
@@ -374,7 +374,7 @@ static int
 ScaleWidgetObjCmd(
     ClientData clientData,	/* Information about scale widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     TkScale *scalePtr = (TkScale *)clientData;

@@ -234,7 +234,7 @@ static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
 static int		CanvasWidgetCmd(void *clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, TkSizeT argc,
 			    Tcl_Obj *const *argv);
 static void		CanvasWorldChanged(void *instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
@@ -712,7 +712,7 @@ Tk_CanvasObjCmd(
     canvasPtr->tkwin = newWin;
     canvasPtr->display = Tk_Display(newWin);
     canvasPtr->interp = interp;
-    canvasPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    canvasPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(canvasPtr->tkwin), CanvasWidgetCmd, canvasPtr,
 	    CanvasCmdDeletedProc);
     canvasPtr->firstItemPtr = NULL;
@@ -829,7 +829,7 @@ static int
 CanvasWidgetCmd(
     void *clientData,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+	TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)clientData;
@@ -887,7 +887,8 @@ CanvasWidgetCmd(
 	break;
 
     case CANV_BBOX: {
-	int i, gotAny;
+	int gotAny;
+	TkSizeT i;
 	int x1 = 0, y1 = 0, x2 = 0, y2 = 0;	/* Initializations needed only
 						 * to prevent overcautious
 						 * compiler warnings. */
@@ -1386,7 +1387,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DELETE: {
-	int i;
+	TkSizeT i;
 	Tcl_HashEntry *entryPtr;
 
 	for (i = 2; i < objc; i++) {
@@ -1927,7 +1928,7 @@ CanvasWidgetCmd(
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
 		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 6-idx)) {
+	} else if ((objc != 5) && (objc + idx != 6)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y":"x y ?gain?");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)

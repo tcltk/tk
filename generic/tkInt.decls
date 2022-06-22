@@ -506,11 +506,11 @@ declare 154 {
 
 # entries needed only by tktest:
 declare 156 {
-    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, TkSizeT objc,
 	    Tcl_Obj *const objv[])
 }
 declare 157 {
-    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
+    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, TkSizeT objc,
 	    Tcl_Obj *const objv[])
 }
 declare 158 {

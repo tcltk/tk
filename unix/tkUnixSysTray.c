@@ -199,9 +199,9 @@ typedef struct {
  */
 
 static int TrayIconCreateCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc,  Tcl_Obj *const objv[]);
+			     TkSizeT objc,  Tcl_Obj *const objv[]);
 static int TrayIconObjectCmd(ClientData cd, Tcl_Interp *interp,
-			     int objc,  Tcl_Obj *const objv[]);
+			     TkSizeT objc,  Tcl_Obj *const objv[]);
 static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
 				   int objc,  Tcl_Obj *const objv[],
 				   int addflags);
@@ -251,7 +251,7 @@ static int
 TrayIconObjectCmd(
     ClientData cd,
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     DockIcon *icon = (DockIcon*)cd;
@@ -1590,7 +1590,7 @@ static int
 TrayIconCreateCmd(
     ClientData cd,
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window mainWindow = (Tk_Window)cd;
@@ -1662,7 +1662,7 @@ TrayIconCreateCmd(
 	}
     }
 
-    icon->widgetCmd = Tcl_CreateObjCommand(interp, Tcl_GetString(objv[1]),
+    icon->widgetCmd = Tcl_CreateObjCommand2(interp, Tcl_GetString(objv[1]),
             TrayIconObjectCmd, (ClientData)icon, TrayIconDeleteProc);
 
     /* Sometimes a command just can't be created... */
@@ -1709,7 +1709,7 @@ int
 Tktray_Init(
     Tcl_Interp *interp)
 {
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray",
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray",
             TrayIconCreateCmd, Tk_MainWindow(interp), NULL);
     return TCL_OK;
 }

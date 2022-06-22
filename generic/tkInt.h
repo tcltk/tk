@@ -1311,7 +1311,7 @@ MODULE_SCOPE int	Tk_SelectionObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SendObjCmd(ClientData clientData,
-			    Tcl_Interp *interp,int objc,
+			    Tcl_Interp *interp,TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_SpinboxObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
@@ -1499,7 +1499,7 @@ MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
  * For Tktest.
  */
 MODULE_SCOPE int SquareObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj * const objv[]);
 MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))

@@ -27,7 +27,7 @@
 NSString * fileName = nil;
 CFStringRef urlFile = NULL;
 int			StartPrint(ClientData clientData, Tcl_Interp * interp,
-			    int objc, Tcl_Obj * const objv[]);
+			    TkSizeT objc, Tcl_Obj * const objv[]);
 OSStatus		FinishPrint(NSString *file, int buttonValue);
 int			MacPrint_Init(Tcl_Interp * interp);
 
@@ -77,7 +77,7 @@ int
 StartPrint(
     ClientData clientData,
     Tcl_Interp * interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     (void) clientData;
@@ -341,7 +341,7 @@ FinishPrint(
 
 int MacPrint_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand(interp, "::tk::print::_print", StartPrint, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::print::_print", StartPrint, NULL, NULL);
     [pool release];
     return TCL_OK;
 }

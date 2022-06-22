@@ -534,7 +534,7 @@ static char *		ButtonVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		ButtonWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static int		ConfigureButton(Tcl_Interp *interp, TkButton *butPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -673,7 +673,7 @@ ButtonCreate(
     butPtr->tkwin = tkwin;
     butPtr->display = Tk_Display(tkwin);
     butPtr->interp = interp;
-    butPtr->widgetCmd = Tcl_CreateObjCommand(interp, Tk_PathName(tkwin),
+    butPtr->widgetCmd = Tcl_CreateObjCommand2(interp, Tk_PathName(tkwin),
 	    ButtonWidgetObjCmd, butPtr, ButtonCmdDeletedProc);
     butPtr->type = type;
     butPtr->optionTable = optionTable;
@@ -777,7 +777,7 @@ static int
 ButtonWidgetObjCmd(
     ClientData clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     TkButton *butPtr = (TkButton *)clientData;
