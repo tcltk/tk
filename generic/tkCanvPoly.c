@@ -163,14 +163,14 @@ static void		DisplayPolygon(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetPolygonIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static int		PolygonCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		PolygonDeleteCoords(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		PolygonInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		PolygonToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		PolygonToPoint(Tk_Canvas canvas,
@@ -1016,7 +1016,7 @@ static void
 PolygonInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    int beforeThis,		/* Index before which new coordinates are to
+    TkSizeT beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
@@ -1711,7 +1711,7 @@ GetPolygonIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     TkSizeT length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;

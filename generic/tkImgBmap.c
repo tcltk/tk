@@ -75,7 +75,7 @@ typedef struct BitmapInstance {
 
 static int		GetByte(Tcl_Channel chan);
 static int		ImgBmapCreate(Tcl_Interp *interp,
-			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const char *name, int objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	ImgBmapGet(Tk_Window tkwin, ClientData clientData);
@@ -150,7 +150,7 @@ static int		ImgBmapCmd(ClientData clientData, Tcl_Interp *interp,
 static void		ImgBmapCmdDeletedProc(ClientData clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
 static int		ImgBmapConfigureModel(BitmapModel *modelPtr,
-			    int argc, Tcl_Obj *const objv[], int flags);
+			    int objc, Tcl_Obj *const objv[], int flags);
 static int		NextBitmapWord(ParseInfo *parseInfoPtr);
 
 /*
@@ -174,8 +174,8 @@ ImgBmapCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,			/* Name to use for image. */
-    int argc,			/* Number of arguments. */
-    Tcl_Obj *const argv[],	/* Argument objects for options (doesn't
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
     Tk_ImageModel model,	/* Token for image, to be used by us in later
@@ -200,7 +200,7 @@ ImgBmapCreate(
     modelPtr->maskFileString = NULL;
     modelPtr->maskDataString = NULL;
     modelPtr->instancePtr = NULL;
-    if (ImgBmapConfigureModel(modelPtr, argc, argv, 0) != TCL_OK) {
+    if (ImgBmapConfigureModel(modelPtr, objc, objv, 0) != TCL_OK) {
 	ImgBmapDelete(modelPtr);
 	return TCL_ERROR;
     }

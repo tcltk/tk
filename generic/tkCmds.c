@@ -905,7 +905,7 @@ int
 WindowingsystemCmd(
     TCL_UNUSED(void *),	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     const char *windowingsystem;
