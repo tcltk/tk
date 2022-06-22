@@ -29,7 +29,7 @@ typedef struct LineItem {
     Tk_Outline outline;		/* Outline structure */
     Tk_Canvas canvas;		/* Canvas containing item. Needed for parsing
 				 * arrow shapes. */
-    int numPoints;		/* Number of points in line (always >= 0). */
+    TkSizeT numPoints;		/* Number of points in line (always >= 0). */
     double *coordPtr;		/* Pointer to malloc-ed array containing x-
 				 * and y-coords of all points in line.
 				 * X-coords are even-valued indices, y-coords
@@ -92,14 +92,14 @@ static void		DisplayLine(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetLineIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static int		LineCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		LineDeleteCoords(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		LineInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		LineToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		LineToPoint(Tk_Canvas canvas,
@@ -362,11 +362,11 @@ LineCoords(
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int i, numPoints;
+    TkSizeT i, numPoints;
     double *coordPtr;
 
     if (objc == 0) {
-	int numCoords;
+	TkSizeT numCoords;
 	Tcl_Obj *subobj, *obj = Tcl_NewObj();
 
 	numCoords = 2*linePtr->numPoints;
@@ -417,7 +417,7 @@ LineCoords(
 	linePtr->numPoints = numPoints;
     }
     coordPtr = linePtr->coordPtr;
-    for (i = 0; i < objc ; i++) {
+    for (i = 0; i < (size_t)objc ; i++) {
 	if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
 		coordPtr++) != TCL_OK) {
 	    return TCL_ERROR;
@@ -649,7 +649,8 @@ ComputeLineBbox(
     LineItem *linePtr)		/* Item whose bbos is to be recomputed. */
 {
     double *coordPtr;
-    int i, intWidth;
+    TkSizeT i;
+    int intWidth;
     double width;
     Tk_State state = linePtr->header.state;
     Tk_TSOffset *tsoffset;
@@ -719,7 +720,7 @@ ComputeLineBbox(
 		coordPtr = linePtr->firstArrowPtr;
 	    }
 	}
-	if (tsoffset->flags > (linePtr->numPoints * 2)) {
+	if (tsoffset->flags > (int)(linePtr->numPoints * 2)) {
 	    coordPtr = linePtr->coordPtr + (linePtr->numPoints * 2);
 	    if ((linePtr->arrow == ARROWS_LAST)
 		    || (linePtr->arrow == ARROWS_BOTH)) {
@@ -955,12 +956,13 @@ static void
 LineInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    int beforeThis,		/* Index before which new coordinates are to
+    TkSizeT beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int length, oriNumPoints, objc, nbInsPoints, i;
+    int oriNumPoints, nbInsPoints;
+    TkSizeT objc, length, i;
     double *newCoordPtr, *coordPtr;
     Tk_State state = itemPtr->state;
     Tcl_Obj **objv;
@@ -976,7 +978,7 @@ LineInsert(
     oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
     nbInsPoints = objc / 2;
-    if (beforeThis < 0) {
+    if (beforeThis == TCL_INDEX_NONE) {
 	beforeThis = 0;
     }
     if (beforeThis + 1 > length + 1) {
@@ -997,7 +999,7 @@ LineInsert(
 	linePtr->coordPtr[length-1] = linePtr->lastArrowPtr[1];
     }
     newCoordPtr = (double *)ckalloc(sizeof(double) * (length + objc));
-    for (i=0; i<(int)beforeThis; i++) {
+    for (i=0; i<beforeThis; i++) {
 	newCoordPtr[i] = linePtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -1056,10 +1058,10 @@ LineInsert(
 		 * of the line, include a third point.
 		 */
 
-		if ((int)beforeThis == -4) {
+		if (beforeThis == (TkSizeT)-4) {
 		    objc += 2;
 		}
-		if ((int)beforeThis + 4 == length - (objc - 8)) {
+		if (beforeThis + 4 == length - (objc - 8)) {
 		    beforeThis -= 2;
 		    objc += 2;
 		}
@@ -1806,7 +1808,7 @@ ScaleLine(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     double *coordPtr;
-    int i;
+    TkSizeT i;
 
     /*
      * Delete any arrowheads before scaling all the points (so that the
@@ -1864,7 +1866,7 @@ GetLineIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     TkSizeT idx, length;
     LineItem *linePtr = (LineItem *) itemPtr;
@@ -1886,7 +1888,7 @@ GetLineIndex(
     string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == '@') {
-	int i;
+	TkSizeT i;
 	double x, y, bestDist, dist, *coordPtr;
 	char *end;
 	const char *p;
@@ -1953,7 +1955,7 @@ TranslateLine(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     double *coordPtr;
-    int i;
+    TkSizeT i;
 
     for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
 	    i++, coordPtr += 2) {
@@ -2005,7 +2007,7 @@ RotateLine(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     double *coordPtr;
-    int i;
+    TkSizeT i;
     double s = sin(angleRad), c = cos(angleRad);
 
     for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
@@ -2059,7 +2061,7 @@ ParseArrowShape(
 {
     LineItem *linePtr = (LineItem *) recordPtr;
     double a, b, c;
-    int argc;
+    TkSizeT argc;
     const char **argv = NULL;
 
     if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {

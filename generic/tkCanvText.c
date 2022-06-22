@@ -229,7 +229,7 @@ static int		ConfigureText(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int ojc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
@@ -240,7 +240,7 @@ static TkSizeT	GetSelText(Tk_Canvas canvas,
 			    TkSizeT maxBytes);
 static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static void		ScaleText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -248,11 +248,11 @@ static void		SetTextCursor(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		TextInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		TextToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		TextToPoint(Tk_Canvas canvas,
@@ -1087,7 +1087,7 @@ static void
 TextInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Text item to be modified. */
-    int index,			/* Character index before which string is to
+    TkSizeT index,			/* Character index before which string is to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
@@ -1102,10 +1102,10 @@ TextInsert(
 
     text = textPtr->text;
 
-    if (index < 0) {
+    if ((int)index < 0) {
 	index = 0;
     }
-    if ((size_t)index + 1 > textPtr->numChars + 1) {
+    if (index + 1 > textPtr->numChars + 1) {
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
@@ -1458,7 +1458,7 @@ GetTextIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
 				 * itemPtr's text. */
-    int *indexPtr)		/* Where to store converted character
+    TkSizeT *indexPtr)		/* Where to store converted character
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
