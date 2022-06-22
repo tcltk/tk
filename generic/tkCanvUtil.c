@@ -411,7 +411,7 @@ TkCanvasTagsParseProc(
     TkSizeT offset)			/* Offset into item (ignored). */
 {
     Tk_Item *itemPtr = (Tk_Item *) widgRec;
-    int argc, i;
+    TkSizeT argc, i;
     const char **argv;
     Tk_Uid *newPtr;
     (void)dummy;
@@ -430,9 +430,9 @@ TkCanvasTagsParseProc(
      * Make sure that there's enough space in the item to hold the tag names.
      */
 
-    if ((int)itemPtr->tagSpace < argc) {
+    if (itemPtr->tagSpace < argc) {
 	newPtr = (Tk_Uid *)ckalloc(argc * sizeof(Tk_Uid));
-	for (i = (int)itemPtr->numTags - 1; i >= 0; i--) {
+	for (i = itemPtr->numTags - 1; i >= 0; i--) {
 	    newPtr[i] = itemPtr->tagPtr[i];
 	}
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
