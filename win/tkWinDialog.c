@@ -3234,12 +3234,13 @@ static int
 FontchooserConfigureCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     HookData *hdPtr = NULL;
-    int i, r = TCL_OK;
+    TkSizeT i;
+    int r = TCL_OK;
     static const char *const optionStrings[] = {
 	"-command", "-font", "-parent", "-title", "-visible", NULL
     };
@@ -3377,7 +3378,7 @@ static int
 FontchooserShowCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     Tcl_DString ds;
@@ -3493,7 +3494,7 @@ static int
 FontchooserHideCmd(
     ClientData dummy,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+	TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     HookData *hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);

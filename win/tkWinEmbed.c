@@ -100,7 +100,7 @@ int
 TkpTestembedCmd(
     ClientData dummy,
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     (void)dummy;

@@ -614,7 +614,7 @@ PanedWindowWidgetObjCmd(
 	/*
 	 * Clean up each window named in the arg list.
 	 */
-	for (count = 0, i = 2; i < objc; i++) {
+	for (count = 0, i = 2; i < (int)objc; i++) {
 	    Tk_Window pane = Tk_NameToWindow(interp, Tcl_GetString(objv[i]),
 		    pwPtr->tkwin);
 
