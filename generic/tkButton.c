@@ -514,7 +514,7 @@ static const enum command map[][8] = {
 
 static void		ButtonCmdDeletedProc(ClientData clientData);
 static int		ButtonCreate(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[], int type);
 static void		ButtonEventProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -537,7 +537,7 @@ static int		ButtonWidgetObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const objv[]);
 static int		ConfigureButton(Tcl_Interp *interp, TkButton *butPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    TkSizeT objc, Tcl_Obj *const objv[]);
 static void		DestroyButton(TkButton *butPtr);
 
 /*
@@ -563,7 +563,7 @@ int
 Tk_ButtonObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_BUTTON);
@@ -573,7 +573,7 @@ int
 Tk_CheckbuttonObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_CHECK_BUTTON);
@@ -583,7 +583,7 @@ int
 Tk_LabelObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_LABEL);
@@ -593,7 +593,7 @@ int
 Tk_RadiobuttonObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_RADIO_BUTTON);
@@ -621,7 +621,7 @@ static int
 ButtonCreate(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument values. */
     int type)			/* Type of button to create: TYPE_LABEL,
 				 * TYPE_BUTTON, TYPE_CHECK_BUTTON, or
@@ -1030,7 +1030,7 @@ ConfigureButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkButton *butPtr,	/* Information about widget;  may or may
 				 * not already have values for some fields. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;

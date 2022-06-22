@@ -146,7 +146,7 @@ typedef struct ParseInfo {
  */
 
 static int		ImgBmapCmd(ClientData clientData, Tcl_Interp *interp,
-			    TkSizeT argc, Tcl_Obj *const objv[]);
+			    TkSizeT objc, Tcl_Obj *const objv[]);
 static void		ImgBmapCmdDeletedProc(ClientData clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
 static int		ImgBmapConfigureModel(BitmapModel *modelPtr,

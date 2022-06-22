@@ -330,7 +330,7 @@ static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const argv[],
+			    TkSizeT objc, Tcl_Obj *const argv[],
 			    enum FrameType type, const char *appName);
 static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
@@ -402,7 +402,7 @@ int
 Tk_FrameObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return CreateFrame(clientData, interp, objc, objv, TYPE_FRAME, NULL);
@@ -412,7 +412,7 @@ int
 Tk_ToplevelObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return CreateFrame(clientData, interp, objc, objv, TYPE_TOPLEVEL, NULL);
@@ -422,7 +422,7 @@ int
 Tk_LabelframeObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return CreateFrame(clientData, interp, objc, objv, TYPE_LABELFRAME, NULL);
@@ -504,7 +504,7 @@ static int
 CreateFrame(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     enum FrameType type,	/* What widget type to create. */
     const char *appName)	/* Should only be non-NULL if there are no
@@ -518,8 +518,8 @@ CreateFrame(
     Tk_Window newWin;
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
-    int i, depth;
-    TkSizeT length;
+    int depth;
+    TkSizeT i, length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;

@@ -92,7 +92,7 @@ int
 Tk_BellObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const bellOptions[] = {
@@ -100,7 +100,8 @@ Tk_BellObjCmd(
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i, index, nice = 0;
+    TkSizeT i;
+    int index, nice = 0;
     Tk_ErrorHandler handler;
 
     if (objc > 4) {
@@ -160,7 +161,7 @@ int
 Tk_BindObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -344,7 +345,7 @@ int
 Tk_BindtagsObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -484,12 +485,12 @@ int
 Tk_DestroyObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window window;
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    TkSizeT i;
 
     for (i = 1; i < objc; i++) {
 	window = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), tkwin);
@@ -531,7 +532,7 @@ int
 Tk_LowerObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window mainwin = (Tk_Window)clientData;
@@ -590,7 +591,7 @@ int
 Tk_RaiseObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window mainwin = (Tk_Window)clientData;
@@ -991,7 +992,7 @@ int
 Tk_TkwaitObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1178,7 +1179,7 @@ int
 Tk_UpdateObjCmd(
     TCL_UNUSED(void *),	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const updateOptions[] = {"idletasks", NULL};
@@ -1276,7 +1277,7 @@ int
 Tk_WinfoObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class, skip;
@@ -1852,7 +1853,7 @@ Tk_WinfoObjCmd(
 int
 TkGetDisplayOf(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. If it is present,
 				 * "-displayof" should be in objv[0] and
 				 * objv[1] the name of a window. */
@@ -1866,7 +1867,7 @@ TkGetDisplayOf(
     const char *string;
     TkSizeT length;
 
-    if (objc < 1) {
+    if ((size_t)(objc - 1) >= (size_t)INT_MIN - 1) {
 	return 0;
     }
     string = Tcl_GetStringFromObj(objv[0], &length);

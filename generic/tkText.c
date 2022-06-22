@@ -352,7 +352,7 @@ static void		TextBlinkProc(ClientData clientData);
 static void		TextCmdDeletedProc(ClientData clientData);
 static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
 			    Tcl_Interp *interp, const TkText *parent,
-			    int objc, Tcl_Obj *const objv[]);
+			    TkSizeT objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static TkSizeT	TextFetchSelection(ClientData clientData, TkSizeT offset,
@@ -448,7 +448,7 @@ int
 Tk_TextObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -489,7 +489,7 @@ CreateWidget(
     Tcl_Interp *interp,		/* Current interpreter. */
     const TkText *parent,	/* If non-NULL then take default start, end
 				 * from this parent. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkText *textPtr;

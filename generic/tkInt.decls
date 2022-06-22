@@ -145,7 +145,7 @@ declare 34 {
     TkDisplay *TkGetDisplay(Display *display)
 }
 declare 35 {
-    int TkGetDisplayOf(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
+    int TkGetDisplayOf(Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[],
 	    Tk_Window *tkwinPtr)
 }
 declare 36 {

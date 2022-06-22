@@ -69,9 +69,8 @@ static void StateSpecDupIntRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr)
 static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 {
     int status;
-    int objc;
+    TkSizeT i, objc;
     Tcl_Obj **objv;
-    int i;
     unsigned int onbits = 0, offbits = 0;
 
     status = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
