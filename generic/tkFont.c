@@ -469,7 +469,7 @@ int
 Tk_FontObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
@@ -496,7 +496,8 @@ Tk_FontObjCmd(
 
     switch ((enum options) index) {
     case FONT_ACTUAL: {
-	int skip, result, n;
+	int result;
+	TkSizeT skip, n;
 	const char *s;
 	Tk_Font tkfont;
 	Tcl_Obj *optPtr, *charPtr, *resultPtr;
@@ -510,7 +511,7 @@ Tk_FontObjCmd(
 	 */
 
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 
@@ -681,7 +682,8 @@ Tk_FontObjCmd(
 	break;
     }
     case FONT_DELETE: {
-	int i, result = TCL_OK;
+	TkSizeT i;
+	int result = TCL_OK;
 	const char *string;
 
 	/*

@@ -395,14 +395,15 @@ int
 Tk_MenuObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     Tk_Window newWin;
     TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
-    int i, index, toplevel;
+    TkSizeT i;
+    int index, toplevel;
     const char *windowName;
     static const char *const typeStringList[] = {"-type", NULL};
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)

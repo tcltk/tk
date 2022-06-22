@@ -420,7 +420,7 @@ int
 Tk_ClipboardObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -428,7 +428,8 @@ Tk_ClipboardObjCmd(
     Atom selection;
     static const char *const optionStrings[] = { "append", "clear", "get", NULL };
     enum options { CLIPBOARD_APPEND, CLIPBOARD_CLEAR, CLIPBOARD_GET };
-    int index, i;
+    int index;
+    TkSizeT i;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");

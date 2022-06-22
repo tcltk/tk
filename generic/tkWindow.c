@@ -99,7 +99,7 @@ static const XSetWindowAttributes defAtts= {
 typedef int (TkInitProc)(Tcl_Interp *interp, void *clientData);
 typedef struct {
     const char *name;		/* Name of command. */
-    Tcl_ObjCmdProc *objProc;	/* Command's object- (or string-) based
+    Tcl_ObjCmdProc2 *objProc;	/* Command's object- (or string-) based
 				 * function, or initProc. */
     int flags;
 } TkCmd;
@@ -126,7 +126,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc2 *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE|SAVEUPDATECMD},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -949,7 +949,7 @@ TkCreateMainWindow(
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
 	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
 #if TCL_MAJOR_VERSION > 8
-	    if (cmdInfo.isNativeObjectProc == 2 && !cmdInfo.objClientData2) {
+	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc = cmdInfo.objProc2;
 	    } else
 #endif
@@ -960,7 +960,7 @@ TkCreateMainWindow(
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
-	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
+	    Tcl_CreateObjCommand2(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
 	}
 	if (isSafe && !(cmdPtr->flags & ISSAFE)) {

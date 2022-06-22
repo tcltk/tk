@@ -193,7 +193,7 @@ int
 Tk_PackObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -316,7 +316,7 @@ Tk_PackObjCmd(
     case PACK_FORGET: {
 	Tk_Window content;
 	Packer *contentPtr;
-	int i;
+	TkSizeT i;
 
 	for (i = 2; i < objc; i++) {
 	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {

@@ -141,7 +141,7 @@ EXTERN const char *	TkGetDefaultScreenName(Tcl_Interp *interp,
 /* 34 */
 EXTERN TkDisplay *	TkGetDisplay(Display *display);
 /* 35 */
-EXTERN int		TkGetDisplayOf(Tcl_Interp *interp, int objc,
+EXTERN int		TkGetDisplayOf(Tcl_Interp *interp, TkSizeT objc,
 				Tcl_Obj *const objv[], Tk_Window *tkwinPtr);
 /* 36 */
 EXTERN TkWindow *	TkGetFocusWin(TkWindow *winPtr);
@@ -611,7 +611,7 @@ typedef struct TkIntStubs {
     TkCursor * (*tkGetCursorByName) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid string); /* 32 */
     const char * (*tkGetDefaultScreenName) (Tcl_Interp *interp, const char *screenName); /* 33 */
     TkDisplay * (*tkGetDisplay) (Display *display); /* 34 */
-    int (*tkGetDisplayOf) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], Tk_Window *tkwinPtr); /* 35 */
+    int (*tkGetDisplayOf) (Tcl_Interp *interp, TkSizeT objc, Tcl_Obj *const objv[], Tk_Window *tkwinPtr); /* 35 */
     TkWindow * (*tkGetFocusWin) (TkWindow *winPtr); /* 36 */
     int (*tkGetInterpNames) (Tcl_Interp *interp, Tk_Window tkwin); /* 37 */
     int (*tkGetMiterPoints) (double p1[], double p2[], double p3[], double width, double m1[], double m2[]); /* 38 */

@@ -1035,12 +1035,13 @@ TkFindStateNumObj(
 int
 TkBackgroundEvalObjv(
     Tcl_Interp *interp,
-    int objc,
+    TkSizeT objc,
     Tcl_Obj *const *objv,
     int flags)
 {
     Tcl_InterpState state;
-    int n, r = TCL_OK;
+    TkSizeT n;
+    int r = TCL_OK;
 
     /*
      * Record the state of the interpreter.

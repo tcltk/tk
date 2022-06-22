@@ -234,7 +234,7 @@ static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
 static int		CanvasWidgetCmd(void *clientData,
-			    Tcl_Interp *interp, TkSizeT argc,
+			    Tcl_Interp *interp, TkSizeT objc,
 			    Tcl_Obj *const *argv);
 static void		CanvasWorldChanged(void *instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
@@ -471,7 +471,7 @@ ItemIndex(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
     Tcl_Obj *objPtr,
-    TkSizeT *indexPtr)
+    int *indexPtr)
 {
     Tcl_Interp *interp = canvasPtr->interp;
 
@@ -681,8 +681,8 @@ int
 Tk_CanvasObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    Tcl_Obj *const argv[])	/* Argument objects. */
+    TkSizeT objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkCanvas *canvasPtr;
@@ -692,12 +692,12 @@ Tk_CanvasObjCmd(
 	InitCanvas();
     }
 
-    if (argc < 2) {
-	Tcl_WrongNumArgs(interp, 1, argv, "pathName ?-option value ...?");
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
-    newWin = Tk_CreateWindowFromPath(interp,tkwin,Tcl_GetString(argv[1]),NULL);
+    newWin = Tk_CreateWindowFromPath(interp,tkwin,Tcl_GetString(objv[1]),NULL);
     if (newWin == NULL) {
 	return TCL_ERROR;
     }
@@ -795,7 +795,7 @@ Tk_CanvasObjCmd(
 	    CanvasBindProc, canvasPtr);
     Tk_CreateSelHandler(canvasPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    CanvasFetchSelection, canvasPtr, XA_STRING);
-    if (ConfigureCanvas(interp, canvasPtr, argc-2, argv+2, 0) != TCL_OK) {
+    if (ConfigureCanvas(interp, canvasPtr, objc-2, objv+2, 0) != TCL_OK) {
 	goto error;
     }
 
@@ -1195,7 +1195,7 @@ CanvasWidgetCmd(
 	tmpObj = Tcl_NewListObj(2, objv+4);
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
-	    TkSizeT index;
+	    int index;
 	    int x1, x2, y1, y2;
 	    int dontRedraw1, dontRedraw2;
 
@@ -1340,7 +1340,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DCHARS: {
-	TkSizeT first, last;
+	int first, last;
 	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
@@ -1538,7 +1538,7 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_ICURSOR: {
-	TkSizeT index;
+	int index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId index");
@@ -1563,7 +1563,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INDEX: {
-	TkSizeT index;
+	int index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId string");
@@ -1591,7 +1591,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INSERT: {
-	TkSizeT beforeThis;
+	int beforeThis;
 	int x1, x2, y1, y2;
 
 	if (objc != 5) {
@@ -1808,7 +1808,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_RCHARS: {
-	TkSizeT first, last;
+	int first, last;
 	int x1, x2, y1, y2;
 	int dontRedraw1, dontRedraw2;
 
@@ -1961,7 +1961,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_SELECT: {
-	TkSizeT index;
+	int index;
 	int optionindex;
 	static const char *const optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
@@ -2011,7 +2011,7 @@ CanvasWidgetCmd(
 		goto done;
 	    }
 	    if (canvasPtr->textInfo.selItemPtr == itemPtr) {
-		if (index + 1 <= ((canvasPtr->textInfo.selectFirst
+		if ((TkSizeT)index + 1 <= ((canvasPtr->textInfo.selectFirst
 			+ canvasPtr->textInfo.selectLast)/2)) {
 		    canvasPtr->textInfo.selectAnchor =
 			    canvasPtr->textInfo.selectLast + 1;

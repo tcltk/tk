@@ -240,7 +240,7 @@ static TkSizeT	GetSelText(Tk_Canvas canvas,
 			    TkSizeT maxBytes);
 static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, TkSizeT *indexPtr);
+			    Tcl_Obj *obj, int *indexPtr);
 static void		ScaleText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -252,7 +252,7 @@ static int		TextCoords(Tcl_Interp *interp,
 static void		TextDeleteChars(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		TextInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
 static int		TextToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		TextToPoint(Tk_Canvas canvas,
@@ -1087,7 +1087,7 @@ static void
 TextInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Text item to be modified. */
-    TkSizeT index,			/* Character index before which string is to
+    int index,			/* Character index before which string is to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
@@ -1102,10 +1102,10 @@ TextInsert(
 
     text = textPtr->text;
 
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	index = 0;
     }
-    if (index + 1 > textPtr->numChars + 1) {
+    if ((size_t)index + 1 > textPtr->numChars + 1) {
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
@@ -1131,18 +1131,18 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 >= index + 1) {
+	if (textInfoPtr->selectFirst + 1 >= (size_t)index + 1) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast + 1 >= index + 1) {
+	if (textInfoPtr->selectLast + 1 >= (size_t)index + 1) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 >= index + 1)) {
+		&& (textInfoPtr->selectAnchor + 1 >= (size_t)index + 1)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos + 1 >= index + 1) {
+    if (textPtr->insertPos + 1 >= (size_t)index + 1) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
@@ -1458,7 +1458,7 @@ GetTextIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
 				 * itemPtr's text. */
-    TkSizeT *indexPtr)		/* Where to store converted character
+    int *indexPtr)		/* Where to store converted character
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
