@@ -486,7 +486,7 @@ int
 Tk_EntryObjCmd(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr;
@@ -600,7 +600,7 @@ static int
 EntryWidgetObjCmd(
     ClientData clientData,	/* Information about entry widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *)clientData;
@@ -1392,7 +1392,7 @@ ConfigureEntry(
 	    }
 	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
 
-            /*
+	    /*
 	     * No check for error return here as well, because any possible
 	     * error will be trapped below when attempting tracing.
 	     */
@@ -3837,7 +3837,7 @@ static int
 SpinboxWidgetObjCmd(
     ClientData clientData,	/* Information about spinbox widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *)clientData;
