@@ -1442,7 +1442,7 @@ CanvasWidgetCmd(
     }
     case CANV_DTAG: {
 	Tk_Uid tag;
-	int i;
+	TkSizeT i;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?tagToDelete?");
@@ -1455,7 +1455,7 @@ CanvasWidgetCmd(
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-	    for (i = (int)itemPtr->numTags-1; i >= 0; i--) {
+	    for (i = itemPtr->numTags-1; i != TCL_INDEX_NONE; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
 
                     /*
@@ -1927,7 +1927,7 @@ CanvasWidgetCmd(
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
 		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 6-idx)) {
+	} else if ((objc != 5) && (objc + idx != 6)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y":"x y ?gain?");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
@@ -5314,7 +5314,7 @@ PickCurrentItem(
 	    && !(canvasPtr->flags & LEFT_GRABBED_ITEM)) {
 	XEvent event;
 	Tk_Item *itemPtr = canvasPtr->currentItemPtr;
-	int i;
+	TkSizeT i;
 
 	event = canvasPtr->pickEvent;
 	event.type = LeaveNotify;
@@ -5336,7 +5336,7 @@ PickCurrentItem(
 	 */
 
 	if ((itemPtr == canvasPtr->currentItemPtr) && !buttonDown) {
-	    for (i = (int)itemPtr->numTags-1; i >= 0; i--) {
+	    for (i = itemPtr->numTags-1; i != TCL_INDEX_NONE; i--) {
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 		    /* then */ {
                     memmove((void *)(itemPtr->tagPtr + i),
@@ -5472,7 +5472,7 @@ CanvasDoEvent(
 #define NUM_STATIC 3
     void *staticObjects[NUM_STATIC];
     void **objectPtr;
-    int numObjects, i;
+    TkSizeT numObjects, i;
     Tk_Item *itemPtr;
     TagSearchExpr *expr;
     int numExprs;
@@ -5524,7 +5524,7 @@ CanvasDoEvent(
 	objectPtr = (void **)ckalloc(numObjects * sizeof(void *));
     }
     objectPtr[0] = (char *)searchUids->allUid;
-    for (i = (int)itemPtr->numTags - 1; i >= 0; i--) {
+    for (i = itemPtr->numTags - 1; i != TCL_INDEX_NONE; i--) {
 	objectPtr[i+1] = (char *)itemPtr->tagPtr[i];
     }
     objectPtr[itemPtr->numTags + 1] = itemPtr;

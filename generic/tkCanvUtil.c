@@ -432,7 +432,7 @@ TkCanvasTagsParseProc(
 
     if (itemPtr->tagSpace < argc) {
 	newPtr = (Tk_Uid *)ckalloc(argc * sizeof(Tk_Uid));
-	for (i = itemPtr->numTags - 1; i >= 0; i--) {
+	for (i = itemPtr->numTags - 1; i != TCL_INDEX_NONE; i--) {
 	    newPtr[i] = itemPtr->tagPtr[i];
 	}
 	if (itemPtr->tagPtr != itemPtr->staticTagSpace) {
