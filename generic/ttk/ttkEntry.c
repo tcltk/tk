@@ -474,7 +474,7 @@ ExpandPercents(
 		break;
 	    case 'i': /* index of insert/delete */
 		if (index == TCL_INDEX_NONE) {
-		    sprintf(numStorage, "-1")l
+		    sprintf(numStorage, "-1");
 		} else {
 		    sprintf(numStorage, "%" TKSIZET_MODIFIER "u", index);
 		}
