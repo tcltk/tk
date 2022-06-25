@@ -2175,7 +2175,7 @@ Tk_BindEvent(
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
     				 * locate display information). */
-    int numObjects,		/* Number of objects at *objArr. */
+    Tcl_Size numObjects1,		/* Number of objects at *objArr. */
     ClientData *objArr)		/* Array of one or more objects to check for a matching binding. */
 {
     Tcl_Interp *interp;
@@ -2200,6 +2200,7 @@ Tk_BindEvent(
     unsigned arraySize;
     unsigned newArraySize;
     unsigned i, k;
+    int numObjects = numObjects1;
 
     assert(bindPtr);
     assert(eventPtr);

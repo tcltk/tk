@@ -57,7 +57,7 @@ typedef struct TkSelHandler {
     Tk_SelectionProc *proc;	/* Procedure to generate selection in this
 				 * format. */
     void *clientData;	/* Argument to pass to proc. */
-    TkSizeT size;			/* Size of units returned by proc (8 for
+    Tcl_Size size;			/* Size of units returned by proc (8 for
 				 * STRING, 32 for almost anything else). */
     struct TkSelHandler *nextPtr;
 				/* Next selection handler associated with same
@@ -107,7 +107,7 @@ typedef struct TkSelRetrievalInfo {
 
 typedef struct TkClipboardBuffer {
     char *buffer;		/* Null terminated data buffer. */
-    TkSizeT length;		/* Length of string in buffer. */
+    Tcl_Size length;		/* Length of string in buffer. */
     struct TkClipboardBuffer *nextPtr;
 				/* Next in list of buffers. NULL means end of
 				 * list . */

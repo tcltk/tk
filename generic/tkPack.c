@@ -1112,7 +1112,7 @@ PackAfter(
     Tk_Window tkwin, ancestor, parent;
     Tcl_Obj **options;
     int c;
-    TkSizeT index, optionCount;
+    Tcl_Size index, optionCount;
 
     /*
      * Iterate over all of the window specifiers, each consisting of two
@@ -1179,7 +1179,7 @@ PackAfter(
 	packPtr->flags |= OLD_STYLE;
 	for (index = 0 ; index < optionCount; index++) {
 	    Tcl_Obj *curOptPtr = options[index];
-	    TkSizeT length;
+	    Tcl_Size length;
 	    const char *curOpt = Tcl_GetStringFromObj(curOptPtr, &length);
 
 	    c = curOpt[0];

@@ -51,7 +51,7 @@ typedef struct TagSearch {
     int searchOver;		/* Non-zero means NextItem should always
 				 * return NULL. */
     int type;			/* Search type (see #defs below) */
-    TkSizeT id;			/* Item id for searches by id */
+    Tcl_Size id;			/* Item id for searches by id */
     const char *string;		/* Tag expression string */
     int stringIndex;		/* Current position in string scan */
     int stringLength;		/* Length of tag expression string */
@@ -222,14 +222,14 @@ static void		CanvasCmdDeletedProc(void *clientData);
 static void		CanvasDoEvent(TkCanvas *canvasPtr, XEvent *eventPtr);
 static void		CanvasEventProc(void *clientData,
 			    XEvent *eventPtr);
-static TkSizeT	CanvasFetchSelection(void *clientData, TkSizeT offset,
-			    char *buffer, TkSizeT maxBytes);
+static Tcl_Size	CanvasFetchSelection(void *clientData, Tcl_Size offset,
+			    char *buffer, Tcl_Size maxBytes);
 static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
 			    double coords[2]);
 static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
 static void		CanvasLostSelection(void *clientData);
 static void		CanvasSelectTo(TkCanvas *canvasPtr,
-			    Tk_Item *itemPtr, TkSizeT index);
+			    Tk_Item *itemPtr, Tcl_Size index);
 static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
@@ -471,7 +471,7 @@ ItemIndex(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
     Tcl_Obj *objPtr,
-    TkSizeT *indexPtr)
+    Tcl_Size *indexPtr)
 {
     Tcl_Interp *interp = canvasPtr->interp;
 
@@ -598,7 +598,7 @@ DefaultRotateImplementation(
     double y,
     double angleRadians)
 {
-    TkSizeT i, objc;
+    Tcl_Size i, objc;
     int ok = 1;
     Tcl_Obj **objv, **newObjv;
     double *coordv;
@@ -1194,7 +1194,7 @@ CanvasWidgetCmd(
 	tmpObj = Tcl_NewListObj(2, objv+4);
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
-	    TkSizeT index;
+	    Tcl_Size index;
 	    int x1, x2, y1, y2;
 	    int dontRedraw1, dontRedraw2;
 
@@ -1250,7 +1250,7 @@ CanvasWidgetCmd(
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
-	TkSizeT length;
+	Tcl_Size length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg ...?");
@@ -1339,7 +1339,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DCHARS: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
@@ -1442,7 +1442,7 @@ CanvasWidgetCmd(
     }
     case CANV_DTAG: {
 	Tk_Uid tag;
-	TkSizeT i;
+	Tcl_Size i;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?tagToDelete?");
@@ -1537,7 +1537,7 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_ICURSOR: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId index");
@@ -1562,7 +1562,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INDEX: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId string");
@@ -1590,7 +1590,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INSERT: {
-	TkSizeT beforeThis;
+	Tcl_Size beforeThis;
 	int x1, x2, y1, y2;
 
 	if (objc != 5) {
@@ -1807,7 +1807,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_RCHARS: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	int x1, x2, y1, y2;
 	int dontRedraw1, dontRedraw2;
 
@@ -1960,7 +1960,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_SELECT: {
-	TkSizeT index;
+	Tcl_Size index;
 	int optionindex;
 	static const char *const optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
@@ -2383,7 +2383,7 @@ ConfigureCanvas(
     canvasPtr->scrollX2 = 0;
     canvasPtr->scrollY2 = 0;
     if (canvasPtr->regionString != NULL) {
-	TkSizeT argc2;
+	Tcl_Size argc2;
 	const char **argv2;
 
 	if (Tcl_SplitList(canvasPtr->interp, canvasPtr->regionString,
@@ -5314,7 +5314,7 @@ PickCurrentItem(
 	    && !(canvasPtr->flags & LEFT_GRABBED_ITEM)) {
 	XEvent event;
 	Tk_Item *itemPtr = canvasPtr->currentItemPtr;
-	TkSizeT i;
+	Tcl_Size i;
 
 	event = canvasPtr->pickEvent;
 	event.type = LeaveNotify;
@@ -5472,7 +5472,7 @@ CanvasDoEvent(
 #define NUM_STATIC 3
     void *staticObjects[NUM_STATIC];
     void **objectPtr;
-    TkSizeT numObjects, i;
+    Tcl_Size numObjects, i;
     Tk_Item *itemPtr;
     TagSearchExpr *expr;
     int numExprs;
@@ -5663,10 +5663,10 @@ static void
 CanvasSelectTo(
     TkCanvas *canvasPtr,	/* Information about widget. */
     Tk_Item *itemPtr,		/* Item that is to hold selection. */
-    TkSizeT index)			/* Index of element that is to become the
+    Tcl_Size index)			/* Index of element that is to become the
 				 * "other" end of the selection. */
 {
-    TkSizeT oldFirst, oldLast;
+    Tcl_Size oldFirst, oldLast;
     Tk_Item *oldSelPtr;
 
     oldFirst = canvasPtr->textInfo.selectFirst;
@@ -5724,13 +5724,13 @@ CanvasSelectTo(
  *--------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 CanvasFetchSelection(
     void *clientData,	/* Information about canvas widget. */
-    TkSizeT offset,			/* Offset within selection of first character
+    Tcl_Size offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -6292,7 +6292,7 @@ Tk_CanvasPsPath(
 				 * generated. */
     double *coordPtr,		/* Pointer to first in array of 2*numPoints
 				 * coordinates giving points for path. */
-    int numPoints)		/* Number of points at *coordPtr. */
+    Tcl_Size numPoints)		/* Number of points at *coordPtr. */
 {
     Tk_PostscriptPath(interp, Canvas(canvas)->psInfo, coordPtr, numPoints);
 }

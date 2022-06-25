@@ -8900,14 +8900,18 @@ fi
 #--------------------------------------------------------------------
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
-eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
-eval "TK_STUB_LIB_DIR=${libdir}"
-
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    TK_STUB_LIB_FILE="libtkstub.a"
+    TK_STUB_LIB_FLAG="-ltkstub"
+else
+    eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
     TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}"
 else
     TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
 fi
+fi
+eval "TK_STUB_LIB_DIR=${libdir}"
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
 TK_STUB_LIB_SPEC="-L${TK_STUB_LIB_DIR} ${TK_STUB_LIB_FLAG}"

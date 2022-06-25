@@ -748,7 +748,7 @@ Tk_Draw3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    int numPoints,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints1,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -763,6 +763,7 @@ Tk_Draw3DPolygon(
     GC gc;
     int i, lightOnLeft, dx, dy, parallel, pointsSeen;
     Display *display = Tk_Display(tkwin);
+    int numPoints = numPoints1;
 
     if (borderPtr->lightGC == NULL) {
 	TkpGetShadows(borderPtr, tkwin);
@@ -1017,7 +1018,7 @@ Tk_Fill3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    int numPoints,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints1,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -1027,6 +1028,7 @@ Tk_Fill3DPolygon(
 				 * TK_RELIEF_SUNKEN. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
+    int numPoints = numPoints1;
 
     XFillPolygon(Tk_Display(tkwin), drawable, borderPtr->bgGC,
 	    pointPtr, numPoints, Complex, CoordModeOrigin);

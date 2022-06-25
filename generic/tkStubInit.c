@@ -113,12 +113,6 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 #define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
-#define Tk_CanvasTagsParseProc \
-		(int (*) (void *, Tcl_Interp *,Tk_Window, const char *, char *, \
-		int offset))(void *)TkCanvasTagsParseProc
-#define Tk_CanvasTagsPrintProc \
-		(const char *(*) (void *,Tk_Window, char *, int, \
-		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
 
 #if !defined(MAC_OSX_TK) && defined(MAC_OSX_TCL)
 #   undef TkpWillDrawWidget

@@ -1258,7 +1258,7 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    TkSizeT i, len;
+	    Tcl_Size i, len;
 	    int underline;
 	    Tcl_Obj *labelPtr;
 	    WCHAR *wlabel;
@@ -1286,7 +1286,7 @@ TkWinHandleMenuEvent(
 		    Tcl_DStringFree(&ds);
 		    Tcl_DStringInit(&ds);
 		    wlabel = Tcl_UtfToWCharDString(src, len, &ds);
-		    if (((TkSizeT)underline + 1 < len + 1) && (menuChar ==
+		    if (((Tcl_Size)underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
 			returnResult = 1;
@@ -1474,7 +1474,7 @@ void
 RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
-    TkSizeT i;
+    Tcl_Size i;
     TkMenuEntry *mePtr;
 
     TkActivateMenuEntry(menuPtr, -1);

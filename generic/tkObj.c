@@ -223,9 +223,9 @@ GetTypeCache(void)
 int
 TkGetIntForIndex(
     Tcl_Obj *indexObj,
-    TkSizeT end,
+    Tcl_Size end,
     int lastOK,
-    TkSizeT *indexPtr)
+    Tcl_Size *indexPtr)
 {
     if (indexObj == NULL) {
 	*indexPtr = TCL_INDEX_NONE;
@@ -748,7 +748,7 @@ UpdateStringOfMM(
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
-    TkSizeT len;
+    Tcl_Size len;
 
     mmPtr = (MMRep *)objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
@@ -1116,7 +1116,7 @@ TkParsePadAmount(
     int *allPtr)		/* Write the total padding here */
 {
     int firstInt, secondInt;    /* The two components of the padding */
-    TkSizeT objc;			/* The length of the list (should be 1 or 2) */
+    Tcl_Size objc;			/* The length of the list (should be 1 or 2) */
     Tcl_Obj **objv;		/* The objects in the list */
 
     /*
