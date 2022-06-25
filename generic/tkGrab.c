@@ -180,7 +180,7 @@ Tk_GrabObjCmd(
     TkDisplay *dispPtr;
     const char *arg;
     int index;
-    TkSizeT len;
+    Tcl_Size len;
     static const char *const optionStrings[] = {
 	"current", "release", "set", "status", NULL
     };

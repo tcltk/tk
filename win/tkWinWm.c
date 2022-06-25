@@ -2685,7 +2685,7 @@ Tk_WmObjCmd(
 	WMOPT_WITHDRAW
     };
     int index;
-    TkSizeT length;
+    Tcl_Size length;
     const char *argv1;
     TkWindow *winPtr, **winPtrPtr = &winPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -2915,7 +2915,7 @@ WmAttributesCmd(
     LONG style, exStyle, styleBit, *stylePtr = NULL;
     const char *string;
     int i, boolean;
-    TkSizeT length;
+    Tcl_Size length;
     int config_fullscreen = 0, updatewrapper = 0;
     int fullscreen_attr_changed = 0, fullscreen_attr = 0;
 
@@ -3212,7 +3212,7 @@ WmClientCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    TkSizeT length;
+    Tcl_Size length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name?");
@@ -3813,7 +3813,7 @@ WmGroupCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
     const char *argv3;
-    TkSizeT length;
+    Tcl_Size length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?pathName?");
@@ -4246,7 +4246,7 @@ WmIconnameCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    TkSizeT length;
+    Tcl_Size length;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newName?");
@@ -4874,7 +4874,7 @@ WmProtocolCmd(
     ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     const char *cmd;
-    TkSizeT cmdLength;
+    Tcl_Size cmdLength;
     Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
@@ -5367,7 +5367,7 @@ WmTitleCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    TkSizeT length;
+    Tcl_Size length;
     HWND wrapper;
 
     if (objc > 4) {

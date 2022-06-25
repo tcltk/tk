@@ -171,7 +171,7 @@ typedef struct StyleValues {
  */
 
 typedef struct TextStyle {
-    TkSizeT refCount;		/* Number of times this structure is
+    Tcl_Size refCount;		/* Number of times this structure is
 				 * referenced in Chunks. */
     GC bgGC;			/* Graphics context for background. None means
 				 * use widget background. */
@@ -418,7 +418,7 @@ typedef struct TextDInfo {
 				 * to so far... */
     int metricPixelHeight;	/* ...and this is for the height calculation
 				 * so far...*/
-    TkSizeT metricEpoch;		/* ...and this for the epoch of the partial
+    Tcl_Size metricEpoch;		/* ...and this for the epoch of the partial
 				 * calculation so it can be cancelled if
 				 * things change once more. This field will be
 				 * -1 if there is no long-line calculation in
@@ -777,7 +777,7 @@ GetStyle(
     StyleValues styleValues;
     TextStyle *stylePtr;
     Tcl_HashEntry *hPtr;
-    TkSizeT numTags, i;
+    Tcl_Size numTags, i;
     int isNew;
     int isSelected;
     XGCValues gcValues;
@@ -1181,7 +1181,7 @@ LayoutDLine(
 				/* Pointer to last chunk in display lines with
 				 * numBytes > 0. Used to drop 0-sized chunks
 				 * from the end of the line. */
-    TkSizeT byteOffset;
+    Tcl_Size byteOffset;
     int ascent, descent, code, elide, elidesize;
     StyleValues *sValuePtr;
     TkTextElideInfo info;	/* Keep track of elide state. */
@@ -6181,7 +6181,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace, type;
     int pixels, count;
-    TkSizeT switchLength;
+    Tcl_Size switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -7624,11 +7624,11 @@ TkTextCharLayoutProc(
     TCL_UNUSED(TkTextIndex *),	/* Index of first character to lay out
 				 * (corresponds to segPtr and offset). */
     TkTextSegment *segPtr,	/* Segment being layed out. */
-    TkSizeT byteOffset,		/* Byte offset within segment of first
+    Tcl_Size byteOffset,		/* Byte offset within segment of first
 				 * character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    TkSizeT maxBytes,		/* Chunk must not include more than this many
+    Tcl_Size maxBytes,		/* Chunk must not include more than this many
 				 * characters. */
     int noCharsYet,		/* Non-zero means no characters have been
 				 * assigned to this display line yet. */
@@ -7642,7 +7642,7 @@ TkTextCharLayoutProc(
 {
     Tk_Font tkfont;
     int nextX, count;
-    TkSizeT bytesThatFit;
+    Tcl_Size bytesThatFit;
     CharInfo *ciPtr;
     char *p;
     TkTextSegment *nextPtr;
