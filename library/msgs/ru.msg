@@ -4,7 +4,7 @@ namespace eval ::tk {
     ::msgcat::mcset ru "All Files" "\u0412\u0441\u0435 \u0444\u0430\u0439\u043b\u044b"
     ::msgcat::mcset ru "Application Error" "\u041e\u0448\u0438\u0431\u043a\u0430 \u0432 \u043f\u0440\u043e\u0433\u0440\u0430\u043c\u043c\u0435"
     ::msgcat::mcset ru "&Blue" " &\u0413\u043e\u043b\u0443\u0431\u043e\u0439"
-    ::msgcat::mcset ru "Cancel" "\u041e\u0442&\u043c\u0435\u043d\u0430"
+    ::msgcat::mcset ru "Cancel" "\u041e\u0442\u043c\u0435\u043d\u0430"
     ::msgcat::mcset ru "&Cancel" "\u041e\u0442&\u043c\u0435\u043d\u0430"
     ::msgcat::mcset ru "Cannot change to the directory \"%1\$s\".\nPermission denied." \
 			"\u041d\u0435 \u043c\u043e\u0433\u0443 \u043f\u0435\u0440\u0435\u0439\u0442\u0438 \u0432 \u043a\u0430\u0442\u0430\u043b\u043e\u0433 \"%1\$s\".\n\u041d\u0435\u0434\u043e\u0441\u0442\u0430\u0442\u043e\u0447\u043d\u043e \u043f\u0440\u0430\u0432 \u0434\u043e\u0441\u0442\u0443\u043f\u0430"
