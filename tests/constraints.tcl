@@ -268,7 +268,7 @@ namespace eval tk {
 	    }
 	    if {$count > 19} {
 		puts "waitForUnmap $w: timeout! mapping state is [winfo ismapped $w]"
-		puts "                 winfo geometry is [winfo geometry $w]"
+		puts "  winfo geometry is [winfo geometry $w]"
 	    }
 	}
 
