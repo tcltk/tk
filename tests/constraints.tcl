@@ -272,8 +272,7 @@ namespace eval tk {
 		puts "waitForUnmap $w: timeout! mapping state is [winfo ismapped $w]"
 		return true
 	    }
-#	   return false
-		return true
+	   return false
 	}
 
     }
