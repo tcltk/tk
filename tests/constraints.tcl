@@ -175,15 +175,19 @@ namespace eval tk {
 	#
 	#  CONTROL TIMING ASPECTS OF POINTER WARPING
 	#
-	# The proc [controlPointerWarpTiming] takes care of the following timing
-	# details of pointer warping:
+	# The proc [controlPointerWarpTiming] is intended to ensure that the (mouse)
+	# pointer has actually been moved to its new position after a Tk test issued:
+	#
+	#    [event generate $w $event -warp 1 ...]
+	#
+	# It takes care of the following timing details of pointer warping:
 	#
 	# a. Allow pointer warping to happen if it was scheduled for execution at
 	#    idle time.
 	#    - In Tk releases 8.6 and older, pointer warping is scheduled for
 	#      execution at idle time
-	#    - In release 8.7 and newer this happens synchronously and no extra
-	#      control is needed.
+	#    - In release 8.7 and newer this happens synchronously if $w refers to the
+	#      whole screen or if the -when option to [event generate] is "now".
 	#    The namespace variable idle_pointer_warping records which of these is
 	#    the case.
 	#
@@ -199,8 +203,8 @@ namespace eval tk {
 	#      the OS to call in order to notify Tk when a mouse move is completed.
 	#    - Tk doesn't wait for the callback function to receive the notification
 	#      from the OS, but continues processing. This suits most use cases
-	#      because (usually) the notification comes quickly enough
-	#      (range: a few ms?). However ...
+	#      because usually the notification arrives fast enough (within a few tens
+	#      of microseconds). However ...
 	#    - A problem arises if Tk performs some processing, immediately following
 	#      up on [event generate $w $event -warp 1 ...], and that processing
 	#      relies on the mouse pointer having actually moved. If such processing
@@ -220,6 +224,13 @@ namespace eval tk {
 	#    ----
 	#    For the history of this issue please refer to Tk ticket [69b48f427e],
 	#    specifically the comment on 2019-10-27 14:24:26.
+	#
+	#
+	# Beware: there are cases, not (yet) exercised by the Tk test suite, where
+	# [controlPointerWarpTiming] doesn't ensure the new position of the pointer.
+	# For example, when issued under Tk8.7+, if the value for the -when option
+	# to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
+	# the whole screen.
 	#
 	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
 	proc controlPointerWarpTiming {{duration 50}} {
