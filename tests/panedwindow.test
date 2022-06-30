@@ -4942,7 +4942,24 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
     pack .p
     waitForMap .p
     waitForMap .f3
-    waitForUnmap .f4
+    if {[waitForUnmap .f4]} {
+        puts "winfo exists .f4:    [winfo exists .f4]"
+        puts "winfo geometry .f4:  [winfo geometry .f4]"
+        puts "winfo x .f4:         [winfo x .f4]"
+        puts "winfo y .f4:         [winfo y .f4]"
+        puts "winfo width .f4:     [winfo width .f4]"
+        puts "winfo height .f4:    [winfo height .f4]"
+        puts "winfo reqwidth .f4:  [winfo reqwidth .f4]"
+        puts "winfo reqheight .f4: [winfo reqheight .f4]"
+        puts "winfo viewable .f4:  [winfo viewable .f4]"
+        puts "winfo rootx .f4:     [winfo rootx .f4]"
+        puts "winfo rooty .f4:     [winfo rooty .f4]"
+        puts "winfo rootx .f3:     [winfo rootx .f3]"
+        puts "winfo rooty .f3:     [winfo rooty .f3]"
+        puts "winfo width .f3:     [winfo width .f3]"
+        puts "winfo height .f3:    [winfo height .f3]"
+        puts ".p configure:        [.p configure]"
+    }
     set result [list]
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]

@@ -257,7 +257,9 @@ namespace eval tk {
 		puts "waitForMap $w: timeout!"
 		puts "  exists state is [winfo exists $w]"
 		catch {puts "  mapping state is [winfo ismapped $w]"}
+		return true
 	    }
+	   return false
 	}
 	proc waitForUnmap {w} {
 	    set count 0
@@ -268,7 +270,10 @@ namespace eval tk {
 	    }
 	    if {$count > 19} {
 		puts "waitForUnmap $w: timeout! mapping state is [winfo ismapped $w]"
+		return true
 	    }
+#	   return false
+		return true
 	}
 
     }
