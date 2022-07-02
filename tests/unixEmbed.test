@@ -1304,6 +1304,7 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     updateWidgets
     toplevel .embed -use [winfo id .main.f] -bg green
     update
+    waitForMap .embed
     pack [button .embed.b -text "Emb Button" \
 	    -command {lappend result "pushed .embed.b"}] -padx 30 -pady 30
     update
