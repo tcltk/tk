@@ -22,7 +22,7 @@ namespace eval ::tk {
     ::msgcat::mcset eo "Error: %1\$s" "Eraro: %1\$s"
     ::msgcat::mcset eo "E&xit" "&Eliru"
     ::msgcat::mcset eo "&File" "&Dosiero"
-    ::msgcat::mcset eo "File \"%1\$s\" already exists.\nDo you want to overwrite it?" "La dosiero \"%1\$s\" jam ekzistas.\n\\u0108u vi volas anstata\u016digi la dosieron?"
+    ::msgcat::mcset eo "File \"%1\$s\" already exists.\nDo you want to overwrite it?" "La dosiero \"%1\$s\" jam ekzistas.\n\u0108u vi volas anstata\u016digi la dosieron?"
     ::msgcat::mcset eo "File \"%1\$s\" already exists.\n\n" "La dosiero \"%1\$s\" jam ekzistas. \n\n"
     ::msgcat::mcset eo "File \"%1\$s\" does not exist." "La dosiero \"%1\$s\" ne ekzistas."
     ::msgcat::mcset eo "File &name:" "Dosiero&nomo:"
