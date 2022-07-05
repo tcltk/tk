@@ -3494,7 +3494,7 @@ static int
 FontchooserHideCmd(
     ClientData dummy,	/* Main window */
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     HookData *hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);

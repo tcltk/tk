@@ -511,7 +511,7 @@ static int ProgressbarStartCommand(
 static int ProgressbarStopCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
