@@ -917,7 +917,7 @@ static int
 WinSystrayCmd(
     ClientData clientData,
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     static const char *const cmdStrings[] = {
@@ -1078,7 +1078,7 @@ static int
 WinSysNotifyCmd(
     ClientData clientData,
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;

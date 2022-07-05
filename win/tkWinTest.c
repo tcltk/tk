@@ -241,7 +241,7 @@ static int
 TestclipboardObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -275,7 +275,7 @@ static int
 TestwineventObjCmd(
     ClientData dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     HWND hwnd = 0;
@@ -444,7 +444,7 @@ static int
 TestfindwindowObjCmd(
     ClientData dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
 	LPCWSTR title = NULL, windowClass = NULL;
@@ -517,7 +517,7 @@ static int
 TestgetwindowinfoObjCmd(
     ClientData dummy,
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     Tcl_WideInt hwnd;
@@ -575,7 +575,7 @@ static int
 TestwinlocaleObjCmd(
     ClientData dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-	TkSizeT objc,			/* Number of arguments. */
+    TkSizeT objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     (void)dummy;

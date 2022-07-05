@@ -194,7 +194,7 @@ static int
 PressButtonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     int x = 0, y = 0, value;
@@ -275,7 +275,7 @@ static int
 InjectKeyEventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-	TkSizeT objc,
+    TkSizeT objc,
     Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] = {
