@@ -229,7 +229,7 @@ static int		ConfigureText(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int ojc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
