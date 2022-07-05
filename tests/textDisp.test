@@ -134,7 +134,7 @@ proc bo {{w .t}} {
 
 # x-width of $n chars, fixed width font
 proc xw {n} {
-    global fixedWidth 
+    global fixedWidth
     return [expr {$n * $fixedWidth}]
 }
 # x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
