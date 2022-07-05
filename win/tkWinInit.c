@@ -71,7 +71,7 @@ TkpGetAppName(
     Tcl_Interp *interp,
     Tcl_DString *namePtr)	/* A previously initialized Tcl_DString. */
 {
-    int argc, namelength;
+    TkSizeT argc, namelength;
     const char **argv = NULL, *name, *p;
 
     name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
