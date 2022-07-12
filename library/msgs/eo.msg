@@ -5,7 +5,7 @@ namespace eval ::tk {
     ::msgcat::mcset eo "Application Error" "Aplikoeraro"
     ::msgcat::mcset eo "&Blue" "&Blua"
     ::msgcat::mcset eo "Cancel" "Rezignu"
-    ::msgcat::mcset eo "&Cancel" "&Rezignu" 
+    ::msgcat::mcset eo "&Cancel" "&Rezignu"
     ::msgcat::mcset eo "Cannot change to the directory \"%1\$s\".\nPermission denied." "Neeble \u015dan\u011di al dosierujo \"%1\$s\".\nVi ne rajtas tion."
     ::msgcat::mcset eo "Choose Directory" "Elektu Dosierujon"
     ::msgcat::mcset eo "Cl&ear" "&Vakigu"
