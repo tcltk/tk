@@ -97,7 +97,7 @@ startEndOfCmd(
     }
     Tcl_DStringInit(&ds);
     str = Tcl_GetStringFromObj(objv[1], &len);
-    Tcl_UtfToUniCharDString(str, len, &ds);
+    Tcl_UtfToChar16DString(str, len, &ds);
     len = Tcl_DStringLength(&ds)/2;
     if (TkGetIntForIndex(objv[2], len-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
