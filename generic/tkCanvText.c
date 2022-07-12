@@ -140,7 +140,7 @@ static int		ConfigureText(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
@@ -159,7 +159,7 @@ static void		SetTextCursor(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, int first, int last);
 static void		TextInsert(Tk_Canvas canvas,

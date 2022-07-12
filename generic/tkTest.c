@@ -80,7 +80,7 @@ typedef struct TImageInstance {
  */
 
 static int		ImageCreate(Tcl_Interp *interp,
-			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const char *name, int objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	ImageGet(Tk_Window tkwin, ClientData clientData);
