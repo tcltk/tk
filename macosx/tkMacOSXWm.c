@@ -798,9 +798,12 @@ void TkMacOSXHandleMapOrUnmap(
      * have to check for the "text" manager and revert to using Tk_HandleEvent
      * in that case.  Hopefully this can be removed when the revised text
      * widget is in place.
+     * Similarly, panedwindow-23.30 is sometimes failing with the .f4 window
+     * being erroneously mapped. Check for the "panedwindow" geometry manager
+     * here as well, and revert to using Tk_HandleEvent in that case.
      */
 
-    if (geomMgrPtr && strcmp(geomMgrPtr->name, "text") == 0) {
+    if (geomMgrPtr && (strcmp(geomMgrPtr->name, "text") || strcmp(geomMgrPtr->name, "panedwindow")) == 0) {
 	Tk_HandleEvent(event);
 	return;
     }
