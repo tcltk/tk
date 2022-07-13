@@ -1163,7 +1163,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    right {
 		incr x [winfo width $button]
 	    }
-	    default {
+	    default {  # flush
 		incr x [expr {[winfo width $button] - [winfo reqwidth $menu] - 5}]
 	    }
 	}
@@ -1210,13 +1210,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	    right {
 		incr x [expr {[winfo width $button]}]
 	    }
-	    default {
-		if {[$button cget -indicatoron]} {
-		    incr x [expr {([winfo width $button] - \
-				   [winfo reqwidth $menu])/ 2}]
-		} else {
-		    incr y [winfo height $button]
-		}
+	    default {  # flush
 	    }
 	}
 	PostOverPoint $menu $x $y $entry
