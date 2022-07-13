@@ -1186,7 +1186,7 @@ TkScrollWindow(
     /*
      * Mutable shapes are not reference counted, and must be released.
      */
-    
+
     CFRelease(dmgRgn);
     return result;
 }
