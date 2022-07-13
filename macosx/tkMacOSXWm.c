@@ -803,7 +803,7 @@ void TkMacOSXHandleMapOrUnmap(
      * here as well, and revert to using Tk_HandleEvent in that case.
      */
 
-    if (geomMgrPtr && (strcmp(geomMgrPtr->name, "text") || strcmp(geomMgrPtr->name, "panedwindow")) == 0) {
+    if (geomMgrPtr && ((strcmp(geomMgrPtr->name, "text") == 0) || (strcmp(geomMgrPtr->name, "panedwindow") == 0))) {
 	Tk_HandleEvent(event);
 	return;
     }
