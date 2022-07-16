@@ -747,9 +747,9 @@ TkWmNewWindow(
  *
  * TkMacOSXHandleMapOrUnmap --
  *
- *      The mechanism used by a geometry manager to propogate the information
+ *      The mechanism used by a geometry manager to propagate the information
  *      about which of its content widgets are mapped is to call Tk_MapWindow
- *      or Tk_UnmapNotify.  Those functions generate MapNotify or UnmapNotify
+ *      or Tk_UnmapWindow.  Those functions generate MapNotify or UnmapNotify
  *      events and then handle them immediately.  Other platforms use
  *      Tk_HandleEvent to do this.  But that does not work correctly on macOS
  *      due to the fact that the calls to Tk_MapNotify or Tk_UnmapNotify can
