@@ -681,7 +681,7 @@ static void SelectNearestTab(Notebook *nb)
     int nextIndex = NextTab(nb, currentIndex);
 
     if (currentIndex >= 0) {
-//        nb->notebook.currentIndex = -1;
+        nb->notebook.currentIndex = -1;
 	Ttk_UnmapContent(nb->notebook.mgr, currentIndex);
     }
     if (currentIndex != nextIndex) {
