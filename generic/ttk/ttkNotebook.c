@@ -681,7 +681,7 @@ static void SelectNearestTab(Notebook *nb)
     int nextIndex = NextTab(nb, currentIndex);
 
     if (currentIndex >= 0) {
-        nb->notebook.currentIndex = -1;
+//        nb->notebook.currentIndex = -1;
 	Ttk_UnmapContent(nb->notebook.mgr, currentIndex);
     }
     if (currentIndex != nextIndex) {
@@ -1346,6 +1346,7 @@ static void DisplayTab(Notebook *nb, int index, Drawable d)
     Ttk_State state = TabState(nb, index);
 
     if (tab->state != TAB_STATE_HIDDEN) {
+printf("  DisplayTab, displaying tab %d\n", index);fflush(stdout);
 	Ttk_RebindSublayout(tabLayout, tab);
 	Ttk_PlaceLayout(tabLayout, state, tab->parcel);
 	Ttk_DrawLayout(tabLayout, state, d);
@@ -1367,10 +1368,12 @@ static void NotebookDisplay(void *clientData, Drawable d)
      */
     for (index = 0; index < nContent; ++index) {
 	if (index != nb->notebook.currentIndex) {
+printf("NotebookDisplay, currentIndex is %d, displaying tab %d\n",nb->notebook.currentIndex, index);fflush(stdout);
 	    DisplayTab(nb, index, d);
 	}
     }
     if (nb->notebook.currentIndex >= 0) {
+printf("NotebookDisplay, currentIndex is %d, displaying current tab\n",nb->notebook.currentIndex);fflush(stdout);
 	DisplayTab(nb, nb->notebook.currentIndex, d);
     }
 }
