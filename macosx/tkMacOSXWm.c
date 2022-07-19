@@ -744,78 +744,6 @@ TkWmNewWindow(
 
 /*
  *----------------------------------------------------------------------
- *
- * TkMacOSXHandleMapOrUnmap --
- *
- *      The mechanism used by a geometry manager to propogate the information
- *      about which of its content widgets are mapped is to call Tk_MapWindow
- *      or Tk_UnmapNotify.  Those functions generate MapNotify or UnmapNotify
- *      events and then handle them immediately.  Other platforms use
- *      Tk_HandleEvent to do this.  But that does not work correctly on macOS
- *      due to the fact that the calls to Tk_MapNotify or Tk_UnmapNotify can
- *      occur in display procedures which are being run in the drawRect method
- *      of a TKContentView. The events will be processed after drawRect
- *      returns, but they need to be processed immediately in some cases.
-
- *      This function operates as a macOS alternative to Tk_HandleEvent, for
- *      processing MapNotify or UnmapNotify events only.  It is called by
- *      Tk_MapWindow, Tk_UnmapWindow, TkWmMapWindow and TkWmUnmapWindow.
- *      Rather than using Tk_HandleEvent it installs a filter which restricts
- *      to the MapNotify or UnmapNotify events, it queues the event and then
- *      processes window events with the filter installed.  This allows the
- *      event to be handled immediately even from within the drawRect method.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Handles a MapNotify or UnMapNotify event.
- *
- *----------------------------------------------------------------------
- */
-static Tk_RestrictAction
-MapUnmapRestrictProc(
-    ClientData arg,
-    XEvent *eventPtr)
-{
-    return (eventPtr->type==MapNotify || eventPtr->type==UnmapNotify ?
-	    TK_PROCESS_EVENT : TK_DEFER_EVENT);
-}
-
-MODULE_SCOPE
-void TkMacOSXHandleMapOrUnmap(
-    Tk_Window tkwin,
-    XEvent *event)
-{
-    ClientData oldArg;
-    Tk_RestrictProc *oldProc;
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    const Tk_GeomMgr *geomMgrPtr = winPtr->geomMgrPtr;
-
-    /*
-     * Sadly, this approach does not work with the "text" geometry manager.
-     * The mysterious unexplained crash elicited by textDisp-5.2 occurs.  So we
-     * have to check for the "text" manager and revert to using Tk_HandleEvent
-     * in that case.  Hopefully this can be removed when the revised text
-     * widget is in place.
-     * Similarly, panedwindow-23.30 is sometimes failing with the .f4 window
-     * being erroneously mapped. Check for the "panedwindow" geometry manager
-     * here as well, and revert to using Tk_HandleEvent in that case.
-     */
-
-    if (geomMgrPtr && ((strcmp(geomMgrPtr->name, "text") == 0) || (strcmp(geomMgrPtr->name, "panedwindow") == 0))) {
-	Tk_HandleEvent(event);
-	return;
-    }
-    oldProc = Tk_RestrictEvents(MapUnmapRestrictProc, NULL, &oldArg);
-    Tk_QueueWindowEvent(event, TCL_QUEUE_TAIL);
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWmMapWindow --
  *
  *	This procedure is invoked to map a top-level window. This module gets
@@ -919,7 +847,7 @@ TkWmMapWindow(
     event.xmap.type = MapNotify;
     event.xmap.event = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -955,7 +883,7 @@ TkWmUnmapWindow(
     event.xunmap.from_configure = false;
     winPtr->flags &= ~TK_MAPPED;
     XUnmapWindow(winPtr->display, winPtr->window);
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
