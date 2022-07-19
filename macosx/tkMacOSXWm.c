@@ -744,6 +744,7 @@ TkWmNewWindow(
 
 /*
  *----------------------------------------------------------------------
+ *
  * TkWmMapWindow --
  *
  *	This procedure is invoked to map a top-level window. This module gets
