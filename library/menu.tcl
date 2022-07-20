@@ -1201,10 +1201,6 @@ if {[tk windowingsystem] eq "aqua"} {
 		set entry {}
 	    }
 	    left {
-		# It is not clear why this is needed.
-		if {[tk windowingsystem] eq "win32"} {
-		    incr x [expr {-4 - [winfo reqwidth $button] / 2}]
-		}
 		incr x [expr {- [winfo reqwidth $menu]}]
 	    }
 	    right {
