@@ -285,7 +285,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
     GenerateMenuSelect $menu
     update idletasks
 
-    if {[catch {PostMenubuttonMenu $w $menu} msg opt]} {
+    if {[catch {PostMenubuttonMenu $w $menu $x $y} msg opt]} {
 	# Error posting menu (e.g. bogus -postcommand). Unpost it and
 	# reflect the error.
 	MenuUnpost {}
@@ -1138,7 +1138,7 @@ proc ::tk::MenuFindName {menu s} {
 # side.  On other platforms the entry is centered over the button.
 
 if {[tk windowingsystem] eq "aqua"} {
-    proc ::tk::PostMenubuttonMenu {button menu} {
+    proc ::tk::PostMenubuttonMenu {button menu cx cy} {
 	set entry ""
 	if {[$button cget -indicatoron]} {
 	    set entry [MenuFindName $menu [$button cget -text]]
@@ -1170,7 +1170,7 @@ if {[tk windowingsystem] eq "aqua"} {
 	PostOverPoint $menu $x $y $entry
     }
 } else {
-    proc ::tk::PostMenubuttonMenu {button menu} {
+    proc ::tk::PostMenubuttonMenu {button menu cx cy} {
 	set entry ""
 	if {[$button cget -indicatoron]} {
 	    set entry [MenuFindName $menu [$button cget -text]]
@@ -1211,6 +1211,18 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr x [expr {[winfo width $button]}]
 	    }
 	    default {  # flush
+                if {[$button cget -indicatoron]} {
+                    if {$cx ne ""} {
+                        set x [expr {$cx - [winfo reqwidth $menu] / 2}]
+                        set l [font metrics [$menu cget -font] -linespace]
+                        set y [expr {$cy - $l/2 - 2}]
+                    } else {
+                        incr x [expr {([winfo width $button] - \
+				[winfo reqwidth $menu])/ 2}]
+                    }
+                } else {
+                    incr y [winfo height $button]
+                }
 	    }
 	}
 	PostOverPoint $menu $x $y $entry
