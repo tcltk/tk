@@ -402,7 +402,7 @@ test textWind-3.6 {EmbWinConfigure procedure} -setup {
     .t window create 1.3
     updateWidgets
     .t window configure 1.3 -window .f
-    waitForMap .f
+    updateWidgets
     list [catch {.t index .f} msg] $msg [winfo ismapped .f] [.t bbox 1.4]
 } -cleanup {
     destroy .f
@@ -461,7 +461,7 @@ test textWind-3.11 {EmbWinConfigure procedure} -setup {
     button .t.b -text "Hello!"
     .t window create 1.4 -window .t.b
     .t window create 1.6 -window .t.b
-    waitForMap .t.b
+    updateWidgets
     .t index .t.b
 } -result {1.6}
 
