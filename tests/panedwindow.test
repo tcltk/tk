@@ -4922,7 +4922,7 @@ test panedwindow-23.29 {ConfigurePanes, -hide works} -setup {
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
             [winfo width .f4] [winfo width .p]
     .p paneconfigure .f2 -hide 1
-    update ; after 100 ; update
+    update
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
@@ -4940,41 +4940,14 @@ test panedwindow-23.30 {ConfigurePanes, -hide works} -setup {
     frame .f4 -width 40 -bg green
     .p add .f1 .f2 .f3 .f4
     pack .p
-    waitForMap .p
-    waitForMap .f3
-    if {[waitForUnmap .f4]} {
-        puts "winfo geometry .p:   [winfo geometry .p]"
-        puts "winfo rootx .p:      [winfo rootx .p]"
-        puts "winfo rooty .p:      [winfo rooty .p]"
-        puts "winfo geometry .f1:  [winfo geometry .f1]"
-        puts "winfo rootx .f1:     [winfo rootx .f1]"
-        puts "winfo rooty .f1:     [winfo rooty .f1]"
-        puts "winfo geometry .f2:  [winfo geometry .f2]"
-        puts "winfo rootx .f2:     [winfo rootx .f2]"
-        puts "winfo rooty .f2:     [winfo rooty .f2]"
-        puts "winfo geometry .f3:  [winfo geometry .f3]"
-        puts "winfo rootx .f3:     [winfo rootx .f3]"
-        puts "winfo rooty .f3:     [winfo rooty .f3]"
-        puts "winfo geometry .f4:  [winfo geometry .f4]"
-        puts "winfo rootx .f4:     [winfo rootx .f4]"
-        puts "winfo rooty .f4:     [winfo rooty .f4]"
-        puts "winfo exists .f4:    [winfo exists .f4]"
-        puts "winfo x .f4:         [winfo x .f4]"
-        puts "winfo y .f4:         [winfo y .f4]"
-        puts "winfo width .f4:     [winfo width .f4]"
-        puts "winfo height .f4:    [winfo height .f4]"
-        puts "winfo reqwidth .f4:  [winfo reqwidth .f4]"
-        puts "winfo reqheight .f4: [winfo reqheight .f4]"
-        puts "winfo viewable .f4:  [winfo viewable .f4]"
-        puts ".p configure:        [.p configure]"
-    }
+    update
     set result [list]
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
             [winfo width .f4] [winfo width .p]
     .p paneconfigure .f2 -hide 1
-    update ; after 100 ; update
+    update
     lappend result [winfo ismapped .f1] [winfo ismapped .f2] \
             [winfo ismapped .f3] [winfo ismapped .f4]
     lappend result [winfo width .f1] [winfo width .f2] [winfo width .f3] \
