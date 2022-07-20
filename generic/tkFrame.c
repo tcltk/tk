@@ -330,7 +330,7 @@ static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const argv[],
+			    int objc, Tcl_Obj *const objv[],
 			    enum FrameType type, const char *appName);
 static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
@@ -489,7 +489,7 @@ TkListCreateFrame(
 				 * Gives the base name to use for the new
 				 * application. */
 {
-    int objc;
+    TkSizeT objc;
     Tcl_Obj **objv;
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
