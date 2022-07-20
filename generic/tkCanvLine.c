@@ -2059,7 +2059,7 @@ ParseArrowShape(
 {
     LineItem *linePtr = (LineItem *) recordPtr;
     double a, b, c;
-    int argc;
+    TkSizeT argc;
     const char **argv = NULL;
 
     if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {

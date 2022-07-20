@@ -244,8 +244,8 @@ typedef struct TkMenuEntry {
  */
 
 #define ENTRY_ACTIVE 0
-#define ENTRY_NORMAL 1
-#define ENTRY_DISABLED 2
+#define ENTRY_DISABLED 1
+#define ENTRY_NORMAL 2
 
 /*
  * A data structure of the following type is kept for each menu widget:
@@ -461,9 +461,9 @@ typedef struct TkMenuReferences {
  */
 
 #define UNKNOWN_TYPE		-1
-#define MAIN_MENU 		0
-#define TEAROFF_MENU 		1
-#define MENUBAR 		2
+#define MENUBAR 		0
+#define MAIN_MENU 		1
+#define TEAROFF_MENU 		2
 
 /*
  * Various geometry definitions:

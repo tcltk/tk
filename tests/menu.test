@@ -3305,7 +3305,7 @@ test menu-20.5 {CloneMenu} -setup {
 } -body {
     menu .m1
     .m1 clone .m2 foo
-} -returnCodes error -result {bad menu type "foo": must be normal, tearoff, or menubar}
+} -returnCodes error -result {bad menu type "foo": must be menubar, normal, or tearoff}
 test menu-20.6 {CloneMenu - hooking up bookeeping ptrs} -setup {
     deleteWindows
 } -body {
@@ -4002,7 +4002,7 @@ test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
     menu .m -type {}
 } -cleanup {
     destroy .m
-} -returnCodes error -result {ambiguous type "": must be normal, tearoff, or menubar}
+} -returnCodes error -result {ambiguous type "": must be menubar, normal, or tearoff}
 
 
 # cleanup
