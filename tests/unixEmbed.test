@@ -1301,12 +1301,12 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     pack [button .main.b -text "Main Button" \
 	    -command {lappend result "pushed .main.b"}] -padx 30 -pady 30
     pack [frame .main.f -container 1 -width 200 -height 200] -fill both
-    update
+    updateWidgets
     toplevel .embed -use [winfo id .main.f] -bg green
-    update
+    updateWidgets
     pack [button .embed.b -text "Emb Button" \
 	    -command {lappend result "pushed .embed.b"}] -padx 30 -pady 30
-    update
+    updateWidgets
     focus -force .main
     after 100
     set x [expr {[winfo x .main ] + [winfo x .main.b] + 40}]
