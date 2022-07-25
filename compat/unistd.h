@@ -15,12 +15,9 @@
 #define _UNISTD
 
 #include <sys/types.h>
-#ifndef _TCL
-#   include <tcl.h>
-#endif
 
 #ifndef NULL
-#define NULL    0
+#   define NULL    0
 #endif
 
 /*
@@ -77,4 +74,3 @@ extern int		vfork(void);
 #endif /* _POSIX_SOURCE */
 
 #endif /* _UNISTD */
-
