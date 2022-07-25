@@ -153,6 +153,7 @@ if {[tk windowingsystem] eq "aqua"} {
 		incr x $bw
 	    }
 	    default {  # flush
+		incr x [expr {([winfo width $mb] - [winfo reqwidth $menu])/ 2}]
 	    }
 	}
 	return [list $x $y $entry]
