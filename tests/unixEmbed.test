@@ -1309,13 +1309,14 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     updateWidgets
     focus -force .main
     after 100
-    set x [expr {[winfo x .main ] + [winfo x .main.b] + 40}]
-    set y [expr {[winfo y .main ] + [winfo y .main.b] + 38}]
+    set x [expr {[winfo rootx .main.b] + [winfo width .main.b]/2}]
+    set y [expr {[winfo rooty .main.b] + [winfo height .main.b]/2}]
     lappend result [winfo containing $x $y]
     after 200
     pressbutton $x $y
     update
-    set y [expr {$y + 80}]
+    set x [expr {[winfo rootx .embed.b] + [winfo width .embed.b]/2}]
+    set y [expr {[winfo rooty .embed.b] + [winfo height .embed.b]/2}]
     lappend result [winfo containing $x $y]
     after 200
     pressbutton $x $y
