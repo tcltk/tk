@@ -60,8 +60,8 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Scale,scale.orientObj),
-	offsetof(Scale,scale.orient), 0,
-	(void *)ttkOrientStrings, STYLE_CHANGED },
+	offsetof(Scale,scale.orient),
+	0, ttkOrientStrings, STYLE_CHANGED },
 
     {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
 	offsetof(Scale,scale.fromObj), TCL_INDEX_NONE, 0, 0, 0},

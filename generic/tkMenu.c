@@ -101,19 +101,8 @@ TCL_DECLARE_MUTEX(menuMutex)
  * to update code in TkpMenuInit that changes the font string entry.
  */
 
-static const char *const menuStateStrings[] = {"active", "normal", "disabled", NULL};
-
 static const char *const menuEntryTypeStrings[] = {
     "cascade", "checkbutton", "command", "radiobutton", "separator", NULL
-};
-
-/*
- * The following table defines the legal values for the -compound option. It
- * is used with the "enum compound" declaration in tkMenu.h
- */
-
-static const char *const compoundStrings[] = {
-    "bottom", "center", "left", "none", "right", "top", NULL
 };
 
 static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
@@ -140,7 +129,7 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, commandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	DEF_MENU_ENTRY_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuEntry, compound), 0,
-	(ClientData) compoundStrings, 0},
+	tkCompoundStrings, 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	DEF_MENU_ENTRY_FONT,
 	offsetof(TkMenuEntry, fontPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -158,8 +147,8 @@ static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
 	offsetof(TkMenuEntry, labelPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE,
-	TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
-	(ClientData) menuStateStrings, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, state),
+	0, tkStateStrings, 0},
     {TK_OPTION_INDEX, "-underline", NULL, NULL,
 	TK_OPTION_UNDERLINE_DEF(TkMenuEntry, underline), 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
@@ -228,8 +217,8 @@ static const Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
 	DEF_MENU_ENTRY_BG,
 	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
-	DEF_MENU_ENTRY_STATE, TCL_INDEX_NONE, offsetof(TkMenuEntry, state), 0,
-	(ClientData) menuStateStrings, 0},
+	DEF_MENU_ENTRY_STATE, TCL_INDEX_NONE, offsetof(TkMenuEntry, state),
+	0, tkStateStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
@@ -244,27 +233,27 @@ static const Tk_OptionSpec *specsArray[] = {
  */
 
 static const char *const menuTypeStrings[] = {
-    "normal", "tearoff", "menubar", NULL
+    "menubar", "normal", "tearoff", NULL
 };
 
 static const Tk_OptionSpec tkMenuConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground",
 	"Foreground", DEF_MENU_ACTIVE_BG_COLOR,
 	offsetof(TkMenu, activeBorderPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_ACTIVE_BG_MONO, 0},
+	DEF_MENU_ACTIVE_BG_MONO, 0},
     {TK_OPTION_PIXELS, "-activeborderwidth", "activeBorderWidth",
 	"BorderWidth", DEF_MENU_ACTIVE_BORDER_WIDTH,
 	offsetof(TkMenu, activeBorderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground",
 	"Background", DEF_MENU_ACTIVE_FG_COLOR,
 	offsetof(TkMenu, activeFgPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+	DEF_MENU_ACTIVE_FG_MONO, 0},
     {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
 	DEF_MENU_ACTIVE_RELIEF, offsetof(TkMenu, activeReliefPtr),
 	TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_MENU_BG_COLOR, offsetof(TkMenu, borderPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_BG_MONO, 0},
+	DEF_MENU_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
@@ -278,7 +267,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENU_DISABLED_FG_COLOR,
 	offsetof(TkMenu, disabledFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK,
-	(ClientData) DEF_MENU_DISABLED_FG_MONO, 0},
+	DEF_MENU_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -292,7 +281,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_RELIEF, offsetof(TkMenu, reliefPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "Background",
 	DEF_MENU_SELECT_COLOR, offsetof(TkMenu, indicatorFgPtr), TCL_INDEX_NONE, 0,
-	(ClientData) DEF_MENU_SELECT_MONO, 0},
+	DEF_MENU_SELECT_MONO, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENU_TAKE_FOCUS,
 	offsetof(TkMenu, takeFocusPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -305,8 +294,8 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_TITLE,	 offsetof(TkMenu, titlePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-type", "type", "Type",
-	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE, 0,
-	(ClientData) menuTypeStrings, 0},
+	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE,
+	0, menuTypeStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
@@ -2522,14 +2511,14 @@ MenuVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        ClientData probe = NULL;
+        void *probe = NULL;
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
 
         do {
                 probe = Tcl_VarTraceInfo(interp, name,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         MenuVarProc, probe);
-                if (probe == (ClientData)mePtr) {
+                if (probe == (void *)mePtr) {
                     break;
                 }
         } while (probe);
@@ -2701,7 +2690,8 @@ CloneMenu(
     				 * menubar, or a tearoff? */
 {
     int returnResult;
-    int menuType, i;
+    int menuType;
+    TkSizeT i;
     TkMenuReferences *menuRefPtr;
     Tcl_Obj *menuDupCommandArray[4];
 
@@ -2741,7 +2731,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int numElements;
+	TkSizeT numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance
@@ -2812,7 +2802,7 @@ CloneMenu(
 	 * Clone all of the cascade menus that this menu points to.
 	 */
 
-	for (i = 0; i < (int)menuPtr->numEntries; i++) {
+	for (i = 0; i < menuPtr->numEntries; i++) {
 	    TkMenuReferences *cascadeRefPtr;
 	    TkMenu *oldCascadePtr;
 

@@ -416,7 +416,7 @@ test place-10.3 {ConfigureContent} -setup {
     place .foo -bordermode j
 } -cleanup {
     destroy .foo
-} -returnCodes error -result {bad bordermode "j": must be inside, outside, or ignore}
+} -returnCodes error -result {bad bordermode "j": must be inside, ignore, or outside}
 test place-10.4 {ConfigureContent} -setup {
     destroy .foo
 } -body {

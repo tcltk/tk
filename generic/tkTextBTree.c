@@ -3361,7 +3361,7 @@ TkBTreeGetTags(
     const TkText *textPtr,	/* If non-NULL, then only return tags for this
 				 * text widget (when there are peer
 				 * widgets). */
-    int *numTagsPtr)		/* Store number of tags found at this
+    TkSizeT *numTagsPtr)		/* Store number of tags found at this
 				 * location. */
 {
     Node *nodePtr;

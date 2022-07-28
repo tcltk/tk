@@ -748,74 +748,6 @@ TkWmNewWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXHandleMapOrUnmap --
- *
- *      The mechanism used by a geometry manager to propogate the information
- *      about which of its content widgets are mapped is to call Tk_MapWindow
- *      or Tk_UnmapNotify.  Those functions generate MapNotify or UnmapNotify
- *      events and then handle them immediately.  Other platforms use
- *      Tk_HandleEvent to do this.  But that does not work correctly on macOS
- *      due to the fact that the calls to Tk_MapNotify or Tk_UnmapNotify can
- *      occur in display procedures which are being run in the drawRect method
- *      of a TKContentView. The events will be processed after drawRect
- *      returns, but they need to be processed immediately in some cases.
-
- *      This function operates as a macOS alternative to Tk_HandleEvent, for
- *      processing MapNotify or UnmapNotify events only.  It is called by
- *      Tk_MapWindow, Tk_UnmapWindow, TkWmMapWindow and TkWmUnmapWindow.
- *      Rather than using Tk_HandleEvent it installs a filter which restricts
- *      to the MapNotify or UnmapNotify events, it queues the event and then
- *      processes window events with the filter installed.  This allows the
- *      event to be handled immediately even from within the drawRect method.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Handles a MapNotify or UnMapNotify event.
- *
- *----------------------------------------------------------------------
- */
-static Tk_RestrictAction
-MapUnmapRestrictProc(
-    TCL_UNUSED(void*),
-    XEvent *eventPtr)
-{
-    return (eventPtr->type==MapNotify || eventPtr->type==UnmapNotify ?
-	    TK_PROCESS_EVENT : TK_DEFER_EVENT);
-}
-
-MODULE_SCOPE
-void TkMacOSXHandleMapOrUnmap(
-    Tk_Window tkwin,
-    XEvent *event)
-{
-    ClientData oldArg;
-    Tk_RestrictProc *oldProc;
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    const Tk_GeomMgr *geomMgrPtr = winPtr->geomMgrPtr;
-
-    /*
-     * Sadly, this approach does not work with the "text" geometry manager.
-     * The mysterious unexplained crash elicited by textDisp-5.2 occurs.  So we
-     * have to check for the "text" manager and revert to using Tk_HandleEvent
-     * in that case.  Hopefully this can be removed when the revised text
-     * widget is in place.
-     */
-
-    if (geomMgrPtr && strcmp(geomMgrPtr->name, "text") == 0) {
-	Tk_HandleEvent(event);
-	return;
-    }
-    oldProc = Tk_RestrictEvents(MapUnmapRestrictProc, NULL, &oldArg);
-    Tk_QueueWindowEvent(event, TCL_QUEUE_TAIL);
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWmMapWindow --
  *
  *	This procedure is invoked to map a top-level window. This module gets
@@ -919,7 +851,7 @@ TkWmMapWindow(
     event.xmap.type = MapNotify;
     event.xmap.event = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -955,7 +887,7 @@ TkWmUnmapWindow(
     event.xunmap.from_configure = false;
     winPtr->flags &= ~TK_MAPPED;
     XUnmapWindow(winPtr->display, winPtr->window);
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -1272,8 +1204,8 @@ Tk_WmObjCmd(
 	return Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing);
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings,
+	    "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1682,8 +1614,8 @@ WmAttributesCmd(
 	}
 	Tcl_SetObjResult(interp, result);
     } else if (objc == 4) {	/* wm attributes $win -attribute */
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], WmAttributeNames,
-		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], WmAttributeNames,
+		"attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
@@ -1691,8 +1623,8 @@ WmAttributesCmd(
 	int i;
 
 	for (i = 3; i < objc; i += 2) {
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
-		    sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
+	    if (Tcl_GetIndexFromObj(interp, objv[i], WmAttributeNames,
+		    "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (WmSetAttribute(winPtr, macWindow, interp, (WmAttribute)attribute, objv[i+1])
@@ -2031,8 +1963,8 @@ WmFocusmodelCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-	    sizeof(char *), "argument", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+	    "argument", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (index == OPT_ACTIVE) {
@@ -3243,8 +3175,8 @@ WmPositionfromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
     } else {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -3489,8 +3421,8 @@ WmSizefromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
     } else {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -3618,8 +3550,8 @@ WmStackorderCmd(
 
 	ckfree(windows);
 
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_ISABOVE) {
@@ -3659,9 +3591,9 @@ WmStateCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
-	"normal", "iconic", "withdrawn", "zoomed", NULL };
+	"iconic", "normal", "withdrawn", "zoomed", NULL };
     enum options {
-	OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN, OPT_ZOOMED };
+	OPT_ICONIC, OPT_NORMAL, OPT_WITHDRAWN, OPT_ZOOMED };
     int index;
 
     if ((objc < 3) || (objc > 4)) {
@@ -3685,8 +3617,8 @@ WmStateCmd(
 	    return TCL_ERROR;
 	}
 
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
-		sizeof(char *), "argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
+		"argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -5741,10 +5673,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"style", "tabbingid", "appearance", "isdark", NULL
+	"appearance", "isdark", "style", "tabbingid", NULL
     };
     enum SubCmds {
-	TKMWS_STYLE, TKMWS_TABID, TKMWS_APPEARANCE, TKMWS_ISDARK
+	TKMWS_APPEARANCE, TKMWS_ISDARK, TKMWS_STYLE, TKMWS_TABID
     };
     Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
@@ -5767,8 +5699,8 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[1], subcmds,
-	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObj(interp, objv[1], subcmds,
+	    "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch((enum SubCmds) index) {
@@ -6134,10 +6066,10 @@ WmWinAppearance(
 #endif
 #if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
     static const char *const appearanceStrings[] = {
-	"aqua", "darkaqua", "auto", NULL
+	"aqua", "auto", "darkaqua", NULL
     };
     enum appearances {
-	APPEARANCE_AQUA, APPEARANCE_DARKAQUA, APPEARANCE_AUTO
+	APPEARANCE_AQUA, APPEARANCE_AUTO, APPEARANCE_DARKAQUA
     };
     Tcl_Obj *result = NULL;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -6169,10 +6101,10 @@ WmWinAppearance(
     }
     if (objc == 4) {
 	int index;
-	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
-                sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
+	if (Tcl_GetIndexFromObj(interp, objv[3], appearanceStrings,
+		"appearancename", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	switch ((enum appearances) index) {
 	case APPEARANCE_AQUA:
 	    win.appearance = [NSAppearance appearanceNamed:

@@ -43,16 +43,6 @@
 #define PIXEL_CLIENTS 5
 
 /*
- * The 'TkTextState' enum in tkText.h is used to define a type for the -state
- * option of the Text widget. These values are used as indices into the string
- * table below.
- */
-
-static const char *const stateStrings[] = {
-    "disabled", "normal", NULL
-};
-
-/*
  * The 'TkWrapMode' enum in tkText.h is used to define a type for the -wrap
  * option of the Text widget. These values are used as indices into the string
  * table below.
@@ -179,7 +169,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, TCL_INDEX_NONE,
 	offsetof(TkText, insertBorderWidth), 0,
-	(ClientData) DEF_TEXT_INSERT_BD_MONO, 0},
+	DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_TEXT_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(TkText, insertOffTime),
 	0, 0, 0},
@@ -189,7 +179,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE,
 	"-insertunfocussed", "insertUnfocussed", "InsertUnfocussed",
 	DEF_TEXT_INSERT_UNFOCUSSED, TCL_INDEX_NONE, offsetof(TkText, insertUnfocussed),
-	0, insertUnfocussedStrings, 0},
+	TK_OPTION_ENUM_VAR, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
 	DEF_TEXT_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, insertWidth),
 	0, 0, 0},
@@ -230,7 +220,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_TEXT_STATE, TCL_INDEX_NONE, offsetof(TkText, state),
-	0, stateStrings, 0},
+	0, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, offsetof(TkText, tabOptionPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
@@ -248,7 +238,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
 	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode),
-	0, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
+	TK_OPTION_ENUM_VAR, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -1543,7 +1533,7 @@ TextWidgetObjCmd(
 		textPtr->afterSyncCmd = cmd;
 	    } else {
 		textPtr->afterSyncCmd = cmd;
-		Tcl_DoWhenIdle(TkTextRunAfterSyncCmd, (ClientData) textPtr);
+		Tcl_DoWhenIdle(TkTextRunAfterSyncCmd, textPtr);
 	    }
 	    break;
 	} else if (objc != 2) {
@@ -2966,7 +2956,8 @@ TextUndoRedoCallback(
 				 * shared text data structure. */
 {
     TkSharedText *sharedPtr = (TkSharedText *)clientData;
-    int res, objc;
+    int res;
+    TkSizeT objc;
     Tcl_Obj **objv;
     TkText *textPtr;
 
@@ -3131,7 +3122,7 @@ DeleteIndexRange(
     int pixels[2*PIXEL_CLIENTS];
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
-    int i;
+    TkSizeT i;
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -3177,7 +3168,7 @@ DeleteIndexRange(
     line2 = TkBTreeLinesTo(textPtr, index2.linePtr);
     if (line2 == TkBTreeNumLines(sharedTextPtr->tree, textPtr)) {
 	TkTextTag **arrayPtr;
-	int arraySize;
+	TkSizeT arraySize;
 	TkTextIndex oldIndex2;
 
 	oldIndex2 = index2;
@@ -3739,12 +3730,12 @@ TextInsertCmd(
 	if (objc > (j+1)) {
 	    Tcl_Obj **tagNamePtrs;
 	    TkTextTag **oldTagArrayPtr;
-	    int numTags;
+	    TkSizeT numTags;
 
 	    TkTextIndexForwBytes(textPtr, &index1, length, &index2);
 	    oldTagArrayPtr = TkBTreeGetTags(&index1, NULL, &numTags);
 	    if (oldTagArrayPtr != NULL) {
-		int i;
+		TkSizeT i;
 
 		for (i = 0; i < numTags; i++) {
 		    TkBTreeTag(&index1, &index2, oldTagArrayPtr[i], 0);
@@ -3755,7 +3746,7 @@ TextInsertCmd(
 		    &tagNamePtrs) != TCL_OK) {
 		return TCL_ERROR;
 	    } else {
-		int i;
+		TkSizeT i;
 
 		for (i = 0; i < numTags; i++) {
 		    const char *strTag = Tcl_GetString(tagNamePtrs[i]);
@@ -3986,7 +3977,7 @@ TextSearchCmd(
  *
  *	Extract a row, text offset index position from an objPtr
  *
- *	This means we ignore any embedded windows/images and elidden text
+ *	This means we ignore any embedded windows/images and elided text
  *	(unless we are searching that).
  *
  * Results:
@@ -4058,7 +4049,7 @@ TextSearchGetLineIndex(
  *	Find textual index of 'byteIndex' in the searchable characters of
  *	'linePtr'.
  *
- *	This means we ignore any embedded windows/images and elidden text
+ *	This means we ignore any embedded windows/images and elided text
  *	(unless we are searching that).
  *
  * Results:
@@ -4291,7 +4282,7 @@ TextSearchFoundMatch(
 
     /*
      * Calculate the character count, which may need augmenting if there are
-     * embedded windows or elidden text.
+     * embedded windows or elided text.
      */
 
     if (searchSpecPtr->exact) {
@@ -4501,7 +4492,7 @@ TkTextGetTabs(
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
-    int objc, i, count;
+    TkSizeT objc, i, count;
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
@@ -5609,13 +5600,13 @@ TkTextRunAfterSyncCmd(
 	return;
     }
 
-    Tcl_Preserve((ClientData) textPtr->interp);
+    Tcl_Preserve(textPtr->interp);
     code = Tcl_EvalObjEx(textPtr->interp, textPtr->afterSyncCmd, TCL_EVAL_GLOBAL);
     if (code == TCL_ERROR) {
 	Tcl_AddErrorInfo(textPtr->interp, "\n    (text sync)");
 	Tcl_BackgroundException(textPtr->interp, TCL_ERROR);
     }
-    Tcl_Release((ClientData) textPtr->interp);
+    Tcl_Release(textPtr->interp);
     Tcl_DecrRefCount(textPtr->afterSyncCmd);
     textPtr->afterSyncCmd = NULL;
 }

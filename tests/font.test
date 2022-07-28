@@ -440,7 +440,7 @@ test font-10.4 {font command: metrics: arguments} -body {
 test font-10.5 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 2
     font metrics xyz -displayof . abc
-} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.6 {font command: metrics: bad font} -constraints noExceed -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
@@ -457,7 +457,7 @@ test font-10.7 {font command: metrics: get all metrics} -setup {
 test font-10.8 {font command: metrics: bad metric} -body {
     # (Tcl_GetIndexFromObj() != TCL_OK)
     font metrics $fixed -xyz
-} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.9 {font command: metrics: get individual metrics} -body {
     font metrics $fixed -ascent
     font metrics $fixed -descent
