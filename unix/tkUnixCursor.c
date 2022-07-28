@@ -180,7 +180,7 @@ static const struct TkCursorName {
 #endif
 
 static Cursor		CreateCursorFromTableOrFile(Tcl_Interp *interp,
-			    Tk_Window tkwin, int argc, const char **argv,
+			    Tk_Window tkwin, TkSizeT argc, const char **argv,
 			    const struct TkCursorName *tkCursorPtr);
 
 /*
@@ -210,7 +210,7 @@ TkGetCursorByName(
 {
     TkUnixCursor *cursorPtr = NULL;
     Cursor cursor = None;
-    int argc;
+    TkSizeT argc;
     const char **argv = NULL;
     Display *display = Tk_Display(tkwin);
     int inTkTable = 0;
@@ -381,7 +381,7 @@ static Cursor
 CreateCursorFromTableOrFile(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    int argc,
+    TkSizeT argc,
     const char **argv,		/* Cursor spec parsed into elements. */
     const struct TkCursorName *tkCursorPtr)
 				/* Non-NULL when cursor is defined in Tk

@@ -26,7 +26,7 @@ static const Tk_OptionSpec SeparatorOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Separator,separator.orientObj),
 	offsetof(Separator,separator.orient),
-	0, (void *)ttkOrientStrings, STYLE_CHANGED },
+	0, ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
