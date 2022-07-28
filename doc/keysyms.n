@@ -1001,36 +1001,6 @@ Ydiaeresis                        5054     0x13BE
 \(eu (EuroSign)                      8364     0x20AC
 .CE
 .CS
-3270_Duplicate                   64769     0xFD01
-3270_FieldMark                   64770     0xFD02
-3270_Right2                      64771     0xFD03
-3270_Left2                       64772     0xFD04
-3270_BackTab                     64773     0xFD05
-3270_EraseEOF                    64774     0xFD06
-3270_EraseInput                  64775     0xFD07
-3270_Reset                       64776     0xFD08
-3270_Quit                        64777     0xFD09
-3270_PA1                         64778     0xFD0A
-3270_PA2                         64779     0xFD0B
-3270_PA3                         64780     0xFD0C
-3270_Test                        64781     0xFD0D
-3270_Attn                        64782     0xFD0E
-3270_CursorBlink                 64783     0xFD0F
-3270_AltCursor                   64784     0xFD10
-3270_KeyClick                    64785     0xFD11
-3270_Jump                        64786     0xFD12
-3270_Ident                       64787     0xFD13
-3270_Rule                        64788     0xFD14
-3270_Copy                        64789     0xFD15
-3270_Play                        64790     0xFD16
-3270_Setup                       64791     0xFD17
-3270_Record                      64792     0xFD18
-3270_ChangeScreen                64793     0xFD19
-3270_DeleteWord                  64794     0xFD1A
-3270_ExSelect                    64795     0xFD1B
-3270_CursorSelect                64796     0xFD1C
-3270_PrintScreen                 64797     0xFD1D
-3270_Enter                       64798     0xFD1E
 ISO_Lock                         65025     0xFE01
 ISO_Level2_Latch                 65026     0xFE02
 ISO_Level3_Shift                 65027     0xFE03
