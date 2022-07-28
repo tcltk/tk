@@ -1539,6 +1539,25 @@ XF86WWAN                     269025204     0x1008FFB4
 XF86RFKill                   269025205     0x1008FFB5
 XF86AudioPreset              269025206     0x1008FFB6
 XF86RotationLockToggle       269025207     0x1008FFB7
+XF86FullScreen               269025208     0x1008FFB8
+XF86Switch_VT_1              269024769     0x1008FE01
+XF86Switch_VT_2              269024770     0x1008FE02
+XF86Switch_VT_3              269024771     0x1008FE03
+XF86Switch_VT_4              269024772     0x1008FE04
+XF86Switch_VT_5              269024773     0x1008FE05
+XF86Switch_VT_6              269024774     0x1008FE06
+XF86Switch_VT_7              269024775     0x1008FE07
+XF86Switch_VT_8              269024776     0x1008FE08
+XF86Switch_VT_9              269024777     0x1008FE09
+XF86Switch_VT_10             269024778     0x1008FE0A
+XF86Switch_VT_11             269024779     0x1008FE0B
+XF86Switch_VT_12             269024780     0x1008FE0C
+XF86Ungrab                   269024800     0x1008FE20
+XF86ClearGrab                269024801     0x1008FE21
+XF86Next_VMode               269024802     0x1008FE22
+XF86Prev_VMode               269024803     0x1008FE23
+XF86LogWindowTree            269024804     0x1008FE24
+XF86LogGrabInfo              269024805     0x1008FE25
 .CE
 .SH "SEE ALSO"
 bind(n), event(n)
