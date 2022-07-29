@@ -998,7 +998,6 @@ Korean_Won                        3839     0xEFF
 OE                                5052     0x13BC
 oe                                5053     0x13BD
 Ydiaeresis                        5054     0x13BE
-\(eu (EuroSign)                      8364     0x20AC
 .CE
 .CS
 ISO_Lock                         65025     0xFE01
