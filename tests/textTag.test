@@ -180,7 +180,7 @@ test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.21a {tag configuration options} -body {
     .t tag configure x -overstrikefg red
     .t tag cget x -overstrikefg
@@ -301,7 +301,7 @@ test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.36 {tag configuration options} -body {
     .t tag configure x -underlinefg red
     .t tag cget x -underlinefg
@@ -532,13 +532,13 @@ test textTag-5.6 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -overstrike foo
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "foo"}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test textTag-5.7 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify left
@@ -1324,6 +1324,24 @@ test textTag-15.3 {TkTextBindProc} -setup {
 } -cleanup {
     .t tag delete x y
 } -result {x-enter | x-down | | | x-up | x-leave y-enter}
+
+test textTag-15.4 {TkTextBindProc, key event with mouse outside the widget} -setup {
+    .t tag delete {*}[.t tag names]
+    wm geometry . +200+200 ; update
+} -body {
+    set res {}
+    .t tag add tag1 1.0 end
+    .t tag bind tag1 <Key> {lappend res %K}
+    .t mark set insert 1.2
+    update
+    event generate .t <Motion> -warp 1 -x -50 -y -50
+    controlPointerWarpTiming
+    focus -force .t
+    event generate .t <Key> -keysym a
+    set res
+} -cleanup {
+    .t tag delete tag1
+} -result {a}
 
 
 test textTag-16.1 {TkTextPickCurrent procedure} -setup {

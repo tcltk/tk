@@ -584,7 +584,7 @@ TkDrawInsetFocusHighlight(
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
  *
- *	This function is now deprecated. Use TkpDrawHighlightBorder instead,
+ *	This function is now deprecated. Use Tk_DrawHighlightBorder instead,
  *	since this function does not handle drawing the Focus ring properly on
  *	the Macintosh - you need to know the background GC as well as the
  *	foreground since the Mac focus ring separated from the widget by a 1
@@ -820,17 +820,17 @@ TkComputeAnchor(
 	*xPtr = Tk_InternalBorderLeft(tkwin) + padX;
 	break;
 
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	*xPtr = (Tk_Width(tkwin) - innerWidth - Tk_InternalBorderLeft(tkwin) -
-		Tk_InternalBorderRight(tkwin)) / 2 +
-		Tk_InternalBorderLeft(tkwin);
+    case TK_ANCHOR_NE:
+    case TK_ANCHOR_E:
+    case TK_ANCHOR_SE:
+	*xPtr = Tk_Width(tkwin) - Tk_InternalBorderRight(tkwin) - padX
+		- innerWidth;
 	break;
 
     default:
-	*xPtr = Tk_Width(tkwin) - Tk_InternalBorderRight(tkwin) - padX
-		- innerWidth;
+	*xPtr = (Tk_Width(tkwin) - innerWidth - Tk_InternalBorderLeft(tkwin) -
+		Tk_InternalBorderRight(tkwin)) / 2 +
+		Tk_InternalBorderLeft(tkwin);
 	break;
     }
 
@@ -845,17 +845,17 @@ TkComputeAnchor(
 	*yPtr = Tk_InternalBorderTop(tkwin) + padY;
 	break;
 
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	*yPtr = (Tk_Height(tkwin) - innerHeight- Tk_InternalBorderTop(tkwin) -
-		Tk_InternalBorderBottom(tkwin)) / 2 +
-		Tk_InternalBorderTop(tkwin);
+    case TK_ANCHOR_SW:
+    case TK_ANCHOR_S:
+    case TK_ANCHOR_SE:
+	*yPtr = Tk_Height(tkwin) - Tk_InternalBorderBottom(tkwin) - padY
+		- innerHeight;
 	break;
 
     default:
-	*yPtr = Tk_Height(tkwin) - Tk_InternalBorderBottom(tkwin) - padY
-		- innerHeight;
+	*yPtr = (Tk_Height(tkwin) - innerHeight- Tk_InternalBorderTop(tkwin) -
+		Tk_InternalBorderBottom(tkwin)) / 2 +
+		Tk_InternalBorderTop(tkwin);
 	break;
     }
 }

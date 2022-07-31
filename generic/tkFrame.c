@@ -330,7 +330,7 @@ static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const argv[],
+			    int objc, Tcl_Obj *const objv[],
 			    enum FrameType type, const char *appName);
 static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
@@ -489,7 +489,7 @@ TkListCreateFrame(
 				 * Gives the base name to use for the new
 				 * application. */
 {
-    int objc;
+    TkSizeT objc;
     Tcl_Obj **objv;
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
@@ -579,8 +579,8 @@ CreateFrame(
      *	  correct class.
      * 2. Must set visual information before calling ConfigureFrame so that
      *	  colors are allocated in a proper colormap.
-     * 3. Must call TkpUseWindow before setting non-default visual
-     *	  information, since TkpUseWindow changes the defaults.
+     * 3. Must call Tk_UseWindow before setting non-default visual
+     *	  information, since Tk_UseWindow changes the defaults.
      */
 
     if (screenName == NULL) {
@@ -634,7 +634,7 @@ CreateFrame(
 	useOption = Tk_GetOption(newWin, "use", "Use");
     }
     if ((useOption != NULL) && (*useOption != 0)
-	    && (TkpUseWindow(interp, newWin, useOption) != TCL_OK)) {
+	    && (Tk_UseWindow(interp, newWin, useOption) != TCL_OK)) {
 	goto error;
     }
     if (visualName == NULL) {
@@ -727,7 +727,7 @@ CreateFrame(
 	    Tcl_SetErrorCode(interp, "TK", "FRAME", "CONTAINMENT", NULL);
 	    goto error;
 	}
-	TkpMakeContainer(framePtr->tkwin);
+	Tk_MakeContainer(framePtr->tkwin);
     }
     if (type == TYPE_TOPLEVEL) {
 	Tcl_DoWhenIdle(MapFrame, framePtr);
@@ -843,7 +843,7 @@ FrameWidgetObjCmd(
 		    if (c == 'u') {
 			const char *string = Tcl_GetString(objv[i+1]);
 
-			if (TkpUseWindow(interp, framePtr->tkwin,
+			if (Tk_UseWindow(interp, framePtr->tkwin,
 				string) != TCL_OK) {
 			    result = TCL_ERROR;
 			    goto done;
@@ -1035,7 +1035,7 @@ ConfigureFrame(
 	    || ((oldMenuName != NULL) && (framePtr->menuName != NULL)
 	    && strcmp(oldMenuName, framePtr->menuName) != 0))
 	    && framePtr->type == TYPE_TOPLEVEL) {
-	TkSetWindowMenuBar(interp, framePtr->tkwin, oldMenuName,
+	Tk_SetWindowMenuBar(interp, framePtr->tkwin, oldMenuName,
 		framePtr->menuName);
     }
 
@@ -1502,10 +1502,10 @@ DisplayFrame(
 	if (framePtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(framePtr->highlightColorPtr,
 		    Tk_WindowId(tkwin));
-	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, hlWidth,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, hlWidth,
 		    Tk_WindowId(tkwin));
 	} else {
-	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, hlWidth,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, hlWidth,
 		    Tk_WindowId(tkwin));
 	}
     }
@@ -1747,7 +1747,7 @@ FrameEventProc(
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
 	if (framePtr->menuName != NULL) {
-	    TkSetWindowMenuBar(framePtr->interp, framePtr->tkwin,
+	    Tk_SetWindowMenuBar(framePtr->interp, framePtr->tkwin,
 		    framePtr->menuName, NULL);
 	    ckfree(framePtr->menuName);
 	    framePtr->menuName = NULL;
@@ -1796,7 +1796,7 @@ FrameEventProc(
 	    }
 	}
     } else if (eventPtr->type == ActivateNotify) {
-    	TkpSetMainMenubar(framePtr->interp, framePtr->tkwin,
+    	Tk_SetMainMenubar(framePtr->interp, framePtr->tkwin,
     		framePtr->menuName);
     }
     return;
@@ -1834,7 +1834,7 @@ FrameCmdDeletedProc(
     Tk_Window tkwin = framePtr->tkwin;
 
     if (framePtr->menuName != NULL) {
-	TkSetWindowMenuBar(framePtr->interp, framePtr->tkwin,
+	Tk_SetWindowMenuBar(framePtr->interp, framePtr->tkwin,
 		framePtr->menuName, NULL);
 	ckfree(framePtr->menuName);
 	framePtr->menuName = NULL;
@@ -2068,7 +2068,7 @@ TkMapTopFrame(
 	framePtr->type = TYPE_TOPLEVEL;
 	Tcl_DoWhenIdle(MapFrame, framePtr);
 	if (framePtr->menuName != NULL) {
-	    TkSetWindowMenuBar(framePtr->interp, framePtr->tkwin, NULL,
+	    Tk_SetWindowMenuBar(framePtr->interp, framePtr->tkwin, NULL,
 		    framePtr->menuName);
 	}
     } else if (!Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_TOPLEVEL) {

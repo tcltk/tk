@@ -100,22 +100,22 @@ static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    const char *str[], int numargs);
 static int		PrintSelectPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintOpenPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintClosePrinter(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintOpenDoc(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		PrintCloseDoc(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		PrintOpenPage(ClientData clientData, Tcl_Interp *interp,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static int		PrintClosePage(ClientData clientData,
-			    Tcl_Interp *interp, int argc,
+			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 
 /*
@@ -1628,7 +1628,7 @@ int GdiText(
     case TK_ANCHOR_SW:
 	y = (sizerect.bottom - sizerect.top);
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x = (sizerect.right - sizerect.left) / 2;
 	y = (sizerect.bottom - sizerect.top) / 2;
 	break;
@@ -3538,13 +3538,13 @@ int Winprint_Init(
      */
 
     namespacePtr = Tcl_CreateNamespace(interp, gdiName,
-	    (ClientData) NULL, (Tcl_NamespaceDeleteProc *) NULL);
+	    NULL, (Tcl_NamespaceDeleteProc *) NULL);
     for (i=0; i<numCommands; i++) {
 	char buffer[100];
 
 	sprintf(buffer, "%s::%s", gdiName, gdi_commands[i].command_string);
 	Tcl_CreateCommand(interp, buffer, gdi_commands[i].command,
-		(ClientData) 0, (Tcl_CmdDeleteProc *) 0);
+		NULL, (Tcl_CmdDeleteProc *) 0);
 	Tcl_Export(interp, namespacePtr, gdi_commands[i].command_string, 0);
     }
     Tcl_CreateEnsemble(interp, gdiName, namespacePtr, 0);
@@ -3802,7 +3802,7 @@ int PrintOpenDoc(
  */
 
 int PrintCloseDoc(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))

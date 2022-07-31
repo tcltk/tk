@@ -20,6 +20,14 @@
 
 #include "tkImgPhoto.h"
 #include "tkPort.h"
+#if defined(_WIN32)
+#include "tkWinInt.h"
+#elif defined(MAC_OSX_TK)
+#include "tkMacOSXInt.h"
+#else /* if defined(__unix__) */
+#include "tkUnixInt.h"
+#endif
+#define ColorTable ImgColorTable
 
 /*
  * Declaration for internal Xlib function used here:

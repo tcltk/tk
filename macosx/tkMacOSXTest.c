@@ -198,7 +198,6 @@ PressButtonObjCmd(
     Tcl_Obj *const objv[])
 {
     int x = 0, y = 0, i, value;
-    NSInteger signal = -1;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;
@@ -234,40 +233,39 @@ PressButtonObjCmd(
     loc.y = ScreenHeight - y;
 
     /*
-     *  We set the window number and the eventNumber to -1 as a signal to
-     *  processMouseEvent.
+     *  We set the timestamp to 0 as a signal to processMouseEvent.
      */
 
     CGWarpMouseCursorPosition(pt);
     motion = [NSEvent mouseEventWithType:NSMouseMoved
 	location:loc
 	modifierFlags:0
-	timestamp:GetCurrentEventTime()
-	windowNumber:signal
+	timestamp:0
+	windowNumber:0
 	context:nil
-	eventNumber:signal
+	eventNumber:0
 	clickCount:1
-	pressure:0.0];
+	pressure:0];
     [NSApp postEvent:motion atStart:NO];
     press = [NSEvent mouseEventWithType:NSLeftMouseDown
 	location:loc
 	modifierFlags:0
-	timestamp:GetCurrentEventTime()
-	windowNumber:signal
+	timestamp:0
+	windowNumber:0
 	context:nil
-	eventNumber:signal
+	eventNumber:0
 	clickCount:1
-	pressure:0.0];
+	pressure:0];
     [NSApp postEvent:press atStart:NO];
     release = [NSEvent mouseEventWithType:NSLeftMouseUp
 	location:loc
 	modifierFlags:0
-	timestamp:GetCurrentEventTime()
-	windowNumber:signal
+	timestamp:0
+	windowNumber:0
 	context:nil
-	eventNumber:signal
+	eventNumber:0
 	clickCount:1
-	pressure:-1.0];
+	pressure:0];
     [NSApp postEvent:release atStart:NO];
     return TCL_OK;
 }
@@ -280,12 +278,12 @@ InjectKeyEventObjCmd(
     Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] = {
-	"press", "release", "flagschanged", NULL};
-    NSUInteger types[3] = {NSKeyDown, NSKeyUp, NSFlagsChanged};
+	"flagschanged", "press", "release", NULL};
+    NSUInteger types[3] = {NSFlagsChanged, NSKeyDown, NSKeyUp};
     static const char *const argStrings[] = {
-	"-shift", "-control", "-option", "-command", "-function", "-x", "-y", NULL};
-    enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION, KEYEVENT_COMMAND,
-	       KEYEVENT_FUNCTION, KEYEVENT_X, KEYEVENT_Y};
+	"-command", "-control", "-function", "-option", "-shift", "-x", "-y", NULL};
+    enum args {KEYEVENT_COMMAND, KEYEVENT_CONTROL, KEYEVENT_FUNCTION, KEYEVENT_OPTION,
+	       KEYEVENT_SHIFT, KEYEVENT_X, KEYEVENT_Y};
     int i, index, keysym, mods = 0, x = 0, y = 0;
     NSString *chars = nil, *unmod = nil, *upper, *lower;
     NSEvent *keyEvent;

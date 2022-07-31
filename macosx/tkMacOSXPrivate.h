@@ -331,22 +331,23 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
-
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    int _poolLock;
-    int _macOSVersion;  /* 10000 * major + 100*minor */
-    Bool _isDrawing;
-    Bool _needsToDraw;
-    Bool _isSigned;
-#endif
-
+    Bool _tkLiveResizeEnded;
 }
 @property int poolLock;
 @property int macOSVersion;
 @property Bool isDrawing;
 @property Bool needsToDraw;
 @property Bool isSigned;
+@property Bool tkLiveResizeEnded;
+
+/*
+ * Persistent state variables used by processMouseEvent.
+ */
+
+@property TkWindow *tkPointerWindow;
+@property TkWindow *tkEventTarget;
+@property TkWindow *tkDragTarget;
+@property unsigned int tkButtonState;
 
 @end
 @interface TKApplication(TKInit)
@@ -421,6 +422,7 @@ VISIBILITY_HIDDEN
     NSString *privateWorkingText;
     Bool _tkNeedsDisplay;
     NSRect _tkDirtyRect;
+    NSTrackingArea *trackingArea;
 }
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
@@ -446,13 +448,7 @@ VISIBILITY_HIDDEN
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
 {
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Bool _mouseInResizeArea;
-    Window _tkWindow;
-#endif
 }
-@property Bool mouseInResizeArea;
 @property Window tkWindow;
 @end
 
@@ -463,20 +459,12 @@ VISIBILITY_HIDDEN
 @interface TKDrawerWindow : NSWindow
 {
     id _i1, _i2;
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end
 
 @interface TKPanel : NSPanel
 {
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end

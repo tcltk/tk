@@ -156,13 +156,13 @@ test font-4.12 {font command: actual} -body {
 test font-4.13 {font command: actual} -body {
     font actual {-family times} -- \uDC00
 } -match glob -result {*}
-test font-4.14 {font command: actual} -constraints {utfcompat win} -body {
+test font-4.14 {font command: actual} -constraints {utfcompat win knownBug} -body {
     font actual {-family times} -family -- \uD800\uDC00
 } -result {times}
 test font-4.15 {font command: actual} -body {
     font actual {-family times} -- \uDC00\uD800
 } -returnCodes 1 -match glob -result {expected a single character but got "*"}
-test font-4.16 {font command: actual} -constraints {fullutf win} -body {
+test font-4.16 {font command: actual} -constraints {fullutf win knownBug} -body {
     font actual {-family times} -family -- \U10000
 } -result {times}
 
@@ -440,7 +440,7 @@ test font-10.4 {font command: metrics: arguments} -body {
 test font-10.5 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 2
     font metrics xyz -displayof . abc
-} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.6 {font command: metrics: bad font} -constraints noExceed -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
@@ -457,7 +457,7 @@ test font-10.7 {font command: metrics: get all metrics} -setup {
 test font-10.8 {font command: metrics: bad metric} -body {
     # (Tcl_GetIndexFromObj() != TCL_OK)
     font metrics $fixed -xyz
-} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.9 {font command: metrics: get individual metrics} -body {
     font metrics $fixed -ascent
     font metrics $fixed -descent

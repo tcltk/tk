@@ -220,8 +220,7 @@ static Ttk_Sticky AnchorToSticky(Tk_Anchor anchor)
 	case TK_ANCHOR_SW:	return TTK_STICK_S | TTK_STICK_W;
 	case TK_ANCHOR_W:	return TTK_STICK_W;
 	case TK_ANCHOR_NW:	return TTK_STICK_N | TTK_STICK_W;
-	default:
-	case TK_ANCHOR_CENTER:	return 0;
+	default:	return 0;
     }
 }
 
@@ -1245,6 +1244,37 @@ void Ttk_PlaceElement(Ttk_Layout layout, Ttk_Element node, Ttk_Box b)
 	Ttk_PlaceNodeList(layout, node->child, 0,
 	    Ttk_PadBox(b, Ttk_LayoutNodeInternalPadding(layout, node)));
     }
+}
+
+/*
+ * AnchorToPosition --
+ * 	Convert a Tk_Anchor enum to a position bitmask.
+ */
+static Ttk_PositionSpec AnchorToPosition(Tk_Anchor anchor)
+{
+    switch (anchor)
+    {
+	case TK_ANCHOR_N:	return TTK_PACK_TOP;
+	case TK_ANCHOR_S:	return TTK_PACK_BOTTOM;
+	case TK_ANCHOR_NE:	return TTK_PACK_RIGHT|TTK_STICK_N;
+	case TK_ANCHOR_SE:	return TTK_PACK_RIGHT|TTK_STICK_S;
+	case TK_ANCHOR_E:	return TTK_PACK_RIGHT;
+	case TK_ANCHOR_NW:	return TTK_PACK_LEFT|TTK_STICK_N;
+	case TK_ANCHOR_SW:	return TTK_PACK_LEFT|TTK_STICK_S;
+	case TK_ANCHOR_W:	return TTK_PACK_LEFT;
+	case TK_ANCHOR_CENTER:	return 0;
+	default:;
+    }
+    return TTK_PACK_LEFT;
+}
+
+/*
+ * Ttk_AnchorElement --
+ * 	Explicitly specify an element's anchoring.
+ */
+void Ttk_AnchorElement(Ttk_Element node, Tk_Anchor anchor)
+{
+    node->flags = AnchorToPosition(anchor);
 }
 
 /*

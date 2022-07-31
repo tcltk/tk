@@ -712,7 +712,7 @@ ClipboardGetProc(
     Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
     Tcl_DString ds;
 
-    Tcl_ExternalToUtfDString(utf8, portion, -1, &ds);
+    (void)Tcl_ExternalToUtfDStringEx(utf8, portion, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     Tcl_DStringAppend((Tcl_DString *) clientData, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     Tcl_FreeEncoding(utf8);

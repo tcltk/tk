@@ -206,11 +206,11 @@ typedef struct {
 				   CapRound, CapProjecting */
 	int join_style;	 	/* JoinMiter, JoinRound, JoinBevel */
 	int fill_style;	 	/* FillSolid, FillTiled,
-				   FillStippled, FillOpaeueStippled */
+				   FillStippled, FillOpaqueStippled */
 	int fill_rule;	  	/* EvenOddRule, WindingRule */
 	int arc_mode;		/* ArcChord, ArcPieSlice */
 	Pixmap tile;		/* tile pixmap for tiling operations */
-	Pixmap stipple;		/* stipple 1 plane pixmap for stipping */
+	Pixmap stipple;		/* stipple 1 plane pixmap for stippling */
 	int ts_x_origin;	/* offset for tile or stipple operations */
 	int ts_y_origin;
         Font font;	        /* default text font for text operations */
@@ -304,7 +304,7 @@ typedef struct {
     int bit_gravity;		/* one of bit gravity values */
     int win_gravity;		/* one of the window gravity values */
     int backing_store;		/* NotUseful, WhenMapped, Always */
-    unsigned long backing_planes;/* planes to be preseved if possible */
+    unsigned long backing_planes;/* planes to be preserved if possible */
     unsigned long backing_pixel;/* value to use in restoring planes */
     Bool save_under;		/* should bits under be saved? (popups) */
     long event_mask;		/* set of events that should be saved */
@@ -376,9 +376,9 @@ typedef struct _XImage {
     int bitmap_bit_order;	/* LSBFirst, MSBFirst */
     int bitmap_pad;		/* 8, 16, 32 either XY or ZPixmap */
     int depth;			/* depth of image */
-    int bytes_per_line;		/* accelarator to next line */
+    int bytes_per_line;		/* accelerator to next line */
     int bits_per_pixel;		/* bits per pixel (ZPixmap) */
-    unsigned long red_mask;	/* bits in z arrangment */
+    unsigned long red_mask;	/* bits in z arrangement */
     unsigned long green_mask;
     unsigned long blue_mask;
     XPointer obdata;		/* hook for the object routines to hang on */
@@ -585,8 +585,6 @@ typedef struct _XDisplay {
 #undef _XEVENT_
 #endif
 #ifndef _XEVENT_
-
-#define XMaxTransChars 7
 
 /*
  * Definitions of specific events.
@@ -1720,7 +1718,8 @@ EXTERN XHostAddress *XListHosts(
     int*		/* nhosts_return */,
     Bool*		/* state_return */
 );
-EXTERN _X_DEPRECATED KeySym XKeycodeToKeysym(
+_X_DEPRECATED
+EXTERN KeySym XKeycodeToKeysym(
     Display*		/* display */,
 #if NeedWidePrototypes
     unsigned int	/* keycode */,

@@ -308,6 +308,7 @@ MODULE_SCOPE Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_Element);
 MODULE_SCOPE void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_Element, int *w, int *h);
 
 MODULE_SCOPE void Ttk_PlaceElement(Ttk_Layout, Ttk_Element, Ttk_Box);
+MODULE_SCOPE void Ttk_AnchorElement(Ttk_Element node, Tk_Anchor anchor);
 MODULE_SCOPE void Ttk_ChangeElementState(Ttk_Element,unsigned set,unsigned clr);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
@@ -350,9 +351,9 @@ TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Ttk_State);
  */
 typedef enum 			/* -default option values */
 {
-    TTK_BUTTON_DEFAULT_NORMAL,	/* widget defaultable */
     TTK_BUTTON_DEFAULT_ACTIVE,	/* currently the default widget */
-    TTK_BUTTON_DEFAULT_DISABLED	/* not defaultable */
+    TTK_BUTTON_DEFAULT_DISABLED,	/* not defaultable */
+    TTK_BUTTON_DEFAULT_NORMAL	/* widget defaultable */
 } Ttk_ButtonDefaultState;
 
 TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_ButtonDefaultState *);

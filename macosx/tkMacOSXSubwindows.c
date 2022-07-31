@@ -148,6 +148,8 @@ XMapWindow(
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     static Bool initialized = NO;
+    NSPoint mouse = [NSEvent mouseLocation];
+    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -185,15 +187,25 @@ XMapWindow(
 		    [win orderFrontRegardless];
 		}
 	    }
+
+	    /*
+	     * Call Tk_UpdatePointer to tell Tk whether the pointer is in the
+	     * new window.
+	     */
+
+	    NSPoint viewLocation = [view convertPoint:mouse fromView:nil];
+	    if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
+		Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
+	    }
 	} else {
-	    TkWindow *contWinPtr = TkpGetOtherWindow(winPtr);
+	    Tk_Window contWinPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	    /*
 	     * Rebuild the container's clipping region and display
 	     * the window.
 	     */
 
-	    TkMacOSXInvalClipRgns((Tk_Window)contWinPtr);
+	    TkMacOSXInvalClipRgns(contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
@@ -296,6 +308,9 @@ XUnmapWindow(
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
+    NSPoint mouse = [NSEvent mouseLocation];
+    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
+    int state = TkMacOSXButtonKeyState();
 
     if (!window) {
 	return BadWindow;
@@ -319,7 +334,7 @@ XUnmapWindow(
 		for (NSWindow *w in [NSApp orderedWindows]) {
 		    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
 		    WmInfo *wmInfoPtr;
-		    
+
 		    BOOL isOnScreen;
 
 		    if (!winPtr2 || !winPtr2->wmInfoPtr) {
@@ -356,6 +371,7 @@ XUnmapWindow(
     if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
     }
+    Tk_UpdatePointer(NULL, x, y, state);
     return Success;
 }
 
@@ -530,7 +546,7 @@ MoveResizeWindow(
      */
 
     if (Tk_IsEmbedded(macWin->winPtr)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->winPtr);
+	TkWindow *contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)macWin->winPtr);
 
 	if (contWinPtr) {
 	    macParent = contWinPtr->privatePtr;
@@ -788,7 +804,7 @@ TkMacOSXSetDrawingEnabled(
      */
 
     if (Tk_IsContainer(winPtr)) {
-	childPtr = TkpGetOtherWindow(winPtr);
+	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	if (childPtr) {
 	    TkMacOSXSetDrawingEnabled(childPtr, flag);
@@ -869,7 +885,7 @@ TkMacOSXUpdateClipRgn(
 		    ChkErr(TkMacOSHIShapeDifferenceWithRect, rgn, &bounds);
 		}
 	    } else if (Tk_IsEmbedded(winPtr)) {
-		win2Ptr = TkpGetOtherWindow(winPtr);
+		win2Ptr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 		if (win2Ptr) {
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		    ChkErr(HIShapeIntersect,
@@ -902,7 +918,7 @@ TkMacOSXUpdateClipRgn(
 	    }
 
 	    if (Tk_IsContainer(winPtr)) {
-		win2Ptr = TkpGetOtherWindow(winPtr);
+		win2Ptr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 		if (win2Ptr) {
 		    if (Tk_IsMapped(win2Ptr)) {
 			TkMacOSXWinCGBounds(win2Ptr, &bounds);
@@ -936,7 +952,7 @@ TkMacOSXUpdateClipRgn(
 	    if (!Tk_IsTopLevel(winPtr)) {
 		TkMacOSXUpdateClipRgn(winPtr->parentPtr);
 	    } else if (Tk_IsEmbedded(winPtr)) {
-		win2Ptr = TkpGetOtherWindow(winPtr);
+		win2Ptr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 		if (win2Ptr) {
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
@@ -1099,7 +1115,7 @@ Tk_MacOSXGetNSWindowForDrawable(
 	    macWin->winPtr->wmInfoPtr->window) {
 	result = macWin->winPtr->wmInfoPtr->window;
     } else if (macWin->toplevel && (macWin->toplevel->flags & TK_EMBEDDED)) {
-	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
+	TkWindow *contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
 	    result = TkMacOSXGetNSWindowForDrawable((Drawable)contWinPtr->privatePtr);
@@ -1145,7 +1161,7 @@ TkMacOSXGetRootControl(
     } else if (!(macWin->toplevel->flags & TK_EMBEDDED)) {
 	result = macWin->toplevel->view;
     } else {
-	TkWindow *contWinPtr = TkpGetOtherWindow(macWin->toplevel->winPtr);
+	TkWindow *contWinPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)macWin->toplevel->winPtr);
 
 	if (contWinPtr) {
 	    result = TkMacOSXGetRootControl((Drawable)contWinPtr->privatePtr);
@@ -1227,7 +1243,7 @@ TkMacOSXInvalClipRgns(
      */
 
     if (Tk_IsContainer(winPtr)) {
-	childPtr = TkpGetOtherWindow(winPtr);
+	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	if (childPtr) {
 	    TkMacOSXInvalClipRgns((Tk_Window)childPtr);
@@ -1382,7 +1398,7 @@ UpdateOffsets(
     }
 
     if (Tk_IsContainer(winPtr)) {
-	childPtr = TkpGetOtherWindow(winPtr);
+	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	if (childPtr != NULL) {
 	    UpdateOffsets(childPtr,deltaX,deltaY);
 	}

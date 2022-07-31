@@ -131,6 +131,7 @@ bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
 bind TEntry <Command-Key>		{# nothing}
+bind TEntry <Mod4-Key>			{# nothing}
 
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
@@ -281,8 +282,8 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::RelIndex {w where {index insert}} {
     switch -- $where {
-	prevchar	{ expr {[$w index $index] - 1} }
-    	nextchar	{ expr {[$w index $index] + 1} }
+	prevchar	{ return [$w index $index]-1 }
+	nextchar	{ return [$w index $index]+1 }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
 	home		{ return 0 }
@@ -323,9 +324,9 @@ proc ttk::entry::ExtendTo {w index} {
 
     # Figure out selection anchor:
     if {![$w selection present]} {
-    	set anchor $insert
+	set anchor $insert
     } else {
-    	set selfirst [$w index sel.first]
+	set selfirst [$w index sel.first]
 	set sellast  [$w index sel.last]
 
 	if {   ($index < $selfirst)
@@ -341,7 +342,7 @@ proc ttk::entry::ExtendTo {w index} {
     if {$anchor < $index} {
 	$w selection range $anchor $index
     } else {
-    	$w selection range $index $anchor
+	$w selection range $index $anchor
     }
 
     $w icursor $index
@@ -401,8 +402,8 @@ proc ttk::entry::Select {w x mode} {
     set cur [ClosestGap $w $x]
 
     switch -- $mode {
-    	word	{ WordSelect $w $cur $cur }
-    	line	{ LineSelect $w $cur $cur }
+	word	{ WordSelect $w $cur $cur }
+	line	{ LineSelect $w $cur $cur }
 	char	{ # no-op }
     }
 
@@ -550,7 +551,7 @@ proc ttk::entry::ScanDrag {w x} {
     $w xview $left
 
     if {$left != [set newLeft [$w index @0]]} {
-    	# We've scanned past one end of the entry;
+	# We've scanned past one end of the entry;
 	# reset the mark so that the text will start dragging again
 	# as soon as the mouse reverses direction.
 	#
@@ -607,7 +608,7 @@ proc ttk::entry::Insert {w s} {
 #
 proc ttk::entry::Backspace {w} {
     if {[PendingDelete $w]} {
-    	See $w
+	See $w
 	return
     }
     set x [expr {[$w index insert] - 1}]

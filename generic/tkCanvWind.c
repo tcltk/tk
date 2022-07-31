@@ -518,7 +518,7 @@ ComputeWindowBbox(
 	break;
     case TK_ANCHOR_NW:
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x -= width/2;
 	y -= height/2;
 	break;
@@ -580,6 +580,9 @@ DisplayWinItem(
     if (winItemPtr->tkwin == NULL) {
 	return;
     }
+
+    Tcl_Preserve(canvas);
+
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
@@ -594,6 +597,7 @@ DisplayWinItem(
 	} else {
 	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
 	}
+	Tcl_Release(canvas);
 	return;
     }
     Tk_CanvasWindowCoords(canvas, (double) winItemPtr->header.x1,
@@ -615,6 +619,7 @@ DisplayWinItem(
 	} else {
 	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
 	}
+	Tcl_Release(canvas);
 	return;
     }
 
@@ -629,11 +634,16 @@ DisplayWinItem(
 		|| (height != Tk_Height(winItemPtr->tkwin))) {
 	    Tk_MoveResizeWindow(winItemPtr->tkwin, x, y, width, height);
 	}
-	Tk_MapWindow(winItemPtr->tkwin);
+
+	if (winItemPtr->tkwin) {
+	    Tk_MapWindow(winItemPtr->tkwin);
+	}
+
     } else {
 	Tk_MaintainGeometry(winItemPtr->tkwin, canvasTkwin, x, y,
 		width, height);
     }
+    Tcl_Release(canvas);
 }
 
 /*
@@ -826,7 +836,7 @@ WinItemToPostscript(
     case TK_ANCHOR_S:	    x -= width/2.0;			    break;
     case TK_ANCHOR_SW:						    break;
     case TK_ANCHOR_W:			    y -= height/2.0;	    break;
-    case TK_ANCHOR_CENTER:  x -= width/2.0; y -= height/2.0;	    break;
+    default:  x -= width/2.0; y -= height/2.0;	    break;
     }
 
     return CanvasPsWindow(interp, tkwin, canvas, x, y, width, height);

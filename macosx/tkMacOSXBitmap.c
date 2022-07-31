@@ -59,12 +59,12 @@ typedef struct {
 } IconBitmap;
 
 static const char *const iconBitmapOptionStrings[] = {
-    "-file", "-fileType", "-osType", "-systemType", "-namedImage",
-    "-imageFile", NULL
+    "-file", "-fileType", "-imageFile", "-namedImage", "-osType",
+    "-systemType", NULL
 };
 enum iconBitmapOptions {
-    ICON_FILE, ICON_FILETYPE, ICON_OSTYPE, ICON_SYSTEMTYPE, ICON_NAMEDIMAGE,
-    ICON_IMAGEFILE,
+    ICON_FILE, ICON_FILETYPE, ICON_IMAGEFILE, ICON_NAMEDIMAGE, ICON_OSTYPE,
+    ICON_SYSTEMTYPE
 };
 
 
@@ -205,7 +205,7 @@ OSTypeFromString(const char *s, OSType *t) {
     Tcl_DString ds;
     Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-    Tcl_UtfToExternalDString(encoding, s, -1, &ds);
+    (void)Tcl_UtfToExternalDStringEx(encoding, s, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     if (Tcl_DStringLength(&ds) <= 4) {
 	char string[4] = {};
 	memcpy(string, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
@@ -384,7 +384,7 @@ TkMacOSXIconBitmapObjCmd(
 	Tcl_DString ds;
  	Tcl_Encoding encoding = Tcl_GetEncoding(NULL, "macRoman");
 
-	Tcl_UtfToExternalDString(encoding, value, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(encoding, value, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	len = Tcl_DStringLength(&ds);
 	Tcl_DStringFree(&ds);
 	Tcl_FreeEncoding(encoding);

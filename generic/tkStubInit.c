@@ -25,6 +25,8 @@
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
 #include "tkMacOSXPrivate.h"
+#else
+#   define Tk_ClipDrawableToRect 0
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -69,6 +71,7 @@ static int TkWinGetPlatformId(void) {
 #   define Tk_PointerEvent 0
 #   define TkWinGetPlatformId 0
 #endif
+
 static int
 doNothing(void)
 {
@@ -107,7 +110,6 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkWmCleanup_ TkWmCleanup
 #define TkSendCleanup_ TkSendCleanup
 #define TkpTestsendCmd_ TkpTestsendCmd
-#define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 #define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
 #define Tk_CanvasTagsParseProc \
@@ -292,7 +294,6 @@ TkPutImage(
 }
 #endif /* MAC_OSX_TCL */
 
-#define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkMacOSXInitAppleEvents_ TkMacOSXInitAppleEvents
 #define TkMacOSXInitMenus_ TkMacOSXInitMenus
 #define Tk_MacOSXTkOwnsCursor_ Tk_MacOSXTkOwnsCursor
@@ -502,24 +503,8 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-#if (TCL_MAJOR_VERSION < 9) && !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    0, /* 185 */
-#endif /* UNIX */
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) /* WIN */
-    0, /* 185 */
-#endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
     TkpRedrawWidget, /* 185 */
-#endif /* MACOSX */
-#if (TCL_MAJOR_VERSION < 9) && !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    0, /* 186 */
-#endif /* UNIX */
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) /* WIN */
-    0, /* 186 */
-#endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
     TkpWillDrawWidget, /* 186 */
-#endif /* MACOSX */
     TkDebugPhotoStringMatchDef, /* 187 */
 };
 
@@ -1027,7 +1012,7 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
     TkMacOSXInitAppleEvents, /* 11 */
-    TkGenWMConfigureEvent_, /* 12 */
+    TkGenWMConfigureEvent, /* 12 */
 #endif /* WIN */
 #if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TK) /* AQUA */
     0, /* 0 */
@@ -1035,7 +1020,7 @@ static const TkPlatStubs tkPlatStubs = {
     0, /* 2 */
     0, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent_, /* 5 */
+    TkGenWMConfigureEvent, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
     0, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
@@ -1341,6 +1326,16 @@ const TkStubs tkStubs = {
     Tk_SendVirtualEvent, /* 278 */
     Tk_FontGetDescription, /* 279 */
     Tk_CreatePhotoImageFormatVersion3, /* 280 */
+    Tk_DrawHighlightBorder, /* 281 */
+    Tk_SetMainMenubar, /* 282 */
+    Tk_SetWindowMenuBar, /* 283 */
+    Tk_ClipDrawableToRect, /* 284 */
+    Tk_GetSystemDefault, /* 285 */
+    Tk_UseWindow, /* 286 */
+    Tk_MakeContainer, /* 287 */
+    Tk_GetOtherWindow, /* 288 */
+    Tk_Get3DBorderColors, /* 289 */
+    Tk_MakeWindow, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */

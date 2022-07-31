@@ -60,6 +60,7 @@ MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
  */
 
 static const TkEnsemble tkCmdMap[] = {
+    {"fontchooser",	NULL, tkFontchooserEnsemble},
     {"appname",		AppnameCmd, NULL },
     {"busy",		Tk_BusyObjCmd, NULL },
     {"caret",		CaretCmd, NULL },
@@ -67,7 +68,6 @@ static const TkEnsemble tkCmdMap[] = {
     {"scaling",		ScalingCmd, NULL },
     {"useinputmethods",	UseinputmethodsCmd, NULL },
     {"windowingsystem",	WindowingsystemCmd, NULL },
-    {"fontchooser",	NULL, tkFontchooserEnsemble},
     {NULL, NULL, NULL}
 };
 
@@ -185,10 +185,10 @@ Tk_BindObjCmd(
 	if (winPtr == NULL) {
 	    return TCL_ERROR;
 	}
-	object = (ClientData) winPtr->pathName;
+	object = winPtr->pathName;
     } else {
 	winPtr = (TkWindow *)clientData;
-	object = (ClientData) Tk_GetUid(string);
+	object = (void *) Tk_GetUid(string);
     }
 
     /*
@@ -267,10 +267,10 @@ TkBindEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
 #define MAX_OBJS 20
-    ClientData objects[MAX_OBJS], *objPtr;
+    void *objects[MAX_OBJS], **objPtr;
     TkWindow *topLevPtr;
-    int i, count;
-    const char *p;
+    TkSizeT i, count;
+    char *p;
     Tcl_HashEntry *hPtr;
 
     if ((winPtr->mainPtr == NULL) || (winPtr->mainPtr->bindingTable == NULL)) {
@@ -288,7 +288,7 @@ TkBindEventProc(
 	    objPtr = (void **)ckalloc(winPtr->numTags * sizeof(void *));
 	}
 	for (i = 0; i < winPtr->numTags; i++) {
-	    p = (const char *)winPtr->tagPtr[i];
+	    p = (char *)winPtr->tagPtr[i];
 	    if (*p == '.') {
 		hPtr = Tcl_FindHashEntry(&winPtr->mainPtr->nameTable, p);
 		if (hPtr != NULL) {
@@ -297,12 +297,12 @@ TkBindEventProc(
 		    p = NULL;
 		}
 	    }
-	    objPtr[i] = (ClientData) p;
+	    objPtr[i] = p;
 	}
 	count = winPtr->numTags;
     } else {
-	objPtr[0] = (ClientData) winPtr->pathName;
-	objPtr[1] = (ClientData) winPtr->classUid;
+	objPtr[0] = winPtr->pathName;
+	objPtr[1] = (void *)winPtr->classUid;
 	for (topLevPtr = winPtr;
 		(topLevPtr != NULL) && !(topLevPtr->flags & TK_TOP_HIERARCHY);
 		topLevPtr = topLevPtr->parentPtr) {
@@ -310,11 +310,11 @@ TkBindEventProc(
 	}
 	if ((winPtr != topLevPtr) && (topLevPtr != NULL)) {
 	    count = 4;
-	    objPtr[2] = (ClientData) topLevPtr->pathName;
+	    objPtr[2] = topLevPtr->pathName;
 	} else {
 	    count = 3;
 	}
-	objPtr[count-1] = (ClientData) Tk_GetUid("all");
+	objPtr[count-1] = (void *) Tk_GetUid("all");
     }
     Tk_BindEvent(winPtr->mainPtr->bindingTable, eventPtr, (Tk_Window) winPtr,
 	    count, objPtr);
@@ -349,7 +349,7 @@ Tk_BindtagsObjCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr, *winPtr2;
-    int i, length;
+    TkSizeT i, length;
     const char *p;
     Tcl_Obj *listPtr, **tags;
 
@@ -400,7 +400,7 @@ Tk_BindtagsObjCmd(
 
     winPtr->numTags = length;
     winPtr->tagPtr = (void **)ckalloc(length * sizeof(void *));
-    for (i = 0; i < length; i++) {
+    for (i = 0; i < (TkSizeT)length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
 	    char *copy;
@@ -414,9 +414,9 @@ Tk_BindtagsObjCmd(
 
 	    copy = (char *)ckalloc(strlen(p) + 1);
 	    strcpy(copy, p);
-	    winPtr->tagPtr[i] = (ClientData) copy;
+	    winPtr->tagPtr[i] = copy;
 	} else {
-	    winPtr->tagPtr[i] = (ClientData) Tk_GetUid(p);
+	    winPtr->tagPtr[i] = (void *)Tk_GetUid(p);
 	}
     }
     return TCL_OK;
@@ -444,7 +444,7 @@ void
 TkFreeBindingTags(
     TkWindow *winPtr)		/* Window whose tags are to be released. */
 {
-    int i;
+    TkSizeT i;
     const char *p;
 
     for (i = 0; i < winPtr->numTags; i++) {
@@ -649,9 +649,13 @@ TkInitTkCmd(
     Tcl_Interp *interp,
     ClientData clientData)
 {
-    TkMakeEnsemble(interp, "::", "tk", clientData, tkCmdMap);
+    /* If the interp is safe, leave out "fontchooser" */
+    int isSafe = Tcl_IsSafe(interp);
+    TkMakeEnsemble(interp, "::", "tk", clientData, tkCmdMap + isSafe);
 #if defined(_WIN32) || defined(MAC_OSX_TK)
-    TkInitFontchooser(interp, clientData);
+    if (!isSafe) {
+	TkInitFontchooser(interp, clientData);
+    }
 #endif
     return TCL_OK;
 }

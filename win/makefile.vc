@@ -346,7 +346,7 @@ PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
 CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
-		 /DHAVE_STRINGS_H=1 \
+		 /DHAVE_STRINGS_H=1 /DTCL_UTF_MAX=3 \
 !if $(HAVE_UXTHEME_H)
 		 /DHAVE_UXTHEME_H=1 \
 !endif
@@ -622,6 +622,13 @@ $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+$(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
@@ -647,6 +654,9 @@ $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
 	$(cc32) $(pkgcflags) 		\
 		-DCFG_RUNTIME_DLLFILE="\"$(TKLIBNAME)\"" \
 		-Fo$@ $?
+
+$(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported

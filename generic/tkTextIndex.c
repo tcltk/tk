@@ -4,8 +4,8 @@
  *	This module provides functions that manipulate indices for text
  *	widgets.
  *
- * Copyright  © 1992-1994 The Regents of the University of California.
- * Copyright  © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -1607,7 +1607,7 @@ TkTextIndexForwChars(
 		 * toggled off), or it's a new tag with higher priority.
 		 */
 
-		if (tagPtr->elideString != NULL) {
+		if (tagPtr->elide >= 0) {
 		    infoPtr->tagCnts[tagPtr->priority]++;
 		    if (infoPtr->tagCnts[tagPtr->priority] & 1) {
 			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
@@ -1635,12 +1635,12 @@ TkTextIndexForwChars(
 				if (infoPtr->tagCnts[infoPtr->elidePriority]
 					& 1) {
 				    elide = infoPtr->tagPtrs
-					    [infoPtr->elidePriority]->elide;
+					    [infoPtr->elidePriority]->elide > 0;
 				    break;
 				}
 			    }
 			} else {
-			    elide = tagPtr->elide;
+			    elide = tagPtr->elide > 0;
 			    infoPtr->elidePriority = tagPtr->priority;
 			}
 		    }
@@ -1857,7 +1857,7 @@ TkTextIndexCount(
 		     * toggled off), or it's a new tag with higher priority.
 		     */
 
-		    if (tagPtr->elideString != NULL) {
+		    if (tagPtr->elide >= 0) {
 			infoPtr->tagCnts[tagPtr->priority]++;
 			if (infoPtr->tagCnts[tagPtr->priority] & 1) {
 			    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
@@ -1885,12 +1885,12 @@ TkTextIndexCount(
 				    if (infoPtr->tagCnts[
 					    infoPtr->elidePriority] & 1) {
 					elide = infoPtr->tagPtrs[
-						infoPtr->elidePriority]->elide;
+						infoPtr->elidePriority]->elide > 0;
 					break;
 				    }
 				}
 			    } else {
-				elide = tagPtr->elide;
+				elide = tagPtr->elide > 0;
 				infoPtr->elidePriority = tagPtr->priority;
 			    }
 			}
@@ -2146,7 +2146,7 @@ TkTextIndexBackChars(
 	     * it's a new tag with higher priority.
 	     */
 
-	    if (tagPtr->elideString != NULL) {
+	    if (tagPtr->elide >= 0) {
 		infoPtr->tagCnts[tagPtr->priority]++;
 		if (infoPtr->tagCnts[tagPtr->priority] & 1) {
 		    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
@@ -2172,12 +2172,12 @@ TkTextIndexBackChars(
 			while (--infoPtr->elidePriority > 0) {
 			    if (infoPtr->tagCnts[infoPtr->elidePriority] & 1) {
 				elide = infoPtr->tagPtrs[
-					infoPtr->elidePriority]->elide;
+					infoPtr->elidePriority]->elide > 0;
 				break;
 			    }
 			}
 		    } else {
-			elide = tagPtr->elide;
+			elide = tagPtr->elide > 0;
 			infoPtr->elidePriority = tagPtr->priority;
 		    }
 		}
@@ -2196,7 +2196,12 @@ TkTextIndexBackChars(
 		    if (p == start) {
 			break;
 		    }
-		    charCount--;
+		    if ((sizeof(Tcl_UniChar) == 2) &&  (unsigned)(UCHAR(*p) - 0xF0) <= 5) {
+			charCount--; /* Characters > U+FFFF count as 2 here */
+		    }
+		    if (charCount != 0) {
+			charCount--;
+		    }
 		}
 	    } else {
 		if (type & COUNT_INDICES) {
@@ -2434,18 +2439,18 @@ StartEnd(
 		}
 		firstChar = 0;
 	    }
-            if (offset == 0) {
-                if (modifier == TKINDEX_DISPLAY) {
-                    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
-                        COUNT_DISPLAY_INDICES);
-                } else {
-                    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr,
-                        COUNT_INDICES);
-                }
-            } else {
-                indexPtr->byteIndex -= chSize;
-            }
-            offset -= chSize;
+	    if (offset == 0) {
+		if (modifier == TKINDEX_DISPLAY) {
+		    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
+			    COUNT_DISPLAY_INDICES);
+		} else {
+		    TkTextIndexBackChars(NULL, indexPtr, 1, indexPtr,
+			    COUNT_INDICES);
+		}
+	    } else {
+		indexPtr->byteIndex -= chSize;
+	    }
+	    offset -= chSize;
 	    if ((int)offset < 0) {
 		if (indexPtr->byteIndex == 0) {
 		    goto done;

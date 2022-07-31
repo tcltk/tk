@@ -14,6 +14,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
+#include "tkMacOSXConstants.h"
 #include <dlfcn.h>
 #include <objc/objc-auto.h>
 #include <sys/stat.h>
@@ -43,6 +44,11 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize isDrawing = _isDrawing;
 @synthesize needsToDraw = _needsToDraw;
 @synthesize isSigned = _isSigned;
+@synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
+@synthesize tkPointerWindow = _tkPointerWindow;
+@synthesize tkEventTarget = _tkEventTarget;
+@synthesize tkDragTarget = _tkDragTarget;
+@synthesize tkButtonState = _tkButtonState;
 @end
 
 /*
@@ -161,6 +167,20 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
     [NSApp setActivationPolicy:NSApplicationActivationPolicyRegular];
     [NSApp activateIgnoringOtherApps: YES];
+
+    /*
+     * Add an event monitor so we continue to receive NSMouseMoved and
+     * NSMouseDragged events when the mouse moves outside of the key
+     * window. The handler simply returns the events it receives, so
+     * they can be processed in the same way as for other events.
+     */
+
+    [NSEvent addLocalMonitorForEventsMatchingMask:(NSMouseMovedMask |
+						   NSLeftMouseDraggedMask)
+	 handler:^NSEvent *(NSEvent *event)
+	 {
+	     return event;
+	 }];
 
     /*
      * Process events to ensure that the root window is fully initialized. See
