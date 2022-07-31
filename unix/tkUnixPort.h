@@ -145,10 +145,4 @@
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
 
-/*
- * Used by tkWindow.c
- */
-
-#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
-
 #endif /* _UNIXPORT */

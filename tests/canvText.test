@@ -66,7 +66,7 @@ test canvText-1.12 {configuration options: good value for "underline"} -body {
 } -result {0 0}
 test canvasText-1.13 {configuration options: bad value for "underline"} -body {
     .c itemconfigure test -underline xyz
-} -returnCodes error -result {bad index "xyz": must be integer?[+-]integer? or end?[+-]integer?}
+} -returnCodes error -result {bad index "xyz": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test canvText-1.14 {configuration options: good value for "width"} -body {
     .c itemconfigure test -width 6
     list [lindex [.c itemconfigure test -width] 4] [.c itemcget test -width]

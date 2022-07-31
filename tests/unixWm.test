@@ -1230,9 +1230,9 @@ test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
 if {[tk windowingsystem] == "aqua"} {
-    set result_35_1 {1 {bad argument "1": must be normal, iconic, withdrawn, or zoomed}}
+    set result_35_1 {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
 } else {
-    set result_35_1 {1 {bad argument "1": must be normal, iconic, or withdrawn}}
+    set result_35_1 {1 {bad argument "1": must be iconic, normal, or withdrawn}}
 }
 test unixWm-35.1 {Tk_WmCmd procedure, "state" option} {unix notAqua} {
     list [catch {wm state .t 1} msg]  $msg
@@ -1866,7 +1866,7 @@ test unixWm-50.3 {
         set y [winfo rooty .x]
     }
     set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
-	       	     [child eval {winfo containing $x [expr $y + 50]}]]
+	[child eval {winfo containing $x [expr $y + 50]}]]
     interp delete child
     set x [winfo rootx .t]
     set y [winfo rooty .t]

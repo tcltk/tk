@@ -1615,7 +1615,7 @@ static int StyleLayoutCmd(
  *      Use the current theme if $theme is omitted.
  */
 static int StyleThemeStylesCmd(
-    TCL_UNUSED(ClientData), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(void *), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Ttk_Theme themePtr;
 

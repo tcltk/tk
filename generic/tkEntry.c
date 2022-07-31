@@ -77,7 +77,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_BORDER, "-disabledbackground", "disabledBackground",
 	"DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, disabledBorder), TK_OPTION_NULL_OK,
-	(ClientData) DEF_ENTRY_DISABLED_BG_MONO, 0},
+	DEF_ENTRY_DISABLED_BG_MONO, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_ENTRY_DISABLED_FG, TCL_INDEX_NONE,
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
@@ -103,7 +103,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, insertBorderWidth), 0,
-	(ClientData) DEF_ENTRY_INSERT_BD_MONO, 0},
+	DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_ENTRY_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOffTime),
 	0, 0, 0},
@@ -122,12 +122,12 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	DEF_ENTRY_PLACEHOLDER, TCL_INDEX_NONE, offsetof(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
-        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
-        offsetof(Entry, placeholderColorPtr), 0, 0, 0},
+	"PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
+	offsetof(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
 	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, readonlyBorder), TK_OPTION_NULL_OK,
-	(ClientData) DEF_ENTRY_READONLY_BG_MONO, 0},
+	DEF_ENTRY_READONLY_BG_MONO, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_ENTRY_RELIEF, TCL_INDEX_NONE, offsetof(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
@@ -216,7 +216,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-disabledbackground", "disabledBackground",
 	"DisabledBackground", DEF_ENTRY_DISABLED_BG_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, disabledBorder), TK_OPTION_NULL_OK,
-	(ClientData) DEF_ENTRY_DISABLED_BG_MONO, 0},
+	DEF_ENTRY_DISABLED_BG_MONO, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_ENTRY_DISABLED_FG, TCL_INDEX_NONE,
 	offsetof(Entry, dfgColorPtr), TK_OPTION_NULL_OK, 0, 0},
@@ -249,7 +249,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
 	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, insertBorderWidth), 0,
-	(ClientData) DEF_ENTRY_INSERT_BD_MONO, 0},
+	DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
 	DEF_ENTRY_INSERT_OFF_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOffTime),
 	0, 0, 0},
@@ -275,7 +275,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
 	"ReadonlyBackground", DEF_ENTRY_READONLY_BG_COLOR, TCL_INDEX_NONE,
 	offsetof(Entry, readonlyBorder), TK_OPTION_NULL_OK,
-	(ClientData) DEF_ENTRY_READONLY_BG_MONO, 0},
+	DEF_ENTRY_READONLY_BG_MONO, 0},
     {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
 	DEF_SPINBOX_REPEAT_DELAY, TCL_INDEX_NONE, offsetof(Spinbox, repeatDelay),
 	0, 0, 0},
@@ -387,7 +387,7 @@ enum sbselCmd {
  */
 
 static const char *const selElementNames[] = {
-    "none", "buttondown", "buttonup", NULL, "entry"
+    "buttondown", "buttonup", "none", NULL, "entry"
 };
 
 /*
@@ -711,7 +711,7 @@ EntryWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, NULL);
 	    goto error;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, TCL_INDEX_NONE));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, -1));
 	break;
 
     case COMMAND_ICURSOR:
@@ -784,7 +784,7 @@ EntryWidgetObjCmd(
 	    EntryScanTo(entryPtr, x);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad scan option \"%s\": must be mark or dragto",
+		    "bad scan option \"%s\": must be dragto or mark",
 		    minorCmd));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
 		    minorCmd, NULL);
@@ -1261,9 +1261,9 @@ ConfigureEntry(
 		sbPtr->listObj = NULL;
 		if (sbPtr->valueStr != NULL) {
 		    Tcl_Obj *newObjPtr;
-		    int nelems;
+		    TkSizeT nelems;
 
-		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, TCL_INDEX_NONE);
+		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, -1);
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
 			    != TCL_OK) {
 			valuesChanged = -1;
@@ -1927,9 +1927,9 @@ DisplayEntry(
 	    bgGC = Tk_GCForColor(entryPtr->highlightBgColorPtr, pixmap);
 	    if (entryPtr->flags & GOT_FOCUS) {
 		fgGC = Tk_GCForColor(entryPtr->highlightColorPtr, pixmap);
-		TkpDrawHighlightBorder(tkwin, fgGC, bgGC, xBound, pixmap);
+		Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, xBound, pixmap);
 	    } else {
-		TkpDrawHighlightBorder(tkwin, bgGC, bgGC, xBound, pixmap);
+		Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, xBound, pixmap);
 	    }
 	}
     }
@@ -3267,14 +3267,14 @@ EntryTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         entryPtr->textVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         EntryTextVarProc, probe);
-                if (probe == (ClientData)entryPtr) {
+                if (probe == (void *)entryPtr) {
                     break;
                 }
             } while (probe);
@@ -4059,7 +4059,7 @@ SpinboxWidgetObjCmd(
 	    EntryScanTo(entryPtr, x);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad scan option \"%s\": must be mark or dragto",
+		    "bad scan option \"%s\": must be dragto or mark",
 		    minorCmd));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
 		    minorCmd, NULL);
@@ -4426,7 +4426,7 @@ SpinboxInvoke(
 		 * there. If not, move to the first element of the list.
 		 */
 
-		int i, listc;
+		TkSizeT i, listc;
 		TkSizeT elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;

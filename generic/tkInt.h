@@ -19,6 +19,8 @@
 #include "tkPort.h"
 #endif
 
+#define TK_OPTION_ENUM_VAR		((int)(sizeof(Tk_OptionType)&(sizeof(int)-1))<<6)
+
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:
  * Needs to happen here in addition to configure to work with fat compiles on
@@ -94,8 +96,17 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
-#   define Tcl_GetParent Tcl_GetMaster
+#if TCL_MAJOR_VERSION < 9
+#   undef Tcl_ExternalToUtfDStringEx
+#   undef Tcl_UtfToExternalDStringEx
+    /* just assume 'flags' is TCL_ENCODING_NOCOMPLAIN, and return value not used. */
+#   define Tcl_ExternalToUtfDStringEx(encoding, data, length, flags, ds) \
+	(Tcl_ExternalToUtfDString(encoding, data, length, ds), TCL_INDEX_NONE)
+#   define Tcl_UtfToExternalDStringEx(encoding, data, length, flags, ds) \
+	(Tcl_UtfToExternalDString(encoding, data, length, ds), TCL_INDEX_NONE)
+#   if !defined(Tcl_GetParent) && (TCL_MINOR_VERSION < 7)
+#	define Tcl_GetParent Tcl_GetMaster
+#   endif
 #endif
 
 /*
@@ -104,34 +115,29 @@
  * to/from pointer from/to integer of different size".
  */
 
-#if !defined(INT2PTR) && !defined(PTR2INT)
-#   if defined(HAVE_INTPTR_T) || defined(intptr_t)
-#	define INT2PTR(p) ((void*)(intptr_t)(p))
-#	define PTR2INT(p) ((intptr_t)(p))
-#   else
-#	define INT2PTR(p) ((void*)(p))
-#	define PTR2INT(p) ((long)(p))
-#   endif
+#if !defined(INT2PTR)
+#   define INT2PTR(p) ((void *)(ptrdiff_t)(p))
 #endif
-#if !defined(UINT2PTR) && !defined(PTR2UINT)
-#   if defined(HAVE_UINTPTR_T) || defined(uintptr_t)
-#	define UINT2PTR(p) ((void*)(uintptr_t)(p))
-#	define PTR2UINT(p) ((uintptr_t)(p))
-#   else
-#	define UINT2PTR(p) ((void*)(p))
-#	define PTR2UINT(p) ((unsigned long)(p))
-#   endif
+#if !defined(PTR2INT)
+#   define PTR2INT(p) ((ptrdiff_t)(p))
+#endif
+#if !defined(UINT2PTR)
+#   define UINT2PTR(p) ((void *)(size_t)(p))
+#endif
+#if !defined(PTR2UINT)
+#   define PTR2UINT(p) ((size_t)(p))
 #endif
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE flag). This allows to use the internal
- * INDEX_TEMP_TABLE flag of Tcl. However this is rather ugly and not robust
- * since nothing prevents Tcl from changing the value of its internal flags!
+ * (TCL_INDEX_TEMP_TABLE) or TIP #613 (TCL_INDEX_NULL_OK)
  */
 
+#ifndef TCL_INDEX_NULL_OK
+#   define TCL_INDEX_NULL_OK 32
+#endif
 #if !defined(TCL_INDEX_TEMP_TABLE)
-#   define TCL_INDEX_TEMP_TABLE 2
+#   define TCL_INDEX_TEMP_TABLE 64
 #endif
 
 #ifndef TCL_Z_MODIFIER
@@ -148,6 +154,12 @@
 #   define TCL_LL_MODIFIER	"I64"
 #else
 #   define TCL_LL_MODIFIER	"ll"
+#endif
+
+#if TCL_MAJOR_VERSION > 8
+#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
+#else
+#   define TKSIZET_MODIFIER ""
 #endif
 
 /*
@@ -391,8 +403,14 @@ typedef struct TkDisplay {
 				 * by that container. */
     int geomInit;
 
-#define TkGetContainer(tkwin) (((TkWindow *)tkwin)->maintainerPtr != NULL ? \
-    ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr)
+    /*
+     * Information used by tkGrid.c, tkPack.c, tkPlace.c, tkPointer.c,
+     * and ttkMacOSXTheme.c:
+     */
+
+#define TkGetContainer(tkwin) (Tk_TopWinHierarchy((TkWindow *)tkwin) ? NULL : \
+	(((TkWindow *)tkwin)->maintainerPtr != NULL ? \
+	 ((TkWindow *)tkwin)->maintainerPtr : ((TkWindow *)tkwin)->parentPtr))
 
     /*
      * Information used by tkGet.c only:
@@ -828,13 +846,13 @@ typedef struct TkWindow {
     ClientData *tagPtr;		/* Points to array of tags used for bindings
 				 * on this window. Each tag is a Tk_Uid.
 				 * Malloc'ed. NULL means no tags. */
-    int numTags;		/* Number of tags at *tagPtr. */
+    TkSizeT numTags;		/* Number of tags at *tagPtr. */
 
     /*
      * Information used by tkOption.c to manage options for the window.
      */
 
-    int optionLevel;		/* -1 means no option information is currently
+    TkSizeT optionLevel;		/* TCL_INDEX_NONE means no option information is currently
 				 * cached for this window. Otherwise this
 				 * gives the level in the option stack at
 				 * which info is cached. */
@@ -912,6 +930,16 @@ typedef struct TkWindow {
 } TkWindow;
 
 /*
+ * String tables:
+ */
+
+MODULE_SCOPE const char *const tkStateStrings[];
+MODULE_SCOPE const char *const tkCompoundStrings[];
+MODULE_SCOPE const char *const tkAnchorStrings[];
+MODULE_SCOPE const char *const tkReliefStrings[];
+MODULE_SCOPE const char *const tkJustifyStrings[];
+
+/*
  * Real definition of some events. Note that these events come from outside
  * but have internally generated pieces added to them.
  */
@@ -919,6 +947,9 @@ typedef struct TkWindow {
 typedef struct {
     XKeyEvent keyEvent;		/* The real event from X11. */
 #ifdef _WIN32
+#   ifndef XMaxTransChars
+#	define XMaxTransChars 7
+#   endif
     char trans_chars[XMaxTransChars];
                             /* translated characters */
     unsigned char nbytes;
@@ -1306,7 +1337,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const argv[]);
+			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
@@ -1327,7 +1358,7 @@ MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window 
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
-			    ClientData clientData);
+			    void *clientData);
 MODULE_SCOPE void	TkDeleteExitHandler(Tcl_ExitProc *proc,
 			    ClientData clientData);
 MODULE_SCOPE Tcl_ExitProc	TkFinalize;

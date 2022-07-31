@@ -308,7 +308,7 @@ declare 83 {
 #    void TkSetClassProcs(Tk_Window tkwin,
 #	    TkClassProcs *procs, ClientData instanceData)
 #}
-declare 85 {
+declare 85 {deprecated {renamed to Tk_SetWindowMenuBar}} {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
 	    const char *oldMenuName, const char *menuName)
 }
@@ -636,10 +636,10 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 macosx {
+declare 185 {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 macosx {
+declare 186 {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 

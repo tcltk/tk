@@ -247,13 +247,14 @@ TkpScanWindowId(
  */
 
 Window
-TkpMakeWindow(
-    TkWindow *winPtr,
+Tk_MakeWindow(
+    Tk_Window tkwin,
     Window parent)
 {
     HWND parentWin;
     int style;
     HWND hwnd;
+    TkWindow *winPtr = (TkWindow *)tkwin;
 
     if (parent != None) {
 	parentWin = Tk_GetHWND(parent);

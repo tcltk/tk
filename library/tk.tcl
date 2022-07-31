@@ -507,7 +507,9 @@ if {$::tk_library ne ""} {
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
-	SourceLibFile systray
+	if {![interp issafe]} {
+	    SourceLibFile systray
+	}
 	SourceLibFile text
     }
 }
@@ -695,11 +697,11 @@ if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-    	source -encoding utf-8 $file
+	source -encoding utf-8 $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
-    	eval $script
+	eval $script
     }
     #This procedure is required to silence warnings generated
     #by inline AppleScript execution.

@@ -26,7 +26,7 @@
 /*
  * Forward declarations of the structures we define.
  */
-
+#define ColorTable ImgColorTable
 #define PhotoMaster PhotoModel
 typedef struct ColorTableId	ColorTableId;
 typedef struct ColorTable	ColorTable;
@@ -260,6 +260,8 @@ MODULE_SCOPE void	TkImgPhotoFree(ClientData clientData,
 			    Display *display);
 MODULE_SCOPE void	TkImgResetDither(PhotoInstance *instancePtr);
 
+#undef ColorTable
+
 /*
  * Local Variables:
  * mode: c

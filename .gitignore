@@ -29,8 +29,9 @@ _FOSSIL_
 */tktest*
 */versions.vc
 */version.vc
-*/libtcl.vfs
-*/libtcl_*.zip
+*/libtk.vfs
+*/libtk*.zip
+*/tkUuid.h
 libtommath/bn.ilg
 libtommath/bn.ind
 libtommath/pretty.build

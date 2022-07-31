@@ -271,7 +271,8 @@ EXTERN void		TkSelInit(Tk_Window tkwin);
 EXTERN void		TkSelPropProc(XEvent *eventPtr);
 /* Slot 84 is reserved */
 /* 85 */
-EXTERN void		TkSetWindowMenuBar(Tcl_Interp *interp,
+TK_DEPRECATED("renamed to Tk_SetWindowMenuBar")
+void			TkSetWindowMenuBar(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *oldMenuName,
 				const char *menuName);
 /* 86 */
@@ -556,14 +557,10 @@ EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, int numBytes, double x,
 				double y, double angle);
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
 /* 185 */
 EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
-#endif /* MACOSX */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
 /* 186 */
 EXTERN int		TkpWillDrawWidget(Tk_Window tkwin);
-#endif /* MACOSX */
 /* 187 */
 EXTERN int		TkDebugPhotoStringMatchDef(Tcl_Interp *inter,
 				Tcl_Obj *data, Tcl_Obj *formatString,
@@ -658,7 +655,7 @@ typedef struct TkIntStubs {
     void (*tkSelInit) (Tk_Window tkwin); /* 82 */
     void (*tkSelPropProc) (XEvent *eventPtr); /* 83 */
     void (*reserved84)(void);
-    void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
+    TCL_DEPRECATED_API("renamed to Tk_SetWindowMenuBar") void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
     KeySym (*tkStringToKeysym) (const char *name); /* 86 */
     int (*tkThickPolyLineToArea) (double *coordPtr, int numPoints, double width, int capStyle, int joinStyle, double *rectPtr); /* 87 */
     void (*tkWmAddToColormapWindows) (TkWindow *winPtr); /* 88 */
@@ -758,24 +755,8 @@ typedef struct TkIntStubs {
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
-#if (TCL_MAJOR_VERSION < 9) && !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    void (*reserved185)(void);
-#endif /* UNIX */
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) /* WIN */
-    void (*reserved185)(void);
-#endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
     void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
-#endif /* MACOSX */
-#if (TCL_MAJOR_VERSION < 9) && !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    void (*reserved186)(void);
-#endif /* UNIX */
-#if (TCL_MAJOR_VERSION > 8) || defined(_WIN32) /* WIN */
-    void (*reserved186)(void);
-#endif /* WIN */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
     int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
-#endif /* MACOSX */
     int (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */
 } TkIntStubs;
 
@@ -1143,14 +1124,10 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectAngledTextLayout) /* 183 */
 #define TkDrawAngledChars \
 	(tkIntStubsPtr->tkDrawAngledChars) /* 184 */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
 #define TkpRedrawWidget \
 	(tkIntStubsPtr->tkpRedrawWidget) /* 185 */
-#endif /* MACOSX */
-#if (TCL_MAJOR_VERSION < 9) && defined(MAC_OSX_TCL) /* MACOSX */
 #define TkpWillDrawWidget \
 	(tkIntStubsPtr->tkpWillDrawWidget) /* 186 */
-#endif /* MACOSX */
 #define TkDebugPhotoStringMatchDef \
 	(tkIntStubsPtr->tkDebugPhotoStringMatchDef) /* 187 */
 

@@ -547,6 +547,7 @@ typedef enum {
  */
 
 typedef enum {
+    TK_ANCHOR_NULL = -1,
     TK_ANCHOR_N, TK_ANCHOR_NE, TK_ANCHOR_E, TK_ANCHOR_SE,
     TK_ANCHOR_S, TK_ANCHOR_SW, TK_ANCHOR_W, TK_ANCHOR_NW,
     TK_ANCHOR_CENTER
@@ -557,6 +558,7 @@ typedef enum {
  */
 
 typedef enum {
+    TK_JUSTIFY_NULL = -1,
     TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER
 } Tk_Justify;
 
@@ -835,8 +837,13 @@ typedef struct Tk_FakeWin {
     XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
     ClientData *dummy10;	/* tagPtr */
-    int dummy11;		/* numTags */
-    int dummy12;		/* optionLevel */
+#if TCL_MAJOR_VERSION > 8
+    size_t dummy11;		/* numTags */
+    size_t dummy12;		/* optionLevel */
+#else
+    int dummy11;
+    int dummy12;
+#endif
     char *dummy13;		/* selHandlerList */
     char *dummy14;		/* geomMgrPtr */
     ClientData dummy15;		/* geomData */
@@ -1060,12 +1067,12 @@ typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
 #else
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[]);
+		    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int argc, Tcl_Obj *const objv[],
+		    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[],
 		    int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int argc, Tcl_Obj *const argv[]);
+		    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
 #if TCL_MAJOR_VERSION > 8
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    size_t beforeThis, Tcl_Obj *string);

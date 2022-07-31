@@ -3361,7 +3361,7 @@ TkBTreeGetTags(
     const TkText *textPtr,	/* If non-NULL, then only return tags for this
 				 * text widget (when there are peer
 				 * widgets). */
-    int *numTagsPtr)		/* Store number of tags found at this
+    TkSizeT *numTagsPtr)		/* Store number of tags found at this
 				 * location. */
 {
     Node *nodePtr;
@@ -3552,7 +3552,7 @@ TkTextIsElided(
 	if ((segPtr->typePtr == &tkTextToggleOnType)
 		|| (segPtr->typePtr == &tkTextToggleOffType)) {
 	    tagPtr = segPtr->body.toggle.tagPtr;
-	    if (tagPtr->elideString != NULL) {
+	    if (tagPtr->elide >= 0) {
 		infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 		infoPtr->tagCnts[tagPtr->priority]++;
 	    }
@@ -3592,7 +3592,7 @@ TkTextIsElided(
 	    if ((segPtr->typePtr == &tkTextToggleOnType)
 		    || (segPtr->typePtr == &tkTextToggleOffType)) {
 		tagPtr = segPtr->body.toggle.tagPtr;
-		if (tagPtr->elideString != NULL) {
+		if (tagPtr->elide >= 0) {
 		    infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 		    infoPtr->tagCnts[tagPtr->priority]++;
 		}
@@ -3616,7 +3616,7 @@ TkTextIsElided(
 		    summaryPtr = summaryPtr->nextPtr) {
 		if (summaryPtr->toggleCount & 1) {
 		    tagPtr = summaryPtr->tagPtr;
-		    if (tagPtr->elideString != NULL) {
+		    if (tagPtr->elide >= 0) {
 			infoPtr->tagPtrs[tagPtr->priority] = tagPtr;
 			infoPtr->tagCnts[tagPtr->priority] +=
 				summaryPtr->toggleCount;
@@ -3634,7 +3634,7 @@ TkTextIsElided(
     infoPtr->elidePriority = -1;
     for (i = infoPtr->numTags-1; i >=0; i--) {
 	if (infoPtr->tagCnts[i] & 1) {
-	    infoPtr->elide = infoPtr->tagPtrs[i]->elide;
+	    infoPtr->elide = infoPtr->tagPtrs[i]->elide > 0;
 
 	    /*
 	     * Note: i == infoPtr->tagPtrs[i]->priority
