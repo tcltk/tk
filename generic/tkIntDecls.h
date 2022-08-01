@@ -1201,7 +1201,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #   define TkpMakeWindow ((Window (*)(TkWindow *, Window))(void *)Tk_MakeWindow)
 #endif
 
-#if !defined(MAC_OSX_TCL)
+#if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 #   define TkpWillDrawWidget(w) 0
