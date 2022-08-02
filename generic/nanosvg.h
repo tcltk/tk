@@ -1309,7 +1309,7 @@ static unsigned int nsvg__parseColorRGB(const char* str)
 	if (sscanf(str, "rgb(%u, %u, %u)", &rgbi[0], &rgbi[1], &rgbi[2]) != 3) {
 		/* integers failed, try percent values (float, locale independent) */
 		const char delimiter[3] = {',', ',', ')'};
-		str += 4; // skip "rgb("
+		str += 4; /* skip "rgb(" */
 		for (i = 0; i < 3; i++) {
 			while (*str && (nsvg__isspace(*str))) str++; 	/* skip leading spaces */
 			if (*str == '+') str++;				/* skip '+' (don't allow '-') */
