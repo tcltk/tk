@@ -248,7 +248,6 @@ TkMacOSXGetCGContextForDrawable(
 
     if (macDraw && (macDraw->flags & TK_IS_PIXMAP) && !macDraw->context) {
 	const size_t bitsPerComponent = 8;
-	size_t bitsPerPixel, bytesPerRow, len;
 	CGColorSpaceRef colorspace = NULL;
 	CGBitmapInfo bitmapInfo =
 #ifdef __LITTLE_ENDIAN__
@@ -256,25 +255,17 @@ TkMacOSXGetCGContextForDrawable(
 #else
 		kCGBitmapByteOrderDefault;
 #endif
-	char *data;
 	CGRect bounds = CGRectMake(0, 0,
 		macDraw->size.width, macDraw->size.height);
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
-	    bitsPerPixel = 8;
 	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateDeviceRGB();
-	    bitsPerPixel = 32;
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
-	bytesPerRow = ((size_t)
-		macDraw->size.width * bitsPerPixel + 127) >> 3 & ~15;
-	len = macDraw->size.height * bytesPerRow;
-	data = (char *)ckalloc(len);
-	bzero(data, len);
-	macDraw->context = CGBitmapContextCreate(data, macDraw->size.width,
-		macDraw->size.height, bitsPerComponent, bytesPerRow,
+	macDraw->context = CGBitmapContextCreate(NULL, macDraw->size.width,
+		macDraw->size.height, bitsPerComponent, 0,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
 	    CGContextClearRect(macDraw->context, bounds);
@@ -292,7 +283,8 @@ TkMacOSXGetCGContextForDrawable(
  *
  * TkMacOSXDrawCGImage --
  *
- *	Draw CG image into drawable.
+ *	Draw CG image into drawable. The entire image is used, and will
+ *	be rescaled if its dimensions do not equal dstBounds.size.
  *
  * Results:
  *	None.
@@ -311,25 +303,11 @@ TkMacOSXDrawCGImage(
     CGImageRef image,
     unsigned long imageForeground,
     unsigned long imageBackground,
-    CGRect imageBounds,
-    CGRect srcBounds,
     CGRect dstBounds)
 {
     MacDrawable *macDraw = (MacDrawable *)d;
 
     if (macDraw && context && image) {
-	CGImageRef subImage = NULL;
-
-	if (!CGRectEqualToRect(imageBounds, srcBounds)) {
-	    if (!CGRectContainsRect(imageBounds, srcBounds)) {
-		TkMacOSXDbgMsg("Mismatch of sub CGImage bounds");
-	    }
-	    subImage = CGImageCreateWithImageInRect(image, CGRectOffset(
-		    srcBounds, -imageBounds.origin.x, -imageBounds.origin.y));
-	    if (subImage) {
-		image = subImage;
-	    }
-	}
 	dstBounds = CGRectOffset(dstBounds, macDraw->xOff, macDraw->yOff);
 	if (CGImageIsMask(image)) {
 	    if (macDraw->flags & TK_IS_BW_PIXMAP) {
@@ -378,9 +356,6 @@ TkMacOSXDrawCGImage(
 	CGContextDrawImage(context, dstBounds, image);
 	CGContextRestoreGState(context);
 #endif /* TK_MAC_DEBUG_IMAGE_DRAWING */
-	if (subImage) {
-	    CFRelease(subImage);
-	}
     } else {
 	TkMacOSXDbgMsg("Drawing of empty CGImage requested");
     }
@@ -514,7 +489,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon using the even-odd fill algorithm,
+ *	Draws a filled polygon.
  *
  * Results:
  *	None.
@@ -562,7 +537,9 @@ XFillPolygon(
 		CGContextAddLineToPoint(dc.context, prevx, prevy);
 	    }
 	}
-	CGContextEOFillPath(dc.context);
+	(gc->fill_rule == EvenOddRule)
+		? CGContextEOFillPath(dc.context)
+		: CGContextFillPath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
@@ -1133,7 +1110,11 @@ XMaxRequestSize(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
+#if TK_MAC_SYNCHRONOUS_DRAWING
+    GC gc,			/* GC for window to be scrolled. */
+#else
     TCL_UNUSED(GC),			/* GC for window to be scrolled. */
+#endif
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1147,7 +1128,13 @@ TkScrollWindow(
     NSRect bounds, viewSrcRect, srcRect, dstRect;
     int result = 0;
 
+#if TK_MAC_SYNCHRONOUS_DRAWING
+    // Should behave more like TkScrollWindow on other platforms
+    if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
+	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
+#else
     if (view) {
+#endif
 
   	/*
 	 * Get the scroll area in NSView coordinates (origin at bottom left).
@@ -1158,11 +1145,15 @@ TkScrollWindow(
 		bounds.size.height - height - (macDraw->yOff + y),
 		width, height);
 
+#if TK_MAC_SYNCHRONOUS_DRAWING
+	// Already scrolled using XCopyArea()
+#else
 	/*
 	 * Scroll the rectangle.
 	 */
 
 	[view scrollRect:viewSrcRect by:NSMakeSize(dx, -dy)];
+#endif
 
 	/*
 	 * Compute the damage region, using Tk coordinates (origin at top left).
@@ -1286,7 +1277,11 @@ TkMacOSXSetupDrawingContext(
     if (!dc.context) {
 	NSRect drawingBounds, currentBounds;
 	dc.view = view;
+#if TK_MAC_CGIMAGE_DRAWING
+	dc.context = view.tkLayerBitmapContext;
+#else
 	dc.context = GET_CGCONTEXT;
+#endif
 	if (dc.clipRgn) {
 	    CGRect clipBounds;
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
@@ -1298,6 +1293,11 @@ TkMacOSXSetupDrawingContext(
 	    drawingBounds = [view bounds];
 	}
 
+#if TK_MAC_SYNCHRONOUS_DRAWING
+	// It seems this should be the only place to use addTkDirtyRect:
+	// and that it should not be used elsewhere as a proxy to generate Expose events, which will not work.
+	[view addTkDirtyRect:drawingBounds];
+#else
 	/*
 	 * We can only draw into the NSView which is the current focusView.
 	 * When the current [NSView focusView] is nil, the CGContext for
@@ -1332,6 +1332,7 @@ TkMacOSXSetupDrawingContext(
 	if (!NSContainsRect(currentBounds, drawingBounds)) {
 	    [view addTkDirtyRect:drawingBounds];
 	}
+#endif
     }
 
     /*
@@ -1469,6 +1470,10 @@ end:
 	dc.clipRgn = NULL;
     }
     *dcPtr = dc;
+#if TK_MAC_SYNCHRONOUS_DRAWING
+    // The goal is to allow immediate drawing; canDraw == 0 should happen far less often.
+    if (0) fprintf(stderr, "tkmacosxsdc canDraw %d\n", canDraw);
+#endif
     return canDraw;
 }
 

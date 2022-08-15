@@ -41,7 +41,19 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @implementation TKApplication
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
+#if TK_MAC_CGIMAGE_DRAWING
+// There should be no need for isDrawing since drawRect: is not used.
+- (void) setIsDrawing: (Bool)b
+{
+    return;
+}
+- (Bool) isDrawing
+{
+    return YES;
+}
+#else
 @synthesize isDrawing = _isDrawing;
+#endif
 @synthesize needsToDraw = _needsToDraw;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkPointerWindow = _tkPointerWindow;

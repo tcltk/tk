@@ -45,8 +45,8 @@ TkRegion
 TkCreateRegion(void)
 {
     TkRegion region = (TkRegion) HIShapeCreateMutable();
-    DebugLog("Created region: total regions = %d\n", ++totalRegions);
-    RetainRegion(region);
+    DebugLog("Created region: total regions = %d, total count is %d\n",
+	    ++totalRegions, ++totalRegionRetainCount);
     return region;
 }
 
