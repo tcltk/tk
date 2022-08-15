@@ -378,7 +378,11 @@ TkMacOSXDrawAllViews(
 		if (dirtyCount) {
 		   continue;
 		}
+#if TK_MAC_CGIMAGE_DRAWING
+		// Layer-backed view: let NSView schedule updates
+#else
 		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
+#endif
 		[view setNeedsDisplay:YES];
 	    }
 	} else {
@@ -403,7 +407,12 @@ TkMacOSXDrawAllViews(
 	     */
 
 	    if ([view needsDisplay]) {
+#if TK_MAC_CGIMAGE_DRAWING
+		// Should no longer ever need to setNeedsDisplay:NO
+		if (0) fprintf(stderr, "nD still set %p\n", view);
+#else
 		[view setNeedsDisplay: NO];
+#endif
 	    }
 	}
     }

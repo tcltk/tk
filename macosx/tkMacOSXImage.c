@@ -18,6 +18,9 @@
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
 static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
+#if TK_MAC_SYNCHRONOUS_DRAWING
+	   int force_1x_scale,
+#endif
 	   int x, int y, unsigned int width, unsigned int height);
 
 /* Pixel formats
@@ -508,8 +511,16 @@ TkMacOSXPutImage(
 	return BadDrawable;
     }
     if (dc.context) {
-	CGRect bounds, srcRect, dstRect;
+	CGRect dstRect, srcRect = CGRectMake(src_x, src_y, width, height);
+	/*
+	 * Whole image is copied before cropping. For performance,
+	 * consider revising TkMacOSXCreateCGImageWithXImage() to accept
+	 * source x/y/w/h and copy only the needed portion instead.
+	 */
 	CGImageRef img = TkMacOSXCreateCGImageWithXImage(image, pixelFormat);
+	CGImageRef cropped = CGImageCreateWithImageInRect(img, srcRect);
+	CGImageRelease(img);
+	img = cropped;
 
 	/*
 	 * The CGContext for a pixmap is RGB only, with A = 0.
@@ -519,12 +530,9 @@ TkMacOSXPutImage(
 	    CGContextSetBlendMode(dc.context, kCGBlendModeSourceAtop);
 	}
 	if (img) {
-	    bounds = CGRectMake(0, 0, image->width, image->height);
-	    srcRect = CGRectMake(src_x, src_y, width, height);
 	    dstRect = CGRectMake(dest_x, dest_y, width, height);
-	    TkMacOSXDrawCGImage(drawable, gc, dc.context,
-				img, gc->foreground, gc->background,
-				bounds, srcRect, dstRect);
+	    TkMacOSXDrawCGImage(drawable, gc, dc.context, img,
+				gc->foreground, gc->background, dstRect);
 	    CFRelease(img);
 	} else {
 	    TkMacOSXDbgMsg("Invalid source drawable");
@@ -635,6 +643,11 @@ int TkpPutRGBAImage(
  *      with origin at the top left, as used by XImage and CGImage, not bottom
  *      left as used by NSView.
  *
+ *      If force_1x_scale is true, then the returned CGImage will be downscaled
+ *      if necessary to have the requested width and height. Othewise, for
+ *      windows on Retina displays, the width and height of the returned CGImage
+ *      will be twice the requested width and height.
+ *
  * Side effects:
  *     None
  *
@@ -644,6 +657,9 @@ int TkpPutRGBAImage(
 static CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
+#if TK_MAC_SYNCHRONOUS_DRAWING
+    int force_1x_scale,
+#endif
     int x,
     int y,
     unsigned int width,
@@ -652,6 +668,9 @@ CreateCGImageFromDrawableRect(
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGImageRef cg_image = NULL, result = NULL;
+#if TK_MAC_SYNCHRONOUS_DRAWING
+    CGFloat scaleFactor = 1.0;
+#endif
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	CGContextRetain(cg_context);
@@ -661,6 +680,13 @@ CreateCGImageFromDrawableRect(
 	    TkMacOSXDbgMsg("Invalid source drawable");
 	    return NULL;
 	}
+#if TK_MAC_SYNCHRONOUS_DRAWING
+	scaleFactor = view.layer.contentsScale;
+#endif
+#if TK_MAC_CGIMAGE_DRAWING
+	cg_context = ((TKContentView *)view).tkLayerBitmapContext;
+	CGContextRetain(cg_context);
+#else
 	NSSize size = view.frame.size;
 	NSUInteger view_width = size.width, view_height = size.height;
         NSUInteger bytesPerPixel = 4,
@@ -673,6 +699,7 @@ CreateCGImageFromDrawableRect(
 			 kCGBitmapByteOrder32Big);
 	CFRelease(colorSpace);
 	[view.layer renderInContext:cg_context];
+#endif
     }
     if (cg_context) {
 	cg_image = CGBitmapContextCreateImage(cg_context);
@@ -681,8 +708,34 @@ CreateCGImageFromDrawableRect(
     if (cg_image) {
 	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
+#if TK_MAC_SYNCHRONOUS_DRAWING
+	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
+#endif
 	result = CGImageCreateWithImageInRect(cg_image, rect);
 	CGImageRelease(cg_image);
+#if TK_MAC_SYNCHRONOUS_DRAWING
+	if (force_1x_scale && (scaleFactor != 1.0)) {
+	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
+	    // create context, keeping original image properties
+	    CGColorSpaceRef colorspace = CGImageGetColorSpace(cg_image);
+	    cg_context = CGBitmapContextCreate(NULL, width, height,
+		    CGImageGetBitsPerComponent(cg_image),
+		    //CGImageGetBytesPerRow(cg_image), // wastes space?
+		    CGImageGetBitsPerPixel(cg_image) * width / 8,
+		    colorspace,
+		    CGImageGetAlphaInfo(cg_image));
+	    CGColorSpaceRelease(colorspace);
+	    if (cg_context) {
+		// draw image to context (resizing it)
+		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
+			cg_image);
+		// extract resulting image from context
+		result = CGBitmapContextCreateImage(cg_context);
+		CGContextRelease(cg_context);
+	    }
+	    CGImageRelease(cg_image);
+	}
+#endif
     }
     return result;
 }
@@ -763,7 +816,8 @@ XGetImage(
 	    return NULL;
 	}
 
-	cgImage = CreateCGImageFromDrawableRect(drawable, x, y, width, height);
+	// Request 1x-scale image for compatibility
+	cgImage = CreateCGImageFromDrawableRect(drawable, 1, x, y, width, height);
 	if (cgImage) {
 	    bitmapRep = [NSBitmapImageRep alloc];
 	    [bitmapRep initWithCGImage:cgImage];
@@ -775,7 +829,6 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
-	bitmap = (char *)ckalloc(size);
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
 	    || [bitmapRep samplesPerPixel] != 4
 	    || [bitmapRep isPlanar] != 0
@@ -785,6 +838,7 @@ XGetImage(
 	    [bitmapRep release];
 	    return NULL;
 	}
+	bitmap = (char *)ckalloc(size);
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
 	[bitmapRep release];
 
@@ -854,9 +908,8 @@ XCopyArea(
     int dest_y)
 {
     TkMacOSXDrawingContext dc;
-    MacDrawable *srcDraw = (MacDrawable *)src;
     CGImageRef img = NULL;
-    CGRect bounds, srcRect, dstRect;
+    CGRect dstRect;
 
     display->request++;
     if (!width || !height) {
@@ -873,20 +926,13 @@ XCopyArea(
 	return BadDrawable;
     }
 
-    if (srcDraw->flags & TK_IS_PIXMAP) {
-	img = CreateCGImageFromPixmap(src);
-    } else if (TkMacOSXGetNSWindowForDrawable(src)) {
-	img = CreateCGImageFromDrawableRect(src, src_x, src_y, width, height);
-    } else {
-	TkMacOSXDbgMsg("Invalid source drawable - neither window nor pixmap.");
-    }
+    // Use unscaled source (TkMacOSXDrawCGImage() will implicitly downscale)
+    img = CreateCGImageFromDrawableRect(src, 0, src_x, src_y, width, height);
 
     if (img) {
-	bounds = CGRectMake(0, 0, srcDraw->size.width, srcDraw->size.height);
-	srcRect = CGRectMake(src_x, src_y, width, height);
 	dstRect = CGRectMake(dest_x, dest_y, width, height);
 	TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-		gc->foreground, gc->background, bounds, srcRect, dstRect);
+		gc->foreground, gc->background, dstRect);
 	CFRelease(img);
     } else {
 	TkMacOSXDbgMsg("Failed to construct CGImage.");
@@ -931,7 +977,7 @@ XCopyPlane(
     TkMacOSXDrawingContext dc;
     MacDrawable *srcDraw = (MacDrawable *)src;
     MacDrawable *dstDraw = (MacDrawable *)dst;
-    CGRect bounds, srcRect, dstRect;
+    CGRect srcRect, dstRect;
     display->request++;
     if (!width || !height) {
 	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
@@ -997,13 +1043,9 @@ XCopyPlane(
 		    CGImageRelease(submask);
 		    CGImageRelease(subimage);
 		} else {
-		    bounds = CGRectMake(0, 0,
-			    srcDraw->size.width, srcDraw->size.height);
-		    srcRect = CGRectMake(src_x, src_y, width, height);
 		    dstRect = CGRectMake(dest_x, dest_y, width, height);
 		    TkMacOSXDrawCGImage(dst, gc, dc.context, img,
-			    gc->foreground, imageBackground, bounds,
-			    srcRect, dstRect);
+			    gc->foreground, imageBackground, dstRect);
 		    CGImageRelease(img);
 		}
 	    } else {

@@ -250,8 +250,7 @@ MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
-			    unsigned long imageBackground, CGRect imageBounds,
-			    CGRect srcBounds, CGRect dstBounds);
+			    unsigned long imageBackground, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
@@ -433,6 +432,9 @@ VISIBILITY_HIDDEN
 }
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
+#if TK_MAC_CGIMAGE_DRAWING
+@property CGContextRef tkLayerBitmapContext;
+#endif
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -445,6 +447,9 @@ VISIBILITY_HIDDEN
 - (void) clearTkDirtyRect;
 - (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
+#if TK_MAC_CGIMAGE_DRAWING
+- (void) resetTkLayerBitmapContext;
+#endif
 @end
 
 @interface NSWindow(TKWm)
@@ -496,6 +501,14 @@ VISIBILITY_HIDDEN
 + (id)menuWithTitle:(NSString *)title submenus:(NSArray *)submenus;
 - (NSMenuItem *)itemWithSubmenu:(NSMenu *)submenu;
 - (NSMenuItem *)itemInSupermenu;
+@end
+
+// Need undocumented appearance: argument
+@interface NSMenu(TKMenu)
+- (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
+		      atLocation:(NSPoint)location
+			  inView:(NSView *)view
+		      appearance:(NSAppearance *)appearance;
 @end
 
 @interface NSMenuItem(TKUtils)
