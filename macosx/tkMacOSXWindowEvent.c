@@ -1170,7 +1170,7 @@ ConfigureRestrictProc(
 	  * ticket [1fa8c3ed8d].
 	  */
 
-	if([NSApp isDrawing] || [self inLiveResize]) {
+	if ([NSApp isDrawing] || [self inLiveResize]) {
 	    [self generateExposeEvents: [self bounds]];
 	}
 
@@ -1210,7 +1210,8 @@ ConfigureRestrictProc(
     updateBounds.origin.y = ([self bounds].size.height - updateBounds.origin.y
 			     - updateBounds.size.height);
     updatesNeeded = GenerateUpdates(&updateBounds, winPtr);
-    if (!TK_MAC_SYNCHRONOUS_DRAWING && updatesNeeded) {
+    //if (!TK_MAC_SYNCHRONOUS_DRAWING && updatesNeeded) {
+    if ([self inLiveResize] && updatesNeeded) {
 
 	serial = LastKnownRequestProcessed(Tk_Display(winPtr));
 
