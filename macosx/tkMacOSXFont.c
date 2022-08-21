@@ -422,6 +422,105 @@ CreateNamedSystemFont(
 }
 
 #pragma mark -
+
+#pragma mark Grapheme Cluster indexing
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * startOfClusterObjCmd --
+ *
+ *      This function is invoked to process the startOfCluster command.
+ *
+ * Results:
+ *      A standard Tcl result.
+ *
+ * Side effects:
+ *      None
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+startOfClusterObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
+{
+    TKNSString *S;
+    const char *stringArg;
+    int numBytes;
+    TkSizeT index;
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    if (stringArg == NULL) {
+	return TCL_ERROR;
+    }
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+    if (index != TCL_INDEX_NONE) {
+	if ((size_t)index >= [S length]) {
+	    index = (TkSizeT)[S length];
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	    index = range.location;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+    }
+    return TCL_OK;
+}
+
+static int
+endOfClusterObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
+{
+    TKNSString *S;
+    char *stringArg;
+    int numBytes;
+    TkSizeT index;
+
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    if (stringArg == NULL) {
+	return TCL_ERROR;
+    }
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+    if ((size_t)index + 1 <= [S length]) {
+	if (index == TCL_INDEX_NONE) {
+		index = 0;
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	    index = range.location + range.length;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+    }
+    return TCL_OK;
+}
+
+#pragma mark -
 #pragma mark Font handling:
 
 /*
@@ -517,6 +616,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
+    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*

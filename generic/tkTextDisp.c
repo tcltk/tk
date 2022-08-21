@@ -22,12 +22,9 @@
 #include "tkUnixInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
 #endif
 
-#if !defined(MAC_OSX_TK)
-#define OK_TO_LOG 1
-#endif
+#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
 
 /*
  * "Calculations of line pixel heights and the size of the vertical
