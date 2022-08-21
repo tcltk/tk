@@ -107,9 +107,6 @@ XCreateGC(
      */
 
     gp = (GC)ckalloc(sizeof(XGCValuesWithDash));
-    if (!gp) {
-	return NULL;
-    }
 
 #define InitField(name,maskbit,default) \
 	(gp->name = (mask & (maskbit)) ? values->name : (default))
