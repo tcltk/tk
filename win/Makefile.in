@@ -359,6 +359,7 @@ TK_OBJS = \
 	tkGet.$(OBJEXT) \
 	tkGrab.$(OBJEXT) \
 	tkGrid.$(OBJEXT) \
+	tkIcu.$(OBJEXT) \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
 	tkImgListFormat.$(OBJEXT) \
