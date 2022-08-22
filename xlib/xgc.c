@@ -125,7 +125,7 @@ XCreateGC(
     InitField(cap_style,	  GCCapStyle,		0);
     InitField(join_style,	  GCJoinStyle,		0);
     InitField(fill_style,	  GCFillStyle,		FillSolid);
-    InitField(fill_rule,	  GCFillRule,		WindingRule);
+    InitField(fill_rule,	  GCFillRule,		EvenOddRule);
     InitField(arc_mode,		  GCArcMode,		ArcPieSlice);
     InitField(tile,		  GCTile,		0);
     InitField(stipple,		  GCStipple,		0);
