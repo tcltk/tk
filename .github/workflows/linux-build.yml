@@ -37,10 +37,10 @@ jobs:
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.5-dev libxss-dev
+          sudo apt-get install tcl8.6-dev libxss-dev
           mkdir "$HOME/install"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
-          echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.5" >> $GITHUB_ENV
+          echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
           echo "CC=$COMPILER" >> $GITHUB_ENV
           echo "TOOL_DIR=$(cd tcl/tools;pwd)" >> $GITHUB_ENV
           echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
@@ -121,10 +121,10 @@ jobs:
           path: tk
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.5-dev libxss-dev xvfb
+          sudo apt-get install tcl8.6-dev libxss-dev xvfb
           mkdir "$HOME/install"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
-          echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.5" >> $GITHUB_ENV
+          echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
           echo "CC=$COMPILER" >> $GITHUB_ENV
         working-directory: "."
         env:
