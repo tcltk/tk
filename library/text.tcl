@@ -250,8 +250,8 @@ bind Text <BackSpace> {
 	    if {[%W compare insert != 1.0]} {
 		# ensure that this operation is triggering "watch"
 		%W mark set insert insert-1i
-		%W delete [tk::TextPrevPos %W insert tk::startOfCluster] \
-			[tk::TextNextPos %W insert-1i tk::endOfCluster]
+		%W delete [tk::TextPrevPos %W insert+1i tk::startOfCluster] \
+			[tk::TextNextPos %W insert tk::endOfCluster]
 	    }
 	    %W see insert
 	}
