@@ -923,7 +923,7 @@ static int GdiLine(
     if (width || dolinecolor || dodash) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (doarrow) {
+    if (doarrow != 0) {
 	GdiFreeBrush(interp, hDC, hBrush);
     }
 
