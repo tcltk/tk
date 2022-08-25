@@ -333,9 +333,9 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 
 static Tk_ClassProcs widgetClassProcs = {
     sizeof(Tk_ClassProcs),	/* size */
-    WidgetWorldChanged,	/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    WidgetWorldChanged,		/* worldChangedProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*
