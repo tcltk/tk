@@ -85,7 +85,7 @@ and the central area (which may be tiled in both directions).
 set img1 [image create photo \-file button.png]
 set img2 [image create photo \-file button-pressed.png]
 set img3 [image create photo \-file button-active.png]
-style element create Button.button image \e
+ttk::style element create Button.button image \e
     [list $img1  pressed $img2  active $img3] \e
     \-border {2 4} \-sticky we
 .CE
