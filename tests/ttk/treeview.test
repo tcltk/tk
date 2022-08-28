@@ -923,4 +923,27 @@ test treeview-ce470f20fd-4 "changing -stretch resizes columns" -setup {
     destroy .tv
 } -result {60 50 60 50 60 50 1}
 
+test treeview-bc602049ab "treeview with custom background does not change size when switching themes" -setup {
+    image create photo tvbg -data {
+	iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAAnXAAAJ1wG
+	xbhe3AAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2NhcGUub3Jnm+48GgAAACJJREFUOI
+	1jPLF9+38GKgImaho2auCogaMGjho4auBQMhAAyR0DXUEyypsAAAAASUVORK5CYII=
+    }
+    ttk::style theme create foo-bc602049ab -parent clam -settings {
+      ttk::style element create Treeview.field image tvbg
+    }
+    ttk::style theme use foo-bc602049ab
+    pack [ttk::treeview .tv]
+    update idletasks
+} -body {
+    set g1 [winfo geometry .tv]
+    ttk::style theme use foo-bc602049ab
+    update idletasks
+    set g2 [winfo geometry .tv]
+    expr {$g1 eq $g2 ? 1 : "$g1 --> $g2"}
+} -cleanup {
+    destroy .tv
+    image delete tvbg
+} -result {1}
+
 tcltest::cleanupTests
