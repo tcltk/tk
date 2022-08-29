@@ -460,7 +460,7 @@ package require tk
 	bind $canvas <Meta-Key> 	{# nothing}
 	bind $canvas <Control-Key> 	{# nothing}
 	bind $canvas <Command-Key> 	{# nothing}
-	bind $canvas <Mod4-Key> 	{# nothing}
+	bind $canvas <Fn-Key>		{# nothing}
 
 	bind $canvas <FocusIn>		[namespace code {my FocusIn}]
 	bind $canvas <FocusOut>		[namespace code {my FocusOut}]
