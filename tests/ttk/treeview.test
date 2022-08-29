@@ -930,7 +930,7 @@ test treeview-bc602049ab "treeview with custom background does not change size w
 	1jPLF9+38GKgImaho2auCogaMGjho4auBQMhAAyR0DXUEyypsAAAAASUVORK5CYII=
     }
     ttk::style theme create foo-bc602049ab -parent clam -settings {
-      ttk::style element create Treeview.field image tvbg
+      ttk::style element create Treeview.field image tvbg -width 0 -height 0
     }
     ttk::style theme use foo-bc602049ab
     pack [ttk::treeview .tv]
