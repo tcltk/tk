@@ -710,6 +710,113 @@ if {[tk windowingsystem] eq "aqua"} {
      }
 }
 
+if {[info commands ::tk::endOfWord] eq ""} {
+    proc ::tk::endOfWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_endOfWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::startOfNextWord] eq ""} {
+    proc ::tk::startOfNextWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_startOfNextWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::startOfPreviousWord] eq ""} {
+    proc ::tk::startOfPreviousWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_startOfPreviousWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakBefore] eq ""} {
+    proc ::tk::wordBreakBefore {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_wordBreakBefore $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakAfter] eq ""} {
+    proc ::tk::wordBreakAfter {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_wordBreakAfter $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::endOfCluster] eq ""} {
+    proc ::tk::endOfCluster {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	} elseif {$start >= [string length $str]} {
+	    return ""
+	}
+	if {[string length [string index $str $start]] > 1} {
+	    incr start
+	}
+	incr start
+	return $start
+    }
+}
+if {[info commands ::tk::startOfCluster] eq ""} {
+    proc ::tk::startOfCluster {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	} elseif {$start >= [string length $str]} {
+	    return [string length $str]
+	}
+	if {[string length [string index $str $start]] < 1} {
+	    incr start -1
+	}
+	if {$start < 0} {
+	    return ""
+	}
+	return $start
+    }
+}
+
 # Create a dictionary to store the starting index of the IME marked
 # text in an Entry or Text widget.
 
