@@ -8,8 +8,6 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
-#define MAX(a,b) (a > b ? a : b)
-
 #define DEF_TREE_ROWS		"10"
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
@@ -1652,8 +1650,8 @@ static int TreeviewSize(void *clientData, int *widthPtr, int *heightPtr)
     Ttk_LayoutSize(tv->core.layout, tv->core.state, &padWidth, &padHeight);
     Tcl_GetIntFromObj(NULL, tv->tree.heightObj, &nRows);
 
-    *widthPtr = MAX(padWidth, TreeWidth(tv));
-    *heightPtr = MAX(padHeight, tv->tree.rowHeight * nRows);
+    *widthPtr = padWidth + TreeWidth(tv);
+    *heightPtr = padHeight + tv->tree.rowHeight * nRows;
 
     if (tv->tree.showFlags & SHOW_HEADINGS) {
 	*heightPtr += tv->tree.headingHeight;
