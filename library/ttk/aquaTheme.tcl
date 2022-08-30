@@ -86,8 +86,8 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
 	ttk::style map TNotebook.Tab \
 	    -foreground {
-		background systemControlTextColor
 		disabled systemDisabledControlTextColor
+		background systemControlTextColor
 		selected systemSelectedTabTextColor}
 
 	# Treeview:
