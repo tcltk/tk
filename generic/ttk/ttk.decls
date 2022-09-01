@@ -25,7 +25,7 @@ declare 5 {
     int Ttk_RegisterElementSpec(
 	Ttk_Theme theme,
 	const char *elementName,
-	Ttk_ElementSpec *elementSpec,
+	const Ttk_ElementSpec *elementSpec,
 	void *clientData)
 }
 
@@ -34,7 +34,7 @@ declare 6 {
 	Tcl_Interp *interp,
 	Ttk_Theme theme,
 	const char *elementName,
-	Ttk_ElementSpec *elementSpec,
+	const Ttk_ElementSpec *elementSpec,
 	void *clientData)
 }
 
@@ -72,7 +72,7 @@ declare 13 {
 }
 declare 14 {
     int Ttk_StateTableLookup(
-    	Ttk_StateTable map[], Ttk_State state)
+    	const Ttk_StateTable *map, Ttk_State state)
 }
 
 
@@ -143,7 +143,7 @@ declare 35 {
 #
 # Utilities.
 #
-declare 40 {
+declare 40 {deprecated {}} {
     int Ttk_GetOrientFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient)
 }
 

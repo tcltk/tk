@@ -23,8 +23,10 @@ with the \fB\-textvariable\fR option.
 Entry widgets support horizontal scrolling with the
 standard \fB\-xscrollcommand\fR option and \fBxview\fR widget command.
 .SO ttk_widget
-\-class	\-cursor	\-style
-\-takefocus	\-xscrollcommand
+\-class	\-cursor
+\-font	\-foreground
+\-style
+\-takefocus	\-xscrollcommand	\-placeholder	\-placeholderforeground
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-exportselection exportSelection ExportSelection
@@ -34,8 +36,6 @@ If the selection is exported, then selecting in the widget deselects
 the current X selection, selecting outside the widget deselects any
 widget selection, and the widget will respond to selection retrieval
 requests when it has a selection.
-.\" MAYBE: .OP \-font font Font
-.\" MAYBE: .OP \-foreground foreground Foreground
 .\" MAYBE: .OP \-insertbackground insertBackground Foreground
 .\" MAYBE: .OP \-insertwidth insertWidth InsertWidth
 .OP \-invalidcommand invalidCommand InvalidCommand
@@ -139,7 +139,11 @@ In general, out-of-range indices are automatically rounded to the
 nearest legal value.
 .SH "WIDGET COMMAND"
 .PP
-The following subcommands are possible for entry widgets:
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR, \fBstyle\fR and \fBxview\fR
+commands (see \fBttk::widget\fR),
+entry widgets support the following additional commands:
 .TP
 \fIpathName \fBbbox \fIindex\fR
 Returns a list of four numbers describing the bounding box of the
@@ -150,14 +154,6 @@ the upper-left corner of the screen area covered by the character
 the width and height of the character, in pixels.
 The bounding box may refer to a region outside the visible area
 of the window.
-'\".TP
-'\"\fIpathName \fBcget\fR \fIoption\fR
-'\"Returns the current value of the specified \fIoption\fR.
-'\"See \fIttk::widget(n)\fR.
-'\".TP
-'\"\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-'\"Modify or query widget options.
-'\"See \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
 Delete one or more elements of the entry.
@@ -174,10 +170,6 @@ Returns the entry's string.
 \fIpathName \fBicursor \fIindex\fR
 Arrange for the insert cursor to be displayed just before the character
 given by \fIindex\fR.  Returns the empty string.
-'\".TP
-'\"\fIpathName \fBidentify \fIx y\fR
-'\"Returns the name of the element at position \fIx\fR, \fIy\fR,
-'\"or the empty string if the coordinates are outside the window.
 .TP
 \fIpathName \fBindex\fI index\fR
 Returns the numerical index corresponding to \fIindex\fR.
@@ -185,10 +177,6 @@ Returns the numerical index corresponding to \fIindex\fR.
 \fIpathName \fBinsert \fIindex string\fR
 Insert \fIstring\fR just before the character
 indicated by \fIindex\fR.  Returns the empty string.
-'\".TP
-'\"\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-'\"Test the widget state.
-'\"See \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBselection \fIoption arg\fR
 This command is used to adjust the selection within an entry.  It
@@ -211,10 +199,6 @@ before \fIend\fR.
 If \fIend\fR refers to the same character as \fIstart\fR or an
 earlier one, then the entry's selection is cleared.
 .RE
-'\".TP
-'\"\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-'\"Modify or query the widget state.
-'\"See \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBvalidate\fR
 Force revalidation, independent of the conditions specified
@@ -222,53 +206,6 @@ by the \fB\-validate\fR option.
 Returns 0 if validation fails, 1 if it succeeds.
 Sets or clears the \fBinvalid\fR state accordingly.
 See \fBVALIDATION\fR below for more details.
-.TP
-\fIpathName \fBxview \fIargs\fR
-This command is used to query and change the horizontal position of the
-text in the widget's window.  It can take any of the following
-forms:
-.RS
-.TP
-\fIpathName \fBxview\fR
-Returns a list containing two elements.
-Each element is a real fraction between 0 and 1; together they describe
-the horizontal span that is visible in the window.
-For example, if the first element is .2 and the second element is .6,
-20% of the entry's text is off-screen to the left, the middle 40% is visible
-in the window, and 40% of the text is off-screen to the right.
-These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
-option.
-.TP
-\fIpathName \fBxview\fR \fIindex\fR
-Adjusts the view in the window so that the character given by \fIindex\fR
-is displayed at the left edge of the window.
-.TP
-\fIpathName \fBxview moveto\fI fraction\fR
-Adjusts the view in the window so that the character \fIfraction\fR of the
-way through the text appears at the left edge of the window.
-\fIFraction\fR must be a fraction between 0 and 1.
-.TP
-\fIpathName \fBxview scroll \fInumber what\fR
-This command shifts the view in the window left or right according to
-\fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
-\fIWhat\fR must be either \fBunits\fR or \fBpages\fR.
-'\" or an abbreviation of one of these, but we don't document that.
-If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
-\fInumber\fR average-width characters on the display;  if it is
-\fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
-If \fInumber\fR is negative then characters farther to the left
-become visible;  if it is positive then characters farther to the right
-become visible.
-.RE
-.PP
-The entry widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBcget\fR	\fBconfigure\fR	\fBidentify\fR
-\fBinstate\fR	\fBstate\fR
-.DE
 .SH VALIDATION
 .PP
 The \fB\-validate\fR, \fB\-validatecommand\fR, and \fB\-invalidcommand\fR
@@ -392,9 +329,10 @@ insert cursor in the entry without affecting the selection.
 If any normal printing characters are typed in an entry, they are
 inserted at the point of the insert cursor.
 .IP \0\(bu 4
-The view in the entry can be adjusted by dragging with mouse button 2.
-If mouse button 2 is clicked without moving the mouse, the selection
-is copied into the entry at the position of the mouse cursor.
+The view in the entry can be adjusted by dragging with the middle
+mouse button (button 2, or button 3 in TkAqua). If the middle mouse
+button is clicked without moving the mouse, the selection is copied
+into the entry at the position of the mouse cursor.
 .IP \0\(bu 4
 If the mouse is dragged out of the entry on the left or right sides
 while button 1 is pressed, the entry will automatically scroll to
@@ -461,6 +399,51 @@ and a different background is used in the \fBreadonly\fR state.
 .PP
 The entry widget sets the \fBinvalid\fR state if revalidation fails,
 and clears it whenever validation succeeds.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::entry\fP is \fBTEntry\fP.
+.PP
+Dynamic states: \fBdisabled\fP, \fBfocus\fP, \fBreadonly\fP.
+.PP
+\fBTEntry\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.RS
+For backwards compatibility, when using the aqua theme (for macOS), this
+option behaves as an alias for the \fB\-fieldbackground\fP provided that no
+value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
+.RE
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP
+.br
+\fB\-fieldbackground\fP \fIcolor\fP
+.RS
+Some themes use a graphical background and their field background colors cannot be changed.
+.RE
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-insertcolor\fP \fIcolor\fP
+.br
+\fB\-insertwidth\fP \fIamount\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
+.br
+\fB\-relief\fP \fIrelief\fP
+.br
+\fB\-selectbackground\fP \fIcolor\fP
+.br
+\fB\-selectborderwidth\fP \fIamount\fP
+.br
+\fB\-selectforeground\fP \fIcolor\fP
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), entry(n)
 .SH KEYWORDS

@@ -5,8 +5,8 @@
  *	the "postscript" widget command plus a few utility functions used for
  *	generating Postscript.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -94,37 +94,37 @@ typedef struct TkPostscriptInfo {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_STRING, "-colormap", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, colorVar), 0, NULL},
+	"", offsetof(TkPostscriptInfo, colorVar), 0, NULL},
     {TK_CONFIG_STRING, "-colormode", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, colorMode), 0, NULL},
+	"", offsetof(TkPostscriptInfo, colorMode), 0, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, fileName), 0, NULL},
+	"", offsetof(TkPostscriptInfo, fileName), 0, NULL},
     {TK_CONFIG_STRING, "-channel", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, channelName), 0, NULL},
+	"", offsetof(TkPostscriptInfo, channelName), 0, NULL},
     {TK_CONFIG_STRING, "-fontmap", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, fontVar), 0, NULL},
+	"", offsetof(TkPostscriptInfo, fontVar), 0, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, height), 0, NULL},
+	"", offsetof(TkPostscriptInfo, height), 0, NULL},
     {TK_CONFIG_ANCHOR, "-pageanchor", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageAnchor), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageAnchor), 0, NULL},
     {TK_CONFIG_STRING, "-pageheight", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageHeightString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageHeightString), 0, NULL},
     {TK_CONFIG_STRING, "-pagewidth", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageWidthString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageWidthString), 0, NULL},
     {TK_CONFIG_STRING, "-pagex", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageXString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageXString), 0, NULL},
     {TK_CONFIG_STRING, "-pagey", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, pageYString), 0, NULL},
+	"", offsetof(TkPostscriptInfo, pageYString), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-prolog", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, prolog), 0, NULL},
+	"", offsetof(TkPostscriptInfo, prolog), 0, NULL},
     {TK_CONFIG_BOOLEAN, "-rotate", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, rotate), 0, NULL},
+	"", offsetof(TkPostscriptInfo, rotate), 0, NULL},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, width), 0, NULL},
+	"", offsetof(TkPostscriptInfo, width), 0, NULL},
     {TK_CONFIG_PIXELS, "-x", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, x), 0, NULL},
+	"", offsetof(TkPostscriptInfo, x), 0, NULL},
     {TK_CONFIG_PIXELS, "-y", NULL, NULL,
-	"", Tk_Offset(TkPostscriptInfo, y), 0, NULL},
+	"", offsetof(TkPostscriptInfo, y), 0, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -157,7 +157,6 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  *--------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 int
 TkCanvPostscriptCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
@@ -193,7 +192,7 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, 0);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -286,15 +285,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_SW:
 	deltaX = 0;
 	break;
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	deltaX = -psInfo.width/2;
-	break;
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
 	deltaX = -psInfo.width;
+	break;
+    default:
+	deltaX = -psInfo.width/2;
 	break;
     }
     switch (psInfo.pageAnchor) {
@@ -303,15 +300,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_NE:
 	deltaY = - psInfo.height;
 	break;
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	deltaY = -psInfo.height/2;
-	break;
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
 	deltaY = 0;
+	break;
+    default:
+	deltaY = -psInfo.height/2;
 	break;
     }
 
@@ -381,7 +376,7 @@ TkCanvPostscriptCmd(
 	 */
 
 	psInfo.chan = Tcl_GetChannel(interp, psInfo.channelName, &mode);
-	if (psInfo.chan == (Tcl_Channel) NULL) {
+	if (psInfo.chan == NULL) {
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -491,7 +486,7 @@ TkCanvPostscriptCmd(
 	Tcl_AppendObjToObj(psObj, preambleObj);
 
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 	    channelWriteFailed:
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"problem writing postscript data to channel: %s",
@@ -545,7 +540,7 @@ TkCanvPostscriptCmd(
 		psInfo.x, Tk_PostscriptY((double)psInfo.y2,
 			(Tk_PostscriptInfo)psInfoPtr));
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 		goto channelWriteFailed;
 	    }
 	    Tcl_DecrRefCount(psObj);
@@ -572,22 +567,22 @@ TkCanvPostscriptCmd(
 	    continue;
 	}
 
-	Tcl_ResetResult(interp);
 	result = itemPtr->typePtr->postscriptProc(interp,
 		(Tk_Canvas) canvasPtr, itemPtr, 0);
 	if (result != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (generating Postscript for item %d)",
-		    itemPtr->id));
+		    (int)itemPtr->id));
 	    goto cleanup;
 	}
 
 	Tcl_AppendToObj(psObj, "gsave\n", -1);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	Tcl_AppendToObj(psObj, "grestore\n", -1);
+	Tcl_ResetResult(interp);
 
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 		goto channelWriteFailed;
 	    }
 	    Tcl_DecrRefCount(psObj);
@@ -608,7 +603,7 @@ TkCanvPostscriptCmd(
 		"%%EOF\n", -1);
 
 	if (psInfo.chan != NULL) {
-	    if (Tcl_WriteObj(psInfo.chan, psObj) == -1) {
+	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
 		goto channelWriteFailed;
 	    }
 	}
@@ -825,7 +820,7 @@ Tk_PostscriptFont(
     fontname = Tcl_DStringValue(&ds);
     Tcl_AppendPrintfToObj(GetPostscriptBuffer(interp),
 	    "/%s findfont %d scalefont%s setfont\n",
-	    fontname, TkFontGetPoints(psInfoPtr->tkwin, points),
+	    fontname, (int)(TkFontGetPoints(psInfoPtr->tkwin, points) + 0.5),
 	    strncasecmp(fontname, "Symbol", 7) ? " ISOEncode" : "");
     Tcl_CreateHashEntry(&psInfoPtr->fontTable, Tcl_DStringValue(&ds), &i);
     Tcl_DStringFree(&ds);
@@ -903,6 +898,18 @@ PostscriptBitmap(
 	    (unsigned int *) &totalHeight, &dummyBorderwidth, &dummyDepth);
     imagePtr = XGetImage(Tk_Display(tkwin), bitmap, 0, 0,
 	    totalWidth, totalHeight, 1, XYPixmap);
+
+
+    if (!imagePtr) {
+	/*
+	 * The XGetImage() function is apparently not implemented on this
+	 * system. Just skip the pixels, the Postscript will still be
+	 * syntactically correct.
+	 */
+
+        Tcl_AppendToObj(psObj, "<>", -1);
+	return;
+    }
 
     Tcl_AppendToObj(psObj, "<", -1);
     mask = 0x80;
@@ -1194,6 +1201,8 @@ TkImageGetColor(
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
+    (void)cdata;
+
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
     *blue  = (double) GetBValue(pixel) / 255.0;
@@ -1262,6 +1271,7 @@ TkPostscriptImage(
     Visual *visual;
     TkColormapData cdata;
     Tcl_Obj *psObj;
+    (void)y;
 
     if (psInfoPtr->prepass) {
 	return TCL_OK;
@@ -1276,10 +1286,10 @@ TkPostscriptImage(
      */
 
     ncolors = visual->map_entries;
-    cdata.colors = ckalloc(sizeof(XColor) * ncolors);
+    cdata.colors = (XColor *)ckalloc(sizeof(XColor) * ncolors);
     cdata.ncolors = ncolors;
 
-    if (visual->class == DirectColor || visual->class == TrueColor) {
+    if (visual->c_class == DirectColor || visual->c_class == TrueColor) {
 	cdata.separated = 1;
 	cdata.red_mask = visual->red_mask;
 	cdata.green_mask = visual->green_mask;
@@ -1311,7 +1321,7 @@ TkPostscriptImage(
 	}
     }
 
-    if (visual->class == StaticGray || visual->class == GrayScale) {
+    if (visual->c_class == StaticGray || visual->c_class == GrayScale) {
 	cdata.color = 0;
     } else {
 	cdata.color = 1;
@@ -1601,7 +1611,7 @@ Tk_PostscriptPhoto(
 	    /*
 	     * Generate data for image in monochrome mode. No attempt at
 	     * dithering is made--instead, just set a threshold. To handle
-	     * transparecies we need to output two lines: one for the black
+	     * transparencies we need to output two lines: one for the black
 	     * pixels, one for the white ones.
 	     */
 

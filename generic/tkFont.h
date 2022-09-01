@@ -5,7 +5,7 @@
  *	parts of the font package. This information is not visible outside of
  *	the font package.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,6 +13,10 @@
 
 #ifndef _TKFONT
 #define _TKFONT
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * The following structure keeps track of the attributes of a font. It can be
@@ -23,7 +27,7 @@
 struct TkFontAttributes {
     Tk_Uid family;		/* Font family, or NULL to represent plaform-
 				 * specific default system font. */
-    int size;			/* Pointsize of font, 0 for default size, or
+    double size;		/* Pointsize of font, 0.0 for default size, or
 				 * negative number meaning pixel size. */
     int weight;			/* Weight flag; see below for def'n. */
     int slant;			/* Slant flag; see below for def'n. */
@@ -85,7 +89,7 @@ typedef struct TkFont {
      * Fields used and maintained exclusively by generic code.
      */
 
-    int resourceRefCount;	/* Number of active uses of this font (each
+    TkSizeT resourceRefCount;	/* Number of active uses of this font (each
 				 * active use corresponds to a call to
 				 * Tk_AllocFontFromTable or Tk_GetFont). If
 				 * this count is 0, then this TkFont structure
@@ -95,7 +99,7 @@ typedef struct TkFont {
 				 * The structure is freed when
 				 * resourceRefCount and objRefCount are both
 				 * 0. */
-    int objRefCount;		/* The number of Tcl objects that reference
+    TkSizeT objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     Tcl_HashEntry *cacheHashPtr;/* Entry in font cache for this structure,
 				 * used when deleting it. */
@@ -198,8 +202,8 @@ MODULE_SCOPE int	TkFontParseXLFD(const char *string,
 			    TkFontAttributes *faPtr, TkXLFDAttributes *xaPtr);
 MODULE_SCOPE const char *const * TkFontGetAliasList(const char *faceName);
 MODULE_SCOPE const char *const *const * TkFontGetFallbacks(void);
-MODULE_SCOPE int	TkFontGetPixels(Tk_Window tkwin, int size);
-MODULE_SCOPE int	TkFontGetPoints(Tk_Window tkwin, int size);
+MODULE_SCOPE double	TkFontGetPixels(Tk_Window tkwin, double size);
+MODULE_SCOPE double	TkFontGetPoints(Tk_Window tkwin, double size);
 MODULE_SCOPE const char *const * TkFontGetGlobalClass(void);
 MODULE_SCOPE const char *const * TkFontGetSymbolClass(void);
 MODULE_SCOPE int	TkCreateNamedFont(Tcl_Interp *interp, Tk_Window tkwin,
@@ -220,5 +224,9 @@ MODULE_SCOPE TkFont *	TkpGetFontFromAttributes(TkFont *tkFontPtr,
 MODULE_SCOPE void	TkpGetFontFamilies(Tcl_Interp *interp,
 			    Tk_Window tkwin);
 MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* _TKFONT */

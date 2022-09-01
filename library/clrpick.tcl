@@ -3,7 +3,7 @@
 #	Color selection dialog for platforms that do not support a
 #	standard color selection dialog.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
+# Copyright © 1996 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -316,7 +316,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
 
     # Accelerator bindings
     bind $lab <<AltUnderlined>> [list focus $ent]
-    bind $w <KeyPress-Escape> [list tk::ButtonInvoke $data(cancelBtn)]
+    bind $w <Escape> [list tk::ButtonInvoke $data(cancelBtn)]
     bind $w <Alt-Key> [list tk::AltKeyInDialog $w %A]
 
     wm protocol $w WM_DELETE_WINDOW [list tk::dialog::color::CancelCmd $w]
@@ -396,7 +396,7 @@ proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
 
 	# Draw the selection polygons
 	CreateSelector $w $sel $c
-	$sel bind $data($c,index) <ButtonPress-1> \
+	$sel bind $data($c,index) <Button-1> \
 		[list tk::dialog::color::StartMove $w $sel $c %x $data(selPad) 1]
 	$sel bind $data($c,index) <B1-Motion> \
 		[list tk::dialog::color::MoveSelector $w $sel $c %x $data(selPad)]
@@ -409,14 +409,14 @@ proc ::tk::dialog::color::DrawColorScale {w c {create 0}} {
 	set data($c,clickRegion) [$sel create rectangle 0 0 \
 		$data(canvasWidth) $height -fill {} -outline {}]
 
-	bind $col <ButtonPress-1> \
+	bind $col <Button-1> \
 		[list tk::dialog::color::StartMove $w $sel $c %x $data(colorPad)]
 	bind $col <B1-Motion> \
 		[list tk::dialog::color::MoveSelector $w $sel $c %x $data(colorPad)]
 	bind $col <ButtonRelease-1> \
 		[list tk::dialog::color::ReleaseMouse $w $sel $c %x $data(colorPad)]
 
-	$sel bind $data($c,clickRegion) <ButtonPress-1> \
+	$sel bind $data($c,clickRegion) <Button-1> \
 		[list tk::dialog::color::StartMove $w $sel $c %x $data(selPad)]
 	$sel bind $data($c,clickRegion) <B1-Motion> \
 		[list tk::dialog::color::MoveSelector $w $sel $c %x $data(selPad)]

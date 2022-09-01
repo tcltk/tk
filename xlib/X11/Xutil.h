@@ -1,8 +1,30 @@
-/* $XConsortium: Xutil.h,v 11.73 91/07/30 16:21:37 rws Exp $ */
 
 /***********************************************************
-Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
-and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+
+Copyright 1987, 1998  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+
+
+Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
@@ -10,7 +32,7 @@ Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
 both that copyright notice and this permission notice appear in
-supporting documentation, and that the names of Digital or MIT not be
+supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
 software without specific, written prior permission.
 
@@ -24,13 +46,19 @@ SOFTWARE.
 
 ******************************************************************/
 
-#ifndef _XUTIL_H_
-#define _XUTIL_H_
+#ifndef _X11_XUTIL_H_
+#define _X11_XUTIL_H_
 
 /* You must include <X11/Xlib.h> before including this file */
+#include <X11/Xlib.h>
+#include <X11/keysym.h>
 
-#if defined(MAC_OSX_TK)
-#   define Region XRegion
+/* The Xlib structs are full of implicit padding to properly align members.
+   We can't clean that up without breaking ABI, so tell clang not to bother
+   complaining about it. */
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 #endif
 
 /*
@@ -112,6 +140,7 @@ typedef struct {
 #define WindowGroupHint		(1L << 6)
 #define AllHints (InputHint|StateHint|IconPixmapHint|IconWindowHint| \
 IconPositionHint|IconMaskHint|WindowGroupHint)
+#define XUrgencyHint		(1L << 8)
 
 /* definitions for initial window state */
 #define WithdrawnState 0	/* for windows that are not mapped */
@@ -146,7 +175,9 @@ typedef enum {
     XStringStyle,		/* STRING */
     XCompoundTextStyle,		/* COMPOUND_TEXT */
     XTextStyle,			/* text in owner's encoding (current locale)*/
-    XStdICCTextStyle		/* STRING, else COMPOUND_TEXT */
+    XStdICCTextStyle,		/* STRING, else COMPOUND_TEXT */
+    /* The following is an XFree86 extension, introduced in November 2000 */
+    XUTF8StringStyle		/* UTF8_STRING */
 } XICCEncodingStyle;
 
 typedef struct {
@@ -160,6 +191,38 @@ typedef struct {
 	char *res_class;
 } XClassHint;
 
+#ifndef EXTERN
+#   define EXTERN extern TCL_STORAGE_CLASS
+#endif
+#if defined(STATIC_BUILD) || !defined(_WIN32)
+# ifndef TCL_STORAGE_CLASS
+#   define TCL_STORAGE_CLASS
+# endif
+#elif defined(BUILD_tk)
+# undef TCL_STORAGE_CLASS
+# define TCL_STORAGE_CLASS __declspec(dllexport)
+#elif !defined(TCL_STORAGE_CLASS)
+# define TCL_STORAGE_CLASS __declspec(dllimport)
+#endif
+
+#ifdef XUTIL_DEFINE_FUNCTIONS
+EXTERN int XDestroyImage(
+        XImage *ximage);
+EXTERN unsigned long XGetPixel(
+        XImage *ximage,
+        int x, int y);
+EXTERN int XPutPixel(
+        XImage *ximage,
+        int x, int y,
+        unsigned long pixel);
+EXTERN XImage *XSubImage(
+        XImage *ximage,
+        int x, int y,
+        unsigned int width, unsigned int height);
+EXTERN int XAddPixel(
+        XImage *ximage,
+        long value);
+#else
 /*
  * These macros are used to give some sugar to the image routines so that
  * naive people are more comfortable with them.
@@ -174,6 +237,7 @@ typedef struct {
 	((*((ximage)->f.sub_image))((ximage), (x), (y), (width), (height)))
 #define XAddPixel(ximage, value) \
 	((*((ximage)->f.add_pixel))((ximage), (value)))
+#endif
 
 /*
  * Compose sequence status structure, used in calling XLookupString.
@@ -187,24 +251,36 @@ typedef struct _XComposeStatus {
  * Keysym macros, used on Keysyms to test for classes of symbols
  */
 #define IsKeypadKey(keysym) \
-  (((unsigned)(keysym) >= XK_KP_Space) && ((unsigned)(keysym) <= XK_KP_Equal))
+  (((KeySym)(keysym) >= XK_KP_Space) && ((KeySym)(keysym) <= XK_KP_Equal))
+
+#define IsPrivateKeypadKey(keysym) \
+  (((KeySym)(keysym) >= 0x11000000) && ((KeySym)(keysym) <= 0x1100FFFF))
 
 #define IsCursorKey(keysym) \
-  (((unsigned)(keysym) >= XK_Home)     && ((unsigned)(keysym) <  XK_Select))
+  (((KeySym)(keysym) >= XK_Home)     && ((KeySym)(keysym) <  XK_Select))
 
 #define IsPFKey(keysym) \
-  (((unsigned)(keysym) >= XK_KP_F1)     && ((unsigned)(keysym) <= XK_KP_F4))
+  (((KeySym)(keysym) >= XK_KP_F1)     && ((KeySym)(keysym) <= XK_KP_F4))
 
 #define IsFunctionKey(keysym) \
-  (((unsigned)(keysym) >= XK_F1)       && ((unsigned)(keysym) <= XK_F35))
+  (((KeySym)(keysym) >= XK_F1)       && ((KeySym)(keysym) <= XK_F35))
 
 #define IsMiscFunctionKey(keysym) \
-  (((unsigned)(keysym) >= XK_Select)   && ((unsigned)(keysym) <= XK_Break))
+  (((KeySym)(keysym) >= XK_Select)   && ((KeySym)(keysym) <= XK_Break))
 
+#ifdef XK_XKB_KEYS
 #define IsModifierKey(keysym) \
-  ((((unsigned)(keysym) >= XK_Shift_L) && ((unsigned)(keysym) <= XK_Hyper_R)) \
-   || ((unsigned)(keysym) == XK_Mode_switch) \
-   || ((unsigned)(keysym) == XK_Num_Lock))
+  ((((KeySym)(keysym) >= XK_Shift_L) && ((KeySym)(keysym) <= XK_Hyper_R)) \
+   || (((KeySym)(keysym) >= XK_ISO_Lock) && \
+       ((KeySym)(keysym) <= XK_ISO_Level5_Lock)) \
+   || ((KeySym)(keysym) == XK_Mode_switch) \
+   || ((KeySym)(keysym) == XK_Num_Lock))
+#else
+#define IsModifierKey(keysym) \
+  ((((KeySym)(keysym) >= XK_Shift_L) && ((KeySym)(keysym) <= XK_Hyper_R)) \
+   || ((KeySym)(keysym) == XK_Mode_switch) \
+   || ((KeySym)(keysym) == XK_Num_Lock))
+#endif
 /*
  * opaque reference to Region data type
  */
@@ -301,329 +377,258 @@ _XFUNCPROTOBEGIN
 
 /* The following declarations are alphabetized. */
 
-extern XClassHint *XAllocClassHint (
-#if NeedFunctionPrototypes
+EXTERN XClassHint *XAllocClassHint (
     void
-#endif
 );
 
-extern XIconSize *XAllocIconSize (
-#if NeedFunctionPrototypes
+EXTERN XIconSize *XAllocIconSize (
     void
-#endif
 );
 
-extern XSizeHints *XAllocSizeHints (
-#if NeedFunctionPrototypes
+EXTERN XSizeHints *XAllocSizeHints (
     void
-#endif
 );
 
-extern XStandardColormap *XAllocStandardColormap (
-#if NeedFunctionPrototypes
+EXTERN XStandardColormap *XAllocStandardColormap (
     void
-#endif
 );
 
-extern XWMHints *XAllocWMHints (
-#if NeedFunctionPrototypes
+EXTERN XWMHints *XAllocWMHints (
     void
-#endif
 );
 
-extern void XClipBox(
-#if NeedFunctionPrototypes
+EXTERN int XClipBox(
     Region		/* r */,
     XRectangle*		/* rect_return */
-#endif
 );
 
-extern Region XCreateRegion(
-#if NeedFunctionPrototypes
+EXTERN Region XCreateRegion(
     void
-#endif
 );
 
-extern char *XDefaultString(
-#if NeedFunctionPrototypes
-    void
-#endif
-);
+EXTERN const char *XDefaultString (void);
 
-extern int XDeleteContext(
-#if NeedFunctionPrototypes
+EXTERN int XDeleteContext(
     Display*		/* display */,
     XID			/* rid */,
     XContext		/* context */
-#endif
 );
 
-extern void XDestroyRegion(
-#if NeedFunctionPrototypes
+EXTERN int XDestroyRegion(
     Region		/* r */
-#endif
 );
 
-extern Bool XEmptyRegion(
-#if NeedFunctionPrototypes
+EXTERN int XEmptyRegion(
     Region		/* r */
-#endif
 );
 
-extern Bool XEqualRegion(
-#if NeedFunctionPrototypes
+EXTERN int XEqualRegion(
     Region		/* r1 */,
     Region		/* r2 */
-#endif
 );
 
-extern int XFindContext(
-#if NeedFunctionPrototypes
+EXTERN int XFindContext(
     Display*		/* display */,
     XID			/* rid */,
     XContext		/* context */,
     XPointer*		/* data_return */
-#endif
 );
 
-extern Status XGetClassHint(
-#if NeedFunctionPrototypes
+EXTERN Status XGetClassHint(
     Display*		/* display */,
     Window		/* w */,
     XClassHint*		/* class_hints_return */
-#endif
 );
 
-extern Status XGetIconSizes(
-#if NeedFunctionPrototypes
+EXTERN Status XGetIconSizes(
     Display*		/* display */,
     Window		/* w */,
     XIconSize**		/* size_list_return */,
     int*		/* count_return */
-#endif
 );
 
-extern Status XGetNormalHints(
-#if NeedFunctionPrototypes
+EXTERN Status XGetNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */
-#endif
 );
 
-extern Status XGetRGBColormaps(
-#if NeedFunctionPrototypes
+EXTERN Status XGetRGBColormaps(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap** /* stdcmap_return */,
     int*		/* count_return */,
     Atom		/* property */
-#endif
 );
 
-extern Status XGetSizeHints(
-#if NeedFunctionPrototypes
+EXTERN Status XGetSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */,
     Atom		/* property */
-#endif
 );
 
-extern Status XGetStandardColormap(
-#if NeedFunctionPrototypes
+EXTERN Status XGetStandardColormap(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap*	/* colormap_return */,
     Atom		/* property */
-#endif
 );
 
-extern Status XGetTextProperty(
-#if NeedFunctionPrototypes
+EXTERN Status XGetTextProperty(
     Display*		/* display */,
     Window		/* window */,
     XTextProperty*	/* text_prop_return */,
     Atom		/* property */
-#endif
 );
 
+EXTERN XVisualInfo *XGetVisualInfo(
+    Display*		/* display */,
+    long		/* vinfo_mask */,
+    XVisualInfo*	/* vinfo_template */,
+    int*		/* nitems_return */
+);
 
-extern Status XGetWMClientMachine(
-#if NeedFunctionPrototypes
+EXTERN Status XGetWMClientMachine(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop_return */
-#endif
 );
 
-extern XWMHints *XGetWMHints(
-#if NeedFunctionPrototypes
+EXTERN XWMHints *XGetWMHints(
     Display*		/* display */,
     Window		/* w */
-#endif
 );
 
-extern Status XGetWMIconName(
-#if NeedFunctionPrototypes
+EXTERN Status XGetWMIconName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop_return */
-#endif
 );
 
-extern Status XGetWMName(
-#if NeedFunctionPrototypes
+EXTERN Status XGetWMName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop_return */
-#endif
 );
 
-extern Status XGetWMNormalHints(
-#if NeedFunctionPrototypes
+EXTERN Status XGetWMNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */,
     long*		/* supplied_return */
-#endif
 );
 
-extern Status XGetWMSizeHints(
-#if NeedFunctionPrototypes
+EXTERN Status XGetWMSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints_return */,
     long*		/* supplied_return */,
     Atom		/* property */
-#endif
 );
 
-extern Status XGetZoomHints(
-#if NeedFunctionPrototypes
+EXTERN Status XGetZoomHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* zhints_return */
-#endif
 );
 
-extern void XIntersectRegion(
-#if NeedFunctionPrototypes
+EXTERN int XIntersectRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
-#endif
 );
 
-extern int XLookupString(
-#if NeedFunctionPrototypes
+EXTERN void XConvertCase(
+    KeySym		/* sym */,
+    KeySym*		/* lower */,
+    KeySym*		/* upper */
+);
+
+EXTERN int XLookupString(
     XKeyEvent*		/* event_struct */,
     char*		/* buffer_return */,
     int			/* bytes_buffer */,
     KeySym*		/* keysym_return */,
     XComposeStatus*	/* status_in_out */
-#endif
 );
 
-extern Status XMatchVisualInfo(
-#if NeedFunctionPrototypes
+EXTERN Status XMatchVisualInfo(
     Display*		/* display */,
     int			/* screen */,
     int			/* depth */,
     int			/* class */,
     XVisualInfo*	/* vinfo_return */
-#endif
 );
 
-extern int XOffsetRegion(
-#if NeedFunctionPrototypes
+EXTERN int XOffsetRegion(
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
-#endif
 );
 
-extern Bool XPointInRegion(
-#if NeedFunctionPrototypes
+EXTERN Bool XPointInRegion(
     Region		/* r */,
     int			/* x */,
     int			/* y */
-#endif
 );
 
-extern Region XPolygonRegion(
-#if NeedFunctionPrototypes
+EXTERN Region XPolygonRegion(
     XPoint*		/* points */,
     int			/* n */,
     int			/* fill_rule */
-#endif
 );
 
-extern int XRectInRegion(
-#if NeedFunctionPrototypes
+EXTERN int XRectInRegion(
     Region		/* r */,
     int			/* x */,
     int			/* y */,
     unsigned int	/* width */,
     unsigned int	/* height */
-#endif
 );
 
-extern int XSaveContext(
-#if NeedFunctionPrototypes
+EXTERN int XSaveContext(
     Display*		/* display */,
     XID			/* rid */,
     XContext		/* context */,
     _Xconst char*	/* data */
-#endif
 );
 
-extern void XSetClassHint(
-#if NeedFunctionPrototypes
+EXTERN int XSetClassHint(
     Display*		/* display */,
     Window		/* w */,
     XClassHint*		/* class_hints */
-#endif
 );
 
-extern void XSetIconSizes(
-#if NeedFunctionPrototypes
+EXTERN int XSetIconSizes(
     Display*		/* display */,
     Window		/* w */,
     XIconSize*		/* size_list */,
     int			/* count */
-#endif
 );
 
-extern void XSetNormalHints(
-#if NeedFunctionPrototypes
+EXTERN int XSetNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */
-#endif
 );
 
-extern void XSetRGBColormaps(
-#if NeedFunctionPrototypes
+EXTERN void XSetRGBColormaps(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap*	/* stdcmaps */,
     int			/* count */,
     Atom		/* property */
-#endif
 );
 
-extern void XSetSizeHints(
-#if NeedFunctionPrototypes
+EXTERN int XSetSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */,
     Atom		/* property */
-#endif
 );
 
-extern void XSetStandardProperties(
-#if NeedFunctionPrototypes
+EXTERN int XSetStandardProperties(
     Display*		/* display */,
     Window		/* w */,
     _Xconst char*	/* window_name */,
@@ -632,52 +637,46 @@ extern void XSetStandardProperties(
     char**		/* argv */,
     int			/* argc */,
     XSizeHints*		/* hints */
-#endif
 );
 
-extern void XSetTextProperty(
-#if NeedFunctionPrototypes
+EXTERN void XSetTextProperty(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */,
     Atom		/* property */
-#endif
 );
 
-extern void XSetWMHints(
-#if NeedFunctionPrototypes
+EXTERN void XSetWMClientMachine(
+    Display*		/* display */,
+    Window		/* w */,
+    XTextProperty*	/* text_prop */
+);
+
+EXTERN int XSetWMHints(
     Display*		/* display */,
     Window		/* w */,
     XWMHints*		/* wm_hints */
-#endif
 );
 
-extern void XSetWMIconName(
-#if NeedFunctionPrototypes
+EXTERN void XSetWMIconName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */
-#endif
 );
 
-extern void XSetWMName(
-#if NeedFunctionPrototypes
+EXTERN void XSetWMName(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* text_prop */
-#endif
 );
 
-extern void XSetWMNormalHints(
-#if NeedFunctionPrototypes
+EXTERN void XSetWMNormalHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */
-#endif
 );
 
-extern void XSetWMProperties(
-#if NeedFunctionPrototypes
+EXTERN void XSetWMProperties(
     Display*		/* display */,
     Window		/* w */,
     XTextProperty*	/* window_name */,
@@ -687,11 +686,9 @@ extern void XSetWMProperties(
     XSizeHints*		/* normal_hints */,
     XWMHints*		/* wm_hints */,
     XClassHint*		/* class_hints */
-#endif
 );
 
-extern void XmbSetWMProperties(
-#if NeedFunctionPrototypes
+EXTERN void XmbSetWMProperties(
     Display*		/* display */,
     Window		/* w */,
     _Xconst char*	/* window_name */,
@@ -701,129 +698,132 @@ extern void XmbSetWMProperties(
     XSizeHints*		/* normal_hints */,
     XWMHints*		/* wm_hints */,
     XClassHint*		/* class_hints */
-#endif
 );
 
-extern void XSetWMSizeHints(
-#if NeedFunctionPrototypes
+EXTERN void Xutf8SetWMProperties(
+    Display*		/* display */,
+    Window		/* w */,
+    _Xconst char*	/* window_name */,
+    _Xconst char*	/* icon_name */,
+    char**		/* argv */,
+    int			/* argc */,
+    XSizeHints*		/* normal_hints */,
+    XWMHints*		/* wm_hints */,
+    XClassHint*		/* class_hints */
+);
+
+EXTERN void XSetWMSizeHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* hints */,
     Atom		/* property */
-#endif
 );
 
-extern void XSetRegion(
-#if NeedFunctionPrototypes
+EXTERN int XSetRegion(
     Display*		/* display */,
     GC			/* gc */,
     Region		/* r */
-#endif
 );
 
-extern void XSetStandardColormap(
-#if NeedFunctionPrototypes
+EXTERN void XSetStandardColormap(
     Display*		/* display */,
     Window		/* w */,
     XStandardColormap*	/* colormap */,
     Atom		/* property */
-#endif
 );
 
-extern void XSetZoomHints(
-#if NeedFunctionPrototypes
+EXTERN int XSetZoomHints(
     Display*		/* display */,
     Window		/* w */,
     XSizeHints*		/* zhints */
-#endif
 );
 
-extern void XShrinkRegion(
-#if NeedFunctionPrototypes
+EXTERN int XShrinkRegion(
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
-#endif
 );
 
-extern void XSubtractRegion(
-#if NeedFunctionPrototypes
+EXTERN Status XStringListToTextProperty(
+    char**		/* list */,
+    int			/* count */,
+    XTextProperty*	/* text_prop_return */
+);
+
+EXTERN int XSubtractRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
-#endif
 );
 
-extern int XmbTextListToTextProperty(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    char**		/* list */,
-    int			/* count */,
-    XICCEncodingStyle	/* style */,
-    XTextProperty*	/* text_prop_return */
-#endif
+EXTERN int XmbTextListToTextProperty(
+    Display*		display,
+    char**		list,
+    int			count,
+    XICCEncodingStyle	style,
+    XTextProperty*	text_prop_return
 );
 
-extern int XwcTextListToTextProperty(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    wchar_t**		/* list */,
-    int			/* count */,
-    XICCEncodingStyle	/* style */,
-    XTextProperty*	/* text_prop_return */
-#endif
+EXTERN int XwcTextListToTextProperty(
+    Display*		display,
+    wchar_t**		list,
+    int			count,
+    XICCEncodingStyle	style,
+    XTextProperty*	text_prop_return
 );
 
-extern void XwcFreeStringList(
-#if NeedFunctionPrototypes
-    wchar_t**		/* list */
-#endif
+EXTERN int Xutf8TextListToTextProperty(
+    Display*		display,
+    char**		list,
+    int			count,
+    XICCEncodingStyle	style,
+    XTextProperty*	text_prop_return
 );
 
-extern Status XTextPropertyToStringList(
-#if NeedFunctionPrototypes
+EXTERN void XwcFreeStringList(
+    wchar_t**		list
+);
+
+EXTERN Status XTextPropertyToStringList(
     XTextProperty*	/* text_prop */,
     char***		/* list_return */,
     int*		/* count_return */
-#endif
 );
 
-extern int XmbTextPropertyToTextList(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    XTextProperty*	/* text_prop */,
-    char***		/* list_return */,
-    int*		/* count_return */
-#endif
+EXTERN int XmbTextPropertyToTextList(
+    Display*		display,
+    const XTextProperty* text_prop,
+    char***		list_return,
+    int*		count_return
 );
 
-extern int XwcTextPropertyToTextList(
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    XTextProperty*	/* text_prop */,
-    wchar_t***		/* list_return */,
-    int*		/* count_return */
-#endif
+EXTERN int XwcTextPropertyToTextList(
+    Display*		display,
+    const XTextProperty* text_prop,
+    wchar_t***		list_return,
+    int*		count_return
 );
 
-extern void XUnionRectWithRegion(
-#if NeedFunctionPrototypes
+EXTERN int Xutf8TextPropertyToTextList(
+    Display*		display,
+    const XTextProperty* text_prop,
+    char***		list_return,
+    int*		count_return
+);
+
+EXTERN int XUnionRectWithRegion(
     XRectangle*		/* rectangle */,
     Region		/* src_region */,
     Region		/* dest_region_return */
-#endif
 );
 
-extern int XUnionRegion(
-#if NeedFunctionPrototypes
+EXTERN int XUnionRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
-#endif
 );
 
-extern int XWMGeometry(
-#if NeedFunctionPrototypes
+EXTERN int XWMGeometry(
     Display*		/* display */,
     int			/* screen_number */,
     _Xconst char*	/* user_geometry */,
@@ -835,21 +835,18 @@ extern int XWMGeometry(
     int*		/* width_return */,
     int*		/* height_return */,
     int*		/* gravity_return */
-#endif
 );
 
-extern void XXorRegion(
-#if NeedFunctionPrototypes
+EXTERN int XXorRegion(
     Region		/* sra */,
     Region		/* srb */,
     Region		/* dr_return */
-#endif
 );
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 _XFUNCPROTOEND
 
-#if defined(MAC_OSX_TK)
-#   undef Region
-#endif
-
-#endif /* _XUTIL_H_ */
+#endif /* _X11_XUTIL_H_ */

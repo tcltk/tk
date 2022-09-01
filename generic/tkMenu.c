@@ -6,8 +6,8 @@
  * supplemented by platform-specific files. The geometry calculation and
  * drawing code for menus is in the file tkMenuDraw.c
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,12 +39,12 @@
  * right; they have a Tk window and pathname associated with them; they have a
  * TkMenu structure and array of entries. However, they are linked with the
  * original menu that they were cloned from. They reflect the attributes of the
- * original, or "master", menu. So if an item is added to a menu, and that
+ * original, or "main", menu. So if an item is added to a menu, and that
  * menu has clones, then the item must be added to all of its clones also.
  * Menus are cloned when a menu is torn-off or when a menu is assigned as a
  * menubar using the "-menu" option of the toplevel's pathname configure
  * subcommand. When a clone is destroyed, only the clone is destroyed, but
- * when the master menu is destroyed, all clones are also destroyed. This
+ * when the main menu is destroyed, all clones are also destroyed. This
  * allows the developer to just deal with one set of menus when creating and
  * destroying.
  *
@@ -77,7 +77,7 @@
 
 #define MENU_HASH_KEY "tkMenus"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int menusInitialized;	/* Flag indicates whether thread-specific
 				 * elements of the Windows Menu module have
 				 * been initialized. */
@@ -90,7 +90,7 @@ static Tcl_ThreadDataKey dataKey;
 
 /*
  * The following flag indicates whether the process-wide state for the Menu
- * module has been intialized. The Mutex protects access to that flag.
+ * module has been initialized. The Mutex protects access to that flag.
  */
 
 static int menusInitialized;
@@ -101,135 +101,124 @@ TCL_DECLARE_MUTEX(menuMutex)
  * to update code in TkpMenuInit that changes the font string entry.
  */
 
-static const char *const menuStateStrings[] = {"active", "normal", "disabled", NULL};
-
 static const char *const menuEntryTypeStrings[] = {
     "cascade", "checkbutton", "command", "radiobutton", "separator", NULL
 };
 
-/*
- * The following table defines the legal values for the -compound option. It
- * is used with the "enum compound" declaration in tkMenu.h
- */
-
-static const char *const compoundStrings[] = {
-    "bottom", "center", "left", "none", "right", "top", NULL
-};
-
 static const Tk_OptionSpec tkBasicMenuEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", NULL, NULL,
-	DEF_MENU_ENTRY_ACTIVE_BG, Tk_Offset(TkMenuEntry, activeBorderPtr), -1,
+	DEF_MENU_ENTRY_ACTIVE_BG, offsetof(TkMenuEntry, activeBorderPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_COLOR, "-activeforeground", NULL, NULL,
 	DEF_MENU_ENTRY_ACTIVE_FG,
-	Tk_Offset(TkMenuEntry, activeFgPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, activeFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-accelerator", NULL, NULL,
 	DEF_MENU_ENTRY_ACCELERATOR,
-	Tk_Offset(TkMenuEntry, accelPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, accelPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	DEF_MENU_ENTRY_BG,
-	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BITMAP, "-bitmap", NULL, NULL,
 	DEF_MENU_ENTRY_BITMAP,
-	Tk_Offset(TkMenuEntry, bitmapPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, bitmapPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-columnbreak", NULL, NULL,
 	DEF_MENU_ENTRY_COLUMN_BREAK,
-	-1, Tk_Offset(TkMenuEntry, columnBreak), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, columnBreak), 0, NULL, 0},
     {TK_OPTION_STRING, "-command", NULL, NULL,
 	DEF_MENU_ENTRY_COMMAND,
-	Tk_Offset(TkMenuEntry, commandPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, commandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	DEF_MENU_ENTRY_COMPOUND, -1, Tk_Offset(TkMenuEntry, compound), 0,
-	(ClientData) compoundStrings, 0},
+	DEF_MENU_ENTRY_COMPOUND, TCL_INDEX_NONE, offsetof(TkMenuEntry, compound), 0,
+	tkCompoundStrings, 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	DEF_MENU_ENTRY_FONT,
-	Tk_Offset(TkMenuEntry, fontPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, fontPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_COLOR, "-foreground", NULL, NULL,
 	DEF_MENU_ENTRY_FG,
-	Tk_Offset(TkMenuEntry, fgPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, fgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-hidemargin", NULL, NULL,
 	DEF_MENU_ENTRY_HIDE_MARGIN,
-	-1, Tk_Offset(TkMenuEntry, hideMargin), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, hideMargin), 0, NULL, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
 	DEF_MENU_ENTRY_IMAGE,
-	Tk_Offset(TkMenuEntry, imagePtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, imagePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-label", NULL, NULL,
 	DEF_MENU_ENTRY_LABEL,
-	Tk_Offset(TkMenuEntry, labelPtr), -1, 0, NULL, 0},
+	offsetof(TkMenuEntry, labelPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
 	DEF_MENU_ENTRY_STATE,
-	-1, Tk_Offset(TkMenuEntry, state), 0,
-	(ClientData) menuStateStrings, 0},
-    {TK_OPTION_INT, "-underline", NULL, NULL,
-	DEF_MENU_ENTRY_UNDERLINE, -1, Tk_Offset(TkMenuEntry, underline), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, state),
+	0, tkStateStrings, 0},
+    {TK_OPTION_INDEX, "-underline", NULL, NULL,
+	TK_OPTION_UNDERLINE_DEF(TkMenuEntry, underline), 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
 static const Tk_OptionSpec tkSeparatorEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	DEF_MENU_ENTRY_BG,
-	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
 static const Tk_OptionSpec tkCheckButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	-1, Tk_Offset(TkMenuEntry, indicatorOn), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), 0, NULL, 0},
     {TK_OPTION_STRING, "-offvalue", NULL, NULL,
 	DEF_MENU_ENTRY_OFF_VALUE,
-	Tk_Offset(TkMenuEntry, offValuePtr), -1, 0, NULL, 0},
+	offsetof(TkMenuEntry, offValuePtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING, "-onvalue", NULL, NULL,
 	DEF_MENU_ENTRY_ON_VALUE,
-	Tk_Offset(TkMenuEntry, onValuePtr), -1, 0, NULL, 0},
+	offsetof(TkMenuEntry, onValuePtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", NULL, NULL,
 	DEF_MENU_ENTRY_SELECT,
-	Tk_Offset(TkMenuEntry, indicatorFgPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, indicatorFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-selectimage", NULL, NULL,
 	DEF_MENU_ENTRY_SELECT_IMAGE,
-	Tk_Offset(TkMenuEntry, selectImagePtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, selectImagePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-variable", NULL, NULL,
 	DEF_MENU_ENTRY_CHECK_VARIABLE,
-	Tk_Offset(TkMenuEntry, namePtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, namePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
-	NULL, 0, -1, 0, tkBasicMenuEntryConfigSpecs, 0}
+	NULL, 0, TCL_INDEX_NONE, 0, tkBasicMenuEntryConfigSpecs, 0}
 };
 
 static const Tk_OptionSpec tkRadioButtonEntryConfigSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", NULL, NULL,
 	DEF_MENU_ENTRY_INDICATOR,
-	-1, Tk_Offset(TkMenuEntry, indicatorOn), 0, NULL, 0},
+	TCL_INDEX_NONE, offsetof(TkMenuEntry, indicatorOn), 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", NULL, NULL,
 	DEF_MENU_ENTRY_SELECT,
-	Tk_Offset(TkMenuEntry, indicatorFgPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, indicatorFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-selectimage", NULL, NULL,
 	DEF_MENU_ENTRY_SELECT_IMAGE,
-	Tk_Offset(TkMenuEntry, selectImagePtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, selectImagePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-value", NULL, NULL,
 	DEF_MENU_ENTRY_VALUE,
-	Tk_Offset(TkMenuEntry, onValuePtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, onValuePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-variable", NULL, NULL,
 	DEF_MENU_ENTRY_RADIO_VARIABLE,
-	Tk_Offset(TkMenuEntry, namePtr), -1, 0, NULL, 0},
+	offsetof(TkMenuEntry, namePtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
-	NULL, 0, -1, 0, tkBasicMenuEntryConfigSpecs, 0}
+	NULL, 0, TCL_INDEX_NONE, 0, tkBasicMenuEntryConfigSpecs, 0}
 };
 
 static const Tk_OptionSpec tkCascadeEntryConfigSpecs[] = {
     {TK_OPTION_STRING, "-menu", NULL, NULL,
 	DEF_MENU_ENTRY_MENU,
-	Tk_Offset(TkMenuEntry, namePtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, namePtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL,
-	NULL, 0, -1, 0, tkBasicMenuEntryConfigSpecs, 0}
+	NULL, 0, TCL_INDEX_NONE, 0, tkBasicMenuEntryConfigSpecs, 0}
 };
 
 static const Tk_OptionSpec tkTearoffEntryConfigSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	DEF_MENU_ENTRY_BG,
-	Tk_Offset(TkMenuEntry, borderPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenuEntry, borderPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-state", NULL, NULL,
-	DEF_MENU_ENTRY_STATE, -1, Tk_Offset(TkMenuEntry, state), 0,
-	(ClientData) menuStateStrings, 0},
+	DEF_MENU_ENTRY_STATE, TCL_INDEX_NONE, offsetof(TkMenuEntry, state),
+	0, tkStateStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
@@ -244,66 +233,69 @@ static const Tk_OptionSpec *specsArray[] = {
  */
 
 static const char *const menuTypeStrings[] = {
-    "normal", "tearoff", "menubar", NULL
+    "menubar", "normal", "tearoff", NULL
 };
 
 static const Tk_OptionSpec tkMenuConfigSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground",
 	"Foreground", DEF_MENU_ACTIVE_BG_COLOR,
-	Tk_Offset(TkMenu, activeBorderPtr), -1, 0,
-	(ClientData) DEF_MENU_ACTIVE_BG_MONO, 0},
+	offsetof(TkMenu, activeBorderPtr), TCL_INDEX_NONE, 0,
+	DEF_MENU_ACTIVE_BG_MONO, 0},
     {TK_OPTION_PIXELS, "-activeborderwidth", "activeBorderWidth",
 	"BorderWidth", DEF_MENU_ACTIVE_BORDER_WIDTH,
-	Tk_Offset(TkMenu, activeBorderWidthPtr), -1, 0, NULL, 0},
+	offsetof(TkMenu, activeBorderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-activeforeground", "activeForeground",
 	"Background", DEF_MENU_ACTIVE_FG_COLOR,
-	Tk_Offset(TkMenu, activeFgPtr), -1, 0,
-	(ClientData) DEF_MENU_ACTIVE_FG_MONO, 0},
+	offsetof(TkMenu, activeFgPtr), TCL_INDEX_NONE, 0,
+	DEF_MENU_ACTIVE_FG_MONO, 0},
+    {TK_OPTION_RELIEF, "-activerelief", "activeRelief", "Relief",
+	DEF_MENU_ACTIVE_RELIEF, offsetof(TkMenu, activeReliefPtr),
+	TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_MENU_BG_COLOR, Tk_Offset(TkMenu, borderPtr), -1, 0,
-	(ClientData) DEF_MENU_BG_MONO, 0},
+	DEF_MENU_BG_COLOR, offsetof(TkMenu, borderPtr), TCL_INDEX_NONE, 0,
+	DEF_MENU_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, "-borderwidth", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, "-background", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_MENU_BORDER_WIDTH,
-	Tk_Offset(TkMenu, borderWidthPtr), -1, 0, NULL, 0},
+	offsetof(TkMenu, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MENU_CURSOR,
-	Tk_Offset(TkMenu, cursorPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenu, cursorPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_MENU_DISABLED_FG_COLOR,
-	Tk_Offset(TkMenu, disabledFgPtr), -1, TK_OPTION_NULL_OK,
-	(ClientData) DEF_MENU_DISABLED_FG_MONO, 0},
+	offsetof(TkMenu, disabledFgPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK,
+	DEF_MENU_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL,
-	NULL, 0, -1, 0, "-foreground", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_MENU_FONT, Tk_Offset(TkMenu, fontPtr), -1, 0, NULL, 0},
+	DEF_MENU_FONT, offsetof(TkMenu, fontPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_MENU_FG, Tk_Offset(TkMenu, fgPtr), -1, 0, NULL, 0},
+	DEF_MENU_FG, offsetof(TkMenu, fgPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_STRING, "-postcommand", "postCommand", "Command",
 	DEF_MENU_POST_COMMAND,
-	Tk_Offset(TkMenu, postCommandPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenu, postCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_MENU_RELIEF, Tk_Offset(TkMenu, reliefPtr), -1, 0, NULL, 0},
+	DEF_MENU_RELIEF, offsetof(TkMenu, reliefPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "Background",
-	DEF_MENU_SELECT_COLOR, Tk_Offset(TkMenu, indicatorFgPtr), -1, 0,
-	(ClientData) DEF_MENU_SELECT_MONO, 0},
+	DEF_MENU_SELECT_COLOR, offsetof(TkMenu, indicatorFgPtr), TCL_INDEX_NONE, 0,
+	DEF_MENU_SELECT_MONO, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_MENU_TAKE_FOCUS,
-	Tk_Offset(TkMenu, takeFocusPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenu, takeFocusPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_BOOLEAN, "-tearoff", "tearOff", "TearOff",
-	DEF_MENU_TEAROFF, -1, Tk_Offset(TkMenu, tearoff), 0, NULL, 0},
+	DEF_MENU_TEAROFF, TCL_INDEX_NONE, offsetof(TkMenu, tearoff), 0, NULL, 0},
     {TK_OPTION_STRING, "-tearoffcommand", "tearOffCommand",
 	"TearOffCommand", DEF_MENU_TEAROFF_CMD,
-	Tk_Offset(TkMenu, tearoffCommandPtr), -1, TK_OPTION_NULL_OK, NULL, 0},
+	offsetof(TkMenu, tearoffCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING, "-title", "title", "Title",
-	DEF_MENU_TITLE,	 Tk_Offset(TkMenu, titlePtr), -1,
+	DEF_MENU_TITLE,	 offsetof(TkMenu, titlePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_STRING_TABLE, "-type", "type", "Type",
-	DEF_MENU_TYPE, Tk_Offset(TkMenu, menuTypePtr), -1, TK_OPTION_NULL_OK,
-	(ClientData) menuTypeStrings, 0},
+	DEF_MENU_TYPE, offsetof(TkMenu, menuTypePtr), TCL_INDEX_NONE,
+	0, menuTypeStrings, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, NULL, 0}
 };
 
@@ -343,9 +335,9 @@ static void		DestroyMenuHashTable(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
 static void		DestroyMenuEntry(void *memPtr);
-static int		GetIndexFromCoords(Tcl_Interp *interp,
+static TkSizeT	GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
-			    int *indexPtr);
+			    TkSizeT *indexPtr);
 static int		MenuDoYPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuDoXPosition(Tcl_Interp *interp,
@@ -354,7 +346,7 @@ static int		MenuAddOrInsert(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *indexPtr, int objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuCmdDeletedProc(ClientData clientData);
-static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, int index, int type);
+static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, TkSizeT index, int type);
 static char *		MenuVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
@@ -365,7 +357,9 @@ static void		MenuWorldChanged(ClientData instanceData);
 static int		PostProcessEntry(TkMenuEntry *mePtr);
 static void		RecursivelyDeleteMenu(TkMenu *menuPtr);
 static void		UnhookCascadeEntry(TkMenuEntry *mePtr);
-static void		TkMenuCleanup(ClientData unused);
+static void		MenuCleanup(ClientData unused);
+static int		GetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
+			    Tcl_Obj *objPtr, int lastOK, TkSizeT *indexPtr);
 
 /*
  * The structure below is a list of procs that respond to certain window
@@ -404,14 +398,14 @@ Tk_MenuObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    Tk_Window tkwin = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
     Tk_Window newWin;
-    register TkMenu *menuPtr;
+    TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
     int i, index, toplevel;
     const char *windowName;
     static const char *const typeStringList[] = {"-type", NULL};
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
@@ -446,7 +440,7 @@ Tk_MenuObjCmd(
      * Tcl_EventuallyFree is called.
      */
 
-    menuPtr = ckalloc(sizeof(TkMenu));
+    menuPtr = (TkMenu *)ckalloc(sizeof(TkMenu));
     memset(menuPtr, 0, sizeof(TkMenu));
     menuPtr->tkwin = newWin;
     menuPtr->display = Tk_Display(newWin);
@@ -454,9 +448,9 @@ Tk_MenuObjCmd(
     menuPtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd, menuPtr,
 	    MenuCmdDeletedProc);
-    menuPtr->active = -1;
-    menuPtr->cursorPtr = None;
-    menuPtr->masterMenuPtr = menuPtr;
+    menuPtr->active = TCL_INDEX_NONE;
+    menuPtr->cursorPtr = NULL;
+    menuPtr->mainMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
     TkMenuInitializeDrawingFields(menuPtr);
 
@@ -465,7 +459,7 @@ Tk_MenuObjCmd(
     Tk_CreateEventHandler(newWin,
 	    ExposureMask|StructureNotifyMask|ActivateMask,
 	    TkMenuEventProc, menuPtr);
-    if (Tk_InitOptions(interp, (char *) menuPtr,
+    if (Tk_InitOptions(interp, menuPtr,
 	    tsdPtr->menuOptionTable, menuPtr->tkwin)
 	    != TCL_OK) {
     	Tk_DestroyWindow(menuPtr->tkwin);
@@ -513,7 +507,7 @@ Tk_MenuObjCmd(
 	    nextCascadePtr = cascadeListPtr->nextCascadePtr;
 
      	    /*
-	     * If we have a new master menu, and an existing cloned menu
+	     * If we have a new main menu, and an existing cloned menu
 	     * points to this menu in a cascade entry, we have to clone the
 	     * new menu and point the entry to the clone instead of the menu
 	     * we are creating. Otherwise, ConfigureMenuEntry will hook up the
@@ -521,9 +515,9 @@ Tk_MenuObjCmd(
 	     * creating exists.
      	     */
 
-     	    if ((menuPtr->masterMenuPtr != menuPtr)
-     	    	    || ((menuPtr->masterMenuPtr == menuPtr)
-     	    	    && ((cascadeListPtr->menuPtr->masterMenuPtr
+     	    if ((menuPtr->mainMenuPtr != menuPtr)
+     	    	    || ((menuPtr->mainMenuPtr == menuPtr)
+     	    	    && ((cascadeListPtr->menuPtr->mainMenuPtr
 		    == cascadeListPtr->menuPtr)))) {
 		newObjv[0] = Tcl_NewStringObj("-menu", -1);
 		newObjv[1] = Tcl_NewStringObj(Tk_PathName(menuPtr->tkwin),-1);
@@ -575,20 +569,20 @@ Tk_MenuObjCmd(
 
 	while (topLevelListPtr != NULL) {
     	    /*
-    	     * Need to get the next pointer first. TkSetWindowMenuBar changes
+    	     * Need to get the next pointer first. Tk_SetWindowMenuBar changes
     	     * the list, so that the next pointer is different after calling
     	     * it.
     	     */
 
     	    nextPtr = topLevelListPtr->nextPtr;
     	    listtkwin = topLevelListPtr->tkwin;
-    	    TkSetWindowMenuBar(menuPtr->interp, listtkwin,
+    	    Tk_SetWindowMenuBar(menuPtr->interp, listtkwin,
     	    	    Tk_PathName(menuPtr->tkwin), Tk_PathName(menuPtr->tkwin));
     	    topLevelListPtr = nextPtr;
     	}
     }
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(menuPtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(menuPtr->tkwin));
     return TCL_OK;
 }
 
@@ -617,11 +611,11 @@ MenuWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    register TkMenu *menuPtr = clientData;
-    register TkMenuEntry *mePtr;
+    TkMenu *menuPtr = (TkMenu *)clientData;
+    TkMenuEntry *mePtr;
     int result = TCL_OK;
     int option;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
@@ -636,21 +630,21 @@ MenuWidgetObjCmd(
 
     switch ((enum options) option) {
     case MENU_ACTIVATE: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
 	if (menuPtr->active == index) {
 	    goto done;
 	}
-	if ((index >= 0) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
+	if ((index != TCL_INDEX_NONE) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
 		|| (menuPtr->entries[index]->state == ENTRY_DISABLED))) {
-	    index = -1;
+	    index = TCL_INDEX_NONE;
 	}
 	result = TkActivateMenuEntry(menuPtr, index);
 	break;
@@ -672,7 +666,7 @@ MenuWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    goto error;
 	}
-	resultPtr = Tk_GetOptionValue(interp, (char *) menuPtr,
+	resultPtr = Tk_GetOptionValue(interp, menuPtr,
 		tsdPtr->menuOptionTable, objv[2],
 		menuPtr->tkwin);
 	if (resultPtr == NULL) {
@@ -692,7 +686,7 @@ MenuWidgetObjCmd(
 	Tcl_Obj *resultPtr;
 
 	if (objc == 2) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
+	    resultPtr = Tk_GetOptionInfo(interp, menuPtr,
 		    tsdPtr->menuOptionTable, NULL,
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
@@ -702,7 +696,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else if (objc == 3) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) menuPtr,
+	    resultPtr = Tk_GetOptionInfo(interp, menuPtr,
 		    tsdPtr->menuOptionTable, objv[2],
 		    menuPtr->tkwin);
 	    if (resultPtr == NULL) {
@@ -720,7 +714,8 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_DELETE: {
-	int first, last;
+	TkSizeT first, last;
+	Tcl_WideInt w;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "first ?last?");
@@ -733,16 +728,17 @@ MenuWidgetObjCmd(
 	 */
 
 	if (isdigit(UCHAR(Tcl_GetString(objv[2])[0]))
-		&& Tcl_GetIntFromObj(NULL, objv[2], &first) == TCL_OK) {
+		&& Tcl_GetWideIntFromObj(NULL, objv[2], &w) == TCL_OK) {
+	    first = w;
 	    if (first >= menuPtr->numEntries) {
 		goto done;
 	    }
-	} else if (TkGetMenuIndex(interp,menuPtr,objv[2],0,&first) != TCL_OK){
+	} else if (GetMenuIndex(interp,menuPtr,objv[2],0,&first) != TCL_OK){
 	    goto error;
 	}
 	if (objc == 3) {
 	    last = first;
-	} else if (TkGetMenuIndex(interp,menuPtr,objv[3],0,&last) != TCL_OK) {
+	} else if (GetMenuIndex(interp,menuPtr,objv[3],0,&last) != TCL_OK) {
 	    goto error;
 	}
 
@@ -754,29 +750,29 @@ MenuWidgetObjCmd(
 
 	    first = 1;
 	}
-	if ((first < 0) || (last < first)) {
+	if ((first == TCL_INDEX_NONE) || (last < first)) {
 	    goto done;
 	}
 	DeleteMenuCloneEntries(menuPtr, first, last);
 	break;
     }
     case MENU_ENTRYCGET: {
-	int index;
+	TkSizeT index;
 	Tcl_Obj *resultPtr;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index option");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	mePtr = menuPtr->entries[index];
 	Tcl_Preserve(mePtr);
-	resultPtr = Tk_GetOptionValue(interp, (char *) mePtr,
+	resultPtr = Tk_GetOptionValue(interp, mePtr,
 		mePtr->optionTable, objv[3], menuPtr->tkwin);
 	Tcl_Release(mePtr);
 	if (resultPtr == NULL) {
@@ -786,23 +782,23 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_ENTRYCONFIGURE: {
-	int index;
+	TkSizeT index;
 	Tcl_Obj *resultPtr;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index ?-option value ...?");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	mePtr = menuPtr->entries[index];
 	Tcl_Preserve(mePtr);
 	if (objc == 3) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) mePtr,
+	    resultPtr = Tk_GetOptionInfo(interp, mePtr,
 		    mePtr->optionTable, NULL, menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -811,7 +807,7 @@ MenuWidgetObjCmd(
 		Tcl_SetObjResult(interp, resultPtr);
 	    }
 	} else if (objc == 4) {
-	    resultPtr = Tk_GetOptionInfo(interp, (char *) mePtr,
+	    resultPtr = Tk_GetOptionInfo(interp, mePtr,
 		    mePtr->optionTable, objv[3], menuPtr->tkwin);
 	    if (resultPtr == NULL) {
 		result = TCL_ERROR;
@@ -827,20 +823,21 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_INDEX: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
-	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewIntObj(index));
-	}
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
+	if (index == TCL_INDEX_NONE) {
+	    Tcl_SetObjResult(interp, Tcl_NewObj());
+	} else
+#endif
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
 	break;
     }
     case MENU_INSERT:
@@ -854,16 +851,16 @@ MenuWidgetObjCmd(
 	}
 	break;
     case MENU_INVOKE: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	result = TkInvokeMenu(interp, menuPtr, index);
@@ -871,46 +868,52 @@ MenuWidgetObjCmd(
     }
     case MENU_POST: {
 	int x, y;
+	TkSizeT index = TCL_INDEX_NONE;
 
-	if (objc != 4) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "x y");
+	if (objc != 4 && objc != 5) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?index?");
 	    goto error;
 	}
 	if ((Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK)
 		|| (Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK)) {
 	    goto error;
 	}
+	if (objc == 5) {
+            if (GetMenuIndex(interp, menuPtr, objv[4], 0, &index) != TCL_OK) {
+                goto error;
+            }
+	}
 
 	/*
-	 * Tearoff menus are posted differently on Mac and Windows than
-	 * non-tearoffs. TkpPostMenu does not actually map the menu's window
-	 * on those platforms, and popup menus have to be handled specially.
-         * Also, menubar menues are not intended to be posted (bug 1567681,
-         * 2160206).
+	 * Tearoff menus are the same as ordinary menus on the Mac and are
+	 * posted differently on Windows than non-tearoffs. TkpPostMenu
+	 * does not actually map the menu's window on those platforms, and
+	 * popup menus have to be handled specially.  Also, menubar menus are
+	 * not intended to be posted (bug 1567681, 2160206).
 	 */
 
 	if (menuPtr->menuType == MENUBAR) {
             Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
             return TCL_ERROR;
         } else if (menuPtr->menuType != TEAROFF_MENU) {
-	    result = TkpPostMenu(interp, menuPtr, x, y);
+	    result = TkpPostMenu(interp, menuPtr, x, y, index);
 	} else {
-	    result = TkPostTearoffMenu(interp, menuPtr, x, y);
+	    result = TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 	}
 	break;
     }
     case MENU_POSTCASCADE: {
-	int index;
+	TkSizeT index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
 
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if ((index < 0) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
+	if ((index == TCL_INDEX_NONE) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
 	    result = TkPostSubmenu(interp, menuPtr, NULL);
 	} else {
 	    result = TkPostSubmenu(interp, menuPtr, menuPtr->entries[index]);
@@ -918,17 +921,17 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_TYPE: {
-	int index;
+	TkSizeT index;
 	const char *typeStr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
 	    goto error;
 	}
-	if (TkGetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index < 0) {
+	if (index == TCL_INDEX_NONE) {
 	    goto done;
 	}
 	if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
@@ -993,13 +996,13 @@ int
 TkInvokeMenu(
     Tcl_Interp *interp,		/* The interp that the menu lives in. */
     TkMenu *menuPtr,		/* The menu we are invoking. */
-    int index)			/* The zero based index of the item we are
+    TkSizeT index)			/* The zero based index of the item we are
     				 * invoking. */
 {
     int result = TCL_OK;
     TkMenuEntry *mePtr;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
     	goto done;
     }
     mePtr = menuPtr->entries[index];
@@ -1014,7 +1017,7 @@ TkInvokeMenu(
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "tk::TearOffMenu ", -1);
 	Tcl_DStringAppend(&ds, Tk_PathName(menuPtr->tkwin), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&ds), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&ds);
     } else if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    && (mePtr->namePtr != NULL)) {
@@ -1095,9 +1098,9 @@ DestroyMenuInstance(
     TkMenu *menuInstancePtr;
     TkMenuEntry *cascadePtr, *nextCascadePtr;
     Tcl_Obj *newObjv[2];
-    TkMenu *parentMasterMenuPtr;
-    TkMenuEntry *parentMasterEntryPtr;
-    ThreadSpecificData *tsdPtr =
+    TkMenu *parentMainMenuPtr;
+    TkMenuEntry *parentMainEntryPtr;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -1105,11 +1108,11 @@ DestroyMenuInstance(
      * entries need to be told that the menu is going away. We need to clear
      * the menu ptr field in the menu reference at this point in the code so
      * that everything else can forget about this menu properly. We also need
-     * to reset -menu field of all entries that are not master menus back to
-     * this entry name if this is a master menu pointed to by another master
+     * to reset -menu field of all entries that are not main menus back to
+     * this entry name if this is a main menu pointed to by another main
      * menu. If there is a clone menu that points to this menu, then this menu
      * is itself a clone, so when this menu goes away, the -menu field of the
-     * pointing entry must be set back to this menu's master menu name so that
+     * pointing entry must be set back to this menu's main menu name so that
      * later if another menu is created the cascade hierarchy can be
      * maintained.
      */
@@ -1127,14 +1130,14 @@ DestroyMenuInstance(
     for (; cascadePtr != NULL; cascadePtr = nextCascadePtr) {
     	nextCascadePtr = cascadePtr->nextCascadePtr;
 
-    	if (menuPtr->masterMenuPtr != menuPtr) {
+    	if (menuPtr->mainMenuPtr != menuPtr) {
 	    Tcl_Obj *menuNamePtr = Tcl_NewStringObj("-menu", -1);
 
-	    parentMasterMenuPtr = cascadePtr->menuPtr->masterMenuPtr;
-	    parentMasterEntryPtr =
-		    parentMasterMenuPtr->entries[cascadePtr->index];
+	    parentMainMenuPtr = cascadePtr->menuPtr->mainMenuPtr;
+	    parentMainEntryPtr =
+		    parentMainMenuPtr->entries[cascadePtr->index];
 	    newObjv[0] = menuNamePtr;
-	    newObjv[1] = parentMasterEntryPtr->namePtr;
+	    newObjv[1] = parentMainEntryPtr->namePtr;
 
 	    /*
 	     * It is possible that the menu info is out of sync, and these
@@ -1153,8 +1156,8 @@ DestroyMenuInstance(
     	}
     }
 
-    if (menuPtr->masterMenuPtr != menuPtr) {
-	for (menuInstancePtr = menuPtr->masterMenuPtr;
+    if (menuPtr->mainMenuPtr != menuPtr) {
+	for (menuInstancePtr = menuPtr->mainMenuPtr;
 		menuInstancePtr != NULL;
 		menuInstancePtr = menuInstancePtr->nextInstancePtr) {
 	    if (menuInstancePtr->nextInstancePtr == menuPtr) {
@@ -1164,7 +1167,7 @@ DestroyMenuInstance(
 	    }
 	}
     } else if (menuPtr->nextInstancePtr != NULL) {
-	Tcl_Panic("Attempting to delete master menu when there are still clones");
+	Tcl_Panic("Attempting to delete main menu when there are still clones");
     }
 
     /*
@@ -1204,8 +1207,8 @@ DestroyMenuInstance(
  *
  *	This function is invoked by Tcl_EventuallyFree or Tcl_Release to clean
  *	up the internal structure of a menu at a safe time (when no-one is
- *	using it anymore). If called on a master instance, destroys all of the
- *	slave instances. If called on a non-master instance, just destroys
+ *	using it anymore). If called on a main instance, destroys all of the
+ *	instances. If called on a non-main instance, just destroys
  *	that instance.
  *
  * Results:
@@ -1251,7 +1254,7 @@ TkDestroyMenu(
 	    topLevelListPtr = nextTopLevelPtr;
 	}
     }
-    if (menuPtr->masterMenuPtr == menuPtr) {
+    if (menuPtr->mainMenuPtr == menuPtr) {
 	while (menuPtr->nextInstancePtr != NULL) {
 	    menuInstancePtr = menuPtr->nextInstancePtr;
 	    menuPtr->nextInstancePtr = menuInstancePtr->nextInstancePtr;
@@ -1380,7 +1383,7 @@ static void
 DestroyMenuEntry(
     void *memPtr)		/* Pointer to entry to be freed. */
 {
-    register TkMenuEntry *mePtr = memPtr;
+    TkMenuEntry *mePtr = (TkMenuEntry *)memPtr;
     TkMenu *menuPtr = mePtr->menuPtr;
 
     if (menuPtr->postedCascade == mePtr) {
@@ -1399,7 +1402,7 @@ DestroyMenuEntry(
      */
 
     if (mePtr->type == CASCADE_ENTRY) {
-	if (menuPtr->masterMenuPtr != menuPtr) {
+	if (menuPtr->mainMenuPtr != menuPtr) {
 	    TkMenu *destroyThis = NULL;
 	    TkMenuReferences *menuRefPtr = mePtr->childMenuRefPtr;
 
@@ -1419,7 +1422,7 @@ DestroyMenuEntry(
 		 */
 
 		if ((destroyThis != NULL)
-			&& (destroyThis->masterMenuPtr == destroyThis)) {
+			&& (destroyThis->mainMenuPtr == destroyThis)) {
 		    destroyThis = NULL;
 		}
 	    }
@@ -1480,8 +1483,8 @@ static void
 MenuWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
-    TkMenu *menuPtr = instanceData;
-    int i;
+    TkMenu *menuPtr = (TkMenu *)instanceData;
+    TkSizeT i;
 
     TkMenuConfigureDrawOptions(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -1514,7 +1517,7 @@ MenuWorldChanged(
 static int
 ConfigureMenu(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkMenu *menuPtr,	/* Information about widget; may or may not
+    TkMenu *menuPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
@@ -1522,17 +1525,17 @@ ConfigureMenu(
     int i;
     TkMenu *menuListPtr, *cleanupPtr;
     int result;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
+    for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
-	menuListPtr->errorStructPtr = ckalloc(sizeof(Tk_SavedOptions));
-	result = Tk_SetOptions(interp, (char *) menuListPtr,
+	menuListPtr->errorStructPtr = (Tk_SavedOptions *)ckalloc(sizeof(Tk_SavedOptions));
+	result = Tk_SetOptions(interp, menuListPtr,
 		tsdPtr->menuOptionTable, objc, objv,
 		menuListPtr->tkwin, menuListPtr->errorStructPtr, NULL);
 	if (result != TCL_OK) {
-	    for (cleanupPtr = menuPtr->masterMenuPtr;
+	    for (cleanupPtr = menuPtr->mainMenuPtr;
 		    cleanupPtr != menuListPtr;
 		    cleanupPtr = cleanupPtr->nextInstancePtr) {
 		Tk_RestoreSavedOptions(cleanupPtr->errorStructPtr);
@@ -1566,7 +1569,7 @@ ConfigureMenu(
 	     * menuTypeName field to tell that this is a menu bar.
 	     */
 
-	    if (menuListPtr->menuType == MASTER_MENU) {
+	    if (menuListPtr->menuType == MAIN_MENU) {
 		int typeFlag = TK_MAKE_MENU_POPUP;
 		Tk_Window tkwin = menuPtr->tkwin;
 
@@ -1601,7 +1604,7 @@ ConfigureMenu(
 	    if ((menuListPtr->numEntries == 0)
 		    || (menuListPtr->entries[0]->type != TEAROFF_ENTRY)) {
 		if (MenuNewEntry(menuListPtr, 0, TEAROFF_ENTRY) == NULL) {
-		    for (cleanupPtr = menuPtr->masterMenuPtr;
+		    for (cleanupPtr = menuPtr->mainMenuPtr;
 			    cleanupPtr != menuListPtr;
 			    cleanupPtr = cleanupPtr->nextInstancePtr) {
 			Tk_RestoreSavedOptions(cleanupPtr->errorStructPtr);
@@ -1618,16 +1621,14 @@ ConfigureMenu(
 	    }
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
-	    int i;
 
 	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
 
-	    for (i = 0; i < menuListPtr->numEntries - 1; i++) {
+	    for (i = 0; i < (int)menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
 		menuListPtr->entries[i]->index = i;
 	    }
-	    menuListPtr->numEntries--;
-	    if (menuListPtr->numEntries == 0) {
+	    if (--menuListPtr->numEntries == 0) {
 		ckfree(menuListPtr->entries);
 		menuListPtr->entries = NULL;
 	    }
@@ -1642,7 +1643,7 @@ ConfigureMenu(
 	 * parent.
 	 */
 
-	for (i = 0; i < menuListPtr->numEntries; i++) {
+	for (i = 0; i < (int)menuListPtr->numEntries; i++) {
 	    TkMenuEntry *mePtr;
 
 	    mePtr = menuListPtr->entries[i];
@@ -1652,7 +1653,7 @@ ConfigureMenu(
 	TkEventuallyRecomputeMenu(menuListPtr);
     }
 
-    for (cleanupPtr = menuPtr->masterMenuPtr; cleanupPtr != NULL;
+    for (cleanupPtr = menuPtr->mainMenuPtr; cleanupPtr != NULL;
 	    cleanupPtr = cleanupPtr->nextInstancePtr) {
 	Tk_FreeSavedOptions(cleanupPtr->errorStructPtr);
 	ckfree(cleanupPtr->errorStructPtr);
@@ -1732,7 +1733,7 @@ PostProcessEntry(
 
 	name = Tcl_GetString(mePtr->namePtr);
 	if (mePtr->childMenuRefPtr != NULL) {
-	    oldHashKey = Tcl_GetHashKey(TkGetMenuHashTable(menuPtr->interp),
+	    oldHashKey = (char *)Tcl_GetHashKey(TkGetMenuHashTable(menuPtr->interp),
 		    mePtr->childMenuRefPtr->hashEntryPtr);
 	    if (strcmp(oldHashKey, name) != 0) {
 		UnhookCascadeEntry(mePtr);
@@ -1814,7 +1815,6 @@ PostProcessEntry(
     if ((mePtr->type == CHECK_BUTTON_ENTRY)
 	    || (mePtr->type == RADIO_BUTTON_ENTRY)) {
 	Tcl_Obj *valuePtr;
-	const char *name;
 
 	if (mePtr->namePtr == NULL) {
 	    if (mePtr->labelPtr == NULL) {
@@ -1898,7 +1898,7 @@ PostProcessEntry(
 
 static int
 ConfigureMenuEntry(
-    register TkMenuEntry *mePtr,/* Information about menu entry; may or may
+    TkMenuEntry *mePtr,/* Information about menu entry; may or may
 				 * not already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
@@ -1924,7 +1924,7 @@ ConfigureMenuEntry(
 
     result = TCL_OK;
     if (menuPtr->tkwin != NULL) {
-	if (Tk_SetOptions(menuPtr->interp, (char *) mePtr,
+	if (Tk_SetOptions(menuPtr->interp, mePtr,
 		mePtr->optionTable, objc, objv, menuPtr->tkwin,
 		&errorStruct, NULL) != TCL_OK) {
 	    return TCL_ERROR;
@@ -1962,7 +1962,7 @@ ConfigureMenuEntry(
 
 static int
 ConfigureMenuCloneEntries(
-    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tcl_Interp *dummy,		/* Used for error reporting. */
     TkMenu *menuPtr,		/* Information about whole menu. */
     int index,			/* Index of mePtr within menuPtr's entries. */
     int objc,			/* Number of valid entries in argv. */
@@ -1974,17 +1974,18 @@ ConfigureMenuCloneEntries(
     TkMenuReferences *oldCascadeMenuRefPtr, *cascadeMenuRefPtr = NULL;
     Tcl_Obj *oldCascadePtr = NULL;
     const char *newCascadeName;
+    (void)dummy;
 
     /*
      * Cascades are kind of tricky here. This is special case #3 in the
-     * comment at the top of this file. Basically, if a menu is the master
+     * comment at the top of this file. Basically, if a menu is the main
      * menu of a clone chain, and has an entry with a cascade menu, the clones
      * of the menu will point to clones of the cascade menu. We have to
      * destroy the clones of the cascades, clone the new cascade menu, and
      * configure the entry to point to the new clone.
      */
 
-    mePtr = menuPtr->masterMenuPtr->entries[index];
+    mePtr = menuPtr->mainMenuPtr->entries[index];
     if (mePtr->type == CASCADE_ENTRY) {
 	oldCascadePtr = mePtr->namePtr;
 	if (oldCascadePtr != NULL) {
@@ -2029,7 +2030,7 @@ ConfigureMenuCloneEntries(
 	}
     }
 
-    for (menuListPtr = menuPtr->masterMenuPtr->nextInstancePtr;
+    for (menuListPtr = menuPtr->mainMenuPtr->nextInstancePtr;
     	    menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 
@@ -2084,7 +2085,7 @@ ConfigureMenuCloneEntries(
 /*
  *--------------------------------------------------------------
  *
- * TkGetMenuIndex --
+ * GetMenuIndex --
  *
  *	Parse a textual index into a menu and return the numerical index of
  *	the indicated entry.
@@ -2102,7 +2103,7 @@ ConfigureMenuCloneEntries(
  */
 
 int
-TkGetMenuIndex(
+GetMenuIndex(
     Tcl_Interp *interp,		/* For error messages. */
     TkMenu *menuPtr,		/* Menu for which the index is being
 				 * specified. */
@@ -2110,56 +2111,56 @@ TkGetMenuIndex(
 				 * manual entry for valid .*/
     int lastOK,			/* Non-zero means its OK to return index just
 				 * *after* last entry. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
     int i;
-    const char *string = Tcl_GetString(objPtr);
+    const char *string;
+
+    if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
+	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
+	if (*indexPtr != TCL_INDEX_NONE || Tcl_GetString(objPtr)[0] != '-') {
+	    if (*indexPtr + 1 >= menuPtr->numEntries + 1) {
+		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
+	    }
+	    return TCL_OK;
+	}
+    }
+
+    string = Tcl_GetString(objPtr);
 
     if ((string[0] == 'a') && (strcmp(string, "active") == 0)) {
 	*indexPtr = menuPtr->active;
 	goto success;
     }
 
-    if (((string[0] == 'l') && (strcmp(string, "last") == 0))
-	    || ((string[0] == 'e') && (strcmp(string, "end") == 0))) {
+    if ((string[0] == 'l') && (strcmp(string, "last") == 0)) {
 	*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	goto success;
     }
 
-    if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
-	*indexPtr = -1;
+    if (string[0] == 0) {
+	*indexPtr = TCL_INDEX_NONE;
 	goto success;
     }
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
+    if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
+	*indexPtr = TCL_INDEX_NONE;
+	goto success;
+    }
+#endif
 
     if (string[0] == '@') {
-	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
+	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
 		== TCL_OK) {
 	    goto success;
 	}
     }
 
-    if (isdigit(UCHAR(string[0]))) {
-	if (Tcl_GetInt(interp, string, &i) == TCL_OK) {
-	    if (i >= menuPtr->numEntries) {
-		if (lastOK) {
-		    i = menuPtr->numEntries;
-		} else {
-		    i = menuPtr->numEntries-1;
-		}
-	    } else if (i < 0) {
-		i = -1;
-	    }
-	    *indexPtr = i;
-	    goto success;
-	}
-	Tcl_ResetResult(interp);
-    }
-
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	Tcl_Obj *labelPtr = menuPtr->entries[i]->labelPtr;
 	const char *label = (labelPtr == NULL) ? NULL : Tcl_GetString(labelPtr);
 
-	if ((label != NULL) && (Tcl_StringMatch(label, string))) {
+	if ((label != NULL) && (Tcl_StringCaseMatch(label, string, 0))) {
 	    *indexPtr = i;
 	    goto success;
 	}
@@ -2196,7 +2197,7 @@ static void
 MenuCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkMenu *menuPtr = clientData;
+    TkMenu *menuPtr = (TkMenu *)clientData;
     Tk_Window tkwin = menuPtr->tkwin;
 
     /*
@@ -2238,21 +2239,21 @@ MenuCmdDeletedProc(
 static TkMenuEntry *
 MenuNewEntry(
     TkMenu *menuPtr,		/* Menu that will hold the new entry. */
-    int index,			/* Where in the menu the new entry is to
+    TkSizeT index,			/* Where in the menu the new entry is to
 				 * go. */
     int type)			/* The type of the new entry. */
 {
     TkMenuEntry *mePtr;
     TkMenuEntry **newEntries;
-    int i;
-    ThreadSpecificData *tsdPtr =
+    TkSizeT i;
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
      * Create a new array of entries with an empty slot for the new entry.
      */
 
-    newEntries = ckalloc((menuPtr->numEntries+1) * sizeof(TkMenuEntry *));
+    newEntries = (TkMenuEntry **)ckalloc((menuPtr->numEntries+1) * sizeof(TkMenuEntry *));
     for (i = 0; i < index; i++) {
 	newEntries[i] = menuPtr->entries[i];
     }
@@ -2265,14 +2266,14 @@ MenuNewEntry(
     }
     menuPtr->entries = newEntries;
     menuPtr->numEntries++;
-    mePtr = ckalloc(sizeof(TkMenuEntry));
+    mePtr = (TkMenuEntry *)ckalloc(sizeof(TkMenuEntry));
     menuPtr->entries[index] = mePtr;
     mePtr->type = type;
     mePtr->optionTable = tsdPtr->entryOptionTables[type];
     mePtr->menuPtr = menuPtr;
     mePtr->labelPtr = NULL;
     mePtr->labelLength = 0;
-    mePtr->underline = -1;
+    mePtr->underline = INT_MIN;
     mePtr->bitmapPtr = NULL;
     mePtr->imagePtr = NULL;
     mePtr->image = NULL;
@@ -2298,7 +2299,7 @@ MenuNewEntry(
     mePtr->entryFlags = 0;
     mePtr->index = index;
     mePtr->nextCascadePtr = NULL;
-    if (Tk_InitOptions(menuPtr->interp, (char *) mePtr,
+    if (Tk_InitOptions(menuPtr->interp, mePtr,
 	    mePtr->optionTable, menuPtr->tkwin) != TCL_OK) {
 	ckfree(mePtr);
 	return NULL;
@@ -2341,20 +2342,21 @@ MenuAddOrInsert(
     Tcl_Obj *const objv[])	/* Arguments to command: first arg is type of
 				 * entry, others are config options. */
 {
-    int type, index;
+    int type;
+    TkSizeT index;
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
 
     if (indexPtr != NULL) {
-	if (TkGetMenuIndex(interp, menuPtr, indexPtr, 1, &index) != TCL_OK) {
+	if (GetMenuIndex(interp, menuPtr, indexPtr, 1, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     } else {
 	index = menuPtr->numEntries;
     }
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad index \"%s\"", Tcl_GetString(indexPtr)));
+		"bad menu entry index \"%s\"", Tcl_GetString(indexPtr)));
 	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
 	return TCL_ERROR;
     }
@@ -2375,7 +2377,7 @@ MenuAddOrInsert(
      * Now we have to add an entry for every instance related to this menu.
      */
 
-    for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
+    for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
     	    menuListPtr = menuListPtr->nextInstancePtr) {
 
     	mePtr = MenuNewEntry(menuListPtr, index, type);
@@ -2384,9 +2386,9 @@ MenuAddOrInsert(
     	}
     	if (ConfigureMenuEntry(mePtr, objc - 1, objv + 1) != TCL_OK) {
 	    TkMenu *errorMenuPtr;
-	    int i;
+	    TkSizeT i;
 
-	    for (errorMenuPtr = menuPtr->masterMenuPtr;
+	    for (errorMenuPtr = menuPtr->mainMenuPtr;
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
     		Tcl_EventuallyFree(errorMenuPtr->entries[index],
@@ -2395,8 +2397,7 @@ MenuAddOrInsert(
 		    errorMenuPtr->entries[i] = errorMenuPtr->entries[i + 1];
 		    errorMenuPtr->entries[i]->index = i;
 		}
-		errorMenuPtr->numEntries--;
-		if (errorMenuPtr->numEntries == 0) {
+		if (--errorMenuPtr->numEntries == 0) {
 		    ckfree(errorMenuPtr->entries);
 		    errorMenuPtr->entries = NULL;
 		}
@@ -2411,7 +2412,7 @@ MenuAddOrInsert(
 	 * If a menu has cascades, then every instance of the menu has to have
 	 * its own parallel cascade structure. So adding an entry to a menu
 	 * with clones means that the menu that the entry points to has to be
-	 * cloned for every clone the master menu has. This is special case #2
+	 * cloned for every clone the main menu has. This is special case #2
 	 * in the comment at the top of this file.
     	 */
 
@@ -2420,7 +2421,7 @@ MenuAddOrInsert(
 		    && (mePtr->childMenuRefPtr != NULL)
     	    	    && (mePtr->childMenuRefPtr->menuPtr != NULL)) {
 		TkMenu *cascadeMenuPtr =
-			mePtr->childMenuRefPtr->menuPtr->masterMenuPtr;
+			mePtr->childMenuRefPtr->menuPtr->mainMenuPtr;
 		Tcl_Obj *newCascadePtr, *newObjv[2];
 		Tcl_Obj *menuNamePtr = Tcl_NewStringObj("-menu", -1);
 		Tcl_Obj *windowNamePtr =
@@ -2481,20 +2482,28 @@ MenuVarProc(
     const char *name2,		/* Second part of variable's name. */
     int flags)			/* Describes what just happened. */
 {
-    TkMenuEntry *mePtr = clientData;
+    TkMenuEntry *mePtr = (TkMenuEntry *)clientData;
     TkMenu *menuPtr;
     const char *value;
     const char *name, *onValue;
+    (void)name1;
+    (void)name2;
 
-    if (flags & TCL_INTERP_DESTROYED) {
+    if (Tcl_InterpDeleted(interp) || (mePtr->namePtr == NULL)) {
 	/*
-	 * Do nothing if the interpreter is going away.
+	 * Do nothing if the interpreter is going away or we have
+	 * no variable name.
 	 */
 
     	return NULL;
     }
 
     menuPtr = mePtr->menuPtr;
+
+    if (menuPtr->menuFlags & MENU_DELETION_PENDING) {
+    	return NULL;
+    }
+
     name = Tcl_GetString(mePtr->namePtr);
 
     /*
@@ -2502,12 +2511,29 @@ MenuVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
+        void *probe = NULL;
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
-	if (flags & TCL_TRACE_DESTROYED) {
-	    Tcl_TraceVar2(interp, name, NULL,
-		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-		    MenuVarProc, clientData);
-	}
+
+        do {
+                probe = Tcl_VarTraceInfo(interp, name,
+                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+                        MenuVarProc, probe);
+                if (probe == (void *)mePtr) {
+                    break;
+                }
+        } while (probe);
+        if (probe) {
+                /*
+                 * We were able to fetch the unset trace for our
+                 * namePtr, which means it is not unset and not
+                 * the cause of this unset trace. Instead some outdated
+                 * former variable must be, and we should ignore it.
+                 */
+		return NULL;
+        }
+	Tcl_TraceVar2(interp, name, NULL,
+		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+		MenuVarProc, clientData);
 	TkpConfigureMenuEntry(mePtr);
 	TkEventuallyRedrawMenu(menuPtr, NULL);
 	return NULL;
@@ -2563,14 +2589,14 @@ MenuVarProc(
 
 int
 TkActivateMenuEntry(
-    register TkMenu *menuPtr,	/* Menu in which to activate. */
-    int index)			/* Index of entry to activate, or -1 to
-				 * deactivate all entries. */
+    TkMenu *menuPtr,	/* Menu in which to activate. */
+    TkSizeT index)			/* Index of entry to activate, or
+				 * TCL_INDEX_NONE to deactivate all entries. */
 {
-    register TkMenuEntry *mePtr;
+    TkMenuEntry *mePtr;
     int result = TCL_OK;
 
-    if (menuPtr->active >= 0) {
+    if (menuPtr->active != TCL_INDEX_NONE) {
 	mePtr = menuPtr->entries[menuPtr->active];
 
 	/*
@@ -2584,7 +2610,7 @@ TkActivateMenuEntry(
 	TkEventuallyRedrawMenu(menuPtr, menuPtr->entries[menuPtr->active]);
     }
     menuPtr->active = index;
-    if (index >= 0) {
+    if (index != TCL_INDEX_NONE) {
 	mePtr = menuPtr->entries[index];
 	mePtr->state = ENTRY_ACTIVE;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);
@@ -2664,12 +2690,13 @@ CloneMenu(
     				 * menubar, or a tearoff? */
 {
     int returnResult;
-    int menuType, i;
+    int menuType;
+    TkSizeT i;
     TkMenuReferences *menuRefPtr;
     Tcl_Obj *menuDupCommandArray[4];
 
     if (newMenuTypePtr == NULL) {
-	menuType = MASTER_MENU;
+	menuType = MAIN_MENU;
     } else {
 	if (Tcl_GetIndexFromObjStruct(menuPtr->interp, newMenuTypePtr,
 		menuTypeStrings, sizeof(char *), "menu type", 0, &menuType) != TCL_OK) {
@@ -2704,7 +2731,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int i, numElements;
+	TkSizeT numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance
@@ -2713,18 +2740,18 @@ CloneMenu(
 
 	if (menuPtr->nextInstancePtr == NULL) {
 	    menuPtr->nextInstancePtr = newMenuPtr;
-	    newMenuPtr->masterMenuPtr = menuPtr->masterMenuPtr;
+	    newMenuPtr->mainMenuPtr = menuPtr->mainMenuPtr;
 	} else {
-	    TkMenu *masterMenuPtr;
+	    TkMenu *mainMenuPtr;
 
-	    masterMenuPtr = menuPtr->masterMenuPtr;
-	    newMenuPtr->nextInstancePtr = masterMenuPtr->nextInstancePtr;
-	    masterMenuPtr->nextInstancePtr = newMenuPtr;
-	    newMenuPtr->masterMenuPtr = masterMenuPtr;
+	    mainMenuPtr = menuPtr->mainMenuPtr;
+	    newMenuPtr->nextInstancePtr = mainMenuPtr->nextInstancePtr;
+	    mainMenuPtr->nextInstancePtr = newMenuPtr;
+	    newMenuPtr->mainMenuPtr = mainMenuPtr;
 	}
 
 	/*
-	 * Add the master menu's window to the bind tags for this window after
+	 * Add the main menu's window to the bind tags for this window after
 	 * this window's tag. This is so the user can bind to either this
 	 * clone (which may not be easy to do) or the entire menu clone
 	 * structure.
@@ -2750,7 +2777,7 @@ CloneMenu(
 		if (strcmp(windowName, Tk_PathName(newMenuPtr->tkwin))
 			== 0) {
 		    Tcl_Obj *newElementPtr = Tcl_NewStringObj(
-			    Tk_PathName(newMenuPtr->masterMenuPtr->tkwin), -1);
+			    Tk_PathName(newMenuPtr->mainMenuPtr->tkwin), -1);
 
 		    /*
 		     * The newElementPtr will have its refCount incremented
@@ -2839,17 +2866,17 @@ MenuDoXPosition(
     TkMenu *menuPtr,
     Tcl_Obj *objPtr)
 {
-    int index;
+    TkSizeT index;
 
     TkRecomputeMenu(menuPtr);
-    if (TkGetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
+    if (GetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     Tcl_ResetResult(interp);
-    if (index < 0) {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(0));
+    if (index == TCL_INDEX_NONE) {
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
     } else {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(menuPtr->entries[index]->x));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(menuPtr->entries[index]->x));
     }
     return TCL_OK;
 }
@@ -2876,17 +2903,17 @@ MenuDoYPosition(
     TkMenu *menuPtr,
     Tcl_Obj *objPtr)
 {
-    int index;
+    TkSizeT index;
 
     TkRecomputeMenu(menuPtr);
-    if (TkGetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
+    if (GetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
 	goto error;
     }
     Tcl_ResetResult(interp);
-    if (index < 0) {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(0));
+    if (index == TCL_INDEX_NONE) {
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
     } else {
-	Tcl_SetObjResult(interp, Tcl_NewIntObj(menuPtr->entries[index]->y));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(menuPtr->entries[index]->y));
     }
 
     return TCL_OK;
@@ -2914,12 +2941,12 @@ MenuDoYPosition(
  *----------------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 GetIndexFromCoords(
     Tcl_Interp *interp,		/* Interpreter of menu. */
     TkMenu *menuPtr,		/* The menu we are searching. */
     const char *string,		/* The @string we are parsing. */
-    int *indexPtr)		/* The index of the item that matches. */
+    TkSizeT *indexPtr)		/* The index of the item that matches. */
 {
     int x, y, i;
     const char *p;
@@ -2954,7 +2981,7 @@ GetIndexFromCoords(
       ? Tk_Width(menuPtr->tkwin) : Tk_ReqWidth(menuPtr->tkwin);
     max -= borderwidth;
 
-    for (i = 0; i < menuPtr->numEntries; i++) {
+    for (i = 0; i < (int)menuPtr->numEntries; i++) {
 	if (menuPtr->entries[i]->entryFlags & ENTRY_LAST_COLUMN) {
 	    x2 = max;
 	} else {
@@ -2997,7 +3024,7 @@ static void
 RecursivelyDeleteMenu(
     TkMenu *menuPtr)		/* The menubar instance we are deleting. */
 {
-    int i;
+    TkSizeT i;
     TkMenuEntry *mePtr;
 
     /*
@@ -3084,7 +3111,7 @@ TkNewMenuName(
 		Tcl_AppendToObj(resultPtr, ".", -1);
 	    }
 	    Tcl_AppendObjToObj(resultPtr, childPtr);
-	    intPtr = Tcl_NewIntObj(i);
+	    intPtr = Tcl_NewWideIntObj(i);
 	    Tcl_AppendObjToObj(resultPtr, intPtr);
 	    Tcl_DecrRefCount(intPtr);
     	}
@@ -3102,7 +3129,7 @@ TkNewMenuName(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetWindowMenuBar --
+ * Tk_SetWindowMenuBar --
  *
  *	Associates a menu with a window. Called by ConfigureFrame in in
  *	response to a "-menu .foo" configuration option for a top level.
@@ -3118,7 +3145,7 @@ TkNewMenuName(
  */
 
 void
-TkSetWindowMenuBar(
+Tk_SetWindowMenuBar(
     Tcl_Interp *interp,		/* The interpreter the toplevel lives in. */
     Tk_Window tkwin,		/* The toplevel window. */
     const char *oldMenuName, /* The name of the menubar previously set in
@@ -3150,7 +3177,7 @@ TkSetWindowMenuBar(
 
 		menuPtr = menuRefPtr->menuPtr;
 
-		for (instancePtr = menuPtr->masterMenuPtr;
+		for (instancePtr = menuPtr->mainMenuPtr;
 			instancePtr != NULL;
 			instancePtr = instancePtr->nextInstancePtr) {
 		    if (instancePtr->menuType == MENUBAR
@@ -3253,14 +3280,14 @@ TkSetWindowMenuBar(
 	 * menu.
 	 */
 
-	topLevelListPtr = ckalloc(sizeof(TkMenuTopLevelList));
+	topLevelListPtr = (TkMenuTopLevelList *)ckalloc(sizeof(TkMenuTopLevelList));
 	topLevelListPtr->tkwin = tkwin;
 	topLevelListPtr->nextPtr = menuRefPtr->topLevelListPtr;
 	menuRefPtr->topLevelListPtr = topLevelListPtr;
     } else {
 	TkpSetWindowMenuBar(tkwin, NULL);
     }
-    TkpSetMainMenubar(interp, tkwin, menuName);
+    Tk_SetMainMenubar(interp, tkwin, menuName);
 }
 
 /*
@@ -3283,9 +3310,11 @@ TkSetWindowMenuBar(
 static void
 DestroyMenuHashTable(
     ClientData clientData,	/* The menu hash table we are destroying. */
-    Tcl_Interp *interp)		/* The interpreter we are destroying. */
+    Tcl_Interp *dummy)		/* The interpreter we are destroying. */
 {
-    Tcl_DeleteHashTable(clientData);
+    (void)dummy;
+
+    Tcl_DeleteHashTable((Tcl_HashTable *)clientData);
     ckfree(clientData);
 }
 
@@ -3311,11 +3340,11 @@ Tcl_HashTable *
 TkGetMenuHashTable(
     Tcl_Interp *interp)		/* The interp we need the hash table in.*/
 {
-    Tcl_HashTable *menuTablePtr =
+    Tcl_HashTable *menuTablePtr = (Tcl_HashTable *)
 	    Tcl_GetAssocData(interp, MENU_HASH_KEY, NULL);
 
     if (menuTablePtr == NULL) {
-	menuTablePtr = ckalloc(sizeof(Tcl_HashTable));
+	menuTablePtr = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(menuTablePtr, TCL_STRING_KEYS);
 	Tcl_SetAssocData(interp, MENU_HASH_KEY, DestroyMenuHashTable,
 		menuTablePtr);
@@ -3356,14 +3385,14 @@ TkCreateMenuReferences(
 
     hashEntryPtr = Tcl_CreateHashEntry(menuTablePtr, pathName, &newEntry);
     if (newEntry) {
-    	menuRefPtr = ckalloc(sizeof(TkMenuReferences));
+    	menuRefPtr = (TkMenuReferences *)ckalloc(sizeof(TkMenuReferences));
     	menuRefPtr->menuPtr = NULL;
     	menuRefPtr->topLevelListPtr = NULL;
     	menuRefPtr->parentEntryPtr = NULL;
     	menuRefPtr->hashEntryPtr = hashEntryPtr;
     	Tcl_SetHashValue(hashEntryPtr, menuRefPtr);
     } else {
-    	menuRefPtr = Tcl_GetHashValue(hashEntryPtr);
+    	menuRefPtr = (TkMenuReferences *)Tcl_GetHashValue(hashEntryPtr);
     }
     return menuRefPtr;
 }
@@ -3400,7 +3429,7 @@ TkFindMenuReferences(
     menuTablePtr = TkGetMenuHashTable(interp);
     hashEntryPtr = Tcl_FindHashEntry(menuTablePtr, pathName);
     if (hashEntryPtr != NULL) {
-    	menuRefPtr = Tcl_GetHashValue(hashEntryPtr);
+    	menuRefPtr = (TkMenuReferences *)Tcl_GetHashValue(hashEntryPtr);
     }
     return menuRefPtr;
 }
@@ -3496,12 +3525,12 @@ DeleteMenuCloneEntries(
     int numDeleted, i, j;
 
     numDeleted = last + 1 - first;
-    for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
+    for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	for (i = last; i >= first; i--) {
 	    Tcl_EventuallyFree(menuListPtr->entries[i], (Tcl_FreeProc *) DestroyMenuEntry);
 	}
-	for (i = last + 1; i < menuListPtr->numEntries; i++) {
+	for (i = last + 1; i < (int)menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;
 	    menuListPtr->entries[j] = menuListPtr->entries[i];
 	    menuListPtr->entries[j]->index = j;
@@ -3511,10 +3540,10 @@ DeleteMenuCloneEntries(
 	    ckfree(menuListPtr->entries);
 	    menuListPtr->entries = NULL;
 	}
-	if ((menuListPtr->active >= first)
-		&& (menuListPtr->active <= last)) {
+	if (((int)menuListPtr->active >= first)
+		&& ((int)menuListPtr->active <= last)) {
 	    menuListPtr->active = -1;
-	} else if (menuListPtr->active > last) {
+	} else if ((int)menuListPtr->active > last) {
 	    menuListPtr->active -= numDeleted;
 	}
 	TkEventuallyRecomputeMenu(menuListPtr);
@@ -3524,7 +3553,7 @@ DeleteMenuCloneEntries(
 /*
  *----------------------------------------------------------------------
  *
- * TkMenuCleanup --
+ * MenuCleanup --
  *
  *	Resets menusInitialized to allow Tk to be finalized and reused without
  *	the DLL being unloaded.
@@ -3539,9 +3568,11 @@ DeleteMenuCloneEntries(
  */
 
 static void
-TkMenuCleanup(
-    ClientData unused)
+MenuCleanup(
+    ClientData dummy)
 {
+    (void)dummy;
+
     menusInitialized = 0;
 }
 
@@ -3565,7 +3596,7 @@ TkMenuCleanup(
 void
 TkMenuInit(void)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!menusInitialized) {
@@ -3579,7 +3610,7 @@ TkMenuInit(void)
 	 * Make sure we cleanup on finalize.
 	 */
 
-	TkCreateExitHandler((Tcl_ExitProc *) TkMenuCleanup, NULL);
+	TkCreateExitHandler((Tcl_ExitProc *) MenuCleanup, NULL);
 	Tcl_MutexUnlock(&menuMutex);
     }
     if (!tsdPtr->menusInitialized) {

@@ -1,8 +1,8 @@
 # This file is a Tcl script to test out Tk's "tk_messageBox" command.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -11,12 +11,18 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 
-test msgbox-1.1 {tk_messageBox command} -body {
+test msgbox-1.1.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo
 } -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, or -type}
-test msgbox-1.2 {tk_messageBox command} -body {
+test msgbox-1.1.2 {tk_messageBox command} -constraints aqua -body {
+    tk_messageBox -foo
+} -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, -type, or -command}
+test msgbox-1.2.1 {tk_messageBox command} -constraints notAqua -body {
     tk_messageBox -foo bar
 } -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, or -type}
+test msgbox-1.2.2 {tk_messageBox command} -constraints aqua -body {
+    tk_messageBox -foo bar
+} -returnCodes error -result {bad option "-foo": must be -default, -detail, -icon, -message, -parent, -title, -type, or -command}
 
 test msgbox-1.3 {tk_messageBox command} -body {
     tk_messageBox -default
@@ -48,30 +54,22 @@ test msgbox-1.11 {tk_messageBox command} -body {
     tk_messageBox -type foo
 } -returnCodes error -result {bad -type value "foo": must be abortretryignore, ok, okcancel, retrycancel, yesno, or yesnocancel}
 
-test msgbox-1.12 {tk_messageBox command} -constraints unix -body {
-    tk_messageBox -default 1.1
-} -returnCodes error -result {invalid default button "1.1"}
-test msgbox-1.13 {tk_messageBox command} -constraints macOrWin -body {
+test msgbox-1.13 {tk_messageBox command} -body {
     tk_messageBox -default 1.1
 } -returnCodes error -result {bad -default value "1.1": must be abort, retry, ignore, ok, cancel, no, or yes}
 
-test msgbox-1.14 {tk_messageBox command} -constraints unix -body {
-    tk_messageBox -default foo
-} -returnCodes error -result {invalid default button "foo"}
-test msgbox-1.15 {tk_messageBox command} -constraints macOrWin -body {
+test msgbox-1.14 {tk_messageBox command} -body {
     tk_messageBox -default foo
 } -returnCodes error -result {bad -default value "foo": must be abort, retry, ignore, ok, cancel, no, or yes}
 
-test msgbox-1.16 {tk_messageBox command} -constraints unix -body {
-    tk_messageBox -type yesno -default 3
-} -returnCodes error -result {invalid default button "3"}
-test msgbox-1.17 {tk_messageBox command} -constraints macOrWin -body {
+test msgbox-1.16 {tk_messageBox command} -body {
     tk_messageBox -type yesno -default 3
 } -returnCodes error -result {bad -default value "3": must be abort, retry, ignore, ok, cancel, no, or yes}
 
 test msgbox-1.18 {tk_messageBox command} -body {
     tk_messageBox -icon foo
 } -returnCodes error -result {bad -icon value "foo": must be error, info, question, or warning}
+
 test msgbox-1.19 {tk_messageBox command} -body {
     tk_messageBox -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}
@@ -96,7 +94,7 @@ proc ChooseMsgByKey {parent btn} {
 
 proc PressButton {btn} {
     event generate $btn <Enter>
-    event generate $btn <ButtonPress-1> -x 5 -y 5
+    event generate $btn <Button-1> -x 5 -y 5
     event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
@@ -115,7 +113,7 @@ proc SendEventToMsg {parent btn type} {
 	event generate $w <Enter>
 	focus $w
 	event generate $w.$btn <Enter>
-	event generate $w <KeyPress> -keysym Return
+	event generate $w <Key> -keysym Return
     }
 }
 #

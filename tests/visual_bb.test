@@ -23,7 +23,7 @@ proc runTest {file} {
     global testNum
 
     test "2.$testNum" "testing $file" {userInteraction} {
-    uplevel \#0 source [file join [testsDirectory] $file]
+    uplevel #0 [list source -encoding utf-8 [file join [testsDirectory] $file]]
     concat ""
     } {}
     incr testNum
@@ -94,7 +94,7 @@ test 1.1 {running visual tests} -constraints userInteraction -body {
 
     # Set up for keyboard-based menu traversal
 
-    bind . <Any-FocusIn> {
+    bind . <FocusIn> {
     if {("%d" == "NotifyVirtual") && ("%m" == "NotifyNormal")} {
         focus .menu
     }
@@ -104,7 +104,7 @@ test 1.1 {running visual tests} -constraints userInteraction -body {
     # Set up a class binding to allow objects to be deleted from a canvas
     # by clicking with mouse button 1:
 
-    bind Canvas <1> {%W delete [%W find closest %x %y]}
+    bind Canvas <Button-1> {%W delete [%W find closest %x %y]}
 
     concat ""
 } -result {}

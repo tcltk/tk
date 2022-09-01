@@ -8,6 +8,7 @@ namespace eval ttk::theme::alt {
     array set colors {
 	-frame 		"#d9d9d9"
 	-window		"#ffffff"
+        -alternate	"#f0f0f0"
 	-darker 	"#c3c3c3"
 	-border		"#414141"
 	-activebg 	"#ececec"
@@ -63,7 +64,8 @@ namespace eval ttk::theme::alt {
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure TCombobox -padding 1
 	ttk::style map TCombobox -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)]
+		[list readonly $colors(-frame) disabled $colors(-frame)] \
+		-arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
@@ -92,10 +94,15 @@ namespace eval ttk::theme::alt {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Treeview -background $colors(-window)
+	ttk::style configure Treeview -background $colors(-window) \
+                -stripedbackground $colors(-alternate)
+	ttk::style configure Treeview.Separator \
+                -background $colors(-alternate)
 	ttk::style map Treeview \
-	    -background [list selected $colors(-selectbg)] \
-	    -foreground [list selected $colors(-selectfg)] ;
+	    -background [list disabled $colors(-frame)\
+				selected $colors(-selectbg)] \
+	    -foreground [list disabled $colors(-disabledfg) \
+				selected $colors(-selectfg)]
 
 	ttk::style configure TScale \
 	    -groovewidth 4 -troughrelief sunken \

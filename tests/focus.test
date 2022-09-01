@@ -2,14 +2,17 @@
 # other procedures in the file tkFocus.c.  It is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 proc focusSetup {} {
     destroy .t
@@ -64,7 +67,7 @@ bind all <FocusIn> {
 bind all <FocusOut> {
     append focusInfo "out %W %d\n"
 }
-bind all <KeyPress> {
+bind all <Key> {
     append focusInfo "press %W %K"
 }
 focusSetup
@@ -308,7 +311,7 @@ in .t.b1 NotifyNonlinear
 } .t.b1}
 
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix  testwrapper
+    unix  testwrapper failsOnUbuntu failsOnXQuarz
 } -body {
     focus .t.b1
     focus .
@@ -316,11 +319,11 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     event gen [testwrapper .t] <FocusIn> -detail NotifyAncestor
     set focusInfo {}
     set x [focus]
-    event gen . <KeyPress-x>
+    event gen . <x>
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper
+    unix  testwrapper failsOnUbuntu failsOnXQuarz
 } -body {
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
@@ -341,7 +344,7 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix  testwrapper
+    unix  testwrapper failsOnUbuntu failsOnXQuarz
 } -body {
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
@@ -599,7 +602,7 @@ cleanupbg
 
 # Test 5.1 fails (before and after update)
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix testwrapper secureserver
+    unix testwrapper secureserver failsOnUbuntu failsOnXQuarz
 } -body {
     setupbg
     focusSetup
@@ -617,7 +620,7 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constr
 destroy .t
 bind all <FocusIn> {}
 bind all <FocusOut> {}
-bind all <KeyPress> {}
+bind all <Key> {}
 
 
 fixfocus
@@ -730,6 +733,26 @@ test focus-6.2 {miscellaneous - embedded application in different process} -cons
     bind all <FocusOut> {}
 } -result {{.t.f2.e1 {} {focus out .t.f2.e1 NotifyNonlinear} {focus out .t.f2 NotifyNonlinearVirtual} {focus in .t.f1 NotifyNonlinear} | {focus out .t.f1 NotifyNonlinear} {focus in .t.f2 NotifyNonlinearVirtual} {focus in .t.f2.e1 NotifyNonlinear}} {{focus in . NotifyVirtual} {focus in .e1 NotifyAncestor} | {focus out .e1 NotifyAncestor} {focus out . NotifyVirtual}}}
 
+test focus-7.1 {TkSetFocusWin procedure, unmapped windows} -setup {
+    # TkSetFocusWin handles the case of not yet mapped windows
+    # by not setting the focus on them right at the time it is
+    # requested, but by scheduling an event handler that will
+    # set the focus later once it gets mapped. The purpose of
+    # this test is to check that event scheduling and deletion
+    # work as expected (bug [08e2f8e6f0]).
+    toplevel .top
+    spinbox .top.s1
+    spinbox .top.s2
+    spinbox .top.s3
+    grid .top.s1 .top.s2 .top.s3
+} -body {
+    focus -force .top.s2
+    focus -force .top.s3
+    update
+    focus
+} -cleanup {
+    destroy .top
+} -result {.top.s3}
 
 
 deleteWindows

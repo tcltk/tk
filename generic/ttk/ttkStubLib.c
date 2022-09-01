@@ -6,7 +6,7 @@
 #undef USE_TCL_STUBS
 #define USE_TCL_STUBS
 
-#include "tk.h"
+#include "tkInt.h"
 
 #define USE_TTK_STUBS 1
 #include "ttkTheme.h"
@@ -34,17 +34,23 @@ TtkInitializeStubs(
     Tcl_Interp *interp, const char *version, int epoch, int revision)
 {
     int exact = 0;
-    const char *packageName = "Ttk";
+    const char *packageName = "ttk";
     const char *errMsg = NULL;
-    ClientData pkgClientData = NULL;
+    void *pkgClientData = NULL;
     const char *actualVersion = Tcl_PkgRequireEx(
 	interp, packageName, version, exact, &pkgClientData);
-    const TtkStubs *stubsPtr = pkgClientData;
+    const TtkStubs *stubsPtr;
 
     if (!actualVersion) {
-	return NULL;
+	packageName = "Ttk";
+	actualVersion = Tcl_PkgRequireEx(
+		interp, packageName, version, exact, &pkgClientData);
+	if (!actualVersion) {
+	    return NULL;
+	}
     }
 
+    stubsPtr = (const TtkStubs *)pkgClientData;
     if (!stubsPtr) {
 	errMsg = "missing stub table pointer";
 	goto error;

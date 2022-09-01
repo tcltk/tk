@@ -3,8 +3,8 @@
 # This file contains obsolete procedures that people really shouldn't
 # be using anymore, but which are kept around for backward compatibility.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -103,7 +103,7 @@ proc ::tk::classic::restore_listbox {args} {
 	option add *Listbox.selectBorderWidth	1 $prio; # 0
     }
     # Remove focus into Listbox added for 8.5
-    bind Listbox <1> {
+    bind Listbox <Button-1> {
 	if {[winfo exists %W]} {
 	    tk::ListboxBeginSelect %W [%W index @%x,%y]
 	}

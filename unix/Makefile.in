@@ -35,6 +35,7 @@ bindir			= @bindir@
 libdir			= @libdir@
 includedir		= @includedir@
 datarootdir		= @datarootdir@
+runstatedir		= @runstatedir@
 mandir			= @mandir@
 
 # The following definition can be set to non-null for special systems
@@ -95,22 +96,23 @@ HTML_INSTALL_DIR	= $(INSTALL_ROOT)$(HTML_DIR)
 CONFIG_INSTALL_DIR	= $(INSTALL_ROOT)$(libdir)
 
 # Directory in which to install the demo files:
-DEMO_INSTALL_DIR	= $(INSTALL_ROOT)$(TK_LIBRARY)/demos
+DEMO_INSTALL_DIR	= $(INSTALL_ROOT)@DEMO_DIR@
 
 # The directory containing the Tcl sources and headers appropriate
 # for this version of Tk ("srcdir" will be replaced or has already
 # been replaced by the configure script):
-TCL_GENERIC_DIR		= @TCL_SRC_DIR@/generic
+TCLDIR   = @TCL_SRC_DIR@
+TCL_GENERIC_DIR		= $(TCLDIR)/generic
 
 # The directory containing the platform specific Tcl sources and headers
 # appropriate for this version of Tk:
-TCL_PLATFORM_DIR	= @TCL_SRC_DIR@/unix
+TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 
 # The directory containing the Tcl library archive file appropriate
 # for this version of Tk:
 TCL_BIN_DIR		= @TCL_BIN_DIR@
 
-# The linker flags needed to link in the Tcl library (ex: -ltcl8.2)
+# The linker flags needed to link in the Tcl library (ex: -ltcl8.7)
 TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Flag, 1: we're building a shared lib, 0 we're not
@@ -245,6 +247,8 @@ TK_STUB_LIB_FLAG	= @TK_STUB_LIB_FLAG@
 #TK_STUB_LIB_FLAG	= -ltkstub
 
 TK_LIB_FILE		= @TK_LIB_FILE@
+TK_LIB_FILE_TCL8	= @TK_LIB_FILE_TCL8@
+TK_LIB_FILE_TCL9	= @TK_LIB_FILE_TCL9@
 #TK_LIB_FILE		= libtk.a
 
 # Generic lib name used in rules that apply to tcl and tk
@@ -283,7 +287,7 @@ CC_SEARCH_FLAGS	= @CC_SEARCH_FLAGS@
 LD_SEARCH_FLAGS	= @LD_SEARCH_FLAGS@
 
 # support for embedded libraries on Darwin / Mac OS X
-DYLIB_INSTALL_DIR	= ${LIB_RUNTIME_DIR}
+DYLIB_INSTALL_DIR	= $(libdir)
 
 # support for building the Aqua resource file
 TK_RSRC_FILE		= @TK_RSRC_FILE@
@@ -310,7 +314,7 @@ GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
-TOOL_DIR		= @TCL_SRC_DIR@/tools
+TOOL_DIR		= $(TCLDIR)/tools
 TEST_DIR		= $(TOP_DIR)/tests
 MAC_OSX_DIR		= $(TOP_DIR)/macosx
 XLIB_DIR		= $(TOP_DIR)/xlib
@@ -327,20 +331,20 @@ MAN_FLAGS               = @MAN_FLAGS@
 
 CC			= @CC@
 
-CC_SWITCHES_NO_STUBS = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
--I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} -I${TCL_GENERIC_DIR} \
--I${TCL_PLATFORM_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} ${AC_FLAGS} \
+CC_SWITCHES_NO_STUBS = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
+${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} ${CFLAGS_WARNING} \
+${SHLIB_CFLAGS} -I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${AC_FLAGS} \
 ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} \
-${NO_DEPRECATED_FLAGS} @EXTRA_CC_SWITCHES@
+${NO_DEPRECATED_FLAGS} -DTCL_UTF_MAX=3 @EXTRA_CC_SWITCHES@
 
 CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @TCL_STUB_FLAGS@
 
 APP_CC_SWITCHES = $(CC_SWITCHES_NO_STUBS) @EXTRA_APP_CC_SWITCHES@
 
-DEPEND_SWITCHES = ${CFLAGS} -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
--I${TCL_GENERIC_DIR} -I${TCL_PLATFORM_DIR} ${@TK_WINDOWINGSYSTEM@_INCLUDES} \
-${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} ${MEM_DEBUG_FLAGS} \
-${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
+DEPEND_SWITCHES = -I${UNIX_DIR} -I${GENERIC_DIR} -I${BMAP_DIR} \
+${@TK_WINDOWINGSYSTEM@_INCLUDES} ${CFLAGS} -I${TCL_GENERIC_DIR} \
+-I${TCL_PLATFORM_DIR} ${AC_FLAGS} ${PROTO_FLAGS} ${SECURITY_FLAGS} \
+${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
 WISH_OBJS = tkAppInit.o
 
@@ -356,7 +360,7 @@ CANV_OBJS = tkCanvas.o tkCanvArc.o tkCanvBmap.o tkCanvImg.o \
 	tkCanvUtil.o tkCanvWind.o tkRectOval.o tkTrig.o
 
 IMAGE_OBJS = tkImage.o tkImgBmap.o tkImgGIF.o tkImgPNG.o tkImgPPM.o \
-	tkImgPhoto.o tkImgPhInstance.o
+	tkImgPhoto.o tkImgPhInstance.o tkImgListFormat.o tkImgSVGnano.o
 
 TEXT_OBJS = tkText.o tkTextBTree.o tkTextDisp.o tkTextImage.o tkTextIndex.o \
 	tkTextMark.o tkTextTag.o tkTextWind.o
@@ -369,8 +373,9 @@ GENERIC_OBJS = tk3d.o tkArgv.o tkAtom.o tkBind.o tkBitmap.o tkBusy.o \
 	tkClipboard.o \
 	tkCmds.o tkColor.o tkConfig.o tkConsole.o tkCursor.o tkError.o \
 	tkEvent.o tkFocus.o tkFont.o tkGet.o tkGC.o tkGeometry.o tkGrab.o \
-	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o tkPlace.o \
-	tkSelect.o tkStyle.o tkUndo.o tkUtil.o tkVisual.o tkWindow.o
+	tkGrid.o tkMain.o tkObj.o tkOldConfig.o tkOption.o tkPack.o \
+	tkPkgConfig.o tkPlace.o	tkSelect.o tkStyle.o tkUndo.o tkUtil.o \
+	tkVisual.o tkWindow.o
 
 TTK_OBJS = \
 	ttkBlink.o ttkButton.o ttkCache.o ttkClamTheme.o ttkClassicTheme.o \
@@ -386,20 +391,22 @@ STUB_OBJS = tkStubInit.o
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
 X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
-	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
+	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
-	tkUnixSend.o tkUnixWm.o tkUnixXId.o
+	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
 
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
-	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXInit.o \
-	tkMacOSXKeyboard.o tkMacOSXKeyEvent.o tkMacOSXMenu.o \
+	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
+	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
+	tkMacOSXMenu.o \
 	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
-	tkMacOSXNotify.o tkMacOSXRegion.o tkMacOSXScrlbr.o tkMacOSXSend.o \
-	tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
-	tkMacOSXWm.o tkMacOSXXStubs.o \
+	tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
+	tkMacOSXScrlbr.o tkMacOSXSend.o \
+	tkMacOSXServices.o tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
+	tkMacOSXWm.o tkMacOSXXStubs.o tkMacOSXSysTray.o\
 	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
 	xcolors.o xdraw.o xgc.o ximage.o xutil.o \
 	ttkMacOSXTheme.o
@@ -431,6 +438,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkGrid.c $(GENERIC_DIR)/tkConsole.c \
 	$(GENERIC_DIR)/tkMain.c $(GENERIC_DIR)/tkOption.c \
 	$(GENERIC_DIR)/tkPack.c $(GENERIC_DIR)/tkPlace.c \
+	$(GENERIC_DIR)/tkPkgConfig.c \
 	$(GENERIC_DIR)/tkSelect.c $(GENERIC_DIR)/tkStyle.c \
 	$(GENERIC_DIR)/tkUndo.c $(GENERIC_DIR)/tkUtil.c \
 	$(GENERIC_DIR)/tkVisual.c $(GENERIC_DIR)/tkWindow.c \
@@ -449,8 +457,9 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTrig.c $(GENERIC_DIR)/tkImage.c \
 	$(GENERIC_DIR)/tkImgBmap.c $(GENERIC_DIR)/tkImgGIF.c \
 	$(GENERIC_DIR)/tkImgPNG.c $(GENERIC_DIR)/tkImgPPM.c \
+	$(GENERIC_DIR)/tkImgSVGnano.c $(GENERIC_DIR)/tkImgSVGnano.c \
 	$(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhInstance.c \
-	$(GENERIC_DIR)/tkText.c \
+	$(GENERIC_DIR)/tkImgListFormat.c $(GENERIC_DIR)/tkText.c \
 	$(GENERIC_DIR)/tkTextBTree.c $(GENERIC_DIR)/tkTextDisp.c \
 	$(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextMark.c \
@@ -501,15 +510,15 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixCursor.c \
 	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
-	$(UNIX_DIR)/tkUnixFocus.c \
+	$(UNIX_DIR)/tkUnixFocus.c $(GENERIC_DIR)/tkIcu.c \
 	$(UNIX_DIR)/tkUnixRFont.c \
 	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
 	$(UNIX_DIR)/tkUnixKey.c \
 	$(UNIX_DIR)/tkUnixMenu.c $(UNIX_DIR)/tkUnixMenubu.c \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
-	$(UNIX_DIR)/tkUnixSelect.c \
-	$(UNIX_DIR)/tkUnixSend.c $(UNIX_DIR)/tkUnixWm.c \
-	$(UNIX_DIR)/tkUnixXId.c
+	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
+	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
+	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXBitmap.c $(MAC_OSX_DIR)/tkMacOSXButton.c \
@@ -519,11 +528,14 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXDraw.c $(MAC_OSX_DIR)/tkMacOSXEmbed.c \
 	$(MAC_OSX_DIR)/tkMacOSXEntry.c $(MAC_OSX_DIR)/tkMacOSXEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXFont.c $(MAC_OSX_DIR)/tkMacOSXHLEvents.c \
+	$(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
-	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c $(MAC_OSX_DIR)/tkMacOSXMenu.c \
+	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c \
+	$(MAC_OSX_DIR)/tkMacOSXMenu.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenubutton.c $(MAC_OSX_DIR)/tkMacOSXMenus.c \
 	$(MAC_OSX_DIR)/tkMacOSXMouseEvent.c $(MAC_OSX_DIR)/tkMacOSXNotify.c \
 	$(MAC_OSX_DIR)/tkMacOSXRegion.c $(MAC_OSX_DIR)/tkMacOSXScrlbr.c \
+	$(MAC_OSX_DIR)/tkMacOSXServices.c $(MAC_OSX_DIR)/tkMacOSXSysTray.c \
 	$(MAC_OSX_DIR)/tkMacOSXSend.c $(MAC_OSX_DIR)/tkMacOSXSubwindows.c \
 	$(MAC_OSX_DIR)/tkMacOSXTest.c $(MAC_OSX_DIR)/tkMacOSXWindowEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXWm.c $(MAC_OSX_DIR)/tkMacOSXXStubs.c \
@@ -534,6 +546,28 @@ AQUA_SRCS = \
 	$(TTK_DIR)/ttkMacOSXTheme.c
 
 SRCS = $(GENERIC_SRCS) $(@TK_WINDOWINGSYSTEM@_SRCS) @PLAT_SRCS@
+
+###
+# Tip 430 - ZipFS Modifications
+###
+
+TK_ZIP_FILE		= @TK_ZIP_FILE@
+TK_VFS_ROOT		= libtk.vfs
+TK_VFS_PATH		= ${TK_VFS_ROOT}/tk_library
+
+HOST_CC			= @CC_FOR_BUILD@
+HOST_EXEEXT		= @EXEEXT_FOR_BUILD@
+HOST_OBJEXT		= @OBJEXT_FOR_BUILD@
+ZIPFS_BUILD		= @ZIPFS_BUILD@
+NATIVE_ZIP		= @ZIP_PROG@
+ZIP_PROG_OPTIONS	= @ZIP_PROG_OPTIONS@
+ZIP_PROG_VFSSEARCH	= @ZIP_PROG_VFSSEARCH@
+SHARED_BUILD		= @SHARED_BUILD@
+INSTALL_LIBRARIES	= @INSTALL_LIBRARIES@
+INSTALL_MSGS		= @INSTALL_MSGS@
+
+ZIP_INSTALL_OBJS	= @ZIP_INSTALL_OBJS@
+
 
 AQUA_RESOURCES = \
 	$(MAC_OSX_DIR)/tkAboutDlg.r $(MAC_OSX_DIR)/tkMacOSXCursors.r \
@@ -547,7 +581,8 @@ AQUA_XLIB_HDRS = $(XLIB_DIR)/X11/*.h $(XLIB_DIR)/xbytes.h
 
 AQUA_PRIVATE_HDRS = $(MAC_OSX_DIR)/tkMacOSXPort.h $(MAC_OSX_DIR)/tkMacOSXInt.h
 
-X11_PRIVATE_HDRS = $(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h $(GENERIC_DIR)/tkIntXlibDecls.h
+X11_PRIVATE_HDRS = $(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h $(GENERIC_DIR)/tkIntXlibDecls.h \
+	$(UNIX_DIR)/tkUnixDefault.h
 
 # Currently private, eventually public
 TTK_HDRS = $(TTK_DIR)/ttkTheme.h $(TTK_DIR)/ttkDecls.h
@@ -565,25 +600,55 @@ DEMOPROGS = browse hello ixset rmt rolodex square tcolor timer widget
 SHELL_ENV = \
 	@LD_LIBRARY_PATH_VAR@="`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}"; \
 	export @LD_LIBRARY_PATH_VAR@; \
-	TCL_LIBRARY=@TCL_SRC_DIR@/library; export TCL_LIBRARY; \
+	TCL_LIBRARY=$(TCLDIR)/library; export TCL_LIBRARY; \
 	TK_LIBRARY=@TK_SRC_DIR@/library; export TK_LIBRARY;
 
-all: binaries libraries doc
+all: binaries libraries
 
 binaries: ${LIB_FILE} ${WISH_EXE}
 
 libraries:
 
-$(TOP_DIR)/doc/man.macros:
-	$(INSTALL_DATA) @TCL_SRC_DIR@/doc/man.macros $(TOP_DIR)/doc/man.macros
+tkzipfile: ${TK_ZIP_FILE}
 
-doc: $(TOP_DIR)/doc/man.macros
+${TK_ZIP_FILE}: ${ZIP_INSTALL_OBJS}
+	@rm -rf ${TK_VFS_ROOT}
+	@mkdir -p ${TK_VFS_PATH}
+	@echo "creating ${TK_VFS_PATH} (prepare compression)"
+	@if \
+	    ln -s $(TOP_DIR)/library/* ${TK_VFS_PATH}/; \
+	then : ; else \
+	    cp -a $(TOP_DIR)/library/* ${TK_VFS_PATH}; \
+	fi
+	rm -rf ${TK_VFS_PATH}/demos
+	@find ${TK_VFS_ROOT} -type d -empty -delete
+	@echo "creating ${TK_ZIP_FILE} from ${TK_VFS_PATH}"
+	-@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    cp ${TCL_BIN_DIR}/tclsh ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVERSION} ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
+	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
+		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
+		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
+	fi
+	@(zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}' || \
+	    echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")  2>/dev/null`; \
+	    echo 'cd ${TK_VFS_ROOT} &&' $$zip '${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH}'; \
+	    cd ${TK_VFS_ROOT} && \
+	    $$zip ${ZIP_PROG_OPTIONS} ../${TK_ZIP_FILE} ${ZIP_PROG_VFSSEARCH} >/dev/null)
 
 # The following target is configured by autoconf to generate either
 # a shared library or non-shared library for Tk.
-${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
+${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS} ${TK_ZIP_FILE}
 	rm -f $@
 	@MAKE_LIB@
+	@if test "${ZIPFS_BUILD}" = "1" ; then \
+	    if test "x$(MACHER)" = "x" ; then \
+		cat ${TK_ZIP_FILE} >> ${LIB_FILE}; \
+	    else $(MACHER) append ${LIB_FILE} ${TK_ZIP_FILE} /tmp/macher_output; \
+	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+	    fi; \
+	    ${NATIVE_ZIP} -A ${LIB_FILE} \
+	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
 	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
@@ -617,6 +682,15 @@ objs: ${OBJS}
 ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
 	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
+	@if test "${ZIPFS_BUILD}" = "2" ; then \
+	    if test "x$(MACHER)" = "x" ; then \
+		cat ${TK_ZIP_FILE} >> ${WISH_EXE}; \
+	    else $(MACHER) append ${WISH_EXE} ${TK_ZIP_FILE} /tmp/macher_output; \
+	         mv /tmp/macher_output ${LIB_FILE}; chmod u+x ${LIB_FILE}; \
+	    fi; \
+	    ${NATIVE_ZIP} -A ${WISH_EXE} \
+	    || echo 'ignore zip-error by adjust sfx process (not executable?)'; \
+	fi
 
 # Resetting the LIB_RUNTIME_DIR below is required so that
 # the generated tktest executable gets the build directory
@@ -628,8 +702,8 @@ $(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real: ${TK_STUB_LIB_FILE}
-	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) ${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} @TK_BUILD_LIB_SPEC@ \
-		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
+	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ $(WISH_LIBS) \
+		${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # # FIXME: This xttest rule seems to be broken in a number of ways.  It should
 # # use CC_SEARCH_FLAGS, it does not include the shared lib location logic from
@@ -681,7 +755,7 @@ demo:
 # This target can be used to run wish inside either gdb or insight
 gdb: ${WISH_EXE}
 	@echo "set env @LD_LIBRARY_PATH_VAR@=\"`pwd`:${TCL_BIN_DIR}:$${@LD_LIBRARY_PATH_VAR@}\"" > gdb.run
-	@echo "set env TCL_LIBRARY=@TCL_SRC_DIR@/library" >> gdb.run
+	@echo "set env TCL_LIBRARY=$(TCLDIR)/library" >> gdb.run
 	@echo "set env TK_LIBRARY=@TK_SRC_DIR@/library" >> gdb.run
 	gdb ./${WISH_EXE} --command=gdb.run
 	rm gdb.run
@@ -694,7 +768,7 @@ valgrind: $(TKTEST_EXE)
 valgrindshell: $(TKTEST_EXE)
 	$(SHELL_ENV) valgrind $(VALGRINDARGS) ./$(TKTEST_EXE) $(SCRIPT)
 
-INSTALL_BASE_TARGETS = install-binaries install-libraries
+INSTALL_BASE_TARGETS = install-binaries ${INSTALL_LIBRARIES}
 INSTALL_DOC_TARGETS = install-doc
 INSTALL_DEV_TARGETS = install-headers
 INSTALL_DEMO_TARGETS = install-demos
@@ -723,18 +797,31 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	    echo "Creating package index $(PKG_INDEX)"; \
 	    rm -f "$(PKG_INDEX)"; \
 	    (\
-	    echo "if {[catch {package present Tcl 8.6.0}]} return";\
+	    echo "if {![package vsatisfies [package provide Tcl] 8.6-]} return";\
 	    relative=`echo | awk '{ORS=" "; split("$(TK_PKG_DIR)",a,"/"); for (f in a) {print ".."}}'`;\
 	    if test "x$(DLL_INSTALL_DIR)" != "x$(BIN_INSTALL_DIR)"; then \
-	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE)]] Tk]";\
+	    echo "if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE_TCL9)]]]";\
+	    echo "} else {";\
+	    echo "    package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}$(TK_LIB_FILE_TCL8)]]]";\
+	    echo "}";\
 	    else \
 	    echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	    echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
-	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE)]] Tk]";\
+	    echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE_TCL9)]]]";\
+	    echo "    } else {";\
+	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin $(TK_LIB_FILE_TCL8)]]]";\
+	    echo "    }";\
 	    echo "} else {";\
-	    echo "    package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]] Tk]";\
+	    echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
+	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tcl9tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
+	    echo "    } else {";\
+	    echo "	package ifneeded tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list load [file normalize [file join \$$dir $${relative}.. bin tk${MAJOR_VERSION}${MINOR_VERSION}.dll]]]";\
+	    echo "    }";\
 	    echo "}";\
-	    fi \
+	    fi; \
+	    echo "package ifneeded Tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL) [list package require -exact tk $(MAJOR_VERSION).$(MINOR_VERSION)$(PATCH_LEVEL)]"\
 	    ) > "$(PKG_INDEX)"; \
 	    fi
 	@echo "Installing $(LIB_FILE) to $(DLL_INSTALL_DIR)/"
@@ -743,8 +830,8 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@if test -f "tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    $(INSTALL_LIBRARY) "tk${MAJOR_VERSION}${MINOR_VERSION}.dll" "$(DLL_INSTALL_DIR)";\
 	    chmod 555 "$(DLL_INSTALL_DIR)/tk${MAJOR_VERSION}${MINOR_VERSION}.dll";\
-	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.a" "$(LIB_INSTALL_DIR)";\
-	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.a";\
+	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a" "$(LIB_INSTALL_DIR)";\
+	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a";\
 	fi
 	@echo "Installing ${WISH_EXE} as $(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
 	@$(INSTALL_PROGRAM) ${WISH_EXE} "$(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
@@ -756,8 +843,8 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	fi
 	@EXTRA_INSTALL_BINARIES@
 	@echo "Installing pkg-config file to $(LIB_INSTALL_DIR)/pkgconfig/"
-	@$(INSTALL_DATA_DIR) $(LIB_INSTALL_DIR)/pkgconfig
-	@$(INSTALL_DATA) tk.pc $(LIB_INSTALL_DIR)/pkgconfig/tk.pc
+	@$(INSTALL_DATA_DIR) "$(LIB_INSTALL_DIR)/pkgconfig"
+	@$(INSTALL_DATA) tk.pc "$(LIB_INSTALL_DIR)/pkgconfig/tk.pc"
 
 install-libraries: libraries
 	@for i in "$(SCRIPT_INSTALL_DIR)" "$(SCRIPT_INSTALL_DIR)/images" \
@@ -898,8 +985,10 @@ Makefile: $(UNIX_DIR)/Makefile.in
 #	$(SHELL) config.status
 
 clean:
+	rm -rf *.vfs
 	rm -f *.a *.o libtk* core errs *~ \#* TAGS *.E a.out \
-		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc
+		errors ${WISH_EXE} $(TKTEST_EXE) lib.exp Tk *.rsrc \
+		 *.zip
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
@@ -1009,6 +1098,33 @@ tkOption.o: $(GENERIC_DIR)/tkOption.c
 tkPack.o: $(GENERIC_DIR)/tkPack.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPack.c
 
+# TIP #59, embedding of configuration information into the binary library.
+#
+# Part of Tk's configuration information are the paths where it was installed
+# and where it will look for its libraries (which can be different). We derive
+# this information from the variables which can be overridden by the user. As
+# every path can be configured separately we do not remember one general
+# prefix/exec_prefix but all the different paths individually.
+
+tkPkgConfig.o: $(GENERIC_DIR)/tkPkgConfig.c
+	$(CC) -c $(CC_SWITCHES)					\
+		-DCFG_INSTALL_LIBDIR="\"$(LIB_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_BINDIR="\"$(BIN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_SCRDIR="\"$(SCRIPT_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_INCDIR="\"$(INCLUDE_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DOCDIR="\"$(MAN_INSTALL_DIR)\"" \
+		-DCFG_INSTALL_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		-DCFG_RUNTIME_LIBDIR="\"$(libdir)\"" \
+		-DCFG_RUNTIME_BINDIR="\"$(bindir)\"" \
+		-DCFG_RUNTIME_SCRDIR="\"$(TK_LIBRARY)\"" \
+		-DCFG_RUNTIME_INCDIR="\"$(includedir)\"" \
+		-DCFG_RUNTIME_DOCDIR="\"$(mandir)\"" \
+		-DCFG_RUNTIME_DLLFILE="\"$(TK_LIB_FILE)\"" \
+		-DCFG_RUNTIME_DEMODIR="\"$(DEMO_INSTALL_DIR)\"" \
+		\
+		$(GENERIC_DIR)/tkPkgConfig.c
+
 tkPlace.o: $(GENERIC_DIR)/tkPlace.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkPlace.c
 
@@ -1024,8 +1140,8 @@ tkUtil.o: $(GENERIC_DIR)/tkUtil.c
 tkVisual.o: $(GENERIC_DIR)/tkVisual.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkVisual.c
 
-tkWindow.o: $(GENERIC_DIR)/tkWindow.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkWindow.c
+tkWindow.o: $(GENERIC_DIR)/tkWindow.c tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. $(GENERIC_DIR)/tkWindow.c
 
 tkButton.o: $(GENERIC_DIR)/tkButton.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkButton.c
@@ -1099,11 +1215,17 @@ tkRectOval.o: $(GENERIC_DIR)/tkRectOval.c
 tkTrig.o: $(GENERIC_DIR)/tkTrig.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTrig.c
 
+tkIcu.o: $(GENERIC_DIR)/tkIcu.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIcu.c
+
 tkImage.o: $(GENERIC_DIR)/tkImage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImage.c
 
 tkImgBmap.o: $(GENERIC_DIR)/tkImgBmap.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgBmap.c
+
+tkImgListFormat.o: $(GENERIC_DIR)/tkImgListFormat.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgListFormat.c
 
 tkImgGIF.o: $(GENERIC_DIR)/tkImgGIF.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgGIF.c
@@ -1114,6 +1236,9 @@ tkImgPNG.o: $(GENERIC_DIR)/tkImgPNG.c
 tkImgPPM.o: $(GENERIC_DIR)/tkImgPPM.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPPM.c
 
+tkImgSVGnano.o: $(GENERIC_DIR)/tkImgSVGnano.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgSVGnano.c
+
 tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhoto.h
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhoto.c
 
@@ -1123,7 +1248,7 @@ tkImgPhInstance.o: $(GENERIC_DIR)/tkImgPhInstance.c $(GENERIC_DIR)/tkImgPhoto.h
 tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkOldTest.c
 
-tkTest.o: $(GENERIC_DIR)/tkTest.c
+tkTest.o: $(GENERIC_DIR)/tkTest.c tkUuid.h
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkTest.c
 
 tkText.o: $(GENERIC_DIR)/tkText.c
@@ -1157,7 +1282,7 @@ tkStubInit.o: $(GENERIC_DIR)/tkStubInit.c
 # even though they will be placed in a static archive
 
 tkStubLib.o: $(GENERIC_DIR)/tkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(GENERIC_DIR)/tkStubLib.c
 
 tkUndo.o: $(GENERIC_DIR)/tkUndo.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkUndo.c
@@ -1200,7 +1325,7 @@ tkUnixRFont.o: $(UNIX_DIR)/tkUnixRFont.c
 	$(CC) -c $(CC_SWITCHES) $(XFT_CFLAGS) $(UNIX_DIR)/tkUnixRFont.c
 
 tkUnixInit.o: $(UNIX_DIR)/tkUnixInit.c tkConfig.sh
-	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
+	$(CC) -c $(CC_SWITCHES) \
 	    $(UNIX_DIR)/tkUnixInit.c
 
 tkUnixKey.o: $(UNIX_DIR)/tkUnixKey.c
@@ -1223,6 +1348,12 @@ tkUnixSelect.o: $(UNIX_DIR)/tkUnixSelect.c
 
 tkUnixSend.o: $(UNIX_DIR)/tkUnixSend.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSend.c
+
+tkUnixSysNotify.o: $(UNIX_DIR)/tkUnixSysNotify.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSysNotify.c
+
+tkUnixSysTray.o: $(UNIX_DIR)/tkUnixSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixSysTray.c
 
 tkUnixWm.o: $(UNIX_DIR)/tkUnixWm.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixWm.c
@@ -1272,8 +1403,11 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
+tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXImage.c
+
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh
-	$(CC) -c $(CC_SWITCHES) -DTK_LIBRARY=\"${TK_LIBRARY}\" \
+	$(CC) -c $(CC_SWITCHES) \
 	    $(MAC_OSX_DIR)/tkMacOSXInit.c
 
 tkMacOSXKeyboard.o: $(MAC_OSX_DIR)/tkMacOSXKeyboard.c
@@ -1297,6 +1431,9 @@ tkMacOSXMouseEvent.o: $(MAC_OSX_DIR)/tkMacOSXMouseEvent.c
 tkMacOSXNotify.o: $(MAC_OSX_DIR)/tkMacOSXNotify.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXNotify.c
 
+tkMacOSXPrint.o: $(MAC_OSX_DIR)/tkMacOSXPrint.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXPrint.c
+
 tkMacOSXRegion.o: $(MAC_OSX_DIR)/tkMacOSXRegion.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXRegion.c
 
@@ -1308,6 +1445,9 @@ tkMacOSXScrlbr.o: $(MAC_OSX_DIR)/tkMacOSXScrlbr.c
 
 tkMacOSXSend.o: $(MAC_OSX_DIR)/tkMacOSXSend.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSend.c
+
+tkMacOSXServices.o: $(MAC_OSX_DIR)/tkMacOSXServices.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXServices.c
 
 tkMacOSXSubwindows.o: $(MAC_OSX_DIR)/tkMacOSXSubwindows.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSubwindows.c
@@ -1323,6 +1463,9 @@ tkMacOSXWm.o: $(MAC_OSX_DIR)/tkMacOSXWm.c
 
 tkMacOSXXStubs.o: $(MAC_OSX_DIR)/tkMacOSXXStubs.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXXStubs.c
+
+tkMacOSXSysTray.o: $(MAC_OSX_DIR)/tkMacOSXSysTray.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXSysTray.c
 
 tkFileFilter.o: $(GENERIC_DIR)/tkFileFilter.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkFileFilter.c
@@ -1421,7 +1564,7 @@ ttkStubInit.o: $(TTK_DIR)/ttkStubInit.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubInit.c
 
 ttkStubLib.o: $(TTK_DIR)/ttkStubLib.c
-	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkStubLib.c
+	$(CC) -c $(CC_SWITCHES) @CFLAGS_NOLTO@ $(TTK_DIR)/ttkStubLib.c
 
 ttkTagSet.o: $(TTK_DIR)/ttkTagSet.c
 	$(CC) -c $(CC_SWITCHES) $(TTK_DIR)/ttkTagSet.c
@@ -1444,6 +1587,11 @@ ttkWidget.o: $(TTK_DIR)/ttkWidget.c
 ttkMacOSXTheme.o: $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/ttkMacOSXTheme.c
 
+tkUuid.h: $(TOP_DIR)/manifest.uuid
+	echo "#define TK_VERSION_UUID \\" >$@
+	cat $(TOP_DIR)/manifest.uuid >>$@
+	echo "" >>$@
+
 .c.o:
 	$(CC) -c $(CC_SWITCHES) $<
 
@@ -1465,7 +1613,7 @@ $(TTK_DIR)/ttkStubInit.c: $(TTK_DIR)/ttk.decls
 genstubs:
 	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(GENERIC_DIR) \
 		$(GENERIC_DIR)/tk.decls $(GENERIC_DIR)/tkInt.decls
-	$(TCL_EXE) $(TTK_DIR)/ttkGenStubs.tcl $(TTK_DIR) $(TTK_DIR)/ttk.decls
+	$(TCL_EXE) $(TOOL_DIR)/genStubs.tcl $(TTK_DIR) $(TTK_DIR)/ttk.decls
 
 #
 # Target to check that all exported functions have an entry in the stubs
@@ -1519,7 +1667,7 @@ rpm: all
 
 #
 # Target to create a proper Tk distribution from information in the
-# master source directory.  DISTDIR must be defined to indicate where
+# source directory.  DISTDIR must be defined to indicate where
 # to put the distribution.  DISTDIR must be an absolute path name.
 #
 
@@ -1527,7 +1675,9 @@ DISTROOT = /tmp/dist
 DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
-TCLDIR   = @TCL_SRC_DIR@
+DIST_INSTALL_DATA   = CPPROG='cp -p' $(INSTALL) -m 644
+DIST_INSTALL_SCRIPT = CPPROG='cp -p' $(INSTALL) -m 755
+
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/aclocal.m4
 	cd $(UNIX_DIR); autoconf
@@ -1536,96 +1686,92 @@ $(MAC_OSX_DIR)/configure: $(MAC_OSX_DIR)/configure.ac $(UNIX_DIR)/configure
 $(UNIX_DIR)/tkConfig.h.in: $(MAC_OSX_DIR)/configure
 	cd $(MAC_OSX_DIR); autoheader; touch $@
 
-dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure genstubs
+$(TOP_DIR)/manifest.uuid:
+	printf "git-" >$(TOP_DIR)/manifest.uuid
+	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
+
+dist: $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(MAC_OSX_DIR)/configure $(TOP_DIR)/doc/man.macros $(TOP_DIR)/manifest.uuid
 	rm -rf $(DISTDIR)
-	mkdir -p $(DISTDIR)/unix
-	cp -p $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
-	cp $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
-	chmod 664 $(DISTDIR)/unix/Makefile.in
-	cp $(UNIX_DIR)/configure $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
+	$(INSTALL_DATA_DIR) $(DISTDIR)/unix
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/manifest.uuid $(DISTDIR)
+	$(DIST_INSTALL_DATA) $(UNIX_DIR)/*.c $(UNIX_DIR)/*.h $(DISTDIR)/unix
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(UNIX_DIR)/Makefile.in $(DISTDIR)/unix
+	$(DIST_INSTALL_DATA) $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tk.spec \
 		$(UNIX_DIR)/aclocal.m4 $(UNIX_DIR)/tcl.m4 \
-		$(UNIX_DIR)/tkConfig.sh.in $(TCLDIR)/unix/install-sh \
+		$(UNIX_DIR)/tkConfig.sh.in $(UNIX_DIR)/install-sh \
 		$(UNIX_DIR)/README $(UNIX_DIR)/installManPage \
 		$(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(DISTDIR)/unix
-	chmod 775 $(DISTDIR)/unix/configure $(DISTDIR)/unix/configure.ac
-	mkdir $(DISTDIR)/bitmaps
+	$(DIST_INSTALL_SCRIPT) $(UNIX_DIR)/configure $(DISTDIR)/unix
+	$(INSTALL_DATA_DIR) $(DISTDIR)/bitmaps
 	@(cd $(TOP_DIR); for i in bitmaps/* ; do \
 	    if [ -f $$i ] ; then \
 		sed -e 's/static char/static unsigned char/' \
 		       $$i > $(DISTDIR)/$$i; \
 	    fi; \
 	done;)
-	mkdir $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/*.[ch] $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
-	cp -p $(GENERIC_DIR)/README $(DISTDIR)/generic
-	cp -p $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog \
-		$(TOP_DIR)/ChangeLog.2??? $(TOP_DIR)/README \
+	$(INSTALL_DATA_DIR) $(DISTDIR)/generic
+	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/*.[ch] $(DISTDIR)/generic
+	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/*.decls $(DISTDIR)/generic
+	$(DIST_INSTALL_DATA) $(GENERIC_DIR)/README $(DISTDIR)/generic
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/changes $(TOP_DIR)/ChangeLog \
+		$(TOP_DIR)/ChangeLog.2??? $(TOP_DIR)/README.md \
 		$(TOP_DIR)/license.terms $(DISTDIR)
 	rm -f $(DISTDIR)/generic/blt*.[ch]
-	mkdir $(DISTDIR)/generic/ttk
-	cp -p $(TTK_DIR)/*.[ch] $(TTK_DIR)/ttk.decls \
-		$(TTK_DIR)/ttkGenStubs.tcl $(DISTDIR)/generic/ttk
-	mkdir $(DISTDIR)/win
-	cp $(TOP_DIR)/win/Makefile.in $(DISTDIR)/win
-	cp $(TOP_DIR)/win/configure.ac \
-		$(TOP_DIR)/win/configure \
-		$(TOP_DIR)/win/tkConfig.sh.in \
+	$(INSTALL_DATA_DIR) $(DISTDIR)/generic/ttk
+	$(DIST_INSTALL_DATA) $(TTK_DIR)/*.[ch] $(TTK_DIR)/ttk.decls \
+		$(DISTDIR)/generic/ttk
+	$(INSTALL_DATA_DIR) $(DISTDIR)/win
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/*.in $(DISTDIR)/win
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/configure.ac \
 		$(TOP_DIR)/win/aclocal.m4 $(TOP_DIR)/win/tcl.m4 \
+		$(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat \
+		$(TOP_DIR)/win/*.vc $(TOP_DIR)/win/README \
+		$(TOP_DIR)/license.terms \
 		$(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/*.[ch] $(TOP_DIR)/win/*.bat $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/makefile.* $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/rules.vc $(DISTDIR)/win
-	cp -p $(TOP_DIR)/win/README $(DISTDIR)/win
-	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/win
-	mkdir $(DISTDIR)/win/rc
-	cp -p $(TOP_DIR)/win/wish.exe.manifest.in $(DISTDIR)/win/
-	cp -p $(TOP_DIR)/win/rc/*.{rc,cur,ico,bmp} $(DISTDIR)/win/rc
-	mkdir $(DISTDIR)/macosx
-	cp -p $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
+	$(DIST_INSTALL_SCRIPT) $(TOP_DIR)/win/configure $(DISTDIR)/win
+	$(INSTALL_DATA_DIR) $(DISTDIR)/win/rc
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/win/rc/*.{rc,cur,ico,bmp} $(DISTDIR)/win/rc
+	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx
+	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/GNUmakefile $(MAC_OSX_DIR)/README \
 		$(MAC_OSX_DIR)/*.icns $(MAC_OSX_DIR)/*.tiff \
 		$(MAC_OSX_DIR)/*.[ch] $(MAC_OSX_DIR)/*.in \
 		$(MAC_OSX_DIR)/*.ac $(MAC_OSX_DIR)/*.xcconfig \
-		$(MAC_OSX_DIR)/*.sdef $(MAC_OSX_DIR)/configure \
+		$(MAC_OSX_DIR)/*.sdef \
 		$(DISTDIR)/macosx
-	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/macosx
-	mkdir $(DISTDIR)/macosx/Tk.xcode
-	cp -p $(MAC_OSX_DIR)/Tk.xcode/project.pbxproj \
-		$(MAC_OSX_DIR)/Tk.xcode/default.pbxuser \
-		$(DISTDIR)/macosx/Tk.xcode
-	mkdir $(DISTDIR)/macosx/Tk.xcodeproj
-	cp -p $(MAC_OSX_DIR)/Tk.xcodeproj/project.pbxproj \
+	$(DIST_INSTALL_SCRIPT) $(MAC_OSX_DIR)/configure $(DISTDIR)/macosx
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/macosx
+	$(INSTALL_DATA_DIR) $(DISTDIR)/macosx/Tk.xcodeproj
+	$(DIST_INSTALL_DATA) $(MAC_OSX_DIR)/Tk.xcodeproj/project.pbxproj \
 		$(MAC_OSX_DIR)/Tk.xcodeproj/default.pbxuser \
 		$(DISTDIR)/macosx/Tk.xcodeproj
-	mkdir $(DISTDIR)/compat
-	cp -p $(TOP_DIR)/license.terms $(TCLDIR)/compat/unistd.h \
-		$(TCLDIR)/compat/stdlib.h \
-		$(DISTDIR)/compat
-	mkdir $(DISTDIR)/xlib
-	cp -p $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
-	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib
-	mkdir $(DISTDIR)/xlib/X11
-	cp -p $(XLIB_DIR)/X11/*.h $(DISTDIR)/xlib/X11
-	cp -p $(TOP_DIR)/license.terms $(DISTDIR)/xlib/X11
-	mkdir $(DISTDIR)/library
-	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/library/*.tcl \
+	$(INSTALL_DATA_DIR) $(DISTDIR)/compat
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TOP_DIR)/compat/stdint.h \
+		$(TOP_DIR)/compat/stdbool.h $(DISTDIR)/compat
+	$(INSTALL_DATA_DIR) $(DISTDIR)/xlib
+	$(DIST_INSTALL_DATA) $(XLIB_DIR)/*.[ch] $(DISTDIR)/xlib
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/xlib
+	$(INSTALL_DATA_DIR) $(DISTDIR)/xlib/X11
+	$(DIST_INSTALL_DATA) $(XLIB_DIR)/X11/*.h $(DISTDIR)/xlib/X11
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(DISTDIR)/xlib/X11
+	$(INSTALL_DATA_DIR) $(DISTDIR)/library
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TOP_DIR)/library/*.tcl \
 		$(TOP_DIR)/library/tclIndex \
 		$(DISTDIR)/library
-	mkdir $(DISTDIR)/library/ttk
-	cp -p $(TOP_DIR)/library/ttk/*.tcl $(DISTDIR)/library/ttk
-	mkdir $(DISTDIR)/library/images
+	$(INSTALL_DATA_DIR) $(DISTDIR)/library/ttk
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/library/ttk/*.tcl $(DISTDIR)/library/ttk
+	$(INSTALL_DATA_DIR) $(DISTDIR)/library/images
 	@(cd $(TOP_DIR); for i in library/images/* ; do \
 	    if [ -f $$i ] ; then \
-		cp $$i $(DISTDIR)/$$i; \
+		$(DIST_INSTALL_DATA) $$i $(DISTDIR)/$$i; \
 	    fi; \
 	done;)
-	mkdir $(DISTDIR)/library/msgs
+	$(INSTALL_DATA_DIR) $(DISTDIR)/library/msgs
 	@(cd $(TOP_DIR); for i in library/msgs/*.msg ; do \
 	    if [ -f $$i ] ; then \
-		cp $$i $(DISTDIR)/$$i; \
+		$(DIST_INSTALL_DATA) $$i $(DISTDIR)/$$i; \
 	    fi; \
 	done;)
-	mkdir $(DISTDIR)/library/demos
+	$(INSTALL_DATA_DIR) $(DISTDIR)/library/demos
 	cp -pr $(TOP_DIR)/library/demos/*.tcl \
 		$(TOP_DIR)/library/demos/*.msg \
 		$(TOP_DIR)/library/demos/tclIndex \
@@ -1638,21 +1784,24 @@ dist:   $(UNIX_DIR)/configure $(UNIX_DIR)/tkConfig.h.in $(UNIX_DIR)/tk.pc.in $(M
 		$(TOP_DIR)/library/demos/widget \
 		$(TOP_DIR)/library/demos/README \
 		$(TOP_DIR)/license.terms $(DISTDIR)/library/demos
-	mkdir $(DISTDIR)/library/demos/images
+	$(INSTALL_DATA_DIR) $(DISTDIR)/library/demos/images
 	@(cd $(TOP_DIR); for i in library/demos/images/* ; do \
 	    if [ -f $$i ] ; then \
-		cp $$i $(DISTDIR)/$$i; \
+		$(DIST_INSTALL_DATA) $$i $(DISTDIR)/$$i; \
 	    fi; \
 	done;)
-	mkdir $(DISTDIR)/doc
-	cp -p $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
-		$(TCLDIR)/doc/man.macros $(DISTDIR)/doc
-	mkdir $(DISTDIR)/tests
-	cp -p $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
-		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,ppm,xbm} \
+	$(INSTALL_DATA_DIR) $(DISTDIR)/doc
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TOP_DIR)/doc/*.[13n] \
+		$(TOP_DIR)/doc/man.macros $(DISTDIR)/doc
+	$(INSTALL_DATA_DIR) $(DISTDIR)/tests
+	$(DIST_INSTALL_DATA) $(TOP_DIR)/license.terms $(TEST_DIR)/*.{test,tcl} \
+		$(TEST_DIR)/README $(TEST_DIR)/*.{gif,png,ppm,xbm} \
 		$(TEST_DIR)/option.file* $(DISTDIR)/tests
-	mkdir $(DISTDIR)/tests/ttk
-	cp -p $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk
+	$(INSTALL_DATA_DIR) $(DISTDIR)/tests/ttk
+	$(DIST_INSTALL_DATA) $(TEST_DIR)/ttk/*.{test,tcl} $(DISTDIR)/tests/ttk
+	cp -p $(TOP_DIR)/.travis.yml $(DISTDIR)
+	mkdir -p $(DISTDIR)/.github/workflows
+	cp -p $(TOP_DIR)/.github/workflows/*.yml $(DISTDIR)/.github/workflows
 
 alldist: dist
 	rm -f $(DISTROOT)/$(DISTNAME)-src.tar.gz $(DISTROOT)/$(ZIPNAME)

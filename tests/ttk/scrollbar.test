@@ -1,30 +1,41 @@
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 testConstraint coreScrollbar [expr {[tk windowingsystem] eq "aqua"}]
 
-test scrollbar-swapout-1 "Use core scrollbars on OSX..." -constraints {
-    coreScrollbar
+# Before 2019 the code in library/ttk/scrollbar.tcl would replace the
+# constructor of ttk::scrollbar with the constructor of tk::scrollbar
+# unless the -class or -style options were specified..
+# Now there is an implementation of ttk::scrollbar for macOS.  The
+# tests are left in place, though, except that scrollbar-swapout-1
+# test was changed to expect the class to be TScrollbar instead of
+# Scrollbar.
+
+test scrollbar-swapout-1 "Don't use core scrollbars on OSX..." \
+ -constraints {
+     coreScrollbar
 } -body {
     ttk::scrollbar .sb -command "yadda"
     list [winfo class .sb] [.sb cget -command]
-} -result [list Scrollbar yadda] -cleanup {
+} -result [list TScrollbar yadda] -cleanup {
     destroy .sb
 }
 
-test scrollbar-swapout-2 "... unless -style is specified ..." -constraints {
+test scrollbar-swapout-2 "... regardless of whether -style ..." \
+-constraints {
     coreScrollbar
 } -body {
     ttk::style layout Vertical.Custom.TScrollbar \
-    	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
+	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
     ttk::scrollbar .sb -command "yadda" -style Custom.TScrollbar
     list [winfo class .sb] [.sb cget -command] [.sb cget -style]
 } -result [list TScrollbar yadda Custom.TScrollbar] -cleanup {
     destroy .sb
 }
 
-test scrollbar-swapout-3 "... or -class." -constraints {
+test scrollbar-swapout-3 "... or -class is specified." -constraints {
     coreScrollbar
 } -body {
     ttk::scrollbar .sb -command "yadda" -class Custom.TScrollbar
@@ -44,26 +55,81 @@ test scrollbar-1.1 "Set method" -body {
 
 test scrollbar-1.2 "Set orientation" -body {
     .tsb configure -orient vertical
-    set w [winfo reqwidth .tsb] ; set h [winfo reqheight .tsb]
+    pack .tsb -side right -anchor e -expand 1 -fill y
+    wm geometry . 200x200
+    update
+    set w [winfo width .tsb] ; set h [winfo height .tsb]
     expr {$h > $w}
 } -result 1
 
 test scrollbar-1.3 "Change orientation" -body {
     .tsb configure -orient horizontal
-    set w [winfo reqwidth .tsb] ; set h [winfo reqheight .tsb]
+    pack .tsb -side bottom -anchor s -expand 1 -fill x
+    wm geometry . 200x200
+    update
+    set w [winfo width .tsb] ; set h [winfo height .tsb]
     expr {$h < $w}
 } -result 1
 
-#
-# Scale tests:
-#
+test scrollbar-10.1.1 {<MouseWheel> event on scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -yscrollcommand {.s set}] -side left
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Line $i\n"}
+    pack [ttk::scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
+    update
+    focus -force .s
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {4.0}
 
-test scale-1.0 "Self-destruction" -body {
-    trace variable v w { destroy .s ;# }
-    ttk::scale .s -variable v
-    pack .s ; update
-    .s set 1 ; update
-} -returnCodes 1 -match glob -result "*"
+test scrollbar-10.2.1 {<Shift-MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <Shift-MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.3}
+test scrollbar-10.2.2 {<MouseWheel> event on horizontal scrollbar} -setup {
+    destroy .t .s
+} -body {
+    pack [text .t -xscrollcommand {.s set} -wrap none] -side top
+    for {set i 1} {$i < 100} {incr i} {.t insert end "Char $i "}
+    pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
+    update
+    focus -force .s
+    event generate .s <MouseWheel> -delta -120
+    after 200 {set eventprocessed 1} ; vwait eventprocessed
+    .t index @0,0
+} -cleanup {
+    destroy .t .s
+} -result {1.3}
+
+test scrollbar-11.1 "style command" -body {
+    ttk::scrollbar .wv  ; # default is  -orient vertical
+    ttk::scrollbar .wh -orient horizontal
+    list [.wv cget -style] [.wv style] [winfo class .wv] \
+         [.wh cget -style] [.wh style] [winfo class .wh]
+} -cleanup {
+    destroy .wv .wh
+} -result {{} Vertical.TScrollbar TScrollbar {} Horizontal.TScrollbar TScrollbar}
+test scrollbar-11.2 "style command" -body {
+    ttk::style configure customStyle.Horizontal.TScrollbar
+    ttk::scrollbar .w -orient horizontal -style customStyle.Horizontal.TScrollbar
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.Horizontal.TScrollbar Horizontal.customStyle.Horizontal.TScrollbar TScrollbar}
 
 tcltest::cleanupTests
 

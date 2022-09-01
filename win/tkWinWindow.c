@@ -4,7 +4,7 @@
  *	Xlib emulation routines for Windows related to creating, displaying
  *	and destroying windows.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,7 +13,7 @@
 #include "tkWinInt.h"
 #include "tkBusy.h"
 
-typedef struct ThreadSpecificData {
+typedef struct {
     int initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable windowTable;  /* The windowTable maps from HWND to Tk_Window
 				 * handles. */
@@ -49,7 +49,7 @@ Tk_AttachHWND(
     Tk_Window tkwin,
     HWND hwnd)
 {
-    int new;
+    int isNew;
     Tcl_HashEntry *entryPtr;
     TkWinDrawable *twdPtr = (TkWinDrawable *) Tk_WindowId(tkwin);
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -66,12 +66,12 @@ Tk_AttachHWND(
      */
 
     if (twdPtr == NULL) {
-	twdPtr = ckalloc(sizeof(TkWinDrawable));
+	twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 	twdPtr->type = TWD_WINDOW;
 	twdPtr->window.winPtr = (TkWindow *) tkwin;
     } else if (twdPtr->window.handle != NULL) {
 	entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable,
-		(char *)twdPtr->window.handle);
+		twdPtr->window.handle);
 	Tcl_DeleteHashEntry(entryPtr);
     }
 
@@ -80,7 +80,7 @@ Tk_AttachHWND(
      */
 
     twdPtr->window.handle = hwnd;
-    entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &new);
+    entryPtr = Tcl_CreateHashEntry(&tsdPtr->windowTable, (char *)hwnd, &isNew);
     Tcl_SetHashValue(entryPtr, tkwin);
 
     return (Window)twdPtr;
@@ -115,7 +115,7 @@ Tk_HWNDToWindow(
 	Tcl_InitHashTable(&tsdPtr->windowTable, TCL_ONE_WORD_KEYS);
 	tsdPtr->initialized = 1;
     }
-    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char *) hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, hwnd);
     if (entryPtr != NULL) {
 	return (Tk_Window) Tcl_GetHashValue(entryPtr);
     }
@@ -170,16 +170,7 @@ TkpPrintWindowId(
 {
     HWND hwnd = (window) ? Tk_GetHWND(window) : 0;
 
-    /*
-     * Use pointer representation, because Win64 is P64 (*not* LP64). Windows
-     * doesn't print the 0x for %p, so we do it.
-     * Bug 2026405: cygwin does output 0x for %p so test and recover.
-     */
-
-    sprintf(buf, "0x%p", hwnd);
-    if (buf[2] == '0' && buf[3] == 'x') {
-	sprintf(buf, "%p", hwnd);
-    }
+    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
 }
 
 /*
@@ -256,13 +247,14 @@ TkpScanWindowId(
  */
 
 Window
-TkpMakeWindow(
-    TkWindow *winPtr,
+Tk_MakeWindow(
+    Tk_Window tkwin,
     Window parent)
 {
     HWND parentWin;
     int style;
     HWND hwnd;
+    TkWindow *winPtr = (TkWindow *)tkwin;
 
     if (parent != None) {
 	parentWin = Tk_GetHWND(parent);
@@ -277,7 +269,7 @@ TkpMakeWindow(
      * order.
      */
 
-    hwnd = CreateWindowEx(WS_EX_NOPARENTNOTIFY, TK_WIN_CHILD_CLASS_NAME, NULL,
+    hwnd = CreateWindowExW(WS_EX_NOPARENTNOTIFY, TK_WIN_CHILD_CLASS_NAME, NULL,
 	    (DWORD) style, Tk_X(winPtr), Tk_Y(winPtr), Tk_Width(winPtr),
 	    Tk_Height(winPtr), parentWin, NULL, Tk_GetHINSTANCE(), NULL);
     SetWindowPos(hwnd, HWND_TOP, 0, 0, 0, 0,
@@ -323,7 +315,7 @@ XDestroyWindow(
 
     TkPointerDeadWindow(winPtr);
 
-    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, (char*)hwnd);
+    entryPtr = Tcl_FindHashEntry(&tsdPtr->windowTable, hwnd);
     if (entryPtr != NULL) {
 	Tcl_DeleteHashEntry(entryPtr);
     }
@@ -765,33 +757,6 @@ XChangeWindowAttributes(
 /*
  *----------------------------------------------------------------------
  *
- * XReparentWindow --
- *
- *	TODO: currently placeholder to satisfy Xlib stubs.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	TODO.
- *
- *----------------------------------------------------------------------
- */
-
-int
-XReparentWindow(
-    Display *display,
-    Window w,
-    Window parent,
-    int x,
-    int y)
-{
-    return BadWindow;
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWinSetWindowPos --
  *
  *	Adjust the stacking order of a window relative to a second window (or
@@ -882,7 +847,7 @@ TkpShowBusyWindow(
      */
 
     GetCursorPos(&point);
-    SetCursorPos(point.x, point.y);
+    TkSetCursorPos(point.x, point.y);
 }
 
 /*
@@ -924,7 +889,7 @@ TkpHideBusyWindow(
      */
 
     GetCursorPos(&point);
-    SetCursorPos(point.x, point.y);
+    TkSetCursorPos(point.x, point.y);
 }
 
 /*
@@ -953,7 +918,7 @@ TkpMakeTransparentWindowExist(
     int style = WS_CHILD | WS_CLIPCHILDREN | WS_CLIPSIBLINGS;
     DWORD exStyle = WS_EX_TRANSPARENT | WS_EX_TOPMOST;
 
-    hWnd = CreateWindowEx(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
+    hWnd = CreateWindowExW(exStyle, TK_WIN_CHILD_CLASS_NAME, NULL, style,
 	    Tk_X(tkwin), Tk_Y(tkwin), Tk_Width(tkwin), Tk_Height(tkwin),
 	    hParent, NULL, Tk_GetHINSTANCE(), NULL);
     winPtr->window = Tk_AttachHWND(tkwin, hWnd);

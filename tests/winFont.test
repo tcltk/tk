@@ -6,8 +6,8 @@
 # underlined?"); these tests attempt to exercise the code in question,
 # but there are no results that can be checked.
 #
-# Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -37,12 +37,12 @@ test winfont-2.1 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
     win
 } -body {
     expr {[font actual {-size -10} -size] > 0}
-} -result {1}
+} -result 1
 test winfont-2.2 {TkpGetFontFromAttributes procedure: pointsize} -constraints {
     win
 } -body {
     expr {[font actual {-family Arial} -size] > 0}
-} -result {1}
+} -result 1
 test winfont-2.3 {TkpGetFontFromAttributes procedure: normal weight} -constraints {
     win
 } -body {
@@ -71,7 +71,7 @@ test winfont-2.7 {TkpGetFontFromAttributes procedure: Times fonts} -constraints 
     lappend x [font actual {-family "Times"} -family]
     lappend x [font actual {-family "New York"} -family]
     lappend x [font actual {-family "Times New Roman"} -family]
-} -result {{Times New Roman} {Times New Roman} {Times New Roman}}
+} -result {Times Times {Times New Roman}}
 test winfont-2.8 {TkpGetFontFromAttributes procedure: Courier fonts} -constraints {
     win
 } -setup {
@@ -80,7 +80,7 @@ test winfont-2.8 {TkpGetFontFromAttributes procedure: Courier fonts} -constraint
     lappend x [font actual {-family "Courier"} -family]
     lappend x [font actual {-family "Monaco"} -family]
     lappend x [font actual {-family "Courier New"} -family]
-} -result {{Courier New} {Courier New} {Courier New}}
+} -match regexp -result {Courier (Courier|Monaco) {Courier New}}
 test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constraints {
     win
 } -setup {
@@ -89,7 +89,7 @@ test winfont-2.9 {TkpGetFontFromAttributes procedure: Helvetica fonts} -constrai
     lappend x [font actual {-family "Helvetica"} -family]
     lappend x [font actual {-family "Geneva"} -family]
     lappend x [font actual {-family "Arial"} -family]
-} -result {Arial Arial Arial}
+} -match regexp -result {Helvetica (Helvetica|Geneva) Arial}
 test winfont-2.10 {TkpGetFontFromAttributes procedure: fallback} -constraints {
     win
 } -body {
@@ -180,7 +180,7 @@ test winfont-5.3 {Tk_MeasureChars procedure: all chars did fit} -constraints {
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*10] -text "00000000"
+    .t.l config -wrap [expr {$ax*10}] -text "00000000"
     list [expr {[winfo reqwidth .t.l] eq 8*$ax}] \
         [expr {[winfo reqheight .t.l] eq $ay}]
 } -cleanup {
@@ -199,7 +199,7 @@ test winfont-5.4 {Tk_MeasureChars procedure: not all chars fit} -constraints {
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*6] -text "00000000"
+    .t.l config -wrap [expr {$ax*6}] -text "00000000"
     list [expr {[winfo reqwidth .t.l] eq 6*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -218,10 +218,10 @@ test winfont-5.5 {Tk_MeasureChars procedure: include last partial char} -constra
 
     .t.c dchars $t 0 end
     .t.c insert $t 0 "0000"
-    .t.c index $t @[expr int($cx*2.5)],1
+    .t.c index $t @[expr {int($cx*2.5)}],1
 } -cleanup {
     destroy .t.c
-} -result {2}
+} -result 2
 
 test winfont-5.6 {Tk_MeasureChars procedure: at least one char on line} -constraints {
     win
@@ -254,7 +254,7 @@ test winfont-5.7 {Tk_MeasureChars procedure: whole words} -constraints {
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*8] -text "000000 0000"
+    .t.l config -wrap [expr {$ax*8}] -text "000000 0000"
     list [expr {[winfo reqwidth .t.l] eq 6*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -273,7 +273,7 @@ test winfont-5.8 {Tk_MeasureChars procedure: already saw space in line} -constra
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*12] -text "000000    0000000"
+    .t.l config -wrap [expr {$ax*12}] -text "000000    0000000"
     list [expr {[winfo reqwidth .t.l] eq 7*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -292,7 +292,7 @@ test winfont-5.9 {Tk_MeasureChars procedure: internal spaces significant} -const
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*12] -text "000  00   00000"
+    .t.l config -wrap [expr {$ax*12}] -text "000  00   00000"
     list [expr {[winfo reqwidth .t.l] eq 7*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -311,7 +311,7 @@ test winfont-5.10 {Tk_MeasureChars procedure: make first part of word fit} -cons
     set ax [winfo reqwidth .t.l]
     set ay [winfo reqheight .t.l]
 
-    .t.l config -wrap [expr $ax*12] -text "0000000000000000"
+    .t.l config -wrap [expr {$ax*12}] -text "0000000000000000"
     list [expr {[winfo reqwidth .t.l] eq 12*$ax}] \
         [expr {[winfo reqheight .t.l] eq 2*$ay}]
 } -cleanup {
@@ -334,10 +334,10 @@ test winfont-5.11 {Tk_MeasureChars procedure: check for kerning} -constraints {
     .t.l config -text "XaYoYaKaWx"
     set x [lindex [getsize] 0]
     .t.l config -font $font
-    expr $x < ($width*10)
+    expr {$x < ($width*10)}
 } -cleanup {
     destroy .t.l
-} -result {1}
+} -result 1
 
 
 test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
@@ -375,12 +375,12 @@ test winfont-7.3 {AllocFont procedure: extract info from textmetric} -constraint
     win
 } -body {
     font metric {arial 10 bold italic underline overstrike} -fixed
-} -result {0}
+} -result 0
 test winfont-7.4 {AllocFont procedure: extract info from textmetric} -constraints {
     win
 } -body {
     font metric systemfixed -fixed
-} -result {1}
+} -result 1
 
 # cleanup
 cleanupTests

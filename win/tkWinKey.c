@@ -4,13 +4,14 @@
  *	This file contains X emulation routines for keyboard related
  *	functions.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkWinInt.h"
+#include "X11/XF86keysym.h"
 
 /*
  * The keymap table holds mappings of Windows keycodes to X keysyms. If
@@ -21,39 +22,47 @@
  * like a worthwhile improvement to use the table.
  */
 
-#define MAX_KEYCODE 145 /* VK_SCROLL is the last entry in our table below */
+#define MAX_KEYCODE 183 /* VK_LAUNCH_APP2 is the last entry in our table below */
+/* cf. https://msdn.microsoft.com/en-us/library/windows/desktop/dd375731(v=vs.85).aspx */
 
 static const KeySym keymap[] = {
-    NoSymbol, NoSymbol, NoSymbol, XK_Cancel, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, XK_BackSpace, XK_Tab,
-    NoSymbol, NoSymbol, XK_Clear, XK_Return, NoSymbol,
-    NoSymbol, XK_Shift_L, XK_Control_L, XK_Alt_L, XK_Pause,
-    XK_Caps_Lock, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, XK_Escape, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, XK_space, XK_Prior, XK_Next,
-    XK_End, XK_Home, XK_Left, XK_Up, XK_Right,
-    XK_Down, XK_Select, XK_Print, XK_Execute, NoSymbol,
-    XK_Insert, XK_Delete, XK_Help, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, XK_Win_L, XK_Win_R, XK_App, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, XK_F1, XK_F2, XK_F3,
-    XK_F4, XK_F5, XK_F6, XK_F7, XK_F8,
-    XK_F9, XK_F10, XK_F11, XK_F12, XK_F13,
-    XK_F14, XK_F15, XK_F16, XK_F17, XK_F18,
-    XK_F19, XK_F20, XK_F21, XK_F22, XK_F23,
-    XK_F24, NoSymbol, NoSymbol, NoSymbol, NoSymbol,
-    NoSymbol, NoSymbol, NoSymbol, NoSymbol, XK_Num_Lock,
-    XK_Scroll_Lock
+    NoSymbol, NoSymbol, NoSymbol, XK_Cancel, NoSymbol, /*0 0x0*/
+    NoSymbol, NoSymbol, NoSymbol, XK_BackSpace, XK_Tab, /*5 0x5*/
+    NoSymbol, NoSymbol, XK_Clear, XK_Return, NoSymbol, /*10 0xA*/
+    NoSymbol, XK_Shift_L, XK_Control_L, XK_Alt_L, XK_Pause, /*15 0xE*/
+    XK_Caps_Lock, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*20 0x14*/
+    NoSymbol, NoSymbol, XK_Escape, NoSymbol, NoSymbol, /*25 0x19*/
+    NoSymbol, NoSymbol, XK_space, XK_Prior, XK_Next, /*30 0x1E*/
+    XK_End, XK_Home, XK_Left, XK_Up, XK_Right, /*35 0x23*/
+    XK_Down, XK_Select, XK_Print, XK_Execute, NoSymbol, /*40 0x28*/
+    XK_Insert, XK_Delete, XK_Help, NoSymbol, NoSymbol, /*45 0x2D*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*50 0x32*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*55 0x37*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*60 0x3C*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*65 0x41*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*70 0x46*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*75 0x4B*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*80 0x50*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*85 0x55*/
+    NoSymbol, XK_Super_L, XK_Super_R, XK_Menu, NoSymbol, /*90 0x5A*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*95 0x5F*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*100 0x64*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*105 0x69*/
+    NoSymbol, NoSymbol, XK_F1, XK_F2, XK_F3, /*110 0x6E*/
+    XK_F4, XK_F5, XK_F6, XK_F7, XK_F8, /*115 0x73*/
+    XK_F9, XK_F10, XK_F11, XK_F12, XK_F13, /*120 0x78*/
+    XK_F14, XK_F15, XK_F16, XK_F17, XK_F18, /*125 0x7D*/
+    XK_F19, XK_F20, XK_F21, XK_F22, XK_F23, /*130 0x82*/
+    XK_F24, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*135 0x87*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, XK_Num_Lock, /*140 0x8C*/
+    XK_Scroll_Lock, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*145 0x91*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*150 0x96*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*155 0x9B*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*160 0xA0*/
+    NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*165 0xA5*/
+    NoSymbol, NoSymbol, NoSymbol, XF86XK_AudioMute, XF86XK_AudioLowerVolume, /*170 0xAA*/
+    XF86XK_AudioRaiseVolume, XF86XK_AudioNext, XF86XK_AudioPrev, XF86XK_AudioStop, XF86XK_AudioPlay, /*175 0xAF*/
+    XF86XK_Mail, XF86XK_AudioMedia, XF86XK_Launch0, XF86XK_Launch1  /*180 0xB4*/
 };
 
 /*
@@ -81,26 +90,27 @@ static KeySym		KeycodeToKeysym(unsigned int keycode,
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: needed to get
+    TCL_UNUSED(TkWindow *),		/* Window where event occurred: needed to get
 				 * input context. */
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
 				 * result. */
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
-    char buf[6];
     int len;
+    char buf[6];
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
-	if (keyEv->nbytes > 0) {
-	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
-		    keyEv->trans_chars, keyEv->nbytes, dsPtr);
+	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
+	if (ev->nbytes > 0) {
+	    (void)Tcl_ExternalToUtfDStringEx(TkWinGetKeyInputEncoding(),
+		    ev->trans_chars, ev->nbytes, TCL_ENCODING_NOCOMPLAIN, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
 
 	/*
-	 * Special case for WM_UNICHAR and win2000 multi-lingal IME input
+	 * Special case for WM_UNICHAR and win2000 multilingual IME input
 	 */
 
 	len = TkUniCharToUtf(keyEv->keycode, buf);
@@ -115,7 +125,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = Tcl_UniCharToUtf((Tcl_UniChar) (keysym & 255), buf);
+	    len = TkUniCharToUtf(keysym & 255, buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
     }
@@ -141,11 +151,28 @@ TkpGetString(
 
 KeySym
 XKeycodeToKeysym(
-    Display *display,
+    TCL_UNUSED(Display *),
     unsigned int keycode,
     int index)
 {
     int state = 0;
+
+    if (index & 0x01) {
+	state |= ShiftMask;
+    }
+    return KeycodeToKeysym(keycode, state, 0);
+}
+
+KeySym
+XkbKeycodeToKeysym(
+    Display *display,
+    unsigned int keycode,
+    int group,
+    int index)
+{
+    int state = 0;
+    (void)display;
+    (void)group;
 
     if (index & 0x01) {
 	state |= ShiftMask;
@@ -179,8 +206,8 @@ KeycodeToKeysym(
 {
     BYTE keys[256];
     int result, deadkey, shift;
-    TCHAR buf[4];
-    unsigned int scancode = MapVirtualKey(keycode, 0);
+    WCHAR buf[4];
+    unsigned int scancode = MapVirtualKeyW(keycode, 0);
 
     /*
      * Do not run keycodes of lock keys through ToUnicode(). One of ToUnicode()'s
@@ -194,10 +221,10 @@ KeycodeToKeysym(
     }
 
     /*
-     * Use MapVirtualKey() to detect some dead keys.
+     * Use MapVirtualKeyW() to detect some dead keys.
      */
 
-    if (MapVirtualKey(keycode, 2) > 0x7fffUL) {
+    if (MapVirtualKeyW(keycode, 2) > 0x7fffUL) {
 	return XK_Multi_key;
     }
 
@@ -254,10 +281,10 @@ KeycodeToKeysym(
 	 * Get information about the old char
 	 */
 
-	deadkey = VkKeyScan(buf[0]);
+	deadkey = VkKeyScanW(buf[0]);
 	shift = deadkey >> 8;
 	deadkey &= 255;
-	scancode = MapVirtualKey(deadkey, 0);
+	scancode = MapVirtualKeyW(deadkey, 0);
 
 	/*
 	 * Set up a keyboard with proper modifier keys
@@ -495,7 +522,7 @@ TkpInitKeymapInfo(
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -511,18 +538,18 @@ TkpInitKeymapInfo(
 	    }
 	}
 	if (dispPtr->numModKeyCodes >= arraySize) {
-	    KeyCode *new;
+	    KeyCode *newKey;
 
 	    /*
 	     * Ran out of space in the array; grow it.
 	     */
 
 	    arraySize *= 2;
-	    new = ckalloc(arraySize * sizeof(KeyCode));
-	    memcpy(new, dispPtr->modKeyCodes,
+	    newKey = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
+	    memcpy(newKey, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
 	    ckfree(dispPtr->modKeyCodes);
-	    dispPtr->modKeyCodes = new;
+	    dispPtr->modKeyCodes = newKey;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
 	dispPtr->numModKeyCodes++;
@@ -533,13 +560,13 @@ TkpInitKeymapInfo(
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state that should be used so that when they call XKeycodeToKeysym
+ * modifier state that should be used so that when they call XkbKeycodeToKeysym
  * taking into account the xkey.state, they will get back the original keysym.
  */
 
 void
 TkpSetKeycodeAndState(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     KeySym keySym,
     XEvent *eventPtr)
 {
@@ -565,7 +592,7 @@ TkpSetKeycodeAndState(
 	}
     }
     if (keySym >= 0x20) {
-	result = VkKeyScan((TCHAR) keySym);
+	result = VkKeyScanW((WCHAR) keySym);
 	if (result != -1) {
 	    shift = result >> 8;
 	    if (shift & 1)
@@ -597,7 +624,7 @@ TkpSetKeycodeAndState(
 
 KeyCode
 XKeysymToKeycode(
-    Display *display,
+    TCL_UNUSED(Display *),
     KeySym keysym)
 {
     int i;
@@ -618,7 +645,7 @@ XKeysymToKeycode(
 	}
     }
     if (keysym >= 0x20) {
-	result = VkKeyScan((TCHAR) keysym);
+	result = VkKeyScanW((WCHAR) keysym);
 	if (result != -1) {
 	    return (KeyCode) (result & 0xff);
 	}
@@ -645,12 +672,12 @@ XKeysymToKeycode(
 
 XModifierKeymap	*
 XGetModifierMapping(
-    Display *display)
+    TCL_UNUSED(Display *))
 {
-    XModifierKeymap *map = ckalloc(sizeof(XModifierKeymap));
+    XModifierKeymap *map = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
 
     map->max_keypermod = 1;
-    map->modifiermap = ckalloc(sizeof(KeyCode) * 8);
+    map->modifiermap = (KeyCode *)ckalloc(sizeof(KeyCode) * 8);
     map->modifiermap[ShiftMapIndex] = VK_SHIFT;
     map->modifiermap[LockMapIndex] = VK_CAPITAL;
     map->modifiermap[ControlMapIndex] = VK_CONTROL;
@@ -706,7 +733,7 @@ XFreeModifiermap(
 
 KeySym
 XStringToKeysym(
-    _Xconst char *string)
+    TCL_UNUSED(_Xconst char *))
 {
     return NoSymbol;
 }
@@ -729,7 +756,7 @@ XStringToKeysym(
 
 char *
 XKeysymToString(
-    KeySym keysym)
+    TCL_UNUSED(KeySym))
 {
     return NULL;
 }

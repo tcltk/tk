@@ -1,15 +1,34 @@
-/*
- *	$XConsortium: X.h,v 1.66 88/09/06 15:55:56 jim Exp $
- */
-
 /* Definitions for the X window system likely to be used by applications */
 
 #ifndef X_H
 #define X_H
 
 /***********************************************************
-Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts,
-and the Massachusetts Institute of Technology, Cambridge, Massachusetts.
+
+Copyright 1987, 1998  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+
+
+Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
 
                         All Rights Reserved
 
@@ -17,7 +36,7 @@ Permission to use, copy, modify, and distribute this software and its
 documentation for any purpose and without fee is hereby granted,
 provided that the above copyright notice appear in all copies and that
 both that copyright notice and this permission notice appear in
-supporting documentation, and that the names of Digital or MIT not be
+supporting documentation, and that the name of Digital not be
 used in advertising or publicity pertaining to distribution of the
 software without specific, written prior permission.
 
@@ -30,25 +49,24 @@ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS
 SOFTWARE.
 
 ******************************************************************/
+
 #define X_PROTOCOL	11		/* current protocol version */
 #define X_PROTOCOL_REVISION 0		/* current minor version */
-
-#if defined(MAC_OSX_TK)
-#   define Cursor XCursor
-#   define Region XRegion
-#endif
 
 /* Resources */
 
 #ifdef _WIN64
-typedef __int64 XID;
+typedef unsigned __int64 XID;
 #else
 typedef unsigned long XID;
 #endif
 
 typedef XID Window;
 typedef XID Drawable;
+#ifndef _XTYPEDEF_FONT
+#  define _XTYPEDEF_FONT
 typedef XID Font;
+#endif
 typedef XID Pixmap;
 typedef XID Cursor;
 typedef XID Colormap;
@@ -63,7 +81,7 @@ typedef unsigned long VisualID;
 
 typedef unsigned long Time;
 
-typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
+typedef unsigned int KeyCode;	/* In order to use IME, the Macintosh needs
 				 * to pack 3 bytes into the keyCode field in
 				 * the XEvent.  In the real X.h, a KeyCode is
 				 * defined as a short, which wouldn't be big
@@ -73,7 +91,7 @@ typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
  *****************************************************************/
 
-#define None                 0L	/* universal null resource or null atom */
+/* #define None              0L      See bug [9e31fd9449] and below */
 
 #define ParentRelative       1L	/* background pixmap in CreateWindow
 				    and ChangeWindowAttributes */
@@ -171,7 +189,8 @@ are reserved in the protocol for errors and replies. */
 #define ColormapNotify		32
 #define ClientMessage		33
 #define MappingNotify		34
-#define LASTEvent		35	/* must be bigger than any event # */
+#define GenericEvent		35
+#define LASTEvent		36	/* must be bigger than any event # */
 
 
 /* Key masks. Used as modifiers to GrabButton and GrabKey, results of QueryPointer,
@@ -179,12 +198,15 @@ are reserved in the protocol for errors and replies. */
 
 #define ShiftMask		(1<<0)
 #define LockMask		(1<<1)
-#define ControlMask		(1<<2)
+/* #define ControlMask		(1<<2) See bug [9e31fd9449] and below */
 #define Mod1Mask		(1<<3)
 #define Mod2Mask		(1<<4)
 #define Mod3Mask		(1<<5)
 #define Mod4Mask		(1<<6)
 #define Mod5Mask		(1<<7)
+
+/* See bug [9e31fd9449], this way prevents conflicts with Win32 headers */
+enum _Bug9e31fd9449 { None = 0, ControlMask = (1<<2) };
 
 /* modifier names.  Used to build a SetModifierMapping request or
    to read a GetModifierMapping request.  These correspond to the
@@ -254,9 +276,13 @@ are reserved in the protocol for errors and replies. */
 
 /* protocol families */
 
-#define FamilyInternet		0
+#define FamilyInternet		0	/* IPv4 */
 #define FamilyDECnet		1
 #define FamilyChaos		2
+#define FamilyInternet6		6	/* IPv6 */
+
+/* authentication families not tied to a specific protocol */
+#define FamilyServerInterpreted 5
 
 /* Property notification */
 
@@ -668,10 +694,5 @@ are reserved in the protocol for errors and replies. */
 
 #define LSBFirst		0
 #define MSBFirst		1
-
-#if defined(MAC_OSX_TK)
-#   undef Cursor
-#   undef Region
-#endif
 
 #endif /* X_H */

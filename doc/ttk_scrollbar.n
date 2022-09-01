@@ -47,36 +47,25 @@ One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the scrollbar.
 .SH "WIDGET COMMAND"
 .PP
-.TP
-\fIpathName \fBcget \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk::widget(n)\fR.
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+scrollbar widgets support the following additional commands:
 .TP
 \fIpathName \fBget\fR
 Returns the scrollbar settings in the form of a list whose
 elements are the arguments to the most recent \fBset\fR widget command.
-.TP
-\fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fR, \fIy\fR.
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBset \fIfirst last\fR
 This command is normally invoked by the scrollbar's associated widget
 from an \fB\-xscrollcommand\fR or \fB\-yscrollcommand\fR callback.
 Specifies the visible range to be displayed.
 \fIfirst\fR and \fIlast\fR are real fractions between 0 and 1.
-.TP
-\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 The following widget commands are used internally
-by the TScrollbar widget class bindings.
+by the \fBTScrollbar\fP widget class bindings.
 .TP
 \fIpathName \fBdelta \fIdeltaX deltaY\fR
 Returns a real number indicating the fractional change in
@@ -118,14 +107,6 @@ document.  1.0 refers to the end of the document, 0.333
 refers to a point one-third of the way through the document,
 and so on.
 .TP
-\fIprefix \fBscroll \fInumber \fBunits\fR
-The widget should adjust its view by \fInumber\fR units.
-The units are defined in whatever way makes sense for the widget,
-such as characters or lines in a text widget.
-\fINumber\fR is either 1, which means one unit should scroll off
-the top or left of the window, or \-1, which means that one unit
-should scroll off the bottom or right of the window.
-.TP
 \fIprefix \fBscroll \fInumber \fBpages\fR
 The widget should adjust its view by \fInumber\fR pages.
 It is up to the widget to define the meaning of a page;  typically
@@ -134,6 +115,14 @@ is a slight overlap between the old and new views.
 \fINumber\fR is either 1, which means the next page should
 become visible, or \-1, which means that the previous page should
 become visible.
+.TP
+\fIprefix \fBscroll \fInumber \fBunits\fR
+The widget should adjust its view by \fInumber\fR units.
+The units are defined in whatever way makes sense for the widget,
+such as characters or lines in a text widget.
+\fINumber\fR is either 1, which means one unit should scroll off
+the top or left of the window, or \-1, which means that one unit
+should scroll off the bottom or right of the window.
 .SH "WIDGET STATES"
 .PP
 The scrollbar automatically sets the \fBdisabled\fR state bit.
@@ -153,7 +142,40 @@ grid $f.vsb \-row 0 \-column 1 \-sticky nsew
 grid $f.hsb \-row 1 \-column 0 \-sticky nsew
 grid columnconfigure $f 0 \-weight 1
 grid rowconfigure $f 0 \-weight 1
+pack $f
 .CE
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::scrollbar\fP is \fBTScrollbar\fP.
+.PP
+Dynamic states: \fBactive\fP, \fBdisabled\fP.
+.PP
+\fBTScrollbar\fP (or more specifically \fBVertical.TScrollbar\fP and
+\fBHorizontal.TScrollbar\fP) styling options that are configurable with
+\fBttk::style\fP are:
+.PP
+\fB\-arrowcolor\fP \fIcolor\fP
+.br
+\fB\-arrowsize\fP \fIamount\fP
+.br
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-darkcolor\fP \fIcolor\fP (color of the dark part of the 3D relief)
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-gripcount\fP \fIcount\fP (number of lines on the thumb)
+.br
+\fB\-lightcolor\fP \fIcolor\fP (color of the light part of the 3D relief)
+.br
+\fB\-troughcolor\fP \fIcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), scrollbar(n)
 .SH KEYWORDS

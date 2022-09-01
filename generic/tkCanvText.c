@@ -3,8 +3,8 @@
  *
  *	This file implements text items for canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -32,7 +32,7 @@ typedef struct TextItem {
      */
 
     double x, y;		/* Positioning point for text. */
-    int insertPos;		/* Character index of character just before
+    TkSizeT insertPos;		/* Character index of character just before
 				 * which the insertion cursor is displayed. */
 
     /*
@@ -53,7 +53,7 @@ typedef struct TextItem {
     int width;			/* Width of lines for word-wrap, pixels. Zero
 				 * means no word-wrap. */
     int underline;		/* Index of character to put underline beneath
-				 * or -1 for no underlining. */
+				 * or INT_MIN for no underlining. */
     double angle;		/* What angle, in degrees, to draw the text
 				 * at. */
 
@@ -62,8 +62,8 @@ typedef struct TextItem {
      * configuration settings above.
      */
 
-    int numChars;		/* Length of text in characters. */
-    int numBytes;		/* Length of text in bytes. */
+    TkSizeT numChars;		/* Length of text in characters. */
+    TkSizeT numBytes;		/* Length of text in bytes. */
     Tk_TextLayout textLayout;	/* Cached text layout information. */
     int actualWidth;		/* Width of text as computed. Used to make
 				 * selections of wrapped text display
@@ -87,46 +87,135 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
 };
 
+static int
+UnderlineParseProc(
+    ClientData dummy,	/* Not used.*/
+    Tcl_Interp *interp,		/* Used for reporting errors. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    const char *value,		/* Value of option. */
+    char *widgRec,		/* Pointer to record for item. */
+    TkSizeT offset)			/* Offset into item (ignored). */
+{
+    int *underlinePtr = (int *) (widgRec + offset);
+    Tcl_Obj obj;
+    int code;
+    TkSizeT underline;
+    (void)dummy;
+    (void)tkwin;
+
+    if (value == NULL || *value == 0) {
+	*underlinePtr = INT_MIN; /* No underline */
+	return TCL_OK;
+    }
+
+    obj.refCount = 1;
+    obj.bytes = (char *)value;
+    obj.length = strlen(value);
+    obj.typePtr = NULL;
+    code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
+    if (code == TCL_OK) {
+	if (underline == TCL_INDEX_NONE) {
+	    underline = INT_MIN;
+	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
+		underline++;
+	} else if (underline >= INT_MAX) {
+	    underline = INT_MAX;
+	}
+	*underlinePtr = underline;
+
+    } else {
+	Tcl_AppendResult(interp, "bad index \"", value,
+		"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
+    }
+	return code;
+}
+
+const char *
+UnderlinePrintProc(
+    ClientData dummy,	/* Ignored. */
+    Tk_Window tkwin,		/* Window containing canvas widget. */
+    char *widgRec,		/* Pointer to record for item. */
+    TkSizeT offset,			/* Pointer to record for item. */
+    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+				 * information about how to reclaim storage
+				 * for return string. */
+{
+    int underline = *(int *)(widgRec + offset);
+    char *p;
+    (void)dummy;
+    (void)tkwin;
+
+    if (underline == INT_MIN) {
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
+	p = (char *)"-1";
+#else
+	p = (char *)"";
+#endif
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    } else if (underline == INT_MAX) {
+	p = (char *)"end+1";
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    } else if (underline == -1) {
+	p = (char *)"end";
+	*freeProcPtr = TCL_STATIC;
+	return p;
+    }
+    p = (char *)ckalloc(32);
+    if (underline < 0) {
+	sprintf(p, "end%d", underline);
+    } else {
+	sprintf(p, "%d", underline);
+    }
+    *freeProcPtr = TCL_DYNAMIC;
+    return p;
+}
+
+static const Tk_CustomOption underlineOption = {
+    UnderlineParseProc, UnderlinePrintProc, NULL
+};
+
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(TextItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_DOUBLE, "-angle", NULL, NULL,
-	"0.0", Tk_Offset(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0.0", offsetof(TextItem, angle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(TextItem, color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, offsetof(TextItem, color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_FONT, "-font", NULL, NULL,
-	DEF_CANVTEXT_FONT, Tk_Offset(TextItem, tkfont), 0, NULL},
+	DEF_CANVTEXT_FONT, offsetof(TextItem, tkfont), 0, NULL},
     {TK_CONFIG_JUSTIFY, "-justify", NULL, NULL,
-	"left", Tk_Offset(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"left", offsetof(TextItem, justify), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(TextItem, tsoffset),
+	"0,0", offsetof(TextItem, tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(TextItem, stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_STRING, "-text", NULL, NULL,
-	"", Tk_Offset(TextItem, text), 0, NULL},
-    {TK_CONFIG_INT, "-underline", NULL, NULL,
-	"-1", Tk_Offset(TextItem, underline), 0, NULL},
+	"", offsetof(TextItem, text), 0, NULL},
+    {TK_CONFIG_CUSTOM, "-underline", NULL, NULL, NULL,
+	offsetof(TextItem, underline), TK_CONFIG_NULL_OK, &underlineOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(TextItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -140,36 +229,38 @@ static int		ConfigureText(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
-static int		GetSelText(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int offset, char *buffer,
-			    int maxBytes);
+static TkSizeT	GetSelText(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, TkSizeT offset, char *buffer,
+			    TkSizeT maxBytes);
 static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static void		ScaleText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
 static void		SetTextCursor(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int index);
+			    Tk_Item *itemPtr, TkSizeT index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last);
+			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		TextInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		TextToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		TextToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 static int		TextToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
+static void		RotateText(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		TranslateText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
 
@@ -199,7 +290,8 @@ Tk_ItemType tkTextType = {
     TextInsert,			/* insertProc */
     TextDeleteChars,		/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateText,			/* rotateProc */
+    0, NULL, NULL
 };
 
 #define ROUND(d) ((int) floor((d) + 0.5))
@@ -261,7 +353,7 @@ CreateText(
     textPtr->disabledStipple = None;
     textPtr->text	= NULL;
     textPtr->width	= 0;
-    textPtr->underline	= -1;
+    textPtr->underline	= INT_MIN;
     textPtr->angle	= 0.0;
 
     textPtr->numChars	= 0;
@@ -269,9 +361,9 @@ CreateText(
     textPtr->textLayout = NULL;
     textPtr->actualWidth = 0;
     textPtr->drawOrigin[0] = textPtr->drawOrigin[1] = 0.0;
-    textPtr->gc		= None;
-    textPtr->selTextGC	= None;
-    textPtr->cursorOffGC = None;
+    textPtr->gc		= NULL;
+    textPtr->selTextGC	= NULL;
+    textPtr->cursorOffGC = NULL;
     textPtr->sine	= 0.0;
     textPtr->cosine	= 1.0;
 
@@ -447,7 +539,7 @@ ConfigureText(
 	}
     }
 
-    newGC = newSelGC = None;
+    newGC = newSelGC = NULL;
     if (textPtr->tkfont != NULL) {
 	gcValues.font = Tk_FontId(textPtr->tkfont);
 	mask = GCFont;
@@ -472,11 +564,11 @@ ConfigureText(
 	}
 	newSelGC = Tk_GetGC(tkwin, mask|GCForeground, &gcValues);
     }
-    if (textPtr->gc != None) {
+    if (textPtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->gc);
     }
     textPtr->gc = newGC;
-    if (textPtr->selTextGC != None) {
+    if (textPtr->selTextGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->selTextGC);
     }
     textPtr->selTextGC = newSelGC;
@@ -491,9 +583,9 @@ ConfigureText(
 	}
 	newGC = Tk_GetGC(tkwin, GCForeground, &gcValues);
     } else {
-	newGC = None;
+	newGC = NULL;
     }
-    if (textPtr->cursorOffGC != None) {
+    if (textPtr->cursorOffGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), textPtr->cursorOffGC);
     }
     textPtr->cursorOffGC = newGC;
@@ -507,19 +599,19 @@ ConfigureText(
     textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
 
-	if (textInfoPtr->selectFirst >= textPtr->numChars) {
+	if (textInfoPtr->selectFirst + 1 >= textPtr->numChars + 1) {
 	    textInfoPtr->selItemPtr = NULL;
 	} else {
-	    if (textInfoPtr->selectLast >= textPtr->numChars) {
+	    if (textInfoPtr->selectLast + 1 >= textPtr->numChars + 1) {
 		textInfoPtr->selectLast = textPtr->numChars - 1;
 	    }
 	    if ((textInfoPtr->anchorItemPtr == itemPtr)
-		    && (textInfoPtr->selectAnchor >= textPtr->numChars)) {
+		    && (textInfoPtr->selectAnchor + 1 >= textPtr->numChars + 1)) {
 		textInfoPtr->selectAnchor = textPtr->numChars - 1;
 	    }
 	}
     }
-    if (textPtr->insertPos >= textPtr->numChars) {
+    if (textPtr->insertPos + 1 >= textPtr->numChars + 1) {
 	textPtr->insertPos = textPtr->numChars;
     }
 
@@ -562,7 +654,7 @@ ConfigureText(
 
 static void
 DeleteText(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),	/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
@@ -592,13 +684,13 @@ DeleteText(
     }
 
     Tk_FreeTextLayout(textPtr->textLayout);
-    if (textPtr->gc != None) {
+    if (textPtr->gc != NULL) {
 	Tk_FreeGC(display, textPtr->gc);
     }
-    if (textPtr->selTextGC != None) {
+    if (textPtr->selTextGC != NULL) {
 	Tk_FreeGC(display, textPtr->selTextGC);
     }
-    if (textPtr->cursorOffGC != None) {
+    if (textPtr->cursorOffGC != NULL) {
 	Tk_FreeGC(display, textPtr->cursorOffGC);
     }
 }
@@ -629,7 +721,7 @@ ComputeTextBbox(
     TextItem *textPtr)		/* Item whose bbox is to be recomputed. */
 {
     Tk_CanvasTextInfo *textInfoPtr;
-    int leftX, topY, width, height, fudge, i;
+    int width, height, fudge, i;
     Tk_State state = textPtr->header.state;
     double x[4], y[4], dx[4], dy[4], sinA, cosA, tmp;
 
@@ -651,8 +743,6 @@ ComputeTextBbox(
      * bounding box for the text item.
      */
 
-    leftX = ROUND(textPtr->x);
-    topY = ROUND(textPtr->y);
     for (i=0 ; i<4 ; i++) {
 	dx[i] = dy[i] = 0.0;
     }
@@ -662,21 +752,17 @@ ComputeTextBbox(
     case TK_ANCHOR_NE:
 	break;
 
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	topY -= height / 2;
-	for (i=0 ; i<4 ; i++) {
-	    dy[i] = -height / 2;
-	}
-	break;
-
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
-	topY -= height;
 	for (i=0 ; i<4 ; i++) {
 	    dy[i] = -height;
+	}
+	break;
+
+    default:
+	for (i=0 ; i<4 ; i++) {
+	    dy[i] = -height / 2;
 	}
 	break;
     }
@@ -686,21 +772,17 @@ ComputeTextBbox(
     case TK_ANCHOR_SW:
 	break;
 
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	leftX -= width / 2;
-	for (i=0 ; i<4 ; i++) {
-	    dx[i] = -width / 2;
-	}
-	break;
-
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
-	leftX -= width;
 	for (i=0 ; i<4 ; i++) {
 	    dx[i] = -width;
+	}
+	break;
+
+    default:
+	for (i=0 ; i<4 ; i++) {
+	    dx[i] = -width / 2;
 	}
 	break;
     }
@@ -798,7 +880,7 @@ DisplayCanvText(
 {
     TextItem *textPtr;
     Tk_CanvasTextInfo *textInfoPtr;
-    int selFirstChar, selLastChar;
+    TkSizeT selFirstChar, selLastChar;
     short drawableX, drawableY;
     Pixmap stipple;
     Tk_State state = itemPtr->state;
@@ -820,7 +902,7 @@ DisplayCanvText(
 	}
     }
 
-    if (textPtr->gc == None) {
+    if (textPtr->gc == NULL) {
 	return;
     }
 
@@ -834,18 +916,18 @@ DisplayCanvText(
 	Tk_CanvasSetOffset(canvas, textPtr->gc, &textPtr->tsoffset);
     }
 
-    selFirstChar = -1;
-    selLastChar = 0;		/* lint. */
+    selFirstChar = TCL_INDEX_NONE;
+    selLastChar = 0;
     Tk_CanvasDrawableCoords(canvas, textPtr->drawOrigin[0],
 	    textPtr->drawOrigin[1], &drawableX, &drawableY);
 
     if (textInfoPtr->selItemPtr == itemPtr) {
 	selFirstChar = textInfoPtr->selectFirst;
 	selLastChar = textInfoPtr->selectLast;
-	if (selLastChar > textPtr->numChars) {
+	if (selLastChar + 1 > textPtr->numChars + 1 ) {
 	    selLastChar = textPtr->numChars - 1;
 	}
-	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
+	if (((int)selFirstChar >= 0) && (selFirstChar + 1 <= selLastChar + 1 )) {
 	    int xFirst, yFirst, hFirst;
 	    int xLast, yLast, wLast;
 
@@ -932,7 +1014,7 @@ DisplayCanvText(
 		Tk_Fill3DPolygon(Tk_CanvasTkwin(canvas), drawable,
 			textInfoPtr->insertBorder, points, 4,
 			textInfoPtr->insertBorderWidth, TK_RELIEF_RAISED);
-	    } else if (textPtr->cursorOffGC != None) {
+	    } else if (textPtr->cursorOffGC != NULL) {
 		/*
 		 * Redraw the background over the area of the cursor, even
 		 * though the cursor is turned off. This guarantees that the
@@ -956,20 +1038,24 @@ DisplayCanvText(
      * anti-aliasing colors would blend together.
      */
 
-    if ((selFirstChar >= 0) && (textPtr->selTextGC != textPtr->gc)) {
-	TkDrawAngledTextLayout(display, drawable, textPtr->gc,
-		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
-		0, selFirstChar);
+    if ((selFirstChar != TCL_INDEX_NONE) && (textPtr->selTextGC != textPtr->gc)) {
+	if (0 < selFirstChar) {
+	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
+		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
+		    0, selFirstChar);
+	}
 	TkDrawAngledTextLayout(display, drawable, textPtr->selTextGC,
 		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
 		selFirstChar, selLastChar + 1);
-	TkDrawAngledTextLayout(display, drawable, textPtr->gc,
-		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
-		selLastChar + 1, -1);
+	if (selLastChar + 1 < textPtr->numChars) {
+	    TkDrawAngledTextLayout(display, drawable, textPtr->gc,
+		    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
+		    selLastChar + 1, textPtr->numChars);
+	}
     } else {
 	TkDrawAngledTextLayout(display, drawable, textPtr->gc,
 		textPtr->textLayout, drawableX, drawableY, textPtr->angle,
-		0, -1);
+		0, textPtr->numChars);
     }
     TkUnderlineAngledTextLayout(display, drawable, textPtr->gc,
 	    textPtr->textLayout, drawableX, drawableY, textPtr->angle,
@@ -1001,12 +1087,13 @@ static void
 TextInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Text item to be modified. */
-    int index,			/* Character index before which string is to
+    TkSizeT index,			/* Character index before which string is to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteIndex, byteCount, charsAdded;
+    int byteIndex, charsAdded;
+    TkSizeT byteCount;
     char *newStr, *text;
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1015,10 +1102,10 @@ TextInsert(
 
     text = textPtr->text;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	index = 0;
     }
-    if (index > textPtr->numChars) {
+    if (index + 1 > textPtr->numChars + 1) {
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
@@ -1027,8 +1114,8 @@ TextInsert(
 	return;
     }
 
-    newStr = ckalloc(textPtr->numBytes + byteCount + 1);
-    memcpy(newStr, text, (size_t) byteIndex);
+    newStr = (char *)ckalloc(textPtr->numBytes + byteCount + 1);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, string);
     strcpy(newStr + byteIndex + byteCount, text + byteIndex);
 
@@ -1044,18 +1131,18 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst >= index) {
+	if (textInfoPtr->selectFirst + 1 >= index + 1) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast >= index) {
+	if (textInfoPtr->selectLast + 1 >= index + 1) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor >= index)) {
+		&& (textInfoPtr->selectAnchor + 1 >= index + 1)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos >= index) {
+    if (textPtr->insertPos + 1 >= index + 1) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
@@ -1082,9 +1169,9 @@ static void
 TextDeleteChars(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    int first,			/* Character index of first character to
+    TkSizeT first,			/* Character index of first character to
 				 * delete. */
-    int last)			/* Character index of last character to delete
+    TkSizeT last)			/* Character index of last character to delete
 				 * (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1093,13 +1180,13 @@ TextDeleteChars(
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     text = textPtr->text;
-    if (first < 0) {
+    if ((int)first < 0) {
 	first = 0;
     }
-    if (last >= textPtr->numChars) {
+    if (last + 1 >= textPtr->numChars + 1) {
 	last = textPtr->numChars - 1;
     }
-    if (first > last) {
+    if (first + 1 > last + 1) {
 	return;
     }
     charsRemoved = last + 1 - first;
@@ -1108,8 +1195,8 @@ TextDeleteChars(
     byteCount = Tcl_UtfAtIndex(text + byteIndex, charsRemoved)
 	- (text + byteIndex);
 
-    newStr = ckalloc(textPtr->numBytes + 1 - byteCount);
-    memcpy(newStr, text, (size_t) byteIndex);
+    newStr = (char *)ckalloc(textPtr->numBytes + 1 - byteCount);
+    memcpy(newStr, text, byteIndex);
     strcpy(newStr + byteIndex, text + byteIndex + byteCount);
 
     ckfree(text);
@@ -1123,32 +1210,32 @@ TextDeleteChars(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst > first) {
+	if (textInfoPtr->selectFirst + 1 > first + 1) {
 	    textInfoPtr->selectFirst -= charsRemoved;
-	    if (textInfoPtr->selectFirst < first) {
+	    if ((int)textInfoPtr->selectFirst + 1 < (int)first + 1) {
 		textInfoPtr->selectFirst = first;
 	    }
 	}
-	if (textInfoPtr->selectLast >= first) {
+	if (textInfoPtr->selectLast + 1 >= first + 1) {
 	    textInfoPtr->selectLast -= charsRemoved;
-	    if (textInfoPtr->selectLast < first - 1) {
+	    if (textInfoPtr->selectLast + 1 < first) {
 		textInfoPtr->selectLast = first - 1;
 	    }
 	}
-	if (textInfoPtr->selectFirst > textInfoPtr->selectLast) {
+	if ((int)textInfoPtr->selectFirst + 1 > (int)textInfoPtr->selectLast + 1) {
 	    textInfoPtr->selItemPtr = NULL;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor > first)) {
+		&& (textInfoPtr->selectAnchor + 1 > first + 1)) {
 	    textInfoPtr->selectAnchor -= charsRemoved;
-	    if (textInfoPtr->selectAnchor < first) {
+	    if (textInfoPtr->selectAnchor + 1 < first + 1) {
 		textInfoPtr->selectAnchor = first;
 	    }
 	}
     }
-    if (textPtr->insertPos > first) {
+    if (textPtr->insertPos + 1 > first + 1) {
 	textPtr->insertPos -= charsRemoved;
-	if (textPtr->insertPos < first) {
+	if ((int)textPtr->insertPos + 1 < (int)first + 1) {
 	    textPtr->insertPos = first;
 	}
     }
@@ -1249,6 +1336,39 @@ TextToArea(
 /*
  *--------------------------------------------------------------
  *
+ * RotateText --
+ *
+ *	This function is called to rotate a text item by a given amount about a
+ *	point. Note that this does *not* rotate the text of the item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the text anchor is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateText(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being rotated. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    TextItem *textPtr = (TextItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &textPtr->x, &textPtr->y);
+    ComputeTextBbox(canvas, textPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * ScaleText --
  *
  *	This function is invoked to rescale a text item.
@@ -1263,7 +1383,6 @@ TextToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ScaleText(
     Tk_Canvas canvas,		/* Canvas containing rectangle. */
@@ -1334,30 +1453,38 @@ TranslateText(
 static int
 GetTextIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
 				 * itemPtr's text. */
-    int *indexPtr)		/* Where to store converted character
+    TkSizeT *indexPtr)		/* Where to store converted character
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int length;
+    TkSizeT length, idx;
     int c;
-    TkCanvas *canvasPtr = (TkCanvas *) canvas;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
-    const char *string = Tcl_GetStringFromObj(obj, &length);
+    const char *string;
 
+    if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > textPtr->numChars) {
+	    idx = textPtr->numChars;
+	}
+	*indexPtr = idx;
+	return TCL_OK;
+    }
+
+    string = Tcl_GetStringFromObj(obj, &length);
     c = string[0];
 
-    if ((c == 'e') && (strncmp(string, "end", (unsigned) length) == 0)) {
-	*indexPtr = textPtr->numChars;
-    } else if ((c == 'i')
-	    && (strncmp(string, "insert", (unsigned) length) == 0)) {
+    if ((c == 'i')
+	    && (strncmp(string, "insert", length) == 0)) {
 	*indexPtr = textPtr->insertPos;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.first", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.first", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));
@@ -1366,7 +1493,7 @@ GetTextIndex(
 	}
 	*indexPtr = textInfoPtr->selectFirst;
     } else if ((c == 's') && (length >= 5)
-	    && (strncmp(string, "sel.last", (unsigned) length) == 0)) {
+	    && (strncmp(string, "sel.last", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", -1));
@@ -1376,7 +1503,7 @@ GetTextIndex(
 	*indexPtr = textInfoPtr->selectLast;
     } else if (c == '@') {
 	int x, y;
-	double tmp, c = textPtr->cosine, s = textPtr->sine;
+	double tmp, cs = textPtr->cosine, s = textPtr->sine;
 	char *end;
 	const char *p;
 
@@ -1392,16 +1519,10 @@ GetTextIndex(
 	    goto badIndex;
 	}
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
-	x += canvasPtr->scrollX1 - (int) textPtr->drawOrigin[0];
-	y += canvasPtr->scrollY1 - (int) textPtr->drawOrigin[1];
+	x -= (int) textPtr->drawOrigin[0];
+	y -= (int) textPtr->drawOrigin[1];
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
-		(int) (x*c - y*s), (int) (y*c + x*s));
-    } else if (Tcl_GetIntFromObj(NULL, obj, indexPtr) == TCL_OK) {
-	if (*indexPtr < 0) {
-	    *indexPtr = 0;
-	} else if (*indexPtr > textPtr->numChars) {
-	    *indexPtr = textPtr->numChars;
-	}
+		(int) (x*cs - y*s), (int) (y*cs + x*s));
     } else {
 	/*
 	 * Some of the paths here leave messages in the interp's result, so we
@@ -1432,18 +1553,17 @@ GetTextIndex(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 SetTextCursor(
-    Tk_Canvas canvas,		/* Record describing canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Record describing canvas widget. */
     Tk_Item *itemPtr,		/* Text item in which cursor position is to be
 				 * set. */
-    int index)			/* Character index of character just before
+    TkSizeT index)			/* Character index of character just before
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
-    if (index < 0) {
+    if (index == TCL_INDEX_NONE) {
 	textPtr->insertPos = 0;
     } else if (index > textPtr->numChars) {
 	textPtr->insertPos = textPtr->numChars;
@@ -1472,39 +1592,39 @@ SetTextCursor(
  *--------------------------------------------------------------
  */
 
-static int
+static TkSizeT
 GetSelText(
-    Tk_Canvas canvas,		/* Canvas containing selection. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing selection. */
     Tk_Item *itemPtr,		/* Text item containing selection. */
-    int offset,			/* Byte offset within selection of first
+    TkSizeT offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    int maxBytes)		/* Maximum number of bytes to place at buffer,
+    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int byteCount;
+    TkSizeT byteCount;
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
-    if ((textInfoPtr->selectFirst < 0) ||
-	    (textInfoPtr->selectFirst > textInfoPtr->selectLast)) {
+    if (((int)textInfoPtr->selectFirst < 0) ||
+	    (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1)) {
 	return 0;
     }
     text = textPtr->text;
     selStart = Tcl_UtfAtIndex(text, textInfoPtr->selectFirst);
     selEnd = Tcl_UtfAtIndex(selStart,
 	    textInfoPtr->selectLast + 1 - textInfoPtr->selectFirst);
+    if (selEnd  <= selStart + offset) {
+	return 0;
+    }
     byteCount = selEnd - selStart - offset;
     if (byteCount > maxBytes) {
 	byteCount = maxBytes;
     }
-    if (byteCount <= 0) {
-	return 0;
-    }
-    memcpy(buffer, selStart + offset, (size_t) byteCount);
+    memcpy(buffer, selStart + offset, byteCount);
     buffer[byteCount] = '\0';
     return byteCount;
 }
@@ -1593,9 +1713,7 @@ TextToPostscript(
     }
 
     Tcl_ResetResult(interp);
-    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	goto error;
-    }
+    Tk_CanvasPsColor(interp, canvas, color);
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     if (stipple != None) {
@@ -1605,7 +1723,6 @@ TextToPostscript(
 		Tcl_GetString(Tcl_GetObjResult(interp)));
     }
 
-    x = 0;  y = 0;  justify = NULL;	/* lint. */
     switch (textPtr->anchor) {
     case TK_ANCHOR_NW:	   x = 0; y = 0; break;
     case TK_ANCHOR_N:	   x = 1; y = 0; break;
@@ -1615,12 +1732,12 @@ TextToPostscript(
     case TK_ANCHOR_S:	   x = 1; y = 2; break;
     case TK_ANCHOR_SW:	   x = 0; y = 2; break;
     case TK_ANCHOR_W:	   x = 0; y = 1; break;
-    case TK_ANCHOR_CENTER: x = 1; y = 1; break;
+    default: x = 1; y = 1; break;
     }
     switch (textPtr->justify) {
-    case TK_JUSTIFY_LEFT:   justify = "0";   break;
     case TK_JUSTIFY_CENTER: justify = "0.5"; break;
     case TK_JUSTIFY_RIGHT:  justify = "1";   break;
+    default:                justify = "0";   break;
     }
 
     Tk_GetFontMetrics(textPtr->tkfont, &fm);

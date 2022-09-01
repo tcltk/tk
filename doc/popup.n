@@ -38,7 +38,7 @@ $m add command \-label "Example 2" \-command bell
 pack [label .l \-text "Click me!"]
 
 # Arrange for the menu to pop up when the label is clicked
-bind .l <1> {\fBtk_popup\fR .popupMenu %X %Y}
+bind .l <Button-1> {\fBtk_popup\fR .popupMenu %X %Y}
 .CE
 .SH "SEE ALSO"
 bind(n), menu(n), tk_optionMenu(n)

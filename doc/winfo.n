@@ -12,7 +12,7 @@
 .SH NAME
 winfo \- Return window-related information
 .SH SYNOPSIS
-\fBwinfo\fR \fIoption \fR?\fIarg arg ...\fR?
+\fBwinfo\fR \fIoption \fR?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -73,6 +73,9 @@ to the screen containing \fIwindow\fR;  otherwise they refer to the
 screen of the application's main window.
 If no window in this application contains the point then an empty
 string is returned.
+An empty string is also returned if the point lies in the title bar
+or border of its highest containing toplevel in this application.
+(Note that with some window managers the borders may be invisible.)
 In selecting the containing window, children are given higher priority
 than parents and among siblings the highest one in the stacking order is
 chosen.

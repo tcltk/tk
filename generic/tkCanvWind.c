@@ -3,8 +3,8 @@
  *
  *	This file implements window items for canvas widgets.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -41,22 +41,22 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(WindowItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_PIXELS, "-height", NULL, NULL,
-	"0", Tk_Offset(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(WindowItem, height), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_PIXELS, "-width", NULL, NULL,
-	"0", Tk_Offset(WindowItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(WindowItem, width), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_WINDOW, "-window", NULL, NULL,
-	NULL, Tk_Offset(WindowItem, tkwin), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(WindowItem, tkwin), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -77,6 +77,8 @@ static void		DeleteWinItem(Tk_Canvas canvas,
 static void		DisplayWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
+static void		RotateWinItem(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -85,7 +87,7 @@ static void		TranslateWinItem(Tk_Canvas canvas,
 static int		WinItemCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
 			    Tcl_Obj *const objv[]);
-static void		WinItemLostSlaveProc(ClientData clientData,
+static void		WinItemLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
 static void		WinItemRequestProc(ClientData clientData,
 			    Tk_Window tkwin);
@@ -130,7 +132,8 @@ Tk_ItemType tkWindowType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateWinItem,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -141,7 +144,7 @@ Tk_ItemType tkWindowType = {
 static const Tk_GeomMgr canvasGeomType = {
     "canvas",				/* name */
     WinItemRequestProc,			/* requestProc */
-    WinItemLostSlaveProc,		/* lostSlaveProc */
+    WinItemLostContentProc,		/* lostContentProc */
 };
 
 /*
@@ -405,6 +408,7 @@ DeleteWinItem(
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
+    (void)display;
 
     if (winItemPtr->tkwin != NULL) {
 	Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
@@ -514,7 +518,7 @@ ComputeWindowBbox(
 	break;
     case TK_ANCHOR_NW:
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x -= width/2;
 	y -= height/2;
 	break;
@@ -567,10 +571,18 @@ DisplayWinItem(
     short x, y;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
     Tk_State state = itemPtr->state;
+    (void)display;
+    (void)regionX;
+    (void)regionY;
+    (void)regionWidth;
+    (void)regionHeight;
 
     if (winItemPtr->tkwin == NULL) {
 	return;
     }
+
+    Tcl_Preserve(canvas);
+
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
     }
@@ -585,6 +597,7 @@ DisplayWinItem(
 	} else {
 	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
 	}
+	Tcl_Release(canvas);
 	return;
     }
     Tk_CanvasWindowCoords(canvas, (double) winItemPtr->header.x1,
@@ -606,6 +619,7 @@ DisplayWinItem(
 	} else {
 	    Tk_UnmaintainGeometry(winItemPtr->tkwin, canvasTkwin);
 	}
+	Tcl_Release(canvas);
 	return;
     }
 
@@ -620,11 +634,16 @@ DisplayWinItem(
 		|| (height != Tk_Height(winItemPtr->tkwin))) {
 	    Tk_MoveResizeWindow(winItemPtr->tkwin, x, y, width, height);
 	}
-	Tk_MapWindow(winItemPtr->tkwin);
+
+	if (winItemPtr->tkwin) {
+	    Tk_MapWindow(winItemPtr->tkwin);
+	}
+
     } else {
 	Tk_MaintainGeometry(winItemPtr->tkwin, canvasTkwin, x, y,
 		width, height);
     }
+    Tcl_Release(canvas);
 }
 
 /*
@@ -655,6 +674,7 @@ WinItemToPoint(
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = winItemPtr->header.x1;
     y1 = winItemPtr->header.y1;
@@ -712,6 +732,7 @@ WinItemToArea(
 				 * area.  */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= winItemPtr->header.x1)
 	    || (rectPtr[0] >= winItemPtr->header.x2)
@@ -748,9 +769,12 @@ WinItemToArea(
 #ifdef X_GetImage
 static int
 xerrorhandler(
-    ClientData clientData,
+    ClientData dummy,
     XErrorEvent *e)
 {
+    (void)dummy;
+    (void)e;
+
     return 0;
 }
 #endif /* X_GetImage */
@@ -812,7 +836,7 @@ WinItemToPostscript(
     case TK_ANCHOR_S:	    x -= width/2.0;			    break;
     case TK_ANCHOR_SW:						    break;
     case TK_ANCHOR_W:			    y -= height/2.0;	    break;
-    case TK_ANCHOR_CENTER:  x -= width/2.0; y -= height/2.0;	    break;
+    default:  x -= width/2.0; y -= height/2.0;	    break;
     }
 
     return CanvasPsWindow(interp, tkwin, canvas, x, y, width, height);
@@ -915,6 +939,40 @@ CanvasPsWindow(
 /*
  *--------------------------------------------------------------
  *
+ * RotateWinItem --
+ *
+ *	This function is called to rotate a window item by a given amount
+ *	about a point. Note that this does *not* rotate the window of the
+ *	item.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the window anchor is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateWinItem(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being rotated. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    WindowItem *winItemPtr = (WindowItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &winItemPtr->x, &winItemPtr->y);
+    ComputeWindowBbox(canvas, winItemPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * ScaleWinItem --
  *
  *	This function is invoked to rescale a window item.
@@ -1007,7 +1065,7 @@ WinItemStructureProc(
     ClientData clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    WindowItem *winItemPtr = clientData;
+    WindowItem *winItemPtr = (WindowItem *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	winItemPtr->tkwin = NULL;
@@ -1037,7 +1095,8 @@ WinItemRequestProc(
     ClientData clientData,	/* Pointer to record for window item. */
     Tk_Window tkwin)		/* Window that changed its desired size. */
 {
-    WindowItem *winItemPtr = clientData;
+    WindowItem *winItemPtr = (WindowItem *)clientData;
+    (void)tkwin;
 
     ComputeWindowBbox(winItemPtr->canvas, winItemPtr);
 
@@ -1053,29 +1112,29 @@ WinItemRequestProc(
 /*
  *--------------------------------------------------------------
  *
- * WinItemLostSlaveProc --
+ * WinItemLostContentProc --
  *
  *	This function is invoked by Tk whenever some other geometry claims
- *	control over a slave that used to be managed by us.
+ *	control over a content window that used to be managed by us.
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Forgets all canvas-related information about the slave.
+ *	Forgets all canvas-related information about the content window.
  *
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
-WinItemLostSlaveProc(
-    ClientData clientData,	/* WindowItem structure for slave window that
+WinItemLostContentProc(
+    ClientData clientData,	/* WindowItem structure for content window window that
 				 * was stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the slave window. */
+    Tk_Window tkwin)		/* Tk's handle for the content window. */
 {
-    WindowItem *winItemPtr = clientData;
+    WindowItem *winItemPtr = (WindowItem *)clientData;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(winItemPtr->canvas);
+    (void)tkwin;
 
     Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
 	    WinItemStructureProc, winItemPtr);

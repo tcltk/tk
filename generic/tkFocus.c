@@ -3,8 +3,8 @@
  *
  *	This file contains functions that manage the input focus for Tk.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -113,8 +113,8 @@ Tk_FocusObjCmd(
     static const char *const focusOptions[] = {
 	"-displayof", "-force", "-lastfor", NULL
     };
-    Tk_Window tkwin = clientData;
-    TkWindow *winPtr = clientData;
+    Tk_Window tkwin = (Tk_Window)clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     TkWindow *newPtr, *topLevelPtr;
     ToplevelFocusInfo *tlFocusPtr;
     const char *windowName;
@@ -128,7 +128,7 @@ Tk_FocusObjCmd(
 	Tk_Window focusWin = (Tk_Window) TkGetFocusWin(winPtr);
 
 	if (focusWin != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj(focusWin));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj(focusWin));
 	}
 	return TCL_OK;
     }
@@ -179,7 +179,7 @@ Tk_FocusObjCmd(
 	}
 	newPtr = TkGetFocusWin(newPtr);
 	if (newPtr != NULL) {
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) newPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) newPtr));
 	}
 	break;
     case 1:			/* -force */
@@ -212,12 +212,12 @@ Tk_FocusObjCmd(
 	    for (tlFocusPtr = newPtr->mainPtr->tlFocusPtr; tlFocusPtr != NULL;
 		    tlFocusPtr = tlFocusPtr->nextPtr) {
 		if (tlFocusPtr->topLevelPtr == topLevelPtr) {
-		    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window)
+		    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window)
 			    tlFocusPtr->focusWinPtr));
 		    return TCL_OK;
 		}
 	    }
-	    Tcl_SetObjResult(interp, TkNewWindowObj((Tk_Window) topLevelPtr));
+	    Tcl_SetObjResult(interp, Tk_NewWindowObj((Tk_Window) topLevelPtr));
 	    return TCL_OK;
 	}
 	break;
@@ -279,8 +279,8 @@ TkFocusFilterEvent(
      * pass the event through to Tk bindings.
      */
 
-    if (eventPtr->xfocus.send_event == GENERATED_FOCUS_EVENT_MAGIC) {
-	eventPtr->xfocus.send_event = 0;
+    if ((eventPtr->xfocus.send_event & GENERATED_FOCUS_EVENT_MAGIC) == GENERATED_FOCUS_EVENT_MAGIC) {
+	eventPtr->xfocus.send_event &= ~GENERATED_FOCUS_EVENT_MAGIC;
 	return 1;
     }
 
@@ -315,7 +315,7 @@ TkFocusFilterEvent(
 	 *	embedded child. We don't care about this, although we may end
 	 *	up getting a NotifyPointer later.
 	 * NotifyInferior - focus is coming to us from an embedded child. When
-	 *	focus is on an embeded focus, we still think we have the
+	 *	focus is on an embedded focus, we still think we have the
 	 *	focus, too, so this message doesn't change our state.
 	 * NotifyPointerRoot - should never happen because this is sent to the
 	 *	root window.
@@ -369,7 +369,7 @@ TkFocusFilterEvent(
     }
 
     /*
-     * If winPtr isn't a top-level window than just ignore the event.
+     * If winPtr isn't a top-level window then just ignore the event.
      */
 
     winPtr = TkWmFocusToplevel(winPtr);
@@ -415,7 +415,7 @@ TkFocusFilterEvent(
 	}
     }
     if (tlFocusPtr == NULL) {
-	tlFocusPtr = ckalloc(sizeof(ToplevelFocusInfo));
+	tlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
 	tlFocusPtr->topLevelPtr = tlFocusPtr->focusWinPtr = winPtr;
 	tlFocusPtr->nextPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tlFocusPtr;
@@ -551,12 +551,17 @@ TkSetFocusWin(
 	return;
     }
 
+    /*
+     * Get the current focus window with the same display and application
+     * as winPtr.
+     */
+
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
 
     /*
-     * If force is set, we should make sure we grab the focus regardless of
-     * the current focus window since under Windows, we may need to take
-     * control away from another application.
+     * Do nothing if the window already has focus and force is not set.  If
+     * force is set, we need to grab the focus, since under Windows or macOS
+     * this may involve taking control away from another application.
      */
 
     if (winPtr == displayFocusPtr->focusWinPtr && !force) {
@@ -564,14 +569,15 @@ TkSetFocusWin(
     }
 
     /*
-     * Find the top-level window for winPtr, then find (or create) a record
-     * for the top-level. Also see whether winPtr and all its ancestors are
+     * Find the toplevel window for winPtr, then find (or create) a record
+     * for the toplevel. Also see whether winPtr and all its ancestors are
      * mapped.
      */
 
     allMapped = 1;
     for (topLevelPtr = winPtr; ; topLevelPtr = topLevelPtr->parentPtr) {
 	if (topLevelPtr == NULL) {
+
 	    /*
 	     * The window is being deleted. No point in worrying about giving
 	     * it the focus.
@@ -588,16 +594,16 @@ TkSetFocusWin(
     }
 
     /*
-     * If the new focus window isn't mapped, then we can't focus on it (X will
-     * generate an error, for example). Instead, create an event handler that
-     * will set the focus to this window once it gets mapped. At the same
-     * time, delete any old handler that might be around; it's no longer
-     * relevant.
+     * If any ancestor of the new focus window isn't mapped, then we can't set
+     * focus for it (X will generate an error, for example). Instead, create
+     * an event handler that will set the focus to this window once it gets
+     * mapped. At the same time, delete any old handler that might be around;
+     * it's no longer relevant.
      */
 
     if (displayFocusPtr->focusOnMapPtr != NULL) {
 	Tk_DeleteEventHandler((Tk_Window) displayFocusPtr->focusOnMapPtr,
-		StructureNotifyMask, FocusMapProc,
+		VisibilityChangeMask, FocusMapProc,
 		displayFocusPtr->focusOnMapPtr);
 	displayFocusPtr->focusOnMapPtr = NULL;
     }
@@ -616,35 +622,44 @@ TkSetFocusWin(
 	}
     }
     if (tlFocusPtr == NULL) {
-	tlFocusPtr = ckalloc(sizeof(ToplevelFocusInfo));
+	tlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
 	tlFocusPtr->topLevelPtr = topLevelPtr;
 	tlFocusPtr->nextPtr = winPtr->mainPtr->tlFocusPtr;
 	winPtr->mainPtr->tlFocusPtr = tlFocusPtr;
     }
     tlFocusPtr->focusWinPtr = winPtr;
 
-    /*
-     * Reset the window system's focus window and generate focus events, with
-     * two special cases:
-     *
-     * 1. If the application is embedded and doesn't currently have the focus,
-     *    don't set the focus directly. Instead, see if the embedding code can
-     *    claim the focus from the enclosing container.
-     * 2. Otherwise, if the application doesn't currently have the focus,
-     *    don't change the window system's focus unless it was already in this
-     *    application or "force" was specified.
-     */
+    if (topLevelPtr->flags & TK_EMBEDDED &&
+        (displayFocusPtr->focusWinPtr == NULL)) {
 
-    if ((topLevelPtr->flags & TK_EMBEDDED)
-	    && (displayFocusPtr->focusWinPtr == NULL)) {
+	/*
+	 * We are assigning focus to an embedded toplevel.  The platform
+	 * specific function TkpClaimFocus needs to handle the job of
+	 * assigning focus to the container, since we have no way to find the
+	 * container.
+	 */
+
 	TkpClaimFocus(topLevelPtr, force);
     } else if ((displayFocusPtr->focusWinPtr != NULL) || force) {
+
 	/*
-	 * Generate events to shift focus between Tk windows. We do this
-	 * regardless of what TkpChangeFocus does with the real X focus so
-	 * that Tk widgets track focus commands when there is no window
-	 * manager. GenerateFocusEvents will set up a serial number marker so
-	 * we discard focus events that are triggered by the ChangeFocus.
+	 * If we are forcing removal of focus from a container hosting a
+	 * toplevel from a different application, clear the focus in that
+	 * application.
+	 */
+
+    	if (force) {
+	    TkWindow *focusPtr = winPtr->dispPtr->focusPtr;
+	    if (focusPtr && focusPtr->mainPtr != winPtr->mainPtr) {
+		DisplayFocusInfo *displayFocusPtr2 = FindDisplayFocusInfo(
+		    focusPtr->mainPtr, focusPtr->dispPtr);
+		displayFocusPtr2->focusWinPtr = NULL;
+	    }
+    	}
+
+	/*
+	 * Call the platform specific function TkpChangeFocus to move the
+	 * window manager's focus to a new toplevel.
 	 */
 
 	serial = TkpChangeFocus(TkpGetWrapperWindow(topLevelPtr), force);
@@ -792,12 +807,13 @@ TkFocusKeyEvent(
 
 void
 TkFocusDeadWindow(
-    register TkWindow *winPtr)	/* Information about the window that is being
+    TkWindow *winPtr)	/* Information about the window that is being
 				 * deleted. */
 {
     ToplevelFocusInfo *tlFocusPtr, *prevPtr;
     DisplayFocusInfo *displayFocusPtr;
     TkDisplay *dispPtr = winPtr->dispPtr;
+    int noMatch = 1;
 
     /*
      * Certain special windows like those used for send and clipboard have no
@@ -841,6 +857,7 @@ TkFocusDeadWindow(
 		prevPtr->nextPtr = tlFocusPtr->nextPtr;
 	    }
 	    ckfree(tlFocusPtr);
+	    noMatch = 0;
 	    break;
 	} else if (winPtr == tlFocusPtr->focusWinPtr) {
 	    /*
@@ -858,6 +875,7 @@ TkFocusDeadWindow(
 		displayFocusPtr->focusWinPtr = tlFocusPtr->topLevelPtr;
 		dispPtr->focusPtr = tlFocusPtr->topLevelPtr;
 	    }
+	    noMatch = 0;
 	    break;
 	}
     }
@@ -874,6 +892,15 @@ TkFocusDeadWindow(
 
     if (displayFocusPtr->focusOnMapPtr == winPtr) {
 	displayFocusPtr->focusOnMapPtr = NULL;
+    }
+
+    /*
+     * It may happen that the search above for focus records that refer
+     * to this window did not find any match. In such a case, when the
+     * dead window had the focus, release it.
+     */
+    if (noMatch && (dispPtr->focusPtr == winPtr)) {
+	dispPtr->focusPtr = NULL;
     }
 }
 
@@ -946,7 +973,7 @@ FocusMapProc(
     ClientData clientData,	/* Toplevel window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkWindow *winPtr = clientData;
+    TkWindow *winPtr = (TkWindow *)clientData;
     DisplayFocusInfo *displayFocusPtr;
 
     if (eventPtr->type == VisibilityNotify) {
@@ -1000,7 +1027,7 @@ FindDisplayFocusInfo(
      * The record doesn't exist yet. Make a new one.
      */
 
-    displayFocusPtr = ckalloc(sizeof(DisplayFocusInfo));
+    displayFocusPtr = (DisplayFocusInfo *)ckalloc(sizeof(DisplayFocusInfo));
     displayFocusPtr->dispPtr = dispPtr;
     displayFocusPtr->focusWinPtr = NULL;
     displayFocusPtr->focusOnMapPtr = NULL;
@@ -1128,7 +1155,7 @@ TkFocusSplit(
 	 * Move focus to new toplevel.
 	 */
 
-	ToplevelFocusInfo *newTlFocusPtr = ckalloc(sizeof(ToplevelFocusInfo));
+	ToplevelFocusInfo *newTlFocusPtr = (ToplevelFocusInfo *)ckalloc(sizeof(ToplevelFocusInfo));
 
 	newTlFocusPtr->topLevelPtr = winPtr;
 	newTlFocusPtr->focusWinPtr = tlFocusPtr->focusWinPtr;
@@ -1152,7 +1179,7 @@ TkFocusSplit(
  *
  * TkFocusJoin --
  *
- *	Remove the focus record for this window that is nolonger managed
+ *	Remove the focus record for this window that is no longer managed
  *
  * Results:
  *	None.

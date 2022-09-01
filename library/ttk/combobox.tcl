@@ -45,13 +45,13 @@ namespace eval ttk::combobox {
 
 ttk::copyBindings TEntry TCombobox
 
-bind TCombobox <KeyPress-Down> 		{ ttk::combobox::Post %W }
-bind TCombobox <KeyPress-Escape> 	{ ttk::combobox::Unpost %W }
+bind TCombobox <Down> 			{ ttk::combobox::Post %W }
+bind TCombobox <Escape> 		{ ttk::combobox::Unpost %W }
 
-bind TCombobox <ButtonPress-1> 		{ ttk::combobox::Press "" %W %x %y }
-bind TCombobox <Shift-ButtonPress-1>	{ ttk::combobox::Press "s" %W %x %y }
-bind TCombobox <Double-ButtonPress-1> 	{ ttk::combobox::Press "2" %W %x %y }
-bind TCombobox <Triple-ButtonPress-1> 	{ ttk::combobox::Press "3" %W %x %y }
+bind TCombobox <Button-1> 		{ ttk::combobox::Press "" %W %x %y }
+bind TCombobox <Shift-Button-1>		{ ttk::combobox::Press "s" %W %x %y }
+bind TCombobox <Double-Button-1> 	{ ttk::combobox::Press "2" %W %x %y }
+bind TCombobox <Triple-Button-1> 	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
 bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
 
@@ -62,9 +62,9 @@ bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
 ### Combobox listbox bindings.
 #
 bind ComboboxListbox <ButtonRelease-1>	{ ttk::combobox::LBSelected %W }
-bind ComboboxListbox <KeyPress-Return>	{ ttk::combobox::LBSelected %W }
-bind ComboboxListbox <KeyPress-Escape>  { ttk::combobox::LBCancel %W }
-bind ComboboxListbox <KeyPress-Tab>	{ ttk::combobox::LBTab %W next }
+bind ComboboxListbox <Return>		{ ttk::combobox::LBSelected %W }
+bind ComboboxListbox <Escape>		{ ttk::combobox::LBCancel %W }
+bind ComboboxListbox <Tab>		{ ttk::combobox::LBTab %W next }
 bind ComboboxListbox <<PrevWindow>>	{ ttk::combobox::LBTab %W prev }
 bind ComboboxListbox <Destroy>		{ ttk::combobox::LBCleanup %W }
 bind ComboboxListbox <Motion>		{ ttk::combobox::LBHover %W %x %y }
@@ -82,31 +82,31 @@ switch -- [tk windowingsystem] {
 #
 bind ComboboxPopdown	<Map>		{ ttk::combobox::MapPopdown %W }
 bind ComboboxPopdown	<Unmap>		{ ttk::combobox::UnmapPopdown %W }
-bind ComboboxPopdown	<ButtonPress> \
+bind ComboboxPopdown	<Button> \
 			{ ttk::combobox::Unpost [winfo parent %W] }
 
 ### Option database settings.
 #
 
-option add *TCombobox*Listbox.font TkTextFont
-option add *TCombobox*Listbox.relief flat
-option add *TCombobox*Listbox.highlightThickness 0
+option add *TCombobox*Listbox.font TkTextFont widgetDefault
+option add *TCombobox*Listbox.relief flat widgetDefault
+option add *TCombobox*Listbox.highlightThickness 0 widgetDefault
 
 ## Platform-specific settings.
 #
 switch -- [tk windowingsystem] {
     x11 {
-	option add *TCombobox*Listbox.background white
+	option add *TCombobox*Listbox.background white widgetDefault
     }
     aqua {
-	option add *TCombobox*Listbox.borderWidth 0
+	option add *TCombobox*Listbox.borderWidth 0 widgetDefault
     }
 }
 
 ### Binding procedures.
 #
 
-## Press $mode $x $y -- ButtonPress binding for comboboxes.
+## Press $mode $x $y -- Button binding for comboboxes.
 #	Either post/unpost the listbox, or perform Entry widget binding,
 #	depending on widget state and location of button press.
 #
@@ -135,7 +135,7 @@ proc ttk::combobox::Press {mode w x y} {
 }
 
 ## Drag -- B1-Motion binding for comboboxes.
-#	If the initial ButtonPress event was handled by Entry binding,
+#	If the initial Button event was handled by Entry binding,
 #	perform Entry widget drag binding; otherwise nothing.
 #
 proc ttk::combobox::Drag {w x}  {
@@ -149,12 +149,14 @@ proc ttk::combobox::Drag {w x}  {
 #	Set cursor.
 #
 proc ttk::combobox::Motion {w x y} {
+    variable State
+    ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
         && [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
-	ttk::setCursor $w ""
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
@@ -180,13 +182,20 @@ proc ttk::combobox::SelectEntry {cb index} {
 
 ## Scroll -- Mousewheel binding
 #
-proc ttk::combobox::Scroll {cb dir} {
+proc ttk::combobox::Scroll {cb dir {factor 1.0}} {
     $cb instate disabled { return }
     set max [llength [$cb cget -values]]
     set current [$cb current]
-    incr current $dir
-    if {$max != 0 && $current == $current % $max} {
-	SelectEntry $cb $current
+    if {$current < 0} {
+	set index 0
+    } else {
+	set d [expr {$dir/$factor}]
+	set index [expr {$current + int($d > 0 ? ceil($d) : floor($d))}]
+	if {$index >= $max} {set index [expr {$max - 1}]}
+	if {$index < 0} {set index 0}
+    }
+    if {$max != 0 && $index != $current} {
+	SelectEntry $cb $index
     }
 }
 
@@ -195,7 +204,7 @@ proc ttk::combobox::Scroll {cb dir} {
 #	and unpost the listbox.
 #
 proc ttk::combobox::LBSelected {lb} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     LBSelect $lb
     Unpost $cb
     focus $cb
@@ -205,14 +214,14 @@ proc ttk::combobox::LBSelected {lb} {
 #	Unpost the listbox.
 #
 proc ttk::combobox::LBCancel {lb} {
-    Unpost [LBMaster $lb]
+    Unpost [LBMain $lb]
 }
 
 ## LBTab -- Tab key binding for combobox listbox.
 #	Set the selection, and navigate to next/prev widget.
 #
 proc ttk::combobox::LBTab {lb dir} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     switch -- $dir {
 	next	{ set newFocus [tk_focusNext $cb] }
 	prev	{ set newFocus [tk_focusPrev $cb] }
@@ -251,30 +260,16 @@ proc ttk::combobox::UnmapPopdown {w} {
     ttk::releaseGrab $w
 }
 
-###
-#
-
-namespace eval ::ttk::combobox {
-    # @@@ Until we have a proper native scrollbar on Aqua, use
-    # @@@ the regular Tk one.  Use ttk::scrollbar on other platforms.
-    variable scrollbar ttk::scrollbar
-    if {[tk windowingsystem] eq "aqua"} {
-	set scrollbar ::scrollbar
-    }
-}
-
 ## PopdownWindow --
 #	Returns the popdown widget associated with a combobox,
 #	creating it if necessary.
 #
 proc ttk::combobox::PopdownWindow {cb} {
-    variable scrollbar
-
     if {![winfo exists $cb.popdown]} {
 	set poplevel [PopdownToplevel $cb.popdown]
 	set popdown [ttk::frame $poplevel.f -style ComboboxPopdownFrame]
 
-	$scrollbar $popdown.sb \
+	ttk::scrollbar $popdown.sb \
 	    -orient vertical -command [list $popdown.l yview]
 	listbox $popdown.l \
 	    -listvariable ttk::combobox::Values($cb) \
@@ -321,7 +316,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	aqua {
 	    $w configure -relief solid -borderwidth 0
 	    tk::unsupported::MacWindowStyle style $w \
-	    	help {noActivates hideOnSuspend}
+		help {noActivates hideOnSuspend}
 	    wm resizable $w 0 0
 	}
     }
@@ -349,7 +344,7 @@ proc ttk::combobox::ConfigureListbox {cb} {
     set height [llength $values]
     if {$height > [$cb cget -height]} {
 	set height [$cb cget -height]
-    	grid $popdown.sb
+	grid $popdown.sb
         grid configure $popdown.l -padx {1 0}
     } else {
 	grid remove $popdown.sb
@@ -368,9 +363,13 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     set y [winfo rooty $cb]
     set w [winfo width $cb]
     set h [winfo height $cb]
-    set postoffset [ttk::style lookup TCombobox -postoffset {} {0 0 0 0}]
+    set style [$cb cget -style]
+    if { $style eq {} } {
+      set style TCombobox
+    }
+    set postoffset [ttk::style lookup $style -postoffset {} {0 0 0 0}]
     foreach var {x y w h} delta $postoffset {
-    	incr $var $delta
+	incr $var $delta
     }
 
     set H [winfo reqheight $popdown]
@@ -422,10 +421,10 @@ proc ttk::combobox::Unpost {cb} {
     grab release $cb.popdown ;# in case of stuck or unexpected grab [#1239190]
 }
 
-## LBMaster $lb --
+## LBMain $lb --
 #	Return the combobox main widget that owns the listbox.
 #
-proc ttk::combobox::LBMaster {lb} {
+proc ttk::combobox::LBMain {lb} {
     winfo parent [winfo parent [winfo parent $lb]]
 }
 
@@ -433,7 +432,7 @@ proc ttk::combobox::LBMaster {lb} {
 #	Transfer listbox selection to combobox value.
 #
 proc ttk::combobox::LBSelect {lb} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     set selection [$lb curselection]
     if {[llength $selection] == 1} {
 	SelectEntry $cb [lindex $selection 0]
@@ -450,7 +449,7 @@ proc ttk::combobox::LBSelect {lb} {
 #
 proc ttk::combobox::LBCleanup {lb} {
     variable Values
-    unset Values([LBMaster $lb])
+    unset Values([LBMain $lb])
 }
 
 #*EOF*

@@ -2,9 +2,9 @@
 # which implement canvas "image" items.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -156,24 +156,31 @@ test canvImg-4.1 {ConfiugreImage procedure} -constraints testImageType -setup {
 	.c delete all
 	image delete foo
 } -result {{{foo free}} {}}
-test canvImg-4.2 {ConfiugreImage procedure} -constraints testImageType -setup {
+test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     image create test foo2 -variable y
     foo2 changed 0 0 0 0 80 60
     .c create image 50 100 -image foo -tags i1 -anchor nw
     update
     set x {}
     set y {}
+    set timer [after 300 {lappend y "timed out"}]
     .c itemconfigure i1 -image foo2
+    update idletasks
     update
+    # On MacOS we need to wait for the test image display procedure to run.
+    while {"timed out" ni $y && [lindex $y end 1] ne "display"} {
+        vwait y
+    }
+    after cancel $timer
     list $x $y [.c bbox i1]
 } -cleanup {
-	.c delete all
-	image delete foo
-	image delete foo2
-} -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60 30 30}} {50 100 130 160}}
+    .c delete all
+    image delete foo
+    image delete foo2
+} -result {{{foo free}} {{foo2 get} {foo2 display 0 0 80 60}} {50 100 130 160}}
 test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
     .c delete all
 } -body {
@@ -354,11 +361,8 @@ test canvImg-6.12 {ComputeImageBbox procedure} -constraints {
     image delete foo
 } -result {5 23 35 38}
 
-# The following test is non-portable because of differences in
-# coordinate rounding on some machines (does 0.5 round  up?).
-
 test canvImg-7.1 {DisplayImage procedure} -constraints {
-	nonPortable testImageType
+    testImageType
 } -setup {
     .c delete all
 } -body {
@@ -369,7 +373,7 @@ test canvImg-7.1 {DisplayImage procedure} -constraints {
     .c create rect 55 110 65 115 -width 1 -outline black -fill white
     update
     set x
-} -result {{foo display 4 9 12 6 30 30}}
+} -result {{foo display 4 9 12 6}}
 test canvImg-7.2 {DisplayImage procedure, no image} -body {
     .c delete all
     .c create image 50 100 -tags i1
@@ -722,33 +726,40 @@ test canvImg-9.1 {DisplayImage procedure} -constraints testImageType -setup {
 
 test canvImg-10.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
+    update
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 2 4 6 8 30 15
-    update
+    vwait x
+    after cancel $timer
     return $x
 } -cleanup {
-	.c delete all
-	image delete foo
-} -result {{foo display 2 4 6 8 30 30}}
+    .c delete all
+    image delete foo
+} -result {{foo display 2 4 6 8}}
 
 test canvImg-11.1 {TranslateImage procedure} -constraints testImageType -setup {
     .c delete all
+    update
 } -body {
-	image create test foo -variable x
+    image create test foo -variable x
     .c create image 50 100 -image foo -tags image -anchor nw
     update
     set x {}
+    set timer [after 500 {lappend x "timed out"}]
     foo changed 2 4 6 8 40 50
+    vwait x
+    after cancel $timer
     update
     return $x
 } -cleanup {
-	.c delete all
-	image delete foo
-} -result {{foo display 0 0 40 50 30 30}}
+    .c delete all
+    image delete foo
+} -result {{foo display 0 0 40 50}}
 test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	testImageType
 } -setup {
@@ -764,27 +775,29 @@ test canvImg-11.2 {ImageChangedProc procedure} -constraints {
 	.c delete all
 	image delete foo
 } -result {30 75 70 125}
+
 test canvImg-11.3 {ImageChangedProc procedure} -constraints {
 	testImageType
 } -setup {
     .c delete all
+    update idletasks
 } -body {
     image create test foo -variable x
-	image create test foo2 -variable y
+    image create test foo2 -variable z
     foo changed 0 0 0 0 40 50
     foo2 changed 0 0 0 0 80 60
-
     .c create image 50 100 -image foo -tags image -anchor nw
     .c create image 70 110 -image foo2 -anchor nw
-    update
-    set y {}
-    image create test foo -variable x
-    update
-    return $y
+    set z {}
+    set timer [after 500 {lappend z "timed out"}]
+    image delete foo
+    vwait z
+    after cancel $timer
+    return $z
 } -cleanup {
-	.c delete all
-	image delete foo foo2
-} -result {{foo2 display 0 0 20 40 50 40}}
+    .c delete all
+    image delete foo2
+} -result {{foo2 display 0 0 80 60}}
 
 # cleanup
 imageFinish

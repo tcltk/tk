@@ -64,7 +64,7 @@ the standard procedures implemented by the type manager:
 .CS
 typedef struct Tk_ItemType {
     const char *\fIname\fR;
-    int \fIitemSize\fR;
+    size_t \fIitemSize\fR;
     Tk_ItemCreateProc *\fIcreateProc\fR;
     const Tk_ConfigSpec *\fIconfigSpecs\fR;
     Tk_ItemConfigureProc *\fIconfigProc\fR;
@@ -83,6 +83,9 @@ typedef struct Tk_ItemType {
     Tk_ItemInsertProc *\fIinsertProc\fR;
     Tk_ItemDCharsProc *\fIdCharsProc\fR;
     Tk_ItemType *\fInextPtr\fR;
+.VS "8.7, TIP164"
+    Tk_ItemRotateProc *\fIrotateProc\fR;
+.VE "8.7, TIP164"
 } \fBTk_ItemType\fR;
 .CE
 .PP
@@ -549,6 +552,46 @@ and \fIdeltaX\fR and \fIdeltaY\fR give the amounts that should be
 added to each x and y coordinate within the item.
 The type manager should adjust the item's coordinates and
 update the bounding box in the item's header.
+.SS ROTATEPROC
+.VS "8.7, TIP164"
+.PP
+\fItypePtr\->rotateProc\fR is invoked by Tk to rotate a canvas item
+during the \fBrotate\fR widget command.
+The procedure must match the following prototype:
+.PP
+.CS
+typedef void \fBTk_ItemRotateProc\fR(
+        Tk_Canvas \fIcanvas\fR,
+        Tk_Item *\fIitemPtr\fR,
+        double \fIoriginX\fR,
+        double \fIoriginY\fR,
+        double \fIangleRad\fR);
+.CE
+.PP
+The \fIcanvas\fR and \fIitemPtr\fR arguments have the usual meaning.
+\fIoriginX\fR and \fIoriginY\fR specify an origin relative to which
+the item is to be rotated, and \fIangleRad\fR gives the anticlockwise
+rotation to be applied in radians.
+The item should adjust the coordinates of its control points so that where
+they used to have coordinates \fIx\fR and \fIy\fR, they will have new
+coordinates \fIx\(fm\fR and \fIy\(fm\fR, where
+.PP
+.CS
+\fIrelX\fR = \fIx\fR - \fIoriginX\fR
+\fIrelY\fR = \fIy\fR - \fIoriginY\fR
+\fIx\(fm\fR = \fIoriginX\fR + \fIrelX\fR \(mu cos(\fIangleRad\fR) + \fIrelY\fR \(mu sin(\fIangleRad\fR)
+\fIy\(fm\fR = \fIoriginY\fR \(mi \fIrelX\fR \(mu sin(\fIangleRad\fR) + \fIrelY\fR \(mu cos(\fIangleRad\fR)
+.CE
+.PP
+The control points for an item are not necessarily the coordinates provided to
+the item when it is created (or via the \fItypePtr\->coordProc\fR), but could
+instead be derived from them.
+\fIrotateProc\fR must also update the bounding box in the item's header.
+.PP
+Item types do not need to provide a \fItypePtr\->rotateProc\fR. If the
+\fItypePtr\->rotateProc\fR is NULL, the \fItypePtr\->coordProc\fR will be
+used instead to retrieve and update the list of coordinates.
+.VE "8.7, TIP164"
 .SS INDEXPROC
 .PP
 \fItypePtr\->indexProc\fR is invoked by Tk to translate a string

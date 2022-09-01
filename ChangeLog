@@ -1,6 +1,6 @@
 A NOTE ON THE CHANGELOG:
 Starting in early 2011, Tk source code has been under the management of
-fossil, hosted at http://core.tcl.tk/tk/ .  Fossil presents a "Timeline"
+fossil, hosted at https://core.tcl-lang.org/tk/ .  Fossil presents a "Timeline"
 view of changes made that is superior in every way to a hand edited log file.
 Because of this, many Tk developers are now out of the habit of maintaining
 this log file.  You may still find useful things in it, but the Timeline is
@@ -714,7 +714,7 @@ a better first place to look now.
 2011-10-27  Kevin B. Kenny  <kennykb@acm.org>
 
 	* generic/tkInt.h:	[Bug 3410609]: Change the event mechanism
-	* unix/tkUnixEvent.c:	for <KeyPress> events to use the keysym
+	* unix/tkUnixEvent.c:	for <Key> events to use the keysym
 	* unix/tkUnixKey.c:	returned by XLookupString in preference to
 	the one that appears in the raw X event at any level. This change
 	allows binding to ISO_Level3_Shift-ed characters, composed characters,
@@ -3203,7 +3203,7 @@ a better first place to look now.
 2009-03-25  Jan Nijtmans  <nijtmans@users.sf.net>
 
 	* doc/wish.1:		Bring doc and demos in line with
-	* library/demos/hello:	http://wiki.tcl.tk/812
+	* library/demos/hello:	https://wiki.tcl-lang.org/page/exec+magic
 	* library/demos/rmt
 	* library/demos/square
 	* library/demos/tcolor
@@ -5213,7 +5213,7 @@ a better first place to look now.
 
 2008-01-29  Joe English  <jenglish@users.sourceforge.net>
 
-	* library/treeview.tcl: Fix bug in Shift-ButtonPress-1 binding (error
+	* library/treeview.tcl: Fix bug in Shift-Button-1 binding (error
 	if no current focus item; reported on c.l.t.)
 
 2008-01-29  Donal K. Fellows  <donal.k.fellows@man.ac.uk>

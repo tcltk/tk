@@ -48,9 +48,12 @@ An integer specifying the relative stretchability of the pane.
 When the paned window is resized, the extra space is added
 or subtracted to each pane proportionally to its \fB\-weight\fR.
 .SH "WIDGET COMMAND"
-Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR,
-and \fBinstate\fR commands; see \fIttk::widget(n)\fR for details.
-Additional commands:
+.PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+panedwindow widgets support the following additional commands:
 .TP
 \fIpathname \fBadd \fIsubwindow options...\fR
 Adds a new pane to the window.
@@ -91,7 +94,8 @@ If one \fI\-option\fR is specified, returns the value of that \fIoption\fR.
 Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
 .TP
 \fIpathname \fBpanes\fR
-Returns the list of all windows managed by the widget.
+Returns the list of all windows managed by the widget, in the index order of
+their associated panes.
 .TP
 \fIpathname \fBsashpos \fIindex\fR ?\fInewpos\fR?
 If \fInewpos\fR is specified, sets the position
@@ -111,6 +115,41 @@ The panedwindow widget generates an \fB<<EnteredChild>>\fR virtual event on
 LeaveNotify/NotifyInferior events, because Tk does not execute binding scripts
 for <Leave> events when the pointer crosses from a parent to a child. The
 panedwindow widget needs to know when that happens.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::panedwindow\fP is \fBTPanedwindow\fP.  The
+sash has a class name of \fBSash\fP.
+.PP
+\fBTPanedwindow\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.PP
+\fBSash\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-bordercolor\fP \fIcolor\fP
+.br
+\fB\-gripcount\fP \fIcount\fP
+.br
+\fB\-handlepad\fP \fIamount\fP
+.br
+\fB\-handlesize\fP \fIamount\fP
+.br
+\fB\-lightcolor\fP \fIcolor\fP
+.br
+\fB\-sashpad\fP \fIamount\fP
+.br
+\fB\-sashrelief\fP \fIrelief\fP
+.br
+\fB\-sashthickness\fP \fIamount\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::notebook(n), panedwindow(n)
 '\" Local Variables:

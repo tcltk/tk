@@ -2,8 +2,8 @@
 # especially the "clipboard" command.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 #
@@ -11,10 +11,17 @@
 # environment variable TK_ALT_DISPLAY is set to an alternate display.
 #
 
+#################################################################
+# Note that some of these tests may fail if another application #
+# is grabbing the clipboard (e.g. an X server, or a VNC viewer) #
+#################################################################
+
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # set up a very large buffer to test INCR retrievals
 set longValue ""
@@ -161,8 +168,7 @@ test clipboard-4.3 {ClipboardLostSel procedure} -setup {
     clipboard append "Test"
     clipboard append -t TEST "Test2"
     selection clear -s CLIPBOARD
-    catch {clipboard get}
-	clipboard get -t TEST
+    clipboard get -t TEST
 } -cleanup {
     clipboard clear
 }  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "TEST" not defined}
@@ -184,8 +190,7 @@ test clipboard-4.5 {ClipboardLostSel procedure} -setup {
     clipboard append -t TEST "Test2"
     clipboard append "Test3"
     selection clear -s CLIPBOARD
-    catch {clipboard get}
-	clipboard get -t TEST
+    clipboard get -t TEST
 } -cleanup {
     clipboard clear
 }  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "TEST" not defined}
@@ -230,7 +235,7 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} -setup {
 } -cleanup {
     clipboard clear
 }  -returnCodes ok -result {first chunk second chunk}
-test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints unix -setup {
+test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints {x11 failsOnXQuarz} -setup {
     clipboard clear
 } -body {
     setupbg

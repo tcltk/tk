@@ -16,7 +16,7 @@ wm title $w "Entry Demonstration (no scrollbars)"
 wm iconname $w "entry1"
 positionWindow $w
 
-label $w.msg -font $font -wraplength 5i -justify left -text "Three different entries are displayed below.  You can add characters by pointing, clicking and typing.  The normal Motif editing characters are supported, along with many Emacs bindings.  For example, Backspace and Control-h delete the character to the left of the insertion cursor and Delete and Control-d delete the chararacter to the right of the insertion cursor.  For entries that are too large to fit in the window all at once, you can scan through the entries by dragging with mouse button2 pressed."
+label $w.msg -font $font -wraplength 5i -justify left -text "Three different entries are displayed below.  You can add characters by pointing, clicking and typing.  The normal Motif editing characters are supported, along with many Emacs bindings.  For example, Backspace and Control-h delete the character to the left of the insertion cursor and Delete and Control-d delete the chararacter to the right of the insertion cursor.  For entries that are too large to fit in the window all at once, you can scan through the entries by dragging with mouse the middle mouse button pressed."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
@@ -25,7 +25,7 @@ pack $btns -side bottom -fill x
 
 entry $w.e1
 entry $w.e2
-entry $w.e3
+entry $w.e3 -placeholder {Enter text here} -placeholderforeground gray75
 pack $w.e1 $w.e2 $w.e3 -side top -pady 5 -padx 10 -fill x
 
 $w.e1 insert 0 "Initial value"

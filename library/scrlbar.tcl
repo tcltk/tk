@@ -3,8 +3,8 @@
 # This file defines the default bindings for Tk scrollbar widgets.
 # It also provides procedures that help in implementing the bindings.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,7 +39,7 @@ bind Scrollbar <Leave> {
     }
     %W activate {}
 }
-bind Scrollbar <1> {
+bind Scrollbar <Button-1> {
     tk::ScrollButtonDown %W %x %y
 }
 bind Scrollbar <B1-Motion> {
@@ -57,13 +57,13 @@ bind Scrollbar <B1-Leave> {
 bind Scrollbar <B1-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <2> {
+bind Scrollbar <Button-2> {
     tk::ScrollButton2Down %W %x %y
 }
-bind Scrollbar <B1-2> {
+bind Scrollbar <B1-Button-2> {
     # Do nothing, since button 1 is already down.
 }
-bind Scrollbar <B2-1> {
+bind Scrollbar <B2-Button-1> {
     # Do nothing, since button 2 is already down.
 }
 bind Scrollbar <B2-Motion> {
@@ -84,10 +84,10 @@ bind Scrollbar <B2-Leave> {
 bind Scrollbar <B2-Enter> {
     # Prevents <Enter> binding from being invoked.
 }
-bind Scrollbar <Control-1> {
+bind Scrollbar <Control-Button-1> {
     tk::ScrollTopBottom %W %x %y
 }
-bind Scrollbar <Control-2> {
+bind Scrollbar <Control-Button-2> {
     tk::ScrollTopBottom %W %x %y
 }
 
@@ -128,42 +128,14 @@ bind Scrollbar <<LineEnd>> {
     tk::ScrollToPos %W 1
 }
 }
-switch [tk windowingsystem] {
-    "aqua" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D)}]
-	}
-	bind Scrollbar <Option-MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {-10 * (%D)}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D)}]
-	}
-	bind Scrollbar <Shift-Option-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {-10 * (%D)}]
-	}
-    }
-    "win32" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D / 120) * 4}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D / 120) * 4}]
-	}
-    }
-    "x11" {
-	bind Scrollbar <MouseWheel> {
-	    tk::ScrollByUnits %W v [expr {- (%D /120 ) * 4}]
-	}
-	bind Scrollbar <Shift-MouseWheel> {
-	    tk::ScrollByUnits %W h [expr {- (%D /120 ) * 4}]
-	}
-	bind Scrollbar <4> {tk::ScrollByUnits %W v -5}
-	bind Scrollbar <5> {tk::ScrollByUnits %W v 5}
-	bind Scrollbar <Shift-4> {tk::ScrollByUnits %W h -5}
-	bind Scrollbar <Shift-5> {tk::ScrollByUnits %W h 5}
-    }
+
+bind Scrollbar <MouseWheel> {
+    tk::ScrollByUnits %W hv %D -40.0
 }
+bind Scrollbar <Option-MouseWheel> {
+    tk::ScrollByUnits %W hv %D -12.0
+}
+
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
 # It changes the way the scrollbar is displayed and takes actions
@@ -334,7 +306,7 @@ proc ::tk::ScrollEndDrag {w x y} {
 #		horizontal, "v" for vertical, "hv" for both.
 # amount -	How many units to scroll:  typically 1 or -1.
 
-proc ::tk::ScrollByUnits {w orient amount} {
+proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
     set cmd [$w cget -command]
     if {$cmd eq "" || ([string first \
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
@@ -342,9 +314,9 @@ proc ::tk::ScrollByUnits {w orient amount} {
     }
     set info [$w get]
     if {[llength $info] == 2} {
-	uplevel #0 $cmd scroll $amount units
+	uplevel #0 $cmd scroll [expr {$amount/$factor}] units
     } else {
-	uplevel #0 $cmd [expr {[lindex $info 2] + $amount}]
+	uplevel #0 $cmd [expr {[lindex $info 2] + [expr {$amount/$factor}]}]
     }
 }
 
