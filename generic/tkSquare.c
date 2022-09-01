@@ -7,7 +7,7 @@
  *	build a widget; it isn't included in the normal wish, but it is
  *	included in "tktest".
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -66,29 +66,29 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	    "#d9d9d9", Tk_Offset(Square, bgBorderPtr), -1, 0,
+	    "#d9d9d9", offsetof(Square, bgBorderPtr), TCL_INDEX_NONE, 0,
 	    "white", 0},
-    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, -1, 0,
+    {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-borderwidth", 0},
-    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, -1, 0,
+    {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	    "2", Tk_Offset(Square, borderWidthPtr), -1, 0, NULL, 0},
+	    "2", offsetof(Square, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", Tk_Offset(Square, doubleBufferPtr), -1, 0 , NULL, 0},
-    {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, -1, 0,
+	    "1", offsetof(Square, doubleBufferPtr), TCL_INDEX_NONE, 0 , NULL, 0},
+    {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-foreground", 0},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
-	    "#b03060", Tk_Offset(Square, fgBorderPtr), -1, 0,
+	    "#b03060", offsetof(Square, fgBorderPtr), TCL_INDEX_NONE, 0,
 	    "black", 0},
     {TK_OPTION_PIXELS, "-posx", "posx", "PosX", "0",
-	    Tk_Offset(Square, xPtr), -1, 0, NULL, 0},
+	    offsetof(Square, xPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-posy", "posy", "PosY", "0",
-	    Tk_Offset(Square, yPtr), -1, 0, NULL, 0},
+	    offsetof(Square, yPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	    "raised", Tk_Offset(Square, reliefPtr), -1, 0, NULL, 0},
+	    "raised", offsetof(Square, reliefPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_PIXELS, "-size", "size", "Size", "20",
-	    Tk_Offset(Square, sizeObjPtr), -1, 0, NULL, 0},
+	    offsetof(Square, sizeObjPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
 
@@ -125,7 +125,7 @@ static int		SquareWidgetObjCmd(ClientData clientData,
 
 int
 SquareObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -133,6 +133,7 @@ SquareObjCmd(
     Square *squarePtr;
     Tk_Window tkwin;
     Tk_OptionTable optionTable;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -160,7 +161,7 @@ SquareObjCmd(
      * just the non-NULL/0 items.
      */
 
-    squarePtr = ckalloc(sizeof(Square));
+    squarePtr = (Square *)ckalloc(sizeof(Square));
     memset(squarePtr, 0, sizeof(Square));
 
     squarePtr->tkwin = tkwin;
@@ -169,10 +170,10 @@ SquareObjCmd(
     squarePtr->widgetCmd = Tcl_CreateObjCommand(interp,
 	    Tk_PathName(squarePtr->tkwin), SquareWidgetObjCmd, squarePtr,
 	    SquareDeletedProc);
-    squarePtr->gc = None;
+    squarePtr->gc = NULL;
     squarePtr->optionTable = optionTable;
 
-    if (Tk_InitOptions(interp, (char *) squarePtr, optionTable, tkwin)
+    if (Tk_InitOptions(interp, squarePtr, optionTable, tkwin)
 	    != TCL_OK) {
 	Tk_DestroyWindow(squarePtr->tkwin);
 	ckfree(squarePtr);
@@ -181,7 +182,7 @@ SquareObjCmd(
 
     Tk_CreateEventHandler(squarePtr->tkwin, ExposureMask|StructureNotifyMask,
 	    SquareObjEventProc, squarePtr);
-    if (Tk_SetOptions(interp, (char *) squarePtr, optionTable, objc - 2,
+    if (Tk_SetOptions(interp, squarePtr, optionTable, objc - 2,
 	    objv + 2, tkwin, NULL, NULL) != TCL_OK) {
 	goto error;
     }
@@ -223,7 +224,7 @@ SquareWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-    Square *squarePtr = clientData;
+    Square *squarePtr = (Square *)clientData;
     int result = TCL_OK;
     static const char *const squareOptions[] = {"cget", "configure", NULL};
     enum {
@@ -233,7 +234,7 @@ SquareWidgetObjCmd(
     int index;
 
     if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg arg...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
 
@@ -250,7 +251,7 @@ SquareWidgetObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    goto error;
 	}
-	resultObjPtr = Tk_GetOptionValue(interp, (char *) squarePtr,
+	resultObjPtr = Tk_GetOptionValue(interp, squarePtr,
 		squarePtr->optionTable, objv[2], squarePtr->tkwin);
 	if (resultObjPtr == NULL) {
 	    result = TCL_ERROR;
@@ -261,19 +262,19 @@ SquareWidgetObjCmd(
     case SQUARE_CONFIGURE:
 	resultObjPtr = NULL;
 	if (objc == 2) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+	    resultObjPtr = Tk_GetOptionInfo(interp, squarePtr,
 		    squarePtr->optionTable, NULL, squarePtr->tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
 	    }
 	} else if (objc == 3) {
-	    resultObjPtr = Tk_GetOptionInfo(interp, (char *) squarePtr,
+	    resultObjPtr = Tk_GetOptionInfo(interp, squarePtr,
 		    squarePtr->optionTable, objv[2], squarePtr->tkwin);
 	    if (resultObjPtr == NULL) {
 		result = TCL_ERROR;
 	    }
 	} else {
-	    result = Tk_SetOptions(interp, (char *) squarePtr,
+	    result = Tk_SetOptions(interp, squarePtr,
 		    squarePtr->optionTable, objc - 2, objv + 2,
 		    squarePtr->tkwin, NULL, NULL);
 	    if (result == TCL_OK) {
@@ -318,12 +319,13 @@ SquareWidgetObjCmd(
 
 static int
 SquareConfigure(
-    Tcl_Interp *interp,		/* Used for error reporting. */
+    Tcl_Interp *dummy,		/* Used for error reporting. */
     Square *squarePtr)		/* Information about widget. */
 {
     int borderWidth;
     Tk_3DBorder bgBorder;
     int doubleBuffer;
+    (void)dummy;
 
     /*
      * Set the background for the window and create a graphics context for use
@@ -335,7 +337,7 @@ SquareConfigure(
     Tk_SetWindowBackground(squarePtr->tkwin,
 	    Tk_3DBorderColor(bgBorder)->pixel);
     Tcl_GetBooleanFromObj(NULL, squarePtr->doubleBufferPtr, &doubleBuffer);
-    if ((squarePtr->gc == None) && (doubleBuffer)) {
+    if ((squarePtr->gc == NULL) && doubleBuffer) {
 	XGCValues gcValues;
 	gcValues.function = GXcopy;
 	gcValues.graphics_exposures = False;
@@ -383,7 +385,7 @@ SquareObjEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    Square *squarePtr = clientData;
+    Square *squarePtr = (Square *)clientData;
 
     if (eventPtr->type == Expose) {
 	if (!squarePtr->updatePending) {
@@ -400,7 +402,7 @@ SquareObjEventProc(
 	if (squarePtr->tkwin != NULL) {
 	    Tk_FreeConfigOptions((char *) squarePtr, squarePtr->optionTable,
 		    squarePtr->tkwin);
-	    if (squarePtr->gc != None) {
+	    if (squarePtr->gc != NULL) {
 		Tk_FreeGC(squarePtr->display, squarePtr->gc);
 	    }
 	    squarePtr->tkwin = NULL;
@@ -436,7 +438,7 @@ static void
 SquareDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    Square *squarePtr = clientData;
+    Square *squarePtr = (Square *)clientData;
     Tk_Window tkwin = squarePtr->tkwin;
 
     /*
@@ -473,7 +475,7 @@ static void
 SquareDisplay(
     ClientData clientData)	/* Information about window. */
 {
-    Square *squarePtr = clientData;
+    Square *squarePtr = (Square *)clientData;
     Tk_Window tkwin = squarePtr->tkwin;
     Pixmap pm = None;
     Drawable d;
@@ -556,7 +558,7 @@ static void
 SquareDestroy(
     void *memPtr)		/* Info about square widget. */
 {
-    Square *squarePtr = memPtr;
+    Square *squarePtr = (Square *)memPtr;
 
     ckfree(squarePtr);
 }
@@ -581,7 +583,7 @@ SquareDestroy(
 
 static void
 KeepInWindow(
-    register Square *squarePtr)	/* Pointer to widget record. */
+    Square *squarePtr)	/* Pointer to widget record. */
 {
     int i, bd, relief;
     int borderWidth, size;

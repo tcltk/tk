@@ -29,6 +29,13 @@ Valid \fIoptions\fR are:
 \fB\-border\fR \fIpadding\fR
 \fIpadding\fR is a list of up to four integers, specifying
 the left, top, right, and bottom borders, respectively.
+If fewer than four elements are specified,
+\fIbottom\fR defaults to \fItop\fR,
+\fIright\fR defaults to \fIleft\fR, and
+\fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right border;
+a list of two numbers specify the horizontal and the vertical border;
+a single number specifies the same border all the way around the element.
 See \fBIMAGE STRETCHING\fR, below.
 .TP
 \fB\-height \fIheight\fR
@@ -36,8 +43,17 @@ Specifies a minimum height for the element.
 If less than zero, the base image's height is used as a default.
 .TP
 \fB\-padding\fR \fIpadding\fR
-Specifies the element's interior padding.  Defaults to
-\fB\-border\fR if not specified.
+Specifies the element's interior padding.
+The padding is a list of up to four length specifications
+\fIleft top right bottom\fR.
+If fewer than four elements are specified,
+\fIbottom\fR defaults to \fItop\fR,
+\fIright\fR defaults to \fIleft\fR, and
+\fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
+Defaults to \fB\-border\fR if not specified.
 .TP
 \fB\-sticky\fR \fIspec\fR
 Specifies how the image is placed within the final parcel.

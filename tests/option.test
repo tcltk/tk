@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the option-handling facilities
 # of Tk.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1991-1993 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1991-1993 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -386,7 +386,7 @@ test option-15.6 {database files} -body {
 test option-15.7 {database files} -body {
     option read $option1
 	option get . x9 color
-} -result " \t\\A\n"
+} -result " \\\t\\A\n"
 test option-15.8 {database files} -body {
     option read $option1 widget foo
 } -returnCodes error -result {wrong # args: should be "option readfile fileName ?priority?"}
@@ -401,7 +401,7 @@ test option-15.10 {database files} -body {
 } -returnCodes error -result {missing colon on line 2}
 set option3 [file join [testsDirectory] option.file3]
 option read $option3
-test option-15.11 {database files} {option get . {x 4} color} br\xf3wn
+test option-15.11 {database files} {option get . {x 4} color} brówn
 
 test option-16.1 {ReadOptionFile} -body {
     set option4 [makeFile {} option.file3]
@@ -414,6 +414,22 @@ test option-16.1 {ReadOptionFile} -body {
 } -cleanup {
     removeFile $option4
 } -result {true false}
+
+set opt162val {label {
+  foo bar
+}
+}
+set opt162list [split $opt162val \n]
+
+test option-16.2 {ticket 766ef52f3} {
+    set option5 [makeFile {} option.file4]
+    set file [open $option5 w]
+    fconfigure $file -translation crlf
+    puts $file "*notok: $opt162list"
+    close $file
+    option read $option5 userDefault
+    option get . notok notok
+} $opt162list
 
 deleteWindows
 

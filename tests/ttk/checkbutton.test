@@ -2,8 +2,9 @@
 # ttk::checkbutton widget tests.
 #
 
-package require Tk
-package require tcltest ; namespace import -force tcltest::*
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 test checkbutton-1.1 "Checkbutton check" -body {
@@ -56,9 +57,32 @@ test checkbutton-1.7 "Button destroyed by click" -body {
     pack .top.mb
     focus -force .top.mb
     update
-    event generate .top.mb <1>
+    event generate .top.mb <Button-1>
     event generate .top.mb <ButtonRelease-1>
     update  ; # shall not trigger error  invalid command name ".top.b"
 } -result {}
+
+# Bug [fa8de77936]
+test checkbutton-1.8 "Empty -variable" -body {
+    # shall simply not crash
+    ttk::checkbutton .cbev -variable {}
+    .cbev invoke
+} -cleanup {
+    destroy .cbev
+} -result {}
+
+test checkbutton-2.1 "style command" -body {
+    ttk::checkbutton .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TCheckbutton TCheckbutton}
+test checkbutton-2.2 "style command" -body {
+    ttk::style configure customStyle.TCheckbutton
+    ttk::checkbutton .w -style customStyle.TCheckbutton
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TCheckbutton customStyle.TCheckbutton TCheckbutton}
 
 tcltest::cleanupTests

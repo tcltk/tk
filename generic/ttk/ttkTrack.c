@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets
  * like scrollbars in which individual elements may
@@ -16,14 +16,14 @@
  * and is normally set to the ACTIVE state unless another element
  * is currently being pressed.
  *
- * The active element becomes "pressed" on <ButtonPress> events,
+ * The active element becomes "pressed" on <Button> events,
  * and remains "active" and "pressed" until the corresponding
  * <ButtonRelease> event.
  *
- * TODO: Handle "chords" properly (e.g., <B1-ButtonPress-2>)
+ * TODO: Handle "chords" properly (e.g., <B1-Button-2>)
  */
 
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -118,7 +118,7 @@ static const unsigned ElementStateMask =
 static void
 ElementStateEventProc(ClientData clientData, XEvent *ev)
 {
-    ElementStateTracker *es = clientData;
+    ElementStateTracker *es = (ElementStateTracker *)clientData;
     Ttk_Layout layout = es->corePtr->layout;
     Ttk_Element element;
 
@@ -173,7 +173,7 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 
 void TtkTrackElementState(WidgetCore *corePtr)
 {
-    ElementStateTracker *es = ckalloc(sizeof(*es));
+    ElementStateTracker *es = (ElementStateTracker *)ckalloc(sizeof(*es));
     es->corePtr = corePtr;
     es->tracking = 0;
     es->activeElement = es->pressedElement = 0;

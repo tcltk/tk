@@ -18,14 +18,15 @@ A \fBttk::sizegrip\fR widget (also known as a \fIgrow box\fR)
 allows the user to resize the containing toplevel window
 by pressing and dragging the grip.
 .SO ttk_widget
-\-class	\-cursor	\-state
+\-class	\-cursor
 \-style	\-takefocus
 .SE
 .SH "WIDGET COMMAND"
 .PP
-Sizegrip widgets support the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-methods.  No other widget methods are used.
+Sizegrip widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
 .SH "PLATFORM-SPECIFIC NOTES"
 .PP
 On Mac OSX, toplevel windows automatically include a built-in
@@ -60,6 +61,19 @@ the sizegrip widget will not resize the window.
 \fBttk::sizegrip\fR widgets only support
 .QW southeast
 resizing.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::sizegrip\fP is \fBTSizegrip\fP.
+.PP
+\fBTSizegrip\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n)
 .SH "KEYWORDS"

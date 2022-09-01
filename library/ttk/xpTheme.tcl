@@ -11,6 +11,7 @@ namespace eval ttk::theme::xpnative {
 	    -foreground SystemWindowText \
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
+	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont \
 	    ;
 
@@ -27,13 +28,6 @@ namespace eval ttk::theme::xpnative {
 	ttk::style map TNotebook.Tab \
 	    -expand [list selected {2 2 2 2}]
 
-	# Treeview:
-	ttk::style configure Heading -font TkHeadingFont
-	ttk::style configure Treeview -background SystemWindow
-	ttk::style map Treeview \
-	    -background [list selected SystemHighlight] \
-	    -foreground [list selected SystemHighlightText] ;
-
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
 
 	# OR: -padding {3 3 3 6}, which some apps seem to use.
@@ -48,7 +42,7 @@ namespace eval ttk::theme::xpnative {
 	    -selectforeground [list !focus SystemWindowText] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
-	    	{readonly focus}	SystemHighlightText \
+		{readonly focus}	SystemHighlightText \
 	    ] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
@@ -61,5 +55,14 @@ namespace eval ttk::theme::xpnative {
 
 	ttk::style configure Toolbutton -padding {4 4}
 
+	# Treeview:
+	ttk::style configure Heading -font TkHeadingFont -relief raised
+	ttk::style configure Treeview -background SystemWindow \
+                -stripedbackground System3dLight
+	ttk::style map Treeview \
+	    -background [list   disabled SystemButtonFace \
+				selected SystemHighlight] \
+	    -foreground [list   disabled SystemGrayText \
+				selected SystemHighlightText];
     }
 }

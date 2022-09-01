@@ -6,7 +6,7 @@ namespace eval ttk::panedwindow {
     variable State
     array set State {
 	pressed 0
-    	pressX	-
+	pressX	-
 	pressY	-
 	sash 	-
 	sashPos -
@@ -15,7 +15,7 @@ namespace eval ttk::panedwindow {
 
 ## Bindings:
 #
-bind TPanedwindow <ButtonPress-1> 	{ ttk::panedwindow::Press %W %x %y }
+bind TPanedwindow <Button-1> 		{ ttk::panedwindow::Press %W %x %y }
 bind TPanedwindow <B1-Motion>		{ ttk::panedwindow::Drag %W %x %y }
 bind TPanedwindow <ButtonRelease-1> 	{ ttk::panedwindow::Release %W %x %y }
 
@@ -32,7 +32,7 @@ proc ttk::panedwindow::Press {w x y} {
 
     set sash [$w identify $x $y]
     if {$sash eq ""} {
-    	set State(pressed) 0
+	set State(pressed) 0
 	return
     }
     set State(pressed) 	1
@@ -46,8 +46,8 @@ proc ttk::panedwindow::Drag {w x y} {
     variable State
     if {!$State(pressed)} { return }
     switch -- [$w cget -orient] {
-    	horizontal 	{ set delta [expr {$x - $State(pressX)}] }
-    	vertical 	{ set delta [expr {$y - $State(pressY)}] }
+	horizontal 	{ set delta [expr {$x - $State(pressX)}] }
+	vertical 	{ set delta [expr {$y - $State(pressY)}] }
     }
     $w sashpos $State(sash) [expr {$State(sashPos) + $delta}]
 }
@@ -62,15 +62,24 @@ proc ttk::panedwindow::Release {w x y} {
 #
 proc ttk::panedwindow::ResetCursor {w} {
     variable State
+
+    ttk::saveCursor $w State(userConfCursor) \
+            [list [ttk::cursor hresize] [ttk::cursor vresize]]
+
     if {!$State(pressed)} {
-	ttk::setCursor $w {}
+	ttk::setCursor $w $State(userConfCursor)
     }
 }
 
 proc ttk::panedwindow::SetCursor {w x y} {
-    set cursor ""
+    variable State
+
+    ttk::saveCursor $w State(userConfCursor) \
+            [list [ttk::cursor hresize] [ttk::cursor vresize]]
+
+    set cursor $State(userConfCursor)
     if {[llength [$w identify $x $y]]} {
-    	# Assume we're over a sash.
+	# Assume we're over a sash.
 	switch -- [$w cget -orient] {
 	    horizontal 	{ set cursor hresize }
 	    vertical 	{ set cursor vresize }

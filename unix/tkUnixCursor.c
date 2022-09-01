@@ -3,7 +3,7 @@
  *
  *	This file contains X specific cursor manipulation routines.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -180,7 +180,7 @@ static const struct TkCursorName {
 #endif
 
 static Cursor		CreateCursorFromTableOrFile(Tcl_Interp *interp,
-			    Tk_Window tkwin, int argc, const char **argv,
+			    Tk_Window tkwin, TkSizeT argc, const char **argv,
 			    const struct TkCursorName *tkCursorPtr);
 
 /*
@@ -210,7 +210,7 @@ TkGetCursorByName(
 {
     TkUnixCursor *cursorPtr = NULL;
     Cursor cursor = None;
-    int argc;
+    TkSizeT argc;
     const char **argv = NULL;
     Display *display = Tk_Display(tkwin);
     int inTkTable = 0;
@@ -245,7 +245,7 @@ TkGetCursorByName(
     if ((argv[0][0] != '@') && !inTkTable) {
 	XColor fg, bg;
 	unsigned int maskIndex;
-	register const struct CursorName *namePtr;
+	const struct CursorName *namePtr;
 	TkDisplay *dispPtr;
 
 	/*
@@ -338,7 +338,7 @@ TkGetCursorByName(
     }
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }
@@ -381,7 +381,7 @@ static Cursor
 CreateCursorFromTableOrFile(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    int argc,
+    TkSizeT argc,
     const char **argv,		/* Cursor spec parsed into elements. */
     const struct TkCursorName *tkCursorPtr)
 				/* Non-NULL when cursor is defined in Tk
@@ -608,7 +608,7 @@ TkCreateCursorFromData(
     Tk_FreePixmap(display, maskPixmap);
 
     if (cursor != None) {
-	cursorPtr = ckalloc(sizeof(TkUnixCursor));
+	cursorPtr = (TkUnixCursor *)ckalloc(sizeof(TkUnixCursor));
 	cursorPtr->info.cursor = (Tk_Cursor) cursor;
 	cursorPtr->display = display;
     }

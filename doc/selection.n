@@ -12,7 +12,7 @@
 .SH NAME
 selection \- Manipulate the X selection
 .SH SYNOPSIS
-\fBselection \fIoption\fR ?\fIarg arg ...\fR?
+\fBselection \fIoption\fR ?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -140,6 +140,26 @@ If \fIcommand\fR is specified, it is a Tcl script to execute when
 some other window claims ownership of the selection away from
 \fIwindow\fR.  \fISelection\fR defaults to PRIMARY.
 .RE
+.SH WIDGET FACILITIES
+.PP
+The \fBtext\fR, \fBentry\fR, \fBttk::entry\fR, \fBlistbox\fR, \fBspinbox\fR and \fBttk::spinbox\fR widgets have the option \fB\-exportselection\fR.  If a widget has this option set to boolean \fBtrue\fR, then (in an unsafe interpreter) a selection made in the widget is automatically written to the \fBPRIMARY\fR selection.
+.PP
+A GUI event, for example \fB<<PasteSelection>>\fR, can copy the \fBPRIMARY\fR selection to certain widgets.  This copy is implemented by a widget binding to the event.  The binding script makes appropriate calls to the \fBselection\fR command.
+.PP
+.SH PORTABILITY ISSUES
+.PP
+On X11, the \fBPRIMARY\fR selection is a system-wide feature of the X server, allowing communication between different processes that are X11 clients.
+.PP
+On Windows, the \fBPRIMARY\fR selection is not provided by the system, but only by Tk, and so it is shared only between windows of a parent interpreter and its child interpreters.  It is not shared between interpreters in different processes or different threads.  Each parent interpreter has a separate \fBPRIMARY\fR selection that is shared only with its child interpreters which are not safe interpreters.
+.PP
+.SH SECURITY
+.PP
+A safe interpreter cannot read from the \fBPRIMARY\fR selection because its \fBselection\fR command is hidden.  For this reason the \fBPRIMARY\fR selection cannot be written to the Tk widgets of a safe interpreter.
+.PP
+A Tk widget can have its option \fB\-exportselection\fR set to boolean \fBtrue\fR, but in a safe interpreter this option has no effect: writing from the widget to the \fBPRIMARY\fR selection is disabled.
+.PP
+These are security features.  A safe interpreter may run untrusted code, and it is a security risk if this untrusted code can read or write the \fBPRIMARY\fR selection used by other interpreters.
+.PP
 .SH EXAMPLES
 .PP
 On X11 platforms, one of the standard selections available is the

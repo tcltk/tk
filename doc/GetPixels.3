@@ -9,13 +9,16 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_GetPixelsFromObj, Tk_GetPixels, Tk_GetMMFromObj, Tk_GetScreenMM \- translate between strings and screen units
+Tk_GetPixelsFromObj, Tk_GetPixels, Tk_GetMMFromObj, Tk_GetScreenMM, Tk_GetDoublePixelsFromObj \- translate between strings and screen units
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
 .sp
 int
 \fBTk_GetPixelsFromObj(\fIinterp, tkwin, objPtr, intPtr\fB)\fR
+.sp
+int
+\fBTk_GetDoublePixelsFromObj(\fIinterp, tkwin, objPtr, doublePtr\fB)\fR
 .sp
 int
 \fBTk_GetPixels(\fIinterp, tkwin, string, intPtr\fB)\fR
@@ -80,6 +83,9 @@ in \fIinterp\fR's result if \fIinterp\fR is not NULL.
 \fBTk_GetPixelsFromObj\fR caches information about the return
 value in \fIobjPtr\fR, which speeds up future calls to
 \fBTk_GetPixelsFromObj\fR with the same \fIobjPtr\fR.
+.PP
+\fBTk_GetDoublePixelsFromObj\fR is identical to \fBTk_GetPixelsFromObj\fR
+except it returns a double not rounded to the nearest integer.
 .PP
 \fBTk_GetPixels\fR is identical to \fBTk_GetPixelsFromObj\fR except
 that the screen distance is specified with a string instead

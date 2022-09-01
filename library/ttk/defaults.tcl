@@ -8,6 +8,7 @@ namespace eval ttk::theme::default {
 	-frame			"#d9d9d9"
 	-foreground		"#000000"
 	-window			"#ffffff"
+	-alternate		"#e8e8e8"
 	-text   		"#000000"
 	-activebg		"#ececec"
 	-selectbg		"#4a6984"
@@ -77,7 +78,8 @@ namespace eval ttk::theme::default {
 
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
@@ -106,11 +108,16 @@ namespace eval ttk::theme::default {
 	#
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview \
-	    -background $colors(-window) \
+            -background $colors(-window) \
+            -stripedbackground $colors(-alternate) \
 	    -foreground $colors(-text) ;
+	ttk::style configure Treeview.Separator \
+                -background $colors(-alternate)
 	ttk::style map Treeview \
-	    -background [list selected $colors(-selectbg)] \
-	    -foreground [list selected $colors(-selectfg)] ;
+	    -background [list disabled $colors(-frame)\
+                                selected $colors(-selectbg)] \
+	    -foreground [list disabled $colors(-disabledfg) \
+				selected $colors(-selectfg)]
 
 	# Combobox popdown frame
 	ttk::style layout ComboboxPopdownFrame {

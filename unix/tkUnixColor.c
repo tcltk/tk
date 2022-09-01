@@ -4,7 +4,7 @@
  *	This file contains the platform specific color routines needed for X
  *	support.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -85,7 +85,7 @@ TkpFreeColor(
      */
 
     visual = tkColPtr->visual;
-    if ((visual->class != StaticGray) && (visual->class != StaticColor)
+    if ((visual->c_class != StaticGray) && (visual->c_class != StaticColor)
 	    && (tkColPtr->color.pixel != BlackPixelOfScreen(screen))
 	    && (tkColPtr->color.pixel != WhitePixelOfScreen(screen))) {
 	Tk_ErrorHandler handler;
@@ -136,17 +136,17 @@ TkpGetColor(
     if (*name != '#') {
 	XColor screen;
 
-	if (((*name - 'A') & 0xdf) < sizeof(tkWebColors)/sizeof(tkWebColors[0])) {
-	    if (!((name[0] - 'G') & 0xdf) && !((name[1] - 'R') & 0xdf)
-		    && !((name[2] - 'A') & 0xdb) && !((name[3] - 'Y') & 0xdf)
+	if (((*name - 'A') & 0xDF) < sizeof(tkWebColors)/sizeof(tkWebColors[0])) {
+	    if (!((name[0] - 'G') & 0xDF) && !((name[1] - 'R') & 0xDF)
+		    && !((name[2] - 'A') & 0xDB) && !((name[3] - 'Y') & 0xDF)
 		    && !name[4]) {
 		name = "#808080808080";
 		goto gotWebColor;
 	    } else {
-		const char *p = tkWebColors[((*name - 'A') & 0x1f)];
+		const char *p = tkWebColors[((*name - 'A') & 0x1F)];
 		if (p) {
 		    const char *q = name;
-		    while (!((*p - *(++q)) & 0xdf)) {
+		    while (!((*p - *(++q)) & 0xDF)) {
 			if (!*p++) {
 			    name = p;
 			    goto gotWebColor;
@@ -157,7 +157,7 @@ TkpGetColor(
 	}
 	if (strlen(name) > 99) {
 	/* Don't bother to parse this. [Bug 2809525]*/
-	return (TkColor *) NULL;
+	return NULL;
     } else if (XAllocNamedColor(display, colormap, name, &screen, &color) != 0) {
 	    DeleteStressedCmap(display, colormap);
 	} else {
@@ -185,7 +185,7 @@ TkpGetColor(
 	}
     }
 
-    tkColPtr = ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
 
     return tkColPtr;
@@ -220,7 +220,7 @@ TkpGetColorByValue(
 {
     Display *display = Tk_Display(tkwin);
     Colormap colormap = Tk_Colormap(tkwin);
-    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
@@ -269,7 +269,7 @@ FindClosestColor(
     XColor *colorPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
     Colormap colormap = Tk_Colormap(tkwin);
-    XVisualInfo template, *visInfoPtr;
+    XVisualInfo templ, *visInfoPtr;
 
     /*
      * Find the TkStressedCmap structure for this colormap, or create a new
@@ -278,19 +278,19 @@ FindClosestColor(
 
     for (stressPtr = dispPtr->stressPtr; ; stressPtr = stressPtr->nextPtr) {
 	if (stressPtr == NULL) {
-	    stressPtr = ckalloc(sizeof(TkStressedCmap));
+	    stressPtr = (TkStressedCmap *)ckalloc(sizeof(TkStressedCmap));
 	    stressPtr->colormap = colormap;
-	    template.visualid = XVisualIDFromVisual(Tk_Visual(tkwin));
+	    templ.visualid = XVisualIDFromVisual(Tk_Visual(tkwin));
 
 	    visInfoPtr = XGetVisualInfo(Tk_Display(tkwin),
-		    VisualIDMask, &template, &numFound);
+		    VisualIDMask, &templ, &numFound);
 	    if (numFound < 1) {
 		Tcl_Panic("FindClosestColor couldn't lookup visual");
 	    }
 
 	    stressPtr->numColors = visInfoPtr->colormap_size;
 	    XFree((char *) visInfoPtr);
-	    stressPtr->colorPtr =
+	    stressPtr->colorPtr = (XColor *)
 		    ckalloc(stressPtr->numColors * sizeof(XColor));
 	    for (i = 0; i < stressPtr->numColors; i++) {
 		stressPtr->colorPtr[i].pixel = (unsigned long) i;
@@ -423,6 +423,7 @@ DeleteStressedCmap(
  *----------------------------------------------------------------------
  */
 
+#undef TkpCmapStressed
 int
 TkpCmapStressed(
     Tk_Window tkwin,		/* Window that identifies the display

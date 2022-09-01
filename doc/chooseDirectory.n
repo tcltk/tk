@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 .TH tk_chooseDirectory n 8.3 Tk "Tk Built-In Commands"
@@ -17,6 +17,13 @@ The procedure \fBtk_chooseDirectory\fR pops up a dialog box for the
 user to select a directory. The following \fIoption\-value\fR pairs are
 possible as command line arguments:
 .TP
+\fB\-command\fR \fIstring\fR
+Specifies the prefix of a Tcl command to invoke when the user closes the
+dialog after having selected an item. This callback is not called if the
+user cancelled the dialog. The actual command consists of \fIstring\fR
+followed by a space and the value selected by the user in the dialog. This
+is only available on Mac OS X.
+.TP
 \fB\-initialdir\fR \fIdirname\fR
 Specifies that the directories in \fIdirectory\fR should be displayed
 when the dialog pops up. If this parameter is not specified,
@@ -26,6 +33,10 @@ On Vista and later systems, the initial directory defaults to the last
 user-selected directory for the application. If the
 parameter specifies a relative path, the return value will convert the
 relative path to an absolute path.
+.TP
+\fB\-message\fR \fIstring\fR
+Specifies a message to include in the client area of the dialog.
+This is only available on Mac OS X.
 .TP
 \fB\-mustexist\fR \fIboolean\fR
 Specifies whether the user may specify non-existent directories.  If

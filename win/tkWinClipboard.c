@@ -3,8 +3,8 @@
  *
  *	This file contains functions for managing the clipboard.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -56,9 +56,14 @@ TkSelGetSelection(
     int result, locale, noBackslash = 0;
 
     if ((selection != Tk_InternAtom(tkwin, "CLIPBOARD"))
-	    || (target != XA_STRING)
-	    || !OpenClipboard(NULL)) {
+	    || (target != XA_STRING)) {
 	goto error;
+    }
+    if (!OpenClipboard(NULL)) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	        "clipboard cannot be opened, another application grabbed it"));
+        Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
+        return TCL_ERROR;
     }
 
     /*
@@ -73,10 +78,9 @@ TkSelGetSelection(
 	    CloseClipboard();
 	    goto error;
 	}
-	data = GlobalLock(handle);
+	data = (char *)GlobalLock(handle);
 	Tcl_DStringInit(&ds);
-	Tcl_UniCharToUtfDString((Tcl_UniChar *)data,
-		Tcl_UniCharLen((Tcl_UniChar *)data), &ds);
+	Tcl_WCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
 	GlobalUnlock(handle);
     } else if (IsClipboardFormatAvailable(CF_TEXT)) {
 	/*
@@ -97,7 +101,7 @@ TkSelGetSelection(
 
 	    Tcl_DStringInit(&ds);
 	    Tcl_DStringAppend(&ds, "cp######", -1);
-	    data = GlobalLock(handle);
+	    data = (char *)GlobalLock(handle);
 
 	    /*
 	     * Even though the documentation claims that GetLocaleInfo expects
@@ -127,8 +131,8 @@ TkSelGetSelection(
 	    CloseClipboard();
 	    goto error;
 	}
-	data = GlobalLock(handle);
-	Tcl_ExternalToUtfDString(encoding, data, -1, &ds);
+	data = (char *)GlobalLock(handle);
+	(void)Tcl_ExternalToUtfDStringEx(encoding, data, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	GlobalUnlock(handle);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
@@ -146,15 +150,16 @@ TkSelGetSelection(
 	if (drop->fWide) {
 	    WCHAR *fname = (WCHAR *) ((char *) drop + drop->pFiles);
 	    Tcl_DString dsTmp;
-	    int count = 0, len;
+	    int count = 0;
+	    size_t len;
 
 	    while (*fname != 0) {
 		if (count) {
 		    Tcl_DStringAppend(&ds, "\n", 1);
 		}
-		len = Tcl_UniCharLen((Tcl_UniChar *) fname);
+		len = wcslen(fname);
 		Tcl_DStringInit(&dsTmp);
-		Tcl_UniCharToUtfDString((Tcl_UniChar *) fname, len, &dsTmp);
+		Tcl_WCharToUtfDString(fname, len, &dsTmp);
 		Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsTmp),
 			Tcl_DStringLength(&dsTmp));
 		Tcl_DStringFree(&dsTmp);
@@ -229,6 +234,8 @@ XSetSelectionOwner(
 {
     HWND hwnd = owner ? TkWinGetHWND(owner) : NULL;
     Tk_Window tkwin;
+    (void)display;
+    (void)time;
 
     /*
      * This is a gross hack because the Tk_InternAtom interface is broken. It
@@ -278,6 +285,7 @@ TkWinClipboardRender(
     char *buffer, *p, *rawText, *endPtr;
     int length;
     Tcl_DString ds;
+    (void)format;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -309,7 +317,7 @@ TkWinClipboardRender(
      * Copy the data and change EOL characters.
      */
 
-    buffer = rawText = ckalloc(length + 1);
+    buffer = rawText = (char *)ckalloc(length + 1);
     if (targetPtr != NULL) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -324,14 +332,8 @@ TkWinClipboardRender(
     }
     *buffer = '\0';
 
-    /*
-     * Depending on the platform, turn the data into Unicode or the system
-     * encoding before placing it on the clipboard.
-     */
-
-#ifdef UNICODE
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToUniCharDString(rawText, -1, &ds);
+	Tcl_UtfToWCharDString(rawText, -1, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		(unsigned) Tcl_DStringLength(&ds) + 2);
@@ -339,28 +341,12 @@ TkWinClipboardRender(
 	    Tcl_DStringFree(&ds);
 	    return;
 	}
-	buffer = GlobalLock(handle);
+	buffer = (char *)GlobalLock(handle);
 	memcpy(buffer, Tcl_DStringValue(&ds),
 		(unsigned) Tcl_DStringLength(&ds) + 2);
 	GlobalUnlock(handle);
 	Tcl_DStringFree(&ds);
 	SetClipboardData(CF_UNICODETEXT, handle);
-#else
-	Tcl_UtfToExternalDString(NULL, rawText, -1, &ds);
-	ckfree(rawText);
-	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	if (!handle) {
-	    Tcl_DStringFree(&ds);
-	    return;
-	}
-	buffer = GlobalLock(handle);
-	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 1);
-	GlobalUnlock(handle);
-	Tcl_DStringFree(&ds);
-	SetClipboardData(CF_TEXT, handle);
-#endif
 }
 
 /*
@@ -386,6 +372,8 @@ TkSelUpdateClipboard(
     TkClipboardTarget *targetPtr)
 {
     HWND hwnd = TkWinGetHWND(winPtr->window);
+    (void)targetPtr;
+
     UpdateClipboard(hwnd);
 }
 
@@ -414,16 +402,7 @@ UpdateClipboard(
     OpenClipboard(hwnd);
     EmptyClipboard();
 
-    /*
-     * CF_UNICODETEXT is only supported on NT, but it it is prefered when
-     * possible.
-     */
-
-    if (TkWinGetPlatformId() != VER_PLATFORM_WIN32_WINDOWS) {
-	SetClipboardData(CF_UNICODETEXT, NULL);
-    } else {
-	SetClipboardData(CF_TEXT, NULL);
-    }
+    SetClipboardData(CF_UNICODETEXT, NULL);
     CloseClipboard();
     TkWinUpdatingClipboard(FALSE);
 }
@@ -447,7 +426,7 @@ UpdateClipboard(
 void
 TkSelEventProc(
     Tk_Window tkwin,		/* Window for which event was targeted. */
-    register XEvent *eventPtr)	/* X event: either SelectionClear,
+    XEvent *eventPtr)	/* X event: either SelectionClear,
 				 * SelectionRequest, or SelectionNotify. */
 {
     if (eventPtr->type == SelectionClear) {
@@ -474,8 +453,9 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    register XEvent *eventPtr)	/* X PropertyChange event. */
+    XEvent *eventPtr)	/* X PropertyChange event. */
 {
+    (void)eventPtr;
 }
 
 /*

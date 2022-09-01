@@ -65,7 +65,7 @@ if 0 {
       rotate : Rotate gesture. %x/y is between fingers
       twofingertap : Two finger tap gesture. %x/y is between fingers
       pressandtap : Press and tap gesture. %x/y is first finger
-    
+
     distance <i> : For zoom/pan/twofingertap: Distance between fingers.
     angle <r> : For rotate: Rotation angle in radians.
     deltax <i> : For pressandtap: Locates second finger. Valid with begin.

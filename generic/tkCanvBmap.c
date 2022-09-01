@@ -3,8 +3,8 @@
  *
  *	This file implements bitmap items for canvas widgets.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,6 +12,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each bitmap item.
@@ -44,35 +45,35 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_COLOR, "-activebackground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, activeBgColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, activeBgColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activebitmap", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, activeBitmap), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-activeforeground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, activeFgColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_ANCHOR, "-anchor", NULL, NULL,
-	"center", Tk_Offset(BitmapItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"center", offsetof(BitmapItem, anchor), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-background", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, bgColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, bgColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-bitmap", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, bitmap), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapItem, bitmap), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledbackground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, disabledBgColor),
+	NULL, offsetof(BitmapItem, disabledBgColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledbitmap", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, disabledBitmap),
+	NULL, offsetof(BitmapItem, disabledBitmap),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-disabledforeground", NULL, NULL,
-	NULL, Tk_Offset(BitmapItem, disabledFgColor),
+	NULL, offsetof(BitmapItem, disabledFgColor),
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-foreground", NULL, NULL,
-	"black", Tk_Offset(BitmapItem, fgColor), 0, NULL},
+	DEF_CANVBMAP_FG, offsetof(BitmapItem, fgColor), 0, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK,
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK,
 	&stateOption},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
@@ -105,6 +106,8 @@ static void		DeleteBitmap(Tk_Canvas canvas,
 static void		DisplayBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
+static void		RotateBitmap(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -137,7 +140,8 @@ Tk_ItemType tkBitmapType = {
     NULL,			/* insertProc */
     NULL,			/* dTextProc */
     NULL,			/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateBitmap,		/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -189,7 +193,7 @@ TkcCreateBitmap(
     bmapPtr->bgColor = NULL;
     bmapPtr->activeBgColor = NULL;
     bmapPtr->disabledBgColor = NULL;
-    bmapPtr->gc = None;
+    bmapPtr->gc = NULL;
 
     /*
      * Process the arguments to fill in the item record. Only 1 (list) or 2 (x
@@ -372,7 +376,7 @@ ConfigureBitmap(
     }
 
     if (bitmap == None) {
-	newGC = None;
+	newGC = NULL;
     } else {
 	gcValues.foreground = fgColor->pixel;
 	mask = GCForeground;
@@ -385,7 +389,7 @@ ConfigureBitmap(
 	}
 	newGC = Tk_GetGC(tkwin, mask, &gcValues);
     }
-    if (bmapPtr->gc != None) {
+    if (bmapPtr->gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), bmapPtr->gc);
     }
     bmapPtr->gc = newGC;
@@ -418,6 +422,7 @@ DeleteBitmap(
     Display *display)		/* Display containing window for canvas. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if (bmapPtr->bitmap != None) {
 	Tk_FreeBitmap(display, bmapPtr->bitmap);
@@ -469,7 +474,6 @@ DeleteBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeBitmapBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -536,7 +540,7 @@ ComputeBitmapBbox(
 	break;
     case TK_ANCHOR_NW:
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x -= width/2;
 	y -= height/2;
 	break;
@@ -667,7 +671,6 @@ DisplayBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 BitmapToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -676,6 +679,7 @@ BitmapToPoint(
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = bmapPtr->header.x1;
     y1 = bmapPtr->header.y1;
@@ -724,7 +728,6 @@ BitmapToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 BitmapToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -734,6 +737,7 @@ BitmapToArea(
 				 * area. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= bmapPtr->header.x1)
 	    || (rectPtr[0] >= bmapPtr->header.x2)
@@ -784,6 +788,39 @@ ScaleBitmap(
 
     bmapPtr->x = originX + scaleX*(bmapPtr->x - originX);
     bmapPtr->y = originY + scaleY*(bmapPtr->y - originY);
+    ComputeBitmapBbox(canvas, bmapPtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * RotateBitmap --
+ *
+ *	This function is called to rotate a bitmap's origin by a given amount.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the bitmap is rotated by angleRad radians about
+ *	(originX, originY), and the bounding box is updated in the generic
+ *	part of the item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateBitmap(
+    Tk_Canvas canvas,
+    Tk_Item *itemPtr,
+    double originX,
+    double originY,
+    double angleRad)
+{
+    BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+
+    TkRotatePoint(originX, originY, sin(angleRad), cos(angleRad),
+	    &bmapPtr->x, &bmapPtr->y);
     ComputeBitmapBbox(canvas, bmapPtr);
 }
 
@@ -856,6 +893,7 @@ BitmapToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -907,7 +945,7 @@ BitmapToPostscript(
     case TK_ANCHOR_S:	   x -= width/2.0;			break;
     case TK_ANCHOR_SW:						break;
     case TK_ANCHOR_W:			   y -= height/2.0;	break;
-    case TK_ANCHOR_CENTER: x -= width/2.0; y -= height/2.0;	break;
+    default: x -= width/2.0; y -= height/2.0;	break;
     }
 
     /*
@@ -928,9 +966,7 @@ BitmapToPostscript(
 		x, y, width, height, -width);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, bgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -945,9 +981,7 @@ BitmapToPostscript(
 
     if (fgColor != NULL) {
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (width > 60000) {
@@ -976,10 +1010,8 @@ BitmapToPostscript(
 		    (double) rowsThisTime, width, rowsThisTime);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
-		    0, curRow, width, rowsThisTime) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsBitmap(interp, canvas, bitmap, 0, curRow, width,
+		    rowsThisTime);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    Tcl_AppendToObj(psObj, "\n} imagemask\n", -1);

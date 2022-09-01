@@ -1,13 +1,11 @@
 /*
  * Tk widget state utilities.
  *
- * Copyright (c) 2003 Joe English.  Freely redistributable.
+ * Copyright © 2003 Joe English.  Freely redistributable.
  *
  */
 
-#include <string.h>
-
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 
 /*
@@ -130,7 +128,8 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     unsigned int offbits = objPtr->internalRep.longValue & 0x0000FFFF;
     unsigned int mask = onbits | offbits;
     Tcl_DString result;
-    int i, len;
+    int i;
+    int len;
 
     Tcl_DStringInit(&result);
 
@@ -146,14 +145,14 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     len = Tcl_DStringLength(&result);
     if (len) {
 	/* 'len' includes extra trailing ' ' */
-	objPtr->bytes = Tcl_Alloc((unsigned)len);
+	objPtr->bytes = (char *)ckalloc(len);
 	objPtr->length = len-1;
-	strncpy(objPtr->bytes, Tcl_DStringValue(&result), (size_t)len-1);
+	strncpy(objPtr->bytes, Tcl_DStringValue(&result), len-1);
 	objPtr->bytes[len-1] = '\0';
     } else {
 	/* empty string */
 	objPtr->length = 0;
-	objPtr->bytes = Tcl_Alloc(1);
+	objPtr->bytes = (char *)ckalloc(1);
 	*objPtr->bytes = '\0';
     }
 
@@ -262,7 +261,7 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
  * Ttk_StateTableLooup --
  * 	Look up an index from a statically allocated state table.
  */
-int Ttk_StateTableLookup(Ttk_StateTable *map, unsigned int state)
+int Ttk_StateTableLookup(const Ttk_StateTable *map, unsigned int state)
 {
     while ((state & map->onBits) != map->onBits
 	    || (~state & map->offBits) != map->offBits)

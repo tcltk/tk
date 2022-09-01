@@ -50,8 +50,8 @@ for {set i 90} {$i>=0} {incr i -10} {
     $w.k create line 0 0 1 1 -smooth true -tags graph$i -fill grey$i
 }
 
-$w.k create text 0 0 -anchor ne -text "\u03b8" -tags label_theta
-$w.k create text 0 0 -anchor ne -text "\u03b4\u03b8" -tags label_dtheta
+$w.k create text 0 0 -anchor ne -text "θ" -tags label_theta
+$w.k create text 0 0 -anchor ne -text "δθ" -tags label_dtheta
 pack $w.k -in $w.p.l2 -fill both -expand true
 
 # Initialize some variables
@@ -94,7 +94,7 @@ proc showPhase {canvas} {
     global Theta dTheta points psw psh
     lappend points [expr {$Theta+$psw}] [expr {-20*$dTheta+$psh}]
     if {[llength $points] > 100} {
-    	 set points [lrange $points end-99 end]
+	set points [lrange $points end-99 end]
     }
     for {set i 0} {$i<100} {incr i 10} {
 	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
@@ -113,7 +113,7 @@ bind $w.c <Destroy> {
     after cancel $animationCallbacks(pendulum)
     unset animationCallbacks(pendulum)
 }
-bind $w.c <1> {
+bind $w.c <Button-1> {
     after cancel $animationCallbacks(pendulum)
     showPendulum %W at %x %y
 }
@@ -126,16 +126,16 @@ bind $w.c <ButtonRelease-1> {
 }
 bind $w.c <Configure> {
     %W coords plate 0 25 %w 25
-    set home [expr %w/2]
-    %W coords pivot [expr $home-5] 20 [expr $home+5] 30
+    set home [expr {%w/2}]
+    %W coords pivot [expr {$home-5}] 20 [expr {$home+5}] 30
 }
 bind $w.k <Configure> {
-    set psh [expr %h/2]
-    set psw [expr %w/2]
-    %W coords x_axis 2 $psh [expr %w-2] $psh
-    %W coords y_axis $psw [expr %h-2] $psw 2
-    %W coords label_dtheta [expr $psw-4] 6
-    %W coords label_theta [expr %w-6] [expr $psh+4]
+    set psh [expr {%h/2}]
+    set psw [expr {%w/2}]
+    %W coords x_axis 2 $psh [expr {%w-2}] $psh
+    %W coords y_axis $psw [expr {%h-2}] $psw 2
+    %W coords label_dtheta [expr {$psw-4}] 6
+    %W coords label_theta [expr {%w-6}] [expr {$psh+4}]
 }
 
 # This procedure is the "business" part of the simulation that does

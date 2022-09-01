@@ -14,10 +14,10 @@ Tk_NameOfImage \- Return name of image.
 \fB#include <tk.h>\fR
 .sp
 const char *
-\fBTk_NameOfImage\fR(\fItypePtr\fR)
+\fBTk_NameOfImage\fR(\fIimageModel\fR)
 .SH ARGUMENTS
-.AS Tk_ImageMaster *masterPtr
-.AP Tk_ImageMaster *masterPtr in
+.AS Tk_ImageModel imageModel
+.AP Tk_ImageModel imageModel in
 Token for image, which was passed to image manager's \fIcreateProc\fR when
 the image was created.
 .BE

@@ -2,9 +2,9 @@
 # radiobuttons in Tk (i.e., all the widgets defined in tkButton.c).  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -334,7 +334,7 @@ test button-1.33 {configuration option: "bd" for label} -setup {
     .l cget -bd
 } -cleanup {
     destroy .l
-} -result {4}
+} -result 4
 test button-1.34 {configuration option: "bd" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .l
@@ -353,7 +353,7 @@ test button-1.35 {configuration option: "bd" for button} -setup {
     .b cget -bd
 } -cleanup {
     destroy .b
-} -result {4}
+} -result 4
 test button-1.36 {configuration option: "bd" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -372,7 +372,7 @@ test button-1.37 {configuration option: "bd" for checkbutton} -setup {
     .c cget -bd
 } -cleanup {
     destroy .c
-} -result {4}
+} -result 4
 test button-1.38 {configuration option: "bd" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -391,7 +391,7 @@ test button-1.39 {configuration option: "bd" for radiobutton} -setup {
     .r cget -bd
 } -cleanup {
     destroy .r
-} -result {4}
+} -result 4
 test button-1.40 {configuration option: "bd" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1165,7 +1165,7 @@ test button-1.119 {configuration option: "height" for label} -setup {
     .l cget -height
 } -cleanup {
     destroy .l
-} -result {18}
+} -result 18
 test button-1.120 {configuration option: "height" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .l
@@ -1184,7 +1184,7 @@ test button-1.121 {configuration option: "height" for button} -setup {
     .b cget -height
 } -cleanup {
     destroy .b
-} -result {18}
+} -result 18
 test button-1.122 {configuration option: "height" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1203,7 +1203,7 @@ test button-1.123 {configuration option: "height" for checkbutton} -setup {
     .c cget -height
 } -cleanup {
     destroy .c
-} -result {18}
+} -result 18
 test button-1.124 {configuration option: "height" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1222,7 +1222,7 @@ test button-1.125 {configuration option: "height" for radiobutton} -setup {
     .r cget -height
 } -cleanup {
     destroy .r
-} -result {18}
+} -result 18
 test button-1.126 {configuration option: "height" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1566,7 +1566,7 @@ test button-1.159 {configuration option: "indicatoron" for checkbutton} -setup {
     .c cget -indicatoron
 } -cleanup {
     destroy .c
-} -result {1}
+} -result 1
 test button-1.160 {configuration option: "indicatoron" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1585,7 +1585,7 @@ test button-1.161 {configuration option: "indicatoron" for radiobutton} -setup {
     .r cget -indicatoron
 } -cleanup {
     destroy .r
-} -result {1}
+} -result 1
 test button-1.162 {configuration option: "indicatoron" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1744,7 +1744,7 @@ test button-1.177 {configuration option: "overrelief" for button} -setup {
 } -cleanup {
     destroy .b
 } -result {}
-test button-1.178 {configuration option: "overrelief" for button} -setup {
+test button-1.178 {configuration option: "overrelief" for button} -constraints needsTcl87 -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
     update
@@ -1752,7 +1752,7 @@ test button-1.178 {configuration option: "overrelief" for button} -setup {
     .b configure -overrelief 1.5
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test button-1.179 {configuration option: "overrelief" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1763,7 +1763,7 @@ test button-1.179 {configuration option: "overrelief" for checkbutton} -setup {
 } -cleanup {
     destroy .c
 } -result {}
-test button-1.180 {configuration option: "overrelief" for checkbutton} -setup {
+test button-1.180 {configuration option: "overrelief" for checkbutton} -constraints needsTcl87 -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
     update
@@ -1771,7 +1771,7 @@ test button-1.180 {configuration option: "overrelief" for checkbutton} -setup {
     .c configure -overrelief 1.5
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test button-1.181 {configuration option: "overrelief" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1782,7 +1782,7 @@ test button-1.181 {configuration option: "overrelief" for radiobutton} -setup {
 } -cleanup {
     destroy .r
 } -result {}
-test button-1.182 {configuration option: "overrelief" for radiobutton} -setup {
+test button-1.182 {configuration option: "overrelief" for radiobutton} -constraints needsTcl87 -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
     update
@@ -1790,7 +1790,7 @@ test button-1.182 {configuration option: "overrelief" for radiobutton} -setup {
     .r configure -overrelief 1.5
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 
 test button-1.183 {configuration option: "padx" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1955,7 +1955,7 @@ test button-1.199 {configuration option: "repeatdelay" for button} -setup {
     .b cget -repeatdelay
 } -cleanup {
     destroy .b
-} -result {100}
+} -result 100
 test button-1.200 {configuration option: "repeatdelay" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1975,7 +1975,7 @@ test button-1.201 {configuration option: "repeatinterval" for button} -setup {
     .b cget -repeatinterval
 } -cleanup {
     destroy .b
-} -result {100}
+} -result 100
 test button-1.202 {configuration option: "repeatinterval" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2405,7 +2405,7 @@ test button-1.243 {configuration option: "underline" for label} -setup {
     .l cget -underline
 } -cleanup {
     destroy .l
-} -result {5}
+} -result 5
 test button-1.244 {configuration option: "underline" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .l
@@ -2414,7 +2414,7 @@ test button-1.244 {configuration option: "underline" for label} -setup {
     .l configure -underline 3p
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test button-1.245 {configuration option: "underline" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2424,7 +2424,7 @@ test button-1.245 {configuration option: "underline" for button} -setup {
     .b cget -underline
 } -cleanup {
     destroy .b
-} -result {5}
+} -result 5
 test button-1.246 {configuration option: "underline" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2433,7 +2433,7 @@ test button-1.246 {configuration option: "underline" for button} -setup {
     .b configure -underline 3p
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test button-1.247 {configuration option: "underline" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2443,7 +2443,7 @@ test button-1.247 {configuration option: "underline" for checkbutton} -setup {
     .c cget -underline
 } -cleanup {
     destroy .c
-} -result {5}
+} -result 5
 test button-1.248 {configuration option: "underline" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2452,7 +2452,7 @@ test button-1.248 {configuration option: "underline" for checkbutton} -setup {
     .c configure -underline 3p
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test button-1.249 {configuration option: "underline" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2462,7 +2462,7 @@ test button-1.249 {configuration option: "underline" for radiobutton} -setup {
     .r cget -underline
 } -cleanup {
     destroy .r
-} -result {5}
+} -result 5
 test button-1.250 {configuration option: "underline" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2471,7 +2471,7 @@ test button-1.250 {configuration option: "underline" for radiobutton} -setup {
     .r configure -underline 3p
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes {error} -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 test button-1.251 {configuration option: "tristatevalue" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2514,7 +2514,7 @@ test button-1.254 {configuration option: "width" for label} -setup {
     .l cget -width
 } -cleanup {
     destroy .l
-} -result {402}
+} -result 402
 test button-1.255 {configuration option: "width" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .l
@@ -2533,7 +2533,7 @@ test button-1.256 {configuration option: "width" for button} -setup {
     .b cget -width
 } -cleanup {
     destroy .b
-} -result {402}
+} -result 402
 test button-1.257 {configuration option: "width" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2552,7 +2552,7 @@ test button-1.258 {configuration option: "width" for checkbutton} -setup {
     .c cget -width
 } -cleanup {
     destroy .c
-} -result {402}
+} -result 402
 test button-1.259 {configuration option: "width" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2571,7 +2571,7 @@ test button-1.260 {configuration option: "width" for radiobutton} -setup {
     .r cget -width
 } -cleanup {
     destroy .r
-} -result {402}
+} -result 402
 test button-1.261 {configuration option: "width" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2591,7 +2591,7 @@ test button-1.262 {configuration option: "wraplength" for label} -setup {
     .l cget -wraplength
 } -cleanup {
     destroy .l
-} -result {100}
+} -result 100
 test button-1.263 {configuration option: "wraplength" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .l
@@ -2610,7 +2610,7 @@ test button-1.264 {configuration option: "wraplength" for button} -setup {
     .b cget -wraplength
 } -cleanup {
     destroy .b
-} -result {100}
+} -result 100
 test button-1.265 {configuration option: "wraplength" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2629,7 +2629,7 @@ test button-1.266 {configuration option: "wraplength" for checkbutton} -setup {
     .c cget -wraplength
 } -cleanup {
     destroy .c
-} -result {100}
+} -result 100
 test button-1.267 {configuration option: "wraplength" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2648,7 +2648,7 @@ test button-1.268 {configuration option: "wraplength" for radiobutton} -setup {
     .r cget -wraplength
 } -cleanup {
     destroy .r
-} -result {100}
+} -result 100
 test button-1.269 {configuration option: "wraplength" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2834,13 +2834,13 @@ test button-3.13 {ButtonWidgetCmd procedure, "configure" option} -body {
     lindex [.b configure -highlightthickness] 4
 } -cleanup {
     destroy .b
-}  -result {3}
+}  -result 3
 test button-3.14 {ButtonWidgetCmd procedure, "configure" option} -body {
     checkbutton .c
     llength [.c configure]
 } -cleanup {
     destroy .c
-} -result {41}
+} -result 41
 test button-3.15 {ButtonWidgetCmd procedure, "configure" option} -body {
     button .b
     .b configure -gorp
@@ -2889,7 +2889,7 @@ test button-3.21 {ButtonWidgetCmd procedure, "deselect" option} -body {
     return $checkvar
 } -cleanup {
     destroy .c
-} -result {0}
+} -result 0
 test button-3.22 {ButtonWidgetCmd procedure, "deselect" option} -body {
     radiobutton .r -variable radiovar -value red
     set radiovar green
@@ -3249,7 +3249,7 @@ test button-5.4 {ConfigureButton - variable trace} -body {  ;# ex 6.2a
     return $y
 } -cleanup {
     destroy .c
-} -result {1}
+} -result 1
 
 test button-5.5 {ConfigureButton - image handling} -constraints {
     testImageType
@@ -3282,7 +3282,7 @@ test button-5.7 {ConfigureButton - setting selected state from variable} -body {
     return $y
 } -cleanup {
     destroy .c
-} -result {0}
+} -result 0
 test button-5.8 {ConfigureButton - setting selected state from variable} -setup {
     unset -nocomplain x
 } -body {
@@ -3444,12 +3444,12 @@ test button-5.24 {ConfigureButton - computing geometry} -constraints {
     set expectedwidth [expr {$textwidth + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness] + 2*[.b cget -padx]}]
     incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
-    set result [expr $expectedwidth == [winfo reqwidth .b]]
+    set result [expr {$expectedwidth == [winfo reqwidth .b]}]
     set linespace [lindex [font metrics [.b cget -font] -displayof .b] 5]
     set expectedheight [expr {$linespace + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness] + 2*[.b cget -pady]}]
     incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
-    lappend result [expr $expectedheight == [winfo reqheight .b]]
+    lappend result [expr {$expectedheight == [winfo reqheight .b]}]
     # 2. button with a bitmap image
     # there is no access to characteristics the predefined bitmaps,
     # so define one as an image (copied from questhead.xbm)
@@ -3468,11 +3468,11 @@ test button-5.24 {ConfigureButton - computing geometry} -constraints {
     set expectedwidth [expr {[image width $myquesthead] + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness]}]
     incr expectedwidth 2   ; # added (hardcoded) in tkUnixButton.c
-    lappend result [expr $expectedwidth == [winfo reqwidth .b]]
+    lappend result [expr {$expectedwidth == [winfo reqwidth .b]}]
     set expectedheight [expr {[image height $myquesthead] + 2*[.b cget -borderwidth] \
             + 2*[.b cget -highlightthickness]}]
     incr expectedheight 2   ; # added (hardcoded) in tkUnixButton.c
-    lappend result [expr $expectedheight == [winfo reqheight .b]]
+    lappend result [expr {$expectedheight == [winfo reqheight .b]}]
 } -cleanup {
     destroy .b
 } -result {1 1 1 1}
@@ -3487,7 +3487,7 @@ test button-5.25 {ConfigureButton - computing geometry} -setup {
     expr {$old == $new}
 } -cleanup {
     destroy .b
-} -result {0}
+} -result 0
 
 test button-6.1 {ButtonEventProc procedure} -body {
     button .b -text "Test Button" -command {
@@ -3554,7 +3554,7 @@ test button-8.3 {TkInvokeButton procedure} -setup {
 } -cleanup {
     destroy .c
     trace vdelete x w bogusTrace
-} -result {1}
+} -result 1
 test button-8.4 {TkInvokeButton procedure} -setup {
     set x 1
 } -body {
@@ -3575,7 +3575,7 @@ test button-8.5 {TkInvokeButton procedure} -setup {
 } -cleanup {
     destroy .c
     trace vdelete x w bogusTrace
-} -result {0}
+} -result 0
 
 test button-8.6 {TkInvokeButton procedure} -setup {
     set x 0
@@ -3665,7 +3665,7 @@ test button-9.2 {ButtonVarProc procedure} -body {
     return $x
 } -cleanup {
     destroy .c
-} -result {1}
+} -result 1
 test button-9.3 {ButtonVarProc procedure} -setup {
     set x 1
 } -body {
@@ -3675,7 +3675,7 @@ test button-9.3 {ButtonVarProc procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-} -result {1}
+} -result 1
 test button-9.4 {ButtonVarProc procedure} -setup {
     set x 0
 } -body {
@@ -3685,7 +3685,7 @@ test button-9.4 {ButtonVarProc procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-} -result {0}
+} -result 0
 test button-9.5 {ButtonVarProc procedure} -setup {
     set x 1
 } -body {
@@ -3695,7 +3695,7 @@ test button-9.5 {ButtonVarProc procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-} -result {0}
+} -result 0
 test button-9.6 {ButtonVarProc procedure} -setup {
     set x 0
 } -body {
@@ -3705,7 +3705,7 @@ test button-9.6 {ButtonVarProc procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-} -result {1}
+} -result 1
 test button-9.7 {ButtonVarProc procedure} -setup {
     set x 1
 } -body {
@@ -3715,7 +3715,7 @@ test button-9.7 {ButtonVarProc procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-} -result {1}
+} -result 1
 test button-9.8 {ButtonVarProc procedure, can't read variable} -setup {
 # This test does nothing but produce a core dump if there's a prbblem.
     unset -nocomplain a
@@ -3751,7 +3751,7 @@ test button-10.2 {ButtonTextVarProc procedure} -setup {
     expr {$old == $new}
 } -cleanup {
     destroy .b
-} -result {0}
+} -result 0
 
 test button-11.1 {ButtonImageProc procedure} -constraints {
     testImageType
@@ -3780,7 +3780,7 @@ test button-12.1 {button widget vs hidden commands} -body {
     expr {$res1 == $res2}
 } -cleanup {
     destroy .b
-} -result {1}
+} -result 1
 
 test button-13.1 {size behavior: label} -setup {
     label .a -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -3957,6 +3957,45 @@ test button-14.1 {bug fix: [011706ec42] tk::ButtonInvoke unsafe wrt widget destr
 } -cleanup {
     destroy .top.b .top
 } -result {}
+
+test button-15.1 {Bug [5d991b822e]} {
+    # Want this not to segfault
+    set var INIT
+    button .b -textvariable var
+    trace add variable var unset {apply {args {
+	.b configure -textvariable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
+test button-15.2 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    button .b -textvariable var
+    trace add variable var unset {apply {args {
+	.b configure -textvariable new
+    }}}
+    pack .b
+    bind .b <Configure> {unset -nocomplain var}
+    update
+    destroy .b
+    unset new
+} {}
+test button-15.3 {Bug [5d991b822e]} {
+    # Want this not to leak traces
+    set var INIT
+    checkbutton .b -variable var
+    trace add variable var unset {apply {args {
+	.b configure -variable {}
+    }}}
+    pack .b
+    bind .b <Configure> {unset var}
+    update
+    destroy .b
+} {}
+
 
 imageFinish
 cleanupTests

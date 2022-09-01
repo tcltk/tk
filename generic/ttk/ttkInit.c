@@ -1,11 +1,10 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * Ttk package: initialization routine and miscellaneous utilities.
  */
 
-#include <string.h>
-#include <tk.h>
+#include "tkInt.h"
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
@@ -13,63 +12,82 @@
  * Legal values for the button -default option.
  * See also: enum Ttk_ButtonDefaultState.
  */
-const char *ttkDefaultStrings[] = {
-    "normal", "active", "disabled", NULL
+const char *const ttkDefaultStrings[] = {
+    "active", "disabled", "normal", NULL
 };
 
 int Ttk_GetButtonDefaultStateFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_ButtonDefaultState *statePtr)
 {
-    *statePtr = TTK_BUTTON_DEFAULT_DISABLED;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, statePtr);
+    int state = (int)TTK_BUTTON_DEFAULT_DISABLED;
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkDefaultStrings,
+	    "default state", 0, &state);
+
+    *statePtr = (Ttk_ButtonDefaultState)state;
+    return result;
 }
 
 /*
  * Legal values for the -compound option.
  * See also: enum Ttk_Compound.
  */
-const char *ttkCompoundStrings[] = {
+const char *const ttkCompoundStrings[] = {
     "none", "text", "image", "center",
     "top", "bottom", "left", "right", NULL
 };
 
 int Ttk_GetCompoundFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *statePtr)
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *compoundPtr)
 {
-    *statePtr = TTK_COMPOUND_NONE;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, statePtr);
+    int compound = (int)TTK_COMPOUND_NONE;
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkCompoundStrings,
+	    "compound layout", 0, &compound);
+
+    *compoundPtr = (Ttk_Compound)compound;
+    return result;
 }
 
 /*
  * Legal values for the -orient option.
  * See also: enum Ttk_Orient.
  */
-const char *ttkOrientStrings[] = {
+const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
+#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
 int Ttk_GetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 {
     *resultPtr = TTK_ORIENT_HORIZONTAL;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-	    sizeof(char *), "orientation", 0, resultPtr);
+    return Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
+	    "orientation", 0, resultPtr);
+}
+#endif
+
+int TtkGetOrientFromObj(
+    Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
+{
+    int orient = (int)TTK_ORIENT_HORIZONTAL;
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
+    	    "orientation", 0, &orient);
+
+    *resultPtr = (Ttk_Orient)orient;
+    return result;
 }
 
 /*
  * Recognized values for the -state compatibility option.
  * Other options are accepted and interpreted as synonyms for "normal".
  */
-static const char *ttkStateStrings[] = {
-    "normal", "readonly", "disabled", "active", NULL
+static const char *const ttkStateStrings[] = {
+    "active", "disabled", "normal", "readonly", NULL
 };
 enum {
-    TTK_COMPAT_STATE_NORMAL,
-    TTK_COMPAT_STATE_READONLY,
+    TTK_COMPAT_STATE_ACTIVE,
     TTK_COMPAT_STATE_DISABLED,
-    TTK_COMPAT_STATE_ACTIVE
+    TTK_COMPAT_STATE_NORMAL,
+    TTK_COMPAT_STATE_READONLY
 };
 
 /* TtkCheckStateOption --
@@ -86,8 +104,8 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
     unsigned all = TTK_STATE_DISABLED|TTK_STATE_READONLY|TTK_STATE_ACTIVE;
 #   define SETFLAGS(f) TtkWidgetChangeState(corePtr, f, all^f)
 
-    (void)Tcl_GetIndexFromObjStruct(NULL, objPtr, ttkStateStrings,
-	    sizeof(char *), "", 0, &stateOption);
+    Tcl_GetIndexFromObj(NULL, objPtr, ttkStateStrings,
+	    "", 0, &stateOption);
     switch (stateOption) {
 	case TTK_COMPAT_STATE_NORMAL:
 	default:
@@ -104,28 +122,6 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 	    break;
     }
 #   undef SETFLAGS
-}
-
-/* TtkSendVirtualEvent --
- * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $tgtWindow <<$eventName>>"
- *
- * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
- * 	so this routine does not reenter the interpreter.
- */
-void TtkSendVirtualEvent(Tk_Window tgtWin, const char *eventName)
-{
-    union {XEvent general; XVirtualEvent virtual;} event;
-
-    memset(&event, 0, sizeof(event));
-    event.general.xany.type = VirtualEvent;
-    event.general.xany.serial = NextRequest(Tk_Display(tgtWin));
-    event.general.xany.send_event = False;
-    event.general.xany.window = Tk_WindowId(tgtWin);
-    event.general.xany.display = Tk_Display(tgtWin);
-    event.virtual.name = Tk_GetUid(eventName);
-
-    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
 /* TtkEnumerateOptions, TtkGetOptionValue --
@@ -149,7 +145,7 @@ int TtkEnumerateOptions(
 
 	if (specPtr->type == TK_OPTION_END && specPtr->clientData != NULL) {
 	    /* Chain to next option spec array: */
-	    specPtr = specPtr->clientData;
+	    specPtr = (const Tk_OptionSpec *)specPtr->clientData;
 	}
     }
     Tcl_SetObjResult(interp, result);
@@ -176,14 +172,14 @@ int TtkGetOptionValue(
  */
 
 /* public */
-Tk_OptionSpec ttkCoreOptionSpecs[] =
+const Tk_OptionSpec ttkCoreOptionSpecs[] =
 {
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor", NULL,
-	Tk_Offset(WidgetCore, cursorObj), -1, TK_OPTION_NULL_OK,0,0 },
+	offsetof(WidgetCore, cursorObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_STRING, "-style", "style", "Style", "",
-	Tk_Offset(WidgetCore,styleObj), -1, 0,0,STYLE_CHANGED},
+	offsetof(WidgetCore,styleObj), TCL_INDEX_NONE, 0,0,STYLE_CHANGED},
     {TK_OPTION_STRING, "-class", "", "", NULL,
-	Tk_Offset(WidgetCore,classObj), -1, 0,0,READONLY_OPTION},
+	offsetof(WidgetCore,classObj), TCL_INDEX_NONE, 0,0,READONLY_OPTION},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -275,7 +271,10 @@ Ttk_Init(Tcl_Interp *interp)
 
     Ttk_PlatformInit(interp);
 
-    Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (ClientData)&ttkStubs);
+#ifndef TK_NO_DEPRECATED
+    Tcl_PkgProvideEx(interp, "Ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
+#endif
+    Tcl_PkgProvideEx(interp, "ttk", TTK_PATCH_LEVEL, (void *)&ttkStubs);
 
     return TCL_OK;
 }

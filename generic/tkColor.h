@@ -3,7 +3,7 @@
  *
  *	Declarations of data types and functions used by the Tk color module.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -32,13 +32,13 @@ typedef struct TkColor {
 				 * COLOR_MAGIC. */
     GC gc;			/* Simple gc with this color as foreground
 				 * color and all other fields defaulted. May
-				 * be None. */
+				 * be NULL. */
     Screen *screen;		/* Screen where this color is valid. Used to
 				 * delete it, and to find its display. */
     Colormap colormap;		/* Colormap from which this entry was
 				 * allocated. */
     Visual *visual;		/* Visual associated with colormap. */
-    int resourceRefCount;	/* Number of active uses of this color (each
+    TkSizeT resourceRefCount;	/* Number of active uses of this color (each
 				 * active use corresponds to a call to
 				 * Tk_AllocColorFromObj or Tk_GetColor). If
 				 * this count is 0, then this TkColor
@@ -48,7 +48,7 @@ typedef struct TkColor {
 				 * referring to it. The structure is freed
 				 * when resourceRefCount and objRefCount are
 				 * both 0. */
-    int objRefCount;		/* The number of Tcl objects that reference
+    TkSizeT objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     int type;			/* TK_COLOR_BY_NAME or TK_COLOR_BY_VALUE. */
     Tcl_HashEntry *hashPtr;	/* Pointer to hash table entry for this

@@ -11,7 +11,7 @@
 .SH NAME
 fontchooser \- control font selection dialog
 .SH SYNOPSIS
-\fBtk fontchooser\fR \fBconfigure\fR ?\fI\-option value \-option value ...\fR?
+\fBtk fontchooser\fR \fBconfigure\fR ?\fI\-option value ...\fR?
 .sp
 \fBtk fontchooser\fR \fBshow\fR
 .sp
@@ -31,7 +31,7 @@ caller via callbacks or virtual events.
 .PP
 The \fBtk fontchooser\fR command can have one of the following forms:
 .TP
-\fBtk fontchooser\fR \fBconfigure \fR?\fI\-option value \-option value ...\fR?
+\fBtk fontchooser\fR \fBconfigure \fR?\fI\-option value ...\fR?
 .
 Set or query one or more of the configurations options below (analogous to Tk
 widget configuration).

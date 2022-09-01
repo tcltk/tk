@@ -72,8 +72,8 @@ expected;  each of its entries has the following structure:
 typedef struct {
     const char *\fIkey\fR;
     int \fItype\fR;
-    char *\fIsrc\fR;
-    char *\fIdst\fR;
+    void *\fIsrc\fR;
+    void *\fIdst\fR;
     const char *\fIhelp\fR;
 } \fBTk_ArgvInfo\fR;
 .CE
@@ -312,16 +312,16 @@ Boolean exec = FALSE;
  * Define option descriptions.
  */
 Tk_ArgvInfo argTable[] = {
-    {"\-X", TK_ARGV_CONSTANT, (char *) 1, (char *) &debugFlag,
+    {"\-X", TK_ARGV_CONSTANT, (char *) 1, &debugFlag,
         "Turn on debugging printfs"},
-    {"\-N", TK_ARGV_INT, (char *) NULL, (char *) &numReps,
+    {"\-N", TK_ARGV_INT, NULL, &numReps,
         "Number of repetitions"},
-    {"\-of", TK_ARGV_STRING, (char *) NULL, (char *) &fileName,
+    {"\-of", TK_ARGV_STRING, NULL, &fileName,
         "Name of file for output"},
-    {"x", TK_ARGV_REST, (char *) NULL, (char *) &exec,
+    {"x", TK_ARGV_REST, NULL, &exec,
         "File to exec, followed by any arguments (must be last argument)."},
-    {(char *) NULL, TK_ARGV_END, (char *) NULL, (char *) NULL,
-        (char *) NULL}
+    {NULL, TK_ARGV_END, NULL, NULL,
+        NULL}
 };
 
 main(argc, argv)

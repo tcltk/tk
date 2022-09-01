@@ -6,7 +6,7 @@
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  *
- * Copyright (c) 2002 Apple Inc.
+ * Copyright © 2002 Apple Inc.
  */
 
 #ifndef _TKENTRY
@@ -45,18 +45,18 @@ typedef struct {
 
     const char *string;		/* Pointer to storage for string;
 				 * NULL-terminated; malloc-ed. */
-    int insertPos;		/* Character index before which next typed
+    TkSizeT insertPos;		/* Character index before which next typed
 				 * character will be inserted. */
 
     /*
      * Information about what's selected, if any.
      */
 
-    int selectFirst;		/* Character index of first selected character
+    TkSizeT selectFirst;		/* Character index of first selected character
 				 * (-1 means nothing selected. */
-    int selectLast;		/* Character index just after last selected
+    TkSizeT selectLast;		/* Character index just after last selected
 				 * character (-1 means nothing selected. */
-    int selectAnchor;		/* Fixed end of selection (i.e. "select to"
+    TkSizeT selectAnchor;		/* Fixed end of selection (i.e. "select to"
 				 * operation will use this as one end of the
 				 * selection). */
 
@@ -82,7 +82,7 @@ typedef struct {
 				 * in readonly state, plus used for
 				 * background. */
     int borderWidth;		/* Width of 3-D border around window. */
-    Tk_Cursor cursor;		/* Current cursor for window, or None. */
+    Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     int exportSelection;	/* Non-zero means tie internal entry selection
 				 * to X selection. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
@@ -129,6 +129,19 @@ typedef struct {
 				 * only used by the Entry widget. */
 
     /*
+     * Fields used in displaying help text if entry value is empty
+     */
+
+    Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
+    char *placeholderString;	/* String value of placeholder. */
+    TkSizeT placeholderChars;	/* Number of chars in placeholder. */
+    XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
+    GC placeholderGC;		/* For drawing placeholder text. */
+    int placeholderX;		/* Origin for layout. */
+    int placeholderLeftIndex;	/* Character index of left-most character
+				 * visible in window. */
+
+    /*
      * Fields whose values are derived from the current values of the
      * configuration settings above.
      */
@@ -138,13 +151,13 @@ typedef struct {
 				 * malloced memory with the same character
 				 * length as string but whose characters are
 				 * all equal to showChar. */
-    int numBytes;		/* Length of string in bytes. */
-    int numChars;		/* Length of string in characters. Both string
+    TkSizeT numBytes;		/* Length of string in bytes. */
+    TkSizeT numChars;		/* Length of string in characters. Both string
 				 * and displayString have the same character
 				 * length, but may have different byte lengths
 				 * due to being made from different UTF-8
 				 * characters. */
-    int numDisplayBytes;	/* Length of displayString in bytes. */
+    TkSizeT numDisplayBytes;	/* Length of displayString in bytes. */
     int inset;			/* Number of pixels on the left and right
 				 * sides that are taken up by XPAD,
 				 * borderWidth (if any), and highlightWidth
@@ -153,7 +166,7 @@ typedef struct {
     int layoutX, layoutY;	/* Origin for layout. */
     int leftX;			/* X position at which character at leftIndex
 				 * is drawn (varies depending on justify). */
-    int leftIndex;		/* Character index of left-most character
+    TkSizeT leftIndex;		/* Character index of left-most character
 				 * visible in window. */
     Tcl_TimerToken insertBlinkHandler;
 				/* Timer handler used to blink cursor on and
@@ -192,7 +205,7 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Used for drawing border around active
 				 * buttons. */
     Tk_3DBorder buttonBorder;	/* Used for drawing border around buttons. */
-    Tk_Cursor bCursor;		/* cursor for buttons, or None. */
+    Tk_Cursor bCursor;		/* cursor for buttons, or NULL. */
     int bdRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
     int buRelief;		/* 3-D effect: TK_RELIEF_RAISED, etc. */
     char *command;		/* Command to invoke for spin buttons. NULL
@@ -221,7 +234,7 @@ typedef struct {
 				 * value that the users requests. Malloc'ed */
     char *valueFormat;		/* Sprintf conversion specifier used for the
 				 * value. */
-    char digitFormat[10];	/* Sprintf conversion specifier computed from
+    char digitFormat[16];	/* Sprintf conversion specifier computed from
 				 * digits and other information; used for the
 				 * value. */
 
@@ -283,7 +296,7 @@ enum state {
  */
 
 enum selelement {
-    SEL_NONE, SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NULL, SEL_ENTRY
+    SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NONE, SEL_NULL, SEL_ENTRY
 };
 
 /*

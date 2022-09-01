@@ -17,7 +17,7 @@ ttk::separator \- Separator bar
 A \fBttk::separator\fR widget displays a horizontal or vertical separator
 bar.
 .SO ttk_widget
-\-class	\-cursor	\-state
+\-class	\-cursor
 \-style	\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -26,9 +26,24 @@ One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the separator.
 .SH "WIDGET COMMAND"
 .PP
-Separator widgets support the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-methods.  No other widget methods are used.
+Separator widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
+.PP
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::separator\fP is \fBTSeparator\fP.
+.PP
+\fBTSeparator\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n)
 .SH "KEYWORDS"

@@ -3,9 +3,9 @@
  *
  *	This file implements line items for canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkCanvas.h"
+#include "default.h"
 
 /*
  * The structure below defines the record for each line item.
@@ -91,14 +92,14 @@ static void		DisplayLine(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetLineIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, int *indexPtr);
+			    Tcl_Obj *obj, TkSizeT *indexPtr);
 static int		LineCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		LineDeleteCoords(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int first, int last);
+			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
 static void		LineInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
 static int		LineToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		LineToPoint(Tk_Canvas canvas,
@@ -107,16 +108,18 @@ static int		LineToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
 static int		ArrowParseProc(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *recordPtr, int offset);
+			    const char *value, char *recordPtr, TkSizeT offset);
 static const char * ArrowPrintProc(ClientData clientData,
-			    Tk_Window tkwin, char *recordPtr, int offset,
+			    Tk_Window tkwin, char *recordPtr, TkSizeT offset,
 			    Tcl_FreeProc **freeProcPtr);
 static int		ParseArrowShape(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
-			    const char *value, char *recordPtr, int offset);
+			    const char *value, char *recordPtr, TkSizeT offset);
 static const char * PrintArrowShape(ClientData clientData,
-			    Tk_Window tkwin, char *recordPtr, int offset,
+			    Tk_Window tkwin, char *recordPtr, TkSizeT offset,
 			    Tcl_FreeProc **freeProcPtr);
+static void		RotateLine(Tk_Canvas canvas, Tk_Item *itemPtr,
+			    double originX, double originY, double angleRad);
 static void		ScaleLine(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
@@ -142,7 +145,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
@@ -157,58 +160,58 @@ static const Tk_CustomOption pixelOption = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_CUSTOM, "-activedash", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeDash),
+	NULL, offsetof(LineItem, outline.activeDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-activefill", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.activeColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-activestipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.activeStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-activewidth", NULL, NULL,
-	"0.0", Tk_Offset(LineItem, outline.activeWidth),
+	"0.0", offsetof(LineItem, outline.activeWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_CUSTOM, "-arrow", NULL, NULL,
-	"none", Tk_Offset(LineItem, arrow),
+	"none", offsetof(LineItem, arrow),
 	TK_CONFIG_DONT_SET_DEFAULT, &arrowOption},
     {TK_CONFIG_CUSTOM, "-arrowshape", NULL, NULL,
-	"8 10 3", Tk_Offset(LineItem, arrowShapeA),
+	"8 10 3", offsetof(LineItem, arrowShapeA),
 	TK_CONFIG_DONT_SET_DEFAULT, &arrowShapeOption},
     {TK_CONFIG_CAP_STYLE, "-capstyle", NULL, NULL,
-	"butt", Tk_Offset(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"butt", offsetof(LineItem, capStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
-	"black", Tk_Offset(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
+	DEF_CANVITEM_OUTLINE, offsetof(LineItem, outline.color), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-dash", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.dash),
+	NULL, offsetof(LineItem, outline.dash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_PIXELS, "-dashoffset", NULL, NULL,
-	"0", Tk_Offset(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"0", offsetof(LineItem, outline.offset), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-disableddash", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledDash),
+	NULL, offsetof(LineItem, outline.disabledDash),
 	TK_CONFIG_NULL_OK, &dashOption},
     {TK_CONFIG_COLOR, "-disabledfill", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.disabledColor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.disabledStipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
-	"0.0", Tk_Offset(LineItem, outline.disabledWidth),
+	"0.0", offsetof(LineItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_JOIN_STYLE, "-joinstyle", NULL, NULL,
-	"round", Tk_Offset(LineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"round", offsetof(LineItem, joinStyle), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-offset", NULL, NULL,
-	"0,0", Tk_Offset(LineItem, outline.tsoffset),
+	"0,0", offsetof(LineItem, outline.tsoffset),
 	TK_CONFIG_DONT_SET_DEFAULT, &offsetOption},
     {TK_CONFIG_CUSTOM, "-smooth", NULL, NULL,
-	"0", Tk_Offset(LineItem, smooth),
+	"0", offsetof(LineItem, smooth),
 	TK_CONFIG_DONT_SET_DEFAULT, &smoothOption},
     {TK_CONFIG_INT, "-splinesteps", NULL, NULL,
-	"12", Tk_Offset(LineItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
+	"12", offsetof(LineItem, splineSteps), TK_CONFIG_DONT_SET_DEFAULT, NULL},
     {TK_CONFIG_CUSTOM, "-state", NULL, NULL,
-	NULL, Tk_Offset(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
+	NULL, offsetof(Tk_Item, state), TK_CONFIG_NULL_OK, &stateOption},
     {TK_CONFIG_BITMAP, "-stipple", NULL, NULL,
-	NULL, Tk_Offset(LineItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(LineItem, outline.stipple), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
 	NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     {TK_CONFIG_CUSTOM, "-width", NULL, NULL,
-	"1.0", Tk_Offset(LineItem, outline.width),
+	"1.0", offsetof(LineItem, outline.width),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
@@ -239,7 +242,8 @@ Tk_ItemType tkLineType = {
     LineInsert,				/* insertProc */
     LineDeleteCoords,			/* dTextProc */
     NULL,				/* nextPtr */
-    NULL, 0, NULL, NULL
+    RotateLine,				/* rotateProc */
+    0, NULL, NULL
 };
 
 /*
@@ -296,7 +300,7 @@ CreateLine(
     linePtr->coordPtr = NULL;
     linePtr->capStyle = CapButt;
     linePtr->joinStyle = JoinRound;
-    linePtr->arrowGC = None;
+    linePtr->arrowGC = NULL;
     linePtr->arrow = ARROWS_NONE;
     linePtr->arrowShapeA = (float)8.0;
     linePtr->arrowShapeB = (float)10.0;
@@ -405,7 +409,7 @@ LineCoords(
 
     numPoints = objc/2;
     if (linePtr->numPoints != numPoints) {
-	coordPtr = ckalloc(sizeof(double) * objc);
+	coordPtr = (double *)ckalloc(sizeof(double) * objc);
 	if (linePtr->coordPtr != NULL) {
 	    ckfree(linePtr->coordPtr);
 	}
@@ -521,12 +525,12 @@ ConfigureLine(
 #endif
 	arrowGC = Tk_GetGC(tkwin, mask, &gcValues);
     } else {
-	newGC = arrowGC = None;
+	newGC = arrowGC = NULL;
     }
-    if (linePtr->outline.gc != None) {
+    if (linePtr->outline.gc != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->outline.gc);
     }
-    if (linePtr->arrowGC != None) {
+    if (linePtr->arrowGC != NULL) {
 	Tk_FreeGC(Tk_Display(tkwin), linePtr->arrowGC);
     }
     linePtr->outline.gc = newGC;
@@ -601,7 +605,7 @@ ConfigureLine(
 
 static void
 DeleteLine(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
@@ -611,7 +615,7 @@ DeleteLine(
     if (linePtr->coordPtr != NULL) {
 	ckfree(linePtr->coordPtr);
     }
-    if (linePtr->arrowGC != None) {
+    if (linePtr->arrowGC != NULL) {
 	Tk_FreeGC(display, linePtr->arrowGC);
     }
     if (linePtr->firstArrowPtr != NULL) {
@@ -705,7 +709,7 @@ ComputeLineBbox(
 
     tsoffset = &linePtr->outline.tsoffset;
     if (tsoffset->flags & TK_OFFSET_INDEX) {
-	double *coordPtr = linePtr->coordPtr
+	coordPtr = linePtr->coordPtr
 		+ (tsoffset->flags & ~TK_OFFSET_INDEX);
 
 	if (tsoffset->flags <= 0) {
@@ -829,18 +833,19 @@ DisplayLine(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y, int width, int height)
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
+    TCL_UNUSED(int),		/* Describes region of canvas that must be */
+    TCL_UNUSED(int),		/* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
-    LineItem *linePtr = (LineItem *) itemPtr;
+    LineItem *linePtr = (LineItem *)itemPtr;
     XPoint staticPoints[MAX_STATIC_POINTS*3];
     XPoint *pointPtr;
     double linewidth;
     int numPoints;
     Tk_State state = itemPtr->state;
 
-    if ((!linePtr->numPoints) || (linePtr->outline.gc == None)) {
+    if (!linePtr->numPoints || (linePtr->outline.gc == NULL)) {
 	return;
     }
 
@@ -874,7 +879,7 @@ DisplayLine(
     if (numPoints <= MAX_STATIC_POINTS) {
 	pointPtr = staticPoints;
     } else {
-	pointPtr = ckalloc(numPoints * 3 * sizeof(XPoint));
+	pointPtr = (XPoint *)ckalloc(numPoints * 3 * sizeof(XPoint));
     }
 
     if ((linePtr->smooth) && (linePtr->numPoints > 2)) {
@@ -950,12 +955,12 @@ static void
 LineInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    int beforeThis,		/* Index before which new coordinates are to
+    TkSizeT beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int length, objc, i;
+    int length, oriNumPoints, objc, nbInsPoints, i;
     double *newCoordPtr, *coordPtr;
     Tk_State state = itemPtr->state;
     Tcl_Obj **objv;
@@ -968,13 +973,21 @@ LineInsert(
 	    || !objc || objc&1) {
 	return;
     }
+    oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
-    if (beforeThis < 0) {
+    nbInsPoints = objc / 2;
+    if (beforeThis == TCL_INDEX_NONE) {
 	beforeThis = 0;
     }
-    if (beforeThis > length) {
+    if (beforeThis + 1 > (TkSizeT)length + 1) {
 	beforeThis = length;
     }
+
+    /*
+     * With arrows, the end points of the line are adjusted so that a thick
+     * line doesn't stick out past the arrowheads (see ConfigureArrows).
+     */
+
     if (linePtr->firstArrowPtr != NULL) {
 	linePtr->coordPtr[0] = linePtr->firstArrowPtr[0];
 	linePtr->coordPtr[1] = linePtr->firstArrowPtr[1];
@@ -983,8 +996,8 @@ LineInsert(
 	linePtr->coordPtr[length-2] = linePtr->lastArrowPtr[0];
 	linePtr->coordPtr[length-1] = linePtr->lastArrowPtr[1];
     }
-    newCoordPtr = ckalloc(sizeof(double) * (length + objc));
-    for (i=0; i<beforeThis; i++) {
+    newCoordPtr = (double *)ckalloc(sizeof(double) * (length + objc));
+    for (i=0; i<(int)beforeThis; i++) {
 	newCoordPtr[i] = linePtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -996,7 +1009,7 @@ LineInsert(
 	}
     }
 
-    for (i=beforeThis; i<length; i++) {
+    for (i=(int)beforeThis; i<length; i++) {
 	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
     if (linePtr->coordPtr) {
@@ -1009,59 +1022,112 @@ LineInsert(
     if ((length > 3) && (state != TK_STATE_HIDDEN)) {
 	/*
 	 * This is some optimizing code that will result that only the part of
-	 * the polygon that changed (and the objects that are overlapping with
+	 * the line that changed (and the objects that are overlapping with
 	 * that part) need to be redrawn. A special flag is set that instructs
 	 * the general canvas code not to redraw the whole object. If this
 	 * flag is not set, the canvas will do the redrawing, otherwise I have
 	 * to do it here.
+	 * Rationale for the optimization code can be found in Tk ticket
+	 * [5fb8145997].
 	 */
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
 
-	if (beforeThis > 0) {
-	    beforeThis -= 2;
-	    objc += 2;
-	}
-	if (beforeThis+objc < length) {
-	    objc += 2;
-	}
+	/*
+	 * Include one point at left of the left insert position, and one
+	 * point at right of the right insert position.
+	 */
+
+	beforeThis -= 2;
+	objc += 4;
+
 	if (linePtr->smooth) {
-	    if (beforeThis > 0) {
+	    if (!strcmp(linePtr->smooth->name, "true")) {
+		/*
+		 * Quadratic Bezier splines. A second point must be included at
+		 * each side of the insert position.
+		 */
+
 		beforeThis -= 2;
-		objc += 2;
-	    }
-	    if (beforeThis+objc+2 < length) {
-		objc += 2;
-	    }
-	}
-	itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
-	itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis < 1)) {
-	    /*
-	     * Include old first arrow.
-	     */
+		objc += 4;
 
-	    for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
-		    i++, coordPtr += 2) {
-		TkIncludePoint(itemPtr, coordPtr);
-	    }
-	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc >= length)) {
-	    /*
-	     * Include old last arrow.
-	     */
+		/*
+		 * Moreover, if the insert position is the first or last point
+		 * of the line, include a third point.
+		 */
 
-	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
-		    i++, coordPtr += 2) {
-		TkIncludePoint(itemPtr, coordPtr);
+		if ((int)beforeThis == -4) {
+		    objc += 2;
+		}
+		if ((int)beforeThis + 4 == length - (objc - 8)) {
+		    beforeThis -= 2;
+		    objc += 2;
+		}
+
+	    } else if (!strcmp(linePtr->smooth->name, "raw")) {
+		/*
+		 * Cubic Bezier splines. See details in ticket [5fb8145997].
+		 */
+
+		if (((oriNumPoints - 1) % 3) || (nbInsPoints % 3)) {
+		    /*
+		     * No optimization for "degenerate" lines or when inserting
+		     * something else than a multiple of 3 points.
+		     */
+
+		    itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
+		} else {
+		    beforeThis -= (int)beforeThis % 6;
+		    objc += 4;
+		}
+
+	    } else {
+		/*
+		 * Custom smoothing method. No optimization is possible.
+		 */
+
+		itemPtr->redraw_flags &= ~TK_ITEM_DONT_REDRAW;
 	    }
 	}
-	coordPtr = linePtr->coordPtr + beforeThis + 2;
-	for (i=2; i<objc; i+=2) {
-	    TkIncludePoint(itemPtr, coordPtr);
-	    coordPtr += 2;
+
+	if (itemPtr->redraw_flags & TK_ITEM_DONT_REDRAW) {
+	    if ((int)beforeThis < 0) {
+		beforeThis = 0;
+	    }
+	    if ((int)beforeThis + objc > length) {
+		objc = length - (int)beforeThis;
+	    }
+
+	    itemPtr->x1 = itemPtr->x2 = (int) linePtr->coordPtr[beforeThis];
+	    itemPtr->y1 = itemPtr->y2 = (int) linePtr->coordPtr[beforeThis+1];
+	    if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 2)) {
+		/*
+		 * Include old first arrow.
+		 */
+
+		for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
+			i++, coordPtr += 2) {
+		    TkIncludePoint(itemPtr, coordPtr);
+		}
+	    }
+	    if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
+		/*
+		 * Include old last arrow.
+		 */
+
+		for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
+			i++, coordPtr += 2) {
+		    TkIncludePoint(itemPtr, coordPtr);
+		}
+	    }
+	    coordPtr = linePtr->coordPtr + beforeThis;
+	    for (i=0; i<objc; i+=2) {
+		TkIncludePoint(itemPtr, coordPtr);
+		coordPtr += 2;
+	    }
 	}
     }
+
     if (linePtr->firstArrowPtr != NULL) {
 	ckfree(linePtr->firstArrowPtr);
 	linePtr->firstArrowPtr = NULL;
@@ -1078,7 +1144,7 @@ LineInsert(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && (beforeThis > 2)) {
+	if ((linePtr->firstArrowPtr != NULL) && ((int)beforeThis < 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1088,9 +1154,9 @@ LineInsert(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (beforeThis+objc < length-2)) {
+	if ((linePtr->lastArrowPtr != NULL) && ((int)beforeThis+objc >= length)) {
 	    /*
-	     * Include new right arrow.
+	     * Include new last arrow.
 	     */
 
 	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
@@ -1144,11 +1210,13 @@ static void
 LineDeleteCoords(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    int first,			/* Index of first character to delete. */
-    int last)			/* Index of last character to delete. */
+    TkSizeT first,			/* Index of first character to delete. */
+    TkSizeT last)			/* Index of last character to delete. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int count, i, first1, last1;
+    int count, i, first1, last1, nbDelPoints;
+    int oriNumPoints = linePtr->numPoints;
+    int canOptimize = 1;
     int length = 2*linePtr->numPoints;
     double *coordPtr;
     Tk_State state = itemPtr->state;
@@ -1157,18 +1225,24 @@ LineDeleteCoords(
 	state = Canvas(canvas)->canvas_state;
     }
 
-    first &= -2;
+    first &= -2;	/* If odd, make it even. */
     last &= -2;
 
-    if (first < 0) {
+    if ((int)first < 0) {
 	first = 0;
     }
-    if (last >= length) {
-	last = length-2;
+    if ((int)last >= length) {
+	last = length - 2;
     }
-    if (first > last) {
+    if ((int)first > (int)last) {
 	return;
     }
+
+    /*
+     * With arrows, the end points of the line are adjusted so that a thick
+     * line doesn't stick out past the arrowheads (see ConfigureArrows).
+     */
+
     if (linePtr->firstArrowPtr != NULL) {
 	linePtr->coordPtr[0] = linePtr->firstArrowPtr[0];
 	linePtr->coordPtr[1] = linePtr->firstArrowPtr[1];
@@ -1179,22 +1253,74 @@ LineDeleteCoords(
     }
     first1 = first;
     last1 = last;
-    if (first1 > 0) {
-	first1 -= 2;
-    }
-    if (last1 < length-2) {
-	last1 += 2;
-    }
+    nbDelPoints = (last - first) / 2 + 1;
+
+    /*
+     * Include one point at left of the left delete position, and one
+     * point at right of the right delete position.
+     */
+
+    first1 -= 2;
+    last1 += 2;
+
     if (linePtr->smooth) {
-	if (first1 > 0) {
+
+	if (!strcmp(linePtr->smooth->name, "true")) {
+	    /*
+	     * Quadratic Bezier splines. A second point must be included at
+	     * each side of the delete position.
+	     */
+
 	    first1 -= 2;
-	}
-	if (last1 < length-2) {
 	    last1 += 2;
+
+	    /*
+	     * If the delete position is the first or last point of the line,
+	     * include a third point.
+	     */
+
+	    if (first1 == -4) {
+		last1 += 2;
+	    }
+	    if (last1 - 4 == length - 2) {
+		first1 -= 2;
+	    }
+
+	} else if (!strcmp(linePtr->smooth->name, "raw")) {
+	    /*
+	     * Cubic Bezier splines. See details in ticket [5fb8145997].
+	     */
+
+	    if (((oriNumPoints - 1) % 3) || (nbDelPoints % 3)) {
+		/*
+		 * No optimization for "degenerate" lines or when deleting
+		 * something else than a multiple of 3 points.
+		 */
+
+		canOptimize = 0;
+	    }
+	    else {
+		first1 -= first1 % 6;
+		last1 = last + 6 - last % 6;
+	    }
+
+	} else {
+	    /*
+	     * Custom smoothing method. No optimization is possible.
+	     */
+
+	    canOptimize = 0;
 	}
     }
 
-    if ((first1 >= 2) || (last1 < length-2)) {
+    if (first1 < 0) {
+	first1 = 0;
+    }
+    if (last1 >= length) {
+	last1 = length - 2;
+    }
+
+    if (canOptimize && ((first1 >= 2) || (last1 < length-2))) {
 	/*
 	 * This is some optimizing code that will result that only the part of
 	 * the line that changed (and the objects that are overlapping with
@@ -1202,6 +1328,8 @@ LineDeleteCoords(
 	 * the general canvas code not to redraw the whole object. If this
 	 * flag is set, the redrawing has to be done here, otherwise the
 	 * general Canvas code will take care of it.
+	 * Rationale for the optimization code can be found in Tk ticket
+	 * [5fb8145997].
 	 */
 
 	itemPtr->redraw_flags |= TK_ITEM_DONT_REDRAW;
@@ -1217,7 +1345,7 @@ LineDeleteCoords(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length-2)) {
+	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length - 2)) {
 	    /*
 	     * Include old last arrow.
 	     */
@@ -1254,7 +1382,7 @@ LineDeleteCoords(
 	double width;
 	int intWidth;
 
-	if ((linePtr->firstArrowPtr != NULL) && (first1 < 4)) {
+	if ((linePtr->firstArrowPtr != NULL) && (first1 < 2)) {
 	    /*
 	     * Include new first arrow.
 	     */
@@ -1264,9 +1392,9 @@ LineDeleteCoords(
 		TkIncludePoint(itemPtr, coordPtr);
 	    }
 	}
-	if ((linePtr->lastArrowPtr != NULL) && (last1 > length-4)) {
+	if ((linePtr->lastArrowPtr != NULL) && (last1 >= length - 2)) {
 	    /*
-	     * Include new right arrow.
+	     * Include new last arrow.
 	     */
 
 	    for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
@@ -1318,7 +1446,6 @@ LineDeleteCoords(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 LineToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1364,7 +1491,7 @@ LineToPoint(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    linePoints = staticSpace;
 	} else {
-	    linePoints = ckalloc(2 * numPoints * sizeof(double));
+	    linePoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
@@ -1546,7 +1673,6 @@ LineToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 LineToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1599,7 +1725,7 @@ LineToArea(
 	if (numPoints <= MAX_STATIC_POINTS) {
 	    linePoints = staticSpace;
 	} else {
-	    linePoints = ckalloc(2 * numPoints * sizeof(double));
+	    linePoints = (double *)ckalloc(2 * numPoints * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps, NULL, linePoints);
@@ -1694,8 +1820,6 @@ ScaleLine(
 	linePtr->firstArrowPtr = NULL;
     }
     if (linePtr->lastArrowPtr != NULL) {
-	int i;
-
 	i = 2*(linePtr->numPoints-1);
 	linePtr->coordPtr[i] = linePtr->lastArrowPtr[0];
 	linePtr->coordPtr[i+1] = linePtr->lastArrowPtr[1];
@@ -1740,18 +1864,28 @@ GetLineIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    int *indexPtr)		/* Where to store converted index. */
+    TkSizeT *indexPtr)		/* Where to store converted index. */
 {
+    TkSizeT idx, length;
     LineItem *linePtr = (LineItem *) itemPtr;
-    const char *string = Tcl_GetString(obj);
+    const char *string;
+    (void)canvas;
 
-    if (string[0] == 'e') {
-	if (strncmp(string, "end", obj->length) == 0) {
-	    *indexPtr = 2*linePtr->numPoints;
+    if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
+	if (idx == TCL_INDEX_NONE) {
+	    idx = 0;
+	} else if (idx > (2*(TkSizeT)linePtr->numPoints)) {
+	    idx = 2*linePtr->numPoints;
 	} else {
-	    goto badIndex;
+	    idx &= (TkSizeT)-2;	/* If index is odd, make it even. */
 	}
-    } else if (string[0] == '@') {
+	*indexPtr = idx;
+	return TCL_OK;
+    }
+
+    string = Tcl_GetStringFromObj(obj, &length);
+
+    if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
 	char *end;
@@ -1779,28 +1913,18 @@ GetLineIndex(
 	    coordPtr += 2;
 	}
     } else {
-	if (Tcl_GetIntFromObj(interp, obj, indexPtr) != TCL_OK) {
-	    goto badIndex;
-	}
-	*indexPtr &= -2;	/* If index is odd, make it even. */
-	if (*indexPtr < 0){
-	    *indexPtr = 0;
-	} else if (*indexPtr > (2*linePtr->numPoints)) {
-	    *indexPtr = (2*linePtr->numPoints);
-	}
+
+	/*
+	 * Some of the paths here leave messages in interp->result, so we have to
+	 * clear it out before storing our own message.
+	 */
+
+    badIndex:
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
+	return TCL_ERROR;
     }
     return TCL_OK;
-
-    /*
-     * Some of the paths here leave messages in interp->result, so we have to
-     * clear it out before storing our own message.
-     */
-
-  badIndex:
-    Tcl_ResetResult(interp);
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
-    return TCL_ERROR;
 }
 
 /*
@@ -1856,6 +1980,56 @@ TranslateLine(
 /*
  *--------------------------------------------------------------
  *
+ * RotateLine --
+ *
+ *	This function is called to rotate a line by a given amount about a
+ *	point.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The position of the line is rotated by angleRad about (originX,
+ *	originY), and the bounding box is updated in the generic part of the
+ *	item structure.
+ *
+ *--------------------------------------------------------------
+ */
+
+static void
+RotateLine(
+    Tk_Canvas canvas,		/* Canvas containing item. */
+    Tk_Item *itemPtr,		/* Item that is being moved. */
+    double originX, double originY,
+    double angleRad)		/* Amount by which item is to be rotated. */
+{
+    LineItem *linePtr = (LineItem *) itemPtr;
+    double *coordPtr;
+    int i;
+    double s = sin(angleRad), c = cos(angleRad);
+
+    for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
+	    i++, coordPtr += 2) {
+	TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+    }
+    if (linePtr->firstArrowPtr != NULL) {
+	for (i = 0, coordPtr = linePtr->firstArrowPtr; i < PTS_IN_ARROW;
+		i++, coordPtr += 2) {
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	}
+    }
+    if (linePtr->lastArrowPtr != NULL) {
+	for (i = 0, coordPtr = linePtr->lastArrowPtr; i < PTS_IN_ARROW;
+		i++, coordPtr += 2) {
+	    TkRotatePoint(originX, originY, s, c, &coordPtr[0], &coordPtr[1]);
+	}
+    }
+    ComputeLineBbox(canvas, linePtr);
+}
+
+/*
+ *--------------------------------------------------------------
+ *
  * ParseArrowShape --
  *
  *	This function is called back during option parsing to parse arrow
@@ -1872,24 +2046,23 @@ TranslateLine(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ParseArrowShape(
-    ClientData clientData,	/* Not used. */
+    TCL_UNUSED(void *),	/* Not used. */
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Window tkwin,		/* Not used. */
+    TCL_UNUSED(Tk_Window),		/* Not used. */
     const char *value,		/* Textual specification of arrow shape. */
     char *recordPtr,		/* Pointer to item record in which to store
 				 * arrow information. */
-    int offset)			/* Offset of shape information in widget
+    TkSizeT offset)			/* Offset of shape information in widget
 				 * record. */
 {
     LineItem *linePtr = (LineItem *) recordPtr;
     double a, b, c;
-    int argc;
+    TkSizeT argc;
     const char **argv = NULL;
 
-    if (offset != Tk_Offset(LineItem, arrowShapeA)) {
+    if ((size_t)offset != offsetof(LineItem, arrowShapeA)) {
 	Tcl_Panic("ParseArrowShape received bogus offset");
     }
 
@@ -1941,19 +2114,18 @@ ParseArrowShape(
  *--------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static const char *
 PrintArrowShape(
-    ClientData clientData,	/* Not used. */
-    Tk_Window tkwin,		/* Window associated with linePtr's widget. */
+    TCL_UNUSED(void *),	/* Not used. */
+    TCL_UNUSED(Tk_Window),		/* Window associated with linePtr's widget. */
     char *recordPtr,		/* Pointer to item record containing current
 				 * shape information. */
-    int offset,			/* Offset of arrow information in record. */
+    TCL_UNUSED(TkSizeT),			/* Offset of arrow information in record. */
     Tcl_FreeProc **freeProcPtr)	/* Store address of function to call to free
 				 * string here. */
 {
     LineItem *linePtr = (LineItem *) recordPtr;
-    char *buffer = ckalloc(120);
+    char *buffer = (char *)ckalloc(120);
 
     sprintf(buffer, "%.5g %.5g %.5g", linePtr->arrowShapeA,
 	    linePtr->arrowShapeB, linePtr->arrowShapeC);
@@ -1981,17 +2153,16 @@ PrintArrowShape(
 
 static int
 ArrowParseProc(
-    ClientData clientData,	/* some flags.*/
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     size_t length;
-
-    register Arrows *arrowPtr = (Arrows *) (widgRec + offset);
+    Arrows *arrowPtr = (Arrows *) (widgRec + offset);
 
     if (value == NULL || *value == 0) {
 	*arrowPtr = ARROWS_NONE;
@@ -2049,15 +2220,15 @@ ArrowParseProc(
 
 static const char *
 ArrowPrintProc(
-    ClientData clientData,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+    TkSizeT offset,			/* Offset into item. */
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Arrows *arrowPtr = (Arrows *) (widgRec + offset);
+    Arrows *arrowPtr = (Arrows *) (widgRec + offset);
 
     switch (*arrowPtr) {
     case ARROWS_FIRST:
@@ -2091,7 +2262,6 @@ ArrowPrintProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConfigureArrows(
     Tk_Canvas canvas,		/* Canvas in which arrows will be displayed
@@ -2152,7 +2322,7 @@ ConfigureArrows(
     if (linePtr->arrow != ARROWS_LAST) {
 	poly = linePtr->firstArrowPtr;
 	if (poly == NULL) {
-	    poly = ckalloc(2 * PTS_IN_ARROW * sizeof(double));
+	    poly = (double *)ckalloc(2 * PTS_IN_ARROW * sizeof(double));
 	    poly[0] = poly[10] = linePtr->coordPtr[0];
 	    poly[1] = poly[11] = linePtr->coordPtr[1];
 	    linePtr->firstArrowPtr = poly;
@@ -2196,7 +2366,7 @@ ConfigureArrows(
 	coordPtr = linePtr->coordPtr + 2*(linePtr->numPoints-2);
 	poly = linePtr->lastArrowPtr;
 	if (poly == NULL) {
-	    poly = ckalloc(2 * PTS_IN_ARROW * sizeof(double));
+	    poly = (double *)ckalloc(2 * PTS_IN_ARROW * sizeof(double));
 	    poly[0] = poly[10] = coordPtr[2];
 	    poly[1] = poly[11] = coordPtr[3];
 	    linePtr->lastArrowPtr = poly;
@@ -2253,7 +2423,7 @@ LineToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))		/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -2319,17 +2489,13 @@ LineToPostscript(
 		" scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n", -1);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, color);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, stipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
 	    Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2365,7 +2531,7 @@ LineToPostscript(
 		linePtr->numPoints, linePtr->splineSteps, NULL, NULL);
 	pointPtr = staticPoints;
 	if (numPoints > MAX_STATIC_POINTS) {
-	    pointPtr = ckalloc(numPoints * 2 * sizeof(double));
+	    pointPtr = (double *)ckalloc(numPoints * 2 * sizeof(double));
 	}
 	numPoints = linePtr->smooth->coordProc(canvas, linePtr->coordPtr,
 		linePtr->numPoints, linePtr->splineSteps, NULL, pointPtr);
@@ -2398,9 +2564,7 @@ LineToPostscript(
     Tcl_AppendPrintfToObj(psObj, "%d setlinejoin\n", style);
 
     Tcl_ResetResult(interp);
-    if (Tk_CanvasPsOutline(canvas, itemPtr, &linePtr->outline) != TCL_OK) {
-	goto error;
-    }
+    Tk_CanvasPsOutline(canvas, itemPtr, &linePtr->outline);
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     /*
@@ -2411,19 +2575,15 @@ LineToPostscript(
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	}
-	if (ArrowheadPostscript(interp, canvas, linePtr,
-		linePtr->firstArrowPtr, psObj) != TCL_OK) {
-	    goto error;
-	}
+	ArrowheadPostscript(interp, canvas, linePtr,
+		linePtr->firstArrowPtr, psObj);
     }
     if (linePtr->lastArrowPtr != NULL) {
 	if (stipple != None) {
 	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
 	}
-	if (ArrowheadPostscript(interp, canvas, linePtr,
-		linePtr->lastArrowPtr, psObj) != TCL_OK) {
-	    goto error;
-	}
+	ArrowheadPostscript(interp, canvas, linePtr,
+		linePtr->lastArrowPtr, psObj);
     }
 
     /*
@@ -2435,11 +2595,6 @@ LineToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*
@@ -2499,9 +2654,7 @@ ArrowheadPostscript(
 	Tcl_AppendToObj(psObj, "clip ", -1);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-	    return TCL_ERROR;
-	}
+	Tk_CanvasPsStipple(interp, canvas, stipple);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     } else {
 	Tcl_AppendToObj(psObj, "fill\n", -1);

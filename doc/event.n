@@ -12,7 +12,7 @@
 .SH NAME
 event \- Miscellaneous event facilities: define virtual events and generate events
 .SH SYNOPSIS
-\fBevent\fI option \fR?\fIarg arg ...\fR?
+\fBevent\fI option \fR?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -100,7 +100,7 @@ Corresponds to the \fB%B\fR substitution for binding scripts.
 .TP
 \fB\-button\fI number\fR
 \fINumber\fR must be an integer;  it specifies the \fIdetail\fR field
-for a \fBButtonPress\fR or \fBButtonRelease\fR event, overriding
+for a \fBButton\fR or \fBButtonRelease\fR event, overriding
 any button  number provided in the base \fIevent\fR argument.
 Corresponds to the \fB%b\fR substitution for binding scripts.
 .TP
@@ -155,7 +155,7 @@ Corresponds to the \fB%h\fR substitution for binding scripts.
 \fB\-keycode\fI number\fR
 \fINumber\fR  must be an integer;  it specifies the \fIkeycode\fR
 field for the event.
-Valid for \fBKeyPress\fR and \fBKeyRelease\fR events.
+Valid for \fBKey\fR and \fBKeyRelease\fR events.
 Corresponds to the \fB%k\fR substitution for binding scripts.
 .TP
 \fB\-keysym\fI name\fR
@@ -163,7 +163,7 @@ Corresponds to the \fB%k\fR substitution for binding scripts.
 \fBspace\fR, or \fBReturn\fR;  its corresponding
 keycode value is used as the \fIkeycode\fR field for event, overriding
 any detail specified in the base \fIevent\fR argument.
-Valid for \fBKeyPress\fR and \fBKeyRelease\fR events.
+Valid for \fBKey\fR and \fBKeyRelease\fR events.
 Corresponds to the \fB%K\fR substitution for binding scripts.
 .TP
 \fB\-mode\fI notify\fR
@@ -189,7 +189,7 @@ Corresponds to the \fB%p\fR substitution for binding scripts.
 \fB\-root\fI window\fR
 \fIWindow\fR must be either a window path name or an integer window
 identifier;  it specifies the \fIroot\fR field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
 events.
 Corresponds to the \fB%R\fR substitution for binding scripts.
@@ -197,14 +197,14 @@ Corresponds to the \fB%R\fR substitution for binding scripts.
 \fB\-rootx\fI coord\fR
 \fICoord\fR must be a screen distance;  it specifies the \fIx_root\fR
 field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
 events.  Corresponds to the \fB%X\fR substitution for binding scripts.
 .TP
 \fB\-rooty\fI coord\fR
 \fICoord\fR must be a screen distance;  it specifies the \fIy_root\fR
 field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
 events.
 Corresponds to the \fB%Y\fR substitution for binding scripts.
@@ -221,7 +221,7 @@ Corresponds to the \fB%#\fR substitution for binding scripts.
 .TP
 \fB\-state\fI state\fR
 \fIState\fR specifies the \fIstate\fR field for the event.
-For \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+For \fBKey\fR, \fBKeyRelease\fR, \fBButtons\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR events
 it must be an integer value.
 For \fBVisibility\fR events it must be one of \fBVisibilityUnobscured\fR,
@@ -233,14 +233,15 @@ Corresponds to the \fB%s\fR substitution for binding scripts.
 \fB\-subwindow\fI window\fR
 \fIWindow\fR specifies the \fIsubwindow\fR field for the event, either
 as a path name for a Tk widget or as an integer window identifier.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR events.
 Similar to \fB%S\fR substitution for binding scripts.
 .TP
 \fB\-time\fI integer\fR
 \fIInteger\fR must be an integer value;  it specifies the \fItime\fR field
-for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+for the event. Additonally the special value \fBcurrent\fR is allowed,
+this value will be substituted by the current event time.
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, \fBMotion\fR,
 and \fBProperty\fR events.
 Corresponds to the \fB%t\fR substitution for binding scripts.
@@ -248,7 +249,7 @@ Corresponds to the \fB%t\fR substitution for binding scripts.
 \fB\-warp\fI boolean\fR
 \fIboolean\fR must be a boolean value;  it specifies whether
 the screen pointer should be warped as well.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, and \fBMotion\fR events.  The pointer will
 only warp to a window if it is mapped.
 .TP
@@ -281,7 +282,7 @@ be processed in order but at the front of the queue.
 \fB\-x\fI coord\fR
 \fICoord\fR must be a screen distance;  it specifies the \fIx\fR field
 for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
@@ -293,7 +294,7 @@ for binding scripts.
 \fB\-y\fI coord\fR
 \fICoord\fR must be a screen distance;  it specifies the \fIy\fR
 field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
@@ -338,7 +339,18 @@ This is sent to a text widget when the selection in the widget is
 changed.
 .TP
 \fB<<ThemeChanged>>\fR
-This is sent to a text widget when the ttk (Tile) theme changed.
+This is sent to all widgets when the ttk theme changed. The ttk
+widgets listen to this event and redisplay themselves when it fires.
+The legacy widgets ignore this event.
+.TP
+\fB<<TkWorldChanged>>\fR
+.
+This event is sent to all widgets when a font is changed, for example,
+by the use of [font configure].  The user_data field (%d) will have the
+value "FontChanged".  For other system wide changes, this event will
+be sent to all widgets, and the user_data field will indicate the
+cause of the change.  NOTE: all tk and ttk widgets already handle this
+event internally.
 .TP
 \fB<<TraverseIn>>\fR
 This is sent to a widget when the focus enters the widget because of a
@@ -565,7 +577,7 @@ Starting from the preceding example, if the following code is executed:
 .PP
 .CS
 bind Entry <Control-y> {}
-\fBevent add\fR <<Paste>> <Key-F6>
+\fBevent add\fR <<Paste>> <F6>
 .CE
 .PP
 the behavior will change such in two ways.  First, the shadowed

@@ -37,9 +37,10 @@ Default value is \fB::selectedButton\fR.
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-commands, radiobuttons support the following additional
-widget commands:
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+radiobutton widgets support the following additional commands:
 .TP
 \fIpathname\fB invoke\fR
 Sets the \fB\-variable\fR to the \fB\-value\fR, selects the widget,
@@ -65,6 +66,36 @@ selection.)
 .PP
 \fBTtk::radiobutton\fR widgets support the \fBToolbutton\fR style in all
 standard themes, which is useful for creating widgets for toolbars.
+.SH "STYLING OPTIONS"
+.PP
+The class name for a \fBttk::radiobutton\fP is \fBTRadiobutton\fP.
+.PP
+Dynamic states: \fBactive\fP, \fBalternate\fP, \fBdisabled\fP,
+\fBpressed\fP, \fBreadonly\fP, \fBselected\fP.
+.PP
+\fBTRadiobutton\fP styling options configurable with \fBttk::style\fP
+are:
+.PP
+\fB\-background\fP \fIcolor\fP
+.br
+\fB\-compound\fP \fIcompound\fP
+.br
+\fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-indicatorbackground\fP \fIcolor\fP
+.br
+\fB\-indicatorcolor\fP \fIcolor\fP
+.br
+\fB\-indicatormargin\fP \fIpadding\fP
+.br
+\fB\-indicatorrelief\fP \fIrelief\fP
+.br
+\fB\-padding\fP \fIpadding\fP
+.PP
+Some options are only available for specific themes.
+.PP
+See the \fBttk::style\fP manual page for information on how to configure
+ttk styles.
 .SH "SEE ALSO"
 ttk::widget(n), ttk::checkbutton(n), radiobutton(n)
 .SH "KEYWORDS"

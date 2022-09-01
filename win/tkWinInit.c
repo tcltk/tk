@@ -4,7 +4,7 @@
  *	This file contains Windows-specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -37,10 +37,14 @@ TkpInit(
 {
     /*
      * This is necessary for static initialization, and is ok otherwise
-     * because TkWinXInit flips a static bit to do its work just once.
+     * because TkWinXInit flips a static bit to do its work just once. Also,
+     * initialize printing and systray API's here.
      */
 
+    WinIcoInit(interp);
+    Winprint_Init(interp);
     TkWinXInit(Tk_GetHINSTANCE());
+    Icu_Init(interp);
     return TCL_OK;
 }
 
@@ -67,7 +71,7 @@ TkpGetAppName(
     Tcl_Interp *interp,
     Tcl_DString *namePtr)	/* A previously initialized Tcl_DString. */
 {
-    int argc, namelength;
+    TkSizeT argc, namelength;
     const char **argv = NULL, *name, *p;
 
     name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
@@ -123,7 +127,7 @@ TkpDisplayWarning(
 
     /* If running on Cygwin and we have a stderr channel, use it. */
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9) {
+	if (tclStubsPtr->tcl_CreateFileHandler) {
 	Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 	if (errChannel) {
 	    Tcl_WriteChars(errChannel, title, -1);
@@ -137,21 +141,21 @@ TkpDisplayWarning(
 
     len = MultiByteToWideChar(CP_UTF8, 0, title, -1, titleString, TK_MAX_WARN_LEN);
     msgString = &titleString[len + 1];
-    titleString[TK_MAX_WARN_LEN - 1] = L'\0';
+    titleString[TK_MAX_WARN_LEN - 1] = '\0';
     MultiByteToWideChar(CP_UTF8, 0, msg, -1, msgString, (TK_MAX_WARN_LEN - 1) - len);
     /*
      * Truncate MessageBox string if it is too long to not overflow the screen
      * and cause possible oversized window error.
      */
-    if (titleString[TK_MAX_WARN_LEN - 1] != L'\0') {
+    if (titleString[TK_MAX_WARN_LEN - 1] != '\0') {
 	memcpy(titleString + (TK_MAX_WARN_LEN - 5), L" ...", 5 * sizeof(WCHAR));
     }
     if (IsDebuggerPresent()) {
-	titleString[len - 1] = L':';
-	titleString[len] = L' ';
+	titleString[len - 1] = ':';
+	titleString[len] = ' ';
 	OutputDebugStringW(titleString);
     } else {
-	titleString[len - 1] = L'\0';
+	titleString[len - 1] = '\0';
 	MessageBoxW(NULL, msgString, titleString,
 		MB_OK | MB_ICONEXCLAMATION | MB_SYSTEMMODAL
 		| MB_SETFOREGROUND | MB_TOPMOST);
@@ -178,28 +182,28 @@ Tcl_Obj*
 TkWin32ErrorObj(
     HRESULT hrError)
 {
-    LPTSTR lpBuffer = NULL, p = NULL;
-    TCHAR  sBuffer[30];
+    LPWSTR lpBuffer = NULL, p = NULL;
+    WCHAR  sBuffer[30];
     Tcl_Obj* errPtr = NULL;
+    Tcl_DString ds;
 
-    FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
+    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM
 	    | FORMAT_MESSAGE_IGNORE_INSERTS, NULL, (DWORD)hrError,
-	    LANG_NEUTRAL, (LPTSTR)&lpBuffer, 0, NULL);
+	    LANG_NEUTRAL, (LPWSTR)&lpBuffer, 0, NULL);
 
     if (lpBuffer == NULL) {
 	lpBuffer = sBuffer;
-	wsprintf(sBuffer, TEXT("Error Code: %08lX"), hrError);
+	wsprintfW(sBuffer, L"Error Code: %08lX", hrError);
     }
 
-    if ((p = _tcsrchr(lpBuffer, TEXT('\r'))) != NULL) {
-	*p = TEXT('\0');
+    if ((p = wcsrchr(lpBuffer, '\r')) != NULL) {
+	*p = '\0';
     }
 
-#ifdef _UNICODE
-    errPtr = Tcl_NewUnicodeObj(lpBuffer, (int)wcslen(lpBuffer));
-#else
-    errPtr = Tcl_NewStringObj(lpBuffer, (int)strlen(lpBuffer));
-#endif /* _UNICODE */
+    Tcl_DStringInit(&ds);
+    Tcl_WCharToUtfDString(lpBuffer, wcslen(lpBuffer), &ds);
+    errPtr = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    Tcl_DStringFree(&ds);
 
     if (lpBuffer != sBuffer) {
 	LocalFree((HLOCAL)lpBuffer);
@@ -207,7 +211,6 @@ TkWin32ErrorObj(
 
     return errPtr;
 }
-
 
 /*
  * Local Variables:

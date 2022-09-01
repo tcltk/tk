@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in tkEvent.c.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -20,57 +20,10 @@ namespace import -force tcltest::test
 proc _init_keypress_lookup {} {
     global keypress_lookup
 
-    scan A %c start
-    scan Z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan a %c start
-    scan z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan 0 %c start
-    scan 9 %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    # Most punctuation
-    array set keypress_lookup {
-        ! exclam
-        % percent
-        & ampersand
-        ( parenleft
-        ) parenright
-        * asterisk
-        + plus
-        , comma
-        - minus
-        . period
-        / slash
-        : colon
-        < less
-        = equal
-        > greater
-        ? question
-        @ at
-        ^ asciicircum
-        _ underscore
-        | bar
-        ~ asciitilde
-        ' apostrophe
-    }
     # Characters with meaning to Tcl...
     array set keypress_lookup [list \
+	    -    minus \
+	    >    greater \
 	    \"   quotedbl \
 	    \#   numbersign \
 	    \$   dollar \
@@ -81,6 +34,7 @@ proc _init_keypress_lookup {} {
 	    \{   braceleft \
 	    \}   braceright \
 	    " "  space \
+	    \xA0 nobreakspace \
 	    "\n" Return \
 	    "\t" Tab]
 }
@@ -88,8 +42,8 @@ proc _init_keypress_lookup {} {
 # Lookup an event in the keypress table.
 # For example:
 # Q -> Q
-# . -> period
-# / -> slash
+# ; -> semicolon
+# > -> greater
 # Delete -> Delete
 # Escape -> Escape
 
@@ -111,7 +65,7 @@ proc _keypress_lookup {char} {
     }
 }
 
-# Lookup and generate a pair of KeyPress and KeyRelease events
+# Lookup and generate a pair of Key and KeyRelease events
 
 proc _keypress {win key} {
     set keysym [_keypress_lookup $key]
@@ -124,7 +78,7 @@ proc _keypress {win key} {
     if {[focus] != $win} {
         focus -force $win
     }
-    event generate $win <KeyPress-$keysym>
+    event generate $win <Key-$keysym>
     _pause 50
     if {[focus] != $win} {
         focus -force $win
@@ -194,10 +148,10 @@ test event-1.1 {Tk_HandleEvent procedure, filter events for dead windows} -setup
     update
     bind .b <Destroy> {
 	    lappend x destroy
-	    event generate .b <1>
+	    event generate .b <Button-1>
 	    event generate .b <ButtonRelease-1>
     }
-    bind .b <1> {
+    bind .b <Button-1> {
 	    lappend x button
     }
 
@@ -245,6 +199,8 @@ test event-2.2(keypress) {type into entry widget and then delete some text} -set
     set e [entry $t.e]
     pack $e
     tkwait visibility $e
+    # Avoid a hang when macOS puts the mouse pointer on the green button
+    wm geometry .t +200+100
     _keypress_string $e MELLO
     _keypress $e BackSpace
     _keypress $e BackSpace
@@ -267,7 +223,7 @@ test event-2.3(keypress) {type into entry widget, triple click, hit Delete key,
     event generate $e <Enter>
     for {set i 0} {$i < 3} {incr i} {
         _pause 100
-        event generate $e <ButtonPress-1>
+        event generate $e <Button-1>
         _pause 100
         event generate $e <ButtonRelease-1>
     }
@@ -321,7 +277,7 @@ test event-2.6(keypress) {type into text widget, triple click,
     event generate $e <Enter>
     for {set i 0} {$i < 3} {incr i} {
         _pause 100
-        event generate $e <ButtonPress-1>
+        event generate $e <Button-1>
         _pause 100
         event generate $e <ButtonRelease-1>
     }
@@ -353,7 +309,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     # Click down to set the insert cursor position
     event generate $e <Enter>
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
@@ -379,7 +335,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     # Now click and click and drag to the left, over "Tcl/Tk selection"
 
-    event generate $e <ButtonPress-1> -x $current_x -y $current_y
+    event generate $e <Button-1> -x $current_x -y $current_y
 
     while {[$e compare $current >= [list $anchor - 4 char]]} {
         foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
@@ -420,7 +376,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     # Click down to set the insert cursor position
     event generate $e <Enter>
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
 
     # Save the position of the insert cursor
     lappend result [$e index insert]
@@ -446,7 +402,7 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     # Now click and click and drag to the left, over "Tcl/Tk selection"
 
-    event generate $e <ButtonPress-1> -x $current_x -y $current_y
+    event generate $e <Button-1> -x $current_x -y $current_y
 
     while {$current >= ($anchor - 4)} {
         foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
@@ -485,11 +441,11 @@ test event-4.1(double-click-drag) {click down, click up, click down again,
 
     # Click down, release, then click down again
     event generate $e <Enter>
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
     _pause 50
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
 
     # Save the highlighted text
@@ -556,11 +512,11 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
 
     # Click down, release, then click down again
     event generate $e <Enter>
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
     _pause 50
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
 
     set result [list]
@@ -628,17 +584,17 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
 
     event generate $e <Enter>
 
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
     _pause 50
 
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $anchor_x -y $anchor_y
     _pause 50
 
-    event generate $e <ButtonPress-1> -x $anchor_x -y $anchor_y
+    event generate $e <Button-1> -x $anchor_x -y $anchor_y
     _pause 50
 
     set result [list]
@@ -678,7 +634,7 @@ test event-6.1(button-state) {button press in a window that is then
 } -body {
     set t [toplevel .t]
 
-    event generate $t <ButtonPress-1>
+    event generate $t <Button-1>
     destroy $t
     set t [toplevel .t]
     set motion nomotion
@@ -717,11 +673,11 @@ test event-7.1(double-click) {A double click on a lone character
     # Double click near left hand egde of the letter A
 
     event generate $e <Enter>
-    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    event generate $e <Button-1> -x $left_x -y $left_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
     _pause 50
-    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    event generate $e <Button-1> -x $left_x -y $left_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
     _pause 50
@@ -732,18 +688,18 @@ test event-7.1(double-click) {A double click on a lone character
 
     # Clear selection by clicking at 0,0
 
-    event generate $e <ButtonPress-1> -x 0 -y 0
+    event generate $e <Button-1> -x 0 -y 0
     _pause 50
     event generate $e <ButtonRelease-1> -x 0 -y 0
     _pause 50
 
     # Double click near right hand edge of the letter A
 
-    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    event generate $e <Button-1> -x $right_x -y $right_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
     _pause 50
-    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    event generate $e <Button-1> -x $right_x -y $right_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
     _pause 50
@@ -754,6 +710,7 @@ test event-7.1(double-click) {A double click on a lone character
     return $result
 } -cleanup {
     deleteWindows
+    unset x1 y1 width height middle_y left_x left_y right_x right_y
 } -result {1.3 A 1.3 A}
 test event-7.2(double-click) {A double click on a lone character
     in an entry widget should select that character} -setup {
@@ -783,11 +740,11 @@ test event-7.2(double-click) {A double click on a lone character
     # Double click near left hand egde of the letter A
 
     event generate $e <Enter>
-    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    event generate $e <Button-1> -x $left_x -y $left_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
     _pause 50
-    event generate $e <ButtonPress-1> -x $left_x -y $left_y
+    event generate $e <Button-1> -x $left_x -y $left_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $left_x -y $left_y
     _pause 50
@@ -798,18 +755,18 @@ test event-7.2(double-click) {A double click on a lone character
 
     # Clear selection by clicking at 0,0
 
-    event generate $e <ButtonPress-1> -x 0 -y 0
+    event generate $e <Button-1> -x 0 -y 0
     _pause 50
     event generate $e <ButtonRelease-1> -x 0 -y 0
     _pause 50
 
     # Double click near right hand edge of the letter A
 
-    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    event generate $e <Button-1> -x $right_x -y $right_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
     _pause 50
-    event generate $e <ButtonPress-1> -x $right_x -y $right_y
+    event generate $e <Button-1> -x $right_x -y $right_y
     _pause 50
     event generate $e <ButtonRelease-1> -x $right_x -y $right_y
     _pause 50
@@ -820,6 +777,7 @@ test event-7.2(double-click) {A double click on a lone character
     return $result
 } -cleanup {
     deleteWindows
+    unset x1 y1 width height middle_y left_x left_y right_x right_y
 } -result {4 A 4 A}
 
 test event-8 {event generate with keysyms corresponding to
@@ -832,7 +790,7 @@ test event-8 {event generate with keysyms corresponding to
     set e [entry $t.e]
     pack $e
     tkwait visibility $e
-    bind $e <KeyPress> {lappend res keycode: %k keysym: %K}
+    bind $e <Key> {lappend res keycode: %k keysym: %K}
     focus -force $e
     update
     event generate $e <diaeresis>
@@ -857,7 +815,95 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-9 {no <Enter> event is generated for the container window when its
+              managed window in which the mouse pointer was inside gets
+              destroyed - bug 9e1312f32c} -setup {
+    set res [list ]
+    set iconified false
+    if {[winfo ismapped .]} {
+        wm iconify .
+        update
+        set iconified true
+    }
+} -body {
+    toplevel .top
+    pack propagate .top 0
+    bind .top <Enter> {lappend res %W}
+    pack [frame .top.f -bg green -width 50 -height 50] -anchor se -side bottom
+    tkwait visibility .top.f
+    after 50
+    update
+    focus -force .top.f
+    event generate .top.f <Motion> -warp 1 -x 25 -y 25  ; # <Enter> sent to .top and .top.f
+    controlPointerWarpTiming
+    update  ; # idletasks not enough
+    destroy .top.f  ; # no <Enter> event sent
+    update
+    set res
+} -cleanup {
+    deleteWindows
+    if {$iconified} {
+        wm deiconify .
+        update
+    }
+} -result {.top .top.f}
+
+test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
+    set EnterBind [bind . <Enter>]
+} -body {
+    wm geometry . 200x200+300+300
+    wm deiconify .
+    _pause 200
+    toplevel .top2 -width 200 -height 200
+    wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
+    wm deiconify .top2
+    raise .top2
+    _pause 400
+    event generate .top2 <Motion> -warp 1 -x 50 -y 50
+    _pause 100
+    bind . <Enter> {lappend res %W}
+    set res [list ]
+    destroy .top2
+    _pause 200
+    set res
+} -cleanup {
+    deleteWindows
+    bind . <Enter> $EnterBind
+} -result {.}
+test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
+    set iconified false
+    if {[winfo ismapped .]} {
+        wm iconify .
+        update
+        set iconified true
+    }
+} -body {
+    toplevel .top1
+    wm geometry .top1 200x200+300+300
+    wm deiconify .top1
+    _pause 200
+    toplevel .top2 -width 200 -height 200
+    wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
+    wm deiconify .top2
+    raise .top2
+    _pause 400
+    event generate .top2 <Motion> -warp 1 -x 50 -y 50
+    _pause 100
+    bind .top1 <Enter> {lappend res %W}
+    set res [list ]
+    destroy .top2
+    _pause 200
+    set res
+} -cleanup {
+    deleteWindows ; # destroy all children of ".", this already includes .top1
+    if {$iconified} {
+        wm deiconify .
+        update
+    }
+} -result {.top1}
+
 # cleanup
+update
 unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}

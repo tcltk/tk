@@ -4,8 +4,8 @@
  *	This file contains the Xlib emulation functions pertaining to actually
  *	drawing objects on a window.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
- * Copyright (c) 1994 Software Research Associates, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
+ * Copyright © 1994 Software Research Associates, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -103,7 +103,7 @@ const int tkpWinBltModes[] = {
 
 typedef BOOL (CALLBACK *WinDrawFunc)(HDC dc, const POINT *points, int npoints);
 
-typedef struct ThreadSpecificData {
+typedef struct {
     POINT *winPoints;		/* Array of points that is reused. */
     int nWinPoints;		/* Current size of point array. */
 } ThreadSpecificData;
@@ -244,7 +244,7 @@ ConvertPoints(
 	if (tsdPtr->winPoints != NULL) {
 	    ckfree(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = ckalloc(sizeof(POINT) * npoints);
+	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -412,7 +412,7 @@ XCopyPlane(
 	     */
 
 	    fgBrush = CreateSolidBrush(gc->foreground);
-	    oldBrush = SelectObject(destDC, fgBrush);
+	    oldBrush = (HBRUSH)SelectObject(destDC, fgBrush);
 	    SetBkColor(destDC, RGB(255,255,255));
 	    SetTextColor(destDC, RGB(0,0,0));
 	    BitBlt(destDC, dest_x, dest_y, (int) width, (int) height, srcDC,
@@ -450,7 +450,7 @@ XCopyPlane(
 	    BitBlt(memDC, 0, 0, (int) width, (int) height, maskDC,
 		    dest_x - gc->clip_x_origin, dest_y - gc->clip_y_origin,
 		    SRCAND);
-	    oldBrush = SelectObject(destDC, fgBrush);
+	    oldBrush = (HBRUSH)SelectObject(destDC, fgBrush);
 	    BitBlt(destDC, dest_x, dest_y, (int) width, (int) height, memDC,
 		    0, 0, MASKPAT);
 
@@ -553,10 +553,10 @@ TkPutImage(
 	usePalette = (image->bits_per_pixel < 16);
 
 	if (usePalette) {
-	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER)
+	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER)
 		    + sizeof(RGBQUAD)*ncolors);
 	} else {
-	    infoPtr = ckalloc(sizeof(BITMAPINFOHEADER));
+	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER));
 	}
 
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -586,12 +586,11 @@ TkPutImage(
 	ckfree(infoPtr);
     }
     if (!bitmap) {
-	Tcl_Panic("Fail to allocate bitmap");
 	DeleteDC(dcMem);
-    	TkWinReleaseDrawableDC(d, dc, &state);
+	TkWinReleaseDrawableDC(d, dc, &state);
 	return BadValue;
     }
-    bitmap = SelectObject(dcMem, bitmap);
+    bitmap = (HBITMAP)SelectObject(dcMem, bitmap);
     BitBlt(dc, dest_x, dest_y, (int) width, (int) height, dcMem, src_x, src_y,
 	    SRCCOPY);
     DeleteObject(SelectObject(dcMem, bitmap));
@@ -600,6 +599,7 @@ TkPutImage(
     return Success;
 }
 
+#undef XPutImage
 int
 XPutImage(
     Display *display,
@@ -671,7 +671,7 @@ XFillRectangles(
 
 	stipple = CreatePatternBrush(twdPtr->bitmap.handle);
 	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, stipple);
+	oldBrush = (HBRUSH)SelectObject(dc, stipple);
 	dcMem = CreateCompatibleDC(dc);
 
 	/*
@@ -683,7 +683,7 @@ XFillRectangles(
 	while (nrectangles-- > 0) {
 	    bitmap = CreateCompatibleBitmap(dc, rectangles[0].width,
 		    rectangles[0].height);
-	    oldBitmap = SelectObject(dcMem, bitmap);
+	    oldBitmap = (HBITMAP)SelectObject(dcMem, bitmap);
 	    rect.left = 0;
 	    rect.top = 0;
 	    rect.right = rectangles[0].width;
@@ -718,8 +718,8 @@ XFillRectangles(
 	    }
 	} else {
 	    HPEN newPen = CreatePen(PS_NULL, 0, gc->foreground);
-	    HPEN oldPen = SelectObject(dc, newPen);
-	    oldBrush = SelectObject(dc, brush);
+	    HPEN oldPen = (HPEN)SelectObject(dc, newPen);
+	    oldBrush = (HBRUSH)SelectObject(dc, brush);
 
 	    while (nrectangles-- > 0) {
 		Rectangle(dc, rectangles[0].x, rectangles[0].y,
@@ -736,6 +736,52 @@ XFillRectangles(
     DeleteObject(brush);
     TkWinReleaseDrawableDC(d, dc, &state);
     return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MakeAndStrokePath --
+ *
+ *	This function draws a shape using a list of points, a stipple pattern,
+ *	and the specified drawing function. It does it through creation of a
+ *	so-called 'path' (see GDI documentation on MSDN).
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+static void
+MakeAndStrokePath(
+    HDC dc,
+    POINT *winPoints,
+    int npoints,
+    WinDrawFunc func)        /* Name of the Windows GDI drawing function:
+                                this is either Polyline or Polygon. */
+{
+    BeginPath(dc);
+    func(dc, winPoints, npoints);
+    /*
+     * In the case of closed polylines, the first and last points
+     * are the same. We want miter or bevel join be rendered also
+     * at this point, this needs telling the Windows GDI that the
+     * path is closed.
+     */
+    if (func == Polyline) {
+        if ((winPoints[0].x == winPoints[npoints-1].x) &&
+                (winPoints[0].y == winPoints[npoints-1].y)) {
+            CloseFigure(dc);
+        }
+        EndPath(dc);
+        StrokePath(dc);
+    } else {
+        EndPath(dc);
+        StrokeAndFillPath(dc);
+    }
 }
 
 /*
@@ -802,7 +848,7 @@ RenderObject(
 	 */
 
 	SetBrushOrgEx(dc, gc->ts_x_origin, gc->ts_y_origin, NULL);
-	oldBrush = SelectObject(dc, CreatePatternBrush(twdPtr->bitmap.handle));
+	oldBrush = (HBRUSH)SelectObject(dc, CreatePatternBrush(twdPtr->bitmap.handle));
 
 	/*
 	 * Create temporary drawing surface containing a copy of the
@@ -810,9 +856,9 @@ RenderObject(
 	 */
 
 	dcMem = CreateCompatibleDC(dc);
-	oldBitmap = SelectObject(dcMem, CreateCompatibleBitmap(dc, width,
+	oldBitmap = (HBITMAP)SelectObject(dcMem, CreateCompatibleBitmap(dc, width,
 		height));
-	oldPen = SelectObject(dcMem, pen);
+	oldPen = (HPEN)SelectObject(dcMem, pen);
 	BitBlt(dcMem, 0, 0, width, height, dc, rect.left, rect.top, SRCCOPY);
 
 	/*
@@ -832,8 +878,8 @@ RenderObject(
 
 	SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-	oldMemBrush = SelectObject(dcMem, CreateSolidBrush(gc->foreground));
-	func(dcMem, winPoints, npoints);
+	oldMemBrush = (HBRUSH)SelectObject(dcMem, CreateSolidBrush(gc->foreground));
+        MakeAndStrokePath(dcMem, winPoints, npoints, func);
 	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
 
 	/*
@@ -845,7 +891,7 @@ RenderObject(
 	if (gc->fill_style == FillOpaqueStippled) {
 	    DeleteObject(SelectObject(dcMem,
 		    CreateSolidBrush(gc->background)));
-	    func(dcMem, winPoints, npoints);
+            MakeAndStrokePath(dcMem, winPoints, npoints, func);
 	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
 		    COPYBG);
 	}
@@ -855,13 +901,13 @@ RenderObject(
 	DeleteObject(SelectObject(dcMem, oldBitmap));
 	DeleteDC(dcMem);
     } else {
-	oldPen = SelectObject(dc, pen);
-	oldBrush = SelectObject(dc, CreateSolidBrush(gc->foreground));
+	oldPen = (HPEN)SelectObject(dc, pen);
+	oldBrush = (HBRUSH)SelectObject(dc, CreateSolidBrush(gc->foreground));
 	SetROP2(dc, tkpWinRopModes[gc->function]);
 
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-	func(dc, winPoints, npoints);
+        MakeAndStrokePath(dc, winPoints, npoints, func);
 	SelectObject(dc, oldPen);
     }
     DeleteObject(SelectObject(dc, oldBrush));
@@ -940,6 +986,7 @@ XFillPolygon(
     HPEN pen;
     TkWinDCState state;
     HDC dc;
+    (void)shape;
 
     if (d == None) {
 	return BadDrawable;
@@ -947,7 +994,7 @@ XFillPolygon(
 
     dc = TkWinGetDrawableDC(display, d, &state);
 
-    pen = GetStockObject(NULL_PEN);
+    pen = (HPEN)GetStockObject(NULL_PEN);
     RenderObject(dc, gc, points, npoints, mode, pen, Polygon);
 
     TkWinReleaseDrawableDC(d, dc, &state);
@@ -991,8 +1038,8 @@ XDrawRectangle(
 
     pen = SetUpGraphicsPort(gc);
     SetBkMode(dc, TRANSPARENT);
-    oldPen = SelectObject(dc, pen);
-    oldBrush = SelectObject(dc, GetStockObject(NULL_BRUSH));
+    oldPen = (HPEN)SelectObject(dc, pen);
+    oldBrush = (HBRUSH)SelectObject(dc, GetStockObject(NULL_BRUSH));
     SetROP2(dc, tkpWinRopModes[gc->function]);
 
     Rectangle(dc, x, y, (int) x+width+1, (int) y+height+1);
@@ -1217,7 +1264,7 @@ DrawOrFillArc(
      */
 
     pen = SetUpGraphicsPort(gc);
-    oldPen = SelectObject(dc, pen);
+    oldPen = (HPEN)SelectObject(dc, pen);
     if (!fill) {
 	/*
 	 * Note that this call will leave a gap of one pixel at the end of the
@@ -1230,7 +1277,7 @@ DrawOrFillArc(
 		xend, yend);
     } else {
 	brush = CreateSolidBrush(gc->foreground);
-	oldBrush = SelectObject(dc, brush);
+	oldBrush = (HBRUSH)SelectObject(dc, brush);
 	if (gc->arc_mode == ArcChord) {
 	    Chord(dc, x, y, (int) (x+width+1), (int) (y+height+1),
 		    xstart, ystart, xend, yend);
@@ -1356,10 +1403,11 @@ TkScrollWindow(
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     HWND hwnd = TkWinGetHWND(Tk_WindowId(tkwin));
     RECT scrollRect;
+    (void)gc;
 
     scrollRect.left = x;
     scrollRect.top = y;
@@ -1402,14 +1450,14 @@ TkWinFillRect(
     rect.bottom = y + height;
     oldColor = SetBkColor(dc, (COLORREF)pixel);
     SetBkMode(dc, OPAQUE);
-    ExtTextOut(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
+    ExtTextOutW(dc, 0, 0, ETO_OPAQUE, &rect, NULL, 0, NULL);
     SetBkColor(dc, oldColor);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawHighlightBorder --
+ * Tk_DrawHighlightBorder --
  *
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
@@ -1429,20 +1477,22 @@ TkWinFillRect(
  */
 
 void
-TkpDrawHighlightBorder(
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,
     int highlightWidth,
     Drawable drawable)
 {
+    (void)bgGC;
+
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawFrame --
+ * TkpDrawFrameEx --
  *
  *	This function draws the rectangular frame area.
  *
@@ -1456,14 +1506,15 @@ TkpDrawHighlightBorder(
  */
 
 void
-TkpDrawFrame(
+TkpDrawFrameEx(
     Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
     int relief)
 {
-    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, highlightWidth,
+    Tk_Fill3DRectangle(tkwin, drawable, border, highlightWidth,
 	    highlightWidth, Tk_Width(tkwin) - 2 * highlightWidth,
 	    Tk_Height(tkwin) - 2 * highlightWidth, borderWidth, relief);
 }

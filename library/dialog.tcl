@@ -3,8 +3,8 @@
 # This file defines the procedure tk_dialog, which creates a dialog
 # box containing a bitmap, a message, and one or more buttons.
 #
-# Copyright (c) 1992-1993 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1992-1993 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -44,11 +44,6 @@ proc ::tk_dialog {w title text bitmap default args} {
     }
 
     set windowingsystem [tk windowingsystem]
-    if {$windowingsystem eq "aqua"} {
-	option add *Dialog*background systemDialogBackgroundActive widgetDefault
-	option add *Dialog*Button.highlightBackground \
-		systemDialogBackgroundActive widgetDefault
-    }
 
     # 1. Create the top-level window and divide it into top
     # and bottom parts.

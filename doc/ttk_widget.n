@@ -71,28 +71,19 @@ See the description of \fB\-xscrollcommand\fR above for details.
 .SH "LABEL OPTIONS"
 The following options are supported by labels, buttons,
 and other button-like widgets:
-.OP \-text text Text
-Specifies a text string to be displayed inside the widget
-(unless overridden by \fB\-textvariable\fR).
-.OP \-textvariable textVariable Variable
-Specifies the name of a global variable whose value will be used
-in place of the \fB\-text\fR resource.
-.OP \-underline underline Underline
-If set, specifies the integer index (0-based) of a character to underline
-in the text string.
-The underlined character is used for mnemonic activation.
-.OP \-image image Image
-Specifies an image to display.
-This is a list of 1 or more elements.
-The first element is the default image name.
-The rest of the list is a sequence of \fIstatespec / value\fR pairs
-as per \fBstyle map\fR, specifying different images to use when
-the widget is in a particular state or combination of states.
-All images in the list should have the same size.
+.OP \-anchor anchor Anchor
+Specifies how the information in the widget is positioned
+relative to the inner margins.  Legal values are
+\fBn\fR, \fBne\fR, \fBe\fR, \fBse\fR,
+\fBs\fR, \fBsw\fR, \fBw\fR, \fBnw\fR, and \fBcenter\fR.
+See also \fB\-justify\fR (for widgets supporting this option).
 .OP \-compound compound Compound
 Specifies how to display the image relative to the text,
 in the case both \fB\-text\fR and \fB\-image\fR are present.
-Valid values are:
+If set to the empty string (the default), the rules described in the
+"Elements" section of \fIttk::intro(n)\fR explain which value is actually
+used.
+The other valid values are:
 .RS
 .IP text
 Display text only.
@@ -106,14 +97,73 @@ Display text centered on top of image.
 .IP right
 Display image above, below, left of, or right of the text, respectively.
 .IP none
-The default; display the image if present, otherwise the text.
+Display the image if present, otherwise the text.
 .RE
+.OP \-font font Font
+Font to use for the text displayed by the widget.
+.OP \-foreground textColor TextColor
+The widget's foreground color.
+If unspecified, the theme default is used.
+.OP \-image image Image
+Specifies an image to display.
+This is a list of 1 or more elements.
+The first element is the default image name.
+The rest of the list is a sequence of \fIstatespec / value\fR pairs
+as per \fBstyle map\fR, specifying different images to use when
+the widget is in a particular state or combination of states.
+All images in the list should have the same size.
+.OP \-justify justify Justify
+If there are multiple lines of text, specifies how
+the lines are laid out relative to one another.
+One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
+See also \fB\-anchor\fR (for widgets supporting this option).
+.OP \-padding padding Padding
+Specifies the internal padding for the widget.
+The padding is a list of up to four length specifications
+\fIleft top right bottom\fR.
+If fewer than four elements are specified,
+\fIbottom\fR defaults to \fItop\fR,
+\fIright\fR defaults to \fIleft\fR, and
+\fItop\fR defaults to \fIleft\fR.
+In other words, a list of three numbers specify the left, vertical, and right padding;
+a list of two numbers specify the horizontal and the vertical padding;
+a single number specifies the same padding all the way around the widget.
+.OP \-text text Text
+Specifies a text string to be displayed inside the widget
+(unless overridden by \fB\-textvariable\fR for the widgets supporting this option).
+.OP \-textvariable textVariable Variable
+Specifies the name of a global variable whose value will be used
+in place of the \fB\-text\fR resource.
+.OP \-underline underline Underline
+If set, specifies the integer index (0-based) of a character to underline
+in the text string.
+The underlined character is used for mnemonic activation.
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths,
 to allocate for the text label.
 If less than zero, specifies a minimum width.
 If zero or unspecified, the natural width of the text label is used.
+Note that some themes may specify a non-zero \fB\-width\fR
+in the style.
+.OP \-wraplength wrapLength WrapLength
+Specifies the maximum line length. The value may have any of the forms
+acceptable to \fBTk_GetPixels\fR. If this option is less than or equal
+to zero, then automatic wrapping is not performed; otherwise
+the text is split into lines such that no line is longer
+than the specified value.
+.SH "ENTRY OPTIONS"
+The following options are supported by entry, spinbox and combobox:
+.OP \-placeholder placeHolder PlaceHolder
+Specifies a help text string to display if no text is otherwise displayed,
+that is when the widget is empty. The placeholder text is displayed using
+the values of the \fB\-font\fR, \fB\-justify\fR and
+\fB\-placeholderforeground\fR options.
+.OP \-placeholderforeground placeHolderForeground PlaceHolderForeground
+Specifies the foreground color of the placeholder text.
 .SH "COMPATIBILITY OPTIONS"
+This option is only available for themed widgets that have
+.QW corresponding
+traditional Tk widgets.
 .OP \-state state State
 May be set to \fBnormal\fR or \fBdisabled\fR
 to control the \fBdisabled\fR state bit.
@@ -124,12 +174,10 @@ does not affect the \fB\-state\fR option.
 .SH COMMANDS
 .TP
 \fIpathName \fBcget \fIoption\fR
-.
 Returns the current value of the configuration option given
 by \fIoption\fR.
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-.
 Query or modify the configuration options of the widget.
 If one or more \fIoption\-value\fR pairs are specified,
 then the command modifies the given widget option(s)
@@ -145,15 +193,14 @@ If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR.
 .TP
 \fIpathName \fBidentify element \fIx y\fR
-.
 Returns the name of the element under the point given
 by \fIx\fR and \fIy\fR, or an empty string if the point does
 not lie within any element.
 \fIx\fR and \fIy\fR are pixel coordinates relative to the widget.
-Some widgets accept other \fBidentify\fR subcommands.
+Some widgets accept other \fBidentify\fR subcommands described
+in these widgets documentation.
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-.
 Test the widget's state.
 If \fIscript\fR is not specified, returns 1 if
 the widget state matches \fIstatespec\fR and 0 otherwise.
@@ -163,7 +210,6 @@ if {[\fIpathName\fR instate \fIstateSpec\fR]} \fIscript\fR
 .CE
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-.
 Modify or inquire widget state.
 If \fIstateSpec\fR is present, sets the widget state:
 for each flag in \fIstateSpec\fR, sets the corresponding flag
@@ -177,6 +223,90 @@ set changes [\fIpathName \fRstate \fIspec\fR]
 will restore \fIpathName\fR to the original state.
 If \fIstateSpec\fR is not specified,
 returns a list of the currently-enabled state flags.
+.RE
+.TP
+\fIpathName \fBstyle\fR
+Return the style used by the widget.
+.TP
+\fIpathName \fBxview \fIargs\fR
+This command is used to query and change the horizontal position of the
+content in the widget's window.  It can take any of the following
+forms:
+.RS
+.TP
+\fIpathName \fBxview\fR
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1; together they describe
+the horizontal span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the widget's content is off-screen to the left, the middle 40% is visible
+in the window, and 40% of the content is off-screen to the right.
+These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
+option.
+.TP
+\fIpathName \fBxview\fR \fIindex\fR
+Adjusts the view in the window so that the content given by \fIindex\fR
+is displayed at the left edge of the window.
+.TP
+\fIpathName \fBxview moveto\fI fraction\fR
+Adjusts the view in the window so that the character \fIfraction\fR of the
+way through the content appears at the left edge of the window.
+\fIFraction\fR must be a fraction between 0 and 1.
+.TP
+\fIpathName \fBxview scroll \fInumber what\fR
+This command shifts the view in the window left or right according to
+\fInumber\fR and \fIwhat\fR.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
+'\" or an abbreviation of one of these, but we don't document that.
+If \fIwhat\fR is
+\fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
+If \fInumber\fR is negative then characters farther to the left
+become visible;  if it is positive then characters farther to the right
+become visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
+\fInumber\fR average-width characters on the display.
+.RE
+.TP
+\fIpathName \fByview \fIargs\fR
+This command is used to query and change the vertical position of the
+content in the widget's window.  It can take any of the following
+forms:
+.RS
+.TP
+\fIpathName \fByview\fR
+Returns a list containing two elements.
+Each element is a real fraction between 0 and 1; together they describe
+the vertical span that is visible in the window.
+For example, if the first element is .2 and the second element is .6,
+20% of the widget's content is off-screen to the top, the middle 40% is visible
+in the window, and 40% of the content is off-screen to the bottom.
+These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
+option.
+.TP
+\fIpathName \fByview\fR \fIindex\fR
+Adjusts the view in the window so that the content given by \fIindex\fR
+is displayed at the top edge of the window.
+.TP
+\fIpathName \fByview moveto\fI fraction\fR
+Adjusts the view in the window so that the item \fIfraction\fR of the
+way through the content appears at the top edge of the window.
+\fIFraction\fR must be a fraction between 0 and 1.
+.TP
+\fIpathName \fByview scroll \fInumber what\fR
+This command shifts the view in the window up or down according to
+\fInumber\fR and \fIwhat\fR.
+\fINumber\fR must be an integer.
+\fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
+'\" or an abbreviation of one of these, but we don't document that.
+If \fIwhat\fR is
+\fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
+If \fInumber\fR is negative then items farther to the top
+become visible;  if it is positive then items farther to the bottom
+become visible.
+If \fIwhat\fR is \fBunits\fR, the view adjusts up or down by
+\fInumber\fR average-width characters on the display.
 .RE
 .SH "WIDGET STATES"
 The widget state is a bitmap of independent state flags.

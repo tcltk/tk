@@ -5,8 +5,8 @@
  *	are used by Tk and in particular by the canvas code. It also has
  *	miscellaneous geometry functions used by canvases.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,9 +39,9 @@
 
 double
 TkLineToPoint(
-    double end1Ptr[2],		/* Coordinates of first end-point of line. */
-    double end2Ptr[2],		/* Coordinates of second end-point of line. */
-    double pointPtr[2])		/* Points to coords for point. */
+    double end1Ptr[],		/* Coordinates of first end-point of line. */
+    double end2Ptr[],		/* Coordinates of second end-point of line. */
+    double pointPtr[])		/* Points to coords for point. */
 {
     double x, y;
 
@@ -143,11 +143,11 @@ TkLineToPoint(
 
 int
 TkLineToArea(
-    double end1Ptr[2],		/* X and y coordinates for one endpoint of
+    double end1Ptr[],		/* X and y coordinates for one endpoint of
 				 * line. */
-    double end2Ptr[2],		/* X and y coordinates for other endpoint of
+    double end2Ptr[],		/* X and y coordinates for other endpoint of
 				 * line. */
-    double rectPtr[4])		/* Points to coords for rectangle, in the
+    double rectPtr[])		/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 must be no larger
 				 * than x2, and y1 no larger than y2. */
 {
@@ -282,7 +282,6 @@ TkLineToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 int
 TkThickPolyLineToArea(
     double *coordPtr,		/* Points to an array of coordinates for the
@@ -440,7 +439,7 @@ TkPolygonToPoint(
 				 * intersect a ray extending vertically
 				 * upwards from the point to infinity. */
     int count;
-    register double *pPtr;
+    double *pPtr;
 
     /*
      * Iterate through all of the edges in the polygon, updating bestDist and
@@ -588,7 +587,7 @@ TkPolygonToArea(
 				 * polygon: x0, y0, x1, y1, ... The polygon
 				 * may be self-intersecting. */
     int numPoints,		/* Total number of points at *polyPtr. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
+    double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
 {
@@ -596,7 +595,7 @@ TkPolygonToArea(
 				 * outside, 1 means inside, won't ever be
 				 * 0). */
     int count;
-    register double *pPtr;
+    double *pPtr;
 
     /*
      * Iterate over all of the edges of the polygon and test them against the
@@ -652,17 +651,16 @@ TkPolygonToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 double
 TkOvalToPoint(
-    double ovalPtr[4],		/* Pointer to array of four coordinates (x1,
+    double ovalPtr[],		/* Pointer to array of four coordinates (x1,
 				 * y1, x2, y2) defining oval's bounding
 				 * box. */
     double width,		/* Width of outline for oval. */
     int filled,			/* Non-zero means oval should be treated as
 				 * filled; zero means only consider
 				 * outline. */
-    double pointPtr[2])		/* Coordinates of point. */
+    double pointPtr[])		/* Coordinates of point. */
 {
     double xDelta, yDelta, scaledDistance, distToOutline, distToCenter;
     double xDiam, yDiam;
@@ -751,11 +749,11 @@ TkOvalToPoint(
 
 int
 TkOvalToArea(
-    register double *ovalPtr,	/* Points to coordinates defining the
+    double *ovalPtr,	/* Points to coordinates defining the
 				 * bounding rectangle for the oval: x1, y1,
 				 * x2, y2. X1 must be less than x2 and y1 less
 				 * than y2. */
-    register double *rectPtr)	/* Points to coords for rectangle, in the
+    double *rectPtr)	/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 and y1 must be
 				 * lower-left corner. */
 {
@@ -867,10 +865,9 @@ TkOvalToArea(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 TkIncludePoint(
-    register Tk_Item *itemPtr,	/* Item whose bounding box is being
+    Tk_Item *itemPtr,	/* Item whose bounding box is being
 				 * calculated. */
     double *pointPtr)		/* Address of two doubles giving x and y
 				 * coordinates of point. */
@@ -919,7 +916,7 @@ TkBezierScreenPoints(
     double control[],		/* Array of coordinates for four control
 				 * points: x0, y0, x1, y1, ... x3 y3. */
     int numSteps,		/* Number of curve points to generate. */
-    register XPoint *xPointPtr)	/* Where to put new points. */
+    XPoint *xPointPtr)	/* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;
@@ -965,7 +962,7 @@ TkBezierPoints(
     double control[],		/* Array of coordinates for four control
 				 * points: x0, y0, x1, y1, ... x3 y3. */
     int numSteps,		/* Number of curve points to generate. */
-    register double *coordPtr)	/* Where to put new points. */
+    double *coordPtr)	/* Where to put new points. */
 {
     int i;
     double u, u2, u3, t, t2, t3;

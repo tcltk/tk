@@ -3,9 +3,9 @@
  *
  *	Declarations shared among all the files that implement canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -147,7 +147,7 @@ typedef struct TkCanvas {
 				 * currentItem is based. Must be saved so that
 				 * if the currentItem is deleted, can pick
 				 * another. */
-    int state;			/* Last known modifier state. Used to defer
+    unsigned int state;		/* Last known modifier state. Used to defer
 				 * picking a new current object while buttons
 				 * are down. */
 
@@ -206,7 +206,7 @@ typedef struct TkCanvas {
      * Miscellaneous information:
      */
 
-    Tk_Cursor cursor;		/* Current cursor for window, or None. */
+    Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     char *takeFocus;		/* Value of -takefocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
@@ -214,7 +214,7 @@ typedef struct TkCanvas {
 				 * when converting coordinates. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    int nextId;			/* Number to use as id for next item created
+    TkSizeT nextId;			/* Number to use as id for next item created
 				 * in widget. */
     Tk_PostscriptInfo psInfo;	/* Pointer to information used for generating
 				 * Postscript for the canvas. NULL means no

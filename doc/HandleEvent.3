@@ -25,7 +25,7 @@ that all unused fields of the structure be set to zero.
 .PP
 \fBTk_HandleEvent\fR is a lower-level procedure that deals with window
 events.  It is called by \fBTcl_ServiceEvent\fR (and indirectly by
-\fBTk_DoOneEvent\fR), and in a few other cases within Tk.
+\fBTcl_DoOneEvent\fR), and in a few other cases within Tk.
 It makes callbacks to any window event
 handlers (created by calls to \fBTk_CreateEventHandler\fR)
 that match \fIeventPtr\fR and then returns.  In some cases
