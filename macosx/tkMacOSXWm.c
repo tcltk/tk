@@ -300,6 +300,9 @@ static int		WmStateCmd(Tk_Window tkwin, TkWindow *winPtr,
 static int		WmTitleCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+static int		WmTouchCmd(Tk_Window tkwin,
+			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
 static int		WmTransientCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
@@ -1168,7 +1171,7 @@ Tk_WmObjCmd(
 	"iconphoto", "iconposition", "iconwindow",
 	"manage", "maxsize", "minsize", "overrideredirect",
 	"positionfrom", "protocol", "resizable", "sizefrom",
-	"stackorder", "state", "title", "transient",
+	"stackorder", "state", "title", "touch", "transient",
 	"withdraw", NULL };
     enum options {
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
@@ -1178,7 +1181,7 @@ Tk_WmObjCmd(
 	WMOPT_ICONPHOTO, WMOPT_ICONPOSITION, WMOPT_ICONWINDOW,
 	WMOPT_MANAGE, WMOPT_MAXSIZE, WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT,
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
-	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
+	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TOUCH, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
     int index, length;
     char *argv1;
@@ -1217,8 +1220,8 @@ Tk_WmObjCmd(
 	!= TCL_OK) {
 	return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr)
-	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
+    if (!Tk_IsTopLevel(winPtr) && (index != WMOPT_MANAGE)
+	    && (index != WMOPT_TOUCH) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
@@ -1289,6 +1292,8 @@ Tk_WmObjCmd(
 	return WmStateCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_TITLE:
 	return WmTitleCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_TOUCH:
+	return WmTouchCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_TRANSIENT:
 	return WmTransientCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_WITHDRAW:
