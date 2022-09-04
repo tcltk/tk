@@ -124,7 +124,7 @@ test wm-1.1 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -bo
 # Next test will fail every time set of subcommands is changed
 test wm-1.2 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -body {
     wm foo
-} -result {bad option "foo": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}
+} -result {bad option "foo": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, touch, transient, or withdraw}
 test wm-1.3 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -body {
     wm command
 } -result {wrong # args: should be "wm option window ?arg ...?"}
