@@ -3740,6 +3740,39 @@ WmTitleCmd(
 /*
  *----------------------------------------------------------------------
  *
+ * WmTouchCmd --
+ *
+ *	This function is invoked to process the "wm touch" Tcl command. See
+ *	the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmTouchCmd(
+    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    (void)winPtr;
+    (void)interp;
+    (void)objc;
+    (void)objv;
+    /* TODO: to be implemented yet */
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * WmTransientCmd --
  *
  *	This procedure is invoked to process the "wm transient" Tcl command.
