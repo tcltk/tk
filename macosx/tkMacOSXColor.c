@@ -629,6 +629,7 @@ TkpGetColor(
     XColor color;
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
+    Bool haveValidXColor = False;
     static Bool initialized = NO;
     static NSColorSpace* sRGB = nil;
 
@@ -658,33 +659,26 @@ TkpGetColor(
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = entry->index;
 	    color.pixel = p.ulong;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    NSAppearance *savedAppearance, *windowAppearance;
+	    if (@available(macOS 10.14, *)) {
+		savedAppearance = [NSAppearance currentAppearance];
+		windowAppearance = savedAppearance;
+		if (view) {
+		    windowAppearance = [view effectiveAppearance];
+		}
+		[NSAppearance setCurrentAppearance:windowAppearance];
+	    }
+#endif
+
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-		if (@available(macOS 10.14, *)) {
-		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		    NSAppearance *windowAppearance = savedAppearance;
-		    if (view) {
-			windowAppearance = [view effectiveAppearance];
-		    }
-		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
-			colormap = darkColormap;
-		    } else {
-			colormap = lightColormap;
-		    }
-		    [NSAppearance setCurrentAppearance:windowAppearance];
-		    GetRGBA(entry, p.ulong, rgba);
-		    [NSAppearance setCurrentAppearance:savedAppearance];
-		} else {
-		    GetRGBA(entry, p.ulong, rgba);
-		}
-#else
 		GetRGBA(entry, p.ulong, rgba);
-#endif
 		color.red   = rgba[0] * 65535.0;
 		color.green = rgba[1] * 65535.0;
 		color.blue  = rgba[2] * 65535.0;
-		goto validXColor;
+		haveValidXColor = True;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
 		const CGFloat *rgba = CGColorGetComponents(c);
@@ -702,15 +696,27 @@ TkpGetColor(
 		    Tcl_Panic("CGColor with %d components", (int) n);
 		}
 		CGColorRelease(c);
-		goto validXColor;
+		haveValidXColor = True;
 	    }
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    if (@available(macOS 10.14, *)) {
+		// Not sure whether colormap should also be set for non-semantic color
+		if (haveValidXColor && entry->type == semantic) {
+		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
+			colormap = darkColormap;
+		    } else {
+			colormap = lightColormap;
+		    }
+		}
+		[NSAppearance setCurrentAppearance:savedAppearance];
+	    }
+#endif
 	}
     }
-    if (TkParseColor(display, colormap, name, &color) == 0) {
+    if (!haveValidXColor && TkParseColor(display, colormap, name, &color) == 0) {
 	return NULL;
     }
 
-validXColor:
     tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->colormap = colormap;
     tkColPtr->color = color;
