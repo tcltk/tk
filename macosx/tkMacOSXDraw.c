@@ -1401,6 +1401,14 @@ TkMacOSXSetupDrawingContext(
 	    CGContextClipToRect(dc.context, r);
 	}
     }
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if (@available(macOS 10.14, *)) {
+	dc.savedAppearance = NSAppearance.currentAppearance;
+	if (view) {
+	    NSAppearance.currentAppearance = view.effectiveAppearance;
+	}
+    }
+#endif
     if (gc) {
 	static const CGLineCap cgCap[] = {
 	    [CapNotLast] = kCGLineCapButt,
@@ -1510,6 +1518,11 @@ TkMacOSXRestoreDrawingContext(
 	CFRelease(dcPtr->clipRgn);
 	dcPtr->clipRgn = NULL;
     }
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    if (@available(macOS 10.14, *)) {
+	NSAppearance.currentAppearance = dcPtr->savedAppearance;
+    }
+#endif
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));

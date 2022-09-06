@@ -204,6 +204,9 @@ typedef struct TkMacOSXDrawingContext {
     CGContextRef context;
     NSView *view;
     HIShapeRef clipRgn;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    NSAppearance *savedAppearance;
+#endif
 } TkMacOSXDrawingContext;
 
 /*
