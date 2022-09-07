@@ -239,8 +239,8 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (id) initWithTkMenu: (TkMenu *) tkMenu
 {
-    NSString *title = [[NSString alloc] initWithUTF8String:
-	    Tk_PathName(tkMenu->tkwin)];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:
+	    Tk_PathName(tkMenu->tkwin) length:-1];
 
     self = [self initWithTitle:title];
     [title release];
@@ -1314,7 +1314,7 @@ ParseAccelerator(
     if (ch) {
 	return [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
     } else {
-	return [[[[NSString alloc] initWithUTF8String:accel] autorelease]
+	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:-1] autorelease]
 		lowercaseString];
     }
 }

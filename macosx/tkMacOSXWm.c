@@ -5420,7 +5420,7 @@ TkSetWMName(
 	return;
     }
 
-    NSString *title = [[NSString alloc] initWithUTF8String:titleUid];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:-1];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
     [title release];
 }
