@@ -3,8 +3,8 @@
  *
  *	This module implements the Mac-platform specific features of menus.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright (c) 2001-2009 Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2012 Adrian Robert.
  *
@@ -814,7 +814,7 @@ TkpConfigureMenuEntry(
 	    if ([submenu supermenu] && [menuItem submenu] != submenu) {
 		/*
 		 * This happens during a clone, where the parent menu is
-		 * cloned before its children, so just ignore this temprary
+		 * cloned before its children, so just ignore this temporary
 		 * setting, it will be changed shortly (c.f. tkMenu.c
 		 * CloneMenu())
 		 */
@@ -1324,7 +1324,7 @@ ParseAccelerator(
  *
  * ModifierCharWidth --
  *
- *	Helper mesuring width of command char in given font.
+ *	Helper measuring width of command char in given font.
  *
  * Results:
  *	Width of command char.
