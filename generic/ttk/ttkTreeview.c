@@ -306,8 +306,8 @@ typedef struct {
 
 static void InitColumn(TreeColumn *column)
 {
-    column->width = 200;
-    column->minWidth = 20;
+    column->width = atoi(DEF_COLWIDTH);
+    column->minWidth = atoi(DEF_MINWIDTH);
     column->stretch = 1;
     column->separator = 0;
     column->idObj = 0;
@@ -2243,7 +2243,7 @@ static void DrawCells(
 	    /* If no explicit padding was asked for, add some default. */
 	    parcel = Ttk_PadBox(parcel, cellPadding);
 	}
-	
+
 	DisplayLayoutTree(imageAnchor, textAnchor,
 		layout, displayItemUsed, state, parcel, d);
     }
