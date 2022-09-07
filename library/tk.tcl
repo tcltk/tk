@@ -675,15 +675,6 @@ proc ::tk::mcmaxamp {args} {
     return $maxlen
 }
 
-# For now, turn off the custom mdef proc for the Mac:
-
-if {[tk windowingsystem] eq "aqua"} {
-    namespace eval ::tk::mac {
-	set useCustomMDEF 0
-    }
-}
-
-
 if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
