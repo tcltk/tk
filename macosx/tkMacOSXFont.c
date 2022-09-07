@@ -244,7 +244,7 @@ FindNSFont(
     NSString *family;
 
     if (familyName) {
-	family = [[[NSString alloc] initWithUTF8String:familyName] autorelease];
+	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:-1] autorelease];
     } else {
 	family = [defaultFont familyName];
     }
