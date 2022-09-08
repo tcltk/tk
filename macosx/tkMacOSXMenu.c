@@ -239,8 +239,8 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (id) initWithTkMenu: (TkMenu *) tkMenu
 {
-    NSString *title = [[NSString alloc] initWithUTF8String:
-	    Tk_PathName(tkMenu->tkwin)];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:
+	    Tk_PathName(tkMenu->tkwin) length:-1];
 
     self = [self initWithTitle:title];
     [title release];
@@ -736,14 +736,9 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	Tcl_DString ds;
-	Tcl_DStringInit(&ds);
-	Tcl_UtfToUniCharDString(Tcl_GetString(mePtr->labelPtr),
-				mePtr->labelLength, &ds);
-	title = [[NSString alloc]
-		    initWithCharacters:(unichar *)Tcl_DStringValue(&ds)
-				length:Tcl_DStringLength(&ds)>>1];
-	Tcl_DStringFree(&ds);
+	title = [[TKNSString alloc]
+		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
+				length:mePtr->labelLength];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
@@ -1314,7 +1309,7 @@ ParseAccelerator(
     if (ch) {
 	return [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
     } else {
-	return [[[[NSString alloc] initWithUTF8String:accel] autorelease]
+	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:-1] autorelease]
 		lowercaseString];
     }
 }

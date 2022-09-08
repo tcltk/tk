@@ -6,7 +6,7 @@
  *	the "wm" command and passes geometry information to the window manager.
  *
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
  * Copyright (c) 2017-2019 Marc Culler.
@@ -5420,7 +5420,7 @@ TkSetWMName(
 	return;
     }
 
-    NSString *title = [[NSString alloc] initWithUTF8String:titleUid];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:-1];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
     [title release];
 }
@@ -6034,9 +6034,9 @@ WmWinAppearance(
     if (objc == 4) {
 	int index;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
-                sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
+		sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	switch ((enum appearances) index) {
 	case APPEARANCE_AQUA:
 	    win.appearance = [NSAppearance appearanceNamed:
