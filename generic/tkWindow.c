@@ -945,10 +945,14 @@ TkCreateMainWindow(
 	} else {
 	    clientData = NULL;
 	}
+#if TCL_MAJOR_VERSION < 9
+#   define objClientData2 objClientData
+#   define objProc2 objProc
+#endif
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
-	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
-	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData2 && !cmdInfo.deleteProc) {
+	    mainPtr->tclUpdateObjProc = cmdInfo.objProc2;
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -1591,7 +1595,7 @@ Tk_DestroyWindow(
 		    if ((cmdPtr->flags & SAVEUPDATECMD) &&
 			winPtr->mainPtr->tclUpdateObjProc != NULL) {
 			/* Restore Tcl's version of [update] */
-			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+			Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 					     cmdPtr->name,
 					     winPtr->mainPtr->tclUpdateObjProc,
 					     NULL, NULL);
