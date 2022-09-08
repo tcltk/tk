@@ -461,7 +461,7 @@ Tk_ChooseColorObjCmd(
     [colorPanel setShowsAlpha: NO];
     [colorPanel _setUseModalAppearance:YES];
     if (title) {
-	NSString *s = [[NSString alloc] initWithUTF8String:title];
+	NSString *s = [[TKNSString alloc] initWithTclUtfBytes:title length:-1];
 
 	[colorPanel setTitle:s];
 	[s release];
@@ -533,7 +533,7 @@ parseFileFilters(
     if (filterInfo.doFileTypes) {
 	for (FileFilter *filterPtr = fl.filters; filterPtr;
 		filterPtr = filterPtr->next) {
-	    NSString *name = [[NSString alloc] initWithUTF8String: filterPtr->name];
+	    NSString *name = [[TKNSString alloc] initWithTclUtfBytes: filterPtr->name length:-1];
 
 	    [filterInfo.fileTypeNames addObject:name];
 	    [name release];
@@ -551,7 +551,7 @@ parseFileFilters(
 		    	str++;
 		    }
 		    if (*str) {
-			NSString *extension = [[NSString alloc] initWithUTF8String:str];
+			NSString *extension = [[TKNSString alloc] initWithTclUtfBytes:str length:-1];
 			if (![filterInfo.allowedExtensions containsObject:extension]) {
 			    [filterInfo.allowedExtensions addObject:extension];
 			}
@@ -604,7 +604,7 @@ parseFileFilters(
 		const char *selectedFileType =
 			Tcl_GetString(selectedFileTypeObj);
 		NSString *selectedFileTypeStr =
-			[[NSString alloc] initWithUTF8String:selectedFileType];
+			[[TKNSString alloc] initWithTclUtfBytes:selectedFileType length:-1];
 		NSUInteger index =
 			[filterInfo.fileTypeNames indexOfObject:selectedFileTypeStr];
 
@@ -695,20 +695,21 @@ Tk_GetOpenFileObjCmd(
 	case OPEN_INITDIR:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
 	    if (len) {
-		directory = [[[NSString alloc] initWithUTF8String:str]
+		directory = [[[TKNSString alloc] initWithTclUtfBytes:str length:len]
 			autorelease];
 	    }
 	    break;
 	case OPEN_INITFILE:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
 	    if (len) {
-		filename = [[[NSString alloc] initWithUTF8String:str]
+		filename = [[[TKNSString alloc] initWithTclUtfBytes:str length:len]
 			autorelease];
 	    }
 	    break;
 	case OPEN_MESSAGE:
-	    message = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    message = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:len];
 	    break;
 	case OPEN_MULTIPLE:
 	    if (Tcl_GetBooleanFromObj(interp, objv[i + 1],
@@ -725,8 +726,9 @@ Tk_GetOpenFileObjCmd(
 	    haveParentOption = 1;
 	    break;
 	case OPEN_TITLE:
-	    title = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    title = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:len];
 	    break;
 	case OPEN_TYPEVARIABLE:
 	    typeVariablePtr = objv[i + 1];
@@ -960,10 +962,10 @@ Tk_GetSaveFileObjCmd(
 	    case SAVE_DEFAULT:
 		str = Tcl_GetStringFromObj(objv[i + 1], &len);
 		while (*str && (*str == '*' || *str == '.')) {
-		    str++;
+		    str++; len--;
 		}
 		if (*str) {
-		    defaultType = [[[NSString alloc] initWithUTF8String:str]
+		    defaultType = [[[TKNSString alloc] initWithTclUtfBytes:str length:len]
 			    autorelease];
 		}
 		break;
@@ -973,21 +975,22 @@ Tk_GetSaveFileObjCmd(
 	    case SAVE_INITDIR:
 		str = Tcl_GetStringFromObj(objv[i + 1], &len);
 		if (len) {
-		    directory = [[[NSString alloc] initWithUTF8String:str]
+		    directory = [[[TKNSString alloc] initWithTclUtfBytes:str length:len]
 			    autorelease];
 		}
 		break;
 	    case SAVE_INITFILE:
 		str = Tcl_GetStringFromObj(objv[i + 1], &len);
 		if (len) {
-		    filename = [[[NSString alloc] initWithUTF8String:str]
+		    filename = [[[TKNSString alloc] initWithTclUtfBytes:str length:len]
 			    autorelease];
 		    [savepanel setNameFieldStringValue:filename];
 		}
 		break;
 	    case SAVE_MESSAGE:
-		message = [[NSString alloc] initWithUTF8String:
-			Tcl_GetString(objv[i + 1])];
+		str = Tcl_GetStringFromObj(objv[i + 1], &len);
+		message = [[TKNSString alloc] initWithTclUtfBytes:
+			str length:len];
 		break;
 	    case SAVE_PARENT:
 		str = Tcl_GetStringFromObj(objv[i + 1], &len);
@@ -998,8 +1001,9 @@ Tk_GetSaveFileObjCmd(
 		haveParentOption = 1;
 		break;
 	    case SAVE_TITLE:
-		title = [[NSString alloc] initWithUTF8String:
-			Tcl_GetString(objv[i + 1])];
+		str = Tcl_GetStringFromObj(objv[i + 1], &len);
+		title = [[TKNSString alloc] initWithTclUtfBytes:
+			str length:len];
 		break;
 	    case SAVE_TYPEVARIABLE:
 		typeVariablePtr = objv[i + 1];
@@ -1198,13 +1202,14 @@ Tk_ChooseDirectoryObjCmd(
 	case CHOOSE_INITDIR:
 	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
 	    if (len) {
-		directory = [[[NSString alloc] initWithUTF8String:str]
+		directory = [[[TKNSString alloc] initWithTclUtfBytes:str length:len]
 			autorelease];
 	    }
 	    break;
 	case CHOOSE_MESSAGE:
-	    message = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    message = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:len];
 	    [panel setMessage:message];
 	    [message release];
 	    break;
@@ -1223,8 +1228,9 @@ Tk_ChooseDirectoryObjCmd(
 	    haveParentOption = 1;
 	    break;
 	case CHOOSE_TITLE:
-	    title = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetStringFromObj(objv[i + 1], &len);
+	    title = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:len];
 	    [panel setTitle:title];
 	    [title release];
 	    break;
@@ -1387,8 +1393,9 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_DETAIL:
-	    message = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetString(objv[i + 1]);
+	    message = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:-1];
 	    [alert setInformativeText:message];
 	    [message release];
 	    break;
@@ -1401,8 +1408,9 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_MESSAGE:
-	    message = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetString(objv[i + 1]);
+	    message = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:-1];
 	    [alert setMessageText:message];
 	    [message release];
 	    break;
@@ -1417,8 +1425,9 @@ Tk_MessageBoxObjCmd(
 	    break;
 
 	case ALERT_TITLE:
-	    title = [[NSString alloc] initWithUTF8String:
-		    Tcl_GetString(objv[i + 1])];
+	    str = Tcl_GetString(objv[i + 1]);
+	    title = [[TKNSString alloc] initWithTclUtfBytes:
+		    str length:-1];
 	    [[alert window] setTitle:title];
 	    [title release];
 	    break;
