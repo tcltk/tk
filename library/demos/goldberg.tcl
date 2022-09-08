@@ -77,7 +77,6 @@ set S(mode) $::MSTART
 
 # Colors for everything
 set C(fg) black
-set C(bg) gray75
 set C(bg) cornflowerblue
 
 set C(0) white;		set C(1a) darkgreen;	set C(1b) yellow
