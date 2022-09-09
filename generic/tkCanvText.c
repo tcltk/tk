@@ -1131,18 +1131,18 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 >= (size_t)index + 1) {
+	if (textInfoPtr->selectFirst + 1 >= (TkSizeT)index + 1) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast + 1 >= (size_t)index + 1) {
+	if (textInfoPtr->selectLast + 1 >= (TkSizeT)index + 1) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 >= (size_t)index + 1)) {
+		&& (textInfoPtr->selectAnchor + 1 >= (TkSizeT)index + 1)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos + 1 >= (size_t)index + 1) {
+    if (textPtr->insertPos + 1 >= (TkSizeT)index + 1) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
