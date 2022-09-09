@@ -417,7 +417,7 @@ LineCoords(
 	linePtr->numPoints = numPoints;
     }
     coordPtr = linePtr->coordPtr;
-    for (i = 0; i < (size_t)objc ; i++) {
+    for (i = 0; i < (TkSizeT)objc ; i++) {
 	if (Tk_CanvasGetCoordFromObj(interp, canvas, objv[i],
 		coordPtr++) != TCL_OK) {
 	    return TCL_ERROR;

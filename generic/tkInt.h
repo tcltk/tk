@@ -85,6 +85,7 @@
 
 #if TCL_MAJOR_VERSION < 9
 #   define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
+#   undef Tcl_CreateObjCommand2
 #   define Tcl_CreateObjCommand2 Tcl_CreateObjCommand
 #endif
 
