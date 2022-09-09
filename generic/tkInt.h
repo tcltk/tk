@@ -677,12 +677,6 @@ typedef struct TkEventHandler {
  * all of the windows associated with a particular main window.
  */
 
-#if TCL_MAJOR_VERSION < 9
-#   define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
-#   undef Tcl_CreateObjCommand2
-#   define Tcl_CreateObjCommand2 Tcl_CreateObjCommand
-#endif
-
 typedef struct TkMainInfo {
     TkSizeT refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
@@ -736,10 +730,17 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
-    Tcl_ObjCmdProc2 *tclUpdateObjProc;
+    Tcl_ObjCmdProc *tclUpdateObjProc;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *tclUpdateObjProc2;
+				/* Saved Tcl [update] command, used to restore
+				 * Tcl's version of [update] after Tk is shut
+				 * down, in case it's a Tcl_ObjCmdProc2 */
+#endif
+
 } TkMainInfo;
 
 /*
