@@ -961,9 +961,7 @@ TkCreateMainWindow(
 	}
     }
     if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
-	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc, (void *)
-		(TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
+	static const char version[] = TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
 #if defined(MAC_OSX_TK)
 		".aqua"
 #endif
@@ -1032,7 +1030,18 @@ TkCreateMainWindow(
 		".no-xft"
 #endif
 #endif
-		), NULL);
+		;
+#if TCL_MAJOR_VERSION > 8
+	if (info.isNativeObjectProc == 2) {
+	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
+		    info.objProc2, (void *)
+		    version, NULL);
+
+	} else
+#endif
+	Tcl_CreateObjCommand(interp, "::tk::build-info",
+		info.objProc, (void *)
+		version, NULL);
     }
 
     /*
