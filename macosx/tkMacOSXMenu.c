@@ -121,7 +121,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
  * demo would cause the animation to stop.  This was also the case for
  * menubuttons.
  *
- * The TKBackground object below works around this problem, and allows a Tk
+ * The TKBackgroundLoop object below works around this problem, and allows a Tk
  * event loop to run while a menu is open.  It is a subclass of NSThread which
  * inserts requests to call [NSApp _runBackgroundLoop] onto the queue
  * associated with the NSEventTrackingRunLoopMode.  One of these threads gets
