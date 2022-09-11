@@ -131,7 +131,7 @@ typedef struct {
 } ICONDIR, *LPICONDIR;
 
 /*
- * A pointer to one of these strucutures is associated with each toplevel.
+ * A pointer to one of these structures is associated with each toplevel.
  * This allows us to free up all memory associated with icon resources when a
  * window is deleted or if the window's icon is changed. They are simply
  * reference counted according to:

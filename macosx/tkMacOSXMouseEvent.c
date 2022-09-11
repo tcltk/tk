@@ -248,7 +248,7 @@ enum {
 	}
 
 	/*
-	 * If this click will change the focus, the Tk event event should
+	 * If this click will change the focus, the Tk event should
 	 * be sent to the toplevel which will be receiving focus rather than to
 	 * the current focus window.  So reset tkEventTarget.
 	 */
