@@ -299,7 +299,7 @@ GetRGBA(
 
 	/*
 	 * Prior to OSX 10.14, getComponents returns black when applied to
-	 * windowBackGroundColor.
+	 * windowBackgroundColor.
 	 */
 
 	if ([NSApp macOSVersion] < 101400) {
