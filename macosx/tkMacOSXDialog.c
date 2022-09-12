@@ -39,9 +39,7 @@ static void setAllowedFileTypes(
     if (@available(macOS 11.0, *)) {
 	for (NSString *ext in extensions) {
 	    UTType *uttype = [UTType typeWithFilenameExtension: ext];
-	    if ([uttype isDeclared]) {
-		[allowedTypes addObject:uttype];
-	    }
+	    [allowedTypes addObject:uttype];
 	}
 	[panel setAllowedContentTypes:allowedTypes];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
