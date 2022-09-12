@@ -13,6 +13,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+
 /*
  * This structure holds information about native bitmaps.
  */
@@ -174,9 +175,13 @@ TkpCreateNativeBitmap(
     Display *display,
     const void *source)		/* Info about the icon to build. */
 {
-    NSString *iconUTI = OSTYPE_TO_UTI(PTR2UINT(source));
-    NSImage *iconImage = [[NSWorkspace sharedWorkspace]
-			     iconForFileType: iconUTI];
+    NSString *filetype = [NSString stringWithUTF8String:(char *)source];
+    NSImage *iconImage;
+    if (filetype) {
+	iconImage = TkMacOSXIconForFileType(filetype);
+    } else {
+	return None;
+    }
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
     Pixmap pixmap = PixmapFromImage(display, iconImage, size);
     return pixmap;
@@ -268,12 +273,12 @@ TkpGetNativeAppBitmap(
 	    break;
 	case ICON_FILETYPE:
 	    string = [NSString stringWithUTF8String:iconBitmap->value];
-	    image = [[NSWorkspace sharedWorkspace] iconForFileType:string];
+	    image = TkMacOSXIconForFileType(string);
 	    break;
 	case ICON_OSTYPE:
 	    if (OSTypeFromString(iconBitmap->value, &type) == TCL_OK) {
-		string = NSFileTypeForHFSTypeCode(type);
-		image = [[NSWorkspace sharedWorkspace] iconForFileType:string];
+		string = [NSString stringWithUTF8String:iconBitmap->value];
+		image = TkMacOSXIconForFileType(string);
 	    }
 	    break;
 	case ICON_SYSTEMTYPE:
@@ -312,13 +317,9 @@ TkpGetNativeAppBitmap(
 	*height = size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
-	OSType iconType;
-	if (OSTypeFromString(name, &iconType) == TCL_OK) {
-	    NSString *iconUTI = OSTYPE_TO_UTI(iconType);
-	    NSImage *iconImage = [[NSWorkspace sharedWorkspace]
-				     iconForFileType: iconUTI];
-	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
-	}
+	NSString *filetype = [NSString stringWithUTF8String:name];
+	NSImage *iconImage = TkMacOSXIconForFileType(filetype);
+	pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
     }
     return pixmap;
 }

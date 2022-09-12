@@ -27,6 +27,31 @@
 #define modalError  -2
 
 /*
+@property(copy) NSArray<NSString *> *allowedFileTypes;
+@property(copy) NSArray<UTType *> *allowedContentTypes;
+*/
+
+static void setAllowedFileTypes(
+    NSSavePanel *panel,
+    NSMutableArray<NSString *> *extensions)
+{
+    NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
+    if (@available(macOS 11.0, *)) {
+	for (NSString *ext in extensions) {
+	    UTType *uttype = [UTType typeWithFilenameExtension: ext];
+	    if ([uttype isDeclared]) {
+		[allowedTypes addObject:uttype];
+	    }
+	}
+	[panel setAllowedContentTypes:allowedTypes];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+    } else {
+	[panel setAllowedFileTypes:extensions];
+#endif
+    }
+}
+
+/*
  * Vars for filtering in "open file" and "save file" dialogs.
  */
 
@@ -302,11 +327,11 @@ getFileURL(
 	 * any file.
 	 */
 
-	[openpanel setAllowedFileTypes:nil];
+	setAllowedFileTypes(openpanel, nil);
     } else {
 	NSMutableArray *allowedtypes =
 		[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
-	[openpanel setAllowedFileTypes:allowedtypes];
+	setAllowedFileTypes(openpanel, allowedtypes);
 	[openpanel setAllowsOtherFileTypes:NO];
     }
 
@@ -319,11 +344,11 @@ getFileURL(
 
     if ([[filterInfo.fileTypeAllowsAll objectAtIndex:filterInfo.fileTypeIndex] boolValue]) {
 	[savepanel setAllowsOtherFileTypes:YES];
-	[savepanel setAllowedFileTypes:nil];
+	setAllowedFileTypes(savepanel, nil);
     } else {
 	NSMutableArray *allowedtypes =
 		[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex];
-	[savepanel setAllowedFileTypes:allowedtypes];
+	setAllowedFileTypes(savepanel, allowedtypes);
 	[savepanel setAllowsOtherFileTypes:NO];
     }
 
@@ -803,9 +828,9 @@ Tk_GetOpenFileObjCmd(
 	    [openpanel setAllowedFileTypes:filterInfo.fileTypeExtensions[filterInfo.fileTypeIndex]];
 	    */
 
-	    [openpanel setAllowedFileTypes:filterInfo.allowedExtensions];
+	    setAllowedFileTypes(openpanel, filterInfo.allowedExtensions);
 	} else {
-	    [openpanel setAllowedFileTypes:filterInfo.allowedExtensions];
+	    setAllowedFileTypes(openpanel, filterInfo.allowedExtensions);
 	}
 	if (filterInfo.allowedExtensionsAllowAll) {
 	    [openpanel setAllowsOtherFileTypes:YES];
@@ -1076,7 +1101,8 @@ Tk_GetSaveFileObjCmd(
 
 	[savepanel setAccessoryView:accessoryView];
 
-	[savepanel setAllowedFileTypes:[filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]];
+	setAllowedFileTypes(savepanel,
+	    [filterInfo.fileTypeExtensions objectAtIndex:filterInfo.fileTypeIndex]);
 	[savepanel setAllowsOtherFileTypes:filterInfo.allowedExtensionsAllowAll];
     } else if (defaultType) {
 	/*
@@ -1088,7 +1114,7 @@ Tk_GetSaveFileObjCmd(
 	NSMutableArray *AllowedFileTypes = [NSMutableArray array];
 
 	[AllowedFileTypes addObject:defaultType];
-	[savepanel setAllowedFileTypes:AllowedFileTypes];
+	setAllowedFileTypes(savepanel, AllowedFileTypes);
 	[savepanel setAllowsOtherFileTypes:YES];
     }
 
