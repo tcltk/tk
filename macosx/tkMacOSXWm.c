@@ -5967,7 +5967,7 @@ WmWinTabbingId(
  *	allows you to get or set the appearance for the NSWindow associated
  *	with a Tk Window.  The syntax is:
  *
- *	    tk::unsupported::MacWindowStyle tabbingid window ?newAppearance?
+ *	    tk::unsupported::MacWindowStyle appearance window ?newAppearance?
  *
  *      Allowed appearance names are "aqua", "darkaqua", and "auto".
  *

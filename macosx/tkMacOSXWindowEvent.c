@@ -457,7 +457,7 @@ static void RefocusGrabWindow(void *data) {
  *      being run inside of the drawRect method. If not, it may be desirable
  *      for the display procedure to simply clear the REDRAW_PENDING flag
  *      and return.  The widget can be recorded in order to schedule a
- *      redraw, via and Expose event, from within drawRect.
+ *      redraw, via an Expose event, from within drawRect.
  *
  *      This is also needed for some tests, especially of the Text widget,
  *      which record data in a global Tcl variable and assume that display
@@ -1014,7 +1014,7 @@ ConfigureRestrictProc(
 
     /*
      * Make sure that the layer uses a contentScale that matches the
-     * backing scale factor of the screen.  This avoids blurry text whe
+     * backing scale factor of the screen.  This avoids blurry text when
      * the view is on a Retina display, as well as incorrect size when
      * the view is on a normal display.
      */
