@@ -176,12 +176,7 @@ TkpCreateNativeBitmap(
     const void *source)		/* Info about the icon to build. */
 {
     NSString *filetype = [NSString stringWithUTF8String:(char *)source];
-    NSImage *iconImage;
-    if (filetype) {
-	iconImage = TkMacOSXIconForFileType(filetype);
-    } else {
-	return None;
-    }
+    NSImage *iconImage = TkMacOSXIconForFileType(filetype);
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
     Pixmap pixmap = PixmapFromImage(display, iconImage, size);
     return pixmap;
@@ -258,7 +253,6 @@ TkpGetNativeAppBitmap(
     NSString *string;
     NSImage *image = nil;
     NSSize size = { .width = builtInIconSize, .height = builtInIconSize };
-
     if (iconBitmapTable.buckets &&
 	    (hPtr = Tcl_FindHashEntry(&iconBitmapTable, name))) {
 	OSType type;
@@ -317,9 +311,17 @@ TkpGetNativeAppBitmap(
 	*height = size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
-	NSString *filetype = [NSString stringWithUTF8String:name];
-	NSImage *iconImage = TkMacOSXIconForFileType(filetype);
-	pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
+	/*
+	 * As a last resort, try to interpret the name as an OSType.
+	 * It would probably be better to just return None at this
+	 * point.
+	 */
+	OSType iconType;
+	if (OSTypeFromString(name, &iconType) == TCL_OK) {
+	    NSString *iconUTI = TkMacOSXOSTypeToUTI(iconType);
+	    NSImage *iconImage = TkMacOSXIconForFileType(iconUTI);
+	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
+	}
     }
     return pixmap;
 }

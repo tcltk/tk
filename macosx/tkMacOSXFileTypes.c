@@ -51,7 +51,6 @@ static void initOSTypeTable(void) {
     int newPtr;
     Tcl_HashEntry *hPtr;
     const IdentifierForOSType *entry;
-    printf("Initializing hash table\n");
     Tcl_InitHashTable(&ostype2identifier, TCL_ONE_WORD_KEYS);
     for (entry = OSTypeDB; entry->ostype != NULL; entry++) {
 	const char *key = INT2PTR(CHARS_TO_OSTYPE(entry->ostype));
@@ -87,14 +86,17 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
 	initOSTypeTable();
     }
     if (@available(macOS 11.0, *)) {
-	UTType *uttype = [UTType typeWithFilenameExtension: filetype];
+	UTType *uttype = [UTType typeWithIdentifier: filetype];
 	if (![uttype isDeclared]) {
-	    uttype = [UTType typeWithIdentifier: filetype];
+	    uttype = [UTType typeWithFilenameExtension: filetype];
 	}
 	if (![uttype isDeclared] && [filetype length] == 4) {
 	    OSType ostype = CHARS_TO_OSTYPE(filetype.UTF8String);
 	    NSString *UTI = TkMacOSXOSTypeToUTI(ostype);
 	    uttype = [UTType typeWithIdentifier:UTI];
+	}
+	if (![uttype isDeclared]) {
+	    return nil;
 	}
 	return [[NSWorkspace sharedWorkspace] iconForContentType:uttype];
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
