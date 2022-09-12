@@ -25,7 +25,9 @@ without generating deprecation warnings.
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFileTypes.h"
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 
 /* documentation
 + (NSArray<UTType *> *)typesWithTag:(NSString *)tag 
