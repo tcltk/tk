@@ -29,17 +29,6 @@ without generating deprecation warnings.
 #import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
 #endif
 
-/* documentation
-+ (NSArray<UTType *> *)typesWithTag:(NSString *)tag 
-                           tagClass:(NSString *)tagClass 
-                   conformingToType:(UTType *)supertype;
-+ (nullable instancetype)typeWithIdentifier:(NSString *)identifier;
-tagClasses:
-
-UTTagClassFilenameExtension
-UTTagClassMIMEType
-*/
-
 #define CHARS_TO_OSTYPE(string) (OSType) string[0] << 24 | \
                                 (OSType) string[1] << 16 | \
                                 (OSType) string[2] <<  8 | \
@@ -86,6 +75,7 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
 	initOSTypeTable();
     }
     if (@available(macOS 11.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
 	UTType *uttype = [UTType typeWithIdentifier: filetype];
 	if (![uttype isDeclared]) {
 	    uttype = [UTType typeWithFilenameExtension: filetype];
@@ -99,6 +89,7 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
 	    return nil;
 	}
 	return [[NSWorkspace sharedWorkspace] iconForContentType:uttype];
+#endif
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     } else {
 	return [[NSWorkspace sharedWorkspace] iconForFileType:filetype];
