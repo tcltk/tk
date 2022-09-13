@@ -201,25 +201,36 @@ TKBackgroundLoop *backgroundLoop = nil;
  * Spanish keyboard both the ' and the ` keys are dead keys used to place
  * accents over letters.  But ⌘` is a standard KeyEquivalent which cycles
  * through the open windows of an application, changing the focus to the next
- * window.
- *
- * The performKeyEquivalent callback method is being overridden here to always
- * return NO.  Previously it would return NO when the event characters has
- * length 0.  This caused a bug reported in [1626ed65b8].  When a dead key that
- * is also as a KeyEquivalent is pressed, a KeyDown event with no characters
- * would be passed to performKeyEquivalent.  The default implementation
- * provided by Apple would cause that event to be routed to some private
- * methods of NSMenu which raise NSInvalidArgumentException, causing an
- * abort. Returning NO in such a case prevents the abort.
+ * window. This caused a bug reported in [1626ed65b8].  When a dead key that is
+ * also as a KeyEquivalent is pressed, a KeyDown event with no characters would
+ * be passed to performKeyEquivalent.  The default implementation provided by
+ * Apple would cause that event to be routed to some private methods of NSMenu
+ * which raise NSInvalidArgumentException, causing an abort. Returning NO in
+ * such a case prevents the abort.  So the override below returns NO when the
+ * event has no characters.
  *
  * In fact, however, we never want to handle accelerators because they are
- * handled by Tk.  Hence this method should always return NO.  This was done
- * to fix [ead70921a9].
+ * handled by Tk.  Hence this method could always return NO.  But if we did
+ * that then we would not see the menu flash when an accelerator is pressed.
+ * The flash is a useful visual indicator. It turns out that the flash is an
+ * undocumented side effect of calling the super method for
+ * performKeyEquivalent.  The super method also calls the NSMenuItem's action
+ * method - tkMenuItemInvoke in our case.  This is also not documented.
+ *
+ * To enable the flash we set up a flag that tells the action method to do
+ * nothing, because it is being called by an accelerator. The override below
+ * sets the flag and then calls super. See ticket [ead70921a9].
  */
 
+static Bool runMenuCommand = true;
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
-    return NO;
+    if ([[event characters] length] == 0) {
+	return NO;
+    }
+    runMenuCommand = false;
+    /* Make the menu flash and call tkMenuItemInvoke. */
+    return [super performKeyEquivalent: event];
 }
 @end
 
@@ -333,11 +344,27 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkMenuItemInvoke: (id) sender
 {
-    NSMenuItem *menuItem = (NSMenuItem *) sender;
-    TkMenu *menuPtr = (TkMenu *) _tkMenu;
-    TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
+    if (!runMenuCommand) {
+
+    	/*
+    	 * We are being called for a menu accelerator.  Tk will handle it.
+    	 * Just update the runMenuCommand flag.
+    	 */
+
+    	runMenuCommand = true;
+    	return;
+    }
+
+    /*
+     * We are being called for an actual menu item selection; run the command.
+     */
+	
+    if ([sender isKindOfClass:[NSMenuItem class]]) {
+	NSMenuItem *menuItem = (NSMenuItem *) sender;
+	TkMenu *menuPtr = (TkMenu *) _tkMenu;
+	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
     
-    if (menuPtr && mePtr) {
+	if (menuPtr && mePtr) {
 	Tcl_Interp *interp = menuPtr->interp;
 	Tcl_Preserve(interp);
 	Tcl_Preserve(menuPtr);
@@ -348,7 +375,8 @@ TKBackgroundLoop *backgroundLoop = nil;
 	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_Release(menuPtr);
-	Tcl_Release(interp);
+	    Tcl_Release(interp);
+	}
     }
 }
 
