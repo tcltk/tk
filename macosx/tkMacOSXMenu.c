@@ -94,7 +94,7 @@ static const struct {
 static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
 				 * the flag that Tk is not to draw any
 				 * menus. */
-static int inPostMenu = 0;
+static Bool   inPostMenu = true;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -106,6 +106,7 @@ static int	GenerateMenuSelectEvent(TKMenu *menu, NSMenuItem *menuItem);
 static void	MenuSelectEvent(TkMenu *menuPtr);
 static void	RecursivelyClearActiveMenu(TkMenu *menuPtr);
 static int	ModifierCharWidth(Tk_Font tkfont);
+
 
 #pragma mark TkBackgroundLoop
 
@@ -202,23 +203,23 @@ TKBackgroundLoop *backgroundLoop = nil;
  * through the open windows of an application, changing the focus to the next
  * window.
  *
- * The performKeyEquivalent callback method is being overridden here to work
- * around a bug reported in [1626ed65b8].  When a dead key that is also as a
- * KeyEquivalent is pressed, a KeyDown event with no characters is passed to
- * performKeyEquivalent.  The default implementation provided by Apple will
- * cause that event to be routed to some private methods of NSMenu which raise
- * NSInvalidArgumentException, causing an abort. Returning NO in such a case
- * prevents the abort, but does not prevent the KeyEquivalent action from being
- * invoked, presumably because the event does get correctly handled higher in
- * the responder chain.
+ * The performKeyEquivalent callback method is being overridden here to always
+ * return NO.  Previously it would return NO when the event characters has
+ * length 0.  This caused a bug reported in [1626ed65b8].  When a dead key that
+ * is also as a KeyEquivalent is pressed, a KeyDown event with no characters
+ * would be passed to performKeyEquivalent.  The default implementation
+ * provided by Apple would cause that event to be routed to some private
+ * methods of NSMenu which raise NSInvalidArgumentException, causing an
+ * abort. Returning NO in such a case prevents the abort.
+ *
+ * In fact, however, we never want to handle accelerators because they are
+ * handled by Tk.  Hence this method should always return NO.  This was done
+ * to fix [ead70921a9].
  */
 
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
-    if (event.characters.length == 0) {
-	return NO;
-    }
-    return [super performKeyEquivalent:event];
+    return NO;
 }
 @end
 
@@ -332,36 +333,25 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkMenuItemInvoke: (id) sender
 {
-    /*
-     * With the delegate matching key equivalents, when a menu action is sent
-     * in response to a key equivalent, the sender is the whole menu and not the
-     * specific menu item.  We use this to ignore key equivalents for Tk
-     * menus (as Tk handles them directly via bindings).
-     */
-
-    if ([sender isKindOfClass:[NSMenuItem class]]) {
-	NSMenuItem *menuItem = (NSMenuItem *) sender;
-	TkMenu *menuPtr = (TkMenu *) _tkMenu;
-	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
-
-	if (menuPtr && mePtr) {
-	    Tcl_Interp *interp = menuPtr->interp;
-
-	    Tcl_Preserve(interp);
-	    Tcl_Preserve(menuPtr);
-
-	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-
-	    if (result != TCL_OK && result != TCL_CONTINUE &&
-		    result != TCL_BREAK) {
-		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundException(interp, result);
-	    }
-	    Tcl_Release(menuPtr);
-	    Tcl_Release(interp);
+    NSMenuItem *menuItem = (NSMenuItem *) sender;
+    TkMenu *menuPtr = (TkMenu *) _tkMenu;
+    TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
+    
+    if (menuPtr && mePtr) {
+	Tcl_Interp *interp = menuPtr->interp;
+	Tcl_Preserve(interp);
+	Tcl_Preserve(menuPtr);
+	int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
+	if (result != TCL_OK && result != TCL_CONTINUE &&
+	    result != TCL_BREAK) {
+	    Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
+	    Tcl_BackgroundException(interp, result);
 	}
+	Tcl_Release(menuPtr);
+	Tcl_Release(interp);
     }
 }
+
 @end
 
 @implementation TKMenu(TKMenuDelegate)
@@ -428,7 +418,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 - (void) menuWillOpen: (NSMenu *) menu
 {
     (void)menu;
-
     if (_tkMenu) {
 	//RecursivelyClearActiveMenu(_tkMenu);
 	GenerateMenuSelectEvent((TKMenu *)[self supermenu],
@@ -439,7 +428,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 - (void) menuDidClose: (NSMenu *) menu
 {
     (void)menu;
-
     if (_tkMenu) {
 	RecursivelyClearActiveMenu((TkMenu *)_tkMenu);
     }
@@ -448,7 +436,6 @@ TKBackgroundLoop *backgroundLoop = nil;
 - (void) menu: (NSMenu *) menu willHighlightItem: (NSMenuItem *) item
 {
     (void)menu;
-
     if (_tkMenu) {
 	GenerateMenuSelectEvent(self, item);
     }
@@ -938,10 +925,10 @@ TkpPostMenu(
     NSMenuItem *item = nil;
     NSPoint location = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
-    inPostMenu = 1;
+    inPostMenu = true;
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
-        inPostMenu = 0;
+        inPostMenu = false;
         return result;
     }
     if (itemIndex >= numItems) {
@@ -963,7 +950,7 @@ TkpPostMenu(
     [menu popUpMenuPositioningItem:item
 			atLocation:[win tkConvertPointFromScreen:location]
 			    inView:view];
-    inPostMenu = 0;
+    inPostMenu = false;
     return TCL_OK;
 }
 
@@ -1599,7 +1586,6 @@ MenuSelectEvent(
     TkMenu *menuPtr)		/* the menu we have selected. */
 {
     union {XEvent general; XVirtualEvent virt;} event;
-
     bzero(&event, sizeof(event));
     event.virt.type = VirtualEvent;
     event.virt.serial = LastKnownRequestProcessed(menuPtr->display);
