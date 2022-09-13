@@ -1042,17 +1042,18 @@ TkCreateMainWindow(
 #endif
 #endif
 		;
+	if (info.isNativeObjectProc) {
 #if TCL_MAJOR_VERSION > 8
-	if (info.isNativeObjectProc == 2) {
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
 		    info.objProc2, (void *)
 		    version, NULL);
 
-	} else
+#else
+	    Tcl_CreateObjCommand(interp, "::tk::build-info",
+		    info.objProc, (void *)
+		    version, NULL);
 #endif
-	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc, (void *)
-		version, NULL);
+	}
     }
 
     /*
