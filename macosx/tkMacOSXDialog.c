@@ -6,7 +6,8 @@
  * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Christian Gollwitzer.
+ * Copyright (c) 2017 Christian Gollwitzer
+ * Copyright (c) 2022 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -26,22 +27,19 @@
 #define modalOther  -1 // indicates that the -command option was used.
 #define modalError  -2
 
-/*
-@property(copy) NSArray<NSString *> *allowedFileTypes;
-@property(copy) NSArray<UTType *> *allowedContentTypes;
-*/
-
 static void setAllowedFileTypes(
     NSSavePanel *panel,
-    NSMutableArray<NSString *> *extensions)
+    NSMutableArray *extensions)
 {
-    NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
     if (@available(macOS 11.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101600
+	NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
 	for (NSString *ext in extensions) {
 	    UTType *uttype = [UTType typeWithFilenameExtension: ext];
 	    [allowedTypes addObject:uttype];
 	}
 	[panel setAllowedContentTypes:allowedTypes];
+#endif
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     } else {
 	[panel setAllowedFileTypes:extensions];
