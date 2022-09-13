@@ -297,8 +297,8 @@ InjectKeyEventObjCmd(
         Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
         return TCL_ERROR;
     }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-            &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+            sizeof(char *), "option", 0, &index) != TCL_OK) {
         return TCL_ERROR;
     }
     type = types[index];
