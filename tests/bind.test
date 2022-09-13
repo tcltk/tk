@@ -5496,6 +5496,23 @@ test bind-25.53 {modifier names} -setup {
     destroy .t.f
 } -result <B9-Key-a>
 
+test bind-25.54 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Num-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod3-Key-a>
+
+test bind-25.55 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Fn-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod4-Key-a>
 
 
 test bind-26.1 {event names} -setup {

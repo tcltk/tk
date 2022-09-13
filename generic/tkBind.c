@@ -473,7 +473,9 @@ static const ModInfo modArray[] = {
 #endif
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
+    {"Num",		Mod3Mask,	0},
     {"Mod4",		Mod4Mask,	0},
+    {"Fn",		Mod4Mask,	0},
     {"M4",		Mod4Mask,	0},
     {"Mod5",		Mod5Mask,	0},
     {"M5",		Mod5Mask,	0},

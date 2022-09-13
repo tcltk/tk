@@ -559,14 +559,10 @@ EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, int numBytes, double x,
 				double y, double angle);
-#ifdef MAC_OSX_TCL /* MACOSX */
 /* 185 */
 EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
-#endif /* MACOSX */
-#ifdef MAC_OSX_TCL /* MACOSX */
 /* 186 */
 EXTERN int		TkpWillDrawWidget(Tk_Window tkwin);
-#endif /* MACOSX */
 /* 187 */
 EXTERN int		TkDebugPhotoStringMatchDef(Tcl_Interp *inter,
 				Tcl_Obj *data, Tcl_Obj *formatString,
@@ -788,24 +784,8 @@ typedef struct TkIntStubs {
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
-#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    void (*reserved185)(void);
-#endif /* UNIX */
-#if defined(_WIN32) /* WIN */
-    void (*reserved185)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
     void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
-#endif /* MACOSX */
-#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    void (*reserved186)(void);
-#endif /* UNIX */
-#if defined(_WIN32) /* WIN */
-    void (*reserved186)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
     int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
-#endif /* MACOSX */
     int (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */
 } TkIntStubs;
 
@@ -1179,14 +1159,10 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkIntersectAngledTextLayout) /* 183 */
 #define TkDrawAngledChars \
 	(tkIntStubsPtr->tkDrawAngledChars) /* 184 */
-#ifdef MAC_OSX_TCL /* MACOSX */
 #define TkpRedrawWidget \
 	(tkIntStubsPtr->tkpRedrawWidget) /* 185 */
-#endif /* MACOSX */
-#ifdef MAC_OSX_TCL /* MACOSX */
 #define TkpWillDrawWidget \
 	(tkIntStubsPtr->tkpWillDrawWidget) /* 186 */
-#endif /* MACOSX */
 #define TkDebugPhotoStringMatchDef \
 	(tkIntStubsPtr->tkDebugPhotoStringMatchDef) /* 187 */
 
@@ -1225,7 +1201,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #   define TkpMakeWindow ((Window (*)(TkWindow *, Window))(void *)Tk_MakeWindow)
 #endif
 
-#if !defined(MAC_OSX_TK)
+#if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 #   define TkpWillDrawWidget(w) 0

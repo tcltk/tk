@@ -3504,7 +3504,7 @@ Tk_PhotoPutBlock(
     if (alphaOffset) {
 	/*
 	 * This block is grossly inefficient. For each row in the image, it
-	 * finds each continguous string of nontransparent pixels, then marks
+	 * finds each contiguous string of nontransparent pixels, then marks
 	 * those areas as valid in the validRegion mask. This makes drawing
 	 * very efficient, because of the way we use X: we just say, here's
 	 * your mask, and here's your data. We need not worry about the

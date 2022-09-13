@@ -47,7 +47,7 @@ namespace eval ::tk {
     ::msgcat::mcset eo "Open Multiple Files" "Malfermu plurajn dosierojn"
     ::msgcat::mcset eo "P&aste" "&Algluu"
     ::msgcat::mcset eo "&Quit" "&Forlasu"
-    ::msgcat::mcset eo "&Red" "&Ru\u011da"
+    ::msgcat::mcset eo "&Red" "&Ruĝa"
     ::msgcat::mcset eo "Replace existing file?" "Ĉu anstataŭigi ekzistantan dosieron?"
     ::msgcat::mcset eo "&Retry" "&Reprovu"
     ::msgcat::mcset eo "&Save" "&Konservu"

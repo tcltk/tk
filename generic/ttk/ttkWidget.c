@@ -115,6 +115,20 @@ void TtkRedisplayWidget(WidgetCore *corePtr)
     }
 }
 
+/*
+ * WidgetWorldChanged --
+ * 	Default Tk_ClassWorldChangedProc() for widgets.
+ * 	Invoked whenever fonts or other system resources are changed;
+ * 	recomputes geometry.
+ */
+static void WidgetWorldChanged(ClientData clientData)
+{
+    WidgetCore *corePtr = (WidgetCore *)clientData;
+    (void)UpdateLayout(corePtr->interp, corePtr);
+    SizeChanged(corePtr);
+    TtkRedisplayWidget(corePtr);
+}
+
 /* TtkResizeWidget --
  * 	Recompute widget size, schedule geometry propagation and redisplay.
  */
@@ -124,8 +138,7 @@ void TtkResizeWidget(WidgetCore *corePtr)
 	return;
     }
 
-    SizeChanged(corePtr);
-    TtkRedisplayWidget(corePtr);
+    WidgetWorldChanged(corePtr);
 }
 
 /* TtkWidgetChangeState --
@@ -308,9 +321,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 	case VirtualEvent: {
 	    const char *name = ((XVirtualEvent *)eventPtr)->name;
 	    if ((name != NULL) && !strcmp("ThemeChanged", name)) {
-		(void)UpdateLayout(corePtr->interp, corePtr);
-		SizeChanged(corePtr);
-		TtkRedisplayWidget(corePtr);
+		WidgetWorldChanged(corePtr);
 	    }
 	    break;
 	}
@@ -320,25 +331,11 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
     }
 }
 
-/*
- * WidgetWorldChanged --
- * 	Default Tk_ClassWorldChangedProc() for widgets.
- * 	Invoked whenever fonts or other system resources are changed;
- * 	recomputes geometry.
- */
-static void WidgetWorldChanged(ClientData clientData)
-{
-    WidgetCore *corePtr = (WidgetCore *)clientData;
-    (void)UpdateLayout(corePtr->interp, corePtr);
-    SizeChanged(corePtr);
-    TtkRedisplayWidget(corePtr);
-}
-
 static const Tk_ClassProcs widgetClassProcs = {
     sizeof(Tk_ClassProcs),	/* size */
-    WidgetWorldChanged,	/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    WidgetWorldChanged,		/* worldChangedProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*

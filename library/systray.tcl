@@ -88,7 +88,7 @@ namespace eval ::tk::systray {
 	wm geometry $top +$x+$y
 	wm deiconify $top
 	raise $top
-	
+
 	if {[tk windowingsystem] eq "aqua" && $focus ne ""} {
 	    # Aqua's help window steals focus on display
 	    after idle [list focus -force $focus]
@@ -122,7 +122,7 @@ namespace eval ::tk::sysnotify:: {
 	catch {destroy ._notify}
 	set w [toplevel ._notify]
 	if {[tk windowingsystem] eq "aqua"} {
-	    ::tk::unsupported::MacWindowStyle style $w utility {hud 
+	    ::tk::unsupported::MacWindowStyle style $w utility {hud
 closeBox resizable}
 	    wm title $w "Alert"
 	}
@@ -132,7 +132,7 @@ closeBox resizable}
 	}
 	label $w.l -bg gray30 -fg white -image ::tk::icons::information
 	pack $w.l -fill both -expand yes -side left
-	message $w.message -aspect 150 -bg gray30 -fg white -aspect 150 
+	message $w.message -aspect 150 -bg gray30 -fg white -aspect 150
 -text $title\n\n$msg -width 280
 	pack $w.message -side right -fill both -expand yes
 	if {[tk windowingsystem] eq "x11"} {

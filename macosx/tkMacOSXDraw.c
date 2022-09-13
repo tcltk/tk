@@ -514,7 +514,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon using the even-odd fill algorithm,
+ *	Draws a filled polygon.
  *
  * Results:
  *	None.
@@ -562,7 +562,9 @@ XFillPolygon(
 		CGContextAddLineToPoint(dc.context, prevx, prevy);
 	    }
 	}
-	CGContextEOFillPath(dc.context);
+	(gc->fill_rule == EvenOddRule)
+		? CGContextEOFillPath(dc.context)
+		: CGContextFillPath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
