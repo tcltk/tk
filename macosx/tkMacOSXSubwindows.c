@@ -308,9 +308,6 @@ XUnmapWindow(
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-    NSPoint mouse = [NSEvent mouseLocation];
-    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    int state = TkMacOSXButtonKeyState();
 
     if (!window) {
 	return BadWindow;
@@ -371,7 +368,6 @@ XUnmapWindow(
     if (view != [NSView focusView]) {
 	[view addTkDirtyRect:[view bounds]];
     }
-    Tk_UpdatePointer(NULL, x, y, state);
     return Success;
 }
 
