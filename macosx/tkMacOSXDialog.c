@@ -31,20 +31,23 @@ static void setAllowedFileTypes(
     NSSavePanel *panel,
     NSMutableArray *extensions)
 {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     if (@available(macOS 11.0, *)) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101600
 	NSMutableArray<UTType *> *allowedTypes = [NSMutableArray array];
 	for (NSString *ext in extensions) {
 	    UTType *uttype = [UTType typeWithFilenameExtension: ext];
 	    [allowedTypes addObject:uttype];
 	}
 	[panel setAllowedContentTypes:allowedTypes];
-#endif
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
     } else {
+/* Despite Apple's claims, @available does not prevent deprecation warnings. */ 
+# if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
 	[panel setAllowedFileTypes:extensions];
 #endif
     }
+#else /* @available is not available */
+    [panel setAllowedFileTypes:extensions];
+#endif	
 }
 
 /*
