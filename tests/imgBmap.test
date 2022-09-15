@@ -218,7 +218,7 @@ test imageBmap-4.1 {ImgBmapConfigureInstance procedure: check error handling} -s
 } -result {}
 
 
-test imageBmap-5.1 {GetBitmapData procedure} -constraints needsTcl87 -body {
+test imageBmap-5.1 {GetBitmapData procedure} -body {
     list [catch {image create bitmap -file ~bad_user/a/b} msg] \
 	    [string tolower $msg]
 } -result {1 {couldn't read bitmap file "~bad_user/a/b": no such file or directory}}
