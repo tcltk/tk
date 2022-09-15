@@ -500,13 +500,15 @@ TkGetBitmapData(
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    return NULL;
 	}
-	expandedFileName = Tcl_TranslateFileName(interp, fileName, &buffer);
+	expandedFileName = Tcl_TranslateFileName(NULL, fileName, &buffer);
 	if (expandedFileName == NULL) {
-	    return NULL;
+	    Tcl_SetErrno(ENOENT);
+	    goto cannotRead;
 	}
 	pi.chan = Tcl_OpenFileChannel(interp, expandedFileName, "r", 0);
 	Tcl_DStringFree(&buffer);
 	if (pi.chan == NULL) {
+	cannotRead:
 	    if (interp != NULL) {
 		Tcl_ResetResult(interp);
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
