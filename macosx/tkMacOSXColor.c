@@ -435,6 +435,7 @@ SetCGColorComponents(
 
     if (entry->type == HIBrush) {
      	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+	[pool drain];
      	return err == noErr;
     }
     GetRGBA(entry, pixel, rgba);
