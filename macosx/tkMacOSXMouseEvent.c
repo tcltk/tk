@@ -143,7 +143,7 @@ enum {
 	buttonState &= ~Tk_GetButtonMask(button);
 	break;
     case NSLeftMouseDragged:
-	buttonState |= TkGetButtonMask(button);
+	buttonState |= Tk_GetButtonMask(button);
 	if (![NSApp tkDragTarget]) {
 	    if (isOutside) {
 		ignoreDrags = YES;
