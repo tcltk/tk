@@ -91,8 +91,8 @@ test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -constraints {
     set x [tk::MotifFDialog_Create foo open {}]
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
-    set kk [tk::MotifFDialog_InterpFilter $x]
-} -result "$testPWD/~nosuchuser1 *"
+    file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
+} -result "$testPWD/~nosuchuser1/*"
 
 test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -constraints {
     unix
@@ -102,8 +102,8 @@ test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -constraints {
     set x [tk::MotifFDialog_Create foo open {}]
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
-    set kk [tk::MotifFDialog_InterpFilter $x]
-} -result "$testPWD ./~nosuchuser1"
+    file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
+} -result "$testPWD/~nosuchuser1"
 
 test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} -constraints {
     unix
@@ -138,7 +138,7 @@ test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} -constraints {
     $::tk::dialog::file::foo(fList) selection clear 0 end
     $::tk::dialog::file::foo(fList) selection set $i
     tk::MotifFDialog_BrowseFList $x
-    $::tk::dialog::file::foo(sEnt) get
+    file normalize [$::tk::dialog::file::foo(sEnt) get]
 } -result "$testPWD/~nosuchuser1"
 
 test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
@@ -153,7 +153,7 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
     tk::MotifFDialog_BrowseFList $x
     tk::MotifFDialog_ActivateFList $x
     list $::tk::dialog::file::foo(selectPath) \
-	    $::tk::dialog::file::foo(selectFile) $tk::Priv(selectFilePath)
+	    $::tk::dialog::file::foo(selectFile) [file normalize $tk::Priv(selectFilePath)]
 } -result "$testPWD ~nosuchuser1 $testPWD/~nosuchuser1"
 
 # cleanup

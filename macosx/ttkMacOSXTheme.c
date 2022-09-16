@@ -285,7 +285,7 @@ static CGRect NormalizeButtonBounds(
  */
 
 /*
- * For systems older than 10.14, [NSColor windowBackGroundColor] generates
+ * For systems older than 10.14, [NSColor windowBackgroundColor] generates
  * garbage when called from this function.  In 10.14 it works correctly, and
  * must be used in order to have a background color which responds to Dark
  * Mode.  So we use this hard-wired RGBA color on the older systems which don't
