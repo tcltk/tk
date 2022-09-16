@@ -7916,7 +7916,7 @@ TkBTreeFindPixelLine(
  *	height of the logical line for given line).
  *
  *	Since the last line of text (the artificial one) has zero height by
- *	defintion, calling this with the last line will return the total
+ *	definition, calling this with the last line will return the total
  *	number of pixels in the widget.
  *
  * Results:

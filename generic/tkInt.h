@@ -795,6 +795,13 @@ typedef struct TkMainInfo {
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *tclUpdateObjProc2;
+				/* Saved Tcl [update] command, used to restore
+				 * Tcl's version of [update] after Tk is shut
+				 * down, in case it's a Tcl_ObjCmdProc2 */
+#endif
+
 } TkMainInfo;
 
 /*
