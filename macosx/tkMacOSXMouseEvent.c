@@ -143,6 +143,7 @@ enum {
 	buttonState &= ~Tk_GetButtonMask(button);
 	break;
     case NSLeftMouseDragged:
+	buttonState |= Tk_GetButtonMask(button);
 	if (![NSApp tkDragTarget]) {
 	    if (isOutside) {
 		ignoreDrags = YES;
@@ -258,7 +259,7 @@ enum {
 	}
 
 	/*
-	 * If this click will change the focus, the Tk event event should
+	 * If this click will change the focus, the Tk event should
 	 * be sent to the toplevel which will be receiving focus rather than to
 	 * the current focus window.  So reset tkEventTarget.
 	 */
@@ -414,7 +415,6 @@ enum {
      * not in the grabber's subtree.
      */
 
-
     if (grabWinPtr && /* There is a grab in effect ... */
 	!winPtr->dispPtr->grabFlags && /* and it is a local grab ... */
 	grabWinPtr->mainPtr == winPtr->mainPtr){ /* in the same application. */
@@ -510,7 +510,7 @@ enum {
 	    	Tk_UpdatePointer((Tk_Window) [NSApp tkDragTarget],
 	    			 global.x, global.y, state);
 	    } else {
-		Tk_UpdatePointer(NULL, global.x, global.y, state);
+	    Tk_UpdatePointer(NULL, global.x, global.y, state);
 	    }
 	} else if (eventType == NSMouseMoved ||
 		   eventType == NSLeftMouseDragged) {
@@ -849,7 +849,6 @@ GenerateButtonEvent(
 	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
 		&dummy, &dummy);
     }
-
     Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
     return true;
 }
