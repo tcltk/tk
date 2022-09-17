@@ -241,8 +241,8 @@ typedef struct {
 
 static void InitColumn(TreeColumn *column)
 {
-    column->width = 200;
-    column->minWidth = 20;
+    column->width = atoi(DEF_COLWIDTH);
+    column->minWidth = atoi(DEF_MINWIDTH);
     column->stretch = 1;
     column->idObj = 0;
     column->anchorObj = 0;
