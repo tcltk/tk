@@ -244,7 +244,7 @@ FindNSFont(
     NSString *family;
 
     if (familyName) {
-	family = [[[NSString alloc] initWithUTF8String:familyName] autorelease];
+	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:-1] autorelease];
     } else {
 	family = [defaultFont familyName];
     }
@@ -1254,7 +1254,6 @@ TkpDrawCharsInContext(
 				 * whole (not just the range) string when
 				 * drawing. */
 {
-    (void)display;
     TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    rangeStart, rangeLength, x, y, 0.0);
 }

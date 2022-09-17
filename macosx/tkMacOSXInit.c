@@ -416,7 +416,7 @@ TkpInit(
 
     /*
      * TkpInit can be called multiple times with different interpreters. But
-     * The application initialization should only be done onece.
+     * The application initialization should only be done once.
      */
 
     if (!initialized) {
@@ -477,7 +477,7 @@ TkpInit(
          * the application icon, will be delivered before the procedure meant
          * to to handle the AppleEvent has been defined.  This is handled in
          * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * ApplEvent later, after the required procedure has been defined.
+         * AppleEvent later, after the required procedure has been defined.
          */
 
 	[NSApp _setup:interp];
