@@ -30,25 +30,8 @@ static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
-
-#pragma mark TKApplication(TKColor)
-@implementation TKApplication(TKColor)
-- (NSAppearance *) currentAppearance
-{
-    if(@available(macOS 11.0, *)) {
-	return [NSAppearance currentDrawingAppearance];
-    } else {
-#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-	return [NSAppearance currentAppearance];
-#else
-	return nil; /* never reached */
 #endif
-    }
-}
-@end
-#pragma mark -
 
-#endif
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
@@ -475,7 +458,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	if (view) {
 	    name = [[view effectiveAppearance] name];
 	} else {
-	    name = [[NSApp currentAppearance] name];
+	    name = [[NSApp effectiveAppearance] name];
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
@@ -683,7 +666,7 @@ TkpGetColor(
 		    if (view) {
 			windowAppearance = [view effectiveAppearance];
 		    } else {
-			windowAppearance = [NSApp currentAppearance];
+			windowAppearance = [NSApp effectiveAppearance];
 		    }
 		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 			colormap = darkColormap;
@@ -697,7 +680,7 @@ TkpGetColor(
 			    }];
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-			NSAppearance *savedAppearance = [NSApp currentAppearance];
+			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
 			[NSAppearance setCurrentAppearance:windowAppearance];
 			GetRGBA(entry, p.ulong, rgba);
 			[NSAppearance setCurrentAppearance:savedAppearance];

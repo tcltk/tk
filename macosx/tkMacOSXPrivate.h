@@ -368,11 +368,6 @@ VISIBILITY_HIDDEN
 - (void)_lockAutoreleasePool;
 - (void)_unlockAutoreleasePool;
 @end
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-@interface TKApplication(TKColor)
-- (NSAppearance *) currentAppearance;
-@end
-#endif
 @interface TKApplication(TKKeyboard)
 - (void) keyboardChanged: (NSNotification *) notification;
 @end
