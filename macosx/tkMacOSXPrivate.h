@@ -28,6 +28,9 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -296,7 +299,9 @@ MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
-
+MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
+MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+    
 #pragma mark Private Objective-C Classes
 
 #define VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
