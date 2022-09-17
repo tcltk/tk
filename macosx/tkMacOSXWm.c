@@ -1201,14 +1201,14 @@ Tk_WmObjCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(wmTracing != 0));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(wmTracing));
 	    return TCL_OK;
 	}
 	return Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing);
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings,
-	    "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -1547,20 +1547,20 @@ WmGetAttribute(
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
     case WMATT_MODIFIED:
-	result = Tcl_NewWideIntObj([macWindow isDocumentEdited] != 0);
+	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
 	break;
     case WMATT_NOTIFY:
-	result = Tcl_NewWideIntObj(tkMacOSXWmAttrNotifyVal != 0);
+	result = Tcl_NewBooleanObj(tkMacOSXWmAttrNotifyVal);
 	break;
     case WMATT_TITLEPATH:
 	result = Tcl_NewStringObj([[macWindow representedFilename] UTF8String],
 		-1);
 	break;
     case WMATT_TOPMOST:
-	result = Tcl_NewWideIntObj((wmPtr->flags & WM_TOPMOST) != 0);
+	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TOPMOST);
 	break;
     case WMATT_TRANSPARENT:
-	result = Tcl_NewWideIntObj((wmPtr->flags & WM_TRANSPARENT) != 0);
+	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
 	break;
     case WMATT_TYPE:
 	result = Tcl_NewStringObj("unsupported", -1);
@@ -1619,8 +1619,8 @@ WmAttributesCmd(
 	}
 	Tcl_SetObjResult(interp, result);
     } else if (objc == 4) {	/* wm attributes $win -attribute */
-	if (Tcl_GetIndexFromObj(interp, objv[3], WmAttributeNames,
-		"attribute", 0, &attribute) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], WmAttributeNames,
+		sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
@@ -1628,8 +1628,8 @@ WmAttributesCmd(
 	int i;
 
 	for (i = 3; i < objc; i += 2) {
-	    if (Tcl_GetIndexFromObj(interp, objv[i], WmAttributeNames,
-		    "attribute", 0, &attribute) != TCL_OK) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], WmAttributeNames,
+		    sizeof(char *), "attribute", 0, &attribute) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    if (WmSetAttribute(winPtr, macWindow, interp, (WmAttribute)attribute, objv[i+1])
@@ -1968,8 +1968,8 @@ WmFocusmodelCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
-	    "argument", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+	    sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     if (index == OPT_ACTIVE) {
@@ -3118,7 +3118,7 @@ WmOverrideredirectCmd(
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		Tk_Attributes((Tk_Window) winPtr)->override_redirect));
+		Tk_Attributes((Tk_Window)winPtr)->override_redirect));
 	return TCL_OK;
     }
 
@@ -3180,8 +3180,8 @@ WmPositionfromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USPosition|PPosition);
     } else {
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
-		"argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -3336,10 +3336,8 @@ WmResizableCmd(
     if (objc == 3) {
 	Tcl_Obj *results[2];
 
-	results[0] = Tcl_NewWideIntObj(
-		(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE) == 0);
-	results[1] = Tcl_NewWideIntObj(
-		(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE) == 0);
+	results[0] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_WIDTH_NOT_RESIZABLE));
+	results[1] = Tcl_NewBooleanObj(!(wmPtr->flags & WM_HEIGHT_NOT_RESIZABLE));
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
@@ -3426,8 +3424,8 @@ WmSizefromCmd(
     if (*Tcl_GetString(objv[3]) == '\0') {
 	wmPtr->sizeHintsFlags &= ~(USSize|PSize);
     } else {
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
-		"argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_USER) {
@@ -3555,8 +3553,8 @@ WmStackorderCmd(
 
 	ckfree(windows);
 
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
-		"argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (index == OPT_ISABOVE) {
@@ -3564,7 +3562,7 @@ WmStackorderCmd(
 	} else { /* OPT_ISBELOW */
 	    result = index1 < index2;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result != 0));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(result));
 	return TCL_OK;
     }
 }
@@ -3622,8 +3620,8 @@ WmStateCmd(
 	    return TCL_ERROR;
 	}
 
-	if (Tcl_GetIndexFromObj(interp, objv[3], optionStrings,
-		"argument", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], optionStrings,
+		sizeof(char *), "argument", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 
@@ -5512,7 +5510,7 @@ TkSetWMName(
 	return;
     }
 
-    NSString *title = [[NSString alloc] initWithUTF8String:titleUid];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:-1];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
     [title release];
 }
@@ -5737,8 +5735,8 @@ TkUnsupported1ObjCmd(
 	return TCL_ERROR;
     }
 
-    if (Tcl_GetIndexFromObj(interp, objv[1], subcmds,
-	    "option", 0, &index) != TCL_OK) {
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], subcmds,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
     switch((enum SubCmds) index) {
@@ -6067,7 +6065,7 @@ WmWinTabbingId(
  *	allows you to get or set the appearance for the NSWindow associated
  *	with a Tk Window.  The syntax is:
  *
- *	    tk::unsupported::MacWindowStyle tabbingid window ?newAppearance?
+ *	    tk::unsupported::MacWindowStyle appearance window ?newAppearance?
  *
  *      Allowed appearance names are "aqua", "darkaqua", and "auto".
  *
@@ -6139,8 +6137,8 @@ WmWinAppearance(
     }
     if (objc == 4) {
 	int index;
-	if (Tcl_GetIndexFromObj(interp, objv[3], appearanceStrings,
-		"appearancename", 0, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
+		sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	switch ((enum appearances) index) {
