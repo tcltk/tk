@@ -32,7 +32,7 @@ place .pack.violet.l -relwidth 1.0 -relheight 1.0
 
 if {![catch {pack ap .pack .pack.red top}]} {
 
-# Don't execute any of this file if Tk is compiled with -DTCL_NO_DEPRECATED
+# Don't execute any of this file if Tk is compiled with -DTK_NO_DEPRECATED
 
 
 test oldpack-1.1 {basic positioning} -body {
