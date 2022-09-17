@@ -121,7 +121,7 @@ static int	ModifierCharWidth(Tk_Font tkfont);
  * demo would cause the animation to stop.  This was also the case for
  * menubuttons.
  *
- * The TKBackground object below works around this problem, and allows a Tk
+ * The TKBackgroundLoop object below works around this problem, and allows a Tk
  * event loop to run while a menu is open.  It is a subclass of NSThread which
  * inserts requests to call [NSApp _runBackgroundLoop] onto the queue
  * associated with the NSEventTrackingRunLoopMode.  One of these threads gets
@@ -236,8 +236,8 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (id) initWithTkMenu: (TkMenu *) tkMenu
 {
-    NSString *title = [[NSString alloc] initWithUTF8String:
-	    Tk_PathName(tkMenu->tkwin)];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:
+	    Tk_PathName(tkMenu->tkwin) length:-1];
 
     self = [self initWithTitle:title];
     [title release];
@@ -737,9 +737,9 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[[NSString alloc] initWithBytes:Tcl_GetString(mePtr->labelPtr)
-		length:mePtr->labelLength encoding:NSUTF8StringEncoding]
-		autorelease];
+	title = [[TKNSString alloc]
+		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
+				length:mePtr->labelLength];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
@@ -1310,7 +1310,7 @@ ParseAccelerator(
     if (ch) {
 	return [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
     } else {
-	return [[[[NSString alloc] initWithUTF8String:accel] autorelease]
+	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:-1] autorelease]
 		lowercaseString];
     }
 }
