@@ -661,14 +661,13 @@ TkpGetColor(
 	    color.pixel = p.ulong;
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-	    NSAppearance *savedAppearance, *windowAppearance;
+	    NSAppearance *windowAppearance;
 	    if (@available(macOS 10.14, *)) {
-		savedAppearance = [NSAppearance currentAppearance];
-		windowAppearance = savedAppearance;
 		if (view) {
 		    windowAppearance = [view effectiveAppearance];
+		} else {
+		    windowAppearance = [NSApp effectiveAppearance];
 		}
-		[NSAppearance setCurrentAppearance:windowAppearance];
 	    }
 #endif
 
@@ -739,7 +738,6 @@ TkpGetColor(
 			colormap = lightColormap;
 		    }
 		}
-		[NSAppearance setCurrentAppearance:savedAppearance];
 	    }
 #endif
 	}

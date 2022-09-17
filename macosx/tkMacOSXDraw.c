@@ -1121,11 +1121,9 @@ TkScrollWindow(
     TkRegion damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *)drawable;
-    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     HIShapeRef srcRgn, dstRgn;
     HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
-    NSRect bounds, viewSrcRect, srcRect, dstRect;
+    NSRect srcRect, dstRect;
     int result = 0;
 
 #if TK_MAC_SYNCHRONOUS_DRAWING
@@ -1133,21 +1131,21 @@ TkScrollWindow(
     if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
 	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
 #else
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     if (view) {
 #endif
-
-  	/*
-	 * Get the scroll area in NSView coordinates (origin at bottom left).
-	 */
-
-  	bounds = [view bounds];
- 	viewSrcRect = NSMakeRect(macDraw->xOff + x,
-		bounds.size.height - height - (macDraw->yOff + y),
-		width, height);
 
 #if TK_MAC_SYNCHRONOUS_DRAWING
 	// Already scrolled using XCopyArea()
 #else
+  	/*
+	 * Get the scroll area in NSView coordinates (origin at bottom left).
+	 */
+
+  	NSRect bounds = [view bounds];
+ 	NSRect viewSrcRect = NSMakeRect(macDraw->xOff + x,
+		bounds.size.height - height - (macDraw->yOff + y),
+		width, height);
 	/*
 	 * Scroll the rectangle.
 	 */
@@ -1275,7 +1273,7 @@ TkMacOSXSetupDrawingContext(
 
     dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (!dc.context) {
-	NSRect drawingBounds, currentBounds;
+	NSRect drawingBounds;
 	dc.view = view;
 #if TK_MAC_CGIMAGE_DRAWING
 	dc.context = view.tkLayerBitmapContext;
@@ -1295,8 +1293,56 @@ TkMacOSXSetupDrawingContext(
 
 #if TK_MAC_SYNCHRONOUS_DRAWING
 	// It seems this should be the only place to use addTkDirtyRect:
-	// and that it should not be used elsewhere as a proxy to generate Expose events, which will not work.
+	// and that it should not be used elsewhere as a proxy to generate
+	// Expose events, which will not work.
+
 	[view addTkDirtyRect:drawingBounds];
+
+	/*
+	 * Workaround for an Apple bug.
+	 *
+	 * Without the block below, ttk frames, labelframes and labels do not
+	 * get the correct background color on macOS 12.5 after the appearance
+	 * changes.  This function is only called when drawing, so we know that
+	 * our view is the focus view. Even though the effective appearance of
+	 * the view has been changed, the currentAppearance, i.e. the
+	 * appearance that will be used for drawing, may not have been changed
+	 * to match.
+	 *
+	 * Prior to macOS 12.0 the currentAppearance property of NSAppearance
+	 * was settable.  In macOS 12.0 currentAppearance was deprecated and
+	 * replaced by the read-only property currentDrawingAppearance.  The
+	 * ttk color issues are fixed by setting the currentAppearance to
+	 * the effectiveAppearance of the view.  So we are forced to use this
+	 * deprecated function until Apple fixes this.
+	 *
+	 * It is a mystery why this only affects the ttk widgets.  A possible
+	 * clue is that when drawing a ttk widget this function is called with
+	 * a NULL gc, whereas the gc is non-null when it is called for drawing
+	 * a Tk widget.  This means that the CGContext setup below is not done
+	 * for ttk widgets.  Perhaps that setup triggers an update of the
+	 * currentAppearance property, but that has not been verified.
+	 */
+
+	if (@available(macOS 12.0, *)) {
+	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
+	    NSAppearance *effective = view.effectiveAppearance;
+	    if( current != effective) {
+		// printf("Appearances are out of sync!\n");
+		// Deprecations be damned!
+		NSAppearance.currentAppearance = effective;
+	    }
+	} else {
+	    /*
+	     *It is not clear if this is a problem before macos 12.0, but
+	     * we might as well do the update anyway.
+	     */
+
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
+/* currentAppearance is not deprecated. */
+	    NSAppearance.currentAppearance = view.effectiveAppearance;
+#endif
+	}
 #else
 	/*
 	 * We can only draw into the NSView which is the current focusView.
@@ -1401,14 +1447,7 @@ TkMacOSXSetupDrawingContext(
 	    CGContextClipToRect(dc.context, r);
 	}
     }
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    if (@available(macOS 10.14, *)) {
-	dc.savedAppearance = NSAppearance.currentAppearance;
-	if (view) {
-	    NSAppearance.currentAppearance = view.effectiveAppearance;
-	}
-    }
-#endif
+
     if (gc) {
 	static const CGLineCap cgCap[] = {
 	    [CapNotLast] = kCGLineCapButt,
@@ -1520,7 +1559,7 @@ TkMacOSXRestoreDrawingContext(
     }
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
-	NSAppearance.currentAppearance = dcPtr->savedAppearance;
+    	//NSAppearance.currentAppearance = [dcPtr->view effectiveAppearance];
     }
 #endif
 
