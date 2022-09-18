@@ -123,6 +123,8 @@ typedef struct {
 				 * origin. */
     char *widthString;		/* Value of -width option. Malloc'ed. */
     char *heightString;		/* Value of -height option. Malloc'ed. */
+    char *indicatorWidthString; /* Value of -indicatorwidth option */
+    char *indicatorHeightString;/* Value of -indicatorheight option */
     int width, height;		/* If > 0, these specify dimensions to request
 				 * for window, in characters for text and in
 				 * pixels for bitmaps. In this case the actual
@@ -152,6 +154,8 @@ typedef struct {
     int indicatorWidth;		/* Width of indicator in pixels, including
 				 * indicatorHeight in padding on each side. 0
 				 * if no indicator. */
+    int indWidthStore;          /* Unchanging indicator width */
+    int indHeightStore;         /* Unchanging indicator height */
 
     /*
      * Miscellaneous information:

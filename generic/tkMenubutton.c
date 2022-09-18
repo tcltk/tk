@@ -131,6 +131,12 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING, "-width", "width", "Width",
 	DEF_MENUBUTTON_WIDTH, TCL_INDEX_NONE, offsetof(TkMenuButton, widthString),
 	0, 0, 0},
+    {TK_OPTION_STRING, "-indwidth", "indWidth", "IndWidth",
+	DEF_MENUBUTTON_INDICATORWIDTH, TCL_INDEX_NONE, offsetof(TkMenuButton, indicatorWidthString),
+	0, 0, 0},
+    {TK_OPTION_STRING, "-indheight", "indHeight", "IndHeight",
+	DEF_MENUBUTTON_INDICATORHEIGHT, TCL_INDEX_NONE, offsetof(TkMenuButton, indicatorHeightString),
+	0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	DEF_MENUBUTTON_WRAP_LENGTH, TCL_INDEX_NONE, offsetof(TkMenuButton, wrapLength),
 	0, 0, 0},
@@ -269,6 +275,8 @@ Tk_MenubuttonObjCmd(
     mbPtr->rightBearing = 0;
     mbPtr->widthString = NULL;
     mbPtr->heightString = NULL;
+    mbPtr->indicatorWidthString = NULL;
+    mbPtr->indicatorHeightString = NULL;
     mbPtr->width = 0;
     mbPtr->width = 0;
     mbPtr->wrapLength = 0;
@@ -280,6 +288,8 @@ Tk_MenubuttonObjCmd(
     mbPtr->indicatorOn = 0;
     mbPtr->indicatorWidth = 0;
     mbPtr->indicatorHeight = 0;
+    mbPtr->indWidthStore = 0;
+    mbPtr->indHeightStore = 0;
     mbPtr->direction = DIRECTION_FLUSH;
     mbPtr->cursor = NULL;
     mbPtr->takeFocus = NULL;
@@ -581,6 +591,18 @@ ConfigureMenuButton(
 		Tcl_AddErrorInfo(interp, "\n    (processing -height option)");
 		continue;
 	    }
+	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->indicatorWidthString,
+		    &mbPtr->indWidthStore) != TCL_OK) {
+	    indicatorWidthError:
+		Tcl_AddErrorInfo(interp, "\n    (processing -indicatorwidth option)");
+		continue;
+	    }
+	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->indicatorHeightString,
+		    &mbPtr->indHeightStore) != TCL_OK) {
+	    indicatorHeightError:
+		Tcl_AddErrorInfo(interp, "\n    (processing -indicatorheight option)");
+		continue;
+	    }
 	} else {
 	    if (Tcl_GetInt(interp, mbPtr->widthString, &mbPtr->width)
 		    != TCL_OK) {
@@ -589,6 +611,14 @@ ConfigureMenuButton(
 	    if (Tcl_GetInt(interp, mbPtr->heightString, &mbPtr->height)
 		    != TCL_OK) {
 		goto heightError;
+	    }
+	    if (Tcl_GetInt(interp, mbPtr->indicatorWidthString, &mbPtr->indWidthStore)
+		    != TCL_OK) {
+		goto indicatorWidthError;
+	    }
+	    if (Tcl_GetInt(interp, mbPtr->indicatorHeightString, &mbPtr->indHeightStore)
+		    != TCL_OK) {
+		goto indicatorHeightError;
 	    }
 	}
 	break;

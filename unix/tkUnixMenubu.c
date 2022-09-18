@@ -452,9 +452,18 @@ TkpComputeMenuButtonGeometry(
     if (mbPtr->indicatorOn) {
 	mm = WidthMMOfScreen(Tk_Screen(mbPtr->tkwin));
 	pixels = WidthOfScreen(Tk_Screen(mbPtr->tkwin));
-	mbPtr->indicatorHeight= (INDICATOR_HEIGHT * pixels)/(10*mm);
-	mbPtr->indicatorWidth = (INDICATOR_WIDTH * pixels)/(10*mm)
-		+ 2*mbPtr->indicatorHeight;
+	if (mbPtr->indHeightStore == 0) {
+	    mbPtr->indicatorHeight = (INDICATOR_HEIGHT * pixels)/(10*mm);
+	} else {
+	    mbPtr->indicatorHeight = (mbPtr->indHeightStore * pixels)/(10*mm);
+	}
+	if (mbPtr->indWidthStore == 0) {
+	    mbPtr->indicatorWidth = (INDICATOR_WIDTH * pixels)/(10*mm)
+		    + 2*mbPtr->indicatorHeight;
+	} else {
+	    mbPtr->indicatorWidth = (mbPtr->indWidthStore * pixels)/(10*mm)
+		    + 2*mbPtr->indicatorHeight;
+	}
 	width += mbPtr->indicatorWidth;
     } else {
 	mbPtr->indicatorHeight = 0;
