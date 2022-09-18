@@ -298,7 +298,7 @@ EXTERN void		Tk_GeometryRequest(Tk_Window tkwin, int reqWidth,
 				int reqHeight);
 /* 80 */
 EXTERN Tk_3DBorder	Tk_Get3DBorder(Tcl_Interp *interp, Tk_Window tkwin,
-				Tk_Uid colorName);
+				const char *colorName);
 /* 81 */
 EXTERN void		Tk_GetAllBindings(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable,
@@ -1018,7 +1018,7 @@ typedef struct TkStubs {
     TCL_DEPRECATED_API("function does nothing, call can be removed") void (*tk_FreeXId) (Display *display, XID xid); /* 77 */
     GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
-    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
+    Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, const char *colorName); /* 80 */
     void (*tk_GetAllBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object); /* 81 */
     int (*tk_GetAnchor) (Tcl_Interp *interp, const char *str, Tk_Anchor *anchorPtr); /* 82 */
     const char * (*tk_GetAtomName) (Tk_Window tkwin, Atom atom); /* 83 */

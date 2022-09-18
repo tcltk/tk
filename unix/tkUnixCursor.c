@@ -205,7 +205,7 @@ TkCursor *
 TkGetCursorByName(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     Tk_Window tkwin,		/* Window in which cursor will be used. */
-    Tk_Uid string)		/* Description of cursor. See manual entry for
+    CONST char *string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
     TkUnixCursor *cursorPtr = NULL;

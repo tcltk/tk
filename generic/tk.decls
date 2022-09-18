@@ -337,7 +337,7 @@ declare 79 {
 }
 declare 80 {
     Tk_3DBorder	Tk_Get3DBorder(Tcl_Interp *interp, Tk_Window tkwin,
-	    Tk_Uid colorName)
+	    const char *colorName)
 }
 declare 81 {
     void Tk_GetAllBindings(Tcl_Interp *interp,

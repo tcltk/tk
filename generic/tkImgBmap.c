@@ -32,8 +32,8 @@ typedef struct {
 				 * no data. Malloc'ed. */
     char *maskData;		/* Data for bitmap's mask (suitable for input
 				 * to XCreateBitmapFromData). Malloc'ed. */
-    Tk_Uid fgUid;		/* Value of -foreground option (malloc'ed). */
-    Tk_Uid bgUid;		/* Value of -background option (malloc'ed). */
+    char *fg;			/* Value of -foreground option (malloc'ed). */
+    char *bg;			/* Value of -background option (malloc'ed). */
     char *fileString;		/* Value of -file option (malloc'ed). */
     char *dataString;		/* Value of -data option (malloc'ed). */
     char *maskFileString;	/* Value of -maskfile option (malloc'ed). */

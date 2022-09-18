@@ -156,7 +156,7 @@ FindSystemColor(
 TkColor *
 TkpGetColor(
     Tk_Window tkwin,		/* Window in which color will be used. */
-    Tk_Uid name)		/* Name of color to allocated (in form
+    CONST char * name)		/* Name of color to allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     WinColor *winColPtr;
