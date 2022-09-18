@@ -23,7 +23,7 @@ bind TSpinbox <Down> 			{ event generate %W <<Decrement>> }
 bind TSpinbox <<Increment>>		{ ttk::spinbox::Spin %W +1 }
 bind TSpinbox <<Decrement>> 		{ ttk::spinbox::Spin %W -1 }
 
-ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::MouseWheel %W]
+ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::Spin %W]
 
 ## Motion --
 #	Sets cursor.
@@ -32,7 +32,7 @@ proc ttk::spinbox::Motion {w x y} {
     variable State
     ttk::saveCursor $w State(userConfCursor) [ttk::cursor text]
     if {   [$w identify $x $y] eq "textarea"
-        && [$w instate {!readonly !disabled}]
+	&& [$w instate {!readonly !disabled}]
     } {
 	ttk::setCursor $w text
     } else {
@@ -46,16 +46,16 @@ proc ttk::spinbox::Press {w x y} {
     if {[$w instate disabled]} { return }
     focus $w
     switch -glob -- [$w identify $x $y] {
-        *textarea	{ ttk::entry::Press $w $x }
+	*textarea	{ ttk::entry::Press $w $x }
 	*rightarrow	-
-        *uparrow 	{ ttk::Repeatedly event generate $w <<Increment>> }
+	*uparrow 	{ ttk::Repeatedly event generate $w <<Increment>> }
 	*leftarrow	-
-        *downarrow	{ ttk::Repeatedly event generate $w <<Decrement>> }
+	*downarrow	{ ttk::Repeatedly event generate $w <<Decrement>> }
 	*spinbutton {
 	    if {$y * 2 >= [winfo height $w]} {
-	    	set event <<Decrement>>
+		set event <<Decrement>>
 	    } else {
-	    	set event <<Increment>>
+		set event <<Increment>>
 	    }
 	    ttk::Repeatedly event generate $w $event
 	}
@@ -69,7 +69,7 @@ proc ttk::spinbox::DoubleClick {w x y} {
     if {[$w instate disabled]} { return }
 
     switch -glob -- [$w identify $x $y] {
-        *textarea	{ SelectAll $w }
+	*textarea	{ SelectAll $w }
 	*		{ Press $w $x $y }
     }
 }
@@ -80,13 +80,13 @@ proc ttk::spinbox::Release {w} {
 
 ## MouseWheel --
 #	Mousewheel callback.  Turn these into <<Increment>> (-1, up)
-# 	or <<Decrement> (+1, down) events.
+# 	or <<Decrement> (+1, down) events. Not used any more.
 #
-proc ttk::spinbox::MouseWheel {w dir} {
+proc ttk::spinbox::MouseWheel {w dir {factor 1.0}} {
     if {[$w instate disabled]} { return }
-    if {$dir < 0} {
+    if {($dir < 0) ^ ($factor < 0)} {
 	event generate $w <<Increment>>
-    } else {
+    } elseif {$dir != 0} {
 	event generate $w <<Decrement>>
     }
 }
@@ -134,17 +134,34 @@ proc ttk::spinbox::Adjust {w v min max} {
 #	Otherwise cycle through numeric range based on
 #	-from, -to, and -increment.
 #
-proc ttk::spinbox::Spin {w dir} {
+proc ttk::spinbox::Spin {w dir {factor -1.0}} {
+    variable State
+
     if {[$w instate disabled]} { return }
-    set nvalues [llength [set values [$w cget -values]]]
-    set value [$w get]
-    if {$nvalues} {
-	set current [lsearch -exact $values $value]
-	set index [Adjust $w [expr {$current + $dir}] 0 [expr {$nvalues - 1}]]
-	$w set [lindex $values $index]
+
+    if {![info exists State($w,values.length)]} {
+	set State($w,values.index) -1
+	set State($w,values.last) {}
+    }
+    set State($w,values) [$w cget -values]
+    set State($w,values.length) [llength $State($w,values)]
+
+    set d [expr {-($dir/$factor)}]
+    set d [expr {int($d > 0 ? ceil($d) : floor($d))}]
+    if {$State($w,values.length) > 0} {
+	set value [$w get]
+	set current $State($w,values.index)
+	if {$value ne $State($w,values.last)} {
+	    set current [lsearch -exact $State($w,values) $value]
+	    if {$current < 0} {set current -1}
+	}
+	set State($w,values.index) [Adjust $w [expr {$current + $d}] 0 \
+		[expr {$State($w,values.length) - 1}]]
+	set State($w,values.last) [lindex $State($w,values) $State($w,values.index)]
+	$w set $State($w,values.last)
     } else {
-        if {[catch {
-    	    set v [expr {[scan [$w get] %f] + $dir * [$w cget -increment]}]
+	if {[catch {
+	    set v [expr {[scan [$w get] %f] + $d * [$w cget -increment]}]
 	}]} {
 	    set v [$w cget -from]
 	}
@@ -162,7 +179,7 @@ proc ttk::spinbox::FormatValue {w val} {
     if {$fmt eq ""} {
 	# Try to guess a suitable -format based on -increment.
 	set delta [expr {abs([$w cget -increment])}]
-        if {0 < $delta && $delta < 1} {
+	if {0 < $delta && $delta < 1} {
 	    # NB: This guesses wrong if -increment has more than 1
 	    # significant digit itself, e.g., -increment 0.25
 	    set nsd [expr {int(ceil(-log10($delta)))}]

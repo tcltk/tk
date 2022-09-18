@@ -3,8 +3,8 @@
 # This file defines the default bindings for Tk entry widgets and provides
 # procedures that help in implementing those bindings.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -58,7 +58,7 @@ bind Entry <<Paste>> {
 }
 bind Entry <<Clear>> {
     # ignore if there is no selection
-    catch { %W delete sel.first sel.last }
+    catch {%W delete sel.first sel.last}
 }
 bind Entry <<PasteSelection>> {
     if {$tk_strictMotif || ![info exists tk::Priv(mouseMoved)]
@@ -119,17 +119,17 @@ bind Entry <Control-Button-1> {
 }
 
 bind Entry <<PrevChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert] - 1}]
+    tk::EntrySetCursor %W [tk::EntryPreviousChar %W insert]
 }
 bind Entry <<NextChar>> {
-    tk::EntrySetCursor %W [expr {[%W index insert] + 1}]
+    tk::EntrySetCursor %W [tk::EntryNextChar %W insert]
 }
 bind Entry <<SelectPrevChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert] - 1}]
+    tk::EntryKeySelect %W [tk::EntryPreviousChar %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextChar>> {
-    tk::EntryKeySelect %W [expr {[%W index insert] + 1}]
+    tk::EntryKeySelect %W [tk::EntryNextChar %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<PrevWord>> {
@@ -165,7 +165,8 @@ bind Entry <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete insert
+	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
+		[tk::endOfCluster [%W get] [%W index insert]]
     }
 }
 bind Entry <BackSpace> {
@@ -195,7 +196,7 @@ bind Entry <Key> {
     tk::EntryInsert %W %A
 }
 
-# Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
 # <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
@@ -209,9 +210,8 @@ bind Entry <KP_Enter> {# nothing}
 bind Entry <Tab> {# nothing}
 bind Entry <Prior> {# nothing}
 bind Entry <Next> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Entry <Command-Key> {# nothing}
-}
+bind Entry <Command-Key> {# nothing}
+bind Entry <Fn-Key> {# nothing}
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind Entry <<NextLine>> {# nothing}
 bind Entry <<PrevLine>> {# nothing}
@@ -278,11 +278,7 @@ bind Entry <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Entry <<TkEndIMEMarkedText>> {
-    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
-	bell
-    } else {
-	%W selection range $mark insert
-    }
+    ::tk::EntryEndIMEMarkedText %W
 }
 bind Entry <<TkClearIMEMarkedText>> {
     %W delete [dict get $::tk::Priv(IMETextMark) "%W"] [%W index insert]
@@ -291,17 +287,34 @@ bind Entry <<TkAccentBackspace>> {
     tk::EntryBackspace %W
 }
 
+# ::tk::EntryEndIMEMarkedText --
+# Handles input method text marking in an entry
+#
+# Arguments:
+# w -		The entry window.
+
+proc ::tk::EntryEndIMEMarkedText {w} {
+    variable Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w selection range $mark insert
+}
+
 # A few additional bindings of my own.
 
 bind Entry <Button-2> {
     if {!$tk_strictMotif} {
-	::tk::EntryScanMark %W %x
+        ::tk::EntryScanMark %W %x
     }
 }
 bind Entry <B2-Motion> {
     if {!$tk_strictMotif} {
-	::tk::EntryScanDrag %W %x
-    }
+        ::tk::EntryScanDrag %W %x
+     }
 }
 
 # ::tk::EntryClosestGap --
@@ -377,17 +390,17 @@ proc ::tk::EntryMouseSelect {w x} {
 	}
 	word {
 	    if {$cur < $anchor} {
-		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] [expr {$anchor-1}]]
+		set before [tk::wordBreakBefore [$w get] $cur]
+		set after [tk::wordBreakAfter [$w get] $anchor-1]
 	    } elseif {$cur > $anchor} {
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] [expr {$cur - 1}]]
+		set before [tk::wordBreakBefore [$w get] $anchor]
+		set after [tk::wordBreakAfter [$w get] $cur-1]
 	    } else {
 		if {[$w index @$Priv(pressX)] < $anchor} {
 		      incr anchor -1
 		}
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] $anchor]
+		set before [tk::wordBreakBefore [$w get] $anchor]
+		set after [tk::wordBreakAfter [$w get] $anchor]
 	    }
 	    if {$before < 0} {
 		set before 0
@@ -507,7 +520,8 @@ proc ::tk::EntryBackspace w {
     } else {
 	set x [expr {[$w index insert] - 1}]
 	if {$x >= 0} {
-	    $w delete $x
+	    $w delete [tk::startOfCluster [$w get] $x] \
+		      [tk::endOfCluster [$w get] $x]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -562,12 +576,12 @@ proc ::tk::EntryTranspose w {
     if {$i < [$w index end]} {
 	incr i
     }
-    set first [expr {$i-2}]
-    if {$first < 0} {
+    if {$i < 2} {
 	return
     }
+    set first $i-2
     set data [$w get]
-    set new [string index $data [expr {$i-1}]][string index $data $first]
+    set new [string index $data $i-1][string index $data $first]
     $w delete $first $i
     $w insert insert $new
     EntrySeeInsert $w
@@ -585,9 +599,9 @@ proc ::tk::EntryTranspose w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
+	set pos [tk::endOfWord [$w get] [$w index $start]]
 	if {$pos >= 0} {
-	    set pos [tcl_startOfNextWord [$w get] $pos]
+	    set pos [tk::startOfNextWord [$w get] $pos]
 	}
 	if {$pos < 0} {
 	    return end
@@ -596,7 +610,7 @@ if {[tk windowingsystem] eq "win32"}  {
     }
 } else {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
+	set pos [tk::endOfWord [$w get] [$w index $start]]
 	if {$pos < 0} {
 	    return end
 	}
@@ -614,12 +628,29 @@ if {[tk windowingsystem] eq "win32"}  {
 # start -	Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
-    set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return 0
     }
     return $pos
 }
+
+proc ::tk::EntryNextChar {w start} {
+    set pos [tk::endOfCluster [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+proc ::tk::EntryPreviousChar {w start} {
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
+    if {$pos < 0} {
+	return 0
+    }
+    return $pos
+}
+
 
 # ::tk::EntryScanMark --
 #
@@ -647,7 +678,7 @@ proc ::tk::EntryScanMark {w x} {
 proc ::tk::EntryScanDrag {w x} {
     # Make sure these exist, as some weird situations can trigger the
     # motion binding without the initial press.  [Bug #220269]
-    if {![info exists ::tk::Priv(x)]} { set ::tk::Priv(x) $x }
+    if {![info exists ::tk::Priv(x)]} {set ::tk::Priv(x) $x}
     # allow for a delta
     if {abs($x-$::tk::Priv(x)) > 2} {
 	set ::tk::Priv(mouseMoved) 1
@@ -664,19 +695,10 @@ proc ::tk::EntryScanDrag {w x} {
 
 proc ::tk::EntryGetSelection {w} {
     set entryString [string range [$w get] [$w index sel.first] \
-	    [expr {[$w index sel.last] - 1}]]
+	    [$w index sel.last]-1]
     if {[$w cget -show] ne ""} {
 	return [string repeat [string index [$w cget -show] 0] \
 		[string length $entryString]]
     }
     return $entryString
 }
-
-
-
-
-
-
-
-
-

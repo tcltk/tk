@@ -4,7 +4,7 @@
  *	This file implements the Windows specific portion of the button
  *	widgets.
  *
- * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
+ * Copyright © 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -149,7 +149,7 @@ InitBoxes(void)
 	size = tsdPtr->boxesPtr->biSize
 		+ (sizeof(RGBQUAD) << tsdPtr->boxesPtr->biBitCount)
 		+ tsdPtr->boxesPtr->biSizeImage;
-	newBitmap = ckalloc(size);
+	newBitmap = (LPBITMAPINFOHEADER)ckalloc(size);
 	memcpy(newBitmap, tsdPtr->boxesPtr, size);
 	tsdPtr->boxesPtr = newBitmap;
 	tsdPtr->boxWidth = tsdPtr->boxesPtr->biWidth / 4;
@@ -182,7 +182,7 @@ InitBoxes(void)
  */
 
 void
-TkpButtonSetDefaults()
+TkpButtonSetDefaults(void)
 {
     int width = GetSystemMetrics(SM_CXEDGE);
 	if (width > 0) {
@@ -211,8 +211,9 @@ TkpCreateButton(
     Tk_Window tkwin)
 {
     WinButton *butPtr;
+    (void)tkwin;
 
-    butPtr = ckalloc(sizeof(WinButton));
+    butPtr = (WinButton *)ckalloc(sizeof(WinButton));
     butPtr->hwnd = NULL;
     return (TkButton *) butPtr;
 }
@@ -316,7 +317,7 @@ TkpDisplayButton(
 {
     TkWinDCState state;
     HDC dc;
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
@@ -1302,7 +1303,7 @@ ButtonProc(
     }
     /* FALLTHRU */
     default:
-	if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    return result;
 	}
     }

@@ -165,10 +165,10 @@ typedef struct TkTextSegment {
     struct TkTextSegment *nextPtr;
 				/* Next in list of segments for this line, or
 				 * NULL for end of list. */
-    int size;			/* Size of this segment (# of bytes of index
+    TkSizeT size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[2];		/* Characters that make up character info.
+	char chars[TKFLEXARRAY];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -282,9 +282,11 @@ struct TkTextDispChunk {
  */
 
 typedef enum {
-    TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD,
-    TEXT_WRAPMODE_NULL
+    TEXT_WRAPMODE_NULL = -1,
+    TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD
 } TkWrapMode;
+
+MODULE_SCOPE const char *const tkTextWrapStrings[];
 
 typedef struct TkTextTag {
     const char *name;		/* Name of this tag. This field is actually a
@@ -335,7 +337,7 @@ typedef struct TkTextTag {
     char *justifyString;	/* -justify option string (malloc-ed). NULL
 				 * means option not specified. */
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT,
-				 * TK_JUSTIFY_RIGHT, or TK_JUSTIFY_CENTER.
+				 * TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER, or TK_JUSTIFY_NULL.
 				 * Only valid if justifyString is non-NULL. */
     char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
 				 * means option not specified. */
@@ -356,11 +358,10 @@ typedef struct TkTextTag {
 				 * baseline of line. Used for superscripts and
 				 * subscripts. Only valid if offsetString is
 				 * non-NULL. */
-    char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
+    Tcl_Obj *overstrikePtr;	/* -overstrike option. NULL
 				 * means option not specified. */
-    int overstrike;		/* Non-zero means draw horizontal line through
-				 * middle of text. Only valid if
-				 * overstrikeString is non-NULL. */
+    int overstrike;		/* > 0 means draw horizontal line through
+				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
     char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
@@ -393,13 +394,12 @@ typedef struct TkTextTag {
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
 				 * NULL. Corresponds to tabString. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if
-				 * not specified). */
-    char *underlineString;	/* -underline option string (malloc-ed). NULL
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
+				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
+    Tcl_Obj *underlinePtr;	/* -underline option. NULL
 				 * means option not specified. */
-    int underline;		/* Non-zero means draw underline underneath
-				 * text. Only valid if underlineString is
-				 * non-NULL. */
+    int underline;		/* > 0 means draw underline underneath
+				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
                                  * color as foreground. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
@@ -407,10 +407,10 @@ typedef struct TkTextTag {
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
 				 * TEXT_WRAPMODE_NULL to use wrapmode for
 				 * whole widget. */
-    char *elideString;		/* -elide option string (malloc-ed). NULL
+    Tcl_Obj *elidePtr;	/* -elide option. NULL
 				 * means option not specified. */
-    int elide;			/* Non-zero means that data under this tag
-				 * should not be displayed. */
+    int elide;			/* > 0 means that data under this tag
+				 * should not be displayed. -1 means not specified. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
@@ -466,14 +466,16 @@ typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
 
 /*
  * The following are the supported styles of tabbing, used for the -tabstyle
- * option of the text widget. The last element is only used for tag options.
+ * option of the text widget. The first element is only used for tag options.
  */
 
 typedef enum {
+    TK_TEXT_TABSTYLE_NULL = -1,
     TK_TEXT_TABSTYLE_TABULAR,
-    TK_TEXT_TABSTYLE_WORDPROCESSOR,
-    TK_TEXT_TABSTYLE_NONE
+    TK_TEXT_TABSTYLE_WORDPROCESSOR
 } TkTextTabStyle;
+
+MODULE_SCOPE const char *const tkTextTabStyleStrings[];
 
 typedef struct TkTextTab {
     int location;		/* Offset in pixels of this tab stop from the
@@ -489,7 +491,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[1];		/* Array of tabs. The actual size will be
+    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;
@@ -695,7 +697,7 @@ typedef struct TkText {
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
 				 * behavior. */
-    int tabStyle;		/* One of TABULAR or WORDPROCESSOR. */
+    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
 
     /*
      * Additional information used for displaying:
@@ -847,7 +849,7 @@ typedef struct TkText {
  */
 
 typedef TkTextSegment *	Tk_SegSplitProc(struct TkTextSegment *segPtr,
-			    int index);
+			    TkSizeT index);
 typedef int		Tk_SegDeleteProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 typedef TkTextSegment *	Tk_SegCleanupProc(struct TkTextSegment *segPtr,
@@ -856,8 +858,8 @@ typedef void		Tk_SegLineChangeProc(struct TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 typedef int		Tk_SegLayoutProc(struct TkText *textPtr,
 			    struct TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, TkSizeT offset, int maxX,
+			    TkSizeT maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    struct TkTextDispChunk *chunkPtr);
 typedef void		Tk_SegCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
@@ -1024,7 +1026,7 @@ MODULE_SCOPE TkTextLine *TkBTreeFindPixelLine(TkTextBTree tree,
 			    const TkText *textPtr, int pixels,
 			    int *pixelOffset);
 MODULE_SCOPE TkTextTag **TkBTreeGetTags(const TkTextIndex *indexPtr,
-			    const TkText *textPtr, int *numTagsPtr);
+			    const TkText *textPtr, TkSizeT *numTagsPtr);
 MODULE_SCOPE void	TkBTreeInsertChars(TkTextBTree tree,
 			    TkTextIndex *indexPtr, const char *string);
 MODULE_SCOPE int	TkBTreeLinesTo(const TkText *textPtr,
@@ -1060,7 +1062,7 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, int noBreakYet,
+			    TkSizeT offset, int maxX, TkSizeT maxChars, int noBreakYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextDLineInfo(TkText *textPtr,
@@ -1106,7 +1108,7 @@ MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x,
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
-			    int *offsetPtr);
+			    TkSizeT *offsetPtr);
 MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex,
@@ -1170,6 +1172,8 @@ MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 MODULE_SCOPE void       TkTextRunAfterSyncCmd(ClientData clientData);
+MODULE_SCOPE int        TkTextIndexAdjustToStartEnd(TkText *textPtr,
+			    TkTextIndex *indexPtr, int err);
 #endif /* _TKTEXT */
 
 /*

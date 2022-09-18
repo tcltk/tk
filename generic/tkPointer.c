@@ -6,7 +6,7 @@
  *	to generate appropriate enter/leave events, and to update the global
  *	grab window information.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -25,7 +25,7 @@
 typedef struct {
     TkWindow *grabWinPtr;	/* Window that defines the top of the grab
 				 * tree in a global grab. */
-    int lastState;		/* Last known state flags. */
+    unsigned lastState;		/* Last known state flags. */
     XPoint lastPos;		/* Last reported mouse position. */
     TkWindow *lastWinPtr;	/* Last reported mouse window. */
     TkWindow *restrictWinPtr;	/* Window to which all mouse events will be
@@ -125,7 +125,7 @@ GenerateEnterLeave(
     int state)			/* State flags. */
 {
     int crossed = 0;		/* 1 if mouse crossed a window boundary */
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     TkWindow *restrictWinPtr = tsdPtr->restrictWinPtr;
     TkWindow *lastWinPtr = tsdPtr->lastWinPtr;
@@ -218,7 +218,7 @@ Tk_UpdatePointer(
     int x, int y,		/* Pointer location in root coords. */
     int state)			/* Modifier state mask. */
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     TkWindow *winPtr = (TkWindow *) tkwin;
     TkWindow *targetWinPtr;
@@ -226,7 +226,9 @@ Tk_UpdatePointer(
     XEvent event;
     int no_cursor = (state & NOCURSOR_MASK);
     int no_button_events = (state & NOBUTTONEVENTS_MASK);
-    int changes, type, b, mask;
+    unsigned changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
+    int type, b;
+    unsigned mask;
 
     if (state & ALL_BUTTONS) {
 	tsdPtr->lastState &= ~NOCURSOR_MASK;
@@ -273,7 +275,7 @@ Tk_UpdatePointer(
      */
 
     for (b = Button1; b <= Button9; b++) {
-	mask = TkGetButtonMask(b);
+	mask = Tk_GetButtonMask(b);
 	if (changes & mask) {
 	    if (state & mask) {
 		type = ButtonPress;
@@ -442,8 +444,15 @@ XGrabPointer(
     Cursor cursor,
     Time time)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)owner_events;
+    (void)event_mask;
+    (void)pointer_mode;
+    (void)keyboard_mode;
+    (void)confine_to;
+    (void)cursor;
+    (void)time;
 
     display->request++;
     tsdPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(display, grab_window);
@@ -477,8 +486,9 @@ XUngrabPointer(
     Display *display,
     Time time)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)time;
 
     display->request++;
     tsdPtr->grabWinPtr = NULL;
@@ -508,11 +518,11 @@ void
 TkPointerDeadWindow(
     TkWindow *winPtr)
 {
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	tsdPtr->lastWinPtr = NULL;
+	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
     }
     if (winPtr == tsdPtr->grabWinPtr) {
 	tsdPtr->grabWinPtr = NULL;
@@ -555,7 +565,7 @@ UpdateCursor(
     TkWindow *winPtr)
 {
     Cursor cursor = None;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -601,55 +611,15 @@ XDefineCursor(
     Cursor cursor)
 {
     TkWindow *winPtr = (TkWindow *) Tk_IdToWindow(display, w);
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)cursor;
 
     if (tsdPtr->cursorWinPtr == winPtr) {
 	UpdateCursor(winPtr);
     }
     display->request++;
     return Success;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGenerateActivateEvents --
- *
- *	This function is called by the Mac and Windows window manager routines
- *	when a toplevel window is activated or deactivated.
- *	Activate/Deactivate events will be sent to every subwindow of the
- *	toplevel followed by a FocusIn/FocusOut message.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Generates X events.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkGenerateActivateEvents(
-    TkWindow *winPtr,		/* Toplevel to activate. */
-    int active)			/* Non-zero if the window is being activated,
-				 * else 0.*/
-{
-    XEvent event;
-
-    /*
-     * Generate Activate and Deactivate events. This event is sent to every
-     * subwindow in a toplevel window.
-     */
-
-    event.xany.serial = winPtr->display->request++;
-    event.xany.send_event = False;
-    event.xany.display = winPtr->display;
-    event.xany.window = winPtr->window;
-
-    event.xany.type = active ? ActivateNotify : DeactivateNotify;
-    TkQueueEventForAllChildren(winPtr, &event);
 }
 
 /*

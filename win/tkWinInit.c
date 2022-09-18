@@ -4,7 +4,7 @@
  *	This file contains Windows-specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -37,10 +37,14 @@ TkpInit(
 {
     /*
      * This is necessary for static initialization, and is ok otherwise
-     * because TkWinXInit flips a static bit to do its work just once.
+     * because TkWinXInit flips a static bit to do its work just once. Also,
+     * initialize printing and systray API's here.
      */
 
+    WinIcoInit(interp);
+    Winprint_Init(interp);
     TkWinXInit(Tk_GetHINSTANCE());
+    Icu_Init(interp);
     return TCL_OK;
 }
 
@@ -67,7 +71,7 @@ TkpGetAppName(
     Tcl_Interp *interp,
     Tcl_DString *namePtr)	/* A previously initialized Tcl_DString. */
 {
-    int argc, namelength;
+    TkSizeT argc, namelength;
     const char **argv = NULL, *name, *p;
 
     name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
@@ -123,7 +127,7 @@ TkpDisplayWarning(
 
     /* If running on Cygwin and we have a stderr channel, use it. */
 #if !defined(STATIC_BUILD)
-	if (tclStubsPtr->reserved9) {
+	if (tclStubsPtr->tcl_CreateFileHandler) {
 	Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 	if (errChannel) {
 	    Tcl_WriteChars(errChannel, title, -1);

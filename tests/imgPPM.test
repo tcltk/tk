@@ -2,8 +2,8 @@
 # which reads and write PPM-format image files for photo widgets.
 # The files is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2

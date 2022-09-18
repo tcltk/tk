@@ -4,7 +4,7 @@
  *	This module implements the platform-independent drawing and geometry
  *	calculations of menu widgets.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -483,8 +483,8 @@ TkRecomputeMenu(
 
 void
 TkEventuallyRedrawMenu(
-    register TkMenu *menuPtr,	/* Information about menu to redraw. */
-    register TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
+    TkMenu *menuPtr,	/* Information about menu to redraw. */
+    TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
 				 * entries in the menu. */
 {
     TkSizeT i;
@@ -530,7 +530,7 @@ static void
 ComputeMenuGeometry(
     ClientData clientData)	/* Structure describing menu. */
 {
-    TkMenu *menuPtr = clientData;
+    TkMenu *menuPtr = (TkMenu *)clientData;
 
     if (menuPtr->tkwin == NULL) {
 	return;
@@ -586,7 +586,13 @@ TkMenuSelectImageProc(
 				 * <=0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkMenuEntry *mePtr = clientData;
+    TkMenuEntry *mePtr = (TkMenuEntry *)clientData;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     if ((mePtr->entryFlags & ENTRY_SELECTED)
 	    && !(mePtr->menuPtr->menuFlags & REDRAW_PENDING)) {
@@ -615,9 +621,9 @@ static void
 DisplayMenu(
     ClientData clientData)	/* Information about widget. */
 {
-    register TkMenu *menuPtr = clientData;
-    register TkMenuEntry *mePtr;
-    register Tk_Window tkwin = menuPtr->tkwin;
+    TkMenu *menuPtr = (TkMenu *)clientData;
+    TkMenuEntry *mePtr;
+    Tk_Window tkwin = menuPtr->tkwin;
     TkSizeT index;
     int strictMotif;
     Tk_Font tkfont;
@@ -669,8 +675,27 @@ DisplayMenu(
 	TkpDrawMenuEntry(mePtr, Tk_WindowId(menuPtr->tkwin), tkfont,
 		&menuMetrics, mePtr->x, mePtr->y, mePtr->width,
 		mePtr->height, strictMotif, 1);
+
+        if (mePtr->entryFlags & ENTRY_LAST_COLUMN) {
+
+            /*
+             * Paint the area at the right of an entry in the last column.
+             * This has zero width except after menu resizing.
+             */
+
+            Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
+                    mePtr->x + mePtr->width, mePtr->y,
+                    Tk_Width(tkwin) - mePtr->x - mePtr->width - borderWidth,
+                    mePtr->height, 0, TK_RELIEF_FLAT);
+        }
+
 	if ((index > 0) && (menuPtr->menuType != MENUBAR)
 		&& mePtr->columnBreak) {
+
+            /*
+             * Paint the area under the last entry in a column.
+             */
+
 	    mePtr = menuPtr->entries[index - 1];
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border,
 		mePtr->x, mePtr->y + mePtr->height, mePtr->width,
@@ -688,6 +713,11 @@ DisplayMenu(
 	    height = Tk_Height(tkwin) - 2 * borderWidth;
 	} else {
 	    mePtr = menuPtr->entries[menuPtr->numEntries - 1];
+
+            /*
+             * Paint the area under the last entry of the menu.
+             */
+
 	    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
 		border, mePtr->x, mePtr->y + mePtr->height, mePtr->width,
 		Tk_Height(tkwin) - mePtr->y - mePtr->height - borderWidth,
@@ -697,6 +727,12 @@ DisplayMenu(
 	    width = Tk_Width(tkwin) - x - borderWidth;
 	    height = Tk_Height(tkwin) - y - borderWidth;
 	}
+
+        /*
+         * Paint the area at the bottom right of the last entry.
+         * This has zero width except after menu resizing.
+         */
+
 	Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), border, x, y,
 		width, height, 0, TK_RELIEF_FLAT);
     }
@@ -730,7 +766,7 @@ TkMenuEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkMenu *menuPtr = clientData;
+    TkMenu *menuPtr = (TkMenu *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawMenu(menuPtr, NULL);
@@ -739,7 +775,7 @@ TkMenuEventProc(
 	TkEventuallyRedrawMenu(menuPtr, NULL);
     } else if (eventPtr->type == ActivateNotify) {
 	if (menuPtr->menuType == TEAROFF_MENU) {
-	    TkpSetMainMenubar(menuPtr->interp, menuPtr->tkwin, NULL);
+	    Tk_SetMainMenubar(menuPtr->interp, menuPtr->tkwin, NULL);
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	if (menuPtr->tkwin != NULL) {
@@ -795,7 +831,13 @@ TkMenuImageProc(
 				 * <=0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    register TkMenu *menuPtr = ((TkMenuEntry *) clientData)->menuPtr;
+    TkMenu *menuPtr = (TkMenu *)((TkMenuEntry *) clientData)->menuPtr;
+    (void)x;
+    (void)y;
+    (void)width;
+    (void)height;
+    (void)imgWidth;
+    (void)imgHeight;
 
     if ((menuPtr->tkwin != NULL) && !(menuPtr->menuFlags & RESIZE_PENDING)) {
 	menuPtr->menuFlags |= RESIZE_PENDING;
@@ -853,8 +895,8 @@ int
 TkPostSubmenu(
     Tcl_Interp *interp,		/* Used for invoking sub-commands and
 				 * reporting errors. */
-    register TkMenu *menuPtr,	/* Information about menu as a whole. */
-    register TkMenuEntry *mePtr)/* Info about submenu that is to be posted.
+    TkMenu *menuPtr,	/* Information about menu as a whole. */
+    TkMenuEntry *mePtr)/* Info about submenu that is to be posted.
 				 * NULL means make sure that no submenu is
 				 * posted. */
 {

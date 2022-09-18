@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2004 Joe English
+ * Copyright © 2004 Joe English
  *
  * "clam" theme; inspired by the XFCE family of Gnome themes.
  */
@@ -955,7 +955,7 @@ TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
 
 TTK_LAYOUT("TCombobox",
     TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
-    TTK_GROUP("Combobox.field", TTK_PACK_LEFT|TTK_FILL_BOTH|TTK_EXPAND,
+    TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.textarea", TTK_FILL_BOTH))))
 

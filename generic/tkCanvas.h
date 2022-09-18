@@ -3,9 +3,9 @@
  *
  *	Declarations shared among all the files that implement canvas widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1995 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1995 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -214,7 +214,7 @@ typedef struct TkCanvas {
 				 * when converting coordinates. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    int nextId;			/* Number to use as id for next item created
+    TkSizeT nextId;			/* Number to use as id for next item created
 				 * in widget. */
     Tk_PostscriptInfo psInfo;	/* Pointer to information used for generating
 				 * Postscript for the canvas. NULL means no

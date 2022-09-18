@@ -66,28 +66,17 @@ automatically set to the value of the variable whenever
 the latter is modified.
 .SH "WIDGET COMMAND"
 .PP
-.TP
-\fIpathName \fBcget \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fR, \fIy\fR.
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk::widget(n)\fR.
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+progressbar widgets support the following additional commands:
 .TP
 \fIpathName \fBstart\fR ?\fIinterval\fR?
 Begin autoincrement mode:
 schedules a recurring timer event that calls \fBstep\fR
 every \fIinterval\fR milliseconds.
 If omitted, \fIinterval\fR defaults to 50 milliseconds (20 steps/second).
-.TP
-\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk::widget(n)\fR.
 .TP
 \fIpathName \fBstep\fR ?\fIamount\fR?
 Increments the \fB\-value\fR by \fIamount\fR.

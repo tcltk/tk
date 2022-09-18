@@ -25,13 +25,13 @@ int
 Interpreter to use for error reporting.
 .AP int objc in
 Number of Tcl_Obj's in \fIobjv\fR array.
-.AP "Tcl_Obj *const" objv[] in
+.AP "Tcl_Obj *const *" objv in
 Argument objects.  These represent the entire widget command, of
 which the first word is typically the widget name and the second
 word is typically \fBxview\fR or \fByview\fR.
 .AP int argc in
 Number of strings in \fIargv\fR array.
-.AP "const char" *argv[] in
+.AP "const char **" argv in
 Argument strings.  These represent the entire widget command, of
 which the first word is typically the widget name and the second
 word is typically \fBxview\fR or \fByview\fR.
@@ -62,7 +62,8 @@ is returned as result and \fI*fractionPtr\fR is filled in with the
 value.
 If \fIobjv\fR has the \fBscroll\fR form, \fBTK_SCROLL_PAGES\fR
 or \fBTK_SCROLL_UNITS\fR is returned and \fI*stepsPtr\fR is filled
-in with the \fInumber\fR value, which must be a proper integer.
+in with the \fInumber\fR value, which must be a  integer or a float,
+but if it is a float then it is converted to an integer, rounded away from 0.
 If an error occurs in parsing the arguments, \fBTK_SCROLL_ERROR\fR
 is returned and an error message is left in interpreter
 \fIinterp\fR's result.

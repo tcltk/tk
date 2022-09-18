@@ -4,7 +4,7 @@
  *	Declarations of public types and interfaces that are only
  *	available under Windows.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright (c) 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -23,13 +23,13 @@
  */
 
 #ifndef WINVER
-#   define WINVER 0x0600
+#   define WINVER 0x0601
 #endif
 #ifndef _WIN32_WINNT
-#   define _WIN32_WINNT 0x0600
+#   define _WIN32_WINNT 0x0601
 #endif
 #ifndef _WIN32_IE
-#   define _WIN32_IE 0x0700
+#   define _WIN32_IE 0x0800
 #endif
 
 #ifndef _TK

@@ -22,7 +22,7 @@ of the \fBttk::entry\fR widget including support of the
 to a Tcl variable.
 .SO ttk_widget
 \-class	\-cursor	\-state	\-style
-\-takefocus	\-xscrollcommand	\-placeholder
+\-takefocus	\-xscrollcommand	\-placeholder	\-placeholderforeground
 .SE
 .SO ttk_entry
 \-validate	\-validatecommand
@@ -107,9 +107,15 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
+\fB\-insertcolor\fP \fIcolor\fP
+.br
+\fB\-insertwidth\fP \fIamount\fP
+.br
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-selectbackground\fP \fIcolor\fP
 .br

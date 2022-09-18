@@ -4,7 +4,7 @@
 # built-in commands.  Sourcing this file into Tcl runs the tests and
 # generates output for errors.  No output means no errors were found.
 #
-# Copyright (c) 1999 by Scriptics Corporation.
+# Copyright © 1999 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -115,13 +115,13 @@ test unixSelect-1.1 {TkSelGetSelection procedure: simple i18n text} -constraints
 } -body {
     pack [entry .e]
     update
-    .e insert 0 \u00fcber
+    .e insert 0 über
     .e selection range 0 end
     dobg {string length [selection get]}
 } -cleanup {
     cleanupbg
     destroy .e
-} -result {4}
+} -result 4
 
 test unixSelect-1.2 {TkSelGetSelection procedure: simple i18n text, iso8859-1} -constraints {
     x11
@@ -131,13 +131,13 @@ test unixSelect-1.2 {TkSelGetSelection procedure: simple i18n text, iso8859-1} -
     dobg {
         pack [entry .e]
         update
-        .e insert 0 \u00fc\u0444
+        .e insert 0 üф
         .e selection range 0 end
     }
     selection get
 } -cleanup {
     cleanupbg
-} -result \u00fc?
+} -result ü?
 
 test unixSelect-1.3 {TkSelGetSelection procedure: simple i18n text, iso2022} -constraints {
     x11
@@ -148,11 +148,11 @@ test unixSelect-1.3 {TkSelGetSelection procedure: simple i18n text, iso2022} -co
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
         {handler COMPOUND_TEXT}
     selection own .
-    set selValue \u00fc\u0444
+    set selValue üф
     set selInfo {}
     set result [dobg {
         set x [selection get -type COMPOUND_TEXT]
-        list [string equal \u00fc\u0444 $x] [string length $x]
+        list [string equal üф $x] [string length $x]
     }]
     lappend result $selInfo
 } -cleanup {
@@ -172,12 +172,12 @@ test unixSelect-1.4 {TkSelGetSelection procedure: INCR i18n text, iso2022} -cons
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
         {handler COMPOUND_TEXT}
     selection own .
-    set selValue [string repeat x 3999]\u00fc\u0444[string repeat x 3999]
+    set selValue [string repeat x 3999]üф[string repeat x 3999]
     set selInfo {}
     set result [dobg {
         set x [selection get -type COMPOUND_TEXT]
         list [string equal \
-            [string repeat x 3999]\u00fc\u0444[string repeat x 3999] $x] \
+            [string repeat x 3999]üф[string repeat x 3999] $x] \
             [string length $x]
     }]
     lappend result $selInfo
@@ -194,11 +194,11 @@ test unixSelect-1.5 {TkSelGetSelection procedure: simple i18n text, iso2022} -co
     selection handle -type COMPOUND_TEXT -format COMPOUND_TEXT . \
         {handler COMPOUND_TEXT}
     selection own .
-    set selValue \u00fc\u0444
+    set selValue üф
     set selInfo {}
     set result [dobg {
         set x [selection get -type COMPOUND_TEXT]
-        list [string equal \u00fc\u0444 $x] [string length $x]
+        list [string equal üф $x] [string length $x]
     }]
     lappend result $selInfo
 } -cleanup {
@@ -211,7 +211,7 @@ test unixSelect-1.6 {TkSelGetSelection procedure: INCR i18n text} -constraints {
     setupbg
 } -body {
     dobg [subst -nobackslashes {entry .e; pack .e; update
-    .e insert 0 \u00fcber$longValue
+    .e insert 0 über$longValue
     .e selection range 0 end}]
     string length [selection get]
 } -cleanup {
@@ -226,13 +226,13 @@ test unixSelect-1.7 {TkSelGetSelection procedure: INCR i18n text} -constraints {
     dobg {
         pack [entry .e]
         update
-        .e insert 0 [string repeat x 3999]\u00fc
+        .e insert 0 [string repeat x 3999]ü
         .e selection range 0 end
     }
     selection get
 } -cleanup {
     cleanupbg
-} -result [string repeat x 3999]\u00fc
+} -result [string repeat x 3999]ü
 
 test unixSelect-1.8 {TkSelGetSelection procedure: INCR i18n text} -constraints {
     x11
@@ -242,13 +242,13 @@ test unixSelect-1.8 {TkSelGetSelection procedure: INCR i18n text} -constraints {
     dobg {
         pack [entry .e]
         update
-        .e insert 0 \u00fc[string repeat x 3999]
+        .e insert 0 ü[string repeat x 3999]
         .e selection range 0 end
     }
     selection get
 } -cleanup {
     cleanupbg
-} -result \u00fc[string repeat x 3999]
+} -result ü[string repeat x 3999]
 
 test unixSelect-1.9 {TkSelGetSelection procedure: INCR i18n text} -constraints {
     x11
@@ -258,13 +258,13 @@ test unixSelect-1.9 {TkSelGetSelection procedure: INCR i18n text} -constraints {
     dobg {
         pack [entry .e]
         update
-        .e insert 0 [string repeat x 3999]\u00fc[string repeat x 4000]
+        .e insert 0 [string repeat x 3999]ü[string repeat x 4000]
         .e selection range 0 end
     }
     selection get
 } -cleanup {
     cleanupbg
-} -result [string repeat x 3999]\u00fc[string repeat x 4000]
+} -result [string repeat x 3999]ü[string repeat x 4000]
 # Now some tests to make sure that the right thing is done when
 # transferring UTF8 selections, to prevent [Bug 614650] and its ilk
 # from rearing its ugly head again.
@@ -277,13 +277,13 @@ test unixSelect-1.10 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [entry .e]
         update
-        .e insert 0 [string repeat x 3999]\u00fc
+        .e insert 0 [string repeat x 3999]ü
         .e selection range 0 end
     }
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result [string repeat x 3999]\u00fc
+} -result [string repeat x 3999]ü
 
 test unixSelect-1.11 {TkSelGetSelection procedure: INCR i18n text, utf-8} -constraints {
     x11
@@ -293,13 +293,13 @@ test unixSelect-1.11 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [entry .e]
         update
-        .e insert 0 \u00fc[string repeat x 3999]
+        .e insert 0 ü[string repeat x 3999]
         .e selection range 0 end
     }
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result \u00fc[string repeat x 3999]
+} -result ü[string repeat x 3999]
 
 test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} -constraints {
     x11
@@ -309,13 +309,13 @@ test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [entry .e]
         update
-        .e insert 0 [string repeat x 3999]\u00fc[string repeat x 4000]
+        .e insert 0 [string repeat x 3999]ü[string repeat x 4000]
         .e selection range 0 end
     }
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result [string repeat x 3999]\u00fc[string repeat x 4000]
+} -result [string repeat x 3999]ü[string repeat x 4000]
 
 test unixSelect-1.13 {TkSelGetSelection procedure: simple i18n text, utf-8} -constraints {
     x11
@@ -325,13 +325,13 @@ test unixSelect-1.13 {TkSelGetSelection procedure: simple i18n text, utf-8} -con
 } -body {
     pack [entry .e]
     update
-    .e insert 0 \u00fcber\u0444
+    .e insert 0 überф
     .e selection range 0 end
     dobg {string length [selection get -type UTF8_STRING]}
 } -cleanup {
     destroy .e
     cleanupbg
-} -result {5}
+} -result 5
 
 test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} -constraints {
     x11
@@ -341,13 +341,13 @@ test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} -con
     dobg {
         pack [entry .e]
         update
-        .e insert 0 \u00fc\u0444
+        .e insert 0 üф
         .e selection range 0 end
     }
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result \u00fc\u0444
+} -result üф
 
 test unixSelect-1.15 {TkSelGetSelection procedure: INCR i18n text, utf-8} -constraints {
     x11
@@ -357,13 +357,13 @@ test unixSelect-1.15 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [entry .e]
         update
-        .e insert 0 [string repeat [string repeat \u00c4\u00e4 50]\n 21]
+        .e insert 0 [string repeat [string repeat Ää 50]\n 21]
         .e selection range 0 end
     }
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result [string repeat [string repeat \u00c4\u00e4 50]\n 21]
+} -result [string repeat [string repeat Ää 50]\n 21]
 
 test unixSelect-1.16 {TkSelGetSelection procedure: INCR i18n text, utf-8} -constraints {
     x11
@@ -373,13 +373,13 @@ test unixSelect-1.16 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [entry .e]
         update
-        .e insert 0 i[string repeat [string repeat \u00c4\u00e4 50]\n 21]
+        .e insert 0 i[string repeat [string repeat Ää 50]\n 21]
         .e selection range 0 end
     }
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result i[string repeat [string repeat \u00c4\u00e4 50]\n 21]
+} -result i[string repeat [string repeat Ää 50]\n 21]
 
 test unixSelect-1.17 {TkSelGetSelection procedure: INCR i18n text, utf-8} -constraints {
     x11
@@ -389,7 +389,7 @@ test unixSelect-1.17 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [text .t]
         update
-        .t insert 1.0 [string repeat [string repeat \u00c4\u00e4 50]\n 21]
+        .t insert 1.0 [string repeat [string repeat Ää 50]\n 21]
         # Has to be selected in a separate stage
         .t tag add sel 1.0 21.end+1c
     }
@@ -397,7 +397,7 @@ test unixSelect-1.17 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result [string repeat [string repeat \u00c4\u00e4 50]\n 21]
+} -result [string repeat [string repeat Ää 50]\n 21]
 
 test unixSelect-1.18 {TkSelGetSelection procedure: INCR i18n text, utf-8} -constraints {
     x11
@@ -407,7 +407,7 @@ test unixSelect-1.18 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     dobg {
         pack [text .t]
         update
-        .t insert 1.0 i[string repeat [string repeat \u00c4\u00e4 50]\n 21]
+        .t insert 1.0 i[string repeat [string repeat Ää 50]\n 21]
         # Has to be selected in a separate stage
         .t tag add sel 1.0 21.end+1c
     }
@@ -415,7 +415,7 @@ test unixSelect-1.18 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
     selection get -type UTF8_STRING
 } -cleanup {
     cleanupbg
-} -result i[string repeat [string repeat \u00c4\u00e4 50]\n 21]
+} -result i[string repeat [string repeat Ää 50]\n 21]
 
 test unixSelect-1.19 {Automatic UTF8_STRING support for selection handle} -constraints {
     unix

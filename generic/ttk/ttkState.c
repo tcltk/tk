@@ -1,7 +1,7 @@
 /*
  * Tk widget state utilities.
  *
- * Copyright (c) 2003 Joe English.  Freely redistributable.
+ * Copyright © 2003 Joe English.  Freely redistributable.
  *
  */
 
@@ -145,14 +145,14 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
     len = Tcl_DStringLength(&result);
     if (len) {
 	/* 'len' includes extra trailing ' ' */
-	objPtr->bytes = ckalloc(len);
+	objPtr->bytes = (char *)ckalloc(len);
 	objPtr->length = len-1;
 	strncpy(objPtr->bytes, Tcl_DStringValue(&result), len-1);
 	objPtr->bytes[len-1] = '\0';
     } else {
 	/* empty string */
 	objPtr->length = 0;
-	objPtr->bytes = ckalloc(1);
+	objPtr->bytes = (char *)ckalloc(1);
 	*objPtr->bytes = '\0';
     }
 

@@ -182,13 +182,20 @@ proc ttk::combobox::SelectEntry {cb index} {
 
 ## Scroll -- Mousewheel binding
 #
-proc ttk::combobox::Scroll {cb dir} {
+proc ttk::combobox::Scroll {cb dir {factor 1.0}} {
     $cb instate disabled { return }
     set max [llength [$cb cget -values]]
     set current [$cb current]
-    incr current $dir
-    if {$max != 0 && $current == $current % $max} {
-	SelectEntry $cb $current
+    if {$current < 0} {
+	set index 0
+    } else {
+	set d [expr {$dir/$factor}]
+	set index [expr {$current + int($d > 0 ? ceil($d) : floor($d))}]
+	if {$index >= $max} {set index [expr {$max - 1}]}
+	if {$index < 0} {set index 0}
+    }
+    if {$max != 0 && $index != $current} {
+	SelectEntry $cb $index
     }
 }
 
@@ -197,7 +204,7 @@ proc ttk::combobox::Scroll {cb dir} {
 #	and unpost the listbox.
 #
 proc ttk::combobox::LBSelected {lb} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     LBSelect $lb
     Unpost $cb
     focus $cb
@@ -207,14 +214,14 @@ proc ttk::combobox::LBSelected {lb} {
 #	Unpost the listbox.
 #
 proc ttk::combobox::LBCancel {lb} {
-    Unpost [LBMaster $lb]
+    Unpost [LBMain $lb]
 }
 
 ## LBTab -- Tab key binding for combobox listbox.
 #	Set the selection, and navigate to next/prev widget.
 #
 proc ttk::combobox::LBTab {lb dir} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     switch -- $dir {
 	next	{ set newFocus [tk_focusNext $cb] }
 	prev	{ set newFocus [tk_focusPrev $cb] }
@@ -309,7 +316,7 @@ proc ttk::combobox::PopdownToplevel {w} {
 	aqua {
 	    $w configure -relief solid -borderwidth 0
 	    tk::unsupported::MacWindowStyle style $w \
-	    	help {noActivates hideOnSuspend}
+		help {noActivates hideOnSuspend}
 	    wm resizable $w 0 0
 	}
     }
@@ -337,7 +344,7 @@ proc ttk::combobox::ConfigureListbox {cb} {
     set height [llength $values]
     if {$height > [$cb cget -height]} {
 	set height [$cb cget -height]
-    	grid $popdown.sb
+	grid $popdown.sb
         grid configure $popdown.l -padx {1 0}
     } else {
 	grid remove $popdown.sb
@@ -357,9 +364,12 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     set w [winfo width $cb]
     set h [winfo height $cb]
     set style [$cb cget -style]
+    if { $style eq {} } {
+      set style TCombobox
+    }
     set postoffset [ttk::style lookup $style -postoffset {} {0 0 0 0}]
     foreach var {x y w h} delta $postoffset {
-    	incr $var $delta
+	incr $var $delta
     }
 
     set H [winfo reqheight $popdown]
@@ -411,10 +421,10 @@ proc ttk::combobox::Unpost {cb} {
     grab release $cb.popdown ;# in case of stuck or unexpected grab [#1239190]
 }
 
-## LBMaster $lb --
+## LBMain $lb --
 #	Return the combobox main widget that owns the listbox.
 #
-proc ttk::combobox::LBMaster {lb} {
+proc ttk::combobox::LBMain {lb} {
     winfo parent [winfo parent [winfo parent $lb]]
 }
 
@@ -422,7 +432,7 @@ proc ttk::combobox::LBMaster {lb} {
 #	Transfer listbox selection to combobox value.
 #
 proc ttk::combobox::LBSelect {lb} {
-    set cb [LBMaster $lb]
+    set cb [LBMain $lb]
     set selection [$lb curselection]
     if {[llength $selection] == 1} {
 	SelectEntry $cb [lindex $selection 0]
@@ -439,7 +449,7 @@ proc ttk::combobox::LBSelect {lb} {
 #
 proc ttk::combobox::LBCleanup {lb} {
     variable Values
-    unset Values([LBMaster $lb])
+    unset Values([LBMain $lb])
 }
 
 #*EOF*

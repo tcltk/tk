@@ -3,10 +3,10 @@
  *
  *	Declarations for images of type "photo" for Tk.
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002-2008 Donal K. Fellows
- * Copyright (c) 2003 ActiveState Corporation.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2002-2008 Donal K. Fellows
+ * Copyright © 2003 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -27,10 +27,11 @@
  * Forward declarations of the structures we define.
  */
 
+#define PhotoMaster PhotoModel
 typedef struct ColorTableId	ColorTableId;
 typedef struct ColorTable	ColorTable;
 typedef struct PhotoInstance	PhotoInstance;
-typedef struct PhotoMaster	PhotoMaster;
+typedef struct PhotoModel	PhotoModel;
 
 /*
  * A signed 8-bit integral type. If chars are unsigned and the compiler isn't
@@ -47,13 +48,6 @@ typedef struct PhotoMaster	PhotoMaster;
 	typedef short schar;
 #   endif
 #endif
-
-/*
- * An unsigned 32-bit integral type, used for pixel values. We use int rather
- * than long here to accommodate those systems where longs are 64 bits.
- */
-
-typedef unsigned int pixel;
 
 /*
  * The maximum number of pixels to transmit to the server in a single
@@ -109,10 +103,10 @@ struct ColorTable {
     XVisualInfo	visualInfo;	/* Information about the visual for windows
 				 * using this color table. */
 
-    pixel redValues[256];	/* Maps 8-bit values of red intensity to a
+    unsigned redValues[256];	/* Maps 8-bit values of red intensity to a
 				 * pixel value or index in pixelMap. */
-    pixel greenValues[256];	/* Ditto for green intensity. */
-    pixel blueValues[256];	/* Ditto for blue intensity. */
+    unsigned greenValues[256];	/* Ditto for green intensity. */
+    unsigned blueValues[256];	/* Ditto for blue intensity. */
     unsigned long *pixelMap;	/* Actual pixel values allocated. */
 
     unsigned char colorQuant[3][256];
@@ -144,11 +138,11 @@ struct ColorTable {
 #define MAP_COLORS		8
 
 /*
- * Definition of the data associated with each photo image master.
+ * Definition of the data associated with each photo image model.
  */
 
-struct PhotoMaster {
-    Tk_ImageMaster tkMaster;	/* Tk's token for image master. NULL means the
+struct PhotoModel {
+    Tk_ImageModel tkModel;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter associated with the application
 				 * using this image. */
@@ -165,17 +159,19 @@ struct PhotoMaster {
     Tcl_Obj *dataString;	/* Object to use as contents of image. */
     Tcl_Obj *format;		/* User-specified format of data in image file
 				 * or string value. */
+    Tcl_Obj *metadata;		/* User-specified metadata dict or read from
+				 * image file */
     unsigned char *pix32;	/* Local storage for 32-bit image. */
     int ditherX, ditherY;	/* Location of first incorrectly dithered
 				 * pixel in image. */
     TkRegion validRegion;	/* Tk region indicating which parts of the
 				 * image have valid image data. */
     PhotoInstance *instancePtr;	/* First in the list of instances associated
-				 * with this master. */
+				 * with this model. */
 };
 
 /*
- * Bit definitions for the flags field of a PhotoMaster.
+ * Bit definitions for the flags field of a PhotoModel.
  * COLOR_IMAGE:			1 means that the image has different color
  *				components.
  * IMAGE_CHANGED:		1 means that the instances of this image need
@@ -202,12 +198,12 @@ struct PhotoMaster {
  */
 
 struct PhotoInstance {
-    PhotoMaster *masterPtr;	/* Pointer to master for image. */
+    PhotoModel *modelPtr;	/* Pointer to model for image. */
     Display *display;		/* Display for windows using this instance. */
     Colormap colormap;		/* The image may only be used in windows with
 				 * this particular colormap. */
     PhotoInstance *nextPtr;	/* Pointer to the next instance in the list of
-				 * instances associated with this master. */
+				 * instances associated with this model. */
 #if TCL_MAJOR_VERSION > 8
     size_t refCount;		/* Number of instances using this structure. */
 #else
@@ -216,7 +212,7 @@ struct PhotoInstance {
     Tk_Uid palette;		/* Palette for these particular instances. */
     double gamma;		/* Gamma value for these instances. */
     Tk_Uid defaultPalette;	/* Default palette to use if a palette is not
-				 * specified for the master. */
+				 * specified for the model. */
     ColorTable *colorTablePtr;	/* Pointer to information about colors
 				 * allocated for image display in windows like
 				 * this one. */

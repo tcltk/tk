@@ -16,6 +16,8 @@ bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
 }
 bind TNotebook <Destroy>		{ ttk::notebook::Cleanup %W }
 
+ttk::bindMouseWheel TNotebook		[list ttk::notebook::CycleTab %W]
+
 # ActivateTab $nb $tab --
 #	Select the specified tab and set focus.
 #
@@ -56,12 +58,16 @@ proc ttk::notebook::Press {w x y} {
 # CycleTab --
 #	Select the next/previous tab in the list.
 #
-proc ttk::notebook::CycleTab {w dir} {
-    if {[$w index end] != 0} {
-	set current [$w index current]
-	set select [expr {($current + $dir) % [$w index end]}]
-	while {[$w tab $select -state] != "normal" && ($select != $current)} {
-	    set select [expr {($select + $dir) % [$w index end]}]
+proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
+    set current [$w index current]
+    if {$current >= 0} {
+	set tabCount [$w index end]
+	set d [expr {$dir/$factor}]
+	set d [expr {int($d > 0 ? ceil($d) : floor($d))}]
+	set select [expr {($current + $d) % $tabCount}]
+	set step [expr {$d > 0 ? 1 : -1}]
+	while {[$w tab $select -state] ne "normal" && ($select != $current)} {
+	    set select [expr {($select + $step) % $tabCount}]
 	}
 	if {$select != $current} {
 	    ActivateTab $w $select
@@ -112,13 +118,8 @@ proc ttk::notebook::enableTraversal {nb} {
 	catch {
 	bind $top <Control-ISO_Left_Tab>     {+ttk::notebook::TLCycleTab %W -1}
 	}
-	if {[tk windowingsystem] eq "aqua"} {
-	    bind $top <Option-Key> \
-		+[list ttk::notebook::MnemonicActivation $top %K]
-	} else {
-	    bind $top <Alt-Key> \
-		+[list ttk::notebook::MnemonicActivation $top %K]
-	}
+	bind $top <Option-Key> \
+	    +[list ttk::notebook::MnemonicActivation $top %K]
 	bind $top <Destroy> {+ttk::notebook::TLCleanup %W}
     }
 

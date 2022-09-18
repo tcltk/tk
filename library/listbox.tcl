@@ -3,9 +3,9 @@
 # This file defines the default bindings for Tk listbox widgets
 # and provides procedures that help in implementing those bindings.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -176,81 +176,17 @@ bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
 
-# The MouseWheel will typically only fire on Windows and Mac OS X.
-# However, someone could use the "event generate" command to produce
-# one on other platforms.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Listbox <MouseWheel> {
-        %W yview scroll [expr {-(%D)}] units
-    }
-    bind Listbox <Option-MouseWheel> {
-        %W yview scroll [expr {-10 * (%D)}] units
-    }
-    bind Listbox <Shift-MouseWheel> {
-        %W xview scroll [expr {-(%D)}] units
-    }
-    bind Listbox <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-10 * (%D)}] units
-    }
-} else {
-    # We must make sure that positive and negative movements are rounded
-    # equally to integers, avoiding the problem that
-    #     (int)1/30 = 0,
-    # but
-    #     (int)-1/30 = -1
-    # The following code ensure equal +/- behaviour.
-    bind Listbox <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/30}] units
-	} else {
-	    %W yview scroll [expr {(29-%D)/30}] units
-	}
-    }
-    bind Listbox <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/30}] units
-	} else {
-	    %W xview scroll [expr {(29-%D)/30}] units
-	}
-    }
+bind Listbox <MouseWheel> {
+    tk::MouseWheel %W y %D -40.0
 }
-
-if {[tk windowingsystem] eq "x11"} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Listbox <Button-4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -5 units
-	}
-    }
-    bind Listbox <Shift-Button-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -5 units
-	}
-    }
-    bind Listbox <Button-5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 5 units
-	}
-    }
-    bind Listbox <Shift-Button-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 5 units
-	}
-    }
-    bind Listbox <Button-6> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -5 units
-	}
-    }
-    bind Listbox <Button-7> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 5 units
-	}
-    }
+bind Listbox <Option-MouseWheel> {
+    tk::MouseWheel %W y %D -12.0
+}
+bind Listbox <Shift-MouseWheel> {
+    tk::MouseWheel %W x %D -40.0
+}
+bind Listbox <Shift-Option-MouseWheel> {
+    tk::MouseWheel %W x %D -12.0
 }
 
 # ::tk::ListboxBeginSelect --
@@ -312,7 +248,7 @@ proc ::tk::ListboxMotion {w el} {
 	}
 	extended {
 	    set i $Priv(listboxPrev)
-	    if {$i eq ""} {
+	    if {$i < 0} {
 		set i $el
 		$w selection set $el
 	    }
@@ -327,13 +263,13 @@ proc ::tk::ListboxMotion {w el} {
 		set Priv(listboxSelection) [$w curselection]
 	    }
 	    while {($i < $el) && ($i < $anchor)} {
-		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
+		if {$i in $Priv(listboxSelection)} {
 		    $w selection set $i
 		}
 		incr i
 	    }
 	    while {($i > $el) && ($i > $anchor)} {
-		if {[lsearch $Priv(listboxSelection) $i] >= 0} {
+		if {$i in $Priv(listboxSelection)} {
 		    $w selection set $i
 		}
 		incr i -1
@@ -522,7 +458,7 @@ proc ::tk::ListboxCancel w {
     }
     set first [$w index anchor]
     set last $Priv(listboxPrev)
-    if {$last eq ""} {
+    if {$last < 0} {
 	# Not actually doing any selection right now
 	return
     }
@@ -533,7 +469,7 @@ proc ::tk::ListboxCancel w {
     }
     $w selection clear $first $last
     while {$first <= $last} {
-	if {[lsearch $Priv(listboxSelection) $first] >= 0} {
+	if {$first in $Priv(listboxSelection)} {
 	    $w selection set $first
 	}
 	incr first

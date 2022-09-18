@@ -37,9 +37,10 @@ Defaults to the widget pathname if not specified.
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-commands, checkbuttons support the following additional
-widget commands:
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+checkbutton widgets support the following additional commands:
 .TP
 \fIpathname\fB invoke\fR
 Toggles between the selected and deselected states

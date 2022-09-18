@@ -15,7 +15,7 @@ wm title $w "Progress Bar Demonstration"
 wm iconname $w "ttkprogress"
 positionWindow $w
 
-ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Below are two progress bars. The top one is a \u201Cdeterminate\u201D progress bar, which is used for showing how far through a defined task the program has got. The bottom one is an \u201Cindeterminate\u201D progress bar, which is used to show that the program is busy but does not know how long for. Both are run here in self-animated mode, which can be turned on and off using the buttons underneath."
+ttk::label $w.msg -font $font -wraplength 4i -justify left -text "Below are two progress bars. The top one is a “determinate” progress bar, which is used for showing how far through a defined task the program has got. The bottom one is an “indeterminate” progress bar, which is used to show that the program is busy but does not know how long for. Both are run here in self-animated mode, which can be turned on and off using the buttons underneath."
 pack $w.msg -side top -fill x
 
 ## See Code / Dismiss buttons

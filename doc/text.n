@@ -847,6 +847,9 @@ characters in the text.
 .IP [4]
 Whenever the \fBsel\fR tag range changes a virtual event \fB<<Selection>>\fR
 is generated.
+It might also be generated when selection is affected but not actually changed.
+Further, multiple selection changes could happen before events can be processed
+leading to multiple events with the same visible selection.
 .PP
 The \fBsel\fR tag is automatically defined when a text widget is created, and
 it may not be deleted with the
@@ -1052,7 +1055,7 @@ The \fBtext\fR command creates a new Tcl command whose name is the same as the
 path name of the text's window. This command may be used to invoke various
 operations on the widget. It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as the text
 widget's path name. \fIOption\fR and the \fIarg\fRs determine the exact
@@ -1082,7 +1085,7 @@ satisfied and 0 if it is not. \fIOp\fR must be one of the operators <, <=, ==,
 the same character, if \fIop\fR is < then 1 is returned if \fIindex1\fR refers
 to an earlier character in the text than \fIindex2\fR, and so on.
 .TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? \fI?value option value ...\fR?
+\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
 Query or modify the configuration options of the widget. If no \fIoption\fR is
 specified, returns a list describing all of the available options for
@@ -1095,7 +1098,7 @@ command modifies the given widget option(s) to have the given value(s); in
 this case the command returns an empty string. \fIOption\fR may have any of
 the values accepted by the \fBtext\fR command.
 .TP
-\fIpathName \fBcount\fR \fI?options\fR? \fIindex1 index2\fR
+\fIpathName \fBcount\fR ?\fIoptions\fR? \fIindex1 index2\fR
 .
 Counts the number of relevant things between the two indices. If \fIindex1\fR
 is after \fIindex2\fR, the result will be a negative number (and this holds
@@ -1281,7 +1284,7 @@ must have a create script.) In this case an empty string is returned, and you
 must query the window by its index position to get more information.
 .RE
 .TP
-\fIpathName \fBedit \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBedit \fIoption \fR?\fIarg ...\fR?
 .
 This command controls the undo mechanism and the modified flag. The exact
 behavior of the command depends on the \fIoption\fR argument that follows the
@@ -1349,10 +1352,10 @@ given, then, within each range, only those characters which are not elided
 will be returned. This may have the effect that some of the returned ranges
 are empty strings.
 .TP
-\fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBimage \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
-command depends on the \fIoption\fR argument that follows the \fBtag\fR
+command depends on the \fIoption\fR argument that follows the \fBimage\fR
 argument. The following forms of the command are currently supported:
 .RS
 .TP
@@ -1414,7 +1417,7 @@ effect as if a separate \fIpathName \fBinsert\fR widget command had been
 issued for each pair, in order. The last \fItagList\fR argument may be
 omitted.
 .TP
-\fIpathName \fBmark \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate marks. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBmark\fR argument. The
@@ -1694,7 +1697,7 @@ calculations, the scheduling is immediate. The command returns the empty
 string. \fBbgerror\fR is called on \fIcommand\fR failure.
 .RE
 .TP
-\fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBtag \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate tags. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBtag\fR argument. The
@@ -1734,15 +1737,17 @@ all the sequences for which bindings have been defined for \fItagName\fR.
 .PP
 The only events for which bindings may be specified are those related to the
 mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, \fBButton\fR,
-\fBMotion\fR, and \fBKey\fR) or virtual events. Event bindings for a text
-widget use the \fBcurrent\fR mark described under \fBMARKS\fR above. An
+\fBMotion\fR, and \fBKey\fR) or virtual events. Mouse and keyboard event
+bindings for a text widget respectively use the \fBcurrent\fR and \fBinsert\fR
+marks described under \fBMARKS\fR above. An
 \fBEnter\fR event triggers for a tag when the tag first becomes present on the
 current character, and a \fBLeave\fR event triggers for a tag when it ceases
 to be present on the current character. \fBEnter\fR and \fBLeave\fR events can
 happen either because the \fBcurrent\fR mark moved or because the character at
 that position changed. Note that these events are different than \fBEnter\fR
-and \fBLeave\fR events for windows. Mouse and keyboard events are directed to
-the current character. If a virtual event is used in a binding, that binding
+and \fBLeave\fR events for windows. Mouse events are directed to the current
+character, while keyboard events are directed to the insert character.
+If a virtual event is used in a binding, that binding
 can trigger only if the virtual event is defined by an underlying
 mouse-related or keyboard-related event.
 .PP
@@ -1861,7 +1866,7 @@ file or \fIindex2\fR is less than or equal to \fIindex1\fR) then the command
 has no effect. This command returns an empty string.
 .RE
 .TP
-\fIpathName \fBwindow \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBwindow \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded windows. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBwindow\fR
@@ -2027,12 +2032,13 @@ integer. This command used to be used for scrolling, but now it is obsolete.
 .SH BINDINGS
 .PP
 Tk automatically creates class bindings for texts that give them the following
-default behavior. In the descriptions below,
+default behavior.
+In the descriptions below,
 .QW word
-is dependent on the value of the \fBtcl_wordchars\fR variable. See
-\fBtclvars\fR(n).
+is dependent on the value of
+the \fBtcl_wordchars\fR variable.  See \fBtclvars\fR(n).
 .IP [1]
-Clicking mouse button 1 positions the insertion cursor just before the
+Clicking mouse button 1 positions the insertion cursor at the closest edge of the
 character underneath the mouse cursor, sets the input focus to this widget,
 and clears any selection in the widget. Dragging with mouse button 1 strokes
 out a selection between the insertion cursor and the character under the
@@ -2059,10 +2065,11 @@ insertion cursor without affecting the selection.
 If any normal printing characters are typed, they are inserted at the point of
 the insertion cursor.
 .IP [7]
-The view in the widget can be adjusted by dragging with mouse button 2. If
-mouse button 2 is clicked without moving the mouse, the selection is copied
-into the text at the position of the mouse cursor. The Insert key also inserts
-the selection, but at the position of the insertion cursor.
+The view in the widget can be adjusted by dragging with the middle mouse
+button (button 2, or button 3 in TkAqua). If the middle mouse button is
+clicked without moving the mouse, the selection is copied into the text at the
+position of the mouse cursor. The Insert key also inserts the selection,
+but at the position of the insertion cursor.
 .IP [8]
 If the mouse is dragged out of the widget while button 1 is pressed, the entry
 will automatically scroll to make more text visible (if there is more text

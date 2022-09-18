@@ -206,11 +206,11 @@ typedef struct {
 				   CapRound, CapProjecting */
 	int join_style;	 	/* JoinMiter, JoinRound, JoinBevel */
 	int fill_style;	 	/* FillSolid, FillTiled,
-				   FillStippled, FillOpaeueStippled */
+				   FillStippled, FillOpaqueStippled */
 	int fill_rule;	  	/* EvenOddRule, WindingRule */
 	int arc_mode;		/* ArcChord, ArcPieSlice */
 	Pixmap tile;		/* tile pixmap for tiling operations */
-	Pixmap stipple;		/* stipple 1 plane pixmap for stipping */
+	Pixmap stipple;		/* stipple 1 plane pixmap for stippling */
 	int ts_x_origin;	/* offset for tile or stipple operations */
 	int ts_y_origin;
         Font font;	        /* default text font for text operations */
@@ -304,7 +304,7 @@ typedef struct {
     int bit_gravity;		/* one of bit gravity values */
     int win_gravity;		/* one of the window gravity values */
     int backing_store;		/* NotUseful, WhenMapped, Always */
-    unsigned long backing_planes;/* planes to be preseved if possible */
+    unsigned long backing_planes;/* planes to be preserved if possible */
     unsigned long backing_pixel;/* value to use in restoring planes */
     Bool save_under;		/* should bits under be saved? (popups) */
     long event_mask;		/* set of events that should be saved */
@@ -376,15 +376,12 @@ typedef struct _XImage {
     int bitmap_bit_order;	/* LSBFirst, MSBFirst */
     int bitmap_pad;		/* 8, 16, 32 either XY or ZPixmap */
     int depth;			/* depth of image */
-    int bytes_per_line;		/* accelarator to next line */
+    int bytes_per_line;		/* accelerator to next line */
     int bits_per_pixel;		/* bits per pixel (ZPixmap) */
-    unsigned long red_mask;	/* bits in z arrangment */
+    unsigned long red_mask;	/* bits in z arrangement */
     unsigned long green_mask;
     unsigned long blue_mask;
     XPointer obdata;		/* hook for the object routines to hang on */
-#if defined(MAC_OSX_TK)
-    int pixelpower;		/* n such that pixels are 2^n x 2^n blocks*/
-#endif
     struct funcs {		/* image manipulation routines */
 	struct _XImage *(*create_image)(
 		struct _XDisplay* /* display */,
@@ -555,8 +552,8 @@ typedef struct _XDisplay {
 	 * list to find the right procedure for each event might be
 	 * expensive if many extensions are being used.
 	 */
-	Bool (*event_vec[128])();  /* vector for wire to event */
-	Status (*wire_vec[128])(); /* vector for event to wire */
+	Bool (*event_vec[128])(void);  /* vector for wire to event */
+	Status (*wire_vec[128])(void); /* vector for event to wire */
 	KeySym lock_meaning;	   /* for XLookupString */
 	struct _XLockInfo *lock;   /* multi-thread state, display lock */
 	struct _XInternalAsync *async_handlers; /* for internal async */
@@ -568,7 +565,7 @@ typedef struct _XDisplay {
 	struct _XDisplayAtoms *atoms; /* for XInternAtom */
 	unsigned int mode_switch;  /* keyboard group modifiers */
 	struct _XContextDB *context_db; /* context database */
-	Bool (**error_vec)();      /* vector for wire to error */
+	Bool (**error_vec)(void);      /* vector for wire to error */
 	/*
 	 * Xcms information
 	 */
@@ -581,15 +578,13 @@ typedef struct _XDisplay {
 	struct _XIMFilter *im_filters;
 	struct _XSQEvent *qfree; /* unallocated event queue elements */
 	unsigned long next_event_serial_num; /* inserted into next queue elt */
-	int (*savedsynchandler)(); /* user synchandler when Xlib usurps */
+	int (*savedsynchandler)(void); /* user synchandler when Xlib usurps */
 } Display;
 
 #if NeedFunctionPrototypes	/* prototypes require event type definitions */
 #undef _XEVENT_
 #endif
 #ifndef _XEVENT_
-
-#define XMaxTransChars 7
 
 /*
  * Definitions of specific events.
@@ -608,9 +603,6 @@ typedef struct {
 	unsigned int state;	/* key or button mask */
 	unsigned int keycode;	/* detail */
 	Bool same_screen;	/* same screen flag */
-	char trans_chars[XMaxTransChars];
-				/* translated characters */
-	unsigned char nbytes;
 } XKeyEvent;
 typedef XKeyEvent XKeyPressedEvent;
 typedef XKeyEvent XKeyReleasedEvent;
@@ -1429,7 +1421,7 @@ typedef struct {
 _XFUNCPROTOBEGIN
 
 #if defined(WIN32) && !defined(_XLIBINT_)
-#define _Xdebug (*_Xdebug_p)
+#define _Xdebug *_Xdebug_p
 #endif
 
 EXTERN int _Xdebug;
@@ -1726,6 +1718,7 @@ EXTERN XHostAddress *XListHosts(
     int*		/* nhosts_return */,
     Bool*		/* state_return */
 );
+_X_DEPRECATED
 EXTERN KeySym XKeycodeToKeysym(
     Display*		/* display */,
 #if NeedWidePrototypes

@@ -52,7 +52,7 @@ namespace eval ::tk {
     ::msgcat::mcset de "Ok"
     ::msgcat::mcset de "Open" "Öffnen"
     ::msgcat::mcset de "&Open" "Ö&ffnen"
-    ::msgcat::mcset de "Open Multiple Files" "Mehrere Dateien \u00F6ffnen"
+    ::msgcat::mcset de "Open Multiple Files" "Mehrere Dateien Öffnen"
     ::msgcat::mcset de "P&aste" "E&infügen"
     ::msgcat::mcset de "&Quit" "&Beenden"
     ::msgcat::mcset de "&Red" "&Rot"
@@ -88,4 +88,22 @@ namespace eval ::tk {
     ::msgcat::mcset de "red" "rot"
     ::msgcat::mcset de "retry" "wiederholen"
     ::msgcat::mcset de "yes" "ja"
+}
+#localization of print terms by Kevin Walzer via Microsoft Translator
+namespace eval ::tk {
+    ::msgcat::mcset  de "Print" "Drucken"
+    ::msgcat::mcset  de "Printer" "Drucker"
+    ::msgcat::mcset  de "Letter " "Brief"
+    ::msgcat::mcset  de "Legal " "Rechtlich"
+    ::msgcat::mcset  de "A4" "A4"
+    ::msgcat::mcset  de "Grayscale" "Graustufen"
+    ::msgcat::mcset  de "RGB" "Rgb"
+    ::msgcat::mcset  de "Options" "Optionen"
+    ::msgcat::mcset  de "Copies" "Kopien"
+    ::msgcat::mcset  de "Paper" "Papier"
+    ::msgcat::mcset  de "Scale" "Skala"
+    ::msgcat::mcset  de "Orientation" "Ausrichtung"
+    ::msgcat::mcset  de "Portrait" "Porträt"
+    ::msgcat::mcset  de "Landscape" "Landschaft"
+    ::msgcat::mcset  de "Output" "Ausgabe"
 }

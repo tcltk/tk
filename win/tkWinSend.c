@@ -4,8 +4,8 @@
  *	This file provides functions that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter.
  *
- * Copyright (c) 1997 by Sun Microsystems, Inc.
- * Copyright (c) 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 1997 Sun Microsystems, Inc.
+ * Copyright © 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -121,6 +121,8 @@ Tk_SetAppName(
 				 * be globally unique. */
 {
 #ifndef TK_SEND_ENABLED_ON_WINDOWS
+    (void)tkwin;
+
     /*
      * Temporarily disabled for bug #858822
      */
@@ -163,7 +165,7 @@ Tk_SetAppName(
     if (riPtr == NULL) {
 	LPUNKNOWN *objPtr;
 
-	riPtr = ckalloc(sizeof(RegisteredInterp));
+	riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
 	memset(riPtr, 0, sizeof(RegisteredInterp));
 	riPtr->interp = interp;
 
@@ -213,6 +215,8 @@ TkGetInterpNames(
 				 * lookup. */
 {
 #ifndef TK_SEND_ENABLED_ON_WINDOWS
+    (void)interp;
+    (void)tkwin;
     /*
      * Temporarily disabled for bug #858822
      */
@@ -735,7 +739,7 @@ Send(
 				 * object. */
     Tcl_Interp *interp,		/* The local interpreter. */
     int async,			/* Flag for the calling style. */
-    ClientData clientData,	/* The RegisteredInterp structure for this
+    ClientData dummy,	/* The RegisteredInterp structure for this
 				 * interp. */
     int objc,			/* Number of arguments to be sent. */
     Tcl_Obj *const objv[])	/* The arguments to be sent. */
@@ -749,6 +753,7 @@ Send(
     DISPID dispid;
     Tcl_DString ds;
     const char *src;
+    (void)dummy;
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -926,7 +931,7 @@ TkWinSend_QueueCommand(
 
     TRACE("SendQueueCommand()\n");
 
-    evPtr = ckalloc(sizeof(SendEvent));
+    evPtr = (SendEvent *)ckalloc(sizeof(SendEvent));
     evPtr->header.proc = SendEventProc;
     evPtr->header.nextPtr = NULL;
     evPtr->interp = interp;
@@ -968,6 +973,7 @@ SendEventProc(
     int flags)
 {
     SendEvent *evPtr = (SendEvent *)eventPtr;
+    (void)flags;
 
     TRACE("SendEventProc\n");
 

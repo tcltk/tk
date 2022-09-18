@@ -3,8 +3,8 @@
 #	Implements the icon-list megawidget used in the "Tk" standard file
 #	selection dialog boxes.
 #
-# Copyright (c) 1994-1998 Sun Microsystems, Inc.
-# Copyright (c) 2009 Donal K. Fellows
+# Copyright © 1994-1998 Sun Microsystems, Inc.
+# Copyright © 2009 Donal K. Fellows
 #
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -26,7 +26,7 @@
 #	<path> selection includes <item>
 #	<path> selection set <first> ?<last>?
 
-package require Tk 8.6
+package require tk
 
 ::tk::Megawidget create ::tk::IconList ::tk::FocusableWidget {
     variable w canvas sbar accel accelCB fill font index \
@@ -338,8 +338,8 @@ package require Tk 8.6
 	    set i_dy [expr {($dy - $iH)/2}]
 	    set t_dy [expr {($dy - $tH)/2}]
 
-	    $canvas coords $iTag $x                    [expr {$y + $i_dy}]
-	    $canvas coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
+	    $canvas coords $iTag $x [expr {$y + $i_dy}]
+	    $canvas coords $tTag [expr {$x + $shift}] [expr {$y + $t_dy}]
 	    $canvas coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
 
 	    incr y $dy
@@ -446,18 +446,9 @@ package require Tk 8.6
 	bind $canvas <Control-B1-Motion> {;}
 	bind $canvas <Shift-B1-Motion>	[namespace code {my ShiftMotion1 %x %y}]
 
-	if {[tk windowingsystem] eq "aqua"} {
-	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel [expr {40 * (%D)}]}]
-	    bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel [expr {400 * (%D)}]}]
-	} else {
-	    bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
-	}
-	if {[tk windowingsystem] eq "x11"} {
-	    bind $canvas <Shift-Button-4>	[namespace code {my MouseWheel 120}]
-	    bind $canvas <Shift-Button-5>	[namespace code {my MouseWheel -120}]
-	    bind $canvas <Button-6>		[namespace code {my MouseWheel 120}]
-	    bind $canvas <Button-7>		[namespace code {my MouseWheel -120}]
-	}
+	bind $canvas <Shift-MouseWheel>	[namespace code {my MouseWheel %D}]
+	bind $canvas <Option-Shift-MouseWheel>	[namespace code {my MouseWheel %D -12}]
+
 
 	bind $canvas <<PrevLine>>	[namespace code {my UpDown -1}]
 	bind $canvas <<NextLine>>	[namespace code {my UpDown  1}]
@@ -465,8 +456,11 @@ package require Tk 8.6
 	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
 	bind $canvas <Key>		[namespace code {my KeyPress %A}]
-	bind $canvas <Control-Key> ";"
-	bind $canvas <Alt-Key>	";"
+	bind $canvas <Alt-Key>		{# nothing}
+	bind $canvas <Meta-Key> 	{# nothing}
+	bind $canvas <Control-Key> 	{# nothing}
+	bind $canvas <Command-Key> 	{# nothing}
+	bind $canvas <Fn-Key>		{# nothing}
 
 	bind $canvas <FocusIn>		[namespace code {my FocusIn}]
 	bind $canvas <FocusOut>		[namespace code {my FocusOut}]
@@ -505,21 +499,11 @@ package require Tk 8.6
     # ----------------------------------------------------------------------
 
     # Event handlers
-    method MouseWheel {amount} {
+    method MouseWheel {amount {factor -120.0}} {
 	if {$noScroll || $::tk_strictMotif} {
 	    return
 	}
-	# We must make sure that positive and negative movements are rounded
-	# equally to integers, avoiding the problem that
-	#     (int)1/120 = 0,
-	# but
-	#     (int)-1/120 = -1
-	# The following code ensure equal +/- behaviour.
-	if {$amount > 0} {
-	    $canvas xview scroll [expr {(-119-$amount) / 120}] units
-	} else {
-	    $canvas xview scroll [expr {-($amount / 120)}] units
-	}
+	$canvas xview scroll [expr {$amount/$factor}] units
     }
     method Btn1 {x y} {
 	focus $canvas
@@ -705,7 +689,7 @@ package require Tk 8.6
 	    }
 	}
 
-	if {$theIndex > -1} {
+	if {$theIndex >= 0} {
 	    $w selection clear 0 end
 	    $w selection set $theIndex
 	    $w selection anchor $theIndex

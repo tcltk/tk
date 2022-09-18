@@ -6,10 +6,10 @@
 #	trace (like save it to a log).  This is adapted from work done by
 #	Donal K. Fellows.
 #
-# Copyright (c) 1998-2000 by Ajuba Solutions.
-# Copyright (c) 2007 by ActiveState Software Inc.
-# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
-# Copyright (c) 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2007 ActiveState Software Inc.
+# Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 2009 Pat Thoyts <patthoyts@users.sourceforge.net>
 
 namespace eval ::tk::dialog::error {
     namespace import -force ::tk::msgcat::*
@@ -41,7 +41,7 @@ proc ::tk::dialog::error::Details {} {
     set w .bgerrorDialog
     set caption [option get $w.function text {}]
     set command [option get $w.function command {}]
-    if { ($caption eq "") || ($command eq "") } {
+    if {($caption eq "") || ($command eq "")} {
 	grid forget $w.function
     }
     lappend command [$w.top.info.text get 1.0 end-1c]
@@ -50,7 +50,7 @@ proc ::tk::dialog::error::Details {} {
 }
 
 proc ::tk::dialog::error::SaveToLog {text} {
-    if { $::tcl_platform(platform) eq "windows" } {
+    if {$::tcl_platform(platform) eq "windows"} {
 	set allFiles *.*
     } else {
 	set allFiles *
@@ -129,11 +129,11 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     set lines 0
     set maxLine 45
     foreach line [split $err \n] {
-	if { [string length $line] > $maxLine } {
-	    append displayedErr "[string range $line 0 [expr {$maxLine-3}]]..."
+	if {[string length $line] > $maxLine} {
+	    append displayedErr "[string range $line 0 $maxLine-3]..."
 	    break
 	}
-	if { $lines > 4 } {
+	if {$lines > 4} {
 	    append displayedErr "..."
 	    break
 	} else {
@@ -182,7 +182,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     pack $W.text -side left -expand yes -fill both
     $W.text insert 0.0 "$err\n$info"
     $W.text mark set insert 0.0
-    bind $W.text <Button-1> { focus %W }
+    bind $W.text <Button-1> {focus %W}
     $W.text configure -state disabled
 
     # 2. Fill the top part with bitmap and message

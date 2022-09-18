@@ -4,11 +4,11 @@
  *	This file implements the Macintosh specific portion of the scrollbar
  *	widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2015 Kevin Walzer/WordTech Commununications LLC.
- * Copyright (c) 2018-2019 Marc Culler
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015 Kevin Walzer/WordTech Commununications LLC.
+ * Copyright © 2018-2019 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -121,7 +121,7 @@ TkScrollbar *
 TkpCreateScrollbar(
     Tk_Window tkwin)
 {
-    MacScrollbar *scrollPtr = ckalloc(sizeof(MacScrollbar));
+    MacScrollbar *scrollPtr = (MacScrollbar *)ckalloc(sizeof(MacScrollbar));
 
     scrollPtr->troughGC = NULL;
     scrollPtr->copyGC = NULL;
@@ -174,8 +174,8 @@ static void drawMacScrollbar(
     MacScrollbar *msPtr,
     CGContextRef context)
 {
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
-    NSView *view = TkMacOSXDrawableView(macWin);
+    Drawable d = Tk_WindowId(scrollPtr->tkwin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(d);
     CGPathRef path;
     CGPoint inner[2], outer[2], thumbOrigin;
     CGSize thumbSize;
@@ -246,7 +246,7 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    TkScrollbar *scrollPtr = clientData;
+    TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -258,12 +258,12 @@ TkpDisplayScrollbar(
 	return;
     }
 
-    MacDrawable *macWin = (MacDrawable *) winPtr->window;
-    NSView *view = TkMacOSXDrawableView(macWin);
+    MacDrawable *macWin = (MacDrawable *)winPtr->window;
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
     if ((view == NULL)
 	    || (macWin->flags & TK_DO_NOT_DRAW)
-	    || !TkMacOSXSetupDrawingContext((Drawable) macWin, NULL, 1, &dc)) {
+	    || !TkMacOSXSetupDrawingContext((Drawable)macWin, NULL, &dc)) {
 	return;
     }
 
@@ -293,7 +293,7 @@ TkpDisplayScrollbar(
     	} else {
     	    fgGC = bgGC;
     	}
-    	TkpDrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
+    	Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, scrollPtr->highlightWidth,
     		(Pixmap) macWin);
     }
 
@@ -316,7 +316,7 @@ TkpDisplayScrollbar(
     if (SNOW_LEOPARD_STYLE) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationInverted);
-    } else if ([NSApp macMinorVersion] <= 8) {
+    } else if ([NSApp macOSVersion] <= 100800) {
 	HIThemeDrawTrack(&msPtr->info, 0, dc.context,
 			 kHIThemeOrientationNormal);
     } else {
@@ -377,7 +377,7 @@ TkpComputeScrollbarGeometry(
 	scrollPtr->highlightWidth = 0;
     }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
-    if ([NSApp macMinorVersion] == 6) {
+    if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;
     } else {
 	scrollPtr->arrowLength = 0;
@@ -456,10 +456,10 @@ TkpDestroyScrollbar(
 {
     MacScrollbar *macScrollPtr = (MacScrollbar *) scrollPtr;
 
-    if (macScrollPtr->troughGC != None) {
+    if (macScrollPtr->troughGC != NULL) {
 	Tk_FreeGC(scrollPtr->display, macScrollPtr->troughGC);
     }
-    if (macScrollPtr->copyGC != None) {
+    if (macScrollPtr->copyGC != NULL) {
 	Tk_FreeGC(scrollPtr->display, macScrollPtr->copyGC);
     }
 }
@@ -486,6 +486,7 @@ void
 TkpConfigureScrollbar(
     TkScrollbar *scrollPtr)
 {
+    (void)scrollPtr;
     /* empty */
 }
 
@@ -589,12 +590,12 @@ UpdateControlValues(
 {
     MacScrollbar *msPtr = (MacScrollbar *) scrollPtr;
     Tk_Window tkwin = scrollPtr->tkwin;
-    MacDrawable *macWin = (MacDrawable *) Tk_WindowId(scrollPtr->tkwin);
+    MacDrawable *macWin = (MacDrawable *)Tk_WindowId(scrollPtr->tkwin);
     double dViewSize;
     HIRect contrlRect;
-    short width, height;
+    short height;
 
-    NSView *view = TkMacOSXDrawableView(macWin);
+    NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
     CGFloat viewHeight = [view bounds].size.height;
     NSRect frame;
 
@@ -606,7 +607,6 @@ UpdateControlValues(
     contrlRect = NSRectToCGRect(frame);
     msPtr->info.bounds = contrlRect;
 
-    width = contrlRect.size.width;
     height = contrlRect.size.height - scrollPtr->arrowLength;
 
     /*
@@ -661,7 +661,7 @@ UpdateControlValues(
  *
  * ScrollbarEvent --
  *
- *	This procedure is invoked in response to <ButtonPress>,
+ *	This procedure is invoked in response to <Button>,
  *      <ButtonRelease>, <EnterNotify>, and <LeaveNotify> events.  The
  *      Scrollbar appearance is modified for each event.
  *
@@ -769,7 +769,7 @@ ScrollbarEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScrollbar *scrollPtr = clientData;
+    TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
 
     switch (eventPtr->type) {
     case UnmapNotify:
@@ -783,10 +783,10 @@ ScrollbarEventProc(
     case ButtonRelease:
     case EnterNotify:
     case LeaveNotify:
-    	ScrollbarEvent(clientData, eventPtr);
+    	ScrollbarEvent(scrollPtr, eventPtr);
 	break;
     default:
-	TkScrollbarEventProc(clientData, eventPtr);
+	TkScrollbarEventProc(scrollPtr, eventPtr);
     }
 }
 

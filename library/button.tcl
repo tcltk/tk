@@ -4,9 +4,9 @@
 # checkbutton, and radiobutton widgets and provides procedures
 # that help in implementing those bindings.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 2002 ActiveState Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 2002 ActiveState Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -41,10 +41,10 @@ if {[tk windowingsystem] eq "aqua"} {
     }
 }
 if {"win32" eq [tk windowingsystem]} {
-    bind Checkbutton <equal> {
+    bind Checkbutton <=> {
 	tk::CheckRadioInvoke %W select
     }
-    bind Checkbutton <plus> {
+    bind Checkbutton <+> {
 	tk::CheckRadioInvoke %W select
     }
     bind Checkbutton <minus> {

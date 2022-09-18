@@ -3,7 +3,7 @@
  *
  *	This file provides procedures that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter. This
- *	current implementation for the Mac has most functionality stubed out.
+ *	current implementation for the Mac has most functionality stubbed out.
  *
  *	The current plan, which we have not had time to implement, is for the
  *	first Wish app to create a gestalt of type 'WIsH'. This gestalt will
@@ -22,10 +22,10 @@
  *	may not get done for awhile. So this sketch is offered for the brave
  *	to attempt if they need the functionality...
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -281,9 +281,9 @@ Tk_SetAppName(
      * We have found a unique name. Now add it to the registry.
      */
 
-    riPtr = ckalloc(sizeof(RegisteredInterp));
+    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
-    riPtr->name = ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
     riPtr->nextPtr = interpListPtr;
     interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);
@@ -320,7 +320,7 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Used only for deletion */
+    ClientData dummy,	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
@@ -332,6 +332,7 @@ Tk_SendObjCmd(
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
+    (void)dummy;
 
     for (i = 1; i < (objc - 1); ) {
 	stringRep = Tcl_GetString(objv[i]);
@@ -466,6 +467,7 @@ TkGetInterpNames(
 {
     Tcl_Obj *listObjPtr;
     RegisteredInterp *riPtr;
+    (void)tkwin;
 
     listObjPtr = Tcl_NewListObj(0, NULL);
     riPtr = interpListPtr;
@@ -498,10 +500,9 @@ TkGetInterpNames(
 
 static int
 SendInit(
-    Tcl_Interp *interp)		/* Interpreter to use for error reporting (no
-				 * errors are ever returned, but the
-				 * interpreter is needed anyway). */
+    Tcl_Interp *dummy)		/* Not used */
 {
+    (void)dummy;
     return TCL_OK;
 }
 

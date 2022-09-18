@@ -3,8 +3,8 @@
  *
  *	This file implements the X specific portion of the scrollbar widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -50,9 +50,9 @@ static void		DisplayVerticalValue(TkScale *scalePtr,
 
 TkScale *
 TkpCreateScale(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    return ckalloc(sizeof(TkScale));
+    return (TkScale *)ckalloc(sizeof(TkScale));
 }
 
 /*
@@ -546,7 +546,7 @@ void
 TkpDisplayScale(
     ClientData clientData)	/* Widget record for scale. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
     Tcl_Interp *interp = scalePtr->interp;
     Pixmap pixmap;
@@ -575,7 +575,7 @@ TkpDisplayScale(
 	Tcl_DStringAppend(&buf, scalePtr->command, -1);
 	Tcl_DStringAppend(&buf, " ", -1);
 	Tcl_DStringAppend(&buf, string, -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");

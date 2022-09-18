@@ -3,8 +3,8 @@
  *
  *	This file contains functions for managing the clipboard.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -55,15 +55,15 @@ TkSelGetSelection(
     Tcl_Encoding encoding;
     int result, locale, noBackslash = 0;
 
+    if ((selection != Tk_InternAtom(tkwin, "CLIPBOARD"))
+	    || (target != XA_STRING)) {
+	goto error;
+    }
     if (!OpenClipboard(NULL)) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	        "clipboard cannot be opened, another application grabbed it"));
         Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
         return TCL_ERROR;
-    }
-    if ((selection != Tk_InternAtom(tkwin, "CLIPBOARD"))
-	    || (target != XA_STRING)) {
-	goto error;
     }
 
     /*
@@ -78,7 +78,7 @@ TkSelGetSelection(
 	    CloseClipboard();
 	    goto error;
 	}
-	data = GlobalLock(handle);
+	data = (char *)GlobalLock(handle);
 	Tcl_DStringInit(&ds);
 	Tcl_WCharToUtfDString((WCHAR *)data, wcslen((WCHAR *)data), &ds);
 	GlobalUnlock(handle);
@@ -101,7 +101,7 @@ TkSelGetSelection(
 
 	    Tcl_DStringInit(&ds);
 	    Tcl_DStringAppend(&ds, "cp######", -1);
-	    data = GlobalLock(handle);
+	    data = (char *)GlobalLock(handle);
 
 	    /*
 	     * Even though the documentation claims that GetLocaleInfo expects
@@ -131,8 +131,8 @@ TkSelGetSelection(
 	    CloseClipboard();
 	    goto error;
 	}
-	data = GlobalLock(handle);
-	Tcl_ExternalToUtfDString(encoding, data, -1, &ds);
+	data = (char *)GlobalLock(handle);
+	(void)Tcl_ExternalToUtfDStringEx(encoding, data, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	GlobalUnlock(handle);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
@@ -234,6 +234,8 @@ XSetSelectionOwner(
 {
     HWND hwnd = owner ? TkWinGetHWND(owner) : NULL;
     Tk_Window tkwin;
+    (void)display;
+    (void)time;
 
     /*
      * This is a gross hack because the Tk_InternAtom interface is broken. It
@@ -283,6 +285,7 @@ TkWinClipboardRender(
     char *buffer, *p, *rawText, *endPtr;
     int length;
     Tcl_DString ds;
+    (void)format;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -314,7 +317,7 @@ TkWinClipboardRender(
      * Copy the data and change EOL characters.
      */
 
-    buffer = rawText = ckalloc(length + 1);
+    buffer = rawText = (char *)ckalloc(length + 1);
     if (targetPtr != NULL) {
 	for (cbPtr = targetPtr->firstBufferPtr; cbPtr != NULL;
 		cbPtr = cbPtr->nextPtr) {
@@ -338,7 +341,7 @@ TkWinClipboardRender(
 	    Tcl_DStringFree(&ds);
 	    return;
 	}
-	buffer = GlobalLock(handle);
+	buffer = (char *)GlobalLock(handle);
 	memcpy(buffer, Tcl_DStringValue(&ds),
 		(unsigned) Tcl_DStringLength(&ds) + 2);
 	GlobalUnlock(handle);
@@ -369,6 +372,8 @@ TkSelUpdateClipboard(
     TkClipboardTarget *targetPtr)
 {
     HWND hwnd = TkWinGetHWND(winPtr->window);
+    (void)targetPtr;
+
     UpdateClipboard(hwnd);
 }
 
@@ -450,6 +455,7 @@ void
 TkSelPropProc(
     XEvent *eventPtr)	/* X PropertyChange event. */
 {
+    (void)eventPtr;
 }
 
 /*

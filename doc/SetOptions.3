@@ -60,7 +60,7 @@ no window-dependent options, then a NULL value may be supplied for
 this argument.
 .AP int objc in
 Number of values in \fIobjv\fR.
-.AP Tcl_Obj "*const objv[]" in
+.AP Tcl_Obj "*const *objv" in
 Command-line arguments for setting configuring options.
 .AP Tk_SavedOptions *savePtr out
 If not NULL, the structure pointed to by this argument is filled
@@ -333,7 +333,9 @@ nor \fIclientData\fR.
 \fBTK_OPTION_ANCHOR\fR
 The value must be a standard anchor position such as \fBne\fR or
 \fBcenter\fR.  The internal form is a Tk_Anchor value like the ones
-returned by \fBTk_GetAnchorFromObj\fR.
+returned by \fBTk_GetAnchorFromObj\fR.  This option type supports the \fBTK_OPTION_NULL_OK\fR
+flag; if the empty string is specified as the value for the option,
+the integer relief value is set to \fBTK_ANCHOR_NULL\fR.
 .TP
 \fBTK_OPTION_BITMAP\fR
 The value must be a standard Tk bitmap name. The internal form is a
@@ -343,7 +345,11 @@ such as \fBTk_SetOptions\fR, and it supports the \fBTK_OPTION_NULL_OK\fR flag.
 .TP
 \fBTK_OPTION_BOOLEAN\fR
 The value must be a standard boolean value such as \fBtrue\fR or
-\fBno\fR.  The internal form is an integer with value 0 or 1.
+\fBno\fR.  The internal form is an integer with value 0 or 1.  Note: if the
+\fIobjOffset\fR field is not used then information about the original value
+of this option will be lost.  This option type supports the
+\fBTK_OPTION_NULL_OK\fR flag; if a NULL value is set, the internal
+representation is set to -1.
 .TP
 \fBTK_OPTION_BORDER\fR
 The value must be a standard color name such as \fBred\fR or \fB#ff8080\fR.
@@ -377,7 +383,7 @@ option type.  See the section \fBCUSTOM OPTION TYPES\fR below for details.
 The string value must be a floating-point number in
 the format accepted by \fBstrtol\fR.  The internal form is a C
 \fBdouble\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
-flag; if a NULL value is set, the internal representation is set to zero.
+flag; if a NULL value is set, the internal representation is set to NaN.
 .TP
 \fBTK_OPTION_END\fR
 Marks the end of the template.  There must be a Tk_OptionSpec structure
@@ -399,12 +405,15 @@ such as \fBTk_SetOptions\fR, and it supports the \fBTK_OPTION_NULL_OK\fR flag.
 The string value must be an integer in the format accepted by
 \fBstrtol\fR (e.g. \fB0\fR and \fB0x\fR prefixes may be used to
 specify octal or hexadecimal numbers, respectively).  The internal
-form is a C \fBint\fR value.
+form is a C \fBint\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
+flag; if a NULL value is set, the internal representation is set to INT_MIN.
 .TP
 \fBTK_OPTION_JUSTIFY\fR
 The value must be a standard justification value such as \fBleft\fR.
 The internal form is a Tk_Justify like the values returned by
-\fBTk_GetJustifyFromObj\fR.
+\fBTk_GetJustifyFromObj\fR.  This option type supports the \fBTK_OPTION_NULL_OK\fR
+flag; if the empty string is specified as the value for the option,
+the integer relief value is set to \fBTK_JUSTIFY_NULL\fR.
 .TP
 \fBTK_OPTION_PIXELS\fR
 The value must specify a screen distance such as \fB2i\fR or \fB6.4\fR.
@@ -414,14 +423,14 @@ distance in pixels, like the values returned by
 used then information about the original value of this option will be lost.
 See \fBOBJOFFSET VS. INTERNALOFFSET\fR below for details.  This option
 type supports the \fBTK_OPTION_NULL_OK\fR flag; if a NULL value is set, the
-internal representation is set to zero.
+internal representation is set to INT_MIN.
 .TP
 \fBTK_OPTION_RELIEF\fR
 The value must be standard relief such as \fBraised\fR.
 The internal form is an integer relief value such as
 \fBTK_RELIEF_RAISED\fR.  This option type supports the \fBTK_OPTION_NULL_OK\fR
-flag; if the empty string is specified as the value for the option,
-the integer relief value is set to \fBTK_RELIEF_NULL\fR.
+flag; if a NULL value is set, the internal representation is set to
+\fBTK_RELIEF_NULL\fR.
 .TP
 \fBTK_OPTION_STRING\fR
 The value may be any string.  The internal form is a (char *) pointer

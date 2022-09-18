@@ -3,9 +3,9 @@
  *
  *	These calls set up the default menus for Tk.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -112,7 +112,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
      * On OS X 10.12 we get duplicate tab control items if we create them here.
      */
 
-    if ([NSApp macMinorVersion] > 12) {
+    if ([NSApp macOSVersion] > 101200) {
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
@@ -199,9 +199,11 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) orderFrontStandardAboutPanel: (id) sender
 {
+    (void)sender;
+
     if (!_eventInterp || !Tcl_FindCommand(_eventInterp, "tkAboutDialog",
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
-	TkAboutDlg();
+	[super orderFrontStandardAboutPanel:nil];
     } else {
 	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", -1,
 		TCL_EVAL_GLOBAL);
@@ -231,6 +233,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkSource: (id) sender
 {
+    (void)sender;
+
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
@@ -256,6 +260,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (void) tkDemo: (id) sender
 {
+	(void)sender;
+
     if (_eventInterp) {
 	Tcl_Obj *path = GetWidgetDemoPath(_eventInterp);
 
@@ -281,6 +287,8 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 
 - (BOOL) validateUserInterfaceItem: (id <NSValidatedUserInterfaceItem>) anItem
 {
+    (void)anItem;
+
     return YES;
 }
 
@@ -355,34 +363,11 @@ GetWidgetDemoPath(
 
 void
 TkMacOSXHandleMenuSelect(
-    short theMenu,
-    unsigned short theItem,
-    int optionKeyPressed)
+    TCL_UNUSED(short),
+    TCL_UNUSED(unsigned short),
+    TCL_UNUSED(int))
 {
     Tcl_Panic("TkMacOSXHandleMenuSelect: Obsolete, no more Carbon!");
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkMacOSXInitMenus --
- *
- *	This procedure initializes the Macintosh menu bar.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXInitMenus(
-    Tcl_Interp *interp)
-{
-    [NSApp _setupMenus];
 }
 
 /*
@@ -406,7 +391,7 @@ static void
 GenerateEditEvent(
     const char *name)
 {
-    XVirtualEvent event;
+    union {XEvent general; XVirtualEvent virt;} event;
     int x, y;
     TkWindow *winPtr = TkMacOSXGetTkWindow([NSApp keyWindow]);
     Tk_Window tkwin;
@@ -414,25 +399,25 @@ GenerateEditEvent(
     if (!winPtr) {
 	return;
     }
-    tkwin = (Tk_Window) winPtr->dispPtr->focusPtr;
+    tkwin = (Tk_Window)winPtr->dispPtr->focusPtr;
     if (!tkwin) {
 	return;
     }
-    bzero(&event, sizeof(XVirtualEvent));
-    event.type = VirtualEvent;
-    event.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-    event.send_event = false;
-    event.display = Tk_Display(tkwin);
-    event.event = Tk_WindowId(tkwin);
-    event.root = XRootWindow(Tk_Display(tkwin), 0);
-    event.subwindow = None;
-    event.time = TkpGetMS();
+    bzero(&event, sizeof(event));
+    event.virt.type = VirtualEvent;
+    event.virt.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+    event.virt.send_event = false;
+    event.virt.display = Tk_Display(tkwin);
+    event.virt.event = Tk_WindowId(tkwin);
+    event.virt.root = XRootWindow(Tk_Display(tkwin), 0);
+    event.virt.subwindow = None;
+    event.virt.time = TkpGetMS();
     XQueryPointer(NULL, winPtr->window, NULL, NULL,
-	    &event.x_root, &event.y_root, &x, &y, &event.state);
-    Tk_TopCoordsToWindow(tkwin, x, y, &event.x, &event.y);
-    event.same_screen = true;
-    event.name = Tk_GetUid(name);
-    Tk_QueueWindowEvent((XEvent *) &event, TCL_QUEUE_TAIL);
+	    &event.virt.x_root, &event.virt.y_root, &x, &y, &event.virt.state);
+    Tk_TopCoordsToWindow(tkwin, x, y, &event.virt.x, &event.virt.y);
+    event.virt.same_screen = true;
+    event.virt.name = Tk_GetUid(name);
+    Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
 #pragma mark -

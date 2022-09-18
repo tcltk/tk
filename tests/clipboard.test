@@ -2,8 +2,8 @@
 # especially the "clipboard" command.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 #
@@ -20,6 +20,8 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # set up a very large buffer to test INCR retrievals
 set longValue ""
@@ -233,7 +235,7 @@ test clipboard-6.1 {Tk_ClipboardAppend procedure} -setup {
 } -cleanup {
     clipboard clear
 }  -returnCodes ok -result {first chunk second chunk}
-test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints x11 -setup {
+test clipboard-6.2 {Tk_ClipboardAppend procedure} -constraints {x11 failsOnXQuarz} -setup {
     clipboard clear
 } -body {
     setupbg

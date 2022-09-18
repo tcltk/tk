@@ -2,11 +2,11 @@
 # "tk_getSaveFile" commands. It is organized in the standard fashion
 # for Tcl tests.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -74,7 +74,6 @@ proc EnterFileByKey {parent fileName fileDir} {
 }
 
 proc SendButtonPress {parent btn type} {
-    global tk_strictMotif
     if {$parent == "."} {
 	set w .__tk_filedialog
     } else {
@@ -111,9 +110,9 @@ if {$tcl_platform(platform) == "unix"} {
 }
 
 set unknownOptionsMsg(tk_getOpenFile,notAqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -multiple, -parent, -title, or -typevariable}
-set unknownOptionsMsg(tk_getOpenFile,aqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -message, -multiple, -parent, -title, -typevariable, or -command}
+set unknownOptionsMsg(tk_getOpenFile,aqua) {bad option "-foo": must be -command, -defaultextension, -filetypes, -initialdir, -initialfile, -message, -multiple, -parent, -title, or -typevariable}
 set unknownOptionsMsg(tk_getSaveFile,notAqua) {bad option "-foo": must be -confirmoverwrite, -defaultextension, -filetypes, -initialdir, -initialfile, -parent, -title, or -typevariable}
-set unknownOptionsMsg(tk_getSaveFile,aqua) {bad option "-foo": must be -defaultextension, -filetypes, -initialdir, -initialfile, -message, -parent, -title, -typevariable, -command, or -confirmoverwrite}
+set unknownOptionsMsg(tk_getSaveFile,aqua) {bad option "-foo": must be -command, -confirmoverwrite, -defaultextension, -filetypes, -initialdir, -initialfile, -message, -parent, -title, or -typevariable}
 
 set tmpFile "filebox.tmp"
 makeFile {
@@ -210,7 +209,6 @@ foreach mode $modes {
     # set verylongstring $verylongstring$verylongstring
     # set verylongstring $verylongstring$verylongstring
 
-    set color #404040
     test filebox-2.1-$mode "tk_getOpenFile command" nonUnixUserInteraction {
         ToPressButton $parent cancel
         tk_getOpenFile -title "Press Cancel ($verylongstring)" -parent $parent
@@ -281,9 +279,6 @@ foreach mode $modes {
 	    catch {unset tv}
 	    catch {unset typeName}
 	    ToPressButton $parent ok
-	    if {[info exists tv]} {
-	    } else {
-	    }
 	    set choice [tk_getOpenFile -title "Press Ok" \
 		    -filetypes $filters($x) -parent $parent \
 		    -initialfile $fileName -initialdir $fileDir \
@@ -337,20 +332,6 @@ foreach mode $modes {
 	[info commands ::tk::dialog::file::] eq ""
     }]
 
-    set parent .
-
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-    # set verylongstring $verylongstring$verylongstring
-
-    set color #404040
     test filebox-5.1-$mode "tk_getSaveFile command" nonUnixUserInteraction {
 	ToPressButton $parent cancel
 	tk_getSaveFile -title "Press Cancel ($verylongstring)" -parent $parent

@@ -190,7 +190,7 @@ The \fBentry\fR command creates a new Tcl command whose
 name is \fIpathName\fR.  This command may be used to invoke various
 operations on the widget.  It has the following general form:
 .CS
-\fIpathName subcommand \fR?\fIarg arg ...\fR?
+\fIpathName subcommand \fR?\fIarg ...\fR?
 .CE
 \fISubcommand\fR and the \fIarg\fRs
 determine the exact behavior of the command.
@@ -403,7 +403,8 @@ way through the text appears at the left edge of the window.
 \fIpathName \fBxview scroll \fInumber what\fR
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR or an abbreviation
 of one of these.
 If \fIwhat\fR is \fBpages\fR then the view adjusts by \fInumber\fR screenfuls.
@@ -449,9 +450,10 @@ insertion cursor in the entry without affecting the selection.
 If any normal printing characters are typed in an entry, they are
 inserted at the point of the insertion cursor.
 .IP [7]
-The view in the entry can be adjusted by dragging with mouse button 2.
-If mouse button 2 is clicked without moving the mouse, the selection
-is copied into the entry at the position of the mouse cursor.
+The view in the entry can be adjusted by dragging with the middle
+mouse button (button 2, or button 3 in TkAqua). If the middle mouse
+button is clicked without moving the mouse, the selection is copied
+into the entry at the position of the mouse cursor.
 .IP [8]
 If the mouse is dragged out of the entry on the left or right sides
 while button 1 is pressed, the entry will automatically scroll to

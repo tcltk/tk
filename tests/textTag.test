@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkTextTag.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -25,6 +25,9 @@ testConstraint haveFontSizes [expr {
     [font metrics $bigFont -fixed] &&
     [font actual  $bigFont -size] == 24 }
 ]
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 destroy .t
 text .t -width 20 -height 10
@@ -78,7 +81,7 @@ test textTag-1.5 {tag configuration options} -body {
     .t tag cget x -borderwidth
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
-} -result {2}
+} -result 2
 test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
@@ -128,7 +131,7 @@ test textTag-1.14 {tag configuration options} -body {
     .t tag cget x -lmargin1
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
-} -result {10}
+} -result 10
 test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
@@ -139,7 +142,7 @@ test textTag-1.16 {tag configuration options} -body {
     .t tag cget x -lmargin2
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
-} -result {10}
+} -result 10
 test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
@@ -161,7 +164,7 @@ test textTag-1.18 {tag configuration options} -body {
     .t tag cget x -offset
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
-} -result {2}
+} -result 2
 test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
@@ -177,7 +180,7 @@ test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.21a {tag configuration options} -body {
     .t tag configure x -overstrikefg red
     .t tag cget x -overstrikefg
@@ -205,7 +208,7 @@ test textTag-1.24 {tag configuration options} -body {
     .t tag cget x -rmargin
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
-} -result {10}
+} -result 10
 test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
@@ -249,7 +252,7 @@ test textTag-1.26 {tag configuration options} -body {
     .t tag cget x -spacing1
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
-} -result {10}
+} -result 10
 test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
@@ -260,7 +263,7 @@ test textTag-1.28 {tag configuration options} -body {
     .t tag cget x -spacing2
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
-} -result {10}
+} -result 10
 test textTag-1.29 {configuration options} -body {
     .t tag configure x -spacing2 bad
 } -cleanup {
@@ -271,7 +274,7 @@ test textTag-1.30 {tag configuration options} -body {
     .t tag cget x -spacing3
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -result {10}
+} -result 10
 test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
@@ -298,7 +301,7 @@ test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-1.36 {tag configuration options} -body {
     .t tag configure x -underlinefg red
     .t tag cget x -underlinefg
@@ -399,7 +402,7 @@ test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     .tt tag add mytag 1.0 1.end
     destroy .ptt .tt
     set res 1
-} -result {1}
+} -result 1
 
 
 test textTag-3.1 {TkTextTagCmd - "bind" option} -body {
@@ -488,7 +491,7 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} -body {
 
 test textTag-5.1 {TkTextTagCmd - "configure" option} -body {
     .t tag configure
-} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option? ?value? ?-option value ...?"}
+} -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option value ...?"}
 test textTag-5.2 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -foo
 } -returnCodes error -result {unknown option "-foo"}
@@ -529,13 +532,13 @@ test textTag-5.6 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -overstrike foo
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "foo"}
+} -returnCodes error -result {expected boolean value or "" but got "foo"}
 test textTag-5.7 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {expected boolean value but got "stupid"}
+} -returnCodes error -result {expected boolean value or "" but got "stupid"}
 test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify left
@@ -1233,7 +1236,9 @@ set y5 [expr [lindex $c 1] + [lindex $c 3]/2]
 
 test textTag-15.1 {TkTextBindProc} -setup {
     .t tag delete x y
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     bind .t <ButtonRelease> {lappend x up}
     .t tag bind x <ButtonRelease> {lappend x x-up}
@@ -1258,7 +1263,9 @@ test textTag-15.1 {TkTextBindProc} -setup {
 
 test textTag-15.2 {TkTextBindProc} -setup {
     .t tag delete x y
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
     .t tag bind x <Button> {lappend x x-down}
@@ -1286,7 +1293,9 @@ test textTag-15.2 {TkTextBindProc} -setup {
 
 test textTag-15.3 {TkTextBindProc} -setup {
     .t tag delete x y
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     .t tag bind x <Enter> {lappend x x-enter}
     .t tag bind x <Button-1> {lappend x x-down}
@@ -1316,10 +1325,30 @@ test textTag-15.3 {TkTextBindProc} -setup {
     .t tag delete x y
 } -result {x-enter | x-down | | | x-up | x-leave y-enter}
 
+test textTag-15.4 {TkTextBindProc, key event with mouse outside the widget} -setup {
+    .t tag delete {*}[.t tag names]
+    wm geometry . +200+200 ; update
+} -body {
+    set res {}
+    .t tag add tag1 1.0 end
+    .t tag bind tag1 <Key> {lappend res %K}
+    .t mark set insert 1.2
+    update
+    event generate .t <Motion> -warp 1 -x -50 -y -50
+    controlPointerWarpTiming
+    focus -force .t
+    event generate .t <Key> -keysym a
+    set res
+} -cleanup {
+    .t tag delete tag1
+} -result {a}
+
 
 test textTag-16.1 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     event gen .t <ButtonRelease-1> -state 0x100 -x $x1 -y $y1
     set x [.t index current]
@@ -1338,13 +1367,17 @@ test textTag-16.1 {TkTextPickCurrent procedure} -setup {
 } -result {2.1 3.2 3.2 3.2 3.2 3.2 4.3}
 
 test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes
+    haveFontSizes failsOnUbuntuNoXft
 } -setup {
     .t tag delete {*}[.t tag names]
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
+    # update needed here to stabilize the test
+    update
     event gen .t <ButtonRelease-1> -state 0x100 -x $x4 -y $y4
     event gen .t <Motion> -x $x5 -y $y5
     set x [.t index current]
@@ -1360,7 +1393,9 @@ test textTag-16.3 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
         .t tag bind $i <Enter> "lappend x enter-$i"
@@ -1387,7 +1422,9 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     foreach i {a b c d} {
         .t tag bind $i <Enter> "lappend x enter-$i"
@@ -1415,7 +1452,9 @@ test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1430,12 +1469,14 @@ test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
 } -result {3.2}
 
 test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes
+    haveFontSizes failsOnUbuntuNoXft
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1451,12 +1492,14 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
 } -result {3.1}
 
 test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes
+    haveFontSizes failsOnUbuntuNoXft
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
     .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
@@ -1488,7 +1531,9 @@ test textTag-17.1 {insert procedure inserts tags} -setup {
 
 test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     destroy .t
-    event generate {} <Motion> -warp 1 -x -1 -y -1; update
+    wm geometry . +200+200 ; update
+    event generate {} <Motion> -warp 1 -x 5 -y 5
+    controlPointerWarpTiming
 } -body {
     text .t -width 30 -height 4 -relief sunken -borderwidth 10 \
       -highlightthickness 10 -pady 2
@@ -1505,13 +1550,17 @@ test textTag-18.1 {TkTextPickCurrent tag bindings} -setup {
     set res {}
     # Bindings must not trigger on the widget border, only over
     # the actual tagged characters themselves.
+    # Note that we don't need to call controlPointerWarpTiming
+    # in the following six calls because we're not checking that
+    # the mouse pointer has actually moved but rather that the
+    # tag binding mechanism of the text widget correctly triggers.
     event gen .t <Motion> -warp 1 -x 0 -y 0 ; update
     event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
     event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
     event gen .t <Motion> -warp 1 -x 20 -y 20 ; update
     event gen .t <Motion> -warp 1 -x 10 -y 10 ; update
     event gen .t <Motion> -warp 1 -x 25 -y 25 ; update
-    return $res
+    set res
 } -cleanup {
     destroy .t
 } -result {Enter {25 25 tag-Enter} {20 20 tag-Leave} {25 25 tag-Enter}}

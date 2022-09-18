@@ -3,15 +3,25 @@
  *
  *	Implements X window calls for manipulating regions
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkMacOSXPrivate.h"
+static void RetainRegion(TkRegion r);
+static void ReleaseRegion(TkRegion r);
+
+#ifdef DEBUG
+static int totalRegions = 0;
+static int totalRegionRetainCount = 0;
+#define DebugLog(msg, ...) fprintf(stderr, (msg), ##__VA_ARGS__)
+#else
+#define DebugLog(msg, ...)
+#endif
 
 
 /*
@@ -34,7 +44,10 @@
 Region
 XCreateRegion(void)
 {
-    return (Region) HIShapeCreateMutable();
+    Region region = (Region) HIShapeCreateMutable();
+    DebugLog("Created region: total regions = %d\n", ++totalRegions);
+    RetainRegion(region);
+    return region;
 }
 
 /*
@@ -59,7 +72,8 @@ XDestroyRegion(
     Region r)
 {
     if (r) {
-	CFRelease(r);
+	DebugLog("Destroyed region: total regions = %d\n", --totalRegions);
+	ReleaseRegion(r);
     }
     return Success;
 }
@@ -320,7 +334,7 @@ TkpBuildRegionFromAlphaData(
 /*
  *----------------------------------------------------------------------
  *
- * TkpRetainRegion --
+ * RetainRegion --
  *
  *	Increases reference count of region.
  *
@@ -333,17 +347,18 @@ TkpBuildRegionFromAlphaData(
  *----------------------------------------------------------------------
  */
 
-void
-TkpRetainRegion(
+static void
+RetainRegion(
     Region r)
 {
     CFRetain(r);
+    DebugLog("Retained region: total count is %d\n", ++totalRegionRetainCount);
 }
 
 /*
  *----------------------------------------------------------------------
  *
- * TkpReleaseRegion --
+ * ReleaseRegion --
  *
  *	Decreases reference count of region.
  *
@@ -356,11 +371,12 @@ TkpRetainRegion(
  *----------------------------------------------------------------------
  */
 
-void
-TkpReleaseRegion(
+static void
+ReleaseRegion(
     Region r)
 {
     CFRelease(r);
+    DebugLog("Released region: total count is %d\n", --totalRegionRetainCount);
 }
 
 /*
@@ -463,7 +479,7 @@ XOffsetRegion(
  *----------------------------------------------------------------------
  *
  * TkMacOSXHIShapeCreateEmpty, TkMacOSXHIShapeCreateMutableWithRect,
- * TkMacOSXHIShapeSetWithShape, TkMacOSXHIShapeSetWithRect,
+ * TkMacOSXHIShapeSetWithShape,
  * TkMacOSHIShapeDifferenceWithRect, TkMacOSHIShapeUnionWithRect,
  * TkMacOSHIShapeUnion --
  *
@@ -502,22 +518,6 @@ TkMacOSXHIShapeSetWithShape(
     return result;
 }
 
-#if 0
-OSStatus
-TkMacOSXHIShapeSetWithRect(
-    HIMutableShapeRef inShape,
-    const CGRect *inRect)
-{
-    OSStatus result;
-    HIShapeRef rgn = HIShapeCreateWithRect(inRect);
-
-    result = TkMacOSXHIShapeSetWithShape(inShape, rgn);
-    CFRelease(rgn);
-
-    return result;
-}
-#endif
-
 OSStatus
 TkMacOSHIShapeDifferenceWithRect(
     HIMutableShapeRef inShape,
@@ -555,6 +555,55 @@ TkMacOSHIShapeUnion(
     return result;
 }
 
+static OSStatus
+rectCounter(
+    TCL_UNUSED(int),
+    TCL_UNUSED(HIShapeRef),
+    TCL_UNUSED(const CGRect *),
+    void *ref)
+{
+    int *count = (int *)ref;
+    (*count)++;
+    return noErr;
+}
+
+static OSStatus
+rectPrinter(
+    TCL_UNUSED(int),
+    TCL_UNUSED(HIShapeRef),
+    const CGRect *rect,
+    TCL_UNUSED(void *))
+{
+    if (rect) {
+	fprintf(stderr, "    %s\n", NSStringFromRect(*rect).UTF8String);
+    }
+    return noErr;
+}
+
+int
+TkMacOSXCountRectsInRegion(
+    HIShapeRef shape)
+{
+    int rect_count = 0;
+    if (!HIShapeIsEmpty(shape)) {
+	ChkErr(HIShapeEnumerate, shape,
+		kHIShapeParseFromBottom|kHIShapeParseFromLeft,
+		rectCounter, &rect_count);
+    }
+    return rect_count;
+}
+
+void
+TkMacOSXPrintRectsInRegion(
+    HIShapeRef shape)
+{
+    if (!HIShapeIsEmpty(shape)) {
+	ChkErr(HIShapeEnumerate, shape,
+		kHIShapeParseFromBottom|kHIShapeParseFromLeft,
+		rectPrinter, NULL);
+    }
+}
+
 /*
  * Local Variables:
  * mode: objc

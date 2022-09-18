@@ -92,7 +92,7 @@ the same as the path name of the panedwindow's window.  This command
 may be used to invoke various operations on the widget.  It has the
 following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as
 the panedwindow widget's path name.  \fIOption\fR and the \fIarg\fRs
@@ -330,7 +330,7 @@ When a pane is resized from outside (e.g. it is packed to expand and
 fill, and the containing toplevel is resized), space is added to the final
 (rightmost or bottommost) pane in the window.
 .PP
-Unlike slave windows managed by e.g. pack or grid, the panes managed by a
+Unlike child windows managed by e.g. pack or grid, the panes managed by a
 panedwindow do not change width or height to accommodate changes in the
 requested widths or heights of the panes, once these have become mapped.
 Therefore it may be advisable, particularly when creating layouts

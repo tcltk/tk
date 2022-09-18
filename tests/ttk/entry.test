@@ -2,9 +2,13 @@
 # Tile package: entry widget tests
 #
 
-package require Tk 8.5
-package require tcltest ; namespace import -force tcltest::*
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 variable scrollInfo
 proc scroll args {
@@ -63,6 +67,12 @@ test entry-1.7 "Deletion - insert cursor in the middle " -body {
     .e index insert
 } -result 0
 
+test entry-1.8 "Index is between 0 and end" -constraints deprecated -body {
+    .e delete 0 end
+    .e insert end abcde
+    set res [list [.e index -1] [.e index -4] [.e index 999]]
+} -result {0 0 5}
+
 test entry-1.done "Cleanup" -body { destroy .e }
 
 # Scrollbar tests.
@@ -71,8 +81,20 @@ test entry-2.1 "Create entry before scrollbar" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-    	-expand false -fill x
+	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
+
+test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints {failsOnUbuntu failsOnXQuarz} -body {
+    pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
+	-expand true -fill both
+    .te insert end [string repeat "abc" 50]
+    catch {update} ; # error triggers because the -xscrollcommand callback
+                     # errors out: invalid command name ".tsb"
+    pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
+	-expand false -fill x
+    update ; # no error
+    set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
+} -result 1 -cleanup {destroy .te .tsb}
 
 test entry-2.2 "Initial scroll position" -body {
     ttk::entry .e -font fixed -width 5 -xscrollcommand scroll
@@ -94,7 +116,7 @@ test entry-3.0 "Series 3 setup" -body {
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
     variable bd 2	;# border + padding
-    variable ux [font measure $fixed \u4e4e]
+    variable ux [font measure $fixed 乎]
 
     pack [ttk::entry .e -font $fixed -width 20]
     update
@@ -116,28 +138,28 @@ test entry-3.3 "xview" -body {
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview end
     set result [.e index @0]
-} -result {7}
+} -result 7
 
 test entry-3.4 "xview" -body {
     .e delete 0 end;
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview moveto 1.0
     set result [.e index @0]
-} -result {7}
+} -result 7
 
 test entry-3.5 "xview" -body {
     .e delete 0 end;
     .e insert end abcdefghijklmnopqrstuvwxyz
     .e xview scroll 5 units
     set result [.e index @0]
-} -result {5}
+} -result 5
 
 test entry-3.6 "xview" -body {
     .e delete 0 end;
     .e insert end [string repeat abcdefghijklmnopqrstuvwxyz 5]
     .e xview scroll 2 pages
     set result [.e index @0]
-} -result {40}
+} -result 40
 
 test entry-3.last "Series 3 cleanup" -body {
     destroy .e
@@ -294,7 +316,7 @@ test entry-8.2a "Followup to test 8.2" -body {
 test entry-9.1 "Index range invariants" -setup {
     # See bug#1721532 for discussion
     proc entry-9.1-trace {n1 n2 op} {
-    	set ::V NO!
+	set ::V NO!
     }
     variable V
     trace add variable V write entry-9.1-trace
@@ -330,6 +352,18 @@ test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
     destroy .e
 } -result {red}
 
+test entry-10.3 {styling option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    set current [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground blue
+    set res [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground $current
+    set res
+} -cleanup {
+    destroy .e
+} -result {blue}
+
 test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
     pack [ttk::entry .e]
     update
@@ -341,5 +375,19 @@ test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup 
 } -result {invalid invalid} -cleanup {
     destroy .e
 }
+
+test entry-12.1 "style command" -body {
+    ttk::entry .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TEntry TEntry}
+test entry-12.2 "style command" -body {
+    ttk::style configure customStyle.TEntry
+    ttk::entry .w -style customStyle.TEntry
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TEntry customStyle.TEntry TEntry}
 
 tcltest::cleanupTests

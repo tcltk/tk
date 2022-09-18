@@ -230,8 +230,7 @@ that is when the widget is empty. The placeholder text is displayed using
 the values of the \fB\-font\fR and \fB\-justify\fR options.
 .OP \-placeholderforeground placeholderForeground PlaceholderForeground
 Specifies the foreground color to use when the placeholder text is
-displayed. If this option is the empty string, the default color gray70
-is used.
+displayed. The default color is platform-specific.
 .OP \-relief relief Relief
 Specifies the 3-D effect desired for the widget.  Acceptable
 values are \fBraised\fR, \fBsunken\fR, \fBflat\fR, \fBridge\fR,

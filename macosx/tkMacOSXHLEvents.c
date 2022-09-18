@@ -3,11 +3,11 @@
  *
  *	Implements high level event support for the Macintosh.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2015-2019 Marc Culler
- * Copyright (c) 2019 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015-2019 Marc Culler
+ * Copyright © 2019 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,6 +39,7 @@ typedef struct AppleEventInfo {
     const char *procedure;
     Tcl_DString command;
     NSAppleEventDescriptor *replyEvent; /* Only used for DoScriptText. */
+    int retryCount;
 } AppleEventInfo;
 
 /*
@@ -53,22 +54,31 @@ static void ProcessAppleEvent(ClientData clientData);
  * Names of the procedures which can be used to process AppleEvents.
  */
 
-static const char* openDocumentProc = "::tk::mac::OpenDocument";
-static const char* launchURLProc = "::tk::mac::LaunchURL";
-static const char* printDocProc = "::tk::mac::PrintDocument";
-static const char* scriptFileProc = "::tk::mac::DoScriptFile";
-static const char* scriptTextProc = "::tk::mac::DoScriptText";
+static const char openDocumentProc[] = "::tk::mac::OpenDocument";
+static const char launchURLProc[] = "::tk::mac::LaunchURL";
+static const char printDocProc[] = "::tk::mac::PrintDocument";
+static const char scriptFileProc[] = "::tk::mac::DoScriptFile";
+static const char scriptTextProc[] = "::tk::mac::DoScriptText";
+static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 
 #pragma mark TKApplication(TKHLEvents)
 
 @implementation TKApplication(TKHLEvents)
 - (void) terminate: (id) sender
 {
+    (void)sender;
     [self handleQuitApplicationEvent:Nil withReplyEvent:Nil];
+}
+
+- (void) superTerminate: (id) sender
+{
+    (void) sender;
+    [super terminate:nil];
 }
 
 - (void) preferences: (id) sender
 {
+    (void)sender;
     [self handleShowPreferencesEvent:Nil withReplyEvent:Nil];
 }
 
@@ -76,6 +86,8 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
     KillEvent *eventPtr;
+    (void)event;
+    (void)replyEvent;
 
     if (_eventInterp) {
 	/*
@@ -86,7 +98,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 	 * quickly as possible.
 	 */
 
-	eventPtr = ckalloc(sizeof(KillEvent));
+	eventPtr = (KillEvent *)ckalloc(sizeof(KillEvent));
 	eventPtr->header.proc = ReallyKillMe;
 	eventPtr->interp = _eventInterp;
 
@@ -97,6 +109,9 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 - (void) handleOpenApplicationEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
+    (void)event;
+    (void)replyEvent;
+
     if (_eventInterp &&
 	Tcl_FindCommand(_eventInterp, "::tk::mac::OpenApplication", NULL, 0)){
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::OpenApplication",
@@ -110,6 +125,9 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 - (void) handleReopenApplicationEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
+    (void)event;
+    (void)replyEvent;
+
     [NSApp activateIgnoringOtherApps: YES];
     if (_eventInterp && Tcl_FindCommand(_eventInterp,
 	    "::tk::mac::ReopenApplication", NULL, 0)) {
@@ -124,6 +142,9 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 - (void) handleShowPreferencesEvent: (NSAppleEventDescriptor *)event
     withReplyEvent: (NSAppleEventDescriptor *)replyEvent
 {
+    (void)event;
+    (void)replyEvent;
+
     if (_eventInterp &&
 	    Tcl_FindCommand(_eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowPreferences",
@@ -147,6 +168,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     long count, index;
     AEKeyword keyword;
     Tcl_DString pathName;
+    (void)replyEvent;
 
     /*
      * Do nothing if we don't have an interpreter.
@@ -186,7 +208,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
      * procedure, passing the paths contained in the AppleEvent as arguments.
      */
 
-    AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *openCommand = &AEInfo->command;
     Tcl_DStringInit(openCommand);
     Tcl_DStringAppend(openCommand, openDocumentProc, -1);
@@ -205,7 +227,8 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
 	if (fileURL == nil) {
 	    continue;
 	}
-	Tcl_ExternalToUtfDString(utf8, [[fileURL path] UTF8String], -1, &pathName);
+	(void)Tcl_ExternalToUtfDStringEx(utf8, [[fileURL path] UTF8String], -1,
+		TCL_ENCODING_NOCOMPLAIN, &pathName);
 	Tcl_DStringAppendElement(openCommand, Tcl_DStringValue(&pathName));
 	Tcl_DStringFree(&pathName);
     }
@@ -215,7 +238,12 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = openDocumentProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+    if (Tcl_FindCommand(_eventInterp, "::tk::mac::OpenDocuments", NULL, 0)){
+	ProcessAppleEvent((ClientData)AEInfo);
+    } else {
+	Tcl_CreateTimerHandler(500, ProcessAppleEvent, (ClientData)AEInfo);
+    }
 }
 
 - (void) handlePrintDocumentsEvent: (NSAppleEventDescriptor *)event
@@ -224,15 +252,18 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     NSString* file = [[event paramDescriptorForKeyword:keyDirectObject]
 			 stringValue];
     const char *printFile = [file UTF8String];
-    AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *printCommand = &AEInfo->command;
+    (void)replyEvent;
+
     Tcl_DStringInit(printCommand);
     Tcl_DStringAppend(printCommand, printDocProc, -1);
     Tcl_DStringAppendElement(printCommand, printFile);
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = printDocProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
 }
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
@@ -285,7 +316,7 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                 URLBuffer[actual] = '\0';
                 NSString *urlString = [NSString stringWithUTF8String:(char*)URLBuffer];
                 NSURL *fileURL = [NSURL URLWithString:urlString];
-                AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+                AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptFileCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptFileCommand);
                 Tcl_DStringAppend(scriptFileCommand, scriptFileProc, -1);
@@ -293,7 +324,8 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
                 AEInfo->interp = _eventInterp;
                 AEInfo->procedure = scriptFileProc;
                 AEInfo->replyEvent = nil;
-                Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+		AEInfo->retryCount = 0;
+                ProcessAppleEvent((ClientData)AEInfo);
             }
         }
     } else if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
@@ -305,23 +337,25 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
          */
 
 	if (actual > 0) {
-	    char *data = ckalloc(actual + 1);
+	    char *data = (char *)ckalloc(actual + 1);
 	    if (noErr == AEGetParamPtr(theDesc, keyDirectObject,
 				       typeUTF8Text, &type,
 				       data, actual, NULL)) {
-                AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
-                Tcl_DString *scriptTextCommand = &AEInfo->command;
-                Tcl_DStringInit(scriptTextCommand);
-                Tcl_DStringAppend(scriptTextCommand, scriptTextProc, -1);
+		data[actual] = '\0';
+		AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+		Tcl_DString *scriptTextCommand = &AEInfo->command;
+		Tcl_DStringInit(scriptTextCommand);
+		Tcl_DStringAppend(scriptTextCommand, scriptTextProc, -1);
 		Tcl_DStringAppendElement(scriptTextCommand, data);
 		AEInfo->interp = _eventInterp;
 		AEInfo->procedure = scriptTextProc;
+		AEInfo->retryCount = 0;
                 if (Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
                     AEInfo->replyEvent = replyEvent;
-                    ProcessAppleEvent((ClientData)AEInfo);
+                    ProcessAppleEvent(AEInfo);
                 } else {
                     AEInfo->replyEvent = nil;
-                    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+                    ProcessAppleEvent(AEInfo);
                 }
 	    }
 	}
@@ -334,15 +368,34 @@ static const char* scriptTextProc = "::tk::mac::DoScriptText";
     NSString* url = [[event paramDescriptorForKeyword:keyDirectObject]
                         stringValue];
     const char *cURL=[url UTF8String];
-    AppleEventInfo *AEInfo = ckalloc(sizeof(AppleEventInfo));
+    AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *launchCommand = &AEInfo->command;
+    (void)replyEvent;
+
     Tcl_DStringInit(launchCommand);
     Tcl_DStringAppend(launchCommand, launchURLProc, -1);
     Tcl_DStringAppendElement(launchCommand, cURL);
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = launchURLProc;
     AEInfo->replyEvent = nil;
-    Tcl_DoWhenIdle(ProcessAppleEvent, (ClientData)AEInfo);
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
+}
+
+- (void)handleGetSDEFEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
+     AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
+    Tcl_DString *sdefCommand = &AEInfo->command;
+    (void)event;
+    (void)replyEvent;
+
+    Tcl_DStringInit(sdefCommand);
+    Tcl_DStringAppend(sdefCommand, getSdefProc, -1);
+    AEInfo->interp = _eventInterp;
+    AEInfo->procedure =  getSdefProc;
+    AEInfo->replyEvent = nil;
+    AEInfo->retryCount = 0;
+    ProcessAppleEvent((ClientData)AEInfo);
+
 }
 
 @end
@@ -377,15 +430,30 @@ static void ProcessAppleEvent(
 {
     int code;
     AppleEventInfo *AEInfo = (AppleEventInfo*) clientData;
-    if (!AEInfo->interp ||
-        !Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
+
+    if (!AEInfo->interp) {
+	return;
+    }
+
+    /*
+     * Apple events that are delivered during the app startup can arrive
+     * before the Tcl procedure for handling the events has been defined.
+     * If the command is not found we create a timer handler to process
+     * the event later, hopefully after the command has been created.
+     * We retry up to 2 times before giving up.
+     */
+
+    if (!Tcl_FindCommand(AEInfo->interp, AEInfo->procedure, NULL, 0)) {
+	if (AEInfo->retryCount < 2) {
+	    AEInfo->retryCount++;
+	    Tcl_CreateTimerHandler(200, ProcessAppleEvent, clientData);
+	} else {
+	    ckfree(clientData);
+	}
 	return;
     }
     code = Tcl_EvalEx(AEInfo->interp, Tcl_DStringValue(&AEInfo->command),
 	    Tcl_DStringLength(&AEInfo->command), TCL_EVAL_GLOBAL);
-    if (code != TCL_OK) {
-	Tcl_BackgroundException(AEInfo->interp, code);
-    }
 
     if (AEInfo->replyEvent && code >= 0) {
         int reslen;
@@ -400,7 +468,10 @@ static void ProcessAppleEvent(
             AEPutParamPtr((AppleEvent*)[AEInfo->replyEvent aeDesc],
                           keyErrorNumber, typeSInt32, (Ptr) &code, sizeof(int));
         }
+    } else if (code != TCL_OK) {
+	Tcl_BackgroundException(AEInfo->interp, code);
     }
+
     Tcl_DStringFree(&AEInfo->command);
     ckfree(clientData);
 }
@@ -424,7 +495,7 @@ static void ProcessAppleEvent(
 
 void
 TkMacOSXInitAppleEvents(
-    Tcl_Interp *interp)   /* not used */
+    TCL_UNUSED(Tcl_Interp *))
 {
     NSAppleEventManager *aeManager = [NSAppleEventManager sharedAppleEventManager];
     static Boolean initialized = FALSE;
@@ -463,6 +534,15 @@ TkMacOSXInitAppleEvents(
 	[aeManager setEventHandler:NSApp
 	    andSelector:@selector(handleURLEvent:withReplyEvent:)
 	    forEventClass:kInternetEventClass andEventID:kAEGetURL];
+
+	/*
+	 * We do not load our sdef dynamically but this event handler
+         * is required to silence error messages from inline execution
+         * of AppleScript at the Objective-C level.
+	 */
+	[aeManager setEventHandler:NSApp
+	    andSelector:@selector(handleGetSDEFEvent:withReplyEvent:)
+	    forEventClass:'ascr' andEventID:'gsdf'];
 
     }
 }
@@ -534,13 +614,18 @@ TkMacOSXDoHLEvent(
 static int
 ReallyKillMe(
     Tcl_Event *eventPtr,
-    int flags)
+    TCL_UNUSED(int))
 {
     Tcl_Interp *interp = ((KillEvent *) eventPtr)->interp;
     int quit = Tcl_FindCommand(interp, "::tk::mac::Quit", NULL, 0)!=NULL;
-    int code = Tcl_EvalEx(interp, quit ? "::tk::mac::Quit" : "exit", -1, TCL_EVAL_GLOBAL);
 
+    if (!quit) {
+	Tcl_Exit(0);
+    }
+
+    int code = Tcl_EvalEx(interp, "::tk::mac::Quit", -1, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
+
 	/*
 	 * Should be never reached...
 	 */

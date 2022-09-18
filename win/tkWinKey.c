@@ -4,7 +4,7 @@
  *	This file contains X emulation routines for keyboard related
  *	functions.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -44,7 +44,7 @@ static const KeySym keymap[] = {
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*75 0x4B*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*80 0x50*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*85 0x55*/
-    NoSymbol, XK_Win_L, XK_Win_R, XK_App, NoSymbol, /*90 0x5A*/
+    NoSymbol, XK_Super_L, XK_Super_R, XK_Menu, NoSymbol, /*90 0x5A*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*95 0x5F*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*100 0x64*/
     NoSymbol, NoSymbol, NoSymbol, NoSymbol, NoSymbol, /*105 0x69*/
@@ -90,7 +90,7 @@ static KeySym		KeycodeToKeysym(unsigned int keycode,
 
 const char *
 TkpGetString(
-    TkWindow *winPtr,		/* Window where event occurred: needed to get
+    TCL_UNUSED(TkWindow *),		/* Window where event occurred: needed to get
 				 * input context. */
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Uninitialized or empty string to hold
@@ -98,18 +98,19 @@ TkpGetString(
 {
     XKeyEvent *keyEv = &eventPtr->xkey;
     int len;
-    char buf[4];
+    char buf[6];
 
     Tcl_DStringInit(dsPtr);
     if (keyEv->send_event == -1) {
-	if (keyEv->nbytes > 0) {
-	    Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
-		    keyEv->trans_chars, keyEv->nbytes, dsPtr);
+	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
+	if (ev->nbytes > 0) {
+	    (void)Tcl_ExternalToUtfDStringEx(TkWinGetKeyInputEncoding(),
+		    ev->trans_chars, ev->nbytes, TCL_ENCODING_NOCOMPLAIN, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
 
 	/*
-	 * Special case for WM_UNICHAR and win2000 multi-lingal IME input
+	 * Special case for WM_UNICHAR and win2000 multilingual IME input
 	 */
 
 	len = TkUniCharToUtf(keyEv->keycode, buf);
@@ -150,11 +151,28 @@ TkpGetString(
 
 KeySym
 XKeycodeToKeysym(
-    Display *display,
+    TCL_UNUSED(Display *),
     unsigned int keycode,
     int index)
 {
     int state = 0;
+
+    if (index & 0x01) {
+	state |= ShiftMask;
+    }
+    return KeycodeToKeysym(keycode, state, 0);
+}
+
+KeySym
+XkbKeycodeToKeysym(
+    Display *display,
+    unsigned int keycode,
+    int group,
+    int index)
+{
+    int state = 0;
+    (void)display;
+    (void)group;
 
     if (index & 0x01) {
 	state |= ShiftMask;
@@ -504,7 +522,7 @@ TkpInitKeymapInfo(
     }
     dispPtr->numModKeyCodes = 0;
     arraySize = KEYCODE_ARRAY_SIZE;
-    dispPtr->modKeyCodes = ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
+    dispPtr->modKeyCodes = (KeyCode *)ckalloc(KEYCODE_ARRAY_SIZE * sizeof(KeyCode));
     for (i = 0, codePtr = modMapPtr->modifiermap; i < max; i++, codePtr++) {
 	if (*codePtr == 0) {
 	    continue;
@@ -520,18 +538,18 @@ TkpInitKeymapInfo(
 	    }
 	}
 	if (dispPtr->numModKeyCodes >= arraySize) {
-	    KeyCode *new;
+	    KeyCode *newKey;
 
 	    /*
 	     * Ran out of space in the array; grow it.
 	     */
 
 	    arraySize *= 2;
-	    new = ckalloc(arraySize * sizeof(KeyCode));
-	    memcpy(new, dispPtr->modKeyCodes,
+	    newKey = (KeyCode *)ckalloc(arraySize * sizeof(KeyCode));
+	    memcpy(newKey, dispPtr->modKeyCodes,
 		    dispPtr->numModKeyCodes * sizeof(KeyCode));
 	    ckfree(dispPtr->modKeyCodes);
-	    dispPtr->modKeyCodes = new;
+	    dispPtr->modKeyCodes = newKey;
 	}
 	dispPtr->modKeyCodes[dispPtr->numModKeyCodes] = *codePtr;
 	dispPtr->numModKeyCodes++;
@@ -542,13 +560,13 @@ TkpInitKeymapInfo(
 
 /*
  * When mapping from a keysym to a keycode, need information about the
- * modifier state that should be used so that when they call XKeycodeToKeysym
+ * modifier state that should be used so that when they call XkbKeycodeToKeysym
  * taking into account the xkey.state, they will get back the original keysym.
  */
 
 void
 TkpSetKeycodeAndState(
-    Tk_Window tkwin,
+    TCL_UNUSED(Tk_Window),
     KeySym keySym,
     XEvent *eventPtr)
 {
@@ -606,7 +624,7 @@ TkpSetKeycodeAndState(
 
 KeyCode
 XKeysymToKeycode(
-    Display *display,
+    TCL_UNUSED(Display *),
     KeySym keysym)
 {
     int i;
@@ -654,12 +672,12 @@ XKeysymToKeycode(
 
 XModifierKeymap	*
 XGetModifierMapping(
-    Display *display)
+    TCL_UNUSED(Display *))
 {
-    XModifierKeymap *map = ckalloc(sizeof(XModifierKeymap));
+    XModifierKeymap *map = (XModifierKeymap *)ckalloc(sizeof(XModifierKeymap));
 
     map->max_keypermod = 1;
-    map->modifiermap = ckalloc(sizeof(KeyCode) * 8);
+    map->modifiermap = (KeyCode *)ckalloc(sizeof(KeyCode) * 8);
     map->modifiermap[ShiftMapIndex] = VK_SHIFT;
     map->modifiermap[LockMapIndex] = VK_CAPITAL;
     map->modifiermap[ControlMapIndex] = VK_CONTROL;
@@ -715,7 +733,7 @@ XFreeModifiermap(
 
 KeySym
 XStringToKeysym(
-    _Xconst char *string)
+    TCL_UNUSED(_Xconst char *))
 {
     return NoSymbol;
 }
@@ -738,7 +756,7 @@ XStringToKeysym(
 
 char *
 XKeysymToString(
-    KeySym keysym)
+    TCL_UNUSED(KeySym))
 {
     return NULL;
 }

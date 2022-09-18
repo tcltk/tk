@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004, Joe English
  *
  * TtkTrackElementState() -- helper routine for widgets
  * like scrollbars in which individual elements may
@@ -118,7 +118,7 @@ static const unsigned ElementStateMask =
 static void
 ElementStateEventProc(ClientData clientData, XEvent *ev)
 {
-    ElementStateTracker *es = clientData;
+    ElementStateTracker *es = (ElementStateTracker *)clientData;
     Ttk_Layout layout = es->corePtr->layout;
     Ttk_Element element;
 
@@ -173,7 +173,7 @@ ElementStateEventProc(ClientData clientData, XEvent *ev)
 
 void TtkTrackElementState(WidgetCore *corePtr)
 {
-    ElementStateTracker *es = ckalloc(sizeof(*es));
+    ElementStateTracker *es = (ElementStateTracker *)ckalloc(sizeof(*es));
     es->corePtr = corePtr;
     es->tracking = 0;
     es->activeElement = es->pressedElement = 0;

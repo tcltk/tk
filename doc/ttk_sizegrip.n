@@ -23,9 +23,10 @@ by pressing and dragging the grip.
 .SE
 .SH "WIDGET COMMAND"
 .PP
-Sizegrip widgets support the standard
-\fBcget\fR, \fBconfigure\fR, \fBidentify\fR, \fBinstate\fR, and \fBstate\fR
-methods.  No other widget methods are used.
+Sizegrip widgets support the standard commands
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+(see \fBttk::widget\fR).
 .SH "PLATFORM-SPECIFIC NOTES"
 .PP
 On Mac OSX, toplevel windows automatically include a built-in

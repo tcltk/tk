@@ -77,7 +77,6 @@ set S(mode) $::MSTART
 
 # Colors for everything
 set C(fg) black
-set C(bg) gray75
 set C(bg) cornflowerblue
 
 set C(0) white;		set C(1a) darkgreen;	set C(1b) yellow
@@ -92,6 +91,7 @@ set C(17) \#A65353;	set C(18) $C(fg);	set C(19) gray50
 set C(20) cyan;		set C(21) gray65;	set C(22) $C(20)
 set C(23a) blue;	set C(23b) red;		set C(23c) yellow
 set C(24a) red;		set C(24b) white;
+set C(24c) black;	set C(26) $C(0);
 
 proc DoDisplay {w} {
     global S C
@@ -113,9 +113,9 @@ proc DoDisplay {w} {
     DoCtrlFrame $w
     DoDetailFrame $w
     if {[tk windowingsystem] ne "aqua"} {
-	ttk::button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2
+	ttk::button $w.show -text "»" -command [list ShowCtrl $w] -width 2
     } else {
-	button $w.show -text "\u00bb" -command [list ShowCtrl $w] -width 2 -highlightbackground $C(bg)
+	button $w.show -text "»" -command [list ShowCtrl $w] -width 2 -highlightbackground $C(bg)
     }
     place $w.show -in $w.c -relx 1 -rely 0 -anchor ne
     update
@@ -204,10 +204,10 @@ proc DoDetailFrame {w} {
 proc ShowCtrl {w} {
     if {[winfo ismapped $w.ctrl]} {
 	pack forget $w.ctrl
-	$w.show config -text "\u00bb"
+	$w.show config -text "»"
     } else {
 	pack $w.ctrl -side right -fill both -ipady 5
-	$w.show config -text "\u00ab"
+	$w.show config -text "»"
     }
 }
 
@@ -1586,6 +1586,7 @@ proc Move24 {w {step {}}} {
 		-width 10 -smooth 1
 	set msg [subst $S(message)]
 	$w.c create text [Centroid $w I24] -text $msg -tag {I24 I24t} \
+		-fill $::C(24c) \
 		-justify center -font {{Times Roman} 18 bold}
 	return 1
     }
@@ -1619,6 +1620,7 @@ proc Move26 {w {step {}}} {
     if {$step >= 3} {
 	$w.c delete I24 I26
 	$w.c create text 430 755 -anchor s -tag I26 \
+		-fill $::C(26) \
 		-text "click to continue" -font {{Times Roman} 24 bold}
 	bind $w.c <Button-1> [list Reset $w]
 	return 4

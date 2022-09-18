@@ -76,3 +76,21 @@ namespace eval ::tk {
     ::msgcat::mcset hu "retry" "újra"
     ::msgcat::mcset hu "yes" "igen"
 }
+#localization of print terms by Kevin Walzer via Microsoft Translator
+namespace eval ::tk {
+    ::msgcat::mcset  hu "Print" "Nyomtat"
+    ::msgcat::mcset  hu "Printer" "Nyomtató"
+    ::msgcat::mcset  hu "Letter " "Levél"
+    ::msgcat::mcset  hu "Legal " "Törvényes"
+    ::msgcat::mcset  hu "A4" "A4"
+    ::msgcat::mcset  hu "Grayscale" "Szürkeárnyalatos"
+    ::msgcat::mcset  hu "RGB" "Rgb"
+    ::msgcat::mcset  hu "Options" "Beállítások"
+    ::msgcat::mcset  hu "Copies" "Másolatok"
+    ::msgcat::mcset  hu "Paper" "Papír"
+    ::msgcat::mcset  hu "Scale" "Hangsor"
+    ::msgcat::mcset  hu "Orientation" "Tájékozódás"
+    ::msgcat::mcset  hu "Portrait" "Portré"
+    ::msgcat::mcset  hu "Landscape" "Táj"
+    ::msgcat::mcset  hu "Output" "Hozam"
+}
