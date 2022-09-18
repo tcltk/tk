@@ -1443,4 +1443,18 @@ test treeview-12.2 "tag bindings deletion on tag delete" -setup {
     destroy .tv
 } -result {}
 
+test treeview-13.1 "cell padding" -setup {
+    tvSetupWithItems
+} -body {
+    .tv tag cell add mytag "nn b"
+    set redcross [image create photo -format gif -data {R0lGODlhBwAHAIABAP8AAP///
+            yH5BAEKAAEALAAAAAAHAAcAAAIMBIKmsWrIXnLxuDMLADs=}]
+    .tv tag configure mytag -image $redcross
+    .tv tag configure mytag -imageanchor nw
+    .tv tag configure mytag -padding {2 4 6 8}
+    .tv tag configure mytag -padding
+} -cleanup {
+    destroy .tv
+} -result {2 4 6 8}
+
 tcltest::cleanupTests
