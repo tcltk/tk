@@ -4,7 +4,7 @@
  *	Declarations of types and functions used to implement the menubutton
  *	widget.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -64,7 +64,7 @@ typedef struct {
 
     char *text;			/* Text to display in button (malloc'ed) or
 				 * NULL. */
-    int underline;		/* Index of character to underline. */
+    int underline;		/* Index of character to underline. INT_MIN means no underline */
     char *textVarName;		/* Name of variable (malloc'ed) or NULL. If
 				 * non-NULL, button displays the contents of
 				 * this variable. */

@@ -12,10 +12,10 @@
  *      data only.
  *
  *
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2002-2003 Donal K. Fellows
- * Copyright (c) 2003 ActiveState Corporation.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2002-2003 Donal K. Fellows
+ * Copyright © 2003 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -44,7 +44,7 @@
  * longer than this limit
  */
 
-#define TK_PHOTO_MAX_COLOR_CHARS 99
+#define TK_PHOTO_MAX_COLOR_LENGTH 99
 
 /*
  * Symbols for the different formats of a color string.
@@ -196,7 +196,7 @@ ParseFormatOptions(
                                        * this struct */
 
 {
-    int index, optIndex, typeIndex, first;
+    int index, optIndex, first, typeIndex;
     const char *option;
 
     first = 1;
@@ -268,7 +268,7 @@ ParseFormatOptions(
                         "BAD_COLOR_FORMAT", NULL);
                 return TCL_ERROR;
             }
-            optPtr->colorFormat = typeIndex;
+            optPtr->colorFormat = (enum ColorFormatType)typeIndex;
             break;
         default:
             Tcl_Panic("ParseFormatOptions: unexpected switch fallthrough");
@@ -366,6 +366,7 @@ StringMatchDef(
     int y, rowCount, colCount, curColCount;
     unsigned char dummy;
     Tcl_Obj **rowListPtr, *pixelData;
+    (void)formatString;
 
     /*
      * See if data can be parsed as a list, if every element is itself a valid
@@ -411,7 +412,8 @@ StringMatchDef(
     if (Tcl_ListObjIndex(interp, rowListPtr[0], 0, &pixelData) != TCL_OK) {
         return 0;
     }
-    if (Tcl_GetCharLength(pixelData) > TK_PHOTO_MAX_COLOR_CHARS) {
+    (void)Tcl_GetString(pixelData);
+    if (pixelData->length > TK_PHOTO_MAX_COLOR_LENGTH) {
         return 0;
     }
     if (ParseColor(interp, pixelData, Tk_Display(Tk_MainWindow(interp)),
@@ -550,7 +552,7 @@ StringReadDef(
     srcBlock.offset[1] = 1;
     srcBlock.offset[2] = 2;
     srcBlock.offset[3] = 3;
-    srcBlock.pixelPtr = attemptckalloc(srcBlock.pitch * srcBlock.height);
+    srcBlock.pixelPtr = (unsigned char *)attemptckalloc(srcBlock.pitch * srcBlock.height);
     if (srcBlock.pixelPtr == NULL) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(TK_PHOTO_ALLOC_FAILURE_MESSAGE));
         Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
@@ -773,30 +775,30 @@ ParseColor(
     unsigned char *alphaPtr)
 {
     const char *specString;
-    TkSizeT charCount;
+    TkSizeT length;
 
     /*
      * Find out which color format we have
      */
 
-    specString = TkGetStringFromObj(specObj, &charCount);
+    specString = Tcl_GetStringFromObj(specObj, &length);
 
-    if (charCount == 0) {
+    if (length == 0) {
         /* Empty string */
         *redPtr = *greenPtr = *bluePtr = *alphaPtr = 0;
         return TCL_OK;
     }
-    if (charCount > TK_PHOTO_MAX_COLOR_CHARS) {
+    if (length > TK_PHOTO_MAX_COLOR_LENGTH) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid color"));
         Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                 "INVALID_COLOR", NULL);
         return TCL_ERROR;
     }
     if (specString[0] == '#') {
-        return ParseColorAsHex(interp, specString, charCount, display,
+        return ParseColorAsHex(interp, specString, length, display,
                 colormap, redPtr, greenPtr, bluePtr, alphaPtr);
     }
-    if (ParseColorAsList(interp, specString, charCount,
+    if (ParseColorAsList(interp, specString, length,
             redPtr, greenPtr, bluePtr, alphaPtr) == TCL_OK) {
         return TCL_OK;
     }
@@ -807,7 +809,7 @@ ParseColor(
      */
 
     Tcl_ResetResult(interp);
-    return ParseColorAsStandard(interp, specString, charCount, display,
+    return ParseColorAsStandard(interp, specString, length, display,
             colormap, redPtr, greenPtr, bluePtr, alphaPtr);
 
 }
@@ -837,7 +839,7 @@ ParseColor(
  */
 static int
 ParseColorAsList(
-    Tcl_Interp *interp,         /* not used */
+    Tcl_Interp *dummy,         /* not used */
     const char *colorString,    /* the color data to parse */
     int colorStrLen,            /* length of the color string */
     unsigned char *redPtr,      /* the result is written to these pointers */
@@ -845,7 +847,6 @@ ParseColorAsList(
     unsigned char *bluePtr,
     unsigned char *alphaPtr)
 {
-
     /*
      * This is kinda ugly. The code would be certainly nicer if it
      * used Tcl_ListObjGetElements() and Tcl_GetIntFromObj(). But with
@@ -855,6 +856,8 @@ ParseColorAsList(
     const char *curPos;
     int values[4];
     int i;
+    (void)dummy;
+    (void)colorStrLen;
 
     curPos = colorString;
     i = 0;
@@ -864,7 +867,7 @@ ParseColorAsList(
      * To avoid that, avance the pointer to the next non-blank char.
      */
 
-    while(isspace(*curPos)) {
+    while(isspace(UCHAR(*curPos))) {
         ++curPos;
     }
     while (i < 4 && *curPos != '\0') {
@@ -872,7 +875,7 @@ ParseColorAsList(
         if (values[i] < 0 || values[i] > 255) {
             return TCL_ERROR;
         }
-        while(isspace(*curPos)) {
+        while(isspace(UCHAR(*curPos))) {
             ++curPos;
         }
         ++i;
@@ -1002,7 +1005,7 @@ ParseColorAsStandard(
 {
     XColor parsedColor;
     const char *suffixString, *colorString;
-    char colorBuffer[TK_PHOTO_MAX_COLOR_CHARS + 1];
+    char colorBuffer[TK_PHOTO_MAX_COLOR_LENGTH + 1];
     char *tmpString;
     double fracAlpha;
     unsigned int suffixAlpha;

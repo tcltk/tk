@@ -32,7 +32,7 @@ namespace eval ttk::theme::winnative {
 	    -padding 2 -selectborderwidth 0 -insertwidth 1
 	ttk::style map TEntry \
 	    -fieldbackground \
-	    	[list readonly SystemButtonFace disabled SystemButtonFace] \
+		[list readonly SystemButtonFace disabled SystemButtonFace] \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
@@ -42,11 +42,11 @@ namespace eval ttk::theme::winnative {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    -fieldbackground [list \
-	    	readonly SystemButtonFace \
+		readonly SystemButtonFace \
 		disabled SystemButtonFace] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
-	    	{readonly focus}	SystemHighlightText \
+		{readonly focus}	SystemHighlightText \
 	    ] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
@@ -71,7 +71,8 @@ namespace eval ttk::theme::winnative {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Treeview -background SystemWindow \
+                -stripedbackground System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \

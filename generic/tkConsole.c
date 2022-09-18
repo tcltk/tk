@@ -5,7 +5,7 @@
  *	have access to a console. It uses the Text widget and provides special
  *	access via a console command.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -44,6 +44,7 @@ typedef struct ChannelData {
  */
 
 static int	ConsoleClose(ClientData instanceData, Tcl_Interp *interp);
+static int	Console2Close(ClientData instanceData, Tcl_Interp *interp, int flags);
 static void	ConsoleDeleteProc(ClientData clientData);
 static void	ConsoleEventProc(ClientData clientData, XEvent *eventPtr);
 static int	ConsoleHandle(ClientData instanceData, int direction,
@@ -66,8 +67,8 @@ static int	InterpreterObjCmd(ClientData clientData, Tcl_Interp *interp,
 
 static const Tcl_ChannelType consoleChannelType = {
     "console",			/* Type name. */
-    TCL_CHANNEL_VERSION_4,	/* v4 channel */
-    ConsoleClose,		/* Close proc. */
+    TCL_CHANNEL_VERSION_5,	/* v5 channel */
+    (Tcl_DriverCloseProc *)ConsoleClose,		/* Close proc. */
     ConsoleInput,		/* Input proc. */
     ConsoleOutput,		/* Output proc. */
     NULL,			/* Seek proc. */
@@ -75,7 +76,7 @@ static const Tcl_ChannelType consoleChannelType = {
     NULL,			/* Get option proc. */
     ConsoleWatch,		/* Watch for events on console. */
     ConsoleHandle,		/* Get a handle from the device. */
-    NULL,			/* close2proc. */
+    Console2Close,			/* close2proc. */
     NULL,			/* Always non-blocking.*/
     NULL,			/* flush proc. */
     NULL,			/* handler proc. */
@@ -227,7 +228,7 @@ Tk_InitConsoleChannels(
         return;
     }
 
-    consoleInitPtr = Tcl_GetThreadData(&consoleInitKey, (int) sizeof(int));
+    consoleInitPtr = (int *)Tcl_GetThreadData(&consoleInitKey, (int) sizeof(int));
     if (*consoleInitPtr) {
 	/*
 	 * We've already initialized console channels in this thread.
@@ -255,13 +256,13 @@ Tk_InitConsoleChannels(
      * interp for it to live in.
      */
 
-    info = ckalloc(sizeof(ConsoleInfo));
+    info = (ConsoleInfo *) ckalloc(sizeof(ConsoleInfo));
     info->consoleInterp = NULL;
     info->interp = NULL;
     info->refCount = 0;
 
     if (doIn) {
-	ChannelData *data = ckalloc(sizeof(ChannelData));
+	ChannelData *data = (ChannelData *)ckalloc(sizeof(ChannelData));
 
 	data->info = info;
 	data->info->refCount++;
@@ -278,7 +279,7 @@ Tk_InitConsoleChannels(
     }
 
     if (doOut) {
-	ChannelData *data = ckalloc(sizeof(ChannelData));
+	ChannelData *data = (ChannelData *)ckalloc(sizeof(ChannelData));
 
 	data->info = info;
 	data->info->refCount++;
@@ -295,7 +296,7 @@ Tk_InitConsoleChannels(
     }
 
     if (doErr) {
-	ChannelData *data = ckalloc(sizeof(ChannelData));
+	ChannelData *data = (ChannelData *)ckalloc(sizeof(ChannelData));
 
 	data->info = info;
 	data->info->refCount++;
@@ -377,7 +378,7 @@ Tk_CreateConsoleWindow(
 	     * New ConsoleInfo for a new console window.
 	     */
 
-	    info = ckalloc(sizeof(ConsoleInfo));
+	    info = (ConsoleInfo *)ckalloc(sizeof(ConsoleInfo));
 	    info->refCount = 0;
 
 	    /*
@@ -407,7 +408,7 @@ Tk_CreateConsoleWindow(
 	    }
 	}
     } else {
-	info = ckalloc(sizeof(ConsoleInfo));
+	info = (ConsoleInfo *)ckalloc(sizeof(ConsoleInfo));
 	info->refCount = 0;
     }
 
@@ -497,7 +498,7 @@ ConsoleOutput(
     int toWrite,		/* How many bytes to write? */
     int *errorCode)		/* Where to store error code. */
 {
-    ChannelData *data = instanceData;
+    ChannelData *data = (ChannelData *)instanceData;
     ConsoleInfo *info = data->info;
 
     *errorCode = 0;
@@ -516,8 +517,8 @@ ConsoleOutput(
 	     * Assumption is utf-8 Tcl_Encoding is reliably present.
 	     */
 
-	    const char *bytes
-		    = Tcl_ExternalToUtfDString(utf8, buf, toWrite, &ds);
+	    (void)Tcl_ExternalToUtfDStringEx(utf8, buf, toWrite, TCL_ENCODING_NOCOMPLAIN, &ds);
+	    const char *bytes = Tcl_DStringValue(&ds);
 	    int numBytes = Tcl_DStringLength(&ds);
 	    Tcl_Obj *cmd = Tcl_NewStringObj("tk::ConsoleOutput", -1);
 
@@ -558,14 +559,13 @@ ConsoleOutput(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleInput(
-    ClientData instanceData,	/* Unused. */
-    char *buf,			/* Where to store data read. */
-    int bufSize,		/* How much space is available in the
+    TCL_UNUSED(void *),
+    TCL_UNUSED(char *),			/* Where to store data read. */
+    TCL_UNUSED(int),		/* How much space is available in the
 				 * buffer? */
-    int *errorCode)		/* Where to store error code. */
+    TCL_UNUSED(int *))		/* Where to store error code. */
 {
     return 0;			/* Always return EOF. */
 }
@@ -573,7 +573,7 @@ ConsoleInput(
 /*
  *----------------------------------------------------------------------
  *
- * ConsoleClose --
+ * ConsoleClose/Console2Close --
  *
  *	Closes the IO channel.
  *
@@ -586,13 +586,12 @@ ConsoleInput(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleClose(
-    ClientData instanceData,	/* Unused. */
-    Tcl_Interp *interp)		/* Unused. */
+    ClientData instanceData,
+    TCL_UNUSED(Tcl_Interp *))
 {
-    ChannelData *data = instanceData;
+    ChannelData *data = (ChannelData *)instanceData;
     ConsoleInfo *info = data->info;
 
     if (info) {
@@ -606,6 +605,18 @@ ConsoleClose(
     }
     ckfree(data);
     return 0;
+}
+
+static int
+Console2Close(
+    ClientData instanceData,	/* Unused. */
+    Tcl_Interp *interp,		/* Unused. */
+    int flags)
+{
+    if ((flags&(TCL_CLOSE_READ|TCL_CLOSE_WRITE))==0) {
+	return ConsoleClose(instanceData, interp);
+    }
+    return EINVAL;
 }
 
 /*
@@ -626,11 +637,10 @@ ConsoleClose(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ConsoleWatch(
-    ClientData instanceData,	/* Device ID for the channel. */
-    int mask)			/* OR-ed combination of TCL_READABLE,
+    TCL_UNUSED(void *),	/* Device ID for the channel. */
+    TCL_UNUSED(int))			/* OR-ed combination of TCL_READABLE,
 				 * TCL_WRITABLE and TCL_EXCEPTION, for the
 				 * events we are interested in. */
 {
@@ -653,14 +663,13 @@ ConsoleWatch(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ConsoleHandle(
-    ClientData instanceData,	/* Device ID for the channel. */
-    int direction,		/* TCL_READABLE or TCL_WRITABLE to indicate
+    TCL_UNUSED(void *),	/* Device ID for the channel. */
+    TCL_UNUSED(int),		/* TCL_READABLE or TCL_WRITABLE to indicate
 				 * which direction of the channel is being
 				 * requested. */
-    ClientData *handlePtr)	/* Where to store handle */
+    TCL_UNUSED(void **))	/* Where to store handle */
 {
     return TCL_ERROR;
 }
@@ -694,7 +703,7 @@ ConsoleObjCmd(
 	"eval", "hide", "show", "title", NULL};
     enum option {CON_EVAL, CON_HIDE, CON_SHOW, CON_TITLE};
     Tcl_Obj *cmd = NULL;
-    ConsoleInfo *info = clientData;
+    ConsoleInfo *info = (ConsoleInfo *)clientData;
     Tcl_Interp *consoleInterp = info->consoleInterp;
 
     if (objc < 2) {
@@ -784,7 +793,7 @@ InterpreterObjCmd(
     int index, result = TCL_OK;
     static const char *const options[] = {"eval", "record", NULL};
     enum option {OTHER_EVAL, OTHER_RECORD};
-    ConsoleInfo *info = clientData;
+    ConsoleInfo *info = (ConsoleInfo *)clientData;
     Tcl_Interp *otherInterp = info->interp;
 
     if (objc < 2) {
@@ -803,7 +812,7 @@ InterpreterObjCmd(
 
     if ((otherInterp == NULL) || Tcl_InterpDeleted(otherInterp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no active master interp", -1));
+		"no active parent interp", -1));
 	Tcl_SetErrorCode(interp, "TK", "CONSOLE", "NO_INTERP", NULL);
 	return TCL_ERROR;
     }
@@ -852,7 +861,7 @@ static void
 DeleteConsoleInterp(
     ClientData clientData)
 {
-    Tcl_Interp *interp = clientData;
+    Tcl_Interp *interp = (Tcl_Interp *)clientData;
 
     Tcl_DeleteInterp(interp);
 }
@@ -879,7 +888,7 @@ InterpDeleteProc(
     ClientData clientData,
     Tcl_Interp *interp)
 {
-    ConsoleInfo *info = clientData;
+    ConsoleInfo *info = (ConsoleInfo *)clientData;
 
     if (info->consoleInterp == interp) {
 	Tcl_DeleteThreadExitHandler(DeleteConsoleInterp, info->consoleInterp);
@@ -911,7 +920,7 @@ static void
 ConsoleDeleteProc(
     ClientData clientData)
 {
-    ConsoleInfo *info = clientData;
+    ConsoleInfo *info = (ConsoleInfo *)clientData;
 
     if (info->consoleInterp) {
 	Tcl_DeleteInterp(info->consoleInterp);
@@ -926,7 +935,7 @@ ConsoleDeleteProc(
  *
  * ConsoleEventProc --
  *
- *	This event function is registered on the main window of the slave
+ *	This event function is registered on the main window of the child
  *	interpreter. If the user or a running script causes the main window to
  *	be destroyed, then we need to inform the console interpreter by
  *	invoking "::tk::ConsoleExit".
@@ -946,7 +955,7 @@ ConsoleEventProc(
     XEvent *eventPtr)
 {
     if (eventPtr->type == DestroyNotify) {
-	ConsoleInfo *info = clientData;
+	ConsoleInfo *info = (ConsoleInfo *)clientData;
 	Tcl_Interp *consoleInterp = info->consoleInterp;
 
 	if (consoleInterp && !Tcl_InterpDeleted(consoleInterp)) {

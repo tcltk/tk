@@ -4,8 +4,8 @@
  *	This module provides procedures to draw borders in the
  *	three-dimensional Motif style.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -19,7 +19,7 @@
  * by Tk_GetReliefFromObj.
  */
 
-static const char *const reliefStrings[] = {
+const char *const tkReliefStrings[] = {
     "flat", "groove", "raised", "ridge", "solid", "sunken", NULL
 };
 
@@ -90,7 +90,7 @@ Tk_Alloc3DBorderFromObj(
     if (objPtr->typePtr != &tkBorderObjType) {
 	InitBorderObj(objPtr);
     }
-    borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
 
     /*
      * If the object currently points to a TkBorder, see if it's the one we
@@ -127,7 +127,7 @@ Tk_Alloc3DBorderFromObj(
      */
 
     if (borderPtr != NULL) {
-	TkBorder *firstBorderPtr = Tcl_GetHashValue(borderPtr->hashPtr);
+	TkBorder *firstBorderPtr = (TkBorder *)Tcl_GetHashValue(borderPtr->hashPtr);
 
 	FreeBorderObj(objPtr);
 	for (borderPtr = firstBorderPtr ; borderPtr != NULL;
@@ -200,7 +200,7 @@ Tk_Get3DBorder(
 
     hashPtr = Tcl_CreateHashEntry(&dispPtr->borderTable, colorName, &isNew);
     if (!isNew) {
-	existingBorderPtr = Tcl_GetHashValue(hashPtr);
+	existingBorderPtr = (TkBorder *)Tcl_GetHashValue(hashPtr);
 	for (borderPtr = existingBorderPtr; borderPtr != NULL;
 		borderPtr = borderPtr->nextPtr) {
 	    if ((Tk_Screen(tkwin) == borderPtr->screen)
@@ -420,12 +420,11 @@ Tk_Free3DBorder(
     Display *display = DisplayOfScreen(borderPtr->screen);
     TkBorder *prevPtr;
 
-    borderPtr->resourceRefCount--;
-    if (borderPtr->resourceRefCount > 0) {
+    if (borderPtr->resourceRefCount-- > 1) {
 	return;
     }
 
-    prevPtr = Tcl_GetHashValue(borderPtr->hashPtr);
+    prevPtr = (TkBorder *)Tcl_GetHashValue(borderPtr->hashPtr);
     TkpFreeBorder(borderPtr);
     if (borderPtr->bgColorPtr != NULL) {
 	Tk_FreeColor(borderPtr->bgColorPtr);
@@ -527,7 +526,7 @@ static void
 FreeBorderObj(
     Tcl_Obj *objPtr)		/* The object we are releasing. */
 {
-    TkBorder *borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    TkBorder *borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
 
     if (borderPtr != NULL) {
 	borderPtr->objRefCount--;
@@ -562,7 +561,7 @@ DupBorderObjProc(
     Tcl_Obj *srcObjPtr,		/* The object we are copying from. */
     Tcl_Obj *dupObjPtr)		/* The object we are copying to. */
 {
-    TkBorder *borderPtr = srcObjPtr->internalRep.twoPtrValue.ptr1;
+    TkBorder *borderPtr = (TkBorder *)srcObjPtr->internalRep.twoPtrValue.ptr1;
 
     dupObjPtr->typePtr = srcObjPtr->typePtr;
     dupObjPtr->internalRep.twoPtrValue.ptr1 = borderPtr;
@@ -594,7 +593,7 @@ Tk_SetBackgroundFromBorder(
     Tk_Window tkwin,		/* Window whose background is to be set. */
     Tk_3DBorder border)		/* Token for border. */
 {
-    register TkBorder *borderPtr = (TkBorder *) border;
+    TkBorder *borderPtr = (TkBorder *) border;
 
     Tk_SetWindowBackground(tkwin, borderPtr->bgColorPtr->pixel);
 }
@@ -624,7 +623,7 @@ Tk_GetReliefFromObj(
 				 * from. */
     int *resultPtr)		/* Where to place the answer. */
 {
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, reliefStrings,
+    return Tcl_GetIndexFromObjStruct(interp, objPtr, tkReliefStrings,
 	    sizeof(char *), "relief", 0, resultPtr);
 }
 
@@ -759,7 +758,7 @@ Tk_Draw3DPolygon(
 {
     XPoint poly[4], b1, b2, newB1, newB2;
     XPoint perp, c, shift1, shift2;	/* Used for handling parallel lines. */
-    register XPoint *p1Ptr, *p2Ptr;
+    XPoint *p1Ptr, *p2Ptr;
     TkBorder *borderPtr = (TkBorder *) border;
     GC gc;
     int i, lightOnLeft, dx, dy, parallel, pointsSeen;
@@ -956,7 +955,7 @@ Tk_Fill3DRectangle(
     int relief)			/* Indicates 3D effect: TK_RELIEF_FLAT,
 				 * TK_RELIEF_RAISED, or TK_RELIEF_SUNKEN. */
 {
-    register TkBorder *borderPtr = (TkBorder *) border;
+    TkBorder *borderPtr = (TkBorder *) border;
     int doubleBorder;
 
     /*
@@ -1027,7 +1026,7 @@ Tk_Fill3DPolygon(
 				 * TK_RELIEF_FLAT, TK_RELIEF_RAISED, or
 				 * TK_RELIEF_SUNKEN. */
 {
-    register TkBorder *borderPtr = (TkBorder *) border;
+    TkBorder *borderPtr = (TkBorder *) border;
 
     XFillPolygon(Tk_Display(tkwin), drawable, borderPtr->bgGC,
 	    pointPtr, numPoints, Complex, CoordModeOrigin);
@@ -1253,7 +1252,7 @@ Tk_Get3DBorderFromObj(
      * cached in the internal representation of the Tcl_Obj. Check it out...
      */
 
-    borderPtr = objPtr->internalRep.twoPtrValue.ptr1;
+    borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
     if ((borderPtr != NULL)
 	    && (borderPtr->resourceRefCount > 0)
 	    && (Tk_Screen(tkwin) == borderPtr->screen)
@@ -1281,7 +1280,7 @@ Tk_Get3DBorderFromObj(
     if (hashPtr == NULL) {
 	goto error;
     }
-    for (borderPtr = Tcl_GetHashValue(hashPtr); borderPtr != NULL;
+    for (borderPtr = (TkBorder *)Tcl_GetHashValue(hashPtr); borderPtr != NULL;
 	    borderPtr = borderPtr->nextPtr) {
 	if ((Tk_Screen(tkwin) == borderPtr->screen)
 		&& (Tk_Colormap(tkwin) == borderPtr->colormap)) {
@@ -1371,7 +1370,7 @@ TkDebugBorder(
     resultPtr = Tcl_NewObj();
     hashPtr = Tcl_FindHashEntry(&dispPtr->borderTable, name);
     if (hashPtr != NULL) {
-	TkBorder *borderPtr = Tcl_GetHashValue(hashPtr);
+	TkBorder *borderPtr = (TkBorder *)Tcl_GetHashValue(hashPtr);
 
 	if (borderPtr == NULL) {
 	    Tcl_Panic("TkDebugBorder found empty hash table entry");
@@ -1387,6 +1386,40 @@ TkDebugBorder(
 	}
     }
     return resultPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * Tk_Get3BorderColors --
+ *
+ *	Given a Tk_3DBorder determine its 3 colors.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+Tk_Get3DBorderColors(
+    Tk_3DBorder border,
+    XColor *bgColorPtr,
+    XColor *darkColorPtr,
+    XColor *lightColorPtr)
+{
+    if (bgColorPtr) {
+	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
+    }
+    if (darkColorPtr) {
+	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
+    }
+    if (lightColorPtr) {
+	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
+    }
 }
 
 /*

@@ -4,8 +4,8 @@
 #	are exported by the Tk library. This file is used to generate the
 #	tkIntDecls.h, tkIntPlatDecls.h, tkIntStub.c, and tkPlatStub.c files.
 #
-# Copyright (c) 1998-1999 by Scriptics Corporation.
-# Copyright (c) 2007 Daniel A. Steffen <das@users.sourceforge.net>
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 2007 Daniel A. Steffen <das@users.sourceforge.net>
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -308,7 +308,7 @@ declare 83 {
 #    void TkSetClassProcs(Tk_Window tkwin,
 #	    TkClassProcs *procs, ClientData instanceData)
 #}
-declare 85 {
+declare 85 {deprecated {renamed to Tk_SetWindowMenuBar}} {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
 	    const char *oldMenuName, const char *menuName)
 }
@@ -538,7 +538,7 @@ declare 162 {
 	    int byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
-    int TkTextPrintIndex(const struct TkText *textPtr,
+    TkSizeT TkTextPrintIndex(const struct TkText *textPtr,
 	    const struct TkTextIndex *indexPtr, char *string)
 }
 declare 164 {
@@ -567,51 +567,51 @@ declare 168 {
 # Next group of functions exposed due to [Bug 2768945].
 declare 169 {
     int TkStateParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 170 {
     const char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 171 {
     int TkCanvasDashParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 172 {
     const char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 173 {
     int TkOffsetParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 174 {
     const char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 175 {
     int TkPixelParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 176 {
     const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 177 {
     int TkOrientParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 178 {
     const char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 179 {
     int TkSmoothParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
 }
 declare 180 {
     const char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
 }
 
 # Angled text API, exposed for Emiliano Gavilán's RBC work.
@@ -635,8 +635,16 @@ declare 184 {
 	    double y, double angle)
 }
 
-# Debugging / testing functions for photo images
+# Support for aqua's inability to draw outside [NSView drawRect:]
 declare 185 {
+    void TkpRedrawWidget(Tk_Window tkwin)
+}
+declare 186 {
+    int TkpWillDrawWidget(Tk_Window tkwin)
+}
+
+# Debugging / testing functions for photo images
+declare 187 {
     int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
             Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
@@ -655,10 +663,9 @@ interface tkIntPlat
 declare 0 x11 {
     void TkCreateXEventSource(void)
 }
-#
-# Slot 1 unused (WAS: TkFreeWindowId)
-# Slot 2 unused (WAS: TkInitXId)
-#
+declare 2 x11 {
+    void TkGenerateActivateEvents(TkWindow *winPtr, int active)
+}
 declare 3 x11 {
     int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
@@ -683,15 +690,38 @@ declare 9 x11 {
 declare 10 x11 {
     void TkSendCleanup(TkDisplay *dispPtr)
 }
-#
-# Slot 11 unused (WAS: TkFreeXId)
-#
 declare 12 x11 {
     int TkpWmSetState(TkWindow *winPtr, int state)
 }
 # only needed by tktest:
 declare 13 x11 {
     int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+	    Tcl_Obj *const objv[])
+}
+declare 38 x11 {
+    int TkpCmapStressed_(Tk_Window tkwin, Colormap colormap)
+}
+declare 39 x11 {
+    void TkpSync_(Display *display)
+}
+declare 40 x11 {
+    Window TkUnixContainerId_(TkWindow *winPtr)
+}
+declare 41 x11 {
+    int TkUnixDoOneXEvent_(Tcl_Time *timePtr)
+}
+declare 42 x11 {
+    void TkUnixSetMenubar_(Tk_Window tkwin, Tk_Window menubar)
+}
+declare 43 x11 {
+    void TkWmCleanup_(TkDisplay *dispPtr)
+}
+declare 44 x11 {
+    void TkSendCleanup_(TkDisplay *dispPtr)
+}
+# only needed by tktest:
+declare 45 x11 {
+    int TkpTestsendCmd_(ClientData clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 
@@ -861,16 +891,9 @@ declare 47 win {
 declare 0 aqua {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
-
-# removed duplicates from tkInt table
-#declare 1 aqua {
-#    Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
-#}
-#
-#declare 2 aqua {
-#    void TkpDefineNativeBitmaps(void)
-#}
-
+declare 2 aqua {
+    void TkGenerateActivateEvents_(TkWindow *winPtr, int active)
+}
 declare 3 aqua {
     void TkPointerDeadWindow(TkWindow *winPtr)
 }
@@ -895,27 +918,16 @@ declare 9 aqua {
 declare 10 aqua {
     int TkMacOSXDispatchMenuEvent(int menuID, int index)
 }
-declare 11 aqua {
-    void TkMacOSXInstallCursor(int resizeOverride)
-}
+# Now a static function
+# declare 11 aqua {
+#     void TkMacOSXInstallCursor(int resizeOverride)
+# }
 declare 12 aqua {
     void TkMacOSXHandleTearoffMenu(void)
 }
-
-# removed duplicate from tkPlat table(tk.decls)
-#declare 13 aqua {
-#    void TkMacOSXInvalClipRgns(TkWindow *winPtr)
-#}
-
 declare 14 aqua {
     int TkMacOSXDoHLEvent(void *theEvent)
 }
-
-# removed duplicate from tkPlat table(tk.decls)
-#declare 15 aqua {
-#    void *TkMacOSXGetDrawablePort(Drawable drawable)
-#}
-
 declare 16 aqua {
     Window TkMacOSXGetXWindow(void *macWinPtr)
 }
@@ -951,9 +963,10 @@ declare 24 aqua {
 declare 25 aqua {
     void TkMacOSXMenuClick(void)
 }
-declare 26 aqua {
-    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
-}
+# The corresponding Unregister was not a stub, and this should be static.
+#declare 26 aqua {
+#    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
+#}
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
 }
@@ -972,9 +985,10 @@ declare 31 aqua {
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
-declare 33 aqua {
-    void TkMacOSXUnregisterMacWindow(void *portPtr)
-}
+# This was not implemented.  Perhaps meant to be OffScreen ?
+#declare 33 aqua {
+#    void TkMacOSXUnregisterMacWindow(void *portPtr)
+#}
 declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }
@@ -993,9 +1007,6 @@ declare 38 aqua {
 declare 39 aqua {
     void TkSetWMName(TkWindow *winPtr, Tk_Uid titleUid)
 }
-#
-# Slot 40 unused (WAS: TkSuspendClipboard)
-#
 declare 41 aqua {
     int TkMacOSXZoomToplevel(void *whichWindow, short zoomPart)
 }
@@ -1019,7 +1030,7 @@ declare 47 aqua {
     Tk_Window TkpGetCapture(void)
 }
 declare 49 aqua {
-    Tk_Window TkGetTransientMaster(TkWindow *winPtr)
+    Tk_Window TkMacOSXGetContainer(TkWindow *winPtr)
 }
 declare 50 aqua {
     int TkGenerateButtonEvent(int x, int y, Window window, unsigned int state)
@@ -1030,17 +1041,9 @@ declare 51 aqua {
 declare 52 aqua {
     void TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag)
 }
-
-# removed duplicate from tkPlat table (tk.decls)
-#declare 52 aqua {
-#    void TkGenWMConfigureEvent(Tk_Window tkwin, int x, int y,
-# 	    int width, int height, int flags)
-#}
-
 declare 53 aqua {
     unsigned long TkpGetMS(void)
 }
-
 # For Canvas3d, requested by Sean Woods
 declare 54 aqua {
     void *TkMacOSXDrawable(Drawable drawable)
@@ -1556,8 +1559,13 @@ declare 155 win {
 declare 156 win {
     void XFreeStringList(char **list)
 }
-
-
+declare 157 win {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
+}
+declare 158 win {
+    Display *XkbOpenDisplay(const char *name, int *ev_rtrn, int *err_rtrn,
+	    int *major_rtrn, int *minor_rtrn, int *reason)
+}
 
 ################################
 # X functions for MacOSX
@@ -1926,6 +1934,10 @@ declare 104 macosx {
 declare 105 macosx {
     XHostAddress *XListHosts(Display *d, int *i, Bool *b)
 }
+declare 106 macosx {
+    int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
+       int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+}
 declare 107 macosx {
     int XFlush(Display *display)
 }
@@ -2047,6 +2059,13 @@ declare 155 macosx {
 }
 declare 156 macosx {
     void XFreeStringList(char **list)
+}
+declare 157 macosx {
+    KeySym XkbKeycodeToKeysym(Display *d, unsigned int k, int g, int i)
+}
+declare 158 macosx {
+    Display *XkbOpenDisplay(const char *name, int *ev_rtrn, int *err_rtrn,
+	    int *major_rtrn, int *minor_rtrn, int *reason)
 }
 
 # Local Variables:

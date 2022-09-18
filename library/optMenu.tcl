@@ -3,8 +3,8 @@
 # This file defines the procedure tk_optionMenu, which creates
 # an option button and its associated menu.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -37,7 +37,7 @@ proc ::tk_optionMenu {w varName firstValue args} {
     menu $w.menu -tearoff 0
     $w.menu add radiobutton -label $firstValue -variable $varName
     foreach i $args {
-    	$w.menu add radiobutton -label $i -variable $varName
+	$w.menu add radiobutton -label $i -variable $varName
     }
     return $w.menu
 }

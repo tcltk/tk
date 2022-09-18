@@ -4,7 +4,7 @@
  *	This file implements the Windows specific portion of the scrollbar
  *	widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -82,7 +82,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 static void
 WinScrollbarEventProc(ClientData clientData, XEvent *eventPtr)
 {
-    WinScrollbar *scrollPtr = clientData;
+    WinScrollbar *scrollPtr = (WinScrollbar *)clientData;
 
     if (eventPtr->type == ButtonPress) {
 	ModalLoop(scrollPtr, eventPtr);
@@ -121,7 +121,7 @@ TkpCreateScrollbar(
 	Tcl_MutexUnlock(&winScrlbrMutex);
     }
 
-    scrollPtr = ckalloc(sizeof(WinScrollbar));
+    scrollPtr = (WinScrollbar *)ckalloc(sizeof(WinScrollbar));
     scrollPtr->winFlags = 0;
     scrollPtr->hwnd = NULL;
 
@@ -275,7 +275,7 @@ void
 TkpDisplayScrollbar(
     ClientData clientData)	/* Information about window. */
 {
-    WinScrollbar *scrollPtr = clientData;
+    WinScrollbar *scrollPtr = (WinScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->info.tkwin;
 
     scrollPtr->info.flags &= ~REDRAW_PENDING;
@@ -497,7 +497,7 @@ ScrollbarProc(
 	int code;
 
 	GetCursorPos(&point);
-	Tk_TranslateWinEvent(NULL, WM_MOUSEMOVE, 0,
+	TkTranslateWinEvent(NULL, WM_MOUSEMOVE, 0,
 		MAKELPARAM(point.x, point.y), &result);
 
 	if (command == SB_ENDSCROLL) {
@@ -564,7 +564,7 @@ ScrollbarProc(
     }
 
     default:
-	if (Tk_TranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+	if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
 	    return result;
 	}
     }
@@ -595,6 +595,7 @@ TkpConfigureScrollbar(
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
 {
+    (void)scrollPtr;
 }
 
 /*

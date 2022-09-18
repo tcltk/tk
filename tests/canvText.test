@@ -2,14 +2,17 @@
 # which implement canvas "text" items.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
 namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
+
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
@@ -63,7 +66,7 @@ test canvText-1.12 {configuration options: good value for "underline"} -body {
 } -result {0 0}
 test canvasText-1.13 {configuration options: bad value for "underline"} -body {
     .c itemconfigure test -underline xyz
-} -returnCodes error -result {expected integer but got "xyz"}
+} -returnCodes error -result {bad index "xyz": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test canvText-1.14 {configuration options: good value for "width"} -body {
     .c itemconfigure test -width 6
     list [lindex [.c itemconfigure test -width] 4] [.c itemcget test -width]
@@ -250,7 +253,7 @@ test canvText-4.6 {ConfigureText procedure: adjust cursor} -setup {
     .c index test insert
 } -cleanup {
 	.c delete test
-} -result {4}
+} -result 4
 
 
 test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
@@ -573,7 +576,7 @@ test canvText-8.8 {TextInsert procedure: inserting before cursor} -setup {
     .c icursor test 3
     .c insert test 2 "xyz"
     .c index test insert
-} -result {6}
+} -result 6
 test canvText-8.9 {TextInsert procedure: inserting after cursor} -setup {
     .c create text 20 20 -tag test
     focus .c
@@ -583,7 +586,7 @@ test canvText-8.9 {TextInsert procedure: inserting after cursor} -setup {
     .c icursor test 3
     .c insert test 4 "xyz"
     .c index test insert
-} -result {3}
+} -result 3
 
 # Item used in 9.* tests
 .c create text 20 20 -tag test
@@ -673,19 +676,19 @@ test canvText-9.13 {TextInsert procedure: move cursor} -body {
     .c icursor test 6
     .c dchars test 2 4
     .c index test insert
-} -result {3}
+} -result 3
 test canvText-9.14 {TextInsert procedure: keep cursor >= first} -body {
     .c itemconfig test -text "abcdefghijk"
     .c icursor test 6
     .c dchars test 2 10
     .c index test insert
-} -result {2}
+} -result 2
 test canvText-9.15 {TextInsert procedure: cursor doesn't move} -body {
     .c itemconfig test -text "abcdefghijk"
     .c icursor test 5
     .c dchars test 7 9
     .c index test insert
-} -result {5}
+} -result 5
 .c delete test
 
 
@@ -695,7 +698,7 @@ test canvText-10.1 {TextToPoint procedure} -body {
     .c index test @0,0
 } -cleanup {
 	.c delete test
-} -result {0}
+} -result 0
 
 
 test canvText-11.1 {TextToArea procedure} -setup {
@@ -753,7 +756,7 @@ test canvText-14.1 {GetTextIndex procedure} -setup {
     list [.c index test end] [.c index test insert] \
 	[.c index test sel.first] [.c index test sel.last] \
 	[.c index test @0,0] \
-	[.c index test -1] [.c index test 10] [.c index test 100]
+	[.c index test {}] [.c index test 10] [.c index test 100]
 } -cleanup {
     .c delete test
 } -result {15 12 5 8 0 0 10 15}
@@ -834,7 +837,7 @@ test canvText-15.1 {SetTextCursor procedure} -setup {
     .c index test insert
 } -cleanup {
     .c delete test
-} -result {3}
+} -result 3
 
 test canvText-16.1 {GetSelText procedure} -setup {
     .c create text 0 0 -tag test
@@ -940,7 +943,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     destroy .c
 } -result {{Yeah } Yeah- 4 4}
 
-test canvText-20.1 {angled text bounding box} -setup {
+test canvText-20.1 {angled text bounding box} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     destroy .c
     canvas .c
     proc transpose {bbox} {
@@ -963,6 +966,20 @@ test canvText-20.1 {angled text bounding box} -setup {
     destroy .c
     rename transpose {}
 } -result {ok ok ok}
+
+test canvText-20.2 {crash on angled text selection (X11, without xft) - bug 2712f43f6e} -setup {
+    destroy .c
+    canvas .c -background bisque -selectforeground green2
+    grid .c
+    set id [.c create text 50 150 -anchor w -text "Angled text" \
+	    -angle 30 -font {Helvetica 32} -fill darkblue]
+} -body {
+    .c select clear
+    .c select from $id 0
+    .c select to $id 8 ; update    ;  # used to crash on X11 (--disable-xft build only)
+} -cleanup {
+    destroy .c
+} -result {}
 
 # cleanup
 cleanupTests

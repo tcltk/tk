@@ -1,5 +1,5 @@
 '\"
-'\" Copyright (c) 1998-2000 by Scriptics Corporation.
+'\" Copyright (c) 1998-2000 Scriptics Corporation.
 '\" All rights reserved.
 '\"
 .TH keysyms n 8.3 Tk "Tk Built-In Commands"
@@ -12,7 +12,7 @@ keysyms \- keysyms recognized by Tk
 .SH DESCRIPTION
 .PP
 Tk recognizes many keysyms when specifying key bindings (e.g.,
-.QW "\fBbind\fR \fB. <Key-\fR\fIkeysym\fR\fB>\fR" ).
+.QW "\fBbind\fR \fB. <\fR\fIkeysym\fR\fB>\fR" ).
 The following list enumerates the
 keysyms that will be recognized by Tk.  Note that not all keysyms will
 be valid on all platforms, and some keysyms are also available on
@@ -24,21 +24,21 @@ decimal and hexadecimal values.
 .PP
 .CS
 space                               32     0x20
-exclam                              33     0x21
+! (exclam)                          33     0x21
 quotedbl                            34     0x22
 numbersign                          35     0x23
 dollar                              36     0x24
-percent                             37     0x25
-ampersand                           38     0x26
-apostrophe                          39     0x27
-parenleft                           40     0x28
-parenright                          41     0x29
-asterisk                            42     0x2A
-plus                                43     0x2B
-comma                               44     0x2C
+% (percent)                         37     0x25
+& (ampersand)                       38     0x26
+' (apostrophe)                      39     0x27
+( (parenleft)                       40     0x28
+) (parenright)                      41     0x29
+* (asterisk)                        42     0x2A
++ (plus)                            43     0x2B
+, (comma)                           44     0x2C
 minus                               45     0x2D
-period                              46     0x2E
-slash                               47     0x2F
+. (period)                          46     0x2E
+/ (slash)                           47     0x2F
 0                                   48     0x30
 1                                   49     0x31
 2                                   50     0x32
@@ -49,13 +49,13 @@ slash                               47     0x2F
 7                                   55     0x37
 8                                   56     0x38
 9                                   57     0x39
-colon                               58     0x3A
+: (colon)                           58     0x3A
 semicolon                           59     0x3B
 less                                60     0x3C
-equal                               61     0x3D
+= (equal)                           61     0x3D
 greater                             62     0x3E
-question                            63     0x3F
-at                                  64     0x40
+? (question)                        63     0x3F
+@ (at)                              64     0x40
 A                                   65     0x41
 B                                   66     0x42
 C                                   67     0x43
@@ -85,9 +85,9 @@ Z                                   90     0x5A
 bracketleft                         91     0x5B
 backslash                           92     0x5C
 bracketright                        93     0x5D
-asciicircum                         94     0x5E
-underscore                          95     0x5F
-grave                               96     0x60
+^ (asciicircum)                     94     0x5E
+_ (underscore)                      95     0x5F
+` (grave)                           96     0x60
 a                                   97     0x61
 b                                   98     0x62
 c                                   99     0x63
@@ -115,105 +115,107 @@ x                                  120     0x78
 y                                  121     0x79
 z                                  122     0x7A
 braceleft                          123     0x7B
-bar                                124     0x7C
+| (bar)                            124     0x7C
 braceright                         125     0x7D
-asciitilde                         126     0x7E
+~ (asciitilde)                     126     0x7E
 nobreakspace                       160     0xA0
-exclamdown                         161     0xA1
-cent                               162     0xA2
-sterling                           163     0xA3
-currency                           164     0xA4
-yen                                165     0xA5
-brokenbar                          166     0xA6
-section                            167     0xA7
-diaeresis                          168     0xA8
-copyright                          169     0xA9
-ordfeminine                        170     0xAA
-guillemotleft                      171     0xAB
-notsign                            172     0xAC
+\(r! (exclamdown)                     161     0xA1
+\(ct (cent)                           162     0xA2
+\(Po (sterling)                       163     0xA3
+\(Cs (currency)                       164     0xA4
+\(Ye (yen)                            165     0xA5
+\(bb (brokenbar)                      166     0xA6
+\(sc (section)                        167     0xA7
+\(ad (diaeresis)                      168     0xA8
+\(co (copyright)                      169     0xA9
+\(Of (ordfeminine)                    170     0xAA
+\(Fo (guillemotleft)                  171     0xAB
+\(no (notsign)                        172     0xAC
 hyphen                             173     0xAD
-registered                         174     0xAE
-macron                             175     0xAF
-degree                             176     0xB0
-plusminus                          177     0xB1
-twosuperior                        178     0xB2
-threesuperior                      179     0xB3
-acute                              180     0xB4
-mu                                 181     0xB5
-paragraph                          182     0xB6
-periodcentered                     183     0xB7
-cedilla                            184     0xB8
-onesuperior                        185     0xB9
-masculine                          186     0xBA
-guillemotright                     187     0xBB
-onequarter                         188     0xBC
-onehalf                            189     0xBD
-threequarters                      190     0xBE
-questiondown                       191     0xBF
-Agrave                             192     0xC0
-Aacute                             193     0xC1
-Acircumflex                        194     0xC2
-Atilde                             195     0xC3
-Adiaeresis                         196     0xC4
-Aring                              197     0xC5
-AE                                 198     0xC6
-Ccedilla                           199     0xC7
-Egrave                             200     0xC8
-Eacute                             201     0xC9
-Ecircumflex                        202     0xCA
-Ediaeresis                         203     0xCB
-Igrave                             204     0xCC
-Iacute                             205     0xCD
-Icircumflex                        206     0xCE
-Idiaeresis                         207     0xCF
-ETH                                208     0xD0
-Ntilde                             209     0xD1
-Ograve                             210     0xD2
-Oacute                             211     0xD3
-Ocircumflex                        212     0xD4
-Otilde                             213     0xD5
-Odiaeresis                         214     0xD6
-multiply                           215     0xD7
-Oslash                             216     0xD8
-Ugrave                             217     0xD9
-Uacute                             218     0xDA
-Ucircumflex                        219     0xDB
-Udiaeresis                         220     0xDC
-Yacute                             221     0xDD
-THORN                              222     0xDE
-ssharp                             223     0xDF
-agrave                             224     0xE0
-aacute                             225     0xE1
-acircumflex                        226     0xE2
-atilde                             227     0xE3
-adiaeresis                         228     0xE4
-aring                              229     0xE5
-ae                                 230     0xE6
-ccedilla                           231     0xE7
-egrave                             232     0xE8
-eacute                             233     0xE9
-ecircumflex                        234     0xEA
-ediaeresis                         235     0xEB
-igrave                             236     0xEC
-iacute                             237     0xED
-icircumflex                        238     0xEE
-idiaeresis                         239     0xEF
-eth                                240     0xF0
-ntilde                             241     0xF1
-ograve                             242     0xF2
-oacute                             243     0xF3
-ocircumflex                        244     0xF4
-otilde                             245     0xF5
-odiaeresis                         246     0xF6
-division                           247     0xF7
-oslash                             248     0xF8
-ugrave                             249     0xF9
-uacute                             250     0xFA
-ucircumflex                        251     0xFB
-udiaeresis                         252     0xFC
-yacute                             253     0xFD
-thorn                              254     0xFE
-ydiaeresis                         255     0xFF
+\(rg (registered)                     174     0xAE
+\(a- (macron)                         175     0xAF
+\(de (degree)                         176     0xB0
+\(+- (plusminus)                      177     0xB1
+\(S2 (twosuperior)                    178     0xB2
+\(S3 (threesuperior)                  179     0xB3
+\(aa (acute)                          180     0xB4
+\(mc (mu)                             181     0xB5
+\(ps (paragraph)                      182     0xB6
+\(pc (periodcentered)                 183     0xB7
+\(ac (cedilla)                        184     0xB8
+\(S1 (onesuperior)                    185     0xB9
+\(Om (masculine)                      186     0xBA
+\(Fc (guillemotright)                 187     0xBB
+\(14 (onequarter)                     188     0xBC
+\(12 (onehalf)                        189     0xBD
+\(34 (threequarters)                  190     0xBE
+\(r? (questiondown)                   191     0xBF
+\(`A (Agrave)                         192     0xC0
+\('A (Aacute)                         193     0xC1
+\(^A (Acircumflex)                    194     0xC2
+\(~A (Atilde)                         195     0xC3
+\(:A (Adiaeresis)                     196     0xC4
+\(oA (Aring)                          197     0xC5
+\(AE (AE)                             198     0xC6
+\(,C (Ccedilla)                       199     0xC7
+\(`E (Egrave)                         200     0xC8
+\('E (Eacute)                         201     0xC9
+\(^E (Ecircumflex)                    202     0xCA
+\(:E (Ediaeresis)                     203     0xCB
+\(`I (Igrave)                         204     0xCC
+\('I (Iacute)                         205     0xCD
+\(^I (Icircumflex)                    206     0xCE
+\(:I (Idiaeresis)                     207     0xCF
+\(-D (ETH)                            208     0xD0
+\(~N (Ntilde)                         209     0xD1
+\(`O (Ograve)                         210     0xD2
+\('O (Oacute)                         211     0xD3
+\(^O (Ocircumflex)                    212     0xD4
+\(~O (Otilde)                         213     0xD5
+\(:O (Odiaeresis)                     214     0xD6
+\(mu (multiply)                       215     0xD7
+\(/O (Oslash)                         216     0xD8
+\(`U (Ugrave)                         217     0xD9
+\('U (Uacute)                         218     0xDA
+\(^U (Ucircumflex)                    219     0xDB
+\(:U (Udiaeresis)                     220     0xDC
+\('Y (Yacute)                         221     0xDD
+\(TP (THORN)                          222     0xDE
+\(ss (ssharp)                         223     0xDF
+\(`a (agrave)                         224     0xE0
+\('a (aacute)                         225     0xE1
+\(^a (acircumflex)                    226     0xE2
+\(~a (atilde)                         227     0xE3
+\(:a (adiaeresis)                     228     0xE4
+\(oa (aring)                          229     0xE5
+\(ae (ae)                             230     0xE6
+\(,c (ccedilla)                       231     0xE7
+\(`e (egrave)                         232     0xE8
+\('e (eacute)                         233     0xE9
+\(^e (ecircumflex)                    234     0xEA
+\(:e (ediaeresis)                     235     0xEB
+\(`i (igrave)                         236     0xEC
+\('i (iacute)                         237     0xED
+\(^i (icircumflex)                    238     0xEE
+\(:i (idiaeresis)                     239     0xEF
+\(Sd (eth)                            240     0xF0
+\(~n (ntilde)                         241     0xF1
+\(`o (ograve)                         242     0xF2
+\('o (oacute)                         243     0xF3
+\(^o (ocircumflex)                    244     0xF4
+\(~o (otilde)                         245     0xF5
+\(:o (odiaeresis)                     246     0xF6
+\(di (division)                       247     0xF7
+\(/o (oslash)                         248     0xF8
+\(`u (ugrave)                         249     0xF9
+\('u (uacute)                         250     0xFA
+\(^u (ucircumflex)                    251     0xFB
+\(:u (udiaeresis)                     252     0xFC
+\('y (yacute)                         253     0xFD
+\(Tp (thorn)                          254     0xFE
+\(:y (ydiaeresis)                     255     0xFF
+.CE
+.CS
 Aogonek                            417     0x1A1
 breve                              418     0x1A2
 Lstroke                            419     0x1A3
@@ -223,8 +225,6 @@ Scaron                             425     0x1A9
 Scedilla                           426     0x1AA
 Tcaron                             427     0x1AB
 Zacute                             428     0x1AC
-.CE
-.CS
 Zcaron                             430     0x1AE
 Zabovedot                          431     0x1AF
 aogonek                            433     0x1B1
@@ -394,6 +394,8 @@ kana_WA                           1244     0x4DC
 kana_N                            1245     0x4DD
 voicedsound                       1246     0x4DE
 semivoicedsound                   1247     0x4DF
+.CE
+.CS
 Arabic_comma                      1452     0x5AC
 Arabic_semicolon                  1467     0x5BB
 Arabic_question_mark              1471     0x5BF
@@ -429,8 +431,6 @@ Arabic_qaf                        1506     0x5E2
 Arabic_kaf                        1507     0x5E3
 Arabic_lam                        1508     0x5E4
 Arabic_meem                       1509     0x5E5
-.CE
-.CS
 Arabic_noon                       1510     0x5E6
 Arabic_ha                         1511     0x5E7
 Arabic_waw                        1512     0x5E8
@@ -544,9 +544,11 @@ Greek_EPSILONaccent               1954     0x7A2
 Greek_ETAaccent                   1955     0x7A3
 Greek_IOTAaccent                  1956     0x7A4
 Greek_IOTAdieresis                1957     0x7A5
+Greek_IOTAaccentdiaeresis         1958     0x7A6
 Greek_OMICRONaccent               1959     0x7A7
 Greek_UPSILONaccent               1960     0x7A8
 Greek_UPSILONdieresis             1961     0x7A9
+Greek_UPSILONaccentdieresis       1962     0x7AA
 Greek_OMEGAaccent                 1963     0x7AB
 Greek_accentdieresis              1966     0x7AE
 Greek_horizbar                    1967     0x7AF
@@ -610,6 +612,8 @@ Greek_phi                         2038     0x7F6
 Greek_chi                         2039     0x7F7
 Greek_psi                         2040     0x7F8
 Greek_omega                       2041     0x7F9
+.CE
+.CS
 leftradical                       2209     0x8A1
 topleftradical                    2210     0x8A2
 horizconnector                    2211     0x8A3
@@ -633,8 +637,6 @@ botvertsummationconnector         2228     0x8B4
 toprightsummation                 2229     0x8B5
 botrightsummation                 2230     0x8B6
 rightmiddlesummation              2231     0x8B7
-.CE
-.CS
 lessthanequal                     2236     0x8BC
 notequal                          2237     0x8BD
 greaterthanequal                  2238     0x8BE
@@ -816,6 +818,8 @@ hebrew_qoph                       3319     0xCF7
 hebrew_resh                       3320     0xCF8
 hebrew_shin                       3321     0xCF9
 hebrew_taw                        3322     0xCFA
+.CE
+.CS
 Thai_kokai                        3489     0xDA1
 Thai_khokhai                      3490     0xDA2
 Thai_khokhuat                     3491     0xDA3
@@ -994,37 +998,9 @@ Korean_Won                        3839     0xEFF
 OE                                5052     0x13BC
 oe                                5053     0x13BD
 Ydiaeresis                        5054     0x13BE
-EuroSign                          8364     0x20AC
-3270_Duplicate                   64769     0xFD01
-3270_FieldMark                   64770     0xFD02
-3270_Right2                      64771     0xFD03
-3270_Left2                       64772     0xFD04
-3270_BackTab                     64773     0xFD05
-3270_EraseEOF                    64774     0xFD06
-3270_EraseInput                  64775     0xFD07
-3270_Reset                       64776     0xFD08
-3270_Quit                        64777     0xFD09
-3270_PA1                         64778     0xFD0A
-3270_PA2                         64779     0xFD0B
-3270_PA3                         64780     0xFD0C
-3270_Test                        64781     0xFD0D
-3270_Attn                        64782     0xFD0E
-3270_CursorBlink                 64783     0xFD0F
-3270_AltCursor                   64784     0xFD10
-3270_KeyClick                    64785     0xFD11
-3270_Jump                        64786     0xFD12
-3270_Ident                       64787     0xFD13
-3270_Rule                        64788     0xFD14
-3270_Copy                        64789     0xFD15
-3270_Play                        64790     0xFD16
-3270_Setup                       64791     0xFD17
-3270_Record                      64792     0xFD18
-3270_ChangeScreen                64793     0xFD19
-3270_DeleteWord                  64794     0xFD1A
-3270_ExSelect                    64795     0xFD1B
-3270_CursorSelect                64796     0xFD1C
-3270_PrintScreen                 64797     0xFD1D
-3270_Enter                       64798     0xFD1E
+\(eu (EuroSign)                      8364     0x20AC
+.CE
+.CS
 ISO_Lock                         65025     0xFE01
 ISO_Level2_Latch                 65026     0xFE02
 ISO_Level3_Shift                 65027     0xFE03
@@ -1165,6 +1141,8 @@ Pointer_Accelerate               65274     0xFEFA
 Pointer_DfltBtnNext              65275     0xFEFB
 Pointer_DfltBtnPrev              65276     0xFEFC
 Pointer_Drag5                    65277     0xFEFD
+.CE
+.CS
 BackSpace                        65288     0xFF08
 Tab                              65289     0xFF09
 Linefeed                         65290     0xFF0A
@@ -1215,18 +1193,13 @@ Prior                            65365     0xFF55
 Next                             65366     0xFF56
 End                              65367     0xFF57
 Begin                            65368     0xFF58
-Win_L                            65371     0xFF5B
-Win_R                            65372     0xFF5C
-.CE
-.CS
-App                              65373     0xFF5D
 Select                           65376     0xFF60
 Print                            65377     0xFF61
 Execute                          65378     0xFF62
 Insert                           65379     0xFF63
 Undo                             65381     0xFF65
 Redo                             65382     0xFF66
-Menu                             65383     0xFF67
+Menu (App)                       65383     0xFF67
 Find                             65384     0xFF68
 Cancel                           65385     0xFF69
 Help                             65386     0xFF6A
@@ -1313,8 +1286,8 @@ Meta_L                           65511     0xFFE7
 Meta_R                           65512     0xFFE8
 Alt_L                            65513     0xFFE9
 Alt_R                            65514     0xFFEA
-Super_L                          65515     0xFFEB
-Super_R                          65516     0xFFEC
+Super_L (Win_L)                  65515     0xFFEB
+Super_R (Win_R)                  65516     0xFFEC
 Hyper_L                          65517     0xFFED
 Hyper_R                          65518     0xFFEE
 braille_dot_1                    65521     0xFFF1
@@ -1328,715 +1301,8 @@ braille_dot_8                    65528     0xFFF8
 braille_dot_9                    65529     0xFFF9
 braille_dot_10                   65530     0xFFFA
 Delete                           65535     0xFFFF
-Ibreve                        16777516     0x100012C
-ibreve                        16777517     0x100012D
-Wcircumflex                   16777588     0x1000174
-wcircumflex                   16777589     0x1000175
-Ycircumflex                   16777590     0x1000176
-ycircumflex                   16777591     0x1000177
-SCHWA                         16777615     0x100018F
-Obarred                       16777631     0x100019F
-Ohorn                         16777632     0x10001A0
-ohorn                         16777633     0x10001A1
-Uhorn                         16777647     0x10001AF
-uhorn                         16777648     0x10001B0
-Zstroke                       16777653     0x10001B5
-zstroke                       16777654     0x10001B6
-EZH                           16777655     0x10001B7
-Ocaron                        16777681     0x10001D1
-ocaron                        16777682     0x10001D2
-Gcaron                        16777702     0x10001E6
-gcaron                        16777703     0x10001E7
-schwa                         16777817     0x1000259
-obarred                       16777845     0x1000275
-ezh                           16777874     0x1000292
-Cyrillic_GHE_bar              16778386     0x1000492
-Cyrillic_ghe_bar              16778387     0x1000493
-Cyrillic_ZHE_descender        16778390     0x1000496
-Cyrillic_zhe_descender        16778391     0x1000497
-Cyrillic_KA_descender         16778394     0x100049A
-Cyrillic_ka_descender         16778395     0x100049B
-Cyrillic_KA_vertstroke        16778396     0x100049C
-Cyrillic_ka_vertstroke        16778397     0x100049D
-Cyrillic_EN_descender         16778402     0x10004A2
-Cyrillic_en_descender         16778403     0x10004A3
-Cyrillic_U_straight           16778414     0x10004AE
-Cyrillic_u_straight           16778415     0x10004AF
-Cyrillic_U_straight_bar       16778416     0x10004B0
-Cyrillic_u_straight_bar       16778417     0x10004B1
-Cyrillic_HA_descender         16778418     0x10004B2
-Cyrillic_ha_descender         16778419     0x10004B3
-Cyrillic_CHE_descender        16778422     0x10004B6
-Cyrillic_che_descender        16778423     0x10004B7
-Cyrillic_CHE_vertstroke       16778424     0x10004B8
-Cyrillic_che_vertstroke       16778425     0x10004B9
-Cyrillic_SHHA                 16778426     0x10004BA
-Cyrillic_shha                 16778427     0x10004BB
-Cyrillic_SCHWA                16778456     0x10004D8
-Cyrillic_schwa                16778457     0x10004D9
-Cyrillic_I_macron             16778466     0x10004E2
-Cyrillic_i_macron             16778467     0x10004E3
-Cyrillic_O_bar                16778472     0x10004E8
-Cyrillic_o_bar                16778473     0x10004E9
-Cyrillic_U_macron             16778478     0x10004EE
-Cyrillic_u_macron             16778479     0x10004EF
-Armenian_AYB                  16778545     0x1000531
-Armenian_BEN                  16778546     0x1000532
-Armenian_GIM                  16778547     0x1000533
-Armenian_DA                   16778548     0x1000534
-Armenian_YECH                 16778549     0x1000535
-Armenian_ZA                   16778550     0x1000536
-Armenian_E                    16778551     0x1000537
-Armenian_AT                   16778552     0x1000538
-Armenian_TO                   16778553     0x1000539
-Armenian_ZHE                  16778554     0x100053A
-Armenian_INI                  16778555     0x100053B
-Armenian_LYUN                 16778556     0x100053C
-Armenian_KHE                  16778557     0x100053D
-Armenian_TSA                  16778558     0x100053E
-Armenian_KEN                  16778559     0x100053F
-Armenian_HO                   16778560     0x1000540
-Armenian_DZA                  16778561     0x1000541
-Armenian_GHAT                 16778562     0x1000542
-Armenian_TCHE                 16778563     0x1000543
-Armenian_MEN                  16778564     0x1000544
-Armenian_HI                   16778565     0x1000545
-Armenian_NU                   16778566     0x1000546
-Armenian_SHA                  16778567     0x1000547
-Armenian_VO                   16778568     0x1000548
-Armenian_CHA                  16778569     0x1000549
-Armenian_PE                   16778570     0x100054A
-Armenian_JE                   16778571     0x100054B
-Armenian_RA                   16778572     0x100054C
-Armenian_SE                   16778573     0x100054D
-Armenian_VEV                  16778574     0x100054E
-Armenian_TYUN                 16778575     0x100054F
-Armenian_RE                   16778576     0x1000550
-Armenian_TSO                  16778577     0x1000551
-Armenian_VYUN                 16778578     0x1000552
-Armenian_PYUR                 16778579     0x1000553
-Armenian_KE                   16778580     0x1000554
-Armenian_O                    16778581     0x1000555
-Armenian_FE                   16778582     0x1000556
-Armenian_apostrophe           16778586     0x100055A
-Armenian_accent               16778587     0x100055B
-Armenian_exclam               16778588     0x100055C
-Armenian_separation_mark      16778589     0x100055D
-Armenian_question             16778590     0x100055E
-Armenian_ayb                  16778593     0x1000561
-Armenian_ben                  16778594     0x1000562
-Armenian_gim                  16778595     0x1000563
-Armenian_da                   16778596     0x1000564
-Armenian_yech                 16778597     0x1000565
-Armenian_za                   16778598     0x1000566
-Armenian_e                    16778599     0x1000567
-Armenian_at                   16778600     0x1000568
-Armenian_to                   16778601     0x1000569
-Armenian_zhe                  16778602     0x100056A
-Armenian_ini                  16778603     0x100056B
-Armenian_lyun                 16778604     0x100056C
-Armenian_khe                  16778605     0x100056D
-Armenian_tsa                  16778606     0x100056E
-Armenian_ken                  16778607     0x100056F
-Armenian_ho                   16778608     0x1000570
-Armenian_dza                  16778609     0x1000571
-Armenian_ghat                 16778610     0x1000572
-Armenian_tche                 16778611     0x1000573
-Armenian_men                  16778612     0x1000574
-Armenian_hi                   16778613     0x1000575
-Armenian_nu                   16778614     0x1000576
-Armenian_sha                  16778615     0x1000577
-Armenian_vo                   16778616     0x1000578
-Armenian_cha                  16778617     0x1000579
-Armenian_pe                   16778618     0x100057A
-Armenian_je                   16778619     0x100057B
-Armenian_ra                   16778620     0x100057C
-Armenian_se                   16778621     0x100057D
-Armenian_vev                  16778622     0x100057E
-Armenian_tyun                 16778623     0x100057F
-Armenian_re                   16778624     0x1000580
-Armenian_tso                  16778625     0x1000581
-Armenian_vyun                 16778626     0x1000582
-Armenian_pyur                 16778627     0x1000583
-Armenian_ke                   16778628     0x1000584
-Armenian_o                    16778629     0x1000585
-Armenian_fe                   16778630     0x1000586
-Armenian_ligature_ew          16778631     0x1000587
-Armenian_full_stop            16778633     0x1000589
-Armenian_hyphen               16778634     0x100058A
-Arabic_madda_above            16778835     0x1000653
-Arabic_hamza_above            16778836     0x1000654
-Arabic_hamza_below            16778837     0x1000655
-Arabic_0                      16778848     0x1000660
-Arabic_1                      16778849     0x1000661
-Arabic_2                      16778850     0x1000662
-Arabic_3                      16778851     0x1000663
-Arabic_4                      16778852     0x1000664
-Arabic_5                      16778853     0x1000665
-Arabic_6                      16778854     0x1000666
-Arabic_7                      16778855     0x1000667
-Arabic_8                      16778856     0x1000668
-Arabic_9                      16778857     0x1000669
-Arabic_percent                16778858     0x100066A
-Arabic_superscript_alef       16778864     0x1000670
-Arabic_tteh                   16778873     0x1000679
-Arabic_peh                    16778878     0x100067E
-Arabic_tcheh                  16778886     0x1000686
-Arabic_ddal                   16778888     0x1000688
-Arabic_rreh                   16778897     0x1000691
-Arabic_jeh                    16778904     0x1000698
-Arabic_veh                    16778916     0x10006A4
-Arabic_keheh                  16778921     0x10006A9
-Arabic_gaf                    16778927     0x10006AF
-Arabic_noon_ghunna            16778938     0x10006BA
-Arabic_heh_doachashmee        16778942     0x10006BE
-Arabic_heh_goal               16778945     0x10006C1
-Farsi_yeh                     16778956     0x10006CC
-Arabic_yeh_baree              16778962     0x10006D2
-Arabic_fullstop               16778964     0x10006D4
-Farsi_0                       16778992     0x10006F0
-Farsi_1                       16778993     0x10006F1
-Farsi_2                       16778994     0x10006F2
-Farsi_3                       16778995     0x10006F3
-Farsi_4                       16778996     0x10006F4
-Farsi_5                       16778997     0x10006F5
-Farsi_6                       16778998     0x10006F6
-Farsi_7                       16778999     0x10006F7
-Farsi_8                       16779000     0x10006F8
-Farsi_9                       16779001     0x10006F9
-Sinh_ng                       16780674     0x1000D82
-Sinh_h2                       16780675     0x1000D83
-Sinh_a                        16780677     0x1000D85
-Sinh_aa                       16780678     0x1000D86
-Sinh_ae                       16780679     0x1000D87
-Sinh_aee                      16780680     0x1000D88
-Sinh_i                        16780681     0x1000D89
-Sinh_ii                       16780682     0x1000D8A
-Sinh_u                        16780683     0x1000D8B
-Sinh_uu                       16780684     0x1000D8C
-Sinh_ri                       16780685     0x1000D8D
-Sinh_rii                      16780686     0x1000D8E
-Sinh_lu                       16780687     0x1000D8F
-Sinh_luu                      16780688     0x1000D90
-Sinh_e                        16780689     0x1000D91
-Sinh_ee                       16780690     0x1000D92
-Sinh_ai                       16780691     0x1000D93
-Sinh_o                        16780692     0x1000D94
-Sinh_oo                       16780693     0x1000D95
-Sinh_au                       16780694     0x1000D96
-Sinh_ka                       16780698     0x1000D9A
-Sinh_kha                      16780699     0x1000D9B
-Sinh_ga                       16780700     0x1000D9C
-Sinh_gha                      16780701     0x1000D9D
-Sinh_ng2                      16780702     0x1000D9E
-Sinh_nga                      16780703     0x1000D9F
-Sinh_ca                       16780704     0x1000DA0
-Sinh_cha                      16780705     0x1000DA1
-Sinh_ja                       16780706     0x1000DA2
-Sinh_jha                      16780707     0x1000DA3
-Sinh_nya                      16780708     0x1000DA4
-Sinh_jnya                     16780709     0x1000DA5
-Sinh_nja                      16780710     0x1000DA6
-Sinh_tta                      16780711     0x1000DA7
-Sinh_ttha                     16780712     0x1000DA8
-Sinh_dda                      16780713     0x1000DA9
-Sinh_ddha                     16780714     0x1000DAA
-Sinh_nna                      16780715     0x1000DAB
-Sinh_ndda                     16780716     0x1000DAC
-Sinh_tha                      16780717     0x1000DAD
-Sinh_thha                     16780718     0x1000DAE
-Sinh_dha                      16780719     0x1000DAF
-Sinh_dhha                     16780720     0x1000DB0
-Sinh_na                       16780721     0x1000DB1
-Sinh_ndha                     16780723     0x1000DB3
-Sinh_pa                       16780724     0x1000DB4
-Sinh_pha                      16780725     0x1000DB5
-Sinh_ba                       16780726     0x1000DB6
-Sinh_bha                      16780727     0x1000DB7
-Sinh_ma                       16780728     0x1000DB8
-Sinh_mba                      16780729     0x1000DB9
-Sinh_ya                       16780730     0x1000DBA
-Sinh_ra                       16780731     0x1000DBB
-Sinh_la                       16780733     0x1000DBD
-Sinh_va                       16780736     0x1000DC0
-Sinh_sha                      16780737     0x1000DC1
-Sinh_ssha                     16780738     0x1000DC2
-Sinh_sa                       16780739     0x1000DC3
-Sinh_ha                       16780740     0x1000DC4
-Sinh_lla                      16780741     0x1000DC5
-Sinh_fa                       16780742     0x1000DC6
-Sinh_al                       16780746     0x1000DCA
-Sinh_aa2                      16780751     0x1000DCF
-Sinh_ae2                      16780752     0x1000DD0
-Sinh_aee2                     16780753     0x1000DD1
-Sinh_i2                       16780754     0x1000DD2
-Sinh_ii2                      16780755     0x1000DD3
-Sinh_u2                       16780756     0x1000DD4
-Sinh_uu2                      16780758     0x1000DD6
-Sinh_ru2                      16780760     0x1000DD8
-Sinh_e2                       16780761     0x1000DD9
-Sinh_ee2                      16780762     0x1000DDA
-Sinh_ai2                      16780763     0x1000DDB
-Sinh_o2                       16780764     0x1000DDC
-Sinh_oo2                      16780765     0x1000DDD
-Sinh_au2                      16780766     0x1000DDE
-Sinh_lu2                      16780767     0x1000DDF
-Sinh_ruu2                     16780786     0x1000DF2
-Sinh_luu2                     16780787     0x1000DF3
-Sinh_kunddaliya               16780788     0x1000DF4
-Georgian_an                   16781520     0x10010D0
-Georgian_ban                  16781521     0x10010D1
-Georgian_gan                  16781522     0x10010D2
-Georgian_don                  16781523     0x10010D3
-Georgian_en                   16781524     0x10010D4
-Georgian_vin                  16781525     0x10010D5
-Georgian_zen                  16781526     0x10010D6
-Georgian_tan                  16781527     0x10010D7
-Georgian_in                   16781528     0x10010D8
-Georgian_kan                  16781529     0x10010D9
-Georgian_las                  16781530     0x10010DA
-Georgian_man                  16781531     0x10010DB
-Georgian_nar                  16781532     0x10010DC
-Georgian_on                   16781533     0x10010DD
-Georgian_par                  16781534     0x10010DE
-Georgian_zhar                 16781535     0x10010DF
-Georgian_rae                  16781536     0x10010E0
-Georgian_san                  16781537     0x10010E1
-Georgian_tar                  16781538     0x10010E2
-Georgian_un                   16781539     0x10010E3
-Georgian_phar                 16781540     0x10010E4
-Georgian_khar                 16781541     0x10010E5
-Georgian_ghan                 16781542     0x10010E6
-Georgian_qar                  16781543     0x10010E7
-Georgian_shin                 16781544     0x10010E8
-Georgian_chin                 16781545     0x10010E9
-Georgian_can                  16781546     0x10010EA
-Georgian_jil                  16781547     0x10010EB
-Georgian_cil                  16781548     0x10010EC
-Georgian_char                 16781549     0x10010ED
-Georgian_xan                  16781550     0x10010EE
-Georgian_jhan                 16781551     0x10010EF
-Georgian_hae                  16781552     0x10010F0
-Georgian_he                   16781553     0x10010F1
-Georgian_hie                  16781554     0x10010F2
-Georgian_we                   16781555     0x10010F3
-Georgian_har                  16781556     0x10010F4
-Georgian_hoe                  16781557     0x10010F5
-Georgian_fi                   16781558     0x10010F6
-Babovedot                     16784898     0x1001E02
-babovedot                     16784899     0x1001E03
-Dabovedot                     16784906     0x1001E0A
-dabovedot                     16784907     0x1001E0B
-Fabovedot                     16784926     0x1001E1E
-fabovedot                     16784927     0x1001E1F
-Lbelowdot                     16784950     0x1001E36
-lbelowdot                     16784951     0x1001E37
-Mabovedot                     16784960     0x1001E40
-mabovedot                     16784961     0x1001E41
-Pabovedot                     16784982     0x1001E56
-pabovedot                     16784983     0x1001E57
-Sabovedot                     16784992     0x1001E60
-sabovedot                     16784993     0x1001E61
-Tabovedot                     16785002     0x1001E6A
-tabovedot                     16785003     0x1001E6B
-Wgrave                        16785024     0x1001E80
-wgrave                        16785025     0x1001E81
-Wacute                        16785026     0x1001E82
-wacute                        16785027     0x1001E83
-Wdiaeresis                    16785028     0x1001E84
-wdiaeresis                    16785029     0x1001E85
-Xabovedot                     16785034     0x1001E8A
-xabovedot                     16785035     0x1001E8B
-Abelowdot                     16785056     0x1001EA0
-abelowdot                     16785057     0x1001EA1
-Ahook                         16785058     0x1001EA2
-ahook                         16785059     0x1001EA3
-Acircumflexacute              16785060     0x1001EA4
-acircumflexacute              16785061     0x1001EA5
-Acircumflexgrave              16785062     0x1001EA6
-acircumflexgrave              16785063     0x1001EA7
-Acircumflexhook               16785064     0x1001EA8
-acircumflexhook               16785065     0x1001EA9
-Acircumflextilde              16785066     0x1001EAA
-acircumflextilde              16785067     0x1001EAB
-Acircumflexbelowdot           16785068     0x1001EAC
-acircumflexbelowdot           16785069     0x1001EAD
-Abreveacute                   16785070     0x1001EAE
-abreveacute                   16785071     0x1001EAF
-Abrevegrave                   16785072     0x1001EB0
-abrevegrave                   16785073     0x1001EB1
-Abrevehook                    16785074     0x1001EB2
-abrevehook                    16785075     0x1001EB3
-Abrevetilde                   16785076     0x1001EB4
-abrevetilde                   16785077     0x1001EB5
-Abrevebelowdot                16785078     0x1001EB6
-abrevebelowdot                16785079     0x1001EB7
-Ebelowdot                     16785080     0x1001EB8
-ebelowdot                     16785081     0x1001EB9
-Ehook                         16785082     0x1001EBA
-ehook                         16785083     0x1001EBB
-Etilde                        16785084     0x1001EBC
-etilde                        16785085     0x1001EBD
-Ecircumflexacute              16785086     0x1001EBE
-ecircumflexacute              16785087     0x1001EBF
-Ecircumflexgrave              16785088     0x1001EC0
-ecircumflexgrave              16785089     0x1001EC1
-Ecircumflexhook               16785090     0x1001EC2
-ecircumflexhook               16785091     0x1001EC3
-Ecircumflextilde              16785092     0x1001EC4
-ecircumflextilde              16785093     0x1001EC5
-Ecircumflexbelowdot           16785094     0x1001EC6
-ecircumflexbelowdot           16785095     0x1001EC7
-Ihook                         16785096     0x1001EC8
-ihook                         16785097     0x1001EC9
-Ibelowdot                     16785098     0x1001ECA
-ibelowdot                     16785099     0x1001ECB
-Obelowdot                     16785100     0x1001ECC
-obelowdot                     16785101     0x1001ECD
-Ohook                         16785102     0x1001ECE
-ohook                         16785103     0x1001ECF
-Ocircumflexacute              16785104     0x1001ED0
-ocircumflexacute              16785105     0x1001ED1
-Ocircumflexgrave              16785106     0x1001ED2
-ocircumflexgrave              16785107     0x1001ED3
-Ocircumflexhook               16785108     0x1001ED4
-ocircumflexhook               16785109     0x1001ED5
-Ocircumflextilde              16785110     0x1001ED6
-ocircumflextilde              16785111     0x1001ED7
-Ocircumflexbelowdot           16785112     0x1001ED8
-ocircumflexbelowdot           16785113     0x1001ED9
-Ohornacute                    16785114     0x1001EDA
-ohornacute                    16785115     0x1001EDB
-Ohorngrave                    16785116     0x1001EDC
-ohorngrave                    16785117     0x1001EDD
-Ohornhook                     16785118     0x1001EDE
-ohornhook                     16785119     0x1001EDF
-Ohorntilde                    16785120     0x1001EE0
-ohorntilde                    16785121     0x1001EE1
-Ohornbelowdot                 16785122     0x1001EE2
-ohornbelowdot                 16785123     0x1001EE3
-Ubelowdot                     16785124     0x1001EE4
-ubelowdot                     16785125     0x1001EE5
-Uhook                         16785126     0x1001EE6
-uhook                         16785127     0x1001EE7
-Uhornacute                    16785128     0x1001EE8
-uhornacute                    16785129     0x1001EE9
-Uhorngrave                    16785130     0x1001EEA
-uhorngrave                    16785131     0x1001EEB
-Uhornhook                     16785132     0x1001EEC
-uhornhook                     16785133     0x1001EED
-Uhorntilde                    16785134     0x1001EEE
-uhorntilde                    16785135     0x1001EEF
-Uhornbelowdot                 16785136     0x1001EF0
-uhornbelowdot                 16785137     0x1001EF1
-Ygrave                        16785138     0x1001EF2
-ygrave                        16785139     0x1001EF3
-Ybelowdot                     16785140     0x1001EF4
-ybelowdot                     16785141     0x1001EF5
-Yhook                         16785142     0x1001EF6
-yhook                         16785143     0x1001EF7
-Ytilde                        16785144     0x1001EF8
-ytilde                        16785145     0x1001EF9
-zerosuperior                  16785520     0x1002070
-foursuperior                  16785524     0x1002074
-fivesuperior                  16785525     0x1002075
-sixsuperior                   16785526     0x1002076
-sevensuperior                 16785527     0x1002077
-eightsuperior                 16785528     0x1002078
-ninesuperior                  16785529     0x1002079
-zerosubscript                 16785536     0x1002080
-onesubscript                  16785537     0x1002081
-twosubscript                  16785538     0x1002082
-threesubscript                16785539     0x1002083
-foursubscript                 16785540     0x1002084
-fivesubscript                 16785541     0x1002085
-sixsubscript                  16785542     0x1002086
-sevensubscript                16785543     0x1002087
-eightsubscript                16785544     0x1002088
-ninesubscript                 16785545     0x1002089
-EcuSign                       16785568     0x10020A0
-ColonSign                     16785569     0x10020A1
-CruzeiroSign                  16785570     0x10020A2
-FFrancSign                    16785571     0x10020A3
-LiraSign                      16785572     0x10020A4
-MillSign                      16785573     0x10020A5
-NairaSign                     16785574     0x10020A6
-PesetaSign                    16785575     0x10020A7
-RupeeSign                     16785576     0x10020A8
-WonSign                       16785577     0x10020A9
-NewSheqelSign                 16785578     0x10020AA
-DongSign                      16785579     0x10020AB
-partdifferential              16785922     0x1002202
-emptyset                      16785925     0x1002205
-elementof                     16785928     0x1002208
-notelementof                  16785929     0x1002209
-containsas                    16785931     0x100220B
-squareroot                    16785946     0x100221A
-cuberoot                      16785947     0x100221B
-fourthroot                    16785948     0x100221C
-dintegral                     16785964     0x100222C
-tintegral                     16785965     0x100222D
-because                       16785973     0x1002235
-notapproxeq                   16785991     0x1002247
-approxeq                      16785992     0x1002248
-notidentical                  16786018     0x1002262
-stricteq                      16786019     0x1002263
-braille_blank                 16787456     0x1002800
-braille_dots_1                16787457     0x1002801
-braille_dots_2                16787458     0x1002802
-braille_dots_12               16787459     0x1002803
-braille_dots_3                16787460     0x1002804
-braille_dots_13               16787461     0x1002805
-braille_dots_23               16787462     0x1002806
-braille_dots_123              16787463     0x1002807
-braille_dots_4                16787464     0x1002808
-braille_dots_14               16787465     0x1002809
-braille_dots_24               16787466     0x100280A
-braille_dots_124              16787467     0x100280B
-braille_dots_34               16787468     0x100280C
-braille_dots_134              16787469     0x100280D
-braille_dots_234              16787470     0x100280E
-braille_dots_1234             16787471     0x100280F
-braille_dots_5                16787472     0x1002810
-braille_dots_15               16787473     0x1002811
-braille_dots_25               16787474     0x1002812
-braille_dots_125              16787475     0x1002813
-braille_dots_35               16787476     0x1002814
-braille_dots_135              16787477     0x1002815
-braille_dots_235              16787478     0x1002816
-braille_dots_1235             16787479     0x1002817
-braille_dots_45               16787480     0x1002818
-braille_dots_145              16787481     0x1002819
-braille_dots_245              16787482     0x100281A
-braille_dots_1245             16787483     0x100281B
-braille_dots_345              16787484     0x100281C
-braille_dots_1345             16787485     0x100281D
-braille_dots_2345             16787486     0x100281E
-braille_dots_12345            16787487     0x100281F
-braille_dots_6                16787488     0x1002820
-braille_dots_16               16787489     0x1002821
-braille_dots_26               16787490     0x1002822
-braille_dots_126              16787491     0x1002823
-braille_dots_36               16787492     0x1002824
-braille_dots_136              16787493     0x1002825
-braille_dots_236              16787494     0x1002826
-braille_dots_1236             16787495     0x1002827
-braille_dots_46               16787496     0x1002828
-braille_dots_146              16787497     0x1002829
-braille_dots_246              16787498     0x100282A
-braille_dots_1246             16787499     0x100282B
-braille_dots_346              16787500     0x100282C
-braille_dots_1346             16787501     0x100282D
-braille_dots_2346             16787502     0x100282E
-braille_dots_12346            16787503     0x100282F
-braille_dots_56               16787504     0x1002830
-braille_dots_156              16787505     0x1002831
-braille_dots_256              16787506     0x1002832
-braille_dots_1256             16787507     0x1002833
-braille_dots_356              16787508     0x1002834
-braille_dots_1356             16787509     0x1002835
-braille_dots_2356             16787510     0x1002836
-braille_dots_12356            16787511     0x1002837
-braille_dots_456              16787512     0x1002838
-braille_dots_1456             16787513     0x1002839
-braille_dots_2456             16787514     0x100283A
-braille_dots_12456            16787515     0x100283B
-braille_dots_3456             16787516     0x100283C
-braille_dots_13456            16787517     0x100283D
-braille_dots_23456            16787518     0x100283E
-braille_dots_123456           16787519     0x100283F
-braille_dots_7                16787520     0x1002840
-braille_dots_17               16787521     0x1002841
-braille_dots_27               16787522     0x1002842
-braille_dots_127              16787523     0x1002843
-braille_dots_37               16787524     0x1002844
-braille_dots_137              16787525     0x1002845
-braille_dots_237              16787526     0x1002846
-braille_dots_1237             16787527     0x1002847
-braille_dots_47               16787528     0x1002848
-braille_dots_147              16787529     0x1002849
-braille_dots_247              16787530     0x100284A
-braille_dots_1247             16787531     0x100284B
-braille_dots_347              16787532     0x100284C
-braille_dots_1347             16787533     0x100284D
-braille_dots_2347             16787534     0x100284E
-braille_dots_12347            16787535     0x100284F
-braille_dots_57               16787536     0x1002850
-braille_dots_157              16787537     0x1002851
-braille_dots_257              16787538     0x1002852
-braille_dots_1257             16787539     0x1002853
-braille_dots_357              16787540     0x1002854
-braille_dots_1357             16787541     0x1002855
-braille_dots_2357             16787542     0x1002856
-braille_dots_12357            16787543     0x1002857
-braille_dots_457              16787544     0x1002858
-braille_dots_1457             16787545     0x1002859
-braille_dots_2457             16787546     0x100285A
-braille_dots_12457            16787547     0x100285B
-braille_dots_3457             16787548     0x100285C
-braille_dots_13457            16787549     0x100285D
-braille_dots_23457            16787550     0x100285E
-braille_dots_123457           16787551     0x100285F
-braille_dots_67               16787552     0x1002860
-braille_dots_167              16787553     0x1002861
-braille_dots_267              16787554     0x1002862
-braille_dots_1267             16787555     0x1002863
-braille_dots_367              16787556     0x1002864
-braille_dots_1367             16787557     0x1002865
-braille_dots_2367             16787558     0x1002866
-braille_dots_12367            16787559     0x1002867
-braille_dots_467              16787560     0x1002868
-braille_dots_1467             16787561     0x1002869
-braille_dots_2467             16787562     0x100286A
-braille_dots_12467            16787563     0x100286B
-braille_dots_3467             16787564     0x100286C
-braille_dots_13467            16787565     0x100286D
-braille_dots_23467            16787566     0x100286E
-braille_dots_123467           16787567     0x100286F
-braille_dots_567              16787568     0x1002870
-braille_dots_1567             16787569     0x1002871
-braille_dots_2567             16787570     0x1002872
-braille_dots_12567            16787571     0x1002873
-braille_dots_3567             16787572     0x1002874
-braille_dots_13567            16787573     0x1002875
-braille_dots_23567            16787574     0x1002876
-braille_dots_123567           16787575     0x1002877
-braille_dots_4567             16787576     0x1002878
-braille_dots_14567            16787577     0x1002879
-braille_dots_24567            16787578     0x100287A
-braille_dots_124567           16787579     0x100287B
-braille_dots_34567            16787580     0x100287C
-braille_dots_134567           16787581     0x100287D
-braille_dots_234567           16787582     0x100287E
-braille_dots_1234567          16787583     0x100287F
-braille_dots_8                16787584     0x1002880
-braille_dots_18               16787585     0x1002881
-braille_dots_28               16787586     0x1002882
-braille_dots_128              16787587     0x1002883
-braille_dots_38               16787588     0x1002884
-braille_dots_138              16787589     0x1002885
-braille_dots_238              16787590     0x1002886
-braille_dots_1238             16787591     0x1002887
-braille_dots_48               16787592     0x1002888
-braille_dots_148              16787593     0x1002889
-braille_dots_248              16787594     0x100288A
-braille_dots_1248             16787595     0x100288B
-braille_dots_348              16787596     0x100288C
-braille_dots_1348             16787597     0x100288D
-braille_dots_2348             16787598     0x100288E
-braille_dots_12348            16787599     0x100288F
-braille_dots_58               16787600     0x1002890
-braille_dots_158              16787601     0x1002891
-braille_dots_258              16787602     0x1002892
-braille_dots_1258             16787603     0x1002893
-braille_dots_358              16787604     0x1002894
-braille_dots_1358             16787605     0x1002895
-braille_dots_2358             16787606     0x1002896
-braille_dots_12358            16787607     0x1002897
-braille_dots_458              16787608     0x1002898
-braille_dots_1458             16787609     0x1002899
-braille_dots_2458             16787610     0x100289A
-braille_dots_12458            16787611     0x100289B
-braille_dots_3458             16787612     0x100289C
-braille_dots_13458            16787613     0x100289D
-braille_dots_23458            16787614     0x100289E
-braille_dots_123458           16787615     0x100289F
-braille_dots_68               16787616     0x10028A0
-braille_dots_168              16787617     0x10028A1
-braille_dots_268              16787618     0x10028A2
-braille_dots_1268             16787619     0x10028A3
-braille_dots_368              16787620     0x10028A4
-braille_dots_1368             16787621     0x10028A5
-braille_dots_2368             16787622     0x10028A6
-braille_dots_12368            16787623     0x10028A7
-braille_dots_468              16787624     0x10028A8
-braille_dots_1468             16787625     0x10028A9
-braille_dots_2468             16787626     0x10028AA
-braille_dots_12468            16787627     0x10028AB
-braille_dots_3468             16787628     0x10028AC
-braille_dots_13468            16787629     0x10028AD
-braille_dots_23468            16787630     0x10028AE
-braille_dots_123468           16787631     0x10028AF
-braille_dots_568              16787632     0x10028B0
-braille_dots_1568             16787633     0x10028B1
-braille_dots_2568             16787634     0x10028B2
-braille_dots_12568            16787635     0x10028B3
-braille_dots_3568             16787636     0x10028B4
-braille_dots_13568            16787637     0x10028B5
-braille_dots_23568            16787638     0x10028B6
-braille_dots_123568           16787639     0x10028B7
-braille_dots_4568             16787640     0x10028B8
-braille_dots_14568            16787641     0x10028B9
-braille_dots_24568            16787642     0x10028BA
-braille_dots_124568           16787643     0x10028BB
-braille_dots_34568            16787644     0x10028BC
-braille_dots_134568           16787645     0x10028BD
-braille_dots_234568           16787646     0x10028BE
-braille_dots_1234568          16787647     0x10028BF
-braille_dots_78               16787648     0x10028C0
-braille_dots_178              16787649     0x10028C1
-braille_dots_278              16787650     0x10028C2
-braille_dots_1278             16787651     0x10028C3
-braille_dots_378              16787652     0x10028C4
-braille_dots_1378             16787653     0x10028C5
-braille_dots_2378             16787654     0x10028C6
-braille_dots_12378            16787655     0x10028C7
-braille_dots_478              16787656     0x10028C8
-braille_dots_1478             16787657     0x10028C9
-braille_dots_2478             16787658     0x10028CA
-braille_dots_12478            16787659     0x10028CB
-braille_dots_3478             16787660     0x10028CC
-braille_dots_13478            16787661     0x10028CD
-braille_dots_23478            16787662     0x10028CE
-braille_dots_123478           16787663     0x10028CF
-braille_dots_578              16787664     0x10028D0
-braille_dots_1578             16787665     0x10028D1
-braille_dots_2578             16787666     0x10028D2
-braille_dots_12578            16787667     0x10028D3
-braille_dots_3578             16787668     0x10028D4
-braille_dots_13578            16787669     0x10028D5
-braille_dots_23578            16787670     0x10028D6
-braille_dots_123578           16787671     0x10028D7
-braille_dots_4578             16787672     0x10028D8
-braille_dots_14578            16787673     0x10028D9
-braille_dots_24578            16787674     0x10028DA
-braille_dots_124578           16787675     0x10028DB
-braille_dots_34578            16787676     0x10028DC
-braille_dots_134578           16787677     0x10028DD
-braille_dots_234578           16787678     0x10028DE
-braille_dots_1234578          16787679     0x10028DF
-braille_dots_678              16787680     0x10028E0
-braille_dots_1678             16787681     0x10028E1
-braille_dots_2678             16787682     0x10028E2
-braille_dots_12678            16787683     0x10028E3
-braille_dots_3678             16787684     0x10028E4
-braille_dots_13678            16787685     0x10028E5
-braille_dots_23678            16787686     0x10028E6
-braille_dots_123678           16787687     0x10028E7
-braille_dots_4678             16787688     0x10028E8
-braille_dots_14678            16787689     0x10028E9
-braille_dots_24678            16787690     0x10028EA
-braille_dots_124678           16787691     0x10028EB
-braille_dots_34678            16787692     0x10028EC
-braille_dots_134678           16787693     0x10028ED
-braille_dots_234678           16787694     0x10028EE
-braille_dots_1234678          16787695     0x10028EF
-braille_dots_5678             16787696     0x10028F0
-braille_dots_15678            16787697     0x10028F1
-braille_dots_25678            16787698     0x10028F2
-braille_dots_125678           16787699     0x10028F3
-braille_dots_35678            16787700     0x10028F4
-braille_dots_135678           16787701     0x10028F5
-braille_dots_235678           16787702     0x10028F6
-braille_dots_1235678          16787703     0x10028F7
-braille_dots_45678            16787704     0x10028F8
-braille_dots_145678           16787705     0x10028F9
-braille_dots_245678           16787706     0x10028FA
-braille_dots_1245678          16787707     0x10028FB
-braille_dots_345678           16787708     0x10028FC
-braille_dots_1345678          16787709     0x10028FD
-braille_dots_2345678          16787710     0x10028FE
-braille_dots_12345678         16787711     0x10028FF
+.CE
+.CS
 SunFA_Grave                  268828416     0x1005FF00
 SunFA_Circum                 268828417     0x1005FF01
 SunFA_Tilde                  268828418     0x1005FF02
@@ -2060,6 +1326,145 @@ SunVideoDegauss              268828538     0x1005FF7A
 SunVideoLowerBrightness      268828539     0x1005FF7B
 SunVideoRaiseBrightness      268828540     0x1005FF7C
 SunPowerSwitchShift          268828541     0x1005FF7D
+XF86BrightnessAuto           268964084     0x100810F4
+XF86DisplayOff               268964085     0x100810F5
+XF86Info                     268964198     0x10081166
+XF86AspectRatio              268964215     0x10081177
+XF86DVD                      268964229     0x10081185
+XF86Audio                    268964232     0x10081188
+XF86ChannelUp                268964242     0x10081192
+XF86ChannelDown              268964243     0x10081193
+XF86Break                    268964251     0x1008119B
+XF86VideoPhone               268964256     0x100811A0
+XF86ZoomReset                268964260     0x100811A4
+XF86Editor                   268964262     0x100811A6
+XF86GraphicsEditor           268964264     0x100811A8
+XF86Presentation             268964265     0x100811A9
+XF86Database                 268964266     0x100811AA
+XF86Voicemail                268964268     0x100811AC
+XF86Addressbook              268964269     0x100811AD
+XF86DisplayToggle            268964271     0x100811AF
+XF86SpellCheck               268964272     0x100811B0
+XF86ContextMenu              268964278     0x100811B6
+XF86MediaRepeat              268964279     0x100811B7
+XF8610ChannelsUp             268964280     0x100811B8
+XF8610ChannelsDown           268964281     0x100811B9
+XF86Images                   268964282     0x100811BA
+XF86NotificationCenter       268964284     0x100811BC
+XF86PickupPhone              268964285     0x100811BD
+XF86HangupPhone              268964286     0x100811BE
+XF86Fn                       268964304     0x100811D0
+XF86Fn_Esc                   268964305     0x100811D1
+XF86FnRightShift             268964325     0x100811E5
+XF86Numeric0                 268964352     0x10081200
+XF86Numeric1                 268964353     0x10081201
+XF86Numeric2                 268964354     0x10081202
+XF86Numeric3                 268964355     0x10081203
+XF86Numeric4                 268964356     0x10081204
+XF86Numeric5                 268964357     0x10081205
+XF86Numeric6                 268964358     0x10081206
+XF86Numeric7                 268964359     0x10081207
+XF86Numeric8                 268964360     0x10081208
+XF86Numeric9                 268964361     0x10081209
+XF86NumericStar              268964362     0x1008120A
+XF86NumericPound             268964363     0x1008120B
+XF86NumericA                 268964364     0x1008120C
+XF86NumericB                 268964365     0x1008120D
+XF86NumericC                 268964366     0x1008120E
+XF86NumericD                 268964367     0x1008120F
+XF86CameraFocus              268964368     0x10081210
+XF86WPSButton                268964369     0x10081211
+XF86CameraZoomIn             268964373     0x10081215
+XF86CameraZoomOut            268964374     0x10081216
+XF86CameraUp                 268964375     0x10081217
+XF86CameraDown               268964376     0x10081218
+XF86CameraLeft               268964377     0x10081219
+XF86CameraRight              268964378     0x1008121A
+XF86AttendantOn              268964379     0x1008121B
+XF86AttendantOff             268964380     0x1008121C
+XF86AttendantToggle          268964381     0x1008121D
+XF86LightsToggle             268964382     0x1008121E
+XF86ALSToggle                268964400     0x10081230
+XF86Buttonconfig             268964416     0x10081240
+XF86Taskmanager              268964417     0x10081241
+XF86Journal                  268964418     0x10081242
+XF86ControlPanel             268964419     0x10081243
+XF86AppSelect                268964420     0x10081244
+XF86Screensaver              268964421     0x10081245
+XF86VoiceCommand             268964422     0x10081246
+XF86Assistant                268964423     0x10081247
+XF86EmojiPicker              268964425     0x10081249
+XF86Dictate                  268964426     0x1008124A
+XF86BrightnessMin            268964432     0x10081250
+XF86BrightnessMax            268964433     0x10081251
+XF86KbdInputAssistPrev       268964448     0x10081260
+XF86KbdInputAssistNext       268964449     0x10081261
+XF86KbdInputAssistPrevgroup  268964450     0x10081262
+XF86KbdInputAssistNextgroup  268964451     0x10081263
+XF86KbdInputAssistAccept     268964452     0x10081264
+XF86KbdInputAssistCancel     268964453     0x10081265
+XF86RightUp                  268964454     0x10081266
+XF86RightDown                268964455     0x10081267
+XF86LeftUp                   268964456     0x10081268
+XF86LeftDown                 268964457     0x10081269
+XF86RootMenu                 268964458     0x1008126A
+XF86MediaTopMenu             268964459     0x1008126B
+XF86Numeric11                268964460     0x1008126C
+XF86Numeric12                268964461     0x1008126D
+XF86AudioDesc                268964462     0x1008126E
+XF863DMode                   268964463     0x1008126F
+XF86NextFavorite             268964464     0x10081270
+XF86StopRecord               268964465     0x10081271
+XF86PauseRecord              268964466     0x10081272
+XF86VOD                      268964467     0x10081273
+XF86Unmute                   268964468     0x10081274
+XF86FastReverse              268964469     0x10081275
+XF86SlowReverse              268964470     0x10081276
+XF86Data                     268964471     0x10081277
+XF86OnScreenKeyboard         268964472     0x10081278
+XF86PrivacyScreenToggle      268964473     0x10081279
+XF86SelectiveScreenshot      268964474     0x1008127A
+XF86Macro1                   268964496     0x10081290
+XF86Macro2                   268964497     0x10081291
+XF86Macro3                   268964498     0x10081292
+XF86Macro4                   268964499     0x10081293
+XF86Macro5                   268964500     0x10081294
+XF86Macro6                   268964501     0x10081295
+XF86Macro7                   268964502     0x10081296
+XF86Macro8                   268964503     0x10081297
+XF86Macro9                   268964504     0x10081298
+XF86Macro10                  268964505     0x10081299
+XF86Macro11                  268964506     0x1008129A
+XF86Macro12                  268964507     0x1008129B
+XF86Macro13                  268964508     0x1008129C
+XF86Macro14                  268964509     0x1008129D
+XF86Macro15                  268964510     0x1008129E
+XF86Macro16                  268964511     0x1008129F
+XF86Macro17                  268964512     0x100812A0
+XF86Macro18                  268964513     0x100812A1
+XF86Macro19                  268964514     0x100812A2
+XF86Macro20                  268964515     0x100812A3
+XF86Macro21                  268964516     0x100812A4
+XF86Macro22                  268964517     0x100812A5
+XF86Macro23                  268964518     0x100812A6
+XF86Macro24                  268964519     0x100812A7
+XF86Macro25                  268964520     0x100812A8
+XF86Macro26                  268964521     0x100812A9
+XF86Macro27                  268964522     0x100812AA
+XF86Macro28                  268964523     0x100812AB
+XF86Macro29                  268964524     0x100812AC
+XF86Macro30                  268964525     0x100812AD
+XF86MacroRecordStart         268964528     0x100812B0
+XF86MacroRecordStop          268964529     0x100812B1
+XF86MacroPresetCycle         268964530     0x100812B2
+XF86MacroPreset1             268964531     0x100812B3
+XF86MacroPreset2             268964532     0x100812B4
+XF86MacroPreset3             268964533     0x100812B5
+XF86KbdLcdMenu1              268964536     0x100812B8
+XF86KbdLcdMenu2              268964537     0x100812B9
+XF86KbdLcdMenu3              268964538     0x100812BA
+XF86KbdLcdMenu4              268964539     0x100812BB
+XF86KbdLcdMenu5              268964540     0x100812BC
 XF86Switch_VT_1              269024769     0x1008FE01
 XF86Switch_VT_2              269024770     0x1008FE02
 XF86Switch_VT_3              269024771     0x1008FE03
@@ -2072,6 +1477,8 @@ XF86Switch_VT_9              269024777     0x1008FE09
 XF86Switch_VT_10             269024778     0x1008FE0A
 XF86Switch_VT_11             269024779     0x1008FE0B
 XF86Switch_VT_12             269024780     0x1008FE0C
+.CE
+.CS
 XF86Ungrab                   269024800     0x1008FE20
 XF86ClearGrab                269024801     0x1008FE21
 XF86Next_VMode               269024802     0x1008FE22
@@ -2243,6 +1650,7 @@ XF86WWAN                     269025204     0x1008FFB4
 XF86RFKill                   269025205     0x1008FFB5
 XF86AudioPreset              269025206     0x1008FFB6
 XF86RotationLockToggle       269025207     0x1008FFB7
+XF86FullScreen               269025208     0x1008FFB8
 .CE
 .SH "SEE ALSO"
 bind(n), event(n)

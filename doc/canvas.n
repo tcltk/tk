@@ -348,13 +348,13 @@ name is \fIpathName\fR. This
 command may be used to invoke various
 operations on the widget. It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.
 The following widget commands are possible for canvas widgets:
 .TP
-\fIpathName \fBaddtag \fItag searchSpec \fR?\fIarg arg ...\fR?
+\fIpathName \fBaddtag \fItag searchSpec \fR?\fIarg ...\fR?
 .
 For each item that meets the constraints specified by
 \fIsearchSpec\fR and the \fIarg\fRs, add
@@ -602,7 +602,7 @@ the item is unaffected by the command.
 If \fItagToDelete\fR is omitted then it defaults to \fItagOrId\fR.
 This command returns an empty string.
 .TP
-\fIpathName \fBfind \fIsearchCommand \fR?\fIarg arg ...\fR?
+\fIpathName \fBfind \fIsearchCommand \fR?\fIarg ...\fR?
 .
 This command returns a list consisting of all the items that
 meet the constraints specified by \fIsearchCommand\fR and
@@ -1147,7 +1147,8 @@ total width of the canvas is off-screen to the left.
 .
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR or an abbreviation
 of one of these.
 If \fIwhat is \fBpages\fR then the view
@@ -1160,7 +1161,7 @@ of the \fBxScrollIncrement\fR option, if it is greater than zero,
 or in units of one-tenth the window's width otherwise.
 .RE
 .TP
-\fIpathName \fByview \fI?args\fR?
+\fIpathName \fByview ?\fIargs\fR?
 .
 This command is used to query and change the vertical position of the
 information displayed in the canvas's window.
@@ -1255,7 +1256,8 @@ in the \fBCOORDINATES\fR section above.
 \fB\-disabledfill \fIcolor\fR
 .
 Specifies the color to be used to fill item's area.
-in its normal, active, and disabled states,
+in its normal, active, and disabled states.
+The even-odd fill rule is used.
 \fIColor\fR may have any of the forms accepted by \fBTk_GetColor\fR.
 For the line item, it specifies the color of the line drawn.
 For the text item, it specifies the foreground color of the text.
@@ -1763,7 +1765,7 @@ should also be drawn as a curve but where the list of coordinates is
 such that the first coordinate pair (and every third coordinate pair
 thereafter) is a knot point on a cubic Bezier curve, and the other
 coordinates are control points on the cubic Bezier curve. Straight
-line segments can be venerated within a curve by making control points
+line segments can be generated within a curve by making control points
 equal to their neighbouring knot points. If the last point is not the
 second point of a pair of control points, the point is repeated (one or two
 times) so that it also becomes the second point of a pair of control

@@ -2,12 +2,12 @@
 # implements generic code for canvases. It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1995-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
-# Copyright (c) 2008 Donal K. Fellows
+# Copyright © 1995-1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
+# Copyright © 2008 Donal K. Fellows
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
@@ -37,14 +37,14 @@ test canvas-1.4 {configuration options: bad value for "bg"} -body {
 test canvas-1.5 {configuration options: good value for "bd"} -body {
     .c configure -bd 4
     .c cget -bd
-} -result {4}
+} -result 4
 test canvas-1.6 {configuration options: bad value for "bd"} -body {
     .c configure -bd badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test canvas-1.7 {configuration options: good value for "borderwidth"} -body {
     .c configure -borderwidth 1.3
     .c cget -borderwidth
-} -result {1}
+} -result 1
 test canvas-1.8 {configuration options: bad value for "borderwidth"} -body {
     .c configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -58,7 +58,7 @@ test canvas-1.10 {configuration options: bad value for "closeenough"} -body {
 test canvas-1.11 {configuration options: good value for "confine"} -body {
     .c configure -confine true
     .c cget -confine
-} -result {1}
+} -result 1
 test canvas-1.12 {configuration options: bad value for "confine"} -body {
     .c configure -confine silly
 } -returnCodes error -result {expected boolean value but got "silly"}
@@ -72,7 +72,7 @@ test canvas-1.14 {configuration options: bad value for "cursor"} -body {
 test canvas-1.15 {configuration options: good value for "height"} -body {
     .c configure -height 2.1
     .c cget -height
-} -result {2}
+} -result 2
 test canvas-1.16 {configuration options: bad value for "height"} -body {
     .c configure -height x42
 } -returnCodes error -result {bad screen distance "x42"}
@@ -93,7 +93,7 @@ test canvas-1.20 {configuration options: bad value for "highlightcolor"} -body {
 test canvas-1.21 {configuration options: good value for "highlightthickness"} -body {
     .c configure -highlightthickness 18
     .c cget -highlightthickness
-} -result {18}
+} -result 18
 test canvas-1.22 {configuration options: bad value for "highlightthickness"} -body {
     .c configure -highlightthickness badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -107,28 +107,28 @@ test canvas-1.24 {configuration options: bad value for "insertbackground"} -body
 test canvas-1.25 {configuration options: good value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 1.3
     .c cget -insertborderwidth
-} -result {1}
+} -result 1
 test canvas-1.26 {configuration options: bad value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 2.6x
 } -returnCodes error -result {bad screen distance "2.6x"}
 test canvas-1.27 {configuration options: good value for "insertofftime"} -body {
     .c configure -insertofftime 100
     .c cget -insertofftime
-} -result {100}
+} -result 100
 test canvas-1.28 {configuration options: bad value for "insertofftime"} -body {
     .c configure -insertofftime 3.2
 } -returnCodes error -result {expected integer but got "3.2"}
 test canvas-1.29 {configuration options: good value for "insertontime"} -body {
     .c configure -insertontime 100
     .c cget -insertontime
-} -result {100}
+} -result 100
 test canvas-1.30 {configuration options: bad value for "insertontime"} -body {
     .c configure -insertontime 3.2
 } -returnCodes error -result {expected integer but got "3.2"}
 test canvas-1.31 {configuration options: good value for "insertwidth"} -body {
     .c configure -insertwidth 1.3
     .c cget -insertwidth
-} -result {1}
+} -result 1
 test canvas-1.32 {configuration options: bad value for "insertwidth"} -body {
     .c configure -insertwidth 6x
 } -returnCodes error -result {bad screen distance "6x"}
@@ -149,7 +149,7 @@ test canvas-1.36 {configuration options: bad value for "selectbackground"} -body
 test canvas-1.37 {configuration options: good value for "selectborderwidth"} -body {
     .c configure -selectborderwidth 1.3
     .c cget -selectborderwidth
-} -result {1}
+} -result 1
 test canvas-1.38 {configuration options: bad value for "selectborderwidth"} -body {
     .c configure -selectborderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -167,7 +167,7 @@ test canvas-1.41 {configuration options: good value for "takefocus"} -body {
 test canvas-1.42 {configuration options: good value for "width"} -body {
     .c configure -width 402
     .c cget -width
-} -result {402}
+} -result 402
 test canvas-1.43 {configuration options: bad value for "width"} -body {
     .c configure -width xyz
 } -returnCodes error -result {bad screen distance "xyz"}
@@ -216,9 +216,7 @@ test canvas-2.3 {CanvasWidgetCmd, xview option} -body {
     update
     lappend x [.c xview]
 } -result {{0.0 0.3} {0.4 0.7}}
-test canvas-2.4 {CanvasWidgetCmd, xview option} -constraints nonPortable -body {
-    # This test gives slightly different results on platforms such as NetBSD.
-    # I don't know why...
+test canvas-2.4 {CanvasWidgetCmd, xview option} -body {
     .c configure -xscrollincrement 0 -yscrollincrement 5
     .c xview moveto 0.6
     update
@@ -227,6 +225,16 @@ test canvas-2.4 {CanvasWidgetCmd, xview option} -constraints nonPortable -body {
     update
     lappend x [.c xview]
 } -result {{0.6 0.9} {0.66 0.96}}
+test canvas-2.5 {CanvasWidgetCmd, raise/lower option, no error on non-existing tags} -setup {
+    .c create line 0 0 10 10 -tags aline
+} -body {
+    .c raise aline noline
+    .c raise bline aline
+    .c lower aline noline
+    .c lower bline aline
+} -cleanup {
+    .c delete aline
+} -result {}
 catch {destroy .c}
 
 # Canvas used in 3.* test cases
@@ -344,6 +352,22 @@ test canvas-8.1 {canvas arc bbox} -setup {
     set arcSegBox [.c bbox arc4]
     list $arcBox $coordBox $pieBox $arcSegBox
 } -result {{48 21 100 94} {248 21 300 94} {398 21 500 112} {98 171 302 202}}
+test canvas-8.2 {canvas very small arc} -setup {
+    catch {destroy .c}
+    canvas .c
+} -body {
+    # no Inf or NaN must be generated even for very small arcs
+    .c create arc 0 100 0 100 -height 100 -style arc -outline "" -tags arc1
+    set arcBox [.c bbox arc1]
+    .c create arc 0 100 0 100 -height 100 -style arc -outline blue -tags arc2
+    set outlinedArcBox [.c bbox arc2]
+    set coords [.c coords arc1]
+    set start [.c itemcget arc1 -start]
+    set extent [.c itemcget arc1 -extent]
+    set width [.c itemcget arc1 -width]
+    set height [.c itemcget arc1 -height]
+    list $arcBox $outlinedArcBox $coords $start $extent $width $height
+} -result {{-1 99 1 101} {-2 98 2 102} {0.0 100.0 0.0 100.0} 0.0 0.0 1.0 0.0}
 
 test canvas-9.1 {canvas id creation and deletion} -setup {
     catch {destroy .c}
@@ -731,7 +755,23 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
 } -body {
     set id [.c create rect 0 0 1cm 1cm]
     expr {[lindex [.c coords $id] 2]>1}
-} -result {1}
+} -result 1
+test canvas-15.20 {bug [237971ce]} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create line {0 0 50 50 100 50}]
+    .c insert $id end {200 200}
+    .c coords $id
+} -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
+test canvas-15.21 {bug [237971ce]} -setup {
+    destroy .c
+    canvas .c
+} -body {
+    set id [.c create poly {0 0 50 50 100 50}]
+    .c insert $id end {200 200}
+    .c coords $id
+} -result {0.0 0.0 50.0 50.0 100.0 50.0 200.0 200.0}
 destroy .c
 
 test canvas-16.1 {arc coords check} -setup {
@@ -994,112 +1034,6 @@ test canvas-20.3 {tag deletion - all tags match} -setup {
     destroy .c
 } -result {{tagA tagA tagA tagA tagA tagA} {}}
 
-# Procedure used in test cases 20.1 20.2 20.3
-proc matchPixels {pixels expected} {
-    set matched 1
-    foreach pline $pixels eline $expected {
-        foreach ppixel $pline epixel $eline {
-            if {$ppixel != $epixel} {
-                set matched 0
-                break
-            }
-        }
-    }
-    return $matched
-}
-
-test canvas-20.1 {canvas image} -setup {
-    canvas .c
-    image create photo testimage
-} -body  {
-    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
-    .c create rectangle 0 0 0 9 -fill #000080 -outline #000080
-    .c image testimage
-    matchPixels [testimage data] { \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
-} -cleanup {
-    destroy .c
-    image delete testimage
-} -result 1
-
-test canvas-20.2 {canvas image with subsample} -setup {
-    canvas .c
-    image create photo testimage
-} -body  {
-    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
-    .c create rectangle 0 0 1 9 -fill #008000 -outline #008000
-    .c image testimage 2
-    matchPixels [testimage data] { \
-        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
-} -cleanup {
-    destroy .c
-    image delete testimage
-} -result 1
-
-test canvas-20.3 {canvas image with subsample and zoom} -setup {
-    canvas .c
-    image create photo testimage
-} -body  {
-    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
-    .c create rectangle 0 0 9 0 -fill #800000 -outline #800000
-    .c image testimage 1 2
-    matchPixels [testimage data] { \
-        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
-        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
-        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
-} -cleanup {
-    destroy .c
-    image delete testimage
-} -result 1
-
-test canvas-21.1 {canvas very small arc} -setup {
-    catch {destroy .c}
-    canvas .c
-} -body {
-    # no Inf or NaN must be generated even for very small arcs
-    .c create arc 0 100 0 100 -height 100 -style arc -outline "" -tags arc1
-    set arcBox [.c bbox arc1]
-    .c create arc 0 100 0 100 -height 100 -style arc -outline blue -tags arc2
-    set outlinedArcBox [.c bbox arc2]
-    set coords [.c coords arc1]
-    set start [.c itemcget arc1 -start]
-    set extent [.c itemcget arc1 -extent]
-    set width [.c itemcget arc1 -width]
-    set height [.c itemcget arc1 -height]
-    list $arcBox $outlinedArcBox $coords $start $extent $width $height
-} -result {{-1 99 1 101} {-2 98 2 102} {0.0 100.0 0.0 100.0} 0.0 0.0 1.0 0.0}
-
-
 destroy .c
 test canvas-21.1 {canvas rotate} -setup {
     pack [canvas .c]
@@ -1282,7 +1216,95 @@ test canvas-22.9 {canvas rotate: window item rotation behaviour} -setup {
 } -cleanup {
     destroy .c
 } -result {{50.00 150.00} {} {25 125 50 150}}
-
+
+# Procedure used in test cases 23.1 23.2 23.3
+proc matchPixels {pixels expected} {
+    set matched 1
+    foreach pline $pixels eline $expected {
+        foreach ppixel $pline epixel $eline {
+            if {$ppixel != $epixel} {
+                set matched 0
+                break
+            }
+        }
+    }
+    return $matched
+}
+
+test canvas-23.1 {canvas image} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 0 9 -fill #000080 -outline #000080
+    .c image testimage
+    matchPixels [testimage data] { \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+            {#000080 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-23.2 {canvas image with subsample} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 1 9 -fill #008000 -outline #008000
+    .c image testimage 2
+    matchPixels [testimage data] { \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#008000 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
+test canvas-23.3 {canvas image with subsample and zoom} -setup {
+    canvas .c
+    image create photo testimage
+} -body  {
+    .c configure -background #c0c0c0 -scrollregion {0 0 9 9}
+    .c create rectangle 0 0 9 0 -fill #800000 -outline #800000
+    .c image testimage 1 2
+    matchPixels [testimage data] { \
+        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+        {#800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000 #800000} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0} \
+        {#c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0 #c0c0c0}}
+} -cleanup {
+    destroy .c
+    image delete testimage
+} -result 1
+
 # cleanup
 imageCleanup
 cleanupTests

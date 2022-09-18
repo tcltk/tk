@@ -3,9 +3,9 @@
 # This file defines the default bindings for Tk text widgets and provides
 # procedures that help in implementing the bindings.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998 by Scriptics Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998 Scriptics Corporation.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -99,10 +99,10 @@ bind Text <Double-Control-Button-1> { # nothing }
 # stop an accidental movement triggering <B1-Motion>
 bind Text <Control-B1-Motion> { # nothing }
 bind Text <<PrevChar>> {
-    tk::TextSetCursor %W insert-1displayindices
+    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfCluster]
 }
 bind Text <<NextChar>> {
-    tk::TextSetCursor %W insert+1displayindices
+    tk::TextSetCursor %W [tk::TextNextPos %W insert tk::endOfCluster]
 }
 bind Text <<PrevLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W -1]
@@ -111,10 +111,10 @@ bind Text <<NextLine>> {
     tk::TextSetCursor %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<SelectPrevChar>> {
-    tk::TextKeySelect %W [%W index {insert - 1displayindices}]
+    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfCluster]
 }
 bind Text <<SelectNextChar>> {
-    tk::TextKeySelect %W [%W index {insert + 1displayindices}]
+    tk::TextKeySelect %W [tk::TextNextPos %W insert tk::endOfCluster]
 }
 bind Text <<SelectPrevLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W -1]
@@ -123,7 +123,7 @@ bind Text <<SelectNextLine>> {
     tk::TextKeySelect %W [tk::TextUpDownLine %W 1]
 }
 bind Text <<PrevWord>> {
-    tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+    tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
 }
 bind Text <<NextWord>> {
     tk::TextSetCursor %W [tk::TextNextWord %W insert]
@@ -135,7 +135,7 @@ bind Text <<NextPara>> {
     tk::TextSetCursor %W [tk::TextNextPara %W insert]
 }
 bind Text <<SelectPrevWord>> {
-    tk::TextKeySelect %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+    tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
 }
 bind Text <<SelectNextWord>> {
     tk::TextKeySelect %W [tk::TextNextWord %W insert]
@@ -222,7 +222,8 @@ bind Text <Delete> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare end != insert+1c]} {
-	    %W delete insert
+	    %W delete [tk::TextPrevPos %W insert+1c tk::startOfCluster] \
+		    [tk::TextNextPos %W insert tk::endOfCluster]
 	}
 	%W see insert
     }
@@ -232,7 +233,8 @@ bind Text <BackSpace> {
 	%W delete sel.first sel.last
     } else {
 	if {[%W compare insert != 1.0]} {
-	    %W delete insert-1c
+	    %W delete [tk::TextPrevPos %W insert tk::startOfCluster] \
+		    [tk::TextNextPos %W insert-1c tk::endOfCluster]
 	}
 	%W see insert
     }
@@ -296,7 +298,7 @@ bind Text <Key> {
     tk::TextInsert %W %A
 }
 
-# Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
 # <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for <Escape>.
@@ -306,9 +308,8 @@ bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
 bind Text <KP_Enter> {# nothing}
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <Command-Key> {# nothing}
-}
+bind Text <Command-Key> {# nothing}
+bind Text <Fn-Key> {# nothing}
 
 # Additional emacs-like bindings:
 
@@ -357,7 +358,7 @@ bind Text <<Redo>> {
 
 bind Text <Meta-b> {
     if {!$tk_strictMotif} {
-	tk::TextSetCursor %W [tk::TextPrevPos %W insert tcl_startOfPreviousWord]
+	tk::TextSetCursor %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
     }
 }
 bind Text <Meta-d> {
@@ -382,12 +383,12 @@ bind Text <Meta-greater> {
 }
 bind Text <Meta-BackSpace> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
+	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
     }
 }
 bind Text <Meta-Delete> {
     if {!$tk_strictMotif} {
-	%W delete [tk::TextPrevPos %W insert tcl_startOfPreviousWord] insert
+	%W delete [tk::TextPrevPos %W insert tk::startOfPreviousWord] insert
     }
 }
 
@@ -397,18 +398,32 @@ bind Text <<TkStartIMEMarkedText>> {
     dict set ::tk::Priv(IMETextMark) "%W" [%W index insert]
 }
 bind Text <<TkEndIMEMarkedText>> {
-    if { [catch {dict get $::tk::Priv(IMETextMark) "%W"} mark] } {
-	bell
-    } else {
-	%W tag add IMEmarkedtext $mark insert
-	%W tag configure IMEmarkedtext -underline on
-    }
+    ::tk::TextEndIMEMarkedText %W
 }
 bind Text <<TkClearIMEMarkedText>> {
     %W delete IMEmarkedtext.first IMEmarkedtext.last
 }
 bind Text <<TkAccentBackspace>> {
     %W delete insert-1c
+}
+
+# ::tk::TextEndIMEMarkedText --
+#
+# Handles input method text marking in a text widget.
+#
+# Arguments:
+# w -	The text widget
+
+proc ::tk::TextEndIMEMarkedText {w} {
+    variable Priv
+    if {[catch {
+	set mark [dict get $Priv(IMETextMark) $w]
+    }]} {
+	bell
+	return
+    }
+    $w tag add IMEmarkedtext $mark insert
+    $w tag configure IMEmarkedtext -underline on
 }
 
 # Macintosh only bindings:
@@ -441,82 +456,17 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-# The MouseWheel will typically only fire on Windows and MacOS X.
-# However, someone could use the "event generate" command to produce one
-# on other platforms.  We must be careful not to round -ve values of %D
-# down to zero.
-
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <MouseWheel> {
-        %W yview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Option-MouseWheel> {
-        %W yview scroll [expr {-150 * (%D)}] pixels
-    }
-    bind Text <Shift-MouseWheel> {
-        %W xview scroll [expr {-15 * (%D)}] pixels
-    }
-    bind Text <Shift-Option-MouseWheel> {
-        %W xview scroll [expr {-150 * (%D)}] pixels
-    }
-} else {
-    # We must make sure that positive and negative movements are rounded
-    # equally to integers, avoiding the problem that
-    #     (int)1/3 = 0,
-    # but
-    #     (int)-1/3 = -1
-    # The following code ensure equal +/- behaviour.
-    bind Text <MouseWheel> {
-	if {%D >= 0} {
-	    %W yview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W yview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
-    bind Text <Shift-MouseWheel> {
-	if {%D >= 0} {
-	    %W xview scroll [expr {-%D/3}] pixels
-	} else {
-	    %W xview scroll [expr {(2-%D)/3}] pixels
-	}
-    }
+bind Text <MouseWheel> {
+    tk::MouseWheel %W y %D -4.0 pixels
 }
-
-if {[tk windowingsystem] eq "x11"} {
-    # Support for mousewheels on Linux/Unix commonly comes through mapping
-    # the wheel to the extended buttons.  If you have a mousewheel, find
-    # Linux configuration info at:
-    #	http://linuxreviews.org/howtos/xfree/mouse/
-    bind Text <Button-4> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll -50 pixels
-	}
-    }
-    bind Text <Button-5> {
-	if {!$tk_strictMotif} {
-	    %W yview scroll 50 pixels
-	}
-    }
-    bind Text <Shift-Button-4> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Shift-Button-5> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
-    bind Text <Button-6> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll -50 pixels
-	}
-    }
-    bind Text <Button-7> {
-	if {!$tk_strictMotif} {
-	    %W xview scroll 50 pixels
-	}
-    }
+bind Text <Option-MouseWheel> {
+    tk::MouseWheel %W y %D -1.2 pixels
+}
+bind Text <Shift-MouseWheel> {
+    tk::MouseWheel %W x %D -4.0 pixels
+}
+bind Text <Shift-Option-MouseWheel> {
+    tk::MouseWheel %W x %D -1.2 pixels
 }
 
 # ::tk::TextClosestGap --
@@ -568,12 +518,7 @@ proc ::tk::TextButton1 {w x y} {
     } else {
 	$w mark gravity $anchorname left
     }
-    # Allow focus in any case on Windows, because that will let the
-    # selection be displayed even for state disabled text widgets.
-    if {[tk windowingsystem] eq "win32" \
-	    || [$w cget -state] eq "normal"} {
-	focus $w
-    }
+    focus $w
     if {[$w cget -autoseparators]} {
 	$w edit separator
     }
@@ -645,8 +590,8 @@ proc ::tk::TextSelectTo {w x y {extend 0}} {
 	    }
 
 	    # Now find word boundaries
-	    set first [TextPrevPos $w "$first + 1c" tcl_wordBreakBefore]
-	    set last [TextNextPos $w "$last - 1c" tcl_wordBreakAfter]
+	    set first [TextPrevPos $w "$first + 1c" tk::wordBreakBefore]
+	    set last [TextNextPos $w "$last - 1c" tk::wordBreakAfter]
 	}
 	line {
 	    # Set initial range based only on the anchor
@@ -1139,12 +1084,12 @@ proc ::tk_textPaste w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::TextNextWord {w start} {
-	TextNextPos $w [TextNextPos $w $start tcl_endOfWord] \
-		tcl_startOfNextWord
+	TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
+		tk::startOfNextWord
     }
 } else {
     proc ::tk::TextNextWord {w start} {
-	TextNextPos $w $start tcl_endOfWord
+	TextNextPos $w $start tk::endOfWord
     }
 }
 
@@ -1278,7 +1223,11 @@ proc ::tk::TextUndoRedoProcessMarks {w} {
     set nUndoMarks [llength $undoMarks]
     set n [expr {$nUndoMarks / 2}]
     set undoMarks [lsort -dictionary $undoMarks]
-    set Lmarks [lrange $undoMarks 0 [expr {$n - 1}]]
+    if {$n > 0} {
+	set Lmarks [lrange $undoMarks 0 [expr {$n - 1}]]
+    } else {
+	set Lmarks {}
+    }
     set Rmarks [lrange $undoMarks $n [llength $undoMarks]]
     foreach Lmark $Lmarks Rmark $Rmarks {
         lappend indices [$w index $Lmark] [$w index $Rmark]

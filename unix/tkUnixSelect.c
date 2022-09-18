@@ -3,7 +3,7 @@
  *
  *	This file contains X specific routines for manipulating selections.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -250,7 +250,7 @@ TkSelPropProc(
     long buffer[TK_SEL_WORDS_AT_ONCE];
     TkDisplay *dispPtr = TkGetDisplay(eventPtr->xany.display);
     Tk_ErrorHandler errorHandler;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
@@ -356,7 +356,7 @@ TkSelPropProc(
 	    ((char *) buffer)[numItems] = 0;
 
 	    errorHandler = Tk_CreateErrorHandler(eventPtr->xproperty.display,
-		    -1, -1, -1, (int (*)()) NULL, NULL);
+		    -1, -1, -1, NULL, NULL);
 
 	    /*
 	     * Encode the data using the proper format for each type.
@@ -545,7 +545,6 @@ TkSelEventProc(
 	Atom type;
 	int format, result;
 	unsigned long numItems, bytesAfter;
-	Tcl_DString ds;
 
 	for (retrPtr = pendingRetrievals; ; retrPtr = retrPtr->nextPtr) {
 	    if (retrPtr == NULL) {
@@ -591,6 +590,7 @@ TkSelEventProc(
 	if ((type == XA_STRING) || (type == dispPtr->textAtom)
 		|| (type == dispPtr->compoundTextAtom)) {
 	    Tcl_Encoding encoding;
+		Tcl_DString ds;
 
 	    if (format != 8) {
 		Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
@@ -620,7 +620,7 @@ TkSelEventProc(
 	    } else {
 		encoding = Tcl_GetEncoding(NULL, "iso8859-1");
 	    }
-	    Tcl_ExternalToUtfDString(encoding, propInfo, (int)numItems, &ds);
+	    (void)Tcl_ExternalToUtfDStringEx(encoding, propInfo, numItems, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    if (encoding) {
 		Tcl_FreeEncoding(encoding);
 	    }
@@ -649,7 +649,7 @@ TkSelEventProc(
 	    }
 
 	    if (propInfo[numItems] != '\0') {
-		propData = ckalloc(numItems + 1);
+		propData = (char *)ckalloc(numItems + 1);
 		strcpy(propData, propInfo);
 		propData[numItems] = '\0';
 	    }
@@ -742,7 +742,7 @@ static void
 SelTimeoutProc(
     ClientData clientData)	/* Information about retrieval in progress. */
 {
-    TkSelRetrievalInfo *retrPtr = clientData;
+    TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *)clientData;
 
     /*
      * Make sure that the retrieval is still in progress. Then see how long
@@ -813,11 +813,11 @@ ConvertSelection(
     Tk_ErrorHandler errorHandler;
     TkSelectionInfo *infoPtr;
     TkSelInProgress ip;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    errorHandler = Tk_CreateErrorHandler(eventPtr->display, -1, -1,-1,
-	    (int (*)()) NULL, NULL);
+    errorHandler = Tk_CreateErrorHandler(eventPtr->display, -1, -1,
+	    -1, NULL, NULL);
 
     /*
      * Initialize the reply event.
@@ -893,7 +893,7 @@ ConvertSelection(
      * below).
      */
 
-    incr.converts = ckalloc(incr.numConversions * sizeof(ConvertInfo));
+    incr.converts = (ConvertInfo *)ckalloc(incr.numConversions * sizeof(ConvertInfo));
     incr.numIncrs = 0;
     for (i = 0; i < incr.numConversions; i++) {
 	Atom target, property, type;
@@ -995,7 +995,7 @@ ConvertSelection(
 	    } else {
 		encoding = Tcl_GetEncoding(NULL, "iso2022");
 	    }
-	    Tcl_UtfToExternalDString(encoding, (char *) buffer, -1, &ds);
+	    (void)Tcl_UtfToExternalDStringEx(encoding, (char *) buffer, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    XChangeProperty(reply.xsel.display, reply.xsel.requestor,
 		    property, type, 8, PropModeReplace,
 		    (unsigned char *) Tcl_DStringValue(&ds),
@@ -1064,7 +1064,7 @@ ConvertSelection(
 	}
 	Tcl_DeleteTimerHandler(incr.timeout);
 	errorHandler = Tk_CreateErrorHandler(winPtr->display,
-		-1, -1, -1, (int (*)()) NULL, NULL);
+		-1, -1, -1, NULL, NULL);
 	XSelectInput(reply.xsel.display, reply.xsel.requestor, 0L);
 	Tk_DeleteErrorHandler(errorHandler);
 	if (tsdPtr->pendingIncrs == &incr) {
@@ -1126,7 +1126,7 @@ SelRcvIncrProc(
     ClientData clientData,	/* Information about retrieval. */
     XEvent *eventPtr)	/* X PropertyChange event. */
 {
-    TkSelRetrievalInfo *retrPtr = clientData;
+    TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *)clientData;
     char *propInfo, **propInfoPtr = &propInfo;
     Atom type;
     int format, result;
@@ -1374,7 +1374,7 @@ IncrTimeoutProc(
 				 * retrieval for which we are selection
 				 * owner. */
 {
-    IncrInfo *incrPtr = clientData;
+    IncrInfo *incrPtr = (IncrInfo *)clientData;
 
     incrPtr->idleTime++;
     if (incrPtr->idleTime >= 5) {
@@ -1435,7 +1435,7 @@ SelCvtToX(
     if (Tcl_SplitList(NULL, string, &numFields, &field) != TCL_OK) {
 	return NULL;
     }
-    propPtr = ckalloc(numFields * sizeof(long));
+    propPtr = (long *)ckalloc(numFields * sizeof(long));
 
     /*
      * Convert the fields one-by-one.
@@ -1522,10 +1522,10 @@ static void
 SelCvtFromX8(
     char *propPtr,	/* Property value from X. */
     int numValues,		/* Number of 8-bit values in property. */
-    Atom type,			/* Type of property Should not be XA_STRING
+    TCL_UNUSED(Atom),			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function
 				 * at all). */
-    Tk_Window tkwin,		/* Window to use for atom conversion. */
+    TCL_UNUSED(Tk_Window),		/* Window to use for atom conversion. */
     Tcl_DString *dsPtr)		/* Where to store the converted string. */
 {
     /*

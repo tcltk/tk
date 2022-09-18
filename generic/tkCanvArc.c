@@ -3,8 +3,8 @@
  *
  *	This file implements arc items for canvas widgets.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -88,9 +88,9 @@ typedef struct ArcItem {
 
 static int	StyleParseProc(ClientData clientData, Tcl_Interp *interp,
 		    Tk_Window tkwin, const char *value,
-		    char *widgRec, int offset);
+		    char *widgRec, TkSizeT offset);
 static const char * StylePrintProc(ClientData clientData, Tk_Window tkwin,
-		    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr);
+		    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr);
 
 static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
@@ -99,7 +99,7 @@ static const Tk_CustomOption styleOption = {
     StyleParseProc, StylePrintProc, NULL
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
@@ -707,11 +707,11 @@ ComputeArcParametersFromHeight(
 
 static void
 DeleteArc(
-    Tk_Canvas canvas,		/* Info about overall canvas. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall canvas. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
-    ArcItem *arcPtr = (ArcItem *) itemPtr;
+    ArcItem *arcPtr = (ArcItem *)itemPtr;
 
     Tk_DeleteOutline(display, &(arcPtr->outline));
     if (arcPtr->numOutlinePoints != 0) {
@@ -757,7 +757,6 @@ DeleteArc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeArcBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -794,13 +793,13 @@ ComputeArcBbox(
      */
 
     if (arcPtr->bbox[1] > arcPtr->bbox[3]) {
-	double tmp = arcPtr->bbox[3];
+	tmp = arcPtr->bbox[3];
 
 	arcPtr->bbox[3] = arcPtr->bbox[1];
 	arcPtr->bbox[1] = tmp;
     }
     if (arcPtr->bbox[0] > arcPtr->bbox[2]) {
-	double tmp = arcPtr->bbox[2];
+	tmp = arcPtr->bbox[2];
 
 	arcPtr->bbox[2] = arcPtr->bbox[0];
 	arcPtr->bbox[0] = tmp;
@@ -900,8 +899,10 @@ DisplayArc(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y,		/* Describes region of canvas that must be */
-    int width, int height)	/* redisplayed (not used). */
+    TCL_UNUSED(int),		/* Describes region of canvas that must be */
+    TCL_UNUSED(int),	/* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     ArcItem *arcPtr = (ArcItem *) itemPtr;
     short x1, y1, x2, y2;
@@ -1073,7 +1074,6 @@ DisplayArc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 ArcToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1238,7 +1238,6 @@ ArcToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 ArcToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -1632,7 +1631,7 @@ ComputeArcOutline(
      */
 
     if (arcPtr->numOutlinePoints == 0) {
-	arcPtr->outlinePtr = ckalloc(26 * sizeof(double));
+	arcPtr->outlinePtr = (double *)ckalloc(26 * sizeof(double));
 	arcPtr->numOutlinePoints = 22;
     }
     outlinePtr = arcPtr->outlinePtr;
@@ -1646,7 +1645,7 @@ ComputeArcOutline(
      * curved arc segment, which are marked with X's in the figure below:
      *
      *
-     *				  * * *
+     *			          * * *
      *			      *          *
      *			   *      * *      *
      *			 *    *         *    *
@@ -1999,7 +1998,7 @@ ArcToPostscript(
     Tcl_Interp *interp,		/* Leave Postscript or error message here. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))		/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -2084,18 +2083,14 @@ ArcToPostscript(
 		ang1, ang2);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fillColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fillColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
 	    Tcl_AppendToObj(psObj, "clip ", -1);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsStipple(interp, canvas, fillStipple) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (arcPtr->outline.gc != NULL) {
@@ -2121,9 +2116,7 @@ ArcToPostscript(
 		ang1, ang2);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsOutline(canvas, itemPtr, &arcPtr->outline);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (arcPtr->style != ARC_STYLE) {
@@ -2136,18 +2129,14 @@ ArcToPostscript(
 	    } else {
 		Tk_CanvasPsPath(interp, canvas, arcPtr->outlinePtr,
 			PIE_OUTLINE1_PTS);
-		if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-		    goto error;
-		}
+		Tk_CanvasPsColor(interp, canvas, color);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 		if (stipple != None) {
 		    Tcl_AppendToObj(psObj, "clip ", -1);
 
 		    Tcl_ResetResult(interp);
-		    if (Tk_CanvasPsStipple(interp, canvas, stipple) !=TCL_OK){
-			goto error;
-		    }
+		    Tk_CanvasPsStipple(interp, canvas, stipple);
 		    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 		} else {
 		    Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2159,18 +2148,14 @@ ArcToPostscript(
 			arcPtr->outlinePtr + 2*PIE_OUTLINE1_PTS,
 			PIE_OUTLINE2_PTS);
 	    }
-	    if (Tk_CanvasPsColor(interp, canvas, color) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsColor(interp, canvas, color);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (stipple != None) {
 		Tcl_AppendToObj(psObj, "clip ", -1);
 
 		Tcl_ResetResult(interp);
-		if (Tk_CanvasPsStipple(interp, canvas, stipple) != TCL_OK) {
-		    goto error;
-		}
+		Tk_CanvasPsStipple(interp, canvas, stipple);
 		Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    } else {
 		Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -2186,11 +2171,6 @@ ArcToPostscript(
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
     return TCL_OK;
-
-  error:
-    Tcl_DiscardInterpState(interpState);
-    Tcl_DecrRefCount(psObj);
-    return TCL_ERROR;
 }
 
 /*
@@ -2213,17 +2193,16 @@ ArcToPostscript(
 
 static int
 StyleParseProc(
-    ClientData clientData,	/* some flags.*/
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset)			/* Offset into item. */
+    TkSizeT offset)			/* Offset into item. */
 {
     int c;
     size_t length;
-
-    register Style *stylePtr = (Style *) (widgRec + offset);
+    Style *stylePtr = (Style *) (widgRec + offset);
 
     if (value == NULL || *value == 0) {
 	*stylePtr = PIESLICE_STYLE;
@@ -2277,15 +2256,15 @@ StyleParseProc(
 
 static const char *
 StylePrintProc(
-    ClientData clientData,	/* Ignored. */
-    Tk_Window tkwin,		/* Ignored. */
+    TCL_UNUSED(void *),	/* Ignored. */
+    TCL_UNUSED(Tk_Window),		/* Ignored. */
     char *widgRec,		/* Pointer to record for item. */
-    int offset,			/* Offset into item. */
-    Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
+    TkSizeT offset,			/* Offset into item. */
+    TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
 {
-    register Style *stylePtr = (Style *) (widgRec + offset);
+    Style *stylePtr = (Style *) (widgRec + offset);
 
     if (*stylePtr == ARC_STYLE) {
 	return "arc";

@@ -6,8 +6,8 @@
  *	functions, like Tk_GetDirection and Tk_GetUid. The more complex
  *	functions like Tk_GetColor are in separate files.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -35,10 +35,10 @@ static void		FreeUidThreadExitProc(ClientData clientData);
  * used by Tk_GetAnchorFromObj and Tk_GetJustifyFromObj.
  */
 
-static const char *const anchorStrings[] = {
+const char *const tkAnchorStrings[] = {
     "n", "ne", "e", "se", "s", "sw", "w", "nw", "center", NULL
 };
-static const char *const justifyStrings[] = {
+const char *const tkJustifyStrings[] = {
     "left", "right", "center", NULL
 };
 
@@ -71,7 +71,7 @@ Tk_GetAnchorFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObj(interp, objPtr, anchorStrings, "anchor", 0,
+    code = Tcl_GetIndexFromObj(interp, objPtr, tkAnchorStrings, "anchor", 0,
 	    &index);
     if (code == TCL_OK) {
 	*anchorPtr = (Tk_Anchor) index;
@@ -190,6 +190,7 @@ Tk_NameOfAnchor(
     case TK_ANCHOR_W: return "w";
     case TK_ANCHOR_NW: return "nw";
     case TK_ANCHOR_CENTER: return "center";
+    case TK_ANCHOR_NULL: return "";
     }
     return "unknown anchor position";
 }
@@ -385,7 +386,7 @@ Tk_GetJustifyFromObj(
 {
     int index, code;
 
-    code = Tcl_GetIndexFromObj(interp, objPtr, justifyStrings,
+    code = Tcl_GetIndexFromObj(interp, objPtr, tkJustifyStrings,
 	    "justification", 0, &index);
     if (code == TCL_OK) {
 	*justifyPtr = (Tk_Justify) index;
@@ -471,6 +472,7 @@ Tk_NameOfJustify(
     case TK_JUSTIFY_LEFT: return "left";
     case TK_JUSTIFY_RIGHT: return "right";
     case TK_JUSTIFY_CENTER: return "center";
+    case TK_JUSTIFY_NULL: return "";
     }
     return "unknown justification style";
 }
@@ -493,10 +495,10 @@ Tk_NameOfJustify(
 
 static void
 FreeUidThreadExitProc(
-    ClientData clientData)		/* Not used. */
+    TCL_UNUSED(void *))
 {
-    ThreadSpecificData *tsdPtr =
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     Tcl_DeleteHashTable(&tsdPtr->uidTable);
     tsdPtr->initialized = 0;
@@ -529,7 +531,7 @@ Tk_GetUid(
     const char *string)		/* String to convert. */
 {
     int dummy;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_HashTable *tablePtr = &tsdPtr->uidTable;
 
@@ -694,6 +696,11 @@ TkGetDoublePixels(
     char *end;
     double d;
 
+    if (!tkwin) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad screen"));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	return TCL_ERROR;
+    }
     d = strtod((char *) string, &end);
     if (end == string) {
 	goto error;

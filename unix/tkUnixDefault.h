@@ -22,6 +22,7 @@
  * TROUGH -		Background color for troughs in scales and scrollbars.
  * INDICATOR -		Color for indicator when button is selected.
  * DISABLED -		Foreground color when widget is disabled.
+ * PLACEHOLDER_FG -	Foreground color for placeholder text.
  */
 
 #define BLACK		"#000000"
@@ -33,6 +34,7 @@
 #define TROUGH		"#b3b3b3"
 #define INDICATOR	WHITE
 #define DISABLED	"#a3a3a3"
+#define PLACEHOLDER_FG	"#b3b3b3"	/* grey70 */
 
 /*
  * Defaults for labels, buttons, checkbuttons, and radiobuttons:
@@ -54,6 +56,7 @@
 #define DEF_BUTTON_DEFAULT		"disabled"
 #define DEF_BUTTON_DISABLED_FG_COLOR	DISABLED
 #define DEF_BUTTON_DISABLED_FG_MONO	""
+#define DEF_LABEL_FG			BLACK
 #define DEF_BUTTON_FG			BLACK
 #define DEF_CHKRAD_FG			DEF_BUTTON_FG
 #define DEF_BUTTON_FONT			"TkDefaultFont"
@@ -86,7 +89,6 @@
 #define DEF_BUTTON_TAKE_FOCUS		NULL
 #define DEF_BUTTON_TEXT			""
 #define DEF_BUTTON_TEXT_VARIABLE	""
-#define DEF_BUTTON_UNDERLINE		"-1"
 #define DEF_BUTTON_VALUE		""
 #define DEF_BUTTON_WIDTH		"0"
 #define DEF_BUTTON_WRAP_LENGTH		"0"
@@ -153,7 +155,7 @@
 #define DEF_ENTRY_INSERT_WIDTH		"2"
 #define DEF_ENTRY_JUSTIFY		"left"
 #define DEF_ENTRY_PLACEHOLDER		""
-#define DEF_ENTRY_PLACEHOLDERFG		"#b3b3b3"
+#define DEF_ENTRY_PLACEHOLDERFG		PLACEHOLDER_FG
 #define DEF_ENTRY_READONLY_BG_COLOR	NORMAL_BG
 #define DEF_ENTRY_READONLY_BG_MONO	WHITE
 #define DEF_ENTRY_RELIEF		"sunken"
@@ -266,7 +268,6 @@
 #define DEF_MENU_ENTRY_CHECK_VARIABLE	NULL
 #define DEF_MENU_ENTRY_RADIO_VARIABLE	"selectedButton"
 #define DEF_MENU_ENTRY_SELECT		NULL
-#define DEF_MENU_ENTRY_UNDERLINE	"-1"
 
 /*
  * Defaults for menus overall:
@@ -331,7 +332,6 @@
 #define DEF_MENUBUTTON_TAKE_FOCUS	"0"
 #define DEF_MENUBUTTON_TEXT		""
 #define DEF_MENUBUTTON_TEXT_VARIABLE	""
-#define DEF_MENUBUTTON_UNDERLINE	"-1"
 #define DEF_MENUBUTTON_WIDTH		"0"
 #define DEF_MENUBUTTON_WRAP_LENGTH	"0"
 

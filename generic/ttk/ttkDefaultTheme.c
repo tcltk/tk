@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * Tk alternate theme, intended to match the MSUE and Gtk's (old) default theme
  */
@@ -593,7 +593,7 @@ static void IndicatorElementDraw(
 
 #if defined(IGNORES_VISUAL)
 
-    img->data = ckalloc(img->bytes_per_line * img->height);
+    img->data = (char *)ckalloc(img->bytes_per_line * img->height);
     if (img->data == NULL) {
         XDestroyImage(img);
 	return;

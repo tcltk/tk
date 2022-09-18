@@ -4,7 +4,7 @@
  *	This file implements an event source for X displays for the UNIX
  *	version of Tk.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -12,11 +12,10 @@
 
 #include "tkUnixInt.h"
 #include <signal.h>
-#ifdef HAVE_XKBKEYCODETOKEYSYM
-#  include <X11/XKBlib.h>
-#else
-#  define XkbOpenDisplay(D,V,E,M,m,R) ((V),(E),(M),(m),(R),(NULL))
-#endif
+#undef register /* Keyword "register" is used in XKBlib.h, so don't try tricky things here */
+#define XkbOpenDisplay XkbOpenDisplay_ /* Move out of the way, conflicting definitions */
+#include <X11/XKBlib.h>
+#undef XkbOpenDisplay
 
 /*
  * The following static indicates whether this module has been initialized in
@@ -92,10 +91,11 @@ TkCreateXEventSource(void)
 
 static void
 DisplayExitHandler(
-    ClientData clientData)	/* Not used. */
+    ClientData dummy)	/* Not used. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    (void)dummy;
 
     Tcl_DeleteEventSource(DisplaySetupProc, DisplayCheckProc, NULL);
     tsdPtr->initialized = 0;
@@ -129,9 +129,8 @@ TkpOpenDisplay(
     int major = 1;
     int minor = 0;
     int reason = 0;
-    unsigned int use_xkb = 0;
     /* Disabled, until we have a better test. See [Bug 3613668] */
-#if 0 && defined(XKEYCODETOKEYSYM_IS_DEPRECATED)
+#if 0
     static int xinited = 0;
     static Tcl_Mutex xinitMutex = NULL;
 
@@ -154,31 +153,19 @@ TkpOpenDisplay(
 
     /*
     ** Bug [3607830]: Before using Xkb, it must be initialized and confirmed
-    **                that the serve supports it.  The XkbOpenDisplay call
+    **                that the server supports it.  The XkbOpenDisplay call
     **                will perform this check and return NULL if the extension
     **                is not supported.
-    **
-    ** Work around un-const-ified Xkb headers using (char *) cast.
     */
-    display = XkbOpenDisplay((char *)displayNameStr, &event, &error, &major,
+    display = XkbOpenDisplay(displayNameStr, &event, &error, &major,
 	    &minor, &reason);
-
-    if (display == NULL) {
-	/*fprintf(stderr,"event=%d error=%d major=%d minor=%d reason=%d\nDisabling xkb\n",
-	event, error, major, minor, reason);*/
-	display = XOpenDisplay(displayNameStr);
-    } else {
-	use_xkb = TK_DISPLAY_USE_XKB;
-	/*fprintf(stderr, "Using xkb %d.%d\n", major, minor);*/
-    }
 
     if (display == NULL) {
 	return NULL;
     }
-    dispPtr = ckalloc(sizeof(TkDisplay));
+    dispPtr = (TkDisplay *)ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
-    dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
     OpenIM(dispPtr);
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
@@ -311,11 +298,12 @@ TkClipCleanup(
 
 static void
 DisplaySetupProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
     static Tcl_Time blockTime = { 0, 0 };
+    (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -443,10 +431,11 @@ TransferXEventsToTcl(
 
 static void
 DisplayCheckProc(
-    ClientData clientData,	/* Not used. */
+    ClientData dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
+    (void)dummy;
 
     if (!(flags & TCL_WINDOW_EVENTS)) {
 	return;
@@ -481,9 +470,10 @@ DisplayFileProc(
     ClientData clientData,	/* The display pointer. */
     int flags)			/* Should be TCL_READABLE. */
 {
-    TkDisplay *dispPtr = clientData;
+    TkDisplay *dispPtr = (TkDisplay *)clientData;
     Display *display = dispPtr->display;
     int numFound;
+    (void)flags;
 
     XFlush(display);
     numFound = XEventsQueued(display, QueuedAfterReading);
@@ -508,9 +498,9 @@ DisplayFileProc(
 	 * nice (?!) message.
 	 */
 
-	void (*oldHandler)();
+	void (*oldHandler)(int);
 
-	oldHandler = (void (*)()) signal(SIGPIPE, SIG_IGN);
+	oldHandler = (void (*)(int)) signal(SIGPIPE, SIG_IGN);
 	XNoOp(display);
 	XFlush(display);
 	(void) signal(SIGPIPE, oldHandler);
@@ -673,6 +663,7 @@ TkUnixDoOneXEvent(
  *----------------------------------------------------------------------
  */
 
+#undef TkpSync
 void
 TkpSync(
     Display *display)		/* Display to sync. */
@@ -694,6 +685,8 @@ InstantiateIMCallback(
     XPointer     call_data)
 {
     TkDisplay    *dispPtr;
+    (void)display;
+    (void)call_data;
 
     dispPtr = (TkDisplay *) client_data;
     OpenIM(dispPtr);
@@ -708,6 +701,8 @@ DestroyIMCallback(
     XPointer    call_data)
 {
     TkDisplay   *dispPtr;
+    (void)im;
+    (void)call_data;
 
     dispPtr = (TkDisplay *) client_data;
     dispPtr->inputMethod = NULL;

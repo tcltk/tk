@@ -48,9 +48,12 @@ An integer specifying the relative stretchability of the pane.
 When the paned window is resized, the extra space is added
 or subtracted to each pane proportionally to its \fB\-weight\fR.
 .SH "WIDGET COMMAND"
-Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR,
-and \fBinstate\fR commands; see \fIttk::widget(n)\fR for details.
-Additional commands:
+.PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+panedwindow widgets support the following additional commands:
 .TP
 \fIpathname \fBadd \fIsubwindow options...\fR
 Adds a new pane to the window.
@@ -106,14 +109,6 @@ and the total size of the widget.
 .\" depending on which changed most recently.
 Returns the new position of sash number \fIindex\fR.
 .\" Full story: new position may be different than the requested position.
-.PP
-The panedwindow widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBcget\fR	\fBconfigure\fR
-\fBinstate\fR	\fBstate\fR
-.DE
 .SH "VIRTUAL EVENTS"
 .PP
 The panedwindow widget generates an \fB<<EnteredChild>>\fR virtual event on

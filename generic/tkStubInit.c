@@ -3,7 +3,7 @@
  *
  *	This file contains the initializers for the Tk stub vectors.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -24,13 +24,15 @@
 #if defined(MAC_OSX_TK)
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
+#include "tkMacOSXPrivate.h"
+#else
+#   define Tk_ClipDrawableToRect 0
 #endif
 
 /* TODO: These ought to come in some other way */
 #include "tkPlatDecls.h"
 #include "tkIntXlibDecls.h"
 
-static const TkIntStubs tkIntStubs;
 MODULE_SCOPE const TkStubs tkStubs;
 
 /*
@@ -44,6 +46,38 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
+#define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
+
+#if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
+#   define Tk_TranslateWinEvent TkTranslateWinEvent
+#   define Tk_PointerEvent TkWinPointerEvent
+#define TkWinGetPlatformId winGetPlatformId
+static int TkWinGetPlatformId(void) {
+    return 2;
+}
+#else
+#   define Tk_TranslateWinEvent 0
+#   define Tk_PointerEvent 0
+#   define TkWinGetPlatformId 0
+#endif
+
+#if defined(TK_NO_DEPRECATED) || (TCL_MAJOR_VERSION > 8)
+#   define TkSetWindowMenuBar 0
+#   define TkpDrawHighlightBorder 0
+#   define TkpUseWindow 0
+#   define TkpSetMainMenubar 0
+#   define TkpGetOtherWindow 0
+#   define TkpGetSystemDefault 0
+#   define TkpMakeContainer 0
+#   define TkpMakeWindow 0
+#endif
+
+static int
+doNothing(void)
+{
+    /* dummy implementation, no need to do anything */
+    return 0;
+}
 
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
 #define Tk_MainEx 0
@@ -57,38 +91,57 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define Tk_PhotoPutBlock_Panic 0
 #define Tk_PhotoPutZoomedBlock_Panic 0
 #define Tk_PhotoSetSize_Panic 0
+#define Tk_CreateOldPhotoImageFormat 0
 #else
-static void
-doNothing(void)
-{
-    /* dummy implementation, no need to do anything */
-}
-#define Tk_FreeXId ((void (*)(Display *, XID)) doNothing)
-#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *)) doNothing)
+#define Tk_FreeXId ((void (*)(Display *, XID))(void *)doNothing)
+#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *))(void *)doNothing)
 #define Tk_GetStyleFromObj getStyleFromObj
 static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 {
 	return Tk_AllocStyleFromObj(NULL, obj);
 }
-#if defined(_WIN32) || defined(__CYGWIN__)
-#define TkWinGetPlatformId winGetPlatformId
-static int TkWinGetPlatformId(void) {
-    return 2;
-}
-#endif /* defined(_WIN32) || defined(__CYGWIN__) */
 #endif /* !TK_NO_DEPRECATED */
+
+#define TkpCmapStressed_ TkpCmapStressed
+#define TkpSync_ TkpSync
+#define TkUnixContainerId_ TkUnixContainerId
+#define TkUnixDoOneXEvent_ TkUnixDoOneXEvent
+#define TkUnixSetMenubar_ TkUnixSetMenubar
+#define TkWmCleanup_ TkWmCleanup
+#define TkSendCleanup_ TkSendCleanup
+#define TkpTestsendCmd_ TkpTestsendCmd
+#define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
+#define TkGenerateActivateEvents_ TkGenerateActivateEvents
+#define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
+#define Tk_CanvasTagsParseProc \
+		(int (*) (void *, Tcl_Interp *,Tk_Window, const char *, char *, \
+		int offset))(void *)TkCanvasTagsParseProc
+#define Tk_CanvasTagsPrintProc \
+		(const char *(*) (void *,Tk_Window, char *, int, \
+		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
+
+#if !defined(MAC_OSX_TK)
+#   undef TkpWillDrawWidget
+#   undef TkpRedrawWidget
+#   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
+#   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
+#endif
 
 #ifdef _WIN32
 
 int
 TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 {
+    (void)tkwin;
+    (void)colormap;
+
     /* dummy implementation, no need to do anything */
     return 0;
 }
 void
 TkpSync(Display *display)
 {
+    (void)display;
     /* dummy implementation, no need to do anything */
 }
 
@@ -101,8 +154,8 @@ TkCreateXEventSource(void)
 #   define TkUnixContainerId 0
 #   define TkUnixDoOneXEvent 0
 #   define TkUnixSetMenubar 0
-#   define TkWmCleanup (void (*)(TkDisplay *)) TkpSync
-#   define TkSendCleanup (void (*)(TkDisplay *)) TkpSync
+#   define TkWmCleanup (void (*)(TkDisplay *))(void *)TkpSync
+#   define TkSendCleanup (void (*)(TkDisplay *))(void *)TkpSync
 #   define TkpTestsendCmd 0
 
 #else /* !_WIN32 */
@@ -121,22 +174,21 @@ TkCreateXEventSource(void)
  */
 
 #define GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS	0x00000004
+#ifdef __cplusplus
+extern "C" {
+#endif
 int __stdcall GetModuleHandleExW(unsigned int, const char *, void *);
-
-void *Tk_GetHINSTANCE()
-{
-    void *hInstance = NULL;
-
-    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
-	    (const char *) &tkIntStubs, &hInstance);
-    return hInstance;
+#ifdef __cplusplus
 }
+#endif
 
 void
 TkSetPixmapColormap(
     Pixmap pixmap,
     Colormap colormap)
 {
+    (void)pixmap;
+    (void)colormap;
 }
 
 void
@@ -162,6 +214,9 @@ TkPutImage(
     unsigned int width, unsigned int height)
 				/* Dimensions of subimage. */
 {
+    (void)colors;
+    (void)ncolors;
+
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 
@@ -169,10 +224,7 @@ TkPutImage(
 #	define Tk_AttachHWND 0
 #	define Tk_GetHWND 0
 #	define Tk_HWNDToWindow 0
-#	define Tk_PointerEvent 0
-#	define Tk_TranslateWinEvent 0
 #	define TkAlignImageData 0
-#	define TkGenerateActivateEvents 0
 #	define TkpGetMS 0
 #	define TkpGetCapture 0
 #	define TkPointerDeadWindow 0
@@ -223,6 +275,9 @@ TkPutImage(
     unsigned int width, unsigned int height)
 				/* Dimensions of subimage. */
 {
+	(void)colors;
+	(void)ncolors;
+
     return XPutImage(display, d, gc, image, src_x, src_y, dest_x, dest_y, width, height);
 }
 #endif /* MAC_OSX_TCL */
@@ -459,7 +514,9 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-    TkDebugPhotoStringMatchDef, /* 185 */
+    TkpRedrawWidget, /* 185 */
+    TkpWillDrawWidget, /* 186 */
+    TkDebugPhotoStringMatchDef, /* 187 */
 };
 
 static const TkIntPlatStubs tkIntPlatStubs = {
@@ -518,7 +575,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #ifdef MAC_OSX_TK /* AQUA */
     TkGenerateActivateEvents, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents_, /* 2 */
     TkPointerDeadWindow, /* 3 */
     TkpSetCapture, /* 4 */
     TkpSetCursor, /* 5 */
@@ -527,7 +584,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXButtonKeyState, /* 8 */
     TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
-    TkMacOSXInstallCursor, /* 11 */
+    0, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
@@ -542,14 +599,14 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXMakeRealWindowExist, /* 23 */
     TkMacOSXMakeStippleMap, /* 24 */
     TkMacOSXMenuClick, /* 25 */
-    TkMacOSXRegisterOffScreenWindow, /* 26 */
+    0, /* 26 */
     TkMacOSXResizable, /* 27 */
     TkMacOSXSetHelpMenuItemCount, /* 28 */
     TkMacOSXSetScrollbarGrow, /* 29 */
     TkMacOSXSetUpClippingRgn, /* 30 */
     TkMacOSXSetUpGraphicsPort, /* 31 */
     TkMacOSXUpdateClipRgn, /* 32 */
-    TkMacOSXUnregisterMacWindow, /* 33 */
+    0, /* 33 */
     TkMacOSXUseMenuID, /* 34 */
     TkMacOSXVisableClipRgn, /* 35 */
     TkMacOSXWinBounds, /* 36 */
@@ -565,7 +622,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpIsWindowFloating, /* 46 */
     TkpGetCapture, /* 47 */
     0, /* 48 */
-    TkGetTransientMaster, /* 49 */
+    TkMacOSXGetContainer, /* 49 */
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
     TkMacOSXSetDrawingEnabled, /* 52 */
@@ -576,7 +633,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */
     0, /* 1 */
-    0, /* 2 */
+    TkGenerateActivateEvents, /* 2 */
     TkpCmapStressed, /* 3 */
     TkpSync, /* 4 */
     TkUnixContainerId, /* 5 */
@@ -588,6 +645,38 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 11 */
     TkpWmSetState, /* 12 */
     TkpTestsendCmd, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
+    0, /* 16 */
+    0, /* 17 */
+    0, /* 18 */
+    0, /* 19 */
+    0, /* 20 */
+    0, /* 21 */
+    0, /* 22 */
+    0, /* 23 */
+    0, /* 24 */
+    0, /* 25 */
+    0, /* 26 */
+    0, /* 27 */
+    0, /* 28 */
+    0, /* 29 */
+    0, /* 30 */
+    0, /* 31 */
+    0, /* 32 */
+    0, /* 33 */
+    0, /* 34 */
+    0, /* 35 */
+    0, /* 36 */
+    0, /* 37 */
+    TkpCmapStressed_, /* 38 */
+    TkpSync_, /* 39 */
+    TkUnixContainerId_, /* 40 */
+    TkUnixDoOneXEvent_, /* 41 */
+    TkUnixSetMenubar_, /* 42 */
+    TkWmCleanup_, /* 43 */
+    TkSendCleanup_, /* 44 */
+    TkpTestsendCmd_, /* 45 */
 #endif /* X11 */
 };
 
@@ -752,6 +841,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetIMValues, /* 154 */
     XCreateFontSet, /* 155 */
     XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
 #endif /* WIN */
 #ifdef MAC_OSX_TCL /* MACOSX */
     XSetDashes, /* 0 */
@@ -860,7 +951,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XIconifyWindow, /* 103 */
     XWithdrawWindow, /* 104 */
     XListHosts, /* 105 */
-    0, /* 106 */
+    XSetClipRectangles, /* 106 */
     XFlush, /* 107 */
     XGrabServer, /* 108 */
     XUngrabServer, /* 109 */
@@ -911,6 +1002,8 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XSetIMValues, /* 154 */
     XCreateFontSet, /* 155 */
     XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
 #endif /* MACOSX */
 };
 
@@ -926,17 +1019,23 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_TranslateWinEvent, /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    Tk_MacOSXSetEmbedHandler, /* 0 */
-    Tk_MacOSXTurnOffMenus, /* 1 */
-    Tk_MacOSXTkOwnsCursor, /* 2 */
-    TkMacOSXInitMenus, /* 3 */
+    0, /* 0 */
+    0, /* 1 */
+    0, /* 2 */
+    0, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent, /* 5 */
+    TkGenWMConfigureEvent_, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
-    TkMacOSXGetDrawablePort, /* 7 */
+    0, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
     Tk_MacOSXSetupTkNotifier, /* 9 */
     Tk_MacOSXIsAppInFront, /* 10 */
+    Tk_MacOSXGetTkWindow, /* 11 */
+    Tk_MacOSXGetCGContextForDrawable, /* 12 */
+    Tk_MacOSXGetNSWindowForDrawable, /* 13 */
+    0, /* 14 */
+    0, /* 15 */
+    TkGenWMConfigureEvent, /* 16 */
 #endif /* AQUA */
 };
 
@@ -1048,7 +1147,7 @@ const TkStubs tkStubs = {
     Tk_GetFontMetrics, /* 95 */
     Tk_GetGC, /* 96 */
     Tk_GetImage, /* 97 */
-    Tk_GetImageMasterData, /* 98 */
+    Tk_GetImageModelData, /* 98 */
     Tk_GetItemTypes, /* 99 */
     Tk_GetJoinStyle, /* 100 */
     Tk_GetJustify, /* 101 */
@@ -1224,6 +1323,36 @@ const TkStubs tkStubs = {
     Tk_Interp, /* 271 */
     Tk_CreateOldImageType, /* 272 */
     Tk_CreateOldPhotoImageFormat, /* 273 */
+    Tk_AlwaysShowSelection, /* 274 */
+    Tk_GetButtonMask, /* 275 */
+    Tk_GetDoublePixelsFromObj, /* 276 */
+    Tk_NewWindowObj, /* 277 */
+    Tk_SendVirtualEvent, /* 278 */
+    Tk_FontGetDescription, /* 279 */
+    Tk_CreatePhotoImageFormatVersion3, /* 280 */
+    Tk_DrawHighlightBorder, /* 281 */
+    Tk_SetMainMenubar, /* 282 */
+    Tk_SetWindowMenuBar, /* 283 */
+    Tk_ClipDrawableToRect, /* 284 */
+    Tk_GetSystemDefault, /* 285 */
+    Tk_UseWindow, /* 286 */
+    Tk_MakeContainer, /* 287 */
+    Tk_GetOtherWindow, /* 288 */
+    Tk_Get3DBorderColors, /* 289 */
+    Tk_MakeWindow, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */
+
+
+#ifdef __CYGWIN__
+void *Tk_GetHINSTANCE(void)
+{
+    void *hInstance = NULL;
+
+    GetModuleHandleExW(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS,
+	    (const char *) &tkIntStubs, &hInstance);
+    return hInstance;
+}
+#endif
+

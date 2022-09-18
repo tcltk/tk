@@ -45,10 +45,13 @@ namespace eval ttk::theme::vista {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
-	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Treeview -background SystemWindow \
+                -stripedbackground System3dLight
+	ttk::style configure Treeview.Separator \
+                -background System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-				selected SystemHighlight] \
+                                selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
@@ -69,9 +72,9 @@ namespace eval ttk::theme::vista {
         ttk::style layout TCombobox {
             Combobox.border -sticky nswe -border 0 -children {
                 Combobox.rightdownarrow -side right -sticky ns
-                Combobox.padding -expand 1 -sticky nswe -children {
+                Combobox.padding -sticky nswe -children {
                     Combobox.background -sticky nswe -children {
-                        Combobox.focus -expand 1 -sticky nswe -children {
+                        Combobox.focus -sticky nswe -children {
                             Combobox.textarea -sticky nswe
                         }
                     }
@@ -91,7 +94,7 @@ namespace eval ttk::theme::vista {
 	    -selectforeground [list !focus SystemWindowText] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
-	    	{readonly focus}	SystemHighlightText \
+		{readonly focus}	SystemHighlightText \
 	    ] \
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
@@ -138,7 +141,7 @@ namespace eval ttk::theme::vista {
                 Spinbox.background -sticky news -children {
                     Spinbox.padding -sticky news -children {
                         Spinbox.innerbg -sticky news -children {
-                            Spinbox.textarea -expand 1
+                            Spinbox.textarea
                         }
                     }
                     Spinbox.uparrow -side top -sticky ens
@@ -203,8 +206,8 @@ namespace eval ttk::theme::vista {
             TRACKBAR 3 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
             -width 6 -height 12
         ttk::style layout Horizontal.TScale {
-            Scale.focus -expand 1 -sticky nswe -children {
-                Horizontal.Scale.trough -expand 1 -sticky nswe -children {
+            Scale.focus -sticky nswe -children {
+                Horizontal.Scale.trough -sticky nswe -children {
                     Horizontal.Scale.track -sticky we
                     Horizontal.Scale.slider -side left -sticky {}
                 }
@@ -214,8 +217,8 @@ namespace eval ttk::theme::vista {
             TRACKBAR 6 {disabled 5 focus 4 pressed 3 active 2 {} 1} \
             -width 12 -height 6
         ttk::style layout Vertical.TScale {
-            Scale.focus -expand 1 -sticky nswe -children {
-                Vertical.Scale.trough -expand 1 -sticky nswe -children {
+            Scale.focus -sticky nswe -children {
+                Vertical.Scale.trough -sticky nswe -children {
                     Vertical.Scale.track -sticky ns
                     Vertical.Scale.slider -side top -sticky {}
                 }

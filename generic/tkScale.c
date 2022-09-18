@@ -9,9 +9,9 @@
  *	implementation by Paul Mackerras. The -variable option is due to
  *	Henning Schulzrinne. All of these are used with permission.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -34,108 +34,99 @@ static const char *const orientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
-/*
- * The following table defines the legal values for the -state option. It is
- * used together with the "enum state" declaration in tkScale.h.
- */
-
-static const char *const stateStrings[] = {
-    "active", "disabled", "normal", NULL
-};
-
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BORDER, "-activebackground", "activeBackground", "Foreground",
-	DEF_SCALE_ACTIVE_BG_COLOR, -1, offsetof(TkScale, activeBorder),
+	DEF_SCALE_ACTIVE_BG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, activeBorder),
 	0, DEF_SCALE_ACTIVE_BG_MONO, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	DEF_SCALE_BG_COLOR, -1, offsetof(TkScale, bgBorder),
+	DEF_SCALE_BG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, bgBorder),
 	0, DEF_SCALE_BG_MONO, 0},
     {TK_OPTION_DOUBLE, "-bigincrement", "bigIncrement", "BigIncrement",
-	DEF_SCALE_BIG_INCREMENT, -1, offsetof(TkScale, bigIncrement),
+	DEF_SCALE_BIG_INCREMENT, TCL_INDEX_NONE, offsetof(TkScale, bigIncrement),
 	0, 0, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
-	NULL, 0, -1, 0, "-borderwidth", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
-	NULL, 0, -1, 0, "-background", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_SCALE_BORDER_WIDTH, -1, offsetof(TkScale, borderWidth),
+	DEF_SCALE_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(TkScale, borderWidth),
 	0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
-	DEF_SCALE_COMMAND, -1, offsetof(TkScale, command),
+	DEF_SCALE_COMMAND, TCL_INDEX_NONE, offsetof(TkScale, command),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	DEF_SCALE_CURSOR, -1, offsetof(TkScale, cursor),
+	DEF_SCALE_CURSOR, TCL_INDEX_NONE, offsetof(TkScale, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_INT, "-digits", "digits", "Digits",
-	DEF_SCALE_DIGITS, -1, offsetof(TkScale, digits),
+	DEF_SCALE_DIGITS, TCL_INDEX_NONE, offsetof(TkScale, digits),
 	0, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
-	NULL, 0, -1, 0, "-foreground", 0},
+	NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEF_SCALE_FONT, -1, offsetof(TkScale, tkfont), 0, 0, 0},
+	DEF_SCALE_FONT, TCL_INDEX_NONE, offsetof(TkScale, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
-	DEF_SCALE_FG_COLOR, -1, offsetof(TkScale, textColorPtr), 0,
-	(ClientData) DEF_SCALE_FG_MONO, 0},
-    {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, -1,
+	DEF_SCALE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkScale, textColorPtr), 0,
+	DEF_SCALE_FG_MONO, 0},
+    {TK_OPTION_DOUBLE, "-from", "from", "From", DEF_SCALE_FROM, TCL_INDEX_NONE,
 	offsetof(TkScale, fromValue), 0, 0, 0},
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_SCALE_HIGHLIGHT_BG_COLOR,
-	-1, offsetof(TkScale, highlightBorder),
+	TCL_INDEX_NONE, offsetof(TkScale, highlightBorder),
 	0, DEF_SCALE_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	DEF_SCALE_HIGHLIGHT, -1, offsetof(TkScale, highlightColorPtr),
+	DEF_SCALE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkScale, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_SCALE_HIGHLIGHT_WIDTH, -1,
+	"HighlightThickness", DEF_SCALE_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
 	offsetof(TkScale, highlightWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-label", "label", "Label",
-	DEF_SCALE_LABEL, -1, offsetof(TkScale, label),
+	DEF_SCALE_LABEL, TCL_INDEX_NONE, offsetof(TkScale, label),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
-	DEF_SCALE_LENGTH, -1, offsetof(TkScale, length), 0, 0, 0},
+	DEF_SCALE_LENGTH, TCL_INDEX_NONE, offsetof(TkScale, length), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
-	DEF_SCALE_ORIENT, -1, offsetof(TkScale, orient),
-	0, orientStrings, 0},
+	DEF_SCALE_ORIENT, TCL_INDEX_NONE, offsetof(TkScale, orient),
+	TK_OPTION_ENUM_VAR, orientStrings, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_SCALE_RELIEF, -1, offsetof(TkScale, relief), 0, 0, 0},
+	DEF_SCALE_RELIEF, TCL_INDEX_NONE, offsetof(TkScale, relief), 0, 0, 0},
     {TK_OPTION_INT, "-repeatdelay", "repeatDelay", "RepeatDelay",
-	DEF_SCALE_REPEAT_DELAY, -1, offsetof(TkScale, repeatDelay),
+	DEF_SCALE_REPEAT_DELAY, TCL_INDEX_NONE, offsetof(TkScale, repeatDelay),
 	0, 0, 0},
     {TK_OPTION_INT, "-repeatinterval", "repeatInterval", "RepeatInterval",
-	DEF_SCALE_REPEAT_INTERVAL, -1, offsetof(TkScale, repeatInterval),
+	DEF_SCALE_REPEAT_INTERVAL, TCL_INDEX_NONE, offsetof(TkScale, repeatInterval),
 	0, 0, 0},
     {TK_OPTION_DOUBLE, "-resolution", "resolution", "Resolution",
-	DEF_SCALE_RESOLUTION, -1, offsetof(TkScale, resolution),
+	DEF_SCALE_RESOLUTION, TCL_INDEX_NONE, offsetof(TkScale, resolution),
 	0, 0, 0},
     {TK_OPTION_BOOLEAN, "-showvalue", "showValue", "ShowValue",
-	DEF_SCALE_SHOW_VALUE, -1, offsetof(TkScale, showValue),
+	DEF_SCALE_SHOW_VALUE, TCL_INDEX_NONE, offsetof(TkScale, showValue),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-sliderlength", "sliderLength", "SliderLength",
-	DEF_SCALE_SLIDER_LENGTH, -1, offsetof(TkScale, sliderLength),
+	DEF_SCALE_SLIDER_LENGTH, TCL_INDEX_NONE, offsetof(TkScale, sliderLength),
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-sliderrelief", "sliderRelief", "SliderRelief",
-	DEF_SCALE_SLIDER_RELIEF, -1, offsetof(TkScale, sliderRelief),
+	DEF_SCALE_SLIDER_RELIEF, TCL_INDEX_NONE, offsetof(TkScale, sliderRelief),
 	0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
-	DEF_SCALE_STATE, -1, offsetof(TkScale, state),
-	0, stateStrings, 0},
+	DEF_SCALE_STATE, TCL_INDEX_NONE, offsetof(TkScale, state),
+	TK_OPTION_ENUM_VAR, tkStateStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusPtr), -1,
+	DEF_SCALE_TAKE_FOCUS, offsetof(TkScale, takeFocusPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-tickinterval", "tickInterval", "TickInterval",
-	DEF_SCALE_TICK_INTERVAL, -1, offsetof(TkScale, tickInterval),
+	DEF_SCALE_TICK_INTERVAL, TCL_INDEX_NONE, offsetof(TkScale, tickInterval),
 	0, 0, 0},
     {TK_OPTION_DOUBLE, "-to", "to", "To",
-	DEF_SCALE_TO, -1, offsetof(TkScale, toValue), 0, 0, 0},
+	DEF_SCALE_TO, TCL_INDEX_NONE, offsetof(TkScale, toValue), 0, 0, 0},
     {TK_OPTION_COLOR, "-troughcolor", "troughColor", "Background",
-	DEF_SCALE_TROUGH_COLOR, -1, offsetof(TkScale, troughColorPtr),
+	DEF_SCALE_TROUGH_COLOR, TCL_INDEX_NONE, offsetof(TkScale, troughColorPtr),
 	0, DEF_SCALE_TROUGH_MONO, 0},
     {TK_OPTION_STRING, "-variable", "variable", "Variable",
-	DEF_SCALE_VARIABLE, offsetof(TkScale, varNamePtr), -1,
+	DEF_SCALE_VARIABLE, offsetof(TkScale, varNamePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_SCALE_WIDTH, -1, offsetof(TkScale, width), 0, 0, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
+	DEF_SCALE_WIDTH, TCL_INDEX_NONE, offsetof(TkScale, width), 0, 0, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
 /*
@@ -161,7 +152,7 @@ static void		ComputeFormat(TkScale *scalePtr, int forTicks);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
 			    int objc, Tcl_Obj *const objv[]);
-static void		DestroyScale(char *memPtr);
+static void		DestroyScale(void *memPtr);
 static double		MaxTickRoundingError(TkScale *scalePtr,
 			    double tickResolution);
 static void		ScaleCmdDeletedProc(ClientData clientData);
@@ -248,14 +239,15 @@ ScaleRound(
 
 int
 Tk_ScaleObjCmd(
-    ClientData clientData,	/* NULL. */
+    ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    register TkScale *scalePtr;
+    TkScale *scalePtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
+    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -356,7 +348,7 @@ Tk_ScaleObjCmd(
 
     scalePtr->flags &= ~INVOKE_COMMAND;
 
-    Tcl_SetObjResult(interp, TkNewWindowObj(scalePtr->tkwin));
+    Tcl_SetObjResult(interp, Tk_NewWindowObj(scalePtr->tkwin));
     return TCL_OK;
 }
 
@@ -385,7 +377,7 @@ ScaleWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     Tcl_Obj *objPtr;
     int index, result;
 
@@ -540,9 +532,9 @@ ScaleWidgetObjCmd(
 
 static void
 DestroyScale(
-    char *memPtr)	/* Info about scale widget. */
+    void *memPtr)	/* Info about scale widget. */
 {
-    register TkScale *scalePtr = (TkScale *) memPtr;
+    TkScale *scalePtr = (TkScale *) memPtr;
 
     scalePtr->flags |= SCALE_DELETED;
 
@@ -599,7 +591,7 @@ DestroyScale(
 static int
 ConfigureScale(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    register TkScale *scalePtr,	/* Information about widget; may or may not
+    TkScale *scalePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -658,13 +650,11 @@ ConfigureScale(
 	    }
 	}
 
-	/*
-	 * Several options need special processing, such as parsing the
-	 * orientation and creating GCs.
-	 */
+        /*
+         * The fromValue shall not be rounded to the resolution, but the
+         * toValue and tickInterval do.
+         */
 
-	scalePtr->fromValue = TkRoundValueToResolution(scalePtr,
-		scalePtr->fromValue);
 	scalePtr->toValue = TkRoundValueToResolution(scalePtr, scalePtr->toValue);
 	scalePtr->tickInterval = TkRoundIntervalToResolution(scalePtr,
 		scalePtr->tickInterval);
@@ -769,7 +759,7 @@ ScaleWorldChanged(
 {
     XGCValues gcValues;
     GC gc;
-    TkScale *scalePtr = instanceData;
+    TkScale *scalePtr = (TkScale *)instanceData;
 
     gcValues.foreground = scalePtr->troughColorPtr->pixel;
     gc = Tk_GetGC(scalePtr->tkwin, GCForeground, &gcValues);
@@ -1019,7 +1009,7 @@ ComputeFormat(
 
 static void
 ComputeScaleGeometry(
-    register TkScale *scalePtr)	/* Information about widget. */
+    TkScale *scalePtr)	/* Information about widget. */
 {
     char valueString[TCL_DOUBLE_SPACE];
     int tmp, valuePixels, tickPixels, x, y, extraSpace;
@@ -1163,7 +1153,7 @@ ScaleEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
@@ -1211,7 +1201,7 @@ static void
 ScaleCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
 
     /*
@@ -1248,7 +1238,7 @@ ScaleCmdDeletedProc(
 
 void
 TkEventuallyRedrawScale(
-    register TkScale *scalePtr,	/* Information about widget. */
+    TkScale *scalePtr,	/* Information about widget. */
     int what)			/* What to redraw: REDRAW_SLIDER or
 				 * REDRAW_ALL. */
 {
@@ -1337,7 +1327,6 @@ TkRoundIntervalToResolution(
  *----------------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 static char *
 ScaleVarProc(
     ClientData clientData,	/* Information about button. */
@@ -1346,11 +1335,13 @@ ScaleVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    register TkScale *scalePtr = clientData;
+    TkScale *scalePtr = (TkScale *)clientData;
     const char *resultStr;
     double value;
     Tcl_Obj *valuePtr;
     int result;
+    (void)name1;
+    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -1359,14 +1350,14 @@ ScaleVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && scalePtr->varNamePtr) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         Tcl_GetString(scalePtr->varNamePtr),
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         ScaleVarProc, probe);
-                if (probe == (ClientData)scalePtr) {
+                if (probe == (void *)scalePtr) {
                     break;
                 }
             } while (probe);
@@ -1441,7 +1432,7 @@ ScaleVarProc(
 
 void
 TkScaleSetValue(
-    register TkScale *scalePtr,	/* Info about widget. */
+    TkScale *scalePtr,	/* Info about widget. */
     double value,		/* New value for scale. Gets adjusted if it's
 				 * off the scale. */
     int setVar,			/* Non-zero means reflect new value through to
@@ -1499,7 +1490,7 @@ TkScaleSetValue(
 
 static void
 ScaleSetVariable(
-    register TkScale *scalePtr)	/* Info about widget. */
+    TkScale *scalePtr)	/* Info about widget. */
 {
     if (scalePtr->varNamePtr != NULL) {
 	char string[TCL_DOUBLE_SPACE];
@@ -1535,7 +1526,7 @@ ScaleSetVariable(
 
 double
 TkScalePixelToValue(
-    register TkScale *scalePtr,	/* Information about widget. */
+    TkScale *scalePtr,	/* Information about widget. */
     int x, int y)		/* Coordinates of point within window. */
 {
     double value, pixelRange;
@@ -1593,7 +1584,7 @@ TkScalePixelToValue(
 
 int
 TkScaleValueToPixel(
-    register TkScale *scalePtr,	/* Information about widget. */
+    TkScale *scalePtr,	/* Information about widget. */
     double value)		/* Reading of the widget. */
 {
     int y, pixelRange;

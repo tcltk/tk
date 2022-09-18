@@ -3,8 +3,8 @@
  *
  *	This file implements bitmap items for canvas widgets.
  *
- * Copyright (c) 1992-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1992-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -45,7 +45,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
@@ -422,6 +422,7 @@ DeleteBitmap(
     Display *display)		/* Display containing window for canvas. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if (bmapPtr->bitmap != None) {
 	Tk_FreeBitmap(display, bmapPtr->bitmap);
@@ -473,7 +474,6 @@ DeleteBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeBitmapBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -540,7 +540,7 @@ ComputeBitmapBbox(
 	break;
     case TK_ANCHOR_NW:
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x -= width/2;
 	y -= height/2;
 	break;
@@ -671,7 +671,6 @@ DisplayBitmap(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static double
 BitmapToPoint(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -680,6 +679,7 @@ BitmapToPoint(
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = bmapPtr->header.x1;
     y1 = bmapPtr->header.y1;
@@ -728,7 +728,6 @@ BitmapToPoint(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static int
 BitmapToArea(
     Tk_Canvas canvas,		/* Canvas containing item. */
@@ -738,6 +737,7 @@ BitmapToArea(
 				 * area. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= bmapPtr->header.x1)
 	    || (rectPtr[0] >= bmapPtr->header.x2)
@@ -893,6 +893,7 @@ BitmapToPostscript(
     Tk_State state = itemPtr->state;
     Tcl_Obj *psObj;
     Tcl_InterpState interpState;
+    (void)prepass;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -944,7 +945,7 @@ BitmapToPostscript(
     case TK_ANCHOR_S:	   x -= width/2.0;			break;
     case TK_ANCHOR_SW:						break;
     case TK_ANCHOR_W:			   y -= height/2.0;	break;
-    case TK_ANCHOR_CENTER: x -= width/2.0; y -= height/2.0;	break;
+    default: x -= width/2.0; y -= height/2.0;	break;
     }
 
     /*
@@ -965,9 +966,7 @@ BitmapToPostscript(
 		x, y, width, height, -width);
 
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, bgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, bgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	Tcl_AppendToObj(psObj, "fill\n", -1);
@@ -982,9 +981,7 @@ BitmapToPostscript(
 
     if (fgColor != NULL) {
 	Tcl_ResetResult(interp);
-	if (Tk_CanvasPsColor(interp, canvas, fgColor) != TCL_OK) {
-	    goto error;
-	}
+	Tk_CanvasPsColor(interp, canvas, fgColor);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (width > 60000) {
@@ -1013,10 +1010,8 @@ BitmapToPostscript(
 		    (double) rowsThisTime, width, rowsThisTime);
 
 	    Tcl_ResetResult(interp);
-	    if (Tk_CanvasPsBitmap(interp, canvas, bitmap,
-		    0, curRow, width, rowsThisTime) != TCL_OK) {
-		goto error;
-	    }
+	    Tk_CanvasPsBitmap(interp, canvas, bitmap, 0, curRow, width,
+		    rowsThisTime);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    Tcl_AppendToObj(psObj, "\n} imagemask\n", -1);

@@ -4,7 +4,7 @@
  *	This file contains the Xlib emulation functions pertaining to creating
  *	and destroying pixmaps.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -42,7 +42,7 @@ Tk_GetPixmap(
 
     display->request++;
 
-    newTwdPtr = ckalloc(sizeof(TkWinDrawable));
+    newTwdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
     newTwdPtr->type = TWD_BITMAP;
     newTwdPtr->bitmap.depth = depth;
     twdPtr = (TkWinDrawable *) d;
@@ -208,6 +208,12 @@ XGetGeometry(
     unsigned int *depth_return)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
+    (void)display;
+    (void)root_return;
+    (void)x_return;
+    (void)y_return;
+    (void)border_width_return;
+    (void)depth_return;
 
     if (twdPtr->type == TWD_BITMAP) {
 	HDC dc;

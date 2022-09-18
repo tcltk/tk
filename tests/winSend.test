@@ -2,12 +2,12 @@
 # other procedures in the file tkSend.c.  It is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
@@ -152,7 +152,7 @@ test winSend-3.1 {TkGetInterpNames} winSend {
     set origLength [llength $currentInterps]
     set newLength [llength [winfo interps]]
     expr {($newLength - 2) == $origLength}
-} {1}
+} 1
 
 test winSend-4.1 {DeleteProc - changing name of app} winSend {
     newApp a
@@ -171,7 +171,7 @@ test winSend-5.1 {ExecuteRemoteObject - no error} winSend {
 	}
     }
     list [send $interp {send [tk appname] {expr {2 / 1}}}]
-} {2}
+} 2
 test winSend-5.2 {ExecuteRemoteObject - error} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {
@@ -268,7 +268,7 @@ test winSend-6.8 {SendDDEServer - XTYP_WILDCONNECT} winSend {
     }
     set command "dde services Tk {}"
     list [catch "send \{$interp\} \{$command\}"]
-} {0}
+} 0
 
 test winSend-7.1 {DDEExitProc} winSend {
     newApp testApp
@@ -312,10 +312,10 @@ test winSend-10.7 {Tk_DDEObjCmd - services wrong num args} winSend {
 } {1 {wrong # args: should be "dde services serviceName topicName"}}
 test winSend-10.8 {Tk_DDEObjCmd - null service name} winSend {
     list [catch {dde services {} {tktest #2}}]
-} {0}
+} 0
 test winSend-10.9 {Tk_DDEObjCmd - null topic name} winSend {
     list [catch {dde services {Tk} {}}]
-} {0}
+} 0
 test winSend-10.10 {Tk_DDEObjCmd - execute - nothing to execute} winSend {
     set newInterps [winfo interps]
     foreach interp $newInterps {

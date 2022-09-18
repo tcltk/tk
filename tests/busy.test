@@ -4,9 +4,9 @@
 # commands. Sourcing this file runs the tests and generates output for errors.
 # No output means no errors were found.
 #
-# Copyright (c) 1998-2000 by Jos Decoster. All rights reserved.
+# Copyright © 1998-2000 Jos Decoster. All rights reserved.
 
-package require tcltest 2.1
+package require tcltest 2.2
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
@@ -17,11 +17,11 @@ namespace import -force tcltest::test
 
 test busy-1.1 {Tk_BusyObjCmd} -returnCodes error -body {
     tk busy
-} -result {wrong # args: should be "tk busy options ?arg arg ...?"}
+} -result {wrong # args: should be "tk busy options ?arg ...?"}
 
 test busy-2.1 {tk busy hold} -returnCodes error -body {
     tk busy hold
-} -result {wrong # args: should be "tk busy hold window ?option value ...?"}
+} -result {wrong # args: should be "tk busy hold window ?-option value ...?"}
 test busy-2.2 {tk busy hold root window} -body {
     set res [tk busy hold .]
     update
@@ -182,7 +182,7 @@ test busy-3.7 {tk busy cget unix} -setup {
 
 test busy-4.1 {tk busy configure no window} -returnCodes error -body {
     tk busy configure
-} -result {wrong # args: should be "tk busy configure window ?option? ?value ...?"}
+} -result {wrong # args: should be "tk busy configure window ?-option value ...?"}
 
 test busy-4.2 {tk busy configure invalid window} -body {
     tk busy configure .f
@@ -350,14 +350,14 @@ test busy-6.1 {tk busy status} -returnCodes error -body {
 } -result {wrong # args: should be "tk busy status window"}
 test busy-6.2 {tk busy status non existing window} -body {
     tk busy status .f
-} -result {0}
+} -result 0
 test busy-6.3 {tk busy status non busy window} -setup {
     pack [frame .f]
 } -body {
     tk busy status .f
 } -cleanup {
     destroy .f
-} -result {0}
+} -result 0
 test busy-6.4 {tk busy status busy window} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -367,7 +367,7 @@ test busy-6.4 {tk busy status busy window} -setup {
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {1}
+} -result 1
 test busy-6.5 {tk busy status forgotten busy window} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -377,7 +377,7 @@ test busy-6.5 {tk busy status forgotten busy window} -setup {
     tk busy status .f
 } -cleanup {
     destroy .f
-} -result {0}
+} -result 0
 
 test busy-7.1 {tk busy current no busy} -body {
     tk busy current

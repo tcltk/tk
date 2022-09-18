@@ -4,7 +4,7 @@
  *	Declarations of types shared among the files that implement selection
  *	support.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -107,7 +107,7 @@ typedef struct TkSelRetrievalInfo {
 
 typedef struct TkClipboardBuffer {
     char *buffer;		/* Null terminated data buffer. */
-    long length;		/* Length of string in buffer. */
+    TkSizeT length;		/* Length of string in buffer. */
     struct TkClipboardBuffer *nextPtr;
 				/* Next in list of buffers. NULL means end of
 				 * list . */

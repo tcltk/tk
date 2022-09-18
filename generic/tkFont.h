@@ -5,7 +5,7 @@
  *	parts of the font package. This information is not visible outside of
  *	the font package.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,6 +13,10 @@
 
 #ifndef _TKFONT
 #define _TKFONT
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
  * The following structure keeps track of the attributes of a font. It can be
@@ -220,5 +224,9 @@ MODULE_SCOPE TkFont *	TkpGetFontFromAttributes(TkFont *tkFontPtr,
 MODULE_SCOPE void	TkpGetFontFamilies(Tcl_Interp *interp,
 			    Tk_Window tkwin);
 MODULE_SCOPE TkFont *	TkpGetNativeFont(Tk_Window tkwin, const char *name);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif	/* _TKFONT */

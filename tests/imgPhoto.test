@@ -2,10 +2,10 @@
 # procedures in the file tkImgPhoto.c. It is organized in the standard fashion
 # for Tcl tests.
 #
-# Copyright (c) 1994 The Australian National University
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
-# Copyright (c) 2002-2008 Donal K. Fellows
+# Copyright © 1994 The Australian National University
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 2002-2008 Donal K. Fellows
 # All rights reserved.
 #
 # Author: Paul Mackerras (paulus@cs.anu.edu.au)
@@ -32,7 +32,7 @@
 # ImgPhotoCmd                           imgPhoto-4.*, imgPhoto-17.*
 # GetExtension:                         no tests
 # ParseSubcommandOptions:               imgPhoto-1.*
-# ImgPhotoConfigureMaster:              imgPhoto-3.*, imgPhoto-15.*
+# ImgPhotoConfigureModel:              imgPhoto-3.*, imgPhoto-15.*
 # toggleComplexAlphaIfNeeded:           no tests
 # ImgPhotoDelete:                       imgPhoto-8.*
 # ImgPhotoCmdDeleteProc:                imgPhoto-9.*
@@ -57,6 +57,8 @@
 # Tk_PhotoPutBlock_Panic                no tests, probably none needed
 # Tk_PhotoPutZoomedBlock_Panic          no tests, probably none needed
 # Tk_PhotoSetSize_Panic                 no tests, probably none needed
+# Tk_PhotoGetMetadata:                  imgPhoto-21.*
+# Tk_PhotoSetMetadata:                  imgPhoto-22.*
 #--------------------------------------------------------------------------
 #
 
@@ -129,14 +131,8 @@ testConstraint hasTeapotPhoto [file exists $teapotPhotoFile]
 # let's see if we have the semi-transparent one as well
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
 testConstraint hasTranspTeapotPhoto [file exists $transpTeapotPhotoFile]
-
-proc base64ok {} {
-    expr {
-        ![catch {package require base64}]
-    }
-}
+testConstraint needsTcl867 [package vsatisfies [package provide Tcl] 8.6.7-]
 
-testConstraint base64PackageNeeded [base64ok]
 
 test imgPhoto-1.1 {options for photo images} -body {
     image create photo photo1 -width 79 -height 83
@@ -193,7 +189,7 @@ test imgPhoto-1.12 {option -alpha, normal use} -setup {
     photo1 transparency get 0 0 -alpha
 } -cleanup {
     imageCleanup
-} -result {255}
+} -result 255
 test imgPhoto-1.13 {option -withalpha, normal use} -setup {
     image create photo photo1
 } -body {
@@ -202,6 +198,9 @@ test imgPhoto-1.13 {option -withalpha, normal use} -setup {
 } -cleanup {
     imageCleanup
 } -result {0 128 0 255}
+test imgPhoto-1.14 {options for photo images - error case} -body {
+    image create photo photo1 -metadata
+} -returnCodes error -result {value for "-metadata" missing}
 
 test imgPhoto-2.1 {ImgPhotoCreate procedure} -setup {
     imageCleanup
@@ -226,7 +225,7 @@ test imgPhoto-2.2 {ImgPhotoCreate procedure} -setup {
 #     set msg
 # } {couldn't open "bogus.img": no such file or directory}
 
-test imgPhoto-3.1 {ImgPhotoConfigureMaster procedure} -constraints {
+test imgPhoto-3.1 {ImgPhotoConfigureModel procedure} -constraints {
     hasTeapotPhoto
 } -body {
     image create photo photo1 -file $teapotPhotoFile
@@ -234,7 +233,7 @@ test imgPhoto-3.1 {ImgPhotoConfigureMaster procedure} -constraints {
 } -cleanup {
     image delete photo1
 } -result {}
-test imgPhoto-3.2 {ImgPhotoConfigureMaster procedure} -constraints {
+test imgPhoto-3.2 {ImgPhotoConfigureModel procedure} -constraints {
     hasTeapotPhoto
 } -body {
     image create photo photo1 -file $teapotPhotoFile
@@ -243,7 +242,7 @@ test imgPhoto-3.2 {ImgPhotoConfigureMaster procedure} -constraints {
 } -cleanup {
     image delete photo1
 } -result {1 {couldn't open "bogus": no such file or directory} 256 256}
-test imgPhoto-3.3 {ImgPhotoConfigureMaster procedure} -constraints {
+test imgPhoto-3.3 {ImgPhotoConfigureModel procedure} -constraints {
     hasTeapotPhoto
 } -setup {
     destroy .c
@@ -261,7 +260,7 @@ test imgPhoto-3.3 {ImgPhotoConfigureMaster procedure} -constraints {
     destroy .c
     image delete photo1
 } -result {256 256 {10 10 266 266} {300 10 556 266}}
-test imgPhoto-3.4 {ImgPhotoConfigureMaster: -data <ppm>} -constraints {
+test imgPhoto-3.4 {ImgPhotoConfigureModel: -data <ppm>} -constraints {
     hasTeapotPhoto
 } -setup {
     image create photo photo1 -file $teapotPhotoFile
@@ -272,8 +271,9 @@ test imgPhoto-3.4 {ImgPhotoConfigureMaster: -data <ppm>} -constraints {
 } -cleanup {
     imageCleanup
 } -result {20 20}
-test imgPhoto-3.5 {ImgPhotoConfigureMaster: -data <png>} -constraints {
-    hasTeapotPhoto
+# This testcase fails with Tcl < 8.6.7, due to [25842c]
+test imgPhoto-3.5 {ImgPhotoConfigureModel: -data <png>} -constraints {
+    hasTeapotPhoto needsTcl867
 } -setup {
     image create photo photo1 -file $teapotPhotoFile
     image create photo photo2
@@ -283,7 +283,7 @@ test imgPhoto-3.5 {ImgPhotoConfigureMaster: -data <png>} -constraints {
 } -cleanup {
     imageCleanup
 } -result {20 20}
-test imgPhoto-3.6 {ImgPhotoConfigureMaster: -data <default>} -constraints {
+test imgPhoto-3.6 {ImgPhotoConfigureModel: -data <default>} -constraints {
     hasTeapotPhoto
 } -setup {
     image create photo photo1 -file $teapotPhotoFile
@@ -337,7 +337,7 @@ test imgPhoto-4.6 {ImgPhotoCmd procedure: configure option} -setup {
     llength [photo1 configure]
 } -cleanup {
     image delete photo1
-} -result 7
+} -result 8
 test imgPhoto-4.7 {ImgPhotoCmd procedure: configure option} -setup {
     image create photo photo1
 } -body {
@@ -579,7 +579,7 @@ test imgPhoto-4.31 {ImgPhotoCmd procedure: read option} -constraints {
     photo1 read $teapotPhotoFile -zoom 2
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {unrecognized option "-zoom": must be -format, -from, -shrink, or -to}
+} -result {unrecognized option "-zoom": must be -format, -from, -metadata, -shrink, or -to}
 test imgPhoto-4.32 {ImgPhotoCmd procedure: read option} -setup {
     image create photo photo1
 } -body {
@@ -959,7 +959,7 @@ test imgPhoto-4.75 {<photo> read command: filename starting with '-'} -constrain
     image delete photo1
     file delete ./-teapotPhotoFile
 } -result {}
-test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
+test imgPhoto-4.75.1 {ImgPhotoCmd procedure: copy to same image} -constraints {
     hasTeapotPhoto
 } -setup {
     imageCleanup
@@ -971,7 +971,7 @@ test imgPhoto-4.76 {ImgPhotoCmd procedure: copy to same image} -constraints {
 } -cleanup {
     imageCleanup
 } -result {}
-test imgPhoto-4.76 {ImgPhotoCmd, transparancy get: too many options} -setup {
+test imgPhoto-4.76 {ImgPhotoCmd, transparency get: too many options} -setup {
     image create photo photo1
 } -body {
     photo1 put white -to 0 0 1 1
@@ -1096,13 +1096,13 @@ test imgPhoto-4.90 {ImgPhotoCmd put: existing but not allowed opt} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-    {unrecognized option "-from": must be -format, or -to}
+    {unrecognized option "-from": must be -format, -metadata, or -to}
 test imgPhoto-4.91 {ImgPhotoCmd put: invalid option} -setup {
     image create photo photo1
 } -body {
     photo1 put {{0 1 2 3}} -bogus x
 } -returnCodes error -result \
-    {unrecognized option "-bogus": must be -format, or -to}
+    {unrecognized option "-bogus": must be -format, -metadata, or -to}
 test imgPhoto-4.92 {ImgPhotocmd put: missing data} -setup {
     image create photo photo1
 } -body {
@@ -1211,7 +1211,7 @@ test imgPhoto-4.100 {ImgPhotoCmd put: no changes on empty data} -setup {
     string equal $imgData [photo1 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-4.101 {ImgPhotoCmd get: too many args} -setup {
     image create photo photo1
 } -body {
@@ -1242,7 +1242,7 @@ test imgPhoto-4.104 {ImgPhotoCmd data: existing but not accepted opt} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-{unrecognized option "-to": must be -background, -format, -from, or -grayscale}
+{unrecognized option "-to": must be -background, -format, -from, -grayscale, or -metadata}
 test imgPhoto-4.105 {ImgPhotoCmd data: invalid option} -setup {
     image create photo photo1
 } -body {
@@ -1250,7 +1250,7 @@ test imgPhoto-4.105 {ImgPhotoCmd data: invalid option} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result \
-{unrecognized option "-bogus": must be -background, -format, -from, or -grayscale}
+{unrecognized option "-bogus": must be -background, -format, -from, -grayscale, or -metadata}
 test imgPhoto-4.106 {ImgPhotoCmd data: extra arg before options} -setup {
     image create photo photo1
 } -body {
@@ -1340,10 +1340,10 @@ test imgPhoto-4.117 {ImgPhotoCmd data: list colorformat} -setup {
 } -body {
     photo1 data -format {default -colorformat list}
 } -result {{{255 0 0 170} {0 128 0 255}} {{0 0 255 204} {255 255 255 221}}}
+# This testcase fails with Tcl < 8.6.7, due to [25842c]
 test imgPhoto-4.118 {ImgPhotoCmd data: using data for new image
     results in same image as orignial } -constraints {
-        hasTeapotPhoto
-        hasTranspTeapotPhoto
+        hasTeapotPhoto hasTranspTeapotPhoto needsTcl867
 } -setup {
     image create photo teapot -file $teapotPhotoFile
     teapot copy teapot -from 50 60 70 80 -shrink
@@ -1503,8 +1503,8 @@ test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
 } -body {
     image create photo photo2 -file $teapotPhotoFile
     rename photo2 {}
-    list [lsearch -exact [imageNames] photo2] [catch {photo2 foo} msg] $msg
-} -result {-1 1 {invalid command name "photo2"}}
+    list [expr {"photo2" in [imageNames]}] [catch {photo2 foo} msg] $msg
+} -result {0 1 {invalid command name "photo2"}}
 
 test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
     imageCleanup
@@ -1527,7 +1527,7 @@ test imgPhoto-10.2 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints 
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-10.3 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -1541,7 +1541,7 @@ test imgPhoto-10.3 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints 
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
     imageCleanup
 } -body {
@@ -1583,7 +1583,7 @@ test imgPhoto-12.2 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -constr
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-12.3 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -setup {
     imageCleanup
 } -body {
@@ -1595,7 +1595,7 @@ test imgPhoto-12.3 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -setup 
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-12.4 {Tk_ImgPhotoPutZoomedBlock, empty image} -setup {
     imageCleanup
 } -body {
@@ -1949,13 +1949,10 @@ test imgPhoto-19.8 {MatchStirngFormat: invalid data for gif} -setup {
 } -returnCodes error -result {couldn't recognize image data}
 
 # Reject corrupted or truncated image [Bug b601ce3ab1].
-# WARNING - tests 18.1-18.9 will cause a segfault on 8.5.19 and lower,
+# WARNING - tests 20.1-20.9 will cause a segfault on 8.5.19 and lower,
 #           and on 8.6.6 and lower.
-test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
-    base64PackageNeeded
-} -setup {
-    package require base64
-    set data [base64::decode {
+test imgPhoto-20.1 {Reject corrupted GIF (binary string)} -setup {
+    set data [binary decode base64 {
 	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
 	5qpraXIvM1JlNyAgOw==
     }]
@@ -1964,7 +1961,7 @@ test imgPhoto-18.1 {Reject corrupted GIF (binary string)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
+test imgPhoto-20.2 {Reject corrupted GIF (base 64 string)} -setup {
     set data {
 	R0lGODlhAAQABP8zM/8z/zP/MzP/////M////yH5CiwheLrcLTBCd6Tv2qW16tdK4jhV
 	5qpraXIvM1JlNyAgOw==
@@ -1974,18 +1971,15 @@ test imgPhoto-18.2 {Reject corrupted GIF (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.3 {Reject corrupted GIF (file)} -setup {
+test imgPhoto-20.3 {Reject corrupted GIF (file)} -setup {
     set fileName [file join [file dirname [info script]] corruptMangled.gif]
 } -body {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.4 {Reject truncated GIF (binary string)} -constraints {
-    base64PackageNeeded
-} -setup {
-    package require base64
-    set data [base64::decode {
+test imgPhoto-20.4 {Reject truncated GIF (binary string)} -setup {
+    set data [binary decode base64 {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
     }]
 } -body {
@@ -1993,7 +1987,7 @@ test imgPhoto-18.4 {Reject truncated GIF (binary string)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
-test imgPhoto-18.5 {Reject truncated GIF (base 64 string)} -setup {
+test imgPhoto-20.5 {Reject truncated GIF (base 64 string)} -setup {
     set data {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP///8=
     }
@@ -2002,22 +1996,21 @@ test imgPhoto-18.5 {Reject truncated GIF (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
-test imgPhoto-18.6 {Reject truncated GIF (file)} -setup {
+test imgPhoto-20.6 {Reject truncated GIF (file)} -setup {
     set fileName [file join [file dirname [info script]] corruptTruncated.gif]
 } -body {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
-test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
-    base64PackageNeeded nonPortable
+test imgPhoto-20.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
+    nonPortable
 } -setup {
     # About the non portability constraint of this test: see ticket [cc42cc18a5]
     # If there is insufficient memory, the error message
     # {not enough free memory for image buffer} should be returned.
     # Instead, some systems (e.g. FreeBSD 11.1) terminate the test interpreter.
-    package require base64
-    set data [base64::decode {
+    set data [binary decode base64 {
 	R0lGODlhwmYz//8zM/8z/zP/MzP/////M////yH5Ciwhe
 	LrcLTBCd6Tv2qW16tdK4jhV5qpraXIvM1JlNyAgOw==
     }]
@@ -2026,7 +2019,7 @@ test imgPhoto-18.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
+test imgPhoto-20.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints {
     nonPortable
 } -setup {
     # About the non portability constraint of this test: see ticket [cc42cc18a5]
@@ -2042,7 +2035,7 @@ test imgPhoto-18.8 {Reject corrupted GIF (> 4Gb) (base 64 string)} -constraints 
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
+test imgPhoto-20.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
     nonPortable
 } -setup {
     # About the non portability constraint of this test: see ticket [cc42cc18a5]
@@ -2055,14 +2048,11 @@ test imgPhoto-18.9 {Reject corrupted GIF (> 4Gb) (file)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map|not enough free memory for image buffer} -match regexp
-test imgPhoto-18.10 {Valid GIF (binary string)} -constraints {
-    base64PackageNeeded
-} -setup {
+test imgPhoto-20.10 {Valid GIF (binary string)} -setup {
     # Test the binary string reader with a valid GIF.
     # This is not tested elsewhere.
-    # Tests 18.11, 18.12, with matching data, are included for completeness.
-    package require base64
-    set data [base64::decode {
+    # Tests 20.11, 20.12, with matching data, are included for completeness.
+    set data [binary decode base64 {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
 	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
     }]
@@ -2071,7 +2061,7 @@ test imgPhoto-18.10 {Valid GIF (binary string)} -constraints {
 } -cleanup {
     catch {image delete gif1}
 } -result gif1
-test imgPhoto-18.11 {Valid GIF (base 64 string)} -setup {
+test imgPhoto-20.11 {Valid GIF (base 64 string)} -setup {
     set data {
 	R0lGODlhEAAQAMIHAAAAADMz//8zM/8z/zP/MzP/////M////yH5BAEKAAcALAAA
 	AAAQABAAAAMheLrcLTBCd6QV79qlterXB0riOFXmmapraXIvM1IdZTcJADs=
@@ -2081,13 +2071,450 @@ test imgPhoto-18.11 {Valid GIF (base 64 string)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -result gif1
-test imgPhoto-18.12 {Valid GIF (file)} -setup {
+test imgPhoto-20.12 {Valid GIF (file)} -setup {
     set fileName [file join [file dirname [info script]] red.gif]
 } -body {
     image create photo gif1 -file $fileName
 } -cleanup {
     catch {image delete gif1}
 } -result gif1
+
+# imgPhoto-21.x : Tk_PhotoGetMetadata
+
+test imgPhoto-21.1 {option -metadata, get configure list} -setup {
+    image create photo photo1 -metadata {dpi 100}
+} -body {
+    photo1 configure -metadata
+} -cleanup {
+    catch {image delete photo1}
+} -result {-metadata {} {} {} {dpi 100}}
+
+test imgPhoto-21.2 {option -metadata, get value} -setup {
+    image create photo photo1 -metadata {dpi 100}
+} -body {
+    photo1 cget -metadata
+} -cleanup {
+    catch {image delete photo1}
+} -result {dpi 100}
+
+test imgPhoto-21.3 {option -metadata, get default value} -setup {
+    image create photo photo1
+} -body {
+    photo1 cget -metadata
+} -cleanup {
+    catch {image delete photo1}
+} -result {}
+
+# imgPhoto-22.x : Tk_PhotoSetMetadata
+
+test imgPhoto-22.1 {option -metadata, set value} -setup {
+    image create photo photo1
+} -body {
+    photo1 configure -metadata {dpi 100}
+    photo1 cget -metadata
+} -cleanup {
+    catch {image delete photo1}
+} -result {dpi 100}
+
+test imgPhoto-22.2 {option -metadata, change value} -setup {
+    image create photo photo1 -metadata {dpi 200}
+} -body {
+    photo1 configure -metadata {dpi 100}
+    photo1 cget -metadata
+} -cleanup {
+    catch {image delete photo1}
+} -result {dpi 100}
+
+test imgPhoto-22.3 {option -metadata, clear value} -setup {
+    image create photo photo1 -metadata {dpi 200}
+} -body {
+    photo1 configure -metadata {}
+    photo1 cget -metadata
+} -cleanup {
+    catch {image delete photo1}
+} -result {}
+
+# 23.x GIF images with metadata
+
+# The following gif core data is used by the following data.
+# N.B. this is the same image as test imgPhoto-18.10
+
+# size 16x16, global color table size: 8
+set gifstart "GIF89a\x10\x00\x10\x00\xc2\x07\x00"
+# color table
+append gifstart "\x00\x00\x00\x33\x33\xff\xff\x33\x33\xff\x33\xff\x33\xff\x33\x33\xff\xff\xff\xff\x33\xff\xff\xff"
+# Graphic control extension: Transparent color index: 7 (not needed here)
+# append gifdata "\x21\xf9\x04\x01\x0a\x00\x07\x00"
+# Image descriptor: 16x16, no local color table
+set gifdata "\x2c\x00\x00\x00\x00\x10\x00\x10\x00\x00"
+# Image data
+append gifdata "\x03\x21\x78\xba\xdc\x2d\x30\x42\x77\xa4\x15\xef\xda\xa5\xb5\xea\xd7\x07\x4a\xe2\x38\x55\xe6\x99\xaa\x6b\x69\x72\x2f\x33\x52\x1d\x65\x37\x09\x00"
+set gifend "\x3b"
+
+test imgPhoto-23.1 {GIF comment before image data (-data)} -setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {comment ABCD}
+
+test imgPhoto-23.2 {GIF file comment before image data (-file)} -setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts -nonewline $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {comment ABCD}
+
+test imgPhoto-23.3 {GIF comment after image data (-data)} -setup {
+    set data $::gifstart
+    append data $::gifdata
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {comment ABCD}
+
+test imgPhoto-23.4 {GIF comment after image data (-file)} -setup {
+    set data $::gifstart
+    append data $::gifdata
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {comment ABCD}
+
+test imgPhoto-23.5 {Two GIF comment blocks (-data)} -setup {
+    set data $::gifstart
+    # Append a comment extension block with data "1234"
+    append data "\x21\xfe\x04" "1234" "\x0"
+    append data $::gifdata
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {comment ABCD}
+
+test imgPhoto-23.6 {Two GIF comment blocks (-file)} -setup {
+    set data $::gifstart
+    # Append a comment extension block with data "1234"
+    append data "\x21\xfe\x04" "1234" "\x0"
+    append data $::gifdata
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifend
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -file $path
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {comment ABCD}
+
+test imgPhoto-23.7 {create: test if shared metadata object is not preserved\
+	(-data)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    image create photo gif1 -data $data -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.8 {create: test if shared metadata object is not preserved\
+	(-file)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    image create photo gif1 -file $path -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.9 {configure: test if shared metadata object is not\
+	preserved (empty image, -data)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -data $data -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.10 {configure: test if shared metadata object is not preserved\
+	(empty image, -file)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -file $path -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.11 {configure: test if shared metadata object is not preserved\
+	(metadata replace, -data}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data "$::gifstart$::gifdata$::gifend"
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -data $data -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.12 {configure: test if shared metadata object is not preserved\
+	(metadata replace, -file}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -data "$::gifstart$::gifdata$::gifend"
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -file $path -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.13 {configure: test if shared metadata object is not preserved\
+	(-data)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+} -body {
+    image create photo gif1 -data $data
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+    gif1 configure -data $data -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.14 {configure: test if shared metadata object is not preserved\
+	(-file)}\
+-setup {
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+
+    set path [file join [configure -tmpdir] test.gif]
+    set h [open $path "WRONLY BINARY CREAT"]
+    puts $h $data
+    close $h
+} -body {
+    image create photo gif1 -data "$::gifstart$::gifdata$::gifend"
+    set metadataDict [dict create A 1]
+    set metadataDict2 $metadataDict
+    gif1 configure -file $path -format gif -metadata $metadataDict
+    list [dict get [gif1 cget -metadata]] $metadataDict $metadataDict2
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {{A 1 comment ABCD} {A 1} {A 1}}
+
+test imgPhoto-23.15 {output data with comment (from -metadata argument)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+} -body {
+    image create photo gif1 -data $data
+    set gifData [gif1 data -format gif -metadata [dict create comment ABCD]]
+} -cleanup {
+    catch {image delete gif1}
+} -match glob -result {*ABCD*}
+
+test imgPhoto-23.22 {output file with comment (from -metadata argument)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    image create photo gif1 -data $data
+    gif1 write $path -format gif -metadata [dict create comment ABCD]
+    image delete gif1
+    image create photo gif1 -file $path
+    dict get [gif1 cget -metadata] comment
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {ABCD}
+
+test imgPhoto-23.16 {output data with comment (from -metadata property)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 configure -metadata [dict create comment ABCD]
+    set gifData [gif1 data -format gif]
+} -cleanup {
+    catch {image delete gif1}
+} -match glob -result {*ABCD*}
+
+test imgPhoto-23.17 {output file with comment (from -metadata property)}\
+-setup {
+    set data $::gifstart$::gifdata$::gifend
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    image create photo gif1 -data $data
+    gif1 configure -metadata [dict create comment ABCD]
+    gif1 write $path -format gif
+    image delete gif1
+    image create photo gif1 -file $path
+    dict get [gif1 cget -metadata] comment
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {ABCD}
+
+test imgPhoto-23.18 {configure: empty metadata parameter overwrites image metadata} -setup {
+    image create photo gif1 -data $::gifstart$::gifdata$::gifend\
+	    -metadata {foo bar}
+    set data $::gifstart
+    # Append a comment extension block with data "ABCD"
+    append data "\x21\xfe\x04" "ABCD" "\x0"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    gif1 configure -data $data -metadata {}
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {comment ABCD}
+
+test imgPhoto-23.19 {write: empty metadata parameter overwrites image metadata} -setup {
+    image create photo gif1 -data $::gifstart$::gifdata$::gifend\
+	    -metadata {comment bar}
+    set path [file join [configure -tmpdir] test.gif]
+} -body {
+    gif1 write $path -format gif -metadata {}
+    image delete gif1
+    image create photo gif1 -file $path
+    dict size [gif1 cget -metadata]
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {0}
+
+test imgPhoto-23.20 {data: empty metadata parameter overwrites image metadata} -setup {
+    image create photo gif1 -data $::gifstart$::gifdata$::gifend\
+	    -metadata {comment bar}
+} -body {
+    set data [gif1 data -format gif -metadata {}]
+    image delete gif1
+    image create photo gif1 -data $data
+    dict size [gif1 cget -metadata]
+} -cleanup {
+    catch {image delete gif1}
+    file delete $path
+} -result {0}
+
+unset -nocomplain gifstart gifdata gifend
+
 
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}

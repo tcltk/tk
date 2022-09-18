@@ -3,8 +3,8 @@
  *
  *	This file implements image items for canvas widgets.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -47,7 +47,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
+    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {
@@ -74,8 +74,8 @@ static void		ImageChangedProc(ClientData clientData,
 			    int x, int y, int width, int height, int imgWidth,
 			    int imgHeight);
 static int		ImageCoords(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *const argv[]);
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tcl_Obj *const objv[]);
 static int		ImageToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		ImageToPoint(Tk_Canvas canvas,
@@ -84,11 +84,11 @@ static int		ImageToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
 static void		ComputeImageBbox(Tk_Canvas canvas, ImageItem *imgPtr);
 static int		ConfigureImage(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
-			    Tcl_Obj *const argv[], int flags);
+			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tcl_Obj *const objv[], int flags);
 static int		CreateImage(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const argv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeleteImage(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayImage(Tk_Canvas canvas,
@@ -385,6 +385,8 @@ DeleteImage(
     Display *display)		/* Display containing window for canvas. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
+    (void)canvas;
+    (void)display;
 
     if (imgPtr->imageString != NULL) {
 	ckfree(imgPtr->imageString);
@@ -424,7 +426,6 @@ DeleteImage(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static void
 ComputeImageBbox(
     Tk_Canvas canvas,		/* Canvas that contains item. */
@@ -490,7 +491,7 @@ ComputeImageBbox(
 	break;
     case TK_ANCHOR_NW:
 	break;
-    case TK_ANCHOR_CENTER:
+    default:
 	x -= width/2;
 	y -= height/2;
 	break;
@@ -537,6 +538,7 @@ DisplayImage(
     short drawableX, drawableY;
     Tk_Image image;
     Tk_State state = itemPtr->state;
+    (void)display;
 
     if (state == TK_STATE_NULL) {
 	state = Canvas(canvas)->canvas_state;
@@ -595,6 +597,7 @@ ImageToPoint(
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
+    (void)canvas;
 
     x1 = imgPtr->header.x1;
     y1 = imgPtr->header.y1;
@@ -652,6 +655,7 @@ ImageToArea(
 				 * area. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
+    (void)canvas;
 
     if ((rectPtr[2] <= imgPtr->header.x1)
 	    || (rectPtr[0] >= imgPtr->header.x2)
@@ -743,7 +747,7 @@ ImageToPostscript(
     case TK_ANCHOR_S:	   x -= width/2.0;			break;
     case TK_ANCHOR_SW:						break;
     case TK_ANCHOR_W:			   y -= height/2.0;	break;
-    case TK_ANCHOR_CENTER: x -= width/2.0; y -= height/2.0;	break;
+    default: x -= width/2.0; y -= height/2.0;	break;
     }
 
     if (!prepass) {
@@ -888,7 +892,7 @@ ImageChangedProc(
 				 * 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    ImageItem *imgPtr = clientData;
+    ImageItem *imgPtr = (ImageItem *)clientData;
 
     /*
      * If the image's size changed and it's not anchored at its northwest

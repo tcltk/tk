@@ -15,7 +15,7 @@ focus \- Manage the input focus
 .nf
 \fBfocus\fR
 \fBfocus \fIwindow\fR
-\fBfocus \fIoption\fR ?\fIarg arg ...\fR?
+\fBfocus \fIoption\fR ?\fIarg ...\fR?
 .fi
 .BE
 .SH DESCRIPTION

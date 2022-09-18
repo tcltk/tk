@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2004, Joe English
+ * Copyright © 2004 Joe English
  *
  * ttk::separator and ttk::sizegrip widgets.
  */
@@ -26,7 +26,7 @@ static const Tk_OptionSpec SeparatorOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "horizontal",
 	offsetof(Separator,separator.orientObj),
 	offsetof(Separator,separator.orient),
-	0,(ClientData)ttkOrientStrings,STYLE_CHANGED },
+	0, ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -39,7 +39,7 @@ static const Tk_OptionSpec SeparatorOptionSpecs[] = {
 static Ttk_Layout SeparatorGetLayout(
     Tcl_Interp *interp, Ttk_Theme theme, void *recordPtr)
 {
-    Separator *sep = recordPtr;
+    Separator *sep = (Separator *)recordPtr;
     return TtkWidgetGetOrientedLayout(
 	interp, theme, recordPtr, sep->separator.orientObj);
 }
@@ -48,18 +48,19 @@ static Ttk_Layout SeparatorGetLayout(
  * Widget commands:
  */
 static const Ttk_Ensemble SeparatorCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
 /*
  * Widget specification:
  */
-static WidgetSpec SeparatorWidgetSpec =
+static const WidgetSpec SeparatorWidgetSpec =
 {
     "TSeparator",		/* className */
     sizeof(Separator),		/* recordSize */
@@ -89,15 +90,16 @@ static const Tk_OptionSpec SizegripOptionSpecs[] = {
 };
 
 static const Ttk_Ensemble SizegripCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "identify",	TtkWidgetIdentifyCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
-static WidgetSpec SizegripWidgetSpec =
+static const WidgetSpec SizegripWidgetSpec =
 {
     "TSizegrip",		/* className */
     sizeof(WidgetCore),		/* recordSize */

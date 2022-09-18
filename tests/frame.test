@@ -2,9 +2,9 @@
 # "toplevel" commands of Tk.  It is organized in the standard fashion for Tcl
 # tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -195,7 +195,7 @@ test frame-1.15 {frame configuration options} -body {
     lindex [.f configure -bd] 4
 } -cleanup {
     .f configure -bd [lindex [.f configure -bd] 3]
-} -result {4}
+} -result 4
 test frame-1.16 {frame configuration options} -body {
     .f configure -bd badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -213,7 +213,7 @@ test frame-1.19 {frame configuration options} -body {
     lindex [.f configure -borderwidth] 4
 } -cleanup {
     .f configure -borderwidth [lindex [.f configure -borderwidth] 3]
-} -result {1}
+} -result 1
 test frame-1.20 {frame configuration options} -body {
     .f configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -231,7 +231,7 @@ test frame-1.23 {frame configuration options} -body {
     lindex [.f configure -height] 4
 } -cleanup {
     .f configure -height [lindex [.f configure -height] 3]
-} -result {100}
+} -result 100
 test frame-1.24 {frame configuration options} -body {
     .f configure -height not_a_number
 } -returnCodes error -result {bad screen distance "not_a_number"}
@@ -258,7 +258,7 @@ test frame-1.29 {frame configuration options} -body {
     lindex [.f configure -highlightthickness] 4
 } -cleanup {
     .f configure -highlightthickness [lindex [.f configure -highlightthickness] 3]
-} -result {6}
+} -result 6
 test frame-1.30 {frame configuration options} -body {
     .f configure -highlightthickness badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -267,7 +267,7 @@ test frame-1.31 {frame configuration options} -body {
     lindex [.f configure -padx] 4
 } -cleanup {
     .f configure -padx [lindex [.f configure -padx] 3]
-} -result {3}
+} -result 3
 test frame-1.32 {frame configuration options} -body {
     .f configure -padx badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -276,7 +276,7 @@ test frame-1.33 {frame configuration options} -body {
     lindex [.f configure -pady] 4
 } -cleanup {
     .f configure -pady [lindex [.f configure -pady] 3]
-} -result {4}
+} -result 4
 test frame-1.34 {frame configuration options} -body {
     .f configure -pady badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -300,7 +300,7 @@ test frame-1.38 {frame configuration options} -body {
     lindex [.f configure -width] 4
 } -cleanup {
     .f configure -width [lindex [.f configure -width] 3]
-} -result {32}
+} -result 32
 test frame-1.39 {frame configuration options} -body {
     .f configure -width badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -500,7 +500,7 @@ test frame-2.21 {toplevel configuration options} -body {
 test frame-2.22 {toplevel configuration options} -body {
     .t configure -bd 4
     lindex [.t configure -bd] 4
-} -result {4}
+} -result 4
 test frame-2.23 {toplevel configuration options} -body {
     .t configure -bd badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -514,7 +514,7 @@ test frame-2.25 {toplevel configuration options} -body {
 test frame-2.26 {toplevel configuration options} -body {
     .t configure -borderwidth 1.3
     lindex [.t configure -borderwidth] 4
-} -result {1}
+} -result 1
 test frame-2.27 {toplevel configuration options} -body {
     .t configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -528,7 +528,7 @@ test frame-2.29 {toplevel configuration options} -body {
 test frame-2.30 {toplevel configuration options} -body {
     .t configure -height 100
     lindex [.t configure -height] 4
-} -result {100}
+} -result 100
 test frame-2.31 {toplevel configuration options} -body {
     .t configure -height not_a_number
 } -returnCodes error -result {bad screen distance "not_a_number"}
@@ -542,21 +542,21 @@ test frame-2.33 {toplevel configuration options} -body {
 test frame-2.34 {toplevel configuration options} -body {
     .t configure -highlightthickness 3
     lindex [.t configure -highlightthickness] 4
-} -result {3}
+} -result 3
 test frame-2.35 {toplevel configuration options} -body {
     .t configure -highlightthickness badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test frame-2.36 {toplevel configuration options} -body {
     .t configure -padx 3
     lindex [.t configure -padx] 4
-} -result {3}
+} -result 3
 test frame-2.37 {toplevel configuration options} -body {
     .t configure -padx badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test frame-2.38 {toplevel configuration options} -body {
     .t configure -pady 4
     lindex [.t configure -pady] 4
-} -result {4}
+} -result 4
 test frame-2.39 {toplevel configuration options} -body {
     .t configure -pady badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -570,7 +570,7 @@ test frame-2.41 {toplevel configuration options} -returnCodes error -body {
 test frame-2.42 {toplevel configuration options} -body {
     .t configure -width 32
     lindex [.t configure -width] 4
-} -result {32}
+} -result 32
 test frame-2.43 {toplevel configuration options} -body {
     .t configure -width badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -670,11 +670,19 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     option add *x.use [winfo id .t]
-    update
     toplevel .x -width 140 -height 300 -bg green
-    tkwait visibility .x
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	tkwait visibility .x
+	update
+    }
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
@@ -699,7 +707,7 @@ test frame-3.11 {TkCreateFrame procedure} -constraints {
     colorsFree .t
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test frame-3.12 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -711,7 +719,7 @@ test frame-3.12 {TkCreateFrame procedure} -constraints {
     colorsFree .t
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test frame-3.13 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -726,7 +734,7 @@ test frame-3.13 {TkCreateFrame procedure} -constraints {
     colorsFree .t
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test frame-3.14 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -741,7 +749,7 @@ test frame-3.14 {TkCreateFrame procedure} -constraints {
     colorsFree .t
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test frame-3.15 {TkCreateFrame procedure, -use and -colormap} -constraints {
     defaultPseudocolor8 unix nonPortable
 } -setup {
@@ -766,7 +774,7 @@ test frame-3.16 {TkCreateFrame procedure} -constraints {
     colorsFree .t
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test frame-3.17 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -779,7 +787,7 @@ test frame-3.17 {TkCreateFrame procedure} -constraints {
     colorsFree .t
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test frame-3.18 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 haveGrayscale8 nonPortable
 } -setup {
@@ -791,7 +799,7 @@ test frame-3.18 {TkCreateFrame procedure} -constraints {
     colorsFree .t 131 131 131
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test frame-3.19 {TkCreateFrame procedure} -constraints {
     defaultPseudocolor8 haveGrayscale8 nonPortable
 } -setup {
@@ -833,7 +841,7 @@ test frame-3.21 {TkCreateFrame procedure} -constraints {
     colorsFree .t 131 131 131
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 if {[testConstraint defaultPseudocolor8]} {
     destroy .t1
 }
@@ -1033,7 +1041,7 @@ test frame-9.2 {MapFrame procedure} -setup {
     destroy .t
     update
     winfo exists .t
-} -result {0}
+} -result 0
 test frame-9.3 {MapFrame procedure, window deleted while mapping} -setup {
     deleteWindows
 } -body {
@@ -1049,7 +1057,7 @@ test frame-9.3 {MapFrame procedure, window deleted while mapping} -setup {
     winfo exists .t
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 
 test frame-10.1 {frame widget vs hidden commands} -setup {
     deleteWindows
@@ -1133,24 +1141,33 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
 } -result {1 1 1 1 1 1 1 1 1 1 1 1}
 test frame-12.3 {FrameWorldChanged procedure} -setup {
     deleteWindows
+	update idletasks
 } -body {
     # Check reaction on font change
     font create myfont -family courier -size 10
     labelframe .f -font myfont -text Mupp
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
     font configure myfont -size 20
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     set h2 [font metrics myfont -linespace]
     set y2 [winfo y .f.f]
     expr {($h2 - $h1) - ($y2 - $y1)}
 } -cleanup {
     deleteWindows
     font delete myfont
-} -result {0}
+} -result 0
 
 test frame-13.1 {labelframe configuration options} -setup {
     deleteWindows
@@ -1235,7 +1252,7 @@ test frame-13.12 {labelframe configuration options} -body {
     lindex [.f configure -bd] 4
 } -cleanup {
     .f configure -bd [lindex [.f configure -bd] 3]
-} -result {4}
+} -result 4
 test frame-13.13 {labelframe configuration options} -body {
     .f configure -bd badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -1253,7 +1270,7 @@ test frame-13.16 {labelframe configuration options} -body {
     lindex [.f configure -borderwidth] 4
 } -cleanup {
     .f configure -borderwidth [lindex [.f configure -borderwidth] 3]
-} -result {1}
+} -result 1
 test frame-13.17 {labelframe configuration options} -body {
     .f configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -1295,7 +1312,7 @@ test frame-13.25 {labelframe configuration options} -body {
     lindex [.f configure -height] 4
 } -cleanup {
     .f configure -height [lindex [.f configure -height] 3]
-} -result {100}
+} -result 100
 test frame-13.26 {labelframe configuration options} -body {
     .f configure -height not_a_number
 } -returnCodes error -result {bad screen distance "not_a_number"}
@@ -1322,7 +1339,7 @@ test frame-13.31 {labelframe configuration options} -body {
     lindex [.f configure -highlightthickness] 4
 } -cleanup {
     .f configure -highlightthickness [lindex [.f configure -highlightthickness] 3]
-} -result {6}
+} -result 6
 test frame-13.32 {labelframe configuration options} -body {
     .f configure -highlightthickness badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -1340,7 +1357,7 @@ test frame-13.35 {labelframe configuration options} -body {
     lindex [.f configure -padx] 4
 } -cleanup {
     .f configure -padx [lindex [.f configure -padx] 3]
-} -result {3}
+} -result 3
 test frame-13.36 {labelframe configuration options} -body {
     .f configure -padx badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -1349,7 +1366,7 @@ test frame-13.37 {labelframe configuration options} -body {
     lindex [.f configure -pady] 4
 } -cleanup {
     .f configure -pady [lindex [.f configure -pady] 3]
-} -result {4}
+} -result 4
 test frame-13.38 {labelframe configuration options} -body {
     .f configure -pady badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -1379,7 +1396,7 @@ test frame-13.43 {labelframe configuration options} -body {
     lindex [.f configure -width] 4
 } -cleanup {
     .f configure -width [lindex [.f configure -width] 3]
-} -result {32}
+} -result 32
 test frame-13.44 {labelframe configuration options} -body {
     .f configure -width badValue
 } -returnCodes error -result {bad screen distance "badValue"}

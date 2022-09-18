@@ -3,7 +3,7 @@
  *
  *	This file implements the Unix specific portion of the button widgets.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -173,7 +173,7 @@ TkpDrawCheckIndicator(
      * Sanity check.
      */
 
-    if (tkwin == NULL || display == None || d == None || bgBorder == NULL
+    if (tkwin == NULL || display == NULL || d == None || bgBorder == NULL
 	    || indicatorColor == NULL) {
 	return;
     }
@@ -326,11 +326,9 @@ TkpDrawCheckIndicator(
 
 TkButton *
 TkpCreateButton(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
-    UnixButton *butPtr = ckalloc(sizeof(UnixButton));
-
-    return (TkButton *) butPtr;
+    return (TkButton *)ckalloc(sizeof(UnixButton));
 }
 
 /*
@@ -396,7 +394,7 @@ void
 TkpDisplayButton(
     ClientData clientData)	/* Information about widget. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     GC gc;
     Tk_3DBorder border;
     Pixmap pixmap;
@@ -807,8 +805,6 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (butPtr->highlightWidth > 0) {
-	GC gc;
-
 	if (butPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(butPtr->highlightColorPtr, pixmap);
 	} else {

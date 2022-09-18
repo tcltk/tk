@@ -5,8 +5,8 @@
  *	the "postscript" widget command plus a few utility functions used for
  *	generating Postscript.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -157,7 +157,6 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  *--------------------------------------------------------------
  */
 
-    /* ARGSUSED */
 int
 TkCanvPostscriptCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
@@ -193,7 +192,7 @@ TkCanvPostscriptCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, 0);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -286,15 +285,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_SW:
 	deltaX = 0;
 	break;
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	deltaX = -psInfo.width/2;
-	break;
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
 	deltaX = -psInfo.width;
+	break;
+    default:
+	deltaX = -psInfo.width/2;
 	break;
     }
     switch (psInfo.pageAnchor) {
@@ -303,15 +300,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_NE:
 	deltaY = - psInfo.height;
 	break;
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	deltaY = -psInfo.height/2;
-	break;
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
 	deltaY = 0;
+	break;
+    default:
+	deltaY = -psInfo.height/2;
 	break;
     }
 
@@ -572,19 +567,19 @@ TkCanvPostscriptCmd(
 	    continue;
 	}
 
-	Tcl_ResetResult(interp);
 	result = itemPtr->typePtr->postscriptProc(interp,
 		(Tk_Canvas) canvasPtr, itemPtr, 0);
 	if (result != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (generating Postscript for item %d)",
-		    itemPtr->id));
+		    (int)itemPtr->id));
 	    goto cleanup;
 	}
 
 	Tcl_AppendToObj(psObj, "gsave\n", -1);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	Tcl_AppendToObj(psObj, "grestore\n", -1);
+	Tcl_ResetResult(interp);
 
 	if (psInfo.chan != NULL) {
 	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
@@ -904,6 +899,18 @@ PostscriptBitmap(
     imagePtr = XGetImage(Tk_Display(tkwin), bitmap, 0, 0,
 	    totalWidth, totalHeight, 1, XYPixmap);
 
+
+    if (!imagePtr) {
+	/*
+	 * The XGetImage() function is apparently not implemented on this
+	 * system. Just skip the pixels, the Postscript will still be
+	 * syntactically correct.
+	 */
+
+        Tcl_AppendToObj(psObj, "<>", -1);
+	return;
+    }
+
     Tcl_AppendToObj(psObj, "<", -1);
     mask = 0x80;
     value = 0;
@@ -1194,6 +1201,8 @@ TkImageGetColor(
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
+    (void)cdata;
+
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
     *blue  = (double) GetBValue(pixel) / 255.0;
@@ -1262,6 +1271,7 @@ TkPostscriptImage(
     Visual *visual;
     TkColormapData cdata;
     Tcl_Obj *psObj;
+    (void)y;
 
     if (psInfoPtr->prepass) {
 	return TCL_OK;
@@ -1276,7 +1286,7 @@ TkPostscriptImage(
      */
 
     ncolors = visual->map_entries;
-    cdata.colors = ckalloc(sizeof(XColor) * ncolors);
+    cdata.colors = (XColor *)ckalloc(sizeof(XColor) * ncolors);
     cdata.ncolors = ncolors;
 
     if (visual->c_class == DirectColor || visual->c_class == TrueColor) {
@@ -1601,7 +1611,7 @@ Tk_PostscriptPhoto(
 	    /*
 	     * Generate data for image in monochrome mode. No attempt at
 	     * dithering is made--instead, just set a threshold. To handle
-	     * transparecies we need to output two lines: one for the black
+	     * transparencies we need to output two lines: one for the black
 	     * pixels, one for the white ones.
 	     */
 

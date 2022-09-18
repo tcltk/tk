@@ -3,9 +3,9 @@
  *
  *	This file manages the clipboard for the Tk toolkit.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -35,7 +35,9 @@ static Tk_Window clipboardOwner = NULL;
 		    targetPtr->type == dispPtr->utf8Atom) {
 		for (TkClipboardBuffer *cbPtr = targetPtr->firstBufferPtr;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
-		    NSString *s = TkUtfToNSString(cbPtr->buffer, cbPtr->length);
+		    NSString *s = [[TKNSString alloc]
+				      initWithTclUtfBytes:cbPtr->buffer
+						   length:cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}
@@ -135,26 +137,13 @@ TkSelGetSelection(
 	    string = [pb stringForType:type];
 	}
 	if (string) {
-
-	    /*
-	     * Encode the string using the encoding which is used in Tcl
-	     * when TCL_UTF_MAX = 3.  This replaces each UTF-16 surrogate with
-	     * a 3-byte sequence generated using the UTF-8 algorithm. (Even
-	     * though UTF-8 does not allow encoding surrogates, the algorithm
-	     * does produce a 3-byte sequence.)
-	     */
-
-	    char *bytes = TkNSStringToUtf(string, NULL);
-	    result = proc(clientData, interp, bytes);
-	    if (bytes) {
-		ckfree(bytes);
-	    }
+	    result = proc(clientData, interp, string.UTF8String);
 	}
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"%s selection doesn't exist or form \"%s\" not defined",
-		Tk_GetAtomName(tkwin, selection),
-		Tk_GetAtomName(tkwin, target)));
+	     "%s selection doesn't exist or form \"%s\" not defined",
+	     Tk_GetAtomName(tkwin, selection),
+	     Tk_GetAtomName(tkwin, target)));
 	Tcl_SetErrorCode(interp, "TK", "SELECTION", "EXISTS", NULL);
     }
     return result;
@@ -182,9 +171,10 @@ XSetSelectionOwner(
     Display *display,		/* X Display. */
     Atom selection,		/* What selection to own. */
     Window owner,		/* Window to be the owner. */
-    Time time)			/* The current time? */
+    TCL_UNUSED(Time))			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
+    (void)time;
 
     if (dispPtr && selection == dispPtr->clipboardAtom) {
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
@@ -242,8 +232,8 @@ TkMacOSXSelDeadWindow(
 
 void
 TkSelUpdateClipboard(
-    TkWindow *winPtr,		/* Window associated with clipboard. */
-    TkClipboardTarget *targetPtr)
+    TCL_UNUSED(TkWindow *),		/* Window associated with clipboard. */
+    TCL_UNUSED(TkClipboardTarget *))
 				/* Info about the content. */
 {
     NSPasteboard *pb = [NSPasteboard generalPasteboard];
@@ -299,7 +289,7 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
 }
 

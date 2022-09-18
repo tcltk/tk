@@ -4,8 +4,8 @@
  *	This file contains the configuration information to embed into the tcl
  *	binary library.
  *
- * Copyright (c) 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
- * Copyright (c) 2017 Stuart Cassoff <stwo@users.sourceforge.net>
+ * Copyright © 2002 Andreas Kupries <andreas_kupries@users.sourceforge.net>
+ * Copyright © 2017 Stuart Cassoff <stwo@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -40,7 +40,7 @@
 
 
 #ifndef TCL_CFGVAL_ENCODING
-#define TCL_CFGVAL_ENCODING "ascii"
+#define TCL_CFGVAL_ENCODING "utf-8"
 #endif
 
 /*
@@ -84,7 +84,7 @@
 #  define CFG_PROFILED		"0"
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32)
 #  define CFG_FONTSYSTEM	"gdi"
 #elif defined(MAC_OSX_TK)
 #  define CFG_FONTSYSTEM	"cocoa"
@@ -95,12 +95,14 @@
 #endif
 
 static const Tcl_Config cfg[] = {
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
     {"debug",			CFG_DEBUG},
     {"threaded",		CFG_THREADED},
     {"profiled",		CFG_PROFILED},
     {"64bit",			CFG_64},
     {"optimized",		CFG_OPTIMIZED},
     {"mem_debug",		CFG_MEMDEBUG},
+#endif
     {"fontsystem",		CFG_FONTSYSTEM},
 
     /* Runtime paths to various stuff */
@@ -122,6 +124,9 @@ static const Tcl_Config cfg[] = {
 #endif
 #ifdef CFG_RUNTIME_DEMODIR
     {"demodir,runtime",		CFG_RUNTIME_DEMODIR},
+#endif
+#if !defined(STATIC_BUILD)
+    {"dllfile,runtime",		CFG_RUNTIME_DLLFILE},
 #endif
 
     /* Installation paths to various stuff */

@@ -12,7 +12,7 @@ switch -- [tk windowingsystem] {
 	option add *TSizegrip.cursor [ttk::cursor seresize] widgetDefault
     }
     aqua {
-    	# Aqua sizegrips use default Arrow cursor.
+	# Aqua sizegrips use default Arrow cursor.
     }
 }
 

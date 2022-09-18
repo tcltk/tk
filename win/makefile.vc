@@ -20,6 +20,9 @@
 # For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/trunk/tip/477.md)
 # or examine Sections 6-8 in rules.vc. This makefile has the following
 # values for the OPTS macro in addition to the ones described there.
+#       noembed  = Embeds Tcl scripts into the wish executable. Currently only
+#                  applicable for static builds. Non-static builds currently
+#                  never embed.
 #	noxp     = If you do not have the uxtheme.h header then you
 #                  cannot include support for XP themeing.
 #	square   = Include the demo square widget.
@@ -58,7 +61,7 @@
 # 64-bit compiler, if your SDK has it.
 #
 # Examples:
-# Assumign Tcl sources lie in ../../tcl
+# Assuming Tcl sources lie in ../../tcl
 #       c:\tcl_src\win\>nmake -f makefile.vc release
 # If Tcl sources are not in ../../tcl, use the TCLDIR macro to specify dir
 #       c:\tcl_src\win\>nmake -f makefile.vc release TCLDIR=c:\src\tcl
@@ -66,7 +69,7 @@
 #       c:\tcl_src\win\>nmake -f makefile.vc test
 # Install Tk in location specified by INSTALLDIR macro
 #       c:\tcl_src\win\>nmake -f makefile.vc install INSTALLDIR=c:\progra~1\tcl
-# Build release with PDF files
+# Build release with PDB files
 #       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=pdbs
 # Build debug version
 #       c:\tcl_src\win\>nmake -f makefile.vc release OPTS=symbols
@@ -90,6 +93,12 @@ USE_WIDECHAR_API  = 0
 # the build configuration, macros, output directories etc.
 !include "rules-ext.vc"
 
+!if ($(TCL_MAJOR_VERSION) > 8) || ($(TCL_MAJOR_VERSION) == 8 && $(TCL_MINOR_VERSION) > 6)
+USING_PRE87_TCL = 0
+!else
+USING_PRE87_TCL = 1
+!endif
+
 # TCLINSTALL is set to 1 by rules.vc to indicate we are building against
 # an installed Tcl and 0 if building against Tcl source. Tk needs the latter.
 !if $(TCLINSTALL)
@@ -102,6 +111,7 @@ USE_WIDECHAR_API  = 0
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
 HAVE_UXTHEME_H    = 1
 TTK_SQUARE_WIDGET = 0
+TK_EMBED_SCRIPTS  = $(STATIC_BUILD)
 !else
 !if [nmakehlp -f $(OPTS) "noxp"]
 !message *** Exclude support for XP theme
@@ -115,6 +125,17 @@ TTK_SQUARE_WIDGET   = 1
 !else
 TTK_SQUARE_WIDGET   = 0
 !endif
+!if [nmakehlp -f $(OPTS) "noembed"]
+!message *** Option noembed specified. Tk script library will not be appended to the binary.
+TK_EMBED_SCRIPTS = 0
+!else
+!message *** Tk script library will be appended to the binary.
+TK_EMBED_SCRIPTS = $(STATIC_BUILD)
+!endif
+!endif
+
+!if $(USING_PRE87_TCL)
+TK_EMBED_SCRIPTS = 0
 !endif
 
 TK_NO_DEPRECATED = 0
@@ -131,7 +152,7 @@ CAT32		= "$(OUT_DIR)\cat32.exe"
 
 WISHOBJS = \
 	$(TMP_DIR)\winMain.obj \
-!if $(TCL_USE_STATIC_PACKAGES)
+!if $(STATIC_BUILD) && !$(STATIC_BUILD)
 	$(TCLDDELIB) \
 	$(TCLREGLIB) \
 !endif
@@ -167,6 +188,8 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinDraw.obj \
 	$(TMP_DIR)\tkWinEmbed.obj \
 	$(TMP_DIR)\tkWinFont.obj \
+	$(TMP_DIR)\tkWinGDI.obj \
+	$(TMP_DIR)\tkWinIco.obj \
 	$(TMP_DIR)\tkWinImage.obj \
 	$(TMP_DIR)\tkWinInit.obj \
 	$(TMP_DIR)\tkWinKey.obj \
@@ -177,6 +200,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinScrlbr.obj \
 	$(TMP_DIR)\tkWinSend.obj \
 	$(TMP_DIR)\tkWinSendCom.obj \
+	$(TMP_DIR)\tkWinSysTray.obj \
 	$(TMP_DIR)\tkWinWindow.obj \
 	$(TMP_DIR)\tkWinWm.obj \
 	$(TMP_DIR)\tkWinX.obj \
@@ -215,6 +239,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkGet.obj \
 	$(TMP_DIR)\tkGrab.obj \
 	$(TMP_DIR)\tkGrid.obj \
+	$(TMP_DIR)\tkIcu.obj \
 	$(TMP_DIR)\tkImage.obj \
 	$(TMP_DIR)\tkImgBmap.obj \
 	$(TMP_DIR)\tkImgListFormat.obj \
@@ -310,14 +335,19 @@ XLIBDIR		= $(ROOT)\xlib
 TTKDIR		= $(ROOT)\generic\ttk
 BITMAPDIR	= $(ROOT)\bitmaps
 
+# Directories where to build TIP430 ZIP files
+# One for Tk - always built, contains Tk scripts
+# One for Wish - for static builds, contains Tcl+Tk scripts
+LIBTKVFS = $(OUT_DIR)\libtk.vfs
+WISHSCRIPTZIP = $(OUT_DIR)\wish.zip
+
 # Additional include and C macro definitions for the implicit rules
 # defined in rules.vc
 PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
-CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
+CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
-		 /DHAVE_STRINGS_H=1 \
-		 /DSUPPORT_CONFIG_EMBEDDED \
+		 /DHAVE_STRINGS_H=1 /DTCL_UTF_MAX=3 \
 !if $(HAVE_UXTHEME_H)
 		 /DHAVE_UXTHEME_H=1 \
 !endif
@@ -331,8 +361,7 @@ CONFIG_DEFS     =/DSTDC_HEADERS=1 /DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
-
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
@@ -347,9 +376,29 @@ TESTFLAGS = $(TESTFLAGS) -file $(TESTPAT)
 #---------------------------------------------------------------------
 
 release:  setup $(TKSTUBLIB) $(WISH)
+!if !$(USING_PRE87_TCL)
+release:  libtkzip embed
+!endif
 all:	  release $(CAT32)
 core:	  setup $(TKSTUBLIB) $(TKLIB)
 cwish:	  $(WISHC)
+libtkzip: setup $(TKSCRIPTZIP)
+!if $(TK_EMBED_SCRIPTS)
+!if $(STATIC_BUILD)
+embed:    setup $(WISH) $(WISHSCRIPTZIP)
+	@copy /y /b "$(WISH)"+"$(WISHSCRIPTZIP)" "$(WISH)"
+!else
+# Note this is currently dead code as TK_EMBED_SCRIPTS is always 0
+# for non-static builds as the C code does not currently setup up
+# a VFS for a non-static wish.
+embed:    setup $(TKLIB) $(TKSCRIPTZIP)
+	@copy /y /b "$(TKLIB)"+"$(TKSCRIPTZIP)" "$(TKLIB)"
+!endif
+!else
+# ! TK_EMBED_SCRIPTS - still need to build the zip even if not embedded
+embed: $(TKSCRIPTZIP)
+!endif
+
 install:  install-binaries install-libraries install-docs
 !if $(SYMBOLS)
 install:    install-pdbs
@@ -466,10 +515,34 @@ $(TKTEST): $(TKTESTOBJS) $(TKSTUBLIB) $(TKIMPLIB)
 	$(GUIEXECMD) -stack:2300000 $**
 	$(_VC_MANIFEST_EMBED_EXE)
 
+TKSCRIPTZIPTOP = tk_library
+#TKSCRIPTZIPTOP = "tk$(DOTVERSION)"
+$(TKSCRIPTZIP): .PHONY
+	@echo Building Tk library zip file
+	@if not exist "$(LIBTKVFS)" $(MKDIR) "$(LIBTKVFS)"
+	@if exist "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)" $(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
+	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
+	@cd "$(OUT_DIR)" && $(TCLSH) <<
+file delete -force {$@}
+zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
+<<
+
+!if $(STATIC_BUILD)
+$(WISHSCRIPTZIP): $(TKSCRIPTZIP)
+	@echo Building Wish Tcl+Tk library zip file
+	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
+	@cd "$(OUT_DIR)" && $(TCLSH) <<
+file delete -force {$@}
+zipfs mount mnt "$(TCLSCRIPTZIP:\=/)"
+file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"
+zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
+<<
+!endif
+
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -483,6 +556,7 @@ genstubs:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR) \
 		$(GENERICDIR)\$(PROJECT).decls $(GENERICDIR)\$(PROJECT)Int.decls
+	$(TCLSH) $(_TCLDIR)\tools\genStubs.tcl $(GENERICDIR)\ttk $(GENERICDIR)\ttk\ttk.decls
 !endif
 
 
@@ -543,10 +617,18 @@ install-pdbs:
 # Special case object file targets
 #---------------------------------------------------------------------
 
+# Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DTK_TEST /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
+
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+$(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
@@ -560,13 +642,22 @@ $(TMP_DIR)\tkWinTest.obj: $(WIN_DIR)\tkWinTest.c
 $(TMP_DIR)\tkSquare.obj: $(GENERICDIR)\tkSquare.c
 	$(cc32) $(appcflags_nostubs) -Fo$@ $?
 
+# Note: Static builds now always mandate statically linking Tcl registry etc.
 $(TMP_DIR)\winMain.obj: $(WIN_DIR)\winMain.c
 	$(cc32) $(appcflags_nostubs) /DUNICODE /D_UNICODE \
-	    /DTCL_USE_STATIC_PACKAGES=$(TCL_USE_STATIC_PACKAGES) \
+	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
 $(TMP_DIR)\tkMain2.obj: $(GENERICDIR)\tkMain.c
 	$(cc32) $(pkgcflags) /DUNICODE /D_UNICODE -Fo$@ $?
+
+$(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
+	$(cc32) $(pkgcflags) 		\
+		-DCFG_RUNTIME_DLLFILE="\"$(TKLIBNAME)\"" \
+		-Fo$@ $?
+
+$(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
@@ -665,13 +756,22 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {[catch {package present Tcl 8.6-}]} { return }
+if {![package vsatisfies [package provide Tcl] 8.6-]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin libtk$(DOTVERSION).dll] Tk]
+    if {[package vsatisfies [package provide Tcl] 9.0]} {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtcl9tk$(DOTVERSION).dll]]]
+    } else {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin libtk$(DOTVERSION).dll]]]
+    }
 } else {
-    package ifneeded Tk $(TK_PATCH_LEVEL) [list load [file join $$dir .. .. bin $(TKLIBNAME)] Tk]
+    if {[package vsatisfies [package provide Tcl] 9.0]} {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME9)]]]
+    } else {
+	package ifneeded tk $(TK_PATCH_LEVEL) [list load [file normalize [file join $$dir .. .. bin $(TKLIBNAME8)]]]
+    }
 }
+package ifneeded Tk $(TK_PATCH_LEVEL) [list package require -exact tk $(TK_PATCH_LEVEL)]
 <<
 	@$(CPY) $(OUT_DIR)\pkgIndex.tcl "$(SCRIPT_INSTALL_DIR)\"
 !endif
@@ -685,6 +785,10 @@ install-libraries:
 	@$(CPY) "$(GENERICDIR)\tkPlatDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(GENERICDIR)\tkIntXlibDecls.h" "$(INCLUDE_INSTALL_DIR)\"
 	@$(CPY) "$(XLIBDIR)\X11\*.h" "$(INCLUDE_INSTALL_DIR)\X11\"
+!if !$(USING_PRE87_TCL)
+	@$(CPY) "$(TKSCRIPTZIP)" "$(LIB_INSTALL_DIR)"
+!endif
+!if !$(TK_EMBED_SCRIPTS)
 	@echo installing script library
 	@$(CPY) "$(LIBDIR)\*" "$(SCRIPT_INSTALL_DIR)\"
 	@echo installing theme library
@@ -693,6 +797,7 @@ install-libraries:
 	@$(CPY) "$(LIBDIR)\images\*" "$(SCRIPT_INSTALL_DIR)\images\"
 	@echo installing language files
 	@$(CPY) "$(LIBDIR)\msgs\*" "$(SCRIPT_INSTALL_DIR)\msgs\"
+!endif
 	@echo installing demos
 	@$(CPY) "$(DEMODIR)\*" "$(DEMO_INSTALL_DIR)\"
 	@$(CPY) "$(DEMODIR)\images\*" "$(DEMO_INSTALL_DIR)\images\"
@@ -720,3 +825,8 @@ tidy:
 	@echo Removing $(TKSTUBLIB) ...
 	@if exist $(TKSTUBLIB) del $(TKSTUBLIB)
 
+.PHONY:
+
+# Local Variables:
+# mode: makefile
+# End:

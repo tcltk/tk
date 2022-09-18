@@ -5,8 +5,8 @@
  *	FOR BACKWARD COMPATIBILITY; THE NEW CONFIGURATION PACKAGE SHOULD BE
  *	USED FOR NEW PROJECTS.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,12 +18,7 @@
  * Values for "flags" field of Tk_ConfigSpec structures. Be sure to coordinate
  * these values with those defined in tk.h (TK_CONFIG_COLOR_ONLY, etc.) There
  * must not be overlap!
- *
- * INIT -		Non-zero means (char *) things have been converted to
- *			Tk_Uid's.
  */
-
-#define INIT		0x20
 
 #ifndef TK_CONFIG_OPTION_SPECIFIED
 #  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
@@ -86,7 +81,7 @@ Tk_ConfigureWidget(
 				 * considered. Also, may have
 				 * TK_CONFIG_ARGV_ONLY set. */
 {
-    register Tk_ConfigSpec *specPtr, *staticSpecs;
+    Tk_ConfigSpec *specPtr, *staticSpecs;
     Tk_Uid value;		/* Value of option from database. */
     int needFlags;		/* Specs must contain this set of flags or
 				 * else they are not considered. */
@@ -249,8 +244,8 @@ FindConfigSpec(
     int hateFlags)		/* Flags that must NOT be present in matching
 				 * entry. */
 {
-    register Tk_ConfigSpec *specPtr;
-    register char c;		/* First character of current argument. */
+    Tk_ConfigSpec *specPtr;
+    char c;		/* First character of current argument. */
     Tk_ConfigSpec *matchPtr;	/* Matching spec, or NULL. */
     size_t length;
 
@@ -352,7 +347,7 @@ DoConfig(
     int nullValue;
 
     nullValue = 0;
-    if ((*value == 0) && (specPtr->specFlags & TK_CONFIG_NULL_OK)) {
+    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_INDEX_NULL_OK))) {
 	nullValue = 1;
     }
 
@@ -380,7 +375,7 @@ DoConfig(
 	    if (nullValue) {
 		newStr = NULL;
 	    } else {
-		newStr = ckalloc(strlen(value) + 1);
+		newStr = (char *)ckalloc(strlen(value) + 1);
 		strcpy(newStr, value);
 	    }
 	    oldStr = *((char **) ptr);
@@ -550,7 +545,7 @@ DoConfig(
 	}
 	case TK_CONFIG_CUSTOM:
 	    if (specPtr->customPtr->parseProc(specPtr->customPtr->clientData,
-		    interp, tkwin, value, widgRec, specPtr->offset)!=TCL_OK) {
+		    interp, tkwin, value, (char *)widgRec, specPtr->offset)!=TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -607,7 +602,7 @@ Tk_ConfigureInfo(
 				 * be present in config specs for them to be
 				 * considered. */
 {
-    register Tk_ConfigSpec *specPtr, *staticSpecs;
+    Tk_ConfigSpec *specPtr, *staticSpecs;
     int needFlags, hateFlags;
     char *list;
     const char *leader = "{";
@@ -690,7 +685,7 @@ FormatConfigInfo(
     Tcl_Interp *interp,		/* Interpreter to use for things like
 				 * floating-point precision. */
     Tk_Window tkwin,		/* Window corresponding to widget. */
-    register const Tk_ConfigSpec *specPtr,
+    const Tk_ConfigSpec *specPtr,
 				/* Pointer to information describing
 				 * option. */
     void *widgRec)		/* Pointer to record holding current values of
@@ -775,28 +770,28 @@ FormatConfigValue(
     result = "";
     switch (specPtr->type) {
     case TK_CONFIG_BOOLEAN:
-	if (*((int *) ptr) == 0) {
+	if (*((int *)ptr) == 0) {
 	    result = "0";
 	} else {
 	    result = "1";
 	}
 	break;
     case TK_CONFIG_INT:
-	sprintf(buffer, "%d", *((int *) ptr));
+	sprintf(buffer, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_DOUBLE:
-	Tcl_PrintDouble(interp, *((double *) ptr), buffer);
+	Tcl_PrintDouble(interp, *((double *)ptr), buffer);
 	result = buffer;
 	break;
     case TK_CONFIG_STRING:
-	result = (*(char **) ptr);
+	result = (*(char **)ptr);
 	if (result == NULL) {
 	    result = "";
 	}
 	break;
     case TK_CONFIG_UID: {
-	Tk_Uid uid = *((Tk_Uid *) ptr);
+	Tk_Uid uid = *((Tk_Uid *)ptr);
 
 	if (uid != NULL) {
 	    result = uid;
@@ -804,7 +799,7 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_COLOR: {
-	XColor *colorPtr = *((XColor **) ptr);
+	XColor *colorPtr = *((XColor **)ptr);
 
 	if (colorPtr != NULL) {
 	    result = Tk_NameOfColor(colorPtr);
@@ -812,7 +807,7 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_FONT: {
-	Tk_Font tkfont = *((Tk_Font *) ptr);
+	Tk_Font tkfont = *((Tk_Font *)ptr);
 
 	if (tkfont != NULL) {
 	    result = Tk_NameOfFont(tkfont);
@@ -820,7 +815,7 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_BITMAP: {
-	Pixmap pixmap = *((Pixmap *) ptr);
+	Pixmap pixmap = *((Pixmap *)ptr);
 
 	if (pixmap != None) {
 	    result = Tk_NameOfBitmap(Tk_Display(tkwin), pixmap);
@@ -828,7 +823,7 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_BORDER: {
-	Tk_3DBorder border = *((Tk_3DBorder *) ptr);
+	Tk_3DBorder border = *((Tk_3DBorder *)ptr);
 
 	if (border != NULL) {
 	    result = Tk_NameOf3DBorder(border);
@@ -836,11 +831,11 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_RELIEF:
-	result = Tk_NameOfRelief(*((int *) ptr));
+	result = Tk_NameOfRelief(*((int *)ptr));
 	break;
     case TK_CONFIG_CURSOR:
     case TK_CONFIG_ACTIVE_CURSOR: {
-	Tk_Cursor cursor = *((Tk_Cursor *) ptr);
+	Tk_Cursor cursor = *((Tk_Cursor *)ptr);
 
 	if (cursor != NULL) {
 	    result = Tk_NameOfCursor(Tk_Display(tkwin), cursor);
@@ -848,29 +843,27 @@ FormatConfigValue(
 	break;
     }
     case TK_CONFIG_JUSTIFY:
-	result = Tk_NameOfJustify(*((Tk_Justify *) ptr));
+	result = Tk_NameOfJustify(*((Tk_Justify *)ptr));
 	break;
     case TK_CONFIG_ANCHOR:
-	result = Tk_NameOfAnchor(*((Tk_Anchor *) ptr));
+	result = Tk_NameOfAnchor(*((Tk_Anchor *)ptr));
 	break;
     case TK_CONFIG_CAP_STYLE:
-	result = Tk_NameOfCapStyle(*((int *) ptr));
+	result = Tk_NameOfCapStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_JOIN_STYLE:
-	result = Tk_NameOfJoinStyle(*((int *) ptr));
+	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	sprintf(buffer, "%d", *((int *) ptr));
+	sprintf(buffer, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_MM:
-	Tcl_PrintDouble(interp, *((double *) ptr), buffer);
+	Tcl_PrintDouble(interp, *((double *)ptr), buffer);
 	result = buffer;
 	break;
     case TK_CONFIG_WINDOW: {
-	Tk_Window tkwin;
-
-	tkwin = *((Tk_Window *) ptr);
+	tkwin = *((Tk_Window *)ptr);
 	if (tkwin != NULL) {
 	    result = Tk_PathName(tkwin);
 	}
@@ -878,7 +871,7 @@ FormatConfigValue(
     }
     case TK_CONFIG_CUSTOM:
 	result = specPtr->customPtr->printProc(specPtr->customPtr->clientData,
-		tkwin, widgRec, specPtr->offset, freeProcPtr);
+		tkwin, (char *)widgRec, specPtr->offset, freeProcPtr);
 	break;
     default:
 	result = "?? unknown type ??";
@@ -976,7 +969,6 @@ Tk_ConfigureValue(
  *----------------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 void
 Tk_FreeOptions(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
@@ -988,7 +980,7 @@ Tk_FreeOptions(
 				 * be present in config specs for them to be
 				 * considered. */
 {
-    register const Tk_ConfigSpec *specPtr;
+    const Tk_ConfigSpec *specPtr;
     char *ptr;
 
     for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
@@ -1076,10 +1068,10 @@ GetCachedSpecs(
      * self-initializing code.
      */
 
-    specCacheTablePtr =
+    specCacheTablePtr = (Tcl_HashTable *)
 	    Tcl_GetAssocData(interp, "tkConfigSpec.threadTable", NULL);
     if (specCacheTablePtr == NULL) {
-	specCacheTablePtr = ckalloc(sizeof(Tcl_HashTable));
+	specCacheTablePtr = (Tcl_HashTable *)ckalloc(sizeof(Tcl_HashTable));
 	Tcl_InitHashTable(specCacheTablePtr, TCL_ONE_WORD_KEYS);
 	Tcl_SetAssocData(interp, "tkConfigSpec.threadTable",
 		DeleteSpecCacheTable, specCacheTablePtr);
@@ -1093,7 +1085,7 @@ GetCachedSpecs(
     entryPtr = Tcl_CreateHashEntry(specCacheTablePtr, (char *) staticSpecs,
 	    &isNew);
     if (isNew) {
-	unsigned int entrySpace = sizeof(Tk_ConfigSpec);
+	size_t entrySpace = sizeof(Tk_ConfigSpec);
 	const Tk_ConfigSpec *staticSpecPtr;
 	Tk_ConfigSpec *specPtr;
 
@@ -1109,10 +1101,10 @@ GetCachedSpecs(
 
 	/*
 	 * Now allocate our working copy's space and copy over the contents
-	 * from the master copy.
+	 * from the origin.
 	 */
 
-	cachedSpecs = ckalloc(entrySpace);
+	cachedSpecs = (Tk_ConfigSpec *)ckalloc(entrySpace);
 	memcpy(cachedSpecs, staticSpecs, entrySpace);
 	Tcl_SetHashValue(entryPtr, cachedSpecs);
 
@@ -1136,7 +1128,7 @@ GetCachedSpecs(
 	    }
 	}
     } else {
-	cachedSpecs = Tcl_GetHashValue(entryPtr);
+	cachedSpecs = (Tk_ConfigSpec *)Tcl_GetHashValue(entryPtr);
     }
 
     return cachedSpecs;
@@ -1162,9 +1154,9 @@ GetCachedSpecs(
 static void
 DeleteSpecCacheTable(
     ClientData clientData,
-    Tcl_Interp *interp)
+    TCL_UNUSED(Tcl_Interp *))
 {
-    Tcl_HashTable *tablePtr = clientData;
+    Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;
     Tcl_HashEntry *entryPtr;
     Tcl_HashSearch search;
 

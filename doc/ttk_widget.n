@@ -83,7 +83,7 @@ in the case both \fB\-text\fR and \fB\-image\fR are present.
 If set to the empty string (the default), the rules described in the
 "Elements" section of \fIttk::intro(n)\fR explain which value is actually
 used.
-Valid values are:
+The other valid values are:
 .RS
 .IP text
 Display text only.
@@ -152,13 +152,14 @@ to zero, then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
 .SH "ENTRY OPTIONS"
-The following option is supported by entry, spinbox and combobox:
+The following options are supported by entry, spinbox and combobox:
 .OP \-placeholder placeHolder PlaceHolder
 Specifies a help text string to display if no text is otherwise displayed,
 that is when the widget is empty. The placeholder text is displayed using
-the values of the \fB\-font\fR and \fB\-justify\fR options. The foreground
-color of the placeholder text can be changed using the
-\fB\-placeholderforeground\fR style option.
+the values of the \fB\-font\fR, \fB\-justify\fR and
+\fB\-placeholderforeground\fR options.
+.OP \-placeholderforeground placeHolderForeground PlaceHolderForeground
+Specifies the foreground color of the placeholder text.
 .SH "COMPATIBILITY OPTIONS"
 This option is only available for themed widgets that have
 .QW corresponding
@@ -173,12 +174,10 @@ does not affect the \fB\-state\fR option.
 .SH COMMANDS
 .TP
 \fIpathName \fBcget \fIoption\fR
-.
 Returns the current value of the configuration option given
 by \fIoption\fR.
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-.
 Query or modify the configuration options of the widget.
 If one or more \fIoption\-value\fR pairs are specified,
 then the command modifies the given widget option(s)
@@ -194,15 +193,14 @@ If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR.
 .TP
 \fIpathName \fBidentify element \fIx y\fR
-.
 Returns the name of the element under the point given
 by \fIx\fR and \fIy\fR, or an empty string if the point does
 not lie within any element.
 \fIx\fR and \fIy\fR are pixel coordinates relative to the widget.
-Some widgets accept other \fBidentify\fR subcommands.
+Some widgets accept other \fBidentify\fR subcommands described
+in these widgets documentation.
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-.
 Test the widget's state.
 If \fIscript\fR is not specified, returns 1 if
 the widget state matches \fIstatespec\fR and 0 otherwise.
@@ -212,7 +210,6 @@ if {[\fIpathName\fR instate \fIstateSpec\fR]} \fIscript\fR
 .CE
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
-.
 Modify or inquire widget state.
 If \fIstateSpec\fR is present, sets the widget state:
 for each flag in \fIstateSpec\fR, sets the corresponding flag
@@ -227,6 +224,9 @@ will restore \fIpathName\fR to the original state.
 If \fIstateSpec\fR is not specified,
 returns a list of the currently-enabled state flags.
 .RE
+.TP
+\fIpathName \fBstyle\fR
+Return the style used by the widget.
 .TP
 \fIpathName \fBxview \fIargs\fR
 This command is used to query and change the horizontal position of the
@@ -256,7 +256,8 @@ way through the content appears at the left edge of the window.
 \fIpathName \fBxview scroll \fInumber what\fR
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 '\" or an abbreviation of one of these, but we don't document that.
 If \fIwhat\fR is

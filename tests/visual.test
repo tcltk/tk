@@ -2,9 +2,9 @@
 # procedures in the file tkVisual.c.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -455,7 +455,7 @@ test visual-7.1 {Tk_GetColormap, "new"} -constraints {
     colorsFree .t2
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test visual-7.2 {Tk_GetColormap, "new"} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -468,7 +468,7 @@ test visual-7.2 {Tk_GetColormap, "new"} -constraints {
     colorsFree .t2
 } -cleanup {
     deleteWindows
-} -result {1}
+} -result 1
 test visual-7.3 {Tk_GetColormap, copy from other window} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -484,7 +484,7 @@ test visual-7.3 {Tk_GetColormap, copy from other window} -constraints {
     colorsFree .t2
 } -cleanup {
     deleteWindows
-} -result {1}
+} -result 1
 test visual-7.4 {Tk_GetColormap, copy from other window} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {
@@ -500,7 +500,7 @@ test visual-7.4 {Tk_GetColormap, copy from other window} -constraints {
     colorsFree .t2
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 test visual-7.5 {Tk_GetColormap, copy from other window} -constraints {
     defaultPseudocolor8 nonPortable
 } -setup {

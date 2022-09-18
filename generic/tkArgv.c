@@ -4,8 +4,8 @@
  *	This file contains a function that handles table-based argv-argc
  *	parsing.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -67,12 +67,12 @@ Tk_ParseArgv(
     int flags)			/* Or'ed combination of various flag bits,
 				 * such as TK_ARGV_NO_DEFAULTS. */
 {
-    register const Tk_ArgvInfo *infoPtr;
+    const Tk_ArgvInfo *infoPtr;
 				/* Pointer to the current entry in the table
 				 * of argument descriptions. */
     const Tk_ArgvInfo *matchPtr;/* Descriptor that matches current argument. */
     const char *curArg;		/* Current argument */
-    register char c;		/* Second character of current arg (used for
+    char c;		/* Second character of current arg (used for
 				 * quick check for matching; use 2nd char.
 				 * because first char. will almost always be
 				 * '-'). */
@@ -228,9 +228,9 @@ Tk_ParseArgv(
 	    break;
 	case TK_ARGV_FUNC: {
 	    typedef int (ArgvFunc)(char *, const char *, const char *);
-	    ArgvFunc *handlerProc = infoPtr->src;
+	    ArgvFunc *handlerProc = (ArgvFunc *)infoPtr->src;
 
-	    if (handlerProc(infoPtr->dst, infoPtr->key, argv[srcIndex])) {
+	    if (handlerProc((char *)infoPtr->dst, infoPtr->key, argv[srcIndex])) {
 		srcIndex++;
 		argc--;
 	    }
@@ -239,9 +239,9 @@ Tk_ParseArgv(
 	case TK_ARGV_GENFUNC: {
 	    typedef int (ArgvGenFunc)(char *, Tcl_Interp *, const char *, int,
 		    const char **);
-	    ArgvGenFunc *handlerProc = infoPtr->src;
+	    ArgvGenFunc *handlerProc = (ArgvGenFunc *)infoPtr->src;
 
-	    argc = handlerProc(infoPtr->dst, interp, infoPtr->key, argc,
+	    argc = handlerProc((char *)infoPtr->dst, interp, infoPtr->key, argc,
 		    argv+srcIndex);
 	    if (argc < 0) {
 		return TCL_ERROR;
@@ -253,14 +253,14 @@ Tk_ParseArgv(
 	    Tcl_SetErrorCode(interp, "TK", "ARG", "HELP", NULL);
 	    return TCL_ERROR;
 	case TK_ARGV_CONST_OPTION:
-	    Tk_AddOption(tkwin, infoPtr->dst, infoPtr->src,
+	    Tk_AddOption(tkwin, (char *)infoPtr->dst, (char *)infoPtr->src,
 		    TK_INTERACTIVE_PRIO);
 	    break;
 	case TK_ARGV_OPTION_VALUE:
 	    if (argc < 1) {
 		goto missingArg;
 	    }
-	    Tk_AddOption(tkwin, infoPtr->dst, argv[srcIndex],
+	    Tk_AddOption(tkwin, (char *)infoPtr->dst, argv[srcIndex],
 		    TK_INTERACTIVE_PRIO);
 	    srcIndex++;
 	    argc--;
@@ -338,7 +338,7 @@ PrintUsage(
 				 * this word, then don't generate information
 				 * for default options. */
 {
-    register const Tk_ArgvInfo *infoPtr;
+    const Tk_ArgvInfo *infoPtr;
     size_t width, i, numSpaces;
     Tcl_Obj *message;
 

@@ -1,8 +1,8 @@
 # This file is a Tcl script to test out Tk's "tk_chooseDir" and
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -102,7 +102,7 @@ test choosedir-1.5.1 {tk_chooseDirectory command} -constraints notAqua -body {
 } -returnCodes error -result {bad option "-foo": must be -initialdir, -mustexist, -parent, or -title}
 test choosedir-1.5.2 {tk_chooseDirectory command} -constraints aqua -body {
     tk_chooseDirectory -foo bar
-} -returnCodes error -result {bad option "-foo": must be -initialdir, -message, -mustexist, -parent, -title, or -command}
+} -returnCodes error -result {bad option "-foo": must be -command, -initialdir, -message, -mustexist, -parent, or -title}
 test choosedir-1.6 {tk_chooseDirectory command} -body {
     tk_chooseDirectory -parent foo.bar
 } -returnCodes error -result {bad window path name "foo.bar"}

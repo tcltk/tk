@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in tkEvent.c.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1995 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1995 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -20,57 +20,10 @@ namespace import -force tcltest::test
 proc _init_keypress_lookup {} {
     global keypress_lookup
 
-    scan A %c start
-    scan Z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan a %c start
-    scan z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan 0 %c start
-    scan 9 %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    # Most punctuation
-    array set keypress_lookup {
-        ! exclam
-        % percent
-        & ampersand
-        ( parenleft
-        ) parenright
-        * asterisk
-        + plus
-        , comma
-        - minus
-        . period
-        / slash
-        : colon
-        < less
-        = equal
-        > greater
-        ? question
-        @ at
-        ^ asciicircum
-        _ underscore
-        | bar
-        ~ asciitilde
-        ' apostrophe
-    }
     # Characters with meaning to Tcl...
     array set keypress_lookup [list \
+	    -    minus \
+	    >    greater \
 	    \"   quotedbl \
 	    \#   numbersign \
 	    \$   dollar \
@@ -81,6 +34,7 @@ proc _init_keypress_lookup {} {
 	    \{   braceleft \
 	    \}   braceright \
 	    " "  space \
+	    \xA0 nobreakspace \
 	    "\n" Return \
 	    "\t" Tab]
 }
@@ -88,8 +42,8 @@ proc _init_keypress_lookup {} {
 # Lookup an event in the keypress table.
 # For example:
 # Q -> Q
-# . -> period
-# / -> slash
+# ; -> semicolon
+# > -> greater
 # Delete -> Delete
 # Escape -> Escape
 
@@ -756,6 +710,7 @@ test event-7.1(double-click) {A double click on a lone character
     return $result
 } -cleanup {
     deleteWindows
+    unset x1 y1 width height middle_y left_x left_y right_x right_y
 } -result {1.3 A 1.3 A}
 test event-7.2(double-click) {A double click on a lone character
     in an entry widget should select that character} -setup {
@@ -822,6 +777,7 @@ test event-7.2(double-click) {A double click on a lone character
     return $result
 } -cleanup {
     deleteWindows
+    unset x1 y1 width height middle_y left_x left_y right_x right_y
 } -result {4 A 4 A}
 
 test event-8 {event generate with keysyms corresponding to
@@ -859,7 +815,95 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
+test event-9 {no <Enter> event is generated for the container window when its
+              managed window in which the mouse pointer was inside gets
+              destroyed - bug 9e1312f32c} -setup {
+    set res [list ]
+    set iconified false
+    if {[winfo ismapped .]} {
+        wm iconify .
+        update
+        set iconified true
+    }
+} -body {
+    toplevel .top
+    pack propagate .top 0
+    bind .top <Enter> {lappend res %W}
+    pack [frame .top.f -bg green -width 50 -height 50] -anchor se -side bottom
+    tkwait visibility .top.f
+    after 50
+    update
+    focus -force .top.f
+    event generate .top.f <Motion> -warp 1 -x 25 -y 25  ; # <Enter> sent to .top and .top.f
+    controlPointerWarpTiming
+    update  ; # idletasks not enough
+    destroy .top.f  ; # no <Enter> event sent
+    update
+    set res
+} -cleanup {
+    deleteWindows
+    if {$iconified} {
+        wm deiconify .
+        update
+    }
+} -result {.top .top.f}
+
+test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
+    set EnterBind [bind . <Enter>]
+} -body {
+    wm geometry . 200x200+300+300
+    wm deiconify .
+    _pause 200
+    toplevel .top2 -width 200 -height 200
+    wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
+    wm deiconify .top2
+    raise .top2
+    _pause 400
+    event generate .top2 <Motion> -warp 1 -x 50 -y 50
+    _pause 100
+    bind . <Enter> {lappend res %W}
+    set res [list ]
+    destroy .top2
+    _pause 200
+    set res
+} -cleanup {
+    deleteWindows
+    bind . <Enter> $EnterBind
+} -result {.}
+test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
+    set iconified false
+    if {[winfo ismapped .]} {
+        wm iconify .
+        update
+        set iconified true
+    }
+} -body {
+    toplevel .top1
+    wm geometry .top1 200x200+300+300
+    wm deiconify .top1
+    _pause 200
+    toplevel .top2 -width 200 -height 200
+    wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
+    wm deiconify .top2
+    raise .top2
+    _pause 400
+    event generate .top2 <Motion> -warp 1 -x 50 -y 50
+    _pause 100
+    bind .top1 <Enter> {lappend res %W}
+    set res [list ]
+    destroy .top2
+    _pause 200
+    set res
+} -cleanup {
+    deleteWindows ; # destroy all children of ".", this already includes .top1
+    if {$iconified} {
+        wm deiconify .
+        update
+    }
+} -result {.top1}
+
 # cleanup
+update
 unset -nocomplain keypress_lookup
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}

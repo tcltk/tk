@@ -4,7 +4,7 @@
  *	Process the -filetypes option for the file dialogs on Windows and the
  *	Mac.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -164,7 +164,7 @@ TkFreeFileFilters(
     FileFilterClause *clausePtr;
     GlobPattern *globPtr;
     MacFileType *mfPtr;
-    register void *toFree;	/* A pointer that we are about to free. */
+    void *toFree;	/* A pointer that we are about to free. */
 
     for (filterPtr = flistPtr->filters; filterPtr != NULL; ) {
 	for (clausePtr = filterPtr->clauses; clausePtr != NULL; ) {
@@ -263,7 +263,7 @@ AddClause(
 
 	for (i=0; i<ostypeCount; i++) {
 	    TkSizeT len;
-	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
+	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 
 	    /*
 	     * If len is < 4, it is definitely an error. If equal or longer,
@@ -286,7 +286,7 @@ AddClause(
 		 * be 4 macRoman characters long
 		 */
 
-		Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+		(void)Tcl_UtfToExternalDStringEx(macRoman, strType, len, TCL_ENCODING_NOCOMPLAIN, &osTypeDS);
 		len = Tcl_DStringLength(&osTypeDS);
 		Tcl_DStringFree(&osTypeDS);
 	    }
@@ -305,7 +305,7 @@ AddClause(
      * Add the clause into the list of clauses
      */
 
-    clausePtr = ckalloc(sizeof(FileFilterClause));
+    clausePtr = (FileFilterClause *)ckalloc(sizeof(FileFilterClause));
     clausePtr->patterns = NULL;
     clausePtr->patternsTail = NULL;
     clausePtr->macTypes = NULL;
@@ -321,9 +321,9 @@ AddClause(
 
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
-	    GlobPattern *globPtr = ckalloc(sizeof(GlobPattern));
+	    GlobPattern *globPtr = (GlobPattern *)ckalloc(sizeof(GlobPattern));
 	    TkSizeT len;
-	    const char *str = TkGetStringFromObj(globList[i], &len);
+	    const char *str = Tcl_GetStringFromObj(globList[i], &len);
 
 	    len = (len + 1) * sizeof(char);
 	    if (str[0] && str[0] != '*') {
@@ -331,12 +331,12 @@ AddClause(
 		 * Prepend a "*" to patterns that do not have a leading "*"
 		 */
 
-		globPtr->pattern = ckalloc(len + 1);
+		globPtr->pattern = (char *)ckalloc(len + 1);
 		globPtr->pattern[0] = '*';
 		strcpy(globPtr->pattern+1, str);
 	    } else if (isWindows) {
 		if (strcmp(str, "*") == 0) {
-		    globPtr->pattern = ckalloc(4);
+		    globPtr->pattern = (char *)ckalloc(4);
 		    strcpy(globPtr->pattern, "*.*");
 		} else if (strcmp(str, "") == 0) {
 		    /*
@@ -345,14 +345,14 @@ AddClause(
 		     * TODO: "*." actually matches with all files on Win95
 		     */
 
-		    globPtr->pattern = ckalloc(3);
+		    globPtr->pattern = (char *)ckalloc(3);
 		    strcpy(globPtr->pattern, "*.");
 		} else {
-		    globPtr->pattern = ckalloc(len);
+		    globPtr->pattern = (char *)ckalloc(len);
 		    strcpy(globPtr->pattern, str);
 		}
 	    } else {
-		globPtr->pattern = ckalloc(len);
+		globPtr->pattern = (char *)ckalloc(len);
 		strcpy(globPtr->pattern, str);
 	    }
 
@@ -376,8 +376,8 @@ AddClause(
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
 	    TkSizeT len;
-	    MacFileType *mfPtr = ckalloc(sizeof(MacFileType));
-	    const char *strType = TkGetStringFromObj(ostypeList[i], &len);
+	    MacFileType *mfPtr = (MacFileType *)ckalloc(sizeof(MacFileType));
+	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 	    char *string;
 
 	    /*
@@ -385,7 +385,7 @@ AddClause(
 	     * macRoman characters long
 	     */
 
-	    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+	    (void)Tcl_UtfToExternalDStringEx(macRoman, strType, len, TCL_ENCODING_NOCOMPLAIN, &osTypeDS);
 	    string = Tcl_DStringValue(&osTypeDS);
 	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 		    (OSType) string[2] <<  8 | (OSType) string[3];
@@ -445,11 +445,11 @@ GetFilter(
 	}
     }
 
-    filterPtr = ckalloc(sizeof(FileFilter));
+    filterPtr = (FileFilter *)ckalloc(sizeof(FileFilter));
     filterPtr->clauses = NULL;
     filterPtr->clausesTail = NULL;
     len = strlen(name) + 1;
-    filterPtr->name = ckalloc(len);
+    filterPtr->name = (char *)ckalloc(len);
     memcpy(filterPtr->name, name, len);
 
     if (flistPtr->filters == NULL) {

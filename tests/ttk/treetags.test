@@ -1,6 +1,7 @@
 
-package require Tk
-package require tcltest ; namespace import -force tcltest::*
+package require tk
+package require tcltest 2.2
+namespace import -force tcltest::*
 loadTestedCommands
 
 ### treeview tag invariants:
@@ -11,12 +12,11 @@ proc assert {expr {message ""}} {
         error "PANIC: $message ($expr failed)"
     }
 }
-proc in {e l} { expr {[lsearch -exact $l $e] >= 0} }
 
 proc itemConstraints {tv item} {
     # $tag in [$tv item $item -tags] <==> [$tv tag has $tag $item]
     foreach tag [$tv item $item -tags] {
-	assert {[in $item [$tv tag has $tag]]}
+	assert {$item in [$tv tag has $tag]}
     }
     foreach child [$tv children $item] {
 	itemConstraints $tv $child
@@ -28,7 +28,7 @@ proc treeConstraints {tv} {
     #
     foreach tag [$tv tag names] {
 	foreach item [$tv tag has $tag] {
-	    assert {[in $tag [$tv item $item -tags]]}
+	    assert {$tag in [$tv item $item -tags]}
 	}
     }
 
@@ -38,7 +38,7 @@ proc treeConstraints {tv} {
 ###
 
 test treetags-1.0 "Setup" -body {
-    set tv [ttk::treeview .tv]
+    set tv [ttk::treeview .tv -columns "A B C"]
     .tv insert {} end -id item1 -text "Item 1"
     pack .tv
 } -cleanup {
@@ -62,7 +62,7 @@ test treetags-1.3 "tag has - test" -body {
     $tv insert {} end -id item2 -text "Item 2" -tags tag2
     set result [list]
     foreach item {item1 item2} {
-    	foreach tag {tag1 tag2 tag3} {
+	foreach tag {tag1 tag2 tag3} {
 	    lappend result $item $tag [$tv tag has $tag $item]
 	}
     }
@@ -113,6 +113,12 @@ test treetags-1.10 "tag names - tag configured" -body {
     $tv tag configure tag5
     lsort [$tv tag names]
 } -result [list tag1 tag2 tag3 tag4 tag5]
+
+test treetags-1.11 "tag delete" -body {
+    $tv tag delete tag5
+    $tv tag delete tag4
+    lsort [$tv tag names]
+} -result [list tag1 tag2 tag3]
 
 test treetags-1.end "cleanup" -body {
     $tv item item1 -tags tag1
@@ -165,7 +171,7 @@ test treetags-2.3 "Virtual events delivered to focus item" -body {
 
 test treetags-2.4 "Bad events" -body {
     $tv tag bind bad <Enter> { puts "Entered!" }
-} -returnCodes 1 -result "unsupported event <Enter>*" -match glob
+} -returnCodes error -result "unsupported event <Enter>*" -match glob
 
 test treetags-3.0 "tag configure - set" -body {
     $tv tag configure tag1 -foreground blue -background red
@@ -185,8 +191,60 @@ test treetags-3.2 "tag configure - enumerate" -body {
 } -cleanup {
     treeConstraints $tv
 } -result [list \
-    -text {} -image {} -anchor {} -background red -foreground blue -font {} \
-]
+    -image {} -imageanchor {} -background red -stripedbackground {} -foreground blue -font {} -padding {} \
+                  ]
+test treetags-4.1 "tag cell add" -body {
+    $tv tag cell add _thetag
+} -returnCodes 1 -result {wrong # args: should be ".tv tag cell add tagName cells"}
+
+test treetags-4.2 "tag cell remove" -body {
+    $tv tag cell remove _thetag
+    $tv tag cell remove
+} -returnCodes 1 -result {wrong # args: should be ".tv tag cell remove tagName ?cells?"}
+
+test treetags-4.3 "tag cell has" -body {
+    $tv tag cell has _thetag
+    $tv tag cell has
+} -returnCodes 1 -result {wrong # args: should be ".tv tag cell has tagName ?cell?"}
+
+test treetags-4.3.1 "tag cell has" -body {
+    $tv tag cell add tag1 "item1 #2"
+    set res [$tv tag cell has tag1 "item1 #2"]
+    lappend res [$tv tag cell has tag1 "item1 #1"]
+    lappend res [$tv tag cell has tag1 "item1 #3"]
+    lappend res {*}[$tv tag cell has tag1]
+    $tv tag cell remove tag1 "item1 B"
+    lappend res {*}[$tv tag cell has tag1]
+    lappend res [$tv tag cell has tag1 "item1 #2"]
+} -result {1 0 0 {item1 B} 0}
+
+test treetags-4.4 "tag cell add" -body {
+    $tv tag cell add tag1 "item1 A"
+    $tv tag cell add tag1 "item1 #3"
+    $tv tag cell has tag1
+} -result {{item1 A} {item1 C}}
+
+test treetags-4.5 "tag cell add" -body {
+    $tv tag cell add tag2 "item1 A"
+    $tv tag cell add tag2 "item1 #2"
+    $tv tag cell has tag2
+} -result {{item1 A} {item1 B}}
+
+test treetags-4.6 "tag cell remove" -body {
+    $tv tag cell remove tag1 "item1 A"
+    $tv tag cell has tag1
+} -result {{item1 C}}
+
+test treetags-4.7 "tag cell remove" -body {
+    $tv tag cell remove tag2
+    $tv tag cell has tag2
+} -result {}
+
+test treetags-4.8 "tag delete with tagged cells" -body {
+    $tv tag cell add tag6 "item1 A"
+    $tv tag delete tag6
+    $tv tag cell has tag6
+} -result {}
 
 # The next test exercises tag resource management.
 # If options are not properly freed, the message:
@@ -201,7 +259,7 @@ test treetags-3.4 "stomp tags in tag binding procedure" -body {
     set result [list]
     $tv tag bind rm1 <<Remove>> { lappend ::result rm1 [%W focus] <<Remove>> }
     $tv tag bind rm2 <<Remove>> {
-    	lappend ::result rm2 [%W focus] <<Remove>>
+	lappend ::result rm2 [%W focus] <<Remove>>
 	%W item [%W focus] -tags {tag1}
     }
     $tv tag bind rm3 <<Remove>> { lappend ::result rm3 [%W focus] <<Remove>> }
