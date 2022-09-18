@@ -119,7 +119,7 @@ TkpFreeColor(
 TkColor *
 TkpGetColor(
     Tk_Window tkwin,		/* Window in which color will be used. */
-    CONST char *name)		/* Name of color to allocated (in form
+    const char *name)		/* Name of color to allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     Display *display = Tk_Display(tkwin);
