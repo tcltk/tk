@@ -83,7 +83,7 @@ ttk::notebook::enableTraversal $w.notebook
 
 # Frames pane
 set framesFrame [ttk::frame $w.notebook.frames -padding {40 35 40 50}]
-$w.notebook add $framesFrame -text "Frames" 
+$w.notebook add $framesFrame -text "Frames"
 pack [ttk::labelframe $framesFrame.darker -text Darker -padding {50 30 50 50}] \
     -fill both -expand 1
 pack [ttk::label $framesFrame.darker.label -padding {0 0 0 6} \
@@ -115,7 +115,7 @@ set triangle [ttk::checkbutton $buttonFrame.triangle -style Item -variable Trian
 bind $triangle <Button-1> {toggleTriangle %W}
 set imagebutton [ttk::button $buttonFrame.imagebutton -style ImageButton -text Image \
  		     -image {bonjour pressed bonjour1}]
-set gradient [ttk::frame $buttonFrame.gradient] 
+set gradient [ttk::frame $buttonFrame.gradient]
 pack [ttk::button $buttonFrame.gradient.add -style GradientButton \
 		  -image add -padding 7] -side left
 pack [ttk::button $buttonFrame.gradient.remove -style GradientButton \
@@ -128,7 +128,7 @@ $radio.r1 state $off
 $radio.r2 state $off
 
 grid [ttk::label $buttonFrame.plainLabel -text "Push Button:"]\
-    -row 0 -column 0 -padx 4 -sticky e 
+    -row 0 -column 0 -padx 4 -sticky e
 grid $plain -pady 4 -row 0 -column 1 -sticky w
 grid [ttk::label $buttonFrame.optionsLabel -text "Pop-up Button:"]\
     -row 1 -column 0 -padx 4 -sticky e
@@ -177,7 +177,7 @@ bind $searchfield <FocusOut> {searchFocusOut %W}
 grid [ttk::label $entryFrame.l0 -text "Text Field"] -row 0 -column 0 -padx 20 -sticky e
 grid $textfield -sticky ew -row 0 -column 1 -pady 13
 grid [ttk::label $entryFrame.l1 -text "Search Field"] -row 1 -column 0 -padx 20 -sticky e
-grid $searchfield -sticky ew -row 1 -column 1 -pady 13 
+grid $searchfield -sticky ew -row 1 -column 1 -pady 13
 grid [ttk::label $entryFrame.l2 -text "Combo Box"] -row 2 -column 0 -padx 20 -sticky e
 grid $combo -sticky ew -row 2 -column 1 -pady 13
 grid [ttk::label $entryFrame.l3 -text "Stepper"] -row 3 -column 0 -padx 20 -sticky e
