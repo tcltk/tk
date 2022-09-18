@@ -329,8 +329,12 @@ addFormattedText {
     @@demo image2	A simple user interface for viewing images
     @@demo labelframe	Labelled frames
     @@demo ttkbut	The simple Themed Tk widgets
-    @@new
-    @@demo mac_styles	Special widgets for macOS
+}
+if {[tk windowingsystem] eq "aqua"} {
+    addFormattedText {
+	@@new
+	@@demo mac_styles	Special widgets for macOS
+    }
 }
 addFormattedText {
     @@subtitle	Listboxes and Trees
