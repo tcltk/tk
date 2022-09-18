@@ -329,7 +329,10 @@ addFormattedText {
     @@demo image2	A simple user interface for viewing images
     @@demo labelframe	Labelled frames
     @@demo ttkbut	The simple Themed Tk widgets
-
+    @@new
+    @@demo mac_styles	Special widgets for macOS
+}
+addFormattedText {
     @@subtitle	Listboxes and Trees
     @@demo states	The 50 states
     @@demo colors	Colors: change the color scheme for the application
