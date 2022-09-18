@@ -190,14 +190,10 @@ Tk_ConfigureWidget(
 		    return TCL_ERROR;
 		}
 	    } else {
-		if (specPtr->defValue != NULL) {
-		    value = Tk_GetUid(specPtr->defValue);
-		} else {
-		    value = NULL;
-		}
+		value = specPtr->defValue;
 		if ((value != NULL) && !(specPtr->specFlags
 			& TK_CONFIG_DONT_SET_DEFAULT)) {
-		    if (DoConfig(interp, tkwin, specPtr, value, 1, widgRec) !=
+		    if (DoConfig(interp, tkwin, specPtr, value, 0, widgRec) !=
 			    TCL_OK) {
 			Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 				"\n    (%s \"%.50s\" in widget \"%.50s\")",
@@ -336,7 +332,7 @@ DoConfig(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     Tk_ConfigSpec *specPtr,	/* Specifier to apply. */
-    Tk_Uid value,		/* Value to use to fill in widgRec. */
+    const char *value,		/* Value to use to fill in widgRec. */
     int valueIsUid,		/* Non-zero means value is a Tk_Uid; zero
 				 * means it's an ordinary string. */
     void *widgRec)		/* Record whose fields are to be modified.
@@ -383,7 +379,7 @@ DoConfig(
 		ckfree(oldStr);
 	    }
 	    *((char **) ptr) = newStr;
-	    break;
+	    break;	
 	}
 	case TK_CONFIG_UID:
 	    if (nullValue) {
@@ -399,8 +395,8 @@ DoConfig(
 	    if (nullValue) {
 		newPtr = NULL;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newPtr = Tk_GetColor(interp, tkwin, uid);
+
+		newPtr = Tk_GetColor(interp, tkwin, value);
 		if (newPtr == NULL) {
 		    return TCL_ERROR;
 		}
@@ -433,8 +429,7 @@ DoConfig(
 	    if (nullValue) {
 		newBmp = None;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newBmp = Tk_GetBitmap(interp, tkwin, uid);
+		newBmp = Tk_GetBitmap(interp, tkwin, value);
 		if (newBmp == None) {
 		    return TCL_ERROR;
 		}
@@ -452,8 +447,7 @@ DoConfig(
 	    if (nullValue) {
 		newBorder = NULL;
 	    } else {
-		uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-		newBorder = Tk_Get3DBorder(interp, tkwin, uid);
+		newBorder = Tk_Get3DBorder(interp, tkwin, value);
 		if (newBorder == NULL) {
 		    return TCL_ERROR;
 		}
@@ -466,8 +460,7 @@ DoConfig(
 	    break;
 	}
 	case TK_CONFIG_RELIEF:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetRelief(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetRelief(interp, value, (int *) ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -494,27 +487,23 @@ DoConfig(
 	    }
 	    break;
 	}
-	case TK_CONFIG_JUSTIFY:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetJustify(interp, uid, (Tk_Justify *) ptr) != TCL_OK) {
+        case TK_CONFIG_JUSTIFY:
+	    if (Tk_GetJustify(interp, value, (Tk_Justify *) ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_ANCHOR:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetAnchor(interp, uid, (Tk_Anchor *) ptr) != TCL_OK) {
+        case TK_CONFIG_ANCHOR:
+	    if (Tk_GetAnchor(interp, value, (Tk_Anchor *) ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_CAP_STYLE:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetCapStyle(interp, uid, (int *) ptr) != TCL_OK) {
+        case TK_CONFIG_CAP_STYLE:
+	    if (Tk_GetCapStyle(interp, value, (int *) ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_JOIN_STYLE:
-	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetJoinStyle(interp, uid, (int *) ptr) != TCL_OK) {
+    	case TK_CONFIG_JOIN_STYLE:
+	    if (Tk_GetJoinStyle(interp, value, (int *) ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -524,7 +513,7 @@ DoConfig(
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_MM:
+        case TK_CONFIG_MM:
 	    if (Tk_GetScreenMM(interp, tkwin, value, (double*)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }

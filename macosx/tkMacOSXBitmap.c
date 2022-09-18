@@ -97,7 +97,7 @@ TkpDefineNativeBitmaps(void)
 	Tk_Uid name;
 	int isNew;
 
-	name = Tk_GetUid(builtInPtr->name);
+	name = builtInPtr->name;
 	predefHashPtr = Tcl_CreateHashEntry(tablePtr, name, &isNew);
 	if (isNew) {
 	    TkPredefBitmap *predefPtr = (TkPredefBitmap *)ckalloc(sizeof(TkPredefBitmap));

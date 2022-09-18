@@ -135,7 +135,7 @@ declare 31 {
 }
 declare 32 {
     TkCursor *TkGetCursorByName(Tcl_Interp *interp,
-	    Tk_Window tkwin, Tk_Uid string)
+	    Tk_Window tkwin, const char *string)
 }
 declare 33 {
     const char *TkGetDefaultScreenName(Tcl_Interp *interp,

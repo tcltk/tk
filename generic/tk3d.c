@@ -182,7 +182,7 @@ Tk_Get3DBorder(
     Tcl_Interp *interp,		/* Place to store an error message. */
     Tk_Window tkwin,		/* Token for window in which border will be
 				 * drawn. */
-    Tk_Uid colorName)		/* String giving name of color for window
+    const char *colorName)	/* String giving name of color for window
 				 * background. */
 {
     Tcl_HashEntry *hashPtr;

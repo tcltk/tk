@@ -184,7 +184,7 @@ Tk_GetColor(
     Tcl_Interp *interp,		/* Place to leave error message if color can't
 				 * be found. */
     Tk_Window tkwin,		/* Window in which color will be used. */
-    Tk_Uid name)		/* Name of color to be allocated (in form
+    const char *name)		/* Name of color to be allocated (in form
 				 * suitable for passing to XParseColor). */
 {
     Tcl_HashEntry *nameHashPtr;

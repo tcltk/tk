@@ -3043,7 +3043,7 @@ WmAttributesCmd(
 			}
 		    } else {
 			XColor *cPtr =
-			    Tk_GetColor(interp, tkwin, Tk_GetUid(crefstr));
+			    Tk_GetColor(interp, tkwin, crefstr);
 			if (cPtr == NULL) {
 			    return TCL_ERROR;
 			}
