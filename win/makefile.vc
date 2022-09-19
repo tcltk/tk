@@ -286,6 +286,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkStubInit.obj \
 	$(TMP_DIR)\tkWindow.obj \
 	$(TTK_OBJS) \
+	$(TKO_OBJS) \
 !if !$(STATIC_BUILD)
 	$(TMP_DIR)\tk.res
 !endif
@@ -325,6 +326,10 @@ TTK_OBJS = \
         $(TMP_DIR)\ttkWidget.obj \
         $(TMP_DIR)\ttkStubInit.obj
 
+TKO_OBJS = \
+        $(TMP_DIR)\tkoWidget.obj \
+        $(TMP_DIR)\tkoFrame.obj
+
 TKSTUBOBJS = \
 	$(TMP_DIR)\tkStubLib.obj \
 	$(TMP_DIR)\ttkStubLib.obj
@@ -333,6 +338,7 @@ TKSTUBOBJS = \
 ### the left side of implicit rules.
 XLIBDIR		= $(ROOT)\xlib
 TTKDIR		= $(ROOT)\generic\ttk
+TKODIR		= $(ROOT)\generic\tko
 BITMAPDIR	= $(ROOT)\bitmaps
 
 # Directories where to build TIP430 ZIP files
@@ -690,7 +696,8 @@ depend:
 	set TCL_LIBRARY=$(TCL_LIBRARY)
 	$(TCLSH) $(TCLTOOLSDIR:\=/)/mkdepend.tcl -vc32 -out:"$(OUT_DIR)\depend.mk" \
 		-passthru:"/DBUILD_tk $(TK_INCLUDES)" $(GENERICDIR),$$(GENERICDIR) \
-		$(WIN_DIR),$$(WIN_DIR) $(TTKDIR),$$(TTKDIR) $(XLIBDIR),$$(XLIBDIR) \
+		$(WIN_DIR),$$(WIN_DIR) $(TTKDIR),$$(TTKDIR) $(TKODIR),$$(TKODIR) \
+		$(XLIBDIR),$$(XLIBDIR) \
 		$(BITMAPDIR),$$(BITMAPDIR) @<<
 $(TKOBJS)
 <<
@@ -725,6 +732,11 @@ $<
 <<
 
 {$(TTKDIR)}.c{$(TMP_DIR)}.obj::
+	$(CCPKGCMD) @<<
+$<
+<<
+
+{$(TKODIR)}.c{$(TMP_DIR)}.obj::
 	$(CCPKGCMD) @<<
 $<
 <<
