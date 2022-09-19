@@ -312,6 +312,7 @@ SRC_DIR			= @srcdir@
 TOP_DIR			= $(SRC_DIR)/..
 GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
+TKO_DIR			= $(GENERIC_DIR)/tko
 UNIX_DIR		= $(TOP_DIR)/unix
 BMAP_DIR		= $(TOP_DIR)/bitmaps
 TOOL_DIR		= $(TCLDIR)/tools
@@ -386,6 +387,9 @@ TTK_OBJS = \
 	ttkTagSet.o ttkTheme.o ttkTrace.o ttkTrack.o ttkTreeview.o \
 	ttkWidget.o ttkStubInit.o
 
+TKO_OBJS = \
+	tkoWidget.o tkoFrame.o
+
 STUB_OBJS = tkStubInit.o
 
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
@@ -414,7 +418,7 @@ AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
 
 OBJS =  $(GENERIC_OBJS) $(WIDG_OBJS) $(CANV_OBJS) $(IMAGE_OBJS) $(TEXT_OBJS) \
-	$(STUB_OBJS) $(TTK_OBJS) \
+	$(STUB_OBJS) $(TTK_OBJS) $(TKO_OBJS)\
 	$(@TK_WINDOWINGSYSTEM@_OBJS) @PLAT_OBJS@
 
 TK_DECLS = \
@@ -501,6 +505,9 @@ TTK_SRCS = \
 
 TTK_STUB_SRCS = \
 	$(TTK_DIR)/ttkStubInit.c $(TTK_DIR)/ttkStubLib.c
+
+TKO_SRCS = \
+	$(TKO_DIR)/tkoWidget.c $(TKO_DIR)/tkoFrame.c
 
 X11_SRCS = \
 	$(UNIX_DIR)/tkAppInit.c $(UNIX_DIR)/tkUnix.c \
@@ -721,13 +728,17 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: test-classic test-ttk
+test: test-classic test-ttk test-tko
 
 test-classic: $(TKTEST_EXE)
 	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/all.tcl -geometry +0+0 $(TESTFLAGS)
 
 test-ttk: $(TKTEST_EXE)
 	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/ttk/all.tcl -geometry +0+0 \
+	$(TESTFLAGS)
+
+test-tko: $(TKTEST_EXE)
+	$(SHELL_ENV) ./$(TKTEST_EXE) $(TEST_DIR)/tko/all.tcl -geometry +0+0 \
 	$(TESTFLAGS)
 
 # Tests with different languages
@@ -1591,6 +1602,12 @@ tkUuid.h: $(TOP_DIR)/manifest.uuid
 	echo "#define TK_VERSION_UUID \\" >$@
 	cat $(TOP_DIR)/manifest.uuid >>$@
 	echo "" >>$@
+
+tkoWidget.o: $(TKO_DIR)/tkoWidget.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoWidget.c
+
+tkoFrame.o: $(TKO_DIR)/tkoFrame.c
+	$(CC) -c $(CC_SWITCHES) $(TKO_DIR)/tkoFrame.c
 
 .c.o:
 	$(CC) -c $(CC_SWITCHES) $<

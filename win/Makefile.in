@@ -102,6 +102,7 @@ WIN_DIR			= $(TOP_DIR)/win
 UNIX_DIR		= $(TOP_DIR)/unix
 GENERIC_DIR		= $(TOP_DIR)/generic
 TTK_DIR			= $(GENERIC_DIR)/ttk
+TKO_DIR			= $(GENERIC_DIR)/tko
 BITMAP_DIR		= $(TOP_DIR)/bitmaps
 XLIB_DIR		= $(TOP_DIR)/xlib
 RC_DIR			= $(WIN_DIR)/rc
@@ -156,7 +157,7 @@ MAN2TCL			= man2tcl${EXESUFFIX}
 # makefile to look into these paths when resolving .c to .obj
 # dependencies.
 
-VPATH = $(GENERIC_DIR):$(TTK_DIR):$(WIN_DIR):$(XLIB_DIR):$(RC_DIR)
+VPATH = $(GENERIC_DIR):$(TTK_DIR):$(TKO_DIR):$(WIN_DIR):$(XLIB_DIR):$(RC_DIR)
 
 # warning flags
 CFLAGS_WARNING	= @CFLAGS_WARNING@
@@ -404,7 +405,8 @@ TK_OBJS = \
 	tkVisual.$(OBJEXT) \
 	tkStubInit.$(OBJEXT) \
 	tkWindow.$(OBJEXT) \
-	$(TTK_OBJS)
+	$(TTK_OBJS) \
+	$(TKO_OBJS)
 
 TTK_OBJS = \
 	ttkWinMonitor.$(OBJEXT) \
@@ -440,6 +442,10 @@ TTK_OBJS = \
 	ttkTreeview.$(OBJEXT) \
 	ttkWidget.$(OBJEXT) \
 	ttkStubInit.$(OBJEXT)
+
+TKO_OBJS = \
+	tkoWidget.$(OBJEXT) \
+	tkoFrame.$(OBJEXT)
 
 STUB_OBJS = \
 	tkStubLib.$(OBJEXT) \
@@ -483,7 +489,7 @@ $(MAN2TCL): $(TCL_SRC_DIR)/tools/man2tcl.c
 # args to tcltest, ie:
 #	% make test TESTFLAGS="-verbose bps -file fileName.test"
 
-test: test-classic test-ttk
+test: test-classic test-ttk test-tko
 
 test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/all.tcl" \
@@ -491,6 +497,10 @@ test-classic: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 
 test-ttk: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
 	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/ttk/all.tcl" \
+	$(TESTFLAGS) | $(WINE) ./$(CAT32)
+
+test-tko: binaries $(TKTEST) $(TEST_DLL_FILE) $(CAT32)
+	$(SHELL_ENV) $(WINE) ./$(TKTEST) "$(ROOT_DIR_NATIVE)/tests/tko/all.tcl" \
 	$(TESTFLAGS) | $(WINE) ./$(CAT32)
 
 runtest: binaries $(TKTEST) $(TEST_DLL_FILE)

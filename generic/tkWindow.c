@@ -3441,6 +3441,15 @@ Initialize(
     }
 
     /*
+     * Initialized the tko widget set
+     */
+
+    code = Tko_Init(interp);
+    if (code != TCL_OK) {
+	goto done;
+    }
+
+    /*
      * Invoke platform-specific initialization. Unlock mutex before entering
      * TkpInit, as that may run through the Tk_Init routine again for the
      * console window interpreter.
