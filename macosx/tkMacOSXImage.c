@@ -1316,7 +1316,7 @@ TkNSImageConfigureMaster(
 /*
  *----------------------------------------------------------------------
  *
- * TkNSImageObjCmd --
+ * TkMacOSXNSImageObjCmd --
  *
  *	This function implements the configure and cget commands for an
  *	nsimage instance.
@@ -1330,8 +1330,8 @@ TkNSImageConfigureMaster(
  *----------------------------------------------------------------------
  */
 
-static int
-TkNSImageObjCmd(
+int
+TkMacOSXNSImageObjCmd(
     ClientData clientData,	/* Information about the image master. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -1451,8 +1451,6 @@ TkNSImageCreate(
 	TkNSImageDelete(masterPtr);
 	return TCL_ERROR;
     }
-
-    Tcl_CreateObjCommand(interp, name, TkNSImageObjCmd, masterPtr, NULL);
 
     *clientDataPtr = masterPtr;
     return TCL_OK;
