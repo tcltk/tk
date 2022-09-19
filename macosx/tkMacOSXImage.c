@@ -1032,9 +1032,9 @@ typedef struct TkNSImageMaster TkNSImageMaster;
  */
 
 struct TkNSImageInstance {
-    TkNSImageMaster *masterPtr; /* Pointer to the master for the image. */
-    NSImage *image;		  /* Pointer to a named NSImage.*/
-    TkNSImageInstance *nextPtr; /* First in the list of instances associated
+    TkNSImageMaster *masterPtr;   /* Pointer to the master for the image. */
+    NSImage *image;		  /* Pointer to an NSImage.*/
+    TkNSImageInstance *nextPtr;   /* First in the list of instances associated
 				   * with this master. */
 };
 
@@ -1048,9 +1048,10 @@ struct TkNSImageMaster {
     int width, height;		      /* Dimensions of the image. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
     bool pressed;                     /* Image is for use in a pressed button.*/
+    bool template;                    /* Image is for use as a template.*/
     char *imageName ;                 /* Malloc'ed image name. */
-    char *source;       	      /* Malloc'ed name of the NSimage. */
-    char *as;                         /* Malloc'ed description of source */
+    char *source;       	      /* Malloc'ed string describing the image. */
+    char *as;                         /* Malloc'ed interpretation of source */
     int	flags;			      /* Sundry flags, defined below. */
     TkNSImageInstance *instancePtr;   /* Start of list of instances associated
 				       * with this master. */
@@ -1096,7 +1097,7 @@ static Tk_ImageType TkNSImageType = {
 };
 
 /*
- * Information used for parsing configuration specifications:
+ * Default values used for parsing configuration specifications:
  */
 #define DEF_SOURCE    ""
 #define DEF_AS      "name"
@@ -1104,6 +1105,7 @@ static Tk_ImageType TkNSImageType = {
 #define DEF_WIDTH   "32"
 #define DEF_ALPHA   "1.0"
 #define DEF_PRESSED "0"
+#define DEF_TEMPLATE "0"
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
@@ -1117,6 +1119,8 @@ static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
      -1, Tk_Offset(TkNSImageMaster, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
+     -1, Tk_Offset(TkNSImageMaster, pressed), 0, NULL, 0},
+    {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
      -1, Tk_Offset(TkNSImageMaster, pressed), 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
@@ -1269,6 +1273,9 @@ TkNSImageConfigureMaster(
 	[masterPtr->image release];
 	[masterPtr->darkModeImage release];
 	masterPtr->image = [newImage retain];
+	if (masterPtr->template) {
+	    newImage.template = YES;
+	}
 	masterPtr->darkModeImage = [[masterPtr->image copy] retain];
 	if ([masterPtr->darkModeImage isTemplate]) {
 
@@ -1292,11 +1299,24 @@ TkNSImageConfigureMaster(
 	    TintImage(masterPtr->darkModeImage, [NSColor whiteColor], 0.5);
 	}
     } else {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
-	    "Try omitting ImageName, "
-	    "e.g. use NSCaution for NSImageNameCaution.", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
-	goto errorExit;
+	switch(sourceInterpretation) {
+	case NAME_SOURCE:
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
+		"Try omitting ImageName, "
+	        "e.g. use NSCaution for NSImageNameCaution.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    goto errorExit;
+	case FILE_SOURCE:
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Failed to load image file.\n", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    goto errorExit;
+	default:
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Unrecognized file type.\n", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    goto errorExit;
+	}
     }
 
     /*
