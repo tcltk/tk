@@ -1,7 +1,8 @@
 /*
  * tkMacOSXImage.c --
  *
- *	The code in this file provides an interface for XImages,
+ *	The code in this file provides an interface for XImages, and
+ *      implements the nsimage image type.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
  * Copyright (c) 2001-2009, Apple Inc.
@@ -114,7 +115,7 @@ _XInitImageFuncPtrs(
 static void ReleaseData(
     void *info,
     TCL_UNUSED(const void *), /* data */
-    TCL_UNUSED(size_t))       /* size */
+    TCL_UNUSED(size_t))        /* size */
 {
     ckfree(info);
 }
@@ -388,7 +389,7 @@ ImagePutPixel(
 XImage *
 XCreateImage(
     Display* display,
-    TCL_UNUSED(Visual*),  /* visual */
+    TCL_UNUSED(Visual*), /* visual */
     unsigned int depth,
     int format,
     int offset,
@@ -732,7 +733,7 @@ XGetImage(
     int y,
     unsigned int width,
     unsigned int height,
-    TCL_UNUSED(unsigned long), /* plane_mask */
+    TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
     NSBitmapImageRep* bitmapRep = nil;
@@ -1009,6 +1010,639 @@ XCopyPlane(
 	return XCopyArea(display, src, dst, gc, src_x, src_y, width, height,
 		dest_x, dest_y);
     }
+}
+
+/* ---------------------------------------------------------------------------*/
+
+/*
+ * Implementation of a Tk image type which provide access to NSImages
+ * for use in buttons etc.
+ */
+
+/*
+ * Forward declarations.
+ */
+
+typedef struct TkNSImageInstance TkNSImageInstance;
+typedef struct TkNSImageMaster TkNSImageMaster;
+
+/*
+ * The following data structure represents a particular use of an nsimage
+ * in a widget.
+ */
+
+struct TkNSImageInstance {
+    TkNSImageMaster *masterPtr;   /* Pointer to the master for the image. */
+    NSImage *image;		  /* Pointer to an NSImage.*/
+    TkNSImageInstance *nextPtr;   /* First in the list of instances associated
+				   * with this master. */
+};
+
+/*
+ * The following data structure represents the master for an nsimage:
+ */
+
+struct TkNSImageMaster {
+    Tk_ImageMaster tkMaster;	      /* Tk's token for image master. */
+    Tcl_Interp *interp;		      /* Interpreter for application. */
+    int width, height;		      /* Dimensions of the image. */
+    double alpha;                     /* Transparency, between 0.0 and 1.0*/
+    bool pressed;                     /* Image is for use in a pressed button.*/
+    bool template;                    /* Image is for use as a template.*/
+    char *imageName ;                 /* Malloc'ed image name. */
+    char *source;       	      /* Malloc'ed string describing the image. */
+    char *as;                         /* Malloc'ed interpretation of source */
+    int	flags;			      /* Sundry flags, defined below. */
+    TkNSImageInstance *instancePtr;   /* Start of list of instances associated
+				       * with this master. */
+    NSImage *image;                   /* The underlying NSImage object. */
+    NSImage *darkModeImage;           /* A modified image to use in Dark Mode. */
+};
+
+/*
+ * Bit definitions for the flags field of a TkNSImageMaster.
+ * IMAGE_CHANGED:		1 means that the instances of this image need
+ *				to be redisplayed.
+ */
+
+#define IMAGE_CHANGED		1
+
+/*
+ * The type record for nsimage images:
+ */
+
+static int		TkNSImageCreate(Tcl_Interp *interp,
+			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const Tk_ImageType *typePtr, Tk_ImageMaster master,
+			    ClientData *clientDataPtr);
+static ClientData	TkNSImageGet(Tk_Window tkwin, ClientData clientData);
+static void		TkNSImageDisplay(ClientData clientData,
+			    Display *display, Drawable drawable,
+			    int imageX, int imageY, int width,
+			    int height, int drawableX,
+			    int drawableY);
+static void		TkNSImageFree(ClientData clientData, Display *display);
+static void		TkNSImageDelete(ClientData clientData);
+
+static Tk_ImageType TkNSImageType = {
+    "nsimage",			/* name of image type */
+    TkNSImageCreate,		/* createProc */
+    TkNSImageGet,		/* getProc */
+    TkNSImageDisplay,		/* displayProc */
+    TkNSImageFree,		/* freeProc */
+    TkNSImageDelete,		/* deleteProc */
+    NULL,			/* postscriptPtr */
+    NULL,			/* nextPtr */
+    NULL
+};
+
+/*
+ * Default values used for parsing configuration specifications:
+ */
+#define DEF_SOURCE    ""
+#define DEF_AS      "name"
+#define DEF_HEIGHT  "32"
+#define DEF_WIDTH   "32"
+#define DEF_ALPHA   "1.0"
+#define DEF_PRESSED "0"
+#define DEF_TEMPLATE "0"
+
+static const Tk_OptionSpec systemImageOptions[] = {
+    {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
+     -1, Tk_Offset(TkNSImageMaster, source), 0, NULL, 0},
+    {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
+     -1, Tk_Offset(TkNSImageMaster, as), 0, NULL, 0},
+    {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
+     -1, Tk_Offset(TkNSImageMaster, width), 0, NULL, 0},
+    {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
+     -1, Tk_Offset(TkNSImageMaster, height), 0, NULL, 0},
+    {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
+     -1, Tk_Offset(TkNSImageMaster, alpha), 0, NULL, 0},
+    {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
+     -1, Tk_Offset(TkNSImageMaster, pressed), 0, NULL, 0},
+    {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
+     -1, Tk_Offset(TkNSImageMaster, pressed), 0, NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
+};
+
+/*
+ * The -as option specifies how the string provided in the -source
+ * option should be interpreted as a description of an NSImage.
+ * Below are the possible values and their meanings.  (The last two
+ * provide the macOS icon for a particular file type.)
+ */
+
+static const char *sourceInterpretations[] = {
+    "name",       /* A name for a named NSImage. */
+    "file",       /* A path to an image file. */
+    "path",       /* A path to a file whose type should be examined. */
+    "filetype",   /* A file extension or 4-byte OSCode. */
+};
+
+enum {NAME_SOURCE, FILE_SOURCE, PATH_SOURCE, FILETYPE_SOURCE};
+
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TintImage --
+ *
+ *      Modify an NSImage by blending it with a color.  The transparent part of
+ *      the image remains transparent.  The opaque part of the image is painted
+ *      with the color, using the specified alpha value for the transparency of
+ *      the color.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The appearance of the NSImage changes.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void TintImage(
+    NSImage *image,
+    NSColor *color,
+    double alpha)
+{
+    NSSize size = [image size];
+    NSRect rect = {NSZeroPoint, size};
+    NSImage *mask = [[[NSImage alloc] initWithSize:size] retain];
+    [mask lockFocus];
+    [color set];
+    NSRectFillUsingOperation(rect, NSCompositeCopy);
+    [image drawInRect:rect
+	     fromRect:rect
+	    operation:NSCompositeDestinationIn
+	     fraction:1.0];
+    [mask unlockFocus];
+    [image lockFocus];
+    [mask drawInRect:rect
+	    fromRect:rect
+	   operation:NSCompositeSourceOver
+	    fraction:alpha];
+    [image unlockFocus];
+    [mask release];
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkNSImageConfigureMaster --
+ *
+ *	This function is called when an nsimage image is created or
+ *	reconfigured.  It processes configuration options and resets any
+ *	instances of the image.
+ *
+ * Results:
+ *	A standard Tcl return value. If TCL_ERROR is returned then an error
+ *	message is left in the masterPtr->interp's result.
+ *
+ * Side effects:
+ *	Existing instances of the image will be redisplayed to match the new
+ *	configuration options.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkNSImageConfigureMaster(
+    Tcl_Interp *interp,		   /* Interpreter to use for reporting errors. */
+    TkNSImageMaster *masterPtr,  /* Pointer to data structure describing
+				    * overall photo image to (re)configure. */
+    int objc,			   /* Number of entries in objv. */
+    Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
+{
+    Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
+    NSImage *newImage;
+    Tcl_Obj *objPtr;
+    static Tcl_Obj *asOption = NULL;
+    int sourceInterpretation;
+    NSString *source;
+
+    if (asOption == NULL) {
+	asOption = Tcl_NewStringObj("-as", -1);
+	Tcl_IncrRefCount(asOption);
+    }
+
+    if (Tk_SetOptions(interp, (char *) masterPtr, optionTable, objc, objv,
+		      NULL, NULL, NULL) != TCL_OK){
+	goto errorExit;
+    }
+
+    if (masterPtr->source == NULL || masterPtr->source[0] == '0') {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	goto errorExit;
+    }
+
+    objPtr = Tk_GetOptionValue(interp, (char *) masterPtr, optionTable,
+				asOption, NULL);
+    if (Tcl_GetIndexFromObj(interp, objPtr, sourceInterpretations, "option",
+			    0, &sourceInterpretation) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    "Unknown interpretation for source in -as option.  "
+	    "Should be name, file, path, or filetype.", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	goto errorExit;
+    }
+
+    source = [[NSString alloc] initWithUTF8String: masterPtr->source];
+    switch (sourceInterpretation) {
+    case NAME_SOURCE:
+	newImage = [[NSImage imageNamed:source] copy];
+	break;
+    case FILE_SOURCE:
+	newImage = [[NSImage alloc] initWithContentsOfFile:source];
+	break;
+    case PATH_SOURCE:
+	newImage = [[NSWorkspace sharedWorkspace] iconForFile:source];
+	break;
+    case FILETYPE_SOURCE:
+	newImage = [[NSWorkspace sharedWorkspace] iconForFileType:source];
+	break;
+    default:
+	newImage = NULL;
+	break;
+    }
+    [source release];
+    if (newImage) {
+	NSSize size = NSMakeSize(masterPtr->width, masterPtr->height);
+	[newImage setSize:size];
+	[masterPtr->image release];
+	[masterPtr->darkModeImage release];
+	masterPtr->image = [newImage retain];
+	if (masterPtr->template) {
+	    newImage.template = YES;
+	}
+	masterPtr->darkModeImage = [[masterPtr->image copy] retain];
+	if ([masterPtr->darkModeImage isTemplate]) {
+
+	    /*
+	     * For a template image the Dark Mode version should be white.
+	     */
+
+	    NSRect rect = {NSZeroPoint, size};
+	    [masterPtr->darkModeImage lockFocus];
+	    [[NSColor whiteColor] set];
+	    NSRectFillUsingOperation(rect, NSCompositeSourceAtop);
+	    [masterPtr->darkModeImage unlockFocus];
+	} else if (masterPtr->pressed) {
+
+	    /*
+	     * Non-template pressed images are darker in Light Mode and lighter
+	     * in Dark Mode.
+	     */
+
+	    TintImage(masterPtr->image, [NSColor blackColor], 0.2);
+	    TintImage(masterPtr->darkModeImage, [NSColor whiteColor], 0.5);
+	}
+    } else {
+	switch(sourceInterpretation) {
+	case NAME_SOURCE:
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
+		"Try omitting ImageName, "
+	        "e.g. use NSCaution for NSImageNameCaution.", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    goto errorExit;
+	case FILE_SOURCE:
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Failed to load image file.\n", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    goto errorExit;
+	default:
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"Unrecognized file type.\n", -1));
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
+	    goto errorExit;
+	}
+    }
+
+    /*
+     * Inform the generic image code that the image has (potentially) changed.
+     */
+
+    Tk_ImageChanged(masterPtr->tkMaster, 0, 0, masterPtr->width,
+	    masterPtr->height, masterPtr->width, masterPtr->height);
+    masterPtr->flags &= ~IMAGE_CHANGED;
+
+    return TCL_OK;
+
+  errorExit:
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXNSImageObjCmd --
+ *
+ *	This function implements the configure and cget commands for an
+ *	nsimage instance.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The image may be reconfigured.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXNSImageObjCmd(
+    ClientData clientData,	/* Information about the image master. */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    TkNSImageMaster *masterPtr = (TkNSImageMaster *)clientData;
+    Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
+    static const char *const options[] = {"cget", "configure", NULL};
+    enum {CGET, CONFIGURE};
+    Tcl_Obj *objPtr;
+    int index;
+
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
+	return TCL_ERROR;
+    }
+    if (Tcl_GetIndexFromObjStruct(interp, objv[1], options,
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
+    }
+    Tcl_Preserve(masterPtr);
+    switch (index) {
+    case CGET:
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "option");
+	    return TCL_ERROR;
+	}
+	objPtr = Tk_GetOptionValue(interp, (char *)masterPtr, optionTable,
+		objv[2], NULL);
+	if (objPtr == NULL) {
+            goto error;
+        }
+        Tcl_SetObjResult(interp, objPtr);
+	break;
+    case CONFIGURE:
+	if (objc == 2) {
+	    objPtr = Tk_GetOptionInfo(interp, (char *)masterPtr, optionTable,
+				     NULL, NULL);
+	    if (objPtr == NULL) {
+		goto error;
+	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    break;
+	} else if (objc == 3) {
+	    objPtr = Tk_GetOptionInfo(interp, (char *)masterPtr, optionTable,
+				     objv[2], NULL);
+	    if (objPtr == NULL) {
+		goto error;
+	    }
+	    Tcl_SetObjResult(interp, objPtr);
+	    break;
+	} else {
+	    TkNSImageConfigureMaster(interp, masterPtr, objc - 2, objv + 2);
+	    break;
+	}
+    default:
+	break;
+    }
+
+    Tcl_Release(masterPtr);
+    return TCL_OK;
+
+ error:
+    Tcl_Release(masterPtr);
+    return TCL_ERROR;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkNSImageCreate --
+ *
+ *	Allocate and initialize an nsimage master.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	The data structure for a new image is allocated.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkNSImageCreate(
+    Tcl_Interp *interp,		 /* Interpreter for application using image. */
+    const char *name,		 /* Name to use for image. */
+    int objc,			 /* Number of arguments. */
+    Tcl_Obj *const objv[],	 /* Argument strings for options (not
+				  * including image name or type). */
+    TCL_UNUSED(const Tk_ImageType *), /* typePtr */
+    Tk_ImageMaster master,	 /* Token for image, to be used in callbacks. */
+    ClientData *clientDataPtr)	 /* Store manager's token for image here; it
+				  * will be returned in later callbacks. */
+{
+    TkNSImageMaster *masterPtr;
+    Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
+
+    masterPtr = (TkNSImageMaster *)ckalloc(sizeof(TkNSImageMaster));
+    masterPtr->tkMaster = master;
+    masterPtr->interp = interp;
+    masterPtr->imageName = (char *)ckalloc(strlen(name) + 1);
+    strcpy(masterPtr->imageName, name);
+    masterPtr->flags = 0;
+    masterPtr->instancePtr = NULL;
+    masterPtr->image = NULL;
+    masterPtr->darkModeImage = NULL;
+    masterPtr->source = NULL;
+    masterPtr->as = NULL;
+
+    /*
+     * Process configuration options given in the image create command.
+     */
+
+    if (Tk_InitOptions(interp, (char *) masterPtr, optionTable, NULL) != TCL_OK
+	|| TkNSImageConfigureMaster(interp, masterPtr, objc, objv) != TCL_OK) {
+	TkNSImageDelete(masterPtr);
+	return TCL_ERROR;
+    }
+
+    *clientDataPtr = masterPtr;
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkNSImageGet --
+ *
+ *	Allocate and initialize an nsimage instance.
+ *
+ * Results:
+ *	The return value is a token for the image instance, which is used in
+ *	future callbacks to ImageDisplay and ImageFree.
+ *
+ * Side effects:
+ *	A new new nsimage instance is created.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static ClientData
+TkNSImageGet(
+    TCL_UNUSED(Tk_Window),      /* tkwin */
+    ClientData clientData)	/* Pointer to TkNSImageMaster for image. */
+{
+    TkNSImageMaster *masterPtr = (TkNSImageMaster *) clientData;
+    TkNSImageInstance *instPtr;
+
+    instPtr = (TkNSImageInstance *)ckalloc(sizeof(TkNSImageInstance));
+    instPtr->masterPtr = masterPtr;
+    return instPtr;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkNSImageDisplay --
+ *
+ *	Display or redisplay an nsimage in the given drawable.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	The image gets drawn.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkNSImageDisplay(
+    ClientData clientData,	/* Pointer to TkNSImageInstance for image. */
+    TCL_UNUSED(Display *),      /* display */
+    Drawable drawable,		/* Where to draw or redraw image. */
+    int imageX, int imageY,	/* Origin of area to redraw, relative to
+				 * origin of image. */
+    int width, int height,	/* Dimensions of area to redraw. */
+    int drawableX, int drawableY)
+				/* Coordinates in drawable corresponding to
+				 * imageX and imageY. */
+{
+    MacDrawable *macWin = (MacDrawable *) drawable;
+    Tk_Window tkwin = (Tk_Window) macWin->winPtr;
+    TkNSImageInstance *instPtr = (TkNSImageInstance *) clientData;
+    TkNSImageMaster *masterPtr = instPtr->masterPtr;
+    TkMacOSXDrawingContext dc;
+    NSRect dstRect = NSMakeRect(macWin->xOff + drawableX,
+				 macWin->yOff + drawableY, width, height);
+    NSRect srcRect = NSMakeRect(imageX, imageY, width, height);
+    NSImage *image = TkMacOSXInDarkMode(tkwin) ? masterPtr->darkModeImage :
+	masterPtr->image;
+
+    if (TkMacOSXSetupDrawingContext(drawable, NULL, &dc)) {
+	if (dc.context) {
+	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
+	    NSGraphicsContext.currentContext = GET_NSCONTEXT(dc.context, YES);
+	    [image drawInRect:dstRect
+		     fromRect:srcRect
+		    operation:NSCompositeSourceOver
+		     fraction:masterPtr->alpha
+	       respectFlipped:YES
+			hints:nil];
+	    NSGraphicsContext.currentContext = savedContext;
+	}
+	TkMacOSXRestoreDrawingContext(&dc);
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkNSImageFree --
+ *
+ *	Deallocate an instance of an nsimage.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	Information related to the instance is freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkNSImageFree(
+    ClientData clientData,	/* Pointer to TkNSImageInstance for instance. */
+    TCL_UNUSED(Display *))	/* display */
+{
+    TkNSImageInstance *instPtr = (TkNSImageInstance *) clientData;
+    ckfree(instPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkNSImageDelete --
+ *
+ *	Deallocate an nsimage master.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	 NSImages are released and memory is freed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static void
+TkNSImageDelete(
+    ClientData clientData)	/* Pointer to TkNSImageMaster for image. When
+				 * this function is called, no more instances
+				 * exist. */
+{
+    TkNSImageMaster *masterPtr = (TkNSImageMaster *) clientData;
+
+    Tcl_DeleteCommand(masterPtr->interp, masterPtr->imageName);
+    ckfree(masterPtr->imageName);
+    ckfree(masterPtr->source);
+    ckfree(masterPtr->as);
+    [masterPtr->image release];
+    [masterPtr->darkModeImage release];
+    ckfree(masterPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXNSImage_Init --
+ *
+ *	Adds the TkNSImage type to Tk.
+ *
+ * Results:
+ *	Returns a standard Tcl completion code, and leaves an error message in
+ *	the interp's result if an error occurs.
+ *
+ * Side effects:
+ *	Creates the command:
+ *      image create system -source ?-width? ?-height? ?-alpha? ?-pressed?
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkMacOSXNSImage_Init(
+    TCL_UNUSED(Tcl_Interp *))	 /* interp */
+{
+    Tk_CreateImageType(&TkNSImageType);
+    return 1;
 }
 
 /*

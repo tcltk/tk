@@ -164,7 +164,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 TKBackgroundLoop *backgroundLoop = nil;
 
-
 #pragma mark TKMenu
 
 /*
@@ -506,8 +505,6 @@ static Bool runMenuCommand = true;
     }
     backgroundLoop = [[TKBackgroundLoop alloc] init];
     [backgroundLoop start];
-    //TkMacOSXClearMenubarActive();
-    //TkMacOSXPreprocessMenu();
 }
 
 - (void) menuEndTracking: (NSNotification *) notification

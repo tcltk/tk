@@ -16,20 +16,17 @@
 #	window managers (even though the older ICCCM spec says
 #	it's meaningless).
 #
-#	On OSX: [wm transient] does utterly the wrong thing.
-#	Instead, we use [MacWindowStyle "help" "noActivates hideOnSuspend"].
-#	The "noActivates" attribute prevents the parent toplevel
-#	from deactivating when the popdown is posted, and is also
-#	necessary for "help" windows to receive mouse events.
-#	"hideOnSuspend" makes the popdown disappear (resp. reappear)
-#	when the parent toplevel is deactivated (resp. reactivated).
-#	(see [#1814778]).  Also set [wm resizable 0 0], to prevent
-#	TkAqua from shrinking the scrollbar to make room for a grow box
-#	that isn't there.
-#
-#	In order to work around other platform quirks in TkAqua,
-#	[grab] and [focus] are set in <Map> bindings instead of
-#	immediately after deiconifying the window.
+#       On OSX: The native combobox uses a popup menu to display the
+#       combobox choices.  So this implementation does that as well,
+#       rather than construc a Tk listbox.  Since the window manager
+#       takes care of scrolling and making sure that the menu can be
+#       displayed even when the button is close to the bottom of the
+#       screen, this actually simplifies the implementation.  The Post
+#       and PopupWindow procs have separate implementations for Aqua
+#       and other systems.  The configuration of the menu is handled
+#       by a different proc than the one which configures the listbox
+#       on other platforms -- ConfigureAquaMenu instead of
+#       ConfigureListbox.
 #
 
 namespace eval ttk::combobox {
@@ -76,6 +73,9 @@ switch -- [tk windowingsystem] {
 	# NB: *only* do this on Windows (see #1814778)
 	bind ComboboxListbox <FocusOut>		{ ttk::combobox::LBCancel %W }
     }
+    aqua {
+	bind TCombobox <Destroy>		{ ttk::combobox::AquaCleanup %W }
+    }
 }
 
 ### Combobox popdown window bindings.
@@ -97,9 +97,6 @@ option add *TCombobox*Listbox.highlightThickness 0 widgetDefault
 switch -- [tk windowingsystem] {
     x11 {
 	option add *TCombobox*Listbox.background white widgetDefault
-    }
-    aqua {
-	option add *TCombobox*Listbox.borderWidth 0 widgetDefault
     }
 }
 
@@ -264,34 +261,51 @@ proc ttk::combobox::UnmapPopdown {w} {
 #	Returns the popdown widget associated with a combobox,
 #	creating it if necessary.
 #
-proc ttk::combobox::PopdownWindow {cb} {
-    if {![winfo exists $cb.popdown]} {
-	set poplevel [PopdownToplevel $cb.popdown]
-	set popdown [ttk::frame $poplevel.f -style ComboboxPopdownFrame]
 
-	ttk::scrollbar $popdown.sb \
-	    -orient vertical -command [list $popdown.l yview]
-	listbox $popdown.l \
-	    -listvariable ttk::combobox::Values($cb) \
-	    -yscrollcommand [list $popdown.sb set] \
-	    -exportselection false \
-	    -selectmode browse \
-	    -activestyle none \
-	    ;
+if {[tk windowingsystem] ne "aqua"} {
+    proc ttk::combobox::PopdownWindow {cb} {
+	if {![winfo exists $cb.popdown]} {
+	    set poplevel [PopdownToplevel $cb.popdown]
+	    set popdown [ttk::frame $poplevel.f -style ComboboxPopdownFrame]
 
-	bindtags $popdown.l \
-	    [list $popdown.l ComboboxListbox Listbox $popdown all]
+	    ttk::scrollbar $popdown.sb \
+		-orient vertical -command [list $popdown.l yview]
+	    listbox $popdown.l \
+		-listvariable ttk::combobox::Values($cb) \
+		-yscrollcommand [list $popdown.sb set] \
+		-exportselection false \
+		-selectmode browse \
+		-activestyle none \
+		;
 
-	grid $popdown.l -row 0 -column 0 -padx {1 0} -pady 1 -sticky nsew
-        grid $popdown.sb -row 0 -column 1 -padx {0 1} -pady 1 -sticky ns
-	grid columnconfigure $popdown 0 -weight 1
-	grid rowconfigure $popdown 0 -weight 1
+	    bindtags $popdown.l \
+		[list $popdown.l ComboboxListbox Listbox $popdown all]
 
-        grid $popdown -sticky news -padx 0 -pady 0
-        grid rowconfigure $poplevel 0 -weight 1
-        grid columnconfigure $poplevel 0 -weight 1
+	    grid $popdown.l -row 0 -column 0 -padx {1 0} -pady 1 -sticky nsew
+	    grid $popdown.sb -row 0 -column 1 -padx {0 1} -pady 1 -sticky ns
+	    grid columnconfigure $popdown 0 -weight 1
+	    grid rowconfigure $popdown 0 -weight 1
+
+	    grid $popdown -sticky news -padx 0 -pady 0
+	    grid rowconfigure $poplevel 0 -weight 1
+	    grid columnconfigure $poplevel 0 -weight 1
+	}
+	return $cb.popdown
     }
-    return $cb.popdown
+} else {
+    proc ttk::combobox::PopdownWindow {cb} {
+	if {![winfo exists $cb.popdown]} {
+	    set popdown [menu $cb.popdown -tearoff 0]
+	    # The menu should be (at least) the same length as the button.
+	    # Since there is no direct way to control the width of a menu
+	    # in Tk, we fake it by using an invisible image in a disabled
+	    # menu item, adjusting the image size to make the menu be the
+	    # correct width.
+	    image create nsimage $cb.spacer -source NSStatusNone -as name \
+		-alpha 0
+	}
+	return $cb.popdown
+    }
 }
 
 ## PopdownToplevel -- Create toplevel window for the combobox popdown
@@ -312,12 +326,6 @@ proc ttk::combobox::PopdownToplevel {w} {
 	    $w configure -relief flat -borderwidth 0
 	    wm overrideredirect $w true
 	    wm attributes $w -topmost 1
-	}
-	aqua {
-	    $w configure -relief solid -borderwidth 0
-	    tk::unsupported::MacWindowStyle style $w \
-		help {noActivates hideOnSuspend}
-	    wm resizable $w 0 0
 	}
     }
     return $w
@@ -353,6 +361,24 @@ proc ttk::combobox::ConfigureListbox {cb} {
     $popdown.l configure -height $height
 }
 
+proc ttk::combobox::ConfigureAquaMenu {cb width} {
+    set popdown [PopdownWindow $cb]
+    set values [$cb cget -values]
+    set current [$cb current]
+    if {$current < 0} {
+	set current 0 		;# no current entry, highlight first one
+    }
+    $cb.popdown delete 0 end
+    set i 0
+    foreach item $values {
+	$cb.popdown add command -label $item \
+	    -command "ttk::combobox::SelectEntry $cb $i"
+	incr i
+	}
+    $cb.spacer configure -width [expr {$width - 55}] -height 1
+    $cb.popdown add command -label {} -image $cb.spacer -state disabled
+}
+
 ## PlacePopdown --
 #	Set popdown window geometry.
 #
@@ -381,34 +407,74 @@ proc ttk::combobox::PlacePopdown {cb popdown} {
     wm geometry $popdown ${w}x${H}+${x}+${Y}
 }
 
-## Post $cb --
-#	Pop down the associated listbox.
-#
-proc ttk::combobox::Post {cb} {
-    # Don't do anything if disabled:
-    #
-    $cb instate disabled { return }
-
-    # ASSERT: ![$cb instate pressed]
-
-    # Run -postcommand callback:
-    #
-    uplevel #0 [$cb cget -postcommand]
-
-    set popdown [PopdownWindow $cb]
-    ConfigureListbox $cb
-    update idletasks	;# needed for geometry propagation.
-    PlacePopdown $cb $popdown
-    # See <<NOTE-WM-TRANSIENT>>
-    switch -- [tk windowingsystem] {
-	x11 - win32 { wm transient $popdown [winfo toplevel $cb] }
+proc ttk::combobox::AquaPlacePopdown {cb popdown} {
+    set x [winfo rootx $cb]
+    set y [winfo rooty $cb]
+    set w [winfo width $cb]
+    set h [winfo height $cb]
+    set style [$cb cget -style]
+    set postoffset [ttk::style lookup $style -postoffset {} {0 0 0 0}]
+    foreach var {x y w h} delta $postoffset {
+    	incr $var $delta
     }
+    return [list $x $y $w $h]
+}
 
-    # Post the listbox:
-    #
-    wm attribute $popdown -topmost 1
-    wm deiconify $popdown
-    raise $popdown
+## Post $cb --
+#	Pop down the associated listbox or menu.
+#
+if {[tk windowingsystem] ne "aqua"} {
+    proc ttk::combobox::Post {cb} {
+	# Don't do anything if disabled:
+	#
+	$cb instate disabled { return }
+
+	# ASSERT: ![$cb instate pressed]
+
+	# Run -postcommand callback:
+	#
+	uplevel #0 [$cb cget -postcommand]
+
+	set popdown [PopdownWindow $cb]
+	ConfigureListbox $cb
+	update idletasks	;# needed for geometry propagation.
+	PlacePopdown $cb $popdown
+	# See <<NOTE-WM-TRANSIENT>>
+	switch -- [tk windowingsystem] {
+	    x11 - win32 { wm transient $popdown [winfo toplevel $cb] }
+	}
+
+	# Post the listbox:
+	#
+	wm attribute $popdown -topmost 1
+	wm deiconify $popdown
+	raise $popdown
+    }
+} else {
+    proc ttk::combobox::Post {cb} {
+	# Don't do anything if disabled:
+	#
+	$cb instate disabled { return }
+
+	# ASSERT: ![$cb instate pressed]
+
+	# Run -postcommand callback:
+	#
+	uplevel #0 [$cb cget -postcommand]
+
+	set popdown [PopdownWindow $cb]
+
+	# Configure the menu
+
+	foreach {x y width height} [AquaPlacePopdown $cb $popdown] { break }
+	ConfigureAquaMenu $cb $width
+
+	# Post the menu.  It will have a disclosure indicator if it is too
+	# close to the bottom of the screen, and it may be posted above the
+	# button if necessary to be visible.
+
+	$popdown post [expr {$x + 6}] [expr {$y + $height + 2}]
+    }
 }
 
 ## Unpost $cb --
@@ -450,6 +516,10 @@ proc ttk::combobox::LBSelect {lb} {
 proc ttk::combobox::LBCleanup {lb} {
     variable Values
     unset Values([LBMain $lb])
+}
+
+proc ttk::combobox::AquaCleanup {cb} {
+    catch {image delete $cb.spacer}
 }
 
 #*EOF*
