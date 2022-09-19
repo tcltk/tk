@@ -20,9 +20,12 @@ positionWindow $w
 ##
 # System images we use in our buttons
 
+set featherImg [file join $tk_demoDirectory images Tk_feather.png]
 image create nsimage action -source NSAction -width 48 -height 48
 image create nsimage bonjour -source NSBonjour -width 48 -height 48
 image create nsimage bonjour1 -source NSBonjour -width 48 -height 48 -pressed 1
+image create nsimage tkfeather -source $featherImg -as file -width 48 -height 48
+image create nsimage tkfeather1 -source $featherImg -as file -width 48 -height 48 -pressed 1
 image create nsimage add -source NSAddTemplate -width 11 -height 11
 image create nsimage remove -source NSRemoveTemplate -width 11 -height 11
 
@@ -113,8 +116,10 @@ pack [ttk::radiobutton $radio.r1 -text "Radio 1" -variable .radioVar -value 1] -
 pack [ttk::radiobutton $radio.r2 -text "Radio 2" -variable .radioVar -value 2] -pady 4
 set triangle [ttk::checkbutton $buttonFrame.triangle -style Item -variable TriangleVar]
 bind $triangle <Button-1> {toggleTriangle %W}
-set imagebutton [ttk::button $buttonFrame.imagebutton -style ImageButton -text Bonjour \
+set bonjour [ttk::button $buttonFrame.bonjour -style ImageButton -text Bonjour \
  		     -image {bonjour pressed bonjour1}]
+set feather [ttk::button $buttonFrame.feather -style ImageButton -text Tk \
+		      -image {tkfeather pressed tkfeather1}]
 set gradient [ttk::frame $buttonFrame.gradient]
 pack [ttk::button $buttonFrame.gradient.add -style GradientButton \
 		  -image add -padding 7] -side left
@@ -145,9 +150,10 @@ grid $triangle -pady 4 -row 4 -column 1 -sticky w
 grid [ttk::label $buttonFrame.disclosureLabel -text "Disclosure Button:"]\
     -row 5 -column 0 -padx 4 -sticky e
 grid $disclosure -row 5 -column 1 -sticky w
-grid [ttk::label $buttonFrame.imageLabel -text "Image Button:"]\
+grid [ttk::label $buttonFrame.imageLabel -text "Image Buttons:"]\
     -row 7 -column 0 -padx 4 -sticky e
-grid $imagebutton -pady 4 -row 6 -rowspan 4 -column 1 -sticky w
+grid $bonjour -pady 4 -row 6 -rowspan 4 -column 1 -sticky w
+grid $feather -padx 10 -pady 4 -row 6 -rowspan 4 -column 2
 grid [ttk::label $buttonFrame.gradentLabel -text "Gradient Buttons:"]\
 -row 10 -column 0 -padx 4 -sticky e
 grid $gradient -pady 4 -row 10 -column 1 -sticky w
