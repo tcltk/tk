@@ -367,7 +367,7 @@ test menubutton-3.6 {ButtonWidgetCmd procedure, "cget" option} -body {
 } -result 3
 test menubutton-3.7 {ButtonWidgetCmd procedure, "configure" option} -body {
     llength [.mb configure]
-} -result 33
+} -result 35
 test menubutton-3.8 {ButtonWidgetCmd procedure, "configure" option} -body {
     .mb configure -gorp
 } -returnCodes error -result {unknown option "-gorp"}
