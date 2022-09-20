@@ -1260,7 +1260,7 @@ TkNSImageConfigureMaster(
 	newImage = [[NSWorkspace sharedWorkspace] iconForFile:source];
 	break;
     case FILETYPE_SOURCE:
-	newImage = [[NSWorkspace sharedWorkspace] iconForFileType:source];
+	newImage = TkMacOSXIconForFileType(source);
 	break;
     default:
 	newImage = NULL;
