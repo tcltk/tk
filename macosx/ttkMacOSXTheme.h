@@ -539,9 +539,9 @@ static ThemeFrameParams
  * been configured and has size 1x1, so there is nothing to draw anyway.
  */
 
-#define CHECK_RADIUS(radius, bounds)                                         \
-    if (radius > bounds.size.width / 2 || radius > bounds.size.height / 2) { \
-        return;                                                              \
+#define CHECK_RADIUS(radius, bounds)                                                 \
+    if ((radius) > (bounds).size.width / 2 || (radius) > (bounds).size.height / 2) { \
+        return;                                                                      \
     }
 
 /*

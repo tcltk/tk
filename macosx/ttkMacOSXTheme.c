@@ -160,14 +160,14 @@ CGColorFromGray(
     return nscolor.CGColor;
 }
 
-#define CGCOLOR(nscolor) nscolor.CGColor
+#define CGCOLOR(nscolor) (nscolor).CGColor
 
 #else
 
-#define CGCOLOR(nscolor)  nil
-#define CGColorFromRGBA(rgba) nil
-#define CGColorFromGray(gray) nil
-#define CGPathCreateWithRoundedRect(w, x, y, z) nil
+#define CGCOLOR(nscolor) NULL
+#define CGColorFromRGBA(rgba) NULL
+#define CGColorFromGray(gray) NULL
+#define CGPathCreateWithRoundedRect(w, x, y, z) NULL
 
 #endif
 
