@@ -76,6 +76,7 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
 	initOSTypeTable();
     }
     if (@available(macOS 11.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
 	UTType *uttype = [UTType typeWithIdentifier: filetype];
 	if (![uttype isDeclared]) {
 	    uttype = [UTType typeWithFilenameExtension: filetype];
@@ -89,6 +90,7 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
 	    return nil;
 	}
 	return [[NSWorkspace sharedWorkspace] iconForContentType:uttype];
+#endif
     } else {
 /* Despite Apple's claims, @available does not prevent deprecation warnings. */ 
 # if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
