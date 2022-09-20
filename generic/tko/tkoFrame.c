@@ -752,7 +752,7 @@ FrameDestructor(
         Tcl_CancelIdleCall(FrameMap, frame);
 
         if(frame->menuName != NULL && frame->tkWinCreate) {
-            TkSetWindowMenuBar(frame->widget.interp, frame->tkWinCreate, frame->menuName, NULL);
+            Tk_SetWindowMenuBar(frame->widget.interp, frame->tkWinCreate, frame->menuName, NULL);
             ckfree(frame->menuName);
             frame->menuName = NULL;
         }
@@ -1082,7 +1082,7 @@ FrameMethod_menu(
         || ((newMenu != NULL) && (frame->menuName != NULL)
             && strcmp(newMenu, frame->menuName) != 0))
         && frame->type == TYPE_TOPLEVEL) {
-        TkSetWindowMenuBar(interp, widget->tkWin, frame->menuName, newMenu);
+        Tk_SetWindowMenuBar(interp, widget->tkWin, frame->menuName, newMenu);
         if (frame->menuName) { ckfree(frame->menuName); }
         if (length) {
             frame->menuName = (char *)ckalloc(length + 1);
@@ -1460,10 +1460,10 @@ FrameDisplay(
         if(frame->flags & GOT_FOCUS) {
             fgGC = Tk_GCForColor(frame->highlightColorPtr,
                 Tk_WindowId(widget->tkWin));
-            TkpDrawHighlightBorder(widget->tkWin, fgGC, bgGC, hlWidth,
+            Tk_DrawHighlightBorder(widget->tkWin, fgGC, bgGC, hlWidth,
                 Tk_WindowId(widget->tkWin));
         } else {
-            TkpDrawHighlightBorder(widget->tkWin, bgGC, bgGC, hlWidth,
+            Tk_DrawHighlightBorder(widget->tkWin, bgGC, bgGC, hlWidth,
                 Tk_WindowId(widget->tkWin));
         }
     }
@@ -1678,7 +1678,7 @@ FrameEventProc(
             }
         }
     } else if(eventPtr->type == ActivateNotify) {
-        TkpSetMainMenubar(frame->widget.interp, widget->tkWin, frame->menuName);
+        Tk_SetMainMenubar(frame->widget.interp, widget->tkWin, frame->menuName);
     }
     return;
 
