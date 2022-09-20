@@ -21,7 +21,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-558
           path: tcl
       - name: Init MSVC
         uses: ilammy/msvc-dev-cmd@v1

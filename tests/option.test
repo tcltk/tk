@@ -38,7 +38,7 @@ option add $appName.op2.op5.Color2 purple
 option add $appName.Class1.Class3.y brown
 option add $appName*op6*Color2 black
 option add $appName*Class1.op1.Color2 grey
-
+
 test option-1.1 {basic option retrieval} -body {
     option get . x Color1
 } -result blue
@@ -57,7 +57,9 @@ test option-1.5 {basic option retrieval} -body {
 test option-1.6 {basic option retrieval} -body {
     option get . z Color2
 } -result {}
-
+test option-1.7 {basic option retrieval} -body {
+    option get . z Color2 gorp
+} -result gorp
 
 test option-2.1 {basic option retrieval} -body {
     option get .op1 x Color1
@@ -78,7 +80,6 @@ test option-2.6 {basic option retrieval} -body {
     option get .op1 z Color2
 } -result {}
 
-
 test option-3.1 {basic option retrieval} -body {
     option get .op1.op3 x Color1
 } -result yellow
@@ -97,7 +98,6 @@ test option-3.5 {basic option retrieval} -body {
 test option-3.6 {basic option retrieval} -body {
     option get .op1.op3 z Color2
 } -result {}
-
 
 test option-4.1 {basic option retrieval} -body {
     option get .op1.op3.op6 x Color1
@@ -118,7 +118,6 @@ test option-4.6 {basic option retrieval} -body {
     option get .op1.op3.op6 z Color2
 } -result black
 
-
 test option-5.1 {basic option retrieval} -body {
     option get .op1.op4 x Color1
 } -result blue
@@ -137,7 +136,6 @@ test option-5.5 {basic option retrieval} -body {
 test option-5.6 {basic option retrieval} -body {
     option get .op1.op4 z Color2
 } -result {}
-
 
 test option-6.1 {basic option retrieval} -body {
     option get .op2 x Color1
@@ -158,7 +156,6 @@ test option-6.6 {basic option retrieval} -body {
     option get .op2 z Color2
 } -result {}
 
-
 test option-7.1 {basic option retrieval} -body {
     option get .op2.op5 x Color1
 } -result orange
@@ -177,7 +174,6 @@ test option-7.5 {basic option retrieval} -body {
 test option-7.6 {basic option retrieval} -body {
     option get .op2.op5 z Color2
 } -result purple
-
 
 # Now try similar tests to above, except jump around non-hierarchically
 # between windows to make sure that the option stacks are pushed and
@@ -203,7 +199,6 @@ test option-8.6 {stack pushing/popping} -body {
     option get .op2.op5 z Color2
 } -result purple
 
-
 test option-9.1 {stack pushing/popping} -body {
     option get . x Color1
 } -result blue
@@ -222,7 +217,6 @@ test option-9.5 {stack pushing/popping} -body {
 test option-9.6 {stack pushing/popping} -body {
     option get . z Color2
 } -result {}
-
 
 test option-10.1 {stack pushing/popping} -body {
     option get .op1.op3.op6 x Color1
@@ -243,7 +237,6 @@ test option-10.6 {stack pushing/popping} -body {
     option get .op1.op3.op6 z Color2
 } -result black
 
-
 test option-11.1 {stack pushing/popping} -body {
     option get .op1.op3 x Color1
 } -result yellow
@@ -262,7 +255,6 @@ test option-11.5 {stack pushing/popping} -body {
 test option-11.6 {stack pushing/popping} -body {
     option get .op1.op3 z Color2
 } -result {}
-
 
 test option-12.1 {stack pushing/popping} -body {
     option get .op1 x Color1
@@ -318,7 +310,6 @@ test option-13.7 {priority levels} -body {
     option get .op1 c B
 } -result file2
 
-
 # Test various error conditions
 
 test option-14.1 {error conditions} -body {
@@ -347,17 +338,16 @@ test option-14.8 {error conditions} -body {
 } -returnCodes error -result {bad priority level "gorp": must be widgetDefault, startupFile, userDefault, interactive, or a number between 0 and 100}
 test option-14.9 {error conditions} -body {
     option get 3
-} -returnCodes error -result {wrong # args: should be "option get window name class"}
+} -returnCodes error -result {wrong # args: should be "option get window name class ?default?"}
 test option-14.10 {error conditions} -body {
     option get 3 4
-} -returnCodes error -result {wrong # args: should be "option get window name class"}
+} -returnCodes error -result {wrong # args: should be "option get window name class ?default?"}
 test option-14.11 {error conditions} -body {
-    option get 3 4 5 6
-} -returnCodes error -result {wrong # args: should be "option get window name class"}
+    option get 3 4 5 6 7
+} -returnCodes error -result {wrong # args: should be "option get window name class ?default?"}
 test option-14.12 {error conditions} -body {
     option get .gorp.gorp a A
 } -returnCodes error -result {bad window path name ".gorp.gorp"}
-
 
 set option1 [file join [testsDirectory] option.file1]
 test option-15.1 {database files} -body {
@@ -403,8 +393,9 @@ set option3 [file join [testsDirectory] option.file3]
 option read $option3
 test option-15.11 {database files} {option get . {x 4} color} brówn
 
-test option-16.1 {ReadOptionFile} -body {
+test option-16.1 {ReadOptionFile} -setup {
     set option4 [makeFile {} option.file3]
+} -body {
     set file [open $option4 w]
     fconfigure $file -translation crlf
     puts $file "*x7: true\n*x8: false"
@@ -414,28 +405,30 @@ test option-16.1 {ReadOptionFile} -body {
 } -cleanup {
     removeFile $option4
 } -result {true false}
-
 set opt162val {label {
   foo bar
 }
 }
 set opt162list [split $opt162val \n]
-
-test option-16.2 {ticket 766ef52f3} {
+test option-16.2 {ticket 766ef52f3} -setup {
     set option5 [makeFile {} option.file4]
+} -body {
     set file [open $option5 w]
     fconfigure $file -translation crlf
     puts $file "*notok: $opt162list"
     close $file
     option read $option5 userDefault
     option get . notok notok
-} $opt162list
-
+} -cleanup {
+    removeFile $option5
+} -result $opt162list
+
 deleteWindows
 
 # cleanup
 cleanupTests
 return
 
-
-
+# Local Variables:
+# mode: tcl
+# End:

@@ -822,6 +822,66 @@ CursorInit(
 /*
  *----------------------------------------------------------------------
  *
+ * TkParseCursorObjCmd --
+ *
+ *	Implements [tk::ParseCursor]. Parses a cursor and returns either the
+ *	empty string if the cursor (named in the first argument) is valid, or
+ *	an error if the cursor is not actually a cursor. The cursor is not
+ *	actually stored anywhere afterwards.
+ *
+ * Results:
+ *	A Tcl result code.
+ *
+ * Side effects:
+ *	Sets the interpreter result and error code on error.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkParseCursorObjCmd(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    Tk_Window tkwin = clientData;
+    Tk_Cursor cursor;
+    Tcl_Obj *cursorObj;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "cursor");
+	return TCL_ERROR;
+    }
+    cursorObj = objv[1];
+
+    /*
+     * Type poke so that we don't need to do memory management if something
+     * else has done it for us. In theory this could be a problem if the main
+     * display couldn't have the cursor that this object describes... but that
+     * never actually happens.
+     */
+
+    if (cursorObj->typePtr == &tkCursorObjType) {
+	return TCL_OK;
+    }
+
+    /*
+     * Not already a cursor. Engage the parser (and clean up destructively
+     * afterwards).
+     */
+
+    cursor = Tk_AllocCursorFromObj(interp, tkwin, cursorObj);
+    if (!cursor) {
+	return TCL_ERROR;
+    }
+    Tk_FreeCursorFromObj(tkwin, cursorObj);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkDebugCursor --
  *
  *	This function returns debugging information about a cursor.

@@ -194,6 +194,7 @@ static const TkCmd commands[] = {
      * Misc.
      */
 
+    {"::tk::ParseCursor", TkParseCursorObjCmd,	PASSMAINWINDOW|ISSAFE},
 #ifdef MAC_OSX_TK
     {"::tk::unsupported::MacWindowStyle",
 			TkUnsupported1ObjCmd,	PASSMAINWINDOW|ISSAFE},

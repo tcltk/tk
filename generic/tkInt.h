@@ -194,7 +194,7 @@ typedef struct TkCursor {
 				 * there are objects referring to it. The
 				 * structure is freed when resourceRefCount
 				 * and objRefCount are both 0. */
-    TkSizeT objRefCount;		/* Number of Tcl objects that reference this
+    TkSizeT objRefCount;	/* Number of Tcl objects that reference this
 				 * structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used to
 				 * index this entry. */
@@ -1498,11 +1498,12 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
 MODULE_SCOPE int	TkUnsupported1ObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkParseCursorObjCmd;
 
 /*
  * For Tktest.
  */
-MODULE_SCOPE int SquareObjCmd(ClientData clientData,
+MODULE_SCOPE int	SquareObjCmd(ClientData clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
 MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
