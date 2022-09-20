@@ -30,6 +30,9 @@
 #undef Cursor
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -299,8 +302,9 @@ MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
 MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
-
-
+MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
+MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+    
 #pragma mark Private Objective-C Classes
 
 #define VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
@@ -344,9 +348,9 @@ VISIBILITY_HIDDEN
  * Persistent state variables used by processMouseEvent.
  */
 
-@property TkWindow *tkPointerWindow;
-@property TkWindow *tkEventTarget;
-@property TkWindow *tkDragTarget;
+@property(nonatomic) TkWindow *tkPointerWindow;
+@property(nonatomic) TkWindow *tkEventTarget;
+@property(nonatomic) TkWindow *tkDragTarget;
 @property unsigned int tkButtonState;
 
 @end
