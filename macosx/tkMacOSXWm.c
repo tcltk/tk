@@ -2669,7 +2669,7 @@ WmIconphotoCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Image tk_icon;
-    int width, height, isDefault = 0;
+    int width, height;
     NSImage *newIcon = NULL;
 
     if (objc < 4) {
@@ -2683,7 +2683,6 @@ WmIconphotoCmd(
      */
 
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "window ?-default? image1 ?image2 ...?");
