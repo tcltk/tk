@@ -353,9 +353,9 @@ VISIBILITY_HIDDEN
  * Persistent state variables used by processMouseEvent.
  */
 
-@property TkWindow *tkPointerWindow;
-@property TkWindow *tkEventTarget;
-@property TkWindow *tkDragTarget;
+@property(nonatomic) TkWindow *tkPointerWindow;
+@property(nonatomic) TkWindow *tkEventTarget;
+@property(nonatomic) TkWindow *tkDragTarget;
 @property unsigned int tkButtonState;
 
 @end
