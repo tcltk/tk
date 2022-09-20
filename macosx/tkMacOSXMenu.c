@@ -506,8 +506,13 @@ static Bool runMenuCommand = true;
     }
     backgroundLoop = [[TKBackgroundLoop alloc] init];
     [backgroundLoop start];
-    //TkMacOSXClearMenubarActive();
-    //TkMacOSXPreprocessMenu();
+
+    /*
+     * Make sure that we can run commands when actually using a menu.
+     * See [412b80fcaf].
+     */
+    
+    runMenuCommand = true;
 }
 
 - (void) menuEndTracking: (NSNotification *) notification
