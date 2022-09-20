@@ -817,6 +817,9 @@ set ::tk::Priv(IMETextMark) [dict create]
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
 }
+
+# Add in our classes
+uplevel \#0 [list source [file join [file dirname [info script]] oocfg.tcl]]
 
 # Local Variables:
 # mode: tcl

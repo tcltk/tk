@@ -679,8 +679,8 @@ Tk_OptionObjCmd(
 	Tk_Window window;
 	Tk_Uid value;
 
-	if (objc != 5) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window name class");
+	if (objc != 5 && objc != 6) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "window name class ?default?");
 	    return TCL_ERROR;
 	}
 	window = Tk_NameToWindow(interp, Tcl_GetString(objv[2]), tkwin);
@@ -691,6 +691,8 @@ Tk_OptionObjCmd(
 		Tcl_GetString(objv[4]));
 	if (value != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
+	} else if (objc == 6) {
+	    Tcl_SetObjResult(interp, objv[5]);
 	}
 	break;
     }
