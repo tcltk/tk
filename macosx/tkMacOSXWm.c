@@ -6,7 +6,7 @@
  *	the "wm" command and passes geometry information to the window manager.
  *
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
  * Copyright (c) 2017-2019 Marc Culler.
@@ -2596,7 +2596,7 @@ WmIconphotoCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Image tk_icon;
-    int width, height, isDefault = 0;
+    int width, height;
     NSImage *newIcon = NULL;
 
     if (objc < 4) {
@@ -2610,7 +2610,6 @@ WmIconphotoCmd(
      */
 
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "window ?-default? image1 ?image2 ...?");
@@ -5420,7 +5419,7 @@ TkSetWMName(
 	return;
     }
 
-    NSString *title = [[NSString alloc] initWithUTF8String:titleUid];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:-1];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
     [title release];
 }
@@ -5968,7 +5967,7 @@ WmWinTabbingId(
  *	allows you to get or set the appearance for the NSWindow associated
  *	with a Tk Window.  The syntax is:
  *
- *	    tk::unsupported::MacWindowStyle tabbingid window ?newAppearance?
+ *	    tk::unsupported::MacWindowStyle appearance window ?newAppearance?
  *
  *      Allowed appearance names are "aqua", "darkaqua", and "auto".
  *
@@ -6034,9 +6033,9 @@ WmWinAppearance(
     if (objc == 4) {
 	int index;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
-                sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
+		sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	switch ((enum appearances) index) {
 	case APPEARANCE_AQUA:
 	    win.appearance = [NSAppearance appearanceNamed:

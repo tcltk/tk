@@ -31,6 +31,7 @@ static SystemColorDatum **systemColorIndex;
 static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
 #endif
+
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
@@ -299,7 +300,7 @@ GetRGBA(
 
 	/*
 	 * Prior to OSX 10.14, getComponents returns black when applied to
-	 * windowBackGroundColor.
+	 * windowBackgroundColor.
 	 */
 
 	if ([NSApp macOSVersion] < 101400) {
@@ -417,6 +418,7 @@ SetCGColorComponents(
 
     if (entry->type == HIBrush) {
      	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+	[pool drain];
      	return err == noErr;
     }
     GetRGBA(entry, pixel, rgba);
@@ -456,7 +458,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	if (view) {
 	    name = [[view effectiveAppearance] name];
 	} else {
-	    name = [[NSAppearance currentAppearance] name];
+	    name = [[NSApp effectiveAppearance] name];
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
@@ -630,11 +632,9 @@ TkpGetColor(
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
     static Bool initialized = NO;
-    static NSColorSpace* sRGB = nil;
 
     if (!initialized) {
 	initialized = YES;
-	sRGB = [NSColorSpace sRGBColorSpace];
 	initColorTable();
     }
     if (tkwin) {
@@ -662,19 +662,30 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		if (@available(macOS 10.14, *)) {
-		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		    NSAppearance *windowAppearance = savedAppearance;
+		    NSAppearance *windowAppearance;
 		    if (view) {
 			windowAppearance = [view effectiveAppearance];
+		    } else {
+			windowAppearance = [NSApp effectiveAppearance];
 		    }
 		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 			colormap = darkColormap;
 		    } else {
 			colormap = lightColormap;
 		    }
-		    [NSAppearance setCurrentAppearance:windowAppearance];
-		    GetRGBA(entry, p.ulong, rgba);
-		    [NSAppearance setCurrentAppearance:savedAppearance];
+		    if (@available(macOS 11.0, *)) {
+			CGFloat *rgbaPtr = rgba; 
+			[windowAppearance performAsCurrentDrawingAppearance:^{
+				GetRGBA(entry, p.ulong, rgbaPtr);
+			    }];
+		    } else {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+			[NSAppearance setCurrentAppearance:windowAppearance];
+			GetRGBA(entry, p.ulong, rgba);
+			[NSAppearance setCurrentAppearance:savedAppearance];
+#endif
+		    }
 		} else {
 		    GetRGBA(entry, p.ulong, rgba);
 		}
