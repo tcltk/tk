@@ -50,8 +50,8 @@ static BuiltInIcon builtInIcons[] = {
 
 #define builtInIconSize 32
 
-#define OSTYPE_TO_UTI(x) (NSString *)UTTypeCreatePreferredIdentifierForTag( \
-     kUTTagClassOSType, UTCreateStringForOSType(x), nil)
+#define OSTYPE_TO_UTI(x) ((NSString *)UTTypeCreatePreferredIdentifierForTag( \
+     kUTTagClassOSType, UTCreateStringForOSType(x), nil))
 
 static Tcl_HashTable iconBitmapTable = {};
 typedef struct {
