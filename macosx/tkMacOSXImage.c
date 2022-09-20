@@ -1024,7 +1024,7 @@ XCopyPlane(
  */
 
 typedef struct TkNSImageInstance TkNSImageInstance;
-typedef struct TkNSImageMaster TkNSImageMaster;
+typedef struct TkNSImageModel TkNSImageModel;
 
 /*
  * The following data structure represents a particular use of an nsimage
@@ -1032,18 +1032,18 @@ typedef struct TkNSImageMaster TkNSImageMaster;
  */
 
 struct TkNSImageInstance {
-    TkNSImageMaster *masterPtr;   /* Pointer to the master for the image. */
+    TkNSImageModel *modelPtr;   /* Pointer to the model for the image. */
     NSImage *image;		  /* Pointer to an NSImage.*/
     TkNSImageInstance *nextPtr;   /* First in the list of instances associated
-				   * with this master. */
+				   * with this model. */
 };
 
 /*
- * The following data structure represents the master for an nsimage:
+ * The following data structure represents the model for an nsimage:
  */
 
-struct TkNSImageMaster {
-    Tk_ImageMaster tkMaster;	      /* Tk's token for image master. */
+struct TkNSImageModel {
+    Tk_ImageModel tkModel;	      /* Tk's token for image model. */
     Tcl_Interp *interp;		      /* Interpreter for application. */
     int width, height;		      /* Dimensions of the image. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
@@ -1054,13 +1054,13 @@ struct TkNSImageMaster {
     char *as;                         /* Malloc'ed interpretation of source */
     int	flags;			      /* Sundry flags, defined below. */
     TkNSImageInstance *instancePtr;   /* Start of list of instances associated
-				       * with this master. */
+				       * with this model. */
     NSImage *image;                   /* The underlying NSImage object. */
     NSImage *darkModeImage;           /* A modified image to use in Dark Mode. */
 };
 
 /*
- * Bit definitions for the flags field of a TkNSImageMaster.
+ * Bit definitions for the flags field of a TkNSImageModel.
  * IMAGE_CHANGED:		1 means that the instances of this image need
  *				to be redisplayed.
  */
@@ -1073,7 +1073,7 @@ struct TkNSImageMaster {
 
 static int		TkNSImageCreate(Tcl_Interp *interp,
 			    const char *name, int argc, Tcl_Obj *const objv[],
-			    const Tk_ImageType *typePtr, Tk_ImageMaster master,
+			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	TkNSImageGet(Tk_Window tkwin, ClientData clientData);
 static void		TkNSImageDisplay(ClientData clientData,
@@ -1109,19 +1109,19 @@ static Tk_ImageType TkNSImageType = {
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
-     -1, Tk_Offset(TkNSImageMaster, source), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, source), 0, NULL, 0},
     {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
-     -1, Tk_Offset(TkNSImageMaster, as), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, as), 0, NULL, 0},
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
-     -1, Tk_Offset(TkNSImageMaster, width), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
-     -1, Tk_Offset(TkNSImageMaster, height), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, height), 0, NULL, 0},
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
-     -1, Tk_Offset(TkNSImageMaster, alpha), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
-     -1, Tk_Offset(TkNSImageMaster, pressed), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, pressed), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, Tk_Offset(TkNSImageMaster, pressed), 0, NULL, 0},
+     -1, Tk_Offset(TkNSImageModel, pressed), 0, NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
@@ -1189,7 +1189,7 @@ static void TintImage(
 /*
  *----------------------------------------------------------------------
  *
- * TkNSImageConfigureMaster --
+ * TkNSImageConfigureModel --
  *
  *	This function is called when an nsimage image is created or
  *	reconfigured.  It processes configuration options and resets any
@@ -1197,7 +1197,7 @@ static void TintImage(
  *
  * Results:
  *	A standard Tcl return value. If TCL_ERROR is returned then an error
- *	message is left in the masterPtr->interp's result.
+ *	message is left in the modelPtr->interp's result.
  *
  * Side effects:
  *	Existing instances of the image will be redisplayed to match the new
@@ -1207,9 +1207,9 @@ static void TintImage(
  */
 
 static int
-TkNSImageConfigureMaster(
+TkNSImageConfigureModel(
     Tcl_Interp *interp,		   /* Interpreter to use for reporting errors. */
-    TkNSImageMaster *masterPtr,  /* Pointer to data structure describing
+    TkNSImageModel *modelPtr,    /* Pointer to data structure describing
 				    * overall photo image to (re)configure. */
     int objc,			   /* Number of entries in objv. */
     Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
@@ -1226,18 +1226,18 @@ TkNSImageConfigureMaster(
 	Tcl_IncrRefCount(asOption);
     }
 
-    if (Tk_SetOptions(interp, (char *) masterPtr, optionTable, objc, objv,
+    if (Tk_SetOptions(interp, (char *) modelPtr, optionTable, objc, objv,
 		      NULL, NULL, NULL) != TCL_OK){
 	goto errorExit;
     }
 
-    if (masterPtr->source == NULL || masterPtr->source[0] == '0') {
+    if (modelPtr->source == NULL || modelPtr->source[0] == '0') {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", -1));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	goto errorExit;
     }
 
-    objPtr = Tk_GetOptionValue(interp, (char *) masterPtr, optionTable,
+    objPtr = Tk_GetOptionValue(interp, (char *) modelPtr, optionTable,
 				asOption, NULL);
     if (Tcl_GetIndexFromObj(interp, objPtr, sourceInterpretations, "option",
 			    0, &sourceInterpretation) != TCL_OK) {
@@ -1248,7 +1248,7 @@ TkNSImageConfigureMaster(
 	goto errorExit;
     }
 
-    source = [[NSString alloc] initWithUTF8String: masterPtr->source];
+    source = [[NSString alloc] initWithUTF8String: modelPtr->source];
     switch (sourceInterpretation) {
     case NAME_SOURCE:
 	newImage = [[NSImage imageNamed:source] copy];
@@ -1268,35 +1268,35 @@ TkNSImageConfigureMaster(
     }
     [source release];
     if (newImage) {
-	NSSize size = NSMakeSize(masterPtr->width, masterPtr->height);
+	NSSize size = NSMakeSize(modelPtr->width, modelPtr->height);
 	[newImage setSize:size];
-	[masterPtr->image release];
-	[masterPtr->darkModeImage release];
-	masterPtr->image = [newImage retain];
-	if (masterPtr->template) {
+	[modelPtr->image release];
+	[modelPtr->darkModeImage release];
+	modelPtr->image = [newImage retain];
+	if (modelPtr->template) {
 	    newImage.template = YES;
 	}
-	masterPtr->darkModeImage = [[masterPtr->image copy] retain];
-	if ([masterPtr->darkModeImage isTemplate]) {
+	modelPtr->darkModeImage = [[modelPtr->image copy] retain];
+	if ([modelPtr->darkModeImage isTemplate]) {
 
 	    /*
 	     * For a template image the Dark Mode version should be white.
 	     */
 
 	    NSRect rect = {NSZeroPoint, size};
-	    [masterPtr->darkModeImage lockFocus];
+	    [modelPtr->darkModeImage lockFocus];
 	    [[NSColor whiteColor] set];
 	    NSRectFillUsingOperation(rect, NSCompositeSourceAtop);
-	    [masterPtr->darkModeImage unlockFocus];
-	} else if (masterPtr->pressed) {
+	    [modelPtr->darkModeImage unlockFocus];
+	} else if (modelPtr->pressed) {
 
 	    /*
 	     * Non-template pressed images are darker in Light Mode and lighter
 	     * in Dark Mode.
 	     */
 
-	    TintImage(masterPtr->image, [NSColor blackColor], 0.2);
-	    TintImage(masterPtr->darkModeImage, [NSColor whiteColor], 0.5);
+	    TintImage(modelPtr->image, [NSColor blackColor], 0.2);
+	    TintImage(modelPtr->darkModeImage, [NSColor whiteColor], 0.5);
 	}
     } else {
 	switch(sourceInterpretation) {
@@ -1323,9 +1323,9 @@ TkNSImageConfigureMaster(
      * Inform the generic image code that the image has (potentially) changed.
      */
 
-    Tk_ImageChanged(masterPtr->tkMaster, 0, 0, masterPtr->width,
-	    masterPtr->height, masterPtr->width, masterPtr->height);
-    masterPtr->flags &= ~IMAGE_CHANGED;
+    Tk_ImageChanged(modelPtr->tkModel, 0, 0, modelPtr->width,
+	    modelPtr->height, modelPtr->width, modelPtr->height);
+    modelPtr->flags &= ~IMAGE_CHANGED;
 
     return TCL_OK;
 
@@ -1352,12 +1352,12 @@ TkNSImageConfigureMaster(
 
 int
 TkMacOSXNSImageObjCmd(
-    ClientData clientData,	/* Information about the image master. */
+    ClientData clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    TkNSImageMaster *masterPtr = (TkNSImageMaster *)clientData;
+    TkNSImageModel *modelPtr = (TkNSImageModel *)clientData;
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
     static const char *const options[] = {"cget", "configure", NULL};
     enum {CGET, CONFIGURE};
@@ -1372,14 +1372,14 @@ TkMacOSXNSImageObjCmd(
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    Tcl_Preserve(masterPtr);
+    Tcl_Preserve(modelPtr);
     switch (index) {
     case CGET:
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option");
 	    return TCL_ERROR;
 	}
-	objPtr = Tk_GetOptionValue(interp, (char *)masterPtr, optionTable,
+	objPtr = Tk_GetOptionValue(interp, (char *)modelPtr, optionTable,
 		objv[2], NULL);
 	if (objPtr == NULL) {
             goto error;
@@ -1388,7 +1388,7 @@ TkMacOSXNSImageObjCmd(
 	break;
     case CONFIGURE:
 	if (objc == 2) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *)masterPtr, optionTable,
+	    objPtr = Tk_GetOptionInfo(interp, (char *)modelPtr, optionTable,
 				     NULL, NULL);
 	    if (objPtr == NULL) {
 		goto error;
@@ -1396,7 +1396,7 @@ TkMacOSXNSImageObjCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    break;
 	} else if (objc == 3) {
-	    objPtr = Tk_GetOptionInfo(interp, (char *)masterPtr, optionTable,
+	    objPtr = Tk_GetOptionInfo(interp, (char *)modelPtr, optionTable,
 				     objv[2], NULL);
 	    if (objPtr == NULL) {
 		goto error;
@@ -1404,18 +1404,18 @@ TkMacOSXNSImageObjCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    break;
 	} else {
-	    TkNSImageConfigureMaster(interp, masterPtr, objc - 2, objv + 2);
+	    TkNSImageConfigureModel(interp, modelPtr, objc - 2, objv + 2);
 	    break;
 	}
     default:
 	break;
     }
 
-    Tcl_Release(masterPtr);
+    Tcl_Release(modelPtr);
     return TCL_OK;
 
  error:
-    Tcl_Release(masterPtr);
+    Tcl_Release(modelPtr);
     return TCL_ERROR;
 }
 
@@ -1424,7 +1424,7 @@ TkMacOSXNSImageObjCmd(
  *
  * TkNSImageCreate --
  *
- *	Allocate and initialize an nsimage master.
+ *	Allocate and initialize an nsimage model.
  *
  * Results:
  *	A standard Tcl result.
@@ -1443,36 +1443,36 @@ TkNSImageCreate(
     Tcl_Obj *const objv[],	 /* Argument strings for options (not
 				  * including image name or type). */
     TCL_UNUSED(const Tk_ImageType *), /* typePtr */
-    Tk_ImageMaster master,	 /* Token for image, to be used in callbacks. */
+    Tk_ImageModel model,	 /* Token for image, to be used in callbacks. */
     ClientData *clientDataPtr)	 /* Store manager's token for image here; it
 				  * will be returned in later callbacks. */
 {
-    TkNSImageMaster *masterPtr;
+    TkNSImageModel *modelPtr;
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
 
-    masterPtr = (TkNSImageMaster *)ckalloc(sizeof(TkNSImageMaster));
-    masterPtr->tkMaster = master;
-    masterPtr->interp = interp;
-    masterPtr->imageName = (char *)ckalloc(strlen(name) + 1);
-    strcpy(masterPtr->imageName, name);
-    masterPtr->flags = 0;
-    masterPtr->instancePtr = NULL;
-    masterPtr->image = NULL;
-    masterPtr->darkModeImage = NULL;
-    masterPtr->source = NULL;
-    masterPtr->as = NULL;
+    modelPtr = (TkNSImageModel *)ckalloc(sizeof(TkNSImageModel));
+    modelPtr->tkModel = model;
+    modelPtr->interp = interp;
+    modelPtr->imageName = (char *)ckalloc(strlen(name) + 1);
+    strcpy(modelPtr->imageName, name);
+    modelPtr->flags = 0;
+    modelPtr->instancePtr = NULL;
+    modelPtr->image = NULL;
+    modelPtr->darkModeImage = NULL;
+    modelPtr->source = NULL;
+    modelPtr->as = NULL;
 
     /*
      * Process configuration options given in the image create command.
      */
 
-    if (Tk_InitOptions(interp, (char *) masterPtr, optionTable, NULL) != TCL_OK
-	|| TkNSImageConfigureMaster(interp, masterPtr, objc, objv) != TCL_OK) {
-	TkNSImageDelete(masterPtr);
+    if (Tk_InitOptions(interp, (char *) modelPtr, optionTable, NULL) != TCL_OK
+	|| TkNSImageConfigureModel(interp, modelPtr, objc, objv) != TCL_OK) {
+	TkNSImageDelete(modelPtr);
 	return TCL_ERROR;
     }
 
-    *clientDataPtr = masterPtr;
+    *clientDataPtr = modelPtr;
     return TCL_OK;
 }
 
@@ -1496,13 +1496,13 @@ TkNSImageCreate(
 static ClientData
 TkNSImageGet(
     TCL_UNUSED(Tk_Window),      /* tkwin */
-    ClientData clientData)	/* Pointer to TkNSImageMaster for image. */
+    ClientData clientData)	/* Pointer to TkNSImageModel for image. */
 {
-    TkNSImageMaster *masterPtr = (TkNSImageMaster *) clientData;
+    TkNSImageModel *modelPtr = (TkNSImageModel *) clientData;
     TkNSImageInstance *instPtr;
 
     instPtr = (TkNSImageInstance *)ckalloc(sizeof(TkNSImageInstance));
-    instPtr->masterPtr = masterPtr;
+    instPtr->modelPtr = modelPtr;
     return instPtr;
 }
 
@@ -1537,13 +1537,13 @@ TkNSImageDisplay(
     MacDrawable *macWin = (MacDrawable *) drawable;
     Tk_Window tkwin = (Tk_Window) macWin->winPtr;
     TkNSImageInstance *instPtr = (TkNSImageInstance *) clientData;
-    TkNSImageMaster *masterPtr = instPtr->masterPtr;
+    TkNSImageModel *modelPtr = instPtr->modelPtr;
     TkMacOSXDrawingContext dc;
     NSRect dstRect = NSMakeRect(macWin->xOff + drawableX,
 				 macWin->yOff + drawableY, width, height);
     NSRect srcRect = NSMakeRect(imageX, imageY, width, height);
-    NSImage *image = TkMacOSXInDarkMode(tkwin) ? masterPtr->darkModeImage :
-	masterPtr->image;
+    NSImage *image = TkMacOSXInDarkMode(tkwin) ? modelPtr->darkModeImage :
+	modelPtr->image;
 
     if (TkMacOSXSetupDrawingContext(drawable, NULL, &dc)) {
 	if (dc.context) {
@@ -1552,7 +1552,7 @@ TkNSImageDisplay(
 	    [image drawInRect:dstRect
 		     fromRect:srcRect
 		    operation:NSCompositeSourceOver
-		     fraction:masterPtr->alpha
+		     fraction:modelPtr->alpha
 	       respectFlipped:YES
 			hints:nil];
 	    NSGraphicsContext.currentContext = savedContext;
@@ -1591,7 +1591,7 @@ TkNSImageFree(
  *
  * TkNSImageDelete --
  *
- *	Deallocate an nsimage master.
+ *	Deallocate an nsimage model.
  *
  * Results:
  *	None.
@@ -1604,19 +1604,19 @@ TkNSImageFree(
 
 static void
 TkNSImageDelete(
-    ClientData clientData)	/* Pointer to TkNSImageMaster for image. When
+    ClientData clientData)	/* Pointer to TkNSImageModel for image. When
 				 * this function is called, no more instances
 				 * exist. */
 {
-    TkNSImageMaster *masterPtr = (TkNSImageMaster *) clientData;
+    TkNSImageModel *modelPtr = (TkNSImageModel *) clientData;
 
-    Tcl_DeleteCommand(masterPtr->interp, masterPtr->imageName);
-    ckfree(masterPtr->imageName);
-    ckfree(masterPtr->source);
-    ckfree(masterPtr->as);
-    [masterPtr->image release];
-    [masterPtr->darkModeImage release];
-    ckfree(masterPtr);
+    Tcl_DeleteCommand(modelPtr->interp, modelPtr->imageName);
+    ckfree(modelPtr->imageName);
+    ckfree(modelPtr->source);
+    ckfree(modelPtr->as);
+    [modelPtr->image release];
+    [modelPtr->darkModeImage release];
+    ckfree(modelPtr);
 }
 
 /*
