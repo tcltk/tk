@@ -213,12 +213,6 @@ typedef struct TkMacOSXDrawingContext {
 } TkMacOSXDrawingContext;
 
 /*
- * Variables internal to TkAqua.
- */
-
-MODULE_SCOPE long tkMacOSXMacOSXVersion;
-
-/*
  * Prototypes for TkMacOSXRegion.c.
  */
 

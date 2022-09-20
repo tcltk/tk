@@ -1332,7 +1332,7 @@ const TkStubs tkStubs = {
     Tk_CreatePhotoImageFormatVersion3, /* 280 */
     Tk_DrawHighlightBorder, /* 281 */
     Tk_SetMainMenubar, /* 282 */
-    Tk_SetWindowMenuBar, /* 283 */
+    Tk_SetWindowMenubar, /* 283 */
     Tk_ClipDrawableToRect, /* 284 */
     Tk_GetSystemDefault, /* 285 */
     Tk_UseWindow, /* 286 */

@@ -204,7 +204,8 @@ EXTERN void		TkpDisplayWarning(const char *msg, const char *title);
 /* 59 */
 EXTERN void		TkpGetAppName(Tcl_Interp *interp, Tcl_DString *name);
 /* 60 */
-EXTERN TkWindow *	TkpGetOtherWindow(TkWindow *winPtr);
+TK_DEPRECATED("renamed to Tk_GetOtherWindow")
+TkWindow *		TkpGetOtherWindow(TkWindow *winPtr);
 /* 61 */
 EXTERN TkWindow *	TkpGetWrapperWindow(TkWindow *winPtr);
 /* 62 */
@@ -213,11 +214,13 @@ EXTERN int		TkpInit(Tcl_Interp *interp);
 EXTERN void		TkpInitializeMenuBindings(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable);
 /* 64 */
-EXTERN void		TkpMakeContainer(Tk_Window tkwin);
+TK_DEPRECATED("renamed to Tk_MakeContainer")
+void			TkpMakeContainer(Tk_Window tkwin);
 /* 65 */
 EXTERN void		TkpMakeMenuWindow(Tk_Window tkwin, int transient);
 /* 66 */
-EXTERN Window		TkpMakeWindow(TkWindow *winPtr, Window parent);
+TK_DEPRECATED("renamed to Tk_MakeWindow")
+Window			TkpMakeWindow(TkWindow *winPtr, Window parent);
 /* 67 */
 EXTERN void		TkpMenuNotifyToplevelCreate(Tcl_Interp *interp,
 				const char *menuName);
@@ -237,10 +240,12 @@ EXTERN int		TkPositionInTree(TkWindow *winPtr, TkWindow *treePtr);
 EXTERN void		TkpRedirectKeyEvent(TkWindow *winPtr,
 				XEvent *eventPtr);
 /* 74 */
-EXTERN void		TkpSetMainMenubar(Tcl_Interp *interp,
+TK_DEPRECATED("renamed to Tk_SetMainMenubar")
+void			TkpSetMainMenubar(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *menuName);
 /* 75 */
-EXTERN int		TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin,
+TK_DEPRECATED("renamed to Tk_UseWindow")
+int			TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin,
 				const char *string);
 /* Slot 76 is reserved */
 /* 77 */
@@ -267,7 +272,7 @@ EXTERN void		TkSelInit(Tk_Window tkwin);
 EXTERN void		TkSelPropProc(XEvent *eventPtr);
 /* Slot 84 is reserved */
 /* 85 */
-TK_DEPRECATED("renamed to Tk_SetWindowMenuBar")
+TK_DEPRECATED("renamed to Tk_SetWindowMenubar")
 void			TkSetWindowMenuBar(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *oldMenuName,
 				const char *menuName);
@@ -332,7 +337,8 @@ EXTERN const char *	TkpGetString(TkWindow *winPtr, XEvent *eventPtr,
 /* 110 */
 EXTERN void		TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont);
 /* 111 */
-EXTERN Tcl_Obj *	TkpGetSystemDefault(Tk_Window tkwin,
+TK_DEPRECATED("renamed to Tk_GetSystemDefault")
+Tcl_Obj *		TkpGetSystemDefault(Tk_Window tkwin,
 				const char *dbName, const char *className);
 /* 112 */
 EXTERN void		TkpMenuThreadInit(void);
@@ -380,7 +386,8 @@ EXTERN Pixmap		TkpGetNativeAppBitmap(Display *display,
 /* Slot 133 is reserved */
 /* Slot 134 is reserved */
 /* 135 */
-EXTERN void		TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC,
+TK_DEPRECATED("renamed to Tk_DrawHighlightBorder")
+void			TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC,
 				GC bgGC, int highlightWidth,
 				Drawable drawable);
 /* 136 */
@@ -632,13 +639,13 @@ typedef struct TkIntStubs {
     void (*tkpClaimFocus) (TkWindow *topLevelPtr, int force); /* 57 */
     void (*tkpDisplayWarning) (const char *msg, const char *title); /* 58 */
     void (*tkpGetAppName) (Tcl_Interp *interp, Tcl_DString *name); /* 59 */
-    TkWindow * (*tkpGetOtherWindow) (TkWindow *winPtr); /* 60 */
+    TCL_DEPRECATED_API("renamed to Tk_GetOtherWindow") TkWindow * (*tkpGetOtherWindow) (TkWindow *winPtr); /* 60 */
     TkWindow * (*tkpGetWrapperWindow) (TkWindow *winPtr); /* 61 */
     int (*tkpInit) (Tcl_Interp *interp); /* 62 */
     void (*tkpInitializeMenuBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable); /* 63 */
-    void (*tkpMakeContainer) (Tk_Window tkwin); /* 64 */
+    TCL_DEPRECATED_API("renamed to Tk_MakeContainer") void (*tkpMakeContainer) (Tk_Window tkwin); /* 64 */
     void (*tkpMakeMenuWindow) (Tk_Window tkwin, int transient); /* 65 */
-    Window (*tkpMakeWindow) (TkWindow *winPtr, Window parent); /* 66 */
+    TCL_DEPRECATED_API("renamed to Tk_MakeWindow") Window (*tkpMakeWindow) (TkWindow *winPtr, Window parent); /* 66 */
     void (*tkpMenuNotifyToplevelCreate) (Tcl_Interp *interp, const char *menuName); /* 67 */
     TkDisplay * (*tkpOpenDisplay) (const char *display_name); /* 68 */
     int (*tkPointerEvent) (XEvent *eventPtr, TkWindow *winPtr); /* 69 */
@@ -646,8 +653,8 @@ typedef struct TkIntStubs {
     double (*tkPolygonToPoint) (double *polyPtr, int numPoints, double *pointPtr); /* 71 */
     int (*tkPositionInTree) (TkWindow *winPtr, TkWindow *treePtr); /* 72 */
     void (*tkpRedirectKeyEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 73 */
-    void (*tkpSetMainMenubar) (Tcl_Interp *interp, Tk_Window tkwin, const char *menuName); /* 74 */
-    int (*tkpUseWindow) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 75 */
+    TCL_DEPRECATED_API("renamed to Tk_SetMainMenubar") void (*tkpSetMainMenubar) (Tcl_Interp *interp, Tk_Window tkwin, const char *menuName); /* 74 */
+    TCL_DEPRECATED_API("renamed to Tk_UseWindow") int (*tkpUseWindow) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 75 */
     void (*reserved76)(void);
     void (*tkQueueEventForAllChildren) (TkWindow *winPtr, XEvent *eventPtr); /* 77 */
     int (*tkReadBitmapFile) (Display *display, Drawable d, const char *filename, unsigned int *width_return, unsigned int *height_return, Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return); /* 78 */
@@ -657,7 +664,7 @@ typedef struct TkIntStubs {
     void (*tkSelInit) (Tk_Window tkwin); /* 82 */
     void (*tkSelPropProc) (XEvent *eventPtr); /* 83 */
     void (*reserved84)(void);
-    TCL_DEPRECATED_API("renamed to Tk_SetWindowMenuBar") void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
+    TCL_DEPRECATED_API("renamed to Tk_SetWindowMenubar") void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
     KeySym (*tkStringToKeysym) (const char *name); /* 86 */
     int (*tkThickPolyLineToArea) (double *coordPtr, int numPoints, double width, int capStyle, int joinStyle, double *rectPtr); /* 87 */
     void (*tkWmAddToColormapWindows) (TkWindow *winPtr); /* 88 */
@@ -683,7 +690,7 @@ typedef struct TkIntStubs {
     int (*tkGetWindowFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, Tk_Window *windowPtr); /* 108 */
     const char * (*tkpGetString) (TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr); /* 109 */
     void (*tkpGetSubFonts) (Tcl_Interp *interp, Tk_Font tkfont); /* 110 */
-    Tcl_Obj * (*tkpGetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 111 */
+    TCL_DEPRECATED_API("renamed to Tk_GetSystemDefault") Tcl_Obj * (*tkpGetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 111 */
     void (*tkpMenuThreadInit) (void); /* 112 */
     int (*xClipBox) (Region rgn, XRectangle *rect_return); /* 113 */
     Region (*xCreateRegion) (void); /* 114 */
@@ -734,7 +741,7 @@ typedef struct TkIntStubs {
     void (*reserved132)(void);
     void (*reserved133)(void);
     void (*reserved134)(void);
-    void (*tkpDrawHighlightBorder) (Tk_Window tkwin, GC fgGC, GC bgGC, int highlightWidth, Drawable drawable); /* 135 */
+    TCL_DEPRECATED_API("renamed to Tk_DrawHighlightBorder") void (*tkpDrawHighlightBorder) (Tk_Window tkwin, GC fgGC, GC bgGC, int highlightWidth, Drawable drawable); /* 135 */
     void (*tkSetFocusWin) (TkWindow *winPtr, int force); /* 136 */
     void (*tkpSetKeycodeAndState) (Tk_Window tkwin, KeySym keySym, XEvent *eventPtr); /* 137 */
     KeySym (*tkpGetKeySym) (TkDisplay *dispPtr, XEvent *eventPtr); /* 138 */
@@ -1191,7 +1198,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TkpMakeWindow
 
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION == 8)
-#   define TkSetWindowMenuBar Tk_SetWindowMenuBar
+#   define TkSetWindowMenuBar Tk_SetWindowMenubar
 #   define TkpDrawHighlightBorder Tk_DrawHighlightBorder
 #   define TkpUseWindow Tk_UseWindow
 #   define TkpSetMainMenubar Tk_SetMainMenubar
