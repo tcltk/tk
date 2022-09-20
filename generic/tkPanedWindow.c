@@ -410,7 +410,7 @@ Tk_PanedWindowObjCmd(
 	/*
 	 * The first time this function is invoked, the option tables will be
 	 * NULL. We then create the option tables from the templates and store
-	 * a pointer to the tables as the command's clinical so we'll have
+	 * a pointer to the tables as the command's clientData so we'll have
 	 * easy access to it in the future.
 	 */
 
