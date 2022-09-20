@@ -1927,7 +1927,7 @@ WidgetEventChanged(
             defvalue = Tcl_NewStringObj(valueUid, -1);
         }
         else {
-            defvalue = TkpGetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
+            defvalue = Tk_GetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
             if (defvalue == NULL) continue;
         }
         Tcl_IncrRefCount(defvalue);
@@ -2328,7 +2328,7 @@ WidgetOptionAdd(
                  */
                 if (optionPtr->value == NULL && optionUid != tkoPtr->Uid_class) {
                     optionPtr->value =
-                        TkpGetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
+                        Tk_GetSystemDefault(widget->tkWin, dbnameUid, dbclassUid);
                 }
             }
             /*
@@ -2810,7 +2810,7 @@ WidgetMethod_(
     case TKO_SET_USE:      /* (Tcl_Obj **)address */
         str = Tcl_GetStringFromObj(value, &length);
         if (str && length) {
-            if (TkpUseWindow(interp, widget->tkWin, str) != TCL_OK) {
+            if (Tk_UseWindow(interp, widget->tkWin, str) != TCL_OK) {
                 return TCL_ERROR;
             }
         }
@@ -2834,7 +2834,7 @@ WidgetMethod_(
         if (Tcl_GetBooleanFromObj(interp, value, &intVal) != TCL_OK)
             return TCL_ERROR;
         if (intVal) {
-            TkpMakeContainer(widget->tkWin);
+            Tk_MakeContainer(widget->tkWin);
             Tcl_ObjSetVar2(interp, widget->optionsArray, objv[1], Tcl_NewIntObj(1),
                 TCL_GLOBAL_ONLY);
         }
