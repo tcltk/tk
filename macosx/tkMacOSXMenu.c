@@ -91,7 +91,7 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static int inPostMenu = 0;
+static Bool   inPostMenu = true;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -196,25 +196,36 @@ TKBackgroundLoop *backgroundLoop = nil;
  * Spanish keyboard both the ' and the ` keys are dead keys used to place
  * accents over letters.  But ⌘` is a standard KeyEquivalent which cycles
  * through the open windows of an application, changing the focus to the next
- * window.
+ * window. This caused a bug reported in [1626ed65b8].  When a dead key that is
+ * also as a KeyEquivalent is pressed, a KeyDown event with no characters would
+ * be passed to performKeyEquivalent.  The default implementation provided by
+ * Apple would cause that event to be routed to some private methods of NSMenu
+ * which raise NSInvalidArgumentException, causing an abort. Returning NO in
+ * such a case prevents the abort.  So the override below returns NO when the
+ * event has no characters.
  *
- * The performKeyEquivalent callback method is being overridden here to work
- * around a bug reported in [1626ed65b8].  When a dead key that is also as a
- * KeyEquivalent is pressed, a KeyDown event with no characters is passed to
- * performKeyEquivalent.  The default implementation provided by Apple will
- * cause that event to be routed to some private methods of NSMenu which raise
- * NSInvalidArgumentException, causing an abort. Returning NO in such a case
- * prevents the abort, but does not prevent the KeyEquivalent action from being
- * invoked, presumably because the event does get correctly handled higher in
- * the responder chain.
+ * In fact, however, we never want to handle accelerators because they are
+ * handled by Tk.  Hence this method could always return NO.  But if we did
+ * that then we would not see the menu flash when an accelerator is pressed.
+ * The flash is a useful visual indicator. It turns out that the flash is an
+ * undocumented side effect of calling the super method for
+ * performKeyEquivalent.  The super method also calls the NSMenuItem's action
+ * method - tkMenuItemInvoke in our case.  This is also not documented.
+ *
+ * To enable the flash we set up a flag that tells the action method to do
+ * nothing, because it is being called by an accelerator. The override below
+ * sets the flag and then calls super. See ticket [ead70921a9].
  */
 
+static Bool runMenuCommand = true;
 - (BOOL)performKeyEquivalent:(NSEvent *)event
 {
-    if (event.characters.length == 0) {
+    if ([[event characters] length] == 0) {
 	return NO;
     }
-    return [super performKeyEquivalent:event];
+    runMenuCommand = false;
+    /* Make the menu flash and call tkMenuItemInvoke. */
+    return [super performKeyEquivalent: event];
 }
 @end
 
@@ -328,11 +339,19 @@ TKBackgroundLoop *backgroundLoop = nil;
 
 - (void) tkMenuItemInvoke: (id) sender
 {
+    if (!runMenuCommand) {
+
+    	/*
+    	 * We are being called for a menu accelerator.  Tk will handle it.
+    	 * Just update the runMenuCommand flag.
+    	 */
+
+    	runMenuCommand = true;
+    	return;
+    }
+
     /*
-     * With the delegate matching key equivalents, when a menu action is sent
-     * in response to a key equivalent, the sender is the whole menu and not the
-     * specific menu item.  We use this to ignore key equivalents for Tk
-     * menus (as Tk handles them directly via bindings).
+     * We are being called for an actual menu item selection; run the command.
      */
 
     if ([sender isKindOfClass:[NSMenuItem class]]) {
@@ -341,19 +360,16 @@ TKBackgroundLoop *backgroundLoop = nil;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
 
 	if (menuPtr && mePtr) {
-	    Tcl_Interp *interp = menuPtr->interp;
-
-	    Tcl_Preserve(interp);
-	    Tcl_Preserve(menuPtr);
-
-	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-
-	    if (result != TCL_OK && result != TCL_CONTINUE &&
-		    result != TCL_BREAK) {
-		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundException(interp, result);
-	    }
-	    Tcl_Release(menuPtr);
+	Tcl_Interp *interp = menuPtr->interp;
+	Tcl_Preserve(interp);
+	Tcl_Preserve(menuPtr);
+	int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
+	if (result != TCL_OK && result != TCL_CONTINUE &&
+	    result != TCL_BREAK) {
+	    Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
+	    Tcl_BackgroundException(interp, result);
+	}
+	Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
 	}
     }
@@ -936,10 +952,10 @@ TkpPostMenu(
     NSMenuItem *item = nil;
     NSPoint location = NSMakePoint(x, TkMacOSXZeroScreenHeight() - y);
 
-    inPostMenu = 1;
+    inPostMenu = true;
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
-        inPostMenu = 0;
+        inPostMenu = false;
         return result;
     }
     if (itemIndex >= numItems) {
@@ -961,7 +977,7 @@ TkpPostMenu(
     [menu popUpMenuPositioningItem:item
 			atLocation:[win tkConvertPointFromScreen:location]
 			    inView:view];
-    inPostMenu = 0;
+    inPostMenu = false;
     return TCL_OK;
 }
 
