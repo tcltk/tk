@@ -752,7 +752,7 @@ FrameDestructor(
         Tcl_CancelIdleCall(FrameMap, frame);
 
         if(frame->menuName != NULL && frame->tkWinCreate) {
-            Tk_SetWindowMenuBar(frame->widget.interp, frame->tkWinCreate, frame->menuName, NULL);
+            Tk_SetWindowMenubar(frame->widget.interp, frame->tkWinCreate, frame->menuName, NULL);
             ckfree(frame->menuName);
             frame->menuName = NULL;
         }
@@ -1082,7 +1082,7 @@ FrameMethod_menu(
         || ((newMenu != NULL) && (frame->menuName != NULL)
             && strcmp(newMenu, frame->menuName) != 0))
         && frame->type == TYPE_TOPLEVEL) {
-        Tk_SetWindowMenuBar(interp, widget->tkWin, frame->menuName, newMenu);
+        Tk_SetWindowMenubar(interp, widget->tkWin, frame->menuName, newMenu);
         if (frame->menuName) { ckfree(frame->menuName); }
         if (length) {
             frame->menuName = (char *)ckalloc(length + 1);
