@@ -1548,7 +1548,8 @@ TkMacOSXNSImageDisplay(
     if (TkMacOSXSetupDrawingContext(drawable, NULL, &dc)) {
 	if (dc.context) {
 	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
-	    NSGraphicsContext.currentContext = GET_NSCONTEXT(dc.context, YES);
+	    NSGraphicsContext.currentContext = [NSGraphicsContext
+		graphicsContextWithCGContext:dc.context flipped:YES];
 	    [image drawInRect:dstRect
 		     fromRect:srcRect
 		    operation:NSCompositeSourceOver
@@ -1631,8 +1632,7 @@ TkMacOSXNSImageDelete(
  *	the interp's result if an error occurs.
  *
  * Side effects:
- *	Creates the command:
- *      image create system -source ?-width? ?-height? ?-alpha? ?-pressed?
+ *	Creates the image create nsrect ...  command.
  *
  *----------------------------------------------------------------------
  */
