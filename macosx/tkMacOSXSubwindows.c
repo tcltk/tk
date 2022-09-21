@@ -147,7 +147,7 @@ XMapWindow(
     MacDrawable *macWin = (MacDrawable *)window;
     TkWindow *winPtr = macWin->winPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-    static Bool initialized = NO;
+    static Bool initialized = NO, needExposure = YES;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
 
@@ -240,6 +240,10 @@ XMapWindow(
 	event.xvisibility.type = VisibilityNotify;
 	event.xvisibility.state = VisibilityUnobscured;
 	NotifyVisibility(winPtr, &event);
+	if (needExposure) {
+	    needExposure = NO;
+	    [view generateExposeEvents:[view bounds]];
+	}
     } else {
 	initialized = YES;
     }
