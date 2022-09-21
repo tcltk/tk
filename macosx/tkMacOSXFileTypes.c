@@ -77,15 +77,17 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
     }
     if (@available(macOS 11.0, *)) {
 	UTType *uttype = [UTType typeWithIdentifier: filetype];
-	if (![uttype isDeclared]) {
+	if (uttype == nil || !uttype.isDeclared) {
 	    uttype = [UTType typeWithFilenameExtension: filetype];
 	}
-	if (![uttype isDeclared] && [filetype length] == 4) {
+	if (uttype == nil || (!uttype.isDeclared && filetype.length == 4)) {
 	    OSType ostype = CHARS_TO_OSTYPE(filetype.UTF8String);
 	    NSString *UTI = TkMacOSXOSTypeToUTI(ostype);
-	    uttype = [UTType typeWithIdentifier:UTI];
+	    if (UTI) {
+		uttype = [UTType typeWithIdentifier:UTI];
+	    }
 	}
-	if (![uttype isDeclared]) {
+	if (uttype == nil || !uttype.isDeclared) {
 	    return nil;
 	}
 	return [[NSWorkspace sharedWorkspace] iconForContentType:uttype];
