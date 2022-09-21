@@ -98,7 +98,7 @@ TkGetCursorByName(
 {
     const struct CursorName *namePtr;
     TkWinCursor *cursorPtr;
-    int argc;
+    TkSizeT argc;
     const char **argv = NULL;
     (void)tkwin;
 

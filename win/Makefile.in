@@ -207,7 +207,7 @@ LN		= ln
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	=
 #NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # TCL_EXE is the name of a tclsh executable that is available *BEFORE*
@@ -358,6 +358,7 @@ TK_OBJS = \
 	tkGet.$(OBJEXT) \
 	tkGrab.$(OBJEXT) \
 	tkGrid.$(OBJEXT) \
+	tkIcu.$(OBJEXT) \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
 	tkImgListFormat.$(OBJEXT) \

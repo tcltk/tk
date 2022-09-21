@@ -2252,7 +2252,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2275,7 +2275,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2300,7 +2300,7 @@ Line 7"
     frame .t.w1
     frame .t.w2
     .t mark set a 2.2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2324,7 +2324,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2348,7 +2348,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2372,7 +2372,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2397,7 +2397,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2421,7 +2421,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2445,7 +2445,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2471,7 +2471,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2495,7 +2495,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2520,7 +2520,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2546,7 +2546,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2570,7 +2570,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2

@@ -1051,9 +1051,9 @@ static int NotebookHideCommand(
     tab->state = TAB_STATE_HIDDEN;
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
+    } else {
+        TtkRedisplayWidget(&nb->core);
     }
-
-    TtkRedisplayWidget(&nb->core);
 
     return TCL_OK;
 }

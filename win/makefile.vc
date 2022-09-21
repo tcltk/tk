@@ -239,6 +239,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkGet.obj \
 	$(TMP_DIR)\tkGrab.obj \
 	$(TMP_DIR)\tkGrid.obj \
+	$(TMP_DIR)\tkIcu.obj \
 	$(TMP_DIR)\tkImage.obj \
 	$(TMP_DIR)\tkImgBmap.obj \
 	$(TMP_DIR)\tkImgListFormat.obj \

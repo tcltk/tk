@@ -133,9 +133,7 @@ test canvPs-2.4 {test writing to channel and file, same output} -constraints {
 destroy .c
 
 
-test canvPs-3.1 {test ps generation with an embedded window} -constraints {
-    notAqua
-} -setup {
+test canvPs-3.1 {test ps generation with an embedded window} -setup {
     set bar [makeFile {} bar.ps]
     file delete $bar
 } -body {

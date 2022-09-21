@@ -22,12 +22,9 @@
 #include "tkUnixInt.h"
 #elif defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
-#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
 #endif
 
-#if !defined(MAC_OSX_TK)
-#define OK_TO_LOG 1
-#endif
+#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
 
 /*
  * "Calculations of line pixel heights and the size of the vertical
@@ -4745,11 +4742,16 @@ TkTextRedrawRegion(
 
     TextInvalidateRegion(textPtr, damageRgn);
 
+    TkDestroyRegion(damageRgn);
+
+    /*
+     * Schedule the redisplay operation if there isn't one already scheduled.
+     */
+
     if (!(dInfoPtr->flags & REDRAW_PENDING)) {
 	dInfoPtr->flags |= REDRAW_PENDING;
 	Tcl_DoWhenIdle(DisplayText, textPtr);
     }
-    TkDestroyRegion(damageRgn);
 }
 
 /*
@@ -4796,10 +4798,6 @@ TextInvalidateRegion(
     if (dInfoPtr->topOfEof < maxY) {
 	dInfoPtr->topOfEof = maxY;
     }
-
-    /*
-     * Schedule the redisplay operation if there isn't one already scheduled.
-     */
 
     inset = textPtr->borderWidth + textPtr->highlightWidth;
     if ((rect.x < (inset + textPtr->padX))

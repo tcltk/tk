@@ -5,7 +5,7 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 #define DEF_TREE_ROWS		"10"
@@ -232,6 +232,7 @@ typedef struct {
     Tcl_Obj *stripedBgObj;
     Tcl_Obj *foregroundObj;
     Tcl_Obj *fontObj;
+    Tcl_Obj *paddingObj;
 } DisplayItem;
 
 static const Tk_OptionSpec DisplayOptionSpecs[] = {
@@ -261,6 +262,9 @@ static const Tk_OptionSpec DisplayOptionSpecs[] = {
 	TK_OPTION_NULL_OK,0,0 },
     {TK_OPTION_FONT, "-font", "font", "Font",
 	NULL, offsetof(DisplayItem,fontObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+    {TK_OPTION_STRING, "-padding", "padding", "Pad",
+	NULL, offsetof(DisplayItem,paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
 
     {TK_OPTION_END, 0,0,0, NULL, TCL_INDEX_NONE,TCL_INDEX_NONE, 0,0,0}
@@ -302,8 +306,8 @@ typedef struct {
 
 static void InitColumn(TreeColumn *column)
 {
-    column->width = 200;
-    column->minWidth = 20;
+    column->width = atoi(DEF_COLWIDTH);
+    column->minWidth = atoi(DEF_MINWIDTH);
     column->stretch = 1;
     column->separator = 0;
     column->idObj = 0;
@@ -2165,7 +2169,7 @@ static void DrawCells(
     DisplayItem displayItemLocal;
     DisplayItem displayItemCell, displayItemCellSel;
     int rowHeight = tv->tree.rowHeight * item->height;
-    int xPad = 0;
+    int xPad = 0, defaultPadding = 1;
     TkSizeT i;
 
     /* Adjust if the tree column has a separator */
@@ -2181,6 +2185,12 @@ static void DrawCells(
     displayItemCellSel.imageObj = NULL;
     displayItemCell.imageAnchorObj = NULL;
     displayItemCellSel.imageAnchorObj = NULL;
+
+    /* If explicit padding was asked for, skip default. */
+    if (Ttk_QueryStyle(Ttk_LayoutStyle(tv->tree.cellLayout), &displayItemCell,
+		    tv->tree.displayOptionTable, "-padding", state) != NULL) {
+	defaultPadding = 0;
+    }
 
     for (i = 1; i < tv->tree.nDisplayColumns; ++i) {
 	TreeColumn *column = tv->tree.displayColumns[i];
@@ -2229,7 +2239,11 @@ static void DrawCells(
 		    parcel, d);
 	}
 
-	parcel = Ttk_PadBox(parcel, cellPadding);
+	if (defaultPadding && displayItemUsed->paddingObj == NULL) {
+	    /* If no explicit padding was asked for, add some default. */
+	    parcel = Ttk_PadBox(parcel, cellPadding);
+	}
+
 	DisplayLayoutTree(imageAnchor, textAnchor,
 		layout, displayItemUsed, state, parcel, d);
     }

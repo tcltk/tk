@@ -46,8 +46,41 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize isSigned = _isSigned;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkPointerWindow = _tkPointerWindow;
+- (void) setTkPointerWindow: (TkWindow *)winPtr
+{
+    if (_tkPointerWindow) {
+	Tcl_Release(_tkPointerWindow);
+    }
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    _tkPointerWindow = winPtr;
+    return;
+}
 @synthesize tkEventTarget = _tkEventTarget;
+- (void) setTkEventTarget: (TkWindow *)winPtr
+{
+    if (_tkEventTarget) {
+	Tcl_Release(_tkEventTarget);
+    }
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    _tkEventTarget = winPtr;
+    return;
+}
 @synthesize tkDragTarget = _tkDragTarget;
+- (void) setTkDragTarget: (TkWindow *)winPtr
+{
+    if (_tkDragTarget) {
+	Tcl_Release(_tkDragTarget);
+    }
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    _tkDragTarget = winPtr;
+    return;
+}
 @synthesize tkButtonState = _tkButtonState;
 @end
 
@@ -416,7 +449,7 @@ TkpInit(
 
     /*
      * TkpInit can be called multiple times with different interpreters. But
-     * The application initialization should only be done onece.
+     * The application initialization should only be done once.
      */
 
     if (!initialized) {
@@ -477,7 +510,7 @@ TkpInit(
          * the application icon, will be delivered before the procedure meant
          * to to handle the AppleEvent has been defined.  This is handled in
          * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * ApplEvent later, after the required procedure has been defined.
+         * AppleEvent later, after the required procedure has been defined.
          */
 
 	[NSApp _setup:interp];

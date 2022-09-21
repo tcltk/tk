@@ -226,7 +226,7 @@ declare 58 {
 declare 59 {
     void TkpGetAppName(Tcl_Interp *interp, Tcl_DString *name)
 }
-declare 60 {
+declare 60 {deprecated {renamed to Tk_GetOtherWindow}} {
     TkWindow *TkpGetOtherWindow(TkWindow *winPtr)
 }
 declare 61 {
@@ -239,13 +239,13 @@ declare 63 {
     void TkpInitializeMenuBindings(Tcl_Interp *interp,
 	    Tk_BindingTable bindingTable)
 }
-declare 64 {
+declare 64 {deprecated {renamed to Tk_MakeContainer}} {
     void TkpMakeContainer(Tk_Window tkwin)
 }
 declare 65 {
     void TkpMakeMenuWindow(Tk_Window tkwin, int transient)
 }
-declare 66 {
+declare 66 {deprecated {renamed to Tk_MakeWindow}} {
     Window TkpMakeWindow(TkWindow *winPtr, Window parent)
 }
 declare 67 {
@@ -269,10 +269,10 @@ declare 72 {
 declare 73 {
     void TkpRedirectKeyEvent(TkWindow *winPtr, XEvent *eventPtr)
 }
-declare 74 {
+declare 74 {deprecated {renamed to Tk_SetMainMenubar}} {
     void TkpSetMainMenubar(Tcl_Interp *interp, Tk_Window tkwin, const char *menuName)
 }
-declare 75 {
+declare 75 {deprecated {renamed to Tk_UseWindow}} {
     int TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin, const char *string)
 }
 #
@@ -308,7 +308,7 @@ declare 83 {
 #    void TkSetClassProcs(Tk_Window tkwin,
 #	    TkClassProcs *procs, ClientData instanceData)
 #}
-declare 85 {deprecated {renamed to Tk_SetWindowMenuBar}} {
+declare 85 {deprecated {renamed to Tk_SetWindowMenubar}} {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
 	    const char *oldMenuName, const char *menuName)
 }
@@ -394,7 +394,7 @@ declare 109 {
 declare 110 {
     void TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont)
 }
-declare 111 {
+declare 111 {deprecated {renamed to Tk_GetSystemDefault}} {
     Tcl_Obj *TkpGetSystemDefault(Tk_Window tkwin,
 	    const char *dbName, const char *className)
 }
@@ -434,7 +434,7 @@ declare 124 aqua {
     Pixmap TkpGetNativeAppBitmap(Display *display,
 	    const char *name, int *width, int *height)
 }
-declare 135 {
+declare 135 {deprecated {renamed to Tk_DrawHighlightBorder}} {
     void TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
         int highlightWidth, Drawable drawable)
 }
@@ -636,10 +636,10 @@ declare 184 {
 }
 
 # Support for aqua's inability to draw outside [NSView drawRect:]
-declare 185 macosx {
+declare 185 {
     void TkpRedrawWidget(Tk_Window tkwin)
 }
-declare 186 macosx {
+declare 186 {
     int TkpWillDrawWidget(Tk_Window tkwin)
 }
 
