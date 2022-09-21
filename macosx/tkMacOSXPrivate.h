@@ -28,6 +28,9 @@
 #import <ApplicationServices/ApplicationServices.h>
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -207,12 +210,6 @@ typedef struct TkMacOSXDrawingContext {
 } TkMacOSXDrawingContext;
 
 /*
- * Variables internal to TkAqua.
- */
-
-MODULE_SCOPE long tkMacOSXMacOSXVersion;
-
-/*
  * Prototypes for TkMacOSXRegion.c.
  */
 
@@ -258,9 +255,9 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-#define TkMacOSXGetTkWindow(window) (TkWindow *)Tk_MacOSXGetTkWindow(window)
+#define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow*)TkMacOSXDrawable(drawable))
-#define TkMacOSXGetNSViewForDrawable(macWin) (NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin))
+#define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
@@ -294,7 +291,9 @@ MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
-
+MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
+MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
+    
 #pragma mark Private Objective-C Classes
 
 #define VISIBILITY_HIDDEN __attribute__((visibility("hidden")))
@@ -351,9 +350,9 @@ VISIBILITY_HIDDEN
  * Persistent state variables used by processMouseEvent.
  */
 
-@property TkWindow *tkPointerWindow;
-@property TkWindow *tkEventTarget;
-@property TkWindow *tkDragTarget;
+@property(nonatomic) TkWindow *tkPointerWindow;
+@property(nonatomic) TkWindow *tkEventTarget;
+@property(nonatomic) TkWindow *tkDragTarget;
 @property unsigned int tkButtonState;
 
 @end
