@@ -334,7 +334,6 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
-    Bool _tkLiveResizeEnded;
 }
 @property int poolLock;
 @property int macOSVersion;
