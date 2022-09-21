@@ -330,7 +330,7 @@ static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const argv[],
+			    int objc, Tcl_Obj *const objv[],
 			    enum FrameType type, const char *appName);
 static void		DestroyFrame(void *memPtr);
 static void		DestroyFramePartly(Frame *framePtr);
@@ -1035,7 +1035,7 @@ ConfigureFrame(
 	    || ((oldMenuName != NULL) && (framePtr->menuName != NULL)
 	    && strcmp(oldMenuName, framePtr->menuName) != 0))
 	    && framePtr->type == TYPE_TOPLEVEL) {
-	Tk_SetWindowMenuBar(interp, framePtr->tkwin, oldMenuName,
+	Tk_SetWindowMenubar(interp, framePtr->tkwin, oldMenuName,
 		framePtr->menuName);
     }
 
@@ -1747,7 +1747,7 @@ FrameEventProc(
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
 	if (framePtr->menuName != NULL) {
-	    Tk_SetWindowMenuBar(framePtr->interp, framePtr->tkwin,
+	    Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin,
 		    framePtr->menuName, NULL);
 	    ckfree(framePtr->menuName);
 	    framePtr->menuName = NULL;
@@ -1834,7 +1834,7 @@ FrameCmdDeletedProc(
     Tk_Window tkwin = framePtr->tkwin;
 
     if (framePtr->menuName != NULL) {
-	Tk_SetWindowMenuBar(framePtr->interp, framePtr->tkwin,
+	Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin,
 		framePtr->menuName, NULL);
 	ckfree(framePtr->menuName);
 	framePtr->menuName = NULL;
@@ -2068,7 +2068,7 @@ TkMapTopFrame(
 	framePtr->type = TYPE_TOPLEVEL;
 	Tcl_DoWhenIdle(MapFrame, framePtr);
 	if (framePtr->menuName != NULL) {
-	    Tk_SetWindowMenuBar(framePtr->interp, framePtr->tkwin, NULL,
+	    Tk_SetWindowMenubar(framePtr->interp, framePtr->tkwin, NULL,
 		    framePtr->menuName);
 	}
     } else if (!Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_TOPLEVEL) {

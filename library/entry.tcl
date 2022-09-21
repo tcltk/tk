@@ -119,17 +119,17 @@ bind Entry <Control-Button-1> {
 }
 
 bind Entry <<PrevChar>> {
-    tk::EntrySetCursor %W [%W index insert]-1
+    tk::EntrySetCursor %W [tk::EntryPreviousChar %W insert]
 }
 bind Entry <<NextChar>> {
-    tk::EntrySetCursor %W [%W index insert]+1
+    tk::EntrySetCursor %W [tk::EntryNextChar %W insert]
 }
 bind Entry <<SelectPrevChar>> {
-    tk::EntryKeySelect %W [%W index insert]-1
+    tk::EntryKeySelect %W [tk::EntryPreviousChar %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextChar>> {
-    tk::EntryKeySelect %W [%W index insert]+1
+    tk::EntryKeySelect %W [tk::EntryNextChar %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<PrevWord>> {
@@ -165,7 +165,8 @@ bind Entry <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete insert
+	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
+		[tk::endOfCluster [%W get] [%W index insert]]
     }
 }
 bind Entry <BackSpace> {
@@ -195,7 +196,7 @@ bind Entry <Key> {
     tk::EntryInsert %W %A
 }
 
-# Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
 # <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
@@ -210,7 +211,7 @@ bind Entry <Tab> {# nothing}
 bind Entry <Prior> {# nothing}
 bind Entry <Next> {# nothing}
 bind Entry <Command-Key> {# nothing}
-bind Entry <Mod4-Key> {# nothing}
+bind Entry <Fn-Key> {# nothing}
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind Entry <<NextLine>> {# nothing}
 bind Entry <<PrevLine>> {# nothing}
@@ -389,17 +390,17 @@ proc ::tk::EntryMouseSelect {w x} {
 	}
 	word {
 	    if {$cur < $anchor} {
-		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] $anchor-1]
+		set before [tk::wordBreakBefore [$w get] $cur]
+		set after [tk::wordBreakAfter [$w get] $anchor-1]
 	    } elseif {$cur > $anchor} {
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] $cur-1]
+		set before [tk::wordBreakBefore [$w get] $anchor]
+		set after [tk::wordBreakAfter [$w get] $cur-1]
 	    } else {
 		if {[$w index @$Priv(pressX)] < $anchor} {
 		      incr anchor -1
 		}
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] $anchor]
+		set before [tk::wordBreakBefore [$w get] $anchor]
+		set after [tk::wordBreakAfter [$w get] $anchor]
 	    }
 	    if {$before < 0} {
 		set before 0
@@ -517,9 +518,10 @@ proc ::tk::EntryBackspace w {
     if {[$w selection present]} {
 	$w delete sel.first sel.last
     } else {
-	set x [$w index insert]
-	if {$x > 0} {
-	    $w delete $x-1
+	set x [expr {[$w index insert] - 1}]
+	if {$x >= 0} {
+	    $w delete [tk::startOfCluster [$w get] $x] \
+		      [tk::endOfCluster [$w get] $x]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -597,9 +599,9 @@ proc ::tk::EntryTranspose w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
+	set pos [tk::endOfWord [$w get] [$w index $start]]
 	if {$pos >= 0} {
-	    set pos [tcl_startOfNextWord [$w get] $pos]
+	    set pos [tk::startOfNextWord [$w get] $pos]
 	}
 	if {$pos < 0} {
 	    return end
@@ -608,7 +610,7 @@ if {[tk windowingsystem] eq "win32"}  {
     }
 } else {
     proc ::tk::EntryNextWord {w start} {
-	set pos [tcl_endOfWord [$w get] [$w index $start]]
+	set pos [tk::endOfWord [$w get] [$w index $start]]
 	if {$pos < 0} {
 	    return end
 	}
@@ -626,12 +628,29 @@ if {[tk windowingsystem] eq "win32"}  {
 # start -	Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
-    set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return 0
     }
     return $pos
 }
+
+proc ::tk::EntryNextChar {w start} {
+    set pos [tk::endOfCluster [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+proc ::tk::EntryPreviousChar {w start} {
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
+    if {$pos < 0} {
+	return 0
+    }
+    return $pos
+}
+
 
 # ::tk::EntryScanMark --
 #

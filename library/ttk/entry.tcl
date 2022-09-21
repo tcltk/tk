@@ -119,7 +119,7 @@ bind TEntry <Key> 			{ ttk::entry::Insert %W %A }
 bind TEntry <Delete>			{ ttk::entry::Delete %W }
 bind TEntry <BackSpace> 		{ ttk::entry::Backspace %W }
 
-# Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, the <Key> class binding will fire and insert the character.
 # Ditto for Escape, Return, and Tab.
 #
@@ -131,7 +131,7 @@ bind TEntry <Return> 			{# nothing}
 bind TEntry <KP_Enter> 			{# nothing}
 bind TEntry <Tab> 			{# nothing}
 bind TEntry <Command-Key>		{# nothing}
-bind TEntry <Mod4-Key>			{# nothing}
+bind TEntry <Fn-Key>			{# nothing}
 
 # Tk-on-Cocoa generates characters for these two keys. [Bug 2971663]
 bind TEntry <<PrevLine>>		{# nothing}
@@ -258,9 +258,9 @@ set ::ttk::entry::State(startNext) \
 
 proc ttk::entry::NextWord {w start} {
     variable State
-    set pos [tcl_endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start]]
     if {$pos >= 0 && $State(startNext)} {
-	set pos [tcl_startOfNextWord [$w get] $pos]
+	set pos [tk::startOfNextWord [$w get] $pos]
     }
     if {$pos < 0} {
 	return end
@@ -271,7 +271,28 @@ proc ttk::entry::NextWord {w start} {
 ## PrevWord -- Find the previous word position.
 #
 proc ttk::entry::PrevWord {w start} {
-    set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return 0
+    }
+    return $pos
+}
+
+## NextChar -- Find the next char position.
+#
+proc ttk::entry::NextChar {w start} {
+    variable State
+    set pos [tk::endOfCluster [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+## PrevChar -- Find the previous char position.
+#
+proc ttk::entry::PrevChar {w start} {
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
     if {$pos < 0} {
 	return 0
     }
@@ -282,8 +303,8 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::RelIndex {w where {index insert}} {
     switch -- $where {
-	prevchar	{ return [$w index $index]-1 }
-	nextchar	{ return [$w index $index]+1 }
+	prevchar	{ PrevChar $w $index }
+    	nextchar	{ NextChar $w $index }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
 	home		{ return 0 }
@@ -509,11 +530,11 @@ proc ttk::entry::WordSelect {w from to} {
 ## WordBack, WordForward -- helper routines for WordSelect.
 #
 proc ttk::entry::WordBack {text index} {
-    if {[set pos [tcl_wordBreakBefore $text $index]] < 0} { return 0 }
+    if {[set pos [tk::wordBreakBefore $text $index]] < 0} { return 0 }
     return $pos
 }
 proc ttk::entry::WordForward {text index} {
-    if {[set pos [tcl_wordBreakAfter $text $index]] < 0} { return end }
+    if {[set pos [tk::wordBreakAfter $text $index]] < 0} { return end }
     return $pos
 }
 
@@ -614,7 +635,7 @@ proc ttk::entry::Backspace {w} {
     set x [expr {[$w index insert] - 1}]
     if {$x < 0} { return }
 
-    $w delete $x
+    $w delete [tk::startOfCluster [$w get] $x] [tk::endOfCluster [$w get] $x]
 
     if {[$w index @0] >= [$w index insert]} {
 	set range [$w xview]
@@ -629,7 +650,8 @@ proc ttk::entry::Backspace {w} {
 #
 proc ttk::entry::Delete {w} {
     if {![PendingDelete $w]} {
-	$w delete insert
+	$w delete [tk::startOfCluster [$w get] [$w index insert]] \
+		[tk::endOfCluster [$w get] [$w index insert]]
     }
 }
 

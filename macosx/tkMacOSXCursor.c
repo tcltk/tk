@@ -372,7 +372,7 @@ TkGetCursorByName(
 {
     TkMacOSXCursor *macCursorPtr = NULL;
     const char **argv = NULL;
-    int argc;
+    TkSizeT argc;
 
     /*
      * All cursor names are valid lists of one element (for

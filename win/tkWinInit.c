@@ -44,6 +44,7 @@ TkpInit(
     WinIcoInit(interp);
     Winprint_Init(interp);
     TkWinXInit(Tk_GetHINSTANCE());
+    Icu_Init(interp);
     return TCL_OK;
 }
 
@@ -70,7 +71,7 @@ TkpGetAppName(
     Tcl_Interp *interp,
     Tcl_DString *namePtr)	/* A previously initialized Tcl_DString. */
 {
-    int argc, namelength;
+    TkSizeT argc, namelength;
     const char **argv = NULL, *name, *p;
 
     name = Tcl_GetVar2(interp, "argv0", NULL, TCL_GLOBAL_ONLY);
