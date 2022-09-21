@@ -1313,7 +1313,8 @@ TkMacOSXNSImageConfigureModel(
 	    goto errorExit;
 	default:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"Unrecognized file type.\n", -1));
+		"Unrecognized file type.\n"
+		"If using a filename extension, do not include the dot.\n", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	    goto errorExit;
 	}
