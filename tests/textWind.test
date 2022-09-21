@@ -11,16 +11,12 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
-# Platform specific procedure for updating the text widget.
+# Procedure for updating the text widget.  This is isolated here
+# to allow for variations between platforms, but is currently the
+# same for all platforms (see ticket [bfea11a916]).
 
-if {[tk windowingsystem] == "aqua"} {
-    proc updateText {} {
-	update idletasks
-    }
-} else {
-    proc updateText {} {
-	update
-    }
+proc updateText {} {
+     update
 }
 
 deleteWindows
