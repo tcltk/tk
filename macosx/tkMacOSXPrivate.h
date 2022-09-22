@@ -213,12 +213,6 @@ typedef struct TkMacOSXDrawingContext {
 } TkMacOSXDrawingContext;
 
 /*
- * Variables internal to TkAqua.
- */
-
-MODULE_SCOPE long tkMacOSXMacOSXVersion;
-
-/*
  * Prototypes for TkMacOSXRegion.c.
  */
 
@@ -264,7 +258,7 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-#define TkMacOSXGetTkWindow(window) (TkWindow *)Tk_MacOSXGetTkWindow(window)
+#define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
 #define TkMacOSXGetCGContextForDrawable(drawable) ((CGContextRef)Tk_MacOSXGetCGContextForDrawable(drawable))
@@ -335,7 +329,6 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
-    Bool _tkLiveResizeEnded;
 }
 @property int poolLock;
 @property int macOSVersion;

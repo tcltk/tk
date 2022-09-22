@@ -1106,7 +1106,7 @@ declare 282 {
     void Tk_SetMainMenubar(Tcl_Interp *interp, Tk_Window tkwin, const char *menuName)
 }
 declare 283 {
-    void Tk_SetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
+    void Tk_SetWindowMenubar(Tcl_Interp *interp, Tk_Window tkwin,
 	    const char *oldMenuName, const char *menuName)
 }
 declare 284 {

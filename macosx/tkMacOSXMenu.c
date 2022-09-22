@@ -91,7 +91,7 @@ static const struct {
 #undef ACCEL
 #undef sl
 
-static Bool   inPostMenu = true;
+static Bool   inPostMenu = false;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -506,8 +506,13 @@ static Bool runMenuCommand = true;
     }
     backgroundLoop = [[TKBackgroundLoop alloc] init];
     [backgroundLoop start];
-    //TkMacOSXClearMenubarActive();
-    //TkMacOSXPreprocessMenu();
+
+    /*
+     * Make sure that we can run commands when actually using a menu.
+     * See [412b80fcaf].
+     */
+    
+    runMenuCommand = true;
 }
 
 - (void) menuEndTracking: (NSNotification *) notification
