@@ -324,7 +324,6 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
-    Bool _tkLiveResizeEnded;
 
 #ifdef __i386__
     /* The Objective C runtime used on i386 requires this. */
