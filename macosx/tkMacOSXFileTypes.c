@@ -69,7 +69,6 @@ MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
  * accept an NSString which could be an encoding of an OSType, or a file extension,
  * or a Uniform Type Idenfier.  This function can serve as a replacement.
  */
-
 MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
     if (!initialized) {
 	initOSTypeTable();
@@ -109,8 +108,8 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
      */
     return nil;
  #endif
-#endif
     }
+#endif
 }
 
 /*
