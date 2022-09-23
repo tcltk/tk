@@ -366,12 +366,12 @@ static Bool runMenuCommand = true;
 	Tcl_Preserve(menuPtr);
 	int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
 	if (result != TCL_OK && result != TCL_CONTINUE &&
-	    result != TCL_BREAK) {
+		result != TCL_BREAK) {
 	    Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
 	    Tcl_BackgroundException(interp, result);
 	}
 	Tcl_Release(menuPtr);
-	    Tcl_Release(interp);
+	Tcl_Release(interp);
 	}
     }
 }
@@ -511,7 +511,7 @@ static Bool runMenuCommand = true;
      * Make sure that we can run commands when actually using a menu.
      * See [412b80fcaf].
      */
-    
+
     runMenuCommand = true;
 }
 

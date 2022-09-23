@@ -48,7 +48,7 @@ static void setAllowedFileTypes(
     }
 #else
     [panel setAllowedFileTypes:extensions];
-#endif	
+#endif
 }
 
 /*

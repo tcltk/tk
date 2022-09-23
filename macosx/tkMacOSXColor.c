@@ -639,7 +639,7 @@ TkpGetColor(
 			colormap = lightColormap;
 		    }
 		    if (@available(macOS 11.0, *)) {
-			CGFloat *rgbaPtr = rgba; 
+			CGFloat *rgbaPtr = rgba;
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
