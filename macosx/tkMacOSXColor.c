@@ -7,7 +7,7 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009 Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2020 Marc Culler
  *
@@ -462,6 +462,8 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
+#else
+    (void) tkwin;
 #endif
     return false;
 }
@@ -519,7 +521,7 @@ TkSetMacColor(
 
 NSColor*
 TkMacOSXGetNSColor(
-    GC gc,
+    TCL_UNUSED(GC),
     unsigned long pixel)		/* Pixel value to convert. */
 {
     CGColorRef cgColor = NULL;
@@ -555,7 +557,7 @@ TkMacOSXGetNSColor(
 
 void
 TkMacOSXSetColorInContext(
-    GC gc,
+    TCL_UNUSED(GC),
     unsigned long pixel,
     CGContextRef context)
 {
@@ -677,7 +679,7 @@ TkpGetColor(
 			colormap = lightColormap;
 		    }
 		    if (@available(macOS 11.0, *)) {
-			CGFloat *rgbaPtr = rgba; 
+			CGFloat *rgbaPtr = rgba;
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
