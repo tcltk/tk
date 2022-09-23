@@ -710,7 +710,7 @@ XSync(
      *  which would then get processed. Apparently this process stabilizes on
      *  X11, leaving the window manager in a state where all events have been
      *  generated and no additional events can be genereated by updating widgets.
-     *   
+     *
      *  It is not clear what the Aqua port should do when XSync is called, but
      *  currently the best option seems to be to do nothing.  (See ticket
      *  [da5f2266df].)
@@ -728,7 +728,7 @@ XSetClipRectangles(
     int clip_y_origin,
     XRectangle* rectangles,
     int n,
-    int ordering)
+    TCL_UNUSED(int))
 {
     TkRegion clipRgn = TkCreateRegion();
 
