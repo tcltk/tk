@@ -15,6 +15,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkColor.h"
 #include "xbytes.h"
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
@@ -1046,6 +1047,8 @@ struct TkMacOSXNSImageModel {
     Tk_ImageModel tkModel;	      /* Tk's token for image model. */
     Tcl_Interp *interp;		      /* Interpreter for application. */
     int width, height;		      /* Dimensions of the image. */
+    int radius;                       /* Radius for rounded corners. */
+    int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
     bool pressed;                     /* Image is for use in a pressed button.*/
     bool template;                    /* Image is for use as a template.*/
@@ -1099,12 +1102,14 @@ static Tk_ImageType TkMacOSXNSImageType = {
 /*
  * Default values used for parsing configuration specifications:
  */
-#define DEF_SOURCE    ""
-#define DEF_AS      "name"
-#define DEF_HEIGHT  "32"
-#define DEF_WIDTH   "32"
-#define DEF_ALPHA   "1.0"
-#define DEF_PRESSED "0"
+#define DEF_SOURCE   ""
+#define DEF_AS       "name"
+#define DEF_HEIGHT   "0"
+#define DEF_WIDTH    "0"
+#define DEF_RADIUS   "0"
+#define DEF_RING     "0"
+#define DEF_ALPHA    "1.0"
+#define DEF_PRESSED  "0"
 #define DEF_TEMPLATE "0"
 
 static const Tk_OptionSpec systemImageOptions[] = {
@@ -1116,6 +1121,10 @@ static const Tk_OptionSpec systemImageOptions[] = {
      -1, Tk_Offset(TkMacOSXNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
      -1, Tk_Offset(TkMacOSXNSImageModel, height), 0, NULL, 0},
+    {TK_OPTION_INT, "-radius", NULL, NULL, DEF_RADIUS,
+     -1, Tk_Offset(TkMacOSXNSImageModel, radius), 0, NULL, 0},
+    {TK_OPTION_INT, "-ring", NULL, NULL, DEF_RING,
+     -1, Tk_Offset(TkMacOSXNSImageModel, ring), 0, NULL, 0},
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
      -1, Tk_Offset(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
@@ -1220,15 +1229,22 @@ TkMacOSXNSImageConfigureModel(
     static Tcl_Obj *asOption = NULL;
     int sourceInterpretation;
     NSString *source;
+    int oldWidth = modelPtr->width, oldHeight = modelPtr->height;
 
     if (asOption == NULL) {
 	asOption = Tcl_NewStringObj("-as", -1);
 	Tcl_IncrRefCount(asOption);
     }
 
+    modelPtr->width = 0;
+    modelPtr->height = 0;
     if (Tk_SetOptions(interp, (char *) modelPtr, optionTable, objc, objv,
 		      NULL, NULL, NULL) != TCL_OK){
 	goto errorExit;
+    }
+    if (modelPtr->width == 0 && modelPtr->height == 0) {
+	modelPtr->width = oldWidth;
+	modelPtr->height = oldHeight;
     }
 
     if (modelPtr->source == NULL || modelPtr->source[0] == '0') {
@@ -1268,7 +1284,8 @@ TkMacOSXNSImageConfigureModel(
     }
     [source release];
     if (newImage) {
-	NSSize size = NSMakeSize(modelPtr->width, modelPtr->height);
+	NSSize size = NSMakeSize(modelPtr->width - 2*modelPtr->ring,
+				 modelPtr->height - 2*modelPtr->ring);
 	[newImage setSize:size];
 	[modelPtr->image release];
 	[modelPtr->darkModeImage release];
@@ -1320,6 +1337,29 @@ TkMacOSXNSImageConfigureModel(
 	}
     }
 
+    /*
+     * Set the width and height.  If only one is specified, set the other one
+     * so as to preserve the aspect ratio.  If neither is specified, match the
+     * size of the image.
+     */
+
+    if (modelPtr->width == 0 && modelPtr->height == 0) {
+	CGSize size = [modelPtr->image size];
+	modelPtr->width = (int) size.width;
+	modelPtr->height = (int) size.height;
+    } else {
+	CGSize size = [modelPtr->image size], newsize;
+	CGFloat aspect = size.width && size.height ?
+	     size.height / size.width : 1;
+	if (modelPtr->width == 0) {
+	    modelPtr->width = (int) ((CGFloat)(modelPtr->height) / aspect);
+	} else if (modelPtr->height == 0) {
+	    modelPtr->height = (int) ((CGFloat)(modelPtr->width) * aspect);
+	}
+	newsize = CGSizeMake(modelPtr->width, modelPtr->height);
+	modelPtr->image.size = newsize;
+    }
+    
     /*
      * Inform the generic image code that the image has (potentially) changed.
      */
@@ -1545,18 +1585,50 @@ TkMacOSXNSImageDisplay(
     NSRect srcRect = NSMakeRect(imageX, imageY, width, height);
     NSImage *image = TkMacOSXInDarkMode(tkwin) ? modelPtr->darkModeImage :
 	modelPtr->image;
+    int ring = modelPtr->ring;
+    int radius = modelPtr->radius;
 
     if (TkMacOSXSetupDrawingContext(drawable, NULL, &dc)) {
 	if (dc.context) {
+	    CGRect clipRect = CGRectMake(
+		dstRect.origin.x - srcRect.origin.x + ring,
+		dstRect.origin.y - srcRect.origin.y + ring,
+		modelPtr->width - 2*ring,
+		modelPtr->height - 2*ring);
+	    CGPathRef path = CGPathCreateWithRoundedRect(clipRect, radius, radius, NULL);
+	    CGContextSaveGState(dc.context);
+	    CGContextBeginPath(dc.context);
+	    CGContextAddPath(dc.context, path);
+	    CGContextClip(dc.context);
 	    NSGraphicsContext *savedContext = NSGraphicsContext.currentContext;
 	    NSGraphicsContext.currentContext = [NSGraphicsContext
 		graphicsContextWithCGContext:dc.context flipped:YES];
-	    [image drawInRect:dstRect
+	    [image drawInRect:clipRect
 		     fromRect:srcRect
 		    operation:NSCompositeSourceOver
 		     fraction:modelPtr->alpha
 	       respectFlipped:YES
 			hints:nil];
+	    CGContextRestoreGState(dc.context);
+
+	    /*
+	     * Draw the focus ring.
+	     */
+
+	    if (ring) {
+		CGRect ringRect = CGRectInset(clipRect, -ring, -ring);
+		CGPathRef ringPath = CGPathCreateWithRoundedRect(ringRect,
+		    radius + ring, radius + ring, NULL);
+		CGContextSaveGState(dc.context);
+		CGContextAddPath(dc.context, path);
+		CGContextAddPath(dc.context, ringPath);
+		CGContextSetFillColorWithColor(dc.context,
+					       controlAccentColor().CGColor);
+		CGContextEOFillPath(dc.context);
+		CGContextRestoreGState(dc.context);
+		CFRelease(ringPath);
+	    }
+	    CFRelease(path);
 	    NSGraphicsContext.currentContext = savedContext;
 	}
 	TkMacOSXRestoreDrawingContext(&dc);
