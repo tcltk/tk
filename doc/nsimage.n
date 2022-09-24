@@ -66,21 +66,44 @@ Identifier or a 4-character OSType value as used in the HFS filesystem.
 \fB\-width\fR
 .PP
 The value of the \fIwidth\fR option is an integer specifying the width
- in pixels of the nsimage.  The default value is 32pp. 
+in pixels of the nsimage.  If the width is not specified it will be
+computed from the height so as to preserve the aspect ration.  If
+neither width nor height are specified then the width and height of
+the underlying NSImage will be used.
 .TP
-\fB-height\fR
+\fB\-height\fR
 .PP
 The value of the \fIheight\fR option is an integer specifying the
- height in pixels of the nsimage. The default value is 32pp. 
+height in pixels of the nsimage. If the height is not specified it
+will be computed from the height so as to preserve the aspect ration.
+If neither width nor height are specified then the width and height of
+the underlying NSImage will be used.
 .TP
-\fB-alpha\fR
+\fB\-radius\fR
+.PP
+The value of the \fIradius\fR option is an integer.  If non-zero the
+image will be clipped to a rounded rectangle with the same width and
+height as the image, but with circular arcs of the specified radius
+cutting off the corners of the rectangle.
+.TP
+\fB\-ring\fR
+.PP
+The value of the \fIring\fR option is an integer.  If non-zero then it
+specifies the thickness of a focus ring which will be drawn around the
+image using the control accent color specified in the System
+Preferences.  The image is resized to reduce its width and height by
+twice the thickness of the ring.  Note that this may create a small
+amount of distortion.  The aspect ration of a non-square image will
+change slightly.
+.TP
+\fB\-alpha\fR
 .PP
 The value of the \fIalpha\fR option should be a floating point number
 between 0.0 and 1.0.  This alpha value will be applied to each pixel
 of the nsimage, producing a partially transparent image.  The default value
 is 1,0, which makes the image opaque.
 .TP
-\fB-pressed\fR
+\fB\-pressed\fR
 .PP
 The \fIpressed\fR option takes a boolean value.  If the value is true
 or 1 then the image will be algorithmically modified to become darker
@@ -89,7 +112,7 @@ image button, the primary image should use the value false while the
 pressed image should be the same image but with the \fIpressed\fR
 option set to true.
 .TP
-\fB-template\fR
+\fB\-template\fR
 .PP
 The \fItemplate\fR option takes a boolean value.  If the value is true
 or 1 then the image will be marked as being a template image.  This

@@ -297,6 +297,7 @@ MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
+MODULE_SCOPE NSColor*   controlAccentColor(void);
 MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);

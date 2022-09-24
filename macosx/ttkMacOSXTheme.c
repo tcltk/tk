@@ -35,7 +35,7 @@
 #include "tkColor.h"
 #include <math.h>
 
-static NSColor *controlAccentColor(void) {
+MODULE_SCOPE NSColor *controlAccentColor(void) {
     static int accentPixel = -1;
     if (accentPixel == -1) {
 	TkColor *temp = TkpGetColor(NULL, "systemControlAccentColor");
