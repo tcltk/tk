@@ -668,6 +668,9 @@ TkpInit(
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
            TkMacOSVersionObjCmd, NULL, NULL);
+    MacSystrayInit(interp);
+    MacPrint_Init(interp);
+
     return TCL_OK;
 }
 
@@ -716,8 +719,6 @@ TkMacOSXGetAppPathObjCmd(
 
     CFRelease(mainBundleURL);
     CFRelease(appPath);
-    MacSystrayInit(interp);
-    MacPrint_Init(interp);
 
     return TCL_OK;
 }
