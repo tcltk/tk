@@ -94,7 +94,7 @@ static const struct {
 static int gNoTkMenus = 0;	/* This is used by Tk_MacOSXTurnOffMenus as
 				 * the flag that Tk is not to draw any
 				 * menus. */
-static Bool   inPostMenu = true;
+static Bool   inPostMenu = false;
 static SInt32 menuMarkColumnWidth = 0, menuIconTrailingEdgeMargin = 0;
 static SInt32 menuTextLeadingEdgeMargin = 0, menuTextTrailingEdgeMargin = 0;
 static SInt16 menuItemExtraHeight = 0, menuItemExtraWidth = 0;
@@ -364,20 +364,17 @@ static Bool runMenuCommand = true;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
 
 	if (menuPtr && mePtr) {
-	    Tcl_Interp *interp = menuPtr->interp;
-
-	    Tcl_Preserve(interp);
-	    Tcl_Preserve(menuPtr);
-
-	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-
-	    if (result != TCL_OK && result != TCL_CONTINUE &&
-		    result != TCL_BREAK) {
-		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-		Tcl_BackgroundException(interp, result);
-	    }
-	    Tcl_Release(menuPtr);
-	    Tcl_Release(interp);
+	Tcl_Interp *interp = menuPtr->interp;
+	Tcl_Preserve(interp);
+	Tcl_Preserve(menuPtr);
+	int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
+	if (result != TCL_OK && result != TCL_CONTINUE &&
+		result != TCL_BREAK) {
+	    Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
+	    Tcl_BackgroundException(interp, result);
+	}
+	Tcl_Release(menuPtr);
+	Tcl_Release(interp);
 	}
     }
 }
@@ -512,8 +509,13 @@ static Bool runMenuCommand = true;
     }
     backgroundLoop = [[TKBackgroundLoop alloc] init];
     [backgroundLoop start];
-    //TkMacOSXClearMenubarActive();
-    //TkMacOSXPreprocessMenu();
+
+    /*
+     * Make sure that we can run commands when actually using a menu.
+     * See [412b80fcaf].
+     */
+
+    runMenuCommand = true;
 }
 
 - (void) menuEndTracking: (NSNotification *) notification
