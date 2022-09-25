@@ -11,20 +11,12 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-# Platform specific procedure for updating the text widget twice, with an in-between delay
-
-if {[tk windowingsystem] == "aqua"} {
-    proc delay {} {
-	update idletasks
-	after 100
-	update idletasks
-    }
-} else {
-    proc delay {} {
-	update
-	after 100
-	update
-    }
+# The delay procedure needs to wait long enough for the asynchronous updates
+# performed by the text widget to run.
+proc delay {} {
+    updateWidgets
+    after 100
+    updateWidgets
 }
 
 # The procedure below is used as the scrolling command for the text;
