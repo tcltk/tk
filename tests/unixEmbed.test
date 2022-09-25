@@ -1248,11 +1248,10 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    update idletasks
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80
-    update idletasks
+    update
     wm geometry .t1 +40+50
-    update idletasks
+    update
     wm geometry .t1
 } -cleanup {
     deleteWindows
@@ -1264,11 +1263,10 @@ test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
-    update idletasks
     toplevel .t1 -use [winfo id .f1] -width 150 -height 80
-    update idletasks
+    update
     wm geometry .t1 70x300+10+20
-    update idletasks
+    update
     wm geometry .t1
 } -cleanup {
     deleteWindows
