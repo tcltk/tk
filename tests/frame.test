@@ -1169,11 +1169,11 @@ test frame-12.3 {FrameWorldChanged procedure} -setup {
     labelframe .f -font myfont -text Mupp
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
-    updateWidgets
+    update
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
     font configure myfont -size 20
-    updateWidgets
+    update
     set h2 [font metrics myfont -linespace]
     set y2 [winfo y .f.f]
     expr {($h2 - $h1) - ($y2 - $y1)}
