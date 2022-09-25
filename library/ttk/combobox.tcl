@@ -369,14 +369,29 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
 	set current 0 		;# no current entry, highlight first one
     }
     $cb.popdown delete 0 end
+    $cb.spacer configure -width [expr {$width - 55}] -height 1
     set i 0
     foreach item $values {
-	$cb.popdown add command -label $item \
-	    -command "ttk::combobox::SelectEntry $cb $i"
-	incr i
+	if {$i == 0} {
+	    # Add spaces to the first item to make the menu as long as cb
+	    set menufont [$cb cget -font]
+	    set stretch $item
+	    while {[font measure $menufont $stretch] < [expr {$width - 55}]} {
+		set stretch "$stretch "
+	    }
+	    $cb.popdown add command -label "$stretch" \
+		-command "ttk::combobox::SelectEntry $cb $i"
+	} else {
+	    $cb.popdown add command -label "$item" \
+		-command "ttk::combobox::SelectEntry $cb $i"
 	}
-    $cb.spacer configure -width [expr {$width - 55}] -height 1
-    $cb.popdown add command -label {} -image $cb.spacer -state disabled
+	incr i
+    }
+    if { $i == 0 } {
+	# There are no items.  To make an empty menu appear add a dummy item
+	# containing a transparent image of the right width.
+	$cb.popdown add command -label {} -image $cb.spacer -state disabled
+    }
 }
 
 ## PlacePopdown --
