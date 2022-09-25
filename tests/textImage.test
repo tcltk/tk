@@ -392,7 +392,7 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     foreach size {10 15 20 25} {
         font configure test_font2 -size $size
         array set Metrics [font metrics test_font2]
-        updateWidgets ; .t sync
+        update ; .t sync
         foreach {x y w h} [.t bbox small] {}
         set norm [expr {
                 (([image height large] - $Metrics(-linespace))/2

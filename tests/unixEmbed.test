@@ -1279,9 +1279,9 @@ test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
 } -body {
     toplevel .t
     pack [frame .t.f -container 1 -width 200 -height 200] -fill both
-    updateWidgets
+    update
     toplevel .embed -use [winfo id .t.f] -bg green
-    updateWidgets
+    update
     focus -force .t
     focus -force .embed
     focus
@@ -1299,12 +1299,12 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     pack [button .main.b -text "Main Button" \
 	    -command {lappend result "pushed .main.b"}] -padx 30 -pady 30
     pack [frame .main.f -container 1 -width 200 -height 200] -fill both
-    updateWidgets
+    update
     toplevel .embed -use [winfo id .main.f] -bg green
-    updateWidgets
+    update
     pack [button .embed.b -text "Emb Button" \
 	    -command {lappend result "pushed .embed.b"}] -padx 30 -pady 30
-    updateWidgets
+    update
     focus -force .main
     after 100
     set x [expr {[winfo rootx .main.b] + [winfo width .main.b]/2}]
