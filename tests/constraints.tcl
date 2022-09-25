@@ -243,20 +243,6 @@ namespace eval tk {
 	}
 	namespace export controlPointerWarpTiming
 
-	# Procedures for updating all widgets. These are isolated here
-	# to allow for variations between platforms, but are currently the
-	# same for all platforms (see ticket [bfea11a916]).
-	namespace export updateWidgets
-	if {[tk windowingsystem] == "aqua"} {
-	    proc updateWidgets {} {
-		update
-	    }
-	} else {
-	    proc updateWidgets {} {
-		update
-	    }
-	}
-
     }
 }
 
