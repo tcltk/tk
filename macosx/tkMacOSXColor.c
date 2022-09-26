@@ -496,13 +496,16 @@ TkMacOSXGetNSColor(
     TCL_UNUSED(GC),
     unsigned long pixel)		/* Pixel value to convert. */
 {
-    CGColorRef cgColor;
+    CGColorRef cgColor = NULL;
     NSColor *nsColor = nil;
 
     TkSetMacColor(pixel, &cgColor);
-    nsColor = [NSColor colorWithColorSpace:sRGB
-		   components:CGColorGetComponents(cgColor)
-		   count:CGColorGetNumberOfComponents(cgColor)];
+    if (cgColor) {
+	nsColor = [NSColor colorWithColorSpace:sRGB
+			components:CGColorGetComponents(cgColor)
+			count:CGColorGetNumberOfComponents(cgColor)];
+	CGColorRelease(cgColor);
+    }
     return nsColor;
 }
 
@@ -531,7 +534,7 @@ TkMacOSXSetColorInContext(
     CGContextRef context)
 {
     OSStatus err = noErr;
-    CGColorRef cgColor = nil;
+    CGColorRef cgColor = NULL;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
 
     if (entry) {
@@ -615,7 +618,7 @@ TkpGetColor(
 
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
-	    CGColorRef c;
+	    CGColorRef c = NULL;
 
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = entry->index;
@@ -636,7 +639,7 @@ TkpGetColor(
 			colormap = lightColormap;
 		    }
 		    if (@available(macOS 11.0, *)) {
-			CGFloat *rgbaPtr = rgba; 
+			CGFloat *rgbaPtr = rgba;
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
