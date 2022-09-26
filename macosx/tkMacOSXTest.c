@@ -22,15 +22,11 @@
  */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc DebuggerObjCmd;
 #endif
-static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const *objv);
-static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const *objv);
-static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const *objv);
+static Tcl_ObjCmdProc PressButtonObjCmd;
+static Tcl_ObjCmdProc InjectKeyEventObjCmd;
+static Tcl_ObjCmdProc MenuBarHeightObjCmd;
 
 
 /*
@@ -87,10 +83,10 @@ TkplatformtestInit(
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static int
 DebuggerObjCmd(
-    ClientData clientData,		/* Not used. */
-    Tcl_Interp *interp,			/* Not used. */
-    int objc,				/* Not used. */
-    Tcl_Obj *const objv[])			/* Not used. */
+    TCL_UNUSED(void *),		/* Not used. */
+    TCL_UNUSED(Tcl_Interp *),			/* Not used. */
+    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Obj *const *)			/* Not used. */
 {
     Debugger();
     return TCL_OK;
