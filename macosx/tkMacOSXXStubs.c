@@ -877,7 +877,7 @@ XForceScreenSaver(
     display->request++;
     return Success;
 }
-
+
 int
 XSetClipRectangles(
     Display *d,

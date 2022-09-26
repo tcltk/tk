@@ -288,6 +288,9 @@ if test $tk_aqua = yes; then
     if test -d /System/Library/Frameworks/UserNotifications.framework; then
         LIBS="$LIBS -framework UserNotifications"
     fi
+    if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
+        LIBS="$LIBS -framework UniformTypeIdentifiers"
+    fi
     EXTRA_CC_SWITCHES='-x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
     if test -n "${enable_symbols}" -a "${enable_symbols}" != no; then

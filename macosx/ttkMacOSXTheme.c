@@ -131,9 +131,9 @@ static CGFloat pressedPushButtonGradient[8] = {
  */
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1080
-#define CGCOLOR(nscolor) nscolor.CGColor
+#define CGCOLOR(nscolor) (nscolor).CGColor
 #else
-#define CGCOLOR(nscolor) (0 ? (CGColorRef) nscolor : NULL)
+#define CGCOLOR(nscolor) (0 ? (CGColorRef) (nscolor) : NULL)
 #define CGPathCreateWithRoundedRect(w, x, y, z) NULL
 #endif
 
@@ -146,7 +146,7 @@ static CGFloat pressedPushButtonGradient[8] = {
  */
 
 #define CHECK_RADIUS(radius, bounds)                                         \
-    if (radius > bounds.size.width / 2 || radius > bounds.size.height / 2) { \
+    if ((radius) > (bounds).size.width / 2 || (radius) > (bounds).size.height / 2) { \
         return;                                                              \
     }
 

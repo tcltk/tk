@@ -904,7 +904,7 @@ EXTERN void		Tk_DrawHighlightBorder(Tk_Window tkwin, GC fgGC,
 EXTERN void		Tk_SetMainMenubar(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *menuName);
 /* 283 */
-EXTERN void		Tk_SetWindowMenuBar(Tcl_Interp *interp,
+EXTERN void		Tk_SetWindowMenubar(Tcl_Interp *interp,
 				Tk_Window tkwin, const char *oldMenuName,
 				const char *menuName);
 /* 284 */
@@ -1221,7 +1221,7 @@ typedef struct TkStubs {
     void (*tk_CreatePhotoImageFormatVersion3) (const Tk_PhotoImageFormatVersion3 *formatPtr); /* 280 */
     void (*tk_DrawHighlightBorder) (Tk_Window tkwin, GC fgGC, GC bgGC, int highlightWidth, Drawable drawable); /* 281 */
     void (*tk_SetMainMenubar) (Tcl_Interp *interp, Tk_Window tkwin, const char *menuName); /* 282 */
-    void (*tk_SetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 283 */
+    void (*tk_SetWindowMenubar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 283 */
     void (*tk_ClipDrawableToRect) (Display *display, Drawable d, int x, int y, int width, int height); /* 284 */
     Tcl_Obj * (*tk_GetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 285 */
     int (*tk_UseWindow) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 286 */
@@ -1807,8 +1807,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_DrawHighlightBorder) /* 281 */
 #define Tk_SetMainMenubar \
 	(tkStubsPtr->tk_SetMainMenubar) /* 282 */
-#define Tk_SetWindowMenuBar \
-	(tkStubsPtr->tk_SetWindowMenuBar) /* 283 */
+#define Tk_SetWindowMenubar \
+	(tkStubsPtr->tk_SetWindowMenubar) /* 283 */
 #define Tk_ClipDrawableToRect \
 	(tkStubsPtr->tk_ClipDrawableToRect) /* 284 */
 #define Tk_GetSystemDefault \

@@ -31,6 +31,7 @@ static SystemColorDatum **systemColorIndex;
 static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
 #endif
+
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
@@ -389,6 +390,7 @@ SetCGColorComponents(
 
     if (entry->type == HIBrush) {
      	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+	[pool drain];
      	return err == noErr;
     }
     GetRGBA(entry, pixel, rgba);
@@ -428,7 +430,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	if (view) {
 	    name = [[view effectiveAppearance] name];
 	} else {
-	    name = [[NSAppearance currentAppearance] name];
+	    name = [[NSApp effectiveAppearance] name];
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
@@ -494,13 +496,16 @@ TkMacOSXGetNSColor(
     TCL_UNUSED(GC),
     unsigned long pixel)		/* Pixel value to convert. */
 {
-    CGColorRef cgColor;
+    CGColorRef cgColor = NULL;
     NSColor *nsColor = nil;
 
     TkSetMacColor(pixel, &cgColor);
-    nsColor = [NSColor colorWithColorSpace:sRGB
-		   components:CGColorGetComponents(cgColor)
-		   count:CGColorGetNumberOfComponents(cgColor)];
+    if (cgColor) {
+	nsColor = [NSColor colorWithColorSpace:sRGB
+			components:CGColorGetComponents(cgColor)
+			count:CGColorGetNumberOfComponents(cgColor)];
+	CGColorRelease(cgColor);
+    }
     return nsColor;
 }
 
@@ -529,7 +534,7 @@ TkMacOSXSetColorInContext(
     CGContextRef context)
 {
     OSStatus err = noErr;
-    CGColorRef cgColor = nil;
+    CGColorRef cgColor = NULL;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
 
     if (entry) {
@@ -595,7 +600,6 @@ TkpGetColor(
 
     if (!initialized) {
 	initialized = YES;
-	(void)[NSColorSpace sRGBColorSpace];
 	initColorTable();
     }
     if (tkwin) {
@@ -614,7 +618,7 @@ TkpGetColor(
 
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
-	    CGColorRef c;
+	    CGColorRef c = NULL;
 
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = entry->index;
@@ -623,19 +627,30 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		if (@available(macOS 10.14, *)) {
-		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		    NSAppearance *windowAppearance = savedAppearance;
+		    NSAppearance *windowAppearance;
 		    if (view) {
 			windowAppearance = [view effectiveAppearance];
+		    } else {
+			windowAppearance = [NSApp effectiveAppearance];
 		    }
 		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 			colormap = darkColormap;
 		    } else {
 			colormap = lightColormap;
 		    }
-		    [NSAppearance setCurrentAppearance:windowAppearance];
-		    GetRGBA(entry, p.ulong, rgba);
-		    [NSAppearance setCurrentAppearance:savedAppearance];
+		    if (@available(macOS 11.0, *)) {
+			CGFloat *rgbaPtr = rgba;
+			[windowAppearance performAsCurrentDrawingAppearance:^{
+				GetRGBA(entry, p.ulong, rgbaPtr);
+			    }];
+		    } else {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+			[NSAppearance setCurrentAppearance:windowAppearance];
+			GetRGBA(entry, p.ulong, rgba);
+			[NSAppearance setCurrentAppearance:savedAppearance];
+#endif
+		    }
 		} else {
 		    GetRGBA(entry, p.ulong, rgba);
 		}
