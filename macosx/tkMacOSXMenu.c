@@ -364,17 +364,17 @@ static Bool runMenuCommand = true;
 	TkMenuEntry *mePtr = (TkMenuEntry *) [menuItem tag];
 
 	if (menuPtr && mePtr) {
-	Tcl_Interp *interp = menuPtr->interp;
-	Tcl_Preserve(interp);
-	Tcl_Preserve(menuPtr);
-	int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
-	if (result != TCL_OK && result != TCL_CONTINUE &&
-		result != TCL_BREAK) {
-	    Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
-	    Tcl_BackgroundException(interp, result);
-	}
-	Tcl_Release(menuPtr);
-	Tcl_Release(interp);
+	    Tcl_Interp *interp = menuPtr->interp;
+	    Tcl_Preserve(interp);
+	    Tcl_Preserve(menuPtr);
+	    int result = TkInvokeMenu(interp, menuPtr, mePtr->index);
+	    if (result != TCL_OK && result != TCL_CONTINUE &&
+		    result != TCL_BREAK) {
+		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
+		Tcl_BackgroundException(interp, result);
+	    }
+	    Tcl_Release(menuPtr);
+	    Tcl_Release(interp);
 	}
     }
 }
