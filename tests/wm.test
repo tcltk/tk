@@ -197,7 +197,7 @@ test wm-attributes-1.2.1 {usage} -constraints win -returnCodes error -body {
 } -result {bad attribute "_": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 test wm-attributes-1.2.2 {usage} -constraints win -returnCodes error -body {
     wm attributes . -alpha 1.0 -disabled
-} -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-transparentcolor ?color?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool??"}
+} -result {wrong # args: should be "wm attributes window ?-alpha ?double?? ?-contexthelp ?bool?? ?-disabled ?bool?? ?-fullscreen ?bool?? ?-shadow ?bool?? ?-toolwindow ?bool?? ?-topmost ?bool?? ?-transparentcolor ?color??"}
 test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
     wm attributes . -to
 } -result {bad attribute "-to": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}

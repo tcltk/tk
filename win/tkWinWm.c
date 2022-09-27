@@ -2953,9 +2953,9 @@ WmAttributesCmd(
 		Tcl_NewStringObj("-alpha", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewDoubleObj(wmPtr->alpha));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewStringObj("-transparentcolor", -1));
+		Tcl_NewStringObj("-contexthelp", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		wmPtr->crefObj ? wmPtr->crefObj : Tcl_NewObj());
+		Tcl_NewBooleanObj((style & WS_EX_CONTEXTHELP) != 0));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-disabled", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
@@ -2965,6 +2965,10 @@ WmAttributesCmd(
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewWideIntObj((wmPtr->flags & WM_FULLSCREEN) != 0));
 	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewStringObj("-shadow", -1));
+	Tcl_ListObjAppendElement(NULL, objPtr,
+		Tcl_NewBooleanObj((wmPtr->flags & WM_DROPSHADOW) != 0));
+	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-toolwindow", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewWideIntObj((exStyle & WS_EX_TOOLWINDOW) != 0));
@@ -2973,13 +2977,9 @@ WmAttributesCmd(
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewWideIntObj((exStyle & WS_EX_TOPMOST) != 0));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewStringObj("-contexthelp", -1));
+		Tcl_NewStringObj("-transparentcolor", -1));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewBooleanObj((style & WS_EX_CONTEXTHELP) != 0));
-	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewStringObj("-shadow", -1));
-	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewBooleanObj((wmPtr->flags & WM_DROPSHADOW) != 0));
+		wmPtr->crefObj ? wmPtr->crefObj : Tcl_NewObj());
 	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     }
