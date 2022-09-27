@@ -1181,6 +1181,7 @@ DestroyMenuInstance(
     }
     if (menuPtr->entries != NULL) {
 	ckfree(menuPtr->entries);
+	menuPtr->entries = NULL;
     }
     TkMenuFreeDrawOptions(menuPtr);
     Tk_FreeConfigOptions((char *) menuPtr,
