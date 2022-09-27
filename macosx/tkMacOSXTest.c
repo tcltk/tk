@@ -21,6 +21,9 @@
  * Forward declarations of procedures defined later in this file:
  */
 
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+static Tcl_ObjCmdProc DebuggerObjCmd;
+#endif
 static Tcl_ObjCmdProc PressButtonObjCmd;
 static Tcl_ObjCmdProc InjectKeyEventObjCmd;
 static Tcl_ObjCmdProc MenuBarHeightObjCmd;
@@ -51,11 +54,44 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
+#endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * DebuggerObjCmd --
+ *
+ *	This procedure simply calls the low level debugger, which was
+ *      deprecated in OSX 10.8.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+static int
+DebuggerObjCmd(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
+{
+    Debugger();
+    return TCL_OK;
+}
+#endif
 
 /*
  *----------------------------------------------------------------------
