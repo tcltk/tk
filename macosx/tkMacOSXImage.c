@@ -1286,14 +1286,14 @@ TkMacOSXNSImageConfigureModel(
     if (newImage) {
 	NSSize size = NSMakeSize(modelPtr->width - 2*modelPtr->ring,
 				 modelPtr->height - 2*modelPtr->ring);
-	[newImage setSize:size];
 	[modelPtr->image release];
 	[modelPtr->darkModeImage release];
+	newImage.size = size;
 	modelPtr->image = [newImage retain];
 	if (modelPtr->template) {
 	    newImage.template = YES;
 	}
-	modelPtr->darkModeImage = [[modelPtr->image copy] retain];
+	modelPtr->darkModeImage = [[newImage copy] retain];
 	if ([modelPtr->darkModeImage isTemplate]) {
 
 	    /*
@@ -1356,8 +1356,9 @@ TkMacOSXNSImageConfigureModel(
 	} else if (modelPtr->height == 0) {
 	    modelPtr->height = (int) ((CGFloat)(modelPtr->width) * aspect);
 	}
-	newsize = CGSizeMake(modelPtr->width, modelPtr->height);
+	newsize = NSMakeSize(modelPtr->width, modelPtr->height);
 	modelPtr->image.size = newsize;
+	modelPtr->darkModeImage.size = newsize;
     }
     
     /*
