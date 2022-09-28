@@ -21,16 +21,12 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static int		DebuggerObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const objv[]);
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+static Tcl_ObjCmdProc DebuggerObjCmd;
 #endif
-static int		PressButtonObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const *objv);
-static int		InjectKeyEventObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const *objv);
-static int		MenuBarHeightObjCmd (ClientData dummy, Tcl_Interp *interp,
-					int objc, Tcl_Obj *const *objv);
+static Tcl_ObjCmdProc PressButtonObjCmd;
+static Tcl_ObjCmdProc InjectKeyEventObjCmd;
+static Tcl_ObjCmdProc MenuBarHeightObjCmd;
 
 
 /*
@@ -58,7 +54,7 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
@@ -84,13 +80,13 @@ TkplatformtestInit(
  *----------------------------------------------------------------------
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static int
 DebuggerObjCmd(
-    ClientData clientData,		/* Not used. */
-    Tcl_Interp *interp,			/* Not used. */
-    int objc,				/* Not used. */
-    Tcl_Obj *const objv[])			/* Not used. */
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     Debugger();
     return TCL_OK;
