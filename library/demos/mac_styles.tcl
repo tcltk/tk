@@ -21,11 +21,19 @@ positionWindow $w
 # System images we use in our buttons
 
 set featherImg [file join $tk_demoDirectory images Tk_feather.png]
+set starryImg [file join $tk_demoDirectory images starry_night.png]
+set fieldImg [file join $tk_demoDirectory images plowed_field.png]
 image create nsimage action -source NSAction -width 48 -height 48
 image create nsimage bonjour -source NSBonjour -width 48 -height 48
 image create nsimage bonjour1 -source NSBonjour -width 48 -height 48 -pressed 1
 image create nsimage tkfeather -source $featherImg -as file -width 48 -height 48
 image create nsimage tkfeather1 -source $featherImg -as file -width 48 -height 48 -pressed 1
+image create nsimage starry -source $starryImg -as file -width 96 -radius 10
+image create nsimage starry1 -source $starryImg -as file -width 96 -radius 10 -pressed 1
+image create nsimage starry2 -source $starryImg -as file -width 96 -radius 10 -ring 3
+image create nsimage field -source $fieldImg -as file -width 96 -radius 10
+image create nsimage field1 -source $fieldImg -as file -width 96 -radius 10 -pressed 1
+image create nsimage field2 -source $fieldImg -as file -width 96 -radius 10 -ring 3
 image create nsimage add -source NSAddTemplate -width 11 -height 11
 image create nsimage remove -source NSRemoveTemplate -width 11 -height 11
 
@@ -217,6 +225,40 @@ grid [ttk::label $scaleFrame.low -text Low -padding {70 0 0 0}] \
 grid [ttk::label $scaleFrame.high -text High -padding {0 0 70 0}] \
     -row 4 -column 1 -sticky se
 grid $bottomProgress -padx 120 -pady 15 -sticky ew -row 5 -column 0 -columnspan 2
+
+#Appearance Frame
+set appearanceFrame [ttk::frame $w.notebook.appearance -padding {0 40 0 80}]
+grid [ttk::label $w.notebook.appearance.info -justify left -padding {0 20 0 40}\
+	  -text "Use the image buttons below to view this demo in light or dark mode."] \
+    -row 0 -column 0 -columnspan 3
+set light [ttk::button $appearanceFrame.light -style ImageButton -text Light \
+	       -image {field pressed field1 selected field2} \
+	       -command "beLight $appearanceFrame $w"]
+grid columnconfigure $appearanceFrame 1 -minsize 10
+grid $light -row 1 -column 0 -sticky e
+set dark [ttk::button $appearanceFrame.dark -style ImageButton -text Dark \
+	      -image {starry pressed starry1 selected starry2} \
+	      -command "beDark $appearanceFrame $w"]
+grid $dark -row 1 -column 2 -sticky w
+if { [::tk::unsupported::MacWindowStyle isdark $w] } {
+    $dark state selected
+} else {
+    $light state selected
+}
+proc beLight {f w} {
+    ::tk::unsupported::MacWindowStyle appearance $w aqua
+    $f.dark state !selected
+    $f.light state selected
+    after 10 $f.light state !hover
+}
+
+proc beDark {f w} {
+    ::tk::unsupported::MacWindowStyle appearance $w darkaqua
+    $f.light state !selected
+    $f.dark state selected
+    after 10 $f.dark state !hover
+}
+$w.notebook add $appearanceFrame -text "Appearance"
 
 ## See Code / Dismiss
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
