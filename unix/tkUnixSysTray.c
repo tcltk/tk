@@ -595,12 +595,12 @@ static void
 CreateTrayIconWindow(
     DockIcon *icon)
 {
-    Tcl_SavedResult oldResult;
+    Tcl_InterpState saved;
     Tk_Window tkwin;
     Tk_Window wrapper;
     XSetWindowAttributes attr;
 
-    Tcl_SaveResult(icon->interp, &oldResult);
+    saved = Tcl_SaveInterpState(icon->interp, TCL_OK);
     /* Use the same name (tail) as the widget name, to enable
      * name-based icon management for supporting trays, as promised by
      * the docs.
@@ -639,7 +639,7 @@ CreateTrayIconWindow(
     } else {
 	Tcl_BackgroundError(icon->interp);
     }
-    Tcl_RestoreResult(icon->interp, &oldResult);
+    Tcl_RestoreInterpState(icon->interp, saved);
 }
 
 /*
@@ -908,11 +908,11 @@ DisplayIcon(
 		icon->photo = Tk_FindPhoto(icon->interp, icon->imageString);
 	    }
 	    if (!icon->photo && !icon->imageVisualInstance) {
-		Tcl_SavedResult saved;
-		Tcl_SaveResult(icon->interp,&saved);
+		Tcl_InterpState saved
+			= Tcl_SaveInterpState(icon->interp, TCL_OK);
 		icon->imageVisualInstance = Tk_GetImage(icon->interp,icon->drawingWin,
                         icon->imageString, IgnoreImageChange,(ClientData)NULL);
-		Tcl_RestoreResult(icon->interp,&saved);
+		Tcl_RestoreInterpState(icon->interp,saved);
 	    }
 	    if (icon->photo && !icon->offscreenImage) {
 		icon->offscreenImage = XGetImage(Tk_Display(icon->drawingWin),
