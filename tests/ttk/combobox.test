@@ -78,7 +78,8 @@ test combobox-3 "Read postoffset value dynamically from current style" -body {
     destroy .cb
 }
 
-test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
+test combobox-1890211 "ComboboxSelected event after listbox unposted" \
+    -constraints {notAqua} -body {
     # whitebox test...
     pack [ttk::combobox .cb -values [list a b c]]
     update idletasks
