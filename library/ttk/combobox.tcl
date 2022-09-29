@@ -381,7 +381,7 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
 	    # Add spaces to the first item to make the menu as long as cb
 	    set menufont [$cb cget -font]
 	    set stretch $item
-	    while {[font measure $menufont $stretch] < [expr {$width - 40}]} {
+	    while {[font measure $menufont $stretch] < [expr {$width - 32}]} {
 		set stretch "$stretch "
 	    }
 	    $cb.popdown.menu add command -label "$stretch" \
