@@ -295,7 +295,7 @@ if {[tk windowingsystem] ne "aqua"} {
 } else {
     proc ttk::combobox::PopdownWindow {cb} {
 	if {![winfo exists $cb.popdown]} {
-	    set popdown [menu $cb.popdown -tearoff 0]
+	    set poplevel [PopdownToplevel $cb.popdown]
 	    # The menu should be (at least) the same length as the button.
 	    # Since there is no direct way to control the width of a menu
 	    # in Tk, we fake it by using an invisible image in a disabled
@@ -303,6 +303,7 @@ if {[tk windowingsystem] ne "aqua"} {
 	    # correct width.
 	    image create nsimage $cb.spacer -source NSStatusNone -as name \
 		-alpha 0
+	    set menu [menu $cb.popdown.menu -tearoff 0]
 	}
 	return $cb.popdown
     }
@@ -326,6 +327,10 @@ proc ttk::combobox::PopdownToplevel {w} {
 	    $w configure -relief flat -borderwidth 0
 	    wm overrideredirect $w true
 	    wm attributes $w -topmost 1
+	}
+	aqua {
+	    wm overrideredirect $w true
+	    wm attributes $w -alpha 0
 	}
     }
     return $w
@@ -368,21 +373,21 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
     if {$current < 0} {
 	set current 0 		;# no current entry, highlight first one
     }
-    $cb.popdown delete 0 end
-    $cb.spacer configure -width [expr {$width - 55}] -height 1
+    $cb.popdown.menu delete 0 end
+    $cb.spacer configure -width [expr {$width - 40}] -height 1
     set i 0
     foreach item $values {
 	if {$i == 0} {
 	    # Add spaces to the first item to make the menu as long as cb
 	    set menufont [$cb cget -font]
 	    set stretch $item
-	    while {[font measure $menufont $stretch] < [expr {$width - 55}]} {
+	    while {[font measure $menufont $stretch] < [expr {$width - 40}]} {
 		set stretch "$stretch "
 	    }
-	    $cb.popdown add command -label "$stretch" \
+	    $cb.popdown.menu add command -label "$stretch" \
 		-command "ttk::combobox::SelectEntry $cb $i"
 	} else {
-	    $cb.popdown add command -label "$item" \
+	    $cb.popdown.menu add command -label "$item" \
 		-command "ttk::combobox::SelectEntry $cb $i"
 	}
 	incr i
@@ -390,7 +395,7 @@ proc ttk::combobox::ConfigureAquaMenu {cb width} {
     if { $i == 0 } {
 	# There are no items.  To make an empty menu appear add a dummy item
 	# containing a transparent image of the right width.
-	$cb.popdown add command -label {} -image $cb.spacer -state disabled
+	$cb.popdown.menu add command -label {} -image $cb.spacer -state disabled
     }
 }
 
@@ -432,6 +437,7 @@ proc ttk::combobox::AquaPlacePopdown {cb popdown} {
     foreach var {x y w h} delta $postoffset {
     	incr $var $delta
     }
+    wm geometry $popdown ${w}x${h}+${x}+${y}
     return [list $x $y $w $h]
 }
 
@@ -482,13 +488,13 @@ if {[tk windowingsystem] ne "aqua"} {
 	# Configure the menu
 
 	foreach {x y width height} [AquaPlacePopdown $cb $popdown] { break }
-	ConfigureAquaMenu $cb $width
+	ConfigureAquaMenu $cb [winfo width $cb]
 
 	# Post the menu.  It will have a disclosure indicator if it is too
 	# close to the bottom of the screen, and it may be posted above the
 	# button if necessary to be visible.
 
-	$popdown post [expr {$x + 6}] [expr {$y + $height + 2}]
+	$popdown.menu post [expr {$x + 2}] [expr {$y + $height + 2}]
     }
 }
 
