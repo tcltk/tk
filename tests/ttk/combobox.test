@@ -72,6 +72,11 @@ test combobox-3 "Read postoffset value dynamically from current style" -body {
     pack .cb -expand true -fill both
     update idletasks
     ttk::style configure DerivedStyle.TCombobox -postoffset [list 25 0 0 0]
+    if {[tk windowingsystem] == "aqua"} {
+	after 500 {
+	    pressbutton [expr {[winfo rootx .cb] + 25}] [expr {[winfo rooty .cb] + 25}]
+	}
+    }
     ttk::combobox::Post .cb
     expr {[winfo rootx .cb.popdown] - [winfo rootx .cb]}
 } -result 25 -cleanup {
