@@ -40,20 +40,6 @@ typedef struct PixelRep {
     ((PixelRep *) (objPtr)->internalRep.twoPtrValue.ptr2)
 
 /*
- * One of these structures is created per thread to store thread-specific
- * data. In this case, it is used to contain references to selected
- * Tcl_ObjTypes that we can use as screen distances without conversion. The
- * "dataKey" below is used to locate the ThreadSpecificData for the current
- * thread.
- */
-
-typedef struct {
-    const Tcl_ObjType *doubleTypePtr;
-    const Tcl_ObjType *intTypePtr;
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
-
-/*
  * The following structure is the internal representation for mm objects.
  */
 
@@ -91,7 +77,6 @@ static void		DupWindowInternalRep(Tcl_Obj *srcPtr,Tcl_Obj*copyPtr);
 static void		FreeMMInternalRep(Tcl_Obj *objPtr);
 static void		FreePixelInternalRep(Tcl_Obj *objPtr);
 static void		FreeWindowInternalRep(Tcl_Obj *objPtr);
-static ThreadSpecificData *GetTypeCache(void);
 static void		UpdateStringOfMM(Tcl_Obj *objPtr);
 static int		SetMMFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
@@ -166,42 +151,6 @@ static const Tcl_ObjType windowObjType = {
     NULL,			/* updateStringProc */
     NULL			/* setFromAnyProc */
 };
-
-/*
- *----------------------------------------------------------------------
- *
- * GetTypeCache --
- *
- *	Get (and build if necessary) the cache of useful Tcl object types for
- *	comparisons in the conversion functions.  This allows optimized checks
- *	for standard cases.
- *
- *----------------------------------------------------------------------
- */
-
-static ThreadSpecificData *
-GetTypeCache(void)
-{
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (tsdPtr->doubleTypePtr == NULL) {
-	/* Smart initialization of doubleTypePtr/intTypePtr without
-	 * hash-table lookup or creating complete Tcl_Obj's */
-	Tcl_Obj obj;
-	obj.bytes = (char *)"0.0";
-	obj.length = 3;
-	obj.typePtr = NULL;
-	Tcl_GetDoubleFromObj(NULL, &obj, &obj.internalRep.doubleValue);
-	tsdPtr->doubleTypePtr = obj.typePtr;
-	obj.bytes = (char *)"0";
-	obj.length = 1;
-	obj.typePtr = NULL;
-	Tcl_GetLongFromObj(NULL, &obj, &obj.internalRep.longValue);
-	tsdPtr->intTypePtr = obj.typePtr;
-    }
-    return tsdPtr;
-}
 
 /*
  *----------------------------------------------------------------------
@@ -282,34 +231,39 @@ GetPixelsFromObjEx(
 {
     int result, fresh;
     double d;
+    Tcl_WideInt w;
     PixelRep *pixelPtr;
     static const double bias[] = {
 	1.0,	10.0,	25.4,	0.35278 /*25.4 / 72.0*/
     };
 
-    /*
-     * Special hacks where the type of the object is known to be something
-     * that is just numeric and cannot require distance conversion. This pokes
-     * holes in Tcl's abstractions, but they are just for optimization, not
-     * semantics.
-     */
-
     if (objPtr->typePtr != &pixelObjType) {
-	ThreadSpecificData *typeCache = GetTypeCache();
+	int type;
+	void *ptr;
 
-	if (objPtr->typePtr == typeCache->doubleTypePtr) {
-	    (void) Tcl_GetDoubleFromObj(interp, objPtr, &d);
-	    if (dblPtr != NULL) {
-		*dblPtr = d;
+	if (TCL_OK == Tcl_GetNumberFromObj(interp, objPtr, &ptr, &type)) {
+	    switch (type) {
+	    case TCL_NUMBER_DOUBLE: 
+		d = *(const double *)ptr;
+		if (dblPtr) {
+		    *dblPtr = d;
+		}
+		*intPtr = (int) (d<0 ? d-0.5 : d+0.5);
+		return TCL_OK;
+
+	    case TCL_NUMBER_INT:
+		w = *(const Tcl_WideInt *)ptr;
+		if (w <= INT_MAX && w >= INT_MIN) {
+		    *intPtr = (int) w;
+		    if (dblPtr) {
+			*dblPtr = (double) (*intPtr);
+		    }
+		    return TCL_OK;
+		}
+
+	    /* Unhandled cases fall through */
+
 	    }
-	    *intPtr = (int) (d<0 ? d-0.5 : d+0.5);
-	    return TCL_OK;
-	} else if (objPtr->typePtr == typeCache->intTypePtr) {
-	    (void) Tcl_GetIntFromObj(interp, objPtr, intPtr);
-	    if (dblPtr) {
-		*dblPtr = (double) (*intPtr);
-	    }
-	    return TCL_OK;
 	}
     }
 
@@ -788,7 +742,6 @@ SetMMFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
-    ThreadSpecificData *typeCache = GetTypeCache();
     const Tcl_ObjType *typePtr;
     const char *string;
     char *rest;
@@ -796,22 +749,41 @@ SetMMFromAny(
     int units;
     MMRep *mmPtr;
 
-    if (objPtr->typePtr == typeCache->doubleTypePtr) {
-	Tcl_GetDoubleFromObj(interp, objPtr, &d);
-	units = -1;
-    } else if (objPtr->typePtr == typeCache->intTypePtr) {
-	Tcl_GetIntFromObj(interp, objPtr, &units);
-	d = (double) units;
-	units = -1;
+    int type, needParse = 1;
+    void *ptr;
+    Tcl_WideInt w;
 
-	/*
-	 * In the case of ints, we need to ensure that a valid string exists
-	 * in order for int-but-not-string objects to be converted back to
-	 * ints again from mm obj types.
-	 */
+    if (TCL_OK == Tcl_GetNumberFromObj(NULL, objPtr, &ptr, &type)) {
 
-	(void) Tcl_GetString(objPtr);
-    } else {
+	switch (type) {
+	case TCL_NUMBER_DOUBLE: 
+	    needParse = 0;
+	    d = *(const double *)ptr;
+	    units = -1;
+	    break;
+
+	case TCL_NUMBER_INT:
+	    w = *(const Tcl_WideInt *)ptr;
+	    if (w <= INT_MAX && w >= INT_MIN) {
+		needParse = 0;
+		units = (int) w;
+		d = (double) units;
+		units = -1;
+
+		/*
+		 * In the case of ints, we need to ensure that a valid
+		 * string exists in order for int-but-not-string objects
+		 * to be converted back to ints again from mm obj types.
+		 *
+		 * TODO: Is this really necessary?
+		 */
+
+		(void) Tcl_GetString(objPtr);
+	    }
+	}
+    }
+
+    if (needParse) {
 	/*
 	 * It wasn't a known int or double, so parse it.
 	 */
