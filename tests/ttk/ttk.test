@@ -211,7 +211,7 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
 } -body {
     bind .b <Button-1> {after 0 {.b configure -state disabled}}
     after 1 {event generate .b <Button-1>}
-    after 20 {event generate .b <ButtonRelease-1>}
+    after 50 {event generate .b <ButtonRelease-1>}
     set aid [after 100 {set ::ttk28 [.b instate {disabled !pressed}]}]
     vwait ::ttk28
     after cancel $aid
