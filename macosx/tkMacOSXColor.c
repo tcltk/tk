@@ -639,10 +639,12 @@ TkpGetColor(
 			colormap = lightColormap;
 		    }
 		    if (@available(macOS 11.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
 			CGFloat *rgbaPtr = rgba;
 			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
+#endif
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
 			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
