@@ -2440,8 +2440,8 @@ test font-47.2 {Bug 3049518,TIP 608 - Canvas} -body {
 	lassign [$w bbox $text] x0 y0 x1 y1
 	set offset 5
 	set coord [lmap expr {
-			      $x0-5 $y0-5   $x1+5 $y0-5
-			      $x1+5 $y1+5   $x0-5 $y1+5
+			      $x0-$offset $y0-$offset   $x1+$offset $y0-$offset
+			      $x1+$offset $y1+$offset   $x0-$offset $y1+$offset
 			  } {expr $expr}]
 	if {[catch {$w coord $circ $coord} err]} {
 	    puts Error:$err
