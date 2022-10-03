@@ -1162,7 +1162,6 @@ test frame-12.2 {FrameWorldChanged procedure} -setup {
 } -result {1 1 1 1 1 1 1 1 1 1 1 1}
 test frame-12.3 {FrameWorldChanged procedure} -setup {
 	deleteWindows
-	update idletasks
 } -body {
     # Check reaction on font change
     font create myfont -family courier -size 10
