@@ -742,7 +742,7 @@ image, but may contain additional information like resolution or
 comments.
 Image format drivers may output metadata when image data is
 parsed, or may use metadata to be included in image files or formats.
-.SS "METADATA KEYS"
+.SS "METADATA KEYS (MULTIPLE FORMATS)"
 .PP
 Each image format driver supports an individual set of metadata dictionary
 keys. Predefined keys are:
@@ -764,6 +764,31 @@ Supported by formats \fBgif\fR and \fBpng\fR.
 .PP
 It is valid to set any key in the metadata dict.
 A format driver will ignore keys it does not handle.
+.SS "METADATA KEYS FOR ANIMATED GIF INFORMATION"
+.PP
+The following metadata keys are reported when reading a \fBgif\fR format file.
+They are typically used in conjunction with the \fI-index\fR option of an
+animated \fBgif\fR file to properly display the subimage sequence.
+The options are linked to each subimage selected by \fI-index\fR.
+.TP
+\fBdelay time\fR \fItime\fR
+.
+Update delay time in 10ms unit. This key is only present, if delay time is not 0.
+.TP
+\fBdisposal method\fR \fImethod\fR
+.
+Disposal method of the preceeding image, if given for the current image.
+Possible values are: \fIdo not dispose\fR, \fIrestore to background color\fR, \fIrestore to previous\fR.
+.TP
+\fBuser interaction\fR \fIbool\fR
+.
+The key is present with a value of 1, if user interaction is specified.
+Otherwise, the key is not present.
+.TP
+\fBupdate region\fR \fIX0\fR, \fIY0\fR, \fIwidth\fR, \fIheight\fR
+.
+Update region of the current subimage, if subimage has not the same size as
+the full image. The pixel outside of this box are all fully transparent.
 .PP
 .VE 8.7
 .SH CREDITS
