@@ -667,10 +667,19 @@ test frame-3.10 {TkCreateFrame procedure, -use option} -constraints {
 } -body {
     toplevel .t -container 1 -width 300 -height 120
     wm geometry .t +0+0
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	update
+    }
     option add *x.use [winfo id .t]
     toplevel .x -width 140 -height 300 -bg green
-    update
+    if {[tk windowingsystem] eq "aqua"} {
+	update idletasks
+    } else {
+	tkwait visibility .x
+	update
+    }
     list [expr {[winfo rootx .x] - [winfo rootx .t]}] \
 	    [expr {[winfo rooty .x] - [winfo rooty .t]}] \
 	    [winfo width .t] [winfo height .t]
