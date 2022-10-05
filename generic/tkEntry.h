@@ -15,6 +15,7 @@
 #ifndef _TKINT
 #include "tkInt.h"
 #endif
+#include <stdbool.h>
 
 enum EntryType {
     TK_ENTRY, TK_SPINBOX
@@ -215,7 +216,7 @@ typedef struct {
      * Spinbox specific fields for use with configuration settings above.
      */
 
-    int wrap;			/* whether to wrap around when spinning */
+    bool wrap;			/* whether to wrap around when spinning */
 
     int selElement;		/* currently selected control */
     int curElement;		/* currently mouseover control */
