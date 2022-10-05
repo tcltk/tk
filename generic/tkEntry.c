@@ -316,7 +316,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_INT, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, TCL_INDEX_NONE, offsetof(Entry, prefWidth), 0, 0, 0},
     {TK_OPTION_BOOLEAN, "-wrap", "wrap", "Wrap",
-	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), 0, 0, 0},
+	DEF_SPINBOX_WRAP, TCL_INDEX_NONE, offsetof(Spinbox, wrap), TK_OPTION_VAR(bool), 0, 0},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	DEF_ENTRY_SCROLL_COMMAND, TCL_INDEX_NONE, offsetof(Entry, scrollCmd),
 	TK_OPTION_NULL_OK, 0, 0},

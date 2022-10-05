@@ -19,8 +19,6 @@
 #include "tkPort.h"
 #endif
 
-#define TK_OPTION_ENUM_VAR		((int)(sizeof(Tk_OptionType)&(sizeof(int)-1))<<6)
-
 /*
  * Ensure WORDS_BIGENDIAN is defined correctly:
  * Needs to happen here in addition to configure to work with fat compiles on
