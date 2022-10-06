@@ -373,6 +373,7 @@ test textImage-4.1 {alignment checking - except baseline} -setup {
 test textImage-4.2 {alignment checking - baseline} -setup {
     destroy .t
     set result ""
+    wm geometry . +100+100
 } -body {
     catch {
         image create photo small -width 5 -height 5
