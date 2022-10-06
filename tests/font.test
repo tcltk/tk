@@ -2447,7 +2447,7 @@ test font-47.2 {Bug 3049518,TIP 608 - Canvas} -body {
 	    puts Error:$err
 	}
     }}
-    set waitfor {{tag {time 333}} {after $time incr ::wait4; vwait ::wait4}}
+    set waitfor {{tag {time 333}} {update; after $time incr ::wait4; vwait ::wait4}}
     set enclosed {{can id} {$can find enclosed {*}[$can bbox $id]}}
 
     set results {}
