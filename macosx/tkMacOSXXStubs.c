@@ -60,8 +60,40 @@ static int		DefaultErrorHandler(Display *display,
  * TkMacOSXDisplayChanged --
  *
  *	Called to set up initial screen info or when an event indicated
- *	display (screen) change.
+ *	display (screen) change.  This will be called when monitors are
+ *      rearranged or resolutions are changed with the System Preferences.
  *
+ *      The Aqua port of Tk supports only one display and only one X11
+ *      screen.  An X11 screen is assumed to be a rectangle.
+ *
+ *      The macOS NSScreen class is an abstraction of a monitor.  The pixels on
+ *      the various monitors can be accessed from a single graphics coordinate
+ *      system.  Each monitor is a rectangle within this coordinate system.
+ *      One monitor is selected as the primary monitor and it is positioned in
+ *      the coordinate system so that its lower left corner is at the origin.
+ *      (Note that the display coordinate systems used for NSScreens, NSWindows
+ *      and NSViews have the y-coordinate increasing in the upward direction.)
+ *      The monitors are always located so that the collection of monitors is
+ *      connected.  This arrangement is controlled with the Displays panel of the
+ *      System Preferences app.  The selection of the primary monitor is also
+ *      done in the Displays panel by dragging the "menu bar" to the monitor
+ *      which should be the primary monitor.
+ *
+ *      Since a Tk Screen is required to be a rectangle, not a union of touchng
+ *      rectangles, we declare the size of the Tk Screen to be the size of the
+ *      bounding box of the union of the monitor rectangles.  That seems to be
+ *      the best option, even though it means that not every pixel within the
+ *      screen rectangle corresponds to a pixel on one of the monitors.  We
+ *      also declare the pixel depth of the Tk Screen to be the depth of the
+ *      primary monitor, since there seems to be no better alternative.
+ *
+ *      Within the Tk Screen rectangle, the coordinate system used by Tk has
+ *      the origin at the top left corner of the primary screen and the
+ *      y-coordinate increasing in the downward direction.  Thus to convert
+ *      between the Tk coordinates and the coordinates used by Apple it is
+ *      necessary to know the height of the primary screen.  This number is
+ *      provided by the function TkMacOSXZeroScreenHeight.
+ *      
  * Results:
  *	None.
  *
@@ -76,30 +108,28 @@ TkMacOSXDisplayChanged(
     Display *display)
 {
     Screen *screen;
-    NSArray *nsScreens;
-
+    NSArray *monitors;
 
     if (display == NULL || display->screens == NULL) {
 	return;
     }
     screen = display->screens;
 
-    nsScreens = [NSScreen screens];
-    if (nsScreens && [nsScreens count]) {
-	NSScreen *s = [nsScreens objectAtIndex:0];
-	NSRect bounds = [s frame];
-	NSRect maxBounds = NSZeroRect;
+    monitors = [NSScreen screens];
+    if (monitors && [monitors count]) {
+	NSScreen *s0 = [monitors objectAtIndex:0];
+	NSRect bounds = NSZeroRect;
 
-	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
+	for (NSScreen *s in monitors) {
+	    bounds = NSUnionRect(bounds, [s frame]);
+	}
+	screen->root_depth = NSBitsPerPixelFromDepth([s0 depth]);
 	screen->width = bounds.size.width;
 	screen->height = bounds.size.height;
 	screen->mwidth = (bounds.size.width * 254 + 360) / 720;
 	screen->mheight = (bounds.size.height * 254 + 360) / 720;
 
-	for (s in nsScreens) {
-	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
-	}
-	*((NSRect *)screen->ext_data) = maxBounds;
+	*((NSRect *)screen->ext_data) = bounds;
     }
 }
 
@@ -108,12 +138,14 @@ TkMacOSXDisplayChanged(
  *
  * TkMacOSXZeroScreenHeight --
  *
- *	Replacement for the tkMacOSXZeroScreenHeight variable to avoid
- *	caching values from NSScreen (fixes bug aea00be199).
+ *	Replacement for the tkMacOSXZeroScreenHeight variable to avoid caching
+ *	values from NSScreen (fixes bug aea00be199).  The height of NSScreen 0
+ *	is needed to convert between Tk graphics coordinates and Apple graphics
+ *	coordinates.
  *
  * Results:
- *	Returns the height of screen 0 (the screen assigned the menu bar
- *	in System Preferences), or 0.0 if getting [NSScreen screens] fails.
+ *      Returns the height of screen 0 (the NSScreen assigned the menu bar in
+ *	System Preferences), or 0.0 if getting [NSScreen screens] fails.
  *
  * Side effects:
  *	None.
