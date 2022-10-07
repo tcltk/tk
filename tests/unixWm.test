@@ -33,27 +33,41 @@ proc makeToplevels {} {
     }
 }
 
-# On macOS windows are not allowed to overlap the menubar at the top of the
-# screen or the dock.  So tests which move a window and then check whether it
-# got moved to the requested location should use a y coordinate larger than the
-# height of the menubar (normally 23 pixels) and an x coordinate larger than the
-# width of the dock, if it happens to be on the left.
+# On macOS the title bar of a window is not allowed to overlap the
+# menubar at the top of the screen or the dock, when it is at the
+# bottom.  Prior to macOS 11 they were not allowed to overlap the dock
+# on the left side either.  So tests which move a window and then
+# check whether it got moved to the requested location should use a
+# positive y coordinate larger than the height of the menubar (23
+# pixels in 10.XX but increased to 24 pixels in 11.0) or a negative
+# y-coordinate less than -112.  The x-coordinate should be larger
+# than 68.
 
 if {[tk windowingsystem] eq "aqua"} {
-    set mb [expr [menubarheight] + 1]
-    set X  100
-    set Y0 $mb
-    set Y2 [expr $mb + 2]
-    set Y5 [expr $mb + 5]
+    set mbsize [expr [menubarheight] + 1]
+    set docksize 112
+    set X  $docksize
+    set Y0 $mbsize
+    set Y1 $docksize
+    set Y2 [expr $mbsize + 2]
+    set Y5 [expr $mbsize + 5]
+    set Y6 100
 } else {
     set X  20
     set Y0 0
+    set Y1 0
     set Y2 2
     set Y5 5
+    set Y6 5
 }
 
 set i 1
-foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
+if {[tk windowingsystem] eq "aqua"} {
+   set geoms "+$docksize+80 +80+$mbsize +$docksize+$mbsize"
+} else {
+   set geoms "+20+80 +80+0 +20+0"
+}
+foreach geom $geoms {
     destroy .t
     test unixWm-1.$i {initial window position} unix {
 	toplevel .t -width 200 -height 150
@@ -68,6 +82,12 @@ foreach geom "+$X+80 +80+$Y0 +$X+$Y0" {
 # windows correctly.  Try one motion and compute the window manager's
 # error, then factor this error into the actual tests.  In other words,
 # this just makes sure that things are consistent between moves.
+#
+# On macOS this works fine if there is just one monitor attached to
+# the test system, so the screen size is the same as the monitor
+# resolution, but it would need to be much more sophisticated
+# to work with multiple monitors.  So unplug any additional monitors
+# (it is not sufficient to power them off) or ignore the errors.
 
 set i 1
 destroy .t
@@ -79,13 +99,20 @@ update
 scan [wm geom .t] %dx%d+%d+%d width height x y
 set xerr [expr 150-$x]
 set yerr [expr 150-$y]
-foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
+if {[tk windowingsystem] eq "aqua"} {
+    set geoms "+20+80 +80+$mbsize +0+$mbsize -0-$docksize +0-$docksize \
+    -0+$mbsize -10-[expr {$docksize + 10}] -10+[expr {$mbsize + 5}] \
+    +10-[expr {$docksize + 10}]"
+} else {
+   set geoms "+20+80 +80+0 +0+0 -0-0 +0-0 -0+0 -10-5 -10+5 +10-5"
+}
+foreach geom $geoms {
     test unixWm-2.$i {moving window while mapped} unix {
 	wm geom .t $geom
 	update
 	scan [wm geom .t] %dx%d%1s%d%1s%d width height xsign x ysign y
-	format "%s%d%s%d" $xsign [eval expr $x$xsign$xerr] $ysign \
-		[eval expr $y$ysign$yerr]
+	format "%s%d%s%d" $xsign [eval expr $x$xsign$xerr] \
+	    $ysign [eval expr $y$ysign$yerr]
     } $geom
     incr i
 }
