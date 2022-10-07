@@ -2447,7 +2447,7 @@ test font-47.2 {Bug 3049518,TIP 608 - Canvas} -body {
 	    puts Error:$err
 	}
 	update
-	after idle {after 200 {set fontwait 1}}
+	after 200 {set fontwait 1}
     }}
     set enclosed {{can id} {$can find enclosed {*}[$can bbox $id]}}
 
@@ -2512,7 +2512,7 @@ test font-47.3 {Bug 3049518, TIP 608 - Label} -body {
 	set img [apply ${make-img} $size]
 	$w configure -image $img
 	update
-	after idle {after 200 {set fontwait 1}}
+	after 200 {set fontwait 1}
     }}
 
     set check {{w} {
