@@ -130,11 +130,11 @@
 
 /*
  * Fallback in case Tk is linked against a Tcl version not having TIP #585
- * (TCL_INDEX_TEMP_TABLE) or TIP #613 (TCL_INDEX_NULL_OK)
+ * (TCL_INDEX_TEMP_TABLE) or TIP #613/#618 (TCL_NULL_OK)
  */
 
-#ifndef TCL_INDEX_NULL_OK
-#   define TCL_INDEX_NULL_OK 32
+#ifndef TCL_NULL_OK
+#   define TCL_NULL_OK 32
 #endif
 #if !defined(TCL_INDEX_TEMP_TABLE)
 #   define TCL_INDEX_TEMP_TABLE 64

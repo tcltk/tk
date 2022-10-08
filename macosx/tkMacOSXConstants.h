@@ -79,6 +79,9 @@ typedef NSInteger NSModalResponse;
 #define NSCursorUpdate NSEventTypeCursorUpdate
 #define NSTexturedBackgroundWindowMask NSWindowStyleMaskTexturedBackground
 #define NSCompositeCopy NSCompositingOperationCopy
+#define NSCompositeSourceOver NSCompositingOperationSourceOver
+#define NSCompositeSourceAtop NSCompositingOperationSourceAtop
+#define NSCompositeDestinationIn NSCompositingOperationDestinationIn
 #define NSWarningAlertStyle NSAlertStyleWarning
 #define NSInformationalAlertStyle NSAlertStyleInformational
 #define NSCriticalAlertStyle NSAlertStyleCritical
