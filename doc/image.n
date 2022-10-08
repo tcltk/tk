@@ -93,8 +93,20 @@ See the \fBbitmap\fR manual entry for more information.
 Displays a variety of full-color images, using dithering to
 approximate colors on displays with limited color capabilities.
 See the \fBphoto\fR manual entry for more information.
+.TP
+\fBnsimage\fR
+This type is only available in the Aqua platform.  It is a full-color
+image which may be created from a named system image.  It has options
+designed to facilitate the use of these images in buttons.  An
+\fBnsimage\fR can be based on an a \fItemplate image\fR, which is an
+anti-aliased 2-color image format that automatically interchanges
+black and white in response to changes between the light and dark
+modes on macOS.  An \fBnsimage\fR can also generate an alternate
+\fIpressed\fR variant which is lighter in dark mode and darker in
+light mode.  These are for use in image buttons. See the \fBnsimage\fR
+manual entry for more information.
 .SH "SEE ALSO"
-bitmap(n), options(n), photo(n)
+bitmap(n), options(n), photo(n), nsimage(n)
 .SH KEYWORDS
 height, image, types of images, width
 '\" Local Variables:
