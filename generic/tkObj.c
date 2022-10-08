@@ -72,6 +72,10 @@ static int dummyGetNumberFromObj(
 #   define Tcl_GetNumberFromObj ((((&tclStubsPtr->tcl_PkgProvideEx)[631]) && ((&tclStubsPtr->tcl_PkgProvideEx)[680])) ? \
 		((int (*)(Tcl_Interp *, Tcl_Obj *, void **, int *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[680])) \
 		: dummyGetNumberFromObj)
+#else
+MODULE_SCOPE int	TclGetNumberFromObj(Tcl_Interp *,
+			    Tcl_Obj *, void **, int *);
+#   define Tcl_GetNumberFromObj TclGetNumberFromObj
 #endif
 #endif /* TCL_MAJOR_VERSION < 9 */
 
