@@ -164,7 +164,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 
 TKBackgroundLoop *backgroundLoop = nil;
 
-
 #pragma mark TKMenu
 
 /*
