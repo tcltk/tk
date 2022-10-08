@@ -2446,8 +2446,6 @@ test font-47.2 {Bug 3049518,TIP 608 - Canvas} -body {
 	if {[catch {$w coord $circ $coord} err]} {
 	    puts Error:$err
 	}
-	update
-	after 200 {set fontwait 1}
     }}
     set enclosed {{can id} {$can find enclosed {*}[$can bbox $id]}}
 
@@ -2459,17 +2457,14 @@ test font-47.2 {Bug 3049518,TIP 608 - Canvas} -body {
     # Begin test:
     set results {}
     lappend results [apply $enclosed $c $circid]
-    set fontwait 0
     font configure MyFont -size 26
-    vwait fontwait
+    update
     lappend results [apply $enclosed $c $circid]
-    set fontwait 0
     font configure MyFont -size 9
-    vwait fontwait
+    update
     lappend results [apply $enclosed $c $circid]
-    set fontwait 0
     font configure MyFont -size 12
-    vwait fontwait
+    update
     lappend results [apply $enclosed $c $circid]
 } -cleanup {
     destroy $c
@@ -2511,8 +2506,6 @@ test font-47.3 {Bug 3049518, TIP 608 - Label} -body {
 	set size [font metrics [$w cget -font] -linespace]
 	set img [apply ${make-img} $size]
 	$w configure -image $img
-	update
-	after 200 {set fontwait 1}
     }}
 
     set check {{w} {
@@ -2534,17 +2527,14 @@ test font-47.3 {Bug 3049518, TIP 608 - Label} -body {
     set ::results {}
 
     apply $check $l
-    set fontwait 0
     font configure MyFont -size 26
-    vwait fontwait
+    update
     apply $check $l
-    set fontwait 0
     font configure MyFont -size 9
-    vwait fontwait
+    update
     apply $check $l
-    set fontwait 0
     font configure MyFont -size 13
-    vwait fontwait
+    update
     apply $check $l
     set results
 } -cleanup {
