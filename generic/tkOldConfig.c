@@ -347,7 +347,7 @@ DoConfig(
     int nullValue;
 
     nullValue = 0;
-    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_INDEX_NULL_OK))) {
+    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK))) {
 	nullValue = 1;
     }
 

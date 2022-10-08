@@ -2306,7 +2306,7 @@ static void DrawItem(
 	DisplayItem *displayItemUsed = &displayItem;
 	Ttk_State stateCell = state;
 	Tk_Anchor textAnchor, imageAnchor = DEFAULT_IMAGEANCHOR;
-	Ttk_Padding cellPadding = {indent, 0, 0, 0};
+	Ttk_Padding cellPadding = {(short)indent, 0, 0, 0};
 
 	if (column->selected) {
 	    displayItemUsed = &displayItemSel;

@@ -19,7 +19,6 @@ jobs:
         cfgopt:
           - ""
           - "CFLAGS=-DTK_NO_DEPRECATED=1"
-          - "--disable-shared"
           - "--disable-xft"
           - "--disable-xss"
           - "--enable-symbols"
