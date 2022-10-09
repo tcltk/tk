@@ -1586,7 +1586,7 @@ GenerateMenuSelectEvent(
 {
     TkMenu *menuPtr = [menu tkMenu];
 
-    if (menuPtr) {
+    if (menuPtr && menuPtr->entries) {
 	int index = [menu tkIndexOfItem:menuItem];
 
 	if (index < 0 || index >= (int) menuPtr->numEntries ||
