@@ -1348,9 +1348,7 @@ Tk_WinfoObjCmd(
 	    Tcl_WrongNumArgs(interp, 2, objv, "window");
 	    return TCL_ERROR;
 	}
-	string = Tcl_GetString(objv[2]);
-	tkwin = Tk_NameToWindow(interp, string, tkwin);
-	if (tkwin == NULL) {
+	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin) != TCL_OK) {
 	    return TCL_ERROR;
 	}
     }
