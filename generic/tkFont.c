@@ -884,7 +884,6 @@ TheWorldHasChanged(
      */
 
     if (TkpWillDrawWidget(NULL)) {
-        printf("TheWorldHasChanged, TkpWillDrawWidget returns true --> don't RecomputeWidgets\n");fflush(stdout);
 	return;
     }
 
