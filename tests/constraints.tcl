@@ -122,6 +122,7 @@ namespace eval tk {
 	namespace export deleteWindows
 	proc deleteWindows {} {
 	    eval destroy [winfo children .]
+	    update
 	}
 
 	namespace export fixfocus
