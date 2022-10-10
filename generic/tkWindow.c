@@ -2304,7 +2304,9 @@ TkDoConfigureNotify(
 				 * changed. */
 {
     XEvent event;
-
+    if (! Tk_WindowId(winPtr)) {
+	Tk_MakeWindowExist(winPtr);
+    }
     event.type = ConfigureNotify;
     event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
     event.xconfigure.send_event = False;
