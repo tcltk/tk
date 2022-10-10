@@ -1982,17 +1982,21 @@ test unixWm-50.8 {Tk_CoordsToWindow procedure, more basics} unix {
 test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t
     destroy .t2
+    update
     toplevel .t -width 200 -height 200 -bg green
     tkwait visibility .t
+    update
     wm geometry .t +0+0
-    update idletasks
+    update
     toplevel .t2 -width 200 -height 200 -bg red
     tkwait visibility .t2
+    update
     wm geometry .t2 +0+0
+    update
     restackDelay
     set result [list [winfo containing 100 100]]
     wm iconify .t2
-    update idletasks
+    update
     lappend result [winfo containing 100 100]
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
