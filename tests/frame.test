@@ -1168,8 +1168,8 @@ test frame-12.3 {FrameWorldChanged procedure} -setup {
     set y1 [winfo y .f.f]
     set fontwait 0
     font configure myfont -size 20
-    if {!$fontwait} {vwait fontwait}
     update
+    if {!$fontwait} {vwait fontwait}
     set h2 [font metrics myfont -linespace]
     set y2 [winfo y .f.f]
     expr {($h2 - $h1) - ($y2 - $y1)}
