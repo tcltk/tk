@@ -1163,13 +1163,11 @@ test frame-12.3 {FrameWorldChanged procedure} -setup {
     place .f -x 0 -y 0 -width 40 -height 40
     pack [frame .f.f] -fill both -expand 1
     update
-    bind .f <<TkWorldChanged>> { set fontwait 1 }
     set h1 [font metrics myfont -linespace]
     set y1 [winfo y .f.f]
-    set fontwait 0
     font configure myfont -size 20
-    update
-    if {!$fontwait} {vwait fontwait}
+    update idletasks  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
+    update            ; # services the queued "TkWorldChanged" events
     set h2 [font metrics myfont -linespace]
     set y2 [winfo y .f.f]
     expr {($h2 - $h1) - ($y2 - $y1)}

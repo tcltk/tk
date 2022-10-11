@@ -2458,12 +2458,15 @@ test font-47.2 {Bug 3049518,TIP 608 - Canvas} -body {
     set results {}
     lappend results [apply $enclosed $c $circid]
     font configure MyFont -size 26
-    update
+    update idletasks  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
+    update            ; # services the queued "TkWorldChanged" events
     lappend results [apply $enclosed $c $circid]
     font configure MyFont -size 9
+    update idletasks
     update
     lappend results [apply $enclosed $c $circid]
     font configure MyFont -size 12
+    update idletasks
     update
     lappend results [apply $enclosed $c $circid]
 } -cleanup {
@@ -2528,12 +2531,15 @@ test font-47.3 {Bug 3049518, TIP 608 - Label} -body {
 
     apply $check $l
     font configure MyFont -size 26
-    update
+    update idletasks  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
+    update            ; # services the queued "TkWorldChanged" events
     apply $check $l
     font configure MyFont -size 9
+    update idletasks
     update
     apply $check $l
     font configure MyFont -size 13
+    update idletasks
     update
     apply $check $l
     set results
