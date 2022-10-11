@@ -21,6 +21,7 @@ config.cache
 config.log
 config.status
 config.status.lineno
+doc/man.macros
 html
 manifest.uuid
 _FOSSIL_
