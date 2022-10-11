@@ -19,6 +19,8 @@ namespace eval ttk::theme::default {
 	-disabledindicator	"#a3a3a3"
 	-altindicator		"#9fbdd8"
 	-disabledaltindicator	"#c0c0c0"
+    }
+
     # On X11, if the user specifies their own choice of colour scheme via X resources,
     # then set the colour palette based on the user's choice.
     if {[tk windowingsystem] eq "x11"} {
@@ -65,8 +67,6 @@ namespace eval ttk::theme::default {
 	disabledForeground	{-disabledfg -disabledindicator}
     }
 }
-
-    }
 # ttk::theme::default::reconfigureDefaultTheme --
 # This procedure contains the definition of the 'default' theme itself.
 # The theme definition is in a procedure, so it can be re-called
@@ -201,8 +201,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
-
-ttk::theme::default::reconfigureDefaultTheme
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
     }
 }
+
+ttk::theme::default::reconfigureDefaultTheme
