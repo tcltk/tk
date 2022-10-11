@@ -377,7 +377,7 @@ package require tk
 
     method DrawSelection {} {
 	$canvas delete selection
-	$canvas itemconfigure selectionText -fill black
+	$canvas itemconfigure selectionText -fill $fill
 	$canvas dtag selectionText
 	set cbg [ttk::style lookup TEntry -selectbackground focus]
 	set cfg [ttk::style lookup TEntry -selectforeground focus]
@@ -405,7 +405,8 @@ package require tk
 	set sbar [ttk::scrollbar $hull.sbar -orient horizontal -takefocus 0]
 	catch {$sbar configure -highlightthickness 0}
 	set canvas [canvas $hull.canvas -highlightthick 0 -takefocus 1 \
-			-width 400 -height 120 -background white]
+			-width 400 -height 120\
+			-background [ttk::style lookup Treeview -background {} white]]
 	pack $sbar -side bottom -fill x -padx 2 -pady {0 2}
 	pack $canvas -expand yes -fill both -padx 2 -pady {2 0}
 
@@ -422,12 +423,7 @@ package require tk
 	set noScroll 1
 	set selection {}
 	set index(anchor) ""
-	set fg [option get $canvas foreground Foreground]
-	if {$fg eq ""} {
-	    set fill black
-	} else {
-	    set fill $fg
-	}
+	set fill [ttk::style lookup Treeview -foreground {} black]
 
 	# Creates the event bindings.
 	#
