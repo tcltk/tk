@@ -1016,7 +1016,7 @@ TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    TCL_UNUSED(int),		/* Maximum number of bytes to consider from
+    TCL_UNUSED(Tcl_Size),		/* Maximum number of bytes to consider from
 				 * source string in all. */
     Tcl_Size rangeStart,		/* Index of first byte to measure. */
     Tcl_Size rangeLength,		/* Length of range to measure in bytes. */
