@@ -849,7 +849,7 @@ TkpConfigureMenuEntry(
 		     * have been added by the system.  See [7185d26cf4].
 		     */
 
-		    for (TkSizeT i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
+		    for (Tcl_Size i = 0; i < menuRefPtr->menuPtr->numEntries; i++) {
 			TkMenuEntry *submePtr = menuRefPtr->menuPtr->entries[i];
 			NSMenuItem *item = (NSMenuItem *) submePtr->platformEntryData;
 			[item setEnabled:(submePtr->state != ENTRY_DISABLED)];
@@ -1048,7 +1048,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index < 0 || (TkSizeT)index >= menuPtr->numEntries) {
+    if (index < 0 || (Tcl_Size)index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {

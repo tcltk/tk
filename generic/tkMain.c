@@ -160,7 +160,7 @@ static void		StdinProc(ClientData clientData, int mask);
 
 void
 Tk_MainEx(
-    int argc,			/* Number of arguments. */
+    Tcl_Size argc,			/* Number of arguments. */
     TCHAR **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
 				/* Application-specific initialization

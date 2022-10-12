@@ -402,16 +402,16 @@ Tk_CanvasGetTextInfo(
  */
 
 int
-TkCanvasTagsParseProc(
+Tk_CanvasTagsParseProc(
     ClientData dummy,	/* Not used.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option (list of tag names). */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item (ignored). */
+    Tcl_Size offset)			/* Offset into item (ignored). */
 {
     Tk_Item *itemPtr = (Tk_Item *) widgRec;
-    TkSizeT argc, i;
+    Tcl_Size argc, i;
     const char **argv;
     Tk_Uid *newPtr;
     (void)dummy;
@@ -472,11 +472,11 @@ TkCanvasTagsParseProc(
  */
 
 const char *
-TkCanvasTagsPrintProc(
+Tk_CanvasTagsPrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Ignored. */
+    Tcl_Size offset,			/* Ignored. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -523,7 +523,7 @@ TkCanvasDashParseProc(
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     (void)dummy;
     (void)tkwin;
@@ -558,7 +558,7 @@ TkCanvasDashPrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset in record for item. */
+    Tcl_Size offset,			/* Offset in record for item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -747,7 +747,7 @@ TkSmoothParseProc(
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     const Tk_SmoothMethod **smoothPtr =
 	    (const Tk_SmoothMethod **) (widgRec + offset);
@@ -839,7 +839,7 @@ TkSmoothPrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset into item. */
+    Tcl_Size offset,			/* Offset into item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */

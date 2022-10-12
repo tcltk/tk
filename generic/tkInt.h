@@ -75,14 +75,6 @@
 #   endif
 #endif
 
-#ifndef TkSizeT
-#   if TCL_MAJOR_VERSION > 8
-#	define TkSizeT size_t
-#   else
-#	define TkSizeT int
-#   endif
-#endif
-
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
 # define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
@@ -185,7 +177,7 @@ typedef struct TkCursor {
     Tk_Cursor cursor;		/* System specific identifier for cursor. */
     Display *display;		/* Display containing cursor. Needed for
 				 * disposal and retrieval of cursors. */
-    TkSizeT resourceRefCount;	/* Number of active uses of this cursor (each
+    Tcl_Size resourceRefCount;	/* Number of active uses of this cursor (each
 				 * active use corresponds to a call to
 				 * Tk_AllocPreserveFromObj or Tk_Preserve). If
 				 * this count is 0, then this structure is no
@@ -194,7 +186,7 @@ typedef struct TkCursor {
 				 * there are objects referring to it. The
 				 * structure is freed when resourceRefCount
 				 * and objRefCount are both 0. */
-    TkSizeT objRefCount;		/* Number of Tcl objects that reference this
+    Tcl_Size objRefCount;		/* Number of Tcl objects that reference this
 				 * structure.. */
     Tcl_HashTable *otherTable;	/* Second table (other than idTable) used to
 				 * index this entry. */
@@ -346,7 +338,7 @@ typedef struct TkDisplay {
 				/* First in list of error handlers for this
 				 * display. NULL means no handlers exist at
 				 * present. */
-    TkSizeT deleteCount;		/* Counts # of handlers deleted since last
+    Tcl_Size deleteCount;		/* Counts # of handlers deleted since last
 				 * time inactive handlers were garbage-
 				 * collected. When this number gets big,
 				 * handlers get cleaned up. */
@@ -568,7 +560,7 @@ typedef struct TkDisplay {
 #endif /* TK_USE_INPUT_METHODS */
     Tcl_HashTable winTable;	/* Maps from X window ids to TkWindow ptrs. */
 
-    TkSizeT refCount;		/* Reference count of how many Tk applications
+    Tcl_Size refCount;		/* Reference count of how many Tk applications
 				 * are using this display. Used to clean up
 				 * the display when we no longer have any Tk
 				 * applications using it. */
@@ -678,7 +670,7 @@ typedef struct TkEventHandler {
  */
 
 typedef struct TkMainInfo {
-    TkSizeT refCount;		/* Number of windows whose "mainPtr" fields
+    Tcl_Size refCount;		/* Number of windows whose "mainPtr" fields
 				 * point here. When this becomes zero, can
 				 * free up the structure (the reference count
 				 * is zero because windows can get deleted in
@@ -853,13 +845,13 @@ typedef struct TkWindow {
     ClientData *tagPtr;		/* Points to array of tags used for bindings
 				 * on this window. Each tag is a Tk_Uid.
 				 * Malloc'ed. NULL means no tags. */
-    TkSizeT numTags;		/* Number of tags at *tagPtr. */
+    Tcl_Size numTags;		/* Number of tags at *tagPtr. */
 
     /*
      * Information used by tkOption.c to manage options for the window.
      */
 
-    TkSizeT optionLevel;		/* TCL_INDEX_NONE means no option information is currently
+    Tcl_Size optionLevel;		/* TCL_INDEX_NONE means no option information is currently
 				 * cached for this window. Otherwise this
 				 * gives the level in the option stack at
 				 * which info is cached. */
@@ -966,7 +958,7 @@ typedef struct {
 				 * adding), or NULL if that has not been
 				 * computed yet. If non-NULL, this string was
 				 * allocated with ckalloc(). */
-    TkSizeT charValueLen;	/* Length of string in charValuePtr when that
+    Tcl_Size charValueLen;	/* Length of string in charValuePtr when that
 				 * is non-NULL. */
     KeySym keysym;		/* Key symbol computed after input methods
 				 * have been invoked */
@@ -990,7 +982,7 @@ typedef struct {
 #   define TCL_INDEX_NONE (-1)
 #endif
 #ifndef TCL_INDEX_END
-#   define TCL_INDEX_END ((TkSizeT)-2)
+#   define TCL_INDEX_END ((Tcl_Size)-2)
 #endif
 
 /*
@@ -1353,15 +1345,6 @@ MODULE_SCOPE int	TkGetDoublePixels(Tcl_Interp *interp, Tk_Window tkwin,
 MODULE_SCOPE int	TkPostscriptImage(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psInfo, XImage *ximage,
 			    int x, int y, int width, int height);
-#if TCL_MAJOR_VERSION > 8
-MODULE_SCOPE int TkCanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
-    Tk_Window tkwin, const char *value, char *widgRec, size_t offset);
-MODULE_SCOPE const char *TkCanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
-    char *widgRec, size_t offset, Tcl_FreeProc **freeProcPtr);
-#else
-#define TkCanvasTagsParseProc Tk_CanvasTagsParseProc
-#define TkCanvasTagsPrintProc Tk_CanvasTagsPrintProc
-#endif
 MODULE_SCOPE void       TkMapTopFrame(Tk_Window tkwin);
 MODULE_SCOPE XEvent *	TkpGetBindingXEvent(Tcl_Interp *interp);
 MODULE_SCOPE void	TkCreateExitHandler(Tcl_ExitProc *proc,
@@ -1387,16 +1370,16 @@ MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    int rangeLength, int x, int y);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, double x, double y, double angle);
+			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
+			    Tcl_Size rangeLength, double x, double y, double angle);
 MODULE_SCOPE int	TkpMeasureCharsInContext(Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, int maxLength, int flags,
+			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
+			    Tcl_Size rangeLength, int maxLength, int flags,
 			    int *lengthPtr);
 MODULE_SCOPE void	TkUnderlineCharsInContext(Display *display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *string, int numBytes, int x, int y,
-			    int firstByte, int lastByte);
+			    const char *string, Tcl_Size numBytes, int x, int y,
+			    Tcl_Size firstByte, Tcl_Size lastByte);
 MODULE_SCOPE void	TkpGetFontAttrsForChar(Tk_Window tkwin, Tk_Font tkfont,
 			    int c, struct TkFontAttributes *faPtr);
 MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
@@ -1428,13 +1411,13 @@ MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
-MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, TkSizeT, int lastOK, TkSizeT*);
+MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
 
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 #   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 #   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
 #else
-#   define TkNewIndexObj(value) (((TkSizeT)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
+#   define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
 #   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 #endif
 
