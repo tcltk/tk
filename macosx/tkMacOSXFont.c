@@ -451,7 +451,7 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     int numBytes;
-    TkSizeT index;
+    Tcl_Size index;
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -470,7 +470,7 @@ startOfClusterObjCmd(
     }
     if (index != TCL_INDEX_NONE) {
 	if ((size_t)index >= [S length]) {
-	    index = (TkSizeT)[S length];
+	    index = (Tcl_Size)[S length];
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
 	    index = range.location;
@@ -490,7 +490,7 @@ endOfClusterObjCmd(
     TKNSString *S;
     char *stringArg;
     int numBytes;
-    TkSizeT index;
+    Tcl_Size index;
 
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");

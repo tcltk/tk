@@ -1849,7 +1849,7 @@ extern const TkStubs *tkStubsPtr;
 
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
-    EXTERN void Tk_MainExW(int argc, wchar_t **argv,
+    EXTERN void Tk_MainExW(Tcl_Size argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #endif
 

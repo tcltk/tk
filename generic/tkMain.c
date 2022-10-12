@@ -206,7 +206,7 @@ Tk_MainEx(
 		return;
 	    }
 	} else {
-	    int j;
+	    Tcl_Size j;
 
 	    for (j = 1; j < argc; ++j) {
 		if (!strcmp(argv[j], "-display")) {
