@@ -47,7 +47,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 
 static const Tk_ConfigSpec configSpecs[] = {

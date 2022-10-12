@@ -130,7 +130,7 @@ static void TextCleanup(TextElement *text)
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
-    TkSizeT underline = TCL_INDEX_NONE;
+    Tcl_Size underline = TCL_INDEX_NONE;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;

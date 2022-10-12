@@ -62,7 +62,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption dashOption = {
     TkCanvasDashParseProc, TkCanvasDashPrintProc, NULL
@@ -163,14 +163,14 @@ static void		DisplayPolygon(Tk_Canvas canvas,
 			    int x, int y, int width, int height);
 static int		GetPolygonIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, TkSizeT *indexPtr);
+			    Tcl_Obj *obj, Tcl_Size *indexPtr);
 static int		PolygonCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		PolygonDeleteCoords(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
+			    Tk_Item *itemPtr, Tcl_Size first, Tcl_Size last);
 static void		PolygonInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, Tcl_Size beforeThis, Tcl_Obj *obj);
 static int		PolygonToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		PolygonToPoint(Tk_Canvas canvas,
@@ -1016,7 +1016,7 @@ static void
 PolygonInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Line item to be modified. */
-    TkSizeT beforeThis,		/* Index before which new coordinates are to
+    Tcl_Size beforeThis,		/* Index before which new coordinates are to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
@@ -1208,8 +1208,8 @@ static void
 PolygonDeleteCoords(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    TkSizeT first,			/* Index of first character to delete. */
-    TkSizeT last)			/* Index of last character to delete. */
+    Tcl_Size first,			/* Index of first character to delete. */
+    Tcl_Size last)			/* Index of last character to delete. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     int count, i;
@@ -1711,12 +1711,12 @@ GetPolygonIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
 				 * itemPtr's line. */
-    TkSizeT *indexPtr)		/* Where to store converted index. */
+    Tcl_Size *indexPtr)		/* Where to store converted index. */
 {
-    TkSizeT length, idx;
+    Tcl_Size length, idx;
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
     const char *string;
-    TkSizeT count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
+    Tcl_Size count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
     if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
@@ -1724,7 +1724,7 @@ GetPolygonIndex(
 	} else if (idx >= INT_MAX - ((INT_MAX) % count)) {
 	    idx = count;
 	} else {
-	    idx = (idx & (TkSizeT)-2) % count;
+	    idx = (idx & (Tcl_Size)-2) % count;
 	}
 	*indexPtr = idx;
 	return TCL_OK;

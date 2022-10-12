@@ -2049,7 +2049,7 @@ CustomOptionSet(
     TCL_UNUSED(Tk_Window),
     Tcl_Obj **value,
     char *recordPtr,
-    TkSizeT internalOffset,
+    Tcl_Size internalOffset,
     char *saveInternalPtr,
     int flags)
 {
@@ -2108,7 +2108,7 @@ CustomOptionGet(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     char *recordPtr,
-    TkSizeT internalOffset)
+    Tcl_Size internalOffset)
 {
     return (Tcl_NewStringObj(*(char **)(recordPtr + internalOffset), -1));
 }

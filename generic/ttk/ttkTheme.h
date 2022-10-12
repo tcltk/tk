@@ -203,19 +203,11 @@ typedef void (Ttk_ElementSizeProc)(void *clientData, void *elementRecord,
 typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
         Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
-#ifndef TkSizeT
-#   if TCL_MAJOR_VERSION > 8
-#	define TkSizeT size_t
-#   else
-#	define TkSizeT int
-#   endif
-#endif
-
 typedef struct Ttk_ElementOptionSpec
 {
     const char *optionName;		/* Command-line name of the widget option */
     Tk_OptionType type; 	/* Accepted option types */
-    TkSizeT offset;			/* Offset of Tcl_Obj* field in element record */
+    Tcl_Size offset;			/* Offset of Tcl_Obj* field in element record */
     const char *defaultValue;		/* Default value to used if resource missing */
 } Ttk_ElementOptionSpec;
 

@@ -64,7 +64,7 @@ EXTERN void		Tk_AddOption(Tk_Window tkwin, const char *name,
 /* 6 */
 EXTERN void		Tk_BindEvent(Tk_BindingTable bindingTable,
 				XEvent *eventPtr, Tk_Window tkwin,
-				int numObjects, ClientData *objectPtr);
+				Tcl_Size numObjects, ClientData *objectPtr);
 /* 7 */
 EXTERN void		Tk_CanvasDrawableCoords(Tk_Canvas canvas, double x,
 				double y, short *drawableXPtr,
@@ -90,7 +90,7 @@ EXTERN int		Tk_CanvasPsFont(Tcl_Interp *interp, Tk_Canvas canvas,
 				Tk_Font font);
 /* 14 */
 EXTERN void		Tk_CanvasPsPath(Tcl_Interp *interp, Tk_Canvas canvas,
-				double *coordPtr, int numPoints);
+				double *coordPtr, Tcl_Size numPoints);
 /* 15 */
 EXTERN int		Tk_CanvasPsStipple(Tcl_Interp *interp,
 				Tk_Canvas canvas, Pixmap bitmap);
@@ -101,11 +101,12 @@ EXTERN void		Tk_CanvasSetStippleOrigin(Tk_Canvas canvas, GC gc);
 /* 18 */
 EXTERN int		Tk_CanvasTagsParseProc(ClientData clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
-				const char *value, char *widgRec, int offset);
+				const char *value, char *widgRec,
+				Tcl_Size offset);
 /* 19 */
 EXTERN const char *	Tk_CanvasTagsPrintProc(ClientData clientData,
-				Tk_Window tkwin, char *widgRec, int offset,
-				Tcl_FreeProc **freeProcPtr);
+				Tk_Window tkwin, char *widgRec,
+				Tcl_Size offset, Tcl_FreeProc **freeProcPtr);
 /* 20 */
 EXTERN Tk_Window	Tk_CanvasTkwin(Tk_Canvas canvas);
 /* 21 */
@@ -149,7 +150,7 @@ EXTERN void		Tk_ConfigureWindow(Tk_Window tkwin,
 				XWindowChanges *valuePtr);
 /* 31 */
 EXTERN Tk_TextLayout	Tk_ComputeTextLayout(Tk_Font font, const char *str,
-				int numChars, int wrapLength,
+				Tcl_Size numChars, int wrapLength,
 				Tk_Justify justify, int flags, int *widthPtr,
 				int *heightPtr);
 /* 32 */
@@ -230,7 +231,7 @@ EXTERN int		Tk_DistanceToTextLayout(Tk_TextLayout layout, int x,
 /* 57 */
 EXTERN void		Tk_Draw3DPolygon(Tk_Window tkwin, Drawable drawable,
 				Tk_3DBorder border, XPoint *pointPtr,
-				int numPoints, int borderWidth,
+				Tcl_Size numPoints, int borderWidth,
 				int leftRelief);
 /* 58 */
 EXTERN void		Tk_Draw3DRectangle(Tk_Window tkwin,
@@ -240,7 +241,7 @@ EXTERN void		Tk_Draw3DRectangle(Tk_Window tkwin,
 /* 59 */
 EXTERN void		Tk_DrawChars(Display *display, Drawable drawable,
 				GC gc, Tk_Font tkfont, const char *source,
-				int numBytes, int x, int y);
+				Tcl_Size numBytes, int x, int y);
 /* 60 */
 EXTERN void		Tk_DrawFocusHighlight(Tk_Window tkwin, GC gc,
 				int width, Drawable drawable);
@@ -252,7 +253,7 @@ EXTERN void		Tk_DrawTextLayout(Display *display,
 /* 62 */
 EXTERN void		Tk_Fill3DPolygon(Tk_Window tkwin, Drawable drawable,
 				Tk_3DBorder border, XPoint *pointPtr,
-				int numPoints, int borderWidth,
+				Tcl_Size numPoints, int borderWidth,
 				int leftRelief);
 /* 63 */
 EXTERN void		Tk_Fill3DRectangle(Tk_Window tkwin,
@@ -437,7 +438,7 @@ EXTERN void		Tk_ManageGeometry(Tk_Window tkwin,
 EXTERN void		Tk_MapWindow(Tk_Window tkwin);
 /* 126 */
 EXTERN int		Tk_MeasureChars(Tk_Font tkfont, const char *source,
-				int numBytes, int maxPixels, int flags,
+				Tcl_Size numBytes, int maxPixels, int flags,
 				int *lengthPtr);
 /* 127 */
 EXTERN void		Tk_MoveResizeWindow(Tk_Window tkwin, int x, int y,
@@ -578,14 +579,14 @@ EXTERN void		Tk_TextLayoutToPostscript(Tcl_Interp *interp,
 				Tk_TextLayout layout);
 /* 176 */
 EXTERN int		Tk_TextWidth(Tk_Font font, const char *str,
-				int numBytes);
+				Tcl_Size numBytes);
 /* 177 */
 EXTERN void		Tk_UndefineCursor(Tk_Window window);
 /* 178 */
 EXTERN void		Tk_UnderlineChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
 				const char *source, int x, int y,
-				int firstByte, int lastByte);
+				Tcl_Size firstByte, Tcl_Size lastByte);
 /* 179 */
 EXTERN void		Tk_UnderlineTextLayout(Display *display,
 				Drawable drawable, GC gc,
@@ -682,14 +683,14 @@ EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp, int objc,
 EXTERN int		Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionToken, Tk_Window tkwin);
 /* 212 */
-EXTERN void		Tk_MainEx(int argc, char **argv,
+EXTERN void		Tk_MainEx(Tcl_Size argc, char **argv,
 				Tcl_AppInitProc *appInitProc,
 				Tcl_Interp *interp);
 /* 213 */
 EXTERN void		Tk_RestoreSavedOptions(Tk_SavedOptions *savePtr);
 /* 214 */
 EXTERN int		Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
-				Tk_OptionTable optionTable, int objc,
+				Tk_OptionTable optionTable, Tcl_Size objc,
 				Tcl_Obj *const objv[], Tk_Window tkwin,
 				Tk_SavedOptions *savePtr, int *maskPtr);
 /* 215 */
@@ -753,7 +754,7 @@ EXTERN int		Tk_PostscriptImage(Tk_Image image,
 /* 235 */
 EXTERN void		Tk_PostscriptPath(Tcl_Interp *interp,
 				Tk_PostscriptInfo psInfo, double *coordPtr,
-				int numPoints);
+				Tcl_Size numPoints);
 /* 236 */
 EXTERN int		Tk_PostscriptStipple(Tcl_Interp *interp,
 				Tk_Window tkwin, Tk_PostscriptInfo psInfo,
@@ -944,7 +945,7 @@ typedef struct TkStubs {
     void (*tk_3DHorizontalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftIn, int rightIn, int topBevel, int relief); /* 3 */
     void (*tk_3DVerticalBevel) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int leftBevel, int relief); /* 4 */
     void (*tk_AddOption) (Tk_Window tkwin, const char *name, const char *value, int priority); /* 5 */
-    void (*tk_BindEvent) (Tk_BindingTable bindingTable, XEvent *eventPtr, Tk_Window tkwin, int numObjects, ClientData *objectPtr); /* 6 */
+    void (*tk_BindEvent) (Tk_BindingTable bindingTable, XEvent *eventPtr, Tk_Window tkwin, Tcl_Size numObjects, ClientData *objectPtr); /* 6 */
     void (*tk_CanvasDrawableCoords) (Tk_Canvas canvas, double x, double y, short *drawableXPtr, short *drawableYPtr); /* 7 */
     void (*tk_CanvasEventuallyRedraw) (Tk_Canvas canvas, int x1, int y1, int x2, int y2); /* 8 */
     int (*tk_CanvasGetCoord) (Tcl_Interp *interp, Tk_Canvas canvas, const char *str, double *doublePtr); /* 9 */
@@ -952,12 +953,12 @@ typedef struct TkStubs {
     int (*tk_CanvasPsBitmap) (Tcl_Interp *interp, Tk_Canvas canvas, Pixmap bitmap, int x, int y, int width, int height); /* 11 */
     int (*tk_CanvasPsColor) (Tcl_Interp *interp, Tk_Canvas canvas, XColor *colorPtr); /* 12 */
     int (*tk_CanvasPsFont) (Tcl_Interp *interp, Tk_Canvas canvas, Tk_Font font); /* 13 */
-    void (*tk_CanvasPsPath) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr, int numPoints); /* 14 */
+    void (*tk_CanvasPsPath) (Tcl_Interp *interp, Tk_Canvas canvas, double *coordPtr, Tcl_Size numPoints); /* 14 */
     int (*tk_CanvasPsStipple) (Tcl_Interp *interp, Tk_Canvas canvas, Pixmap bitmap); /* 15 */
     double (*tk_CanvasPsY) (Tk_Canvas canvas, double y); /* 16 */
     void (*tk_CanvasSetStippleOrigin) (Tk_Canvas canvas, GC gc); /* 17 */
-    int (*tk_CanvasTagsParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, int offset); /* 18 */
-    const char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, int offset, Tcl_FreeProc **freeProcPtr); /* 19 */
+    int (*tk_CanvasTagsParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 18 */
+    const char * (*tk_CanvasTagsPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 19 */
     Tk_Window (*tk_CanvasTkwin) (Tk_Canvas canvas); /* 20 */
     void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short *screenXPtr, short *screenYPtr); /* 21 */
     void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes *attsPtr); /* 22 */
@@ -969,7 +970,7 @@ typedef struct TkStubs {
     int (*tk_ConfigureValue) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 28 */
     int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, int argc, const char **argv, char *widgRec, int flags); /* 29 */
     void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges *valuePtr); /* 30 */
-    Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, int numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
+    Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, Tcl_Size numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
     Tk_Window (*tk_CoordsToWindow) (int rootX, int rootY, Tk_Window tkwin); /* 32 */
     unsigned long (*tk_CreateBinding) (Tcl_Interp *interp, Tk_BindingTable bindingTable, ClientData object, const char *eventStr, const char *script, int append); /* 33 */
     Tk_BindingTable (*tk_CreateBindingTable) (Tcl_Interp *interp); /* 34 */
@@ -995,12 +996,12 @@ typedef struct TkStubs {
     void (*tk_DestroyWindow) (Tk_Window tkwin); /* 54 */
     const char * (*tk_DisplayName) (Tk_Window tkwin); /* 55 */
     int (*tk_DistanceToTextLayout) (Tk_TextLayout layout, int x, int y); /* 56 */
-    void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 57 */
+    void (*tk_Draw3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, Tcl_Size numPoints, int borderWidth, int leftRelief); /* 57 */
     void (*tk_Draw3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 58 */
-    void (*tk_DrawChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, int x, int y); /* 59 */
+    void (*tk_DrawChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, int x, int y); /* 59 */
     void (*tk_DrawFocusHighlight) (Tk_Window tkwin, GC gc, int width, Drawable drawable); /* 60 */
     void (*tk_DrawTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int firstChar, int lastChar); /* 61 */
-    void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, int numPoints, int borderWidth, int leftRelief); /* 62 */
+    void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, Tcl_Size numPoints, int borderWidth, int leftRelief); /* 62 */
     void (*tk_Fill3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 63 */
     Tk_PhotoHandle (*tk_FindPhoto) (Tcl_Interp *interp, const char *imageName); /* 64 */
     Font (*tk_FontId) (Tk_Font font); /* 65 */
@@ -1064,7 +1065,7 @@ typedef struct TkStubs {
     void (*tk_MakeWindowExist) (Tk_Window tkwin); /* 123 */
     void (*tk_ManageGeometry) (Tk_Window tkwin, const Tk_GeomMgr *mgrPtr, ClientData clientData); /* 124 */
     void (*tk_MapWindow) (Tk_Window tkwin); /* 125 */
-    int (*tk_MeasureChars) (Tk_Font tkfont, const char *source, int numBytes, int maxPixels, int flags, int *lengthPtr); /* 126 */
+    int (*tk_MeasureChars) (Tk_Font tkfont, const char *source, Tcl_Size numBytes, int maxPixels, int flags, int *lengthPtr); /* 126 */
     void (*tk_MoveResizeWindow) (Tk_Window tkwin, int x, int y, int width, int height); /* 127 */
     void (*tk_MoveWindow) (Tk_Window tkwin, int x, int y); /* 128 */
     void (*tk_MoveToplevelWindow) (Tk_Window tkwin, int x, int y); /* 129 */
@@ -1114,9 +1115,9 @@ typedef struct TkStubs {
     void (*tk_SizeOfImage) (Tk_Image image, int *widthPtr, int *heightPtr); /* 173 */
     int (*tk_StrictMotif) (Tk_Window tkwin); /* 174 */
     void (*tk_TextLayoutToPostscript) (Tcl_Interp *interp, Tk_TextLayout layout); /* 175 */
-    int (*tk_TextWidth) (Tk_Font font, const char *str, int numBytes); /* 176 */
+    int (*tk_TextWidth) (Tk_Font font, const char *str, Tcl_Size numBytes); /* 176 */
     void (*tk_UndefineCursor) (Tk_Window window); /* 177 */
-    void (*tk_UnderlineChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int x, int y, int firstByte, int lastByte); /* 178 */
+    void (*tk_UnderlineChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int x, int y, Tcl_Size firstByte, Tcl_Size lastByte); /* 178 */
     void (*tk_UnderlineTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int underline); /* 179 */
     void (*tk_Ungrab) (Tk_Window tkwin); /* 180 */
     void (*tk_UnmaintainGeometry) (Tk_Window window, Tk_Window container); /* 181 */
@@ -1150,9 +1151,9 @@ typedef struct TkStubs {
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
     int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
-    TCL_DEPRECATED_API("Don't use this function in a stub-enabled extension") void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
+    TCL_DEPRECATED_API("Don't use this function in a stub-enabled extension") void (*tk_MainEx) (Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
-    int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
+    int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Size objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
     int (*tk_CreateConsoleWindow) (Tcl_Interp *interp); /* 216 */
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
@@ -1173,7 +1174,7 @@ typedef struct TkStubs {
     int (*tk_PostscriptColor) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, XColor *colorPtr); /* 232 */
     int (*tk_PostscriptFont) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, Tk_Font font); /* 233 */
     int (*tk_PostscriptImage) (Tk_Image image, Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo, int x, int y, int width, int height, int prepass); /* 234 */
-    void (*tk_PostscriptPath) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, double *coordPtr, int numPoints); /* 235 */
+    void (*tk_PostscriptPath) (Tcl_Interp *interp, Tk_PostscriptInfo psInfo, double *coordPtr, Tcl_Size numPoints); /* 235 */
     int (*tk_PostscriptStipple) (Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psInfo, Pixmap bitmap); /* 236 */
     double (*tk_PostscriptY) (double y, Tk_PostscriptInfo psInfo); /* 237 */
     int (*tk_PostscriptPhoto) (Tcl_Interp *interp, Tk_PhotoImageBlock *blockPtr, Tk_PostscriptInfo psInfo, int width, int height); /* 238 */

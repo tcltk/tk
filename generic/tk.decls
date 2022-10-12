@@ -54,7 +54,7 @@ declare 5 {
 }
 declare 6 {
     void Tk_BindEvent(Tk_BindingTable bindingTable,
-	    XEvent *eventPtr, Tk_Window tkwin, int numObjects,
+	    XEvent *eventPtr, Tk_Window tkwin, Tcl_Size numObjects,
 	    ClientData *objectPtr)
 }
 declare 7 {
@@ -88,7 +88,7 @@ declare 13 {
 }
 declare 14 {
     void Tk_CanvasPsPath(Tcl_Interp *interp,
-	    Tk_Canvas canvas, double *coordPtr, int numPoints)
+	    Tk_Canvas canvas, double *coordPtr, Tcl_Size numPoints)
 }
 declare 15 {
     int Tk_CanvasPsStipple(Tcl_Interp *interp,
@@ -102,11 +102,11 @@ declare 17 {
 }
 declare 18 {
     int Tk_CanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, int offset)
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 19 {
     const char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, int offset, Tcl_FreeProc **freeProcPtr)
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 20 {
     Tk_Window	Tk_CanvasTkwin(Tk_Canvas canvas)
@@ -155,7 +155,7 @@ declare 30 {
 }
 declare 31 {
     Tk_TextLayout Tk_ComputeTextLayout(Tk_Font font,
-	    const char *str, int numChars, int wrapLength,
+	    const char *str, Tcl_Size numChars, int wrapLength,
 	    Tk_Justify justify, int flags, int *widthPtr,
 	    int *heightPtr)
 }
@@ -253,7 +253,7 @@ declare 56 {
 declare 57 {
     void Tk_Draw3DPolygon(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border,
-	    XPoint *pointPtr, int numPoints, int borderWidth,
+	    XPoint *pointPtr, Tcl_Size numPoints, int borderWidth,
 	    int leftRelief)
 }
 declare 58 {
@@ -263,7 +263,7 @@ declare 58 {
 }
 declare 59 {
     void Tk_DrawChars(Display *display, Drawable drawable, GC gc,
-	    Tk_Font tkfont, const char *source, int numBytes, int x, int y)
+	    Tk_Font tkfont, const char *source, Tcl_Size numBytes, int x, int y)
 }
 declare 60 {
     void Tk_DrawFocusHighlight(Tk_Window tkwin, GC gc, int width,
@@ -277,7 +277,7 @@ declare 61 {
 declare 62 {
     void Tk_Fill3DPolygon(Tk_Window tkwin,
 	    Drawable drawable, Tk_3DBorder border,
-	    XPoint *pointPtr, int numPoints, int borderWidth,
+	    XPoint *pointPtr, Tcl_Size numPoints, int borderWidth,
 	    int leftRelief)
 }
 declare 63 {
@@ -504,7 +504,7 @@ declare 125 {
 }
 declare 126 {
     int Tk_MeasureChars(Tk_Font tkfont,
-	    const char *source, int numBytes, int maxPixels,
+	    const char *source, Tcl_Size numBytes, int maxPixels,
 	    int flags, int *lengthPtr)
 }
 declare 127 {
@@ -672,7 +672,7 @@ declare 175 {
     void Tk_TextLayoutToPostscript(Tcl_Interp *interp, Tk_TextLayout layout)
 }
 declare 176 {
-    int Tk_TextWidth(Tk_Font font, const char *str, int numBytes)
+    int Tk_TextWidth(Tk_Font font, const char *str, Tcl_Size numBytes)
 }
 declare 177 {
     void Tk_UndefineCursor(Tk_Window window)
@@ -680,8 +680,8 @@ declare 177 {
 declare 178 {
     void Tk_UnderlineChars(Display *display,
 	    Drawable drawable, GC gc, Tk_Font tkfont,
-	    const char *source, int x, int y, int firstByte,
-	    int lastByte)
+	    const char *source, int x, int y, Tcl_Size firstByte,
+	    Tcl_Size lastByte)
 }
 declare 179 {
     void Tk_UnderlineTextLayout(Display *display, Drawable drawable, GC gc,
@@ -806,7 +806,7 @@ declare 211 {
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
 }
 declare 212 {nostub {Don't use this function in a stub-enabled extension}} {
-    void  Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
+    void  Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 declare 213 {
@@ -814,7 +814,7 @@ declare 213 {
 }
 declare 214 {
     int	 Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
-	    Tk_OptionTable optionTable, int objc,
+	    Tk_OptionTable optionTable, Tcl_Size objc,
 	    Tcl_Obj *const objv[], Tk_Window tkwin,
 	    Tk_SavedOptions *savePtr, int *maskPtr)
 }
@@ -892,7 +892,7 @@ declare 234 {
 }
 declare 235 {
     void Tk_PostscriptPath(Tcl_Interp *interp, Tk_PostscriptInfo psInfo,
-	    double *coordPtr, int numPoints)
+	    double *coordPtr, Tcl_Size numPoints)
 }
 declare 236 {
     int Tk_PostscriptStipple(Tcl_Interp *interp, Tk_Window tkwin,
@@ -1216,11 +1216,11 @@ export {
 	    int exact)
 }
 export {
-    void Tk_MainEx(int argc, char **argv, Tcl_AppInitProc *appInitProc,
+    void Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 export {
-    void Tk_MainExW(int argc, wchar_t **argv,
+    void Tk_MainExW(Tcl_Size argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 }
 
