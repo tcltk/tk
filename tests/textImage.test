@@ -392,8 +392,8 @@ test textImage-4.2 {alignment checking - baseline} -setup {
     foreach size {10 15 20 25} {
         font configure test_font2 -size $size
         array set Metrics [font metrics test_font2]
-        update idletasks  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
-        update            ; # services the queued "TkWorldChanged" events
+        update  ; # services the idle "TheWorldHasChanged" event, queues "TkWorldChanged" events
+        update  ; # services the queued "TkWorldChanged" events
         foreach {x y w h} [.t bbox small] {}
         set norm [expr {
                 (([image height large] - $Metrics(-linespace))/2
