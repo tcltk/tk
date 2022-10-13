@@ -1360,7 +1360,7 @@ TkMacOSXNSImageConfigureModel(
 	modelPtr->image.size = newsize;
 	modelPtr->darkModeImage.size = newsize;
     }
-    
+
     /*
      * Inform the generic image code that the image has (potentially) changed.
      */
