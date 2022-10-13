@@ -746,11 +746,11 @@ FileReadGIF(
 	}
 	ckfree(block.pixelPtr);
     }
-    
+
     /*
      * Update the metadata dictionary with current image data
      */
-    
+
     if (NULL != metadataOutObj) {
 
 	/*
