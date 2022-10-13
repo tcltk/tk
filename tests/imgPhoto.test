@@ -2513,6 +2513,147 @@ test imgPhoto-23.20 {data: empty metadata parameter overwrites image metadata} -
     file delete $path
 } -result {0}
 
+test imgPhoto-23.21 {GIF delay time metadata} -setup {
+    set data $::gifstart
+    # Graphic control extension: 10 1/100s delay time
+    append data "\x21\xf9\x04\x00\x0a\x00\x00\x00"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{delay time} 10}
+
+test imgPhoto-23.22 {GIF disposal method "do not dispose" metadata} -setup {
+    set data $::gifstart
+    # Graphic control extension: disposdal method:
+    append data "\x21\xf9\x04\x04\x00\x00\x00\x00"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{disposal method} {do not dispose}}
+
+test imgPhoto-33.23 {GIF disposal method "restore to background color" metadata} -setup {
+    set data $::gifstart
+    # Graphic control extension: disposdal method:
+    append data "\x21\xf9\x04\x08\x00\x00\x00\x00"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{disposal method} {restore to background color}}
+
+test imgPhoto-43.24 {GIF disposal method "restore to previous" metadata} -setup {
+    set data $::gifstart
+    # Graphic control extension: disposdal method:
+    append data "\x21\xf9\x04\x0C\x00\x00\x00\x00"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{disposal method} {restore to previous}}
+
+test imgPhoto-53.25 {GIF user input flag metadata} -setup {
+    set data $::gifstart
+    # Graphic control extension: disposdal method:
+    append data "\x21\xf9\x04\x02\x00\x00\x00\x00"
+    # Trailer
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{user interaction} 1}
+
+test imgPhoto-63.26 {GIF update region metadata} -setup {
+    # size 32x32, global color table size: 8
+    set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
+    # color table
+    append data "\x00\x00\x00\x33\x33\xff\xff\x33\x33\xff\x33\xff\x33\xff\x33\x33\xff\xff\xff\xff\x33\xff\xff\xff"
+    # Trailer
+    # As this is 16x16, we will get an update region setting
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{update region} {0 0 16 16}}
+
+test imgPhoto-63.27 {GIF multiple options metadata} -setup {
+    # size 32x32, global color table size: 8
+    set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
+    # color table
+    append data "\x00\x00\x00\x33\x33\xff\xff\x33\x33\xff\x33\xff\x33\xff\x33\x33\xff\xff\xff\xff\x33\xff\xff\xff"
+    # Graphic control extension: do not dispose, user interaction, transparent color, delay time 10
+    append data "\x21\xf9\x04\x07\x0a\x00\x01\x00"
+    # Image data and trailer
+    # As this is 16x16, we will get an update region setting
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{update region} {0 0 16 16} {delay time} 10 {disposal method} {do not dispose} {user interaction} 1}
+
+test imgPhoto-63.27 {GIF multiple options metadata in -index 0} -setup {
+    # size 32x32, global color table size: 8
+    set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
+    # color table
+    append data "\x00\x00\x00\x33\x33\xff\xff\x33\x33\xff\x33\xff\x33\xff\x33\x33\xff\xff\xff\xff\x33\xff\xff\xff"
+    # Graphic control extension: do not dispose, user interaction, transparent color, delay time 4096
+    append data "\x21\xf9\x04\x07\x00\x10\x01\x00"
+    # Image data
+    # As this is 16x16, we will get an update region setting
+    append data $::gifdata
+    # Graphic control extension: restore to background, delay time 1
+    append data "\x21\xf9\x04\x08\x01\x00\x02\x00"
+    # Image data and trailer
+    # As this is 16x16, we will get an update region setting
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data -format "gif -index 0"
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{update region} {0 0 16 16} {delay time} 4096 {disposal method} {do not dispose} {user interaction} 1}
+
+test imgPhoto-63.28 {GIF multiple options metadata in -index 1} -setup {
+    # size 32x32, global color table size: 8
+    set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
+    # color table
+    append data "\x00\x00\x00\x33\x33\xff\xff\x33\x33\xff\x33\xff\x33\xff\x33\x33\xff\xff\xff\xff\x33\xff\xff\xff"
+    # Graphic control extension: restore to background, delay time 1
+    append data "\x21\xf9\x04\x08\x01\x00\x02\x00"
+    # Image data
+    # As this is 16x16, we will get an update region setting
+    append data $::gifdata
+    # Graphic control extension: do not dispose, user interaction, transparent color, delay time 4096
+    append data "\x21\xf9\x04\x07\x00\x10\x01\x00"
+    # Image data and trailer
+    # As this is 16x16, we will get an update region setting
+    append data $::gifdata $::gifend
+} -body {
+    image create photo gif1 -data $data -format "gif -index 1"
+    gif1 cget -metadata
+} -cleanup {
+    catch {image delete gif1}
+} -result {{update region} {0 0 16 16} {delay time} 4096 {disposal method} {do not dispose} {user interaction} 1}
+
 unset -nocomplain gifstart gifdata gifend
 
 

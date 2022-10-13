@@ -47,6 +47,18 @@
 #define GIF_DONE	(GIF_SPECIAL+4)
 
 /*
+ * structure to hold the data of a Graphic Control Extension block.
+ */
+
+typedef struct {
+    int blockPresent;		/* if 1, the block was read and is in scope */
+    int transparent;		/* Transparency index */
+    int delayTime;		/* update delay time in 10ms */
+    int disposalMethod;		/* disposal method 0-3 */
+    int userInteraction;	/* user interaction 0/1 */
+} GIFGraphicControlExtensionBlock;
+
+/*
  * structure to "mimic" FILE for Mread, so we can look like fread. The decoder
  * state keeps track of which byte we are about to read, or EOF.
  */
@@ -178,7 +190,9 @@ static int		ReadOneByte(Tcl_Interp *interp,
 			    GIFImageConfig *gifConfPtr, Tcl_Channel chan);
 static int		DoExtension(GIFImageConfig *gifConfPtr,
 			    Tcl_Channel chan, int label, unsigned char *buffer,
-			    int *transparent, Tcl_Obj *metadataOutObj);
+			    GIFGraphicControlExtensionBlock
+			    *gifGraphicControlExtensionBlock,
+			    Tcl_Obj *metadataOutObj);
 static int		GetCode(Tcl_Channel chan, int code_size, int flag,
 			    GIFImageConfig *gifConfPtr);
 static int		GetDataBlock(GIFImageConfig *gifConfPtr,
@@ -416,12 +430,13 @@ FileReadGIF(
     int bitPixel;
     int gifLabel;
     unsigned char colorMap[MAXCOLORMAPSIZE][4];
-    int transparent = -1;
+    GIFGraphicControlExtensionBlock gifGraphicControlExtensionBlock;
     static const char *const optionStrings[] = {
 	"-index", NULL
     };
     GIFImageConfig gifConf, *gifConfPtr = &gifConf;
 
+    gifGraphicControlExtensionBlock.blockPresent = 0;
     /*
      * Decode the magic used to convey when we're sourcing data from a string
      * source and not a file.
@@ -547,7 +562,8 @@ FileReadGIF(
 		goto error;
 	    }
 	    if (DoExtension(gifConfPtr, chan, gifLabel,
-		    gifConfPtr->workingBuffer, &transparent, metadataOutObj)
+		    gifConfPtr->workingBuffer, &gifGraphicControlExtensionBlock,
+		    metadataOutObj)
 		    < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", -1));
@@ -639,7 +655,7 @@ FileReadGIF(
 	     * This extension starts a new scope, so Graphic control Extension
 	     * data should be cleared
 	     */
-	    transparent = -1;
+	    gifGraphicControlExtensionBlock.blockPresent = 0;
 
 	    continue;
 	}
@@ -688,7 +704,10 @@ FileReadGIF(
 
     if ((width > 0) && (height > 0)) {
 	Tk_PhotoImageBlock block;
-
+	int transparent = -1;
+	if (gifGraphicControlExtensionBlock.blockPresent) {
+	    transparent = gifGraphicControlExtensionBlock.transparent;
+	}
 	/*
 	 * Read the data and put it into the photo buffer for display by the
 	 * general image machinery.
@@ -729,6 +748,82 @@ FileReadGIF(
     }
 
     /*
+     * Update the metadata dictionary with current image data
+     */
+
+    if (NULL != metadataOutObj) {
+
+	/*
+	 * Save the update box, if not the whole image
+	 */
+
+	if ( width != fileWidth || height != fileHeight) {
+	    Tcl_Obj *itemList[4];
+	    itemList[0] = Tcl_NewIntObj(destX);
+	    itemList[1] = Tcl_NewIntObj(destY);
+	    itemList[2] = Tcl_NewIntObj(width);
+	    itemList[3] = Tcl_NewIntObj(height);
+	    if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+		    Tcl_NewStringObj("update region",-1),
+		    Tcl_NewListObj(4, itemList) )) {
+		result = TCL_ERROR;
+		goto error;
+	    }
+	}
+
+	/*
+	 * Copy the Graphic Control Extension Block data to the metadata
+	 * dictionary
+	 */
+
+	if (gifGraphicControlExtensionBlock.blockPresent) {
+	    if ( gifGraphicControlExtensionBlock.delayTime != 0) {
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("delay time",-1),
+			Tcl_NewIntObj(gifGraphicControlExtensionBlock.delayTime)
+			)) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+	    }
+	    switch ( gifGraphicControlExtensionBlock.disposalMethod ) {
+	    case 1: /* Do not dispose */
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("disposal method",-1),
+			Tcl_NewStringObj("do not dispose",-1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+		break;
+	    case 2: /* Restore to background color */
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("disposal method",-1),
+			Tcl_NewStringObj("restore to background color",-1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+		break;
+	    case 3: /* Restore to previous */
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("disposal method",-1),
+			Tcl_NewStringObj("restore to previous",-1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+		break;
+	    }
+	    if ( gifGraphicControlExtensionBlock.userInteraction != 0) {
+		if ( TCL_OK != Tcl_DictObjPut(interp, metadataOutObj,
+			Tcl_NewStringObj("user interaction",-1),
+			Tcl_NewBooleanObj(1))) {
+		    result = TCL_ERROR;
+		    goto error;
+		}
+	    }
+	}
+    }
+
+    /*
      * We've successfully read the GIF frame (or there was nothing to read,
      * which suits as well). We're done.
      */
@@ -750,7 +845,8 @@ FileReadGIF(
 		goto error;
 	    }
 	    if (DoExtension(gifConfPtr, chan, gifLabel,
-		    gifConfPtr->workingBuffer, &transparent, metadataOutObj)
+		    gifConfPtr->workingBuffer, &gifGraphicControlExtensionBlock,
+		    metadataOutObj)
 		    < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", -1));
@@ -1047,7 +1143,8 @@ ReadColorMap(
 *       >= 0 ok
 *
 * Side effects:
-*	The transparent color is set if present in current extensions
+*       The gifGraphicControlExtensionBlock is set if present in current
+*       extensions
 *       The data of the following extensions are saved to the metadata dict:
 *       - Application extension
 *         - Comment extension in key "comment"
@@ -1062,7 +1159,7 @@ DoExtension(
     Tcl_Channel chan,
     int label,
     unsigned char *buf, /* defined as 280 byte working buffer */
-    int *transparent,
+    GIFGraphicControlExtensionBlock *gifGraphicControlExtensionBlock,
     Tcl_Obj *metadataOutObj)
 {
     int count;
@@ -1078,7 +1175,7 @@ DoExtension(
 	 * This extension starts a new scope, so Graphic control Extension
 	 * data should be cleared
 	 */
-	*transparent = -1;
+	gifGraphicControlExtensionBlock->blockPresent = 0;
 	/* this extension is ignored, skip below */
 	break;
     case 0xf9:			/* Graphic Control Extension */
@@ -1086,8 +1183,20 @@ DoExtension(
 	if (count < 0) {
 	    return -1;
 	}
-	if ((buf[0] & 0x1) != 0) {
-	    *transparent = buf[3];
+	gifGraphicControlExtensionBlock->blockPresent=1;
+	/* save disposal method */
+	gifGraphicControlExtensionBlock->disposalMethod
+		= ((buf[0] & 0x1C) >> 2);
+	/* save disposal method */
+	gifGraphicControlExtensionBlock->userInteraction = ((buf[0] & 2) >> 1);
+	/* save delay time */
+	gifGraphicControlExtensionBlock->delayTime
+		= LM_to_uint(buf[1], buf[2]);
+	/* save transparent index if given */
+	if ((buf[0] & 0x1) == 0) {
+	    gifGraphicControlExtensionBlock->transparent = -1;
+	} else {
+	    gifGraphicControlExtensionBlock->transparent = buf[3];
 	}
 	break;
     case 0xfe:			/* Comment Extension */
