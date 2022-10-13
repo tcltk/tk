@@ -41,7 +41,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test TESTFLAGS="-verbose bepst" | tee out.txt
+          make test | tee out.txt
           nmatches=$( grep -c "Failed	0" out.txt )
           if [ $nmatches -lt 4 ]
           then
@@ -138,7 +138,7 @@ jobs:
               echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic TESTFLAGS="-verbose bepst"; exit $? ) | tee out-classic.txt || {
+          ( runXvfb :0; make test-classic; exit $? ) | tee out-classic.txt || {
             echo "::error::Failure during Test (classic)"
             exit 1
           }
