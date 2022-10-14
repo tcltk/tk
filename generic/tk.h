@@ -1061,7 +1061,7 @@ typedef void	(Tk_ItemTranslateProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    double deltaX, double deltaY);
 typedef void	(Tk_ItemCursorProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Tcl_Size index);
-typedef size_t	(Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
+typedef Tcl_Size (Tk_ItemSelectionProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
 typedef void	(Tk_ItemDCharsProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Tcl_Size first, Tcl_Size last);
