@@ -741,8 +741,8 @@ void			TkpDumpPSList(const PSList *psList);
 /*
  * Some useful helper functions.
  */
-#ifdef SUPPORT_DEBUGGING
-static int BindCount = 0;
+#if SUPPORT_DEBUGGING
+static int BindCount = 0;  /* Can be set or queried from Tcl through 'event debug' subcommand. Otherwise not used. */
 #endif
 
 static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
@@ -3331,8 +3331,18 @@ Tk_EventObjCmd(
     TkBindInfo bindInfo;
     VirtualEventTable *vetPtr;
 
-    static const char *const optionStrings[] = { "add", "delete", "generate", "info", NULL };
-    enum options { EVENT_ADD, EVENT_DELETE, EVENT_GENERATE, EVENT_INFO };
+    static const char *const optionStrings[] = { "add",
+#if SUPPORT_DEBUGGING
+	"debug",
+#endif
+	"delete", "generate", "info", NULL
+    };
+    enum options { EVENT_ADD,
+#if SUPPORT_DEBUGGING
+	EVENT_DEBUG,
+#endif
+	EVENT_DELETE, EVENT_GENERATE, EVENT_INFO
+    };
 
     assert(clientData);
 
@@ -3342,16 +3352,6 @@ Tk_EventObjCmd(
     }
     if (Tcl_GetIndexFromObjStruct(
 	    interp, objv[1], optionStrings, sizeof(char *), "option", 0, &index) != TCL_OK) {
-#ifdef SUPPORT_DEBUGGING
-    	if (strcmp(Tcl_GetString(objv[1]), "debug") == 0) {
-	    if (objc < 3) {
-		Tcl_WrongNumArgs(interp, 1, objv, "debug number");
-		return TCL_ERROR;
-	    }
-	    Tcl_GetIntFromObj(interp, objv[2], &BindCount);
-	    return TCL_OK;
-	}
-#endif
 	return TCL_ERROR;
     }
 
@@ -3373,6 +3373,22 @@ Tk_EventObjCmd(
 	    }
 	}
 	break;
+#if SUPPORT_DEBUGGING
+    case EVENT_DEBUG:
+	if (objc > 3) {
+	    Tcl_WrongNumArgs(interp, 1, objv, "debug number");
+	    return TCL_ERROR;
+	}
+	if (objc < 3) {
+	    Tcl_SetObjResult(interp,
+		Tcl_NewIntObj(BindCount));
+	    return TCL_OK;
+	}
+	if (Tcl_GetIntFromObj(interp, objv[2], &BindCount) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	return TCL_OK;
+#endif
     case EVENT_DELETE:
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "virtual ?sequence ...?");
