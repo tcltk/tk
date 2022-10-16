@@ -126,7 +126,7 @@ namespace eval tk {
 	    # Reason for the failures is unclear but could have to do with window ids being deleted
 	    # after the destroy command returns. The detailed mechanism of such delayed deletions
 	    # is not understood, but it appears that this update prevents the test failures.
-	    update
+#	    update
 	}
 
 	namespace export fixfocus
