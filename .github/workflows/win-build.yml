@@ -57,7 +57,7 @@ jobs:
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-      - name: Run Tests (OPTS=${{ matrix.symbols }})
+      - name: Run Tk Tests (OPTS=${{ matrix.symbols }})
         run: |
           nmake -f makefile.vc test-classic OPTS=${{ matrix.symbols }} | tee out-classic.txt || {
             echo "::error::Failure during Test"
@@ -108,9 +108,9 @@ jobs:
         with:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v3
-      - name: Checkout
+      - name: Checkout Tcl
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
@@ -138,7 +138,7 @@ jobs:
         env:
           CFGOPT: --enable-64bit --enable-symbols=${{ matrix.symbols }}
         working-directory: tcl/win
-      - name: Configure (symbols=${{ matrix.symbols }})
+      - name: Configure Tk (symbols=${{ matrix.symbols }})
         run: |
           ./configure ${CFGOPT} "--prefix=$HOME/INSTALL_DIR" "--with-tcl=$TCL_CONFIG_PATH" || {
             cat config.log
@@ -147,13 +147,13 @@ jobs:
           }
         env:
           CFGOPT: --enable-64bit --enable-symbols=${{ matrix.symbols }}
-      - name: Build
+      - name: Build Tk
         run: |
           make all tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
-      - name: Run Tests
+      - name: Run Tk Tests
         run: |
           make test-classic | tee out-classic.txt
           make test-ttk | tee out-ttk.txt
