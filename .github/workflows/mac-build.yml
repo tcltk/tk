@@ -41,7 +41,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test TESTFLAGS="-file unixEmbed.test -verbose bepst" | tee out.txt
+          make test TESTFLAGS="-file unixEmbed.test -match unixEmbed-10* -verbose bepst" | tee out.txt
           nmatches=$( grep -c "Failed	0" out.txt )
           if [ $nmatches -lt 4 ]
           then
@@ -138,11 +138,11 @@ jobs:
               echo Xvfb not used, this is a --enable-aqua build
             }
           fi
-          ( runXvfb :0; make test-classic TESTFLAGS="-file unixEmbed.test -verbose bepst"; exit $? ) | tee out-classic.txt || {
+          ( runXvfb :0; make test-classic TESTFLAGS="-file unixEmbed.test -match unixEmbed-10* -verbose bepst"; exit $? ) | tee out-classic.txt || {
             echo "::error::Failure during Test (classic)"
             exit 1
           }
-          ( runXvfb :0; make test-ttk; exit $? ) | tee out-ttk.txt || {
+          ( runXvfb :0; make test-ttk TESTFLAGS="-file nothing.test"; exit $? ) | tee out-ttk.txt || {
             echo "::error::Failure during Test (ttk)"
             exit 1
           }
