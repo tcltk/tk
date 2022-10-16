@@ -78,15 +78,15 @@ jobs:
         env:
           CI_BUILD_WITH_MSVC: 1
         shell: bash
-      - name: Build Help
+      - name: Build Help (OPTS=${{ matrix.symbols }})
         run: |
-          &nmake -f makefile.vc htmlhelp
+          &nmake -f makefile.vc htmlhelp OPTS=${{ matrix.symbols }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-      - name: Install
+      - name: Install (OPTS=${{ matrix.symbols }})
         run: |
-          &nmake -f makefile.vc install
+          &nmake -f makefile.vc install OPTS=${{ matrix.symbols }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
