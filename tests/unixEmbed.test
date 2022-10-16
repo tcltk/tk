@@ -1244,7 +1244,9 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
     unix
 } -setup {
+puts "10.1 setup start"
     deleteWindows
+puts "10.1 setup end"
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -1254,12 +1256,16 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
     update
     wm geometry .t1
 } -cleanup {
+puts "10.1 cleanup start"
     deleteWindows
+puts "10.1 cleanup end"
 } -result {150x80+0+0}
 test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
     unix
 } -setup {
+puts "10.2 setup start"
     deleteWindows
+puts "10.2 setup end"
 } -body {
     frame .f1 -container 1 -width 200 -height 50
     pack .f1
@@ -1269,7 +1275,9 @@ test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
     update
     wm geometry .t1
 } -cleanup {
+puts "10.2 cleanup start"
     deleteWindows
+puts "10.2 cleanup end"
 } -result {70x300+0+0}
 
 test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
