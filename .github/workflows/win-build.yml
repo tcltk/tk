@@ -38,16 +38,16 @@ jobs:
           mkdir install
           cd install
           echo "INSTALLDIR=`pwd`" >> $GITHUB_ENV
-      - name: Build Tcl
+      - name: Build Tcl (OPTS=${{ matrix.symbols }})
         run: |
-          &nmake -f makefile.vc release install
+          &nmake -f makefile.vc release install (OPTS=${{ matrix.symbols }})
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
         working-directory: tcl/win
-      - name: Build (OPTS==${{ matrix.symbols }})
+      - name: Build (OPTS=${{ matrix.symbols }})
         run: |
-          &nmake -f makefile.vc all OPTS==${{ matrix.symbols }}
+          &nmake -f makefile.vc all OPTS=${{ matrix.symbols }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
