@@ -12,6 +12,11 @@ jobs:
         shell: powershell
         working-directory: tk/win
     # Using powershell means we need to explicitly stop on failure
+    strategy:
+      matrix:
+        symbols:
+          - "none"
+          - "symbols"
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -40,9 +45,9 @@ jobs:
              throw "nmake exit code: $lastexitcode"
           }
         working-directory: tcl/win
-      - name: Build
+      - name: Build (OPTS==${{ matrix.symbols }})
         run: |
-          &nmake -f makefile.vc all
+          &nmake -f makefile.vc all OPTS==${{ matrix.symbols }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
