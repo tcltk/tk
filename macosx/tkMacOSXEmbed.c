@@ -853,7 +853,9 @@ ContainerEventProc(
 	 * Here we are following unix, by destroying the container.
 	 */
 
-	Tk_DestroyWindow((Tk_Window)winPtr);
+printf("ContainerEventProc: processing DestroyNotify, calling Tk_DestroyWindow to destroy the container\n");
+	    Tk_DestroyWindow((Tk_Window)winPtr);
+printf("ContainerEventProc: processing DestroyNotify, returning fron Tk_DestroyWindow\n");
     }
     Tk_DeleteErrorHandler(errHandler);
 }
