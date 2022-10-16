@@ -18,11 +18,11 @@ jobs:
           - "none"
           - "symbols"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout
+      - name: Checkout Tcl
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
@@ -45,15 +45,15 @@ jobs:
              throw "nmake exit code: $lastexitcode"
           }
         working-directory: tcl/win
-      - name: Build (OPTS=${{ matrix.symbols }})
+      - name: Build Tk (OPTS=${{ matrix.symbols }})
         run: |
           &nmake -f makefile.vc all OPTS=${{ matrix.symbols }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-      - name: Build Test Harness
+      - name: Build Test Harness (OPTS=${{ matrix.symbols }})
         run: |
-          &nmake -f makefile.vc tktest
+          &nmake -f makefile.vc tktest OPTS=${{ matrix.symbols }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
