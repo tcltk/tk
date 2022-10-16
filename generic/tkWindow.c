@@ -1480,7 +1480,9 @@ Tk_DestroyWindow(
 	event.xdestroywindow.display = winPtr->display;
 	event.xdestroywindow.event = winPtr->window;
 	event.xdestroywindow.window = winPtr->window;
+printf("Tk_DestroyWindow: Calling Tk_HandleEvent for DestroyNotify on %s\n", winPtr->pathName);fflush(stdout);
 	Tk_HandleEvent(&event);
+printf("Tk_DestroyWindow: Returned from Tk_HandleEvent for DestroyNotify on %s\n", winPtr->pathName);fflush(stdout);
     }
 
     /*
@@ -1559,8 +1561,10 @@ Tk_DestroyWindow(
 	if (winPtr->pathName != NULL) {
 	    Tk_DeleteAllBindings(winPtr->mainPtr->bindingTable,
 		    winPtr->pathName);
+printf("Tk_DestroyWindow: Now deleting hash key of %s\n", winPtr->pathName);fflush(stdout);
 	    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&winPtr->mainPtr->nameTable,
 		    winPtr->pathName));
+printf("Tk_DestroyWindow: returned from Tcl_DeleteHashEntry\n");fflush(stdout);
 
 	    /*
 	     * The memory pointed to by pathName has been deallocated. Keep
