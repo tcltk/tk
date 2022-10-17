@@ -2528,7 +2528,7 @@ test imgPhoto-23.21 {GIF delay time metadata} -setup {
 
 test imgPhoto-23.22 {GIF disposal method "do not dispose" metadata} -setup {
     set data $::gifstart
-    # Graphic control extension: disposdal method: 
+    # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x04\x00\x00\x00\x00"
     # Trailer
     append data $::gifdata $::gifend
@@ -2541,7 +2541,7 @@ test imgPhoto-23.22 {GIF disposal method "do not dispose" metadata} -setup {
 
 test imgPhoto-33.23 {GIF disposal method "restore to background color" metadata} -setup {
     set data $::gifstart
-    # Graphic control extension: disposdal method: 
+    # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x08\x00\x00\x00\x00"
     # Trailer
     append data $::gifdata $::gifend
@@ -2554,7 +2554,7 @@ test imgPhoto-33.23 {GIF disposal method "restore to background color" metadata}
 
 test imgPhoto-43.24 {GIF disposal method "restore to previous" metadata} -setup {
     set data $::gifstart
-    # Graphic control extension: disposdal method: 
+    # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x0C\x00\x00\x00\x00"
     # Trailer
     append data $::gifdata $::gifend
@@ -2567,7 +2567,7 @@ test imgPhoto-43.24 {GIF disposal method "restore to previous" metadata} -setup 
 
 test imgPhoto-53.25 {GIF user input flag metadata} -setup {
     set data $::gifstart
-    # Graphic control extension: disposdal method: 
+    # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x02\x00\x00\x00\x00"
     # Trailer
     append data $::gifdata $::gifend
