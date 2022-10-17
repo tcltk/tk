@@ -1242,7 +1242,7 @@ test unixEmbed-9.2a {EmbedWindowDeleted procedure, check embeddedPtr} -constrain
 
 
 test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-    unix failsOnUbuntu failsOnXQuarz
+    unix
 } -setup {
     deleteWindows
 } -body {
@@ -1257,7 +1257,7 @@ test unixEmbed-10.1 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -con
     deleteWindows
 } -result {150x80+0+0}
 test unixEmbed-10.2 {geometry propagation in tkUnixWm.c/UpdateGeometryInfo} -constraints {
-    unix failsOnUbuntu failsOnXQuarz
+    unix
 } -setup {
     deleteWindows
 } -body {
