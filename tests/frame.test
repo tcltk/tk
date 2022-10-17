@@ -406,31 +406,6 @@ test frame-2.11 {toplevel configuration options} -constraints nonwin -setup {
 } -cleanup {
     deleteWindows
 } -result {-use use Use {} {}}
-test frame-2.10 {toplevel configuration options} -constraints {
-    nonwin
-} -setup {
-    deleteWindows
-} -body {
-    catch {destroy .t}
-    toplevel .t -width 200 -height 100
-    wm geometry .t +0+0
-    .t configure -use 0x44022
-} -cleanup {
-    deleteWindows
-} -returnCodes error -result {can't modify -use option after widget is created}
-test frame-2.11 {toplevel configuration options} -constraints {
-    nonwin
-} -setup {
-    deleteWindows
-} -body {
-    catch {destroy .t}
-    toplevel .t -width 200 -height 100
-    wm geometry .t +0+0
-    catch {.t configure -use 0x44022}
-    .t configure -use
-} -cleanup {
-    deleteWindows
-} -result {-use use Use {} {}}
 test frame-2.12 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
