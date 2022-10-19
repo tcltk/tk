@@ -14,14 +14,6 @@
 # its own.
  
 ########################################################################
-# If the Tcl command 'console' is already in the interpreter, our work
-# is done.
-########################################################################
-if {![catch {console show}]} {
-    return
-}
-
-########################################################################
 # Check Tcl/Tk support
 ########################################################################
 package require Tcl 8.6-
@@ -83,11 +75,7 @@ load "" Tk $consoleInterp
 	}
     }
 }
-if {[package vsatisfies [package provide Tk] 4]} {
-    $consoleInterp alias interp consoleinterp
-} else {
-    $consoleInterp alias consoleinterp consoleinterp
-}
+$consoleInterp alias consoleinterp consoleinterp
 
 # 4. Bind the <Destroy> event of the application interpreter's main
 #    window to kill the console (via tkConsoleExit)
@@ -95,101 +83,31 @@ bind . <Destroy> [list +if {[string match . %W]} [list catch \
   [list $consoleInterp eval tkConsoleExit]]]
 
 # 5. Redirect stdout/stderr messages to the console
-if {[package vcompare [package present Tcl] 8.6] >= 0} {
-    # 5a. we can use TIP#230 channel transforms to achieve this simply:
-    namespace eval tkConsoleOut {
-	variable consoleInterp $::consoleInterp
-	proc initialize {what x mode}    {
-	    fconfigure $what -buffering none -translation binary
-	    info procs
-	}
-	proc finalize {what x }          { }
-	proc write {what x data}         { 
-	    variable consoleInterp
-	    set data [string map {\r ""} $data]
-	    $consoleInterp eval [list tkConsoleOutput $what $data]
-	    if {[info exists ::TTY] && $::TTY} {return $data}
-	}
-	proc flush {what x}              { }
-	namespace export {[a-z]*}
-	namespace ensemble create -parameters what
+# We can use TIP#230 channel transforms to achieve this simply:
+namespace eval tkConsoleOut {
+    variable consoleInterp $::consoleInterp
+    proc initialize {what x mode} {
+	fconfigure $what -buffering none -translation binary
+	info procs
     }
-    chan push stdout {::tkConsoleOut stdout}
-    chan push stderr {::tkConsoleOut stderr}
-    # Restore normal [puts] if console widget goes away...
-    proc Oc_RestorePuts {slave} {
-	chan pop stdout     ;# we hope nothing else was pushed in the meantime !
-	chan pop stderr
-	puts stderr "Console closed:  check your channel transforms!"
+    proc finalize {what x} { }
+    proc write {what x data} { 
+	variable consoleInterp
+	set data [string map {\r ""} $data]
+	$consoleInterp eval [list tkConsoleOutput $what $data]
+	if {[info exists ::TTY] && $::TTY} {return $data}
     }
-} else {
-    # 5b. Pre-8.6 needs to redefine 'puts' in order to redirect stdout
-    #     and stderr messages to the console
-    rename puts tcl_puts
-    ;proc puts {args} [subst -nocommands {
-	switch -exact -- [llength \$args] {
-	    1 {
-		if {[string match -nonewline \$args]} {
-		    if {[catch {uplevel 1 [linsert \$args 0 tcl_puts]} msg]} {
-			regsub -all tcl_puts \$msg puts msg
-			return -code error \$msg
-		    }
-		} else {
-		    $consoleInterp eval [list \
-		      tkConsoleOutput stdout "[lindex \$args 0]\n"]
-		}
-	    }
-	    2 {
-		if {[string match -nonewline [lindex \$args 0]]} {
-		    $consoleInterp eval [list \
-		      tkConsoleOutput stdout [lindex \$args 1]]
-		} elseif {[string match stdout [lindex \$args 0]]} {
-		    $consoleInterp eval [list \
-		      tkConsoleOutput stdout "[lindex \$args 1]\n"]
-		} elseif {[string match stderr [lindex \$args 0]]} {
-		    $consoleInterp eval [list \
-		      tkConsoleOutput stderr "[lindex \$args 1]\n"]
-		} else {
-		    if {[catch {uplevel 1 [linsert \$args 0 tcl_puts]} msg]} {
-			regsub -all tcl_puts \$msg puts msg
-			return -code error \$msg
-		    }
-		}
-	    }
-	    3 {
-		if {![string match -nonewline [lindex \$args 0]]} {
-		    if {[catch {uplevel 1 [linsert \$args 0 tcl_puts]} msg]} {
-			regsub -all tcl_puts \$msg puts msg
-			return -code error \$msg
-		    }
-		} elseif {[string match stdout [lindex \$args 1]]} {
-		    $consoleInterp eval [list \
-		      tkConsoleOutput stdout [lindex \$args 2]]
-		} elseif {[string match stderr [lindex \$args 1]]} {
-		    $consoleInterp eval [list \
-		      tkConsoleOutput stderr [lindex \$args 2]]
-		} else {
-		    if {[catch {uplevel 1 [linsert \$args 0 tcl_puts]} msg]} {
-			regsub -all tcl_puts \$msg puts msg
-			return -code error \$msg
-		    }
-		}
-	    }
-	    default {
-		if {[catch {uplevel 1 [linsert \$args 0 tcl_puts]} msg]} {
-		    regsub -all tcl_puts \$msg puts msg
-		    return -code error \$msg
-		}
-	    }
-	}
-    }]
-    $consoleInterp alias puts puts
-    # Restore normal [puts] if console widget goes away...
-    proc Oc_RestorePuts {slave} {
-	rename puts {}
-	rename tcl_puts puts
-	interp delete $slave
-    }
+    proc flush {what x} { }
+    namespace export {[a-z]*}
+    namespace ensemble create -parameters what
+}
+chan push stdout {::tkConsoleOut stdout}
+chan push stderr {::tkConsoleOut stderr}
+# Restore normal [puts] if console widget goes away...
+proc Oc_RestorePuts {slave} {
+    chan pop stdout     ;# we hope nothing else was pushed in the meantime !
+    chan pop stderr
+    puts stderr "Console closed:  check your channel transforms!"
 }
 
 # 6. No matter what Tk_Main says, insist that this is an interactive shell
@@ -207,12 +125,6 @@ $consoleInterp eval {
 $consoleInterp eval {
     if {![llength [info commands tkConsoleOutput]]} {
 	tk::unsupported::ExposePrivateCommand tkConsoleOutput
-    }
-}
-if {[string match 8.3.4 $tk_patchLevel]} {
-    # Workaround bug in first draft of the tkcon enhancments
-    $consoleInterp eval {
-	bind Console <Control-Key-v> {}
     }
 }
 
