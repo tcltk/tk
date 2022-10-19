@@ -166,7 +166,7 @@ test canvImg-4.2 {ConfigureImage procedure} -constraints testImageType -setup {
     update
     set x {}
     set y {}
-    set timer [after 300 {lappend y "timed out"}]
+    set timer [after 500 {lappend y "timed out"}]
     .c itemconfigure i1 -image foo2
     update idletasks
     update

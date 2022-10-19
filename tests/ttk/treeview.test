@@ -1377,13 +1377,13 @@ test treeview-column0-leak "Test for leak in tree column" -setup {
     tcl::unsupported::representation $heading
 } -match glob -result {*refcount of 3,*}
 
-test treeview-11.1 "style command" -body {
+test treeview-21.1 "style command" -body {
     ttk::treeview .w
     list [.w cget -style] [.w style] [winfo class .w]
 } -cleanup {
     destroy .w
 } -result {{} Treeview Treeview}
-test treeview-11.2 "style command" -body {
+test treeview-21.2 "style command" -body {
     ttk::style configure customStyle.Treeview
     ttk::treeview .w -style customStyle.Treeview
     list [.w cget -style] [.w style] [winfo class .w]
@@ -1391,7 +1391,7 @@ test treeview-11.2 "style command" -body {
     destroy .w
 } -result {customStyle.Treeview customStyle.Treeview Treeview}
 
-test treeview-12.1 "tag bindings" -setup {
+test treeview-22.1 "tag bindings" -setup {
     tvSetupWithItems
     .tv tag configure t1 -background red
     .tv tag configure t2 -background blue
@@ -1443,7 +1443,7 @@ test treeview-12.2 "tag bindings deletion on tag delete" -setup {
     destroy .tv
 } -result {}
 
-test treeview-13.1 "cell padding" -setup {
+test treeview-23.1 "cell padding" -setup {
     tvSetupWithItems
 } -body {
     .tv tag cell add mytag "nn b"
