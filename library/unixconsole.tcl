@@ -41,19 +41,13 @@ namespace eval tk::unixconsole {
 	    $consoleInterp alias conDelete [namespace which conDelete]
 	    load "" Tk $consoleInterp
 	    # Bind the <Destroy> event of the application interpreter's main
-	    # window to kill the console (via tkConsoleExit)
+	    # window to kill the console (via tk::ConsoleExit)
 	    bind . <Destroy> [list +if {"%W" eq "."} [list catch \
-	      [list $consoleInterp eval tkConsoleExit]]]
+	      [list $consoleInterp eval tk::ConsoleExit]]]
 	    # Evaluate the Tk library console script in the console interpreter
 	    variable conimpl
 	    $consoleInterp eval [list source $conimpl]
 	    $consoleInterp eval {
-		if {![llength [info commands tkConsoleExit]]} {
-		    tk::unsupported::ExposePrivateCommand tkConsoleExit
-		}
-		if {![llength [info commands tkConsoleOutput]]} {
-		    tk::unsupported::ExposePrivateCommand tkConsoleOutput
-		}
 		bind Console <Destroy> +conDelete
 		# addition by Schelte Bron ([sbron]):
 		# Allow functional pasting with the middle mouse button
@@ -134,7 +128,7 @@ namespace eval tk::unixconsole {
 	proc write {what x data} { 
 	    variable consoleInterp
 	    set data [string map {\r ""} $data]
-	    $consoleInterp eval [list tkConsoleOutput $what $data]
+	    $consoleInterp eval [list tk::ConsoleOutput $what $data]
 	    if {[info exists ::TTY] && $::TTY} {return $data}
 	}
 	proc flush {what x} { }
