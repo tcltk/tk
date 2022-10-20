@@ -174,7 +174,7 @@ TkTestLogDisplay(
  *      location.  It injects NSEvents into the NSApplication event queue, as
  *      opposed to adding events to the Tcl queue as event generate would do.
  *      One application is for testing the grab command. These events have
- *      their unused context property set to 1 as a signal indicating that they
+ *      their timestamp property set to 0 as a signal indicating that they
  *      should not be ignored by [NSApp tkProcessMouseEvent].
  *
  * Results:
@@ -229,7 +229,7 @@ PressButtonObjCmd(
     loc.y = ScreenHeight - y;
 
     /*
-     *  We set the timestamp to 0 as a signal to processMouseEvent.
+     *  We set the timestamp to 0 as a signal to tkProcessMouseEvent.
      */
 
     CGWarpMouseCursorPosition(pt);
