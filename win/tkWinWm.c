@@ -8093,7 +8093,7 @@ WmProc(
 	winPtr = GetTopLevel(hwnd);
 	if (winPtr && (TkGrabState(winPtr) == TK_GRAB_EXCLUDED)) {
 	    /*
-	     * This window is outside the grab heirarchy, so don't let any of
+	     * This window is outside the grab hierarchy, so don't let any of
 	     * the normal non-client processing occur. Note that this
 	     * implementation is not strictly correct because the grab might
 	     * change between now and when the event would have been processed
