@@ -405,7 +405,7 @@ package require tk
 	set sbar [ttk::scrollbar $hull.sbar -orient horizontal -takefocus 0]
 	catch {$sbar configure -highlightthickness 0}
 	set canvas [canvas $hull.canvas -highlightthick 0 -takefocus 1 \
-			-width 400 -height 120\
+			-width 400 -height 120 \
 			-background [ttk::style lookup Treeview -background {} white]]
 	pack $sbar -side bottom -fill x -padx 2 -pady {0 2}
 	pack $canvas -expand yes -fill both -padx 2 -pady {2 0}
