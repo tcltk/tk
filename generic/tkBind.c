@@ -4010,7 +4010,12 @@ HandleEventGenerate(
 
     for (i = 2; i < (unsigned) objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
+#if defined(_MSC_VER)
+        /* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
+	volatile int badOpt = 0;
+#else
 	int badOpt = 0;
+#endif
 	int index;
 
 	optionPtr = objv[i];
