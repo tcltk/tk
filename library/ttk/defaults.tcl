@@ -138,12 +138,12 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TLabelframe \
 	    -relief groove -borderwidth 2
@@ -151,7 +151,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TScrollbar \
 	    -width 12 -arrowsize 12
 	ttk::style map TScrollbar \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TScale \
 	    -sliderrelief raised

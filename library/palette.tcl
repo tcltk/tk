@@ -140,8 +140,9 @@ proc ::tk_setPalette {args} {
 
     array set ::tk::Palette [array get new]
 
-    # Update the 'default' ttk theme in order to apply the
-    # new palette to the ttk widgets.
+    # Update the 'default' ttk theme with the new palette,
+    # and then set 'default' as the current ttk theme,
+    # in order to apply the new palette to the ttk widgets.
 
     foreach option [array names new] {
 	if {[info exists ttk::theme::default::colorOptionLookup($option)]} {
@@ -151,6 +152,9 @@ proc ::tk_setPalette {args} {
 	}
     }
     ttk::theme::default::reconfigureDefaultTheme
+    ttk::setTheme default
+
+    return
 }
 
 # ::tk::RecolorTree --
