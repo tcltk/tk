@@ -48,6 +48,9 @@ namespace eval tk::unixconsole {
 	    variable conimpl
 	    $consoleInterp eval [list source $conimpl]
 	    $consoleInterp eval {
+		# Initially hide the console window
+		wm withdraw .
+		# Trigger cleanup when the console is destroyed
 		bind Console <Destroy> +conDelete
 		# addition by Schelte Bron ([sbron]):
 		# Allow functional pasting with the middle mouse button
