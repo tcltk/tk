@@ -81,7 +81,7 @@ typedef struct TkSelRetrievalInfo {
     Atom target;		/* Desired form for selection. */
     Tk_GetSelProc *proc;	/* Procedure to call to handle pieces of
 				 * selection. */
-    ClientData clientData;	/* Argument for proc. */
+    void *clientData;	/* Argument for proc. */
     int result;			/* Initially -1. Set to a Tcl return value
 				 * once the selection has been retrieved. */
     Tcl_TimerToken timeout;	/* Token for current timeout procedure. */

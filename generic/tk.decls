@@ -55,7 +55,7 @@ declare 5 {
 declare 6 {
     void Tk_BindEvent(Tk_BindingTable bindingTable,
 	    XEvent *eventPtr, Tk_Window tkwin, Tcl_Size numObjects,
-	    ClientData *objectPtr)
+	    void **objectPtr)
 }
 declare 7 {
     void Tk_CanvasDrawableCoords(Tk_Canvas canvas,
@@ -101,11 +101,11 @@ declare 17 {
     void Tk_CanvasSetStippleOrigin(Tk_Canvas canvas, GC gc)
 }
 declare 18 {
-    int Tk_CanvasTagsParseProc(ClientData clientData, Tcl_Interp *interp,
+    int Tk_CanvasTagsParseProc(void *clientData, Tcl_Interp *interp,
 	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 19 {
-    const char *Tk_CanvasTagsPrintProc(ClientData clientData, Tk_Window tkwin,
+    const char *Tk_CanvasTagsPrintProc(void *clientData, Tk_Window tkwin,
 	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 20 {
@@ -164,7 +164,7 @@ declare 32 {
 }
 declare 33 {
     unsigned long Tk_CreateBinding(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
+	    Tk_BindingTable bindingTable, void *object,
 	    const char *eventStr, const char *script, int append)
 }
 declare 34 {
@@ -173,15 +173,15 @@ declare 34 {
 declare 35 {
     Tk_ErrorHandler Tk_CreateErrorHandler(Display *display,
 	    int errNum, int request, int minorCode,
-	    Tk_ErrorProc *errorProc, ClientData clientData)
+	    Tk_ErrorProc *errorProc, void *clientData)
 }
 declare 36 {
     void Tk_CreateEventHandler(Tk_Window token,
 	    unsigned long mask, Tk_EventProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 37 {
-    void Tk_CreateGenericHandler(Tk_GenericProc *proc, ClientData clientData)
+    void Tk_CreateGenericHandler(Tk_GenericProc *proc, void *clientData)
 }
 declare 38 {
     void Tk_CreateImageType(const Tk_ImageType *typePtr)
@@ -195,7 +195,7 @@ declare 40 {
 declare 41 {
     void Tk_CreateSelHandler(Tk_Window tkwin,
 	    Atom selection, Atom target,
-	    Tk_SelectionProc *proc, ClientData clientData,
+	    Tk_SelectionProc *proc, void *clientData,
 	    Atom format)
 }
 declare 42 {
@@ -214,11 +214,11 @@ declare 45 {
     void Tk_DefineCursor(Tk_Window window, Tk_Cursor cursor)
 }
 declare 46 {
-    void Tk_DeleteAllBindings(Tk_BindingTable bindingTable, ClientData object)
+    void Tk_DeleteAllBindings(Tk_BindingTable bindingTable, void *object)
 }
 declare 47 {
     int Tk_DeleteBinding(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
+	    Tk_BindingTable bindingTable, void *object,
 	    const char *eventStr)
 }
 declare 48 {
@@ -230,10 +230,10 @@ declare 49 {
 declare 50 {
     void Tk_DeleteEventHandler(Tk_Window token,
 	    unsigned long mask, Tk_EventProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 51 {
-    void Tk_DeleteGenericHandler(Tk_GenericProc *proc, ClientData clientData)
+    void Tk_DeleteGenericHandler(Tk_GenericProc *proc, void *clientData)
 }
 declare 52 {
     void Tk_DeleteImage(Tcl_Interp *interp, const char *name)
@@ -341,7 +341,7 @@ declare 80 {
 }
 declare 81 {
     void Tk_GetAllBindings(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object)
+	    Tk_BindingTable bindingTable, void *object)
 }
 declare 82 {
     int Tk_GetAnchor(Tcl_Interp *interp,
@@ -352,7 +352,7 @@ declare 83 {
 }
 declare 84 {
     const char *Tk_GetBinding(Tcl_Interp *interp,
-	    Tk_BindingTable bindingTable, ClientData object,
+	    Tk_BindingTable bindingTable, void *object,
 	    const char *eventStr)
 }
 declare 85 {
@@ -400,10 +400,10 @@ declare 96 {
 }
 declare 97 {
     Tk_Image Tk_GetImage(Tcl_Interp *interp, Tk_Window tkwin, const char *name,
-	    Tk_ImageChangedProc *changeProc, ClientData clientData)
+	    Tk_ImageChangedProc *changeProc, void *clientData)
 }
 declare 98 {
-    ClientData Tk_GetImageModelData(Tcl_Interp *interp,
+    void *Tk_GetImageModelData(Tcl_Interp *interp,
 	    const char *name, const Tk_ImageType **typePtrPtr)
 }
 declare 99 {
@@ -448,7 +448,7 @@ declare 109 {
 declare 110 {
     int Tk_GetSelection(Tcl_Interp *interp,
 	    Tk_Window tkwin, Atom selection, Atom target,
-	    Tk_GetSelProc *proc, ClientData clientData)
+	    Tk_GetSelProc *proc, void *clientData)
 }
 declare 111 {
     Tk_Uid Tk_GetUid(const char *str)
@@ -497,7 +497,7 @@ declare 123 {
 }
 declare 124 {
     void Tk_ManageGeometry(Tk_Window tkwin,
-	    const Tk_GeomMgr *mgrPtr, ClientData clientData)
+	    const Tk_GeomMgr *mgrPtr, void *clientData)
 }
 declare 125 {
     void Tk_MapWindow(Tk_Window tkwin)
@@ -557,7 +557,7 @@ declare 141 {
 declare 142 {
     void Tk_OwnSelection(Tk_Window tkwin,
 	    Atom selection, Tk_LostSelProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 143 {
     int Tk_ParseArgv(Tcl_Interp *interp,
@@ -615,7 +615,7 @@ declare 157 {
 }
 declare 158 {
     Tk_RestrictProc *Tk_RestrictEvents(Tk_RestrictProc *proc,
-	    ClientData arg, ClientData *prevArgPtr)
+	    void *arg, void **prevArgPtr)
 }
 declare 159 {
     int Tk_SafeInit(Tcl_Interp *interp)
@@ -924,7 +924,7 @@ declare 241 {
 }
 declare 242 {
     void Tk_SetClassProcs(Tk_Window tkwin,
-	    const Tk_ClassProcs *procs, ClientData instanceData)
+	    const Tk_ClassProcs *procs, void *instanceData)
 }
 
 # New in 8.4a4
@@ -975,7 +975,7 @@ declare 252 {
 }
 declare 253 {
     Tk_Style Tk_CreateStyle(const char *name, Tk_StyleEngine engine,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 254 {
     Tk_Style Tk_GetStyle(Tcl_Interp *interp, const char *name)

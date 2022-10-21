@@ -233,7 +233,7 @@ MODULE_SCOPE double	TkRoundValueToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE double	TkRoundIntervalToResolution(TkScale *scalePtr, double value);
 MODULE_SCOPE TkScale *	TkpCreateScale(Tk_Window tkwin);
 MODULE_SCOPE void	TkpDestroyScale(TkScale *scalePtr);
-MODULE_SCOPE void	TkpDisplayScale(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayScale(void *clientData);
 MODULE_SCOPE int	TkpScaleElement(TkScale *scalePtr, int x, int y);
 MODULE_SCOPE void	TkScaleSetValue(TkScale *scalePtr, double value,
 			    int setVar, int invokeCommand);

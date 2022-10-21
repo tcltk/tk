@@ -143,11 +143,7 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
 typedef const char *Tk_Uid;
 
 #ifndef Tcl_Size
-#   if TCL_MAJOR_VERSION > 8
-#	define Tcl_Size size_t
-#   else
-#	define Tcl_Size int
-#   endif
+#   define Tcl_Size int
 #endif
 
 /*
@@ -240,14 +236,14 @@ typedef struct Tk_OptionSpec {
  * option config code to handle a custom option.
  */
 
-typedef int (Tk_CustomOptionSetProc) (ClientData clientData,
+typedef int (Tk_CustomOptionSetProc) (void *clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj **value, char *widgRec,
 	Tcl_Size offset, char *saveInternalPtr, int flags);
-typedef Tcl_Obj *(Tk_CustomOptionGetProc) (ClientData clientData,
+typedef Tcl_Obj *(Tk_CustomOptionGetProc) (void *clientData,
 	Tk_Window tkwin, char *widgRec, Tcl_Size offset);
-typedef void (Tk_CustomOptionRestoreProc) (ClientData clientData,
+typedef void (Tk_CustomOptionRestoreProc) (void *clientData,
 	Tk_Window tkwin, char *internalPtr, char *saveInternalPtr);
-typedef void (Tk_CustomOptionFreeProc) (ClientData clientData, Tk_Window tkwin,
+typedef void (Tk_CustomOptionFreeProc) (void *clientData, Tk_Window tkwin,
 	char *internalPtr);
 
 typedef struct Tk_ObjCustomOption {
@@ -265,7 +261,7 @@ typedef struct Tk_ObjCustomOption {
     Tk_CustomOptionFreeProc *freeProc;
 				/* Function to use to free the internal
 				 * representation of an option. */
-    ClientData clientData;	/* Arbitrary one-word value passed to the
+    void *clientData;	/* Arbitrary one-word value passed to the
 				 * handling procs. */
 } Tk_ObjCustomOption;
 
@@ -344,9 +340,9 @@ typedef struct Tk_SavedOptions {
 
 #ifndef __NO_OLD_CONFIG
 
-typedef int (Tk_OptionParseProc) (ClientData clientData, Tcl_Interp *interp,
+typedef int (Tk_OptionParseProc) (void *clientData, Tcl_Interp *interp,
 	Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset);
-typedef const char *(Tk_OptionPrintProc) (ClientData clientData,
+typedef const char *(Tk_OptionPrintProc) (void *clientData,
 	Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr);
 
 typedef struct Tk_CustomOption {
@@ -356,7 +352,7 @@ typedef struct Tk_CustomOption {
     Tk_OptionPrintProc *printProc;
 				/* Procedure to return a printable string
 				 * describing an existing option. */
-    ClientData clientData;	/* Arbitrary one-word value used by option
+    void *clientData;	/* Arbitrary one-word value used by option
 				 * parser: passed to parseProc and
 				 * printProc. */
 } Tk_CustomOption;
@@ -584,8 +580,8 @@ typedef struct Tk_FontMetrics {
  */
 
 typedef Window (Tk_ClassCreateProc) (Tk_Window tkwin, Window parent,
-	ClientData instanceData);
-typedef void (Tk_ClassWorldChangedProc) (ClientData instanceData);
+	void *instanceData);
+typedef void (Tk_ClassWorldChangedProc) (void *instanceData);
 typedef void (Tk_ClassModalProc) (Tk_Window tkwin, XEvent *eventPtr);
 
 typedef struct Tk_ClassProcs {
@@ -614,12 +610,12 @@ typedef struct Tk_ClassProcs {
  *
  *	#define Tk_GetField(name, who, which) \
  *	    (((who) == NULL) ? NULL :
- *	    (((who)->size <= offsetof(name, which)) ? NULL :(name)->which))
+ *	    (((size_t)(who)->size <= offsetof(name, which)) ? NULL :(name)->which))
  */
 
 #define Tk_GetClassProc(procs, which) \
     (((procs) == NULL) ? NULL : \
-    (((procs)->size <= offsetof(Tk_ClassProcs, which)) ? NULL:(procs)->which))
+    (((size_t)(procs)->size <= offsetof(Tk_ClassProcs, which)) ? NULL:(procs)->which))
 
 /*
  * Each geometry manager (the packer, the placer, etc.) is represented by a
@@ -628,8 +624,8 @@ typedef struct Tk_ClassProcs {
  */
 
 #define Tk_GeomLostSlaveProc Tk_GeomLostContentProc
-typedef void (Tk_GeomRequestProc) (ClientData clientData, Tk_Window tkwin);
-typedef void (Tk_GeomLostContentProc) (ClientData clientData, Tk_Window tkwin);
+typedef void (Tk_GeomRequestProc) (void *clientData, Tk_Window tkwin);
+typedef void (Tk_GeomLostContentProc) (void *clientData, Tk_Window tkwin);
 
 typedef struct Tk_GeomMgr {
     const char *name;		/* Name of the geometry manager (command used
@@ -812,17 +808,17 @@ typedef struct Tk_FakeWin {
 #if defined(TK_USE_INPUT_METHODS) || (TCL_MAJOR_VERSION > 8)
     XIC dummy9;			/* inputContext */
 #endif /* TK_USE_INPUT_METHODS */
-    ClientData *dummy10;	/* tagPtr */
+    void **dummy10;	/* tagPtr */
     Tcl_Size dummy11;		/* numTags */
     Tcl_Size dummy12;		/* optionLevel */
     char *dummy13;		/* selHandlerList */
     char *dummy14;		/* geomMgrPtr */
-    ClientData dummy15;		/* geomData */
+    void *dummy15;		/* geomData */
     int reqWidth, reqHeight;
     int internalBorderLeft;
     char *dummy16;		/* wmInfoPtr */
     char *dummy17;		/* classProcPtr */
-    ClientData dummy18;		/* instanceData */
+    void *dummy18;		/* instanceData */
     char *dummy19;		/* privatePtr */
     int internalBorderRight;
     int internalBorderTop;
@@ -1246,21 +1242,21 @@ typedef struct Tk_ImageType Tk_ImageType;
 #if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
 	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
-	ClientData *clientDataPtr);
+	void **clientDataPtr);
 #else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, int objc,
 	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageModel model,
-	ClientData *clientDataPtr);
+	void **clientDataPtr);
 #endif /* USE_OLD_IMAGE */
-typedef ClientData (Tk_ImageGetProc) (Tk_Window tkwin, ClientData clientData);
-typedef void (Tk_ImageDisplayProc) (ClientData clientData, Display *display,
+typedef void *(Tk_ImageGetProc) (Tk_Window tkwin, void *clientData);
+typedef void (Tk_ImageDisplayProc) (void *clientData, Display *display,
 	Drawable drawable, int imageX, int imageY, int width, int height,
 	int drawableX, int drawableY);
-typedef void (Tk_ImageFreeProc) (ClientData clientData, Display *display);
-typedef void (Tk_ImageDeleteProc) (ClientData clientData);
-typedef void (Tk_ImageChangedProc) (ClientData clientData, int x, int y,
+typedef void (Tk_ImageFreeProc) (void *clientData, Display *display);
+typedef void (Tk_ImageDeleteProc) (void *clientData);
+typedef void (Tk_ImageChangedProc) (void *clientData, int x, int y,
 	int width, int height, int imageWidth, int imageHeight);
-typedef int (Tk_ImagePostscriptProc) (ClientData clientData,
+typedef int (Tk_ImagePostscriptProc) (void *clientData,
 	Tcl_Interp *interp, Tk_Window tkwin, Tk_PostscriptInfo psinfo,
 	int x, int y, int width, int height, int prepass);
 
@@ -1493,16 +1489,16 @@ struct Tk_PhotoImageFormatVersion3 {
  * declare widget elements.
  */
 
-typedef void (Tk_GetElementSizeProc) (ClientData clientData, char *recordPtr,
+typedef void (Tk_GetElementSizeProc) (void *clientData, char *recordPtr,
 	const Tk_OptionSpec **optionsPtr, Tk_Window tkwin, int width,
 	int height, int inner, int *widthPtr, int *heightPtr);
-typedef void (Tk_GetElementBoxProc) (ClientData clientData, char *recordPtr,
+typedef void (Tk_GetElementBoxProc) (void *clientData, char *recordPtr,
 	const Tk_OptionSpec **optionsPtr, Tk_Window tkwin, int x, int y,
 	int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr,
 	int *heightPtr);
-typedef int (Tk_GetElementBorderWidthProc) (ClientData clientData,
+typedef int (Tk_GetElementBorderWidthProc) (void *clientData,
 	char *recordPtr, const Tk_OptionSpec **optionsPtr, Tk_Window tkwin);
-typedef void (Tk_DrawElementProc) (ClientData clientData, char *recordPtr,
+typedef void (Tk_DrawElementProc) (void *clientData, char *recordPtr,
 	const Tk_OptionSpec **optionsPtr, Tk_Window tkwin, Drawable d, int x,
 	int y, int width, int height, int state);
 
@@ -1615,16 +1611,16 @@ EXTERN const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
  *----------------------------------------------------------------------
  */
 
-typedef int (Tk_ErrorProc) (ClientData clientData, XErrorEvent *errEventPtr);
-typedef void (Tk_EventProc) (ClientData clientData, XEvent *eventPtr);
-typedef int (Tk_GenericProc) (ClientData clientData, XEvent *eventPtr);
+typedef int (Tk_ErrorProc) (void *clientData, XErrorEvent *errEventPtr);
+typedef void (Tk_EventProc) (void *clientData, XEvent *eventPtr);
+typedef int (Tk_GenericProc) (void *clientData, XEvent *eventPtr);
 typedef int (Tk_ClientMessageProc) (Tk_Window tkwin, XEvent *eventPtr);
-typedef int (Tk_GetSelProc) (ClientData clientData, Tcl_Interp *interp,
+typedef int (Tk_GetSelProc) (void *clientData, Tcl_Interp *interp,
 	const char *portion);
-typedef void (Tk_LostSelProc) (ClientData clientData);
-typedef Tk_RestrictAction (Tk_RestrictProc) (ClientData clientData,
+typedef void (Tk_LostSelProc) (void *clientData);
+typedef Tk_RestrictAction (Tk_RestrictProc) (void *clientData,
 	XEvent *eventPtr);
-typedef size_t (Tk_SelectionProc) (ClientData clientData, Tcl_Size offset,
+typedef Tcl_Size (Tk_SelectionProc) (void *clientData, Tcl_Size offset,
 	char *buffer, Tcl_Size maxBytes);
 
 /*

@@ -39,8 +39,8 @@ typedef struct {			/* Manager hooks */
  * Default implementations for Tk_GeomMgr hooks:
  */
 #define Ttk_LostSlaveProc Ttk_LostContentProc
-MODULE_SCOPE void Ttk_GeometryRequestProc(ClientData, Tk_Window window);
-MODULE_SCOPE void Ttk_LostContentProc(ClientData, Tk_Window window);
+MODULE_SCOPE void Ttk_GeometryRequestProc(void *, Tk_Window window);
+MODULE_SCOPE void Ttk_LostContentProc(void *, Tk_Window window);
 
 /*
  * Public API:

@@ -271,7 +271,7 @@ struct TkTextDispChunk {
 				 * position for a line (break just before this
 				 * byte index). <= 0 means don't break during
 				 * or immediately after this chunk. */
-    ClientData clientData;	/* Additional information for use of
+    void *clientData;	/* Additional information for use of
 				 * displayProc and undisplayProc. */
 };
 
@@ -1046,7 +1046,7 @@ MODULE_SCOPE int	TkBTreeTag(TkTextIndex *index1Ptr,
 			    int add);
 MODULE_SCOPE void	TkBTreeUnlinkSegment(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
-MODULE_SCOPE void	TkTextBindProc(ClientData clientData,
+MODULE_SCOPE void	TkTextBindProc(void *clientData,
 			    XEvent *eventPtr);
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
@@ -1101,7 +1101,7 @@ MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment *TkTextIndexToSeg(const TkTextIndex *indexPtr,
 			    Tcl_Size *offsetPtr);
-MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
+MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE TkTextIndex *TkTextMakeCharIndex(TkTextBTree tree, TkText *textPtr,
 			    int lineIndex, int charIndex,
 			    TkTextIndex *indexPtr);
@@ -1163,7 +1163,7 @@ MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
-MODULE_SCOPE void       TkTextRunAfterSyncCmd(ClientData clientData);
+MODULE_SCOPE void       TkTextRunAfterSyncCmd(void *clientData);
 MODULE_SCOPE int        TkTextIndexAdjustToStartEnd(TkText *textPtr,
 			    TkTextIndex *indexPtr, int err);
 #endif /* _TKTEXT */
