@@ -500,13 +500,13 @@ MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
 			    TkMenuEntry *mePtr, Tcl_Size index);
 MODULE_SCOPE void	TkMenuFreeDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
-MODULE_SCOPE void	TkMenuEventProc(ClientData clientData,
+MODULE_SCOPE void	TkMenuEventProc(void *clientData,
     			    XEvent *eventPtr);
-MODULE_SCOPE void	TkMenuImageProc(ClientData clientData, int x, int y,
+MODULE_SCOPE void	TkMenuImageProc(void *clientData, int x, int y,
 			    int width, int height, int imgWidth,
 			    int imgHeight);
 MODULE_SCOPE void	TkMenuInit(void);
-MODULE_SCOPE void	TkMenuSelectImageProc(ClientData clientData, int x,
+MODULE_SCOPE void	TkMenuSelectImageProc(void *clientData, int x,
 			    int y, int width, int height, int imgWidth,
 			    int imgHeight);
 MODULE_SCOPE Tcl_Obj *	TkNewMenuName(Tcl_Interp *interp,
