@@ -59,8 +59,8 @@ static Tcl_ThreadDataKey dataKey;
  * Forward declarations for functions defined in this file:
  */
 
-static TkSizeT	HandleTclCommand(ClientData clientData,
-			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
+static Tcl_Size	HandleTclCommand(ClientData clientData,
+			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
 static void		LostSelection(ClientData clientData);
 static int		SelGetProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *portion);
@@ -831,7 +831,7 @@ Tk_SelectionObjCmd(
 	const char *targetName = NULL;
 	const char *formatName = NULL;
 	CommandInfo *cmdInfoPtr;
-	TkSizeT cmdLength;
+	Tcl_Size cmdLength;
 	static const char *const handleOptionStrings[] = {
 	    "-format", "-selection", "-type", NULL
 	};
@@ -1317,13 +1317,13 @@ SelGetProc(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 HandleTclCommand(
     ClientData clientData,	/* Information about command to execute. */
-    TkSizeT offset,			/* Return selection bytes starting at this
+    Tcl_Size offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    Tcl_Size maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     CommandInfo *cmdInfoPtr = (CommandInfo *)clientData;
     int length;

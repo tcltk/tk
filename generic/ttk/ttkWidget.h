@@ -105,7 +105,7 @@ MODULE_SCOPE int TtkWidgetStyleCommand(
 /* Widget constructor:
  */
 MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	ClientData, Tcl_Interp*, int, Tcl_Obj*const[]);
+	void *, Tcl_Interp*, int, Tcl_Obj*const[]);
 
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \

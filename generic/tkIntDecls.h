@@ -79,10 +79,9 @@ EXTERN TkCursor *	TkCreateCursorFromData(Tk_Window tkwin,
 				int width, int height, int xHot, int yHot,
 				XColor fg, XColor bg);
 /* 13 */
-EXTERN int		TkCreateFrame(ClientData clientData,
-				Tcl_Interp *interp, int argc,
-				const char *const *argv, int toplevel,
-				const char *appName);
+EXTERN int		TkCreateFrame(void *clientData, Tcl_Interp *interp,
+				int argc, const char *const *argv,
+				int toplevel, const char *appName);
 /* 14 */
 EXTERN Tk_Window	TkCreateMainWindow(Tcl_Interp *interp,
 				const char *screenName, const char *baseName);
@@ -436,22 +435,21 @@ EXTERN void		TkpDrawFrame(Tk_Window tkwin, Tk_3DBorder border,
 				int relief);
 /* 153 */
 EXTERN void		TkCreateThreadExitHandler(Tcl_ExitProc *proc,
-				ClientData clientData);
+				void *clientData);
 /* 154 */
 EXTERN void		TkDeleteThreadExitHandler(Tcl_ExitProc *proc,
-				ClientData clientData);
+				void *clientData);
 /* Slot 155 is reserved */
 /* 156 */
-EXTERN int		TkpTestembedCmd(ClientData clientData,
-				Tcl_Interp *interp, int objc,
-				Tcl_Obj *const objv[]);
+EXTERN int		TkpTestembedCmd(void *clientData, Tcl_Interp *interp,
+				int objc, Tcl_Obj *const objv[]);
 /* 157 */
-EXTERN int		TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp,
+EXTERN int		TkpTesttextCmd(void *dummy, Tcl_Interp *interp,
 				int objc, Tcl_Obj *const objv[]);
 /* 158 */
 EXTERN int		TkSelGetSelection(Tcl_Interp *interp,
 				Tk_Window tkwin, Atom selection, Atom target,
-				Tk_GetSelProc *proc, ClientData clientData);
+				Tk_GetSelProc *proc, void *clientData);
 /* 159 */
 EXTERN int		TkTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
@@ -469,7 +467,7 @@ EXTERN struct TkTextIndex * TkTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
 				int byteIndex, struct TkTextIndex *indexPtr);
 /* 163 */
-EXTERN TkSizeT		TkTextPrintIndex(const struct TkText *textPtr,
+EXTERN Tcl_Size		TkTextPrintIndex(const struct TkText *textPtr,
 				const struct TkTextIndex *indexPtr,
 				char *string);
 /* 164 */
@@ -494,59 +492,59 @@ EXTERN void		TkTextInsertDisplayProc(struct TkText *textPtr,
 				int y, int height, int baseline,
 				Display *display, Drawable dst, int screenY);
 /* 169 */
-EXTERN int		TkStateParseProc(ClientData clientData,
+EXTERN int		TkStateParseProc(void *clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec,
-				TkSizeT offset);
+				Tcl_Size offset);
 /* 170 */
-EXTERN const char *	TkStatePrintProc(ClientData clientData,
-				Tk_Window tkwin, char *widgRec,
-				TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+EXTERN const char *	TkStatePrintProc(void *clientData, Tk_Window tkwin,
+				char *widgRec, Tcl_Size offset,
+				Tcl_FreeProc **freeProcPtr);
 /* 171 */
-EXTERN int		TkCanvasDashParseProc(ClientData clientData,
+EXTERN int		TkCanvasDashParseProc(void *clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec,
-				TkSizeT offset);
+				Tcl_Size offset);
 /* 172 */
-EXTERN const char *	TkCanvasDashPrintProc(ClientData clientData,
+EXTERN const char *	TkCanvasDashPrintProc(void *clientData,
 				Tk_Window tkwin, char *widgRec,
-				TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+				Tcl_Size offset, Tcl_FreeProc **freeProcPtr);
 /* 173 */
-EXTERN int		TkOffsetParseProc(ClientData clientData,
+EXTERN int		TkOffsetParseProc(void *clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec,
-				TkSizeT offset);
+				Tcl_Size offset);
 /* 174 */
-EXTERN const char *	TkOffsetPrintProc(ClientData clientData,
-				Tk_Window tkwin, char *widgRec,
-				TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+EXTERN const char *	TkOffsetPrintProc(void *clientData, Tk_Window tkwin,
+				char *widgRec, Tcl_Size offset,
+				Tcl_FreeProc **freeProcPtr);
 /* 175 */
-EXTERN int		TkPixelParseProc(ClientData clientData,
+EXTERN int		TkPixelParseProc(void *clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec,
-				TkSizeT offset);
+				Tcl_Size offset);
 /* 176 */
-EXTERN const char *	TkPixelPrintProc(ClientData clientData,
-				Tk_Window tkwin, char *widgRec,
-				TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+EXTERN const char *	TkPixelPrintProc(void *clientData, Tk_Window tkwin,
+				char *widgRec, Tcl_Size offset,
+				Tcl_FreeProc **freeProcPtr);
 /* 177 */
-EXTERN int		TkOrientParseProc(ClientData clientData,
+EXTERN int		TkOrientParseProc(void *clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec,
-				TkSizeT offset);
+				Tcl_Size offset);
 /* 178 */
-EXTERN const char *	TkOrientPrintProc(ClientData clientData,
-				Tk_Window tkwin, char *widgRec,
-				TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+EXTERN const char *	TkOrientPrintProc(void *clientData, Tk_Window tkwin,
+				char *widgRec, Tcl_Size offset,
+				Tcl_FreeProc **freeProcPtr);
 /* 179 */
-EXTERN int		TkSmoothParseProc(ClientData clientData,
+EXTERN int		TkSmoothParseProc(void *clientData,
 				Tcl_Interp *interp, Tk_Window tkwin,
 				const char *value, char *widgRec,
-				TkSizeT offset);
+				Tcl_Size offset);
 /* 180 */
-EXTERN const char *	TkSmoothPrintProc(ClientData clientData,
-				Tk_Window tkwin, char *widgRec,
-				TkSizeT offset, Tcl_FreeProc **freeProcPtr);
+EXTERN const char *	TkSmoothPrintProc(void *clientData, Tk_Window tkwin,
+				char *widgRec, Tcl_Size offset,
+				Tcl_FreeProc **freeProcPtr);
 /* 181 */
 EXTERN void		TkDrawAngledTextLayout(Display *display,
 				Drawable drawable, GC gc,
@@ -592,7 +590,7 @@ typedef struct TkIntStubs {
     void (*reserved10)(void);
     void (*reserved11)(void);
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
-    int (*tkCreateFrame) (ClientData clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
+    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
     Tk_Window (*tkCreateMainWindow) (Tcl_Interp *interp, const char *screenName, const char *baseName); /* 14 */
     Time (*tkCurrentTime) (TkDisplay *dispPtr); /* 15 */
     void (*tkDeleteAllImages) (TkMainInfo *mainPtr); /* 16 */
@@ -759,34 +757,34 @@ typedef struct TkIntStubs {
     int (*tkMakeRawCurve) (Tk_Canvas canvas, double *pointPtr, int numPoints, int numSteps, XPoint xPoints[], double dblPoints[]); /* 150 */
     void (*tkMakeRawCurvePostscript) (Tcl_Interp *interp, Tk_Canvas canvas, double *pointPtr, int numPoints); /* 151 */
     void (*tkpDrawFrame) (Tk_Window tkwin, Tk_3DBorder border, int highlightWidth, int borderWidth, int relief); /* 152 */
-    void (*tkCreateThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 153 */
-    void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, ClientData clientData); /* 154 */
+    void (*tkCreateThreadExitHandler) (Tcl_ExitProc *proc, void *clientData); /* 153 */
+    void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, void *clientData); /* 154 */
     void (*reserved155)(void);
-    int (*tkpTestembedCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 156 */
-    int (*tkpTesttextCmd) (ClientData dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
-    int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, ClientData clientData); /* 158 */
+    int (*tkpTestembedCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 156 */
+    int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
+    int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
     int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
     int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 161 */
     struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, int byteIndex, struct TkTextIndex *indexPtr); /* 162 */
-    TkSizeT (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
+    Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
     int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 165 */
     void (*tkTextChanged) (struct TkSharedText *sharedTextPtr, struct TkText *textPtr, const struct TkTextIndex *index1Ptr, const struct TkTextIndex *index2Ptr); /* 166 */
     int (*tkBTreeNumLines) (TkTextBTree tree, const struct TkText *textPtr); /* 167 */
     void (*tkTextInsertDisplayProc) (struct TkText *textPtr, struct TkTextDispChunk *chunkPtr, int x, int y, int height, int baseline, Display *display, Drawable dst, int screenY); /* 168 */
-    int (*tkStateParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 169 */
-    const char * (*tkStatePrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 170 */
-    int (*tkCanvasDashParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 171 */
-    const char * (*tkCanvasDashPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 172 */
-    int (*tkOffsetParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 173 */
-    const char * (*tkOffsetPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 174 */
-    int (*tkPixelParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 175 */
-    const char * (*tkPixelPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 176 */
-    int (*tkOrientParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 177 */
-    const char * (*tkOrientPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 178 */
-    int (*tkSmoothParseProc) (ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset); /* 179 */
-    const char * (*tkSmoothPrintProc) (ClientData clientData, Tk_Window tkwin, char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr); /* 180 */
+    int (*tkStateParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 169 */
+    const char * (*tkStatePrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 170 */
+    int (*tkCanvasDashParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 171 */
+    const char * (*tkCanvasDashPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 172 */
+    int (*tkOffsetParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 173 */
+    const char * (*tkOffsetPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 174 */
+    int (*tkPixelParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 175 */
+    const char * (*tkPixelPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 176 */
+    int (*tkOrientParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 177 */
+    const char * (*tkOrientPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 178 */
+    int (*tkSmoothParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 179 */
+    const char * (*tkSmoothPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 180 */
     void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int lastChar); /* 181 */
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */

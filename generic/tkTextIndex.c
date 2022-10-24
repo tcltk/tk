@@ -844,7 +844,7 @@ TkTextIndexGetLineNumber(
     const TkTextIndex *indexPtr,
     const TkText *textPtr)	/* we want the line number belonging to this peer, can be NULL */
 {
-    TkSizeT epoch;
+    Tcl_Size epoch;
     int32_t *lineNo;
 
     assert(indexPtr->tree);

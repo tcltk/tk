@@ -451,7 +451,7 @@ startOfClusterObjCmd(
     TKNSString *S;
     const char *stringArg;
     int numBytes;
-    TkSizeT index;
+    Tcl_Size index;
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -470,7 +470,7 @@ startOfClusterObjCmd(
     }
     if (index != TCL_INDEX_NONE) {
 	if ((size_t)index >= [S length]) {
-	    index = (TkSizeT)[S length];
+	    index = (Tcl_Size)[S length];
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
 	    index = range.location;
@@ -490,7 +490,7 @@ endOfClusterObjCmd(
     TKNSString *S;
     char *stringArg;
     int numBytes;
-    TkSizeT index;
+    Tcl_Size index;
 
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
@@ -924,7 +924,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
@@ -974,10 +974,10 @@ TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char * source,	/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string in all. */
-    int rangeStart,		/* Index of first byte to measure. */
-    int rangeLength,		/* Length of range to measure in bytes. */
+    Tcl_Size rangeStart,		/* Index of first byte to measure. */
+    Tcl_Size rangeLength,		/* Length of range to measure in bytes. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
 				 * character that would cross this x-position.
@@ -1182,7 +1182,7 @@ Tk_DrawChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
@@ -1272,9 +1272,9 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1295,7 +1295,7 @@ TkpDrawAngledCharsInContext(
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
-    if (rangeStart < 0 || rangeLength <= 0  ||
+    if (rangeStart == TCL_INDEX_NONE || rangeLength + 1 <= 1  ||
 	rangeStart + rangeLength > numBytes ||
 	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;

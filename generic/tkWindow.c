@@ -3277,7 +3277,7 @@ Initialize(
     }
 
     if (value) {
-	TkSizeT objc;
+	Tcl_Size objc;
 	Tcl_Obj **objv, **rest;
 	Tcl_Obj *parseList = Tcl_NewListObj(1, NULL);
 
@@ -3327,7 +3327,7 @@ Initialize(
      */
 
     {
-	TkSizeT numBytes;
+	Tcl_Size numBytes;
 	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);

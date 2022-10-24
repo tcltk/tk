@@ -41,7 +41,7 @@ used for returning results and errors from binding procedures.
 .AP Tk_BindingTable bindingTable in
 Token for binding table;  must have been returned by some previous
 call to \fBTk_CreateBindingTable\fR.
-.AP ClientData object in
+.AP "void *" object in
 Identifies object with which binding is associated.
 .AP "const char" *eventString in
 String describing event sequence.
@@ -55,9 +55,9 @@ X event to match against bindings in \fIbindingTable\fR.
 .AP Tk_Window tkwin in
 Identifier for any window on the display where the event occurred.
 Used to find display-related information such as key maps.
-.AP int numObjects in
+.AP Tcl_Size numObjects in
 Number of object identifiers pointed to by \fIobjectPtr\fR.
-.AP ClientData *objectPtr in
+.AP "void **" objectPtr in
 Points to an array of object identifiers:  bindings will be considered
 for each of these objects in order from first to last.
 .BE

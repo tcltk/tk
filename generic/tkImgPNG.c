@@ -126,7 +126,7 @@ typedef struct {
     Tcl_Channel channel;	/* Channel for from-file reads. */
     Tcl_Obj *objDataPtr;
     unsigned char *strDataBuf;	/* Raw source data for from-string reads. */
-    TkSizeT strDataLen;		/* Length of source data. */
+    Tcl_Size strDataLen;		/* Length of source data. */
     unsigned char *base64Data;	/* base64 encoded string data. */
     unsigned char base64Bits;	/* Remaining bits from last base64 read. */
     unsigned char base64State;	/* Current state of base64 decoder. */
@@ -647,7 +647,7 @@ ReadData(
     }
 
     while (destSz) {
-	TkSizeT blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	Tcl_Size blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
 	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
 	if (blockSz == TCL_IO_FAILURE) {
@@ -2199,7 +2199,7 @@ ReadIDAT(
      */
 
     while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)) {
-	TkSizeT len1, len2;
+	Tcl_Size len1, len2;
 
 	/*
 	 * Read another block of input into the zlib stream if data remains.
@@ -2255,7 +2255,7 @@ ReadIDAT(
 	}
 	Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, &len2);
 
-	if (len2 == (TkSizeT)pngPtr->phaseSize) {
+	if (len2 == (Tcl_Size)pngPtr->phaseSize) {
 	    if (pngPtr->phase > 7) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"extra data after final scan line of final phase",
@@ -3044,7 +3044,7 @@ WriteData(
      */
 
     if (pngPtr->objDataPtr) {
-	TkSizeT objSz;
+	Tcl_Size objSz;
 	unsigned char *destPtr;
 
 	Tcl_GetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
@@ -3339,7 +3339,7 @@ WriteIDAT(
     int rowNum, flush = TCL_ZLIB_NO_FLUSH, result;
     Tcl_Obj *outputObj;
     unsigned char *outputBytes;
-    TkSizeT outputSize;
+    Tcl_Size outputSize;
 
     /*
      * Filter and compress each row one at a time.
