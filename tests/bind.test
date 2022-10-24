@@ -6990,7 +6990,7 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
 test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [43573999ca]} -body {
     proc A {} {
        bind .c <B1-Motion><Enter> {}
-OK       bind .c <B1-Motion><Enter> "puts Trigger"
+       bind .c <B1-Motion><Enter> "puts Trigger"
     }
     pack [canvas .c]
     bind .c <ButtonRelease-1>  "A"
