@@ -6998,7 +6998,6 @@ test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [435739
     bind .c <ButtonRelease-1>  "A"
     A
     update
-    focus -force .c
     event generate .c <Button-1>
     event generate .c <B1-Motion>
     event generate .c <B1-Motion>
