@@ -84,12 +84,12 @@ typedef struct {
      * Internal state:
      */
     char *string;		/* Storage for string (malloced) */
-    TkSizeT numBytes;		/* Length of string in bytes. */
-    TkSizeT numChars;		/* Length of string in characters. */
+    Tcl_Size numBytes;		/* Length of string in bytes. */
+    Tcl_Size numChars;		/* Length of string in characters. */
 
-    TkSizeT insertPos;		/* Insert index */
-    TkSizeT selectFirst;		/* Index of start of selection, or TCL_INDEX_NONE */
-    TkSizeT selectLast;		/* Index of end of selection, or TCL_INDEX_NONE */
+    Tcl_Size insertPos;		/* Insert index */
+    Tcl_Size selectFirst;		/* Index of start of selection, or TCL_INDEX_NONE */
+    Tcl_Size selectLast;		/* Index of end of selection, or TCL_INDEX_NONE */
 
     Scrollable xscroll;		/* Current scroll position */
     ScrollHandle xscrollHandle;
@@ -315,7 +315,7 @@ static char *EntryDisplayString(const char *showChar, int numChars)
  */
 static void EntryUpdateTextLayout(Entry *entryPtr)
 {
-    TkSizeT length;
+    Tcl_Size length;
     char *text;
     Tk_FreeTextLayout(entryPtr->entry.textLayout);
     if ((entryPtr->entry.numChars != 0) || (entryPtr->entry.placeholderObj == NULL)) {
@@ -350,12 +350,12 @@ EntryEditable(Entry *entryPtr)
 /* EntryFetchSelection --
  *	Selection handler for entry widgets.
  */
-static TkSizeT
+static Tcl_Size
 EntryFetchSelection(
-    ClientData clientData, TkSizeT offset, char *buffer, TkSizeT maxBytes)
+    ClientData clientData, Tcl_Size offset, char *buffer, Tcl_Size maxBytes)
 {
     Entry *entryPtr = (Entry *)clientData;
-    TkSizeT byteCount;
+    Tcl_Size byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
@@ -421,7 +421,7 @@ ExpandPercents(
      Entry *entryPtr,		/* Entry that needs validation. */
      const char *templ, 	/* Script template */
      const char *newValue,		/* Potential new value of entry string */
-     TkSizeT index,			/* index of insert/delete */
+     Tcl_Size index,			/* index of insert/delete */
      int count,			/* #changed characters */
      VREASON reason,		/* Reason for change */
      Tcl_DString *dsPtr)	/* Result of %-substitutions */
@@ -531,8 +531,8 @@ static int RunValidationScript(
     const char *templ,	/* Script template */
     const char *optionName,	/* "-validatecommand", "-invalidcommand" */
     const char *newValue,	/* Potential new value of entry string */
-    TkSizeT index,			/* index of insert/delete */
-    TkSizeT count,			/* #changed characters */
+    Tcl_Size index,			/* index of insert/delete */
+    Tcl_Size count,			/* #changed characters */
     VREASON reason)		/* Reason for change */
 {
     Tcl_DString script;
@@ -592,8 +592,8 @@ static int
 EntryValidateChange(
     Entry *entryPtr,		/* Entry that needs validation. */
     const char *newValue,	/* Potential new value of entry string */
-    TkSizeT index,			/* index of insert/delete, TCL_INDEX_NONE otherwise */
-    TkSizeT count,			/* #changed characters */
+    Tcl_Size index,			/* index of insert/delete, TCL_INDEX_NONE otherwise */
+    Tcl_Size count,			/* #changed characters */
     VREASON reason)		/* Reason for change */
 {
     Tcl_Interp *interp = entryPtr->core.interp;
@@ -734,7 +734,7 @@ static void
 EntryStoreValue(Entry *entryPtr, const char *value)
 {
     size_t numBytes = strlen(value);
-    TkSizeT numChars = Tcl_NumUtfChars(value, numBytes);
+    Tcl_Size numChars = Tcl_NumUtfChars(value, numBytes);
 
     if (entryPtr->core.flags & VALIDATING)
 	entryPtr->core.flags |= VALIDATION_SET_VALUE;
@@ -835,7 +835,7 @@ static void EntryTextVariableTrace(void *recordPtr, const char *value)
 static int
 InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
-    TkSizeT index,			/* Insert before this index */
+    Tcl_Size index,			/* Insert before this index */
     const char *value)		/* New characters to add */
 {
     char *string = entryPtr->entry.string;
@@ -875,8 +875,8 @@ InsertChars(
 static int
 DeleteChars(
     Entry *entryPtr,		/* Entry widget to modify. */
-    TkSizeT index,			/* Index of first character to delete. */
-    TkSizeT count)			/* How many characters to delete. */
+    Tcl_Size index,			/* Index of first character to delete. */
+    Tcl_Size count)			/* How many characters to delete. */
 {
     char *string = entryPtr->entry.string;
     size_t byteIndex, byteCount, newByteCount;
@@ -1088,7 +1088,7 @@ static int EntryPostConfigure(Tcl_Interp *dummy, void *recordPtr, int mask)
  * 	Precondition: textLayout and layoutX up-to-date.
  */
 static int
-EntryCharPosition(Entry *entryPtr, TkSizeT index)
+EntryCharPosition(Entry *entryPtr, Tcl_Size index)
 {
     int xPos;
     Tk_CharBbox(entryPtr->entry.textLayout, index, &xPos, NULL, NULL, NULL);
@@ -1197,7 +1197,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 {
     Entry *entryPtr = (Entry *)clientData;
     Tk_Window tkwin = entryPtr->core.tkwin;
-    TkSizeT leftIndex = entryPtr->entry.xscroll.first,
+    Tcl_Size leftIndex = entryPtr->entry.xscroll.first,
 	rightIndex = entryPtr->entry.xscroll.last + 1,
 	selFirst = entryPtr->entry.selectFirst,
 	selLast = entryPtr->entry.selectLast;
@@ -1386,10 +1386,10 @@ EntryIndex(
     Tcl_Interp *interp,		/* For error messages. */
     Entry *entryPtr,		/* Entry widget to query */
     Tcl_Obj *indexObj,		/* Symbolic index name */
-    TkSizeT *indexPtr)		/* Return value */
+    Tcl_Size *indexPtr)		/* Return value */
 {
 #   define EntryWidth(e) (Tk_Width(entryPtr->core.tkwin)) /* Not Right */
-    TkSizeT length, idx;
+    Tcl_Size length, idx;
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
@@ -1441,7 +1441,7 @@ EntryIndex(
 		x - entryPtr->entry.layoutX, 0);
 
         TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
-	if (*indexPtr + 1 < (TkSizeT)entryPtr->entry.xscroll.first + 1) {
+	if (*indexPtr + 1 < (Tcl_Size)entryPtr->entry.xscroll.first + 1) {
 	    *indexPtr = entryPtr->entry.xscroll.first;
 	}
 
@@ -1452,7 +1452,7 @@ EntryIndex(
 	 * last character to be selected, for example.
 	 */
 
-	if (roundUp && ((TkSizeT)*indexPtr + 1 < entryPtr->entry.numChars + 1 )) {
+	if (roundUp && ((Tcl_Size)*indexPtr + 1 < entryPtr->entry.numChars + 1 )) {
 	    *indexPtr += 1;
 	}
     } else {
@@ -1476,7 +1476,7 @@ EntryBBoxCommand(
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Ttk_Box b;
-    TkSizeT index;
+    Tcl_Size index;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -1505,7 +1505,7 @@ EntryDeleteCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    TkSizeT first, last;
+    Tcl_Size first, last;
 
     if ((objc < 3) || (objc > 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
@@ -1570,7 +1570,7 @@ EntryIndexCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    TkSizeT index;
+    Tcl_Size index;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "string");
@@ -1592,7 +1592,7 @@ EntryInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    TkSizeT index;
+    Tcl_Size index;
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "index text");
@@ -1647,7 +1647,7 @@ static int EntrySelectionRangeCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    TkSizeT start, end;
+    Tcl_Size start, end;
     if (objc != 5) {
 	Tcl_WrongNumArgs(interp, 3, objv, "start end");
 	return TCL_ERROR;
@@ -1724,7 +1724,7 @@ static int EntryXViewCommand(
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc == 3) {
-	TkSizeT newFirst;
+	Tcl_Size newFirst;
 	if (EntryIndex(interp, entryPtr, objv[2], &newFirst) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -1780,7 +1780,7 @@ typedef struct {
     Tcl_Obj	*postCommandObj;
     Tcl_Obj	*valuesObj;
     Tcl_Obj	*heightObj;
-    TkSizeT	currentIndex;
+    Tcl_Size	currentIndex;
 } ComboboxPart;
 
 typedef struct {
@@ -1842,7 +1842,7 @@ static int ComboboxCurrentCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Combobox *cbPtr = (Combobox *)recordPtr;
-    TkSizeT currentIndex = cbPtr->combobox.currentIndex;
+    Tcl_Size currentIndex = cbPtr->combobox.currentIndex;
     const char *currentValue = cbPtr->entry.string;
     int nValues;
     Tcl_Obj **values;
@@ -1853,18 +1853,18 @@ static int ComboboxCurrentCommand(
 	/* Check if currentIndex still valid:
 	 */
 	if (currentIndex == TCL_INDEX_NONE
-	     || currentIndex >= (TkSizeT)nValues
+	     || currentIndex >= (Tcl_Size)nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
 	{
 	    /* Not valid.  Check current value against each element in -values:
 	     */
-	    for (currentIndex = 0; currentIndex < (TkSizeT)nValues; ++currentIndex) {
+	    for (currentIndex = 0; currentIndex < (Tcl_Size)nValues; ++currentIndex) {
 		if (!strcmp(currentValue,Tcl_GetString(values[currentIndex]))) {
 		    break;
 		}
 	    }
-	    if (currentIndex >= (TkSizeT)nValues) {
+	    if (currentIndex >= (Tcl_Size)nValues) {
 		/* Not found */
 		currentIndex = TCL_INDEX_NONE;
 	    }
@@ -1873,10 +1873,10 @@ static int ComboboxCurrentCommand(
 	Tcl_SetObjResult(interp, TkNewIndexObj(currentIndex));
 	return TCL_OK;
     } else if (objc == 3) {
-	TkSizeT idx;
+	Tcl_Size idx;
 
 	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, 0, &idx)) {
-	    if (idx == TCL_INDEX_NONE || idx >= (TkSizeT)nValues) {
+	    if (idx == TCL_INDEX_NONE || idx >= (Tcl_Size)nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);

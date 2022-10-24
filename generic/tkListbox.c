@@ -405,8 +405,8 @@ static void		ListboxComputeGeometry(Listbox *listPtr,
 			    int fontChanged, int maxIsStale, int updateGrid);
 static void		ListboxEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static TkSizeT	ListboxFetchSelection(ClientData clientData,
-			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
+static Tcl_Size	ListboxFetchSelection(ClientData clientData,
+			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
 static void		ListboxLostSelection(ClientData clientData);
 static void		GenerateListboxSelectEvent(Listbox *listPtr);
 static void		EventuallyRedrawRange(Listbox *listPtr,
@@ -1100,7 +1100,7 @@ ListboxBboxSubCmd(
 	Tcl_Obj *el, *results[4];
 	const char *stringRep;
 	int pixelWidth, x, y, result;
-	TkSizeT stringLen;
+	Tcl_Size stringLen;
 	Tk_FontMetrics fm;
 
 	/*
@@ -1841,7 +1841,7 @@ DisplayListbox(
     Tk_Window tkwin = listPtr->tkwin;
     GC gc;
     int i, limit, x, y, prevSelected, freeGC;
-    TkSizeT stringLen;
+    Tcl_Size stringLen;
     Tk_FontMetrics fm;
     Tcl_Obj *curElement;
     Tcl_HashEntry *entry;
@@ -2238,7 +2238,7 @@ ListboxComputeGeometry(
 				 * window. */
 {
     int width, height, pixelWidth, pixelHeight, i, result;
-    TkSizeT textLength;
+    Tcl_Size textLength;
     Tk_FontMetrics fm;
     Tcl_Obj *element;
     const char *text;
@@ -2326,7 +2326,7 @@ ListboxInsertSubCmd(
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
 {
     int i, oldMaxWidth, pixelWidth, result;
-    TkSizeT length;
+    Tcl_Size length;
     Tcl_Obj *newListObj;
     const char *stringRep;
 
@@ -2441,7 +2441,7 @@ ListboxDeleteSubCmd(
     int last)			/* Index of last element to delete. */
 {
     int count, i, widthChanged, result, pixelWidth;
-    TkSizeT length;
+    Tcl_Size length;
     Tcl_Obj *newListObj, *element;
     const char *stringRep;
     Tcl_HashEntry *entry;
@@ -2733,12 +2733,12 @@ GetListboxIndex(
     int *indexPtr)		/* Where to store converted index. */
 {
     int result, index;
-    TkSizeT idx;
+    Tcl_Size idx;
     const char *stringRep;
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
-    	if ((idx != TCL_INDEX_NONE) && (idx > (TkSizeT)listPtr->nElements)) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > (Tcl_Size)listPtr->nElements)) {
     	    idx = listPtr->nElements;
     	}
     	*indexPtr = (int)idx;
@@ -3108,20 +3108,20 @@ ListboxSelect(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 ListboxFetchSelection(
     ClientData clientData,	/* Information about listbox widget. */
-    TkSizeT offset,			/* Offset within selection of first byte to be
+    Tcl_Size offset,			/* Offset within selection of first byte to be
 				 * returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
     Listbox *listPtr = (Listbox *)clientData;
     Tcl_DString selection;
     int count, needNewline, i;
-    TkSizeT length, stringLen;
+    Tcl_Size length, stringLen;
     Tcl_Obj *curElement;
     const char *stringRep;
     Tcl_HashEntry *entry;

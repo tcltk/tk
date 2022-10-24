@@ -76,11 +76,11 @@ startEndOfCmd(
     Tcl_Obj *const objv[])
 {
     Tcl_DString ds;
-    TkSizeT len;
+    Tcl_Size len;
     const char *str;
     UErrorCodex errorCode = U_ZERO_ERRORZ;
     void *it;
-    TkSizeT idx;
+    Tcl_Size idx;
     int flags = PTR2INT(clientData);
     const uint16_t *ustr;
     const char *locale = NULL;
