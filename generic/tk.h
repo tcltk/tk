@@ -1512,7 +1512,7 @@ typedef struct Tk_ElementSpec {
 #define Tk_Release		Tcl_Release
 
 /* Removed Tk_Main, use macro instead */
-#if defined(_WIN32) || defined(__CYGWIN__)
+#if defined(_WIN32)
 #define Tk_Main(argc, argv, proc) Tk_MainEx(argc, argv, proc, \
 	(Tcl_FindExecutable(0), (Tcl_CreateInterp)()))
 #else

@@ -37,7 +37,7 @@ extern "C" {
  * Exported function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) /* WIN */
 /* 0 */
 EXTERN Window		Tk_AttachHWND(Tk_Window tkwin, HWND hwnd);
 /* 1 */
@@ -99,7 +99,7 @@ typedef struct TkPlatStubs {
     int magic;
     void *hooks;
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) /* WIN */
     Window (*tk_AttachHWND) (Tk_Window tkwin, HWND hwnd); /* 0 */
     HINSTANCE (*tk_GetHINSTANCE) (void); /* 1 */
     HWND (*tk_GetHWND) (Window window); /* 2 */
@@ -140,7 +140,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
  * Inline function declarations:
  */
 
-#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
+#if defined(_WIN32) /* WIN */
 #define Tk_AttachHWND \
 	(tkPlatStubsPtr->tk_AttachHWND) /* 0 */
 #define Tk_GetHINSTANCE \
