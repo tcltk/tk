@@ -103,7 +103,7 @@ EXTERN void		TkWinSetWindowPos(HWND hwnd, HWND siblingHwnd,
 /* 27 */
 EXTERN void		TkWinWmCleanup(HINSTANCE hInstance);
 /* 28 */
-EXTERN void		TkWinXCleanup(ClientData clientData);
+EXTERN void		TkWinXCleanup(void *clientData);
 /* 29 */
 EXTERN void		TkWinXInit(HINSTANCE hInstance);
 /* 30 */
@@ -139,9 +139,8 @@ EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 /* 44 */
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
-EXTERN int		TkpTestsendCmd(ClientData clientData,
-				Tcl_Interp *interp, int objc,
-				Tcl_Obj *const objv[]);
+EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
+				int objc, Tcl_Obj *const objv[]);
 /* Slot 46 is reserved */
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
@@ -288,9 +287,8 @@ EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 12 */
 EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 /* 13 */
-EXTERN int		TkpTestsendCmd(ClientData clientData,
-				Tcl_Interp *interp, int objc,
-				Tcl_Obj *const objv[]);
+EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
+				int objc, Tcl_Obj *const objv[]);
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
 /* Slot 16 is reserved */
@@ -330,9 +328,8 @@ EXTERN void		TkWmCleanup_(TkDisplay *dispPtr);
 /* 44 */
 EXTERN void		TkSendCleanup_(TkDisplay *dispPtr);
 /* 45 */
-EXTERN int		TkpTestsendCmd_(ClientData clientData,
-				Tcl_Interp *interp, int objc,
-				Tcl_Obj *const objv[]);
+EXTERN int		TkpTestsendCmd_(void *clientData, Tcl_Interp *interp,
+				int objc, Tcl_Obj *const objv[]);
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -368,7 +365,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinSetMenu) (Tk_Window tkwin, HMENU hMenu); /* 25 */
     void (*tkWinSetWindowPos) (HWND hwnd, HWND siblingHwnd, int pos); /* 26 */
     void (*tkWinWmCleanup) (HINSTANCE hInstance); /* 27 */
-    void (*tkWinXCleanup) (ClientData clientData); /* 28 */
+    void (*tkWinXCleanup) (void *clientData); /* 28 */
     void (*tkWinXInit) (HINSTANCE hInstance); /* 29 */
     void (*tkWinSetForegroundWindow) (TkWindow *winPtr); /* 30 */
     void (*tkWinDialogDebug) (int debug); /* 31 */
@@ -385,7 +382,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
     void (*reserved46)(void);
     Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
@@ -461,7 +458,7 @@ typedef struct TkIntPlatStubs {
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 10 */
     void (*reserved11)(void);
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 12 */
-    int (*tkpTestsendCmd) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 13 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 13 */
     void (*reserved14)(void);
     void (*reserved15)(void);
     void (*reserved16)(void);
@@ -493,7 +490,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar_) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup_) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup_) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd_) (ClientData clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd_) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
 #endif /* X11 */
 } TkIntPlatStubs;
 

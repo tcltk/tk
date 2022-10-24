@@ -384,7 +384,7 @@ TkTextTagCmd(
 	break;
     case TAG_CLEAR: {
 	int discardSelection;
-	TkSizeT epoch, countTags;
+	Tcl_Size epoch, countTags;
 	TkTextTag **arrayPtr;
 	int anyChanges;
 	int arg;
@@ -1451,7 +1451,7 @@ TkTextReplaceTags(
     int altered = 0;
     int anyChanges = 0;
     Tcl_Obj **objs;
-    TkSizeT objn = 0, k;
+    Tcl_Size objn = 0, k;
     unsigned j;
 
     assert(textPtr);

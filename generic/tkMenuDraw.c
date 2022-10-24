@@ -298,7 +298,7 @@ TkMenuConfigureDrawOptions(
 int
 TkMenuConfigureEntryDrawOptions(
     TkMenuEntry *mePtr,
-    TkSizeT index)
+    Tcl_Size index)
 {
     XGCValues gcValues;
     GC newGC, newActiveGC, newDisabledGC, newIndicatorGC;
@@ -487,7 +487,7 @@ TkEventuallyRedrawMenu(
     TkMenuEntry *mePtr)/* Entry to redraw. NULL means redraw all the
 				 * entries in the menu. */
 {
-    TkSizeT i;
+    Tcl_Size i;
 
     if (menuPtr->tkwin == NULL) {
 	return;
@@ -624,7 +624,7 @@ DisplayMenu(
     TkMenu *menuPtr = (TkMenu *)clientData;
     TkMenuEntry *mePtr;
     Tk_Window tkwin = menuPtr->tkwin;
-    TkSizeT index;
+    Tcl_Size index;
     int strictMotif;
     Tk_Font tkfont;
     Tk_FontMetrics menuMetrics;

@@ -665,7 +665,7 @@ TkTextMarkCmd(
 	break;
     }
     case MARK_GRAVITY: {
-	TkSizeT length;
+	Tcl_Size length;
 	const char *str;
 
 	if (objc < 4 || objc > 5) {

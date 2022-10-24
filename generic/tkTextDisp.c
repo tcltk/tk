@@ -305,8 +305,8 @@ typedef struct CharInfo {
 				 * the base chunk. */
 	struct CharInfo *next;	/* Pointer to next free info struct. */
     } u;
-    TkSizeT numBytes;		/* Number of bytes that belong to this chunk. */
-    TkSizeT baseOffset;		/* Starting offset in baseChars of base chunk; always zero if
+    Tcl_Size numBytes;		/* Number of bytes that belong to this chunk. */
+    Tcl_Size baseOffset;		/* Starting offset in baseChars of base chunk; always zero if
     				 * context drawing is not used. */
     TkTextSegment *segPtr;	/* Pointer to char segment containing the chars. */
 } CharInfo;
@@ -2979,8 +2979,8 @@ LayoutFinalizeCharInfo(
     CharInfo *ciPtr = (CharInfo *)data->chunkPtr->clientData;
 
     assert(data->trimSpaces ?
-	    (TkSizeT)data->chunkPtr->numBytes >= ciPtr->numBytes :
-	    (TkSizeT)data->chunkPtr->numBytes == ciPtr->numBytes);
+	    (Tcl_Size)data->chunkPtr->numBytes >= ciPtr->numBytes :
+	    (Tcl_Size)data->chunkPtr->numBytes == ciPtr->numBytes);
 
     /*
      * Update the character information. Take into account that we don't want
@@ -11158,7 +11158,7 @@ TkTextYviewCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     int pickPlace;
     int pixels, count;
-    TkSizeT switchLength;
+    Tcl_Size switchLength;
     double fraction;
     TkTextIndex index;
 
@@ -12084,7 +12084,7 @@ TkTextPixelIndex(
     DLine *currDLinePtr;
     TkTextDispChunk *currChunkPtr;
     int nearby = 0;
-    TkSizeT epoch;
+    Tcl_Size epoch;
 
     /*
      * Make sure that all of the layout information about what's displayed
@@ -14347,7 +14347,7 @@ CharChunkMeasureChars(
 	charsLen = Tcl_DStringLength(baseChars);
 	start += ciPtr->baseOffset;
 	if (end == -1) {
-	    assert(ciPtr->numBytes >= (TkSizeT)chunkPtr->wrappedAtSpace);
+	    assert(ciPtr->numBytes >= (Tcl_Size)chunkPtr->wrappedAtSpace);
 	    end = ciPtr->baseOffset + ciPtr->numBytes - chunkPtr->wrappedAtSpace;
 	} else {
 	    end += ciPtr->baseOffset;
@@ -14358,7 +14358,7 @@ CharChunkMeasureChars(
 	}
     }
 
-    if ((TkSizeT)start == ciPtr->baseOffset) {
+    if ((Tcl_Size)start == ciPtr->baseOffset) {
 	/*
 	 * This is a very frequent case, and MeasureChars() is not needed here.
 	 */
@@ -14855,7 +14855,7 @@ DrawChars(
 	start = ciPtr->baseOffset + offsetBytes;
 	len = ciPtr->numBytes - offsetBytes;
 
-	assert(ciPtr->numBytes >= (TkSizeT)offsetBytes);
+	assert(ciPtr->numBytes >= (Tcl_Size)offsetBytes);
 
 	if (len == 0 || (string[start + len - 1] == '\t' && --len == 0)) {
 	    return;
@@ -14911,7 +14911,7 @@ DrawChars(
     ciPtr = (const CharInfo *)chunkPtr->clientData;
     numBytes = ciPtr->numBytes;
 
-    assert((TkSizeT)offsetBytes >= ciPtr->baseOffset);
+    assert((Tcl_Size)offsetBytes >= ciPtr->baseOffset);
 
     if (numBytes > offsetBytes) {
 	const TextStyle *stylePtr = chunkPtr->stylePtr;
@@ -15019,7 +15019,7 @@ TkpTextPrintDispChunk(
 	fprintf(stdout, "CHAR=");
 	if (chunkPtr->clientData) {
 	    const CharInfo *ciPtr = (const CharInfo *) chunkPtr->clientData;
-	    TkSizeT i;
+	    Tcl_Size i;
 
 	    for (i = 0; i < ciPtr->numBytes; ++i) {
 		char c = ciPtr->u.chars[i];
