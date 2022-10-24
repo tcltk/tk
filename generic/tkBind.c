@@ -2363,7 +2363,7 @@ Tk_BindEvent(
     Tcl_DStringInit(&scripts);
 
     if ((size_t) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
-	/* it's unrealistic that the buffer size is too small, but who knows? */
+	/* It's unrealistic that the buffer size is too small, but who knows? */
 	matchPtrArr = (PatSeq **)ckalloc(numObjects*sizeof(matchPtrArr[0]));
     }
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
@@ -2762,6 +2762,20 @@ CompareModMasks(
     return fstCount - sndCount;
 }
 
+/* helper function */
+static int
+IsPSInPSList(
+    const PatSeq *psPtr,   /* Is this pattern sequence */
+    const PSList *psList)  /* in this list of sequence patterns? */
+{
+    PSEntry *psEntry;
+
+    TK_DLIST_FOREACH(psEntry, psList) {
+        if (psEntry->psPtr == psPtr) { return 1; }
+    }
+    return 0;
+}
+
 static PatSeq *
 MatchPatterns(
     TkDisplay *dispPtr,		/* Display from which the event came. */
@@ -2831,7 +2845,7 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
-                /* ignore modifier key events, and KeyRelease events if the current event
+                /* Ignore modifier key events, and KeyRelease events if the current event
                  * is of a different type (e.g. a Button event)
                  */
                 psEntry->keepIt = isModKeyOnly || \
@@ -2893,26 +2907,36 @@ MatchPatterns(
 			    }
 			} else if (psSuccList) {
 			    /*
-			     * Not a final pattern, but matching, so promote it to next level.
+			     * Not a final pattern, but matching, so promote it to next level
+			     * if not already promoted in the success list.
 			     * But do not promote if count of current pattern is not yet reached.
 			     */
-			    if (patPtr->count == psEntry->count) {
-				PSEntry *psNewEntry;
+			    if (!IsPSInPSList(psPtr, psSuccList)) {
+				if (patPtr->count == psEntry->count) {
+				    PSEntry *psNewEntry;
 
-				assert(!patPtr->name);
-				psNewEntry = MakeListEntry(
-				    &bindPtr->lookupTables.entryPool, psPtr, psPtr->modMaskUsed);
-				if (!PSModMaskArr_IsEmpty(psNewEntry->lastModMaskArr)) {
-				    PSModMaskArr_Set(psNewEntry->lastModMaskArr, patIndex, &modMask);
+				    assert(!patPtr->name);
+				    psNewEntry = MakeListEntry(
+					&bindPtr->lookupTables.entryPool, psPtr, psPtr->modMaskUsed);
+				    if (!PSModMaskArr_IsEmpty(psNewEntry->lastModMaskArr)) {
+					PSModMaskArr_Set(psNewEntry->lastModMaskArr, patIndex, &modMask);
+				    }
+				    assert(psNewEntry->keepIt);
+				    assert(psNewEntry->count == 1u);
+				    PSList_Append(psSuccList, psNewEntry);
+				    psNewEntry->window = window; /* bind to current window */
+				} else {
+				    assert(psEntry->count < patPtr->count);
+				    DEBUG(psEntry->expired = 0;)
+				    psEntry->count += 1;
+				    psEntry->keepIt = 1; /* don't remove it from promotion list */
 				}
-				assert(psNewEntry->keepIt);
-				assert(psNewEntry->count == 1u);
-				PSList_Append(psSuccList, psNewEntry);
-				psNewEntry->window = window; /* bind to current window */
 			    } else {
-				assert(psEntry->count < patPtr->count);
+			        /*
+				 * Pattern sequence is already present in the success list.
+				 */
+
 				DEBUG(psEntry->expired = 0;)
-				psEntry->count += 1;
 				psEntry->keepIt = 1; /* don't remove it from promotion list */
 			    }
 			}
