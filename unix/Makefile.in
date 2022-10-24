@@ -592,10 +592,6 @@ ${LIB_FILE}: ${STUB_LIB_FILE} @LIB_RSRC_FILE@ ${OBJS}
 	@MAKE_LIB@
 
 ${STUB_LIB_FILE}: ${STUB_LIB_OBJS}
-	@if test "x${LIB_FILE}" = "xlibtk${MAJOR_VERSION}.${MINOR_VERSION}.dll"; then \
-	    (cd ${TOP_DIR}/win; ${MAKE} tk${MAJOR_VERSION}${MINOR_VERSION}.dll); \
-	    cp "${TOP_DIR}/win/tk${MAJOR_VERSION}${MINOR_VERSION}.dll" .; \
-	fi
 	rm -f $@
 	@MAKE_STUB_LIB@
 

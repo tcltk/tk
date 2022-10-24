@@ -114,7 +114,7 @@
 #   define NBBY 8
 #endif
 
-#ifdef __CYGWIN__
+#if 0
 #   include "tkIntXlibDecls.h"
 #   define UINT unsigned int
 #   define HWND void *
@@ -171,7 +171,7 @@
 #define TkpButtonSetDefaults() {}
 #define TkpDestroyButton(butPtr) {}
 #define TkSelUpdateClipboard(a,b) {}
-#ifndef __CYGWIN__
+#if 1
 #define TkSetPixmapColormap(p,c) {}
 #endif
 
@@ -189,7 +189,7 @@
  * This should perhaps use the real size of an XID.
  */
 
-#ifndef __CYGWIN__
+#if 1
 #define TkpPrintWindowId(buf,w) \
 	sprintf((buf), "0x%08lx", (unsigned long) (w))
 #endif

@@ -4759,7 +4759,7 @@ echo "$as_me: error: CYGWIN compile is only supported with --enable-threads" >&2
    { (exit 1); exit 1; }; }
 	    fi
 	    do64bit_ok=yes
-	    if test "x${SHARED_BUILD}" = "x1"; then
+	    if test "x${SHARED_BUILD}" = "xnever"; then
 		echo "running cd ../win; ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args"
 		# The eval makes quoting arguments work.
 		if cd ../win; eval ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args; cd ../unix
@@ -11154,7 +11154,7 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
-    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
+    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "never"; then
 	TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
     else

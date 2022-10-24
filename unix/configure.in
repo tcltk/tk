@@ -749,7 +749,7 @@ else
     fi
     # libdir must be a fully qualified path and not ${exec_prefix}/lib
     eval libdir="$libdir"
-    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "1"; then
+    if test "${ac_cv_cygwin}" = "yes" -a "$SHARED_BUILD" = "never"; then
 	TK_LIB_FLAG="-ltk`echo ${TK_VERSION} | tr -d .`"
 	TK_BUILD_LIB_SPEC="-L\$(TOP_DIR)/win ${TK_LIB_FLAG}"
     else

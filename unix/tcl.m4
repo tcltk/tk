@@ -1214,7 +1214,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		AC_MSG_ERROR([CYGWIN compile is only supported with --enable-threads])
 	    fi
 	    do64bit_ok=yes
-	    if test "x${SHARED_BUILD}" = "x1"; then
+	    if test "x${SHARED_BUILD}" = "xnever"; then
 		echo "running cd ../win; ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args"
 		# The eval makes quoting arguments work.
 		if cd ../win; eval ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args; cd ../unix
