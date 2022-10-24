@@ -675,7 +675,7 @@ DoObjConfig(
 	break;
     }
     case TK_OPTION_INDEX: {
-	TkSizeT newIndex;
+	Tcl_Size newIndex;
 
 	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
@@ -685,7 +685,7 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
     if (newIndex == TCL_INDEX_NONE) {
-	newIndex = (TkSizeT)INT_MIN;
+	newIndex = (Tcl_Size)INT_MIN;
     } else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
 	newIndex++;
     }
@@ -728,7 +728,7 @@ DoObjConfig(
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	TkSizeT length;
+	Tcl_Size length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
@@ -1316,7 +1316,7 @@ Tk_SetOptions(
 				 * then no error message is returned.*/
     void *recordPtr,	    	/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
-    int objc,			/* The number of elements in objv. */
+    Tcl_Size objc1,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
     Tk_Window tkwin,		/* Window associated with the thing being
 				 * configured; needed for some options (such
@@ -1335,6 +1335,7 @@ Tk_SetOptions(
     Option *optionPtr;
     Tk_SavedOptions *lastSavePtr, *newSavePtr;
     int mask;
+    int objc = objc1;
 
     if (savePtr != NULL) {
 	savePtr->recordPtr = recordPtr;

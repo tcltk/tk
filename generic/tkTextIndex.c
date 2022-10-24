@@ -112,7 +112,7 @@ DupTextIndexInternalRep(
     Tcl_Obj *srcPtr,		/* TextIndex obj with internal rep to copy. */
     Tcl_Obj *copyPtr)		/* TextIndex obj with internal rep to set. */
 {
-    TkSizeT epoch;
+    Tcl_Size epoch;
     TkTextIndex *dupIndexPtr, *indexPtr;
 
     dupIndexPtr = (TkTextIndex *)ckalloc(sizeof(TkTextIndex));
@@ -214,7 +214,7 @@ TkTextGetIndexFromObj(
     int cache;
 
     if (objPtr->typePtr == &tkTextIndexType) {
-	TkSizeT epoch;
+	Tcl_Size epoch;
 
 	indexPtr = GET_TEXTINDEX(objPtr);
 	epoch = GET_INDEXEPOCH(objPtr);
@@ -573,11 +573,11 @@ TkTextMakeCharIndex(
 TkTextSegment *
 TkTextIndexToSeg(
     const TkTextIndex *indexPtr,/* Text index. */
-    TkSizeT *offsetPtr)		/* Where to store offset within segment, or
+    Tcl_Size *offsetPtr)		/* Where to store offset within segment, or
 				 * NULL if offset isn't wanted. */
 {
     TkTextSegment *segPtr;
-    TkSizeT offset;
+    Tcl_Size offset;
 
     for (offset = indexPtr->byteIndex, segPtr = indexPtr->linePtr->segPtr;
 	    offset >= segPtr->size;
@@ -1094,7 +1094,7 @@ TkTextIndexAdjustToStartEnd(
  *---------------------------------------------------------------------------
  */
 
-TkSizeT
+Tcl_Size
 TkTextPrintIndex(
     const TkText *textPtr,
     const TkTextIndex *indexPtr,/* Pointer to index. */
@@ -1558,7 +1558,7 @@ TkTextIndexForwChars(
     TkTextLine *linePtr;
     TkTextSegment *segPtr;
     TkTextElideInfo *infoPtr = NULL;
-    TkSizeT byteOffset;
+    Tcl_Size byteOffset;
     char *start, *end, *p;
     int ch;
     int elide = 0;
@@ -1746,7 +1746,7 @@ IndexCountBytesOrdered(
 				/* Index describing location of last character
 				 * at which to stop the count. */
 {
-    TkSizeT byteCount, offset;
+    Tcl_Size byteCount, offset;
     TkTextSegment *segPtr, *segPtr1;
     TkTextLine *linePtr;
 
@@ -1823,7 +1823,7 @@ TkTextIndexCount(
     TkTextLine *linePtr1;
     TkTextSegment *segPtr, *seg2Ptr = NULL;
     TkTextElideInfo *infoPtr = NULL;
-    TkSizeT byteOffset, maxBytes, count = 0;
+    Tcl_Size byteOffset, maxBytes, count = 0;
     int elide = 0;
     int checkElided = (type & COUNT_DISPLAY);
 
@@ -1914,10 +1914,10 @@ TkTextIndexCount(
 	    }
 
 	    if (segPtr->typePtr == &tkTextCharType) {
-		TkSizeT byteLen = segPtr->size - byteOffset;
+		Tcl_Size byteLen = segPtr->size - byteOffset;
 		unsigned char *str = (unsigned char *)
 			segPtr->body.chars + byteOffset;
-		TkSizeT i;
+		Tcl_Size i;
 
 		if (segPtr == seg2Ptr) {
 		    if (byteLen + byteOffset > maxBytes) {
@@ -1947,7 +1947,7 @@ TkTextIndexCount(
 		}
 	    } else {
 		if (type & COUNT_INDICES) {
-		    TkSizeT byteLen = segPtr->size - byteOffset;
+		    Tcl_Size byteLen = segPtr->size - byteOffset;
 
 		    if (segPtr == seg2Ptr) {
 			if (byteLen + byteOffset > maxBytes) {
@@ -2372,7 +2372,7 @@ StartEnd(
     } else if ((*string == 'w') && (strncmp(string, "wordend", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
-	TkSizeT offset;
+	Tcl_Size offset;
 
 	/*
 	 * If the current character isn't part of a word then just move
@@ -2415,7 +2415,7 @@ StartEnd(
     } else if ((*string == 'w') && (strncmp(string, "wordstart", length) == 0)
 	    && (length >= 5)) {
 	int firstChar = 1;
-	TkSizeT offset;
+	Tcl_Size offset;
 
 	if (modifier == TKINDEX_DISPLAY) {
 	    TkTextIndexForwChars(textPtr, indexPtr, 0, indexPtr,

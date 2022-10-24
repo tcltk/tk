@@ -954,7 +954,7 @@ StringMatchGIF(
     TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     unsigned char *data, header[10];
-    TkSizeT got, length;
+    Tcl_Size got, length;
     MFile handle;
 
     data = Tcl_GetByteArrayFromObj(dataObj, &length);
@@ -1025,7 +1025,7 @@ StringReadGIF(
     Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     MFile handle, *hdlPtr = &handle;
-    TkSizeT length;
+    Tcl_Size length;
     const char *xferFormat;
     unsigned char *data = Tcl_GetByteArrayFromObj(dataObj, &length);
 

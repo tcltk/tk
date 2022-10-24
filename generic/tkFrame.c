@@ -489,7 +489,7 @@ TkListCreateFrame(
 				 * Gives the base name to use for the new
 				 * application. */
 {
-    TkSizeT objc;
+    Tcl_Size objc;
     Tcl_Obj **objv;
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
@@ -519,7 +519,7 @@ CreateFrame(
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
     int i, depth;
-    TkSizeT length;
+    Tcl_Size length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -776,7 +776,7 @@ FrameWidgetObjCmd(
     Frame *framePtr = (Frame *)clientData;
     int result = TCL_OK, index;
     int c, i;
-    TkSizeT length;
+    Tcl_Size length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {

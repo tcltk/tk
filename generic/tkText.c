@@ -86,11 +86,11 @@ static const char *const insertUnfocussedStrings[] = {
 static int		SetLineStartEnd(ClientData clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj **value, char *recordPtr,
-			    TkSizeT internalOffset, char *oldInternalPtr,
+			    Tcl_Size internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetLineStartEnd(ClientData clientData,
 			    Tk_Window tkwin, char *recordPtr,
-			    TkSizeT internalOffset);
+			    Tcl_Size internalOffset);
 static void		RestoreLineStartEnd(ClientData clientData,
 			    Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
@@ -269,10 +269,10 @@ typedef ClientData	SearchAddLineProc(int lineNum,
 typedef int		SearchMatchProc(int lineNum,
 			    struct SearchSpec *searchSpecPtr,
 			    ClientData clientData, Tcl_Obj *theLine,
-			    TkSizeT matchOffset, TkSizeT matchLength);
+			    Tcl_Size matchOffset, Tcl_Size matchLength);
 typedef int		SearchLineIndexProc(Tcl_Interp *interp,
 			    Tcl_Obj *objPtr, struct SearchSpec *searchSpecPtr,
-			    int *linePosPtr, TkSizeT *offsetPosPtr);
+			    int *linePosPtr, Tcl_Size *offsetPosPtr);
 
 typedef struct SearchSpec {
     int exact;			/* Whether search is exact or regexp. */
@@ -288,10 +288,10 @@ typedef struct SearchSpec {
     int all;			/* Whether all or the first match should be
 				 * reported. */
     int startLine;		/* First line to examine. */
-    TkSizeT startOffset;		/* Index in first line to start at. */
+    Tcl_Size startOffset;		/* Index in first line to start at. */
     int stopLine;		/* Last line to examine, or -1 when we search
 				 * all available text. */
-    TkSizeT stopOffset;		/* Index to stop at, provided stopLine is not
+    Tcl_Size stopOffset;		/* Index to stop at, provided stopLine is not
 				 * -1. */
     int numLines;		/* Total lines which are available. */
     int backwards;		/* Searching forwards or backwards. */
@@ -355,8 +355,8 @@ static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData,
 			    XEvent *eventPtr);
-static TkSizeT	TextFetchSelection(ClientData clientData, TkSizeT offset,
-			    char *buffer, TkSizeT maxBytes);
+static Tcl_Size	TextFetchSelection(ClientData clientData, Tcl_Size offset,
+			    char *buffer, Tcl_Size maxBytes);
 static int		TextIndexSortProc(const void *first,
 			    const void *second);
 static int		TextInsertCmd(TkSharedText *sharedTextPtr,
@@ -400,8 +400,8 @@ static void		TextPushUndoAction(TkText *textPtr,
 			    Tcl_Obj *undoString, int insert,
 			    const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
-static TkSizeT		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
-			    TkTextLine *linePtr, TkSizeT byteIndex);
+static Tcl_Size		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
+			    TkTextLine *linePtr, Tcl_Size byteIndex);
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static TkUndoProc	TextUndoRedoCallback;
@@ -854,7 +854,7 @@ TextWidgetObjCmd(
 
 	for (i = 2; i < objc-2; i++) {
 	    int value;
-	    TkSizeT length;
+	    Tcl_Size length;
 	    const char *option = Tcl_GetStringFromObj(objv[i], &length);
 	    char c;
 
@@ -1249,7 +1249,7 @@ TextWidgetObjCmd(
 	Tcl_Obj *objPtr = NULL;
 	int i, found = 0, visible = 0;
 	const char *name;
-	TkSizeT length;
+	Tcl_Size length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
@@ -2625,7 +2625,7 @@ InsertChars(
     int viewUpdate)		/* Update the view if set. */
 {
     int lineIndex;
-    TkSizeT length;
+    Tcl_Size length;
     TkText *tPtr;
     int *lineAndByteIndex;
     int resetViewCount;
@@ -2957,7 +2957,7 @@ TextUndoRedoCallback(
 {
     TkSharedText *sharedPtr = (TkSharedText *)clientData;
     int res;
-    TkSizeT objc;
+    Tcl_Size objc;
     Tcl_Obj **objv;
     TkText *textPtr;
 
@@ -3122,7 +3122,7 @@ DeleteIndexRange(
     int pixels[2*PIXEL_CLIENTS];
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
-    TkSizeT i;
+    Tcl_Size i;
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -3168,7 +3168,7 @@ DeleteIndexRange(
     line2 = TkBTreeLinesTo(textPtr, index2.linePtr);
     if (line2 == TkBTreeNumLines(sharedTextPtr->tree, textPtr)) {
 	TkTextTag **arrayPtr;
-	TkSizeT arraySize;
+	Tcl_Size arraySize;
 	TkTextIndex oldIndex2;
 
 	oldIndex2 = index2;
@@ -3400,20 +3400,20 @@ DeleteIndexRange(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-    TkSizeT offset,			/* Offset within selection of first character
+    Tcl_Size offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
     TkText *textPtr = (TkText *)clientData;
     TkTextIndex eof;
     int count, chunkSize;
-    TkSizeT offsetInSeg;
+    Tcl_Size offsetInSeg;
     TkTextSearch search;
     TkTextSegment *segPtr;
 
@@ -3730,12 +3730,12 @@ TextInsertCmd(
 	if (objc > (j+1)) {
 	    Tcl_Obj **tagNamePtrs;
 	    TkTextTag **oldTagArrayPtr;
-	    TkSizeT numTags;
+	    Tcl_Size numTags;
 
 	    TkTextIndexForwBytes(textPtr, &index1, length, &index2);
 	    oldTagArrayPtr = TkBTreeGetTags(&index1, NULL, &numTags);
 	    if (oldTagArrayPtr != NULL) {
-		TkSizeT i;
+		Tcl_Size i;
 
 		for (i = 0; i < numTags; i++) {
 		    TkBTreeTag(&index1, &index2, oldTagArrayPtr[i], 0);
@@ -3746,7 +3746,7 @@ TextInsertCmd(
 		    &tagNamePtrs) != TCL_OK) {
 		return TCL_ERROR;
 	    } else {
-		TkSizeT i;
+		Tcl_Size i;
 
 		for (i = 0; i < numTags; i++) {
 		    const char *strTag = Tcl_GetString(tagNamePtrs[i]);
@@ -4002,7 +4002,7 @@ TextSearchGetLineIndex(
     Tcl_Obj *objPtr,		/* Contains a textual index like "1.2" */
     SearchSpec *searchSpecPtr,	/* Contains other search parameters. */
     int *linePosPtr,		/* For returning the line number. */
-    TkSizeT *offsetPosPtr)		/* For returning the text offset in the
+    Tcl_Size *offsetPosPtr)		/* For returning the text offset in the
 				 * line. */
 {
     const TkTextIndex *indexPtr;
@@ -4062,16 +4062,16 @@ TextSearchGetLineIndex(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 TextSearchIndexInLine(
     const SearchSpec *searchSpecPtr,
 				/* Search parameters. */
     TkTextLine *linePtr,	/* The line we're looking at. */
-    TkSizeT byteIndex)		/* Index into the line. */
+    Tcl_Size byteIndex)		/* Index into the line. */
 {
     TkTextSegment *segPtr;
     TkTextIndex curIndex;
-    TkSizeT index;
+    Tcl_Size index;
     int leftToScan;
     TkText *textPtr = (TkText *)searchSpecPtr->clientData;
 
@@ -4255,12 +4255,12 @@ TextSearchFoundMatch(
     Tcl_Obj *theLine,		/* Text from current line, only accessed for
 				 * exact searches, and is allowed to be NULL
 				 * for regexp searches. */
-    TkSizeT matchOffset,		/* Offset of found item in utf-8 bytes for
+    Tcl_Size matchOffset,		/* Offset of found item in utf-8 bytes for
 				 * exact search, Unicode chars for regexp. */
-    TkSizeT matchLength)		/* Length also in bytes/chars as per search
+    Tcl_Size matchLength)		/* Length also in bytes/chars as per search
 				 * type. */
 {
-    TkSizeT numChars;
+    Tcl_Size numChars;
     int leftToScan;
     TkTextIndex curIndex, foundIndex;
     TkTextSegment *segPtr;
@@ -4492,7 +4492,7 @@ TkTextGetTabs(
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
-    TkSizeT objc, i, count;
+    Tcl_Size objc, i, count;
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
@@ -4740,7 +4740,7 @@ TextDumpCmd(
     if (objc == arg) {
 	TkTextIndexForwChars(NULL, &index1, 1, &index2, COUNT_INDICES);
     } else {
-	TkSizeT length;
+	Tcl_Size length;
 	const char *str;
 
 	if (TkTextGetObjIndex(interp, textPtr, objv[arg], &index2) != TCL_OK) {
@@ -5062,7 +5062,7 @@ DumpSegment(
 	Tcl_DecrRefCount(tuple);
 	return 0;
     } else {
-	TkSizeT oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	Tcl_Size oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 	Tcl_DString buf;
 	int code;
 
@@ -5421,7 +5421,7 @@ TextGetText(
 
     if (TkTextIndexCmp(indexPtr1, indexPtr2) < 0) {
 	while (1) {
-	    TkSizeT offset;
+	    Tcl_Size offset;
 	    TkTextSegment *segPtr = TkTextIndexToSeg(&tmpIndex, &offset);
 	    int last = segPtr->size, last2;
 
@@ -5742,7 +5742,7 @@ SearchCore(
      */
 
     int firstOffset, lastOffset;
-    TkSizeT matchOffset,  matchLength;
+    Tcl_Size matchOffset,  matchLength;
     int passes;
     int lineNum = searchSpecPtr->startLine;
     int code = TCL_OK;
@@ -5763,9 +5763,9 @@ SearchCore(
 
 #define LOTS_OF_MATCHES 20
     int matchNum = LOTS_OF_MATCHES;
-    TkSizeT smArray[2 * LOTS_OF_MATCHES];
-    TkSizeT *storeMatch = smArray;
-    TkSizeT *storeLength = smArray + LOTS_OF_MATCHES;
+    Tcl_Size smArray[2 * LOTS_OF_MATCHES];
+    Tcl_Size *storeMatch = smArray;
+    Tcl_Size *storeLength = smArray + LOTS_OF_MATCHES;
     int lastBackwardsLineMatch = -1;
     int lastBackwardsMatchOffset = -1;
 
@@ -5914,7 +5914,7 @@ SearchCore(
 		 * Only use the last part of the line.
 		 */
 
-		if (searchSpecPtr->startOffset + 1 > (TkSizeT)firstOffset + 1) {
+		if (searchSpecPtr->startOffset + 1 > (Tcl_Size)firstOffset + 1) {
 		    firstOffset = searchSpecPtr->startOffset;
 		}
 		if ((firstOffset >= lastOffset)
@@ -5926,7 +5926,7 @@ SearchCore(
 		 * Use only the first part of the line.
 		 */
 
-		if (searchSpecPtr->startOffset + 1 < (TkSizeT)lastOffset + 1) {
+		if (searchSpecPtr->startOffset + 1 < (Tcl_Size)lastOffset + 1) {
 		    lastOffset = searchSpecPtr->startOffset;
 		}
 	    }
@@ -5950,11 +5950,11 @@ SearchCore(
 	    do {
 		int ch;
 		const char *p;
-		TkSizeT lastFullLine = lastOffset;
+		Tcl_Size lastFullLine = lastOffset;
 
 		if (firstNewLine == -1) {
 		    if (searchSpecPtr->strictLimits
-			    && (firstOffset + matchLength + 1 > (TkSizeT)lastOffset + 1)) {
+			    && (firstOffset + matchLength + 1 > (Tcl_Size)lastOffset + 1)) {
 			/*
 			 * Not enough characters to match.
 			 */
@@ -6072,7 +6072,7 @@ SearchCore(
 			     * exact searches.
 			     */
 
-			    if ((TkSizeT)lastTotal - skipFirst + 1 >= matchLength + 1) {
+			    if ((Tcl_Size)lastTotal - skipFirst + 1 >= matchLength + 1) {
 				/*
 				 * We now have enough text to match, so we
 				 * make a final test and break whatever the
@@ -6154,7 +6154,7 @@ SearchCore(
 			}
 		    } else {
                         firstOffset = matchLength ? p - startOfLine + matchLength
-                                                  : p - startOfLine + (TkSizeT)1;
+                                                  : p - startOfLine + (Tcl_Size)1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find
@@ -6194,7 +6194,7 @@ SearchCore(
 	    do {
 		Tcl_RegExpInfo info;
 		int match;
-		TkSizeT lastFullLine = lastOffset;
+		Tcl_Size lastFullLine = lastOffset;
 
 		match = Tcl_RegExpExecObj(interp, regexp, theLine,
 			firstOffset, 1, (firstOffset>0 ? TCL_REG_NOTBOL : 0));
@@ -6212,9 +6212,9 @@ SearchCore(
 
 		if (!match ||
 			((info.extendStart == info.matches[0].start)
-			&& (info.matches[0].end == (TkSizeT) (lastOffset - firstOffset)))) {
+			&& (info.matches[0].end == (Tcl_Size) (lastOffset - firstOffset)))) {
 		    int extraLines = 0;
-		    TkSizeT prevFullLine;
+		    Tcl_Size prevFullLine;
 
 		    /*
 		     * If we find a match that overlaps more than one line, we
@@ -6327,7 +6327,7 @@ SearchCore(
 			 */
 
 			if ((match &&
-				firstOffset + info.matches[0].end != (TkSizeT) lastTotal &&
+				firstOffset + info.matches[0].end != (Tcl_Size) lastTotal &&
 				firstOffset + info.matches[0].end + 1 < prevFullLine + 1)
 				|| info.extendStart == TCL_INDEX_NONE) {
 			    break;
@@ -6340,7 +6340,7 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && (info.matches[0].start + 1 >= (TkSizeT) lastOffset + 1)) {
+			if (match && (info.matches[0].start + 1 >= (Tcl_Size) lastOffset + 1)) {
 			    break;
 			}
 			if (match && ((firstOffset + info.matches[0].end)
@@ -6397,7 +6397,7 @@ SearchCore(
 				 * Possible overlap or enclosure.
 				 */
 
-				if ((TkSizeT)thisOffset - lastNonOverlap >=
+				if ((Tcl_Size)thisOffset - lastNonOverlap >=
 					lastBackwardsMatchOffset + matchLength + 1){
 				    /*
 				     * Totally encloses previous match, so
@@ -6481,7 +6481,7 @@ SearchCore(
 
 		if (matchOffset == TCL_INDEX_NONE ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
-			&& (((TkSizeT)firstOffset + 1 < matchOffset + 1)
+			&& (((Tcl_Size)firstOffset + 1 < matchOffset + 1)
 			|| ((firstOffset + info.matches[0].end
 				- info.matches[0].start)
 				> matchOffset + matchLength)))) {
@@ -6502,11 +6502,11 @@ SearchCore(
 			     * matches on the heap.
 			     */
 
-			    TkSizeT *newArray = (TkSizeT *)
-				    ckalloc(4 * matchNum * sizeof(TkSizeT));
-			    memcpy(newArray, storeMatch, matchNum*sizeof(TkSizeT));
+			    Tcl_Size *newArray = (Tcl_Size *)
+				    ckalloc(4 * matchNum * sizeof(Tcl_Size));
+			    memcpy(newArray, storeMatch, matchNum*sizeof(Tcl_Size));
 			    memcpy(newArray + 2*matchNum, storeLength,
-				    matchNum * sizeof(TkSizeT));
+				    matchNum * sizeof(Tcl_Size));
 			    if (storeMatch != smArray) {
 				ckfree(storeMatch);
 			    }
@@ -6766,7 +6766,7 @@ GetLineStartEnd(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     char *recordPtr,		/* Pointer to widget record. */
-    TkSizeT internalOffset)		/* Offset within *recordPtr containing the
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the
 				 * line value. */
 {
     TkTextLine *linePtr = *(TkTextLine **)(recordPtr + internalOffset);
@@ -6805,7 +6805,7 @@ SetLineStartEnd(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */

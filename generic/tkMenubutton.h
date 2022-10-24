@@ -209,8 +209,8 @@ typedef struct {
 
 MODULE_SCOPE void	TkpComputeMenuButtonGeometry(TkMenuButton *mbPtr);
 MODULE_SCOPE TkMenuButton *TkpCreateMenuButton(Tk_Window tkwin);
-MODULE_SCOPE void	TkpDisplayMenuButton(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayMenuButton(void *clientData);
 MODULE_SCOPE void 	TkpDestroyMenuButton(TkMenuButton *mbPtr);
-MODULE_SCOPE void	TkMenuButtonWorldChanged(ClientData instanceData);
+MODULE_SCOPE void	TkMenuButtonWorldChanged(void *instanceData);
 
 #endif /* _TKMENUBUTTON */

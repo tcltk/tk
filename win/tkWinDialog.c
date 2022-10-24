@@ -2056,7 +2056,7 @@ MakeFilter(
 	*p = '\0';
 
     } else {
-	TkSizeT len;
+	Tcl_Size len;
 
 	if (valuePtr == NULL) {
 	    len = 0;

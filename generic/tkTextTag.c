@@ -132,7 +132,7 @@ TkTextTagCmd(
 	TAG_REMOVE
     };
     int optionIndex;
-    TkSizeT i;
+    Tcl_Size i;
     TkTextTag *tagPtr;
     TkTextIndex index1, index2;
 
@@ -170,12 +170,12 @@ TkTextTagCmd(
 		*/
 		textPtr->sharedTextPtr->stateEpoch++;
 	}
-	for (i = 4; i < (TkSizeT)objc; i += 2) {
+	for (i = 4; i < (Tcl_Size)objc; i += 2) {
 	    if (TkTextGetObjIndex(interp, textPtr, objv[i],
 		    &index1) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if ((TkSizeT)objc > (i+1)) {
+	    if ((Tcl_Size)objc > (i+1)) {
 		if (TkTextGetObjIndex(interp, textPtr, objv[i+1],
 			&index2) != TCL_OK) {
 		    return TCL_ERROR;
@@ -537,7 +537,7 @@ TkTextTagCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "tagName ?tagName ...?");
 	    return TCL_ERROR;
 	}
-	for (i = 3; i < (TkSizeT)objc; i++) {
+	for (i = 3; i < (Tcl_Size)objc; i++) {
 	    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->tagTable,
 		    Tcl_GetString(objv[i]));
 	    if (hPtr == NULL) {
@@ -599,7 +599,7 @@ TkTextTagCmd(
     }
     case TAG_NAMES: {
 	TkTextTag **arrayPtr;
-	TkSizeT arraySize;
+	Tcl_Size arraySize;
 	Tcl_Obj *listObj;
 
 	if ((objc != 3) && (objc != 4)) {
@@ -1073,7 +1073,7 @@ FindTag(
     Tcl_Obj *tagName)		/* Name of desired tag. */
 {
     Tcl_HashEntry *hPtr;
-    TkSizeT len;
+    Tcl_Size len;
     const char *str;
 
     str = Tcl_GetStringFromObj(tagName, &len);
@@ -1464,7 +1464,7 @@ TkTextBindProc(
 
 	    TkTextIndex index;
 	    TkTextTag** tagArrayPtr;
-	    TkSizeT numTags;
+	    Tcl_Size numTags;
 
 	    TkTextMarkNameToIndex(textPtr, "insert", &index);
 	    tagArrayPtr = TkBTreeGetTags(&index, textPtr, &numTags);
@@ -1526,7 +1526,7 @@ TkTextPickCurrent(
 				/* Initialization needed to prevent compiler
 				 * warning. */
     int numOldTags, i, nearby;
-    TkSizeT numNewTags, j;
+    Tcl_Size numNewTags, j;
     size_t size;
     XEvent event;
 

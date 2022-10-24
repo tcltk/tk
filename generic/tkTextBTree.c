@@ -105,7 +105,7 @@ typedef struct BTree {
     int clients;		/* Number of clients of this B-tree. */
     int pixelReferences;	/* Number of clients of this B-tree which care
 				 * about pixel heights. */
-    TkSizeT stateEpoch;	 /* Updated each time any aspect of the B-tree
+    Tcl_Size stateEpoch;	 /* Updated each time any aspect of the B-tree
 				 * changes. */
     TkSharedText *sharedTextPtr;/* Used to find tagTable in consistency
 				 * checking code, and to access list of all
@@ -161,7 +161,7 @@ static int		CharDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 static TkTextSegment *	CharCleanupProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
-static TkTextSegment *	CharSplitProc(TkTextSegment *segPtr, TkSizeT index);
+static TkTextSegment *	CharSplitProc(TkTextSegment *segPtr, Tcl_Size index);
 static void		CheckNodeConsistency(Node *nodePtr, int references);
 static void		CleanupLine(TkTextLine *linePtr);
 static void		DeleteSummaries(Summary *tagPtr);
@@ -501,7 +501,7 @@ TkBTreeDestroy(
  *----------------------------------------------------------------------
  */
 
-TkSizeT
+Tcl_Size
 TkBTreeEpoch(
     TkTextBTree tree)		/* Tree to get epoch for. */
 {
@@ -1190,7 +1190,7 @@ SplitSeg(
 {
     TkTextSegment *prevPtr, *segPtr;
     TkTextLine *linePtr;
-    TkSizeT count = indexPtr->byteIndex;
+    Tcl_Size count = indexPtr->byteIndex;
 
     linePtr = indexPtr->linePtr;
     prevPtr = NULL;
@@ -2674,7 +2674,7 @@ TkBTreeStartSearch(
 				/* Where to store information about search's
 				 * progress. */
 {
-    TkSizeT offset;
+    Tcl_Size offset;
     TkTextIndex index0;		/* First index of the tag. */
     TkTextSegment *seg0Ptr;	/* First segment of the tag. */
 
@@ -2770,7 +2770,7 @@ TkBTreeStartSearchBack(
 				/* Where to store information about search's
 				 * progress. */
 {
-    TkSizeT offset;
+    Tcl_Size offset;
     TkTextIndex index0;		/* Last index of the tag. */
     TkTextIndex backOne;	/* One character before starting index. */
     TkTextSegment *seg0Ptr;	/* Last segment of the tag. */
@@ -3361,7 +3361,7 @@ TkBTreeGetTags(
     const TkText *textPtr,	/* If non-NULL, then only return tags for this
 				 * text widget (when there are peer
 				 * widgets). */
-    TkSizeT *numTagsPtr)		/* Store number of tags found at this
+    Tcl_Size *numTagsPtr)		/* Store number of tags found at this
 				 * location. */
 {
     Node *nodePtr;
@@ -4565,7 +4565,7 @@ TkBTreeNumPixels(
 static TkTextSegment *
 CharSplitProc(
     TkTextSegment *segPtr,	/* Pointer to segment to split. */
-    TkSizeT index)			/* Position within segment at which to
+    Tcl_Size index)			/* Position within segment at which to
 				 * split. */
 {
     TkTextSegment *newPtr1, *newPtr2;

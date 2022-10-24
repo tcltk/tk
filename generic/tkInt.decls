@@ -67,7 +67,7 @@ declare 12 {
 	    int xHot, int yHot, XColor fg, XColor bg)
 }
 declare 13 {
-    int TkCreateFrame(ClientData clientData, Tcl_Interp *interp,
+    int TkCreateFrame(void *clientData, Tcl_Interp *interp,
 	    int argc, const char *const *argv, int toplevel, const char *appName)
 }
 declare 14 {
@@ -306,7 +306,7 @@ declare 83 {
 # Exported publically as Tk_SetClassProcs in 8.4a2
 #declare 84 {
 #    void TkSetClassProcs(Tk_Window tkwin,
-#	    TkClassProcs *procs, ClientData instanceData)
+#	    TkClassProcs *procs, void *instanceData)
 #}
 declare 85 {deprecated {renamed to Tk_SetWindowMenubar}} {
     void TkSetWindowMenuBar(Tcl_Interp *interp, Tk_Window tkwin,
@@ -498,25 +498,25 @@ declare 152 {
 	    int highlightWidth, int borderWidth, int relief)
 }
 declare 153 {
-    void TkCreateThreadExitHandler(Tcl_ExitProc *proc, ClientData clientData)
+    void TkCreateThreadExitHandler(Tcl_ExitProc *proc, void *clientData)
 }
 declare 154 {
-    void TkDeleteThreadExitHandler(Tcl_ExitProc *proc, ClientData clientData)
+    void TkDeleteThreadExitHandler(Tcl_ExitProc *proc, void *clientData)
 }
 
 # entries needed only by tktest:
 declare 156 {
-    int TkpTestembedCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+    int TkpTestembedCmd(void *clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 declare 157 {
-    int TkpTesttextCmd(ClientData dummy, Tcl_Interp *interp, int objc,
+    int TkpTesttextCmd(void *dummy, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 declare 158 {
     int TkSelGetSelection(Tcl_Interp *interp, Tk_Window tkwin,
 	    Atom selection, Atom target, Tk_GetSelProc *proc,
-	    ClientData clientData)
+	    void *clientData)
 }
 declare 159 {
     int TkTextGetIndex(Tcl_Interp *interp, struct TkText *textPtr,
@@ -538,7 +538,7 @@ declare 162 {
 	    int byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
-    TkSizeT TkTextPrintIndex(const struct TkText *textPtr,
+    Tcl_Size TkTextPrintIndex(const struct TkText *textPtr,
 	    const struct TkTextIndex *indexPtr, char *string)
 }
 declare 164 {
@@ -566,52 +566,52 @@ declare 168 {
 }
 # Next group of functions exposed due to [Bug 2768945].
 declare 169 {
-    int TkStateParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
+    int TkStateParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 170 {
-    const char *TkStatePrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
+    const char *TkStatePrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 171 {
-    int TkCanvasDashParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
+    int TkCanvasDashParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 172 {
-    const char *TkCanvasDashPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
+    const char *TkCanvasDashPrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 173 {
-    int TkOffsetParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
+    int TkOffsetParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 174 {
-    const char *TkOffsetPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
+    const char *TkOffsetPrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 175 {
-    int TkPixelParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
+    int TkPixelParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 176 {
-    const char *TkPixelPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
+    const char *TkPixelPrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 177 {
-    int TkOrientParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
+    int TkOrientParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 178 {
-    const char *TkOrientPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
+    const char *TkOrientPrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 declare 179 {
-    int TkSmoothParseProc(ClientData clientData, Tcl_Interp *interp,
-	    Tk_Window tkwin, const char *value, char *widgRec, TkSizeT offset)
+    int TkSmoothParseProc(void *clientData, Tcl_Interp *interp,
+	    Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset)
 }
 declare 180 {
-    const char *TkSmoothPrintProc(ClientData clientData, Tk_Window tkwin,
-	    char *widgRec, TkSizeT offset, Tcl_FreeProc **freeProcPtr)
+    const char *TkSmoothPrintProc(void *clientData, Tk_Window tkwin,
+	    char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr)
 }
 
 # Angled text API, exposed for Emiliano Gavilán's RBC work.
@@ -695,7 +695,7 @@ declare 12 x11 {
 }
 # only needed by tktest:
 declare 13 x11 {
-    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 declare 38 x11 {
@@ -721,7 +721,7 @@ declare 44 x11 {
 }
 # only needed by tktest:
 declare 45 x11 {
-    int TkpTestsendCmd_(ClientData clientData, Tcl_Interp *interp, int objc,
+    int TkpTestsendCmd_(void *clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 
@@ -813,7 +813,7 @@ declare 27 win {
     void TkWinWmCleanup(HINSTANCE hInstance)
 }
 declare 28 win {
-    void TkWinXCleanup(ClientData clientData)
+    void TkWinXCleanup(void *clientData)
 }
 declare 29 win {
     void TkWinXInit(HINSTANCE hInstance)
@@ -878,7 +878,7 @@ declare 44 win {
 }
 # only needed by tktest:
 declare 45 win {
-    int TkpTestsendCmd(ClientData clientData, Tcl_Interp *interp, int objc,
+    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, int objc,
 	    Tcl_Obj *const objv[])
 }
 declare 47 win {

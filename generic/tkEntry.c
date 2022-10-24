@@ -403,7 +403,7 @@ static const char *const selElementNames[] = {
 
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
 			    int objc, Tcl_Obj *const objv[]);
-static int		DeleteChars(Entry *entryPtr, TkSizeT index, TkSizeT count);
+static int		DeleteChars(Entry *entryPtr, Tcl_Size index, Tcl_Size count);
 static void		DestroyEntry(void *memPtr);
 static void		DisplayEntry(ClientData clientData);
 static void		EntryBlinkProc(ClientData clientData);
@@ -412,22 +412,22 @@ static void		EntryComputeGeometry(Entry *entryPtr);
 static void		EntryEventProc(ClientData clientData,
 			    XEvent *eventPtr);
 static void		EntryFocusProc(Entry *entryPtr, int gotFocus);
-static TkSizeT	EntryFetchSelection(ClientData clientData, TkSizeT offset,
-			    char *buffer, TkSizeT maxBytes);
+static Tcl_Size	EntryFetchSelection(ClientData clientData, Tcl_Size offset,
+			    char *buffer, Tcl_Size maxBytes);
 static void		EntryLostSelection(ClientData clientData);
 static void		EventuallyRedraw(Entry *entryPtr);
 static void		EntryScanTo(Entry *entryPtr, int y);
 static void		EntrySetValue(Entry *entryPtr, const char *value);
-static void		EntrySelectTo(Entry *entryPtr, TkSizeT index);
+static void		EntrySelectTo(Entry *entryPtr, Tcl_Size index);
 static char *		EntryTextVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static void		EntryUpdateScrollbar(Entry *entryPtr);
 static int		EntryValidate(Entry *entryPtr, char *cmd);
 static int		EntryValidateChange(Entry *entryPtr, const char *change,
-			    const char *newStr, TkSizeT index, int type);
+			    const char *newStr, Tcl_Size index, int type);
 static void		ExpandPercents(Entry *entryPtr, const char *before,
-			    const char *change, const char *newStr, TkSizeT index,
+			    const char *change, const char *newStr, Tcl_Size index,
 			    int type, Tcl_DString *dsPtr);
 static int		EntryValueChanged(Entry *entryPtr,
 			    const char *newValue);
@@ -438,8 +438,8 @@ static int		EntryWidgetObjCmd(ClientData clientData,
 			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
-			    Tcl_Obj *indexObj, TkSizeT *indexPtr);
-static int		InsertChars(Entry *entryPtr, TkSizeT index, const char *string);
+			    Tcl_Obj *indexObj, Tcl_Size *indexPtr);
+static int		InsertChars(Entry *entryPtr, Tcl_Size index, const char *string);
 
 /*
  * These forward declarations are the spinbox specific ones:
@@ -626,7 +626,7 @@ EntryWidgetObjCmd(
     Tcl_Preserve(entryPtr);
     switch ((enum entryCmd) cmdIndex) {
     case COMMAND_BBOX: {
-	TkSizeT index;
+	Tcl_Size index;
 	int x, y, width, height;
 	Tcl_Obj *bbox[4];
 
@@ -680,7 +680,7 @@ EntryWidgetObjCmd(
 	break;
 
     case COMMAND_DELETE: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	int code;
 
 	if ((objc < 3) || (objc > 4)) {
@@ -727,7 +727,7 @@ EntryWidgetObjCmd(
 	break;
 
     case COMMAND_INDEX: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
@@ -742,7 +742,7 @@ EntryWidgetObjCmd(
     }
 
     case COMMAND_INSERT: {
-	TkSizeT index;
+	Tcl_Size index;
 	int code;
 
 	if (objc != 4) {
@@ -794,7 +794,7 @@ EntryWidgetObjCmd(
     }
 
     case COMMAND_SELECTION: {
-	TkSizeT index, index2;
+	Tcl_Size index, index2;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option ?index?");
@@ -833,7 +833,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    if (entryPtr->selectFirst != TCL_INDEX_NONE) {
-		TkSizeT half1, half2;
+		Tcl_Size half1, half2;
 
 		half1 = (entryPtr->selectFirst + entryPtr->selectLast)/2;
 		half2 = (entryPtr->selectFirst + entryPtr->selectLast + 1)/2;
@@ -948,7 +948,7 @@ EntryWidgetObjCmd(
     }
 
     case COMMAND_XVIEW: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc == 2) {
 	    double first, last;
@@ -1261,7 +1261,7 @@ ConfigureEntry(
 		sbPtr->listObj = NULL;
 		if (sbPtr->valueStr != NULL) {
 		    Tcl_Obj *newObjPtr;
-		    TkSizeT nelems;
+		    Tcl_Size nelems;
 
 		    newObjPtr = Tcl_NewStringObj(sbPtr->valueStr, -1);
 		    if (Tcl_ListObjLength(interp, newObjPtr, &nelems)
@@ -1786,7 +1786,7 @@ DisplayEntry(
 	     * Draw the selected and unselected portions separately.
 	     */
 
-	    TkSizeT selFirst;
+	    Tcl_Size selFirst;
 
 	    if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
 	        selFirst = entryPtr->leftIndex;
@@ -1973,7 +1973,7 @@ EntryComputeGeometry(
     Entry *entryPtr)		/* Widget record for entry. */
 {
     int totalLength, overflow, rightX;
-    TkSizeT maxOffScreen;
+    Tcl_Size maxOffScreen;
     int height, width, i;
     Tk_FontMetrics fm;
     char *p;
@@ -2157,7 +2157,7 @@ EntryComputeGeometry(
 static int
 InsertChars(
     Entry *entryPtr,		/* Entry that is to get the new elements. */
-    TkSizeT index,			/* Add the new elements before this character
+    Tcl_Size index,			/* Add the new elements before this character
 				 * index. */
     const char *value)		/* New characters to add (NULL-terminated
 				 * string). */
@@ -2256,8 +2256,8 @@ InsertChars(
 static int
 DeleteChars(
     Entry *entryPtr,		/* Entry widget to modify. */
-    TkSizeT index,			/* Index of first character to delete. */
-    TkSizeT count)			/* How many characters to delete. */
+    Tcl_Size index,			/* Index of first character to delete. */
+    Tcl_Size count)			/* How many characters to delete. */
 {
     int byteIndex, byteCount, newByteCount;
     const char *string;
@@ -2675,9 +2675,9 @@ GetEntryIndex(
     Entry *entryPtr,		/* Entry for which the index is being
 				 * specified. */
     Tcl_Obj *indexObj,	/* Specifies character in entryPtr. */
-    TkSizeT *indexPtr)		/* Where to store converted character index */
+    Tcl_Size *indexPtr)		/* Where to store converted character index */
 {
-    TkSizeT length, idx;
+    Tcl_Size length, idx;
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars - 1, 1, &idx)) {
@@ -2792,7 +2792,7 @@ EntryScanTo(
     Entry *entryPtr,		/* Information about widget. */
     int x)			/* X-coordinate to use for scan operation. */
 {
-    TkSizeT newLeftIndex;
+    Tcl_Size newLeftIndex;
 
     /*
      * Compute new leftIndex for entry by amplifying the difference between
@@ -2848,10 +2848,10 @@ EntryScanTo(
 static void
 EntrySelectTo(
     Entry *entryPtr,		/* Information about widget. */
-    TkSizeT index)			/* Character index of element that is to
+    Tcl_Size index)			/* Character index of element that is to
 				 * become the "other" end of the selection. */
 {
-    TkSizeT newFirst, newLast;
+    Tcl_Size newFirst, newLast;
 
     /*
      * Grab the selection if we don't own it already.
@@ -2911,17 +2911,17 @@ EntrySelectTo(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 EntryFetchSelection(
     ClientData clientData,	/* Information about entry widget. */
-    TkSizeT offset,			/* Byte offset within selection of first
+    Tcl_Size offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NUL character. */
 {
     Entry *entryPtr = (Entry *)clientData;
-    TkSizeT byteCount;
+    Tcl_Size byteCount;
     const char *string;
     const char *selStart, *selEnd;
 
@@ -3397,7 +3397,7 @@ EntryValidateChange(
      const char *change,	/* Characters to be added/deleted
 				 * (NUL-terminated string). */
      const char *newValue,	/* Potential new value of entry string */
-     TkSizeT index,			/* index of insert/delete, -1 otherwise */
+     Tcl_Size index,			/* index of insert/delete, -1 otherwise */
      int type)			/* forced, delete, insert, focusin or
 				 * focusout */
 {
@@ -3543,7 +3543,7 @@ ExpandPercents(
      const char *change,	/* Characters to added/deleted (NUL-terminated
 				 * string). */
      const char *newValue,	/* Potential new value of entry string */
-     TkSizeT index,			/* index of insert/delete */
+     Tcl_Size index,			/* index of insert/delete */
      int type,			/* INSERT or DELETE */
      Tcl_DString *dsPtr)	/* Dynamic string in which to append new
 				 * command. */
@@ -3864,7 +3864,7 @@ SpinboxWidgetObjCmd(
     Tcl_Preserve(entryPtr);
     switch ((enum sbCmd) cmdIndex) {
     case SB_CMD_BBOX: {
-	TkSizeT index;
+	Tcl_Size index;
 	int x, y, width, height;
 	Tcl_Obj *bbox[4];
 
@@ -3917,7 +3917,7 @@ SpinboxWidgetObjCmd(
 	break;
 
     case SB_CMD_DELETE: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	int code;
 
 	if ((objc < 3) || (objc > 4)) {
@@ -3985,7 +3985,7 @@ SpinboxWidgetObjCmd(
     }
 
     case SB_CMD_INDEX: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
@@ -4000,7 +4000,7 @@ SpinboxWidgetObjCmd(
     }
 
     case SB_CMD_INSERT: {
-	TkSizeT index;
+	Tcl_Size index;
 	int code;
 
 	if (objc != 4) {
@@ -4069,7 +4069,7 @@ SpinboxWidgetObjCmd(
     }
 
     case SB_CMD_SELECTION: {
-	TkSizeT index, index2;
+	Tcl_Size index, index2;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "option ?index?");
@@ -4108,7 +4108,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	    if (entryPtr->selectFirst != TCL_INDEX_NONE) {
-		TkSizeT half1, half2;
+		Tcl_Size half1, half2;
 
 		half1 = (entryPtr->selectFirst + entryPtr->selectLast)/2;
 		half2 = (entryPtr->selectFirst + entryPtr->selectLast + 1)/2;
@@ -4263,7 +4263,7 @@ SpinboxWidgetObjCmd(
     }
 
     case SB_CMD_XVIEW: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc == 2) {
 	    double first, last;
@@ -4426,8 +4426,8 @@ SpinboxInvoke(
 		 * there. If not, move to the first element of the list.
 		 */
 
-		TkSizeT i, listc;
-		TkSizeT elemLen, length = entryPtr->numChars;
+		Tcl_Size i, listc;
+		Tcl_Size elemLen, length = entryPtr->numChars;
 		const char *bytes;
 		Tcl_Obj **listv;
 
