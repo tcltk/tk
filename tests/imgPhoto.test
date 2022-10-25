@@ -2429,21 +2429,6 @@ test imgPhoto-23.15 {output data with comment (from -metadata argument)}\
     catch {image delete gif1}
 } -match glob -result {*ABCD*}
 
-test imgPhoto-23.22 {output file with comment (from -metadata argument)}\
--setup {
-    set data $::gifstart$::gifdata$::gifend
-    set path [file join [configure -tmpdir] test.gif]
-} -body {
-    image create photo gif1 -data $data
-    gif1 write $path -format gif -metadata [dict create comment ABCD]
-    image delete gif1
-    image create photo gif1 -file $path
-    dict get [gif1 cget -metadata] comment
-} -cleanup {
-    catch {image delete gif1}
-    file delete $path
-} -result {ABCD}
-
 test imgPhoto-23.16 {output data with comment (from -metadata property)}\
 -setup {
     set data $::gifstart$::gifdata$::gifend
@@ -2539,7 +2524,7 @@ test imgPhoto-23.22 {GIF disposal method "do not dispose" metadata} -setup {
     catch {image delete gif1}
 } -result {{disposal method} {do not dispose}}
 
-test imgPhoto-33.23 {GIF disposal method "restore to background color" metadata} -setup {
+test imgPhoto-23.23 {GIF disposal method "restore to background color" metadata} -setup {
     set data $::gifstart
     # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x08\x00\x00\x00\x00"
@@ -2552,7 +2537,7 @@ test imgPhoto-33.23 {GIF disposal method "restore to background color" metadata}
     catch {image delete gif1}
 } -result {{disposal method} {restore to background color}}
 
-test imgPhoto-43.24 {GIF disposal method "restore to previous" metadata} -setup {
+test imgPhoto-23.24 {GIF disposal method "restore to previous" metadata} -setup {
     set data $::gifstart
     # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x0C\x00\x00\x00\x00"
@@ -2565,7 +2550,7 @@ test imgPhoto-43.24 {GIF disposal method "restore to previous" metadata} -setup 
     catch {image delete gif1}
 } -result {{disposal method} {restore to previous}}
 
-test imgPhoto-53.25 {GIF user input flag metadata} -setup {
+test imgPhoto-23.25 {GIF user input flag metadata} -setup {
     set data $::gifstart
     # Graphic control extension: disposdal method:
     append data "\x21\xf9\x04\x02\x00\x00\x00\x00"
@@ -2578,7 +2563,7 @@ test imgPhoto-53.25 {GIF user input flag metadata} -setup {
     catch {image delete gif1}
 } -result {{user interaction} 1}
 
-test imgPhoto-63.26 {GIF update region metadata} -setup {
+test imgPhoto-23.26 {GIF update region metadata} -setup {
     # size 32x32, global color table size: 8
     set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
     # color table
@@ -2593,7 +2578,7 @@ test imgPhoto-63.26 {GIF update region metadata} -setup {
     catch {image delete gif1}
 } -result {{update region} {0 0 16 16}}
 
-test imgPhoto-63.27 {GIF multiple options metadata} -setup {
+test imgPhoto-23.27 {GIF multiple options metadata} -setup {
     # size 32x32, global color table size: 8
     set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
     # color table
@@ -2610,7 +2595,7 @@ test imgPhoto-63.27 {GIF multiple options metadata} -setup {
     catch {image delete gif1}
 } -result {{update region} {0 0 16 16} {delay time} 10 {disposal method} {do not dispose} {user interaction} 1}
 
-test imgPhoto-63.27 {GIF multiple options metadata in -index 0} -setup {
+test imgPhoto-23.28 {GIF multiple options metadata in -index 0} -setup {
     # size 32x32, global color table size: 8
     set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
     # color table
@@ -2632,7 +2617,7 @@ test imgPhoto-63.27 {GIF multiple options metadata in -index 0} -setup {
     catch {image delete gif1}
 } -result {{update region} {0 0 16 16} {delay time} 4096 {disposal method} {do not dispose} {user interaction} 1}
 
-test imgPhoto-63.28 {GIF multiple options metadata in -index 1} -setup {
+test imgPhoto-23.29 {GIF multiple options metadata in -index 1} -setup {
     # size 32x32, global color table size: 8
     set data "GIF89a\x20\x00\x20\x00\xc2\x07\x00"
     # color table
