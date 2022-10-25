@@ -2881,7 +2881,7 @@ MatchPatterns(
 			if (psPtr->numPats == patIndex + 1) {
 			    if (patPtr->count <= count) {
 				/*
-				 * This is also a final (i.e. complete) pattern.
+				 * This is also a final pattern (i.e. the pattern sequence is complete).
 				 * We always prefer the pattern with better match.
 				 * If completely equal than prefer most recently defined pattern.
 				 */
@@ -2907,8 +2907,8 @@ MatchPatterns(
 			    }
 			} else if (psSuccList) {
 			    /*
-			     * Not a final pattern, but matching (so far, i.e. the first patterns do match),
-			     * so promote it to next level if not already promoted in the success list.
+			     * Not a final pattern, but matching (i.e. successive patterns match the pattern sequence so far),
+			     * so promote the pattern sequence to next level if not already promoted in the success list.
 			     * But do not promote if count of current pattern is not yet reached.
 			     */
 			    if (!IsPSInPSList(psPtr, psSuccList)) {
