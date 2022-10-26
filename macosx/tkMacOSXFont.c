@@ -1012,7 +1012,7 @@ TkpMeasureCharsInContext(
     double width;
     int length, fit;
 
-    if (rangeStart < 0 || rangeLength <= 0 ||
+    if (rangeStart == TCL_INDEX_NONE || rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
 	    (maxLength == 0 && !(flags & TK_AT_LEAST_ONE))) {
 	*lengthPtr = 0;
@@ -1204,7 +1204,7 @@ TkDrawAngledChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
@@ -1247,9 +1247,9 @@ TkpDrawCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
