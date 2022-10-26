@@ -143,7 +143,7 @@ struct PatSeq; /* forward declaration */
 TK_ARRAY_DEFINE(PSModMaskArr, unsigned);
 
 typedef struct PSEntry {
-    TK_DLIST_LINKS(PSEntry);	/* Makes this struct a double linked list; must be first entry. */
+    TK_DLIST_LINKS(PSEntry);	/* Makes this struct a doubly linked list; must be first entry. */
     Window window;		/* Window of last match. */
     struct PatSeq* psPtr;	/* Pointer to pattern sequence. */
     PSModMaskArr *lastModMaskArr;
@@ -188,7 +188,7 @@ typedef struct {
  * in the canvas).
  */
 
-/* defining the whole Promotion_* stuff (array of PSList entries) */
+/* Defining the whole PromArr_* stuff (array of PSList entries) */
 TK_ARRAY_DEFINE(PromArr, PSList);
 
 typedef struct Tk_BindingTable_ {
@@ -419,7 +419,7 @@ typedef struct {
  * DOUBLE -		Non-zero means duplicate this event, e.g. for double-clicks.
  * TRIPLE -		Non-zero means triplicate this event, e.g. for triple-clicks.
  * QUADRUPLE -		Non-zero means quadruple this event, e.g. for 4-fold-clicks.
- * MULT_CLICKS -	Combination of all of above.
+ * MULT_CLICKS -	Combination of all the above.
  */
 
 #define DOUBLE		(1<<0)
@@ -582,7 +582,7 @@ static int eventArrayIndex[TK_LASTEVENT];
 
 /*
  * These structs agree with xkey for the fields type, serial, send_event, display,
- * window, root, subwindow, time, x, y, x_root, and y_root.  So when accessing
+ * window, root, subwindow, time, x, y, x_root, and y_root. So when accessing
  * these fields we may pretend that we are using a struct xkey.
  */
 
@@ -779,8 +779,8 @@ static int TestNearbyCoords(int lhs, int rhs) { return Abs(lhs - rhs) <= NEARBY_
 
 static int
 IsSubsetOf(
-    unsigned lhsMask,	/* this is a subset */
-    unsigned rhsMask)	/* of this bit field? */
+    unsigned lhsMask,	/* Is this a subset... */
+    unsigned rhsMask)	/* ...of this bit field? */
 {
     return (lhsMask & rhsMask) == lhsMask;
 }
@@ -885,8 +885,8 @@ IsButtonEventType(
 
 static int
 MatchEventNearby(
-    const XEvent *lhs,	/* previous button event */
-    const XEvent *rhs)	/* current button event */
+    const XEvent *lhs,	/* Previous button event */
+    const XEvent *rhs)	/* Current button event */
 {
     assert(lhs);
     assert(rhs);
@@ -902,8 +902,8 @@ MatchEventNearby(
 
 static int
 MatchEventRepeat(
-    const XKeyEvent *lhs,	/* previous key event */
-    const XKeyEvent *rhs)	/* current key event */
+    const XKeyEvent *lhs,	/* Previous key event */
+    const XKeyEvent *rhs)	/* Current key event */
 {
     assert(lhs);
     assert(rhs);
@@ -1132,7 +1132,7 @@ GetLookupForEvent(
     assert(lookupTables);
     assert(eventPtr);
 
-    /* otherwise on some systems the key contains uninitialized bytes */
+    /* Otherwise on some systems the key contains uninitialized bytes. */
     memset(&key, 0, sizeof(PatternTableKey));
 
     if (onlyConsiderDetailedEvents) {
@@ -1263,7 +1263,7 @@ ClearPromotionLists(
  */
 
 /*
- * Windoze compiler does not allow the definition of these static variables inside a function,
+ * Windows compiler does not allow the definition of these static variables inside a function,
  * otherwise this should belong to function TkBindInit().
  */
 TCL_DECLARE_MUTEX(bindMutex);
@@ -1277,37 +1277,37 @@ TkBindInit(
 
     assert(mainPtr);
 
-    /* otherwise virtual events can't be supported */
+    /* Otherwise virtual events can't be supported. */
     assert(sizeof(XEvent) >= sizeof(XVirtualEvent));
 
-    /* type of TkPattern.info is well defined? */
+    /* Is type of TkPattern.info well defined? */
     assert(sizeof(Info) >= sizeof(KeySym));
     assert(sizeof(Info) >= sizeof(unsigned));
 
-    /* ensure that our matching algorithm is working (when testing detail) */
+    /* Ensure that our matching algorithm is working (when testing detail). */
     assert(sizeof(Detail) == sizeof(Tk_Uid));
 
-    /* test expected indices of Button1..Button5, otherwise our button handling is not working */
+    /* Test expected indices of Button1..Button5, otherwise our button handling is not working. */
     assert(Button1 == 1 && Button2 == 2 && Button3 == 3 && Button4 == 4 && Button5 == 5);
     assert(Button2Mask == (Button1Mask << 1));
     assert(Button3Mask == (Button1Mask << 2));
     assert(Button4Mask == (Button1Mask << 3));
     assert(Button5Mask == (Button1Mask << 4));
 
-    /* test expected values of button motion masks, otherwise our button handling is not working */
+    /* Test expected values of button motion masks, otherwise our button handling is not working. */
     assert(Button1MotionMask == Button1Mask);
     assert(Button2MotionMask == Button2Mask);
     assert(Button3MotionMask == Button3Mask);
     assert(Button4MotionMask == Button4Mask);
     assert(Button5MotionMask == Button5Mask);
 
-    /* because we expect zero if keySym is empty */
+    /* Because we expect zero if keySym is empty. */
     assert(NoSymbol == 0L);
 
-    /* this must be a union, not a struct, otherwise comparison with NULL will not work */
+    /* This must be a union, not a struct, otherwise comparison with NULL will not work. */
     assert(offsetof(Detail, name) == offsetof(Detail, info));
 
-    /* we use some constraints about X*Event */
+    /* We use some constraints about X*Event. */
     assert(offsetof(XButtonEvent, time) == offsetof(XMotionEvent, time));
     assert(offsetof(XButtonEvent, x_root) == offsetof(XMotionEvent, x_root));
     assert(offsetof(XButtonEvent, y_root) == offsetof(XMotionEvent, y_root));
@@ -2274,14 +2274,14 @@ Tk_BindEvent(
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
-	/* modifier keys should not influence button events */
+	/* Modifier keys should not influence button events. */
 	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		reset = 0;
 	    }
 	}
 	if (reset) {
-	    /* reset repetition count for button events */
+	    /* Reset repetition count for button events. */
 	    bindPtr->eventInfo[ButtonPress].countAny = 0;
 	    bindPtr->eventInfo[ButtonPress].countDetailed = 0;
 	    bindPtr->eventInfo[ButtonRelease].countAny = 0;
@@ -2291,7 +2291,7 @@ Tk_BindEvent(
     }
     case ButtonPress:
     case ButtonRelease:
-	/* reset repetition count for key events */
+	/* Reset repetition count for key events. */
 	bindPtr->eventInfo[KeyPress].countAny = 0;
 	bindPtr->eventInfo[KeyPress].countDetailed = 0;
 	bindPtr->eventInfo[KeyRelease].countAny = 0;
@@ -2395,7 +2395,7 @@ Tk_BindEvent(
     Tcl_DStringInit(&scripts);
 
     if ((size_t) numObjects > SIZE_OF_ARRAY(matchPtrBuf)) {
-	/* it's unrealistic that the buffer size is too small, but who knows? */
+	/* It's unrealistic that the buffer size is too small, but who knows? */
 	matchPtrArr = (PatSeq **)ckalloc(numObjects*sizeof(matchPtrArr[0]));
     }
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
@@ -2417,11 +2417,11 @@ Tk_BindEvent(
 		psPtr[0] = MatchPatterns(dispPtr, bindPtr, psl[0], psl[1], i, curEvent, objArr[k], NULL);
 
 		if (IsBetterMatch(matchPtrArr[k], psPtr[0])) {
-		    /* we will process it later, because we still may find a pattern with better match */
+		    /* We will process it later, because we still may find a pattern with better match. */
 		    matchPtrArr[k] = psPtr[0];
 		}
 		if (!PSList_IsEmpty(psl[1])) {
-		    /* we have promoted sequences, adjust array size */
+		    /* We have promoted sequences, adjust array size. */
 		    arraySize = Max(i + 1, arraySize);
 		}
 	    }
@@ -2446,7 +2446,7 @@ Tk_BindEvent(
 	psPtr[1] = MatchPatterns(dispPtr, bindPtr, psl[1], psSuccList, 0, curEvent, objArr[k], NULL);
 
 	if (!PSList_IsEmpty(psSuccList)) {
-	    /* we have promoted sequences, adjust array size */
+	    /* We have promoted sequences, adjust array size. */
 	    arraySize = Max(1u, arraySize);
 	}
 
@@ -2499,7 +2499,7 @@ Tk_BindEvent(
 
 	if (matchPtrArr[k]) {
 	    ExpandPercents(winPtr, matchPtrArr[k]->script, curEvent, scriptCount++, &scripts);
-	    /* nul is added to the scripts string to separate the various scripts */
+	    /* Null is added to the scripts string to separate the various scripts. */
 	    Tcl_DStringAppend(&scripts, "", 1);
 	}
     }
@@ -2564,7 +2564,7 @@ Tk_BindEvent(
 	}
 
 	if (!PSList_IsEmpty(psList)) {
-	    /* we still have promoted sequences, adjust array size */
+	    /* We still have promoted sequences, adjust array size. */
 	    newArraySize = Max(i + 1, newArraySize);
 	}
     }
@@ -2576,7 +2576,7 @@ Tk_BindEvent(
     }
 
     if (Tcl_DStringLength(&scripts) == 0) {
-	return; /* nothing to do */
+	return; /* Nothing to do. */
     }
 
     /*
@@ -2707,12 +2707,12 @@ VirtPatIsBound(
 
 	if (physPatPtr->info || !virtPatPtr->info) {
 	    if (IsSubsetOf(virtPatPtr->modMask, physPatPtr->modMask)) {
-		return 0; /* we cannot surpass this match */
+		return 0; /* We cannot surpass this match. */
 	    }
 	}
     }
 
-    /* otherwise on some systems the key contains uninitialized bytes */
+    /* Otherwise on some systems the key contains uninitialized bytes. */
     memset(&key, 0, sizeof(key));
 
     key.object = object;
@@ -2738,7 +2738,7 @@ VirtPatIsBound(
 static int
 Compare(
     const PatSeq *fstMatchPtr,
-    const PatSeq *sndMatchPtr) /* most recent match */
+    const PatSeq *sndMatchPtr) /* Most recent match. */
 {
     int diff;
 
@@ -2792,6 +2792,20 @@ CompareModMasks(
     if (IsSubsetOf(sndModMask, fstModMask)) { ++fstCount; }
 
     return fstCount - sndCount;
+}
+
+/* helper function */
+static int
+IsPSInPSList(
+    const PatSeq *psPtr,   /* Is this pattern sequence... */
+    const PSList *psList)  /* ...an element of this list of patterns sequence? */
+{
+    PSEntry *psEntry;
+
+    TK_DLIST_FOREACH(psEntry, psList) {
+        if (psEntry->psPtr == psPtr) { return 1; }
+    }
+    return 0;
 }
 
 static PatSeq *
@@ -2863,7 +2877,7 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
-                /* ignore modifier key events, and KeyRelease events if the current event
+                /* Ignore modifier key events, and KeyRelease events if the current event
                  * is of a different type (e.g. a Button event)
                  */
                 psEntry->keepIt = isModKeyOnly || \
@@ -2882,8 +2896,8 @@ MatchPatterns(
 		    unsigned modMask = ResolveModifiers(dispPtr, patPtr->modMask);
 		    unsigned curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
-		    psEntry->expired = 1; /* remove it from promotion list */
-                    psEntry->keepIt = 0; /* don't keep matching patterns */
+		    psEntry->expired = 1; /* Remove it from promotion list. */
+                    psEntry->keepIt = 0;  /* Don't keep matching patterns. */
 
 		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2899,7 +2913,7 @@ MatchPatterns(
 			if (psPtr->numPats == patIndex + 1) {
 			    if (patPtr->count <= count) {
 				/*
-				 * This is also a final pattern.
+				 * This is also a final pattern (i.e. the pattern sequence is complete).
 				 * We always prefer the pattern with better match.
 				 * If completely equal than prefer most recently defined pattern.
 				 */
@@ -2921,31 +2935,41 @@ MatchPatterns(
 				}
 			    } else {
 				DEBUG(psEntry->expired = 0;)
-				psEntry->keepIt = 1; /* don't remove it from promotion list */
+				psEntry->keepIt = 1; /* Don't remove it from promotion list. */
 			    }
 			} else if (psSuccList) {
 			    /*
-			     * Not a final pattern, but matching, so promote it to next level.
+			     * Not a final pattern, but matching (i.e. successive patterns match the pattern sequence so far),
+			     * so promote the pattern sequence to next level if not already promoted in the success list.
 			     * But do not promote if count of current pattern is not yet reached.
 			     */
-			    if (patPtr->count == psEntry->count) {
-				PSEntry *psNewEntry;
+			    if (!IsPSInPSList(psPtr, psSuccList)) {
+				if (patPtr->count == psEntry->count) {
+				    PSEntry *psNewEntry;
 
-				assert(!patPtr->name);
-				psNewEntry = MakeListEntry(
-				    &bindPtr->lookupTables.entryPool, psPtr, psPtr->modMaskUsed);
-				if (!PSModMaskArr_IsEmpty(psNewEntry->lastModMaskArr)) {
-				    PSModMaskArr_Set(psNewEntry->lastModMaskArr, patIndex, &modMask);
+				    assert(!patPtr->name);
+				    psNewEntry = MakeListEntry(
+					&bindPtr->lookupTables.entryPool, psPtr, psPtr->modMaskUsed);
+				    if (!PSModMaskArr_IsEmpty(psNewEntry->lastModMaskArr)) {
+					PSModMaskArr_Set(psNewEntry->lastModMaskArr, patIndex, &modMask);
+				    }
+				    assert(psNewEntry->keepIt);
+				    assert(psNewEntry->count == 1u);
+				    PSList_Append(psSuccList, psNewEntry);
+				    psNewEntry->window = window; /* Bind to current window. */
+				} else {
+				    assert(psEntry->count < patPtr->count);
+				    DEBUG(psEntry->expired = 0;)
+				    psEntry->count += 1;
+				    psEntry->keepIt = 1; /* Don't remove it from promotion list. */
 				}
-				assert(psNewEntry->keepIt);
-				assert(psNewEntry->count == 1u);
-				PSList_Append(psSuccList, psNewEntry);
-				psNewEntry->window = window; /* bind to current window */
 			    } else {
-				assert(psEntry->count < patPtr->count);
+			        /*
+				 * Pattern sequence is already present in the success list.
+				 */
+
 				DEBUG(psEntry->expired = 0;)
-				psEntry->count += 1;
-				psEntry->keepIt = 1; /* don't remove it from promotion list */
+				psEntry->keepIt = 1; /* Don't remove it from promotion list. */
 			    }
 			}
 		    }
@@ -3581,7 +3605,7 @@ CreateVirtualEvent(
     }
 
     /*
-     * Find/create physical event
+     * Find/create physical event.
      */
 
     if (!(psPtr = FindSequence(interp, &vetPtr->lookupTables, NULL, eventString, 1, 0, NULL))) {
@@ -3689,7 +3713,7 @@ DeleteVirtualEvent(
 	    VirtOwners *owners = psPtr->ptr.owners;
 	    int iVirt = VirtOwners_Find(owners, vhPtr);
 
-	    assert(iVirt != -1); /* otherwise we couldn't find owner, and this should not happen */
+	    assert(iVirt != -1); /* Otherwise we couldn't find owner, and this should not happen. */
 
 	    /*
 	     * Remove association between this physical event and the given
@@ -4882,7 +4906,7 @@ ParseEventDescription(
     assert(eventMaskPtr);
 
     p = *eventStringPtr;
-    memset(patPtr, 0, sizeof(TkPattern)); /* otherwise memcmp doesn't work */
+    memset(patPtr, 0, sizeof(TkPattern)); /* Otherwise memcmp doesn't work. */
 
     /*
      * Handle simple ASCII characters.
@@ -5013,7 +5037,7 @@ ParseEventDescription(
 		if ((eventFlags & BUTTON)
 			|| (button && eventFlags == 0)
 			|| (SUPPORT_ADDITIONAL_MOTION_SYNTAX && (eventFlags & MOTION) && button == 0)) {
-		    /* This must be a button (or bad motion) event */
+		    /* This must be a button (or bad motion) event. */
 		    if (button == 0) {
 			return FinalizeParseEventDescription(
 				interp,
