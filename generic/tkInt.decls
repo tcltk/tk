@@ -631,7 +631,7 @@ declare 183 {
 }
 declare 184 {
     void TkDrawAngledChars(Display *display,Drawable drawable, GC gc,
-	    Tk_Font tkfont, const char *source, int numBytes, double x,
+	    Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x,
 	    double y, double angle)
 }
 
