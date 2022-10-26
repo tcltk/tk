@@ -1429,8 +1429,8 @@ MODULE_SCOPE int	TkpDrawingIsDisabled(Tk_Window tkwin);
 #endif
 MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, int x, int y);
+			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
+			    Tcl_Size rangeLength, int x, int y);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,

@@ -562,8 +562,8 @@ EXTERN int		TkIntersectAngledTextLayout(Tk_TextLayout layout,
 /* 184 */
 EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
-				const char *source, int numBytes, double x,
-				double y, double angle);
+				const char *source, Tcl_Size numBytes,
+				double x, double y, double angle);
 /* 185 */
 EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
 /* 186 */
@@ -788,7 +788,7 @@ typedef struct TkIntStubs {
     void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int lastChar); /* 181 */
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
-    void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
+    void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x, double y, double angle); /* 184 */
     void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
     int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
     int (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */
