@@ -1851,7 +1851,7 @@ Tk_WinfoObjCmd(
 int
 TkGetDisplayOf(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. If it is present,
 				 * "-displayof" should be in objv[0] and
 				 * objv[1] the name of a window. */
@@ -1865,7 +1865,7 @@ TkGetDisplayOf(
     const char *string;
     Tcl_Size length;
 
-    if (objc < 1) {
+    if (objc + 1 < 2) {
 	return 0;
     }
     string = Tcl_GetStringFromObj(objv[0], &length);

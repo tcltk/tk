@@ -799,7 +799,7 @@ declare 209 {
 }
 declare 210 {
     int	 Tk_GetScrollInfoObj(Tcl_Interp *interp,
-	    int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
+	    Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
 }
 declare 211 {
     int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,

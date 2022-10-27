@@ -673,9 +673,9 @@ EXTERN int		Tk_GetPixelsFromObj(Tcl_Interp *interp,
 EXTERN int		Tk_GetReliefFromObj(Tcl_Interp *interp,
 				Tcl_Obj *objPtr, int *resultPtr);
 /* 210 */
-EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp, int objc,
-				Tcl_Obj *const objv[], double *dblPtr,
-				int *intPtr);
+EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp,
+				Tcl_Size objc, Tcl_Obj *const objv[],
+				double *dblPtr, int *intPtr);
 /* 211 */
 EXTERN int		Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionToken, Tk_Window tkwin);
@@ -1146,7 +1146,7 @@ typedef struct TkStubs {
     int (*tk_GetMMFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 207 */
     int (*tk_GetPixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, int *intPtr); /* 208 */
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
-    int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
+    int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
     TCL_DEPRECATED_API("Don't use this function in a stub-enabled extension") void (*tk_MainEx) (Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
