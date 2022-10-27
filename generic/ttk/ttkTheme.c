@@ -1708,8 +1708,8 @@ StyleObjCmd(
 
 MODULE_SCOPE
 int Ttk_InvokeEnsemble(	/* Run an ensemble command */
-    const Ttk_Ensemble *ensemble, int cmdIndex,
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    const Ttk_Ensemble *ensemble, Tcl_Size cmdIndex,
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     while (cmdIndex < objc) {
 	int index;
