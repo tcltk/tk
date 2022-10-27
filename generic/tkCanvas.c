@@ -2090,7 +2090,7 @@ CanvasWidgetCmd(
 	}
 
 	args = TkGetStringsFromObjs(objc, objv);
-	type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
+	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	if (args != NULL) {
 	    ckfree(args);
 	}
@@ -2136,7 +2136,7 @@ CanvasWidgetCmd(
 	}
 
 	args = TkGetStringsFromObjs(objc, objv);
-	type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
+	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	if (args != NULL) {
 	    ckfree(args);
 	}

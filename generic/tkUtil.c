@@ -723,7 +723,7 @@ Tk_GetScrollInfo(
 int
 Tk_GetScrollInfoObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int objc,			/* # arguments for command. */
+    Tcl_Size objc,			/* # arguments for command. */
     Tcl_Obj *const objv[],	/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
@@ -731,8 +731,13 @@ Tk_GetScrollInfoObj(
 				 * scroll, if any. */
 {
     Tcl_Size length;
-    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
+    const char *arg;
 
+    if (objc + 1 < 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "moveto|scroll args");
+	return TK_SCROLL_ERROR;
+    }
+    arg = Tcl_GetStringFromObj(objv[2], &length);
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
 
