@@ -29,6 +29,7 @@ namespace eval ttk::theme::default {
                  { {	background		Background		}
                  {	foreground		Foreground		}
                  {	background		Background		}
+                 {	background		Background		}
                  {	foreground		Foreground		}
                  {	activeBackground	ActiveBackground	}
                  {	selectBackground	SelectBackground	}
@@ -40,7 +41,7 @@ namespace eval ttk::theme::default {
                  {	selectBackground	SelectBackground	}
                  {	troughColor		TroughColor		} }\
 	    colorName\
-                 { -frame -foreground -window -text
+                 { -frame -foreground -window -alternate -text
                  -activebg -selectbg -selectfg
                  -darker -disabledfg -indicator
                  -disabledindicator -altindicator
@@ -58,7 +59,7 @@ namespace eval ttk::theme::default {
     # to the ttk widgets.
     variable colorOptionLookup
     array set colorOptionLookup {
-	background		{-frame -window}
+	background		{-frame -window -alternate}
 	foreground		{-foreground -text}
 	activeBackground	-activebg
 	selectBackground	{-selectbg -indicator -altindicator}
@@ -137,12 +138,12 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TLabelframe \
@@ -169,6 +170,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure Treeview \
             -background $colors(-window) \
             -stripedbackground $colors(-alternate) \
+	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) ;
 	ttk::style configure Treeview.Separator \
                 -background $colors(-alternate)

@@ -836,7 +836,7 @@ clean: cleanhelp
 
 distclean: clean
 	$(RM) Makefile config.status config.cache config.log tkConfig.sh \
-		wish.exe.manifest
+		wish.exe.manifest tkUuid.h
 
 Makefile: $(SRC_DIR)/Makefile.in
 	./config.status
