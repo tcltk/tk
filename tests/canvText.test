@@ -11,9 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
@@ -943,7 +940,7 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     destroy .c
 } -result {{Yeah } Yeah- 4 4}
 
-test canvText-20.1 {angled text bounding box} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+test canvText-20.1 {angled text bounding box} -setup {
     destroy .c
     canvas .c
     proc transpose {bbox} {
@@ -951,7 +948,7 @@ test canvText-20.1 {angled text bounding box} -constraints {failsOnUbuntu failsO
 	list $b $a $d $c
     }
 } -body {
-    .c create text 2 2 -tag t -anchor center -text 0 -font {Helvetica 24}
+    .c create text 2 2 -tag t -anchor center -text 0 -font {TkDefaultFont 24}
     set bb0 [.c bbox t]
     .c itemconf t -angle 90
     set bb1 [.c bbox t]
