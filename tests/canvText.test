@@ -947,6 +947,12 @@ test canvText-20.1 {angled text bounding box} -setup {
 	lassign $bbox a b c d
 	list $b $a $d $c
     }
+    proc almosteq {b1 b2} {
+        # check whether the two boxes are equal, with 1 unit tolerance on each x y w h
+        lassign $b1 a b c d
+        lassign $b2 e f g h
+        expr {($e-$a)<=1 && ($f-$b)<=1 && ($g-$c)<=1 && ($h-$d)<=1}
+    }
 } -body {
     .c create text 2 2 -tag t -anchor center -text 0 -font {TkDefaultFont 24}
     set bb0 [.c bbox t]
@@ -956,9 +962,9 @@ test canvText-20.1 {angled text bounding box} -setup {
     set bb2 [.c bbox t]
     .c itemconf t -angle 270
     set bb3 [.c bbox t]
-    list [expr {$bb0 eq $bb2 ? "ok" : "$bb0,$bb2"}] \
-	[expr {$bb1 eq $bb3 ? "ok" : "$bb1,$bb3"}] \
-	[expr {$bb0 eq [transpose $bb1] ? "ok" : "$bb0,$bb1"}] \
+    list [expr {[almosteq $bb0 $bb2] ? "ok" : "$bb0,$bb2"}] \
+	[expr {[almosteq $bb1 $bb3] ? "ok" : "$bb1,$bb3"}] \
+	[expr {[almosteq $bb0 [transpose $bb1]] ? "ok" : "$bb0,$bb1"}]
 } -cleanup {
     destroy .c
     rename transpose {}
