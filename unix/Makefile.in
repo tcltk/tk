@@ -990,7 +990,7 @@ clean:
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
-		tkConfig.h *.plist Tk.framework tk.pc
+		tkConfig.h *.plist Tk.framework tk.pc tkUuid.h
 
 depend:
 	makedepend -- $(DEPEND_SWITCHES) -- $(SRCS)
