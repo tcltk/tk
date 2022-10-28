@@ -79,7 +79,7 @@ test clrpick-1.7 {tk_chooseColor command} -body {
 
 # tests 3.1 and 3.2 fail when individually run
 # if there is no catch {tk_chooseColor -foo 1} msg
-# before settin isNative
+# before setting isNative
 catch {tk_chooseColor -foo 1} msg
 set isNative [expr {[info commands tk::dialog::color::] eq ""}]
 
@@ -144,23 +144,10 @@ proc SendButtonPress {parent btn type} {
 }
 
 
-
 test clrpick-2.1 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
 } -setup {
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
-    # Interesting thing...when this is too long, the
-    # delay caused in processing it kills the automated testing,
-    # and makes a lot of the test cases fail.
-    #set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
+    set verylongstring [string repeat longstring: 100]
 } -body {
     ToPressButton . ok
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor #404040 \
