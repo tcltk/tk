@@ -20,11 +20,12 @@
 */config.status
 */tkConfig.sh
 */wish*
-*/tktest*
+*/tktest
 */versions.vc
 */version.vc
 */libtk.vfs
 */libtk*.zip
+*/tkUuid.h
 doc/man.macros
 html
 macosx/configure

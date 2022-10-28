@@ -194,10 +194,4 @@
 	sprintf((buf), "0x%08lx", (unsigned long) (w))
 #endif
 
-/*
- * Used by tkWindow.c
- */
-
-#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
-
 #endif /* _UNIXPORT */
