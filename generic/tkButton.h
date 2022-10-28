@@ -308,14 +308,14 @@ MODULE_SCOPE char tkDefLabelPady[TCL_INTEGER_SPACE];
 #ifndef TkpButtonSetDefaults
 MODULE_SCOPE void	TkpButtonSetDefaults(void);
 #endif
-MODULE_SCOPE void	TkButtonWorldChanged(ClientData instanceData);
+MODULE_SCOPE void	TkButtonWorldChanged(void *instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
 MODULE_SCOPE TkButton	*TkpCreateButton(Tk_Window tkwin);
 #ifndef TkpDestroyButton
 MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
 #endif
 #ifndef TkpDisplayButton
-MODULE_SCOPE void	TkpDisplayButton(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayButton(void *clientData);
 #endif
 MODULE_SCOPE int	TkInvokeButton(TkButton *butPtr);
 

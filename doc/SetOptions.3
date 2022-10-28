@@ -320,6 +320,17 @@ If this bit is set for an option then no default value will be set in
 system default value, nor \fIoptionTable\fR are used to give a default
 value to this option. Instead it is assumed that the caller has already
 supplied a default value in the widget code.
+.TP
+\fBTK_OPTION_ENUM_VAR\fR
+If this value is set for an option, then it indicates the the
+internalOffset points to an enum variable in stead of an int variable.
+Only useful in combination with \fBTK_OPTION_STRING_TABLE\fR
+.TP
+\fBTK_OPTION_VAR(type)\fR
+If this value is set for an option, then it indicates the the
+internalOffset points to a \fItype\fR variable in stead of an int variable.
+Only useful in combination with \fBTK_OPTION_STRING_TABLE\fR or
+\fBTK_OPTION_BOOLEAN\fR
 .PP
 The \fItype\fR field of each Tk_OptionSpec structure determines
 how to parse the value of that configuration option. The

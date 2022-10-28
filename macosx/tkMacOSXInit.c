@@ -33,7 +33,9 @@ static char scriptPath[PATH_MAX + 1] = "";
  * Forward declarations...
  */
 
-static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
+static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
+			    int objc, Tcl_Obj *const objv[]);
+static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
 
 #pragma mark TKApplication(TKInit)
@@ -42,12 +44,44 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize poolLock = _poolLock;
 @synthesize macOSVersion = _macOSVersion;
 @synthesize isDrawing = _isDrawing;
-@synthesize needsToDraw = _needsToDraw;
 @synthesize isSigned = _isSigned;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkPointerWindow = _tkPointerWindow;
+- (void) setTkPointerWindow: (TkWindow *)winPtr
+{
+    if (_tkPointerWindow) {
+	Tcl_Release(_tkPointerWindow);
+    }
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    _tkPointerWindow = winPtr;
+    return;
+}
 @synthesize tkEventTarget = _tkEventTarget;
+- (void) setTkEventTarget: (TkWindow *)winPtr
+{
+    if (_tkEventTarget) {
+	Tcl_Release(_tkEventTarget);
+    }
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    _tkEventTarget = winPtr;
+    return;
+}
 @synthesize tkDragTarget = _tkDragTarget;
+- (void) setTkDragTarget: (TkWindow *)winPtr
+{
+    if (_tkDragTarget) {
+	Tcl_Release(_tkDragTarget);
+    }
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    _tkDragTarget = winPtr;
+    return;
+}
 @synthesize tkButtonState = _tkButtonState;
 @end
 
@@ -146,6 +180,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     /*
      * Initialize the graphics context.
      */
+
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
 
@@ -155,6 +190,12 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 
     _defaultMainMenu = nil;
     [self _setupMenus];
+
+    /*
+     * Run initialization routines that depend on the OS version.
+     */
+
+    Ttk_MacOSXInit();
 
     /*
      * It is not safe to force activation of the NSApp until this method is
@@ -416,7 +457,7 @@ TkpInit(
 
     /*
      * TkpInit can be called multiple times with different interpreters. But
-     * The application initialization should only be done onece.
+     * The application initialization should only be done once.
      */
 
     if (!initialized) {
@@ -477,7 +518,7 @@ TkpInit(
          * the application icon, will be delivered before the procedure meant
          * to to handle the AppleEvent has been defined.  This is handled in
          * tkMacOSXHLEvents.c by scheduling a timer event to handle the
-         * ApplEvent later, after the required procedure has been defined.
+         * AppleEvent later, after the required procedure has been defined.
          */
 
 	[NSApp _setup:interp];
@@ -564,12 +605,13 @@ TkpInit(
 	}
 
 	/*
-	 * Initialize the NSServices object here. Apple's docs say to do this
-	 * in applicationDidFinishLaunching, but the Tcl interpreter is not
-	 * initialized until this function call.
+	 * Now we can run initialization routines which require that both the
+	 * NSApplication and the Tcl interpreter have been created and
+	 * initialized.
 	 */
 
 	TkMacOSXServices_Init(interp);
+	TkMacOSXNSImage_Init(interp);
 
 	/*
 	 * The root window has been created and mapped, but XMapWindow deferred its
@@ -605,7 +647,6 @@ TkpInit(
 	signal(SIGHUP, TkMacOSXSignalHandler);
 	signal(SIGTERM, TkMacOSXSignalHandler);
     }
-
     /*
      * Initialization steps that are needed for all interpreters.
      */
@@ -613,20 +654,71 @@ TkpInit(
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
-
     if (scriptPath[0] != '\0') {
 	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
-
+    Tcl_CreateObjCommand(interp, "nsimage",
+	    TkMacOSXNSImageObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
-	    TkMacOSXGetAppPathCmd, NULL, NULL);
+	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
+           TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
+
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkMacOSXGetAppPathObjCmd --
+ *
+ *	Returns the path of the Wish application bundle.
+ *
+ * Results:
+ *	Returns the application path.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+TkMacOSXGetAppPathObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
+{
+    if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Get the application path URL and convert it to a string path reference.
+     */
+
+    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
+    CFStringRef appPath =
+	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
+
+    /*
+     * Convert (and copy) the string reference into a Tcl result.
+     */
+
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
+
+    CFRelease(mainBundleURL);
+    CFRelease(appPath);
 
     return TCL_OK;
 }
@@ -671,48 +763,37 @@ TkpGetAppName(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetAppPathCmd --
+ * TkMacOSVersionObjCmd --
  *
- *	Returns the path of the Wish application bundle.
+ *	Tcl command which returns an integer encoding the major and minor
+ *	version numbers of the currently running operating system in the
+ *	form 10000*majorVersion + 100*minorVersion.
  *
  * Results:
- *	Returns the application path.
+ *	Returns the OS version.
  *
  * Side effects:
  *	None.
  *
  *----------------------------------------------------------------------
  */
-
+
 static int
-TkMacOSXGetAppPathCmd(
-    TCL_UNUSED(void *),
+TkMacOSVersionObjCmd(
+    TCL_UNUSED(void *), /* ClientData */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    if (objc != 1) {
+    static char version[16] = "";
+    if (objc > 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;
     }
-
-    /*
-     * Get the application path URL and convert it to a string path reference.
-     */
-
-    CFURLRef mainBundleURL = CFBundleCopyBundleURL(CFBundleGetMainBundle());
-    CFStringRef appPath =
-	    CFURLCopyFileSystemPath(mainBundleURL, kCFURLPOSIXPathStyle);
-
-    /*
-     * Convert (and copy) the string reference into a Tcl result.
-     */
-
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
-
-    CFRelease(mainBundleURL);
-    CFRelease(appPath);
+    if (version[0] == '\0') {
+	snprintf(version, 16, "%d", [NSApp macOSVersion]);
+    }
+    Tcl_SetResult(interp, version, NULL);
     return TCL_OK;
 }
 
@@ -819,10 +900,11 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    TCL_UNUSED(const char *),
-    const char *symbol)
+    const char* module,
+    const char* symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
+    (void)module;
 
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */

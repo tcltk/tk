@@ -21,6 +21,66 @@ namespace eval ttk::theme::default {
 	-disabledaltindicator	"#c0c0c0"
     }
 
+    # On X11, if the user specifies their own choice of colour scheme via X resources,
+    # then set the colour palette based on the user's choice.
+    if {[tk windowingsystem] eq "x11"} {
+	foreach\
+	    xResourceName\
+                 { {	background		Background		}
+                 {	foreground		Foreground		}
+                 {	background		Background		}
+                 {	background		Background		}
+                 {	foreground		Foreground		}
+                 {	activeBackground	ActiveBackground	}
+                 {	selectBackground	SelectBackground	}
+                 {	selectForeground	SelectForeground	}
+                 {	troughColor		TroughColor		}
+                 {	disabledForeground	DisabledForeground	}
+                 {	selectBackground	SelectBackground	}
+                 {	disabledForeground	DisabledForeground	}
+                 {	selectBackground	SelectBackground	}
+                 {	troughColor		TroughColor		} }\
+	    colorName\
+                 { -frame -foreground -window -alternate -text
+                 -activebg -selectbg -selectfg
+                 -darker -disabledfg -indicator
+                 -disabledindicator -altindicator
+                 -disabledaltindicator }\
+	{
+	    set color [eval option get . $xResourceName]
+	    if {$color ne ""} {
+                 set colors($colorName) $color
+	    }
+	}
+    }
+    # This array is used to match up the tk widget options with the
+    # corresponding values in the 'colors' array.
+    # This is used by tk_setPalette to apply the new palette
+    # to the ttk widgets.
+    variable colorOptionLookup
+    array set colorOptionLookup {
+	background		{-frame -window -alternate}
+	foreground		{-foreground -text}
+	activeBackground	-activebg
+	selectBackground	{-selectbg -indicator -altindicator}
+	selectForeground	-selectfg
+	troughColor		{-darker -disabledaltindicator}
+	disabledForeground	{-disabledfg -disabledindicator}
+    }
+}
+# ttk::theme::default::reconfigureDefaultTheme --
+# This procedure contains the definition of the 'default' theme itself.
+# The theme definition is in a procedure, so it can be re-called
+# when required, enabling tk_setPalette to set the colours
+# of the ttk widgets.
+#
+# Arguments:
+# None.
+
+proc ttk::theme::default::reconfigureDefaultTheme {} {
+    upvar ttk::theme::default::colors colors
+    # The definition of the 'default' theme.
+
     ttk::style theme settings default {
 
 	ttk::style configure "." \
@@ -47,7 +107,7 @@ namespace eval ttk::theme::default {
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
 	ttk::style configure TCheckbutton \
-	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
+	    -indicatorcolor $colors(-window) -indicatorrelief sunken -padding 1
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -58,7 +118,7 @@ namespace eval ttk::theme::default {
 	    [list alternate raised]
 
 	ttk::style configure TRadiobutton \
-	    -indicatorcolor "#ffffff" -indicatorrelief sunken -padding 1
+	    -indicatorcolor $colors(-window) -indicatorrelief sunken -padding 1
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -72,19 +132,19 @@ namespace eval ttk::theme::default {
 	    -relief raised -padding "10 3"
 
 	ttk::style configure TEntry \
-	    -relief sunken -fieldbackground white -padding 1
+	    -relief sunken -fieldbackground $colors(-window) -padding 1
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -arrowsize 12 -padding 1
 	ttk::style map TCombobox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
+	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
+	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TLabelframe \
 	    -relief groove -borderwidth 2
@@ -92,7 +152,7 @@ namespace eval ttk::theme::default {
 	ttk::style configure TScrollbar \
 	    -width 12 -arrowsize 12
 	ttk::style map TScrollbar \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
 	ttk::style configure TScale \
 	    -sliderrelief raised
@@ -110,6 +170,7 @@ namespace eval ttk::theme::default {
 	ttk::style configure Treeview \
             -background $colors(-window) \
             -stripedbackground $colors(-alternate) \
+	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) ;
 	ttk::style configure Treeview.Separator \
                 -background $colors(-alternate)
@@ -145,3 +206,5 @@ namespace eval ttk::theme::default {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
     }
 }
+
+ttk::theme::default::reconfigureDefaultTheme

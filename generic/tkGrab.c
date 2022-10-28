@@ -26,7 +26,7 @@
  * grab state information: the current grab window, the current restrict
  * window, and whether the mouse is captured.
  *
- * The current grab window specifies the point in the Tk window heirarchy
+ * The current grab window specifies the point in the Tk window hierarchy
  * above which pointer events will not be reported. Any window within the
  * subtree below the grab window will continue to receive events as normal.
  * Events outside of the grab tree will be reported to the grab window.
@@ -180,7 +180,7 @@ Tk_GrabObjCmd(
     TkDisplay *dispPtr;
     const char *arg;
     int index;
-    TkSizeT len;
+    Tcl_Size len;
     static const char *const optionStrings[] = {
 	"current", "release", "set", "status", NULL
     };

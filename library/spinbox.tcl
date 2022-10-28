@@ -129,17 +129,17 @@ bind Spinbox <<NextLine>> {
 }
 
 bind Spinbox <<PrevChar>> {
-    ::tk::EntrySetCursor %W [%W index insert]-1
+    ::tk::EntrySetCursor %W [tk::EntryPreviousChar %W insert]
 }
 bind Spinbox <<NextChar>> {
-    ::tk::EntrySetCursor %W [%W index insert]+1
+    ::tk::EntrySetCursor %W [tk::EntryNextChar %W insert]
 }
 bind Spinbox <<SelectPrevChar>> {
-    ::tk::EntryKeySelect %W [%W index insert]-1
+    ::tk::EntryKeySelect %W [tk::EntryPreviousChar %W insert]
     ::tk::EntrySeeInsert %W
 }
 bind Spinbox <<SelectNextChar>> {
-    ::tk::EntryKeySelect %W [%W index insert]+1
+    ::tk::EntryKeySelect %W [tk::EntryNextChar %W insert]
     ::tk::EntrySeeInsert %W
 }
 bind Spinbox <<PrevWord>> {
@@ -175,7 +175,8 @@ bind Spinbox <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete insert
+	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
+		[tk::endOfGlyphCluster [%W get] [%W index insert]]
     }
 }
 bind Spinbox <BackSpace> {
@@ -204,7 +205,7 @@ bind Spinbox <Key> {
     ::tk::EntryInsert %W %A
 }
 
-# Ignore all Alt, Meta, and Control keypresses unless explicitly bound.
+# Ignore all Alt, Meta, Control, Command, and Fn keypresses unless explicitly bound.
 # Otherwise, if a widget binding for one of these is defined, the
 # <Key> class binding will also fire and insert the character,
 # which is wrong.  Ditto for Escape, Return, and Tab.
@@ -219,7 +220,7 @@ bind Spinbox <Tab> {# nothing}
 bind Spinbox <Prior> {# nothing}
 bind Spinbox <Next> {# nothing}
 bind Spinbox <Command-Key> {# nothing}
-bind Spinbox <Mod4-Key> {# nothing}
+bind Spinbox <Fn-Key> {# nothing}
 
 # On Windows, paste is done using Shift-Insert.  Shift-Insert already
 # generates the <<Paste>> event, so we don't need to do anything here.
@@ -468,11 +469,11 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	}
 	word {
 	    if {$cur < [$w index anchor]} {
-		set before [tcl_wordBreakBefore [$w get] $cur]
-		set after [tcl_wordBreakAfter [$w get] $anchor-1]
+		set before [tk::wordBreakBefore [$w get] $cur]
+		set after [tk::wordBreakAfter [$w get] $anchor-1]
 	    } else {
-		set before [tcl_wordBreakBefore [$w get] $anchor]
-		set after [tcl_wordBreakAfter [$w get] $cur-1]
+		set before [tk::wordBreakBefore [$w get] $anchor]
+		set after [tk::wordBreakAfter [$w get] $cur-1]
 	    }
 	    if {$before < 0} {
 		set before 0

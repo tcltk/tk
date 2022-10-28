@@ -51,7 +51,7 @@ typedef struct TagSearch {
     int searchOver;		/* Non-zero means NextItem should always
 				 * return NULL. */
     int type;			/* Search type (see #defs below) */
-    TkSizeT id;			/* Item id for searches by id */
+    Tcl_Size id;			/* Item id for searches by id */
     const char *string;		/* Tag expression string */
     int stringIndex;		/* Current position in string scan */
     int stringLength;		/* Length of tag expression string */
@@ -222,24 +222,24 @@ static void		CanvasCmdDeletedProc(void *clientData);
 static void		CanvasDoEvent(TkCanvas *canvasPtr, XEvent *eventPtr);
 static void		CanvasEventProc(void *clientData,
 			    XEvent *eventPtr);
-static TkSizeT	CanvasFetchSelection(void *clientData, TkSizeT offset,
-			    char *buffer, TkSizeT maxBytes);
+static Tcl_Size	CanvasFetchSelection(void *clientData, Tcl_Size offset,
+			    char *buffer, Tcl_Size maxBytes);
 static Tk_Item *	CanvasFindClosest(TkCanvas *canvasPtr,
 			    double coords[2]);
 static void		CanvasFocusProc(TkCanvas *canvasPtr, int gotFocus);
 static void		CanvasLostSelection(void *clientData);
 static void		CanvasSelectTo(TkCanvas *canvasPtr,
-			    Tk_Item *itemPtr, TkSizeT index);
+			    Tk_Item *itemPtr, Tcl_Size index);
 static void		CanvasSetOrigin(TkCanvas *canvasPtr,
 			    int xOrigin, int yOrigin);
 static void		CanvasUpdateScrollbars(TkCanvas *canvasPtr);
 static int		CanvasWidgetCmd(void *clientData,
-			    Tcl_Interp *interp, int argc,
-			    Tcl_Obj *const *argv);
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const *objv);
 static void		CanvasWorldChanged(void *instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
-			    TkCanvas *canvasPtr, int argc,
-			    Tcl_Obj *const *argv, int flags);
+			    TkCanvas *canvasPtr, int objc,
+			    Tcl_Obj *const *objv, int flags);
 static void		DefaultRotateImplementation(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr, double x, double y,
 			    double angleRadians);
@@ -251,13 +251,13 @@ static void		DoItem(Tcl_Obj *accumObj,
 static void		EventuallyRedrawItem(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr);
 static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
-			    int argc, Tcl_Obj *const *argv,
+			    int objc, Tcl_Obj *const *objv,
 			    Tcl_Obj *newTagObj, int first,
 			    TagSearch **searchPtrPtr);
 static int		FindArea(Tcl_Interp *interp, TkCanvas *canvasPtr,
-			    Tcl_Obj *const *argv, Tk_Uid uid, int enclosed);
+			    Tcl_Obj *const *objv, Tk_Uid uid, int enclosed);
 static double		GridAlign(double coord, double spacing);
-static const char**	TkGetStringsFromObjs(int argc, Tcl_Obj *const *objv);
+static const char**	TkGetStringsFromObjs(int objc, Tcl_Obj *const *objv);
 static void		InitCanvas(void);
 static void		PickCurrentItem(TkCanvas *canvasPtr, XEvent *eventPtr);
 static Tcl_Obj *	ScrollFractions(int screen1,
@@ -471,7 +471,7 @@ ItemIndex(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
     Tcl_Obj *objPtr,
-    TkSizeT *indexPtr)
+    Tcl_Size *indexPtr)
 {
     Tcl_Interp *interp = canvasPtr->interp;
 
@@ -598,7 +598,8 @@ DefaultRotateImplementation(
     double y,
     double angleRadians)
 {
-    int objc, i, ok = 1;
+    Tcl_Size i, objc;
+    int ok = 1;
     Tcl_Obj **objv, **newObjv;
     double *coordv;
     double s = sin(angleRadians);
@@ -680,8 +681,8 @@ int
 Tk_CanvasObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    Tcl_Obj *const argv[])	/* Argument objects. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkCanvas *canvasPtr;
@@ -691,12 +692,12 @@ Tk_CanvasObjCmd(
 	InitCanvas();
     }
 
-    if (argc < 2) {
-	Tcl_WrongNumArgs(interp, 1, argv, "pathName ?-option value ...?");
+    if (objc < 2) {
+	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
 	return TCL_ERROR;
     }
 
-    newWin = Tk_CreateWindowFromPath(interp,tkwin,Tcl_GetString(argv[1]),NULL);
+    newWin = Tk_CreateWindowFromPath(interp,tkwin,Tcl_GetString(objv[1]),NULL);
     if (newWin == NULL) {
 	return TCL_ERROR;
     }
@@ -794,7 +795,7 @@ Tk_CanvasObjCmd(
 	    CanvasBindProc, canvasPtr);
     Tk_CreateSelHandler(canvasPtr->tkwin, XA_PRIMARY, XA_STRING,
 	    CanvasFetchSelection, canvasPtr, XA_STRING);
-    if (ConfigureCanvas(interp, canvasPtr, argc-2, argv+2, 0) != TCL_OK) {
+    if (ConfigureCanvas(interp, canvasPtr, objc-2, objv+2, 0) != TCL_OK) {
 	goto error;
     }
 
@@ -1193,7 +1194,7 @@ CanvasWidgetCmd(
 	tmpObj = Tcl_NewListObj(2, objv+4);
 
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto doneImove) {
-	    TkSizeT index;
+	    Tcl_Size index;
 	    int x1, x2, y1, y2;
 	    int dontRedraw1, dontRedraw2;
 
@@ -1249,7 +1250,7 @@ CanvasWidgetCmd(
 	int isNew = 0;
 	Tcl_HashEntry *entryPtr;
 	const char *arg;
-	TkSizeT length;
+	Tcl_Size length;
 
 	if (objc < 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "type coords ?arg ...?");
@@ -1338,7 +1339,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_DCHARS: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	int x1, x2, y1, y2;
 
 	if ((objc != 4) && (objc != 5)) {
@@ -1441,7 +1442,7 @@ CanvasWidgetCmd(
     }
     case CANV_DTAG: {
 	Tk_Uid tag;
-	int i;
+	Tcl_Size i;
 
 	if ((objc != 3) && (objc != 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId ?tagToDelete?");
@@ -1454,7 +1455,7 @@ CanvasWidgetCmd(
 	    tag = Tk_GetUid(Tcl_GetString(objv[2]));
 	}
 	FOR_EVERY_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done) {
-	    for (i = (int)itemPtr->numTags-1; i >= 0; i--) {
+	    for (i = itemPtr->numTags-1; i != TCL_INDEX_NONE; i--) {
 		if (itemPtr->tagPtr[i] == tag) {
 
                     /*
@@ -1536,7 +1537,7 @@ CanvasWidgetCmd(
 	}
 	break;
     case CANV_ICURSOR: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId index");
@@ -1561,7 +1562,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INDEX: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "tagOrId string");
@@ -1589,7 +1590,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_INSERT: {
-	TkSizeT beforeThis;
+	Tcl_Size beforeThis;
 	int x1, x2, y1, y2;
 
 	if (objc != 5) {
@@ -1806,7 +1807,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_RCHARS: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	int x1, x2, y1, y2;
 	int dontRedraw1, dontRedraw2;
 
@@ -1926,7 +1927,7 @@ CanvasWidgetCmd(
 	} else if (Tcl_GetIndexFromObj(interp, objv[2], optionStrings,
 		"scan option", 0, &idx) != TCL_OK) {
 	    result = TCL_ERROR;
-	} else if ((objc != 5) && (objc != 6-idx)) {
+	} else if ((objc != 5) && (objc + idx != 6)) {
 	    Tcl_WrongNumArgs(interp, 3, objv, idx?"x y":"x y ?gain?");
 	    result = TCL_ERROR;
 	} else if ((Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK)
@@ -1959,7 +1960,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_SELECT: {
-	TkSizeT index;
+	Tcl_Size index;
 	int optionindex;
 	static const char *const optionStrings[] = {
 	    "adjust", "clear", "from", "item", "to", NULL
@@ -2089,14 +2090,11 @@ CanvasWidgetCmd(
 	}
 
 	args = TkGetStringsFromObjs(objc, objv);
-	type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
+	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	if (args != NULL) {
 	    ckfree(args);
 	}
 	switch (type) {
-	case TK_SCROLL_ERROR:
-	    result = TCL_ERROR;
-	    goto done;
 	case TK_SCROLL_MOVETO:
 	    newX = canvasPtr->scrollX1 - canvasPtr->inset
 		    + (int) (fraction * (canvasPtr->scrollX2
@@ -2114,6 +2112,9 @@ CanvasWidgetCmd(
 			* (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    }
 	    break;
+	default:
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	CanvasSetOrigin(canvasPtr, newX, canvasPtr->yOrigin);
 	break;
@@ -2135,14 +2136,11 @@ CanvasWidgetCmd(
 	}
 
 	args = TkGetStringsFromObjs(objc, objv);
-	type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
+	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	if (args != NULL) {
 	    ckfree(args);
 	}
 	switch (type) {
-	case TK_SCROLL_ERROR:
-	    result = TCL_ERROR;
-	    goto done;
 	case TK_SCROLL_MOVETO:
 	    newY = canvasPtr->scrollY1 - canvasPtr->inset + (int) (
 		    fraction*(canvasPtr->scrollY2-canvasPtr->scrollY1) + 0.5);
@@ -2159,6 +2157,9 @@ CanvasWidgetCmd(
 			* (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    }
 	    break;
+	default:
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, newY);
 	break;
@@ -2382,7 +2383,7 @@ ConfigureCanvas(
     canvasPtr->scrollX2 = 0;
     canvasPtr->scrollY2 = 0;
     if (canvasPtr->regionString != NULL) {
-	int argc2;
+	Tcl_Size argc2;
 	const char **argv2;
 
 	if (Tcl_SplitList(canvasPtr->interp, canvasPtr->regionString,
@@ -5313,7 +5314,7 @@ PickCurrentItem(
 	    && !(canvasPtr->flags & LEFT_GRABBED_ITEM)) {
 	XEvent event;
 	Tk_Item *itemPtr = canvasPtr->currentItemPtr;
-	int i;
+	Tcl_Size i;
 
 	event = canvasPtr->pickEvent;
 	event.type = LeaveNotify;
@@ -5335,7 +5336,7 @@ PickCurrentItem(
 	 */
 
 	if ((itemPtr == canvasPtr->currentItemPtr) && !buttonDown) {
-	    for (i = (int)itemPtr->numTags-1; i >= 0; i--) {
+	    for (i = itemPtr->numTags-1; i != TCL_INDEX_NONE; i--) {
 		if (itemPtr->tagPtr[i] == searchUids->currentUid)
 		    /* then */ {
                     memmove((void *)(itemPtr->tagPtr + i),
@@ -5471,7 +5472,7 @@ CanvasDoEvent(
 #define NUM_STATIC 3
     void *staticObjects[NUM_STATIC];
     void **objectPtr;
-    int numObjects, i;
+    Tcl_Size numObjects, i;
     Tk_Item *itemPtr;
     TagSearchExpr *expr;
     int numExprs;
@@ -5523,7 +5524,7 @@ CanvasDoEvent(
 	objectPtr = (void **)ckalloc(numObjects * sizeof(void *));
     }
     objectPtr[0] = (char *)searchUids->allUid;
-    for (i = (int)itemPtr->numTags - 1; i >= 0; i--) {
+    for (i = itemPtr->numTags - 1; i != TCL_INDEX_NONE; i--) {
 	objectPtr[i+1] = (char *)itemPtr->tagPtr[i];
     }
     objectPtr[itemPtr->numTags + 1] = itemPtr;
@@ -5662,10 +5663,10 @@ static void
 CanvasSelectTo(
     TkCanvas *canvasPtr,	/* Information about widget. */
     Tk_Item *itemPtr,		/* Item that is to hold selection. */
-    TkSizeT index)			/* Index of element that is to become the
+    Tcl_Size index)			/* Index of element that is to become the
 				 * "other" end of the selection. */
 {
-    TkSizeT oldFirst, oldLast;
+    Tcl_Size oldFirst, oldLast;
     Tk_Item *oldSelPtr;
 
     oldFirst = canvasPtr->textInfo.selectFirst;
@@ -5723,13 +5724,13 @@ CanvasSelectTo(
  *--------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 CanvasFetchSelection(
     void *clientData,	/* Information about canvas widget. */
-    TkSizeT offset,			/* Offset within selection of first character
+    Tcl_Size offset,			/* Offset within selection of first character
 				 * to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
@@ -6291,7 +6292,7 @@ Tk_CanvasPsPath(
 				 * generated. */
     double *coordPtr,		/* Pointer to first in array of 2*numPoints
 				 * coordinates giving points for path. */
-    int numPoints)		/* Number of points at *coordPtr. */
+    Tcl_Size numPoints)		/* Number of points at *coordPtr. */
 {
     Tk_PostscriptPath(interp, Canvas(canvas)->psInfo, coordPtr, numPoints);
 }

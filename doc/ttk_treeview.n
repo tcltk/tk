@@ -530,6 +530,8 @@ Specifies the font to use when drawing text.
 Specifies the cell or item image.
 .IP \fB\-imageanchor\fR
 Specifies the cell or item image anchor.
+.IP \fB\-padding\fR
+Specifies the cell padding. A data cell will have a default padding of {4 0}
 .IP \fB\-stripedbackground\fR
 Specifies the cell or item background color for alternate lines, if \fB\-striped\fR is true.
 .PP

@@ -5496,6 +5496,23 @@ test bind-25.53 {modifier names} -setup {
     destroy .t.f
 } -result <B9-Key-a>
 
+test bind-25.54 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Num-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod3-Key-a>
+
+test bind-25.55 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Fn-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod4-Key-a>
 
 
 test bind-26.1 {event names} -setup {
@@ -7064,6 +7081,27 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     destroy .top
     unset x1 y1 x2 y2
 } -result 1
+
+test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [43573999ca]} -body {
+    proc A {} {
+       bind .c <B1-Motion><Enter> {}
+       set myv(a) 1
+       set b [array get myv]
+       bind .c <B1-Motion><Enter> "puts Trigger"
+    }
+    pack [canvas .c]
+    bind .c <ButtonRelease-1>  "A"
+    A
+    update
+    event generate .c <Button-1>
+    event generate .c <B1-Motion>
+    event generate .c <B1-Motion>
+    event generate .c <B1-Motion>
+    event generate .c <ButtonRelease-1>
+    event generate .c <B1-Motion>
+} -cleanup {
+    destroy .c
+} -returnCodes ok -result {}  ; # shall not crash (assertion failed)
 
 # cleanup
 cleanupTests

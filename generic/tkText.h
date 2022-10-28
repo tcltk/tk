@@ -498,7 +498,7 @@ typedef struct TkTextSection {
 typedef struct TkTextIndex {
     TkTextBTree tree;		/* Tree containing desired position. */
     struct TkText *textPtr;	/* The associated text widget (required). */
-    TkSizeT stateEpoch;	/* The epoch of the segment pointer. */
+    Tcl_Size stateEpoch;	/* The epoch of the segment pointer. */
 
     /*
      * The following attribtes should not be accessed directly, use the TkTextIndex*
@@ -843,7 +843,7 @@ typedef struct TkTextTag {
     struct TkTextTag *succPtr;	/* Only TextInspectCmd will use this attribute. */
     uint32_t flag;		/* Only for temporary usage (currently only TextInspectCmd, and
     				 * EmbImageConfigure will use this attribute). */
-    TkSizeT epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
+    Tcl_Size epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
     				 * will use this attribute. */
 
     /*
@@ -1093,16 +1093,16 @@ typedef enum {
 struct TkRangeList;
 struct TkText;
 
-#ifndef TkSizeT
+#ifndef Tcl_Size
 #   if TCL_MAJOR_VERSION > 8
-#	define TkSizeT size_t
+#	define Tcl_Size size_t
 #   else
-#	define TkSizeT int
+#	define Tcl_Size int
 #   endif
 #endif
 
 typedef struct TkSharedText {
-    TkSizeT refCount;		/* Reference count this shared object. */
+    Tcl_Size refCount;		/* Reference count this shared object. */
     TkTextBTree tree;		/* B-tree representation of text and tags for
 				 * widget. */
     Tcl_HashTable tagTable;	/* Hash table that maps from tag names to
@@ -1874,8 +1874,8 @@ MODULE_SCOPE int	TkBTreeLoad(TkText *textPtr, Tcl_Obj *content, int validOptions
 MODULE_SCOPE void	TkBTreeDeleteIndexRange(TkSharedText *sharedTextPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    int flags, TkTextUndoInfo *undoInfo);
-inline TkSizeT		TkBTreeEpoch(TkTextBTree tree);
-inline TkSizeT		TkBTreeIncrEpoch(TkTextBTree tree);
+inline Tcl_Size		TkBTreeEpoch(TkTextBTree tree);
+inline Tcl_Size		TkBTreeIncrEpoch(TkTextBTree tree);
 inline struct Node	* TkBTreeGetRoot(TkTextBTree tree);
 MODULE_SCOPE TkTextLine * TkBTreeFindLine(TkTextBTree tree, const TkText *textPtr, unsigned line);
 MODULE_SCOPE TkTextLine * TkBTreeFindPixelLine(TkTextBTree tree,
@@ -2175,7 +2175,7 @@ MODULE_SCOPE int	TkTextIndexPrint(const TkSharedText *sharedTextPtr, const TkTex
 MODULE_SCOPE void	TkTextIndexSetByteIndex(TkTextIndex *indexPtr, int byteIndex);
 MODULE_SCOPE void	TkTextIndexSetByteIndex2(TkTextIndex *indexPtr,
 			    TkTextLine *linePtr, int byteIndex);
-inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, TkSizeT epoch);
+inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, Tcl_Size epoch);
 MODULE_SCOPE void	TkTextIndexSetSegment(TkTextIndex *indexPtr, TkTextSegment *segPtr);
 inline void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 MODULE_SCOPE int	TkTextIndexIsEmpty(const TkTextIndex *indexPtr);
@@ -2231,7 +2231,7 @@ MODULE_SCOPE int		TkrTextIndexForwBytes(const struct TkText *textPtr,
 MODULE_SCOPE struct TkTextIndex * TkrTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
 				int byteIndex, struct TkTextIndex *indexPtr);
-MODULE_SCOPE TkSizeT		TkrTextPrintIndex(const struct TkText *textPtr,
+MODULE_SCOPE Tcl_Size		TkrTextPrintIndex(const struct TkText *textPtr,
 				const struct TkTextIndex *indexPtr,
 				char *string);
 MODULE_SCOPE struct TkTextSegment * TkrTextSetMark(struct TkText *textPtr,

@@ -189,7 +189,7 @@ KEYSYM_FLAGS		=
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	=
 #NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # Some versions of make, like SGI's, use the following variable to
@@ -391,7 +391,7 @@ STUB_OBJS = tkStubInit.o
 STUB_LIB_OBJS = tkStubLib.o ttkStubLib.o
 
 X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
-	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o \
+	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
 	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
@@ -399,16 +399,14 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
 	tkMacOSXDialog.o tkMacOSXDraw.o tkMacOSXEmbed.o tkMacOSXEntry.o \
-	tkMacOSXEvent.o tkMacOSXFont.o tkMacOSXHLEvents.o tkMacOSXImage.o \
-	tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
-	tkMacOSXMenu.o \
-	tkMacOSXMenubutton.o tkMacOSXMenus.o tkMacOSXMouseEvent.o \
-	tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
-	tkMacOSXScrlbr.o tkMacOSXSend.o \
-	tkMacOSXServices.o tkMacOSXSubwindows.o tkMacOSXWindowEvent.o \
-	tkMacOSXWm.o tkMacOSXXStubs.o tkMacOSXSysTray.o\
-	tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o tkUnixScale.o \
-	xcolors.o xdraw.o xgc.o ximage.o xutil.o \
+	tkMacOSXEvent.o tkMacOSXFileTypes.o tkMacOSXFont.o tkMacOSXHLEvents.o \
+        tkMacOSXImage.o tkMacOSXInit.o tkMacOSXKeyboard.o tkMacOSXKeyEvent.o \
+	tkMacOSXMenu.o tkMacOSXMenubutton.o tkMacOSXMenus.o \
+        tkMacOSXMouseEvent.o tkMacOSXNotify.o tkMacOSXPrint.o tkMacOSXRegion.o \
+	tkMacOSXScrlbr.o tkMacOSXSend.o tkMacOSXServices.o \
+	tkMacOSXSubwindows.o tkMacOSXSysTray.o tkMacOSXWindowEvent.o tkMacOSXWm.o \
+	tkMacOSXXStubs.o tkFileFilter.o tkMacWinMenu.o tkPointer.o tkUnix3d.o \
+	tkUnixScale.o xcolors.o xdraw.o xgc.o ximage.o xutil.o \
 	ttkMacOSXTheme.o
 
 AQUA_TKTEST_OBJS = tkMacOSXTest.o
@@ -513,7 +511,7 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixCursor.c \
 	$(UNIX_DIR)/tkUnixDraw.c \
 	$(UNIX_DIR)/tkUnixEmbed.c $(UNIX_DIR)/tkUnixEvent.c \
-	$(UNIX_DIR)/tkUnixFocus.c \
+	$(UNIX_DIR)/tkUnixFocus.c $(GENERIC_DIR)/tkIcu.c \
 	$(UNIX_DIR)/tkUnixRFont.c \
 	$(UNIX_DIR)/tkUnixFont.c $(UNIX_DIR)/tkUnixInit.c \
 	$(UNIX_DIR)/tkUnixKey.c \
@@ -530,8 +528,8 @@ AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXDebug.c $(MAC_OSX_DIR)/tkMacOSXDialog.c \
 	$(MAC_OSX_DIR)/tkMacOSXDraw.c $(MAC_OSX_DIR)/tkMacOSXEmbed.c \
 	$(MAC_OSX_DIR)/tkMacOSXEntry.c $(MAC_OSX_DIR)/tkMacOSXEvent.c \
-	$(MAC_OSX_DIR)/tkMacOSXFont.c $(MAC_OSX_DIR)/tkMacOSXHLEvents.c \
-	$(MAC_OSX_DIR)/tkMacOSXImage.c \
+	$(MAC_OSX_DIR)/tkMacOSXFont.c $(MAC_OSX_DIR)/tkMacOSXFileTypes.c\
+	$(MAC_OSX_DIR)/tkMacOSXHLEvents.c $(MAC_OSX_DIR)/tkMacOSXImage.c \
 	$(MAC_OSX_DIR)/tkMacOSXInit.c $(MAC_OSX_DIR)/tkMacOSXKeyboard.c \
 	$(MAC_OSX_DIR)/tkMacOSXKeyEvent.c \
 	$(MAC_OSX_DIR)/tkMacOSXMenu.c \
@@ -584,7 +582,8 @@ AQUA_XLIB_HDRS = $(XLIB_DIR)/X11/*.h $(XLIB_DIR)/xbytes.h
 
 AQUA_PRIVATE_HDRS = $(MAC_OSX_DIR)/tkMacOSXPort.h $(MAC_OSX_DIR)/tkMacOSXInt.h
 
-X11_PRIVATE_HDRS = $(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h $(GENERIC_DIR)/tkIntXlibDecls.h
+X11_PRIVATE_HDRS = $(UNIX_DIR)/tkUnixPort.h $(UNIX_DIR)/tkUnixInt.h $(GENERIC_DIR)/tkIntXlibDecls.h \
+	$(UNIX_DIR)/tkUnixDefault.h
 
 # Currently private, eventually public
 TTK_HDRS = $(TTK_DIR)/ttkTheme.h $(TTK_DIR)/ttkDecls.h
@@ -994,7 +993,7 @@ clean:
 
 distclean: clean
 	rm -rf Makefile config.status config.cache config.log tkConfig.sh \
-		tkConfig.h *.plist Tk.framework tk.pc
+		tkConfig.h *.plist Tk.framework tk.pc tkUuid.h
 
 depend:
 	makedepend -- $(DEPEND_SWITCHES) -- $(SRCS)
@@ -1220,6 +1219,9 @@ tkRectOval.o: $(GENERIC_DIR)/tkRectOval.c
 tkTrig.o: $(GENERIC_DIR)/tkTrig.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkTrig.c
 
+tkIcu.o: $(GENERIC_DIR)/tkIcu.c
+	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkIcu.c
+
 tkImage.o: $(GENERIC_DIR)/tkImage.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImage.c
 
@@ -1413,6 +1415,9 @@ tkMacOSXEntry.o: $(MAC_OSX_DIR)/tkMacOSXEntry.c
 
 tkMacOSXEvent.o: $(MAC_OSX_DIR)/tkMacOSXEvent.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXEvent.c
+
+tkMacOSXFileTypes.o: $(MAC_OSX_DIR)/tkMacOSXFileTypes.c
+	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXFileTypes.c
 
 tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXFont.c
