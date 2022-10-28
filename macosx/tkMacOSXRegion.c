@@ -586,9 +586,9 @@ TkMacOSXCountRectsInRegion(
 {
     int rect_count = 0;
     if (!HIShapeIsEmpty(shape)) {
-	ChkErr(HIShapeEnumerate, shape,
-		kHIShapeParseFromBottom|kHIShapeParseFromLeft,
-		rectCounter, &rect_count);
+	HIShapeEnumerate(shape,
+	    kHIShapeParseFromBottom|kHIShapeParseFromLeft,
+	    (HIShapeEnumerateProcPtr) rectCounter, (void *) &rect_count);
     }
     return rect_count;
 }
@@ -598,9 +598,9 @@ TkMacOSXPrintRectsInRegion(
     HIShapeRef shape)
 {
     if (!HIShapeIsEmpty(shape)) {
-	ChkErr(HIShapeEnumerate, shape,
-		kHIShapeParseFromBottom|kHIShapeParseFromLeft,
-		rectPrinter, NULL);
+	HIShapeEnumerate( shape,
+	    kHIShapeParseFromBottom|kHIShapeParseFromLeft,
+	    (HIShapeEnumerateProcPtr) rectPrinter, NULL);
     }
 }
 

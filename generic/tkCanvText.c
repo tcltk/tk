@@ -32,7 +32,7 @@ typedef struct TextItem {
      */
 
     double x, y;		/* Positioning point for text. */
-    TkSizeT insertPos;		/* Character index of character just before
+    Tcl_Size insertPos;		/* Character index of character just before
 				 * which the insertion cursor is displayed. */
 
     /*
@@ -62,8 +62,8 @@ typedef struct TextItem {
      * configuration settings above.
      */
 
-    TkSizeT numChars;		/* Length of text in characters. */
-    TkSizeT numBytes;		/* Length of text in bytes. */
+    Tcl_Size numChars;		/* Length of text in characters. */
+    Tcl_Size numBytes;		/* Length of text in bytes. */
     Tk_TextLayout textLayout;	/* Cached text layout information. */
     int actualWidth;		/* Width of text as computed. Used to make
 				 * selections of wrapped text display
@@ -87,7 +87,7 @@ static const Tk_CustomOption stateOption = {
     TkStateParseProc, TkStatePrintProc, INT2PTR(2)
 };
 static const Tk_CustomOption tagsOption = {
-    TkCanvasTagsParseProc, TkCanvasTagsPrintProc, NULL
+    Tk_CanvasTagsParseProc, Tk_CanvasTagsPrintProc, NULL
 };
 static const Tk_CustomOption offsetOption = {
     TkOffsetParseProc, TkOffsetPrintProc, INT2PTR(TK_OFFSET_RELATIVE)
@@ -100,12 +100,12 @@ UnderlineParseProc(
     Tk_Window tkwin,		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item (ignored). */
+    Tcl_Size offset)			/* Offset into item (ignored). */
 {
     int *underlinePtr = (int *) (widgRec + offset);
     Tcl_Obj obj;
     int code;
-    TkSizeT underline;
+    Tcl_Size underline;
     (void)dummy;
     (void)tkwin;
 
@@ -141,7 +141,7 @@ UnderlinePrintProc(
     ClientData dummy,	/* Ignored. */
     Tk_Window tkwin,		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Pointer to record for item. */
+    Tcl_Size offset,			/* Pointer to record for item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -152,7 +152,7 @@ UnderlinePrintProc(
     (void)tkwin;
 
     if (underline == INT_MIN) {
-#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
+#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 	p = (char *)"-1";
 #else
 	p = (char *)"";
@@ -229,30 +229,30 @@ static int		ConfigureText(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display, Drawable dst,
 			    int x, int y, int width, int height);
-static TkSizeT	GetSelText(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT offset, char *buffer,
-			    TkSizeT maxBytes);
+static Tcl_Size	GetSelText(Tk_Canvas canvas,
+			    Tk_Item *itemPtr, Tcl_Size offset, char *buffer,
+			    Tcl_Size maxBytes);
 static int		GetTextIndex(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    Tcl_Obj *obj, TkSizeT *indexPtr);
+			    Tcl_Obj *obj, Tcl_Size *indexPtr);
 static void		ScaleText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double originX, double originY,
 			    double scaleX, double scaleY);
 static void		SetTextCursor(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT index);
+			    Tk_Item *itemPtr, Tcl_Size index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int argc, Tcl_Obj *const objv[]);
+			    int objc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT first, TkSizeT last);
+			    Tk_Item *itemPtr, Tcl_Size first, Tcl_Size last);
 static void		TextInsert(Tk_Canvas canvas,
-			    Tk_Item *itemPtr, TkSizeT beforeThis, Tcl_Obj *obj);
+			    Tk_Item *itemPtr, Tcl_Size beforeThis, Tcl_Obj *obj);
 static int		TextToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
 static double		TextToPoint(Tk_Canvas canvas,
@@ -880,7 +880,7 @@ DisplayCanvText(
 {
     TextItem *textPtr;
     Tk_CanvasTextInfo *textInfoPtr;
-    TkSizeT selFirstChar, selLastChar;
+    Tcl_Size selFirstChar, selLastChar;
     short drawableX, drawableY;
     Pixmap stipple;
     Tk_State state = itemPtr->state;
@@ -1087,13 +1087,13 @@ static void
 TextInsert(
     Tk_Canvas canvas,		/* Canvas containing text item. */
     Tk_Item *itemPtr,		/* Text item to be modified. */
-    TkSizeT index,			/* Character index before which string is to
+    Tcl_Size index,			/* Character index before which string is to
 				 * be inserted. */
     Tcl_Obj *obj)		/* New characters to be inserted. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
     int byteIndex, charsAdded;
-    TkSizeT byteCount;
+    Tcl_Size byteCount;
     char *newStr, *text;
     const char *string;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
@@ -1169,9 +1169,9 @@ static void
 TextDeleteChars(
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Item in which to delete characters. */
-    TkSizeT first,			/* Character index of first character to
+    Tcl_Size first,			/* Character index of first character to
 				 * delete. */
-    TkSizeT last)			/* Character index of last character to delete
+    Tcl_Size last)			/* Character index of last character to delete
 				 * (inclusive). */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1458,11 +1458,11 @@ GetTextIndex(
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular character in
 				 * itemPtr's text. */
-    TkSizeT *indexPtr)		/* Where to store converted character
+    Tcl_Size *indexPtr)		/* Where to store converted character
 				 * index. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    TkSizeT length, idx;
+    Tcl_Size length, idx;
     int c;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
     const char *string;
@@ -1558,7 +1558,7 @@ SetTextCursor(
     TCL_UNUSED(Tk_Canvas),		/* Record describing canvas widget. */
     Tk_Item *itemPtr,		/* Text item in which cursor position is to be
 				 * set. */
-    TkSizeT index)			/* Character index of character just before
+    Tcl_Size index)			/* Character index of character just before
 				 * which cursor is to be positioned. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -1592,19 +1592,19 @@ SetTextCursor(
  *--------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 GetSelText(
     TCL_UNUSED(Tk_Canvas),		/* Canvas containing selection. */
     Tk_Item *itemPtr,		/* Text item containing selection. */
-    TkSizeT offset,			/* Byte offset within selection of first
+    Tcl_Size offset,			/* Byte offset within selection of first
 				 * character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer,
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer,
 				 * not including terminating NULL
 				 * character. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    TkSizeT byteCount;
+    Tcl_Size byteCount;
     char *text;
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;

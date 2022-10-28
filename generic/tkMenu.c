@@ -335,9 +335,9 @@ static void		DestroyMenuHashTable(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
 static void		DestroyMenuEntry(void *memPtr);
-static TkSizeT	GetIndexFromCoords(Tcl_Interp *interp,
+static Tcl_Size	GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
-			    TkSizeT *indexPtr);
+			    Tcl_Size *indexPtr);
 static int		MenuDoYPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuDoXPosition(Tcl_Interp *interp,
@@ -346,7 +346,7 @@ static int		MenuAddOrInsert(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *indexPtr, int objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuCmdDeletedProc(ClientData clientData);
-static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, TkSizeT index, int type);
+static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, Tcl_Size index, int type);
 static char *		MenuVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
@@ -359,7 +359,7 @@ static void		RecursivelyDeleteMenu(TkMenu *menuPtr);
 static void		UnhookCascadeEntry(TkMenuEntry *mePtr);
 static void		MenuCleanup(ClientData unused);
 static int		GetMenuIndex(Tcl_Interp *interp, TkMenu *menuPtr,
-			    Tcl_Obj *objPtr, int lastOK, TkSizeT *indexPtr);
+			    Tcl_Obj *objPtr, int lastOK, Tcl_Size *indexPtr);
 
 /*
  * The structure below is a list of procs that respond to certain window
@@ -569,14 +569,14 @@ Tk_MenuObjCmd(
 
 	while (topLevelListPtr != NULL) {
     	    /*
-    	     * Need to get the next pointer first. Tk_SetWindowMenuBar changes
+    	     * Need to get the next pointer first. Tk_SetWindowMenubar changes
     	     * the list, so that the next pointer is different after calling
     	     * it.
     	     */
 
     	    nextPtr = topLevelListPtr->nextPtr;
     	    listtkwin = topLevelListPtr->tkwin;
-    	    Tk_SetWindowMenuBar(menuPtr->interp, listtkwin,
+    	    Tk_SetWindowMenubar(menuPtr->interp, listtkwin,
     	    	    Tk_PathName(menuPtr->tkwin), Tk_PathName(menuPtr->tkwin));
     	    topLevelListPtr = nextPtr;
     	}
@@ -630,7 +630,7 @@ MenuWidgetObjCmd(
 
     switch ((enum options) option) {
     case MENU_ACTIVATE: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -714,7 +714,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_DELETE: {
-	TkSizeT first, last;
+	Tcl_Size first, last;
 	Tcl_WideInt w;
 
 	if ((objc != 3) && (objc != 4)) {
@@ -757,7 +757,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_ENTRYCGET: {
-	TkSizeT index;
+	Tcl_Size index;
 	Tcl_Obj *resultPtr;
 
 	if (objc != 4) {
@@ -782,7 +782,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_ENTRYCONFIGURE: {
-	TkSizeT index;
+	Tcl_Size index;
 	Tcl_Obj *resultPtr;
 
 	if (objc < 3) {
@@ -823,7 +823,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_INDEX: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "string");
@@ -851,7 +851,7 @@ MenuWidgetObjCmd(
 	}
 	break;
     case MENU_INVOKE: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -868,7 +868,7 @@ MenuWidgetObjCmd(
     }
     case MENU_POST: {
 	int x, y;
-	TkSizeT index = TCL_INDEX_NONE;
+	Tcl_Size index = TCL_INDEX_NONE;
 
 	if (objc != 4 && objc != 5) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "x y ?index?");
@@ -903,7 +903,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_POSTCASCADE: {
-	TkSizeT index;
+	Tcl_Size index;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -921,7 +921,7 @@ MenuWidgetObjCmd(
 	break;
     }
     case MENU_TYPE: {
-	TkSizeT index;
+	Tcl_Size index;
 	const char *typeStr;
 
 	if (objc != 3) {
@@ -996,7 +996,7 @@ int
 TkInvokeMenu(
     Tcl_Interp *interp,		/* The interp that the menu lives in. */
     TkMenu *menuPtr,		/* The menu we are invoking. */
-    TkSizeT index)			/* The zero based index of the item we are
+    Tcl_Size index)			/* The zero based index of the item we are
     				 * invoking. */
 {
     int result = TCL_OK;
@@ -1188,6 +1188,7 @@ DestroyMenuInstance(
     }
     if (menuPtr->entries != NULL) {
 	ckfree(menuPtr->entries);
+	menuPtr->entries = NULL;
     }
     TkMenuFreeDrawOptions(menuPtr);
     Tk_FreeConfigOptions((char *) menuPtr,
@@ -1484,7 +1485,7 @@ MenuWorldChanged(
     ClientData instanceData)	/* Information about widget. */
 {
     TkMenu *menuPtr = (TkMenu *)instanceData;
-    TkSizeT i;
+    Tcl_Size i;
 
     TkMenuConfigureDrawOptions(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -2111,7 +2112,7 @@ GetMenuIndex(
 				 * manual entry for valid .*/
     int lastOK,			/* Non-zero means its OK to return index just
 				 * *after* last entry. */
-    TkSizeT *indexPtr)		/* Where to store converted index. */
+    Tcl_Size *indexPtr)		/* Where to store converted index. */
 {
     int i;
     const char *string;
@@ -2239,13 +2240,13 @@ MenuCmdDeletedProc(
 static TkMenuEntry *
 MenuNewEntry(
     TkMenu *menuPtr,		/* Menu that will hold the new entry. */
-    TkSizeT index,			/* Where in the menu the new entry is to
+    Tcl_Size index,			/* Where in the menu the new entry is to
 				 * go. */
     int type)			/* The type of the new entry. */
 {
     TkMenuEntry *mePtr;
     TkMenuEntry **newEntries;
-    TkSizeT i;
+    Tcl_Size i;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -2343,7 +2344,7 @@ MenuAddOrInsert(
 				 * entry, others are config options. */
 {
     int type;
-    TkSizeT index;
+    Tcl_Size index;
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
 
@@ -2386,7 +2387,7 @@ MenuAddOrInsert(
     	}
     	if (ConfigureMenuEntry(mePtr, objc - 1, objv + 1) != TCL_OK) {
 	    TkMenu *errorMenuPtr;
-	    TkSizeT i;
+	    Tcl_Size i;
 
 	    for (errorMenuPtr = menuPtr->mainMenuPtr;
 		    errorMenuPtr != NULL;
@@ -2590,7 +2591,7 @@ MenuVarProc(
 int
 TkActivateMenuEntry(
     TkMenu *menuPtr,	/* Menu in which to activate. */
-    TkSizeT index)			/* Index of entry to activate, or
+    Tcl_Size index)			/* Index of entry to activate, or
 				 * TCL_INDEX_NONE to deactivate all entries. */
 {
     TkMenuEntry *mePtr;
@@ -2690,7 +2691,8 @@ CloneMenu(
     				 * menubar, or a tearoff? */
 {
     int returnResult;
-    int menuType, i;
+    int menuType;
+    Tcl_Size i;
     TkMenuReferences *menuRefPtr;
     Tcl_Obj *menuDupCommandArray[4];
 
@@ -2730,7 +2732,7 @@ CloneMenu(
 	    && (menuPtr->numEntries == menuRefPtr->menuPtr->numEntries)) {
 	TkMenu *newMenuPtr = menuRefPtr->menuPtr;
 	Tcl_Obj *newObjv[3];
-	int numElements;
+	Tcl_Size numElements;
 
 	/*
 	 * Now put this newly created menu into the parent menu's instance
@@ -2801,7 +2803,7 @@ CloneMenu(
 	 * Clone all of the cascade menus that this menu points to.
 	 */
 
-	for (i = 0; i < (int)menuPtr->numEntries; i++) {
+	for (i = 0; i < menuPtr->numEntries; i++) {
 	    TkMenuReferences *cascadeRefPtr;
 	    TkMenu *oldCascadePtr;
 
@@ -2865,7 +2867,7 @@ MenuDoXPosition(
     TkMenu *menuPtr,
     Tcl_Obj *objPtr)
 {
-    TkSizeT index;
+    Tcl_Size index;
 
     TkRecomputeMenu(menuPtr);
     if (GetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
@@ -2902,7 +2904,7 @@ MenuDoYPosition(
     TkMenu *menuPtr,
     Tcl_Obj *objPtr)
 {
-    TkSizeT index;
+    Tcl_Size index;
 
     TkRecomputeMenu(menuPtr);
     if (GetMenuIndex(interp, menuPtr, objPtr, 0, &index) != TCL_OK) {
@@ -2940,12 +2942,12 @@ MenuDoYPosition(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 GetIndexFromCoords(
     Tcl_Interp *interp,		/* Interpreter of menu. */
     TkMenu *menuPtr,		/* The menu we are searching. */
     const char *string,		/* The @string we are parsing. */
-    TkSizeT *indexPtr)		/* The index of the item that matches. */
+    Tcl_Size *indexPtr)		/* The index of the item that matches. */
 {
     int x, y, i;
     const char *p;
@@ -3023,7 +3025,7 @@ static void
 RecursivelyDeleteMenu(
     TkMenu *menuPtr)		/* The menubar instance we are deleting. */
 {
-    TkSizeT i;
+    Tcl_Size i;
     TkMenuEntry *mePtr;
 
     /*
@@ -3128,7 +3130,7 @@ TkNewMenuName(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_SetWindowMenuBar --
+ * Tk_SetWindowMenubar --
  *
  *	Associates a menu with a window. Called by ConfigureFrame in in
  *	response to a "-menu .foo" configuration option for a top level.
@@ -3144,7 +3146,7 @@ TkNewMenuName(
  */
 
 void
-Tk_SetWindowMenuBar(
+Tk_SetWindowMenubar(
     Tcl_Interp *interp,		/* The interpreter the toplevel lives in. */
     Tk_Window tkwin,		/* The toplevel window. */
     const char *oldMenuName, /* The name of the menubar previously set in

@@ -521,7 +521,7 @@ Tk_GetOption(
     if (masqName != NULL) {
 	char *masqClass;
 	Tk_Uid nodeId, winClassId, winNameId;
-	TkSizeT classNameLength;
+	Tcl_Size classNameLength;
 	Element *nodePtr, *leafPtr;
 	static const int searchOrder[] = {
 	    EXACT_NODE_NAME, WILDCARD_NODE_NAME, EXACT_NODE_CLASS,
@@ -1085,7 +1085,7 @@ ReadOptionFile(
     const char *realName;
     Tcl_Obj *buffer;
     int result;
-    TkSizeT bufferSize;
+    Tcl_Size bufferSize;
     Tcl_Channel chan;
     Tcl_DString newName;
 

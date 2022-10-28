@@ -160,7 +160,7 @@ static void		StdinProc(ClientData clientData, int mask);
 
 void
 Tk_MainEx(
-    int argc,			/* Number of arguments. */
+    Tcl_Size argc,			/* Number of arguments. */
     TCHAR **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
 				/* Application-specific initialization
@@ -206,7 +206,7 @@ Tk_MainEx(
 		return;
 	    }
 	} else {
-	    int j;
+	    Tcl_Size j;
 
 	    for (j = 1; j < argc; ++j) {
 		if (!strcmp(argv[j], "-display")) {

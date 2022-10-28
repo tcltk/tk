@@ -225,10 +225,10 @@ static void		DestroyOptionTables(void *clientData,
 			    Tcl_Interp *interp);
 static int		SetSticky(void *clientData, Tcl_Interp *interp,
 			    Tk_Window tkwin, Tcl_Obj **value, char *recordPtr,
-			    TkSizeT internalOffset, char *oldInternalPtr,
+			    Tcl_Size internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetSticky(void *clientData, Tk_Window tkwin,
-			    char *recordPtr, TkSizeT internalOffset);
+			    char *recordPtr, Tcl_Size internalOffset);
 static void		RestoreSticky(void *clientData, Tk_Window tkwin,
 			    char *internalPtr, char *oldInternalPtr);
 static void		AdjustForSticky(int sticky, int cavityWidth,
@@ -236,7 +236,7 @@ static void		AdjustForSticky(int sticky, int cavityWidth,
 			    int *paneWidthPtr, int *paneHeightPtr);
 static void		MoveSash(PanedWindow *pwPtr, int sash, int diff);
 static int		ObjectIsEmpty(Tcl_Obj *objPtr);
-static void *	ComputeSlotAddress(void *recordPtr, TkSizeT offset);
+static void *	ComputeSlotAddress(void *recordPtr, Tcl_Size offset);
 static int		PanedWindowIdentifyCoords(PanedWindow *pwPtr,
 			    Tcl_Interp *interp, int x, int y);
 
@@ -410,7 +410,7 @@ Tk_PanedWindowObjCmd(
 	/*
 	 * The first time this function is invoked, the option tables will be
 	 * NULL. We then create the option tables from the templates and store
-	 * a pointer to the tables as the command's clinical so we'll have
+	 * a pointer to the tables as the command's clientData so we'll have
 	 * easy access to it in the future.
 	 */
 
@@ -2400,7 +2400,7 @@ GetSticky(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     char *recordPtr,		/* Pointer to widget record. */
-    TkSizeT internalOffset)		/* Offset within *recordPtr containing the
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the
 				 * sticky value. */
 {
     int sticky = *(int *)(recordPtr + internalOffset);
@@ -2452,7 +2452,7 @@ SetSticky(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
@@ -3026,7 +3026,7 @@ ObjectIsEmpty(
 static void *
 ComputeSlotAddress(
     void *recordPtr,	/* Pointer to the start of a record. */
-    TkSizeT offset)		/* Offset of a slot within that record; may be TCL_INDEX_NONE. */
+    Tcl_Size offset)		/* Offset of a slot within that record; may be TCL_INDEX_NONE. */
 {
     if (offset != TCL_INDEX_NONE) {
 	return (char *)recordPtr + offset;

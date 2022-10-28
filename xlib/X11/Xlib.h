@@ -106,29 +106,29 @@ typedef int Status;
 #define QueuedAfterFlush 2
 
 #define ConnectionNumber(dpy) 	((dpy)->fd)
-#define RootWindow(dpy, scr) 	(((dpy)->screens[(scr)]).root)
+#define RootWindow(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->root)
 #define DefaultScreen(dpy) 	((dpy)->default_screen)
-#define DefaultRootWindow(dpy) 	(((dpy)->screens[(dpy)->default_screen]).root)
-#define DefaultVisual(dpy, scr) (((dpy)->screens[(scr)]).root_visual)
-#define DefaultGC(dpy, scr) 	(((dpy)->screens[(scr)]).default_gc)
-#define BlackPixel(dpy, scr) 	(((dpy)->screens[(scr)]).black_pixel)
-#define WhitePixel(dpy, scr) 	(((dpy)->screens[(scr)]).white_pixel)
+#define DefaultRootWindow(dpy) 	(ScreenOfDisplay(dpy,DefaultScreen(dpy))->root)
+#define DefaultVisual(dpy, scr) (ScreenOfDisplay(dpy,scr)->root_visual)
+#define DefaultGC(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->default_gc)
+#define BlackPixel(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->black_pixel)
+#define WhitePixel(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->white_pixel)
 #define AllPlanes 		((unsigned long)~0L)
 #define QLength(dpy) 		((dpy)->qlen)
-#define DisplayWidth(dpy, scr) 	(((dpy)->screens[(scr)]).width)
-#define DisplayHeight(dpy, scr) (((dpy)->screens[(scr)]).height)
-#define DisplayWidthMM(dpy, scr)(((dpy)->screens[(scr)]).mwidth)
-#define DisplayHeightMM(dpy, scr)(((dpy)->screens[(scr)]).mheight)
-#define DisplayPlanes(dpy, scr) (((dpy)->screens[(scr)]).root_depth)
-#define DisplayCells(dpy, scr) 	(DefaultVisual((dpy), (scr))->map_entries)
+#define DisplayWidth(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->width)
+#define DisplayHeight(dpy, scr) (ScreenOfDisplay(dpy,scr)->height)
+#define DisplayWidthMM(dpy, scr)(ScreenOfDisplay(dpy,scr)->mwidth)
+#define DisplayHeightMM(dpy, scr)(ScreenOfDisplay(dpy,scr)->mheight)
+#define DisplayPlanes(dpy, scr) (ScreenOfDisplay(dpy,scr)->root_depth)
+#define DisplayCells(dpy, scr) 	(DefaultVisual(dpy,scr)->map_entries)
 #define ScreenCount(dpy) 	((dpy)->nscreens)
 #define ServerVendor(dpy) 	((dpy)->vendor)
 #define ProtocolVersion(dpy) 	((dpy)->proto_major_version)
 #define ProtocolRevision(dpy) 	((dpy)->proto_minor_version)
 #define VendorRelease(dpy) 	((dpy)->release)
 #define DisplayString(dpy) 	((dpy)->display_name)
-#define DefaultDepth(dpy, scr) 	(((dpy)->screens[(scr)]).root_depth)
-#define DefaultColormap(dpy, scr)(((dpy)->screens[(scr)]).cmap)
+#define DefaultDepth(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->root_depth)
+#define DefaultColormap(dpy, scr)(ScreenOfDisplay(dpy,scr)->cmap)
 #define BitmapUnit(dpy) 	((dpy)->bitmap_unit)
 #define BitmapBitOrder(dpy) 	((dpy)->bitmap_bit_order)
 #define BitmapPad(dpy) 		((dpy)->bitmap_pad)
@@ -138,7 +138,7 @@ typedef int Status;
 
 /* macros for screen oriented applications (toolkit) */
 #define ScreenOfDisplay(dpy, scr)(&((dpy)->screens[(scr)]))
-#define DefaultScreenOfDisplay(dpy) (&((dpy)->screens[(dpy)->default_screen]))
+#define DefaultScreenOfDisplay(dpy) ScreenOfDisplay(dpy,DefaultScreen(dpy))
 #define DisplayOfScreen(s)	((s)->display)
 #define RootWindowOfScreen(s)	((s)->root)
 #define BlackPixelOfScreen(s)	((s)->black_pixel)
@@ -206,11 +206,11 @@ typedef struct {
 				   CapRound, CapProjecting */
 	int join_style;	 	/* JoinMiter, JoinRound, JoinBevel */
 	int fill_style;	 	/* FillSolid, FillTiled,
-				   FillStippled, FillOpaeueStippled */
+				   FillStippled, FillOpaqueStippled */
 	int fill_rule;	  	/* EvenOddRule, WindingRule */
 	int arc_mode;		/* ArcChord, ArcPieSlice */
 	Pixmap tile;		/* tile pixmap for tiling operations */
-	Pixmap stipple;		/* stipple 1 plane pixmap for stipping */
+	Pixmap stipple;		/* stipple 1 plane pixmap for stippling */
 	int ts_x_origin;	/* offset for tile or stipple operations */
 	int ts_y_origin;
         Font font;	        /* default text font for text operations */
@@ -304,7 +304,7 @@ typedef struct {
     int bit_gravity;		/* one of bit gravity values */
     int win_gravity;		/* one of the window gravity values */
     int backing_store;		/* NotUseful, WhenMapped, Always */
-    unsigned long backing_planes;/* planes to be preseved if possible */
+    unsigned long backing_planes;/* planes to be preserved if possible */
     unsigned long backing_pixel;/* value to use in restoring planes */
     Bool save_under;		/* should bits under be saved? (popups) */
     long event_mask;		/* set of events that should be saved */
@@ -376,9 +376,9 @@ typedef struct _XImage {
     int bitmap_bit_order;	/* LSBFirst, MSBFirst */
     int bitmap_pad;		/* 8, 16, 32 either XY or ZPixmap */
     int depth;			/* depth of image */
-    int bytes_per_line;		/* accelarator to next line */
+    int bytes_per_line;		/* accelerator to next line */
     int bits_per_pixel;		/* bits per pixel (ZPixmap) */
-    unsigned long red_mask;	/* bits in z arrangment */
+    unsigned long red_mask;	/* bits in z arrangement */
     unsigned long green_mask;
     unsigned long blue_mask;
     XPointer obdata;		/* hook for the object routines to hang on */
@@ -581,11 +581,8 @@ typedef struct _XDisplay {
 	int (*savedsynchandler)(void); /* user synchandler when Xlib usurps */
 } Display;
 
-#if NeedFunctionPrototypes	/* prototypes require event type definitions */
 #undef _XEVENT_
-#endif
 #ifndef _XEVENT_
-
 /*
  * Definitions of specific events.
  */

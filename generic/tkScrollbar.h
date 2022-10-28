@@ -175,13 +175,13 @@ MODULE_SCOPE char tkDefScrollbarWidth[TCL_INTEGER_SPACE];
  * widget.
  */
 
-MODULE_SCOPE void	TkScrollbarEventProc(ClientData clientData,
+MODULE_SCOPE void	TkScrollbarEventProc(void *clientData,
 			    XEvent *eventPtr);
 MODULE_SCOPE void	TkScrollbarEventuallyRedraw(TkScrollbar *scrollPtr);
 MODULE_SCOPE void	TkpComputeScrollbarGeometry(TkScrollbar *scrollPtr);
 MODULE_SCOPE TkScrollbar *TkpCreateScrollbar(Tk_Window tkwin);
 MODULE_SCOPE void 	TkpDestroyScrollbar(TkScrollbar *scrollPtr);
-MODULE_SCOPE void	TkpDisplayScrollbar(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayScrollbar(void *clientData);
 MODULE_SCOPE void	TkpConfigureScrollbar(TkScrollbar *scrollPtr);
 MODULE_SCOPE int	TkpScrollbarPosition(TkScrollbar *scrollPtr,
 			    int x, int y);

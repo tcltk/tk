@@ -406,7 +406,7 @@ TkBTreeGetShared(
  */
 
 inline
-TkSizeT
+Tcl_Size
 TkBTreeIncrEpoch(
     TkTextBTree tree)		/* Tree to increment epoch. */
 {
@@ -431,7 +431,7 @@ TkBTreeIncrEpoch(
  */
 
 inline
-TkSizeT
+Tcl_Size
 TkBTreeEpoch(
     TkTextBTree tree)		/* Tree to get epoch for. */
 {
@@ -874,7 +874,7 @@ TkTextGetIndexFromObj(
     Tcl_Obj *objPtr,		/* Object containing description of position. */
     TkTextIndex *indexPtr)	/* Store the result here. */
 {
-    TkSizeT length;
+    Tcl_Size length;
     const char *str;
 
     assert(textPtr);
@@ -987,7 +987,7 @@ inline
 void
 TkTextIndexSetEpoch(
     TkTextIndex *indexPtr,
-    TkSizeT epoch)
+    Tcl_Size epoch)
 {
     assert(indexPtr->priv.linePtr);
     assert(indexPtr->priv.linePtr->parentPtr); /* expired? */

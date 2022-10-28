@@ -27,13 +27,12 @@
 #include "tkFont.h"
 
 /*
- * The following encoding is used in TYPE_FLAGS:
+ * The following encoding is used in TK_OPTION_VAR:
  *
- * if sizeof(type) == sizeof(int)     =>    TYPE_FLAGS(type) = 0
- * if sizeof(type) == 1               =>    TYPE_FLAGS(type) = 64
- * if sizeof(type) == 2               =>    TYPE_FLAGS(type) = 128
+ * if sizeof(type) == sizeof(int)     =>    TK_OPTION_VAR(type) = 0
+ * if sizeof(type) == 1               =>    TK_OPTION_VAR(type) = 64
+ * if sizeof(type) == 2               =>    TK_OPTION_VAR(type) = 128
  */
-#define TYPE_FLAGS(type) (((int)(sizeof(type)&(sizeof(int)-1))<<6))
 #define TYPE_MASK        (((((int)sizeof(int)-1))|3)<<6)
 
 /*
@@ -619,7 +618,7 @@ DoObjConfig(
     } else {
 	oldInternalPtr = (char *) &internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK));
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK));
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;
@@ -635,8 +634,20 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newBool;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    *((char *) oldInternalPtr) = *((char *) internalPtr);
+		    *((char *) internalPtr) = newBool;
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    *((short *) oldInternalPtr) = *((short *) internalPtr);
+		    *((short *) internalPtr) = newBool;
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_BOOLEAN");
+		}
+	    } else {
+		*((int *) oldInternalPtr) = *((int *) internalPtr);
+		*((int *) internalPtr) = newBool;
+	    }
 	}
 	break;
     }
@@ -664,7 +675,7 @@ DoObjConfig(
 	break;
     }
     case TK_OPTION_INDEX: {
-	TkSizeT newIndex;
+	Tcl_Size newIndex;
 
 	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
@@ -674,7 +685,7 @@ DoObjConfig(
 	    return TCL_ERROR;
 	}
     if (newIndex == TCL_INDEX_NONE) {
-	newIndex = (TkSizeT)INT_MIN;
+	newIndex = (Tcl_Size)INT_MIN;
     } else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
 	newIndex++;
     }
@@ -717,7 +728,7 @@ DoObjConfig(
     case TK_OPTION_STRING: {
 	char *newStr;
 	const char *value;
-	TkSizeT length;
+	Tcl_Size length;
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
@@ -744,16 +755,16 @@ DoObjConfig(
 	} else {
 	    if (Tcl_GetIndexFromObjStruct(interp, valuePtr,
 		    optionPtr->specPtr->clientData, sizeof(char *),
-		    optionPtr->specPtr->optionName+1, (nullOK ? TCL_INDEX_NULL_OK : 0), &newValue) != TCL_OK) {
+		    optionPtr->specPtr->optionName+1, (nullOK ? TCL_NULL_OK : 0), &newValue) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	}
 	if (internalPtr != NULL) {
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
-		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    *((char *) oldInternalPtr) = *((char *) internalPtr);
 		    *((char *) internalPtr) = newValue;
-		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
 		    *((short *) oldInternalPtr) = *((short *) internalPtr);
 		    *((short *) internalPtr) = newValue;
 		} else {
@@ -863,7 +874,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newRelief = TK_RELIEF_NULL;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkReliefStrings,
-		"relief", (nullOK ? TCL_INDEX_NULL_OK : 0), &newRelief) != TCL_OK) {
+		"relief", (nullOK ? TCL_NULL_OK : 0), &newRelief) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -898,7 +909,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newJustify = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
-		"justification", (nullOK ? TCL_INDEX_NULL_OK : 0), &newJustify) != TCL_OK) {
+		"justification", (nullOK ? TCL_NULL_OK : 0), &newJustify) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -914,7 +925,7 @@ DoObjConfig(
 	    valuePtr = NULL;
 	    newAnchor = -1;
 	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkAnchorStrings,
-		"anchor", (nullOK ? TCL_INDEX_NULL_OK : 0), &newAnchor) != TCL_OK) {
+		"anchor", (nullOK ? TCL_NULL_OK : 0), &newAnchor) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {
@@ -1305,7 +1316,7 @@ Tk_SetOptions(
 				 * then no error message is returned.*/
     void *recordPtr,	    	/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
-    int objc,			/* The number of elements in objv. */
+    Tcl_Size objc1,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
     Tk_Window tkwin,		/* Window associated with the thing being
 				 * configured; needed for some options (such
@@ -1324,6 +1335,7 @@ Tk_SetOptions(
     Option *optionPtr;
     Tk_SavedOptions *lastSavePtr, *newSavePtr;
     int mask;
+    int objc = objc1;
 
     if (savePtr != NULL) {
 	savePtr->recordPtr = recordPtr;
@@ -1481,6 +1493,18 @@ Tk_RestoreSavedOptions(
 	    CLANG_ASSERT(internalPtr);
 	    switch (specPtr->type) {
 	    case TK_OPTION_BOOLEAN:
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+			*((char *) internalPtr) = *((char *) ptr);
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+			*((short *) internalPtr) = *((short *) ptr);
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_BOOLEAN");
+		    }
+		} else {
+		    *((int *) internalPtr) = *((int *) ptr);
+		}
+		break;
 	    case TK_OPTION_INT:
 	    case TK_OPTION_INDEX:
 		*((int *) internalPtr) = *((int *) ptr);
@@ -1493,9 +1517,9 @@ Tk_RestoreSavedOptions(
 		break;
 	    case TK_OPTION_STRING_TABLE:
 		if (optionPtr->specPtr->flags & TYPE_MASK) {
-		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 			*((char *) internalPtr) = *((char *) ptr);
-		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+		    } else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
 			*((short *) internalPtr) = *((short *) ptr);
 		    } else {
 			Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
@@ -1960,13 +1984,26 @@ GetObjectForOption(
     if (optionPtr->specPtr->internalOffset != TCL_INDEX_NONE) {
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
-	case TK_OPTION_BOOLEAN:
-	    if (*((int *) internalPtr) != -1) {
-		objPtr = Tcl_NewBooleanObj(*((int *)internalPtr));
+	case TK_OPTION_BOOLEAN: {
+	    int value;
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
+		    value = *((signed char *)internalPtr);
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
+		    value = *((short *)internalPtr);
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_BOOLEAN");
+		}
+	    } else {
+		value = *((int *)internalPtr);
+	    }
+	    if (value != -1) {
+		objPtr = Tcl_NewBooleanObj(value);
 	    }
 	    break;
+	}
 	case TK_OPTION_INT:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
@@ -1986,7 +2023,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK)) || !isnan(*((double *) internalPtr))) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || !isnan(*((double *) internalPtr))) {
 		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
 	    }
 	    break;
@@ -1996,9 +2033,9 @@ GetObjectForOption(
 	case TK_OPTION_STRING_TABLE: {
 	    int value;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
-		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(char)) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);
-		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_FLAGS(short)) {
+		} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(short)) {
 		    value = *((short *)internalPtr);
 		} else {
 		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_STRING_TABLE");
@@ -2074,7 +2111,7 @@ GetObjectForOption(
 		    *((Tk_Anchor *)internalPtr)), -1);
 	    break;
 	case TK_OPTION_PIXELS:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_INDEX_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;

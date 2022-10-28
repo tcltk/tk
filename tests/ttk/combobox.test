@@ -70,16 +70,24 @@ test combobox-2.end "Cleanup" -body { destroy .cb }
 test combobox-3 "Read postoffset value dynamically from current style" -body {
     ttk::combobox .cb -values [list a b c] -style "DerivedStyle.TCombobox"
     pack .cb -expand true -fill both
+    update idletasks
     ttk::style configure DerivedStyle.TCombobox -postoffset [list 25 0 0 0]
+    if {[tk windowingsystem] == "aqua"} {
+	after 500 {
+	    pressbutton [expr {[winfo rootx .cb] + 25}] [expr {[winfo rooty .cb] + 25}]
+	}
+    }
     ttk::combobox::Post .cb
     expr {[winfo rootx .cb.popdown] - [winfo rootx .cb]}
 } -result 25 -cleanup {
     destroy .cb
 }
 
-test combobox-1890211 "ComboboxSelected event after listbox unposted" -body {
+test combobox-1890211 "ComboboxSelected event after listbox unposted" \
+    -constraints {notAqua} -body {
     # whitebox test...
     pack [ttk::combobox .cb -values [list a b c]]
+    update idletasks
     set result [list]
     bind .cb <<ComboboxSelected>> {
 	lappend result Event [winfo ismapped .cb.popdown] [.cb get]

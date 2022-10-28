@@ -715,7 +715,7 @@ Tk_FontObjCmd(
     case FONT_MEASURE: {
 	const char *string;
 	Tk_Font tkfont;
-	TkSizeT length = 0;
+	Tcl_Size length = 0;
 	int skip = 0;
 
 	if (objc > 4) {
@@ -909,7 +909,7 @@ RecomputeWidgets(
      *
      * This could be done recursively or iteratively. The recursive version is
      * easier to implement and understand, and typically, windows with a -font
-     * option will be leaf nodes in the widget heirarchy (buttons, labels,
+     * option will be leaf nodes in the widget hierarchy (buttons, labels,
      * etc.), so the recursion depth will be shallow.
      *
      * However, the additional overhead of the recursive calls may become a
@@ -1841,12 +1841,12 @@ int
 Tk_TextWidth(
     Tk_Font tkfont,		/* Font in which text will be measured. */
     const char *string,		/* String whose width will be computed. */
-    int numBytes)		/* Number of bytes to consider from string, or
-				 * < 0 for strlen(). */
+    Tcl_Size numBytes)		/* Number of bytes to consider from string, or
+				 * TCL_INDEX_NONE for strlen(). */
 {
     int width;
 
-    if (numBytes < 0) {
+    if (numBytes == TCL_INDEX_NONE) {
 	numBytes = strlen(string);
     }
     Tk_MeasureChars(tkfont, string, numBytes, -1, 0, &width);
@@ -1888,8 +1888,8 @@ Tk_UnderlineChars(
 				 * underlined or overstruck. */
     int x, int y,		/* Coordinates at which first character of
 				 * string is drawn. */
-    int firstByte,		/* Index of first byte of first character. */
-    int lastByte)		/* Index of first byte after the last
+    Tcl_Size firstByte,		/* Index of first byte of first character. */
+    Tcl_Size lastByte)		/* Index of first byte after the last
 				 * character. */
 {
     TkUnderlineCharsInContext(display, drawable, gc, tkfont, string,
@@ -1907,11 +1907,11 @@ TkUnderlineCharsInContext(
 				 * dimensions, etc. */
     const char *string,		/* String containing characters to be
 				 * underlined or overstruck. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y,		/* Coordinates at which the first character of
 				 * the whole string would be drawn. */
-    int firstByte,		/* Index of first byte of first character. */
-    int lastByte)		/* Index of first byte after the last
+    Tcl_Size firstByte,		/* Index of first byte of first character. */
+    Tcl_Size lastByte)		/* Index of first byte after the last
 				 * character. */
 {
     TkFont *fontPtr = (TkFont *) tkfont;
@@ -1961,8 +1961,8 @@ Tk_ComputeTextLayout(
     Tk_Font tkfont,		/* Font that will be used to display text. */
     const char *string,		/* String whose dimensions are to be
 				 * computed. */
-    int numChars,		/* Number of characters to consider from
-				 * string, or < 0 for strlen(). */
+    Tcl_Size numChars,		/* Number of characters to consider from
+				 * string, or TCL_INDEX_NONE for strlen(). */
     int wrapLength,		/* Longest permissible line length, in pixels.
 				 * <= 0 means no automatic wrapping: just let
 				 * lines get as long as needed. */
@@ -2000,7 +2000,7 @@ Tk_ComputeTextLayout(
 
     height = fmPtr->ascent + fmPtr->descent;
 
-    if (numChars < 0) {
+    if (numChars == TCL_INDEX_NONE) {
 	numChars = Tcl_NumUtfChars(string, -1);
     }
     if (wrapLength == 0) {
@@ -3299,7 +3299,7 @@ Tk_TextLayoutToPostscript(
     int baseline = chunkPtr->y;
     Tcl_Obj *psObj = Tcl_NewObj();
     int i, j;
-    TkSizeT len;
+    Tcl_Size len;
     const char *p, *glyphname;
     char uindex[5], c, *ps;
     int ch;
@@ -3671,7 +3671,8 @@ ParseFontNameObj(
 				 * default values. */
 {
     const char *dash;
-    int objc, result, i, n;
+    int result, n;
+    Tcl_Size objc, i;
     Tcl_Obj **objv;
     const char *string;
 

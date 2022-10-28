@@ -133,7 +133,7 @@ TkMacOSXGetNSImageFromTkImage(
 {
     Pixmap pixmap;
     NSImage *nsImage;
-    if (width == 0 || height == 0) {
+    if (width <= 0 || height <= 0) {
 	return nsImage = [[NSImage alloc] initWithSize:NSMakeSize(0,0)];
     }
     pixmap = Tk_GetPixmap(display, None, width, height, 0);
@@ -514,7 +514,7 @@ XDrawSegments(
  *
  * XFillPolygon --
  *
- *	Draws a filled polygon using the even-odd fill algorithm,
+ *	Draws a filled polygon.
  *
  * Results:
  *	None.
@@ -562,7 +562,9 @@ XFillPolygon(
 		CGContextAddLineToPoint(dc.context, prevx, prevy);
 	    }
 	}
-	CGContextEOFillPath(dc.context);
+	(gc->fill_rule == EvenOddRule)
+		? CGContextEOFillPath(dc.context)
+		: CGContextFillPath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
@@ -1188,7 +1190,7 @@ TkScrollWindow(
     /*
      * Mutable shapes are not reference counted, and must be released.
      */
-    
+
     CFRelease(dmgRgn);
     return result;
 }

@@ -426,7 +426,7 @@ TkTextImageCmd(
 	}
 	if (objc <= 5) {
 	    Tcl_Obj **objs;
-	    int objn = 0, i;
+	    Tcl_Size objn = 0, i;
 
 	    Tcl_Obj *objPtr = Tk_GetOptionInfo(interp,
 		    &eiPtr->body.ei, eiPtr->body.ei.optionTable,
@@ -437,7 +437,7 @@ TkTextImageCmd(
 	    Tcl_ListObjGetElements(NULL, objPtr, &objn, &objs);
 	    for (i = 0; i < objn; ++i) {
 		Tcl_Obj **objv1;
-		int objc1 = 0;
+		Tcl_Size objc1 = 0;
 
 		Tcl_ListObjGetElements(NULL, objs[i], &objc1, &objv1);
 		if (objc1 == 5 && strcmp(Tcl_GetString(objv1[0]), "-tags") == 0) {
@@ -601,7 +601,7 @@ TkTextMakeImage(
 {
     TkTextSegment *eiPtr;
     Tcl_Obj **objv;
-    int objc;
+    Tcl_Size objc;
 
     assert(options);
 

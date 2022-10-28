@@ -177,10 +177,10 @@ static const char *const hyphenRuleStrings[] = {
  */
 
 static int		SetLineStartEnd(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr, TkSizeT internalOffset, char *oldInternalPtr,
+			    Tcl_Obj **value, char *recordPtr, Tcl_Size internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetLineStartEnd(ClientData clientData, Tk_Window tkwin, char *recordPtr,
-			    TkSizeT internalOffset);
+			    Tcl_Size internalOffset);
 static void		RestoreLineStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
 
@@ -202,10 +202,10 @@ static const Tk_ObjCustomOption lineOption = {
  */
 
 static int		SetTextStartEnd(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
-			    Tcl_Obj **value, char *recordPtr, TkSizeT internalOffset, char *oldInternalPtr,
+			    Tcl_Obj **value, char *recordPtr, Tcl_Size internalOffset, char *oldInternalPtr,
 			    int flags);
 static Tcl_Obj *	GetTextStartEnd(ClientData clientData, Tk_Window tkwin, char *recordPtr,
-			    TkSizeT internalOffset);
+			    Tcl_Size internalOffset);
 static void		RestoreTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
 static void		FreeTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr);
@@ -480,8 +480,8 @@ static int		CreateWidget(TkSharedText *sharedTextPtr, Tk_Window tkwin, Tcl_Inter
 			    const TkText *parent, int objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(ClientData clientData, XEvent *eventPtr);
 static void		ProcessConfigureNotify(TkText *textPtr, int updateLineGeometry);
-static TkSizeT		TextFetchSelection(ClientData clientData, TkSizeT offset, char *buffer,
-			    TkSizeT maxBytes);
+static Tcl_Size		TextFetchSelection(ClientData clientData, Tcl_Size offset, char *buffer,
+			    Tcl_Size maxBytes);
 static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[], const TkTextIndex *indexPtr,
@@ -761,7 +761,7 @@ Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
  *--------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 GetByteLength(
     Tcl_Obj *objPtr)
 {
@@ -3276,7 +3276,7 @@ ClearText(
     TkTextIndex startIndex;
     TkText *tPtr;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
-    TkSizeT oldEpoch = TkBTreeEpoch(sharedTextPtr->tree);
+    Tcl_Size oldEpoch = TkBTreeEpoch(sharedTextPtr->tree);
     int steadyMarks = textPtr->sharedTextPtr->steadyMarks;
     int debug = tkBTreeDebug;
 
@@ -3814,7 +3814,7 @@ TkConfigureText(
 {
     Tk_SavedOptions savedOptions;
     TkTextIndex start, end, current;
-    TkSizeT currentEpoch;
+    Tcl_Size currentEpoch;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextBTree tree = sharedTextPtr->tree;
     int copyDownFlags = 0;
@@ -4442,7 +4442,7 @@ TkTextParseHyphenRules(
 {
     int rules = 0;
     Tcl_Obj **argv;
-    int argc, i;
+    Tcl_Size argc, i;
     unsigned k;
 
     assert(rulesPtr);
@@ -5942,12 +5942,12 @@ DeleteIndexRange(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 TextFetchSelection(
     ClientData clientData,	/* Information about text widget. */
-    TkSizeT offset,			/* Offset within selection of first character to be returned. */
+    Tcl_Size offset,			/* Offset within selection of first character to be returned. */
     char *buffer,		/* Location in which to place selection. */
-    TkSizeT maxBytes)		/* Maximum number of bytes to place at buffer, not including
+    Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer, not including
     				 * terminating NULL character. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -6229,7 +6229,7 @@ TextInsertCmd(
     TkSharedText *sharedTextPtr;
     TkTextTag *hyphenTagPtr = NULL;
     int rc = TCL_OK;
-    int j;
+    Tcl_Size j;
 
     assert(textPtr);
     assert(!TkTextIsDeadPeer(textPtr));
@@ -6237,7 +6237,7 @@ TextInsertCmd(
     sharedTextPtr = textPtr->sharedTextPtr;
 
     if (parseHyphens && objc > 1 && *Tcl_GetString(objv[0]) == '-') {
-	int argc;
+	Tcl_Size argc;
 	Tcl_Obj **argv;
 
 	if (strcmp(Tcl_GetString(objv[0]), "-hyphentags") != 0) {
@@ -6258,26 +6258,26 @@ TextInsertCmd(
 	objv += 2;
     }
 
-    for (j = 0; j < objc && GetByteLength(objv[j]) == 0; j += 2) {
+    for (j = 0; j < (Tcl_Size)objc && GetByteLength(objv[j]) == 0; j += 2) {
 	/* empty loop body */
     }
     index1 = *indexPtr;
 
-    while (j < objc) {
+    while (j < (Tcl_Size)objc) {
 	Tcl_Obj *stringPtr = objv[j];
-	Tcl_Obj *tagPtr = (j + 1 < objc) ? objv[j + 1] : NULL;
+	Tcl_Obj *tagPtr = (j + 1 < (Tcl_Size)objc) ? objv[j + 1] : NULL;
 	char const *string = Tcl_GetString(stringPtr);
 	unsigned length = GetByteLength(stringPtr);
-	int k = j + 2;
+	size_t k = j + 2;
 	int final;
 
-	while (k < objc && GetByteLength(objv[k]) == 0) {
+	while (k < (size_t)objc && GetByteLength(objv[k]) == 0) {
 	    k += 2;
 	}
-	final = objc <= k;
+	final = (size_t)objc <= k;
 
 	if (length > 0) {
-	    int numTags = 0;
+	    Tcl_Size numTags = 0;
 	    Tcl_Obj **tagNamePtrs = NULL;
 	    TkTextTagSet *tagInfoPtr = NULL;
 
@@ -6295,7 +6295,7 @@ TextInsertCmd(
 	    }
 
 	    if (tagPtr) {
-		int i;
+		Tcl_Size i;
 
 		if (Tcl_ListObjGetElements(interp, tagPtr, &numTags, &tagNamePtrs) != TCL_OK) {
 		    rc = TCL_ERROR;
@@ -6852,7 +6852,6 @@ TextSearchFoundMatch(
     TkTextSegment *segPtr;
     TkTextLine *linePtr, *startLinePtr;
     TkText *textPtr = (TkText *)searchSpecPtr->clientData;
-    int byteIndex;
 
     if (lineNum == searchSpecPtr->stopLine) {
 	/*
@@ -6917,7 +6916,6 @@ TextSearchFoundMatch(
 	 */
 
 	segPtr = (linePtr == startLinePtr) ? textPtr->startMarker : linePtr->segPtr;
-	byteIndex = TkTextSegToIndex(segPtr);
 
 	/*
 	 * TODO: Use new elide structure, but this requires a redesign of the whole
@@ -6945,7 +6943,6 @@ TextSearchFoundMatch(
 		assert(segPtr->size <= 1);
 		matchOffset += segPtr->size;
 	    }
-	    byteIndex += segPtr->size;
 	}
 
 	assert(!segPtr || leftToScan < 0 || TkBTreeNextLine(textPtr, linePtr));
@@ -7008,7 +7005,6 @@ TextSearchFoundMatch(
 	    assert(TkBTreeNextLine(textPtr, linePtr));
 	    linePtr = linePtr->nextPtr;
 	    segPtr = linePtr->segPtr;
-	    byteIndex = 0;
 	}
 
 	isCharSeg = (segPtr->typePtr == &tkTextCharType);
@@ -7074,7 +7070,7 @@ TkTextGetTabs(
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
-    int objc, i, count;
+    Tcl_Size objc, i, count;
     Tcl_Obj **objv;
     TkTextTabArray *tabArrayPtr;
     TkTextTab *tabPtr;
@@ -7111,7 +7107,7 @@ TkTextGetTabs(
     tabArrayPtr->numTabs = 0;
     prevStop = 0.0;
     lastStop = 0.0;
-    for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i < objc; i++, tabPtr++) {
+    for (i = 0, tabPtr = &tabArrayPtr->tabs[0]; i < (Tcl_Size)objc; i++, tabPtr++) {
 	int index;
 
 	/*
@@ -8072,7 +8068,7 @@ DumpSegment(
 	Tcl_GuardedDecrRefCount(tuple);
 	return 1;
     } else {
-	TkSizeT oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
+	Tcl_Size oldStateEpoch = TkBTreeEpoch(textPtr->sharedTextPtr->tree);
 	Tcl_DString buf;
 	int code;
 
@@ -8181,15 +8177,14 @@ TkTextInspectOptions(
 
     if ((objPtr = Tk_GetOptionInfo(interp, (char *) recordPtr, optionTable, NULL, textPtr->tkwin))) {
 	Tcl_Obj **objv;
-	int objc = 0;
-	int i;
+	Tcl_Size i, objc = 0;
 
 	Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
 
 
 	for (i = 0; i < objc; ++i) {
 	    Tcl_Obj **argv;
-	    int argc = 0;
+	    Tcl_Size argc = 0;
 
 	    Tcl_ListObjGetElements(interp, objv[i], &argc, &argv);
 
@@ -8358,7 +8353,7 @@ GetBindings(
     Tcl_Interp *interp = textPtr->interp;
     Tcl_DString str2;
     Tcl_Obj **argv;
-    int argc, i;
+    Tcl_Size argc, i;
 
     Tk_GetAllBindings(interp, bindingTable, (void *)name);
     Tcl_ListObjGetElements(interp, Tcl_GetObjResult(interp), &argc, &argv);
@@ -8722,8 +8717,8 @@ InspectRetainedUndoItems(
 {
     if (sharedTextPtr->undoTagListCount > 0 || sharedTextPtr->undoMarkListCount > 0) {
 	Tcl_Obj *resultPtr = Tcl_NewObj();
-	unsigned i;
-	int len;
+	size_t i;
+	Tcl_Size len;
 
 	for (i = 0; i < sharedTextPtr->undoTagListCount; ++i) {
 	    TkTextInspectUndoTagItem(sharedTextPtr, sharedTextPtr->undoTagList[i], resultPtr);
@@ -10179,7 +10174,7 @@ TkTextGenerateWidgetViewSyncEvent(
  * and cannot be inlined.
  */
 
-TkSizeT
+Tcl_Size
 TkrTextPrintIndex(
     const TkText *textPtr,
     const TkTextIndex *indexPtr,/* Pointer to index. */
@@ -10927,7 +10922,7 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && info.matches[0].start + 1 >= (TkSizeT)lastOffset + 1) {
+			if (match && info.matches[0].start + 1 >= (Tcl_Size)lastOffset + 1) {
 			    break;
 			}
 			if (match && firstOffset + (int)info.matches[0].end >= prevFullLine) {
@@ -11340,7 +11335,7 @@ GetTextStartEnd(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     char *recordPtr,		/* Pointer to widget record. */
-    TkSizeT internalOffset)		/* Offset within *recordPtr containing the start object. */
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the start object. */
 {
     TkTextIndex index;
     char buf[TK_POS_CHARS] = { '\0' };
@@ -11400,7 +11395,7 @@ SetTextStartEnd(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    TkSizeT internalOffset,		/* Offset within *recordPtr at which the
+    Tcl_Size internalOffset,		/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
@@ -11508,7 +11503,7 @@ GetLineStartEnd(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     char *recordPtr,		/* Pointer to widget record. */
-    TkSizeT internalOffset)		/* Offset within *recordPtr containing the line value. */
+    Tcl_Size internalOffset)		/* Offset within *recordPtr containing the line value. */
 {
     TkText *textPtr;
     TkTextLine *linePtr = *(TkTextLine **)(recordPtr + internalOffset);
@@ -11548,7 +11543,7 @@ SetLineStartEnd(
 				 * We use a pointer to the pointer because we
 				 * may need to return a value (NULL). */
     char *recordPtr,		/* Pointer to storage for the widget record. */
-    TkSizeT internalOffset,	/* Offset within *recordPtr at which the
+    Tcl_Size internalOffset,	/* Offset within *recordPtr at which the
 				 * internal value is to be stored. */
     char *oldInternalPtr,	/* Pointer to storage for the old value. */
     int flags)			/* Flags for the option, set Tk_SetOptions. */
@@ -11795,7 +11790,7 @@ TkpTextInspect(
     Tcl_Obj *resultPtr;
     Tcl_Obj *objv[8];
     Tcl_Obj **argv;
-    int argc, i;
+    Tcl_Size argc, i;
 
     Tcl_IncrRefCount(resultPtr = Tcl_GetObjResult(textPtr->interp));
     Tcl_ResetResult(textPtr->interp);
@@ -11846,7 +11841,7 @@ TkpTextDump(
     Tcl_Obj *resultPtr;
     Tcl_Obj *objv[4];
     Tcl_Obj **argv;
-    int argc, i;
+    Tcl_Size argc, i;
 
     Tcl_IncrRefCount(resultPtr = Tcl_GetObjResult(textPtr->interp));
     Tcl_ResetResult(textPtr->interp);
@@ -11924,8 +11919,8 @@ TkpTextDump(
 extern TkSharedText *	TkBTreeGetShared(TkTextBTree tree);
 extern int		TkBTreeGetNumberOfDisplayLines(const TkTextPixelInfo *pixelInfo);
 extern TkTextPixelInfo *TkBTreeLinePixelInfo(const TkText *textPtr, TkTextLine *linePtr);
-extern TkSizeT		TkBTreeEpoch(TkTextBTree tree);
-extern TkSizeT		TkBTreeIncrEpoch(TkTextBTree tree);
+extern Tcl_Size		TkBTreeEpoch(TkTextBTree tree);
+extern Tcl_Size		TkBTreeIncrEpoch(TkTextBTree tree);
 extern struct Node	*TkBTreeGetRoot(TkTextBTree tree);
 extern TkTextLine *	TkBTreePrevLogicalLine(const TkSharedText *sharedTextPtr,
 			    const TkText *textPtr, TkTextLine *linePtr);
@@ -11950,7 +11945,7 @@ extern int		TkTextIsNormalMark(const TkTextSegment *segPtr);
 extern int		TkTextIsStableMark(const TkTextSegment *segPtr);
 extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
 extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
-extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, TkSizeT epoch);
+extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, Tcl_Size epoch);
 extern void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 extern void		TkTextIndexSetToLastChar2(TkTextIndex *indexPtr, TkTextLine *linePtr);
 extern void		TkTextIndexInvalidate(TkTextIndex *indexPtr);
