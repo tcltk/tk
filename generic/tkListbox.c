@@ -1280,8 +1280,6 @@ ListboxXviewSubCmd(
 	ChangeListboxOffset(listPtr, index*listPtr->xScrollUnit);
     } else {
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
-	case TK_SCROLL_ERROR:
-	    return TCL_ERROR;
 	case TK_SCROLL_MOVETO:
 	    offset = (int) (fraction*listPtr->maxWidth + 0.5);
 	    break;
@@ -1297,6 +1295,8 @@ ListboxXviewSubCmd(
 	case TK_SCROLL_UNITS:
 	    offset = listPtr->xOffset + count*listPtr->xScrollUnit;
 	    break;
+	default:
+	    return TCL_ERROR;
 	}
 	ChangeListboxOffset(listPtr, offset);
     }
@@ -1367,7 +1367,6 @@ ListboxYviewSubCmd(
 	case TK_SCROLL_UNITS:
 	    index = listPtr->topIndex + count;
 	    break;
-	case TK_SCROLL_ERROR:
 	default:
 	    return TCL_ERROR;
 	}
