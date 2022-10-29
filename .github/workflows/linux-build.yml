@@ -139,7 +139,7 @@ jobs:
           }
       - name: Build
         run: |
-          make binaries libraries tktest || {
+          make --disable-xft binaries libraries tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
