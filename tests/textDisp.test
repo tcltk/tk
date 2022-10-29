@@ -77,7 +77,7 @@ set ascentDiff [expr {$bigAscent - $fixedAscent}]
 set heightDiff [expr {$bigHeight - $fixedHeight}]
 
 # On Windows at least, the tests do work with {Courier -10}, {Courier -12} or {Courier -14} as fixedFont.
-# Warn the user if the actual font size is too different from what was requested.
+# Warn the user if the actual font is too different from what was requested.
 if {[font metrics [font actual $fixedFont] -fixed] != 1} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
 does not seem to be a fixed-width font as expected. If this is really the case, many upcoming\
