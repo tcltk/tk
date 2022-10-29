@@ -2329,7 +2329,7 @@ test entry-8.18 {DeleteChars procedure} -setup {
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result 31
+} -result [expr {[font measure {Courier -12} m]*3 + 2*(2+2+1)}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side
 
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
