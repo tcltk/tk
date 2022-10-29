@@ -132,14 +132,14 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure (symbols=${{ matrix.symbols }})
         run: |
-          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
+          ./configure --disable-xft  $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
           }
       - name: Build
         run: |
-          make --disable-xft binaries libraries tktest || {
+          make binaries libraries tktest || {
             echo "::error::Failure during Build"
             exit 1
           }
