@@ -13,6 +13,8 @@ tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+puts [testConstraint failsOnUbuntu]
+puts [testConstraint failsOnUbuntuNoXft]
 
 # For xscrollcommand
 set scrollInfo {}
@@ -2600,7 +2602,7 @@ test spinbox-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test spinbox-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
+test spinbox-8.18 {DeleteChars procedure} -setup {
     spinbox .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
     focus .e
