@@ -11,9 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -2313,7 +2310,7 @@ test entry-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
+test entry-8.18 {DeleteChars procedure} -setup {
     entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e ; update idletasks
     focus .e
@@ -2324,7 +2321,7 @@ test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result 31
+} -result [expr {[font measure {Courier -12} m]*3 + 2*(2+2+1)}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side
 
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
