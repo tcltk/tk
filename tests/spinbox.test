@@ -2602,6 +2602,9 @@ test spinbox-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
+
+set arrowsWidth [expr {[font measure {Courier -12} 0] + 2*(1+1)}] ; # one character width + 2*(1+XPAD)
+set arrowsWidth [expr {$arrowsWidth < 11 ? 11 : arrowsWidth}]     ; # see tkEntry.c
 test spinbox-8.18 {DeleteChars procedure} -setup {
     spinbox .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2613,7 +2616,7 @@ test spinbox-8.18 {DeleteChars procedure} -setup {
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result [expr {[font measure {Courier -12} 0]*3 + 2*(2+2+1) + [font measure {Courier -12} 0] + 2*(1+1)}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side, + arrows size (one average width + 2x(1+XPAD)
+} -result [expr {[font measure {Courier -12} 0]*3 + 2*(2+2+1) + $arrowsWidth}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side, + arrows
 
 test spinbox-9.1 {SpinboxValueChanged procedure} -setup {
     unset -nocomplain x
