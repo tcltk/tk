@@ -1687,7 +1687,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 
 
 test entry-5.8 {ConfigureEntry procedure} -constraints {
-    fonts failsOnXQuarz
+    fonts
 } -setup {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
