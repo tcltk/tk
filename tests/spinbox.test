@@ -2613,7 +2613,7 @@ test spinbox-8.18 {DeleteChars procedure} -setup {
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result [expr {[font measure {Courier -12} m]*3 + 2*(2+2+1)}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side
+} -result [expr {[font measure {Courier -12} 0]*3 + 2*(2+2+1) + [font measure {Courier -12} 0] + 2*(1+1)}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side, + arrows size (one average width + 2x(1+XPAD)
 
 test spinbox-9.1 {SpinboxValueChanged procedure} -setup {
     unset -nocomplain x
