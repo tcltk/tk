@@ -15,6 +15,10 @@ testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match L
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
+puts [testConstraint failsOnUbuntu]
+puts [testConstraint failsOnUbuntuNoXft]
+puts [testConstraint failsOnXQuarz]
+
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -2314,7 +2318,7 @@ test entry-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
+test entry-8.18 {DeleteChars procedure} -setup {
     entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e ; update idletasks
     focus .e
