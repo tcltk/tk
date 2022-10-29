@@ -11,9 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -2600,7 +2597,9 @@ test spinbox-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test spinbox-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
+set arrowsWidth [expr {[font measure {Courier -12} 0] + 2*(1+1)}] ; # one character width + 2*(1+XPAD)
+set arrowsWidth [expr {$arrowsWidth < 11 ? 11 : $arrowsWidth}]    ; # (see tkEntry.c)
+test spinbox-8.18 {DeleteChars procedure} -setup {
     spinbox .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
     focus .e
@@ -2611,7 +2610,7 @@ test spinbox-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup
     winfo reqwidth .e
 } -cleanup {
     destroy .e
-} -result 42
+} -result [expr {[font measure {Courier -12} 0]*3 + 2*(2+2+1) + $arrowsWidth}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side + arrows (see tkEntry.c)
 
 test spinbox-9.1 {SpinboxValueChanged procedure} -setup {
     unset -nocomplain x
