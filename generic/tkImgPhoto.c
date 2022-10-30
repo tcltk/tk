@@ -2105,7 +2105,7 @@ ImgPhotoConfigureModel(
 	 * Take also empty metadatas as this may be a sign to replace
 	 * existing metadata.
 	 */
-	int dictSize;
+	Tcl_Size dictSize;
 
 	if (TCL_OK != Tcl_DictObjSize(interp,metadataInObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2271,7 +2271,7 @@ ImgPhotoConfigureModel(
      * Merge driver returned metadata and master metadata
      */
     if (metadataOutObj != NULL) {
-	int dictSize;
+	Tcl_Size dictSize;
 	if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "driver metadata not a dict", -1));
@@ -2881,7 +2881,7 @@ if (formatPtr == NULL) {
 	     */
 
 	    if (metadataOutObj != NULL) {
-		int dictSize;
+		Tcl_Size dictSize;
 		if (Tcl_IsShared(metadataOutObj)
 			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {
@@ -3083,7 +3083,7 @@ MatchStringFormat(
 	     */
 
 	    if (metadataOutObj != NULL) {
-		int dictSize;
+		Tcl_Size dictSize;
 		if (Tcl_IsShared(metadataOutObj)
 			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {

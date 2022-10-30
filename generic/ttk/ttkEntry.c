@@ -1822,7 +1822,7 @@ static int
 ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
     Combobox *cbPtr = (Combobox *)recordPtr;
-    int unused;
+    Tcl_Size unused;
 
     /* Make sure -values is a valid list:
      */
@@ -1844,7 +1844,7 @@ static int ComboboxCurrentCommand(
     Combobox *cbPtr = (Combobox *)recordPtr;
     Tcl_Size currentIndex = cbPtr->combobox.currentIndex;
     const char *currentValue = cbPtr->entry.string;
-    int nValues;
+    Tcl_Size nValues;
     Tcl_Obj **values;
 
     Tcl_ListObjGetElements(interp, cbPtr->combobox.valuesObj, &nValues, &values);
@@ -1853,18 +1853,18 @@ static int ComboboxCurrentCommand(
 	/* Check if currentIndex still valid:
 	 */
 	if (currentIndex == TCL_INDEX_NONE
-	     || currentIndex >= (Tcl_Size)nValues
+	     || currentIndex >= nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
 	{
 	    /* Not valid.  Check current value against each element in -values:
 	     */
-	    for (currentIndex = 0; currentIndex < (Tcl_Size)nValues; ++currentIndex) {
+	    for (currentIndex = 0; currentIndex < nValues; ++currentIndex) {
 		if (!strcmp(currentValue,Tcl_GetString(values[currentIndex]))) {
 		    break;
 		}
 	    }
-	    if (currentIndex >= (Tcl_Size)nValues) {
+	    if (currentIndex >= nValues) {
 		/* Not found */
 		currentIndex = TCL_INDEX_NONE;
 	    }
@@ -1876,7 +1876,7 @@ static int ComboboxCurrentCommand(
 	Tcl_Size idx;
 
 	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, 0, &idx)) {
-	    if (idx == TCL_INDEX_NONE || idx >= (Tcl_Size)nValues) {
+	    if (idx == TCL_INDEX_NONE || idx >= nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
@@ -2007,7 +2007,7 @@ static int
 SpinboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 {
     Spinbox *sb = (Spinbox *)recordPtr;
-    int unused;
+    Tcl_Size unused;
 
     /* Make sure -values is a valid list:
      */

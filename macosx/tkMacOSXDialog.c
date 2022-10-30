@@ -262,7 +262,7 @@ getFileURL(
 	}
 	if (callbackInfo->cmdObj) {
 	    Tcl_Obj **objv, **tmpv;
-	    int objc, result = Tcl_ListObjGetElements(callbackInfo->interp,
+	    Tcl_Size objc, result = Tcl_ListObjGetElements(callbackInfo->interp,
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
@@ -294,7 +294,7 @@ getFileURL(
 
 	if (callbackInfo->cmdObj) {
 	    Tcl_Obj **objv, **tmpv;
-	    int objc, result = Tcl_ListObjGetElements(callbackInfo->interp,
+	    Tcl_Size objc, result = Tcl_ListObjGetElements(callbackInfo->interp,
 		    callbackInfo->cmdObj, &objc, &objv);
 
 	    if (result == TCL_OK && objc) {
@@ -1706,7 +1706,8 @@ FontchooserEvent(
 		fontPanelFont, fontPanelFontAttributes);
 	if (fontObj) {
 	    if (fcdPtr->cmdObj) {
-		int objc, result;
+		Tcl_Size objc;
+		int result;
 		Tcl_Obj **objv, **tmpv;
 
 		result = Tcl_ListObjGetElements(fontchooserInterp,

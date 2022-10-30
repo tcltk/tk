@@ -79,9 +79,8 @@ TkGetFileFilters(
     Tcl_Obj *types,		/* Value of the -filetypes option. */
     int isWindows)		/* True if we are running on Windows. */
 {
-    int listObjc;
+    Tcl_Size i, listObjc;
     Tcl_Obj ** listObjv = NULL;
-    int i;
 
     if (types == NULL) {
 	return TCL_OK;
@@ -110,7 +109,7 @@ TkGetFileFilters(
 	 * third is the Mac OSType ID, but we don't care about them here.
 	 */
 
-	int count;
+	Tcl_Size count;
 	FileFilter *filterPtr;
 	Tcl_Obj **typeInfo;
 
