@@ -1075,7 +1075,7 @@ struct TkMacOSXNSImageModel {
  */
 
 static int		TkMacOSXNSImageCreate(Tcl_Interp *interp,
-			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	TkMacOSXNSImageGet(Tk_Window tkwin, ClientData clientData);
@@ -1220,7 +1220,7 @@ TkMacOSXNSImageConfigureModel(
     Tcl_Interp *interp,		   /* Interpreter to use for reporting errors. */
     TkMacOSXNSImageModel *modelPtr,    /* Pointer to data structure describing
 				    * overall photo image to (re)configure. */
-    int objc,			   /* Number of entries in objv. */
+    Tcl_Size objc,			   /* Number of entries in objv. */
     Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
 {
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
@@ -1481,7 +1481,7 @@ static int
 TkMacOSXNSImageCreate(
     Tcl_Interp *interp,		 /* Interpreter for application using image. */
     const char *name,		 /* Name to use for image. */
-    int objc,			 /* Number of arguments. */
+    Tcl_Size objc,			 /* Number of arguments. */
     Tcl_Obj *const objv[],	 /* Argument strings for options (not
 				  * including image name or type). */
     TCL_UNUSED(const Tk_ImageType *), /* typePtr */
@@ -1538,7 +1538,7 @@ TkMacOSXNSImageCreate(
 static ClientData
 TkMacOSXNSImageGet(
     TCL_UNUSED(Tk_Window),      /* tkwin */
-    ClientData clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
+    void *clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
 {
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *) clientData;
     TkMacOSXNSImageInstance *instPtr;

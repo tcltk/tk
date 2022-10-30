@@ -551,7 +551,7 @@ int
 TkTextMarkCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
     				 * enough to know that objv[1] is "mark". */
 {
@@ -719,7 +719,7 @@ TkTextMarkCmd(
     }
     case MARK_NAMES: {
 	int discardSpecial = 0;
-	int numArgs = 3;
+	Tcl_Size numArgs = 3;
 	const char *pattern;
 	Tcl_Obj *resultObj;
 
@@ -769,7 +769,7 @@ TkTextMarkCmd(
     }
     case MARK_NEXT: {
 	int discardSpecial = 0;
-	int numArgs = 4;
+	Tcl_Size numArgs = 4;
 	const char *pattern;
 
 	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
@@ -794,7 +794,7 @@ TkTextMarkCmd(
     }
     case MARK_PREVIOUS: {
 	int discardSpecial = 0;
-	int numArgs = 4;
+	Tcl_Size numArgs = 4;
 	const char *pattern;
 
 	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
@@ -887,7 +887,7 @@ TkTextMarkCmd(
     case MARK_UNSET: {
 	TkTextUndoInfo undoInfo;
 	TkTextUndoInfo *undoInfoPtr = NULL;
-	int i;
+	Tcl_Size i;
 
 	if (textPtr->sharedTextPtr->steadyMarks
 		&& !TkTextUndoUndoStackIsFull(textPtr->sharedTextPtr->undoStack)) {

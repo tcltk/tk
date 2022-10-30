@@ -223,7 +223,7 @@ typedef struct Ttk_ElementSpec {
 
 typedef int (*Ttk_ElementFactory)
 	(Tcl_Interp *, void *clientData,
-	 Ttk_Theme, const char *elementName, int objc, Tcl_Obj *const objv[]);
+	 Ttk_Theme, const char *elementName, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  * Null element implementation:

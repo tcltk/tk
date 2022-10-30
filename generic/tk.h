@@ -1022,23 +1022,23 @@ typedef struct Tk_Item {
 
 #if defined(USE_OLD_CANVAS) && TCL_MAJOR_VERSION < 9
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int argc, char **argv);
+		    Tk_Item *itemPtr, Tcl_Size argc, char **argv);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int argc, char **argv, int flags);
+		    Tk_Item *itemPtr, Tcl_Size argc, char **argv, int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int argc, char **argv);
+		    Tk_Item *itemPtr, Tcl_Size argc, char **argv);
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    int beforeThis, char *string);
 typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
 #else
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
+		    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[],
+		    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[],
 		    int flags);
 typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
+		    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Tcl_Size beforeThis, Tcl_Obj *string);
 typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
@@ -1247,11 +1247,11 @@ typedef struct Tk_Outline {
 
 typedef struct Tk_ImageType Tk_ImageType;
 #if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
-typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, int argc,
+typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, Tcl_Size argc,
 	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
 	void **clientDataPtr);
 #else
-typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, int objc,
+typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, Tcl_Size objc,
 	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageModel model,
 	void **clientDataPtr);
 #endif /* USE_OLD_IMAGE */

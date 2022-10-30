@@ -98,9 +98,9 @@ TkWinCleanupContainerList(void)
 
 int
 TkpTestembedCmd(
-    ClientData dummy,
+    void *dummy,
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     (void)dummy;

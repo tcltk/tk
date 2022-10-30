@@ -1316,7 +1316,7 @@ Tk_SetOptions(
 				 * then no error message is returned.*/
     void *recordPtr,	    	/* The record to configure. */
     Tk_OptionTable optionTable,	/* Describes valid options. */
-    Tcl_Size objc1,			/* The number of elements in objv. */
+    Tcl_Size objc,			/* The number of elements in objv. */
     Tcl_Obj *const objv[],	/* Contains one or more name-value pairs. */
     Tk_Window tkwin,		/* Window associated with the thing being
 				 * configured; needed for some options (such
@@ -1335,7 +1335,6 @@ Tk_SetOptions(
     Option *optionPtr;
     Tk_SavedOptions *lastSavePtr, *newSavePtr;
     int mask;
-    int objc = objc1;
 
     if (savePtr != NULL) {
 	savePtr->recordPtr = recordPtr;

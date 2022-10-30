@@ -1956,7 +1956,7 @@ int
 TkpTestsendCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     enum {
@@ -1969,7 +1969,7 @@ TkpTestsendCmd(
     Tk_ErrorHandler handler;
     int index;
 
-    if (objc < 2) {
+    if (objc + 1 < 3) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"option ?arg ...?");
 	return TCL_ERROR;

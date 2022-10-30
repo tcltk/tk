@@ -1456,7 +1456,7 @@ MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const *objv, int flags);
+			    Tcl_Size objc, Tcl_Obj *const *objv, int flags);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);

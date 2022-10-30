@@ -442,10 +442,10 @@ EXTERN void		TkDeleteThreadExitHandler(Tcl_ExitProc *proc,
 /* Slot 155 is reserved */
 /* 156 */
 EXTERN int		TkpTestembedCmd(void *clientData, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 /* 157 */
 EXTERN int		TkpTesttextCmd(void *dummy, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 /* 158 */
 EXTERN int		TkSelGetSelection(Tcl_Interp *interp,
 				Tk_Window tkwin, Atom selection, Atom target,
@@ -476,7 +476,7 @@ EXTERN struct TkTextSegment * TkTextSetMark(struct TkText *textPtr,
 				struct TkTextIndex *indexPtr);
 /* 165 */
 EXTERN int		TkTextXviewCmd(struct TkText *textPtr,
-				Tcl_Interp *interp, int objc,
+				Tcl_Interp *interp, Tcl_Size objc,
 				Tcl_Obj *const objv[]);
 /* 166 */
 EXTERN void		TkTextChanged(struct TkSharedText *sharedTextPtr,
@@ -760,8 +760,8 @@ typedef struct TkIntStubs {
     void (*tkCreateThreadExitHandler) (Tcl_ExitProc *proc, void *clientData); /* 153 */
     void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, void *clientData); /* 154 */
     void (*reserved155)(void);
-    int (*tkpTestembedCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 156 */
-    int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
+    int (*tkpTestembedCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 156 */
+    int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
     int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
@@ -769,7 +769,7 @@ typedef struct TkIntStubs {
     struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, int byteIndex, struct TkTextIndex *indexPtr); /* 162 */
     Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
-    int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 165 */
+    int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 165 */
     void (*tkTextChanged) (struct TkSharedText *sharedTextPtr, struct TkText *textPtr, const struct TkTextIndex *index1Ptr, const struct TkTextIndex *index2Ptr); /* 166 */
     int (*tkBTreeNumLines) (TkTextBTree tree, const struct TkText *textPtr); /* 167 */
     void (*tkTextInsertDisplayProc) (struct TkText *textPtr, struct TkTextDispChunk *chunkPtr, int x, int y, int height, int baseline, Display *display, Drawable dst, int screenY); /* 168 */

@@ -651,7 +651,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkSendCleanup, /* 10 */
     0, /* 11 */
     TkpWmSetState, /* 12 */
-    TkpTestsendCmd, /* 13 */
+    TkpTestsendCmd_, /* 13 */
     0, /* 14 */
     0, /* 15 */
     0, /* 16 */
@@ -683,7 +683,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkUnixSetMenubar_, /* 42 */
     TkWmCleanup_, /* 43 */
     TkSendCleanup_, /* 44 */
-    TkpTestsendCmd_, /* 45 */
+    TkpTestsendCmd, /* 45 */
 #endif /* X11 */
 };
 
