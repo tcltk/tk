@@ -423,7 +423,8 @@ FileReadGIF(
 {
     int fileWidth, fileHeight, imageWidth, imageHeight;
     unsigned int nBytes;
-    int index = 0, argc = 0, i, result = TCL_ERROR;
+    int index = 0, result = TCL_ERROR;
+    Tcl_Size argc = 0, i;
     Tcl_Obj **objv;
     unsigned char buf[100];
     unsigned char *trashBuffer = NULL;

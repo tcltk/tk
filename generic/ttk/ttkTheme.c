@@ -829,7 +829,7 @@ int Ttk_RegisterElementFactory(
 static int Ttk_CloneElement(
     Tcl_Interp *interp, TCL_UNUSED(void *),
     Ttk_Theme theme, const char *elementName,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Ttk_Theme fromTheme;
     Ttk_ElementClass *fromElement;

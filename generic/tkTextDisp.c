@@ -5733,7 +5733,7 @@ int
 TkTextSeeCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "see". */
@@ -5869,7 +5869,7 @@ int
 TkTextXviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "xview". */
@@ -6170,7 +6170,7 @@ int
 TkTextYviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "yview". */
@@ -6377,7 +6377,7 @@ int
 TkTextScanCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "scan". */
@@ -6385,7 +6385,7 @@ TkTextScanCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
     int c, x, y, totalScroll, gain=10;
-    size_t length;
+    Tcl_Size length;
 
     if ((objc != 5) && (objc != 6)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "mark x y");
@@ -6406,8 +6406,7 @@ TkTextScanCmd(
     if ((objc == 6) && (Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    c = Tcl_GetString(objv[2])[0];
-    length = strlen(Tcl_GetString(objv[2]));
+    c = Tcl_GetStringFromObj(objv[2], &length)[0];
     if (c=='d' && strncmp(Tcl_GetString(objv[2]), "dragto", length)==0) {
 	int newX, maxX;
 
