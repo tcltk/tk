@@ -496,12 +496,14 @@ test scrollbar-6.11.2 {ScrollbarPosition procedure} aqua {
     # macOS scrollbars have no arrows nowadays
     .s identify 8 4
 } {trough1}
-test scrollbar-6.12.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu failsOnXQuarz} {
-    .s identify 8 19
+test scrollbar-6.12.1 {ScrollbarPosition procedure} x11 {
+    # x11 scrollbars have arrows 19 pixels height,
+    # but on XQuartz they are 15 pixels height
+    .s identify 8 15
 } {arrow1}
 test scrollbar-6.12.2 {ScrollbarPosition procedure} aqua {
     # macOS scrollbars have no arrows nowadays
-    .s identify 8 19
+    .s identify 8 15
 } {trough1}
 test scrollbar-6.14 {ScrollbarPosition procedure} win {
     .s identify [expr {[winfo width .s] / 2}] 0
@@ -554,12 +556,14 @@ test scrollbar-6.28 {ScrollbarPosition procedure} {testmetrics win} {
     .s identify [expr {[winfo width .s] / 2}] [expr {[winfo height .s]
 						 - [testmetrics cyvscroll .s] - 1}]
 } {trough2}
-test scrollbar-6.29.1 {ScrollbarPosition procedure} {x11 failsOnUbuntu failsOnXQuarz} {
-    .s identify 8 180
+test scrollbar-6.29.1 {ScrollbarPosition procedure} x11 {
+    # x11 scrollbars have arrows at least 19 pixels height
+    # but on XQuartz they are 15 pixels height
+    .s identify 8 184
 } {arrow2}
 test scrollbar-6.29.2 {ScrollbarPosition procedure} aqua {
     # macOS scrollbars have no arrows nowadays
-    .s identify 8 180
+    .s identify 8 184
 } {trough2}
 test scrollbar-6.30.1 {ScrollbarPosition procedure} x11 {
     .s identify 8 195
