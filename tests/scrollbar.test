@@ -273,15 +273,17 @@ test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
 } [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
        /([getTroughSize .s] - 1)}]]
-test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu failsOnXQuarz} {
+test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 179]
-} {1}
+} [format %.6g [expr {(179.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
+       /([getTroughSize .s] - 1)}]]
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
 } {1}
-test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {x11 failsOnUbuntu failsOnXQuarz} {
+test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 178]
-} {0.993711}
+} [format %.6g [expr {(178.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
+       /([getTroughSize .s] - 1)}]]
 test scrollbar-3.39 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics win} {
     expr {
     [format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s] - 2}]]]
