@@ -132,7 +132,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure (symbols=${{ matrix.symbols }})
         run: |
-          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
+          ./configure --disable-xft $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -145,7 +145,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          xvfb-run --auto-servernum make test-classic | tee out-classic.txt
+          xvfb-run --auto-servernum make test-classic TESTFLAGS="-verbose beps -file fontchooser.test"| tee out-classic.txt
           xvfb-run --auto-servernum make test-ttk | tee out-ttk.txt
           grep -q "Failed	0" out-classic.txt || {
             echo "::error::Failure during Test"
