@@ -362,8 +362,8 @@ PolygonCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %" TCL_Z_MODIFIER "u",
-		(size_t)objc));
+		"wrong # coordinates: expected an even number, got %" TKSIZET_MODIFIER "u",
+		objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", NULL);
 	return TCL_ERROR;
     }
