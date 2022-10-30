@@ -110,7 +110,7 @@ static const char *const optionNames[] = {
  */
 
 static int		ImgPhotoCreate(Tcl_Interp *interp, const char *name,
-			    int objc, Tcl_Obj *const objv[],
+			    Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static void		ImgPhotoDelete(ClientData clientData);
@@ -192,7 +192,7 @@ static int		ParseSubcommandOptions(
 			    int *indexPtr, int objc, Tcl_Obj *const objv[]);
 static void		ImgPhotoCmdDeletedProc(ClientData clientData);
 static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
-			    PhotoModel *modelPtr, int objc,
+			    PhotoModel *modelPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		ToggleComplexAlphaIfNeeded(PhotoModel *mPtr);
 static int		ImgPhotoSetSize(PhotoModel *modelPtr, int width,
@@ -386,7 +386,7 @@ ImgPhotoCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,		/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     TCL_UNUSED(const Tk_ImageType *),/* Pointer to our type record (not used). */
@@ -1957,7 +1957,7 @@ ImgPhotoConfigureModel(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     PhotoModel *modelPtr,	/* Pointer to data structure describing
 				 * overall photo image to (re)configure. */
-    int objc,			/* Number of entries in objv. */
+    Tcl_Size objc,			/* Number of entries in objv. */
     Tcl_Obj *const objv[],	/* Pairs of configuration options for image. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget, such
 				 * as TK_CONFIG_ARGV_ONLY. */
@@ -1968,7 +1968,8 @@ ImgPhotoConfigureModel(
 	    *metadataInObj = NULL, *metadataOutObj = NULL;
     Tcl_Obj *tempdata, *tempformat;
     Tcl_Size length;
-    int i, j, result, imageWidth, imageHeight, oldformat;
+    Tcl_Size i, j;
+    int result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
@@ -2105,7 +2106,7 @@ ImgPhotoConfigureModel(
 	 * Take also empty metadatas as this may be a sign to replace
 	 * existing metadata.
 	 */
-	int dictSize;
+	Tcl_Size dictSize;
 
 	if (TCL_OK != Tcl_DictObjSize(interp,metadataInObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2271,7 +2272,7 @@ ImgPhotoConfigureModel(
      * Merge driver returned metadata and master metadata
      */
     if (metadataOutObj != NULL) {
-	int dictSize;
+	Tcl_Size dictSize;
 	if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "driver metadata not a dict", -1));
@@ -2881,7 +2882,7 @@ if (formatPtr == NULL) {
 	     */
 
 	    if (metadataOutObj != NULL) {
-		int dictSize;
+		Tcl_Size dictSize;
 		if (Tcl_IsShared(metadataOutObj)
 			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {
@@ -3083,7 +3084,7 @@ MatchStringFormat(
 	     */
 
 	    if (metadataOutObj != NULL) {
-		int dictSize;
+		Tcl_Size dictSize;
 		if (Tcl_IsShared(metadataOutObj)
 			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {

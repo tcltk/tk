@@ -85,7 +85,7 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		BitmapCoords(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		BitmapToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
@@ -96,11 +96,11 @@ static int		BitmapToPostscript(Tcl_Interp *interp,
 static void		ComputeBitmapBbox(Tk_Canvas canvas,
 			    BitmapItem *bmapPtr);
 static int		ConfigureBitmap(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		TkcCreateBitmap(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteBitmap(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayBitmap(Tk_Canvas canvas,
@@ -169,11 +169,11 @@ TkcCreateBitmap(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing rectangle. */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -245,7 +245,7 @@ BitmapCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     BitmapItem *bmapPtr = (BitmapItem *) itemPtr;
@@ -263,7 +263,7 @@ BitmapCoords(
 		return TCL_ERROR;
 	    } else if (objc != 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 2, got %d", objc));
+			"wrong # coordinates: expected 2, got %" TCL_Z_MODIFIER "u", (size_t)objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP",
 			NULL);
 		return TCL_ERROR;
@@ -278,7 +278,7 @@ BitmapCoords(
 	ComputeBitmapBbox(canvas, bmapPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 2, got %d", objc));
+		"wrong # coordinates: expected 0 or 2, got %" TCL_Z_MODIFIER "u", (size_t)objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP", NULL);
 	return TCL_ERROR;
     }
@@ -308,7 +308,7 @@ ConfigureBitmap(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Bitmap item to reconfigure. */
-    int objc,			/* Number of elements in objv.  */
+    Tcl_Size objc,			/* Number of elements in objv.  */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

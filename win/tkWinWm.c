@@ -211,7 +211,7 @@ typedef struct TkWmInfo {
      */
 
     TkWindow **cmapList;	/* Array of window with private colormaps. */
-    int cmapCount;		/* Number of windows in array. */
+    Tcl_Size cmapCount;		/* Number of windows in array. */
 
     /*
      * Miscellaneous information.
@@ -3282,7 +3282,8 @@ WmColormapwindowsCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList, *winPtr2, **winPtr2Ptr = &winPtr2;
-    int i, windowObjc, gotToplevel;
+    Tcl_Size i, windowObjc;
+    int gotToplevel;
     Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
@@ -7296,7 +7297,7 @@ InstallColormaps(
 				 * WM_QUERYNEWPALETTE */
     int isForemost)		/* 1 if window is foremost, else 0 */
 {
-    int i;
+    Tcl_Size i;
     HDC dc;
     HPALETTE oldPalette;
     TkWindow *winPtr = GetTopLevel(hwnd);
@@ -7405,7 +7406,7 @@ RefreshColormap(
     TkDisplay *dispPtr)
 {
     WmInfo *wmPtr;
-    int i;
+    Tcl_Size i;
 
     for (wmPtr = dispPtr->firstWmPtr; wmPtr != NULL; wmPtr = wmPtr->nextPtr) {
 	if (wmPtr->cmapCount > 0) {

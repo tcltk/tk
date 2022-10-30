@@ -3052,7 +3052,7 @@ ApplyLogfont(
     HDC hdc,
     LOGFONTW *logfontPtr)
 {
-    int objc;
+    Tcl_Size objc;
     Tcl_Obj **objv, **tmpv;
 
     Tcl_ListObjGetElements(NULL, cmdObj, &objc, &objv);

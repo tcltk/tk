@@ -11623,13 +11623,11 @@ RestoreLineStartEnd(
  *----------------------------------------------------------------------
  */
 
-#if TK_MAJOR_VERSION > 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION > 5)
-
 int
 TkrTesttextCmd(
     TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     TkText *textPtr;
@@ -11640,7 +11638,7 @@ TkrTesttextCmd(
     Tcl_CmdInfo info;
     Tcl_Obj *watchCmd;
 
-    if (objc < 3) {
+    if (objc + 1 < 4) {
 	return TCL_ERROR;
     }
 
@@ -11694,76 +11692,6 @@ TkrTesttextCmd(
     return TCL_OK;
 }
 
-#else /* backport to Tk 8.5 */
-
-int
-TkrTesttextCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
-{
-    TkText *textPtr;
-    size_t len;
-    int lineIndex, byteIndex, byteOffset;
-    TkTextIndex index;
-    char buf[64];
-    unsigned offs;
-    Tcl_CmdInfo info;
-
-    if (argc < 3) {
-	return TCL_ERROR;
-    }
-
-    if (Tcl_GetCommandInfo(interp, argv[1], &info) == 0) {
-	return TCL_ERROR;
-    }
-    if (info.isNativeObjectProc) {
-	textPtr = (TkText *) info.objClientData;
-    } else {
-	textPtr = (TkText *) info.clientData;
-    }
-    len = strlen(argv[2]);
-    if (strncmp(argv[2], "byteindex", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	lineIndex = atoi(argv[3]) - 1;
-	byteIndex = atoi(argv[4]);
-
-	TkrTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, byteIndex, &index);
-    } else if (strncmp(argv[2], "forwbytes", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	if (TkrTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	byteOffset = atoi(argv[4]);
-	TkrTextIndexForwBytes(textPtr, &index, byteOffset, &index);
-    } else if (strncmp(argv[2], "backbytes", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	if (TkrTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	byteOffset = atoi(argv[4]);
-	TkrTextIndexBackBytes(textPtr, &index, byteOffset, &index);
-    } else {
-	return TCL_ERROR;
-    }
-
-    TkrTextSetMark(textPtr, "insert", &index);
-    TkrTextPrintIndex(textPtr, &index, buf);
-    offs = strlen(buf);
-    snprintf(buf + offs, sizeof(buf) - offs, " %d", TkTextIndexGetByteIndex(&index));
-    Tcl_AppendResult(interp, buf, NULL);
-
-    return TCL_OK;
-}
-
-#endif /* TK_MAJOR_VERSION > 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION > 5) */
 
 #ifndef NDEBUG
 /*

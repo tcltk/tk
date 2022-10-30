@@ -400,7 +400,7 @@ static int GetEnumSetFromObj(
     unsigned *resultPtr)
 {
     unsigned result = 0;
-    int i, objc;
+    Tcl_Size i, objc;
     Tcl_Obj **objv;
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
@@ -797,7 +797,7 @@ static void TreeviewFreeColumns(Treeview *tv)
 static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
 {
     Tcl_Obj **columns;
-    int i, ncols;
+    Tcl_Size i, ncols;
 
     if (Tcl_ListObjGetElements(
 	    interp, tv->tree.columnsObj, &ncols, &columns) != TCL_OK)
@@ -849,7 +849,7 @@ static int TreeviewInitColumns(Tcl_Interp *interp, Treeview *tv)
 static int TreeviewInitDisplayColumns(Tcl_Interp *interp, Treeview *tv)
 {
     Tcl_Obj **dcolumns;
-    int index, ndcols;
+    Tcl_Size index, ndcols;
     TreeColumn **displayColumns = 0;
 
     if (Tcl_ListObjGetElements(interp,
@@ -1072,7 +1072,7 @@ static int GetCellFromObj(
     int displayColumnOnly, int *displayColumn,
     TreeCell *cell)
 {
-    int nElements;
+    Tcl_Size nElements;
     Tcl_Obj **elements;
 
     if (Tcl_ListObjGetElements(interp, obj, &nElements, &elements) != TCL_OK) {
@@ -1130,8 +1130,7 @@ static TreeCell *GetCellListFromObj(
     TreeCell cell;
     Tcl_Obj **elements;
     Tcl_Obj *oneCell;
-    Tcl_Size i;
-    int n;
+    Tcl_Size i, n;
 
     if (Tcl_ListObjGetElements(interp, objPtr, &n, &elements) != TCL_OK) {
 	return NULL;
@@ -1150,7 +1149,7 @@ static TreeCell *GetCellListFromObj(
     }
 
     cells = (TreeCell *) ckalloc(n * sizeof(TreeCell));
-    for (i = 0; i < (Tcl_Size)n; ++i) {
+    for (i = 0; i < n; ++i) {
 	if (GetCellFromObj(interp, tv, elements[i], 0, NULL, &cells[i]) != TCL_OK) {
 	    ckfree(cells);
 	    return NULL;
@@ -1440,7 +1439,7 @@ static int ConfigureItem(
     /* Make sure that -values is a valid list:
      */
     if (item->valuesObj) {
-	int unused;
+	Tcl_Size unused;
 	if (Tcl_ListObjLength(interp, item->valuesObj, &unused) != TCL_OK)
 	    goto error;
     }
@@ -2119,8 +2118,7 @@ static void PrepareItem(
 static void PrepareCells(
    Treeview *tv, TreeItem *item)
 {
-    Tcl_Size i;
-    int nValues = 0;
+    Tcl_Size i, nValues = 0;
     Tcl_Obj **values = NULL;
     TreeColumn *column;
 
@@ -2128,7 +2126,7 @@ static void PrepareCells(
 	Tcl_ListObjGetElements(NULL, item->valuesObj, &nValues, &values);
     }
     for (i = 0; i < tv->tree.nColumns; ++i) {
-	tv->tree.columns[i].data = (i < (Tcl_Size)nValues) ? values[i] : 0;
+	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
 	tv->tree.columns[i].selected = 0;
 	tv->tree.columns[i].tagset = NULL;
     }
@@ -2138,7 +2136,7 @@ static void PrepareCells(
 
     if (item->selObj != NULL) {
 	Tcl_ListObjGetElements(NULL, item->selObj, &nValues, &values);
-	for (i = 0; i < (Tcl_Size)nValues; ++i) {
+	for (i = 0; i < nValues; ++i) {
 	    column = FindColumn(NULL, tv, values[i]);
 	    /* Just in case. It should not be possible for column to be NULL */
 	    if (column != NULL) {
@@ -3096,14 +3094,14 @@ static int TreeviewSetCommand(
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
     } else {		/* set column */
-	int length;
+	Tcl_Size length;
 
 	item->valuesObj = unshareObj(item->valuesObj);
 
 	/* Make sure -values is fully populated:
 	 */
 	Tcl_ListObjLength(interp, item->valuesObj, &length);
-	while ((Tcl_Size)length < tv->tree.nColumns) {
+	while (length < tv->tree.nColumns) {
 	    Tcl_Obj *empty = Tcl_NewStringObj("",0);
 	    Tcl_ListObjAppendElement(interp, item->valuesObj, empty);
 	    ++length;
@@ -3289,7 +3287,7 @@ static int TreeviewDeleteCommand(
         if (items[i]->state & TTK_STATE_SELECTED) {
             selChange = 1;
         } else if (items[i]->selObj != NULL) {
-	    int length;
+	    Tcl_Size length;
 	    Tcl_ListObjLength(interp, items[i]->selObj, &length);
 	    if (length > 0) {
 		selChange = 1;
@@ -3637,7 +3635,8 @@ static int SelObjChangeElement(
     Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
     int add, TCL_UNUSED(int) /*remove*/, int toggle)
 {
-    int i, nElements, anyChange = 0;
+    Tcl_Size i, nElements;
+    int anyChange = 0;
     TreeColumn *column, *elemColumn;
     Tcl_Obj **elements;
 
@@ -3670,7 +3669,8 @@ static int CellSelectionRange(
     TreeCell cellFrom, cellTo;
     TreeItem *item;
     Tcl_Obj *columns, **elements;
-    int colno, nElements, i, fromNo, toNo, anyChange = 0;
+    int colno, fromNo, toNo, anyChange = 0;
+    Tcl_Size i, nElements;
     int set = !(add || remove || toggle);
 
     if (GetCellFromObj(interp, tv, fromCell, 1, &fromNo, &cellFrom)
@@ -3773,8 +3773,7 @@ static int TreeviewCellSelectionCommand(
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
 	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	    if (item->selObj != NULL) {
-		int n;
-		Tcl_Size elemc;
+		Tcl_Size n, elemc;
 		Tcl_Obj **elemv;
 
 		Tcl_ListObjGetElements(interp, item->selObj, &n, &elemv);

@@ -79,12 +79,12 @@ static int		ArrowheadPostscript(Tcl_Interp *interp,
 			    double *arrowPtr, Tcl_Obj *psObj);
 static void		ComputeLineBbox(Tk_Canvas canvas, LineItem *linePtr);
 static int		ConfigureLine(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		ConfigureArrows(Tk_Canvas canvas, LineItem *linePtr);
 static int		CreateLine(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteLine(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayLine(Tk_Canvas canvas,
@@ -95,7 +95,7 @@ static int		GetLineIndex(Tcl_Interp *interp,
 			    Tcl_Obj *obj, Tcl_Size *indexPtr);
 static int		LineCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		LineDeleteCoords(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Tcl_Size first, Tcl_Size last);
 static void		LineInsert(Tk_Canvas canvas,
@@ -279,11 +279,11 @@ CreateLine(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing line. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -358,11 +358,12 @@ LineCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int i, numPoints;
+    Tcl_Size i;
+    int numPoints;
     double *coordPtr;
 
     if (objc == 0) {
@@ -375,11 +376,11 @@ LineCoords(
 	} else {
 	    coordPtr = linePtr->coordPtr;
 	}
-	for (i = 0; i < numCoords; i++, coordPtr++) {
+	for (i = 0; i < (Tcl_Size)numCoords; i++, coordPtr++) {
 	    if (i == 2) {
 		coordPtr = linePtr->coordPtr+2;
 	    }
-	    if ((linePtr->lastArrowPtr != NULL) && (i == (numCoords-2))) {
+	    if ((linePtr->lastArrowPtr != NULL) && (i == ((Tcl_Size)numCoords-2))) {
 		coordPtr = linePtr->lastArrowPtr;
 	    }
 	    subobj = Tcl_NewDoubleObj(*coordPtr);
@@ -396,13 +397,13 @@ LineCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %d",
-		objc));
+		"wrong # coordinates: expected an even number, got %" TCL_Z_MODIFIER "u",
+		(size_t)objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected at least 4, got %d", objc));
+		"wrong # coordinates: expected at least 4, got %" TCL_Z_MODIFIER "u", (size_t)objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     }
@@ -468,7 +469,7 @@ ConfigureLine(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Line item to reconfigure. */
-    int objc,			/* Number of elements in objv. */
+    Tcl_Size objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

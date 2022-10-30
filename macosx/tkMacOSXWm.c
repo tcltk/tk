@@ -1722,7 +1722,8 @@ WmColormapwindowsCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList, *winPtr2;
-    int i, windowObjc, gotToplevel = 0;
+    Tcl_Size i, windowObjc;
+    int gotToplevel = 0;
     Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
@@ -5844,7 +5845,8 @@ WmWinStyle(
 	{ NULL, 0 }
     };
 
-    int index, i;
+    int index;
+    Tcl_Size i;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (objc == 3) {
@@ -5884,7 +5886,7 @@ WmWinStyle(
 	Tcl_ListObjAppendElement(NULL, newResult, attributeList);
 	Tcl_SetObjResult(interp, newResult);
     } else {
-	int attrObjc;
+	Tcl_Size attrObjc;
 	Tcl_Obj **attrObjv = NULL;
 	WindowClass macClass;
 	UInt64 oldAttributes = wmPtr->attributes;

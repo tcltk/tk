@@ -69,9 +69,8 @@ static void StateSpecDupIntRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr)
 static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 {
     int status;
-    int objc;
+    Tcl_Size i, objc;
     Tcl_Obj **objv;
-    int i;
     unsigned int onbits = 0, offbits = 0;
 
     status = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
@@ -200,8 +199,8 @@ Tcl_Obj *Ttk_StateMapLookup(
     Ttk_State state)    	/* State to look up */
 {
     Tcl_Obj **specs;
-    int nSpecs;
-    int j, status;
+    Tcl_Size j, nSpecs;
+    int status;
 
     status = Tcl_ListObjGetElements(interp, map, &nSpecs, &specs);
     if (status != TCL_OK)
@@ -232,8 +231,8 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
     Tcl_Obj *mapObj)		/* State map */
 {
     Tcl_Obj **specs;
-    int nSpecs;
-    int j, status;
+    Tcl_Size j, nSpecs;
+    int status;
 
     status = Tcl_ListObjGetElements(interp, mapObj, &nSpecs, &specs);
     if (status != TCL_OK)

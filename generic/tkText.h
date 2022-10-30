@@ -2093,7 +2093,7 @@ MODULE_SCOPE void	TkTextInvalidateLineMetrics(TkSharedText *sharedTextPtr, TkTex
 			    TkTextLine *linePtr, unsigned lineCount, TkTextInvalidateAction action);
 MODULE_SCOPE void	TkTextUpdateLineMetrics(TkText *textPtr, unsigned lineNum, unsigned endLine);
 MODULE_SCOPE int	TkTextMarkCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE TkTextSegment * TkTextFindMark(const TkText *textPtr, const char *name);
 MODULE_SCOPE TkTextSegment * TkTextFreeMarks(TkSharedText *sharedTextPtr, int retainPrivateMarks);
 MODULE_SCOPE int	TkTextMarkNameToIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
@@ -2147,22 +2147,22 @@ MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);
 MODULE_SCOPE void	TkTextCheckLineMetricUpdate(const TkText *textPtr);
 MODULE_SCOPE void	TkTextCheckDisplayLineConsistency(const TkText *textPtr);
 MODULE_SCOPE int	TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextSeeCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextSetYView(TkText *textPtr, TkTextIndex *indexPtr, int pickPlace);
 MODULE_SCOPE int	TkTextTagCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextImageCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextImageIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeImage(TkText *textPtr, Tcl_Obj *options);
 MODULE_SCOPE int	TkTextWindowCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextWindowIndex(TkText *textPtr, const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE TkTextSegment * TkTextMakeWindow(TkText *textPtr, Tcl_Obj *options);
 MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextGetViewOffset(TkText *textPtr, int *x, int *y);
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr, TkTextEmbWindowClient *client);
 MODULE_SCOPE void	TkTextIndexSetPosition(TkTextIndex *indexPtr,
@@ -2218,7 +2218,7 @@ MODULE_SCOPE int	TkTextIndexOutsideStartEnd(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
 MODULE_SCOPE int		TkrTesttextCmd(ClientData dummy, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int		TkrTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
 				struct TkTextIndex *indexPtr);
@@ -2238,7 +2238,7 @@ MODULE_SCOPE struct TkTextSegment * TkrTextSetMark(struct TkText *textPtr,
 				const char *name,
 				struct TkTextIndex *indexPtr);
 MODULE_SCOPE int		TkrTextXviewCmd(struct TkText *textPtr,
-				Tcl_Interp *interp, int objc,
+				Tcl_Interp *interp, Tcl_Size objc,
 				Tcl_Obj *const objv[]);
 MODULE_SCOPE void		TkrTextChanged(struct TkSharedText *sharedTextPtr,
 				struct TkText *textPtr,

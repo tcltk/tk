@@ -1109,7 +1109,7 @@ Ttk_CreateVsapiElement(
     void *clientData,
     Ttk_Theme theme,
     const char *elementName,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
@@ -1132,7 +1132,7 @@ Ttk_CreateVsapiElement(
     enum { O_HALFHEIGHT, O_HALFWIDTH, O_HEIGHT, O_MARGINS, O_PADDING,
 	   O_SYSSIZE, O_WIDTH };
 
-    if (objc < 2) {
+    if (objc + 1 < 3) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing required arguments 'class' and/or 'partId'", -1));
 	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
@@ -1148,7 +1148,8 @@ Ttk_CreateVsapiElement(
 
     /* flags or padding */
     if (objc > 3) {
-	int i = 3, option = 0;
+	Tcl_Size i = 3;
+	int option = 0;
 	for (i = 3; i < objc; i += 2) {
 	    int tmp = 0;
 	    if (i == objc -1) {
