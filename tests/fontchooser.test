@@ -184,7 +184,7 @@ test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
 
 test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl} -body {
     start {
-        tk::fontchooser::Configure -command ApplyFont -font {TkDefaultFont 14 bold}
+        tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
         tk::fontchooser::Show
     }
     then {
