@@ -2258,8 +2258,10 @@ test font-38.10 {ParseFontNameObj procedure: arguments} -body {
     font actual {times xyz xyz}
 } -returnCodes error -result {expected integer but got "xyz"}
 test font-38.11 {ParseFontNameObj procedure: stylelist loop} -constraints {
-	unixOrWin failsOnUbuntuNoXft
+	unixOrWin 
 } -body {
+puts font-38.11
+puts [font actual {times 12 bold italic overstrike underline}]
     lrange [font actual {times 12 bold italic overstrike underline}] 4 end
 } -result {-weight bold -slant italic -underline 1 -overstrike 1}
 test font-38.12 {ParseFontNameObj procedure: stylelist error} -body {
@@ -2348,10 +2350,11 @@ test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
 } -cleanup {
     tk scaling $oldscale
 } -result {24}
-test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed failsOnUbuntuNoXft} -setup {
+test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed} -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5
+puts [font actual {times 12}]
     font actual {times 12} -size
 } -cleanup {
     tk scaling $oldscale
