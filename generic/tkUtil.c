@@ -640,7 +640,7 @@ Tk_DrawFocusHighlight(
 int
 Tk_GetScrollInfo(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int argc,			/* # arguments for command. */
+    Tcl_Size argc,			/* # arguments for command. */
     const char **argv,		/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */

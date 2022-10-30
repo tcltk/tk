@@ -75,7 +75,7 @@ typedef struct BitmapInstance {
 
 static int		GetByte(Tcl_Channel chan);
 static int		ImgBmapCreate(Tcl_Interp *interp,
-			    const char *name, int objc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	ImgBmapGet(Tk_Window tkwin, ClientData clientData);
@@ -150,7 +150,7 @@ static int		ImgBmapCmd(ClientData clientData, Tcl_Interp *interp,
 static void		ImgBmapCmdDeletedProc(ClientData clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
 static int		ImgBmapConfigureModel(BitmapModel *modelPtr,
-			    int objc, Tcl_Obj *const objv[], int flags);
+			    Tcl_Size objc, Tcl_Obj *const objv[], int flags);
 static int		NextBitmapWord(ParseInfo *parseInfoPtr);
 
 /*
@@ -174,7 +174,7 @@ ImgBmapCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,			/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     const Tk_ImageType *typePtr,/* Pointer to our type record (not used). */
@@ -232,26 +232,18 @@ static int
 ImgBmapConfigureModel(
     BitmapModel *modelPtr,	/* Pointer to data structure describing
 				 * overall bitmap image to (reconfigure). */
-    int objc,			/* Number of entries in objv. */
+    Tcl_Size objc,			/* Number of entries in objv. */
     Tcl_Obj *const objv[],	/* Pairs of configuration options for image. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget, such
 				 * as TK_CONFIG_ARGV_ONLY. */
 {
     BitmapInstance *instancePtr;
     int maskWidth, maskHeight, dummy1, dummy2;
-    const char **argv = (const char **)ckalloc((objc+1) * sizeof(char *));
-
-    for (dummy1 = 0; dummy1 < objc; dummy1++) {
-	argv[dummy1] = Tcl_GetString(objv[dummy1]);
-    }
-    argv[objc] = NULL;
 
     if (Tk_ConfigureWidget(modelPtr->interp, Tk_MainWindow(modelPtr->interp),
-	    configSpecs, objc, argv, (char *) modelPtr, flags) != TCL_OK) {
-	ckfree(argv);
+	    configSpecs, objc, (const char **) objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	return TCL_ERROR;
     }
-    ckfree(argv);
 
     /*
      * Parse the bitmap and/or mask to create binary data. Make sure that the

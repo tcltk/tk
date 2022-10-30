@@ -72,7 +72,7 @@ Tk_ConfigureWidget(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    int argc,			/* Number of elements in argv. */
+    Tcl_Size argc,			/* Number of elements in argv. */
     const char **argv,		/* Command-line options. */
     char *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */

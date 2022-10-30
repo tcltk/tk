@@ -225,11 +225,11 @@ static const Tk_ConfigSpec configSpecs[] = {
 
 static void		ComputeTextBbox(Tk_Canvas canvas, TextItem *textPtr);
 static int		ConfigureText(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int argc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size argc,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateText(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteText(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayCanvText(Tk_Canvas canvas,
@@ -248,7 +248,7 @@ static void		SetTextCursor(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Tcl_Size index);
 static int		TextCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		TextDeleteChars(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Tcl_Size first, Tcl_Size last);
 static void		TextInsert(Tk_Canvas canvas,
@@ -320,11 +320,11 @@ CreateText(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing rectangle. */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -417,7 +417,7 @@ TextCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     TextItem *textPtr = (TextItem *) itemPtr;
@@ -431,9 +431,9 @@ TextCoords(
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
 	return TCL_OK;
-    } else if (objc > 2) {
+    } else if (objc + 1 > 3) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 2, got %d", objc));
+		"wrong # coordinates: expected 0 or 2, got %" TCL_Z_MODIFIER "u", (size_t)objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
 	return TCL_ERROR;
     }
@@ -444,7 +444,7 @@ TextCoords(
 	    return TCL_ERROR;
 	} else if (objc != 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "wrong # coordinates: expected 2, got %d", objc));
+		    "wrong # coordinates: expected 2, got %" TCL_Z_MODIFIER "u", (size_t)objc));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
 	    return TCL_ERROR;
 	}
@@ -483,7 +483,7 @@ ConfigureText(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Rectangle item to reconfigure. */
-    int objc,			/* Number of elements in objv. */
+    Tcl_Size objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

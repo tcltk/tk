@@ -223,7 +223,7 @@ TkTextMarkCmd(
 	TkTextSetMark(textPtr, Tcl_GetString(objv[3]), &index);
 	return TCL_OK;
     case MARK_UNSET: {
-	int i;
+	Tcl_Size i;
 
 	for (i = 3; i < objc; i++) {
 	    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable,
