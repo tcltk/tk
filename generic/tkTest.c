@@ -91,7 +91,7 @@ typedef struct TImageInstance {
  */
 
 static int		ImageCreate(Tcl_Interp *interp,
-			    const char *name, int objc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	ImageGet(Tk_Window tkwin, ClientData clientData);
@@ -1388,7 +1388,7 @@ ImageCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,			/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument strings for options (doesn't
 				 * include image name or type). */
     TCL_UNUSED(const Tk_ImageType *),	/* Pointer to our type record (not used). */
@@ -1399,7 +1399,7 @@ ImageCreate(
 {
     TImageModel *timPtr;
     const char *varName;
-    int i;
+    Tcl_Size i;
 
     varName = "log";
     for (i = 0; i < objc; i += 2) {
