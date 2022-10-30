@@ -190,6 +190,7 @@ test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl} -body {
     then {
         Click ok
     }
+puts !!$::testfont!!
     lrange $::testfont 1 end
 } -result {14 bold}
 
