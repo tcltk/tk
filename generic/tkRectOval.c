@@ -350,7 +350,7 @@ RectOvalCoords(
 
     if (objc != 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 4, got %" TCL_Z_MODIFIER "u", (size_t)objc));
+		"wrong # coordinates: expected 0 or 4, got %" TKSIZET_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS",
 		(rectOvalPtr->header.typePtr == &tkRectangleType
 			? "RECTANGLE" : "OVAL"), NULL);
