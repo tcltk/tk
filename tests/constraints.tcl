@@ -321,7 +321,7 @@ testConstraint haveTimes12Font [expr {
     ([font actual {times 12} -size] == 12)
 }]
 testConstraint haveCourier37Font [expr {
-    ([font actual {-family courier -size 37}] == 37)
+    ([font actual {-family courier -size 37} -size] == 37)
 }]
 testConstraint haveTimes14BoldFont [expr {
     ([font actual {times 14 bold} -size] == 14) &&
