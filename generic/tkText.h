@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     Tcl_Size size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[1];		/* Characters that make up character info.
+	char chars[16];		/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -210,9 +210,9 @@ typedef void 		Tk_ChunkDisplayProc(struct TkText *textPtr,
 			    Drawable dst, int screenY);
 typedef void		Tk_ChunkUndisplayProc(struct TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
-typedef int		Tk_ChunkMeasureProc(TkTextDispChunk *chunkPtr, int x);
+typedef Tcl_Size	Tk_ChunkMeasureProc(TkTextDispChunk *chunkPtr, int x);
 typedef void		Tk_ChunkBboxProc(struct TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
 

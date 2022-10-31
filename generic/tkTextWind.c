@@ -47,7 +47,7 @@ static TkTextSegment *	EmbWinCleanupProc(TkTextSegment *segPtr,
 static void		EmbWinCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static void		EmbWinBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr,
@@ -1225,7 +1225,7 @@ static void
 EmbWinBboxProc(
     TkText *textPtr,		/* Information about text widget. */
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
