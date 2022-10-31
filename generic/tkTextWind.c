@@ -31,8 +31,8 @@
  * geometry manager:
  */
 
-static void EmbWinRequestProc(ClientData clientData, Tk_Window tkwin);
-static void EmbWinLostContentProc(ClientData clientData, Tk_Window tkwin);
+static void EmbWinRequestProc(void *clientData, Tk_Window tkwin);
+static void EmbWinLostContentProc(void *clientData, Tk_Window tkwin);
 
 static const Tk_GeomMgr textGeomType = {
     "text",			/* name */
@@ -48,18 +48,18 @@ static void		EmbWinCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegm
 static Tcl_Obj *	EmbWinInspectProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
 static void		EmbWinBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr, int undoable,
 			    int objc, Tcl_Obj *const objv[]);
-static void		EmbWinDelayedUnmap(ClientData clientData);
+static void		EmbWinDelayedUnmap(void *clientData);
 static int		EmbWinDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
 static int		EmbWinRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static int		EmbWinLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
-static void		EmbWinStructureProc(ClientData clientData, XEvent *eventPtr);
+static void		EmbWinStructureProc(void *clientData, XEvent *eventPtr);
 static void	        EmbWinDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr,
                             int x, int y, int lineHeight, int baseline, Display *display,
 			    Drawable dst, int screenY);
@@ -929,7 +929,7 @@ EmbWinConfigure(
 
 static void
 EmbWinStructureProc(
-    ClientData clientData,	/* Pointer to record describing window item. */
+    void *clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
@@ -983,7 +983,7 @@ EmbWinStructureProc(
 
 static void
 EmbWinRequestProc(
-    ClientData clientData,	/* Pointer to record for window item. */
+    void *clientData,	/* Pointer to record for window item. */
     TCL_UNUSED(Tk_Window))	/* Window that changed its desired size. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
@@ -1029,7 +1029,7 @@ EmbWinRequestProc(
 
 static void
 EmbWinLostContentProc(
-    ClientData clientData,	/* Pointer to record describing window item. */
+    void *clientData,	/* Pointer to record describing window item. */
     Tk_Window tkwin)		/* Window that was claimed away by another geometry manager. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
@@ -1772,7 +1772,7 @@ static void
 EmbWinBboxProc(
     TkText *textPtr,		/* Information about text widget. */
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the chunk. */
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the chunk. */
     int y,			/* Topmost pixel in area allocated for this line. */
     int lineHeight,		/* Total height of line. */
     int baseline,		/* Location of line's baseline, in pixels measured down from y. */
@@ -1837,7 +1837,7 @@ EmbWinBboxProc(
 
 static void
 EmbWinDelayedUnmap(
-    ClientData clientData)	/* Token for the window to be unmapped. */
+    void *clientData)	/* Token for the window to be unmapped. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
 

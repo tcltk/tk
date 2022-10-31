@@ -453,7 +453,7 @@ typedef struct TkTextSegment {
     uint32_t startEndMarkFlag:1;/* This segment is a start marker or an end marker? */
 
     union {
-	char chars[1];		/* Characters that make up character info. Actual length varies
+	char chars[16];		/* Characters that make up character info. Actual length varies
 				 * to hold as many characters as needed. */
 	TkTextHyphen hyphen;	/* Information about hyphen. */
 	TkTextEmbWindow ew;	/* Information about embedded window. */
@@ -532,9 +532,9 @@ typedef void 	Tk_ChunkDisplayProc(struct TkText *textPtr, TkTextDispChunk *chunk
 		    int x, int y, int height, int baseline, Display *display, Drawable dst,
 		    int screenY);
 typedef void	Tk_ChunkUndisplayProc(struct TkText *textPtr, TkTextDispChunk *chunkPtr);
-typedef int	Tk_ChunkMeasureProc(TkTextDispChunk *chunkPtr, int x);
+typedef Tcl_Size	Tk_ChunkMeasureProc(TkTextDispChunk *chunkPtr, int x);
 typedef void	Tk_ChunkBboxProc(struct TkText *textPtr, TkTextDispChunk *chunkPtr,
-		    int index, int y, int lineHeight, int baseline, int *xPtr, int *yPtr,
+		    Tcl_Size index, int y, int lineHeight, int baseline, int *xPtr, int *yPtr,
 		    int *widthPtr, int *heightPtr);
 
 /*
@@ -603,7 +603,7 @@ struct TkTextDispChunk {
 
     const TkTextDispChunkProcs *layoutProcs;
     const char *brks;		/* Line break information of this chunk for TEXT_WRAPMODE_CODEPOINT. */
-    ClientData clientData;	/* Additional information for use of displayProc and undisplayProc. */
+    void *clientData;	/* Additional information for use of displayProc and undisplayProc. */
 
     /*
      * The fields below are set by the type-independent code before calling
@@ -1964,15 +1964,15 @@ MODULE_SCOPE unsigned	TkBTreeChildNumber(const TkTextBTree tree, const TkTextLin
 			    unsigned *depth);
 MODULE_SCOPE unsigned	TkBTreeLinesPerNode(const TkTextBTree tree);
 MODULE_SCOPE const union TkTextTagSet * TkBTreeRootTagInfo(const TkTextBTree tree);
-MODULE_SCOPE void	TkTextBindProc(ClientData clientData, XEvent *eventPtr);
+MODULE_SCOPE void	TkTextBindProc(void *clientData, XEvent *eventPtr);
 MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkConfigureText(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE const TkTextSegment * TkTextGetUndeletableNewline(const TkTextLine *lastLinePtr);
 MODULE_SCOPE void	TkTextPerformWatchCmd(TkSharedText *sharedTextPtr, TkText *textPtr,
 			    const char *operation,
-			    TkTextWatchGetIndexProc index1Proc, ClientData index1ProcData,
-			    TkTextWatchGetIndexProc index2Proc, ClientData index2ProcData,
+			    TkTextWatchGetIndexProc index1Proc, void *index1ProcData,
+			    TkTextWatchGetIndexProc index2Proc, void *index2ProcData,
 			    const char *arg1, const char *arg2, const char *arg3, int userFlag);
 MODULE_SCOPE int	TkTextTriggerWatchCmd(TkText *textPtr, const char *operation,
 			    const char *index1, const char *index2, const char *arg1, const char *arg2,
@@ -2068,7 +2068,7 @@ MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *tex
 			    const char *lang, char *brks);
 MODULE_SCOPE int	TkTextTestLangCode(Tcl_Interp *interp, Tcl_Obj *langCodePtr);
 MODULE_SCOPE int	TkTextParseHyphenRules(TkText *textPtr, Tcl_Obj *objPtr, int *rulesPtr);
-MODULE_SCOPE void	TkTextLostSelection(ClientData clientData);
+MODULE_SCOPE void	TkTextLostSelection(void *clientData);
 MODULE_SCOPE void	TkTextConfigureUndoStack(TkSharedText *sharedTextPtr, int maxUndoDepth,
 			    int maxByteSize);
 MODULE_SCOPE void	TkTextConfigureRedoStack(TkSharedText *sharedTextPtr, int maxRedoDepth);
@@ -2217,7 +2217,7 @@ MODULE_SCOPE int	TkTextIndexRestrictToEndRange(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexOutsideStartEnd(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexEnsureBeforeLastChar(TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextSkipElidedRegion(TkTextIndex *indexPtr);
-MODULE_SCOPE int		TkrTesttextCmd(ClientData dummy, Tcl_Interp *interp,
+MODULE_SCOPE int		TkrTesttextCmd(void *dummy, Tcl_Interp *interp,
 				Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int		TkrTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
