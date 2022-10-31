@@ -13,6 +13,7 @@ tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+testConstraint failsOnUbuntuNoXft 1
 
 destroy .t
 text .t -width 20 -height 10 -font {Courier 12}
@@ -1319,6 +1320,7 @@ test textTag-15.4 {TkTextBindProc, key event with mouse outside the widget} -set
     .t tag delete tag1
 } -result {a}
 
+puts [font actual $bigFont]
 
 test textTag-16.1 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
