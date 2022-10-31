@@ -6,8 +6,6 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint haveTimes14Bold [expr {([font actual {times 14 bold} -size] == 14) && ([font actual {times 14 bold} -weight] eq "bold")}]
-
 # the following helper functions are related to the functions used
 # in winDialog.test where they are used to send messages to the win32
 # dialog (hence the weirdness).
