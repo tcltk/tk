@@ -295,7 +295,7 @@ testConstraint testtext      [llength [info commands testtext]]
 testConstraint testwinevent  [llength [info commands testwinevent]]
 testConstraint testwrapper   [llength [info commands testwrapper]]
 
-# constraint to see what sort of fonts are available
+# constraints about what sort of fonts are available
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
@@ -314,8 +314,12 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
+testConstraint haveTimes14Bold [expr {
+    ([font actual {times 14 bold} -size] == 14) &&
+    ([font actual {times 14 bold} -weight] eq "bold")
+}]
 
-# constraints for the visuals available..
+# constraints for the visuals available
 testConstraint pseudocolor8 [expr {
     ([catch {
 	toplevel .t -visual {pseudocolor 8} -colormap new
