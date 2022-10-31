@@ -17,7 +17,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 if {[tk windowingsystem] eq "x11"} {
@@ -118,7 +117,7 @@ test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11
 test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 noExceed failsOnUbuntu} {
     lindex [font actual {-family courier}] 1
 } {courier}
-test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 failsOnUbuntuNoXft} {
+test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 haveCourier37Font} {
     lindex [font actual {-family courier -size 37}] 3
 } {37}
 test unixfont-2.11 {TkpGetFontFromAttributes: font cannot be loaded} x11 {
