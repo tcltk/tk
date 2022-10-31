@@ -15,7 +15,6 @@ tcltest::loadTestedCommands
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 set defaultfontlist [font names]
 
@@ -2258,7 +2257,7 @@ test font-38.10 {ParseFontNameObj procedure: arguments} -body {
     font actual {times xyz xyz}
 } -returnCodes error -result {expected integer but got "xyz"}
 test font-38.11 {ParseFontNameObj procedure: stylelist loop} -constraints {
-	unixOrWin failsOnUbuntuNoXft
+    unixOrWin haveTimes12BoldItalicUnderlineOverstrikeFont
 } -body {
     lrange [font actual {times 12 bold italic overstrike underline}] 4 end
 } -result {-weight bold -slant italic -underline 1 -overstrike 1}
@@ -2348,7 +2347,7 @@ test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
 } -cleanup {
     tk scaling $oldscale
 } -result {24}
-test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed failsOnUbuntuNoXft} -setup {
+test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Font} -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5

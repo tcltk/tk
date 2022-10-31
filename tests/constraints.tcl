@@ -314,9 +314,24 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
-testConstraint haveTimes14Bold [expr {
+# Although unexpected, some systems may have a very limited set of fonts available.
+# The following constraints happen to evaluate to false at least on one system: the
+# Github CI runner for Linux with --disable-xft
+testConstraint haveTimes12Font [expr {
+    ([font actual {times 12} -size] == 12)
+}]
+testConstraint haveCourier37Font [expr {
+    ([font actual {-family courier -size 37}] == 37)
+}]
+testConstraint haveTimes14BoldFont [expr {
     ([font actual {times 14 bold} -size] == 14) &&
     ([font actual {times 14 bold} -weight] eq "bold")
+}]
+testConstraint haveTimes12BoldItalicUnderlineOverstrikeFont [expr {
+    ([font actual {times 12 bold italic overstrike underline} -weight] eq "bold") &&
+    ([font actual {times 12 bold italic overstrike underline} -slant] eq "italic") &&
+    ([font actual {times 12 bold italic overstrike underline} -underline] eq "1") &&
+    ([font actual {times 12 bold italic overstrike underline} -overstrike] eq "1")
 }]
 
 # constraints for the visuals available
