@@ -6,7 +6,7 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint hasTimes14Bold [expr {([font actual {times 14 bold} -size] == 14) && ([font actual {times 14 bold} -weight] eq "bold")}]
+testConstraint haveTimes14Bold [expr {([font actual {times 14 bold} -size] == 14) && ([font actual {times 14 bold} -weight] eq "bold")}]
 
 # the following helper functions are related to the functions used
 # in winDialog.test where they are used to send messages to the win32
@@ -181,7 +181,7 @@ test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
     expr {$::testfont ne {}}
 } -result {1}
 
-test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl hasTimes14Bold} -body {
+test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl haveTimes14Bold} -body {
     start {
         tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
         tk::fontchooser::Show
