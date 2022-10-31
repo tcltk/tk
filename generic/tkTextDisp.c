@@ -745,14 +745,14 @@ static void		ComputeShiftForNumericTab(LayoutData *data, TkTextSegment *firstSeg
 			    int offset);
 static void		ComputeShiftForRightTab(LayoutData *data, TkTextSegment *segPtr, int offset);
 static int		IsStartOfTab(TkTextSegment *segPtr, int offset);
-static void		ElideBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int index, int y,
+static void		ElideBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
-static int		ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
+static Tcl_Size	ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		DisplayDLine(TkText *textPtr, DLine *dlPtr, DLine *prevPtr, Pixmap pixmap);
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr, DLine *prevPtr,
 			    Pixmap pixmap);
-static void		DisplayText(ClientData clientData);
+static void		DisplayText(void *clientData);
 static DLine *		FindCachedDLine(TkText *textPtr, const TkTextIndex *indexPtr);
 static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr, const TkTextIndex *indexPtr);
 static DLine *		FreeDLines(TkText *textPtr, DLine *firstPtr, DLine *lastPtr,
@@ -791,8 +791,8 @@ static ScrollMethod	TextGetScrollInfoObj(Tcl_Interp *interp, TkText *textPtr, in
 			    Tcl_Obj *const objv[], double *dblPtr, int *intPtr);
 static void		InvokeAsyncUpdateLineMetrics(TkText *textPtr);
 static void		InvokeAsyncUpdateYScrollbar(TkText *textPtr);
-static void		AsyncUpdateYScrollbar(ClientData clientData);
-static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		AsyncUpdateYScrollbar(void *clientData);
+static void		AsyncUpdateLineMetrics(void *clientData);
 static void		UpdateLineMetrics(TkText *textPtr, unsigned doThisMuch);
 static int		TestIfLinesUpToDate(const TkTextIndex *indexPtr);
 static void		SaveDisplayLines(TkText *textPtr, DisplayInfo *info, int append);
@@ -806,12 +806,12 @@ static unsigned		FindDisplayLineOffset(TkText *textPtr, TkTextLine *linePtr, int
 static void		FindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, int end,
 			    int cacheType);
 static void		CheckIfLineMetricIsUpToDate(TkText *textPtr);
-static void		RunUpdateLineMetricsFinished(ClientData clientData);
+static void		RunUpdateLineMetricsFinished(void *clientData);
 static void		CheckLineMetricConsistency(const TkText *textPtr);
 static int		ComputeBreakIndex(TkText *textPtr, const TkTextDispChunk *chunkPtr,
 			    TkTextSegment *segPtr, int byteOffset, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode);
-static int		CharChunkMeasureChars(TkTextDispChunk *chunkPtr, const char *chars, int charsLen,
+static Tcl_Size	CharChunkMeasureChars(TkTextDispChunk *chunkPtr, const char *chars, int charsLen,
 			    int start, int end, int startX, int maxX, TkTextSpaceMode spaceMode,
 			    int flags, int *nextXPtr);
 static void		CharDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
@@ -820,8 +820,8 @@ static void		CharUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static void		HyphenUndisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr);
 static void		DisplayChars(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int baseline, Display *display, Drawable dst);
-static int		CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
-static void		CharBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int index, int y,
+static Tcl_Size	CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
+static void		CharBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
 static int		MeasureChars(Tk_Font tkfont, const char *source, int maxBytes, int rangeStart,
@@ -4770,7 +4770,7 @@ UpdateLineMetricsFinished(
 
 static void
 RunUpdateLineMetricsFinished(
-    ClientData clientData)
+    void *clientData)
 {
     TkText *textPtr = (TkText *) clientData;
 
@@ -5297,7 +5297,7 @@ ComputeMissingMetric(
 
 static Tk_RestrictAction
 UpdateRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     TkText* textPtr = (TkText *) arg;
@@ -5369,7 +5369,7 @@ UpdateDisplayInfo(
     unsigned displayLineNo;
     unsigned epoch;
     Tk_RestrictProc* prevRestrictProc;
-    ClientData prevRestrictArg;
+    void *prevRestrictArg;
 
     if (!(dInfoPtr->flags & DINFO_OUT_OF_DATE)) {
 	return;
@@ -7016,7 +7016,7 @@ DisplayLineBackground(
 
 static void
 AsyncUpdateLineMetrics(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -8602,7 +8602,7 @@ UpdateOneLine(
 
 static void
 DisplayText(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -11114,7 +11114,7 @@ MakePixelIndex(
 
 static void
 Repick(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *) clientData;
 
@@ -11727,7 +11727,7 @@ GetYView(
 
 static void
 AsyncUpdateYScrollbar(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -12693,7 +12693,7 @@ static void
 ElideBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the chunk. */
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the chunk. */
     int y,			/* Topmost pixel in area allocated for this line. */
     TCL_UNUSED(int),		/* Height of line, in pixels. */
     TCL_UNUSED(int),		/* Location of line's baseline, in pixels measured down from y. */
@@ -12711,7 +12711,7 @@ ElideBboxProc(
  * Measure an elided chunk.
  */
 
-static int
+static Tcl_Size
 ElideMeasureProc(
     TCL_UNUSED(TkTextDispChunk *),	/* Chunk containing desired coord. */
     TCL_UNUSED(int))			/* X-coordinate, in same coordinate system as chunkPtr->x. */
@@ -12737,7 +12737,7 @@ ElideMeasureProc(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 CharMeasureProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
     int x)			/* X-coordinate, in same coordinate system as chunkPtr->x. */
@@ -12776,7 +12776,7 @@ static void
 CharBboxProc(
     TkText *textPtr,
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    int byteIndex,		/* Byte offset of desired character within the chunk */
+    Tcl_Size byteIndex,		/* Byte offset of desired character within the chunk */
     int y,			/* Topmost pixel in area allocated for this line. */
     TCL_UNUSED(int),		/* Height of line, in pixels. */
     int baseline,		/* Location of line's baseline, in pixels measured down from y. */
@@ -12792,7 +12792,7 @@ CharBboxProc(
 
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex, chunkPtr->x, -1, textPtr->spaceMode, 0, xPtr);
 
-    if (byteIndex >= (int)ciPtr->numBytes) {
+    if (byteIndex >= ciPtr->numBytes) {
 	/*
 	 * This situation only happens if the last character in a line is a
 	 * space character, in which case it absorbs all of the extra space in
@@ -12800,7 +12800,7 @@ CharBboxProc(
 	 */
 
 	*widthPtr = maxX - *xPtr;
-    } else if (ciPtr->u.chars[offset] == '\t' && byteIndex == (int)ciPtr->numBytes - 1) {
+    } else if (ciPtr->u.chars[offset] == '\t' && byteIndex == ciPtr->numBytes - 1) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
@@ -14313,7 +14313,7 @@ TkTextCheckLineMetricUpdate(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 CharChunkMeasureChars(
     TkTextDispChunk *chunkPtr,	/* Chunk from which to measure. */
     const char *chars,		/* Chars to use, instead of the chunk's own. Used by the layoutproc

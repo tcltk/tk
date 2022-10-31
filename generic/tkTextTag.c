@@ -2795,7 +2795,7 @@ ChangeTagPriority(
 
 void
 TkTextBindProc(
-    ClientData clientData,	/* Pointer to text widget structure. */
+    void *clientData,	/* Pointer to text widget structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -3384,7 +3384,7 @@ TagBindEvent(
 	    tagArrPtr[i] = (TkTextTag *) tagArrPtr[i]->name;
 	}
 	Tk_BindEvent(textPtr->sharedTextPtr->tagBindingTable, eventPtr,
-		textPtr->tkwin, countTags, (ClientData *) tagArrPtr);
+		textPtr->tkwin, countTags, (void **) tagArrPtr);
 
 	if (tagArrPtr != tagArrayBuf) {
 	    free(tagArrPtr);

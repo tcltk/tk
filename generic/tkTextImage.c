@@ -32,7 +32,7 @@ static void		EmbImageCheckProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
 static Tcl_Obj *	EmbImageInspectProc(const TkSharedText *sharedTextPtr,
 			    const TkTextSegment *segPtr);
-static void		EmbImageBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int index, int y,
+static void		EmbImageBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr, TkTextSegment *eiPtr, int *maskPtr,
@@ -45,7 +45,7 @@ static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int
 static int		EmbImageLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    int offset, int maxX, int maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
-static void		EmbImageProc(ClientData clientData, int x, int y, int width, int height,
+static void		EmbImageProc(void *clientData, int x, int y, int width, int height,
 			    int imageWidth, int imageHeight);
 static TkTextSegment *	MakeImage(TkText *textPtr);
 static void		ReleaseImage(TkTextSegment *eiPtr);
@@ -1119,7 +1119,7 @@ static void
 EmbImageBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the chunk. */
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the chunk. */
     int y,			/* Topmost pixel in area allocated for this line. */
     int lineHeight,		/* Total height of line. */
     int baseline,		/* Location of line's baseline, in pixels measured down from y. */
@@ -1230,7 +1230,7 @@ GetIndexForWatch(
 
 static void
 EmbImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     TCL_UNUSED(int),		/* Upper left pixel (within image) that must be redisplayed. */
 	TCL_UNUSED(int),
     TCL_UNUSED(int),	/* Dimensions of area to redisplay (may be <= 0). */
