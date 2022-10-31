@@ -289,7 +289,8 @@ TkTextTagCmd(
 	TAG_GETRANGE, TAG_LOWER, TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE, TAG_PRIORITY, TAG_RAISE,
 	TAG_RANGES, TAG_REMOVE
     };
-    int optionIndex, i;
+    int optionIndex;
+    Tcl_Size i;
     TkTextTag *tagPtr;
     TkTextIndex index1, index2;
     TkSharedText *sharedTextPtr;

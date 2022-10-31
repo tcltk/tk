@@ -996,7 +996,7 @@ declare 259 {
     void  Tk_FreeStyleFromObj(Tcl_Obj *objPtr)
 }
 declare 260 {
-    Tk_StyledElement Tk_GetStyledElement(Tk_Style style, int elementId,
+    Tk_StyledElement Tk_GetStyledElement(Tk_Style style, Tcl_Size elementId,
 	Tk_OptionTable optionTable)
 }
 declare 261 {

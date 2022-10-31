@@ -826,7 +826,8 @@ EXTERN Tk_Style		Tk_GetStyleFromObj(Tcl_Obj *objPtr);
 /* 259 */
 EXTERN void		Tk_FreeStyleFromObj(Tcl_Obj *objPtr);
 /* 260 */
-EXTERN Tk_StyledElement	 Tk_GetStyledElement(Tk_Style style, int elementId,
+EXTERN Tk_StyledElement	 Tk_GetStyledElement(Tk_Style style,
+				Tcl_Size elementId,
 				Tk_OptionTable optionTable);
 /* 261 */
 EXTERN void		Tk_GetElementSize(Tk_Style style,
@@ -1196,7 +1197,7 @@ typedef struct TkStubs {
     Tk_Style (*tk_AllocStyleFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr); /* 257 */
     Tk_Style (*tk_GetStyleFromObj) (Tcl_Obj *objPtr); /* 258 */
     void (*tk_FreeStyleFromObj) (Tcl_Obj *objPtr); /* 259 */
-    Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, int elementId, Tk_OptionTable optionTable); /* 260 */
+    Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, Tcl_Size elementId, Tk_OptionTable optionTable); /* 260 */
     void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int width, int height, int inner, int *widthPtr, int *heightPtr); /* 261 */
     void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 262 */
     int (*tk_GetElementBorderWidth) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin); /* 263 */
