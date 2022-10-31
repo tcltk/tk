@@ -535,10 +535,10 @@ static void		AdjustForTab(TkText *textPtr,
 			    TkTextTabArray *tabArrayPtr, int index,
 			    TkTextDispChunk *chunkPtr);
 static void		CharBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
-static int		CharChunkMeasureChars(TkTextDispChunk *chunkPtr,
+static Tcl_Size	CharChunkMeasureChars(TkTextDispChunk *chunkPtr,
 			    const char *chars, int charsLen,
 			    int start, int end, int startX, int maxX,
 			    int flags, int *nextX);
@@ -546,7 +546,7 @@ static void		CharDisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display,
 			    Drawable dst, int screenY);
-static int		CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
+static Tcl_Size	CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		CharUndisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -562,10 +562,10 @@ static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
  * tag toggle-filled elided region.
  */
 static void		ElideBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
-static int		ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
+static Tcl_Size	ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
@@ -584,7 +584,7 @@ static void		GetYView(Tcl_Interp *interp, TkText *textPtr,
 static int		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
 static DLine *		LayoutDLine(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
-static int		MeasureChars(Tk_Font tkfont, const char *source,
+static Tcl_Size	MeasureChars(Tk_Font tkfont, const char *source,
 			    int maxBytes, int rangeStart, int rangeLength,
 			    int startX, int maxX, int flags, int *nextXPtr);
 static void		MeasureUp(TkText *textPtr,
@@ -7559,7 +7559,7 @@ static void
 ElideBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),		/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),		/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -7584,7 +7584,7 @@ ElideBboxProc(
  * Measure an elided chunk.
  */
 
-static int
+static Tcl_Size
 ElideMeasureProc(
     TCL_UNUSED(TkTextDispChunk *),	/* Chunk containing desired coord. */
     TCL_UNUSED(int))		/* X-coordinate, in same coordinate system as
@@ -7876,7 +7876,7 @@ TkTextCharLayoutProc(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 CharChunkMeasureChars(
     TkTextDispChunk *chunkPtr,	/* Chunk from which to measure. */
     const char *chars,		/* Chars to use, instead of the chunk's own.
@@ -8186,7 +8186,7 @@ CharUndisplayProc(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 CharMeasureProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
     int x)			/* X-coordinate, in same coordinate system as
@@ -8224,7 +8224,7 @@ static void
 CharBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    int byteIndex,		/* Byte offset of desired character within the
+    Tcl_Size byteIndex,		/* Byte offset of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -8246,7 +8246,7 @@ CharBboxProc(
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 	    chunkPtr->x, -1, 0, xPtr);
 
-    if (byteIndex == ciPtr->numBytes) {
+    if (byteIndex == (Tcl_Size)ciPtr->numBytes) {
 	/*
 	 * This situation only happens if the last character in a line is a
 	 * space character, in which case it absorbs all of the extra space in
@@ -8255,7 +8255,7 @@ CharBboxProc(
 
 	*widthPtr = maxX - *xPtr;
     } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
+	    && (byteIndex == (Tcl_Size)ciPtr->numBytes - 1)) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
@@ -8674,7 +8674,7 @@ NextTabStop(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 MeasureChars(
     Tk_Font tkfont,		/* Font in which to draw characters. */
     const char *source,		/* Characters to be displayed. Need not be

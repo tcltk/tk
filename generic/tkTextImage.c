@@ -29,7 +29,7 @@ static TkTextSegment *	EmbImageCleanupProc(TkTextSegment *segPtr,
 static void		EmbImageCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static void		EmbImageBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr,
@@ -717,7 +717,7 @@ static void
 EmbImageBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
