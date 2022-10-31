@@ -90,17 +90,17 @@ static TkSelRetrievalInfo *pendingRetrievals = NULL;
 
 static void		ConvertSelection(TkWindow *winPtr,
 			    XSelectionRequestEvent *eventPtr);
-static void		IncrTimeoutProc(ClientData clientData);
-static void		SelCvtFromX32(long *propPtr, int numValues, Atom type,
+static void		IncrTimeoutProc(void *clientData);
+static void		SelCvtFromX32(long *propPtr, unsigned long numValues, Atom type,
 			    Tk_Window tkwin, Tcl_DString *dsPtr);
-static void		SelCvtFromX8(char *propPtr, int numValues, Atom type,
+static void		SelCvtFromX8(char *propPtr, unsigned long numValues, Atom type,
 			    Tk_Window tkwin, Tcl_DString *dsPtr);
 static long *		SelCvtToX(char *string, Atom type, Tk_Window tkwin,
-			    int *numLongsPtr);
+			    Tcl_Size *numLongsPtr);
 static int		SelectionSize(TkSelHandler *selPtr);
-static void		SelRcvIncrProc(ClientData clientData,
+static void		SelRcvIncrProc(void *clientData,
 			    XEvent *eventPtr);
-static void		SelTimeoutProc(ClientData clientData);
+static void		SelTimeoutProc(void *clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -131,7 +131,7 @@ TkSelGetSelection(
 				 * returned. */
     Tk_GetSelProc *proc,	/* Function to call to process the selection,
 				 * once it has been retrieved. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     TkSelRetrievalInfo retr;
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -244,7 +244,8 @@ TkSelPropProc(
 {
     IncrInfo *incrPtr;
     TkSelHandler *selPtr;
-    int length, numItems;
+    int length;
+    Tcl_Size numItems;
     unsigned long i;
     Atom target, formatType;
     long buffer[TK_SEL_WORDS_AT_ONCE];
@@ -345,7 +346,7 @@ TkSelPropProc(
 
 		    return;
 		}
-		if (numItems < 0) {
+		if (numItems == TCL_INDEX_NONE) {
 		    numItems = 0;
 		}
 		numItems += length;
@@ -478,8 +479,8 @@ TkSelPropProc(
 	     * offset to -1 to indicate we are done.
 	     */
 
-	    if (numItems < TK_SEL_BYTES_AT_ONCE) {
-		if (numItems <= 0) {
+	    if (numItems + 1 < TK_SEL_BYTES_AT_ONCE + 1) {
+		if (numItems + 1 < 2) {
 		    incrPtr->converts[i].offset = -1;
 		    incrPtr->numIncrs--;
 		} else {
@@ -690,10 +691,10 @@ TkSelEventProc(
 	    }
 	    Tcl_DStringInit(&ds);
 	    if (format == 32) {
-		SelCvtFromX32((long *) propInfo, (int) numItems, type,
+		SelCvtFromX32((long *) propInfo, numItems, type,
 			(Tk_Window) winPtr, &ds);
 	    } else {
-		SelCvtFromX8((char *) propInfo, (int) numItems, type,
+		SelCvtFromX8((char *) propInfo, numItems, type,
 			(Tk_Window) winPtr, &ds);
 	    }
 	    interp = retrPtr->interp;
@@ -740,7 +741,7 @@ TkSelEventProc(
 
 static void
 SelTimeoutProc(
-    ClientData clientData)	/* Information about retrieval in progress. */
+    void *clientData)	/* Information about retrieval in progress. */
 {
     TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *)clientData;
 
@@ -899,7 +900,8 @@ ConvertSelection(
 	Atom target, property, type;
 	long buffer[TK_SEL_WORDS_AT_ONCE];
 	TkSelHandler *selPtr;
-	int numItems, format;
+	Tcl_Size numItems;
+	int format;
 	char *propPtr;
 
 	target = incr.multAtoms[2*i];
@@ -924,7 +926,7 @@ ConvertSelection(
 
 	    numItems = TkSelDefaultSelection(infoPtr, target, (char *) buffer,
 		    TK_SEL_BYTES_AT_ONCE, &type);
-	    if (numItems < 0) {
+	    if (numItems == TCL_INDEX_NONE) {
 		incr.multAtoms[2*i + 1] = None;
 		continue;
 	    }
@@ -936,7 +938,7 @@ ConvertSelection(
 	    numItems = selPtr->proc(selPtr->clientData, 0, (char *) buffer,
 		    TK_SEL_BYTES_AT_ONCE);
 	    TkSelSetInProgress(ip.nextPtr);
-	    if ((ip.selPtr == NULL) || (numItems < 0)) {
+	    if ((ip.selPtr == NULL) || (numItems == TCL_INDEX_NONE)) {
 		incr.multAtoms[2*i + 1] = None;
 		continue;
 	    }
@@ -1038,7 +1040,7 @@ ConvertSelection(
 	XChangeProperty(reply.xsel.display, reply.xsel.requestor,
 		reply.xsel.property, winPtr->dispPtr->atomPairAtom,
 		32, PropModeReplace, (unsigned char *) incr.multAtoms,
-		(int) incr.numConversions*2);
+		incr.numConversions*2);
     } else {
 	/*
 	 * Not a MULTIPLE request. The first property in "multAtoms" got set
@@ -1123,7 +1125,7 @@ ConvertSelection(
 
 static void
 SelRcvIncrProc(
-    ClientData clientData,	/* Information about retrieval. */
+    void *clientData,	/* Information about retrieval. */
     XEvent *eventPtr)	/* X PropertyChange event. */
 {
     TkSelRetrievalInfo *retrPtr = (TkSelRetrievalInfo *)clientData;
@@ -1279,10 +1281,10 @@ SelRcvIncrProc(
 	}
 	Tcl_DStringInit(&ds);
 	if (format == 32) {
-	    SelCvtFromX32((long *) propInfo, (int) numItems, type,
+	    SelCvtFromX32((long *) propInfo, numItems, type,
 		    (Tk_Window) retrPtr->winPtr, &ds);
 	} else {
-	    SelCvtFromX8((char *) propInfo, (int) numItems, type,
+	    SelCvtFromX8((char *) propInfo, numItems, type,
 		    (Tk_Window) retrPtr->winPtr, &ds);
 	}
 	interp = retrPtr->interp;
@@ -1370,7 +1372,7 @@ SelectionSize(
 
 static void
 IncrTimeoutProc(
-    ClientData clientData)	/* Information about INCR-mode selection
+    void *clientData)	/* Information about INCR-mode selection
 				 * retrieval for which we are selection
 				 * owner. */
 {
@@ -1416,11 +1418,11 @@ SelCvtToX(
 				 * XA_STRING (if so, don't bother calling this
 				 * function at all). */
     Tk_Window tkwin,		/* Window that governs atom conversion. */
-    int *numLongsPtr)		/* Number of 32-bit words contained in the
+    Tcl_Size *numLongsPtr)		/* Number of 32-bit words contained in the
 				 * result. */
 {
     const char **field;
-    int numFields, i;
+    Tcl_Size numFields, i;
     long *propPtr;
 
     /*
@@ -1488,7 +1490,7 @@ SelCvtToX(
 static void
 SelCvtFromX32(
     long *propPtr,	/* Property value from X. */
-    int numValues,		/* Number of 32-bit values in property. */
+    unsigned long numValues,		/* Number of 32-bit values in property. */
     Atom type,			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function
 				 * at all). */
@@ -1521,7 +1523,7 @@ SelCvtFromX32(
 static void
 SelCvtFromX8(
     char *propPtr,	/* Property value from X. */
-    int numValues,		/* Number of 8-bit values in property. */
+    unsigned long numValues,		/* Number of 8-bit values in property. */
     TCL_UNUSED(Atom),			/* Type of property Should not be XA_STRING
 				 * (if so, don't bother calling this function
 				 * at all). */
