@@ -31,13 +31,13 @@ struct TkBTreeNodePixelInfo;
 struct TkTextMyBTree {
     struct Node *rootPtr;
 				/* Pointer to root of B-tree. */
-    unsigned clients;		/* Number of clients of this B-tree. */
-    unsigned numPixelReferences;
+    size_t clients;		/* Number of clients of this B-tree. */
+    size_t numPixelReferences;
 				/* Number of clients of this B-tree which care about pixel heights. */
     struct TkBTreeNodePixelInfo *pixelInfoBuffer;
     				/* Buffer of size numPixelReferences used for recomputation of pixel
     				 * information. */
-    unsigned stateEpoch;	/* Updated each time any aspect of the B-tree changes. */
+    size_t stateEpoch;	/* Updated each time any aspect of the B-tree changes. */
     TkSharedText *sharedTextPtr;/* Used to find tagTable in consistency checking code, and to access
     				 * list of all B-tree clients. */
 };
@@ -987,7 +987,7 @@ inline
 void
 TkTextIndexSetEpoch(
     TkTextIndex *indexPtr,
-    Tcl_Size epoch)
+    size_t epoch)
 {
     assert(indexPtr->priv.linePtr);
     assert(indexPtr->priv.linePtr->parentPtr); /* expired? */
