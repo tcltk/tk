@@ -11873,7 +11873,7 @@ extern int		TkTextIsNormalMark(const TkTextSegment *segPtr);
 extern int		TkTextIsStableMark(const TkTextSegment *segPtr);
 extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
 extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
-extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, Tcl_Size epoch);
+extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, size_t epoch);
 extern void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 extern void		TkTextIndexSetToLastChar2(TkTextIndex *indexPtr, TkTextLine *linePtr);
 extern void		TkTextIndexInvalidate(TkTextIndex *indexPtr);
