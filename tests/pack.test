@@ -1551,8 +1551,17 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     pack info .pack.a
 } -returnCodes error -result {window ".pack.a" isn't packed}
 
-test pack-18.1 {unmap content when container unmapped} -constraints {
-    tempNotWin failsOnUbuntu failsOnXQuarz
+# Test pack-18.1.* is constrained because on Windows, when the width/height
+# is configured while the window is unmapped, the changes don't take
+# effect until the window is remapped. This is apparently by design of the
+# OS, and Tk accommodates this behavior (see UpdateGeometryInfo() and
+# ConfigureTopLevel() in tkWinWm.c).
+# pack-18.1.1 checks that, on Linux or macOS, width/height changes are taken
+# into account while the window is unmapped.
+# pack-18.1.2 checks that, on Windows, width/height changes are taken into
+# account on window remapping.
+test pack-18.1.1 {unmap content when container unmapped} -constraints {
+    macOrUnix failsOnUbuntu failsOnXQuarz
 } -setup {
     eval destroy [winfo child .pack]
     # adjust the position of .pack before test to avoid a screen switch
@@ -1560,10 +1569,6 @@ test pack-18.1 {unmap content when container unmapped} -constraints {
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
 } -body {
-    # Test constrained by tempNotWin because on Windows, when the width/height
-    # is configured while the window is unmapped, the changes don't take
-    # effect until the window is remapped. Who knows why?
-
     frame .pack.a -width 100 -height 50 -relief raised -bd 2
     pack .pack.a
     update
@@ -1578,6 +1583,28 @@ test pack-18.1 {unmap content when container unmapped} -constraints {
     update
     lappend result [winfo ismapped .pack.a]
 } -result {1 0 200 75 0 1}
+test pack-18.1.2 {unmap content when container unmapped} -constraints {
+    win
+} -setup {
+    eval destroy [winfo child .pack]
+    # adjust the position of .pack before test to avoid a screen switch
+    # that occurs with window managers that have desktops four times as big
+    # as the screen (screen switch causes scale and other tests to fail).
+    wm geometry .pack +100+100
+} -body {
+    frame .pack.a -width 100 -height 50 -relief raised -bd 2
+    pack .pack.a
+    update
+    set result [winfo ismapped .pack.a]
+    wm iconify .pack
+    lappend result [winfo ismapped .pack.a]
+    .pack.a configure -width 200 -height 75
+    update
+    wm deiconify .pack
+    update
+    lappend result [winfo width .pack.a] [winfo height .pack.a]
+    lappend result [winfo ismapped .pack.a]
+} -result {1 0 200 75 1}
 
 test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     eval destroy [winfo child .pack]
