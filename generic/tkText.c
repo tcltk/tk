@@ -2772,9 +2772,9 @@ TextPushUndoAction(
 {
     TkUndoSubAtom *iAtom, *dAtom;
     int canUndo, canRedo;
-    char lMarkName[20] = "tk::undoMarkL";
-    char rMarkName[20] = "tk::undoMarkR";
-    char stringUndoMarkId[16] = "";
+    char lMarkName[16 + TCL_INTEGER_SPACE] = "tk::undoMarkL";
+    char rMarkName[16 + TCL_INTEGER_SPACE] = "tk::undoMarkR";
+    char stringUndoMarkId[TCL_INTEGER_SPACE] = "";
 
     /*
      * Create the helpers.
@@ -2846,7 +2846,7 @@ TextPushUndoAction(
 	    Tcl_NewStringObj("set", 3));
     markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
     textPtr->sharedTextPtr->undoMarkId++;
-    sprintf(stringUndoMarkId, "%d", textPtr->sharedTextPtr->undoMarkId);
+    sprintf(stringUndoMarkId, "%" TKSIZET_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
     strcat(lMarkName, stringUndoMarkId);
     strcat(rMarkName, stringUndoMarkId);
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
