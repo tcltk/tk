@@ -608,13 +608,13 @@ TkTextIndexToSeg(
  *---------------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkTextSegToOffset(
     const TkTextSegment *segPtr,/* Segment whose offset is desired. */
     const TkTextLine *linePtr)	/* Line containing segPtr. */
 {
     const TkTextSegment *segPtr2;
-    int offset = 0;
+    Tcl_Size offset = 0;
 
     for (segPtr2 = linePtr->segPtr; segPtr2 != segPtr;
 	    segPtr2 = segPtr2->nextPtr) {

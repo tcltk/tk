@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     Tcl_Size size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[16];		/* Characters that make up character info.
+	char chars[TCL_UTF_MAX];	/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -582,8 +582,6 @@ typedef struct TkSharedText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
-    int undoMarkId;             /* Counts undo marks temporarily used during
-                                   undo and redo operations. */
     int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
 				 * unsaved modifications have been applied to
@@ -598,6 +596,9 @@ typedef struct TkSharedText {
      */
 
     struct TkText *peers;
+
+    Tcl_Size undoMarkId;             /* Counts undo marks temporarily used during
+                                   undo and redo operations. */
 } TkSharedText;
 
 /*
@@ -1145,7 +1146,7 @@ MODULE_SCOPE int	TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextSeeCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-MODULE_SCOPE int	TkTextSegToOffset(const TkTextSegment *segPtr,
+MODULE_SCOPE Tcl_Size TkTextSegToOffset(const TkTextSegment *segPtr,
 			    const TkTextLine *linePtr);
 MODULE_SCOPE void	TkTextSetYView(TkText *textPtr,
 			    TkTextIndex *indexPtr, int pickPlace);
