@@ -147,7 +147,7 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
 
 typedef const char *Tk_Uid;
 
-#ifndef Tcl_Size
+#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION == 6)
 #   define Tcl_Size int
 #endif
 
