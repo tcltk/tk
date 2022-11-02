@@ -19,7 +19,7 @@ testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowi
 # Starting with macOS Ventura it became necessary to wait for windows to be restacked
 # or to be raised after creation.
 
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     proc restackDelay {} {
 	after 100;
     }
@@ -829,7 +829,7 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
 	    WM_HINTS] 0]]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set result_22_3 {0 {}}
 } else {
     set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
@@ -1240,7 +1240,7 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set result_35_1 {1 {bad argument "1": must be iconic, normal, withdrawn, or zoomed}}
 } else {
     set result_35_1 {1 {bad argument "1": must be iconic, normal, or withdrawn}}
@@ -1802,7 +1802,7 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 
 deleteWindows
 wm withdraw .
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     # Modern mac windows have no border.
     set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t}
 } else {
@@ -2122,7 +2122,7 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     lappend result [winfo containing $x $y]
 } {.t2 .t .t2}
 # The mac won't put an overrideredirect window above the root,
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     wm withdraw .
 }
 test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} unix {
@@ -2151,7 +2151,7 @@ test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} 
     restackDelay
     lappend result [winfo containing $x $y]
 } {.t2 .t3}
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     wm deiconify .
 }
 test unixWm-51.10 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
@@ -2529,7 +2529,7 @@ test unixWm-59.3 {exit processing} unix {
 # NOTE: since [wm attributes] is not guaranteed to have any effect,
 # the only thing we can really test here is the syntax.
 #
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set result_60_1 {-alpha 1.0 -fullscreen 0 -modified 0 -notify 0\
 			 -titlepath {} -topmost 0 -transparent 0\
 			 -type unsupported}

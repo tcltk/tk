@@ -715,7 +715,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     wm geom . 103x$height
@@ -729,7 +729,7 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
         {} \
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
@@ -740,7 +740,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     frame .f2 -width 20 -height 100
@@ -769,7 +769,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     .t delete 1.0 end
@@ -3749,7 +3749,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     .t configure -wrap char
@@ -3763,7 +3763,7 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
         [list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
