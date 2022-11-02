@@ -648,10 +648,10 @@ TkTextMarkCmd(
 	/* IMPORTANT NOTE: ensure fixed length (depending on pointer size) */
 	snprintf(uniqName, sizeof(uniqName),
 #ifdef TK_IS_64_BIT_ARCH
-	    "##ID##0x%016" PRIx64 "##0x%016" PRIx64 "##%08u##", /* we're on a real 64-bit system */
+	    "##ID##0x%016" PRIx64 "##0x%016" PRIx64 "##%08" TCL_Z_MODIFIER "u##", /* we're on a real 64-bit system */
 	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #else /* if defined(TK_IS_32_BIT_ARCH) */
-	    "##ID##0x%08" PRIx32 "##0x%08" PRIx32 "##%08u##",   /* we're most likely on a 32-bit system */
+	    "##ID##0x%08" PRIx32 "##0x%08" PRIx32 "##%08" TCL_Z_MODIFIER "u##",   /* we're most likely on a 32-bit system */
 	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #endif /* TK_IS_64_BIT_ARCH */
 	);

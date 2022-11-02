@@ -661,7 +661,7 @@ SetImageName(
     Tcl_DStringInit(&newName);
     while (Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name)) {
 	char buf[4 + TCL_INTEGER_SPACE];
-	snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
+	snprintf(buf, sizeof(buf), "#%" TCL_Z_MODIFIER "u", ++textPtr->sharedTextPtr->imageCount);
 	Tcl_DStringSetLength(&newName, 0);
 	Tcl_DStringAppend(&newName, name, -1);
 	Tcl_DStringAppend(&newName, buf, -1);

@@ -499,7 +499,7 @@ typedef struct TkTextSection {
 typedef struct TkTextIndex {
     TkTextBTree tree;		/* Tree containing desired position. */
     struct TkText *textPtr;	/* The associated text widget (required). */
-    size_t stateEpoch;	/* The epoch of the segment pointer. */
+    Tcl_Size stateEpoch;	/* The epoch of the segment pointer. */
 
     /*
      * The following attribtes should not be accessed directly, use the TkTextIndex*
