@@ -3475,7 +3475,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
 # On macOS, however, there is no way to make the window overlap the menubar.
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set minY [expr [menubarheight] + 1]
 } else {
     set minY 0
