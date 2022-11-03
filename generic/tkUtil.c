@@ -46,7 +46,7 @@ const Tcl_ObjType tkStateKeyObjType = {
 
 int
 TkStateParseProc(
-    ClientData clientData,	/* some flags.*/
+    void *clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
@@ -257,7 +257,7 @@ TkOrientPrintProc(
 
 int
 TkOffsetParseProc(
-    ClientData clientData,	/* not used */
+    void *clientData,	/* not used */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
@@ -473,7 +473,7 @@ TkOffsetPrintProc(
 
 int
 TkPixelParseProc(
-    ClientData clientData,	/* If non-NULL, negative values are allowed as
+    void *clientData,	/* If non-NULL, negative values are allowed as
 				 * well. */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
@@ -1100,7 +1100,7 @@ TkMakeEnsemble(
     Tcl_Interp *interp,
     const char *namesp,
     const char *name,
-    ClientData clientData,
+    void *clientData,
     const TkEnsemble map[])
 {
     Tcl_Namespace *namespacePtr = NULL;
@@ -1151,8 +1151,13 @@ TkMakeEnsemble(
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
+#if TCL_MAJOR_VERSION > 8
+	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
+		    map[i].proc, clientData, NULL);
+#else
 	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
+#endif
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		    map[i].name, clientData, map[i].subensemble);

@@ -32,11 +32,11 @@ static const Tk_OptionSpec busyOptionSpecs[] = {
  * Forward declarations of functions defined in this file.
  */
 
-static void		BusyEventProc(ClientData clientData,
+static void		BusyEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		BusyGeometryProc(ClientData clientData,
+static void		BusyGeometryProc(void *clientData,
 			    Tk_Window tkwin);
-static void		BusyCustodyProc(ClientData clientData,
+static void		BusyCustodyProc(void *clientData,
 			    Tk_Window tkwin);
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -53,10 +53,10 @@ static int		HoldBusy(Tcl_HashTable *busyTablePtr,
 static void		MakeTransparentWindowExist(Tk_Window tkwin,
 			    Window parent);
 static inline Tk_Window	NextChild(Tk_Window tkwin);
-static void		RefWinEventProc(ClientData clientData,
+static void		RefWinEventProc(void *clientData,
 			    XEvent *eventPtr);
 static inline void	SetWindowInstanceData(Tk_Window tkwin,
-			    ClientData instanceData);
+			    void *instanceData);
 
 /*
  * The "busy" geometry manager definition.
@@ -96,7 +96,7 @@ NextChild(
 static inline void
 SetWindowInstanceData(
     Tk_Window tkwin,
-    ClientData instanceData)
+    void *instanceData)
 {
     struct TkWindow *winPtr = (struct TkWindow *) tkwin;
 
@@ -124,7 +124,7 @@ SetWindowInstanceData(
 
 static void
 BusyCustodyProc(
-    ClientData clientData,	/* Information about the busy window. */
+    void *clientData,	/* Information about the busy window. */
     TCL_UNUSED(Tk_Window))		/* Not used. */
 {
     Busy *busyPtr = (Busy *)clientData;
@@ -246,7 +246,7 @@ DoConfigureNotify(
 
 static void
 RefWinEventProc(
-    ClientData clientData,	/* Busy window record */
+    void *clientData,	/* Busy window record */
     XEvent *eventPtr)	/* Event which triggered call to routine */
 {
     Busy *busyPtr = (Busy *)clientData;
@@ -372,7 +372,7 @@ DestroyBusy(
 
 static void
 BusyEventProc(
-    ClientData clientData,	/* Busy window record */
+    void *clientData,	/* Busy window record */
     XEvent *eventPtr)		/* Event which triggered call to routine */
 {
     Busy *busyPtr = (Busy *)clientData;
@@ -785,9 +785,9 @@ HoldBusy(
 
 int
 Tk_BusyObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;

@@ -427,7 +427,7 @@ static NSInteger showOpenSavePanel(
 
 int
 Tk_ChooseColorObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -683,7 +683,7 @@ filterCompatible(
 
 int
 Tk_GetOpenFileObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -954,7 +954,7 @@ Tk_GetOpenFileObjCmd(
 
 int
 Tk_GetSaveFileObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1196,7 +1196,7 @@ Tk_GetSaveFileObjCmd(
 
 int
 Tk_ChooseDirectoryObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1376,7 +1376,7 @@ TkMacOSXStandardAboutPanelObjCmd(
 
 int
 Tk_MessageBoxObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1581,18 +1581,18 @@ enum FontchooserEvent {
 static void		FontchooserEvent(int kind);
 static Tcl_Obj *	FontchooserCget(FontchooserData *fcdPtr,
 			    int optionIndex);
-static int		FontchooserConfigureCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+static int		FontchooserConfigureCmd(void *clientData,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static int		FontchooserShowCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+static int		FontchooserShowCmd(void *clientData,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static int		FontchooserHideCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+static int		FontchooserHideCmd(void *clientData,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static void		FontchooserParentEventHandler(ClientData clientData,
+static void		FontchooserParentEventHandler(void *clientData,
 			    XEvent *eventPtr);
-static void		DeleteFontchooserData(ClientData clientData,
+static void		DeleteFontchooserData(void *clientData,
 			    Tcl_Interp *interp);
 
 MODULE_SCOPE const TkEnsemble tkFontchooserEnsemble[];
@@ -1810,9 +1810,9 @@ FontchooserCget(
 
 static int
 FontchooserConfigureCmd(
-    ClientData clientData,	/* Main window */
+    void *clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1975,9 +1975,9 @@ FontchooserConfigureCmd(
 
 static int
 FontchooserShowCmd(
-    ClientData clientData,	/* Main window */
+    void *clientData,	/* Main window */
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     FontchooserData *fcdPtr = (FontchooserData *)Tcl_GetAssocData(interp, "::tk::fontchooser",
@@ -2025,7 +2025,7 @@ static int
 FontchooserHideCmd(
     TCL_UNUSED(void *),	/* Main window */
     TCL_UNUSED(Tcl_Interp *),
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     NSFontPanel *fp = [[NSFontManager sharedFontManager] fontPanel:NO];
@@ -2055,7 +2055,7 @@ FontchooserHideCmd(
 
 static void
 FontchooserParentEventHandler(
-    ClientData clientData,
+    void *clientData,
     XEvent *eventPtr)
 {
     FontchooserData *fcdPtr = (FontchooserData *)clientData;
@@ -2087,7 +2087,7 @@ FontchooserParentEventHandler(
 
 static void
 DeleteFontchooserData(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp)
 {
     FontchooserData *fcdPtr = (FontchooserData *)clientData;
