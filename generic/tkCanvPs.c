@@ -1196,11 +1196,13 @@ GetPostscriptPoints(
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 static void
 TkImageGetColor(
-    TCL_UNUSED(TkColormapData *),
+    TkColormapData *cdata,
     unsigned long pixel,	/* Pixel value to look up */
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
+    (void)cdata;
+
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
     *blue  = (double) GetBValue(pixel) / 255.0;
