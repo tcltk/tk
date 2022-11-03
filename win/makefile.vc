@@ -756,7 +756,7 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {![package vsatisfies [package provide Tcl] 8.6-]} return
+if {![package vsatisfies [package provide Tcl] 8.7-]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
     if {[package vsatisfies [package provide Tcl] 9.0]} {
