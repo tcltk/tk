@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
+AC_INIT([tk],[9.1])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.69])
 
@@ -12,10 +12,10 @@ AC_PREREQ([2.69])
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=8.7
-TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a6"
+TK_VERSION=9.1
+TK_MAJOR_VERSION=9
+TK_MINOR_VERSION=1
+TK_PATCH_LEVEL="a0"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
