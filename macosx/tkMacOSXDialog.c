@@ -1818,7 +1818,8 @@ FontchooserConfigureCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     FontchooserData *fcdPtr = (FontchooserData *)Tcl_GetAssocData(interp, "::tk::fontchooser",
 	    NULL);
-    int i, r = TCL_OK;
+    Tcl_Size i;
+    int r = TCL_OK;
 
     /*
      * With no arguments we return all the options in a dict
