@@ -127,7 +127,11 @@ Tk_ConfigureWidget(
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetString((Tcl_Obj *) *argv);
 	} else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	    arg = *argv;
+#endif
 	}
 	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
@@ -147,7 +151,11 @@ Tk_ConfigureWidget(
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetString((Tcl_Obj *) argv[1]);
 	} else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	    arg = argv[1];
+#endif
 	}
 	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
