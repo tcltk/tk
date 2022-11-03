@@ -442,10 +442,9 @@ ConfigureMessage(
 				 * already have values for some fields. */
     int objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
-    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
+    TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    (void)flags;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
