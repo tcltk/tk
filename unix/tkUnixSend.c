@@ -593,7 +593,8 @@ ValidateName(
 				 * like an old-style (pre-4.0) one; 0 means
 				 * consider these invalid. */
 {
-    int result, actualFormat, argc, i;
+    int result, actualFormat;
+    Tcl_Size argc, i;
     unsigned long length, bytesAfter;
     Atom actualType;
     char *property, **propertyPtr = &property;

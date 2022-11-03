@@ -232,7 +232,8 @@ AddClause(
 				 * two platforms */
 {
     Tcl_Obj **globList = NULL, **ostypeList = NULL;
-    int globCount, ostypeCount, i, code = TCL_OK;
+    Tcl_Size globCount, ostypeCount, i;
+    int code = TCL_OK;
     FileFilterClause *clausePtr;
     Tcl_Encoding macRoman = NULL;
 
