@@ -136,7 +136,7 @@ proc DoCtrlFrame {w} {
     ttk::labelframe $w.message -text "Message"
     ttk::entry $w.message.e -textvariable S(message) -justify center
     ttk::labelframe $w.speed -text "Speed: 0"
-    ttk::scale $w.speed.scale -orient h -from 1 -to 10 -variable S(speed)
+    ttk::scale $w.speed.scale -orient horizontal -from 1 -to 10 -variable S(speed)
     ttk::button $w.about -text About -command [list About $w]
 
     grid $w.start -in $w.ctrl -row 0 -sticky ew
