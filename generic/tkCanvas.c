@@ -340,6 +340,9 @@ ItemConfigure(
 	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc, objv, TK_CONFIG_ARGV_ONLY);
     } else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	const char **args = TkGetStringsFromObjs(objc, objv);
 
 	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
@@ -347,6 +350,7 @@ ItemConfigure(
 	if (args != NULL) {
 	    ckfree(args);
 	}
+#endif
     }
     return result;
 }
@@ -389,6 +393,9 @@ ItemCoords(
 	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc, objv);
     } else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	const char **args = TkGetStringsFromObjs(objc, objv);
 
 	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
@@ -396,6 +403,7 @@ ItemCoords(
 	if (args != NULL) {
 	    ckfree(args);
 	}
+#endif
     }
     return result;
 }
@@ -415,6 +423,9 @@ ItemCreate(
 	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc-3, objv+3);
     } else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	const char **args = TkGetStringsFromObjs(objc-3, objv+3);
 
 	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
@@ -422,6 +433,7 @@ ItemCreate(
 	if (args != NULL) {
 	    ckfree(args);
 	}
+#endif
     }
     return result;
 }
@@ -481,8 +493,12 @@ ItemIndex(
 	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objPtr, indexPtr);
     } else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, (Tcl_Obj *) Tcl_GetString(objPtr), indexPtr);
+#endif
     }
 }
 
@@ -497,8 +513,12 @@ ItemInsert(
 	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
 		beforeThis, toInsert);
     } else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
 		beforeThis, (Tcl_Obj *) Tcl_GetString(toInsert));
+#endif
     }
 }
 
