@@ -171,7 +171,7 @@ Tk_ItemType tkRectangleType = {
     RectOvalCoords,		/* coordProc */
     DeleteRectOval,		/* deleteProc */
     DisplayRectOval,		/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     RectToPoint,		/* pointProc */
     RectToArea,			/* areaProc */
     RectOvalToPostscript,	/* postscriptProc */
@@ -196,7 +196,7 @@ Tk_ItemType tkOvalType = {
     RectOvalCoords,		/* coordProc */
     DeleteRectOval,		/* deleteProc */
     DisplayRectOval,		/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     OvalToPoint,		/* pointProc */
     OvalToArea,			/* areaProc */
     RectOvalToPostscript,	/* postscriptProc */
@@ -416,7 +416,7 @@ ConfigureRectOval(
     tkwin = Tk_CanvasTkwin(canvas);
 
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **)objv, (char *) rectOvalPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, rectOvalPtr, flags)) {
 	return TCL_ERROR;
     }
     state = itemPtr->state;
