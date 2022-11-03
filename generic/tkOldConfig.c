@@ -352,6 +352,9 @@ DoConfig(
     }
 
     do {
+	if (specPtr->offset == TCL_INDEX_NONE) {
+	    continue;
+	}
 	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
@@ -651,7 +654,7 @@ Tk_ConfigureInfo(
 		|| (specPtr->specFlags & hateFlags)) {
 	    continue;
 	}
-	if (specPtr->argvName == NULL) {
+	if ((specPtr->argvName == NULL) || (specPtr->offset == TCL_INDEX_NONE)) {
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
@@ -766,6 +769,9 @@ FormatConfigValue(
     const char *result;
 
     *freeProcPtr = NULL;
+    if (specPtr->offset == TCL_INDEX_NONE) {
+	return NULL;
+    }
     ptr = (char *)widgRec + specPtr->offset;
     result = "";
     switch (specPtr->type) {
@@ -988,6 +994,9 @@ Tk_FreeOptions(
 	    continue;
 	}
 	ptr = widgRec + specPtr->offset;
+	if (specPtr->offset == TCL_INDEX_NONE) {
+	    continue;
+	}
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **) ptr) != NULL) {
