@@ -1201,6 +1201,8 @@ TkImageGetColor(
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
+    (void)cdata;
+
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
     *blue  = (double) GetBValue(pixel) / 255.0;
