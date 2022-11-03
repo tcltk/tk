@@ -1771,12 +1771,7 @@ CanvasWidgetCmd(
 	break;
     }
     case CANV_POSTSCRIPT: {
-	const char **args = TkGetStringsFromObjs(objc, objv);
-
-	result = TkCanvPostscriptCmd(canvasPtr, interp, objc, args);
-	if (args != NULL) {
-	    ckfree(args);
-	}
+	result = TkCanvPostscriptObjCmd(canvasPtr, interp, objc, objv);
 	break;
     }
     case CANV_RAISE: {

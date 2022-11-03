@@ -142,7 +142,7 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
 /*
  *--------------------------------------------------------------
  *
- * TkCanvPostscriptCmd --
+ * TkCanvPostscriptObjCmd --
  *
  *	This function is invoked to process the "postscript" options of the
  *	widget command for canvas widgets. See the user documentation for
@@ -158,12 +158,12 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  */
 
 int
-TkCanvPostscriptCmd(
+TkCanvPostscriptObjCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. Caller has already parsed
-				 * this command enough to know that argv[1] is
+    Tcl_Size objc,			/* Number of arguments. */
+	Tcl_Obj *const objv[])		/* Argument strings. Caller has already parsed
+				 * this command enough to know that objv[1] is
 				 * "postscript". */
 {
     TkPostscriptInfo psInfo, *psInfoPtr = &psInfo;
@@ -236,8 +236,8 @@ TkCanvPostscriptCmd(
     psInfo.prolog = 1;
     psInfo.tkwin = tkwin;
     Tcl_InitHashTable(&psInfo.fontTable, TCL_STRING_KEYS);
-    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, argc-2, argv+2,
-	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY);
+    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, (const char **)objv+2,
+	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY|TK_CONFIG_OBJS);
     if (result != TCL_OK) {
 	goto cleanup;
     }
@@ -1196,13 +1196,11 @@ GetPostscriptPoints(
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 static void
 TkImageGetColor(
-    TkColormapData *cdata,	/* Colormap data */
+    TCL_UNUSED(TkColormapData *),
     unsigned long pixel,	/* Pixel value to look up */
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
-    (void)cdata;
-
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
     *blue  = (double) GetBValue(pixel) / 255.0;
@@ -1258,7 +1256,7 @@ TkPostscriptImage(
     Tk_Window tkwin,
     Tk_PostscriptInfo psInfo,	/* postscript info */
     XImage *ximage,		/* Image to draw */
-    int x, int y,		/* First pixel to output */
+    int x, TCL_UNUSED(int),		/* First pixel to output */
     int width, int height)	/* Width and height of area */
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
@@ -1271,7 +1269,6 @@ TkPostscriptImage(
     Visual *visual;
     TkColormapData cdata;
     Tcl_Obj *psObj;
-    (void)y;
 
     if (psInfoPtr->prepass) {
 	return TCL_OK;
