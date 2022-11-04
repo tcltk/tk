@@ -120,7 +120,7 @@ Tk_ItemType tkWindowType = {
     WinItemCoords,		/* coordProc */
     DeleteWinItem,		/* deleteProc */
     DisplayWinItem,		/* displayProc */
-    1,				/* flags */
+    TK_ALWAYS_REDRAW,		/* flags */
     WinItemToPoint,		/* pointProc */
     WinItemToArea,		/* areaProc */
     WinItemToPostscript,	/* postscriptProc */
