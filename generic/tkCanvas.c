@@ -323,7 +323,7 @@ static inline int
 AlwaysRedraw(
     Tk_Item *itemPtr)
 {
-    return itemPtr->typePtr->alwaysRedraw & 1;
+    return itemPtr->typePtr->flags & TK_ALWAYS_REDRAW;
 }
 
 static inline int
@@ -1164,7 +1164,7 @@ CanvasWidgetCmd(
 	     */
 
 	    if (itemPtr == NULL ||
-		    !(itemPtr->typePtr->alwaysRedraw & TK_MOVABLE_POINTS)) {
+		    !(itemPtr->typePtr->flags & TK_MOVABLE_POINTS)) {
 		continue;
 	    }
 
