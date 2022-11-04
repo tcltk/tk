@@ -1053,7 +1053,11 @@ typedef struct {
 
 typedef struct TkEnsemble {
     const char *name;
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *proc;
+#else
     Tcl_ObjCmdProc *proc;
+#endif
     const struct TkEnsemble *subensemble;
 } TkEnsemble;
 
@@ -1260,7 +1264,7 @@ MODULE_SCOPE int	Tk_BindtagsObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_BusyObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_ButtonObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,

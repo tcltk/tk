@@ -119,12 +119,11 @@ void
 TkGetServerInfo(
     Tcl_Interp *interp,		/* The server information is returned in this
 				 * interpreter's result. */
-    Tk_Window tkwin)		/* Token for window; this selects a particular
+    TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
     static char buffer[32]; /* Empty string means not initialized yet. */
     OSVERSIONINFOW os;
-    (void)tkwin;
 
     if (!buffer[0]) {
 	GetVersionExW(&os);
@@ -282,7 +281,7 @@ TkWinXInit(
 
 void
 TkWinXCleanup(
-    ClientData clientData)
+    void *clientData)
 {
     HINSTANCE hInstance = (HINSTANCE)clientData;
 
@@ -390,11 +389,9 @@ TkWinGetPlatformTheme(void)
 
 const char *
 TkGetDefaultScreenName(
-    Tcl_Interp *dummy,		/* Not used. */
+    TCL_UNUSED(Tcl_Interp *),
     const char *screenName)	/* If NULL, use default string. */
 {
-    (void)dummy;
-
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = winScreenName;
     }
@@ -707,12 +704,9 @@ TkClipCleanup(
 
 int
 XBell(
-    Display *display,
-    int percent)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)percent;
-
     MessageBeep(MB_OK);
     return Success;
 }
@@ -1957,10 +1951,9 @@ Tk_SetCaretPos(
 
 long
 Tk_GetUserInactiveTime(
-     Display *dpy)		/* Ignored on Windows */
+     TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
-    (void)dpy;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1993,10 +1986,9 @@ Tk_GetUserInactiveTime(
 
 void
 Tk_ResetUserInactiveTime(
-    Display *dpy)
+    TCL_UNUSED(Display *))
 {
     INPUT inp;
-    (void)dpy;
 
     inp.type = INPUT_MOUSE;
     inp.mi.dx = 0;

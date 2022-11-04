@@ -2525,7 +2525,7 @@ static int GdiMakeLogFont(
     HDC hDC)
 {
     const char **list;
-    int count;
+    Tcl_Size count;
 
     /* Set up defaults for logical font. */
     memset(lf, 0, sizeof(*lf));

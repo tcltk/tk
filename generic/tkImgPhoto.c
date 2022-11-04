@@ -166,12 +166,18 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static const Tk_ConfigSpec configSpecs[] = {
+    {TK_CONFIG_STRING, "-data", NULL, NULL,
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	 NULL, offsetof(PhotoModel, fileString), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_STRING, "-format", NULL, NULL,
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
 	 DEF_PHOTO_GAMMA, offsetof(PhotoModel, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
 	 DEF_PHOTO_HEIGHT, offsetof(PhotoModel, userHeight), 0, NULL},
+    {TK_CONFIG_STRING, "-metadata", NULL, NULL,
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
 	 DEF_PHOTO_PALETTE, offsetof(PhotoModel, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
@@ -1974,45 +1980,40 @@ ImgPhotoConfigureModel(
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
-    const char **args;
 
-    args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
-	args[j] = Tcl_GetStringFromObj(objv[i], &length);
-	if ((length > 1) && (args[j][0] == '-')) {
-	    if ((args[j][1] == 'd') &&
-		    !strncmp(args[j], "-data", length)) {
+	const char *arg = Tcl_GetStringFromObj(objv[i], &length);
+	if ((length > 1) && (arg[0] == '-')) {
+	    if ((arg[1] == 'd') &&
+		    !strncmp(arg, "-data", length)) {
 		if (++i < objc) {
 		    data = objv[i];
 		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-data\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-	    } else if ((args[j][1] == 'f') &&
-		    !strncmp(args[j], "-format", length)) {
+	    } else if ((arg[1] == 'f') &&
+		    !strncmp(arg, "-format", length)) {
 		if (++i < objc) {
 		    format = objv[i];
 		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-format\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-	    } else if ((args[j][1] == 'm') &&
-		!strncmp(args[j], "-metadata", length)) {
+	    } else if ((arg[1] == 'm') &&
+		!strncmp(arg, "-metadata", length)) {
 		if (++i < objc) {
 		    metadataInObj = objv[i];
 		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"value for \"-metadata\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -2051,11 +2052,9 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    j, args, (char *) modelPtr, flags) != TCL_OK) {
-	ckfree(args);
+	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	goto errorExit;
     }
-    ckfree(args);
 
     /*
      * Regard the empty string for -file, -data, -format or -metadata as the null value.
