@@ -79,8 +79,8 @@ static int		GdiFreePen(Tcl_Interp *interp, HDC hDC, HGDIOBJ oldPen);
 static int		GdiMakeBrush(Tcl_Interp *interp, unsigned int style,
 			    unsigned long color, long hatch, LOGBRUSH *lb,
 			    HDC hDC, HGDIOBJ *oldBrush);
-static int		GdiFreeBrush(Tcl_Interp *interp, HDC hDC,
-			    HGDIOBJ oldBcrush);
+static void		GdiFreeBrush(Tcl_Interp *interp, HDC hDC,
+			    HGDIOBJ oldBrush);
 static int		GdiGetHdcInfo(HDC hdc,
 			    LPPOINT worigin, LPSIZE wextent,
 			    LPPOINT vorigin, LPSIZE vextent);
@@ -187,7 +187,7 @@ static int GdiArc(
     HPEN hPen;
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
     HGDIOBJ oldobj;
     int dodash = 0;
@@ -297,7 +297,7 @@ static int GdiArc(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -671,7 +671,7 @@ static int GdiLine(
     HPEN hPen;
 
     LOGBRUSH lbrush;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
 
     int width          = 0;
     COLORREF linecolor = 0;
@@ -923,7 +923,7 @@ static int GdiLine(
     if (width || dolinecolor || dodash) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (doarrow) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     }
 
@@ -959,7 +959,7 @@ static int GdiOval(
     int width = 0;
     COLORREF linecolor = 0, fillcolor = 0;
     int dolinecolor = 0, dofillcolor = 0;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
     HGDIOBJ oldobj;
 
@@ -1037,7 +1037,7 @@ static int GdiOval(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -1082,7 +1082,7 @@ static int GdiPolygon(
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
     HGDIOBJ oldobj;
 
     int dodash = 0;
@@ -1206,7 +1206,7 @@ static int GdiPolygon(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -1247,7 +1247,7 @@ static int GdiRectangle(
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
     HGDIOBJ oldobj;
 
     int dodash = 0;
@@ -1331,7 +1331,7 @@ static int GdiRectangle(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -2849,7 +2849,7 @@ static int GdiMakeBrush(
  *
  *----------------------------------------------------------------------
  */
-static int GdiFreeBrush(
+static void GdiFreeBrush(
     TCL_UNUSED(Tcl_Interp *),
     HDC hDC,
     HGDIOBJ oldBrush)
@@ -2858,7 +2858,6 @@ static int GdiFreeBrush(
 
     goneBrush = SelectObject(hDC, oldBrush);
     DeleteObject(goneBrush);
-    return 1;
 }
 
 /*
