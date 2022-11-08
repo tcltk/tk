@@ -2678,11 +2678,11 @@ printf "%s\n" "$as_me: WARNING: --with-tcl argument should refer to directory co
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/pkg/lib 2>/dev/null` \
-			`ls -d /usr/lib/tcl9.0 2>/dev/null` \
+			`ls -d /usr/lib/tcl9.1 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl9.0 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl/tcl9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl9.1 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tcl9.1 2>/dev/null` \
 			; do
 		    if test -f "$i/tclConfig.sh" ; then
 			ac_cv_c_tclconfig="`(cd $i; pwd)`"
@@ -2780,10 +2780,6 @@ printf "%s\n" "could not find ${TCL_BIN_DIR}/tclConfig.sh" >&6; }
 
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-    as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.7+
-Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
-fi
 if test "${TCL_MINOR_VERSION}" -lt 7 ; then
     as_fn_error $? "${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.7+
 Found config for Tcl ${TCL_VERSION}" "$LINENO" 5
