@@ -68,12 +68,14 @@ extern "C" {
 #ifndef TK_MAJOR_VERSION
 #   define TK_MAJOR_VERSION 9
 #endif
-#define TK_MINOR_VERSION	1
-#define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	0
+#if TK_MAJOR_VERSION == 9
+#   define TK_MINOR_VERSION	1
+#   define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
+#   define TK_RELEASE_SERIAL	0
 
-#define TK_VERSION		"9.1"
-#define TK_PATCH_LEVEL		"9.1a0"
+#   define TK_VERSION		"9.1"
+#   define TK_PATCH_LEVEL		"9.1a0"
+#endif /* TK_MAJOR_VERSION */
 
 /*
  * A special definition used to allow this header file to be included from
@@ -143,10 +145,6 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
  */
 
 typedef const char *Tk_Uid;
-
-#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION == 6)
-#   define Tcl_Size int
-#endif
 
 /*
  *----------------------------------------------------------------------
