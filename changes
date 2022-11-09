@@ -7905,7 +7905,9 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 - Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details
 
 
+2022-02-25 (bug) [f75190] tk_fontchooser: multiple font families, locale change,
+	button activation (holger,fogel)
 
 
 
-- Released 8.6.13, Oct 28, 2021 - https://core.tcl-lang.org/tk/ for details
+- Released 8.6.13, Nov 15, 2022 - https://core.tcl-lang.org/tk/ for details
