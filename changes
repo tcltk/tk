@@ -7903,3 +7903,6 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2021-10-30 (bug)[6ea0b3] Mac: grab from menu makes dead window (culler)
 
 - Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details
+
+2022-02-25 (bug) [f75190] tk_fontchooser: multiple font families, locale change,
+	button activation (holger,fogel)
