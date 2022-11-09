@@ -13,6 +13,7 @@ tcltest::loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 # For xscrollcommand
 set scrollInfo {}
@@ -1083,7 +1084,7 @@ test spinbox-3.6 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraint
     destroy .e
 } -result {{19 5 7 13} {19 5 7 13}}
 test spinbox-3.7 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+	fonts failsOnXQuarz
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1096,7 +1097,7 @@ test spinbox-3.7 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraint
     destroy .e
 } -result {19 5 12 13}
 test spinbox-3.8 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+	fonts failsOnXQuarz
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1119,7 +1120,7 @@ test spinbox-3.9 {SpinboxWidgetCmd procedure, "bbox" widget command} -setup {
     destroy .e
 } -result "5 5 0 $cy"
 test spinbox-3.10 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts
+	fonts failsOnXQuarz
 } -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
