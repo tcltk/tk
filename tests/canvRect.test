@@ -167,7 +167,7 @@ test canvRect-4.4 {ConfigureRectOval procedure} -body {
 
 # I can't come up with any good tests for DeleteRectOval.
 
-test canvRect-5.1 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
+test canvRect-5.1 {ComputeRectOvalBbox procedure} -body {
     # Non-portable due to rounding differences:
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 20 15 10 5
@@ -175,7 +175,7 @@ test canvRect-5.1 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -cleanup {
     .c delete withtag all
 } -result {10 5 20 15}
-test canvRect-5.2 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
+test canvRect-5.2 {ComputeRectOvalBbox procedure} -body {
     # Non-portable due to rounding differences:
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
@@ -184,7 +184,7 @@ test canvRect-5.2 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -cleanup {
     .c delete withtag all
 } -result {9 9 31 21}
-test canvRect-5.3 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
+test canvRect-5.3 {ComputeRectOvalBbox procedure} -body {
     # Non-portable due to rounding differences:
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
@@ -193,7 +193,7 @@ test canvRect-5.3 {ComputeRectOvalBbox procedure} -constraints nonPortable -body
 } -cleanup {
     .c delete withtag all
 } -result {9 9 31 21}
-test canvRect-5.4 {ComputeRectOvalBbox procedure} -constraints nonPortable -body {
+test canvRect-5.4 {ComputeRectOvalBbox procedure} -body {
     # Non-portable due to rounding differences:
     .c create rectangle 10 20 30 40 -tags x -width 1 -outline {}
     .c coords x 10 20 30 10
