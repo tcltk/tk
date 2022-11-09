@@ -112,6 +112,7 @@ jobs:
           - "gcc"
         cfgopt:
           - ""
+          - "--disable-xft"
           - "--enable-symbols"
     steps:
       - name: Checkout
