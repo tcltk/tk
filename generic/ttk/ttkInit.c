@@ -107,7 +107,7 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
 
 /* TtkSendVirtualEvent --
  * 	Send a virtual event notification to the specified target window.
- * 	Equivalent to "event generate $tgtWindow <<$eventName>>"
+ * 	Equivalent to "event generate $tgtWindow <<$eventName>> -when tail"
  *
  * 	Note that we use Tk_QueueWindowEvent, not Tk_HandleEvent,
  * 	so this routine does not reenter the interpreter.

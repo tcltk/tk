@@ -86,7 +86,9 @@
 # endif
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 2)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#   define TKFLEXARRAY
+#elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
@@ -1251,7 +1253,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
 MODULE_SCOPE int	TkDeadAppObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const argv[]);
+			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);

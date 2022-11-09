@@ -6,7 +6,7 @@
  *	the "wm" command and passes geometry information to the window manager.
  *
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
  * Copyright (c) 2017-2019 Marc Culler.
@@ -745,74 +745,6 @@ TkWmNewWindow(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXHandleMapOrUnmap --
- *
- *      The mechanism used by a geometry manager to propogate the information
- *      about which of its content widgets are mapped is to call Tk_MapWindow
- *      or Tk_UnmapNotify.  Those functions generate MapNotify or UnmapNotify
- *      events and then handle them immediately.  Other platforms use
- *      Tk_HandleEvent to do this.  But that does not work correctly on macOS
- *      due to the fact that the calls to Tk_MapNotify or Tk_UnmapNotify can
- *      occur in display procedures which are being run in the drawRect method
- *      of a TKContentView. The events will be processed after drawRect
- *      returns, but they need to be processed immediately in some cases.
-
- *      This function operates as a macOS alternative to Tk_HandleEvent, for
- *      processing MapNotify or UnmapNotify events only.  It is called by
- *      Tk_MapWindow, Tk_UnmapWindow, TkWmMapWindow and TkWmUnmapWindow.
- *      Rather than using Tk_HandleEvent it installs a filter which restricts
- *      to the MapNotify or UnmapNotify events, it queues the event and then
- *      processes window events with the filter installed.  This allows the
- *      event to be handled immediately even from within the drawRect method.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Handles a MapNotify or UnMapNotify event.
- *
- *----------------------------------------------------------------------
- */
-static Tk_RestrictAction
-MapUnmapRestrictProc(
-    ClientData arg,
-    XEvent *eventPtr)
-{
-    return (eventPtr->type==MapNotify || eventPtr->type==UnmapNotify ?
-	    TK_PROCESS_EVENT : TK_DEFER_EVENT);
-}
-
-MODULE_SCOPE
-void TkMacOSXHandleMapOrUnmap(
-    Tk_Window tkwin,
-    XEvent *event)
-{
-    ClientData oldArg;
-    Tk_RestrictProc *oldProc;
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    const Tk_GeomMgr *geomMgrPtr = winPtr->geomMgrPtr;
-
-    /*
-     * Sadly, this approach does not work with the "text" geometry manager.
-     * The mysterious unexplained crash elicited by textDisp-5.2 occurs.  So we
-     * have to check for the "text" manager and revert to using Tk_HandleEvent
-     * in that case.  Hopefully this can be removed when the revised text
-     * widget is in place.
-     */
-
-    if (geomMgrPtr && strcmp(geomMgrPtr->name, "text") == 0) {
-	Tk_HandleEvent(event);
-	return;
-    }
-    oldProc = Tk_RestrictEvents(MapUnmapRestrictProc, NULL, &oldArg);
-    Tk_QueueWindowEvent(event, TCL_QUEUE_TAIL);
-    while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
-    Tk_RestrictEvents(oldProc, oldArg, &oldArg);
-}
-
-/*
- *----------------------------------------------------------------------
- *
  * TkWmMapWindow --
  *
  *	This procedure is invoked to map a top-level window. This module gets
@@ -916,7 +848,7 @@ TkWmMapWindow(
     event.xmap.type = MapNotify;
     event.xmap.event = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -952,7 +884,7 @@ TkWmUnmapWindow(
     event.xunmap.from_configure = false;
     winPtr->flags &= ~TK_MAPPED;
     XUnmapWindow(winPtr->display, winPtr->window);
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -2664,7 +2596,7 @@ WmIconphotoCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Image tk_icon;
-    int width, height, isDefault = 0;
+    int width, height;
     NSImage *newIcon = NULL;
 
     if (objc < 4) {
@@ -2678,7 +2610,6 @@ WmIconphotoCmd(
      */
 
     if (strcmp(Tcl_GetString(objv[3]), "-default") == 0) {
-	isDefault = 1;
 	if (objc == 4) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "window ?-default? image1 ?image2 ...?");
@@ -5488,7 +5419,7 @@ TkSetWMName(
 	return;
     }
 
-    NSString *title = [[NSString alloc] initWithUTF8String:titleUid];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:-1];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
     [title release];
 }
@@ -6036,7 +5967,7 @@ WmWinTabbingId(
  *	allows you to get or set the appearance for the NSWindow associated
  *	with a Tk Window.  The syntax is:
  *
- *	    tk::unsupported::MacWindowStyle tabbingid window ?newAppearance?
+ *	    tk::unsupported::MacWindowStyle appearance window ?newAppearance?
  *
  *      Allowed appearance names are "aqua", "darkaqua", and "auto".
  *
@@ -6102,9 +6033,9 @@ WmWinAppearance(
     if (objc == 4) {
 	int index;
 	if (Tcl_GetIndexFromObjStruct(interp, objv[3], appearanceStrings,
-                sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
+		sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
 	switch ((enum appearances) index) {
 	case APPEARANCE_AQUA:
 	    win.appearance = [NSAppearance appearanceNamed:
