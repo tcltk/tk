@@ -189,7 +189,7 @@ static int GdiArc(
     int dolinecolor = 0, dofillcolor = 0;
     HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
     int dodash = 0;
     const char *dashdata = 0;
 
@@ -961,7 +961,7 @@ static int GdiOval(
     int dolinecolor = 0, dofillcolor = 0;
     HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1083,7 +1083,7 @@ static int GdiPolygon(
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
     HBRUSH hBrush = NULL;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1248,7 +1248,7 @@ static int GdiRectangle(
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
     HBRUSH hBrush = NULL;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
