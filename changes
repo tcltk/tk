@@ -7904,5 +7904,29 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 - Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details
 
+2021-11-09 (bug) [ce5d98] Mac: minimize on yellow title button (culler)
+
+2021-11-10 (bug) [ce5d98] Mac: assign new key window if old widthdrawn (culler)
+
+2021-11-24 (bug) [18682c] Mac: Enter/Leave events for toplevels (culler)
+
+2021-11-26 (bug) [794100] Mac: crash on file drop (culler)
+
+2021-12-04 (bug) [440c52] fix PPM/PGM read with graylevel > 255 (vogel)
+
+2021-12-04 (bug) [5fb814] canvas redraw region for lines/polygones (vogel)
+
+2021-12-04 (new) [631a0b] text widget: direct mouse events to insert mark, not
+	current (vogel)
+
+2021-11-09 (bug) [e699a7] Fix build on macOS < 10.12 (culler)
+
+2022-01-16 (bug) [b1d115] No <Enter> event on new toplevel on current toplevel
+	destruction (vogel)
+
 2022-02-25 (bug) [f75190] tk_fontchooser: multiple font families, locale change,
-	button activation (holger,fogel)
+	button activation (holger,vogel)
+
+2022-03-07 (bug) [2a6c62] Avoid invalid <<TreeviewSelect>> events (vogel,spjuth)
+
+2022-06-12 (bug) [e4a051] Mac: map embedded window emideately (vogel)
