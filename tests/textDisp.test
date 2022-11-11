@@ -1410,7 +1410,7 @@ test textDisp-9.2 {TkTextRedrawTag} -constraints failsOnUbuntuNoXft -body {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 }  -match glob -result {{1.0 2.0 2.1[678]} {1.0 2.0 2.1[678]}}
-test textDisp-9.3 {TkTextRedrawTag} -constraints failsOnUbuntuNoXft {
+test textDisp-9.3 {TkTextRedrawTag} failsOnUbuntuNoXft {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
