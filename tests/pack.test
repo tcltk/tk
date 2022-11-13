@@ -1563,19 +1563,21 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
     macOrUnix
 } -setup {
-    eval destroy [winfo child .pack]
+destroy .pack
+toplevel .pack
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
+update
 } -body {
     frame .pack.a -width 100 -height 50 -relief raised -bd 2
     pack .pack.a
     update
     set result [winfo ismapped .pack.a]
-wm tracing true
+#wm tracing true
     wm iconify .pack
-wm tracing false
+#wm tracing false
     lappend result [winfo ismapped .pack.a]
     .pack.a configure -width 200 -height 75
     update
@@ -1588,11 +1590,13 @@ wm tracing false
 test pack-18.1.2 {unmap content when container unmapped} -constraints {
     win
 } -setup {
-    eval destroy [winfo child .pack]
+destroy .pack
+toplevel .pack
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
+update
 } -body {
     frame .pack.a -width 100 -height 50 -relief raised -bd 2
     pack .pack.a
@@ -1609,11 +1613,13 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
 } -result {1 0 200 75 1}
 
 test pack-18.2 {unmap content when container unmapped} -setup {
-    eval destroy [winfo child .pack]
+destroy .pack
+toplevel .pack
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
     wm geometry .pack +100+100
+update
 } -body {
     frame .pack.a -relief raised -bd 2
     frame .pack.b -width 70 -height 30 -relief sunken -bd 2
@@ -1621,9 +1627,9 @@ test pack-18.2 {unmap content when container unmapped} -setup {
     pack .pack.b -in .pack.a
     update
     set result [winfo ismapped .pack.b]
-wm tracing true
+#wm tracing true
     wm iconify .pack
-wm tracing false
+#wm tracing false
     lappend result [winfo ismapped .pack.b]
     .pack.b configure -width 100 -height 30
     update
@@ -1636,7 +1642,7 @@ wm tracing false
 
 
 test pack-19.1 {test respect for internalborder} -setup {
-    catch {eval pack forget [pack content .pack]}
+    catch {pack forget {*}[pack content .pack]}
     destroy .pack.l .pack.lf
 } -body {
     wm geometry .pack 200x200
@@ -1654,7 +1660,7 @@ test pack-19.1 {test respect for internalborder} -setup {
     destroy .pack.l .pack.lf
 } -result {196x188+2+10 177x186+5+7}
 test pack-19.2 {test support for minreqsize} -setup {
-    catch {eval pack forget [pack content .pack]}
+    catch {pack forget {*}[pack content .pack]}
     destroy .pack.l .pack.lf
 } -body {
     wm geometry .pack {}
