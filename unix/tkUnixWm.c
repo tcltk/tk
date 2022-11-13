@@ -5264,7 +5264,7 @@ WaitForEvent(
     prevProc = Tk_RestrictEvents(WaitRestrictProc, &info, &prevArg);
 
     Tcl_GetTime(&timeout);
-    timeout.sec += 2;
+    timeout.sec += 20;
 
     while (!info.foundEvent) {
 	if (!TkUnixDoOneXEvent(&timeout)) {
