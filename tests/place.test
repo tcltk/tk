@@ -268,7 +268,9 @@ test place-8.1 {PlaceStructureProc, mapping and unmapping content} -setup {
     place .t.f2 -relx 1.0 -rely 1.0 -anchor sw
     update
     set result [winfo ismapped .t.f2]
+wm tracing true
     wm iconify .t
+wm tracing false
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
     update
@@ -285,7 +287,9 @@ test place-8.2 {PlaceStructureProc, mapping and unmapping content} -setup {
     place .t.f2 -in .t.f -relx 1.0 -rely 1.0 -anchor sw -width 50 -height 20
     update
     set result [winfo ismapped .t.f2]
+wm tracing true
     wm iconify .t
+wm tracing false
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
     update
