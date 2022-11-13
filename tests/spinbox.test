@@ -2597,8 +2597,6 @@ test spinbox-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-set arrowsWidth [expr {[font measure {Courier -12} 0] + 2*(1+1)}] ; # one character width + 2*(1+XPAD)
-set arrowsWidth [expr {$arrowsWidth < 11 ? 11 : $arrowsWidth}]    ; # (see tkEntry.c)
 test spinbox-8.18 {DeleteChars procedure} -setup {
     spinbox .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e
@@ -2607,10 +2605,25 @@ test spinbox-8.18 {DeleteChars procedure} -setup {
     .e insert 0 "xyzzy"
     update
     .e delete 2 4
-    winfo reqwidth .e
+    # To check that deletion actually happened we measure the new width
+    # of the widget, based on the measuring width of the remaining text ("xyy")
+    # in the widget. For that purpose we have to mirror the code in tkEntry.c
+    # for computation of the reqwidth
+    # note: XPAD corresponds to the hardcoded    #define XPAD 1
+    set XPAD 1
+    set buttonWidth [expr { [font measure [.e cget -font] "0"] + 2 * (1 + $XPAD) }]
+    if {$buttonWidth < 11} {
+        set buttonWidth 11
+    }
+    set expected [expr { [font measure [.e cget -font] "xyy"] \
+                          + 2 * ( [.e cget -borderwidth] + \
+                                [.e cget -highlightthickness] + $XPAD ) \
+                          + $buttonWidth } ]
+    expr {[winfo reqwidth .e] == $expected}
 } -cleanup {
     destroy .e
-} -result [expr {[font measure {Courier -12} 0]*3 + 2*(2+2+1) + $arrowsWidth}]  ; # 3 chars + (highlightthickness + bd + XPAD) on each side + arrows (see tkEntry.c)
+    unset XPAD buttonWidth expected
+} -result {1}
 
 test spinbox-9.1 {SpinboxValueChanged procedure} -setup {
     unset -nocomplain x
