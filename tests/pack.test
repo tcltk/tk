@@ -1551,7 +1551,17 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
     pack info .pack.a
 } -returnCodes error -result {window ".pack.a" isn't packed}
 
-# Test pack-18.1.* is constrained because on Windows, when the width/height
+# Tests pack-18.1.1 and pack-18.2 are constrained with failsOnUbuntu
+# because they are failing in the GitHub CI environment, using Linux Ubuntu.
+# These tests are also constrained with failsOnXQuarz because they fail
+# on macOS when building with clang --disable-aqua (which uses XQuartz)
+# (this is the case both at GitHub CI and on a real Mac).
+# Analysis shows that, on both cases, WaitForMapNotify is giving up on
+# waiting for the MapNotify event that should show up when running
+# 'wm iconify'. The timeout delay (2s) is exceeded without the unmapping
+# having happened. The cause for this is unknown (see comments in WaitForMapNotify).
+
+# Tests pack-18.1.* are constrained because on Windows, when the width/height
 # is configured while the window is unmapped, the changes don't take
 # effect until the window is remapped. This is apparently by design of the
 # OS, and Tk accommodates this behavior (see UpdateGeometryInfo() and

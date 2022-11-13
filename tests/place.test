@@ -261,6 +261,16 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
+# Tests place-8.1 and place-8.2 are constrained with failsOnUbuntu
+# because they are failing in the GitHub CI environment, using Linux Ubuntu.
+# These tests are also constrained with failsOnXQuarz because they fail
+# on macOS when building with clang --disable-aqua (which uses XQuartz)
+# (this is the case both at GitHub CI and on a real Mac).
+# Analysis shows that, on both cases, WaitForMapNotify is giving up on
+# waiting for the MapNotify event that should show up when running
+# 'wm iconify'. The timeout delay (2s) is exceeded without the unmapping
+# having happened. The cause for this is unknown (see comments in WaitForMapNotify).
+
 test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
