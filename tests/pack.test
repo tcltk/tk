@@ -1574,6 +1574,7 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
     update
     set result [winfo ismapped .pack.a]
     wm iconify .pack
+update
     lappend result [winfo ismapped .pack.a]
     .pack.a configure -width 200 -height 75
     update
@@ -1620,6 +1621,7 @@ test pack-18.2 {unmap content when container unmapped} -setup {
     update
     set result [winfo ismapped .pack.b]
     wm iconify .pack
+update
     lappend result [winfo ismapped .pack.b]
     .pack.b configure -width 100 -height 30
     update
