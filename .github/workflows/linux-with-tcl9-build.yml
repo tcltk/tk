@@ -104,7 +104,7 @@ jobs:
           cd /tmp/dist
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
