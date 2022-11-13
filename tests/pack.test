@@ -1621,8 +1621,9 @@ test pack-18.2 {unmap content when container unmapped} -setup {
     pack .pack.b -in .pack.a
     update
     set result [winfo ismapped .pack.b]
+wm tracing true
     wm iconify .pack
-update
+wm tracing false
     lappend result [winfo ismapped .pack.b]
     .pack.b configure -width 100 -height 30
     update
