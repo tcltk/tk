@@ -1573,7 +1573,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
     macOrUnix failsOnUbuntu failsOnXQuarz
 } -setup {
-    eval destroy [winfo child .pack]
+    destroy {*}[winfo child .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1596,7 +1596,7 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
 test pack-18.1.2 {unmap content when container unmapped} -constraints {
     win
 } -setup {
-    eval destroy [winfo child .pack]
+    destroy {*}[winfo child .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1617,7 +1617,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
 } -result {1 0 200 75 1}
 
 test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
-    eval destroy [winfo child .pack]
+    destroy {*}[winfo child .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1642,7 +1642,7 @@ test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbun
 
 
 test pack-19.1 {test respect for internalborder} -setup {
-    catch {eval pack forget [pack content .pack]}
+    catch {pack forget {*}[pack content .pack]}
     destroy .pack.l .pack.lf
 } -body {
     wm geometry .pack 200x200
@@ -1660,7 +1660,7 @@ test pack-19.1 {test respect for internalborder} -setup {
     destroy .pack.l .pack.lf
 } -result {196x188+2+10 177x186+5+7}
 test pack-19.2 {test support for minreqsize} -setup {
-    catch {eval pack forget [pack content .pack]}
+    catch {pack forget {*}[pack content .pack]}
     destroy .pack.l .pack.lf
 } -body {
     wm geometry .pack {}
