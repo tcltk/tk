@@ -105,39 +105,39 @@ typedef int Status;
 #define QueuedAfterReading 1
 #define QueuedAfterFlush 2
 
-#define ConnectionNumber(dpy) 	((dpy)->fd)
+#define ConnectionNumber(dpy) 	(((_XPrivDisplay)(dpy))->fd)
 #define RootWindow(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->root)
-#define DefaultScreen(dpy) 	((dpy)->default_screen)
+#define DefaultScreen(dpy) 	(((_XPrivDisplay)(dpy))->default_screen)
 #define DefaultRootWindow(dpy) 	(ScreenOfDisplay(dpy,DefaultScreen(dpy))->root)
 #define DefaultVisual(dpy, scr) (ScreenOfDisplay(dpy,scr)->root_visual)
 #define DefaultGC(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->default_gc)
 #define BlackPixel(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->black_pixel)
 #define WhitePixel(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->white_pixel)
 #define AllPlanes 		((unsigned long)~0L)
-#define QLength(dpy) 		((dpy)->qlen)
+#define QLength(dpy) 		(((_XPrivDisplay)(dpy))->qlen)
 #define DisplayWidth(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->width)
 #define DisplayHeight(dpy, scr) (ScreenOfDisplay(dpy,scr)->height)
 #define DisplayWidthMM(dpy, scr)(ScreenOfDisplay(dpy,scr)->mwidth)
 #define DisplayHeightMM(dpy, scr)(ScreenOfDisplay(dpy,scr)->mheight)
 #define DisplayPlanes(dpy, scr) (ScreenOfDisplay(dpy,scr)->root_depth)
 #define DisplayCells(dpy, scr) 	(DefaultVisual(dpy,scr)->map_entries)
-#define ScreenCount(dpy) 	((dpy)->nscreens)
-#define ServerVendor(dpy) 	((dpy)->vendor)
-#define ProtocolVersion(dpy) 	((dpy)->proto_major_version)
-#define ProtocolRevision(dpy) 	((dpy)->proto_minor_version)
-#define VendorRelease(dpy) 	((dpy)->release)
-#define DisplayString(dpy) 	((dpy)->display_name)
+#define ScreenCount(dpy) 	(((_XPrivDisplay)(dpy))->nscreens)
+#define ServerVendor(dpy) 	(((_XPrivDisplay)(dpy))->vendor)
+#define ProtocolVersion(dpy) 	(((_XPrivDisplay)(dpy))->proto_major_version)
+#define ProtocolRevision(dpy) 	(((_XPrivDisplay)(dpy))->proto_minor_version)
+#define VendorRelease(dpy) 	(((_XPrivDisplay)(dpy))->release)
+#define DisplayString(dpy) 	(((_XPrivDisplay)(dpy))->display_name)
 #define DefaultDepth(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->root_depth)
 #define DefaultColormap(dpy, scr)(ScreenOfDisplay(dpy,scr)->cmap)
-#define BitmapUnit(dpy) 	((dpy)->bitmap_unit)
-#define BitmapBitOrder(dpy) 	((dpy)->bitmap_bit_order)
-#define BitmapPad(dpy) 		((dpy)->bitmap_pad)
-#define ImageByteOrder(dpy) 	((dpy)->byte_order)
-#define NextRequest(dpy)	((dpy)->request + 1)
-#define LastKnownRequestProcessed(dpy)	((dpy)->request)
+#define BitmapUnit(dpy) 	(((_XPrivDisplay)(dpy))->bitmap_unit)
+#define BitmapBitOrder(dpy) 	(((_XPrivDisplay)(dpy))->bitmap_bit_order)
+#define BitmapPad(dpy) 		(((_XPrivDisplay)(dpy))->bitmap_pad)
+#define ImageByteOrder(dpy) 	(((_XPrivDisplay)(dpy))->byte_order)
+#define NextRequest(dpy)	(((_XPrivDisplay)(dpy))->request + 1)
+#define LastKnownRequestProcessed(dpy)	(((_XPrivDisplay)(dpy))->request)
 
 /* macros for screen oriented applications (toolkit) */
-#define ScreenOfDisplay(dpy, scr)(&((dpy)->screens[(scr)]))
+#define ScreenOfDisplay(dpy, scr)(&((_XPrivDisplay)(dpy))->screens[scr])
 #define DefaultScreenOfDisplay(dpy) ScreenOfDisplay(dpy,DefaultScreen(dpy))
 #define DisplayOfScreen(s)	((s)->display)
 #define RootWindowOfScreen(s)	((s)->root)
@@ -492,7 +492,12 @@ typedef struct {
  * The contents of this structure are implementation dependent.
  * A Display should be treated as opaque by application code.
  */
-typedef struct _XDisplay {
+struct _XPrivate;		/* Forward declare before use for C++ */
+struct _XrmHashBucketRec;
+
+typedef struct
+_XDisplay
+{
 	XExtData *ext_data;	/* hook for extension to hang data */
 	struct _XPrivate *private1;
 	int fd;			/* Network socket. */
@@ -540,46 +545,10 @@ typedef struct _XDisplay {
 	XPointer private18;
 	int private19;
 	char *xdefaults;	/* contents of defaults from server */
-	char *scratch_buffer;	/* place to hang scratch buffer */
-	unsigned long scratch_length;	/* length of scratch buffer */
-	int ext_number;		/* extension number on this display */
-	struct _XExten *ext_procs; /* extensions initialized on this display */
-	/*
-	 * the following can be fixed size, as the protocol defines how
-	 * much address space is available.
-	 * While this could be done using the extension vector, there
-	 * may be MANY events processed, so a search through the extension
-	 * list to find the right procedure for each event might be
-	 * expensive if many extensions are being used.
-	 */
-	Bool (*event_vec[128])(void);  /* vector for wire to event */
-	Status (*wire_vec[128])(void); /* vector for event to wire */
-	KeySym lock_meaning;	   /* for XLookupString */
-	struct _XLockInfo *lock;   /* multi-thread state, display lock */
-	struct _XInternalAsync *async_handlers; /* for internal async */
-	unsigned long bigreq_size; /* max size of big requests */
-	struct _XLockPtrs *lock_fns; /* pointers to threads functions */
-	/* things above this line should not move, for binary compatibility */
-	struct _XKeytrans *key_bindings; /* for XLookupString */
-	Font cursor_font;	   /* for XCreateFontCursor */
-	struct _XDisplayAtoms *atoms; /* for XInternAtom */
-	unsigned int mode_switch;  /* keyboard group modifiers */
-	struct _XContextDB *context_db; /* context database */
-	Bool (**error_vec)(void);      /* vector for wire to error */
-	/*
-	 * Xcms information
-	 */
-	struct {
-	   XPointer defaultCCCs;  /* pointer to an array of default XcmsCCC */
-	   XPointer clientCmaps;  /* pointer to linked list of XcmsCmapRec */
-	   XPointer perVisualIntensityMaps;
-				  /* linked list of XcmsIntensityMap */
-	} cms;
-	struct _XIMFilter *im_filters;
-	struct _XSQEvent *qfree; /* unallocated event queue elements */
-	unsigned long next_event_serial_num; /* inserted into next queue elt */
-	int (*savedsynchandler)(void); /* user synchandler when Xlib usurps */
-} Display;
+	/* there is more to this structure, but it is private to Xlib */
+}
+Display,
+*_XPrivDisplay;
 
 #undef _XEVENT_
 #ifndef _XEVENT_
@@ -1041,7 +1010,7 @@ typedef union _XEvent {
 } XEvent;
 #endif
 
-#define XAllocID(dpy) ((*(dpy)->resource_alloc)((dpy)))
+#define XAllocID(dpy) ((*((_XPrivDisplay)(dpy))->resource_alloc)((dpy)))
 
 /*
  * per character font metric information.
@@ -1890,6 +1859,16 @@ EXTERN XIOErrorHandler XSetIOErrorHandler (
     XIOErrorHandler	/* handler */
 );
 
+typedef void (*XIOErrorExitHandler) ( /* WARNING, this type not in Xlib spec */
+    Display*,		/* display */
+    void*		/* user_data */
+);
+
+EXTERN void XSetIOErrorExitHandler (
+    Display*,			/* display */
+    XIOErrorExitHandler,	/* handler */
+    void*			/* user_data */
+);
 
 EXTERN XPixmapFormatValues *XListPixmapFormats(
     Display*		/* display */,
