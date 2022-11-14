@@ -7968,12 +7968,23 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2022-04-07 (bug)[415415] scale advances multiple steps on single click (vogel)
 
-2022-06-12 (bug)[e4a051] Mac: map embedded window emideately (vogel)
+2022-06-12 (bug)[e4a051] Mac: map embedded window immediately (vogel)
 
 2022-07-20 (bug)[40bc81,17f44d,150174,61e0bb] embedding error test failures
 	(vogel)
 
 2022-07-25 (bug)[a3b03f] Linux, Windows: improve (ttk) menubutton menu
 	position (danckaert,vogel)
+
+
+
+2022-09-22 (bug)[1a46d8,1fa325] Mac: memleak, crash safety in color (chavez)
+
+2022-10-17 [d93c81] Workaround faulty compiler optimization in VS 2022 (vogel)
+
+2022-10-26 (bug)[435739] crash in test bind-37.1 (csok,vogel)
+
+2022-10-28 (bug)[5e4e44] ttk::panedwindow drag robust wrt orientation variants
+	(xolodho,vogel)
 
 - Released 8.6.13, Nov 16, 2022 - https://core.tcl-lang.org/tk/ for details
