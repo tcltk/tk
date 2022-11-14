@@ -612,7 +612,7 @@ int
 Tk_OptionObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of Tcl_Obj arguments. */
+    Tcl_Size objc,			/* Number of Tcl_Obj arguments. */
     Tcl_Obj *const objv[])	/* Tcl_Obj arguments. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;

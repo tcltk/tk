@@ -99,7 +99,7 @@ static const XSetWindowAttributes defAtts= {
 typedef int (TkInitProc)(Tcl_Interp *interp, void *clientData);
 typedef struct {
     const char *name;		/* Name of command. */
-    Tcl_ObjCmdProc *objProc;	/* Command's object- (or string-) based
+    Tcl_ObjCmdProc2 *objProc;	/* Command's object- (or string-) based
 				 * function, or initProc. */
     int flags;
 } TkCmd;
@@ -126,7 +126,7 @@ static const TkCmd commands[] = {
     {"place",		Tk_PlaceObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"raise",		Tk_RaiseObjCmd,		PASSMAINWINDOW|ISSAFE},
     {"selection",	Tk_SelectionObjCmd,	PASSMAINWINDOW},
-    {"tk",		(Tcl_ObjCmdProc *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
+    {"tk",		(Tcl_ObjCmdProc2 *)(void *)TkInitTkCmd,  USEINITPROC|PASSMAINWINDOW|ISSAFE},
     {"tkwait",		Tk_TkwaitObjCmd,	PASSMAINWINDOW|ISSAFE},
     {"update",		Tk_UpdateObjCmd,	PASSMAINWINDOW|ISSAFE|SAVEUPDATECMD},
     {"winfo",		Tk_WinfoObjCmd,		PASSMAINWINDOW|ISSAFE},
@@ -954,16 +954,17 @@ TkCreateMainWindow(
 #if TCL_MAJOR_VERSION > 8
 	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
-	    } else
-#endif
+	    }
+#else
 	    if (!cmdInfo.objClientData ) {
 		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
 	    }
+#endif
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
 	} else {
-	    Tcl_CreateObjCommand(interp, cmdPtr->name, cmdPtr->objProc,
+	    Tcl_CreateObjCommand2(interp, cmdPtr->name, cmdPtr->objProc,
 		    clientData, NULL);
 	}
 	if (isSafe && !(cmdPtr->flags & ISSAFE)) {
@@ -1041,17 +1042,18 @@ TkCreateMainWindow(
 #endif
 #endif
 		;
+	if (info.isNativeObjectProc) {
 #if TCL_MAJOR_VERSION > 8
-	if (info.isNativeObjectProc == 2) {
 	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
 		    info.objProc2, (void *)
 		    version, NULL);
 
-	} else
+#else
+	    Tcl_CreateObjCommand(interp, "::tk::build-info",
+		    info.objProc, (void *)
+		    version, NULL);
 #endif
-	Tcl_CreateObjCommand(interp, "::tk::build-info",
-		info.objProc, (void *)
-		version, NULL);
+	}
     }
 
     /*
@@ -1615,21 +1617,22 @@ Tk_DestroyWindow(
 				    cmdPtr->name,
 				    winPtr->mainPtr->tclUpdateObjProc2,
 				    NULL, NULL);
-			} else
-#endif
+			}
+#else
 			if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
 			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
 				    cmdPtr->name,
 				    winPtr->mainPtr->tclUpdateObjProc,
 				    NULL, NULL);
 			}
+#endif
 		    } else {
-			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+			Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
 					     cmdPtr->name, TkDeadAppObjCmd,
 					     NULL, NULL);
 		    }
 		}
-		Tcl_CreateObjCommand(winPtr->mainPtr->interp, "send",
+		Tcl_CreateObjCommand2(winPtr->mainPtr->interp, "send",
 			TkDeadAppObjCmd, NULL, NULL);
 		Tcl_UnlinkVar(winPtr->mainPtr->interp, "tk_strictMotif");
 		Tcl_UnlinkVar(winPtr->mainPtr->interp,

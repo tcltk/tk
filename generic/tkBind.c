@@ -740,7 +740,7 @@ static int		GetVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp, char *virtString);
 static int		HandleEventGenerate(Tcl_Interp *interp, Tk_Window main,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
@@ -3376,10 +3376,11 @@ int
 Tk_EventObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int index, i;
+    int index;
+    Tcl_Size i;
     char *name;
     const char *event;
     Tk_Window tkwin;
@@ -3902,7 +3903,7 @@ static int
 HandleEventGenerate(
     Tcl_Interp *interp,		/* Interp for errors return and name lookup. */
     Tk_Window mainWin,		/* Main window associated with interp. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     union { XEvent general; XVirtualEvent virt; } event;

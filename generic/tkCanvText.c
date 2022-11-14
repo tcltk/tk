@@ -1102,7 +1102,7 @@ TextInsert(
 
     text = textPtr->text;
 
-    if (index == TCL_INDEX_NONE) {
+    if ((int)index < 0) {
 	index = 0;
     }
     if (index + 1 > textPtr->numChars + 1) {
@@ -1131,18 +1131,18 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 >= index + 1) {
+	if (textInfoPtr->selectFirst + 1 >= (Tcl_Size)index + 1) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast + 1 >= index + 1) {
+	if (textInfoPtr->selectLast + 1 >= (Tcl_Size)index + 1) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 >= index + 1)) {
+		&& (textInfoPtr->selectAnchor + 1 >= (Tcl_Size)index + 1)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos + 1 >= index + 1) {
+    if (textPtr->insertPos + 1 >= (Tcl_Size)index + 1) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);

@@ -22,11 +22,11 @@
  */
 
 #if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-static Tcl_ObjCmdProc DebuggerObjCmd;
+static Tcl_ObjCmdProc2 DebuggerObjCmd;
 #endif
-static Tcl_ObjCmdProc PressButtonObjCmd;
-static Tcl_ObjCmdProc InjectKeyEventObjCmd;
-static Tcl_ObjCmdProc MenuBarHeightObjCmd;
+static Tcl_ObjCmdProc2 PressButtonObjCmd;
+static Tcl_ObjCmdProc2 InjectKeyEventObjCmd;
+static Tcl_ObjCmdProc2 MenuBarHeightObjCmd;
 
 
 /*
@@ -55,11 +55,11 @@ TkplatformtestInit(
      */
 
 #if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
-    Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
-    Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -85,7 +85,7 @@ static int
 DebuggerObjCmd(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tcl_Interp *),
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     Debugger();
@@ -115,7 +115,7 @@ static int
 MenuBarHeightObjCmd(
     TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
-    TCL_UNUSED(int),				/* Not used. */
+    TCL_UNUSED(Tcl_Size),				/* Not used. */
     TCL_UNUSED(Tcl_Obj *const *))		/* Not used. */
 {
     static int height = 0;
@@ -190,10 +190,11 @@ static int
 PressButtonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int x = 0, y = 0, i, value;
+    int x = 0, y = 0, value;
+    Tcl_Size i;
     CGPoint pt;
     NSPoint loc;
     NSEvent *motion, *press, *release;
@@ -270,7 +271,7 @@ static int
 InjectKeyEventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] = {
@@ -280,7 +281,8 @@ InjectKeyEventObjCmd(
 	"-command", "-control", "-function", "-option", "-shift", "-x", "-y", NULL};
     enum args {KEYEVENT_COMMAND, KEYEVENT_CONTROL, KEYEVENT_FUNCTION, KEYEVENT_OPTION,
 	       KEYEVENT_SHIFT, KEYEVENT_X, KEYEVENT_Y};
-    int i, index, keysym, mods = 0, x = 0, y = 0;
+    Tcl_Size i;
+    int index, keysym, mods = 0, x = 0, y = 0;
     NSString *chars = nil, *unmod = nil, *upper, *lower;
     NSEvent *keyEvent;
     NSUInteger type;
