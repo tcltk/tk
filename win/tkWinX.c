@@ -587,7 +587,6 @@ XkbOpenDisplay(
     display->display_name = (char  *)ckalloc(strlen(name) + 1);
     strcpy(display->display_name, name);
 
-    display->cursor_font = 1;
     display->nscreens = 1;
     display->request = 1;
     display->qlen = 0;
