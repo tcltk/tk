@@ -7966,6 +7966,14 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-03-07 (bug)[2a6c62] Avoid invalid <<TreeviewSelect>> events
 	(vogel,spjuth)
 
+2022-03-16 Updates to Finnish message catalog (hippelainen)
+
+2022-03-16 (bug)[424773] crash in test canvPs-5.1 (chavez,vogel)
+
+2022-03-19 (bug)[5412c6] crash in test canvWind-2.1 (SVID,vogel,griffin)
+
+2022-03-19 (bug)[54fe7a] crash in test textWind-18.3 (akuli,vogel)
+
 2022-04-07 (bug)[415415] scale advances multiple steps on single click (vogel)
 
 2022-04-10 (bug)[dc4c55] tk_popup entry index (mcdonald)
@@ -7992,7 +8000,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2022-07-29 Update keysym tables to latest X11R6 (nijtmans)
 
-2022-08-22 [f6e4d4] consistent cross-platform polygon fill (Akuli,chavez)
+2022-08-22 [f6e4d4] consistent cross-platform polygon fill (akuli,chavez)
 
 2022-09-04 (bug)[bc6020] test treeview-bc602049ab (bende,spjuth)
 
