@@ -7906,7 +7906,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2021-11-09 (bug)[e699a7] Fix build on macOS < 10.12 (culler)
 
-2021-11-10 (bug)[ce5d98] Mac: minimize on yellow title button (culler)
+2021-11-10 (bug)[8aebca,ce5d98] Mac: fix minimize button details (culler)
 
 2021-11-24 (bug)[18682c,733dae] Mac: Enter/Leave events for toplevels (culler)
 
