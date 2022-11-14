@@ -1172,7 +1172,7 @@ test treeview-rowheight-3b "rowheight adapts to named font" -constraints failsOn
     expr {0 < $diff ? "OK" : $diff}
 } -result OK
 
-test treeview-rowheight-4 "rowheight adapts to item padding" -body {
+test treeview-rowheight-4 "rowheight adapts to item padding" -constraints failsOnUbuntu -body {
     # Test that things from Item style is picked up.
     ttk::style configure Item -padding "2 2 2 2"
     update
