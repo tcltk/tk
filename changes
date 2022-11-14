@@ -7958,10 +7958,14 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2022-01-06 (bug) [b7d851] Mac: crash on tkdnd drop and window close (culler)
 
-2022-01-09 (bug) [40bc81] embedding error test failure (vogel)
-
 2022-01-16 (bug) [b1d115] No <Enter> event on new toplevel on current toplevel
 	destruction (vogel)
+
+2022-02-07 (new) [247d80] Chinese message file (NewbieXvwu)
+
+2022-02-16 (bug) [934cab] crash in revised text elided text (frithrah)
+
+2022-02-17 (bug) [864b06] PNG photo image color numeric issue (chavez)
 
 2022-02-25 (bug) [f75190] tk_fontchooser: multiple font families, locale
 	change, button activation (holger,vogel)
@@ -7969,4 +7973,13 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-03-07 (bug) [2a6c62] Avoid invalid <<TreeviewSelect>> events
 	(vogel,spjuth)
 
+2022-04-07 (bug) [415415] scale advances multiple steps on single click (vogel)
+
 2022-06-12 (bug) [e4a051] Mac: map embedded window emideately (vogel)
+
+2022-07-20 (bug) [40bc81], [17f44d], [150174], [61e0bb] embedding error test
+	failures (vogel)
+
+2022-07-25 (bug) [a3b03f] Linux, WIndows: improve (ttk) menubutton menu
+	position (danckaert,vogel)
+
