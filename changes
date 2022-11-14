@@ -7976,7 +7976,17 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-07-25 (bug)[a3b03f] Linux, Windows: improve (ttk) menubutton menu
 	position (danckaert,vogel)
 
+2022-07-29 Update keysym tables to latest X11R6 (nijtmans)
 
+2022-08-22 [f6e4d4] consistent cross-platform polygon fill (Akuli,chavez)
+
+2022-09-04 (bug)[bc6020] test treeview-bc602049ab (bende,spjuth)
+
+2022-09-08 (bug)[e17b6f] Mac: crash in test unixW-50.4 (chavez)
+
+2022-09-20 [33de84] Mac: handle Apple deprecation of OSTypes (culler)
+
+2022-09-20 (bug)[412b80] Mac menu: arrow key and menu selection (nab,culler)
 
 2022-09-22 (bug)[1a46d8,1fa325] Mac: memleak, crash safety in color (chavez)
 
