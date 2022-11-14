@@ -7968,7 +7968,21 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2022-04-07 (bug)[415415] scale advances multiple steps on single click (vogel)
 
+2022-04-10 (bug)[dc4c55] tk_popup entry index (mcdonald)
+
+2022-04-15 (bug)[c0bf1b] XVirtualEvent buffer overflows (chavez)
+
+2022-05-11 (bug)[88cfdc] Mac: dialog memory, avoid use after free (chavez)
+
+2022-05-22 (bug)[bee96b] Win: cursor warp, [tk busy] (mcdonald)
+
 2022-06-12 (bug)[e4a051] Mac: map embedded window immediately (vogel)
+
+2022-06-27 Updates to Russian message catalog (pylypenko)
+
+2022-07-04 Updates to Esperanto message catalog (ender)
+
+2022-07-19 (bug)[91ca77] Mac: map event handling (rosenburger,culler,landers)
 
 2022-07-20 (bug)[40bc81,17f44d,150174,61e0bb] embedding error test failures
 	(vogel)
