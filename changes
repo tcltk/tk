@@ -7954,12 +7954,26 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-01-16 (bug)[b1d115] No <Enter> event on new toplevel on current toplevel
 	destruction (vogel)
 
+2022-02-07 (new)[247d80] Chinese message file (NewbieXvwu)
+
+2022-02-16 (bug)[934cab] crash in revised text elided text (frithrah)
+
+2022-02-17 (bug)[864b06] PNG photo image color numeric issue (chavez)
+
 2022-02-25 (bug)[f75190] tk_fontchooser: multiple font families, locale
 	change, button activation (holger,vogel)
 
 2022-03-07 (bug)[2a6c62] Avoid invalid <<TreeviewSelect>> events
 	(vogel,spjuth)
 
+2022-04-07 (bug)[415415] scale advances multiple steps on single click (vogel)
+
 2022-06-12 (bug)[e4a051] Mac: map embedded window emideately (vogel)
+
+2022-07-20 (bug)[40bc81,17f44d,150174,61e0bb] embedding error test failures
+	(vogel)
+
+2022-07-25 (bug)[a3b03f] Linux, Windows: improve (ttk) menubutton menu
+	position (danckaert,vogel)
 
 - Released 8.6.13, Nov 16, 2022 - https://core.tcl-lang.org/tk/ for details
