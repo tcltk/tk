@@ -2393,7 +2393,7 @@ ParseFormat(
     PNGImage *pngPtr)
 {
     Tcl_Obj **objv = NULL;
-    int objc = 0;
+    Tcl_Size objc = 0;
     static const char *const fmtOptions[] = {
 	"-alpha", NULL
     };

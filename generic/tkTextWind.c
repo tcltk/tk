@@ -51,7 +51,7 @@ static void		EmbWinBboxProc(TkText *textPtr,
 			    int lineHeight, int baseline, int *xPtr,int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(ClientData clientData);
 static int		EmbWinDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
@@ -382,7 +382,7 @@ EmbWinConfigure(
     TkText *textPtr,		/* Information about text widget that contains
 				 * embedded window. */
     TkTextSegment *ewPtr,	/* Embedded window to be configured. */
-    int objc,			/* Number of strings in objv. */
+    Tcl_Size objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of objects describing configuration
 				 * options. */
 {

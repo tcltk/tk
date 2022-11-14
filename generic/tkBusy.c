@@ -39,7 +39,7 @@ static void		BusyGeometryProc(void *clientData,
 static void		BusyCustodyProc(void *clientData,
 			    Tk_Window tkwin);
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
 static void		DestroyBusy(void *dataPtr);
 static void		DoConfigureNotify(Tk_FakeWin *winPtr);
@@ -632,7 +632,7 @@ static int
 ConfigureBusy(
     Tcl_Interp *interp,
     Busy *busyPtr,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Cursor oldCursor = busyPtr->cursor;

@@ -155,7 +155,7 @@ static const Tk_GeomMgr placerType = {
 static void		ContentStructureProc(ClientData clientData,
 			    XEvent *eventPtr);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
-			    Tk_OptionTable table, int objc,
+			    Tk_OptionTable table, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		PlaceInfoCommand(Tcl_Interp *interp, Tk_Window tkwin);
 static Content *		CreateContent(Tk_Window tkwin, Tk_OptionTable table);
@@ -189,7 +189,7 @@ int
 Tk_PlaceObjCmd(
     ClientData clientData,	/* Interpreter main window. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window main_win = (Tk_Window)clientData;
@@ -612,7 +612,7 @@ ConfigureContent(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Window tkwin,		/* Token for the window to manipulate. */
     Tk_OptionTable table,	/* Token for option table. */
-    int objc,			/* Number of config arguments. */
+    Tcl_Size objc,			/* Number of config arguments. */
     Tcl_Obj *const objv[])	/* Object values for arguments. */
 {
     Container *containerPtr;

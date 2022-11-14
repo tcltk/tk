@@ -667,7 +667,7 @@ Tk_SelectionObjCmd(
     void *clientData,	/* Main window associated with
 				 * interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -675,7 +675,8 @@ Tk_SelectionObjCmd(
     Atom selection;
     const char *selName = NULL;
     const char *string;
-    int count, index;
+    Tcl_Size count;
+    int index;
     Tcl_Obj *const *objs;
     static const char *const optionStrings[] = {
 	"clear", "get", "handle", "own", NULL

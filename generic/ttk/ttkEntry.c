@@ -473,7 +473,11 @@ ExpandPercents(
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
-		sprintf(numStorage, "%d", (int)index);
+		if (index == TCL_INDEX_NONE) {
+		    sprintf(numStorage, "-1");
+		} else {
+		    sprintf(numStorage, "%" TKSIZET_MODIFIER "u", index);
+		}
 		string = numStorage;
 		break;
 	    case 'P': /* 'Peeked' new value of the string */
@@ -1472,7 +1476,7 @@ badIndex:
  */
 static int
 EntryBBoxCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Ttk_Box b;
@@ -1502,7 +1506,7 @@ EntryBBoxCommand(
  */
 static int
 EntryDeleteCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Tcl_Size first, last;
@@ -1531,7 +1535,7 @@ EntryDeleteCommand(
  */
 static int
 EntryGetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 2) {
@@ -1547,7 +1551,7 @@ EntryGetCommand(
  */
 static int
 EntryICursorCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 3) {
@@ -1567,7 +1571,7 @@ EntryICursorCommand(
  */
 static int
 EntryIndexCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Tcl_Size index;
@@ -1589,7 +1593,7 @@ EntryIndexCommand(
  */
 static int
 EntryInsertCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Tcl_Size index;
@@ -1611,7 +1615,7 @@ EntryInsertCommand(
  * 	Clear selection.
  */
 static int EntrySelectionClearCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
 
@@ -1628,7 +1632,7 @@ static int EntrySelectionClearCommand(
  * 	Returns 1 if any characters are selected, 0 otherwise.
  */
 static int EntrySelectionPresentCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 3) {
@@ -1644,7 +1648,7 @@ static int EntrySelectionPresentCommand(
  * 	Explicitly set the selection range.
  */
 static int EntrySelectionRangeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     Tcl_Size start, end;
@@ -1682,7 +1686,7 @@ static const Ttk_Ensemble EntrySelectionCommands[] = {
  * 	Sets the value of an entry widget.
  */
 static int EntrySetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc != 3) {
@@ -1698,7 +1702,7 @@ static int EntrySetCommand(
  * 	or error status from -validatecommand / -invalidcommand.
  */
 static int EntryValidateCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     int code;
@@ -1720,7 +1724,7 @@ static int EntryValidateCommand(
 /* $entry xview	-- horizontal scrolling interface
  */
 static int EntryXViewCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Entry *entryPtr = (Entry *)recordPtr;
     if (objc == 3) {
@@ -1839,7 +1843,7 @@ ComboboxConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * 	in sync at all times, [$cb current] double-checks
  */
 static int ComboboxCurrentCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Combobox *cbPtr = (Combobox *)recordPtr;
     Tcl_Size currentIndex = cbPtr->combobox.currentIndex;

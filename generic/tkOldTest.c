@@ -83,7 +83,7 @@ static Tk_ImageType imageType = {
  */
 
 static int              ImageObjCmd(ClientData dummy,
-                            Tcl_Interp *interp, int objc,
+                            Tcl_Interp *interp, Tcl_Size objc,
             			    Tcl_Obj * const objv[]);
 #endif
 
@@ -180,7 +180,7 @@ ImageCreate(
     strcpy(timPtr->imageName, name);
     timPtr->varName = (char *)ckalloc(strlen(varName) + 1);
     strcpy(timPtr->varName, varName);
-    Tcl_CreateObjCommand(interp, name, ImageObjCmd, timPtr, NULL);
+    Tcl_CreateObjCommand2(interp, name, ImageObjCmd, timPtr, NULL);
     *clientDataPtr = timPtr;
     Tk_ImageChanged(model, 0, 0, 30, 15, 30, 15);
     return TCL_OK;
@@ -207,7 +207,7 @@ static int
 ImageObjCmd(
     ClientData clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TImageModel *timPtr = (TImageModel *)clientData;
