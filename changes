@@ -7904,74 +7904,62 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 - Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details
 
+2021-11-09 (bug)[e699a7] Fix build on macOS < 10.12 (culler)
 
-2021-11-09 (bug) [ce5d98] Mac: minimize on yellow title button (culler)
+2021-11-10 (bug)[ce5d98] Mac: minimize on yellow title button (culler)
 
-2021-11-09 (bug) [e699a7] Fix build on macOS < 10.12 (culler)
+2021-11-24 (bug)[18682c,733dae] Mac: Enter/Leave events for toplevels (culler)
 
-2021-11-10 (bug) [ce5d98] Mac: assign new key window if old widthdrawn (culler)
-
-2021-11-24 (bug) [18682c], [733dae] Mac: Enter/Leave events for toplevels
-	(culler)
-
-2021-11-26 (bug) [794100] Mac: crash on file drop (culler)
-
-2021-11-29 (bug) [4ac9d2] Mac: canvas screenshot with Img package position
+2021-11-29 (bug)[4ac9d2] Mac: canvas screenshot with Img package position
 	correction (chavez)
-
-2021-11-29 (new)[TIP 599] Extended build information (nijtmans)
-
-2021-11-30 (new) Mac: new color index "SelectedMenuItemTextColor".
 
 2021-11-30 (documentation cleanup) [bad305] improve wm protocol
 	WM_DELETE_WINDOW documentation (culler)
 
-2021-12-04 (bug) [440c52] fix PPM/PGM read with graylevel > 255 (vogel)
+2021-11-30 (new) Mac: new color index "SelectedMenuItemTextColor".
 
-2021-12-04 (bug) [5fb814] canvas redraw region for lines/polygones (vogel)
+2021-12-01 (new)[TIP 599] Extended build information (nijtmans)
 
-2021-12-04 (new) [631a0b] text widget: direct mouse events to insert mark, not
+2021-12-04 (bug)[440c52] fix PPM/PGM read with graylevel > 255 (vogel)
+
+2021-12-04 (bug)[5fb814] canvas redraw region for lines/polygones (vogel)
+
+2021-12-04 (new)[631a0b] text widget: direct mouse events to insert mark, not
 	current (vogel)
 
-2021-12-06 (bug) [b164ef] fix mouse events for multiple toplevels (culler)
+2021-12-06 (bug)[b164ef] fix mouse events for multiple toplevels (culler)
 
-2021-12-07 (bug) [be8f5b] crash setting -type empty for a menu (vogel)
+2021-12-07 (bug)[be8f5b] crash setting -type empty for a menu (vogel)
 
-2021-12-10 (bug) [50fc02], [50fc02], [25894d], [156e58] pointer issues in image
-	photo (chavez)
+2021-12-10 (bug)[50fc02,50fc02,25894d,156e58] ImgPhoto pointer issues (chavez)
 
-2021-12-14 (bug) [50fc02] potential pointer error in photo copy code (chavez)
+2021-12-20 (bug)[617861] -justify/-anchor defaults for ttk::label (nijtmans)
 
-2021-12-20 (bug) [617861] correct -justify/-anchor defaults for ttk::label
-	(nijtmans)
+2021-12-20 (bug)[6be8b0] Mac: crash on drag and Cmd-w (culler)
 
-2021-12-20 (bug) [6be8b0] Mac: crash on drag and Cmd-w (culler)
-
-2021-12-22 (bug) [a132b5] Mac: esc on combobox menu influences click reopening
+2021-12-22 (bug)[a132b5] Mac: esc on combobox menu influences click reopening
 	(culler)
 
-2021-12-24 (bug) [915316] Mac: drag events not to initial widget (culler)
+2021-12-24 (bug)[915316] Mac: drag events not to initial widget (culler)
 
-2021-12-27 (bug) [eb26d4] Mac: wrong beep when clicking outside a combobox
+2021-12-27 (bug)[eb26d4] Mac: wrong beep when clicking outside a combobox
 	(culler)
 
-2021-12-30 (bug) [822450] Mac: crash on exit (culler)
+2021-12-30 (bug)[822450] Mac: crash on exit (culler)
 
-2022-01-06 (bug) [b7d851] Mac: crash on tkdnd drop and window close (culler)
+2022-01-06 (bug)[b7d851] Mac: crash on tkdnd drop and window close (culler)
 
-2022-01-09 (bug) [40bc81] embedding error test failure (vogel)
+2022-01-09 (bug)[40bc81] embedding error test failure (vogel)
 
-2022-01-16 (bug) [b1d115] No <Enter> event on new toplevel on current toplevel
+2022-01-16 (bug)[b1d115] No <Enter> event on new toplevel on current toplevel
 	destruction (vogel)
 
-2022-02-25 (bug) [f75190] tk_fontchooser: multiple font families, locale
+2022-02-25 (bug)[f75190] tk_fontchooser: multiple font families, locale
 	change, button activation (holger,vogel)
 
-2022-03-07 (bug) [2a6c62] Avoid invalid <<TreeviewSelect>> events
+2022-03-07 (bug)[2a6c62] Avoid invalid <<TreeviewSelect>> events
 	(vogel,spjuth)
 
-2022-06-12 (bug) [e4a051] Mac: map embedded window emideately (vogel)
+2022-06-12 (bug)[e4a051] Mac: map embedded window emideately (vogel)
 
-
-
-- Released 8.6.13, Nov 15, 2022 - https://core.tcl-lang.org/tk/ for details
+- Released 8.6.13, Nov 16, 2022 - https://core.tcl-lang.org/tk/ for details
