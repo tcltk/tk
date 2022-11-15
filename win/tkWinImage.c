@@ -619,7 +619,7 @@ XGetImage(
 		width, height, 32, 0);
 	size = imagePtr->bytes_per_line * imagePtr->height;
 	imagePtr->data = (char *)ckalloc(size);
-	ZeroMemory(imagePtr->data, size);
+	memset(imagePtr->data, 0, size);
 
 	for (yy = 0; yy < height; yy++) {
 	    for (xx = 0; xx < width; xx++) {

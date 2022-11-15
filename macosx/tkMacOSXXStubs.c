@@ -15,6 +15,7 @@
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 
@@ -189,7 +190,7 @@ TkpOpenDisplay(
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
-	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
+	if (strcmp(DisplayString(gMacDisplay->display), display_name) == 0) {
 	    return gMacDisplay;
 	} else {
 	    return NULL;
