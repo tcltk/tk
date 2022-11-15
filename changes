@@ -7954,7 +7954,15 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-01-16 (bug)[b1d115] No <Enter> event on new toplevel on current toplevel
 	destruction (vogel)
 
+2022-02-03 (bug)[3fefb3] crash in empty ttk::combobox when end index requested
+	(vogel)
+
 2022-02-07 (new)[247d80] Chinese message file (NewbieXvwu)
+
+2022-02-12 (bug)[292598,01acde,e02fc96] Mac: memory leaks (image, focus ring)
+	(chavez)
+
+2022-02-12 (bug)[fc5073] Mac: crash on native file dialog and tooltip (walzer)
 
 2022-02-16 (bug)[934cab] crash in revised text elided text (frithrah)
 
