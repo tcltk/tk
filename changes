@@ -7980,7 +7980,12 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2022-04-15 (bug)[c0bf1b] XVirtualEvent buffer overflows (chavez)
 
+2022-04-19 (new)[8dd3d5] Mac : use Fn + e to access Emoji (nijtmans)
+
 2022-05-11 (bug)[88cfdc] Mac: dialog memory, avoid use after free (chavez)
+
+2022-04-21 (new)[bf0f48] Mac: Optimization for compilation is now -O2
+	(nijtmans)
 
 2022-05-22 (bug)[bee96b] Win: cursor warp, [tk busy] (mcdonald)
 
