@@ -79,12 +79,14 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
  * text widgets internally.
  */
 
-const Tcl_ObjType tkTextIndexType = {
-    "textindex",		/* name */
+const TkObjType tkTextIndexType = {
+    {"textindex",		/* name */
     FreeTextIndexInternalRep,	/* freeIntRepProc */
     DupTextIndexInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 static void
@@ -128,7 +130,7 @@ DupTextIndexInternalRep(
     }
     SET_TEXTINDEX(copyPtr, dupIndexPtr);
     SET_INDEXEPOCH(copyPtr, epoch);
-    copyPtr->typePtr = &tkTextIndexType;
+    copyPtr->typePtr = &tkTextIndexType.objType;
 }
 
 /*
@@ -190,7 +192,7 @@ MakeObjIndex(
     indexPtr->linePtr = origPtr->linePtr;
     indexPtr->byteIndex = origPtr->byteIndex;
     SET_TEXTINDEX(objPtr, indexPtr);
-    objPtr->typePtr = &tkTextIndexType;
+    objPtr->typePtr = &tkTextIndexType.objType;
     indexPtr->textPtr = textPtr;
 
     if (textPtr != NULL) {
@@ -213,7 +215,7 @@ TkTextGetIndexFromObj(
     TkTextIndex *indexPtr = NULL;
     int cache;
 
-    if (objPtr->typePtr == &tkTextIndexType) {
+    if (objPtr->typePtr == &tkTextIndexType.objType) {
 	Tcl_Size epoch;
 
 	indexPtr = GET_TEXTINDEX(objPtr);
