@@ -7257,7 +7257,7 @@ GenerateConfigureNotify(
      */
 
     event.type = ConfigureNotify;
-    event.xconfigure.serial = winPtr->display->request;
+    event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
     event.xconfigure.send_event = False;
     event.xconfigure.display = winPtr->display;
     event.xconfigure.event = winPtr->window;

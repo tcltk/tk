@@ -1082,7 +1082,7 @@ Tk_DrawChars(
     TkWinDCState state;
 
     fontPtr = (WinFont *) gc->font;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (drawable == None) {
 	return;
@@ -1231,7 +1231,7 @@ TkDrawAngledChars(
     TkWinDCState state;
 
     fontPtr = (WinFont *) gc->font;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (drawable == None) {
 	return;

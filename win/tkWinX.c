@@ -422,10 +422,10 @@ TkWinDisplayChanged(
     HDC dc;
     Screen *screen;
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     dc = GetDC(NULL);
     screen->width = GetDeviceCaps(dc, HORZRES);
@@ -559,7 +559,7 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    Display *display = (Display *)ckalloc(sizeof(Display));
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
     Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 
@@ -621,7 +621,7 @@ void
 TkpCloseDisplay(
     TkDisplay *dispPtr)
 {
-    Display *display = dispPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)dispPtr->display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -636,14 +636,14 @@ TkpCloseDisplay(
 	ckfree(display->display_name);
     }
     if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+	if (ScreenOfDisplay(display, 0)->root_visual != NULL) {
+	    ckfree(ScreenOfDisplay(display, 0)->root_visual);
 	}
-	if (display->screens->root != None) {
-	    ckfree((char *)display->screens->root);
+	if (ScreenOfDisplay(display, 0)->root != None) {
+	    ckfree((char *)ScreenOfDisplay(display, 0)->root);
 	}
-	if (display->screens->cmap != None) {
-	    XFreeColormap(display, display->screens->cmap);
+	if (ScreenOfDisplay(display, 0)->cmap != None) {
+	    XFreeColormap(display, ScreenOfDisplay(display, 0)->cmap);
 	}
 	ckfree(display->screens);
     }

@@ -79,10 +79,10 @@ TkMacOSXDisplayChanged(
     NSArray *nsScreens;
 
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     nsScreens = [NSScreen screens];
     if (nsScreens && [nsScreens count]) {
@@ -232,7 +232,7 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    Display *display = (Display *)ckalloc(sizeof(Display));
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
     Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     int fd = 0;
     NSArray *cgVers;
@@ -243,7 +243,7 @@ XkbOpenDisplay(
     bzero(screen, sizeof(Screen));
 
     display->resource_alloc = MacXIdAlloc;
-    display->request	    = 0;
+    display->request	    = 1;
     display->qlen	    = 0;
     display->fd		    = fd;
     display->screens	    = screen;
@@ -329,7 +329,7 @@ void
 TkpCloseDisplay(
     TkDisplay *displayPtr)
 {
-    Display *display = displayPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)displayPtr->display;
 
     if (gMacDisplay != displayPtr) {
 	Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
@@ -337,8 +337,8 @@ TkpCloseDisplay(
 
     gMacDisplay = NULL;
     if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+	if (ScreenOfDisplay(display, 0)->root_visual != NULL) {
+	    ckfree(ScreenOfDisplay(display, 0)->root_visual);
 	}
 	ckfree(display->screens);
     }
@@ -455,7 +455,7 @@ XGetAtomName(
     Display *display,
     TCL_UNUSED(Atom))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -471,7 +471,7 @@ XRootWindow(
     Display *display,
     TCL_UNUSED(int))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ROOT_ID;
 }
 
@@ -489,7 +489,7 @@ XGetGeometry(
 {
     TkWindow *winPtr = ((MacDrawable *)d)->winPtr;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     *root_return = ROOT_ID;
     if (winPtr) {
 	*x_return = Tk_X(winPtr);
@@ -803,7 +803,7 @@ XGetWindowProperty(
     unsigned long *bytes_after_return,
     TCL_UNUSED(unsigned char **))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     *actual_type_return = None;
     *actual_format_return = *bytes_after_return = 0;
     *nitems_return = 0;
@@ -859,7 +859,7 @@ XSetIconName(
     /*
      * This is a no-op, no icon name for Macs.
      */
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -874,7 +874,7 @@ XForceScreenSaver(
      * is!
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -1064,7 +1064,7 @@ XGetInputFocus(
     TCL_UNUSED(Window *),
     TCL_UNUSED(int *))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -1080,7 +1080,7 @@ XSynchronize(
     Display *display,
     TCL_UNUSED(Bool))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -1103,7 +1103,7 @@ int
 XNoOp(
     Display *display)
 {
-	display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 
