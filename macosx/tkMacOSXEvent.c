@@ -125,7 +125,7 @@ XSync(
      *  [da5f2266df].)
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 

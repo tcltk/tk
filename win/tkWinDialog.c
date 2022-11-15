@@ -1028,7 +1028,7 @@ ParseOFNOptions(
     case OFN_FILE_OPEN: options = openOptions; break;
     }
 
-    ZeroMemory(optsPtr, sizeof(*optsPtr));
+    memset(optsPtr, 0, sizeof(*optsPtr));
     /* optsPtr->forceXPStyle = 1; */
     optsPtr->tkwin = (Tk_Window)clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
@@ -1520,7 +1520,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    ZeroMemory(&ofnData, sizeof(OFNData));
+    memset(&ofnData, 0, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
     Tcl_DStringInit(&dirString); /* XXX - original code was missing this
                                     leaving dirString uninitialized for
@@ -1534,7 +1534,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     Tk_MakeWindowExist(optsPtr->tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(optsPtr->tkwin));
 
-    ZeroMemory(&ofn, sizeof(OPENFILENAME));
+    memset(&ofn, 0, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
@@ -2401,7 +2401,7 @@ Tk_ChooseDirectoryObjCmd(
     /* Older dialogs */
 
     path[0] = '\0';
-    ZeroMemory(&cdCBData, sizeof(ChooseDir));
+    memset(&cdCBData, 0, sizeof(ChooseDir));
     cdCBData.interp = interp;
     cdCBData.mustExist = ofnOpts.mustExist;
 
@@ -3400,8 +3400,8 @@ FontchooserShowCmd(
 
     Tk_MakeWindowExist(parent);
 
-    ZeroMemory(&cf, sizeof(CHOOSEFONTW));
-    ZeroMemory(&lf, sizeof(LOGFONTW));
+    memset(&cf, 0, sizeof(CHOOSEFONTW));
+    memset(&lf, 0, sizeof(LOGFONTW));
     lf.lfCharSet = DEFAULT_CHARSET;
     cf.lStructSize = sizeof(CHOOSEFONTW);
     cf.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));

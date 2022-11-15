@@ -655,7 +655,7 @@ InitWindowClass(
 
 	    initialized = 1;
 
-	    ZeroMemory(&windowClass, sizeof(WNDCLASSW));
+	    memset(&windowClass, 0, sizeof(WNDCLASSW));
 
 	    windowClass.style = CS_HREDRAW | CS_VREDRAW;
 	    windowClass.hInstance = Tk_GetHINSTANCE();
@@ -1053,7 +1053,7 @@ ReadIconFromFile(
 		Tcl_DStringFree(&ds2);
 		return NULL;
 	    }
-	    ZeroMemory(lpIR, size);
+	    memset(lpIR, 0, size);
 
 	    lpIR->nNumImages		= ((res != 0) ? 2 : 1);
 	    lpIR->IconImages[0].Width	= 16;
@@ -1770,7 +1770,7 @@ TkWmNewWindow(
      * Initialize full structure, then set what isn't NULL
      */
 
-    ZeroMemory(wmPtr, sizeof(WmInfo));
+    memset(wmPtr, 0, sizeof(WmInfo));
     winPtr->wmInfoPtr = wmPtr;
     wmPtr->winPtr = winPtr;
     wmPtr->hints.flags = InputHint | StateHint;
@@ -4345,7 +4345,7 @@ WmIconphotoCmd(
     if (lpIR == NULL) {
 	return TCL_ERROR;
     }
-    ZeroMemory(lpIR, size);
+    memset(lpIR, 0, size);
 
     for (i = startObj; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
@@ -7257,7 +7257,7 @@ GenerateConfigureNotify(
      */
 
     event.type = ConfigureNotify;
-    event.xconfigure.serial = winPtr->display->request;
+    event.xconfigure.serial = LastKnownRequestProcessed(winPtr->display);
     event.xconfigure.send_event = False;
     event.xconfigure.display = winPtr->display;
     event.xconfigure.event = winPtr->window;
