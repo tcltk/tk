@@ -40,7 +40,7 @@ Tk_GetPixmap(
     int planes;
     Screen *screen;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     newTwdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
     newTwdPtr->type = TWD_BITMAP;
@@ -56,7 +56,7 @@ Tk_GetPixmap(
     } else {
 	newTwdPtr->bitmap.colormap = twdPtr->bitmap.colormap;
     }
-    screen = &display->screens[0];
+    screen = ScreenOfDisplay(display, 0);
     planes = 1;
     if (depth == screen->root_depth) {
 	planes = PTR2INT(screen->ext_data);
@@ -144,7 +144,7 @@ Tk_FreePixmap(
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *) pixmap;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (twdPtr != NULL) {
 	DeleteObject(twdPtr->bitmap.handle);
 	ckfree(twdPtr);

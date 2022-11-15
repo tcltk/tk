@@ -589,7 +589,7 @@ XGetImage(
     XImage *imagePtr;
     HDC dc;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (twdPtr == NULL) {
 	/*

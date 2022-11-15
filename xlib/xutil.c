@@ -39,7 +39,7 @@ XInternAtom(
     (void)atom_name;
     (void)only_if_exists;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ++atom;
 }
 

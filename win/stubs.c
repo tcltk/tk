@@ -579,7 +579,7 @@ int
 XNoOp(
     Display *display)
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 
@@ -590,7 +590,7 @@ XSynchronize(
 {
     (void)onoff;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -601,7 +601,7 @@ XSync(
 {
     (void)discard;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 
