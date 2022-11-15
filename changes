@@ -7959,28 +7959,42 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2022-02-07 (new)[247d80] Chinese message file (NewbieXvwu)
 
-2022-02-12 (bug)[292598,01acde,e02fc96] Mac: memory leaks (image, focus ring)
-	(chavez)
+2022-02-07 (new) Support Windows ARM platform (nijtmans)
+
+2022-02-11 (bug)[e331bc] NULL to memset in photo blank (chavez)
 
 2022-02-12 (bug)[fc5073] Mac: crash on native file dialog and tooltip (walzer)
 
-2022-02-16 (bug)[934cab] crash in revised text elided text (frithrah)
-
 2022-02-17 (bug)[864b06] PNG photo image color numeric issue (chavez)
+
+2022-02-24 (bug)[141a11] Mac: dialog box with global grab inresponsive on
+	click in other toplevel (walzer)
 
 2022-02-25 (bug)[f75190] tk_fontchooser: multiple font families, locale
 	change, button activation (holger,vogel)
 
+2022-02-25 (bug)[ce6b42] (in TCL bug tracker) ttk::spinbox increment event
+	endless invokation (vogel)
+
+2022-02-26 (bug)[c7052d] Win: middle mouse click blocks system clipbord
+	(vogel)
+
+2022-02-27 (bug)[292598,01acde,e02fc96,0c3dbe,ee49f3,d175bb] Mac: memory leaks
+	(images, focus ring) (chavez)
+
 2022-03-07 (bug)[2a6c62] Avoid invalid <<TreeviewSelect>> events
 	(vogel,spjuth)
 
-2022-03-16 Updates to Finnish message catalog (hippelainen)
+2022-03-16 (new)[f47920] Updates to Finnish message catalog (hippelainen)
 
 2022-03-16 (bug)[424773] crash in test canvPs-5.1 (chavez,vogel)
 
 2022-03-19 (bug)[5412c6] crash in test canvWind-2.1 (SVID,vogel,griffin)
 
 2022-03-19 (bug)[54fe7a] crash in test textWind-18.3 (akuli,vogel)
+
+2022-04-04 (bug)[29b5c2] error in tk_popup with separator entry selected
+	(griffin)
 
 2022-04-07 (bug)[415415] scale advances multiple steps on single click (vogel)
 
@@ -7995,11 +8009,20 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-04-21 (new)[bf0f48] Mac: Optimization for compilation is now -O2
 	(nijtmans)
 
+2022-05-08 (bug)[eedd79] potential crashes in option parsing when sizeof(enum)
+	not equal to int (nijtmans)
+
+2022-05-08 (bug)[0ce975] panedwindow calls memcpy with NULL pointer (chavez)
+
 2022-05-22 (bug)[bee96b] Win: cursor warp, [tk busy] (mcdonald)
+
+2022-06-07 (bug) GIF with multiple images may reuse transparent color (oehhar)
 
 2022-06-12 (bug)[e4a051] Mac: map embedded window immediately (vogel)
 
-2022-06-27 Updates to Russian message catalog (pylypenko)
+2022-06-15 (bug)[b18434] cygwin path compiling issues (fassel)
+
+2022-06-27 [aefdb8,be29f7] Updates to Russian message catalog (pylypenko)
 
 2022-07-04 Updates to Esperanto message catalog (ender)
 
