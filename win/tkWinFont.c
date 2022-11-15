@@ -405,7 +405,7 @@ TkWinSetupSystemFonts(
      * (i.e. WINVER=0x0600 and running on XP).
      */
 
-    ZeroMemory(&ncMetrics, sizeof(ncMetrics));
+    memset(&ncMetrics, 0, sizeof(ncMetrics));
     ncMetrics.cbSize = sizeof(ncMetrics);
     if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
 	    sizeof(ncMetrics), &ncMetrics, 0)) {

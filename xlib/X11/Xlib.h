@@ -492,11 +492,17 @@ typedef struct {
  * The contents of this structure are implementation dependent.
  * A Display should be treated as opaque by application code.
  */
+#ifndef XLIB_ILLEGAL_ACCESS
+typedef struct _XDisplay Display;
+#endif
+
 struct _XPrivate;		/* Forward declare before use for C++ */
 struct _XrmHashBucketRec;
 
 typedef struct
+#ifdef XLIB_ILLEGAL_ACCESS
 _XDisplay
+#endif
 {
 	XExtData *ext_data;	/* hook for extension to hang data */
 	struct _XPrivate *private1;
@@ -547,7 +553,9 @@ _XDisplay
 	char *xdefaults;	/* contents of defaults from server */
 	/* there is more to this structure, but it is private to Xlib */
 }
+#ifdef XLIB_ILLEGAL_ACCESS
 Display,
+#endif
 *_XPrivDisplay;
 
 #undef _XEVENT_

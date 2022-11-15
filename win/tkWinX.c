@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
 #include <commctrl.h>
@@ -519,7 +520,7 @@ TkpOpenDisplay(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->winDisplay != NULL) {
-	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
+	if (!strcmp(DisplayString(tsdPtr->winDisplay->display), display_name)) {
 	    return tsdPtr->winDisplay;
 	} else {
 	    return NULL;
@@ -530,7 +531,7 @@ TkpOpenDisplay(
     TkWinDisplayChanged(display);
 
     tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
-    ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
+    memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
     tsdPtr->wheelTickPrev = GetTickCount();
@@ -563,8 +564,8 @@ XkbOpenDisplay(
     Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 
-    ZeroMemory(screen, sizeof(Screen));
-    ZeroMemory(display, sizeof(Display));
+    memset(screen, 0, sizeof(Screen));
+    memset(display, 0, sizeof(Display));
 
     /*
      * Note that these pixel values are not palette relative.
@@ -582,7 +583,7 @@ XkbOpenDisplay(
     twdPtr->window.winPtr = NULL;
     twdPtr->window.handle = NULL;
     screen->root = (Window)twdPtr;
-    screen->display = display;
+    screen->display = (Display *)display;
 
     display->display_name = (char  *)ckalloc(strlen(name) + 1);
     strcpy(display->display_name, name);
@@ -597,7 +598,7 @@ XkbOpenDisplay(
     if (minor_rtrn) *minor_rtrn = 0;
     if (reason) *reason = 0;
 
-    return display;
+    return (Display *)display;
 }
 
 /*
@@ -643,7 +644,7 @@ TkpCloseDisplay(
 	    ckfree((char *)ScreenOfDisplay(display, 0)->root);
 	}
 	if (ScreenOfDisplay(display, 0)->cmap != None) {
-	    XFreeColormap(display, ScreenOfDisplay(display, 0)->cmap);
+	    XFreeColormap((Display *)display, ScreenOfDisplay(display, 0)->cmap);
 	}
 	ckfree(display->screens);
     }
@@ -991,7 +992,7 @@ GenerateXEvent(
     }
 
     memset(&event.x, 0, sizeof(XEvent));
-    event.x.xany.serial = winPtr->display->request++;
+    event.x.xany.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.x.xany.send_event = False;
     event.x.xany.display = winPtr->display;
     event.x.xany.window = winPtr->window;
@@ -1660,7 +1661,7 @@ HandleIMEComposition(
 	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	memset(&event, 0, sizeof(XEvent));
-	event.xkey.serial = winPtr->display->request++;
+	event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
 	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
