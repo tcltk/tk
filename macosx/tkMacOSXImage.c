@@ -1114,23 +1114,23 @@ static Tk_ImageType TkMacOSXNSImageType = {
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
-     -1, Tk_Offset(TkMacOSXNSImageModel, source), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, source), 0, NULL, 0},
     {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
-     -1, Tk_Offset(TkMacOSXNSImageModel, as), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, as), 0, NULL, 0},
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
-     -1, Tk_Offset(TkMacOSXNSImageModel, width), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
-     -1, Tk_Offset(TkMacOSXNSImageModel, height), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, height), 0, NULL, 0},
     {TK_OPTION_INT, "-radius", NULL, NULL, DEF_RADIUS,
-     -1, Tk_Offset(TkMacOSXNSImageModel, radius), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, radius), 0, NULL, 0},
     {TK_OPTION_INT, "-ring", NULL, NULL, DEF_RING,
-     -1, Tk_Offset(TkMacOSXNSImageModel, ring), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, ring), 0, NULL, 0},
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
-     -1, Tk_Offset(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
-     -1, Tk_Offset(TkMacOSXNSImageModel, pressed), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, Tk_Offset(TkMacOSXNSImageModel, pressed), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, template), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
