@@ -419,7 +419,7 @@ XDrawLines(
 	return BadValue;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -487,7 +487,7 @@ XDrawSegments(
     TkMacOSXDrawingContext dc;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -539,7 +539,7 @@ XFillPolygon(
     TkMacOSXDrawingContext dc;
     int i;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -603,7 +603,7 @@ XDrawRectangle(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -657,7 +657,7 @@ XDrawRectangles(
     XRectangle * rectPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -709,7 +709,7 @@ XFillRectangles(
     XRectangle * rectPtr;
     int i;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -814,7 +814,7 @@ XDrawArc(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -884,7 +884,7 @@ XDrawArcs(
     XArc *arcPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -965,7 +965,7 @@ XFillArc(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -1038,7 +1038,7 @@ XFillArcs(
     XArc * arcPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
