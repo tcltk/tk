@@ -339,7 +339,7 @@ XQueryPointer(
     (void)win_x_return;
     (void)win_y_return;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
     *mask_return = TkWinGetModifierState();
     return True;
@@ -476,7 +476,7 @@ XGetInputFocus(
 
     *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -507,7 +507,7 @@ XSetInputFocus(
     (void)revert_to;
     (void)time;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));
     }

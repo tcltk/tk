@@ -189,7 +189,7 @@ static int GdiArc(
     int dolinecolor = 0, dofillcolor = 0;
     HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
     int dodash = 0;
     const char *dashdata = 0;
 
@@ -961,7 +961,7 @@ static int GdiOval(
     int dolinecolor = 0, dofillcolor = 0;
     HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1083,7 +1083,7 @@ static int GdiPolygon(
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
     HBRUSH hBrush = NULL;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1248,7 +1248,7 @@ static int GdiRectangle(
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
     HBRUSH hBrush = NULL;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -3601,7 +3601,7 @@ static int PrintSelectPrinter(
 
     /* Set up print dialog and initalize property structure. */
 
-    ZeroMemory(&pd, sizeof(pd));
+    memset(&pd, 0, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
@@ -3609,7 +3609,7 @@ static int PrintSelectPrinter(
     if (PrintDlgW(&pd) == TRUE) {
 
 	/*Get document info.*/
-	ZeroMemory(&di, sizeof(di));
+	memset(&di, 0, sizeof(di));
 	di.cbSize = sizeof(di);
 	di.lpszDocName = L"Tk Print Output";
 
