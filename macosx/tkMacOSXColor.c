@@ -755,7 +755,7 @@ XAllocColor(
     TCL_UNUSED(Colormap),		/* Not used. */
     XColor *colorPtr)		/* XColor struct to modify. */
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     colorPtr->pixel = TkpGetPixel(colorPtr);
     return 1;
 }

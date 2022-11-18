@@ -3601,7 +3601,7 @@ static int PrintSelectPrinter(
 
     /* Set up print dialog and initalize property structure. */
 
-    ZeroMemory(&pd, sizeof(pd));
+    memset(&pd, 0, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
@@ -3609,7 +3609,7 @@ static int PrintSelectPrinter(
     if (PrintDlgW(&pd) == TRUE) {
 
 	/*Get document info.*/
-	ZeroMemory(&di, sizeof(di));
+	memset(&di, 0, sizeof(di));
 	di.cbSize = sizeof(di);
 	di.lpszDocName = L"Tk Print Output";
 

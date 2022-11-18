@@ -109,7 +109,7 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", DEF_MESSAGE_ANCHOR,
-	 TCL_INDEX_NONE, offsetof(Message, anchor), 0, 0, 0},
+	 TCL_INDEX_NONE, offsetof(Message, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_INT, "-aspect", "aspect", "Aspect", DEF_MESSAGE_ASPECT,
 	 TCL_INDEX_NONE, offsetof(Message, aspect), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
@@ -141,7 +141,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
 	 offsetof(Message, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), 0, 0, 0},
+	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	 DEF_MESSAGE_PADX, offsetof(Message, padXPtr),
 	 offsetof(Message, padX), 0, 0, 0},
