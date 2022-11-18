@@ -155,14 +155,14 @@ CreateIcoFromPhoto(
      * converts them as required. Initialise icon info structure.
      */
 
-    ZeroMemory(&iconInfo, sizeof(iconInfo));
+    memset(&iconInfo, 0, sizeof(iconInfo));
     iconInfo.fIcon = TRUE;
 
     /*
      * Create device-independent color bitmap.
      */
 
-    ZeroMemory(&bmInfo, sizeof bmInfo);
+    memset(&bmInfo, 0, sizeof bmInfo);
     bmInfo.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmInfo.bmiHeader.biWidth = width;
     bmInfo.bmiHeader.biHeight = -height;
@@ -203,7 +203,7 @@ CreateIcoFromPhoto(
         return NULL;
     }
 
-    ZeroMemory(bgraMask.ptr, width*height/8);
+    memset(bgraMask.ptr, 0, width*height/8);
 
     /*
      * Create an icon from the bitmaps.

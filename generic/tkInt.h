@@ -1116,13 +1116,22 @@ typedef struct TkpClipMask {
  * be properly registered with Tcl:
  */
 
-MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
-MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
-MODULE_SCOPE const Tcl_ObjType tkColorObjType;
-MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE const Tcl_ObjType tkFontObjType;
-MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
-MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
+typedef struct {
+    Tcl_ObjType objType;
+    size_t version;
+} TkObjType;
+
+#ifndef TCL_OBJTYPE_V0
+#   define TCL_OBJTYPE_V0 /* just empty */
+#endif
+
+MODULE_SCOPE const TkObjType tkBorderObjType;
+MODULE_SCOPE const TkObjType tkBitmapObjType;
+MODULE_SCOPE const TkObjType tkColorObjType;
+MODULE_SCOPE const TkObjType tkCursorObjType;
+MODULE_SCOPE const TkObjType tkFontObjType;
+MODULE_SCOPE const TkObjType tkStateKeyObjType;
+MODULE_SCOPE const TkObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the
