@@ -39,13 +39,14 @@ namespace eval ttk::theme::default {
                  {	selectBackground	SelectBackground	}
                  {	disabledForeground	DisabledForeground	}
                  {	selectBackground	SelectBackground	}
-                 {	troughColor		TroughColor		} }\
+                 {	troughColor		TroughColor		}
+                 {	windowColor		Background		} }\
 	    colorName\
                  { -frame -foreground -window -alternate -text
                  -activebg -selectbg -selectfg
                  -darker -disabledfg -indicator
                  -disabledindicator -altindicator
-                 -disabledaltindicator }\
+                 -disabledaltindicator -window}\
 	{
 	    set color [eval option get . $xResourceName]
 	    if {$color ne ""} {
@@ -99,7 +100,11 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
 	ttk::style map "." -foreground \
-	    [list disabled $colors(-disabledfg)]
+	    [list disabled $colors(-disabledfg) !disabled $colors(-text)]
+	ttk::style map "." -insertcolor \
+	    [list !disabled $colors(-foreground)]
+	ttk::style map "." -focuscolor \
+	    [list !disabled $colors(-text)]
 
 	ttk::style configure TButton \
 	    -anchor center -padding "3 3" -width -9 \

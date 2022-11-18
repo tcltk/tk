@@ -272,12 +272,8 @@ typedef struct Tk_ObjCustomOption {
  * Computes number of bytes from beginning of structure to a given field.
  */
 
-#ifndef TK_NO_DEPRECATED
+#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9) && !defined(BUILD_tk)
 #   define Tk_Offset(type, field) ((int) offsetof(type, field))
-#endif
-/* Workaround for platforms missing offsetof(), e.g. VC++ 6.0 */
-#ifndef offsetof
-#   define offsetof(type, field) ((size_t) ((char *) &((type *) 0)->field))
 #endif
 
 /*
