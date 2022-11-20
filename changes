@@ -8055,4 +8055,4 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2022-10-28 (bug)[5e4e44] ttk::panedwindow drag robust wrt orientation variants
 	(xolodho,vogel)
 
-- Released 8.6.13, Nov 16, 2022 - https://core.tcl-lang.org/tk/ for details
+- Released 8.6.13, Nov 22, 2022 - https://core.tcl-lang.org/tk/ for details
