@@ -72,11 +72,11 @@ extern "C" {
 #   error "This header-file is for Tk 8 only"
 #endif
 #define TK_MINOR_VERSION	7
-#define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	6
+#define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
+#define TK_RELEASE_SERIAL	1
 
 #define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a6"
+#define TK_PATCH_LEVEL		"8.7b1"
 
 /*
  * A special definition used to allow this header file to be included from

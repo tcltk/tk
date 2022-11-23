@@ -1,6 +1,6 @@
 # README:  Tk
 
-This is the **Tk 8.7a6** source distribution.
+This is the **Tk 8.7b1** source distribution.
 
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
