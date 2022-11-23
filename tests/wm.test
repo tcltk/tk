@@ -2317,7 +2317,7 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
 test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     catch {destroy .l .f.b .f}
     set res {}
-    if {[tk windowingsystem] == "aqua"} {
+    if {[tk windowingsystem] eq "aqua"} {
 	proc doUpdate {} {update idletasks}
     } else {
 	proc doUpdate {} {update}
