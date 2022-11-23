@@ -86,7 +86,9 @@
 # endif
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 2)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#   define TKFLEXARRAY
+#elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
