@@ -343,7 +343,7 @@ DoConfig(
 
     do {
 	if (specPtr->offset < 0) {
-	    continue;
+	    break;
 	}
 	ptr = widgRec + specPtr->offset;
 	switch (specPtr->type) {
