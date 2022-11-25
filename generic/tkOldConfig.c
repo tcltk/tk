@@ -983,10 +983,10 @@ Tk_FreeOptions(
 	if ((specPtr->specFlags & needFlags) != needFlags) {
 	    continue;
 	}
-	ptr = widgRec + specPtr->offset;
 	if (specPtr->offset < 0) {
 	    continue;
 	}
+	ptr = widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **) ptr) != NULL) {
