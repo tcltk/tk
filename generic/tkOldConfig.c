@@ -361,7 +361,7 @@ DoConfig(
 
     do {
 	if (specPtr->offset == TCL_INDEX_NONE) {
-	    continue;
+	    break;
 	}
 	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
