@@ -962,6 +962,7 @@ test canvText-20.1 {angled text bounding box} -setup {
     set bb2 [.c bbox t]
     .c itemconf t -angle 270
     set bb3 [.c bbox t]
+    # bboxes should be the same, possibly with a small (platform-specific) rounding difference
     list [expr {[almosteq $bb0 $bb2] ? "ok" : "$bb0,$bb2"}] \
 	[expr {[almosteq $bb1 $bb3] ? "ok" : "$bb1,$bb3"}] \
 	[expr {[almosteq $bb0 [transpose $bb1]] ? "ok" : "$bb0,$bb1"}]
