@@ -179,7 +179,8 @@ test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
     expr {$::testfont ne {}}
 } -result {1}
 
-test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl haveTimes14BoldFont} -body {
+puts >>>Start ; foreach fam [lsort [font families]] {puts "$fam"} ; puts <<<End
+test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl} -body {
     start {
         tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
         tk::fontchooser::Show
