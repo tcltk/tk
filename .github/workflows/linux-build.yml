@@ -132,7 +132,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure (symbols=${{ matrix.symbols }})
         run: |
-          ./configure $CFGOPT "--without-xft --prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--disable-xft --prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
