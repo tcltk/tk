@@ -4200,7 +4200,8 @@ HandleEventGenerate(
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, NULL);
 		return TCL_ERROR;
 	    }
-
+printf("key value is %s\n", value);
+printf("keysym is %d\n", keysym); fflush(stdout);
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("no keycode for keysym \"%s\"", value));
