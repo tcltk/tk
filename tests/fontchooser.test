@@ -6,9 +6,6 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-
 # the following helper functions are related to the functions used
 # in winDialog.test where they are used to send messages to the win32
 # dialog (hence the weirdness).
@@ -182,7 +179,7 @@ test fontchooser-4.3 {fontchooser -font} -constraints scriptImpl -body {
     expr {$::testfont ne {}}
 } -result {1}
 
-test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl failsOnUbuntuNoXft} -body {
+test fontchooser-4.4 {fontchooser -font} -constraints {scriptImpl haveTimes14BoldFont} -body {
     start {
         tk::fontchooser::Configure -command ApplyFont -font {times 14 bold}
         tk::fontchooser::Show
