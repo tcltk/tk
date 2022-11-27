@@ -261,47 +261,47 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
-if {[tk windowingsystem] ne "aqua"} {
-    proc placeUpdate {} {
-	update
-    }
-} else {
-    proc placeUpdate {} {
-    }
-}
+# Tests place-8.1 and place-8.2 are constrained with failsOnUbuntu
+# because they are failing in the GitHub CI environment, using Linux Ubuntu.
+# These tests are also constrained with failsOnXQuarz because they fail
+# on macOS when building with clang --disable-aqua (which uses XQuartz)
+# (this is the case both at GitHub CI and on a real Mac).
+# Analysis shows that, on both cases, WaitForMapNotify is giving up on
+# waiting for the MapNotify event that should show up when running
+# 'wm iconify'. The timeout delay (2s) is exceeded without the unmapping
+# having happened. The cause for this is unknown (see comments in WaitForMapNotify).
 
 test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
 } -body {
     place .t.f2 -relx 1.0 -rely 1.0 -anchor sw
-    update idletasks
+    update
     set result [winfo ismapped .t.f2]
     wm iconify .t
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
-    update idletasks
+    update
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    placeUpdate
+    update
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
 test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
-    update idletasks
 } -body {
     place .t.f -x 0 -y 0 -width 200 -height 100
     place .t.f2 -in .t.f -relx 1.0 -rely 1.0 -anchor sw -width 50 -height 20
-    update idletasks
+    update
     set result [winfo ismapped .t.f2]
     wm iconify .t
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
-    update idletasks
+    update
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    placeUpdate
+    update
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 42 32 0 1}
 destroy .t
