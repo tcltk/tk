@@ -1503,9 +1503,7 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
 } -result {enter-a enter-b enter-c | leave-c leave-b}
 
-test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12
-} -setup {
+test textTag-16.5 {TkTextPickCurrent procedure} -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
