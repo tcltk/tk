@@ -19,7 +19,7 @@ set bigFont       {Helvetica 24}
 # This is because this configuration only has ONE single font available,
 # making all requested fonts become actually the same font.
 # See constraints.tcl for more details.
-testConstraint bigFontTwiceLargerThanTextFont [expr {
+testConstraint havebigFontTwiceLargerThanTextFont [expr {
     [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
 }]
 
@@ -1358,7 +1358,7 @@ test textTag-16.1 {TkTextPickCurrent procedure} -setup {
 } -result {2.1 3.2 3.2 3.2 3.2 3.2 4.3}
 
 test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
-    bigFontTwiceLargerThanTextFont
+    havebigFontTwiceLargerThanTextFont
 } -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update
@@ -1454,7 +1454,7 @@ test textTag-16.5 {TkTextPickCurrent procedure} -setup {
 } -result {3.2}
 
 test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
-    bigFontTwiceLargerThanTextFont
+    havebigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
@@ -1475,7 +1475,7 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
 } -result {3.1}
 
 test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
-    bigFontTwiceLargerThanTextFont
+    havebigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
