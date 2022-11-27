@@ -275,7 +275,7 @@ int
 TkTextTagCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
     				 * enough to know that objv[1] is "tag". */
 {
@@ -289,7 +289,8 @@ TkTextTagCmd(
 	TAG_GETRANGE, TAG_LOWER, TAG_NAMES, TAG_NEXTRANGE, TAG_PREVRANGE, TAG_PRIORITY, TAG_RAISE,
 	TAG_RANGES, TAG_REMOVE
     };
-    int optionIndex, i;
+    int optionIndex;
+    Tcl_Size i;
     TkTextTag *tagPtr;
     TkTextIndex index1, index2;
     TkSharedText *sharedTextPtr;
@@ -2794,7 +2795,7 @@ ChangeTagPriority(
 
 void
 TkTextBindProc(
-    ClientData clientData,	/* Pointer to text widget structure. */
+    void *clientData,	/* Pointer to text widget structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -3383,7 +3384,7 @@ TagBindEvent(
 	    tagArrPtr[i] = (TkTextTag *) tagArrPtr[i]->name;
 	}
 	Tk_BindEvent(textPtr->sharedTextPtr->tagBindingTable, eventPtr,
-		textPtr->tkwin, countTags, (ClientData *) tagArrPtr);
+		textPtr->tkwin, countTags, (void **) tagArrPtr);
 
 	if (tagArrPtr != tagArrayBuf) {
 	    free(tagArrPtr);

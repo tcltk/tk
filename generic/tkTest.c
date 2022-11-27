@@ -56,6 +56,10 @@ EXTERN int		Tktest_Init(Tcl_Interp *interp);
 }
 #endif
 
+#if TCL_MAJOR_VERSION < 9
+#   undef Tcl_CreateObjCommand2
+#   define Tcl_CreateObjCommand2 Tcl_CreateObjCommand
+#endif
 /*
  * The following data structure represents the model for a test image:
  */
@@ -87,7 +91,7 @@ typedef struct TImageInstance {
  */
 
 static int		ImageCreate(Tcl_Interp *interp,
-			    const char *name, int objc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	ImageGet(Tk_Window tkwin, ClientData clientData);
@@ -262,7 +266,7 @@ Tktest_Init(
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testdeleteapps", TestdeleteappsObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testembed", TkpTestembedCmd,
+    Tcl_CreateObjCommand2(interp, "testembed", TkpTestembedCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testobjconfig", TestobjconfigObjCmd,
 	    Tk_MainWindow(interp), NULL);
@@ -273,7 +277,7 @@ Tktest_Init(
     Tcl_CreateObjCommand(interp, "testprop", TestpropObjCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testprintf", TestprintfObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "testtext", TkpTesttextCmd,
+    Tcl_CreateObjCommand2(interp, "testtext", TkpTesttextCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testphotostringmatch",
             TestPhotoStringMatchCmd, Tk_MainWindow(interp),
@@ -285,7 +289,7 @@ Tktest_Init(
 #elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
     Tcl_CreateObjCommand(interp, "testmenubar", TestmenubarObjCmd,
 	    Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
+    Tcl_CreateObjCommand2(interp, "testsend", TkpTestsendCmd,
 	    Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
 	    Tk_MainWindow(interp), NULL);
@@ -1384,7 +1388,7 @@ ImageCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,			/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument strings for options (doesn't
 				 * include image name or type). */
     TCL_UNUSED(const Tk_ImageType *),	/* Pointer to our type record (not used). */
@@ -1395,7 +1399,7 @@ ImageCreate(
 {
     TImageModel *timPtr;
     const char *varName;
-    int i;
+    Tcl_Size i;
 
     varName = "log";
     for (i = 0; i < objc; i += 2) {
@@ -1935,7 +1939,7 @@ TestpropObjCmd(
 
 static int
 TestprintfObjCmd(
-    ClientData dummy,	/* Not used */
+    TCL_UNUSED(void *),	/* Not used */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -1943,7 +1947,6 @@ TestprintfObjCmd(
     char buffer[256];
     Tcl_WideInt wideInt;
     long long longLongInt;
-    (void)dummy;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "wideint");
@@ -2115,27 +2118,21 @@ CustomOptionGet(
 
 static void
 CustomOptionRestore(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *internalPtr,
     char *saveInternalPtr)
 {
-    (void)dummy;
-    (void)tkwin;
-
     *(char **)internalPtr = *(char **)saveInternalPtr;
     return;
 }
 
 static void
 CustomOptionFree(
-    ClientData dummy,
-    Tk_Window tkwin,
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
     char *internalPtr)
 {
-    (void)dummy;
-    (void)tkwin;
-
     if (*(char **)internalPtr != NULL) {
 	ckfree(*(char **)internalPtr);
     }

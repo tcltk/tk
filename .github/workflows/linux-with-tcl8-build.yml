@@ -118,13 +118,14 @@ jobs:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
           - "gcc"
         cfgopt:
           - ""
+          - "--disable-xft"
           - "--enable-symbols"
     steps:
       - name: Checkout

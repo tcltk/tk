@@ -2177,7 +2177,7 @@ Tk_BindEvent(
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
     				 * locate display information). */
-    Tcl_Size numObjects1,		/* Number of objects at *objArr. */
+    Tcl_Size numObjects,		/* Number of objects at *objArr. */
     ClientData *objArr)		/* Array of one or more objects to check for a matching binding. */
 {
     Tcl_Interp *interp;
@@ -2201,8 +2201,7 @@ Tk_BindEvent(
     unsigned flags;
     unsigned arraySize;
     unsigned newArraySize;
-    unsigned i, k;
-    int numObjects = numObjects1;
+    size_t i, k;
 
     assert(bindPtr);
     assert(eventPtr);
@@ -2275,7 +2274,7 @@ Tk_BindEvent(
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
 	/* Modifier keys should not influence button events. */
-	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
+	for (i = 0; i < (size_t) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		reset = 0;
 	    }
@@ -2401,7 +2400,7 @@ Tk_BindEvent(
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
     if (!PromArr_IsEmpty(bindPtr->promArr)) {
-	for (k = 0; k < (unsigned) numObjects; ++k) {
+	for (k = 0; k < (size_t) numObjects; ++k) {
 	    psl[1] = PromArr_Last(bindPtr->promArr);
 	    psl[0] = psl[1] - 1;
 

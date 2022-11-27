@@ -50,7 +50,7 @@ typedef struct {
 				 * available for listbox items. */
     char *listVarName;		/* List variable name */
     Tcl_Obj *listObj;		/* Pointer to the list object being used */
-    int nElements;		/* Holds the current count of elements */
+    Tcl_Size nElements;		/* Holds the current count of elements */
     Tcl_HashTable *selection;	/* Tracks selection */
     Tcl_HashTable *itemAttrTable;
 				/* Tracks item attributes */
@@ -410,7 +410,7 @@ static Tcl_Size	ListboxFetchSelection(ClientData clientData,
 static void		ListboxLostSelection(ClientData clientData);
 static void		GenerateListboxSelectEvent(Listbox *listPtr);
 static void		EventuallyRedrawRange(Listbox *listPtr,
-			    int first, int last);
+			    Tcl_Size first, Tcl_Size last);
 static void		ListboxScanTo(Listbox *listPtr, int x, int y);
 static int		ListboxSelect(Listbox *listPtr,
 			    int first, int last, int select);
@@ -647,7 +647,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	if (index >= listPtr->nElements) {
+	if (index >= (int)listPtr->nElements) {
 	    index = listPtr->nElements-1;
 	}
 	if (index < 0) {
@@ -723,7 +723,7 @@ ListboxWidgetObjCmd(
 	 */
 
 	objPtr = Tcl_NewObj();
-	for (i = 0; i < listPtr->nElements; i++) {
+	for (i = 0; i < (int)listPtr->nElements; i++) {
 	    if (Tcl_FindHashEntry(listPtr->selection, KEY(i))) {
 		Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewWideIntObj(i));
 	    }
@@ -751,7 +751,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	if (first < listPtr->nElements) {
+	if (first < (int)listPtr->nElements) {
 	    /*
 	     * if a "last index" was given, get it now; otherwise, use the
 	     * first index as the last index.
@@ -765,7 +765,7 @@ ListboxWidgetObjCmd(
 	    } else {
 		last = first;
 	    }
-	    if (last >= listPtr->nElements) {
+	    if (last >= (int)listPtr->nElements) {
 		last = listPtr->nElements - 1;
 	    }
 	    result = ListboxDeleteSubCmd(listPtr, first, last);
@@ -776,7 +776,8 @@ ListboxWidgetObjCmd(
     }
 
     case COMMAND_GET: {
-	int first, last, listLen;
+	int first, last;
+	Tcl_Size listLen;
 	Tcl_Obj **elemPtrs;
 
 	if (objc != 3 && objc != 4) {
@@ -795,11 +796,11 @@ ListboxWidgetObjCmd(
 		break;
 	    }
 	}
-	if (first >= listPtr->nElements) {
+	if (first >= (int)listPtr->nElements) {
 	    result = TCL_OK;
 	    break;
 	}
-	if (last >= listPtr->nElements) {
+	if (last >= (int)listPtr->nElements) {
 	    last = listPtr->nElements - 1;
 	}
 	if (first < 0) {
@@ -875,7 +876,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	if (index < 0 || index >= listPtr->nElements) {
+	if (index < 0 || index >= (int)listPtr->nElements) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
@@ -912,7 +913,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	if (index < 0 || index >= listPtr->nElements) {
+	if (index < 0 || index >= (int)listPtr->nElements) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
@@ -1005,7 +1006,7 @@ ListboxWidgetObjCmd(
 	if (result != TCL_OK) {
 	    break;
 	}
-	if (index >= listPtr->nElements) {
+	if (index >= (int)listPtr->nElements) {
 	    index = listPtr->nElements - 1;
 	}
 	if (index < 0) {
@@ -1088,7 +1089,7 @@ ListboxBboxSubCmd(
 
     lastVisibleIndex = listPtr->topIndex + listPtr->fullLines
 	    + listPtr->partialLine;
-    if (listPtr->nElements < lastVisibleIndex) {
+    if ((int)listPtr->nElements < lastVisibleIndex) {
 	lastVisibleIndex = listPtr->nElements;
     }
 
@@ -1199,7 +1200,7 @@ ListboxSelectionSubCmd(
 	    Tcl_WrongNumArgs(interp, 3, objv, "index");
 	    return TCL_ERROR;
 	}
-	if (first >= listPtr->nElements) {
+	if (first >= (int)listPtr->nElements) {
 	    first = listPtr->nElements - 1;
 	}
 	if (first < 0) {
@@ -1637,7 +1638,7 @@ ConfigureListbox(
 	if (listPtr->listVarName != NULL) {
 	    Tcl_Obj *listVarObj = Tcl_GetVar2Ex(interp, listPtr->listVarName,
 		    NULL, TCL_GLOBAL_ONLY);
-	    int dummy;
+	    Tcl_Size dummy;
 
 	    if (listVarObj == NULL) {
 		listVarObj = (oldListObj ? oldListObj : Tcl_NewObj());
@@ -1906,7 +1907,7 @@ DisplayListbox(
      */
 
     limit = listPtr->topIndex + listPtr->fullLines + listPtr->partialLine - 1;
-    if (limit >= listPtr->nElements) {
+    if (limit >= (int)listPtr->nElements) {
 	limit = listPtr->nElements-1;
     }
     left = right = 0;
@@ -2022,7 +2023,7 @@ DisplayListbox(
 			    1, 1, 1, TK_RELIEF_RAISED);
 		}
 		/* Draw bottom bevel */
-		if (i + 1 == listPtr->nElements ||
+		if (i + 1 == (int)listPtr->nElements ||
 			!Tcl_FindHashEntry(listPtr->selection, KEY(i + 1))) {
 		    Tk_3DHorizontalBevel(tkwin, pixmap, selectedBg, x-left,
 			    y + listPtr->lineHeight - listPtr->selBorderWidth,
@@ -2248,7 +2249,7 @@ ListboxComputeGeometry(
 	    listPtr->xScrollUnit = 1;
 	}
 	listPtr->maxWidth = 0;
-	for (i = 0; i < listPtr->nElements; i++) {
+	for (i = 0; i < (int)listPtr->nElements; i++) {
 	    /*
 	     * Compute the pixel width of the current element.
 	     */
@@ -2281,7 +2282,7 @@ ListboxComputeGeometry(
 	    + 2*listPtr->selBorderWidth;
     height = listPtr->height;
     if (listPtr->height <= 0) {
-	height = listPtr->nElements;
+	height = (int)listPtr->nElements;
 	if (height < 1) {
 	    height = 1;
 	}
@@ -2402,8 +2403,8 @@ ListboxInsertSubCmd(
     }
     if (index <= listPtr->active) {
 	listPtr->active += objc;
-	if ((listPtr->active >= listPtr->nElements) &&
-		(listPtr->nElements > 0)) {
+	if ((listPtr->active >= (int)listPtr->nElements) &&
+		((int)listPtr->nElements > 0)) {
 	    listPtr->active = listPtr->nElements-1;
 	}
     }
@@ -2453,7 +2454,7 @@ ListboxDeleteSubCmd(
     if (first < 0) {
 	first = 0;
     }
-    if (last >= listPtr->nElements) {
+    if (last >= (int)listPtr->nElements) {
 	last = listPtr->nElements-1;
     }
     count = last + 1 - first;
@@ -2566,7 +2567,7 @@ ListboxDeleteSubCmd(
 	    listPtr->topIndex = first;
 	}
     }
-    if (listPtr->topIndex > (listPtr->nElements - listPtr->fullLines)) {
+    if (listPtr->topIndex > ((int)listPtr->nElements - listPtr->fullLines)) {
 	listPtr->topIndex = listPtr->nElements - listPtr->fullLines;
 	if (listPtr->topIndex < 0) {
 	    listPtr->topIndex = 0;
@@ -2576,8 +2577,8 @@ ListboxDeleteSubCmd(
 	listPtr->active -= count;
     } else if (listPtr->active >= first) {
 	listPtr->active = first;
-	if ((listPtr->active >= listPtr->nElements) &&
-		(listPtr->nElements > 0)) {
+	if ((listPtr->active >= (int)listPtr->nElements) &&
+		((int)listPtr->nElements > 0)) {
 	    listPtr->active = listPtr->nElements-1;
 	}
     }
@@ -2829,7 +2830,7 @@ ChangeListboxView(
     int index)			/* Index of element in listPtr that should now
 				 * appear at the top of the listbox. */
 {
-    if (index >= (listPtr->nElements - listPtr->fullLines)) {
+    if (index >= ((int)listPtr->nElements - listPtr->fullLines)) {
 	index = listPtr->nElements - listPtr->fullLines;
     }
     if (index < 0) {
@@ -2988,7 +2989,7 @@ NearestListboxElement(
 	index = 0;
     }
     index += listPtr->topIndex;
-    if (index >= listPtr->nElements) {
+    if (index >= (int)listPtr->nElements) {
 	index = listPtr->nElements-1;
     }
     return index;
@@ -3032,13 +3033,13 @@ ListboxSelect(
 	first = last;
 	last = i;
     }
-    if ((last < 0) || (first >= listPtr->nElements)) {
+    if ((last < 0) || (first >= (int)listPtr->nElements)) {
 	return TCL_OK;
     }
     if (first < 0) {
 	first = 0;
     }
-    if (last >= listPtr->nElements) {
+    if (last >= (int)listPtr->nElements) {
 	last = listPtr->nElements - 1;
     }
     oldCount = listPtr->numSelected;
@@ -3135,7 +3136,7 @@ ListboxFetchSelection(
 
     needNewline = 0;
     Tcl_DStringInit(&selection);
-    for (i = 0; i < listPtr->nElements; i++) {
+    for (i = 0; i < (int)listPtr->nElements; i++) {
 	entry = Tcl_FindHashEntry(listPtr->selection, KEY(i));
 	if (entry != NULL) {
 	    if (needNewline) {
@@ -3247,15 +3248,12 @@ GenerateListboxSelectEvent(
 static void
 EventuallyRedrawRange(
     Listbox *listPtr,	/* Information about widget. */
-    int first,			/* Index of first element in list that needs
+    TCL_UNUSED(Tcl_Size),			/* Index of first element in list that needs
 				 * to be redrawn. */
-    int last)			/* Index of last element in list that needs to
+    TCL_UNUSED(Tcl_Size))			/* Index of last element in list that needs to
 				 * be redrawn. May be less than first; these
 				 * just bracket a range. */
 {
-    (void)first;
-    (void)last;
-
     /*
      * We don't have to register a redraw callback if one is already pending,
      * or if the window doesn't exist, or if the window isn't mapped.
@@ -3438,7 +3436,7 @@ ListboxListVarProc(
 {
     Listbox *listPtr = (Listbox *)clientData;
     Tcl_Obj *oldListObj, *varListObj;
-    int oldLength, i;
+    Tcl_Size oldLength, i;
     Tcl_HashEntry *entry;
     (void)name1;
     (void)name2;
@@ -3542,7 +3540,7 @@ ListboxListVarProc(
 
     if (oldLength != listPtr->nElements) {
 	listPtr->flags |= UPDATE_V_SCROLLBAR;
-	if (listPtr->topIndex > (listPtr->nElements - listPtr->fullLines)) {
+	if (listPtr->topIndex > ((int)listPtr->nElements - listPtr->fullLines)) {
 	    listPtr->topIndex = listPtr->nElements - listPtr->fullLines;
 	    if (listPtr->topIndex < 0) {
 		listPtr->topIndex = 0;

@@ -520,9 +520,9 @@ TkpClaimFocus(
 
 int
 TkpTestembedCmd(
-    ClientData dummy,	/* Main window for application. */
+    void *dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     int all;

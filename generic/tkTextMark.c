@@ -551,7 +551,7 @@ int
 TkTextMarkCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already parsed this command
     				 * enough to know that objv[1] is "mark". */
 {
@@ -648,10 +648,10 @@ TkTextMarkCmd(
 	/* IMPORTANT NOTE: ensure fixed length (depending on pointer size) */
 	snprintf(uniqName, sizeof(uniqName),
 #ifdef TK_IS_64_BIT_ARCH
-	    "##ID##0x%016" PRIx64 "##0x%016" PRIx64 "##%08u##", /* we're on a real 64-bit system */
+	    "##ID##0x%016" PRIx64 "##0x%016" PRIx64 "##%08" TCL_Z_MODIFIER "u##", /* we're on a real 64-bit system */
 	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #else /* if defined(TK_IS_32_BIT_ARCH) */
-	    "##ID##0x%08" PRIx32 "##0x%08" PRIx32 "##%08u##",   /* we're most likely on a 32-bit system */
+	    "##ID##0x%08" PRIx32 "##0x%08" PRIx32 "##%08" TCL_Z_MODIFIER "u##",   /* we're most likely on a 32-bit system */
 	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #endif /* TK_IS_64_BIT_ARCH */
 	);
@@ -719,7 +719,7 @@ TkTextMarkCmd(
     }
     case MARK_NAMES: {
 	int discardSpecial = 0;
-	int numArgs = 3;
+	Tcl_Size numArgs = 3;
 	const char *pattern;
 	Tcl_Obj *resultObj;
 
@@ -769,7 +769,7 @@ TkTextMarkCmd(
     }
     case MARK_NEXT: {
 	int discardSpecial = 0;
-	int numArgs = 4;
+	Tcl_Size numArgs = 4;
 	const char *pattern;
 
 	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
@@ -794,7 +794,7 @@ TkTextMarkCmd(
     }
     case MARK_PREVIOUS: {
 	int discardSpecial = 0;
-	int numArgs = 4;
+	Tcl_Size numArgs = 4;
 	const char *pattern;
 
 	if (objc > 4 && *Tcl_GetString(objv[3]) == '-') {
@@ -887,7 +887,7 @@ TkTextMarkCmd(
     case MARK_UNSET: {
 	TkTextUndoInfo undoInfo;
 	TkTextUndoInfo *undoInfoPtr = NULL;
-	int i;
+	Tcl_Size i;
 
 	if (textPtr->sharedTextPtr->steadyMarks
 		&& !TkTextUndoUndoStackIsFull(textPtr->sharedTextPtr->undoStack)) {

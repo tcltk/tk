@@ -402,7 +402,7 @@ XCreateImage(
 {
     XImage *ximage;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
@@ -507,7 +507,7 @@ TkMacOSXPutImage(
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
@@ -845,7 +845,7 @@ XCopyArea(
     CGImageRef img = NULL;
     CGRect bounds, srcRect, dstRect;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	return BadDrawable;
     }
@@ -919,7 +919,7 @@ XCopyPlane(
     MacDrawable *srcDraw = (MacDrawable *)src;
     MacDrawable *dstDraw = (MacDrawable *)dst;
     CGRect bounds, srcRect, dstRect;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
 	return BadDrawable;
@@ -1075,7 +1075,7 @@ struct TkMacOSXNSImageModel {
  */
 
 static int		TkMacOSXNSImageCreate(Tcl_Interp *interp,
-			    const char *name, int argc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static ClientData	TkMacOSXNSImageGet(Tk_Window tkwin, ClientData clientData);
@@ -1114,23 +1114,23 @@ static Tk_ImageType TkMacOSXNSImageType = {
 
 static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_STRING, "-source", NULL, NULL, DEF_SOURCE,
-     -1, Tk_Offset(TkMacOSXNSImageModel, source), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, source), 0, NULL, 0},
     {TK_OPTION_STRING, "-as", NULL, NULL, DEF_AS,
-     -1, Tk_Offset(TkMacOSXNSImageModel, as), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, as), 0, NULL, 0},
     {TK_OPTION_INT, "-width", NULL, NULL, DEF_WIDTH,
-     -1, Tk_Offset(TkMacOSXNSImageModel, width), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, width), 0, NULL, 0},
     {TK_OPTION_INT, "-height", NULL, NULL, DEF_HEIGHT,
-     -1, Tk_Offset(TkMacOSXNSImageModel, height), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, height), 0, NULL, 0},
     {TK_OPTION_INT, "-radius", NULL, NULL, DEF_RADIUS,
-     -1, Tk_Offset(TkMacOSXNSImageModel, radius), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, radius), 0, NULL, 0},
     {TK_OPTION_INT, "-ring", NULL, NULL, DEF_RING,
-     -1, Tk_Offset(TkMacOSXNSImageModel, ring), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, ring), 0, NULL, 0},
     {TK_OPTION_DOUBLE, "-alpha", NULL, NULL, DEF_ALPHA,
-     -1, Tk_Offset(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, alpha), 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
-     -1, Tk_Offset(TkMacOSXNSImageModel, pressed), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, Tk_Offset(TkMacOSXNSImageModel, pressed), 0, NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, template), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
@@ -1220,7 +1220,7 @@ TkMacOSXNSImageConfigureModel(
     Tcl_Interp *interp,		   /* Interpreter to use for reporting errors. */
     TkMacOSXNSImageModel *modelPtr,    /* Pointer to data structure describing
 				    * overall photo image to (re)configure. */
-    int objc,			   /* Number of entries in objv. */
+    Tcl_Size objc,			   /* Number of entries in objv. */
     Tcl_Obj *const objv[])	   /* Pairs of configuration options for image. */
 {
     Tk_OptionTable optionTable = Tk_CreateOptionTable(interp, systemImageOptions);
@@ -1481,7 +1481,7 @@ static int
 TkMacOSXNSImageCreate(
     Tcl_Interp *interp,		 /* Interpreter for application using image. */
     const char *name,		 /* Name to use for image. */
-    int objc,			 /* Number of arguments. */
+    Tcl_Size objc,			 /* Number of arguments. */
     Tcl_Obj *const objv[],	 /* Argument strings for options (not
 				  * including image name or type). */
     TCL_UNUSED(const Tk_ImageType *), /* typePtr */
@@ -1538,7 +1538,7 @@ TkMacOSXNSImageCreate(
 static ClientData
 TkMacOSXNSImageGet(
     TCL_UNUSED(Tk_Window),      /* tkwin */
-    ClientData clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
+    void *clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
 {
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *) clientData;
     TkMacOSXNSImageInstance *instPtr;

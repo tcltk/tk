@@ -80,7 +80,9 @@
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 2)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#   define TKFLEXARRAY
+#elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
@@ -1051,7 +1053,11 @@ typedef struct {
 
 typedef struct TkEnsemble {
     const char *name;
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *proc;
+#else
     Tcl_ObjCmdProc *proc;
+#endif
     const struct TkEnsemble *subensemble;
 } TkEnsemble;
 
@@ -1164,12 +1170,21 @@ typedef struct TkpClipMask {
  * be properly registered with Tcl:
  */
 
-MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
-MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
-MODULE_SCOPE const Tcl_ObjType tkColorObjType;
-MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE const Tcl_ObjType tkFontObjType;
-MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
+typedef struct {
+    Tcl_ObjType objType;
+    size_t version;
+} TkObjType;
+
+#ifndef TCL_OBJTYPE_V0
+#   define TCL_OBJTYPE_V0 /* just empty */
+#endif
+
+MODULE_SCOPE const TkObjType tkBorderObjType;
+MODULE_SCOPE const TkObjType tkBitmapObjType;
+MODULE_SCOPE const TkObjType tkColorObjType;
+MODULE_SCOPE const TkObjType tkCursorObjType;
+MODULE_SCOPE const TkObjType tkFontObjType;
+MODULE_SCOPE const TkObjType tkStateKeyObjType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the
@@ -1258,7 +1273,7 @@ MODULE_SCOPE int	Tk_BindtagsObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_BusyObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_ButtonObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
@@ -1456,7 +1471,7 @@ MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const *objv, int flags);
+			    Tcl_Size objc, Tcl_Obj *const *objv, int flags);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
