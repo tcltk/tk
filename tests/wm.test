@@ -2456,11 +2456,6 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
 test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     catch {destroy .l .f.b .f}
     set res {}
-    if {[tk windowingsystem] eq "aqua"} {
-	proc doUpdate {} {update idletasks}
-    } else {
-	proc doUpdate {} {update}
-    }
 } -body {
     label .l -text "Top Dot"
     frame .f
@@ -2470,13 +2465,13 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     pack .f -side bottom
     set res [winfo manager .f]
     pack forget .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
     wm manage .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
     wm forget .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
 } -cleanup {
     destroy .l .f.b .f
