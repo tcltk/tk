@@ -12,7 +12,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 set fixedFont     {Courier 12}
-set fixedFontBold {Courier 12 bold}
 set bigFont       {Helvetica 24}
 
 # Although unexpected, this constraint happens to evaluate to false on at
@@ -397,7 +396,7 @@ test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     for {set i 1} {$i <10} {incr i} {
         .tt insert end "Line $i\n"
     }
-    .tt tag configure mytag -font $fixedFontBold
+    .tt tag configure mytag -offset 2
     .tt peer create .ptt
     .ptt configure -startline 3 -endline 7
     # the test succeeds if next line does not crash
