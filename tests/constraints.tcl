@@ -316,12 +316,21 @@ if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
 }
 # Although unexpected, some systems may have a very limited set of fonts available.
 # The following constraints happen to evaluate to false at least on one system: the
-# Github CI runner for Linux with --disable-xft
+# Github CI runner for Linux with --disable-xft, which has exactly ONE single font
+# ([font families] returns a single element: "fixed"), for which [font actual]
+# returns:
+#    -family fixed -size 9 -weight normal -slant roman -underline 0
+# and [font metrics] returns:
+#    -ascent 11 -descent 2 -linespace 13 -fixed 1
+# The following constraints are hence tailored to check exactly what is needed in the
+# tests they constrain (that is: availability of any font having the given font
+# attributes), so that these constrained tests will in fact run on all systems having
+# reasonable font dotation.
 testConstraint haveTimes12Font [expr {
-    ([font actual {times 12} -size] == 12)
+    [font actual {times 12} -size] == 12
 }]
 testConstraint haveCourier37Font [expr {
-    ([font actual {-family courier -size 37} -size] == 37)
+    [font actual {-family courier -size 37} -size] == 37
 }]
 testConstraint haveTimes14BoldFont [expr {
     ([font actual {times 14 bold} -size] == 14) &&
