@@ -593,6 +593,9 @@ TkpSetKeycodeAndState(
     }
     if (keySym >= 0x20) {
 	result = VkKeyScanW((WCHAR) keySym);
+if (keySym == 0x20AC) {
+printf("result is %d\n",(int)result);fflush(stdout);
+}
 	if (result != -1) {
 	    shift = result >> 8;
 	    if (shift & 1)
