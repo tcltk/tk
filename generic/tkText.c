@@ -176,12 +176,12 @@ static const char *const hyphenRuleStrings[] = {
  * freeing.
  */
 
-static int		SetLineStartEnd(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
+static int		SetLineStartEnd(void *clientData, Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj **value, char *recordPtr, Tcl_Size internalOffset, char *oldInternalPtr,
 			    int flags);
-static Tcl_Obj *	GetLineStartEnd(ClientData clientData, Tk_Window tkwin, char *recordPtr,
+static Tcl_Obj *	GetLineStartEnd(void *clientData, Tk_Window tkwin, char *recordPtr,
 			    Tcl_Size internalOffset);
-static void		RestoreLineStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
+static void		RestoreLineStartEnd(void *clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
 
 static const Tk_ObjCustomOption lineOption = {
@@ -201,14 +201,14 @@ static const Tk_ObjCustomOption lineOption = {
  * '-endindex' configuration options which are of that type.
  */
 
-static int		SetTextStartEnd(ClientData clientData, Tcl_Interp *interp, Tk_Window tkwin,
+static int		SetTextStartEnd(void *clientData, Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj **value, char *recordPtr, Tcl_Size internalOffset, char *oldInternalPtr,
 			    int flags);
-static Tcl_Obj *	GetTextStartEnd(ClientData clientData, Tk_Window tkwin, char *recordPtr,
+static Tcl_Obj *	GetTextStartEnd(void *clientData, Tk_Window tkwin, char *recordPtr,
 			    Tcl_Size internalOffset);
-static void		RestoreTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr,
+static void		RestoreTextStartEnd(void *clientData, Tk_Window tkwin, char *internalPtr,
 			    char *oldInternalPtr);
-static void		FreeTextStartEnd(ClientData clientData, Tk_Window tkwin, char *internalPtr);
+static void		FreeTextStartEnd(void *clientData, Tk_Window tkwin, char *internalPtr);
 
 static const Tk_ObjCustomOption startEndMarkOption = {
     "index",			/* name */
@@ -392,10 +392,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 struct SearchSpec;	/* Forward declaration. */
 
-typedef ClientData	SearchAddLineProc(int lineNum, struct SearchSpec *searchSpecPtr,
+typedef void *SearchAddLineProc(int lineNum, struct SearchSpec *searchSpecPtr,
 			    Tcl_Obj *theLine, int *lenPtr, int *extraLinesPtr);
 typedef int		SearchMatchProc(int lineNum, struct SearchSpec *searchSpecPtr,
-			    ClientData clientData, Tcl_Obj *theLine, int matchOffset, int matchLength);
+			    void *clientData, Tcl_Obj *theLine, int matchOffset, int matchLength);
 typedef int		SearchLineIndexProc(Tcl_Interp *interp, Tcl_Obj *objPtr,
 			    struct SearchSpec *searchSpecPtr, int *linePosPtr, int *offsetPosPtr);
 
@@ -427,7 +427,7 @@ typedef struct SearchSpec {
 				/* Function to call when we have found a match. */
     SearchLineIndexProc *lineIndexProc;
 				/* Function to call when we have found a match. */
-    ClientData clientData;	/* Information about structure being searched, in this case a text
+    void *clientData;	/* Information about structure being searched, in this case a text
     				 * widget. */
 } SearchSpec;
 
@@ -469,18 +469,18 @@ static int		CountIndices(const TkText *textPtr, const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, TkTextCountType type);
 static void		DestroyText(TkText *textPtr);
 static void		ClearText(TkText *textPtr, int clearTags);
-static void		FireWidgetViewSyncEvent(ClientData clientData);
+static void		FireWidgetViewSyncEvent(void *clientData);
 static void		FreeEmbeddedWindows(TkText *textPtr);
 static void		InsertChars(TkText *textPtr, TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    char const *string, unsigned length, int viewUpdate,
 			    TkTextTagSet *tagInfoPtr, TkTextTag *hyphenTagPtr, int parseHyphens);
-static void		TextBlinkProc(ClientData clientData);
-static void		TextCmdDeletedProc(ClientData clientData);
+static void		TextBlinkProc(void *clientData);
+static void		TextCmdDeletedProc(void *clientData);
 static int		CreateWidget(TkSharedText *sharedTextPtr, Tk_Window tkwin, Tcl_Interp *interp,
 			    const TkText *parent, int objc, Tcl_Obj *const objv[]);
-static void		TextEventProc(ClientData clientData, XEvent *eventPtr);
+static void		TextEventProc(void *clientData, XEvent *eventPtr);
 static void		ProcessConfigureNotify(TkText *textPtr, int updateLineGeometry);
-static Tcl_Size		TextFetchSelection(ClientData clientData, Tcl_Size offset, char *buffer,
+static Tcl_Size		TextFetchSelection(void *clientData, Tcl_Size offset, char *buffer,
 			    Tcl_Size maxBytes);
 static int		TextIndexSortProc(const void *first, const void *second);
 static int		TextInsertCmd(TkText *textPtr, Tcl_Interp *interp,
@@ -495,9 +495,9 @@ static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-static int		TextWidgetObjCmd(ClientData clientData,
+static int		TextWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
-static void		TextWorldChangedCallback(ClientData instanceData);
+static void		TextWorldChangedCallback(void *instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
 static void		UpdateLineMetrics(TkText *textPtr, unsigned lineNum, unsigned endLine);
 static int		TextChecksumCmd(TkText *textPtr, Tcl_Interp *interp,
@@ -519,7 +519,7 @@ static Tcl_Obj *	TextGetText(TkText *textPtr, const TkTextIndex *index1,
 			    const TkTextIndex *index2, TkTextIndex *lastIndexPtr, Tcl_Obj *resultPtr,
 			    unsigned maxBytes, int visibleOnly, int includeHyphens);
 static void		GenerateEvent(TkSharedText *sharedTextPtr, const char *type);
-static void		RunAfterSyncCmd(ClientData clientData);
+static void		RunAfterSyncCmd(void *clientData);
 static void		UpdateModifiedFlag(TkSharedText *sharedTextPtr, int flag);
 static Tcl_Obj *	MakeEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *arrayPtr);
 static Tcl_Obj *	GetEditInfo(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *option);
@@ -792,7 +792,7 @@ GetByteLength(
 
 int
 Tk_TextObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1407,7 +1407,7 @@ MatchOpt(
 
 static int
 TextWidgetObjCmd(
-    ClientData clientData,	/* Information about text widget. */
+    void *clientData,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -4491,7 +4491,7 @@ TkTextParseHyphenRules(
 
 static void
 TextWorldChangedCallback(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     TextWorldChanged((TkText *) instanceData, TK_TEXT_LINE_GEOMETRY);
 }
@@ -4670,7 +4670,7 @@ ProcessFocusInOut(
 
 static void
 TextEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -4738,7 +4738,7 @@ TextEventProc(
 
 static void
 TextCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     Tk_Window tkwin = textPtr->tkwin;
@@ -5944,7 +5944,7 @@ DeleteIndexRange(
 
 static Tcl_Size
 TextFetchSelection(
-    ClientData clientData,	/* Information about text widget. */
+    void *clientData,	/* Information about text widget. */
     Tcl_Size offset,			/* Offset within selection of first character to be returned. */
     char *buffer,		/* Location in which to place selection. */
     Tcl_Size maxBytes)		/* Maximum number of bytes to place at buffer, not including
@@ -6094,7 +6094,7 @@ TkTextSelectionEvent(
 
 void
 TkTextLostSelection(
-    ClientData clientData)	/* Information about text widget. */
+    void *clientData)	/* Information about text widget. */
 {
     TkText *textPtr = (TkText *)clientData;
 
@@ -6147,7 +6147,7 @@ TkTextLostSelection(
 
 static void
 TextBlinkProc(
-    ClientData clientData)	/* Pointer to record describing text. */
+    void *clientData)	/* Pointer to record describing text. */
 {
     TkText *textPtr = (TkText *)clientData;
     unsigned oldFlags = textPtr->flags;
@@ -6718,7 +6718,7 @@ TextSearchIndexInLine(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 TextSearchAddNextLine(
     int lineNum,		/* Line we must add. */
     SearchSpec *searchSpecPtr,	/* Search parameters. */
@@ -6838,7 +6838,7 @@ static int
 TextSearchFoundMatch(
     int lineNum,		/* Line on which match was found. */
     SearchSpec *searchSpecPtr,	/* Search parameters. */
-    ClientData clientData,	/* Token returned by the 'addNextLineProc', TextSearchAddNextLine.
+    void *clientData,	/* Token returned by the 'addNextLineProc', TextSearchAddNextLine.
     				 * May be NULL, in which we case we must generate it (from lineNum). */
     Tcl_Obj *theLine,		/* Text from current line, only accessed for exact searches, and
     				 * is allowed to be NULL for regexp searches. */
@@ -9715,9 +9715,9 @@ TkTextPerformWatchCmd(
     TkText *textPtr,			/* Firstly trigger watch command of this peer, can be NULL. */
     const char *operation,		/* The trigger operation. */
     TkTextWatchGetIndexProc index1Proc,	/* Function pointer for fst index, can be NULL. */
-    ClientData index1ProcData,		/* Client data for index1Proc. */
+    void *index1ProcData,		/* Client data for index1Proc. */
     TkTextWatchGetIndexProc index2Proc,	/* Function pointer for snd index, can be NULL. */
-    ClientData index2ProcData,		/* Client data for index2Proc. */
+    void *index2ProcData,		/* Client data for index2Proc. */
     const char *arg1,			/* 3rd argument for watch command, can be NULL. */
     const char *arg2,			/* 3rd argument for watch command, can be NULL. */
     const char *arg3,			/* 3rd argument for watch command, can be NULL. */
@@ -10034,7 +10034,7 @@ TkTextRunAfterSyncCmd(
 
 static void
 RunAfterSyncCmd(
-    ClientData clientData)	/* Information about text widget. */
+    void *clientData)	/* Information about text widget. */
 {
     TkText *textPtr = (TkText *) clientData;
 
@@ -10073,7 +10073,7 @@ RunAfterSyncCmd(
 
 static void
 FireWidgetViewSyncEvent(
-    ClientData clientData)	/* Information about text widget. */
+    void *clientData)	/* Information about text widget. */
 {
     TkText *textPtr = (TkText *) clientData;
     Tcl_Interp *interp;
@@ -10420,7 +10420,7 @@ SearchCore(
     Tcl_IncrRefCount(theLine);
 
     for (passes = 0; passes < 2; ) {
-	ClientData lineInfo;
+	void *lineInfo;
 	int linesSearched = 1;
 	int extraLinesSearched = 0;
 
@@ -11623,13 +11623,11 @@ RestoreLineStartEnd(
  *----------------------------------------------------------------------
  */
 
-#if TK_MAJOR_VERSION > 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION > 5)
-
 int
 TkrTesttextCmd(
     TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     TkText *textPtr;
@@ -11640,7 +11638,7 @@ TkrTesttextCmd(
     Tcl_CmdInfo info;
     Tcl_Obj *watchCmd;
 
-    if (objc < 3) {
+    if (objc + 1 < 4) {
 	return TCL_ERROR;
     }
 
@@ -11694,76 +11692,6 @@ TkrTesttextCmd(
     return TCL_OK;
 }
 
-#else /* backport to Tk 8.5 */
-
-int
-TkrTesttextCmd(
-    ClientData clientData,	/* Main window for application. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. */
-{
-    TkText *textPtr;
-    size_t len;
-    int lineIndex, byteIndex, byteOffset;
-    TkTextIndex index;
-    char buf[64];
-    unsigned offs;
-    Tcl_CmdInfo info;
-
-    if (argc < 3) {
-	return TCL_ERROR;
-    }
-
-    if (Tcl_GetCommandInfo(interp, argv[1], &info) == 0) {
-	return TCL_ERROR;
-    }
-    if (info.isNativeObjectProc) {
-	textPtr = (TkText *) info.objClientData;
-    } else {
-	textPtr = (TkText *) info.clientData;
-    }
-    len = strlen(argv[2]);
-    if (strncmp(argv[2], "byteindex", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	lineIndex = atoi(argv[3]) - 1;
-	byteIndex = atoi(argv[4]);
-
-	TkrTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, lineIndex, byteIndex, &index);
-    } else if (strncmp(argv[2], "forwbytes", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	if (TkrTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	byteOffset = atoi(argv[4]);
-	TkrTextIndexForwBytes(textPtr, &index, byteOffset, &index);
-    } else if (strncmp(argv[2], "backbytes", len) == 0) {
-	if (argc != 5) {
-	    return TCL_ERROR;
-	}
-	if (TkrTextGetIndex(interp, textPtr, argv[3], &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	byteOffset = atoi(argv[4]);
-	TkrTextIndexBackBytes(textPtr, &index, byteOffset, &index);
-    } else {
-	return TCL_ERROR;
-    }
-
-    TkrTextSetMark(textPtr, "insert", &index);
-    TkrTextPrintIndex(textPtr, &index, buf);
-    offs = strlen(buf);
-    snprintf(buf + offs, sizeof(buf) - offs, " %d", TkTextIndexGetByteIndex(&index));
-    Tcl_AppendResult(interp, buf, NULL);
-
-    return TCL_OK;
-}
-
-#endif /* TK_MAJOR_VERSION > 8 || (TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION > 5) */
 
 #ifndef NDEBUG
 /*
@@ -11945,7 +11873,7 @@ extern int		TkTextIsNormalMark(const TkTextSegment *segPtr);
 extern int		TkTextIsStableMark(const TkTextSegment *segPtr);
 extern const TkTextDispChunk *TkTextGetFirstChunkOfNextDispLine(const TkTextDispChunk *chunkPtr);
 extern const TkTextDispChunk *TkTextGetLastChunkOfPrevDispLine(const TkTextDispChunk *chunkPtr);
-extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, Tcl_Size epoch);
+extern void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, size_t epoch);
 extern void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
 extern void		TkTextIndexSetToLastChar2(TkTextIndex *indexPtr, TkTextLine *linePtr);
 extern void		TkTextIndexInvalidate(TkTextIndex *indexPtr);

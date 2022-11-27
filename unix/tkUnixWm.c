@@ -205,7 +205,7 @@ typedef struct TkWmInfo {
     WmAttributes reqState;	/* Requested state of [wm attributes] */
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for this
 				 * window (NULL means none). */
-    int cmdArgc;		/* Number of elements in cmdArgv below. */
+    Tcl_Size cmdArgc;		/* Number of elements in cmdArgv below. */
     const char **cmdArgv;	/* Array of strings to store in the WM_COMMAND
 				 * property. NULL means nothing available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -1546,7 +1546,8 @@ WmColormapwindowsCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window *cmapList;
     TkWindow *winPtr2;
-    int count, i, windowObjc, gotToplevel;
+    Tcl_Size i, windowObjc;
+    int count, gotToplevel;
     Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1563,8 +1564,8 @@ WmColormapwindowsCmd(
 	    return TCL_OK;
 	}
 	resultObj = Tcl_NewObj();
-	for (i = 0; i < count; i++) {
-	    if ((i == (count-1))
+	for (i = 0; i < (Tcl_Size)count; i++) {
+	    if ((i == ((Tcl_Size)count-1))
 		    && (wmPtr->flags & WM_ADDED_TOPLEVEL_COLORMAP)) {
 		break;
 	    }
@@ -1646,7 +1647,7 @@ WmCommandCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    int cmdArgc;
+    Tcl_Size cmdArgc;
     const char **cmdArgv;
 
     if ((objc != 3) && (objc != 4)) {
@@ -5490,7 +5491,7 @@ SetNetWmType(
     Atom *atoms = NULL;
     WmInfo *wmPtr;
     Tcl_Obj **objv;
-    int objc, n;
+    Tcl_Size objc, n;
     Tk_Window tkwin = (Tk_Window) winPtr;
     Tcl_Interp *interp = Tk_Interp(tkwin);
 
@@ -7367,7 +7368,8 @@ UpdateCommand(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tcl_DString cmds, ds;
-    int i, *offsets;
+    Tcl_Size i;
+    int *offsets;
     char **cmdArgv;
 
     /*

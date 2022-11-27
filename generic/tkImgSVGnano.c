@@ -388,7 +388,7 @@ ParseSVGWithOptions(
     RastOpts *ropts)
 {
     Tcl_Obj **objv = NULL;
-    int objc = 0;
+    Tcl_Size objc = 0;
     double dpi = 96.0;
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;

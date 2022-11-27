@@ -142,8 +142,8 @@ EXTERN int		Tk_ConfigureValue(Tcl_Interp *interp,
 /* 29 */
 EXTERN int		Tk_ConfigureWidget(Tcl_Interp *interp,
 				Tk_Window tkwin, const Tk_ConfigSpec *specs,
-				int argc, const char **argv, char *widgRec,
-				int flags);
+				Tcl_Size argc, const char **argv,
+				char *widgRec, int flags);
 /* 30 */
 EXTERN void		Tk_ConfigureWindow(Tk_Window tkwin,
 				unsigned int valueMask,
@@ -383,7 +383,7 @@ EXTERN int		Tk_GetRelief(Tcl_Interp *interp, const char *name,
 EXTERN void		Tk_GetRootCoords(Tk_Window tkwin, int *xPtr,
 				int *yPtr);
 /* 108 */
-EXTERN int		Tk_GetScrollInfo(Tcl_Interp *interp, int argc,
+EXTERN int		Tk_GetScrollInfo(Tcl_Interp *interp, Tcl_Size argc,
 				const char **argv, double *dblPtr,
 				int *intPtr);
 /* 109 */
@@ -826,7 +826,8 @@ EXTERN Tk_Style		Tk_GetStyleFromObj(Tcl_Obj *objPtr);
 /* 259 */
 EXTERN void		Tk_FreeStyleFromObj(Tcl_Obj *objPtr);
 /* 260 */
-EXTERN Tk_StyledElement	 Tk_GetStyledElement(Tk_Style style, int elementId,
+EXTERN Tk_StyledElement	 Tk_GetStyledElement(Tk_Style style,
+				Tcl_Size elementId,
 				Tk_OptionTable optionTable);
 /* 261 */
 EXTERN void		Tk_GetElementSize(Tk_Style style,
@@ -965,7 +966,7 @@ typedef struct TkStubs {
     int (*tk_ClipboardClear) (Tcl_Interp *interp, Tk_Window tkwin); /* 26 */
     int (*tk_ConfigureInfo) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 27 */
     int (*tk_ConfigureValue) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 28 */
-    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, int argc, const char **argv, char *widgRec, int flags); /* 29 */
+    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, Tcl_Size argc, const char **argv, char *widgRec, int flags); /* 29 */
     void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges *valuePtr); /* 30 */
     Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, Tcl_Size numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
     Tk_Window (*tk_CoordsToWindow) (int rootX, int rootY, Tk_Window tkwin); /* 32 */
@@ -1044,7 +1045,7 @@ typedef struct TkStubs {
     Pixmap (*tk_GetPixmap) (Display *display, Drawable d, int width, int height, int depth); /* 105 */
     int (*tk_GetRelief) (Tcl_Interp *interp, const char *name, int *reliefPtr); /* 106 */
     void (*tk_GetRootCoords) (Tk_Window tkwin, int *xPtr, int *yPtr); /* 107 */
-    int (*tk_GetScrollInfo) (Tcl_Interp *interp, int argc, const char **argv, double *dblPtr, int *intPtr); /* 108 */
+    int (*tk_GetScrollInfo) (Tcl_Interp *interp, Tcl_Size argc, const char **argv, double *dblPtr, int *intPtr); /* 108 */
     int (*tk_GetScreenMM) (Tcl_Interp *interp, Tk_Window tkwin, const char *str, double *doublePtr); /* 109 */
     int (*tk_GetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 110 */
     Tk_Uid (*tk_GetUid) (const char *str); /* 111 */
@@ -1196,7 +1197,7 @@ typedef struct TkStubs {
     Tk_Style (*tk_AllocStyleFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr); /* 257 */
     Tk_Style (*tk_GetStyleFromObj) (Tcl_Obj *objPtr); /* 258 */
     void (*tk_FreeStyleFromObj) (Tcl_Obj *objPtr); /* 259 */
-    Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, int elementId, Tk_OptionTable optionTable); /* 260 */
+    Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, Tcl_Size elementId, Tk_OptionTable optionTable); /* 260 */
     void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int width, int height, int inner, int *widthPtr, int *heightPtr); /* 261 */
     void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 262 */
     int (*tk_GetElementBorderWidth) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin); /* 263 */

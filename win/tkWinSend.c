@@ -62,8 +62,8 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
-static void		CmdDeleteProc(ClientData clientData);
-static void		InterpDeleteProc(ClientData clientData,
+static void		CmdDeleteProc(void *clientData);
+static void		InterpDeleteProc(void *clientData,
 			    Tcl_Interp *interp);
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
@@ -75,7 +75,7 @@ static HRESULT		RegisterInterp(const char *name,
 static int		FindInterpreterObject(Tcl_Interp *interp,
 			    const char *name, LPDISPATCH *ppdisp);
 static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
-			    int async, ClientData clientData, int objc,
+			    int async, void *clientData, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		SendTrace(const char *format, ...);
 static Tcl_EventProc	SendEventProc;
@@ -322,7 +322,7 @@ TkGetInterpNames(
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Information about sender (only dispPtr
+    void *clientData,	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -488,7 +488,7 @@ FindInterpreterObject(
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 CmdDeleteProc(
-    ClientData clientData)
+    void *clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
 
@@ -587,7 +587,7 @@ RevokeObjectRegistration(
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 InterpDeleteProc(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp)
 {
     CoUninitialize();
@@ -739,9 +739,8 @@ Send(
 				 * object. */
     Tcl_Interp *interp,		/* The local interpreter. */
     int async,			/* Flag for the calling style. */
-    ClientData dummy,	/* The RegisteredInterp structure for this
-				 * interp. */
-    int objc,			/* Number of arguments to be sent. */
+    TCL_UNUSED(void *),
+    Tcl_Size objc,			/* Number of arguments to be sent. */
     Tcl_Obj *const objv[])	/* The arguments to be sent. */
 {
     VARIANT vCmd, vResult;
@@ -753,7 +752,6 @@ Send(
     DISPID dispid;
     Tcl_DString ds;
     const char *src;
-    (void)dummy;
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -970,10 +968,9 @@ TkWinSend_QueueCommand(
 static int
 SendEventProc(
     Tcl_Event *eventPtr,
-    int flags)
+    TCL_UNUSED(int))
 {
     SendEvent *evPtr = (SendEvent *)eventPtr;
-    (void)flags;
 
     TRACE("SendEventProc\n");
 

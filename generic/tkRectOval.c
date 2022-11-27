@@ -128,10 +128,10 @@ static const Tk_ConfigSpec configSpecs[] = {
 static void		ComputeRectOvalBbox(Tk_Canvas canvas,
 			    RectOvalItem *rectOvalPtr);
 static int		ConfigureRectOval(Tcl_Interp *interp, Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[],
+			    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[],
 			    int flags);
 static int		CreateRectOval(Tcl_Interp *interp, Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
+			    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    Display *display);
 static void		DisplayRectOval(Tk_Canvas canvas, Tk_Item *itemPtr,
@@ -142,7 +142,7 @@ static int		OvalToArea(Tk_Canvas canvas, Tk_Item *itemPtr,
 static double		OvalToPoint(Tk_Canvas canvas, Tk_Item *itemPtr,
 			    double *pointPtr);
 static int		RectOvalCoords(Tcl_Interp *interp, Tk_Canvas canvas,
-			    Tk_Item *itemPtr, int objc, Tcl_Obj *const objv[]);
+			    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		RectOvalToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
 static int		RectToArea(Tk_Canvas canvas, Tk_Item *itemPtr,
@@ -238,11 +238,11 @@ CreateRectOval(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing rectangle. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -313,7 +313,7 @@ RectOvalCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1,y1,x2,y2,... */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
@@ -350,7 +350,7 @@ RectOvalCoords(
 
     if (objc != 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 4, got %d", objc));
+		"wrong # coordinates: expected 0 or 4, got %" TKSIZET_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS",
 		(rectOvalPtr->header.typePtr == &tkRectangleType
 			? "RECTANGLE" : "OVAL"), NULL);
@@ -399,7 +399,7 @@ ConfigureRectOval(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Rectangle item to reconfigure. */
-    int objc,			/* Number of elements in objv. */
+    Tcl_Size objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

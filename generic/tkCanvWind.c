@@ -67,11 +67,11 @@ static const Tk_ConfigSpec configSpecs[] = {
 static void		ComputeWindowBbox(Tk_Canvas canvas,
 			    WindowItem *winItemPtr);
 static int		ConfigureWinItem(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		CreateWinItem(Tcl_Interp *interp,
 			    Tk_Canvas canvas, struct Tk_Item *itemPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, Display *display);
 static void		DisplayWinItem(Tk_Canvas canvas,
@@ -85,7 +85,7 @@ static void		ScaleWinItem(Tk_Canvas canvas,
 static void		TranslateWinItem(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double deltaX, double deltaY);
 static int		WinItemCoords(Tcl_Interp *interp,
-			    Tk_Canvas canvas, Tk_Item *itemPtr, int objc,
+			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		WinItemLostContentProc(ClientData clientData,
 			    Tk_Window tkwin);
@@ -172,7 +172,7 @@ CreateWinItem(
     Tk_Canvas canvas,		/* Canvas to hold new item. */
     Tk_Item *itemPtr,		/* Record to hold new item; header has been
 				 * initialized by caller. */
-    int objc,			/* Number of arguments in objv. */
+    Tcl_Size objc,			/* Number of arguments in objv. */
     Tcl_Obj *const objv[])	/* Arguments describing window. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
@@ -243,7 +243,7 @@ WinItemCoords(
     Tk_Canvas canvas,		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item whose coordinates are to be read or
 				 * modified. */
-    int objc,			/* Number of coordinates supplied in objv. */
+    Tcl_Size objc,			/* Number of coordinates supplied in objv. */
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
@@ -261,7 +261,7 @@ WinItemCoords(
 		return TCL_ERROR;
 	    } else if (objc != 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 2, got %d", objc));
+			"wrong # coordinates: expected 2, got %" TKSIZET_MODIFIER "u", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW",
 			NULL);
 		return TCL_ERROR;
@@ -275,7 +275,7 @@ WinItemCoords(
 	ComputeWindowBbox(canvas, winItemPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 2, got %d", objc));
+		"wrong # coordinates: expected 0 or 2, got %" TKSIZET_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW", NULL);
 	return TCL_ERROR;
     }
@@ -305,7 +305,7 @@ ConfigureWinItem(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_Canvas canvas,		/* Canvas containing itemPtr. */
     Tk_Item *itemPtr,		/* Window item to reconfigure. */
-    int objc,			/* Number of elements in objv.  */
+    Tcl_Size objc,			/* Number of elements in objv.  */
     Tcl_Obj *const objv[],	/* Arguments describing things to configure. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

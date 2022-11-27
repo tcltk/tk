@@ -18,12 +18,14 @@
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-const Tcl_ObjType tkStateKeyObjType = {
-    "statekey",			/* name */
+const TkObjType tkStateKeyObjType = {
+    {"statekey",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -46,7 +48,7 @@ const Tcl_ObjType tkStateKeyObjType = {
 
 int
 TkStateParseProc(
-    ClientData clientData,	/* some flags.*/
+    void *clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
@@ -257,7 +259,7 @@ TkOrientPrintProc(
 
 int
 TkOffsetParseProc(
-    ClientData clientData,	/* not used */
+    void *clientData,	/* not used */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
@@ -473,7 +475,7 @@ TkOffsetPrintProc(
 
 int
 TkPixelParseProc(
-    ClientData clientData,	/* If non-NULL, negative values are allowed as
+    void *clientData,	/* If non-NULL, negative values are allowed as
 				 * well. */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
@@ -640,7 +642,7 @@ Tk_DrawFocusHighlight(
 int
 Tk_GetScrollInfo(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int argc,			/* # arguments for command. */
+    Tcl_Size argc,			/* # arguments for command. */
     const char **argv,		/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
@@ -972,7 +974,7 @@ TkFindStateNumObj(
      * See if the value is in the object cache.
      */
 
-    if ((keyPtr->typePtr == &tkStateKeyObjType)
+    if ((keyPtr->typePtr == &tkStateKeyObjType.objType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == mapPtr)) {
 	return PTR2INT(keyPtr->internalRep.twoPtrValue.ptr2);
     }
@@ -990,7 +992,7 @@ TkFindStateNumObj(
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);
-	    keyPtr->typePtr = &tkStateKeyObjType;
+	    keyPtr->typePtr = &tkStateKeyObjType.objType;
 	    return mPtr->numKey;
 	}
     }
@@ -1040,12 +1042,13 @@ TkFindStateNumObj(
 int
 TkBackgroundEvalObjv(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv,
     int flags)
 {
     Tcl_InterpState state;
-    int n, r = TCL_OK;
+    int r = TCL_OK;
+    Tcl_Size n;
 
     /*
      * Record the state of the interpreter.
@@ -1099,7 +1102,7 @@ TkMakeEnsemble(
     Tcl_Interp *interp,
     const char *namesp,
     const char *name,
-    ClientData clientData,
+    void *clientData,
     const TkEnsemble map[])
 {
     Tcl_Namespace *namespacePtr = NULL;
@@ -1150,8 +1153,13 @@ TkMakeEnsemble(
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
+#if TCL_MAJOR_VERSION > 8
+	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
+		    map[i].proc, clientData, NULL);
+#else
 	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
+#endif
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		    map[i].name, clientData, map[i].subensemble);

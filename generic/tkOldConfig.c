@@ -72,7 +72,7 @@ Tk_ConfigureWidget(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    int argc,			/* Number of elements in argv. */
+    Tcl_Size argc,			/* Number of elements in argv. */
     const char **argv,		/* Command-line options. */
     char *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
@@ -127,7 +127,11 @@ Tk_ConfigureWidget(
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetString((Tcl_Obj *) *argv);
 	} else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	    arg = *argv;
+#endif
 	}
 	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
@@ -147,7 +151,11 @@ Tk_ConfigureWidget(
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetString((Tcl_Obj *) argv[1]);
 	} else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	    arg = argv[1];
+#endif
 	}
 	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
@@ -352,6 +360,9 @@ DoConfig(
     }
 
     do {
+	if (specPtr->offset == TCL_INDEX_NONE) {
+	    break;
+	}
 	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
@@ -651,7 +662,7 @@ Tk_ConfigureInfo(
 		|| (specPtr->specFlags & hateFlags)) {
 	    continue;
 	}
-	if (specPtr->argvName == NULL) {
+	if ((specPtr->argvName == NULL) || (specPtr->offset == TCL_INDEX_NONE)) {
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
@@ -766,6 +777,9 @@ FormatConfigValue(
     const char *result;
 
     *freeProcPtr = NULL;
+    if (specPtr->offset == TCL_INDEX_NONE) {
+	return NULL;
+    }
     ptr = (char *)widgRec + specPtr->offset;
     result = "";
     switch (specPtr->type) {
@@ -985,6 +999,9 @@ Tk_FreeOptions(
 
     for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
 	if ((specPtr->specFlags & needFlags) != needFlags) {
+	    continue;
+	}
+	if (specPtr->offset == TCL_INDEX_NONE) {
 	    continue;
 	}
 	ptr = widgRec + specPtr->offset;
