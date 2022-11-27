@@ -1500,7 +1500,7 @@ test textDisp-9.9 {TkTextRedrawTag} -constraints {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 } -match glob -result {2.0 2.1[678]}
-test textDisp-9.10 {TkTextRedrawTag} {
+test textDisp-9.10 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1511,7 +1511,7 @@ test textDisp-9.10 {TkTextRedrawTag} {
     update
     set tk_textRedraw
 } none
-test textDisp-9.11 {TkTextRedrawTag} {
+test textDisp-9.11 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -2267,7 +2267,8 @@ test textDisp-16.9 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.10 {TkTextYviewCmd procedure, "moveto" option} {
     list [catch {.t yview moveto gorp} msg] $msg
 } {1 {expected floating-point number but got "gorp"}}
-test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} havebigFontTwiceLargerThanTextFont {
+# constrained because text tagged with the big font plays a role
     .t yview moveto 0.5
     .t index @0,0
 } {103.0}
@@ -2322,7 +2323,8 @@ test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
     }
     lequal [.t index @0,0] $expected
 } {1}
-test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} havebigFontTwiceLargerThanTextFont {
+# constrained because text tagged with the big font plays a role
     .t yview moveto .755
     .t index @0,0
 } {151.80}
@@ -3387,7 +3389,7 @@ test textDisp-22.6 {TkTextCharBbox, line visible but not char} havebigFontTwiceL
 } {1}
 wm geom . {}
 update
-test textDisp-22.7 {TkTextCharBbox, different character sizes} {
+test textDisp-22.7 {TkTextCharBbox, different character sizes} havebigFontTwiceLargerThanTextFont {
     .t config -wrap char
     .t yview 10.0
     .t tag add big 12.2 12.5
