@@ -81,7 +81,7 @@ set bigAscent [font metrics $bigFont -ascent]
 # This is because this configuration only has ONE single font available,
 # making all requested fonts become actually the same font.
 # See constraints.tcl for more details.
-testConstraint havebigFontTwiceLargerThanTextFont [expr {
+testConstraint haveBigFontTwiceLargerThanTextFont [expr {
     [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
 }]
 
@@ -657,7 +657,7 @@ test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {
     .t bbox 1.4
 } [list [xchar [expr {2*8}]] [yline 1] $fixedWidth $fixedHeight]
 
-test textDisp-3.1 {different character sizes} havebigFontTwiceLargerThanTextFont {
+test textDisp-3.1 {different character sizes} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert end "Some sample text, including both large\n"
@@ -1341,7 +1341,7 @@ test textDisp-8.9 {TkTextChanged} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 8.0} {2.0 8.0}}
-test textDisp-8.10 {TkTextChanged} havebigFontTwiceLargerThanTextFont {
+test textDisp-8.10 {TkTextChanged} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1402,7 +1402,7 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
 } {}
 
 test textDisp-9.1 {TkTextRedrawTag} -constraints {
-    havebigFontTwiceLargerThanTextFont
+    haveBigFontTwiceLargerThanTextFont
 } -body {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1415,7 +1415,7 @@ test textDisp-9.1 {TkTextRedrawTag} -constraints {
 # while still testing what we want to test
 } -match glob -result {{2.0 2.1[78]} {2.0 2.1[78]}}
 test textDisp-9.2 {TkTextRedrawTag} -constraints {
-    havebigFontTwiceLargerThanTextFont
+    haveBigFontTwiceLargerThanTextFont
 } -body {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1427,7 +1427,7 @@ test textDisp-9.2 {TkTextRedrawTag} -constraints {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 } -match glob -result {{1.0 2.0 2.1[678]} {1.0 2.0 2.1[678]}}
-test textDisp-9.3 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
+test textDisp-9.3 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1438,7 +1438,7 @@ test textDisp-9.3 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.4 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
+test textDisp-9.4 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1450,7 +1450,7 @@ test textDisp-9.4 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
 test textDisp-9.5 {TkTextRedrawTag} -constraints {
-    havebigFontTwiceLargerThanTextFont
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     .t configure -wrap char -height [expr {[.t cget -height]+10}]
 } -body {
@@ -1466,7 +1466,7 @@ test textDisp-9.5 {TkTextRedrawTag} -constraints {
     .t configure -height [expr {[.t cget -height]-10}]
     update
 } -result {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.6 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
+test textDisp-9.6 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap"
@@ -1477,7 +1477,7 @@ test textDisp-9.6 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
+test textDisp-9.7 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1488,7 +1488,7 @@ test textDisp-9.7 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     set tk_textRedraw
 } {2.0 2.20 eof}
 test textDisp-9.8 {TkTextRedrawTag} -constraints {
-    havebigFontTwiceLargerThanTextFont
+    haveBigFontTwiceLargerThanTextFont
 } -body {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1502,7 +1502,7 @@ test textDisp-9.8 {TkTextRedrawTag} -constraints {
 # while still testing what we want to test
 } -match glob -result {2.0 2.1[678]}
 test textDisp-9.9 {TkTextRedrawTag} -constraints {
-    havebigFontTwiceLargerThanTextFont
+    haveBigFontTwiceLargerThanTextFont
 } -body {
     .t configure -wrap char
     .t delete 1.0 end
@@ -1515,7 +1515,7 @@ test textDisp-9.9 {TkTextRedrawTag} -constraints {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 } -match glob -result {2.0 2.1[678]}
-test textDisp-9.10 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
+test textDisp-9.10 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1526,7 +1526,7 @@ test textDisp-9.10 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
     update
     set tk_textRedraw
 } {none}
-test textDisp-9.11 {TkTextRedrawTag} havebigFontTwiceLargerThanTextFont {
+test textDisp-9.11 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -2290,7 +2290,7 @@ test textDisp-16.9 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.10 {TkTextYviewCmd procedure, "moveto" option} {
     list [catch {.t yview moveto gorp} msg] $msg
 } {1 {expected floating-point number but got "gorp"}}
-test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} havebigFontTwiceLargerThanTextFont {
+test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} haveBigFontTwiceLargerThanTextFont {
 # constrained because text tagged with the big font plays a role
     .t yview moveto 0.5
     .t index @0,0
@@ -2346,7 +2346,7 @@ test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
     }
     lequal [.t index @0,0] $expected
 } {1}
-test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} havebigFontTwiceLargerThanTextFont {
+test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} haveBigFontTwiceLargerThanTextFont {
 # constrained because text tagged with the big font plays a role
     .t yview moveto .755
     .t index @0,0
@@ -3396,7 +3396,7 @@ test textDisp-22.5 {TkTextCharBbox, cut-off char} {
     update
     .t bbox 15.6
 } [list [xchar 6] [yline 6] $fixedWidth $fixedHeight]
-test textDisp-22.6 {TkTextCharBbox, line visible but not char} havebigFontTwiceLargerThanTextFont {
+test textDisp-22.6 {TkTextCharBbox, line visible but not char} haveBigFontTwiceLargerThanTextFont {
     wm geometry . {}
     update
     scan [wm geom .] %dx%d oriWidth oriHeight
@@ -3412,7 +3412,7 @@ test textDisp-22.6 {TkTextCharBbox, line visible but not char} havebigFontTwiceL
 } {1}
 wm geom . {}
 update
-test textDisp-22.7 {TkTextCharBbox, different character sizes} havebigFontTwiceLargerThanTextFont {
+test textDisp-22.7 {TkTextCharBbox, different character sizes} haveBigFontTwiceLargerThanTextFont {
     .t config -wrap char
     .t yview 10.0
     .t tag add big 12.2 12.5
