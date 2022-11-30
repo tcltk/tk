@@ -6576,7 +6576,6 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
 # Make sure the Text is mapped before we start
     update
     set ::retval {}
-    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]
