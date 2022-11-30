@@ -16,7 +16,7 @@ loadTestedCommands
 #	follows ->prev links, this should cover all invariants.
 #
 proc consistencyCheck {tv {item {}}} {
-    set i 0;
+    set i 0
     foreach child [$tv children $item] {
 	assert {[$tv parent $child] == $item} "parent $child = $item"
 	assert {[$tv index $child] == $i} "index $child [$tv index $child]=$i"
@@ -28,18 +28,43 @@ proc consistencyCheck {tv {item {}}} {
 proc assert {expr {message ""}} {
     if {![uplevel 1 [list expr $expr]]} {
         set error "PANIC! PANIC! PANIC: $message ($expr failed)"
-    	puts stderr $error
+	puts stderr $error
 	error $error
     }
 }
 
-test treeview-0 "treeview test - setup" -body {
+proc tvSetup {} {
+    destroy .tv
     ttk::treeview .tv -columns {a b c}
     pack .tv -expand true -fill both
+    .tv column #0 -width 50
+    .tv column a -width 50
+    .tv column b -width 50
+    .tv column c -width 50
+    # Make sure everything is created and updated
+    tkwait visibility .tv
     update
+    after 10
+    update
+}
+proc tvSetupWithItems {} {
+    tvSetup
+    .tv insert {} end -id nn
+    .tv insert nn end -id nn.n1
+    .tv insert nn end -id nn.n2
+    .tv insert nn end -id nn.n3
+    for {set t 2} {$t < 100} {incr t} {
+        .tv insert {} end -id nn$t
+        if {$t % 3 == 0} {
+            .tv insert nn$t end -id nn$t.n1
+            .tv insert nn$t end -id nn$t.n2
+            .tv insert nn$t end -id nn$t.n3
+        }
+    }
 }
 
 test treeview-1.1 "columns" -body {
+    tvSetup
     .tv configure -columns {a b c}
 }
 
@@ -91,8 +116,6 @@ test treeview-2.8 "insert -- new node at end" -body {
     consistencyCheck .tv
     .tv children {}
 } -result [list newnode lastnode]
-
-consistencyCheck .tv
 
 test treeview-2.9 "insert -- new node at beginning" -body {
     .tv insert {} 0 -id firstnode
@@ -200,10 +223,10 @@ test treeview-3.10 "detach is idempotent" -body {
 
 test treeview-3.11 "Can't detach root item" -body {
     .tv detach [list {}]
+} -cleanup {
     update
     consistencyCheck .tv
 } -returnCodes error -result "Cannot detach root item"
-consistencyCheck .tv
 
 test treeview-3.12 "Reattach" -body {
     .tv move newnode {} end
@@ -350,8 +373,6 @@ test treeview-6.1.1 "delete" -body {
     list [.tv exists b] [.tv children dtest]
 } -result [list 0 [list a c d e]]
 
-consistencyCheck .tv
-
 test treeview-6.2 "delete - duplicate items in list" -body {
     .tv delete [list a e a e]
     consistencyCheck .tv
@@ -427,9 +448,9 @@ test treeview-7.5 "replace children - precondition" -body {
 
 test treeview-7.6 "Replace children - illegal move" -body {
     .tv children newnode.n1 [list newnode.n1 newnode.n2 newnode.n3]
+} -cleanup {
+    consistencyCheck .tv
 } -returnCodes error -result "Cannot insert newnode.n1 as descendant of newnode.n1"
-
-consistencyCheck .tv
 
 test treeview-8.0 "Selection set" -body {
     .tv selection set [list newnode.n1 newnode.n3 newnode.n2]
@@ -475,6 +496,8 @@ test treeview-8.7 "<<TreeviewSelect>> when deleting items" -body {
     .tv delete myItem1  ; # <<TreeviewSelect>> triggers
     update
     set res
+} -cleanup {
+    bind .tv <<TreeviewSelect>> {}
 } -result {2}
 
 test treeview-8.8 "<<TreeviewSelect>> when setting the selection" -body {
@@ -579,6 +602,7 @@ proc scrollcallback {args} {
     set ::scrolldata $args
 }
 test treeview-9.0 "scroll callback - empty tree" -body {
+    tvSetup
     .tv configure -yscrollcommand scrollcallback
     .tv delete [.tv children {}]
     update
@@ -592,7 +616,10 @@ test treeview-9.1 "scrolling" -setup {
     }
 } -body {
     .tree yview scroll 5 units
-    .tree identify item 2 2
+    # This is sensitive to the exact layout of a tree.
+    # It assumes that (8,8) should be far enough in to be in the tree,
+    # while still being in the first item.
+    .tree identify item 8 8
 } -cleanup {
     destroy .tree
 } -result {I006}
@@ -649,7 +676,7 @@ test treeview-9.3 {scrolling on see command, requested item is closed} -setup {
     expr $after < $before
 } -cleanup {
     destroy .top
-} -result {1}
+} -result 1
 
 ### identify tests:
 #
@@ -755,6 +782,7 @@ test treeview-identify-9 "identify works when horizontally scrolled" -setup {
     foreach column {#0 A B C} {
 	.tv column $column -stretch 0 -width 50
     }
+    # Scrollable area is 200, visible is 100
     place .tv -x 0 -y 0 -width 100
 } -body {
     set result [list]
@@ -777,7 +805,7 @@ test treeview-identify-cleanup "identify - cleanup" -body {
 ### Misc. tests:
 
 destroy .tv
-test treeview-10.1 "Root node properly initialized (#1541739)" -setup {
+test treeview-1541739 "Root node properly initialized (#1541739)" -setup {
     ttk::treeview .tv
     .tv insert {} end -id a
     .tv see a
