@@ -2132,7 +2132,7 @@ test listbox-10.19 {GetListboxIndex procedure} -setup {
     .l index -1
 } -cleanup {
     destroy .l
-} -result  -1
+} -result -1
 test listbox-10.20 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {

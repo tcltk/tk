@@ -177,7 +177,7 @@ test winfo-4.7 {"winfo containing" command} -setup {
     expr {($x == ".") || ($x == "")}
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 
 
 test winfo-5.1 {"winfo interps" command} -body {
@@ -191,10 +191,10 @@ test winfo-5.3 {"winfo interps" command} -body {
 } -returnCodes error -result {bad window path name "geek"}
 test winfo-5.4 {"winfo interps" command} -constraints unix -body {
     expr {[lsearch -exact [winfo interps] [tk appname]] >= 0}
-} -result {1}
+} -result 1
 test winfo-5.5 {"winfo interps" command} -constraints unix -body {
     expr {[lsearch -exact [winfo interps -displayof .] [tk appname]] >= 0}
-} -result {1}
+} -result 1
 
 
 test winfo-6.1 {"winfo exists" command} -body {
@@ -205,10 +205,10 @@ test winfo-6.2 {"winfo exists" command} -body {
 } -returnCodes error -result {wrong # args: should be "winfo exists window"}
 test winfo-6.3 {"winfo exists" command} -body {
     winfo exists gorp
-} -result {0}
+} -result 0
 test winfo-6.4 {"winfo exists" command} -body {
     winfo exists .
-} -result {1}
+} -result 1
 test winfo-6.5 {"winfo exists" command} -setup {
     destroy .b
 } -body {
@@ -293,13 +293,13 @@ test winfo-9.2 {"winfo viewable" command} -body {
 } -returnCodes error -result {bad window path name "foo"}
 test winfo-9.3 {"winfo viewable" command} -body {
     winfo viewable .
-} -result {1}
+} -result 1
 test winfo-9.4 {"winfo viewable" command} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     wm iconify .
     winfo viewable .
 } -cleanup {
     wm deiconify .
-} -result {0}
+} -result 0
 test winfo-9.5 {"winfo viewable" command} -setup {
     deleteWindows
 } -body {
@@ -347,7 +347,7 @@ test winfo-10.2 {"winfo visualid" command} -body {
 } -returnCodes error -result {bad window path name "gorp"}
 test winfo-10.3 {"winfo visualid" command} -body {
     expr {2 + [winfo visualid .] - [winfo visualid .]}
-} -result {2}
+} -result 2
 
 
 test winfo-11.1 {"winfo visualid" command} -body {
@@ -361,14 +361,14 @@ test winfo-11.3 {"winfo visualid" command} -body {
 } -returnCodes error -result {wrong # args: should be "winfo visualsavailable window ?includeids?"}
 test winfo-11.4 {"winfo visualid" command} -body {
     llength [lindex [winfo visualsa .] 0]
-} -result {2}
+} -result 2
 test winfo-11.5 {"winfo visualid" command} -body {
     llength [lindex [winfo visualsa . includeids] 0]
-} -result {3}
+} -result 3
 test winfo-11.6 {"winfo visualid" command} -body {
     set x [lindex [lindex [winfo visualsa . includeids] 0] 2]
     expr {$x + 2 - $x}
-} -result {2}
+} -result 2
 
 
 test winfo-12.1 {GetDisplayOf procedure} -body {

@@ -74,7 +74,7 @@ test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11 noExceed} {
 } {1 {font "" doesn't exist}}
 test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 failsOnUbuntu} {
     font measure fixed 0
-} {6}
+} 6
 
 test unixfont-2.1 {TkpGetFontFromAttributes procedure: no family} x11 {
     font actual {-size 10}
@@ -119,7 +119,7 @@ test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {
 } {courier}
 test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 haveCourier37Font} {
     lindex [font actual {-family courier -size 37}] 3
-} {37}
+} 37
 test unixfont-2.11 {TkpGetFontFromAttributes: font cannot be loaded} x11 {
     # On Linux, XListFonts() was returning names for fonts that do not
     # actually exist, causing the subsequent XLoadQueryFont() to fail
@@ -177,7 +177,7 @@ test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {x11 failsOnUbuntu}
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0000"
     .b.c index $t @[expr int($ax*2.5)],1
-} {2}
+} 2
 test unixfont-5.10 {Tk_MeasureChars procedure: TK_AT_LEAST_ONE} x11 {
     .b.l config -text "000000000000"
     getsize
@@ -246,7 +246,7 @@ test unixfont-8.1 {AllocFont procedure: use old font} x11 {
 } {}
 test unixfont-8.2 {AllocFont procedure: parse information from XLFD} x11 {
     expr {[lindex [font actual {-family times -size 0}] 3] == 0}
-} {0}
+} 0
 test unixfont-8.3 {AllocFont procedure: can't parse info from name} x11 {
     catch {unset fontArray}
     # check that font actual returns the correct attributes.
@@ -266,7 +266,7 @@ test unixfont-8.4 {AllocFont procedure: classify characters} {x11 failsOnUbuntu 
 } [expr $cx*13]
 test unixfont-8.5 {AllocFont procedure: setup widths of normal chars} x11 {
     font metrics $courier -fixed
-} {1}
+} 1
 test unixfont-8.6 {AllocFont procedure: setup widths of special chars} {x11 failsOnUbuntu failsOnXQuarz} {
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
