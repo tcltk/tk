@@ -11,26 +11,27 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-set textWidgetFont {Courier 12}
-set bigFont        {Courier 24}
+set fixedFont     {Courier 12}
+set bigFont       {Helvetica 24}
 
-# what is needed is a font that is both fixed-width and featuring a
-# specific size because in some tests (that will be constrained by
-# haveFontSizes), a tag applying the $bigFont will be set to some
-# characters, which action has the effect of changing what character
-# is under the mouse pointer, which is the purpose of the tests
-testConstraint haveFontSizes [expr {
-    [font metrics $textWidgetFont -fixed] &&
-    [font actual  $textWidgetFont -size] == 12 &&
-    [font metrics $bigFont -fixed] &&
-    [font actual  $bigFont -size] == 24 }
-]
+# Although unexpected, this constraint happens to evaluate to false on at
+# least one system: the Github CI runner on Linux with --disable-xft
+# This is because this configuration only has ONE single font available,
+# making all requested fonts become actually the same font.
+# See constraints.tcl for more details.
+testConstraint haveBigFontTwiceLargerThanTextFont [expr {
+    [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
+}]
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+# Warn the user if the actual font is too different from what was requested.
+if {[font metrics [font actual $fixedFont] -fixed] != 1} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+does not seem to be a fixed-width font as expected. If this is really the case, many upcoming\
+tests will fail."
+}
 
 destroy .t
-text .t -width 20 -height 10
+text .t -width 20 -height 10 -font $fixedFont
 
 pack .t -expand 1 -fill both
 update
@@ -81,7 +82,7 @@ test textTag-1.5 {tag configuration options} -body {
     .t tag cget x -borderwidth
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
-} -result 2
+} -result {2}
 test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
@@ -131,7 +132,7 @@ test textTag-1.14 {tag configuration options} -body {
     .t tag cget x -lmargin1
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
-} -result 10
+} -result {10}
 test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
@@ -142,7 +143,7 @@ test textTag-1.16 {tag configuration options} -body {
     .t tag cget x -lmargin2
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
-} -result 10
+} -result {10}
 test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
@@ -164,7 +165,7 @@ test textTag-1.18 {tag configuration options} -body {
     .t tag cget x -offset
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
-} -result 2
+} -result {2}
 test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
@@ -208,7 +209,7 @@ test textTag-1.24 {tag configuration options} -body {
     .t tag cget x -rmargin
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
-} -result 10
+} -result {10}
 test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
@@ -252,7 +253,7 @@ test textTag-1.26 {tag configuration options} -body {
     .t tag cget x -spacing1
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
-} -result 10
+} -result {10}
 test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
@@ -263,7 +264,7 @@ test textTag-1.28 {tag configuration options} -body {
     .t tag cget x -spacing2
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
-} -result 10
+} -result {10}
 test textTag-1.29 {configuration options} -body {
     .t tag configure x -spacing2 bad
 } -cleanup {
@@ -274,7 +275,7 @@ test textTag-1.30 {tag configuration options} -body {
     .t tag cget x -spacing3
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -result 10
+} -result {10}
 test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
@@ -395,14 +396,14 @@ test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     for {set i 1} {$i <10} {incr i} {
         .tt insert end "Line $i\n"
     }
-    .tt tag configure mytag -font {Courier 12 bold}
+    .tt tag configure mytag -offset 2
     .tt peer create .ptt
     .ptt configure -startline 3 -endline 7
     # the test succeeds if next line does not crash
     .tt tag add mytag 1.0 1.end
     destroy .ptt .tt
     set res 1
-} -result 1
+} -result {1}
 
 
 test textTag-3.1 {TkTextTagCmd - "bind" option} -body {
@@ -1213,8 +1214,6 @@ test textTag-14.4 {SortTags} -setup {
 } -result {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 x29}
 
 
-set curFont [.t cget -font]
-set curWrap [.t cget -wrap]
 set c [.t bbox 2.1]
 set x1 [expr {[lindex $c 0] + [lindex $c 2]/2}]
 set y1 [expr {[lindex $c 1] + [lindex $c 3]/2}]
@@ -1224,15 +1223,6 @@ set y2 [expr {[lindex $c 1] + [lindex $c 3]/2}]
 set c [.t bbox 4.3]
 set x3 [expr {[lindex $c 0] + [lindex $c 2]/2}]
 set y3 [expr {[lindex $c 1] + [lindex $c 3]/2}]
-.t configure -font $textWidgetFont -wrap none
-update
-set c [.t bbox 2.1]
-set x4 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y4 [expr [lindex $c 1] + [lindex $c 3]/2]
-set c [.t bbox 3.2]
-set x5 [expr [lindex $c 0] + [lindex $c 2]/2]
-set y5 [expr [lindex $c 1] + [lindex $c 3]/2]
-.t configure -font $curFont -wrap $curWrap
 
 test textTag-15.1 {TkTextBindProc} -setup {
     .t tag delete x y
@@ -1367,26 +1357,24 @@ test textTag-16.1 {TkTextPickCurrent procedure} -setup {
 } -result {2.1 3.2 3.2 3.2 3.2 3.2 4.3}
 
 test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes failsOnUbuntuNoXft
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
-    .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
     # update needed here to stabilize the test
     update
-    event gen .t <ButtonRelease-1> -state 0x100 -x $x4 -y $y4
-    event gen .t <Motion> -x $x5 -y $y5
+    event gen .t <ButtonRelease-1> -state 0x100 -x $x1 -y $y1
+    event gen .t <Motion> -x $x2 -y $y2
     set x [.t index current]
     .t tag add big 3.0
     update
     lappend x [.t index current]
 } -cleanup {
     .t tag delete big
-    .t configure -font $curFont -wrap $curWrap
 } -result {3.2 3.1}
 
 test textTag-16.3 {TkTextPickCurrent procedure} -setup {
@@ -1446,30 +1434,26 @@ test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
 } -result {enter-a enter-b enter-c | leave-c leave-b}
 
-test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes
-} -setup {
+test textTag-16.5 {TkTextPickCurrent procedure} -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
-    .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
-    event gen .t <Motion> -x $x4 -y $y4
+    event gen .t <Motion> -x $x1 -y $y1
     .t tag bind a <Enter> {.t tag add big 3.0 3.2}
     .t tag add a 3.2
-    event gen .t <Motion> -x $x5 -y $y5
+    event gen .t <Motion> -x $x2 -y $y2
     .t index current
 } -cleanup {
     .t tag delete a big
-    .t configure -font $curFont -wrap $curWrap
 } -result {3.2}
 
 test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes failsOnUbuntuNoXft
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
@@ -1477,22 +1461,20 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
-    .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
-    event gen .t <Motion> -x $x4 -y $y4
+    event gen .t <Motion> -x $x1 -y $y1
     .t tag bind a <Enter> {.t tag add big 3.0 3.2}
     .t tag add a 3.2
-    event gen .t <Motion> -x $x5 -y $y5
+    event gen .t <Motion> -x $x2 -y $y2
     update
     .t index current
 } -cleanup {
     .t tag delete a big
-    .t configure -font $curFont -wrap $curWrap
 } -result {3.1}
 
 test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
-    haveFontSizes failsOnUbuntuNoXft
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
@@ -1500,21 +1482,19 @@ test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
     controlPointerWarpTiming
-    .t configure -font $textWidgetFont -wrap none
 } -body {
     .t tag configure big -font $bigFont
     .t tag bind a <Enter> {.t tag add big 3.0 3.2}
     .t tag add a 3.2
 
-    event gen .t <Motion> -x $x4 -y $y4
+    event gen .t <Motion> -x $x1 -y $y1
     .t tag bind a <Leave> {.t tag add big 3.0 3.2}
     .t tag add a 2.1
-    event gen .t <Motion> -x $x5 -y $y5
+    event gen .t <Motion> -x $x2 -y $y2
     update
     .t index current
 } -cleanup {
     .t tag delete a big
-    .t configure -font $curFont -wrap $curWrap
 } -result {3.1}
 
 
