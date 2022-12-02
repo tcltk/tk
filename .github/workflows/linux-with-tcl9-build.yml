@@ -1,4 +1,4 @@
-name: Linux (with Tcl 8.7)
+name: Linux (with Tcl 9.0)
 on: [push]
 permissions:
   contents: read
