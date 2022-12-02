@@ -63,11 +63,11 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 	offsetof(Scale,scale.orient),
 	0, ttkOrientStrings, STYLE_CHANGED },
 
-    {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
+    {TK_OPTION_DOUBLE, "-from", "from", "From", "0.0",
 	offsetof(Scale,scale.fromObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_DOUBLE, "-to", "to", "To", "1.0",
 	offsetof(Scale,scale.toObj), TCL_INDEX_NONE, 0, 0, 0},
-    {TK_OPTION_DOUBLE, "-value", "value", "Value", "0",
+    {TK_OPTION_DOUBLE, "-value", "value", "Value", "0.0",
 	offsetof(Scale,scale.valueObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_SCALE_LENGTH, offsetof(Scale,scale.lengthObj), TCL_INDEX_NONE, 0, 0,

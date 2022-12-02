@@ -176,9 +176,9 @@ static const Tk_OptionSpec entryOptSpec[] = {
 
 #define DEF_SPINBOX_CMD			""
 
-#define DEF_SPINBOX_FROM		"0"
-#define DEF_SPINBOX_TO			"0"
-#define DEF_SPINBOX_INCREMENT		"1"
+#define DEF_SPINBOX_FROM		"0.0"
+#define DEF_SPINBOX_TO			"0.0"
+#define DEF_SPINBOX_INCREMENT		"1.0"
 #define DEF_SPINBOX_FORMAT		""
 
 #define DEF_SPINBOX_VALUES		""
