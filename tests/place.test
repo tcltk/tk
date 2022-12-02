@@ -357,7 +357,7 @@ test place-9.8 {PlaceObjCmd, configure} -setup {
     place configure .foo
 } -cleanup {
     destroy .foo
-} -result [list {-anchor {} {} nw nw} {-bordermode {} {} inside inside} {-height {} {} {} {}} {-in {} {} {} .} {-relheight {} {} {} {}} {-relwidth {} {} {} {}} {-relx {} {} 0 0.0} {-rely {} {} 0 0.0} {-width {} {} {} {}} {-x {} {} 0 0} {-y {} {} 0 0}]
+} -result [list {-anchor {} {} nw nw} {-bordermode {} {} inside inside} {-height {} {} {} {}} {-in {} {} {} .} {-relheight {} {} {} {}} {-relwidth {} {} {} {}} {-relx {} {} 0.0 0.0} {-rely {} {} 0.0 0.0} {-width {} {} {} {}} {-x {} {} 0 0} {-y {} {} 0 0}]
 test place-9.9 {PlaceObjCmd, configure} -setup {
     destroy .foo
 } -body {
