@@ -66,7 +66,7 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 	DEF_PROGRESSBAR_LENGTH, offsetof(Progressbar,progress.lengthObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_DOUBLE, "-maximum", "maximum", "Maximum",
-	"100", offsetof(Progressbar,progress.maximumObj), TCL_INDEX_NONE,
+	"100.0", offsetof(Progressbar,progress.maximumObj), TCL_INDEX_NONE,
 	0, 0, 0 },
     {TK_OPTION_STRING_TABLE, "-mode", "mode", "ProgressMode", "determinate",
 	offsetof(Progressbar,progress.modeObj),
