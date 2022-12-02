@@ -653,7 +653,6 @@ DoObjConfig(
 	}
 	if (slotPtrPtr != NULL && valuePtr != NULL) {
 	    valuePtr = Tcl_NewIntObj(newBool);
-	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
@@ -680,7 +679,6 @@ DoObjConfig(
 	}
 	if (slotPtrPtr != NULL && valuePtr != NULL) {
 	    valuePtr = Tcl_NewIntObj(newInt);
-	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
@@ -735,7 +733,6 @@ DoObjConfig(
 	}
 	if (slotPtrPtr != NULL && valuePtr != NULL) {
 	    valuePtr = Tcl_NewDoubleObj(newDbl);
-	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
