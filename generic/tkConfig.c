@@ -651,6 +651,10 @@ DoObjConfig(
 		*((int *) internalPtr) = newBool;
 	    }
 	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_NewIntObj(newBool);
+	    Tcl_InvalidateStringRep(valuePtr);
+	}
 	break;
     }
     case TK_OPTION_INT: {
@@ -673,6 +677,10 @@ DoObjConfig(
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
 	    *((int *) internalPtr) = newInt;
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_NewIntObj(newInt);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
@@ -724,6 +732,10 @@ DoObjConfig(
 	if (internalPtr != NULL) {
 	    *((double *) oldInternalPtr) = *((double *) internalPtr);
 	    *((double *) internalPtr) = newDbl;
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_NewDoubleObj(newDbl);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
