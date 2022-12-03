@@ -236,8 +236,8 @@ TkCanvPostscriptObjCmd(
     psInfo.prolog = 1;
     psInfo.tkwin = tkwin;
     Tcl_InitHashTable(&psInfo.fontTable, TCL_STRING_KEYS);
-    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, (const char **)objv+2,
-	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY|TK_CONFIG_OBJS);
+    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, objv+2,
+	    &psInfo, TK_CONFIG_ARGV_ONLY);
     if (result != TCL_OK) {
 	goto cleanup;
     }

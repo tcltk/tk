@@ -240,7 +240,7 @@ ImgBmapConfigureModel(
     int maskWidth, maskHeight, dummy1, dummy2;
 
     if (Tk_ConfigureWidget(modelPtr->interp, Tk_MainWindow(modelPtr->interp),
-	    configSpecs, objc, (const char **) objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    configSpecs, objc, objv, modelPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
