@@ -17,11 +17,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl 8.7
+      - name: Checkout Tcl 9.1
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-626
           path: tcl
       - name: Setup Environment
         run: |
@@ -51,7 +51,7 @@ jobs:
         # TODO: need the Tk version separately for distro naming below
       - name: Package
         run: |
-          cp bin/wish8.7 ${BUILD_NAME}
+          cp bin/wish9.1 ${BUILD_NAME}
           chmod +x ${BUILD_NAME}
           tar -cf ${BUILD_NAME}.tar ${BUILD_NAME}
         working-directory: ${{ env.INST_DIR }}
@@ -81,11 +81,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl 8.7
+      - name: Checkout Tcl 9.1
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-626
           path: tcl
       - name: Checkout create-dmg
         uses: actions/checkout@v3
@@ -169,11 +169,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl 8.7
+      - name: Checkout Tcl 9.1
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-626
           path: tcl
       - name: Setup Environment
         run: |
