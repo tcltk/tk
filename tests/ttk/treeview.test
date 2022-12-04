@@ -1181,6 +1181,8 @@ test treeview-rowheight-4 "rowheight adapts to item padding" -constraints failsO
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
+} -cleanup {
+    ttk::style configure Item -padding {}
 } -result [expr {3-2 + 5-2}]
 
 test treeview-rowheight-5 "rowheight adapts to cell padding" -constraints failsOnUbuntuNoXft -body {
@@ -1192,6 +1194,8 @@ test treeview-rowheight-5 "rowheight adapts to cell padding" -constraints failsO
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
+} -cleanup {
+    ttk::style configure Cell -padding {}
 } -result [expr {8-5 + 9-5}]
 
 ### NEED: tests for focus item, selection
