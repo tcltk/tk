@@ -8,8 +8,6 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
 #	are properly linked.
@@ -1173,7 +1171,7 @@ test treeview-rowheight-3b "rowheight adapts to named font" -constraints haveBig
     ttk::style configure Treeview -font {Courier 12}
 } -result OK
 
-test treeview-rowheight-4 "rowheight adapts to item padding" -constraints failsOnUbuntu -body {
+test treeview-rowheight-4 "rowheight adapts to item padding" -body {
     # Test that things from Item style is picked up.
     ttk::style configure Item -padding "2 2 2 2"
     update
