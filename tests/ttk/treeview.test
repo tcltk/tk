@@ -1145,10 +1145,10 @@ test treeview-rowheight-2 "rowheight change" -body {
 
 test treeview-rowheight-3 "rowheight adapts to font" -constraints failsOnUbuntuNoXft -body {
     ttk::style configure Treeview -rowheight {}
-    ttk::style configure Treeview -font "Courier -20"
+    ttk::style configure Treeview -font "Courier 12"
     update
     set baseline [lindex [.tv bbox nn a] 3]
-    ttk::style configure Treeview -font "Courier -50"
+    ttk::style configure Treeview -font "Helvetica 24"
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
@@ -1159,11 +1159,11 @@ test treeview-rowheight-3 "rowheight adapts to font" -constraints failsOnUbuntuN
 
 test treeview-rowheight-3b "rowheight adapts to named font" -constraints failsOnUbuntuNoXft -body {
     ttk::style configure Treeview -rowheight {}
-    font create __tf -family Courier -size -20
+    font create __tf -family Courier -size 12
     ttk::style configure Treeview -font __tf
     update
     set baseline [lindex [.tv bbox nn a] 3]
-    font configure __tf -size -50
+    font configure __tf -family Helvetica -size 24
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
