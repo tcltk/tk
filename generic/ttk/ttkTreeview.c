@@ -1630,7 +1630,7 @@ static void TreeviewDoLayout(void *clientData)
 	tv->tree.headingArea = Ttk_MakeBox(0,0,0,0);
     }
 
-    visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight;
+    visibleRows = (tv->tree.rowHeight ? tv->tree.treeArea.height / tv->tree.rowHeight : 0);
     tv->tree.root->state |= TTK_STATE_OPEN;
     TtkScrolled(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first,
