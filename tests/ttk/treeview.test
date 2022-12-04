@@ -9,7 +9,6 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
 
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
@@ -1185,7 +1184,7 @@ test treeview-rowheight-4 "rowheight adapts to item padding" -constraints failsO
     ttk::style configure Item -padding {}
 } -result [expr {3-2 + 5-2}]
 
-test treeview-rowheight-5 "rowheight adapts to cell padding" -constraints failsOnUbuntuNoXft -body {
+test treeview-rowheight-5 "rowheight adapts to cell padding" -body {
     # Test that things from Cell style is picked up.
     ttk::style configure Cell -padding "2 5 2 5"
     update
