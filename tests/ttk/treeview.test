@@ -1138,6 +1138,8 @@ test treeview-rowheight-2 "rowheight change" -body {
     ttk::style configure Treeview -rowheight 25
     update
     lindex [.tv bbox nn a] 3
+} -cleanup {
+    ttk::style configure Treeview -rowheight {}
 } -result 25
 
 test treeview-rowheight-3 "rowheight adapts to font" -constraints haveBigFontTwiceLargerThanTextFont -body {
@@ -1170,7 +1172,7 @@ test treeview-rowheight-3b "rowheight adapts to named font" -constraints haveBig
 } -result OK
 
 puts [ttk::style configure Treeview]
-puts [font actual [ttk::style configure Treeview -font]]
+#puts [font actual [ttk::style configure Treeview -font]]
 puts ---
 puts [.tv configure]
 test treeview-rowheight-4 "rowheight adapts to item padding" -body {
