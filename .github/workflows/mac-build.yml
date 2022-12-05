@@ -90,7 +90,7 @@ jobs:
         working-directory: .
       - name: Build Tcl
         run: |
-          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --disable-zipfs "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Tcl Configure"
             exit 1
@@ -108,7 +108,7 @@ jobs:
           CFGOPT: --enable-symbols=${{ matrix.symbols }}
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
         run: |
-          ./configure $CFGOPT "--prefix=$HOME/install dir" --disable-xft || {
+          ./configure $CFGOPT --disable-zipfs "--prefix=$HOME/install dir" --disable-xft || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
