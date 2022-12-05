@@ -3484,7 +3484,7 @@ test entry-20.7 {widget deletion with textvariable active} -body {
 # SF bugs 607390 and 617446
     set FOO init
     entry .e -textvariable FOO -validate all \
-	    -vcmd {%W configure -bg white; format 1}
+	    -validatecommand {%W configure -bg white; format 1}
     bind .e <Destroy> { set FOO hello }
     destroy .e
     winfo exists .e

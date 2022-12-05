@@ -197,7 +197,7 @@ test scrollbar-3.14.1 {ScrollbarWidgetCmd procedure, "cget" option} emptyTest {
 destroy .s2
 test scrollbar-3.15 {ScrollbarWidgetCmd procedure, "configure" option} {
     llength [.s configure]
-} {20}
+} 20
 test scrollbar-3.16 {ScrollbarWidgetCmd procedure, "configure" option} {
     list [catch {.s configure -bad} msg] $msg
 } {1 {unknown option "-bad"}}
@@ -230,7 +230,7 @@ test scrollbar-3.24 {ScrollbarWidgetCmd procedure, "delta" option} {
 } {1 {expected integer but got "xxyz"}}
 test scrollbar-3.25 {ScrollbarWidgetCmd procedure, "delta" option} {
     format {%.6g} [.s delta 20 0]
-} {0}
+} 0
 test scrollbar-3.26 {ScrollbarWidgetCmd procedure, "delta" option} {
     format {%.6g} [.s delta 0 20]
 } [format %.6g [expr {20.0/([getTroughSize .s]-1)}]]
@@ -262,10 +262,10 @@ test scrollbar-3.32 {ScrollbarWidgetCmd procedure, "fraction" option} {
 } {1 {expected integer but got "bogus"}}
 test scrollbar-3.33 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 0 0]
-} {0}
+} 0
 test scrollbar-3.34 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 0 1000]
-} {1}
+} 1
 test scrollbar-3.35 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 21]
 } [format %.6g [expr {(21.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
@@ -276,7 +276,7 @@ test scrollbar-3.36 {ScrollbarWidgetCmd procedure, "fraction" option} {
        /([getTroughSize .s] - 1)}]]
 test scrollbar-3.37 {ScrollbarWidgetCmd procedure, "fraction" option} {testmetrics} {
     format {%.6g} [.s fraction 4 [expr {200 - [testmetrics cyvscroll .s]}]]
-} {1}
+} 1
 test scrollbar-3.38 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.s fraction 4 178]
 } [format %.6g [expr {(178.0 - ([winfo height .s] - [getTroughSize .s])/2.0) \
@@ -311,7 +311,7 @@ if {[testConstraint testmetrics]} {
 update
 test scrollbar-3.42 {ScrollbarWidgetCmd procedure, "fraction" option} {
     format {%.6g} [.t.s fraction 100 0]
-} {0}
+} 0
 destroy .t
 test scrollbar-3.43 {ScrollbarWidgetCmd procedure, "get" option} {
     list [catch {.s get a} msg] $msg

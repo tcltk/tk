@@ -37,14 +37,14 @@ test canvas-1.4 {configuration options: bad value for "bg"} -body {
 test canvas-1.5 {configuration options: good value for "bd"} -body {
     .c configure -bd 4
     .c cget -bd
-} -result {4}
+} -result 4
 test canvas-1.6 {configuration options: bad value for "bd"} -body {
     .c configure -bd badValue
 } -returnCodes error -result {bad screen distance "badValue"}
 test canvas-1.7 {configuration options: good value for "borderwidth"} -body {
     .c configure -borderwidth 1.3
     .c cget -borderwidth
-} -result {1}
+} -result 1
 test canvas-1.8 {configuration options: bad value for "borderwidth"} -body {
     .c configure -borderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -58,7 +58,7 @@ test canvas-1.10 {configuration options: bad value for "closeenough"} -body {
 test canvas-1.11 {configuration options: good value for "confine"} -body {
     .c configure -confine true
     .c cget -confine
-} -result {1}
+} -result 1
 test canvas-1.12 {configuration options: bad value for "confine"} -body {
     .c configure -confine silly
 } -returnCodes error -result {expected boolean value but got "silly"}
@@ -72,7 +72,7 @@ test canvas-1.14 {configuration options: bad value for "cursor"} -body {
 test canvas-1.15 {configuration options: good value for "height"} -body {
     .c configure -height 2.1
     .c cget -height
-} -result {2}
+} -result 2
 test canvas-1.16 {configuration options: bad value for "height"} -body {
     .c configure -height x42
 } -returnCodes error -result {bad screen distance "x42"}
@@ -93,7 +93,7 @@ test canvas-1.20 {configuration options: bad value for "highlightcolor"} -body {
 test canvas-1.21 {configuration options: good value for "highlightthickness"} -body {
     .c configure -highlightthickness 18
     .c cget -highlightthickness
-} -result {18}
+} -result 18
 test canvas-1.22 {configuration options: bad value for "highlightthickness"} -body {
     .c configure -highlightthickness badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -107,28 +107,28 @@ test canvas-1.24 {configuration options: bad value for "insertbackground"} -body
 test canvas-1.25 {configuration options: good value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 1.3
     .c cget -insertborderwidth
-} -result {1}
+} -result 1
 test canvas-1.26 {configuration options: bad value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 2.6x
 } -returnCodes error -result {bad screen distance "2.6x"}
 test canvas-1.27 {configuration options: good value for "insertofftime"} -body {
     .c configure -insertofftime 100
     .c cget -insertofftime
-} -result {100}
+} -result 100
 test canvas-1.28 {configuration options: bad value for "insertofftime"} -body {
     .c configure -insertofftime 3.2
 } -returnCodes error -result {expected integer but got "3.2"}
 test canvas-1.29 {configuration options: good value for "insertontime"} -body {
     .c configure -insertontime 100
     .c cget -insertontime
-} -result {100}
+} -result 100
 test canvas-1.30 {configuration options: bad value for "insertontime"} -body {
     .c configure -insertontime 3.2
 } -returnCodes error -result {expected integer but got "3.2"}
 test canvas-1.31 {configuration options: good value for "insertwidth"} -body {
     .c configure -insertwidth 1.3
     .c cget -insertwidth
-} -result {1}
+} -result 1
 test canvas-1.32 {configuration options: bad value for "insertwidth"} -body {
     .c configure -insertwidth 6x
 } -returnCodes error -result {bad screen distance "6x"}
@@ -149,7 +149,7 @@ test canvas-1.36 {configuration options: bad value for "selectbackground"} -body
 test canvas-1.37 {configuration options: good value for "selectborderwidth"} -body {
     .c configure -selectborderwidth 1.3
     .c cget -selectborderwidth
-} -result {1}
+} -result 1
 test canvas-1.38 {configuration options: bad value for "selectborderwidth"} -body {
     .c configure -selectborderwidth badValue
 } -returnCodes error -result {bad screen distance "badValue"}
@@ -167,7 +167,7 @@ test canvas-1.41 {configuration options: good value for "takefocus"} -body {
 test canvas-1.42 {configuration options: good value for "width"} -body {
     .c configure -width 402
     .c cget -width
-} -result {402}
+} -result 402
 test canvas-1.43 {configuration options: bad value for "width"} -body {
     .c configure -width xyz
 } -returnCodes error -result {bad screen distance "xyz"}
@@ -727,7 +727,7 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
 } -body {
     set id [.c create rect 0 0 1cm 1cm]
     expr {[lindex [.c coords $id] 2]>1}
-} -result {1}
+} -result 1
 test canvas-15.20 {bug [237971ce]} -setup {
     destroy .c
     canvas .c
