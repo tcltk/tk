@@ -1139,10 +1139,11 @@ test treeview-rowheight-2 "rowheight change" -body {
     update
     lindex [.tv bbox nn a] 3
 } -cleanup {
-    ttk::style configure Treeview -rowheight {}
+#    ttk::style configure Treeview -rowheight {}
 } -result 25
 
 test treeview-rowheight-3 "rowheight adapts to font" -constraints haveBigFontTwiceLargerThanTextFont -body {
+    ttk::style configure Treeview -rowheight {}
     ttk::style configure Treeview -font "Courier 12"
     update
     set baseline [lindex [.tv bbox nn a] 3]
@@ -1156,6 +1157,7 @@ test treeview-rowheight-3 "rowheight adapts to font" -constraints haveBigFontTwi
 } -result OK
 
 test treeview-rowheight-3b "rowheight adapts to named font" -constraints haveBigFontTwiceLargerThanTextFont -body {
+    ttk::style configure Treeview -rowheight {}
     font create __tf -family Courier -size 12
     ttk::style configure Treeview -font __tf
     update
