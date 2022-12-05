@@ -829,7 +829,7 @@ test treeview-11.11 "Cellselection - <<TreeviewSelect>> on cellselection add" -b
     set res
 } -cleanup {
     bind .tv <<TreeviewSelect>> {}
-} -result {1}
+} -result 1
 
 test treeview-11.12 "<<TreeviewSelect>> on selected cell deletion" -body {
     .tv cellselection set {}
