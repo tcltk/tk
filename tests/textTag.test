@@ -11,17 +11,8 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-set fixedFont     {Courier 12}
-set bigFont       {Helvetica 24}
-
-# Although unexpected, this constraint happens to evaluate to false on at
-# least one system: the Github CI runner on Linux with --disable-xft
-# This is because this configuration only has ONE single font available,
-# making all requested fonts become actually the same font.
-# See constraints.tcl for more details.
-testConstraint haveBigFontTwiceLargerThanTextFont [expr {
-    [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
-}]
+set fixedFont {Courier 12}
+set bigFont   {Helvetica 24}
 
 # Warn the user if the actual font is too different from what was requested.
 if {[font metrics [font actual $fixedFont] -fixed] != 1} {
