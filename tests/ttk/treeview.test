@@ -8,9 +8,6 @@ package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-
 # consistencyCheck --
 #	Traverse the tree to make sure the item data structures
 #	are properly linked.
@@ -52,16 +49,16 @@ proc tvSetup {} {
 }
 proc tvSetupWithItems {} {
     tvSetup
-    .tv insert {} end -id nn
-    .tv insert nn end -id nn.n1
-    .tv insert nn end -id nn.n2
-    .tv insert nn end -id nn.n3
+    .tv insert {} end -id nn -text "nn"
+    .tv insert nn end -id nn.n1 -text "nn.1"
+    .tv insert nn end -id nn.n2 -text "nn.3"
+    .tv insert nn end -id nn.n3 -text "nn.3"
     for {set t 2} {$t < 100} {incr t} {
-        .tv insert {} end -id nn$t
+        .tv insert {} end -id nn$t -text "nn$t"
         if {$t % 3 == 0} {
-            .tv insert nn$t end -id nn$t.n1
-            .tv insert nn$t end -id nn$t.n2
-            .tv insert nn$t end -id nn$t.n3
+            .tv insert nn$t end -id nn$t.n1 -text "nn$t.n1"
+            .tv insert nn$t end -id nn$t.n2 -text "nn$t.n2"
+            .tv insert nn$t end -id nn$t.n3 -text "nn$t.n3"
         }
     }
 }
@@ -1141,14 +1138,15 @@ test treeview-rowheight-2 "rowheight change" -body {
     ttk::style configure Treeview -rowheight 25
     update
     lindex [.tv bbox nn a] 3
+} -cleanup {
+    ttk::style configure Treeview -rowheight {}
 } -result 25
 
-test treeview-rowheight-3 "rowheight adapts to font" -constraints failsOnUbuntuNoXft -body {
-    ttk::style configure Treeview -rowheight {}
-    ttk::style configure Treeview -font "Courier -20"
+test treeview-rowheight-3 "rowheight adapts to font" -constraints haveBigFontTwiceLargerThanTextFont -body {
+    ttk::style configure Treeview -font "Courier 12"
     update
     set baseline [lindex [.tv bbox nn a] 3]
-    ttk::style configure Treeview -font "Courier -50"
+    ttk::style configure Treeview -font "Helvetica 24"
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
@@ -1157,13 +1155,12 @@ test treeview-rowheight-3 "rowheight adapts to font" -constraints failsOnUbuntuN
     expr {0 < $diff ? "OK" : $diff}
 } -result OK
 
-test treeview-rowheight-3b "rowheight adapts to named font" -constraints failsOnUbuntuNoXft -body {
-    ttk::style configure Treeview -rowheight {}
-    font create __tf -family Courier -size -20
+test treeview-rowheight-3b "rowheight adapts to named font" -constraints haveBigFontTwiceLargerThanTextFont -body {
+    font create __tf -family Courier -size 12
     ttk::style configure Treeview -font __tf
     update
     set baseline [lindex [.tv bbox nn a] 3]
-    font configure __tf -size -50
+    font configure __tf -family Helvetica -size 24
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
@@ -1172,7 +1169,7 @@ test treeview-rowheight-3b "rowheight adapts to named font" -constraints failsOn
     expr {0 < $diff ? "OK" : $diff}
 } -result OK
 
-test treeview-rowheight-4 "rowheight adapts to item padding" -constraints failsOnUbuntu -body {
+test treeview-rowheight-4 "rowheight adapts to item padding" -body {
     # Test that things from Item style is picked up.
     ttk::style configure Item -padding "2 2 2 2"
     update
@@ -1181,9 +1178,11 @@ test treeview-rowheight-4 "rowheight adapts to item padding" -constraints failsO
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
-} -result 4
+} -cleanup {
+    ttk::style configure Item -padding {}
+} -result [expr {3-2 + 5-2}]
 
-test treeview-rowheight-5 "rowheight adapts to cell padding" -constraints failsOnUbuntuNoXft -body {
+test treeview-rowheight-5 "rowheight adapts to cell padding" -body {
     # Test that things from Cell style is picked up.
     ttk::style configure Cell -padding "2 5 2 5"
     update
@@ -1192,7 +1191,9 @@ test treeview-rowheight-5 "rowheight adapts to cell padding" -constraints failsO
     update
     set after [lindex [.tv bbox nn a] 3]
     set diff [expr {$after - $baseline}]
-} -result 7
+} -cleanup {
+    ttk::style configure Cell -padding {}
+} -result [expr {8-5 + 9-5}]
 
 ### NEED: tests for focus item, selection
 
