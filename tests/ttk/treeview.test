@@ -49,16 +49,16 @@ proc tvSetup {} {
 }
 proc tvSetupWithItems {} {
     tvSetup
-    .tv insert {} end -id nn
-    .tv insert nn end -id nn.n1
-    .tv insert nn end -id nn.n2
-    .tv insert nn end -id nn.n3
+    .tv insert {} end -id nn -text "nn"
+    .tv insert nn end -id nn.n1 -text "nn.1"
+    .tv insert nn end -id nn.n2 -text "nn.3"
+    .tv insert nn end -id nn.n3 -text "nn.3"
     for {set t 2} {$t < 100} {incr t} {
-        .tv insert {} end -id nn$t
+        .tv insert {} end -id nn$t -text "nn$t"
         if {$t % 3 == 0} {
-            .tv insert nn$t end -id nn$t.n1
-            .tv insert nn$t end -id nn$t.n2
-            .tv insert nn$t end -id nn$t.n3
+            .tv insert nn$t end -id nn$t.n1 -text "nn$t.n1"
+            .tv insert nn$t end -id nn$t.n2 -text "nn$t.n2"
+            .tv insert nn$t end -id nn$t.n3 -text "nn$t.n3"
         }
     }
 }
