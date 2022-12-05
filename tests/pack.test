@@ -936,7 +936,6 @@ test pack-9.10 {window ordering} -setup {
     pack .pack.a .pack.c .pack.d .pack.b -after .pack.a
     pack content .pack
 } -result {.pack.a .pack.c .pack.d .pack.b}
-
 test pack-10.1 {retaining/clearing configuration state} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1363,7 +1362,6 @@ test pack-12.46 {command options and errors} -setup {
 } -body {
     pack lousy .pack
 } -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, or propagate}
-
 test pack-13.1 {window deletion} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d .pack.right .pack.bottom
 } -body {
