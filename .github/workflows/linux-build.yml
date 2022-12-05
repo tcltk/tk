@@ -1,4 +1,4 @@
-name: Linux
+name: Linux (with Tcl 8.7)
 on: [push]
 permissions:
   contents: read
@@ -50,7 +50,7 @@ jobs:
           OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -151,7 +151,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
