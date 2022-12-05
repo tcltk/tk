@@ -8,6 +8,8 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+
 #define DEF_TREE_ROWS		"10"
 #define DEF_COLWIDTH		"200"
 #define DEF_MINWIDTH		"20"
@@ -1586,12 +1588,12 @@ static Ttk_Layout TreeviewGetLayout(
     Ttk_LayoutSize(tv->tree.headingLayout, 0, &unused, &tv->tree.headingHeight);
 
     /* Get item height, indent from style:
-     * @@@ TODO: sanity-check.
      */
     tv->tree.rowHeight = DEFAULT_ROWHEIGHT;
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
+	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
     }
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.indent);
@@ -1630,7 +1632,7 @@ static void TreeviewDoLayout(void *clientData)
 	tv->tree.headingArea = Ttk_MakeBox(0,0,0,0);
     }
 
-    visibleRows = (tv->tree.rowHeight ? tv->tree.treeArea.height / tv->tree.rowHeight : 0);
+    visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight;
     tv->tree.root->state |= TTK_STATE_OPEN;
     TtkScrolled(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first,
