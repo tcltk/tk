@@ -334,36 +334,6 @@ test entry-9.1 "Index range invariants" -setup {
     destroy .e
 }
 
-test entry-10.1 {configuration option: "-placeholder"} -setup {
-    pack [ttk::entry .e]
-} -body {
-    .e configure -placeholder {Some text}
-    .e cget -placeholder
-} -cleanup {
-    destroy .e
-} -result {Some text}
-
-test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
-    pack [ttk::entry .e]
-} -body {
-    .e configure -placeholder {Some text} -placeholderforeground red
-    .e cget -placeholderforeground
-} -cleanup {
-    destroy .e
-} -result {red}
-
-test entry-10.3 {styling option: "-placeholderforeground"} -setup {
-    pack [ttk::entry .e]
-} -body {
-    set current [ttk::style configure TEntry -placeholderforeground]
-    ttk::style configure TEntry -placeholderforeground blue
-    set res [ttk::style configure TEntry -placeholderforeground]
-    ttk::style configure TEntry -placeholderforeground $current
-    set res
-} -cleanup {
-    destroy .e
-} -result {blue}
-
 test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
     pack [ttk::entry .e]
     update
