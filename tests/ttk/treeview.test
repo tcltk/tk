@@ -1123,6 +1123,8 @@ test treeview-identify-cleanup "identify - cleanup" -body {
     destroy .tv
 }
 
+puts [font actual {Courier 12}]
+puts [font actual {Helvetica 24}]
 
 test treeview-rowheight-1 "rowheight - setup" -body {
     destroy .tv
