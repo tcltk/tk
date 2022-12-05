@@ -84,13 +84,13 @@ jobs:
       - name: Add X11 (if required)
         if: ${{ env.USE_XVFB == 'true' }}
         run: |
+          brew install icu4c
           brew install --cask xquartz
           sudo /opt/X11/libexec/privileged_startx || true
         working-directory: .
       - name: Build Tcl
-        # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Tcl Configure"
             exit 1
@@ -107,9 +107,8 @@ jobs:
         env:
           CFGOPT: --enable-symbols=${{ matrix.symbols }}
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
-        # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" --disable-xft || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" --disable-xft || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1

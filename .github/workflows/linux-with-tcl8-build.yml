@@ -1,4 +1,4 @@
-name: Linux (with Tcl 8.7)
+name: Linux
 on: [push]
 permissions:
   contents: read
@@ -50,7 +50,7 @@ jobs:
           OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -63,7 +63,7 @@ jobs:
         working-directory: tcl/unix
       - name: Configure (opts=${{ matrix.cfgopt }})
         run: |
-          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH --disable-zipfs "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -132,7 +132,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
