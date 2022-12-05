@@ -238,7 +238,7 @@ test validate-2.2 "configure in -validatecommand" -body {
 test validate-3.0 "Setup" -body {
     set ::E "123"
     ttk::entry .e \
-    	-validatecommand {string is integer -strict %P} \
+	-validatecommand {string is integer -strict %P} \
 	-validate all \
 	-textvariable ::E \
 	;

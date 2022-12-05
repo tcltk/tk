@@ -1116,6 +1116,7 @@ test imgPNG-3.1 {reading image with unknown ancillary chunk - bug [1c659ef0f1]} 
 } -result {0}
 
 }
+
 namespace delete png
 imageFinish
 cleanupTests

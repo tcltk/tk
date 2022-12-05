@@ -171,7 +171,7 @@ test textWind-2.7 {TkTextWindowCmd procedure, "cget" option} -setup {
     .t window cget .f -pady
 } -cleanup {
     destroy .f
-} -returnCodes ok -result {2}
+} -returnCodes ok -result 2
 test textWind-2.8 {TkTextWindowCmd procedure} -body {
     .t window co
 } -returnCodes error -result {wrong # args: should be ".t window configure index ?-option value ...?"}
@@ -1414,7 +1414,7 @@ test textWind-17.1 {peer widgets and embedded windows} -setup {
     update
     destroy .t .tt
     winfo exists .f
-} -result {0}
+} -result 0
 
 test textWind-17.2 {peer widgets and embedded windows} -setup {
     destroy .t .f .tt
