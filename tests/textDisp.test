@@ -11,9 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-
 # The delay procedure needs to wait long enough for the asynchronous updates
 # performed by the text widget to run.
 proc delay {} {
@@ -75,15 +72,6 @@ set fixedAscent [font metrics $fixedFont -ascent]
 set bigFont {Helvetica -24}  ; # note: not a fixed-width font!
 set bigHeight [font metrics $bigFont -linespace]
 set bigAscent [font metrics $bigFont -ascent]
-
-# Although unexpected, this constraint happens to evaluate to false on at
-# least one system: the Github CI runner on Linux with --disable-xft
-# This is because this configuration only has ONE single font available,
-# making all requested fonts become actually the same font.
-# See constraints.tcl for more details.
-testConstraint haveBigFontTwiceLargerThanTextFont [expr {
-    [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
-}]
 
 set ascentDiff [expr {$bigAscent - $fixedAscent}]
 set heightDiff [expr {$bigHeight - $fixedHeight}]
