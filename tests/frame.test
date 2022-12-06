@@ -175,7 +175,6 @@ test frame-1.12 {frame configuration options} -setup {
     }
     frame .g {*}$opts
 } -cleanup {
-} -cleanup {
     destroy .f .g
     deleteWindows
 } -result .g
@@ -482,7 +481,6 @@ test frame-2.19 {toplevel configuration options} -setup {
         }
     }
     toplevel .g {*}$opts
-} -cleanup {
 } -cleanup {
     destroy .f .g
     deleteWindows
