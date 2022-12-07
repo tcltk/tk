@@ -50,7 +50,7 @@ jobs:
           OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -98,11 +98,6 @@ jobs:
             echo "::error::Failure during Distribute"
             exit 1
           }
-      - name: Discover Version ID
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        run: |
-          cd /tmp/dist
-          echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
   test:
     runs-on: ubuntu-22.04
     strategy:
@@ -137,7 +132,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
