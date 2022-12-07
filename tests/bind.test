@@ -6908,8 +6908,8 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
     global keyInfo numericalKeysym
     set result {}
     bind . <Key> {
-    	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-    	set numericalKeysym [format "0x%x" %N]
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericalKeysym [format "0x%x" %N]
     }
     foreach event {
 	{<Control_L> -control}
