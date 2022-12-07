@@ -345,6 +345,12 @@ testConstraint haveTimes12BoldItalicUnderlineOverstrikeFont [expr {
     ([font actual {times 12 bold italic overstrike underline} -underline] eq "1") &&
     ([font actual {times 12 bold italic overstrike underline} -overstrike] eq "1")
 }]
+set fixedFont {Courier 12}   ; # warning: must be consistent with the files using the constraint below!
+set bigFont   {Helvetica 24} ; # ditto
+testConstraint haveBigFontTwiceLargerThanTextFont [expr {
+    [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
+}]
+unset fixedFont bigFont
 
 # constraints for the visuals available
 testConstraint pseudocolor8 [expr {
