@@ -28,7 +28,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
@@ -113,7 +113,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
