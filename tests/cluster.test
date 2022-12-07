@@ -11,7 +11,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint needsTcl87orICU [expr {[package vsatisfies [package provide Tcl] 8.7] || [catch {info body ::tk::startOfCluster}]}]
+testConstraint needsICU [expr {[catch {info body ::tk::startOfCluster}]}]
 
 
 test cluster-1.0 {::tk::startOfCluster} -body {
@@ -20,32 +20,32 @@ test cluster-1.0 {::tk::startOfCluster} -body {
 test cluster-1.1 {::tk::startOfCluster} -body {
     ::tk::startOfCluster 🤡 0
 } -result 0
-test cluster-1.2 {::tk::startOfCluster} -constraints needsTcl87orICU -body {
+test cluster-1.2 {::tk::startOfCluster} -constraints needsICU -body {
     ::tk::startOfCluster 🤡 1
 } -result 0
-test cluster-1.3 {::tk::startOfCluster} -constraints needsTcl87orICU -body {
+test cluster-1.3 {::tk::startOfCluster} -constraints needsICU -body {
     ::tk::startOfCluster 🤡 2
 } -result 2
-test cluster-1.4 {::tk::startOfCluster} -constraints needsTcl87orICU -body {
+test cluster-1.4 {::tk::startOfCluster} -constraints needsICU -body {
     ::tk::startOfCluster 🤡 3
 } -result 2
-test cluster-1.5 {::tk::startOfCluster} -constraints needsTcl87orICU -body {
+test cluster-1.5 {::tk::startOfCluster} -constraints needsICU -body {
     ::tk::startOfCluster 🤡 end
 } -result 0
 test cluster-1.6 {::tk::startOfCluster} -body {
     ::tk::startOfCluster 🤡 {}
 } -result {}
-test cluster-1.7 {::tk::startOfCluster} -constraints needsTcl87orICU -body {
+test cluster-1.7 {::tk::startOfCluster} -constraints needsICU -body {
     ::tk::startOfCluster 🤡 end-1
 } -result 0
 
 test cluster-2.0 {::tk::endOfCluster} -body {
     ::tk::endOfCluster 🤡 -1
 } -result 0
-test cluster-2.1 {::tk::endOfCluster} -constraints needsTcl87orICU -body {
+test cluster-2.1 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster 🤡 0
 } -result 2
-test cluster-2.2 {::tk::endOfCluster} -constraints needsTcl87orICU -body {
+test cluster-2.2 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster 🤡 1
 } -result 2
 test cluster-2.3 {::tk::endOfCluster} -body {
@@ -54,13 +54,13 @@ test cluster-2.3 {::tk::endOfCluster} -body {
 test cluster-2.4 {::tk::endOfCluster} -body {
     ::tk::endOfCluster 🤡 3
 } -result {}
-test cluster-2.5 {::tk::endOfCluster} -constraints needsTcl87orICU -body {
+test cluster-2.5 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster 🤡 end
 } -result 2
 test cluster-2.6 {::tk::endOfCluster} -body {
     ::tk::endOfCluster 🤡 {}
 } -result 0
-test cluster-2.7 {::tk::endOfCluster} -constraints needsTcl87orICU -body {
+test cluster-2.7 {::tk::endOfCluster} -constraints needsICU -body {
     ::tk::endOfCluster 🤡 end-1
 } -result 2
 
