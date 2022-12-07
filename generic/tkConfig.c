@@ -760,6 +760,10 @@ DoObjConfig(
 		    optionPtr->specPtr->optionName+1, (nullOK ? TCL_NULL_OK : 0), &newValue) != TCL_OK) {
 		return TCL_ERROR;
 	    }
+	    if (slotPtrPtr != NULL && valuePtr != NULL) {
+		valuePtr = Tcl_DuplicateObj(valuePtr);
+		Tcl_InvalidateStringRep(valuePtr);
+	    }
 	}
 	if (internalPtr != NULL) {
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
@@ -883,6 +887,10 @@ DoObjConfig(
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
 	    *((int *) internalPtr) = newRelief;
 	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
+	}
 	break;
     }
     case TK_OPTION_CURSOR: {
@@ -918,6 +926,10 @@ DoObjConfig(
 	    *((Tk_Justify *) oldInternalPtr) = *((Tk_Justify *) internalPtr);
 	    *((Tk_Justify *) internalPtr) = (Tk_Justify)newJustify;
 	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
+	}
 	break;
     }
     case TK_OPTION_ANCHOR: {
@@ -933,6 +945,10 @@ DoObjConfig(
 	if (internalPtr != NULL) {
 	    *((Tk_Anchor *) oldInternalPtr) = *((Tk_Anchor *) internalPtr);
 	    *((Tk_Anchor *) internalPtr) = (Tk_Anchor)newAnchor;
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
