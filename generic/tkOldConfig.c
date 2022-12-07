@@ -57,7 +57,7 @@ static void		DeleteSpecCacheTable(ClientData clientData,
  *	will hold an error message.
  *
  * Side effects:
- *	The fields of widgRec get filled in with information from argc/argv
+ *	The fields of widgRec get filled in with information from objc/objv
  *	and the option database. Old information in widgRec's fields gets
  *	recycled. A copy of the spec-table is taken with (some of) the char*
  *	fields converted into Tk_Uid fields; this copy will be released when
@@ -72,9 +72,9 @@ Tk_ConfigureWidget(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    Tcl_Size argc,			/* Number of elements in argv. */
-    const char **argv,		/* Command-line options. */
-    char *widgRec,		/* Record whose fields are to be modified.
+    Tcl_Size objc,			/* Number of elements in objv. */
+    Tcl_Obj *const *objv,		/* Command-line options. */
+    void *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
     int flags)			/* Used to specify additional flags that must
 				 * be present in config specs for them to be
@@ -121,18 +121,10 @@ Tk_ConfigureWidget(
      * match entries in the specs.
      */
 
-    for ( ; argc > 0; argc -= 2, argv += 2) {
+    for ( ; objc > 0; objc -= 2, objv += 2) {
 	const char *arg;
 
-	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetString((Tcl_Obj *) *argv);
-	} else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	    arg = *argv;
-#endif
-	}
+	arg = Tcl_GetString(*objv);
 	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
@@ -142,21 +134,13 @@ Tk_ConfigureWidget(
 	 * Process the entry.
 	 */
 
-	if (argc < 2) {
+	if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", arg));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
 	    return TCL_ERROR;
 	}
-	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetString((Tcl_Obj *) argv[1]);
-	} else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	    arg = argv[1];
-#endif
-	}
+	arg = Tcl_GetString(objv[1]);
 	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (processing \"%.40s\" option)",specPtr->argvName));
