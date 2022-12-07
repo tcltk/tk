@@ -163,11 +163,11 @@ test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
 } -returnCodes error -result {bad screen distance "100xyz"}
 test textTag-1.20 {tag configuration options} -body {
-    .t tag configure x -overstrike 1
+    .t tag configure x -overstrike on
     .t tag cget x -overstrike
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -result 1
+} -result {on}
 test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
@@ -284,11 +284,11 @@ test textTag-1.33 {configuration options} -body {
     .t tag configure x -tabs [lindex [.t tag configure x -tabs] 3]
 } -returnCodes error -result {bad tab alignment "fork": must be left, right, center, or numeric}
 test textTag-1.34 {tag configuration options} -body {
-    .t tag configure x -underline 1
+    .t tag configure x -underline no
     .t tag cget x -underline
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -result 1
+} -result {no}
 test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
@@ -494,11 +494,11 @@ test textTag-5.3 {TkTextTagCmd - "configure" option} -body {
 } -returnCodes error -result {value for "-underline" missing}
 test textTag-5.4 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
-    .t tag configure x -underline 1
+    .t tag configure x -underline yes
     .t tag configure x -underline
 } -cleanup {
     .t tag delete x
-} -result {-underline {} {} {} 1}
+} -result {-underline {} {} {} yes}
 test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underlinefg lightgreen
@@ -508,11 +508,11 @@ test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
 } -result {-underlinefg {} {} {} lightgreen}
 test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
-    .t tag configure x -overstrike 1
+    .t tag configure x -overstrike on
     .t tag cget x -overstrike
 } -cleanup {
     .t tag delete x
-} -result 1
+} -result {on}
 test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -overstrikefg lightgreen
