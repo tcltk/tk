@@ -18,7 +18,7 @@ namespace eval ::tk::console {
     variable blinkTime   500 ; # msecs to blink braced range for
     variable blinkRange  1   ; # enable blinking of the entire braced range
     variable magicKeys   1   ; # enable brace matching and proc/var recognition
-    variable maxLines    600 ; # maximum # of lines buffered in console
+    variable maxLines    2500 ; # maximum # of lines buffered in console
     variable showMatches 1   ; # show multiple expand matches
     variable useFontchooser [llength [info command ::tk::fontchooser]]
     variable inPlugin [info exists embed_args]
@@ -199,6 +199,12 @@ proc ::tk::ConsoleInit {} {
 	    if {[$con get 1.0 output] eq "% "} { $con delete 1.0 output }
 	}]
     }
+    
+    bind all <Key-F1> {
+	::tk::LaunchHelp
+    }
+
+
 }
 
 # ::tk::ConsoleSource --
@@ -595,6 +601,7 @@ proc ::tk::ConsoleBind {w} {
     bind Console <<Cut>> { ::tk::console::Cut %W }
     bind Console <<Copy>> { ::tk::console::Copy %W }
     bind Console <<Paste>> { ::tk::console::Paste %W }
+    bind Console <<Selection>> { ::tk::console::Copy %W }
 
     bind Console <<Console_FontSizeIncr>> {
 	set size [font configure TkConsoleFont -size]
@@ -648,6 +655,12 @@ proc ::tk::ConsoleBind {w} {
 	    ::tk::console::TagProc %W
 	}
     }
+    
+    bind Console <Button-3> {
+        event generate .console <<Copy>>
+        event generate .console <<Paste>>
+    }
+
 }
 
 # ::tk::ConsoleInsert --
@@ -719,6 +732,11 @@ proc ::tk::ConsoleAbout {} {
 
 Tcl $::tcl_patchLevel
 Tk $::tk_patchLevel"
+}
+
+proc ::tk::LaunchHelp {} {
+    global tcl_library
+    eval [list exec] [auto_execok start] [glob -directory [file join $tcl_library .. .. doc tcl TclCmd] contents.html] &
 }
 
 # ::tk::console::Fontchooser* --
