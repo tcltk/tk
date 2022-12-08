@@ -4,6 +4,8 @@
 
 namespace eval ttk::theme::xpnative {
 
+    namespace import ::tk::ScaleNum
+
     ttk::style theme settings xpnative {
 
 	ttk::style configure . \
@@ -19,14 +21,17 @@ namespace eval ttk::theme::xpnative {
 	    -foreground [list disabled SystemGrayText] \
 	    ;
 
-	ttk::style configure TButton -anchor center -padding {1 1} -width -11
-	ttk::style configure TRadiobutton -padding 2
-	ttk::style configure TCheckbutton -padding 2
-	ttk::style configure TMenubutton -padding {8 4}
+	ttk::style configure TButton -anchor center -padding [ScaleNum 1] \
+	    -width -11
+	ttk::style configure TRadiobutton -padding [ScaleNum 2]
+	ttk::style configure TCheckbutton -padding [ScaleNum 2]
+	ttk::style configure TMenubutton \
+	    -padding [list [ScaleNum 8] [ScaleNum 4]]
 
-	ttk::style configure TNotebook -tabmargins {2 2 2 0}
+	set m [ScaleNum 2]
+	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
 	ttk::style map TNotebook.Tab \
-	    -expand [list selected {2 2 2 2}]
+	    -expand [list selected [list $m $m $m $m]]
 
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
 
@@ -36,7 +41,7 @@ namespace eval ttk::theme::xpnative {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding [ScaleNum 2]
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -47,13 +52,14 @@ namespace eval ttk::theme::xpnative {
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
 
-	ttk::style configure TSpinbox -padding {2 0 14 0}
+	set l [ScaleNum 2]; set r [ScaleNum 14]
+	ttk::style configure TSpinbox -padding [list $l 0 $r 0]
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-	ttk::style configure Toolbutton -padding {4 4}
+	ttk::style configure Toolbutton -padding [ScaleNum 4]
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
@@ -65,4 +71,6 @@ namespace eval ttk::theme::xpnative {
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText];
     }
+
+    unset m l r
 }
