@@ -34,9 +34,9 @@ static char scriptPath[PATH_MAX + 1] = "";
  */
 
 static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 
 #pragma mark TKApplication(TKInit)
 
@@ -658,15 +658,15 @@ TkpInit(
 	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
-    Tcl_CreateObjCommand(interp, "nsimage",
+    Tcl_CreateObjCommand2(interp, "nsimage",
 	    TkMacOSXNSImageObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::iconBitmap",
 	    TkMacOSXIconBitmapObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::GetAppPath",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::GetAppPath",
 	    TkMacOSXGetAppPathObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::mac::macOSVersion",
+    Tcl_CreateObjCommand2(interp, "::tk::mac::macOSVersion",
            TkMacOSVersionObjCmd, NULL, NULL);
     MacSystrayInit(interp);
     MacPrint_Init(interp);
@@ -694,7 +694,7 @@ static int
 TkMacOSXGetAppPathObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     if (objc != 1) {
@@ -782,7 +782,7 @@ static int
 TkMacOSVersionObjCmd(
     TCL_UNUSED(void *), /* ClientData */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     static char version[16] = "";

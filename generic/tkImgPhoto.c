@@ -191,11 +191,11 @@ static const Tk_ConfigSpec configSpecs[] = {
 
 static void		PhotoFormatThreadExitProc(ClientData clientData);
 static int		ImgPhotoCmd(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ParseSubcommandOptions(
 			    struct SubcommandOptions *optPtr,
 			    Tcl_Interp *interp, int allowedOptions,
-			    int *indexPtr, int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size *indexPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		ImgPhotoCmdDeletedProc(ClientData clientData);
 static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
 			    PhotoModel *modelPtr, Tcl_Size objc,
@@ -411,7 +411,7 @@ ImgPhotoCreate(
     memset(modelPtr, 0, sizeof(PhotoModel));
     modelPtr->tkModel = model;
     modelPtr->interp = interp;
-    modelPtr->imageCmd = Tcl_CreateObjCommand(interp, name, ImgPhotoCmd,
+    modelPtr->imageCmd = Tcl_CreateObjCommand2(interp, name, ImgPhotoCmd,
 	    modelPtr, ImgPhotoCmdDeletedProc);
     modelPtr->palette = NULL;
     modelPtr->pix32 = NULL;
@@ -453,7 +453,7 @@ static int
 ImgPhotoCmd(
     ClientData clientData,	/* Information about photo model. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const photoOptions[] = {
@@ -467,7 +467,8 @@ ImgPhotoCmd(
     };
 
     PhotoModel *modelPtr = (PhotoModel *)clientData;
-    int result, index, x, y, width, height;
+    int result, x, y, width, height;
+    Tcl_Size index;
     struct SubcommandOptions options;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
@@ -1668,10 +1669,10 @@ ParseSubcommandOptions(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     int allowedOptions,		/* Indicates which options are valid for the
 				 * current command. */
-    int *optIndexPtr,		/* Points to a variable containing the current
+    Tcl_Size *optIndexPtr,		/* Points to a variable containing the current
 				 * index in objv; this variable is updated by
 				 * this function. */
-    int objc,			/* Number of arguments in objv[]. */
+    Tcl_Size objc,			/* Number of arguments in objv[]. */
     Tcl_Obj *const objv[])	/* Arguments to be parsed. */
 {
     static const char *const compositingRules[] = {
@@ -1679,9 +1680,9 @@ ParseSubcommandOptions(
 				 * TK_PHOTO_COMPOSITE_* constants. */
 	NULL
     };
-    Tcl_Size length;
-    int index, c, bit, currentBit;
-    int values[4], numValues, maxValues, argIndex;
+    Tcl_Size index, length, argIndex;
+    int c, bit, currentBit;
+    int values[4], numValues, maxValues;
     const char *option, *expandedOption, *needed;
     const char *const *listPtr;
     Tcl_Obj *msgObj;

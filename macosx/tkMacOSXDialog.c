@@ -429,13 +429,13 @@ int
 Tk_ChooseColorObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int result = TCL_ERROR;
     Tk_Window parent, tkwin = (Tk_Window)clientData;
     const char *title = NULL;
-    int i;
+    Tcl_Size i;
     NSColor *color = nil, *initialColor = nil;
     NSColorPanel *colorPanel;
     NSInteger returnCode, numberOfComponents = 0;
@@ -685,12 +685,13 @@ int
 Tk_GetOpenFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    Tcl_Size i;
+    int result = TCL_ERROR, haveParentOption = 0;
     int index, len, multiple = 0;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
     NSString *directory = nil, *filename = nil;
@@ -956,12 +957,13 @@ int
 Tk_GetSaveFileObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    Tcl_Size i;
+    int result = TCL_ERROR, haveParentOption = 0;
     int confirmOverwrite = 1;
     int index, len;
     Tcl_Obj *cmdObj = NULL, *typeVariablePtr = NULL, *fileTypesPtr = NULL;
@@ -1198,13 +1200,14 @@ int
 Tk_ChooseDirectoryObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    int result = TCL_ERROR, haveParentOption = 0;
     int index, len, mustexist = 0;
+    Tcl_Size i;
     Tcl_Obj *cmdObj = NULL;
     NSString *directory = nil;
     NSString *message, *title;
@@ -1347,7 +1350,7 @@ int
 TkMacOSXStandardAboutPanelObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     if (objc > 1) {
@@ -1378,12 +1381,13 @@ int
 Tk_MessageBoxObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     char *str;
-    int i, result = TCL_ERROR, haveParentOption = 0;
+    Tcl_Size i;
+    int result = TCL_ERROR, haveParentOption = 0;
     int index, typeIndex, iconIndex, indexDefaultOption = 0;
     int defaultNativeButtonIndex = 1; /* 1, 2, 3: right to left */
     Tcl_Obj *cmdObj = NULL;

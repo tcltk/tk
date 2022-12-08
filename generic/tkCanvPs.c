@@ -783,7 +783,7 @@ Tk_PostscriptFont(
     if (psInfoPtr->fontVar != NULL) {
 	const char *name = Tk_NameOfFont(tkfont);
 	Tcl_Obj **objv;
-	int objc;
+	Tcl_Size objc;
 	double size;
 	Tcl_Obj *list = Tcl_GetVar2Ex(interp, psInfoPtr->fontVar, name, 0);
 

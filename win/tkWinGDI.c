@@ -100,22 +100,22 @@ static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    const char *str[], int numargs);
 static int		PrintSelectPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintOpenPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintClosePrinter(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		PrintOpenDoc(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		PrintCloseDoc(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		PrintOpenPage(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		PrintClosePage(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 
 /*
@@ -3552,19 +3552,19 @@ int Winprint_Init(
      * The other printing-related commands.
      */
 
-    Tcl_CreateObjCommand(interp, "::tk::print::_selectprinter",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_selectprinter",
 	    PrintSelectPrinter, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_openprinter",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_openprinter",
 	    PrintOpenPrinter, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_closeprinter",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_closeprinter",
 	    PrintClosePrinter, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_opendoc",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_opendoc",
 	    PrintOpenDoc, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_closedoc",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_closedoc",
 	    PrintCloseDoc, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_openpage",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_openpage",
 	    PrintOpenPage, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_closepage",
+    Tcl_CreateObjCommand2(interp, "::tk::print::_closepage",
 	    PrintClosePage, NULL, NULL);
     return TCL_OK;
 }
@@ -3586,7 +3586,7 @@ int Winprint_Init(
 static int PrintSelectPrinter(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj* const*))
 {
     LPCWSTR printerName = NULL;
@@ -3687,12 +3687,12 @@ static int PrintSelectPrinter(
 int PrintOpenPrinter(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int argc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tcl_DString ds;
 
-    if (argc < 2) {
+    if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "printer");
 	return TCL_ERROR;
     }
@@ -3737,7 +3737,7 @@ int PrintOpenPrinter(
 int PrintClosePrinter(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     if (printDC == NULL) {
@@ -3765,7 +3765,7 @@ int PrintClosePrinter(
 int PrintOpenDoc(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     int output = 0;
@@ -3803,7 +3803,7 @@ int PrintOpenDoc(
 int PrintCloseDoc(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     if (printDC == NULL) {
@@ -3835,7 +3835,7 @@ int PrintCloseDoc(
 int PrintOpenPage(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     if (printDC == NULL) {
@@ -3868,7 +3868,7 @@ int PrintOpenPage(
 int PrintClosePage(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(Tcl_Obj *const *))
 {
     if (printDC == NULL) {

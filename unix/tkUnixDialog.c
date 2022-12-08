@@ -38,7 +38,7 @@ static int
 EvalObjv(
     Tcl_Interp *interp,		/* Current interpreter. */
     char *cmdName,		/* Name of the TCL command to call */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const *objv)	/* Arguments. */
 {
     Tcl_Obj *cmdObj, **objs;
@@ -81,7 +81,7 @@ int
 Tk_ChooseColorObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const *objv)	/* Arguments. */
 {
     return EvalObjv(interp, "tk::ColorDialog", objc-1, objv+1);
@@ -110,7 +110,7 @@ int
 Tk_GetOpenFileObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const *objv)	/* Arguments. */
 {
     Tk_Window tkwin = clientData;
@@ -142,7 +142,7 @@ int
 Tk_GetSaveFileObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const *objv)	/* Arguments. */
 {
     Tk_Window tkwin = clientData;
@@ -176,7 +176,7 @@ int
 Tk_MessageBoxCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const *objv)	/* Arguments. */
 {
     return EvalObjv(interp, "tk::MessageBox", objc-1, objv+1);

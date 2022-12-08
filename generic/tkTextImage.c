@@ -33,7 +33,7 @@ static void		EmbImageBboxProc(TkText *textPtr,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr,
-			    TkTextSegment *eiPtr, int objc,
+			    TkTextSegment *eiPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		EmbImageDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
@@ -327,7 +327,7 @@ EmbImageConfigure(
     TkText *textPtr,		/* Information about text widget that contains
 				 * embedded image. */
     TkTextSegment *eiPtr,	/* Embedded image to be configured. */
-    int objc,			/* Number of strings in objv. */
+    Tcl_Size objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of strings describing configuration
 				 * options. */
 {

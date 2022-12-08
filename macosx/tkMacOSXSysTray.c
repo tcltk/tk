@@ -195,7 +195,7 @@ static int
 MacSystrayObjCmd(
     void *clientData,
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     Tk_Image tk_image;
@@ -401,7 +401,7 @@ MacSystrayObjCmd(
 static int SysNotifyObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv)
 {
     if (objc < 3) {
@@ -480,9 +480,9 @@ MacSystrayInit(Tcl_Interp *interp)
     StatusItemInfo info = (StatusItemInfo) ckalloc(sizeof(StatusItemInfo));
     *info = 0;
 
-    Tcl_CreateObjCommand(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
+    Tcl_CreateObjCommand2(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
             (Tcl_CmdDeleteProc *)MacSystrayDestroy);
-    Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
 

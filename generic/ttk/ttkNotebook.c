@@ -210,7 +210,7 @@ static void DestroyTab(Notebook *nb, Tab *tab)
 
 static int ConfigureTab(
     Tcl_Interp *interp, Notebook *nb, Tab *tab, Tk_Window window,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Ttk_Sticky sticky = tab->sticky;
     Ttk_Padding padding = tab->padding;
@@ -728,7 +728,7 @@ static int TabRequest(
 static int AddTab(
     Tcl_Interp *interp, Notebook *nb,
     Tcl_Size destIndex, Tk_Window window,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Tab *tab;
     if (!Ttk_Maintainable(interp, window, nb->core.tkwin)) {
@@ -895,7 +895,7 @@ static int GetTabIndex(
 /* $nb add window ?options ... ?
  */
 static int NotebookAddCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Tk_Window window;
@@ -934,7 +934,7 @@ static int NotebookAddCommand(
  * 	Insert new tab, or move existing one.
  */
 static int NotebookInsertCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Tcl_Size current = nb->notebook.currentIndex;
@@ -1008,7 +1008,7 @@ static int NotebookInsertCommand(
  * 	Removes the specified tab.
  */
 static int NotebookForgetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Tcl_Size index;
@@ -1032,7 +1032,7 @@ static int NotebookForgetCommand(
  * 	Hides the specified tab.
  */
 static int NotebookHideCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Tcl_Size index;
@@ -1062,7 +1062,7 @@ static int NotebookHideCommand(
  * 	Returns name of tab element at $x,$y; empty string if none.
  */
 static int NotebookIdentifyCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     static const char *const whatTable[] = { "element", "tab", NULL };
     enum { IDENTIFY_ELEMENT, IDENTIFY_TAB };
@@ -1121,7 +1121,7 @@ static int NotebookIdentifyCommand(
  *	See above for valid item formats.
  */
 static int NotebookIndexCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Tcl_Size index;
@@ -1148,7 +1148,7 @@ static int NotebookIndexCommand(
  * 	the currently-selected pane.
  */
 static int NotebookSelectCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
 
@@ -1175,7 +1175,7 @@ static int NotebookSelectCommand(
  * 	Return list of tabs.
  */
 static int NotebookTabsCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Ttk_Manager *mgr = nb->notebook.mgr;
@@ -1200,7 +1200,7 @@ static int NotebookTabsCommand(
 /* $nb tab $tab ?-option ?value -option value...??
  */
 static int NotebookTabCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Notebook *nb = (Notebook *)recordPtr;
     Ttk_Manager *mgr = nb->notebook.mgr;

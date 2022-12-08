@@ -117,7 +117,7 @@ static const char *const formatOptionNames[] = {
  */
 
 static int      ParseFormatOptions(Tcl_Interp *interp, int allowedOptions,
-                    int objc, Tcl_Obj *const objv[], int *indexPtr,
+                    Tcl_Size objc, Tcl_Obj *const objv[], Tcl_Size *indexPtr,
                     struct FormatOptions *optPtr);
 static Tcl_Obj  *GetBadOptMsg(const char *badValue, int allowedOpts);
 static int      StringMatchDef(Tcl_Obj *data, Tcl_Obj *formatString,
@@ -187,16 +187,17 @@ ParseFormatOptions(
     Tcl_Interp *interp,               /* For error messages */
     int allowedOptions,               /* Bitfield specifying which options are
                                        * to be considered allowed */
-    int objc,                         /* Number of elements in argv[] */
+    Tcl_Size objc,                         /* Number of elements in argv[] */
     Tcl_Obj *const objv[],            /* The arguments to parse */
-    int *indexPtr,                    /* Index giving the first element to
+    Tcl_Size *indexPtr,                    /* Index giving the first element to
                                        * parse. The value is updated to the
                                        * index where parsing ended */
     struct FormatOptions *optPtr)     /* Parsed option values are written to
                                        * this struct */
 
 {
-    int index, optIndex, first, typeIndex;
+    Tcl_Size optIndex, index;
+    int first, typeIndex;
     const char *option;
 
     first = 1;
@@ -468,14 +469,14 @@ StringReadDef(
 {
     Tcl_Obj **rowListPtr, **colListPtr;
     Tcl_Obj **objv;
-    int objc;
+    Tcl_Size objc;
     unsigned char *curPixelPtr;
     int x, y, rowCount, colCount, curColCount;
     Tk_PhotoImageBlock srcBlock;
     Display *display;
     Colormap colormap;
     struct FormatOptions opts;
-    int optIndex;
+    Tcl_Size optIndex;
 
     /*
      * Parse format suboptions
@@ -625,7 +626,7 @@ StringWriteDef(
 {
     int greenOffset, blueOffset, alphaOffset, hasAlpha;
     Tcl_Obj *result, **objv = NULL;
-    int objc, allowedOpts, optIndex;
+    Tcl_Size objc, allowedOpts, optIndex;
     struct FormatOptions opts;
 
     /*

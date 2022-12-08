@@ -324,7 +324,7 @@ static const char *const globalFontClass[] = {
 
 
 static int		ConfigAttributesObj(Tcl_Interp *interp,
-			    Tk_Window tkwin, int objc, Tcl_Obj *const objv[],
+			    Tk_Window tkwin, Tcl_Size objc, Tcl_Obj *const objv[],
 			    TkFontAttributes *faPtr);
 static void		DupFontObjProc(Tcl_Obj *srcObjPtr, Tcl_Obj *dupObjPtr);
 static int		FieldSpecified(const char *field);
@@ -471,7 +471,7 @@ int
 Tk_FontObjCmd(
     ClientData clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index;
@@ -498,7 +498,8 @@ Tk_FontObjCmd(
 
     switch ((enum options) index) {
     case FONT_ACTUAL: {
-	int skip, result, n;
+	int result;
+	Tcl_Size skip, n;
 	const char *s;
 	Tk_Font tkfont;
 	Tcl_Obj *optPtr, *charPtr, *resultPtr;
@@ -512,7 +513,7 @@ Tk_FontObjCmd(
 	 */
 
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 
@@ -683,7 +684,8 @@ Tk_FontObjCmd(
 	break;
     }
     case FONT_DELETE: {
-	int i, result = TCL_OK;
+	Tcl_Size i;
+	int result = TCL_OK;
 	const char *string;
 
 	/*
@@ -3415,13 +3417,14 @@ static int
 ConfigAttributesObj(
     Tcl_Interp *interp,		/* Interp for error return. */
     TCL_UNUSED(Tk_Window),	/* For display on which font will be used. */
-    int objc,			/* Number of elements in argv. */
+    Tcl_Size objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[],	/* Command line options. */
     TkFontAttributes *faPtr)	/* Font attributes structure whose fields are
 				 * to be modified. Structure must already be
 				 * properly initialized. */
 {
-    int i, n, index;
+    Tcl_Size i;
+    int n, index;
     Tcl_Obj *optionPtr, *valuePtr;
     const char *value;
 
