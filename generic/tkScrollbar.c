@@ -532,7 +532,7 @@ ConfigureScrollbar(
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs, objc,
-	    (const char **)objv, (char *) scrollPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objv, (char *) scrollPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 

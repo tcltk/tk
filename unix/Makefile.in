@@ -112,7 +112,7 @@ TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 # for this version of Tk:
 TCL_BIN_DIR		= @TCL_BIN_DIR@
 
-# The linker flags needed to link in the Tcl library (ex: -ltcl8.7)
+# The linker flags needed to link in the Tcl library (ex: -ltcl9.1)
 TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Flag, 1: we're building a shared lib, 0 we're not
