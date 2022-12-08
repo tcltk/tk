@@ -257,7 +257,9 @@ static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
 static int		FindArea(Tcl_Interp *interp, TkCanvas *canvasPtr,
 			    Tcl_Obj *const *objv, Tk_Uid uid, int enclosed);
 static double		GridAlign(double coord, double spacing);
+#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9)
 static const char**	TkGetStringsFromObjs(Tcl_Size objc, Tcl_Obj *const *objv);
+#endif
 static void		InitCanvas(void);
 static void		PickCurrentItem(TkCanvas *canvasPtr, XEvent *eventPtr);
 static Tcl_Obj *	ScrollFractions(int screen1,
@@ -2094,7 +2096,6 @@ CanvasWidgetCmd(
 	int newX = 0;		/* Initialization needed only to prevent gcc
 				 * warnings. */
 	double fraction;
-	const char **args;
 
 	if (objc == 2) {
 	    Tcl_SetObjResult(interp, ScrollFractions(
@@ -2105,11 +2106,7 @@ CanvasWidgetCmd(
 	    break;
 	}
 
-	args = TkGetStringsFromObjs(objc, objv);
 	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
-	if (args != NULL) {
-	    ckfree(args);
-	}
 	switch (type) {
 	case TK_SCROLL_MOVETO:
 	    newX = canvasPtr->scrollX1 - canvasPtr->inset
@@ -2140,7 +2137,6 @@ CanvasWidgetCmd(
 	int newY = 0;		/* Initialization needed only to prevent gcc
 				 * warnings. */
 	double fraction;
-	const char **args;
 
 	if (objc == 2) {
 	    Tcl_SetObjResult(interp, ScrollFractions(
@@ -2151,11 +2147,7 @@ CanvasWidgetCmd(
 	    break;
 	}
 
-	args = TkGetStringsFromObjs(objc, objv);
 	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
-	if (args != NULL) {
-	    ckfree(args);
-	}
 	switch (type) {
 	case TK_SCROLL_MOVETO:
 	    newY = canvasPtr->scrollY1 - canvasPtr->inset + (int) (
@@ -6107,6 +6099,7 @@ CanvasSetOrigin(
  *----------------------------------------------------------------------
  */
 
+#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9)
 static const char **
 TkGetStringsFromObjs(
     Tcl_Size objc,
@@ -6125,6 +6118,7 @@ TkGetStringsFromObjs(
     argv[objc] = 0;
     return argv;
 }
+#endif
 
 /*
  *--------------------------------------------------------------
