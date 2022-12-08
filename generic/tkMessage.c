@@ -109,7 +109,7 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", DEF_MESSAGE_ANCHOR,
-	 TCL_INDEX_NONE, offsetof(Message, anchor), 0, 0, 0},
+	 TCL_INDEX_NONE, offsetof(Message, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_INT, "-aspect", "aspect", "Aspect", DEF_MESSAGE_ASPECT,
 	 TCL_INDEX_NONE, offsetof(Message, aspect), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
@@ -141,7 +141,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
 	 offsetof(Message, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), 0, 0, 0},
+	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	 DEF_MESSAGE_PADX, offsetof(Message, padXPtr),
 	 offsetof(Message, padX), 0, 0, 0},
@@ -174,12 +174,12 @@ static char *		MessageTextVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		MessageWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		MessageWorldChanged(ClientData instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
-			    int objc, Tcl_Obj *const objv[], int flags);
+			    Tcl_Size objc, Tcl_Obj *const objv[], int flags);
 static void		DestroyMessage(void *memPtr);
 static void		DisplayMessage(ClientData clientData);
 
@@ -216,7 +216,7 @@ int
 Tk_MessageObjCmd(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Message *msgPtr;
@@ -252,7 +252,7 @@ Tk_MessageObjCmd(
     msgPtr->tkwin = tkwin;
     msgPtr->display = Tk_Display(tkwin);
     msgPtr->interp = interp;
-    msgPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    msgPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(msgPtr->tkwin), MessageWidgetObjCmd, msgPtr,
 	    MessageCmdDeletedProc);
     msgPtr->optionTable = optionTable;
@@ -304,7 +304,7 @@ static int
 MessageWidgetObjCmd(
     ClientData clientData,	/* Information about message widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Message *msgPtr = (Message *)clientData;
@@ -440,7 +440,7 @@ ConfigureMessage(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Message *msgPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

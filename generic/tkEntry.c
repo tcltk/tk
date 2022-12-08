@@ -117,7 +117,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), 0, 0, 0},
+	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	DEF_ENTRY_PLACEHOLDER, TCL_INDEX_NONE, offsetof(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -263,7 +263,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_SYNONYM, "-invcmd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-invalidcommand", 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), 0, 0, 0},
+	DEF_ENTRY_JUSTIFY, TCL_INDEX_NONE, offsetof(Entry, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	DEF_ENTRY_PLACEHOLDER, TCL_INDEX_NONE, offsetof(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -402,7 +402,7 @@ static const char *const selElementNames[] = {
  */
 
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		DeleteChars(Entry *entryPtr, Tcl_Size index, Tcl_Size count);
 static void		DestroyEntry(void *memPtr);
 static void		DisplayEntry(ClientData clientData);
@@ -434,7 +434,7 @@ static int		EntryValueChanged(Entry *entryPtr,
 static void		EntryVisibleRange(Entry *entryPtr,
 			    double *firstPtr, double *lastPtr);
 static int		EntryWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		EntryWorldChanged(ClientData instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
@@ -446,7 +446,7 @@ static int		InsertChars(Entry *entryPtr, Tcl_Size index, const char *string);
  */
 
 static int		SpinboxWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		GetSpinboxElement(Spinbox *sbPtr, int x, int y);
 static int		SpinboxInvoke(Tcl_Interp *interp, Spinbox *sbPtr,
@@ -486,7 +486,7 @@ int
 Tk_EntryObjCmd(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr;
@@ -526,7 +526,7 @@ Tk_EntryObjCmd(
     entryPtr->tkwin		= tkwin;
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
-    entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+    entryPtr->widgetCmd		= Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(entryPtr->tkwin), EntryWidgetObjCmd, entryPtr,
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
@@ -600,7 +600,7 @@ static int
 EntryWidgetObjCmd(
     ClientData clientData,	/* Information about entry widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *)clientData;
@@ -1106,7 +1106,7 @@ ConfigureEntry(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Entry *entryPtr,		/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
@@ -1392,7 +1392,7 @@ ConfigureEntry(
 	    }
 	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
 
-            /*
+	    /*
 	     * No check for error return here as well, because any possible
 	     * error will be trapped below when attempting tracing.
 	     */
@@ -3703,7 +3703,7 @@ int
 Tk_SpinboxObjCmd(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr;
@@ -3745,7 +3745,7 @@ Tk_SpinboxObjCmd(
     entryPtr->tkwin		= tkwin;
     entryPtr->display		= Tk_Display(tkwin);
     entryPtr->interp		= interp;
-    entryPtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+    entryPtr->widgetCmd		= Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(entryPtr->tkwin), SpinboxWidgetObjCmd, sbPtr,
 	    EntryCmdDeletedProc);
     entryPtr->optionTable	= optionTable;
@@ -3837,7 +3837,7 @@ static int
 SpinboxWidgetObjCmd(
     ClientData clientData,	/* Information about spinbox widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Entry *entryPtr = (Entry *)clientData;

@@ -1396,7 +1396,7 @@ int
 TkMacOSXNSImageObjCmd(
     ClientData clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkMacOSXNSImageModel *modelPtr = (TkMacOSXNSImageModel *)clientData;

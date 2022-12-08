@@ -67,7 +67,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
+	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
@@ -114,7 +114,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), 0, 0, 0},
+	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXPtr),
 	offsetof(TkButton, padX), 0, 0, 0},
@@ -152,7 +152,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	DEF_BUTTON_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
+	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
@@ -205,7 +205,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), 0, 0, 0},
+	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
 	 DEF_BUTTON_OVER_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, overRelief),
 	 TK_OPTION_NULL_OK, 0, 0},
@@ -253,7 +253,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	DEF_CHKRAD_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
+	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
@@ -305,7 +305,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indicatoron", "indicatorOn", "IndicatorOn",
 	DEF_BUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkButton, indicatorOn), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), 0, 0, 0},
+	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
 	DEF_BUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, offRelief), 0, 0, 0},
     {TK_OPTION_STRING, "-offvalue", "offValue", "Value",
@@ -366,7 +366,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	DEF_CHKRAD_ACTIVE_FG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, activeFg),
 	TK_OPTION_NULL_OK, DEF_BUTTON_ACTIVE_FG_MONO, 0},
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), 0, 0, 0},
+	DEF_BUTTON_ANCHOR, TCL_INDEX_NONE, offsetof(TkButton, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(TkButton, normalBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
@@ -419,7 +419,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	DEF_BUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkButton, indicatorOn),
 	0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), 0, 0, 0},
+	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
 	 DEF_BUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, offRelief), 0, 0, 0},
     {TK_OPTION_RELIEF, "-overrelief", "overRelief", "OverRelief",
@@ -514,7 +514,7 @@ static const enum command map[][8] = {
 
 static void		ButtonCmdDeletedProc(ClientData clientData);
 static int		ButtonCreate(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int type);
 static void		ButtonEventProc(ClientData clientData,
 			    XEvent *eventPtr);
@@ -534,10 +534,10 @@ static char *		ButtonVarProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		ButtonWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		ConfigureButton(Tcl_Interp *interp, TkButton *butPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DestroyButton(TkButton *butPtr);
 
 /*
@@ -563,7 +563,7 @@ int
 Tk_ButtonObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_BUTTON);
@@ -573,7 +573,7 @@ int
 Tk_CheckbuttonObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_CHECK_BUTTON);
@@ -583,7 +583,7 @@ int
 Tk_LabelObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_LABEL);
@@ -593,7 +593,7 @@ int
 Tk_RadiobuttonObjCmd(
     ClientData clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     return ButtonCreate(clientData, interp, objc, objv, TYPE_RADIO_BUTTON);
@@ -621,7 +621,7 @@ static int
 ButtonCreate(
     ClientData dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument values. */
     int type)			/* Type of button to create: TYPE_LABEL,
 				 * TYPE_BUTTON, TYPE_CHECK_BUTTON, or
@@ -673,7 +673,7 @@ ButtonCreate(
     butPtr->tkwin = tkwin;
     butPtr->display = Tk_Display(tkwin);
     butPtr->interp = interp;
-    butPtr->widgetCmd = Tcl_CreateObjCommand(interp, Tk_PathName(tkwin),
+    butPtr->widgetCmd = Tcl_CreateObjCommand2(interp, Tk_PathName(tkwin),
 	    ButtonWidgetObjCmd, butPtr, ButtonCmdDeletedProc);
     butPtr->type = type;
     butPtr->optionTable = optionTable;
@@ -777,7 +777,7 @@ static int
 ButtonWidgetObjCmd(
     ClientData clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     TkButton *butPtr = (TkButton *)clientData;
@@ -1030,7 +1030,7 @@ ConfigureButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkButton *butPtr,	/* Information about widget;  may or may
 				 * not already have values for some fields. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;

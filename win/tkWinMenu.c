@@ -177,7 +177,7 @@ static void		GetTearoffEntryGeometry(TkMenu *menuPtr,
 			    int *heightPtr);
 static int		GetNewID(TkMenuEntry *mePtr, WORD *menuIDPtr);
 static int		TkWinMenuKeyObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuSelectEvent(TkMenu *menuPtr);
 static void		ReconfigureWindowsMenu(ClientData clientData);
@@ -2178,7 +2178,7 @@ static int
 TkWinMenuKeyObjCmd(
     ClientData dummy,	/* Unused. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     UINT scanCode;
@@ -2319,7 +2319,7 @@ TkpInitializeMenuBindings(
      * binding in Tcl code.
      */
 
-    (void) Tcl_CreateObjCommand(interp, "tk::WinMenuKey",
+    (void) Tcl_CreateObjCommand2(interp, "tk::WinMenuKey",
 	    TkWinMenuKeyObjCmd, Tk_MainWindow(interp), NULL);
 
     (void) Tk_CreateBinding(interp, bindingTable, (ClientData) uid,
