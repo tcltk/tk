@@ -803,9 +803,8 @@ namespace eval ::tk::print {
 	    # COPIES
 	    ttk::label $of.copiesl -text "[mc "Copies"] :"
 	    ttk::spinbox $of.copies -from 1 -to 1000 \
-		-textvariable [myvar dlg::sel](copies) \
-		-width 5
-	    grid  $of.copiesl $of.copies -sticky ew -padx 3 -pady 3
+		-textvariable [myvar dlg::sel](copies)
+	    grid $of.copiesl $of.copies -sticky ew -padx 3 -pady 3
 
 	    # PAPER SIZE
 	    ttk::label $of.paperl -text "[mc "Paper"] :"
