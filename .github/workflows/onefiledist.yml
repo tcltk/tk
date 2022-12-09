@@ -33,7 +33,7 @@ jobs:
         working-directory: "."
       - name: Configure Tcl
         run: |
-          ./configure $CFGOPT --enable-zipfs --prefix=$INST_DIR
+          ./configure $CFGOPT --prefix=$INST_DIR
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
@@ -75,7 +75,7 @@ jobs:
         shell: bash
     env:
       CC: gcc
-      CFGOPT: --disable-symbols --disable-shared --enable-64bit
+      CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v3
@@ -105,7 +105,7 @@ jobs:
         working-directory: "."
       - name: Configure Tcl
         run: |
-          ./configure $CFGOPT --enable-zipfs --prefix=$INST_DIR
+          ./configure $CFGOPT --prefix=$INST_DIR
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
@@ -185,7 +185,7 @@ jobs:
         working-directory: "."
       - name: Configure Tcl
         run: |
-          ./configure $CFGOPT --enable-zipfs --prefix=$INST_DIR
+          ./configure $CFGOPT --prefix=$INST_DIR
         working-directory: tcl/win
       - name: Build & Install Tcl
         run: |
