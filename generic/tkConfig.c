@@ -147,12 +147,14 @@ static void		DupOptionInternalRep(Tcl_Obj *, Tcl_Obj *);
  * the internalPtr2 field points to the entry that matched.
  */
 
-static const Tcl_ObjType optionObjType = {
-    "option",			/* name */
+static const TkObjType optionObjType = {
+    {"option",			/* name */
     FreeOptionInternalRep,	/* freeIntRepProc */
     DupOptionInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -758,6 +760,10 @@ DoObjConfig(
 		    optionPtr->specPtr->optionName+1, (nullOK ? TCL_NULL_OK : 0), &newValue) != TCL_OK) {
 		return TCL_ERROR;
 	    }
+	    if (slotPtrPtr != NULL && valuePtr != NULL) {
+		valuePtr = Tcl_DuplicateObj(valuePtr);
+		Tcl_InvalidateStringRep(valuePtr);
+	    }
 	}
 	if (internalPtr != NULL) {
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
@@ -881,6 +887,10 @@ DoObjConfig(
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
 	    *((int *) internalPtr) = newRelief;
 	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
+	}
 	break;
     }
     case TK_OPTION_CURSOR: {
@@ -916,6 +926,10 @@ DoObjConfig(
 	    *((Tk_Justify *) oldInternalPtr) = *((Tk_Justify *) internalPtr);
 	    *((Tk_Justify *) internalPtr) = (Tk_Justify)newJustify;
 	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
+	}
 	break;
     }
     case TK_OPTION_ANCHOR: {
@@ -931,6 +945,10 @@ DoObjConfig(
 	if (internalPtr != NULL) {
 	    *((Tk_Anchor *) oldInternalPtr) = *((Tk_Anchor *) internalPtr);
 	    *((Tk_Anchor *) internalPtr) = (Tk_Anchor)newAnchor;
+	}
+	if (slotPtrPtr != NULL && valuePtr != NULL) {
+	    valuePtr = Tcl_DuplicateObj(valuePtr);
+	    Tcl_InvalidateStringRep(valuePtr);
 	}
 	break;
     }
@@ -1158,7 +1176,7 @@ GetOptionFromObj(
      * First, check to see if the object already has the answer cached.
      */
 
-    if (objPtr->typePtr == &optionObjType) {
+    if (objPtr->typePtr == &optionObjType.objType) {
 	if (objPtr->internalRep.twoPtrValue.ptr1 == (void *) tablePtr) {
 	    return (Option *) objPtr->internalRep.twoPtrValue.ptr2;
 	}
@@ -1180,7 +1198,7 @@ GetOptionFromObj(
     }
     objPtr->internalRep.twoPtrValue.ptr1 = (void *) tablePtr;
     objPtr->internalRep.twoPtrValue.ptr2 = (void *) bestPtr;
-    objPtr->typePtr = &optionObjType;
+    objPtr->typePtr = &optionObjType.objType;
     tablePtr->refCount++;
     return bestPtr;
 
