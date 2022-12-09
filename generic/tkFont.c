@@ -349,12 +349,14 @@ static void		UpdateDependentFonts(TkFontInfo *fiPtr,
  * font object points to the TkFont structure for the font, or NULL.
  */
 
-const Tcl_ObjType tkFontObjType = {
-    "font",			/* name */
+const TkObjType tkFontObjType = {
+    {"font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -1118,7 +1120,7 @@ Tk_AllocFontFromObj(
     int isNew, descent;
     NamedFont *nfPtr;
 
-    if (objPtr->typePtr != &tkFontObjType
+    if (objPtr->typePtr != &tkFontObjType.objType
 	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(interp, objPtr);
     }
@@ -1303,7 +1305,7 @@ Tk_GetFontFromObj(
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;
 
-    if (objPtr->typePtr != &tkFontObjType
+    if (objPtr->typePtr != &tkFontObjType.objType
 	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(NULL, objPtr);
     }
@@ -1384,7 +1386,7 @@ SetFontFromAny(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkFontObjType;
+    objPtr->typePtr = &tkFontObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->internalRep.twoPtrValue.ptr2 = NULL;
 

@@ -16,6 +16,8 @@ if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
 
+testConstraint tcl8 [package vsatisfies [package provide Tcl] 8]
+
 # Locale identifier LANG_ENGLISH is 0x09
 testConstraint english [expr {
     [llength [info commands testwinlocale]]
@@ -481,15 +483,13 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
 } -result [file join [initialdir] "12x 455"]
 
 test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -constraints {
-    nt
+    nt tcl8
 } -body {
-#        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
-
     tk_getOpenFile -initialdir ~12x/455
 } -returnCodes error -result {user "12x" doesn't exist}
 
 test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
-    nt testwinevent
+    nt testwinevent tcl8
 } -body {
     unset -nocomplain x
     start {set x [tk_getSaveFile \
@@ -502,7 +502,7 @@ test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
 } -result [file normalize [file join ~ "5 12 1"]]
 
 test winDialog-5.12.2 {tk_getSaveFile: initial directory: ~user} -constraints {
-    nt testwinevent
+    nt testwinevent tcl8
 } -body {
 
     # Note: this test will fail on Tcl versions 8.6.4 and earlier due
@@ -603,7 +603,7 @@ test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -setup {
 	close [open $actualFilename w]
     }
 } -constraints {
-    nt testwinevent
+    nt testwinevent tcl8
 } -body {
     set fn [file tail [lindex [glob -types f ~/*] 0]]
     unset -nocomplain x
@@ -707,7 +707,7 @@ test winDialog-5.13 {GetFileName: initial file} -constraints {
     file tail $x
 } -result "12x 456"
 test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constraints {
-    nt
+    nt tcl8
 } -body {
 #        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
     tk_getOpenFile -initialfile ~12x/455
@@ -938,7 +938,7 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
     string tolower [set x]
 } -result [string tolower [initialdir]]
 test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFilename()} -constraints {
-    nt
+    nt tcl8
 } -body {
 #        if (Tcl_TranslateFileName(interp, string,
 #            &utfDirString) == NULL)

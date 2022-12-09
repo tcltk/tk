@@ -79,8 +79,8 @@ static int		GdiFreePen(Tcl_Interp *interp, HDC hDC, HGDIOBJ oldPen);
 static int		GdiMakeBrush(Tcl_Interp *interp, unsigned int style,
 			    unsigned long color, long hatch, LOGBRUSH *lb,
 			    HDC hDC, HGDIOBJ *oldBrush);
-static int		GdiFreeBrush(Tcl_Interp *interp, HDC hDC,
-			    HGDIOBJ oldBcrush);
+static void		GdiFreeBrush(Tcl_Interp *interp, HDC hDC,
+			    HGDIOBJ oldBrush);
 static int		GdiGetHdcInfo(HDC hdc,
 			    LPPOINT worigin, LPSIZE wextent,
 			    LPPOINT vorigin, LPSIZE vextent);
@@ -187,9 +187,9 @@ static int GdiArc(
     HPEN hPen;
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
     int dodash = 0;
     const char *dashdata = 0;
 
@@ -297,7 +297,7 @@ static int GdiArc(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -671,7 +671,7 @@ static int GdiLine(
     HPEN hPen;
 
     LOGBRUSH lbrush;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
 
     int width          = 0;
     COLORREF linecolor = 0;
@@ -923,7 +923,7 @@ static int GdiLine(
     if (width || dolinecolor || dodash) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (doarrow) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     }
 
@@ -959,9 +959,9 @@ static int GdiOval(
     int width = 0;
     COLORREF linecolor = 0, fillcolor = 0;
     int dolinecolor = 0, dofillcolor = 0;
-    HBRUSH hBrush;
+    HBRUSH hBrush = NULL;
     LOGBRUSH lbrush;
-    HGDIOBJ oldobj;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1037,7 +1037,7 @@ static int GdiOval(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -1082,8 +1082,8 @@ static int GdiPolygon(
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
-    HBRUSH hBrush;
-    HGDIOBJ oldobj;
+    HBRUSH hBrush = NULL;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1206,7 +1206,7 @@ static int GdiPolygon(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -1247,8 +1247,8 @@ static int GdiRectangle(
     COLORREF linecolor = 0, fillcolor = BS_NULL;
     int dolinecolor = 0, dofillcolor = 0;
     LOGBRUSH lbrush;
-    HBRUSH hBrush;
-    HGDIOBJ oldobj;
+    HBRUSH hBrush = NULL;
+    HGDIOBJ oldobj = NULL;
 
     int dodash = 0;
     const char *dashdata = 0;
@@ -1331,7 +1331,7 @@ static int GdiRectangle(
     if (width || dolinecolor) {
 	GdiFreePen(interp, hDC, hPen);
     }
-    if (dofillcolor) {
+    if (hBrush) {
 	GdiFreeBrush(interp, hDC, hBrush);
     } else {
 	SelectObject(hDC, oldobj);
@@ -2849,7 +2849,7 @@ static int GdiMakeBrush(
  *
  *----------------------------------------------------------------------
  */
-static int GdiFreeBrush(
+static void GdiFreeBrush(
     TCL_UNUSED(Tcl_Interp *),
     HDC hDC,
     HGDIOBJ oldBrush)
@@ -2858,7 +2858,6 @@ static int GdiFreeBrush(
 
     goneBrush = SelectObject(hDC, oldBrush);
     DeleteObject(goneBrush);
-    return 1;
 }
 
 /*
@@ -3602,7 +3601,7 @@ static int PrintSelectPrinter(
 
     /* Set up print dialog and initalize property structure. */
 
-    ZeroMemory(&pd, sizeof(pd));
+    memset(&pd, 0, sizeof(pd));
     pd.lStructSize = sizeof(pd);
     pd.hwndOwner = GetDesktopWindow();
     pd.Flags = PD_HIDEPRINTTOFILE | PD_DISABLEPRINTTOFILE | PD_NOSELECTION;
@@ -3610,7 +3609,7 @@ static int PrintSelectPrinter(
     if (PrintDlgW(&pd) == TRUE) {
 
 	/*Get document info.*/
-	ZeroMemory(&di, sizeof(di));
+	memset(&di, 0, sizeof(di));
 	di.cbSize = sizeof(di);
 	di.lpszDocName = L"Tk Print Output";
 

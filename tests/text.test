@@ -6110,7 +6110,7 @@ test text-22.250 {TextSearchCmd, backwards search all matching at start of line}
 } -result {1.1 1.0 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6119,7 +6119,7 @@ test text-23.1 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {unmatched open brace in list}
 test text-23.2 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6128,7 +6128,7 @@ test text-23.2 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {bad screen distance "xyz"}
 test text-23.3 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6139,7 +6139,7 @@ test text-23.3 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {100 200}
 test text-23.4 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6153,7 +6153,7 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {100 200 300 400}
 test text-23.5 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6167,7 +6167,7 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {105 205 305 405}
 test text-23.6 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6176,7 +6176,7 @@ test text-23.6 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {bad tab alignment "lork": must be left, right, center, or numeric}
 test text-23.7 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6576,7 +6576,6 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
 # Make sure the Text is mapped before we start
     update
     set ::retval {}
-    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]

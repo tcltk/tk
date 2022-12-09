@@ -207,13 +207,13 @@ CheckForCompilerFeature(
 
     hProcess = GetCurrentProcess();
 
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&si, sizeof(STARTUPINFO));
+    memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+    memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags   = STARTF_USESTDHANDLES;
     si.hStdInput = INVALID_HANDLE_VALUE;
 
-    ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
+    memset(&sa, 0, sizeof(SECURITY_ATTRIBUTES));
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = FALSE;
@@ -343,13 +343,13 @@ CheckForLinkerFeature(
 
     hProcess = GetCurrentProcess();
 
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&si, sizeof(STARTUPINFO));
+    memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+    memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags   = STARTF_USESTDHANDLES;
     si.hStdInput = INVALID_HANDLE_VALUE;
 
-    ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
+    memset(&sa, 0, sizeof(SECURITY_ATTRIBUTES));
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;

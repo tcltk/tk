@@ -1,4 +1,4 @@
-name: Linux (with Tcl 8.7)
+name: Linux (with Tcl 8.6)
 on: [push]
 permissions:
   contents: read
@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: core-8-6-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -50,7 +50,7 @@ jobs:
           OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -63,7 +63,7 @@ jobs:
         working-directory: tcl/unix
       - name: Configure (opts=${{ matrix.cfgopt }})
         run: |
-          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH --disable-zipfs "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -98,33 +98,15 @@ jobs:
             echo "::error::Failure during Distribute"
             exit 1
           }
-      - name: Discover Version ID
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        run: |
-          cd /tmp/dist
-          echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
-      - name: Upload Source Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: Tk ${{ env.VERSION }} Source distribution (snapshot)
-          path: |
-            /tmp/dist/tk*
-            !/tmp/dist/tk*/html/**
-      - name: Upload Documentation Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v2
-        with:
-          name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
-          path: /tmp/dist/tk*/html
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
           - "gcc"
         cfgopt:
           - ""
+          - "--disable-xft"
           - "--enable-symbols"
     steps:
       - name: Checkout
@@ -135,7 +117,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: core-8-6-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -150,7 +132,7 @@ jobs:
           COMPILER: ${{ matrix.compiler }}
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
