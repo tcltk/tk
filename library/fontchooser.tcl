@@ -178,13 +178,10 @@ proc ::tk::fontchooser::Create {} {
         wm title $S(W) $S(-title)
         wm transient $S(W) [winfo toplevel $S(-parent)]
 
-        set scaling [tk scaling]
-        set sizeWidth [expr {int([string length [::msgcat::mc "&Size:"]] * $scaling)}]
-
         set outer [::ttk::frame $S(W).outer -padding {10 10}]
         ::tk::AmpWidget ::ttk::label $S(W).font -text [::msgcat::mc "&Font:"]
         ::tk::AmpWidget ::ttk::label $S(W).style -text [::msgcat::mc "Font st&yle:"]
-        ::tk::AmpWidget ::ttk::label $S(W).size -text [::msgcat::mc "&Size:"] -width $sizeWidth
+        ::tk::AmpWidget ::ttk::label $S(W).size -text [::msgcat::mc "&Size:"]
         ttk::entry $S(W).efont -width 18 \
                 -textvariable [namespace which -variable S](font)
         ttk::entry $S(W).estyle -width 10 \

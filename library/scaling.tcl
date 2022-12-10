@@ -30,11 +30,15 @@ proc ::tk::ScalingPct {} {
 	# Try to get the window scaling factor (1 or 2), partly
 	# based on https://wiki.archlinux.org/title/HiDPI
 	#
-	set factor 1
+	set winScalingFactor 1
+	variable fontScalingFactor 1		;# needed in the file ttk/fonts
 	if {[catch {exec ps -e | grep xfce4-session}] == 0} {		;# Xfce
 	    if {[catch {exec xfconf-query -c xsettings \
 		 -p /Gdk/WindowScalingFactor} result] == 0} {
-		set factor $result
+		set winScalingFactor $result
+		if {$winScalingFactor >= 2} {
+		    set fontScalingFactor 2
+		}
 	    }
 
 	    #
@@ -46,18 +50,19 @@ proc ::tk::ScalingPct {} {
 		 window-scaling-factor} result] == 0} {
 		if {$result == 0} {			;# means: "Auto-detect"
 		    #
-		    # Try to get the value of factor from the cursor size
+		    # Try to get winScalingFactor from the cursor size
 		    #
 		    if {[catch {exec xrdb -query | grep Xcursor.size} result]
 			== 0 &&
 			[catch {exec gsettings get org.mate.peripherals-mouse \
 			 cursor-size} defCursorSize] == 0} {
 			set cursorSize [lindex $result 1]
-			set factor [expr {($cursorSize + $defCursorSize - 1) /
-					  $defCursorSize}]
+			set winScalingFactor \
+			    [expr {($cursorSize + $defCursorSize - 1) /
+				   $defCursorSize}]
 		    }
 		} else {
-		    set factor $result
+		    set winScalingFactor $result
 		}
 	    }
 
@@ -66,26 +71,19 @@ proc ::tk::ScalingPct {} {
 	    # dialog, which can be opened using the "Details..." button
 	    # in the "Fonts" tab of the "Appearance Preferences" dialog.
 	    #
-	} elseif {[catch {exec gsettings get \
+	} elseif {[catch {exec ps -e | grep gnome-session}] == 0 &&
+		  [catch {exec gsettings get \
 		   org.gnome.settings-daemon.plugins.xsettings overrides} \
 		   result] == 0 &&
 		  [set idx \
 		   [string first "'Gdk/WindowScalingFactor'" $result]] >= 0} {
-	    scan [string range $result $idx end] "%*s <%d>" factor
+	    scan [string range $result $idx end] "%*s <%d>" winScalingFactor
 	}
-	if {$factor > 2} {
-	    set factor 2
-	}
-
-	#
-	# Save $factor because it is needed in the file ttk/fonts.tcl
-	#
-	variable windowScalingFactor $factor
 
 	#
 	# Get the scaling percentage
 	#
-	if {$factor == 2} {
+	if {$winScalingFactor >= 2} {
 	    set pct 200
 	} elseif {[catch {exec xrdb -query | grep Xft.dpi} result] == 0} {
 	    #
