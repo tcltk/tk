@@ -1,4 +1,4 @@
-name: Linux (with Tcl 9.1)
+name: Linux (with Tcl 8.7)
 on: [push]
 permissions:
   contents: read
@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: tip-626
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -63,7 +63,7 @@ jobs:
         working-directory: tcl/unix
       - name: Configure (opts=${{ matrix.cfgopt }})
         run: |
-          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH --disable-zipfs "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -117,7 +117,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: tip-626
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
