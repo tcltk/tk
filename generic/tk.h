@@ -1371,7 +1371,7 @@ typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 #endif /* USE_OLD_IMAGE */
 
 /*
- * The following alternate definitions are used with the Tk9.1 file format
+ * The following alternate definitions are used with the Tk8.7 file format
  * supporting a metadata dict, internal dstring and close file flag
  */
 
