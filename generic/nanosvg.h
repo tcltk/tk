@@ -3152,7 +3152,7 @@ NSVGimage* nsvgParse(char* input, const char* units, float dpi)
 
 	// Create gradients after all definitions have been parsed
 	nsvg__createGradients(p);
-	
+
 	/* Scale to viewBox */
 	nsvg__scaleToViewbox(p, units);
 
