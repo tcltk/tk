@@ -509,7 +509,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
  */
 
 #undef  MAX
-#define MAX(a,b) ((a) > (b) ? a : b);
+#define MAX(a,b) ((a) > (b) ? (a) : (b));
 static void LabelSetup(
     LabelElement *c, Tk_Window tkwin, Ttk_State state)
 {
