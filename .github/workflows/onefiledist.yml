@@ -51,7 +51,7 @@ jobs:
         # TODO: need the Tk version separately for distro naming below
       - name: Package
         run: |
-          cp bin/wish8.7 ${BUILD_NAME}
+          cp bin/wish9.1 ${BUILD_NAME}
           chmod +x ${BUILD_NAME}
           tar -cf ${BUILD_NAME}.tar ${BUILD_NAME}
         working-directory: ${{ env.INST_DIR }}
