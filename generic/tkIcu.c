@@ -216,7 +216,7 @@ Icu_Init(
 
 	/* Going back down to ICU version 50 */
 	while ((icu_fns.lib == NULL) && (icuversion[1] >= '5')) {
-	    if (icuversion[2]-- < '0') {
+	    if (--icuversion[2] < '0') {
 		icuversion[1]--; icuversion[2] = '9';
 	    }
 #if defined(_WIN32) && !defined(STATIC_BUILD)

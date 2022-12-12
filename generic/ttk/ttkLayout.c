@@ -9,8 +9,8 @@
 #include "tkInt.h"
 #include "ttkThemeInt.h"
 
-#define MAX(a,b) (a > b ? a : b)
-#define MIN(a,b) (a < b ? a : b)
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 /*------------------------------------------------------------------------
  * +++ Ttk_Box and Ttk_Padding utilities:
