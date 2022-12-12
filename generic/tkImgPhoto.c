@@ -1974,22 +1974,20 @@ ImgPhotoConfigureModel(
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL,
 	    *metadataInObj = NULL, *metadataOutObj = NULL;
     Tcl_Obj *tempdata, *tempformat;
-    Tcl_Size length;
-    Tcl_Size i, j;
+    Tcl_Size i, length;
     int result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
 
-    for (i = 0, j = 0; i < objc; i++,j++) {
+    for (i = 0; i < objc; i++) {
 	const char *arg = Tcl_GetStringFromObj(objv[i], &length);
 	if ((length > 1) && (arg[0] == '-')) {
 	    if ((arg[1] == 'd') &&
 		    !strncmp(arg, "-data", length)) {
 		if (++i < objc) {
 		    data = objv[i];
-		    j--;
 		} else {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-data\" missing", -1));
@@ -2001,7 +1999,6 @@ ImgPhotoConfigureModel(
 		    !strncmp(arg, "-format", length)) {
 		if (++i < objc) {
 		    format = objv[i];
-		    j--;
 		} else {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-format\" missing", -1));
@@ -2013,7 +2010,6 @@ ImgPhotoConfigureModel(
 		!strncmp(arg, "-metadata", length)) {
 		if (++i < objc) {
 		    metadataInObj = objv[i];
-		    j--;
 		} else {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"value for \"-metadata\" missing", -1));
