@@ -1918,13 +1918,13 @@ static Ttk_Layout TreeviewGetLayout(
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
+	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
     }
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
 	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.colSeparatorWidth);
     }
 
     /* Get item indent from style:
-     * @@@ TODO: sanity-check.
      */
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
