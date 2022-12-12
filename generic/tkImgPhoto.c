@@ -1810,12 +1810,12 @@ ImgPhotoConfigureModel(
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
     Tcl_Obj *tempdata, *tempformat;
     size_t length;
-    int i, j, result, imageWidth, imageHeight, oldformat;
+    int i, result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
 
-    for (i = 0, j = 0; i < objc; i++,j++) {
+    for (i = 0; i < objc; i++) {
 	const char *arg = Tcl_GetString(objv[i]);
 	length = objv[i]->length;
 	if ((length > 1) && (arg[0] == '-')) {
@@ -1823,7 +1823,6 @@ ImgPhotoConfigureModel(
 		    !strncmp(arg, "-data", length)) {
 		if (++i < objc) {
 		    data = objv[i];
-		    j--;
 		} else {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-data\" missing", -1));
@@ -1835,7 +1834,6 @@ ImgPhotoConfigureModel(
 		    !strncmp(arg, "-format", length)) {
 		if (++i < objc) {
 		    format = objv[i];
-		    j--;
 		} else {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-format\" missing", -1));
