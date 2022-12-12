@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.7
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
@@ -110,11 +110,11 @@ jobs:
           install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
         uses: actions/checkout@v3
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.7
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: core-8-branch
           path: tcl
       - name: Prepare
         run: |
@@ -125,7 +125,7 @@ jobs:
         working-directory: generic
       - name: Configure and Build Tcl
         run: |
-          ./configure ${CFGOPT} "--prefix=$INSTALL_DIR" || {
+          ./configure $CFGOPT "--prefix=$INSTALL_DIR" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -140,7 +140,7 @@ jobs:
         working-directory: tcl/win
       - name: Configure Tk (symbols=${{ matrix.symbols }})
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/INSTALL_DIR" "--with-tcl=$TCL_CONFIG_PATH" || {
+          ./configure $CFGOPT "--prefix=$HOME/INSTALL_DIR" "--with-tcl=$TCL_CONFIG_PATH" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
