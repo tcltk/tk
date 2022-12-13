@@ -608,6 +608,11 @@ are:
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
+\fB\-indent\fP \fIamount\fP
+.RS
+Specifies how many pixels items are indented from their parents. Defaults to 20.
+.RE
+.br
 \fB\-columnseparatorwidth\fP \fIpixels\fP
 .br
 \fB\-rowheight\fP \fIpixels\fP
