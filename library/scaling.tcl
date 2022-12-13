@@ -112,6 +112,22 @@ proc ::tk::ScalingPct {} {
 	set pct 175
     } elseif {$pct < 200 + 12.5} {
 	set pct 200
+    } elseif {$pct < 225 + 12.5} {
+	set pct 225
+    } elseif {$pct < 250 + 12.5} {
+	set pct 250
+    } elseif {$pct < 275 + 12.5} {
+	set pct 275
+    } elseif {$pct < 300 + 25} {
+	set pct 300
+    } elseif {$pct < 350 + 25} {
+	set pct 350
+    } elseif {$pct < 400 + 25} {
+	set pct 400
+    } elseif {$pct < 450 + 25} {
+	set pct 450
+    } elseif {$pct < 500 + 25} {
+	set pct 500
     } else {
 	set pct [expr {int($pct + 0.5)}]
     }
