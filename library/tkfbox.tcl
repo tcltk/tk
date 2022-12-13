@@ -353,9 +353,9 @@ proc ::tk::dialog::file::Create {w class} {
 
     $f1.menu configure -takefocus 1;# -highlightthickness 2
 
-    pack $data(upBtn) -side right -padx 4 -fill both
-    pack $f1.lab -side left -padx 4 -fill both
-    pack $f1.menu -expand yes -fill both -padx 4
+    pack $data(upBtn) -side right -padx 3p -fill both
+    pack $f1.lab -side left -padx 3p -fill both
+    pack $f1.menu -expand yes -fill both -padx 3p
 
     # data(icons): the IconList that list the files and directories.
     #
@@ -415,7 +415,7 @@ proc ::tk::dialog::file::Create {w class} {
 	    -text $text -state disabled \
 	    -variable ::tk::dialog::file::showHiddenVar \
 	    -command [list ::tk::dialog::file::UpdateWhenIdle $w]]
-# -anchor w -padx 3
+# -anchor w -padx 2p
 
     # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order, and add binding so that we find out when the
@@ -424,30 +424,30 @@ proc ::tk::dialog::file::Create {w class} {
     # once will do). [Bug 987169]
 
     set data(okBtn)     [::tk::AmpWidget ttk::button $f2.ok \
-	    -text [mc "&OK"]     -default active];# -pady 3]
+	    -text [mc "&OK"]     -default active];# -pady 2p]
     bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
     set data(cancelBtn) [::tk::AmpWidget ttk::button $f2.cancel \
-	    -text [mc "&Cancel"] -default normal];# -pady 3]
+	    -text [mc "&Cancel"] -default normal];# -pady 2p]
 
     # grid the widgets in f2
     #
-    grid $f2.lab $f2.ent $data(okBtn) -padx 4 -pady 3 -sticky ew
-    grid configure $f2.ent -padx 2
+    grid $f2.lab $f2.ent $data(okBtn) -padx 3p -pady 2p -sticky ew
+    grid configure $f2.ent -padx 1.5p
     if {$class eq "TkFDialog"} {
 	grid $data(typeMenuLab) $data(typeMenuBtn) $data(cancelBtn) \
-		-padx 4 -sticky ew
+		-padx 3p -sticky ew
 	grid configure $data(typeMenuBtn) -padx 0
-	grid $data(hiddenBtn) -columnspan 2 -padx 4 -sticky ew
+	grid $data(hiddenBtn) -columnspan 2 -padx 3p -sticky ew
     } else {
-	grid $data(hiddenBtn) - $data(cancelBtn) -padx 4 -sticky ew
+	grid $data(hiddenBtn) - $data(cancelBtn) -padx 3p -sticky ew
     }
     grid columnconfigure $f2 1 -weight 1
 
     # Pack all the frames together. We are done with widget construction.
     #
-    pack $f1 -side top -fill x -pady 4
-    pack $f2 -side bottom -pady 4 -fill x
-    pack $data(icons) -expand yes -fill both -padx 4 -pady 1
+    pack $f1 -side top -fill x -pady 3p
+    pack $f2 -side bottom -pady 3p -fill x
+    pack $data(icons) -expand yes -fill both -padx 3p -pady 1p
 
     # Set up the event handlers that are common to Directory and File Dialogs
     #

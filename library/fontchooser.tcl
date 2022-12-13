@@ -178,7 +178,7 @@ proc ::tk::fontchooser::Create {} {
         wm title $S(W) $S(-title)
         wm transient $S(W) [winfo toplevel $S(-parent)]
 
-        set outer [::ttk::frame $S(W).outer -padding {10 10}]
+        set outer [::ttk::frame $S(W).outer -padding {7.5p 7.5p}]
         ::tk::AmpWidget ::ttk::label $S(W).font -text [::msgcat::mc "&Font:"]
         ::tk::AmpWidget ::ttk::label $S(W).style -text [::msgcat::mc "Font st&yle:"]
         ::tk::AmpWidget ::ttk::label $S(W).size -text [::msgcat::mc "&Size:"]
@@ -223,7 +223,7 @@ proc ::tk::fontchooser::Create {} {
         ttk::scrollbar $S(W).tmpvs
         set scroll_width [winfo reqwidth $S(W).tmpvs]
         destroy $S(W).tmpvs
-        set minsize(gap) 10
+        set minsize(gap) [::tk::ScaleNum 10]
         set minsize(bbox) [winfo reqwidth $S(W).ok]
         set minsize(fonts) \
                 [expr {[font measure TkDefaultFont "Helvetica"] + $scroll_width}]
@@ -235,7 +235,7 @@ proc ::tk::fontchooser::Create {} {
         foreach {what width} [array get minsize] {
             incr min $width
         }
-        wm minsize $S(W) $min 260
+        wm minsize $S(W) $min [::tk::ScaleNum 260]
 
         bind $S(W) <Return> [namespace code [list Done 1]]
         bind $S(W) <Escape> [namespace code [list Done 0]]
@@ -258,24 +258,24 @@ proc ::tk::fontchooser::Create {} {
         ::ttk::label $WS.sample -relief sunken -anchor center \
                 -textvariable [namespace which -variable S](sampletext)
         set S(sample) $WS.sample
-        grid $WS.sample -sticky news -padx 6 -pady 4
+        grid $WS.sample -sticky news -padx 4.5p -pady 3p
         grid rowconfigure $WS 0 -weight 1
         grid columnconfigure $WS 0 -weight 1
         grid propagate $WS 0
 
-        grid $S(W).ok     -in $bbox -sticky new -pady {0 2}
-        grid $S(W).cancel -in $bbox -sticky new -pady 2
-        grid $S(W).apply  -in $bbox -sticky new -pady 2
+        grid $S(W).ok     -in $bbox -sticky new -pady {0 1.5p}
+        grid $S(W).cancel -in $bbox -sticky new -pady 1.5p
+        grid $S(W).apply  -in $bbox -sticky new -pady 1.5p
         grid columnconfigure $bbox 0 -weight 1
 
-        grid $WE.strike -sticky w -padx 10
-        grid $WE.under -sticky w -padx 10 -pady {0 30}
+        grid $WE.strike -sticky w -padx 7.5p
+        grid $WE.under -sticky w -padx 7.5p -pady {0 22.5p}
         grid columnconfigure $WE 1 -weight 1
 
         grid $S(W).font   x $S(W).style   x $S(W).size   x       -in $outer -sticky w
         grid $S(W).efont  x $S(W).estyle  x $S(W).esize  x $bbox -in $outer -sticky ew
         grid $S(W).lfonts x $S(W).lstyles x $S(W).lsizes x ^     -in $outer -sticky news
-        grid $WE          x $WS           - -            x ^     -in $outer -sticky news -pady {15 30}
+        grid $WE          x $WS           - -            x ^     -in $outer -sticky news -pady {11p 22.5p}
         grid configure $bbox -sticky n
         grid rowconfigure $outer 2 -weight 1
         grid columnconfigure $outer {1 3 5} -minsize $minsize(gap)
@@ -494,7 +494,7 @@ proc ::tk::fontchooser::Visibility {w visible} {
 #	This is exactly right on XP but may need adjusting on other platforms.
 #
 proc ::tk::fontchooser::ttk_slistbox {w args} {
-    set f [ttk::frame $w -style FontchooserFrame -padding 2]
+    set f [ttk::frame $w -style FontchooserFrame -padding 1.5p]
     if {[catch {
         listbox $f.list -relief flat -highlightthickness 0 -borderwidth 0 {*}$args
         ttk::scrollbar $f.vs -command [list $f.list yview]
