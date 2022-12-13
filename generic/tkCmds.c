@@ -825,6 +825,11 @@ ScalingCmd(
 	d *= WidthOfScreen(screenPtr);
 	d /= WidthMMOfScreen(screenPtr);
 	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(d));
+    } else if (Tcl_IsSafe(interp)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"setting the scaling not accessible in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
+	return TCL_ERROR;
     } else if (objc - skip == 2) {
 	if (Tcl_GetDoubleFromObj(interp, objv[1+skip], &d) != TCL_OK) {
 	    return TCL_ERROR;
