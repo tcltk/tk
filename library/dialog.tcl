@@ -117,7 +117,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	    if {$tmp eq "ok" || $tmp eq "cancel"} {
 		grid columnconfigure $w.bot $i -minsize 90
 	    }
-	    grid configure $w.button$i -pady [::tk::ScaleNum 7]
+	    grid configure $w.button$i -pady 7
 	}
 	incr i
     }
