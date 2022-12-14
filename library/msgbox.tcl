@@ -353,7 +353,7 @@ proc ::tk::MessageBox {args} {
 		    $tmp eq "ignore"} {
 		grid columnconfigure $w.bot $i -minsize 90
 	    }
-	    grid configure $w.$name -pady 5p
+	    grid configure $w.$name -pady 7
 	}
         incr i
 

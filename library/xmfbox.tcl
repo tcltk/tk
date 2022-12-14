@@ -344,9 +344,9 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     set f2a [frame $f2.a]
     set f2b [frame $f2.b]
 
-    grid $f2a -row 0 -column 0 -rowspan 1 -columnspan 1 -padx 4 -pady 4 \
+    grid $f2a -row 0 -column 0 -rowspan 1 -columnspan 1 -padx 3p -pady 3p \
 	-sticky news
-    grid $f2b -row 0 -column 1 -rowspan 1 -columnspan 1 -padx 4 -pady 4 \
+    grid $f2b -row 0 -column 1 -rowspan 1 -columnspan 1 -padx 3p -pady 3p \
 	-sticky news
     grid rowconfigure $f2 0    -minsize 0   -weight 1
     grid columnconfigure $f2 0 -minsize 0   -weight 1
@@ -357,8 +357,8 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     bind [::tk::AmpWidget label $f1.lab -text [mc "Fil&ter:"] -anchor w] \
 	<<AltUnderlined>> [list focus $f1.ent]
     entry $f1.ent
-    pack $f1.lab -side top -fill x -padx 6 -pady 4
-    pack $f1.ent -side top -fill x -padx 4 -pady 0
+    pack $f1.lab -side top -fill x -padx 4.5p -pady 3p
+    pack $f1.ent -side top -fill x -padx 3p -pady 0
     set data(fEnt) $f1.ent
 
     # The file and directory lists
@@ -373,8 +373,8 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     bind [::tk::AmpWidget label $f3.lab -text [mc "&Selection:"] -anchor w] \
 	<<AltUnderlined>> [list focus $f3.ent]
     entry $f3.ent
-    pack $f3.lab -side top -fill x -padx 6 -pady 0
-    pack $f3.ent -side top -fill x -padx 4 -pady 4
+    pack $f3.lab -side top -fill x -padx 4.5p -pady 0
+    pack $f3.ent -side top -fill x -padx 3p -pady 3p
     set data(sEnt) $f3.ent
 
     # The buttons
@@ -391,7 +391,7 @@ proc ::tk::MotifFDialog_BuildUI {w} {
 	    -width $maxWidth \
 	    -command [list tk::MotifFDialog_CancelCmd $w]]
 
-    pack $bot.ok $bot.filter $bot.cancel -padx 10 -pady 10 -expand yes \
+    pack $bot.ok $bot.filter $bot.cancel -padx 7.5p -pady 7.5p -expand yes \
 	-side left
 
     # Create the bindings:
@@ -441,7 +441,7 @@ proc ::tk::MotifFDialog_MakeSList {w f label cmdPrefix} {
     scrollbar $f.v -orient vertical   -takefocus 0 -command [list $f.l yview]
     scrollbar $f.h -orient horizontal -takefocus 0 -command [list $f.l xview]
     grid $f.lab -row 0 -column 0 -sticky news -rowspan 1 -columnspan 2 \
-	-padx 2 -pady 2
+	-padx 1.5p -pady 1.5p
     grid $f.l -row 1 -column 0 -rowspan 1 -columnspan 1 -sticky news
     grid $f.v -row 1 -column 1 -rowspan 1 -columnspan 1 -sticky news
     grid $f.h -row 2 -column 0 -rowspan 1 -columnspan 1 -sticky news
