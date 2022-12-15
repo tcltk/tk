@@ -813,27 +813,26 @@ ScalingCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     Screen *screenPtr;
-    int skip, width, height;
+    Tcl_Size skip;
+    int width, height;
     double d;
 
-    if (Tcl_IsSafe(interp)) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"scaling not accessible in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
-	return TCL_ERROR;
-    }
-
     skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
-    if (skip < 0) {
+    if (skip == TCL_INDEX_NONE) {
 	return TCL_ERROR;
     }
     screenPtr = Tk_Screen(tkwin);
-    if (objc - skip == 1) {
+    if (objc == 1 + skip) {
 	d = 25.4 / 72;
 	d *= WidthOfScreen(screenPtr);
 	d /= WidthMMOfScreen(screenPtr);
 	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(d));
-    } else if (objc - skip == 2) {
+    } else if (Tcl_IsSafe(interp)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"setting the scaling not accessible in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
+	return TCL_ERROR;
+    } else if (objc == 2 + skip) {
 	if (Tcl_GetDoubleFromObj(interp, objv[1+skip], &d) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -864,7 +863,7 @@ UseinputmethodsCmd(
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     TkDisplay *dispPtr;
-    int skip;
+    Tcl_Size skip;
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -873,12 +872,12 @@ UseinputmethodsCmd(
 	return TCL_ERROR;
     }
 
-    skip = TkGetDisplayOf(interp, objc-1, objv+1, &tkwin);
-    if (skip < 0) {
+    skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
+    if (skip == TCL_INDEX_NONE) {
 	return TCL_ERROR;
     }
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
-    if ((objc - skip) == 2) {
+    if (objc == 2 + skip) {
 
 	int boolVal;
 
@@ -891,7 +890,7 @@ UseinputmethodsCmd(
 	} else {
 	    dispPtr->flags &= ~TK_DISPLAY_USE_IM;
 	}
-    } else if ((objc - skip) != 1) {
+    } else if (objc != 1 + skip) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-displayof window? ?boolean?");
 	return TCL_ERROR;
@@ -933,18 +932,18 @@ InactiveCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
-    int skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
+    Tcl_Size skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
 
-    if (skip < 0) {
+    if (skip == TCL_INDEX_NONE) {
 	return TCL_ERROR;
     }
-    if (objc == (Tcl_Size)1 + skip) {
+    if (objc == 1 + skip) {
 	Tcl_WideInt inactive;
 
 	inactive = (Tcl_IsSafe(interp) ? -1 :
 		Tk_GetUserInactiveTime(Tk_Display(tkwin)));
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(inactive));
-    } else if (objc - skip == 2) {
+    } else if (objc == 2 + skip) {
 	const char *string;
 
 	string = Tcl_GetString(objv[objc-1]);
@@ -1280,7 +1279,8 @@ Tk_WinfoObjCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int index, x, y, width, height, useX, useY, c_class, skip;
+    int index, x, y, width, height, useX, useY, c_class;
+    int skip;
     const char *string;
     TkWindow *winPtr;
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1567,7 +1567,7 @@ Tk_WinfoObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if (objc - skip != 3) {
+	if (objc != 3 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window? name");
 	    return TCL_ERROR;
 	}
@@ -1584,7 +1584,7 @@ Tk_WinfoObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if (objc - skip != 3) {
+	if (objc != 3 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window? id");
 	    return TCL_ERROR;
 	}
@@ -1608,7 +1608,7 @@ Tk_WinfoObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if (objc - skip != 4) {
+	if (objc != 4 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "?-displayof window? rootX rootY");
 	    return TCL_ERROR;
@@ -1632,7 +1632,7 @@ Tk_WinfoObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if (objc - skip != 2) {
+	if (objc != 2 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window?");
 	    return TCL_ERROR;
 	}
@@ -1644,7 +1644,7 @@ Tk_WinfoObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if (objc - skip != 3) {
+	if (objc != 3 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window? id");
 	    return TCL_ERROR;
 	}
@@ -1837,12 +1837,12 @@ Tk_WinfoObjCmd(
  *	The return value is 0 if the argument strings did not contain the
  *	"-displayof" option. The return value is 2 if the argument strings
  *	contained both the "-displayof" option and a valid window name.
- *	Otherwise, the return value is -1 if the window name was missing or
- *	did not specify a valid window.
+ *	Otherwise, the return value is TCL_INDEX_NONE if the window name
+ *	was missing or did not specify a valid window.
  *
  *	If the return value was 2, *tkwinPtr is filled with the token for the
- *	window specified on the command line. If the return value was -1, an
- *	error message is left in interp's result object.
+ *	window specified on the command line. If the return value was
+ *	TCL_INDEX_NONE, an error message is left in interp's result object.
  *
  * Side effects:
  *	None.
@@ -1850,7 +1850,7 @@ Tk_WinfoObjCmd(
  *----------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkGetDisplayOf(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tcl_Size objc,			/* Number of arguments. */
@@ -1877,11 +1877,11 @@ TkGetDisplayOf(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "value for \"-displayof\" missing", -1));
 	    Tcl_SetErrorCode(interp, "TK", "NO_VALUE", "DISPLAYOF", NULL);
-	    return -1;
+	    return TCL_INDEX_NONE;
 	}
 	*tkwinPtr = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), *tkwinPtr);
 	if (*tkwinPtr == NULL) {
-	    return -1;
+	    return TCL_INDEX_NONE;
 	}
 	return 2;
     }
