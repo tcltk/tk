@@ -1280,7 +1280,7 @@ Tk_WinfoObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class;
-    int skip;
+    Tcl_Size skip;
     const char *string;
     TkWindow *winPtr;
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1564,7 +1564,7 @@ Tk_WinfoObjCmd(
 
     case WIN_ATOM:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 3 + skip) {
@@ -1581,7 +1581,7 @@ Tk_WinfoObjCmd(
 	Tcl_WideInt id;
 
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 3 + skip) {
@@ -1605,7 +1605,7 @@ Tk_WinfoObjCmd(
     }
     case WIN_CONTAINING:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 4 + skip) {
@@ -1629,7 +1629,7 @@ Tk_WinfoObjCmd(
 	break;
     case WIN_INTERPS:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 2 + skip) {
@@ -1641,7 +1641,7 @@ Tk_WinfoObjCmd(
 	Window id;
 
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 3 + skip) {

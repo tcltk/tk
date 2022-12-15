@@ -704,9 +704,9 @@ Tk_FontObjCmd(
 	return result;
     }
     case FONT_FAMILIES: {
-	int skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
+	Tcl_Size skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
 
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 2 + skip) {
@@ -720,11 +720,11 @@ Tk_FontObjCmd(
 	const char *string;
 	Tk_Font tkfont;
 	Tcl_Size length = 0;
-	int skip = 0;
+	Tcl_Size skip = 0;
 
 	if (objc > 4) {
 	    skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
-	    if (skip < 0) {
+	    if (skip == TCL_INDEX_NONE) {
 		return TCL_ERROR;
 	    }
 	}
@@ -745,14 +745,15 @@ Tk_FontObjCmd(
     }
     case FONT_METRICS: {
 	Tk_Font tkfont;
-	int skip, i;
+	Tcl_Size skip;
+	int i;
 	const TkFontMetrics *fmPtr;
 	static const char *const switches[] = {
 	    "-ascent", "-descent", "-fixed", "-linespace", NULL
 	};
 
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if ((objc < 3) || (objc > 4 + skip)) {
