@@ -324,7 +324,7 @@ static const char *const globalFontClass[] = {
 
 
 static int		ConfigAttributesObj(Tcl_Interp *interp,
-			    Tk_Window tkwin, int objc, Tcl_Obj *const objv[],
+			    Tk_Window tkwin, Tcl_Size objc, Tcl_Obj *const objv[],
 			    TkFontAttributes *faPtr);
 static void		DupFontObjProc(Tcl_Obj *srcObjPtr, Tcl_Obj *dupObjPtr);
 static int		FieldSpecified(const char *field);
@@ -520,7 +520,7 @@ Tk_FontObjCmd(
 	 * Next parameter may be an option.
 	 */
 
-	n = skip + 3;
+	n = 3 + skip;
 	optPtr = NULL;
 	charPtr = NULL;
 	if (n < objc) {
@@ -707,7 +707,7 @@ Tk_FontObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if (objc - skip != 2) {
+	if (objc != 2 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-displayof window?");
 	    return TCL_ERROR;
 	}
@@ -726,7 +726,7 @@ Tk_FontObjCmd(
 		return TCL_ERROR;
 	    }
 	}
-	if (objc - skip != 4) {
+	if (objc != 4 + skip) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "font ?-displayof window? text");
 	    return TCL_ERROR;
@@ -753,7 +753,7 @@ Tk_FontObjCmd(
 	if (skip < 0) {
 	    return TCL_ERROR;
 	}
-	if ((objc < 3) || ((objc - skip) > 4)) {
+	if ((objc < 3) || (objc > 4 + skip)) {
 	    Tcl_WrongNumArgs(interp, 2, objv,
 		    "font ?-displayof window? ?-option?");
 	    return TCL_ERROR;
@@ -3415,13 +3415,14 @@ static int
 ConfigAttributesObj(
     Tcl_Interp *interp,		/* Interp for error return. */
     TCL_UNUSED(Tk_Window),	/* For display on which font will be used. */
-    int objc,			/* Number of elements in argv. */
+    Tcl_Size objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[],	/* Command line options. */
     TkFontAttributes *faPtr)	/* Font attributes structure whose fields are
 				 * to be modified. Structure must already be
 				 * properly initialized. */
 {
-    int i, n, index;
+    Tcl_Size i;
+    int n, index;
     Tcl_Obj *optionPtr, *valuePtr;
     const char *value;
 
