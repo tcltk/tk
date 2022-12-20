@@ -125,10 +125,17 @@ switch -- [tk windowingsystem] {
 	    set family "Helvetica"
 	    set fixed  "courier"
 	}
-	set size 10
-	set ttsize 9
-	set capsize 12
-	set fixedsize 10
+	if {$::tk::fontScalingFactor == 1} {
+	    set size 10
+	    set ttsize 9
+	    set capsize 12
+	    set fixedsize 10
+	} else {
+	    set size 20
+	    set ttsize 18
+	    set capsize 24
+	    set fixedsize 20
+	}
 
 	font configure TkDefaultFont -family $family -size $size
 	font configure TkTextFont    -family $family -size $size
