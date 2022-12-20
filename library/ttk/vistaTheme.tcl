@@ -14,6 +14,8 @@ if {"vista" ni [ttk::style theme names]} {
 
 namespace eval ttk::theme::vista {
 
+    namespace import ::tk::ScaleNum
+
     ttk::style theme settings vista {
 
  	ttk::style configure . \
@@ -29,19 +31,22 @@ namespace eval ttk::theme::vista {
 	    -foreground [list disabled SystemGrayText] \
 	    ;
 
-	ttk::style configure TButton -anchor center -padding {1 1} -width -11
-	ttk::style configure TRadiobutton -padding 2
-	ttk::style configure TCheckbutton -padding 2
-	ttk::style configure TMenubutton -padding {8 4}
+	ttk::style configure TButton -anchor center -padding [ScaleNum 1] \
+	    -width -11
+	ttk::style configure TRadiobutton -padding [ScaleNum 2]
+	ttk::style configure TCheckbutton -padding [ScaleNum 2]
+	ttk::style configure TMenubutton \
+	    -padding [list [ScaleNum 8] [ScaleNum 4]]
 
 	ttk::style element create Menubutton.dropdown vsapi \
 	    TOOLBAR 4 {{selected active} 6 {selected !active} 5
 		disabled 4 pressed 3 active 2 {} 1} \
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
 
-	ttk::style configure TNotebook -tabmargins {2 2 2 0}
+	set m [ScaleNum 2]
+	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
 	ttk::style map TNotebook.Tab \
-	    -expand [list selected {2 2 2 2}]
+	    -expand [list selected [list $m $m $m $m]]
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
@@ -58,10 +63,10 @@ namespace eval ttk::theme::vista {
         # Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
-	ttk::style configure Toolbutton -padding {4 4}
+	ttk::style configure Toolbutton -padding [ScaleNum 4]
 
         # Combobox
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding [ScaleNum 2]
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.background vsapi \
@@ -226,8 +231,10 @@ namespace eval ttk::theme::vista {
         }
 
         # Treeview
-        ttk::style configure Item -padding {4 0 0 0}
+        ttk::style configure Item -padding [list [ScaleNum 4] 0 0 0]
 
         package provide ttk::theme::vista 1.0
     }
+
+    unset m
 }
