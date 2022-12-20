@@ -24,61 +24,53 @@ namespace eval ::tk::dialog::file {
 
     # Create the images if they did not already exist.
     if {![info exists ::tk::Priv(updirImage)]} {
-	set ::tk::Priv(updirImage) [image create photo -data {
-	    iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABmJLR0QA/gD+AP7rGN
-	    SCAAAACXBIWXMAAA3WAAAN1gGQb3mcAAAACXZwQWcAAAAWAAAAFgDcxelYAAAENUlE
-	    QVQ4y7WUbWiVZRjHf/f9POcc9+Kc5bC2aIq5sGG0XnTzNU13zAIlFMNc9CEhTCKwCC
-	    JIgt7AglaR0RcrolAKg14+GBbiGL6xZiYyy63cmzvu7MVznnOe537rw7bDyvlBoT/c
-	    n+6L3/3nf13XLZLJJP+HfICysjKvqqpq+rWKysvLR1tbW+11g+fPn/+bEGIe4KYqCs
-	    Owu66u7oG2trah6wJrrRc0NTVhjME5h7Vj5pxzCCE4duxYZUdHx/aGhoZmgJ+yb+wF
-	    uCO19RmAffv25f8LFslkktraWtvU1CS6u7vRWmOtxVpbAPu+T0tLS04pFU/J34Wd3S
-	    cdFtlfZWeZBU4IcaS5uXn1ZLAEMMY4ay1aa4wx/zpKKYIgoL6+vmjxqoXe5ZLTcsPq
-	    bTyycjODpe1y3WMrvDAMV14jCuW0VhhjiJQpOJ5w7Zwjk8/y9R+vsHHNNq6oFMrkeX
-	    BxI+8d2sktap3YvOPD0lRQrH+Z81fE7t3WB4gihVKazsuaA20aKSUgAG/seQdy2l6W
-	    37+EyopqTv39I6HJUT2zlnlza2jLdgiTaxwmDov6alLHcZUTzXPGGAauWJbfO4dHl9
-	    bgJs3HyfNf0N4ZsOa+jbT3/ownY/hO09p1kBULtjBw+Tvq7xzwauds4dWPDleAcP5E
-	    xlprgtBRUZRgYCRPTzoHwEi2g6OnX+eFrW/RM9qBE4p43CeTz5ATaU6nDrFm2cPs/+
-	    E1SopqkZ7MFJqntXZaa7IKppckwIEvJbg8LWd28OT6nVihCPQQ8UScWCLGqO4hXuQx
-	    qDtJ204eWrqWb1ufRspwtABWaqx5gRKUFSdwDnxPcuLcyyxbuIyaqntIBV34MY9YzC
-	    Owg+S9YeJFkniRpGPkCLMrZzG3+jbktA/KClMxFoUhiKC0OAbAhd79CO8i6xe/STyW
-	    4O7KVRgUJ/sP0heeJV4kEVKw/vZd40sFKxat4mLvp6VLdvnb/XHHGGPIKwBBpC1/9n
-	    3DpfRZnn9/AwCxRII9O79kVPdjvByxuET6Ai8mePeTt4lyheXzhOSpCcdWa00uckTG
-	    kckbGu76nEhbIm2xznH4VB3OWYaiXqQn8GKSWGIMHuXyPL76LBcupmhp69pz4uMnXi
-	    w4VloTGcdQRtGdzmHs1f+RdYZslMZJhzUOHVnceN1ooEiP5JUzdqCQMWCD0JCIeQzn
-	    NNpO+clhrCYf5rC+A2cxWmDUWG2oHEOZMEKIwclgMnnLrTeXUV7sUzpNXgU9DmijWV
-	    v9LEKCkAIhKIBnlvpks6F21qUZ31u/sbExPa9h0/RzwzMov2nGlG5TmW1YOzzlnSfL
-	    mVnyGf19Q7lwZHBp+1fPtflAIgiC7389n9qkihP+lWyeqfUO15ZwQTqlw9H+o2cOvN
-	    QJCAHEgEqgYnI0NyALjAJdyWQy7wMa6AEujUdzo3LjcAXwD/XCTKIRjWytAAAAJXRF
-	    WHRjcmVhdGUtZGF0ZQAyMDA5LTA0LTA2VDIxOjI1OjQxLTAzOjAw8s+uCAAAACV0RV
-	    h0bW9kaWZ5LWRhdGUAMjAwOC0wMS0wM1QxNTowODoyMS0wMjowMJEc/44AAAAZdEVY
-	    dFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC
+	# Based on Vimix/22/actions/go-up.svg
+	# See https://github.com/vinceliuice/vimix-icon-theme
+	set ::tk::Priv(updirImage) [image create photo -format $::tk::svgFmt -data {
+	    <?xml version="1.0" encoding="UTF-8"?>
+	    <svg width="22" height="22" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	     <defs>
+	      <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#565656; } .ColorScheme-Highlight { color:#5294e2; }</style>
+	     </defs>
+	     <g transform="translate(3 3)">
+	      <path class="ColorScheme-Text" d="m7 14v-8l-3.5 3.5-1.5-1.5 6-6 6 6-1.5 1.5-3.5-3.5v8z"/>
+	     </g>
+	    </svg>
 	}]
     }
     if {![info exists ::tk::Priv(folderImage)]} {
-	set ::tk::Priv(folderImage) [image create photo -data {
-	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiA
-	    AAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBl
-	    Lm9yZ5vuPBoAAAHCSURBVDiNpZAxa5NRFIafc+9XLCni4BC6FBycMnbrLpkcgtDVX6
-	    C70D/g4lZX/4coxLlgxFkpiiSSUGm/JiXfveee45AmNlhawXc53HvPee55X+l2u/yP
-	    qt3d3Tfu/viatwt3fzIYDI5uBJhZr9fr3TMzzAx3B+D09PR+v98/7HQ6z5fNOWdCCG
-	    U4HH6s67oAVDlnV1UmkwmllBUkhMD29nYHeLuEAkyn06qU8qqu64MrgIyqYmZrkHa7
-	    3drc3KTVahFjJITAaDRiPB4/XFlQVVMtHH5IzJo/P4EA4MyB+erWPQB7++zs7ccYvl
-	    U5Z08pMW2cl88eIXLZeDUpXzsBkNQ5eP1+p0opmaoCTgzw6fjs6gLLsp58FB60t0Dc
-	    K1Ul54yIEIMQ43Uj68pquDmCeJVztpwzuBNE2LgBoMVpslHMCUEAFgDVxQbzVAiA+a
-	    K5uGPmmDtZF3VpoUm2ArhqQaRiUjcMf81p1G60UEVhcjZfAFTVUkrgkS+jc06mDX9n
-	    vq4YhJ9nlxZExMwMEaHJRutOdWuIIsJFUoBSuTvHJ4YIfP46unV4qdlsjsBRZRtb/X
-	    fHd5+C8+P7+J8BIoxFwovfRxYhnhxjpzEAAAAASUVORK5CYII=
+	# Based on Boston/16/places/folder.svg
+	# See https://github.com/thecheis/Boston-Icons
+	set ::tk::Priv(folderImage) [image create photo -format $::tk::svgFmt -data {
+	    <?xml version="1.0" encoding="UTF-8"?>
+	    <svg width="16" height="16" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+	     <title>Boston Icons</title>
+	     <g>
+	      <path d="m2 1a2 2 0 0 0-0.51758 0.068359 2 2 0 0 0-0.48242 0.19922 2 2 0 0 0-0.41406 0.31836 2 2 0 0 0-0.31836 0.41406 2 2 0 0 0-0.19922 0.48242 2 2 0 0 0-0.068359 0.51758v13h2 12 2v-11-0.96094a1 1 0 0 0 0-0.039062 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0 0-0.0097656 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0 0-0.0097657 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0039063 1 1 0 0 0-0.025391-0.12891 1 1 0 0 0-0.042969-0.12305 1 1 0 0 0-0.058594-0.11719 1 1 0 0 0-0.072265-0.10938 1 1 0 0 0-0.085938-0.097656 1 1 0 0 0-0.097656-0.085938 1 1 0 0 0-0.10938-0.072266 1 1 0 0 0-0.11719-0.058594 1 1 0 0 0-0.12305-0.042969 1 1 0 0 0-0.12891-0.025391 1 1 0 0 0-0.13086-0.0078125h-6l-2-2h-5zm13.99 3.1367a1 1 0 0 1-0.001953 0.019531 1 1 0 0 0 0.001953-0.019531zm-0.019531 0.10547a1 1 0 0 1-0.005859 0.019531 1 1 0 0 0 0.005859-0.019531z" fill="#2d8cff"/>
+	      <path d="m9.5996 4-2.5 3h-6.0996v8h14v-10.471a0.5 0.5 0 0 1-0.001953 0.011719 0.5 0.5 0 0 0 0.001953-0.011719 0.5 0.5 0 0 0 0-0.0019531 0.5 0.5 0 0 0 0-0.027344 0.5 0.5 0 0 0-0.007812-0.085938 0.5 0.5 0 0 0-0.021485-0.085938 0.5 0.5 0 0 0-0.037109-0.078125 0.5 0.5 0 0 0-0.050782-0.072266 0.5 0.5 0 0 0-0.060546-0.060547 0.5 0.5 0 0 0-0.072266-0.050781 0.5 0.5 0 0 0-0.078125-0.037109 0.5 0.5 0 0 0-0.085937-0.021484 0.5 0.5 0 0 0-0.085938-0.0078125h-4.9004z" fill="#6fb7ff"/>
+	      <path d="m2 2a1 1 0 0 0-0.22266 0.025391 1 1 0 0 0-0.21094 0.074219 1 1 0 0 0-0.18945 0.11914 1 1 0 0 0-0.1582 0.1582 1 1 0 0 0-0.11914 0.18945 1 1 0 0 0-0.074219 0.21094 1 1 0 0 0-0.025391 0.22266v3h5.5l1.7734-2.127-1.873-1.873h-4.4004z" fill="#6fb7ff"/>
+	     </g>
+	    </svg>
 	}]
     }
     if {![info exists ::tk::Priv(fileImage)]} {
-	set ::tk::Priv(fileImage)   [image create photo -data {
-	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gva
-	    eTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQWFA84umAmQgAAANpJREFU
-	    OMutkj1uhDAQhb8HSLtbISGfgZ+zbJkix0HmFhwhUdocBnMBGvqtTIqIFSReWKK8ai
-	    x73nwzHrVt+zEMwwvH9FrX9TsA1trpqKy10+yUzME4jnjvAZB0LzXHkojjmDRNVyh3
-	    A+89zrlVwlKSqKrqVy/J8lAUxSZBSMny4ZLgp54iyPM8UPHGNJ2IomibAKDv+9VlWZ
-	    bABbgB5/0WQgSSkC4PF2JF4JzbHN430c4vhAm0TyCJruuClefph4yCBCGT3T3Isoy/
-	    KDHGfDZNcz2SZIx547/0BVRRX7n8uT/sAAAAAElFTkSuQmCC
+	# Based on Boston/16/mimes/text-x-plain.svg
+	# See https://github.com/thecheis/Boston-Icons
+	set ::tk::Priv(fileImage)   [image create photo -format $::tk::svgFmt -data {
+	    <?xml version="1.0" encoding="UTF-8"?>
+	    <svg width="16" height="16" version="1.1" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+	     <title>Boston Icons</title>
+	     <path d="m2 0h9l3 3v13h-12z" fill="#556e81"/>
+	     <path d="m3 1h7.5l2.5 2.5v11.5h-10z" fill="#fff"/>
+	     <g fill="#556e81">
+	      <path d="m10 0v4h4v-1h-3v-3z"/>
+	      <rect x="5" y="4" width="3" height="1"/>
+	      <rect x="5" y="6" width="6" height="1"/>
+	      <rect x="5" y="8" width="6" height="1"/>
+	      <rect x="5" y="10" width="6" height="1"/>
+	      <rect x="5" y="12" width="3" height="1"/>
+	     </g>
+	    </svg>
 	}]
     }
 }
@@ -361,9 +353,9 @@ proc ::tk::dialog::file::Create {w class} {
 
     $f1.menu configure -takefocus 1;# -highlightthickness 2
 
-    pack $data(upBtn) -side right -padx 4 -fill both
-    pack $f1.lab -side left -padx 4 -fill both
-    pack $f1.menu -expand yes -fill both -padx 4
+    pack $data(upBtn) -side right -padx 3p -fill both
+    pack $f1.lab -side left -padx 3p -fill both
+    pack $f1.menu -expand yes -fill both -padx 3p
 
     # data(icons): the IconList that list the files and directories.
     #
@@ -423,7 +415,7 @@ proc ::tk::dialog::file::Create {w class} {
 	    -text $text -state disabled \
 	    -variable ::tk::dialog::file::showHiddenVar \
 	    -command [list ::tk::dialog::file::UpdateWhenIdle $w]]
-# -anchor w -padx 3
+# -anchor w -padx 2p
 
     # the okBtn is created after the typeMenu so that the keyboard traversal
     # is in the right order, and add binding so that we find out when the
@@ -432,30 +424,30 @@ proc ::tk::dialog::file::Create {w class} {
     # once will do). [Bug 987169]
 
     set data(okBtn)     [::tk::AmpWidget ttk::button $f2.ok \
-	    -text [mc "&OK"]     -default active];# -pady 3]
+	    -text [mc "&OK"]     -default active];# -pady 2p]
     bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
     set data(cancelBtn) [::tk::AmpWidget ttk::button $f2.cancel \
-	    -text [mc "&Cancel"] -default normal];# -pady 3]
+	    -text [mc "&Cancel"] -default normal];# -pady 2p]
 
     # grid the widgets in f2
     #
-    grid $f2.lab $f2.ent $data(okBtn) -padx 4 -pady 3 -sticky ew
-    grid configure $f2.ent -padx 2
+    grid $f2.lab $f2.ent $data(okBtn) -padx 3p -pady 2p -sticky ew
+    grid configure $f2.ent -padx 1.5p
     if {$class eq "TkFDialog"} {
 	grid $data(typeMenuLab) $data(typeMenuBtn) $data(cancelBtn) \
-		-padx 4 -sticky ew
+		-padx 3p -sticky ew
 	grid configure $data(typeMenuBtn) -padx 0
-	grid $data(hiddenBtn) -columnspan 2 -padx 4 -sticky ew
+	grid $data(hiddenBtn) -columnspan 2 -padx 3p -sticky ew
     } else {
-	grid $data(hiddenBtn) - $data(cancelBtn) -padx 4 -sticky ew
+	grid $data(hiddenBtn) - $data(cancelBtn) -padx 3p -sticky ew
     }
     grid columnconfigure $f2 1 -weight 1
 
     # Pack all the frames together. We are done with widget construction.
     #
-    pack $f1 -side top -fill x -pady 4
-    pack $f2 -side bottom -pady 4 -fill x
-    pack $data(icons) -expand yes -fill both -padx 4 -pady 1
+    pack $f1 -side top -fill x -pady 3p
+    pack $f2 -side bottom -pady 3p -fill x
+    pack $data(icons) -expand yes -fill both -padx 3p -pady 1p
 
     # Set up the event handlers that are common to Directory and File Dialogs
     #
