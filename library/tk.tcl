@@ -813,6 +813,21 @@ if {[info commands ::tk::startOfCluster] eq ""} {
 
 set ::tk::Priv(IMETextMark) [dict create]
 
+# Scale the default parameters of the panedwindow sash
+option add *Panedwindow.handlePad	[::tk::ScaleNum 8] widgetDefault
+option add *Panedwindow.handleSize	[::tk::ScaleNum 8] widgetDefault
+option add *Panedwindow.sashWidth	[::tk::ScaleNum 3] widgetDefault
+
+# Scale the default size of the scale widget and its slider
+option add *Scale.length		[::tk::ScalingPct] widgetDefault
+option add *Scale.sliderLength		[::tk::ScaleNum 30] widgetDefault
+option add *Scale.width			[::tk::ScaleNum 15] widgetDefault
+
+# Scale the default scrollbar width on X11
+if {[tk windowingsystem] eq "x11"} {
+    option add *Scrollbar.width		[::tk::ScaleNum 11] widgetDefault
+}
+
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
