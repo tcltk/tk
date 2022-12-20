@@ -284,7 +284,8 @@ package require tk
     method CreateHull {} {
 	ttk::frame $w
 	set hull [ttk::entry $w.cHull -takefocus 0 -cursor $options(-cursor)]
-	pack $hull -expand yes -fill both -ipadx 2 -ipady 2
+	set ipad [::tk::ScaleNum 2]
+	pack $hull -expand yes -fill both -ipadx $ipad -ipady $ipad
 	my TraceOption -cursor UpdateCursorOption
     }
 }
