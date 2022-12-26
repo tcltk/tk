@@ -18,8 +18,10 @@ The \fBtk sysnotify\fR command creates a platform-specific system notification a
 .SH EXAMPLE
 .PP
 Here is an example of the \fBtk sysnotify\fR code:
+.PP
 .CS
-     tk sysnotify "Alert" "This is just a test of the Tk System Notification Code."
+tk sysnotify "Alert" \e
+      "This is just a test of the Tk System Notification Code."
 .CE
 .SH PLATFORM NOTES
 .PP
@@ -28,34 +30,27 @@ API's. The X11 version has a conditional dependency on libnotify, and
 falls back to a Tcl-only implementation if libnotify is not installed. On
 each platform the notification includes a platform-specific default image to
 accompany the text.
-.
 .TP
 \fBmacOS\fR
 .
-The macOS version embeds two separate under-the-hood implementations
-using different notification APIs.  The choice of which one to use
-depends on which version of the OS is being run and the state of the
-Tk application code. The newer API, introduced in macOS 10.14,
-requires that the application accessing the API be code-signed, or the
-notification will not display.  (A self-signed certificate seems to be
-sufficient.) The older API was deprecated but not removed in macOS
-11.0. Tk uses the newer API only for signed applications running on
-macOS 10.14 or newer.  Otherwise it falls back to the older API.  A
-quirk which developers should be aware of is that if an unsigned
-version of Wish (or an application derived from it) is installed on
-top of a signed version after the signed version has been registered
-with System Preferences then neither API will be allowed to show
-notifications, making Tk's automatic fallback to the older API
-ineffective.  To re-enable notifications the application must be
-deleted from Apple's System Preferences Notifications section. (There
-is no removal button, so this is done by selecting the application and
-pressing the Delete key.)
-.
+The macOS version will request permission from the user to authorize
+notifications. This must be activated in Apple's System Preferences
+Notifications section.
+.RS
+.PP
+If deploying an application using the standalone version of Wish.app,
+setting the bundle ID in the applications Info.plist file to begin with
+.QW \fBcom\fR
+seems necessary for notifications to work. Using a different prefix
+for the bundle ID, such as something like
+.QW \fBtk.tcl.tkchat\fR ,
+will cause notifications to silently fail.
+.RE
 .TP
 \fBWindows\fR
 .
-The image is taken from the systray i.e. a sysnotify can only be
-called when a systray was installed.
+The image is taken from the system tray, i.e., \fBsysnotify\fR can only be
+called when a \fBsystray\fR was installed.
 .
 .SH KEYWORDS
 notify, alert

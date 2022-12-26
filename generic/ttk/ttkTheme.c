@@ -829,7 +829,7 @@ int Ttk_RegisterElementFactory(
 static int Ttk_CloneElement(
     Tcl_Interp *interp, TCL_UNUSED(void *),
     Ttk_Theme theme, const char *elementName,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Ttk_Theme fromTheme;
     Ttk_ElementClass *fromElement;
@@ -1615,7 +1615,7 @@ static int StyleLayoutCmd(
  *      Use the current theme if $theme is omitted.
  */
 static int StyleThemeStylesCmd(
-    TCL_UNUSED(ClientData), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(void *), Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Ttk_Theme themePtr;
 
@@ -1708,8 +1708,8 @@ StyleObjCmd(
 
 MODULE_SCOPE
 int Ttk_InvokeEnsemble(	/* Run an ensemble command */
-    const Ttk_Ensemble *ensemble, int cmdIndex,
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    const Ttk_Ensemble *ensemble, Tcl_Size cmdIndex,
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     while (cmdIndex < objc) {
 	int index;

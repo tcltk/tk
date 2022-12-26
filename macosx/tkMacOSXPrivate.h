@@ -30,6 +30,9 @@
 #undef Cursor
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
+#endif
 #ifndef NO_CARBON_H
 #import <Carbon/Carbon.h>
 #endif
@@ -210,12 +213,6 @@ typedef struct TkMacOSXDrawingContext {
 } TkMacOSXDrawingContext;
 
 /*
- * Variables internal to TkAqua.
- */
-
-MODULE_SCOPE long tkMacOSXMacOSXVersion;
-
-/*
  * Prototypes for TkMacOSXRegion.c.
  */
 
@@ -261,7 +258,7 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
-#define TkMacOSXGetTkWindow(window) (TkWindow *)Tk_MacOSXGetTkWindow(window)
+#define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
 #define TkMacOSXGetCGContextForDrawable(drawable) ((CGContextRef)Tk_MacOSXGetCGContextForDrawable(drawable))
@@ -280,25 +277,26 @@ MODULE_SCOPE NSModalSession TkMacOSXGetModalSession(void);
 MODULE_SCOPE void	TkMacOSXSelDeadWindow(TkWindow *winPtr);
 MODULE_SCOPE void	TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
 			    NSWindow *macWindow);
-MODULE_SCOPE int	TkMacOSXStandardAboutPanelObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	TkMacOSXIconBitmapObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXStandardAboutPanelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXIconBitmapObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXNSImageObjCmd;
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
 MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
-MODULE_SCOPE int	TkMacOSXRegisterServiceWidgetObjCmd(ClientData clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXRegisterServiceWidgetObjCmd;
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
+MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
-MODULE_SCOPE void	TkMacOSXDrawAllViews(ClientData clientData);
+MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
+MODULE_SCOPE NSColor*   controlAccentColor(void);
+MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
 MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
-
+MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
+MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
+MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
 
 #pragma mark Private Objective-C Classes
 
@@ -330,22 +328,22 @@ VISIBILITY_HIDDEN
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
     NSThread *_backgoundLoop;
-
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    int _poolLock;
-    int _macOSVersion;  /* 10000 * major + 100*minor */
-    Bool _isDrawing;
-    Bool _needsToDraw;
-    Bool _isSigned;
-#endif
-
 }
 @property int poolLock;
 @property int macOSVersion;
 @property Bool isDrawing;
 @property Bool needsToDraw;
 @property Bool isSigned;
+@property Bool tkLiveResizeEnded;
+
+/*
+ * Persistent state variables used by processMouseEvent.
+ */
+
+@property(nonatomic) TkWindow *tkPointerWindow;
+@property(nonatomic) TkWindow *tkEventTarget;
+@property(nonatomic) TkWindow *tkDragTarget;
+@property unsigned int tkButtonState;
 
 @end
 @interface TKApplication(TKInit)
@@ -420,6 +418,7 @@ VISIBILITY_HIDDEN
     NSString *privateWorkingText;
     Bool _tkNeedsDisplay;
     NSRect _tkDirtyRect;
+    NSTrackingArea *trackingArea;
 }
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
@@ -445,13 +444,7 @@ VISIBILITY_HIDDEN
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
 {
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Bool _mouseInResizeArea;
-    Window _tkWindow;
-#endif
 }
-@property Bool mouseInResizeArea;
 @property Window tkWindow;
 @end
 
@@ -462,20 +455,12 @@ VISIBILITY_HIDDEN
 @interface TKDrawerWindow : NSWindow
 {
     id _i1, _i2;
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end
 
 @interface TKPanel : NSPanel
 {
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end

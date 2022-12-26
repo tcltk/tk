@@ -86,6 +86,13 @@ error if tried.
 Controls the Tk font selection dialog. For more details see the
 \fBfontchooser\fR manual page.
 .TP
+\fBtk print \fIwindow\fR
+.
+The \fBtk print\fR command posts a dialog that allows users to print output
+from the \fBcanvas\fR and \fBtext\fR widgets. The printing will be done using
+platform-native APIs and dialogs where available. For more details see the
+\fBprint\fR manual page.
+.TP
 \fBtk scaling \fR?\fB\-displayof \fIwindow\fR? ?\fInumber\fR?
 .
 Sets and queries the current scaling factor used by Tk to convert between
@@ -116,12 +123,12 @@ accommodate the new scaling factor.
 The \fBtk sysnotify\fP  command creates a platform-specific system
 notification alert. Its intent is to provide a brief, unobtrusive
 notification to the user by popping up a window that briefly appears in a
-corner of the screen. For more details see the  see the \fBsysnotify\fR manual page.
+corner of the screen. For more details see the \fBsysnotify\fR manual page.
 .TP
 \fBtk systray create\fP \fIsubcommand...\fP
 .
 The \fBtk systray\fP command creates an icon in the platform-specific
-tray. For more details see the  see the \fBsystray\fR manual page.
+tray. For more details see the \fBsystray\fR manual page.
 .TP
 \fBtk useinputmethods \fR?\fB\-displayof \fIwindow\fR? ?\fIboolean\fR?
 .
@@ -139,9 +146,9 @@ Returns the current Tk windowing system, one of
 \fBx11\fR (X11-based), \fBwin32\fR (MS Windows),
 or \fBaqua\fR (Mac OS X Aqua).
 .SH "SEE ALSO"
-busy(n), fontchooser(n), send(n), sysnotify(n), systray(n), winfo(n)
+busy(n), fontchooser(n), print(n), send(n), sysnotify(n), systray(n), winfo(n)
 .SH KEYWORDS
-application name, send, sysnotify, systray
+application name, print, send, sysnotify, systray
 '\" Local Variables:
 '\" mode: nroff
 '\" End:

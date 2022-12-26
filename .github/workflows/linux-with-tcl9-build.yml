@@ -1,5 +1,7 @@
 name: Linux (with Tcl 9.0)
 on: [push]
+permissions:
+  contents: read
 defaults:
   run:
     shell: bash
@@ -8,7 +10,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   build:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
@@ -23,11 +25,11 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: main
@@ -102,28 +104,29 @@ jobs:
           cd /tmp/dist
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
   test:
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         compiler:
           - "gcc"
         cfgopt:
           - ""
+          - "--disable-xft"
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev xvfb
+          sudo apt-get install libxss-dev xvfb libicu-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

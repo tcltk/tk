@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  8.7a4
+package require -exact tk  8.7a6
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -457,7 +457,7 @@ switch -exact -- [tk windowingsystem] {
 	event add <<Clear>>		<Clear>
 
 	# Official bindings
-	# See http://support.apple.com/kb/HT1343
+	# See https://support.apple.com/en-us/HT201236
 	event add <<SelectAll>>		<Command-a>
 	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
 	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
@@ -497,15 +497,19 @@ if {$::tk_library ne ""} {
     }
     namespace eval ::tk {
 	SourceLibFile icons
+	SourceLibFile iconbadges
 	SourceLibFile button
 	SourceLibFile entry
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow
+	SourceLibFile print
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
-	SourceLibFile systray
+	if {![interp issafe]} {
+	    SourceLibFile systray
+	}
 	SourceLibFile text
     }
 }
@@ -680,24 +684,127 @@ proc ::tk::mcmaxamp {args} {
     return $maxlen
 }
 
-# For now, turn off the custom mdef proc for the Mac:
-
-if {[tk windowingsystem] eq "aqua"} {
-    namespace eval ::tk::mac {
-	set useCustomMDEF 0
-    }
-}
-
-
 if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-    	source -encoding utf-8 $file
+	source -encoding utf-8 $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
-    	eval $script
+	eval $script
+    }
+    #This procedure is required to silence warnings generated
+    #by inline AppleScript execution.
+    proc ::tk::mac::GetDynamicSdef {} {
+         puts ""
+     }
+}
+
+if {[info commands ::tk::endOfWord] eq ""} {
+    proc ::tk::endOfWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_endOfWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::startOfNextWord] eq ""} {
+    proc ::tk::startOfNextWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_startOfNextWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::startOfPreviousWord] eq ""} {
+    proc ::tk::startOfPreviousWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_startOfPreviousWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakBefore] eq ""} {
+    proc ::tk::wordBreakBefore {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_wordBreakBefore $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakAfter] eq ""} {
+    proc ::tk::wordBreakAfter {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	}
+	set start [tcl_wordBreakAfter $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::endOfCluster] eq ""} {
+    proc ::tk::endOfCluster {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	} elseif {$start >= [string length $str]} {
+	    return ""
+	}
+	if {[string length [string index $str $start]] > 1} {
+	    incr start
+	}
+	incr start
+	return $start
+    }
+}
+if {[info commands ::tk::startOfCluster] eq ""} {
+    proc ::tk::startOfCluster {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	} elseif {$start >= [string length $str]} {
+	    return [string length $str]
+	}
+	if {[string length [string index $str $start]] < 1} {
+	    incr start -1
+	}
+	if {$start < 0} {
+	    return ""
+	}
+	return $start
     }
 }
 

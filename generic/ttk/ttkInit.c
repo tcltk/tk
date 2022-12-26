@@ -13,15 +13,15 @@
  * See also: enum Ttk_ButtonDefaultState.
  */
 const char *const ttkDefaultStrings[] = {
-    "normal", "active", "disabled", NULL
+    "active", "disabled", "normal", NULL
 };
 
 int Ttk_GetButtonDefaultStateFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_ButtonDefaultState *statePtr)
 {
     int state = (int)TTK_BUTTON_DEFAULT_DISABLED;
-    int result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkDefaultStrings,
-	    sizeof(char *), "default state", 0, &state);
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkDefaultStrings,
+	    "default state", 0, &state);
 
     *statePtr = (Ttk_ButtonDefaultState)state;
     return result;
@@ -40,8 +40,8 @@ int Ttk_GetCompoundFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Compound *compoundPtr)
 {
     int compound = (int)TTK_COMPOUND_NONE;
-    int result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkCompoundStrings,
-	    sizeof(char *), "compound layout", 0, &compound);
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkCompoundStrings,
+	    "compound layout", 0, &compound);
 
     *compoundPtr = (Ttk_Compound)compound;
     return result;
@@ -60,8 +60,8 @@ int Ttk_GetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
 {
     *resultPtr = TTK_ORIENT_HORIZONTAL;
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-	    sizeof(char *), "orientation", 0, resultPtr);
+    return Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
+	    "orientation", 0, resultPtr);
 }
 #endif
 
@@ -69,8 +69,8 @@ int TtkGetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
 {
     int orient = (int)TTK_ORIENT_HORIZONTAL;
-    int result = Tcl_GetIndexFromObjStruct(interp, objPtr, ttkOrientStrings,
-    	    sizeof(char *), "orientation", 0, &orient);
+    int result = Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
+    	    "orientation", 0, &orient);
 
     *resultPtr = (Ttk_Orient)orient;
     return result;
@@ -81,13 +81,13 @@ int TtkGetOrientFromObj(
  * Other options are accepted and interpreted as synonyms for "normal".
  */
 static const char *const ttkStateStrings[] = {
-    "normal", "readonly", "disabled", "active", NULL
+    "active", "disabled", "normal", "readonly", NULL
 };
 enum {
-    TTK_COMPAT_STATE_NORMAL,
-    TTK_COMPAT_STATE_READONLY,
+    TTK_COMPAT_STATE_ACTIVE,
     TTK_COMPAT_STATE_DISABLED,
-    TTK_COMPAT_STATE_ACTIVE
+    TTK_COMPAT_STATE_NORMAL,
+    TTK_COMPAT_STATE_READONLY
 };
 
 /* TtkCheckStateOption --
@@ -104,8 +104,8 @@ void TtkCheckStateOption(WidgetCore *corePtr, Tcl_Obj *objPtr)
     unsigned all = TTK_STATE_DISABLED|TTK_STATE_READONLY|TTK_STATE_ACTIVE;
 #   define SETFLAGS(f) TtkWidgetChangeState(corePtr, f, all^f)
 
-    (void)Tcl_GetIndexFromObjStruct(NULL, objPtr, ttkStateStrings,
-	    sizeof(char *), "", 0, &stateOption);
+    Tcl_GetIndexFromObj(NULL, objPtr, ttkStateStrings,
+	    "", 0, &stateOption);
     switch (stateOption) {
 	case TTK_COMPAT_STATE_NORMAL:
 	default:

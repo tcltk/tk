@@ -24,7 +24,7 @@ typedef struct
     Tcl_Obj *textObj;
     Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
-    Tcl_Obj *underlineObj;
+    int underline;
     Tcl_Obj *widthObj;
 
     Ttk_TraceHandle	*textVariableTrace;
@@ -57,17 +57,16 @@ typedef struct
 static const Tk_OptionSpec BaseOptionSpecs[] =
 {
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-        "left", offsetof(Base,base.justifyObj), TCL_INDEX_NONE,
-        TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	"left", offsetof(Base,base.justifyObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Base,base.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-textvariable", "textVariable", "Variable", "",
 	offsetof(Base,base.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", offsetof(Base,base.underlineObj), TCL_INDEX_NONE,
-	0,0,0 },
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(Base, base.underline), 0},
     /* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
     {TK_OPTION_STRING, "-width", "width", "Width",
 	NULL, offsetof(Base,base.widthObj), TCL_INDEX_NONE,
@@ -84,9 +83,9 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
      * Compound base/image options
      */
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
-	 NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
-	 TK_OPTION_NULL_OK, (void *)ttkCompoundStrings,
-         GEOMETRY_CHANGED },
+	NULL, offsetof(Base,base.compoundObj), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK, ttkCompoundStrings,
+	GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Base,base.paddingObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED},
@@ -95,8 +94,8 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
      * Compatibility/legacy options
      */
     {TK_OPTION_STRING, "-state", "state", "State",
-	 "normal", offsetof(Base,base.stateObj), TCL_INDEX_NONE,
-	 0,0,STATE_CHANGED },
+	"normal", offsetof(Base,base.stateObj), TCL_INDEX_NONE,
+	0,0,STATE_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
@@ -259,11 +258,11 @@ static const Tk_OptionSpec LabelOptionSpecs[] =
 	NULL, offsetof(Label,label.reliefObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
-	NULL, offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
+	"w", offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
+	0, 0, GEOMETRY_CHANGED},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	NULL, offsetof(Label, label.justifyObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	"left", offsetof(Label, label.justifyObj), TCL_INDEX_NONE,
+	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	NULL, offsetof(Label, label.wrapLengthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED /*SB: SIZE_CHANGED*/ },
@@ -331,7 +330,7 @@ static const Tk_OptionSpec ButtonOptionSpecs[] =
 	"", offsetof(Button, button.commandObj), TCL_INDEX_NONE, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-default", "default", "Default",
 	"normal", offsetof(Button, button.defaultStateObj), TCL_INDEX_NONE,
-	0, (void *)ttkDefaultStrings, DEFAULTSTATE_CHANGED},
+	0, ttkDefaultStrings, DEFAULTSTATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)
@@ -827,7 +826,7 @@ static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 	"", offsetof(Menubutton, menubutton.menuObj), TCL_INDEX_NONE, 0,0,0},
     {TK_OPTION_STRING_TABLE, "-direction", "direction", "Direction",
 	"below", offsetof(Menubutton, menubutton.directionObj), TCL_INDEX_NONE,
-	0, (void *)directionStrings, GEOMETRY_CHANGED},
+	0, directionStrings, GEOMETRY_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(BaseOptionSpecs)

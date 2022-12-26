@@ -16,7 +16,7 @@
 /*
  *----------------------------------------------------------------------
  *
- * TkpGetSystemDefault --
+ * Tk_GetSystemDefault --
  *
  *	Given a dbName and className for a configuration option, return a
  *	string representation of the option.
@@ -33,7 +33,7 @@
  */
 
 Tcl_Obj *
-TkpGetSystemDefault(
+Tk_GetSystemDefault(
     Tk_Window tkwin,		/* A window to use. */
     const char *dbName,		/* The option database name. */
     const char *className)	/* The name of the option class. */

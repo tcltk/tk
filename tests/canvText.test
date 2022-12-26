@@ -11,9 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # Canvas used in 1.* - 17.* tests
 canvas .c -width 400 -height 300 -bd 2 -relief sunken
 pack .c
@@ -66,7 +63,7 @@ test canvText-1.12 {configuration options: good value for "underline"} -body {
 } -result {0 0}
 test canvasText-1.13 {configuration options: bad value for "underline"} -body {
     .c itemconfigure test -underline xyz
-} -returnCodes error -result {expected integer but got "xyz"}
+} -returnCodes error -result {bad index "xyz": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 test canvText-1.14 {configuration options: good value for "width"} -body {
     .c itemconfigure test -width 6
     list [lindex [.c itemconfigure test -width] 4] [.c itemcget test -width]
@@ -756,7 +753,7 @@ test canvText-14.1 {GetTextIndex procedure} -setup {
     list [.c index test end] [.c index test insert] \
 	[.c index test sel.first] [.c index test sel.last] \
 	[.c index test @0,0] \
-	[.c index test -1] [.c index test 10] [.c index test 100]
+	[.c index test {}] [.c index test 10] [.c index test 100]
 } -cleanup {
     .c delete test
 } -result {15 12 5 8 0 0 10 15}
@@ -943,15 +940,21 @@ test canvText-19.1 {patch 1006286, leading space caused wrap under Win32} -setup
     destroy .c
 } -result {{Yeah } Yeah- 4 4}
 
-test canvText-20.1 {angled text bounding box} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
+test canvText-20.1 {angled text bounding box} -setup {
     destroy .c
     canvas .c
     proc transpose {bbox} {
 	lassign $bbox a b c d
 	list $b $a $d $c
     }
+    proc almosteq {b1 b2} {
+        # check whether the two boxes are equal, with 1 unit tolerance on each x y w h
+        lassign $b1 a b c d
+        lassign $b2 e f g h
+        expr {($e-$a)<=1 && ($f-$b)<=1 && ($g-$c)<=1 && ($h-$d)<=1}
+    }
 } -body {
-    .c create text 2 2 -tag t -anchor center -text 0 -font {Helvetica 24}
+    .c create text 2 2 -tag t -anchor center -text 0 -font {TkDefaultFont 24}
     set bb0 [.c bbox t]
     .c itemconf t -angle 90
     set bb1 [.c bbox t]
@@ -959,9 +962,10 @@ test canvText-20.1 {angled text bounding box} -constraints {failsOnUbuntu failsO
     set bb2 [.c bbox t]
     .c itemconf t -angle 270
     set bb3 [.c bbox t]
-    list [expr {$bb0 eq $bb2 ? "ok" : "$bb0,$bb2"}] \
-	[expr {$bb1 eq $bb3 ? "ok" : "$bb1,$bb3"}] \
-	[expr {$bb0 eq [transpose $bb1] ? "ok" : "$bb0,$bb1"}] \
+    # bboxes should be the same, possibly with a small (platform-specific) rounding difference
+    list [expr {[almosteq $bb0 $bb2] ? "ok" : "$bb0,$bb2"}] \
+	[expr {[almosteq $bb1 $bb3] ? "ok" : "$bb1,$bb3"}] \
+	[expr {[almosteq $bb0 [transpose $bb1]] ? "ok" : "$bb0,$bb1"}]
 } -cleanup {
     destroy .c
     rename transpose {}

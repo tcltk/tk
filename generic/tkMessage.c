@@ -712,10 +712,10 @@ DisplayMessage(
 	bgGC = Tk_GCForColor(msgPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
 	if (msgPtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(msgPtr->highlightColorPtr,Tk_WindowId(tkwin));
-	    TkpDrawHighlightBorder(tkwin, fgGC, bgGC, msgPtr->highlightWidth,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, msgPtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	} else {
-	    TkpDrawHighlightBorder(tkwin, bgGC, bgGC, msgPtr->highlightWidth,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, msgPtr->highlightWidth,
 		    Tk_WindowId(tkwin));
 	}
     }
@@ -848,14 +848,14 @@ MessageTextVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
         if (!Tcl_InterpDeleted(interp) && msgPtr->textVarName) {
-            ClientData probe = NULL;
+            void *probe = NULL;
 
             do {
                 probe = Tcl_VarTraceInfo(interp,
                         msgPtr->textVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         MessageTextVarProc, probe);
-                if (probe == (ClientData)msgPtr) {
+                if (probe == (void *)msgPtr) {
                     break;
                 }
             } while (probe);

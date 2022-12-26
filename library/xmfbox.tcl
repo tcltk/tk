@@ -83,9 +83,9 @@ proc ::tk::MotifFDialog_Create {dataName type argList} {
     MotifFDialog_Config $dataName $type $argList
 
     if {$data(-parent) eq "."} {
-        set w .$dataName
+	set w .$dataName
     } else {
-        set w $data(-parent).$dataName
+	set w $data(-parent).$dataName
     }
 
     # (re)create the dialog box if necessary
@@ -548,7 +548,7 @@ proc ::tk::MotifFDialog_Update {w} {
 
     $data(fEnt) delete 0 end
     $data(fEnt) insert 0 \
-            [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
+	    [::tk::dialog::file::JoinFile $data(selectPath) $data(filter)]
     $data(sEnt) delete 0 end
     $data(sEnt) insert 0 [::tk::dialog::file::JoinFile $data(selectPath) \
 	    $data(selectFile)]
@@ -596,15 +596,15 @@ proc ::tk::MotifFDialog_LoadFiles {w} {
 	if {[file isdir ./$f]} {
 	    lappend dlist $f
 	} else {
-            foreach pat $data(filter) {
-                if {[string match $pat $f]} {
+	    foreach pat $data(filter) {
+		if {[string match $pat $f]} {
 		    if {[string match .* $f]} {
 			incr top
 		    }
 		    lappend flist $f
-                    break
+		    break
 		}
-            }
+	    }
 	}
     }
     eval [list $data(dList) insert end] [lsort -dictionary $dlist]

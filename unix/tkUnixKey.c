@@ -100,7 +100,7 @@ TkpGetString(
     XEvent *eventPtr,		/* X keyboard event. */
     Tcl_DString *dsPtr)		/* Initialized, empty string to hold result. */
 {
-    TkSizeT len;
+    Tcl_Size len;
     Tcl_DString buf;
     TkKeyEvent *kePtr = (TkKeyEvent *) eventPtr;
 
@@ -175,7 +175,7 @@ TkpGetString(
 	    len = 0;
 	}
 	Tcl_DStringSetLength(&buf, len);
-	Tcl_ExternalToUtfDString(NULL, Tcl_DStringValue(&buf), len, dsPtr);
+	(void)Tcl_ExternalToUtfDStringEx(NULL, Tcl_DStringValue(&buf), len, TCL_ENCODING_NOCOMPLAIN, dsPtr);
 	Tcl_DStringFree(&buf);
 #endif /* X_HAVE_UTF8_STRING */
     } else

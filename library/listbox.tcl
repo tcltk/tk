@@ -248,7 +248,7 @@ proc ::tk::ListboxMotion {w el} {
 	}
 	extended {
 	    set i $Priv(listboxPrev)
-	    if {$i eq ""} {
+	    if {$i < 0} {
 		set i $el
 		$w selection set $el
 	    }
@@ -458,7 +458,7 @@ proc ::tk::ListboxCancel w {
     }
     set first [$w index anchor]
     set last $Priv(listboxPrev)
-    if {$last eq ""} {
+    if {$last < 0} {
 	# Not actually doing any selection right now
 	return
     }

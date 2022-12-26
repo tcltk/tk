@@ -11,14 +11,13 @@ tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
 testConstraint testprintf [llength [info command testprintf]]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 test tk-1.1 {tk command: general} -body {
     tk
 } -returnCodes error -result {wrong # args: should be "tk subcommand ?arg ...?"}
 test tk-1.2 {tk command: general} -body {
     tk xyz
-} -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, scaling, sysnotify, systray, useinputmethods, or windowingsystem}
+} -returnCodes error -result {unknown or ambiguous subcommand "xyz": must be appname, busy, caret, fontchooser, inactive, print, scaling, sysnotify, systray, useinputmethods, or windowingsystem}
 
 # Value stored to restore default settings after 2.* tests
 set appname [tk appname]
@@ -155,12 +154,12 @@ test tk-6.3 {tk inactive wrong argument} -body {
 test tk-6.4 {tk inactive too many arguments} -body {
     tk inactive reset foo
 } -returnCodes 1 -result {wrong # args: should be "tk inactive ?-displayof window? ?reset?"}
-test tk-6.5 {tk inactive} -constraints failsOnXQuarz -body {
+test tk-6.5 {tk inactive} -body {
     tk inactive reset
     update
     after 100
     set i [tk inactive]
-    expr {$i < 0 || ( $i > 90 && $i < 200 )}
+    expr {$i < 0 || ( $i > 90 && $i < 300 )}
 } -result 1
 
 test tk-7.1 {tk inactive in a safe interpreter} -body {

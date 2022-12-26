@@ -15,7 +15,7 @@ SHELL=/bin/sh
 TK_VERSION=8.7
 TK_MAJOR_VERSION=8
 TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a4"
+TK_PATCH_LEVEL="a6"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -113,7 +113,8 @@ AC_SUBST(MAN2TCLFLAGS)
 #-------------------------------------------
 
 AC_CACHE_CHECK([availability of _strtoi64], tcl_cv_strtoi64, [
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]], [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
+    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <stdlib.h>]],
+    [[_strtoi64(0,0,0)]])],[tcl_cv_strtoi64=yes],[tcl_cv_strtoi64=no])])
 if test $tcl_cv_strtoi64 = no; then
     AC_DEFINE(NO_STRTOI64, 1, [Is _strtoi64 function available?])
 fi
@@ -238,7 +239,7 @@ TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
-eval "TK_SRC_DIR=\"`cd $srcdir/..; pwd`\""
+eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
 eval "TK_DLL_FILE_TCL8=tk$VER${DLLSUFFIX}"
 eval "TK_DLL_FILE_TCL9=tcl9tk$VER${DLLSUFFIX}"
@@ -258,7 +259,11 @@ else
 fi
 fi
 
-eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}"
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
+else
+    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
+fi
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
@@ -268,14 +273,18 @@ if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
 fi
 eval "TK_LIB_FLAG=\"${TK_LIB_FLAG}${VER}${LIBFLAGSUFFIX}\""
 TK_LIB_SPEC="-L${libdir} ${TK_LIB_FLAG}"
-TK_BUILD_LIB_SPEC="-L`pwd` ${TK_LIB_FLAG}"
+eval "TK_BUILD_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_LIB_FLAG}\""
 
-eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
-TK_BUILD_STUB_LIB_SPEC="-L`pwd` ${TK_STUB_LIB_FLAG}"
+if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
+    eval "TK_STUB_LIB_FLAG=\"-ltkstub${LIBFLAGSUFFIX}\""
+else
+    eval "TK_STUB_LIB_FLAG=\"-ltkstub${VER}${LIBFLAGSUFFIX}\""
+fi
+eval "TK_BUILD_STUB_LIB_SPEC=\"-L`$CYGPATH $(pwd)` ${TK_STUB_LIB_FLAG}\""
 
 TK_STUB_LIB_SPEC="-L${libdir} ${TK_STUB_LIB_FLAG}"
 TK_STUB_LIB_PATH="${libdir}/${TK_STUB_LIB_FILE}"
-TK_BUILD_STUB_LIB_PATH="`pwd`/${TK_STUB_LIB_FILE}"
+eval "TK_BUILD_STUB_LIB_PATH=\"`$CYGPATH $(pwd)`/${TK_STUB_LIB_FILE}\""
 
 eval "DLLSUFFIX=${DLLSUFFIX}"
 eval "LIBPREFIX=${LIBPREFIX}"
@@ -318,6 +327,8 @@ AC_SUBST(TK_MINOR_VERSION)
 AC_SUBST(TK_PATCH_LEVEL)
 AC_SUBST(TK_LIB_FILE)
 AC_SUBST(TK_DLL_FILE)
+AC_SUBST(TK_DLL_FILE_TCL8)
+AC_SUBST(TK_DLL_FILE_TCL9)
 AC_SUBST(TK_STUB_LIB_FILE)
 AC_SUBST(TK_STUB_LIB_FLAG)
 AC_SUBST(TK_BUILD_STUB_LIB_SPEC)

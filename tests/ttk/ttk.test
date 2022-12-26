@@ -87,7 +87,7 @@ test ttk-6.8 "Button command removes itself" -body {
 
 test ttk-6.9 "Bad font spec in styles" -setup {
     ttk::style theme create badfont -settings {
-    	ttk::style configure . -font {Helvetica 12 Bogus}
+	ttk::style configure . -font {Helvetica 12 Bogus}
     }
     ttk::style theme use badfont
 } -cleanup {
@@ -119,7 +119,7 @@ test ttk-construction-failure-2 "Destroy widget in constructor" -setup {
     list \
 	[catch { ttk::checkbutton .b -variable OUCH } msg] \
 	$msg \
-    	[winfo exists .b] \
+	[winfo exists .b] \
 	[info commands .b] \
 	;
 } -result [list 1 "widget has been destroyed" 0 {}]
@@ -158,10 +158,10 @@ proc checkstate {w} {
 	{!active disabled}
 	{active !disabled}
 	{active disabled}
-    	active
+	active
 	disabled
     } {
-    	lappend result [$w instate $statespec]
+	lappend result [$w instate $statespec]
     }
     set result
 }
@@ -211,7 +211,7 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
 } -body {
     bind .b <Button-1> {after 0 {.b configure -state disabled}}
     after 1 {event generate .b <Button-1>}
-    after 20 {event generate .b <ButtonRelease-1>}
+    after 50 {event generate .b <ButtonRelease-1>}
     set aid [after 100 {set ::ttk28 [.b instate {disabled !pressed}]}]
     vwait ::ttk28
     after cancel $aid
@@ -297,7 +297,7 @@ test ttk-4.4 "Bad resource specifications" -body {
     update;
     # As long as we haven't crashed, everything's OK
     ttk::style theme settings alt {
-    	ttk::style configure TButton -font TkDefaultFont
+	ttk::style configure TButton -font TkDefaultFont
     }
     ttk::style theme use default
     destroy .tb1
@@ -440,6 +440,15 @@ test ttk-9.8 "-textvariable overrides -text" -body {
     .tl cget -text
 } -cleanup { destroy .tl } -result "Foo"
 
+test ttk-9.9 "default for -justify" -body {
+    ttk::label .tl
+    .tl cget -justify
+} -cleanup { destroy .tl } -result "left"
+test ttk-9.10 "default for -anchor" -body {
+    ttk::label .tl
+    .tl cget -anchor
+} -cleanup { destroy .tl } -result "w"
+
 #
 # Frame widget tests:
 #
@@ -559,7 +568,7 @@ test ttk-13.4 "Custom styles -- bad -style option" -body {
 
 test ttk-13.5 "Custom layouts -- missing element definition" -body {
     ttk::style layout badstyle {
-    	NoSuchElement
+	NoSuchElement
     }
     ttk::button .tb1 -style badstyle
 } -cleanup {

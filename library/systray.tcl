@@ -22,31 +22,82 @@ namespace eval ::tk::systray {
     variable _ico
 
     proc _balloon {w help} {
-	bind $w <Any-Enter> "after 1000 [list ::tk::systray::_balloon_show %W [list $help]]"
+	bind $w <Any-Enter> "after 100 [list [namespace current]::_balloon_show %W [list $help] cursor]"
 	bind $w <Any-Leave> "destroy %W._balloon"
     }
 
-    proc _balloon_show {w arg} {
-	if {[winfo containing {*}[winfo pointerxy .]] ne $w} {
+    proc _balloon_show {w msg i} {
+	if {![winfo exists $w]} { return }
+
+	# Use string match to allow that the help will be shown when
+	# the pointer is in any child of the desired widget
+	if {([winfo class $w] ne "Menu") && ![string match $w* [eval [list winfo containing] \
+								    [winfo pointerxy $w]]]} {
 	    return
 	}
+
 	set top $w._balloon
 	catch {destroy $top}
-	toplevel $top -bg black
+	toplevel $top -bg black -bd 1
 	wm overrideredirect $top 1
 	if {[tk windowingsystem] eq "aqua"}  {
 	    ::tk::unsupported::MacWindowStyle style $top help none
 	}
-	pack [message $top._txt -aspect 10000 -text $arg]
-	set wmx [winfo rootx $w]
-	set wmy [expr {[winfo rooty $w] + [winfo height $w]}]
-	wm geometry $top [winfo reqwidth $top._txt]x[winfo reqheight $top._txt]+$wmx+$wmy
+	pack [message $top._txt -aspect 10000 -text $msg]
+
+	update idletasks
+	set screenw [winfo screenwidth $w]
+	set screenh [winfo screenheight $w]
+	set reqw [winfo reqwidth $top]
+	set reqh [winfo reqheight $top]
+	# When adjusting for being on the screen boundary, check that we are
+	# near the "edge" already, as Tk handles multiple monitors oddly
+	if {$i eq "cursor"} {
+	    set y [expr {[winfo pointery $w]+20}]
+	    if {($y < $screenh) && ($y+$reqh) > $screenh} {
+		set y [expr {[winfo pointery $w]-$reqh-5}]
+	    }
+	} elseif {$i ne ""} {
+	    set y [expr {[winfo rooty $w]+[winfo vrooty $w]+[$w yposition $i]+25}]
+	    if {($y < $screenh) && ($y+$reqh) > $screenh} {
+		# show above if we would be offscreen
+		set y [expr {[winfo rooty $w]+[$w yposition $i]-$reqh-5}]
+	    }
+	} else {
+	    set y [expr {[winfo rooty $w]+[winfo vrooty $w]+[winfo height $w]+5}]
+	    if {($y < $screenh) && ($y+$reqh) > $screenh} {
+		# show above if we would be offscreen
+		set y [expr {[winfo rooty $w]-$reqh-5}]
+	    }
+	}
+	if {$i eq "cursor"} {
+	    set x [winfo pointerx $w]
+	} else {
+	    set x [expr {[winfo rootx $w]+[winfo vrootx $w]+ ([winfo width $w]-$reqw)/2}]
+	}
+	# only readjust when we would appear right on the screen edge
+	if {$x<0 && ($x+$reqw)>0} {
+	    set x 0
+	} elseif {($x < $screenw) && ($x+$reqw) > $screenw} {
+	    set x [expr {$screenw-$reqw}]
+	}
+	if {[tk windowingsystem] eq "aqua"} {
+	    set focus [focus]
+	}
+
+	wm geometry $top +$x+$y
+	wm deiconify $top
 	raise $top
+
+	if {[tk windowingsystem] eq "aqua" && $focus ne ""} {
+	    # Aqua's help window steals focus on display
+	    after idle [list focus -force $focus]
+	}
     }
 
     proc _win_callback {msg} {
 	variable _current
-	# The API at the Tk level does not feature bindings to double clicks. Whatever
+	# The API at the Tk level does not feature bindings to double  clicks. Whatever
 	# the speed the user clicks with, he expects the single click binding to fire.
 	# Therefore we need to bind to both WM_*BUTTONDOWN and to WM_*BUTTONDBLCLK.
 	switch -exact -- $msg {
@@ -71,7 +122,8 @@ namespace eval ::tk::sysnotify:: {
 	catch {destroy ._notify}
 	set w [toplevel ._notify]
 	if {[tk windowingsystem] eq "aqua"} {
-	    ::tk::unsupported::MacWindowStyle style $w utility {hud closeBox resizable}
+	    ::tk::unsupported::MacWindowStyle style $w utility {hud
+closeBox resizable}
 	    wm title $w "Alert"
 	}
 	if {[tk windowingsystem] eq "win32"} {
@@ -80,7 +132,8 @@ namespace eval ::tk::sysnotify:: {
 	}
 	label $w.l -bg gray30 -fg white -image ::tk::icons::information
 	pack $w.l -fill both -expand yes -side left
-	message $w.message -aspect 150 -bg gray30 -fg white -aspect 150 -text $title\n\n$msg -width 280
+	message $w.message -aspect 150 -bg gray30 -fg white -aspect 150
+-text $title\n\n$msg -width 280
 	pack $w.message -side right -fill both -expand yes
 	if {[tk windowingsystem] eq "x11"} {
 	    wm overrideredirect $w true
@@ -323,7 +376,7 @@ proc ::tk::sysnotify::sysnotify {title message} {
 
 #Add these commands to the tk command ensemble: tk systray, tk sysnotify
 #Thanks to Christian Gollwitzer for the guidance here
-set map [namespace ensemble configure tk -map]
-dict set map systray ::tk::systray
-dict set map sysnotify ::tk::sysnotify::sysnotify
-namespace ensemble configure tk -map $map
+namespace ensemble configure tk -map \
+    [dict merge [namespace ensemble configure tk -map] \
+        {systray ::tk::systray sysnotify ::tk::sysnotify::sysnotify}]
+

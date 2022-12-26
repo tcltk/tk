@@ -293,7 +293,7 @@ test textIndex-4.13 {TkTextGetIndex, tags} {
     set result
 } {1.0}
 
-test textIndex-5.1 {TkTextGetIndex, "@"} {nonPortable fonts} {
+test textIndex-5.1 {TkTextGetIndex, "@"} {fonts} {
     .t index @12,9
 } 1.1
 test textIndex-5.2 {TkTextGetIndex, "@"} {fonts} {
@@ -778,6 +778,7 @@ set str [string repeat "hello " 20]
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
+update
 
 test textIndex-19.1 {Display lines} {
     .t index "2.7 displaylinestart"
@@ -860,7 +861,7 @@ test textIndex-19.13 {Display lines} {
 
 test textIndex-19.14 {Display lines + lines with Unicode text} {
     destroy .t
-    pack [text .t -font {Courier -24}]
+    pack [text .t -font {Courier -24} -borderwidth 0 -highlightthickness 0]
     update
     .t insert end "abcdefgh\n\u0430\u0431\u0432\u0433\u0491\u0434\u0435\u0454\n\u4E00\u4F0A\u4F9D\u533B\u54BF\u566B\u6B39\u6CC6"
     .t sync
@@ -869,8 +870,49 @@ test textIndex-19.14 {Display lines + lines with Unicode text} {
     lappend res [.t index "1.4 +1displaylines"] [.t index "1.4 +2displaylines"]
     lappend res [.t index "3.4 -1lines"] [.t index "3.4 -2lines"]
     lappend res [.t index "3.4 -1displaylines"] [.t index "3.4 -2displaylines"]
-    set res
-} {2.4 3.4 2.4 3.2 2.4 1.4 2.6 1.6}
+    set fontlinespace [font metrics [.t cget -font] -linespace]
+    set xat1.4 [expr {[.t count -xpixels 1.0 1.4] + 1}]
+    set xat3.4 [expr {[.t count -xpixels 3.0 3.4] + 1}]
+    set expected [list \
+            2.4 3.4 \
+            [.t index @${xat1.4},[expr {int($fontlinespace *1.5)}]]  [.t index @${xat1.4},[expr {int($fontlinespace *2.5)}]] \
+            2.4 1.4 \
+            [.t index @${xat3.4},[expr {int($fontlinespace *1.5)}]]  [.t index @${xat3.4},[expr {int($fontlinespace *0.5)}]] ]
+    set checkedOK 1
+    for {set i 0} {$i < 8} {incr i} {
+        if {[.t compare [lindex $res $i] != [lindex $expected $i]]} {
+	    set checkedOK [list result: $res - expected: $expected]
+	    break
+	}
+    }
+    set checkedOK
+} {1}
+
+test textIndex-19.15 {Display lines with elided lines} {
+    catch {destroy .t}
+    pack [text .t]
+    for {set n 1} {$n <= 1000} {incr n} {
+	.t insert end "Line $n\n"
+    }
+    .t tag configure Elided -elide 1
+    .t tag add Elided 6.0 951.0
+    update
+    .t sync
+    set res [.t index "951.0 + 1 displaylines"]
+    lappend res [.t index "951.0 + 7 displaylines"]
+} {952.0 958.0}
+
+test textIndex-19.16 {Display lines with elided lines} {
+    catch {destroy .t}
+    pack [text .t]
+    for {set n 1} {$n <= 10} {incr n} {
+	.t insert end "Line $n\n"
+    }
+    .t tag configure Elided -elide 1
+    .t tag add Elided 6.0 9.0
+    update
+    .t get -displaychars "6.6 linestart - 1i" 6.6 ;  # shall not crash
+} "\n"
 
 proc text_test_word {startend chars start} {
     destroy .t

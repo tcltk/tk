@@ -316,27 +316,31 @@ any of the following forms:
 \fBactive\fR
 .
 Indicates the entry that is currently active.  If no entry is
-active then this form is equivalent to \fBnone\fR.  This form may
+active then this form is equivalent to \fB{}\fR.  This form may
 not be abbreviated.
 .TP 12
 \fBend\fR
 .
 Indicates the bottommost entry in the menu.  If there are no
-entries in the menu then this form is equivalent to \fBnone\fR.
+entries in the menu then this form is equivalent to \fB{}\fR.
 This form may not be abbreviated.
 .TP 12
 \fBlast\fR
 .
 Same as \fBend\fR.
 .TP 12
-\fBnone\fR
+\fB{}\fR
 .
 Indicates
 .QW "no entry at all" ;
 this is used most commonly with
 the \fBactivate\fR option to deactivate all the entries in the
-menu.  In most cases the specification of \fBnone\fR causes
+menu.  In most cases the specification of \fB{}\fR causes
 nothing to happen in the widget command.
+.TP 12
+\fBnone\fR
+.
+Same as \fB{}\fR
 This form may not be abbreviated.
 .TP 12
 \fB@\fInumber\fR
@@ -371,7 +375,7 @@ The following widget commands are possible for menu widgets:
 Change the state of the entry indicated by \fIindex\fR to \fBactive\fR
 and redisplay it using its active colors.
 Any previously-active entry is deactivated.  If \fIindex\fR
-is specified as \fBnone\fR, or if the specified entry is
+is specified as \fB{}\fR or \fBnone\fR, or if the specified entry is
 disabled, then the menu ends up with no active entry.
 Returns an empty string.
 .TP
@@ -447,7 +451,7 @@ information on the format of this list).
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the numerical index corresponding to \fIindex\fR, or
-\fBnone\fR if \fIindex\fR was specified as \fBnone\fR.
+\fB{}\fR if \fIindex\fR was specified as \fB{}\fR or \fBnone\fR.
 .TP
 \fIpathName \fBinsert \fIindex type \fR?\fIoption value option value ...\fR?
 .

@@ -45,18 +45,18 @@ typedef struct {
 
     const char *string;		/* Pointer to storage for string;
 				 * NULL-terminated; malloc-ed. */
-    TkSizeT insertPos;		/* Character index before which next typed
+    Tcl_Size insertPos;		/* Character index before which next typed
 				 * character will be inserted. */
 
     /*
      * Information about what's selected, if any.
      */
 
-    TkSizeT selectFirst;		/* Character index of first selected character
+    Tcl_Size selectFirst;		/* Character index of first selected character
 				 * (-1 means nothing selected. */
-    TkSizeT selectLast;		/* Character index just after last selected
+    Tcl_Size selectLast;		/* Character index just after last selected
 				 * character (-1 means nothing selected. */
-    TkSizeT selectAnchor;		/* Fixed end of selection (i.e. "select to"
+    Tcl_Size selectAnchor;		/* Fixed end of selection (i.e. "select to"
 				 * operation will use this as one end of the
 				 * selection). */
 
@@ -134,7 +134,7 @@ typedef struct {
 
     Tk_TextLayout placeholderLayout;/* Cached placeholder text layout information. */
     char *placeholderString;	/* String value of placeholder. */
-    TkSizeT placeholderChars;	/* Number of chars in placeholder. */
+    Tcl_Size placeholderChars;	/* Number of chars in placeholder. */
     XColor *placeholderColorPtr;/* Color value of placeholder foreground. */
     GC placeholderGC;		/* For drawing placeholder text. */
     int placeholderX;		/* Origin for layout. */
@@ -151,13 +151,13 @@ typedef struct {
 				 * malloced memory with the same character
 				 * length as string but whose characters are
 				 * all equal to showChar. */
-    TkSizeT numBytes;		/* Length of string in bytes. */
-    TkSizeT numChars;		/* Length of string in characters. Both string
+    Tcl_Size numBytes;		/* Length of string in bytes. */
+    Tcl_Size numChars;		/* Length of string in characters. Both string
 				 * and displayString have the same character
 				 * length, but may have different byte lengths
 				 * due to being made from different UTF-8
 				 * characters. */
-    TkSizeT numDisplayBytes;	/* Length of displayString in bytes. */
+    Tcl_Size numDisplayBytes;	/* Length of displayString in bytes. */
     int inset;			/* Number of pixels on the left and right
 				 * sides that are taken up by XPAD,
 				 * borderWidth (if any), and highlightWidth
@@ -166,7 +166,7 @@ typedef struct {
     int layoutX, layoutY;	/* Origin for layout. */
     int leftX;			/* X position at which character at leftIndex
 				 * is drawn (varies depending on justify). */
-    TkSizeT leftIndex;		/* Character index of left-most character
+    Tcl_Size leftIndex;		/* Character index of left-most character
 				 * visible in window. */
     Tcl_TimerToken insertBlinkHandler;
 				/* Timer handler used to blink cursor on and
@@ -296,7 +296,7 @@ enum state {
  */
 
 enum selelement {
-    SEL_NONE, SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NULL, SEL_ENTRY
+    SEL_BUTTONDOWN, SEL_BUTTONUP, SEL_NONE, SEL_NULL, SEL_ENTRY
 };
 
 /*

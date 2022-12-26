@@ -235,7 +235,7 @@ static Ttk_Side LabelAnchorSide(Ttk_PositionSpec flags)
 typedef struct {
     Tcl_Obj 	*labelAnchorObj;
     Tcl_Obj	*textObj;
-    Tcl_Obj 	*underlineObj;
+    int	underline;
     Tk_Window	labelWidget;
 
     Ttk_Manager	*mgr;
@@ -258,9 +258,8 @@ static const Tk_OptionSpec LabelframeOptionSpecs[] = {
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Labelframe,label.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-underline", "underline", "Underline",
-	"-1", offsetof(Labelframe,label.underlineObj), TCL_INDEX_NONE,
-	0,0,0 },
+    {TK_OPTION_INDEX, "-underline", "underline", "Underline",
+	TK_OPTION_UNDERLINE_DEF(Labelframe, label.underline), 0},
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
 	TCL_INDEX_NONE, offsetof(Labelframe,label.labelWidget),
 	TK_OPTION_NULL_OK,0,LABELWIDGET_CHANGED|GEOMETRY_CHANGED },
@@ -496,7 +495,7 @@ static void LabelframePlaceContent(void *recordPtr)
 
 static int LabelRequest(
     TCL_UNUSED(void *),
-    TCL_UNUSED(TkSizeT),
+    TCL_UNUSED(Tcl_Size),
     TCL_UNUSED(int),
     TCL_UNUSED(int))
 {
@@ -512,7 +511,7 @@ static int LabelRequest(
  */
 static void LabelRemoved(
     void *managerData,
-    TCL_UNUSED(TkSizeT))
+    TCL_UNUSED(Tcl_Size))
 {
     Labelframe *lframe = (Labelframe *)managerData;
 

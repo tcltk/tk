@@ -338,8 +338,8 @@ package require tk
 	    set i_dy [expr {($dy - $iH)/2}]
 	    set t_dy [expr {($dy - $tH)/2}]
 
-	    $canvas coords $iTag $x                    [expr {$y + $i_dy}]
-	    $canvas coords $tTag [expr {$x + $shift}]  [expr {$y + $t_dy}]
+	    $canvas coords $iTag $x [expr {$y + $i_dy}]
+	    $canvas coords $tTag [expr {$x + $shift}] [expr {$y + $t_dy}]
 	    $canvas coords $rTag $x $y [expr {$x+$dx}] [expr {$y+$dy}]
 
 	    incr y $dy
@@ -377,7 +377,7 @@ package require tk
 
     method DrawSelection {} {
 	$canvas delete selection
-	$canvas itemconfigure selectionText -fill black
+	$canvas itemconfigure selectionText -fill $fill
 	$canvas dtag selectionText
 	set cbg [ttk::style lookup TEntry -selectbackground focus]
 	set cfg [ttk::style lookup TEntry -selectforeground focus]
@@ -405,7 +405,8 @@ package require tk
 	set sbar [ttk::scrollbar $hull.sbar -orient horizontal -takefocus 0]
 	catch {$sbar configure -highlightthickness 0}
 	set canvas [canvas $hull.canvas -highlightthick 0 -takefocus 1 \
-			-width 400 -height 120 -background white]
+			-width 400 -height 120 \
+			-background [ttk::style lookup Treeview -background {} white]]
 	pack $sbar -side bottom -fill x -padx 2 -pady {0 2}
 	pack $canvas -expand yes -fill both -padx 2 -pady {2 0}
 
@@ -422,12 +423,7 @@ package require tk
 	set noScroll 1
 	set selection {}
 	set index(anchor) ""
-	set fg [option get $canvas foreground Foreground]
-	if {$fg eq ""} {
-	    set fill black
-	} else {
-	    set fill $fg
-	}
+	set fill [ttk::style lookup Treeview -foreground {} black]
 
 	# Creates the event bindings.
 	#
@@ -456,8 +452,11 @@ package require tk
 	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
 	bind $canvas <Key>		[namespace code {my KeyPress %A}]
-	bind $canvas <Control-Key> ";"
-	bind $canvas <Alt-Key>	";"
+	bind $canvas <Alt-Key>		{# nothing}
+	bind $canvas <Meta-Key> 	{# nothing}
+	bind $canvas <Control-Key> 	{# nothing}
+	bind $canvas <Command-Key> 	{# nothing}
+	bind $canvas <Fn-Key>		{# nothing}
 
 	bind $canvas <FocusIn>		[namespace code {my FocusIn}]
 	bind $canvas <FocusOut>		[namespace code {my FocusOut}]

@@ -290,7 +290,7 @@ TkpSetWindowMenuBar(
  */
 
 void
-TkpSetMainMenubar(
+Tk_SetMainMenubar(
     TCL_UNUSED(Tcl_Interp *),
     TCL_UNUSED(Tk_Window),
     TCL_UNUSED(const char *))
@@ -851,16 +851,16 @@ DrawMenuUnderline(
     int x, int y,
     TCL_UNUSED(int), int height)
 {
-    if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
+    if (mePtr->labelPtr != NULL) {
 	int len;
 
 	len = Tcl_GetCharLength(mePtr->labelPtr);
-	if (mePtr->underline < len) {
+	if (mePtr->underline < len && mePtr->underline >= -len) {
 	    int activeBorderWidth, leftEdge, ch;
 	    const char *label, *start, *end;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
-	    start = Tcl_UtfAtIndex(label, mePtr->underline);
+	    start = Tcl_UtfAtIndex(label, (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline);
 	    end = start + TkUtfToUniChar(start, &ch);
 
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
@@ -928,20 +928,13 @@ TkpPostMenu(
 
 int
 TkpPostTearoffMenu(
-    TCL_UNUSED(Tcl_Interp *),		/* The interpreter of the menu */
+    TCL_UNUSED(Tcl_Interp *),	/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
     int x, int y, int index)	/* The root X,Y coordinates where the
 				 * specified entry will be posted */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
-
-    if (index >= (int)menuPtr->numEntries) {
-	index = menuPtr->numEntries - 1;
-    }
-    if (index >= 0) {
-	y -= menuPtr->entries[index]->y;
-    }
 
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
@@ -957,6 +950,18 @@ TkpPostTearoffMenu(
 
     if (menuPtr->tkwin == NULL) {
     	return TCL_OK;
+    }
+
+    /*
+     * Adjust the menu y position so that the specified entry will be located
+     * at the given coordinates.
+     */
+
+    if (index >= (int)menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
     }
 
     /*

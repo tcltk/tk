@@ -258,7 +258,7 @@ static void Ttk_Tile(
 typedef struct {		/* ClientData for image elements */
     Ttk_ImageSpec *imageSpec;	/* Image(s) to use */
     int minWidth;		/* Minimum width; overrides image width */
-    int minHeight;		/* Minimum width; overrides image width */
+    int minHeight;		/* Minimum height; overrides image height */
     Ttk_Sticky sticky;		/* -stickiness specification */
     Ttk_Padding border;		/* Fixed border region */
     Ttk_Padding padding;	/* Internal padding */
@@ -354,7 +354,7 @@ Ttk_CreateImageElement(
     void *dummy,
     Ttk_Theme theme,
     const char *elementName,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] =
 	 { "-border","-height","-padding","-sticky","-width",NULL };
@@ -363,10 +363,10 @@ Ttk_CreateImageElement(
     Ttk_ImageSpec *imageSpec = 0;
     ImageData *imageData = 0;
     int padding_specified = 0;
-    int i;
+    Tcl_Size i;
     (void)dummy;
 
-    if (objc <= 0) {
+    if (objc + 1 < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Must supply a base image", -1));
 	Tcl_SetErrorCode(interp, "TTK", "IMAGE", "BASE", NULL);

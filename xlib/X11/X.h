@@ -55,10 +55,46 @@ SOFTWARE.
 
 /* Resources */
 
-#ifdef _WIN64
+/*
+ * _XSERVER64 must ONLY be defined when compiling X server sources on
+ * systems where unsigned long is not 32 bits, must NOT be used in
+ * client or library code.
+ */
+#ifndef _XSERVER64
+#  ifndef _XTYPEDEF_XID
+#    define _XTYPEDEF_XID
+#    ifdef _WIN64
 typedef unsigned __int64 XID;
-#else
+#    else
 typedef unsigned long XID;
+#    endif
+#  endif
+#  ifndef _XTYPEDEF_MASK
+#    define _XTYPEDEF_MASK
+typedef unsigned long Mask;
+#  endif
+#  ifndef _XTYPEDEF_ATOM
+#    define _XTYPEDEF_ATOM
+typedef unsigned long Atom;		/* Also in Xdefs.h */
+#  endif
+typedef unsigned long VisualID;
+typedef unsigned long Time;
+#else
+#  include <X11/Xmd.h>
+#  ifndef _XTYPEDEF_XID
+#    define _XTYPEDEF_XID
+typedef CARD32 XID;
+#  endif
+#  ifndef _XTYPEDEF_MASK
+#    define _XTYPEDEF_MASK
+typedef CARD32 Mask;
+#  endif
+#  ifndef _XTYPEDEF_ATOM
+#    define _XTYPEDEF_ATOM
+typedef CARD32 Atom;
+#  endif
+typedef CARD32 VisualID;
+typedef CARD32 Time;
 #endif
 
 typedef XID Window;
@@ -72,14 +108,6 @@ typedef XID Cursor;
 typedef XID Colormap;
 typedef XID GContext;
 typedef XID KeySym;
-
-typedef unsigned long Mask;
-
-typedef unsigned long Atom;
-
-typedef unsigned long VisualID;
-
-typedef unsigned long Time;
 
 typedef unsigned int KeyCode;	/* In order to use IME, the Macintosh needs
 				 * to pack 3 bytes into the keyCode field in

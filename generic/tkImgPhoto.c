@@ -110,7 +110,7 @@ static const char *const optionNames[] = {
  */
 
 static int		ImgPhotoCreate(Tcl_Interp *interp, const char *name,
-			    int objc, Tcl_Obj *const objv[],
+			    Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    ClientData *clientDataPtr);
 static void		ImgPhotoDelete(ClientData clientData);
@@ -166,12 +166,18 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static const Tk_ConfigSpec configSpecs[] = {
+    {TK_CONFIG_STRING, "-data", NULL, NULL,
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	 NULL, offsetof(PhotoModel, fileString), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_STRING, "-format", NULL, NULL,
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
 	 DEF_PHOTO_GAMMA, offsetof(PhotoModel, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
 	 DEF_PHOTO_HEIGHT, offsetof(PhotoModel, userHeight), 0, NULL},
+    {TK_CONFIG_STRING, "-metadata", NULL, NULL,
+	 NULL, TCL_INDEX_NONE, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_UID, "-palette", NULL, NULL,
 	 DEF_PHOTO_PALETTE, offsetof(PhotoModel, palette), 0, NULL},
     {TK_CONFIG_INT, "-width", NULL, NULL,
@@ -192,7 +198,7 @@ static int		ParseSubcommandOptions(
 			    int *indexPtr, int objc, Tcl_Obj *const objv[]);
 static void		ImgPhotoCmdDeletedProc(ClientData clientData);
 static int		ImgPhotoConfigureModel(Tcl_Interp *interp,
-			    PhotoModel *modelPtr, int objc,
+			    PhotoModel *modelPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static int		ToggleComplexAlphaIfNeeded(PhotoModel *mPtr);
 static int		ImgPhotoSetSize(PhotoModel *modelPtr, int width,
@@ -386,7 +392,7 @@ ImgPhotoCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,		/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     TCL_UNUSED(const Tk_ImageType *),/* Pointer to our type record (not used). */
@@ -467,7 +473,7 @@ ImgPhotoCmd(
     Tk_PhotoImageBlock block;
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
-    TkSizeT length;
+    Tcl_Size length;
     int imageWidth, imageHeight, matched, oldformat = 0;
     Tcl_Channel chan;
     Tk_PhotoHandle srcHandle;
@@ -657,9 +663,6 @@ ImgPhotoCmd(
 	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
-	    if (options.background) {
-		Tk_FreeColor(options.background);
-	    }
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside source image",
 		    -1));
@@ -712,15 +715,19 @@ ImgPhotoCmd(
 	 * Copy the image data over using Tk_PhotoPutZoomedBlock.
 	 */
 
-	block.pixelPtr += options.fromX * block.pixelSize
-		+ options.fromY * block.pitch;
-	block.width = options.fromX2 - options.fromX;
-	block.height = options.fromY2 - options.fromY;
-	result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
-		&block, options.toX, options.toY, options.toX2 - options.toX,
-		options.toY2 - options.toY, options.zoomX, options.zoomY,
-		options.subsampleX, options.subsampleY,
-		options.compositingRule);
+	if (block.pixelPtr) {
+	    block.pixelPtr += options.fromX * block.pixelSize
+		    + options.fromY * block.pitch;
+	    block.width = options.fromX2 - options.fromX;
+	    block.height = options.fromY2 - options.fromY;
+	    result = Tk_PhotoPutZoomedBlock(interp, (Tk_PhotoHandle) modelPtr,
+		    &block, options.toX, options.toY, options.toX2 - options.toX,
+		    options.toY2 - options.toY, options.zoomX, options.zoomY,
+		    options.subsampleX, options.subsampleY,
+		    options.compositingRule);
+	} else {
+	    result = TCL_OK;
+	}
 
 	/*
 	 * Set the destination image size if the -shrink option was specified.
@@ -732,19 +739,15 @@ ImgPhotoCmd(
 	if (options.options & OPT_SHRINK) {
 	    if (ImgPhotoSetSize(modelPtr, options.toX2,
 		    options.toY2) != TCL_OK) {
-		if (options.background) {
-		    Tk_FreeColor(options.background);
-		}
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			TK_PHOTO_ALLOC_FAILURE_MESSAGE, -1));
 		Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
 		return TCL_ERROR;
 	    }
 	}
-	Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
-		modelPtr->width, modelPtr->height);
-	if (options.background) {
-	    Tk_FreeColor(options.background);
+	if (block.pixelPtr || (options.options & OPT_SHRINK)) {
+	    Tk_ImageChanged(modelPtr->tkModel, 0, 0, 0, 0,
+		    modelPtr->width, modelPtr->height);
 	}
 	return result;
 
@@ -775,6 +778,9 @@ ImgPhotoCmd(
 	}
 	if ((options.name == NULL) || (index < objc)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "?-option value ...?");
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > modelPtr->width)
@@ -784,6 +790,9 @@ ImgPhotoCmd(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside image", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -907,21 +916,21 @@ ImgPhotoCmd(
 	if (data) {
 	    ckfree(data);
 	}
-        if (freeObj != NULL) {
-            Tcl_DecrRefCount(freeObj);
-        }
+	if (freeObj != NULL) {
+	    Tcl_DecrRefCount(freeObj);
+	}
 	return result;
 
       dataErrorExit:
-        if (options.background) {
+	if (options.background) {
 	    Tk_FreeColor(options.background);
 	}
 	if (data) {
 	    ckfree(data);
 	}
-        if (freeObj != NULL) {
-            Tcl_DecrRefCount(freeObj);
-        }
+	if (freeObj != NULL) {
+	    Tcl_DecrRefCount(freeObj);
+	}
 	return TCL_ERROR;
     }
 
@@ -1438,6 +1447,9 @@ readCleanup:
 	}
 	if ((options.name == NULL) || (index < objc)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "fileName ?-option value ...?");
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 	if ((options.fromX > modelPtr->width)
@@ -1447,6 +1459,9 @@ readCleanup:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "coordinates for -from option extend outside image", -1));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO", "BAD_FROM", NULL);
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -1555,6 +1570,9 @@ readCleanup:
 	    }
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO_FORMAT",
 		    fmtString, NULL);
+	    if (options.background) {
+		Tk_FreeColor(options.background);
+	    }
 	    return TCL_ERROR;
 	}
 
@@ -1661,7 +1679,7 @@ ParseSubcommandOptions(
 				 * TK_PHOTO_COMPOSITE_* constants. */
 	NULL
     };
-    TkSizeT length;
+    Tcl_Size length;
     int index, c, bit, currentBit;
     int values[4], numValues, maxValues, argIndex;
     const char *option, *expandedOption, *needed;
@@ -1945,7 +1963,7 @@ ImgPhotoConfigureModel(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     PhotoModel *modelPtr,	/* Pointer to data structure describing
 				 * overall photo image to (re)configure. */
-    int objc,			/* Number of entries in objv. */
+    Tcl_Size objc,			/* Number of entries in objv. */
     Tcl_Obj *const objv[],	/* Pairs of configuration options for image. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget, such
 				 * as TK_CONFIG_ARGV_ONLY. */
@@ -1955,51 +1973,47 @@ ImgPhotoConfigureModel(
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL,
 	    *metadataInObj = NULL, *metadataOutObj = NULL;
     Tcl_Obj *tempdata, *tempformat;
-    TkSizeT length;
-    int i, j, result, imageWidth, imageHeight, oldformat;
+    Tcl_Size length;
+    Tcl_Size i, j;
+    int result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
     Tk_PhotoImageFormatVersion3 *imageFormatVersion3;
-    const char **args;
 
-    args = (const char **)ckalloc((objc + 1) * sizeof(char *));
     for (i = 0, j = 0; i < objc; i++,j++) {
-	args[j] = Tcl_GetStringFromObj(objv[i], &length);
-	if ((length > 1) && (args[j][0] == '-')) {
-	    if ((args[j][1] == 'd') &&
-		    !strncmp(args[j], "-data", length)) {
+	const char *arg = Tcl_GetStringFromObj(objv[i], &length);
+	if ((length > 1) && (arg[0] == '-')) {
+	    if ((arg[1] == 'd') &&
+		    !strncmp(arg, "-data", length)) {
 		if (++i < objc) {
 		    data = objv[i];
 		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-data\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-	    } else if ((args[j][1] == 'f') &&
-		    !strncmp(args[j], "-format", length)) {
+	    } else if ((arg[1] == 'f') &&
+		    !strncmp(arg, "-format", length)) {
 		if (++i < objc) {
 		    format = objv[i];
 		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-format\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-	    } else if ((args[j][1] == 'm') &&
-		!strncmp(args[j], "-metadata", length)) {
+	    } else if ((arg[1] == 'm') &&
+		!strncmp(arg, "-metadata", length)) {
 		if (++i < objc) {
 		    metadataInObj = objv[i];
 		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"value for \"-metadata\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -2038,11 +2052,9 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    j, args, (char *) modelPtr, flags) != TCL_OK) {
-	ckfree(args);
+	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	goto errorExit;
     }
-    ckfree(args);
 
     /*
      * Regard the empty string for -file, -data, -format or -metadata as the null value.
@@ -2057,7 +2069,7 @@ ImgPhotoConfigureModel(
 	 * Force into ByteArray format, which most (all) image handlers will
 	 * use anyway. Empty length means ignore the -data option.
 	 */
-	TkSizeT bytesize;
+	Tcl_Size bytesize;
 
 	(void) Tcl_GetByteArrayFromObj(data, &bytesize);
 	if (bytesize) {
@@ -2093,7 +2105,7 @@ ImgPhotoConfigureModel(
 	 * Take also empty metadatas as this may be a sign to replace
 	 * existing metadata.
 	 */
-	int dictSize;
+	Tcl_Size dictSize;
 
 	if (TCL_OK != Tcl_DictObjSize(interp,metadataInObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -2134,7 +2146,6 @@ ImgPhotoConfigureModel(
     if ((modelPtr->fileString != NULL)
 	    && ((modelPtr->fileString != oldFileString)
 	    || (modelPtr->format != oldFormat))) {
-
 	/*
 	 * Prevent file system access in a safe interpreter.
 	 */
@@ -2260,7 +2271,7 @@ ImgPhotoConfigureModel(
      * Merge driver returned metadata and master metadata
      */
     if (metadataOutObj != NULL) {
-	int dictSize;
+	Tcl_Size dictSize;
 	if (TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "driver metadata not a dict", -1));
@@ -2383,7 +2394,7 @@ ToggleComplexAlphaIfNeeded(
     size_t len = (size_t)MAX(mPtr->userWidth, mPtr->width) *
 	    (size_t)MAX(mPtr->userHeight, mPtr->height) * 4;
     unsigned char *c = mPtr->pix32;
-    unsigned char *end = c + len;
+    unsigned char *end;
 
     /*
      * Set the COMPLEX_ALPHA flag if we have an image with partially
@@ -2394,6 +2405,7 @@ ToggleComplexAlphaIfNeeded(
     if (c == NULL) {
 	return 0;
     }
+    end = c + len;
     c += 3;			/* Start at first alpha byte. */
     for (; c < end; c += 4) {
 	if (*c && *c != 255) {
@@ -2869,7 +2881,7 @@ if (formatPtr == NULL) {
 	     */
 
 	    if (metadataOutObj != NULL) {
-		int dictSize;
+		Tcl_Size dictSize;
 		if (Tcl_IsShared(metadataOutObj)
 			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {
@@ -3071,7 +3083,7 @@ MatchStringFormat(
 	     */
 
 	    if (metadataOutObj != NULL) {
-		int dictSize;
+		Tcl_Size dictSize;
 		if (Tcl_IsShared(metadataOutObj)
 			|| TCL_OK != Tcl_DictObjSize(interp,metadataOutObj, &dictSize)
 			|| dictSize > 0) {
@@ -3251,9 +3263,9 @@ Tk_PhotoPutBlock(
      */
     sourceBlock = *blockPtr;
     memToFree = NULL;
-    if (sourceBlock.pixelPtr >= modelPtr->pix32
-	    && sourceBlock.pixelPtr <= modelPtr->pix32 + modelPtr->width
-	    * modelPtr->height * 4) {
+    if (modelPtr->pix32 && (sourceBlock.pixelPtr >= modelPtr->pix32)
+	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width
+	    * modelPtr->height * 4)) {
 	/*
 	 * Fix 5c51be6411: avoid reading
 	 *
@@ -3491,7 +3503,7 @@ Tk_PhotoPutBlock(
     if (alphaOffset) {
 	/*
 	 * This block is grossly inefficient. For each row in the image, it
-	 * finds each continguous string of nontransparent pixels, then marks
+	 * finds each contiguous string of nontransparent pixels, then marks
 	 * those areas as valid in the validRegion mask. This makes drawing
 	 * very efficient, because of the way we use X: we just say, here's
 	 * your mask, and here's your data. We need not worry about the
@@ -3697,9 +3709,9 @@ Tk_PhotoPutZoomedBlock(
      */
     sourceBlock = *blockPtr;
     memToFree = NULL;
-    if (sourceBlock.pixelPtr >= modelPtr->pix32
-	    && sourceBlock.pixelPtr <= modelPtr->pix32 + modelPtr->width
-	    * modelPtr->height * 4) {
+    if (modelPtr->pix32 && (sourceBlock.pixelPtr >= modelPtr->pix32)
+	    && (sourceBlock.pixelPtr < modelPtr->pix32 + modelPtr->width
+	    * modelPtr->height * 4)) {
 	/*
 	 * Fix 5c51be6411: avoid reading
 	 *
@@ -4082,8 +4094,10 @@ Tk_PhotoBlank(
      * arrays for each instance.
      */
 
-    memset(modelPtr->pix32, 0,
-	    ((size_t)modelPtr->width * modelPtr->height * 4));
+    if (modelPtr->pix32) {
+	memset(modelPtr->pix32, 0,
+		((size_t)modelPtr->width * modelPtr->height * 4));
+    }
     for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
 	TkImgResetDither(instancePtr);

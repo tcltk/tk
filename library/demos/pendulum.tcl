@@ -94,7 +94,7 @@ proc showPhase {canvas} {
     global Theta dTheta points psw psh
     lappend points [expr {$Theta+$psw}] [expr {-20*$dTheta+$psh}]
     if {[llength $points] > 100} {
-    	 set points [lrange $points end-99 end]
+	set points [lrange $points end-99 end]
     }
     for {set i 0} {$i<100} {incr i 10} {
 	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]

@@ -126,6 +126,7 @@ TCL_SRC_DIR_NATIVE		= $(shell $(CYGPATH) '$(TCL_SRC_DIR)')
 DLLSUFFIX		= @DLLSUFFIX@
 LIBSUFFIX		= @LIBSUFFIX@
 EXESUFFIX		= @EXESUFFIX@
+TCLVER			= @TCL_MAJOR_VERSION@@TCL_MINOR_VERSION@
 VER			= @TK_MAJOR_VERSION@@TK_MINOR_VERSION@
 DOTVER			= @TK_MAJOR_VERSION@.@TK_MINOR_VERSION@
 
@@ -203,12 +204,10 @@ RM		= rm -f
 COPY		= cp
 LN		= ln
 
-BUILD_TCLSH	= @BUILD_TCLSH@
-
 # Tk does not used deprecated Tcl constructs so it should
 # compile fine with -DTCL_NO_DEPRECATED. To remove its own
 # set of deprecated code uncomment the second line.
-NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED
+NO_DEPRECATED_FLAGS	=
 #NO_DEPRECATED_FLAGS	= -DTCL_NO_DEPRECATED -DTK_NO_DEPRECATED
 
 # TCL_EXE is the name of a tclsh executable that is available *BEFORE*
@@ -262,7 +261,7 @@ CC_SWITCHES = ${CFLAGS} ${CFLAGS_WARNING} ${SHLIB_CFLAGS} \
 -I"${GENERIC_DIR_NATIVE}" -I"${WIN_DIR_NATIVE}" \
 -I"${XLIB_DIR_NATIVE}" -I"${BITMAP_DIR_NATIVE}" \
 -I"${TCL_GENERIC_NATIVE}" -I"${TCL_PLATFORM_NATIVE}" \
-${AC_FLAGS} $(NO_DEPRECATED_FLAGS) -DUSE_TCL_STUBS
+${AC_FLAGS} $(NO_DEPRECATED_FLAGS) -DTCL_UTF_MAX=3 -DUSE_TCL_STUBS
 
 CC_OBJNAME = @CC_OBJNAME@
 CC_EXENAME = @CC_EXENAME@
@@ -308,6 +307,7 @@ TK_OBJS = \
 	tkWinDraw.$(OBJEXT) \
 	tkWinEmbed.$(OBJEXT) \
 	tkWinFont.$(OBJEXT) \
+	tkWinGDI.$(OBJEXT) \
 	tkWinIco.$(OBJEXT) \
 	tkWinImage.$(OBJEXT) \
 	tkWinInit.$(OBJEXT) \
@@ -359,6 +359,7 @@ TK_OBJS = \
 	tkGet.$(OBJEXT) \
 	tkGrab.$(OBJEXT) \
 	tkGrid.$(OBJEXT) \
+	tkIcu.$(OBJEXT) \
 	tkImage.$(OBJEXT) \
 	tkImgBmap.$(OBJEXT) \
 	tkImgListFormat.$(OBJEXT) \
@@ -538,7 +539,7 @@ install-binaries: binaries
 	@echo "Creating package index $(PKG_INDEX)";
 	@$(RM) $(PKG_INDEX);
 	@(\
-	echo "if {![package vsatisfies [package provide Tcl] 8.6-]} return";\
+	echo "if {![package vsatisfies [package provide Tcl] 8.7-]} return";\
 	echo "if {(\$$::tcl_platform(platform) eq \"unix\") && ([info exists ::env(DISPLAY)]";\
 	echo "	|| ([info exists ::argv] && (\"-display\" in \$$::argv)))} {";\
 	echo "    if {[package vsatisfies [package provide Tcl] 9.0]} {";\
@@ -693,6 +694,15 @@ $(TKTEST): testMain.$(OBJEXT) $(TEST_DLL_FILE) @LIBRARIES@ $(TK_STUB_LIB_FILE) w
 ${TEST_DLL_FILE}: ${TKTEST_OBJS} ${TK_STUB_LIB_FILE}
 	@MAKE_DLL@ ${TKTEST_OBJS} $(TK_STUB_LIB_FILE) $(SHLIB_LD_LIBS)
 
+$(TOP_DIR)/manifest.uuid:
+	printf "git-" >$(TOP_DIR)/manifest.uuid
+	(cd $(TOP_DIR); git rev-parse HEAD >>$(TOP_DIR)/manifest.uuid || printf "unknown" >$(TOP_DIR)/manifest.uuid)
+
+tkUuid.h:	$(TOP_DIR)/manifest.uuid
+	echo "#define TK_VERSION_UUID \\" >$@
+	cat $(TOP_DIR)/manifest.uuid >>$@
+	echo "" >>$@
+
 # Msys make requires this next rule for some reason.
 $(TCL_SRC_DIR)/win/cat.c:
 
@@ -713,7 +723,7 @@ ${TK_ZIP_FILE}:  ${ZIP_INSTALL_OBJS}
 	)
 	@$(RMDIR) $(TK_VFS_PATH)/demos
 	-@if test "${ZIPFS_BUILD}" = "2" ; then \
-	    cp ${BUILD_TCLSH}${EXESUFFIX} ${TK_VFS_ROOT}/../${TK_ZIP_FILE} ; \
+	    cp ${TCL_BIN_DIR}/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE} || cp ${TCL_BIN_DIR}/../bin/tclsh${TCLVER}s.exe ${TK_VFS_ROOT}/../${TK_ZIP_FILE}; \
 	    (zip=`(realpath '${NATIVE_ZIP}' || readlink -m '${NATIVE_ZIP}') 2>/dev/null || \
 		(echo '${NATIVE_ZIP}' | sed "s?^\./?$$(pwd)/?")`; \
 		cd ${TK_VFS_ROOT} && $$zip -J ../${TK_ZIP_FILE}) \
@@ -790,11 +800,13 @@ tkPkgConfig.$(OBJEXT): $(GENERIC_DIR)/tkPkgConfig.c
 		@DEPARG@ $(CC_OBJNAME)
 
 
+tkWindow.$(OBJEXT): ${GENERIC_DIR}/tkWindow.c configure Makefile tkUuid.h
+	$(CC) -c $(CC_SWITCHES) -I. -DBUILD_tk @DEPARG@ $(CC_OBJNAME)
+
 # Extra dependency info
 tkConsole.$(OBJEXT): configure Makefile
 tkMain.$(OBJEXT): configure Makefile
 tkMain2.$(OBJEXT): configure Makefile
-tkWindow.$(OBJEXT): configure Makefile
 
 # Add the object extension to the implicit rules.  By default .obj is not
 # automatically added.
@@ -824,7 +836,7 @@ clean: cleanhelp
 
 distclean: clean
 	$(RM) Makefile config.status config.cache config.log tkConfig.sh \
-		wish.exe.manifest
+		wish.exe.manifest tkUuid.h
 
 Makefile: $(SRC_DIR)/Makefile.in
 	./config.status

@@ -1842,7 +1842,7 @@ DelayedMotionProc(
 void
 TkCreateExitHandler(
     Tcl_ExitProc *proc,		/* Function to invoke. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     ExitHandler *exitPtr;
 
@@ -2007,7 +2007,7 @@ TkDeleteThreadExitHandler(
  * TkFinalize --
  *
  *	Runs our private exit handlers and removes itself from Tcl. This is
- *	benificial should we want to protect from dangling pointers should the
+ *	beneficial should we want to protect from dangling pointers should the
  *	Tk shared library be unloaded prior to Tcl which can happen on windows
  *	should the process be forcefully exiting from an exception handler.
  *

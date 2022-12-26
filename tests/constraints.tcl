@@ -122,6 +122,11 @@ namespace eval tk {
 	namespace export deleteWindows
 	proc deleteWindows {} {
 	    eval destroy [winfo children .]
+	    # This update is needed to avoid intermittent failures on macOS in unixEmbed.test
+	    # Reason for the failures is unclear but could have to do with window ids being deleted
+	    # after the destroy command returns. The detailed mechanism of such delayed deletions
+	    # is not understood, but it appears that this update prevents the test failures.
+	    update
 	}
 
 	namespace export fixfocus
@@ -136,7 +141,6 @@ namespace eval tk {
             focus -force .focus.e
             destroy .focus
 	}
-
 
         namespace export imageInit imageFinish imageCleanup imageNames
         variable ImageNames
@@ -175,15 +179,19 @@ namespace eval tk {
 	#
 	#  CONTROL TIMING ASPECTS OF POINTER WARPING
 	#
-	# The proc [controlPointerWarpTiming] takes care of the following timing
-	# details of pointer warping:
+	# The proc [controlPointerWarpTiming] is intended to ensure that the (mouse)
+	# pointer has actually been moved to its new position after a Tk test issued:
+	#
+	#    [event generate $w $event -warp 1 ...]
+	#
+	# It takes care of the following timing details of pointer warping:
 	#
 	# a. Allow pointer warping to happen if it was scheduled for execution at
 	#    idle time.
 	#    - In Tk releases 8.6 and older, pointer warping is scheduled for
 	#      execution at idle time
-	#    - In release 8.7 and newer this happens synchronously and no extra
-	#      control is needed.
+	#    - In release 8.7 and newer this happens synchronously if $w refers to the
+	#      whole screen or if the -when option to [event generate] is "now".
 	#    The namespace variable idle_pointer_warping records which of these is
 	#    the case.
 	#
@@ -199,8 +207,8 @@ namespace eval tk {
 	#      the OS to call in order to notify Tk when a mouse move is completed.
 	#    - Tk doesn't wait for the callback function to receive the notification
 	#      from the OS, but continues processing. This suits most use cases
-	#      because (usually) the notification comes quickly enough
-	#      (range: a few ms?). However ...
+	#      because usually the notification arrives fast enough (within a few tens
+	#      of microseconds). However ...
 	#    - A problem arises if Tk performs some processing, immediately following
 	#      up on [event generate $w $event -warp 1 ...], and that processing
 	#      relies on the mouse pointer having actually moved. If such processing
@@ -220,6 +228,13 @@ namespace eval tk {
 	#    ----
 	#    For the history of this issue please refer to Tk ticket [69b48f427e],
 	#    specifically the comment on 2019-10-27 14:24:26.
+	#
+	#
+	# Beware: there are cases, not (yet) exercised by the Tk test suite, where
+	# [controlPointerWarpTiming] doesn't ensure the new position of the pointer.
+	# For example, when issued under Tk8.7+, if the value for the -when option
+	# to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
+	# the whole screen.
 	#
 	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
 	proc controlPointerWarpTiming {{duration 50}} {
@@ -256,6 +271,12 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
 }]
+testConstraint deprecated [expr {![package vsatisfies [package provide Tcl] 8.7-] || ![::tk::build-info no-deprecate]}]
+testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
+
+# constraint for running a test on all windowing system except aqua
+# where the test fails due to a known bug
+testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]
 
 # constraints for testing facilities defined in the tktest executable...
 testConstraint testImageType [expr {"test" in [image types]}]
@@ -277,7 +298,7 @@ testConstraint testtext      [llength [info commands testtext]]
 testConstraint testwinevent  [llength [info commands testwinevent]]
 testConstraint testwrapper   [llength [info commands testwrapper]]
 
-# constraint to see what sort of fonts are available
+# constraints about what sort of fonts are available
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
@@ -296,11 +317,42 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
-testConstraint textfonts [expr {
-    [testConstraint fonts] || [tk windowingsystem] eq "win32"
+# Although unexpected, some systems may have a very limited set of fonts available.
+# The following constraints happen to evaluate to false at least on one system: the
+# Github CI runner for Linux with --disable-xft, which has exactly ONE single font
+# ([font families] returns a single element: "fixed"), for which [font actual]
+# returns:
+#    -family fixed -size 9 -weight normal -slant roman -underline 0
+# and [font metrics] returns:
+#    -ascent 11 -descent 2 -linespace 13 -fixed 1
+# The following constraints are hence tailored to check exactly what is needed in the
+# tests they constrain (that is: availability of any font having the given font
+# attributes), so that these constrained tests will in fact run on all systems having
+# reasonable font dotation.
+testConstraint haveTimes12Font [expr {
+    [font actual {times 12} -size] == 12
 }]
+testConstraint haveCourier37Font [expr {
+    [font actual {-family courier -size 37} -size] == 37
+}]
+testConstraint haveTimes14BoldFont [expr {
+    ([font actual {times 14 bold} -size] == 14) &&
+    ([font actual {times 14 bold} -weight] eq "bold")
+}]
+testConstraint haveTimes12BoldItalicUnderlineOverstrikeFont [expr {
+    ([font actual {times 12 bold italic overstrike underline} -weight] eq "bold") &&
+    ([font actual {times 12 bold italic overstrike underline} -slant] eq "italic") &&
+    ([font actual {times 12 bold italic overstrike underline} -underline] eq "1") &&
+    ([font actual {times 12 bold italic overstrike underline} -overstrike] eq "1")
+}]
+set fixedFont {Courier 12}   ; # warning: must be consistent with the files using the constraint below!
+set bigFont   {Helvetica 24} ; # ditto
+testConstraint haveBigFontTwiceLargerThanTextFont [expr {
+    [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
+}]
+unset fixedFont bigFont
 
-# constraints for the visuals available..
+# constraints for the visuals available
 testConstraint pseudocolor8 [expr {
     ([catch {
 	toplevel .t -visual {pseudocolor 8} -colormap new

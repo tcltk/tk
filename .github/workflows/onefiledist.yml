@@ -1,9 +1,11 @@
 name: Build Binaries
 on: [push]
+permissions:
+  contents: read
 jobs:
   linux:
     name: Linux
-    runs-on: ubuntu-16.04
+    runs-on: ubuntu-20.04
     defaults:
       run:
         shell: bash
@@ -12,11 +14,11 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout Tcl 8.7
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: core-8-branch
@@ -56,7 +58,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Linux single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.tar
@@ -67,7 +69,7 @@ jobs:
         working-directory: ${{ env.INST_DIR }}
   macos:
     name: macOS
-    runs-on: macos-11.0
+    runs-on: macos-11
     defaults:
       run:
         shell: bash
@@ -76,17 +78,17 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared --enable-64bit
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout Tcl 8.7
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: core-8-branch
           path: tcl
       - name: Checkout create-dmg
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: create-dmg/create-dmg
           ref: v1.0.8
@@ -144,7 +146,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} macOS single-file build (snapshot)
           path: ${{ env.INST_DIR }}/*.dmg
@@ -153,23 +155,26 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        shell: bash
+        shell: msys2 {0}
     env:
       CC: gcc
       CFGOPT: --disable-symbols --disable-shared
     steps:
+      - name: Install MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW64
+          install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: tk
       - name: Checkout Tcl 8.7
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
           ref: core-8-branch
           path: tcl
-      - name: Install MSYS2, Make, Zip
-        run: choco install -y msys2 make zip
       - name: Setup Environment
         run: |
           mkdir -p install/combined
@@ -204,7 +209,7 @@ jobs:
         env:
           BUILD_NAME: wish${{ env.TCL_PATCHLEVEL }}_snapshot
       - name: Upload
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Wish ${{ env.TCL_PATCHLEVEL }} Windows single-file build (snapshot)
           path: install/combined/wish${{ env.TCL_PATCHLEVEL }}_snapshot.exe

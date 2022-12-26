@@ -79,9 +79,8 @@ TkGetFileFilters(
     Tcl_Obj *types,		/* Value of the -filetypes option. */
     int isWindows)		/* True if we are running on Windows. */
 {
-    int listObjc;
+    Tcl_Size i, listObjc;
     Tcl_Obj ** listObjv = NULL;
-    int i;
 
     if (types == NULL) {
 	return TCL_OK;
@@ -110,7 +109,7 @@ TkGetFileFilters(
 	 * third is the Mac OSType ID, but we don't care about them here.
 	 */
 
-	int count;
+	Tcl_Size count;
 	FileFilter *filterPtr;
 	Tcl_Obj **typeInfo;
 
@@ -233,7 +232,8 @@ AddClause(
 				 * two platforms */
 {
     Tcl_Obj **globList = NULL, **ostypeList = NULL;
-    int globCount, ostypeCount, i, code = TCL_OK;
+    Tcl_Size globCount, ostypeCount, i;
+    int code = TCL_OK;
     FileFilterClause *clausePtr;
     Tcl_Encoding macRoman = NULL;
 
@@ -262,7 +262,7 @@ AddClause(
 	 */
 
 	for (i=0; i<ostypeCount; i++) {
-	    TkSizeT len;
+	    Tcl_Size len;
 	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 
 	    /*
@@ -286,7 +286,7 @@ AddClause(
 		 * be 4 macRoman characters long
 		 */
 
-		Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+		(void)Tcl_UtfToExternalDStringEx(macRoman, strType, len, TCL_ENCODING_NOCOMPLAIN, &osTypeDS);
 		len = Tcl_DStringLength(&osTypeDS);
 		Tcl_DStringFree(&osTypeDS);
 	    }
@@ -322,7 +322,7 @@ AddClause(
     if (globCount > 0 && globList != NULL) {
 	for (i=0; i<globCount; i++) {
 	    GlobPattern *globPtr = (GlobPattern *)ckalloc(sizeof(GlobPattern));
-	    TkSizeT len;
+	    Tcl_Size len;
 	    const char *str = Tcl_GetStringFromObj(globList[i], &len);
 
 	    len = (len + 1) * sizeof(char);
@@ -375,7 +375,7 @@ AddClause(
 	}
 	for (i=0; i<ostypeCount; i++) {
 	    Tcl_DString osTypeDS;
-	    TkSizeT len;
+	    Tcl_Size len;
 	    MacFileType *mfPtr = (MacFileType *)ckalloc(sizeof(MacFileType));
 	    const char *strType = Tcl_GetStringFromObj(ostypeList[i], &len);
 	    char *string;
@@ -385,7 +385,7 @@ AddClause(
 	     * macRoman characters long
 	     */
 
-	    Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
+	    (void)Tcl_UtfToExternalDStringEx(macRoman, strType, len, TCL_ENCODING_NOCOMPLAIN, &osTypeDS);
 	    string = Tcl_DStringValue(&osTypeDS);
 	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 		    (OSType) string[2] <<  8 | (OSType) string[3];

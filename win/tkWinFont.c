@@ -405,7 +405,7 @@ TkWinSetupSystemFonts(
      * (i.e. WINVER=0x0600 and running on XP).
      */
 
-    ZeroMemory(&ncMetrics, sizeof(ncMetrics));
+    memset(&ncMetrics, 0, sizeof(ncMetrics));
     ncMetrics.cbSize = sizeof(ncMetrics);
     if (SystemParametersInfoW(SPI_GETNONCLIENTMETRICS,
 	    sizeof(ncMetrics), &ncMetrics, 0)) {
@@ -790,9 +790,9 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes1,		/* Maximum number of bytes to consider from
 				 * source string. */
-    int maxLength,		/* If >= 0, maxLength specifies the longest
+	int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
 				 * consider any character that would cross
 				 * this x-position. If < 0, then line length
@@ -810,6 +810,7 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
+    int numBytes = numBytes1;
     HDC hdc;
     HFONT oldFont;
     WinFont *fontPtr;
@@ -849,8 +850,8 @@ Tk_MeasureChars(
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
-	    Tcl_UtfToExternalDString(familyPtr->encoding, start,
-		    (int) (p - start), &runString);
+	    (void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
+		    p - start, TCL_ENCODING_NOCOMPLAIN, &runString);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
 		    (WCHAR *)Tcl_DStringValue(&runString),
@@ -877,8 +878,8 @@ Tk_MeasureChars(
 	 */
 
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, start,
-		(int) (p - start), &runString);
+	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
+		p - start, TCL_ENCODING_NOCOMPLAIN, &runString);
 	size.cx = 0;
 	familyPtr->getTextExtentPoint32Proc(hdc, (WCHAR *) Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
@@ -1016,10 +1017,10 @@ TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    TCL_UNUSED(int),		/* Maximum number of bytes to consider from
+    TCL_UNUSED(Tcl_Size),		/* Maximum number of bytes to consider from
 				 * source string in all. */
-    int rangeStart,		/* Index of first byte to measure. */
-    int rangeLength,		/* Length of range to measure in bytes. */
+    Tcl_Size rangeStart,		/* Index of first byte to measure. */
+    Tcl_Size rangeLength,		/* Length of range to measure in bytes. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
 				 * character that would cross this x-position.
@@ -1072,7 +1073,7 @@ Tk_DrawChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
@@ -1081,7 +1082,7 @@ Tk_DrawChars(
     TkWinDCState state;
 
     fontPtr = (WinFont *) gc->font;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (drawable == None) {
 	return;
@@ -1219,17 +1220,18 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes1,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)
 {
+    int numBytes = numBytes1;
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
 
     fontPtr = (WinFont *) gc->font;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (drawable == None) {
 	return;
@@ -1388,9 +1390,9 @@ TkpDrawCharsInContext(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    TCL_UNUSED(int),		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1416,9 +1418,9 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1426,7 +1428,6 @@ TkpDrawAngledCharsInContext(
 {
     int widthUntilStart;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -1493,8 +1494,8 @@ MultiFontTextOut(
 	if ((thisSubFontPtr != lastSubFontPtr) || (p-source > 200)) {
 	    if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
- 		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			(int) (p - source), &runString);
+		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
@@ -1515,8 +1516,8 @@ MultiFontTextOut(
     }
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
- 	Tcl_UtfToExternalDString(familyPtr->encoding, source,
-		(int) (p - source), &runString);
+	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
+		p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
 	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 		(WCHAR *)Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
@@ -2732,7 +2733,7 @@ LoadFontRanges(
 				 * range information. */
     int *symbolPtr)
  {
-    int n, i, swapped, offset, cbData, segCount;
+    int n, i, j, k, swapped, offset, cbData, segCount;
     DWORD cmapKey;
     USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;
@@ -2808,9 +2809,9 @@ LoadFontRanges(
 		offset += cbData + sizeof(USHORT);
 		GetFontData(hdc, cmapKey, (DWORD) offset, startCount, cbData);
 		if (swapped) {
-		    for (i = 0; i < segCount; i++) {
-			SwapShort(&endCount[i]);
-			SwapShort(&startCount[i]);
+		    for (j = 0; j < segCount; j++) {
+			SwapShort(&endCount[j]);
+			SwapShort(&startCount[j]);
 		    }
 		}
 		if (*symbolPtr != 0) {
@@ -2826,11 +2827,11 @@ LoadFontRanges(
 		     * 8-bit characters [note Bug: 2406]
 		     */
 
-		    for (i = 0; i < segCount; i++) {
-			if (((startCount[i] & 0xff00) == 0xf000)
-				&& ((endCount[i] & 0xff00) == 0xf000)) {
-			    startCount[i] &= 0xff;
-			    endCount[i] &= 0xff;
+		    for (k = 0; k < segCount; k++) {
+			if (((startCount[k] & 0xff00) == 0xf000)
+				&& ((endCount[k] & 0xff00) == 0xf000)) {
+			    startCount[k] &= 0xff;
+			    endCount[k] &= 0xff;
 			}
 		    }
 		}

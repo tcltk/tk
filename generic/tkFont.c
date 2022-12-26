@@ -349,12 +349,14 @@ static void		UpdateDependentFonts(TkFontInfo *fiPtr,
  * font object points to the TkFont structure for the font, or NULL.
  */
 
-const Tcl_ObjType tkFontObjType = {
-    "font",			/* name */
+const TkObjType tkFontObjType = {
+    {"font",			/* name */
     FreeFontObjProc,		/* freeIntRepProc */
     DupFontObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -715,7 +717,7 @@ Tk_FontObjCmd(
     case FONT_MEASURE: {
 	const char *string;
 	Tk_Font tkfont;
-	TkSizeT length = 0;
+	Tcl_Size length = 0;
 	int skip = 0;
 
 	if (objc > 4) {
@@ -744,7 +746,7 @@ Tk_FontObjCmd(
 	int skip, i;
 	const TkFontMetrics *fmPtr;
 	static const char *const switches[] = {
-	    "-ascent", "-descent", "-linespace", "-fixed", NULL
+	    "-ascent", "-descent", "-fixed", "-linespace", NULL
 	};
 
 	skip = TkGetDisplayOf(interp, objc - 3, objv + 3, &tkwin);
@@ -778,8 +780,8 @@ Tk_FontObjCmd(
 	    switch (index) {
 	    case 0: i = fmPtr->ascent;			break;
 	    case 1: i = fmPtr->descent;			break;
-	    case 2: i = fmPtr->ascent + fmPtr->descent;	break;
-	    case 3: i = fmPtr->fixed;			break;
+	    case 2: i = fmPtr->fixed;			break;
+	    case 3: i = fmPtr->ascent + fmPtr->descent;	break;
 	    }
 	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(i));
 	}
@@ -898,6 +900,7 @@ RecomputeWidgets(
 {
     Tk_ClassWorldChangedProc *proc =
 	    Tk_GetClassProc(winPtr->classProcsPtr, worldChangedProc);
+    TkWindow *tkwinPtr;
 
     if (proc != NULL) {
 	proc(winPtr->instanceData);
@@ -908,23 +911,30 @@ RecomputeWidgets(
      *
      * This could be done recursively or iteratively. The recursive version is
      * easier to implement and understand, and typically, windows with a -font
-     * option will be leaf nodes in the widget heirarchy (buttons, labels,
+     * option will be leaf nodes in the widget hierarchy (buttons, labels,
      * etc.), so the recursion depth will be shallow.
      *
      * However, the additional overhead of the recursive calls may become a
      * performance problem if typical usage alters such that -font'ed widgets
-     * appear high in the heirarchy, causing deep recursion. This could happen
-     * with text widgets, or more likely with the (not yet existant) labeled
-     * frame widget. With these widgets it is possible, even likely, that a
-     * -font'ed widget (text or labeled frame) will not be a leaf node, but
+     * appear high in the hierarchy, causing deep recursion. This could happen
+     * with text widgets, or more likely with the labelframe
+     * widget. With these widgets it is possible, even likely, that a
+     * -font'ed widget (text or labelframe) will not be a leaf node, but
      * will instead have many descendants. If this is ever found to cause a
      * performance problem, it may be worth investigating an iterative version
      * of the code below.
      */
 
-    for (winPtr=winPtr->childList ; winPtr!=NULL ; winPtr=winPtr->nextPtr) {
-	RecomputeWidgets(winPtr);
+    for (tkwinPtr=winPtr->childList ; tkwinPtr!=NULL ; tkwinPtr=tkwinPtr->nextPtr) {
+	RecomputeWidgets(tkwinPtr);
     }
+
+    /*
+     * Broadcast font change virtually for mega-widget layout managers.
+     * Do this after the font change has been propagated to core widgets.
+    */
+    Tk_SendVirtualEvent((Tk_Window)winPtr, "TkWorldChanged",
+			Tcl_NewStringObj("FontChanged",-1));
 }
 
 /*
@@ -1110,7 +1120,7 @@ Tk_AllocFontFromObj(
     int isNew, descent;
     NamedFont *nfPtr;
 
-    if (objPtr->typePtr != &tkFontObjType
+    if (objPtr->typePtr != &tkFontObjType.objType
 	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(interp, objPtr);
     }
@@ -1295,7 +1305,7 @@ Tk_GetFontFromObj(
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;
 
-    if (objPtr->typePtr != &tkFontObjType
+    if (objPtr->typePtr != &tkFontObjType.objType
 	    || objPtr->internalRep.twoPtrValue.ptr2 != fiPtr) {
 	SetFontFromAny(NULL, objPtr);
     }
@@ -1376,7 +1386,7 @@ SetFontFromAny(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkFontObjType;
+    objPtr->typePtr = &tkFontObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
     objPtr->internalRep.twoPtrValue.ptr2 = NULL;
 
@@ -1833,12 +1843,12 @@ int
 Tk_TextWidth(
     Tk_Font tkfont,		/* Font in which text will be measured. */
     const char *string,		/* String whose width will be computed. */
-    int numBytes)		/* Number of bytes to consider from string, or
-				 * < 0 for strlen(). */
+    Tcl_Size numBytes)		/* Number of bytes to consider from string, or
+				 * TCL_INDEX_NONE for strlen(). */
 {
     int width;
 
-    if (numBytes < 0) {
+    if (numBytes == TCL_INDEX_NONE) {
 	numBytes = strlen(string);
     }
     Tk_MeasureChars(tkfont, string, numBytes, -1, 0, &width);
@@ -1880,8 +1890,8 @@ Tk_UnderlineChars(
 				 * underlined or overstruck. */
     int x, int y,		/* Coordinates at which first character of
 				 * string is drawn. */
-    int firstByte,		/* Index of first byte of first character. */
-    int lastByte)		/* Index of first byte after the last
+    Tcl_Size firstByte,		/* Index of first byte of first character. */
+    Tcl_Size lastByte)		/* Index of first byte after the last
 				 * character. */
 {
     TkUnderlineCharsInContext(display, drawable, gc, tkfont, string,
@@ -1899,11 +1909,11 @@ TkUnderlineCharsInContext(
 				 * dimensions, etc. */
     const char *string,		/* String containing characters to be
 				 * underlined or overstruck. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y,		/* Coordinates at which the first character of
 				 * the whole string would be drawn. */
-    int firstByte,		/* Index of first byte of first character. */
-    int lastByte)		/* Index of first byte after the last
+    Tcl_Size firstByte,		/* Index of first byte of first character. */
+    Tcl_Size lastByte)		/* Index of first byte after the last
 				 * character. */
 {
     TkFont *fontPtr = (TkFont *) tkfont;
@@ -1953,8 +1963,8 @@ Tk_ComputeTextLayout(
     Tk_Font tkfont,		/* Font that will be used to display text. */
     const char *string,		/* String whose dimensions are to be
 				 * computed. */
-    int numChars,		/* Number of characters to consider from
-				 * string, or < 0 for strlen(). */
+    Tcl_Size numChars,		/* Number of characters to consider from
+				 * string, or TCL_INDEX_NONE for strlen(). */
     int wrapLength,		/* Longest permissible line length, in pixels.
 				 * <= 0 means no automatic wrapping: just let
 				 * lines get as long as needed. */
@@ -1992,7 +2002,7 @@ Tk_ComputeTextLayout(
 
     height = fmPtr->ascent + fmPtr->descent;
 
-    if (numChars < 0) {
+    if (numChars == TCL_INDEX_NONE) {
 	numChars = Tcl_NumUtfChars(string, -1);
     }
     if (wrapLength == 0) {
@@ -2471,7 +2481,7 @@ Tk_UnderlineTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2498,7 +2508,7 @@ TkUnderlineAngledTextLayout(
 				 * which to draw (pixels). */
     double angle,
     int underline)		/* Index of the single character to underline,
-				 * or -1 for no underline. */
+				 * or INT_MIN for no underline. */
 {
     int xx, yy, width, height;
 
@@ -2726,7 +2736,7 @@ Tk_CharBbox(
     Tk_TextLayout layout,	/* Layout information, from a previous call to
 				 * Tk_ComputeTextLayout(). */
     int index,			/* The index of the character whose bbox is
-				 * desired. */
+				 * desired. Negative means count backwards. */
     int *xPtr, int *yPtr,	/* Filled with the upper-left hand corner, in
 				 * pixels, of the bounding box for the
 				 * character specified by index, if
@@ -2744,7 +2754,12 @@ Tk_CharBbox(
     const char *end;
 
     if (index < 0) {
-	return 0;
+	for (i = 0; i < layoutPtr->numChunks; i++) {
+	    index += (chunkPtr + i)->numChars;
+	}
+	if (index < 0) {
+	    return 0;
+	}
     }
 
     tkfont = layoutPtr->tkfont;
@@ -3286,7 +3301,7 @@ Tk_TextLayoutToPostscript(
     int baseline = chunkPtr->y;
     Tcl_Obj *psObj = Tcl_NewObj();
     int i, j;
-    TkSizeT len;
+    Tcl_Size len;
     const char *p, *glyphname;
     char uindex[5], c, *ps;
     int ch;
@@ -3658,7 +3673,8 @@ ParseFontNameObj(
 				 * default values. */
 {
     const char *dash;
-    int objc, result, i, n;
+    int result, n;
+    Tcl_Size objc, i;
     Tcl_Obj **objv;
     const char *string;
 

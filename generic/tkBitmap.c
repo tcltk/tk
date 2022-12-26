@@ -121,12 +121,14 @@ static void		InitBitmapObj(Tcl_Obj *objPtr);
  * field of the Tcl_Obj points to a TkBitmap object.
  */
 
-const Tcl_ObjType tkBitmapObjType = {
-    "bitmap",			/* name */
+const TkObjType tkBitmapObjType = {
+    {"bitmap",			/* name */
     FreeBitmapObjProc,		/* freeIntRepProc */
     DupBitmapObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -164,7 +166,7 @@ Tk_AllocBitmapFromObj(
 {
     TkBitmap *bitmapPtr;
 
-    if (objPtr->typePtr != &tkBitmapObjType) {
+    if (objPtr->typePtr != &tkBitmapObjType.objType) {
 	InitBitmapObj(objPtr);
     }
     bitmapPtr = (TkBitmap *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -905,7 +907,7 @@ GetBitmapFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBitmapObjType) {
+    if (objPtr->typePtr != &tkBitmapObjType.objType) {
 	InitBitmapObj(objPtr);
     }
 
@@ -980,7 +982,7 @@ InitBitmapObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBitmapObjType;
+    objPtr->typePtr = &tkBitmapObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -1014,7 +1016,7 @@ BitmapInit(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     /*
-     * First initialize the data in the ThreadSpecificData strucuture, if
+     * First initialize the data in the ThreadSpecificData structure, if
      * needed.
      */
 
@@ -1169,7 +1171,7 @@ TkDebugBitmap(
  *
  * TkGetBitmapPredefTable --
  *
- *	This function is used by tkMacBitmap.c to access the thread-specific
+ *	This function is used by tkMacOSXBitmap.c to access the thread-specific
  *	predefBitmap table that maps from the names of the predefined bitmaps
  *	to data associated with those bitmaps. It is required because the
  *	table is allocated in thread-local storage and is not visible outside

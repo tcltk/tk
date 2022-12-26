@@ -35,11 +35,11 @@
 #ifndef _TCL
 #   include <tcl.h>
 #endif
-#if HAVE_SYS_TIME_H
+#ifdef HAVE_SYS_TIME_H
 #	include <sys/time.h>
 #endif
 #include <time.h>
-#if HAVE_INTTYPES_H
+#ifdef HAVE_INTTYPES_H
 #    include <inttypes.h>
 #endif
 #include <unistd.h>
@@ -68,6 +68,19 @@
 #	define SELECT_MASK void
 #   else
 #	define SELECT_MASK int
+#   endif
+#endif
+
+/*
+ * Used to tag functions that are only to be visible within the module being
+ * built and not outside it (where this is supported by the linker).
+ */
+
+#ifndef MODULE_SCOPE
+#   ifdef __cplusplus
+#	define MODULE_SCOPE extern "C"
+#   else
+#	define MODULE_SCOPE extern
 #   endif
 #endif
 
@@ -141,20 +154,18 @@ MODULE_SCOPE int TkpPutRGBAImage(
 		     unsigned int width, unsigned int height);
 
 /*
+ * Inform tkCanvas.c that our XGetImage returns a 32pp pixmap packed as 0xAABBGGRR
+ */
+
+#define TK_XGETIMAGE_USES_ABGR32
+
+/*
  * Used by xcolor.c
  */
 
 MODULE_SCOPE unsigned long TkMacOSXRGBPixel(unsigned long red, unsigned long green,
 					    unsigned long blue);
 #define TkpGetPixel(p) (TkMacOSXRGBPixel(p->red >> 8, p->green >> 8, p->blue >> 8))
-
-/*
- * Used by tkWindow.c
- */
-
-MODULE_SCOPE void TkMacOSXHandleMapOrUnmap(Tk_Window tkwin, XEvent *event);
-
-#define TkpHandleMapOrUnmap(tkwin, event)  TkMacOSXHandleMapOrUnmap(tkwin, event)
 
 /*
  * Used by tkAppInit

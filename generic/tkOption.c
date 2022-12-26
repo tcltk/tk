@@ -521,7 +521,7 @@ Tk_GetOption(
     if (masqName != NULL) {
 	char *masqClass;
 	Tk_Uid nodeId, winClassId, winNameId;
-	TkSizeT classNameLength;
+	Tcl_Size classNameLength;
 	Element *nodePtr, *leafPtr;
 	static const int searchOrder[] = {
 	    EXACT_NODE_NAME, WILDCARD_NODE_NAME, EXACT_NODE_CLASS,
@@ -751,11 +751,11 @@ TkOptionDeadWindow(
      * XXX: tsd. Tk shutdown needs to be verified to handle this correctly.
      */
 
-    if (tsdPtr->initialized && (winPtr->optionLevel != -1)) {
+    if (tsdPtr->initialized && (winPtr->optionLevel != TCL_INDEX_NONE)) {
 	int i;
 
 	for (i = 1; i <= tsdPtr->curLevel; i++) {
-	    tsdPtr->levels[i].winPtr->optionLevel = -1;
+	    tsdPtr->levels[i].winPtr->optionLevel = TCL_INDEX_NONE;
 	}
 	tsdPtr->curLevel = -1;
 	tsdPtr->cachedWindow = NULL;
@@ -799,7 +799,7 @@ TkOptionClassChanged(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (winPtr->optionLevel == -1) {
+    if (winPtr->optionLevel == TCL_INDEX_NONE) {
 	return;
     }
 
@@ -811,7 +811,7 @@ TkOptionClassChanged(
     for (i = 1; i <= tsdPtr->curLevel; i++) {
 	if (tsdPtr->levels[i].winPtr == winPtr) {
 	    for (j = i; j <= tsdPtr->curLevel; j++) {
-		tsdPtr->levels[j].winPtr->optionLevel = -1;
+		tsdPtr->levels[j].winPtr->optionLevel = TCL_INDEX_NONE;
 	    }
 	    tsdPtr->curLevel = i-1;
 	    basePtr = tsdPtr->levels[i].bases;
@@ -1085,7 +1085,7 @@ ReadOptionFile(
     const char *realName;
     Tcl_Obj *buffer;
     int result;
-    TkSizeT bufferSize;
+    Tcl_Size bufferSize;
     Tcl_Channel chan;
     Tcl_DString newName;
 
@@ -1269,7 +1269,7 @@ SetupStacks(
 
     if (tsdPtr->curLevel >= level) {
 	while (tsdPtr->curLevel >= level) {
-	    tsdPtr->levels[tsdPtr->curLevel].winPtr->optionLevel = -1;
+	    tsdPtr->levels[tsdPtr->curLevel].winPtr->optionLevel = TCL_INDEX_NONE;
 	    tsdPtr->curLevel--;
 	}
 	levelPtr = &tsdPtr->levels[level];

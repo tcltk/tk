@@ -214,7 +214,7 @@ typedef struct TkCanvas {
 				 * when converting coordinates. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    TkSizeT nextId;			/* Number to use as id for next item created
+    Tcl_Size nextId;			/* Number to use as id for next item created
 				 * in widget. */
     Tk_PostscriptInfo psInfo;	/* Pointer to information used for generating
 				 * Postscript for the canvas. NULL means no
@@ -290,8 +290,8 @@ typedef struct TkCanvas {
  * to the outside world:
  */
 
-MODULE_SCOPE int	TkCanvPostscriptCmd(TkCanvas *canvasPtr,
-			    Tcl_Interp *interp, int argc, const char **argv);
+MODULE_SCOPE int	TkCanvPostscriptObjCmd(TkCanvas *canvasPtr,
+			    Tcl_Interp *interp, Tcl_Size argc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int 	TkCanvTranslatePath(TkCanvas *canvPtr,
 			    int numVertex, double *coordPtr, int closed,
 			    XPoint *outPtr);

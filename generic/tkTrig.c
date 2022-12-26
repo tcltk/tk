@@ -39,9 +39,9 @@
 
 double
 TkLineToPoint(
-    double end1Ptr[2],		/* Coordinates of first end-point of line. */
-    double end2Ptr[2],		/* Coordinates of second end-point of line. */
-    double pointPtr[2])		/* Points to coords for point. */
+    double end1Ptr[],		/* Coordinates of first end-point of line. */
+    double end2Ptr[],		/* Coordinates of second end-point of line. */
+    double pointPtr[])		/* Points to coords for point. */
 {
     double x, y;
 
@@ -143,11 +143,11 @@ TkLineToPoint(
 
 int
 TkLineToArea(
-    double end1Ptr[2],		/* X and y coordinates for one endpoint of
+    double end1Ptr[],		/* X and y coordinates for one endpoint of
 				 * line. */
-    double end2Ptr[2],		/* X and y coordinates for other endpoint of
+    double end2Ptr[],		/* X and y coordinates for other endpoint of
 				 * line. */
-    double rectPtr[4])		/* Points to coords for rectangle, in the
+    double rectPtr[])		/* Points to coords for rectangle, in the
 				 * order x1, y1, x2, y2. X1 must be no larger
 				 * than x2, and y1 no larger than y2. */
 {
@@ -653,14 +653,14 @@ TkPolygonToArea(
 
 double
 TkOvalToPoint(
-    double ovalPtr[4],		/* Pointer to array of four coordinates (x1,
+    double ovalPtr[],		/* Pointer to array of four coordinates (x1,
 				 * y1, x2, y2) defining oval's bounding
 				 * box. */
     double width,		/* Width of outline for oval. */
     int filled,			/* Non-zero means oval should be treated as
 				 * filled; zero means only consider
 				 * outline. */
-    double pointPtr[2])		/* Coordinates of point. */
+    double pointPtr[])		/* Coordinates of point. */
 {
     double xDelta, yDelta, scaledDistance, distToOutline, distToCenter;
     double xDiam, yDiam;

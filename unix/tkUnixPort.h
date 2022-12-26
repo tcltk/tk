@@ -164,13 +164,7 @@
 
 #ifndef __CYGWIN__
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "%#08lx", (unsigned long) (w))
+	sprintf((buf), "0x%lx", (unsigned long) (w))
 #endif
-
-/*
- * Used by tkWindow.c
- */
-
-#define TkpHandleMapOrUnmap(tkwin, event)  Tk_HandleEvent(event)
 
 #endif /* _UNIXPORT */
