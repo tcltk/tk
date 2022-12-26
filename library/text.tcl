@@ -515,7 +515,8 @@ proc ::tk::TextCursorPos {w x y} {
 # ::tk::TextClosestGap --
 # Given x and y coordinates, this procedure finds the closest boundary
 # between characters to the given coordinates and returns the index
-# of the character just after the boundary.
+# of the character just after the boundary, except at display line end
+# where it returns that index.
 #
 # Arguments:
 # w -		The text window.
@@ -525,7 +526,8 @@ proc ::tk::TextCursorPos {w x y} {
 proc ::tk::TextClosestGap {w x y} {
     set pos [$w index @$x,$y]
     set bbox [$w bbox $pos]
-    if {$bbox eq ""} {
+    if {($bbox eq "")
+            || ([$w compare $pos == "$pos display lineend"] == 1)} {
 	return $pos
     }
     if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {

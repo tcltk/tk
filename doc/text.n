@@ -2384,7 +2384,10 @@ current wrap mode is \fBnone\fR and the line extends beyond the boundaries of
 the window, the area returned reflects the entire area of the line, including
 the portions that are out of the window. If the line is shorter than the full
 width of the window then the area returned reflects just the portion of the
-line that is occupied by characters and embedded windows. If the display line
+line that is occupied by characters and embedded windows. If the current wrap
+mode is different from \fBnone\fR, the area returned reflects the area occupied
+by all characters displayed on this line, which can be smaller than the widget
+width. If the display line
 containing \fIindex\fR is not visible on the screen then the return value is
 an empty list.
 .RS
