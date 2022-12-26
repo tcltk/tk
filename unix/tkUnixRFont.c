@@ -53,6 +53,10 @@ typedef struct {
     Region clipRegion;		/* The clipping region, or None. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
+
+TCL_DECLARE_MUTEX(xftMutex);
+#define LOCK Tcl_MutexLock(&xftMutex)
+#define UNLOCK Tcl_MutexUnlock(&xftMutex)
 
 /*
  *-------------------------------------------------------------------------
@@ -131,7 +135,9 @@ GetFont(
 	if (angle != 0.0) {
 	    FcPatternAddMatrix(pat, FC_MATRIX, &mat);
 	}
+	LOCK;
 	ftFont = XftFontOpenPattern(fontPtr->display, pat);
+	UNLOCK;
 	if (!ftFont) {
 	    /*
 	     * The previous call to XftFontOpenPattern() should not fail, but
@@ -140,11 +146,13 @@ GetFont(
 	     * fallback:
 	     */
 
+	    LOCK;
 	    ftFont = XftFontOpen(fontPtr->display, fontPtr->screen,
 		    FC_FAMILY, FcTypeString, "sans",
 		    FC_SIZE, FcTypeDouble, 12.0,
 		    FC_MATRIX, FcTypeMatrix, &mat,
 		    NULL);
+	    UNLOCK;
 	}
 	if (!ftFont) {
 	    /*
@@ -159,7 +167,9 @@ GetFont(
 	    fontPtr->faces[i].ft0Font = ftFont;
 	} else {
 	    if (fontPtr->faces[i].ftFont) {
+		LOCK;
 		XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+		UNLOCK;
 	    }
 	    fontPtr->faces[i].ftFont = ftFont;
 	    fontPtr->faces[i].angle = angle;
@@ -418,10 +428,14 @@ FinishedWithFont(
 
     for (i = 0; i < fontPtr->nfaces; i++) {
 	if (fontPtr->faces[i].ftFont) {
+	    LOCK;
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ftFont);
+	    UNLOCK;
 	}
 	if (fontPtr->faces[i].ft0Font) {
+	    LOCK;
 	    XftFontClose(fontPtr->display, fontPtr->faces[i].ft0Font);
+	    UNLOCK;
 	}
 	if (fontPtr->faces[i].charset) {
 	    FcCharSetDestroy(fontPtr->faces[i].charset);
@@ -692,7 +706,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes1,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
@@ -710,6 +724,7 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
+    int numBytes = numBytes1;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XftFont *ftFont;
     FcChar32 c;
@@ -760,7 +775,9 @@ Tk_MeasureChars(
 	ftFont = GetFont(fontPtr, c, 0.0);
 
 	if (!errorFlag) {
+	    LOCK;
 	    XftTextExtents32(fontPtr->display, ftFont, &c, 1, &extents);
+	    UNLOCK;
 	} else {
 	    extents.xOff = 0;
 	    errorFlag = 0;
@@ -806,15 +823,13 @@ int
 TkpMeasureCharsInContext(
     Tk_Font tkfont,
     const char *source,
-    int numBytes,
-    int rangeStart,
-    int rangeLength,
+    TCL_UNUSED(Tcl_Size),
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
     int maxLength,
     int flags,
     int *lengthPtr)
 {
-    (void) numBytes; /*unused*/
-
     return Tk_MeasureChars(tkfont, source + rangeStart, rangeLength,
 	    maxLength, flags, lengthPtr);
 }
@@ -918,7 +933,7 @@ Tk_DrawChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y)		/* Coordinates at which to place origin of
 				 * string when drawing. */
 {
@@ -971,8 +986,10 @@ Tk_DrawChars(
 	ftFont = GetFont(fontPtr, c, 0.0);
 	if (ftFont) {
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
+	    LOCK;
 	    XftGlyphExtents(fontPtr->display, ftFont, &specs[nspec].glyph, 1,
 		    &metrics);
+	    UNLOCK;
 
 	    /*
 	     * Draw glyph only when it fits entirely into 16 bit coords.
@@ -985,8 +1002,10 @@ Tk_DrawChars(
 		specs[nspec].x = x;
 		specs[nspec].y = y;
 		if (++nspec == NUM_SPEC) {
+		    LOCK;
 		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			    specs, nspec);
+		    UNLOCK;
 		    nspec = 0;
 		}
 	    }
@@ -995,7 +1014,9 @@ Tk_DrawChars(
 	}
     }
     if (nspec) {
+	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+	UNLOCK;
     }
 
   doUnderlineStrikeout:
@@ -1048,11 +1069,12 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes1,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
+    int numBytes = numBytes1;
     const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
     const int minCoord = -maxCoord-1;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -1122,8 +1144,11 @@ TkDrawAngledChars(
 		 * this information... but we'll be ready when it does!
 		 */
 
+		LOCK;
 		XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
 			nglyph, &metrics);
+		UNLOCK;
+
 		/*
 		 * Draw glyph only when it fits entirely into 16 bit coords.
 		 */
@@ -1146,8 +1171,10 @@ TkDrawAngledChars(
                      * a very small barely readable font)
 		     */
 
+		    LOCK;
 		    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 			    originX, originY, glyphs, nglyph);
+		    UNLOCK;
 		}
 	    }
 	    originX = ROUND16(x);
@@ -1157,8 +1184,10 @@ TkDrawAngledChars(
 	glyphs[nglyph++] = XftCharIndex(fontPtr->display, ftFont, c);
     }
     if (nglyph) {
+	LOCK;
 	XftGlyphExtents(fontPtr->display, currentFtFont, glyphs,
 		nglyph, &metrics);
+	UNLOCK;
 
 	/*
 	 * Draw glyph only when it fits entirely into 16 bit coords.
@@ -1167,8 +1196,10 @@ TkDrawAngledChars(
 	if (x >= minCoord && y >= minCoord &&
 	    x <= maxCoord - metrics.width &&
 	    y <= maxCoord - metrics.height) {
+	    LOCK;
 	    XftDrawGlyphs(fontPtr->ftDraw, xftcolor, currentFtFont,
 		    originX, originY, glyphs, nglyph);
+	    UNLOCK;
 	}
     }
 #else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
@@ -1216,8 +1247,10 @@ TkDrawAngledChars(
 	ft0Font = GetFont(fontPtr, c, 0.0);
 	if (ftFont && ft0Font) {
 	    specs[nspec].glyph = XftCharIndex(fontPtr->display, ftFont, c);
+	    LOCK;
 	    XftGlyphExtents(fontPtr->display, ft0Font, &specs[nspec].glyph, 1,
 		    &metrics);
+	    UNLOCK;
 
 	    /*
 	     * Draw glyph only when it fits entirely into 16 bit coords.
@@ -1230,8 +1263,10 @@ TkDrawAngledChars(
 		specs[nspec].x = ROUND16(x);
 		specs[nspec].y = ROUND16(y);
 		if (++nspec == NUM_SPEC) {
+		    LOCK;
 		    XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor,
 			    specs, nspec);
+		    UNLOCK;
 		    nspec = 0;
 		}
 	    }
@@ -1240,7 +1275,9 @@ TkDrawAngledChars(
 	}
     }
     if (nspec) {
+	LOCK;
 	XftDrawGlyphFontSpec(fontPtr->ftDraw, xftcolor, specs, nspec);
+	UNLOCK;
     }
 #endif /* XFT_HAS_FIXED_ROTATED_PLACEMENT */
 
@@ -1339,16 +1376,14 @@ TkpDrawCharsInContext(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
 {
     int widthUntilStart;
-
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     Tk_DrawChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -1369,9 +1404,9 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1379,8 +1414,6 @@ TkpDrawAngledCharsInContext(
 {
     int widthUntilStart;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
-
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,

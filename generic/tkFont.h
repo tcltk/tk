@@ -89,7 +89,7 @@ typedef struct TkFont {
      * Fields used and maintained exclusively by generic code.
      */
 
-    TkSizeT resourceRefCount;	/* Number of active uses of this font (each
+    Tcl_Size resourceRefCount;	/* Number of active uses of this font (each
 				 * active use corresponds to a call to
 				 * Tk_AllocFontFromTable or Tk_GetFont). If
 				 * this count is 0, then this TkFont structure
@@ -99,7 +99,7 @@ typedef struct TkFont {
 				 * The structure is freed when
 				 * resourceRefCount and objRefCount are both
 				 * 0. */
-    TkSizeT objRefCount;		/* The number of Tcl objects that reference
+    Tcl_Size objRefCount;		/* The number of Tcl objects that reference
 				 * this structure. */
     Tcl_HashEntry *cacheHashPtr;/* Entry in font cache for this structure,
 				 * used when deleting it. */

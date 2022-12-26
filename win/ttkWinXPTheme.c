@@ -15,7 +15,7 @@
  *  	shellcc/platform/commctls/userex/refentry.asp >
  */
 
-#include <tkWinInt.h>
+#include "tkWinInt.h"
 #ifndef HAVE_UXTHEME_H
 /* Stub for platforms that lack the XP theme API headers: */
 int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
@@ -140,12 +140,13 @@ XPThemeDeleteProc(void *clientData)
 }
 
 static int
-XPThemeEnabled(Ttk_Theme theme, void *clientData)
+XPThemeEnabled(
+    TCL_UNUSED(Ttk_Theme),
+    void *clientData)
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
     int active = themeData->procs->IsThemeActive();
     int themed = themeData->procs->IsAppThemed();
-    (void)theme;
 
     return (active && themed);
 }
@@ -492,13 +493,16 @@ FreeElementData(ElementData *elementData)
  */
 
 static void GenericElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
     HRESULT result;
     SIZE size;
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -529,12 +533,15 @@ static void GenericElementSize(
 }
 
 static void GenericElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     RECT rc;
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d)) {
 	return;
@@ -640,13 +647,16 @@ static const Ttk_ElementSpec SpinboxArrowElementSpec = {
  */
 
 static void ThumbElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
-    (void)elementRecord;
 
     /*
      * Don't draw the thumb if we are disabled.
@@ -720,13 +730,16 @@ static const Ttk_ElementSpec PbarElementSpec =
  * 	we can use the same statemap no matter what the partId.
  */
 static void TabElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
     RECT rc = BoxToRect(b);
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
@@ -832,7 +845,7 @@ static void TextElementSize(
     RECT rc = {0, 0};
     HRESULT hr = S_OK;
     const char *src;
-    TkSizeT len;
+    Tcl_Size len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, 0))
@@ -863,7 +876,7 @@ static void TextElementSize(
 }
 
 static void TextElementDraw(
-    ClientData clientData, void *elementRecord, Tk_Window tkwin,
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
     TextElement *element = elementRecord;
@@ -871,7 +884,7 @@ static void TextElementDraw(
     RECT rc = BoxToRect(b);
     HRESULT hr = S_OK;
     const char *src;
-    TkSizeT len;
+    Tcl_Size len;
     Tcl_DString ds;
 
     if (!InitElementData(elementData, tkwin, d))
@@ -1109,30 +1122,30 @@ Ttk_CreateVsapiElement(
     void *clientData,
     Ttk_Theme theme,
     const char *elementName,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
     ElementInfo *elementPtr = NULL;
-    ClientData elementData;
+    void *elementData;
     LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
     Ttk_Padding pad = {0, 0, 0, 0};
     int flags = 0;
-    TkSizeT length = 0;
+    Tcl_Size length = 0;
     char *name;
     LPWSTR wname;
     const Ttk_ElementSpec *elementSpec = &GenericElementSpec;
     Tcl_DString classBuf;
 
     static const char *const optionStrings[] =
-	{ "-padding","-width","-height","-margins", "-syssize",
-	  "-halfheight", "-halfwidth", NULL };
-    enum { O_PADDING, O_WIDTH, O_HEIGHT, O_MARGINS, O_SYSSIZE,
-	   O_HALFHEIGHT, O_HALFWIDTH };
+	{ "-halfheight", "-halfwidth", "-height", "-margins", "-padding",
+	  "-syssize", "-width", NULL };
+    enum { O_HALFHEIGHT, O_HALFWIDTH, O_HEIGHT, O_MARGINS, O_PADDING,
+	   O_SYSSIZE, O_WIDTH };
 
-    if (objc < 2) {
+    if (objc + 1 < 3) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing required arguments 'class' and/or 'partId'", -1));
 	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
@@ -1148,7 +1161,8 @@ Ttk_CreateVsapiElement(
 
     /* flags or padding */
     if (objc > 3) {
-	int i = 3, option = 0;
+	Tcl_Size i = 3;
+	int option = 0;
 	for (i = 3; i < objc; i += 2) {
 	    int tmp = 0;
 	    if (i == objc -1) {
@@ -1158,8 +1172,8 @@ Ttk_CreateVsapiElement(
 		Tcl_SetErrorCode(interp, "TTK", "VSAPI", "MISSING", NULL);
 		goto retErr;
 	    }
-	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
-		    sizeof(char *), "option", 0, &option) != TCL_OK)
+	    if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
+		    "option", 0, &option) != TCL_OK)
 		goto retErr;
 	    switch (option) {
 	    case O_PADDING:
@@ -1326,7 +1340,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	ClientData clientData = NewElementData(procs, infoPtr);
+	void *clientData = NewElementData(procs, infoPtr);
 	Ttk_RegisterElementSpec(
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);

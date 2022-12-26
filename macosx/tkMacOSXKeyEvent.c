@@ -94,7 +94,10 @@ static NSUInteger textInputModifiers;
     if (grabWinPtr) {
 	if (winPtr->dispPtr->grabFlags ||  /* global grab */
 	    grabWinPtr->mainPtr == winPtr->mainPtr){ /* same application */
-	    winPtr =winPtr->dispPtr->focusPtr;
+	    winPtr = winPtr->dispPtr->focusPtr;
+	    if (!winPtr) {
+		return theEvent;
+	    }
 	    tkwin = (Tk_Window)winPtr;
 	}
     }
@@ -662,7 +665,7 @@ setXEventPoint(
     int win_x, win_y;
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow(tkwin);
 	if (Tk_IsTopLevel(contPtr)) {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
@@ -724,8 +727,12 @@ XGrabKeyboard(
 	MacDrawable *macWin = (MacDrawable *)grab_window;
 
 	if (w && macWin->toplevel->winPtr == (TkWindow *) captureWinPtr) {
-	    if (modalSession) {
-		Tcl_Panic("XGrabKeyboard: already grabbed");
+	    if (modalSession ) {
+		if (keyboardGrabNSWindow == w) {
+		    return GrabSuccess;
+		} else {
+		    Tcl_Panic("XGrabKeyboard: already grabbed");
+		}
 	    }
 	    keyboardGrabNSWindow = w;
 	    [w retain];

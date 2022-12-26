@@ -882,13 +882,6 @@ TkpPostTearoffMenu(
     int result;
     (void)dummy;
 
-    if (index >= (int)menuPtr->numEntries) {
-	index = menuPtr->numEntries - 1;
-    }
-    if (index >= 0) {
-	y -= menuPtr->entries[index]->y;
-    }
-
     TkActivateMenuEntry(menuPtr, -1);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
@@ -905,7 +898,19 @@ TkpPostTearoffMenu(
     	return TCL_OK;
     }
 
-    /*
+     /*
+     * Adjust the menu y position so that the specified entry will be located
+     * at the given coordinates.
+     */
+
+    if (index >= (int)menuPtr->numEntries) {
+	index = menuPtr->numEntries - 1;
+    }
+    if (index >= 0) {
+	y -= menuPtr->entries[index]->y;
+    }
+
+   /*
      * Adjust the position of the menu if necessary to keep it visible on the
      * screen. There are two special tricks to make this work right:
      *
@@ -1253,7 +1258,7 @@ TkWinHandleMenuEvent(
 	hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->winMenuTable,
 		*plParam);
 	if (hashEntryPtr != NULL) {
-	    TkSizeT i, len;
+	    Tcl_Size i, len;
 	    int underline;
 	    Tcl_Obj *labelPtr;
 	    WCHAR *wlabel;
@@ -1281,7 +1286,7 @@ TkWinHandleMenuEvent(
 		    Tcl_DStringFree(&ds);
 		    Tcl_DStringInit(&ds);
 		    wlabel = Tcl_UtfToWCharDString(src, len, &ds);
-		    if (((TkSizeT)underline + 1 < len + 1) && (menuChar ==
+		    if (((Tcl_Size)underline + 1 < len + 1) && (menuChar ==
 				Tcl_UniCharToUpper(wlabel[underline]))) {
 			*plResult = (2 << 16) | i;
 			returnResult = 1;
@@ -1469,7 +1474,7 @@ void
 RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
-    TkSizeT i;
+    Tcl_Size i;
     TkMenuEntry *mePtr;
 
     TkActivateMenuEntry(menuPtr, -1);
@@ -1540,7 +1545,7 @@ TkpSetWindowMenuBar(
 /*
  *----------------------------------------------------------------------
  *
- * TkpSetMainMenubar --
+ * Tk_SetMainMenubar --
  *
  *	Puts the menu associated with a window into the menubar. Should only
  *	be called when the window is in front.
@@ -1555,7 +1560,7 @@ TkpSetWindowMenuBar(
  */
 
 void
-TkpSetMainMenubar(
+Tk_SetMainMenubar(
     Tcl_Interp *interp,		/* The interpreter of the application */
     Tk_Window tkwin,		/* The frame we are setting up */
     const char *menuName)	/* The name of the menu to put in front. If
@@ -3183,7 +3188,7 @@ MenuSelectEvent(
 
     memset(&event, 0, sizeof(event));
     event.virt.type = VirtualEvent;
-    event.virt.serial = menuPtr->display->request;
+    event.virt.serial = LastKnownRequestProcessed(menuPtr->display);
     event.virt.send_event = 0;
     event.virt.display = menuPtr->display;
     Tk_MakeWindowExist(menuPtr->tkwin);

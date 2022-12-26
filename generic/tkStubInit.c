@@ -25,6 +25,8 @@
 /* we could have used _TKMACINT */
 #include "tkMacOSXInt.h"
 #include "tkMacOSXPrivate.h"
+#else
+#   define Tk_ClipDrawableToRect 0
 #endif
 
 /* TODO: These ought to come in some other way */
@@ -72,6 +74,17 @@ static int TkWinGetPlatformId(void) {
 #   define TkWinGetPlatformId 0
 #endif
 
+#if defined(TK_NO_DEPRECATED) || (TCL_MAJOR_VERSION > 8)
+#   define TkSetWindowMenuBar 0
+#   define TkpDrawHighlightBorder 0
+#   define TkpUseWindow 0
+#   define TkpSetMainMenubar 0
+#   define TkpGetOtherWindow 0
+#   define TkpGetSystemDefault 0
+#   define TkpMakeContainer 0
+#   define TkpMakeWindow 0
+#endif
+
 static int
 doNothing(void)
 {
@@ -113,14 +126,8 @@ static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
 #define TkGenWMConfigureEvent_ TkGenWMConfigureEvent
 #define TkGenerateActivateEvents_ TkGenerateActivateEvents
 #define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
-#define Tk_CanvasTagsParseProc \
-		(int (*) (void *, Tcl_Interp *,Tk_Window, const char *, char *, \
-		int offset))(void *)TkCanvasTagsParseProc
-#define Tk_CanvasTagsPrintProc \
-		(const char *(*) (void *,Tk_Window, char *, int, \
-		Tcl_FreeProc **))(void *)TkCanvasTagsPrintProc
 
-#if !defined(MAC_OSX_TK) && defined(MAC_OSX_TCL)
+#if !defined(MAC_OSX_TK)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
 #   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
@@ -514,24 +521,8 @@ static const TkIntStubs tkIntStubs = {
     TkUnderlineAngledTextLayout, /* 182 */
     TkIntersectAngledTextLayout, /* 183 */
     TkDrawAngledChars, /* 184 */
-#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    0, /* 185 */
-#endif /* UNIX */
-#if defined(_WIN32) /* WIN */
-    0, /* 185 */
-#endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
     TkpRedrawWidget, /* 185 */
-#endif /* MACOSX */
-#if !defined(_WIN32) && !defined(MAC_OSX_TCL) /* UNIX */
-    0, /* 186 */
-#endif /* UNIX */
-#if defined(_WIN32) /* WIN */
-    0, /* 186 */
-#endif /* WIN */
-#ifdef MAC_OSX_TCL /* MACOSX */
     TkpWillDrawWidget, /* 186 */
-#endif /* MACOSX */
     TkDebugPhotoStringMatchDef, /* 187 */
 };
 
@@ -660,7 +651,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkSendCleanup, /* 10 */
     0, /* 11 */
     TkpWmSetState, /* 12 */
-    TkpTestsendCmd, /* 13 */
+    TkpTestsendCmd_, /* 13 */
     0, /* 14 */
     0, /* 15 */
     0, /* 16 */
@@ -692,7 +683,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkUnixSetMenubar_, /* 42 */
     TkWmCleanup_, /* 43 */
     TkSendCleanup_, /* 44 */
-    TkpTestsendCmd_, /* 45 */
+    TkpTestsendCmd, /* 45 */
 #endif /* X11 */
 };
 
@@ -1345,7 +1336,17 @@ const TkStubs tkStubs = {
     Tk_NewWindowObj, /* 277 */
     Tk_SendVirtualEvent, /* 278 */
     Tk_FontGetDescription, /* 279 */
-    Tk_CreatePhotoImageFormatVersion3 /* 280 */
+    Tk_CreatePhotoImageFormatVersion3, /* 280 */
+    Tk_DrawHighlightBorder, /* 281 */
+    Tk_SetMainMenubar, /* 282 */
+    Tk_SetWindowMenubar, /* 283 */
+    Tk_ClipDrawableToRect, /* 284 */
+    Tk_GetSystemDefault, /* 285 */
+    Tk_UseWindow, /* 286 */
+    Tk_MakeContainer, /* 287 */
+    Tk_GetOtherWindow, /* 288 */
+    Tk_Get3DBorderColors, /* 289 */
+    Tk_MakeWindow, /* 290 */
 };
 
 /* !END!: Do not edit above this line. */

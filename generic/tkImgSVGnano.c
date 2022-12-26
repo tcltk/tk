@@ -68,7 +68,7 @@ static int		StringReadSVG(Tcl_Interp *interp, Tcl_Obj *dataObj,
 			    int destX, int destY, int width, int height,
 			    int srcX, int srcY);
 static NSVGimage *	ParseSVGWithOptions(Tcl_Interp *interp,
-			    const char *input, TkSizeT length, Tcl_Obj *format,
+			    const char *input, Tcl_Size length, Tcl_Obj *format,
 			    RastOpts *ropts);
 static int		RasterizeSVG(Tcl_Interp *interp,
 			    Tk_PhotoHandle imageHandle, NSVGimage *nsvgImage,
@@ -166,7 +166,7 @@ FileMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    TkSizeT length;
+    Tcl_Size length;
     Tcl_Obj *dataObj = Tcl_NewObj();
     const char *data;
     RastOpts ropts;
@@ -238,7 +238,7 @@ FileReadSVG(
     int width, int height,
     int srcX, int srcY)
 {
-    TkSizeT length;
+    Tcl_Size length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
@@ -291,7 +291,7 @@ StringMatchSVG(
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
 {
-    TkSizeT length, testLength;
+    Tcl_Size length, testLength;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
@@ -347,7 +347,7 @@ StringReadSVG(
     int width, int height,
     int srcX, int srcY)
 {
-    TkSizeT length;
+    Tcl_Size length;
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, dataObj, formatObj, &ropts);
@@ -383,12 +383,12 @@ static NSVGimage *
 ParseSVGWithOptions(
     Tcl_Interp *interp,
     const char *input,
-    TkSizeT length,
+    Tcl_Size length,
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
     Tcl_Obj **objv = NULL;
-    int objc = 0;
+    Tcl_Size objc = 0;
     double dpi = 96.0;
     char *inputCopy = NULL;
     NSVGimage *nsvgImage;
@@ -757,7 +757,7 @@ CacheSVG(
     NSVGimage *nsvgImage,
     RastOpts *ropts)
 {
-    TkSizeT length;
+    Tcl_Size length;
     const char *data;
     NSVGcache *cachePtr = GetCachePtr(interp);
 
@@ -797,7 +797,7 @@ GetCachedSVG(
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
-    TkSizeT length;
+    Tcl_Size length;
     const char *data;
     NSVGcache *cachePtr = GetCachePtr(interp);
     NSVGimage *nsvgImage = NULL;

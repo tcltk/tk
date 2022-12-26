@@ -339,7 +339,7 @@ XQueryPointer(
     (void)win_x_return;
     (void)win_y_return;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
     *mask_return = TkWinGetModifierState();
     return True;
@@ -376,6 +376,17 @@ void TkSetCursorPos(
     INPUT input;
     int xscreen = (int)(GetSystemMetrics(SM_CXSCREEN) - 1);
     int yscreen = (int)(GetSystemMetrics(SM_CYSCREEN) - 1);
+
+    /*
+     * A multi-screen system may have different logical pixels/inch, with
+     * Windows applying behind-the-scenes scaling on secondary screens.
+     * Don't try and emulate that, instead fall back to SetCursor if the
+     * requested position is off the primary screen.
+     */
+    if ( x < 0 || x > xscreen || y < 0 || y > yscreen ) {
+        SetCursorPos(x, y);
+        return;
+    }
 
     input.type = INPUT_MOUSE;
     input.mi.dx = (x * 65535 + xscreen/2) / xscreen;
@@ -465,7 +476,7 @@ XGetInputFocus(
 
     *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -496,7 +507,7 @@ XSetInputFocus(
     (void)revert_to;
     (void)time;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));
     }

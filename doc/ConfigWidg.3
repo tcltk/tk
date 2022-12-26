@@ -536,22 +536,22 @@ of the a type and creating a structure pointing to those procedures:
 typedef struct Tk_CustomOption {
     Tk_OptionParseProc *\fIparseProc\fR;
     Tk_OptionPrintProc *\fIprintProc\fR;
-    ClientData \fIclientData\fR;
+    void *\fIclientData\fR;
 } \fBTk_CustomOption\fR;
 
 typedef int \fBTk_OptionParseProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         Tcl_Interp *\fIinterp\fR,
         Tk_Window \fItkwin\fR,
         char *\fIvalue\fR,
         char *\fIwidgRec\fR,
-        int \fIoffset\fR);
+        Tcl_Size \fIoffset\fR);
 
 typedef const char *\fBTk_OptionPrintProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         Tk_Window \fItkwin\fR,
         char *\fIwidgRec\fR,
-        int \fIoffset\fR,
+        Tcl_Size \fIoffset\fR,
         Tcl_FreeProc **\fIfreeProcPtr\fR);
 .CE
 The Tk_CustomOption structure contains three fields, which are pointers

@@ -26,14 +26,54 @@ namespace eval ttk::theme::aqua {
 		!focus systemSelectedTextColor}
 
 	# Button
-	ttk::style configure TButton -anchor center -width -6 \
+	ttk::style configure TButton -anchor center \
 	    -foreground systemControlTextColor
 	ttk::style map TButton \
 	    -foreground {
 		pressed white
-	        {alternate !pressed !background} white}
+	        {alternate !pressed !background} white
+	        disabled systemDisabledControlTextColor}
+
+	# Menubutton
 	ttk::style configure TMenubutton -anchor center -padding {2 0 0 2}
+
+	# Toolbutton
 	ttk::style configure Toolbutton -anchor center
+
+	# Inline Button
+	ttk::style configure InlineButton -anchor center -font TkHeadingFont \
+	    -foreground systemTextBackgroundColor
+	ttk::style map InlineButton \
+	    -foreground {
+		disabled systemWindowBackgroundColor
+	    }
+
+	# Image Button
+	ttk::style configure ImageButton -anchor center -width 1 \
+	    -compound top
+	ttk::style map ImageButton \
+	    -foreground {
+		pressed systemLabelColor
+		!pressed systemSecondaryLabelColor
+	    }
+
+	# Recessed (radio) button
+	font create RecessedFont -family EmphasizedSystem -size 11 -weight bold
+	ttk::style configure RecessedButton \
+	    -foreground systemControlTextColor
+	ttk::style map RecessedButton \
+	    -foreground {
+		{disabled selected} systemWindowBackgroundColor3
+		{disabled !selected} systemDisabledControlTextColor
+		selected systemTextBackgroundColor
+		active white
+		pressed white
+	    } \
+	    -font {
+		selected RecessedFont
+		active RecessedFont
+		pressed RecessedFont
+	    }
 
 	# For Entry, Combobox and Spinbox widgets the selected text background
 	# is the "Highlight color" selected in preferences when the widget
@@ -86,9 +126,10 @@ namespace eval ttk::theme::aqua {
 	ttk::style configure TNotebook.Tab -foreground systemControlTextColor
 	ttk::style map TNotebook.Tab \
 	    -foreground {
-		background systemControlTextColor
-		disabled systemDisabledControlTextColor
-		selected systemSelectedTabTextColor}
+		{background !selected} systemControlTextColor
+		{background selected} black
+		{!background selected} systemSelectedTabTextColor
+		disabled systemDisabledControlTextColor}
 
 	# Treeview:
 	ttk::style configure Heading \
@@ -97,7 +138,8 @@ namespace eval ttk::theme::aqua {
 	    -background systemWindowBackgroundColor
 	ttk::style configure Treeview -rowheight 18 \
 	    -background systemTextBackgroundColor \
-	    -foreground systemTextColor \
+            -stripedbackground systemDisabledControlTextColor \
+            -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \
 	    -background {
@@ -112,7 +154,11 @@ namespace eval ttk::theme::aqua {
 	# (ref: Apple Human Interface Guidelines / Controls / Grouping Controls)
 	#
 	ttk::style configure TLabelframe \
-		-labeloutside true -labelmargins {14 0 14 4}
+	    -labeloutside true \
+	    -labelmargins {14 0 14 2}
+
+	ttk::style configure TLabelframe.Label \
+	    -font TkSmallCaptionFont
 
 	# TODO: panedwindow sashes should be 9 pixels (HIG:Controls:Split Views)
     }

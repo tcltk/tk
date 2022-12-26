@@ -244,7 +244,7 @@ FindNSFont(
     NSString *family;
 
     if (familyName) {
-	family = [[[NSString alloc] initWithUTF8String:familyName] autorelease];
+	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:-1] autorelease];
     } else {
 	family = [defaultFont familyName];
     }
@@ -422,6 +422,105 @@ CreateNamedSystemFont(
 }
 
 #pragma mark -
+
+#pragma mark Grapheme Cluster indexing
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * startOfClusterObjCmd --
+ *
+ *      This function is invoked to process the startOfCluster command.
+ *
+ * Results:
+ *      A standard Tcl result.
+ *
+ * Side effects:
+ *      None
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+startOfClusterObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
+{
+    TKNSString *S;
+    const char *stringArg;
+    int numBytes;
+    Tcl_Size index;
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    if (stringArg == NULL) {
+	return TCL_ERROR;
+    }
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+    if (index != TCL_INDEX_NONE) {
+	if ((size_t)index >= [S length]) {
+	    index = (Tcl_Size)[S length];
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	    index = range.location;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+    }
+    return TCL_OK;
+}
+
+static int
+endOfClusterObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,         /* Current interpreter. */
+    int objc,                   /* Number of arguments. */
+    Tcl_Obj *const objv[])      /* Argument objects. */
+{
+    TKNSString *S;
+    char *stringArg;
+    int numBytes;
+    Tcl_Size index;
+
+    if ((unsigned)(objc - 3) > 1) {
+	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
+	return TCL_ERROR;
+    }
+    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    if (stringArg == NULL) {
+	return TCL_ERROR;
+    }
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
+    if (TkGetIntForIndex(objv[2], [S length] - 1, 0, &index) != TCL_OK) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
+		Tcl_GetString(objv[2])));
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
+	return TCL_ERROR;
+    }
+    if ((size_t)index + 1 <= [S length]) {
+	if (index == TCL_INDEX_NONE) {
+		index = 0;
+	} else {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
+	    index = range.location + range.length;
+	}
+	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+    }
+    return TCL_OK;
+}
+
+#pragma mark -
 #pragma mark Font handling:
 
 /*
@@ -517,6 +616,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
+    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*
@@ -823,7 +924,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
@@ -873,10 +974,10 @@ TkpMeasureCharsInContext(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char * source,	/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    int numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string in all. */
-    int rangeStart,		/* Index of first byte to measure. */
-    int rangeLength,		/* Length of range to measure in bytes. */
+    Tcl_Size rangeStart,		/* Index of first byte to measure. */
+    Tcl_Size rangeLength,		/* Length of range to measure in bytes. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length; don't consider any
 				 * character that would cross this x-position.
@@ -911,7 +1012,7 @@ TkpMeasureCharsInContext(
     double width;
     int length, fit;
 
-    if (rangeStart < 0 || rangeLength <= 0 ||
+    if (rangeStart == TCL_INDEX_NONE || rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
 	    (maxLength == 0 && !(flags & TK_AT_LEAST_ONE))) {
 	*lengthPtr = 0;
@@ -1081,7 +1182,7 @@ Tk_DrawChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * string when drawing. */
 {
@@ -1103,7 +1204,7 @@ TkDrawAngledChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
@@ -1146,14 +1247,13 @@ TkpDrawCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
 {
-    (void)display;
     TkpDrawAngledCharsInContext(display, drawable, gc, tkfont, source, numBytes,
 	    rangeStart, rangeLength, x, y, 0.0);
 }
@@ -1172,9 +1272,9 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1190,12 +1290,12 @@ TkpDrawAngledCharsInContext(
     MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
-    CGColorRef fg;
+    CGColorRef fg = NULL;
     NSFont *nsFont;
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
-    if (rangeStart < 0 || rangeLength <= 0  ||
+    if (rangeStart == TCL_INDEX_NONE || rangeLength + 1 <= 1  ||
 	rangeStart + rangeLength > numBytes ||
 	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
@@ -1208,8 +1308,10 @@ TkpDrawAngledCharsInContext(
     context = drawingContext.context;
     TkSetMacColor(gc->foreground, &fg);
     attributes = [fontPtr->nsAttributes mutableCopy];
-    [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
-    CFRelease(fg);
+    if (fg) {
+	[attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
+	CGColorRelease(fg);
+    }
     nsFont = [attributes objectForKey:NSFontAttributeName];
     [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);

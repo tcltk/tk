@@ -983,10 +983,11 @@ GridRowColumnConfigureCommand(
     int slot;			/* the column or row number */
     int slotType;		/* COLUMN or ROW */
     int size;			/* the configuration value */
-    int lObjc;			/* Number of items in index list */
+    Tcl_Size lObjc;		/* Number of items in index list */
     Tcl_Obj **lObjv;		/* array of indices */
     int ok;			/* temporary TCL result code */
-    int i, j, first, last;
+    int i, first, last;
+    Tcl_Size j;
     const char *string;
     static const char *const optionStrings[] = {
 	"-minsize", "-pad", "-uniform", "-weight", NULL
@@ -2828,6 +2829,9 @@ DestroyGrid(
 {
     Gridder *gridPtr = (Gridder *)memPtr;
 
+    if (gridPtr->flags & REQUESTED_RELAYOUT) {
+	Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
+    }
     if (gridPtr->containerDataPtr != NULL) {
 	if (gridPtr->containerDataPtr->rowPtr != NULL) {
 	    ckfree(gridPtr->containerDataPtr -> rowPtr);
@@ -2983,7 +2987,7 @@ ConfigureContent(
 
     firstChar = 0;
     for (numWindows=0, i=0; i < objc; i++) {
-	TkSizeT length;
+	Tcl_Size length;
 	char prevChar = firstChar;
 
 	string = Tcl_GetStringFromObj(objv[i], &length);

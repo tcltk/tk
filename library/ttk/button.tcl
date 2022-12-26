@@ -66,7 +66,7 @@ proc ttk::button::activate {w} {
 proc ttk::button::RadioTraverse {w dir} {
     set group [list]
     foreach sibling [winfo children [winfo parent $w]] {
-    	if {   [winfo class $sibling] eq "TRadiobutton"
+	if {   [winfo class $sibling] eq "TRadiobutton"
 	    && [$sibling cget -variable] eq [$w cget -variable]
 	    && ![$sibling instate disabled]
 	} {
@@ -75,7 +75,7 @@ proc ttk::button::RadioTraverse {w dir} {
     }
 
     if {![llength $group]} {	 # Shouldn't happen, but can.
-    	return
+	return
     }
 
     set pos [expr {([lsearch -exact $group $w] + $dir) % [llength $group]}]

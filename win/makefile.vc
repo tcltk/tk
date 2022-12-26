@@ -188,6 +188,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkWinDraw.obj \
 	$(TMP_DIR)\tkWinEmbed.obj \
 	$(TMP_DIR)\tkWinFont.obj \
+	$(TMP_DIR)\tkWinGDI.obj \
 	$(TMP_DIR)\tkWinIco.obj \
 	$(TMP_DIR)\tkWinImage.obj \
 	$(TMP_DIR)\tkWinInit.obj \
@@ -239,6 +240,7 @@ TKOBJS = \
 	$(TMP_DIR)\tkGet.obj \
 	$(TMP_DIR)\tkGrab.obj \
 	$(TMP_DIR)\tkGrid.obj \
+	$(TMP_DIR)\tkIcu.obj \
 	$(TMP_DIR)\tkImage.obj \
 	$(TMP_DIR)\tkImgBmap.obj \
 	$(TMP_DIR)\tkImgListFormat.obj \
@@ -350,7 +352,7 @@ PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 
 CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
-		 /DHAVE_STRINGS_H=1 \
+		 /DHAVE_STRINGS_H=1 /DTCL_UTF_MAX=3 \
 !if $(HAVE_UXTHEME_H)
 		 /DHAVE_UXTHEME_H=1 \
 !endif
@@ -364,7 +366,7 @@ CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 PRJ_DEFINES	= /DBUILD_ttk $(CONFIG_DEFS) /Dinline=__inline /D_CRT_SECURE_NO_DEPRECATE /D_CRT_NONSTDC_NO_DEPRECATE
 
 # Additional Link libraries needed beyond those in rules.vc
-PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib
+PRJ_LIBS   = netapi32.lib gdi32.lib user32.lib userenv.lib winspool.lib shell32.lib ole32.lib uuid.lib
 
 #---------------------------------------------------------------------
 # TkTest flags
@@ -545,7 +547,7 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 
 $(CAT32): $(_TCLDIR)\win\cat.c
 	$(cc32) $(cflags) $(crt) /D_CRT_NONSTDC_NO_DEPRECATE /DCONSOLE /DUNICODE /D_UNICODE -Fo$(TMP_DIR)\ $?
-	$(CONEXECMD) /DCONSOLE -stack:16384 $(TMP_DIR)\cat.obj
+	$(CONEXECMD) -stack:16384 $(TMP_DIR)\cat.obj
 	$(_VC_MANIFEST_EMBED_EXE)
 
 #---------------------------------------------------------------------
@@ -626,6 +628,13 @@ $(TMP_DIR)\testMain.obj: $(WIN_DIR)\winMain.c
 	    /DTCL_USE_STATIC_PACKAGES=$(STATIC_BUILD) \
 	    -Fo$@ $?
 
+$(ROOT)\manifest.uuid:
+   copy $(WIN_DIR)\gitmanifest.in $(ROOT)\manifest.uuid
+   git rev-parse HEAD >>$(ROOT)\manifest.uuid
+
+$(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
+	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
+
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
 	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
 
@@ -651,6 +660,9 @@ $(TMP_DIR)\tkPkgConfig.obj: $(GENERICDIR)\tkPkgConfig.c
 	$(cc32) $(pkgcflags) 		\
 		-DCFG_RUNTIME_DLLFILE="\"$(TKLIBNAME)\"" \
 		-Fo$@ $?
+
+$(TMP_DIR)\tkWindow.obj: $(GENERICDIR)\tkWindow.c $(TMP_DIR)\tkUuid.h
+	$(cc32) $(pkgcflags) -I$(TMP_DIR) -Fo$@ $?
 
 # The following objects are part of the stub library and should not
 # be built as DLL objects but none of the symbols should be exported
@@ -749,7 +761,7 @@ install-binaries:
 !if !$(STATIC_BUILD)
 	@echo creating package index
 	@type << > $(OUT_DIR)\pkgIndex.tcl
-if {![package vsatisfies [package provide Tcl] 8.6-]} return
+if {![package vsatisfies [package provide Tcl] 8.7-]} return
 if {($$::tcl_platform(platform) eq "unix") && ([info exists ::env(DISPLAY)]
 	|| ([info exists ::argv] && ("-display" in $$::argv)))} {
     if {[package vsatisfies [package provide Tcl] 9.0]} {

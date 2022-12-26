@@ -142,7 +142,7 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
 /*
  *--------------------------------------------------------------
  *
- * TkCanvPostscriptCmd --
+ * TkCanvPostscriptObjCmd --
  *
  *	This function is invoked to process the "postscript" options of the
  *	widget command for canvas widgets. See the user documentation for
@@ -158,12 +158,12 @@ static inline Tcl_Obj *	GetPostscriptBuffer(Tcl_Interp *interp);
  */
 
 int
-TkCanvPostscriptCmd(
+TkCanvPostscriptObjCmd(
     TkCanvas *canvasPtr,	/* Information about canvas widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char **argv)		/* Argument strings. Caller has already parsed
-				 * this command enough to know that argv[1] is
+    Tcl_Size objc,			/* Number of arguments. */
+	Tcl_Obj *const objv[])		/* Argument strings. Caller has already parsed
+				 * this command enough to know that objv[1] is
 				 * "postscript". */
 {
     TkPostscriptInfo psInfo, *psInfoPtr = &psInfo;
@@ -236,8 +236,8 @@ TkCanvPostscriptCmd(
     psInfo.prolog = 1;
     psInfo.tkwin = tkwin;
     Tcl_InitHashTable(&psInfo.fontTable, TCL_STRING_KEYS);
-    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, argc-2, argv+2,
-	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY);
+    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, (const char **)objv+2,
+	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY|TK_CONFIG_OBJS);
     if (result != TCL_OK) {
 	goto cleanup;
     }
@@ -285,15 +285,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_SW:
 	deltaX = 0;
 	break;
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	deltaX = -psInfo.width/2;
-	break;
     case TK_ANCHOR_NE:
     case TK_ANCHOR_E:
     case TK_ANCHOR_SE:
 	deltaX = -psInfo.width;
+	break;
+    default:
+	deltaX = -psInfo.width/2;
 	break;
     }
     switch (psInfo.pageAnchor) {
@@ -302,15 +300,13 @@ TkCanvPostscriptCmd(
     case TK_ANCHOR_NE:
 	deltaY = - psInfo.height;
 	break;
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	deltaY = -psInfo.height/2;
-	break;
     case TK_ANCHOR_SW:
     case TK_ANCHOR_S:
     case TK_ANCHOR_SE:
 	deltaY = 0;
+	break;
+    default:
+	deltaY = -psInfo.height/2;
 	break;
     }
 
@@ -903,6 +899,18 @@ PostscriptBitmap(
     imagePtr = XGetImage(Tk_Display(tkwin), bitmap, 0, 0,
 	    totalWidth, totalHeight, 1, XYPixmap);
 
+
+    if (!imagePtr) {
+	/*
+	 * The XGetImage() function is apparently not implemented on this
+	 * system. Just skip the pixels, the Postscript will still be
+	 * syntactically correct.
+	 */
+
+        Tcl_AppendToObj(psObj, "<>", -1);
+	return;
+    }
+
     Tcl_AppendToObj(psObj, "<", -1);
     mask = 0x80;
     value = 0;
@@ -1051,7 +1059,7 @@ Tk_PostscriptPath(
 				 * generated. */
     double *coordPtr,		/* Pointer to first in array of 2*numPoints
 				 * coordinates giving points for path. */
-    int numPoints)		/* Number of points at *coordPtr. */
+    Tcl_Size numPoints)		/* Number of points at *coordPtr. */
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
     Tcl_Obj *psObj;
@@ -1188,7 +1196,7 @@ GetPostscriptPoints(
 #if defined(_WIN32) || defined(MAC_OSX_TK)
 static void
 TkImageGetColor(
-    TkColormapData *cdata,	/* Colormap data */
+    TkColormapData *cdata,
     unsigned long pixel,	/* Pixel value to look up */
     double *red, double *green, double *blue)
 				/* Color data to return */
@@ -1250,7 +1258,7 @@ TkPostscriptImage(
     Tk_Window tkwin,
     Tk_PostscriptInfo psInfo,	/* postscript info */
     XImage *ximage,		/* Image to draw */
-    int x, int y,		/* First pixel to output */
+    int x, TCL_UNUSED(int),		/* First pixel to output */
     int width, int height)	/* Width and height of area */
 {
     TkPostscriptInfo *psInfoPtr = (TkPostscriptInfo *) psInfo;
@@ -1263,7 +1271,6 @@ TkPostscriptImage(
     Visual *visual;
     TkColormapData cdata;
     Tcl_Obj *psObj;
-    (void)y;
 
     if (psInfoPtr->prepass) {
 	return TCL_OK;

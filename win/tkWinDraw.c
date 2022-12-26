@@ -369,7 +369,7 @@ XCopyPlane(
     HBRUSH bgBrush, fgBrush, oldBrush;
     TkpClipMask *clipPtr = (TkpClipMask*)gc->clip_mask;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (plane != 1) {
 	Tcl_Panic("Unexpected plane specified for XCopyPlane");
@@ -520,7 +520,7 @@ TkPutImage(
     HBITMAP bitmap;
     char *data;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     dc = TkWinGetDrawableDC(display, d, &state);
     SetROP2(dc, tkpWinRopModes[gc->function]);
@@ -586,9 +586,8 @@ TkPutImage(
 	ckfree(infoPtr);
     }
     if (!bitmap) {
-	Tcl_Panic("Fail to allocate bitmap");
 	DeleteDC(dcMem);
-    	TkWinReleaseDrawableDC(d, dc, &state);
+	TkWinReleaseDrawableDC(d, dc, &state);
 	return BadValue;
     }
     bitmap = (HBITMAP)SelectObject(dcMem, bitmap);
@@ -1097,7 +1096,7 @@ XDrawArc(
     unsigned int width, unsigned int height,
     int start, int extent)
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
 }
@@ -1112,7 +1111,7 @@ XDrawArcs(
 {
     int ret = Success;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     while (narcs-- > 0) {
 	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
@@ -1151,7 +1150,7 @@ XFillArc(
     unsigned int width, unsigned int height,
     int start, int extent)
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
 }
@@ -1166,7 +1165,7 @@ XFillArcs(
 {
     int ret = Success;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     while (narcs-- > 0) {
 	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
@@ -1458,7 +1457,7 @@ TkWinFillRect(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawHighlightBorder --
+ * Tk_DrawHighlightBorder --
  *
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
@@ -1478,7 +1477,7 @@ TkWinFillRect(
  */
 
 void
-TkpDrawHighlightBorder(
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,

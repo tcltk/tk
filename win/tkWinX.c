@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
 #include <commctrl.h>
@@ -119,12 +120,11 @@ void
 TkGetServerInfo(
     Tcl_Interp *interp,		/* The server information is returned in this
 				 * interpreter's result. */
-    Tk_Window tkwin)		/* Token for window; this selects a particular
+    TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
     static char buffer[32]; /* Empty string means not initialized yet. */
     OSVERSIONINFOW os;
-    (void)tkwin;
 
     if (!buffer[0]) {
 	GetVersionExW(&os);
@@ -282,7 +282,7 @@ TkWinXInit(
 
 void
 TkWinXCleanup(
-    ClientData clientData)
+    void *clientData)
 {
     HINSTANCE hInstance = (HINSTANCE)clientData;
 
@@ -390,11 +390,9 @@ TkWinGetPlatformTheme(void)
 
 const char *
 TkGetDefaultScreenName(
-    Tcl_Interp *dummy,		/* Not used. */
+    TCL_UNUSED(Tcl_Interp *),
     const char *screenName)	/* If NULL, use default string. */
 {
-    (void)dummy;
-
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = winScreenName;
     }
@@ -425,10 +423,10 @@ TkWinDisplayChanged(
     HDC dc;
     Screen *screen;
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     dc = GetDC(NULL);
     screen->width = GetDeviceCaps(dc, HORZRES);
@@ -522,7 +520,7 @@ TkpOpenDisplay(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->winDisplay != NULL) {
-	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
+	if (!strcmp(DisplayString(tsdPtr->winDisplay->display), display_name)) {
 	    return tsdPtr->winDisplay;
 	} else {
 	    return NULL;
@@ -533,7 +531,7 @@ TkpOpenDisplay(
     TkWinDisplayChanged(display);
 
     tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
-    ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
+    memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
     tsdPtr->wheelTickPrev = GetTickCount();
@@ -562,12 +560,12 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    Display *display = (Display *)ckalloc(sizeof(Display));
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
     Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 
-    ZeroMemory(screen, sizeof(Screen));
-    ZeroMemory(display, sizeof(Display));
+    memset(screen, 0, sizeof(Screen));
+    memset(display, 0, sizeof(Display));
 
     /*
      * Note that these pixel values are not palette relative.
@@ -585,12 +583,11 @@ XkbOpenDisplay(
     twdPtr->window.winPtr = NULL;
     twdPtr->window.handle = NULL;
     screen->root = (Window)twdPtr;
-    screen->display = display;
+    screen->display = (Display *)display;
 
     display->display_name = (char  *)ckalloc(strlen(name) + 1);
     strcpy(display->display_name, name);
 
-    display->cursor_font = 1;
     display->nscreens = 1;
     display->request = 1;
     display->qlen = 0;
@@ -601,7 +598,7 @@ XkbOpenDisplay(
     if (minor_rtrn) *minor_rtrn = 0;
     if (reason) *reason = 0;
 
-    return display;
+    return (Display *)display;
 }
 
 /*
@@ -625,7 +622,7 @@ void
 TkpCloseDisplay(
     TkDisplay *dispPtr)
 {
-    Display *display = dispPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)dispPtr->display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -640,14 +637,14 @@ TkpCloseDisplay(
 	ckfree(display->display_name);
     }
     if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+	if (ScreenOfDisplay(display, 0)->root_visual != NULL) {
+	    ckfree(ScreenOfDisplay(display, 0)->root_visual);
 	}
-	if (display->screens->root != None) {
-	    ckfree((char *)display->screens->root);
+	if (ScreenOfDisplay(display, 0)->root != None) {
+	    ckfree((char *)ScreenOfDisplay(display, 0)->root);
 	}
-	if (display->screens->cmap != None) {
-	    XFreeColormap(display, display->screens->cmap);
+	if (ScreenOfDisplay(display, 0)->cmap != None) {
+	    XFreeColormap((Display *)display, ScreenOfDisplay(display, 0)->cmap);
 	}
 	ckfree(display->screens);
     }
@@ -707,12 +704,9 @@ TkClipCleanup(
 
 int
 XBell(
-    Display *display,
-    int percent)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)percent;
-
     MessageBeep(MB_OK);
     return Success;
 }
@@ -998,7 +992,7 @@ GenerateXEvent(
     }
 
     memset(&event.x, 0, sizeof(XEvent));
-    event.x.xany.serial = winPtr->display->request++;
+    event.x.xany.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.x.xany.send_event = False;
     event.x.xany.display = winPtr->display;
     event.x.xany.window = winPtr->window;
@@ -1445,7 +1439,7 @@ GetTranslatedKey(
 
     xkey->nbytes = 0;
 
-    while ((xkey->nbytes < XMaxTransChars)
+    while ((xkey->nbytes < sizeof(xkey->trans_chars))
 	    && (PeekMessageA(&msg, NULL, type, type, PM_NOREMOVE) != 0)) {
 	if (msg.message != type) {
 	    break;
@@ -1667,7 +1661,7 @@ HandleIMEComposition(
 	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	memset(&event, 0, sizeof(XEvent));
-	event.xkey.serial = winPtr->display->request++;
+	event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
 	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
@@ -1957,10 +1951,9 @@ Tk_SetCaretPos(
 
 long
 Tk_GetUserInactiveTime(
-     Display *dpy)		/* Ignored on Windows */
+     TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
-    (void)dpy;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1993,10 +1986,9 @@ Tk_GetUserInactiveTime(
 
 void
 Tk_ResetUserInactiveTime(
-    Display *dpy)
+    TCL_UNUSED(Display *))
 {
     INPUT inp;
-    (void)dpy;
 
     inp.type = INPUT_MOUSE;
     inp.mi.dx = 0;

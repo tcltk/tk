@@ -64,7 +64,7 @@ typedef struct TkMenuEntry {
     Tk_OptionTable optionTable;	/* Option table for this menu entry. */
     Tcl_Obj *labelPtr;		/* Main text label displayed in entry (NULL if
 				 * no label). */
-    TkSizeT labelLength;	/* Number of non-NULL characters in label. */
+    Tcl_Size labelLength;	/* Number of non-NULL characters in label. */
     int state;			/* State of button for display purposes:
 				 * normal, active, or disabled. */
     int underline;		/* Value of -underline option: specifies index
@@ -85,7 +85,7 @@ typedef struct TkMenuEntry {
     Tcl_Obj *accelPtr;		/* Accelerator string displayed at right of
 				 * menu entry. NULL means no such accelerator.
 				 * Malloc'ed. */
-    TkSizeT accelLength;	/* Number of non-NULL characters in
+    Tcl_Size accelLength;	/* Number of non-NULL characters in
 				 * accelerator. */
     int indicatorOn;		/* True means draw indicator, false means
 				 * don't draw it. This field is ignored unless
@@ -244,8 +244,8 @@ typedef struct TkMenuEntry {
  */
 
 #define ENTRY_ACTIVE 0
-#define ENTRY_NORMAL 1
-#define ENTRY_DISABLED 2
+#define ENTRY_DISABLED 1
+#define ENTRY_NORMAL 2
 
 /*
  * A data structure of the following type is kept for each menu widget:
@@ -263,8 +263,8 @@ typedef struct TkMenu {
     Tcl_Command widgetCmd;	/* Token for menu's widget command. */
     TkMenuEntry **entries;	/* Array of pointers to all the entries in the
 				 * menu. NULL means no entries. */
-    TkSizeT numEntries;		/* Number of elements in entries. */
-    TkSizeT active;			/* Index of active entry. TCL_INDEX_NONE means
+    Tcl_Size numEntries;		/* Number of elements in entries. */
+    Tcl_Size active;			/* Index of active entry. TCL_INDEX_NONE means
 				 * nothing active. */
     int menuType;		/* MAIN_MENU, TEAROFF_MENU, or MENUBAR. See
     				 * below for definitions. */
@@ -461,9 +461,9 @@ typedef struct TkMenuReferences {
  */
 
 #define UNKNOWN_TYPE		-1
-#define MAIN_MENU 		0
-#define TEAROFF_MENU 		1
-#define MENUBAR 		2
+#define MENUBAR 		0
+#define MAIN_MENU 		1
+#define TEAROFF_MENU 		2
 
 /*
  * Various geometry definitions:
@@ -478,7 +478,7 @@ typedef struct TkMenuReferences {
  * the outside world:
  */
 
-MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, TkSizeT index);
+MODULE_SCOPE int	TkActivateMenuEntry(TkMenu *menuPtr, Tcl_Size index);
 MODULE_SCOPE void	TkBindMenu(Tk_Window tkwin, TkMenu *menuPtr);
 MODULE_SCOPE TkMenuReferences*TkCreateMenuReferences(Tcl_Interp *interp,
 			    const char *name);
@@ -494,19 +494,19 @@ MODULE_SCOPE Tcl_HashTable *TkGetMenuHashTable(Tcl_Interp *interp);
 MODULE_SCOPE void	TkMenuInitializeDrawingFields(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuInitializeEntryDrawingFields(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkInvokeMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    TkSizeT index);
+			    Tcl_Size index);
 MODULE_SCOPE void	TkMenuConfigureDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE int	TkMenuConfigureEntryDrawOptions(
-			    TkMenuEntry *mePtr, TkSizeT index);
+			    TkMenuEntry *mePtr, Tcl_Size index);
 MODULE_SCOPE void	TkMenuFreeDrawOptions(TkMenu *menuPtr);
 MODULE_SCOPE void	TkMenuEntryFreeDrawOptions(TkMenuEntry *mePtr);
-MODULE_SCOPE void	TkMenuEventProc(ClientData clientData,
+MODULE_SCOPE void	TkMenuEventProc(void *clientData,
     			    XEvent *eventPtr);
-MODULE_SCOPE void	TkMenuImageProc(ClientData clientData, int x, int y,
+MODULE_SCOPE void	TkMenuImageProc(void *clientData, int x, int y,
 			    int width, int height, int imgWidth,
 			    int imgHeight);
 MODULE_SCOPE void	TkMenuInit(void);
-MODULE_SCOPE void	TkMenuSelectImageProc(ClientData clientData, int x,
+MODULE_SCOPE void	TkMenuSelectImageProc(void *clientData, int x,
 			    int y, int width, int height, int imgWidth,
 			    int imgHeight);
 MODULE_SCOPE Tcl_Obj *	TkNewMenuName(Tcl_Interp *interp,
@@ -515,7 +515,7 @@ MODULE_SCOPE int	TkPostCommand(TkMenu *menuPtr);
 MODULE_SCOPE int	TkPostSubmenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-					   int x, int y);
+			    int x, int y);
 MODULE_SCOPE int	TkPreprocessMenu(TkMenu *menuPtr);
 MODULE_SCOPE void	TkRecomputeMenu(TkMenu *menuPtr);
 
@@ -540,7 +540,7 @@ MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
 			    int x, int y, int index);
 MODULE_SCOPE int	TkpPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-					   int x, int y, int index);
+			    int x, int y, int index);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 #endif /* _TKMENU */

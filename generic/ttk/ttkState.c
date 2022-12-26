@@ -50,28 +50,29 @@ static int  StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *obj);
 static void StateSpecDupIntRep(Tcl_Obj *, Tcl_Obj *);
 static void StateSpecUpdateString(Tcl_Obj *);
 
-static
-struct Tcl_ObjType StateSpecObjType =
+static const
+TkObjType StateSpecObjType =
 {
-    "StateSpec",
+    {"StateSpec",
     StateSpecFreeIntRep,
     StateSpecDupIntRep,
     StateSpecUpdateString,
-    StateSpecSetFromAny
+    StateSpecSetFromAny,
+    TCL_OBJTYPE_V0},
+    0
 };
 
 static void StateSpecDupIntRep(Tcl_Obj *srcPtr, Tcl_Obj *copyPtr)
 {
     copyPtr->internalRep.longValue = srcPtr->internalRep.longValue;
-    copyPtr->typePtr = &StateSpecObjType;
+    copyPtr->typePtr = &StateSpecObjType.objType;
 }
 
 static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 {
     int status;
-    int objc;
+    Tcl_Size i, objc;
     Tcl_Obj **objv;
-    int i;
     unsigned int onbits = 0, offbits = 0;
 
     status = Tcl_ListObjGetElements(interp, objPtr, &objc, &objv);
@@ -116,7 +117,7 @@ static int StateSpecSetFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	objPtr->typePtr->freeIntRepProc(objPtr);
     }
 
-    objPtr->typePtr = &StateSpecObjType;
+    objPtr->typePtr = &StateSpecObjType.objType;
     objPtr->internalRep.longValue = (onbits << 16) | offbits;
 
     return TCL_OK;
@@ -164,7 +165,7 @@ Tcl_Obj *Ttk_NewStateSpecObj(unsigned int onbits, unsigned int offbits)
     Tcl_Obj *objPtr = Tcl_NewObj();
 
     Tcl_InvalidateStringRep(objPtr);
-    objPtr->typePtr = &StateSpecObjType;
+    objPtr->typePtr = &StateSpecObjType.objType;
     objPtr->internalRep.longValue = (onbits << 16) | offbits;
 
     return objPtr;
@@ -175,7 +176,7 @@ int Ttk_GetStateSpecFromObj(
     Tcl_Obj *objPtr,
     Ttk_StateSpec *spec)
 {
-    if (objPtr->typePtr != &StateSpecObjType) {
+    if (objPtr->typePtr != &StateSpecObjType.objType) {
 	int status = StateSpecSetFromAny(interp, objPtr);
 	if (status != TCL_OK)
 	    return status;
@@ -200,8 +201,8 @@ Tcl_Obj *Ttk_StateMapLookup(
     Ttk_State state)    	/* State to look up */
 {
     Tcl_Obj **specs;
-    int nSpecs;
-    int j, status;
+    Tcl_Size j, nSpecs;
+    int status;
 
     status = Tcl_ListObjGetElements(interp, map, &nSpecs, &specs);
     if (status != TCL_OK)
@@ -232,8 +233,8 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
     Tcl_Obj *mapObj)		/* State map */
 {
     Tcl_Obj **specs;
-    int nSpecs;
-    int j, status;
+    Tcl_Size j, nSpecs;
+    int status;
 
     status = Tcl_ListObjGetElements(interp, mapObj, &nSpecs, &specs);
     if (status != TCL_OK)

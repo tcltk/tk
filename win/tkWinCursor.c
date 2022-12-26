@@ -39,7 +39,7 @@ typedef struct {
  * resource identifier.
  */
 
-static struct CursorName {
+static const struct CursorName {
     const char *name;
     LPCTSTR id;
 } cursorNames[] = {
@@ -96,9 +96,9 @@ TkGetCursorByName(
     Tk_Uid string)		/* Description of cursor. See manual entry for
 				 * details on legal syntax. */
 {
-    struct CursorName *namePtr;
+    const struct CursorName *namePtr;
     TkWinCursor *cursorPtr;
-    int argc;
+    Tcl_Size argc;
     const char **argv = NULL;
     (void)tkwin;
 

@@ -25,6 +25,8 @@
 #ifndef NANOSVGRAST_H
 #define NANOSVGRAST_H
 
+#include "nanosvg.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -84,11 +86,11 @@ NANOSVG_SCOPE void nsvgDeleteRasterizer(NSVGrasterizer*);
 }
 #endif
 
-#endif /* NANOSVGRAST_H */
-
 #ifdef NANOSVGRAST_IMPLEMENTATION
 
 #include <math.h>
+#include <stdlib.h>
+#include <string.h>
 
 #define NSVG__SUBSAMPLES	5
 #define NSVG__FIXSHIFT		10
@@ -124,7 +126,7 @@ typedef struct NSVGmemPage {
 } NSVGmemPage;
 
 typedef struct NSVGcachedPaint {
-	char type;
+	signed char type;
 	char spread;
 	float xform[6];
 	unsigned int colors[256];
@@ -972,7 +974,7 @@ static float nsvg__clampf(float a, float mn, float mx) { return a < mn ? mn : (a
 
 static unsigned int nsvg__RGBA(unsigned char r, unsigned char g, unsigned char b, unsigned char a)
 {
-	return (r) | (g << 8) | (b << 16) | (a << 24);
+	return ((unsigned int)r) | ((unsigned int)g << 8) | ((unsigned int)b << 16) | ((unsigned int)a << 24);
 }
 
 static unsigned int nsvg__lerpRGBA(unsigned int c0, unsigned int c1, float u)
@@ -1423,7 +1425,8 @@ void nsvgRasterize(NSVGrasterizer* r,
 			}
 
 			/* Rasterize edges */
-			qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
+			if (r->nedges != 0)
+				qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
 
 			/* now, traverse the scanlines and find the intersections on each scanline, use non-zero rule */
 			nsvg__initPaint(&cache, &shape->fill, shape->opacity);
@@ -1449,7 +1452,8 @@ void nsvgRasterize(NSVGrasterizer* r,
 			}
 
 			/* Rasterize edges */
-			qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
+			if (r->nedges != 0)
+				qsort(r->edges, r->nedges, sizeof(NSVGedge), nsvg__cmpEdge);
 
 			/* now, traverse the scanlines and find the intersections on each scanline, use non-zero rule */
 			nsvg__initPaint(&cache, &shape->stroke, shape->opacity);
@@ -1467,3 +1471,5 @@ void nsvgRasterize(NSVGrasterizer* r,
 }
 
 #endif
+
+#endif /* NANOSVGRAST_H */

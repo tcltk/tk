@@ -50,13 +50,13 @@ typedef struct {
 } WmAttributes;
 
 typedef enum {
-    WMATT_ALPHA, WMATT_TOPMOST, WMATT_ZOOMED, WMATT_FULLSCREEN,
-    WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
+    WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_TOPMOST, WMATT_TYPE,
+    WMATT_ZOOMED, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
-    "-alpha", "-topmost", "-zoomed", "-fullscreen",
-    "-type", NULL
+    "-alpha", "-fullscreen", "-topmost", "-type",
+    "-zoomed", NULL
 };
 
 /*
@@ -205,7 +205,7 @@ typedef struct TkWmInfo {
     WmAttributes reqState;	/* Requested state of [wm attributes] */
     ProtocolHandler *protPtr;	/* First in list of protocol handlers for this
 				 * window (NULL means none). */
-    int cmdArgc;		/* Number of elements in cmdArgv below. */
+    Tcl_Size cmdArgc;		/* Number of elements in cmdArgv below. */
     const char **cmdArgv;	/* Array of strings to store in the WM_COMMAND
 				 * property. NULL means nothing available. */
     char *clientMachine;	/* String to store in WM_CLIENT_MACHINE
@@ -412,6 +412,9 @@ static int		WmGridCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmGroupCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		WmIconbadgeCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmIconbitmapCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -710,7 +713,7 @@ TkWmMapWindow(
 	    UpdateCommand(winPtr);
 	}
 	if (wmPtr->clientMachine != NULL) {
-	    Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, -1, &ds);
+	    (void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
 		unsigned long pid = (unsigned long) getpid();
@@ -982,8 +985,8 @@ TkWmSetClass(
 	XClassHint *classPtr;
 	Tcl_DString name, ds;
 
-	Tcl_UtfToExternalDString(NULL, winPtr->nameUid, -1, &name);
-	Tcl_UtfToExternalDString(NULL, winPtr->classUid, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->nameUid, -1, TCL_ENCODING_NOCOMPLAIN, &name);
+	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->classUid, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	classPtr = XAllocClassHint();
 	classPtr->res_name = Tcl_DStringValue(&name);
 	classPtr->res_class = Tcl_DStringValue(&ds);
@@ -1016,7 +1019,7 @@ Tk_WmObjCmd(
     static const char *const optionStrings[] = {
 	"aspect", "attributes", "client", "colormapwindows",
 	"command", "deiconify", "focusmodel", "forget",
-	"frame", "geometry", "grid", "group", "iconbitmap",
+	"frame", "geometry", "grid", "group", "iconbadge", "iconbitmap",
 	"iconify", "iconmask", "iconname", "iconphoto",
 	"iconposition", "iconwindow", "manage", "maxsize",
 	"minsize", "overrideredirect", "positionfrom",
@@ -1026,7 +1029,7 @@ Tk_WmObjCmd(
 	WMOPT_ASPECT, WMOPT_ATTRIBUTES, WMOPT_CLIENT, WMOPT_COLORMAPWINDOWS,
 	WMOPT_COMMAND, WMOPT_DEICONIFY, WMOPT_FOCUSMODEL, WMOPT_FORGET,
 	WMOPT_FRAME, WMOPT_GEOMETRY, WMOPT_GRID, WMOPT_GROUP,
-	WMOPT_ICONBITMAP,
+	WMOPT_ICONBADGE, WMOPT_ICONBITMAP,
 	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME, WMOPT_ICONPHOTO,
 	WMOPT_ICONPOSITION, WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE,
 	WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT, WMOPT_POSITIONFROM,
@@ -1116,6 +1119,8 @@ Tk_WmObjCmd(
 	return WmGridCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_GROUP:
 	return WmGroupCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_ICONBADGE:
+	return WmIconbadgeCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONBITMAP:
 	return WmIconbitmapCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_ICONIFY:
@@ -1489,7 +1494,7 @@ WmClientCmd(
 	XTextProperty textProp;
 	Tcl_DString ds;
 
-	Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		&textProp) != 0) {
 	    unsigned long pid = (unsigned long) getpid();
@@ -1541,7 +1546,8 @@ WmColormapwindowsCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Window *cmapList;
     TkWindow *winPtr2;
-    int count, i, windowObjc, gotToplevel;
+    Tcl_Size i, windowObjc;
+    int count, gotToplevel;
     Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
@@ -1558,8 +1564,8 @@ WmColormapwindowsCmd(
 	    return TCL_OK;
 	}
 	resultObj = Tcl_NewObj();
-	for (i = 0; i < count; i++) {
-	    if ((i == (count-1))
+	for (i = 0; i < (Tcl_Size)count; i++) {
+	    if ((i == ((Tcl_Size)count-1))
 		    && (wmPtr->flags & WM_ADDED_TOPLEVEL_COLORMAP)) {
 		break;
 	    }
@@ -1641,7 +1647,7 @@ WmCommandCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    int cmdArgc;
+    Tcl_Size cmdArgc;
     const char **cmdArgv;
 
     if ((objc != 3) && (objc != 4)) {
@@ -2114,6 +2120,48 @@ WmGroupCmd(
 	strcpy(wmPtr->leaderName, argv3);
     }
     UpdateHints(winPtr);
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmIconbadgeCmd --
+ *
+ *	This function is invoked to process the "wm iconbadge" Tcl command.
+ *	See the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmIconbadgeCmd(
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    TkWindow *tkWin,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    (void) tkWin;
+    char cmd[4096];
+
+    if (objc < 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "window badge");
+	return TCL_ERROR;
+    }
+
+    sprintf(cmd, "::tk::icons::IconBadge {%s} {%s}",
+	    Tcl_GetString(objv[2]),
+	    Tcl_GetString(objv[3]));
+    if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
+	return TCL_ERROR;
+    }
     return TCL_OK;
 }
 
@@ -3009,7 +3057,7 @@ WmProtocolCmd(
     ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     const char *cmd;
-    TkSizeT cmdLength;
+    Tcl_Size cmdLength;
 
     if ((objc < 3) || (objc > 5)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name? ?command?");
@@ -3368,9 +3416,9 @@ WmStateCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     static const char *const optionStrings[] = {
-	"normal", "iconic", "withdrawn", NULL };
+	"iconic", "normal", "withdrawn", NULL };
     enum options {
-	OPT_NORMAL, OPT_ICONIC, OPT_WITHDRAWN };
+	OPT_ICONIC, OPT_NORMAL, OPT_WITHDRAWN };
     int index;
 
     if ((objc < 3) || (objc > 4)) {
@@ -3596,7 +3644,7 @@ WmTransientCmd(
 	}
 
 	for (w = containerPtr; w != NULL && w->wmInfoPtr != NULL;
-	     w = (TkWindow *)w->wmInfoPtr->containerPtr) {
+	    w = (TkWindow *)w->wmInfoPtr->containerPtr) {
 	    if (w == winPtr) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't set \"%s\" as container: would cause management loop",
@@ -4709,7 +4757,7 @@ UpdateGeometryInfo(
 
     if ((winPtr->flags & (TK_EMBEDDED|TK_BOTH_HALVES))
 	    == (TK_EMBEDDED|TK_BOTH_HALVES)) {
-	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
+	Tk_Window childPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 
 	/*
 	 * This window is embedded and the container is also in this process,
@@ -4723,7 +4771,7 @@ UpdateGeometryInfo(
 	wmPtr->flags &= ~(WM_NEGATIVE_X|WM_NEGATIVE_Y);
 	height += wmPtr->menuHeight;
 	if (childPtr != NULL) {
-	    Tk_GeometryRequest((Tk_Window) childPtr, width, height);
+	    Tk_GeometryRequest(childPtr, width, height);
 	}
 	return;
     }
@@ -4932,7 +4980,7 @@ UpdateTitle(
      */
 
     string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
-    Tcl_UtfToExternalDString(NULL, string, -1, &ds);
+    (void)Tcl_UtfToExternalDStringEx(NULL, string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     XStoreName(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
@@ -4945,7 +4993,7 @@ UpdateTitle(
      */
 
     if (wmPtr->iconName != NULL) {
-	Tcl_UtfToExternalDString(NULL, wmPtr->iconName, -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->iconName, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
 		Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
@@ -5443,7 +5491,7 @@ SetNetWmType(
     Atom *atoms = NULL;
     WmInfo *wmPtr;
     Tcl_Obj **objv;
-    int objc, n;
+    Tcl_Size objc, n;
     Tk_Window tkwin = (Tk_Window) winPtr;
     Tcl_Interp *interp = Tk_Interp(tkwin);
 
@@ -5461,11 +5509,11 @@ SetNetWmType(
 
     for (n = 0; n < objc; ++n) {
 	Tcl_DString ds, dsName;
-	TkSizeT len;
+	Tcl_Size len;
 	char *name = Tcl_GetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);
-	Tcl_UtfToExternalDString(NULL, name, len, &dsName);
+	(void)Tcl_UtfToExternalDStringEx(NULL, name, len, TCL_ENCODING_NOCOMPLAIN, &dsName);
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "_NET_WM_WINDOW_TYPE_", 20);
 	Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsName),
@@ -5529,7 +5577,7 @@ GetNetWmType(
 	    const char *name = Tk_GetAtomName(tkwin, atoms[n]);
 
 	    if (strncmp("_NET_WM_WINDOW_TYPE_", name, 20) == 0) {
-		Tcl_ExternalToUtfDString(NULL, name+20, -1, &ds);
+		(void)Tcl_ExternalToUtfDStringEx(NULL, name+20, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 		Tcl_UtfToLower(Tcl_DStringValue(&ds));
 		Tcl_ListObjAppendElement(interp, typePtr,
 			Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -5729,12 +5777,12 @@ Tk_GetRootCoords(
 	    continue;
 	}
 	if (winPtr->flags & TK_TOP_LEVEL) {
-	    TkWindow *otherPtr;
+	    Tk_Window otherPtr;
 
 	    if (!(winPtr->flags & TK_EMBEDDED)) {
 		break;
 	    }
-	    otherPtr = TkpGetOtherWindow(winPtr);
+	    otherPtr = Tk_GetOtherWindow((Tk_Window)winPtr);
 	    if (otherPtr == NULL) {
 		/*
 		 * The container window is not in the same application. Query
@@ -5759,7 +5807,7 @@ Tk_GetRootCoords(
 		 * query its coordinates.
 		 */
 
-		winPtr = otherPtr;
+		winPtr = (TkWindow *)otherPtr;
 		continue;
 	    }
 	}
@@ -5893,7 +5941,7 @@ Tk_CoordsToWindow(
 		if (child == wmPtr->wrapperPtr->window) {
 		    goto gotToplevel;
 		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
-                           TkpGetOtherWindow(wmPtr->winPtr) == NULL) {
+                           Tk_GetOtherWindow((Tk_Window)wmPtr->winPtr) == NULL) {
 
                     /*
                      * This toplevel is embedded in a window belonging to
@@ -5993,7 +6041,7 @@ Tk_CoordsToWindow(
 	     * the toplevel for the embedded application and start processing
 	     * that toplevel from scratch.
 	     */
-	    winPtr = TkpGetOtherWindow(nextPtr);
+	    winPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)nextPtr);
 	    if (winPtr == NULL) {
 		return (Tk_Window) nextPtr;
 	    }
@@ -6999,7 +7047,7 @@ CreateWrapper(
 
     /*
      * The code below is copied from CreateTopLevelWindow, Tk_MakeWindowExist,
-     * and TkpMakeWindow. The idea is to create an "official" Tk window (so
+     * and Tk_MakeWindow. The idea is to create an "official" Tk window (so
      * that we can get events on it), but to hide the window outside the
      * official Tk hierarchy so that it isn't visible to the application. See
      * the comments for the other functions if you have questions about this
@@ -7320,7 +7368,8 @@ UpdateCommand(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tcl_DString cmds, ds;
-    int i, *offsets;
+    Tcl_Size i;
+    int *offsets;
     char **cmdArgv;
 
     /*
@@ -7339,7 +7388,7 @@ UpdateCommand(
     offsets = (int *)ckalloc(sizeof(int) * wmPtr->cmdArgc);
     Tcl_DStringInit(&cmds);
     for (i = 0; i < wmPtr->cmdArgc; i++) {
-	Tcl_UtfToExternalDString(NULL, wmPtr->cmdArgv[i], -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->cmdArgv[i], -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	offsets[i] = Tcl_DStringLength(&cmds);
 	Tcl_DStringAppend(&cmds, Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds)+1);

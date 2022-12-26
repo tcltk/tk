@@ -203,19 +203,11 @@ typedef void (Ttk_ElementSizeProc)(void *clientData, void *elementRecord,
 typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
         Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
-#ifndef TkSizeT
-#   if TCL_MAJOR_VERSION > 8
-#	define TkSizeT size_t
-#   else
-#	define TkSizeT int
-#   endif
-#endif
-
 typedef struct Ttk_ElementOptionSpec
 {
     const char *optionName;		/* Command-line name of the widget option */
     Tk_OptionType type; 	/* Accepted option types */
-    TkSizeT offset;			/* Offset of Tcl_Obj* field in element record */
+    Tcl_Size offset;			/* Offset of Tcl_Obj* field in element record */
     const char *defaultValue;		/* Default value to used if resource missing */
 } Ttk_ElementOptionSpec;
 
@@ -231,7 +223,7 @@ typedef struct Ttk_ElementSpec {
 
 typedef int (*Ttk_ElementFactory)
 	(Tcl_Interp *, void *clientData,
-	 Ttk_Theme, const char *elementName, int objc, Tcl_Obj *const objv[]);
+	 Ttk_Theme, const char *elementName, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  * Null element implementation:
@@ -308,6 +300,7 @@ MODULE_SCOPE Ttk_Padding Ttk_LayoutNodeInternalPadding(Ttk_Layout,Ttk_Element);
 MODULE_SCOPE void Ttk_LayoutNodeReqSize(Ttk_Layout, Ttk_Element, int *w, int *h);
 
 MODULE_SCOPE void Ttk_PlaceElement(Ttk_Layout, Ttk_Element, Ttk_Box);
+MODULE_SCOPE void Ttk_AnchorElement(Ttk_Element node, Tk_Anchor anchor);
 MODULE_SCOPE void Ttk_ChangeElementState(Ttk_Element,unsigned set,unsigned clr);
 
 MODULE_SCOPE Tcl_Obj *Ttk_QueryOption(Ttk_Layout, const char *, Ttk_State);
@@ -340,7 +333,7 @@ MODULE_SCOPE void Ttk_RegisterNamedColor(Ttk_ResourceCache, const char *, XColor
 typedef struct TtkImageSpec Ttk_ImageSpec;
 TTKAPI Ttk_ImageSpec *TtkGetImageSpec(Tcl_Interp *, Tk_Window, Tcl_Obj *);
 TTKAPI Ttk_ImageSpec *TtkGetImageSpecEx(Tcl_Interp *, Tk_Window, Tcl_Obj *,
-					Tk_ImageChangedProc *, ClientData);
+					Tk_ImageChangedProc *, void *);
 TTKAPI void TtkFreeImageSpec(Ttk_ImageSpec *);
 TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Ttk_State);
 
@@ -350,9 +343,9 @@ TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Ttk_State);
  */
 typedef enum 			/* -default option values */
 {
-    TTK_BUTTON_DEFAULT_NORMAL,	/* widget defaultable */
     TTK_BUTTON_DEFAULT_ACTIVE,	/* currently the default widget */
-    TTK_BUTTON_DEFAULT_DISABLED	/* not defaultable */
+    TTK_BUTTON_DEFAULT_DISABLED,	/* not defaultable */
+    TTK_BUTTON_DEFAULT_NORMAL	/* widget defaultable */
 } Ttk_ButtonDefaultState;
 
 TTKAPI int Ttk_GetButtonDefaultStateFromObj(Tcl_Interp *, Tcl_Obj *, Ttk_ButtonDefaultState *);
@@ -390,8 +383,8 @@ typedef struct TtkEnsemble {
 } Ttk_Ensemble;
 
 MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
-    const Ttk_Ensemble *commands, int cmdIndex,
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+    const Ttk_Ensemble *commands, Tcl_Size cmdIndex,
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
 

@@ -10,7 +10,7 @@ exec wish "$0" ${1+"$@"}
 # separate ".tcl" files is this directory, which are sourced by this script as
 # needed.
 
-package require Tk	8.5
+package require Tk	8.6-
 package require msgcat
 
 eval destroy [winfo child .]
@@ -329,7 +329,14 @@ addFormattedText {
     @@demo image2	A simple user interface for viewing images
     @@demo labelframe	Labelled frames
     @@demo ttkbut	The simple Themed Tk widgets
-
+}
+if {[tk windowingsystem] eq "aqua"} {
+    addFormattedText {
+	@@new
+	@@demo mac_styles	Special widgets for macOS
+    }
+}
+addFormattedText {
     @@subtitle	Listboxes and Trees
     @@demo states	The 50 states
     @@demo colors	Colors: change the color scheme for the application
@@ -388,6 +395,8 @@ addFormattedText {
     @@demo fontchoose	Font selection dialog
     @@new
     @@demo systray      System tray icon and notification
+    @@new
+    @@demo print        Printing from canvas and text widgets
 
     @@subtitle	Animation
     @@demo anilabel	Animated labels
@@ -399,6 +408,8 @@ addFormattedText {
     @@demo bitmap	The built-in bitmaps
     @@demo dialog1	A dialog box with a local grab
     @@demo dialog2	A dialog box with a global grab
+    @@new
+    @@demo windowicons  Window icons and badges
 }
 
 ##############################################################################
@@ -641,80 +652,7 @@ proc showCode w {
 # file -		Name of the original file (implicitly for title)
 
 proc printCode {w file} {
-    set code [$w get 1.0 end-1c]
-
-    set dir "."
-    if {[info exists ::env(HOME)]} {
-	set dir "$::env(HOME)"
-    }
-    if {[info exists ::env(TMP)]} {
-	set dir $::env(TMP)
-    }
-    if {[info exists ::env(TEMP)]} {
-	set dir $::env(TEMP)
-    }
-
-    set filename [file join $dir "tkdemo-$file"]
-    set outfile [open $filename "w"]
-    puts $outfile $code
-    close $outfile
-
-    switch -- $::tcl_platform(platform) {
-	unix {
-	    if {[catch {exec lp -c $filename} msg]} {
-		tk_messageBox -title "Print spooling failure" \
-			-message "Print spooling probably failed: $msg"
-	    }
-	}
-	windows {
-	    if {[catch {PrintTextWin32 $filename} msg]} {
-		tk_messageBox -title "Print spooling failure" \
-			-message "Print spooling probably failed: $msg"
-	    }
-	}
-	default {
-	    tk_messageBox -title "Operation not Implemented" \
-		    -message "Wow! Unknown platform: $::tcl_platform(platform)"
-	}
-    }
-
-    #
-    # Be careful to throw away the temporary file in a gentle manner ...
-    #
-    if {[file exists $filename]} {
-	catch {file delete $filename}
-    }
-}
-
-# PrintTextWin32 --
-#    Print a file under Windows using all the "intelligence" necessary
-#
-# Arguments:
-# filename -		Name of the file
-#
-# Note:
-# Taken from the Wiki page by Keith Vetter, "Printing text files under
-# Windows".
-# Note:
-# Do not execute the command in the background: that way we can dispose of the
-# file smoothly.
-#
-proc PrintTextWin32 {filename} {
-    package require registry
-    set app [auto_execok notepad.exe]
-    set pcmd "$app /p %1"
-    catch {
-	set app [registry get {HKEY_CLASSES_ROOT\.txt} {}]
-	set pcmd [registry get \
-		{HKEY_CLASSES_ROOT\\$app\\shell\\print\\command} {}]
-    }
-
-    regsub -all {%1} $pcmd $filename pcmd
-    puts $pcmd
-
-    regsub -all {\\} $pcmd {\\\\} pcmd
-    set command "[auto_execok start] /min $pcmd"
-    eval exec $command
+    tk print $w
 }
 
 # tkAboutDialog --
@@ -727,7 +665,8 @@ proc tkAboutDialog {} {
 "[mc "Copyright © %s" {1996-1997 Sun Microsystems, Inc.}]
 [mc "Copyright © %s" {1997-2000 Ajuba Solutions, Inc.}]
 [mc "Copyright © %s" {2001-2009 Donal K. Fellows}]
-[mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]"
+[mc "Copyright © %s" {2002-2007 Daniel A. Steffen}]
+[mc "Copyright © %s" {2021 Kevin Walzer}]"
 }
 
 # Local Variables:

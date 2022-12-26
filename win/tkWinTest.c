@@ -24,19 +24,19 @@ HWND tkWinCurrentDialog;
  * Forward declarations of functions defined later in this file:
  */
 
-static int		TestclipboardObjCmd(ClientData clientData,
+static int		TestclipboardObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		TestwineventObjCmd(ClientData clientData,
+static int		TestwineventObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		TestfindwindowObjCmd(ClientData clientData,
+static int		TestfindwindowObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		TestgetwindowinfoObjCmd(ClientData clientData,
+static int		TestgetwindowinfoObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static int		TestwinlocaleObjCmd(ClientData clientData,
+static int		TestwinlocaleObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static Tk_GetSelProc		SetSelectionResult;
@@ -227,19 +227,17 @@ AppendSystemError(
 
 static int
 SetSelectionResult(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     const char *selection)
 {
-    (void)dummy;
-
     Tcl_AppendResult(interp, selection, NULL);
     return TCL_OK;
 }
 
 static int
 TestclipboardObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -273,7 +271,7 @@ TestclipboardObjCmd(
 
 static int
 TestwineventObjCmd(
-    ClientData dummy,	/* Main window for application. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -306,12 +304,11 @@ TestwineventObjCmd(
 	{WM_COMMAND,            "WM_COMMAND"},
 	{-1,			NULL}
     };
-    (void)dummy;
 
     if ((objc == 3) && (strcmp(Tcl_GetString(objv[1]), "debug") == 0)) {
 	int b;
 
-	if (Tcl_GetBoolean(interp, Tcl_GetString(objv[2]), &b) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, objv[2], &b) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	TkWinDialogDebug(b);
@@ -381,7 +378,7 @@ TestwineventObjCmd(
         SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
                      (LPARAM) buf);
 #endif
-	Tcl_ExternalToUtfDString(NULL, buf, -1, &ds);
+	(void)Tcl_ExternalToUtfDStringEx(NULL, buf, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
 	Tcl_DStringFree(&ds);
 	break;
@@ -396,7 +393,7 @@ TestwineventObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), -1, &ds);
+	(void)Tcl_UtfToExternalDStringEx(NULL, Tcl_GetString(objv[4]), -1, TCL_ENCODING_NOCOMPLAIN, &ds);
 	result = SendMessageA(control, WM_SETTEXT, 0,
 		(LPARAM) Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
@@ -442,7 +439,7 @@ TestwineventObjCmd(
 
 static int
 TestfindwindowObjCmd(
-    ClientData dummy,	/* Main window for application. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -452,7 +449,6 @@ TestfindwindowObjCmd(
     HWND hwnd = NULL;
     int r = TCL_OK;
     DWORD myPid;
-    (void)dummy;
 
     Tcl_DStringInit(&classString);
     Tcl_DStringInit(&titleString);
@@ -515,7 +511,7 @@ EnumChildrenProc(
 
 static int
 TestgetwindowinfoObjCmd(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -526,7 +522,6 @@ TestgetwindowinfoObjCmd(
     WCHAR buf[512];
     int cch, cchBuf = 256;
     Tcl_DString ds;
-    (void)dummy;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "hwnd");
@@ -573,13 +568,11 @@ TestgetwindowinfoObjCmd(
 
 static int
 TestwinlocaleObjCmd(
-    ClientData dummy,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    (void)dummy;
-
     if (objc != 1) {
 	Tcl_WrongNumArgs(interp, 1, objv, NULL);
 	return TCL_ERROR;

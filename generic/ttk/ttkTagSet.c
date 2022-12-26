@@ -126,7 +126,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
 {
     Ttk_TagSet tagset = (Ttk_TagSet)ckalloc(sizeof(*tagset));
     Tcl_Obj **objv;
-    int i, objc;
+    Tcl_Size i, objc;
 
     if (objPtr == NULL) {
 	tagset->tags = NULL;
@@ -140,7 +140,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
     }
 
     tagset->tags = (Ttk_Tag *)ckalloc((objc+1) * sizeof(Ttk_Tag));
-    for (i=0; i<objc; ++i) {
+    for (i = 0; i < objc; ++i) {
 	tagset->tags[i] = Ttk_GetTagFromObj(tagTable, objv[i]);
     }
     tagset->tags[i] = NULL;
@@ -202,6 +202,35 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
     return 1;
 }
 
+/* Ttk_TagSetAddSet -- add a tag set to a tag set.
+ *
+ * Returns: 0 if tagset already contained tags,
+ * 1 if tagset was modified.
+ */
+int Ttk_TagSetAddSet(Ttk_TagSet tagset, Ttk_TagSet tagsetFrom)
+{
+    int i, j, result = 0, found, total, nTags = tagset->nTags;
+    Ttk_Tag tag;
+
+    total = tagsetFrom->nTags + tagset->nTags;
+    tagset->tags = (Ttk_Tag *)ckrealloc(tagset->tags,
+	    (total)*sizeof(tagset->tags[0]));
+    for (j = 0; j < tagsetFrom->nTags; ++j) {
+	tag = tagsetFrom->tags[j];
+	found = 0;
+	for (i = 0; i < nTags; ++i) {
+	    if (tagset->tags[i] == tag) {
+		found = 1;
+		break;
+	    }
+	}
+	if (found) continue;
+	tagset->tags[tagset->nTags++] = tag;
+	result = 1;
+    }
+    return result;
+}
+
 /* Ttk_TagSetRemove -- remove a tag from a tag set.
  *
  * Returns: 0 if tagset did not contain tag,
@@ -259,7 +288,7 @@ int Ttk_ConfigureTag(
     Tcl_Interp *interp,
     Ttk_TagTable tagTable,
     Ttk_Tag tag,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     return Tk_SetOptions(
 	interp, tag->tagRecord, tagTable->optionTable,
@@ -272,16 +301,27 @@ int Ttk_ConfigureTag(
 
 #define OBJ_AT(record, offset) (*(Tcl_Obj**)(((char*)record)+offset))
 
+void Ttk_TagSetDefaults(Ttk_TagTable tagTable, Ttk_Style style, void *record)
+{
+    const Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
+    memset(record, 0, tagTable->recordSize);
+
+    while (optionSpec->type != TK_OPTION_END) {
+	int offset = optionSpec->objOffset;
+	const char *optionName = optionSpec->optionName;
+	OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
+	++optionSpec;
+    }
+}
+
 void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 {
     const int LOWEST_PRIORITY = 0x7FFFFFFF;
     int i, j;
 
-    memset(record, 0, tagTable->recordSize);
-
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
 	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
-	TkSizeT offset = optionSpec->objOffset;
+	Tcl_Size offset = optionSpec->objOffset;
 	int prio = LOWEST_PRIORITY;
 
 	for (j = 0; j < tagSet->nTags; ++j) {
@@ -300,13 +340,11 @@ void Ttk_TagSetApplyStyle(
     const Tk_OptionSpec *optionSpec = tagTable->optionSpecs;
 
     while (optionSpec->type != TK_OPTION_END) {
-	TkSizeT offset = optionSpec->objOffset;
+	Tcl_Size offset = optionSpec->objOffset;
 	const char *optionName = optionSpec->optionName;
 	Tcl_Obj *val = Ttk_StyleMap(style, optionName, state);
 	if (val) {
 	    OBJ_AT(record, offset) = val;
-	} else if (OBJ_AT(record, offset) == 0) {
-	    OBJ_AT(record, offset) = Ttk_StyleDefault(style, optionName);
 	}
 	++optionSpec;
     }

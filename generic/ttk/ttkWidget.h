@@ -105,11 +105,11 @@ MODULE_SCOPE int TtkWidgetStyleCommand(
 /* Widget constructor:
  */
 MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	ClientData, Tcl_Interp*, int, Tcl_Obj*const[]);
+	void *, Tcl_Interp*, int, Tcl_Obj*const[]);
 
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \
-	TtkWidgetConstructorObjCmd, (ClientData)specPtr,NULL)
+	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --
@@ -190,7 +190,7 @@ MODULE_SCOPE ScrollHandle TtkCreateScrollHandle(WidgetCore *, Scrollable *);
 MODULE_SCOPE void TtkFreeScrollHandle(ScrollHandle);
 
 MODULE_SCOPE int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle);
+    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle);
 
 MODULE_SCOPE void TtkUpdateScrollInfo(ScrollHandle h);
 MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst, int updateScrollInfo);
@@ -227,7 +227,7 @@ MODULE_SCOPE void Ttk_DeleteTagFromTable(Ttk_TagTable, Ttk_Tag);
 
 MODULE_SCOPE int Ttk_ConfigureTag(
     Tcl_Interp *interp, Ttk_TagTable tagTable, Ttk_Tag tag,
-    int objc, Tcl_Obj *const objv[]);
+    Tcl_Size objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE Ttk_TagSet Ttk_GetTagSetFromObj(
     Tcl_Interp *interp, Ttk_TagTable, Tcl_Obj *objPtr);
@@ -237,8 +237,10 @@ MODULE_SCOPE void Ttk_FreeTagSet(Ttk_TagSet);
 
 MODULE_SCOPE int Ttk_TagSetContains(Ttk_TagSet, Ttk_Tag tag);
 MODULE_SCOPE int Ttk_TagSetAdd(Ttk_TagSet, Ttk_Tag tag);
+MODULE_SCOPE int Ttk_TagSetAddSet(Ttk_TagSet, Ttk_TagSet);
 MODULE_SCOPE int Ttk_TagSetRemove(Ttk_TagSet, Ttk_Tag tag);
 
+MODULE_SCOPE void Ttk_TagSetDefaults(Ttk_TagTable, Ttk_Style, void *);
 MODULE_SCOPE void Ttk_TagSetValues(Ttk_TagTable, Ttk_TagSet, void *record);
 MODULE_SCOPE void Ttk_TagSetApplyStyle(Ttk_TagTable,Ttk_Style,Ttk_State,void*);
 

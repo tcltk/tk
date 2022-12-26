@@ -2483,7 +2483,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2506,7 +2506,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2531,7 +2531,7 @@ Line 7"
     frame .t.w1
     frame .t.w2
     .t mark set a 2.2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2555,7 +2555,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2579,7 +2579,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2603,7 +2603,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2628,7 +2628,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2652,7 +2652,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2676,7 +2676,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2702,7 +2702,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2726,7 +2726,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2751,7 +2751,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2777,7 +2777,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3, but 'a' is automatically moved to 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -2801,7 +2801,7 @@ Line 7"
 # Create one visible and one invisible window
     frame .t.w1
     frame .t.w2
-# Creating this window here means that the elidden text
+# Creating this window here means that the elided text
 # now starts at 2.3
     .t window create 2.1 -window .t.w1
     .t window create 3.1 -window .t.w2
@@ -3805,7 +3805,7 @@ test text-14.18 {ConfigureText procedure} -constraints fonts -setup {
 # The "overrideredirect" gets rid of the titlebar so the toplevel can shrink
 # to the appropriate size.
 # On macOS, however, there is no way to make the window overlap the menubar.
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set minY [expr [menubarheight] + 1]
 } else {
     set minY 0
@@ -6436,7 +6436,7 @@ test text-22.250 {TextSearchCmd, backwards search all matching at start of line}
 } -result {1.1 1.0 1.0}
 
 test text-23.1 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6445,7 +6445,7 @@ test text-23.1 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {unmatched open brace in list}
 test text-23.2 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6454,7 +6454,7 @@ test text-23.2 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {bad screen distance "xyz"}
 test text-23.3 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6465,7 +6465,7 @@ test text-23.3 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {100 200}
 test text-23.4 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6479,7 +6479,7 @@ test text-23.4 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {100 200 300 400}
 test text-23.5 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6493,7 +6493,7 @@ test text-23.5 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -result {105 205 305 405}
 test text-23.6 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6502,7 +6502,7 @@ test text-23.6 {TkTextGetTabs procedure} -setup {
     destroy .t
 } -returnCodes {error} -result {bad tab alignment "lork": must be left, right, center, or numeric}
 test text-23.7 {TkTextGetTabs procedure} -setup {
-    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 100
+    text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
 } -body {
     .t insert end "1\t2\t3\t4\t55.5"
@@ -6902,7 +6902,6 @@ test text-27.11 {TextEditCmd procedure, set modified flag repeat} -setup {
 # Make sure the Text is mapped before we start
     update
     set ::retval {}
-    update
 } -body {
     bind .t <<Modified>> "lappend ::retval modified"
 # Shouldn't require [update idle] to trigger event [Bug 1809538]

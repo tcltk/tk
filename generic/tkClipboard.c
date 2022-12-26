@@ -19,12 +19,12 @@
  * Prototypes for functions used only in this file:
  */
 
-static TkSizeT	ClipboardAppHandler(ClientData clientData,
-			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
-static TkSizeT	ClipboardHandler(ClientData clientData,
-			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
-static TkSizeT	ClipboardWindowHandler(ClientData clientData,
-			    TkSizeT offset, char *buffer, TkSizeT maxBytes);
+static Tcl_Size	ClipboardAppHandler(ClientData clientData,
+			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
+static Tcl_Size	ClipboardHandler(ClientData clientData,
+			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
+static Tcl_Size	ClipboardWindowHandler(ClientData clientData,
+			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
 static void		ClipboardLostSel(ClientData clientData);
 static int		ClipboardGetProc(ClientData clientData,
 			    Tcl_Interp *interp, const char *portion);
@@ -48,20 +48,20 @@ static int		ClipboardGetProc(ClientData clientData,
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 ClipboardHandler(
     ClientData clientData,	/* Information about data to fetch. */
-    TkSizeT offset,			/* Return selection bytes starting at this
+    Tcl_Size offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    Tcl_Size maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     TkClipboardTarget *targetPtr = (TkClipboardTarget *)clientData;
     TkClipboardBuffer *cbPtr;
     char *srcPtr, *destPtr;
-    TkSizeT count = 0;
-    TkSizeT scanned = 0;
-    TkSizeT length, freeCount;
+    Tcl_Size count = 0;
+    Tcl_Size scanned = 0;
+    Tcl_Size length, freeCount;
 
     /*
      * Skip to buffer containing offset byte
@@ -126,16 +126,16 @@ ClipboardHandler(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 ClipboardAppHandler(
     ClientData clientData,	/* Pointer to TkDisplay structure. */
-    TkSizeT offset,			/* Return selection bytes starting at this
+    Tcl_Size offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    TkSizeT maxBytes)		/* Maximum # of bytes to store at buffer. */
+    Tcl_Size maxBytes)		/* Maximum # of bytes to store at buffer. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
-    TkSizeT length;
+    Tcl_Size length;
     const char *p;
 
     p = dispPtr->clipboardAppPtr->winPtr->nameUid;
@@ -171,13 +171,13 @@ ClipboardAppHandler(
  *----------------------------------------------------------------------
  */
 
-static TkSizeT
+static Tcl_Size
 ClipboardWindowHandler(
     TCL_UNUSED(void *),	/* Not used. */
-    TCL_UNUSED(TkSizeT),			/* Return selection bytes starting at this
+    TCL_UNUSED(Tcl_Size),			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
-    TCL_UNUSED(TkSizeT))		/* Maximum # of bytes to store at buffer. */
+    TCL_UNUSED(Tcl_Size))		/* Maximum # of bytes to store at buffer. */
 {
     buffer[0] = '.';
     buffer[1] = 0;
@@ -451,7 +451,7 @@ Tk_ClipboardObjCmd(
 	};
 	enum appendOptions { APPEND_DISPLAYOF, APPEND_FORMAT, APPEND_TYPE };
 	int subIndex;
-	TkSizeT length;
+	Tcl_Size length;
 
 	for (i = 2; i < objc - 1; i++) {
 	    string = Tcl_GetStringFromObj(objv[i], &length);
@@ -712,7 +712,7 @@ ClipboardGetProc(
     Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
     Tcl_DString ds;
 
-    Tcl_ExternalToUtfDString(utf8, portion, -1, &ds);
+    (void)Tcl_ExternalToUtfDStringEx(utf8, portion, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
     Tcl_DStringAppend((Tcl_DString *) clientData, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     Tcl_FreeEncoding(utf8);

@@ -19,6 +19,7 @@
 #elif !defined(MAC_OSX_TK)
 #include "tkUnixInt.h"
 #endif
+#include "tkUuid.h"
 
 /*
  * Type used to keep track of Window objects that were only partially
@@ -95,7 +96,7 @@ static const XSetWindowAttributes defAtts= {
 #define USEINITPROC 8
 #define SAVEUPDATECMD 16 /* better only be one of these! */
 
-typedef int (TkInitProc)(Tcl_Interp *interp, ClientData clientData);
+typedef int (TkInitProc)(Tcl_Interp *interp, void *clientData);
 typedef struct {
     const char *name;		/* Name of command. */
     Tcl_ObjCmdProc *objProc;	/* Command's object- (or string-) based
@@ -207,7 +208,7 @@ static const TkCmd commands[] = {
 static Tk_Window	CreateTopLevelWindow(Tcl_Interp *interp,
 			    Tk_Window parent, const char *name,
 			    const char *screenName, unsigned int flags);
-static void		DeleteWindowsExitProc(ClientData clientData);
+static void		DeleteWindowsExitProc(void *clientData);
 static TkDisplay *	GetScreen(Tcl_Interp *interp, const char *screenName,
 			    int *screenPtr);
 static int		Initialize(Tcl_Interp *interp);
@@ -657,7 +658,7 @@ TkAllocWindow(
     winPtr->inputContext = NULL;
     winPtr->tagPtr = NULL;
     winPtr->numTags = 0;
-    winPtr->optionLevel = -1;
+    winPtr->optionLevel = TCL_INDEX_NONE;
     winPtr->selHandlerList = NULL;
     winPtr->geomMgrPtr = NULL;
     winPtr->geomData = NULL;
@@ -817,6 +818,11 @@ NameWindow(
  *----------------------------------------------------------------------
  */
 
+#ifndef STRINGIFY
+#  define STRINGIFY(x) STRINGIFY1(x)
+#  define STRINGIFY1(x) #x
+#endif
+
 Tk_Window
 TkCreateMainWindow(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
@@ -832,7 +838,8 @@ TkCreateMainWindow(
     TkMainInfo *mainPtr;
     TkWindow *winPtr;
     const TkCmd *cmdPtr;
-    ClientData clientData;
+    void *clientData;
+    Tcl_CmdInfo info;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -878,6 +885,9 @@ TkCreateMainWindow(
     mainPtr->strictMotif = 0;
     mainPtr->alwaysShowSelection = 0;
     mainPtr->tclUpdateObjProc = NULL;
+#if TCL_MAJOR_VERSION > 8
+    mainPtr->tclUpdateObjProc2 = NULL;
+#endif
     if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
@@ -940,8 +950,15 @@ TkCreateMainWindow(
 	}
 	if ((cmdPtr->flags & SAVEUPDATECMD) &&
 	    Tcl_GetCommandInfo(interp, cmdPtr->name, &cmdInfo) &&
-	    cmdInfo.isNativeObjectProc && !cmdInfo.objClientData && !cmdInfo.deleteProc) {
-	    mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+	    cmdInfo.isNativeObjectProc && !cmdInfo.deleteProc) {
+#if TCL_MAJOR_VERSION > 8
+	    if ((cmdInfo.isNativeObjectProc == 2) && !cmdInfo.objClientData2) {
+		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
+	    } else
+#endif
+	    if (!cmdInfo.objClientData ) {
+		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
+	    }
 	}
 	if (cmdPtr->flags & USEINITPROC) {
 	    ((TkInitProc *)(void *)cmdPtr->objProc)(interp, clientData);
@@ -952,6 +969,90 @@ TkCreateMainWindow(
 	if (isSafe && !(cmdPtr->flags & ISSAFE)) {
 	    Tcl_HideCommand(interp, cmdPtr->name, cmdPtr->name);
 	}
+    }
+    if (Tcl_GetCommandInfo(interp, "::tcl::build-info", &info)) {
+	static const char version[] = TK_PATCH_LEVEL "+" STRINGIFY(TK_VERSION_UUID)
+#if defined(MAC_OSX_TK)
+		".aqua"
+#endif
+#if defined(__clang__) && defined(__clang_major__)
+		".clang-" STRINGIFY(__clang_major__)
+#if __clang_minor__ < 10
+		"0"
+#endif
+		STRINGIFY(__clang_minor__)
+#endif
+#if defined(__cplusplus) && !defined(__OBJC__)
+		".cplusplus"
+#endif
+#ifndef NDEBUG
+		".debug"
+#endif
+#if !defined(__clang__) && !defined(__INTEL_COMPILER) && defined(__GNUC__)
+		".gcc-" STRINGIFY(__GNUC__)
+#if __GNUC_MINOR__ < 10
+		"0"
+#endif
+		STRINGIFY(__GNUC_MINOR__)
+#endif
+#ifdef __INTEL_COMPILER
+		".icc-" STRINGIFY(__INTEL_COMPILER)
+#endif
+#ifdef TCL_MEM_DEBUG
+		".memdebug"
+#endif
+#if defined(_MSC_VER)
+		".msvc-" STRINGIFY(_MSC_VER)
+#endif
+#ifdef USE_NMAKE
+		".nmake"
+#endif
+#ifdef TK_NO_DEPRECATED
+		".no-deprecate"
+#endif
+#ifndef TCL_CFG_OPTIMIZED
+		".no-optimize"
+#endif
+#ifdef __OBJC__
+		".objective-c"
+#if defined(__cplusplus)
+		"plusplus"
+#endif
+#endif
+#ifdef TCL_CFG_PROFILED
+		".profile"
+#endif
+#ifdef PURIFY
+		".purify"
+#endif
+		".revised-text"
+#ifdef STATIC_BUILD
+		".static"
+#endif
+#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+		".utf-16"
+#endif
+#if defined(_WIN32)
+		".win32"
+#endif
+#if !defined(_WIN32) && !defined(MAC_OSX_TK)
+		".x11"
+#if !defined(HAVE_XFT)
+		".no-xft"
+#endif
+#endif
+		;
+#if TCL_MAJOR_VERSION > 8
+	if (info.isNativeObjectProc == 2) {
+	    Tcl_CreateObjCommand2(interp, "::tk::build-info",
+		    info.objProc2, (void *)
+		    version, NULL);
+
+	} else
+#endif
+	Tcl_CreateObjCommand(interp, "::tk::build-info",
+		info.objProc, (void *)
+		version, NULL);
     }
 
     /*
@@ -1241,7 +1342,7 @@ void
 Tk_DestroyWindow(
     Tk_Window tkwin)		/* Window to destroy. */
 {
-    TkWindow *winPtr = (TkWindow *) tkwin;
+    TkWindow *winPtr = (TkWindow *)tkwin;
     TkDisplay *dispPtr = winPtr->dispPtr;
     XEvent event;
     TkHalfdeadWindow *halfdeadPtr, *prev_halfdeadPtr;
@@ -1358,10 +1459,10 @@ Tk_DestroyWindow(
 	 * (otherwise, for example, the Tk window may appear to exist even
 	 * though its X window is gone; this could cause errors). Special
 	 * note: it's possible that the embedded window has already been
-	 * deleted, in which case TkpGetOtherWindow will return NULL.
+	 * deleted, in which case Tk_GetOtherWindow will return NULL.
 	 */
 
-	TkWindow *childPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *childPtr = (TkWindow *)Tk_GetOtherWindow(tkwin);
 
 	if (childPtr != NULL) {
 	    childPtr->flags |= TK_DONT_DESTROY_WINDOW;
@@ -1507,13 +1608,22 @@ Tk_DestroyWindow(
 	    if ((winPtr->mainPtr->interp != NULL) &&
 		!Tcl_InterpDeleted(winPtr->mainPtr->interp)) {
 		for (cmdPtr = commands; cmdPtr->name != NULL; cmdPtr++) {
-		    if ((cmdPtr->flags & SAVEUPDATECMD) &&
-			winPtr->mainPtr->tclUpdateObjProc != NULL) {
+		    if (cmdPtr->flags & SAVEUPDATECMD) {
 			/* Restore Tcl's version of [update] */
-			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
-					     cmdPtr->name,
-					     winPtr->mainPtr->tclUpdateObjProc,
-					     NULL, NULL);
+#if TCL_MAJOR_VERSION > 8
+			if (winPtr->mainPtr->tclUpdateObjProc2 != NULL) {
+			    Tcl_CreateObjCommand2(winPtr->mainPtr->interp,
+				    cmdPtr->name,
+				    winPtr->mainPtr->tclUpdateObjProc2,
+				    NULL, NULL);
+			} else
+#endif
+			if (winPtr->mainPtr->tclUpdateObjProc != NULL) {
+			    Tcl_CreateObjCommand(winPtr->mainPtr->interp,
+				    cmdPtr->name,
+				    winPtr->mainPtr->tclUpdateObjProc,
+				    NULL, NULL);
+			}
 		    } else {
 			Tcl_CreateObjCommand(winPtr->mainPtr->interp,
 					     cmdPtr->name, TkDeadAppObjCmd,
@@ -1661,7 +1771,7 @@ Tk_MapWindow(
     event.xmap.event = winPtr->window;
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
-    TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -1712,7 +1822,7 @@ Tk_MakeWindowExist(
     if (createProc != NULL && parent != None) {
 	winPtr->window = createProc(tkwin, parent, winPtr->instanceData);
     } else {
-	winPtr->window = TkpMakeWindow(winPtr, parent);
+	winPtr->window = Tk_MakeWindow(tkwin, parent);
     }
 
     hPtr = Tcl_CreateHashEntry(&winPtr->dispPtr->winTable,
@@ -1823,7 +1933,7 @@ Tk_UnmapWindow(
 	event.xunmap.event = winPtr->window;
 	event.xunmap.window = winPtr->window;
 	event.xunmap.from_configure = False;
-	TkpHandleMapOrUnmap((Tk_Window)winPtr, &event);
+	Tk_HandleEvent(&event);
     }
 }
 
@@ -2268,7 +2378,7 @@ void
 Tk_SetClassProcs(
     Tk_Window tkwin,		/* Token for window to modify. */
     const Tk_ClassProcs *procs,	/* Class procs structure. */
-    ClientData instanceData)	/* Data to be passed to class functions. */
+    void *instanceData)	/* Data to be passed to class functions. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
@@ -2757,7 +2867,7 @@ Tk_AlwaysShowSelection(
 
 static void
 DeleteWindowsExitProc(
-    ClientData clientData)	/* tsdPtr when handler was created. */
+    void *clientData)	/* tsdPtr when handler was created. */
 {
     TkDisplay *dispPtr, *nextPtr;
     Tcl_Interp *interp;
@@ -2863,7 +2973,7 @@ TkCygwinMainEx(
     void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
-    len = GetModuleFileNameW(Tk_GetHINSTANCE(), name, MAX_PATH);
+    len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
@@ -3020,12 +3130,10 @@ MODULE_SCOPE const TkStubs tkStubs;
 
 static int
 CopyValue(
-    ClientData dummy,
+    TCL_UNUSED(void *),
     Tcl_Obj *objPtr,
     void *dstPtr)
 {
-    (void)dummy;
-
     *(Tcl_Obj **)dstPtr = objPtr;
     return 1;
 }
@@ -3169,7 +3277,7 @@ Initialize(
     }
 
     if (value) {
-	int objc;
+	Tcl_Size objc;
 	Tcl_Obj **objv, **rest;
 	Tcl_Obj *parseList = Tcl_NewListObj(1, NULL);
 
@@ -3219,7 +3327,7 @@ Initialize(
      */
 
     {
-	TkSizeT numBytes;
+	Tcl_Size numBytes;
 	const char *bytes = Tcl_GetStringFromObj(nameObj, &numBytes);
 
 	classObj = Tcl_NewStringObj(bytes, numBytes);
@@ -3307,10 +3415,10 @@ Initialize(
 
 #ifndef TK_NO_DEPRECATED
     Tcl_PkgProvideEx(interp, "Tk", TK_PATCH_LEVEL,
-	    (ClientData) &tkStubs);
+	    (void *)&tkStubs);
 #endif
     code = Tcl_PkgProvideEx(interp, "tk", TK_PATCH_LEVEL,
-	    (ClientData) &tkStubs);
+	    (void *)&tkStubs);
     if (code != TCL_OK) {
 	goto done;
     }

@@ -19,7 +19,7 @@
  * by Tk_GetReliefFromObj.
  */
 
-static const char *const reliefStrings[] = {
+const char *const tkReliefStrings[] = {
     "flat", "groove", "raised", "ridge", "solid", "sunken", NULL
 };
 
@@ -46,12 +46,14 @@ static void		ShiftLine(XPoint *p1Ptr, XPoint *p2Ptr,
  * is set.
  */
 
-const Tcl_ObjType tkBorderObjType = {
-    "border",			/* name */
+const TkObjType tkBorderObjType = {
+    {"border",			/* name */
     FreeBorderObjProc,		/* freeIntRepProc */
     DupBorderObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -87,7 +89,7 @@ Tk_Alloc3DBorderFromObj(
 {
     TkBorder *borderPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType) {
+    if (objPtr->typePtr != &tkBorderObjType.objType) {
 	InitBorderObj(objPtr);
     }
     borderPtr = (TkBorder *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -623,7 +625,7 @@ Tk_GetReliefFromObj(
 				 * from. */
     int *resultPtr)		/* Where to place the answer. */
 {
-    return Tcl_GetIndexFromObjStruct(interp, objPtr, reliefStrings,
+    return Tcl_GetIndexFromObjStruct(interp, objPtr, tkReliefStrings,
 	    sizeof(char *), "relief", 0, resultPtr);
 }
 
@@ -748,7 +750,7 @@ Tk_Draw3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    int numPoints,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints1,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -763,6 +765,7 @@ Tk_Draw3DPolygon(
     GC gc;
     int i, lightOnLeft, dx, dy, parallel, pointsSeen;
     Display *display = Tk_Display(tkwin);
+    int numPoints = numPoints1;
 
     if (borderPtr->lightGC == NULL) {
 	TkpGetShadows(borderPtr, tkwin);
@@ -1017,7 +1020,7 @@ Tk_Fill3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    int numPoints,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints1,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -1027,6 +1030,7 @@ Tk_Fill3DPolygon(
 				 * TK_RELIEF_SUNKEN. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
+    int numPoints = numPoints1;
 
     XFillPolygon(Tk_Display(tkwin), drawable, borderPtr->bgGC,
 	    pointPtr, numPoints, Complex, CoordModeOrigin);
@@ -1242,7 +1246,7 @@ Tk_Get3DBorderFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBorderObjType) {
+    if (objPtr->typePtr != &tkBorderObjType.objType) {
 	InitBorderObj(objPtr);
     }
 
@@ -1334,7 +1338,7 @@ InitBorderObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBorderObjType;
+    objPtr->typePtr = &tkBorderObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -1386,6 +1390,40 @@ TkDebugBorder(
 	}
     }
     return resultPtr;
+}
+
+/*
+ *--------------------------------------------------------------
+ *
+ * Tk_Get3BorderColors --
+ *
+ *	Given a Tk_3DBorder determine its 3 colors.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *--------------------------------------------------------------
+ */
+
+void
+Tk_Get3DBorderColors(
+    Tk_3DBorder border,
+    XColor *bgColorPtr,
+    XColor *darkColorPtr,
+    XColor *lightColorPtr)
+{
+    if (bgColorPtr) {
+	*bgColorPtr = *((TkBorder *)border)->bgColorPtr;
+    }
+    if (darkColorPtr) {
+	*darkColorPtr = *((TkBorder *) border)->darkColorPtr;
+    }
+    if (lightColorPtr) {
+	*lightColorPtr = *((TkBorder *) border)->lightColorPtr;
+    }
 }
 
 /*

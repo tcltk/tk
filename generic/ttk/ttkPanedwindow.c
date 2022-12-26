@@ -77,7 +77,7 @@ typedef struct {
 static const Tk_OptionSpec PanedOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	offsetof(Paned,paned.orientObj), offsetof(Paned,paned.orient),
-	0, (void *)ttkOrientStrings, READONLY_OPTION|STYLE_CHANGED },
+	0, ttkOrientStrings, READONLY_OPTION|STYLE_CHANGED },
     {TK_OPTION_INT, "-width", "width", "Width", "0",
 	TCL_INDEX_NONE, offsetof(Paned, paned.width),
 	0, 0, GEOMETRY_CHANGED },
@@ -206,7 +206,7 @@ static int ShoveUp(Paned *pw, int i, int pos)
  * 	Same as ShoveUp, but going in the opposite direction
  * 	and stopping at the sentinel sash.
  */
-static int ShoveDown(Paned *pw, TkSizeT i, int pos)
+static int ShoveDown(Paned *pw, Tcl_Size i, int pos)
 {
     Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr,i);
     int sashThickness = pw->paned.sashThickness;
@@ -275,7 +275,7 @@ static void AdjustPanes(Paned *pw)
 {
     int sashThickness = pw->paned.sashThickness;
     int pos = 0;
-    TkSizeT index;
+    Tcl_Size index;
 
     for (index = 0; index < Ttk_NumberContent(pw->paned.mgr); ++index) {
 	Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
@@ -372,7 +372,7 @@ static void PlacePanes(Paned *pw)
     int width = Tk_Width(pw->core.tkwin), height = Tk_Height(pw->core.tkwin);
     int sashThickness = pw->paned.sashThickness;
     int pos = 0;
-    TkSizeT index;
+    Tcl_Size index;
 
     for (index = 0; index < Ttk_NumberContent(pw->paned.mgr); ++index) {
 	Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
@@ -403,7 +403,7 @@ static void PanedPlaceContent(void *managerData)
     PlacePanes(pw);
 }
 
-static void PaneRemoved(void *managerData, TkSizeT index)
+static void PaneRemoved(void *managerData, Tcl_Size index)
 {
     Paned *pw = (Paned *)managerData;
     Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
@@ -445,7 +445,7 @@ static int AddPane(
  * 	in order to avoid unexpected pane resizes (esp. while the
  * 	user is dragging a sash [#1325286]).
  */
-static int PaneRequest(void *managerData, TkSizeT index, int width, int height)
+static int PaneRequest(void *managerData, Tcl_Size index, int width, int height)
 {
     Paned *pw = (Paned *)managerData;
     Pane *pane = (Pane *)Ttk_ContentData(pw->paned.mgr, index);
@@ -606,7 +606,7 @@ static void DrawSash(Paned *pw, int index, Drawable d)
 static void PanedDisplay(void *recordPtr, Drawable d)
 {
     Paned *pw = (Paned *)recordPtr;
-    TkSizeT i, nContent = Ttk_NumberContent(pw->paned.mgr);
+    Tcl_Size i, nContent = Ttk_NumberContent(pw->paned.mgr);
 
     TtkWidgetDisplay(recordPtr, d);
     for (i = 1; i < nContent; ++i) {
@@ -649,8 +649,8 @@ static int PanedInsertCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    TkSizeT nContent = Ttk_NumberContent(pw->paned.mgr);
-    TkSizeT srcIndex, destIndex;
+    Tcl_Size nContent = Ttk_NumberContent(pw->paned.mgr);
+    Tcl_Size srcIndex, destIndex;
     Tk_Window window;
 
     if (objc < 4) {
@@ -692,7 +692,7 @@ static int PanedForgetCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    TkSizeT paneIndex;
+    Tcl_Size paneIndex;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2,objv, "pane");
@@ -772,7 +772,7 @@ static int PanedPaneCommand(
     void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    TkSizeT paneIndex;
+    Tcl_Size paneIndex;
     Tk_Window window;
     Pane *pane;
 
@@ -813,7 +813,7 @@ static int PanedPanesCommand(
     Paned *pw = (Paned *)recordPtr;
     Ttk_Manager *mgr = pw->paned.mgr;
     Tcl_Obj *panes;
-    TkSizeT i;
+    Tcl_Size i;
 
     if (objc != 2) {
 	Tcl_WrongNumArgs(interp, 2, objv, "");
@@ -848,7 +848,7 @@ static int PanedSashposCommand(
     if (Tcl_GetIntFromObj(interp, objv[2], &sashIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (sashIndex < 0 || (TkSizeT)sashIndex + 1 >= Ttk_NumberContent(pw->paned.mgr)) {
+    if (sashIndex < 0 || (Tcl_Size)sashIndex + 1 >= Ttk_NumberContent(pw->paned.mgr)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "sash index %d out of range", sashIndex));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);

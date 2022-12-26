@@ -13,11 +13,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 tk useinputmethods 0
 
-testConstraint nodeprecated [expr {"nodeprecated" ni [tk::pkgconfig list]}]
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
-testConstraint failsOnWindows [expr {![info exists ::env(CI)] || [tk windowingsystem] ne "win32"}]
-
-
 toplevel .t -width 100 -height 50
 wm geom .t +0+0
 update idletasks
@@ -2230,7 +2225,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind all <Key> $savedBind(All)
     unset savedBind
 } -result {0 1 2}
-test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87 failsOnWindows} -setup {
+test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
@@ -2238,11 +2233,11 @@ test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87 
 } -body {
     bind .t.f <Key> {set x "%K"}
     set x none
-    event generate .t.f <Key> -keysym €
+    event generate .t.f <Key> -keysym :
     set x
 } -cleanup {
     destroy .t.f
-} -result €
+} -result :
 
 test bind-17.1 {event command} -body {
     event
@@ -5498,6 +5493,23 @@ test bind-25.53 {modifier names} -setup {
     destroy .t.f
 } -result <B9-Key-a>
 
+test bind-25.54 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Num-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod3-Key-a>
+
+test bind-25.55 {modifier names} -setup {
+    frame .t.f -class Test -width 150 -height 100
+} -body {
+    bind .t.f <Fn-a> foo
+    bind .t.f
+} -cleanup {
+    destroy .t.f
+} -result <Mod4-Key-a>
 
 
 test bind-26.1 {event names} -setup {
@@ -6012,7 +6024,7 @@ test bind-28.9 {keysym names, Ð} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-Ð>
-test bind-28.10 {keysym names, Ø} -constraints nodeprecated -body {
+test bind-28.10 {keysym names, Ø} -constraints deprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Ø> foo
     bind .t.f
@@ -6026,7 +6038,7 @@ test bind-28.11 {keysym names, gcedilla} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-gcedilla>
-test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -body {
+test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -constraints deprecated -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Greek_IOTAdiaeresis> foo
     bind .t.f
@@ -6510,7 +6522,7 @@ test bind-33.2 {prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {Double}
+} -result Double
 test bind-33.3 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6526,7 +6538,7 @@ test bind-33.3 {prefer most specific event} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {Double}
+} -result Double
 test bind-33.4 {prefer most specific event} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6618,7 +6630,7 @@ test bind-33.9 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.10 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6635,7 +6647,7 @@ test bind-33.10 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.11 {should prefer most specific} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6656,7 +6668,7 @@ test bind-33.11 {should prefer most specific} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {first}
+} -result first
 test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6670,15 +6682,15 @@ test bind-33.12 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.13 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
     update
     set x {}
 } -body {
-    bind .t.f <Button-1><Control-1> { lappend x "first" }
-    bind .t.f <Control-1><Button-1> { lappend x "last" }
+    bind .t.f <Button-1><Control-Button-1> { lappend x "first" }
+    bind .t.f <Control-Button-1><Button-1> { lappend x "last" }
     event generate .t.f <Control-Button-1>
     event generate .t.f <Control-Button-1>
     set x
@@ -6687,7 +6699,7 @@ test bind-33.13 {prefer last in case of homogeneous equal patterns} -setup {
     # Old implementation failed, and returned "first", but this was wrong,
     # because both bindings are homogeneous equal, so the most recently defined
     # must be preferred.
-} -result {last}
+} -result last
 test bind-33.14 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6703,7 +6715,7 @@ test bind-33.14 {prefer last in case of homogeneous equal patterns} -setup {
     set x
 } -cleanup {
     destroy .t.f
-} -result {last}
+} -result last
 test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -6722,7 +6734,7 @@ test bind-33.15 {prefer last in case of homogeneous equal patterns} -setup {
     # Old implementation failed, and returned "first", but this was wrong,
     # because both bindings are homogeneous equal, so the most recently defined
     # must be preferred.
-} -result {last}
+} -result last
 test bind-33.16 {simulate use of the keyboard to trigger a pattern sequence with modifier - bug [16ef161925]} -setup {
     pack [frame .t.f]
     focus -force .t.f
@@ -7001,8 +7013,8 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
     global keyInfo numericalKeysym
     set result {}
     bind . <Key> {
-    	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-    	set numericalKeysym [format "0x%x" %N]
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericalKeysym [format "0x%x" %N]
     }
     foreach event {
 	{<Control_L> -control}
@@ -7066,6 +7078,27 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     destroy .top
     unset x1 y1 x2 y2
 } -result 1
+
+test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [43573999ca]} -body {
+    proc A {} {
+       bind .c <B1-Motion><Enter> {}
+       set myv(a) 1
+       set b [array get myv]
+       bind .c <B1-Motion><Enter> "puts Trigger"
+    }
+    pack [canvas .c]
+    bind .c <ButtonRelease-1>  "A"
+    A
+    update
+    event generate .c <Button-1>
+    event generate .c <B1-Motion>
+    event generate .c <B1-Motion>
+    event generate .c <B1-Motion>
+    event generate .c <ButtonRelease-1>
+    event generate .c <B1-Motion>
+} -cleanup {
+    destroy .c
+} -returnCodes ok -result {}  ; # shall not crash (assertion failed)
 
 # cleanup
 cleanupTests

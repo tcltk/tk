@@ -247,16 +247,16 @@ struct PhotoInstance {
 
 MODULE_SCOPE void	TkImgPhotoConfigureInstance(
 			    PhotoInstance *instancePtr);
-MODULE_SCOPE void	TkImgDisposeInstance(ClientData clientData);
+MODULE_SCOPE void	TkImgDisposeInstance(void *clientData);
 MODULE_SCOPE void	TkImgPhotoInstanceSetSize(PhotoInstance *instancePtr);
-MODULE_SCOPE ClientData	TkImgPhotoGet(Tk_Window tkwin, ClientData clientData);
+MODULE_SCOPE void *TkImgPhotoGet(Tk_Window tkwin, void *clientData);
 MODULE_SCOPE void	TkImgDitherInstance(PhotoInstance *instancePtr, int x,
 			    int y, int width, int height);
-MODULE_SCOPE void	TkImgPhotoDisplay(ClientData clientData,
+MODULE_SCOPE void	TkImgPhotoDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width, int height,
 			    int drawableX, int drawableY);
-MODULE_SCOPE void	TkImgPhotoFree(ClientData clientData,
+MODULE_SCOPE void	TkImgPhotoFree(void *clientData,
 			    Display *display);
 MODULE_SCOPE void	TkImgResetDither(PhotoInstance *instancePtr);
 

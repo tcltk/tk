@@ -24,12 +24,14 @@ static int numSystemColors;
 static int rgbColorIndex;
 static int controlAccentIndex;
 static int selectedTabTextIndex;
+static int pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 static NSAppearance *lightAqua = nil;
 static NSAppearance *darkAqua = nil;
 #endif
+
 static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
@@ -67,7 +69,8 @@ void initColorTable()
 	    if (![NSColor respondsToSelector:colorSelector]) {
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
-		} else if (![colorName isEqualToString:@"selectedTabTextColor"]) {
+		} else if (   ![colorName isEqualToString:@"selectedTabTextColor"]
+			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
 		    continue;
@@ -147,6 +150,9 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "SelectedTabTextColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     selectedTabTextIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "PressedButtonTextColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    pressedButtonTextIndex = entry->index;
     [pool drain];
 }
 
@@ -278,6 +284,7 @@ GetRGBA(
     CGFloat *rgba)
 {
     NSColor *bgColor, *color = nil;
+    int OSVersion = [NSApp macOSVersion];
 
     if (!sRGB) {
 	sRGB = [NSColorSpace sRGBColorSpace];
@@ -293,7 +300,7 @@ GetRGBA(
 
 	/*
 	 * Prior to OSX 10.14, getComponents returns black when applied to
-	 * windowBackGroundColor.
+	 * windowBackgroundColor.
 	 */
 
 	if ([NSApp macOSVersion] < 101400) {
@@ -325,11 +332,16 @@ GetRGBA(
 			      colorUsingColorSpace:sRGB];
 #endif
 	} else if (entry->index == selectedTabTextIndex) {
-	    int OSVersion = [NSApp macOSVersion];
-	    if (OSVersion > 100600 && OSVersion < 101600) {
+	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
 	    } else {
 		color = [[NSColor textColor] colorUsingColorSpace:sRGB];
+	    }
+	} else if (entry->index == pressedButtonTextIndex) {
+	    if (OSVersion < 120000) {
+		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
+	    } else {
+		color = [[NSColor blackColor] colorUsingColorSpace:sRGB];
 	    }
 	} else {
 	    color = [[NSColor valueForKey:entry->selector] colorUsingColorSpace:sRGB];
@@ -378,6 +390,7 @@ SetCGColorComponents(
 
     if (entry->type == HIBrush) {
      	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+	[pool drain];
      	return err == noErr;
     }
     GetRGBA(entry, pixel, rgba);
@@ -417,7 +430,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 	if (view) {
 	    name = [[view effectiveAppearance] name];
 	} else {
-	    name = [[NSAppearance currentAppearance] name];
+	    name = [[NSApp effectiveAppearance] name];
 	}
 	return (name == NSAppearanceNameDarkAqua);
     }
@@ -483,13 +496,16 @@ TkMacOSXGetNSColor(
     TCL_UNUSED(GC),
     unsigned long pixel)		/* Pixel value to convert. */
 {
-    CGColorRef cgColor;
+    CGColorRef cgColor = NULL;
     NSColor *nsColor = nil;
 
     TkSetMacColor(pixel, &cgColor);
-    nsColor = [NSColor colorWithColorSpace:sRGB
-		   components:CGColorGetComponents(cgColor)
-		   count:CGColorGetNumberOfComponents(cgColor)];
+    if (cgColor) {
+	nsColor = [NSColor colorWithColorSpace:sRGB
+			components:CGColorGetComponents(cgColor)
+			count:CGColorGetNumberOfComponents(cgColor)];
+	CGColorRelease(cgColor);
+    }
     return nsColor;
 }
 
@@ -518,7 +534,7 @@ TkMacOSXSetColorInContext(
     CGContextRef context)
 {
     OSStatus err = noErr;
-    CGColorRef cgColor = nil;
+    CGColorRef cgColor = NULL;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
 
     if (entry) {
@@ -581,11 +597,9 @@ TkpGetColor(
     Colormap colormap = tkwin ? Tk_Colormap(tkwin) : noColormap;
     NSView *view = nil;
     static Bool initialized = NO;
-    static NSColorSpace* sRGB = nil;
 
     if (!initialized) {
 	initialized = YES;
-	sRGB = [NSColorSpace sRGBColorSpace];
 	initColorTable();
     }
     if (tkwin) {
@@ -604,7 +618,7 @@ TkpGetColor(
 
 	if (hPtr != NULL) {
 	    SystemColorDatum *entry = (SystemColorDatum *)Tcl_GetHashValue(hPtr);
-	    CGColorRef c;
+	    CGColorRef c = NULL;
 
 	    p.pixel.colortype = entry->type;
 	    p.pixel.value = entry->index;
@@ -613,19 +627,32 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		if (@available(macOS 10.14, *)) {
-		    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-		    NSAppearance *windowAppearance = savedAppearance;
+		    NSAppearance *windowAppearance;
 		    if (view) {
 			windowAppearance = [view effectiveAppearance];
+		    } else {
+			windowAppearance = [NSApp effectiveAppearance];
 		    }
 		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 			colormap = darkColormap;
 		    } else {
 			colormap = lightColormap;
 		    }
-		    [NSAppearance setCurrentAppearance:windowAppearance];
-		    GetRGBA(entry, p.ulong, rgba);
-		    [NSAppearance setCurrentAppearance:savedAppearance];
+		    if (@available(macOS 11.0, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+			CGFloat *rgbaPtr = rgba;
+			[windowAppearance performAsCurrentDrawingAppearance:^{
+				GetRGBA(entry, p.ulong, rgbaPtr);
+			    }];
+#endif
+		    } else {
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
+			[NSAppearance setCurrentAppearance:windowAppearance];
+			GetRGBA(entry, p.ulong, rgba);
+			[NSAppearance setCurrentAppearance:savedAppearance];
+#endif
+		    }
 		} else {
 		    GetRGBA(entry, p.ulong, rgba);
 		}
@@ -728,7 +755,7 @@ XAllocColor(
     TCL_UNUSED(Colormap),		/* Not used. */
     XColor *colorPtr)		/* XColor struct to modify. */
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     colorPtr->pixel = TkpGetPixel(colorPtr);
     return 1;
 }

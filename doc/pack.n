@@ -166,7 +166,7 @@ If \fIwindow\fR has no content then an empty string is returned.
 .TP
 \fBpack slaves \fIwindow\fR
 .
-Synonym for . \fBpack content \fIwindow\fR
+Synonym for \fBpack content \fIwindow\fR.
 .SH "THE PACKER ALGORITHM"
 .PP
 For each container the packer maintains an ordered list of content

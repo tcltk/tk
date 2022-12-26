@@ -101,7 +101,7 @@ DllMain(
     DWORD reason,
     LPVOID reserved)
 {
-#ifdef HAVE_NO_SEH
+#if defined(HAVE_NO_SEH) && !defined(__aarch64__)
     TCLEXCEPTION_REGISTRATION registration;
 #endif
     (void)reserved;
@@ -120,11 +120,13 @@ DllMain(
     case DLL_PROCESS_DETACH:
 	/*
 	 * Protect the call to TkFinalize in an SEH block. We can't be
-	 * guarenteed Tk is always being unloaded from a stable condition.
+	 * guaranteed Tk is always being unloaded from a stable condition.
 	 */
 
 #ifdef HAVE_NO_SEH
-#   ifdef __WIN64
+#   if defined(__aarch64__)
+	/* Don't run TkFinalize(NULL) on mingw-w64 for ARM64, since we don't have corresponding assembler-code. */
+#   elif defined(_WIN64)
 	__asm__ __volatile__ (
 
 	    /*

@@ -67,7 +67,7 @@ typedef struct {
     Tcl_Obj *textPtr;		/* Value of -text option: specifies text to
 				 * display in button. */
     int underline;		/* Value of -underline option: specifies index
-				 * of character to underline. < 0 means don't
+				 * of character to underline. INT_MIN means don't
 				 * underline anything. */
     Tcl_Obj *textVarNamePtr;	/* Value of -textvariable option: specifies
 				 * name of variable or NULL. If non-NULL,
@@ -308,14 +308,14 @@ MODULE_SCOPE char tkDefLabelPady[TCL_INTEGER_SPACE];
 #ifndef TkpButtonSetDefaults
 MODULE_SCOPE void	TkpButtonSetDefaults(void);
 #endif
-MODULE_SCOPE void	TkButtonWorldChanged(ClientData instanceData);
+MODULE_SCOPE void	TkButtonWorldChanged(void *instanceData);
 MODULE_SCOPE void	TkpComputeButtonGeometry(TkButton *butPtr);
 MODULE_SCOPE TkButton	*TkpCreateButton(Tk_Window tkwin);
 #ifndef TkpDestroyButton
 MODULE_SCOPE void 	TkpDestroyButton(TkButton *butPtr);
 #endif
 #ifndef TkpDisplayButton
-MODULE_SCOPE void	TkpDisplayButton(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayButton(void *clientData);
 #endif
 MODULE_SCOPE int	TkInvokeButton(TkButton *butPtr);
 

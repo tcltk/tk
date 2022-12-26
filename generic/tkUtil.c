@@ -18,12 +18,14 @@
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-const Tcl_ObjType tkStateKeyObjType = {
-    "statekey",			/* name */
+const TkObjType tkStateKeyObjType = {
+    {"statekey",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -46,12 +48,12 @@ const Tcl_ObjType tkStateKeyObjType = {
 
 int
 TkStateParseProc(
-    ClientData clientData,	/* some flags.*/
+    void *clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     int c;
     int flags = PTR2INT(clientData);
@@ -128,7 +130,7 @@ TkStatePrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset into item. */
+    Tcl_Size offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -174,7 +176,7 @@ TkOrientParseProc(
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset)			/* Offset into item. */
+    Tcl_Size offset)			/* Offset into item. */
 {
     int c;
     size_t length;
@@ -230,7 +232,7 @@ TkOrientPrintProc(
     TCL_UNUSED(void *),	/* Ignored. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
-    TkSizeT offset,			/* Offset into item. */
+    Tcl_Size offset,			/* Offset into item. */
     TCL_UNUSED(Tcl_FreeProc **))	/* Pointer to variable to fill in with
 				 * information about how to reclaim storage
 				 * for return string. */
@@ -257,12 +259,12 @@ TkOrientPrintProc(
 
 int
 TkOffsetParseProc(
-    ClientData clientData,	/* not used */
+    void *clientData,	/* not used */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset)			/* Offset of tile in record */
+    Tcl_Size offset)			/* Offset of tile in record */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
     Tk_TSOffset tsoffset;
@@ -412,7 +414,7 @@ TkOffsetPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset,			/* Offset of tile in record */
+    Tcl_Size offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     Tk_TSOffset *offsetPtr = (Tk_TSOffset *) (widgRec + offset);
@@ -473,13 +475,13 @@ TkOffsetPrintProc(
 
 int
 TkPixelParseProc(
-    ClientData clientData,	/* If non-NULL, negative values are allowed as
+    void *clientData,	/* If non-NULL, negative values are allowed as
 				 * well. */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset)			/* Offset of tile in record */
+    Tcl_Size offset)			/* Offset of tile in record */
 {
     double *doublePtr = (double *) (widgRec + offset);
     int result;
@@ -513,7 +515,7 @@ TkPixelPrintProc(
     TCL_UNUSED(void *),	/* not used */
     TCL_UNUSED(Tk_Window),		/* not used */
     char *widgRec,		/* Widget structure record */
-    TkSizeT offset,			/* Offset of tile in record */
+    Tcl_Size offset,			/* Offset of tile in record */
     Tcl_FreeProc **freeProcPtr)	/* not used */
 {
     double *doublePtr = (double *) (widgRec + offset);
@@ -584,7 +586,7 @@ TkDrawInsetFocusHighlight(
  *	This function draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
  *
- *	This function is now deprecated. Use TkpDrawHighlightBorder instead,
+ *	This function is now deprecated. Use Tk_DrawHighlightBorder instead,
  *	since this function does not handle drawing the Focus ring properly on
  *	the Macintosh - you need to know the background GC as well as the
  *	foreground since the Mac focus ring separated from the widget by a 1
@@ -640,7 +642,7 @@ Tk_DrawFocusHighlight(
 int
 Tk_GetScrollInfo(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int argc,			/* # arguments for command. */
+    Tcl_Size argc,			/* # arguments for command. */
     const char **argv,		/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
@@ -723,16 +725,21 @@ Tk_GetScrollInfo(
 int
 Tk_GetScrollInfoObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int objc,			/* # arguments for command. */
+    Tcl_Size objc,			/* # arguments for command. */
     Tcl_Obj *const objv[],	/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
     int *intPtr)		/* Filled in with number of pages or lines to
 				 * scroll, if any. */
 {
-    TkSizeT length;
-    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
+    Tcl_Size length;
+    const char *arg;
 
+    if (objc + 1 < 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "moveto|scroll args");
+	return TK_SCROLL_ERROR;
+    }
+    arg = Tcl_GetStringFromObj(objv[2], &length);
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
 
@@ -820,17 +827,17 @@ TkComputeAnchor(
 	*xPtr = Tk_InternalBorderLeft(tkwin) + padX;
 	break;
 
-    case TK_ANCHOR_N:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_S:
-	*xPtr = (Tk_Width(tkwin) - innerWidth - Tk_InternalBorderLeft(tkwin) -
-		Tk_InternalBorderRight(tkwin)) / 2 +
-		Tk_InternalBorderLeft(tkwin);
+    case TK_ANCHOR_NE:
+    case TK_ANCHOR_E:
+    case TK_ANCHOR_SE:
+	*xPtr = Tk_Width(tkwin) - Tk_InternalBorderRight(tkwin) - padX
+		- innerWidth;
 	break;
 
     default:
-	*xPtr = Tk_Width(tkwin) - Tk_InternalBorderRight(tkwin) - padX
-		- innerWidth;
+	*xPtr = (Tk_Width(tkwin) - innerWidth - Tk_InternalBorderLeft(tkwin) -
+		Tk_InternalBorderRight(tkwin)) / 2 +
+		Tk_InternalBorderLeft(tkwin);
 	break;
     }
 
@@ -845,17 +852,17 @@ TkComputeAnchor(
 	*yPtr = Tk_InternalBorderTop(tkwin) + padY;
 	break;
 
-    case TK_ANCHOR_W:
-    case TK_ANCHOR_CENTER:
-    case TK_ANCHOR_E:
-	*yPtr = (Tk_Height(tkwin) - innerHeight- Tk_InternalBorderTop(tkwin) -
-		Tk_InternalBorderBottom(tkwin)) / 2 +
-		Tk_InternalBorderTop(tkwin);
+    case TK_ANCHOR_SW:
+    case TK_ANCHOR_S:
+    case TK_ANCHOR_SE:
+	*yPtr = Tk_Height(tkwin) - Tk_InternalBorderBottom(tkwin) - padY
+		- innerHeight;
 	break;
 
     default:
-	*yPtr = Tk_Height(tkwin) - Tk_InternalBorderBottom(tkwin) - padY
-		- innerHeight;
+	*yPtr = (Tk_Height(tkwin) - innerHeight- Tk_InternalBorderTop(tkwin) -
+		Tk_InternalBorderBottom(tkwin)) / 2 +
+		Tk_InternalBorderTop(tkwin);
 	break;
     }
 }
@@ -967,7 +974,7 @@ TkFindStateNumObj(
      * See if the value is in the object cache.
      */
 
-    if ((keyPtr->typePtr == &tkStateKeyObjType)
+    if ((keyPtr->typePtr == &tkStateKeyObjType.objType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == mapPtr)) {
 	return PTR2INT(keyPtr->internalRep.twoPtrValue.ptr2);
     }
@@ -985,7 +992,7 @@ TkFindStateNumObj(
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);
-	    keyPtr->typePtr = &tkStateKeyObjType;
+	    keyPtr->typePtr = &tkStateKeyObjType.objType;
 	    return mPtr->numKey;
 	}
     }
@@ -1035,12 +1042,13 @@ TkFindStateNumObj(
 int
 TkBackgroundEvalObjv(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv,
     int flags)
 {
     Tcl_InterpState state;
-    int n, r = TCL_OK;
+    int r = TCL_OK;
+    Tcl_Size n;
 
     /*
      * Record the state of the interpreter.
@@ -1094,7 +1102,7 @@ TkMakeEnsemble(
     Tcl_Interp *interp,
     const char *namesp,
     const char *name,
-    ClientData clientData,
+    void *clientData,
     const TkEnsemble map[])
 {
     Tcl_Namespace *namespacePtr = NULL;
@@ -1145,8 +1153,13 @@ TkMakeEnsemble(
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
+#if TCL_MAJOR_VERSION > 8
+	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
+		    map[i].proc, clientData, NULL);
+#else
 	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
+#endif
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		    map[i].name, clientData, map[i].subensemble);
@@ -1192,6 +1205,7 @@ Tk_SendVirtualEvent(
     event.general.xany.display = Tk_Display(target);
     event.virt.name = Tk_GetUid(eventName);
     event.virt.user_data = detail;
+    if (detail) Tcl_IncrRefCount(detail); // Event code will DecrRefCount
 
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
