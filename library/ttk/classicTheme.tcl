@@ -6,7 +6,10 @@
 
 namespace eval ttk::theme::classic {
 
-    variable colors; array set colors {
+    namespace import ::tk::ScaleNum
+
+    variable colors
+    array set colors {
 	-frame		"#d9d9d9"
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
@@ -48,7 +51,10 @@ namespace eval ttk::theme::classic {
 	    -anchor center -padding "3m 1m" -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
-	ttk::style configure TCheckbutton -indicatorrelief raised
+	set t [ScaleNum 2]; set r [ScaleNum 4]; set b $t
+	set indMargin [list 0 $t $r $b]
+	ttk::style configure TCheckbutton -indicatorrelief raised \
+	    -indicatordiameter [ScaleNum 12] -indicatormargin $indMargin
 	ttk::style map TCheckbutton \
 	    -indicatorcolor [list \
 		    pressed $colors(-frame) \
@@ -57,7 +63,8 @@ namespace eval ttk::theme::classic {
 	    -indicatorrelief {alternate raised  selected sunken  pressed sunken} \
 	    ;
 
-	ttk::style configure TRadiobutton -indicatorrelief raised
+	ttk::style configure TRadiobutton -indicatorrelief raised \
+	    -indicatordiameter [ScaleNum 12] -indicatormargin $indMargin
 	ttk::style map TRadiobutton \
 	    -indicatorcolor [list \
 		    pressed $colors(-frame) \
@@ -66,30 +73,40 @@ namespace eval ttk::theme::classic {
 	    -indicatorrelief {alternate raised  selected sunken  pressed sunken} \
 	    ;
 
-	ttk::style configure TMenubutton -relief raised -padding "3m 1m"
+	ttk::style configure TMenubutton -relief raised \
+	    -indicatormargin [list [ScaleNum 5] 0] -padding "3m 1m"
 
 	ttk::style configure TEntry -relief sunken -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
-	ttk::style configure TCombobox -padding 1
+
+	ttk::style configure TCombobox -padding 1 -arrowsize [ScaleNum 15]
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
+	set l [ScaleNum 2]; set r [ScaleNum 10]
+	ttk::style configure TSpinbox -arrowsize [ScaleNum 10] \
+	    -padding [list $l 0 $r 0]
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure TScrollbar -relief raised
+	set scrlbarWidth [ScaleNum 15]
+	ttk::style configure TScrollbar -relief raised \
+	    -arrowsize $scrlbarWidth -width $scrlbarWidth
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
-	ttk::style configure TScale -sliderrelief raised
+	set thickness [ScaleNum 15]
+	ttk::style configure TScale -sliderrelief raised \
+	    -sliderlength [ScaleNum 30] -sliderthickness $thickness
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
 
-	ttk::style configure TProgressbar -background SteelBlue
+	ttk::style configure TProgressbar -background SteelBlue \
+	    -barsize [ScaleNum 30] -thickness $thickness
+
 	ttk::style configure TNotebook.Tab \
 	    -padding {3m 1m} \
 	    -background $colors(-troughbg)
@@ -110,10 +127,17 @@ namespace eval ttk::theme::classic {
 	#
 	# Toolbar buttons:
 	#
-	ttk::style configure Toolbutton -padding 2 -relief flat -shiftrelief 2
+	ttk::style configure Toolbutton -padding [ScaleNum 2] -relief flat \
+	    -shiftrelief 2
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \
 	    [list pressed $colors(-troughbg)  active $colors(-activebg)]
+
+	ttk::style configure Sash \
+	    -sashthickness [ScaleNum 6] -sashpad [ScaleNum 2] \
+	    -handlesize [ScaleNum 8] -handlepad [ScaleNum 8]
     }
+
+    unset l t r b indMargin scrlbarWidth thickness
 }

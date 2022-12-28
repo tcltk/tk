@@ -122,8 +122,7 @@ namespace eval ::tk::sysnotify:: {
 	catch {destroy ._notify}
 	set w [toplevel ._notify]
 	if {[tk windowingsystem] eq "aqua"} {
-	    ::tk::unsupported::MacWindowStyle style $w utility {hud
-closeBox resizable}
+	    ::tk::unsupported::MacWindowStyle style $w utility {hud closeBox resizable}
 	    wm title $w "Alert"
 	}
 	if {[tk windowingsystem] eq "win32"} {
@@ -132,15 +131,14 @@ closeBox resizable}
 	}
 	label $w.l -bg gray30 -fg white -image ::tk::icons::information
 	pack $w.l -fill both -expand yes -side left
-	message $w.message -aspect 150 -bg gray30 -fg white -aspect 150
--text $title\n\n$msg -width 280
+	message $w.message -aspect 150 -bg gray30 -fg white -text $title\n\n$msg -width [::tk::ScaleNum 280]
 	pack $w.message -side right -fill both -expand yes
 	if {[tk windowingsystem] eq "x11"} {
 	    wm overrideredirect $w true
 	}
 	wm attributes $w -alpha 0.0
-	set xpos [expr {[winfo screenwidth $w] - 325}]
-	wm geometry $w +$xpos+30
+	set xpos [expr {[winfo screenwidth $w] - [::tk::ScaleNum 325]}]
+	wm geometry $w +$xpos+[::tk::ScaleNum 30]
 	::tk::sysnotify::_fade_in $w
 	after 3000 ::tk::sysnotify::_fade_out $w
     }
