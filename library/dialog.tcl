@@ -109,7 +109,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 	    $w.button$i configure -default normal
 	}
 	grid $w.button$i -in $w.bot -column $i -row 0 -sticky ew \
-		-padx [::tk::ScaleNum 10] -pady [::tk::ScaleNum 4]
+		-padx 7.5p -pady 3p
 	grid columnconfigure $w.bot $i
 	# We boost the size of some Mac buttons for l&f
 	if {$windowingsystem eq "aqua"} {
