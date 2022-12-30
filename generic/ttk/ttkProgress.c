@@ -561,7 +561,7 @@ TTK_END_LAYOUT
 TTK_BEGIN_LAYOUT(HorizontalProgressbarLayout)
     TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
 	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
-	TTK_NODE("Horizontal.Progressbar.text", TTK_PACK_LEFT))
+	TTK_NODE("Horizontal.Progressbar.ctext", TTK_PACK_LEFT))
 TTK_END_LAYOUT
 
 /*
