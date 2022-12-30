@@ -54,7 +54,7 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 	"w", offsetof(Progressbar,progress.anchorObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED},
     {TK_OPTION_FONT, "-font", "font", "Font",
-	DEFAULT_FONT, offsetof(Progressbar,progress.fontObj), TCL_INDEX_NONE,
+	"TkDefaultFont_progressbar", offsetof(Progressbar,progress.fontObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_COLOR, "-foreground", "textColor", "TextColor",
 	"black", offsetof(Progressbar,progress.foregroundObj), TCL_INDEX_NONE,

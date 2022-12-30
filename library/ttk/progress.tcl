@@ -3,7 +3,18 @@
 #
 
 namespace eval ttk::progressbar {
+
     variable Timers	;# Map: widget name -> after ID
+
+    # Default font for -text option in progressbars:
+    # The size of a progressbar takes the font height into account so that when
+    # some -text is to be displayed it does not get cropped. The default font
+    # size must be very small in order to not increase the progresbar height
+    # to the font height when no text is displayed (which is the default).
+    # When some -text must be displayed then the user has to set an adequate
+    # font size. For more details, see ticket [8bee4b2009].
+    font create TkDefaultFont_progressbar {*}[font actual TkDefaultFont]
+    font configure TkDefaultFont_progressbar -size -1
 }
 
 # Autoincrement --
