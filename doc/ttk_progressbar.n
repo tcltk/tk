@@ -24,7 +24,8 @@ If the value of \fB-orient\fR is \fBhorizontal\fR a text string can be
 displayed inside the progressbar. This string can be configured using
 the \fB-anchor\fR, \fB-font\fR, \fB-foreground\fR, \fB-justify\fR,
 \fB-text\fR and \fB-wraplength\fR options. If the value of \fB-orient\fR
-is \fBvertical\fR then these options are ignored.
+is \fBvertical\fR then these options are ignored. When configuring
+\fB-text\fR, \fB-font\fR should be configured as well.
 .SO ttk_widget
 \-anchor	\-class	\-cursor
 \-font	\-foreground	\-justify	\-style
