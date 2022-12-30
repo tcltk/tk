@@ -246,89 +246,23 @@ static const Ttk_ElementSpec TextElementSpec = {
  * +++ cText (collapsing text) element.
  *
  * This element is the same as the Text element, except its dimensions
- * become 0,0 when the text to display is "".
+ * are 0,0 when the text to display is "".
  */
 
-typedef struct {
-    /*
-     * Element options:
-     */
-    Tcl_Obj	*textObj;
-    Tcl_Obj	*fontObj;
-    Tcl_Obj	*foregroundObj;
-    Tcl_Obj	*underlineObj;
-    Tcl_Obj	*widthObj;
-    Tcl_Obj	*anchorObj;
-    Tcl_Obj	*justifyObj;
-    Tcl_Obj	*wrapLengthObj;
-    Tcl_Obj	*embossedObj;
-
-    /*
-     * Computed resources:
-     */
-    Tk_Font		tkfont;
-    Tk_TextLayout	textLayout;
-    int 		width;
-    int 		height;
-    int			embossed;
-
-} cTextElement;
-
-static const Ttk_ElementOptionSpec cTextElementOptions[] = {
-    { "-text", TK_OPTION_STRING,
-	offsetof(cTextElement,textObj), "" },
-    { "-font", TK_OPTION_FONT,
-	offsetof(cTextElement,fontObj), DEFAULT_FONT },
-    { "-foreground", TK_OPTION_COLOR,
-	offsetof(cTextElement,foregroundObj), "black" },
-    { "-underline", TK_OPTION_INDEX,
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-	offsetof(cTextElement,underlineObj), "-1"},
-#else
-	offsetof(cTextElement,underlineObj), NULL},
-#endif
-    { "-width", TK_OPTION_INT,
-	offsetof(cTextElement,widthObj), "-1"},
-    { "-anchor", TK_OPTION_ANCHOR,
-	offsetof(cTextElement,anchorObj), "w"},
-    { "-justify", TK_OPTION_JUSTIFY,
-	offsetof(cTextElement,justifyObj), "left" },
-    { "-wraplength", TK_OPTION_PIXELS,
-	offsetof(cTextElement,wrapLengthObj), "0" },
-    { "-embossed", TK_OPTION_INT,
-	offsetof(cTextElement,embossedObj), "0"},
-    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
-};
-
-static int cTextSetup(cTextElement *text, Tk_Window tkwin)
+static int cTextSetup(TextElement *text, Tk_Window tkwin)
 {
     if (*Tcl_GetString(text->textObj) == '\0') {
         return 0;
     } else {
-        return TextSetup((TextElement *) text, tkwin);
+        return TextSetup(text, tkwin);
     }
-}
-
-static int cTextReqWidth(cTextElement *text)
-{
-    return TextReqWidth((TextElement *) text);
-}
-
-static void cTextCleanup(cTextElement *text)
-{
-    TextCleanup((TextElement *) text);
-}
-
-static void cTextDraw(cTextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
-{
-    TextDraw((TextElement *) text, tkwin, d, b);
 }
 
 static void cTextElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    cTextElement *text = (cTextElement *)elementRecord;
+    TextElement *text = (TextElement *)elementRecord;
     (void)dummy;
     (void)paddingPtr;
 
@@ -336,26 +270,19 @@ static void cTextElementSize(
 	return;
 
     *heightPtr = text->height;
-    *widthPtr = cTextReqWidth(text);
+    *widthPtr = TextReqWidth(text);
 
-    cTextCleanup(text);
+    TextCleanup(text);
 
     return;
 }
 
-static void cTextElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
-{
-    TextElementDraw(dummy, elementRecord, tkwin, d, b, state);
-}
-
 static const Ttk_ElementSpec cTextElementSpec = {
     TK_STYLE_VERSION_2,
-    sizeof(cTextElement),
-    cTextElementOptions,
+    sizeof(TextElement),
+    TextElementOptions,
     cTextElementSize,
-    cTextElementDraw
+    TextElementDraw
 };
 
 /*----------------------------------------------------------------------
