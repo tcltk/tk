@@ -58,7 +58,7 @@ Tk_GetPixmap(
     }
     screen = ScreenOfDisplay(display, 0);
     planes = 1;
-    if (depth == screen->root_depth) {
+    if (depth == DefaultDepthOfScreen(screen)) {
 	planes = PTR2INT(screen->ext_data);
 	depth /= planes;
     }

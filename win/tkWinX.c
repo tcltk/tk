@@ -429,11 +429,11 @@ TkWinDisplayChanged(
     screen = (((_XPrivDisplay)(display))->screens);
 
     dc = GetDC(NULL);
-    screen->width = GetDeviceCaps(dc, HORZRES);
-    screen->height = GetDeviceCaps(dc, VERTRES);
-    screen->mwidth = MulDiv(screen->width, 254,
+    WidthOfScreen(screen) = GetDeviceCaps(dc, HORZRES);
+    HeightOfScreen(screen) = GetDeviceCaps(dc, VERTRES);
+    WidthMMOfScreen(screen) = MulDiv(WidthOfScreen(screen), 254,
 	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
-    screen->mheight = MulDiv(screen->height, 254,
+    HeightMMOfScreen(screen) = MulDiv(HeightOfScreen(screen), 254,
 	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
 
     /*
@@ -454,43 +454,43 @@ TkWinDisplayChanged(
     screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	screen->root_visual->c_class = PseudoColor;
-	screen->root_visual->red_mask = 0x0;
-	screen->root_visual->green_mask = 0x0;
-	screen->root_visual->blue_mask = 0x0;
-    } else if (screen->root_depth == 4) {
-	screen->root_visual->c_class = StaticColor;
-	screen->root_visual->map_entries = 16;
-    } else if (screen->root_depth == 8) {
-	screen->root_visual->c_class = StaticColor;
-	screen->root_visual->map_entries = 256;
-    } else if (screen->root_depth == 12) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 32;
-	screen->root_visual->red_mask = 0xf0;
-	screen->root_visual->green_mask = 0xf000;
-	screen->root_visual->blue_mask = 0xf00000;
-    } else if (screen->root_depth == 16) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 64;
-	screen->root_visual->red_mask = 0xf8;
-	screen->root_visual->green_mask = 0xfc00;
-	screen->root_visual->blue_mask = 0xf80000;
-    } else if (screen->root_depth >= 24) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 256;
-	screen->root_visual->red_mask = 0xff;
-	screen->root_visual->green_mask = 0xff00;
-	screen->root_visual->blue_mask = 0xff0000;
+	DefaultVisualOfScreen(screen)->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
+	DefaultVisualOfScreen(screen)->c_class = PseudoColor;
+	DefaultVisualOfScreen(screen)->red_mask = 0x0;
+	DefaultVisualOfScreen(screen)->green_mask = 0x0;
+	DefaultVisualOfScreen(screen)->blue_mask = 0x0;
+    } else if (DefaultDepthOfScreen(screen) == 4) {
+	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+	DefaultVisualOfScreen(screen)->map_entries = 16;
+    } else if (DefaultDepthOfScreen(screen) == 8) {
+	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+	DefaultVisualOfScreen(screen)->map_entries = 256;
+    } else if (DefaultDepthOfScreen(screen) == 12) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 32;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf0;
+	DefaultVisualOfScreen(screen)->green_mask = 0xf000;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf00000;
+    } else if (DefaultDepthOfScreen(screen) == 16) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 64;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf8;
+	DefaultVisualOfScreen(screen)->green_mask = 0xfc00;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf80000;
+    } else if (DefaultDepthOfScreen(screen) >= 24) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 256;
+	DefaultVisualOfScreen(screen)->red_mask = 0xff;
+	DefaultVisualOfScreen(screen)->green_mask = 0xff00;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xff0000;
     }
-    screen->root_visual->bits_per_rgb = screen->root_depth;
+    DefaultVisualOfScreen(screen)->bits_per_rgb = DefaultDepthOfScreen(screen);
     ReleaseDC(NULL, dc);
 
-    if (screen->cmap != None) {
-	XFreeColormap(display, screen->cmap);
+    if (DefaultColormapOfScreen(screen) != None) {
+	XFreeColormap(display, DefaultColormapOfScreen(screen));
     }
-    screen->cmap = XCreateColormap(display, None, screen->root_visual,
+    DefaultColormapOfScreen(screen) = XCreateColormap(display, None, DefaultVisualOfScreen(screen),
 	    AllocNone);
 }
 
@@ -571,9 +571,9 @@ XkbOpenDisplay(
      * Note that these pixel values are not palette relative.
      */
 
-    screen->white_pixel = RGB(255, 255, 255);
-    screen->black_pixel = RGB(0, 0, 0);
-    screen->cmap = None;
+    WhitePixelOfScreen(screen) = RGB(255, 255, 255);
+    BlackPixelOfScreen(screen) = RGB(0, 0, 0);
+    DefaultColormapOfScreen(screen) = None;
 
     display->screens		= screen;
     display->nscreens		= 1;
@@ -636,17 +636,17 @@ TkpCloseDisplay(
     if (display->display_name != NULL) {
 	ckfree(display->display_name);
     }
-    if (display->screens != NULL) {
-	if (ScreenOfDisplay(display, 0)->root_visual != NULL) {
-	    ckfree(ScreenOfDisplay(display, 0)->root_visual);
+    if (ScreenOfDisplay(display, 0) != NULL) {
+	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
+	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	if (ScreenOfDisplay(display, 0)->root != None) {
-	    ckfree((char *)ScreenOfDisplay(display, 0)->root);
+	if (RootWindowOfScreen(ScreenOfDisplay(display, 0)) != None) {
+	    ckfree(RootWindowOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	if (ScreenOfDisplay(display, 0)->cmap != None) {
-	    XFreeColormap((Display *)display, ScreenOfDisplay(display, 0)->cmap);
+	if (DefaultColormapOfScreen(ScreenOfDisplay(display, 0)) != None) {
+	    XFreeColormap(display, DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	ckfree(display->screens);
+	ckfree(ScreenOfDisplay(display, 0));
     }
     ckfree(display);
 }
