@@ -3171,7 +3171,7 @@ MenuSelectEvent(
 
     memset(&event, 0, sizeof(event));
     event.virt.type = VirtualEvent;
-    event.virt.serial = menuPtr->display->request;
+    event.virt.serial = LastKnownRequestProcessed(menuPtr->display);
     event.virt.send_event = 0;
     event.virt.display = menuPtr->display;
     Tk_MakeWindowExist(menuPtr->tkwin);

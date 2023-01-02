@@ -90,11 +90,11 @@ TkMacOSXDisplayChanged(
 	NSRect bounds = [s frame];
 	NSRect maxBounds = NSZeroRect;
 
-	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
-	screen->width = bounds.size.width;
-	screen->height = bounds.size.height;
-	screen->mwidth = (bounds.size.width * 254 + 360) / 720;
-	screen->mheight = (bounds.size.height * 254 + 360) / 720;
+	DefaultDepthOfScreen(screen) = NSBitsPerPixelFromDepth([s depth]);
+	WidthOfScreen(screen) = bounds.size.width;
+	HeightOfScreen(screen) = bounds.size.height;
+	WidthMMOfScreen(screen) = (bounds.size.width * 254 + 360) / 720;
+	HeightMMOfScreen(screen) = (bounds.size.height * 254 + 360) / 720;
 
 	for (s in nsScreens) {
 	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
@@ -207,7 +207,7 @@ TkpOpenDisplay(
     bzero(screen, sizeof(Screen));
 
     display->resource_alloc = MacXIdAlloc;
-    display->request	    = 0;
+    LastKnownRequestProcessed(display) = 0;
     display->qlen	    = 0;
     display->fd		    = fd;
     display->screens	    = screen;
@@ -248,20 +248,20 @@ TkpOpenDisplay(
     /*
      * These screen bits never change
      */
-    screen->root	= ROOT_ID;
-    screen->display	= display;
-    screen->black_pixel = 0x00000000;
-    screen->white_pixel = 0x00FFFFFF;
+    RootWindowOfScreen(screen)	= ROOT_ID;
+    DisplayOfScreen(screen)	= display;
+    BlackPixelOfScreen(screen) = 0x00000000;
+    WhitePixelOfScreen(screen) = 0x00FFFFFF;
     screen->ext_data	= (XExtData *) &maxBounds;
 
-    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
-    screen->root_visual->visualid     = 0;
-    screen->root_visual->c_class      = TrueColor;
-    screen->root_visual->red_mask     = 0x00FF0000;
-    screen->root_visual->green_mask   = 0x0000FF00;
-    screen->root_visual->blue_mask    = 0x000000FF;
-    screen->root_visual->bits_per_rgb = 24;
-    screen->root_visual->map_entries  = 256;
+    DefaultVisualOfScreen(screen) = (Visual *)ckalloc(sizeof(Visual));
+    DefaultVisualOfScreen(screen)->visualid     = 0;
+    DefaultVisualOfScreen(screen)->c_class      = TrueColor;
+    DefaultVisualOfScreen(screen)->red_mask     = 0x00FF0000;
+    DefaultVisualOfScreen(screen)->green_mask   = 0x0000FF00;
+    DefaultVisualOfScreen(screen)->blue_mask    = 0x000000FF;
+    DefaultVisualOfScreen(screen)->bits_per_rgb = 24;
+    DefaultVisualOfScreen(screen)->map_entries  = 256;
 
     /*
      * Initialize screen bits that may change
@@ -316,8 +316,8 @@ TkpCloseDisplay(
 
     gMacDisplay = NULL;
     if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+	if (DefaultVisualOfScreen(display->screens) != NULL) {
+	    ckfree(DefaultVisualOfScreen(display->screens));
 	}
 	ckfree(display->screens);
     }
@@ -434,7 +434,7 @@ XGetAtomName(
     Display *display,
     TCL_UNUSED(Atom))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -450,7 +450,7 @@ XRootWindow(
     Display *display,
     TCL_UNUSED(int))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ROOT_ID;
 }
 
@@ -468,7 +468,7 @@ XGetGeometry(
 {
     TkWindow *winPtr = ((MacDrawable *)d)->winPtr;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     *root_return = ROOT_ID;
     if (winPtr) {
 	*x_return = Tk_X(winPtr);
@@ -645,7 +645,7 @@ XGetWindowProperty(
     unsigned long *bytes_after_return,
     TCL_UNUSED(unsigned char **))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     *actual_type_return = None;
     *actual_format_return = *bytes_after_return = 0;
     *nitems_return = 0;
@@ -670,7 +670,7 @@ XSetIconName(
     /*
      * This is a no-op, no icon name for Macs.
      */
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -685,7 +685,7 @@ XForceScreenSaver(
      * is!
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -716,7 +716,7 @@ XSync(
      *  [da5f2266df].)
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 
@@ -905,7 +905,7 @@ XSynchronize(
     Display *display,
     TCL_UNUSED(Bool))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -922,7 +922,7 @@ int
 XNoOp(
     Display *display)
 {
-	display->request++;
+	LastKnownRequestProcessed(display)++;
     return 0;
 }
 
