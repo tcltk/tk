@@ -91,11 +91,11 @@ TkMacOSXDisplayChanged(
 	NSRect bounds = [s frame];
 	NSRect maxBounds = NSZeroRect;
 
-	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
-	screen->width = bounds.size.width;
-	screen->height = bounds.size.height;
-	screen->mwidth = (bounds.size.width * 254 + 360) / 720;
-	screen->mheight = (bounds.size.height * 254 + 360) / 720;
+	DefaultDepthOfScreen(screen) = NSBitsPerPixelFromDepth([s depth]);
+	WidthOfScreen(screen) = bounds.size.width;
+	HeightOfScreen(screen) = bounds.size.height;
+	WidthMMOfScreen(screen) = (bounds.size.width * 254 + 360) / 720;
+	HeightMMOfScreen(screen) = (bounds.size.height * 254 + 360) / 720;
 
 	for (s in nsScreens) {
 	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
@@ -244,7 +244,7 @@ XkbOpenDisplay(
     bzero(screen, sizeof(Screen));
 
     display->resource_alloc = MacXIdAlloc;
-    display->request	    = 1;
+    LastKnownRequestProcessed(display) = 1;
     display->qlen	    = 0;
     display->fd		    = fd;
     display->screens	    = screen;
@@ -338,8 +338,8 @@ TkpCloseDisplay(
 
     gMacDisplay = NULL;
     if (display->screens != NULL) {
-	if (ScreenOfDisplay(display, 0)->root_visual != NULL) {
-	    ckfree(ScreenOfDisplay(display, 0)->root_visual);
+	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
+	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	ckfree(display->screens);
     }
