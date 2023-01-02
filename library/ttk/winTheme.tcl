@@ -26,13 +26,13 @@ namespace eval ttk::theme::winnative {
 	    -anchor center -width -11 -relief raised -shiftrelief 1
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
 
-	set padding [list [ScaleNum 2] [ScaleNum 4]]
+	set padding [list 1.5p 3p]
 	ttk::style configure TCheckbutton -padding $padding
 	ttk::style configure TRadiobutton -padding $padding
 
 	ttk::style configure TMenubutton \
-	    -padding [list [ScaleNum 8] [ScaleNum 4]] \
-	    -arrowsize [ScaleNum 3] -relief raised
+	    -padding [list 6p 3p] \
+	    -arrowsize 2.25p -relief raised
 
 	ttk::style configure TEntry \
 	    -padding 2 -selectborderwidth 0 -insertwidth 1
@@ -43,7 +43,7 @@ namespace eval ttk::theme::winnative {
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-	ttk::style configure TCombobox -padding [ScaleNum 2]
+	ttk::style configure TCombobox -padding 1.5p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -61,13 +61,13 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-	set l [ScaleNum 2]; set r [ScaleNum 16]
+	set l 1.5p; set r 12p
         ttk::style configure TSpinbox -padding [list $l 0 $r 0]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure Toolbutton -relief flat \
-	    -padding [list [ScaleNum 8] [ScaleNum 4]]
+	    -padding [list 6p 3p]
 	ttk::style map Toolbutton -relief \
 	    {disabled flat  selected sunken  pressed sunken  active raised}
 
@@ -77,7 +77,7 @@ namespace eval ttk::theme::winnative {
 	set margins [list $m $m $m 0]
 	ttk::style configure TNotebook -tabmargins $margins
 	ttk::style configure TNotebook.Tab \
-	    -padding [list [ScaleNum 3] [ScaleNum 1]] -borderwidth 1
+	    -padding [list 2.25p 0.75p] -borderwidth 1
 	ttk::style map TNotebook.Tab -expand [list selected $margins]
 
 	# Treeview:

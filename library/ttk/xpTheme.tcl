@@ -21,12 +21,12 @@ namespace eval ttk::theme::xpnative {
 	    -foreground [list disabled SystemGrayText] \
 	    ;
 
-	ttk::style configure TButton -anchor center -padding [ScaleNum 1] \
+	ttk::style configure TButton -anchor center -padding 0.75p \
 	    -width -11
-	ttk::style configure TRadiobutton -padding [ScaleNum 2]
-	ttk::style configure TCheckbutton -padding [ScaleNum 2]
+	ttk::style configure TRadiobutton -padding 1.5p
+	ttk::style configure TCheckbutton -padding 1.5p
 	ttk::style configure TMenubutton \
-	    -padding [list [ScaleNum 8] [ScaleNum 4]]
+	    -padding [list 6p 3p]
 
 	set m [ScaleNum 2]
 	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
@@ -41,7 +41,7 @@ namespace eval ttk::theme::xpnative {
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
-	ttk::style configure TCombobox -padding [ScaleNum 2]
+	ttk::style configure TCombobox -padding 1.5p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -52,14 +52,14 @@ namespace eval ttk::theme::xpnative {
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
 
-	set l [ScaleNum 2]; set r [ScaleNum 14]
+	set l 1.5p; set r 10.5p
 	ttk::style configure TSpinbox -padding [list $l 0 $r 0]
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-	ttk::style configure Toolbutton -padding [ScaleNum 4]
+	ttk::style configure Toolbutton -padding 3p
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
