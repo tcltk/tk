@@ -400,7 +400,7 @@ XCreateImage(
 {
     XImage *ximage;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
@@ -503,7 +503,7 @@ TkMacOSXPutImage(
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
@@ -858,7 +858,7 @@ XCopyArea(
     CGImageRef img = NULL;
     CGRect bounds, srcRect, dstRect;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	return BadDrawable;
     }
@@ -932,7 +932,7 @@ XCopyPlane(
     MacDrawable *srcDraw = (MacDrawable *)src;
     MacDrawable *dstDraw = (MacDrawable *)dst;
     CGRect bounds, srcRect, dstRect;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
 	return BadDrawable;
