@@ -1408,31 +1408,6 @@ TkMacOSXNSFontAttributesForFont(
 }
 
 /*
- *---------------------------------------------------------------------------
- *
- * TkMacOSXIsCharacterMissing --
- *
- *	Given a tkFont and a character determine whether the character has
- *	a glyph defined in the font or not.
- *
- * Results:
- *	Returns a 1 if the character is missing, a 0 if it is not.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-int
-TkMacOSXIsCharacterMissing(
-    TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
-    TCL_UNUSED(unsigned int))	/* The character we are looking for. */
-{
-    return 0;
-}
-
-/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXFontDescriptionForNSFontAndNSFontAttributes --

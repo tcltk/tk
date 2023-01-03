@@ -47,6 +47,8 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
+#undef TkMacOSXIsCharacterMissing
+#define TkMacOSXIsCharacterMissing (int (*)(Tk_Font, unsigned int))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
