@@ -14,6 +14,7 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
