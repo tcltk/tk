@@ -704,7 +704,7 @@ XClearWindow(
     HWND hwnd = Tk_GetHWND(w);
     HDC dc = GetDC(hwnd);
 
-    palette = TkWinGetPalette(ScreenOfDisplay(display, 0)->cmap);
+    palette = TkWinGetPalette(DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
     oldPalette = SelectPalette(dc, palette, FALSE);
 
     LastKnownRequestProcessed(display)++;

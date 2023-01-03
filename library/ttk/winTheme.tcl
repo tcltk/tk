@@ -3,6 +3,9 @@
 #
 
 namespace eval ttk::theme::winnative {
+
+    namespace import ::tk::ScaleNum
+
     ttk::style theme settings winnative {
 
 	ttk::style configure "." \
@@ -21,12 +24,15 @@ namespace eval ttk::theme::winnative {
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -relief raised -shiftrelief 1
-	ttk::style configure TCheckbutton -padding "2 4"
-	ttk::style configure TRadiobutton -padding "2 4"
-	ttk::style configure TMenubutton \
-	    -padding "8 4" -arrowsize 3 -relief raised
-
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
+
+	set padding [list [ScaleNum 2] [ScaleNum 4]]
+	ttk::style configure TCheckbutton -padding $padding
+	ttk::style configure TRadiobutton -padding $padding
+
+	ttk::style configure TMenubutton \
+	    -padding [list [ScaleNum 8] [ScaleNum 4]] \
+	    -arrowsize [ScaleNum 3] -relief raised
 
 	ttk::style configure TEntry \
 	    -padding 2 -selectborderwidth 0 -insertwidth 1
@@ -37,7 +43,7 @@ namespace eval ttk::theme::winnative {
 	    -selectforeground [list !focus SystemWindowText] \
 	    ;
 
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding [ScaleNum 2]
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -55,19 +61,24 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-        ttk::style configure TSpinbox -padding {2 0 16 0}
+	set l [ScaleNum 2]; set r [ScaleNum 16]
+        ttk::style configure TSpinbox -padding [list $l 0 $r 0]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure Toolbutton -relief flat -padding {8 4}
+	ttk::style configure Toolbutton -relief flat \
+	    -padding [list [ScaleNum 8] [ScaleNum 4]]
 	ttk::style map Toolbutton -relief \
-	    {disabled flat selected sunken  pressed sunken  active raised}
+	    {disabled flat  selected sunken  pressed sunken  active raised}
 
-	ttk::style configure TScale -groovewidth 4
+	ttk::style configure TScale -groovewidth [ScaleNum 4]
 
-	ttk::style configure TNotebook -tabmargins {2 2 2 0}
-	ttk::style configure TNotebook.Tab -padding {3 1} -borderwidth 1
-	ttk::style map TNotebook.Tab -expand [list selected {2 2 2 0}]
+	set m [ScaleNum 2]
+	set margins [list $m $m $m 0]
+	ttk::style configure TNotebook -tabmargins $margins
+	ttk::style configure TNotebook.Tab \
+	    -padding [list [ScaleNum 3] [ScaleNum 1]] -borderwidth 1
+	ttk::style map TNotebook.Tab -expand [list selected $margins]
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
@@ -80,6 +91,9 @@ namespace eval ttk::theme::winnative {
 				selected SystemHighlightText]
 
         ttk::style configure TProgressbar \
-	    -background SystemHighlight -borderwidth 0 ;
+	    -background SystemHighlight -borderwidth 0 \
+	    -barsize [ScaleNum 30] -thickness [ScaleNum 15]
     }
+
+    unset padding l r m margins
 }
