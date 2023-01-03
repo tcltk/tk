@@ -1323,6 +1323,7 @@ TkMacOSXNSFontAttributesForFont(
  *---------------------------------------------------------------------------
  */
 
+#undef TkMacOSXIsCharacterMissing
 int
 TkMacOSXIsCharacterMissing(
     TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
