@@ -205,7 +205,8 @@ GetTkFontAttributesForNSFont(
     NSFontTraitMask traits = [[NSFontManager sharedFontManager]
 	    traitsOfFont:nsFont];
     faPtr->family = Tk_GetUid([[nsFont familyName] UTF8String]);
-    faPtr->size = [nsFont pointSize];
+#define FACTOR (3.0/4.0)
+    faPtr->size = [nsFont pointSize] * FACTOR;
     faPtr->weight = (traits & NSBoldFontMask ? TK_FW_BOLD : TK_FW_NORMAL);
     faPtr->slant = (traits & NSItalicFontMask ? TK_FS_ITALIC : TK_FS_ROMAN);
 
@@ -249,7 +250,7 @@ FindNSFont(
 	family = [defaultFont familyName];
     }
     if (size == 0.0) {
-	size = [defaultFont pointSize];
+	size = [defaultFont pointSize] * FACTOR;
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
 
@@ -715,7 +716,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) * 4.0 / 3.0 + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -1441,7 +1442,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize] * FACTOR);
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);

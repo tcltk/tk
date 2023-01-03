@@ -94,8 +94,8 @@ TkMacOSXDisplayChanged(
 	DefaultDepthOfScreen(screen) = NSBitsPerPixelFromDepth([s depth]);
 	WidthOfScreen(screen) = bounds.size.width;
 	HeightOfScreen(screen) = bounds.size.height;
-	WidthMMOfScreen(screen) = (bounds.size.width * 254 + 360) / 720;
-	HeightMMOfScreen(screen) = (bounds.size.height * 254 + 360) / 720;
+	WidthMMOfScreen(screen) = (bounds.size.width * 254 * 3 / 4 + 360) / 720;
+	HeightMMOfScreen(screen) = (bounds.size.height * 254 * 3 / 4 + 360) / 720;
 
 	for (s in nsScreens) {
 	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);

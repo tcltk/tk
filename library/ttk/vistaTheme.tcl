@@ -31,12 +31,12 @@ namespace eval ttk::theme::vista {
 	    -foreground [list disabled SystemGrayText] \
 	    ;
 
-	ttk::style configure TButton -anchor center -padding [ScaleNum 1] \
+	ttk::style configure TButton -anchor center -padding 0.75p \
 	    -width -11
-	ttk::style configure TRadiobutton -padding [ScaleNum 2]
-	ttk::style configure TCheckbutton -padding [ScaleNum 2]
+	ttk::style configure TRadiobutton -padding 1.5p
+	ttk::style configure TCheckbutton -padding 1.5p
 	ttk::style configure TMenubutton \
-	    -padding [list [ScaleNum 8] [ScaleNum 4]]
+	    -padding [list 6p 3p]
 
 	ttk::style element create Menubutton.dropdown vsapi \
 	    TOOLBAR 4 {{selected active} 6 {selected !active} 5
@@ -63,10 +63,10 @@ namespace eval ttk::theme::vista {
         # Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
-	ttk::style configure Toolbutton -padding [ScaleNum 4]
+	ttk::style configure Toolbutton -padding 3p
 
         # Combobox
-	ttk::style configure TCombobox -padding [ScaleNum 2]
+	ttk::style configure TCombobox -padding 1.5p
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.background vsapi \
@@ -231,7 +231,7 @@ namespace eval ttk::theme::vista {
         }
 
         # Treeview
-        ttk::style configure Item -padding [list [ScaleNum 4] 0 0 0]
+        ttk::style configure Item -padding [list 3p 0 0 0]
 
         package provide ttk::theme::vista 1.0
     }
