@@ -112,16 +112,15 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list !disabled $colors(-text)]
 
 	ttk::style configure TButton \
-	    -anchor center -padding [ScaleNum 3] -width -9 \
+	    -anchor center -padding 2.25p -width -9 \
 	    -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
-	set t [ScaleNum 2]; set r [ScaleNum 4]; set b $t
-	set indMargin [list 0 $t $r $b]
+	set indMargin [list 0 [ScaleNum 2] [ScaleNum 4] [ScaleNum 2]]
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
 	    -indicatordiameter [ScaleNum 10] -indicatormargin $indMargin \
-	    -padding [ScaleNum 1]
+	    -padding 0.75p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -134,7 +133,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
 	    -indicatordiameter [ScaleNum 10] -indicatormargin $indMargin \
-	    -padding [ScaleNum 1]
+	    -padding 0.75p
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -146,21 +145,20 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TMenubutton \
 	    -relief raised -indicatormargin [list [ScaleNum 5] 0] \
-	    -padding [list [ScaleNum 10] [ScaleNum 3]]
+	    -padding [list 7.5p 2.25p]
 
 	ttk::style configure TEntry \
 	    -relief sunken -fieldbackground $colors(-window) -padding 1
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -arrowsize [ScaleNum 12] -padding 1
+	ttk::style configure TCombobox -arrowsize 9p -padding 1
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
-	set l [ScaleNum 2]; set r [ScaleNum 10]
-	ttk::style configure TSpinbox -arrowsize [ScaleNum 10] \
-	    -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -arrowsize 7.5p \
+	    -padding [list [ScaleNum 2] 0 [ScaleNum 10] 0]
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
@@ -168,9 +166,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TLabelframe \
 	    -relief groove -borderwidth 2
 
-	set scrlbarWidth [ScaleNum 12]
 	ttk::style configure TScrollbar \
-	    -width $scrlbarWidth -arrowsize $scrlbarWidth
+	    -width [ScaleNum 12] -arrowsize [ScaleNum 12]
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
@@ -186,7 +183,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -thickness $thickness
 
 	ttk::style configure TNotebook.Tab \
-	    -padding [list [ScaleNum 4] [ScaleNum 2]] \
+	    -padding [list 3p 1.5p] \
 	    -background $colors(-darker)
 	ttk::style map TNotebook.Tab \
 	    -background [list selected $colors(-frame)]
@@ -226,7 +223,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	ttk::style configure Toolbutton \
-	    -padding [ScaleNum 2] -relief flat
+	    -padding 1.5p -relief flat
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
