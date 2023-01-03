@@ -1001,7 +1001,6 @@ test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
     imageCleanup
 } -result {0 0}
 
-
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     imageCleanup
 } -body {
