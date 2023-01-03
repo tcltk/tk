@@ -129,11 +129,11 @@
 #undef XGrabServer
 #define XGrabServer(display) (0)
 #undef XNoOp
-#define XNoOp(display) (display->request++,0)
+#define XNoOp(display) (LastKnownRequestProcessed(display)++,0)
 #undef XUngrabServer
 #define XUngrabServer(display) (0)
 #undef XSynchronize
-#define XSynchronize(display, onoff) (display->request++,NULL)
+#define XSynchronize(display, onoff) (LastKnownRequestProcessed(display)++,NULL)
 #undef XVisualIDFromVisual
 #define XVisualIDFromVisual(visual) (visual->visualid)
 

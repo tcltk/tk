@@ -77,7 +77,7 @@ set ascentDiff [expr {$bigAscent - $fixedAscent}]
 set heightDiff [expr {$bigHeight - $fixedHeight}]
 
 # On Windows at least, the tests do work with {Courier -10}, {Courier -12} or {Courier -14} as fixedFont.
-# Warn the user if the actual font size is too different from what was requested.
+# Warn the user if the actual font is too different from what was requested.
 if {[font metrics [font actual $fixedFont] -fixed] != 1} {
     puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
 does not seem to be a fixed-width font as expected. If this is really the case, many upcoming\
@@ -256,9 +256,9 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
     .t delete 1.0 end
     .t insert 1.0 "x\ty"
     .t tag delete x y z
-    .t tag configure x -tabs {50}
+    .t tag configure x -tabs 50
     .t tag configure y -foreground black
-    .t tag configure z -tabs {70}
+    .t tag configure z -tabs 70
     .t tag add x 1.0 1.end
     .t tag add y 1.0 1.end
     .t tag add z 1.0 1.end
@@ -266,7 +266,7 @@ test textDisp-1.1 {GetStyle procedure, priorities and tab stops} {
     set x [lindex [.t bbox 1.2] 0]
     .t tag configure z -tabs {}
     lappend x [lindex [.t bbox 1.2] 0]
-    .t tag configure z -tabs {30}
+    .t tag configure z -tabs 30
     .t tag raise x
     update idletasks
     lappend x [lindex [.t bbox 1.2] 0]
@@ -643,7 +643,7 @@ test textDisp-2.30 {LayoutDLine, tabs, running out of space in dline} {
     .t bbox 1.4
 } [list [xchar [expr {2*8}]] [yline 1] $fixedWidth $fixedHeight]
 
-test textDisp-3.1 {different character sizes} {
+test textDisp-3.1 {different character sizes} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap word
     .t delete 1.0 end
     .t insert end "Some sample text, including both large\n"
@@ -713,7 +713,7 @@ test textDisp-4.4 {UpdateDisplayInfo, wrap-mode "none"} {
 	[list [xchar 0] [yline 3] $fixedWidth  $fixedHeight] \
 	{1.0 2.0 3.0}]
 test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     wm geom . 103x$height
@@ -727,7 +727,7 @@ test textDisp-4.5 {UpdateDisplayInfo, tiny window} {
         {} \
 	[list [xchar 0] [yline 3] 1 $fixedHeight] \
 	{1.0 2.0 3.0}]
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
@@ -738,7 +738,7 @@ test textDisp-4.6 {UpdateDisplayInfo, tiny window} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     frame .f2 -width 20 -height 100
@@ -767,7 +767,7 @@ test textDisp-4.7 {UpdateDisplayInfo, filling in extra vertical space} {
     # the overrideredirect on "." confuses the window manager and
     # causes subsequent tests to fail.
 
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     .t delete 1.0 end
@@ -829,7 +829,7 @@ test textDisp-4.12 {UpdateDisplayInfo, filling in extra vertical space} {
     .t yview moveto 1
     update
     winfo ismapped .b
-} {0}
+} 0
 .t configure -wrap word
 .t delete 1.0 end
 .t insert end "Line 1\nLine 2\nLine 3\nLine 4\nLine 5\nLine 6\nLine 7\n"
@@ -1317,7 +1317,7 @@ test textDisp-8.9 {TkTextChanged} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 8.0} {2.0 8.0}}
-test textDisp-8.10 {TkTextChanged} {
+test textDisp-8.10 {TkTextChanged} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1377,7 +1377,9 @@ test textDisp-8.13 {TkTextChanged, used to crash, see [06c1433906]} {
     update idletasks
 } {}
 
-test textDisp-9.1 {TkTextRedrawTag} -body {
+test textDisp-9.1 {TkTextRedrawTag} -constraints {
+    haveBigFontTwiceLargerThanTextFont
+} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1388,7 +1390,9 @@ test textDisp-9.1 {TkTextRedrawTag} -body {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 } -match glob -result {{2.0 2.1[78]} {2.0 2.1[78]}}
-test textDisp-9.2 {TkTextRedrawTag} -body {
+test textDisp-9.2 {TkTextRedrawTag} -constraints {
+    haveBigFontTwiceLargerThanTextFont
+} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1398,8 +1402,8 @@ test textDisp-9.2 {TkTextRedrawTag} -body {
     list $tk_textRelayout $tk_textRedraw
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
-}  -match glob -result {{1.0 2.0 2.1[678]} {1.0 2.0 2.1[678]}}
-test textDisp-9.3 {TkTextRedrawTag} {
+} -match glob -result {{1.0 2.0 2.1[678]} {1.0 2.0 2.1[678]}}
+test textDisp-9.3 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1410,7 +1414,7 @@ test textDisp-9.3 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.4 {TkTextRedrawTag} {
+test textDisp-9.4 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap around\nLine 3\nLine 4"
@@ -1421,7 +1425,9 @@ test textDisp-9.4 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.5 {TkTextRedrawTag} -setup {
+test textDisp-9.5 {TkTextRedrawTag} -constraints {
+    haveBigFontTwiceLargerThanTextFont
+} -setup {
     .t configure -wrap char -height [expr {[.t cget -height]+10}]
 } -body {
     .t delete 1.0 end
@@ -1436,7 +1442,7 @@ test textDisp-9.5 {TkTextRedrawTag} -setup {
     .t configure -height [expr {[.t cget -height]-10}]
     update
 } -result {{2.0 2.20} {2.0 2.20 eof}}
-test textDisp-9.6 {TkTextRedrawTag} {
+test textDisp-9.6 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap"
@@ -1447,7 +1453,7 @@ test textDisp-9.6 {TkTextRedrawTag} {
     update
     list $tk_textRelayout $tk_textRedraw
 } {{2.0 2.20 3.0 3.20} {2.0 2.20 3.0 3.20 eof}}
-test textDisp-9.7 {TkTextRedrawTag} {
+test textDisp-9.7 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1457,7 +1463,9 @@ test textDisp-9.7 {TkTextRedrawTag} {
     update
     set tk_textRedraw
 } {2.0 2.20 eof}
-test textDisp-9.8 {TkTextRedrawTag} -body {
+test textDisp-9.8 {TkTextRedrawTag} -constraints {
+    haveBigFontTwiceLargerThanTextFont
+} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1469,7 +1477,9 @@ test textDisp-9.8 {TkTextRedrawTag} -body {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 } -match glob -result {2.0 2.1[678]}
-test textDisp-9.9 {TkTextRedrawTag} -body {
+test textDisp-9.9 {TkTextRedrawTag} -constraints {
+    haveBigFontTwiceLargerThanTextFont
+} -body {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1481,7 +1491,7 @@ test textDisp-9.9 {TkTextRedrawTag} -body {
 # glob matching is to have some tolerance on actually used font size
 # while still testing what we want to test
 } -match glob -result {2.0 2.1[678]}
-test textDisp-9.10 {TkTextRedrawTag} {
+test textDisp-9.10 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -1492,7 +1502,7 @@ test textDisp-9.10 {TkTextRedrawTag} {
     update
     set tk_textRedraw
 } none
-test textDisp-9.11 {TkTextRedrawTag} {
+test textDisp-9.11 {TkTextRedrawTag} haveBigFontTwiceLargerThanTextFont {
     .t configure -wrap char
     .t delete 1.0 end
     .t insert 1.0 "Line 1\nLine 2 is long enough to wrap\nLine 3 is also long enough to wrap\nLine 4"
@@ -2002,7 +2012,7 @@ test textDisp-13.11 {TkTextSeeCmd procedure} {} {
     set res [.top2.t2 compare $ref == $new]
     destroy .top2
     set res
-} {0}
+} 0
 wm geom . {}
 
 .t configure -wrap none
@@ -2191,7 +2201,7 @@ test textDisp-15.8 {Scrolling near end of window} {
     set res [.tf.f.t compare $newind > $refind]
     destroy .tf
     set res
-} {1}
+} 1
 
 .t configure -wrap char
 .t delete 1.0 end
@@ -2248,7 +2258,8 @@ test textDisp-16.9 {TkTextYviewCmd procedure, "moveto" option} {
 test textDisp-16.10 {TkTextYviewCmd procedure, "moveto" option} {
     list [catch {.t yview moveto gorp} msg] $msg
 } {1 {expected floating-point number but got "gorp"}}
-test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.11 {TkTextYviewCmd procedure, "moveto" option} haveBigFontTwiceLargerThanTextFont {
+# constrained because text tagged with the big font plays a role
     .t yview moveto 0.5
     .t index @0,0
 } {103.0}
@@ -2303,7 +2314,8 @@ test textDisp-16.16 {TkTextYviewCmd procedure, "moveto" option} {
     }
     lequal [.t index @0,0] $expected
 } {1}
-test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} {
+test textDisp-16.17 {TkTextYviewCmd procedure, "moveto" option} haveBigFontTwiceLargerThanTextFont {
+# constrained because text tagged with the big font plays a role
     .t yview moveto .755
     .t index @0,0
 } {151.80}
@@ -2900,66 +2912,66 @@ test textDisp-19.11 {GetYView procedure} {
 } {0.5 1.0}
 test textDisp-19.11.2 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 1.0 end
-} {20}
+} 20
 test textDisp-19.11.3 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines end 1.0
-} {-20}
+} -20
 test textDisp-19.11.4 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 1.1 1.3
-} {0}
+} 0
 test textDisp-19.11.5 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 16.1
-} {0}
+} 0
 test textDisp-19.11.5.1 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 16.5
-} {0}
+} 0
 test textDisp-19.11.6 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 16.24
-} {1}
+} 1
 test textDisp-19.11.7 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 16.40
-} {2}
+} 2
 test textDisp-19.11.8 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines "16.0 displaylineend +1c" "16.0 lineend"
-} {3}
+} 3
 test textDisp-19.11.9 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 "16.0 lineend"
-} {4}
+} 4
 test textDisp-19.11.10 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 "16.0 +4displaylines"
-} {4}
+} 4
 test textDisp-19.11.11 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines 16.0 "16.0 +2displaylines"
-} {2}
+} 2
 test textDisp-19.11.12 {TextWidgetCmd procedure, "count -displaylines"} {
     .t count -displaylines "16.0 +1displayline" "16.0 +2displaylines -1c"
-} {0}
+} 0
 .t tag configure elide -elide 1
 test textDisp-19.11.13 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "16.0 +1displaylines" "16.0 +1displaylines +6c"
     .t count -displaylines 16.0 "16.0 +4displaylines"
-} {4}
+} 4
 test textDisp-19.11.14 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "16.0 +1displaylines" "16.0 +1displaylines displaylineend"
     .t count -displaylines 16.0 "16.0 +4displaylines"
-} {4}
+} 4
 test textDisp-19.11.15 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "16.0 +1displaylines" "16.0 +2displaylines"
     .t count -displaylines 16.0 "16.0 +4displaylines -1c"
-} {3}
+} 3
 test textDisp-19.11.15a {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "16.0 +1displaylines" "16.0 +2displaylines"
     .t count -displaylines 16.0 "16.0 +4displaylines"
-} {4}
+} 4
 test textDisp-19.11.16 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "14.0"
     .t count -displaylines 12.0 16.0
-} {2}
+} 2
 test textDisp-19.11.17 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "14.0"
@@ -2980,7 +2992,7 @@ test textDisp-19.11.19 {TextWidgetCmd procedure, "count -displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "16.0 +1displaylines"
     .t count -displaylines 12.0 17.0
-} {4}
+} 4
 test textDisp-19.11.20 {TextWidgetCmd procedure, "index +displaylines"} {
     .t tag remove elide 1.0 end
     .t tag add elide "12.0" "16.0 +1displaylines"
@@ -3290,7 +3302,7 @@ set res [.tt.u count -displaylines 3.10 2.173]
 destroy .tt
 unset message
 set res
-} {-1}
+} -1
 
 .t delete 1.0 end
 .t insert end "Line 1"
@@ -3352,7 +3364,7 @@ test textDisp-22.5 {TkTextCharBbox, cut-off char} {
     update
     .t bbox 15.6
 } [list [xchar 6] [yline 6] $fixedWidth $fixedHeight]
-test textDisp-22.6 {TkTextCharBbox, line visible but not char} {
+test textDisp-22.6 {TkTextCharBbox, line visible but not char} haveBigFontTwiceLargerThanTextFont {
     wm geometry . {}
     update
     scan [wm geom .] %dx%d oriWidth oriHeight
@@ -3368,7 +3380,7 @@ test textDisp-22.6 {TkTextCharBbox, line visible but not char} {
 } {1}
 wm geom . {}
 update
-test textDisp-22.7 {TkTextCharBbox, different character sizes} {
+test textDisp-22.7 {TkTextCharBbox, different character sizes} haveBigFontTwiceLargerThanTextFont {
     .t config -wrap char
     .t yview 10.0
     .t tag add big 12.2 12.5
@@ -3729,7 +3741,7 @@ test textDisp-24.15 {TkTextCharLayoutProc, -wrap none} {
     lequal [list [.t bbox 1.19] [.t bbox 1.20]] $expected
 } {1}
 test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
-    if {[tk windowingsystem] == "win32"} {
+    if {[tk windowingsystem] eq "win32"} {
 	wm overrideredirect . 1
     }
     .t configure -wrap char
@@ -3743,7 +3755,7 @@ test textDisp-24.16 {TkTextCharLayoutProc, no chars fit} {
 } [list [list [xchar 0] [yline 1] 1 $fixedHeight] \
         [list [xchar 0] [yline 2] 1 $fixedHeight] \
 	[list [xchar 0] [yline 3] 1 $fixedHeight]]
-if {[tk windowingsystem] == "win32"} {
+if {[tk windowingsystem] eq "win32"} {
     wm overrideredirect . 0
 }
 test textDisp-24.17 {TkTextCharLayoutProc, -wrap word} {
@@ -3926,7 +3938,7 @@ test textDisp-26.5 {AdjustForTab procedure, numeric alignment} {
     .t tag add y 1.2
     .t tag add y 1.5
     lindex [.t bbox 1.3] 0
-} {120}
+} 120
 test textDisp-26.6 {AdjustForTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t1,456.234
@@ -3935,7 +3947,7 @@ test textDisp-26.6 {AdjustForTab procedure, numeric alignment} {
     .t tag add x 1.0 end
     .t tag add y 1.2
     lindex [.t bbox 1.7] 0
-} {120}
+} 120
 test textDisp-26.7 {AdjustForTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t1.456.234,7
@@ -3944,7 +3956,7 @@ test textDisp-26.7 {AdjustForTab procedure, numeric alignment} {
     .t tag add x 1.0 end
     .t tag add y 1.2
     lindex [.t bbox 1.11] 0
-} {120}
+} 120
 test textDisp-26.8 {AdjustForTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\ttest
@@ -3953,7 +3965,7 @@ test textDisp-26.8 {AdjustForTab procedure, numeric alignment} {
     .t tag add x 1.0 end
     .t tag add y 1.2
     lindex [.t bbox 1.6] 0
-} {120}
+} 120
 test textDisp-26.9 {AdjustForTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t1234
@@ -3962,7 +3974,7 @@ test textDisp-26.9 {AdjustForTab procedure, numeric alignment} {
     .t tag add x 1.0 end
     .t tag add y 1.2
     lindex [.t bbox 1.6] 0
-} {120}
+} 120
 test textDisp-26.10 {AdjustForTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\t1.234567
@@ -3971,7 +3983,7 @@ test textDisp-26.10 {AdjustForTab procedure, numeric alignment} {
     .t tag add x 1.0 end
     .t tag add y 1.5
     lindex [.t bbox 1.3] 0
-} {120}
+} 120
 test textDisp-26.11 {AdjustForTab procedure, numeric alignment} {
     .t delete 1.0 end
     .t insert 1.0 a\tx=1.234567
@@ -3981,7 +3993,7 @@ test textDisp-26.11 {AdjustForTab procedure, numeric alignment} {
     .t tag add y 1.7
     .t tag add y 1.9
     lindex [.t bbox 1.5] 0
-} {120}
+} 120
 test textDisp-26.12 {AdjustForTab procedure, adjusting chunks} {
     .t delete 1.0 end
     .t insert 1.0 a\tx1.234567
@@ -3994,7 +4006,7 @@ test textDisp-26.12 {AdjustForTab procedure, adjusting chunks} {
     .t window create 1.3 -window .b
     update
     lindex [.t bbox 1.5] 0
-} {120}
+} 120
 test textDisp-26.13 {AdjustForTab procedure, not enough space} {
     .t delete 1.0 end
     .t insert 1.0 "abc\txyz\tqrs\txyz\t0"
@@ -4186,7 +4198,7 @@ test textDisp-27.7.2 {SizeOfTab procedure, fractional tab interpolation problem}
     .t configure -tabs $precisetab
     update
     expr {[lindex $res 0] - [lindex [.t bbox 1.20] 0]}
-} {0}
+} 0
 
 .t configure -wrap char -tabs {} -width 20
 update
@@ -4799,7 +4811,7 @@ test textDisp-33.3 {one line longer than fits in the widget} {
     .tt sync
     # Each line should have been recalculated just once
     expr {[llength $tk_textHeightCalc] == [.tt count -displaylines 1.0 end]}
-} {1}
+} 1
 test textDisp-33.4 {one line longer than fits in the widget} {
     destroy .tt
     pack [text .tt -wrap char]
@@ -4866,7 +4878,7 @@ test textDisp-34.1 {Line heights recalculation problem: bug 2677890} -setup {
     set negative
 } -cleanup {
     destroy .t1
-} -result {0}
+} -result 0
 
 test textDisp-35.1 {Init value of charHeight - Dancing scrollbar bug 1499165} -setup {
     pack [text .t1] -fill both -expand y -side left

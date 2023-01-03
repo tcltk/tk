@@ -11,21 +11,24 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
+set fixedFont {Courier 12}
+set bigFont   {Helvetica 24}
+
+# Warn the user if the actual font is too different from what was requested.
+if {[font metrics [font actual $fixedFont] -fixed] != 1} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+does not seem to be a fixed-width font as expected. If this is really the case, many upcoming\
+tests will fail."
+}
 
 destroy .t
-text .t -width 20 -height 10
-testConstraint haveCourier12 [expr {[catch {
-    .t configure -font {Courier 12}
-}] == 0}]
+text .t -width 20 -height 10 -font $fixedFont
 
 pack .t -expand 1 -fill both
 update
 .t debug on
 
 wm geometry . {}
-set bigFont {Helvetica 24}
 
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm, to make mwm forget about a previous minimum size setting.
@@ -43,130 +46,96 @@ bOy GIrl .#@? x_yz
 !@#$%
 Line 7"
 
-test textTag-1.1 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.1 {tag configuration options} -body {
     .t tag configure x -background #012345
     .t tag cget x -background
 } -cleanup {
     .t tag configure x -background [lindex [.t tag configure x -background] 3]
 } -result {#012345}
-test textTag-1.2 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.2 {configuration options} -body {
     .t tag configure x -background non-existent
 } -cleanup {
     .t tag configure x -background [lindex [.t tag configure x -background] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
-test textTag-1.3 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.3 {tag configuration options} -body {
     .t tag configure x -bgstipple gray50
     .t tag cget x -bgstipple
 } -cleanup {
     .t tag configure x -bgstipple [lindex [.t tag configure x -bgstipple] 3]
 } -result {gray50}
-test textTag-1.4 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.4 {configuration options} -body {
     .t tag configure x -bgstipple badStipple
 } -cleanup {
     .t tag configure x -bgstipple [lindex [.t tag configure x -bgstipple] 3]
 } -returnCodes error -result {bitmap "badStipple" not defined}
-test textTag-1.5 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.5 {tag configuration options} -body {
     .t tag configure x -borderwidth 2
     .t tag cget x -borderwidth
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
 } -result {2}
-test textTag-1.6 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
 } -returnCodes error -result {bad screen distance "46q"}
-test textTag-1.7 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.7 {tag configuration options} -body {
     .t tag configure x -fgstipple gray25
     .t tag cget x -fgstipple
 } -cleanup {
     .t tag configure x -fgstipple [lindex [.t tag configure x -fgstipple] 3]
 } -result {gray25}
-test textTag-1.8 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.8 {configuration options} -body {
     .t tag configure x -fgstipple bogus
 } -cleanup {
     .t tag configure x -fgstipple [lindex [.t tag configure x -fgstipple] 3]
 } -returnCodes error -result {bitmap "bogus" not defined}
-test textTag-1.9 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.9 {tag configuration options} -body {
     .t tag configure x -font fixed
     .t tag cget x -font
 } -cleanup {
     .t tag configure x -font [lindex [.t tag configure x -font] 3]
 } -result {fixed}
-test textTag-1.10 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.10 {tag configuration options} -body {
     .t tag configure x -foreground #001122
     .t tag cget x -foreground
 } -cleanup {
     .t tag configure x -foreground [lindex [.t tag configure x -foreground] 3]
 } -result {#001122}
-test textTag-1.11 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.11 {configuration options} -body {
     .t tag configure x -foreground {silly color}
 } -cleanup {
     .t tag configure x -foreground [lindex [.t tag configure x -foreground] 3]
 } -returnCodes error -result {unknown color name "silly color"}
-test textTag-1.12 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.12 {tag configuration options} -body {
     .t tag configure x -justify left
     .t tag cget x -justify
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
 } -result {left}
-test textTag-1.13 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.13 {configuration options} -body {
     .t tag configure x -justify middle
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
 } -returnCodes error -result {bad justification "middle": must be left, right, or center}
-test textTag-1.14 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.14 {tag configuration options} -body {
     .t tag configure x -lmargin1 10
     .t tag cget x -lmargin1
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
 } -result {10}
-test textTag-1.15 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
 } -returnCodes error -result {bad screen distance "bad"}
-test textTag-1.16 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.16 {tag configuration options} -body {
     .t tag configure x -lmargin2 10
     .t tag cget x -lmargin2
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
 } -result {10}
-test textTag-1.17 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
@@ -182,32 +151,24 @@ test textTag-1.17b {configuration options} -body {
 } -cleanup {
     .t tag configure x -lmargincolor [lindex [.t tag configure x -lmargincolor] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
-test textTag-1.18 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.18 {tag configuration options} -body {
     .t tag configure x -offset 2
     .t tag cget x -offset
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
 } -result {2}
-test textTag-1.19 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
 } -returnCodes error -result {bad screen distance "100xyz"}
-test textTag-1.20 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.20 {tag configuration options} -body {
     .t tag configure x -overstrike on
     .t tag cget x -overstrike
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
 } -result {on}
-test textTag-1.21 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
@@ -223,32 +184,24 @@ test textTag-1.21b {configuration options} -body {
 } -cleanup {
     .t tag configure x -overstrikefg [lindex [.t tag configure x -overstrikefg] 3]
 } -returnCodes error -result {unknown color name "stupid"}
-test textTag-1.22 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.22 {tag configuration options} -body {
     .t tag configure x -relief raised
     .t tag cget x -relief
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
 } -result {raised}
-test textTag-1.23 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.23 {configuration options} -body {
     .t tag configure x -relief stupid
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
 } -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, or sunken}
-test textTag-1.24 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.24 {tag configuration options} -body {
     .t tag configure x -rmargin 10
     .t tag cget x -rmargin
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
 } -result {10}
-test textTag-1.25 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
@@ -286,77 +239,57 @@ test textTag-1.25f {configuration options} -body {
 } -cleanup {
     .t tag configure x -selectforeground [lindex [.t tag configure x -selectforeground] 3]
 } -returnCodes error -result {unknown color name "non-existent"}
-test textTag-1.26 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.26 {tag configuration options} -body {
     .t tag configure x -spacing1 10
     .t tag cget x -spacing1
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
 } -result {10}
-test textTag-1.27 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
 } -returnCodes error -result {bad screen distance "bad"}
-test textTag-1.28 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.28 {tag configuration options} -body {
     .t tag configure x -spacing2 10
     .t tag cget x -spacing2
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
 } -result {10}
-test textTag-1.29 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.29 {configuration options} -body {
     .t tag configure x -spacing2 bad
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
 } -returnCodes error -result {bad screen distance "bad"}
-test textTag-1.30 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.30 {tag configuration options} -body {
     .t tag configure x -spacing3 10
     .t tag cget x -spacing3
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
 } -result {10}
-test textTag-1.31 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
 } -returnCodes error -result {bad screen distance "bad"}
-test textTag-1.32 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.32 {tag configuration options} -body {
     .t tag configure x -tabs {10 20 30}
     .t tag cget x -tabs
 } -cleanup {
     .t tag configure x -tabs [lindex [.t tag configure x -tabs] 3]
 } -result {10 20 30}
-test textTag-1.33 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.33 {configuration options} -body {
     .t tag configure x -tabs {10 fork}
 } -cleanup {
     .t tag configure x -tabs [lindex [.t tag configure x -tabs] 3]
 } -returnCodes error -result {bad tab alignment "fork": must be left, right, center, or numeric}
-test textTag-1.34 {tag configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.34 {tag configuration options} -body {
     .t tag configure x -underline no
     .t tag cget x -underline
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
 } -result {no}
-test textTag-1.35 {configuration options} -constraints {
-    haveCourier12
-} -body {
+test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
@@ -374,43 +307,29 @@ test textTag-1.37 {configuration options} -body {
 } -returnCodes error -result {unknown color name "stupid"}
 
 
-test textTag-2.1 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.1 {TkTextTagCmd - "add" option} -body {
     .t tag
 } -returnCodes error -result {wrong # args: should be ".t tag option ?arg ...?"}
-test textTag-2.2 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.2 {TkTextTagCmd - "add" option} -body {
     .t tag gorp
 } -returnCodes error -result {bad tag option "gorp": must be add, bind, cget, configure, delete, lower, names, nextrange, prevrange, raise, ranges, or remove}
-test textTag-2.3 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.3 {TkTextTagCmd - "add" option} -body {
     .t tag add foo
 } -returnCodes error -result {wrong # args: should be ".t tag add tagName index1 ?index2 index1 index2 ...?"}
-test textTag-2.4 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.4 {TkTextTagCmd - "add" option} -body {
     .t tag add x gorp
 } -returnCodes error -result {bad text index "gorp"}
-test textTag-2.5 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.5 {TkTextTagCmd - "add" option} -body {
     .t tag add x 1.2 gorp
 } -returnCodes error -result {bad text index "gorp"}
-test textTag-2.6 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -setup {
+test textTag-2.6 {TkTextTagCmd - "add" option} -setup {
     .t tag delete sel
 } -body {
     .t tag add sel 3.2 3.4
     .t tag add sel 3.2 3.0
     .t tag ranges sel
 } -result {3.2 3.4}
-test textTag-2.7 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -setup {
+test textTag-2.7 {TkTextTagCmd - "add" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 1.0 1.end
@@ -418,9 +337,7 @@ test textTag-2.7 {TkTextTagCmd - "add" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {1.0 1.6}
-test textTag-2.8 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -setup {
+test textTag-2.8 {TkTextTagCmd - "add" option} -setup {
     .t tag remove x 1.0 end
 } -body {
     .t tag add x 1.2
@@ -428,9 +345,7 @@ test textTag-2.8 {TkTextTagCmd - "add" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {1.2 1.3}
-test textTag-2.9 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -setup {
+test textTag-2.9 {TkTextTagCmd - "add" option} -setup {
     destroy .t.e
 } -body {
     entry .t.e
@@ -442,9 +357,7 @@ test textTag-2.9 {TkTextTagCmd - "add" option} -constraints {
 } -cleanup {
     destroy .t.e
 } -result 34
-test textTag-2.10 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -setup {
+test textTag-2.10 {TkTextTagCmd - "add" option} -setup {
     destroy .t.e
 } -body {
     entry .t.e
@@ -457,72 +370,56 @@ test textTag-2.10 {TkTextTagCmd - "add" option} -constraints {
 } -cleanup {
     destroy .t.e
 }  -result {Text}
-test textTag-2.11 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.11 {TkTextTagCmd - "add" option} -body {
     .t tag remove sel 1.0 end
     .t tag add sel 1.1 1.5 2.4 3.1 4.2 4.4
     .t tag ranges sel
 } -result {1.1 1.5 2.4 3.1 4.2 4.4}
-test textTag-2.12 {TkTextTagCmd - "add" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-2.12 {TkTextTagCmd - "add" option} -body {
     .t tag remove sel 1.0 end
     .t tag add sel 1.1 1.5 2.4
     .t tag ranges sel
 } -cleanup {
     .t tag remove sel 1.0 end
 } -result {1.1 1.5 2.4 2.5}
-test textTag-2.14 {tag add before -startline - Bug 1615425} haveCourier12 {
+test textTag-2.14 {tag add before -startline - Bug 1615425} -body {
     text .tt
     for {set i 1} {$i <10} {incr i} {
         .tt insert end "Line $i\n"
     }
-    .tt tag configure mytag -font {Courier 12 bold}
+    .tt tag configure mytag -offset 2
     .tt peer create .ptt
     .ptt configure -startline 3 -endline 7
     # the test succeeds if next line does not crash
     .tt tag add mytag 1.0 1.end
     destroy .ptt .tt
     set res 1
-} {1}
+} -result {1}
 
 
-test textTag-3.1 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.1 {TkTextTagCmd - "bind" option} -body {
     .t tag bind
 } -returnCodes error -result {wrong # args: should be ".t tag bind tagName ?sequence? ?command?"}
-test textTag-3.2 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.2 {TkTextTagCmd - "bind" option} -body {
     .t tag bind 1 2 3 4
 } -returnCodes error -result {wrong # args: should be ".t tag bind tagName ?sequence? ?command?"}
-test textTag-3.3 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.3 {TkTextTagCmd - "bind" option} -body {
     .t tag bind x <Enter> script1
     .t tag bind x <Enter>
 } -cleanup {
     .t tag delete x
 } -result {script1}
-test textTag-3.4 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.4 {TkTextTagCmd - "bind" option} -body {
     .t tag bind x <Gorp> script2
 } -returnCodes error -result {bad event type or keysym "Gorp"}
-test textTag-3.5 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.5 {TkTextTagCmd - "bind" option} -body {
     .t tag delete x
     .t tag bind x <Enter> script1
     .t tag bind x <FocusIn> script2
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {requested illegal events; only key, button, motion, enter, leave, and virtual events may be used}
-test textTag-3.6 {TkTextTagCmd - "bind" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-3.6 {TkTextTagCmd - "bind" option} -body {
     .t tag delete x
     .t tag bind x <Enter> script1
     catch {.t tag bind x <FocusIn> script2}
@@ -530,9 +427,7 @@ test textTag-3.6 {TkTextTagCmd - "bind" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {<Enter>}
-test textTag-3.7 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.7 {TkTextTagCmd - "bind" option} -body {
     .t tag delete x
     .t tag bind x <Enter> script1
     .t tag bind x <Leave> script2
@@ -541,9 +436,7 @@ test textTag-3.7 {TkTextTagCmd - "bind" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {{<Enter> <Leave> a} script1 xyzzy}
-test textTag-3.8 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.8 {TkTextTagCmd - "bind" option} -body {
     .t tag delete x
     .t tag bind x <Enter> script1
     .t tag bind x <Enter> +script2
@@ -552,17 +445,13 @@ test textTag-3.8 {TkTextTagCmd - "bind" option} -constraints {
     .t tag delete x
 } -result {script1
 script2}
-test textTag-3.9 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.9 {TkTextTagCmd - "bind" option} -body {
     .t tag delete x
     .t tag bind x <Enter>
 } -cleanup {
     .t tag delete x
 } -returnCodes ok -result {}
-test textTag-3.10 {TkTextTagCmd - "bind" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-3.10 {TkTextTagCmd - "bind" option} -body {
     .t tag delete x
     .t tag bind x <
 } -cleanup {
@@ -570,30 +459,20 @@ test textTag-3.10 {TkTextTagCmd - "bind" option} -constraints {
 } -returnCodes error -result {no event type or button # or keysym}
 
 
-test textTag-4.1 {TkTextTagCmd - "cget" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-4.1 {TkTextTagCmd - "cget" option} -body {
     .t tag cget a
 } -returnCodes error -result {wrong # args: should be ".t tag cget tagName option"}
-test textTag-4.2 {TkTextTagCmd - "cget" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-4.2 {TkTextTagCmd - "cget" option} -body {
     .t tag cget a b c
 } -returnCodes error -result {wrong # args: should be ".t tag cget tagName option"}
-test textTag-4.3 {TkTextTagCmd - "cget" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-4.3 {TkTextTagCmd - "cget" option} -body {
     .t tag delete foo
     .t tag cget foo bar
 } -returnCodes error -result {tag "foo" isn't defined in text widget}
-test textTag-4.4 {TkTextTagCmd - "cget" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-4.4 {TkTextTagCmd - "cget" option} -body {
     .t tag cget sel bogus
 } -returnCodes error -result {unknown option "bogus"}
-test textTag-4.5 {TkTextTagCmd - "cget" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-4.5 {TkTextTagCmd - "cget" option} -body {
     .t tag delete x
     .t tag configure x -background red
     .t tag cget x -background
@@ -602,26 +481,18 @@ test textTag-4.5 {TkTextTagCmd - "cget" option} -constraints {
 } -result {red}
 
 
-test textTag-5.1 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.1 {TkTextTagCmd - "configure" option} -body {
     .t tag configure
 } -returnCodes error -result {wrong # args: should be ".t tag configure tagName ?-option? ?value? ?-option value ...?"}
-test textTag-5.2 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.2 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -foo
 } -returnCodes error -result {unknown option "-foo"}
-test textTag-5.3 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.3 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -background red -underline
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {value for "-underline" missing}
-test textTag-5.4 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.4 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underline yes
     .t tag configure x -underline
@@ -635,9 +506,7 @@ test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -result {-underlinefg {} {} {} lightgreen}
-test textTag-5.5 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -overstrike on
     .t tag cget x -overstrike
@@ -651,58 +520,44 @@ test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -result {-overstrikefg {} {} {} lightgreen}
-test textTag-5.6 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.6 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -overstrike foo
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {expected boolean value but got "foo"}
-test textTag-5.7 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.7 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underline stupid
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {expected boolean value but got "stupid"}
-test textTag-5.8 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify left
     .t tag configure x -justify
 } -cleanup {
     .t tag delete x
 } -result {-justify {} {} {} left}
-test textTag-5.9 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.9 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify bogus
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad justification "bogus": must be left, right, or center}
-test textTag-5.10 {TkTextTagCmd - "configure" option} -constraints {
-	haveCourier12
-} -body {
+test textTag-5.10 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify fill
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad justification "fill": must be left, right, or center}
-test textTag-5.11 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.11 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -offset 2
     .t tag configure x -offset
 } -cleanup {
     .t tag delete x
 } -result {-offset {} {} {} 2}
-test textTag-5.12 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.12 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -offset 1.0q
 } -cleanup {
@@ -721,17 +576,13 @@ test textTag-5.13 {TkTextTagCmd - "configure" option} -body {
                 {-rmargin {} {} {} 5} \
                 {-lmargincolor {} {} {} darkblue} {-rmargincolor {} {} {} lightgreen} \
           ]
-test textTag-5.14 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.14 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin1 2.0x
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "2.0x"}
-test textTag-5.15 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.15 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin2 gorp
 } -cleanup {
@@ -743,9 +594,7 @@ test textTag-5.15a {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {unknown color name "rainbow"}
-test textTag-5.16 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.16 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -rmargin 140.1.1
 } -cleanup {
@@ -758,9 +607,7 @@ test textTag-5.16a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
 } -returnCodes error -result {unknown color name "rainbow"}
 .t tag delete x
-test textTag-5.17 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.17 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 2 -spacing2 4 -spacing3 6
     list [.t tag configure x -spacing1] [.t tag configure x -spacing2] \
@@ -768,33 +615,25 @@ test textTag-5.17 {TkTextTagCmd - "configure" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {{-spacing1 {} {} {} 2} {-spacing2 {} {} {} 4} {-spacing3 {} {} {} 6}}
-test textTag-5.18 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.18 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 2.0x
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "2.0x"}
-test textTag-5.19 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.19 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 lousy
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "lousy"}
-test textTag-5.20 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.20 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 4.2.3
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad screen distance "4.2.3"}
-test textTag-5.21 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.21 {TkTextTagCmd - "configure" option} -body {
     .t configure -selectborderwidth 2 -selectforeground blue \
         -selectbackground black
     .t tag configure sel -borderwidth 4 -foreground green -background yellow
@@ -804,9 +643,7 @@ test textTag-5.21 {TkTextTagCmd - "configure" option} -constraints {
     }
     return $x
 } -result {4 green yellow}
-test textTag-5.22 {TkTextTagCmd - "configure" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-5.22 {TkTextTagCmd - "configure" option} -body {
     .t configure -selectborderwidth 20
     .t tag configure sel -borderwidth {}
     .t cget -selectborderwidth
@@ -858,19 +695,13 @@ test textTag-5.24 {TkTextTagCmd - "configure" option} -body {
     return $x
 } -result {yellow blue red white}
 
-test textTag-6.1 {TkTextTagCmd - "delete" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-6.1 {TkTextTagCmd - "delete" option} -body {
     .t tag delete
 } -returnCodes error -result {wrong # args: should be ".t tag delete tagName ?tagName ...?"}
-test textTag-6.2 {TkTextTagCmd - "delete" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-6.2 {TkTextTagCmd - "delete" option} -body {
     .t tag delete zork
 } -returnCodes ok -result {}
-test textTag-6.3 {TkTextTagCmd - "delete" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-6.3 {TkTextTagCmd - "delete" option} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     .t tag config x -background black
@@ -881,9 +712,7 @@ test textTag-6.3 {TkTextTagCmd - "delete" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {sel x}
-test textTag-6.4 {TkTextTagCmd - "delete" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-6.4 {TkTextTagCmd - "delete" option} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     .t tag config x -background black
@@ -892,9 +721,7 @@ test textTag-6.4 {TkTextTagCmd - "delete" option} -constraints {
     eval .t tag delete [.t tag names]
     .t tag names
 } -result {sel}
-test textTag-6.5 {TkTextTagCmd - "delete" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-6.5 {TkTextTagCmd - "delete" option} -body {
     .t tag bind x <Enter> foo
     .t tag delete x
     .t tag configure x -background black
@@ -904,24 +731,16 @@ test textTag-6.5 {TkTextTagCmd - "delete" option} -constraints {
 } -result {}
 
 
-test textTag-7.1 {TkTextTagCmd - "lower" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-7.1 {TkTextTagCmd - "lower" option} -body {
     .t tag lower
 } -returnCodes error -result {wrong # args: should be ".t tag lower tagName ?belowThis?"}
-test textTag-7.2 {TkTextTagCmd - "lower" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-7.2 {TkTextTagCmd - "lower" option} -body {
     .t tag lower foo
 } -returnCodes error -result {tag "foo" isn't defined in text widget}
-test textTag-7.3 {TkTextTagCmd - "lower" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-7.3 {TkTextTagCmd - "lower" option} -body {
     .t tag lower sel bar
 } -returnCodes error -result {tag "bar" isn't defined in text widget}
-test textTag-7.4 {TkTextTagCmd - "lower" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-7.4 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -933,9 +752,7 @@ test textTag-7.4 {TkTextTagCmd - "lower" option} -constraints {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {c sel a b d}
-test textTag-7.5 {TkTextTagCmd - "lower" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-7.5 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -947,9 +764,7 @@ test textTag-7.5 {TkTextTagCmd - "lower" option} -constraints {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {sel a d b c}
-test textTag-7.6 {TkTextTagCmd - "lower" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-7.6 {TkTextTagCmd - "lower" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -963,16 +778,12 @@ test textTag-7.6 {TkTextTagCmd - "lower" option} -constraints {
 } -result {sel b a c d}
 
 
-test textTag-8.1 {TkTextTagCmd - "names" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-8.1 {TkTextTagCmd - "names" option} -body {
     .t tag names a b
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -returnCodes error -result {wrong # args: should be ".t tag names ?index?"}
-test textTag-8.2 {TkTextTagCmd - "names" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-8.2 {TkTextTagCmd - "names" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -983,9 +794,7 @@ test textTag-8.2 {TkTextTagCmd - "names" option} -constraints {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {sel a b c d}
-test textTag-8.3 {TkTextTagCmd - "names" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-8.3 {TkTextTagCmd - "names" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -1000,24 +809,16 @@ test textTag-8.3 {TkTextTagCmd - "names" option} -constraints {
 } -result {c {a b}}
 
 
-test textTag-9.1 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-9.1 {TkTextTagCmd - "nextrange" option} -body {
     .t tag nextrange x
 } -returnCodes error -result {wrong # args: should be ".t tag nextrange tagName index1 ?index2?"}
-test textTag-9.2 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-9.2 {TkTextTagCmd - "nextrange" option} -body {
     .t tag nextrange x 1 2 3
 } -returnCodes error -result {wrong # args: should be ".t tag nextrange tagName index1 ?index2?"}
-test textTag-9.3 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-9.3 {TkTextTagCmd - "nextrange" option} -body {
     .t tag nextrange foo 1.0
 } -returnCodes ok -result {}
-test textTag-9.4 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.4 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1025,9 +826,7 @@ test textTag-9.4 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad text index "foo"}
-test textTag-9.5 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.5 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1037,9 +836,7 @@ test textTag-9.5 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad text index "bar"}
-test textTag-9.6 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.6 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1049,9 +846,7 @@ test textTag-9.6 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-9.7 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.7 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1061,9 +856,7 @@ test textTag-9.7 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-9.8 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.8 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1073,9 +866,7 @@ test textTag-9.8 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-9.9 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.9 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1085,9 +876,7 @@ test textTag-9.9 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.9 3.1}
-test textTag-9.10 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.10 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1097,9 +886,7 @@ test textTag-9.10 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {}
-test textTag-9.11 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.11 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1109,9 +896,7 @@ test textTag-9.11 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.9 3.1}
-test textTag-9.12 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.12 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1121,9 +906,7 @@ test textTag-9.12 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.9 3.1}
-test textTag-9.13 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.13 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1133,9 +916,7 @@ test textTag-9.13 {TkTextTagCmd - "nextrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {7.2 7.3}
-test textTag-9.14 {TkTextTagCmd - "nextrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-9.14 {TkTextTagCmd - "nextrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1147,28 +928,20 @@ test textTag-9.14 {TkTextTagCmd - "nextrange" option} -constraints {
 } -result {}
 
 
-test textTag-10.1 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-10.1 {TkTextTagCmd - "prevrange" option} -body {
     .t tag prevrange x
 } -returnCodes error -result {wrong # args: should be ".t tag prevrange tagName index1 ?index2?"}
-test textTag-10.2 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-10.2 {TkTextTagCmd - "prevrange" option} -body {
     .t tag prevrange x 1 2 3
 } -returnCodes error -result {wrong # args: should be ".t tag prevrange tagName index1 ?index2?"}
-test textTag-10.3 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.3 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag prevrange foo end
 } -cleanup {
     .t tag delete x
 } -returnCodes ok -result {}
-test textTag-10.4 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.4 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1178,9 +951,7 @@ test textTag-10.4 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad text index "foo"}
-test textTag-10.5 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.5 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1190,9 +961,7 @@ test textTag-10.5 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -returnCodes error -result {bad text index "bar"}
-test textTag-10.6 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.6 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1202,9 +971,7 @@ test textTag-10.6 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {7.2 7.3}
-test textTag-10.7 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.7 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1214,9 +981,7 @@ test textTag-10.7 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-10.8 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.8 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1226,9 +991,7 @@ test textTag-10.8 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-10.9 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.9 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1238,9 +1001,7 @@ test textTag-10.9 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-10.10 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.10 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1250,9 +1011,7 @@ test textTag-10.10 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {}
-test textTag-10.11 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.11 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1262,9 +1021,7 @@ test textTag-10.11 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {}
-test textTag-10.12 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.12 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1274,9 +1031,7 @@ test textTag-10.12 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.3 2.5}
-test textTag-10.13 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.13 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1286,9 +1041,7 @@ test textTag-10.13 {TkTextTagCmd - "prevrange" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.9 3.1}
-test textTag-10.14 {TkTextTagCmd - "prevrange" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-10.14 {TkTextTagCmd - "prevrange" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.3 2.5
@@ -1300,24 +1053,16 @@ test textTag-10.14 {TkTextTagCmd - "prevrange" option} -constraints {
 } -result {}
 
 
-test textTag-11.1 {TkTextTagCmd - "raise" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-11.1 {TkTextTagCmd - "raise" option} -body {
     .t tag raise
 } -returnCodes error -result {wrong # args: should be ".t tag raise tagName ?aboveThis?"}
-test textTag-11.2 {TkTextTagCmd - "raise" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-11.2 {TkTextTagCmd - "raise" option} -body {
     .t tag raise foo
 } -returnCodes error -result {tag "foo" isn't defined in text widget}
-test textTag-11.3 {TkTextTagCmd - "raise" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-11.3 {TkTextTagCmd - "raise" option} -body {
     .t tag raise sel bar
 } -returnCodes error -result {tag "bar" isn't defined in text widget}
-test textTag-11.4 {TkTextTagCmd - "raise" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-11.4 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -1329,9 +1074,7 @@ test textTag-11.4 {TkTextTagCmd - "raise" option} -constraints {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {sel a b d c}
-test textTag-11.5 {TkTextTagCmd - "raise" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-11.5 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -1343,9 +1086,7 @@ test textTag-11.5 {TkTextTagCmd - "raise" option} -constraints {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {sel a b d c}
-test textTag-11.6 {TkTextTagCmd - "raise" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-11.6 {TkTextTagCmd - "raise" option} -setup {
     .t tag delete {*}[.t tag names]
     .t tag remove sel 1.0 end
     foreach i {a b c d} {
@@ -1359,20 +1100,14 @@ test textTag-11.6 {TkTextTagCmd - "raise" option} -constraints {
 } -result {sel b c a d}
 
 
-test textTag-12.1 {TkTextTagCmd - "ranges" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-12.1 {TkTextTagCmd - "ranges" option} -body {
     .t tag ranges
 } -returnCodes error -result {wrong # args: should be ".t tag ranges tagName"}
-test textTag-12.2 {TkTextTagCmd - "ranges" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-12.2 {TkTextTagCmd - "ranges" option} -body {
     .t tag delete x
     .t tag ranges x
 } -result {}
-test textTag-12.3 {TkTextTagCmd - "ranges" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-12.3 {TkTextTagCmd - "ranges" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.2
@@ -1382,9 +1117,7 @@ test textTag-12.3 {TkTextTagCmd - "ranges" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.2 2.3 2.7 4.6 5.2 5.5}
-test textTag-12.4 {TkTextTagCmd - "ranges" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-12.4 {TkTextTagCmd - "ranges" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 1.0 3.0
@@ -1395,14 +1128,10 @@ test textTag-12.4 {TkTextTagCmd - "ranges" option} -constraints {
 } -result {1.0 3.0 4.0 8.0}
 
 
-test textTag-13.1 {TkTextTagCmd - "remove" option} -constraints {
-    haveCourier12
-} -body {
+test textTag-13.1 {TkTextTagCmd - "remove" option} -body {
     .t tag remove
 } -returnCodes error -result {wrong # args: should be ".t tag remove tagName index1 ?index2 index1 index2 ...?"}
-test textTag-13.2 {TkTextTagCmd - "remove" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-13.2 {TkTextTagCmd - "remove" option} -setup {
     .t tag delete x
 } -body {
     .t tag add x 2.2 2.11
@@ -1411,9 +1140,7 @@ test textTag-13.2 {TkTextTagCmd - "remove" option} -constraints {
 } -cleanup {
     .t tag delete x
 } -result {2.2 2.3 2.7 2.11}
-test textTag-13.3 {TkTextTagCmd - "remove" option} -constraints {
-    haveCourier12
-} -setup {
+test textTag-13.3 {TkTextTagCmd - "remove" option} -setup {
     destroy .t.e
 } -body {
     entry .t.e
@@ -1429,7 +1156,7 @@ test textTag-13.3 {TkTextTagCmd - "remove" option} -constraints {
 } -result {Text}
 
 
-test textTag-14.1 {SortTags} -constraints haveCourier12 -setup {
+test textTag-14.1 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
     foreach i {a b c d} {
@@ -1440,7 +1167,7 @@ test textTag-14.1 {SortTags} -constraints haveCourier12 -setup {
     .t tag delete a b c d
 } -result {a b c d}
 .t tag delete a b c d
-test textTag-14.2 {SortTags} -constraints haveCourier12 -setup {
+test textTag-14.2 {SortTags} -setup {
     .t tag delete a b c d
 } -body {
     foreach i {a b c d} {
@@ -1453,7 +1180,7 @@ test textTag-14.2 {SortTags} -constraints haveCourier12 -setup {
 } -cleanup {
     .t tag delete a b c d
 } -result {a b c d}
-test textTag-14.3 {SortTags} -constraints haveCourier12 -setup {
+test textTag-14.3 {SortTags} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     for {set i 0} {$i < 30} {incr i} {
@@ -1463,7 +1190,7 @@ test textTag-14.3 {SortTags} -constraints haveCourier12 -setup {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 x29}
-test textTag-14.4 {SortTags} -constraints haveCourier12 -setup {
+test textTag-14.4 {SortTags} -setup {
     .t tag delete {*}[.t tag names]
 } -body {
     for {set i 0} {$i < 30} {incr i} {
@@ -1478,7 +1205,6 @@ test textTag-14.4 {SortTags} -constraints haveCourier12 -setup {
 } -result {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 x29}
 
 
-
 set c [.t bbox 2.1]
 set x1 [expr {[lindex $c 0] + [lindex $c 2]/2}]
 set y1 [expr {[lindex $c 1] + [lindex $c 3]/2}]
@@ -1489,7 +1215,7 @@ set c [.t bbox 4.3]
 set x3 [expr {[lindex $c 0] + [lindex $c 2]/2}]
 set y3 [expr {[lindex $c 1] + [lindex $c 3]/2}]
 
-test textTag-15.1 {TkTextBindProc} -constraints haveCourier12 -setup {
+test textTag-15.1 {TkTextBindProc} -setup {
     .t tag delete x y
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1516,7 +1242,7 @@ test textTag-15.1 {TkTextBindProc} -constraints haveCourier12 -setup {
     bind .t <ButtonRelease> {}
 } -result {x-up up up y-up up}
 
-test textTag-15.2 {TkTextBindProc} -constraints haveCourier12 -setup {
+test textTag-15.2 {TkTextBindProc} -setup {
     .t tag delete x y
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1546,7 +1272,7 @@ test textTag-15.2 {TkTextBindProc} -constraints haveCourier12 -setup {
     .t tag delete x y
 } -result {x-enter | x-down | | x-up x-leave y-enter}
 
-test textTag-15.3 {TkTextBindProc} -constraints haveCourier12 -setup {
+test textTag-15.3 {TkTextBindProc} -setup {
     .t tag delete x y
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1599,9 +1325,7 @@ test textTag-15.4 {TkTextBindProc, key event with mouse outside the widget} -set
 } -result {a}
 
 
-test textTag-16.1 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12
-} -setup {
+test textTag-16.1 {TkTextPickCurrent procedure} -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update
     event generate {} <Motion> -warp 1 -x 5 -y 5
@@ -1624,7 +1348,7 @@ test textTag-16.1 {TkTextPickCurrent procedure} -constraints {
 } -result {2.1 3.2 3.2 3.2 3.2 3.2 4.3}
 
 test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12 failsOnUbuntuNoXft
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     .t tag delete {*}[.t tag names]
     wm geometry . +200+200 ; update
@@ -1644,9 +1368,7 @@ test textTag-16.2 {TkTextPickCurrent procedure} -constraints {
     .t tag delete big
 } -result {3.2 3.1}
 
-test textTag-16.3 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12
-} -setup {
+test textTag-16.3 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
         .t tag remove $i 1.0 end
     }
@@ -1675,9 +1397,7 @@ test textTag-16.3 {TkTextPickCurrent procedure} -constraints {
     .t tag delete {*}[.t tag names]
 } -result {enter-a enter-b | leave-b enter-c | leave-a leave-c}
 
-test textTag-16.4 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12
-} -setup {
+test textTag-16.4 {TkTextPickCurrent procedure} -setup {
     foreach i {a b c d} {
         .t tag remove $i 1.0 end
     }
@@ -1705,9 +1425,7 @@ test textTag-16.4 {TkTextPickCurrent procedure} -constraints {
     .t tag delete {*}[.t tag names]
 } -result {enter-a enter-b enter-c | leave-c leave-b}
 
-test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12
-} -setup {
+test textTag-16.5 {TkTextPickCurrent procedure} -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
     }
@@ -1726,7 +1444,7 @@ test textTag-16.5 {TkTextPickCurrent procedure} -constraints {
 } -result {3.2}
 
 test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12 failsOnUbuntuNoXft
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
@@ -1747,7 +1465,7 @@ test textTag-16.6 {TkTextPickCurrent procedure} -constraints {
 } -result {3.1}
 
 test textTag-16.7 {TkTextPickCurrent procedure} -constraints {
-    haveCourier12 failsOnUbuntuNoXft
+    haveBigFontTwiceLargerThanTextFont
 } -setup {
     foreach i {big a b c d} {
         .t tag remove $i 1.0 end
