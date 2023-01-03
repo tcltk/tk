@@ -11,10 +11,6 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -1687,7 +1683,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 
 
 test entry-5.8 {ConfigureEntry procedure} -constraints {
-    fonts failsOnXQuarz
+    fonts
 } -setup {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -2314,7 +2310,7 @@ test entry-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
+test entry-8.18 {DeleteChars procedure} -setup {
     entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e ; update idletasks
     focus .e
@@ -2322,10 +2318,20 @@ test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
     .e insert 0 "xyzzy"
     update
     .e delete 2 4
-    winfo reqwidth .e
+    # To check that deletion actually happened we measure the new width
+    # of the widget, based on the measuring width of the remaining text ("xyy")
+    # in the widget. For that purpose we have to mirror the code in tkEntry.c
+    # for computation of the reqwidth
+    # note: XPAD corresponds to the hardcoded    #define XPAD 1
+    set XPAD 1
+    set expected [expr { [font measure [.e cget -font] "xyy"] \
+                          + 2 * ( [.e cget -borderwidth] + \
+                                [.e cget -highlightthickness] + $XPAD ) } ]
+    expr {[winfo reqwidth .e] == $expected}
 } -cleanup {
     destroy .e
-} -result 31
+    unset XPAD expected
+} -result {1}
 
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
@@ -3478,7 +3484,7 @@ test entry-20.7 {widget deletion with textvariable active} -body {
 # SF bugs 607390 and 617446
     set FOO init
     entry .e -textvariable FOO -validate all \
-	    -vcmd {%W configure -bg white; format 1}
+	    -validatecommand {%W configure -bg white; format 1}
     bind .e <Destroy> { set FOO hello }
     destroy .e
     winfo exists .e
