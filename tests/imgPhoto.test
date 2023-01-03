@@ -84,7 +84,7 @@ package require tcltest 2.2
 namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
-
+
 #
 # Used for imgPhoto-4.65 - imgPhoto-4.73
 #
@@ -224,7 +224,7 @@ test imgPhoto-2.2 {ImgPhotoCreate procedure} -setup {
 #     photo1 copy photo2
 #     set msg
 # } {couldn't open "bogus.img": no such file or directory}
-
+
 test imgPhoto-3.1 {ImgPhotoConfigureModel procedure} -constraints {
     hasTeapotPhoto
 } -body {
@@ -1398,7 +1398,7 @@ test imgPhoto-5.1 {ImgPhotoGet/Free procedures, shared instances} -constraints {
 } -cleanup {
     destroy .c
 } -result {}
-
+
 test imgPhoto-6.1 {ImgPhotoDisplay procedure, blank display} -setup {
     destroy .c
     pack [canvas .c]
@@ -1412,7 +1412,7 @@ test imgPhoto-6.1 {ImgPhotoDisplay procedure, blank display} -setup {
     destroy .c
     image delete photo1
 } -result {}
-
+
 test imgPhoto-7.1 {ImgPhotoFree procedure, resource freeing} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -1473,7 +1473,7 @@ test imgPhoto-7.3 {ImgPhotoFree procedures, multiple visuals} -constraints {
     destroy .f
     image delete photo1
 } -result {}
-
+
 test imgPhoto-8.1 {ImgPhotoDelete procedure} -constraints hasTeapotPhoto -body {
     image create photo photo2 -file $teapotPhotoFile
     image delete photo2
@@ -1497,7 +1497,7 @@ test imgPhoto-8.3 {ImgPhotoDelete procedure, name cleanup} -body {
 } -returnCodes error -cleanup {
     imageCleanup
 } -result {image "photo2" doesn't exist or is not a photo image}
-
+
 test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
     hasTeapotPhoto
 } -body {
@@ -1505,7 +1505,7 @@ test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -constraints {
     rename photo2 {}
     list [expr {"photo2" in [imageNames]}] [catch {photo2 foo} msg] $msg
 } -result {0 1 {invalid command name "photo2"}}
-
+
 test imgPhoto-10.1 {Tk_ImgPhotoPutBlock procedure} -setup {
     imageCleanup
 } -body {
@@ -1560,7 +1560,7 @@ test imgPhoto-11.1 {Tk_FindPhoto} -setup {
 } -cleanup {
     imageCleanup
 } -returnCodes error -result {image "i1" doesn't exist or is not a photo image}
-
+
 test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -constraints hasTeapotPhoto -body {
     image create photo p3 -file $teapotPhotoFile
     set result [list [p3 get 50 50] [p3 get 100 100]]
@@ -1649,7 +1649,7 @@ test imgPhoto-13.1 {check separation of images in different interpreters} -setup
     interp delete x1
     interp delete x2
 } -result T1_data
-
+
 test imgPhoto-14.1 {GIF writes work correctly} -setup {
     set data {
 	R0lGODlhYwA5APcAAAAAAIAAAACAAICAAAAAgIAAgACAgICAgAysnGy8hKzM
@@ -1793,7 +1793,7 @@ test imgPhoto-15.1 {photo images can fail to allocate memory gracefully} -constr
     # free memory available...
     image create photo -width 32000 -height 32000
 } -returnCodes error -result {not enough free memory for image buffer}
-
+
 test imgPhoto-16.1 {copying to self doesn't access freed memory} -setup {
     set i [image create photo]
 } -body {
@@ -1804,7 +1804,7 @@ test imgPhoto-16.1 {copying to self doesn't access freed memory} -setup {
 } -cleanup {
     image delete $i
 } -result {}
-
+
 # Check that we can guess our supported output formats [Bug 2983824]
 test imgPhoto-17.1 {photo write: format guessing from filename} -setup {
     set i [image create photo -width 3 -height 3]
@@ -1865,7 +1865,7 @@ test imgPhoto-17.5 {photo write: file with extension .default} -setup {
     unset f
 } -returnCodes error -result \
     {image file format "default" has no file writing capability}
-
+
 test imgPhoto-18.1 {MatchFileFormat: "default" format not supported} -setup {
     image create photo photo1
     set f [makeFile {} test.txt]
