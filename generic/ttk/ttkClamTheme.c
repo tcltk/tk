@@ -495,8 +495,8 @@ static const Ttk_ElementOptionSpec GripElementOptions[] = {
 	offsetof(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(GripElement,borderColorObj), DARKEST_COLOR },
-    { "-gripcount", TK_OPTION_INT,
-	offsetof(GripElement,gripCountObj), "5" },
+    { "-gripcount", TK_OPTION_PIXELS,
+	offsetof(GripElement,gripCountObj), "3.75p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -510,7 +510,7 @@ static void GripElementSize(
     (void)tkwin;
     (void)paddingPtr;
 
-    Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripCount);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = 2*gripCount;
     } else {
@@ -531,7 +531,7 @@ static void GripElementDraw(
     int i;
     (void)state;
 
-    Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripCount);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	int x = b.x + b.width / 2 - gripCount;
@@ -595,10 +595,10 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
-    { "-gripcount", TK_OPTION_INT,
-	offsetof(ScrollbarElement,gripCountObj), "5" },
+    { "-gripcount", TK_OPTION_PIXELS,
+	offsetof(ScrollbarElement,gripCountObj), "3.75p" },
     { "-sliderlength", TK_OPTION_INT,
-	offsetof(ScrollbarElement,sliderlengthObj), "30" },
+	offsetof(ScrollbarElement,sliderlengthObj), "22.5p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -661,7 +661,7 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
-    Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripCountObj, &gripCount);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 

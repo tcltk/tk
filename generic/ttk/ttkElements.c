@@ -990,7 +990,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
-	"30" },
+	"22.5p" },
     { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
 	"15" },
     { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),

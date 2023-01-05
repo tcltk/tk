@@ -235,7 +235,7 @@ proc ::tk::fontchooser::Create {} {
         foreach {what width} [array get minsize] {
             incr min $width
         }
-        wm minsize $S(W) $min [::tk::ScaleNum 260]
+        wm minsize $S(W) $min 195p
 
         bind $S(W) <Return> [namespace code [list Done 1]]
         bind $S(W) <Escape> [namespace code [list Done 0]]
@@ -278,7 +278,7 @@ proc ::tk::fontchooser::Create {} {
         grid $WE          x $WS           - -            x ^     -in $outer -sticky news -pady {11p 22.5p}
         grid configure $bbox -sticky n
         grid rowconfigure $outer 2 -weight 1
-        grid columnconfigure $outer {1 3 5} -minsize $minsize(gap)
+        grid columnconfigure $outer {1 3 5} -minsize 7.5p
         grid columnconfigure $outer {0 2 4} -weight 1
         grid columnconfigure $outer 0 -minsize $minsize(fonts)
         grid columnconfigure $outer 2 -minsize $minsize(styles)

@@ -6,8 +6,6 @@
 
 namespace eval ttk::theme::clam {
 
-    namespace import ::tk::ScaleNum
-
     variable colors
     array set colors {
 	-disabledfg		"#999999"
@@ -144,19 +142,15 @@ namespace eval ttk::theme::clam {
 	    -labeloutside true -labelmargins {0 0 0 3p} \
 	    -borderwidth 2 -relief raised
 
-	set gripCount [ScaleNum 5]
-	ttk::style configure TScrollbar -gripcount $gripCount \
+	ttk::style configure TScrollbar \
 	    -arrowsize 10.5p -width 10.5p
 
-	set sliderLen 22.5p
-	ttk::style configure TScale -gripcount $gripCount \
-	    -arrowsize 10.5p -sliderlength $sliderLen
+	ttk::style configure TScale \
+	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure TProgressbar -background $colors(-frame) \
-	    -arrowsize 10.5p -sliderlength $sliderLen
+	    -arrowsize 10.5p -sliderlength 22.5p
 
-	ttk::style configure Sash -sashthickness 4.5p -gripcount [ScaleNum 10]
+	ttk::style configure Sash -sashthickness 4.5p -gripcount 7.5p
     }
-
-    unset gripCount sliderLen
 }
