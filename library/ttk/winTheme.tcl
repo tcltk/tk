@@ -14,11 +14,10 @@ namespace eval ttk::theme::winnative {
 	    -fieldbackground SystemWindow \
 	    -insertcolor SystemWindowText \
 	    -troughcolor SystemScrollbar \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
-	ttk::style map "." -foreground [list disabled SystemGrayText] ;
-        ttk::style map "." -embossed [list disabled 1] ;
+	ttk::style map "." -foreground [list disabled SystemGrayText]
+        ttk::style map "." -embossed [list disabled 1]
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -relief raised -shiftrelief 1
@@ -37,8 +36,7 @@ namespace eval ttk::theme::winnative {
 	    -fieldbackground \
 		[list readonly SystemButtonFace disabled SystemButtonFace] \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 
 	ttk::style configure TCombobox -padding 1.5p
 	ttk::style map TCombobox \
@@ -51,8 +49,7 @@ namespace eval ttk::theme::winnative {
 		disabled		SystemGrayText \
 		{readonly focus}	SystemHighlightText \
 	    ] \
-	    -focusfill	[list {readonly focus} SystemHighlight] \
-	    ;
+	    -focusfill	[list {readonly focus} SystemHighlight]
 
 	ttk::style element create ComboboxPopdownFrame.border from default
 	ttk::style configure ComboboxPopdownFrame \
@@ -68,8 +65,7 @@ namespace eval ttk::theme::winnative {
 
 	ttk::style configure TScale -groovewidth 3p
 
-	set m 1.5p
-	set margins [list $m $m $m 0]
+	set margins {1.5p 1.5p 1.5p 0}
 	ttk::style configure TNotebook -tabmargins $margins
 	ttk::style configure TNotebook.Tab \
 	    -padding {2.25p 0.75p} -borderwidth 1
@@ -90,5 +86,5 @@ namespace eval ttk::theme::winnative {
 	    -barsize 22.5p -thickness 11.25p
     }
 
-    unset padding m margins
+    unset padding margins
 }

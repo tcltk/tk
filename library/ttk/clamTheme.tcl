@@ -36,16 +36,15 @@ namespace eval ttk::theme::clam {
 	    -selectbackground $colors(-selectbg) \
 	    -selectforeground $colors(-selectfg) \
 	    -selectborderwidth 0 \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
 	ttk::style map "." \
 	    -background [list disabled $colors(-frame) \
 			     active $colors(-lighter)] \
 	    -foreground [list disabled $colors(-disabledfg)] \
 	    -selectbackground [list  !focus $colors(-darkest)] \
-	    -selectforeground [list  !focus white] \
-	    ;
+	    -selectforeground [list  !focus white]
+
 	# -selectbackground [list  !focus "#847d73"]
 
 	ttk::style configure TButton \
@@ -57,8 +56,7 @@ namespace eval ttk::theme::clam {
 			     active $colors(-lighter)] \
 	    -lightcolor [list pressed $colors(-darker)] \
 	    -darkcolor [list pressed $colors(-darker)] \
-	    -bordercolor [list alternate "#000000"] \
-	    ;
+	    -bordercolor [list alternate "#000000"]
 
 	ttk::style configure Toolbutton \
 	    -anchor center -padding 1.5p -relief flat
@@ -73,20 +71,17 @@ namespace eval ttk::theme::clam {
 		    pressed $colors(-darker) \
 		    active $colors(-lighter)] \
 	    -lightcolor [list pressed $colors(-darker)] \
-	    -darkcolor [list pressed $colors(-darker)] \
-	    ;
+	    -darkcolor [list pressed $colors(-darker)]
 
-	set l 0.75p; set t $l; set r 3p; set b $l
-	set indMargin [list $l $t $r $b]
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \
 	    -indicatorsize 7.5p \
-	    -indicatormargin $indMargin \
+	    -indicatormargin {0.75p 0.75p 3p 0.75p} \
 	    -padding 1.5p
 	ttk::style configure TRadiobutton \
 	    -indicatorbackground "#ffffff" \
 	    -indicatorsize 7.5p \
-	    -indicatormargin $indMargin \
+	    -indicatormargin {0.75p 0.75p 3p 0.75p} \
 	    -padding 1.5p
 	ttk::style map TCheckbutton -indicatorbackground \
 	    [list  pressed $colors(-frame) \
@@ -107,8 +102,7 @@ namespace eval ttk::theme::clam {
 	    -background [list  readonly $colors(-frame)] \
 	    -bordercolor [list  focus $colors(-selectbg)] \
 	    -lightcolor [list  focus "#6f9dc6"] \
-	    -darkcolor [list  focus "#6f9dc6"] \
-	    ;
+	    -darkcolor [list  focus "#6f9dc6"]
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
 	    -arrowsize 10.5p
@@ -127,14 +121,11 @@ namespace eval ttk::theme::clam {
 	    -background [list  readonly $colors(-frame)] \
             -arrowcolor [list disabled $colors(-disabledfg)]
 
-	set l 4.5p; set t 1.5p; set r $l; set b $t
-	ttk::style configure TNotebook.Tab -padding [list $l $t $r $b]
-	set t 3p
+	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \
-	    -padding [list selected [list $l $t $r $b]] \
+	    -padding [list selected {4.5p 3p 4.5p 1.5p}] \
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
-	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)] \
-	    ;
+	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
 
 	# Treeview:
 	ttk::style configure Heading \
@@ -167,5 +158,5 @@ namespace eval ttk::theme::clam {
 	ttk::style configure Sash -sashthickness 4.5p -gripcount [ScaleNum 10]
     }
 
-    unset l t r b indMargin gripCount sliderLen
+    unset gripCount sliderLen
 }

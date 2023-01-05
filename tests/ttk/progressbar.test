@@ -96,7 +96,7 @@ test progressbar-3.1 "progressbar non-core options" -setup {
 } -cleanup {
     unset res
     destroy .defaultpb
-} -result {w black left {} {} 0 100 100.0 determinate horizontal 0 0.0 {}}
+} -result {w black left {} {} 0 75p 100.0 determinate horizontal 0 0.0 {}}
 
 test progressbar-3.2 "TIP #442 options are taken into account" -setup {
     set res {}

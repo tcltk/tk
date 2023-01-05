@@ -32,8 +32,7 @@ namespace eval ttk::theme::classic {
 	    -highlightcolor	$colors(-frame) \
 	    -highlightthickness	1 \
 	    -selectborderwidth	1 \
-	    -insertwidth	2 \
-	    ;
+	    -insertwidth	2
 
 	# To match pre-Xft X11 appearance, use:
 	#	ttk::style configure . -font {Helvetica 12 bold}
@@ -49,8 +48,7 @@ namespace eval ttk::theme::classic {
 	    -anchor center -padding "3m 1m" -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
-	set t 1.5p; set r 3p; set b $t
-	set indMargin [list 0 $t $r $b]
+	set indMargin {0 1.5p 3p 1.5p}
 	ttk::style configure TCheckbutton -indicatorrelief raised \
 	    -indicatordiameter 9p -indicatormargin $indMargin
 	ttk::style map TCheckbutton \
