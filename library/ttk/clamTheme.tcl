@@ -76,16 +76,16 @@ namespace eval ttk::theme::clam {
 	    -darkcolor [list pressed $colors(-darker)] \
 	    ;
 
-	set l [ScaleNum 1]; set t $l; set r [ScaleNum 4]; set b $l
+	set l 0.75p; set t $l; set r 3p; set b $l
 	set indMargin [list $l $t $r $b]
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \
-	    -indicatorsize [ScaleNum 10] \
+	    -indicatorsize 7.5p \
 	    -indicatormargin $indMargin \
 	    -padding 1.5p
 	ttk::style configure TRadiobutton \
 	    -indicatorbackground "#ffffff" \
-	    -indicatorsize [ScaleNum 10] \
+	    -indicatorsize 7.5p \
 	    -indicatormargin $indMargin \
 	    -padding 1.5p
 	ttk::style map TCheckbutton -indicatorbackground \
@@ -100,8 +100,7 @@ namespace eval ttk::theme::clam {
 			disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p \
-	    -padding 3.75p -relief raised
+	    -width -11 -arrowsize 3.75p -padding 3.75p -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
@@ -123,16 +122,14 @@ namespace eval ttk::theme::clam {
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	set l [ScaleNum 2]; set r [ScaleNum 10]
-	ttk::style configure TSpinbox -arrowsize 7.5p \
-	    -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
 	    -background [list  readonly $colors(-frame)] \
             -arrowcolor [list disabled $colors(-disabledfg)]
 
-	set l [ScaleNum 6]; set t [ScaleNum 2]; set r $l; set b $t
+	set l 4.5p; set t 1.5p; set r $l; set b $t
 	ttk::style configure TNotebook.Tab -padding [list $l $t $r $b]
-	set t [ScaleNum 4]
+	set t 3p
 	ttk::style map TNotebook.Tab \
 	    -padding [list selected [list $l $t $r $b]] \
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
@@ -153,22 +150,21 @@ namespace eval ttk::theme::clam {
 				selected $colors(-selectfg)]
 
 	ttk::style configure TLabelframe \
-	    -labeloutside true -labelmargins [list 0 0 0 [ScaleNum 4]] \
+	    -labeloutside true -labelmargins {0 0 0 3p} \
 	    -borderwidth 2 -relief raised
 
 	set gripCount [ScaleNum 5]
 	ttk::style configure TScrollbar -gripcount $gripCount \
-	    -arrowsize [ScaleNum 14] -width [ScaleNum 14]
+	    -arrowsize 10.5p -width 10.5p
 
-	set sliderLen [ScaleNum 30]
+	set sliderLen 22.5p
 	ttk::style configure TScale -gripcount $gripCount \
-	    -arrowsize [ScaleNum 14] -sliderlength $sliderLen
+	    -arrowsize 10.5p -sliderlength $sliderLen
 
 	ttk::style configure TProgressbar -background $colors(-frame) \
-	    -arrowsize [ScaleNum 14] -sliderlength $sliderLen
+	    -arrowsize 10.5p -sliderlength $sliderLen
 
-	ttk::style configure Sash -sashthickness [ScaleNum 6] \
-	    -gripcount [ScaleNum 10]
+	ttk::style configure Sash -sashthickness 4.5p -gripcount [ScaleNum 10]
     }
 
     unset l t r b indMargin gripCount sliderLen

@@ -14,8 +14,6 @@ if {"vista" ni [ttk::style theme names]} {
 
 namespace eval ttk::theme::vista {
 
-    namespace import ::tk::ScaleNum
-
     ttk::style theme settings vista {
 
  	ttk::style configure . \
@@ -31,19 +29,17 @@ namespace eval ttk::theme::vista {
 	    -foreground [list disabled SystemGrayText] \
 	    ;
 
-	ttk::style configure TButton -anchor center -padding 0.75p \
-	    -width -11
+	ttk::style configure TButton -anchor center -padding 0.75p -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
 	ttk::style configure TCheckbutton -padding 1.5p
-	ttk::style configure TMenubutton \
-	    -padding [list 6p 3p]
+	ttk::style configure TMenubutton -padding {6p 3p}
 
 	ttk::style element create Menubutton.dropdown vsapi \
 	    TOOLBAR 4 {{selected active} 6 {selected !active} 5
 		disabled 4 pressed 3 active 2 {} 1} \
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
 
-	set m [ScaleNum 2]
+	set m 1.5p
 	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
 	ttk::style map TNotebook.Tab \
 	    -expand [list selected [list $m $m $m $m]]
@@ -231,7 +227,7 @@ namespace eval ttk::theme::vista {
         }
 
         # Treeview
-        ttk::style configure Item -padding [list 3p 0 0 0]
+        ttk::style configure Item -padding {3p 0 0 0}
 
         package provide ttk::theme::vista 1.0
     }

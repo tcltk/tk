@@ -4,8 +4,6 @@
 
 namespace eval ttk::theme::winnative {
 
-    namespace import ::tk::ScaleNum
-
     ttk::style theme settings winnative {
 
 	ttk::style configure "." \
@@ -26,13 +24,12 @@ namespace eval ttk::theme::winnative {
 	    -anchor center -width -11 -relief raised -shiftrelief 1
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
 
-	set padding [list 1.5p 3p]
+	set padding {1.5p 3p}
 	ttk::style configure TCheckbutton -padding $padding
 	ttk::style configure TRadiobutton -padding $padding
 
 	ttk::style configure TMenubutton \
-	    -padding [list 6p 3p] \
-	    -arrowsize 2.25p -relief raised
+	    -padding {6p 3p} -arrowsize 2.25p -relief raised
 
 	ttk::style configure TEntry \
 	    -padding 2 -selectborderwidth 0 -insertwidth 1
@@ -61,23 +58,21 @@ namespace eval ttk::theme::winnative {
 	ttk::style configure ComboboxPopdownFrame \
 	    -borderwidth 1 -relief solid
 
-	set l 1.5p; set r 12p
-        ttk::style configure TSpinbox -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -padding {1.5p 0 12p 0}
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure Toolbutton -relief flat \
-	    -padding [list 6p 3p]
+	ttk::style configure Toolbutton -relief flat -padding {6p 3p}
 	ttk::style map Toolbutton -relief \
 	    {disabled flat  selected sunken  pressed sunken  active raised}
 
-	ttk::style configure TScale -groovewidth [ScaleNum 4]
+	ttk::style configure TScale -groovewidth 3p
 
-	set m [ScaleNum 2]
+	set m 1.5p
 	set margins [list $m $m $m 0]
 	ttk::style configure TNotebook -tabmargins $margins
 	ttk::style configure TNotebook.Tab \
-	    -padding [list 2.25p 0.75p] -borderwidth 1
+	    -padding {2.25p 0.75p} -borderwidth 1
 	ttk::style map TNotebook.Tab -expand [list selected $margins]
 
 	# Treeview:
@@ -92,8 +87,8 @@ namespace eval ttk::theme::winnative {
 
         ttk::style configure TProgressbar \
 	    -background SystemHighlight -borderwidth 0 \
-	    -barsize [ScaleNum 30] -thickness [ScaleNum 15]
+	    -barsize 22.5p -thickness 11.25p
     }
 
-    unset padding l r m margins
+    unset padding m margins
 }
