@@ -614,7 +614,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -636,7 +636,7 @@ TkpGetFontFromAttributes(
     if (tkFontPtr == NULL) {
 	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
-	fontPtr = (MacFont *) tkFontPtr;
+	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
     CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
@@ -1366,7 +1366,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
