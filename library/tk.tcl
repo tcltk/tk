@@ -816,7 +816,7 @@ set ::tk::Priv(IMETextMark) [dict create]
 # Scale the default parameters of the panedwindow sash
 option add *Panedwindow.handlePad	6p widgetDefault
 option add *Panedwindow.handleSize	6p widgetDefault
-option add *Panedwindow.sashWidth	2p widgetDefault
+option add *Panedwindow.sashWidth	2.25p widgetDefault
 
 # Scale the default size of the scale widget and its slider
 option add *Scale.length		75p widgetDefault
