@@ -4,8 +4,6 @@
 
 namespace eval ttk::theme::alt {
 
-    namespace import ::tk::ScaleNum
-
     variable colors
     array set colors {
 	-frame 		"#d9d9d9"
@@ -46,7 +44,7 @@ namespace eval ttk::theme::alt {
 	    {active !disabled}	raised
 	} -highlightcolor {alternate black}
 
-	set t [ScaleNum 2]; set r [ScaleNum 4]; set b $t
+	set t 1.5p; set r 3p; set b $t
 	set indMargin [list 0 $t $r $b]
 	ttk::style configure TCheckbutton -indicatorcolor "#ffffff" \
 	    -indicatormargin $indMargin -padding 1.5p
@@ -62,8 +60,7 @@ namespace eval ttk::theme::alt {
 	           disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p \
-	    -padding 2.5p -relief raised
+	    -width -11 -arrowsize 3.75p -padding 2.25p -relief raised
 
 	ttk::style configure TEntry -padding 1
 	ttk::style map TEntry -fieldbackground \
@@ -76,9 +73,7 @@ namespace eval ttk::theme::alt {
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	set l [ScaleNum 2]; set r [ScaleNum 10]
-	ttk::style configure TSpinbox -arrowsize 7.5p \
-	    -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -90,15 +85,15 @@ namespace eval ttk::theme::alt {
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize [ScaleNum 14] -width [ScaleNum 14]
+	    -arrowsize 10.5p -width 10.5p
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
-	set l [ScaleNum 2]; set t $l; set r [ScaleNum 1]
+	set l 1.5p; set t $l; set r 0.75p
 	set margins [list $l $t $r 0]
 	ttk::style configure TNotebook -tabmargins $margins
 	ttk::style configure TNotebook.Tab -background $colors(-darker) \
-	    -padding [list 3p 1.5p]
+	    -padding {3p 1.5p}
 	ttk::style map TNotebook.Tab \
 	    -background [list selected $colors(-frame)] \
 	    -expand [list selected $margins]
@@ -115,14 +110,14 @@ namespace eval ttk::theme::alt {
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
-	set thickness [ScaleNum 15]
+	set thickness 11.25p
 	ttk::style configure TScale \
-	    -groovewidth [ScaleNum 4] -troughrelief sunken \
+	    -groovewidth 3p -troughrelief sunken \
 	    -sliderthickness $thickness -borderwidth 2
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) -borderwidth 0 \
-	    -barsize [ScaleNum 30] -thickness $thickness
+	    -barsize 22.5p -thickness $thickness
     }
 
     unset l t r b indMargin margins thickness

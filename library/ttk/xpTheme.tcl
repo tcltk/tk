@@ -4,8 +4,6 @@
 
 namespace eval ttk::theme::xpnative {
 
-    namespace import ::tk::ScaleNum
-
     ttk::style theme settings xpnative {
 
 	ttk::style configure . \
@@ -25,10 +23,9 @@ namespace eval ttk::theme::xpnative {
 	    -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
 	ttk::style configure TCheckbutton -padding 1.5p
-	ttk::style configure TMenubutton \
-	    -padding [list 6p 3p]
+	ttk::style configure TMenubutton -padding {6p 3p}
 
-	set m [ScaleNum 2]
+	set m 1.5p
 	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
 	ttk::style map TNotebook.Tab \
 	    -expand [list selected [list $m $m $m $m]]
@@ -52,8 +49,7 @@ namespace eval ttk::theme::xpnative {
 	    -focusfill	[list {readonly focus} SystemHighlight] \
 	    ;
 
-	set l 1.5p; set r 10.5p
-	ttk::style configure TSpinbox -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -padding {1.5p 0 10.5p 0}
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -72,5 +68,5 @@ namespace eval ttk::theme::xpnative {
 				selected SystemHighlightText];
     }
 
-    unset m l r
+    unset m
 }
