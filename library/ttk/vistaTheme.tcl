@@ -22,12 +22,10 @@ namespace eval ttk::theme::vista {
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
 	    -insertcolor SystemWindowText \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
 	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText] \
-	    ;
+	    -foreground [list disabled SystemGrayText]
 
 	ttk::style configure TButton -anchor center -padding 0.75p -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
@@ -39,10 +37,9 @@ namespace eval ttk::theme::vista {
 		disabled 4 pressed 3 active 2 {} 1} \
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
 
-	set m 1.5p
-	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
+	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 1.5p 0}
 	ttk::style map TNotebook.Tab \
-	    -expand [list selected [list $m $m $m $m]]
+	    -expand [list selected {1.5p 1.5p 1.5p 1.5p}]
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
@@ -97,8 +94,7 @@ namespace eval ttk::theme::vista {
 		disabled		SystemGrayText \
 		{readonly focus}	SystemHighlightText \
 	    ] \
-	    -focusfill	[list {readonly focus} SystemHighlight] \
-	    ;
+	    -focusfill	[list {readonly focus} SystemHighlight]
 
         # Entry
         ttk::style configure TEntry -padding {1 1 1 1} ;# Needs lookup
@@ -117,8 +113,7 @@ namespace eval ttk::theme::vista {
         }
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 
         # Spinbox
         ttk::style configure TSpinbox -padding 0
@@ -152,8 +147,7 @@ namespace eval ttk::theme::vista {
         }
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 
 
         # SCROLLBAR elements (Vista includes a state for 'hover')
@@ -231,6 +225,4 @@ namespace eval ttk::theme::vista {
 
         package provide ttk::theme::vista 1.0
     }
-
-    unset m
 }

@@ -27,13 +27,12 @@ namespace eval ttk::theme::alt {
 	    -bordercolor	$colors(-border) \
 	    -selectbackground 	$colors(-selectbg) \
 	    -selectforeground 	$colors(-selectfg) \
-	    -font 		TkDefaultFont \
-	    ;
+	    -font 		TkDefaultFont
 
 	ttk::style map "." -background \
-	    [list disabled $colors(-frame)  active $colors(-activebg)] ;
-	ttk::style map "." -foreground [list disabled $colors(-disabledfg)] ;
-        ttk::style map "." -embossed [list disabled 1] ;
+	    [list disabled $colors(-frame)  active $colors(-activebg)]
+	ttk::style map "." -foreground [list disabled $colors(-disabledfg)]
+        ttk::style map "." -embossed [list disabled 1]
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -padding 0.75p \
@@ -44,8 +43,7 @@ namespace eval ttk::theme::alt {
 	    {active !disabled}	raised
 	} -highlightcolor {alternate black}
 
-	set t 1.5p; set r 3p; set b $t
-	set indMargin [list 0 $t $r $b]
+	set indMargin {0 1.5p 3p 1.5p}
 	ttk::style configure TCheckbutton -indicatorcolor "#ffffff" \
 	    -indicatormargin $indMargin -padding 1.5p
 	ttk::style configure TRadiobutton -indicatorcolor "#ffffff" \
@@ -89,8 +87,7 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
-	set l 1.5p; set t $l; set r 0.75p
-	set margins [list $l $t $r 0]
+	set margins {1.5p 1.5p 0.75p 0}
 	ttk::style configure TNotebook -tabmargins $margins
 	ttk::style configure TNotebook.Tab -background $colors(-darker) \
 	    -padding {3p 1.5p}
@@ -120,5 +117,5 @@ namespace eval ttk::theme::alt {
 	    -barsize 22.5p -thickness $thickness
     }
 
-    unset l t r b indMargin margins thickness
+    unset indMargin margins thickness
 }
