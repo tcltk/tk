@@ -4,8 +4,6 @@
 
 namespace eval ttk::theme::default {
 
-    namespace import ::tk::ScaleNum
-
     variable colors
     array set colors {
 	-frame			"#d9d9d9"
@@ -112,16 +110,15 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list !disabled $colors(-text)]
 
 	ttk::style configure TButton \
-	    -anchor center -padding [ScaleNum 3] -width -9 \
+	    -anchor center -padding 2.25p -width -9 \
 	    -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
-	set t [ScaleNum 2]; set r [ScaleNum 4]; set b $t
+	set t 1.5p; set r 3p; set b $t
 	set indMargin [list 0 $t $r $b]
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter [ScaleNum 10] -indicatormargin $indMargin \
-	    -padding [ScaleNum 1]
+	    -indicatordiameter 7.5p -indicatormargin $indMargin -padding 0.75p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -133,8 +130,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter [ScaleNum 10] -indicatormargin $indMargin \
-	    -padding [ScaleNum 1]
+	    -indicatordiameter 7.5p -indicatormargin $indMargin -padding 0.75p
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -145,22 +141,19 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    [list alternate raised]
 
 	ttk::style configure TMenubutton \
-	    -relief raised -indicatormargin [list [ScaleNum 5] 0] \
-	    -padding [list [ScaleNum 10] [ScaleNum 3]]
+	    -relief raised -indicatormargin {3.75p 0} -padding {7.5p 2.25p}
 
 	ttk::style configure TEntry \
 	    -relief sunken -fieldbackground $colors(-window) -padding 1
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -arrowsize [ScaleNum 12] -padding 1
+	ttk::style configure TCombobox -arrowsize 9p -padding 1
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
-	set l [ScaleNum 2]; set r [ScaleNum 10]
-	ttk::style configure TSpinbox -arrowsize [ScaleNum 10] \
-	    -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
@@ -168,26 +161,24 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TLabelframe \
 	    -relief groove -borderwidth 2
 
-	set scrlbarWidth [ScaleNum 12]
 	ttk::style configure TScrollbar \
-	    -width $scrlbarWidth -arrowsize $scrlbarWidth
+	    -width 9p -arrowsize 9p
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
-	set thickness [ScaleNum 15]
+	set thickness 11.25p
 	ttk::style configure TScale \
 	    -sliderrelief raised \
-	    -sliderlength [ScaleNum 30] \
+	    -sliderlength 22.5p \
 	    -sliderthickness $thickness
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) \
-	    -barsize [ScaleNum 30] \
+	    -barsize 22.5p \
 	    -thickness $thickness
 
 	ttk::style configure TNotebook.Tab \
-	    -padding [list [ScaleNum 4] [ScaleNum 2]] \
-	    -background $colors(-darker)
+	    -padding {3p 1.5p} -background $colors(-darker)
 	ttk::style map TNotebook.Tab \
 	    -background [list selected $colors(-frame)]
 
@@ -200,7 +191,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) ;
 	ttk::style configure Treeview.Separator \
-                -background $colors(-alternate)
+	    -background $colors(-alternate)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
                                 selected $colors(-selectbg)] \
@@ -226,7 +217,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	ttk::style configure Toolbutton \
-	    -padding [ScaleNum 2] -relief flat
+	    -padding 1.5p -relief flat
 	ttk::style map Toolbutton -relief \
 	    [list disabled flat selected sunken pressed sunken active raised]
 	ttk::style map Toolbutton -background \
