@@ -185,7 +185,7 @@ namespace eval ttk::theme::vista {
         ttk::style layout Horizontal.TProgressbar {
             Horizontal.Progressbar.trough -sticky nswe -children {
                 Horizontal.Progressbar.pbar -side left -sticky ns
-                Horizontal.Progressbar.text -sticky nesw
+                Horizontal.Progressbar.ctext -sticky nesw
             }
         }
         ttk::style element create Vertical.Progressbar.pbar vsapi \
