@@ -97,8 +97,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
-	    -indicatordiameter	10 \
-	    ;
+	    -indicatorsize	7.5p
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
@@ -118,7 +117,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	set indMargin [list 0 $t $r $b]
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin $indMargin -padding 0.75p
+	    -indicatorsize 7.5p -indicatormargin $indMargin -padding 0.75p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -130,7 +129,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin $indMargin -padding 0.75p
+	    -indicatorsize 7.5p -indicatormargin $indMargin -padding 0.75p
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \

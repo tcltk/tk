@@ -294,7 +294,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(IndicatorElement,sizeObj), "10" },
+	offsetof(IndicatorElement,sizeObj), "7.5p" },
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(IndicatorElement,marginObj), "1" },
     { "-indicatorbackground", TK_OPTION_COLOR,
