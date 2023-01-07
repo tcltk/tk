@@ -130,7 +130,7 @@ namespace eval tk {
 	    # Question: Is this perhaps due to the above call to 'eval' leading to callbacks
 	    #           creation and in turn to delayed deletions? To be checked, and probably
 	    #           anyway replace this line by  'destroy {*}[winfo children .]'
-	    update
+	#    update
 	}
 
 	namespace export fixfocus
