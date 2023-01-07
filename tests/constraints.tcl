@@ -121,15 +121,12 @@ namespace eval tk {
 
 	namespace export deleteWindows
 	proc deleteWindows {} {
-	    eval destroy [winfo children .]
+	    destroy {*}[winfo children .]
 	    # This update is needed to avoid intermittent failures on macOS in unixEmbed.test
 	    # with the (GitHub Actions) CI runner.
 	    # Reason for the failures is unclear but could have to do with window ids being deleted
 	    # after the destroy command returns. The detailed mechanism of such delayed deletions
 	    # is not understood, but it appears that this update prevents the test failures.
-	    # Question: Is this perhaps due to the above call to 'eval' leading to callbacks
-	    #           creation and in turn to delayed deletions? To be checked, and probably
-	    #           anyway replace this line by  'destroy {*}[winfo children .]'
 	    update
 	}
 
