@@ -753,8 +753,7 @@ Tk_MeasureChars(
 	     * This can't happen (but see #1185640)
 	     */
 
-	    *lengthPtr = curX;
-	    return curByte;
+	    goto measureCharsEnd;
 	}
 
 	source += clen;
@@ -810,6 +809,7 @@ Tk_MeasureChars(
 	curX = newX;
 	curByte = newByte;
     }
+measureCharsEnd:
     Tk_DeleteErrorHandler(handler);
 #ifdef DEBUG_FONTSEL
     string[len] = '\0';
