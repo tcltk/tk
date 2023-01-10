@@ -21,6 +21,14 @@
 #include "tkImgPhoto.h"
 #include "tkPort.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Declaration for internal Xlib function used here:
  */
@@ -339,9 +347,9 @@ TkImgPhotoGet(
     XFree((char *) visInfoPtr);
 
     if (mono) {
-	sprintf(buf, "%d", nRed);
+	snprintf(buf, sizeof(buf), "%d", nRed);
     } else {
-	sprintf(buf, "%d/%d/%d", nRed, nGreen, nBlue);
+	snprintf(buf, sizeof(buf), "%d/%d/%d", nRed, nGreen, nBlue);
     }
     instancePtr->defaultPalette = Tk_GetUid(buf);
 

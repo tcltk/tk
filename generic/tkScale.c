@@ -21,9 +21,14 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#if defined(_WIN32)
-#define snprintf _snprintf
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
 #endif
+
 
 /*
  * The following table defines the legal values for the -orient option. It is
@@ -974,15 +979,15 @@ ComputeFormat(
 
     if (forTicks) {
 	if (fDigits <= eDigits) {
-	    sprintf(scalePtr->tickFormat, "%%.%df", afterDecimal);
+	    snprintf(scalePtr->tickFormat, sizeof(scalePtr->tickFormat), "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits - 1);
+	    snprintf(scalePtr->tickFormat, sizeof(scalePtr->tickFormat), "%%.%de", numDigits - 1);
 	}
     } else {
 	if (fDigits <= eDigits) {
-	    sprintf(scalePtr->valueFormat, "%%.%df", afterDecimal);
+	    snprintf(scalePtr->valueFormat, sizeof(scalePtr->valueFormat), "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits - 1);
+	    snprintf(scalePtr->valueFormat, sizeof(scalePtr->valueFormat), "%%.%de", numDigits - 1);
 	}
     }
 }

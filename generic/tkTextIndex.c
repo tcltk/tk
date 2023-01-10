@@ -15,6 +15,14 @@
 #include "tkText.h"
 #include "default.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Index to use to select last character in line (very large integer):
  */
@@ -1128,7 +1136,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return sprintf(string, "%d.%d",
+    return snprintf(string, sizeof(string), "%d.%d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 

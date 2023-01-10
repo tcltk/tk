@@ -14,6 +14,14 @@
 #include "tkWinInt.h"
 #include "tkButton.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * These macros define the base style flags for the different button types.
  */
@@ -186,7 +194,7 @@ TkpButtonSetDefaults(void)
 {
     int width = GetSystemMetrics(SM_CXEDGE);
 	if (width > 0) {
-	    sprintf(tkDefButtonBorderWidth, "%d", width);
+	    snprintf(tkDefButtonBorderWidth, sizeof(tkDefButtonBorderWidth), "%d", width);
 	}
 }
 

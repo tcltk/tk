@@ -31,6 +31,14 @@
 #include "tkInt.h"
 #include "ttkTheme.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 struct Ttk_ResourceCache_ {
     Tcl_Interp	  *interp;	/* Interpreter for error reporting */
     Tk_Window	  tkwin;	/* Cache window. */
@@ -209,7 +217,7 @@ void Ttk_RegisterNamedColor(
     char nameBuf[14];
     Tcl_Obj *colorNameObj;
 
-    sprintf(nameBuf, "#%04X%04X%04X",
+    snprintf(nameBuf, sizeof(nameBuf), "#%04X%04X%04X",
     	colorPtr->red, colorPtr->green, colorPtr->blue);
     colorNameObj = Tcl_NewStringObj(nameBuf, -1);
     Tcl_IncrRefCount(colorNameObj);

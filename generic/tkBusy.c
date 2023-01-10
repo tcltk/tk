@@ -16,6 +16,14 @@
 #include "tkBusy.h"
 #include "default.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Things about the busy system that may be configured. Note that on some
  * platforms this may or may not have an effect.
@@ -550,7 +558,7 @@ CreateBusy(
 	    tkChild = NextChild(tkChild)) {
 	Tk_MakeWindowExist(tkChild);
     }
-    sprintf(name, fmt, Tk_Name(tkRef));
+    snprintf(name, sizeof(name), fmt, Tk_Name(tkRef));
     tkBusy = Tk_CreateWindow(interp, tkParent, name, NULL);
     ckfree(name);
 

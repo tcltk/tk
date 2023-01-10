@@ -25,6 +25,14 @@
 #   pragma comment (lib, "uuid.lib")
 #endif
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /* These needed for compilation with VC++ 5.2 */
 /* XXX - remove these since need at least VC 6 */
 #ifndef BIF_EDITBOX
@@ -3027,7 +3035,7 @@ SetTkDialog(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char buf[32];
 
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
+    snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
     Tcl_SetVar2(tsdPtr->debugInterp, "tk_dialog", NULL, buf, TCL_GLOBAL_ONLY);
 }
 
