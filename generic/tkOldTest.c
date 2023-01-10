@@ -24,6 +24,14 @@
 #endif
 #include "tkInt.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * The following data structure represents the model for a test image:
  */
@@ -267,7 +275,7 @@ ImageGet(
     char buffer[100];
     XGCValues gcValues;
 
-    sprintf(buffer, "%s get", timPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s get", timPtr->imageName);
     Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
@@ -312,7 +320,7 @@ ImageDisplay(
     TImageInstance *instPtr = clientData;
     char buffer[200 + TCL_INTEGER_SPACE * 6];
 
-    sprintf(buffer, "%s display %d %d %d %d %d %d",
+    snprintf(buffer, sizeof(buffer), "%s display %d %d %d %d %d %d",
 	    instPtr->modelPtr->imageName, imageX, imageY, width, height,
 	    drawableX, drawableY);
     Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName, NULL,
@@ -357,7 +365,7 @@ ImageFree(
     TImageInstance *instPtr = clientData;
     char buffer[200];
 
-    sprintf(buffer, "%s free", instPtr->modelPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s free", instPtr->modelPtr->imageName);
     Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName, NULL,
 	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     Tk_FreeColor(instPtr->fg);
@@ -391,7 +399,7 @@ ImageDelete(
     TImageModel *timPtr = clientData;
     char buffer[100];
 
-    sprintf(buffer, "%s delete", timPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s delete", timPtr->imageName);
     Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 

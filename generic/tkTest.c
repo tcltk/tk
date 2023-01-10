@@ -28,6 +28,14 @@
 #include "tkWinInt.h"
 #endif
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"
@@ -1505,7 +1513,7 @@ ImageGet(
     char buffer[100];
     XGCValues gcValues;
 
-    sprintf(buffer, "%s get", timPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s get", timPtr->imageName);
     Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
@@ -1574,7 +1582,7 @@ ImageDisplay(
 	     * Log the message.
 	     */
 
-	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
 	    instPtr->modelPtr->imageName, imageX, imageY, width, height);
 	}
 	Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName,
@@ -1589,7 +1597,7 @@ ImageDisplay(
 	 */
 
 	if (instPtr->displayFailed == False) {
-	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
 		    instPtr->modelPtr->imageName, imageX, imageY, width, height);
 	}
 	instPtr->displayFailed = True;
@@ -1635,7 +1643,7 @@ ImageFree(
     TImageInstance *instPtr = (TImageInstance *)clientData;
     char buffer[200];
 
-    sprintf(buffer, "%s free", instPtr->modelPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s free", instPtr->modelPtr->imageName);
     Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName, NULL,
 	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     Tk_FreeColor(instPtr->fg);
@@ -1669,7 +1677,7 @@ ImageDelete(
     TImageModel *timPtr = (TImageModel *)clientData;
     char buffer[100];
 
-    sprintf(buffer, "%s delete", timPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s delete", timPtr->imageName);
     Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
@@ -1828,7 +1836,7 @@ TestmetricsObjCmd(
 		"\": must be cxhscroll or cyvscroll", NULL);
 	return TCL_ERROR;
     }
-    sprintf(buf, "%d", val);
+    snprintf(buf, sizeof(buf), "%d", val);
     Tcl_AppendResult(interp, buf, NULL);
     return TCL_OK;
 }
@@ -1899,7 +1907,7 @@ TestpropObjCmd(
 		    value = 0xff & *p;
 		    p += 1;
 		}
-		sprintf(buffer, "0x%lx", value);
+		snprintf(buffer, sizeof(buffer), "0x%lx", value);
 		Tcl_AppendElement(interp, buffer);
 	    }
 	}

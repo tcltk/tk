@@ -15,6 +15,14 @@
 #include "tkInt.h"
 #include "tkColor.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Structures of the following following type are used as keys for
  * colorValueTable (in TkDisplay).
@@ -371,7 +379,7 @@ Tk_NameOfColor(
 	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red,
+	snprintf(tsdPtr->rgbString, sizeof(tsdPtr->rgbString), "#%04x%04x%04x", colorPtr->red,
 		colorPtr->green, colorPtr->blue);
 
 	/*

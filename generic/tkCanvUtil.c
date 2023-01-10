@@ -13,6 +13,14 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Structures defined only in this file.
  */
@@ -570,9 +578,9 @@ TkCanvasDashPrintProc(
     *freeProcPtr = TCL_DYNAMIC;
 
     p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-    sprintf(buffer, "%d", *p++ & 0xff);
+    snprintf(buffer, sizeof(buffer), "%d", *p++ & 0xff);
     while (--i) {
-	sprintf(buffer+strlen(buffer), " %d", *p++ & 0xff);
+	snprintf(buffer+strlen(buffer), sizeof(buffer)-strlen(buffer), " %d", *p++ & 0xff);
     }
     return buffer;
 }

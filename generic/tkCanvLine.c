@@ -15,6 +15,14 @@
 #include "tkCanvas.h"
 #include "default.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * The structure below defines the record for each line item.
  */
@@ -2075,7 +2083,7 @@ PrintArrowShape(
     LineItem *linePtr = (LineItem *) recordPtr;
     char *buffer = (char *)ckalloc(120);
 
-    sprintf(buffer, "%.5g %.5g %.5g", linePtr->arrowShapeA,
+    snprintf(buffer, sizeof(buffer), "%.5g %.5g %.5g", linePtr->arrowShapeA,
 	    linePtr->arrowShapeB, linePtr->arrowShapeC);
     *freeProcPtr = TCL_DYNAMIC;
     return buffer;

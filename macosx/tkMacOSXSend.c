@@ -267,7 +267,7 @@ Tk_SetAppName(
 		actualName = Tcl_DStringValue(&dString);
 	    }
 	    suffix++;
-	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", suffix);
+	    snprintf(Tcl_DStringValue(&dString) + offset, sizeof(Tcl_DStringValue(&dString)) - offset, "%d", suffix);
 	    i = 0;
 	} else {
 	    i++;

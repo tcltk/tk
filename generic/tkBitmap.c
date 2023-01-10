@@ -42,6 +42,14 @@
 #pragma warning (default : 4305)
 #endif
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * One of the following data structures exists for each bitmap that is
  * currently in use. Each structure is indexed with both "idTable" and
@@ -834,7 +842,7 @@ Tk_GetBitmapFromData(
 	name = (char *)Tcl_GetHashValue(dataHashPtr);
     } else {
 	dispPtr->bitmapAutoNumber++;
-	sprintf(string, "_tk%d", dispPtr->bitmapAutoNumber);
+	snprintf(string, sizeof(string), "_tk%d", dispPtr->bitmapAutoNumber);
 	name = string;
 	Tcl_SetHashValue(dataHashPtr, name);
 	if (Tk_DefineBitmap(interp, name, source, width, height) != TCL_OK) {

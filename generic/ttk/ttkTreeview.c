@@ -8,6 +8,14 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 #define MAX(a,b) ((a) > (b) ? (a) : (b))
 
 #define DEF_TREE_ROWS		"10"
@@ -2209,7 +2217,7 @@ static int TreeviewHorribleIdentify(
     if (dColumnNumber < 0) {
 	goto done;
     }
-    sprintf(dcolbuf, "#%d", dColumnNumber);
+    snprintf(dcolbuf, sizeof(dcolbuf), "#%d", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
 	if (-HALO <= x1 - x  && x1 - x <= HALO) {
@@ -2598,7 +2606,7 @@ static int TreeviewInsertCommand(
 	char idbuf[16];
 	do {
 	    ++tv->tree.serial;
-	    sprintf(idbuf, "I%03X", tv->tree.serial);
+	    snprintf(idbuf, sizeof(idbuf), "I%03X", tv->tree.serial);
 	    entryPtr = Tcl_CreateHashEntry(&tv->tree.items, idbuf, &isNew);
 	} while (!isNew);
     }

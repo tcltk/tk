@@ -13,6 +13,14 @@
 #include "tkPort.h"
 #include "tkText.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Macro that determines the size of an embedded image segment:
  */
@@ -410,7 +418,7 @@ EmbImageConfigure(
     if (conflict) {
     	char buf[4 + TCL_INTEGER_SPACE];
 
-	sprintf(buf, "#%d", count+1);
+	snprintf(buf, sizeof(buf), "#%d", count+1);
 	Tcl_DStringAppend(&newName, buf, -1);
     }
     name = Tcl_DStringValue(&newName);

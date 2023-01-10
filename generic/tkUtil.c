@@ -13,6 +13,14 @@
 
 #include "tkInt.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * The structure below defines the implementation of the "statekey" Tcl
  * object, used for quickly finding a mapping in a TkStateMap.
@@ -423,7 +431,7 @@ TkOffsetPrintProc(
 	    return "end";
 	}
 	p = (char *)ckalloc(32);
-	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
+	snprintf(p, sizeof(p), "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
     }
@@ -456,7 +464,7 @@ TkOffsetPrintProc(
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
-    sprintf(q, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
+    snprintf(q, sizeof(q), "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
     *freeProcPtr = TCL_DYNAMIC;
     return p;
 }

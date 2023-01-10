@@ -14,6 +14,14 @@
 #define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
  * default. Define it here to gain access to the InitCommonControlsEx API in
@@ -146,7 +154,7 @@ TkGetServerInfo(
 	    GetVersionExW(&os);
 	}
 	/* Write the first character last, preventing multi-thread issues. */
-	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
+	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
 		"Win64"
@@ -1533,7 +1541,7 @@ UpdateInputLanguage(
     if (charsetInfo.ciACP == CP_UTF8) {
 	strcpy(codepage, "utf-8");
     } else {
-	sprintf(codepage, "cp%d", charsetInfo.ciACP);
+	snprintf(codepage, sizeof(codepage), "cp%d", charsetInfo.ciACP);
     }
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {

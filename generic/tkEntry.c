@@ -19,6 +19,14 @@
 #include "default.h"
 #include "tkEntry.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * The following macro defines how many extra pixels to leave on each side of
  * the text in the entry.
@@ -1370,7 +1378,7 @@ ConfigureEntry(
 	    } else if (dvalue < sbPtr->fromValue) {
 		dvalue = sbPtr->fromValue;
 	    }
-	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
+	    snprintf(sbPtr->formatBuf, sizeof(sbPtr->formatBuf), sbPtr->valueFormat, dvalue);
 
             /*
 	     * No check for error return here as well, because any possible
@@ -3529,11 +3537,11 @@ ExpandPercents(
 		    number = -1;
 		    break;
 		}
-		sprintf(numStorage, "%d", number);
+		snprintf(numStorage, sizeof(numStorage), "%d", number);
 		string = numStorage;
 		break;
 	    case 'i':		/* index of insert/delete */
-		sprintf(numStorage, "%d", index);
+		snprintf(numStorage, sizeof(numStorage), "%d", index);
 		string = numStorage;
 		break;
 	    case 'P':		/* 'Peeked' new value of the string */
@@ -4400,7 +4408,7 @@ SpinboxInvoke(
 		    dvalue = sbPtr->toValue;
 		}
 	    }
-	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
+	    snprintf(sbPtr->formatBuf, sizeof(sbPtr->formatBuf), sbPtr->valueFormat, dvalue);
 	    code = EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }
@@ -4517,9 +4525,9 @@ ComputeFormat(
 	fDigits++;		/* Zero to left of decimal point. */
     }
     if (fDigits <= eDigits) {
-	sprintf(sbPtr->digitFormat, "%%.%df", afterDecimal);
+	snprintf(sbPtr->digitFormat, sizeof(sbPtr->digitFormat), "%%.%df", afterDecimal);
     } else {
-	sprintf(sbPtr->digitFormat, "%%.%de", numDigits-1);
+	snprintf(sbPtr->digitFormat, sizeof(sbPtr->digitFormat), "%%.%de", numDigits-1);
     }
     sbPtr->valueFormat = sbPtr->digitFormat;
     return TCL_OK;

@@ -13,6 +13,14 @@
 #include "tkWinInt.h"
 #include "tkBusy.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 typedef struct {
     int initialized;		/* 0 means table below needs initializing. */
     Tcl_HashTable windowTable;  /* The windowTable maps from HWND to Tk_Window

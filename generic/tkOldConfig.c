@@ -14,6 +14,14 @@
 
 #include "tkInt.h"
 
+#ifdef _MSC_VER
+/*
+ * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+# define snprintf _snprintf
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -773,7 +781,7 @@ FormatConfigValue(
 	}
 	break;
     case TK_CONFIG_INT:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, sizeof(buffer), "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_DOUBLE:
@@ -851,7 +859,7 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, sizeof(buffer),"%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_MM:
