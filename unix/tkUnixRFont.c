@@ -77,7 +77,6 @@ TCL_DECLARE_MUTEX(xftMutex);
  *-------------------------------------------------------------------------
  */
 
-
 static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
 {
     if (numBytes >= 6) {
@@ -88,9 +87,8 @@ static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
 
 void
 TkpFontPkgInit(
-    TkMainInfo *mainPtr)	/* The application being created. */
+    TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
-    (void)mainPtr;
 }
 
 static XftFont *
