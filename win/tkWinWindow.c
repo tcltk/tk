@@ -178,7 +178,7 @@ TkpPrintWindowId(
 {
     HWND hwnd = (window) ? Tk_GetHWND(window) : 0;
 
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
+    snprintf(buf, TCL_INTEGER_SPACE, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
 }
 
 /*
