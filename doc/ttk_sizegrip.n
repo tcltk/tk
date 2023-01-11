@@ -68,6 +68,8 @@ The class name for a \fBttk::sizegrip\fP is \fBTSizegrip\fP.
 \fBTSizegrip\fP styling options configurable with \fBttk::style\fP
 are:
 .PP
+\fB\-gripsize\fP \fIsize\fP (number of screen units)
+.PP
 \fB\-background\fP \fIcolor\fP
 .PP
 Some options are only available for specific themes.

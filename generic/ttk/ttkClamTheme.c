@@ -487,7 +487,7 @@ static const Ttk_ElementSpec MenuIndicatorElementSpec =
 typedef struct {
     Tcl_Obj 	*lightColorObj;
     Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*gripCountObj;
+    Tcl_Obj 	*gripSizeObj;
 } GripElement;
 
 static const Ttk_ElementOptionSpec GripElementOptions[] = {
@@ -495,8 +495,8 @@ static const Ttk_ElementOptionSpec GripElementOptions[] = {
 	offsetof(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(GripElement,borderColorObj), DARKEST_COLOR },
-    { "-gripcount", TK_OPTION_INT,
-	offsetof(GripElement,gripCountObj), "5" },
+    { "-gripsize", TK_OPTION_PIXELS,
+	offsetof(GripElement,gripSizeObj), "10" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -506,15 +506,14 @@ static void GripElementSize(
 {
     Ttk_Orient orient = (Ttk_Orient)PTR2INT(clientData);
     GripElement *grip = (GripElement *)elementRecord;
-    int gripCount = 0;
-    (void)tkwin;
+    int gripSize = 0;
     (void)paddingPtr;
 
-    Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	*widthPtr = 2*gripCount;
+	*widthPtr = gripSize;
     } else {
-	*heightPtr = 2*gripCount;
+	*heightPtr = gripSize;
     }
 }
 
@@ -527,25 +526,23 @@ static void GripElementDraw(
     GripElement *grip = (GripElement *)elementRecord;
     GC lightGC = Ttk_GCForColor(tkwin,grip->lightColorObj,d);
     GC darkGC = Ttk_GCForColor(tkwin,grip->borderColorObj,d);
-    int gripPad = 1, gripCount = 0;
+    int gripPad = 1, gripSize = 0;
     int i;
     (void)state;
 
-    Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
-	int x = b.x + b.width / 2 - gripCount;
+	int x = b.x + (b.width - gripSize) / 2;
 	int y1 = b.y + gripPad, y2 = b.y + b.height - gripPad - 1 + w;
-	for (i=0; i<gripCount; ++i) {
-	    XDrawLine(Tk_Display(tkwin), d, darkGC,  x,y1, x,y2); ++x;
-	    XDrawLine(Tk_Display(tkwin), d, lightGC, x,y1, x,y2); ++x;
+	for (i=0; i<gripSize; ++i) {
+	    XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC,  x,y1, x,y2); ++x;
 	}
     } else {
-	int y = b.y + b.height / 2 - gripCount;
+	int y = b.y + (b.height - gripSize) / 2;
 	int x1 = b.x + gripPad, x2 = b.x + b.width - gripPad - 1 + w;
-	for (i=0; i<gripCount; ++i) {
-	    XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y, x2,y); ++y;
-	    XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y, x2,y); ++y;
+	for (i=0; i<gripSize; ++i) {
+	    XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC,  x1,y, x2,y); ++y;
 	}
     }
 }
@@ -574,7 +571,7 @@ typedef struct { /* Common element record for scrollbar elements */
     Tcl_Obj 	*darkColorObj;
     Tcl_Obj 	*arrowColorObj;
     Tcl_Obj 	*arrowSizeObj;
-    Tcl_Obj 	*gripCountObj;
+    Tcl_Obj 	*gripSizeObj;
     Tcl_Obj 	*sliderlengthObj;
 } ScrollbarElement;
 
@@ -595,8 +592,8 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
-    { "-gripcount", TK_OPTION_INT,
-	offsetof(ScrollbarElement,gripCountObj), "5" },
+    { "-gripsize", TK_OPTION_PIXELS,
+	offsetof(ScrollbarElement,gripSizeObj), "10" },
     { "-sliderlength", TK_OPTION_INT,
 	offsetof(ScrollbarElement,sliderlengthObj), "30" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -643,7 +640,7 @@ static void ThumbElementDraw(
     Drawable d, Ttk_Box b, unsigned state)
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    int gripCount = 0;
+    int gripSize = 0;
     Ttk_Orient orient = TTK_ORIENT_HORIZONTAL;
     GC lightGC, darkGC;
     int x1, y1, x2, y2, dx, dy, i;
@@ -661,27 +658,26 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
-    Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripSizeObj, &gripSize);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	dx = 1; dy = 0;
-	x1 = x2 = b.x + b.width / 2 - gripCount;
+	x1 = x2 = b.x + (b.width - gripSize) / 2;
 	y1 = b.y + 2;
 	y2 = b.y + b.height - 3 + w;
     } else {
 	dx = 0; dy = 1;
-	y1 = y2 = b.y + b.height / 2 - gripCount;
+	y1 = y2 = b.y + (b.height - gripSize) / 2;
 	x1 = b.x + 2;
 	x2 = b.x + b.width - 3 + w;
     }
 
-    for (i=0; i<gripCount; ++i) {
-	XDrawLine(Tk_Display(tkwin), d, darkGC, x1,y1, x2,y2);
+    for (i=0; i<gripSize; ++i) {
+	XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC, x1,y1, x2,y2);
 	x1 += dx; x2 += dx; y1 += dy; y2 += dy;
-	XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2);
-	x1 += dx; x2 += dx; y1 += dy; y2 += dy;
+
     }
 }
 
