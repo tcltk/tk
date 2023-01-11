@@ -255,23 +255,25 @@ TkpDrawCheckIndicator(
 
     TkpGetShadows(bg_brdr, tkwin);
 
-    imgColors[0 /*A*/] =
+    imgColors[0 /*A*/] = /* BorderBackground */
 	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[1 /*B*/] =
+    imgColors[1 /*B*/] = /* BorderBackground */
 	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[2 /*C*/] = (bg_brdr->lightColorPtr != NULL) ?
+    imgColors[2 /*C*/] = /* BorderLightColor */
+	    (bg_brdr->lightColorPtr != NULL) ?
 	    Tk_GetColorByValue(tkwin, bg_brdr->lightColorPtr)->pixel :
 	    WhitePixelOfScreen(bg_brdr->screen);
-    imgColors[3 /*D*/] =
+    imgColors[3 /*D*/] = /* SelectColor */
 	    Tk_GetColorByValue(tkwin, selectColor)->pixel;
-    imgColors[4 /*E*/] = (bg_brdr->darkColorPtr != NULL) ?
+    imgColors[4 /*E*/] = /* BorderDarkColor */
+	    (bg_brdr->darkColorPtr != NULL) ?
 	    Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel :
 	    BlackPixelOfScreen(bg_brdr->screen);
-    imgColors[5 /*F*/] =
+    imgColors[5 /*F*/] = /* BorderBackground */
 	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[6 /*G*/] =
+    imgColors[6 /*G*/] = /* IndicatorColor */
 	    Tk_GetColorByValue(tkwin, indicatorColor)->pixel;
-    imgColors[7 /*H*/] =
+    imgColors[7 /*H*/] = /* DisableColor */
 	    Tk_GetColorByValue(tkwin, disableColor)->pixel;
 
     /*
@@ -306,6 +308,7 @@ TkpDrawCheckIndicator(
     Tk_FreeGC(display, copyGC);
     XDestroyImage(img);
     Tk_FreePixmap(display, pixmap);
+
 }
 
 /*
@@ -489,6 +492,9 @@ TkpDisplayButton(
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
 	haveImage = 1;
+    } else if (butPtr->defImage[1] != NULL) {
+	/* assume all 4 images are the same size by definition */
+	Tk_SizeOfImage(butPtr->defImage[1], &width, &height);
     }
     imageWidth = width;
     imageHeight = height;
@@ -683,37 +689,63 @@ TkpDisplayButton(
      * x and y refer to the top-left corner of the text or image or bitmap.
      */
 
-    if ((butPtr->type == TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
+    if (((butPtr->type == TYPE_CHECK_BUTTON) || (butPtr->type == TYPE_RADIO_BUTTON))
+	&& butPtr->indicatorOn) {
 	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
 	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
 	    XColor *selColor = NULL;
+	    int on = ((butPtr->flags & SELECTED) ? 1 : 0) |
+		     ((butPtr->flags & TRISTATED) ? 2 : 0);
 
 	    if (selBorder != NULL) {
 		selColor = selBorder->bgColorPtr;
 	    }
-	    x -= butPtr->indicatorSpace/2;
-	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
-		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
-		    ((butPtr->flags & SELECTED) ? 1 :
-			    (butPtr->flags & TRISTATED) ? 2 : 0),
-		    (butPtr->state == STATE_DISABLED), CHECK_BUTTON);
-	}
-    } else if ((butPtr->type == TYPE_RADIO_BUTTON) && butPtr->indicatorOn) {
-	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
-	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
-	    XColor *selColor = NULL;
 
-	    if (selBorder != NULL) {
-		selColor = selBorder->bgColorPtr;
-	    }
-	    x -= butPtr->indicatorSpace/2;
-	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
+	    /* Draw scalable image */
+	    if (butPtr->indicatorOn < 2 && butPtr->defImage[on]) {
+
+		imageXOffset += (butPtr->indicatorSpace - imageWidth)/2;
+		imageYOffset += (Tk_Height(tkwin) - imageHeight)/2;
+
+		/*
+		 * Do boundary clipping, so that Tk_RedrawImage is passed
+		 * valid coordinates. [Bug 979239]
+		 */
+
+		if (imageXOffset < 0) {
+		    imageXOffset = 0;
+		}
+		if (imageYOffset < 0) {
+		    imageYOffset = 0;
+		}
+		if (width > Tk_Width(tkwin)) {
+		    width = Tk_Width(tkwin);
+		}
+		if (height > Tk_Height(tkwin)) {
+		    height = Tk_Height(tkwin);
+		}
+		if ((width + imageXOffset) > Tk_Width(tkwin)) {
+		    imageXOffset = Tk_Width(tkwin) - width;
+		}
+		if ((height + imageYOffset) > Tk_Height(tkwin)) {
+		    imageYOffset = Tk_Height(tkwin) - height;
+		}
+
+		Tk_RedrawImage(butPtr->defImage[on], 0, 0, width, height,
+			       pixmap, imageXOffset, imageYOffset);
+
+	    } else {
+		/* Draw old "classic" pixmap */
+		x -= butPtr->indicatorSpace/2;
+		y = Tk_Height(tkwin)/2;
+		int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
+			     CHECK_BUTTON : RADIO_BUTTON);
+		TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
 		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
 		    ((butPtr->flags & SELECTED) ? 1 :
 			    (butPtr->flags & TRISTATED) ? 2 : 0),
-		    (butPtr->state == STATE_DISABLED), RADIO_BUTTON);
+			    (butPtr->state == STATE_DISABLED), btype);
+	    }
 	}
     }
 
@@ -986,7 +1018,8 @@ TkpComputeButtonGeometry(
 	    }
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorDiameter = fm.linespace;
-		if (butPtr->type == TYPE_CHECK_BUTTON) {
+		if (butPtr->indicatorOn /*> 1 && butPtr->type == TYPE_CHECK_BUTTON*/) {
+		    /* Scale down old classic pixmap */
 		    butPtr->indicatorDiameter =
 			(80*butPtr->indicatorDiameter)/100;
 		}

@@ -76,6 +76,8 @@ typedef struct {
     Pixmap bitmap;		/* Value of -bitmap option. If not None,
 				 * specifies bitmap to display and text and
 				 * textVar are ignored. */
+    Tk_Image defImage[4];       /* Classic default images for off, on, and
+				 * disabled states */
     Tcl_Obj *imagePtr;		/* Value of -image option: specifies image to
 				 * display in window, or NULL if none. If
 				 * non-NULL, bitmap, text, and textVarName are

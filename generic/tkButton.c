@@ -14,6 +14,7 @@
 
 #include "tkInt.h"
 #include "tkButton.h"
+#include "tk3d.h"
 #include "default.h"
 
 typedef struct {
@@ -53,6 +54,23 @@ char tkDefButtonBorderWidth[TCL_INTEGER_SPACE] = DEF_BUTTON_BORDER_WIDTH;
 char tkDefLabelHighlightWidth[TCL_INTEGER_SPACE] = DEF_LABEL_HIGHLIGHT_WIDTH;
 char tkDefLabelPadx[TCL_INTEGER_SPACE] = DEF_LABCHKRAD_PADX;
 char tkDefLabelPady[TCL_INTEGER_SPACE] = DEF_LABCHKRAD_PADY;
+
+/*
+ * Custom extended boolean type
+ */
+static Tk_CustomOptionSetProc indExtOnSetProc;
+static Tk_CustomOptionGetProc indExtOnGetProc;
+static Tk_CustomOptionRestoreProc indExtOnRestoreProc;
+static Tk_CustomOptionFreeProc indExtOnFreeProc;
+
+Tk_ObjCustomOption indExtOn = {
+    "indicatorOn",
+    indExtOnSetProc,
+    indExtOnGetProc,
+    indExtOnRestoreProc,
+    indExtOnFreeProc,
+    0
+};
 
 /*
  * Information used for parsing configuration options.  There is a
@@ -302,8 +320,9 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_BOOLEAN, "-indicatoron", "indicatorOn", "IndicatorOn",
-	DEF_BUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkButton, indicatorOn), 0, 0, 0},
+    {TK_OPTION_CUSTOM, "-indicatoron", "indicatorOn", "IndicatorOn",
+	DEF_BUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkButton, indicatorOn),
+	0, &indExtOn, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), 0, 0, 0},
     {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
@@ -415,9 +434,9 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_BOOLEAN, "-indicatoron", "indicatorOn", "IndicatorOn",
+    {TK_OPTION_CUSTOM, "-indicatoron", "indicatorOn", "IndicatorOn",
 	DEF_BUTTON_INDICATOR, TCL_INDEX_NONE, offsetof(TkButton, indicatorOn),
-	0, 0, 0},
+	0, &indExtOn, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), 0, 0, 0},
     {TK_OPTION_RELIEF, "-offrelief", "offRelief", "OffRelief",
@@ -681,6 +700,8 @@ ButtonCreate(
     butPtr->underline = INT_MIN;
     butPtr->textVarNamePtr = NULL;
     butPtr->bitmap = None;
+    butPtr->defImage[0] = NULL; butPtr->defImage[1] = NULL;
+    butPtr->defImage[2] = NULL; butPtr->defImage[3] = NULL;
     butPtr->imagePtr = NULL;
     butPtr->image = NULL;
     butPtr->selectImagePtr = NULL;
@@ -946,6 +967,7 @@ static void
 DestroyButton(
     TkButton *butPtr)		/* Info about button widget. */
 {
+    int i;
     butPtr->flags |= BUTTON_DELETED;
     TkpDestroyButton(butPtr);
 
@@ -972,6 +994,12 @@ DestroyButton(
     }
     if (butPtr->tristateImage != NULL) {
 	Tk_FreeImage(butPtr->tristateImage);
+    }
+    for(i=0; i<4; i++) {
+	if (butPtr->defImage[i] != NULL) {
+	    Tk_FreeImage(butPtr->defImage[i]);
+	    butPtr->defImage[i] = NULL;
+	}
     }
     if (butPtr->normalTextGC != NULL) {
 	Tk_FreeGC(butPtr->display, butPtr->normalTextGC);
@@ -1414,6 +1442,96 @@ TkButtonWorldChanged(
 
     if (butPtr->copyGC == NULL) {
 	butPtr->copyGC = Tk_GetGC(butPtr->tkwin, 0, &gcValues);
+    }
+    /*
+     * Make/Confirm indicator images
+     */
+    if (butPtr->type == TYPE_CHECK_BUTTON ||
+	butPtr->type == TYPE_RADIO_BUTTON) {
+	/* Order of colors in array:
+	 *    background, light, dark, select, indicator, disable
+	 */
+	unsigned long imgPalette[6];
+
+	imgPalette[0] = gcValues.background;
+	imgPalette[1] =
+	    ((TkBorder *)butPtr->normalBorder)->lightColorPtr != NULL ?
+	    Tk_GetColorByValue(butPtr->tkwin,
+		((TkBorder*)butPtr->normalBorder)->lightColorPtr)->pixel :
+	    WhitePixelOfScreen(((TkBorder*)butPtr->normalBorder)->screen);
+	imgPalette[2] =
+	    (((TkBorder*)butPtr->normalBorder)->darkColorPtr != NULL) ?
+	    Tk_GetColorByValue(butPtr->tkwin,
+		((TkBorder*)butPtr->normalBorder)->darkColorPtr)->pixel :
+	    BlackPixelOfScreen(((TkBorder*)butPtr->normalBorder)->screen);
+	imgPalette[3] = ((TkBorder *)butPtr->selectBorder != NULL) ?
+	    (((TkBorder *)butPtr->selectBorder)->bgColorPtr)->pixel :
+	    Tk_3DBorderColor(butPtr->normalBorder)->pixel;
+	imgPalette[4] = (butPtr->normalFg ?
+			 butPtr->normalFg->pixel : gcValues.foreground);
+	imgPalette[5] = (butPtr->disabledFg ?
+			 butPtr->disabledFg->pixel : gcValues.background);
+
+	const char *typeName = (butPtr->type == TYPE_RADIO_BUTTON) ?
+	    "radiobox" : "checkbox";
+	Tcl_Obj *indicatorHash =
+	    Tcl_ObjPrintf("::tk::icons::%sImg", typeName);
+	Tcl_Obj *imgkey =
+	    Tcl_ObjPrintf("#%06lx,#%06lx,#%06lx,#%06lx,#%06lx,#%06lx",
+			  imgPalette[0], // background
+			  imgPalette[1], // light
+			  imgPalette[2], // dark
+			  imgPalette[3], // select
+			  imgPalette[4], // indicator
+			  imgPalette[5]);// disable
+	Tcl_IncrRefCount(indicatorHash);
+	Tcl_IncrRefCount(imgkey);
+	Tcl_Obj *imgListObj =
+	    Tcl_ObjGetVar2(butPtr->interp, indicatorHash, imgkey, 0);
+	if (imgListObj == NULL) {
+	    Tcl_InterpState save =
+		Tcl_SaveInterpState(butPtr->interp, TCL_OK);
+	    Tcl_Obj *cmdObjv[4];
+	    cmdObjv[0] = Tcl_NewStringObj("::tk::icons::createCheckRadioBtns",-1);
+	    Tcl_IncrRefCount(cmdObjv[0]);
+	    cmdObjv[1] = Tcl_NewStringObj(typeName,-1);
+	    Tcl_IncrRefCount(cmdObjv[1]);
+	    cmdObjv[2] = imgkey;
+	    Tcl_IncrRefCount(imgkey);
+	    cmdObjv[3] = NULL;
+	    if (Tcl_EvalObjv(butPtr->interp, 3, cmdObjv, TCL_EVAL_DIRECT)
+		!= TCL_OK) {
+		printf("Error: %s\n", Tcl_GetStringResult(butPtr->interp));
+		Tcl_DiscardInterpState(save);
+		imgListObj = NULL;
+	    } else {
+		imgListObj = Tcl_GetObjResult(butPtr->interp);
+		if (imgListObj) Tcl_IncrRefCount(imgListObj);
+		Tcl_RestoreInterpState(butPtr->interp, save);
+	    }
+	    Tcl_DecrRefCount(cmdObjv[2]);
+	    Tcl_DecrRefCount(cmdObjv[1]);
+	    Tcl_DecrRefCount(cmdObjv[0]);
+	}
+	if (imgListObj) {
+	    int i, imgObjc;
+	    Tcl_Obj **imgObjv;
+	    Tcl_IncrRefCount(imgListObj);
+	    Tcl_ListObjGetElements(butPtr->interp, imgListObj,
+				   &imgObjc, &imgObjv) ;
+	    for(i=0; i<imgObjc; i++) {
+		if (butPtr->defImage[i] != NULL) {
+		    Tk_FreeImage(butPtr->defImage[i]);
+		}
+		butPtr->defImage[i] =
+		    Tk_GetImage(butPtr->interp, butPtr->tkwin,
+			Tcl_GetString(imgObjv[i]), ButtonSelectImageProc,
+			    butPtr);
+	    }
+	    Tcl_DecrRefCount(imgListObj);
+	}
+	Tcl_DecrRefCount(imgkey);
+	Tcl_DecrRefCount(indicatorHash);
     }
 
     TkpComputeButtonGeometry(butPtr);
@@ -1932,6 +2050,71 @@ ButtonTristateImageProc(
 	Tcl_DoWhenIdle(TkpDisplayButton, butPtr);
 	butPtr->flags |= REDRAW_PENDING;
     }
+}
+
+static int
+indExtOnSetProc(
+    ClientData clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **valuePtr,
+    char *recordPtr,
+    int internalOffset,
+    char *saveInternalPtr,
+    int flags)
+{
+    TkButton *butPtr = (TkButton*)recordPtr;
+    int b, status = TCL_OK;
+    (void)clientData;
+    (void)tkwin;
+    (void)internalOffset;
+    (void)flags;
+    if (Tcl_GetIntFromObj(NULL, *valuePtr, &b) != TCL_OK) {
+	status = Tcl_GetBooleanFromObj(interp, *valuePtr, &b);
+    }
+    if (status == TCL_OK) {
+	*(int*)saveInternalPtr = butPtr->indicatorOn;
+	butPtr->indicatorOn = b;
+    }
+    return status;
+}
+
+static Tcl_Obj*
+indExtOnGetProc(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *recordPtr,
+    int internalOffset)
+{
+    (void)clientData;
+    (void)tkwin;
+    (void)internalOffset;
+    TkButton *butPtr = (TkButton*)recordPtr;
+    return Tcl_NewIntObj(butPtr->indicatorOn);
+}
+
+static void
+indExtOnRestoreProc(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr,
+    char *saveInternalPtr)
+{
+    (void)clientData;
+    (void)tkwin;
+    *(int*)internalPtr = *(int*)saveInternalPtr;
+}
+
+static void
+indExtOnFreeProc(
+    ClientData clientData,
+    Tk_Window tkwin,
+    char *internalPtr)
+{
+    (void)clientData;
+    (void)tkwin;
+    (void)internalPtr;
+    return;
 }
 
 /*
