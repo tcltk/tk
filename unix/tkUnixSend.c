@@ -1796,8 +1796,10 @@ AppendErrorProc(
 	    pcPtr = pcPtr->nextPtr) {
 	if ((pcPtr == pendingPtr) && (pcPtr->result == NULL)) {
 	    pcPtr->result = (char *)ckalloc(strlen(pcPtr->target) + 50);
-	    snprintf(pcPtr->result, sizeof(pcPtr->result), "no application named \"%s\"",
+	    sprintf(pcPtr->result, "no application named \"%s\"",
 		    pcPtr->target);
+//	    snprintf(pcPtr->result, sizeof(pcPtr->result), "no application named \"%s\"",
+//		    pcPtr->target);
 	    pcPtr->code = TCL_ERROR;
 	    pcPtr->gotResponse = 1;
 	    break;
