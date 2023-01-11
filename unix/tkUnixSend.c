@@ -476,7 +476,7 @@ RegAddName(
     char id[30], *newProp;
     int idLength, newBytes;
 
-    snprintf(id, sizeof(id), "%x ", (unsigned) commWindow);
+    snprintf(id, 30, "%x ", (unsigned) commWindow);
     idLength = strlen(id);
     newBytes = idLength + strlen(name) + 1;
     newProp = (char *)ckalloc(regPtr->propLength + newBytes);
@@ -1096,7 +1096,7 @@ Tk_SendObjCmd(
     if (!async) {
 	char buffer[TCL_INTEGER_SPACE * 2];
 
-	snprintf(buffer, sizeof(buffer), "%x %d",
+	snprintf(buffer, TCL_INTEGER_SPACE * 2, "%x %d",
 		(unsigned) Tk_WindowId(dispPtr->commTkwin),
 		localData.sendSerial);
 	Tcl_DStringAppend(&request, "\0-r ", 4);
@@ -1620,7 +1620,7 @@ SendEventProc(
 		if (result != TCL_OK) {
 		    char buffer[TCL_INTEGER_SPACE];
 
-		    snprintf(buffer, sizeof(buffer), "%d", result);
+		    snprintf(buffer, TCL_INTEGER_SPACE, "%d", result);
 		    Tcl_DStringAppend(&reply, "\0-c ", 4);
 		    Tcl_DStringAppend(&reply, buffer, -1);
 		}
