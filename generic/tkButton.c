@@ -2054,12 +2054,12 @@ ButtonTristateImageProc(
 
 static int
 indExtOnSetProc(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
     Tk_Window tkwin,
     Tcl_Obj **valuePtr,
     char *recordPtr,
-    int internalOffset,
+    Tcl_Size internalOffset,
     char *saveInternalPtr,
     int flags)
 {
@@ -2081,10 +2081,10 @@ indExtOnSetProc(
 
 static Tcl_Obj*
 indExtOnGetProc(
-    ClientData clientData,
+    void *clientData,
     Tk_Window tkwin,
     char *recordPtr,
-    int internalOffset)
+    Tcl_Size internalOffset)
 {
     (void)clientData;
     (void)tkwin;
@@ -2095,7 +2095,7 @@ indExtOnGetProc(
 
 static void
 indExtOnRestoreProc(
-    ClientData clientData,
+    void *clientData,
     Tk_Window tkwin,
     char *internalPtr,
     char *saveInternalPtr)
@@ -2107,7 +2107,7 @@ indExtOnRestoreProc(
 
 static void
 indExtOnFreeProc(
-    ClientData clientData,
+    void *clientData,
     Tk_Window tkwin,
     char *internalPtr)
 {
