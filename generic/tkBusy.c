@@ -558,7 +558,7 @@ CreateBusy(
 	    tkChild = NextChild(tkChild)) {
 	Tk_MakeWindowExist(tkChild);
     }
-    snprintf(name, sizeof(name), fmt, Tk_Name(tkRef));
+    snprintf(name, length + 6, fmt, Tk_Name(tkRef));
     tkBusy = Tk_CreateWindow(interp, tkParent, name, NULL);
     ckfree(name);
 

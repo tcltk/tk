@@ -578,9 +578,9 @@ TkCanvasDashPrintProc(
     *freeProcPtr = TCL_DYNAMIC;
 
     p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-    snprintf(buffer, sizeof(buffer), "%d", *p++ & 0xff);
+    snprintf(buffer, 4 * i, "%d", *p++ & 0xff);
     while (--i) {
-	snprintf(buffer+strlen(buffer), sizeof(buffer)-strlen(buffer), " %d", *p++ & 0xff);
+	snprintf(buffer + strlen(buffer), 4 * i - strlen(buffer), " %d", *p++ & 0xff);
     }
     return buffer;
 }

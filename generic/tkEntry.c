@@ -1113,6 +1113,7 @@ ConfigureEntry(
     double oldFrom = 0.0;	/* lint initialization */
     double oldTo = 0.0;		/* lint initialization */
     int code;
+    size_t formatSpace = TCL_DOUBLE_SPACE;
 
     /*
      * Eliminate any existing trace on a variable monitored by the entry.
@@ -1201,7 +1202,7 @@ ConfigureEntry(
 		 */
 
 		int min, max;
-		size_t formatLen, formatSpace = TCL_DOUBLE_SPACE;
+		size_t formatLen;
 		char fbuf[4], *fmt = sbPtr->reqFormat;
 
 		formatLen = strlen(fmt);
@@ -1378,7 +1379,7 @@ ConfigureEntry(
 	    } else if (dvalue < sbPtr->fromValue) {
 		dvalue = sbPtr->fromValue;
 	    }
-	    snprintf(sbPtr->formatBuf, sizeof(sbPtr->formatBuf), sbPtr->valueFormat, dvalue);
+	    snprintf(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat, dvalue);
 
             /*
 	     * No check for error return here as well, because any possible
@@ -4408,7 +4409,7 @@ SpinboxInvoke(
 		    dvalue = sbPtr->toValue;
 		}
 	    }
-	    snprintf(sbPtr->formatBuf, sizeof(sbPtr->formatBuf), sbPtr->valueFormat, dvalue);
+	    snprintf(sbPtr->formatBuf, TCL_DOUBLE_SPACE, sbPtr->valueFormat, dvalue);
 	    code = EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }
