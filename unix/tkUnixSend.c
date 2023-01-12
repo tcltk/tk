@@ -875,7 +875,7 @@ Tk_SetAppName(
 		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
-	    snprintf(Tcl_DStringValue(&dString) + offset, sizeof(Tcl_DStringValue(&dString)) - offset, "%d", i);
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", i);
 	}
 	w = RegFindName(regPtr, actualName);
 	if (w == None) {
