@@ -514,6 +514,7 @@ static void SizegripDraw(
     (void)dummy;
     (void)state;
 
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
     gripThickness = gripSize * 3 / (gripCount * 5);
     gripSpace = gripSize / 3 - gripThickness;
     while (gripCount--) {
