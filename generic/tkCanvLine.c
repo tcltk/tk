@@ -2083,7 +2083,7 @@ PrintArrowShape(
     LineItem *linePtr = (LineItem *) recordPtr;
     char *buffer = (char *)ckalloc(120);
 
-    snprintf(buffer, sizeof(buffer), "%.5g %.5g %.5g", linePtr->arrowShapeA,
+    snprintf(buffer, 120, "%.5g %.5g %.5g", linePtr->arrowShapeA,
 	    linePtr->arrowShapeB, linePtr->arrowShapeC);
     *freeProcPtr = TCL_DYNAMIC;
     return buffer;

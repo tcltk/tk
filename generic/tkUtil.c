@@ -431,7 +431,7 @@ TkOffsetPrintProc(
 	    return "end";
 	}
 	p = (char *)ckalloc(32);
-	snprintf(p, sizeof(p), "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
+	snprintf(p, 32, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
     }
@@ -464,7 +464,7 @@ TkOffsetPrintProc(
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
-    snprintf(q, sizeof(q), "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
+    snprintf(q, 32, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
     *freeProcPtr = TCL_DYNAMIC;
     return p;
 }

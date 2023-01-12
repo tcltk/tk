@@ -1484,7 +1484,7 @@ TkSelDefaultSelection(
 	if (maxBytes < 20) {
 	    return -1;
 	}
-	snprintf(buffer, sizeof(buffer), "0x%x", (unsigned int) infoPtr->time);
+	snprintf(buffer, maxBytes, "0x%x", (unsigned int) infoPtr->time);
 	*typePtr = XA_INTEGER;
 	return strlen(buffer);
     }
