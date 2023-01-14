@@ -25,14 +25,6 @@
 #   pragma comment (lib, "uuid.lib")
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /* These needed for compilation with VC++ 5.2 */
 /* XXX - remove these since need at least VC 6 */
 #ifndef BIF_EDITBOX

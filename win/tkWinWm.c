@@ -16,14 +16,6 @@
 #include "tkWinInt.h"
 #include <shellapi.h>
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /*
  * These next two defines are only valid on Win2K/XP+.
  */

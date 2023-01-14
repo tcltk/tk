@@ -28,14 +28,6 @@
 #include "tkWinInt.h"
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 #if defined(MAC_OSX_TK)
 #include "tkMacOSXInt.h"
 #include "tkScrollbar.h"

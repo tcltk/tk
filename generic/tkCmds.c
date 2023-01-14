@@ -22,14 +22,6 @@
 #include "tkUnixInt.h"
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /*
  * Forward declarations for functions defined later in this file:
  */

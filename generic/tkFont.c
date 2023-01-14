@@ -17,12 +17,8 @@
 #include "tkMacOSXInt.h"    /* Defines TK_DRAW_IN_CONTEXT */
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
 
 /*
