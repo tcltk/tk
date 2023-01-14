@@ -40,9 +40,9 @@ Tk_GetPixmap(
     int planes;
     Screen *screen;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
-    newTwdPtr = ckalloc(sizeof(TkWinDrawable));
+    newTwdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
     newTwdPtr->type = TWD_BITMAP;
     newTwdPtr->bitmap.depth = depth;
     twdPtr = (TkWinDrawable *) d;
@@ -56,9 +56,9 @@ Tk_GetPixmap(
     } else {
 	newTwdPtr->bitmap.colormap = twdPtr->bitmap.colormap;
     }
-    screen = &display->screens[0];
+    screen = ScreenOfDisplay(display, 0);
     planes = 1;
-    if (depth == screen->root_depth) {
+    if (depth == DefaultDepthOfScreen(screen)) {
 	planes = PTR2INT(screen->ext_data);
 	depth /= planes;
     }
@@ -144,7 +144,7 @@ Tk_FreePixmap(
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *) pixmap;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (twdPtr != NULL) {
 	DeleteObject(twdPtr->bitmap.handle);
 	ckfree(twdPtr);
@@ -208,6 +208,12 @@ XGetGeometry(
     unsigned int *depth_return)
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
+    (void)display;
+    (void)root_return;
+    (void)x_return;
+    (void)y_return;
+    (void)border_width_return;
+    (void)depth_return;
 
     if (twdPtr->type == TWD_BITMAP) {
 	HDC dc;

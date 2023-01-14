@@ -309,7 +309,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
 #endif
@@ -1009,6 +1009,7 @@ ConfigureRestrictProc(
     return NO;
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
 {
 
@@ -1021,6 +1022,7 @@ ConfigureRestrictProc(
 
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
+#endif
 
 - (void) addTkDirtyRect: (NSRect) rect
 {
@@ -1277,6 +1279,8 @@ static const char *const accentNames[] = {
 			change:(NSDictionary *)change
 		       context:(void *)context
 {
+    (void) change;
+    (void) context;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
 	if (@available(macOS 10.14, *)) {
