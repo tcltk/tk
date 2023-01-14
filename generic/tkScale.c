@@ -21,14 +21,9 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
-
 
 /*
  * The following table defines the legal values for the -orient option. It is

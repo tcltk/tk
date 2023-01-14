@@ -29,14 +29,6 @@
 #define OK_TO_LOG 1
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /*
  * "Calculations of line pixel heights and the size of the vertical
  * scrollbar."

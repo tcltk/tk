@@ -18,14 +18,6 @@
 #define USE_TK_STUBS
 #include "tkWinInt.h"
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 HWND tkWinCurrentDialog;
 
 /*

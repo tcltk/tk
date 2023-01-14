@@ -14,14 +14,6 @@
 #define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /*
  * The w32api 1.1 package (included in Mingw 1.1) does not define _WIN32_IE by
  * default. Define it here to gain access to the InitCommonControlsEx API in

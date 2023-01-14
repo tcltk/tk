@@ -14,6 +14,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The includes below are for pre-defined bitmaps.
  *
@@ -40,14 +44,6 @@
 
 #if defined(_MSC_VER)
 #pragma warning (default : 4305)
-#endif
-
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
 #endif
 
 /*

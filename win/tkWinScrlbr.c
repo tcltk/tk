@@ -13,14 +13,6 @@
 #include "tkWinInt.h"
 #include "tkScrollbar.h"
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /*
  * The following constant is used to specify the maximum scroll position. This
  * value is limited by the Win32 API to either 16-bits or 32-bits, depending

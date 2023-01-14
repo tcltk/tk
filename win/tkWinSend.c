@@ -13,14 +13,7 @@
 
 #include "tkInt.h"
 #include "tkWinSendCom.h"
-
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
+#include "tkWinInt.h"
 
 /*
  * Should be defined in WTypes.h but mingw 1.0 is missing them.

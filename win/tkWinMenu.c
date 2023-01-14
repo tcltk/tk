@@ -15,14 +15,6 @@
 #include "tkWinInt.h"
 #include "tkMenu.h"
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 /*
  * The class of the window for popup menus.
  */
