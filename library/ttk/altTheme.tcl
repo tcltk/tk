@@ -8,7 +8,7 @@ namespace eval ttk::theme::alt {
     array set colors {
 	-frame 		"#d9d9d9"
 	-window		"#ffffff"
-        -alternate	"#f0f0f0"
+	-alternate	"#f0f0f0"
 	-darker 	"#c3c3c3"
 	-border		"#414141"
 	-activebg 	"#ececec"
@@ -43,11 +43,10 @@ namespace eval ttk::theme::alt {
 	    {active !disabled}	raised
 	} -highlightcolor {alternate black}
 
-	set indMargin {0 1.5p 3p 1.5p}
 	ttk::style configure TCheckbutton -indicatorcolor "#ffffff" \
-	    -indicatormargin $indMargin -padding 1.5p
+	    -indicatormargin {0 1.5p 3p 1.5p} -padding 1.5p
 	ttk::style configure TRadiobutton -indicatorcolor "#ffffff" \
-	    -indicatormargin $indMargin -padding 1.5p
+	    -indicatormargin {0 1.5p 3p 1.5p} -padding 1.5p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list  pressed $colors(-frame) \
 	           alternate $colors(-altindicator) \
@@ -58,7 +57,7 @@ namespace eval ttk::theme::alt {
 	           disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p -padding 2.25p -relief raised
+	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised
 
 	ttk::style configure TEntry -padding 1
 	ttk::style map TEntry -fieldbackground \
@@ -87,13 +86,12 @@ namespace eval ttk::theme::alt {
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
-	set margins {1.5p 1.5p 0.75p 0}
-	ttk::style configure TNotebook -tabmargins $margins
+	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 0.75p 0}
 	ttk::style configure TNotebook.Tab -background $colors(-darker) \
 	    -padding {3p 1.5p}
 	ttk::style map TNotebook.Tab \
 	    -background [list selected $colors(-frame)] \
-	    -expand [list selected $margins]
+	    -expand {selected {1.5p 1.5p 0.75p 0}}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
@@ -107,15 +105,12 @@ namespace eval ttk::theme::alt {
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
-	set thickness 11.25p
 	ttk::style configure TScale \
 	    -groovewidth 3p -troughrelief sunken \
-	    -sliderthickness $thickness -borderwidth 2
+	    -sliderthickness 11.25p -borderwidth 2
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) -borderwidth 0 \
-	    -barsize 22.5p -thickness $thickness
+	    -barsize 22.5p -thickness 11.25p
     }
-
-    unset indMargin margins thickness
 }
