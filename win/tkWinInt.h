@@ -246,9 +246,8 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
  * MSVC versions before 2015 don't know snprintf, but _snprintf is compatible.
  * Note that sprintf is deprecated.
  */
-
-#ifdef _MSC_VER
-# define snprintf _snprintf
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#    define snprintf _snprintf
 #endif
 
 #endif /* _TKWININT */
