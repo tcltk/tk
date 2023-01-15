@@ -99,7 +99,7 @@ jobs:
             echo "::error::Failure during Test (classic)"
             exit 1
           }
-          ( runXvfb :0; make test-ttk TESTFLAGS="-file NONE.test -verbose beps" ; exit $? ) | tee out-ttk.txt || {
+          ( runXvfb :0; make test-ttk TESTFLAGS="-file bell.test -verbose beps" ; exit $? ) | tee out-ttk.txt || {
             echo "::error::Failure during Test (ttk)"
             exit 1
           }
