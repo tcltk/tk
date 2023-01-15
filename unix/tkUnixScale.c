@@ -1,7 +1,7 @@
 /*
  * tkUnixScale.c --
  *
- *	This file implements the X specific portion of the scrollbar widget.
+ *	This file implements the X specific portion of the scale widget.
  *
  * Copyright (c) 1996 by Sun Microsystems, Inc.
  * Copyright (c) 1998-2000 by Scriptics Corporation.
