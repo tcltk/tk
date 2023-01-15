@@ -13,8 +13,8 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#if defined(_WIN32)
-#define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
 
 /*
