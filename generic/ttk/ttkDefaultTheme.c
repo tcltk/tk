@@ -1099,14 +1099,14 @@ static const Ttk_ElementSpec SliderElementSpec = {
 typedef struct {
     Tcl_Obj *colorObj;
     Tcl_Obj *marginObj;
-    Tcl_Obj *diameterObj;
+    Tcl_Obj *sizeObj;
 } TreeitemIndicator;
 
 static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
-    { "-diameter", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,diameterObj), "9" },
+    { "-size", TK_OPTION_PIXELS,
+	offsetof(TreeitemIndicator,sizeObj), "6.75p" },
     { "-indicatormargins", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginObj), "2 2 4 2" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -1123,7 +1123,7 @@ static void TreeitemIndicatorSize(
     (void)paddingPtr;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
     *widthPtr = diameter + Ttk_PaddingWidth(margins);
     *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
