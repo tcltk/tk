@@ -131,7 +131,7 @@ namespace eval ::tk::sysnotify:: {
 	}
 	label $w.l -bg gray30 -fg white -image ::tk::icons::information
 	pack $w.l -fill both -expand yes -side left
-	message $w.message -aspect 150 -bg gray30 -fg white -text $title\n\n$msg -width [::tk::ScaleNum 280]
+	message $w.message -aspect 150 -bg gray30 -fg white -text $title\n\n$msg -width 210p
 	pack $w.message -side right -fill both -expand yes
 	if {[tk windowingsystem] eq "x11"} {
 	    wm overrideredirect $w true

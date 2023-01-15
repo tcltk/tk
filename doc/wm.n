@@ -807,7 +807,8 @@ However, you can use the \fBwm minsize\fR and \fBwm maxsize\fR commands
 to limit the range of allowable sizes.
 The range set by \fBwm minsize\fR and \fBwm maxsize\fR applies to
 all forms of resizing, including the window's natural size as
-well as manual resizes and the \fBwm geometry\fR command.
+well as manual resizes and the \fBwm geometry\fR command.  You
+can use any value accepted by \fBTk_GetPixels\fR.
 You can also use the command \fBwm resizable\fR to completely
 disable interactive resizing in one or both dimensions.
 .PP

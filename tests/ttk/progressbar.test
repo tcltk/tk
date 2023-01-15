@@ -96,7 +96,7 @@ test progressbar-3.1 "progressbar non-core options" -setup {
 } -cleanup {
     unset res
     destroy .defaultpb
-} -result {w black left {} {} 0 100 100.0 determinate horizontal 0 0.0 {}}
+} -result {w black left {} {} 0 75p 100.0 determinate horizontal 0 0.0 {}}
 
 test progressbar-3.2 "TIP #442 options are taken into account" -setup {
     set res {}
@@ -121,6 +121,28 @@ test progressbar-3.2 "TIP #442 options are taken into account" -setup {
     unset res thefont
     destroy .p
 } -result {{-anchor e} {-foreground green} {-justify center} {-text {Cannot be seen}} {-wraplength 250}}
+
+test progressbar-3.3 {horizontal progressbar height with no -text (TIP #442) specified - Bug [8bee4b2009]} -setup {
+    set res {}
+    set oldTheme [ttk::style theme use]
+} -body {
+    ttk::style theme use default
+    set imga [image create photo -file [file join [file dirname [info script]] pb_image.svg] -format {svg -scale 0.8}]
+    ::ttk::style element create Horizontal.Progressbar.pbar image $imga
+    # -text "": progressbar height does not depend on font height
+    pack [ttk::progressbar .p -orient horizontal -font {TkDefaultFont 24}]
+    .p step 25
+    update
+    set res [expr {[winfo reqheight .p] == [image height $imga] + 2}]
+    # -text "something": progressbar height adjusts to contain the font height
+    .p configure -text Hello -font {TkDefaultFont 24}
+    update
+    lappend res [expr {[winfo reqheight .p] == [font metrics [.p cget -font] -linespace] + 2}]
+} -cleanup {
+    destroy .p
+    ttk::style theme use $oldTheme
+    # there's no way I know to undo  '::ttk::style element create...'
+} -result {1 1}
 
 test progressbar-4.1 "style command" -body {
     ttk::progressbar .wh  ; # default is  -orient horizontal

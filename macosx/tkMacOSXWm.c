@@ -409,7 +409,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     }
 }
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -1423,7 +1423,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != ((wmPtr->flags & WM_FULLSCREEN) != 0)) {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
 #else
 	    TKLog(@"The fullscreen attribute is ignored on this system.");
@@ -2988,7 +2988,7 @@ WmManageCmd(
 
 static int
 WmMaxsizeCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    Tk_Window tkwin,	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3012,8 +3012,8 @@ WmMaxsizeCmd(
 	return TCL_OK;
     }
 
-    if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &height) != TCL_OK)) {
+    if ((Tk_GetPixelsFromObj(interp, tkwin, objv[3], &width) != TCL_OK)
+	    || (Tk_GetPixelsFromObj(interp, tkwin, objv[4], &height) != TCL_OK)) {
 	return TCL_ERROR;
     }
     wmPtr->maxWidth = width;
@@ -3042,7 +3042,7 @@ WmMaxsizeCmd(
 
 static int
 WmMinsizeCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    Tk_Window tkwin,		/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3066,8 +3066,8 @@ WmMinsizeCmd(
 	return TCL_OK;
     }
 
-    if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &height) != TCL_OK)) {
+    if ((Tk_GetPixelsFromObj(interp, tkwin, objv[3], &width) != TCL_OK)
+	    || (Tk_GetPixelsFromObj(interp, tkwin, objv[4], &height) != TCL_OK)) {
 	return TCL_ERROR;
     }
     wmPtr->minWidth = width;
@@ -5976,8 +5976,7 @@ WmWinTabbingId(
     (void) objc;
     (void) objv;
     return TCL_OK;
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+#else
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -6014,8 +6013,8 @@ WmWinTabbingId(
 	}
 	return TCL_OK;
     }
-#endif
     return TCL_ERROR;
+#endif
 }
 
 /*
@@ -6062,8 +6061,7 @@ WmWinAppearance(
     (void) objc;
     (void) objv;
     return TCL_OK;
-#endif
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
+#else
     static const char *const appearanceStrings[] = {
 	"aqua", "auto", "darkaqua", NULL
     };
@@ -6123,8 +6121,6 @@ WmWinAppearance(
     }
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
-#else // MAC_OS_X_VERSION_MAX_ALLOWED > 1090
-    return TCL_ERROR;
 #endif
 }
 

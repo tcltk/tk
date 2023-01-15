@@ -562,9 +562,9 @@ Ucs2beToUtfProc(
  */
 
 #if defined(USE_TCL_STUBS)
-/* Since the UCS-2BE encoding is only used when Tk 8.7 is dynamically loaded in Tcl 8.6,
+/* Since the UCS-2BE encoding is only used when Tk is dynamically loaded in Tcl 8.6,
  * make sure that Tcl_UtfCharComplete is ALWAYS the pre-TIP #575 version,
- * even though Tk 8.7 is being compiled with -DTCL_NO_DEPRECATED! */
+ * even though Tk is being compiled with -DTCL_NO_DEPRECATED! */
 #   undef Tcl_UtfCharComplete
 #   define Tcl_UtfCharComplete ((int (*)(const char *, int))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[326]))
 #endif
@@ -2125,10 +2125,10 @@ FindSubFontForChar(
 
     nameList = ListFonts(fontPtr->display, "*", &numNames);
     for (i = 0; i < numNames; i++) {
-	char *fallbck = strchr(nameList[i] + 1, '-') + 1;
-	strchr(fallbck, '-')[0] = '\0';
-	if (SeenName(fallbck, &ds) == 0) {
-	    subFontPtr = CanUseFallback(fontPtr, fallbck, ch,
+	fallback = strchr(nameList[i] + 1, '-') + 1;
+	strchr(fallback, '-')[0] = '\0';
+	if (SeenName(fallback, &ds) == 0) {
+	    subFontPtr = CanUseFallback(fontPtr, fallback, ch,
 		    fixSubFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		XFreeFontNames(nameList);
