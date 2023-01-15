@@ -86,6 +86,7 @@ test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constra
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
 	-expand false -fill x
     update ; # no error
+puts [.tsb get]
     set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
 } -result 1 -cleanup {destroy .te .tsb}
 
