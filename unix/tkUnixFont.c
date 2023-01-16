@@ -1066,7 +1066,7 @@ Tk_MeasureChars(
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
 		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+			p - source, TCL_ENCODING_NOCOMPLAIN|TCL_ENCODING_HACK_FLAG, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1084,7 +1084,7 @@ Tk_MeasureChars(
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
 	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source, p - source,
-		TCL_ENCODING_NOCOMPLAIN, &runString);
+		TCL_ENCODING_NOCOMPLAIN|TCL_ENCODING_HACK_FLAG, &runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 		    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1122,7 +1122,7 @@ Tk_MeasureChars(
 	    } else {
 		lastSubFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 0, NULL,
+		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, TCL_ENCODING_HACK_FLAG, NULL,
 			(char *)&buf[0].byte1, sizeof(buf), NULL, &dstWrote, NULL);
 		if (familyPtr->isTwoByteFont) {
 		    newX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1333,7 +1333,7 @@ Tk_DrawChars(
 		familyPtr = lastSubFontPtr->familyPtr;
 
 		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+			p - source, TCL_ENCODING_NOCOMPLAIN|TCL_ENCODING_HACK_FLAG, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -2298,7 +2298,7 @@ FontMapLoadPage(
 	int hi, lo;
 
 	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
-		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
+		TCL_ENCODING_STOPONERROR|TCL_ENCODING_HACK_FLAG, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
 	}
@@ -2572,7 +2572,7 @@ CanUseFallback(
 	    numEncodings++;
 	}
 	Tcl_UtfToExternal(NULL, encoding, src, srcLen,
-		TCL_ENCODING_STOPONERROR, NULL, dst, sizeof(dst), &srcRead,
+		TCL_ENCODING_STOPONERROR|TCL_ENCODING_HACK_FLAG, NULL, dst, sizeof(dst), &srcRead,
 		&dstWrote, NULL);
 	if (dstWrote == 0) {
 	    goto crossout;
