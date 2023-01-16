@@ -114,11 +114,9 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
-	set t 1.5p; set r 3p; set b $t
-	set indMargin [list 0 $t $r $b]
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin $indMargin -padding 0.75p
+	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} -padding 0.75p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -130,7 +128,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin $indMargin -padding 0.75p
+	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} -padding 0.75p
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -166,16 +164,15 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style map TScrollbar \
 	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
 
-	set thickness 11.25p
 	ttk::style configure TScale \
 	    -sliderrelief raised \
 	    -sliderlength 22.5p \
-	    -sliderthickness $thickness
+	    -sliderthickness 11.25p
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) \
 	    -barsize 22.5p \
-	    -thickness $thickness
+	    -thickness 11.25p
 
 	ttk::style configure TNotebook.Tab \
 	    -padding {3p 1.5p} -background $colors(-darker)
@@ -186,15 +183,15 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	#
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview \
-            -background $colors(-window) \
-            -stripedbackground $colors(-alternate) \
+	    -background $colors(-window) \
+	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) ;
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
-                                selected $colors(-selectbg)] \
+				selected $colors(-selectbg)] \
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
