@@ -8,6 +8,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 variable scrollInfo
 proc scroll args {
@@ -77,7 +78,7 @@ test entry-2.1 "Create entry before scrollbar" -body {
 	-expand false -fill x
 }  -cleanup {destroy .te .tsb}
 
-test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints {failsOnUbuntu} -body {
+test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -constraints {failsOnUbuntu failsOnXQuarz} -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
 	-expand true -fill both
     .te insert end [string repeat "abc" 50]
