@@ -263,11 +263,11 @@ Tk_SetAppName(
 		Tcl_DStringAppend(&dString, name, -1);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
-		Tcl_DStringSetLength(&dString, offset + 10);
+		Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
 	    suffix++;
-	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", suffix);
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", suffix);
 	    i = 0;
 	} else {
 	    i++;
