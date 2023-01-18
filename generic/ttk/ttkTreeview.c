@@ -8,6 +8,10 @@
 #include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 #define DEF_TREE_ROWS		"10"
 #define DEF_TITLECOLUMNS	"0"
 #define DEF_TITLEITEMS		"0"
@@ -2768,7 +2772,7 @@ static int TreeviewHorribleIdentify(
     if (dColumnNumber == TCL_INDEX_NONE) {
 	goto done;
     }
-    sprintf(dcolbuf, "#%" TKSIZET_MODIFIER "u", dColumnNumber);
+    snprintf(dcolbuf, sizeof(dcolbuf), "#%" TKSIZET_MODIFIER "u", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
 	if (-HALO <= x1 - x  && x1 - x <= HALO) {
@@ -3172,7 +3176,7 @@ static int TreeviewInsertCommand(
 	char idbuf[16];
 	do {
 	    ++tv->tree.serial;
-	    sprintf(idbuf, "I%03X", tv->tree.serial);
+	    snprintf(idbuf, sizeof(idbuf), "I%03X", tv->tree.serial);
 	    entryPtr = Tcl_CreateHashEntry(&tv->tree.items, idbuf, &isNew);
 	} while (!isNew);
     }

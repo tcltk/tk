@@ -13,6 +13,10 @@
 #include "tkInt.h"
 #include "tkCanvas.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Structures defined only in this file.
  */
@@ -585,9 +589,9 @@ TkCanvasDashPrintProc(
     *freeProcPtr = TCL_DYNAMIC;
 
     p = (i > (int)sizeof(char *)) ? dash->pattern.pt : dash->pattern.array;
-    sprintf(buffer, "%d", *p++ & 0xff);
+    snprintf(buffer, 4 * i, "%d", *p++ & 0xff);
     while (--i) {
-	sprintf(buffer+strlen(buffer), " %d", *p++ & 0xff);
+	snprintf(buffer + strlen(buffer), 4 * i - strlen(buffer), " %d", *p++ & 0xff);
     }
     return buffer;
 }

@@ -26,6 +26,10 @@
 #include "tkInt.h"
 #include "tkFont.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The following encoding is used in TK_OPTION_VAR:
  *
@@ -510,19 +514,19 @@ Tk_InitOptions(
 
 		switch (source) {
 		case OPTION_DATABASE:
-		    sprintf(msg, "\n    (database entry for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (database entry for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		    break;
 		case SYSTEM_DEFAULT:
-		    sprintf(msg, "\n    (system default for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (system default for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		    break;
 		case TABLE_DEFAULT:
-		    sprintf(msg, "\n    (default value for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (default value for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		}
 		if (tkwin != NULL) {
-		    sprintf(msg + strlen(msg) - 1, " in widget \"%.50s\")",
+		    snprintf(msg + strlen(msg) - 1, 200 - (strlen(msg) - 1), " in widget \"%.50s\")",
 			    Tk_PathName(tkwin));
 		}
 		Tcl_AddErrorInfo(interp, msg);
@@ -2033,7 +2037,7 @@ GetObjectForOption(
 		objPtr = Tcl_NewStringObj("end", -1);
 	    } else if (*((int *) internalPtr) < 0) {
 		char buf[32];
-		sprintf(buf, "end%d", *((int *) internalPtr));
+		snprintf(buf, 32, "end%d", *((int *) internalPtr));
 		objPtr = Tcl_NewStringObj(buf, -1);
 	    } else {
 		objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
