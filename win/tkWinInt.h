@@ -242,4 +242,12 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 #define GWLP_ID			GWL_ID
 #endif /* !GWLP_WNDPROC */
 
+/*
+ * MSVC versions before 2015 don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#    define snprintf _snprintf
+#endif
+
 #endif /* _TKWININT */

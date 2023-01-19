@@ -14,6 +14,10 @@
 #include "tkInt.h"
 #include "tkSelect.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * When a selection handler is set up by invoking "selection handle", one of
  * the following data structures is set up to hold information about the
@@ -1476,7 +1480,7 @@ TkSelDefaultSelection(
 	if (maxBytes < 20) {
 	    return -1;
 	}
-	sprintf(buffer, "0x%x", (unsigned int) infoPtr->time);
+	snprintf(buffer, maxBytes, "0x%x", (unsigned int) infoPtr->time);
 	*typePtr = XA_INTEGER;
 	return strlen(buffer);
     }

@@ -21,8 +21,8 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#if defined(_WIN32)
-#define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
 
 /*
@@ -974,15 +974,15 @@ ComputeFormat(
 
     if (forTicks) {
 	if (fDigits <= eDigits) {
-	    sprintf(scalePtr->tickFormat, "%%.%df", afterDecimal);
+	    snprintf(scalePtr->tickFormat, sizeof(scalePtr->tickFormat), "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits - 1);
+	    snprintf(scalePtr->tickFormat, sizeof(scalePtr->tickFormat), "%%.%de", numDigits - 1);
 	}
     } else {
 	if (fDigits <= eDigits) {
-	    sprintf(scalePtr->valueFormat, "%%.%df", afterDecimal);
+	    snprintf(scalePtr->valueFormat, sizeof(scalePtr->valueFormat), "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits - 1);
+	    snprintf(scalePtr->valueFormat, sizeof(scalePtr->valueFormat), "%%.%de", numDigits - 1);
 	}
     }
 }

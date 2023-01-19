@@ -109,7 +109,6 @@ wm geometry . {}
 proc bo {{w .t}} {
     return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
 }
-
 # x-width of $n chars, fixed width font
 proc xw {n} {
     global fixedWidth
