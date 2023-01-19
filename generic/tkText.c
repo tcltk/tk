@@ -6836,7 +6836,7 @@ TkpTesttextCmd(
     size_t len;
     int lineIndex, byteIndex, byteOffset;
     TkTextIndex index;
-    char buf[64];
+    char buf[TK_POS_CHARS];
     Tcl_CmdInfo info;
 
     if (objc < 3) {

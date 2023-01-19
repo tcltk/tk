@@ -13,6 +13,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Each call to Tk_GetImage returns a pointer to one of the following
  * structures, which is used as a token by clients (widgets) that display
@@ -285,7 +289,7 @@ Tk_ImageObjCmd(
 	if ((objc == 3) || (*(arg = Tcl_GetString(objv[3])) == '-')) {
 	    do {
 		dispPtr->imageId++;
-		sprintf(idString, "image%d", dispPtr->imageId);
+		snprintf(idString, sizeof(idString), "image%d", dispPtr->imageId);
 		name = idString;
 	    } while (Tcl_FindCommand(interp, name, NULL, 0) != NULL);
 	    firstOption = 3;

@@ -13,23 +13,42 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-set fixedFont {"Courier" -12}
+set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
 
 # Widget used in almost all tests
-set tWidth 30
-set tHeight 6
-text .t -width $tWidth -height $tHeight -bd 2 -highlightthickness 2 \
-        -font $fixedFont
+######################################## TODO ~### remove this line    set tWidth 30
+######################################## TODO ~### remove this line    tHeight 6
+text .t -font $fixedFont -width 30 -height 6 -bd 2 -highlightthickness 2
 pack .t -expand 1 -fill both
 update
 .t debug on
+wm geometry . {}
+
+# full border size of the text widget, i.e. first x or y coordinate inside the text widget
+# warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
+# vertically around the widget)
+proc bo {{w .t}} {
+    return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
+}
+# x-width of $n chars, fixed width font
+proc xw {n} {
+    global fixedWidth
+    return [expr {$n * $fixedWidth}]
+}
+# x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
+proc xchar {n {w .t}} {
+    return [expr {[bo $w] + [xw $n]}]
+}
+# y-coordinate of the first pixel of $l-th display line (count starts at 1)
+proc yline {l {w .t}} {
+    global fixedHeight
+    return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
+}
 
 set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
-
-wm geometry . {}
 
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
@@ -44,12 +63,12 @@ wm deiconify .
 
 update
 
-set bw [.t cget -borderwidth]
-set px [.t cget -padx]
-set py [.t cget -pady]
-set hlth [.t cget -highlightthickness]
-set padx [expr {$bw+$px+$hlth}]
-set pady [expr {$bw+$py+$hlth}]
+######################################## TODO ~### remove this line    set bw [.t cget -borderwidth]
+######################################## TODO ~### remove this line    set px [.t cget -padx]
+######################################## TODO ~### remove this line    set py [.t cget -pady]
+######################################## TODO ~### remove this line    set hlth [.t cget -highlightthickness]
+######################################## TODO ~### remove this line    set padx [expr {$bw+$px+$hlth}]
+######################################## TODO ~### remove this line    set pady [expr {$bw+$py+$hlth}]
 
 # ----------------------------------------------------------------------
 
@@ -65,8 +84,8 @@ test textWind-1.1 {basic tests of options} -setup {
         [.t window configure .f -window]
 } -result [list \
     1 \
-    3x3+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight+(($fixedHeight-3)/2)}] \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight+(($fixedHeight-3)/2)}] 3 3] \
+    3x3+[xchar 2]+[expr {[yline 2]+($fixedHeight-3)/2}] \
+    [list [xchar 2] [expr {[yline 2]+($fixedHeight-3)/2}] 3 3] \
     {-window {} {} {} .f}]
 
 test textWind-1.2 {basic tests of options} -setup {
@@ -81,8 +100,8 @@ test textWind-1.2 {basic tests of options} -setup {
         [.t window configure .f -align]
 } -result [list \
     1 \
-    3x3+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight}] \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight}] 3 3] \
+    3x3+[xchar 2]+[yline 2] \
+    [list [xchar 2] [yline 2] 3 3] \
     {-align {} {} center top}]
 
 test textWind-1.3 {basic tests of options} -setup {
