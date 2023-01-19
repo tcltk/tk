@@ -3541,7 +3541,7 @@ int Winprint_Init(
     for (i=0; i<numCommands; i++) {
 	char buffer[100];
 
-	sprintf(buffer, "%s::%s", gdiName, gdi_commands[i].command_string);
+	snprintf(buffer, sizeof(buffer), "%s::%s", gdiName, gdi_commands[i].command_string);
 	Tcl_CreateCommand(interp, buffer, gdi_commands[i].command,
 		NULL, (Tcl_CmdDeleteProc *) 0);
 	Tcl_Export(interp, namespacePtr, gdi_commands[i].command_string, 0);
