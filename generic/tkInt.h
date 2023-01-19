@@ -88,10 +88,6 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#ifndef TCL_ENCODING_HACK_FLAG
-#   define TCL_ENCODING_HACK_FLAG (1<<20)
-#endif
-
 #if TCL_MAJOR_VERSION < 9
 #   undef Tcl_ExternalToUtfDStringEx
 #   undef Tcl_UtfToExternalDStringEx
