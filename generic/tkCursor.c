@@ -14,6 +14,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * A TkCursor structure exists for each cursor that is currently active. Each
  * structure is indexed with two hash tables defined below. One of the tables
@@ -427,7 +431,7 @@ Tk_NameOfCursor(
 
     if (!dispPtr->cursorInit) {
     printid:
-	sprintf(dispPtr->cursorString, "cursor id 0x%" TCL_Z_MODIFIER "x", PTR2INT(cursor));
+	snprintf(dispPtr->cursorString, sizeof(dispPtr->cursorString), "cursor id 0x%" TCL_Z_MODIFIER "x", PTR2INT(cursor));
 	return dispPtr->cursorString;
     }
     idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);

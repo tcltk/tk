@@ -21,6 +21,10 @@
 #include "tkImgPhoto.h"
 #include "tkPort.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Declaration for internal Xlib function used here:
  */
@@ -346,9 +350,9 @@ TkImgPhotoGet(
     XFree((char *) visInfoPtr);
 
     if (mono) {
-	sprintf(buf, "%d", nRed);
+	snprintf(buf, sizeof(buf), "%d", nRed);
     } else {
-	sprintf(buf, "%d/%d/%d", nRed, nGreen, nBlue);
+	snprintf(buf, sizeof(buf), "%d/%d/%d", nRed, nGreen, nBlue);
     }
     instancePtr->defaultPalette = Tk_GetUid(buf);
 

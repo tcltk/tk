@@ -2818,7 +2818,7 @@ GetScreenFont(
 	    rest = strchr(rest + 1, '-');
 	}
 	*str = '\0';
-	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
+	snprintf(buf, sizeof(buf), "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
 		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
@@ -2956,7 +2956,7 @@ ListFonts(
 {
     char buf[256];
 
-    sprintf(buf, "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
+    snprintf(buf, sizeof(buf), "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
     return XListFonts(display, buf, 10000, numNamesPtr);
 }
 

@@ -6,8 +6,6 @@
 
 namespace eval ttk::theme::clam {
 
-    namespace import ::tk::ScaleNum
-
     variable colors
     array set colors {
 	-disabledfg		"#999999"
@@ -56,7 +54,7 @@ namespace eval ttk::theme::clam {
 			     active $colors(-lighter)] \
 	    -lightcolor [list pressed $colors(-darker)] \
 	    -darkcolor [list pressed $colors(-darker)] \
-	    -bordercolor [list alternate "#000000"]
+	    -bordercolor {alternate #000000}
 
 	ttk::style configure Toolbutton \
 	    -anchor center -padding 1.5p -relief flat
@@ -101,8 +99,8 @@ namespace eval ttk::theme::clam {
 	ttk::style map TEntry \
 	    -background [list  readonly $colors(-frame)] \
 	    -bordercolor [list  focus $colors(-selectbg)] \
-	    -lightcolor [list  focus "#6f9dc6"] \
-	    -darkcolor [list  focus "#6f9dc6"]
+	    -lightcolor {focus #6f9dc6} \
+	    -darkcolor {focus #6f9dc6}
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
 	    -arrowsize 10.5p
@@ -123,7 +121,7 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \
-	    -padding [list selected {4.5p 3p 4.5p 1.5p}] \
+	    -padding {selected {4.5p 3p 4.5p 1.5p}} \
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
 	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
 
@@ -144,19 +142,15 @@ namespace eval ttk::theme::clam {
 	    -labeloutside true -labelmargins {0 0 0 3p} \
 	    -borderwidth 2 -relief raised
 
-	set gripCount [ScaleNum 5]
-	ttk::style configure TScrollbar -gripcount $gripCount \
+	ttk::style configure TScrollbar -gripcount 3.75p \
 	    -arrowsize 10.5p -width 10.5p
 
-	set sliderLen 22.5p
-	ttk::style configure TScale -gripcount $gripCount \
-	    -arrowsize 10.5p -sliderlength $sliderLen
+	ttk::style configure TScale -gripcount 3.75p \
+	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure TProgressbar -background $colors(-frame) \
-	    -arrowsize 10.5p -sliderlength $sliderLen
+	    -arrowsize 10.5p -sliderlength 22.5p
 
-	ttk::style configure Sash -sashthickness 4.5p -gripcount [ScaleNum 10]
+	ttk::style configure Sash -sashthickness 4.5p -gripcount 7.5p
     }
-
-    unset gripCount sliderLen
 }

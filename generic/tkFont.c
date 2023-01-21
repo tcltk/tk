@@ -17,6 +17,10 @@
 #include "tkMacOSXInt.h"    /* Defines TK_DRAW_IN_CONTEXT */
 #endif
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The following structure is used to keep track of all the fonts that exist
  * in the current application. It must be stored in the TkMainInfo for the
@@ -662,7 +666,7 @@ Tk_FontObjCmd(
 	     */
 
 	    for (i = 1; ; i++) {
-		sprintf(buf, "font%d", i);
+		snprintf(buf, sizeof(buf), "font%d", i);
 		namedHashPtr = Tcl_FindHashEntry(&fiPtr->namedTable, buf);
 		if (namedHashPtr == NULL) {
 		    break;
@@ -3330,7 +3334,7 @@ Tk_TextLayoutToPostscript(
 	    p += TkUtfToUniChar(p, &ch);
 	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
 		/*
-		 * Tricky point: the "03" is necessary in the sprintf below,
+		 * Tricky point: the "03" is necessary in the snprintf below,
 		 * so that a full three digits of octal are always generated.
 		 * Without the "03", a number following this sequence could be
 		 * interpreted by Postscript as part of this sequence.
@@ -3356,7 +3360,7 @@ Tk_TextLayoutToPostscript(
 	    if (ch > 0xffff) {
 		goto noMapping;
 	    }
-	    sprintf(uindex, "%04X", ch);		/* endianness? */
+	    snprintf(uindex, sizeof(uindex), "%04X", ch);		/* endianness? */
 	    glyphname = Tcl_GetVar2(interp, "::tk::psglyphs", uindex, 0);
 	    if (glyphname) {
 		ps = Tcl_GetStringFromObj(psObj, &len);
