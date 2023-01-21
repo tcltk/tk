@@ -25,7 +25,7 @@ namespace eval ttk::theme::vista {
 	    -font TkDefaultFont
 
 	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText]
+	    -foreground {disabled SystemGrayText}
 
 	ttk::style configure TButton -anchor center -padding 0.75p -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
@@ -39,7 +39,7 @@ namespace eval ttk::theme::vista {
 
 	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 1.5p 0}
 	ttk::style map TNotebook.Tab \
-	    -expand [list selected {1.5p 1.5p 1.5p 1.5p}]
+	    -expand {selected {1.5p 1.5p 1.5p 1.5p}}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
@@ -49,7 +49,7 @@ namespace eval ttk::theme::vista {
                 -background System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
-                                selected SystemHighlight] \
+				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
 				selected SystemHighlightText]
 
