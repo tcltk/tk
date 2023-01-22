@@ -232,7 +232,6 @@ test textWind-2.11 {TkTextWindowCmd procedure} -setup {
     destroy .f
 } -result  {{-align {} {} center baseline} {-create {} {} {} foo} {-padx {} {} 0 1} {-pady {} {} 0 2} {-stretch {} {} 0 0} {-window {} {} {} .f}}
 test textWind-2.12 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 10 -height 6 -bg $color
     .t window create 2.2 -window .f -align baseline -padx 1 -pady 2 -create foo
@@ -248,7 +247,6 @@ test textWind-2.12 {TkTextWindowCmd procedure} -setup {
     destroy .f
 } -result {{} {-padx {} {} 0 33}}
 test textWind-2.13 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 10 -height 6 -bg $color
     .t window create 2.2 -window .f -align baseline -padx 1 -pady 2 -create foo
@@ -275,7 +273,6 @@ test textWind-2.15 {TkTextWindowCmd procedure} -setup {
     .t window create gorp
 } -returnCodes error -result {bad text index "gorp"}
 test textWind-2.16 {TkTextWindowCmd procedure, don't insert after end} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 10 -height 6 -bg $color
     .t window create 2.2 -window .f -align baseline -padx 1 -pady 2
@@ -292,7 +289,6 @@ test textWind-2.17 {TkTextWindowCmd procedure} -setup {
     list [catch {.t window create 1.0} msg] $msg [.t window configure 1.0]
 } -result {0 {} {{-align {} {} center center} {-create {} {} {} {}} {-padx {} {} 0 0} {-pady {} {} 0 0} {-stretch {} {} 0 0} {-window {} {} {} {}}}}
 test textWind-2.18 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 20 -height 10 -bg $color
     .t window create end -window .f
@@ -302,7 +298,6 @@ test textWind-2.18 {TkTextWindowCmd procedure} -setup {
     .t window create 1.0 -window .f -gorp stupid
 } -returnCodes error -result {unknown option "-gorp"}
 test textWind-2.19 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 20 -height 10 -bg $color
     .t window create end -window .f
