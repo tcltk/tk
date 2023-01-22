@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-set fixedFont {Courier -14}
+set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
