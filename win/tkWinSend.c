@@ -681,10 +681,10 @@ RegisterInterp(
 		    Tcl_DStringAppend(&dString, name, -1);
 		    Tcl_DStringAppend(&dString, " #", 2);
 		    offset = Tcl_DStringLength(&dString);
-		    Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
+		    Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
 		    actualName = Tcl_DStringValue(&dString);
 		}
-		snprintf(Tcl_DStringValue(&dString) + offset, sizeof(Tcl_DStringValue(&dString)) - offset, "%d", i);
+		snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", i);
 	    }
 
 	    hr = BuildMoniker(actualName, &pmk);
