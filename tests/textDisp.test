@@ -101,6 +101,7 @@ text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
+
 wm geometry . {}
 
 # full border size of the text widget, i.e. first x or y coordinate inside the text widget
