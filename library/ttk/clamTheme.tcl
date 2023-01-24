@@ -6,8 +6,6 @@
 
 namespace eval ttk::theme::clam {
 
-    namespace import ::tk::ScaleNum
-
     variable colors
     array set colors {
 	-disabledfg		"#999999"
@@ -36,20 +34,19 @@ namespace eval ttk::theme::clam {
 	    -selectbackground $colors(-selectbg) \
 	    -selectforeground $colors(-selectfg) \
 	    -selectborderwidth 0 \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
 	ttk::style map "." \
 	    -background [list disabled $colors(-frame) \
 			     active $colors(-lighter)] \
 	    -foreground [list disabled $colors(-disabledfg)] \
 	    -selectbackground [list  !focus $colors(-darkest)] \
-	    -selectforeground [list  !focus white] \
-	    ;
+	    -selectforeground [list  !focus white]
+
 	# -selectbackground [list  !focus "#847d73"]
 
 	ttk::style configure TButton \
-	    -anchor center -width -11 -padding [ScaleNum 5] -relief raised
+	    -anchor center -width -11 -padding 3.75p -relief raised
 	ttk::style map TButton \
 	    -background [list \
 			     disabled $colors(-frame) \
@@ -57,11 +54,10 @@ namespace eval ttk::theme::clam {
 			     active $colors(-lighter)] \
 	    -lightcolor [list pressed $colors(-darker)] \
 	    -darkcolor [list pressed $colors(-darker)] \
-	    -bordercolor [list alternate "#000000"] \
-	    ;
+	    -bordercolor {alternate #000000}
 
 	ttk::style configure Toolbutton \
-	    -anchor center -padding [ScaleNum 2] -relief flat
+	    -anchor center -padding 1.5p -relief flat
 	ttk::style map Toolbutton \
 	    -relief [list \
 		    disabled flat \
@@ -73,21 +69,18 @@ namespace eval ttk::theme::clam {
 		    pressed $colors(-darker) \
 		    active $colors(-lighter)] \
 	    -lightcolor [list pressed $colors(-darker)] \
-	    -darkcolor [list pressed $colors(-darker)] \
-	    ;
+	    -darkcolor [list pressed $colors(-darker)]
 
-	set l [ScaleNum 1]; set t $l; set r [ScaleNum 4]; set b $l
-	set indMargin [list $l $t $r $b]
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \
-	    -indicatorsize [ScaleNum 10] \
-	    -indicatormargin $indMargin \
-	    -padding [ScaleNum 2] ;
+	    -indicatorsize 7.5p \
+	    -indicatormargin {0.75p 0.75p 3p 0.75p} \
+	    -padding 1.5p
 	ttk::style configure TRadiobutton \
 	    -indicatorbackground "#ffffff" \
-	    -indicatorsize [ScaleNum 10] \
-	    -indicatormargin $indMargin \
-	    -padding [ScaleNum 2] ;
+	    -indicatorsize 7.5p \
+	    -indicatormargin {0.75p 0.75p 3p 0.75p} \
+	    -padding 1.5p
 	ttk::style map TCheckbutton -indicatorbackground \
 	    [list  pressed $colors(-frame) \
 			{!disabled alternate} $colors(-altindicator) \
@@ -100,19 +93,17 @@ namespace eval ttk::theme::clam {
 			disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize [ScaleNum 5] \
-	    -padding [ScaleNum 5] -relief raised
+	    -width -11 -arrowsize 3.75p -padding 3.75p -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
 	    -background [list  readonly $colors(-frame)] \
 	    -bordercolor [list  focus $colors(-selectbg)] \
-	    -lightcolor [list  focus "#6f9dc6"] \
-	    -darkcolor [list  focus "#6f9dc6"] \
-	    ;
+	    -lightcolor {focus #6f9dc6} \
+	    -darkcolor {focus #6f9dc6}
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
-	    -arrowsize [ScaleNum 14]
+	    -arrowsize 10.5p
 	ttk::style map TCombobox \
 	    -background [list active $colors(-lighter) \
 			     pressed $colors(-lighter)] \
@@ -123,25 +114,20 @@ namespace eval ttk::theme::clam {
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	set l [ScaleNum 2]; set r [ScaleNum 10]
-	ttk::style configure TSpinbox -arrowsize [ScaleNum 10] \
-	    -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
 	    -background [list  readonly $colors(-frame)] \
             -arrowcolor [list disabled $colors(-disabledfg)]
 
-	set l [ScaleNum 6]; set t [ScaleNum 2]; set r $l; set b $t
-	ttk::style configure TNotebook.Tab -padding [list $l $t $r $b]
-	set t [ScaleNum 4]
+	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \
-	    -padding [list selected [list $l $t $r $b]] \
+	    -padding {selected {4.5p 3p 4.5p 1.5p}} \
 	    -background [list selected $colors(-frame) {} $colors(-darker)] \
-	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)] \
-	    ;
+	    -lightcolor [list selected $colors(-lighter) {} $colors(-dark)]
 
 	# Treeview:
 	ttk::style configure Heading \
-	    -font TkHeadingFont -relief raised -padding [ScaleNum 3]
+	    -font TkHeadingFont -relief raised -padding 2.25p
 	ttk::style configure Treeview -background $colors(-window) \
                 -stripedbackground $colors(-lighter)
 	ttk::style configure Treeview.Separator \
@@ -153,24 +139,18 @@ namespace eval ttk::theme::clam {
 				selected $colors(-selectfg)]
 
 	ttk::style configure TLabelframe \
-	    -labeloutside true -labelmargins [list 0 0 0 [ScaleNum 4]] \
+	    -labeloutside true -labelmargins {0 0 0 3p} \
 	    -borderwidth 2 -relief raised
 
-	set gripCount [ScaleNum 5]
-	set scrlbarWidth [ScaleNum 14]
-	ttk::style configure TScrollbar -gripcount $gripCount \
-	    -arrowsize $scrlbarWidth -width $scrlbarWidth
+	ttk::style configure TScrollbar -gripcount 3.75p \
+	    -arrowsize 10.5p -width 10.5p
 
-	set sliderLen [ScaleNum 30]
-	ttk::style configure TScale -gripcount $gripCount \
-	    -arrowsize $scrlbarWidth -sliderlength $sliderLen
+	ttk::style configure TScale -gripcount 3.75p \
+	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure TProgressbar -background $colors(-frame) \
-	    -arrowsize $scrlbarWidth -sliderlength $sliderLen
+	    -arrowsize 10.5p -sliderlength 22.5p
 
-	ttk::style configure Sash -sashthickness [ScaleNum 6] \
-	    -gripcount [ScaleNum 10]
+	ttk::style configure Sash -sashthickness 4.5p -gripcount 7.5p
     }
-
-    unset l t r b indMargin gripCount scrlbarWidth sliderLen
 }
