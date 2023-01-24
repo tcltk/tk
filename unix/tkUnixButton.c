@@ -38,94 +38,165 @@ typedef struct UnixButton {
 const Tk_ClassProcs tkpButtonProcs = {
     sizeof(Tk_ClassProcs),	/* size */
     TkButtonWorldChanged,	/* worldChangedProc */
-    NULL,					/* createProc */
-    NULL					/* modalProc */
+    NULL,			/* createProc */
+    NULL			/* modalProc */
 };
 
 /*
- * The button image.
- * The header info here is ignored, it's the image that's important. The
- * colors will be applied as follows:
- *   A = Background
- *   B = Background
- *   C = 3D light
- *   D = selectColor
- *   E = 3D dark
- *   F = Background
- *   G = Indicator Color
- *   H = disabled Indicator Color
- */
-
-/* XPM */
-static const char *const button_images[] = {
-    /* width height ncolors chars_per_pixel */
-    "52 26 7 1",
-    /* colors */
-    "A c #808000000000",
-    "B c #000080800000",
-    "C c #808080800000",
-    "D c #000000008080",
-    "E c #808000008080",
-    "F c #000080808080",
-    "G c #000000000000",
-    "H c #000080800000",
-    /* pixels */
-    "AAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAAB",
-    "AEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECB",
-    "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
-    "AEDDDDDDDDDCBAEDDDDDDDGDCBAEFFFFFFFFFCBAEFFFFFFFHFCB",
-    "AEDDDDDDDDDCBAEDDDDDDGGDCBAEFFFFFFFFFCBAEFFFFFFHHFCB",
-    "AEDDDDDDDDDCBAEDGDDDGGGDCBAEFFFFFFFFFCBAEFHFFFHHHFCB",
-    "AEDDDDDDDDDCBAEDGGDGGGDDCBAEFFFFFFFFFCBAEFHHFHHHFFCB",
-    "AEDDDDDDDDDCBAEDGGGGGDDDCBAEFFFFFFFFFCBAEFHHHHHFFFCB",
-    "AEDDDDDDDDDCBAEDDGGGDDDDCBAEFFFFFFFFFCBAEFFHHHFFFFCB",
-    "AEDDDDDDDDDCBAEDDDGDDDDDCBAEFFFFFFFFFCBAEFFFHFFFFFCB",
-    "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
-    "ACCCCCCCCCCCBACCCCCCCCCCCBACCCCCCCCCCCBACCCCCCCCCCCB",
-    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
-    "FFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFF",
-    "FFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFF",
-    "FAEEDDDDEEBFFFAEEDDDDEEBFFFAEEFFFFEEBFFFAEEFFFFEEBFF",
-    "FAEDDDDDDCBFFFAEDDDDDDCBFFFAEFFFFFFCBFFFAEFFFFFFCBFF",
-    "AEDDDDDDDDCBFAEDDDGGDDDCBFAEFFFFFFFFCBFAEFFFHHFFFCBF",
-    "AEDDDDDDDDCBFAEDDGGGGDDCBFAEFFFFFFFFCBFAEFFHHHHFFCBF",
-    "AEDDDDDDDDCBFAEDDGGGGDDCBFAEFFFFFFFFCBFAEFFHHHHFFCBF",
-    "AEDDDDDDDDCBFAEDDDGGDDDCBFAEFFFFFFFFCBFAEFFFHHFFFCBF",
-    "FAEDDDDDDCBFFFAEDDDDDDCBFFFAEFFFFFFCBFFFAEFFFFFFCBFF",
-    "FACCDDDDCCBFFFACCDDDDCCBFFFACCFFFFCCBFFFACCFFFFCCBFF",
-    "FFBBCCCCBBFFFFFBBCCCCBBFFFFFBBCCCCBBFFFFFBBCCCCBBFFF",
-    "FFFFBBBBFFFFFFFFFBBBBFFFFFFFFFBBBBFFFFFFFFFBBBBFFFFF",
-    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-};
-
-/*
- * Sizes and offsets into above XPM file.
- */
-
-#define CHECK_BUTTON_DIM    13
-#define CHECK_MENU_DIM       9
-#define CHECK_START          9
-#define CHECK_ON_OFFSET     13
-#define CHECK_OFF_OFFSET     0
-#define CHECK_DISON_OFFSET  39
-#define CHECK_DISOFF_OFFSET 26
-#define RADIO_BUTTON_DIM    12
-#define RADIO_MENU_DIM       6
-#define RADIO_WIDTH         13
-#define RADIO_START         22
-#define RADIO_ON_OFFSET     13
-#define RADIO_OFF_OFFSET     0
-#define RADIO_DISON_OFFSET  39
-#define RADIO_DISOFF_OFFSET 26
-
-/*
- * Indicator Draw Modes
+ * Indicator draw modes
  */
 
 #define CHECK_BUTTON 0
 #define CHECK_MENU   1
 #define RADIO_BUTTON 2
 #define RADIO_MENU   3
+
+/*
+ * Indicator sizes
+ */
+
+#define CHECK_BUTTON_DIM 16
+#define CHECK_MENU_DIM    8
+#define RADIO_BUTTON_DIM 16
+#define RADIO_MENU_DIM    8
+
+/*
+ * The SVG images used here are based on some icons provided by the
+ * official open source SVG icon library for the Bootstrap project,
+ * licensed under the MIT license (https://opensource.org/licenses/MIT).
+ *
+ * See https://github.com/twbs/icons.
+ */
+
+static const char *const checkbtnOffData =
+"    <svg id='classiccheckbox' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
+"  <defs id='defs325'>\n"
+"    <linearGradient id='linearGradientLeft' gradientUnits='userSpaceOnUse'\n"
+"		    x1='2' y1='7.5' x2='2' y2='7.5'>\n"
+"      <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
+"      <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
+"  </linearGradient>\n"
+"  <linearGradient id='LinearGradientBottom' gradientUnits='userSpaceOnUse'\n"
+"		  x1='7.5' y1='16' x2='7.5' y2='15'>\n"
+"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
+"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
+"  </linearGradient>\n"
+"  <linearGradient id='linearGradientRight' gradientUnits='userSpaceOnUse'\n"
+"		  x1='16' y1='7.5' x2='16' y2='7.5'>\n"
+"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
+"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
+"  </linearGradient>\n"
+"  <linearGradient id='linearGradientTop' gradientUnits='userSpaceOnUse'\n"
+"		  x1='7.5' y1='1.5' x2='7.5' y2='1.5'>\n"
+"    <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
+"    <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
+"  </linearGradient>\n"
+"  </defs>\n"
+"  <g id='layer1'>\n"
+"    <rect id='rectbackdrop'\n"
+"	  style='fill:#INTROR;stroke-width:11;paint-order:stroke markers fill;fill-opacity:1'\n"
+"	  width='12' height='12' x='2' y='2' />\n"
+"    <path id='recttopside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientTop)'\n"
+"	  d='M 0,0 L 13,0 12,1 1,1 0,0' />\n"
+"    <path id='rectleftside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientLeft)'\n"
+"	  d='M 0,0 L 1,1 1,12 0,13' />\n"
+"    <path id='rectrightside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientRight)'\n"
+"	  d='M 13,0 L 12,1 12,12 13,13 13,0' />\n"
+"    <path id='rectbottomside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#LinearGradientBottom)'\n"
+"	  d='M 0,13 L 1,12 12,12 13,13 0,13' />\n"
+"  </g>\n"
+"</svg>";
+
+static const char *const checkbtnOnData =
+"    <svg id='classiccheckbox' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
+"  <defs id='defs325'>\n"
+"    <linearGradient id='linearGradientLeft' gradientUnits='userSpaceOnUse'\n"
+"		    x1='2' y1='7.5' x2='2' y2='7.5'>\n"
+"      <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
+"      <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
+"  </linearGradient>\n"
+"  <linearGradient id='LinearGradientBottom' gradientUnits='userSpaceOnUse'\n"
+"		  x1='7.5' y1='16' x2='7.5' y2='15'>\n"
+"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
+"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
+"  </linearGradient>\n"
+"  <linearGradient id='linearGradientRight' gradientUnits='userSpaceOnUse'\n"
+"		  x1='16' y1='7.5' x2='16' y2='7.5'>\n"
+"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
+"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
+"  </linearGradient>\n"
+"  <linearGradient id='linearGradientTop' gradientUnits='userSpaceOnUse'\n"
+"		  x1='7.5' y1='1.5' x2='7.5' y2='1.5'>\n"
+"    <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
+"    <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
+"  </linearGradient>\n"
+"  </defs>\n"
+"  <g id='layer1'>\n"
+"    <rect id='rectbackdrop'\n"
+"	  style='fill:#INTROR;stroke-width:11;paint-order:stroke markers fill;fill-opacity:1'\n"
+"	  width='12' height='12' x='2' y='2' />\n"
+"    <path id='recttopside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientTop)'\n"
+"	  d='M 0,0 L 13,0 12,1 1,1 0,0' />\n"
+"    <path id='rectleftside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientLeft)'\n"
+"	  d='M 0,0 L 1,1 1,12 0,13' />\n"
+"    <path id='rectrightside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientRight)'\n"
+"	  d='M 13,0 L 12,1 12,12 13,13 13,0' />\n"
+"    <path id='rectbottomside'\n"
+"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#LinearGradientBottom)'\n"
+"	  d='M 0,13 L 1,12 12,12 13,13 0,13' />\n"
+"    <path id='indicator'\n"
+"	  style='fill:none;stroke:#INDCTR;stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;paint-order:stroke markers fill;stroke-opacity:1'\n"
+"	  d='M 3,7 L 6,10 10,3' />\n"
+"  </g>\n"
+"</svg>";
+
+static const char *const radiobtnOffData =
+    "<svg width='16px' height='16px' version='1.1' id='radiobutton' xmlns:svg='http://www.w3.org/2000/svg'>\n"
+    "  <defs id='defs4785'>\n"
+    "    <linearGradient id='gradient1' x1='2' y1='2' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n"
+    "      <stop id='stop0' style='stop-color:#DARKKK;stop-opacity:1;' offset='0' />\n"
+    "      <stop id='stop1' style='stop-color:#LIGHTT;stop-opacity:0;' offset='1' />\n"
+    "    </linearGradient>\n"
+    "  </defs>\n"
+    "  <circle id='path4803' cx='8' cy='8' r='8' style='fill:url(#gradient1);fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none' />\n"
+    "  <circle id='path4803-6' cx='8' cy='8' r='6.5' style='fill:#INTROR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
+    "</svg>";
+
+static const char *const radiobtnOnData =
+    "<svg width='16px' height='16px' version='1.1' id='radiobutton' xmlns:svg='http://www.w3.org/2000/svg'>\n"
+    "  <defs id='defs4785'>\n"
+    "    <linearGradient id='gradient1' x1='2' y1='2' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n"
+    "      <stop id='stop0' style='stop-color:#DARKKK;stop-opacity:1;' offset='0' />\n"
+    "      <stop id='stop1' style='stop-color:#LIGHTT;stop-opacity:0;' offset='1' />\n"
+    "    </linearGradient>\n"
+    "  </defs>\n"
+    "  <circle id='path4803' cx='8' cy='8' r='8' style='fill:url(#gradient1);fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none' />\n"
+    "  <circle id='path4803-6' cx='8' cy='8' r='7' style='fill:#INTROR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
+    "  <circle id='path4820' cx='8' cy='8' r='4' style='fill:#INDCTR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
+    "</svg>";
+
+static const char *const menuOffData =
+"    <svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'></svg>\n";
+
+static const char *const checkmenuOnData =
+"    <svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
+"    <path id='indicator'\n"
+"	  style='fill:none;stroke:#INDCTR;stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;paint-order:stroke markers fill;stroke-opacity:1'\n"
+"	  d='M 0,3 L 4,7 8,0' />\n"
+"    </svg>";
+
+static const char *const radiomenuOnData =
+"    <svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
+"  <circle id='path4820' cx='4' cy='4' r='3' style='fill:#INDCTR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
+"    </svg>";
+
 
 /*
  *----------------------------------------------------------------------
@@ -133,7 +204,7 @@ static const char *const button_images[] = {
  * TkpDrawCheckIndicator -
  *
  *	Draws the checkbox image in the drawable at the (x,y) location, value,
- *	and state given. This routine is use by the button and menu widgets
+ *	and state given. This routine is used by the button and menu widgets.
  *
  * Results:
  *	None.
@@ -143,6 +214,30 @@ static const char *const button_images[] = {
  *
  *----------------------------------------------------------------------
  */
+
+static void
+ColorToStr(
+    const XColor *colorPtr,	/* specifies a color */
+    char *colorStr)		/* memory area to which the color is to be
+				   output in the format "RRGGBB" */
+{
+    char str[13];
+
+    snprintf(str, sizeof(str), "%04x%04x%04x",
+	     colorPtr->red, colorPtr->green, colorPtr->blue);
+    snprintf(colorStr, 7, "%.2s%.2s%.2s", str, str + 4, str + 8);
+}
+
+static void
+ImageChanged(			/* to be passed to Tk_GetImage() */
+    ClientData clientData,
+    int x, int y, int width, int height,
+    int imageWidth, int imageHeight)
+{
+    (void)clientData;
+    (void)x; (void)y; (void)width; (void)height;
+    (void)imageWidth; (void)imageHeight;
+}
 
 void
 TkpDrawCheckIndicator(
@@ -158,19 +253,23 @@ TkpDrawCheckIndicator(
     int disabled,		/* are we disabled? */
     int mode)			/* kind of indicator to draw */
 {
-    int ix, iy;
-    int dim;
-    int imgsel, imgstart;
+    const char *svgDataPtr;
+    int hasBorder, hasInterior, dim;
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
-    XGCValues gcValues;
-    GC copyGC;
-    unsigned long imgColors[8];
-    XImage *img;
-    Pixmap pixmap;
-    int depth;
+    char borderColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
+    char imgName[50];
+    Tk_Image img;
+    size_t svgDataLen;
+    char *svgDataCopy;
+    char *borderColorPtr, *lightColorPtr, *interiorColorPtr, *indicatorColorPtr;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    char *script;
+    int code;
+    const char *scalingPctPtr;
+    double scalingFactor;
 
     /*
-     * Sanity check.
+     * Sanity check
      */
 
     if (tkwin == NULL || display == NULL || d == None || bgBorder == NULL
@@ -186,128 +285,161 @@ TkpDrawCheckIndicator(
 	selectColor = bg_brdr->bgColorPtr;
     }
 
-    depth = Tk_Depth(tkwin);
-
     /*
-     * Compute starting point and dimensions of image inside button_images to
-     * be used.
+     * Determine the SVG data to use for the
+     * photo image and the latter's dimensions
      */
 
     switch (mode) {
     default:
     case CHECK_BUTTON:
-	imgsel = on == 2 ? CHECK_DISON_OFFSET :
-		on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
-	imgsel += disabled && on != 2 ? CHECK_DISOFF_OFFSET : 0;
-	imgstart = CHECK_START;
+	svgDataPtr = (on == 0 ? checkbtnOffData : checkbtnOnData);
+	hasBorder = 1; hasInterior = 1;
 	dim = CHECK_BUTTON_DIM;
 	break;
 
     case CHECK_MENU:
-	imgsel = on == 2 ? CHECK_DISOFF_OFFSET :
-		on == 1 ? CHECK_ON_OFFSET : CHECK_OFF_OFFSET;
-	imgsel += disabled && on != 2 ? CHECK_DISOFF_OFFSET : 0;
-	imgstart = CHECK_START + 2;
-	imgsel += 2;
+	svgDataPtr = (on == 0 ? menuOffData : checkmenuOnData);
+	hasBorder = 0; hasInterior = 0;
 	dim = CHECK_MENU_DIM;
 	break;
 
     case RADIO_BUTTON:
-	imgsel = on == 2 ? RADIO_DISON_OFFSET :
-		on==1 ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
-	imgsel += disabled && on != 2 ? RADIO_DISOFF_OFFSET : 0;
-	imgstart = RADIO_START;
+	svgDataPtr = (on == 0 ? radiobtnOffData : radiobtnOnData);
+	hasBorder = 1; hasInterior = 1;
 	dim = RADIO_BUTTON_DIM;
 	break;
 
     case RADIO_MENU:
-	imgsel = on == 2 ? RADIO_DISOFF_OFFSET :
-		on==1 ? RADIO_ON_OFFSET : RADIO_OFF_OFFSET;
-	imgsel += disabled && on != 2 ? RADIO_DISOFF_OFFSET : 0;
-	imgstart = RADIO_START + 3;
-	imgsel += 3;
+	svgDataPtr = (on == 0 ? menuOffData : radiomenuOnData);
+	hasBorder = 0; hasInterior = 0;
 	dim = RADIO_MENU_DIM;
 	break;
     }
 
     /*
-     * Allocate the drawing areas to use. Note that we use double-buffering
-     * here because not all code paths leading to this function do so.
-     */
-
-    pixmap = Tk_GetPixmap(display, d, dim, dim, depth);
-    if (pixmap == None) {
-	return;
-    }
-
-    x -= dim/2;
-    y -= dim/2;
-
-    img = XGetImage(display, pixmap, 0, 0,
-	    (unsigned int)dim, (unsigned int)dim, AllPlanes, ZPixmap);
-    if (img == NULL) {
-	return;
-    }
-
-    /*
-     * Set up the color mapping table.
+     * Construct the color strings borderColorStr,
+     * interiorColorStr, and indicatorColorStr
      */
 
     TkpGetShadows(bg_brdr, tkwin);
 
-    imgColors[0 /*A*/] = /* BorderBackground */
-	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[1 /*B*/] = /* BorderBackground */
-	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[2 /*C*/] = /* BorderLightColor */
-	    (bg_brdr->lightColorPtr != NULL) ?
-	    Tk_GetColorByValue(tkwin, bg_brdr->lightColorPtr)->pixel :
-	    WhitePixelOfScreen(bg_brdr->screen);
-    imgColors[3 /*D*/] = /* SelectColor */
-	    Tk_GetColorByValue(tkwin, selectColor)->pixel;
-    imgColors[4 /*E*/] = /* BorderDarkColor */
-	    (bg_brdr->darkColorPtr != NULL) ?
-	    Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr)->pixel :
-	    BlackPixelOfScreen(bg_brdr->screen);
-    imgColors[5 /*F*/] = /* BorderBackground */
-	    Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr)->pixel;
-    imgColors[6 /*G*/] = /* IndicatorColor */
-	    Tk_GetColorByValue(tkwin, indicatorColor)->pixel;
-    imgColors[7 /*H*/] = /* DisableColor */
-	    Tk_GetColorByValue(tkwin, disableColor)->pixel;
-
-    /*
-     * Create the image, painting it into an XImage one pixel at a time.
-     */
-
-    for (iy=0 ; iy<dim ; iy++) {
-	for (ix=0 ; ix<dim ; ix++) {
-	    XPutPixel(img, ix, iy,
-		    imgColors[button_images[imgstart+iy][imgsel+ix] - 'A']);
-	}
+    if (bg_brdr->darkColorPtr == NULL) {
+	strcpy(borderColorStr, "000000");
+    } else {
+	ColorToStr(Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr),
+		   borderColorStr);
+    }
+    if (bg_brdr->lightColorPtr == NULL) {
+	strcpy(lightColorStr, "ffffff");
+    } else {
+	ColorToStr(Tk_GetColorByValue(tkwin, bg_brdr->lightColorPtr),
+		   lightColorStr);
+    }
+    if (on == 2 || disabled) {			/* tri-state or disabled */
+	ColorToStr(Tk_GetColorByValue(tkwin, bg_brdr->bgColorPtr),
+		   interiorColorStr);
+	ColorToStr(Tk_GetColorByValue(tkwin, disableColor),
+		   indicatorColorStr);
+    } else {
+	ColorToStr(Tk_GetColorByValue(tkwin, selectColor),
+		   interiorColorStr);
+	ColorToStr(Tk_GetColorByValue(tkwin, indicatorColor),
+		   indicatorColorStr);
     }
 
     /*
-     * Copy onto our target drawable surface.
+     * Check whether there is an SVG image for
+     * the value of mode and these color strings
      */
 
-    memset(&gcValues, 0, sizeof(gcValues));
-    gcValues.background = bg_brdr->bgColorPtr->pixel;
-    gcValues.graphics_exposures = False;
-    copyGC = Tk_GetGC(tkwin, 0, &gcValues);
+    snprintf(imgName, sizeof(imgName), "::tk::icons::indicator%d_%s_%s_%s",
+	     mode,
+	     hasBorder ? borderColorStr : "XXXXXX",
+	     hasInterior ? interiorColorStr : "XXXXXX",
+	     on ? indicatorColorStr : "XXXXXX");
+    img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
+    if (img == NULL) {
+	/*
+	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
+	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 */
 
-    XPutImage(display, pixmap, copyGC, img, 0, 0, 0, 0,
-	    (unsigned)dim, (unsigned)dim);
-    XCopyArea(display, pixmap, d, copyGC, 0, 0,
-	    (unsigned)dim, (unsigned)dim, x, y);
+	svgDataLen = strlen(svgDataPtr);
+	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
+	if (svgDataCopy == NULL) {
+	    return;
+	}
+	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
+	svgDataCopy[svgDataLen] = '\0';
+	svgDataPtr = svgDataCopy;
+
+	/*
+	 * Update the colors within svgDataCopy
+	 */
+
+	borderColorPtr =    strstr(svgDataPtr, "DARKKK"); //888888
+	lightColorPtr =     strstr(svgDataPtr, "LIGHTT"); //
+	interiorColorPtr =  strstr(svgDataPtr, "INTROR"); //ffffff
+	indicatorColorPtr = strstr(svgDataPtr, "INDCTR"); //000000
+
+	while (borderColorPtr != NULL) {
+	    memcpy(borderColorPtr, borderColorStr, 6);
+	    borderColorPtr = strstr(borderColorPtr, "DARKKK"); //888888
+	}
+	while (lightColorPtr != NULL) {
+	    memcpy(lightColorPtr, lightColorStr, 6);
+	    lightColorPtr = strstr(lightColorPtr, "LIGHTT"); //888888
+	}
+	while (interiorColorPtr != NULL) {
+	    memcpy(interiorColorPtr, interiorColorStr, 6);
+	    interiorColorPtr =  strstr(interiorColorPtr, "INTROR"); //ffffff
+	}
+	while (indicatorColorPtr != NULL) {
+	    memcpy(indicatorColorPtr, indicatorColorStr, 6);
+	    indicatorColorPtr = strstr(indicatorColorPtr, "INDCTR"); //000000
+	}
+
+	/*
+	 * Create an SVG photo image from svgDataCopy
+	 */
+	const char *cmdfmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
+	size_t scriptsz = strlen(cmdfmt) + strlen(imgName) + svgDataLen;
+	script = (char *)attemptckalloc(scriptsz);
+	if (script == NULL) {
+	    ckfree(svgDataCopy);
+	    return;
+	}
+	snprintf(script, scriptsz, cmdfmt, imgName, svgDataCopy);
+	ckfree(svgDataCopy);
+	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	ckfree(script);
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
+	    return;
+	}
+	img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
+    }
 
     /*
-     * Tidy up.
+     * Retrieve the scaling factor and multiply dim by it
      */
 
-    Tk_FreeGC(display, copyGC);
-    XDestroyImage(img);
-    Tk_FreePixmap(display, pixmap);
+    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
+    if (scalingPctPtr == NULL) {
+	scalingPctPtr = "100";
+    }
+    scalingFactor = atof(scalingPctPtr) / 100;	/* 1.0, 1.25, 1.5, 1.75, ... */
+    dim *= scalingFactor;
+
+    /*
+     * Adjust the image's coordinates in the drawable and display the image
+     */
+
+    x -= dim/2;
+    y -= dim/2;
+    Tk_RedrawImage(img, 0, 0, dim, dim, d, x, y);
+    Tk_FreeImage(img);
 
 }
 
@@ -492,9 +624,6 @@ TkpDisplayButton(
     } else if (butPtr->bitmap != None) {
 	Tk_SizeOfBitmap(butPtr->display, butPtr->bitmap, &width, &height);
 	haveImage = 1;
-    } else if (butPtr->defImage[1] != NULL) {
-	/* assume all 4 images are the same size by definition */
-	Tk_SizeOfImage(butPtr->defImage[1], &width, &height);
     }
     imageWidth = width;
     imageHeight = height;
@@ -694,58 +823,19 @@ TkpDisplayButton(
 	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
 	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
 	    XColor *selColor = NULL;
-	    int on = ((butPtr->flags & SELECTED) ? 1 : 0) |
-		     ((butPtr->flags & TRISTATED) ? 2 : 0);
 
 	    if (selBorder != NULL) {
 		selColor = selBorder->bgColorPtr;
 	    }
-
-	    /* Draw scalable image */
-	    if (butPtr->indicatorOn < 2 && butPtr->defImage[on]) {
-
-		imageXOffset += (butPtr->indicatorSpace - imageWidth)/2;
-		imageYOffset += (Tk_Height(tkwin) - imageHeight)/2;
-
-		/*
-		 * Do boundary clipping, so that Tk_RedrawImage is passed
-		 * valid coordinates. [Bug 979239]
-		 */
-
-		if (imageXOffset < 0) {
-		    imageXOffset = 0;
-		}
-		if (imageYOffset < 0) {
-		    imageYOffset = 0;
-		}
-		if (width > Tk_Width(tkwin)) {
-		    width = Tk_Width(tkwin);
-		}
-		if (height > Tk_Height(tkwin)) {
-		    height = Tk_Height(tkwin);
-		}
-		if ((width + imageXOffset) > Tk_Width(tkwin)) {
-		    imageXOffset = Tk_Width(tkwin) - width;
-		}
-		if ((height + imageYOffset) > Tk_Height(tkwin)) {
-		    imageYOffset = Tk_Height(tkwin) - height;
-		}
-
-		Tk_RedrawImage(butPtr->defImage[on], 0, 0, width, height,
-			       pixmap, imageXOffset, imageYOffset);
-
-	    } else {
-		/* Draw old "classic" pixmap */
-		x -= butPtr->indicatorSpace/2;
-		y = Tk_Height(tkwin)/2;
-		int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
-			     CHECK_BUTTON : RADIO_BUTTON);
-		TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
+	    x -= butPtr->indicatorSpace/2;
+	    y = Tk_Height(tkwin)/2 + butPtr->borderWidth*2;
+	    int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
+			 CHECK_BUTTON : RADIO_BUTTON);
+	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
 		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
 		    ((butPtr->flags & SELECTED) ? 1 :
-			    (butPtr->flags & TRISTATED) ? 2 : 0),
-			    (butPtr->state == STATE_DISABLED), btype);
-	    }
+		     (butPtr->flags & TRISTATED) ? 2 : 0),
+		     (butPtr->state == STATE_DISABLED), btype);
 	}
     }
 
@@ -1018,11 +1108,6 @@ TkpComputeButtonGeometry(
 	    }
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorDiameter = fm.linespace;
-		if (butPtr->indicatorOn /*> 1 && butPtr->type == TYPE_CHECK_BUTTON*/) {
-		    /* Scale down old classic pixmap */
-		    butPtr->indicatorDiameter =
-			(80*butPtr->indicatorDiameter)/100;
-		}
 		butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
 	    }
 	}
