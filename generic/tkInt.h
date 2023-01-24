@@ -88,6 +88,11 @@
 #   define TKFLEXARRAY 1
 #endif
 
+#if (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#   define TCL_ENCODING_STRICT			0x44
+#endif
+
+
 #if TCL_MAJOR_VERSION < 9
 #   undef Tcl_ExternalToUtfDStringEx
 #   undef Tcl_UtfToExternalDStringEx
