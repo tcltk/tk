@@ -4,13 +4,11 @@
 
 namespace eval ttk::theme::alt {
 
-    namespace import ::tk::ScaleNum
-
     variable colors
     array set colors {
 	-frame 		"#d9d9d9"
 	-window		"#ffffff"
-        -alternate	"#f0f0f0"
+	-alternate	"#f0f0f0"
 	-darker 	"#c3c3c3"
 	-border		"#414141"
 	-activebg 	"#ececec"
@@ -29,16 +27,15 @@ namespace eval ttk::theme::alt {
 	    -bordercolor	$colors(-border) \
 	    -selectbackground 	$colors(-selectbg) \
 	    -selectforeground 	$colors(-selectfg) \
-	    -font 		TkDefaultFont \
-	    ;
+	    -font 		TkDefaultFont
 
 	ttk::style map "." -background \
-	    [list disabled $colors(-frame)  active $colors(-activebg)] ;
-	ttk::style map "." -foreground [list disabled $colors(-disabledfg)] ;
-        ttk::style map "." -embossed [list disabled 1] ;
+	    [list disabled $colors(-frame)  active $colors(-activebg)]
+	ttk::style map "." -foreground [list disabled $colors(-disabledfg)]
+        ttk::style map "." -embossed [list disabled 1]
 
 	ttk::style configure TButton \
-	    -anchor center -width -11 -padding [ScaleNum 1] \
+	    -anchor center -width -11 -padding 0.75p \
 	    -relief raised -shiftrelief 1 \
 	    -highlightthickness 1 -highlightcolor $colors(-frame)
 	ttk::style map TButton -relief {
@@ -46,12 +43,10 @@ namespace eval ttk::theme::alt {
 	    {active !disabled}	raised
 	} -highlightcolor {alternate black}
 
-	set t [ScaleNum 2]; set r [ScaleNum 4]; set b $t
-	set indMargin [list 0 $t $r $b]
 	ttk::style configure TCheckbutton -indicatorcolor "#ffffff" \
-	    -indicatormargin $indMargin -padding [ScaleNum 2]
+	    -indicatormargin {0 1.5p 3p 1.5p} -padding 1.5p
 	ttk::style configure TRadiobutton -indicatorcolor "#ffffff" \
-	    -indicatormargin $indMargin -padding [ScaleNum 2]
+	    -indicatormargin {0 1.5p 3p 1.5p} -padding 1.5p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list  pressed $colors(-frame) \
 	           alternate $colors(-altindicator) \
@@ -62,47 +57,41 @@ namespace eval ttk::theme::alt {
 	           disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize [ScaleNum 5] \
-	    -padding [ScaleNum 3] -relief raised
+	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised
 
 	ttk::style configure TEntry -padding 1
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1 -arrowsize [ScaleNum 14]
+	ttk::style configure TCombobox -padding 1 -arrowsize 10.5p
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)] \
 		-arrowcolor [list disabled $colors(-disabledfg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
-	set l [ScaleNum 2]; set r [ScaleNum 10]
-	ttk::style configure TSpinbox -arrowsize [ScaleNum 10] \
-	    -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure Toolbutton -relief flat -padding [ScaleNum 2]
+	ttk::style configure Toolbutton -relief flat -padding 1.5p
 	ttk::style map Toolbutton -relief \
 	    {disabled flat selected sunken pressed sunken active raised}
 	ttk::style map Toolbutton -background \
 	    [list pressed $colors(-darker)  active $colors(-activebg)]
 
-	set scrlbarWidth [ScaleNum 14]
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize $scrlbarWidth -width $scrlbarWidth
+	    -arrowsize 10.5p -width 10.5p
 
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
-	set l [ScaleNum 2]; set t $l; set r [ScaleNum 1]
-	set margins [list $l $t $r 0]
-	ttk::style configure TNotebook -tabmargins $margins
+	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 0.75p 0}
 	ttk::style configure TNotebook.Tab -background $colors(-darker) \
-	    -padding [list [ScaleNum 4] [ScaleNum 2]]
+	    -padding {3p 1.5p}
 	ttk::style map TNotebook.Tab \
 	    -background [list selected $colors(-frame)] \
-	    -expand [list selected $margins]
+	    -expand {selected {1.5p 1.5p 0.75p 0}}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
@@ -116,15 +105,12 @@ namespace eval ttk::theme::alt {
 	    -foreground [list disabled $colors(-disabledfg) \
 				selected $colors(-selectfg)]
 
-	set thickness [ScaleNum 15]
 	ttk::style configure TScale \
-	    -groovewidth [ScaleNum 4] -troughrelief sunken \
-	    -sliderthickness $thickness -borderwidth 2
+	    -groovewidth 3p -troughrelief sunken \
+	    -sliderthickness 11.25p -borderwidth 2
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) -borderwidth 0 \
-	    -barsize [ScaleNum 30] -thickness $thickness
+	    -barsize 22.5p -thickness 11.25p
     }
-
-    unset l t r b indMargin scrlbarWidth margins thickness
 }

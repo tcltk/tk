@@ -31,6 +31,10 @@
 
 #include "tkImgPhoto.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Message to generate when an attempt to allocate memory for an image fails.
  */
@@ -692,25 +696,25 @@ StringWriteDef(
 
                 switch (opts.colorFormat) {
                 case COLORFORMAT_RGB2:
-                    sprintf(colorBuf, "#%02x%02x%02x ",  pixelPtr[0],
+                    snprintf(colorBuf, sizeof(colorBuf), "#%02x%02x%02x ",  pixelPtr[0],
                             pixelPtr[greenOffset], pixelPtr[blueOffset]);
                     Tcl_DStringAppend(&line, colorBuf, -1);
                     break;
                 case COLORFORMAT_RGBA2:
-                    sprintf(colorBuf, "#%02x%02x%02x%02x ",
+                    snprintf(colorBuf, sizeof(colorBuf), "#%02x%02x%02x%02x ",
                             pixelPtr[0], pixelPtr[greenOffset],
                             pixelPtr[blueOffset], alphaVal);
                     Tcl_DStringAppend(&line, colorBuf, -1);
                     break;
                 case COLORFORMAT_LIST:
                     Tcl_DStringStartSublist(&line);
-                    sprintf(colorBuf, "%d", pixelPtr[0]);
+                    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[0]);
                     Tcl_DStringAppendElement(&line, colorBuf);
-                    sprintf(colorBuf, "%d", pixelPtr[greenOffset]);
+                    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[greenOffset]);
                     Tcl_DStringAppendElement(&line, colorBuf);
-                    sprintf(colorBuf, "%d", pixelPtr[blueOffset]);
+                    snprintf(colorBuf, sizeof(colorBuf), "%d", pixelPtr[blueOffset]);
                     Tcl_DStringAppendElement(&line, colorBuf);
-                    sprintf(colorBuf, "%d", alphaVal);
+                    snprintf(colorBuf, sizeof(colorBuf), "%d", alphaVal);
                     Tcl_DStringAppendElement(&line, colorBuf);
                     Tcl_DStringEndSublist(&line);
                     break;

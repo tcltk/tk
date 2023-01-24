@@ -742,7 +742,7 @@ test entry-3.6 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     destroy .e
 } -result {{19 5 7 13} {19 5 7 13}}
 test entry-3.7 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts failsOnXQuarz
+	fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -755,7 +755,7 @@ test entry-3.7 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     destroy .e
 } -result {19 5 12 13}
 test entry-3.8 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts failsOnXQuarz
+	fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -778,7 +778,7 @@ test entry-3.9 {EntryWidgetCmd procedure, "bbox" widget command} -setup {
     destroy .e
 } -result "5 5 0 $cy"
 test entry-3.10 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
-	fonts failsOnXQuarz
+	fonts
 } -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks

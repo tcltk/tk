@@ -243,6 +243,49 @@ static const Ttk_ElementSpec TextElementSpec = {
 };
 
 /*----------------------------------------------------------------------
+ * +++ cText (collapsing text) element.
+ *
+ * This element is the same as the Text element, except its dimensions
+ * are 0,0 when the text to display is "".
+ */
+
+static int cTextSetup(TextElement *text, Tk_Window tkwin)
+{
+    if (*Tcl_GetString(text->textObj) == '\0') {
+        return 0;
+    } else {
+        return TextSetup(text, tkwin);
+    }
+}
+
+static void cTextElementSize(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    TextElement *text = (TextElement *)elementRecord;
+    (void)dummy;
+    (void)paddingPtr;
+
+    if (!cTextSetup(text, tkwin))
+	return;
+
+    *heightPtr = text->height;
+    *widthPtr = TextReqWidth(text);
+
+    TextCleanup(text);
+
+    return;
+}
+
+static const Ttk_ElementSpec cTextElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(TextElement),
+    TextElementOptions,
+    cTextElementSize,
+    TextElementDraw
+};
+
+/*----------------------------------------------------------------------
  * +++ Image element.
  * Draws an image.
  */
@@ -720,6 +763,7 @@ void TtkLabel_Init(Tcl_Interp *interp)
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
     Ttk_RegisterElement(interp, theme, "text", &TextElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "ctext", &cTextElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, NULL);
 }
