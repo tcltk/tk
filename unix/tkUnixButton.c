@@ -317,14 +317,11 @@ TkpDrawCheckIndicator(
     }
 
     /*
-     * Retrieve the scaling factor and multiply dim by it
+     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...) and multiply dim by it
      */
 
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    if (scalingPctPtr == NULL) {
-	scalingPctPtr = "100";
-    }
-    scalingFactor = atof(scalingPctPtr) / 100;	/* 1.0, 1.25, 1.5, 1.75, ... */
+    scalingFactor = atof(scalingPctPtr) / 100;
     dim *= scalingFactor;
 
     /*
