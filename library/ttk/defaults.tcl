@@ -116,7 +116,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TCheckbutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} -padding 0.75p
+	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} \
+	    -padding 0.75p
 	ttk::style map TCheckbutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -128,7 +129,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TRadiobutton \
 	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} -padding 0.75p
+	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} \
+	    -padding 0.75p
 	ttk::style map TRadiobutton -indicatorcolor \
 	    [list pressed $colors(-activebg)  \
 			{!disabled alternate} $colors(-altindicator) \
@@ -182,11 +184,15 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	# Treeview.
 	#
 	ttk::style configure Heading -font TkHeadingFont -relief raised
+	ttk::style configure Item -indicatorsize 9p \
+	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
-	    -foreground $colors(-text) ;
+	    -foreground $colors(-text) \
+	    -indent 15p
+	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
 	ttk::style map Treeview \

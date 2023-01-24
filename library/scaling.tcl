@@ -139,7 +139,13 @@ proc ::tk::ScalingPct {} {
 	tk scaling [expr {$pct / 75.0}]
     }
 
+    #
+    # Set the variable scalingPct to $pct and make it read-only
+    #
     set scalingPct $pct
+    trace add variable scalingPct {write unset} \
+	[list ::tk::RestoreScalingPct $scalingPct]
+
     return $pct
 }
 
@@ -227,6 +233,29 @@ proc ::tk::ScanMonitorsFile {xrandrResult chan pctName} {
 	    }
 	    set pct [expr {$maxScaling > 1.0 ? 200 : 100}]
 	    break
+	}
+    }
+}
+
+# ::tk::RestoreScalingPct --
+#
+# This trace procedure is executed whenever the variable scalingPct is written
+# or unset.  It restores the variable to its original value, given by the first
+# argument.
+#
+# Arguments:
+#   origVal - The original value of the variable scalingPct.
+#   varName - The name of the variable ("(::)tk::scalingPct" or "scalingPct").
+#   index   - An empty string.
+#   op -      One of "write" or "unset".
+
+proc ::tk::RestoreScalingPct {origVal varName index op} {
+    variable scalingPct $origVal
+    switch $op {
+	write { return -code error "the variable is read-only" }
+	unset {
+	    trace add variable scalingPct {write unset} \
+		[list ::tk::RestoreScalingPct $scalingPct]
 	}
     }
 }

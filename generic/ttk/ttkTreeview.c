@@ -1932,7 +1932,7 @@ static Ttk_Layout TreeviewGetLayout(
      */
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
-	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.indent);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.indent);
     }
 
     return treeLayout;
