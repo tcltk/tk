@@ -328,7 +328,7 @@ TkpDrawCheckIndicator(
      * Adjust the image's coordinates in the drawable and display the image
      */
 
-    x -= dim/2; x -= 2;
+    x -= dim/2;
     y -= dim/2;
     Tk_RedrawImage(img, 0, 0, dim, dim, d, x, y);
     Tk_FreeImage(img);
@@ -709,38 +709,24 @@ TkpDisplayButton(
      * x and y refer to the top-left corner of the text or image or bitmap.
      */
 
-    if ((butPtr->type == TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
-	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
-	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
-	    XColor *selColor = NULL;
+    if ((butPtr->type == TYPE_CHECK_BUTTON || butPtr->type == TYPE_RADIO_BUTTON)
+	    && butPtr->indicatorOn
+	    && butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
+	TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
+	XColor *selColor = NULL;
+	int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
+		     CHECK_BUTTON : RADIO_BUTTON);
 
-	    if (selBorder != NULL) {
-		selColor = selBorder->bgColorPtr;
-	    }
-	    x -= butPtr->indicatorSpace/2;
-	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
-		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
-		    ((butPtr->flags & SELECTED) ? 1 :
-			    (butPtr->flags & TRISTATED) ? 2 : 0),
-		    (butPtr->state == STATE_DISABLED), CHECK_BUTTON);
+	if (selBorder != NULL) {
+	    selColor = selBorder->bgColorPtr;
 	}
-    } else if ((butPtr->type == TYPE_RADIO_BUTTON) && butPtr->indicatorOn) {
-	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
-	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
-	    XColor *selColor = NULL;
-
-	    if (selBorder != NULL) {
-		selColor = selBorder->bgColorPtr;
-	    }
-	    x -= butPtr->indicatorSpace/2;
-	    y = Tk_Height(tkwin)/2;
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
-		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
-		    ((butPtr->flags & SELECTED) ? 1 :
-			    (butPtr->flags & TRISTATED) ? 2 : 0),
-		    (butPtr->state == STATE_DISABLED), RADIO_BUTTON);
-	}
+	x -= butPtr->indicatorSpace/2;
+	y = Tk_Height(tkwin)/2;
+	TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
+		border, butPtr->normalFg, selColor, butPtr->disabledFg,
+		((butPtr->flags & SELECTED) ? 1 :
+		 (butPtr->flags & TRISTATED) ? 2 : 0),
+		 (butPtr->state == STATE_DISABLED), btype);
     }
 
     /*
@@ -1012,10 +998,6 @@ TkpComputeButtonGeometry(
 	    }
 	    if ((butPtr->type >= TYPE_CHECK_BUTTON) && butPtr->indicatorOn) {
 		butPtr->indicatorDiameter = fm.linespace;
-		if (butPtr->type == TYPE_CHECK_BUTTON) {
-		    butPtr->indicatorDiameter =
-			(80*butPtr->indicatorDiameter)/100;
-		}
 		butPtr->indicatorSpace = butPtr->indicatorDiameter + avgWidth;
 	    }
 	}
