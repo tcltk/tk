@@ -12,6 +12,10 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Extra bits for core.flags:
  */
@@ -469,11 +473,11 @@ ExpandPercents(
 		} else {
 		    number = -1;
 		}
-		sprintf(numStorage, "%d", number);
+		snprintf(numStorage, sizeof(numStorage), "%d", number);
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
-		sprintf(numStorage, "%d", (int)index);
+		snprintf(numStorage, sizeof(numStorage), "%d", (int)index);
 		string = numStorage;
 		break;
 	    case 'P': /* 'Peeked' new value of the string */

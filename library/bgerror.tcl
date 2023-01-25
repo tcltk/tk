@@ -207,8 +207,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     foreach {name caption} $buttons {
 	ttk::button $dlg.$name -text $caption -default normal \
 	    -command [namespace code [list set button $i]]
-	grid $dlg.$name -in $dlg.bot -column $i -row 0 -sticky ew \
-	    -padx [::tk::ScaleNum 10]
+	grid $dlg.$name -in $dlg.bot -column $i -row 0 -sticky ew -padx 7.5p
 	grid columnconfigure $dlg.bot $i -weight 1
 	# We boost the size of some Mac buttons for l&f
 	if {$windowingsystem eq "aqua"} {

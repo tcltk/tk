@@ -16,6 +16,10 @@
 #include "tkBusy.h"
 #include "default.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Things about the busy system that may be configured. Note that on some
  * platforms this may or may not have an effect.
@@ -550,7 +554,7 @@ CreateBusy(
 	    tkChild = NextChild(tkChild)) {
 	Tk_MakeWindowExist(tkChild);
     }
-    sprintf(name, fmt, Tk_Name(tkRef));
+    snprintf(name, length + 6, fmt, Tk_Name(tkRef));
     tkBusy = Tk_CreateWindow(interp, tkParent, name, NULL);
     ckfree(name);
 

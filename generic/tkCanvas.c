@@ -20,6 +20,9 @@
 #ifdef MAC_OSX_TK
 #include "tkMacOSXInt.h"
 #endif
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
 
 /*
  * See tkCanvas.h for key data structures used to implement canvases.
@@ -2694,10 +2697,10 @@ DrawCanvas(
 
 #ifdef DEBUG_DRAWCANVAS
     Tcl_AppendResult(interp, "ximagePtr {", NULL);
-    sprintf(buffer,"%d",ximagePtr->width);   Tcl_AppendResult(interp, " width ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->height);  Tcl_AppendResult(interp, " height ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->xoffset); Tcl_AppendResult(interp, " xoffset ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->format);  Tcl_AppendResult(interp, " format ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->width);   Tcl_AppendResult(interp, " width ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->height);  Tcl_AppendResult(interp, " height ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->xoffset); Tcl_AppendResult(interp, " xoffset ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->format);  Tcl_AppendResult(interp, " format ", buffer, NULL);
                                              Tcl_AppendResult(interp, " ximagePtr->data", NULL);
     if (ximagePtr->data != NULL) {
 	int ix, iy;
@@ -2712,30 +2715,30 @@ DrawCanvas(
                     else
                         Tcl_AppendResult(interp, " ", NULL);
                 }
-	        sprintf(buffer,"%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
+	        snprintf(buffer,sizeof(buffer),"%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
 	        Tcl_AppendResult(interp, buffer, NULL);
 	    }
 	    Tcl_AppendResult(interp, " }", NULL);
 	}
 	Tcl_AppendResult(interp, " }", NULL);
     } else
-	sprintf(buffer," NULL");
-    sprintf(buffer,"%d",ximagePtr->byte_order);       Tcl_AppendResult(interp, " byte_order ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->bitmap_unit);      Tcl_AppendResult(interp, " bitmap_unit ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->bitmap_bit_order); Tcl_AppendResult(interp, " bitmap_bit_order ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->bitmap_pad);       Tcl_AppendResult(interp, " bitmap_pad ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->depth);            Tcl_AppendResult(interp, " depth ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->bytes_per_line);   Tcl_AppendResult(interp, " bytes_per_line ", buffer, NULL);
-    sprintf(buffer,"%d",ximagePtr->bits_per_pixel);   Tcl_AppendResult(interp, " bits_per_pixel ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",ximagePtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",ximagePtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",ximagePtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
+	snprintf(buffer,sizeof(buffer)," NULL");
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->byte_order);       Tcl_AppendResult(interp, " byte_order ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_unit);      Tcl_AppendResult(interp, " bitmap_unit ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_bit_order); Tcl_AppendResult(interp, " bitmap_bit_order ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_pad);       Tcl_AppendResult(interp, " bitmap_pad ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->depth);            Tcl_AppendResult(interp, " depth ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bytes_per_line);   Tcl_AppendResult(interp, " bytes_per_line ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bits_per_pixel);   Tcl_AppendResult(interp, " bits_per_pixel ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
     Tcl_AppendResult(interp, " }", NULL);
 
     Tcl_AppendResult(interp, "\nvisualPtr {", NULL);
-    sprintf(buffer,"0x%8.8lx",visualPtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
-    sprintf(buffer,"0x%8.8lx",visualPtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
     Tcl_AppendResult(interp, " }", NULL);
 
 #endif
@@ -2776,12 +2779,12 @@ DrawCanvas(
     DecomposeMaskToShiftAndBits(visualPtr->blue_mask,&bshift,&bbits);
 
 #ifdef DEBUG_DRAWCANVAS
-    sprintf(buffer,"%d",rshift); Tcl_AppendResult(interp, "\nbits { rshift ", buffer, NULL);
-    sprintf(buffer,"%d",gshift); Tcl_AppendResult(interp, " gshift ", buffer, NULL);
-    sprintf(buffer,"%d",bshift); Tcl_AppendResult(interp, " bshift ", buffer, NULL);
-    sprintf(buffer,"%d",rbits);  Tcl_AppendResult(interp, " rbits ", buffer, NULL);
-    sprintf(buffer,"%d",gbits);  Tcl_AppendResult(interp, " gbits ", buffer, NULL);
-    sprintf(buffer,"%d",bbits);  Tcl_AppendResult(interp, " bbits ", buffer, " }", NULL);
+    snprintf(buffer,sizeof(buffer),"%d",rshift); Tcl_AppendResult(interp, "\nbits { rshift ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",gshift); Tcl_AppendResult(interp, " gshift ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",bshift); Tcl_AppendResult(interp, " bshift ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",rbits);  Tcl_AppendResult(interp, " rbits ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",gbits);  Tcl_AppendResult(interp, " gbits ", buffer, NULL);
+    snprintf(buffer,sizeof(buffer),"%d",bbits);  Tcl_AppendResult(interp, " bbits ", buffer, " }", NULL);
     Tcl_AppendResult(interp, "\nConverted_image {", NULL);
 #endif
 
@@ -2899,7 +2902,8 @@ DrawCanvas(
 	        for (ix = 0; ix < 4; ++ix) {
                     if (ix > 0)
                         Tcl_AppendResult(interp, " ", NULL);
-		    sprintf(buffer,"%2.2x",blockPtr.pixelPtr[blockPtr.pitch * y
+		    snprintf(buffer,sizeof(buffer),"%2.2x",
+		            blockPtr.pixelPtr[blockPtr.pitch * y
                             + blockPtr.pixelSize * x + ix]&0xFF);
                     Tcl_AppendResult(interp, buffer, NULL);
                 }

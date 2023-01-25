@@ -475,11 +475,14 @@ static const Ttk_ElementSpec SeparatorElementSpec = {
 
 typedef struct {
     Tcl_Obj	*backgroundObj;
+    Tcl_Obj	*gripSizeObj;
 } SizegripElement;
 
 static const Ttk_ElementOptionSpec SizegripOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
+    { "-gripsize", TK_OPTION_PIXELS,
+	offsetof(SizegripElement,gripSizeObj), "15" },
     {0,TK_OPTION_BOOLEAN,0,0}
 };
 
@@ -487,13 +490,14 @@ static void SizegripSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    int gripCount = 3, gripSpace = 2, gripThickness = 3;
+    SizegripElement *grip = (SizegripElement *)elementRecord;
+    int gripSize = 0;
     (void)dummy;
-    (void)elementRecord;
     (void)tkwin;
     (void)paddingPtr;
 
-    *widthPtr = *heightPtr = gripCount * (gripSpace + gripThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+    *widthPtr = *heightPtr = gripSize;
 }
 
 static void SizegripDraw(
@@ -501,7 +505,8 @@ static void SizegripDraw(
     Drawable d, Ttk_Box b, Ttk_State state)
 {
     SizegripElement *grip = (SizegripElement *)elementRecord;
-    int gripCount = 3, gripSpace = 2;
+    int gripSize = 0;
+    int gripCount = 3, gripSpace, gripThickness;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, grip->backgroundObj);
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
@@ -509,11 +514,15 @@ static void SizegripDraw(
     (void)dummy;
     (void)state;
 
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+    gripThickness = gripSize * 3 / (gripCount * 5);
+    gripSpace = gripSize / 3 - gripThickness;
     while (gripCount--) {
 	x1 -= gripSpace; y2 -= gripSpace;
-	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
-	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
-	XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2); --x1; --y2;
+	for (int i = 1; i < gripThickness; i++) {
+	    XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
+	}
+	XDrawLine(Tk_Display(tkwin), d, lightGC,  x1,y1, x2,y2); --x1; --y2;
     }
 }
 
