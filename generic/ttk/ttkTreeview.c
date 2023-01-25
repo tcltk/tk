@@ -453,8 +453,8 @@ typedef struct {
 
     int headingHeight;		/* Space for headings */
     int rowHeight;		/* Height of each item */
-    int colSeparatorWidth;	/* Width of column separator, if used */
-    int indent;			/* #pixels horizontal offset for child items */
+    int colSeparatorWidth;	/* Width of column separator, if used (screen units) */
+    int indent;			/* Horizontal offset for child items (screen units) */
 
     /* Tree data:
      */
@@ -1921,11 +1921,11 @@ static Ttk_Layout TreeviewGetLayout(
     }
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
-	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
 	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
     }
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
-	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.colSeparatorWidth);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.colSeparatorWidth);
     }
 
     /* Get item indent from style:
