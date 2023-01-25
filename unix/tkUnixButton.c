@@ -61,141 +61,107 @@ const Tk_ClassProcs tkpButtonProcs = {
 #define RADIO_MENU_DIM    8
 
 /*
- * The SVG images used here are based on some icons provided by the
- * official open source SVG icon library for the Bootstrap project,
- * licensed under the MIT license (https://opensource.org/licenses/MIT).
- *
- * See https://github.com/twbs/icons.
+ * Data of the SVG images used for drawing the indicators
  */
 
 static const char *const checkbtnOffData =
-"    <svg id='classiccheckbox' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
-"  <defs id='defs325'>\n"
-"    <linearGradient id='linearGradientLeft' gradientUnits='userSpaceOnUse'\n"
-"		    x1='2' y1='7.5' x2='2' y2='7.5'>\n"
-"      <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
-"      <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
-"  </linearGradient>\n"
-"  <linearGradient id='LinearGradientBottom' gradientUnits='userSpaceOnUse'\n"
-"		  x1='7.5' y1='16' x2='7.5' y2='15'>\n"
-"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
-"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
-"  </linearGradient>\n"
-"  <linearGradient id='linearGradientRight' gradientUnits='userSpaceOnUse'\n"
-"		  x1='16' y1='7.5' x2='16' y2='7.5'>\n"
-"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
-"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
-"  </linearGradient>\n"
-"  <linearGradient id='linearGradientTop' gradientUnits='userSpaceOnUse'\n"
-"		  x1='7.5' y1='1.5' x2='7.5' y2='1.5'>\n"
-"    <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
-"    <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
-"  </linearGradient>\n"
-"  </defs>\n"
-"  <g id='layer1'>\n"
-"    <rect id='rectbackdrop'\n"
-"	  style='fill:#INTROR;stroke-width:11;paint-order:stroke markers fill;fill-opacity:1'\n"
-"	  width='12' height='12' x='2' y='2' />\n"
-"    <path id='recttopside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientTop)'\n"
-"	  d='M 0,0 L 13,0 12,1 1,1 0,0' />\n"
-"    <path id='rectleftside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientLeft)'\n"
-"	  d='M 0,0 L 1,1 1,12 0,13' />\n"
-"    <path id='rectrightside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientRight)'\n"
-"	  d='M 13,0 L 12,1 12,12 13,13 13,0' />\n"
-"    <path id='rectbottomside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#LinearGradientBottom)'\n"
-"	  d='M 0,13 L 1,12 12,12 13,13 0,13' />\n"
-"  </g>\n"
-"</svg>";
+    "<svg id='checkbutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
+    " <defs>\n"
+    "  <linearGradient id='linearGradientLeft' x1='2' x2='2' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#DARKKK' offset='1'/>\n"
+    "   <stop stop-color='#000000' offset='0'/>\n"
+    "  </linearGradient>\n"
+    "  <linearGradient id='linearGradientBottom' x1='7.5' x2='7.5' y1='16' y2='16' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
+    "   <stop stop-color='#ffffff' offset='1'/>\n"
+    "  </linearGradient>\n"
+    "  <linearGradient id='linearGradientRight' x1='16' x2='16' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
+    "   <stop stop-color='#ffffff' offset='1'/>\n"
+    "  </linearGradient>\n"
+    "  <linearGradient id='linearGradientTop' x1='7.5' x2='7.5' y1='1.5' y2='1.5' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#DARKKK' offset='1'/>\n"
+    "   <stop stop-color='#000000' offset='0'/>\n"
+    "  </linearGradient>\n"
+    " </defs>\n"
+    " <rect id='rectbackdrop' x='2' y='2' width='12' height='12' fill='#INTROR' stroke-width='11' style='paint-order:stroke markers fill'/>\n"
+    " <g stroke-width='10.16'>\n"
+    "  <path id='recttopside' d='m0 0h16.002l-1.0025 1h-13.999l-1-1' fill='url(#linearGradientTop)' style='paint-order:stroke markers fill'/>\n"
+    "  <path id='rectleftside' d='m0 0 1 1v14.002l-1 1.0024' fill='url(#linearGradientLeft)' style='paint-order:stroke markers fill'/>\n"
+    "  <path id='rectrightside' d='m16 0-1 1v14.023l1 0.97186v-15.995' fill='url(#linearGradientRight)' style='paint-order:stroke markers fill'/>\n"
+    "  <path id='rectbottomside' d='m0 16 1-1h14l1.0041 1h-16.004' fill='url(#linearGradientBottom)' style='paint-order:stroke markers fill'/>\n"
+    " </g>\n"
+    "</svg>";
 
 static const char *const checkbtnOnData =
-"    <svg id='classiccheckbox' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
-"  <defs id='defs325'>\n"
-"    <linearGradient id='linearGradientLeft' gradientUnits='userSpaceOnUse'\n"
-"		    x1='2' y1='7.5' x2='2' y2='7.5'>\n"
-"      <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
-"      <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
-"  </linearGradient>\n"
-"  <linearGradient id='LinearGradientBottom' gradientUnits='userSpaceOnUse'\n"
-"		  x1='7.5' y1='16' x2='7.5' y2='15'>\n"
-"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
-"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
-"  </linearGradient>\n"
-"  <linearGradient id='linearGradientRight' gradientUnits='userSpaceOnUse'\n"
-"		  x1='16' y1='7.5' x2='16' y2='7.5'>\n"
-"    <stop style='stop-color:#LIGHTT;stop-opacity:1;' offset='0' id='stop2672' />\n"
-"    <stop style='stop-color:#ffffff;stop-opacity:1;' offset='1' id='stop2674' />\n"
-"  </linearGradient>\n"
-"  <linearGradient id='linearGradientTop' gradientUnits='userSpaceOnUse'\n"
-"		  x1='7.5' y1='1.5' x2='7.5' y2='1.5'>\n"
-"    <stop style='stop-color:#DARKKK;stop-opacity:1;' offset='1' id='stop1885' />\n"
-"    <stop style='stop-color:#000000;stop-opacity:1;' offset='0' id='stop1887' />\n"
-"  </linearGradient>\n"
-"  </defs>\n"
-"  <g id='layer1'>\n"
-"    <rect id='rectbackdrop'\n"
-"	  style='fill:#INTROR;stroke-width:11;paint-order:stroke markers fill;fill-opacity:1'\n"
-"	  width='12' height='12' x='2' y='2' />\n"
-"    <path id='recttopside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientTop)'\n"
-"	  d='M 0,0 L 13,0 12,1 1,1 0,0' />\n"
-"    <path id='rectleftside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientLeft)'\n"
-"	  d='M 0,0 L 1,1 1,12 0,13' />\n"
-"    <path id='rectrightside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#linearGradientRight)'\n"
-"	  d='M 13,0 L 12,1 12,12 13,13 13,0' />\n"
-"    <path id='rectbottomside'\n"
-"	  style='stroke-width:10.16;paint-order:stroke markers fill;fill-opacity:1;fill:url(#LinearGradientBottom)'\n"
-"	  d='M 0,13 L 1,12 12,12 13,13 0,13' />\n"
-"    <path id='indicator'\n"
-"	  style='fill:none;stroke:#INDCTR;stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;paint-order:stroke markers fill;stroke-opacity:1'\n"
-"	  d='M 3,7 L 6,10 10,3' />\n"
-"  </g>\n"
-"</svg>";
+    "<svg id='checkbutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
+    " <defs>\n"
+    "  <linearGradient id='linearGradientLeft' x1='2' x2='2' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#DARKKK' offset='1'/>\n"
+    "   <stop stop-color='#000000' offset='0'/>\n"
+    "  </linearGradient>\n"
+    "  <linearGradient id='linearGradientBottom' x1='7.5' x2='7.5' y1='16' y2='16' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
+    "   <stop stop-color='#ffffff' offset='1'/>\n"
+    "  </linearGradient>\n"
+    "  <linearGradient id='linearGradientRight' x1='16' x2='16' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
+    "   <stop stop-color='#ffffff' offset='1'/>\n"
+    "  </linearGradient>\n"
+    "  <linearGradient id='linearGradientTop' x1='7.5' x2='7.5' y1='1.5' y2='1.5' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#DARKKK' offset='1'/>\n"
+    "   <stop stop-color='#000000' offset='0'/>\n"
+    "  </linearGradient>\n"
+    " </defs>\n"
+    " <rect id='rectbackdrop' x='2' y='2' width='12' height='12' fill='#INTROR' stroke-width='11' style='paint-order:stroke markers fill'/>\n"
+    " <g stroke-width='10.16'>\n"
+    "  <path id='recttopside' d='m0 0h16.002l-1.0025 1h-13.999l-1-1' fill='url(#linearGradientTop)' style='paint-order:stroke markers fill'/>\n"
+    "  <path id='rectleftside' d='m0 0 1 1v14.002l-1 1.0024' fill='url(#linearGradientLeft)' style='paint-order:stroke markers fill'/>\n"
+    "  <path id='rectrightside' d='m16 0-1 1v14.023l1 0.97186v-15.995' fill='url(#linearGradientRight)' style='paint-order:stroke markers fill'/>\n"
+    "  <path id='rectbottomside' d='m0 16 1-1h14l1.0041 1h-16.004' fill='url(#linearGradientBottom)' style='paint-order:stroke markers fill'/>\n"
+    " </g>\n"
+    " <path id='indicator' d='m4.4194 7.9316 3 3 4-7' fill='none' stroke='#INDCTR' stroke-width='2px' style='paint-order:stroke markers fill'/>\n"
+    "</svg>";
 
 static const char *const radiobtnOffData =
-    "<svg width='16px' height='16px' version='1.1' id='radiobutton' xmlns:svg='http://www.w3.org/2000/svg'>\n"
-    "  <defs id='defs4785'>\n"
-    "    <linearGradient id='gradient1' x1='2' y1='2' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n"
-    "      <stop id='stop0' style='stop-color:#DARKKK;stop-opacity:1;' offset='0' />\n"
-    "      <stop id='stop1' style='stop-color:#LIGHTT;stop-opacity:0;' offset='1' />\n"
-    "    </linearGradient>\n"
-    "  </defs>\n"
-    "  <circle id='path4803' cx='8' cy='8' r='8' style='fill:url(#gradient1);fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none' />\n"
-    "  <circle id='path4803-6' cx='8' cy='8' r='6.5' style='fill:#INTROR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
+    "<svg id='radiobutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
+    " <defs>\n"
+    "  <linearGradient id='gradient1' x1='2' x2='11' y1='2' y2='11' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#DARKKK' offset='0'/>\n"
+    "   <stop stop-color='#LIGHTT' stop-opacity='0' offset='1'/>\n"
+    "  </linearGradient>\n"
+    " </defs>\n"
+    " <circle cx='8' cy='8' r='8' fill='url(#gradient1)' fill-rule='evenodd'/>\n"
+    " <circle cx='8' cy='8' r='6.5' fill='#INTROR' fill-rule='evenodd'/>\n"
     "</svg>";
 
 static const char *const radiobtnOnData =
-    "<svg width='16px' height='16px' version='1.1' id='radiobutton' xmlns:svg='http://www.w3.org/2000/svg'>\n"
-    "  <defs id='defs4785'>\n"
-    "    <linearGradient id='gradient1' x1='2' y1='2' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n"
-    "      <stop id='stop0' style='stop-color:#DARKKK;stop-opacity:1;' offset='0' />\n"
-    "      <stop id='stop1' style='stop-color:#LIGHTT;stop-opacity:0;' offset='1' />\n"
-    "    </linearGradient>\n"
-    "  </defs>\n"
-    "  <circle id='path4803' cx='8' cy='8' r='8' style='fill:url(#gradient1);fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none' />\n"
-    "  <circle id='path4803-6' cx='8' cy='8' r='7' style='fill:#INTROR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
-    "  <circle id='path4820' cx='8' cy='8' r='4' style='fill:#INDCTR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
+    "<svg id='radiobutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
+    " <defs>\n"
+    "  <linearGradient id='gradient1' x1='2' x2='11' y1='2' y2='11' gradientUnits='userSpaceOnUse'>\n"
+    "   <stop stop-color='#DARKKK' offset='0'/>\n"
+    "   <stop stop-color='#LIGHTT' stop-opacity='0' offset='1'/>\n"
+    "  </linearGradient>\n"
+    " </defs>\n"
+    " <g fill-rule='evenodd'>\n"
+    "  <circle cx='8' cy='8' r='8' fill='url(#gradient1)'/>\n"
+    "  <circle cx='8' cy='8' r='7' fill='#INTROR'/>\n"
+    "  <circle cx='8' cy='8' r='4' fill='#INDCTR'/>\n"
+    " </g>\n"
     "</svg>";
 
 static const char *const menuOffData =
-"    <svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'></svg>\n";
+    "<svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'></svg>";
 
 static const char *const checkmenuOnData =
-"    <svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
-"    <path id='indicator'\n"
-"	  style='fill:none;stroke:#INDCTR;stroke-width:2px;stroke-linecap:butt;stroke-linejoin:miter;paint-order:stroke markers fill;stroke-opacity:1'\n"
-"	  d='M 0,3 L 4,7 8,0' />\n"
-"    </svg>";
+    "<svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
+    " <path id='indicator' d='m0.59082 3.0963 3.3419 3.3419 3.3419-5.8483' fill='none' stroke='#INDCTR' stroke-width='1.6709px' style='paint-order:stroke markers fill'/>\n"
+    "</svg>";
 
 static const char *const radiomenuOnData =
-"    <svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
-"  <circle id='path4820' cx='4' cy='4' r='3' style='fill:#INDCTR;fill-opacity:1;fill-rule:evenodd;stroke-width:1;stroke-miterlimit:4;stroke-dasharray:none'/>\n"
-"    </svg>";
+    "<svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
+    " <circle cx='4' cy='4' r='3' fill='#INDCTR' fill-rule='evenodd'/>\n"
+    "</svg>";
 
 
 /*
@@ -257,12 +223,14 @@ TkpDrawCheckIndicator(
     int hasBorder, hasInterior, dim;
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
     char borderColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
-    char imgName[50];
+    char imgName[60];
     Tk_Image img;
     size_t svgDataLen;
     char *svgDataCopy;
     char *borderColorPtr, *lightColorPtr, *interiorColorPtr, *indicatorColorPtr;
     Tcl_Interp *interp = Tk_Interp(tkwin);
+    const char *cmdFmt;
+    size_t scriptSize;
     char *script;
     int code;
     const char *scalingPctPtr;
@@ -353,9 +321,10 @@ TkpDrawCheckIndicator(
      * the value of mode and these color strings
      */
 
-    snprintf(imgName, sizeof(imgName), "::tk::icons::indicator%d_%s_%s_%s",
+    snprintf(imgName, sizeof(imgName), "::tk::icons::indicator%d_%s_%s_%s_%s",
 	     mode,
 	     hasBorder ? borderColorStr : "XXXXXX",
+	     hasBorder ? lightColorStr : "XXXXXX",
 	     hasInterior ? interiorColorStr : "XXXXXX",
 	     on ? indicatorColorStr : "XXXXXX");
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
@@ -378,39 +347,39 @@ TkpDrawCheckIndicator(
 	 * Update the colors within svgDataCopy
 	 */
 
-	borderColorPtr =    strstr(svgDataPtr, "DARKKK"); //888888
-	lightColorPtr =     strstr(svgDataPtr, "LIGHTT"); //
-	interiorColorPtr =  strstr(svgDataPtr, "INTROR"); //ffffff
-	indicatorColorPtr = strstr(svgDataPtr, "INDCTR"); //000000
+	borderColorPtr =    strstr(svgDataPtr, "DARKKK");
+	lightColorPtr =     strstr(svgDataPtr, "LIGHTT");
+	interiorColorPtr =  strstr(svgDataPtr, "INTROR");
+	indicatorColorPtr = strstr(svgDataPtr, "INDCTR");
 
 	while (borderColorPtr != NULL) {
 	    memcpy(borderColorPtr, borderColorStr, 6);
-	    borderColorPtr = strstr(borderColorPtr, "DARKKK"); //888888
+	    borderColorPtr = strstr(borderColorPtr, "DARKKK");
 	}
 	while (lightColorPtr != NULL) {
 	    memcpy(lightColorPtr, lightColorStr, 6);
-	    lightColorPtr = strstr(lightColorPtr, "LIGHTT"); //888888
+	    lightColorPtr = strstr(lightColorPtr, "LIGHTT");
 	}
 	while (interiorColorPtr != NULL) {
 	    memcpy(interiorColorPtr, interiorColorStr, 6);
-	    interiorColorPtr =  strstr(interiorColorPtr, "INTROR"); //ffffff
+	    interiorColorPtr =  strstr(interiorColorPtr, "INTROR");
 	}
 	while (indicatorColorPtr != NULL) {
 	    memcpy(indicatorColorPtr, indicatorColorStr, 6);
-	    indicatorColorPtr = strstr(indicatorColorPtr, "INDCTR"); //000000
+	    indicatorColorPtr = strstr(indicatorColorPtr, "INDCTR");
 	}
 
 	/*
 	 * Create an SVG photo image from svgDataCopy
 	 */
-	const char *cmdfmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
-	size_t scriptsz = strlen(cmdfmt) + strlen(imgName) + svgDataLen;
-	script = (char *)attemptckalloc(scriptsz);
+	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
+	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
+	script = (char *)attemptckalloc(scriptSize);
 	if (script == NULL) {
 	    ckfree(svgDataCopy);
 	    return;
 	}
-	snprintf(script, scriptsz, cmdfmt, imgName, svgDataCopy);
+	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
 	ckfree(svgDataCopy);
 	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
 	ckfree(script);
@@ -422,14 +391,11 @@ TkpDrawCheckIndicator(
     }
 
     /*
-     * Retrieve the scaling factor and multiply dim by it
+     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...) and multiply dim by it
      */
 
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    if (scalingPctPtr == NULL) {
-	scalingPctPtr = "100";
-    }
-    scalingFactor = atof(scalingPctPtr) / 100;	/* 1.0, 1.25, 1.5, 1.75, ... */
+    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
     dim *= scalingFactor;
 
     /*
@@ -818,25 +784,24 @@ TkpDisplayButton(
      * x and y refer to the top-left corner of the text or image or bitmap.
      */
 
-    if (((butPtr->type == TYPE_CHECK_BUTTON) || (butPtr->type == TYPE_RADIO_BUTTON))
-	&& butPtr->indicatorOn) {
-	if (butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
-	    TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
-	    XColor *selColor = NULL;
+    if ((butPtr->type == TYPE_CHECK_BUTTON || butPtr->type == TYPE_RADIO_BUTTON)
+	    && butPtr->indicatorOn
+	    && butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
+	TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
+	XColor *selColor = NULL;
+	int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
+		     CHECK_BUTTON : RADIO_BUTTON);
 
-	    if (selBorder != NULL) {
-		selColor = selBorder->bgColorPtr;
-	    }
-	    x -= butPtr->indicatorSpace/2;
-	    y = Tk_Height(tkwin)/2 + butPtr->borderWidth*2;
-	    int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
-			 CHECK_BUTTON : RADIO_BUTTON);
-	    TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
-		    border, butPtr->normalFg, selColor, butPtr->disabledFg,
-		    ((butPtr->flags & SELECTED) ? 1 :
-		     (butPtr->flags & TRISTATED) ? 2 : 0),
-		     (butPtr->state == STATE_DISABLED), btype);
+	if (selBorder != NULL) {
+	    selColor = selBorder->bgColorPtr;
 	}
+	x -= butPtr->indicatorSpace/2;
+	y = Tk_Height(tkwin)/2;
+	TkpDrawCheckIndicator(tkwin, butPtr->display, pixmap, x, y,
+		border, butPtr->normalFg, selColor, butPtr->disabledFg,
+		((butPtr->flags & SELECTED) ? 1 :
+		 (butPtr->flags & TRISTATED) ? 2 : 0),
+		 (butPtr->state == STATE_DISABLED), btype);
     }
 
     /*
