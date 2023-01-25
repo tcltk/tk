@@ -1819,7 +1819,7 @@ AllocFontFamily(
 	    &familyPtr->endCount, &familyPtr->isSymbolFont);
 
     encoding = NULL;
-    if (familyPtr->isSymbolFont != 0) {
+    if (familyPtr->isSymbolFont) {
 	/*
 	 * Symbol fonts are handled specially. For instance, Unicode 0393
 	 * (GREEK CAPITAL GAMMA) must be mapped to Symbol character 0047
@@ -2267,7 +2267,7 @@ FontMapLoadPage(
 	end = (row + 1) << FONTMAP_SHIFT;
 	for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	    if (Tcl_UtfToExternal(NULL, encoding, src,
-		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
+		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR|TCL_ENCODING_STRICT, NULL,
 		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
 		continue;
 	    }

@@ -2298,7 +2298,7 @@ FontMapLoadPage(
 	int hi, lo;
 
 	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
-		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
+		TCL_ENCODING_STOPONERROR|TCL_ENCODING_STRICT, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
 	}
@@ -2572,7 +2572,7 @@ CanUseFallback(
 	    numEncodings++;
 	}
 	Tcl_UtfToExternal(NULL, encoding, src, srcLen,
-		TCL_ENCODING_STOPONERROR, NULL, dst, sizeof(dst), &srcRead,
+		TCL_ENCODING_STOPONERROR|TCL_ENCODING_STRICT, NULL, dst, sizeof(dst), &srcRead,
 		&dstWrote, NULL);
 	if (dstWrote == 0) {
 	    goto crossout;
@@ -2818,7 +2818,7 @@ GetScreenFont(
 	    rest = strchr(rest + 1, '-');
 	}
 	*str = '\0';
-	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
+	snprintf(buf, sizeof(buf), "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
 		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
@@ -2956,7 +2956,7 @@ ListFonts(
 {
     char buf[256];
 
-    sprintf(buf, "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
+    snprintf(buf, sizeof(buf), "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
     return XListFonts(display, buf, 10000, numNamesPtr);
 }
 
