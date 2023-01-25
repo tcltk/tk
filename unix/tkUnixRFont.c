@@ -77,7 +77,6 @@ TCL_DECLARE_MUTEX(xftMutex);
  *-------------------------------------------------------------------------
  */
 
-
 static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
 {
     if (numBytes >= 6) {
@@ -88,9 +87,8 @@ static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
 
 void
 TkpFontPkgInit(
-    TkMainInfo *mainPtr)	/* The application being created. */
+    TCL_UNUSED(TkMainInfo *))	/* The application being created. */
 {
-    (void)mainPtr;
 }
 
 static XftFont *
@@ -753,8 +751,7 @@ Tk_MeasureChars(
 	     * This can't happen (but see #1185640)
 	     */
 
-	    *lengthPtr = curX;
-	    return curByte;
+	    goto measureCharsEnd;
 	}
 
 	source += clen;
@@ -810,6 +807,7 @@ Tk_MeasureChars(
 	curX = newX;
 	curByte = newByte;
     }
+measureCharsEnd:
     Tk_DeleteErrorHandler(handler);
 #ifdef DEBUG_FONTSEL
     string[len] = '\0';

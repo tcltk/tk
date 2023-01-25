@@ -4,8 +4,6 @@
 
 namespace eval ttk::theme::xpnative {
 
-    namespace import ::tk::ScaleNum
-
     ttk::style theme settings xpnative {
 
 	ttk::style configure . \
@@ -14,24 +12,19 @@ namespace eval ttk::theme::xpnative {
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
 	    -insertcolor SystemWindowText \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
 	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText] \
-	    ;
+	    -foreground [list disabled SystemGrayText]
 
-	ttk::style configure TButton -anchor center -padding [ScaleNum 1] \
-	    -width -11
-	ttk::style configure TRadiobutton -padding [ScaleNum 2]
-	ttk::style configure TCheckbutton -padding [ScaleNum 2]
-	ttk::style configure TMenubutton \
-	    -padding [list [ScaleNum 8] [ScaleNum 4]]
+	ttk::style configure TButton -anchor center -padding 0.75p -width -11
+	ttk::style configure TRadiobutton -padding 1.5p
+	ttk::style configure TCheckbutton -padding 1.5p
+	ttk::style configure TMenubutton -padding {6p 3p}
 
-	set m [ScaleNum 2]
-	ttk::style configure TNotebook -tabmargins [list $m $m $m 0]
+	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 1.5p 0}
 	ttk::style map TNotebook.Tab \
-	    -expand [list selected [list $m $m $m $m]]
+	    -expand {selected {1.5p 1.5p 1.5p 1.5p}}
 
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
 
@@ -39,9 +32,8 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure TEntry -padding {2 2 2 4}
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
-	ttk::style configure TCombobox -padding [ScaleNum 2]
+	    -selectforeground [list !focus SystemWindowText]
+	ttk::style configure TCombobox -padding 1.5p
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
 	    -selectforeground [list !focus SystemWindowText] \
@@ -49,17 +41,14 @@ namespace eval ttk::theme::xpnative {
 		disabled		SystemGrayText \
 		{readonly focus}	SystemHighlightText \
 	    ] \
-	    -focusfill	[list {readonly focus} SystemHighlight] \
-	    ;
+	    -focusfill	[list {readonly focus} SystemHighlight]
 
-	set l [ScaleNum 2]; set r [ScaleNum 14]
-	ttk::style configure TSpinbox -padding [list $l 0 $r 0]
+	ttk::style configure TSpinbox -padding {1.5p 0 10.5p 0}
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 
-	ttk::style configure Toolbutton -padding [ScaleNum 4]
+	ttk::style configure Toolbutton -padding 3p
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
@@ -69,8 +58,6 @@ namespace eval ttk::theme::xpnative {
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
-				selected SystemHighlightText];
+				selected SystemHighlightText]
     }
-
-    unset m l r
 }

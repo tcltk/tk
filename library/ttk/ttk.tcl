@@ -174,8 +174,8 @@ proc ttk::DefaultTheme {} {
 ttk::setTheme [ttk::DefaultTheme] ; rename ttk::DefaultTheme {}
 
 # Scale the default ttk::scale and ttk::progressbar length
-option add *TScale.length	[::tk::ScalingPct] widgetDefault
-option add *TProgressbar.length	[::tk::ScalingPct] widgetDefault
+option add *TScale.length	75p widgetDefault
+option add *TProgressbar.length	75p widgetDefault
 
 ## ttk::SetTreeviewRowHeight --
 #	Sets the default height of the ttk::treeview rows.
