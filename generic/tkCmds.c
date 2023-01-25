@@ -1805,10 +1805,10 @@ Tk_WinfoObjCmd(
 	    if (string == NULL) {
 		strcpy(buf, "unknown");
 	    } else {
-		sprintf(buf, "%s %d", string, visInfoPtr[i].depth);
+		snprintf(buf, sizeof(buf), "%s %d", string, visInfoPtr[i].depth);
 	    }
 	    if (includeVisualId) {
-		sprintf(visualIdString, " 0x%lx",
+		snprintf(visualIdString, sizeof(visualIdString), " 0x%lx",
 			(unsigned long) visInfoPtr[i].visualid);
 		strcat(buf, visualIdString);
 	    }

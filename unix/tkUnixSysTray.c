@@ -435,8 +435,7 @@ DockSelectionAtomFor(
     Tk_Window tkwin)
 {
     char buf[256];
-    /* no snprintf in C89 */
-    sprintf(buf,"_NET_SYSTEM_TRAY_S%d",Tk_ScreenNumber(tkwin));
+    snprintf(buf,256,"_NET_SYSTEM_TRAY_S%d",Tk_ScreenNumber(tkwin));
     return Tk_InternAtom(tkwin,buf);
 }
 
@@ -558,7 +557,7 @@ CheckArgbVisual(
 	    retNitems == 1 &&
 	    retFormat == 32) {
 	char numeric[256];
-	sprintf(numeric,"%ld",*(long*)retProp);
+	snprintf(numeric,256,"%ld",*(long*)retProp);
 	XFree(retProp);
 	match = Tk_GetVisual(icon->interp, icon->tkwin,
                 numeric, &depth, &cmap);

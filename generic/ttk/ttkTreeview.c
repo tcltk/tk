@@ -8,6 +8,10 @@
 #include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 #define DEF_TREE_ROWS		"10"
 #define DEF_TITLECOLUMNS	"0"
 #define DEF_TITLEITEMS		"0"
@@ -449,8 +453,8 @@ typedef struct {
 
     int headingHeight;		/* Space for headings */
     int rowHeight;		/* Height of each item */
-    int colSeparatorWidth;	/* Width of column separator, if used */
-    int indent;			/* #pixels horizontal offset for child items */
+    int colSeparatorWidth;	/* Width of column separator, if used (screen units) */
+    int indent;			/* Horizontal offset for child items (screen units) */
 
     /* Tree data:
      */
@@ -1917,18 +1921,18 @@ static Ttk_Layout TreeviewGetLayout(
     }
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
-	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.rowHeight);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
 	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
     }
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
-	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.colSeparatorWidth);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.colSeparatorWidth);
     }
 
     /* Get item indent from style:
      */
     tv->tree.indent = DEFAULT_INDENT;
     if ((objPtr = Ttk_QueryOption(treeLayout, "-indent", 0))) {
-	(void)Tcl_GetIntFromObj(NULL, objPtr, &tv->tree.indent);
+	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.indent);
     }
 
     return treeLayout;
@@ -2768,7 +2772,7 @@ static int TreeviewHorribleIdentify(
     if (dColumnNumber == TCL_INDEX_NONE) {
 	goto done;
     }
-    sprintf(dcolbuf, "#%" TKSIZET_MODIFIER "u", dColumnNumber);
+    snprintf(dcolbuf, sizeof(dcolbuf), "#%" TKSIZET_MODIFIER "u", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
 	if (-HALO <= x1 - x  && x1 - x <= HALO) {
@@ -3172,7 +3176,7 @@ static int TreeviewInsertCommand(
 	char idbuf[16];
 	do {
 	    ++tv->tree.serial;
-	    sprintf(idbuf, "I%03X", tv->tree.serial);
+	    snprintf(idbuf, sizeof(idbuf), "I%03X", tv->tree.serial);
 	    entryPtr = Tcl_CreateHashEntry(&tv->tree.items, idbuf, &isNew);
 	} while (!isNew);
     }

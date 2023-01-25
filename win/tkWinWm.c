@@ -3615,7 +3615,7 @@ WmFrameCmd(
     if (hwnd == NULL) {
 	hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) winPtr));
     }
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
+    snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)hwnd);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
@@ -4624,7 +4624,7 @@ WmManageCmd(
 
 static int
 WmMaxsizeCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    Tk_Window tkwin,	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
@@ -4646,8 +4646,8 @@ WmMaxsizeCmd(
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &height) != TCL_OK)) {
+    if ((Tk_GetPixelsFromObj(interp, tkwin, objv[3], &width) != TCL_OK)
+	    || (Tk_GetPixelsFromObj(interp, tkwin, objv[4], &height) != TCL_OK)) {
 	return TCL_ERROR;
     }
     wmPtr->maxWidth = width;
@@ -4675,7 +4675,7 @@ WmMaxsizeCmd(
 
 static int
 WmMinsizeCmd(
-    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    Tk_Window tkwin,	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
@@ -4697,8 +4697,8 @@ WmMinsizeCmd(
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
-    if ((Tcl_GetIntFromObj(interp, objv[3], &width) != TCL_OK)
-	    || (Tcl_GetIntFromObj(interp, objv[4], &height) != TCL_OK)) {
+    if ((Tk_GetPixelsFromObj(interp, tkwin, objv[3], &width) != TCL_OK)
+	    || (Tk_GetPixelsFromObj(interp, tkwin, objv[4], &height) != TCL_OK)) {
 	return TCL_ERROR;
     }
     wmPtr->minWidth = width;
@@ -7834,7 +7834,7 @@ WmProc(
 	winPtr = GetTopLevel(hwnd);
 	if (winPtr) {
 	    Screen *screen = Tk_Screen(winPtr);
-	    if (screen->root_depth != (int) wParam) {
+	    if (DefaultDepthOfScreen(screen) != (int) wParam) {
 		/*
 		 * Color resolution changed, so do extensive rebuild of
 		 * display parameters. This will affect the display for all Tk
@@ -7847,11 +7847,11 @@ WmProc(
 	    } else {
 		HDC dc = GetDC(NULL);
 
-		screen->width = LOWORD(lParam);		/* horizontal res */
-		screen->height = HIWORD(lParam);	/* vertical res */
-		screen->mwidth = MulDiv(screen->width, 254,
+		WidthOfScreen(screen) = LOWORD(lParam);		/* horizontal res */
+		HeightOfScreen(screen) = HIWORD(lParam);	/* vertical res */
+		WidthMMOfScreen(screen) = MulDiv(WidthOfScreen(screen), 254,
 			GetDeviceCaps(dc, LOGPIXELSX) * 10);
-		screen->mheight = MulDiv(screen->height, 254,
+		HeightMMOfScreen(screen) = MulDiv(HeightOfScreen(screen), 254,
 			GetDeviceCaps(dc, LOGPIXELSY) * 10);
 		ReleaseDC(NULL, dc);
 	    }

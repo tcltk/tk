@@ -471,7 +471,6 @@ test config-4.29a {DoObjConfig - invalid string table} -constraints {
 } -cleanup {
     killTables
 } -returnCodes error -result {bad stringtable2 "foo": must be one, two, or ""}
-
 test config-4.30 {DoObjConfig - new string table} -constraints {
     testobjconfig
 } -body {
