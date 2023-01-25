@@ -129,7 +129,7 @@ TkGetServerInfo(
     if (!buffer[0]) {
 	GetVersionExW(&os);
 	/* Write the first character last, preventing multi-thread issues. */
-	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
+	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
 		"Win64"
@@ -1517,7 +1517,7 @@ UpdateInputLanguage(
     if (charsetInfo.ciACP == CP_UTF8) {
 	strcpy(codepage, "utf-8");
     } else {
-	sprintf(codepage, "cp%d", charsetInfo.ciACP);
+	snprintf(codepage, sizeof(codepage), "cp%d", charsetInfo.ciACP);
     }
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {

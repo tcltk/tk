@@ -289,14 +289,14 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     err = AEGetParamPtr(theDesc, keyDirectObject, typeWildCard, &initialType,
 			NULL, 0, NULL);
     if (err != noErr) {
-	sprintf(errString, "AEDoScriptHandler: GetParamDesc error %d", (int)err);
+	snprintf(errString, sizeof(errString), "AEDoScriptHandler: GetParamDesc error %d", (int)err);
 	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString,
 		      typeChar, errString, strlen(errString));
 	return;
     }
 
     if (MissedAnyParameters((AppleEvent*)theDesc)) {
-    	sprintf(errString, "AEDoScriptHandler: extra parameters");
+    	snprintf(errString, sizeof(errString), "AEDoScriptHandler: extra parameters");
     	AEPutParamPtr((AppleEvent*)[replyEvent aeDesc], keyErrorString,
 		      typeChar,errString, strlen(errString));
     	return;

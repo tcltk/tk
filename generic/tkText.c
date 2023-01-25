@@ -23,6 +23,10 @@
 #define DInfo TkDInfo
 #endif
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
  * mis-specified with non-increasing values. These are converted into tabs
@@ -2846,7 +2850,7 @@ TextPushUndoAction(
 	    Tcl_NewStringObj("set", 3));
     markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
     textPtr->sharedTextPtr->undoMarkId++;
-    sprintf(stringUndoMarkId, "%" TKSIZET_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
+    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TKSIZET_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
     strcat(lMarkName, stringUndoMarkId);
     strcat(rMarkName, stringUndoMarkId);
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
@@ -6925,7 +6929,7 @@ TkpTesttextCmd(
     size_t len;
     int lineIndex, byteIndex, byteOffset;
     TkTextIndex index;
-    char buf[64];
+    char buf[TK_POS_CHARS];
     Tcl_CmdInfo info;
 
     if (objc + 1 < 4) {

@@ -3452,7 +3452,7 @@ SetDefaults(
     DeleteObject(menuFont);
 
     Tcl_DStringAppendElement(&menuFontDString, faceName);
-    sprintf(sizeString, "%d", pointSize);
+    snprintf(sizeString, sizeof(sizeString), "%d", pointSize);
     Tcl_DStringAppendElement(&menuFontDString, sizeString);
 
     if (bold || italic) {
