@@ -702,7 +702,7 @@ TaskbarEval(
         }
         if (result != TCL_OK) {
             char buffer[100];
-            sprintf(buffer, "\n  (command bound to taskbar-icon ico#%d)", icoPtr->id);
+            snprintf(buffer, 100, "\n  (command bound to taskbar-icon ico#%d)", icoPtr->id);
             Tcl_AddErrorInfo(icoPtr->interp, buffer);
             Tcl_BackgroundError(icoPtr->interp);
         }

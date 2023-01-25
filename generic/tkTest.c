@@ -1515,7 +1515,7 @@ ImageGet(
     char buffer[100];
     XGCValues gcValues;
 
-    sprintf(buffer, "%s get", timPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s get", timPtr->imageName);
     Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
@@ -1584,7 +1584,7 @@ ImageDisplay(
 	     * Log the message.
 	     */
 
-	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
 	    instPtr->modelPtr->imageName, imageX, imageY, width, height);
 	}
 	Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName,
@@ -1599,7 +1599,7 @@ ImageDisplay(
 	 */
 
 	if (instPtr->displayFailed == False) {
-	    sprintf(instPtr->buffer, "%s display %d %d %d %d",
+	    snprintf(instPtr->buffer, sizeof(instPtr->buffer), "%s display %d %d %d %d",
 		    instPtr->modelPtr->imageName, imageX, imageY, width, height);
 	}
 	instPtr->displayFailed = True;
@@ -1645,7 +1645,7 @@ ImageFree(
     TImageInstance *instPtr = (TImageInstance *)clientData;
     char buffer[200];
 
-    sprintf(buffer, "%s free", instPtr->modelPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s free", instPtr->modelPtr->imageName);
     Tcl_SetVar2(instPtr->modelPtr->interp, instPtr->modelPtr->varName, NULL,
 	    buffer, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
     Tk_FreeColor(instPtr->fg);
@@ -1679,7 +1679,7 @@ ImageDelete(
     TImageModel *timPtr = (TImageModel *)clientData;
     char buffer[100];
 
-    sprintf(buffer, "%s delete", timPtr->imageName);
+    snprintf(buffer, sizeof(buffer), "%s delete", timPtr->imageName);
     Tcl_SetVar2(timPtr->interp, timPtr->varName, NULL, buffer,
 	    TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT);
 
@@ -1838,7 +1838,7 @@ TestmetricsObjCmd(
 		"\": must be cxhscroll or cyvscroll", NULL);
 	return TCL_ERROR;
     }
-    sprintf(buf, "%d", val);
+    snprintf(buf, sizeof(buf), "%d", val);
     Tcl_AppendResult(interp, buf, NULL);
     return TCL_OK;
 }
@@ -1909,7 +1909,7 @@ TestpropObjCmd(
 		    value = 0xff & *p;
 		    p += 1;
 		}
-		sprintf(buffer, "0x%lx", value);
+		snprintf(buffer, sizeof(buffer), "0x%lx", value);
 		Tcl_AppendElement(interp, buffer);
 	    }
 	}
@@ -1957,12 +1957,12 @@ TestprintfObjCmd(
     }
     longLongInt = wideInt;
 
-    /* Just add a lot of arguments to sprintf. Reason: on AMD64, the first
+    /* Just add a lot of arguments to snprintf. Reason: on AMD64, the first
      * 4 or 6 arguments (we assume 8, just in case) might be put in registers,
      * which still woudn't tell if the assumed size is correct: We want this
      * test-case to fail if the 64-bit value is printed as truncated to 32-bit.
      */
-    sprintf(buffer, "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
+    snprintf(buffer, sizeof(buffer), "%s%s%s%s%s%s%s%s%" TCL_LL_MODIFIER "d %"
 	    TCL_LL_MODIFIER "u", "", "", "", "", "", "", "", "",
 	    longLongInt, (unsigned long long)longLongInt);
     Tcl_AppendResult(interp, buffer, NULL);

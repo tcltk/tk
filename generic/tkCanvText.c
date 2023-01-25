@@ -14,6 +14,10 @@
 #include "tkCanvas.h"
 #include "default.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The structure below defines the record for each text item.
  */
@@ -170,9 +174,9 @@ UnderlinePrintProc(
     }
     p = (char *)ckalloc(32);
     if (underline < 0) {
-	sprintf(p, "end%d", underline);
+	snprintf(p, 32, "end%d", underline);
     } else {
-	sprintf(p, "%d", underline);
+	snprintf(p, 32, "%d", underline);
     }
     *freeProcPtr = TCL_DYNAMIC;
     return p;

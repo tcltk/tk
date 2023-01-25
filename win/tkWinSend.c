@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkWinSendCom.h"
+#include "tkWinInt.h"
 
 /*
  * Should be defined in WTypes.h but mingw 1.0 is missing them.
@@ -680,10 +681,10 @@ RegisterInterp(
 		    Tcl_DStringAppend(&dString, name, -1);
 		    Tcl_DStringAppend(&dString, " #", 2);
 		    offset = Tcl_DStringLength(&dString);
-		    Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
+		    Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
 		    actualName = Tcl_DStringValue(&dString);
 		}
-		sprintf(Tcl_DStringValue(&dString) + offset, "%d", i);
+		snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", i);
 	    }
 
 	    hr = BuildMoniker(actualName, &pmk);

@@ -31,14 +31,6 @@
 # define DEBUG(expr) expr
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 #define SIZE_OF_ARRAY(arr) (sizeof(arr)/sizeof(arr[0]))
 
 /*
@@ -5395,9 +5387,9 @@ TkKeysymToString(
 	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
 	    buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
 	} else if (keysym >= 0x1010000) {
-	    sprintf(buf, "U%08X", (int)(keysym - 0x1000000));
+	    snprintf(buf, sizeof(buf), "U%08X", (int)(keysym - 0x1000000));
 	} else {
-	    sprintf(buf, "U%04X", (int)(keysym - 0x1000000));
+	    snprintf(buf, sizeof(buf), "U%04X", (int)(keysym - 0x1000000));
 	}
 	return Tk_GetUid(buf);
     }

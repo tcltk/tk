@@ -12,6 +12,10 @@
 #include "ttkTheme.h"
 #include "ttkWidget.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Extra bits for core.flags:
  */
@@ -469,14 +473,14 @@ ExpandPercents(
 		} else {
 		    number = -1;
 		}
-		sprintf(numStorage, "%d", number);
+		snprintf(numStorage, sizeof(numStorage), "%d", number);
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
 		if (index == TCL_INDEX_NONE) {
-		    sprintf(numStorage, "-1");
+		    snprintf(numStorage, sizeof(numStorage), "-1");
 		} else {
-		    sprintf(numStorage, "%" TKSIZET_MODIFIER "u", index);
+		    snprintf(numStorage, sizeof(numStorage), "%" TKSIZET_MODIFIER "u", index);
 		}
 		string = numStorage;
 		break;
