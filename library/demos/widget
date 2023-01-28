@@ -336,6 +336,12 @@ if {[tk windowingsystem] eq "aqua"} {
 	@@demo mac_styles	Special widgets for macOS
     }
 }
+if {[tk windowingsystem] eq "aqua"} {
+    addFormattedText {
+	@@new
+	@@demo mac_wm	Window styles for macOS
+    }
+}
 addFormattedText {
     @@subtitle	Listboxes and Trees
     @@demo states	The 50 states

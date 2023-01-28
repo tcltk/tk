@@ -37,7 +37,7 @@
 */
 
 /*
- * Window attributes and classes
+ * Carbon window attributes and classes.
  */
 
 #define WM_NSMASK_SHIFT 36
@@ -150,19 +150,85 @@ static const struct {
 	(macClassAttrs[(class)].forceOnAttrs & ~kWindowResizableAttribute)))
 
 /*
- * Data for [wm attributes] command:
+ * Structures and data for the wm attributes command (macOS 10.12 and later):
  */
 
+enum NSWindowSubclass {
+    subclassNSWindow = 0,
+    subclassNSPanel = 1
+};
+/* This array must be indexed by the enum above.*/
+static const char *subclassNames[] = {"nswindow", "nspanel", NULL};
+static Tcl_HashTable pathnameToSubclass;
+
+typedef struct buttonField_t {
+    unsigned zoom: 1;
+    unsigned miniaturize: 1;
+    unsigned close: 1;
+} buttonField;
+
+/* The order of these names must match the order of the bits above! */
+static const char *buttonNames[] = {"zoom", "miniaturize", "close", NULL};
+
+typedef union windowButtonState_t {
+    int intvalue;
+    buttonField bits;
+} windowButtonState;
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+enum NSWindowClass {
+    NSWindowClass_any = 0,
+    NSWindowClass_window = 1,
+    NSWindowClass_panel = 2
+};
+typedef struct styleMaskBit_t {
+    const char *bitname;
+    unsigned long bitvalue;
+    enum NSWindowClass allowed;
+} styleMaskBit;
+
+static const styleMaskBit styleMaskBits[] = {
+    /* Make the titlebar visible and use round corners. */
+    {"titled", NSWindowStyleMaskTitled, NSWindowClass_window},
+    /* Enable the close button. */
+    {"closable", NSWindowStyleMaskClosable, NSWindowClass_window},
+    /* Enable the miniaturize button. */
+    {"miniaturizable", NSWindowStyleMaskMiniaturizable, NSWindowClass_window},
+    /* Allow the user to resize the window. */
+    {"resizable", NSWindowStyleMaskResizable, NSWindowClass_window},
+    /*
+     * Make the content view extend under the titlebar.  We force
+     * titlebarAppearsTransparent when this bit is set.  Otherwise it is
+     * pretty useless.
+     */
+    {"fullsizecontentview", NSWindowStyleMaskFullSizeContentView, NSWindowClass_window},
+    /* Rounded corners, cannot have a titlebar (overrides titled bit). */
+    {"docmodal", NSWindowStyleMaskDocModalWindow, NSWindowClass_any},
+    /* ============================================
+     * The following bits are only valid for panels.
+     */
+    /* Make the title bar thinner. */
+    {"utility", NSWindowStyleMaskUtilityWindow, NSWindowClass_panel},
+    /* Do not activate the app when the window is activated. */
+    {"nonactivatingpanel", NSWindowStyleMaskNonactivatingPanel, NSWindowClass_panel},
+    /* 
+     * Requires utility.  Cannot be resizable.  Close button is an X; no other buttons.
+     * Cannot be a docmodal.
+     */
+    {"HUDwindow", NSWindowStyleMaskHUDWindow, NSWindowClass_panel},
+    {NULL, 0, 0}
+};
+#endif
+
 typedef enum {
-    WMATT_ALPHA, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
-    WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT,
-    WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
+    WMATT_ALPHA, WMATT_BUTTONS, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
+    WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_TYPE,
+    _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
-    "-alpha", "-fullscreen", "-modified", "-notify",
-    "-titlepath", "-topmost", "-transparent",
-    "-type", NULL
+    "-alpha", "-buttons", "-fullscreen", "-modified", "-notify", "-titlepath",
+    "-topmost", "-transparent", "-stylemask", "-type", NULL
 };
 
 /*
@@ -193,7 +259,7 @@ static const Tk_GeomMgr wmMgrType = {
 static int tkMacOSXWmAttrNotifyVal = 0;
 
 /*
- * Forward declarations for procedures defined in this file:
+ * Declarations of static functions defined in this file:
  */
 
 static NSRect		InitialWindowBounds(TkWindow *winPtr,
@@ -345,19 +411,71 @@ static void             RemoveTransient(TkWindow *winPtr);
     NSRect pointrect = {point, {0,0}};
     return [self convertRectToScreen:pointrect].origin;
 }
+/*
+ * This method synchronizes Tk's understanding of the bounds of a contentView
+ * with the window's.  It is needed because there are situations when the
+ * window manager can change the layout of an NSWindow without having been
+ * requested to do so by Tk.  Examples are when a window goes FullScreen or
+ * shows a tab bar.  NSWindow methods which involve such layout changes should
+ * be overridden or protected by methods which call this.
+ */
+
+- (void) tkLayoutChanged
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+
+    if (winPtr) {
+	NSRect frameRect;
+	frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+		    styleMask:[self styleMask]];
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+	// The parent included the titlebar and window frame.
+	wmPtr->xInParent = -frameRect.origin.x;
+	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
+    }
+}
 - (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     NSRect pointrect = {point, {0,0}};
     return [self convertRectFromScreen:pointrect].origin;
 }
 #endif
-
 @end
 
 #pragma mark -
 
 @implementation TKPanel: NSPanel
 @synthesize tkWindow = _tkWindow;
+
+/*
+ * This method synchronizes Tk's understanding of the bounds of a contentView
+ * with the window's.  It is needed because there are situations when the
+ * window manager can change the layout of an NSWindow without having been
+ * requested to do so by Tk.  Examples are when a window goes FullScreen or
+ * shows a tab bar.  NSWindow methods which involve such layout changes should
+ * be overridden or protected by methods which call this.
+ */
+
+- (void) tkLayoutChanged
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
+
+    if (winPtr) {
+	NSRect frameRect;
+	frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+		    styleMask:[self styleMask]];
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+	// The parent included the titlebar and window frame.
+	wmPtr->xInParent = -frameRect.origin.x;
+	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
+	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
+    }
+}
 @end
 
 @implementation TKDrawerWindow: NSWindow
@@ -387,21 +505,11 @@ static void             RemoveTransient(TkWindow *winPtr);
 
     if (winPtr) {
 	NSRect frameRect;
-
-	/*
-	 * This avoids including the title bar for full screen windows
-	 * but does include it for normal windows.
-	 */
-
-	if ([self styleMask] & NSFullScreenWindowMask) {
- 	    frameRect = [NSWindow frameRectForContentRect:NSZeroRect
+	frameRect = [NSWindow frameRectForContentRect:NSZeroRect
 		    styleMask:[self styleMask]];
-	} else {
-	    frameRect = [self frameRectForContentRect:NSZeroRect];
-	}
-
 	WmInfo *wmPtr = winPtr->wmInfoPtr;
 
+	// The parent included the titlebar and window frame.
 	wmPtr->xInParent = -frameRect.origin.x;
 	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
 	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
@@ -726,6 +834,8 @@ TkWmNewWindow(
     wmPtr->menuPtr = NULL;
     wmPtr->window = nil;
     winPtr->wmInfoPtr = wmPtr;
+
+    // initialize wmPtr->NSWindowSubclass here
 
     UpdateVRootGeometry(wmPtr);
 
@@ -1213,11 +1323,26 @@ Tk_WmObjCmd(
 	goto wrongNumArgs;
     }
 
-    if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
+    if (index == WMOPT_ATTRIBUTES && objc == 5 &&
+	    strcmp(Tcl_GetString(objv[3]), "-type") == 0) {
+	if (TkGetWindowFromObj(NULL, tkwin, objv[2], (Tk_Window *) &winPtr)
+	    == TCL_OK) {
+	    if (winPtr->wmInfoPtr->window != NULL) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		    "Cannot change type after the mac window is created.",-1));
+		Tcl_SetErrorCode(interp, "TK", "TYPE_CHANGE", NULL);
+		return TCL_ERROR;
+	    } else {
+		fprintf(stderr, "Setting type for %s\n", Tk_PathName(winPtr));
+	    }
+	} else {
+		winPtr = NULL;
+	}
+    } else if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
 	!= TCL_OK) {
-	return TCL_ERROR;
+	    return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr)
+    if (winPtr && !Tk_IsTopLevel(winPtr)
 	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
@@ -1418,6 +1543,34 @@ WmSetAttribute(
 	[macWindow setAlphaValue:dval];
 	break;
     }
+    case WMATT_BUTTONS: {
+	windowButtonState state = {0};
+	Tcl_Obj **elements;
+	Tcl_Size nElements, i;
+	if (Tcl_ListObjGetElements(interp, value, &nElements, &elements) == TCL_OK) {
+	    int index = 0;
+	    for (i = 0; i < nElements; i++) {
+		if (Tcl_GetIndexFromObjStruct(interp, elements[i], buttonNames,
+		       sizeof(char *), "window button name", 0, &index) != TCL_OK) {
+		    return TCL_ERROR;
+		} else {
+		    state.intvalue |= (1 << index);
+		}
+	    }
+	} else if (Tcl_GetIntFromObj(interp, value, &state.intvalue) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	NSButton *closer = [macWindow standardWindowButton:
+			       NSWindowCloseButton]; 
+	NSButton *miniaturizer = [macWindow standardWindowButton:
+				     NSWindowMiniaturizeButton];
+	NSButton *zoomer = [macWindow standardWindowButton:
+			      NSWindowZoomButton];
+	closer.enabled = (state.bits.close != 0);
+	miniaturizer.enabled = (state.bits.miniaturize != 0);
+	zoomer.enabled = (state.bits.zoom != 0);
+	break;
+    } 
     case WMATT_FULLSCREEN:
 	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
 	    return TCL_ERROR;
@@ -1455,6 +1608,71 @@ WmSetAttribute(
 	    tkMacOSXWmAttrNotifyVal = boolean;
 	}
 	break;
+    case WMATT_STYLEMASK: {
+	unsigned long styleMaskValue = 0;
+	Tcl_Obj **elements;
+	Tcl_Size nElements, i;
+	if (Tcl_ListObjGetElements(interp, value, &nElements, &elements) == TCL_OK) {
+	    int index;
+	    for (i = 0; i < nElements; i++) {
+		if (Tcl_GetIndexFromObjStruct(interp, elements[i], styleMaskBits,
+		       sizeof(styleMaskBit), "styleMask bit", 0, &index) != TCL_OK) {
+		    return TCL_ERROR;
+		} else if (![macWindow isKindOfClass: [NSPanel class]] &&
+			   styleMaskBits[index].allowed == NSWindowClass_panel) {
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		        "styleMask bit \"%s\" can only be used with an NSPanel",
+			styleMaskBits[index].bitname));
+		    Tcl_SetErrorCode(interp, "TK", "INVALID_STYLEMASK_BIT", NULL);
+		    return TCL_ERROR;
+		} else {
+		    styleMaskValue |= styleMaskBits[index].bitvalue;
+		}
+	    }
+	    if ([macWindow isKindOfClass: [NSPanel class]]) {
+		/*
+		 * We always make NSPanels titled, nonactivating utility windows,
+		 * even if these bits are not requested in the command.
+		 */
+		if (!(styleMaskValue & NSWindowStyleMaskTitled) ) {
+		    styleMaskValue |= NSWindowStyleMaskTitled;
+		    styleMaskValue |= NSWindowStyleMaskUtilityWindow;
+		    styleMaskValue |= NSWindowStyleMaskNonactivatingPanel;
+		}
+	    }
+	    if (styleMaskValue & NSWindowStyleMaskFullSizeContentView) {
+		macWindow.titlebarAppearsTransparent = YES;
+	    } else {
+		macWindow.titlebarAppearsTransparent = NO;
+	    }		
+	} else {
+	    return TCL_ERROR;
+	}
+	NSRect oldFrame = [macWindow frame];
+#if DEBUG
+	fprintf(stderr, "Current styleMask: %lx\n", [macWindow styleMask]); 
+	fprintf(stderr, "Setting styleMask to %lx\n", styleMaskValue); 
+#endif
+        macWindow.styleMask = (unsigned long) styleMaskValue;
+	NSRect newFrame = [macWindow frame];
+	int heightDiff = newFrame.size.height - oldFrame.size.height;
+	int newHeight = heightDiff < 0 ? newFrame.size.height :
+	    newFrame.size.height - heightDiff;
+	if ([macWindow respondsToSelector: @selector (tkLayoutChanged)]) {
+	    [(TKWindow *)macWindow tkLayoutChanged];
+	}
+	if (heightDiff) {
+	    //Calling XMoveResizeWindow twice is a hack to force a relayout
+	    //of the window.
+	    XMoveResizeWindow(winPtr->display, winPtr->window,
+	 		  winPtr->changes.x, winPtr->changes.y,
+			  newFrame.size.width, newHeight - 1);
+	    XMoveResizeWindow(winPtr->display, winPtr->window,
+	 		  winPtr->changes.x, winPtr->changes.y,
+			  newFrame.size.width, newHeight);
+	}
+	break;
+    }
     case WMATT_TITLEPATH: {
 	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
@@ -1504,9 +1722,11 @@ WmSetAttribute(
 		    TK_PARENT_WINDOW);
 	    }
 	break;
-    case WMATT_TYPE:
-	TKLog(@"The type attribute is ignored on macOS.");
+    case WMATT_TYPE: {
+	char *subclass = Tcl_GetString(value);
+	fprintf(stderr, "Setting subclass %s for %s\n", subclass, Tk_PathName(winPtr));
 	break;
+    }
     case _WMATT_LAST_ATTRIBUTE:
     default:
 	return TCL_ERROR;
@@ -1538,6 +1758,19 @@ WmGetAttribute(
     case WMATT_ALPHA:
 	result = Tcl_NewDoubleObj([macWindow alphaValue]);
 	break;
+    case WMATT_BUTTONS: {
+	result = Tcl_NewListObj(3, NULL);
+	if ([macWindow standardWindowButton:NSWindowCloseButton].enabled) {
+	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("close", -1));
+	}
+	if ([macWindow standardWindowButton:NSWindowMiniaturizeButton].enabled) {
+	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("miniaturize", -1));
+	}
+	if ([macWindow standardWindowButton:NSWindowZoomButton].enabled) {
+	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("zoom", -1));
+	}
+	break;
+    }
     case WMATT_FULLSCREEN:
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
@@ -1547,6 +1780,18 @@ WmGetAttribute(
     case WMATT_NOTIFY:
 	result = Tcl_NewBooleanObj(tkMacOSXWmAttrNotifyVal);
 	break;
+    case WMATT_STYLEMASK: {
+	unsigned long styleMaskValue = [macWindow styleMask];
+	const styleMaskBit *bit;
+	result = Tcl_NewListObj(9, NULL);
+	for (bit = styleMaskBits; bit->bitname != NULL; bit++) {
+	    if (styleMaskValue & bit->bitvalue) {
+		Tcl_ListObjAppendElement(NULL, result,
+		    Tcl_NewStringObj(bit->bitname, -1));
+	    }
+	}
+	break;
+    }
     case WMATT_TITLEPATH:
 	result = Tcl_NewStringObj([[macWindow representedFilename] UTF8String],
 		-1);
@@ -1558,7 +1803,11 @@ WmGetAttribute(
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
 	break;
     case WMATT_TYPE:
-	result = Tcl_NewStringObj("unsupported", -1);
+	if ([macWindow isKindOfClass:[NSPanel class]]) {
+	    result = Tcl_NewStringObj(subclassNames[subclassNSPanel], -1);
+	} else {
+	    result = Tcl_NewStringObj(subclassNames[subclassNSWindow], -1);
+	}
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
@@ -1586,7 +1835,7 @@ WmGetAttribute(
 
 static int
 WmAttributesCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -1594,7 +1843,25 @@ WmAttributesCmd(
 {
     int attribute = 0;
     NSWindow *macWindow;
-
+    if (winPtr == NULL && objc == 5 &&
+	strcmp(Tcl_GetString(objv[3]), "-type") == 0) {
+	/*
+	 * We are setting the type of a future window.  We just save the type
+	 * in a hash table so we can look it up when the window is actually
+	 * created.
+	 */
+	int index, isNew = 0;
+	if (Tcl_GetIndexFromObjStruct(interp, objv[4], subclassNames,
+		sizeof(char *), "NSWindow subclass", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToSubclass,
+				  Tcl_GetString(objv[2]), &isNew);
+	if (hPtr) {
+	    Tcl_SetHashValue(hPtr, INT2PTR(index));
+	    return TCL_OK;
+	}
+    }
     if (winPtr->window == None) {
 	Tk_MakeWindowExist((Tk_Window)winPtr);
     }
@@ -3096,7 +3363,7 @@ WmMinsizeCmd(
 
 static int
 WmOverrideredirectCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -3122,7 +3389,15 @@ WmOverrideredirectCmd(
     }
     atts.override_redirect = flag ? True : False;
     Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
-    ApplyContainerOverrideChanges(winPtr, win);
+    if ([NSApp macOSVersion] >= 101200) {
+	if (flag) {
+	    win.styleMask |= NSWindowStyleMaskDocModalWindow;
+	} else {
+	    win.styleMask &= ~NSWindowStyleMaskDocModalWindow;
+	}
+    } else {
+	ApplyContainerOverrideChanges(winPtr, win);
+    }
     return TCL_OK;
 }
 
@@ -6186,12 +6461,16 @@ TkMacOSXMakeRealWindowExist(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     MacDrawable *macWin;
     WindowClass macClass;
+    Class winClass = nil;
     Bool overrideRedirect = Tk_Attributes((Tk_Window)winPtr)->override_redirect;
+    Tcl_HashEntry *hPtr = NULL;
+    NSUInteger styleMask;
+    static int initialized = 0;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
     }
-
+    
     macWin = (MacDrawable *)winPtr->window;
 
     /*
@@ -6217,48 +6496,90 @@ TkMacOSXMakeRealWindowExist(
 	 */
     }
 
-    /*
-     * If this is an override-redirect window, the NSWindow is created first as
-     * a document window then converted to a simple window.
-     */
+    if ([NSApp macOSVersion] >= 101200) {
+	/*
+	 * Prior to macOS 10.12 the styleMask was readonly.  From macOS 10.12
+	 * onward, the styleMask can replace the Carbon window classes and
+	 * attributes.
+	 */
+	int index;
+	if (!initialized) {
+	    Tcl_InitHashTable(&pathnameToSubclass, TCL_STRING_KEYS);
+	    initialized = 1;
+	}
+	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr)); 
+	index = hPtr ? PTR2INT(Tcl_GetHashValue(hPtr)) : subclassNSWindow;
+	switch(index) {
+	case subclassNSPanel:
+	    winClass = [TKPanel class];
+	    styleMask =  (NSWindowStyleMaskTitled        |
+			  NSWindowStyleMaskClosable      |
+			  NSWindowStyleMaskResizable     |
+			  NSWindowStyleMaskUtilityWindow |
+			  NSWindowStyleMaskNonactivatingPanel );
+		break;
+	default:
+	    winClass = [TKWindow class];
+	    styleMask =  (NSWindowStyleMaskTitled         |
+			  NSWindowStyleMaskClosable       |
+			  NSWindowStyleMaskMiniaturizable |
+			  NSWindowStyleMaskResizable );
+		break;
+	}
+	if (overrideRedirect) {
+	    styleMask |= NSWindowStyleMaskDocModalWindow;
+	}
+	if (hPtr) {
+	    Tcl_DeleteHashEntry(hPtr);
+	}
+    } else {
 
-    if (overrideRedirect) {
-	wmPtr->macClass = kDocumentWindowClass;
-    }
-    macClass = wmPtr->macClass;
-    wmPtr->attributes &= (tkAlwaysValidAttributes |
-	    macClassAttrs[macClass].validAttrs);
-    wmPtr->flags |= macClassAttrs[macClass].flags |
+	/*
+	 * If this is an override-redirect window, the NSWindow is created first as
+	 * a document window then converted to a simple window.
+	 */
+
+	if (overrideRedirect) {
+	    wmPtr->macClass = kDocumentWindowClass;
+	}
+	macClass = wmPtr->macClass;
+	wmPtr->attributes &= (tkAlwaysValidAttributes |
+			      macClassAttrs[macClass].validAttrs);
+	wmPtr->flags |= macClassAttrs[macClass].flags |
 	    ((wmPtr->attributes & kWindowResizableAttribute) ? 0 :
-	    WM_WIDTH_NOT_RESIZABLE|WM_HEIGHT_NOT_RESIZABLE);
-    UInt64 attributes = (wmPtr->attributes &
-	    ~macClassAttrs[macClass].forceOffAttrs) |
+	     WM_WIDTH_NOT_RESIZABLE|WM_HEIGHT_NOT_RESIZABLE);
+	UInt64 attributes = (wmPtr->attributes &
+			     ~macClassAttrs[macClass].forceOffAttrs) |
 	    macClassAttrs[macClass].forceOnAttrs;
-    NSUInteger styleMask = macClassAttrs[macClass].styleMask |
-	((attributes & kWindowNoTitleBarAttribute) ? 0 : NSTitledWindowMask) |
-	((attributes & kWindowCloseBoxAttribute) ? NSClosableWindowMask : 0) |
-	((attributes & kWindowCollapseBoxAttribute) ?
-		NSMiniaturizableWindowMask : 0) |
-	((attributes & kWindowResizableAttribute) ? NSResizableWindowMask : 0) |
-	((attributes & kWindowMetalAttribute) ?
-		NSTexturedBackgroundWindowMask : 0) |
-	((attributes & kWindowUnifiedTitleAndToolbarAttribute) ?
-		NSUnifiedTitleAndToolbarWindowMask : 0) |
-	((attributes & kWindowSideTitlebarAttribute) ? 1 << 9 : 0) |
-	(attributes >> WM_NSMASK_SHIFT);
-    Class winClass = (macClass == kDrawerWindowClass ? [TKDrawerWindow class] :
-	    (styleMask & (NSUtilityWindowMask|NSDocModalWindowMask|
-	    NSNonactivatingPanelMask|NSHUDWindowMask)) ? [TKPanel class] :
-	    [TKWindow class]);
+	styleMask = macClassAttrs[macClass].styleMask |
+	    ((attributes & kWindowNoTitleBarAttribute) ? 0 : NSTitledWindowMask) |
+	    ((attributes & kWindowCloseBoxAttribute) ? NSClosableWindowMask : 0) |
+	    ((attributes & kWindowCollapseBoxAttribute) ?
+	     NSMiniaturizableWindowMask : 0) |
+	    ((attributes & kWindowResizableAttribute) ? NSResizableWindowMask : 0) |
+	    ((attributes & kWindowMetalAttribute) ?
+	     NSTexturedBackgroundWindowMask : 0) |
+	    ((attributes & kWindowUnifiedTitleAndToolbarAttribute) ?
+	     NSUnifiedTitleAndToolbarWindowMask : 0) |
+	    ((attributes & kWindowSideTitlebarAttribute) ? 1 << 9 : 0) |
+	    (attributes >> WM_NSMASK_SHIFT);
+	winClass = (macClass == kDrawerWindowClass ? [TKDrawerWindow class] :
+		    (styleMask & (NSUtilityWindowMask|NSDocModalWindowMask|
+				  NSNonactivatingPanelMask|NSHUDWindowMask)) ?
+		    [TKPanel class] : [TKWindow class]);
+    }
+    
     NSRect structureRect = [winClass frameRectForContentRect:NSZeroRect
 	    styleMask:styleMask];
     NSRect contentRect = NSMakeRect(5 - structureRect.origin.x,
 	    TkMacOSXZeroScreenHeight() - (TkMacOSXZeroScreenTop() + 5 +
 	    structureRect.origin.y + structureRect.size.height + 200), 200, 200);
     if (wmPtr->hints.initial_state == WithdrawnState) {
+	//// ???????
     }
     TKWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
+
     if (!window) {
     	Tcl_Panic("couldn't allocate new Mac window");
     }
@@ -6298,7 +6619,11 @@ TkMacOSXMakeRealWindowExist(
 
     	atts.override_redirect = True;
     	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
-    	ApplyContainerOverrideChanges(winPtr, NULL);
+	if ([NSApp macOSVersion] >= 101200) {
+	    window.styleMask |= NSWindowStyleMaskDocModalWindow;
+	} else {
+	    ApplyContainerOverrideChanges(winPtr, NULL);
+	}
     }
     [window display];
 }
