@@ -130,19 +130,6 @@ namespace eval tk {
 	    update
 	}
 
-	namespace export fixfocus
-	proc fixfocus {} {
-            catch {destroy .focus}
-            toplevel .focus
-            wm geometry .focus +0+0
-            entry .focus.e
-            .focus.e insert 0 "fixfocus"
-            pack .focus.e
-            update
-            focus -force .focus.e
-            destroy .focus
-	}
-
         namespace export imageInit imageFinish imageCleanup imageNames
         variable ImageNames
         proc imageInit {} {
