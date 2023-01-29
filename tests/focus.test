@@ -6,13 +6,14 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
+# WARNING: Some tests in the present file may fail on Linux with KDE
+#          when the focus stealing prevention setting is higher
+#          than its default value (low).
+
 package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
-
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 proc focusSetup {} {
     destroy .t
@@ -38,6 +39,7 @@ proc focusSetupAlt {} {
 # The following procedure ensures that there is no input focus
 # in this application, by forcing the focus on a window in a
 # newly created toplevel and destroying this toplevel.
+# Calling    focusClear ; focus    returns    {}
 proc focusClear {} {
     destroy .focus
     toplevel .focus
@@ -55,13 +57,6 @@ proc focusClear {} {
 button .b -text .b -relief raised -bd 2
 pack .b
 wm geometry . +300+100
-
-# Make sure the window manager knows who has focus
-focusClear
-
-# cleanupbg will be after 4.4 test
-setupbg
-update
 
 bind all <FocusIn> {
     append focusInfo "in %W %d\n"
@@ -227,22 +222,34 @@ test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 
 
+# Several focus-2.* tests are now constrained with knownBug because
+# commit [185b0e79] that fixed [1389270fff] made a change in how
+# <FocusIn> and <FocusOut> events are handled. This change was not
+# compatible with these tests, which remained undetected since 2008
+# (probably because these tests used to be constrained with nonPortable,
+# thus not routinely run).
+# This is dealt with in ticket [1474465fff].
 focusSetup
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
-    unix nonPortable testwrapper
+    unix testwrapper knownBug
 } -body {
     focusClear
     focus -force .b
     focusSetup
     update
     set focusInfo {}
-    # 0x54217567 has no specific meaning
+    # 0x54217567 has no specific meaning.
+    # Since [1389270fff] was fixed in [185b0e79], all FocusIn and FocusOut
+    # generated events are flagged with GENERATED_FOCUS_EVENT_MAGIC.
+    # in their send_event field.
+    # When the given -sendevent is not 0, the actual send_event field
+    # is (GENERATED_FOCUS_EVENT_MAGIC | 1)
     event gen [testwrapper .t] <FocusIn> -detail NotifyAncestor \
 	    -sendevent 0x54217567
     return $focusInfo
 } -result {}
 test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
-    unix nonPortable
+    unix knownBug
 } -body {
     focusClear
     focus -force .b
@@ -250,12 +257,20 @@ test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
     update
     set focusInfo {}
     # 0x547321ac is GENERATED_FOCUS_EVENT_MAGIC
+    # Since [1389270fff] was fixed in [185b0e79], all FocusIn and FocusOut
+    # generated events are flagged with GENERATED_FOCUS_EVENT_MAGIC.
+    # in their send_event field.
+    # When the given -sendevent is not 0, the actual send_event field
+    # is (GENERATED_FOCUS_EVENT_MAGIC | 1)
+    # Since the above bug fix, this test is not different from the previous
+    # one (except it addresses .t and not the wrapper), indeed sending
+    # -sendevent GENERATED_FOCUS_EVENT_MAGIC has no special meaning anymore.
     event gen .t <FocusIn> -detail NotifyAncestor -sendevent 0x547321ac
     list $focusInfo [focus]
 } -result {{in .t NotifyAncestor
 } .b}
 test focus-2.3 {TkFocusFilterEvent procedure} -constraints {
-    unix nonPortable testwrapper
+    unix testwrapper knownBug
 } -body {
     focusClear
     focus -force .b
@@ -270,7 +285,7 @@ out . NotifyNonlinearVirtual
 in .t NotifyNonlinear
 } .t}
 test focus-2.4 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix nonPortable testwrapper
+    unix testwrapper knownBug
 } -body {
     focusClear
     set result {}
@@ -303,7 +318,7 @@ in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 }}
 test focus-2.5 {TkFocusFilterEvent procedure, creating FocusInfo struct} -constraints {
-    unix nonPortable testwrapper
+    unix testwrapper knownBug
 } -body {
     focusSetup
     focus .t.b1
@@ -314,9 +329,8 @@ test focus-2.5 {TkFocusFilterEvent procedure, creating FocusInfo struct} -constr
 in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 } .t.b1}
-
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix testwrapper failsOnUbuntu failsOnXQuarz
+    unix testwrapper knownBug
 } -body {
     focus .t.b1
     focus .
@@ -328,7 +342,7 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix testwrapper failsOnUbuntu failsOnXQuarz
+    unix testwrapper knownBug
 } -body {
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
@@ -349,14 +363,14 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix testwrapper failsOnUbuntu failsOnXQuarz
+    unix testwrapper knownBug
 } -body {
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
     focus
 } -result {}
 test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix testwrapper
+    unix testwrapper knownBug
 } -body {
     set result {}
     focus .t.b1
@@ -372,7 +386,7 @@ test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $result
 } -result {.t.b1 {} .t.b1 .t.b1 .t.b1}
 test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix testwrapper
+    unix testwrapper knownBug
 } -body {
     focusClear
     set focusInfo {}
@@ -418,7 +432,7 @@ test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when 
     destroy .t2
 } -result {}
 test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix testwrapper
+    unix testwrapper knownBug
 } -body {
     set result {}
     focus .t.b1
@@ -434,7 +448,7 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
     return $result
 } -result {{} .t.b1 {} {} {}}
 test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix testwrapper
+    unix testwrapper knownBug
 } -body {
     focusClear
     focus .t.b1
@@ -448,7 +462,7 @@ test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
 out .t NotifyVirtual
 }
 test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix testwrapper
+    unix testwrapper knownBug
 } -body {
     focusClear
     focus .t.b1
@@ -543,9 +557,8 @@ in .t NotifyNonlinearVirtual
 in .t.b2 NotifyNonlinear
 }
 test focus-3.7 {SetFocus procedure, generating events} -constraints {
-    unix nonPortable
+    unix knownBug
 } -body {
-    # Non-portable because some platforms generate extra events.
     focusSetup
     focusClear
     set focusInfo {}
@@ -554,7 +567,8 @@ test focus-3.7 {SetFocus procedure, generating events} -constraints {
     return $focusInfo
 } -result {}
 
-
+# The following two tests fail on KDE when the focus stealing prevention
+# setting is higher than the lowest level (None).
 test focus-4.1 {TkFocusDeadWindow procedure} -constraints {
     unix
 } -body {
@@ -600,12 +614,10 @@ test focus-4.4 {TkFocusDeadWindow procedure} -constraints {
     focus
 } -result {.t}
 
-cleanupbg
 
-
-# Test 5.1 fails (before and after update)
+# Test 5.1 fails: knownBug, see ticket [1642750fff]
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix secureserver failsOnUbuntu failsOnXQuarz
+    unix secureserver knownBug
 } -body {
     setupbg
     focusSetup
