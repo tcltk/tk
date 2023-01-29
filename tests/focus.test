@@ -74,7 +74,7 @@ if {[testConstraint altDisplay]} {
 }
 
 
-test focus-1.1 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.1 {Tk_FocusCmd procedure} -body {
     focusClear
     focus
 } -result {}
@@ -84,29 +84,27 @@ test focus-1.2 {Tk_FocusCmd procedure} -constraints {
     focus .alt.b
     focus
 } -result {}
-test focus-1.3 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.3 {Tk_FocusCmd procedure} -body {
     focusClear
     focus .t.b3
     focus
 } -result {}
-test focus-1.4 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.4 {Tk_FocusCmd procedure} -body {
     focus ""
 } -returnCodes ok -result {}
-test focus-1.5 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.5 {Tk_FocusCmd procedure} -body {
     focusClear
     focus -force .t
     focus .t.b3
     focus
 }  -result {.t.b3}
-test focus-1.6 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.6 {Tk_FocusCmd procedure} -body {
     focus .gorp
 } -returnCodes error -result {bad window path name ".gorp"}
-test focus-1.7 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.7 {Tk_FocusCmd procedure} -body {
     focus .gorp a
 } -returnCodes error -result {bad option ".gorp": must be -displayof, -force, or -lastfor}
-test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
-    unix
-} -setup {
+test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -setup {
     destroy .t2
 } -body {
     focusClear
@@ -130,31 +128,21 @@ test focus-1.8 {Tk_FocusCmd procedure, focussing on dead window} -constraints {
 } -cleanup {
     destroy .t2
 } -result {.t2.f2 .t2 .t2}
-test focus-1.9 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.9 {Tk_FocusCmd procedure, -displayof option} -body {
     focus -displayof
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
-test focus-1.10 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.10 {Tk_FocusCmd procedure, -displayof option} -body {
     focus -displayof a b
 } -returnCodes error -result {wrong # args: should be "focus -displayof window"}
-test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.11 {Tk_FocusCmd procedure, -displayof option} -body {
     focus -displayof .lousy
 } -returnCodes error -result {bad window path name ".lousy"}
-test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.12 {Tk_FocusCmd procedure, -displayof option} -body {
     focusClear
     focus .t
     focus -displayof .t.b3
 }  -result {}
-test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -constraints {
-    unix
-} -body {
+test focus-1.13 {Tk_FocusCmd procedure, -displayof option} -body {
     focusClear
     focus -force .t
     focus -displayof .t.b3
@@ -166,58 +154,48 @@ test focus-1.14 {Tk_FocusCmd procedure, -displayof option} -constraints {
     focus -force .alt.c
     focus -displayof .alt
 } -result {.alt.c}
-test focus-1.15 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.15 {Tk_FocusCmd procedure, -force option} -body {
     focus -force
 } -returnCodes error -result {wrong # args: should be "focus -force window"}
-test focus-1.16 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.16 {Tk_FocusCmd procedure, -force option} -body {
     focus -force a b
 } -returnCodes error -result {wrong # args: should be "focus -force window"}
-test focus-1.17 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.17 {Tk_FocusCmd procedure, -force option} -body {
     focus -force foo
 } -returnCodes error -result {bad window path name "foo"}
-test focus-1.18 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.18 {Tk_FocusCmd procedure, -force option} -body {
     focus -force ""
 } -returnCodes ok -result {}
-test focus-1.19 {Tk_FocusCmd procedure, -force option} -constraints unix -body {
+test focus-1.19 {Tk_FocusCmd procedure, -force option} -body {
     focusClear
     focus .t.b1
     set x  [list [focus]]
     focus -force .t.b1
     lappend x [focus]
 } -result {{} .t.b1}
-test focus-1.20 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.20 {Tk_FocusCmd procedure, -lastfor option} -body {
     focus -lastfor
 } -returnCodes error -result {wrong # args: should be "focus -lastfor window"}
-test focus-1.21 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.21 {Tk_FocusCmd procedure, -lastfor option} -body {
     focus -lastfor 1 2
 } -returnCodes error -result {wrong # args: should be "focus -lastfor window"}
-test focus-1.22 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.22 {Tk_FocusCmd procedure, -lastfor option} -body {
     focus -lastfor who_knows?
 } -returnCodes error -result {bad window path name "who_knows?"}
-test focus-1.23 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.23 {Tk_FocusCmd procedure, -lastfor option} -body {
     focusClear
     focusSetup
     focus .b
     focus .t.b1
     list [focus -lastfor .] [focus -lastfor .t.b3]
 } -result {.b .t.b1}
-test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} -constraints {
-    unix
-} -body {
+test focus-1.24 {Tk_FocusCmd procedure, -lastfor option} -body {
     focusClear
     focusSetup
     update
     focus -lastfor .t.b2
 } -result {.t}
-test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
+test focus-1.25 {Tk_FocusCmd procedure} -body {
     focus -unknown
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 
@@ -231,7 +209,7 @@ test focus-1.25 {Tk_FocusCmd procedure} -constraints unix -body {
 # This is dealt with in ticket [1474465fff].
 focusSetup
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusClear
     focus -force .b
@@ -249,7 +227,7 @@ test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
-    unix knownBug
+    knownBug
 } -body {
     focusClear
     focus -force .b
@@ -270,7 +248,7 @@ test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
 } -result {{in .t NotifyAncestor
 } .b}
 test focus-2.3 {TkFocusFilterEvent procedure} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusClear
     focus -force .b
@@ -285,7 +263,7 @@ out . NotifyNonlinearVirtual
 in .t NotifyNonlinear
 } .t}
 test focus-2.4 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusClear
     set result {}
@@ -318,7 +296,7 @@ in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 }}
 test focus-2.5 {TkFocusFilterEvent procedure, creating FocusInfo struct} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusSetup
     focus .t.b1
@@ -330,7 +308,7 @@ in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 } .t.b1}
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focus .t.b1
     focus .
@@ -342,7 +320,7 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
@@ -355,22 +333,20 @@ test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
     }
     return $result
 } -result {{} .t.b1 {} {} .t.b1 .t.b1 {}}
-test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix
-} -body {
+test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -body {
     focus -force .t.b1
     event gen .t.b1 <FocusOut> -detail NotifyAncestor
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
     focus
 } -result {}
 test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     set result {}
     focus .t.b1
@@ -386,7 +362,7 @@ test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $result
 } -result {.t.b1 {} .t.b1 .t.b1 .t.b1}
 test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusClear
     set focusInfo {}
@@ -395,7 +371,7 @@ test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix testwrapper
+    testwrapper
 } -body {
     focus -force .b
     update
@@ -405,7 +381,7 @@ test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    unix testwrapper
+    testwrapper
 } -body {
     focus .t.b1
     focusClear
@@ -417,7 +393,7 @@ test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
 in .t.b1 NotifyAncestor
 }
 test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when setting focus due to implicit focus} -constraints {
-    unix testwrapper
+    testwrapper
 } -setup {
     destroy .t2
     set focusInfo {}
@@ -432,7 +408,7 @@ test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when 
     destroy .t2
 } -result {}
 test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     set result {}
     focus .t.b1
@@ -448,7 +424,7 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
     return $result
 } -result {{} .t.b1 {} {} {}}
 test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusClear
     focus .t.b1
@@ -462,7 +438,7 @@ test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
 out .t NotifyVirtual
 }
 test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    unix testwrapper knownBug
+    testwrapper knownBug
 } -body {
     focusClear
     focus .t.b1
@@ -478,9 +454,7 @@ out .t NotifyVirtual
 } {}}
 
 
-test focus-3.1 {SetFocus procedure, create record on focus} -constraints {
-    unix
-} -body {
+test focus-3.1 {SetFocus procedure, create record on focus} -body {
     toplevel .t2 -width 250 -height 100
     wm geometry .t2 +0+0
     update
@@ -493,9 +467,7 @@ test focus-3.1 {SetFocus procedure, create record on focus} -constraints {
 # This test produces no result, but it will generate a protocol
 # error if Tk forgets to make the window exist before focussing
 # on it.
-test focus-3.2 {SetFocus procedure, making window exist} -constraints {
-    unix
-} -body {
+test focus-3.2 {SetFocus procedure, making window exist} -body {
     update
     button .b2 -text "Another button"
     focus .b2
@@ -506,16 +478,12 @@ test focus-3.2 {SetFocus procedure, making window exist} -constraints {
 } -result {}
 # The following test doesn't produce a check-able result, but if
 # there are bugs it may generate an X protocol error.
-test focus-3.3 {SetFocus procedure, delaying claim of X focus} -constraints {
-    unix
-} -body {
+test focus-3.3 {SetFocus procedure, delaying claim of X focus} -body {
     focusSetup
     focus -force .t.b2
     update
 } -result {}
-test focus-3.4 {SetFocus procedure, delaying claim of X focus} -constraints {
-    unix
-} -body {
+test focus-3.4 {SetFocus procedure, delaying claim of X focus} -body {
     focusSetup
     wm withdraw .t
     focus -force .t.b2
@@ -530,7 +498,7 @@ test focus-3.4 {SetFocus procedure, delaying claim of X focus} -constraints {
     destroy .t2
 } -result {}
 test focus-3.5 {SetFocus procedure, generating events} -constraints {
-    unix
+    knownBug
 } -body {
     focusSetup
     focusClear
@@ -541,9 +509,7 @@ test focus-3.5 {SetFocus procedure, generating events} -constraints {
 } -result {in .t NotifyVirtual
 in .t.b2 NotifyAncestor
 }
-test focus-3.6 {SetFocus procedure, generating events} -constraints {
-    unix
-} -body {
+test focus-3.6 {SetFocus procedure, generating events} -body {
     focusSetup
     focus -force .b
     update
@@ -557,7 +523,7 @@ in .t NotifyNonlinearVirtual
 in .t.b2 NotifyNonlinear
 }
 test focus-3.7 {SetFocus procedure, generating events} -constraints {
-    unix knownBug
+    knownBug
 } -body {
     focusSetup
     focusClear
@@ -569,9 +535,7 @@ test focus-3.7 {SetFocus procedure, generating events} -constraints {
 
 # The following two tests fail on KDE when the focus stealing prevention
 # setting is higher than the lowest level (None).
-test focus-4.1 {TkFocusDeadWindow procedure} -constraints {
-    unix
-} -body {
+test focus-4.1 {TkFocusDeadWindow procedure} -body {
     focusSetup
     update
     focus -force .b
@@ -579,9 +543,7 @@ test focus-4.1 {TkFocusDeadWindow procedure} -constraints {
     destroy .t
     focus
 } -result {.b}
-test focus-4.2 {TkFocusDeadWindow procedure} -constraints {
-    unix
-} -body {
+test focus-4.2 {TkFocusDeadWindow procedure} -body {
     focusSetup
     update
     focus -force .t.b2
@@ -594,7 +556,7 @@ test focus-4.2 {TkFocusDeadWindow procedure} -constraints {
 # Non-portable due to wm-specific redirection of input focus when
 # windows are deleted:
 test focus-4.3 {TkFocusDeadWindow procedure} -constraints {
-    unix nonPortable
+    nonPortable
 } -body {
     focusSetup
     update
@@ -604,9 +566,7 @@ test focus-4.3 {TkFocusDeadWindow procedure} -constraints {
     update
     focus
 } -result {}
-test focus-4.4 {TkFocusDeadWindow procedure} -constraints {
-    unix
-} -body {
+test focus-4.4 {TkFocusDeadWindow procedure} -body {
     focusSetup
     focus -force .t.b2
     update
