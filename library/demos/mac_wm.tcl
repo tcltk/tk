@@ -25,6 +25,11 @@ set winlist {}
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
 
 proc launch {name windowInfo type} {
+    if {[winfo exists $name]} {
+	wm deiconify $name
+	focus -force $name
+	return
+    }
     wm attributes $name -type $type; toplevel $name 
     wm title $name $type
     set f $name.f
@@ -52,7 +57,8 @@ proc launch {name windowInfo type} {
     $f.stylemask.closable state selected
     grid $f.stylemask.closable -row 1 -column 0 -sticky w
     # miniaturizableable
-    ttk::checkbutton $f.stylemask.miniaturizable -text miniaturizable -variable $name.miniaturizable \
+    ttk::checkbutton $f.stylemask.miniaturizable -text miniaturizable \
+	-variable $name.miniaturizable \
         -command [list setbit $name $f.stylemask.miniaturizable miniaturizable]
     if {$type == "nswindow"} {
         $f.stylemask.miniaturizable state selected
@@ -107,9 +113,9 @@ grid $t -row 0 -column 0 -columnspan 2 -sticky NSEW
 ttk::labelframe $f.stylemask -text "styleMask"
 grid $f.stylemask -row 1 -column 0
 grid [ttk::button $f.wbw -text "Open an NSWindow" -width 20 \
-	  -command [list launch $w.window $windowInfo nswindow]] -row 2 -column 0
+	  -command [list launch .nswindow $windowInfo nswindow]] -row 2 -column 0
 grid [ttk::button $f.wbp -text "Open an NSPanel" -width 20 \
-	  -command [list launch $w.panel $panelInfo nspanel]] -row 3 -column 0
+	  -command [list launch .nspanel $panelInfo nspanel]] -row 3 -column 0
 grid [ttk::button $f.wbm -text "Open a modern window" -width 20 \
 	  -command launchModernWindow] -row 4 -column 0
 pack $w.f -side bottom -fill both -expand 1 -padx 16 -pady 16
@@ -125,26 +131,6 @@ proc setbit {win cb bitname} {
         lappend bits $bitname
     }
     wm attributes $win -stylemask $bits
-}
-
-proc createPanel {basename} {
-    global suffix
-    global winlist
-    set name "$basename$suffix"
-    wm attributes $name -type nspanel; toplevel $name 
-    lappend winlist $name
-    wm title $name TKPanel
-    incr suffix
-}
-
-proc createWindow {basename} {
-    global suffix
-    global winlist
-    set name "$basename$suffix"
-    toplevel $name
-    lappend winlist $name
-    wm title $name TKWindow
-    incr suffix
 }
 
 set aboutText \
@@ -191,27 +177,37 @@ proc launchModernWindow {} {
     global aboutText
     global aboutCode
     global detailsText
+    if {[winfo exists .mod]} {
+	wm deiconify .mod
+	focus -force .mod
+	return
+    }
     toplevel .mod
     wm title .mod {}
-    wm attributes .mod -stylemask {titled fullsizecontent closable miniaturizable resizable}
+    wm attributes .mod -stylemask {titled fullsizecontent closable \
+				       miniaturizable resizable}
     .mod configure -background white
     grid columnconfigure .mod 0 -weight 0
     grid columnconfigure .mod 1 -weight 1
     grid rowconfigure .mod 0 -weight 1
     frame .mod.left -width 220 -height 400 -background systemWindowBackgroundColor
-    font create leftFont -family .AppleSystemUIFont -size 11
-    font create rightFont -family .AppleSystemUIFont -size 16
-    font create codeFont -family Courier -size 16
+    catch {
+	font create leftFont -family .AppleSystemUIFont -size 11
+        font create rightFont -family .AppleSystemUIFont -size 16
+        font create codeFont -family Courier -size 16
+    }
     grid [ttk::label .mod.left.spacer -padding {220 30 0 0}] -row 0 -column 0
-    grid [ttk::radiobutton .mod.left.about -text About -style SidebarButton -variable whichPage -value 1] \
+    grid [ttk::radiobutton .mod.left.about -text About -style SidebarButton \
+	      -variable whichPage -value 1] \
 	-row 1 -column 0 -sticky nsew -padx 14
-    grid [ttk::radiobutton .mod.left.details -text Details -style SidebarButton -variable whichPage -value 2] \
+    grid [ttk::radiobutton .mod.left.details -text Details -style SidebarButton \
+	-variable whichPage -value 2] \
 	-row 2 -column 0 -sticky nsew -padx 14
     grid .mod.left -row 0 -column 0 -sticky nsew
     frame .mod.right -width 500 -background systemTextBackgroundColor
     grid rowconfigure .mod.right 0 -weight 0
     text .mod.right.about -highlightcolor systemTextBackgroundColor \
-	-background systemTextBackgroundColor -font rightFont\
+	-background systemTextBackgroundColor -font rightFont \
 	-highlightthickness 0 -wrap word -width 40
     .mod.right.about tag configure code -font codeFont
     .mod.right.about insert end $aboutText
