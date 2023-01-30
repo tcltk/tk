@@ -222,13 +222,13 @@ static const styleMaskBit styleMaskBits[] = {
 
 typedef enum {
     WMATT_ALPHA, WMATT_BUTTONS, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
-    WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_TYPE,
+    WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS,
     _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-buttons", "-fullscreen", "-modified", "-notify", "-titlepath",
-    "-topmost", "-transparent", "-stylemask", "-type", NULL
+    "-topmost", "-transparent", "-stylemask", "-class", NULL
 };
 
 /*
@@ -1324,16 +1324,14 @@ Tk_WmObjCmd(
     }
 
     if (index == WMOPT_ATTRIBUTES && objc == 5 &&
-	    strcmp(Tcl_GetString(objv[3]), "-type") == 0) {
+	    strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
 	if (TkGetWindowFromObj(NULL, tkwin, objv[2], (Tk_Window *) &winPtr)
 	    == TCL_OK) {
 	    if (winPtr->wmInfoPtr->window != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "Cannot change type after the mac window is created.",-1));
-		Tcl_SetErrorCode(interp, "TK", "TYPE_CHANGE", NULL);
+		    "Cannot change the class after the mac window is created.",-1));
+		Tcl_SetErrorCode(interp, "TK", "CLASS_CHANGE", NULL);
 		return TCL_ERROR;
-	    } else {
-		fprintf(stderr, "Setting type for %s\n", Tk_PathName(winPtr));
 	    }
 	} else {
 		winPtr = NULL;
@@ -1722,9 +1720,8 @@ WmSetAttribute(
 		    TK_PARENT_WINDOW);
 	    }
 	break;
-    case WMATT_TYPE: {
+    case WMATT_CLASS: {
 	char *subclass = Tcl_GetString(value);
-	fprintf(stderr, "Setting subclass %s for %s\n", subclass, Tk_PathName(winPtr));
 	break;
     }
     case _WMATT_LAST_ATTRIBUTE:
@@ -1802,7 +1799,7 @@ WmGetAttribute(
     case WMATT_TRANSPARENT:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
 	break;
-    case WMATT_TYPE:
+    case WMATT_CLASS:
 	if ([macWindow isKindOfClass:[NSPanel class]]) {
 	    result = Tcl_NewStringObj(subclassNames[subclassNSPanel], -1);
 	} else {
@@ -1844,9 +1841,9 @@ WmAttributesCmd(
     int attribute = 0;
     NSWindow *macWindow;
     if (winPtr == NULL && objc == 5 &&
-	strcmp(Tcl_GetString(objv[3]), "-type") == 0) {
+	strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
 	/*
-	 * We are setting the type of a future window.  We just save the type
+	 * We are setting the class of a future window.  We just save the class
 	 * in a hash table so we can look it up when the window is actually
 	 * created.
 	 */

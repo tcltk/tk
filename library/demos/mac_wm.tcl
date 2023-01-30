@@ -24,14 +24,14 @@ set winlist {}
 ## See Code / Dismiss
 pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
 
-proc launch {name windowInfo type} {
+proc launch {name windowInfo class} {
     if {[winfo exists $name]} {
 	wm deiconify $name
 	focus -force $name
 	return
     }
-    wm attributes $name -type $type; toplevel $name 
-    wm title $name $type
+    wm attributes $name -class $class; toplevel $name 
+    wm title $name $class
     set f $name.f
     ttk::frame $f
     set t $f.t
@@ -45,7 +45,7 @@ proc launch {name windowInfo type} {
     grid $t -row 0 -column 0 -columnspan 2 -sticky NSEW
     ttk::labelframe $f.stylemask -text "styleMask bits"
     # titled
-    if {$type == "nswindow"} {
+    if {$class == "nswindow"} {
        ttk::checkbutton $f.stylemask.titled -text titled -variable $name.titled \
           -command [list setbit $name $f.stylemask.titled titled]
        $f.stylemask.titled state selected
@@ -60,7 +60,7 @@ proc launch {name windowInfo type} {
     ttk::checkbutton $f.stylemask.miniaturizable -text miniaturizable \
 	-variable $name.miniaturizable \
         -command [list setbit $name $f.stylemask.miniaturizable miniaturizable]
-    if {$type == "nswindow"} {
+    if {$class == "nswindow"} {
         $f.stylemask.miniaturizable state selected
     } else { 
         $f.stylemask.miniaturizable state !alternate
