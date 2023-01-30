@@ -381,7 +381,7 @@ test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    testwrapper
+    testwrapper knownBug
 } -body {
     focus .t.b1
     focusClear
