@@ -94,7 +94,33 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 2000/XP+.  Where not supported, the \fB\-transparentcolor\fR value remains
 at \fB{}\fR.
 .PP
-On Mac OS X, the following attributes may be set.
+On MacOS, the following attributes may be set.
+.TP
+\fB\-class\fR
+.
+Specifies whether the underlying Aqua window for a toplevel is an
+object of the NSWindow class or the NSPanel class.  The two allowed
+values for this option are \fBnswindow\fR and \fBnspanel\fR.  It is
+not possible to change the class of the underlying Aqua window once
+that window has been instantiated, and attempting to do that is an
+error.  However it is allowed to set this option for a pathname that
+does not correspond to an existing window.  Doing that causes the
+class name to be cached for later use.  When a toplevel with that
+pathname is eventually created, the cached class name will determine which
+class is used for the underlying Aqua window.
+.TP
+\fB\-stylemask\fR
+.
+Specifies an integer to be assigned as the styleMask of the underlying
+Aqua window.  (See the Apple documentation for styleMask property of
+the NSWindow class.) The value of this option should be a list of
+bitnames.  Each bit named in the list will be set to 1, and all other
+bits will be set to 0.  The allowed bitnames are: \fBtitled\fR,
+\fBclosable\fR, \fBminiaturizable\fR, \fBresizable\fR,
+\fBfullsizecontentview\fR, \fBdocmodal\fR, \fButility\fR,
+\fBnonactivatingpanel\fR, and \fBHUDwindow\fR.  Note that a side
+effect of setting the fullsizecontentview bit is that the window title
+bar becomes transparent.
 .TP
 \fB\-modified\fR
 .
