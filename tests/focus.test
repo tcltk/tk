@@ -600,7 +600,7 @@ bind all <KeyPress> {}
 
 focusClear
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
-    unix
+    x11
 } -setup {
     eval interp delete [interp slaves]
 } -body {
@@ -656,7 +656,7 @@ test focus-6.1 {miscellaneous - embedded application in same process} -constrain
 } -result {{.t.f2.e1 {} {focus out .t.f2.e1 NotifyNonlinear} {focus out .t.f2 NotifyNonlinearVirtual} {focus in .t.f1 NotifyNonlinear} | {focus out .t.f1 NotifyNonlinear} {focus in .t.f2 NotifyNonlinearVirtual} {focus in .t.f2.e1 NotifyNonlinear}} {{focus in . NotifyVirtual} {focus in .e1 NotifyAncestor} | {focus out .e1 NotifyAncestor} {focus out . NotifyVirtual}}}
 
 test focus-6.2 {miscellaneous - embedded application in different process} -constraints {
-    unix
+    x11
 } -body {
     setupbg
     toplevel .t
