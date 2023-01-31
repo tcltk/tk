@@ -281,6 +281,8 @@ Tktest_Init(
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
+    Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
+	    (ClientData) Tk_MainWindow(interp), NULL);
 #endif /* _WIN32 */
 
     /*
