@@ -1859,7 +1859,7 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
 } {{} {} .t .t .t2 .t2 .t {}}
 test unixWm-50.3 {
 	Tk_CoordsToWindow procedure, finding a toplevel with embedding
-} tempNotWin {
+} {} {
     deleteWindows
     catch {interp delete child}
 
