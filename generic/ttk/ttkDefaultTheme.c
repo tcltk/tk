@@ -386,11 +386,11 @@ static const Ttk_ElementSpec FieldElementSpec = {
  * Indicator bitmap descriptor:
  */
 typedef struct {
-    int width;		/* Width of each image */
-    int height;		/* Height of each image */
-    const char *offDataPtr;
-    const char *onDataPtr;
-    const Ttk_StateTable *map;/* used to look up image index by state */
+    int width;			/* Width of each image */
+    int height;			/* Height of each image */
+    const char *const offDataPtr;
+    const char *const onDataPtr;
+    const Ttk_StateTable *map;	/* used to look up image index by state */
 } IndicatorSpec;
 
 static const Ttk_StateTable checkbutton_states[] = {
