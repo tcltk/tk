@@ -388,8 +388,8 @@ static const Ttk_ElementSpec FieldElementSpec = {
 typedef struct {
     int width;			/* Width of each image */
     int height;			/* Height of each image */
-    const char *const offDataPtr;
-    const char *const onDataPtr;
+    const char *offDataPtr;
+    const char *onDataPtr;
     const Ttk_StateTable *map;	/* used to look up image index by state */
 } IndicatorSpec;
 
@@ -424,7 +424,7 @@ static const char *const checkbtnOnData = "\
      </g>\n\
     </svg>";
 
-static IndicatorSpec checkbutton_spec = {
+static const IndicatorSpec checkbutton_spec = {
     16, 16,
     checkbtnOffData,
     checkbtnOnData,
@@ -474,7 +474,7 @@ static const char *const radiobtnOnData = "\
      <path d='m11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' fill='#000000'/>\n\
     </svg>";
 
-static IndicatorSpec radiobutton_spec = {
+static const IndicatorSpec radiobutton_spec = {
     16, 16,
     radiobtnOffData,
     radiobtnOnData,
@@ -513,7 +513,7 @@ static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    IndicatorSpec *spec = (IndicatorSpec *)clientData;
+    const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *scalingPctPtr;
     double scalingFactor;
@@ -561,7 +561,7 @@ static void IndicatorElementDraw(
     Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *scalingPctPtr;
     double scalingFactor;
-    IndicatorSpec *spec = (IndicatorSpec *)clientData;
+    const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
     int index;
     const char *svgDataPtr;
@@ -1244,9 +1244,9 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
-	    &IndicatorElementSpec, &checkbutton_spec);
+	    &IndicatorElementSpec, (void *)&checkbutton_spec);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
-	    &IndicatorElementSpec, &radiobutton_spec);
+	    &IndicatorElementSpec, (void *)&radiobutton_spec);
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
 	    &MenubuttonArrowElementSpec, NULL);
 
