@@ -209,7 +209,7 @@ test focus-1.25 {Tk_FocusCmd procedure} -body {
 # This is dealt with in ticket [1474465fff].
 focusSetup
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusClear
     focus -force .b
@@ -248,7 +248,7 @@ test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
 } -result {{in .t NotifyAncestor
 } .b}
 test focus-2.3 {TkFocusFilterEvent procedure} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusClear
     focus -force .b
@@ -263,7 +263,7 @@ out . NotifyNonlinearVirtual
 in .t NotifyNonlinear
 } .t}
 test focus-2.4 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusClear
     set result {}
@@ -296,7 +296,7 @@ in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 }}
 test focus-2.5 {TkFocusFilterEvent procedure, creating FocusInfo struct} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusSetup
     focus .t.b1
@@ -308,7 +308,7 @@ in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 } .t.b1}
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focus .t.b1
     focus .
@@ -320,7 +320,7 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
@@ -339,14 +339,14 @@ test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -body {
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
     focus
 } -result {}
 test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     set result {}
     focus .t.b1
@@ -362,7 +362,7 @@ test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $result
 } -result {.t.b1 {} .t.b1 .t.b1 .t.b1}
 test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusClear
     set focusInfo {}
@@ -371,7 +371,7 @@ test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    testwrapper
+    x11 testwrapper knownBug
 } -body {
     focus -force .b
     update
@@ -381,7 +381,7 @@ test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focus .t.b1
     focusClear
@@ -393,7 +393,7 @@ test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
 in .t.b1 NotifyAncestor
 }
 test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when setting focus due to implicit focus} -constraints {
-    testwrapper
+    x11 testwrapper knownBug
 } -setup {
     destroy .t2
     set focusInfo {}
@@ -408,7 +408,7 @@ test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when 
     destroy .t2
 } -result {}
 test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     set result {}
     focus .t.b1
@@ -424,7 +424,7 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
     return $result
 } -result {{} .t.b1 {} {} {}}
 test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusClear
     focus .t.b1
@@ -438,7 +438,7 @@ test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
 out .t NotifyVirtual
 }
 test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    testwrapper knownBug
+    x11 testwrapper knownBug
 } -body {
     focusClear
     focus .t.b1
