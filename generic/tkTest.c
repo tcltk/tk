@@ -197,7 +197,7 @@ static void		CustomOptionFree(ClientData clientData,
 static int		TestpropObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
-#if !defined(__CYGWIN__)
+#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int		TestwrapperObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -274,12 +274,7 @@ Tktest_Init(
 #if defined(_WIN32)
     Tcl_CreateObjCommand(interp, "testmetrics", TestmetricsObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
-    Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
-#elif defined(MAC_OSX_TK)
-    Tcl_CreateObjCommand(interp, "testwrapper", TestwrapperObjCmd,
-	    (ClientData) Tk_MainWindow(interp), NULL);
-#elif !defined(__CYGWIN__)
+#elif !defined(__CYGWIN__) && !defined(MAC_OSX_TK)
     Tcl_CreateObjCommand(interp, "testmenubar", TestmenubarObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
     Tcl_CreateObjCommand(interp, "testsend", TkpTestsendCmd,
@@ -1915,7 +1910,7 @@ TestpropObjCmd(
     return TCL_OK;
 }
 
-#if !defined(__CYGWIN__)
+#if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 /*
  *----------------------------------------------------------------------
  *
