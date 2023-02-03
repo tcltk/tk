@@ -250,7 +250,7 @@ test winfo-7.7 {"winfo pathname" command} -setup {
     destroy .b
 } -result {.}
 test winfo-7.8 {"winfo pathname" command} -constraints {
-    unix testwrapper
+    x11 testwrapper
 } -body {
     winfo pathname [testwrapper .]
 } -result {}
