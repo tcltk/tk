@@ -533,7 +533,7 @@ test focus-3.7 {SetFocus procedure, generating events} -constraints {
     return $focusInfo
 } -result {}
 
-# The following two tests fail on KDE when the focus stealing prevention
+# The following test fails on KDE when the focus stealing prevention
 # setting is higher than the lowest level (None).
 test focus-4.1 {TkFocusDeadWindow procedure} -body {
     focusSetup
@@ -543,6 +543,8 @@ test focus-4.1 {TkFocusDeadWindow procedure} -body {
     destroy .t
     focus
 } -result {.b}
+# The following test fails on KDE when the focus stealing prevention
+# setting is higher than the lowest level (None).
 test focus-4.2 {TkFocusDeadWindow procedure} -body {
     focusSetup
     update
