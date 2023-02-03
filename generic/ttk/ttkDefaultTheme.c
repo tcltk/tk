@@ -388,8 +388,8 @@ static const Ttk_ElementSpec FieldElementSpec = {
 typedef struct {
     int width;			/* Width of each image */
     int height;			/* Height of each image */
-    const char *offDataPtr;
-    const char *onDataPtr;
+    const char *const offDataPtr;
+    const char *const onDataPtr;
     const Ttk_StateTable *map;	/* used to look up image index by state */
 } IndicatorSpec;
 
@@ -401,7 +401,7 @@ static const Ttk_StateTable checkbutton_states[] = {
     { 0, 0, 0 }
 };
 
-static const char *const checkbtnOffData = "\
+static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <g>\n\
       <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
@@ -412,7 +412,7 @@ static const char *const checkbtnOffData = "\
      </g>\n\
     </svg>";
 
-static const char *const checkbtnOnData = "\
+static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <g>\n\
       <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
@@ -439,7 +439,7 @@ static const Ttk_StateTable radiobutton_states[] = {
     { 0, 0, 0 }
 };
 
-static const char *const radiobtnOffData = "\
+static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
       <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
@@ -456,7 +456,7 @@ static const char *const radiobtnOffData = "\
      <path d='m12.95 3.0503c-2.7294-2.7294-7.1701-2.7294-9.8995 0s-2.7294 7.1701 0 9.8995 7.1701 2.7294 9.8995 0 2.7294-7.1701 0-9.8995zm-0.70711 0.70711c2.3476 2.3476 2.3476 6.1377 0 8.4853s-6.1377 2.3476-8.4853 0-2.3476-6.1377 0-8.4853 6.1377-2.3476 8.4853 0z' fill='url(#linearGradient2819)'/>\n\
     </svg>";
 
-static const char *const radiobtnOnData = "\
+static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
       <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
@@ -525,7 +525,7 @@ static void IndicatorElementSize(
      * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
      */
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = atof(scalingPctPtr) / 100;
+    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = spec->width * scalingFactor + Ttk_PaddingWidth(margins);
@@ -586,7 +586,7 @@ static void IndicatorElementDraw(
      * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
      */
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = atof(scalingPctPtr) / 100;
+    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
 
     /*
      * Sanity check
@@ -1268,7 +1268,7 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
-	    &TreeitemIndicatorElementSpec, 0);
+	    &TreeitemIndicatorElementSpec, NULL);
 
     Tcl_PkgProvide(interp, "ttk::theme::alt", TTK_VERSION);
 
