@@ -150,8 +150,13 @@ static const struct {
 	(macClassAttrs[(class)].forceOnAttrs & ~kWindowResizableAttribute)))
 
 /*
- * Structures and data for the wm attributes command (macOS 10.12 and later):
+ * Structures and data for the wm attributes command (macOS 10.13 and later):
  */
+
+/* Hash tables for attributes which can be set before a window exists */
+static Tcl_HashTable pathnameToSubclass;
+static Tcl_HashTable pathnameToTabbingId;
+static Tcl_HashTable pathnameToTabbingMode;
 
 enum NSWindowSubclass {
     subclassNSWindow = 0,
@@ -159,7 +164,6 @@ enum NSWindowSubclass {
 };
 /* This array must be indexed by the enum above.*/
 static const char *subclassNames[] = {"nswindow", "nspanel", NULL};
-static Tcl_HashTable pathnameToSubclass;
 
 typedef struct buttonField_t {
     unsigned zoom: 1;
@@ -175,7 +179,7 @@ typedef union windowButtonState_t {
     buttonField bits;
 } windowButtonState;
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 enum NSWindowClass {
     NSWindowClass_any = 0,
     NSWindowClass_window = 1,
@@ -218,17 +222,31 @@ static const styleMaskBit styleMaskBits[] = {
     {"HUDwindow", NSWindowStyleMaskHUDWindow, NSWindowClass_panel},
     {NULL, 0, 0}
 };
+
+typedef struct tabbingMode_t {
+    const char *modeName;
+    long modeValue;
+} tabbingMode;
+
+static const tabbingMode tabbingModes[] = {
+    {"auto",  NSWindowTabbingModeAutomatic},
+    {"disallowed", NSWindowTabbingModeDisallowed},
+    {"preferred", NSWindowTabbingModePreferred},
+    {NULL, -1}
+};
+
 #endif
 
 typedef enum {
     WMATT_ALPHA, WMATT_BUTTONS, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
     WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS,
-    _WMATT_LAST_ATTRIBUTE
+    WMATT_TABBINGID, WMATT_TABBINGMODE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
     "-alpha", "-buttons", "-fullscreen", "-modified", "-notify", "-titlepath",
-    "-topmost", "-transparent", "-stylemask", "-class", NULL
+    "-topmost", "-transparent", "-stylemask", "-class", "-tabbingid", "-tabbingmode",
+    NULL
 };
 
 /*
@@ -517,7 +535,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     }
 }
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -1318,13 +1336,11 @@ Tk_WmObjCmd(
 	    sizeof(char *), "option", 0, &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-
     if (objc < 3) {
 	goto wrongNumArgs;
     }
-
     if (index == WMOPT_ATTRIBUTES && objc == 5 &&
-	    strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
+	strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
 	if (TkGetWindowFromObj(NULL, tkwin, objv[2], (Tk_Window *) &winPtr)
 	    == TCL_OK) {
 	    if (winPtr->wmInfoPtr->window != NULL) {
@@ -1336,9 +1352,21 @@ Tk_WmObjCmd(
 	} else {
 		winPtr = NULL;
 	}
+    } else if (index == WMOPT_ATTRIBUTES && objc == 5 &&
+	       strcmp(Tcl_GetString(objv[3]), "-tabbingid") == 0) {
+	    if (TkGetWindowFromObj(NULL, tkwin, objv[2], (Tk_Window *) &winPtr)
+		!= TCL_OK) {
+		winPtr = NULL;
+	    }
+    } else if (index == WMOPT_ATTRIBUTES && objc == 5 &&
+	       strcmp(Tcl_GetString(objv[3]), "-tabbingmode") == 0) {
+	    if (TkGetWindowFromObj(NULL, tkwin, objv[2], (Tk_Window *) &winPtr)
+		!= TCL_OK) {
+		winPtr = NULL;
+	    }
     } else if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
-	!= TCL_OK) {
-	    return TCL_ERROR;
+	       != TCL_OK) {
+	return TCL_ERROR;
     }
     if (winPtr && !Tk_IsTopLevel(winPtr)
 	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
@@ -1647,7 +1675,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	NSRect oldFrame = [macWindow frame];
-#if DEBUG
+#ifdef DEBUG
 	fprintf(stderr, "Current styleMask: %lx\n", [macWindow styleMask]); 
 	fprintf(stderr, "Setting styleMask to %lx\n", styleMaskValue); 
 #endif
@@ -1670,6 +1698,41 @@ WmSetAttribute(
 			  newFrame.size.width, newHeight);
 	}
 	break;
+    }
+    case WMATT_TABBINGID: {
+	NSString *identifier, *oldId = [macWindow tabbingIdentifier];
+	char *valueString;
+	int length;
+	if ([NSApp macOSVersion] < 101300) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		  "Tabbing identifiers require macOS 10.13", -1));
+	    Tcl_SetErrorCode(interp, "TK", "WM", "TABBINGID", NULL);
+	    return TCL_ERROR;
+	}
+	valueString = Tcl_GetStringFromObj(value, &length);
+	identifier = [NSString stringWithUTF8String:valueString];
+	[macWindow setTabbingIdentifier: identifier];
+
+	/*
+	 * If the tabbingIdentifier of a tab is changed we also turn it into a
+	 * separate window so we don't violate the rule that all tabs in the
+	 * same frame must have the same tabbingIdentifier.
+	 */
+
+	if ([macWindow tab] && [oldId compare:identifier] != NSOrderedSame) {
+	    [macWindow moveTabToNewWindow:nil];
+	}
+	break;
+    }
+    case WMATT_TABBINGMODE: {
+	int index;
+	tabbingMode mode;
+	if (Tcl_GetIndexFromObjStruct(interp, value, tabbingModes,
+	   sizeof(tabbingMode), "NSWindow Tabbing Mode", 0, &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	mode = tabbingModes[index];
+	[macWindow setTabbingMode: mode.modeValue];
     }
     case WMATT_TITLEPATH: {
 	const char *path = (const char *)Tcl_FSGetNativePath(value);
@@ -1720,10 +1783,8 @@ WmSetAttribute(
 		    TK_PARENT_WINDOW);
 	    }
 	break;
-    case WMATT_CLASS: {
-	char *subclass = Tcl_GetString(value);
+    case WMATT_CLASS:
 	break;
-    }
     case _WMATT_LAST_ATTRIBUTE:
     default:
 	return TCL_ERROR;
@@ -1789,6 +1850,22 @@ WmGetAttribute(
 	}
 	break;
     }
+    case WMATT_TABBINGID:
+	result = Tcl_NewStringObj([[macWindow tabbingIdentifier] UTF8String],
+		-1);
+	break;
+    case WMATT_TABBINGMODE: {
+	long mode = [macWindow tabbingMode];
+	const char *name = "unrecognized";
+	for (const tabbingMode *m = tabbingModes; m->modeName != NULL; m++) {
+	    if (m->modeValue == mode) {
+		name = m->modeName;
+		break;
+	    }
+	}
+	result = Tcl_NewStringObj(name, -1);
+	break;
+    }
     case WMATT_TITLEPATH:
 	result = Tcl_NewStringObj([[macWindow representedFilename] UTF8String],
 		-1);
@@ -1840,26 +1917,59 @@ WmAttributesCmd(
 {
     int attribute = 0;
     NSWindow *macWindow;
-    if (winPtr == NULL && objc == 5 &&
-	strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
+    if (winPtr == NULL && objc == 5) {
+	int index, isNew = 0, length;
+
 	/*
-	 * We are setting the class of a future window.  We just save the class
+	 * If we are setting an atttribute of a future window, save the value
 	 * in a hash table so we can look it up when the window is actually
 	 * created.
 	 */
-	int index, isNew = 0;
-	if (Tcl_GetIndexFromObjStruct(interp, objv[4], subclassNames,
-		sizeof(char *), "NSWindow subclass", 0, &index) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToSubclass,
-				  Tcl_GetString(objv[2]), &isNew);
-	if (hPtr) {
-	    Tcl_SetHashValue(hPtr, INT2PTR(index));
-	    return TCL_OK;
+
+	if (strcmp(Tcl_GetString(objv[3]), "-class") == 0) {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[4], subclassNames,
+		    sizeof(char *), "NSWindow subclass", 0, &index) != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToSubclass,
+		Tcl_GetString(objv[2]), &isNew);
+	    if (hPtr) {
+		Tcl_SetHashValue(hPtr, INT2PTR(index));
+		return TCL_OK;
+	    }
+	} else if (strcmp(Tcl_GetString(objv[3]), "-tabbingid") == 0) {
+	    char *identifier = Tcl_GetStringFromObj(objv[4], &length);
+	    char *value = ckalloc(length + 1);
+	    strncpy(value, identifier, length + 1);
+	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToTabbingId,
+				      Tcl_GetString(objv[2]), &isNew);
+	    if (hPtr) {
+		Tcl_SetHashValue(hPtr, value);
+		return TCL_OK;
+	    }
+	} else if (strcmp(Tcl_GetString(objv[3]), "-tabbingmode") == 0) {
+	    long value = NSWindowTabbingModeAutomatic;
+	    int modeIndex;
+	    char *modeName = Tcl_GetStringFromObj(objv[4], &length);
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[4], tabbingModes,
+	       sizeof(tabbingMode), "NSWindow Tabbing Mode", 0, &modeIndex) == TCL_OK) {
+		value = tabbingModes[modeIndex].modeValue;
+	    }
+	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToTabbingMode,
+		Tcl_GetString(objv[2]), &isNew);
+	    if (hPtr) {
+		Tcl_SetHashValue(hPtr, value);
+		return TCL_OK;
+	    }
 	}
     }
-    if (winPtr->window == None) {
+    if (!winPtr) {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	   "Only -class, -tabbingid, or -tabbingmode can be set before the window exists."));
+	Tcl_SetErrorCode(interp, "TK", "NO_WINDOW", NULL);
+	return TCL_ERROR;
+    }
+    if (winPtr && winPtr->window == None) {
 	Tk_MakeWindowExist((Tk_Window)winPtr);
     }
     if (!TkMacOSXHostToplevelExists(winPtr)) {
@@ -3386,7 +3496,7 @@ WmOverrideredirectCmd(
     }
     atts.override_redirect = flag ? True : False;
     Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
-    if ([NSApp macOSVersion] >= 101200) {
+    if ([NSApp macOSVersion] >= 101300) {
 	if (flag) {
 	    win.styleMask |= NSWindowStyleMaskDocModalWindow;
 	} else {
@@ -5981,9 +6091,9 @@ TkUnsupported1ObjCmd(
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
     case TKMWS_TABID:
-	if ([NSApp macOSVersion] < 101200) {
+	if ([NSApp macOSVersion] < 101300) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                "Tabbing identifiers did not exist until OSX 10.12.", -1));
+                "Tabbing identifiers require macOS 10.13.", -1));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "TABBINGID", NULL);
 	    return TCL_ERROR;
 	}
@@ -6242,7 +6352,7 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101300
     (void) interp;
     (void) winPtr;
     (void) objc;
@@ -6277,7 +6387,7 @@ WmWinTabbingId(
 	 */
 
 	if ([idString compare:newIdString] != NSOrderedSame
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101200
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
 		&& [win tab]
 #endif
 		) {
@@ -6462,6 +6572,8 @@ TkMacOSXMakeRealWindowExist(
     Bool overrideRedirect = Tk_Attributes((Tk_Window)winPtr)->override_redirect;
     Tcl_HashEntry *hPtr = NULL;
     NSUInteger styleMask;
+    char *tabbingId = NULL;
+    long tabbingMode = NSWindowTabbingModeAutomatic;
     static int initialized = 0;
 
     if (TkMacOSXHostToplevelExists(winPtr)) {
@@ -6493,7 +6605,7 @@ TkMacOSXMakeRealWindowExist(
 	 */
     }
 
-    if ([NSApp macOSVersion] >= 101200) {
+    if ([NSApp macOSVersion] >= 101300) {
 	/*
 	 * Prior to macOS 10.12 the styleMask was readonly.  From macOS 10.12
 	 * onward, the styleMask can replace the Carbon window classes and
@@ -6502,6 +6614,8 @@ TkMacOSXMakeRealWindowExist(
 	int index;
 	if (!initialized) {
 	    Tcl_InitHashTable(&pathnameToSubclass, TCL_STRING_KEYS);
+	    Tcl_InitHashTable(&pathnameToTabbingId, TCL_STRING_KEYS);
+	    Tcl_InitHashTable(&pathnameToTabbingMode, TCL_STRING_KEYS);
 	    initialized = 1;
 	}
 	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr)); 
@@ -6527,6 +6641,17 @@ TkMacOSXMakeRealWindowExist(
 	    styleMask |= NSWindowStyleMaskDocModalWindow;
 	}
 	if (hPtr) {
+	    Tcl_DeleteHashEntry(hPtr);
+	}
+	hPtr = Tcl_FindHashEntry(&pathnameToTabbingId, Tk_PathName(winPtr)); 
+	if (hPtr) {
+	    tabbingId = Tcl_GetHashValue(hPtr);	    
+	    Tcl_DeleteHashEntry(hPtr);
+	    ckfree(tabbingId);
+	}
+	hPtr = Tcl_FindHashEntry(&pathnameToTabbingMode, Tk_PathName(winPtr)); 
+	if (hPtr) {
+	    tabbingMode = PTR2INT(Tcl_GetHashValue(hPtr));	    
 	    Tcl_DeleteHashEntry(hPtr);
 	}
     } else {
@@ -6576,10 +6701,14 @@ TkMacOSXMakeRealWindowExist(
     }
     TKWindow *window = [[winClass alloc] initWithContentRect:contentRect
 	    styleMask:styleMask backing:NSBackingStoreBuffered defer:YES];
-
     if (!window) {
     	Tcl_Panic("couldn't allocate new Mac window");
     }
+    if (tabbingId) {
+	NSString *identifier = [NSString stringWithUTF8String:tabbingId];
+	[window setTabbingIdentifier: identifier];
+    }
+    [window setTabbingMode: tabbingMode];
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
     [window setContentView:contentView];
@@ -6616,7 +6745,7 @@ TkMacOSXMakeRealWindowExist(
 
     	atts.override_redirect = True;
     	Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
-	if ([NSApp macOSVersion] >= 101200) {
+	if ([NSApp macOSVersion] >= 101300) {
 	    window.styleMask |= NSWindowStyleMaskDocModalWindow;
 	} else {
 	    ApplyContainerOverrideChanges(winPtr, NULL);

@@ -158,7 +158,7 @@ fullsizecontent bit is set.\
 
 \n\n\(2) Each radio button in the sidebar is a standard ttk::radiobutton \
 but created with a special value for its -style option.  The value of the \
--style option use to create these buttons is SidebarButton.\n"
+-style option used to create these buttons is SidebarButton.\n"
 
 set whichPage 1
 trace add variable whichPage write "flipPage whichPage"
