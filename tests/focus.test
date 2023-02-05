@@ -269,7 +269,7 @@ test focus-2.4 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     focus .t.b1
     # Important to end with NotifyAncestor, which is an
     # event that is processed normally. This has a side
-    # effect on text 2.5
+    # effect on test 2.5
     foreach detail {NotifyAncestor NotifyNonlinear
 	    NotifyNonlinearVirtual NotifyPointer NotifyPointerRoot
 	    NotifyVirtual NotifyAncestor} {
