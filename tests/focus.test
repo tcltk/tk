@@ -6,9 +6,9 @@
 # Copyright (c) 1998-1999 by Scriptics Corporation.
 # All rights reserved.
 
-# WARNING: Some tests in the present file will fail on Linux with KDE
+# WARNING: Some tests in the present file may fail on Linux with KDE
 #          when the focus stealing prevention setting is higher
-#          than 'None'.
+#          than its default value (low).
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -37,17 +37,21 @@ proc focusSetupAlt {} {
 }
 
 # The following procedure ensures that there is no input focus
-# in this application.  It does it by arranging for another
-# application to grab the focus.  The "after" and "update" stuff
-# is needed to wait long enough for pending actions to get through
-# the X server and possibly also the window manager.
+# in this application, by forcing the focus on a window in a
+# newly created toplevel and destroying this toplevel.
+# Calling    focusClear ; focus    returns    {}
 proc focusClear {} {
-    global x;
-    after 200 {set x 1}
-    tkwait variable x
-    dobg {focus -force .; update}
+    destroy .focus
+    toplevel .focus
+    wm geometry .focus +100+100
+    entry .focus.e
+    .focus.e insert 0 "focusClear"
+    pack .focus.e
     update
+    focus -force .focus.e
+    destroy .focus
 }
+
 
 # Button used in some tests in the whole test file
 button .b -text .b -relief raised -bd 2
@@ -69,9 +73,6 @@ if {[testConstraint altDisplay]} {
     focusSetupAlt
 }
 
-# cleanupbg will be after 4.4 test
-setupbg
-update
 
 test focus-1.1 {Tk_FocusCmd procedure} -body {
     focusClear
@@ -575,8 +576,6 @@ test focus-4.4 {TkFocusDeadWindow procedure} -body {
     focus
 } -result {.t}
 
-cleanupbg
-
 
 # Test 5.1 fails: knownBug, see ticket [1642750fff]
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
@@ -601,6 +600,7 @@ bind all <FocusOut> {}
 bind all <KeyPress> {}
 
 
+focusClear
 test focus-6.1 {miscellaneous - embedded application in same process} -constraints {
     x11
 } -setup {
