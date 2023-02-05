@@ -338,6 +338,8 @@ if {[tk windowingsystem] eq "aqua"} {
 	@@demo mac_styles	Special widgets for macOS
 	@@new
 	@@demo mac_wm	Window styles for macOS
+	@@new
+	@@demo mac_tabs	Tabbed Windows on macOS
     }
 }
 

@@ -235,6 +235,56 @@ static const tabbingMode tabbingModes[] = {
     {NULL, -1}
 };
 
+static Bool wantsToBeTab(NSWindow *macWindow) {
+    Bool result;
+    switch ([macWindow tabbingMode]) {
+    case NSWindowTabbingModeDisallowed:
+	result = False;
+	break;
+    case NSWindowTabbingModePreferred:
+	result = True;
+	break;
+    case NSWindowTabbingModeAutomatic:
+	result = ([NSWindow userTabbingPreference] ==
+		NSWindowUserTabbingPreferenceAlways);
+	break;
+    default:
+	result = False;
+	break;
+    }
+    return result;
+}
+
+/*
+ * Helper for the tkLayoutChanged methods.  Synchronizes Tk's understanding of
+ * the bounds of a contentView with the window's.  It is needed because there
+ * are situations when the window manager can change the layout of an NSWindow
+ * without having been requested to do so by Tk.  Examples are when a window
+ * goes FullScreen or shows a tab bar.  NSWindow methods which involve such
+ * layout changes should be overridden or protected by methods which call this.
+ */
+
+static void syncLayout(NSWindow *macWindow)
+{
+    TkWindow *winPtr = TkMacOSXGetTkWindow(macWindow);
+
+    if (winPtr) {
+	// Using screen coordinates with origin at bottom left.
+	NSRect frameRect = [macWindow frame];
+	// This accounts for the tab bar, if there is one.
+	NSRect contentRect = [macWindow contentRectForFrameRect: frameRect];
+	WmInfo *wmPtr = winPtr->wmInfoPtr;
+
+	// The parent includes the title bar, tab bar and window frame.
+	wmPtr->xInParent = frameRect.origin.x - contentRect.origin.x;
+	wmPtr->yInParent = (frameRect.origin.y + frameRect.size.height -
+	    contentRect.origin.y - contentRect.size.height);
+	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width -
+	    contentRect.size.width;
+	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height -
+	    contentRect.size.height;
+    }
+}
 #endif
 
 typedef enum {
@@ -410,6 +460,90 @@ static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 static void             RemoveTransient(TkWindow *winPtr);
 
+#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+
+/*
+ * Add a window as a tab in the group specified by its tabbingid, or
+ * make it a standalone window if it is the only window with that
+ * tabbingid.  Adjust the window size if a tab bar appeared or
+ * disappeared.
+ */
+
+static void placeAsTab(TKWindow *macWindow) {
+    TkWindow *winPtr = NULL, *winPtr2 = NULL;
+    TKWindow *target = NULL, *sibling = NULL;
+    NSString *identifier = [macWindow tabbingIdentifier];
+    if (!wantsToBeTab(macWindow)) {
+	[macWindow moveTabToNewWindow:NSApp];
+	[(TKWindow *)target tkLayoutChanged];
+	return;
+    }
+    for (NSWindow *window in [NSApp windows]) {
+	if (window == macWindow) {
+	    continue;
+	}
+	if ([identifier isEqualTo: [window tabbingIdentifier]] &&
+	    wantsToBeTab(window)) {
+	    target = (TKWindow*) window;
+	    syncLayout(target);
+	    break;
+	}
+    }
+    syncLayout(macWindow);
+    NSArray<NSWindow *> *tabs = [macWindow tabbedWindows];
+    if ([tabs count] == 2) {
+	sibling = tabs[0] == macWindow ? (TKWindow *)tabs[1] : (TKWindow *)tabs[0];
+	syncLayout(sibling);
+	winPtr2 = TkMacOSXGetTkWindow(sibling);
+    }
+    if (target) {
+	CGFloat winHeight = [macWindow contentRectForFrameRect:
+				[macWindow frame]].size.height;
+	CGFloat winDelta = 0, targetHeight, targetDelta = 0;
+	targetHeight =  [target contentRectForFrameRect:
+			    [target frame]].size.height;
+	[target addTabbedWindow:macWindow ordered:NSWindowAbove];
+	targetDelta = targetHeight - [target contentRectForFrameRect:
+					 [target frame]].size.height;
+	winDelta = winHeight - [target contentRectForFrameRect:
+				   [target frame]].size.height;
+	if (winDelta) {
+	    winPtr = TkMacOSXGetTkWindow(macWindow);
+	    XMoveResizeWindow(winPtr->display, winPtr->window,
+			      winPtr->changes.x, winPtr->changes.y,
+			      winPtr->changes.width, winPtr->changes.height + winDelta );
+	    if (sibling) {
+		winPtr = TkMacOSXGetTkWindow(sibling);
+		XMoveResizeWindow(winPtr->display, winPtr->window,
+				  winPtr->changes.x, winPtr->changes.y,
+				  winPtr->changes.width, winPtr->changes.height - winDelta );
+	    }
+	}
+	if (targetDelta) {
+	    winPtr = TkMacOSXGetTkWindow(target);
+	    XMoveResizeWindow(winPtr->display, winPtr->window,
+			      winPtr->changes.x, winPtr->changes.y,
+			      winPtr->changes.width, winPtr->changes.height + targetDelta );
+	}
+    } else {
+	CGFloat height = [macWindow contentRectForFrameRect:
+			     [macWindow frame]].size.height;
+	[macWindow moveTabToNewWindow:NSApp];
+	CGFloat delta = height - [macWindow contentRectForFrameRect:
+			    [macWindow frame]].size.height;
+	winPtr = TkMacOSXGetTkWindow(macWindow);
+	XMoveResizeWindow(winPtr->display, winPtr->window,
+			  winPtr->changes.x, winPtr->changes.y,
+			  winPtr->changes.width, winPtr->changes.height + delta);
+	if (winPtr2) {
+	    XMoveResizeWindow(winPtr2->display, winPtr2->window,
+			      winPtr2->changes.x, winPtr2->changes.y,
+			      winPtr2->changes.width, winPtr2->changes.height + delta );
+	}
+    }
+}
+#endif
+
 #pragma mark NSWindow(TKWm)
 
 @implementation NSWindow(TKWm)
@@ -429,32 +563,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     NSRect pointrect = {point, {0,0}};
     return [self convertRectToScreen:pointrect].origin;
 }
-/*
- * This method synchronizes Tk's understanding of the bounds of a contentView
- * with the window's.  It is needed because there are situations when the
- * window manager can change the layout of an NSWindow without having been
- * requested to do so by Tk.  Examples are when a window goes FullScreen or
- * shows a tab bar.  NSWindow methods which involve such layout changes should
- * be overridden or protected by methods which call this.
- */
 
-- (void) tkLayoutChanged
-{
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-
-    if (winPtr) {
-	NSRect frameRect;
-	frameRect = [NSWindow frameRectForContentRect:NSZeroRect
-		    styleMask:[self styleMask]];
-	WmInfo *wmPtr = winPtr->wmInfoPtr;
-
-	// The parent included the titlebar and window frame.
-	wmPtr->xInParent = -frameRect.origin.x;
-	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
-	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
-	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
-    }
-}
 - (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     NSRect pointrect = {point, {0,0}};
@@ -468,32 +577,11 @@ static void             RemoveTransient(TkWindow *winPtr);
 @implementation TKPanel: NSPanel
 @synthesize tkWindow = _tkWindow;
 
-/*
- * This method synchronizes Tk's understanding of the bounds of a contentView
- * with the window's.  It is needed because there are situations when the
- * window manager can change the layout of an NSWindow without having been
- * requested to do so by Tk.  Examples are when a window goes FullScreen or
- * shows a tab bar.  NSWindow methods which involve such layout changes should
- * be overridden or protected by methods which call this.
- */
-
 - (void) tkLayoutChanged
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-
-    if (winPtr) {
-	NSRect frameRect;
-	frameRect = [NSWindow frameRectForContentRect:NSZeroRect
-		    styleMask:[self styleMask]];
-	WmInfo *wmPtr = winPtr->wmInfoPtr;
-
-	// The parent included the titlebar and window frame.
-	wmPtr->xInParent = -frameRect.origin.x;
-	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
-	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
-	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
-    }
+    syncLayout(self);
 }
+
 @end
 
 @implementation TKDrawerWindow: NSWindow
@@ -508,31 +596,9 @@ static void             RemoveTransient(TkWindow *winPtr);
 
 @implementation TKWindow(TKWm)
 
-/*
- * This method synchronizes Tk's understanding of the bounds of a contentView
- * with the window's.  It is needed because there are situations when the
- * window manager can change the layout of an NSWindow without having been
- * requested to do so by Tk.  Examples are when a window goes FullScreen or
- * shows a tab bar.  NSWindow methods which involve such layout changes should
- * be overridden or protected by methods which call this.
- */
-
 - (void) tkLayoutChanged
 {
-    TkWindow *winPtr = TkMacOSXGetTkWindow(self);
-
-    if (winPtr) {
-	NSRect frameRect;
-	frameRect = [NSWindow frameRectForContentRect:NSZeroRect
-		    styleMask:[self styleMask]];
-	WmInfo *wmPtr = winPtr->wmInfoPtr;
-
-	// The parent included the titlebar and window frame.
-	wmPtr->xInParent = -frameRect.origin.x;
-	wmPtr->yInParent = frameRect.origin.y + frameRect.size.height;
-	wmPtr->parentWidth = winPtr->changes.width + frameRect.size.width;
-	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height;
-    }
+    syncLayout(self);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -1548,6 +1614,7 @@ WmSetAttribute(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     int boolean;
+    NSString *identifier;
 
     switch (attribute) {
     case WMATT_ALPHA: {
@@ -1684,9 +1751,7 @@ WmSetAttribute(
 	int heightDiff = newFrame.size.height - oldFrame.size.height;
 	int newHeight = heightDiff < 0 ? newFrame.size.height :
 	    newFrame.size.height - heightDiff;
-	if ([macWindow respondsToSelector: @selector (tkLayoutChanged)]) {
-	    [(TKWindow *)macWindow tkLayoutChanged];
-	}
+	[(TKWindow *)macWindow tkLayoutChanged];
 	if (heightDiff) {
 	    //Calling XMoveResizeWindow twice is a hack to force a relayout
 	    //of the window.
@@ -1700,7 +1765,7 @@ WmSetAttribute(
 	break;
     }
     case WMATT_TABBINGID: {
-	NSString *identifier, *oldId = [macWindow tabbingIdentifier];
+	NSString *oldId = [macWindow tabbingIdentifier];
 	char *valueString;
 	int length;
 	if ([NSApp macOSVersion] < 101300) {
@@ -1714,13 +1779,12 @@ WmSetAttribute(
 	[macWindow setTabbingIdentifier: identifier];
 
 	/*
-	 * If the tabbingIdentifier of a tab is changed we also turn it into a
-	 * separate window so we don't violate the rule that all tabs in the
-	 * same frame must have the same tabbingIdentifier.
+	 * If the tabbingIdentifier of a tab is changed we move it into
+	 * the tab group with that identifier.
 	 */
 
-	if ([macWindow tab] && [oldId compare:identifier] != NSOrderedSame) {
-	    [macWindow moveTabToNewWindow:nil];
+	if ([oldId compare:identifier] != NSOrderedSame) {
+	    placeAsTab((TKWindow *)macWindow);
 	}
 	break;
     }
@@ -1733,6 +1797,8 @@ WmSetAttribute(
 	    }
 	mode = tabbingModes[index];
 	[macWindow setTabbingMode: mode.modeValue];
+	placeAsTab((TKWindow *)macWindow);
+	break;
     }
     case WMATT_TITLEPATH: {
 	const char *path = (const char *)Tcl_FSGetNativePath(value);
@@ -1950,7 +2016,6 @@ WmAttributesCmd(
 	} else if (strcmp(Tcl_GetString(objv[3]), "-tabbingmode") == 0) {
 	    long value = NSWindowTabbingModeAutomatic;
 	    int modeIndex;
-	    char *modeName = Tcl_GetStringFromObj(objv[4], &length);
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[4], tabbingModes,
 	       sizeof(tabbingMode), "NSWindow Tabbing Mode", 0, &modeIndex) == TCL_OK) {
 		value = tabbingModes[modeIndex].modeValue;
@@ -6053,10 +6118,10 @@ TkUnsupported1ObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const subcmds[] = {
-	"appearance", "isdark", "style", "tabbingid", NULL
+	"appearance", "isdark", "style", NULL
     };
     enum SubCmds {
-	TKMWS_APPEARANCE, TKMWS_ISDARK, TKMWS_STYLE, TKMWS_TABID
+	TKMWS_APPEARANCE, TKMWS_ISDARK, TKMWS_STYLE
     };
     Tk_Window tkwin = (Tk_Window)clientData;
     TkWindow *winPtr;
@@ -6090,18 +6155,6 @@ TkUnsupported1ObjCmd(
 	    return TCL_ERROR;
 	}
 	return WmWinStyle(interp, winPtr, objc, objv);
-    case TKMWS_TABID:
-	if ([NSApp macOSVersion] < 101300) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                "Tabbing identifiers require macOS 10.13.", -1));
-	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "TABBINGID", NULL);
-	    return TCL_ERROR;
-	}
-	if ((objc < 3) || (objc > 4)) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window ?newid?");
-	    return TCL_ERROR;
-	}
-	return WmWinTabbingId(interp, winPtr, objc, objv);
     case TKMWS_APPEARANCE:
 	if ([NSApp macOSVersion] < 100900) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -6572,6 +6625,7 @@ TkMacOSXMakeRealWindowExist(
     Bool overrideRedirect = Tk_Attributes((Tk_Window)winPtr)->override_redirect;
     Tcl_HashEntry *hPtr = NULL;
     NSUInteger styleMask;
+    NSString *identifier;
     char *tabbingId = NULL;
     long tabbingMode = NSWindowTabbingModeAutomatic;
     static int initialized = 0;
@@ -6704,11 +6758,15 @@ TkMacOSXMakeRealWindowExist(
     if (!window) {
     	Tcl_Panic("couldn't allocate new Mac window");
     }
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101200
     if (tabbingId) {
-	NSString *identifier = [NSString stringWithUTF8String:tabbingId];
-	[window setTabbingIdentifier: identifier];
+	identifier = [NSString stringWithUTF8String:tabbingId];
+    } else {
+	identifier = [NSString stringWithUTF8String:Tk_PathName(winPtr)];
     }
+    [window setTabbingIdentifier: identifier];
     [window setTabbingMode: tabbingMode];
+#endif
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
     [window setContentView:contentView];
