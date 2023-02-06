@@ -563,13 +563,13 @@ static void IndicatorElementDraw(
     double scalingFactor;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
-    int index;
-    const char *svgDataPtr;
     char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
+    int index;
     char imgName[70];
     Tk_Image img;
 
+    const char *svgDataPtr;
     size_t svgDataLen;
     char *svgDataCopy;
     char *shadeColorPtr, *highlightColorPtr, *borderColorPtr, *bgColorPtr,
@@ -603,12 +603,6 @@ static void IndicatorElementDraw(
     }
 
     /*
-     * Determine the SVG data to use for the photo image
-     */
-    index = Ttk_StateTableLookup(spec->map, state);
-    svgDataPtr = (index % 2 == 0 ? spec->offDataPtr : spec->onDataPtr);
-
-    /*
      * Construct the color strings bgColorStr, fgColorStr,
      * indicatorColorStr, shadeColorStr, and borderColorStr
      */
@@ -627,13 +621,19 @@ static void IndicatorElementDraw(
      * Check whether there is an SVG image for the indicator's
      * type (0 = checkbtn, 1 = radiobtn) and these color strings
      */
+    index = Ttk_StateTableLookup(spec->map, state);
     snprintf(imgName, sizeof(imgName),
-	     "::tk::icons::alt_indicator%d_%s_%s_%s_%s_%s",
+	     "::tk::icons::indicator_alt%d_%s_%s_%s_%s_%s",
 	     spec->offDataPtr == radiobtnOffData,
 	     shadeColorStr, indicatorColorStr, borderColorStr, bgColorStr,
 	     index % 2 == 1 ? fgColorStr : "XXXXXX");
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
+	/*
+	 * Determine the SVG data to use for the photo image
+	 */
+	svgDataPtr = (index % 2 == 0 ? spec->offDataPtr : spec->onDataPtr);
+
 	/*
 	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
 	 * area svgDataCopy and assign the latter's address to svgDataPtr
