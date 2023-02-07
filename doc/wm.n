@@ -140,7 +140,10 @@ tabbingid, which can be an arbitrary UTF8 string.  In the Tk
 implementation, changing the tabbingid of a toplevel in a tab group
 will cause it to be moved into a different group, in which all tabs
 have the new tabbingid or, if the new tabbingid is unique, to become
-a normal non-tabbed toplevel.
+a normal non-tabbed toplevel.   It is allowed to set the tabbingid before the
+toplevel is created.  If the pathname provided in the command does not
+correspond to a toplevel, the value will be cached and used later when
+the toplevel is actually created.
 .TP
 \fB\-tabbingmode\fR
 .
@@ -150,7 +153,10 @@ The allowed values are \fBauto\fR, \fBpreferred\fR or
 situations: if its tabbingmode is \fBpreferred\fR; or if its
 tabbingmode is \fBauto\fR and the user has selected "prefer tabs when
 opening documents" in the Desktop and Dock panel of the System
-Settings application.
+Settings application.  It is allowed to set the tabbingmode before the
+toplevel is created.  If the pathname provided in the command does not
+correspond to a toplevel, the value will be cached and used later when
+the toplevel is actually created.
 .TP
 \fB\-titlepath\fR
 .
