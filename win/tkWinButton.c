@@ -79,7 +79,7 @@ static Tcl_ThreadDataKey dataKey;
 static LRESULT CALLBACK	ButtonProc(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static Window		CreateProc(Tk_Window tkwin, Window parent,
-			    ClientData instanceData);
+			    void *instanceData);
 static void		InitBoxes(void);
 
 /*
@@ -208,10 +208,9 @@ TkpButtonSetDefaults(void)
 
 TkButton *
 TkpCreateButton(
-    Tk_Window tkwin)
+    TCL_UNUSED(Tk_Window))
 {
     WinButton *butPtr;
-    (void)tkwin;
 
     butPtr = (WinButton *)ckalloc(sizeof(WinButton));
     butPtr->hwnd = NULL;
@@ -239,7 +238,7 @@ static Window
 CreateProc(
     Tk_Window tkwin,		/* Token for window. */
     Window parentWin,		/* Parent of new window. */
-    ClientData instanceData)	/* Button instance data. */
+    void *instanceData)	/* Button instance data. */
 {
     Window window;
     HWND parent;
@@ -313,7 +312,7 @@ TkpDestroyButton(
 
 void
 TkpDisplayButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkWinDCState state;
     HDC dc;
