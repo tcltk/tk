@@ -4,7 +4,7 @@
  *	This file contains functions for managing the clipboard.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -227,15 +227,13 @@ TkSelGetSelection(
 
 int
 XSetSelectionOwner(
-    Display *display,
+    TCL_UNUSED(Display *),
     Atom selection,
     Window owner,
-    Time time)
+    TCL_UNUSED(Time))
 {
     HWND hwnd = owner ? TkWinGetHWND(owner) : NULL;
     Tk_Window tkwin;
-    (void)display;
-    (void)time;
 
     /*
      * This is a gross hack because the Tk_InternAtom interface is broken. It
@@ -277,7 +275,7 @@ XSetSelectionOwner(
 void
 TkWinClipboardRender(
     TkDisplay *dispPtr,
-    UINT format)
+    TCL_UNUSED(UINT))
 {
     TkClipboardTarget *targetPtr;
     TkClipboardBuffer *cbPtr;
@@ -285,7 +283,6 @@ TkWinClipboardRender(
     char *buffer, *p, *rawText, *endPtr;
     int length;
     Tcl_DString ds;
-    (void)format;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -369,10 +366,9 @@ TkWinClipboardRender(
 void
 TkSelUpdateClipboard(
     TkWindow *winPtr,
-    TkClipboardTarget *targetPtr)
+    TCL_UNUSED(TkClipboardTarget *))
 {
     HWND hwnd = TkWinGetHWND(winPtr->window);
-    (void)targetPtr;
 
     UpdateClipboard(hwnd);
 }
@@ -453,9 +449,8 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
-    (void)eventPtr;
 }
 
 /*
