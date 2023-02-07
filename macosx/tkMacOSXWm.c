@@ -443,8 +443,6 @@ static int		WmWithdrawCmd(Tk_Window tkwin, TkWindow *winPtr,
 static void		WmUpdateGeom(WmInfo *wmPtr, TkWindow *winPtr);
 static int		WmWinStyle(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
-static int		WmWinTabbingId(Tcl_Interp *interp, TkWindow *winPtr,
-			    int objc, Tcl_Obj *const objv[]);
 static int		WmWinAppearance(Tcl_Interp *interp, TkWindow *winPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static void		ApplyWindowAttributeFlagChanges(TkWindow *winPtr,
@@ -460,7 +458,7 @@ static void		RemapWindows(TkWindow *winPtr,
 			    MacDrawable *parentWin);
 static void             RemoveTransient(TkWindow *winPtr);
 
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
+#if MAC_OS_X_VERSION_MAX_ALLOWED > 101300
 
 /*
  * Add a window as a tab in the group specified by its tabbingid, or
@@ -6369,87 +6367,6 @@ WmWinStyle(
     }
 
     return TCL_OK;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * WmWinTabbingId --
- *
- *	This procedure is invoked to process the
- *	"::tk::unsupported::MacWindowStyle tabbingid" subcommand. The command
- *	allows you to get or set the tabbingIdentifier for the NSWindow
- *	associated with a Tk Window.  The syntax is:
- *
- *	    tk::unsupported::MacWindowStyle tabbingid window ?newId?
- *
- * Results:
- *	Returns the tabbingIdentifier of the window prior to calling this
- *      function.  If the optional newId argument is omitted, the window's
- *      tabbingIdentifier is not changed.
- *
- * Side effects:
- *	Windows may only be grouped together as tabs if they all have the same
- *      tabbingIdentifier.  In particular, by giving a window a unique
- *      tabbingIdentifier one can prevent it from becoming a tab in any other
- *      window.  Changing the tabbingIdentifier of a window which is already
- *      a tab causes it to become a separate window.
- *
- *----------------------------------------------------------------------
- */
-
-static int
-WmWinTabbingId(
-    Tcl_Interp *interp,		/* Current interpreter. */
-    TkWindow *winPtr,		/* Window to be manipulated. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj * const objv[])	/* Argument objects. */
-{
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 101300
-    (void) interp;
-    (void) winPtr;
-    (void) objc;
-    (void) objv;
-    return TCL_OK;
-#else
-    Tcl_Obj *result = NULL;
-    NSString *idString;
-    NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
-    if (win) {
-	idString = win.tabbingIdentifier;
-	result = Tcl_NewStringObj(idString.UTF8String, [idString length]);
-    }
-    if (result == NULL) {
-	NSLog(@"Failed to read tabbing identifier; try calling update idletasks"
-	      " before getting/setting the tabbing identifier of the window.");
-	return TCL_OK;
-    }
-    Tcl_SetObjResult(interp, result);
-    if (objc == 3) {
-	return TCL_OK;
-    } else if (objc == 4) {
-	int len;
-	char *newId = Tcl_GetStringFromObj(objv[3], &len);
-	NSString *newIdString = [NSString stringWithUTF8String:newId];
-	[win setTabbingIdentifier: newIdString];
-
-	/*
-	 * If the tabbingIdentifier of a tab is changed we also turn it into a
-	 * separate window so we don't violate the rule that all tabs in the
-	 * same frame must have the same tabbingIdentifier.
-	 */
-
-	if ([idString compare:newIdString] != NSOrderedSame
-#if MAC_OS_X_VERSION_MIN_REQUIRED > 101300
-		&& [win tab]
-#endif
-		) {
-	    [win moveTabToNewWindow:nil];
-	}
-	return TCL_OK;
-    }
-    return TCL_ERROR;
-#endif
 }
 
 /*
