@@ -51,11 +51,11 @@ static Tcl_ThreadDataKey dataKey;
  * The SVG images used here are partly based on some icons provided by
  * the official open source SVG icon library for the Bootstrap project,
  * licensed under the MIT license (https://opensource.org/licenses/MIT).
- *  
+ *
  * See https://github.com/twbs/icons.
  */
 
-static const char *const checkbtnOffData = "\
+static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <g>\n\
       <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
@@ -66,7 +66,7 @@ static const char *const checkbtnOffData = "\
      </g>\n\
     </svg>";
 
-static const char *const checkbtnOnData = "\
+static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <g>\n\
       <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
@@ -78,7 +78,7 @@ static const char *const checkbtnOnData = "\
      </g>\n\
     </svg>";
 
-static const char *const radiobtnOffData = "\
+static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
       <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
@@ -95,7 +95,7 @@ static const char *const radiobtnOffData = "\
      <path d='m12.95 3.0503c-2.7294-2.7294-7.1701-2.7294-9.8995 0s-2.7294 7.1701 0 9.8995 7.1701 2.7294 9.8995 0 2.7294-7.1701 0-9.8995zm-0.70711 0.70711c2.3476 2.3476 2.3476 6.1377 0 8.4853s-6.1377 2.3476-8.4853 0-2.3476-6.1377 0-8.4853 6.1377-2.3476 8.4853 0z' fill='url(#linearGradient2819)'/>\n\
     </svg>";
 
-static const char *const radiobtnOnData = "\
+static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
       <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
