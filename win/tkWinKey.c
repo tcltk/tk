@@ -165,14 +165,12 @@ XKeycodeToKeysym(
 
 KeySym
 XkbKeycodeToKeysym(
-    Display *display,
+    TCL_UNUSED(Display *),
     unsigned int keycode,
-    int group,
+    TCL_UNUSED(int),
     int index)
 {
     int state = 0;
-    (void)display;
-    (void)group;
 
     if (index & 0x01) {
 	state |= ShiftMask;
