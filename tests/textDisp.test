@@ -101,6 +101,7 @@ text .t -font $fixedFont -width 20 -height 10 -yscrollcommand scroll
 pack .t -expand 1 -fill both
 .t tag configure big -font $bigFont
 .t debug on
+
 wm geometry . {}
 
 # full border size of the text widget, i.e. first x or y coordinate inside the text widget
@@ -109,7 +110,6 @@ wm geometry . {}
 proc bo {{w .t}} {
     return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
 }
-
 # x-width of $n chars, fixed width font
 proc xw {n} {
     global fixedWidth

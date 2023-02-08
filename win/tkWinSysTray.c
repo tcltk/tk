@@ -41,14 +41,6 @@
 #include <stdint.h>
 #endif
 
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
     unsigned id;                /* Identifier for command;  used to
@@ -1037,7 +1029,7 @@ WinSystrayCmd(
             if (cmd == CMD_ADD) {
                 char buffer[5 + TCL_INTEGER_SPACE];
                 int n;
-                n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
+                n = snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
                 buffer[n] = 0;
                 Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, n));
             }
