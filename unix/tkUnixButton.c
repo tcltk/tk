@@ -64,7 +64,7 @@ const Tk_ClassProcs tkpButtonProcs = {
  * Data of the SVG images used for drawing the indicators
  */
 
-static const char *const checkbtnOffData =
+static const char checkbtnOffData[] =
     "<svg id='checkbutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
     " <defs>\n"
     "  <linearGradient id='linearGradientLeft' x1='2' x2='2' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
@@ -93,7 +93,7 @@ static const char *const checkbtnOffData =
     " </g>\n"
     "</svg>";
 
-static const char *const checkbtnOnData =
+static const char checkbtnOnData[] =
     "<svg id='checkbutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
     " <defs>\n"
     "  <linearGradient id='linearGradientLeft' x1='2' x2='2' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
@@ -123,7 +123,7 @@ static const char *const checkbtnOnData =
     " <path id='indicator' d='m4.4194 7.9316 3 3 4-7' fill='none' stroke='#INDCTR' stroke-width='2px' style='paint-order:stroke markers fill'/>\n"
     "</svg>";
 
-static const char *const radiobtnOffData =
+static const char radiobtnOffData[] =
     "<svg id='radiobutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
     " <defs>\n"
     "  <linearGradient id='gradient1' x1='2' x2='11' y1='2' y2='11' gradientUnits='userSpaceOnUse'>\n"
@@ -135,7 +135,7 @@ static const char *const radiobtnOffData =
     " <circle cx='8' cy='8' r='6.5' fill='#INTROR' fill-rule='evenodd'/>\n"
     "</svg>";
 
-static const char *const radiobtnOnData =
+static const char radiobtnOnData[] =
     "<svg id='radiobutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
     " <defs>\n"
     "  <linearGradient id='gradient1' x1='2' x2='11' y1='2' y2='11' gradientUnits='userSpaceOnUse'>\n"
@@ -150,15 +150,15 @@ static const char *const radiobtnOnData =
     " </g>\n"
     "</svg>";
 
-static const char *const menuOffData =
+static const char menuOffData[] =
     "<svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'></svg>";
 
-static const char *const checkmenuOnData =
+static const char checkmenuOnData[] =
     "<svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
     " <path id='indicator' d='m0.59082 3.0963 3.3419 3.3419 3.3419-5.8483' fill='none' stroke='#INDCTR' stroke-width='1.6709px' style='paint-order:stroke markers fill'/>\n"
     "</svg>";
 
-static const char *const radiomenuOnData =
+static const char radiomenuOnData[] =
     "<svg width='8' height='8' version='1.1' viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'>\n"
     " <circle cx='4' cy='4' r='3' fill='#INDCTR' fill-rule='evenodd'/>\n"
     "</svg>";
@@ -372,6 +372,7 @@ TkpDrawCheckIndicator(
 	/*
 	 * Create an SVG photo image from svgDataCopy
 	 */
+
 	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
 	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
 	script = (char *)attemptckalloc(scriptSize);
@@ -406,7 +407,6 @@ TkpDrawCheckIndicator(
     y -= dim/2;
     Tk_RedrawImage(img, 0, 0, dim, dim, d, x, y);
     Tk_FreeImage(img);
-
 }
 
 /*
