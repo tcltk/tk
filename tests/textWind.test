@@ -41,7 +41,7 @@ Some of the upcoming tests will probably fail."
 # upcoming tests when wrapping enters in play
 # Also  -height 6  (lines) is an important assumption
 # Moreover the widget must have the same padding in x and y (see proc bo)
-# However the tests are not sensitive to  -borderwidth  and  -highlightthickness  
+# However the tests are not sensitive to  -borderwidth  and  -highlightthickness
 text .t -font $fixedFont -width 30 -height 6 -borderwidth 2 -highlightthickness 2
 pack .t -expand 1 -fill both
 update

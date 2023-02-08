@@ -96,8 +96,8 @@ typedef struct {
     const char *name;		/* element name */
     int classId;		/* class id for DrawFrameControl */
     int partId;			/* part id for DrawFrameControl  */
-    unsigned cxId;			/* system metric ids for width/height... */
-    unsigned cyId;			/* ... or size if FIXEDSIZE bit set */
+    unsigned cxId;		/* system metric ids for width/height... */
+    unsigned cyId;		/* ... or size if FIXEDSIZE bit set */
     const Ttk_StateTable *stateMap;	/* map Tk states to Win32 flags */
     Ttk_Padding margins;	/* additional placement padding */
 } FrameControlElementData;
@@ -111,10 +111,10 @@ typedef struct {
 
 static const FrameControlElementData FrameControlElements[] = {
     { "Checkbutton.indicator",
-	DFC_BUTTON, DFCS_BUTTONCHECK, FIXEDSIZE(13), FIXEDSIZE(13),
+	DFC_BUTTON, DFCS_BUTTONCHECK, FIXEDSIZE(16), FIXEDSIZE(16),
 	checkbutton_statemap, {0,0,4,0} },
     { "Radiobutton.indicator",
-    	DFC_BUTTON, DFCS_BUTTONRADIO, FIXEDSIZE(13), FIXEDSIZE(13),
+    	DFC_BUTTON, DFCS_BUTTONRADIO, FIXEDSIZE(16), FIXEDSIZE(16),
 	checkbutton_statemap, {0,0,4,0} },
     { "uparrow",
     	DFC_SCROLL, DFCS_SCROLLUP, SM_CXVSCROLL, SM_CYVSCROLL,
@@ -146,7 +146,7 @@ static const FrameControlElementData FrameControlElements[] = {
 static void FrameControlElementSize(
     void *clientData,
     TCL_UNUSED(void *),
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -155,8 +155,23 @@ static void FrameControlElementSize(
     int cx = GETMETRIC(p->cxId);
     int cy = GETMETRIC(p->cyId);
 
+    if (p->partId == DFCS_BUTTONCHECK || p->partId == DFCS_BUTTONRADIO) {
+	/*
+	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
+	 * and multiply cx and cy by it
+	 */
+	Tcl_Interp *interp = Tk_Interp(tkwin);
+	const char *scalingPctPtr =
+	    Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
+	double scalingFactor = (scalingPctPtr == NULL ? 1.0 :
+				atof(scalingPctPtr) / 100);
+	cx *= scalingFactor;
+	cy *= scalingFactor;
+    }
+
     if (p->cxId & _HALFMETRIC) cx /= 2;
     if (p->cyId & _HALFMETRIC) cy /= 2;
+
     *widthPtr = cx + Ttk_PaddingWidth(p->margins);
     *heightPtr = cy + Ttk_PaddingHeight(p->margins);
 }
