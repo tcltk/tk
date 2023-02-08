@@ -844,7 +844,7 @@ typedef struct TkTextTag {
     struct TkTextTag *succPtr;	/* Only TextInspectCmd will use this attribute. */
     uint32_t flag;		/* Only for temporary usage (currently only TextInspectCmd, and
     				 * EmbImageConfigure will use this attribute). */
-    size_t epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
+    Tcl_Size epoch;		/* Only TkBTreeGetTags, TkBTreeGetSegmentTags, and TkBTreeClearTags
     				 * will use this attribute. */
 
     /*

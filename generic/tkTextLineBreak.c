@@ -729,7 +729,7 @@ static void
 ComputeBreakLocations(
     const unsigned char *text,
     size_t len,
-    const char *lang,
+    TCL_UNUSED(const char *),
     char *brks)
 {
     size_t i;
@@ -738,7 +738,6 @@ ComputeBreakLocations(
     size_t brkIndex;
     LBClass cls;
     LBClass prevCls;
-    (void)lang;
 
     if (len == 0) {
 	return;
