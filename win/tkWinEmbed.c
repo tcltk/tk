@@ -41,7 +41,7 @@ typedef struct {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-static void		ContainerEventProc(ClientData clientData,
+static void		ContainerEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		EmbedGeometryRequest(Container *containerPtr,
 			    int width, int height);
@@ -853,7 +853,7 @@ EmbedGeometryRequest(
 
 static void
 ContainerEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
