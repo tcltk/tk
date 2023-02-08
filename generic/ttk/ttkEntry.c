@@ -189,7 +189,7 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
     {TK_OPTION_STRING, "-validatecommand", "validateCommand", "ValidateCommand",
 	NULL, TCL_INDEX_NONE, offsetof(Entry, entry.validateCmd),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_INT, "-width", "width", "Width",
+    {TK_OPTION_PIXELS, "-width", "width", "Width",
 	DEF_ENTRY_WIDTH, offsetof(Entry, entry.widthObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
@@ -2071,7 +2071,7 @@ typedef struct {
 static const Ttk_ElementOptionSpec TextareaElementOptions[] = {
     { "-font", TK_OPTION_FONT,
 	offsetof(TextareaElement,fontObj), DEF_ENTRY_FONT },
-    { "-width", TK_OPTION_INT,
+    { "-width", TK_OPTION_PIXELS,
 	offsetof(TextareaElement,widthObj), "20" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -2089,7 +2089,7 @@ static void TextareaElementSize(
     (void)paddingPtr;
 
     Tk_GetFontMetrics(font, &fm);
-    Tcl_GetIntFromObj(NULL, textarea->widthObj, &prefWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, textarea->widthObj, &prefWidth);
     if (prefWidth <= 0)
 	prefWidth = 1;
 
