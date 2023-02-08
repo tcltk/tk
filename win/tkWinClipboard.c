@@ -47,7 +47,7 @@ TkSelGetSelection(
 				 * returned. */
     Tk_GetSelProc *proc,	/* Procedure to call to process the selection,
 				 * once it has been retrieved. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     char *data, *destPtr;
     Tcl_DString ds;
@@ -227,15 +227,13 @@ TkSelGetSelection(
 
 int
 XSetSelectionOwner(
-    Display *display,
+    TCL_UNUSED(Display *),
     Atom selection,
     Window owner,
-    Time time)
+    TCL_UNUSED(Time))
 {
     HWND hwnd = owner ? TkWinGetHWND(owner) : NULL;
     Tk_Window tkwin;
-    (void)display;
-    (void)time;
 
     /*
      * This is a gross hack because the Tk_InternAtom interface is broken. It
@@ -277,7 +275,7 @@ XSetSelectionOwner(
 void
 TkWinClipboardRender(
     TkDisplay *dispPtr,
-    UINT format)
+    TCL_UNUSED(UINT))
 {
     TkClipboardTarget *targetPtr;
     TkClipboardBuffer *cbPtr;
@@ -285,7 +283,6 @@ TkWinClipboardRender(
     char *buffer, *p, *rawText, *endPtr;
     int length;
     Tcl_DString ds;
-    (void)format;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
 	    targetPtr = targetPtr->nextPtr) {
@@ -369,10 +366,9 @@ TkWinClipboardRender(
 void
 TkSelUpdateClipboard(
     TkWindow *winPtr,
-    TkClipboardTarget *targetPtr)
+    TCL_UNUSED(TkClipboardTarget *))
 {
     HWND hwnd = TkWinGetHWND(winPtr->window);
-    (void)targetPtr;
 
     UpdateClipboard(hwnd);
 }
@@ -453,9 +449,8 @@ TkSelEventProc(
 
 void
 TkSelPropProc(
-    XEvent *eventPtr)	/* X PropertyChange event. */
+    TCL_UNUSED(XEvent *))	/* X PropertyChange event. */
 {
-    (void)eventPtr;
 }
 
 /*

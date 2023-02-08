@@ -980,13 +980,12 @@ XFillPolygon(
     GC gc,
     XPoint *points,
     int npoints,
-    int shape,
+    TCL_UNUSED(int),
     int mode)
 {
     HPEN pen;
     TkWinDCState state;
     HDC dc;
-    (void)shape;
 
     if (d == None) {
 	return BadDrawable;
@@ -1399,7 +1398,7 @@ SetUpGraphicsPort(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
+    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1407,7 +1406,6 @@ TkScrollWindow(
 {
     HWND hwnd = TkWinGetHWND(Tk_WindowId(tkwin));
     RECT scrollRect;
-    (void)gc;
 
     scrollRect.left = x;
     scrollRect.top = y;
@@ -1480,12 +1478,10 @@ void
 Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
-    GC bgGC,
+    TCL_UNUSED(GC),
     int highlightWidth,
     Drawable drawable)
 {
-    (void)bgGC;
-
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
 
