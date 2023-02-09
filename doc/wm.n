@@ -96,6 +96,13 @@ at \fB{}\fR.
 .PP
 On MacOS, the following attributes may be set.
 .TP
+\fB\-appearance\fR
+.
+Specifies whether the window is rendered in "dark mode".  Allowed
+values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
+is auto then the appearance of the window is controlled by the
+System Settings.
+.TP
 \fB\-class\fR
 .
 Specifies whether the underlying Aqua window for a toplevel is an
@@ -109,6 +116,21 @@ class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
 .TP
+\fB\-isdark\fR
+.
+Returns a boolean value which is true if the window is currently in
+dark mode.
+.TP
+\fB\-modified\fR
+.
+Specifies the modification state of the window (determines whether the
+window close widget contains the modification indicator and whether the
+proxy icon is draggable).
+.TP
+\fB\-notify\fR
+.
+Specifies process notification state (bouncing of the application dock icon).
+.TP
 \fB\-stylemask\fR
 .
 Specifies an integer to be assigned as the styleMask of the underlying
@@ -121,16 +143,6 @@ bits will be set to 0.  The allowed bitnames are: \fBtitled\fR,
 \fBnonactivatingpanel\fR, and \fBHUDwindow\fR.  Note that a side
 effect of setting the fullsizecontentview bit is that the window title
 bar becomes transparent.
-.TP
-\fB\-modified\fR
-.
-Specifies the modification state of the window (determines whether the
-window close widget contains the modification indicator and whether the
-proxy icon is draggable).
-.TP
-\fB\-notify\fR
-.
-Specifies process notification state (bouncing of the application dock icon).
 .TP
 \fB\-tabbingid\fR
 .
@@ -160,8 +172,8 @@ the toplevel is actually created.
 .TP
 \fB\-titlepath\fR
 .
-Specifies the path of the file referenced as the window proxy icon (which
-can be dragged and dropped in lieu of the file's finder icon).
+Specifies the path of the file referenced as the window proxy icon
+(which can be dragged and dropped in lieu of the file's finder icon).
 .TP
 \fB\-transparent\fR
 .
