@@ -235,6 +235,13 @@ static const tabbingMode tabbingModes[] = {
     {NULL, -1}
 };
 
+static const char *const appearanceStrings[] = {
+    "aqua", "auto", "darkaqua", NULL
+};
+enum appearances {
+    APPEARANCE_AQUA, APPEARANCE_AUTO, APPEARANCE_DARKAQUA
+};
+
 static Bool wantsToBeTab(NSWindow *macWindow) {
     Bool result;
     switch ([macWindow tabbingMode]) {
@@ -288,15 +295,16 @@ static void syncLayout(NSWindow *macWindow)
 #endif
 
 typedef enum {
-    WMATT_ALPHA, WMATT_BUTTONS, WMATT_FULLSCREEN, WMATT_MODIFIED, WMATT_NOTIFY,
-    WMATT_TITLEPATH, WMATT_TOPMOST, WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS,
-    WMATT_TABBINGID, WMATT_TABBINGMODE, _WMATT_LAST_ATTRIBUTE
+    WMATT_ALPHA, WMATT_APPEARANCE, WMATT_BUTTONS, WMATT_FULLSCREEN,
+    WMATT_ISDARK, WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH, WMATT_TOPMOST,
+    WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS, WMATT_TABBINGID,
+    WMATT_TABBINGMODE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
-    "-alpha", "-buttons", "-fullscreen", "-modified", "-notify", "-titlepath",
-    "-topmost", "-transparent", "-stylemask", "-class", "-tabbingid", "-tabbingmode",
-    NULL
+    "-alpha", "-appearance", "-buttons", "-fullscreen", "-isdark", "-modified",
+    "-notify", "-titlepath", "-topmost", "-transparent", "-stylemask", "-class",
+    "-tabbingid", "-tabbingmode", NULL
 };
 
 /*
@@ -1634,6 +1642,30 @@ WmSetAttribute(
 	[macWindow setAlphaValue:dval];
 	break;
     }
+    case WMATT_APPEARANCE: {
+	int index;
+	if (Tcl_GetIndexFromObjStruct(interp, value, appearanceStrings,
+	    sizeof(char *), "appearancename", 0, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum appearances) index) {
+	case APPEARANCE_AQUA:
+	    macWindow.appearance = [NSAppearance appearanceNamed:
+		NSAppearanceNameAqua];
+	    break;
+	case APPEARANCE_DARKAQUA:
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    if (@available(macOS 10.14, *)) {
+		macWindow.appearance = [NSAppearance appearanceNamed:
+		    NSAppearanceNameDarkAqua];
+	    }
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	    break;
+	default:
+	    macWindow.appearance = nil;
+	}
+	break;
+    }
     case WMATT_BUTTONS: {
 	windowButtonState state = {0};
 	Tcl_Obj **elements;
@@ -1798,6 +1830,9 @@ WmSetAttribute(
 	placeAsTab((TKWindow *)macWindow);
 	break;
     }
+    case WMATT_ISDARK: {
+	break;
+    }
     case WMATT_TITLEPATH: {
 	const char *path = (const char *)Tcl_FSGetNativePath(value);
 	NSString *filename = @"";
@@ -1880,6 +1915,28 @@ WmGetAttribute(
     case WMATT_ALPHA:
 	result = Tcl_NewDoubleObj([macWindow alphaValue]);
 	break;
+    case WMATT_APPEARANCE: {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+	NSAppearanceName appearance;
+#else
+	NSString *appearance;
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
+	const char *resultString = "unrecognized";
+	appearance = macWindow.appearance.name;
+	if (appearance == nil) {
+	    resultString = appearanceStrings[APPEARANCE_AUTO];
+	} else if (appearance == NSAppearanceNameAqua) {
+	    resultString = appearanceStrings[APPEARANCE_AQUA];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	} else if (@available(macOS 10.14, *)) {
+	    if (appearance == NSAppearanceNameDarkAqua) {
+		resultString = appearanceStrings[APPEARANCE_DARKAQUA];
+	    }
+#endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	}
+	result = Tcl_NewStringObj(resultString, -1);
+	break;
+    }
     case WMATT_BUTTONS: {
 	result = Tcl_NewListObj(3, NULL);
 	if ([macWindow standardWindowButton:NSWindowCloseButton].enabled) {
@@ -1893,8 +1950,18 @@ WmGetAttribute(
 	}
 	break;
     }
+    case WMATT_CLASS:
+	if ([macWindow isKindOfClass:[NSPanel class]]) {
+	    result = Tcl_NewStringObj(subclassNames[subclassNSPanel], -1);
+	} else {
+	    result = Tcl_NewStringObj(subclassNames[subclassNSWindow], -1);
+	}
+	break;
     case WMATT_FULLSCREEN:
 	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
+	break;
+    case WMATT_ISDARK:
+	result = Tcl_NewBooleanObj(TkMacOSXInDarkMode((Tk_Window)winPtr));
 	break;
     case WMATT_MODIFIED:
 	result = Tcl_NewBooleanObj([macWindow isDocumentEdited]);
@@ -1939,13 +2006,6 @@ WmGetAttribute(
 	break;
     case WMATT_TRANSPARENT:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
-	break;
-    case WMATT_CLASS:
-	if ([macWindow isKindOfClass:[NSPanel class]]) {
-	    result = Tcl_NewStringObj(subclassNames[subclassNSPanel], -1);
-	} else {
-	    result = Tcl_NewStringObj(subclassNames[subclassNSWindow], -1);
-	}
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
@@ -6414,12 +6474,6 @@ WmWinAppearance(
     (void) objv;
     return TCL_OK;
 #else
-    static const char *const appearanceStrings[] = {
-	"aqua", "auto", "darkaqua", NULL
-    };
-    enum appearances {
-	APPEARANCE_AQUA, APPEARANCE_AUTO, APPEARANCE_DARKAQUA
-    };
     Tcl_Obj *result = NULL;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
     NSAppearanceName appearance;
