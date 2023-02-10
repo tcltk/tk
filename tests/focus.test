@@ -200,59 +200,49 @@ test focus-1.25 {Tk_FocusCmd procedure} -body {
 } -returnCodes error -result {bad option "-unknown": must be -displayof, -force, or -lastfor}
 
 
-# Several focus-2.* tests are now constrained with knownBug because
-# commit [185b0e79] that fixed [1389270fff] made a change in how
-# <FocusIn> and <FocusOut> events are handled. This change was not
-# compatible with these tests, which remained undetected since 2008
-# (probably because these tests used to be constrained with nonPortable,
-# thus not routinely run).
-# This is dealt with in ticket [1474465fff].
 focusSetup
 test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
     focusClear
-    focus -force .b
     focusSetup
+    focus -force .b
     update
     set focusInfo {}
-    # 0x54217567 has no specific meaning.
-    # Since [1389270fff] was fixed in [185b0e79], all FocusIn and FocusOut
-    # generated events are flagged with GENERATED_FOCUS_EVENT_MAGIC.
-    # in their send_event field.
+    # 0x54217567 has no specific meaning in a send_event field.
     # When the given -sendevent is not 0, the actual send_event field
-    # is (GENERATED_FOCUS_EVENT_MAGIC | 1)
+    # is (EVENT_GEN_FOCUS_MAGIC | 1)
     event gen [testwrapper .t] <FocusIn> -detail NotifyAncestor \
 	    -sendevent 0x54217567
     return $focusInfo
 } -result {}
 test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
-    knownBug
+
 } -body {
     focusClear
-    focus -force .b
     focusSetup
+    focus -force .b
     update
     set focusInfo {}
     # 0x547321ac is GENERATED_FOCUS_EVENT_MAGIC
-    # Since [1389270fff] was fixed in [185b0e79], all FocusIn and FocusOut
-    # generated events are flagged with GENERATED_FOCUS_EVENT_MAGIC.
-    # in their send_event field.
     # When the given -sendevent is not 0, the actual send_event field
-    # is (GENERATED_FOCUS_EVENT_MAGIC | 1)
-    # Since the above bug fix, this test is not different from the previous
-    # one (except it addresses .t and not the wrapper), indeed sending
-    # -sendevent GENERATED_FOCUS_EVENT_MAGIC has no special meaning anymore.
+    # is (EVENT_GEN_FOCUS_MAGIC | 1)
+    # This test is not different from the previous one (except it
+    # addresses .t and not the wrapper).
+    # Indeed, specifying -sendevent GENERATED_FOCUS_EVENT_MAGIC has no
+    # special meaning anymore (that is: since [1389270fff] was fixed in
+    # [185b0e79]), because all FocusIn and FocusOut [event generated] events
+    # are flagged with GENERATED_FOCUS_EVENT_MAGIC (and now with EVENT_GEN_FOCUS_MAGIC).
     event gen .t <FocusIn> -detail NotifyAncestor -sendevent 0x547321ac
     list $focusInfo [focus]
 } -result {{in .t NotifyAncestor
 } .b}
 test focus-2.3 {TkFocusFilterEvent procedure} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
     focusClear
-    focus -force .b
     focusSetup
+    focus -force .b
     update
     set focusInfo {}
     event gen [testwrapper .t] <FocusIn> -detail NotifyAncestor
@@ -263,17 +253,15 @@ out . NotifyNonlinearVirtual
 in .t NotifyNonlinear
 } .t}
 test focus-2.4 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
     focusClear
+    focusSetup
     set result {}
     focus .t.b1
-    # Important to end with NotifyAncestor, which is an
-    # event that is processed normally. This has a side
-    # effect on test 2.5
     foreach detail {NotifyAncestor NotifyNonlinear
 	    NotifyNonlinearVirtual NotifyPointer NotifyPointerRoot
-	    NotifyVirtual NotifyAncestor} {
+	    NotifyVirtual} {
 	focus -force .
 	update
 	event gen [testwrapper .t] <FocusIn> -detail $detail
@@ -288,28 +276,40 @@ in .t.b1 NotifyNonlinear
 } {out . NotifyNonlinear
 in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
-} {} {out . NotifyNonlinear
+} {out . NotifyNonlinear
 in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
-} {} {} {out . NotifyNonlinear
+} {out . NotifyNonlinear
+in .t NotifyNonlinearVirtual
+in .t.b1 NotifyNonlinear
+} {out . NotifyNonlinear
+in .t NotifyNonlinearVirtual
+in .t.b1 NotifyNonlinear
+} {out . NotifyNonlinear
 in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 }}
 test focus-2.5 {TkFocusFilterEvent procedure, creating FocusInfo struct} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
     focusSetup
     focus .t.b1
+    focus -force .
     update
+    set focusInfo {}
     event gen [testwrapper .t] <FocusIn> -detail NotifyAncestor
+    update
     list $focusInfo [focus]
 } -result {{out . NotifyNonlinear
 in .t NotifyNonlinearVirtual
 in .t.b1 NotifyNonlinear
 } .t.b1}
 test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
+    focusSetup
     focus .t.b1
     focus .
     update
@@ -320,34 +320,43 @@ test focus-2.6 {TkFocusFilterEvent procedure, FocusIn events} -constraints {
     list $x $focusInfo
 } -result {.t.b1 {press .t.b1 x}}
 test focus-2.7 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
+    focusSetup
     set result {}
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
 	    NotifyNonlinearVirtual NotifyPointer NotifyPointerRoot
 	    NotifyVirtual} {
 	focus -force .t.b1
+	update
 	event gen [testwrapper .t] <FocusOut> -detail $detail
 	update
 	lappend result [focus]
     }
     return $result
-} -result {{} .t.b1 {} {} .t.b1 .t.b1 {}}
+} -result {{} {} {} {} {} {} {}}
 test focus-2.8 {TkFocusFilterEvent procedure, FocusOut events} -body {
+    focusClear
+    focusSetup
     focus -force .t.b1
     event gen .t.b1 <FocusOut> -detail NotifyAncestor
     focus
 } -result {.t.b1}
 test focus-2.9 {TkFocusFilterEvent procedure, FocusOut events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
+    focusSetup
     focus .t.b1
     event gen [testwrapper .] <FocusOut> -detail NotifyAncestor
     focus
 } -result {}
 test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
+    focusSetup
     set result {}
     focus .t.b1
     focusClear
@@ -360,19 +369,22 @@ test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
 	update
     }
     return $result
-} -result {.t.b1 {} .t.b1 .t.b1 .t.b1}
+} -result {.t.b1 .t.b1 .t.b1 .t.b1 .t.b1}
 test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
     focusClear
+    focusSetup
     set focusInfo {}
     event gen [testwrapper .t] <Enter> -detail NotifyAncestor
     update
     return $focusInfo
 } -result {}
 test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
+    focusSetup
     focus -force .b
     update
     set focusInfo {}
@@ -381,8 +393,10 @@ test focus-2.12 {TkFocusFilterEvent procedure, Enter events} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusClear
+    focusSetup
     focus .t.b1
     focusClear
     event gen [testwrapper .t] <Enter> -detail NotifyAncestor -focus 1
@@ -393,12 +407,13 @@ test focus-2.13 {TkFocusFilterEvent procedure, Enter events} -constraints {
 in .t.b1 NotifyAncestor
 }
 test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when setting focus due to implicit focus} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -setup {
     destroy .t2
     set focusInfo {}
 } -body {
     focusClear
+    focusSetup
     toplevel .t2
     wm withdraw .t2
     update
@@ -408,13 +423,14 @@ test focus-2.14 {TkFocusFilterEvent procedure, Enter events, ignore errors when 
     destroy .t2
 } -result {}
 test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusSetup
     set result {}
     focus .t.b1
     foreach detail {NotifyAncestor NotifyInferior NotifyNonlinear
 	    NotifyNonlinearVirtual NotifyVirtual} {
-	    focusClear
+	focusClear
 	event gen [testwrapper .t] <Enter> -detail NotifyAncestor -focus 1
 	update
 	event gen [testwrapper .t] <Leave> -detail $detail
@@ -422,10 +438,11 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
 	lappend result [focus]
     }
     return $result
-} -result {{} .t.b1 {} {} {}}
+} -result {.t.b1 .t.b1 .t.b1 .t.b1 .t.b1}
 test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusSetup
     focusClear
     focus .t.b1
     event gen [testwrapper .t] <Enter> -detail NotifyAncestor -focus 1
@@ -434,12 +451,11 @@ test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
     event gen [testwrapper .t] <Leave> -detail NotifyAncestor
     update
     return $focusInfo
-} -result {out .t.b1 NotifyAncestor
-out .t NotifyVirtual
-}
+} -result {}
 test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
-    x11 testwrapper knownBug
+    x11 testwrapper
 } -body {
+    focusSetup
     focusClear
     focus .t.b1
     event gen [testwrapper .t] <Enter> -detail NotifyAncestor -focus 1
@@ -449,9 +465,7 @@ test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
     event gen [testwrapper .] <Leave> -detail NotifyAncestor
     update
     list $focusInfo [focus]
-} -result {{out .t.b1 NotifyAncestor
-out .t NotifyVirtual
-} {}}
+} -result {{} .t.b1}
 
 
 test focus-3.1 {SetFocus procedure, create record on focus} -body {
@@ -498,7 +512,7 @@ test focus-3.4 {SetFocus procedure, delaying claim of X focus} -body {
     destroy .t2
 } -result {}
 test focus-3.5 {SetFocus procedure, generating events} -constraints {
-    knownBug
+
 } -body {
     focusSetup
     focusClear
@@ -523,15 +537,16 @@ in .t NotifyNonlinearVirtual
 in .t.b2 NotifyNonlinear
 }
 test focus-3.7 {SetFocus procedure, generating events} -constraints {
-    knownBug
+
 } -body {
     focusSetup
-    focusClear
+    update
     set focusInfo {}
     focus .t.b2
     update
     return $focusInfo
-} -result {}
+} -result {in .t.b2 NotifyAncestor
+}
 
 # The following test fails on KDE when the focus stealing prevention
 # setting is higher than the lowest level (None).

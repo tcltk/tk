@@ -3982,7 +3982,7 @@ HandleEventGenerate(
     }
 
     if (event.general.xany.type == FocusIn || event.general.xany.type == FocusOut) {
-	event.general.xany.send_event = GENERATED_FOCUS_EVENT_MAGIC;
+	event.general.xany.send_event = EVENT_GEN_FOCUS_MAGIC;
     }
 
     /*
@@ -4253,8 +4253,8 @@ HandleEventGenerate(
 		if (number) {
 		    /*
 		     * send_event only expects 1 or 0. We cannot allow arbitrary non-zero
-		     * values, otherwise the thing with GENERATED_FOCUS_EVENT_MAGIC will not
-		     * work.
+		     * values, otherwise the thing with GENERATED_FOCUS_EVENT_MAGIC and
+		     * EVENT_GEN_FOCUS_MAGIC will not work.
 		     */
 		    number = 1;
 		}
