@@ -304,7 +304,7 @@ typedef enum {
 static const char *const WmAttributeNames[] = {
     "-alpha", "-appearance", "-buttons", "-fullscreen", "-isdark", "-modified",
     "-notify", "-titlepath", "-topmost", "-transparent", "-stylemask", "-class",
-    "-tabbingid", "-tabbingmode", NULL
+    "-tabbingid", "-tabbingmode", "-type", NULL
 };
 
 /*
