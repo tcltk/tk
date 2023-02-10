@@ -592,9 +592,8 @@ test focus-4.4 {TkFocusDeadWindow procedure} -body {
 } -result {.t}
 
 
-# Test 5.1 fails: knownBug, see ticket [1642750fff]
 test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constraints {
-    unix secureserver knownBug
+    x11 secureserver
 } -body {
     setupbg
     focusSetup
@@ -602,6 +601,7 @@ test focus-5.1 {ChangeXFocus procedure, don't take focus unless have it} -constr
     update
     set result [focus]
     send [dobg {tk appname}] {focus -force .; update}
+    update
     lappend result [focus]
     focus .t.b2
     update
