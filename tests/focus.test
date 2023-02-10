@@ -217,7 +217,7 @@ test focus-2.1 {TkFocusFilterEvent procedure} -constraints {
     return $focusInfo
 } -result {}
 test focus-2.2 {TkFocusFilterEvent procedure} -constraints {
-
+    x11
 } -body {
     focusClear
     focusSetup
@@ -512,7 +512,7 @@ test focus-3.4 {SetFocus procedure, delaying claim of X focus} -body {
     destroy .t2
 } -result {}
 test focus-3.5 {SetFocus procedure, generating events} -constraints {
-
+    x11
 } -body {
     focusSetup
     focusClear
@@ -537,7 +537,7 @@ in .t NotifyNonlinearVirtual
 in .t.b2 NotifyNonlinear
 }
 test focus-3.7 {SetFocus procedure, generating events} -constraints {
-
+    x11
 } -body {
     focusSetup
     update
