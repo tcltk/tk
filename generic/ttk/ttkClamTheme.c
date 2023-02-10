@@ -594,7 +594,7 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 	offsetof(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
     { "-gripsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,gripSizeObj), "7.5p" },
-    { "-sliderlength", TK_OPTION_INT,
+    { "-sliderlength", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,sliderlengthObj), "30" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
