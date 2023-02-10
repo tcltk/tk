@@ -222,6 +222,8 @@ namespace eval ttk::theme::vista {
 
         # Treeview
         ttk::style configure Item -padding {3p 0 0 0}
+	ttk::style configure Treeview -indent 15p
+	ttk::setTreeviewRowHeight
 
         package provide ttk::theme::vista 1.0
     }
