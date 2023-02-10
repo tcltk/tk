@@ -32,7 +32,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: apn-encoding-profile
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -136,7 +136,7 @@ jobs:
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: apn-encoding-profile
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
