@@ -1752,6 +1752,15 @@ WmSetAttribute(
 		    styleMaskValue |= styleMaskBits[index].bitvalue;
 		}
 	    }
+	    /*
+	     * A resizable docmodal NSWindow or NSPanel does not work
+	     * correctly.  It cannot be resized from the top edge.  Other bits,
+	     * such as titled are ignored for docmodals.  To be safe, we clear
+	     * all other bits when the docmodal bit is set.
+	     */
+	    if (styleMaskValue & NSDocModalWindowMask) {
+		styleMaskValue =  NSDocModalWindowMask;
+	    }
 	    if ([macWindow isKindOfClass: [NSPanel class]]) {
 		/*
 		 * We always make NSPanels titled, nonactivating utility windows,
