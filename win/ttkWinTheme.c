@@ -102,6 +102,7 @@ typedef struct {
     Ttk_Padding margins;	/* additional placement padding */
 } FrameControlElementData;
 
+#define BASE_DIM    16
 #define _FIXEDSIZE  0x80000000UL
 #define _HALFMETRIC 0x40000000UL
 #define FIXEDSIZE(id) (id|_FIXEDSIZE)
@@ -109,12 +110,12 @@ typedef struct {
 #define GETMETRIC(m) \
     ((m) & _FIXEDSIZE ? (int)((m) & ~_FIXEDSIZE) : GetSystemMetrics((m)&0xFFFFFFF))
 
-static const FrameControlElementData FrameControlElements[] = {
+static FrameControlElementData FrameControlElements[] = {
     { "Checkbutton.indicator",
-	DFC_BUTTON, DFCS_BUTTONCHECK, FIXEDSIZE(16), FIXEDSIZE(16),
+	DFC_BUTTON, DFCS_BUTTONCHECK, FIXEDSIZE(BASE_DIM), FIXEDSIZE(BASE_DIM),
 	checkbutton_statemap, {0,0,4,0} },
     { "Radiobutton.indicator",
-    	DFC_BUTTON, DFCS_BUTTONRADIO, FIXEDSIZE(16), FIXEDSIZE(16),
+    	DFC_BUTTON, DFCS_BUTTONRADIO, FIXEDSIZE(BASE_DIM), FIXEDSIZE(BASE_DIM),
 	checkbutton_statemap, {0,0,4,0} },
     { "uparrow",
     	DFC_SCROLL, DFCS_SCROLLUP, SM_CXVSCROLL, SM_CYVSCROLL,
@@ -155,7 +156,7 @@ static void FrameControlElementSize(
     int cx = GETMETRIC(p->cxId);
     int cy = GETMETRIC(p->cyId);
 
-    if (p->partId == DFCS_BUTTONCHECK || p->partId == DFCS_BUTTONRADIO) {
+    if ((p->cxId & _FIXEDSIZE) && cx == BASE_DIM) {
 	/*
 	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
 	 * and multiply cx and cy by it
@@ -167,6 +168,12 @@ static void FrameControlElementSize(
 				atof(scalingPctPtr) / 100);
 	cx *= scalingFactor;
 	cy *= scalingFactor;
+
+	/*
+	 * Update the corresponding element of the array FrameControlElements
+	 */
+	p->cxId = FIXEDSIZE(cx);
+	p->cyId = FIXEDSIZE(cy);
     }
 
     if (p->cxId & _HALFMETRIC) cx /= 2;
