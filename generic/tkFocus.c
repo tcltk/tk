@@ -299,14 +299,16 @@ TkFocusFilterEvent(
     }
 
     /*
-     * This was not a generated event. We'll return 1 (so that the event will
+     * This was not a Tk generated event. We'll return 1 (so that the event will
      * be processed) if it's an Enter or Leave event, and 0 (so that the event
-     * won't be processed) if it's a FocusIn or FocusOut event.
+     * won't be processed) if it's a FocusIn or FocusOut event, except when
+     * this event was generated at script level.
      */
 
     retValue = 0;
     displayFocusPtr = FindDisplayFocusInfo(winPtr->mainPtr, winPtr->dispPtr);
-    if (eventPtr->type == FocusIn) {
+    if (eventPtr->type == FocusIn
+	    && !((eventPtr->xfocus.send_event & EVENT_GEN_FOCUS_MAGIC) == EVENT_GEN_FOCUS_MAGIC)) {
 	/*
 	 * Skip FocusIn events that cause confusion
 	 * NotifyVirtual and NotifyNonlinearVirtual - Virtual events occur on
@@ -337,7 +339,8 @@ TkFocusFilterEvent(
 		|| (eventPtr->xfocus.detail == NotifyInferior)) {
 	    return retValue;
 	}
-    } else if (eventPtr->type == FocusOut) {
+    } else if (eventPtr->type == FocusOut
+	    && !((eventPtr->xfocus.send_event & EVENT_GEN_FOCUS_MAGIC) == EVENT_GEN_FOCUS_MAGIC)) {
 	/*
 	 * Skip FocusOut events that cause confusion.
 	 * NotifyPointer - the pointer is in us or a child, and we are losing
