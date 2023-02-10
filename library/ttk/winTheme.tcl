@@ -70,8 +70,11 @@ namespace eval ttk::theme::winnative {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
+	ttk::style configure Item -diameter 6.75p \
+	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview -background SystemWindow \
-                -stripedbackground System3dLight
+	    -stripedbackground System3dLight -indent 15p
+	ttk::setTreeviewRowHeight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
