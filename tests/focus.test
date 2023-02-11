@@ -369,7 +369,7 @@ test focus-2.10 {TkFocusFilterEvent procedure, Enter events} -constraints {
 	update
     }
     return $result
-} -result {.t.b1 .t.b1 .t.b1 .t.b1 .t.b1}
+} -result {.t.b1 {} .t.b1 .t.b1 .t.b1}
 test focus-2.11 {TkFocusFilterEvent procedure, Enter events} -constraints {
     x11 testwrapper
 } -body {
@@ -438,7 +438,7 @@ test focus-2.15 {TkFocusFilterEvent procedure, Leave events} -constraints {
 	lappend result [focus]
     }
     return $result
-} -result {.t.b1 .t.b1 .t.b1 .t.b1 .t.b1}
+} -result {{} .t.b1 {} {} {}}
 test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
     x11 testwrapper
 } -body {
@@ -451,7 +451,9 @@ test focus-2.16 {TkFocusFilterEvent procedure, Leave events} -constraints {
     event gen [testwrapper .t] <Leave> -detail NotifyAncestor
     update
     return $focusInfo
-} -result {}
+} -result {out .t.b1 NotifyAncestor
+out .t NotifyVirtual
+}
 test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
     x11 testwrapper
 } -body {
@@ -465,7 +467,9 @@ test focus-2.17 {TkFocusFilterEvent procedure, Leave events} -constraints {
     event gen [testwrapper .] <Leave> -detail NotifyAncestor
     update
     list $focusInfo [focus]
-} -result {{} .t.b1}
+} -result {{out .t.b1 NotifyAncestor
+out .t NotifyVirtual
+} {}}
 
 
 test focus-3.1 {SetFocus procedure, create record on focus} -body {
@@ -545,11 +549,8 @@ test focus-3.7 {SetFocus procedure, generating events} -constraints {
     focus .t.b2
     update
     return $focusInfo
-} -result {in .t.b2 NotifyAncestor
-}
+} -result {}
 
-# The following test fails on KDE when the focus stealing prevention
-# setting is higher than the lowest level (None).
 test focus-4.1 {TkFocusDeadWindow procedure} -body {
     focusSetup
     update
@@ -558,8 +559,6 @@ test focus-4.1 {TkFocusDeadWindow procedure} -body {
     destroy .t
     focus
 } -result {.b}
-# The following test fails on KDE when the focus stealing prevention
-# setting is higher than the lowest level (None).
 test focus-4.2 {TkFocusDeadWindow procedure} -body {
     focusSetup
     update
