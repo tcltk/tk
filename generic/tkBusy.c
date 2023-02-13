@@ -686,8 +686,8 @@ GetBusy(
     Tcl_HashEntry *hPtr;
     Tk_Window tkwin;
 
-    if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), windowObj,
-	    &tkwin) != TCL_OK) {
+    tkwin = Tk_MainWindow(interp);
+    if (!tkwin || (TkGetWindowFromObj(interp, tkwin, windowObj, &tkwin) != TCL_OK)) {
 	return NULL;
     }
     hPtr = Tcl_FindHashEntry(busyTablePtr, tkwin);
