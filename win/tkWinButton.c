@@ -57,25 +57,21 @@ static Tcl_ThreadDataKey dataKey;
 
 static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
     </svg>";
 
 static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-      <path d='m10.803 4.969a0.75002 0.75002 0 0 1 1.071 1.05l-3.992 4.9901a0.75002 0.75002 0 0 1-1.08 0.01999l-2.645-2.646a0.75002 0.75002 0 1 1 1.06-1.06l2.094 2.093 3.473-4.4251a0.235 0.235 0 0 1 0.01999-0.021997z' fill='#000000'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+     <path d='m10.803 4.969a0.75002 0.75002 0 0 1 1.071 1.05l-3.992 4.9901a0.75002 0.75002 0 0 1-1.08 0.01999l-2.645-2.646a0.75002 0.75002 0 1 1 1.06-1.06l2.094 2.093 3.473-4.4251a0.235 0.235 0 0 1 0.01999-0.021997z' fill='#000000'/>\n\
     </svg>";
 
 static const char radiobtnOffData[] = "\

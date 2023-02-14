@@ -383,60 +383,38 @@ static const Ttk_ElementSpec FieldElementSpec = {
  */
 
 /*
- * Indicator bitmap descriptor:
+ * Indicator image descriptor:
  */
 typedef struct {
-    int width;			/* Width of each image */
-    int height;			/* Height of each image */
+    int width;				/* unscaled width */
+    int height;				/* unscaled height */
     const char *const offDataPtr;
     const char *const onDataPtr;
-    const Ttk_StateTable *map;	/* used to look up image index by state */
 } IndicatorSpec;
-
-static const Ttk_StateTable checkbutton_states[] = {
-    { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
-    { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
-    { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
-    { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { 0, 0, 0 }
-};
 
 static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
     </svg>";
 
 static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-      <path d='m10.803 4.969a0.75002 0.75002 0 0 1 1.071 1.05l-3.992 4.9901a0.75002 0.75002 0 0 1-1.08 0.01999l-2.645-2.646a0.75002 0.75002 0 1 1 1.06-1.06l2.094 2.093 3.473-4.4251a0.235 0.235 0 0 1 0.01999-0.021997z' fill='#000000'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+     <path d='m10.803 4.969a0.75002 0.75002 0 0 1 1.071 1.05l-3.992 4.9901a0.75002 0.75002 0 0 1-1.08 0.01999l-2.645-2.646a0.75002 0.75002 0 1 1 1.06-1.06l2.094 2.093 3.473-4.4251a0.235 0.235 0 0 1 0.01999-0.021997z' fill='#000000'/>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {
     16, 16,
     checkbtnOffData,
-    checkbtnOnData,
-    checkbutton_states
-};
-
-static const Ttk_StateTable radiobutton_states[] = {
-    { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
-    { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
-    { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
-    { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { 0, 0, 0 }
+    checkbtnOnData
 };
 
 static const char radiobtnOffData[] = "\
@@ -477,8 +455,7 @@ static const char radiobtnOnData[] = "\
 static const IndicatorSpec radiobutton_spec = {
     16, 16,
     radiobtnOffData,
-    radiobtnOnData,
-    radiobutton_states
+    radiobtnOnData
 };
 
 typedef struct {
@@ -506,8 +483,10 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	    offsetof(IndicatorElement,borderColorObj), "black" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    offsetof(IndicatorElement,marginObj), "0 2 4 2" },
-	    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
+
+static double scalingFactor;
 
 static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -516,7 +495,6 @@ static void IndicatorElementSize(
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *scalingPctPtr;
-    double scalingFactor;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
     (void)paddingPtr;
@@ -558,14 +536,12 @@ static void IndicatorElementDraw(
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    const char *scalingPctPtr;
-    double scalingFactor;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
     char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
-    int index;
+    unsigned int selected = (state & TTK_STATE_SELECTED);
+    Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[70];
     Tk_Image img;
 
@@ -583,12 +559,6 @@ static void IndicatorElementDraw(
     b = Ttk_PadBox(b, padding);
 
     /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-     */
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-
-    /*
      * Sanity check
      */
     if (   b.x < 0
@@ -596,7 +566,7 @@ static void IndicatorElementDraw(
 	|| Tk_Width(tkwin) < b.x + spec->width * scalingFactor
 	|| Tk_Height(tkwin) < b.y + spec->height * scalingFactor)
     {
-	/* Oops!  not enough room to display the image.
+	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
 	 */
 	return;
@@ -621,18 +591,17 @@ static void IndicatorElementDraw(
      * Check whether there is an SVG image for the indicator's
      * type (0 = checkbtn, 1 = radiobtn) and these color strings
      */
-    index = Ttk_StateTableLookup(spec->map, state);
     snprintf(imgName, sizeof(imgName),
 	     "::tk::icons::indicator_alt%d_%s_%s_%s_%s_%s",
 	     spec->offDataPtr == radiobtnOffData,
 	     shadeColorStr, indicatorColorStr, borderColorStr, bgColorStr,
-	     index % 2 == 1 ? fgColorStr : "XXXXXX");
+	     selected ? fgColorStr : "XXXXXX");
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
 	 * Determine the SVG data to use for the photo image
 	 */
-	svgDataPtr = (index % 2 == 0 ? spec->offDataPtr : spec->onDataPtr);
+	svgDataPtr = (selected ? spec->onDataPtr : spec->offDataPtr);
 
 	/*
 	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
