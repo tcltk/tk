@@ -311,7 +311,7 @@ static const char checkbtnOnData[] = "\
      <path d='m0 0v16h1v-15h15v-1z' fill='#9e9a91'/>\n\
      <path d='m15 1v14h-14v1h15v-15z' fill='#cfcdc8'/>\n\
      <rect x='1' y='1' width='14' height='14' fill='#ffffff'/>\n\
-     <path d='m4.6263 4.6262a0.50294 0.50294 0 0 1 0.71217 0l2.6617 2.6627 2.6617-2.6627a0.50358 0.50358 0 0 1 0.71217 0.71217l-2.6627 2.6617 2.6627 2.6617a0.50358 0.50358 0 0 1-0.71217 0.71217l-2.6617-2.6627-2.6617 2.6627a0.50358 0.50358 0 0 1-0.71217-0.71217l2.6627-2.6617-2.6627-2.6617a0.50294 0.50294 0 0 1 0-0.71217z' stroke='#000000' stroke-width='.94154'/>\n\
+     <path d='m4.6263 4.6262a0.50294 0.50294 0 0 1 0.71217 0l2.6617 2.6627 2.6617-2.6627a0.50358 0.50358 0 0 1 0.71217 0.71217l-2.6627 2.6617 2.6627 2.6617a0.50358 0.50358 0 0 1-0.71217 0.71217l-2.6617-2.6627-2.6617 2.6627a0.50358 0.50358 0 0 1-0.71217-0.71217l2.6627-2.6617-2.6627-2.6617a0.50294 0.50294 0 0 1 0-0.71217z' fill='#000000' stroke='#000000' stroke-width='.942'/>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {
@@ -352,9 +352,6 @@ static const IndicatorSpec radiobutton_spec = {
 };
 
 typedef struct {
-#if 0
-    Tcl_Obj *sizeObj;
-#endif
     Tcl_Obj *marginObj;
     Tcl_Obj *backgroundObj;
     Tcl_Obj *foregroundObj;
@@ -363,10 +360,6 @@ typedef struct {
 } IndicatorElement;
 
 static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
-#if 0
-    { "-indicatorsize", TK_OPTION_PIXELS,
-	offsetof(IndicatorElement,sizeObj), "10" },
-#endif
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(IndicatorElement,marginObj), "1" },
     { "-indicatorbackground", TK_OPTION_COLOR,
@@ -522,8 +515,9 @@ static void IndicatorElementDraw(
 	memcpy(upperBdColorPtr, upperBdColorStr, 6);
 	memcpy(lowerBdColorPtr, lowerBdColorStr, 6);
 	memcpy(bgColorPtr, bgColorStr, 6);
-	if (fgColorPtr != NULL) {
+	while (fgColorPtr != NULL) {
 	    memcpy(fgColorPtr, fgColorStr, 6);
+	    fgColorPtr = strstr(fgColorPtr + 6, "000000");
 	}
 
 	/*
