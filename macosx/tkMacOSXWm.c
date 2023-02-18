@@ -111,7 +111,8 @@ static const struct {
 	.defaultAttrs = kWindowHideOnSuspendAttribute,
 	.forceOnAttrs = kWindowNoTitleBarAttribute |
 		kWindowDoesNotCycleAttribute,
-	.flags = WM_TOPMOST, },
+	.flags = WM_TOPMOST,
+        .styleMask = 0},
     [kSheetWindowClass] = {
 	.validAttrs = kWindowResizableAttribute,
 	.forceOnAttrs = kWindowNoTitleBarAttribute |
@@ -1759,7 +1760,7 @@ WmSetAttribute(
 	     * all other bits when the docmodal bit is set.
 	     */
 	    if (styleMaskValue & NSDocModalWindowMask) {
-		styleMaskValue =  NSDocModalWindowMask;
+		styleMaskValue &= ~NSWindowStyleMaskResizable;
 	    }
 	    if ([macWindow isKindOfClass: [NSPanel class]]) {
 		/*
@@ -6674,6 +6675,10 @@ TkMacOSXMakeRealWindowExist(
 	if (overrideRedirect) {
 	    styleMask |= NSWindowStyleMaskDocModalWindow;
 	}
+	/* Help windows (used for tooltips) should have stylemask 0. */
+	if (wmPtr->macClass == kHelpWindowClass) {
+	    styleMask = 0;
+	}
 	if (hPtr) {
 	    Tcl_DeleteHashEntry(hPtr);
 	}
@@ -6724,7 +6729,6 @@ TkMacOSXMakeRealWindowExist(
 				  NSNonactivatingPanelMask|NSHUDWindowMask)) ?
 		    [TKPanel class] : [TKWindow class]);
     }
-    
     NSRect structureRect = [winClass frameRectForContentRect:NSZeroRect
 	    styleMask:styleMask];
     NSRect contentRect = NSMakeRect(5 - structureRect.origin.x,
