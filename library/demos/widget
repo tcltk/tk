@@ -92,24 +92,6 @@ image create photo ::img::print -format $::tk::svgFmt -data {
     </svg>
 }
 
-# Note that this is run through the message catalog! This is because this is
-# actually an image of a word.
-image create photo ::img::new -format PNG -data [mc {
-    iVBORw0KGgoAAAANSUhEUgAAAB4AAAAOCAYAAAA45qw5AAACMElEQVR4AeVTAwxd
-    QRCc2tZHGtQ2w9q2bdsOa9u2bUW1bdt2Z372JZe6DapJLqtb3h7+T8yKi5j4CsYD
-    EUQXxETclT7kWOlH2VV+tFkdQHPSwksSISF+BauCqL0qgOcMWgGfgEkaMsHxqUBk
-    3plE/sOnh/qDPAPJH/CKFBivGHWzFwBRnHhlqbu1Mh6CoFNnC/JshQ9p4YC2lrKt
-    DCAV+THiVejyhMjAbrNSrroiEfKR9g7ZfCgOog8QfnUQV62wAk68ndQ9ZbyoWO1H
-    Y6eDY1LCQL6a9ApOp9Hi1T0+gQq2JKMlky/oTKQliKWxEZvyG575kpW4pl1aZnQK
-    CLOVt45Lkp8uXp2SL8KO6uitNTZLdpK6s+I/eZbhpmsmWeOGOVQNKYLITzpKPAO3
-    tY7LSNZ7ccSLxX9y3uuOxRkg3dKESMoCHvL+GRVCutXsB3guLgDCeXOv4iWWkvwG
-    BaS+PmlpK6SI9ApI2oC2UtrwZQEkhkH+NtolVlQXJl1I+QltuU3XEc721bIRFpa8
-    IA5iqTo6vNNWmkNBLQbPeXwF2g17Q94nTQAfY3YzeY+WSu8MDzQ2kpELUhSGJUHE
-    0zeR3rY1L+Xl5G/re+jbiK6KhThwwInsts1fbMUUcpZszKeVtggZEiGdZDe5AtHh
-    7vL4CGiRvvKPS8FAvq9Nr4ZkFadR2y6kggu1z4vlyIbBp6BugQ8JLEg4bTkD9eMZ
-    QZ8hpJ3VvTtuvbWrY/ElvP/9R+Aj3603+iE3fkEAAAAASUVORK5CYII=
-}]
-
 #----------------------------------------------------------------
 # The code below creates the main window, consisting of a menu bar and a text
 # widget that explains how to use the program, plus lists all of the demos as
@@ -211,6 +193,11 @@ if {[winfo depth .] == 1} {
     }
     .t tag configure hot -foreground red -underline 1
 }
+
+# The tag "new" must be the one having the highest priority.
+#
+.t tag configure new -foreground #c00000 -underline 0 -font boldFont
+
 .t tag bind demo <ButtonRelease-1> {
     invoke [.t index {@%x,%y}]
 }
@@ -286,7 +273,7 @@ proc addFormattedText {formattedText} {
 		    .t insert end "[incr demoCount]. [mc $description]" \
 			    [list demo demo-$name]
 		    if {$new} {
-			.t image create end -image ::img::new -padx 5
+			.t insert end " [mc NEW]" new
 			set new 0
 		    }
 		    .t insert end " \n " demospace
