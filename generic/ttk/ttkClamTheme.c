@@ -281,12 +281,6 @@ static const Ttk_ElementSpec ComboboxFieldElementSpec = {
 
 /*------------------------------------------------------------------------
  * +++ Indicator elements for check and radio buttons.
- *
- * The SVG images used here are partly based on some icons provided by
- * the official open source SVG icon library for the Bootstrap project,
- * licensed under the MIT license (https://opensource.org/licenses/MIT).
- *
- * See https://github.com/twbs/icons.
  */
 
 /*
@@ -311,7 +305,10 @@ static const char checkbtnOnData[] = "\
      <path d='m0 0v16h1v-15h15v-1z' fill='#9e9a91'/>\n\
      <path d='m15 1v14h-14v1h15v-15z' fill='#cfcdc8'/>\n\
      <rect x='1' y='1' width='14' height='14' fill='#ffffff'/>\n\
-     <path d='m4.6263 4.6262a0.50294 0.50294 0 0 1 0.71217 0l2.6617 2.6627 2.6617-2.6627a0.50358 0.50358 0 0 1 0.71217 0.71217l-2.6627 2.6617 2.6627 2.6617a0.50358 0.50358 0 0 1-0.71217 0.71217l-2.6617-2.6627-2.6617 2.6627a0.50358 0.50358 0 0 1-0.71217-0.71217l2.6627-2.6617-2.6627-2.6617a0.50294 0.50294 0 0 1 0-0.71217z' fill='#000000' stroke='#000000' stroke-width='.942'/>\n\
+     <g fill='none' stroke='#000000' stroke-linecap='round' stroke-width='2'>\n\
+      <path d='m5 5 6 6'/>\n\
+      <path d='m5 11 6-6'/>\n\
+     </g>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {
@@ -515,9 +512,8 @@ static void IndicatorElementDraw(
 	memcpy(upperBdColorPtr, upperBdColorStr, 6);
 	memcpy(lowerBdColorPtr, lowerBdColorStr, 6);
 	memcpy(bgColorPtr, bgColorStr, 6);
-	while (fgColorPtr != NULL) {
+	if (fgColorPtr != NULL) {
 	    memcpy(fgColorPtr, fgColorStr, 6);
-	    fgColorPtr = strstr(fgColorPtr + 6, "000000");
 	}
 
 	/*
