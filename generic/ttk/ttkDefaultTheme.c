@@ -374,12 +374,6 @@ static const Ttk_ElementSpec FieldElementSpec = {
 
 /*------------------------------------------------------------------------
  * Indicators --
- *
- * The SVG images used here are partly based on some icons provided by
- * the official open source SVG icon library for the Bootstrap project,
- * licensed under the MIT license (https://opensource.org/licenses/MIT).
- *
- * See https://github.com/twbs/icons.
  */
 
 /*
@@ -408,7 +402,7 @@ static const char checkbtnOnData[] = "\
      <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-     <path d='m10.857 5.2815a0.49452 0.49452 0 0 1 0.70636 0c0.19295 0.19497 0.19565 0.51003 0.0068 0.70838l-3.9892 4.7158a0.49452 0.49452 0 0 1-0.7185 0.01349l-2.4274-2.4598a0.51071 0.51071 0 0 1 0-0.71513 0.49452 0.49452 0 0 1 0.70636 0l2.059 2.0867 3.6431-4.3346a0.16664 0.16664 0 0 1 0.01349-0.014842z' fill='#000000' stroke='#000000' stroke-width='.7'/>\n\
+     <path d='m4.5 8 3 3 4-6' fill='none' stroke='#000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {
@@ -638,9 +632,8 @@ static void IndicatorElementDraw(
 	memcpy(borderColorPtr, borderColorStr, 6);
 	memcpy(bgColorPtr, bgColorStr, 6);
 	memcpy(indicatorColorPtr, indicatorColorStr, 6);
-	while (fgColorPtr != NULL) {
+	if (fgColorPtr != NULL) {
 	    memcpy(fgColorPtr, fgColorStr, 6);
-	    fgColorPtr = strstr(fgColorPtr + 6, "000000");
 	}
 
 	/*
