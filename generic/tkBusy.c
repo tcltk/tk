@@ -743,6 +743,7 @@ HoldBusy(
     if (isNew) {
 	busyPtr = CreateBusy(interp, tkwin);
 	if (busyPtr == NULL) {
+	    Tcl_DeleteHashEntry(hPtr);
 	    return TCL_ERROR;
 	}
 	Tcl_SetHashValue(hPtr, busyPtr);
