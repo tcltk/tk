@@ -289,6 +289,9 @@ TTK_END_LAYOUT
  * free to specify a new style using completely different elements.
  */
 
+MODULE_SCOPE int
+TtkSquareWidget_Init(Tcl_Interp *interp);
+
 /* public */ MODULE_SCOPE int
 TtkSquareWidget_Init(Tcl_Interp *interp)
 {
