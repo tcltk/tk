@@ -1113,6 +1113,7 @@ TTK_END_LAYOUT_TABLE
 /*------------------------------------------------------------------------
  * +++ Initialization.
  */
+MODULE_SCOPE int TtkClamTheme_Init(Tcl_Interp *);
 
 MODULE_SCOPE int
 TtkClamTheme_Init(Tcl_Interp *interp)
