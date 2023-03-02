@@ -1290,6 +1290,8 @@ retErr:
  * +++ Initialization routine:
  */
 
+MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd);
+
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     XPThemeData *themeData;

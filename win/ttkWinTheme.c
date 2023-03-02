@@ -794,6 +794,11 @@ TTK_END_LAYOUT_TABLE
 MODULE_SCOPE
 int TtkWinTheme_Init(
     Tcl_Interp *interp,
+    TCL_UNUSED(HWND));
+
+MODULE_SCOPE
+int TtkWinTheme_Init(
+    Tcl_Interp *interp,
     TCL_UNUSED(HWND))
 {
     Ttk_Theme themePtr, parentPtr;
