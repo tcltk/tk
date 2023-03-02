@@ -1418,6 +1418,9 @@ TTK_END_LAYOUT
  */
 
 MODULE_SCOPE
+void TtkNotebook_Init(Tcl_Interp *interp);
+
+MODULE_SCOPE
 void TtkNotebook_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
