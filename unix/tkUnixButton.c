@@ -384,7 +384,7 @@ TkpDrawCheckIndicator(
 	}
 	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
 	ckfree(svgDataCopy);
-	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	ckfree(script);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
