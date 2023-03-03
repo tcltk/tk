@@ -104,8 +104,8 @@ TkpGetString(
     if (keyEv->send_event == -1) {
 	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
 	if (ev->nbytes > 0) {
-	    (void)Tcl_ExternalToUtfDStringEx(TkWinGetKeyInputEncoding(),
-		    ev->trans_chars, ev->nbytes, TCL_ENCODING_NOCOMPLAIN, dsPtr);
+	    (void)Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
+		    ev->trans_chars, ev->nbytes, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
 
