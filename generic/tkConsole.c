@@ -517,7 +517,7 @@ ConsoleOutput(
 	     * Assumption is utf-8 Tcl_Encoding is reliably present.
 	     */
 
-	    (void)Tcl_ExternalToUtfDStringEx(utf8, buf, toWrite, TCL_ENCODING_NOCOMPLAIN, &ds);
+	    (void)Tcl_ExternalToUtfDString(utf8, buf, toWrite, &ds);
 	    const char *bytes = Tcl_DStringValue(&ds);
 	    int numBytes = Tcl_DStringLength(&ds);
 	    Tcl_Obj *cmd = Tcl_NewStringObj("tk::ConsoleOutput", -1);
