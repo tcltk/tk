@@ -189,11 +189,8 @@ ColorToStr(
     char *colorStr)		/* memory area to which the color is to be
 				   output in the format "RRGGBB" */
 {
-    char str[13];
-
-    snprintf(str, sizeof(str), "%04x%04x%04x",
-	     colorPtr->red, colorPtr->green, colorPtr->blue);
-    snprintf(colorStr, 7, "%.2s%.2s%.2s", str, str + 4, str + 8);
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void
