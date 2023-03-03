@@ -100,7 +100,7 @@ TkSelGetSelection(
 	     */
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, "cp######", -1);
+	    Tcl_DStringAppend(&ds, "cp######", TCL_INDEX_NONE);
 	    data = (char *)GlobalLock(handle);
 
 	    /*
@@ -132,7 +132,7 @@ TkSelGetSelection(
 	    goto error;
 	}
 	data = (char *)GlobalLock(handle);
-	(void)Tcl_ExternalToUtfDStringEx(encoding, data, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_ExternalToUtfDString(encoding, data, TCL_INDEX_NONE, &ds);
 	GlobalUnlock(handle);
 	if (encoding) {
 	    Tcl_FreeEncoding(encoding);
@@ -330,7 +330,7 @@ TkWinClipboardRender(
     *buffer = '\0';
 
 	Tcl_DStringInit(&ds);
-	Tcl_UtfToWCharDString(rawText, -1, &ds);
+	Tcl_UtfToWCharDString(rawText, TCL_INDEX_NONE, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
 		(unsigned) Tcl_DStringLength(&ds) + 2);

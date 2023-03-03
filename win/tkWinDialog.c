@@ -867,7 +867,7 @@ ColorDlgHookProc(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, -1, &ds));
+	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, TCL_INDEX_NONE, &ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -1049,7 +1049,7 @@ ParseOFNOptions(
             if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
                 goto error_return;
             if (i + 1 == objc) {
-                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", -1));
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", TCL_INDEX_NONE));
                 Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
                 goto error_return;
             }
@@ -1343,7 +1343,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
     if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
         Tcl_Obj *normPath, *iniDirPath;
-        iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), -1);
+        iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), TCL_INDEX_NONE);
         Tcl_IncrRefCount(iniDirPath);
         normPath = Tcl_FSGetNormalizedPath(interp, iniDirPath);
         /* XXX - Note on failures do not raise error, simply ignore ini dir */
@@ -1571,7 +1571,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    ++str;
 	}
 	Tcl_DStringInit(&extString);
-	ofn.lpstrDefExt = Tcl_UtfToWCharDString(str, -1, &extString);
+	ofn.lpstrDefExt = Tcl_UtfToWCharDString(str, TCL_INDEX_NONE, &extString);
     }
 
     Tcl_DStringInit(&filterString);
@@ -1607,7 +1607,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
     if (optsPtr->titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	ofn.lpstrTitle = Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
+	ofn.lpstrTitle = Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), TCL_INDEX_NONE, &titleString);
     }
 
     /*
@@ -1696,7 +1696,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
 		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 			    Tcl_DStringLength(&ds));
-		    Tcl_AppendToObj(fullnameObj, "/", -1);
+		    Tcl_AppendToObj(fullnameObj, "/", TCL_INDEX_NONE);
 		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filenameBuf),
 			    Tcl_DStringLength(&filenameBuf));
 		    gotFilename = 1;
@@ -1719,7 +1719,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    Tcl_DStringFree(&ds);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    ConvertExternalFilename(ofn.lpstrFile, &ds), -1));
+		    ConvertExternalFilename(ofn.lpstrFile, &ds), TCL_INDEX_NONE));
 	    gotFilename = (Tcl_DStringLength(&ds) > 0);
 	    Tcl_DStringFree(&ds);
 	}
@@ -2244,7 +2244,7 @@ static int MakeFilterVista(
 
 	/* First stash away the text description of the pattern */
         Tcl_DStringInit(&ds);
-        Tcl_UtfToWCharDString(filterPtr->name, -1, &ds);
+        Tcl_UtfToWCharDString(filterPtr->name, TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszName = (LPCWSTR)ckalloc(nbytes);
@@ -2265,15 +2265,15 @@ static int MakeFilterVista(
 	    GlobPattern *globPtr;
 	    for (globPtr = clausePtr->patterns; globPtr;
 		    globPtr = globPtr->next) {
-		Tcl_DStringAppend(&patterns, sep, -1);
-		Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
+		Tcl_DStringAppend(&patterns, sep, TCL_INDEX_NONE);
+		Tcl_DStringAppend(&patterns, globPtr->pattern, TCL_INDEX_NONE);
 		sep = ";";
 	    }
 	}
 
 	/* Again we need a Unicode form of the string */
         Tcl_DStringInit(&ds);
-        Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), -1, &ds);
+        Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszSpec = (LPCWSTR)ckalloc(nbytes);
@@ -2410,7 +2410,7 @@ Tk_ChooseDirectoryObjCmd(
 	LPCWSTR uniStr;
 
 	Tcl_DStringInit(&tempString);
-	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), TCL_INDEX_NONE,
                           &tempString);
         uniStr = (WCHAR *) Tcl_DStringValue(&tempString);
 
@@ -2443,7 +2443,7 @@ Tk_ChooseDirectoryObjCmd(
 
     if (ofnOpts.titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	bInfo.lpszTitle = Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
+	bInfo.lpszTitle = Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), TCL_INDEX_NONE, &titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
     }
@@ -2501,7 +2501,7 @@ Tk_ChooseDirectoryObjCmd(
 	if (pidl != NULL) {
 	    if (!SHGetPathFromIDListW(pidl, path)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"error: not a file system folder", -1));
+			"error: not a file system folder", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "PSEUDO", NULL);
 	    }
 	    pMalloc->lpVtbl->Free(pMalloc, (void *) pidl);
@@ -2531,7 +2531,7 @@ Tk_ChooseDirectoryObjCmd(
 	Tcl_DString ds;
 
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		ConvertExternalFilename(path, &ds), -1));
+		ConvertExternalFilename(path, &ds), TCL_INDEX_NONE));
 	Tcl_DStringFree(&ds);
     }
 
@@ -2599,7 +2599,7 @@ ChooseDirectoryValidateProc(
 	    return 1;
 	}
 	Tcl_DStringSetLength(&initDirString, 0);
-	wcsncpy(string, Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), -1, &initDirString),
+	wcsncpy(string, Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), TCL_INDEX_NONE, &initDirString),
 		MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 	Tcl_DStringFree(&tempString);
@@ -2904,7 +2904,7 @@ Tk_MessageBoxObjCmd(
 
     Tcl_DecrRefCount(tmpObj);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    TkFindStateString(buttonMap, winCode), -1));
+	    TkFindStateString(buttonMap, winCode), TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -3021,24 +3021,24 @@ GetFontObj(
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(plf->lfFaceName, wcslen(plf->lfFaceName), &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
-	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
+	    Tcl_NewStringObj(Tcl_DStringValue(&ds), TCL_INDEX_NONE));
     Tcl_DStringFree(&ds);
     pt = -MulDiv(plf->lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
     Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewWideIntObj(pt));
     if (plf->lfWeight >= 700) {
-	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", -1));
+	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", TCL_INDEX_NONE));
     }
     if (plf->lfItalic) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("italic", -1));
+		Tcl_NewStringObj("italic", TCL_INDEX_NONE));
     }
     if (plf->lfUnderline) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("underline", -1));
+		Tcl_NewStringObj("underline", TCL_INDEX_NONE));
     }
     if (plf->lfStrikeOut) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("overstrike", -1));
+		Tcl_NewStringObj("overstrike", TCL_INDEX_NONE));
     }
     return resObj;
 }
@@ -3106,7 +3106,7 @@ HookProc(
 	    Tcl_DString title;
 
 	    Tcl_DStringInit(&title);
-	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), -1, &title);
+	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), TCL_INDEX_NONE, &title);
 	    if (Tcl_DStringLength(&title) > 0) {
 		SetWindowTextW(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
 	    }
@@ -3254,7 +3254,7 @@ FontchooserConfigureCmd(
 	Tcl_Obj *dictObj = Tcl_NewDictObj();
 
 	for (i = 0; r == TCL_OK && optionStrings[i] != NULL; ++i) {
-	    keyObj = Tcl_NewStringObj(optionStrings[i], -1);
+	    keyObj = Tcl_NewStringObj(optionStrings[i], TCL_INDEX_NONE);
 	    valueObj = FontchooserCget(hdPtr, i);
 	    r = Tcl_DictObjPut(interp, dictObj, keyObj, valueObj);
 	}
@@ -3290,7 +3290,7 @@ FontchooserConfigureCmd(
 	    static const char *msg = "cannot change read-only option "
 		    "\"-visible\": use the show or hide command";
 
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
 	    return TCL_ERROR;
 	}
@@ -3425,7 +3425,7 @@ FontchooserShowCmd(
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
 	Tcl_DStringInit(&ds);
-	wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(fontPtr->fa.family, -1, &ds),
+	wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(fontPtr->fa.family, TCL_INDEX_NONE, &ds),
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
