@@ -316,7 +316,7 @@ TkpComputeButtonGeometry(
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		text, -1, butPtr->wrapLength, butPtr->justify, 0,
+		text, TCL_INDEX_NONE, butPtr->wrapLength, butPtr->justify, 0,
 		&butPtr->textWidth, &butPtr->textHeight);
 
 	txtWidth = butPtr->textWidth + 2*butPtr->padX;
@@ -409,10 +409,10 @@ TkpComputeButtonGeometry(
 	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
         HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         if (height < contBounds.size.height) {
-	    height = contBounds.size.height;
+	    height = (int)contBounds.size.height;
         }
         if (width < contBounds.size.width) {
-	    width = contBounds.size.width;
+	    width = (int)contBounds.size.width;
         }
 	height += 2*HI_PADY;
 	width += 2*HI_PADX;

@@ -1597,7 +1597,7 @@ TrayIconCreateCmd(
 
     icon = (DockIcon*)attemptckalloc(sizeof(DockIcon));
     if (!icon) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", TCL_INDEX_NONE));
 	goto handleErrors;
     }
     memset(icon,0,sizeof(*icon));

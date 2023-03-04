@@ -175,7 +175,7 @@ TkMacOSXGetNSImageFromBitmap(
 
     gc->background = transparentColor;
     XSetClipOrigin(display, gc, 0, 0);
-    XCopyPlane(display, bitmap, pixmap, gc, 0, 0, width, height, 0, 0, 1);
+    XCopyPlane(display, bitmap, pixmap, gc, 0, 0, (unsigned)width, (unsigned)height, 0, 0, 1);
     gc->background = origBackground;
     nsImage = CreateNSImageFromPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
@@ -270,11 +270,11 @@ Tk_MacOSXGetCGContextForDrawable(
 	}
 	bytesPerRow = ((size_t)
 		macDraw->size.width * bitsPerPixel + 127) >> 3 & ~15;
-	len = macDraw->size.height * bytesPerRow;
+	len = (size_t)(macDraw->size.height * bytesPerRow);
 	data = (char *)ckalloc(len);
 	bzero(data, len);
-	macDraw->context = CGBitmapContextCreate(data, macDraw->size.width,
-		macDraw->size.height, bitsPerComponent, bytesPerRow,
+	macDraw->context = CGBitmapContextCreate(data, (unsigned)macDraw->size.width,
+		(unsigned)macDraw->size.height, bitsPerComponent, bytesPerRow,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
 	    CGContextClearRect(macDraw->context, bounds);
@@ -1415,7 +1415,7 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetShouldAntialias(dc.context, shouldAntialias);
 	CGContextSetLineWidth(dc.context, w);
 	if (gc->line_style != LineSolid) {
-	    int num = 0;
+	    size_t num = 0;
 	    char *p = &gc->dashes;
 	    CGFloat dashOffset = gc->dash_offset;
 	    dashOffset -= (gc->line_width % 2) ? 0.5 : 0.0;

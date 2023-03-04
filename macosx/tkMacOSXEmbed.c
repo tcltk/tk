@@ -214,7 +214,7 @@ Tk_UseWindow(
 
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't modify container after widget is created", -1));
+		"can't modify container after widget is created", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
@@ -869,8 +869,8 @@ EmbedStructureProc(
 	    errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
 		    -1, -1, NULL, NULL);
 	    Tk_MoveResizeWindow((Tk_Window)containerPtr->embeddedPtr, 0, 0,
-		    (unsigned) Tk_Width((Tk_Window)containerPtr->parentPtr),
-		    (unsigned) Tk_Height((Tk_Window)containerPtr->parentPtr));
+		    Tk_Width((Tk_Window)containerPtr->parentPtr),
+		    Tk_Height((Tk_Window)containerPtr->parentPtr));
 	    Tk_DeleteErrorHandler(errHandler);
 	}
     } else if (eventPtr->type == DestroyNotify) {

@@ -1093,7 +1093,7 @@ Tk_SendObjCmd(
     localData.sendSerial++;
     Tcl_DStringInit(&request);
     Tcl_DStringAppend(&request, "\0c\0-n ", 6);
-    Tcl_DStringAppend(&request, destName, -1);
+    Tcl_DStringAppend(&request, destName, TCL_INDEX_NONE);
     if (!async) {
 	char buffer[TCL_INTEGER_SPACE * 2];
 
@@ -1101,13 +1101,13 @@ Tk_SendObjCmd(
 		(unsigned) Tk_WindowId(dispPtr->commTkwin),
 		localData.sendSerial);
 	Tcl_DStringAppend(&request, "\0-r ", 4);
-	Tcl_DStringAppend(&request, buffer, -1);
+	Tcl_DStringAppend(&request, buffer, TCL_INDEX_NONE);
     }
     Tcl_DStringAppend(&request, "\0-s ", 4);
-    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), -1);
+    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
     for (i = firstArg+1; i < objc; i++) {
 	Tcl_DStringAppend(&request, " ", 1);
-	Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), -1);
+	Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
     }
 
     if (!async) {
@@ -1209,10 +1209,10 @@ Tk_SendObjCmd(
 	ckfree(pending.errorInfo);
     }
     if (pending.errorCode != NULL) {
-	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, -1));
+	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, TCL_INDEX_NONE));
 	ckfree(pending.errorCode);
     }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, TCL_INDEX_NONE));
     ckfree(pending.result);
     return pending.code;
 }
@@ -1602,7 +1602,7 @@ SendEventProc(
 			    NULL, TCL_GLOBAL_ONLY);
 		    if (varValue != NULL) {
 			Tcl_DStringAppend(&reply, "\0-e ", 4);
-			Tcl_DStringAppend(&reply, varValue, -1);
+			Tcl_DStringAppend(&reply, varValue, TCL_INDEX_NONE);
 		    }
 		}
 	    }
@@ -2021,7 +2021,7 @@ TkpTestsendCmd(
 			*p = '\n';
 		    }
 		}
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, TCL_INDEX_NONE));
 	    }
 	    if (property != NULL) {
 		XFree(property);

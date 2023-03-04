@@ -136,7 +136,7 @@ PixmapFromImage(
     TkMacOSXDrawingContext dc;
     Pixmap pixmap;
 
-    pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
+    pixmap = Tk_GetPixmap(display, None, (int)size.width, (int)size.height, 0);
     if (TkMacOSXSetupDrawingContext(pixmap, NULL, &dc)) {
 	if (dc.context) {
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1,
@@ -307,8 +307,8 @@ TkpGetNativeAppBitmap(
 	}
     }
     if (image) {
-	*width = size.width;
-	*height = size.height;
+	*width = (int)size.width;
+	*height = (int)size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
 	/*
@@ -350,7 +350,8 @@ TkMacOSXIconBitmapObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tcl_HashEntry *hPtr;
-    int i = 1, len, isNew, result = TCL_ERROR;
+    int isNew, result = TCL_ERROR;
+    Tcl_Size i = 1, len;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
 
@@ -362,7 +363,7 @@ TkMacOSXIconBitmapObjCmd(
     }
     name = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap name", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "BAD", NULL);
 	goto end;
     }
@@ -378,7 +379,7 @@ TkMacOSXIconBitmapObjCmd(
     }
     value = Tcl_GetStringFromObj(objv[i++], &len);
     if (!len) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("empty bitmap value", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "EMPTY", NULL);
 	goto end;
     }
@@ -393,7 +394,7 @@ TkMacOSXIconBitmapObjCmd(
 	Tcl_FreeEncoding(encoding);
 	if (len > 4) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid bitmap value", -1));
+		    "invalid bitmap value", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "MACBITMAP", "INVALID", NULL);
 	    goto end;
 	}

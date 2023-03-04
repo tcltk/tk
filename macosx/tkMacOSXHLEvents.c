@@ -115,7 +115,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     if (_eventInterp &&
 	Tcl_FindCommand(_eventInterp, "::tk::mac::OpenApplication", NULL, 0)){
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::OpenApplication",
-			      -1, TCL_EVAL_GLOBAL);
+			      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
 	}
@@ -132,7 +132,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     if (_eventInterp && Tcl_FindCommand(_eventInterp,
 	    "::tk::mac::ReopenApplication", NULL, 0)) {
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ReopenApplication",
-			      -1, TCL_EVAL_GLOBAL);
+			      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK){
 	    Tcl_BackgroundException(_eventInterp, code);
 	}
@@ -148,7 +148,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     if (_eventInterp &&
 	    Tcl_FindCommand(_eventInterp, "::tk::mac::ShowPreferences", NULL, 0)){
 	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowPreferences",
-			      -1, TCL_EVAL_GLOBAL);
+			      TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
 	}
@@ -211,7 +211,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
     Tcl_DString *openCommand = &AEInfo->command;
     Tcl_DStringInit(openCommand);
-    Tcl_DStringAppend(openCommand, openDocumentProc, -1);
+    Tcl_DStringAppend(openCommand, openDocumentProc, TCL_INDEX_NONE);
     utf8 = Tcl_GetEncoding(NULL, "utf-8");
 
     for (index = 1; index <= count; index++) {
@@ -227,7 +227,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 	if (fileURL == nil) {
 	    continue;
 	}
-	(void)Tcl_ExternalToUtfDString(utf8, [[fileURL path] UTF8String], -1,
+	(void)Tcl_ExternalToUtfDString(utf8, [[fileURL path] UTF8String], TCL_INDEX_NONE,
 		&pathName);
 	Tcl_DStringAppendElement(openCommand, Tcl_DStringValue(&pathName));
 	Tcl_DStringFree(&pathName);
@@ -257,7 +257,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     (void)replyEvent;
 
     Tcl_DStringInit(printCommand);
-    Tcl_DStringAppend(printCommand, printDocProc, -1);
+    Tcl_DStringAppend(printCommand, printDocProc, TCL_INDEX_NONE);
     Tcl_DStringAppendElement(printCommand, printFile);
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = printDocProc;
@@ -319,7 +319,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
                 AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
                 Tcl_DString *scriptFileCommand = &AEInfo->command;
                 Tcl_DStringInit(scriptFileCommand);
-                Tcl_DStringAppend(scriptFileCommand, scriptFileProc, -1);
+                Tcl_DStringAppend(scriptFileCommand, scriptFileProc, TCL_INDEX_NONE);
                 Tcl_DStringAppendElement(scriptFileCommand, [[fileURL path] UTF8String]);
                 AEInfo->interp = _eventInterp;
                 AEInfo->procedure = scriptFileProc;
@@ -345,7 +345,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
 		AppleEventInfo *AEInfo = (AppleEventInfo *)ckalloc(sizeof(AppleEventInfo));
 		Tcl_DString *scriptTextCommand = &AEInfo->command;
 		Tcl_DStringInit(scriptTextCommand);
-		Tcl_DStringAppend(scriptTextCommand, scriptTextProc, -1);
+		Tcl_DStringAppend(scriptTextCommand, scriptTextProc, TCL_INDEX_NONE);
 		Tcl_DStringAppendElement(scriptTextCommand, data);
 		AEInfo->interp = _eventInterp;
 		AEInfo->procedure = scriptTextProc;
@@ -373,7 +373,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     (void)replyEvent;
 
     Tcl_DStringInit(launchCommand);
-    Tcl_DStringAppend(launchCommand, launchURLProc, -1);
+    Tcl_DStringAppend(launchCommand, launchURLProc, TCL_INDEX_NONE);
     Tcl_DStringAppendElement(launchCommand, cURL);
     AEInfo->interp = _eventInterp;
     AEInfo->procedure = launchURLProc;
@@ -389,7 +389,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     (void)replyEvent;
 
     Tcl_DStringInit(sdefCommand);
-    Tcl_DStringAppend(sdefCommand, getSdefProc, -1);
+    Tcl_DStringAppend(sdefCommand, getSdefProc, TCL_INDEX_NONE);
     AEInfo->interp = _eventInterp;
     AEInfo->procedure =  getSdefProc;
     AEInfo->replyEvent = nil;
@@ -623,7 +623,7 @@ ReallyKillMe(
 	Tcl_Exit(0);
     }
 
-    int code = Tcl_EvalEx(interp, "::tk::mac::Quit", -1, TCL_EVAL_GLOBAL);
+    int code = Tcl_EvalEx(interp, "::tk::mac::Quit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
 
 	/*
