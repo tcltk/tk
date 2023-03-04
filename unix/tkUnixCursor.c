@@ -296,7 +296,7 @@ TkGetCursorByName(
 	    dispPtr->cursorFont = XLoadFont(display, CURSORFONT);
 	    if (dispPtr->cursorFont == None) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"couldn't load cursor font", -1));
+			"couldn't load cursor font", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CURSOR", "FONT", NULL);
 		goto cleanup;
 	    }
@@ -547,7 +547,7 @@ CreateCursorFromTableOrFile(
 
     if ((maskWidth != width) || (maskHeight != height)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"source and mask bitmaps have different sizes", -1));
+		"source and mask bitmaps have different sizes", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CURSOR", "SIZE_MATCH", NULL);
 	goto cleanup;
     }
