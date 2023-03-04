@@ -123,7 +123,7 @@ StartPrint(
     (void)(PMPageFormat)[printInfo PMPageFormat];
     printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
 
-    accepted = [printPanel runModalWithPrintInfo: printInfo];
+    accepted = (int)[printPanel runModalWithPrintInfo: printInfo];
     [printDelegate printPanelDidEnd: printPanel
 			 returnCode: accepted
 			contextInfo: printInfo];

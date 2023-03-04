@@ -1232,7 +1232,7 @@ TkMacOSXNSImageConfigureModel(
     int oldWidth = modelPtr->width, oldHeight = modelPtr->height;
 
     if (asOption == NULL) {
-	asOption = Tcl_NewStringObj("-as", -1);
+	asOption = Tcl_NewStringObj("-as", TCL_INDEX_NONE);
 	Tcl_IncrRefCount(asOption);
     }
 
@@ -1248,7 +1248,7 @@ TkMacOSXNSImageConfigureModel(
     }
 
     if (modelPtr->source == NULL || modelPtr->source[0] == '0') {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("-source is required.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	goto errorExit;
     }
@@ -1259,7 +1259,7 @@ TkMacOSXNSImageConfigureModel(
 			    0, &sourceInterpretation) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "Unknown interpretation for source in -as option.  "
-	    "Should be name, file, path, or filetype.", -1));
+	    "Should be name, file, path, or filetype.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	goto errorExit;
     }
@@ -1320,18 +1320,18 @@ TkMacOSXNSImageConfigureModel(
 	case NAME_SOURCE:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
 		"Try omitting ImageName, "
-	        "e.g. use NSCaution for NSImageNameCaution.", -1));
+	        "e.g. use NSCaution for NSImageNameCaution.", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	    goto errorExit;
 	case FILE_SOURCE:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"Failed to load image file.\n", -1));
+		"Failed to load image file.\n", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	    goto errorExit;
 	default:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Unrecognized file type.\n"
-		"If using a filename extension, do not include the dot.\n", -1));
+		"If using a filename extension, do not include the dot.\n", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	    goto errorExit;
 	}
