@@ -1246,7 +1246,7 @@ MakeTagInfoObj(
 
     for ( ; i != TK_TEXT_TAG_SET_NPOS; i = TkTextTagSetFindNext(tagInfoPtr, i)) {
 	const TkTextTag *tagPtr = tagLookup[i];
-	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(tagPtr->name, -1));
+	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(tagPtr->name, TCL_INDEX_NONE));
     }
 
     return objPtr;
@@ -1273,7 +1273,7 @@ UndoDeleteGetCommand(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("delete", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("delete", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -1607,9 +1607,9 @@ RedoDeleteInspect(
 
     UndoGetRange(sharedTextPtr, item, &startIndex, &endIndex);
     TkTextIndexPrint(sharedTextPtr, NULL, &startIndex, buf);
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
     TkTextIndexPrint(sharedTextPtr, NULL, &endIndex, buf);
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 #endif
 
     return objPtr;
@@ -1679,7 +1679,7 @@ UndoInsertGetCommand(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -1711,7 +1711,7 @@ RedoInsertInspect(
     unsigned numSegments = ((const UndoTokenDelete *) item)->numSegments;
     const TkTextSegment *segPtr;
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("insert", TCL_INDEX_NONE));
 
     for (segPtr = *segments++; numSegments > 0; segPtr = *segments++, --numSegments) {
 	assert(segPtr->typePtr->inspectProc);
@@ -1733,8 +1733,8 @@ UndoTagGetCommand(
     int add = (isRedo == POINTER_IS_MARKED(token->tagPtr));
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(add ? "add" : "remove", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(add ? "add" : "remove", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -1748,7 +1748,7 @@ TkBTreeUndoTagInspect(
     TkTextTag *tagPtr = token->tagPtr;
 
     UNMARK_POINTER(tagPtr);
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(tagPtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(tagPtr->name, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -1823,8 +1823,8 @@ UndoClearTagsGetCommand(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("clear", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("clear", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -15661,7 +15661,7 @@ CharInspectProc(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, TCL_INDEX_NONE));
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->body.chars, segPtr->size));
     Tcl_ListObjAppendElement(NULL, objPtr, MakeTagInfoObj(sharedTextPtr, segPtr->tagInfoPtr));
     return objPtr;
@@ -15764,7 +15764,7 @@ HyphenInspectProc(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, TCL_INDEX_NONE));
     Tcl_ListObjAppendElement(NULL, objPtr, MakeTagInfoObj(sharedTextPtr, segPtr->tagInfoPtr));
     return objPtr;
 }
@@ -15889,7 +15889,7 @@ BranchInspectProc(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -16078,7 +16078,7 @@ LinkInspectProc(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, TCL_INDEX_NONE));
     return objPtr;
 }
 

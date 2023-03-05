@@ -1219,7 +1219,7 @@ ErrorNotAllowed(
     Tcl_Interp *interp,
     const char *text)
 {
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(text, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(text, TCL_INDEX_NONE));
     Tcl_SetErrorCode(interp, "TK", "TEXT", "NOT_ALLOWED", NULL);
 }
 
@@ -1606,13 +1606,13 @@ TextWidgetObjCmd(
 	    const char *opt = Tcl_GetString(objv[2]);
 
 	    if (strcmp(opt, "-start") == 0) {
-		optionObj = Tcl_NewStringObj(textPtr->startLine ? "-startline" : "-startindex", -1);
+		optionObj = Tcl_NewStringObj(textPtr->startLine ? "-startline" : "-startindex", TCL_INDEX_NONE);
 	    } else if (MatchOpt(opt, "-startline", 7)) {
-		optionObj = Tcl_NewStringObj("-startline", -1);
+		optionObj = Tcl_NewStringObj("-startline", TCL_INDEX_NONE);
 	    } else if (strcmp(opt, "-end") == 0) {
-		optionObj = Tcl_NewStringObj(textPtr->endLine ? "-endline" : "-endindex", -1);
+		optionObj = Tcl_NewStringObj(textPtr->endLine ? "-endline" : "-endindex", TCL_INDEX_NONE);
 	    } else if (MatchOpt(opt, "-endline", 5)) {
-		optionObj = Tcl_NewStringObj("-endline", -1);
+		optionObj = Tcl_NewStringObj("-endline", TCL_INDEX_NONE);
 	    } else {
 		Tcl_IncrRefCount(optionObj = objv[2]);
 	    }
@@ -2575,7 +2575,7 @@ TextWidgetObjCmd(
 
 	    if (!textPtr->afterSyncCmd) {
 		if (append) {
-		    cmd = Tcl_NewStringObj(script, -1);
+		    cmd = Tcl_NewStringObj(script, TCL_INDEX_NONE);
 		}
 		Tcl_IncrRefCount(textPtr->afterSyncCmd = cmd);
 	    } else {
@@ -2938,7 +2938,7 @@ TextWatchCmd(
 	    if (textPtr->watchCmd) {
 		cmd = AppendScript(Tcl_GetString(textPtr->watchCmd), script);
 	    } else {
-		cmd = Tcl_NewStringObj(script, -1);
+		cmd = Tcl_NewStringObj(script, TCL_INDEX_NONE);
 	    }
 	} else if (argnum == 2) {
 	    TkText *tPtr;
@@ -3851,49 +3851,49 @@ TkConfigureText(
 		if (strcmp(Tcl_GetString(objv[i]), "-start") == 0) {
 		    if (i + 1 < objc && IsNumberOrEmpty(Tcl_GetString(objv[i + 1]))) {
 			if (!startLineObj) {
-			    Tcl_IncrRefCount(startLineObj = Tcl_NewStringObj("-startline", -1));
+			    Tcl_IncrRefCount(startLineObj = Tcl_NewStringObj("-startline", TCL_INDEX_NONE));
 			}
 			obj = startLineObj;
 			WarnAboutDeprecatedStartLineOption();
 		    } else {
 			if (!startIndexObj) {
-			    Tcl_IncrRefCount(startIndexObj = Tcl_NewStringObj("-startindex", -1));
+			    Tcl_IncrRefCount(startIndexObj = Tcl_NewStringObj("-startindex", TCL_INDEX_NONE));
 			}
 			obj = startIndexObj;
 		    }
 		} else if (MatchOpt(Tcl_GetString(objv[i]), "-startline", 7)) {
 		    if (!startLineObj) {
-			Tcl_IncrRefCount(startLineObj = Tcl_NewStringObj("-startline", -1));
+			Tcl_IncrRefCount(startLineObj = Tcl_NewStringObj("-startline", TCL_INDEX_NONE));
 		    }
 		    obj = startLineObj;
 		    WarnAboutDeprecatedStartLineOption();
 		} else if (MatchOpt(Tcl_GetString(objv[i]), "-startindex", 7)) {
 		    if (!startIndexObj) {
-			Tcl_IncrRefCount(startIndexObj = Tcl_NewStringObj("-startindex", -1));
+			Tcl_IncrRefCount(startIndexObj = Tcl_NewStringObj("-startindex", TCL_INDEX_NONE));
 		    }
 		    obj = startIndexObj;
 		} else if (strcmp(Tcl_GetString(objv[i]), "-end") == 0) {
 		    if (i + 1 < objc && IsNumberOrEmpty(Tcl_GetString(objv[i + 1]))) {
 			if (!endLineObj) {
-			    Tcl_IncrRefCount(endLineObj = Tcl_NewStringObj("-endline", -1));
+			    Tcl_IncrRefCount(endLineObj = Tcl_NewStringObj("-endline", TCL_INDEX_NONE));
 			}
 			obj = endLineObj;
 			WarnAboutDeprecatedEndLineOption();
 		    } else {
 			if (!endIndexObj) {
-			    Tcl_IncrRefCount(endIndexObj = Tcl_NewStringObj("-endindex", -1));
+			    Tcl_IncrRefCount(endIndexObj = Tcl_NewStringObj("-endindex", TCL_INDEX_NONE));
 			}
 			obj = endIndexObj;
 		    }
 		} else if (MatchOpt(Tcl_GetString(objv[i]), "-endline", 5)) {
 		    if (!endLineObj) {
-			Tcl_IncrRefCount(endLineObj = Tcl_NewStringObj("-endline", -1));
+			Tcl_IncrRefCount(endLineObj = Tcl_NewStringObj("-endline", TCL_INDEX_NONE));
 		    }
 		    obj = endLineObj;
 		    WarnAboutDeprecatedEndLineOption();
 		} else if (MatchOpt(Tcl_GetString(objv[i]), "-endindex", 5)) {
 		    if (!endIndexObj) {
-			Tcl_IncrRefCount(endIndexObj = Tcl_NewStringObj("-endindex", -1));
+			Tcl_IncrRefCount(endIndexObj = Tcl_NewStringObj("-endindex", TCL_INDEX_NONE));
 		    }
 		    obj = endIndexObj;
 		}
@@ -3908,12 +3908,12 @@ TkConfigureText(
 	if (rc != TCL_OK) {
 	    if (startLineObj && startIndexObj) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "cannot use both, -startindex, and deprecated -startline", -1));
+		    "cannot use both, -startindex, and deprecated -startline", TCL_INDEX_NONE));
 		rc = TCL_ERROR;
 	    }
 	    if (endLineObj && endIndexObj) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "cannot use both, -endindex, and deprecated -endline", -1));
+		    "cannot use both, -endindex, and deprecated -endline", TCL_INDEX_NONE));
 		rc = TCL_ERROR;
 	    }
 	}
@@ -3943,7 +3943,7 @@ TkConfigureText(
 
 	if (TkTextIndexCompare(&start, &end) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "-startline must be less than or equal to -endline", -1));
+		    "-startline must be less than or equal to -endline", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
 	    goto error;
 	}
@@ -4172,7 +4172,7 @@ TkConfigureText(
 	}
 	if (TkTextIndexCompare(&start, &end) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "-startindex must be less than or equal to -endindex", -1));
+		    "-startindex must be less than or equal to -endindex", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
 	    goto error;
 	}
@@ -6442,7 +6442,7 @@ TextSearchCmd(
 	    break;
 	case TK_TEXT_SEARCH_COUNT:
 	    if (i >= objc - 1) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("no value given for \"-count\" option", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("no value given for \"-count\" option", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "VALUE", NULL);
 		return TCL_ERROR;
 	    }
@@ -6497,14 +6497,14 @@ TextSearchCmd(
 
     if (searchSpec.noLineStop && searchSpec.exact) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"the \"-nolinestop\" option requires the \"-regexp\" option to be present", -1));
+		"the \"-nolinestop\" option requires the \"-regexp\" option to be present", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "TEXT", "SEARCH_USAGE", NULL);
 	return TCL_ERROR;
     }
 
     if (searchSpec.overlap && !searchSpec.all) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"the \"-overlap\" option requires the \"-all\" option to be present", -1));
+		"the \"-overlap\" option requires the \"-all\" option to be present", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "TEXT", "SEARCH_USAGE", NULL);
 	return TCL_ERROR;
     }
@@ -8059,9 +8059,9 @@ DumpSegment(
     Tcl_Obj *values[3], *tuple;
 
     TkrTextPrintIndex(textPtr, index, buffer);
-    values[0] = Tcl_NewStringObj(key, -1);
-    values[1] = Tcl_NewStringObj(value, -1);
-    values[2] = Tcl_NewStringObj(buffer, -1);
+    values[0] = Tcl_NewStringObj(key, TCL_INDEX_NONE);
+    values[1] = Tcl_NewStringObj(value, TCL_INDEX_NONE);
+    values[2] = Tcl_NewStringObj(buffer, TCL_INDEX_NONE);
     Tcl_IncrRefCount(tuple = Tcl_NewListObj(3, values));
     if (!command) {
 	Tcl_ListObjAppendList(NULL, Tcl_GetObjResult(interp), tuple);
@@ -8073,10 +8073,10 @@ DumpSegment(
 	int code;
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, Tcl_GetString(command), -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringAppend(&buf, Tcl_GetString(command), TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (segment dumping command executed by text)");
@@ -8379,7 +8379,7 @@ GetBindings(
 	    binding = p + 1;
 	    p = (char *)strchr(binding, '\n');
 	}
-	Tcl_DStringAppend(&str2, binding, -1);
+	Tcl_DStringAppend(&str2, binding, TCL_INDEX_NONE);
 
 	Tcl_DStringAppendElement(str, Tcl_DStringValue(&str2));
 	Tcl_DStringEndSublist(str);
@@ -9047,7 +9047,7 @@ TextEditCmd(
 	    PushRetainedUndoTokens(sharedTextPtr);
 
 	    if (TkTextUndoGetCurrentRedoStackDepth(sharedTextPtr->undoStack) == 0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
 		return TCL_ERROR;
 	    }
@@ -9152,7 +9152,7 @@ TextEditCmd(
 	    PushRetainedUndoTokens(sharedTextPtr);
 
 	    if (TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack) == 0) {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", NULL);
 		return TCL_ERROR;
 	    }
@@ -9360,7 +9360,7 @@ MakeEditInfo(
 
     Tcl_UnsetVar(interp, Tcl_GetString(var), 0);
     for (i = 0; i < INFO_LAST; ++i) {
-	Tcl_ObjSetVar2(interp, var, Tcl_NewStringObj(editInfoStrings[i] + 1, -1),
+	Tcl_ObjSetVar2(interp, var, Tcl_NewStringObj(editInfoStrings[i] + 1, TCL_INDEX_NONE),
 		MakeEditInfoValue(interp, textPtr, i), 0);
     }
     return var;
@@ -9818,7 +9818,7 @@ TkTextTriggerWatchCmd(
     assert(operation);
 
     Tcl_DStringInit(&cmd);
-    Tcl_DStringAppend(&cmd, Tcl_GetString(textPtr->watchCmd), -1);
+    Tcl_DStringAppend(&cmd, Tcl_GetString(textPtr->watchCmd), TCL_INDEX_NONE);
     Tcl_DStringAppendElement(&cmd, Tk_PathName(textPtr->tkwin));
     Tcl_DStringAppendElement(&cmd, operation);
     Tcl_DStringAppendElement(&cmd, index1 ? index1 : "");
@@ -11357,7 +11357,7 @@ GetTextStartEnd(
 	TkTextIndexSetSegment(&index, marker);
 	TkTextIndexPrint(sharedTextPtr, NULL, &index, buf);
     }
-    return Tcl_NewStringObj(buf, -1);
+    return Tcl_NewStringObj(buf, TCL_INDEX_NONE);
 }
 
 /*
@@ -11409,7 +11409,7 @@ SetTextStartEnd(
 
     if ((flags & TK_OPTION_NULL_OK) && ObjectIsEmpty(*value)) {
 	*value = NULL;
-	*objPtr = Tcl_NewStringObj((objPtr == &textPtr->newStartIndex) ? "begin" : "end", -1);
+	*objPtr = Tcl_NewStringObj((objPtr == &textPtr->newStartIndex) ? "begin" : "end", TCL_INDEX_NONE);
     } else {
 	*objPtr = *value;
     }
@@ -11722,14 +11722,14 @@ TkpTextInspect(
 
     Tcl_IncrRefCount(resultPtr = Tcl_GetObjResult(textPtr->interp));
     Tcl_ResetResult(textPtr->interp);
-    Tcl_IncrRefCount(objv[0] = Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
-    Tcl_IncrRefCount(objv[1] = Tcl_NewStringObj("inspect", -1));
-    Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("-elide", -1));
-    Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("-chars", -1));
-    Tcl_IncrRefCount(objv[4] = Tcl_NewStringObj("-image", -1));
-    Tcl_IncrRefCount(objv[5] = Tcl_NewStringObj("-window", -1));
-    Tcl_IncrRefCount(objv[6] = Tcl_NewStringObj("-mark", -1));
-    Tcl_IncrRefCount(objv[7] = Tcl_NewStringObj("-tag", -1));
+    Tcl_IncrRefCount(objv[0] = Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[1] = Tcl_NewStringObj("inspect", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("-elide", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("-chars", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[4] = Tcl_NewStringObj("-image", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[5] = Tcl_NewStringObj("-window", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[6] = Tcl_NewStringObj("-mark", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[7] = Tcl_NewStringObj("-tag", TCL_INDEX_NONE));
     TextInspectCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
     for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
 	Tcl_GuardedDecrRefCount(objv[i]);
@@ -11774,10 +11774,10 @@ TkpTextDump(
     Tcl_IncrRefCount(resultPtr = Tcl_GetObjResult(textPtr->interp));
     Tcl_ResetResult(textPtr->interp);
 
-    Tcl_IncrRefCount(objv[0] = Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), -1));
-    Tcl_IncrRefCount(objv[1] = Tcl_NewStringObj("dump", -1));
-    Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("begin", -1));
-    Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("end", -1));
+    Tcl_IncrRefCount(objv[0] = Tcl_NewStringObj(Tk_PathName(textPtr->tkwin), TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[1] = Tcl_NewStringObj("dump", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[2] = Tcl_NewStringObj("begin", TCL_INDEX_NONE));
+    Tcl_IncrRefCount(objv[3] = Tcl_NewStringObj("end", TCL_INDEX_NONE));
     TextDumpCmd(textPtr, textPtr->interp, sizeof(objv)/sizeof(objv[0]), objv);
     for (i = 0; i < (int) (sizeof(objv)/sizeof(objv[0])); ++i) {
 	Tcl_GuardedDecrRefCount(objv[i]);
