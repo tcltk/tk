@@ -191,7 +191,7 @@ UndoLinkSegmentGetCommand(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("image", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("image", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -207,7 +207,7 @@ UndoLinkSegmentInspect(
 
     GetIndex(sharedTextPtr, token->segPtr, &index);
     TkTextIndexPrint(sharedTextPtr, NULL, &index, buf);
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -280,7 +280,7 @@ RedoLinkSegmentInspect(
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->index, &index);
     TkTextIndexPrint(sharedTextPtr, NULL, &index, buf);
-    idxPtr = Tcl_NewStringObj(buf, -1);
+    idxPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
     Tcl_ListObjReplace(NULL, objPtr, 0, 0, 1, &idxPtr);
     return objPtr;
 }
@@ -663,8 +663,8 @@ SetImageName(
 	char buf[4 + TCL_INTEGER_SPACE];
 	snprintf(buf, sizeof(buf), "#%" TCL_Z_MODIFIER "u", ++textPtr->sharedTextPtr->imageCount);
 	Tcl_DStringSetLength(&newName, 0);
-	Tcl_DStringAppend(&newName, name, -1);
-	Tcl_DStringAppend(&newName, buf, -1);
+	Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&newName, buf, TCL_INDEX_NONE);
 	name = Tcl_DStringValue(&newName);
     }
     length = strlen(name);
@@ -675,7 +675,7 @@ SetImageName(
     Tcl_SetHashValue(img->hPtr, eiPtr);
     img->name = (char *)malloc(length + 1);
     memcpy(img->name, name, length + 1);
-    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
+    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     Tcl_DStringFree(&newName);
 }
 
@@ -735,12 +735,12 @@ EmbImageConfigure(
 	if (!(name = img->imageName) && !(name = img->imageString)) {
 	    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		    "Either a \"-name\" or a \"-image\" argument must be"
-		    " provided to the \"image create\" subcommand", -1));
+		    " provided to the \"image create\" subcommand", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "IMAGE_CREATE_USAGE", NULL);
 	    return TCL_ERROR;
 	}
 
-	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(img->name, -1));
+	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(img->name, TCL_INDEX_NONE));
 	SetImageName(textPtr, eiPtr, name);
     }
 
@@ -782,15 +782,15 @@ EmbImageInspectProc(
 
     for ( ; i != TK_TEXT_TAG_SET_NPOS; i = TkTextTagSetFindNext(tagInfoPtr, i)) {
 	const TkTextTag *tagPtr = tagLookup[i];
-	Tcl_ListObjAppendElement(NULL, objPtr2, Tcl_NewStringObj(tagPtr->name, -1));
+	Tcl_ListObjAppendElement(NULL, objPtr2, Tcl_NewStringObj(tagPtr->name, TCL_INDEX_NONE));
     }
 
     Tcl_DStringInit(&opts);
     TkTextInspectOptions(sharedTextPtr->peers, &segPtr->body.ei, segPtr->body.ei.optionTable,
 	    &opts, 0);
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(img->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(img->name, TCL_INDEX_NONE));
     Tcl_ListObjAppendElement(NULL, objPtr, objPtr2);
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(Tcl_DStringValue(&opts),
 	    Tcl_DStringLength(&opts)));

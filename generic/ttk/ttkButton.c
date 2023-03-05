@@ -870,6 +870,8 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
+MODULE_SCOPE void TtkButton_Init(Tcl_Interp *);
+
 MODULE_SCOPE
 void TtkButton_Init(Tcl_Interp *interp)
 {

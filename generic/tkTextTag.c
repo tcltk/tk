@@ -205,9 +205,9 @@ UndoChangeTagPriorityGetCommand(
     const UndoTokenTagPriority *token = (const UndoTokenTagPriority *) item;
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("priority", -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(token->tagPtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("tag", TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("priority", TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(token->tagPtr->name, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -675,12 +675,12 @@ TkTextTagCmd(
 	    }
 	    resultObj = Tcl_NewObj();
 	    TkrTextPrintIndex(textPtr, &tSearch.curIndex, position);
-	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position, -1));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position, TCL_INDEX_NONE));
 	    TkBTreeLiftSearch(&tSearch); /* we need tagoff even if outside of the range */
 	    TkBTreeNextTag(&tSearch);    /* cannot fail */
 	    assert(tSearch.segPtr);      /* proof last assumption */
 	    TkrTextPrintIndex(textPtr, &tSearch.curIndex, position);
-	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position, -1));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position, TCL_INDEX_NONE));
 	    Tcl_SetObjResult(interp, resultObj);
 	}
 	break;
@@ -741,8 +741,8 @@ TkTextTagCmd(
 		TkrTextPrintIndex(textPtr, &index1, position2);
 	    }
 	    resultObj = Tcl_NewObj();
-	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position1, -1));
-	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position2, -1));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position1, TCL_INDEX_NONE));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(position2, TCL_INDEX_NONE));
 	    Tcl_SetObjResult(interp, resultObj);
 	}
 	break;
@@ -1071,7 +1071,7 @@ SetupDefaultRelief(
 	Tk_GetRelief(textPtr->interp, DEF_TEXT_SELECT_RELIEF, &tagPtr->relief);
 	assert(strcmp(Tk_NameOfRelief(tagPtr->relief), DEF_TEXT_SELECT_RELIEF) == 0);
 	if (tagPtr->reliefPtr) { Tcl_GuardedDecrRefCount(tagPtr->reliefPtr); }
-	Tcl_IncrRefCount(tagPtr->reliefPtr = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, -1));
+	Tcl_IncrRefCount(tagPtr->reliefPtr = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, TCL_INDEX_NONE));
     } else {
 	tagPtr->relief = TK_RELIEF_FLAT;
     }
@@ -1409,7 +1409,7 @@ AppendTags(
 
     for (i = 0; i < numTags; ++i) {
 	if (tagArray[i]) {
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(tagArray[i]->name, -1));
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(tagArray[i]->name, TCL_INDEX_NONE));
 	}
     }
     Tcl_SetObjResult(interp, listObj);
@@ -1573,7 +1573,7 @@ TkTextFindTags(
 
     for ( ; tagPtr; tagPtr = tagPtr->nextPtr) {
 	if (!discardSelection || tagPtr != textPtr->selTagPtr) {
-	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(tagPtr->name, -1));
+	    Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj(tagPtr->name, TCL_INDEX_NONE));
 	}
     }
 
@@ -1793,7 +1793,7 @@ TkTextBindEvent(
 	    Tcl_ResetResult(interp);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "requested illegal events; only key, button, motion,"
-		    " enter, leave, and virtual events may be used", -1));
+		    " enter, leave, and virtual events may be used", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
 	    return TCL_ERROR;
 	}
@@ -1828,7 +1828,7 @@ TkTextBindEvent(
 	    }
 	    Tcl_ResetResult(interp);
 	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(command, TCL_INDEX_NONE));
 	}
     } else {
 	Tk_GetAllBindings(interp, *bindingTablePtr, (void *)name);

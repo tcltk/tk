@@ -272,7 +272,7 @@ AppendName(
 	name = TkTextMarkName(sharedTextPtr, NULL, markPtr);
     }
     assert(name);
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -283,8 +283,8 @@ UndoToggleGravityGetCommand(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("gravity", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("gravity", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -380,8 +380,8 @@ UndoSetMarkGetCommand(
     const char *operation = POINTER_IS_MARKED(token->markPtr) ? "unset" : "set";
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(operation, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("mark", TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(operation, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -398,7 +398,7 @@ UndoSetMarkInspect(
 
     if (!POINTER_IS_MARKED(token->markPtr)) {
 	const char *gravity = (markPtr->typePtr == &tkTextLeftMarkType) ? "left" : "right";
-	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(gravity, -1));
+	Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(gravity, TCL_INDEX_NONE));
     }
 
     return objPtr;
@@ -661,7 +661,7 @@ TkTextMarkCmd(
 	textPtr->sharedTextPtr->numMarks -= 1; /* take back counting */
 	textPtr->sharedTextPtr->numPrivateMarks += 1;
 	TkBTreeLinkSegment(textPtr->sharedTextPtr, markPtr1, &index1);
-	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(uniqName, -1));
+	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(uniqName, TCL_INDEX_NONE));
 	break;
     }
     case MARK_GRAVITY: {
@@ -686,7 +686,7 @@ TkTextMarkCmd(
 	if (objc == 4) {
 	    const char *typeStr;
 	    typeStr = markPtr->typePtr == &tkTextRightMarkType ? "right" : "left";
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, TCL_INDEX_NONE));
 	    return TCL_OK;
 	}
 	str = Tcl_GetStringFromObj(objv[4], &length);
@@ -744,10 +744,10 @@ TkTextMarkCmd(
 	resultObj = Tcl_NewObj();
 
 	if (!discardSpecial && (!pattern || Tcl_StringMatch("insert", pattern))) {
-	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("insert", -1));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("insert", TCL_INDEX_NONE));
 	}
 	if (!discardSpecial && (!pattern || Tcl_StringMatch("current", pattern))) {
-	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("current", -1));
+	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj("current", TCL_INDEX_NONE));
 	}
 
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable, &search);
@@ -759,7 +759,7 @@ TkTextMarkCmd(
 		const char *name = (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr);
 
 		if (!pattern || Tcl_StringMatch(name, pattern)) {
-		    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(name, -1));
+		    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(name, TCL_INDEX_NONE));
 		}
 	    }
 	}
@@ -2189,8 +2189,8 @@ MarkInspectProc(
     name = TkTextMarkName(sharedTextPtr, NULL, segPtr);
     assert(name);
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(gravity, -1));
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(gravity, TCL_INDEX_NONE));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -2910,7 +2910,7 @@ MarkFindNext(
 		    if (name /* otherwise it's a special mark not belonging to this widget */
 			    && (!discardSpecial || !TkTextIsSpecialMark(segPtr))
 			    && (!pattern || Tcl_StringMatch(name, pattern))) {
-			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
+			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
 			return TCL_OK;
 		    }
 		}
@@ -2948,7 +2948,7 @@ MarkFindNext(
 		    if (name /* otherwise it's a special mark not belonging to this widget */
 			    && (!discardSpecial || !TkTextIsSpecialMark(segPtr))
 			    && (!pattern || Tcl_StringMatch(name, pattern))) {
-			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
+			Tcl_SetObjResult(interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
 			return TCL_OK;
 		    }
 		}

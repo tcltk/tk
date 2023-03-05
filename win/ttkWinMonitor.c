@@ -146,6 +146,7 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
 MODULE_SCOPE int TtkWinTheme_Init(Tcl_Interp *, HWND hwnd);
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *, HWND hwnd);
+MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp);
 
 MODULE_SCOPE int Ttk_WinPlatformInit(Tcl_Interp *interp)
 {

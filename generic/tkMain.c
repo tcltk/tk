@@ -71,7 +71,7 @@ NewNativeObj(
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(string, wcslen(string), &ds);
 #else
-    (void)Tcl_ExternalToUtfDStringEx(NULL, (char *)string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+    (void)Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
 #endif
     obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);

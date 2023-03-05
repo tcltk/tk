@@ -220,7 +220,7 @@ UndoLinkSegmentGetCommand(
 {
     Tcl_Obj *objPtr = Tcl_NewObj();
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("window", -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj("window", TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -236,7 +236,7 @@ UndoLinkSegmentInspect(
 
     GetIndex(sharedTextPtr, token->segPtr, &index);
     TkTextIndexPrint(sharedTextPtr, NULL, &index, buf);
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
     return objPtr;
 }
 
@@ -311,7 +311,7 @@ RedoLinkSegmentInspect(
 
     TkBTreeUndoIndexToIndex(sharedTextPtr, &token->index, &index);
     TkTextIndexPrint(sharedTextPtr, NULL, &index, buf);
-    idxPtr = Tcl_NewStringObj(buf, -1);
+    idxPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
     Tcl_ListObjReplace(NULL, objPtr, 1, 0, 1, &idxPtr);
     return objPtr;
 }
@@ -611,7 +611,7 @@ TkTextWindowCmd(
 		hPtr;
 		hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr), -1));
+		    (const char *)Tcl_GetHashKey(&textPtr->sharedTextPtr->markTable, hPtr), TCL_INDEX_NONE));
 	}
 	Tcl_SetObjResult(interp, resultObj);
 	break;
@@ -1170,14 +1170,14 @@ EmbWinInspectProc(
 
     for ( ; i != TK_TEXT_TAG_SET_NPOS; i = TkTextTagSetFindNext(tagInfoPtr, i)) {
 	const TkTextTag *tagPtr = tagLookup[i];
-	Tcl_ListObjAppendElement(NULL, objPtr2, Tcl_NewStringObj(tagPtr->name, -1));
+	Tcl_ListObjAppendElement(NULL, objPtr2, Tcl_NewStringObj(tagPtr->name, TCL_INDEX_NONE));
     }
 
     Tcl_DStringInit(&opts);
     TkTextInspectOptions(sharedTextPtr->peers, &segPtr->body.ew, segPtr->body.ew.optionTable,
 	    &opts, 0);
 
-    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, -1));
+    Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(segPtr->typePtr->name, TCL_INDEX_NONE));
     Tcl_ListObjAppendElement(NULL, objPtr, objPtr2);
     Tcl_ListObjAppendElement(NULL, objPtr, Tcl_NewStringObj(Tcl_DStringValue(&opts),
 	    Tcl_DStringLength(&opts)));
@@ -1453,17 +1453,17 @@ EmbWinLayoutProc(
 
 	if (dsPtr) {
 	    Tcl_DStringAppend(dsPtr, before, string - before);
-	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), -1, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, -1, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
 	    goto gotWindow;
 	}
 	Tcl_DStringInit(&name);
-	Tcl_DStringAppend(&name, Tcl_GetStringResult(textPtr->interp), -1);
+	Tcl_DStringAppend(&name, Tcl_GetStringResult(textPtr->interp), TCL_INDEX_NONE);
 	Tcl_ResetResult(textPtr->interp);
 	ewPtr->body.ew.tkwin = Tk_NameToWindow(textPtr->interp, Tcl_DStringValue(&name), textPtr->tkwin);
 	Tcl_DStringFree(&name);

@@ -2323,7 +2323,7 @@ TkpTextGetIndex(
      */
 
     Tcl_DStringInit(&copy);
-    myString = Tcl_DStringAppend(&copy, string, -1);
+    myString = Tcl_DStringAppend(&copy, string, TCL_INDEX_NONE);
     skipMark = 0;
 
     p = myString + lenOfString;
