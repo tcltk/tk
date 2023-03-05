@@ -145,11 +145,10 @@ SysNotifyCmd(
 	Tcl_DStringInit(&dst);
 	Tcl_DStringInit(&dsm);
 	enc = Tcl_GetEncoding(NULL, "utf-8");
-	(void)Tcl_UtfToExternalDStringEx(enc, title, -1, TCL_ENCODING_NOCOMPLAIN, &dst);
-	(void)Tcl_UtfToExternalDStringEx(enc, message, -1, TCL_ENCODING_NOCOMPLAIN, &dsm);
+	char *dstStr = Tcl_UtfToExternalDString(enc, title, TCL_INDEX_NONE, &dst);
+	char *dsmStr = Tcl_UtfToExternalDString(enc, message, TCL_INDEX_NONE, &dsm);
 	notify_init(appname);
-	notif = notify_notification_new(Tcl_DStringValue(&dst),
-	    Tcl_DStringValue(&dsm), icon, NULL);
+	notif = notify_notification_new(dstStr, dsmStr, icon, NULL);
 	notify_notification_show(notif, NULL);
 	Tcl_DStringFree(&dsm);
 	Tcl_DStringFree(&dst);
@@ -194,7 +193,7 @@ SysNotify_Init(
 
 	while (lnlibs[i] != NULL) {
 	    Tcl_ResetResult(interp);
-	    nameobj = Tcl_NewStringObj(lnlibs[i], -1);
+	    nameobj = Tcl_NewStringObj(lnlibs[i], TCL_INDEX_NONE);
 	    Tcl_IncrRefCount(nameobj);
 	    if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &ln_fns.lib)
 		    == TCL_OK) {

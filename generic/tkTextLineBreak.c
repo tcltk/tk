@@ -94,7 +94,7 @@ LoadLibUnibreak(
 
     VoidP Funcs[sizeof(Symbols)/sizeof(Symbols[0])];
     Tcl_LoadHandle handle;
-    Tcl_Obj *pathPtr = Tcl_NewStringObj("libunibreak.so.1", -1);
+    Tcl_Obj *pathPtr = Tcl_NewStringObj("libunibreak.so.1", TCL_INDEX_NONE);
     int rc;
 
     Tcl_IncrRefCount(pathPtr);
@@ -106,7 +106,7 @@ LoadLibUnibreak(
 
 	Tcl_ResetResult(interp);
 	Tcl_DecrRefCount(pathPtr);
-	Tcl_IncrRefCount(pathPtr = Tcl_NewStringObj("liblinebreak.so.2", -1));
+	Tcl_IncrRefCount(pathPtr = Tcl_NewStringObj("liblinebreak.so.2", TCL_INDEX_NONE));
 	rc = LoadFile(interp, pathPtr, &handle, Symbols, Funcs);
     }
     Tcl_DecrRefCount(pathPtr);

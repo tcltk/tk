@@ -1327,6 +1327,9 @@ static const Ttk_ElementSpec ClientElementSpec = {
  */
 
 MODULE_SCOPE
+void TtkElements_Init(Tcl_Interp *interp);
+
+MODULE_SCOPE
 void TtkElements_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);

@@ -11482,10 +11482,10 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1 + 1);
 	Tcl_PrintDouble(NULL, last, buf2 + 1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, -1);
-	Tcl_DStringAppend(&buf, buf1, -1);
-	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -11692,10 +11692,10 @@ GetYView(
 		Tcl_PrintDouble(NULL, first, buf1 + 1);
 		Tcl_PrintDouble(NULL, last, buf2 + 1);
 		Tcl_DStringInit(&buf);
-		Tcl_DStringAppend(&buf, textPtr->yScrollCmd, -1);
-		Tcl_DStringAppend(&buf, buf1, -1);
-		Tcl_DStringAppend(&buf, buf2, -1);
-		code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, 0);
+		Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+		Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
+		Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
+		code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);
 		Tcl_DStringFree(&buf);
 		if (code != TCL_OK) {
 		    Tcl_AddErrorInfo(interp,

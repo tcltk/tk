@@ -2037,7 +2037,7 @@ GetObjectForOption(
 		objPtr = Tcl_NewStringObj("end", -1);
 	    } else if (*((int *) internalPtr) < 0) {
 		char buf[32];
-		snprintf(buf, 32, "end%d", *((int *) internalPtr));
+		snprintf(buf, 32, "end%d", 1 + *((int *) internalPtr));
 		objPtr = Tcl_NewStringObj(buf, -1);
 	    } else {
 		objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
