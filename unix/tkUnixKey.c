@@ -133,8 +133,8 @@ TkpGetString(
 
 #if X_HAVE_UTF8_STRING
 	Tcl_DStringSetLength(dsPtr, TCL_DSTRING_STATIC_SIZE-1);
-	len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
+	len = (Tcl_Size)Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+		Tcl_DStringValue(dsPtr), (int)Tcl_DStringLength(dsPtr),
 		&kePtr->keysym, &status);
 
 	if (status == XBufferOverflow) {
@@ -143,8 +143,8 @@ TkpGetString(
 	     */
 
 	    Tcl_DStringSetLength(dsPtr, len);
-	    len = Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
-		    Tcl_DStringValue(dsPtr), Tcl_DStringLength(dsPtr),
+	    len =(Tcl_Size) Xutf8LookupString(winPtr->inputContext, &eventPtr->xkey,
+		    Tcl_DStringValue(dsPtr), (int)Tcl_DStringLength(dsPtr),
 		    &kePtr->keysym, &status);
 	}
 	if ((status != XLookupChars) && (status != XLookupBoth)) {
@@ -191,7 +191,7 @@ TkpGetString(
 
 	Tcl_DStringInit(&buf);
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
-	len = XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
+	len = (Tcl_Size)XLookupString(&eventPtr->xkey, Tcl_DStringValue(&buf),
 		TCL_DSTRING_STATIC_SIZE, &kePtr->keysym, 0);
 	Tcl_DStringValue(&buf)[len] = '\0';
 
@@ -421,7 +421,8 @@ TkpInitKeymapInfo(
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
     KeySym keysym;
-    int count, i, j, max, arraySize;
+    int count, i, max;
+    Tcl_Size j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;
