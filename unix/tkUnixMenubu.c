@@ -369,7 +369,7 @@ TkpComputeMenuButtonGeometry(
 	Tk_FreeTextLayout(mbPtr->textLayout);
 
 	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->text,
-		-1, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
+		TCL_INDEX_NONE, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
 		&mbPtr->textHeight);
 	txtWidth = mbPtr->textWidth;
 	txtHeight = mbPtr->textHeight;
