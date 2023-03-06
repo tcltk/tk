@@ -109,8 +109,8 @@ TkSelGetSelection(
 	     */
 
 	    locale = LANGIDFROMLCID(*((int*)data));
-	    GetLocaleInfoA(locale, LOCALE_IDEFAULTANSICODEPAGE,
-		    Tcl_DStringValue(&ds)+2, Tcl_DStringLength(&ds)-2);
+	    GetLocaleInfoA((ULONG)locale, LOCALE_IDEFAULTANSICODEPAGE,
+		    Tcl_DStringValue(&ds)+2, (int)Tcl_DStringLength(&ds)-2);
 	    GlobalUnlock(handle);
 
 	    encoding = Tcl_GetEncoding(NULL, Tcl_DStringValue(&ds));
@@ -281,7 +281,7 @@ TkWinClipboardRender(
     TkClipboardBuffer *cbPtr;
     HGLOBAL handle;
     char *buffer, *p, *rawText, *endPtr;
-    int length;
+    size_t length;
     Tcl_DString ds;
 
     for (targetPtr = dispPtr->clipTargetPtr; targetPtr != NULL;
@@ -333,14 +333,14 @@ TkWinClipboardRender(
 	Tcl_UtfToWCharDString(rawText, TCL_INDEX_NONE, &ds);
 	ckfree(rawText);
 	handle = GlobalAlloc(GMEM_MOVEABLE|GMEM_DDESHARE,
-		(unsigned) Tcl_DStringLength(&ds) + 2);
+		Tcl_DStringLength(&ds) + 2);
 	if (!handle) {
 	    Tcl_DStringFree(&ds);
 	    return;
 	}
 	buffer = (char *)GlobalLock(handle);
 	memcpy(buffer, Tcl_DStringValue(&ds),
-		(unsigned) Tcl_DStringLength(&ds) + 2);
+		Tcl_DStringLength(&ds) + 2);
 	GlobalUnlock(handle);
 	Tcl_DStringFree(&ds);
 	SetClipboardData(CF_UNICODETEXT, handle);

@@ -88,22 +88,8 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#if (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
-#   define TCL_ENCODING_STRICT			0x44
-#endif
-
-
-#if TCL_MAJOR_VERSION < 9
-#   undef Tcl_ExternalToUtfDStringEx
-#   undef Tcl_UtfToExternalDStringEx
-    /* just assume 'flags' is TCL_ENCODING_NOCOMPLAIN, and return value not used. */
-#   define Tcl_ExternalToUtfDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_ExternalToUtfDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   define Tcl_UtfToExternalDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_UtfToExternalDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   if !defined(Tcl_GetParent) && (TCL_MINOR_VERSION < 7)
-#	define Tcl_GetParent Tcl_GetMaster
-#   endif
+#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#   define Tcl_GetParent Tcl_GetMaster
 #endif
 
 /*
@@ -272,7 +258,7 @@ typedef struct TkDisplay {
     TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
-    int numModKeyCodes;		/* Number of entries in modKeyCodes array
+    Tcl_Size numModKeyCodes;		/* Number of entries in modKeyCodes array
 				 * below. */
     KeyCode *modKeyCodes;	/* Pointer to an array giving keycodes for all
 				 * of the keys that have modifiers associated
