@@ -259,7 +259,13 @@ static const Tk_OptionSpec LabelframeOptionSpecs[] = {
 	offsetof(Labelframe,label.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TK_OPTION_UNDERLINE_DEF(Labelframe, label.underline), 0},
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
+	"-1", offsetof(Labelframe,label.underline), TCL_INDEX_NONE,
+	0,0,0 },
+#else
+	NULL, offsetof(Labelframe,label.underline), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,0 },
+#endif
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
 	TCL_INDEX_NONE, offsetof(Labelframe,label.labelWidget),
 	TK_OPTION_NULL_OK,0,LABELWIDGET_CHANGED|GEOMETRY_CHANGED },
