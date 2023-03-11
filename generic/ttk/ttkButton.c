@@ -66,8 +66,14 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
 	offsetof(Base,base.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TK_OPTION_UNDERLINE_DEF(Base, base.underline), 0},
-    /* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
+	"-1", offsetof(Base,base.underline), TCL_INDEX_NONE,
+	0,0,0 },
+#else
+	NULL, offsetof(Base,base.underline), TCL_INDEX_NONE,
+	TK_OPTION_NULL_OK,0,0 },
+#endif
+	/* SB: OPTION_INT, see <<NOTE-NULLOPTIONS>> */
     {TK_OPTION_STRING, "-width", "width", "Width",
 	NULL, offsetof(Base,base.widthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
