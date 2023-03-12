@@ -99,8 +99,8 @@ static const Tk_ConfigSpec configSpecs[] = {
 static int		ConfigureScrollbar(Tcl_Interp *interp,
 			    TkScrollbar *scrollPtr, int objc,
 			    Tcl_Obj *const objv[], int flags);
-static void		ScrollbarCmdDeletedProc(ClientData clientData);
-static int		ScrollbarWidgetObjCmd(ClientData clientData,
+static void		ScrollbarCmdDeletedProc(void *clientData);
+static int		ScrollbarWidgetObjCmd(void *clientData,
 			    Tcl_Interp *, int objc, Tcl_Obj *const objv[]);
 
 /*
@@ -122,7 +122,7 @@ static int		ScrollbarWidgetObjCmd(ClientData clientData,
 
 int
 Tk_ScrollbarObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -220,7 +220,7 @@ Tk_ScrollbarObjCmd(
 
 static int
 ScrollbarWidgetObjCmd(
-    ClientData clientData,	/* Information about scrollbar widget. */
+    void *clientData,	/* Information about scrollbar widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -264,7 +264,7 @@ ScrollbarWidgetObjCmd(
 	    case SLIDER:	zone = "slider"; break;
 	    case BOTTOM_ARROW:	zone = "arrow2"; break;
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, TCL_INDEX_NONE));
 	    goto done;
 	}
 	if (objc != 3) {
@@ -413,7 +413,7 @@ ScrollbarWidgetObjCmd(
 	case BOTTOM_GAP:	zone = "trough2"; break;
 	case BOTTOM_ARROW:	zone = "arrow2";  break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, TCL_INDEX_NONE));
 	break;
     }
     case COMMAND_SET: {
@@ -584,7 +584,7 @@ ConfigureScrollbar(
 
 void
 TkScrollbarEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
@@ -650,7 +650,7 @@ TkScrollbarEventProc(
 
 static void
 ScrollbarCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->tkwin;

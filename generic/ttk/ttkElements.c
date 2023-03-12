@@ -482,7 +482,7 @@ static const Ttk_ElementOptionSpec SizegripOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	offsetof(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
     { "-gripsize", TK_OPTION_PIXELS,
-	offsetof(SizegripElement,gripSizeObj), "15" },
+	offsetof(SizegripElement,gripSizeObj), "11.25p" },
     {0,TK_OPTION_BOOLEAN,0,0}
 };
 
@@ -1325,6 +1325,9 @@ static const Ttk_ElementSpec ClientElementSpec = {
  * TtkElements_Init --
  *	Register default element implementations.
  */
+
+MODULE_SCOPE
+void TtkElements_Init(Tcl_Interp *interp);
 
 MODULE_SCOPE
 void TtkElements_Init(Tcl_Interp *interp)
