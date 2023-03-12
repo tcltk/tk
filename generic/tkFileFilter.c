@@ -385,8 +385,7 @@ AddClause(
 	     * macRoman characters long
 	     */
 
-	    (void)Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
-	    string = Tcl_DStringValue(&osTypeDS);
+	    string = Tcl_UtfToExternalDString(macRoman, strType, len, &osTypeDS);
 	    mfPtr->type = (OSType) string[0] << 24 | (OSType) string[1] << 16 |
 		    (OSType) string[2] <<  8 | (OSType) string[3];
 	    Tcl_DStringFree(&osTypeDS);

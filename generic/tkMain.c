@@ -16,7 +16,7 @@
 
 #include "tkInt.h"
 
-extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
 /*
  * The default prompt used when the user has not overridden it.
@@ -66,14 +66,16 @@ NewNativeObj(
 {
     Tcl_Obj *obj;
     Tcl_DString ds;
+    const char *str;
 
 #if defined(_WIN32) && defined(UNICODE)
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(string, wcslen(string), &ds);
+    str = Tcl_DStringValue(&ds);
 #else
-    (void)Tcl_ExternalToUtfDString(NULL, (char *)string, -1, &ds);
+    str = Tcl_ExternalToUtfDString(NULL, (char *)string, strlen(string), &ds);
 #endif
-    obj = Tcl_NewStringObj(Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    obj = Tcl_NewStringObj(str, Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     return obj;
 }
@@ -137,7 +139,7 @@ typedef struct {
  */
 
 static void		Prompt(Tcl_Interp *interp, InteractiveState *isPtr);
-static void		StdinProc(ClientData clientData, int mask);
+static void		StdinProc(void *clientData, int mask);
 
 /*
  *----------------------------------------------------------------------
@@ -289,7 +291,7 @@ Tk_MainEx(
     }
     Tcl_SetVar2Ex(interp, "argv0", NULL, appName, TCL_GLOBAL_ONLY);
 
-    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj(argc), TCL_GLOBAL_ONLY);
+    Tcl_SetVar2Ex(interp, "argc", NULL, Tcl_NewWideIntObj((Tcl_WideInt)argc), TCL_GLOBAL_ONLY);
 
     argvPtr = Tcl_NewListObj(0, NULL);
     while (argc--) {
@@ -411,19 +413,19 @@ Tk_MainEx(
 
 static void
 StdinProc(
-    ClientData clientData,	/* The state of interactive cmd line */
+    void *clientData,	/* The state of interactive cmd line */
     TCL_UNUSED(int) /*mask*/)
 {
     char *cmd;
     int code;
-    int length;
+    Tcl_Size length;
     InteractiveState *isPtr = (InteractiveState *)clientData;
     Tcl_Channel chan = isPtr->input;
     Tcl_Interp *interp = isPtr->interp;
 
     length = Tcl_Gets(chan, &isPtr->line);
 
-    if ((length < 0) && !isPtr->gotPartial) {
+    if ((length == TCL_INDEX_NONE) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    /*
 	     * Would be better to find a way to exit the mainLoop? Or perhaps
@@ -437,8 +439,8 @@ StdinProc(
 	return;
     }
 
-    Tcl_DStringAppend(&isPtr->command, Tcl_DStringValue(&isPtr->line), -1);
-    cmd = Tcl_DStringAppend(&isPtr->command, "\n", -1);
+    Tcl_DStringAppend(&isPtr->command, Tcl_DStringValue(&isPtr->line), TCL_INDEX_NONE);
+    cmd = Tcl_DStringAppend(&isPtr->command, "\n", TCL_INDEX_NONE);
     Tcl_DStringFree(&isPtr->line);
     if (!Tcl_CommandComplete(cmd)) {
 	isPtr->gotPartial = 1;

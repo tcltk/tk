@@ -46,7 +46,7 @@ typedef struct {
      * It is a Tcl_Channel if image created by -file option
      * or a Tcl_Obj, if image is created with the -data option
      */
-    ClientData dataOrChan;
+    void *dataOrChan;
     Tcl_DString formatString;
     NSVGimage *nsvgImage;
     RastOpts ropts;
@@ -77,13 +77,13 @@ static int		RasterizeSVG(Tcl_Interp *interp,
 static double		GetScaleFromParameters(NSVGimage *nsvgImage,
 			    RastOpts *ropts, int *widthPtr, int *heightPtr);
 static NSVGcache *	GetCachePtr(Tcl_Interp *interp);
-static int		CacheSVG(Tcl_Interp *interp, ClientData dataOrChan,
+static int		CacheSVG(Tcl_Interp *interp, void *dataOrChan,
 			    Tcl_Obj *formatObj, NSVGimage *nsvgImage,
 			    RastOpts *ropts);
-static NSVGimage *	GetCachedSVG(Tcl_Interp *interp, ClientData dataOrChan,
+static NSVGimage *	GetCachedSVG(Tcl_Interp *interp, void *dataOrChan,
 			    Tcl_Obj *formatObj, RastOpts *ropts);
 static void		CleanCache(Tcl_Interp *interp);
-static void		FreeCache(ClientData clientData, Tcl_Interp *interp);
+static void		FreeCache(void *clientData, Tcl_Interp *interp);
 
 /*
  * The format record for the SVG nano file format:
@@ -161,7 +161,7 @@ MemMem(const void *haystack, size_t haylen,
 static int
 FileMatchSVG(
     Tcl_Channel chan,
-    const char *fileName,
+    TCL_UNUSED(const char *),
     Tcl_Obj *formatObj,
     int *widthPtr, int *heightPtr,
     Tcl_Interp *interp)
@@ -171,7 +171,6 @@ FileMatchSVG(
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage;
-    (void)fileName;
 
     CleanCache(interp);
     if (Tcl_ReadChars(chan, dataObj, 4096, 0) == TCL_IO_FAILURE) {
@@ -186,7 +185,7 @@ FileMatchSVG(
 	Tcl_DecrRefCount(dataObj);
 	return 0;
     }
-    if (!Tcl_Eof(chan) && (Tcl_ReadChars(chan, dataObj, -1, 1) == TCL_IO_FAILURE)) {
+    if (!Tcl_Eof(chan) && (Tcl_ReadChars(chan, dataObj, TCL_INDEX_NONE, 1) == TCL_IO_FAILURE)) {
 	/* in case of an error reading the file */
 	Tcl_DecrRefCount(dataObj);
 	return 0;
@@ -231,7 +230,7 @@ static int
 FileReadSVG(
     Tcl_Interp *interp,
     Tcl_Channel chan,
-    const char *fileName,
+    TCL_UNUSED(const char *),
     Tcl_Obj *formatObj,
     Tk_PhotoHandle imageHandle,
     int destX, int destY,
@@ -242,15 +241,14 @@ FileReadSVG(
     const char *data;
     RastOpts ropts;
     NSVGimage *nsvgImage = GetCachedSVG(interp, chan, formatObj, &ropts);
-    (void)fileName;
 
     if (nsvgImage == NULL) {
         Tcl_Obj *dataObj = Tcl_NewObj();
 
-	if (Tcl_ReadChars(chan, dataObj, -1, 0) == TCL_IO_FAILURE) {
+	if (Tcl_ReadChars(chan, dataObj, TCL_INDEX_NONE, 0) == TCL_IO_FAILURE) {
 	    /* in case of an error reading the file */
 	    Tcl_DecrRefCount(dataObj);
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("read error", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("read error", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "READ_ERROR", NULL);
 	    return TCL_ERROR;
 	}
@@ -407,7 +405,7 @@ ParseSVGWithOptions(
 
     inputCopy = (char *)attemptckalloc(length+1);
     if (inputCopy == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc data buffer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
 	goto error;
     }
@@ -460,7 +458,7 @@ ParseSVGWithOptions(
 	case OPT_SCALE_TO_WIDTH:
 	    if ( parameterScaleSeen ) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"only one of -scale, -scaletoheight, -scaletowidth may be given", -1));
+			"only one of -scale, -scaletoheight, -scaletowidth may be given", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
 		goto error;
@@ -481,7 +479,7 @@ ParseSVGWithOptions(
 	    }
 	    if (dpi < 0.0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-dpi value must be positive", -1));
+			"-dpi value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_DPI",
 			NULL);
 		goto error;
@@ -494,7 +492,7 @@ ParseSVGWithOptions(
 	    }
 	    if (ropts->scale <= 0.0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-scale value must be positive", -1));
+			"-scale value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
 		goto error;
@@ -507,7 +505,7 @@ ParseSVGWithOptions(
 	    }
 	    if (ropts->scaleToHeight <= 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-scaletoheight value must be positive", -1));
+			"-scaletoheight value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
 		goto error;
@@ -520,7 +518,7 @@ ParseSVGWithOptions(
 	    }
 	    if (ropts->scaleToWidth <= 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-scaletowidth value must be positive", -1));
+			"-scaletowidth value must be positive", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "BAD_SCALE",
 			NULL);
 		goto error;
@@ -531,7 +529,7 @@ ParseSVGWithOptions(
 
     nsvgImage = nsvgParse(inputCopy, "px", (float) dpi);
     if (nsvgImage == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot parse SVG image", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "PARSE_ERROR", NULL);
 	goto error;
     }
@@ -571,7 +569,8 @@ RasterizeSVG(
     NSVGimage *nsvgImage,
     int destX, int destY,
     int width, int height,
-    int srcX, int srcY,
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
     RastOpts *ropts)
 {
     int w, h, c;
@@ -580,14 +579,12 @@ RasterizeSVG(
     Tk_PhotoImageBlock svgblock;
     double scale;
     Tcl_WideUInt wh;
-    (void)srcX;
-    (void)srcY;
 
     scale = GetScaleFromParameters(nsvgImage, ropts, &w, &h);
 
     rast = nsvgCreateRasterizer();
     if (rast == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot initialize rasterizer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "RASTERIZER_ERROR",
 		NULL);
 	goto cleanAST;
@@ -596,14 +593,14 @@ RasterizeSVG(
     /* Tk Ticket [822330269b] Check potential int overflow in following ckalloc */
     wh = (Tcl_WideUInt)w * (Tcl_WideUInt)h;
     if ( w < 0 || h < 0 || wh > INT_MAX / 4) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("image size overflow", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("image size overflow", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "IMAGE_SIZE_OVERFLOW", NULL);
 	goto cleanRAST;
     }
 
     imgData = (unsigned char *)attemptckalloc(wh * 4);
     if (imgData == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("cannot alloc image buffer", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "SVG", "OUT_OF_MEMORY", NULL);
 	goto cleanRAST;
     }
@@ -752,7 +749,7 @@ GetCachePtr(
 static int
 CacheSVG(
     Tcl_Interp *interp,
-    ClientData dataOrChan,
+    void *dataOrChan,
     Tcl_Obj *formatObj,
     NSVGimage *nsvgImage,
     RastOpts *ropts)
@@ -793,7 +790,7 @@ CacheSVG(
 static NSVGimage *
 GetCachedSVG(
     Tcl_Interp *interp,
-    ClientData dataOrChan,
+    void *dataOrChan,
     Tcl_Obj *formatObj,
     RastOpts *ropts)
 {
@@ -866,10 +863,9 @@ CleanCache(Tcl_Interp *interp)
  */
 
 static void
-FreeCache(ClientData clientData, Tcl_Interp *interp)
+FreeCache(void *clientData, TCL_UNUSED(Tcl_Interp *))
 {
     NSVGcache *cachePtr = (NSVGcache *)clientData;
-    (void)interp;
 
     Tcl_DStringFree(&cachePtr->formatString);
     if (cachePtr->nsvgImage != NULL) {

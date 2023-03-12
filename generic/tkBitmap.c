@@ -350,7 +350,7 @@ GetBitmap(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't specify bitmap with '@' in a safe interpreter",
-		    -1));
+		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    goto error;
 	}
