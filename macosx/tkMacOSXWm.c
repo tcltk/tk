@@ -321,7 +321,7 @@ static int wmTracing = 0;
  * of top-level windows.
  */
 
-static void TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
+static void TopLevelReqProc(void *dummy, Tk_Window tkwin);
 
 static const Tk_GeomMgr wmMgrType = {
     "wm",			/* name */
@@ -343,11 +343,11 @@ static NSRect		InitialWindowBounds(TkWindow *winPtr,
 			    NSWindow *macWindow);
 static int		ParseGeometry(Tcl_Interp *interp, char *string,
 			    TkWindow *winPtr);
-static void		TopLevelEventProc(ClientData clientData,
+static void		TopLevelEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		WmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *table);
-static void		UpdateGeometryInfo(ClientData clientData);
+static void		UpdateGeometryInfo(void *clientData);
 static void		UpdateSizeHints(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -1355,7 +1355,7 @@ TkWmSetClass(
 
 int
 Tk_WmObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1811,7 +1811,7 @@ WmSetAttribute(
 	int length;
 	if ([NSApp macOSVersion] < 101300) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		  "Tabbing identifiers require macOS 10.13", -1));
+		  "Tabbing identifiers require macOS 10.13", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "TABBINGID", NULL);
 	    return TCL_ERROR;
 	}
@@ -1945,27 +1945,27 @@ WmGetAttribute(
 	    }
 #endif // MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	}
-	result = Tcl_NewStringObj(resultString, -1);
+	result = Tcl_NewStringObj(resultString, TCL_INDEX_NONE);
 	break;
     }
     case WMATT_BUTTONS: {
 	result = Tcl_NewListObj(3, NULL);
 	if ([macWindow standardWindowButton:NSWindowCloseButton].enabled) {
-	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("close", -1));
+	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("close", TCL_INDEX_NONE));
 	}
 	if ([macWindow standardWindowButton:NSWindowMiniaturizeButton].enabled) {
-	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("miniaturize", -1));
+	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("miniaturize", TCL_INDEX_NONE));
 	}
 	if ([macWindow standardWindowButton:NSWindowZoomButton].enabled) {
-	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("zoom", -1));
+	    Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj("zoom", TCL_INDEX_NONE));
 	}
 	break;
     }
     case WMATT_CLASS:
 	if ([macWindow isKindOfClass:[NSPanel class]]) {
-	    result = Tcl_NewStringObj(subclassNames[subclassNSPanel], -1);
+	    result = Tcl_NewStringObj(subclassNames[subclassNSPanel], TCL_INDEX_NONE);
 	} else {
-	    result = Tcl_NewStringObj(subclassNames[subclassNSWindow], -1);
+	    result = Tcl_NewStringObj(subclassNames[subclassNSWindow], TCL_INDEX_NONE);
 	}
 	break;
     case WMATT_FULLSCREEN:
@@ -1987,7 +1987,7 @@ WmGetAttribute(
 	for (bit = styleMaskBits; bit->bitname != NULL; bit++) {
 	    if (styleMaskValue & bit->bitvalue) {
 		Tcl_ListObjAppendElement(NULL, result,
-		    Tcl_NewStringObj(bit->bitname, -1));
+		    Tcl_NewStringObj(bit->bitname, TCL_INDEX_NONE));
 	    }
 	}
 	break;
@@ -2005,7 +2005,7 @@ WmGetAttribute(
 		break;
 	    }
 	}
-	result = Tcl_NewStringObj(name, -1);
+	result = Tcl_NewStringObj(name, TCL_INDEX_NONE);
 	break;
     }
     case WMATT_TITLEPATH:
@@ -4686,7 +4686,7 @@ Tk_UnsetGrid(
 
 static void
 TopLevelEventProc(
-    ClientData clientData,	/* Window for which event occurred. */
+    void *clientData,	/* Window for which event occurred. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -4773,7 +4773,7 @@ TopLevelReqProc(
 
 static void
 UpdateGeometryInfo(
-    ClientData clientData)	/* Pointer to the window's record. */
+    void *clientData)	/* Pointer to the window's record. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -6181,7 +6181,7 @@ TkMacOSXZoomToplevel(
 
 int
 TkUnsupported1ObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
