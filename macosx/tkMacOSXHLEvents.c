@@ -48,7 +48,7 @@ typedef struct AppleEventInfo {
 
 static int  MissedAnyParameters(const AppleEvent *theEvent);
 static int  ReallyKillMe(Tcl_Event *eventPtr, int flags);
-static void ProcessAppleEvent(ClientData clientData);
+static void ProcessAppleEvent(void *clientData);
 
 /*
  * Names of the procedures which can be used to process AppleEvents.
@@ -240,9 +240,9 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     AEInfo->replyEvent = nil;
     AEInfo->retryCount = 0;
     if (Tcl_FindCommand(_eventInterp, "::tk::mac::OpenDocuments", NULL, 0)){
-	ProcessAppleEvent((ClientData)AEInfo);
+	ProcessAppleEvent((void *)AEInfo);
     } else {
-	Tcl_CreateTimerHandler(500, ProcessAppleEvent, (ClientData)AEInfo);
+	Tcl_CreateTimerHandler(500, ProcessAppleEvent, (void *)AEInfo);
     }
 }
 
@@ -263,7 +263,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     AEInfo->procedure = printDocProc;
     AEInfo->replyEvent = nil;
     AEInfo->retryCount = 0;
-    ProcessAppleEvent((ClientData)AEInfo);
+    ProcessAppleEvent((void *)AEInfo);
 }
 
 - (void) handleDoScriptEvent: (NSAppleEventDescriptor *)event
@@ -325,7 +325,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
                 AEInfo->procedure = scriptFileProc;
                 AEInfo->replyEvent = nil;
 		AEInfo->retryCount = 0;
-                ProcessAppleEvent((ClientData)AEInfo);
+                ProcessAppleEvent((void *)AEInfo);
             }
         }
     } else if (noErr == AEGetParamPtr(theDesc, keyDirectObject, typeUTF8Text, &type,
@@ -379,7 +379,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     AEInfo->procedure = launchURLProc;
     AEInfo->replyEvent = nil;
     AEInfo->retryCount = 0;
-    ProcessAppleEvent((ClientData)AEInfo);
+    ProcessAppleEvent((void *)AEInfo);
 }
 
 - (void)handleGetSDEFEvent:(NSAppleEventDescriptor *)event withReplyEvent:(NSAppleEventDescriptor *)replyEvent {
@@ -394,7 +394,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
     AEInfo->procedure =  getSdefProc;
     AEInfo->replyEvent = nil;
     AEInfo->retryCount = 0;
-    ProcessAppleEvent((ClientData)AEInfo);
+    ProcessAppleEvent((void *)AEInfo);
 
 }
 
@@ -426,7 +426,7 @@ static const char getSdefProc[] = "::tk::mac::GetDynamicSdef";
  */
 
 static void ProcessAppleEvent(
-    ClientData clientData)
+    void *clientData)
 {
     int code;
     AppleEventInfo *AEInfo = (AppleEventInfo*) clientData;
