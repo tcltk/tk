@@ -35,7 +35,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
-static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
+static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
 
 #pragma mark TKApplication(TKInit)
@@ -780,7 +780,7 @@ TkpGetAppName(
 
 static int
 TkMacOSVersionObjCmd(
-    TCL_UNUSED(void *), /* ClientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
