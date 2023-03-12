@@ -123,7 +123,7 @@ typedef struct {
  * serializing in the GIF format.
  */
 
-typedef size_t (WriteBytesFunc) (ClientData clientData, const char *bytes,
+typedef size_t (WriteBytesFunc) (void *clientData, const char *bytes,
 			    size_t byteCount);
 
 /*
@@ -155,7 +155,7 @@ static int		StringWriteGIF(Tcl_Interp *interp, Tcl_Obj *format,
 			    Tcl_Obj *metadataInObj,
 			    Tk_PhotoImageBlock *blockPtr);
 static int		CommonWriteGIF(Tcl_Interp *interp,
-			    ClientData clientData,
+			    void *clientData,
 			    WriteBytesFunc *writeProc, Tcl_Obj *format,
 			    Tcl_Obj *metadataInObj,
 			    Tk_PhotoImageBlock *blockPtr);
@@ -305,7 +305,7 @@ typedef struct {
      */
 
     int initialBits;
-    ClientData destination;
+    void *destination;
     WriteBytesFunc *writeProc;
 
     int clearCode;
@@ -333,7 +333,7 @@ typedef struct {
 
 static int		ColorNumber(GifWriterState *statePtr,
 			    int red, int green, int blue);
-static void		Compress(int initBits, ClientData handle,
+static void		Compress(int initBits, void *handle,
 			    WriteBytesFunc *writeProc, ifunptr readValue,
 			    GifWriterState *statePtr);
 static int		IsNewColor(GifWriterState *statePtr,
@@ -505,7 +505,7 @@ FileReadGIF(
     if (BitSet(buf[0], LOCALCOLORMAP)) {	/* Global Colormap */
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "error reading color map", -1));
+		    "error reading color map", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP", NULL);
 	    return TCL_ERROR;
 	}
@@ -550,7 +550,7 @@ FileReadGIF(
 	switch (gifLabel) {
 	case GIF_TERMINATOR:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "no image data for this index", -1));
+		    "no image data for this index", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "NO_DATA", NULL);
 	    goto error;
 
@@ -567,7 +567,7 @@ FileReadGIF(
 		    metadataOutObj)
 		    < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"error reading extension in GIF image", -1));
+			"error reading extension in GIF image", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
 			NULL);
 		goto error;
@@ -608,7 +608,7 @@ FileReadGIF(
 	    if (BitSet(buf[8], LOCALCOLORMAP)) {
 		if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "error reading color map", -1));
+			    "error reading color map", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF",
 			    "COLOR_MAP", NULL);
 		    goto error;
@@ -671,7 +671,7 @@ FileReadGIF(
     if (BitSet(buf[8], LOCALCOLORMAP)) {
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "error reading color map", -1));
+		    "error reading color map", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP", NULL);
 	    goto error;
 	}
@@ -850,7 +850,7 @@ FileReadGIF(
 		    metadataOutObj)
 		    < 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"error reading extension in GIF image", -1));
+			"error reading extension in GIF image", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
 			NULL);
 		goto error;
@@ -871,7 +871,7 @@ FileReadGIF(
 	break;
     }
 
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(tkImgFmtGIF.name, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(tkImgFmtGIF.name, TCL_INDEX_NONE));
     result = TCL_OK;
 
 error:
@@ -918,7 +918,7 @@ ReadOneByte(
          */
 
         Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"premature end of image data", -1));
+		"premature end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END", NULL);
 	return -1;
     }
@@ -1331,7 +1331,7 @@ ReadImage(
     }
 
     if (initialCodeSize > MAX_LWZ_BITS) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("malformed image", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("malformed image", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "MALFORMED", NULL);
 	return TCL_ERROR;
     }
@@ -1953,7 +1953,7 @@ StringWriteGIF(
 
 static size_t
 WriteToChannel(
-    ClientData clientData,
+    void *clientData,
     const char *bytes,
     size_t byteCount)
 {
@@ -1964,7 +1964,7 @@ WriteToChannel(
 
 static size_t
 WriteToByteArray(
-    ClientData clientData,
+    void *clientData,
     const char *bytes,
     size_t byteCount)
 {
@@ -1980,7 +1980,7 @@ WriteToByteArray(
 static int
 CommonWriteGIF(
     Tcl_Interp *interp,
-    ClientData handle,
+    void *handle,
     WriteBytesFunc *writeProc,
     TCL_UNUSED(Tcl_Obj *),
     Tcl_Obj *metadataInObj,
@@ -2024,7 +2024,7 @@ CommonWriteGIF(
     state.pixelPitch = blockPtr->pitch;
     SaveMap(&state, blockPtr);
     if (state.num >= MAXCOLORMAPSIZE) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("too many colors", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("too many colors", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLORFUL", NULL);
 	return TCL_ERROR;
     }
@@ -2281,7 +2281,7 @@ ReadValue(
 static void
 Compress(
     int initialBits,
-    ClientData handle,
+    void *handle,
     WriteBytesFunc *writeProc,
     ifunptr readValue,
     GifWriterState *statePtr)

@@ -1077,7 +1077,7 @@ Tcl_Obj *
 Tk_NewWindowObj(
     Tk_Window tkwin)
 {
-    Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
+    Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), TCL_INDEX_NONE);
     TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
     WindowRep *winPtr;
 
@@ -1152,7 +1152,7 @@ TkParsePadAmount(
     }
     if (objc != 1 && objc != 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"wrong number of parts to pad specification", -1));
+		"wrong number of parts to pad specification", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "PARTS", NULL);
 	return TCL_ERROR;
     }

@@ -766,7 +766,7 @@ HoldBusy(
 	TkpHideBusyWindow(busyPtr);
     }
     if (result == TCL_OK) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
     }
     return result;
 }
@@ -841,7 +841,7 @@ Tk_BusyObjCmd(
 	    Tcl_ResetResult(interp);
             return TCL_OK;
 	}
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
         return TCL_OK;
 
     case BUSY_CGET:
