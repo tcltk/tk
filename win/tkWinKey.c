@@ -455,7 +455,8 @@ TkpInitKeymapInfo(
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
     KeySym keysym;
-    int count, i, j, max, arraySize;
+    int count, i, max;
+    Tcl_Size j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;

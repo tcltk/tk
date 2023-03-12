@@ -1219,12 +1219,11 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    Tcl_Size numBytes1,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)
 {
-    int numBytes = numBytes1;
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
@@ -2729,7 +2728,8 @@ LoadFontRanges(
 				 * range information. */
     int *symbolPtr)
  {
-    int n, i, j, k, swapped, offset, cbData, segCount;
+    int n, i, j, k, swapped, segCount;
+    size_t cbData, offset;
     DWORD cmapKey;
     USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;

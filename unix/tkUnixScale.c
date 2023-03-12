@@ -268,7 +268,7 @@ DisplayVerticalValue(
     const char *format)		/* Format string to use for the value */
 {
     Tk_Window tkwin = scalePtr->tkwin;
-    int y, width, length;
+    int y, width;
     char valueString[TCL_DOUBLE_SPACE];
     Tk_FontMetrics fm;
 
@@ -277,7 +277,7 @@ DisplayVerticalValue(
     if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
-    length = (int) strlen(valueString);
+    Tcl_Size length = strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
@@ -491,7 +491,7 @@ DisplayHorizontalValue(
     const char *format)		/* Format string to use for the value */
 {
     Tk_Window tkwin = scalePtr->tkwin;
-    int x, y, length, width;
+    int x, y, width;
     char valueString[TCL_DOUBLE_SPACE];
     Tk_FontMetrics fm;
 
@@ -501,7 +501,7 @@ DisplayHorizontalValue(
     if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
-    length = (int) strlen(valueString);
+    Tcl_Size length = strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*

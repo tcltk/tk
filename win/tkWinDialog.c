@@ -2145,7 +2145,7 @@ MakeFilter(
 	*p = '\0';
     }
 
-    Tcl_DStringAppend(dsPtr, filterStr, (int) (p - filterStr));
+    Tcl_DStringAppend(dsPtr, filterStr, (Tcl_Size) (p - filterStr));
     ckfree(filterStr);
 
     TkFreeFileFilters(&flist);
@@ -2236,7 +2236,7 @@ static int MakeFilterVista(
          filterPtr = filterPtr->next, ++i) {
 	const char *sep;
 	FileFilterClause *clausePtr;
-	int nbytes;
+	size_t nbytes;
 
 	/* Check if this entry should be shown as the default */
 	if (initial && strcmp(initial, filterPtr->name) == 0)

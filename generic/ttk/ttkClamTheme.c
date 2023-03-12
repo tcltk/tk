@@ -305,10 +305,7 @@ static const char checkbtnOnData[] = "\
      <path d='m0 0v16h1v-15h15v-1z' fill='#9e9a91'/>\n\
      <path d='m15 1v14h-14v1h15v-15z' fill='#cfcdc8'/>\n\
      <rect x='1' y='1' width='14' height='14' fill='#ffffff'/>\n\
-     <g fill='none' stroke='#000000' stroke-linecap='round' stroke-width='2'>\n\
-      <path d='m5 5 6 6'/>\n\
-      <path d='m5 11 6-6'/>\n\
-     </g>\n\
+     <path d='m5 5 6 6m0-6-6 6' fill='none' stroke='#000000' stroke-linecap='round' stroke-width='2'/>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {

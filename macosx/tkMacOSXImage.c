@@ -1077,15 +1077,15 @@ struct TkMacOSXNSImageModel {
 static int		TkMacOSXNSImageCreate(Tcl_Interp *interp,
 			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
-			    ClientData *clientDataPtr);
-static ClientData	TkMacOSXNSImageGet(Tk_Window tkwin, ClientData clientData);
-static void		TkMacOSXNSImageDisplay(ClientData clientData,
+			    void **clientDataPtr);
+static void *TkMacOSXNSImageGet(Tk_Window tkwin, void *clientData);
+static void		TkMacOSXNSImageDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width,
 			    int height, int drawableX,
 			    int drawableY);
-static void		TkMacOSXNSImageFree(ClientData clientData, Display *display);
-static void		TkMacOSXNSImageDelete(ClientData clientData);
+static void		TkMacOSXNSImageFree(void *clientData, Display *display);
+static void		TkMacOSXNSImageDelete(void *clientData);
 
 static Tk_ImageType TkMacOSXNSImageType = {
     "nsimage",			/* name of image type */
@@ -1394,7 +1394,7 @@ TkMacOSXNSImageConfigureModel(
 
 int
 TkMacOSXNSImageObjCmd(
-    ClientData clientData,	/* Information about the image model. */
+    void *clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1486,7 +1486,7 @@ TkMacOSXNSImageCreate(
 				  * including image name or type). */
     TCL_UNUSED(const Tk_ImageType *), /* typePtr */
     Tk_ImageModel model,	 /* Token for image, to be used in callbacks. */
-    ClientData *clientDataPtr)	 /* Store manager's token for image here; it
+    void **clientDataPtr)	 /* Store manager's token for image here; it
 				  * will be returned in later callbacks. */
 {
     TkMacOSXNSImageModel *modelPtr;
@@ -1535,7 +1535,7 @@ TkMacOSXNSImageCreate(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 TkMacOSXNSImageGet(
     TCL_UNUSED(Tk_Window),      /* tkwin */
     void *clientData)	/* Pointer to TkMacOSXNSImageModel for image. */
@@ -1566,7 +1566,7 @@ TkMacOSXNSImageGet(
 
 static void
 TkMacOSXNSImageDisplay(
-    ClientData clientData,	/* Pointer to TkMacOSXNSImageInstance for image. */
+    void *clientData,	/* Pointer to TkMacOSXNSImageInstance for image. */
     TCL_UNUSED(Display *),      /* display */
     Drawable drawable,		/* Where to draw or redraw image. */
     int imageX, int imageY,	/* Origin of area to redraw, relative to
@@ -1654,7 +1654,7 @@ TkMacOSXNSImageDisplay(
 
 static void
 TkMacOSXNSImageFree(
-    ClientData clientData,	/* Pointer to TkMacOSXNSImageInstance for instance. */
+    void *clientData,	/* Pointer to TkMacOSXNSImageInstance for instance. */
     TCL_UNUSED(Display *))	/* display */
 {
     TkMacOSXNSImageInstance *instPtr = (TkMacOSXNSImageInstance *) clientData;
@@ -1679,7 +1679,7 @@ TkMacOSXNSImageFree(
 
 static void
 TkMacOSXNSImageDelete(
-    ClientData clientData)	/* Pointer to TkMacOSXNSImageModel for image. When
+    void *clientData)	/* Pointer to TkMacOSXNSImageModel for image. When
 				 * this function is called, no more instances
 				 * exist. */
 {
