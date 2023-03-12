@@ -93,15 +93,15 @@ TkStateParseProc(
     msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be normal",
 	    ((flags & 4) ? "-default" : "state"), value);
     if (flags & 1) {
-	Tcl_AppendToObj(msgObj, ", active", -1);
+	Tcl_AppendToObj(msgObj, ", active", TCL_INDEX_NONE);
     }
     if (flags & 2) {
-	Tcl_AppendToObj(msgObj, ", hidden", -1);
+	Tcl_AppendToObj(msgObj, ", hidden", TCL_INDEX_NONE);
     }
     if (flags & 3) {
-	Tcl_AppendToObj(msgObj, ",", -1);
+	Tcl_AppendToObj(msgObj, ",", TCL_INDEX_NONE);
     }
-    Tcl_AppendToObj(msgObj, " or disabled", -1);
+    Tcl_AppendToObj(msgObj, " or disabled", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
     Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
     *statePtr = TK_STATE_NORMAL;
@@ -389,12 +389,12 @@ TkOffsetParseProc(
   badTSOffset:
     msgObj = Tcl_ObjPrintf("bad offset \"%s\": expected \"x,y\"", value);
     if (PTR2INT(clientData) & TK_OFFSET_RELATIVE) {
-	Tcl_AppendToObj(msgObj, ", \"#x,y\"", -1);
+	Tcl_AppendToObj(msgObj, ", \"#x,y\"", TCL_INDEX_NONE);
     }
     if (PTR2INT(clientData) & TK_OFFSET_INDEX) {
-	Tcl_AppendToObj(msgObj, ", <index>", -1);
+	Tcl_AppendToObj(msgObj, ", <index>", TCL_INDEX_NONE);
     }
-    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", -1);
+    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
     Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
     return TCL_ERROR;
@@ -1129,7 +1129,7 @@ TkMakeEnsemble(
 	}
     }
 
-    nameObj = Tcl_NewStringObj(name, -1);
+    nameObj = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     ensemble = Tcl_FindEnsemble(interp, nameObj, 0);
     Tcl_DecrRefCount(nameObj);
     if (ensemble == NULL) {
@@ -1141,17 +1141,17 @@ TkMakeEnsemble(
     }
 
     Tcl_DStringSetLength(&ds, 0);
-    Tcl_DStringAppend(&ds, namesp, -1);
+    Tcl_DStringAppend(&ds, namesp, TCL_INDEX_NONE);
     if (!(strlen(namesp) == 2 && namesp[1] == ':')) {
-	Tcl_DStringAppend(&ds, "::", -1);
+	Tcl_DStringAppend(&ds, "::", TCL_INDEX_NONE);
     }
-    Tcl_DStringAppend(&ds, name, -1);
+    Tcl_DStringAppend(&ds, name, TCL_INDEX_NONE);
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
 	Tcl_Obj *fqdnObj;
 
-	nameObj = Tcl_NewStringObj(map[i].name, -1);
+	nameObj = Tcl_NewStringObj(map[i].name, TCL_INDEX_NONE);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds));
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);

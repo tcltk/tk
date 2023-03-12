@@ -945,7 +945,7 @@ Tk_MacOSXIsAppInFront(void)
 
 static Tk_RestrictAction
 ExposeRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
@@ -1089,7 +1089,7 @@ ConfigureRestrictProc(
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
-	ClientData oldArg;
+	void *oldArg;
     	Tk_RestrictProc *oldProc;
 
 	/*
@@ -1154,7 +1154,7 @@ ConfigureRestrictProc(
     int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    ClientData oldArg;
+    void *oldArg;
     Tk_RestrictProc *oldProc;
     if (!winPtr) {
 	return;

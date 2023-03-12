@@ -162,7 +162,7 @@ typedef TkStatusItem** StatusItemInfo;
 
 static void
 MacSystrayDestroy(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(Tcl_Interp *))
 {
     StatusItemInfo info = (StatusItemInfo)clientData;
