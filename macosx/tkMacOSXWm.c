@@ -1381,7 +1381,8 @@ Tk_WmObjCmd(
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
 	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
-    int index, length;
+    int index;
+    Tcl_Size length;
     char *argv1;
     TkWindow *winPtr;
 
@@ -1580,7 +1581,7 @@ WmAspectCmd(
 	if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) ||
 		(denom2 <= 0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "aspect number can't be <= 0", -1));
+		    "aspect number can't be <= 0", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ASPECT", NULL);
 	    return TCL_ERROR;
 	}
@@ -1712,7 +1713,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != [macWindow isDocumentEdited]) {
-	    [macWindow setDocumentEdited:boolean];
+	    [macWindow setDocumentEdited:(BOOL)boolean];
 	}
 	break;
     case WMATT_NOTIFY:
@@ -2009,7 +2010,7 @@ WmGetAttribute(
     }
     case WMATT_TITLEPATH:
 	result = Tcl_NewStringObj([[macWindow representedFilename] UTF8String],
-		-1);
+		TCL_INDEX_NONE);
 	break;
     case WMATT_TOPMOST:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TOPMOST);
@@ -2115,7 +2116,7 @@ WmAttributesCmd(
 
 	for (attribute = 0; attribute < _WMATT_LAST_ATTRIBUTE; ++attribute) {
 	    Tcl_ListObjAppendElement(NULL, result,
-		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
+		    Tcl_NewStringObj(WmAttributeNames[attribute], TCL_INDEX_NONE));
 	    Tcl_ListObjAppendElement(NULL, result,
 		    WmGetAttribute(winPtr, macWindow, (WmAttribute)attribute));
 	}
@@ -2173,7 +2174,7 @@ WmClientCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
-    int length;
+    Tcl_Size length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?name?");
@@ -2182,7 +2183,7 @@ WmClientCmd(
     if (objc == 3) {
 	if (wmPtr->clientMachine != NULL) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(wmPtr->clientMachine, -1));
+		    Tcl_NewStringObj(wmPtr->clientMachine, TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -2467,7 +2468,7 @@ WmFocusmodelCmd(
     }
     if (objc == 3) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		wmPtr->hints.input ? "passive" : "active", -1));
+		wmPtr->hints.input ? "passive" : "active", TCL_INDEX_NONE));
 	return TCL_OK;
     }
 
@@ -2587,7 +2588,7 @@ WmFrameCmd(
 	window = Tk_WindowId((Tk_Window)winPtr);
     }
     snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)window);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -2751,7 +2752,7 @@ WmGridCmd(
     return TCL_OK;
 
   error:
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(errorMsg, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(errorMsg, TCL_INDEX_NONE));
     Tcl_SetErrorCode(interp, "TK", "WM", "GRID", NULL);
     return TCL_ERROR;
 }
@@ -2792,7 +2793,7 @@ WmGroupCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & WindowGroupHint) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->leaderName, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->leaderName, TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -3133,7 +3134,7 @@ WmIconnameCmd(
     }
     if (objc == 3) {
 	if (wmPtr->iconName != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->iconName, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->iconName, TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -3680,9 +3681,9 @@ WmPositionfromCmd(
 
     if (objc == 3) {
 	if (wmPtr->sizeHintsFlags & USPosition) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("user", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("user", TCL_INDEX_NONE));
 	} else if (wmPtr->sizeHintsFlags & PPosition) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("program", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("program", TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -3769,7 +3770,7 @@ WmProtocolCmd(
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
 		Tcl_SetObjResult(interp,
-			Tcl_NewStringObj(protPtr->command, -1));
+			Tcl_NewStringObj(protPtr->command, TCL_INDEX_NONE));
 		return TCL_OK;
 	    }
 	}
@@ -3924,9 +3925,9 @@ WmSizefromCmd(
 
     if (objc == 3) {
 	if (wmPtr->sizeHintsFlags & USSize) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("user", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("user", TCL_INDEX_NONE));
 	} else if (wmPtr->sizeHintsFlags & PSize) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("program", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("program", TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -4042,7 +4043,7 @@ WmStackorderCmd(
 	windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
 	if (windows == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "TkWmStackorderToplevel failed", -1));
+		    "TkWmStackorderToplevel failed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "STACK", "FAIL", NULL);
 	    return TCL_ERROR;
 	}
@@ -4172,7 +4173,7 @@ WmStateCmd(
 	    break;
 	}
     } else if (wmPtr->iconFor != NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("icon", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("icon", TCL_INDEX_NONE));
     } else {
 	if (wmPtr->hints.initial_state == NormalState ||
 		wmPtr->hints.initial_state == ZoomState) {
@@ -4181,16 +4182,16 @@ WmStateCmd(
 	}
 	switch (wmPtr->hints.initial_state) {
 	case NormalState:
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("normal", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("normal", TCL_INDEX_NONE));
 	    break;
 	case IconicState:
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("iconic", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("iconic", TCL_INDEX_NONE));
 	    break;
 	case WithdrawnState:
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("withdrawn", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("withdrawn", TCL_INDEX_NONE));
 	    break;
 	case ZoomState:
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("zoomed", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("zoomed", TCL_INDEX_NONE));
 	    break;
 	}
     }
@@ -4233,7 +4234,7 @@ WmTitleCmd(
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		wmPtr->titleUid ? wmPtr->titleUid : winPtr->nameUid, -1));
+		wmPtr->titleUid ? wmPtr->titleUid : winPtr->nameUid, TCL_INDEX_NONE));
 	return TCL_OK;
     }
 
@@ -4283,7 +4284,7 @@ WmTransientCmd(
     if (objc == 3) {
 	if (wmPtr->container != NULL) {
 	    Tcl_SetObjResult(interp,
-		Tcl_NewStringObj(Tk_PathName(wmPtr->container), -1));
+		Tcl_NewStringObj(Tk_PathName(wmPtr->container), TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -5987,7 +5988,7 @@ TkSetWMName(
 	return;
     }
 
-    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:-1];
+    NSString *title = [[TKNSString alloc] initWithTclUtfBytes:titleUid length:TCL_INDEX_NONE];
     [TkMacOSXGetNSWindowForDrawable(winPtr->window) setTitle:title];
     [title release];
 }
@@ -6226,7 +6227,7 @@ TkUnsupported1ObjCmd(
     case TKMWS_APPEARANCE:
 	if ([NSApp macOSVersion] < 100900) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-                "Window appearances did not exist until OSX 10.9.", -1));
+                "Window appearances did not exist until OSX 10.9.", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "WINDOWSTYLE", "APPEARANCE", NULL);
 	    return TCL_ERROR;
 	}
@@ -6358,7 +6359,7 @@ WmWinStyle(
 
 	for (i = 0; classMap[i].strValue != NULL; i++) {
 	    if (wmPtr->macClass == classMap[i].intValue) {
-		newResult = Tcl_NewStringObj(classMap[i].strValue, -1);
+		newResult = Tcl_NewStringObj(classMap[i].strValue, TCL_INDEX_NONE);
 		break;
 	    }
 	}
@@ -6383,7 +6384,7 @@ WmWinStyle(
 	for (i = 0; attrMap[i].strValue != NULL; i++) {
 	    if (attributes & attrMap[i].intValue) {
 		Tcl_ListObjAppendElement(NULL, attributeList,
-			Tcl_NewStringObj(attrMap[i].strValue, -1));
+			Tcl_NewStringObj(attrMap[i].strValue, TCL_INDEX_NONE));
 	    }
 	}
 	Tcl_ListObjAppendElement(NULL, newResult, attributeList);

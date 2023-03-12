@@ -582,7 +582,7 @@ TkSelEventProc(
 	}
 	if (bytesAfter != 0) {
 	    Tcl_SetObjResult(retrPtr->interp, Tcl_NewStringObj(
-		    "selection property too large", -1));
+		    "selection property too large", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "SIZE",NULL);
 	    retrPtr->result = TCL_ERROR;
 	    XFree(propInfo);
@@ -621,13 +621,12 @@ TkSelEventProc(
 	    } else {
 		encoding = Tcl_GetEncoding(NULL, "iso8859-1");
 	    }
-	    (void)Tcl_ExternalToUtfDStringEx(encoding, propInfo, numItems, TCL_ENCODING_NOCOMPLAIN, &ds);
+	    char *str = Tcl_ExternalToUtfDString(encoding, propInfo, numItems, &ds);
 	    if (encoding) {
 		Tcl_FreeEncoding(encoding);
 	    }
 
-	    retrPtr->result = retrPtr->proc(retrPtr->clientData, interp,
-		    Tcl_DStringValue(&ds));
+	    retrPtr->result = retrPtr->proc(retrPtr->clientData, interp, str);
 	    Tcl_DStringFree(&ds);
 	    Tcl_Release(interp);
 	} else if (type == dispPtr->utf8Atom) {
@@ -762,7 +761,7 @@ SelTimeoutProc(
 	 */
 
 	Tcl_SetObjResult(retrPtr->interp, Tcl_NewStringObj(
-		"selection owner didn't respond", -1));
+		"selection owner didn't respond", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "IGNORED", NULL);
 	retrPtr->result = TCL_ERROR;
     } else {
@@ -997,10 +996,10 @@ ConvertSelection(
 	    } else {
 		encoding = Tcl_GetEncoding(NULL, "iso2022");
 	    }
-	    (void)Tcl_UtfToExternalDStringEx(encoding, (char *) buffer, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	    unsigned char *str = (unsigned char *)Tcl_UtfToExternalDString(encoding,
+		    (char *) buffer, TCL_INDEX_NONE, &ds);
 	    XChangeProperty(reply.xsel.display, reply.xsel.requestor,
-		    property, type, 8, PropModeReplace,
-		    (unsigned char *) Tcl_DStringValue(&ds),
+		    property, type, 8, PropModeReplace, str,
 		    Tcl_DStringLength(&ds));
 	    if (encoding) {
 		Tcl_FreeEncoding(encoding);
@@ -1150,7 +1149,7 @@ SelRcvIncrProc(
     }
     if (bytesAfter != 0) {
 	Tcl_SetObjResult(retrPtr->interp, Tcl_NewStringObj(
-		"selection property too large", -1));
+		"selection property too large", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION", "SIZE", NULL);
 	retrPtr->result = TCL_ERROR;
 	goto done;

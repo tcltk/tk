@@ -31,7 +31,7 @@ static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
  * Forward declarations of procedures used in this file.
  */
 
-static void		MouseTimerProc(ClientData clientData);
+static void		MouseTimerProc(void *clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -235,10 +235,9 @@ XUngrabKeyboard(
 
 void
 MouseTimerProc(
-    ClientData dummy)
+    TCL_UNUSED(void *))
 {
     POINT pos;
-    (void)dummy;
 
     mouseTimerSet = 0;
 

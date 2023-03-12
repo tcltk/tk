@@ -109,10 +109,10 @@ typedef struct
 
 static const Tk_OptionSpec NotebookOptionSpecs[] =
 {
-    {TK_OPTION_INT, "-width", "width", "Width", "0",
+    {TK_OPTION_PIXELS, "-width", "width", "Width", "0",
 	offsetof(Notebook,notebook.widthObj),TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-height", "height", "Height", "0",
+    {TK_OPTION_PIXELS, "-height", "height", "Height", "0",
 	offsetof(Notebook,notebook.heightObj),TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Padding", NULL,
@@ -411,8 +411,8 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     /* Client width/height overridable by widget options:
      */
-    Tcl_GetIntFromObj(NULL, nb->notebook.widthObj,&reqWidth);
-    Tcl_GetIntFromObj(NULL, nb->notebook.heightObj,&reqHeight);
+    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.widthObj,&reqWidth);
+    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.heightObj,&reqHeight);
     if (reqWidth > 0)
 	clientWidth = reqWidth;
     if (reqHeight > 0)
@@ -1416,6 +1416,9 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Initialization.
  */
+
+MODULE_SCOPE
+void TtkNotebook_Init(Tcl_Interp *interp);
 
 MODULE_SCOPE
 void TtkNotebook_Init(Tcl_Interp *interp)

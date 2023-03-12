@@ -374,97 +374,82 @@ static const Ttk_ElementSpec FieldElementSpec = {
 
 /*------------------------------------------------------------------------
  * Indicators --
- *
- * 	Code derived (probably incorrectly) from TIP 109 implementation,
- * 	unix/tkUnixButton.c r 1.15.
  */
 
 /*
- * Indicator bitmap descriptor:
+ * Indicator image descriptor:
  */
 typedef struct {
-    int width;		/* Width of each image */
-    int height;		/* Height of each image */
-    int nimages;	/* #images / row */
-    const char *const *pixels;	/* array[height] of char[width*nimage] */
-    const Ttk_StateTable *map;/* used to look up image index by state */
+    int width;				/* unscaled width */
+    int height;				/* unscaled height */
+    const char *const offDataPtr;
+    const char *const onDataPtr;
 } IndicatorSpec;
 
-#if 0
-/*XPM*/
-static const char *const button_images[] = {
-    /* width height ncolors chars_per_pixel */
-    "52 13 8 1",
-    /* colors */
-    "A c #808000000000 s shadow",
-    "B c #000080800000 s highlight",
-    "C c #808080800000 s 3dlight",
-    "D c #000000008080 s window",
-    "E c #808000008080 s 3ddark",
-    "F c #000080808080 s frame",
-    "G c #000000000000 s foreground",
-    "H c #000080800000 s disabledfg",
-};
-#endif
+static const char checkbtnOffData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+    </svg>";
 
-static const Ttk_StateTable checkbutton_states[] = {
-    { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
-    { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
-    { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
-    { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { 0, 0, 0 }
-};
+static const char checkbtnOnData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+     <path d='m4.5 8 3 3 4-6' fill='none' stroke='#000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
+    </svg>";
 
-static const char *const checkbutton_pixels[] = {
-    "AAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAABAAAAAAAAAAAAB",
-    "AEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECBAEEEEEEEEEECB",
-    "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
-    "AEDDDDDDDDDCBAEDDDDDDDGDCBAEFFFFFFFFFCBAEFFFFFFFHFCB",
-    "AEDDDDDDDDDCBAEDDDDDDGGDCBAEFFFFFFFFFCBAEFFFFFFHHFCB",
-    "AEDDDDDDDDDCBAEDGDDDGGGDCBAEFFFFFFFFFCBAEFHFFFHHHFCB",
-    "AEDDDDDDDDDCBAEDGGDGGGDDCBAEFFFFFFFFFCBAEFHHFHHHFFCB",
-    "AEDDDDDDDDDCBAEDGGGGGDDDCBAEFFFFFFFFFCBAEFHHHHHFFFCB",
-    "AEDDDDDDDDDCBAEDDGGGDDDDCBAEFFFFFFFFFCBAEFFHHHFFFFCB",
-    "AEDDDDDDDDDCBAEDDDGDDDDDCBAEFFFFFFFFFCBAEFFFHFFFFFCB",
-    "AEDDDDDDDDDCBAEDDDDDDDDDCBAEFFFFFFFFFCBAEFFFFFFFFFCB",
-    "ACCCCCCCCCCCBACCCCCCCCCCCBACCCCCCCCCCCBACCCCCCCCCCCB",
-    "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB",
+static const IndicatorSpec checkbutton_spec = {
+    16, 16,
+    checkbtnOffData,
+    checkbtnOnData
 };
 
-static IndicatorSpec checkbutton_spec = {
-    13, 13, 4,		/* width, height, nimages */
-    checkbutton_pixels,
-    checkbutton_states
-};
+static const char radiobtnOffData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <defs>\n\
+      <linearGradient id='linearGradientOuter' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#888888' offset='0'/>\n\
+       <stop stop-color='#eeeeee' offset='1'/>\n\
+      </linearGradient>\n\
+      <linearGradient id='linearGradientInner' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#414141' offset='0'/>\n\
+       <stop stop-color='#d9d9d9' offset='1'/>\n\
+      </linearGradient>\n\
+     </defs>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
+    </svg>";
 
-static const Ttk_StateTable radiobutton_states[] = {
-    { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
-    { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
-    { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
-    { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { 0, 0, 0 }
-};
+static const char radiobtnOnData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <defs>\n\
+      <linearGradient id='linearGradientOuter' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#888888' offset='0'/>\n\
+       <stop stop-color='#eeeeee' offset='1'/>\n\
+      </linearGradient>\n\
+      <linearGradient id='linearGradientInner' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+       <stop stop-color='#414141' offset='0'/>\n\
+       <stop stop-color='#d9d9d9' offset='1'/>\n\
+      </linearGradient>\n\
+     </defs>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
+     <circle cx='8' cy='8' r='3' fill='#000000'/>\n\
+    </svg>";
 
-static const char *const radiobutton_pixels[] = {
-    "FFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFFFFFFAAAAFFFFF",
-    "FFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFFFFAAEEEEAAFFF",
-    "FAEEDDDDEEBFFFAEEDDDDEEBFFFAEEFFFFEEBFFFAEEFFFFEEBFF",
-    "FAEDDDDDDCBFFFAEDDDDDDCBFFFAEFFFFFFCBFFFAEFFFFFFCBFF",
-    "AEDDDDDDDDCBFAEDDDGGDDDCBFAEFFFFFFFFCBFAEFFFHHFFFCBF",
-    "AEDDDDDDDDCBFAEDDGGGGDDCBFAEFFFFFFFFCBFAEFFHHHHFFCBF",
-    "AEDDDDDDDDCBFAEDDGGGGDDCBFAEFFFFFFFFCBFAEFFHHHHFFCBF",
-    "AEDDDDDDDDCBFAEDDDGGDDDCBFAEFFFFFFFFCBFAEFFFHHFFFCBF",
-    "FAEDDDDDDCBFFFAEDDDDDDCBFFFAEFFFFFFCBFFFAEFFFFFFCBFF",
-    "FACCDDDDCCBFFFACCDDDDCCBFFFACCFFFFCCBFFFACCFFFFCCBFF",
-    "FFBBCCCCBBFFFFFBBCCCCBBFFFFFBBCCCCBBFFFFFBBCCCCBBFFF",
-    "FFFFBBBBFFFFFFFFFBBBBFFFFFFFFFBBBBFFFFFFFFFBBBBFFFFF",
-    "FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
-};
-
-static IndicatorSpec radiobutton_spec = {
-    13, 13, 4,		/* width, height, nimages */
-    radiobutton_pixels,
-    radiobutton_states
+static const IndicatorSpec radiobutton_spec = {
+    16, 16,
+    radiobtnOffData,
+    radiobtnOnData
 };
 
 typedef struct {
@@ -492,154 +477,189 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	    offsetof(IndicatorElement,borderColorObj), "black" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    offsetof(IndicatorElement,marginObj), "0 2 4 2" },
-	    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
+
+static double scalingFactor;
 
 static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    IndicatorSpec *spec = (IndicatorSpec *)clientData;
+    const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    const char *scalingPctPtr;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
     (void)paddingPtr;
 
+    /*
+     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
+     */
+    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
+    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
+
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = spec->width + Ttk_PaddingWidth(margins);
-    *heightPtr = spec->height + Ttk_PaddingHeight(margins);
+    *widthPtr = spec->width * scalingFactor + Ttk_PaddingWidth(margins);
+    *heightPtr = spec->height * scalingFactor + Ttk_PaddingHeight(margins);
+}
+
+static void ColorToStr(
+    const XColor *colorPtr, char *colorStr)	/* in the format "RRGGBB" */
+{
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
+}
+
+static void ImageChanged(		/* to be passed to Tk_GetImage() */
+    ClientData clientData,
+    int x, int y, int width, int height,
+    int imageWidth, int imageHeight)
+{
+    (void)clientData;
+    (void)x; (void)y; (void)width; (void)height;
+    (void)imageWidth; (void)imageHeight;
 }
 
 static void IndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    IndicatorSpec *spec = (IndicatorSpec *)clientData;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
-    Display *display = Tk_Display(tkwin);
     Ttk_Padding padding;
-    XColor *fgColor, *frameColor, *shadeColor, *indicatorColor, *borderColor;
+    const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
-    int index, ix, iy;
-    XGCValues gcValues;
-    GC copyGC;
-    unsigned long imgColors[8];
-    XImage *img = NULL;
+    char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
+	 shadeColorStr[7], borderColorStr[7];
+    unsigned int selected = (state & TTK_STATE_SELECTED);
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    char imgName[70];
+    Tk_Image img;
+
+    const char *svgDataPtr;
+    size_t svgDataLen;
+    char *svgDataCopy;
+    char *shadeColorPtr, *highlightColorPtr, *borderColorPtr, *bgColorPtr,
+	 *indicatorColorPtr, *fgColorPtr;
+    const char *cmdFmt;
+    size_t scriptSize;
+    char *script;
+    int code;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+    /*
+     * Sanity check
+     */
     if (   b.x < 0
 	|| b.y < 0
-	|| Tk_Width(tkwin) < b.x + spec->width
-	|| Tk_Height(tkwin) < b.y + spec->height)
+	|| Tk_Width(tkwin) < b.x + spec->width * scalingFactor
+	|| Tk_Height(tkwin) < b.y + spec->height * scalingFactor)
     {
-	/* Oops!  not enough room to display the image.
+	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
 	 */
 	return;
     }
 
     /*
-     * Fill in imgColors palette:
-     *
-     * (SHOULD: take light and shade colors from the border object,
-     * but Tk doesn't provide easy access to these in the public API.)
+     * Construct the color strings bgColorStr, fgColorStr,
+     * indicatorColorStr, shadeColorStr, and borderColorStr
      */
-    fgColor = Tk_GetColorFromObj(tkwin, indicator->foregroundObj);
-    frameColor = Tk_GetColorFromObj(tkwin, indicator->backgroundObj);
-    shadeColor = Tk_GetColorFromObj(tkwin, indicator->shadeColorObj);
-    indicatorColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    borderColor = Tk_GetColorFromObj(tkwin, indicator->borderColorObj);
-
-    imgColors[0 /*A*/] = shadeColor->pixel;
-    imgColors[1 /*B*/] = indicatorColor->pixel;
-    imgColors[2 /*C*/] = frameColor->pixel;
-    imgColors[3 /*D*/] = indicatorColor->pixel;
-    imgColors[4 /*E*/] = borderColor->pixel;
-    imgColors[5 /*F*/] = frameColor->pixel;
-    imgColors[6 /*G*/] = fgColor->pixel;
-    imgColors[7 /*H*/] = fgColor->pixel;
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->backgroundObj),
+	       bgColorStr);
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
+	       fgColorStr);
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->colorObj),
+	       indicatorColorStr);
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->shadeColorObj),
+	       shadeColorStr);
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->borderColorObj),
+	       borderColorStr);
 
     /*
-     * Create a scratch buffer to store the image:
+     * Check whether there is an SVG image for the indicator's
+     * type (0 = checkbtn, 1 = radiobtn) and these color strings
      */
-
-#if defined(IGNORES_VISUAL)
-
-    /*
-     * Platforms which ignore the VisualInfo can use XCreateImage to get the
-     * scratch image.  This is essential on macOS, where it is not safe to call
-     * XGetImage in a display procedure.
-     */
-
-    img = XCreateImage(display, NULL, 32, ZPixmap, 0, NULL,
-		       (unsigned int)spec->width, (unsigned int)spec->height,
-		       0, 0);
-#else
-
-    /*
-     * This trick allows creating the scratch XImage without having to
-     * construct a VisualInfo.
-     */
-
-    img = XGetImage(display, d, 0, 0,
-		    (unsigned int)spec->width, (unsigned int)spec->height,
-		    AllPlanes, ZPixmap);
-#endif
-
+    snprintf(imgName, sizeof(imgName),
+	     "::tk::icons::indicator_alt%d_%s_%s_%s_%s_%s",
+	     spec->offDataPtr == radiobtnOffData,
+	     shadeColorStr, indicatorColorStr, borderColorStr, bgColorStr,
+	     selected ? fgColorStr : "XXXXXX");
+    img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
-        return;
-    }
+	/*
+	 * Determine the SVG data to use for the photo image
+	 */
+	svgDataPtr = (selected ? spec->onDataPtr : spec->offDataPtr);
 
-#if defined(IGNORES_VISUAL)
-
-    img->data = (char *)ckalloc(img->bytes_per_line * img->height);
-    if (img->data == NULL) {
-        XDestroyImage(img);
-	return;
-    }
-
-#endif
-
-    /*
-     * Create the image, painting it into the XImage one pixel at a time.
-     */
-
-    index = Ttk_StateTableLookup(spec->map, state);
-    for (iy=0 ; iy<spec->height ; iy++) {
-	for (ix=0 ; ix<spec->width ; ix++) {
-	    XPutPixel(img, ix, iy,
-		imgColors[spec->pixels[iy][index*spec->width+ix] - 'A'] );
+	/*
+	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
+	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 */
+	svgDataLen = strlen(svgDataPtr);
+	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
+	if (svgDataCopy == NULL) {
+	    return;
 	}
+	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
+	svgDataCopy[svgDataLen] = '\0';
+	svgDataPtr = svgDataCopy;
+
+	/*
+	 * Update the colors within svgDataCopy
+	 */
+
+	shadeColorPtr =	    strstr(svgDataPtr, "888888");
+	highlightColorPtr = strstr(svgDataPtr, "eeeeee");
+	borderColorPtr =    strstr(svgDataPtr, "414141");
+	bgColorPtr =	    strstr(svgDataPtr, "d9d9d9");
+	indicatorColorPtr = strstr(svgDataPtr, "ffffff");
+	fgColorPtr =	    strstr(svgDataPtr, "000000");
+
+	assert(shadeColorPtr);
+	assert(highlightColorPtr);
+	assert(borderColorPtr);
+	assert(bgColorPtr);
+	assert(indicatorColorPtr);
+
+	memcpy(shadeColorPtr, shadeColorStr, 6);
+	memcpy(highlightColorPtr, indicatorColorStr, 6);
+	memcpy(borderColorPtr, borderColorStr, 6);
+	memcpy(bgColorPtr, bgColorStr, 6);
+	memcpy(indicatorColorPtr, indicatorColorStr, 6);
+	if (fgColorPtr != NULL) {
+	    memcpy(fgColorPtr, fgColorStr, 6);
+	}
+
+	/*
+	 * Create an SVG photo image from svgDataCopy
+	 */
+	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
+	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
+	script = (char *)attemptckalloc(scriptSize);
+	if (script == NULL) {
+	    ckfree(svgDataCopy);
+	    return;
+	}
+	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
+	ckfree(svgDataCopy);
+	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	ckfree(script);
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
+	    return;
+	}
+	img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     }
 
     /*
-     * Copy the image onto our target drawable surface.
+     * Display the image
      */
-
-    memset(&gcValues, 0, sizeof(gcValues));
-    copyGC = Tk_GetGC(tkwin, 0, &gcValues);
-    TkPutImage(NULL, 0, display, d, copyGC, img, 0, 0, b.x, b.y,
-               spec->width, spec->height);
-
-    /*
-     * Tidy up.
-     */
-
-    Tk_FreeGC(display, copyGC);
-
-    /*
-     * Protect against the possibility that some future platform might
-     * not use the Tk memory manager in its implementation of XDestroyImage,
-     * even though that would be an extremely strange thing to do.
-     */
-
-#if defined(IGNORES_VISUAL)
-    ckfree(img->data);
-    img->data = NULL;
-#endif
-
-    XDestroyImage(img);
+    Tk_RedrawImage(img, 0, 0, spec->width * scalingFactor,
+	spec->height * scalingFactor, d, b.x, b.y);
+    Tk_FreeImage(img);
 }
 
 static const Ttk_ElementSpec IndicatorElementSpec = {
@@ -1017,7 +1037,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec SliderElementOptions[] = {
     { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
-	"15" },
+	"11.25p" },
     { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
 	"15" },
     { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),
@@ -1173,6 +1193,8 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
  * TtkAltTheme_Init --
  * 	Install alternate theme.
  */
+MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp);
+
 MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "alt", NULL);
@@ -1184,9 +1206,9 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
-	    &IndicatorElementSpec, &checkbutton_spec);
+	    &IndicatorElementSpec, (void *)&checkbutton_spec);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
-	    &IndicatorElementSpec, &radiobutton_spec);
+	    &IndicatorElementSpec, (void *)&radiobutton_spec);
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
 	    &MenubuttonArrowElementSpec, NULL);
 
@@ -1208,7 +1230,7 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Treeitem.indicator",
-	    &TreeitemIndicatorElementSpec, 0);
+	    &TreeitemIndicatorElementSpec, NULL);
 
     Tcl_PkgProvide(interp, "ttk::theme::alt", TTK_VERSION);
 
