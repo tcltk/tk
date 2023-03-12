@@ -61,7 +61,7 @@ TCL_DECLARE_MUTEX(winScrlbrMutex)
  */
 
 static Window		CreateProc(Tk_Window tkwin, Window parent,
-			    ClientData instanceData);
+			    void *instanceData);
 static void		ModalLoop(WinScrollbar *, XEvent *eventPtr);
 static LRESULT CALLBACK	ScrollbarProc(HWND hwnd, UINT message, WPARAM wParam,
 			    LPARAM lParam);
@@ -80,7 +80,7 @@ const Tk_ClassProcs tkpScrollbarProcs = {
 };
 
 static void
-WinScrollbarEventProc(ClientData clientData, XEvent *eventPtr)
+WinScrollbarEventProc(void *clientData, XEvent *eventPtr)
 {
     WinScrollbar *scrollPtr = (WinScrollbar *)clientData;
 
@@ -205,7 +205,7 @@ static Window
 CreateProc(
     Tk_Window tkwin,		/* Token for window. */
     Window parentWin,		/* Parent of new window. */
-    ClientData instanceData)	/* Scrollbar instance data. */
+    void *instanceData)	/* Scrollbar instance data. */
 {
     DWORD style;
     Window window;
@@ -273,7 +273,7 @@ CreateProc(
 
 void
 TkpDisplayScrollbar(
-    ClientData clientData)	/* Information about window. */
+    void *clientData)	/* Information about window. */
 {
     WinScrollbar *scrollPtr = (WinScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->info.tkwin;
@@ -552,7 +552,7 @@ ScrollbarProc(
 	}
 
 	interp = scrollPtr->info.interp;
-	code = Tcl_EvalEx(interp, cmdString.string, -1, TCL_EVAL_GLOBAL);
+	code = Tcl_EvalEx(interp, cmdString.string, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
 	    Tcl_AddErrorInfo(interp, "\n    (scrollbar command)");
 	    Tcl_BackgroundException(interp, code);
@@ -591,11 +591,10 @@ ScrollbarProc(
 
 void
 TkpConfigureScrollbar(
-    TkScrollbar *scrollPtr)
+    TCL_UNUSED(TkScrollbar *))
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
 {
-    (void)scrollPtr;
 }
 
 /*

@@ -148,7 +148,7 @@ namespace eval tk {
         proc imageInit {} {
             variable ImageNames
             if {![info exists ImageNames]} {
-                set ImageNames [lsort [image names]]
+                set ImageNames [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
             }
             imageCleanup
             if {[lsort [image names]] ne $ImageNames} {
@@ -157,7 +157,8 @@ namespace eval tk {
         }
         proc imageFinish {} {
             variable ImageNames
-            if {[lsort [image names]] ne $ImageNames} {
+	    set imgs [lsearch -all -inline -glob -not [lsort [image names]] ::tk::icons::indicator*]
+            if {$imgs ne $ImageNames} {
                 return -code error "images remaining: [image names] != $ImageNames"
             }
             imageCleanup
@@ -397,4 +398,3 @@ namespace import -force tcltest::cleanupTests
 deleteWindows
 wm geometry . {}
 raise .
-

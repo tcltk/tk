@@ -293,9 +293,9 @@ XkbOpenDisplay(
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
 #else
 	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-	major = systemVersion.majorVersion;
-	minor = systemVersion.minorVersion;
-	patch = systemVersion.patchVersion;
+	major = (int)systemVersion.majorVersion;
+	minor = (int)systemVersion.minorVersion;
+	patch = (int)systemVersion.patchVersion;
 #endif
 	display->release = major << 16 | minor << 8 | patch;
     }

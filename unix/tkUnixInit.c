@@ -81,7 +81,7 @@ TkpGetAppName(
 	    name = p+1;
 	}
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, TCL_INDEX_NONE);
 }
 
 /*
@@ -109,9 +109,9 @@ TkpDisplayWarning(
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 
     if (errChannel) {
-	Tcl_WriteChars(errChannel, title, -1);
+	Tcl_WriteChars(errChannel, title, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, ": ", 2);
-	Tcl_WriteChars(errChannel, msg, -1);
+	Tcl_WriteChars(errChannel, msg, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, "\n", 1);
     }
 }

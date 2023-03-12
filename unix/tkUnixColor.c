@@ -291,7 +291,7 @@ FindClosestColor(
 	    stressPtr->numColors = visInfoPtr->colormap_size;
 	    XFree((char *) visInfoPtr);
 	    stressPtr->colorPtr = (XColor *)
-		    ckalloc(stressPtr->numColors * sizeof(XColor));
+		    ckalloc((size_t)stressPtr->numColors * sizeof(XColor));
 	    for (i = 0; i < stressPtr->numColors; i++) {
 		stressPtr->colorPtr[i].pixel = (unsigned long) i;
 	    }
