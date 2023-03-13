@@ -762,7 +762,7 @@ void			TkpDumpPSList(const PSList *psList);
 static int BindCount = 0;  /* Can be set or queried from Tcl through 'event debug' subcommand. Otherwise not used. */
 #endif
 
-static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
+static Tcl_Size Max(Tcl_Size a, Tcl_Size b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static int IsOdd(int n) { return n & 1; }
 
@@ -1220,8 +1220,7 @@ ClearPromotionLists(
     Tk_BindingTable bindPtr,
     void *object)
 {
-    unsigned newArraySize = 0;
-    unsigned i;
+    size_t i, newArraySize = 0;
 
     assert(bindPtr);
 
@@ -1944,7 +1943,7 @@ RemovePatSeqFromPromotionLists(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     PatSeq *psPtr)		/* Remove this pattern sequence. */
 {
-    unsigned i;
+    size_t i;
 
     assert(bindPtr);
     assert(psPtr);
@@ -2191,7 +2190,7 @@ Tk_BindEvent(
     unsigned scriptCount;
     int oldScreen;
     unsigned flags;
-    unsigned arraySize;
+    Tcl_Size arraySize;
     unsigned newArraySize;
     Tcl_Size i, k;
 
@@ -2392,7 +2391,7 @@ Tk_BindEvent(
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
     if (!PromArr_IsEmpty(bindPtr->promArr)) {
-	for (k = 0; k < (size_t) numObjects; ++k) {
+	for (k = 0; k < numObjects; ++k) {
 	    psl[1] = PromArr_Last(bindPtr->promArr);
 	    psl[0] = psl[1] - 1;
 
@@ -2424,7 +2423,7 @@ Tk_BindEvent(
      * 2. Look for bindings without detail.
      */
 
-    for (k = 0; k < (unsigned) numObjects; ++k) {
+    for (k = 0; k < numObjects; ++k) {
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
@@ -2438,7 +2437,7 @@ Tk_BindEvent(
 
 	if (!PSList_IsEmpty(psSuccList)) {
 	    /* We have promoted sequences, adjust array size. */
-	    arraySize = Max(1u, arraySize);
+	    arraySize = Max(1, arraySize);
 	}
 
 	bestPtr = psPtr[0] ? psPtr[0] : psPtr[1];
@@ -2509,7 +2508,7 @@ Tk_BindEvent(
 	for (psEntry = PSList_First(psList); psEntry; psEntry = psNext) {
 	    const TkPattern *patPtr;
 
-	    assert(i + 1 < psEntry->psPtr->numPats);
+	    assert(i + 1 < (size_t) psEntry->psPtr->numPats);
 
 	    psNext = PSList_Next(psEntry);
 	    patPtr = &psEntry->psPtr->pats[i + 1];
