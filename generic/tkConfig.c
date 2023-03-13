@@ -690,11 +690,11 @@ DoObjConfig(
 	    }
 	    return TCL_ERROR;
 	}
-    if (newIndex == TCL_INDEX_NONE) {
-	newIndex = (Tcl_Size)INT_MIN;
-    } else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
-	newIndex++;
-    }
+	if (newIndex == TCL_INDEX_NONE) {
+	    newIndex = (Tcl_Size)INT_MIN;
+	} else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
+	    newIndex++;
+	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
 	    *((int *) internalPtr) = (int)newIndex;
