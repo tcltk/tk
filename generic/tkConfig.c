@@ -2029,18 +2029,20 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_INDEX:
-	    if (*((int *) internalPtr) == INT_MIN) {
-		objPtr = TkNewIndexObj(TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) == INT_MAX) {
-		objPtr = Tcl_NewStringObj("end+1", TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) == -1) {
-		objPtr = Tcl_NewStringObj("end", TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) < 0) {
-		char buf[32];
-		snprintf(buf, 32, "end%d", 1 + *((int *) internalPtr));
-		objPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
-	    } else {
-		objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+		if (*((int *) internalPtr) == INT_MIN) {
+		    objPtr = TkNewIndexObj(TCL_INDEX_NONE);
+		} else if (*((int *) internalPtr) == INT_MAX) {
+		    objPtr = Tcl_NewStringObj("end+1", TCL_INDEX_NONE);
+		} else if (*((int *) internalPtr) == -1) {
+		    objPtr = Tcl_NewStringObj("end", TCL_INDEX_NONE);
+		} else if (*((int *) internalPtr) < 0) {
+		    char buf[32];
+		    snprintf(buf, 32, "end%d", 1 + *((int *) internalPtr));
+		    objPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
+		} else {
+		    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+		}
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
