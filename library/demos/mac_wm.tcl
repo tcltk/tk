@@ -30,7 +30,7 @@ proc launch {name windowInfo class} {
 	focus -force $name
 	return
     }
-    wm attributes $name -class $class; toplevel $name 
+    wm attributes $name -class $class; toplevel $name
     wm title $name $class
     set f $name.f
     ttk::frame $f
@@ -39,7 +39,7 @@ proc launch {name windowInfo class} {
 	-highlightcolor systemWindowBackgroundColor \
 	-font systemDefaultFont\
 	-wrap word -width 50 -height 6
-    $t insert insert $windowInfo 
+    $t insert insert $windowInfo
     $t configure -state disabled
     grid columnconfigure $f 0 -weight 1
     grid $t -row 0 -column 0 -columnspan 2 -sticky NSEW
@@ -62,7 +62,7 @@ proc launch {name windowInfo class} {
         -command [list setbit $name $f.stylemask.miniaturizable miniaturizable]
     if {$class == "nswindow"} {
         $f.stylemask.miniaturizable state selected
-    } else { 
+    } else {
         $f.stylemask.miniaturizable state !alternate
     }
     grid $f.stylemask.miniaturizable -row 2 -column 0 -sticky w
@@ -80,7 +80,7 @@ proc launch {name windowInfo class} {
     grid $f.stylemask -row 1 -column 0
     pack $name.f -side bottom -fill both -expand 1 -padx 16 -pady 16
 }
-	     
+
 set info "The command wm attributes window -stylemask ?bitnames? can \
 be used to modify bits in the stylemask property of the NSWindow or \
 NSPanel underlying a Tk Window.  Changing these bits causes the \
@@ -106,7 +106,7 @@ text $t -background systemWindowBackgroundColor \
     -highlightcolor systemWindowBackgroundColor \
     -font systemDefaultFont\
     -wrap word -width 50 -height 8
-$t insert insert $info 
+$t insert insert $info
 $t configure -state disabled
 grid columnconfigure $f 0 -weight 1
 grid $t -row 0 -column 0 -columnspan 2 -sticky NSEW

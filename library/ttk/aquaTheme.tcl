@@ -88,7 +88,7 @@ namespace eval ttk::theme::aqua {
 		active systemTextColor
 		pressed systemTextColor
 	    }
-	
+
 	# For Entry, Combobox and Spinbox widgets the selected text background
 	# is the "Highlight color" selected in preferences when the widget
 	# has focus.  It is a gray color when the widget does not have focus or

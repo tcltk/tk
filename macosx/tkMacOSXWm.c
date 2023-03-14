@@ -216,7 +216,7 @@ static const styleMaskBit styleMaskBits[] = {
     {"utility", NSWindowStyleMaskUtilityWindow, NSWindowClass_panel},
     /* Do not activate the app when the window is activated. */
     {"nonactivatingpanel", NSWindowStyleMaskNonactivatingPanel, NSWindowClass_panel},
-    /* 
+    /*
      * Requires utility.  Cannot be resizable.  Close button is an X; no other buttons.
      * Cannot be a docmodal.
      */
@@ -1686,7 +1686,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	NSButton *closer = [macWindow standardWindowButton:
-			       NSWindowCloseButton]; 
+			       NSWindowCloseButton];
 	NSButton *miniaturizer = [macWindow standardWindowButton:
 				     NSWindowMiniaturizeButton];
 	NSButton *zoomer = [macWindow standardWindowButton:
@@ -1695,7 +1695,7 @@ WmSetAttribute(
 	miniaturizer.enabled = (state.bits.miniaturize != 0);
 	zoomer.enabled = (state.bits.zoom != 0);
 	break;
-    } 
+    }
     case WMATT_FULLSCREEN:
 	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
 	    return TCL_ERROR;
@@ -1778,14 +1778,14 @@ WmSetAttribute(
 		macWindow.titlebarAppearsTransparent = YES;
 	    } else {
 		macWindow.titlebarAppearsTransparent = NO;
-	    }		
+	    }
 	} else {
 	    return TCL_ERROR;
 	}
 	NSRect oldFrame = [macWindow frame];
 #ifdef DEBUG
-	fprintf(stderr, "Current styleMask: %lx\n", [macWindow styleMask]); 
-	fprintf(stderr, "Setting styleMask to %lx\n", styleMaskValue); 
+	fprintf(stderr, "Current styleMask: %lx\n", [macWindow styleMask]);
+	fprintf(stderr, "Setting styleMask to %lx\n", styleMaskValue);
 #endif
         macWindow.styleMask = (unsigned long) styleMaskValue;
 	NSRect newFrame = [macWindow frame];
@@ -6615,7 +6615,7 @@ TkMacOSXMakeRealWindowExist(
     if (TkMacOSXHostToplevelExists(winPtr)) {
 	return;
     }
-    
+
     macWin = (MacDrawable *)winPtr->window;
 
     /*
@@ -6654,7 +6654,7 @@ TkMacOSXMakeRealWindowExist(
 	    Tcl_InitHashTable(&pathnameToTabbingMode, TCL_STRING_KEYS);
 	    initialized = 1;
 	}
-	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr)); 
+	hPtr = Tcl_FindHashEntry(&pathnameToSubclass, Tk_PathName(winPtr));
 	index = hPtr ? PTR2INT(Tcl_GetHashValue(hPtr)) : subclassNSWindow;
 	switch(index) {
 	case subclassNSPanel:
@@ -6683,15 +6683,15 @@ TkMacOSXMakeRealWindowExist(
 	if (hPtr) {
 	    Tcl_DeleteHashEntry(hPtr);
 	}
-	hPtr = Tcl_FindHashEntry(&pathnameToTabbingId, Tk_PathName(winPtr)); 
+	hPtr = Tcl_FindHashEntry(&pathnameToTabbingId, Tk_PathName(winPtr));
 	if (hPtr) {
-	    tabbingId = Tcl_GetHashValue(hPtr);	    
+	    tabbingId = Tcl_GetHashValue(hPtr);
 	    Tcl_DeleteHashEntry(hPtr);
 	    ckfree(tabbingId);
 	}
-	hPtr = Tcl_FindHashEntry(&pathnameToTabbingMode, Tk_PathName(winPtr)); 
+	hPtr = Tcl_FindHashEntry(&pathnameToTabbingMode, Tk_PathName(winPtr));
 	if (hPtr) {
-	    tabbingMode = PTR2INT(Tcl_GetHashValue(hPtr));	    
+	    tabbingMode = PTR2INT(Tcl_GetHashValue(hPtr));
 	    Tcl_DeleteHashEntry(hPtr);
 	}
     } else {
