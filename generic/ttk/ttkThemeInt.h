@@ -39,4 +39,10 @@ MODULE_SCOPE Ttk_LayoutTemplate Ttk_FindLayoutTemplate(
 
 MODULE_SCOPE const char *Ttk_StyleName(Ttk_Style);
 
+#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
+#   define TTK_OPTION_UNDERLINE_DEF(type, field) "-1", offsetof(type, field), TCL_INDEX_NONE, 0, NULL
+#else
+#   define TTK_OPTION_UNDERLINE_DEF(type, field) NULL, offsetof(type, field), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL
+#endif
+
 #endif /* _TTKTHEMEINT */
