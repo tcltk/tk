@@ -343,13 +343,12 @@ nothing to happen in the widget command.
 Same as \fB{}\fR
 This form may not be abbreviated.
 .TP 12
-\fB@\fInumber\fR
+\fB@\fIx\fB,\fIy\fR
 .
-In this form, \fInumber\fR is treated as a y-coordinate in the
-menu's window;  the entry closest to that y-coordinate is used.
-For example,
-.QW \fB@0\fR
-indicates the top-most entry in the window.
+Indicates the entry that covers the point in the menu's window specified
+by \fIx\fR and \fIy\fR (in pixel coordinates).
+If no entry covers that point, then this form is equivalent to \fB{}\fR.
+If only a single number is specified, it is treated as the y-coordinate.
 .TP 12
 \fInumber\fR
 .
