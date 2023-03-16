@@ -139,7 +139,7 @@ proc ::tk::MenuDup {src dst type} {
 	return
     }
     for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
-	set cmd [list $dst add [$src type $i]]
+	set cmd [list $dst add [$src type $i] [$src id $i]]
 	foreach option [$src entryconfigure $i]  {
 	    lappend cmd [lindex $option 0] [lindex $option 4]
 	}
