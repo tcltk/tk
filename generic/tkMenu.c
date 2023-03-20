@@ -2421,7 +2421,7 @@ MenuAddOrInsert(
         idPtr = objv[offs];
         if (Tcl_FindHashEntry(&menuPtr->items, Tcl_GetString(idPtr))) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-              "Entry %s already exists", Tcl_GetString(idPtr)));
+              "entry \"%s\" already exists", Tcl_GetString(idPtr)));
             Tcl_SetErrorCode(interp, "TK", "MENU", "ENTRY_EXISTS", NULL);
             return TCL_ERROR;
         }
