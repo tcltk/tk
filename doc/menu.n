@@ -358,11 +358,12 @@ so on.
 .TP 12
 \fIid\fR
 .
-Indicates the entry with the specified id.
+If the index does not satisfy one of the above forms then the menu is
+searched for an entry with the specified id.
 .TP 12
 \fIpattern\fR
 .
-If the index does not satisfy one of the above forms then this
+If all of the above methods for finding an entry fail, this
 form is used.  \fIPattern\fR is pattern-matched against the label of
 each entry in the menu, in order from the top down, until a
 matching entry is found.  The rules of \fBstring match\fR
