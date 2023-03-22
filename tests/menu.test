@@ -4134,7 +4134,7 @@ test menu-40.12 {identifiers - delete by id} -setup {
 } -cleanup {
     destroy .m
 } -result {e001 e002 cmd9}
-test menu-40.12 {identifiers - duplicate} -setup {
+test menu-40.13 {identifiers - duplicate} -setup {
     destroy .m
 } -body {
     menu .m
@@ -4144,6 +4144,17 @@ test menu-40.12 {identifiers - duplicate} -setup {
 } -cleanup {
     destroy .m
 } -returnCodes error -result {entry "foo" already exists}
+test menu-40.14 {identifiers - reserved word} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 0
+    .m add command last -label 1
+    .m add command -label 2
+    .m add command -label 3
+    .m index last
+} -cleanup {
+    destroy .m
+} -result {2}
 
 # cleanup
 imageFinish
