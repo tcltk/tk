@@ -3381,6 +3381,14 @@ test menu-20.15 {CloneMenu - new binding on non-empty menu} -setup {
     event generate .m2 <<Test>>
     return $x
 } -result {<<Test>>}
+test menu-20.16 {CloneMenu - bindtags} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    bindtags .m1 [linsert [bindtags .m1] 1 .m1.sub1]
+    .m1 clone .m2
+    bindtags .m2
+} -result {.m2 .m1 .m1.sub1 Menu all}
 
 test menu-21.1 {MenuDoYPosition} -setup {
     deleteWindows

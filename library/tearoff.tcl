@@ -134,15 +134,24 @@ proc ::tk::MenuDup {src dst type} {
 	lappend cmd [lindex $option 0] [lindex $option 4]
     }
     eval $cmd
+
+    # Copy the meny entries, if any
+
     set last [$src index last]
-    if {$last eq "none" || $last < 0} {
-	return
-    }
-    for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
-	set cmd [list $dst add [$src type $i]]
-	foreach option [$src entryconfigure $i]  {
-	    lappend cmd [lindex $option 0] [lindex $option 4]
+    if {$last ne "none" && $last >= 0} {
+	for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
+	    set cmd [list $dst add [$src type $i]]
+	    foreach option [$src entryconfigure $i]  {
+		lappend cmd [lindex $option 0] [lindex $option 4]
+	    }
+	    eval $cmd
 	}
-	eval $cmd
     }
+
+    # Duplicate the binding tags from the source menu, replacing src with dst
+
+    set tags [bindtags $src]
+    set x [lsearch -exact $tags $src]
+    if {$x >= 0} {lset tags $x $dst}
+    bindtags $dst $tags
 }
