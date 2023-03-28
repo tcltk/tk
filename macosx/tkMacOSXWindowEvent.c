@@ -1299,7 +1299,7 @@ static const char *const accentNames[] = {
 - (void) tkToolbarButton: (id) sender
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd));
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), sender);
 #endif
     union {XEvent general; XVirtualEvent virt;} event;
     int x, y;
