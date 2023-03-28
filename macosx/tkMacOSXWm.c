@@ -299,7 +299,7 @@ typedef enum {
     WMATT_ALPHA, WMATT_APPEARANCE, WMATT_BUTTONS, WMATT_FULLSCREEN,
     WMATT_ISDARK, WMATT_MODIFIED, WMATT_NOTIFY, WMATT_TITLEPATH, WMATT_TOPMOST,
     WMATT_TRANSPARENT, WMATT_STYLEMASK, WMATT_CLASS, WMATT_TABBINGID,
-    WMATT_TABBINGMODE, _WMATT_LAST_ATTRIBUTE
+    WMATT_TABBINGMODE, WMATT_TYPE, _WMATT_LAST_ATTRIBUTE
 } WmAttribute;
 
 static const char *const WmAttributeNames[] = {
@@ -1895,6 +1895,9 @@ WmSetAttribute(
 	break;
     case WMATT_CLASS:
 	break;
+    case WMATT_TYPE:
+	TKLog(@"The type attribute is ignored on macOS.");
+	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
 	return TCL_ERROR;
@@ -2017,6 +2020,9 @@ WmGetAttribute(
 	break;
     case WMATT_TRANSPARENT:
 	result = Tcl_NewBooleanObj(wmPtr->flags & WM_TRANSPARENT);
+	break;
+    case WMATT_TYPE:
+	result = Tcl_NewStringObj("unsupported", TCL_INDEX_NONE);
 	break;
     case _WMATT_LAST_ATTRIBUTE:
     default:
