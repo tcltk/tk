@@ -2467,7 +2467,7 @@ MenuAddOrInsert(
             /* Generate an id for the new entry on the main menu */
             do {
                 snprintf(idbuf, sizeof(idbuf), "e%03X", ++menuPtr->serial);
-                entryPtr = 
+                entryPtr =
                   Tcl_CreateHashEntry(&menuListPtr->items, idbuf, &isNew);
             } while (!isNew);
             idPtr = Tcl_NewStringObj(idbuf, TCL_INDEX_NONE);
