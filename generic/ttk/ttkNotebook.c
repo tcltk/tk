@@ -3,7 +3,7 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
 
@@ -68,7 +68,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,ttkCompoundStrings,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TK_OPTION_UNDERLINE_DEF(Tab, underline), GEOMETRY_CHANGED},
+	TTK_OPTION_UNDERLINE_DEF(Tab, underline), GEOMETRY_CHANGED},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
