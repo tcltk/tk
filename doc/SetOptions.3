@@ -419,6 +419,15 @@ specify octal or hexadecimal numbers, respectively).  The internal
 form is a C \fBint\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
 flag; if a NULL value is set, the internal representation is set to INT_MIN.
 .TP
+\fBTK_OPTION_INDEX\fR
+The string value must be an index in the format accepted by \fBTcl_GetIntForIndex()\fR
+or the empty string.  The internal form is a C \fBint\fR value. If the string
+starts with \fB-\fR, the internal representation will be set to INT_MIN. If the
+string has the form \fBend-???\fR, then the result will be a negative number:
+\fB-1\fR stands for \fBend\fR, \fB-2\fR stands for \fBend-1\fR and so on.
+This option type supports the \fBTK_OPTION_NULL_OK\fR flag;
+if a NULL value is set, the internal representation is set to INT_MIN.
+.TP
 \fBTK_OPTION_JUSTIFY\fR
 The value must be a standard justification value such as \fBleft\fR.
 The internal form is a Tk_Justify like the values returned by
