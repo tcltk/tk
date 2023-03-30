@@ -3357,6 +3357,58 @@ test menu-20.11 {CloneMenu} -setup {
     menu .m2
     .m1 clone .m2
 } -returnCodes error -result {window name "m2" already exists in parent}
+test menu-20.12 {CloneMenu - copied bindings on empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 0
+    bind .m1 <<Test>> {append x <<Test>>}
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.13 {CloneMenu - copied bindings on non-empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 1
+    bind .m1 <<Test>> {append x <<Test>>}
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.14 {CloneMenu - new binding on empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 0
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    bind .m1 <<Test>> {append x <<Test>>}
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.15 {CloneMenu - new binding on non-empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 1
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    bind .m1 <<Test>> {append x <<Test>>}
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.16 {CloneMenu - bindtags} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    bindtags .m1 [linsert [bindtags .m1] 1 .m1.sub1]
+    .m1 clone .m2
+    bindtags .m2
+} -result {.m2 .m1 .m1.sub1 Menu all}
 
 test menu-21.1 {MenuDoYPosition} -setup {
     deleteWindows
