@@ -114,7 +114,7 @@ static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 #endif
 
