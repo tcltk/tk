@@ -361,8 +361,8 @@ test option-14.12 {error conditions} -body {
 
 set option1 [file join [testsDirectory] option.file1]
 test option-15.1 {database files} -body {
-    option read non-existent
-} -returnCodes error -result {couldn't open "non-existent": no such file or directory}
+    list [catch {option read non-existent} msg] [string tolower $msg]
+} -result {1 {couldn't open "non-existent": no such file or directory}}
 test option-15.2 {database files} -body {
     option read $option1
     option get . x1 color

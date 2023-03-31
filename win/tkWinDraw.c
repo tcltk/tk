@@ -244,7 +244,7 @@ ConvertPoints(
 	if (tsdPtr->winPoints != NULL) {
 	    ckfree(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * npoints);
+	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * (size_t)npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -554,7 +554,7 @@ TkPutImage(
 
 	if (usePalette) {
 	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER)
-		    + sizeof(RGBQUAD)*ncolors);
+		    + sizeof(RGBQUAD)*(size_t)ncolors);
 	} else {
 	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER));
 	}
@@ -563,7 +563,7 @@ TkPutImage(
 	infoPtr->bmiHeader.biWidth = image->width;
 	infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
 	infoPtr->bmiHeader.biPlanes = 1;
-	infoPtr->bmiHeader.biBitCount = image->bits_per_pixel;
+	infoPtr->bmiHeader.biBitCount = (WORD)image->bits_per_pixel;
 	infoPtr->bmiHeader.biCompression = BI_RGB;
 	infoPtr->bmiHeader.biSizeImage = 0;
 	infoPtr->bmiHeader.biXPelsPerMeter = 0;
@@ -571,7 +571,7 @@ TkPutImage(
 	infoPtr->bmiHeader.biClrImportant = 0;
 
 	if (usePalette) {
-	    infoPtr->bmiHeader.biClrUsed = ncolors;
+	    infoPtr->bmiHeader.biClrUsed = (DWORD)ncolors;
 	    for (i = 0; i < ncolors; i++) {
 		infoPtr->bmiColors[i].rgbBlue = GetBValue(colors[i]);
 		infoPtr->bmiColors[i].rgbGreen = GetGValue(colors[i]);
@@ -764,7 +764,7 @@ MakeAndStrokePath(
                                 this is either Polyline or Polygon. */
 {
     BeginPath(dc);
-    func(dc, winPoints, npoints);
+    func(dc, winPoints, (int)npoints);
     /*
      * In the case of closed polylines, the first and last points
      * are the same. We want miter or bevel join be rendered also
@@ -1041,7 +1041,7 @@ XDrawRectangle(
     oldBrush = (HBRUSH)SelectObject(dc, GetStockObject(NULL_BRUSH));
     SetROP2(dc, tkpWinRopModes[gc->function]);
 
-    Rectangle(dc, x, y, (int) x+width+1, (int) y+height+1);
+    Rectangle(dc, x, y, x + (int)width + 1, y + (int)height + 1);
 
     DeleteObject(SelectObject(dc, oldPen));
     SelectObject(dc, oldBrush);
@@ -1272,16 +1272,16 @@ DrawOrFillArc(
 	 */
 
 	SetBkMode(dc, TRANSPARENT);
-	Arc(dc, x, y, (int) (x+width+1), (int) (y+height+1), xstart, ystart,
+	Arc(dc, x, y,  x + (int)width + 1, y + (int)height + 1, xstart, ystart,
 		xend, yend);
     } else {
 	brush = CreateSolidBrush(gc->foreground);
 	oldBrush = (HBRUSH)SelectObject(dc, brush);
 	if (gc->arc_mode == ArcChord) {
-	    Chord(dc, x, y, (int) (x+width+1), (int) (y+height+1),
+	    Chord(dc, x, y,  x + (int)width + 1, y + (int)height + 1,
 		    xstart, ystart, xend, yend);
 	} else if (gc->arc_mode == ArcPieSlice) {
-	    Pie(dc, x, y, (int) (x+width+1), (int) (y+height+1),
+	    Pie(dc, x, y,  x+(int)width+1, y + (int)height + 1,
 		    xstart, ystart, xend, yend);
 	}
 	DeleteObject(SelectObject(dc, oldBrush));

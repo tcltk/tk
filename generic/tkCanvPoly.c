@@ -1970,13 +1970,13 @@ PolygonToPostscript(
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (stipple != None) {
-	    Tcl_AppendToObj(psObj, "clip ", -1);
+	    Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
 	    Tk_CanvasPsStipple(interp, canvas, stipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
-	    Tcl_AppendToObj(psObj, "fill\n", -1);
+	    Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 	}
 	goto done;
     }
@@ -1998,17 +1998,17 @@ PolygonToPostscript(
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
-	    Tcl_AppendToObj(psObj, "eoclip ", -1);
+	    Tcl_AppendToObj(psObj, "eoclip ", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
 	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	    if (color != NULL) {
-		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 	    }
 	} else {
-	    Tcl_AppendToObj(psObj, "eofill\n", -1);
+	    Tcl_AppendToObj(psObj, "eofill\n", TCL_INDEX_NONE);
 	}
     }
 

@@ -19,14 +19,14 @@
  * Prototypes for functions used only in this file:
  */
 
-static Tcl_Size	ClipboardAppHandler(ClientData clientData,
+static Tcl_Size	ClipboardAppHandler(void *clientData,
 			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
-static Tcl_Size	ClipboardHandler(ClientData clientData,
+static Tcl_Size	ClipboardHandler(void *clientData,
 			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
-static Tcl_Size	ClipboardWindowHandler(ClientData clientData,
+static Tcl_Size	ClipboardWindowHandler(void *clientData,
 			    Tcl_Size offset, char *buffer, Tcl_Size maxBytes);
-static void		ClipboardLostSel(ClientData clientData);
-static int		ClipboardGetProc(ClientData clientData,
+static void		ClipboardLostSel(void *clientData);
+static int		ClipboardGetProc(void *clientData,
 			    Tcl_Interp *interp, const char *portion);
 
 /*
@@ -50,7 +50,7 @@ static int		ClipboardGetProc(ClientData clientData,
 
 static Tcl_Size
 ClipboardHandler(
-    ClientData clientData,	/* Information about data to fetch. */
+    void *clientData,	/* Information about data to fetch. */
     Tcl_Size offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
@@ -128,7 +128,7 @@ ClipboardHandler(
 
 static Tcl_Size
 ClipboardAppHandler(
-    ClientData clientData,	/* Pointer to TkDisplay structure. */
+    void *clientData,	/* Pointer to TkDisplay structure. */
     Tcl_Size offset,			/* Return selection bytes starting at this
 				 * offset. */
     char *buffer,		/* Place to store converted selection. */
@@ -204,7 +204,7 @@ ClipboardWindowHandler(
 
 static void
 ClipboardLostSel(
-    ClientData clientData)	/* Pointer to TkDisplay structure. */
+    void *clientData)	/* Pointer to TkDisplay structure. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
 
@@ -418,7 +418,7 @@ Tk_ClipboardAppend(
 
 int
 Tk_ClipboardObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -703,7 +703,7 @@ TkClipInit(
 
 static int
 ClipboardGetProc(
-    ClientData clientData,	/* Dynamic string holding partially assembled
+    void *clientData,	/* Dynamic string holding partially assembled
 				 * selection. */
     TCL_UNUSED(Tcl_Interp *),		/* Interpreter used for error reporting (not
 				 * used). */
@@ -712,8 +712,8 @@ ClipboardGetProc(
     Tcl_Encoding utf8 = Tcl_GetEncoding(NULL, "utf-8");
     Tcl_DString ds;
 
-    (void)Tcl_ExternalToUtfDStringEx(utf8, portion, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
-    Tcl_DStringAppend((Tcl_DString *) clientData, Tcl_DStringValue(&ds), Tcl_DStringLength(&ds));
+    const char *str = Tcl_ExternalToUtfDString(utf8, portion, TCL_INDEX_NONE, &ds);
+    Tcl_DStringAppend((Tcl_DString *) clientData, str, Tcl_DStringLength(&ds));
     Tcl_DStringFree(&ds);
     Tcl_FreeEncoding(utf8);
     return TCL_OK;

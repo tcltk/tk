@@ -130,9 +130,9 @@ TkpDisplayWarning(
 	if (tclStubsPtr->tcl_CreateFileHandler) {
 	Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 	if (errChannel) {
-	    Tcl_WriteChars(errChannel, title, -1);
+	    Tcl_WriteChars(errChannel, title, TCL_INDEX_NONE);
 	    Tcl_WriteChars(errChannel, ": ", 2);
-	    Tcl_WriteChars(errChannel, msg, -1);
+	    Tcl_WriteChars(errChannel, msg, TCL_INDEX_NONE);
 	    Tcl_WriteChars(errChannel, "\n", 1);
 	    return;
 	}

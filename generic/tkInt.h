@@ -88,22 +88,8 @@
 #   define TKFLEXARRAY 1
 #endif
 
-#if (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
-#   define TCL_ENCODING_STRICT			0x44
-#endif
-
-
-#if TCL_MAJOR_VERSION < 9
-#   undef Tcl_ExternalToUtfDStringEx
-#   undef Tcl_UtfToExternalDStringEx
-    /* just assume 'flags' is TCL_ENCODING_NOCOMPLAIN, and return value not used. */
-#   define Tcl_ExternalToUtfDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_ExternalToUtfDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   define Tcl_UtfToExternalDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_UtfToExternalDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   if !defined(Tcl_GetParent) && (TCL_MINOR_VERSION < 7)
-#	define Tcl_GetParent Tcl_GetMaster
-#   endif
+#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#   define Tcl_GetParent Tcl_GetMaster
 #endif
 
 /*
@@ -272,7 +258,7 @@ typedef struct TkDisplay {
     TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
-    int numModKeyCodes;		/* Number of entries in modKeyCodes array
+    Tcl_Size numModKeyCodes;		/* Number of entries in modKeyCodes array
 				 * below. */
     KeyCode *modKeyCodes;	/* Pointer to an array giving keycodes for all
 				 * of the keys that have modifiers associated
@@ -1435,7 +1421,7 @@ MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
 #   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 #   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
 #else
-#   define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
+#   define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
 #   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 #endif
 

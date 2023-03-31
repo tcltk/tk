@@ -187,9 +187,9 @@ const Tk_OptionSpec ttkCoreOptionSpecs[] =
  * +++ Initialization: elements and element factories.
  */
 
-extern void TtkElements_Init(Tcl_Interp *);
-extern void TtkLabel_Init(Tcl_Interp *);
-extern void TtkImage_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkElements_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkLabel_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkImage_Init(Tcl_Interp *);
 
 static void RegisterElements(Tcl_Interp *interp)
 {
@@ -202,19 +202,19 @@ static void RegisterElements(Tcl_Interp *interp)
  * +++ Initialization: Widget definitions.
  */
 
-extern void TtkButton_Init(Tcl_Interp *);
-extern void TtkEntry_Init(Tcl_Interp *);
-extern void TtkFrame_Init(Tcl_Interp *);
-extern void TtkNotebook_Init(Tcl_Interp *);
-extern void TtkPanedwindow_Init(Tcl_Interp *);
-extern void TtkProgressbar_Init(Tcl_Interp *);
-extern void TtkScale_Init(Tcl_Interp *);
-extern void TtkScrollbar_Init(Tcl_Interp *);
-extern void TtkSeparator_Init(Tcl_Interp *);
-extern void TtkTreeview_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkButton_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkEntry_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkFrame_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkNotebook_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkPanedwindow_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkProgressbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkScale_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkScrollbar_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkSeparator_Init(Tcl_Interp *);
+MODULE_SCOPE void TtkTreeview_Init(Tcl_Interp *);
 
 #ifdef TTK_SQUARE_WIDGET
-extern int TtkSquareWidget_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkSquareWidget_Init(Tcl_Interp *);
 #endif
 
 static void RegisterWidgets(Tcl_Interp *interp)
@@ -238,9 +238,9 @@ static void RegisterWidgets(Tcl_Interp *interp)
  * +++ Initialization: Built-in themes.
  */
 
-extern int TtkAltTheme_Init(Tcl_Interp *);
-extern int TtkClassicTheme_Init(Tcl_Interp *);
-extern int TtkClamTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *);
+MODULE_SCOPE int TtkClamTheme_Init(Tcl_Interp *);
 
 static void RegisterThemes(Tcl_Interp *interp)
 {

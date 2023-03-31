@@ -374,111 +374,82 @@ static const Ttk_ElementSpec FieldElementSpec = {
 
 /*------------------------------------------------------------------------
  * Indicators --
- *
- * The SVG images used here are partly based on some icons provided by
- * the official open source SVG icon library for the Bootstrap project,
- * licensed under the MIT license (https://opensource.org/licenses/MIT).
- *
- * See https://github.com/twbs/icons.
  */
 
 /*
- * Indicator bitmap descriptor:
+ * Indicator image descriptor:
  */
 typedef struct {
-    int width;			/* Width of each image */
-    int height;			/* Height of each image */
+    int width;				/* unscaled width */
+    int height;				/* unscaled height */
     const char *const offDataPtr;
     const char *const onDataPtr;
-    const Ttk_StateTable *map;	/* used to look up image index by state */
 } IndicatorSpec;
-
-static const Ttk_StateTable checkbutton_states[] = {
-    { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
-    { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
-    { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
-    { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { 0, 0, 0 }
-};
 
 static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
     </svg>";
 
 static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-      <path d='m10.803 4.969a0.75002 0.75002 0 0 1 1.071 1.05l-3.992 4.9901a0.75002 0.75002 0 0 1-1.08 0.01999l-2.645-2.646a0.75002 0.75002 0 1 1 1.06-1.06l2.094 2.093 3.473-4.4251a0.235 0.235 0 0 1 0.01999-0.021997z' fill='#000000'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#888888'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#414141'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#d9d9d9'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+     <path d='m4.5 8 3 3 4-6' fill='none' stroke='#000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {
     16, 16,
     checkbtnOffData,
-    checkbtnOnData,
-    checkbutton_states
-};
-
-static const Ttk_StateTable radiobutton_states[] = {
-    { 0, 0, TTK_STATE_SELECTED|TTK_STATE_DISABLED },
-    { 1, TTK_STATE_SELECTED, TTK_STATE_DISABLED },
-    { 2, TTK_STATE_DISABLED, TTK_STATE_SELECTED },
-    { 3, TTK_STATE_SELECTED|TTK_STATE_DISABLED, 0 },
-    { 0, 0, 0 }
+    checkbtnOnData
 };
 
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradient2819' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
      </defs>\n\
-     <path d='m7.6149 14.979c-0.95143-0.052435-1.8251-0.28345-2.6955-0.71278-1.2049-0.59425-2.1287-1.4307-2.865-2.5939-0.17549-0.27726-0.48912-0.91628-0.60706-1.2369-0.78448-2.1325-0.50124-4.4748 0.76831-6.3538 1.0215-1.5118 2.623-2.5782 4.4077-2.9349 1.8284-0.36541 3.7204 0.011412 5.2659 1.0488 1.5781 1.0592 2.6631 2.7202 2.993 4.5816 0.13747 0.77566 0.13747 1.6696 0 2.4452-0.44509 2.5113-2.2593 4.6096-4.6777 5.4101-0.82562 0.2733-1.7275 0.39395-2.5897 0.34644z' fill='#ffffff' stroke-width='.019254'/>\n\
-     <path d='m3.0503 12.95a7 7 0 1 1 9.8995-9.8995 7 7 0 0 1-9.8995 9.8995zm-0.70711 0.70711a8 8 0 1 0 11.314-11.314 8 8 0 0 0-11.314 11.314z' fill='url(#linearGradient1319)'/>\n\
-     <path d='m12.95 3.0503c-2.7294-2.7294-7.1701-2.7294-9.8995 0s-2.7294 7.1701 0 9.8995 7.1701 2.7294 9.8995 0 2.7294-7.1701 0-9.8995zm-0.70711 0.70711c2.3476 2.3476 2.3476 6.1377 0 8.4853s-6.1377 2.3476-8.4853 0-2.3476-6.1377 0-8.4853 6.1377-2.3476 8.4853 0z' fill='url(#linearGradient2819)'/>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
     </svg>";
 
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradient2819' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
      </defs>\n\
-     <path d='m7.6149 14.979c-0.95143-0.052435-1.8251-0.28345-2.6955-0.71278-1.2049-0.59425-2.1287-1.4307-2.865-2.5939-0.17549-0.27726-0.48912-0.91628-0.60706-1.2369-0.78448-2.1325-0.50124-4.4748 0.76831-6.3538 1.0215-1.5118 2.623-2.5782 4.4077-2.9349 1.8284-0.36541 3.7204 0.011412 5.2659 1.0488 1.5781 1.0592 2.6631 2.7202 2.993 4.5816 0.13747 0.77566 0.13747 1.6696 0 2.4452-0.44509 2.5113-2.2593 4.6096-4.6777 5.4101-0.82562 0.2733-1.7275 0.39395-2.5897 0.34644z' fill='#ffffff' stroke-width='.019254'/>\n\
-     <path d='m3.0503 12.95a7 7 0 1 1 9.8995-9.8995 7 7 0 0 1-9.8995 9.8995zm-0.70711 0.70711a8 8 0 1 0 11.314-11.314 8 8 0 0 0-11.314 11.314z' fill='url(#linearGradient1319)'/>\n\
-     <path d='m12.95 3.0503c-2.7294-2.7294-7.1701-2.7294-9.8995 0s-2.7294 7.1701 0 9.8995 7.1701 2.7294 9.8995 0 2.7294-7.1701 0-9.8995zm-0.70711 0.70711c2.3476 2.3476 2.3476 6.1377 0 8.4853s-6.1377 2.3476-8.4853 0-2.3476-6.1377 0-8.4853 6.1377-2.3476 8.4853 0z' fill='url(#linearGradient2819)'/>\n\
-     <path d='m11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' fill='#000000'/>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
+     <circle cx='8' cy='8' r='3' fill='#000000'/>\n\
     </svg>";
 
 static const IndicatorSpec radiobutton_spec = {
     16, 16,
     radiobtnOffData,
-    radiobtnOnData,
-    radiobutton_states
+    radiobtnOnData
 };
 
 typedef struct {
@@ -506,8 +477,10 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	    offsetof(IndicatorElement,borderColorObj), "black" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    offsetof(IndicatorElement,marginObj), "0 2 4 2" },
-	    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
+
+static double scalingFactor;
 
 static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
@@ -516,7 +489,6 @@ static void IndicatorElementSize(
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
     Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *scalingPctPtr;
-    double scalingFactor;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
     (void)paddingPtr;
@@ -535,11 +507,8 @@ static void IndicatorElementSize(
 static void ColorToStr(
     const XColor *colorPtr, char *colorStr)	/* in the format "RRGGBB" */
 {
-    char str[13];
-
-    snprintf(str, sizeof(str), "%04x%04x%04x",
-	     colorPtr->red, colorPtr->green, colorPtr->blue);
-    snprintf(colorStr, 7, "%.2s%.2s%.2s", str, str + 4, str + 8);
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void ImageChanged(		/* to be passed to Tk_GetImage() */
@@ -558,14 +527,12 @@ static void IndicatorElementDraw(
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    const char *scalingPctPtr;
-    double scalingFactor;
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
     char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
 	 shadeColorStr[7], borderColorStr[7];
-    int index;
+    unsigned int selected = (state & TTK_STATE_SELECTED);
+    Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[70];
     Tk_Image img;
 
@@ -583,12 +550,6 @@ static void IndicatorElementDraw(
     b = Ttk_PadBox(b, padding);
 
     /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-     */
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-
-    /*
      * Sanity check
      */
     if (   b.x < 0
@@ -596,7 +557,7 @@ static void IndicatorElementDraw(
 	|| Tk_Width(tkwin) < b.x + spec->width * scalingFactor
 	|| Tk_Height(tkwin) < b.y + spec->height * scalingFactor)
     {
-	/* Oops!  not enough room to display the image.
+	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
 	 */
 	return;
@@ -621,18 +582,17 @@ static void IndicatorElementDraw(
      * Check whether there is an SVG image for the indicator's
      * type (0 = checkbtn, 1 = radiobtn) and these color strings
      */
-    index = Ttk_StateTableLookup(spec->map, state);
     snprintf(imgName, sizeof(imgName),
 	     "::tk::icons::indicator_alt%d_%s_%s_%s_%s_%s",
 	     spec->offDataPtr == radiobtnOffData,
 	     shadeColorStr, indicatorColorStr, borderColorStr, bgColorStr,
-	     index % 2 == 1 ? fgColorStr : "XXXXXX");
+	     selected ? fgColorStr : "XXXXXX");
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
 	 * Determine the SVG data to use for the photo image
 	 */
-	svgDataPtr = (index % 2 == 0 ? spec->offDataPtr : spec->onDataPtr);
+	svgDataPtr = (selected ? spec->onDataPtr : spec->offDataPtr);
 
 	/*
 	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
@@ -1233,6 +1193,8 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
  * TtkAltTheme_Init --
  * 	Install alternate theme.
  */
+MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp);
+
 MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "alt", NULL);

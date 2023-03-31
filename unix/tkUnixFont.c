@@ -891,7 +891,7 @@ TkpGetFontFamilies(
     hPtr = Tcl_FirstHashEntry(&familyTable, &search);
     resultPtr = Tcl_NewObj();
     while (hPtr != NULL) {
-	strPtr = Tcl_NewStringObj((const char *)Tcl_GetHashKey(&familyTable, hPtr), -1);
+	strPtr = Tcl_NewStringObj((const char *)Tcl_GetHashKey(&familyTable, hPtr), TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	hPtr = Tcl_NextHashEntry(&search);
     }
@@ -932,10 +932,10 @@ TkpGetSubFonts(
     fontPtr = (UnixFont *) tkfont;
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	familyPtr = fontPtr->subFontArray[i].familyPtr;
-	objv[0] = Tcl_NewStringObj(familyPtr->faceName, -1);
-	objv[1] = Tcl_NewStringObj(familyPtr->foundry, -1);
+	objv[0] = Tcl_NewStringObj(familyPtr->faceName, TCL_INDEX_NONE);
+	objv[1] = Tcl_NewStringObj(familyPtr->foundry, TCL_INDEX_NONE);
 	objv[2] = Tcl_NewStringObj(
-		Tcl_GetEncodingName(familyPtr->encoding), -1);
+		Tcl_GetEncodingName(familyPtr->encoding), TCL_INDEX_NONE);
 	listPtr = Tcl_NewListObj(3, objv);
 	Tcl_ListObjAppendElement(NULL, resultPtr, listPtr);
     }
@@ -1065,8 +1065,8 @@ Tk_MeasureChars(
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
-		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1083,8 +1083,8 @@ Tk_MeasureChars(
 	    p = next;
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
-	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source, p - source,
-		TCL_ENCODING_NOCOMPLAIN, &runString);
+	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
+		&runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 		    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1332,8 +1332,8 @@ Tk_DrawChars(
 		do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
 
-		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -2298,7 +2298,7 @@ FontMapLoadPage(
 	int hi, lo;
 
 	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
-		TCL_ENCODING_STOPONERROR|TCL_ENCODING_STRICT, NULL, buf, sizeof(buf), NULL,
+		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
 	}
@@ -2572,7 +2572,7 @@ CanUseFallback(
 	    numEncodings++;
 	}
 	Tcl_UtfToExternal(NULL, encoding, src, srcLen,
-		TCL_ENCODING_STOPONERROR|TCL_ENCODING_STRICT, NULL, dst, sizeof(dst), &srcRead,
+		TCL_ENCODING_STOPONERROR, NULL, dst, sizeof(dst), &srcRead,
 		&dstWrote, NULL);
 	if (dstWrote == 0) {
 	    goto crossout;

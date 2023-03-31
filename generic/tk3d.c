@@ -750,7 +750,7 @@ Tk_Draw3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    Tcl_Size numPoints1,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -763,9 +763,9 @@ Tk_Draw3DPolygon(
     XPoint *p1Ptr, *p2Ptr;
     TkBorder *borderPtr = (TkBorder *) border;
     GC gc;
-    int i, lightOnLeft, dx, dy, parallel, pointsSeen;
+    Tcl_Size i;
+    int lightOnLeft, dx, dy, parallel, pointsSeen;
     Display *display = Tk_Display(tkwin);
-    int numPoints = numPoints1;
 
     if (borderPtr->lightGC == NULL) {
 	TkpGetShadows(borderPtr, tkwin);
@@ -837,9 +837,9 @@ Tk_Draw3DPolygon(
      */
 
     pointsSeen = 0;
-    for (i = -2, p1Ptr = &pointPtr[numPoints-2], p2Ptr = p1Ptr+1;
-	    i < numPoints; i++, p1Ptr = p2Ptr, p2Ptr++) {
-	if ((i == -1) || (i == numPoints-1)) {
+    for (i = 0, p1Ptr = &pointPtr[numPoints-2], p2Ptr = p1Ptr+1;
+	    i < numPoints + 2; i++, p1Ptr = p2Ptr, p2Ptr++) {
+	if ((i == 1) || (i == numPoints + 1)) {
 	    p2Ptr = pointPtr;
 	}
 	if ((p2Ptr->x == p1Ptr->x) && (p2Ptr->y == p1Ptr->y)) {
@@ -1020,7 +1020,7 @@ Tk_Fill3DPolygon(
     XPoint *pointPtr,		/* Array of points describing polygon. All
 				 * points must be absolute
 				 * (CoordModeOrigin). */
-    Tcl_Size numPoints1,		/* Number of points at *pointPtr. */
+    Tcl_Size numPoints,		/* Number of points at *pointPtr. */
     int borderWidth,		/* Width of border, measured in pixels to the
 				 * left of the polygon's trajectory. May be
 				 * negative. */
@@ -1030,10 +1030,9 @@ Tk_Fill3DPolygon(
 				 * TK_RELIEF_SUNKEN. */
 {
     TkBorder *borderPtr = (TkBorder *) border;
-    int numPoints = numPoints1;
 
     XFillPolygon(Tk_Display(tkwin), drawable, borderPtr->bgGC,
-	    pointPtr, numPoints, Complex, CoordModeOrigin);
+	    pointPtr, (int)numPoints, Complex, CoordModeOrigin);
     if (leftRelief != TK_RELIEF_FLAT) {
 	Tk_Draw3DPolygon(tkwin, drawable, border, pointPtr, numPoints,
 		borderWidth, leftRelief);
@@ -1383,9 +1382,9 @@ TkDebugBorder(
 	    Tcl_Obj *objPtr = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(borderPtr->resourceRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)borderPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(borderPtr->objRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)borderPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

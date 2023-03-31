@@ -50,7 +50,7 @@ static int		EmbImageLayoutProc(TkText *textPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars,
 			    int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
-static void		EmbImageProc(ClientData clientData, int x, int y,
+static void		EmbImageProc(void *clientData, int x, int y,
 			    int width, int height, int imageWidth,
 			    int imageHeight);
 
@@ -389,7 +389,7 @@ EmbImageConfigure(
     if (name == NULL) {
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		"Either a \"-name\" or a \"-image\" argument must be"
-		" provided to the \"image create\" subcommand", -1));
+		" provided to the \"image create\" subcommand", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "IMAGE_CREATE_USAGE",
 		NULL);
 	return TCL_ERROR;
@@ -414,19 +414,19 @@ EmbImageConfigure(
     }
 
     Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, -1);
+    Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
 
     if (conflict) {
     	char buf[4 + TCL_INTEGER_SPACE];
 
 	snprintf(buf, sizeof(buf), "#%d", count+1);
-	Tcl_DStringAppend(&newName, buf, -1);
+	Tcl_DStringAppend(&newName, buf, TCL_INDEX_NONE);
     }
     name = Tcl_DStringValue(&newName);
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
-    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
+    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
     strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
@@ -837,7 +837,7 @@ TkTextImageIndex(
 
 static void
 EmbImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     TCL_UNUSED(int),		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     TCL_UNUSED(int),
