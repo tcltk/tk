@@ -208,7 +208,7 @@ Tk_GetVisual(
 	    for (dictPtr = visualNames; dictPtr->minLength; dictPtr++) {
 		Tcl_AppendPrintfToObj(msgObj, "%s, ", dictPtr->name);
 	    }
-	    Tcl_AppendToObj(msgObj, "or default", -1);
+	    Tcl_AppendToObj(msgObj, "or default", TCL_INDEX_NONE);
 	    Tcl_SetObjResult(interp, msgObj);
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "VISUAL", string, NULL);
 	    return NULL;
@@ -239,7 +239,7 @@ Tk_GetVisual(
 	    &numVisuals);
     if (visInfoList == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"couldn't find an appropriate visual", -1));
+		"couldn't find an appropriate visual", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "VISUAL", "INAPPROPRIATE", NULL);
 	return NULL;
     }

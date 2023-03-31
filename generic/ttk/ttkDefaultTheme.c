@@ -414,11 +414,11 @@ static const IndicatorSpec checkbutton_spec = {
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
@@ -431,11 +431,11 @@ static const char radiobtnOffData[] = "\
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
@@ -507,11 +507,8 @@ static void IndicatorElementSize(
 static void ColorToStr(
     const XColor *colorPtr, char *colorStr)	/* in the format "RRGGBB" */
 {
-    char str[13];
-
-    snprintf(str, sizeof(str), "%04x%04x%04x",
-	     colorPtr->red, colorPtr->green, colorPtr->blue);
-    snprintf(colorStr, 7, "%.2s%.2s%.2s", str, str + 4, str + 8);
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void ImageChanged(		/* to be passed to Tk_GetImage() */

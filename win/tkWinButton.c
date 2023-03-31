@@ -41,7 +41,7 @@ typedef struct WinButton {
 
 typedef struct {
     BOOLEAN initialized;
-    DWORD boxSize;		/* Width & height of the box. */
+    int boxSize;		/* Width & height of the box. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -71,11 +71,11 @@ static const char checkbtnOnData[] = "\
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#a0a0a0' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#696969' offset='0'/>\n\
        <stop stop-color='#e3e3e3' offset='1'/>\n\
       </linearGradient>\n\
@@ -88,11 +88,11 @@ static const char radiobtnOffData[] = "\
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#a0a0a0' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#696969' offset='0'/>\n\
        <stop stop-color='#e3e3e3' offset='1'/>\n\
       </linearGradient>\n\
@@ -164,7 +164,7 @@ InitBoxes(Tcl_Interp *interp)
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
     scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
 
-    tsdPtr->boxSize = 16 * scalingFactor;
+    tsdPtr->boxSize = (int)(16.0 * scalingFactor);
     tsdPtr->initialized = TRUE;
 }
 
@@ -505,7 +505,7 @@ TkpDrawIndicator(
 	}
 	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
 	ckfree(svgDataCopy);
-	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	ckfree(script);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
@@ -1045,7 +1045,7 @@ TkpComputeButtonGeometry(
 
     Tk_FreeTextLayout(butPtr->textLayout);
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-	    Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+	    Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, butPtr->wrapLength,
 	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
     txtWidth = butPtr->textWidth;
