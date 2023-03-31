@@ -66,90 +66,42 @@ const Tk_ClassProcs tkpButtonProcs = {
 
 static const char checkbtnOffData[] =
     "<svg id='checkbutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
-    " <defs>\n"
-    "  <linearGradient id='linearGradientLeft' x1='2' x2='2' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#DARKKK' offset='1'/>\n"
-    "   <stop stop-color='#000000' offset='0'/>\n"
-    "  </linearGradient>\n"
-    "  <linearGradient id='linearGradientBottom' x1='7.5' x2='7.5' y1='16' y2='16' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
-    "   <stop stop-color='#ffffff' offset='1'/>\n"
-    "  </linearGradient>\n"
-    "  <linearGradient id='linearGradientRight' x1='16' x2='16' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
-    "   <stop stop-color='#ffffff' offset='1'/>\n"
-    "  </linearGradient>\n"
-    "  <linearGradient id='linearGradientTop' x1='7.5' x2='7.5' y1='2' y2='2' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#DARKKK' offset='1'/>\n"
-    "   <stop stop-color='#000000' offset='0'/>\n"
-    "  </linearGradient>\n"
-    " </defs>\n"
-    " <g style='paint-order:stroke markers fill'>\n"
-    "  <rect id='rectbackdrop' x='2' y='2' width='12' height='12' fill='#INTROR'/>\n"
-    "  <path id='recttopside' d='m0 0h16l-1 1h-14l-1-1' fill='url(#linearGradientTop)'/>\n"
-    "  <path id='rectleftside' d='m0 0 1 1v14l-1 1' fill='url(#linearGradientLeft)'/>\n"
-    "  <path id='rectrightside' d='m16 0-1 1v14l1 1v-16' fill='url(#linearGradientRight)'/>\n"
-    "  <path id='rectbottomside' d='m0 16 1-1h14l1 1h-16' fill='url(#linearGradientBottom)'/>\n"
-    " </g>\n"
+    " <path id='borderdark' d='m0 0v16l1-1v-14h14l1-1h-16z' fill='#DARKKK'/>\n"
+    " <path id='borderlight' d='m16 0-1 1v14h-14l-1 1h16v-16z' fill='#LIGHTT'/>\n"
+    " <rect id='rectbackdrop' x='2' y='2' width='12' height='12' fill='#INTROR'/>\n"
     "</svg>";
 
 static const char checkbtnOnData[] =
     "<svg id='checkbutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
-    " <defs>\n"
-    "  <linearGradient id='linearGradientLeft' x1='2' x2='2' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#DARKKK' offset='1'/>\n"
-    "   <stop stop-color='#000000' offset='0'/>\n"
-    "  </linearGradient>\n"
-    "  <linearGradient id='linearGradientBottom' x1='7.5' x2='7.5' y1='16' y2='16' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
-    "   <stop stop-color='#ffffff' offset='1'/>\n"
-    "  </linearGradient>\n"
-    "  <linearGradient id='linearGradientRight' x1='16' x2='16' y1='7.5' y2='7.5' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#LIGHTT' offset='0'/>\n"
-    "   <stop stop-color='#ffffff' offset='1'/>\n"
-    "  </linearGradient>\n"
-    "  <linearGradient id='linearGradientTop' x1='7.5' x2='7.5' y1='2' y2='2' gradientUnits='userSpaceOnUse'>\n"
-    "   <stop stop-color='#DARKKK' offset='1'/>\n"
-    "   <stop stop-color='#000000' offset='0'/>\n"
-    "  </linearGradient>\n"
-    " </defs>\n"
-    " <g style='paint-order:stroke markers fill'>\n"
-    "  <rect id='rectbackdrop' x='2' y='2' width='12' height='12' fill='#INTROR'/>\n"
-    "  <path id='recttopside' d='m0 0h16l-1 1h-14l-1-1' fill='url(#linearGradientTop)'/>\n"
-    "  <path id='rectleftside' d='m0 0 1 1v14l-1 1' fill='url(#linearGradientLeft)'/>\n"
-    "  <path id='rectrightside' d='m16 0-1 1v14l1 1v-16' fill='url(#linearGradientRight)'/>\n"
-    "  <path id='rectbottomside' d='m0 16 1-1h14l1 1h-16' fill='url(#linearGradientBottom)'/>\n"
-    "  <path id='indicator' d='m4.5 8 3 3 4-6' fill='none' stroke='#INDCTR' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n"
-    " </g>\n"
+    " <path id='borderdark' d='m0 0v16l1-1v-14h14l1-1h-16z' fill='#DARKKK'/>\n"
+    " <path id='borderlight' d='m16 0-1 1v14h-14l-1 1h16v-16z' fill='#LIGHTT'/>\n"
+    " <rect id='rectbackdrop' x='2' y='2' width='12' height='12' fill='#INTROR'/>\n"
+    " <path id='indicator' d='m4.5 8 3 3 4-6' fill='none' stroke='#INDCTR' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n"
     "</svg>";
 
 static const char radiobtnOffData[] =
     "<svg id='radiobutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
     " <defs>\n"
-    "  <linearGradient id='gradient1' x1='2' x2='11' y1='2' y2='11' gradientUnits='userSpaceOnUse'>\n"
+    "  <linearGradient id='gradient' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n"
     "   <stop stop-color='#DARKKK' offset='0'/>\n"
-    "   <stop stop-color='#LIGHTT' stop-opacity='0' offset='1'/>\n"
+    "   <stop stop-color='#LIGHTT' offset='1' stop-opacity='0'/>\n"
     "  </linearGradient>\n"
     " </defs>\n"
-    " <g fill-rule='evenodd'>\n"
-    "  <circle cx='8' cy='8' r='8' fill='url(#gradient1)'/>\n"
-    "  <circle cx='8' cy='8' r='6.5' fill='#INTROR'/>\n"
-    " </g>\n"
+    " <circle cx='8' cy='8' r='8' fill='url(#gradient)'/>\n"
+    " <circle cx='8' cy='8' r='6.5' fill='#INTROR'/>\n"
     "</svg>";
 
 static const char radiobtnOnData[] =
     "<svg id='radiobutton' width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
     " <defs>\n"
-    "  <linearGradient id='gradient1' x1='2' x2='11' y1='2' y2='11' gradientUnits='userSpaceOnUse'>\n"
+    "  <linearGradient id='gradient' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n"
     "   <stop stop-color='#DARKKK' offset='0'/>\n"
-    "   <stop stop-color='#LIGHTT' stop-opacity='0' offset='1'/>\n"
+    "   <stop stop-color='#LIGHTT' offset='1' stop-opacity='0'/>\n"
     "  </linearGradient>\n"
     " </defs>\n"
-    " <g fill-rule='evenodd'>\n"
-    "  <circle cx='8' cy='8' r='8' fill='url(#gradient1)'/>\n"
-    "  <circle cx='8' cy='8' r='7' fill='#INTROR'/>\n"
-    "  <circle cx='8' cy='8' r='4' fill='#INDCTR'/>\n"
-    " </g>\n"
+    " <circle cx='8' cy='8' r='8' fill='url(#gradient)'/>\n"
+    " <circle cx='8' cy='8' r='7' fill='#INTROR'/>\n"
+    " <circle cx='8' cy='8' r='4' fill='#INDCTR'/>\n"
     "</svg>";
 
 static const char menuOffData[] =
@@ -157,12 +109,12 @@ static const char menuOffData[] =
 
 static const char checkmenuOnData[] =
     "<svg width='8' height='8' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
-    " <path id='indicator' d='m1 3.5 2.5 3 3.5-5' fill='none' stroke='#INDCTR' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.975' style='paint-order:stroke markers fill'/>\n"
+    " <path id='indicator' d='m1 3.5 2.5 3 3.5-5' fill='none' stroke='#INDCTR' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.975'/>\n"
     "</svg>";
 
 static const char radiomenuOnData[] =
     "<svg width='8' height='8' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n"
-    " <circle cx='4' cy='4' r='3' fill='#INDCTR' fill-rule='evenodd'/>\n"
+    " <circle cx='4' cy='4' r='3' fill='#INDCTR'/>\n"
     "</svg>";
 
 
@@ -189,11 +141,8 @@ ColorToStr(
     char *colorStr)		/* memory area to which the color is to be
 				   output in the format "RRGGBB" */
 {
-    char str[13];
-
-    snprintf(str, sizeof(str), "%04x%04x%04x",
-	     colorPtr->red, colorPtr->green, colorPtr->blue);
-    snprintf(colorStr, 7, "%.2s%.2s%.2s", str, str + 4, str + 8);
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void
@@ -224,12 +173,12 @@ TkpDrawCheckIndicator(
     const char *svgDataPtr;
     int hasBorder, hasInterior, dim;
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
-    char borderColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
+    char darkColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
     char imgName[60];
     Tk_Image img;
     size_t svgDataLen;
     char *svgDataCopy;
-    char *borderColorPtr, *lightColorPtr, *interiorColorPtr, *indicatorColorPtr;
+    char *darkColorPtr, *lightColorPtr, *interiorColorPtr, *indicatorColorPtr;
     Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *cmdFmt;
     size_t scriptSize;
@@ -288,17 +237,17 @@ TkpDrawCheckIndicator(
     }
 
     /*
-     * Construct the color strings borderColorStr,
+     * Construct the color strings darkColorStr, lightColorStr,
      * interiorColorStr, and indicatorColorStr
      */
 
     TkpGetShadows(bg_brdr, tkwin);
 
     if (bg_brdr->darkColorPtr == NULL) {
-	strcpy(borderColorStr, "000000");
+	strcpy(darkColorStr, "000000");
     } else {
 	ColorToStr(Tk_GetColorByValue(tkwin, bg_brdr->darkColorPtr),
-		   borderColorStr);
+		   darkColorStr);
     }
     if (bg_brdr->lightColorPtr == NULL) {
 	strcpy(lightColorStr, "ffffff");
@@ -325,7 +274,7 @@ TkpDrawCheckIndicator(
 
     snprintf(imgName, sizeof(imgName), "::tk::icons::indicator%d_%s_%s_%s_%s",
 	     mode,
-	     hasBorder ? borderColorStr : "XXXXXX",
+	     hasBorder ? darkColorStr : "XXXXXX",
 	     hasBorder ? lightColorStr : "XXXXXX",
 	     hasInterior ? interiorColorStr : "XXXXXX",
 	     on ? indicatorColorStr : "XXXXXX");
@@ -349,26 +298,22 @@ TkpDrawCheckIndicator(
 	 * Update the colors within svgDataCopy
 	 */
 
-	borderColorPtr =    strstr(svgDataPtr, "DARKKK");
+	darkColorPtr =      strstr(svgDataPtr, "DARKKK");
 	lightColorPtr =     strstr(svgDataPtr, "LIGHTT");
 	interiorColorPtr =  strstr(svgDataPtr, "INTROR");
 	indicatorColorPtr = strstr(svgDataPtr, "INDCTR");
 
-	while (borderColorPtr != NULL) {
-	    memcpy(borderColorPtr, borderColorStr, 6);
-	    borderColorPtr = strstr(borderColorPtr, "DARKKK");
+	if (darkColorPtr != NULL) {
+	    memcpy(darkColorPtr, darkColorStr, 6);
 	}
-	while (lightColorPtr != NULL) {
+	if (lightColorPtr != NULL) {
 	    memcpy(lightColorPtr, lightColorStr, 6);
-	    lightColorPtr = strstr(lightColorPtr, "LIGHTT");
 	}
-	while (interiorColorPtr != NULL) {
+	if (interiorColorPtr != NULL) {
 	    memcpy(interiorColorPtr, interiorColorStr, 6);
-	    interiorColorPtr =  strstr(interiorColorPtr, "INTROR");
 	}
-	while (indicatorColorPtr != NULL) {
+	if (indicatorColorPtr != NULL) {
 	    memcpy(indicatorColorPtr, indicatorColorStr, 6);
-	    indicatorColorPtr = strstr(indicatorColorPtr, "INDCTR");
 	}
 
 	/*
@@ -384,7 +329,7 @@ TkpDrawCheckIndicator(
 	}
 	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
 	ckfree(svgDataCopy);
-	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	ckfree(script);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
@@ -399,7 +344,7 @@ TkpDrawCheckIndicator(
 
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
     scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-    dim *= scalingFactor;
+    dim = (int)(dim * scalingFactor);
 
     /*
      * Adjust the image's coordinates in the drawable and display the image
@@ -980,7 +925,7 @@ TkpComputeButtonGeometry(
 	Tk_FreeTextLayout(butPtr->textLayout);
 
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+		Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, butPtr->wrapLength,
 		butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
 	txtWidth = butPtr->textWidth;

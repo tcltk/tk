@@ -343,7 +343,7 @@ static int		ParseFontNameObj(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj *objPtr, TkFontAttributes *faPtr);
 static void		RecomputeWidgets(TkWindow *winPtr);
 static int		SetFontFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
-static void		TheWorldHasChanged(ClientData clientData);
+static void		TheWorldHasChanged(void *clientData);
 static void		UpdateDependentFonts(TkFontInfo *fiPtr,
 			    Tk_Window tkwin, Tcl_HashEntry *namedHashPtr);
 
@@ -473,7 +473,7 @@ TkFontPkgFree(
 
 int
 Tk_FontObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -576,10 +576,10 @@ Tk_FontObjCmd(
 
 	    if (len != (size_t)charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
-			"expected a single character but got \"", -1);
+			"expected a single character but got \"", TCL_INDEX_NONE);
 		Tcl_AppendLimitedToObj(resultPtr, string,
-			-1, 40, "...");
-		Tcl_AppendToObj(resultPtr, "\"", -1);
+			TCL_INDEX_NONE, 40, "...");
+		Tcl_AppendToObj(resultPtr, "\"", TCL_INDEX_NONE);
 		Tcl_SetObjResult(interp, resultPtr);
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "FONT_SAMPLE", NULL);
 		return TCL_ERROR;
@@ -683,7 +683,7 @@ Tk_FontObjCmd(
 	if (TkCreateNamedFont(interp, tkwin, name, &fa) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
 	break;
     }
     case FONT_DELETE: {
@@ -811,7 +811,7 @@ Tk_FontObjCmd(
 			namedHashPtr);
 
 		Tcl_ListObjAppendElement(NULL, resultPtr,
-			Tcl_NewStringObj(string, -1));
+			Tcl_NewStringObj(string, TCL_INDEX_NONE));
 	    }
 	    namedHashPtr = Tcl_NextHashEntry(&search);
 	}
@@ -879,7 +879,7 @@ UpdateDependentFonts(
 
 static void
 TheWorldHasChanged(
-    ClientData clientData)	/* Info about application's fonts. */
+    void *clientData)	/* Info about application's fonts. */
 {
     TkFontInfo *fiPtr = (TkFontInfo *)clientData;
 
@@ -1082,7 +1082,7 @@ Tk_GetFont(
     Tk_Font tkfont;
     Tcl_Obj *strPtr;
 
-    strPtr = Tcl_NewStringObj(string, -1);
+    strPtr = Tcl_NewStringObj(string, TCL_INDEX_NONE);
     Tcl_IncrRefCount(strPtr);
     tkfont = Tk_AllocFontFromObj(interp, tkwin, strPtr);
     Tcl_DecrRefCount(strPtr);
@@ -1222,7 +1222,7 @@ Tk_AllocFontFromObj(
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"failed to allocate font due to internal system font engine"
-		" problem", -1));
+		" problem", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "FONT", "INTERNAL_PROBLEM", NULL);
 	return NULL;
     }
@@ -1731,7 +1731,7 @@ Tk_PostscriptFontName(
 	 * to do.
 	 */
 
-	Tcl_DStringAppend(dsPtr, family, -1);
+	Tcl_DStringAppend(dsPtr, family, TCL_INDEX_NONE);
 
 	src = dest = Tcl_DStringValue(dsPtr) + len;
 	upper = 1;
@@ -1754,13 +1754,13 @@ Tk_PostscriptFontName(
 	family = Tcl_DStringValue(dsPtr) + len;
     }
     if (family != Tcl_DStringValue(dsPtr) + len) {
-	Tcl_DStringAppend(dsPtr, family, -1);
+	Tcl_DStringAppend(dsPtr, family, TCL_INDEX_NONE);
 	family = Tcl_DStringValue(dsPtr) + len;
     }
 
     if (strcasecmp(family, "NewCenturySchoolbook") == 0) {
 	Tcl_DStringSetLength(dsPtr, len);
-	Tcl_DStringAppend(dsPtr, "NewCenturySchlbk", -1);
+	Tcl_DStringAppend(dsPtr, "NewCenturySchlbk", TCL_INDEX_NONE);
 	family = Tcl_DStringValue(dsPtr) + len;
     }
 
@@ -1810,15 +1810,15 @@ Tk_PostscriptFontName(
 	if ((strcmp(family, "Times") == 0)
 		|| (strcmp(family, "NewCenturySchlbk") == 0)
 		|| (strcmp(family, "Palatino") == 0)) {
-	    Tcl_DStringAppend(dsPtr, "-Roman", -1);
+	    Tcl_DStringAppend(dsPtr, "-Roman", TCL_INDEX_NONE);
 	}
     } else {
-	Tcl_DStringAppend(dsPtr, "-", -1);
+	Tcl_DStringAppend(dsPtr, "-", TCL_INDEX_NONE);
 	if (weightString != NULL) {
-	    Tcl_DStringAppend(dsPtr, weightString, -1);
+	    Tcl_DStringAppend(dsPtr, weightString, TCL_INDEX_NONE);
 	}
 	if (slantString != NULL) {
-	    Tcl_DStringAppend(dsPtr, slantString, -1);
+	    Tcl_DStringAppend(dsPtr, slantString, TCL_INDEX_NONE);
 	}
     }
 
@@ -2007,7 +2007,7 @@ Tk_ComputeTextLayout(
     height = fmPtr->ascent + fmPtr->descent;
 
     if (numChars == TCL_INDEX_NONE) {
-	numChars = Tcl_NumUtfChars(string, -1);
+	numChars = Tcl_NumUtfChars(string, TCL_INDEX_NONE);
     }
     if (wrapLength == 0) {
 	wrapLength = -1;
@@ -3310,15 +3310,15 @@ Tk_TextLayoutToPostscript(
     char uindex[5], c, *ps;
     int ch;
 
-    Tcl_AppendToObj(psObj, "[(", -1);
+    Tcl_AppendToObj(psObj, "[(", TCL_INDEX_NONE);
     for (i = 0; i < layoutPtr->numChunks; i++, chunkPtr++) {
 	if (baseline != chunkPtr->y) {
-	    Tcl_AppendToObj(psObj, ")]\n[(", -1);
+	    Tcl_AppendToObj(psObj, ")]\n[(", TCL_INDEX_NONE);
 	    baseline = chunkPtr->y;
 	}
 	if (chunkPtr->numDisplayChars <= 0) {
 	    if (chunkPtr->start[0] == '\t') {
-		Tcl_AppendToObj(psObj, "\\t", -1);
+		Tcl_AppendToObj(psObj, "\\t", TCL_INDEX_NONE);
 	    }
 	    continue;
 	}
@@ -3371,10 +3371,10 @@ Tk_TextLayoutToPostscript(
 
 		    ps[len-1] = '/';
 		} else {
-		    Tcl_AppendToObj(psObj, ")/", -1);
+		    Tcl_AppendToObj(psObj, ")/", TCL_INDEX_NONE);
 		}
-		Tcl_AppendToObj(psObj, glyphname, -1);
-		Tcl_AppendToObj(psObj, "(", -1);
+		Tcl_AppendToObj(psObj, glyphname, TCL_INDEX_NONE);
+		Tcl_AppendToObj(psObj, "(", TCL_INDEX_NONE);
 	    } else {
 		/*
 		 * No known mapping for the character into the space of
@@ -3389,7 +3389,7 @@ noMapping:	;
 	    }
 	}
     }
-    Tcl_AppendToObj(psObj, ")]\n", -1);
+    Tcl_AppendToObj(psObj, ")]\n", TCL_INDEX_NONE);
     Tcl_AppendObjToObj(Tcl_GetObjResult(interp), psObj);
     Tcl_DecrRefCount(psObj);
 }
@@ -3563,12 +3563,12 @@ GetAttributeInfoObj(
 
 	case FONT_WEIGHT:
 	    str = TkFindStateString(weightMap, faPtr->weight);
-	    valuePtr = Tcl_NewStringObj(str, -1);
+	    valuePtr = Tcl_NewStringObj(str, TCL_INDEX_NONE);
 	    break;
 
 	case FONT_SLANT:
 	    str = TkFindStateString(slantMap, faPtr->slant);
-	    valuePtr = Tcl_NewStringObj(str, -1);
+	    valuePtr = Tcl_NewStringObj(str, TCL_INDEX_NONE);
 	    break;
 
 	case FONT_UNDERLINE:
@@ -3584,7 +3584,7 @@ GetAttributeInfoObj(
 	    return TCL_OK;
 	}
 	Tcl_ListObjAppendElement(NULL, resultPtr,
-		Tcl_NewStringObj(fontOpt[i], -1));
+		Tcl_NewStringObj(fontOpt[i], TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, resultPtr, valuePtr);
     }
     Tcl_SetObjResult(interp, resultPtr);
@@ -3625,19 +3625,19 @@ Tk_FontGetDescription(
     }
     if (faPtr->weight != TK_FW_NORMAL) {
 	str = TkFindStateString(weightMap, faPtr->weight);
-	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, TCL_INDEX_NONE));
     }
     if (faPtr->slant != TK_FS_ROMAN) {
 	str = TkFindStateString(slantMap, faPtr->slant);
-	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, TCL_INDEX_NONE));
     }
     if (faPtr->underline) {
 	str = TkFindStateString(underlineMap, faPtr->underline);
-	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, TCL_INDEX_NONE));
     }
     if (faPtr->overstrike) {
 	str = TkFindStateString(overstrikeMap, faPtr->overstrike);
-	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, -1));
+	Tcl_ListObjAppendElement(NULL, resultPtr, Tcl_NewStringObj(str, TCL_INDEX_NONE));
     }
     return resultPtr;
 }
@@ -3919,7 +3919,7 @@ TkFontParseXLFD(
     }
 
     Tcl_DStringInit(&ds);
-    Tcl_DStringAppend(&ds, str, -1);
+    Tcl_DStringAppend(&ds, str, TCL_INDEX_NONE);
     src = Tcl_DStringValue(&ds);
 
     field[0] = src;

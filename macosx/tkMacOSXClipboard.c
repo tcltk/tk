@@ -37,7 +37,7 @@ static Tk_Window clipboardOwner = NULL;
 			cbPtr; cbPtr = cbPtr->nextPtr) {
 		    NSString *s = [[TKNSString alloc]
 				      initWithTclUtfBytes:cbPtr->buffer
-						   length:cbPtr->length];
+						   length:(NSUInteger)cbPtr->length];
 		    [string appendString:s];
 		    [s release];
 		}
@@ -118,7 +118,7 @@ TkSelGetSelection(
 				 * returned. */
     Tk_GetSelProc *proc,	/* Procedure to call to process the selection,
 				 * once it has been retrieved. */
-    ClientData clientData)	/* Arbitrary value to pass to proc. */
+    void *clientData)	/* Arbitrary value to pass to proc. */
 {
     int result = TCL_ERROR;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;

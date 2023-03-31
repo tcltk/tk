@@ -104,8 +104,8 @@ TkpGetString(
     if (keyEv->send_event == -1) {
 	TkKeyEvent *ev = (TkKeyEvent *)keyEv;
 	if (ev->nbytes > 0) {
-	    (void)Tcl_ExternalToUtfDStringEx(TkWinGetKeyInputEncoding(),
-		    ev->trans_chars, ev->nbytes, TCL_ENCODING_NOCOMPLAIN, dsPtr);
+	    (void)Tcl_ExternalToUtfDString(TkWinGetKeyInputEncoding(),
+		    ev->trans_chars, ev->nbytes, dsPtr);
 	}
     } else if (keyEv->send_event == -3) {
 
@@ -455,7 +455,8 @@ TkpInitKeymapInfo(
     XModifierKeymap *modMapPtr;
     KeyCode *codePtr;
     KeySym keysym;
-    int count, i, j, max, arraySize;
+    int count, i, max;
+    Tcl_Size j, arraySize;
 #define KEYCODE_ARRAY_SIZE 20
 
     dispPtr->bindInfoStale = 0;

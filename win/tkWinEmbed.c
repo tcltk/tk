@@ -164,7 +164,7 @@ void Tk_MapEmbeddedWindow(
 {
     if(!(winPtr->flags & TK_ALREADY_DEAD)) {
 	HWND hwnd = (HWND)winPtr->privatePtr;
-	int state = SendMessageW(hwnd, TK_STATE, -1, -1) - 1;
+	int state = SendMessageW(hwnd, TK_STATE, -1, (WPARAM)-1) - 1;
 
 	if (state < 0 || state > 3) {
 	    state = NormalState;
@@ -248,7 +248,7 @@ Tk_UseWindow(
 /*
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't modify container after widget is created", -1));
+		"can't modify container after widget is created", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
@@ -291,13 +291,13 @@ Tk_UseWindow(
     if (id == PTR2INT(hwnd)) {
 	if (!SendMessageW(hwnd, TK_INFO, TK_CONTAINER_ISAVAILABLE, 0)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "The container is already in use", -1));
+		    "The container is already in use", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "IN_USE", NULL);
 	    return TCL_ERROR;
 	}
     } else if (id == -PTR2INT(hwnd)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"the window to use is not a Tk container", -1));
+		"the window to use is not a Tk container", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "CONTAINER", NULL);
 	return TCL_ERROR;
     } else {
@@ -313,7 +313,7 @@ Tk_UseWindow(
 	if (IDCANCEL == MessageBoxW(hwnd, msg, L"Tk Warning",
 		MB_OKCANCEL | MB_ICONWARNING)) {
     	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "Operation has been canceled", -1));
+		    "Operation has been canceled", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "CANCEL", NULL);
 	    return TCL_ERROR;
 	}

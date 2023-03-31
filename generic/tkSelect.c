@@ -1297,7 +1297,7 @@ SelGetProc(
 				 * used). */
     const char *portion)	/* New information to be appended. */
 {
-    Tcl_DStringAppend((Tcl_DString *)clientData, portion, -1);
+    Tcl_DStringAppend((Tcl_DString *)clientData, portion, TCL_INDEX_NONE);
     return TCL_OK;
 }
 
@@ -1401,7 +1401,7 @@ HandleTclCommand(
 
 	if (cmdInfoPtr->interp != NULL) {
 	    if (length <= maxBytes) {
-		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, -1);
+		cmdInfoPtr->charOffset += Tcl_NumUtfChars(string, TCL_INDEX_NONE);
 		cmdInfoPtr->buffer[0] = '\0';
 	    } else {
 		Tcl_UniChar ch = 0;
@@ -1496,7 +1496,7 @@ TkSelDefaultSelection(
 	}
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds,
-		"MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW", -1);
+		"MULTIPLE TARGETS TIMESTAMP TK_APPLICATION TK_WINDOW", TCL_INDEX_NONE);
 	for (selPtr = winPtr->selHandlerList; selPtr != NULL;
 		selPtr = selPtr->nextPtr) {
 	    if ((selPtr->selection == infoPtr->selection)

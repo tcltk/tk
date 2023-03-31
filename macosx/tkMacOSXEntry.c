@@ -259,10 +259,10 @@ TkpDrawSpinboxButtons(
      */
 
     bgGC = Tk_GCForColor(sbPtr->entry.highlightBgColorPtr, d);
-    rects[0].x = Tk_Width(tkwin) - incDecWidth - 1;
+    rects[0].x = (short)(Tk_Width(tkwin) - incDecWidth - 1);
     rects[0].y = 0;
-    rects[0].width = incDecWidth + 1;
-    rects[0].height = Tk_Height(tkwin);
+    rects[0].width = (unsigned short)(incDecWidth + 1);
+    rects[0].height = (unsigned short)Tk_Height(tkwin);
     XFillRectangles(Tk_Display(tkwin), d, bgGC, rects, 1);
 
     if (!TkMacOSXSetupDrawingContext(d, NULL, &dc)) {

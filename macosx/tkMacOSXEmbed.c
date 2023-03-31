@@ -48,14 +48,14 @@ static Container *firstContainerPtr = NULL;
  * Prototypes for static procedures defined in this file:
  */
 
-static void	ContainerEventProc(ClientData clientData, XEvent *eventPtr);
-static void	EmbeddedEventProc(ClientData clientData, XEvent *eventPtr);
-static void	EmbedActivateProc(ClientData clientData, XEvent *eventPtr);
-static void	EmbedFocusProc(ClientData clientData, XEvent *eventPtr);
+static void	ContainerEventProc(void *clientData, XEvent *eventPtr);
+static void	EmbeddedEventProc(void *clientData, XEvent *eventPtr);
+static void	EmbedActivateProc(void *clientData, XEvent *eventPtr);
+static void	EmbedFocusProc(void *clientData, XEvent *eventPtr);
 static void	EmbedGeometryRequest(Container *containerPtr, int width,
 		    int height);
 static void	EmbedSendConfigure(Container *containerPtr);
-static void	EmbedStructureProc(ClientData clientData, XEvent *eventPtr);
+static void	EmbedStructureProc(void *clientData, XEvent *eventPtr);
 static void	EmbedWindowDeleted(TkWindow *winPtr);
 
 /*
@@ -214,7 +214,7 @@ Tk_UseWindow(
 
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't modify container after widget is created", -1));
+		"can't modify container after widget is created", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
@@ -702,7 +702,7 @@ Tk_GetOtherWindow(
 
 static void
 EmbeddedEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -737,7 +737,7 @@ EmbeddedEventProc(
 
 static void
 ContainerEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -845,7 +845,7 @@ ContainerEventProc(
 
 static void
 EmbedStructureProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
@@ -869,8 +869,8 @@ EmbedStructureProc(
 	    errHandler = Tk_CreateErrorHandler(eventPtr->xfocus.display, -1,
 		    -1, -1, NULL, NULL);
 	    Tk_MoveResizeWindow((Tk_Window)containerPtr->embeddedPtr, 0, 0,
-		    (unsigned) Tk_Width((Tk_Window)containerPtr->parentPtr),
-		    (unsigned) Tk_Height((Tk_Window)containerPtr->parentPtr));
+		    Tk_Width((Tk_Window)containerPtr->parentPtr),
+		    Tk_Height((Tk_Window)containerPtr->parentPtr));
 	    Tk_DeleteErrorHandler(errHandler);
 	}
     } else if (eventPtr->type == DestroyNotify) {
@@ -899,7 +899,7 @@ EmbedStructureProc(
 
 static void
 EmbedActivateProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
@@ -934,7 +934,7 @@ EmbedActivateProc(
 
 static void
 EmbedFocusProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;

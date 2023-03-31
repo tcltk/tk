@@ -305,10 +305,7 @@ static const char checkbtnOnData[] = "\
      <path d='m0 0v16h1v-15h15v-1z' fill='#9e9a91'/>\n\
      <path d='m15 1v14h-14v1h15v-15z' fill='#cfcdc8'/>\n\
      <rect x='1' y='1' width='14' height='14' fill='#ffffff'/>\n\
-     <g fill='none' stroke='#000000' stroke-linecap='round' stroke-width='2'>\n\
-      <path d='m5 5 6 6'/>\n\
-      <path d='m5 11 6-6'/>\n\
-     </g>\n\
+     <path d='m5 5 6 6m0-6-6 6' fill='none' stroke='#000000' stroke-linecap='round' stroke-width='2'/>\n\
     </svg>";
 
 static const IndicatorSpec checkbutton_spec = {
@@ -320,7 +317,7 @@ static const IndicatorSpec checkbutton_spec = {
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradient' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradient' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#9e9a91' offset='0'/>\n\
        <stop stop-color='#cfcdc8' offset='1'/>\n\
       </linearGradient>\n\
@@ -332,7 +329,7 @@ static const char radiobtnOffData[] = "\
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradient' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradient' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#9e9a91' offset='0'/>\n\
        <stop stop-color='#cfcdc8' offset='1'/>\n\
       </linearGradient>\n\
@@ -397,11 +394,8 @@ static void IndicatorElementSize(
 static void ColorToStr(
     const XColor *colorPtr, char *colorStr)	/* in the format "RRGGBB" */
 {
-    char str[13];
-
-    snprintf(str, sizeof(str), "%04x%04x%04x",
-	     colorPtr->red, colorPtr->green, colorPtr->blue);
-    snprintf(colorStr, 7, "%.2s%.2s%.2s", str, str + 4, str + 8);
+    snprintf(colorStr, 7, "%02x%02x%02x",
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void ImageChanged(		/* to be passed to Tk_GetImage() */

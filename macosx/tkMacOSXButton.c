@@ -76,7 +76,7 @@ static void	ButtonContentDrawCB(const HIRect *bounds,
 		    ThemeButtonKind kind,
 		    const HIThemeButtonDrawInfo *info, MacButton *ptr,
 		    SInt16 depth, Boolean isColorDev);
-static void	ButtonEventProc(ClientData clientData,
+static void	ButtonEventProc(void *clientData,
 		    XEvent *eventPtr);
 static void	TkMacOSXComputeButtonParams(TkButton *butPtr,
 		    ThemeButtonKind *btnkind,
@@ -86,7 +86,7 @@ static int	TkMacOSXComputeButtonDrawParams(TkButton *butPtr,
 static void	TkMacOSXDrawButton(MacButton *butPtr, GC gc,
 		    Pixmap pixmap);
 static void	DrawButtonImageAndText(TkButton *butPtr);
-static void	PulseDefaultButtonProc(ClientData clientData);
+static void	PulseDefaultButtonProc(void *clientData);
 
 /*
  * The class procedure table for the button widgets.
@@ -179,7 +179,7 @@ TkpCreateButton(
 
 void
 TkpDisplayButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     MacButton *macButtonPtr = (MacButton *)clientData;
     TkButton *butPtr = (TkButton *)clientData;
@@ -316,7 +316,7 @@ TkpComputeButtonGeometry(
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
 	butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-		text, -1, butPtr->wrapLength, butPtr->justify, 0,
+		text, TCL_INDEX_NONE, butPtr->wrapLength, butPtr->justify, 0,
 		&butPtr->textWidth, &butPtr->textHeight);
 
 	txtWidth = butPtr->textWidth + 2*butPtr->padX;
@@ -409,10 +409,10 @@ TkpComputeButtonGeometry(
 	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
         HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         if (height < contBounds.size.height) {
-	    height = contBounds.size.height;
+	    height = (int)contBounds.size.height;
         }
         if (width < contBounds.size.width) {
-	    width = contBounds.size.width;
+	    width = (int)contBounds.size.width;
         }
 	height += 2*HI_PADY;
 	width += 2*HI_PADX;
@@ -900,7 +900,7 @@ ButtonContentDrawCB (
 
 static void
 ButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkButton *buttonPtr = (TkButton *)clientData;
@@ -1174,7 +1174,7 @@ TkMacOSXComputeButtonDrawParams(
  */
 
 static void
-PulseDefaultButtonProc(ClientData clientData)
+PulseDefaultButtonProc(void *clientData)
 {
     MacButton *mbPtr = (MacButton *)clientData;
 

@@ -45,7 +45,7 @@ static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
 			    const Tk_ConfigSpec *staticSpecs);
-static void		DeleteSpecCacheTable(ClientData clientData,
+static void		DeleteSpecCacheTable(void *clientData,
 			    Tcl_Interp *interp);
 
 /*
@@ -98,7 +98,7 @@ Tk_ConfigureWidget(
 	 * we're on our way out of the application
 	 */
 
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
 	return TCL_ERROR;
     }
@@ -648,7 +648,7 @@ Tk_ConfigureInfo(
 	    return TCL_ERROR;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, TCL_INDEX_NONE));
 	ckfree(list);
 	return TCL_OK;
     }
@@ -955,7 +955,7 @@ Tk_ConfigureValue(
     }
     result = FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer,
 	    &freeProc);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
 	    ckfree((char *) result);
@@ -1174,7 +1174,7 @@ GetCachedSpecs(
 
 static void
 DeleteSpecCacheTable(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(Tcl_Interp *))
 {
     Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;
