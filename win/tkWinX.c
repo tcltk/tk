@@ -641,7 +641,7 @@ TkpCloseDisplay(
 	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	if (RootWindowOfScreen(ScreenOfDisplay(display, 0)) != None) {
-	    ckfree(RootWindowOfScreen(ScreenOfDisplay(display, 0)));
+	    ckfree((void *)RootWindowOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	if (DefaultColormapOfScreen(ScreenOfDisplay(display, 0)) != None) {
 	    XFreeColormap(display, DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));

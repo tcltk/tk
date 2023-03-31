@@ -353,7 +353,7 @@ InitPNGImage(
 	    TCL_ZLIB_COMPRESS_DEFAULT, NULL, &pngPtr->stream) != TCL_OK) {
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "zlib initialization failed", -1));
+		    "zlib initialization failed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
 	}
 	if (objPtr) {
@@ -544,7 +544,7 @@ ReadBase64(
 
     if (destSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"unexpected end of image data", -1));
+		"unexpected end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EARLY_END", NULL);
 	return TCL_ERROR;
     }
@@ -588,7 +588,7 @@ ReadByteArray(
 
     if ((size_t)pngPtr->strDataLen < destSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"unexpected end of image data", -1));
+		"unexpected end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EARLY_END", NULL);
 	return TCL_ERROR;
     }
@@ -676,7 +676,7 @@ ReadData(
 
 	if (destSz && Tcl_Eof(pngPtr->channel)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "unexpected end of file", -1));
+		    "unexpected end of file", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EOF", NULL);
 	    return TCL_ERROR;
 	}
@@ -762,7 +762,7 @@ CheckCRC(
      */
 
     if (calculated != chunked) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("CRC check failed", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("CRC check failed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "CRC", NULL);
 	return TCL_ERROR;
     }
@@ -1034,7 +1034,7 @@ ReadChunkHeader(
 		if ((pc[i] < 65) || (pc[i] > 122) ||
 			((pc[i] > 90) && (pc[i] < 97))) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "invalid chunk type", -1));
+			    "invalid chunk type", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
 			    "INVALID_CHUNK", NULL);
 		    return TCL_ERROR;
@@ -1135,7 +1135,7 @@ CheckColor(
 	if ((8 != pngPtr->bitDepth) && (16 != pngPtr->bitDepth)) {
 	unsupportedDepth:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "bit depth is not allowed for given color type", -1));
+		    "bit depth is not allowed for given color type", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_DEPTH", NULL);
 	    return TCL_ERROR;
 	}
@@ -1300,7 +1300,7 @@ ReadIHDR(
 
     if (mismatch) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"data stream does not have a PNG signature", -1));
+		"data stream does not have a PNG signature", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NO_SIG", NULL);
 	return TCL_ERROR;
     }
@@ -1318,14 +1318,14 @@ ReadIHDR(
 
     if (chunkType != CHUNK_IHDR) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"expected IHDR chunk type", -1));
+		"expected IHDR chunk type", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NO_IHDR", NULL);
 	return TCL_ERROR;
     }
 
     if (chunkSz != 13) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid IHDR chunk size", -1));
+		"invalid IHDR chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_IHDR", NULL);
 	return TCL_ERROR;
     }
@@ -1469,7 +1469,7 @@ ReadPLTE(
     case PNG_COLOR_GRAY:
     case PNG_COLOR_GRAYALPHA:
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"PLTE chunk type forbidden for grayscale", -1));
+		"PLTE chunk type forbidden for grayscale", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PLTE_UNEXPECTED",
 		NULL);
 	return TCL_ERROR;
@@ -1486,7 +1486,7 @@ ReadPLTE(
 
     if (!chunkSz || (chunkSz > PNG_PLTE_MAXSZ) || (chunkSz % 3)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid palette chunk size", -1));
+		"invalid palette chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PLTE", NULL);
 	return TCL_ERROR;
     }
@@ -1563,7 +1563,7 @@ ReadTRNS(
 
     if (chunkSz > PNG_TRNS_MAXSZ) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid tRNS chunk size", -1));
+		"invalid tRNS chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_TRNS", NULL);
 	return TCL_ERROR;
     }
@@ -1594,7 +1594,7 @@ ReadTRNS(
 
 	if (chunkSz > pngPtr->paletteLen) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "size of tRNS chunk is too large for the palette", -1));
+		    "size of tRNS chunk is too large for the palette", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TRNS_SIZE", NULL);
 	    return TCL_ERROR;
 	}
@@ -1639,7 +1639,7 @@ ReadTRNS(
 
 	if (chunkSz != 6) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid tRNS chunk size - must 6 bytes for RGB", -1));
+		    "invalid tRNS chunk size - must 6 bytes for RGB", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_TRNS", NULL);
 	    return TCL_ERROR;
 	}
@@ -1699,7 +1699,7 @@ ReadPHYS(
 
     if (chunkSz != 9) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid physical chunk size", -1));
+		"invalid physical chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PHYS", NULL);
 	return TCL_ERROR;
     }
@@ -1728,7 +1728,7 @@ ReadPHYS(
     if ( PPUx > 2147483647 || PPUy > 2147483647
 	    || unitSpecifier > 1 ) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid physical size value", -1));
+		"invalid physical size value", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PHYS", NULL);
 	return TCL_ERROR;
     }
@@ -2216,7 +2216,7 @@ ReadIDAT(
 
 	    if (Tcl_ZlibStreamEof(pngPtr->stream)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"extra data after end of zlib stream", -1));
+			"extra data after end of zlib stream", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA",
 			NULL);
 		return TCL_ERROR;
@@ -2308,7 +2308,7 @@ ReadIDAT(
 
     if (chunkSz != 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"compressed data after stream finalize in PNG data", -1));
+		"compressed data after stream finalize in PNG data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA", NULL);
 	return TCL_ERROR;
     }
@@ -2443,7 +2443,7 @@ ParseFormat(
 
 	    if ((pngPtr->alpha < 0.0) || (pngPtr->alpha > 1.0)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-alpha value must be between 0.0 and 1.0", -1));
+			"-alpha value must be between 0.0 and 1.0", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_ALPHA",
 			NULL);
 		return TCL_ERROR;
@@ -2559,7 +2559,7 @@ DecodePNG(
 	}
     } else if (PNG_COLOR_PLTE == pngPtr->colorType) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"PLTE chunk required for indexed color", -1));
+		"PLTE chunk required for indexed color", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NEED_PLTE", NULL);
 	return TCL_ERROR;
     }
@@ -2620,7 +2620,7 @@ DecodePNG(
 
     if (chunkType != CHUNK_IDAT) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"at least one IDAT chunk is required", -1));
+		"at least one IDAT chunk is required", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NEED_IDAT", NULL);
 	return TCL_ERROR;
     }
@@ -2671,7 +2671,7 @@ DecodePNG(
     pngPtr->block.pixelPtr = (unsigned char *)attemptckalloc(pngPtr->blockLen);
     if (!pngPtr->block.pixelPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"memory allocation failed", -1));
+		"memory allocation failed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
 	return TCL_ERROR;
     }
@@ -2723,7 +2723,7 @@ DecodePNG(
 
     if (!Tcl_ZlibStreamEof(pngPtr->stream)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"unfinalized data stream in PNG data", -1));
+		"unfinalized data stream in PNG data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA", NULL);
 	return TCL_ERROR;
     }
@@ -2749,7 +2749,7 @@ DecodePNG(
 
     if (chunkSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"IEND chunk contents must be empty", -1));
+		"IEND chunk contents must be empty", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_IEND", NULL);
 	return TCL_ERROR;
     }
@@ -2770,7 +2770,7 @@ DecodePNG(
 #if 0
     if (ReadData(interp, pngPtr, &c, 1, NULL) != TCL_ERROR) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"extra data following IEND chunk", -1));
+		"extra data following IEND chunk", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_IEND", NULL);
 	return TCL_ERROR;
     }
@@ -3051,7 +3051,7 @@ WriteData(
 
 	if (objSz + srcSz > INT_MAX) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "image too large to store completely in byte array", -1));
+		    "image too large to store completely in byte array", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TOO_LARGE", NULL);
 	    return TCL_ERROR;
 	}
@@ -3060,7 +3060,7 @@ WriteData(
 
 	if (!destPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "memory allocation failed", -1));
+		    "memory allocation failed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
 	    return TCL_ERROR;
 	}
@@ -3408,7 +3408,7 @@ WriteIDAT(
 	if (Tcl_ZlibStreamPut(pngPtr->stream, pngPtr->thisLineObj,
 		flush) != TCL_OK) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "deflate() returned error", -1));
+		    "deflate() returned error", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "DEFLATE", NULL);
 	    return TCL_ERROR;
 	}
@@ -3430,7 +3430,7 @@ WriteIDAT(
      */
 
     outputObj = Tcl_NewObj();
-    (void) Tcl_ZlibStreamGet(pngPtr->stream, outputObj, -1);
+    (void) Tcl_ZlibStreamGet(pngPtr->stream, outputObj, TCL_INDEX_NONE);
     outputBytes = Tcl_GetByteArrayFromObj(outputObj, &outputSize);
     result = WriteChunk(interp, pngPtr, CHUNK_IDAT, outputBytes, outputSize);
     Tcl_DecrRefCount(outputObj);
@@ -3500,8 +3500,8 @@ WriteExtraChunks(
 
     Tcl_DStringInit(&buf);
     Tcl_DStringAppend(&buf, "Software", 9);
-    Tcl_DStringAppend(&buf, "Tk Toolkit v", -1);
-    Tcl_DStringAppend(&buf, TK_PATCH_LEVEL, -1);
+    Tcl_DStringAppend(&buf, "Tk Toolkit v", TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, TK_PATCH_LEVEL, TCL_INDEX_NONE);
     if (WriteChunk(interp, pngPtr, CHUNK_tEXt,
 	    (unsigned char *) Tcl_DStringValue(&buf),
 	    Tcl_DStringLength(&buf)) != TCL_OK) {
@@ -3569,7 +3569,7 @@ WriteExtraChunks(
 
 	    if ( PPUx > 2147483647 || PPUy > 2147483647 ) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"DPI or aspect out of range", -1));
+			"DPI or aspect out of range", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PHYS", NULL);
 		return TCL_ERROR;
 	    }
@@ -3659,7 +3659,7 @@ EncodePNG(
     if ((blockPtr->width > (INT_MAX - 1) / (pngPtr->bytesPerPixel)) ||
 	    (blockPtr->height > INT_MAX / pngPtr->lineSize)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"image is too large to encode pixel data", -1));
+		"image is too large to encode pixel data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TOO_LARGE", NULL);
 	return TCL_ERROR;
     }

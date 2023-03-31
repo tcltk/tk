@@ -110,16 +110,16 @@ static double		LineToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *coordPtr);
 static int		LineToPostscript(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, int prepass);
-static int		ArrowParseProc(ClientData clientData,
+static int		ArrowParseProc(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *recordPtr, Tcl_Size offset);
-static const char * ArrowPrintProc(ClientData clientData,
+static const char * ArrowPrintProc(void *clientData,
 			    Tk_Window tkwin, char *recordPtr, Tcl_Size offset,
 			    Tcl_FreeProc **freeProcPtr);
-static int		ParseArrowShape(ClientData clientData,
+static int		ParseArrowShape(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    const char *value, char *recordPtr, Tcl_Size offset);
-static const char * PrintArrowShape(ClientData clientData,
+static const char * PrintArrowShape(void *clientData,
 			    Tk_Window tkwin, char *recordPtr, Tcl_Size offset,
 			    Tcl_FreeProc **freeProcPtr);
 static void		RotateLine(Tk_Canvas canvas, Tk_Item *itemPtr,
@@ -1864,7 +1864,7 @@ ScaleLine(
 static int
 GetLineIndex(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item for which the index is being
 				 * specified. */
     Tcl_Obj *obj,		/* Specification of a particular coord in
@@ -1874,7 +1874,6 @@ GetLineIndex(
     Tcl_Size idx, length;
     LineItem *linePtr = (LineItem *) itemPtr;
     const char *string;
-    (void)canvas;
 
     if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
 	if (idx == TCL_INDEX_NONE) {
@@ -2486,24 +2485,24 @@ LineToPostscript(
      */
 
     if (linePtr->numPoints == 1) {
-	Tcl_AppendToObj(psObj, "matrix currentmatrix\n", -1);
+	Tcl_AppendToObj(psObj, "matrix currentmatrix\n", TCL_INDEX_NONE);
 	Tcl_AppendPrintfToObj(psObj, "%.15g %.15g translate %.15g %.15g",
 		linePtr->coordPtr[0], Tk_CanvasPsY(canvas, linePtr->coordPtr[1]),
 		width/2.0, width/2.0);
 	Tcl_AppendToObj(psObj,
-		" scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n", -1);
+		" scale 1 0 moveto 0 0 1 0 360 arc\nsetmatrix\n", TCL_INDEX_NONE);
 
 	Tcl_ResetResult(interp);
 	Tk_CanvasPsColor(interp, canvas, color);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (stipple != None) {
-	    Tcl_AppendToObj(psObj, "clip ", -1);
+	    Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 	    Tcl_ResetResult(interp);
 	    Tk_CanvasPsStipple(interp, canvas, stipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	} else {
-	    Tcl_AppendToObj(psObj, "fill\n", -1);
+	    Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 	}
 	goto done;
     }
@@ -2578,14 +2577,14 @@ LineToPostscript(
 
     if (linePtr->firstArrowPtr != NULL) {
 	if (stipple != None) {
-	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+	    Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 	}
 	ArrowheadPostscript(interp, canvas, linePtr,
 		linePtr->firstArrowPtr, psObj);
     }
     if (linePtr->lastArrowPtr != NULL) {
 	if (stipple != None) {
-	    Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+	    Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 	}
 	ArrowheadPostscript(interp, canvas, linePtr,
 		linePtr->lastArrowPtr, psObj);
@@ -2656,13 +2655,13 @@ ArrowheadPostscript(
     Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
     if (stipple != None) {
-	Tcl_AppendToObj(psObj, "clip ", -1);
+	Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 	Tcl_ResetResult(interp);
 	Tk_CanvasPsStipple(interp, canvas, stipple);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
     } else {
-	Tcl_AppendToObj(psObj, "fill\n", -1);
+	Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
     }
     return TCL_OK;
 }

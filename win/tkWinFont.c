@@ -702,7 +702,7 @@ TkpGetSubFonts(
     fontPtr = (WinFont *) tkfont;
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	familyPtr = fontPtr->subFontArray[i].familyPtr;
-	strPtr = Tcl_NewStringObj(familyPtr->faceName, -1);
+	strPtr = Tcl_NewStringObj(familyPtr->faceName, TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
     }
     Tcl_SetObjResult(interp, resultPtr);
@@ -850,11 +850,10 @@ Tk_MeasureChars(
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
-	    (void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
-		    p - start, TCL_ENCODING_NOCOMPLAIN, &runString);
+	    WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, start,
+		    p - start, &runString);
 	    size.cx = 0;
-	    familyPtr->getTextExtentPoint32Proc(hdc,
-		    (WCHAR *)Tcl_DStringValue(&runString),
+	    familyPtr->getTextExtentPoint32Proc(hdc, wstr,
 		    Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		    &size);
 	    Tcl_DStringFree(&runString);
@@ -878,10 +877,10 @@ Tk_MeasureChars(
 	 */
 
 	familyPtr = lastSubFontPtr->familyPtr;
-	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, start,
-		p - start, TCL_ENCODING_NOCOMPLAIN, &runString);
+	WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, start,
+		p - start, &runString);
 	size.cx = 0;
-	familyPtr->getTextExtentPoint32Proc(hdc, (WCHAR *) Tcl_DStringValue(&runString),
+	familyPtr->getTextExtentPoint32Proc(hdc, wstr,
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 		&size);
 	Tcl_DStringFree(&runString);
@@ -1220,12 +1219,11 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    Tcl_Size numBytes1,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)
 {
-    int numBytes = numBytes1;
     HDC dc;
     WinFont *fontPtr;
     TkWinDCState state;
@@ -1494,14 +1492,12 @@ MultiFontTextOut(
 	if ((thisSubFontPtr != lastSubFontPtr) || (p-source > 200)) {
 	    if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
-		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+		WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, source,
+			p - source, &runString);
 		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
-			(WCHAR *)Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
+			wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 		familyPtr->getTextExtentPoint32Proc(hdc,
-			(WCHAR *)Tcl_DStringValue(&runString),
-			Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
+			wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
 			&size);
 		x += cosA*size.cx;
 		y -= sinA*size.cx;
@@ -1516,11 +1512,10 @@ MultiFontTextOut(
     }
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
-	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-		p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+	WCHAR *wstr = (WCHAR *)Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		p - source, &runString);
 	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
-		(WCHAR *)Tcl_DStringValue(&runString),
-		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
+		wstr, Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
 	Tcl_DStringFree(&runString);
     }
     SelectObject(hdc, oldFont);
@@ -2267,7 +2262,7 @@ FontMapLoadPage(
 	end = (row + 1) << FONTMAP_SHIFT;
 	for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	    if (Tcl_UtfToExternal(NULL, encoding, src,
-		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR|TCL_ENCODING_STRICT, NULL,
+		    TkUniCharToUtf(i, src), TCL_ENCODING_STOPONERROR, NULL,
 		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
 		continue;
 	    }
@@ -2549,7 +2544,7 @@ FamilyExists(
     Tcl_DString faceString;
 
     Tcl_DStringInit(&faceString);
-    Tcl_UtfToWCharDString(faceName, -1, &faceString);
+    Tcl_UtfToWCharDString(faceName, TCL_INDEX_NONE, &faceString);
 
     /*
      * If the family exists, WinFontExistProc() will be called and
@@ -2733,7 +2728,8 @@ LoadFontRanges(
 				 * range information. */
     int *symbolPtr)
  {
-    int n, i, j, k, swapped, offset, cbData, segCount;
+    int n, i, j, k, swapped, segCount;
+    size_t cbData, offset;
     DWORD cmapKey;
     USHORT *startCount, *endCount;
     CMAPTABLE cmapTable;

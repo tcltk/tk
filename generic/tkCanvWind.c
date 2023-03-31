@@ -87,11 +87,11 @@ static void		TranslateWinItem(Tk_Canvas canvas,
 static int		WinItemCoords(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tk_Item *itemPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static void		WinItemLostContentProc(ClientData clientData,
+static void		WinItemLostContentProc(void *clientData,
 			    Tk_Window tkwin);
-static void		WinItemRequestProc(ClientData clientData,
+static void		WinItemRequestProc(void *clientData,
 			    Tk_Window tkwin);
-static void		WinItemStructureProc(ClientData clientData,
+static void		WinItemStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static int		WinItemToArea(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *rectPtr);
@@ -100,7 +100,7 @@ static int		WinItemToPostscript(Tcl_Interp *interp,
 static double		WinItemToPoint(Tk_Canvas canvas,
 			    Tk_Item *itemPtr, double *pointPtr);
 #ifdef X_GetImage
-static int		xerrorhandler(ClientData clientData, XErrorEvent *e);
+static int		xerrorhandler(void *clientData, XErrorEvent *e);
 #endif
 static int		CanvasPsWindow(Tcl_Interp *interp,
 			    Tk_Window tkwin, Tk_Canvas canvas, double x,
@@ -207,10 +207,10 @@ CreateWinItem(
 	    i = 1;
 	}
     }
-    if (WinItemCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
+    if (WinItemCoords(interp, canvas, itemPtr, (Tcl_Size)i, objv) != TCL_OK) {
 	goto error;
     }
-    if (ConfigureWinItem(interp, canvas, itemPtr, objc-i, objv+i, 0)
+    if (ConfigureWinItem(interp, canvas, itemPtr, objc-(Tcl_Size)i, objv+i, 0)
 	    == TCL_OK) {
 	return TCL_OK;
     }
@@ -404,11 +404,10 @@ static void
 DeleteWinItem(
     Tk_Canvas canvas,		/* Overall info about widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
-    Display *display)		/* Display containing window for canvas. */
+    TCL_UNUSED(Display *))	/* Display containing window for canvas. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
-    (void)display;
 
     if (winItemPtr->tkwin != NULL) {
 	Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
@@ -560,22 +559,18 @@ static void
 DisplayWinItem(
     Tk_Canvas canvas,		/* Canvas that contains item. */
     Tk_Item *itemPtr,		/* Item to be displayed. */
-    Display *display,		/* Display on which to draw item. */
+    TCL_UNUSED(Display *),	/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int regionX, int regionY, int regionWidth, int regionHeight)
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
+    TCL_UNUSED(int), /* Describes region of canvas that must be */
+    TCL_UNUSED(int), /* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     int width, height;
     short x, y;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(canvas);
     Tk_State state = itemPtr->state;
-    (void)display;
-    (void)regionX;
-    (void)regionY;
-    (void)regionWidth;
-    (void)regionHeight;
 
     if (winItemPtr->tkwin == NULL) {
 	return;
@@ -668,13 +663,12 @@ DisplayWinItem(
 
 static double
 WinItemToPoint(
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item to check against point. */
     double *pointPtr)		/* Pointer to x and y coordinates. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
-    (void)canvas;
 
     x1 = winItemPtr->header.x1;
     y1 = winItemPtr->header.y1;
@@ -725,14 +719,13 @@ WinItemToPoint(
 
 static int
 WinItemToArea(
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),		/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item to check against rectangle. */
     double *rectPtr)		/* Pointer to array of four coordinates
 				 * (x1,y1,x2,y2) describing rectangular
 				 * area.  */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
-    (void)canvas;
 
     if ((rectPtr[2] <= winItemPtr->header.x1)
 	    || (rectPtr[0] >= winItemPtr->header.x2)
@@ -769,12 +762,9 @@ WinItemToArea(
 #ifdef X_GetImage
 static int
 xerrorhandler(
-    ClientData dummy,
-    XErrorEvent *e)
+    TCL_UNUSED(void *),
+    TCL_UNUSED(XErrorEvent *))
 {
-    (void)dummy;
-    (void)e;
-
     return 0;
 }
 #endif /* X_GetImage */
@@ -885,7 +875,7 @@ CanvasPsWindow(
 		"1.000 1.000 1.000 setrgbcolor AdjustColor\nfill\ngrestore\n",
 		height, width, height, width);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
-	Tcl_AppendToObj(psObj, "\nrestore\nend\n\n\n", -1);
+	Tcl_AppendToObj(psObj, "\nrestore\nend\n\n\n", TCL_INDEX_NONE);
 	goto done;
     }
 
@@ -1062,7 +1052,7 @@ TranslateWinItem(
 
 static void
 WinItemStructureProc(
-    ClientData clientData,	/* Pointer to record describing window item. */
+    void *clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
     WindowItem *winItemPtr = (WindowItem *)clientData;
@@ -1092,11 +1082,10 @@ WinItemStructureProc(
 
 static void
 WinItemRequestProc(
-    ClientData clientData,	/* Pointer to record for window item. */
-    Tk_Window tkwin)		/* Window that changed its desired size. */
+    void *clientData,	/* Pointer to record for window item. */
+    TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
 {
     WindowItem *winItemPtr = (WindowItem *)clientData;
-    (void)tkwin;
 
     ComputeWindowBbox(winItemPtr->canvas, winItemPtr);
 
@@ -1128,13 +1117,12 @@ WinItemRequestProc(
 
 static void
 WinItemLostContentProc(
-    ClientData clientData,	/* WindowItem structure for content window window that
+    void *clientData,	/* WindowItem structure for content window window that
 				 * was stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the content window. */
+    TCL_UNUSED(Tk_Window))		/* Tk's handle for the content window. */
 {
     WindowItem *winItemPtr = (WindowItem *)clientData;
     Tk_Window canvasTkwin = Tk_CanvasTkwin(winItemPtr->canvas);
-    (void)tkwin;
 
     Tk_DeleteEventHandler(winItemPtr->tkwin, StructureNotifyMask,
 	    WinItemStructureProc, winItemPtr);

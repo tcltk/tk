@@ -1090,7 +1090,7 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
 	return TCL_ERROR;
     if (objc != 2) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # args", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # args", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	return TCL_ERROR;
     }
@@ -1147,7 +1147,7 @@ Ttk_CreateVsapiElement(
 
     if (objc + 1 < 3) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "missing required arguments 'class' and/or 'partId'", -1));
+	    "missing required arguments 'class' and/or 'partId'", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
 	return TCL_ERROR;
     }
@@ -1277,7 +1277,7 @@ Ttk_CreateVsapiElement(
 	theme, elementName, elementPtr->elementSpec, elementData);
 
     Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, TCL_INDEX_NONE));
     Tcl_DStringFree(&classBuf);
     return TCL_OK;
 
@@ -1289,6 +1289,8 @@ retErr:
 /*----------------------------------------------------------------------
  * +++ Initialization routine:
  */
+
+MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd);
 
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {

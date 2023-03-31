@@ -800,7 +800,7 @@ GetIndex(
      */
 
     Tcl_DStringInit(&copy);
-    p = strrchr(Tcl_DStringAppend(&copy, string, -1), '.');
+    p = strrchr(Tcl_DStringAppend(&copy, string, TCL_INDEX_NONE), '.');
     if (p != NULL) {
 	TkTextSearch search;
 	TkTextTag *tagPtr;

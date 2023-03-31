@@ -78,7 +78,7 @@ static int		ImgBmapCreate(Tcl_Interp *interp,
 			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    void **clientDataPtr);
-static ClientData	ImgBmapGet(Tk_Window tkwin, void *clientData);
+static void	*ImgBmapGet(Tk_Window tkwin, void *clientData);
 static void		ImgBmapDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width, int height,
@@ -269,7 +269,7 @@ ImgBmapConfigureModel(
 	    || (modelPtr->maskDataString != NULL)) {
 	if (modelPtr->data == NULL) {
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "can't have mask without bitmap", -1));
+		    "can't have mask without bitmap", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "NO_BITMAP", NULL);
 	    return TCL_ERROR;
@@ -285,7 +285,7 @@ ImgBmapConfigureModel(
 	    ckfree(modelPtr->maskData);
 	    modelPtr->maskData = NULL;
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "bitmap and mask have different sizes", -1));
+		    "bitmap and mask have different sizes", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "MASK_SIZE", NULL);
 	    return TCL_ERROR;
@@ -595,7 +595,7 @@ TkGetBitmapData(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"format error in bitmap data; looks like it's an"
-			" obsolete X10 bitmap file", -1));
+			" obsolete X10 bitmap file", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "OBSOLETE",
 			NULL);
 	    }
@@ -640,7 +640,7 @@ TkGetBitmapData(
   error:
     if (interp != NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"format error in bitmap data", -1));
+		"format error in bitmap data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "FORMAT", NULL);
     }
 
@@ -805,7 +805,7 @@ ImgBmapCmd(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 ImgBmapGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
@@ -1155,10 +1155,10 @@ ImgBmapPsImagemask(
 	    Tcl_AppendPrintfToObj(psObj, " %02x",
 		    bit_reverse[0xff & data[i*nBytePerRow + j]]);
 	}
-	Tcl_AppendToObj(psObj, "\n", -1);
+	Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
     }
 
-    Tcl_AppendToObj(psObj, ">} imagemask \n", -1);
+    Tcl_AppendToObj(psObj, ">} imagemask \n", TCL_INDEX_NONE);
 }
 
 /*
@@ -1213,7 +1213,7 @@ ImgBmapPostscript(
     if (modelPtr->width*modelPtr->height > 60000) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"unable to generate postscript for bitmaps larger than 60000"
-		" pixels", -1));
+		" pixels", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	return TCL_ERROR;
     }
@@ -1263,7 +1263,7 @@ ImgBmapPostscript(
 	if (modelPtr->maskData == NULL) {
 	    Tcl_AppendToObj(psObj,
 		    "0 0 moveto 1 0 rlineto 0 1 rlineto -1 0 rlineto "
-		    "closepath fill\n", -1);
+		    "closepath fill\n", TCL_INDEX_NONE);
 	} else {
 	    ImgBmapPsImagemask(psObj, modelPtr->width, modelPtr->height,
 		    modelPtr->maskData);

@@ -157,7 +157,7 @@ TkTextMarkCmd(
 	    } else {
 		typeStr = "left";
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, TCL_INDEX_NONE));
 	    return TCL_OK;
 	}
 	str = Tcl_GetStringFromObj(objv[4],&length);
@@ -188,9 +188,9 @@ TkTextMarkCmd(
 	}
 	resultObj = Tcl_NewObj();
 	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		"insert", -1));
+		"insert", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		"current", -1));
+		"current", TCL_INDEX_NONE));
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(

@@ -41,76 +41,66 @@ typedef struct WinButton {
 
 typedef struct {
     BOOLEAN initialized;
-    DWORD boxSize;		/* Width & height of the box. */
+    int boxSize;		/* Width & height of the box. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
 /*
  * Data of the SVG images used for drawing the indicators
- *
- * The SVG images used here are partly based on some icons provided by
- * the official open source SVG icon library for the Bootstrap project,
- * licensed under the MIT license (https://opensource.org/licenses/MIT).
- *
- * See https://github.com/twbs/icons.
  */
 
 static const char checkbtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
     </svg>";
 
 static const char checkbtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
-     <g>\n\
-      <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
-      <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
-      <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
-      <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
-      <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
-      <path d='m10.803 4.969a0.75002 0.75002 0 0 1 1.071 1.05l-3.992 4.9901a0.75002 0.75002 0 0 1-1.08 0.01999l-2.645-2.646a0.75002 0.75002 0 1 1 1.06-1.06l2.094 2.093 3.473-4.4251a0.235 0.235 0 0 1 0.01999-0.021997z' fill='#000000'/>\n\
-     </g>\n\
+     <path d='m0 0v15h1v-14h14v-1z' fill='#a0a0a0'/>\n\
+     <path d='m1 1v13h1v-12h12v-1z' fill='#696969'/>\n\
+     <path d='m14 1v13h-13v1h14v-14z' fill='#e3e3e3'/>\n\
+     <path d='m15 0v15h-15v1h16v-16z' fill='#eeeeee'/>\n\
+     <rect x='2' y='2' width='12' height='12' fill='#ffffff'/>\n\
+     <path d='m4.5 8 3 3 4-6' fill='none' stroke='#000000' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
     </svg>";
 
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#a0a0a0' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradient2819' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#696969' offset='0'/>\n\
        <stop stop-color='#e3e3e3' offset='1'/>\n\
       </linearGradient>\n\
      </defs>\n\
-     <path d='m7.6149 14.979c-0.95143-0.052435-1.8251-0.28345-2.6955-0.71278-1.2049-0.59425-2.1287-1.4307-2.865-2.5939-0.17549-0.27726-0.48912-0.91628-0.60706-1.2369-0.78448-2.1325-0.50124-4.4748 0.76831-6.3538 1.0215-1.5118 2.623-2.5782 4.4077-2.9349 1.8284-0.36541 3.7204 0.011412 5.2659 1.0488 1.5781 1.0592 2.6631 2.7202 2.993 4.5816 0.13747 0.77566 0.13747 1.6696 0 2.4452-0.44509 2.5113-2.2593 4.6096-4.6777 5.4101-0.82562 0.2733-1.7275 0.39395-2.5897 0.34644z' fill='#ffffff' stroke-width='.019254'/>\n\
-     <path d='m3.0503 12.95a7 7 0 1 1 9.8995-9.8995 7 7 0 0 1-9.8995 9.8995zm-0.70711 0.70711a8 8 0 1 0 11.314-11.314 8 8 0 0 0-11.314 11.314z' fill='url(#linearGradient1319)'/>\n\
-     <path d='m12.95 3.0503c-2.7294-2.7294-7.1701-2.7294-9.8995 0s-2.7294 7.1701 0 9.8995 7.1701 2.7294 9.8995 0 2.7294-7.1701 0-9.8995zm-0.70711 0.70711c2.3476 2.3476 2.3476 6.1377 0 8.4853s-6.1377 2.3476-8.4853 0-2.3476-6.1377 0-8.4853 6.1377-2.3476 8.4853 0z' fill='url(#linearGradient2819)'/>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
     </svg>";
 
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradient1319' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#a0a0a0' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradient2819' x1='7' x2='9' y1='8' y2='8' gradientTransform='rotate(45,8,8)' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#696969' offset='0'/>\n\
        <stop stop-color='#e3e3e3' offset='1'/>\n\
       </linearGradient>\n\
      </defs>\n\
-     <path d='m7.6149 14.979c-0.95143-0.052435-1.8251-0.28345-2.6955-0.71278-1.2049-0.59425-2.1287-1.4307-2.865-2.5939-0.17549-0.27726-0.48912-0.91628-0.60706-1.2369-0.78448-2.1325-0.50124-4.4748 0.76831-6.3538 1.0215-1.5118 2.623-2.5782 4.4077-2.9349 1.8284-0.36541 3.7204 0.011412 5.2659 1.0488 1.5781 1.0592 2.6631 2.7202 2.993 4.5816 0.13747 0.77566 0.13747 1.6696 0 2.4452-0.44509 2.5113-2.2593 4.6096-4.6777 5.4101-0.82562 0.2733-1.7275 0.39395-2.5897 0.34644z' fill='#ffffff' stroke-width='.019254'/>\n\
-     <path d='m3.0503 12.95a7 7 0 1 1 9.8995-9.8995 7 7 0 0 1-9.8995 9.8995zm-0.70711 0.70711a8 8 0 1 0 11.314-11.314 8 8 0 0 0-11.314 11.314z' fill='url(#linearGradient1319)'/>\n\
-     <path d='m12.95 3.0503c-2.7294-2.7294-7.1701-2.7294-9.8995 0s-2.7294 7.1701 0 9.8995 7.1701 2.7294 9.8995 0 2.7294-7.1701 0-9.8995zm-0.70711 0.70711c2.3476 2.3476 2.3476 6.1377 0 8.4853s-6.1377 2.3476-8.4853 0-2.3476-6.1377 0-8.4853 6.1377-2.3476 8.4853 0z' fill='url(#linearGradient2819)'/>\n\
-     <path d='m11 8a3 3 0 1 1-6 0 3 3 0 0 1 6 0z' fill='#000000'/>\n\
+     <circle cx='8' cy='8' r='8' fill='url(#linearGradientOuter)'/>\n\
+     <circle cx='8' cy='8' r='7' fill='url(#linearGradientInner)'/>\n\
+     <circle cx='8' cy='8' r='6' fill='#ffffff'/>\n\
+     <circle cx='8' cy='8' r='3' fill='#000000'/>\n\
     </svg>";
 
 /*
@@ -174,7 +164,7 @@ InitBoxes(Tcl_Interp *interp)
     scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
     scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
 
-    tsdPtr->boxSize = 16 * scalingFactor;
+    tsdPtr->boxSize = (int)(16.0 * scalingFactor);
     tsdPtr->initialized = TRUE;
 }
 
@@ -515,7 +505,7 @@ TkpDrawIndicator(
 	}
 	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
 	ckfree(svgDataCopy);
-	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	code = Tcl_EvalEx(interp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	ckfree(script);
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(interp, code);
@@ -1055,7 +1045,7 @@ TkpComputeButtonGeometry(
 
     Tk_FreeTextLayout(butPtr->textLayout);
     butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-	    Tcl_GetString(butPtr->textPtr), -1, butPtr->wrapLength,
+	    Tcl_GetString(butPtr->textPtr), TCL_INDEX_NONE, butPtr->wrapLength,
 	    butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
 
     txtWidth = butPtr->textWidth;

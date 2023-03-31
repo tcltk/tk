@@ -574,12 +574,11 @@ ConfigureRectOval(
 
 static void
 DeleteRectOval(
-    Tk_Canvas canvas,		/* Info about overall widget. */
+    TCL_UNUSED(Tk_Canvas),		/* Info about overall widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
     Display *display)		/* Display containing window for canvas. */
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
-    (void)canvas;
 
     Tk_DeleteOutline(display, &(rectOvalPtr->outline));
     if (rectOvalPtr->fillColor != NULL) {
@@ -744,18 +743,15 @@ DisplayRectOval(
     Tk_Item *itemPtr,		/* Item to be displayed. */
     Display *display,		/* Display on which to draw item. */
     Drawable drawable,		/* Pixmap or window in which to draw item. */
-    int x, int y, int width, int height)
-				/* Describes region of canvas that must be
-				 * redisplayed (not used). */
+    TCL_UNUSED(int),/* Describes region of canvas that must be */
+    TCL_UNUSED(int),/* redisplayed (not used). */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     RectOvalItem *rectOvalPtr = (RectOvalItem *) itemPtr;
     short x1, y1, x2, y2;
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
 
     /*
      * Compute the screen coordinates of the bounding box for the item. Make
@@ -1434,7 +1430,7 @@ RectOvalToPostscript(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Canvas canvas,		/* Information about overall canvas. */
     Tk_Item *itemPtr,		/* Item for which Postscript is wanted. */
-    int prepass)		/* 1 means this is a prepass to collect font
+    TCL_UNUSED(int))		/* 1 means this is a prepass to collect font
 				 * information; 0 means final Postscript is
 				 * being created. */
 {
@@ -1446,7 +1442,6 @@ RectOvalToPostscript(
     Pixmap fillStipple;
     Tk_State state = itemPtr->state;
     Tcl_InterpState interpState;
-    (void)prepass;
 
     y1 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[1]);
     y2 = Tk_CanvasPsY(canvas, rectOvalPtr->bbox[3]);
@@ -1525,16 +1520,16 @@ RectOvalToPostscript(
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 
 	if (fillStipple != None) {
-	    Tcl_AppendToObj(psObj, "clip ", -1);
+	    Tcl_AppendToObj(psObj, "clip ", TCL_INDEX_NONE);
 
 	    Tcl_ResetResult(interp);
 	    Tk_CanvasPsStipple(interp, canvas, fillStipple);
 	    Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
 	    if (color != NULL) {
-		Tcl_AppendToObj(psObj, "grestore gsave\n", -1);
+		Tcl_AppendToObj(psObj, "grestore gsave\n", TCL_INDEX_NONE);
 	    }
 	} else {
-	    Tcl_AppendToObj(psObj, "fill\n", -1);
+	    Tcl_AppendToObj(psObj, "fill\n", TCL_INDEX_NONE);
 	}
     }
 
@@ -1544,7 +1539,7 @@ RectOvalToPostscript(
 
     if (color != NULL) {
 	Tcl_AppendObjToObj(psObj, pathObj);
-	Tcl_AppendToObj(psObj, "0 setlinejoin 2 setlinecap\n", -1);
+	Tcl_AppendToObj(psObj, "0 setlinejoin 2 setlinecap\n", TCL_INDEX_NONE);
 
 	Tcl_ResetResult(interp);
 	Tk_CanvasPsOutline(canvas, itemPtr, &rectOvalPtr->outline);

@@ -57,47 +57,40 @@ if {"defaultFont" ni [font names]} {
 set widgetDemo 1
 set font mainFont
 
-image create photo ::img::refresh -format GIF -data {
-    R0lGODlhEAAQAJEDAP///wAAACpnKv///yH5BAEAAAMALAAAAAAQABAAAAI63IKp
-    xgcPH2ouwgBCw1HIxHCQ4F3hSJKmwZXqWrmWxj7lKJ2dndcon9EBUq+gz3brVXAR
-    2tICU0gXBQA7
+# The SVG images used below are based on some icons provided by the
+# official open source SVG icon library for the Bootstrap project,
+# licensed under the MIT license (https://opensource.org/licenses/MIT).
+#
+# See https://github.com/twbs/icons.
+
+image create photo ::img::refresh -format $::tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+    </svg>
 }
 
-image create photo ::img::view -format GIF -data {
-    R0lGODlhEAAQAKIHAP///wwMDAAAAMDAwNnZ2SYmJmZmZv///yH5BAEAAAcALAAA
-    AAAQABAAAANMKLos90+ASamDRxJCgw9YVnlDOXiQBgRDBRgHKE6sW8QR3doPKK27
-    yg33q/GIOhdg6OsEJzeZykiBSUcs06e56Xx6np8ScIkFGuhQAgA7
+image create photo ::img::view -format $::tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+    </svg>
 }
 
-image create photo ::img::delete -format GIF -data {
-    R0lGODlhEAAQAIABAIQAAP///yH5BAEAAAEALAAAAAAQABAAAAIjjI+pmwAc3HGy
-    PUSvqYpuvWQg40FfSVacBa5nN6JYDI3mzRQAOw==
+image create photo ::img::delete -format $::tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" fill="#800000"/>
+    </svg>
 }
 
-image create photo ::img::print -format GIF -data {
-    R0lGODlhEAAQALMKAAAAAP///52VunNkl8C82Yl+qldBgq+pyrOzs1fYAP///wAA
-    AAAAAAAAAAAAAAAAACH5BAEAAAoALAAAAAAQABAAAARGUMlJKwU4AztB+ODGeUiJ
-    fGLlgeEYmGWQXmx7aXgmAUTv/74N4EAsGhOJg1DAbDqbwoJ0Sp0KB9isNis0eL/g
-    ryhH5pgnEQA7
+image create photo ::img::print -format $::tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
+     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+    </svg>
 }
-
-# Note that this is run through the message catalog! This is because this is
-# actually an image of a word.
-image create photo ::img::new -format PNG -data [mc {
-    iVBORw0KGgoAAAANSUhEUgAAAB4AAAAOCAYAAAA45qw5AAACMElEQVR4AeVTAwxd
-    QRCc2tZHGtQ2w9q2bdsOa9u2bUW1bdt2Z372JZe6DapJLqtb3h7+T8yKi5j4CsYD
-    EUQXxETclT7kWOlH2VV+tFkdQHPSwksSISF+BauCqL0qgOcMWgGfgEkaMsHxqUBk
-    3plE/sOnh/qDPAPJH/CKFBivGHWzFwBRnHhlqbu1Mh6CoFNnC/JshQ9p4YC2lrKt
-    DCAV+THiVejyhMjAbrNSrroiEfKR9g7ZfCgOog8QfnUQV62wAk68ndQ9ZbyoWO1H
-    Y6eDY1LCQL6a9ApOp9Hi1T0+gQq2JKMlky/oTKQliKWxEZvyG575kpW4pl1aZnQK
-    CLOVt45Lkp8uXp2SL8KO6uitNTZLdpK6s+I/eZbhpmsmWeOGOVQNKYLITzpKPAO3
-    tY7LSNZ7ccSLxX9y3uuOxRkg3dKESMoCHvL+GRVCutXsB3guLgDCeXOv4iWWkvwG
-    BaS+PmlpK6SI9ApI2oC2UtrwZQEkhkH+NtolVlQXJl1I+QltuU3XEc721bIRFpa8
-    IA5iqTo6vNNWmkNBLQbPeXwF2g17Q94nTQAfY3YzeY+WSu8MDzQ2kpELUhSGJUHE
-    0zeR3rY1L+Xl5G/re+jbiK6KhThwwInsts1fbMUUcpZszKeVtggZEiGdZDe5AtHh
-    7vL4CGiRvvKPS8FAvq9Nr4ZkFadR2y6kggu1z4vlyIbBp6BugQ8JLEg4bTkD9eMZ
-    QZ8hpJ3VvTtuvbWrY/ElvP/9R+Aj3603+iE3fkEAAAAASUVORK5CYII=
-}]
 
 #----------------------------------------------------------------
 # The code below creates the main window, consisting of a menu bar and a text
@@ -200,6 +193,11 @@ if {[winfo depth .] == 1} {
     }
     .t tag configure hot -foreground red -underline 1
 }
+
+# The tag "new" must be the one having the highest priority.
+#
+.t tag configure new -foreground #c00000 -underline 0 -font boldFont
+
 .t tag bind demo <ButtonRelease-1> {
     invoke [.t index {@%x,%y}]
 }
@@ -275,7 +273,7 @@ proc addFormattedText {formattedText} {
 		    .t insert end "[incr demoCount]. [mc $description]" \
 			    [list demo demo-$name]
 		    if {$new} {
-			.t image create end -image ::img::new -padx 5
+			.t insert end " [mc NEW]" new
 			set new 0
 		    }
 		    .t insert end " \n " demospace
