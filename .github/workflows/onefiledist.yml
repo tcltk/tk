@@ -17,11 +17,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl 8.7
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-660
           path: tcl
       - name: Setup Environment
         run: |
@@ -81,11 +81,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl 8.7
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-660
           path: tcl
       - name: Checkout create-dmg
         uses: actions/checkout@v3
@@ -101,7 +101,7 @@ jobs:
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
           echo "VER_PATH=$(cd tcl/tools; pwd)/addVerToFile.tcl" >> $GITHUB_ENV
           echo "CREATE_DMG=$(cd create-dmg;pwd)/create-dmg" >> $GITHUB_ENV
-          echo "CFLAGS=-arch x86_64 -arch arm64e" >> $GITHUB_ENV
+          echo "CFLAGS=-arch x86_64 -arch arm64" >> $GITHUB_ENV
         working-directory: "."
       - name: Configure Tcl
         run: |
@@ -169,11 +169,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Checkout Tcl 8.7
+      - name: Checkout Tcl 9.0
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: tip-660
           path: tcl
       - name: Setup Environment
         run: |

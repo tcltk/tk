@@ -103,8 +103,8 @@ typedef struct Packer {
  * The following structure is the official type record for the packer:
  */
 
-static void		PackReqProc(ClientData clientData, Tk_Window tkwin);
-static void		PackLostContentProc(ClientData clientData,
+static void		PackReqProc(void *clientData, Tk_Window tkwin);
+static void		PackLostContentProc(void *clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr packerType = {
@@ -117,7 +117,7 @@ static const Tk_GeomMgr packerType = {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		ArrangePacking(ClientData clientData);
+static void		ArrangePacking(void *clientData);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
 static void		DestroyPacker(void *memPtr);
@@ -126,7 +126,7 @@ static Packer *		GetPacker(Tk_Window tkwin);
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
 			    Packer *containerPtr, int objc,Tcl_Obj *const objv[]);
 #endif /* !TK_NO_DEPRECATED */
-static void		PackStructureProc(ClientData clientData,
+static void		PackStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static void		Unlink(Packer *packPtr);
 static int		XExpansion(Packer *contentPtr, int cavityWidth);
@@ -162,12 +162,12 @@ TkAppendPadAmount(
     Tcl_Obj *padding[2];
 
     if (halfSpace*2 == allSpace) {
-	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, -1),
+	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, TCL_INDEX_NONE),
 		Tcl_NewWideIntObj(halfSpace));
     } else {
 	padding[0] = Tcl_NewWideIntObj(halfSpace);
 	padding[1] = Tcl_NewWideIntObj(allSpace - halfSpace);
-	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, -1),
+	Tcl_DictObjPut(NULL, bufferObj, Tcl_NewStringObj(switchName, TCL_INDEX_NONE),
 		Tcl_NewListObj(2, padding));
     }
 }
@@ -191,7 +191,7 @@ TkAppendPadAmount(
 
 int
 Tk_PackObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -356,36 +356,36 @@ Tk_PackObjCmd(
 	}
 
 	infoObj = Tcl_NewObj();
-	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", -1),
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-in", TCL_INDEX_NONE),
 		Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
-	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-anchor", -1),
-		Tcl_NewStringObj(Tk_NameOfAnchor(contentPtr->anchor), -1));
-	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-expand", -1),
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-anchor", TCL_INDEX_NONE),
+		Tcl_NewStringObj(Tk_NameOfAnchor(contentPtr->anchor), TCL_INDEX_NONE));
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-expand", TCL_INDEX_NONE),
 		Tcl_NewBooleanObj(contentPtr->flags & EXPAND));
 	switch (contentPtr->flags & (FILLX|FILLY)) {
 	case 0:
-	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
-		    Tcl_NewStringObj("none", -1));
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", TCL_INDEX_NONE),
+		    Tcl_NewStringObj("none", TCL_INDEX_NONE));
 	    break;
 	case FILLX:
-	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
-		    Tcl_NewStringObj("x", -1));
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", TCL_INDEX_NONE),
+		    Tcl_NewStringObj("x", TCL_INDEX_NONE));
 	    break;
 	case FILLY:
-	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
-		    Tcl_NewStringObj("y", -1));
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", TCL_INDEX_NONE),
+		    Tcl_NewStringObj("y", TCL_INDEX_NONE));
 	    break;
 	case FILLX|FILLY:
-	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", -1),
-		    Tcl_NewStringObj("both", -1));
+	    Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-fill", TCL_INDEX_NONE),
+		    Tcl_NewStringObj("both", TCL_INDEX_NONE));
 	    break;
 	}
 	TkAppendPadAmount(infoObj, "-ipadx", contentPtr->iPadX/2, contentPtr->iPadX);
 	TkAppendPadAmount(infoObj, "-ipady", contentPtr->iPadY/2, contentPtr->iPadY);
 	TkAppendPadAmount(infoObj, "-padx", contentPtr->padLeft,contentPtr->padX);
 	TkAppendPadAmount(infoObj, "-pady", contentPtr->padTop, contentPtr->padY);
-	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-side", -1),
-		Tcl_NewStringObj(sideNames[contentPtr->side], -1));
+	Tcl_DictObjPut(NULL, infoObj, Tcl_NewStringObj("-side", TCL_INDEX_NONE),
+		Tcl_NewStringObj(sideNames[contentPtr->side], TCL_INDEX_NONE));
 	Tcl_SetObjResult(interp, infoObj);
 	break;
     }
@@ -517,7 +517,7 @@ Tk_PackObjCmd(
 
 static void
 PackReqProc(
-    ClientData clientData,	/* Packer's information about window that got
+    void *clientData,	/* Packer's information about window that got
 				 * new preferred geometry.  */
     TCL_UNUSED(Tk_Window))		/* Other Tk-related information about the
 				 * window. */
@@ -584,7 +584,7 @@ PackLostContentProc(
 
 static void
 ArrangePacking(
-    ClientData clientData)	/* Structure describing container whose content
+    void *clientData)	/* Structure describing container whose content
 				 * are to be re-layed out. */
 {
     Packer *containerPtr = (Packer *)clientData;
@@ -1241,7 +1241,7 @@ PackAfter(
 		if (optionCount <= (index+1)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "wrong # args: \"frame\""
-			    " option must be followed by anchor point", -1));
+			    " option must be followed by anchor point", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
 			    NULL);
 		    return TCL_ERROR;
@@ -1435,7 +1435,7 @@ DestroyPacker(
 
 static void
 PackStructureProc(
-    ClientData clientData,	/* Our information about window referred to by
+    void *clientData,	/* Our information about window referred to by
 				 * eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {

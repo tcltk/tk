@@ -321,7 +321,7 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData dummy,	/* Not used */
+    void *dummy,	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
