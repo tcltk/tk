@@ -26,7 +26,7 @@
 /* Forward declarations of functions and variables. */
 NSString * fileName = nil;
 CFStringRef urlFile = NULL;
-int			StartPrint(ClientData clientData, Tcl_Interp * interp,
+int			StartPrint(void *clientData, Tcl_Interp * interp,
 			    Tcl_Size objc, Tcl_Obj * const objv[]);
 OSStatus		FinishPrint(NSString *file, int buttonValue);
 int			MacPrint_Init(Tcl_Interp * interp);
@@ -75,7 +75,7 @@ int			MacPrint_Init(Tcl_Interp * interp);
 
 int
 StartPrint(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp * interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
@@ -123,7 +123,7 @@ StartPrint(
     (void)(PMPageFormat)[printInfo PMPageFormat];
     printSettings = (PMPrintSettings)[printInfo PMPrintSettings];
 
-    accepted = [printPanel runModalWithPrintInfo: printInfo];
+    accepted = (int)[printPanel runModalWithPrintInfo: printInfo];
     [printDelegate printPanelDidEnd: printPanel
 			 returnCode: accepted
 			contextInfo: printInfo];

@@ -47,7 +47,7 @@ typedef struct {
 #define MENUITEMFONT_NAME	"menu"
 
 struct SystemFontMapEntry {
-    const ThemeFontID id;
+    ThemeFontID id;
     const char *systemName;
     const char *tkName;
     const char *tkName1;
@@ -74,7 +74,7 @@ static const struct SystemFontMapEntry systemFontMap[] = {
     ThemeFont(MiniSystem, NULL, NULL),
     { kThemeSystemFontDetail,		"systemDetailSystemFont", NULL, NULL },
     { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont", NULL, NULL },
-    { -1, NULL, NULL, NULL }
+    { (ThemeFontID)-1, NULL, NULL, NULL }
 };
 #undef ThemeFont
 
@@ -166,7 +166,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 	for (index = 0; index < [_string length]; index++) {
 	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
 	}
-	Tcl_DStringSetLength(&_ds, p - Tcl_DStringValue(&_ds));
+	Tcl_DStringSetLength(&_ds, (Tcl_Size)(p - Tcl_DStringValue(&_ds)));
     }
     return _ds;
 }
@@ -245,7 +245,7 @@ FindNSFont(
     NSString *family;
 
     if (familyName) {
-	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:-1] autorelease];
+	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:TCL_INDEX_NONE] autorelease];
     } else {
 	family = [defaultFont familyName];
     }
@@ -350,9 +350,9 @@ InitFont(
     nsFont = [nsFont screenFontWithRenderingMode:renderingMode];
     GetTkFontAttributesForNSFont(nsFont, faPtr);
     fmPtr = &fontPtr->font.fm;
-    fmPtr->ascent = floor([nsFont ascender] + [nsFont leading] + 0.5);
-    fmPtr->descent = floor(-[nsFont descender] + 0.5);
-    fmPtr->maxWidth = [nsFont maximumAdvancement].width;
+    fmPtr->ascent = (int)floor([nsFont ascender] + [nsFont leading] + 0.5);
+    fmPtr->descent = (int)floor(-[nsFont descender] + 0.5);
+    fmPtr->maxWidth = (int)[nsFont maximumAdvancement].width;
     fmPtr->fixed = [nsFont isFixedPitch];   /* Does not work for all fonts */
 
     /*
@@ -370,8 +370,8 @@ InitFont(
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
-    descent = floor(-bounds.origin.y + 0.5);
-    ascent = floor(bounds.size.height + bounds.origin.y + 0.5);
+    descent = (int)floor(-bounds.origin.y + 0.5);
+    ascent = (int)floor(bounds.size.height + bounds.origin.y + 0.5);
     if (ascent > fmPtr->ascent) {
 	fmPtr->ascent = ascent;
     }
@@ -451,8 +451,7 @@ startOfClusterObjCmd(
 {
     TKNSString *S;
     const char *stringArg;
-    int numBytes;
-    Tcl_Size index;
+    Tcl_Size numBytes, index;
     if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -805,7 +804,7 @@ TkpGetFontFamilies(
 
     for (NSString *family in list) {
 	Tcl_ListObjAppendElement(NULL, resultPtr,
-		Tcl_NewStringObj([family UTF8String], -1));
+		Tcl_NewStringObj([family UTF8String], TCL_INDEX_NONE));
     }
     Tcl_SetObjResult(interp, resultPtr);
 }
@@ -845,7 +844,7 @@ TkpGetSubFonts(
 
 	    if (family) {
 		Tcl_ListObjAppendElement(NULL, resultPtr,
-			Tcl_NewStringObj([family UTF8String], -1));
+			Tcl_NewStringObj([family UTF8String], TCL_INDEX_NONE));
 	    }
 	}
     }
@@ -1441,7 +1440,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 	id strikethrough = [nsAttributes objectForKey:
 		NSStrikethroughStyleAttributeName];
 
-	objv[i++] = Tcl_NewStringObj(familyName, -1);
+	objv[i++] = Tcl_NewStringObj(familyName, TCL_INDEX_NONE);
 	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] * FACTOR + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);

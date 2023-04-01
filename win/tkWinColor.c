@@ -309,13 +309,13 @@ XAllocColor(
     PALETTEENTRY entry, closeEntry;
     HDC dc = GetDC(NULL);
 
-    entry.peRed = (color->red) >> 8;
-    entry.peGreen = (color->green) >> 8;
-    entry.peBlue = (color->blue) >> 8;
+    entry.peRed = (BYTE)((color->red) >> 8);
+    entry.peGreen = (BYTE)((color->green) >> 8);
+    entry.peBlue = (BYTE)((color->blue) >> 8);
     entry.peFlags = 0;
 
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	unsigned long sizePalette = GetDeviceCaps(dc, SIZEPALETTE);
+	unsigned long sizePalette = (unsigned long)GetDeviceCaps(dc, SIZEPALETTE);
 	UINT newPixel, closePixel;
 	int isNew;
 	size_t refCount;

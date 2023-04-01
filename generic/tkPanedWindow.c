@@ -672,7 +672,7 @@ PanedWindowWidgetObjCmd(
 	if (resultObj == NULL) {
 	    if (i == pwPtr->numPanes) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"not managed by this window", -1));
+			"not managed by this window", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED",
 			NULL);
 	    }
@@ -1127,7 +1127,7 @@ PanedWindowSashCommand(
 
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid sash index", -1));
+		    "invalid sash index", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
 	    return TCL_ERROR;
 	}
@@ -1150,7 +1150,7 @@ PanedWindowSashCommand(
 
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid sash index", -1));
+		    "invalid sash index", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
 	    return TCL_ERROR;
 	}
@@ -1186,7 +1186,7 @@ PanedWindowSashCommand(
 
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid sash index", -1));
+		    "invalid sash index", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
 	    return TCL_ERROR;
 	}
@@ -2419,7 +2419,7 @@ GetSticky(
     }
     *p = '\0';
 
-    return Tcl_NewStringObj(buffer, -1);
+    return Tcl_NewStringObj(buffer, TCL_INDEX_NONE);
 }
 
 /*
@@ -3144,7 +3144,7 @@ PanedWindowIdentifyCoords(
 	Tcl_Obj *list[2];
 
 	list[0] = Tcl_NewWideIntObj(found);
-	list[1] = Tcl_NewStringObj((isHandle ? "handle" : "sash"), -1);
+	list[1] = Tcl_NewStringObj((isHandle ? "handle" : "sash"), TCL_INDEX_NONE);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, list));
     }
     return TCL_OK;

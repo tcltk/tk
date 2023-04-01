@@ -70,7 +70,7 @@ TCL_DECLARE_MUTEX(icu_mutex);
 
 static int
 startEndOfCmd(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
@@ -228,7 +228,7 @@ Icu_Init(
 	    i = 0;
 	    while (iculibs[i] != NULL) {
 		Tcl_ResetResult(interp);
-		nameobj = Tcl_NewStringObj(iculibs[i], -1);
+		nameobj = Tcl_NewStringObj(iculibs[i], TCL_INDEX_NONE);
 		char *nameStr = Tcl_GetString(nameobj);
 		char *p = strchr(nameStr, '?');
 		if (p != NULL) {
@@ -250,7 +250,7 @@ Icu_Init(
 #if defined(_WIN32)
 	if (icu_fns.lib == NULL) {
 	    Tcl_ResetResult(interp);
-		nameobj = Tcl_NewStringObj("icu.dll", -1);
+		nameobj = Tcl_NewStringObj("icu.dll", TCL_INDEX_NONE);
 		Tcl_IncrRefCount(nameobj);
 		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
 			== TCL_OK) {
@@ -260,7 +260,7 @@ Icu_Init(
 	}
 	if (icu_fns.lib == NULL) {
 	    Tcl_ResetResult(interp);
-		nameobj = Tcl_NewStringObj("icuuc.dll", -1);
+		nameobj = Tcl_NewStringObj("icuuc.dll", TCL_INDEX_NONE);
 		Tcl_IncrRefCount(nameobj);
 		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
 			== TCL_OK) {

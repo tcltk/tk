@@ -148,7 +148,7 @@ Tk_SetAppName(
 	hr = CoInitialize(0);
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "failed to initialize the COM library", -1));
+		    "failed to initialize the COM library", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
 	    return "";
 	}
@@ -375,7 +375,7 @@ Tk_SendObjCmd(
     if (displayPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"option not implemented: \"displayof\" is not available"
-		" for this platform.", -1));
+		" for this platform.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
 	result = TCL_ERROR;
     }
@@ -626,7 +626,7 @@ BuildMoniker(
 	Tcl_DString dString;
 
 	Tcl_DStringInit(&dString);
-	Tcl_UtfToWCharDString(name, -1, &dString);
+	Tcl_UtfToWCharDString(name, TCL_INDEX_NONE, &dString);
 	hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
 	Tcl_DStringFree(&dString);
 	if (SUCCEEDED(hr)) {
@@ -678,7 +678,7 @@ RegisterInterp(
 	    if (i > 1) {
 		if (i == 2) {
 		    Tcl_DStringInit(&dString);
-		    Tcl_DStringAppend(&dString, name, -1);
+		    Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		    Tcl_DStringAppend(&dString, " #", 2);
 		    offset = Tcl_DStringLength(&dString);
 		    Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);

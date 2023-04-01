@@ -323,7 +323,7 @@ TestwineventObjCmd(
     if (rest == Tcl_GetString(objv[1])) {
 	hwnd = FindWindowA(NULL, Tcl_GetString(objv[1]));
 	if (hwnd == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("no such window", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("no such window", TCL_INDEX_NONE));
 	    return TCL_ERROR;
 	}
     }
@@ -378,8 +378,7 @@ TestwineventObjCmd(
         SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
                      (LPARAM) buf);
 #endif
-	(void)Tcl_ExternalToUtfDStringEx(NULL, buf, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
-	Tcl_AppendResult(interp, Tcl_DStringValue(&ds), NULL);
+	Tcl_AppendResult(interp, Tcl_ExternalToUtfDString(NULL, buf, TCL_INDEX_NONE, &ds), NULL);
 	Tcl_DStringFree(&ds);
 	break;
     }
@@ -393,12 +392,11 @@ TestwineventObjCmd(
 	    return TCL_ERROR;
 	}
 	Tcl_DStringInit(&ds);
-	(void)Tcl_UtfToExternalDStringEx(NULL, Tcl_GetString(objv[4]), -1, TCL_ENCODING_NOCOMPLAIN, &ds);
-	result = SendMessageA(control, WM_SETTEXT, 0,
-		(LPARAM) Tcl_DStringValue(&ds));
+	LPARAM lparam = (LPARAM)Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
+	result = SendMessageA(control, WM_SETTEXT, 0, lparam);
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", TCL_INDEX_NONE));
 	    AppendSystemError(interp, GetLastError());
 	    return TCL_ERROR;
 	}
@@ -411,7 +409,7 @@ TestwineventObjCmd(
 	    lParam = (LPARAM)child;
 	}
 	snprintf(buf, sizeof(buf), "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
     default: {
@@ -419,7 +417,7 @@ TestwineventObjCmd(
 
 	snprintf(buf, sizeof(buf), "%d",
 		(int) SendDlgItemMessageA(hwnd, id, message, wParam, lParam));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
     }
@@ -459,10 +457,10 @@ TestfindwindowObjCmd(
     }
 
     Tcl_DStringInit(&titleString);
-    title = Tcl_UtfToWCharDString(Tcl_GetString(objv[1]), -1, &titleString);
+    title = Tcl_UtfToWCharDString(Tcl_GetString(objv[1]), TCL_INDEX_NONE, &titleString);
     if (objc == 3) {
 	Tcl_DStringInit(&classString);
-	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), -1, &classString);
+	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), TCL_INDEX_NONE, &classString);
     }
     if (title[0] == 0)
         title = NULL;
@@ -485,7 +483,7 @@ TestfindwindowObjCmd(
     }
 
     if (hwnd == NULL) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to find window: ", TCL_INDEX_NONE));
 	AppendSystemError(interp, GetLastError());
 	r = TCL_ERROR;
     } else {
@@ -533,7 +531,7 @@ TestgetwindowinfoObjCmd(
 
     cch = GetClassNameW((HWND)INT2PTR(hwnd), buf, cchBuf);
     if (cch == 0) {
-    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", -1));
+    	Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to get class name: ", TCL_INDEX_NONE));
     	AppendSystemError(interp, GetLastError());
     	return TCL_ERROR;
     } else {
@@ -560,7 +558,7 @@ TestgetwindowinfoObjCmd(
 
     childrenObj = Tcl_NewListObj(0, NULL);
     EnumChildWindows((HWND)(size_t)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
-    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", -1), childrenObj);
+    Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("children", TCL_INDEX_NONE), childrenObj);
 
     Tcl_SetObjResult(interp, dictObj);
     return TCL_OK;

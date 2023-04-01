@@ -44,7 +44,7 @@ EvalObjv(
     Tcl_Obj *cmdObj, **objs;
     int result;
 
-    cmdObj = Tcl_NewStringObj(cmdName, -1);
+    cmdObj = Tcl_NewStringObj(cmdName, TCL_INDEX_NONE);
     Tcl_IncrRefCount(cmdObj);
     objs = (Tcl_Obj **)ckalloc(sizeof(Tcl_Obj *) * (objc+1));
     objs[0] = cmdObj;

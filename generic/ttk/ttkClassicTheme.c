@@ -479,6 +479,8 @@ TTK_END_LAYOUT_TABLE
  * 	Install classic theme.
  */
 
+MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp);
+
 MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "classic", NULL);

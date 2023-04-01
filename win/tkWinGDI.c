@@ -586,7 +586,7 @@ static int GdiPhoto(
  *----------------------------------------------------------------------
  */
 
-int Bezierize(
+static int Bezierize(
     POINT* polypoints,
     int npoly,
     int nStep,
@@ -1595,7 +1595,7 @@ int GdiText(
 
     Tcl_DStringInit(&tds);
     /* Just for fun, let's try translating string to Unicode. */
-    wstring = Tcl_UtfToWCharDString(string, -1, &tds);
+    wstring = Tcl_UtfToWCharDString(string, TCL_INDEX_NONE, &tds);
     DrawTextW(hDC, wstring, Tcl_DStringLength(&tds)/2, &sizerect,
 	    format_flags | DT_CALCRECT);
 
@@ -2546,7 +2546,7 @@ static int GdiMakeLogFont(
 	Tcl_DString ds;
 
 	Tcl_DStringInit(&ds);
-	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(list[0], -1, &ds),
+	wcsncpy(lf->lfFaceName, Tcl_UtfToWCharDString(list[0], TCL_INDEX_NONE, &ds),
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf->lfFaceName[LF_FACESIZE-1] = 0;

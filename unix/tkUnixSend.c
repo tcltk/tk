@@ -870,7 +870,7 @@ Tk_SetAppName(
 	if (i > 1) {
 	    if (i == 2) {
 		Tcl_DStringInit(&dString);
-		Tcl_DStringAppend(&dString, name, -1);
+		Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
 		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
@@ -1032,15 +1032,15 @@ Tk_SendObjCmd(
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
 	if (firstArg == (objc-1)) {
-	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]), -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(localInterp, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	} else {
 	    Tcl_DStringInit(&request);
-	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), -1);
+	    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
 	    for (i = firstArg+1; i < objc; i++) {
 		Tcl_DStringAppend(&request, " ", 1);
-		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), -1);
+		Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
 	    }
-	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request), -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(localInterp, Tcl_DStringValue(&request), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(&request);
 	}
 	if (interp != localInterp) {
@@ -1094,7 +1094,7 @@ Tk_SendObjCmd(
     localData.sendSerial++;
     Tcl_DStringInit(&request);
     Tcl_DStringAppend(&request, "\0c\0-n ", 6);
-    Tcl_DStringAppend(&request, destName, -1);
+    Tcl_DStringAppend(&request, destName, TCL_INDEX_NONE);
     if (!async) {
 	char buffer[TCL_INTEGER_SPACE * 2];
 
@@ -1102,13 +1102,13 @@ Tk_SendObjCmd(
 		(unsigned) Tk_WindowId(dispPtr->commTkwin),
 		localData.sendSerial);
 	Tcl_DStringAppend(&request, "\0-r ", 4);
-	Tcl_DStringAppend(&request, buffer, -1);
+	Tcl_DStringAppend(&request, buffer, TCL_INDEX_NONE);
     }
     Tcl_DStringAppend(&request, "\0-s ", 4);
-    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), -1);
+    Tcl_DStringAppend(&request, Tcl_GetString(objv[firstArg]), TCL_INDEX_NONE);
     for (i = firstArg+1; i < objc; i++) {
 	Tcl_DStringAppend(&request, " ", 1);
-	Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), -1);
+	Tcl_DStringAppend(&request, Tcl_GetString(objv[i]), TCL_INDEX_NONE);
     }
 
     if (!async) {
@@ -1210,10 +1210,10 @@ Tk_SendObjCmd(
 	ckfree(pending.errorInfo);
     }
     if (pending.errorCode != NULL) {
-	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, -1));
+	Tcl_SetObjErrorCode(interp, Tcl_NewStringObj(pending.errorCode, TCL_INDEX_NONE));
 	ckfree(pending.errorCode);
     }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(pending.result, TCL_INDEX_NONE));
     ckfree(pending.result);
     return pending.code;
 }
@@ -1282,7 +1282,7 @@ TkGetInterpNames(
 	     */
 
 	    Tcl_ListObjAppendElement(NULL, resultObj,
-		    Tcl_NewStringObj(entryName, -1));
+		    Tcl_NewStringObj(entryName, TCL_INDEX_NONE));
 	} else {
 	    int count;
 
@@ -1535,7 +1535,7 @@ SendEventProc(
 	    if (commWindow != None) {
 		Tcl_DStringInit(&reply);
 		Tcl_DStringAppend(&reply, "\0r\0-s ", 6);
-		Tcl_DStringAppend(&reply, serial, -1);
+		Tcl_DStringAppend(&reply, serial, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&reply, "\0-r ", 4);
 	    }
 
@@ -1543,7 +1543,7 @@ SendEventProc(
 		if (commWindow != None) {
 		    Tcl_DStringAppend(&reply,
 			    "X server insecure (must use xauth-style "
-			    "authorization); command ignored", -1);
+			    "authorization); command ignored", TCL_INDEX_NONE);
 		}
 		result = TCL_ERROR;
 		goto returnResult;
@@ -1557,8 +1557,8 @@ SendEventProc(
 		if (riPtr == NULL) {
 		    if (commWindow != None) {
 			Tcl_DStringAppend(&reply,
-				"receiver never heard of interpreter \"", -1);
-			Tcl_DStringAppend(&reply, interpName, -1);
+				"receiver never heard of interpreter \"", TCL_INDEX_NONE);
+			Tcl_DStringAppend(&reply, interpName, TCL_INDEX_NONE);
 			Tcl_DStringAppend(&reply, "\"", 1);
 		    }
 		    result = TCL_ERROR;
@@ -1578,7 +1578,7 @@ SendEventProc(
 	    remoteInterp = riPtr->interp;
 	    Tcl_Preserve(remoteInterp);
 
-	    result = Tcl_EvalEx(remoteInterp, script, -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(remoteInterp, script, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 
 	    /*
 	     * The call to Tcl_Release may have released the interpreter which
@@ -1597,13 +1597,13 @@ SendEventProc(
 			    NULL, TCL_GLOBAL_ONLY);
 		    if (varValue != NULL) {
 			Tcl_DStringAppend(&reply, "\0-i ", 4);
-			Tcl_DStringAppend(&reply, varValue, -1);
+			Tcl_DStringAppend(&reply, varValue, TCL_INDEX_NONE);
 		    }
 		    varValue = Tcl_GetVar2(remoteInterp, "errorCode",
 			    NULL, TCL_GLOBAL_ONLY);
 		    if (varValue != NULL) {
 			Tcl_DStringAppend(&reply, "\0-e ", 4);
-			Tcl_DStringAppend(&reply, varValue, -1);
+			Tcl_DStringAppend(&reply, varValue, TCL_INDEX_NONE);
 		    }
 		}
 	    }
@@ -1624,7 +1624,7 @@ SendEventProc(
 
 		    snprintf(buffer, sizeof(buffer), "%d", result);
 		    Tcl_DStringAppend(&reply, "\0-c ", 4);
-		    Tcl_DStringAppend(&reply, buffer, -1);
+		    Tcl_DStringAppend(&reply, buffer, TCL_INDEX_NONE);
 		}
 		(void) AppendPropCarefully(dispPtr->display, commWindow,
 			dispPtr->commProperty, Tcl_DStringValue(&reply),
@@ -2022,7 +2022,7 @@ TkpTestsendCmd(
 			*p = '\n';
 		    }
 		}
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(property, TCL_INDEX_NONE));
 	    }
 	    if (property != NULL) {
 		XFree(property);

@@ -167,21 +167,21 @@ static const Tk_OptionSpec optionSpecs[] = {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		MessageCmdDeletedProc(ClientData clientData);
-static void		MessageEventProc(ClientData clientData,
+static void		MessageCmdDeletedProc(void *clientData);
+static void		MessageEventProc(void *clientData,
 			    XEvent *eventPtr);
-static char *		MessageTextVarProc(ClientData clientData,
+static char *		MessageTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		MessageWidgetObjCmd(ClientData clientData,
+static int		MessageWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static void		MessageWorldChanged(ClientData instanceData);
+static void		MessageWorldChanged(void *instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[], int flags);
 static void		DestroyMessage(void *memPtr);
-static void		DisplayMessage(ClientData clientData);
+static void		DisplayMessage(void *clientData);
 
 /*
  * The structure below defines message class behavior by means of functions
@@ -214,7 +214,7 @@ static const Tk_ClassProcs messageClass = {
 
 int
 Tk_MessageObjCmd(
-    ClientData dummy,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -222,7 +222,6 @@ Tk_MessageObjCmd(
     Message *msgPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -302,7 +301,7 @@ Tk_MessageObjCmd(
 
 static int
 MessageWidgetObjCmd(
-    ClientData clientData,	/* Information about message widget. */
+    void *clientData,	/* Information about message widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -442,10 +441,9 @@ ConfigureMessage(
 				 * already have values for some fields. */
     Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
-    int flags)			/* Flags to pass to Tk_ConfigureWidget. */
+    TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    (void)flags;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
@@ -493,7 +491,7 @@ ConfigureMessage(
      * be specified to Tk_ConfigureWidget.
      */
 
-    msgPtr->numChars = Tcl_NumUtfChars(msgPtr->string, -1);
+    msgPtr->numChars = Tcl_NumUtfChars(msgPtr->string, TCL_INDEX_NONE);
 
     if (msgPtr->highlightWidth < 0) {
 	msgPtr->highlightWidth = 0;
@@ -524,7 +522,7 @@ ConfigureMessage(
 
 static void
 MessageWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC gc = NULL;
@@ -666,7 +664,7 @@ ComputeMessageGeometry(
 
 static void
 DisplayMessage(
-    ClientData clientData)	/* Information about window. */
+    void *clientData)	/* Information about window. */
 {
     Message *msgPtr = (Message *)clientData;
     Tk_Window tkwin = msgPtr->tkwin;
@@ -741,7 +739,7 @@ DisplayMessage(
 
 static void
 MessageEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     Message *msgPtr = (Message *)clientData;
@@ -795,7 +793,7 @@ MessageEventProc(
 
 static void
 MessageCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     Message *msgPtr = (Message *)clientData;
 
@@ -830,16 +828,14 @@ MessageCmdDeletedProc(
 
 static char *
 MessageTextVarProc(
-    ClientData clientData,	/* Information about message. */
+    void *clientData,	/* Information about message. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    TCL_UNUSED(const char *),	/* Name of variable. */
+    TCL_UNUSED(const char *),	/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     Message *msgPtr = (Message *)clientData;
     const char *value;
-    (void)name1;
-    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -884,7 +880,7 @@ MessageTextVarProc(
     if (msgPtr->string != NULL) {
 	ckfree(msgPtr->string);
     }
-    msgPtr->numChars = Tcl_NumUtfChars(value, -1);
+    msgPtr->numChars = Tcl_NumUtfChars(value, TCL_INDEX_NONE);
     msgPtr->string = (char *)ckalloc(strlen(value) + 1);
     strcpy(msgPtr->string, value);
     ComputeMessageGeometry(msgPtr);

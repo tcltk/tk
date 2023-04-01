@@ -96,14 +96,14 @@ static const Tk_OptionSpec optionSpecs[] = {
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		SquareDeletedProc(ClientData clientData);
+static void		SquareDeletedProc(void *clientData);
 static int		SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
 static void		SquareDestroy(void *memPtr);
-static void		SquareDisplay(ClientData clientData);
+static void		SquareDisplay(void *clientData);
 static void		KeepInWindow(Square *squarePtr);
-static void		SquareObjEventProc(ClientData clientData,
+static void		SquareObjEventProc(void *clientData,
 			    XEvent *eventPtr);
-static int		SquareWidgetObjCmd(ClientData clientData,
+static int		SquareWidgetObjCmd(void *clientData,
 			    Tcl_Interp *, Tcl_Size objc, Tcl_Obj * const objv[]);
 
 /*
@@ -125,7 +125,7 @@ static int		SquareWidgetObjCmd(ClientData clientData,
 
 int
 SquareObjCmd(
-    ClientData dummy,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -133,7 +133,6 @@ SquareObjCmd(
     Square *squarePtr;
     Tk_Window tkwin;
     Tk_OptionTable optionTable;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -191,7 +190,7 @@ SquareObjCmd(
     }
 
     Tcl_SetObjResult(interp,
-	    Tcl_NewStringObj(Tk_PathName(squarePtr->tkwin), -1));
+	    Tcl_NewStringObj(Tk_PathName(squarePtr->tkwin), TCL_INDEX_NONE));
     return TCL_OK;
 
   error:
@@ -219,7 +218,7 @@ SquareObjCmd(
 
 static int
 SquareWidgetObjCmd(
-    ClientData clientData,	/* Information about square widget. */
+    void *clientData,	/* Information about square widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
@@ -319,13 +318,12 @@ SquareWidgetObjCmd(
 
 static int
 SquareConfigure(
-    Tcl_Interp *dummy,		/* Used for error reporting. */
+    TCL_UNUSED(Tcl_Interp *),		/* Used for error reporting. */
     Square *squarePtr)		/* Information about widget. */
 {
     int borderWidth;
     Tk_3DBorder bgBorder;
     int doubleBuffer;
-    (void)dummy;
 
     /*
      * Set the background for the window and create a graphics context for use
@@ -382,7 +380,7 @@ SquareConfigure(
 
 static void
 SquareObjEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     Square *squarePtr = (Square *)clientData;
@@ -436,7 +434,7 @@ SquareObjEventProc(
 
 static void
 SquareDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     Square *squarePtr = (Square *)clientData;
     Tk_Window tkwin = squarePtr->tkwin;
@@ -473,7 +471,7 @@ SquareDeletedProc(
 
 static void
 SquareDisplay(
-    ClientData clientData)	/* Information about window. */
+    void *clientData)	/* Information about window. */
 {
     Square *squarePtr = (Square *)clientData;
     Tk_Window tkwin = squarePtr->tkwin;

@@ -334,7 +334,7 @@ TkpNewMenu(
     winMenuHdl = CreatePopupMenu();
     if (winMenuHdl == NULL) {
     	Tcl_SetObjResult(menuPtr->interp, Tcl_NewStringObj(
-		"No more menus can be allocated.", -1));
+		"No more menus can be allocated.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(menuPtr->interp, "TK", "MENU", "SYSTEM_RESOURCES", NULL);
     	return TCL_ERROR;
     }
@@ -612,7 +612,7 @@ ReconfigureWindowsMenu(
 	if ((menuPtr->menuType == MENUBAR)
 		|| (menuPtr->menuFlags & MENU_SYSTEM_MENU)) {
 		Tcl_DStringInit(&translatedText);
-		Tcl_UtfToWCharDString(itemText, -1, &translatedText);
+		Tcl_UtfToWCharDString(itemText, TCL_INDEX_NONE, &translatedText);
 	    lpNewItem = (LPCWSTR) Tcl_DStringValue(&translatedText);
 	    flags |= MF_STRING;
 	} else {
@@ -686,7 +686,7 @@ ReconfigureWindowsMenu(
 
 		Tcl_DStringInit(&ds);
 		Tcl_DStringAppend(&ds,
-			Tk_PathName(menuPtr->mainMenuPtr->tkwin), -1);
+			Tk_PathName(menuPtr->mainMenuPtr->tkwin), TCL_INDEX_NONE);
 		Tcl_DStringAppend(&ds, ".system", 7);
 
 		menuRefPtr = TkFindMenuReferences(menuPtr->interp,
@@ -880,7 +880,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
@@ -1188,7 +1188,7 @@ TkWinHandleMenuEvent(
 		}
 		Tcl_Release(interp);
 	    }
-	    TkActivateMenuEntry(menuPtr, -1);
+	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	    *plResult = 0;
 	    returnResult = 1;
 	} else {
@@ -1343,7 +1343,7 @@ TkWinHandleMenuEvent(
 		if (itemPtr->itemState & ODS_SELECTED) {
 		    TkActivateMenuEntry(menuPtr, mePtr->index);
 		} else {
-		    TkActivateMenuEntry(menuPtr, -1);
+		    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 		}
 	    } else {
 		/*
@@ -1432,7 +1432,7 @@ TkWinHandleMenuEvent(
 		}
 
 		if ((mePtr == NULL) || (mePtr->state == ENTRY_DISABLED)) {
-		    TkActivateMenuEntry(menuPtr, -1);
+		    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 		} else {
 		    if (mePtr->index >= (int)menuPtr->numEntries) {
 			Tcl_Panic("Trying to activate an entry which doesn't exist");
@@ -1474,7 +1474,7 @@ RecursivelyClearActiveMenu(
     Tcl_Size i;
     TkMenuEntry *mePtr;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     MenuSelectEvent(menuPtr);
     for (i = 0; i < menuPtr->numEntries; i++) {
     	mePtr = menuPtr->entries[i];
@@ -3324,7 +3324,7 @@ TkWinGetMenuSystemDefault(
 	    (strcmp(dbName, "borderWidth") == 0)) {
 	valuePtr = Tcl_NewWideIntObj(defaultBorderWidth);
     } else if (strcmp(dbName, "font") == 0) {
-	valuePtr = Tcl_NewStringObj(Tcl_DStringValue(&menuFontDString), -1);
+	valuePtr = Tcl_NewStringObj(Tcl_DStringValue(&menuFontDString), TCL_INDEX_NONE);
     }
 
     return valuePtr;

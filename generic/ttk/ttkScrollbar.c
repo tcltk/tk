@@ -333,6 +333,9 @@ TTK_END_LAYOUT
  */
 
 MODULE_SCOPE
+void TtkScrollbar_Init(Tcl_Interp *interp);
+
+MODULE_SCOPE
 void TtkScrollbar_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme = Ttk_GetDefaultTheme(interp);

@@ -570,7 +570,7 @@ static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
-static void		DisplayText(ClientData clientData);
+static void		DisplayText(void *clientData);
 static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr,
                             const TkTextIndex *indexPtr);
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
@@ -617,9 +617,9 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], double *dblPtr,
 			    int *intPtr);
-static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
-static void		AsyncUpdateYScrollbar(ClientData clientData);
+static void		AsyncUpdateYScrollbar(void *clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             const TkTextIndex *indexPtr);
 
@@ -3013,7 +3013,7 @@ DisplayLineBackground(
 
 static void
 AsyncUpdateLineMetrics(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -4171,7 +4171,7 @@ TkTextUpdateOneLine(
 
 static void
 DisplayText(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -6540,10 +6540,10 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, -1);
-	Tcl_DStringAppend(&buf, buf1, -1);
-	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -6825,10 +6825,10 @@ GetYView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, -1);
-	Tcl_DStringAppend(&buf, buf1, -1);
-	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -6858,7 +6858,7 @@ GetYView(
 
 static void
 AsyncUpdateYScrollbar(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
 
