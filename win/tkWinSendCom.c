@@ -391,7 +391,7 @@ Async(
     hr = VariantChangeType(&vCmd, &Cmd, 0, VT_BSTR);
     if (FAILED(hr)) {
 	Tcl_SetObjResult(obj->interp, Tcl_NewStringObj(
-		"invalid args: Async(command)", -1));
+		"invalid args: Async(command)", TCL_INDEX_NONE));
 	TkWinSend_SetExcepInfo(obj->interp, pExcepInfo);
 	hr = DISP_E_EXCEPTION;
     }

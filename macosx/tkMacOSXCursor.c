@@ -231,7 +231,7 @@ FindCursorByName(
 	macCursorPtr->type = IMAGEPATH;
 	path = [NSString stringWithUTF8String:&name[1]];
     } else {
-	Tcl_Obj *strPtr = Tcl_NewStringObj(name, -1);
+	Tcl_Obj *strPtr = Tcl_NewStringObj(name, TCL_INDEX_NONE);
 	int idx;
 
 	result = Tcl_GetIndexFromObjStruct(NULL, strPtr, cursorNames,

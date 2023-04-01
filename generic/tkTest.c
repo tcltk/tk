@@ -93,15 +93,15 @@ typedef struct TImageInstance {
 static int		ImageCreate(Tcl_Interp *interp,
 			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
-			    ClientData *clientDataPtr);
-static ClientData	ImageGet(Tk_Window tkwin, ClientData clientData);
-static void		ImageDisplay(ClientData clientData,
+			    void **clientDataPtr);
+static ClientData	ImageGet(Tk_Window tkwin, void *clientData);
+static void		ImageDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width,
 			    int height, int drawableX,
 			    int drawableY);
-static void		ImageFree(ClientData clientData, Display *display);
-static void		ImageDelete(ClientData clientData);
+static void		ImageFree(void *clientData, Display *display);
+static void		ImageDelete(void *clientData);
 
 static Tk_ImageType imageType = {
     "test",			/* name */
@@ -155,65 +155,65 @@ typedef struct TrivialCommandHeader {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		ImageObjCmd(ClientData dummy,
+static int		ImageObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestbitmapObjCmd(ClientData dummy,
+static int		TestbitmapObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestborderObjCmd(ClientData dummy,
+static int		TestborderObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestcolorObjCmd(ClientData dummy,
+static int		TestcolorObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestcursorObjCmd(ClientData dummy,
+static int		TestcursorObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestdeleteappsObjCmd(ClientData dummy,
+static int		TestdeleteappsObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestfontObjCmd(ClientData dummy,
+static int		TestfontObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static int		TestmakeexistObjCmd(ClientData dummy,
+static int		TestmakeexistObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestmenubarObjCmd(ClientData dummy,
+static int		TestmenubarObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 #endif
 #if defined(_WIN32)
-static int		TestmetricsObjCmd(ClientData dummy,
+static int		TestmetricsObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 #endif
-static int		TestobjconfigObjCmd(ClientData dummy,
+static int		TestobjconfigObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 static Tk_CustomOptionSetProc CustomOptionSet;
 static Tk_CustomOptionGetProc CustomOptionGet;
 static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
-static int		TestpropObjCmd(ClientData dummy,
+static int		TestpropObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static int		TestprintfObjCmd(ClientData dummy,
+static int		TestprintfObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestwrapperObjCmd(ClientData dummy,
+static int		TestwrapperObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
 #endif
-static void		TrivialCmdDeletedProc(ClientData clientData);
-static int		TrivialConfigObjCmd(ClientData dummy,
+static void		TrivialCmdDeletedProc(void *clientData);
+static int		TrivialConfigObjCmd(void *dummy,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj * const objv[]);
-static void		TrivialEventProc(ClientData clientData,
+static void		TrivialEventProc(void *clientData,
 			    XEvent *eventPtr);
-static int              TestPhotoStringMatchCmd(ClientData dummy,
+static int              TestPhotoStringMatchCmd(void *dummy,
                             Tcl_Interp *interp, Tcl_Size objc,
                             Tcl_Obj * const objv[]);
 
@@ -507,7 +507,7 @@ TestdeleteappsObjCmd(
 
 static int
 TestobjconfigObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1050,7 +1050,7 @@ TestobjconfigObjCmd(
 		offsetof(NotEnoughRecord, fooObjPtr), 0, 0, NULL, 0},
 	    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 	};
-	Tcl_Obj *newObjPtr = Tcl_NewStringObj("-foo", -1);
+	Tcl_Obj *newObjPtr = Tcl_NewStringObj("-foo", TCL_INDEX_NONE);
 	Tk_OptionTable optionTable;
 
 	record.fooObjPtr = NULL;
@@ -1144,7 +1144,7 @@ TestobjconfigObjCmd(
 
 static int
 TrivialConfigObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1251,7 +1251,7 @@ TrivialConfigObjCmd(
 
 static void
 TrivialCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TrivialCommandHeader *headerPtr = (TrivialCommandHeader *)clientData;
     Tk_Window tkwin = headerPtr->tkwin;
@@ -1289,7 +1289,7 @@ TrivialCmdDeletedProc(
 
 static void
 TrivialEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TrivialCommandHeader *headerPtr = (TrivialCommandHeader *)clientData;
@@ -1326,7 +1326,7 @@ TrivialEventProc(
 
 static int
 TestfontObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1394,7 +1394,7 @@ ImageCreate(
     TCL_UNUSED(const Tk_ImageType *),	/* Pointer to our type record (not used). */
 	Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
-    ClientData *clientDataPtr)	/* Store manager's token for image here; it
+    void **clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
     TImageModel *timPtr;
@@ -1450,7 +1450,7 @@ ImageCreate(
 
 static int
 ImageObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -1508,7 +1508,7 @@ static ClientData
 ImageGet(
     Tk_Window tkwin,		/* Token for window in which image will be
 				 * used. */
-    ClientData clientData)	/* Pointer to TImageModel for image. */
+    void *clientData)	/* Pointer to TImageModel for image. */
 {
     TImageModel *timPtr = (TImageModel *)clientData;
     TImageInstance *instPtr;
@@ -1548,7 +1548,7 @@ ImageGet(
 
 static void
 ImageDisplay(
-    ClientData clientData,	/* Pointer to TImageInstance for image. */
+    void *clientData,	/* Pointer to TImageInstance for image. */
     Display *display,		/* Display to use for drawing. */
     Drawable drawable,		/* Where to redraw image. */
     int imageX, int imageY,	/* Origin of area to redraw, relative to
@@ -1639,7 +1639,7 @@ ImageDisplay(
 
 static void
 ImageFree(
-    ClientData clientData,	/* Pointer to TImageInstance for instance. */
+    void *clientData,	/* Pointer to TImageInstance for instance. */
     Display *display)		/* Display where image was to be drawn. */
 {
     TImageInstance *instPtr = (TImageInstance *)clientData;
@@ -1672,7 +1672,7 @@ ImageFree(
 
 static void
 ImageDelete(
-    ClientData clientData)	/* Pointer to TImageModel for image. When
+    void *clientData)	/* Pointer to TImageModel for image. When
 				 * this function is called, no more instances
 				 * exist. */
 {
@@ -1709,7 +1709,7 @@ ImageDelete(
 
 static int
 TestmakeexistObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -1750,7 +1750,7 @@ TestmakeexistObjCmd(
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
 static int
 TestmenubarObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -1863,7 +1863,7 @@ TestmetricsObjCmd(
 
 static int
 TestpropObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -1896,7 +1896,7 @@ TestpropObjCmd(
 		    *p = '\n';
 		}
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj((/*!unsigned*/char*)property, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj((/*!unsigned*/char*)property, TCL_INDEX_NONE));
 	} else {
 	    for (p = property; length > 0; length--) {
 		if (actualFormat == 32) {
@@ -1990,7 +1990,7 @@ TestprintfObjCmd(
 
 static int
 TestwrapperObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -2014,7 +2014,7 @@ TestwrapperObjCmd(
 	char buf[TCL_INTEGER_SPACE];
 
 	TkpPrintWindowId(buf, Tk_WindowId(wrapperPtr));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
     }
     return TCL_OK;
 }
@@ -2087,7 +2087,7 @@ CustomOptionSet(
 	string = Tcl_GetString(*value);
 	Tcl_UtfToUpper(string);
 	if (strcmp(string, "BAD") == 0) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("expected good value, got \"BAD\"", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("expected good value, got \"BAD\"", TCL_INDEX_NONE));
 	    return TCL_ERROR;
 	}
     }
@@ -2113,7 +2113,7 @@ CustomOptionGet(
     char *recordPtr,
     Tcl_Size internalOffset)
 {
-    return (Tcl_NewStringObj(*(char **)(recordPtr + internalOffset), -1));
+    return (Tcl_NewStringObj(*(char **)(recordPtr + internalOffset), TCL_INDEX_NONE));
 }
 
 static void
@@ -2160,7 +2160,7 @@ CustomOptionFree(
 
 static int
 TestPhotoStringMatchCmd(
-    ClientData clientData,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -2168,7 +2168,6 @@ TestPhotoStringMatchCmd(
     Tcl_Obj *dummy = NULL;
     Tcl_Obj *resultObj[2];
     int width, height;
-    (void)clientData;
 
     if (objc != 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "imageData");

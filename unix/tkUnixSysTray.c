@@ -349,17 +349,17 @@ TrayIconObjectCmd(
 
     case XWC_ORIENTATION:
 	if (icon->myManager == None || icon->wrapper == None) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", TCL_INDEX_NONE));
 	} else {
 	    switch(QueryTrayOrientation(icon)) {
 	    case 0:
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("horizontal", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("horizontal", TCL_INDEX_NONE));
 		break;
 	    case 1:
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("vertical", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("vertical", TCL_INDEX_NONE));
 		break;
 	    default:
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("unknown", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("unknown", TCL_INDEX_NONE));
 		break;
 	    }
 	}
@@ -1597,7 +1597,7 @@ TrayIconCreateCmd(
 
     icon = (DockIcon*)attemptckalloc(sizeof(DockIcon));
     if (!icon) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", TCL_INDEX_NONE));
 	goto handleErrors;
     }
     memset(icon,0,sizeof(*icon));

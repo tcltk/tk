@@ -971,6 +971,9 @@ TTK_END_LAYOUT
  * +++ Registration routine.
  */
 MODULE_SCOPE
+void TtkPanedwindow_Init(Tcl_Interp *interp);
+
+MODULE_SCOPE
 void TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);

@@ -219,7 +219,7 @@ static void		ExtendStacks(ElArray *arrayPtr, int leaf);
 static int		GetDefaultOptions(Tcl_Interp *interp,
 			    TkWindow *winPtr);
 static ElArray *	NewArray(int numEls);
-static void		OptionThreadExitProc(ClientData clientData);
+static void		OptionThreadExitProc(void *clientData);
 static void		OptionInit(TkMainInfo *mainPtr);
 static int		ParsePriority(Tcl_Interp *interp, const char *string);
 static int		ReadOptionFile(Tcl_Interp *interp, Tk_Window tkwin,
@@ -610,7 +610,7 @@ Tk_GetOption(
 
 int
 Tk_OptionObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of Tcl_Obj arguments. */
     Tcl_Obj *const objv[])	/* Tcl_Obj arguments. */
@@ -690,7 +690,7 @@ Tk_OptionObjCmd(
 	value = Tk_GetOption(window, Tcl_GetString(objv[3]),
 		Tcl_GetString(objv[4]));
 	if (value != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(value, TCL_INDEX_NONE));
 	}
 	break;
     }
@@ -1095,7 +1095,7 @@ ReadOptionFile(
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't read options from a file in a safe interpreter", -1));
+		"can't read options from a file in a safe interpreter", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", NULL);
 	return TCL_ERROR;
     }
@@ -1115,7 +1115,7 @@ ReadOptionFile(
     buffer = Tcl_NewObj();
     Tcl_IncrRefCount(buffer);
     Tcl_SetChannelOption(NULL, chan, "-encoding", "utf-8");
-    bufferSize = Tcl_ReadChars(chan, buffer, -1, 0);
+    bufferSize = Tcl_ReadChars(chan, buffer, TCL_INDEX_NONE, 0);
     if (bufferSize == TCL_IO_FAILURE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"error reading file \"%s\": %s",

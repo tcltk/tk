@@ -713,7 +713,7 @@ TkWmMapWindow(
 	    UpdateCommand(winPtr);
 	}
 	if (wmPtr->clientMachine != NULL) {
-	    (void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	    (void)Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, TCL_INDEX_NONE, &ds);
 	    if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		    &textProp) != 0) {
 		unsigned long pid = (unsigned long) getpid();
@@ -985,8 +985,8 @@ TkWmSetClass(
 	XClassHint *classPtr;
 	Tcl_DString name, ds;
 
-	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->nameUid, -1, TCL_ENCODING_NOCOMPLAIN, &name);
-	(void)Tcl_UtfToExternalDStringEx(NULL, winPtr->classUid, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDString(NULL, winPtr->nameUid, TCL_INDEX_NONE, &name);
+	(void)Tcl_UtfToExternalDString(NULL, winPtr->classUid, TCL_INDEX_NONE, &ds);
 	classPtr = XAllocClassHint();
 	classPtr->res_name = Tcl_DStringValue(&name);
 	classPtr->res_class = Tcl_DStringValue(&ds);
@@ -1224,7 +1224,7 @@ WmAspectCmd(
 	if ((numer1 <= 0) || (denom1 <= 0) || (numer2 <= 0) ||
 		(denom2 <= 0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "aspect number can't be <= 0", -1));
+		    "aspect number can't be <= 0", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ASPECT", NULL);
 	    return TCL_ERROR;
 	}
@@ -1401,7 +1401,7 @@ WmAttributesCmd(
 
 	for (attribute = 0; attribute < _WMATT_LAST_ATTRIBUTE; ++attribute) {
 	    Tcl_ListObjAppendElement(interp, result,
-		    Tcl_NewStringObj(WmAttributeNames[attribute], -1));
+		    Tcl_NewStringObj(WmAttributeNames[attribute], TCL_INDEX_NONE));
 	    Tcl_ListObjAppendElement(interp, result,
 		    WmGetAttribute(winPtr, (WmAttribute)attribute));
 	}
@@ -1468,7 +1468,7 @@ WmClientCmd(
     if (objc == 3) {
 	if (wmPtr->clientMachine != NULL) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(wmPtr->clientMachine, -1));
+		    Tcl_NewStringObj(wmPtr->clientMachine, TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -1494,7 +1494,7 @@ WmClientCmd(
 	XTextProperty textProp;
 	Tcl_DString ds;
 
-	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->clientMachine, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDString(NULL, wmPtr->clientMachine, TCL_INDEX_NONE, &ds);
 	if (XStringListToTextProperty(&(Tcl_DStringValue(&ds)), 1,
 		&textProp) != 0) {
 	    unsigned long pid = (unsigned long) getpid();
@@ -1576,7 +1576,7 @@ WmColormapwindowsCmd(
 			Tcl_ObjPrintf("0x%lx", cmapList[i]));
 	    } else {
 		Tcl_ListObjAppendElement(NULL, resultObj,
-			Tcl_NewStringObj(winPtr2->pathName, -1));
+			Tcl_NewStringObj(winPtr2->pathName, TCL_INDEX_NONE));
 	    }
 	}
 	XFree((char *) cmapList);
@@ -1658,7 +1658,7 @@ WmCommandCmd(
 	if (wmPtr->cmdArgv != NULL) {
 	    char *arg = Tcl_Merge(wmPtr->cmdArgc, wmPtr->cmdArgv);
 
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(arg, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(arg, TCL_INDEX_NONE));
 	    ckfree(arg);
 	}
 	return TCL_OK;
@@ -1777,7 +1777,7 @@ WmFocusmodelCmd(
     }
     if (objc == 3) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		wmPtr->hints.input ? "passive" : "active", -1));
+		wmPtr->hints.input ? "passive" : "active", TCL_INDEX_NONE));
 	return TCL_OK;
     }
 
@@ -1885,7 +1885,7 @@ WmFrameCmd(
 	window = Tk_WindowId((Tk_Window) winPtr);
     }
     snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)window);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -2018,25 +2018,25 @@ WmGridCmd(
 	}
 	if (reqWidth < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "baseWidth can't be < 0", -1));
+		    "baseWidth can't be < 0", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	if (reqHeight < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "baseHeight can't be < 0", -1));
+		    "baseHeight can't be < 0", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	if (widthInc <= 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "widthInc can't be <= 0", -1));
+		    "widthInc can't be <= 0", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
 	if (heightInc <= 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "heightInc can't be <= 0", -1));
+		    "heightInc can't be <= 0", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "GRID", NULL);
 	    return TCL_ERROR;
 	}
@@ -2084,7 +2084,7 @@ WmGroupCmd(
     }
     if (objc == 3) {
 	if (wmPtr->hints.flags & WindowGroupHint) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->leaderName, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->leaderName, TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -2159,7 +2159,7 @@ WmIconbadgeCmd(
     snprintf(cmd, sizeof(cmd), "::tk::icons::IconBadge {%s} {%s}",
 	    Tcl_GetString(objv[2]),
 	    Tcl_GetString(objv[3]));
-    if (Tcl_EvalEx(interp, cmd, -1, TCL_EVAL_DIRECT) != TCL_OK) {
+    if (Tcl_EvalEx(interp, cmd, TCL_INDEX_NONE, TCL_EVAL_DIRECT) != TCL_OK) {
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -2202,7 +2202,7 @@ WmIconbitmapCmd(
 	if (wmPtr->hints.flags & IconPixmapHint) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    Tk_NameOfBitmap(winPtr->display,
-			    wmPtr->hints.icon_pixmap), -1));
+			    wmPtr->hints.icon_pixmap), TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     }
@@ -2287,7 +2287,7 @@ WmIconifyCmd(
     }
     if (TkpWmSetState(winPtr, IconicState) == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"couldn't send iconify message to window manager", -1));
+		"couldn't send iconify message to window manager", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 	return TCL_ERROR;
     }
@@ -2387,7 +2387,7 @@ WmIconnameCmd(
     }
     if (objc == 3) {
 	if (wmPtr->iconName != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->iconName, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->iconName, TCL_INDEX_NONE));
 	}
 	return TCL_OK;
     } else {
@@ -3006,7 +3006,7 @@ WmPositionfromCmd(
 	} else if (wmPtr->sizeHintsFlags & PPosition) {
 	    sourceStr = "program";
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, TCL_INDEX_NONE));
 	return TCL_OK;
     }
     if (*Tcl_GetString(objv[3]) == '\0') {
@@ -3089,7 +3089,7 @@ WmProtocolCmd(
 		protPtr = protPtr->nextPtr) {
 	    if (protPtr->protocol == protocol) {
 		Tcl_SetObjResult(interp,
-			Tcl_NewStringObj(protPtr->command, -1));
+			Tcl_NewStringObj(protPtr->command, TCL_INDEX_NONE));
 		return TCL_OK;
 	    }
 	}
@@ -3102,7 +3102,7 @@ WmProtocolCmd(
 
     if (strcmp(Tcl_GetString(objv[3]), "_NET_WM_PING") == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"may not alter handling of that protocol", -1));
+		"may not alter handling of that protocol", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "WM", "PROTOCOL", "RESERVED", NULL);
 	return TCL_ERROR;
     }
@@ -3242,7 +3242,7 @@ WmSizefromCmd(
 	} else if (wmPtr->sizeHintsFlags & PSize) {
 	    sourceStr = "program";
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(sourceStr, TCL_INDEX_NONE));
 	return TCL_OK;
     }
 
@@ -3311,7 +3311,7 @@ WmStackorderCmd(
 	    /* ASSERT: true [Bug 1789819]*/
 	    for (window_ptr = windows; *window_ptr ; window_ptr++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
-			Tcl_NewStringObj((*window_ptr)->pathName, -1));
+			Tcl_NewStringObj((*window_ptr)->pathName, TCL_INDEX_NONE));
 	    }
 	    ckfree(windows);
 	    Tcl_SetObjResult(interp, resultObj);
@@ -3359,7 +3359,7 @@ WmStackorderCmd(
 	windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
 	if (windows == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "TkWmStackorderToplevel failed", -1));
+		    "TkWmStackorderToplevel failed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 	    return TCL_ERROR;
 	}
@@ -3491,7 +3491,7 @@ WmStateCmd(
 	} else {
 	    state = "iconic";
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(state, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(state, TCL_INDEX_NONE));
     }
     return TCL_OK;
 }
@@ -3530,9 +3530,9 @@ WmTitleCmd(
     }
     if (objc == 3) {
 	if (wmPtr->title) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->title, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(wmPtr->title, TCL_INDEX_NONE));
 	} else {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, TCL_INDEX_NONE));
 	}
     } else {
 	if (wmPtr->title != NULL) {
@@ -3739,7 +3739,7 @@ WmWithdrawCmd(
     wmPtr->flags |= WM_WITHDRAWN;
     if (TkpWmSetState(winPtr, WithdrawnState) == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"couldn't send withdraw message to window manager", -1));
+		"couldn't send withdraw message to window manager", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "WM", "COMMUNICATION", NULL);
 	return TCL_ERROR;
     }
@@ -4981,7 +4981,7 @@ UpdateTitle(
      */
 
     string = (wmPtr->title != NULL) ? wmPtr->title : winPtr->nameUid;
-    (void)Tcl_UtfToExternalDStringEx(NULL, string, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+    (void)Tcl_UtfToExternalDString(NULL, string, TCL_INDEX_NONE, &ds);
     XStoreName(winPtr->display, wmPtr->wrapperPtr->window,
 	    Tcl_DStringValue(&ds));
     Tcl_DStringFree(&ds);
@@ -4994,7 +4994,7 @@ UpdateTitle(
      */
 
     if (wmPtr->iconName != NULL) {
-	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->iconName, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDString(NULL, wmPtr->iconName, TCL_INDEX_NONE, &ds);
 	XSetIconName(winPtr->display, wmPtr->wrapperPtr->window,
 		Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
@@ -5514,7 +5514,7 @@ SetNetWmType(
 	char *name = Tcl_GetStringFromObj(objv[n], &len);
 
 	Tcl_UtfToUpper(name);
-	(void)Tcl_UtfToExternalDStringEx(NULL, name, len, TCL_ENCODING_NOCOMPLAIN, &dsName);
+	(void)Tcl_UtfToExternalDString(NULL, name, len, &dsName);
 	Tcl_DStringInit(&ds);
 	Tcl_DStringAppend(&ds, "_NET_WM_WINDOW_TYPE_", 20);
 	Tcl_DStringAppend(&ds, Tcl_DStringValue(&dsName),
@@ -5578,7 +5578,7 @@ GetNetWmType(
 	    const char *name = Tk_GetAtomName(tkwin, atoms[n]);
 
 	    if (strncmp("_NET_WM_WINDOW_TYPE_", name, 20) == 0) {
-		(void)Tcl_ExternalToUtfDStringEx(NULL, name+20, -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+		(void)Tcl_ExternalToUtfDString(NULL, name+20, TCL_INDEX_NONE, &ds);
 		Tcl_UtfToLower(Tcl_DStringValue(&ds));
 		Tcl_ListObjAppendElement(interp, typePtr,
 			Tcl_NewStringObj(Tcl_DStringValue(&ds),
@@ -6373,7 +6373,7 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve(protPtr);
 	    interp = protPtr->interp;
 	    Tcl_Preserve(interp);
-	    result = Tcl_EvalEx(interp, protPtr->command, -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(interp, protPtr->command, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    if (result != TCL_OK) {
 		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 			"\n    (command for \"%s\" window manager protocol)",
@@ -6983,15 +6983,15 @@ TkpMakeMenuWindow(
     if (typeFlag == TK_MAKE_MENU_TEAROFF) {
 	atts.override_redirect = False;
 	atts.save_under = False;
-	typeObj = Tcl_NewStringObj("menu", -1);
+	typeObj = Tcl_NewStringObj("menu", TCL_INDEX_NONE);
 	TkSetTransientFor(tkwin, NULL);
     } else {
 	atts.override_redirect = True;
 	atts.save_under = True;
 	if (typeFlag == TK_MAKE_MENU_DROPDOWN) {
-	    typeObj = Tcl_NewStringObj("dropdown_menu", -1);
+	    typeObj = Tcl_NewStringObj("dropdown_menu", TCL_INDEX_NONE);
 	} else {
-	    typeObj = Tcl_NewStringObj("popup_menu", -1);
+	    typeObj = Tcl_NewStringObj("popup_menu", TCL_INDEX_NONE);
 	}
     }
     SetNetWmType((TkWindow *)tkwin, typeObj);
@@ -7389,7 +7389,7 @@ UpdateCommand(
     offsets = (int *)ckalloc(sizeof(int) * wmPtr->cmdArgc);
     Tcl_DStringInit(&cmds);
     for (i = 0; i < wmPtr->cmdArgc; i++) {
-	(void)Tcl_UtfToExternalDStringEx(NULL, wmPtr->cmdArgv[i], -1, TCL_ENCODING_NOCOMPLAIN, &ds);
+	(void)Tcl_UtfToExternalDString(NULL, wmPtr->cmdArgv[i], TCL_INDEX_NONE, &ds);
 	offsets[i] = Tcl_DStringLength(&cmds);
 	Tcl_DStringAppend(&cmds, Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds)+1);

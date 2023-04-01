@@ -209,7 +209,8 @@ Tk_SetAppName(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     Tcl_Interp *interp = winPtr->mainPtr->interp;
-    int i, suffix, offset, result;
+    int suffix, result;
+    Tcl_Size i, offset;
     RegisteredInterp *riPtr, *prevPtr;
     const char *actualName;
     Tcl_DString dString;
@@ -260,7 +261,7 @@ Tk_SetAppName(
 	interpName = Tcl_GetString(interpNamePtr);
 	if (strcmp(actualName, interpName) == 0) {
 	    if (suffix == 1) {
-		Tcl_DStringAppend(&dString, name, -1);
+		Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
 		Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
@@ -320,7 +321,7 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData dummy,	/* Not used */
+    void *dummy,	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
     Tcl_Size objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
@@ -474,7 +475,7 @@ TkGetInterpNames(
     riPtr = interpListPtr;
     while (riPtr != NULL) {
 	Tcl_ListObjAppendElement(interp, listObjPtr,
-		Tcl_NewStringObj(riPtr->name, -1));
+		Tcl_NewStringObj(riPtr->name, TCL_INDEX_NONE));
 	riPtr = riPtr->nextPtr;
     }
 

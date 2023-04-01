@@ -56,7 +56,7 @@ image create photo ::tk::icons::information -format $::tk::svgFmt -data {
 
 image create photo ::tk::icons::question -format $::tk::svgFmt -data {
     <?xml version="1.0" encoding="UTF-8"?>
-    <svg width="32" height="32" version="1" xmlns="http://www.w3.org/2000/svg">
+    <svg width="32" height="32" version="1.1" xmlns="http://www.w3.org/2000/svg">
      <g transform="matrix(.8 0 0 .8 -3.2 -3.2)">
       <circle cx="24" cy="24" r="20" fill="#78c367"/>
       <path d="m26 38h-4v-4h4zm4.14-15.5-1.8 1.84c-1.44 1.46-2.34 2.66-2.34 5.66h-4v-1c0-2.2 0.9-4.2 2.34-5.66l2.48-2.52a3.91 3.91 0 0 0 1.18-2.82c0-2.2-1.8-4-4-4s-4 1.8-4 4h-4c0-4.42 3.58-8 8-8s8 3.58 8 8c0 1.76-0.72 3.36-1.86 4.5z" fill="#fff"/>

@@ -192,7 +192,7 @@ TkCanvPostscriptObjCmd(
      * such.
      */
 
-    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", -1, TCL_EVAL_GLOBAL);
+    result = Tcl_EvalEx(interp, "::tk::ensure_psenc_is_loaded", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (result != TCL_OK) {
 	return result;
     }
@@ -337,7 +337,7 @@ TkCanvPostscriptObjCmd(
 
 	if (psInfo.channelName != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't specify both -file and -channel", -1));
+		    "can't specify both -file and -channel", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
@@ -350,7 +350,7 @@ TkCanvPostscriptObjCmd(
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't specify -file in a safe interpreter", -1));
+		    "can't specify -file in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
@@ -431,7 +431,7 @@ TkCanvPostscriptObjCmd(
     if (psInfo.prolog) {
 	Tcl_AppendToObj(psObj,
 		"%!PS-Adobe-3.0 EPSF-3.0\n"
-		"%%Creator: Tk Canvas Widget\n", -1);
+		"%%Creator: Tk Canvas Widget\n", TCL_INDEX_NONE);
 
 #ifdef HAVE_PW_GECOS
 	if (!Tcl_IsSafe(interp)) {
@@ -477,7 +477,7 @@ TkCanvPostscriptObjCmd(
 		    Tcl_GetHashKey(&psInfo.fontTable, hPtr));
 	    p = "%%%%+ font %s\n";
 	}
-	Tcl_AppendToObj(psObj, "%%EndComments\n\n", -1);
+	Tcl_AppendToObj(psObj, "%%EndComments\n\n", TCL_INDEX_NONE);
 
 	/*
 	 * Insert the prolog
@@ -510,7 +510,7 @@ TkCanvPostscriptObjCmd(
 		    "%%%%IncludeResource: font %s\n",
 		    (char *) Tcl_GetHashKey(&psInfo.fontTable, hPtr));
 	}
-	Tcl_AppendToObj(psObj, "%%EndSetup\n\n", -1);
+	Tcl_AppendToObj(psObj, "%%EndSetup\n\n", TCL_INDEX_NONE);
 
 	/*
 	 * Page setup: move to page positioning point, rotate if needed, set
@@ -518,11 +518,11 @@ TkCanvPostscriptObjCmd(
 	 * region.
 	 */
 
-	Tcl_AppendToObj(psObj, "%%Page: 1 1\nsave\n", -1);
+	Tcl_AppendToObj(psObj, "%%Page: 1 1\nsave\n", TCL_INDEX_NONE);
 	Tcl_AppendPrintfToObj(psObj,
 		"%.1f %.1f translate\n", psInfo.pageX, psInfo.pageY);
 	if (psInfo.rotate) {
-	    Tcl_AppendToObj(psObj, "90 rotate\n", -1);
+	    Tcl_AppendToObj(psObj, "90 rotate\n", TCL_INDEX_NONE);
 	}
 	Tcl_AppendPrintfToObj(psObj,
 		"%.4g %.4g scale\n", psInfo.scale, psInfo.scale);
@@ -576,9 +576,9 @@ TkCanvPostscriptObjCmd(
 	    goto cleanup;
 	}
 
-	Tcl_AppendToObj(psObj, "gsave\n", -1);
+	Tcl_AppendToObj(psObj, "gsave\n", TCL_INDEX_NONE);
 	Tcl_AppendObjToObj(psObj, Tcl_GetObjResult(interp));
-	Tcl_AppendToObj(psObj, "grestore\n", -1);
+	Tcl_AppendToObj(psObj, "grestore\n", TCL_INDEX_NONE);
 	Tcl_ResetResult(interp);
 
 	if (psInfo.chan != NULL) {
@@ -600,7 +600,7 @@ TkCanvPostscriptObjCmd(
 		"restore showpage\n\n"
 		"%%Trailer\n"
 		"end\n"
-		"%%EOF\n", -1);
+		"%%EOF\n", TCL_INDEX_NONE);
 
 	if (psInfo.chan != NULL) {
 	    if (Tcl_WriteObj(psInfo.chan, psObj) == TCL_IO_FAILURE) {
@@ -907,11 +907,11 @@ PostscriptBitmap(
 	 * syntactically correct.
 	 */
 
-        Tcl_AppendToObj(psObj, "<>", -1);
+        Tcl_AppendToObj(psObj, "<>", TCL_INDEX_NONE);
 	return;
     }
 
-    Tcl_AppendToObj(psObj, "<", -1);
+    Tcl_AppendToObj(psObj, "<", TCL_INDEX_NONE);
     mask = 0x80;
     value = 0;
     charsInLine = 0;
@@ -929,7 +929,7 @@ PostscriptBitmap(
 		value = 0;
 		charsInLine += 2;
 		if (charsInLine >= 60) {
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    charsInLine = 0;
 		}
 	    }
@@ -941,7 +941,7 @@ PostscriptBitmap(
 	    charsInLine += 2;
 	}
     }
-    Tcl_AppendToObj(psObj, ">", -1);
+    Tcl_AppendToObj(psObj, ">", TCL_INDEX_NONE);
 
     XDestroyImage(imagePtr);
 }
@@ -1002,7 +1002,7 @@ Tk_PostscriptStipple(
     psObj = GetPostscriptBuffer(interp);
     Tcl_AppendPrintfToObj(psObj, "%d %d ", width, height);
     PostscriptBitmap(tkwin, bitmap, 0, 0, width, height, psObj);
-    Tcl_AppendToObj(psObj, " StippleFill\n", -1);
+    Tcl_AppendToObj(psObj, " StippleFill\n", TCL_INDEX_NONE);
     return TCL_OK;
 }
 
@@ -1201,7 +1201,7 @@ TkImageGetColor(
     double *red, double *green, double *blue)
 				/* Color data to return */
 {
-    (void)cdata;
+	(void)cdata;
 
     *red   = (double) GetRValue(pixel) / 255.0;
     *green = (double) GetGValue(pixel) / 255.0;
@@ -1405,7 +1405,7 @@ TkPostscriptImage(
 			lineLen += 2;
 			if (lineLen > 60) {
 			    lineLen = 0;
-			    Tcl_AppendToObj(psObj, "\n", -1);
+			    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 			}
 			mask = 0x80;
 			data = 0x00;
@@ -1433,7 +1433,7 @@ TkPostscriptImage(
 		    lineLen += 2;
 		    if (lineLen > 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		}
 		break;
@@ -1453,7 +1453,7 @@ TkPostscriptImage(
 		    lineLen += 6;
 		    if (lineLen > 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		}
 		break;
@@ -1461,9 +1461,9 @@ TkPostscriptImage(
 	}
 	switch (level) {
 	case 0: case 1:
-	    Tcl_AppendToObj(psObj, ">\n} image\n", -1); break;
+	    Tcl_AppendToObj(psObj, ">\n} image\n", TCL_INDEX_NONE); break;
 	default:
-	    Tcl_AppendToObj(psObj, ">\n} false 3 colorimage\n", -1); break;
+	    Tcl_AppendToObj(psObj, ">\n} false 3 colorimage\n", TCL_INDEX_NONE); break;
 	}
 	Tcl_AppendPrintfToObj(psObj, "0 %d translate\n", rows);
     }
@@ -1556,17 +1556,17 @@ Tk_PostscriptPhoto(
     psObj = GetPostscriptBuffer(interp);
     switch (colorLevel) {
     case 0:
-	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", -1);
+	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", TCL_INDEX_NONE);
 	decode = "1 0";
 	bpc = 1;
 	break;
     case 1:
-	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", -1);
+	Tcl_AppendToObj(psObj, "/DeviceGray setcolorspace\n\n", TCL_INDEX_NONE);
 	decode = "0 1";
 	bpc = 8;
 	break;
     default:
-	Tcl_AppendToObj(psObj, "/DeviceRGB setcolorspace\n\n", -1);
+	Tcl_AppendToObj(psObj, "/DeviceRGB setcolorspace\n\n", TCL_INDEX_NONE);
 	decode = "0 1 0 1 0 1";
 	bpc = 8;
 	break;
@@ -1642,7 +1642,7 @@ Tk_PostscriptPhoto(
 		    lineLen += 2;
 		    if (lineLen >= 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		    mask = 0x80;
 		    data = 0x00;
@@ -1681,7 +1681,7 @@ Tk_PostscriptPhoto(
 		    lineLen += 2;
 		    if (lineLen >= 60) {
 			lineLen = 0;
-			Tcl_AppendToObj(psObj, "\n", -1);
+			Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		    }
 		    mask = 0x80;
 		    data = 0x00;
@@ -1707,7 +1707,7 @@ Tk_PostscriptPhoto(
 		lineLen += 2;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 
@@ -1729,7 +1729,7 @@ Tk_PostscriptPhoto(
 		lineLen += 2;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 	    break;
@@ -1747,7 +1747,7 @@ Tk_PostscriptPhoto(
 		lineLen += 2;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 
@@ -1767,7 +1767,7 @@ Tk_PostscriptPhoto(
 		lineLen += 6;
 		if (lineLen >= 60) {
 		    lineLen = 0;
-		    Tcl_AppendToObj(psObj, "\n", -1);
+		    Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
 		}
 	    }
 	    break;
@@ -1778,7 +1778,7 @@ Tk_PostscriptPhoto(
      * The end-of-data marker.
      */
 
-    Tcl_AppendToObj(psObj, ">\n", -1);
+    Tcl_AppendToObj(psObj, ">\n", TCL_INDEX_NONE);
     return TCL_OK;
 }
 

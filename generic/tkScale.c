@@ -155,16 +155,16 @@ static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
 static void		DestroyScale(void *memPtr);
 static double		MaxTickRoundingError(TkScale *scalePtr,
 			    double tickResolution);
-static void		ScaleCmdDeletedProc(ClientData clientData);
-static void		ScaleEventProc(ClientData clientData,
+static void		ScaleCmdDeletedProc(void *clientData);
+static void		ScaleEventProc(void *clientData,
 			    XEvent *eventPtr);
-static char *		ScaleVarProc(ClientData clientData,
+static char *		ScaleVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		ScaleWidgetObjCmd(ClientData clientData,
+static int		ScaleWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
-static void		ScaleWorldChanged(ClientData instanceData);
+static void		ScaleWorldChanged(void *instanceData);
 static void		ScaleSetVariable(TkScale *scalePtr);
 
 /*
@@ -239,7 +239,7 @@ ScaleRound(
 
 int
 Tk_ScaleObjCmd(
-    ClientData dummy,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -247,7 +247,6 @@ Tk_ScaleObjCmd(
     TkScale *scalePtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    (void)dummy;
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "pathName ?-option value ...?");
@@ -372,7 +371,7 @@ Tk_ScaleObjCmd(
 
 static int
 ScaleWidgetObjCmd(
-    ClientData clientData,	/* Information about scale widget. */
+    void *clientData,	/* Information about scale widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
@@ -485,7 +484,7 @@ ScaleWidgetObjCmd(
 	case SLIDER:	zone = "slider";  break;
 	case TROUGH2:	zone = "trough2"; break;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(zone, TCL_INDEX_NONE));
 	break;
     }
     case COMMAND_SET: {
@@ -755,7 +754,7 @@ ConfigureScale(
 
 static void
 ScaleWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC gc;
@@ -1150,7 +1149,7 @@ ComputeScaleGeometry(
 
 static void
 ScaleEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
@@ -1199,7 +1198,7 @@ ScaleEventProc(
 
 static void
 ScaleCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
@@ -1329,10 +1328,10 @@ TkRoundIntervalToResolution(
 
 static char *
 ScaleVarProc(
-    ClientData clientData,	/* Information about button. */
+    void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    TCL_UNUSED(const char *),	/* Name of variable. */
+    TCL_UNUSED(const char *),	/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
@@ -1340,8 +1339,6 @@ ScaleVarProc(
     double value;
     Tcl_Obj *valuePtr;
     int result;
-    (void)name1;
-    (void)name2;
 
     /*
      * If the variable is unset, then immediately recreate it unless the whole
@@ -1501,7 +1498,7 @@ ScaleSetVariable(
         }
 	scalePtr->flags |= SETTING_VAR;
 	Tcl_ObjSetVar2(scalePtr->interp, scalePtr->varNamePtr, NULL,
-		Tcl_NewStringObj(string, -1), TCL_GLOBAL_ONLY);
+		Tcl_NewStringObj(string, TCL_INDEX_NONE), TCL_GLOBAL_ONLY);
 	scalePtr->flags &= ~SETTING_VAR;
     }
 }

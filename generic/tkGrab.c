@@ -170,7 +170,7 @@ static void		ReleaseButtonGrab(TkDisplay *dispPtr);
 
 int
 Tk_GrabObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -357,7 +357,7 @@ Tk_GrabObjCmd(
 	} else {
 	    statusString = "local";
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(statusString, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(statusString, TCL_INDEX_NONE));
 	break;
     }
     }
@@ -523,20 +523,20 @@ Tk_Grab(
   grabError:
     if (grabResult == GrabNotViewable) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"grab failed: window not viewable", -1));
+		"grab failed: window not viewable", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "GRAB", "UNVIEWABLE", NULL);
     } else if (grabResult == AlreadyGrabbed) {
     alreadyGrabbed:
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"grab failed: another application has grab", -1));
+		"grab failed: another application has grab", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "GRAB", "GRABBED", NULL);
     } else if (grabResult == GrabFrozen) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"grab failed: keyboard or pointer frozen", -1));
+		"grab failed: keyboard or pointer frozen", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "GRAB", "FROZEN", NULL);
     } else if (grabResult == GrabInvalidTime) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"grab failed: invalid time", -1));
+		"grab failed: invalid time", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "GRAB", "BAD_TIME", NULL);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1268,7 +1268,7 @@ EatGrabEvents(
 {
     Tk_RestrictProc *prevProc;
     GrabInfo info;
-    ClientData prevArg;
+    void *prevArg;
 
     info.display = dispPtr->display;
     info.serial = serial;
@@ -1301,7 +1301,7 @@ EatGrabEvents(
 
 static Tk_RestrictAction
 GrabRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     GrabInfo *info = (GrabInfo *)arg;
