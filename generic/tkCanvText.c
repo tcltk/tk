@@ -99,9 +99,9 @@ static const Tk_CustomOption offsetOption = {
 
 static int
 UnderlineParseProc(
-    ClientData dummy,	/* Not used.*/
+    TCL_UNUSED(void *),	/* Not used.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
     char *widgRec,		/* Pointer to record for item. */
     Tcl_Size offset)			/* Offset into item (ignored). */
@@ -110,8 +110,6 @@ UnderlineParseProc(
     Tcl_Obj obj;
     int code;
     Tcl_Size underline;
-    (void)dummy;
-    (void)tkwin;
 
     if (value == NULL || *value == 0) {
 	*underlinePtr = INT_MIN; /* No underline */
@@ -125,13 +123,13 @@ UnderlineParseProc(
     code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
     if (code == TCL_OK) {
 	if (underline == TCL_INDEX_NONE) {
-	    underline = INT_MIN;
+	    underline = (Tcl_Size)INT_MIN;
 	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
 		underline++;
 	} else if (underline >= INT_MAX) {
 	    underline = INT_MAX;
 	}
-	*underlinePtr = underline;
+	*underlinePtr = (int)underline;
 
     } else {
 	Tcl_AppendResult(interp, "bad index \"", value,
@@ -140,10 +138,10 @@ UnderlineParseProc(
 	return code;
 }
 
-const char *
+static const char *
 UnderlinePrintProc(
-    ClientData dummy,	/* Ignored. */
-    Tk_Window tkwin,		/* Window containing canvas widget. */
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     char *widgRec,		/* Pointer to record for item. */
     Tcl_Size offset,			/* Pointer to record for item. */
     Tcl_FreeProc **freeProcPtr)	/* Pointer to variable to fill in with
@@ -152,8 +150,6 @@ UnderlinePrintProc(
 {
     int underline = *(int *)(widgRec + offset);
     char *p;
-    (void)dummy;
-    (void)tkwin;
 
     if (underline == INT_MIN) {
 #if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
@@ -1491,7 +1487,7 @@ GetTextIndex(
 	    && (strncmp(string, "sel.first", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "selection isn't in item", -1));
+		    "selection isn't in item", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
@@ -1500,7 +1496,7 @@ GetTextIndex(
 	    && (strncmp(string, "sel.last", length) == 0)) {
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "selection isn't in item", -1));
+		    "selection isn't in item", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
 	    return TCL_ERROR;
 	}
