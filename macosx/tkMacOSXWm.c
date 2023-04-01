@@ -178,7 +178,7 @@ static int wmTracing = 0;
  * of top-level windows.
  */
 
-static void TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
+static void TopLevelReqProc(void *dummy, Tk_Window tkwin);
 
 static const Tk_GeomMgr wmMgrType = {
     "wm",			/* name */
@@ -200,11 +200,11 @@ static NSRect		InitialWindowBounds(TkWindow *winPtr,
 			    NSWindow *macWindow);
 static int		ParseGeometry(Tcl_Interp *interp, char *string,
 			    TkWindow *winPtr);
-static void		TopLevelEventProc(ClientData clientData,
+static void		TopLevelEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		WmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *table);
-static void		UpdateGeometryInfo(ClientData clientData);
+static void		UpdateGeometryInfo(void *clientData);
 static void		UpdateSizeHints(TkWindow *winPtr);
 static void		UpdateVRootGeometry(WmInfo *wmPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -1154,7 +1154,7 @@ TkWmSetClass(
 
 int
 Tk_WmObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -4171,7 +4171,7 @@ Tk_UnsetGrid(
 
 static void
 TopLevelEventProc(
-    ClientData clientData,	/* Window for which event occurred. */
+    void *clientData,	/* Window for which event occurred. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -4258,7 +4258,7 @@ TopLevelReqProc(
 
 static void
 UpdateGeometryInfo(
-    ClientData clientData)	/* Pointer to the window's record. */
+    void *clientData)	/* Pointer to the window's record. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -5666,7 +5666,7 @@ TkMacOSXZoomToplevel(
 
 int
 TkUnsupported1ObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */

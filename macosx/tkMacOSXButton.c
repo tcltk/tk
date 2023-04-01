@@ -76,7 +76,7 @@ static void	ButtonContentDrawCB(const HIRect *bounds,
 		    ThemeButtonKind kind,
 		    const HIThemeButtonDrawInfo *info, MacButton *ptr,
 		    SInt16 depth, Boolean isColorDev);
-static void	ButtonEventProc(ClientData clientData,
+static void	ButtonEventProc(void *clientData,
 		    XEvent *eventPtr);
 static void	TkMacOSXComputeButtonParams(TkButton *butPtr,
 		    ThemeButtonKind *btnkind,
@@ -86,7 +86,7 @@ static int	TkMacOSXComputeButtonDrawParams(TkButton *butPtr,
 static void	TkMacOSXDrawButton(MacButton *butPtr, GC gc,
 		    Pixmap pixmap);
 static void	DrawButtonImageAndText(TkButton *butPtr);
-static void	PulseDefaultButtonProc(ClientData clientData);
+static void	PulseDefaultButtonProc(void *clientData);
 
 /*
  * The class procedure table for the button widgets.
@@ -179,7 +179,7 @@ TkpCreateButton(
 
 void
 TkpDisplayButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     MacButton *macButtonPtr = (MacButton *)clientData;
     TkButton *butPtr = (TkButton *)clientData;
@@ -900,7 +900,7 @@ ButtonContentDrawCB (
 
 static void
 ButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkButton *buttonPtr = (TkButton *)clientData;
@@ -1174,7 +1174,7 @@ TkMacOSXComputeButtonDrawParams(
  */
 
 static void
-PulseDefaultButtonProc(ClientData clientData)
+PulseDefaultButtonProc(void *clientData)
 {
     MacButton *mbPtr = (MacButton *)clientData;
 

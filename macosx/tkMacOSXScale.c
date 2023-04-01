@@ -51,7 +51,7 @@ static ControlActionUPP scaleActionProc = NULL; /* Pointer to func. */
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		MacScaleEventProc(ClientData clientData,
+static void		MacScaleEventProc(void *clientData,
 			    XEvent *eventPtr);
 static pascal void	ScaleActionProc(ControlRef theControl,
 			    ControlPartCode partCode);
@@ -139,7 +139,7 @@ TkpDestroyScale(
 
 void
 TkpDisplayScale(
-    ClientData clientData)	/* Widget record for scale. */
+    void *clientData)	/* Widget record for scale. */
 {
     TkScale *scalePtr = clientData;
     Tk_Window tkwin = scalePtr->tkwin;
@@ -378,7 +378,7 @@ TkpScaleElement(
 
 static void
 MacScaleEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     MacScale *macScalePtr = (MacScale *) clientData;

@@ -261,7 +261,7 @@ static int		FindArea(Tcl_Interp *interp, TkCanvas *canvasPtr,
 			    Tcl_Obj *const *objv, Tk_Uid uid, int enclosed);
 static double		GridAlign(double coord, double spacing);
 #if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9)
-static const char**	TkGetStringsFromObjs(int objc, Tcl_Obj *const *objv);
+static const char**	TkGetStringsFromObjs(Tcl_Size objc, Tcl_Obj *const *objv);
 #endif
 static void		InitCanvas(void);
 static void		PickCurrentItem(TkCanvas *canvasPtr, XEvent *eventPtr);
@@ -561,20 +561,20 @@ ItemScale(
 	    xOrigin, yOrigin, xScale, yScale);
 }
 
-static inline int
+static inline Tcl_Size
 ItemSelection(
     TkCanvas *canvasPtr,
     Tk_Item *itemPtr,
     int offset,
     char *buffer,
-    int maxBytes)
+    Tcl_Size maxBytes)
 {
     if (itemPtr == NULL || itemPtr->typePtr->selectionProc == NULL) {
-	return -1;
+	return TCL_INDEX_NONE;
     }
 
-    return itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
-	    offset, buffer, maxBytes);
+    return (Tcl_Size)itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
+	    offset, buffer, (int)maxBytes);
 }
 
 static inline void
@@ -1070,7 +1070,7 @@ CanvasWidgetCmd(
 			object, Tcl_GetString(objv[3]));
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"requested illegal events; only key, button, motion,"
-			" enter, leave, and virtual events may be used", -1));
+			" enter, leave, and virtual events may be used", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_EVENTS", NULL);
 		result = TCL_ERROR;
 		goto done;
@@ -1095,7 +1095,7 @@ CanvasWidgetCmd(
 		}
 		Tcl_ResetResult(interp);
 	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(command, TCL_INDEX_NONE));
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, canvasPtr->bindingTable, object);
@@ -1556,7 +1556,7 @@ CanvasWidgetCmd(
 
 	    for (i = 0; i < (int)itemPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, resultObj,
-			Tcl_NewStringObj(itemPtr->tagPtr[i], -1));
+			Tcl_NewStringObj(itemPtr->tagPtr[i], TCL_INDEX_NONE));
 	    }
 	    Tcl_SetObjResult(interp, resultObj);
 	}
@@ -1922,7 +1922,7 @@ CanvasWidgetCmd(
 	}
 	if ((xScale == 0.0) || (yScale == 0.0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "scale factor cannot be zero", -1));
+		    "scale factor cannot be zero", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_SCALE", NULL);
 	    result = TCL_ERROR;
 	    goto done;
@@ -2090,7 +2090,7 @@ CanvasWidgetCmd(
 	FIRST_CANVAS_ITEM_MATCHING(objv[2], &searchPtr, goto done);
 	if (itemPtr != NULL) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(itemPtr->typePtr->name, -1));
+		    Tcl_NewStringObj(itemPtr->typePtr->name, TCL_INDEX_NONE));
 	}
 	break;
     case CANV_XVIEW: {
@@ -4027,7 +4027,7 @@ TagSearchScanExpr(
 	    case '!':		/* Negate next tag or subexpr */
 		if (looking_for_tag > 1) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "too many '!' in tag search expression", -1));
+			    "too many '!' in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "COMPLEXITY", NULL);
 		    return TCL_ERROR;
@@ -4077,7 +4077,7 @@ TagSearchScanExpr(
 		}
 		if (!found_endquote) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "missing endquote in tag search expression", -1));
+			    "missing endquote in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "ENDQUOTE", NULL);
 		    return TCL_ERROR;
@@ -4085,7 +4085,7 @@ TagSearchScanExpr(
 		if (!(tag - searchPtr->rewritebuffer)) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "null quoted tag string in tag search expression",
-			    -1));
+			    TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "EMPTY", NULL);
 		    return TCL_ERROR;
@@ -4102,7 +4102,7 @@ TagSearchScanExpr(
 	    case '^':
 	    case ')':
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"unexpected operator in tag search expression", -1));
+			"unexpected operator in tag search expression", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			"UNEXPECTED", NULL);
 		return TCL_ERROR;
@@ -4166,7 +4166,7 @@ TagSearchScanExpr(
 		c = searchPtr->string[searchPtr->stringIndex++];
 		if (c != '&') {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "singleton '&' in tag search expression", -1));
+			    "singleton '&' in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "INCOMPLETE_OP", NULL);
 		    return TCL_ERROR;
@@ -4179,7 +4179,7 @@ TagSearchScanExpr(
 		c = searchPtr->string[searchPtr->stringIndex++];
 		if (c != '|') {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "singleton '|' in tag search expression", -1));
+			    "singleton '|' in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
 			    "INCOMPLETE_OP", NULL);
 		    return TCL_ERROR;
@@ -4200,7 +4200,7 @@ TagSearchScanExpr(
 	    default:		/* syntax error */
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"invalid boolean operator in tag search expression",
-			-1));
+			TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "BAD_OP",
 			NULL);
 		return TCL_ERROR;
@@ -4213,7 +4213,7 @@ TagSearchScanExpr(
 	return TCL_OK;
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "missing tag in tag search expression", -1));
+	    "missing tag in tag search expression", TCL_INDEX_NONE));
     Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "NO_TAG", NULL);
     return TCL_ERROR;
 }
@@ -5924,10 +5924,10 @@ CanvasUpdateScrollbars(
 		xOrigin + width - inset, scrollX1, scrollX2);
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, xScrollCmd, -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), TCL_INDEX_NONE);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
@@ -5942,10 +5942,10 @@ CanvasUpdateScrollbars(
 		yOrigin + height - inset, scrollY1, scrollY2);
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, yScrollCmd, -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(fractions), TCL_INDEX_NONE);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	Tcl_DecrRefCount(fractions);
 	if (result != TCL_OK) {
@@ -6105,10 +6105,10 @@ CanvasSetOrigin(
 #if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9)
 static const char **
 TkGetStringsFromObjs(
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    int i;
+    Tcl_Size i;
     const char **argv;
 
     if (objc <= 0) {
