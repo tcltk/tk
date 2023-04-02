@@ -1753,6 +1753,10 @@ WmSetAttribute(
 		} else {
 		    styleMaskValue |= styleMaskBits[index].bitvalue;
 		}
+		/*
+		 * Be sure not to change the fullscreen bit.
+		 */
+		styleMaskValue |= (NSWindowStyleMaskFullScreen & macWindow.styleMask);
 	    }
 	    /*
 	     * A resizable docmodal NSWindow or NSPanel does not work
