@@ -280,7 +280,7 @@ TkTextTagCmd(
 			(void *) tagPtr->name, Tcl_GetString(objv[4]));
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"requested illegal events; only key, button, motion,"
-			" enter, leave, and virtual events may be used", -1));
+			" enter, leave, and virtual events may be used", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
 		return TCL_ERROR;
 	    }
@@ -304,7 +304,7 @@ TkTextTagCmd(
 		}
 		Tcl_ResetResult(interp);
 	    } else {
-		Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(command, TCL_INDEX_NONE));
 	    }
 	} else {
 	    Tk_GetAllBindings(interp, textPtr->sharedTextPtr->bindingTable,
@@ -723,11 +723,11 @@ TkTextTagCmd(
 	resultObj = Tcl_NewObj();
 	TkTextPrintIndex(textPtr, &tSearch.curIndex, position);
 	Tcl_ListObjAppendElement(NULL, resultObj,
-		Tcl_NewStringObj(position, -1));
+		Tcl_NewStringObj(position, TCL_INDEX_NONE));
 	TkBTreeNextTag(&tSearch);
 	TkTextPrintIndex(textPtr, &tSearch.curIndex, position);
 	Tcl_ListObjAppendElement(NULL, resultObj,
-		Tcl_NewStringObj(position, -1));
+		Tcl_NewStringObj(position, TCL_INDEX_NONE));
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
@@ -838,9 +838,9 @@ TkTextTagCmd(
     gotPrevIndexPair:
 	resultObj = Tcl_NewObj();
 	Tcl_ListObjAppendElement(NULL, resultObj,
-		Tcl_NewStringObj(position1, -1));
+		Tcl_NewStringObj(position1, TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, resultObj,
-		Tcl_NewStringObj(position2, -1));
+		Tcl_NewStringObj(position2, TCL_INDEX_NONE));
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
@@ -1405,7 +1405,7 @@ ChangeTagPriority(
 
 void
 TkTextBindProc(
-    ClientData clientData,	/* Pointer to text widget structure. */
+    void *clientData,	/* Pointer to text widget structure. */
     XEvent *eventPtr)		/* Pointer to X event that just happened. */
 {
     TkText *textPtr = (TkText *)clientData;
@@ -1750,7 +1750,7 @@ TagBindEvent(
 	}
     }
     Tk_BindEvent(textPtr->sharedTextPtr->bindingTable, eventPtr,
-	    textPtr->tkwin, numTags, (ClientData *) nameArrPtr);
+	    textPtr->tkwin, numTags, (void **) nameArrPtr);
 
     if (numTags > NUM_BIND_TAGS) {
 	ckfree(nameArrPtr);

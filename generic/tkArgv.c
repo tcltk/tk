@@ -175,7 +175,7 @@ Tk_ParseArgv(
 	infoPtr = matchPtr;
 	switch (infoPtr->type) {
 	case TK_ARGV_CONSTANT:
-	    *((int *) infoPtr->dst) = PTR2INT(infoPtr->src);
+	    *((int *) infoPtr->dst) = (int)PTR2INT(infoPtr->src);
 	    break;
 	case TK_ARGV_INT:
 	    if (argc == 0) {
@@ -363,7 +363,7 @@ PrintUsage(
 	}
     }
 
-    message = Tcl_NewStringObj("Command-specific options:", -1);
+    message = Tcl_NewStringObj("Command-specific options:", TCL_INDEX_NONE);
     for (i = 0; ; i++) {
 	for (infoPtr = i ? defaultTable : argTable;
 		infoPtr->type != TK_ARGV_END; infoPtr++) {
@@ -376,7 +376,7 @@ PrintUsage(
 	    while (numSpaces-- > 0) {
 		Tcl_AppendToObj(message, " ", 1);
 	    }
-	    Tcl_AppendToObj(message, infoPtr->help, -1);
+	    Tcl_AppendToObj(message, infoPtr->help, TCL_INDEX_NONE);
 	    switch (infoPtr->type) {
 	    case TK_ARGV_INT:
 		Tcl_AppendPrintfToObj(message, "\n\t\tDefault value: %d",
@@ -403,7 +403,7 @@ PrintUsage(
 	if ((flags & TK_ARGV_NO_DEFAULTS) || (i > 0)) {
 	    break;
 	}
-	Tcl_AppendToObj(message, "\nGeneric options for all commands:", -1);
+	Tcl_AppendToObj(message, "\nGeneric options for all commands:", TCL_INDEX_NONE);
     }
     Tcl_SetObjResult(interp, message);
 }
