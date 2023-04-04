@@ -214,7 +214,7 @@ GetTypeCache(void)
  *
  * TkGetIntForIndex --
  *
- *	Almost the same as Tcl_GetIntForIndex, but it return an int. Accepts
+ *	Almost the same as Tcl_GetIntForIndex, but it retrieves an int. Accepts
  *	"" (empty string) as well.
  *
  * Results:
@@ -240,6 +240,7 @@ TkGetIntForIndex(
     if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr) != TCL_OK) {
 	const char *value = Tcl_GetString(indexObj);
 	if (!*value) {
+	    /* empty string */
 	    *indexPtr = TCL_INDEX_NONE;
 	    return TCL_OK;
 	}
