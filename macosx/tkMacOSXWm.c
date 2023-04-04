@@ -6220,7 +6220,6 @@ TkMacOSXMakeRealWindowExist(
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
     [window setContentView:contentView];
-    [contentView release];
     [window setDelegate:NSApp];
     [window setAcceptsMouseMovedEvents:NO];
     [window setReleasedWhenClosed:NO];
