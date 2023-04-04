@@ -686,8 +686,8 @@ GetBusy(
     Tcl_HashEntry *hPtr;
     Tk_Window tkwin;
 
-    if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), windowObj,
-	    &tkwin) != TCL_OK) {
+    tkwin = Tk_MainWindow(interp);
+    if (!tkwin || (TkGetWindowFromObj(interp, tkwin, windowObj, &tkwin) != TCL_OK)) {
 	return NULL;
     }
     hPtr = Tcl_FindHashEntry(busyTablePtr, tkwin);
@@ -743,6 +743,7 @@ HoldBusy(
     if (isNew) {
 	busyPtr = CreateBusy(interp, tkwin);
 	if (busyPtr == NULL) {
+	    Tcl_DeleteHashEntry(hPtr);
 	    return TCL_ERROR;
 	}
 	Tcl_SetHashValue(hPtr, busyPtr);
@@ -765,7 +766,7 @@ HoldBusy(
 	TkpHideBusyWindow(busyPtr);
     }
     if (result == TCL_OK) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
     }
     return result;
 }
@@ -840,7 +841,7 @@ Tk_BusyObjCmd(
 	    Tcl_ResetResult(interp);
             return TCL_OK;
 	}
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
         return TCL_OK;
 
     case BUSY_CGET:

@@ -824,9 +824,9 @@ TkDebugColor(
 	    Tcl_Obj *objPtr = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(tkColPtr->resourceRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)tkColPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(tkColPtr->objRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)tkColPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

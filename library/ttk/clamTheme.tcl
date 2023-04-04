@@ -73,12 +73,10 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TCheckbutton \
 	    -indicatorbackground "#ffffff" \
-	    -indicatorsize 7.5p \
 	    -indicatormargin {0.75p 0.75p 3p 0.75p} \
 	    -padding 1.5p
 	ttk::style configure TRadiobutton \
 	    -indicatorbackground "#ffffff" \
-	    -indicatorsize 7.5p \
 	    -indicatormargin {0.75p 0.75p 3p 0.75p} \
 	    -padding 1.5p
 	ttk::style map TCheckbutton -indicatorbackground \

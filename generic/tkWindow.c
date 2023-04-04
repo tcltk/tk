@@ -435,7 +435,7 @@ GetScreen(
     screenName = TkGetDefaultScreenName(interp, screenName);
     if (screenName == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"no display name and no $DISPLAY environment variable", -1));
+		"no display name and no $DISPLAY environment variable", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "NO_DISPLAY", NULL);
 	return NULL;
     }
@@ -446,8 +446,8 @@ GetScreen(
 	p--;
     }
     if ((*p == '.') && (p[1] != '\0')) {
-	length = p - screenName;
-	screenId = strtoul(p+1, NULL, 10);
+	length = (size_t)(p - screenName);
+	screenId = (int)strtoul(p+1, NULL, 10);
     }
 
     /*
@@ -956,7 +956,7 @@ TkCreateMainWindow(
 		mainPtr->tclUpdateObjProc2 = cmdInfo.objProc2;
 	    } else
 #endif
-	    if (!cmdInfo.objClientData ) {
+	    if (!cmdInfo.objClientData) {
 		mainPtr->tclUpdateObjProc = cmdInfo.objProc;
 	    }
 	}
@@ -1106,13 +1106,13 @@ Tk_CreateWindow(
     if (parentPtr) {
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: parent has been destroyed", -1));
+		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: its parent has -container = yes",
-		    -1));
+		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
 	    return NULL;
 	} else if (screenName == NULL) {
@@ -1170,13 +1170,13 @@ Tk_CreateAnonymousWindow(
     if (parentPtr) {
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: parent has been destroyed", -1));
+		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: its parent has -container = yes",
-		    -1));
+		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
 	    return NULL;
 	} else if (screenName == NULL) {
@@ -1258,7 +1258,7 @@ Tk_CreateWindowFromPath(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
 	return NULL;
     }
-    numChars = p-pathName;
+    numChars = (size_t)(p - pathName);
     if (numChars > FIXED_SPACE) {
 	p = (char *)ckalloc(numChars + 1);
     } else {
@@ -1285,12 +1285,12 @@ Tk_CreateWindowFromPath(
     }
     if (((TkWindow *) parent)->flags & TK_ALREADY_DEAD) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't create window: parent has been destroyed", -1));
+		"can't create window: parent has been destroyed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
 	return NULL;
     } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't create window: its parent has -container = yes", -1));
+		"can't create window: its parent has -container = yes", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
 	return NULL;
     }
@@ -1999,8 +1999,8 @@ Tk_ResizeWindow(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 
-    winPtr->changes.width = (unsigned) width;
-    winPtr->changes.height = (unsigned) height;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
     if (winPtr->window != None) {
 	XResizeWindow(winPtr->display, winPtr->window, (unsigned) width,
 		(unsigned) height);
@@ -2021,8 +2021,8 @@ Tk_MoveResizeWindow(
 
     winPtr->changes.x = x;
     winPtr->changes.y = y;
-    winPtr->changes.width = (unsigned) width;
-    winPtr->changes.height = (unsigned) height;
+    winPtr->changes.width = width;
+    winPtr->changes.height = height;
     if (winPtr->window != None) {
 	XMoveResizeWindow(winPtr->display, winPtr->window, x, y,
 		(unsigned) width, (unsigned) height);
@@ -2421,7 +2421,7 @@ Tk_NameToWindow(
 	 */
 
 	if (interp != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window",-1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window",TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
 	}
 	return NULL;
@@ -2751,7 +2751,7 @@ Tk_MainWindow(
 	}
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "this isn't a Tk application", -1));
+	    "this isn't a Tk application", TCL_INDEX_NONE));
     Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
     return NULL;
 }
@@ -2956,10 +2956,11 @@ static HMODULE tkcygwindll = NULL;
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
+extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
 int
 TkCygwinMainEx(
-    int argc,			/* Number of arguments. */
+    Tcl_Size argc,			/* Number of arguments. */
     char **argv,		/* Array of argument strings. */
     Tcl_AppInitProc *appInitProc,
 				/* Application-specific initialization
@@ -2969,7 +2970,7 @@ TkCygwinMainEx(
 {
     WCHAR name[MAX_PATH];
     size_t len;
-    void (*tkmainex)(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+    void (*tkmainex)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
     /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
     len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
@@ -2983,7 +2984,7 @@ TkCygwinMainEx(
 	/* dll is not present */
 	return 0;
     }
-    tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
+    tkmainex = (void (*)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *))
 	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
     if (!tkmainex) {
 	return 0;
@@ -3221,7 +3222,7 @@ Initialize(
 	    parent = Tcl_GetParent(parent);
 	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"no controlling parent interpreter", -1));
+			"no controlling parent interpreter", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_PARENT", NULL);
 		return TCL_ERROR;
 	    }
@@ -3242,7 +3243,7 @@ Initialize(
 
 	cmd = Tcl_NewListObj(2, NULL);
 	Tcl_ListObjAppendElement(NULL, cmd,
-		Tcl_NewStringObj("::safe::TkInit", -1));
+		Tcl_NewStringObj("::safe::TkInit", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, Tcl_GetObjResult(parent));
 
 	/*
@@ -3294,7 +3295,7 @@ Initialize(
 	    Tcl_SetVar2Ex(interp, "argv", NULL,
 		    Tcl_NewListObj(objc-1, rest+1), TCL_GLOBAL_ONLY);
 	    Tcl_SetVar2Ex(interp, "argc", NULL,
-		    Tcl_NewWideIntObj(objc-1), TCL_GLOBAL_ONLY);
+		    Tcl_NewWideIntObj((Tcl_WideInt)objc-1), TCL_GLOBAL_ONLY);
 	    ckfree(rest);
 	}
 	Tcl_DecrRefCount(parseList);
@@ -3340,13 +3341,13 @@ Initialize(
      * information parsed from argv, if any.
      */
 
-    cmd = Tcl_NewStringObj("toplevel . -class", -1);
+    cmd = Tcl_NewStringObj("toplevel . -class", TCL_INDEX_NONE);
 
     Tcl_ListObjAppendElement(NULL, cmd, classObj);
     classObj = NULL;
 
     if (displayObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-screen", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-screen", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, displayObj);
 
 	/*
@@ -3361,17 +3362,17 @@ Initialize(
 	displayObj = NULL;
     }
     if (colorMapObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-colormap", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-colormap", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, colorMapObj);
 	colorMapObj = NULL;
     }
     if (useObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-use", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-use", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, useObj);
 	useObj = NULL;
     }
     if (visualObj) {
-	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-visual", -1));
+	Tcl_ListObjAppendElement(NULL, cmd, Tcl_NewStringObj("-visual", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, cmd, visualObj);
 	visualObj = NULL;
     }
@@ -3397,7 +3398,7 @@ Initialize(
 
 	Tcl_SetVar2Ex(interp, "geometry", NULL, geometryObj, TCL_GLOBAL_ONLY);
 
-	cmd = Tcl_NewStringObj("wm geometry .", -1);
+	cmd = Tcl_NewStringObj("wm geometry .", TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, cmd, geometryObj);
 	Tcl_IncrRefCount(cmd);
 	code = Tcl_EvalObjEx(interp, cmd, 0);
@@ -3467,7 +3468,7 @@ Initialize(
     tcl_findLibrary tk $tk_version $tk_patchLevel tk.tcl TK_LIBRARY tk_library\n\
   }\n\
 }\n\
-tkInit", -1, TCL_EVAL_GLOBAL);
+tkInit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     }
     if (code == TCL_OK) {
 	/*
