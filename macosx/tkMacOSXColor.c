@@ -20,11 +20,11 @@
 #include "tkMacOSXColor.h"
 
 static Tcl_HashTable systemColors;
-static int numSystemColors;
-static int rgbColorIndex;
-static int controlAccentIndex;
-static int selectedTabTextIndex;
-static int pressedButtonTextIndex;
+static size_t numSystemColors;
+static size_t rgbColorIndex;
+static size_t controlAccentIndex;
+static size_t selectedTabTextIndex;
+static size_t pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -43,7 +43,8 @@ void initColorTable()
     SystemColorDatum *entry, *oldEntry;
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
-    int newPtr, index = 0;
+    int newPtr;
+    size_t index = 0;
     NSColorList *systemColorList = [NSColorList colorListNamed:@"System"];
     NSString *key;
 
@@ -93,13 +94,13 @@ void initColorTable()
      */
 
     for (key in [systemColorList allKeys]) {
-	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+	NSUInteger length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
 	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
 	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
-	name[0] = toupper(name[0]);
+	name[0] = (char)toupper(UCHAR(name[0]));
         if (!strcmp(name, "WindowBackgroundColor")) {
 
 	    /*
@@ -185,9 +186,9 @@ TkMacOSXRGBPixel(
 {
     MacPixel p = {0};
     p.pixel.colortype = rgbColor;
-    p.pixel.value = ((red & 0xff) << 16)  |
+    p.pixel.value = (unsigned int)(((red & 0xff) << 16)  |
 	            ((green & 0xff) << 8) |
-	            (blue & 0xff);
+	            (blue & 0xff));
     return p.ulong;
 }
 
@@ -243,7 +244,7 @@ GetEntryFromPixel(
     unsigned long pixel)
 {
     MacPixel p = {0};
-    int index = rgbColorIndex;
+    size_t index = rgbColorIndex;
 
     p.ulong = pixel;
     if (p.pixel.colortype != rgbColor) {
@@ -503,7 +504,7 @@ TkMacOSXGetNSColor(
     if (cgColor) {
 	nsColor = [NSColor colorWithColorSpace:sRGB
 			components:CGColorGetComponents(cgColor)
-			count:CGColorGetNumberOfComponents(cgColor)];
+			count:(NSInteger)CGColorGetNumberOfComponents(cgColor)];
 	CGColorRelease(cgColor);
     }
     return nsColor;
@@ -621,7 +622,7 @@ TkpGetColor(
 	    CGColorRef c = NULL;
 
 	    p.pixel.colortype = entry->type;
-	    p.pixel.value = entry->index;
+	    p.pixel.value = (unsigned int)entry->index;
 	    color.pixel = p.ulong;
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
@@ -659,9 +660,9 @@ TkpGetColor(
 #else
 		GetRGBA(entry, p.ulong, rgba);
 #endif
-		color.red   = rgba[0] * 65535.0;
-		color.green = rgba[1] * 65535.0;
-		color.blue  = rgba[2] * 65535.0;
+		color.red   = (unsigned short)(rgba[0] * 65535.0);
+		color.green = (unsigned short)(rgba[1] * 65535.0);
+		color.blue  = (unsigned short)(rgba[2] * 65535.0);
 		goto validXColor;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
@@ -669,12 +670,12 @@ TkpGetColor(
 
 		switch (n) {
 		case 4:
-		    color.red   = rgba[0] * 65535.0;
-		    color.green = rgba[1] * 65535.0;
-		    color.blue  = rgba[2] * 65535.0;
+		    color.red   = (unsigned short)(rgba[0] * 65535.0);
+		    color.green = (unsigned short)(rgba[1] * 65535.0);
+		    color.blue  = (unsigned short)(rgba[2] * 65535.0);
 		    break;
 		case 2:
-		    color.red = color.green = color.blue = rgba[0] * 65535.0;
+		    color.red = color.green = color.blue = (unsigned short)(rgba[0] * 65535.0);
 		    break;
 		default:
 		    Tcl_Panic("CGColor with %d components", (int) n);

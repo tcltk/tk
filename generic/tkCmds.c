@@ -237,7 +237,7 @@ Tk_BindObjCmd(
 	    Tcl_ResetResult(interp);
 	    return TCL_OK;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(command, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(command, TCL_INDEX_NONE));
     } else {
 	Tk_GetAllBindings(interp, winPtr->mainPtr->bindingTable, object);
     }
@@ -367,23 +367,23 @@ Tk_BindtagsObjCmd(
 	listPtr = Tcl_NewObj();
 	if (winPtr->numTags == 0) {
 	    Tcl_ListObjAppendElement(NULL, listPtr,
-		    Tcl_NewStringObj(winPtr->pathName, -1));
+		    Tcl_NewStringObj(winPtr->pathName, TCL_INDEX_NONE));
 	    Tcl_ListObjAppendElement(NULL, listPtr,
-		    Tcl_NewStringObj(winPtr->classUid, -1));
+		    Tcl_NewStringObj(winPtr->classUid, TCL_INDEX_NONE));
 	    winPtr2 = winPtr;
 	    while ((winPtr2 != NULL) && !(Tk_TopWinHierarchy(winPtr2))) {
 		winPtr2 = winPtr2->parentPtr;
 	    }
 	    if ((winPtr != winPtr2) && (winPtr2 != NULL)) {
 		Tcl_ListObjAppendElement(NULL, listPtr,
-			Tcl_NewStringObj(winPtr2->pathName, -1));
+			Tcl_NewStringObj(winPtr2->pathName, TCL_INDEX_NONE));
 	    }
 	    Tcl_ListObjAppendElement(NULL, listPtr,
-		    Tcl_NewStringObj("all", -1));
+		    Tcl_NewStringObj("all", TCL_INDEX_NONE));
 	} else {
 	    for (i = 0; i < winPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, listPtr,
-			Tcl_NewStringObj((char *) winPtr->tagPtr[i], -1));
+			Tcl_NewStringObj((char *) winPtr->tagPtr[i], TCL_INDEX_NONE));
 	    }
 	}
 	Tcl_SetObjResult(interp, listPtr);
@@ -692,7 +692,7 @@ AppnameCmd(
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"appname not accessible in a safe interpreter", -1));
+		"appname not accessible in a safe interpreter", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "SAFE", "APPLICATION", NULL);
 	return TCL_ERROR;
     }
@@ -707,7 +707,7 @@ AppnameCmd(
 	string = Tcl_GetString(objv[1]);
 	winPtr->nameUid = Tk_GetUid(Tk_SetAppName(tkwin, string));
     }
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -829,7 +829,7 @@ ScalingCmd(
 	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(d));
     } else if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"setting the scaling not accessible in a safe interpreter", -1));
+		"setting the scaling not accessible in a safe interpreter", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
 	return TCL_ERROR;
     } else if (objc == 2 + skip) {
@@ -867,7 +867,7 @@ UseinputmethodsCmd(
 
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"useinputmethods not accessible in a safe interpreter", -1));
+		"useinputmethods not accessible in a safe interpreter", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "SAFE", "INPUT_METHODS", NULL);
 	return TCL_ERROR;
     }
@@ -920,7 +920,7 @@ WindowingsystemCmd(
 #else
     windowingsystem = "x11";
 #endif
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(windowingsystem, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(windowingsystem, TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -957,7 +957,7 @@ InactiveCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "resetting the user inactivity timer "
-		    "is not allowed in a safe interpreter", -1));
+		    "is not allowed in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "INACTIVITY_TIMER", NULL);
 	    return TCL_ERROR;
 	}
@@ -1366,7 +1366,7 @@ Tk_WinfoObjCmd(
 	winPtr = winPtr->childList;
 	for ( ; winPtr != NULL; winPtr = winPtr->nextPtr) {
 	    if (!(winPtr->flags & TK_ANONYMOUS_WINDOW)) {
-		strPtr = Tcl_NewStringObj(winPtr->pathName, -1);
+		strPtr = Tcl_NewStringObj(winPtr->pathName, TCL_INDEX_NONE);
 		Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	    }
 	}
@@ -1374,7 +1374,7 @@ Tk_WinfoObjCmd(
 	break;
     }
     case WIN_CLASS:
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_Class(tkwin), -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_Class(tkwin), TCL_INDEX_NONE));
 	break;
     case WIN_COLORMAPFULL:
 	Tcl_SetObjResult(interp,
@@ -1395,7 +1395,7 @@ Tk_WinfoObjCmd(
 
 	Tk_MakeWindowExist(tkwin);
 	TkpPrintWindowId(buf, Tk_WindowId(tkwin));
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, TCL_INDEX_NONE));
 	break;
     }
     case WIN_ISMAPPED:
@@ -1404,16 +1404,16 @@ Tk_WinfoObjCmd(
     case WIN_MANAGER:
 	if (winPtr->geomMgrPtr != NULL) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(winPtr->geomMgrPtr->name, -1));
+		    Tcl_NewStringObj(winPtr->geomMgrPtr->name, TCL_INDEX_NONE));
 	}
 	break;
     case WIN_NAME:
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_Name(tkwin), -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_Name(tkwin), TCL_INDEX_NONE));
 	break;
     case WIN_PARENT:
 	if (winPtr->parentPtr != NULL) {
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewStringObj(winPtr->parentPtr->pathName, -1));
+		    Tcl_NewStringObj(winPtr->parentPtr->pathName, TCL_INDEX_NONE));
 	}
 	break;
     case WIN_POINTERX:
@@ -1499,7 +1499,7 @@ Tk_WinfoObjCmd(
     case WIN_TOPLEVEL:
 	winPtr = GetTopHierarchy(tkwin);
 	if (winPtr != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->pathName, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->pathName, TCL_INDEX_NONE));
 	}
 	break;
     case WIN_VIEWABLE: {
@@ -1526,7 +1526,7 @@ Tk_WinfoObjCmd(
 	if (string == NULL) {
 	    string = "unknown";
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(string, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(string, TCL_INDEX_NONE));
 	break;
     case WIN_VISUALID:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("0x%x", (unsigned)
@@ -1600,7 +1600,7 @@ Tk_WinfoObjCmd(
 		    Tcl_GetString(objv[2]), NULL);
 	    return TCL_ERROR;
 	}
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
 	break;
     }
     case WIN_CONTAINING:
@@ -1624,7 +1624,7 @@ Tk_WinfoObjCmd(
 	}
 	tkwin = Tk_CoordsToWindow(x, y, tkwin);
 	if (tkwin != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin),-1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin), TCL_INDEX_NONE));
 	}
 	break;
     case WIN_INTERPS:
@@ -1670,7 +1670,7 @@ Tk_WinfoObjCmd(
 
 	tkwin = (Tk_Window) winPtr;
 	if (Tk_PathName(tkwin) != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin),-1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(tkwin), TCL_INDEX_NONE));
 	}
 	break;
     }
@@ -1795,7 +1795,7 @@ Tk_WinfoObjCmd(
 		&templ, &count);
 	if (visInfoPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't find any visuals for screen", -1));
+		    "can't find any visuals for screen", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", NULL);
 	    return TCL_ERROR;
 	}
@@ -1812,7 +1812,7 @@ Tk_WinfoObjCmd(
 			(unsigned long) visInfoPtr[i].visualid);
 		strcat(buf, visualIdString);
 	    }
-	    strPtr = Tcl_NewStringObj(buf, -1);
+	    strPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
 	    Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	}
 	Tcl_SetObjResult(interp, resultPtr);
@@ -1875,7 +1875,7 @@ TkGetDisplayOf(
 	    (strncmp(string, "-displayof", length) == 0)) {
         if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "value for \"-displayof\" missing", -1));
+		    "value for \"-displayof\" missing", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "NO_VALUE", "DISPLAYOF", NULL);
 	    return TCL_INDEX_NONE;
 	}

@@ -55,9 +55,9 @@ static Tcl_ThreadDataKey dataKey;
 #define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
-static void TkMacOSXNotifyExitHandler(ClientData clientData);
-static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
-static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
+static void TkMacOSXNotifyExitHandler(void *clientData);
+static void TkMacOSXEventsSetupProc(void *clientData, int flags);
+static void TkMacOSXEventsCheckProc(void *clientData, int flags);
 
 #ifdef TK_MAC_DEBUG_EVENTS
 static const char *Tk_EventName[39] = {
@@ -104,7 +104,7 @@ static const char *Tk_EventName[39] = {
 
 static Tk_RestrictAction
 InspectQueueRestrictProc(
-     ClientData arg,
+     void *arg,
      XEvent *eventPtr)
 {
     XVirtualEvent* ve = (XVirtualEvent*) eventPtr;
@@ -128,7 +128,7 @@ InspectQueueRestrictProc(
 
 void DebugPrintQueue(void)
 {
-    ClientData oldArg;
+    void *oldArg;
     Tk_RestrictProc *oldProc;
 
     oldProc = Tk_RestrictEvents(InspectQueueRestrictProc, NULL, &oldArg);
@@ -321,7 +321,7 @@ Tk_MacOSXSetupTkNotifier(void)
 
 static void
 TkMacOSXNotifyExitHandler(
-    ClientData dummy)	/* Not used. */
+    void *dummy)	/* Not used. */
 {
     (void)dummy;
     TSD_INIT();
@@ -369,7 +369,7 @@ TkMacOSXNotifyExitHandler(
 
 void
 TkMacOSXDrawAllViews(
-    ClientData clientData)
+    void *clientData)
 {
        int count = 0, *dirtyCount = (int *)clientData;
 
@@ -453,7 +453,7 @@ static const Tcl_Time zeroBlockTime = { 0, 0 };
 
 static void
 TkMacOSXEventsSetupProc(
-    ClientData dummy,
+    void *dummy,
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];

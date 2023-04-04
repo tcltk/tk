@@ -71,10 +71,10 @@ enum macColormap {
 typedef struct {
     const char *name;
     enum colorType type;
-    int value;
+    ThemeBrush value;
     const char *macName;
     /* Fields below are filled in after or during construction of the hash table. */
-    int index;
+    size_t index;
     NSString *selector;
 } SystemColorDatum;
 
