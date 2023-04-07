@@ -328,12 +328,19 @@ addFormattedText {
     @@demo labelframe	Labelled frames
     @@demo ttkbut	The simple Themed Tk widgets
 }
+
 if {[tk windowingsystem] eq "aqua"} {
     addFormattedText {
+	@@subtitle Mac-Specific Widgets and Window Styles
 	@@new
 	@@demo mac_styles	Special widgets for macOS
+	@@new
+	@@demo mac_wm	Window styles for macOS
+	@@new
+	@@demo mac_tabs	Tabbed Windows on macOS
     }
 }
+
 addFormattedText {
     @@subtitle	Listboxes and Trees
     @@demo states	The 50 states
