@@ -20,8 +20,8 @@ image create photo ::tk::icons::error -format $::tk::svgFmt -data {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="32" height="32" version="1.1" xmlns="http://www.w3.org/2000/svg">
      <circle cx="16" cy="16" r="16" fill="#d32f2f"/>
-     <g transform="rotate(45,16,16)" fill="#ffffff">
-      <rect transform="rotate(-90)" x="-18" y="6" width="4" height="20"/>
+     <g transform="rotate(45,16,16)" fill="#fff">
+      <rect x="6" y="14" width="20" height="4"/>
       <rect x="14" y="6" width="4" height="20"/>
      </g>
     </svg>
@@ -41,7 +41,7 @@ image create photo ::tk::icons::information -format $::tk::svgFmt -data {
     <svg width="32" height="32" version="1.1" xmlns="http://www.w3.org/2000/svg">
      <circle cx="16" cy="16" r="16" fill="#2091df"/>
      <circle cx="16" cy="8" r="2" fill="#fff"/>
-     <path d="m14 12h4v14h-4z" fill="#fff" fill-rule="evenodd"/>
+     <path d="m14 12h4v14h-4z" fill="#fff"/>
     </svg>
 }
 
