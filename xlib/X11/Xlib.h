@@ -1,20 +1,28 @@
-/* $XConsortium: Xlib.h,v 11.221 93/07/02 14:13:28 gildea Exp $ */
 /*
- * Copyright 1985, 1986, 1987, 1991 by the Massachusetts Institute of Technology
- *
- * Permission to use, copy, modify, and distribute this software and its
- * documentation for any purpose and without fee is hereby granted, provided
- * that the above copyright notice appear in all copies and that both that
- * copyright notice and this permission notice appear in supporting
- * documentation, and that the name of M.I.T. not be used in advertising
- * or publicity pertaining to distribution of the software without specific,
- * written prior permission. M.I.T. makes no representations about the
- * suitability of this software for any purpose.  It is provided "as is"
- * without express or implied warranty.
- *
- * X Window System is a Trademark of MIT.
- *
- */
+
+Copyright 1985, 1986, 1987, 1991, 1998  The Open Group
+
+Permission to use, copy, modify, distribute, and sell this software and its
+documentation for any purpose is hereby granted without fee, provided that
+the above copyright notice appear in all copies and that both that
+copyright notice and this permission notice appear in supporting
+documentation.
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.  IN NO EVENT SHALL THE
+OPEN GROUP BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN
+AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+Except as contained in this notice, the name of The Open Group shall not be
+used in advertising or otherwise to promote the sale, use or other dealings
+in this Software without prior written authorization from The Open Group.
+
+*/
 
 
 /*
@@ -22,16 +30,20 @@
  *	interface library (Xlib) to the X Window System Protocol (V11).
  *	Structures and symbols starting with "_" are private to the library.
  */
-#ifndef _XLIB_H_
-#define _XLIB_H_
+#ifndef _X11_XLIB_H_
+#define _X11_XLIB_H_
 
-#define XlibSpecificationRelease 5
+#define XlibSpecificationRelease 6
 
-#if !defined(MAC_OSX_TK)
-#   include <X11/X.h>
+#include <sys/types.h>
+
+#if defined(__SCO__) || defined(__UNIXWARE__)
+#include <stdint.h>
 #endif
+
+#include <X11/X.h>
+
 #ifdef MAC_OSX_TK
-#   include <X11/X.h>
 #   define Cursor XCursor
 #   define Region XRegion
 #endif
@@ -40,16 +52,25 @@
 #include <X11/Xfuncproto.h>
 
 #ifndef X_WCHAR
-#ifdef X_NOT_STDC_ENV
-#define X_WCHAR
-#endif
-#endif
-
-#ifndef X_WCHAR
 #include <stddef.h>
+#else
+#ifdef __UNIXOS2__
+#include <stdlib.h>
 #else
 /* replace this with #include or typedef appropriate for your system */
 typedef unsigned long wchar_t;
+#endif
+#endif
+/* API mentioning "UTF8" or "utf8" is an XFree86 extension, introduced in
+   November 2000. Its presence is indicated through the following macro. */
+#define X_HAVE_UTF8_STRING 1
+
+/* The Xlib structs are full of implicit padding to properly align members.
+   We can't clean that up without breaking ABI, so tell clang not to bother
+   complaining about it. */
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wpadded"
 #endif
 
 typedef char *XPointer;
@@ -128,7 +149,9 @@ typedef int Status;
 typedef struct _XExtData {
 	int number;		/* number returned by XRegisterExtension */
 	struct _XExtData *next;	/* next item on list of data for structure */
-	int (*free_private)();	/* called to free private storage */
+	int (*free_private)(	/* called to free private storage */
+	struct _XExtData *extension
+	);
 	XPointer private_data;	/* data private to this extension. */
 } XExtData;
 
@@ -167,11 +190,11 @@ typedef struct {
 				   CapRound, CapProjecting */
 	int join_style;	 	/* JoinMiter, JoinRound, JoinBevel */
 	int fill_style;	 	/* FillSolid, FillTiled,
-				   FillStippled, FillOpaeueStippled */
+				   FillStippled, FillOpaqueStippled */
 	int fill_rule;	  	/* EvenOddRule, WindingRule */
 	int arc_mode;		/* ArcChord, ArcPieSlice */
 	Pixmap tile;		/* tile pixmap for tiling operations */
-	Pixmap stipple;		/* stipple 1 plane pixmap for stipping */
+	Pixmap stipple;		/* stipple 1 plane pixmap for stippling */
 	int ts_x_origin;	/* offset for tile or stipple operations */
 	int ts_y_origin;
         Font font;	        /* default text font for text operations */
@@ -262,7 +285,7 @@ typedef struct {
     int bit_gravity;		/* one of bit gravity values */
     int win_gravity;		/* one of the window gravity values */
     int backing_store;		/* NotUseful, WhenMapped, Always */
-    unsigned long backing_planes;/* planes to be preseved if possible */
+    unsigned long backing_planes;/* planes to be preserved if possible */
     unsigned long backing_pixel;/* value to use in restoring planes */
     Bool save_under;		/* should bits under be saved? (popups) */
     long event_mask;		/* set of events that should be saved */
@@ -312,6 +335,16 @@ typedef struct {
 } XHostAddress;
 
 /*
+ * Data structure for ServerFamilyInterpreted addresses in host routines
+ */
+typedef struct {
+	int typelength;		/* length of type string, in bytes */
+	int valuelength;	/* length of value string, in bytes */
+	char *type;		/* pointer to where to find the type string */
+	char *value;		/* pointer to where to find the address */
+} XServerInterpretedAddress;
+
+/*
  * Data structure for "image" data, used by image manipulation routines.
  */
 typedef struct _XImage {
@@ -324,27 +357,29 @@ typedef struct _XImage {
     int bitmap_bit_order;	/* LSBFirst, MSBFirst */
     int bitmap_pad;		/* 8, 16, 32 either XY or ZPixmap */
     int depth;			/* depth of image */
-    int bytes_per_line;		/* accelarator to next line */
+    int bytes_per_line;		/* accelerator to next line */
     int bits_per_pixel;		/* bits per pixel (ZPixmap) */
-    unsigned long red_mask;	/* bits in z arrangment */
+    unsigned long red_mask;	/* bits in z arrangement */
     unsigned long green_mask;
     unsigned long blue_mask;
     XPointer obdata;		/* hook for the object routines to hang on */
     struct funcs {		/* image manipulation routines */
-	struct _XImage *(*create_image)();
-#if NeedFunctionPrototypes
+	struct _XImage *(*create_image)(
+		struct _XDisplay* /* display */,
+		Visual*		/* visual */,
+		unsigned int	/* depth */,
+		int		/* format */,
+		int		/* offset */,
+		char*		/* data */,
+		unsigned int	/* width */,
+		unsigned int	/* height */,
+		int		/* bitmap_pad */,
+		int		/* bytes_per_line */);
 	int (*destroy_image)        (struct _XImage *);
 	unsigned long (*get_pixel)  (struct _XImage *, int, int);
 	int (*put_pixel)            (struct _XImage *, int, int, unsigned long);
 	struct _XImage *(*sub_image)(struct _XImage *, int, int, unsigned int, unsigned int);
 	int (*add_pixel)            (struct _XImage *, long);
-#else
-	int (*destroy_image)();
-	unsigned long (*get_pixel)();
-	int (*put_pixel)();
-	struct _XImage *(*sub_image)();
-	int (*add_pixel)();
-#endif
 	} f;
 } XImage;
 
@@ -450,7 +485,9 @@ typedef struct _XDisplay {
 	XID resource_mask;	/* resource ID mask bits */
 	XID resource_id;	/* allocator current ID */
 	int resource_shift;	/* allocator shift to correct bits */
-	XID (*resource_alloc)(); /* allocator function */
+	XID (*resource_alloc)(	/* allocator function */
+		struct _XDisplay*
+	);
 	int byte_order;		/* screen byte order, LSBFirst, MSBFirst */
 	int bitmap_unit;	/* padding and data requirements */
 	int bitmap_pad;		/* padding requirements on bitmaps */
@@ -468,7 +505,9 @@ typedef struct _XDisplay {
 	char *bufmax;		/* Output buffer maximum+1 address. */
 	unsigned max_request_size; /* maximum number 32 bit words in request*/
 	struct _XrmHashBucketRec *db;
-	int (*synchandler)();	/* Synchronization handler */
+	int (*synchandler)(	/* Synchronization handler */
+		struct _XDisplay*
+		);
 	char *display_name;	/* "host:display" string used on this connect*/
 	int default_screen;	/* default screen for operations */
 	int nscreens;		/* number of screens on this server*/
@@ -481,54 +520,13 @@ typedef struct _XDisplay {
 	XModifierKeymap *modifiermap;	/* This server's modifier keymap */
 	int keysyms_per_keycode;/* number of rows */
 	char *xdefaults;	/* contents of defaults from server */
-	char *scratch_buffer;	/* place to hang scratch buffer */
-	unsigned long scratch_length;	/* length of scratch buffer */
-	int ext_number;		/* extension number on this display */
-	struct _XExten *ext_procs; /* extensions initialized on this display */
-	/*
-	 * the following can be fixed size, as the protocol defines how
-	 * much address space is available.
-	 * While this could be done using the extension vector, there
-	 * may be MANY events processed, so a search through the extension
-	 * list to find the right procedure for each event might be
-	 * expensive if many extensions are being used.
-	 */
-	Bool (*event_vec[128])();  /* vector for wire to event */
-	Status (*wire_vec[128])(); /* vector for event to wire */
-	KeySym lock_meaning;	   /* for XLookupString */
-	struct _XLockInfo *lock;   /* multi-thread state, display lock */
-	struct _XInternalAsync *async_handlers; /* for internal async */
-	unsigned long bigreq_size; /* max size of big requests */
-	struct _XLockPtrs *lock_fns; /* pointers to threads functions */
-	/* things above this line should not move, for binary compatibility */
-	struct _XKeytrans *key_bindings; /* for XLookupString */
-	Font cursor_font;	   /* for XCreateFontCursor */
-	struct _XDisplayAtoms *atoms; /* for XInternAtom */
-	unsigned int mode_switch;  /* keyboard group modifiers */
-	struct _XContextDB *context_db; /* context database */
-	Bool (**error_vec)();      /* vector for wire to error */
-	/*
-	 * Xcms information
-	 */
-	struct {
-	   XPointer defaultCCCs;  /* pointer to an array of default XcmsCCC */
-	   XPointer clientCmaps;  /* pointer to linked list of XcmsCmapRec */
-	   XPointer perVisualIntensityMaps;
-				  /* linked list of XcmsIntensityMap */
-	} cms;
-	struct _XIMFilter *im_filters;
-	struct _XSQEvent *qfree; /* unallocated event queue elements */
-	unsigned long next_event_serial_num; /* inserted into next queue elt */
-	int (*savedsynchandler)(); /* user synchandler when Xlib usurps */
+	/* there is more to this structure, but it is private to Xlib */
 } Display;
-
-#if NeedFunctionPrototypes	/* prototypes require event type definitions */
-#undef _XEVENT_
-#endif
-#ifndef _XEVENT_
 
 #define XMaxTransChars 7
 
+#undef _XEVENT_
+#ifndef _XEVENT_
 /*
  * Definitions of specific events.
  */
@@ -615,7 +613,8 @@ typedef struct {
 	Bool send_event;	/* true if this came from a SendEvent request */
 	Display *display;	/* Display the event was read from */
 	Window window;		/* window of event */
-	int mode;		/* NotifyNormal, NotifyGrab, NotifyUngrab */
+	int mode;		/* NotifyNormal, NotifyWhileGrabbed,
+				   NotifyGrab, NotifyUngrab */
 	int detail;
 	/*
 	 * NotifyAncestor, NotifyVirtual, NotifyInferior,
@@ -916,6 +915,33 @@ typedef struct {
 	Window window;	/* window on which event was requested in event mask */
 } XAnyEvent;
 
+
+/***************************************************************
+ *
+ * GenericEvent.  This event is the standard event for all newer extensions.
+ */
+
+typedef struct
+    {
+    int            type;         /* of event. Always GenericEvent */
+    unsigned long  serial;       /* # of last request processed */
+    Bool           send_event;   /* true if from SendEvent request */
+    Display        *display;     /* Display the event was read from */
+    int            extension;    /* major opcode of extension that caused the event */
+    int            evtype;       /* actual event type. */
+    } XGenericEvent;
+
+typedef struct {
+    int            type;         /* of event. Always GenericEvent */
+    unsigned long  serial;       /* # of last request processed */
+    Bool           send_event;   /* true if from SendEvent request */
+    Display        *display;     /* Display the event was read from */
+    int            extension;    /* major opcode of extension that caused the event */
+    int            evtype;       /* actual event type. */
+    unsigned int   cookie;
+    void           *data;
+} XGenericEventCookie;
+
 /*
  * this union is defined so Xlib can always use the same sized
  * event structure internally, to avoid memory fragmentation.
@@ -953,6 +979,8 @@ typedef union _XEvent {
 	XMappingEvent xmapping;
 	XErrorEvent xerror;
 	XKeymapEvent xkeymap;
+	XGenericEvent xgeneric;
+	XGenericEventCookie xcookie;
 	XID pad[24];
 } XEvent;
 #endif
@@ -1034,7 +1062,12 @@ typedef struct {
     XRectangle      max_logical_extent;
 } XFontSetExtents;
 
-typedef struct _XFontSet *XFontSet;
+/* unused:
+typedef void (*XOMProc)();
+ */
+
+typedef struct _XOM *XOM;
+typedef struct _XOC *XOC, *XFontSet;
 
 typedef struct {
     char           *chars;
@@ -1050,10 +1083,61 @@ typedef struct {
     XFontSet        font_set;
 } XwcTextItem;
 
-typedef void (*XIMProc)();
+#define XNRequiredCharSet "requiredCharSet"
+#define XNQueryOrientation "queryOrientation"
+#define XNBaseFontName "baseFontName"
+#define XNOMAutomatic "omAutomatic"
+#define XNMissingCharSet "missingCharSet"
+#define XNDefaultString "defaultString"
+#define XNOrientation "orientation"
+#define XNDirectionalDependentDrawing "directionalDependentDrawing"
+#define XNContextualDrawing "contextualDrawing"
+#define XNFontInfo "fontInfo"
+
+typedef struct {
+    int charset_count;
+    char **charset_list;
+} XOMCharSetList;
+
+typedef enum {
+    XOMOrientation_LTR_TTB,
+    XOMOrientation_RTL_TTB,
+    XOMOrientation_TTB_LTR,
+    XOMOrientation_TTB_RTL,
+    XOMOrientation_Context
+} XOrientation;
+
+typedef struct {
+    int num_orientation;
+    XOrientation *orientation;	/* Input Text description */
+} XOMOrientation;
+
+typedef struct {
+    int num_font;
+    XFontStruct **font_struct_list;
+    char **font_name_list;
+} XOMFontInfo;
 
 typedef struct _XIM *XIM;
 typedef struct _XIC *XIC;
+
+typedef void (*XIMProc)(
+    XIM,
+    XPointer,
+    XPointer
+);
+
+typedef Bool (*XICProc)(
+    XIC,
+    XPointer,
+    XPointer
+);
+
+typedef void (*XIDProc)(
+    Display*,
+    XPointer,
+    XPointer
+);
 
 typedef unsigned long XIMStyle;
 
@@ -1073,17 +1157,20 @@ typedef struct {
 #define XIMStatusNone		0x0800L
 
 #define XNVaNestedList "XNVaNestedList"
+#define XNQueryInputStyle "queryInputStyle"
 #define XNClientWindow "clientWindow"
 #define XNInputStyle "inputStyle"
 #define XNFocusWindow "focusWindow"
 #define XNResourceName "resourceName"
 #define XNResourceClass "resourceClass"
 #define XNGeometryCallback "geometryCallback"
+#define XNDestroyCallback "destroyCallback"
 #define XNFilterEvents "filterEvents"
 #define XNPreeditStartCallback "preeditStartCallback"
 #define XNPreeditDoneCallback "preeditDoneCallback"
 #define XNPreeditDrawCallback "preeditDrawCallback"
 #define XNPreeditCaretCallback "preeditCaretCallback"
+#define XNPreeditStateNotifyCallback "preeditStateNotifyCallback"
 #define XNPreeditAttributes "preeditAttributes"
 #define XNStatusStartCallback "statusStartCallback"
 #define XNStatusDoneCallback "statusDoneCallback"
@@ -1101,31 +1188,47 @@ typedef struct {
 #define XNLineSpace "lineSpace"
 #define XNCursor "cursor"
 
+#define XNQueryIMValuesList "queryIMValuesList"
+#define XNQueryICValuesList "queryICValuesList"
+#define XNVisiblePosition "visiblePosition"
+#define XNR6PreeditCallback "r6PreeditCallback"
+#define XNStringConversionCallback "stringConversionCallback"
+#define XNStringConversion "stringConversion"
+#define XNResetState "resetState"
+#define XNHotKey "hotKey"
+#define XNHotKeyState "hotKeyState"
+#define XNPreeditState "preeditState"
+#define XNSeparatorofNestedList "separatorofNestedList"
+
 #define XBufferOverflow		-1
 #define XLookupNone		1
 #define XLookupChars		2
 #define XLookupKeySym		3
 #define XLookupBoth		4
 
-#if NeedFunctionPrototypes
 typedef void *XVaNestedList;
-#else
-typedef XPointer XVaNestedList;
-#endif
 
 typedef struct {
     XPointer client_data;
     XIMProc callback;
 } XIMCallback;
 
+typedef struct {
+    XPointer client_data;
+    XICProc callback;
+} XICCallback;
+
 typedef unsigned long XIMFeedback;
 
-#define XIMReverse	1
-#define XIMUnderline	(1<<1)
-#define XIMHighlight	(1<<2)
-#define XIMPrimary 	(1<<5)
-#define XIMSecondary	(1<<6)
-#define XIMTertiary 	(1<<7)
+#define XIMReverse		1L
+#define XIMUnderline		(1L<<1)
+#define XIMHighlight		(1L<<2)
+#define XIMPrimary	 	(1L<<5)
+#define XIMSecondary		(1L<<6)
+#define XIMTertiary	 	(1L<<7)
+#define XIMVisibleToForward 	(1L<<8)
+#define XIMVisibleToBackword 	(1L<<9)
+#define XIMVisibleToCenter 	(1L<<10)
 
 typedef struct _XIMText {
     unsigned short length;
@@ -1137,12 +1240,53 @@ typedef struct _XIMText {
     } string;
 } XIMText;
 
-typedef struct _XIMPreeditDrawCallbackStruct {
-    int caret;		/* Cursor offset within pre-edit string */
-    int chg_first;	/* Starting change position */
-    int chg_length;	/* Length of the change in character count */
-    XIMText *text;
-} XIMPreeditDrawCallbackStruct;
+typedef	unsigned long	 XIMPreeditState;
+
+#define	XIMPreeditUnKnown	0L
+#define	XIMPreeditEnable	1L
+#define	XIMPreeditDisable	(1L<<1)
+
+typedef	struct	_XIMPreeditStateNotifyCallbackStruct {
+    XIMPreeditState state;
+} XIMPreeditStateNotifyCallbackStruct;
+
+typedef	unsigned long	 XIMResetState;
+
+#define	XIMInitialState		1L
+#define	XIMPreserveState	(1L<<1)
+
+typedef unsigned long XIMStringConversionFeedback;
+
+#define	XIMStringConversionLeftEdge	(0x00000001)
+#define	XIMStringConversionRightEdge	(0x00000002)
+#define	XIMStringConversionTopEdge	(0x00000004)
+#define	XIMStringConversionBottomEdge	(0x00000008)
+#define	XIMStringConversionConcealed	(0x00000010)
+#define	XIMStringConversionWrapped	(0x00000020)
+
+typedef struct _XIMStringConversionText {
+    unsigned short length;
+    XIMStringConversionFeedback *feedback;
+    Bool encoding_is_wchar;
+    union {
+	char *mbs;
+	wchar_t *wcs;
+    } string;
+} XIMStringConversionText;
+
+typedef	unsigned short	XIMStringConversionPosition;
+
+typedef	unsigned short	XIMStringConversionType;
+
+#define	XIMStringConversionBuffer	(0x0001)
+#define	XIMStringConversionLine		(0x0002)
+#define	XIMStringConversionWord		(0x0003)
+#define	XIMStringConversionChar		(0x0004)
+
+typedef	unsigned short	XIMStringConversionOperation;
+
+#define	XIMStringConversionSubstitution	(0x0001)
+#define	XIMStringConversionRetrieval	(0x0002)
 
 typedef enum {
     XIMForwardChar, XIMBackwardChar,
@@ -1153,6 +1297,21 @@ typedef enum {
     XIMAbsolutePosition,
     XIMDontChange
 } XIMCaretDirection;
+
+typedef struct _XIMStringConversionCallbackStruct {
+    XIMStringConversionPosition position;
+    XIMCaretDirection direction;
+    XIMStringConversionOperation operation;
+    unsigned short factor;
+    XIMStringConversionText *text;
+} XIMStringConversionCallbackStruct;
+
+typedef struct _XIMPreeditDrawCallbackStruct {
+    int caret;		/* Cursor offset within pre-edit string */
+    int chg_first;	/* Starting change position */
+    int chg_length;	/* Length of the change in character count */
+    XIMText *text;
+} XIMPreeditDrawCallbackStruct;
 
 typedef enum {
     XIMIsInvisible,	/* Disable caret feedback */
@@ -1179,18 +1338,43 @@ typedef struct _XIMStatusDrawCallbackStruct {
     } data;
 } XIMStatusDrawCallbackStruct;
 
-typedef int (*XErrorHandler) (	    /* WARNING, this type not in Xlib spec */
-#if NeedFunctionPrototypes
-    Display*		/* display */,
-    XErrorEvent*	/* error_event */
-#endif
-);
+typedef struct _XIMHotKeyTrigger {
+    KeySym	 keysym;
+    int		 modifier;
+    int		 modifier_mask;
+} XIMHotKeyTrigger;
+
+typedef struct _XIMHotKeyTriggers {
+    int			 num_hot_key;
+    XIMHotKeyTrigger	*key;
+} XIMHotKeyTriggers;
+
+typedef	unsigned long	 XIMHotKeyState;
+
+#define	XIMHotKeyStateON	(0x0001L)
+#define	XIMHotKeyStateOFF	(0x0002L)
+
+typedef struct {
+    unsigned short count_values;
+    char **supported_values;
+} XIMValuesList;
 
 _XFUNCPROTOBEGIN
 
+#if defined(WIN32) && !defined(_XLIBINT_)
+#define _Xdebug *_Xdebug_p
+#endif
 
+typedef int (*XErrorHandler) (	    /* WARNING, this type not in Xlib spec */
+    Display*		/* display */,
+    XErrorEvent*	/* error_event */
+);
 
 #include "tkIntXlibDecls.h"
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif
 
 _XFUNCPROTOEND
 
@@ -1199,4 +1383,4 @@ _XFUNCPROTOEND
 #   undef Region
 #endif
 
-#endif /* _XLIB_H_ */
+#endif /* _X11_XLIB_H_ */
