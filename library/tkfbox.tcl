@@ -50,7 +50,7 @@ namespace eval ::tk::dialog::file {
 	set ::tk::Priv(fileImage)   [image create photo -format $::tk::svgFmt -data {
 	    <?xml version="1.0" encoding="UTF-8"?>
 	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <path d="m2 1h8c-0.027878-0.037171 3 2.6667 4 4v11h-12z" fill="#808080"/>
+	     <path d="m2 1h8l4 4v11h-12z" fill="#808080"/>
 	     <path d="m3 2h6.5l3.5 3.5v9.5h-10z" fill="#e8e8e8"/>
 	     <path d="m9 1v5h5v-1h-4v-4h-1z" fill="#808080"/>
 	    </svg>
