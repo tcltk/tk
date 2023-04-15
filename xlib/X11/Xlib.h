@@ -90,20 +90,20 @@ typedef int Status;
 #define QueuedAfterFlush 2
 
 #define ConnectionNumber(dpy) 	((dpy)->fd)
-#define RootWindow(dpy, scr) 	(((dpy)->screens[(scr)]).root)
+#define RootWindow(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->root)
 #define DefaultScreen(dpy) 	((dpy)->default_screen)
-#define DefaultRootWindow(dpy) 	(((dpy)->screens[(dpy)->default_screen]).root)
-#define DefaultVisual(dpy, scr) (((dpy)->screens[(scr)]).root_visual)
-#define DefaultGC(dpy, scr) 	(((dpy)->screens[(scr)]).default_gc)
-#define BlackPixel(dpy, scr) 	(((dpy)->screens[(scr)]).black_pixel)
-#define WhitePixel(dpy, scr) 	(((dpy)->screens[(scr)]).white_pixel)
+#define DefaultRootWindow(dpy) 	(ScreenOfDisplay(dpy,DefaultScreen(dpy))->root)
+#define DefaultVisual(dpy, scr) (ScreenOfDisplay(dpy,scr)->root_visual)
+#define DefaultGC(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->default_gc)
+#define BlackPixel(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->black_pixel)
+#define WhitePixel(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->white_pixel)
 #define AllPlanes 		((unsigned long)~0L)
 #define QLength(dpy) 		((dpy)->qlen)
-#define DisplayWidth(dpy, scr) 	(((dpy)->screens[(scr)]).width)
-#define DisplayHeight(dpy, scr) (((dpy)->screens[(scr)]).height)
-#define DisplayWidthMM(dpy, scr)(((dpy)->screens[(scr)]).mwidth)
-#define DisplayHeightMM(dpy, scr)(((dpy)->screens[(scr)]).mheight)
-#define DisplayPlanes(dpy, scr) (((dpy)->screens[(scr)]).root_depth)
+#define DisplayWidth(dpy, scr) 	(ScreenOfDisplay(dpy,scr)->width)
+#define DisplayHeight(dpy, scr) (ScreenOfDisplay(dpy,scr)->height)
+#define DisplayWidthMM(dpy, scr)(ScreenOfDisplay(dpy,scr)->mwidth)
+#define DisplayHeightMM(dpy, scr)(ScreenOfDisplay(dpy,scr)->mheight)
+#define DisplayPlanes(dpy, scr) (ScreenOfDisplay(dpy,scr)->root_depth)
 #define DisplayCells(dpy, scr) 	(DefaultVisual((dpy), (scr))->map_entries)
 #define ScreenCount(dpy) 	((dpy)->nscreens)
 #define ServerVendor(dpy) 	((dpy)->vendor)
@@ -122,7 +122,7 @@ typedef int Status;
 
 /* macros for screen oriented applications (toolkit) */
 #define ScreenOfDisplay(dpy, scr)(&((dpy)->screens[(scr)]))
-#define DefaultScreenOfDisplay(dpy) (&((dpy)->screens[(dpy)->default_screen]))
+#define DefaultScreenOfDisplay(dpy) ScreenOfDisplay(dpy,DefaultScreen(dpy))
 #define DisplayOfScreen(s)	((s)->display)
 #define RootWindowOfScreen(s)	((s)->root)
 #define BlackPixelOfScreen(s)	((s)->black_pixel)
@@ -244,6 +244,9 @@ typedef struct {
  * implementation dependent.  A Screen should be treated as opaque
  * by application code.
  */
+
+struct _XDisplay;		/* Forward declare before use for C++ */
+
 typedef struct {
 	XExtData *ext_data;	/* hook for extension to hang data */
 	struct _XDisplay *display;/* back pointer to display structure */
@@ -473,18 +476,23 @@ typedef struct {
  * The contents of this structure are implementation dependent.
  * A Display should be treated as opaque by application code.
  */
-typedef struct _XDisplay {
+struct _XPrivate;		/* Forward declare before use for C++ */
+struct _XrmHashBucketRec;
+
+typedef struct
+_XDisplay
+{
 	XExtData *ext_data;	/* hook for extension to hang data */
-	struct _XFreeFuncs *free_funcs; /* internal free functions */
+	struct _XPrivate *private1;
 	int fd;			/* Network socket. */
-	int conn_checker;         /* ugly thing used by _XEventsQueued */
-	int proto_major_version;/* maj. version of server's X protocol */
+	int private2;
+	int proto_major_version;/* major version of server's X protocol */
 	int proto_minor_version;/* minor version of servers X protocol */
 	char *vendor;		/* vendor of the server hardware */
-        XID resource_base;	/* resource ID base */
-	XID resource_mask;	/* resource ID mask bits */
-	XID resource_id;	/* allocator current ID */
-	int resource_shift;	/* allocator shift to correct bits */
+        XID private3;
+	XID private4;
+	XID private5;
+	int private6;
 	XID (*resource_alloc)(	/* allocator function */
 		struct _XDisplay*
 	);
@@ -494,18 +502,18 @@ typedef struct _XDisplay {
 	int bitmap_bit_order;	/* LeastSignificant or MostSignificant */
 	int nformats;		/* number of pixmap formats in list */
 	ScreenFormat *pixmap_format;	/* pixmap format list */
-	int vnumber;		/* Xlib's X protocol version number. */
+	int private8;
 	int release;		/* release of the server */
-	struct _XSQEvent *head, *tail;	/* Input event queue. */
+	struct _XPrivate *private9, *private10;
 	int qlen;		/* Length of input event queue */
 	unsigned long request;	/* sequence number of last request. */
-	char *last_req;		/* beginning of last request, or dummy */
-	char *buffer;		/* Output buffer starting address. */
-	char *bufptr;		/* Output buffer index pointer. */
-	char *bufmax;		/* Output buffer maximum+1 address. */
+	XPointer private11;
+	XPointer private12;
+	XPointer private13;
+	XPointer private14;
 	unsigned max_request_size; /* maximum number 32 bit words in request*/
 	struct _XrmHashBucketRec *db;
-	int (*synchandler)(	/* Synchronization handler */
+	int (*private15)(
 		struct _XDisplay*
 		);
 	char *display_name;	/* "host:display" string used on this connect*/
@@ -513,12 +521,12 @@ typedef struct _XDisplay {
 	int nscreens;		/* number of screens on this server*/
 	Screen *screens;	/* pointer to list of screens */
 	unsigned long motion_buffer;	/* size of motion buffer */
-	unsigned long flags;	/* internal connection flags */
+	unsigned long private16;
 	int min_keycode;	/* minimum defined keycode */
 	int max_keycode;	/* maximum defined keycode */
-	KeySym *keysyms;	/* This server's keysyms */
-	XModifierKeymap *modifiermap;	/* This server's modifier keymap */
-	int keysyms_per_keycode;/* number of rows */
+	XPointer private17;
+	XPointer private18;
+	int private19;
 	char *xdefaults;	/* contents of defaults from server */
 	/* there is more to this structure, but it is private to Xlib */
 } Display;
