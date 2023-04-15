@@ -1812,7 +1812,7 @@ WmSetAttribute(
     case WMATT_TABBINGID: {
 	NSString *oldId = [macWindow tabbingIdentifier];
 	char *valueString;
-	int length;
+	Tcl_Size length;
 	if ([NSApp macOSVersion] < 101300) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		  "Tabbing identifiers require macOS 10.13", TCL_INDEX_NONE));
@@ -2063,7 +2063,8 @@ WmAttributesCmd(
     int attribute = 0;
     NSWindow *macWindow;
     if (winPtr == NULL && objc == 5) {
-	int index, isNew = 0, length;
+	int index, isNew = 0;
+	Tcl_Size length;
 
 	/*
 	 * If we are setting an atttribute of a future window, save the value
@@ -2795,7 +2796,7 @@ WmGroupCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Tk_Window tkwin2;
     char *argv3;
-    int length;
+    Tcl_Size length;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?pathName?");
@@ -2927,7 +2928,7 @@ WmIconbitmapCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     Pixmap pixmap;
     char *str;
-    int len;
+    Tcl_Size len;
 
     if ((objc != 3) && (objc != 4)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?bitmap?");
@@ -3136,7 +3137,7 @@ WmIconnameCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     const char *argv3;
-    int length;
+    Tcl_Size length;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newName?");
@@ -3747,7 +3748,7 @@ WmProtocolCmd(
     ProtocolHandler *protPtr, *prevPtr;
     Atom protocol;
     char *cmd;
-    int cmdLength;
+    Tcl_Size cmdLength;
     Tcl_Obj *resultObj;
 
     if ((objc < 3) || (objc > 5)) {
@@ -4235,7 +4236,7 @@ WmTitleCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     char *argv3;
-    int length;
+    Tcl_Size length;
 
     if (objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "window ?newTitle?");
