@@ -465,6 +465,9 @@ VISIBILITY_HIDDEN
 @property Window tkWindow;
 @end
 
+@interface TKPanel(TKWm)
+- (void)    tkLayoutChanged;
+@end
 #pragma mark NSMenu & NSMenuItem Utilities
 
 @interface NSMenu(TKUtils)

@@ -456,7 +456,7 @@ static void ProcessAppleEvent(
 	    Tcl_DStringLength(&AEInfo->command), TCL_EVAL_GLOBAL);
 
     if (AEInfo->replyEvent && code >= 0) {
-        int reslen;
+        Tcl_Size reslen;
         const char *result = Tcl_GetStringFromObj(Tcl_GetObjResult(AEInfo->interp),
                                                   &reslen);
         if (code == TCL_OK) {

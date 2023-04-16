@@ -34,8 +34,8 @@ image create nsimage starry2 -source $starryImg -as file -width 96 -radius 10 -r
 image create nsimage field -source $fieldImg -as file -width 96 -radius 10
 image create nsimage field1 -source $fieldImg -as file -width 96 -radius 10 -pressed 1
 image create nsimage field2 -source $fieldImg -as file -width 96 -radius 10 -ring 3
-image create nsimage add -source NSAddTemplate -width 11 -height 11
-image create nsimage remove -source NSRemoveTemplate -width 11 -height 11
+image create nsimage add -source NSAddTemplate -width 20 -height 20
+image create nsimage remove -source NSRemoveTemplate -width 18 -height 4
 
 # Off state and variables for checkbuttons and radio buttons
 set off {!selected !alternate}
@@ -130,9 +130,9 @@ set feather [ttk::button $buttonFrame.feather -style ImageButton -text Tk \
 		      -image {tkfeather pressed tkfeather1}]
 set gradient [ttk::frame $buttonFrame.gradient]
 pack [ttk::button $buttonFrame.gradient.add -style GradientButton \
-		  -image add -padding 7] -side left
+	  -image add -padding {2 0}] -side left
 pack [ttk::button $buttonFrame.gradient.remove -style GradientButton \
-		-image remove -padding 7] -side left
+	  -image remove -padding {2 8}] -side left
 set disclosure [ttk::checkbutton $buttonFrame.disclosure -style DisclosureButton]
 set help [ttk::button $buttonFrame.help -style HelpButton];
 
@@ -240,20 +240,20 @@ set dark [ttk::button $appearanceFrame.dark -style ImageButton -text Dark \
 	      -image {starry pressed starry1 selected starry2} \
 	      -command "beDark $appearanceFrame $w"]
 grid $dark -row 1 -column 2 -sticky w
-if { [::tk::unsupported::MacWindowStyle isdark $w] } {
+if { [wm attributes $w -isdark] } {
     $dark state selected
 } else {
     $light state selected
 }
 proc beLight {f w} {
-    ::tk::unsupported::MacWindowStyle appearance $w aqua
+    wm attributes $w -appearance aqua
     $f.dark state !selected
     $f.light state selected
     after 10 $f.light state !hover
 }
 
 proc beDark {f w} {
-    ::tk::unsupported::MacWindowStyle appearance $w darkaqua
+    wm attributes $w -appearance darkaqua
     $f.light state !selected
     $f.dark state selected
     after 10 $f.dark state !hover
