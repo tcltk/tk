@@ -2067,7 +2067,9 @@ test unixWm-51.5 {TkWmRestackToplevel procedure, basic tests} {unix nonPortable}
 } {.raise1 .raise3}
 deleteWindows
 test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapped} unix {
+    wm geometry . +300+300
     destroy .t
+    update idletasks
     toplevel .t -width 200 -height 200 -bg green
     tkwait visibility .t
     wm geometry .t +0+0
@@ -2530,9 +2532,7 @@ test unixWm-59.3 {exit processing} unix {
 # the only thing we can really test here is the syntax.
 #
 if {[tk windowingsystem] eq "aqua"} {
-    set result_60_1 {-alpha 1.0 -fullscreen 0 -modified 0 -notify 0\
-			 -titlepath {} -topmost 0 -transparent 0\
-			 -type unsupported}
+    set result_60_1 {-alpha 1.0 -appearance auto -buttons {close miniaturize zoom} -fullscreen 0 -isdark 0 -modified 0 -notify 0 -titlepath {} -topmost 0 -transparent 0 -stylemask {titled closable miniaturizable resizable} -class nswindow -tabbingid .t -tabbingmode auto -type unsupported}
 } else {
     set result_60_1 {-alpha 1.0 -fullscreen 0 -topmost 0 -type {} -zoomed 0}
 }
