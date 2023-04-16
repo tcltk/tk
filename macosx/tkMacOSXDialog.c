@@ -1846,7 +1846,8 @@ FontchooserConfigureCmd(
     }
 
     for (i = 1; i < objc; i += 2) {
-	int optionIndex, len;
+	int optionIndex;
+	Tcl_Size len;
 
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], fontchooserOptionStrings,
 		sizeof(char *), "option", 0, &optionIndex) != TCL_OK) {

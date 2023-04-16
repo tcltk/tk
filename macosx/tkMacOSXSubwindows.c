@@ -403,7 +403,7 @@ XResizeWindow(
 
 	if (w) {
 	    if ([w styleMask] & NSFullScreenWindowMask) {
-		[w tkLayoutChanged];
+		[(TKWindow *)w tkLayoutChanged];
 	    } else {
 		NSRect r = [w contentRectForFrameRect:[w frame]];
 
