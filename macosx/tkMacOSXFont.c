@@ -489,8 +489,7 @@ endOfClusterObjCmd(
 {
     TKNSString *S;
     char *stringArg;
-    int numBytes;
-    Tcl_Size index;
+    Tcl_Size index, numBytes;
 
     if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
