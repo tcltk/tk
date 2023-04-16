@@ -302,6 +302,27 @@ static const ButtonDesign recessedDesign = {
   }
 };
 
+static const ButtonDesign sidebarDesign = {
+  .radius = 8.0,
+  .palettes = {
+    {
+      .light = {.face = 210.0, .top = 210.0, .side = 210.0, .bottom = 210.0},
+      .dark =  {.face = 129.0, .top = 129.0, .side = 129.0, .bottom = 129.0},
+      .onBits = TTK_STATE_SELECTED, .offBits = 0
+    },
+    {
+      .light = {.face = 210.0, .top = 210.0, .side = 210.0, .bottom = 210.0},
+      .dark =  {.face = 129.0, .top = 129.0, .side = 129.0, .bottom = 129.0},
+      .onBits = TTK_STATE_PRESSED, .offBits = 0
+    },
+    {
+      .light = {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
+      .dark =  {.face = 256.0, .top = 256.0, .side = 256.0, .bottom = 256.0},
+      .onBits = 0, .offBits = 0
+    }
+  }
+};
+
 static const ButtonDesign incdecDesign = {
   .radius = 5.0,
   .palettes = {
@@ -474,6 +495,7 @@ static const Ttk_StateTable ButtonAdornmentTable[] = {
 #define TkRoundedRectButton 0x8002
 #define TkRecessedButton    0x8003
 #define TkInlineButton      0x8004
+#define TkSidebarButton     0x8005
 /*
  * The struct passed as clientData when drawing Ttk buttons.
  */
@@ -509,8 +531,8 @@ static ThemeButtonParams
 			       NoThemeMetric},
     RecessedButtonParams = {TkRecessedButton, kThemeMetricPushButtonHeight,
  			    NoThemeMetric},
-    InlineButtonParams = {TkInlineButton,  kThemeMetricPushButtonHeight,
-  			  NoThemeMetric};
+    SidebarButtonParams = {TkSidebarButton, NoThemeMetric, NoThemeMetric},
+    InlineButtonParams = {TkInlineButton,  kThemeMetricPushButtonHeight, NoThemeMetric};
 
     /*
      * Others: kThemeDisclosureRight, kThemeDisclosureDown,

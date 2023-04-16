@@ -24,50 +24,35 @@ namespace eval ::tk::dialog::file {
 
     # Create the images if they did not already exist.
     if {![info exists ::tk::Priv(updirImage)]} {
-	# Based on Vimix/22/actions/go-up.svg
+	# Based on Vimix/16/actions/go-up.svg
 	# See https://github.com/vinceliuice/vimix-icon-theme
-	set ::tk::Priv(updirImage) [image create photo -format $::tk::svgFmt -data {
+	set ::tk::Priv(updirImage)  [image create photo -format $::tk::svgFmt -data {
 	    <?xml version="1.0" encoding="UTF-8"?>
-	    <svg width="22" height="22" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <defs>
-	      <style id="current-color-scheme" type="text/css">.ColorScheme-Text { color:#565656; } .ColorScheme-Highlight { color:#5294e2; }</style>
-	     </defs>
-	     <g transform="translate(3 3)">
-	      <path class="ColorScheme-Text" d="m7 14v-8l-3.5 3.5-1.5-1.5 6-6 6 6-1.5 1.5-3.5-3.5v8z"/>
-	     </g>
+	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	     <path d="m7 14v-9l-4 4-1-1 6-6 6 6-1 1-4-4v9z"/>
 	    </svg>
 	}]
     }
     if {![info exists ::tk::Priv(folderImage)]} {
-	# Based on Boston/16/places/folder.svg
-	# See https://github.com/thecheis/Boston-Icons
+	# Based on https://icons8.com/icon/JXYalxb9XWWd/folder
 	set ::tk::Priv(folderImage) [image create photo -format $::tk::svgFmt -data {
 	    <?xml version="1.0" encoding="UTF-8"?>
 	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <g>
-	      <path d="m2 1a2 2 0 0 0-0.51758 0.068359 2 2 0 0 0-0.48242 0.19922 2 2 0 0 0-0.41406 0.31836 2 2 0 0 0-0.31836 0.41406 2 2 0 0 0-0.19922 0.48242 2 2 0 0 0-0.068359 0.51758v13h2 12 2v-11-0.96094a1 1 0 0 0 0-0.039062 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0 0-0.0097656 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0 0-0.0097657 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0 0-0.0097656 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0058594 1 1 0 0 0-0.001953-0.0097656 1 1 0 0 0 0-0.0039063 1 1 0 0 0-0.025391-0.12891 1 1 0 0 0-0.042969-0.12305 1 1 0 0 0-0.058594-0.11719 1 1 0 0 0-0.072265-0.10938 1 1 0 0 0-0.085938-0.097656 1 1 0 0 0-0.097656-0.085938 1 1 0 0 0-0.10938-0.072266 1 1 0 0 0-0.11719-0.058594 1 1 0 0 0-0.12305-0.042969 1 1 0 0 0-0.12891-0.025391 1 1 0 0 0-0.13086-0.0078125h-6l-2-2h-5zm13.99 3.1367a1 1 0 0 1-0.001953 0.019531 1 1 0 0 0 0.001953-0.019531zm-0.019531 0.10547a1 1 0 0 1-0.005859 0.019531 1 1 0 0 0 0.005859-0.019531z" fill="#2d8cff"/>
-	      <path d="m9.5996 4-2.5 3h-6.0996v8h14v-10.471a0.5 0.5 0 0 1-0.001953 0.011719 0.5 0.5 0 0 0 0.001953-0.011719 0.5 0.5 0 0 0 0-0.0019531 0.5 0.5 0 0 0 0-0.027344 0.5 0.5 0 0 0-0.007812-0.085938 0.5 0.5 0 0 0-0.021485-0.085938 0.5 0.5 0 0 0-0.037109-0.078125 0.5 0.5 0 0 0-0.050782-0.072266 0.5 0.5 0 0 0-0.060546-0.060547 0.5 0.5 0 0 0-0.072266-0.050781 0.5 0.5 0 0 0-0.078125-0.037109 0.5 0.5 0 0 0-0.085937-0.021484 0.5 0.5 0 0 0-0.085938-0.0078125h-4.9004z" fill="#6fb7ff"/>
-	      <path d="m2 2a1 1 0 0 0-0.22266 0.025391 1 1 0 0 0-0.21094 0.074219 1 1 0 0 0-0.18945 0.11914 1 1 0 0 0-0.1582 0.1582 1 1 0 0 0-0.11914 0.18945 1 1 0 0 0-0.074219 0.21094 1 1 0 0 0-0.025391 0.22266v3h5.5l1.7734-2.127-1.873-1.873h-4.4004z" fill="#6fb7ff"/>
-	     </g>
+	     <path d="m0.5 13.5v-12h4.293l2 2h8.707v10z" fill="#59afff"/>
+	     <path d="m4.586 2 2 2h8.414v9h-14v-11h3.586m0.414-1h-5v13h16v-11h-9l-2-2z" fill="#2d8cff"/>
+	     <path d="m0.5 14.5v-10h4.618l2-1h8.382v11z" fill="#8cc5ff"/>
+	     <path d="m15 4v10h-14v-9h4.236l0.211-0.106 1.789-0.894h7.764m1-1h-9l-2 1h-5v11h16z" fill="#2d8cff"/>
 	    </svg>
 	}]
     }
     if {![info exists ::tk::Priv(fileImage)]} {
-	# Based on Boston/16/mimes/text-x-plain.svg
-	# See https://github.com/thecheis/Boston-Icons
+	# Based on https://icons8.com/icon/mEF_vyjYlnE3/file
 	set ::tk::Priv(fileImage)   [image create photo -format $::tk::svgFmt -data {
 	    <?xml version="1.0" encoding="UTF-8"?>
 	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <path d="m2 0h9l3 3v13h-12z" fill="#556e81"/>
-	     <path d="m3 1h7.5l2.5 2.5v11.5h-10z" fill="#fff"/>
-	     <g fill="#556e81">
-	      <path d="m10 0v4h4v-1h-3v-3z"/>
-	      <rect x="5" y="4" width="3" height="1"/>
-	      <rect x="5" y="6" width="6" height="1"/>
-	      <rect x="5" y="8" width="6" height="1"/>
-	      <rect x="5" y="10" width="6" height="1"/>
-	      <rect x="5" y="12" width="3" height="1"/>
-	     </g>
+	     <path d="m2 1h8l4 4v11h-12z" fill="#808080"/>
+	     <path d="m3 2h6.5l3.5 3.5v9.5h-10z" fill="#e8e8e8"/>
+	     <path d="m9 1v5h5v-1h-4v-4h-1z" fill="#808080"/>
 	    </svg>
 	}]
     }
