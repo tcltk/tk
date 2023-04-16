@@ -1319,6 +1319,10 @@ TextWidgetObjCmd(
 
 		Tcl_Obj *get = TextGetText(textPtr, index1Ptr, index2Ptr,
 			visible);
+#if TCL_MAJOR_VERSION < 9
+		/* For tkInter: See bug [6b49149b4e] */
+		(void)Tcl_GetUnicode(get);
+#endif
 
 		found++;
 		if (found == 1) {
