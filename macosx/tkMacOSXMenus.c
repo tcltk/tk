@@ -240,7 +240,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
 		TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
 	    Tcl_Obj *path = Tcl_GetObjResult(_eventInterp);
-	    int len;
+	    Tcl_Size len;
 
 	    Tcl_GetStringFromObj(path, &len);
 	    if (len) {
