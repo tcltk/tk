@@ -981,10 +981,10 @@ LineInsert(
     oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
     nbInsPoints = objc / 2;
-    if (beforeThis == TCL_INDEX_NONE) {
+    if (beforeThis < 0) {
 	beforeThis = 0;
     }
-    if (beforeThis + 1 > (Tcl_Size)length + 1) {
+    if (beforeThis > length) {
 	beforeThis = length;
     }
 
