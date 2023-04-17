@@ -88,7 +88,7 @@ enum {
     NSEventType eventType = [theEvent type];
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
-    NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
+    //NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
     Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
@@ -117,7 +117,8 @@ enum {
      * window attribute set to nil.
      */
 
-    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
+    if (![eventWindow isMemberOfClass:[TKWindow class]] &&
+	![eventWindow isMemberOfClass:[TKPanel class]]) {
 	if ([theEvent timestamp] == 0) {
 	    isTestingEvent = YES;
 	    eventWindow = [NSApp keyWindow];
@@ -130,7 +131,7 @@ enum {
 	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
 	}
-    } else if (!NSPointInRect(viewLocation, [contentView bounds])) {
+    } else if (!NSPointInRect(location, [contentView bounds])) {
 	isOutside = YES;
     }
     button = [theEvent buttonNumber] + Button1;
@@ -246,10 +247,10 @@ enum {
 	    NSRect bounds = [contentView bounds];
 	    NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
 	    bounds = NSInsetRect(bounds, 2.0, 2.0);
-	    if (!NSPointInRect(viewLocation, bounds)) {
+	    if (!NSPointInRect(location, bounds)) {
 		return theEvent;
 	    }
-	    if (NSPointInRect(viewLocation, grip)) {
+	    if (NSPointInRect(location, grip)) {
 		return theEvent;
 	    }
 	    if ([NSApp tkLiveResizeEnded]) {
