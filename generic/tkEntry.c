@@ -700,7 +700,7 @@ EntryWidgetObjCmd(
 		&last) != TCL_OK) {
 	    goto error;
 	}
-	if ((last + 1 >= first + 1 ) && (entryPtr->state == STATE_NORMAL)) {
+	if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
 	    code = DeleteChars(entryPtr, first, last - first);
             if (code != TCL_OK) {
                 goto error;
@@ -840,9 +840,9 @@ EntryWidgetObjCmd(
 
 		half1 = (entryPtr->selectFirst + entryPtr->selectLast)/2;
 		half2 = (entryPtr->selectFirst + entryPtr->selectLast + 1)/2;
-		if (index + 1 < half1 + 1 ) {
+		if (index < half1) {
 		    entryPtr->selectAnchor = entryPtr->selectLast;
-		} else if (index + 1 > half2 + 1 ) {
+		} else if (index > half2) {
 		    entryPtr->selectAnchor = entryPtr->selectFirst;
 		} else {
 		    /*
@@ -900,7 +900,7 @@ EntryWidgetObjCmd(
 		    &index2) != TCL_OK) {
 		goto error;
 	    }
-	    if (index + 1 >= index2 + 1 ) {
+	    if (index >= index2) {
 		entryPtr->selectFirst = TCL_INDEX_NONE;
 		entryPtr->selectLast = TCL_INDEX_NONE;
 	    } else {
@@ -995,7 +995,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	}
-	if (index + 1 >= entryPtr->numChars + 1) {
+	if (index >= entryPtr->numChars) {
 	    index = entryPtr->numChars - 1;
 	}
 	if ((int)index < 0) {
@@ -1706,7 +1706,7 @@ DisplayEntry(
 	    0, 0, Tk_Width(tkwin), Tk_Height(tkwin), 0, TK_RELIEF_FLAT);
 
     if (showSelection && (entryPtr->state != STATE_DISABLED)
-	    && (entryPtr->selectLast + 1  > entryPtr->leftIndex + 1)) {
+	    && (entryPtr->selectLast > entryPtr->leftIndex)) {
 	if (entryPtr->selectFirst <= entryPtr->leftIndex) {
 	    selStartX = entryPtr->leftX;
 	} else {
@@ -1749,7 +1749,7 @@ DisplayEntry(
 	cursorX -= (entryPtr->insertWidth == 1) ? 1 : (entryPtr->insertWidth)/2;
 	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
 		fm.ascent + fm.descent);
-	if ((entryPtr->insertPos + 1 >= entryPtr->leftIndex + 1) && cursorX < xBound) {
+	if ((entryPtr->insertPos >= entryPtr->leftIndex) && cursorX < xBound) {
 	    if (entryPtr->flags & CURSOR_ON) {
 		Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
 			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
@@ -1777,7 +1777,7 @@ DisplayEntry(
 
         if (showSelection && (entryPtr->state != STATE_DISABLED)
 	        && (entryPtr->selTextGC != entryPtr->textGC)
-	        && (entryPtr->selectFirst + 1 < entryPtr->selectLast + 1)) {
+	        && (entryPtr->selectFirst < entryPtr->selectLast)) {
 
 	    /*
 	     * Draw the selected and unselected portions separately.
@@ -1785,7 +1785,7 @@ DisplayEntry(
 
 	    Tcl_Size selFirst;
 
-	    if (entryPtr->selectFirst + 1 < entryPtr->leftIndex + 1) {
+	    if (entryPtr->selectFirst < entryPtr->leftIndex) {
 	        selFirst = entryPtr->leftIndex;
 	    } else {
 	        selFirst = entryPtr->selectFirst;
@@ -2106,7 +2106,7 @@ EntryComputeGeometry(
 	if (rightX < overflow) {
 	    maxOffScreen++;
 	}
-	if (entryPtr->leftIndex + 1 > maxOffScreen + 1) {
+	if (entryPtr->leftIndex > maxOffScreen) {
 	    entryPtr->leftIndex = maxOffScreen;
 	}
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->leftIndex, &rightX,
@@ -2214,19 +2214,19 @@ InsertChars(
      * selection.
      */
 
-    if (entryPtr->selectFirst + 1 >= index + 1) {
+    if (entryPtr->selectFirst >= index) {
 	entryPtr->selectFirst += charsAdded;
     }
-    if (entryPtr->selectLast + 1 > index + 1) {
+    if (entryPtr->selectLast > index) {
 	entryPtr->selectLast += charsAdded;
     }
-    if ((entryPtr->selectAnchor + 1 > index + 1) || (entryPtr->selectFirst + 1 >= index + 1)) {
+    if ((entryPtr->selectAnchor > index) || (entryPtr->selectFirst >= index)) {
 	entryPtr->selectAnchor += charsAdded;
     }
-    if (entryPtr->leftIndex + 1 > index + 1) {
+    if (entryPtr->leftIndex > index) {
 	entryPtr->leftIndex += charsAdded;
     }
-    if (entryPtr->insertPos + 1 >= index + 1) {
+    if (entryPtr->insertPos >= index) {
 	entryPtr->insertPos += charsAdded;
     }
     return EntryValueChanged(entryPtr, NULL);
@@ -2260,7 +2260,7 @@ DeleteChars(
     const char *string;
     char *newStr, *toDelete;
 
-    if (index + count + 1 > entryPtr->numChars + 1) {
+    if (index + count > entryPtr->numChars) {
 	count = entryPtr->numChars - index;
     }
     if ((int)count <= 0) {
@@ -2306,40 +2306,40 @@ DeleteChars(
      * change.
      */
 
-    if (entryPtr->selectFirst + 1 >= index + 1) {
-	if (entryPtr->selectFirst + 1 >= index + count + 1) {
+    if (entryPtr->selectFirst >= index) {
+	if (entryPtr->selectFirst >= index + count) {
 	    entryPtr->selectFirst -= count;
 	} else {
 	    entryPtr->selectFirst = index;
 	}
     }
-    if (entryPtr->selectLast + 1 >= index + 1) {
-	if (entryPtr->selectLast + 1 >= index + count + 1) {
+    if (entryPtr->selectLast >= index) {
+	if (entryPtr->selectLast >= index + count) {
 	    entryPtr->selectLast -= count;
 	} else {
 	    entryPtr->selectLast = index;
 	}
     }
-    if (entryPtr->selectLast + 1 <= entryPtr->selectFirst + 1) {
+    if (entryPtr->selectLast <= entryPtr->selectFirst) {
 	entryPtr->selectFirst = TCL_INDEX_NONE;
 	entryPtr->selectLast = TCL_INDEX_NONE;
     }
-    if (entryPtr->selectAnchor + 1 >= index + 1) {
-	if (entryPtr->selectAnchor + 1 >= index + count + 1) {
+    if (entryPtr->selectAnchor >= index) {
+	if (entryPtr->selectAnchor >= index + count) {
 	    entryPtr->selectAnchor -= count;
 	} else {
 	    entryPtr->selectAnchor = index;
 	}
     }
-    if (entryPtr->leftIndex + 1 > index + 1) {
-	if (entryPtr->leftIndex + 1 >= index + count + 1) {
+    if (entryPtr->leftIndex > index) {
+	if (entryPtr->leftIndex >= index + count) {
 	    entryPtr->leftIndex -= count;
 	} else {
 	    entryPtr->leftIndex = index;
 	}
     }
-    if (entryPtr->insertPos + 1 >= index + 1) {
-	if (entryPtr->insertPos + 1 >= index + count + 1) {
+    if (entryPtr->insertPos >= index) {
+	if (entryPtr->insertPos >= index + count) {
 	    entryPtr->insertPos -= count;
 	} else {
 	    entryPtr->insertPos = index;
@@ -2505,21 +2505,21 @@ EntrySetValue(
     }
 
     if (entryPtr->selectFirst != TCL_INDEX_NONE) {
-	if (entryPtr->selectFirst + 1 >= entryPtr->numChars + 1) {
+	if (entryPtr->selectFirst >= entryPtr->numChars) {
 	    entryPtr->selectFirst = TCL_INDEX_NONE;
 	    entryPtr->selectLast = TCL_INDEX_NONE;
-	} else if (entryPtr->selectLast + 1 > entryPtr->numChars + 1) {
+	} else if (entryPtr->selectLast > entryPtr->numChars) {
 	    entryPtr->selectLast = entryPtr->numChars;
 	}
     }
-    if (entryPtr->leftIndex + 1 >= entryPtr->numChars + 1) {
-	if (entryPtr->numChars + 1 > 1) {
+    if (entryPtr->leftIndex >= entryPtr->numChars) {
+	if (entryPtr->numChars > 0) {
 	    entryPtr->leftIndex = entryPtr->numChars - 1;
 	} else {
 	    entryPtr->leftIndex = 0;
 	}
     }
-    if (entryPtr->insertPos + 1 > entryPtr->numChars + 1) {
+    if (entryPtr->insertPos > entryPtr->numChars) {
 	entryPtr->insertPos = entryPtr->numChars;
     }
 
@@ -2750,7 +2750,7 @@ GetEntryIndex(
 	 * be selected, for example.
 	 */
 
-	if (roundUp && (*indexPtr + 1 < entryPtr->numChars + 1)) {
+	if (roundUp && (*indexPtr < entryPtr->numChars)) {
 	    *indexPtr += 1;
 	}
 	break;
@@ -2804,7 +2804,7 @@ EntryScanTo(
 
     newLeftIndex = entryPtr->scanMarkIndex
 	    - (10 * (x - entryPtr->scanMarkX)) / entryPtr->avgWidth;
-    if (newLeftIndex + 1 >= entryPtr->numChars + 1) {
+    if (newLeftIndex >= entryPtr->numChars) {
 	newLeftIndex = entryPtr->scanMarkIndex = entryPtr->numChars - 1;
 	entryPtr->scanMarkX = x;
     }
@@ -2865,10 +2865,10 @@ EntrySelectTo(
      * Pick new starting and ending points for the selection.
      */
 
-    if (entryPtr->selectAnchor + 1 > entryPtr->numChars + 1) {
+    if (entryPtr->selectAnchor > entryPtr->numChars) {
 	entryPtr->selectAnchor = entryPtr->numChars;
     }
-    if (entryPtr->selectAnchor + 1 <= index + 1) {
+    if (entryPtr->selectAnchor <= index) {
 	newFirst = entryPtr->selectAnchor;
 	newLast = index;
     } else {
@@ -3870,7 +3870,7 @@ SpinboxWidgetObjCmd(
 		&index) != TCL_OK) {
 	    goto error;
 	}
-	if ((index == entryPtr->numChars) && (index + 1 > 1)) {
+	if ((index == entryPtr->numChars) && (index > 0)) {
 	    index--;
 	}
 	Tk_CharBbox(entryPtr->textLayout, index, &x, &y, &width, &height);
@@ -3930,7 +3930,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	}
-	if ((last + 1 >= first + 1) && (entryPtr->state == STATE_NORMAL)) {
+	if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
 	    code = DeleteChars(entryPtr, first, last - first);
             if (code != TCL_OK) {
                 goto error;
@@ -4106,9 +4106,9 @@ SpinboxWidgetObjCmd(
 
 		half1 = (entryPtr->selectFirst + entryPtr->selectLast)/2;
 		half2 = (entryPtr->selectFirst + entryPtr->selectLast + 1)/2;
-		if (index + 1 < half1 + 1) {
+		if (index < half1) {
 		    entryPtr->selectAnchor = entryPtr->selectLast;
-		} else if (index + 1 > half2 + 1) {
+		} else if (index > half2) {
 		    entryPtr->selectAnchor = entryPtr->selectFirst;
 		} else {
 		    /*
@@ -4166,7 +4166,7 @@ SpinboxWidgetObjCmd(
 		    objv[4],& index2) != TCL_OK) {
 		goto error;
 	    }
-	    if (index + 1 >= index2 + 1) {
+	    if (index >= index2) {
 		entryPtr->selectFirst = TCL_INDEX_NONE;
 		entryPtr->selectLast = TCL_INDEX_NONE;
 	    } else {
@@ -4302,7 +4302,7 @@ SpinboxWidgetObjCmd(
 		goto error;
 	    }
 	}
-	if (index + 1 >= entryPtr->numChars + 1) {
+	if (index >= entryPtr->numChars) {
 	    index = entryPtr->numChars - 1;
 	}
 	if (index == TCL_INDEX_NONE) {
