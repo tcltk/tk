@@ -724,7 +724,7 @@ static void AdjustIndices(Entry *entryPtr, int index, int nChars)
     e->selectLast   = AdjustIndex(e->selectLast, index+g, nChars);
     e->xscroll.first= AdjustIndex(e->xscroll.first, index+g, nChars);
 
-    if (e->selectLast + 1 <= e->selectFirst + 1)
+    if (e->selectLast <= e->selectFirst)
 	e->selectFirst = e->selectLast = TCL_INDEX_NONE;
 }
 
@@ -890,10 +890,10 @@ DeleteChars(
     if (index == TCL_INDEX_NONE) {
 	index = 0;
     }
-    if (count + index + 1 > entryPtr->entry.numChars + 1) {
+    if (count + index  > entryPtr->entry.numChars) {
 	count = entryPtr->entry.numChars - index;
     }
-    if (count + 1 <= 1) {
+    if (count <= 0) {
 	return TCL_OK;
     }
 
@@ -1219,21 +1219,21 @@ static void EntryDisplay(void *clientData, Drawable d)
     showCursor =
 	   (entryPtr->core.flags & CURSOR_ON)
 	&& EntryEditable(entryPtr)
-	&& entryPtr->entry.insertPos + 1 >= leftIndex + 1
-	&& entryPtr->entry.insertPos + 1 <= rightIndex + 1
+	&& entryPtr->entry.insertPos >= leftIndex
+	&& entryPtr->entry.insertPos <= rightIndex
 	;
     showSelection =
 	   !(entryPtr->core.state & TTK_STATE_DISABLED)
 	&& selFirst != TCL_INDEX_NONE
-	&& selLast + 1 > leftIndex + 1
-	&& selFirst + 1 <= rightIndex + 1;
+	&& selLast > leftIndex
+	&& selFirst <= rightIndex;
 
     /* Adjust selection range to keep in display bounds.
      */
     if (showSelection) {
-	if (selFirst + 1 < leftIndex + 1)
+	if (selFirst < leftIndex)
 	    selFirst = leftIndex;
-	if (selLast + 1 > rightIndex + 1)
+	if (selLast > rightIndex)
 	    selLast = rightIndex;
     }
 
@@ -1445,7 +1445,7 @@ EntryIndex(
 		x - entryPtr->entry.layoutX, 0);
 
         TtkUpdateScrollInfo(entryPtr->entry.xscrollHandle);
-	if (*indexPtr + 1 < (Tcl_Size)entryPtr->entry.xscroll.first + 1) {
+	if (*indexPtr < entryPtr->entry.xscroll.first) {
 	    *indexPtr = entryPtr->entry.xscroll.first;
 	}
 
@@ -1456,7 +1456,7 @@ EntryIndex(
 	 * last character to be selected, for example.
 	 */
 
-	if (roundUp && ((Tcl_Size)*indexPtr + 1 < entryPtr->entry.numChars + 1 )) {
+	if (roundUp && (*indexPtr < entryPtr->entry.numChars)) {
 	    *indexPtr += 1;
 	}
     } else {
@@ -1489,7 +1489,7 @@ EntryBBoxCommand(
     if (EntryIndex(interp, entryPtr, objv[2], &index) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if ((index == entryPtr->entry.numChars) && (index + 1 > 1)) {
+    if ((index == entryPtr->entry.numChars) && (index > 0)) {
 	index--;
     }
     Tk_CharBbox(entryPtr->entry.textLayout, index,
@@ -1524,7 +1524,7 @@ EntryDeleteCommand(
 	return TCL_ERROR;
     }
 
-    if (last + 1 >= first + 1 && EntryEditable(entryPtr)) {
+    if (last >= first && EntryEditable(entryPtr)) {
 	return DeleteChars(entryPtr, first, last - first);
     }
     return TCL_OK;
@@ -1664,7 +1664,7 @@ static int EntrySelectionRangeCommand(
 	return TCL_OK;
     }
 
-    if (start + 1 >= end + 1 ) {
+    if (start >= end) {
 	entryPtr->entry.selectFirst = entryPtr->entry.selectLast = TCL_INDEX_NONE;
     } else {
 	entryPtr->entry.selectFirst = start;
