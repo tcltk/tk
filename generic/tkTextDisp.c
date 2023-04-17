@@ -1219,7 +1219,7 @@ LayoutDLine(
     if (elide && indexPtr->byteIndex == 0) {
 	maxBytes = 0;
 	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
-	    if (segPtr->size + 1 > 1) {
+	    if (segPtr->size > 0) {
 		if (elide == 0) {
 		    /*
 		     * We toggled a tag and the elide state changed to
@@ -1340,7 +1340,7 @@ LayoutDLine(
   connectNextLogicalLine:
     byteOffset = curIndex.byteIndex;
     segPtr = curIndex.linePtr->segPtr;
-    while ((byteOffset + 1 > 1) && (byteOffset + 1 >= segPtr->size + 1)) {
+    while ((byteOffset > 0) && (byteOffset >= segPtr->size)) {
 	byteOffset -= segPtr->size;
 	segPtr = segPtr->nextPtr;
 
@@ -1380,7 +1380,7 @@ LayoutDLine(
 	if (elide && (lastChunkPtr != NULL)
 		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
 	    elidesize = segPtr->size - byteOffset;
-	    if (segPtr->size + 1 > byteOffset + 1) {
+	    if (segPtr->size > byteOffset) {
 		curIndex.byteIndex += elidesize;
 		lastChunkPtr->numBytes += elidesize;
 		breakByteOffset = lastChunkPtr->breakIndex

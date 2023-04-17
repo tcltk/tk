@@ -646,7 +646,7 @@ static int NextTab(Notebook *nb, int index)
 
     /* Scan forward for following usable tab:
      */
-    for (nextIndex = index + 1; nextIndex + 1 < nTabs + 1; ++nextIndex) {
+    for (nextIndex = index + 1; nextIndex < nTabs; ++nextIndex) {
 	Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, nextIndex);
 	if (tab->state == TAB_STATE_NORMAL) {
 	    return nextIndex;
@@ -704,7 +704,7 @@ static void TabRemoved(void *managerData, Tcl_Size index)
 	SelectNearestTab(nb);
     }
 
-    if (index + 1 < nb->notebook.currentIndex + 1) {
+    if (index < nb->notebook.currentIndex) {
 	--nb->notebook.currentIndex;
     }
 
@@ -760,7 +760,7 @@ static int AddTab(
      */
     if (nb->notebook.currentIndex == TCL_INDEX_NONE) {
 	SelectTab(nb, destIndex);
-    } else if (nb->notebook.currentIndex + 1 >= destIndex + 1) {
+    } else if (nb->notebook.currentIndex  >= destIndex) {
 	++nb->notebook.currentIndex;
     }
 
@@ -872,7 +872,7 @@ static int GetTabIndex(
     Tcl_Interp *interp, Notebook *nb, Tcl_Obj *objPtr, Tcl_Size *index_rtn)
 {
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
-	if (status == TCL_OK && *index_rtn + 1 >= Ttk_NumberContent(nb->notebook.mgr) + 1) {
+	if (status == TCL_OK && *index_rtn  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"tab index %s out of bounds", Tcl_GetString(objPtr)));
 	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", NULL);
@@ -969,7 +969,7 @@ static int NotebookInsertCommand(
 		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
     {
 	return TCL_ERROR;
-    } else if (srcIndex + 1 >= Ttk_NumberContent(nb->notebook.mgr) + 1) {
+    } else if (srcIndex  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	srcIndex = Ttk_NumberContent(nb->notebook.mgr) - 1;
     }
 
@@ -983,7 +983,7 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (destIndex + 1 >= nContent + 1) {
+    if (destIndex  >= nContent) {
 	destIndex  = nContent - 1;
     }
     Ttk_ReorderContent(nb->notebook.mgr, srcIndex, destIndex);
@@ -993,9 +993,9 @@ static int NotebookInsertCommand(
     nb->notebook.activeIndex = TCL_INDEX_NONE;
     if (current == srcIndex) {
 	nb->notebook.currentIndex = destIndex;
-    } else if (destIndex + 1 <= current + 1 && current + 1 < srcIndex + 1) {
+    } else if (destIndex <= current && current < srcIndex) {
 	++nb->notebook.currentIndex;
-    } else if (srcIndex + 1 < current + 1 && current + 1 <= destIndex + 1) {
+    } else if (srcIndex < current && current <= destIndex) {
 	--nb->notebook.currentIndex;
     }
 
