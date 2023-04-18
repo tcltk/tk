@@ -1876,7 +1876,7 @@ GetLineIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > (2*(Tcl_Size)linePtr->numPoints)) {
 	    idx = 2*linePtr->numPoints;

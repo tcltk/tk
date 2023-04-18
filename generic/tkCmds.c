@@ -818,7 +818,7 @@ ScalingCmd(
     double d;
 
     skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
-    if (skip == TCL_INDEX_NONE) {
+    if (skip < 0) {
 	return TCL_ERROR;
     }
     screenPtr = Tk_Screen(tkwin);
@@ -873,7 +873,7 @@ UseinputmethodsCmd(
     }
 
     skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
-    if (skip == TCL_INDEX_NONE) {
+    if (skip < 0) {
 	return TCL_ERROR;
     }
     dispPtr = ((TkWindow *) tkwin)->dispPtr;
@@ -934,7 +934,7 @@ InactiveCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     Tcl_Size skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
 
-    if (skip == TCL_INDEX_NONE) {
+    if (skip < 0) {
 	return TCL_ERROR;
     }
     if (objc == 1 + skip) {

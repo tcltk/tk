@@ -3072,7 +3072,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == TCL_INDEX_NONE
+    if (dInfoPtr->metricEpoch == -1
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -3256,7 +3256,7 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == TCL_INDEX_NONE && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
 
 
 		/*
