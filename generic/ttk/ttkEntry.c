@@ -363,7 +363,7 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if (entryPtr->entry.selectFirst == TCL_INDEX_NONE || (!entryPtr->entry.exportSelection)
+    if (entryPtr->entry.selectFirst < 0 || (!entryPtr->entry.exportSelection)
 	    || Tcl_IsSafe(entryPtr->core.interp)) {
 	return TCL_INDEX_NONE;
     }
@@ -887,7 +887,7 @@ DeleteChars(
     char *newBytes;
     int code;
 
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	index = 0;
     }
     if (count + index  > entryPtr->entry.numChars) {
@@ -1033,7 +1033,7 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 
     /* Claim the selection, in case we've suddenly started exporting it.
      */
-    if (entryPtr->entry.exportSelection && (entryPtr->entry.selectFirst != TCL_INDEX_NONE)
+    if (entryPtr->entry.exportSelection && (entryPtr->entry.selectFirst >= 0)
 	    && (!Tcl_IsSafe(entryPtr->core.interp))) {
 	EntryOwnSelection(entryPtr);
     }
@@ -1224,7 +1224,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	;
     showSelection =
 	   !(entryPtr->core.state & TTK_STATE_DISABLED)
-	&& selFirst != TCL_INDEX_NONE
+	&& selFirst >= 0
 	&& selLast > leftIndex
 	&& selFirst <= rightIndex;
 
@@ -1397,7 +1397,7 @@ EntryIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->entry.numChars - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > entryPtr->entry.numChars) {
 	    idx = entryPtr->entry.numChars;
@@ -1415,7 +1415,7 @@ EntryIndex(
     } else if (strncmp(string, "right", length) == 0) {	/* for debugging */
 	*indexPtr = entryPtr->entry.xscroll.last;
     } else if (strncmp(string, "sel.", 4) == 0) {
-	if (entryPtr->entry.selectFirst == TCL_INDEX_NONE) {
+	if (entryPtr->entry.selectFirst < 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
 		    Tk_PathName(entryPtr->core.tkwin)));
@@ -1640,7 +1640,7 @@ static int EntrySelectionPresentCommand(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp,
-	    Tcl_NewWideIntObj(entryPtr->entry.selectFirst != TCL_INDEX_NONE));
+	    Tcl_NewWideIntObj(entryPtr->entry.selectFirst >= 0));
     return TCL_OK;
 }
 
@@ -1856,7 +1856,7 @@ static int ComboboxCurrentCommand(
     if (objc == 2) {
 	/* Check if currentIndex still valid:
 	 */
-	if (currentIndex == TCL_INDEX_NONE
+	if (currentIndex < 0
 	     || currentIndex >= nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
@@ -1880,7 +1880,7 @@ static int ComboboxCurrentCommand(
 	Tcl_Size idx;
 
 	if (TCL_OK == TkGetIntForIndex(objv[2], nValues - 1, 0, &idx)) {
-	    if (idx == TCL_INDEX_NONE || idx >= nValues) {
+	    if (idx < 0 || idx >= nValues) {
 	        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		        "index \"%s\" out of range", Tcl_GetString(objv[2])));
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
