@@ -2678,7 +2678,7 @@ GetEntryIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(indexObj, entryPtr->numChars - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > entryPtr->numChars) {
 	    idx = entryPtr->numChars;
@@ -2703,7 +2703,7 @@ GetEntryIndex(
 	*indexPtr = entryPtr->insertPos;
 	break;
     case 's':
-	if (entryPtr->selectFirst == TCL_INDEX_NONE) {
+	if (entryPtr->selectFirst < 0) {
 	    Tcl_ResetResult(interp);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "selection isn't in widget %s",
@@ -2808,7 +2808,7 @@ EntryScanTo(
 	newLeftIndex = entryPtr->scanMarkIndex = entryPtr->numChars - 1;
 	entryPtr->scanMarkX = x;
     }
-    if (newLeftIndex == TCL_INDEX_NONE) {
+    if (newLeftIndex < 0) {
 	newLeftIndex = entryPtr->scanMarkIndex = 0;
 	entryPtr->scanMarkX = x;
     }
@@ -2874,7 +2874,7 @@ EntrySelectTo(
     } else {
 	newFirst = index;
 	newLast = entryPtr->selectAnchor;
-	if (newLast == TCL_INDEX_NONE) {
+	if (newLast < 0) {
 	    newFirst = newLast = TCL_INDEX_NONE;
 	}
     }
@@ -2922,7 +2922,7 @@ EntryFetchSelection(
     const char *string;
     const char *selStart, *selEnd;
 
-    if ((entryPtr->selectFirst == TCL_INDEX_NONE) || (!entryPtr->exportSelection)
+    if ((entryPtr->selectFirst < 0) || (!entryPtr->exportSelection)
 	    || Tcl_IsSafe(entryPtr->interp)) {
 	return -1;
     }
@@ -4305,7 +4305,7 @@ SpinboxWidgetObjCmd(
 	if (index >= entryPtr->numChars) {
 	    index = entryPtr->numChars - 1;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    index = 0;
 	}
 	entryPtr->leftIndex = index;

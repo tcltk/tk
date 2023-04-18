@@ -6234,7 +6234,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if (info.extendStart == TCL_INDEX_NONE) {
+		    if (info.extendStart < 0) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -6333,7 +6333,7 @@ SearchCore(
 			if ((match &&
 				firstOffset + info.matches[0].end != (Tcl_Size) lastTotal &&
 				firstOffset + info.matches[0].end < prevFullLine)
-				|| info.extendStart == TCL_INDEX_NONE) {
+				|| info.extendStart < 0) {
 			    break;
 			}
 
@@ -6483,7 +6483,7 @@ SearchCore(
 		 * previous match.
 		 */
 
-		if (matchOffset == TCL_INDEX_NONE ||
+		if (matchOffset == -1 ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
 			&& ((firstOffset < matchOffset)
 			|| ((firstOffset + info.matches[0].end
