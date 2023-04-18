@@ -425,7 +425,7 @@ StdinProc(
 
     length = Tcl_Gets(chan, &isPtr->line);
 
-    if ((length == TCL_INDEX_NONE) && !isPtr->gotPartial) {
+    if ((length < 0) && !isPtr->gotPartial) {
 	if (isPtr->tty) {
 	    /*
 	     * Would be better to find a way to exit the mainLoop? Or perhaps

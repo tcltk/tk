@@ -122,7 +122,7 @@ UnderlineParseProc(
     obj.typePtr = NULL;
     code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
     if (code == TCL_OK) {
-	if (underline == TCL_INDEX_NONE) {
+	if (underline < 0) {
 	    underline = (Tcl_Size)INT_MIN;
 	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
 		underline++;
@@ -1468,7 +1468,7 @@ GetTextIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > textPtr->numChars) {
 	    idx = textPtr->numChars;
@@ -1563,7 +1563,7 @@ SetTextCursor(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	textPtr->insertPos = 0;
     } else if (index > textPtr->numChars) {
 	textPtr->insertPos = textPtr->numChars;

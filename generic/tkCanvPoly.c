@@ -1720,7 +1720,7 @@ GetPolygonIndex(
     Tcl_Size count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
     if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx >= INT_MAX - ((INT_MAX) % count)) {
 	    idx = count;
