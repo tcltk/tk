@@ -419,7 +419,7 @@ static int AddPane(
     if (!Ttk_Maintainable(interp, window, pw->core.tkwin)) {
 	return TCL_ERROR;
     }
-    if (Ttk_ContentIndex(pw->paned.mgr, window) != TCL_INDEX_NONE) {
+    if (Ttk_ContentIndex(pw->paned.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s already added", Tk_PathName(window)));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", NULL);
@@ -671,7 +671,7 @@ static int PanedInsertCommand(
     }
 
     srcIndex = Ttk_ContentIndex(pw->paned.mgr, window);
-    if (srcIndex == TCL_INDEX_NONE) { /* New content: */
+    if (srcIndex < 0) { /* New content: */
 	return AddPane(interp, pw, destIndex, window, objc-4, objv+4);
     } /* else -- move existing content: */
 
