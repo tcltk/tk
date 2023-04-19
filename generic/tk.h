@@ -661,11 +661,15 @@ typedef struct Tk_GeomMgr {
  *----------------------------------------------------------------------
  */
 
-#define VirtualEvent	    (MappingNotify + 1)
-#define ActivateNotify	    (MappingNotify + 2)
-#define DeactivateNotify    (MappingNotify + 3)
-#define MouseWheelEvent     (MappingNotify + 4)
-#define TK_LASTEVENT	    (MappingNotify + 5)
+#if TCL_MAJOR_VERSION > 8
+#define VirtualEvent	    (MappingNotify + 2)
+#else
+#define VirtualEvent	    (MappingNotify + 1) /* Conflicts with GenericEvent */
+#endif
+#define ActivateNotify	    (VirtualEvent + 1)
+#define DeactivateNotify    (VirtualEvent + 2)
+#define MouseWheelEvent     (VirtualEvent + 3)
+#define TK_LASTEVENT	    (VirtualEvent + 4)
 
 #define MouseWheelMask	    (1L << 28)
 #define ActivateMask	    (1L << 29)
