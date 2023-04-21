@@ -539,7 +539,8 @@ proc ::tk::TextClosestGap {w x y} {
     if {$bbox eq ""} {
 	return $pos
     }
-    if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
+    if {($y < [lindex [$w dlineinfo $pos] 1]) ||
+            ($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
 	return $pos
     }
     $w index "$pos + 1 char"
