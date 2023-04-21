@@ -667,7 +667,7 @@ static TreeColumn *GetColumn(
     /* Check for index:
      */
     if (TkGetIntForIndex(columnIDObj, tv->tree.nColumns - 1, 1, &columnIndex) == TCL_OK) {
-	if (columnIndex == TCL_INDEX_NONE || columnIndex >= tv->tree.nColumns) {
+	if (columnIndex < 0 || columnIndex >= tv->tree.nColumns) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "Column index \"%s\" out of bounds",
 		    Tcl_GetString(columnIDObj)));
@@ -693,7 +693,7 @@ static TreeColumn *FindColumn(
 
     if (sscanf(Tcl_GetString(columnIDObj), "#%" TKSIZET_MODIFIER "d", &colno) == 1)
     {	/* Display column specification, #n */
-	if (colno != TCL_INDEX_NONE && (Tcl_Size)colno < tv->tree.nDisplayColumns) {
+	if (colno >= 0 && (Tcl_Size)colno < tv->tree.nDisplayColumns) {
 	    return tv->tree.displayColumns[colno];
 	}
 	/* else */
@@ -1225,7 +1225,7 @@ static void TreeviewBindEventProc(void *clientData, XEvent *event)
     /*
      * Pick up any cell tags.
      */
-    if (colno != TCL_INDEX_NONE) {
+    if (colno >= 0) {
 	column = tv->tree.displayColumns[colno];
 	if (column == &tv->tree.column0) {
 	    colno = 0;
@@ -1826,7 +1826,7 @@ static TreeRegion IdentifyRegion(Treeview *tv, int x, int y)
     Tcl_Size colno = IdentifyDisplayColumn(tv, x, &x1);
 
     if (Ttk_BoxContains(tv->tree.headingArea, x, y)) {
-	if (colno == TCL_INDEX_NONE) {
+	if (colno < 0) {
 	    return REGION_NOTHING;
 	} else if (-HALO <= x1 - x  && x1 - x <= HALO) {
 	    return REGION_SEPARATOR;
@@ -2769,7 +2769,7 @@ static int TreeviewHorribleIdentify(
     }
 
     dColumnNumber = IdentifyDisplayColumn(tv, x, &x1);
-    if (dColumnNumber == TCL_INDEX_NONE) {
+    if (dColumnNumber < 0) {
 	goto done;
     }
     snprintf(dcolbuf, sizeof(dcolbuf), "#%" TKSIZET_MODIFIER "u", dColumnNumber);
@@ -2862,7 +2862,7 @@ static int TreeviewIdentifyCommand(
     region = IdentifyRegion(tv, x, y);
     item = IdentifyItem(tv, y);
     colno = IdentifyDisplayColumn(tv, x, &x1);
-    column = (colno != TCL_INDEX_NONE) ?  tv->tree.displayColumns[colno] : NULL;
+    column = (colno >= 0) ?  tv->tree.displayColumns[colno] : NULL;
 
     switch (submethod)
     {
@@ -2878,13 +2878,13 @@ static int TreeviewIdentifyCommand(
 	    break;
 
 	case I_COLUMN :
-	    if (colno != TCL_INDEX_NONE) {
+	    if (colno >= 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno));
 	    }
 	    break;
 
 	case I_CELL :
-	    if (item && colno != TCL_INDEX_NONE) {
+	    if (item && colno >= 0) {
 		Tcl_Obj *elem[2];
 		elem[0] = ItemID(tv, item);
 		elem[1] = Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno);

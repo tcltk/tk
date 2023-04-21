@@ -315,7 +315,7 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     Tcl_Size index = Ttk_ContentIndex(mgr, window);
 
-    if (index != TCL_INDEX_NONE) {
+    if (index >= 0) {
 	int reqWidth = Tk_ReqWidth(window);
 	int reqHeight= Tk_ReqHeight(window);
 	if (mgr->managerSpec->ContentRequest(
@@ -330,7 +330,7 @@ void Ttk_LostContentProc(ClientData clientData, Tk_Window window)
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     Tcl_Size index = Ttk_ContentIndex(mgr, window);
 
-    /* ASSERT: index != TCL_INDEX_NONE */
+    /* ASSERT: index >= 0 */
     RemoveContent(mgr, index);
 }
 
@@ -431,7 +431,7 @@ Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
     for (index = 0; index < mgr->nContent; ++index)
 	if (mgr->content[index]->window == window)
 	    return index;
-    return TCL_INDEX_NONE;
+    return -1;
 }
 
 /* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, indexPtr) --
@@ -453,7 +453,7 @@ int Ttk_GetContentIndexFromObj(
     /* Try interpreting as an integer first:
      */
     if (TkGetIntForIndex(objPtr, mgr->nContent - 1, 1, &index) == TCL_OK) {
-	if (index == TCL_INDEX_NONE || index > mgr->nContent) {
+	if (index < 0 || index > mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"Managed window index %d out of bounds", (int)index));
 	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", NULL);
@@ -468,7 +468,7 @@ int Ttk_GetContentIndexFromObj(
     if ((*string == '.') &&
 	    (tkwin = Tk_NameToWindow(interp, string, mgr->window))) {
 	index = Ttk_ContentIndex(mgr, tkwin);
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s is not managed by %s", string,
 		    Tk_PathName(mgr->window)));

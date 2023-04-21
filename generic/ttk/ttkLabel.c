@@ -176,7 +176,7 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 
     if (text->underlineObj != NULL) {
 	TkGetIntForIndex(text->underlineObj, TCL_INDEX_END, 0, &underline);
-	if (underline != TCL_INDEX_NONE) {
+	if (underline >= 0) {
 	    if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
 		underline++;
 	    }
