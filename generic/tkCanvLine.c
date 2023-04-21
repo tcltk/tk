@@ -981,10 +981,10 @@ LineInsert(
     oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
     nbInsPoints = objc / 2;
-    if (beforeThis == TCL_INDEX_NONE) {
+    if (beforeThis < 0) {
 	beforeThis = 0;
     }
-    if (beforeThis + 1 > (Tcl_Size)length + 1) {
+    if (beforeThis > length) {
 	beforeThis = length;
     }
 
@@ -1876,7 +1876,7 @@ GetLineIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > (2*(Tcl_Size)linePtr->numPoints)) {
 	    idx = 2*linePtr->numPoints;
