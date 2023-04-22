@@ -7717,6 +7717,22 @@ test text-37.1 "bug #dd9667635d: text anchor not set" -setup {
     interp bgerror {} $save
     unset -nocomplain save ::my_error
 } -result {}
+
+
+test text-38.1 {Extending selection with mouse going outside the widget - Bug a9cf210a42} -setup {
+    pack [text .t -width 40 -height 10]
+    for {set n 1} {$n <= 5} {incr n} {
+        .t insert end "This is line $i of text\n"
+    }
+    update
+} -body {
+    event generate .t <Button-1> -x 50 -y 50
+    event generate .t <B1-Motion> -x 50 -y -50
+    .t index sel.first
+} -cleanup {
+    destroy .t
+} -result {1.0}
+
 
 # cleanup
 cleanupTests
