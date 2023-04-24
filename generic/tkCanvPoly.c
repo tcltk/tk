@@ -1022,7 +1022,8 @@ PolygonInsert(
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int length, oriNumPoints, objc, nbInsPoints, i;
+    int length, oriNumPoints, nbInsPoints, i;
+    Tcl_Size objc;
     Tcl_Obj **objv;
     double *newCoordPtr;
     Tk_State state = itemPtr->state;
