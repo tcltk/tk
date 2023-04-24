@@ -419,7 +419,7 @@ static int AddPane(
     if (!Ttk_Maintainable(interp, window, pw->core.tkwin)) {
 	return TCL_ERROR;
     }
-    if (Ttk_ContentIndex(pw->paned.mgr, window) != TCL_INDEX_NONE) {
+    if (Ttk_ContentIndex(pw->paned.mgr, window) >= 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"%s already added", Tk_PathName(window)));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "PRESENT", NULL);
@@ -671,11 +671,11 @@ static int PanedInsertCommand(
     }
 
     srcIndex = Ttk_ContentIndex(pw->paned.mgr, window);
-    if (srcIndex == TCL_INDEX_NONE) { /* New content: */
+    if (srcIndex < 0) { /* New content: */
 	return AddPane(interp, pw, destIndex, window, objc-4, objv+4);
     } /* else -- move existing content: */
 
-    if (destIndex + 1 >= nContent + 1)
+    if (destIndex >= nContent)
 	destIndex  = nContent - 1;
     Ttk_ReorderContent(pw->paned.mgr, srcIndex, destIndex);
 
@@ -703,7 +703,7 @@ static int PanedForgetCommand(
 		    interp, pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex + 1 >= Ttk_NumberContent(pw->paned.mgr) + 1) {
+    } else if (paneIndex >= Ttk_NumberContent(pw->paned.mgr)) {
 	paneIndex = Ttk_NumberContent(pw->paned.mgr) - 1;
     }
     Ttk_ForgetContent(pw->paned.mgr, paneIndex);
@@ -785,7 +785,7 @@ static int PanedPaneCommand(
 		    interp,pw->paned.mgr, objv[2], &paneIndex))
     {
 	return TCL_ERROR;
-    } else if (paneIndex + 1 >= Ttk_NumberContent(pw->paned.mgr) + 1) {
+    } else if (paneIndex >= Ttk_NumberContent(pw->paned.mgr)) {
 	paneIndex = Ttk_NumberContent(pw->paned.mgr) - 1;
     }
 

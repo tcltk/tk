@@ -1145,7 +1145,7 @@ Ttk_CreateVsapiElement(
     enum { O_HALFHEIGHT, O_HALFWIDTH, O_HEIGHT, O_MARGINS, O_PADDING,
 	   O_SYSSIZE, O_WIDTH };
 
-    if (objc + 1 < 3) {
+    if (objc < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing required arguments 'class' and/or 'partId'", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
