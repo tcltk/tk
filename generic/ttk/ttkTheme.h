@@ -378,7 +378,11 @@ MODULE_SCOPE int		TtkGetOrientFromObj(Tcl_Interp *interp,
 
 typedef struct TtkEnsemble {
     const char *name;			/* subcommand name */
-    Tcl_ObjCmdProc *command; 		/* subcommand implementation, OR: */
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *command; 		/* subcommand implementation, OR: */
+#else
+    Tcl_ObjCmdProc *command;
+#endif
     const struct TtkEnsemble *ensemble;	/* subcommand ensemble */
 } Ttk_Ensemble;
 
