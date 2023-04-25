@@ -750,7 +750,7 @@ MenuWidgetObjCmd(
 
 	    first = 1;
 	}
-	if ((first == TCL_INDEX_NONE) || (last < first)) {
+	if ((first < 0) || (last < first)) {
 	    goto done;
 	}
 	DeleteMenuCloneEntries(menuPtr, first, last);
@@ -767,7 +767,7 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    goto done;
 	}
 	mePtr = menuPtr->entries[index];
@@ -792,7 +792,7 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    goto done;
 	}
 	mePtr = menuPtr->entries[index];
@@ -833,7 +833,7 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewObj());
 	} else
 #endif
@@ -860,7 +860,7 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    goto done;
 	}
 	result = TkInvokeMenu(interp, menuPtr, index);
@@ -913,7 +913,7 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if ((index == TCL_INDEX_NONE) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
+	if ((index < 0) || (menuPtr->entries[index]->type != CASCADE_ENTRY)) {
 	    result = TkPostSubmenu(interp, menuPtr, NULL);
 	} else {
 	    result = TkPostSubmenu(interp, menuPtr, menuPtr->entries[index]);
@@ -931,7 +931,7 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    goto done;
 	}
 	if (menuPtr->entries[index]->type == TEAROFF_ENTRY) {
@@ -1002,7 +1002,7 @@ TkInvokeMenu(
     int result = TCL_OK;
     TkMenuEntry *mePtr;
 
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
     	goto done;
     }
     mePtr = menuPtr->entries[index];
@@ -2117,7 +2117,7 @@ GetMenuIndex(
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
 	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
 	if (*indexPtr != TCL_INDEX_NONE || Tcl_GetString(objPtr)[0] != '-') {
-	    if (*indexPtr + 1 >= menuPtr->numEntries + 1) {
+	    if (*indexPtr >= menuPtr->numEntries) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	    }
 	    return TCL_OK;
@@ -2352,7 +2352,7 @@ MenuAddOrInsert(
     } else {
 	index = menuPtr->numEntries;
     }
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad menu entry index \"%s\"", Tcl_GetString(indexPtr)));
 	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
@@ -2869,7 +2869,7 @@ MenuDoXPosition(
 	return TCL_ERROR;
     }
     Tcl_ResetResult(interp);
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(menuPtr->entries[index]->x));
@@ -2906,7 +2906,7 @@ MenuDoYPosition(
 	goto error;
     }
     Tcl_ResetResult(interp);
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(0));
     } else {
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(menuPtr->entries[index]->y));
