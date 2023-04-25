@@ -699,13 +699,12 @@ AppnameCmd(
 
     winPtr = (TkWindow *) tkwin;
 
-    if (objc > 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "?newName?");
-	return TCL_ERROR;
-    }
     if (objc == 2) {
 	string = Tcl_GetString(objv[1]);
 	winPtr->nameUid = Tk_GetUid(Tk_SetAppName(tkwin, string));
+    } else if (objc != 1) {
+	Tcl_WrongNumArgs(interp, 1, objv, "?newName?");
+	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(winPtr->nameUid, TCL_INDEX_NONE));
     return TCL_OK;
