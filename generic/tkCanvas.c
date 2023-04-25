@@ -5701,7 +5701,7 @@ CanvasSelectTo(
 	canvasPtr->textInfo.anchorItemPtr = itemPtr;
 	canvasPtr->textInfo.selectAnchor = index;
     }
-    if (canvasPtr->textInfo.selectAnchor + 1 <= index + 1) {
+    if (canvasPtr->textInfo.selectAnchor <= index) {
 	canvasPtr->textInfo.selectFirst = canvasPtr->textInfo.selectAnchor;
 	canvasPtr->textInfo.selectLast = index;
     } else {

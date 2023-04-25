@@ -142,7 +142,7 @@ static const Tk_OptionSpec *TTKGetOptionSpec(
 
     /* Make sure widget option has a Tcl_Obj* entry:
      */
-    if (optionSpec->objOffset == TCL_INDEX_NONE) {
+    if (optionSpec->objOffset < 0) {
 	return 0;
     }
 

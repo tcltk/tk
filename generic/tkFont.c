@@ -1855,7 +1855,7 @@ Tk_TextWidth(
 {
     int width;
 
-    if (numBytes == TCL_INDEX_NONE) {
+    if (numBytes < 0) {
 	numBytes = strlen(string);
     }
     Tk_MeasureChars(tkfont, string, numBytes, -1, 0, &width);
@@ -2009,7 +2009,7 @@ Tk_ComputeTextLayout(
 
     height = fmPtr->ascent + fmPtr->descent;
 
-    if (numChars == TCL_INDEX_NONE) {
+    if (numChars < 0) {
 	numChars = Tcl_NumUtfChars(string, TCL_INDEX_NONE);
     }
     if (wrapLength == 0) {

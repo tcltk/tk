@@ -122,7 +122,7 @@ UnderlineParseProc(
     obj.typePtr = NULL;
     code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
     if (code == TCL_OK) {
-	if (underline == TCL_INDEX_NONE) {
+	if (underline < 0) {
 	    underline = (Tcl_Size)INT_MIN;
 	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
 		underline++;
@@ -431,7 +431,7 @@ TextCoords(
 	Tcl_ListObjAppendElement(interp, obj, subobj);
 	Tcl_SetObjResult(interp, obj);
 	return TCL_OK;
-    } else if (objc + 1 > 3) {
+    } else if (objc > 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %" TKSIZET_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
@@ -599,19 +599,19 @@ ConfigureText(
     textPtr->numChars = Tcl_NumUtfChars(textPtr->text, textPtr->numBytes);
     if (textInfoPtr->selItemPtr == itemPtr) {
 
-	if (textInfoPtr->selectFirst + 1 >= textPtr->numChars + 1) {
+	if (textInfoPtr->selectFirst >= textPtr->numChars) {
 	    textInfoPtr->selItemPtr = NULL;
 	} else {
-	    if (textInfoPtr->selectLast + 1 >= textPtr->numChars + 1) {
+	    if (textInfoPtr->selectLast >= textPtr->numChars) {
 		textInfoPtr->selectLast = textPtr->numChars - 1;
 	    }
 	    if ((textInfoPtr->anchorItemPtr == itemPtr)
-		    && (textInfoPtr->selectAnchor + 1 >= textPtr->numChars + 1)) {
+		    && (textInfoPtr->selectAnchor >= textPtr->numChars)) {
 		textInfoPtr->selectAnchor = textPtr->numChars - 1;
 	    }
 	}
     }
-    if (textPtr->insertPos + 1 >= textPtr->numChars + 1) {
+    if (textPtr->insertPos >= textPtr->numChars) {
 	textPtr->insertPos = textPtr->numChars;
     }
 
@@ -924,10 +924,10 @@ DisplayCanvText(
     if (textInfoPtr->selItemPtr == itemPtr) {
 	selFirstChar = textInfoPtr->selectFirst;
 	selLastChar = textInfoPtr->selectLast;
-	if (selLastChar + 1 > textPtr->numChars + 1 ) {
+	if (selLastChar > textPtr->numChars) {
 	    selLastChar = textPtr->numChars - 1;
 	}
-	if (((int)selFirstChar >= 0) && (selFirstChar + 1 <= selLastChar + 1 )) {
+	if ((selFirstChar >= 0) && (selFirstChar <= selLastChar)) {
 	    int xFirst, yFirst, hFirst;
 	    int xLast, yLast, wLast;
 
@@ -1102,10 +1102,10 @@ TextInsert(
 
     text = textPtr->text;
 
-    if ((int)index < 0) {
+    if (index < 0) {
 	index = 0;
     }
-    if (index + 1 > textPtr->numChars + 1) {
+    if (index > textPtr->numChars) {
 	index = textPtr->numChars;
     }
     byteIndex = Tcl_UtfAtIndex(text, index) - text;
@@ -1131,18 +1131,18 @@ TextInsert(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 >= (Tcl_Size)index + 1) {
+	if (textInfoPtr->selectFirst >= index) {
 	    textInfoPtr->selectFirst += charsAdded;
 	}
-	if (textInfoPtr->selectLast + 1 >= (Tcl_Size)index + 1) {
+	if (textInfoPtr->selectLast >= index) {
 	    textInfoPtr->selectLast += charsAdded;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 >= (Tcl_Size)index + 1)) {
+		&& (textInfoPtr->selectAnchor >= index)) {
 	    textInfoPtr->selectAnchor += charsAdded;
 	}
     }
-    if (textPtr->insertPos + 1 >= (Tcl_Size)index + 1) {
+    if (textPtr->insertPos >= index) {
 	textPtr->insertPos += charsAdded;
     }
     ComputeTextBbox(canvas, textPtr);
@@ -1180,13 +1180,13 @@ TextDeleteChars(
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
     text = textPtr->text;
-    if ((int)first < 0) {
+    if (first < 0) {
 	first = 0;
     }
-    if (last + 1 >= textPtr->numChars + 1) {
+    if (last >= textPtr->numChars) {
 	last = textPtr->numChars - 1;
     }
-    if (first + 1 > last + 1) {
+    if (first > last) {
 	return;
     }
     charsRemoved = last + 1 - first;
@@ -1210,32 +1210,32 @@ TextDeleteChars(
      */
 
     if (textInfoPtr->selItemPtr == itemPtr) {
-	if (textInfoPtr->selectFirst + 1 > first + 1) {
+	if (textInfoPtr->selectFirst > first) {
 	    textInfoPtr->selectFirst -= charsRemoved;
-	    if ((int)textInfoPtr->selectFirst + 1 < (int)first + 1) {
+	    if (textInfoPtr->selectFirst < first) {
 		textInfoPtr->selectFirst = first;
 	    }
 	}
-	if (textInfoPtr->selectLast + 1 >= first + 1) {
+	if (textInfoPtr->selectLast >= first) {
 	    textInfoPtr->selectLast -= charsRemoved;
-	    if (textInfoPtr->selectLast + 1 < first) {
+	    if (textInfoPtr->selectLast < first - 1) {
 		textInfoPtr->selectLast = first - 1;
 	    }
 	}
-	if ((int)textInfoPtr->selectFirst + 1 > (int)textInfoPtr->selectLast + 1) {
+	if (textInfoPtr->selectFirst > textInfoPtr->selectLast) {
 	    textInfoPtr->selItemPtr = NULL;
 	}
 	if ((textInfoPtr->anchorItemPtr == itemPtr)
-		&& (textInfoPtr->selectAnchor + 1 > first + 1)) {
+		&& (textInfoPtr->selectAnchor > first)) {
 	    textInfoPtr->selectAnchor -= charsRemoved;
-	    if (textInfoPtr->selectAnchor + 1 < first + 1) {
+	    if (textInfoPtr->selectAnchor < first) {
 		textInfoPtr->selectAnchor = first;
 	    }
 	}
     }
-    if (textPtr->insertPos + 1 > first + 1) {
+    if (textPtr->insertPos > first) {
 	textPtr->insertPos -= charsRemoved;
-	if ((int)textPtr->insertPos + 1 < (int)first + 1) {
+	if (textPtr->insertPos < first) {
 	    textPtr->insertPos = first;
 	}
     }
@@ -1468,7 +1468,7 @@ GetTextIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(obj, textPtr->numChars - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > textPtr->numChars) {
 	    idx = textPtr->numChars;
@@ -1563,7 +1563,7 @@ SetTextCursor(
 {
     TextItem *textPtr = (TextItem *) itemPtr;
 
-    if (index == TCL_INDEX_NONE) {
+    if (index < 0) {
 	textPtr->insertPos = 0;
     } else if (index > textPtr->numChars) {
 	textPtr->insertPos = textPtr->numChars;
@@ -1609,8 +1609,8 @@ GetSelText(
     const char *selStart, *selEnd;
     Tk_CanvasTextInfo *textInfoPtr = textPtr->textInfoPtr;
 
-    if (((int)textInfoPtr->selectFirst < 0) ||
-	    (textInfoPtr->selectFirst + 1 > textInfoPtr->selectLast + 1)) {
+    if ((textInfoPtr->selectFirst < 0) ||
+	    (textInfoPtr->selectFirst > textInfoPtr->selectLast)) {
 	return 0;
     }
     text = textPtr->text;

@@ -120,7 +120,7 @@ startEndOfCmd(
     	return TCL_ERROR;
     }
     if (flags & FLAG_FOLLOWING) {
-	if ((idx == TCL_INDEX_NONE) && (flags & FLAG_WORD)) {
+	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
 	}
 	idx = icu_following(it, idx);
