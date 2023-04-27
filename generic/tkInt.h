@@ -200,10 +200,8 @@
 #   define TCL_LL_MODIFIER	"ll"
 #endif
 
-#if TCL_MAJOR_VERSION > 8
-#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
-#else
-#   define TKSIZET_MODIFIER ""
+#if !defined(TCL_SIZE_MODIFIER)
+#   define TCL_SIZE_MODIFIER ""
 #endif
 
 /*

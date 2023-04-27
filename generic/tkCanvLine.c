@@ -401,13 +401,13 @@ LineCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %" TKSIZET_MODIFIER "u",
+		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "u",
 		objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected at least 4, got %" TKSIZET_MODIFIER "u", objc));
+		"wrong # coordinates: expected at least 4, got %" TCL_SIZE_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     }
@@ -965,7 +965,8 @@ LineInsert(
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int length, oriNumPoints, objc, nbInsPoints, i;
+    int length, oriNumPoints, nbInsPoints, i;
+    Tcl_Size objc;
     double *newCoordPtr, *coordPtr;
     Tk_State state = itemPtr->state;
     Tcl_Obj **objv;
@@ -981,10 +982,10 @@ LineInsert(
     oriNumPoints = linePtr->numPoints;
     length = 2*linePtr->numPoints;
     nbInsPoints = objc / 2;
-    if (beforeThis == TCL_INDEX_NONE) {
+    if (beforeThis < 0) {
 	beforeThis = 0;
     }
-    if (beforeThis + 1 > (Tcl_Size)length + 1) {
+    if (beforeThis > length) {
 	beforeThis = length;
     }
 
@@ -1876,7 +1877,7 @@ GetLineIndex(
     const char *string;
 
     if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx > (2*(Tcl_Size)linePtr->numPoints)) {
 	    idx = 2*linePtr->numPoints;
