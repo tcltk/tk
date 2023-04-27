@@ -374,7 +374,7 @@ ArcCoords(
 		return TCL_ERROR;
 	    } else if (objc != 4) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 4, got %" TKSIZET_MODIFIER "u", objc));
+			"wrong # coordinates: expected 4, got %" TCL_SIZE_MODIFIER "u", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
 			NULL);
 		return TCL_ERROR;
@@ -404,7 +404,7 @@ ArcCoords(
 	ComputeArcBbox(canvas, arcPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 4, got %" TKSIZET_MODIFIER "u", objc));
+		"wrong # coordinates: expected 0 or 4, got %" TCL_SIZE_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC", NULL);
 	return TCL_ERROR;
     }
