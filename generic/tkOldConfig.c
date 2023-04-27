@@ -364,7 +364,7 @@ DoConfig(
     }
 
     do {
-	if (specPtr->offset == TCL_INDEX_NONE) {
+	if (specPtr->offset < 0) {
 	    break;
 	}
 	ptr = (char *)widgRec + specPtr->offset;
@@ -666,7 +666,7 @@ Tk_ConfigureInfo(
 		|| (specPtr->specFlags & hateFlags)) {
 	    continue;
 	}
-	if ((specPtr->argvName == NULL) || (specPtr->offset == TCL_INDEX_NONE)) {
+	if ((specPtr->argvName == NULL) || (specPtr->offset < 0)) {
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
@@ -781,7 +781,7 @@ FormatConfigValue(
     const char *result;
 
     *freeProcPtr = NULL;
-    if (specPtr->offset == TCL_INDEX_NONE) {
+    if (specPtr->offset < 0) {
 	return NULL;
     }
     ptr = (char *)widgRec + specPtr->offset;
@@ -1005,7 +1005,7 @@ Tk_FreeOptions(
 	if ((specPtr->specFlags & needFlags) != needFlags) {
 	    continue;
 	}
-	if (specPtr->offset == TCL_INDEX_NONE) {
+	if (specPtr->offset < 0) {
 	    continue;
 	}
 	ptr = widgRec + specPtr->offset;

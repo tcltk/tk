@@ -362,7 +362,7 @@ PolygonCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %" TKSIZET_MODIFIER "u",
+		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "u",
 		objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", NULL);
 	return TCL_ERROR;
@@ -1022,7 +1022,8 @@ PolygonInsert(
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     PolygonItem *polyPtr = (PolygonItem *) itemPtr;
-    int length, oriNumPoints, objc, nbInsPoints, i;
+    int length, oriNumPoints, nbInsPoints, i;
+    Tcl_Size objc;
     Tcl_Obj **objv;
     double *newCoordPtr;
     Tk_State state = itemPtr->state;
@@ -1720,7 +1721,7 @@ GetPolygonIndex(
     Tcl_Size count = 2*(polyPtr->numPoints - polyPtr->autoClosed);
 
     if (TCL_OK == TkGetIntForIndex(obj,  (INT_MAX - 1) - ((INT_MAX) % count), 1, &idx)) {
-	if (idx == TCL_INDEX_NONE) {
+	if (idx < 0) {
 	    idx = 0;
 	} else if (idx >= INT_MAX - ((INT_MAX) % count)) {
 	    idx = count;

@@ -1970,7 +1970,7 @@ TkpTestsendCmd(
     Tk_ErrorHandler handler;
     int index;
 
-    if (objc + 1 < 3) {
+    if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"option ?arg ...?");
 	return TCL_ERROR;

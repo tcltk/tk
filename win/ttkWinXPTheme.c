@@ -1085,7 +1085,7 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     };
 
     Tcl_Obj **objv;
-    int i, objc;
+    Tcl_Size i, objc;
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
 	return TCL_ERROR;
@@ -1145,7 +1145,7 @@ Ttk_CreateVsapiElement(
     enum { O_HALFHEIGHT, O_HALFWIDTH, O_HEIGHT, O_MARGINS, O_PADDING,
 	   O_SYSSIZE, O_WIDTH };
 
-    if (objc + 1 < 3) {
+    if (objc < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing required arguments 'class' and/or 'partId'", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
@@ -1229,7 +1229,8 @@ Ttk_CreateVsapiElement(
     /* convert a statemap into a state table */
     if (objc > 2) {
 	Tcl_Obj **specs;
-	int n,j,count, status = TCL_OK;
+	Tcl_Size n, j, count;
+	int status = TCL_OK;
 	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
 	    goto retErr;
 	/* we over-allocate to ensure there is a terminating entry */

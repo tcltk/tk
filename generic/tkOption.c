@@ -799,7 +799,7 @@ TkOptionClassChanged(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    if (winPtr->optionLevel == TCL_INDEX_NONE) {
+    if (winPtr->optionLevel < 0) {
 	return;
     }
 
