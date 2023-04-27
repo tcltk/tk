@@ -79,7 +79,8 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     Tk_ImageChangedProc *imageChangedProc, ClientData imageChangedClientData)
 {
     Ttk_ImageSpec *imageSpec = 0;
-    int i = 0, n = 0, objc;
+    int i = 0, n = 0;
+    Tcl_Size objc;
     Tcl_Obj **objv;
 
     imageSpec = (Ttk_ImageSpec *)ckalloc(sizeof(*imageSpec));
