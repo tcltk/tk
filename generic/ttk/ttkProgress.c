@@ -423,7 +423,7 @@ static Ttk_Layout ProgressbarGetLayout(
 /* $sb step ?amount?
  */
 static int ProgressbarStepCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Progressbar *pb = (Progressbar *)recordPtr;
     double value = 0.0, stepAmount = 1.0;
@@ -479,7 +479,7 @@ static int ProgressbarStepCommand(
  * and pass to interpreter.
  */
 static int ProgressbarStartStopCommand(
-    Tcl_Interp *interp, const char *cmdName, int objc, Tcl_Obj *const objv[])
+    Tcl_Interp *interp, const char *cmdName, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Tcl_Obj *cmd = Tcl_NewListObj(objc, objv);
     Tcl_Obj *prefix[2];
@@ -489,7 +489,7 @@ static int ProgressbarStartStopCommand(
 
     prefix[0] = Tcl_NewStringObj(cmdName, -1);
     prefix[1] = objv[0];
-    Tcl_ListObjReplace(interp, cmd, 0,2, 2,prefix);
+    Tcl_ListObjReplace(interp, cmd, 0, 2, 2,prefix);
 
     Tcl_IncrRefCount(cmd);
     status = Tcl_EvalObjEx(interp, cmd, 0);
@@ -501,7 +501,7 @@ static int ProgressbarStartStopCommand(
 static int ProgressbarStartCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
@@ -511,7 +511,7 @@ static int ProgressbarStartCommand(
 static int ProgressbarStopCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
