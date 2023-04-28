@@ -1085,7 +1085,7 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     };
 
     Tcl_Obj **objv;
-    int i, objc;
+    Tcl_Size i, objc;
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
 	return TCL_ERROR;
@@ -1229,7 +1229,8 @@ Ttk_CreateVsapiElement(
     /* convert a statemap into a state table */
     if (objc > 2) {
 	Tcl_Obj **specs;
-	int n,j,count, status = TCL_OK;
+	Tcl_Size n, j, count;
+	int status = TCL_OK;
 	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
 	    goto retErr;
 	/* we over-allocate to ensure there is a terminating entry */

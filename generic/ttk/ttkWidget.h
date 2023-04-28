@@ -90,26 +90,32 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 /* Common widget commands:
  */
 MODULE_SCOPE int TtkWidgetCgetCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetConfigureCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetIdentifyCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetInstateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStyleCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 
 /* Widget constructor:
  */
 MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	void *, Tcl_Interp*, int, Tcl_Obj*const[]);
+	void *, Tcl_Interp*, Tcl_Size, Tcl_Obj*const[]);
 
+#if TCL_MAJOR_VERSION > 8
+#define RegisterWidget(interp, name, specPtr) \
+    Tcl_CreateObjCommand2(interp, name, \
+	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
+#else
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \
 	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
+#endif
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --

@@ -2133,7 +2133,7 @@ CommonWriteGIF(
 	    return TCL_ERROR;
 	}
 	if (itemData != NULL) {
-	    int length;
+	    Tcl_Size length;
 	    unsigned char *comment;
 	    comment = Tcl_GetByteArrayFromObj(itemData, &length);
 	    if (length > 0) {

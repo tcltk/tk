@@ -401,13 +401,13 @@ LineCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %" TKSIZET_MODIFIER "u",
+		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "u",
 		objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected at least 4, got %" TKSIZET_MODIFIER "u", objc));
+		"wrong # coordinates: expected at least 4, got %" TCL_SIZE_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     }
@@ -965,7 +965,7 @@ LineInsert(
     Tcl_Obj *obj)		/* New coordinates to be inserted. */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    int length, oriNumPoints, objc, nbInsPoints, i;
+    Tcl_Size length, oriNumPoints, objc, nbInsPoints, i;
     double *newCoordPtr, *coordPtr;
     Tk_State state = itemPtr->state;
     Tcl_Obj **objv;
