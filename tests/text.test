@@ -7000,7 +7000,7 @@ test text-27.15b {<<Selection>> virtual event on <<PasteSelection>> inside widge
     bind .t <<Selection>> "set ::retval <<Selection>>_fired"
     update
     set ::retval no_<<Selection>>_event_fired
-    event generate .t <<PasteSelection>> -x 15 -y 3
+    event generate .t <<PasteSelection>> -x 15 -y [lindex [.t dlineinfo 1.0] 1]
     update
     set ::retval
 } -cleanup {
@@ -7014,7 +7014,7 @@ test text-27.15c {No <<Selection>> virtual event on <<PasteSelection>> outside w
     bind .t <<Selection>> "set ::retval <<Selection>>_fired"
     update
     set ::retval no_<<Selection>>_event_fired
-    event generate .t <<PasteSelection>> -x 15 -y 80
+    event generate .t <<PasteSelection>> -x 15 -y [lindex [.t dlineinfo 2.0] 1]
     update
     set ::retval
 } -cleanup {
@@ -8659,6 +8659,20 @@ test text-39.14 "Bug 9ffb79059bacafe3796bc3ab3ae701f402f4c813 \
     destroy .t
 } -result {}
 
+
+test text-40.1 {Extending selection with mouse going outside the widget - Bug a9cf210a42} -setup {
+    pack [text .t -width 40 -height 10]
+    for {set n 1} {$n <= 5} {incr n} {
+        .t insert end "This is line $i of text\n"
+    }
+    update
+} -body {
+    event generate .t <Button-1> -x 50 -y 50
+    event generate .t <B1-Motion> -x 50 -y -50
+    .t index sel.first
+} -cleanup {
+    destroy .t
+} -result {1.0}
 
 
 # cleanup
