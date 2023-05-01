@@ -403,31 +403,6 @@ typedef struct
     int themeChangePending;		/* scheduled ThemeChangedProc call? */
 } StylePackageData;
 
-static void ThemeChangedProc(void *);	/* Forward */
-
-/* Ttk_TkDestroyedHandler --
- *	See bug [310c74ecf440]: idle calls to ThemeChangedProc()
- *	need to be canceled when Tk is destroyed, since the interp
- *	may still be active afterward; canceling them from
- *	Ttk_StylePkgFree() would be too late.
- */
-static void Ttk_TkDestroyedHandler(
-    ClientData clientData,
-    TCL_UNUSED(Tcl_Interp*),
-    TCL_UNUSED(const char*),
-    TCL_UNUSED(const char*),
-    TCL_UNUSED(int))
-{
-    StylePackageData* pkgPtr = (StylePackageData*)clientData;
-
-    /*
-     * Cancel any pending ThemeChanged calls:
-     */
-    if (pkgPtr->themeChangePending) {
-	Tcl_CancelIdleCall(ThemeChangedProc, pkgPtr);
-    }
-}
-
 /* Ttk_StylePkgFree --
  *	Cleanup procedure for StylePackageData.
  */
@@ -544,6 +519,25 @@ static void ThemeChanged(StylePackageData *pkgPtr)
     if (!pkgPtr->themeChangePending) {
 	Tcl_DoWhenIdle(ThemeChangedProc, pkgPtr);
 	pkgPtr->themeChangePending = 1;
+    }
+}
+
+/* Ttk_TkDestroyedHandler --
+ *	See bug [310c74ecf440]: idle calls to ThemeChangedProc()
+ *	need to be canceled when Tk is destroyed, since the interp
+ *	may still be active afterward; canceling them from
+ *	Ttk_StylePkgFree() would be too late.
+ */
+void Ttk_TkDestroyedHandler(
+    Tcl_Interp* interp)
+{
+    StylePackageData* pkgPtr = (StylePackageData*)GetStylePackageData(interp);
+
+    /*
+     * Cancel any pending ThemeChanged calls:
+     */
+    if (pkgPtr->themeChangePending) {
+	Tcl_CancelIdleCall(ThemeChangedProc, pkgPtr);
     }
 }
 
@@ -1743,8 +1737,6 @@ void Ttk_StylePkgInit(Tcl_Interp *interp)
     pkgPtr->themeChangePending = 0;
 
     Tcl_SetAssocData(interp, PKG_ASSOC_KEY, Ttk_StylePkgFree, pkgPtr);
-
-    Tcl_TraceCommand(interp, ".", TCL_TRACE_DELETE, Ttk_TkDestroyedHandler, pkgPtr);
 
     /*
      * Create the default system theme:
