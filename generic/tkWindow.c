@@ -1621,6 +1621,7 @@ Tk_DestroyWindow(
 	    TkFontPkgFree(winPtr->mainPtr);
 	    TkFocusFree(winPtr->mainPtr);
 	    TkStylePkgFree(winPtr->mainPtr);
+	    Ttk_TkDestroyedHandler(winPtr->mainPtr->interp);
 
 	    /*
 	     * When embedding Tk into other applications, make sure that all
