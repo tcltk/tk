@@ -477,7 +477,7 @@ static StylePackageData *GetStylePackageData(Tcl_Interp *interp)
 void Ttk_RegisterCleanup(
     Tcl_Interp *interp, ClientData clientData, Ttk_CleanupProc *cleanupProc)
 {
-    StylePackageData *pkgPtr = (StylePackageData *)GetStylePackageData(interp);
+    StylePackageData *pkgPtr = GetStylePackageData(interp);
     Cleanup *cleanup = (Cleanup *)ckalloc(sizeof(*cleanup));
 
     cleanup->clientData = clientData;
@@ -531,7 +531,7 @@ static void ThemeChanged(StylePackageData *pkgPtr)
 void Ttk_TkDestroyedHandler(
     Tcl_Interp* interp)
 {
-    StylePackageData* pkgPtr = (StylePackageData*)GetStylePackageData(interp);
+    StylePackageData* pkgPtr = GetStylePackageData(interp);
 
     /*
      * Cancel any pending ThemeChanged calls:
