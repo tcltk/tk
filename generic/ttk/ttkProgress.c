@@ -489,7 +489,7 @@ static int ProgressbarStartStopCommand(
 
     prefix[0] = Tcl_NewStringObj(cmdName, -1);
     prefix[1] = objv[0];
-    Tcl_ListObjReplace(interp, cmd, 0,2, 2,prefix);
+    Tcl_ListObjReplace(interp, cmd, 0, 2, 2,prefix);
 
     Tcl_IncrRefCount(cmd);
     status = Tcl_EvalObjEx(interp, cmd, 0);

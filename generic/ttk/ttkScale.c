@@ -267,13 +267,9 @@ ScaleGetCommand(
     int x, y, r = TCL_OK;
     double value = 0;
 
-    if ((objc != 2) && (objc != 4)) {
-	Tcl_WrongNumArgs(interp, 1, objv, "get ?x y?");
-	return TCL_ERROR;
-    }
     if (objc == 2) {
 	Tcl_SetObjResult(interp, scalePtr->scale.valueObj);
-    } else {
+    } else if (objc == 4) {
 	r = Tcl_GetIntFromObj(interp, objv[2], &x);
 	if (r == TCL_OK)
 	    r = Tcl_GetIntFromObj(interp, objv[3], &y);
@@ -281,6 +277,9 @@ ScaleGetCommand(
 	    value = PointToValue(scalePtr, x, y);
 	    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(value));
 	}
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "get ?x y?");
+	return TCL_ERROR;
     }
     return r;
 }
@@ -363,15 +362,13 @@ ScaleCoordsCommand(
     double value;
     int r = TCL_OK;
 
-    if (objc < 2 || objc > 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
-	return TCL_ERROR;
-    }
-
     if (objc == 3) {
 	r = Tcl_GetDoubleFromObj(interp, objv[2], &value);
-    } else {
+    } else if (objc == 2) {
 	r = Tcl_GetDoubleFromObj(interp, scalePtr->scale.valueObj, &value);
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
+	return TCL_ERROR;
     }
 
     if (r == TCL_OK) {

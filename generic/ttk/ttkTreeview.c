@@ -691,7 +691,7 @@ static TreeColumn *FindColumn(
 {
     Tcl_Size colno;
 
-    if (sscanf(Tcl_GetString(columnIDObj), "#%" TKSIZET_MODIFIER "d", &colno) == 1)
+    if (sscanf(Tcl_GetString(columnIDObj), "#%" TCL_SIZE_MODIFIER "d", &colno) == 1)
     {	/* Display column specification, #n */
 	if (colno >= 0 && (Tcl_Size)colno < tv->tree.nDisplayColumns) {
 	    return tv->tree.displayColumns[colno];
@@ -2772,7 +2772,7 @@ static int TreeviewHorribleIdentify(
     if (dColumnNumber < 0) {
 	goto done;
     }
-    snprintf(dcolbuf, sizeof(dcolbuf), "#%" TKSIZET_MODIFIER "u", dColumnNumber);
+    snprintf(dcolbuf, sizeof(dcolbuf), "#%" TCL_SIZE_MODIFIER "u", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
 	if (-HALO <= x1 - x  && x1 - x <= HALO) {
@@ -2879,7 +2879,7 @@ static int TreeviewIdentifyCommand(
 
 	case I_COLUMN :
 	    if (colno >= 0) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno));
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "u", colno));
 	    }
 	    break;
 
@@ -2887,7 +2887,7 @@ static int TreeviewIdentifyCommand(
 	    if (item && colno >= 0) {
 		Tcl_Obj *elem[2];
 		elem[0] = ItemID(tv, item);
-		elem[1] = Tcl_ObjPrintf("#%" TKSIZET_MODIFIER "u", colno);
+		elem[1] = Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "u", colno);
 		Tcl_SetObjResult(interp, Tcl_NewListObj(2, elem));
 	    }
 	    break;
@@ -3213,7 +3213,7 @@ static int TreeviewDetachCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items;
-    int i;
+    Tcl_Size i;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -3261,7 +3261,8 @@ static int TreeviewDeleteCommand(
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem **items, *delq;
-    int i, selChange = 0;
+    Tcl_Size i;
+    int selChange = 0;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "items");
@@ -3942,7 +3943,7 @@ static int TreeviewTagConfigureCommand(
     Ttk_Tag tag;
 
     if (objc < 4) {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?-option ?value ...??");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?-option ?value ...??");
 	return TCL_ERROR;
     }
 
@@ -4123,7 +4124,7 @@ static int TreeviewTagAddCommand(
     Treeview *tv = (Treeview *)recordPtr;
     Ttk_Tag tag;
     TreeItem **items;
-    int i;
+    Tcl_Size i;
 
     if (objc != 5) {
 	Tcl_WrongNumArgs(interp, 3, objv, "tagName items");
