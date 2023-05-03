@@ -367,7 +367,7 @@ StringMatchDef(
     int *heightPtr,         /* Height of image is written to this location */
     Tcl_Interp *interp)     /* Error messages are left in this interpreter */
 {
-    int y, rowCount, colCount, curColCount;
+    Tcl_Size y, rowCount, colCount, curColCount;
     unsigned char dummy;
     Tcl_Obj **rowListPtr, *pixelData;
 
@@ -398,7 +398,7 @@ StringMatchDef(
             colCount = curColCount;
         } else if (curColCount != colCount) {
             if (interp != NULL) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %d: "
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %" TCL_SIZE_MODIFIER "u: "
                         "all rows must have the same number of elements", y));
                 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                         "INVALID_DATA", NULL);
@@ -471,9 +471,9 @@ StringReadDef(
 {
     Tcl_Obj **rowListPtr, **colListPtr;
     Tcl_Obj **objv;
-    Tcl_Size objc;
+    Tcl_Size objc, rowCount, colCount, curColCount;
     unsigned char *curPixelPtr;
-    int x, y, rowCount, colCount, curColCount;
+    int x, y;
     Tk_PhotoImageBlock srcBlock;
     Display *display;
     Colormap colormap;
