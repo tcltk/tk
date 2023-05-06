@@ -1,10 +1,9 @@
 name: macOS
-on: 
+on:
   push:
     branches:
     - "main"
-    - "trunk"
-    - "core-8-**-branch"
+    - "core-8-branch"
     tags:
     - "core-**"
 permissions:
