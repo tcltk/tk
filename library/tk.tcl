@@ -178,10 +178,12 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 
     catch {focus $oldFocus}
     grab release $grab
-    if {$destroy eq "withdraw"} {
-	wm withdraw $grab
-    } else {
-	destroy $grab
+    if {[winfo exists $grab]} {
+	if {$destroy eq "withdraw"} {
+	    wm withdraw $grab
+	} else {
+	    destroy $grab
+	}
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
 	if {$oldStatus eq "global"} {
