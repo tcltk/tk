@@ -538,156 +538,275 @@ static const Ttk_ElementSpec SizegripElementSpec = {
  * +++ Indicator element.
  *
  * Draws the on/off indicator for checkbuttons and radiobuttons.
- *
- * Draws a 3-D square (or diamond), raised if off, sunken if on.
- *
- * This is actually a regression from Tk 8.5 back to the ugly old Motif
- * style; use "altTheme" for the newer, nicer version.
  */
+
+/*
+ * Indicator image descriptor:
+ */
+typedef struct {
+    int width;				/* unscaled width */
+    int height;				/* unscaled height */
+    const char *const offDataPtr;
+    const char *const onDataPtr;
+    const char *const triDataPtr;
+} IndicatorSpec;
+
+static const char checkbtnOffData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <rect x='.5' y='.5' width='15' height='15' rx='1.5' fill='#ffffff' stroke='#888888'/>\n\
+    </svg>";
+
+static const char checkbtnOnData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='2'/>\n\
+     <path d='m4.5 8 3 3 4-6' fill='none' stroke='#ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2'/>\n\
+    </svg>";
+
+static const char checkbtnTriData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <rect x='0' y='0' width='16' height='16' fill='#4a6984' rx='2'/>\n\
+     <path d='m4 8h8' fill='none' stroke='#ffffff' stroke-width='2'/>\n\
+    </svg>";
+
+static const IndicatorSpec checkbutton_spec = {
+    16, 16,
+    checkbtnOffData,
+    checkbtnOnData,
+    checkbtnTriData
+};
+
+static const char radiobtnOffData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <circle cx='8' cy='8' r='7.5' fill='#ffffff' stroke='#888888'/>\n\
+    </svg>";
+
+static const char radiobtnOnData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <circle cx='8' cy='8' r='8' fill='#4a6984'/>\n\
+     <circle cx='8' cy='8' r='3' fill='#ffffff'/>\n\
+    </svg>";
+
+static const char radiobtnTriData[] = "\
+    <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
+     <circle cx='8' cy='8' r='8' fill='#4a6984'/>\n\
+     <path d='m4 8h8' fill='none' stroke='#ffffff' stroke-width='2'/>\n\
+    </svg>";
+
+static const IndicatorSpec radiobutton_spec = {
+    16, 16,
+    radiobtnOffData,
+    radiobtnOnData,
+    radiobtnTriData
+};
 
 typedef struct {
     Tcl_Obj *backgroundObj;
-    Tcl_Obj *reliefObj;
-    Tcl_Obj *colorObj;
-    Tcl_Obj *diameterObj;
+    Tcl_Obj *foregroundObj;
+    Tcl_Obj *borderColorObj;
     Tcl_Obj *marginObj;
-    Tcl_Obj *borderWidthObj;
 } IndicatorElement;
 
+/*
+ * Note that the -indicatorbackground and -indicatorforeground options below
+ * have the same default value "#ffffff", but the -indicatorforeground option
+ * will only be used for the alternate and selected states, in which the
+ * -indicatorbackground option will have a different value (e.g., "#4a6984").
+ */
 static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
-    { "-background", TK_OPTION_BORDER,
-	offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
-    { "-indicatorcolor", TK_OPTION_BORDER,
-	offsetof(IndicatorElement,colorObj), DEFAULT_BACKGROUND },
-    { "-indicatorrelief", TK_OPTION_RELIEF,
-	offsetof(IndicatorElement,reliefObj), "raised" },
-    { "-indicatordiameter", TK_OPTION_PIXELS,
-	offsetof(IndicatorElement,diameterObj), "12" },
+    { "-indicatorbackground", TK_OPTION_COLOR,
+	offsetof(IndicatorElement,backgroundObj), "#ffffff" },
+    { "-indicatorforeground", TK_OPTION_COLOR,
+        offsetof(IndicatorElement,foregroundObj), "#ffffff" },
+    { "-bordercolor", TK_OPTION_COLOR,
+	offsetof(IndicatorElement,borderColorObj), "#888888" },
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(IndicatorElement,marginObj), "0 2 4 2" },
-    { "-borderwidth", TK_OPTION_PIXELS,
-	offsetof(IndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-/*
- * Checkbutton indicators (default): 3-D square.
- */
-static void SquareIndicatorElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
+static double scalingFactor;
+
+static void IndicatorElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
+    const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    const char *scalingPctPtr;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
-    int diameter = 0;
-    (void)dummy;
     (void)paddingPtr;
 
+    /*
+     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
+     */
+    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
+    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
+
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
-    *widthPtr = diameter + Ttk_PaddingWidth(margins);
-    *heightPtr = diameter + Ttk_PaddingHeight(margins);
+    *widthPtr = spec->width * scalingFactor + Ttk_PaddingWidth(margins);
+    *heightPtr = spec->height * scalingFactor + Ttk_PaddingHeight(margins);
 }
 
-static void SquareIndicatorElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
+static void ColorToStr(
+    const XColor *colorPtr, char *colorStr)     /* in the format "RRGGBB" */
+{
+    snprintf(colorStr, 7, "%02x%02x%02x",
+             colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
+}
+
+static void ImageChanged(               /* to be passed to Tk_GetImage() */
+    ClientData clientData,
+    int x, int y, int width, int height,
+    int imageWidth, int imageHeight)
+{
+    (void)clientData;
+    (void)x; (void)y; (void)width; (void)height;
+    (void)imageWidth; (void)imageHeight;
+}
+
+static void IndicatorElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
-    Tk_3DBorder border = 0, interior = 0;
-    int relief = TK_RELIEF_RAISED;
     Ttk_Padding padding;
-    int borderWidth = 2;
-    int diameter;
-    (void)dummy;
-    (void)state;
+    const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
-    interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
-    border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
-    Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+    char bgColorStr[7], fgColorStr[7], borderColorStr[7];
+    unsigned int selected = (state & TTK_STATE_SELECTED);
+    unsigned int tristate = (state & TTK_STATE_ALTERNATE);
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    char imgName[60];
+    Tk_Image img;
 
+    const char *svgDataPtr;
+    size_t svgDataLen;
+    char *svgDataCopy;
+    char *bgColorPtr, *fgColorPtr, *borderColorPtr;
+    const char *cmdFmt;
+    size_t scriptSize;
+    char *script;
+    int code;
+
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
-    diameter = b.width < b.height ? b.width : b.height;
-    Tk_Fill3DRectangle(tkwin, d, interior, b.x, b.y,
-	    diameter, diameter,borderWidth, TK_RELIEF_FLAT);
-    Tk_Draw3DRectangle(tkwin, d, border, b.x, b.y,
-	    diameter, diameter, borderWidth, relief);
+    /*
+     * Sanity check
+     */
+    if (   b.x < 0
+	|| b.y < 0
+	|| Tk_Width(tkwin) < b.x + spec->width * scalingFactor
+	|| Tk_Height(tkwin) < b.y + spec->height * scalingFactor)
+    {
+	/* Oops!  Not enough room to display the image.
+	 * Don't draw anything.
+	 */
+	return;
+    }
+
+    /*
+     * Construct the color strings bgColorStr, fgColorStr, and borderColorStr
+     */
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->backgroundObj),
+	       bgColorStr);
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->foregroundObj),
+	       fgColorStr);
+    ColorToStr(Tk_GetColorFromObj(tkwin, indicator->borderColorObj),
+	       borderColorStr);
+
+    /*
+     * Check whether there is an SVG image for the indicator's
+     * type (0 = checkbtn, 1 = radiobtn), "state" (0 = off,
+     * 1 = on, 2 = tristate), and these color strings
+     */
+    snprintf(imgName, sizeof(imgName),
+	     "::tk::icons::indicator_default%d,%d_%s_%s_%s",
+	     spec->offDataPtr == radiobtnOffData,
+	     tristate ? 2 : (selected ? 1 : 0),
+	     bgColorStr,
+	     selected || tristate ? fgColorStr : "XXXXXX",
+	     selected || tristate ? "XXXXXX" : borderColorStr);
+    img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
+    if (img == NULL) {
+	/*
+	 * Determine the SVG data to use for the photo image
+	 */
+	svgDataPtr = (tristate ? spec->triDataPtr :
+		      (selected ? spec->onDataPtr : spec->offDataPtr));
+
+	/*
+	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
+	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 */
+	svgDataLen = strlen(svgDataPtr);
+	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
+	if (svgDataCopy == NULL) {
+	    return;
+	}
+	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
+	svgDataCopy[svgDataLen] = '\0';
+	svgDataPtr = svgDataCopy;
+
+	/*
+	 * Update the colors within svgDataCopy
+	 */
+	if (selected || tristate) {
+	    bgColorPtr = strstr(svgDataPtr, "4a6984");
+	    fgColorPtr = strstr(svgDataPtr, "ffffff");
+
+	    assert(bgColorPtr);
+	    assert(fgColorPtr);
+
+	    memcpy(bgColorPtr, bgColorStr, 6);
+	    memcpy(fgColorPtr, fgColorStr, 6);
+	} else {
+	    bgColorPtr =     strstr(svgDataPtr, "ffffff");
+	    borderColorPtr = strstr(svgDataPtr, "888888");
+
+	    assert(bgColorPtr);
+	    assert(borderColorPtr);
+
+	    memcpy(bgColorPtr, bgColorStr, 6);
+	    memcpy(borderColorPtr, borderColorStr, 6);
+	}
+
+	/*
+	 * Create an SVG photo image from svgDataCopy
+	 */
+	cmdFmt = "image create photo %s -format $::tk::svgFmt -data {%s}";
+	scriptSize = strlen(cmdFmt) + strlen(imgName) + svgDataLen;
+	script = (char *)attemptckalloc(scriptSize);
+	if (script == NULL) {
+	    ckfree(svgDataCopy);
+	    return;
+	}
+	snprintf(script, scriptSize, cmdFmt, imgName, svgDataCopy);
+	ckfree(svgDataCopy);
+	code = Tcl_EvalEx(interp, script, -1, TCL_EVAL_GLOBAL);
+	ckfree(script);
+	if (code != TCL_OK) {
+	    Tcl_BackgroundException(interp, code);
+	    return;
+	}
+	img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
+    }
+
+    /*
+     * Display the image
+     */
+    Tk_RedrawImage(img, 0, 0, spec->width * scalingFactor,
+	spec->height * scalingFactor, d, b.x, b.y);
+    Tk_FreeImage(img);
 }
 
-/*
- * Radiobutton indicators:  3-D diamond.
- */
-static void DiamondIndicatorElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
-    Ttk_Padding margins;
-    int diameter = 0;
-    (void)dummy;
-    (void)paddingPtr;
-
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
-    *widthPtr = diameter + 3 + Ttk_PaddingWidth(margins);
-    *heightPtr = diameter + 3 + Ttk_PaddingHeight(margins);
-}
-
-static void DiamondIndicatorElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
-{
-    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
-    Tk_3DBorder border = 0, interior = 0;
-    int borderWidth = 2;
-    int relief = TK_RELIEF_RAISED;
-    int diameter, radius;
-    XPoint points[4];
-    Ttk_Padding padding;
-    (void)dummy;
-    (void)state;
-
-    interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
-    border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
-    Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
-
-    b = Ttk_PadBox(b, padding);
-
-    diameter = b.width < b.height ? b.width : b.height;
-    radius = diameter / 2;
-
-    points[0].x = b.x;
-    points[0].y = b.y + radius;
-    points[1].x = b.x + radius;
-    points[1].y = b.y + 2*radius;
-    points[2].x = b.x + 2*radius;
-    points[2].y = b.y + radius;
-    points[3].x = b.x + radius;
-    points[3].y = b.y;
-
-    Tk_Fill3DPolygon(tkwin,d,interior,points,4,borderWidth,TK_RELIEF_FLAT);
-    Tk_Draw3DPolygon(tkwin,d,border,points,4,borderWidth,relief);
-}
-
-static const Ttk_ElementSpec CheckbuttonIndicatorElementSpec = {
+static const Ttk_ElementSpec IndicatorElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(IndicatorElement),
     IndicatorElementOptions,
-    SquareIndicatorElementSize,
-    SquareIndicatorElementDraw
-};
-
-static const Ttk_ElementSpec RadiobuttonIndicatorElementSpec = {
-    TK_STYLE_VERSION_2,
-    sizeof(IndicatorElement),
-    IndicatorElementOptions,
-    DiamondIndicatorElementSize,
-    DiamondIndicatorElementDraw
+    IndicatorElementSize,
+    IndicatorElementDraw
 };
 
 /*
@@ -1348,13 +1467,13 @@ void TtkElements_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "padding", &PaddingElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
-	    &CheckbuttonIndicatorElementSpec, NULL);
+	    &IndicatorElementSpec, (void *)&checkbutton_spec);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
-	    &RadiobuttonIndicatorElementSpec, NULL);
+	    &IndicatorElementSpec, (void *)&radiobutton_spec);
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
 	    &MenuIndicatorElementSpec, NULL);
 
-    Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec,NULL);
+    Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
