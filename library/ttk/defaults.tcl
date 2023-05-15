@@ -18,8 +18,7 @@ namespace eval ttk::theme::default {
 	-disabledfg		"#a3a3a3"
 	-indicator		"#4a6984"
 	-disabledindicator	"#a3a3a3"
-	-altindicator		"#9fbdd8"
-	-disabledaltindicator	"#c0c0c0"
+	-pressedindicator	"#5895bc"
     }
 
     # On X11, if the user specifies their own choice of colour scheme via
@@ -40,14 +39,12 @@ namespace eval ttk::theme::default {
 		    {	selectBackground	SelectBackground	}
 		    {	disabledForeground	DisabledForeground	}
 		    {	selectBackground	SelectBackground	}
-		    {	troughColor		TroughColor		}
 		    {	windowColor		Background		} } \
 		colorName {
 		    -frame -foreground -window -alternate -text
 		    -activebg -selectbg -selectfg
 		    -darker -disabledfg -indicator
-		    -disabledindicator -altindicator
-		    -disabledaltindicator -window } {
+		    -disabledindicator -pressedindicator -window } {
 	    set color [eval option get . $xResourceName]
 	    if {$color ne ""} {
 		set colors($colorName) $color
@@ -64,9 +61,9 @@ namespace eval ttk::theme::default {
 	background		{-frame -window -alternate}
 	foreground		{-foreground -text}
 	activeBackground	-activebg
-	selectBackground	{-selectbg -indicator -altindicator}
+	selectBackground	{-selectbg -indicator -pressedindicator}
 	selectForeground	-selectfg
-	troughColor		{-darker -disabledaltindicator}
+	troughColor		-darker
 	disabledForeground	{-disabledfg -disabledindicator}
     }
 }
@@ -97,7 +94,6 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
-	    -indicatordiameter	10 \
 	    ;
 
 	ttk::style map "." -background \
@@ -114,31 +110,21 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -relief raised -shiftrelief 1
 	ttk::style map TButton -relief [list {!disabled pressed} sunken]
 
-	ttk::style configure TCheckbutton \
-	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} \
-	    -padding 0.75p
-	ttk::style map TCheckbutton -indicatorcolor \
-	    [list pressed $colors(-activebg)  \
-			{!disabled alternate} $colors(-altindicator) \
-			{disabled alternate} $colors(-disabledaltindicator) \
-			{!disabled selected} $colors(-indicator) \
-			{disabled selected} $colors(-disabledindicator)]
-	ttk::style map TCheckbutton -indicatorrelief \
-	    [list alternate raised]
-
-	ttk::style configure TRadiobutton \
-	    -indicatorcolor $colors(-window) -indicatorrelief sunken \
-	    -indicatordiameter 7.5p -indicatormargin {0 1.5p 3p 1.5p} \
-	    -padding 0.75p
-	ttk::style map TRadiobutton -indicatorcolor \
-	    [list pressed $colors(-activebg)  \
-			{!disabled alternate} $colors(-altindicator) \
-			{disabled alternate} $colors(-disabledaltindicator) \
-			{!disabled selected} $colors(-indicator) \
-			{disabled selected} $colors(-disabledindicator)]
-	ttk::style map TRadiobutton -indicatorrelief \
-	    [list alternate raised]
+	foreach style {TCheckbutton TRadiobutton} {
+	    ttk::style configure $style \
+		-indicatorbackground $colors(-window) \
+		-indicatorforeground $colors(-selectfg) \
+		-indicatormargin {0 1.5p 3p 1.5p} -padding 0.75p
+	    ttk::style map $style -indicatorbackground \
+		[list {alternate disabled}	$colors(-disabledindicator) \
+		      {alternate pressed}	$colors(-pressedindicator) \
+		      alternate			$colors(-indicator) \
+		      {selected disabled}	$colors(-disabledindicator) \
+		      {selected pressed}	$colors(-pressedindicator) \
+		      selected			$colors(-indicator) \
+		      disabled			$colors(-frame) \
+		      pressed			$colors(-darker)]
+	}
 
 	ttk::style configure TMenubutton \
 	    -relief raised -indicatormargin {3.75p 0} -padding {7.5p 2.25p}
