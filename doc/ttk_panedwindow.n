@@ -132,7 +132,7 @@ are:
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB\-gripcount\fP \fIcount\fP
+\fB\-gripsize\fP \fIsize\fP (number of screen units)
 .br
 \fB\-handlepad\fP \fIamount\fP
 .br
