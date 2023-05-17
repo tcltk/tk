@@ -6698,7 +6698,6 @@ TkMacOSXMakeRealWindowExist(
 	if (hPtr) {
 	    tabbingId = Tcl_GetHashValue(hPtr);
 	    Tcl_DeleteHashEntry(hPtr);
-	    ckfree(tabbingId);
 	}
 	hPtr = Tcl_FindHashEntry(&pathnameToTabbingMode, Tk_PathName(winPtr));
 	if (hPtr) {
@@ -6763,6 +6762,9 @@ TkMacOSXMakeRealWindowExist(
     [window setTabbingIdentifier: identifier];
     [window setTabbingMode: tabbingMode];
 #endif
+    if (tabbingId) {
+	ckfree(tabbingId);
+    }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
     [window setContentView:contentView];
