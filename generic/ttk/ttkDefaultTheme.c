@@ -414,11 +414,11 @@ static const IndicatorSpec checkbutton_spec = {
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
@@ -431,11 +431,11 @@ static const char radiobtnOffData[] = "\
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
