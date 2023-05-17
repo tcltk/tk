@@ -480,7 +480,7 @@ ExpandPercents(
 		if (index == TCL_INDEX_NONE) {
 		    snprintf(numStorage, sizeof(numStorage), "-1");
 		} else {
-		    snprintf(numStorage, sizeof(numStorage), "%" TKSIZET_MODIFIER "u", index);
+		    snprintf(numStorage, sizeof(numStorage), "%" TCL_SIZE_MODIFIER "u", index);
 		}
 		string = numStorage;
 		break;

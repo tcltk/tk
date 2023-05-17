@@ -10,7 +10,7 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-geometry, tk_library, tk_patchLevel, tk_strictMotif, tk_version \- Variables used or set by Tk
+geometry, tk_library, tk_patchLevel, tk_strictMotif, tk::svgFmt, tk_version \- Variables used or set by Tk
 .BE
 .SH DESCRIPTION
 .PP
@@ -61,6 +61,18 @@ closely as possible to Motif look-and-feel standards.
 For example, active elements such as buttons and scrollbar
 sliders will not change color when the pointer passes over them.
 Modern applications should not normally set this variable.
+.TP
+\fBtk::svgFmt\fR
+.
+This variable is set at Tk initialization time to the value
+[\fBlist svg \-scale\fR [\fBexpr\fR {\fIscalingPct\fR / 100.0}]],
+where \fIscalingPct\fR is the scaling percentage (100, 125, 150, ...)
+corresponding to the display's DPI scaling level.  It is recommended
+to pass the value of this variable to the commands \fBimage create
+photo\fR, \fIimageName\fB put\fR, and \fIimageName\fB read\fR as the
+value of their \fB\-format\fR option when creating or manipulating
+SVG images, to make sure that their sizes will correspond to the
+display's DPI scaling level.
 .TP 15
 \fBtk_version\fR
 .

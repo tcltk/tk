@@ -1513,7 +1513,7 @@ TkMacOSXNSImageCreate(
 	TkMacOSXNSImageDelete(modelPtr);
 	return TCL_ERROR;
     }
-    Tcl_CreateObjCommand(interp, name, TkMacOSXNSImageObjCmd, modelPtr, NULL);
+    Tcl_CreateObjCommand2(interp, name, TkMacOSXNSImageObjCmd, modelPtr, NULL);
     *clientDataPtr = modelPtr;
     return TCL_OK;
 }
