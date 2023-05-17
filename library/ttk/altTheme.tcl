@@ -95,7 +95,7 @@ namespace eval ttk::theme::alt {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Item -diameter 6.75p \
+	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview -background $colors(-window) \
 	    -stripedbackground $colors(-alternate) -indent 15p
