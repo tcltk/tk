@@ -102,34 +102,14 @@ proc ::tk::ScalingPct {} {
 	}
     }
 
-    if {$pct < 100 + 12.5} {
-	set pct 100
-    } elseif {$pct < 125 + 12.5} {
-	set pct 125
-    } elseif {$pct < 150 + 12.5} {
-	set pct 150
-    } elseif {$pct < 175 + 12.5} {
-	set pct 175
-    } elseif {$pct < 200 + 12.5} {
-	set pct 200
-    } elseif {$pct < 225 + 12.5} {
-	set pct 225
-    } elseif {$pct < 250 + 12.5} {
-	set pct 250
-    } elseif {$pct < 275 + 12.5} {
-	set pct 275
-    } elseif {$pct < 300 + 25} {
-	set pct 300
-    } elseif {$pct < 350 + 25} {
-	set pct 350
-    } elseif {$pct < 400 + 25} {
-	set pct 400
-    } elseif {$pct < 450 + 25} {
-	set pct 450
-    } elseif {$pct < 500 + 25} {
-	set pct 500
-    } else {
-	set pct [expr {int($pct + 0.5)}]
+    #
+    # Set pct to a multiple of 25
+    #
+    for {set pct2 100} {1} {incr pct2 25} {
+	if {$pct < $pct2 + 12.5} {
+	    set pct $pct2
+	    break
+	}
     }
 
     if {$onX11 && $pct != 100 && $pct != $origPct} {
@@ -212,20 +192,25 @@ proc ::tk::ScanMonitorsFile {xrandrResult chan pctName} {
 
 	#
 	# If $outputList and $connectorList are identical then set the
-	# variable pct to 100 or 200, depending on the max. scaling
-	# within this configuration, and exit the loop.  (Due to the
-	# way fractional scaling is implemented in GNOME, we have to
-	# set the variable pct to 200 rather than 125, 150, or 175.)
+	# variable pct to 100, 200, 300, 400, or 500, depending on the
+	# max. scaling within this configuration, and exit the loop
 	#
-	if {[string compare $outputList $connectorList] == 0} {
-	    set maxScaling 0.0
+	if {$outputList eq $connectorList} {
+	    set maxScaling 1.0
 	    foreach {dummy scaling} [regexp -all -inline \
 		    {<scale>([^<]+)</scale>} $config] {
 		if {$scaling > $maxScaling} {
 		    set maxScaling $scaling
 		}
 	    }
-	    set pct [expr {$maxScaling > 1.0 ? 200 : 100}]
+
+	    foreach n {4 3 2 1 0} {
+		if {$maxScaling > $n} {
+		    set pct [expr {($n + 1) * 100}]
+		    break
+		}
+	    }
+
 	    break
 	}
     }
