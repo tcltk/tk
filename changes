@@ -4676,7 +4676,7 @@ Tk_DrawChars(). (Jim Ingham)
 
 9/24/99 (feature change) tk_dialog now uses {Times 12} by default. (hobbs)
 
---- Released 8.2.1, October 04, 1999 --- See ChangeLog for details ---
+--- Released 8.2.1, October 04, 1999
 
 10/30/99 (bug fix) fixed XKeysymToKeycode to handle mapping of symbolic
 keysyms (Left, Home, ...) with event generate (hobbs)
@@ -4688,14 +4688,14 @@ right edge changes slightly. [Bug: 3195] (hobbs)
 10/30/99 (bug fix) changed tkScrollButtonUp to check for existence of
 tkPriv(relief) in order to avoid spurious release events (hobbs)
 
---- Released 8.2.2, November 04, 1999 --- See ChangeLog for details ---
+--- Released 8.2.2, November 04, 1999
 
 11/19/99 (bug fix) fixed expression error that could cause
 'malformed bucket chain' error in tkEntry.c. (hobbs)
 
 11/19/99 (bug fix) fixed Tk_NameOfColor (hobbs)
 
---- Released 8.2.3, December 16, 1999 --- See ChangeLog for details ---
+--- Released 8.2.3, December 16, 1999
 
 1999-09-01 (feature enhancement) rewrote runtime libraries to use new
 Tcl functions where appropriate
@@ -4763,7 +4763,7 @@ to stderr instead (for Tix) (hobbs)
 
 1999-12-21 (bug fix) fixed segv with scale widget when using -cursor (hobbs)
 
---- Released 8.3b1, December 22, 1999 --- See ChangeLog for details ---
+--- Released 8.3b1, December 22, 1999
 
 2000-01-05 (bug fix) Applied fixes for unprotected arg passing through eval
 and after in Tk runtime code [Bug: 3943] (hobbs)
@@ -4785,7 +4785,7 @@ on Windows (hobbs)
 2000-01-12 (bug fix) Applied fix for cursor to not blink when entry or
 text widget was disabled [Bug: 1807] (hobbs)
 
---- Released 8.3b2, January 13, 2000 --- See ChangeLog for details ---
+--- Released 8.3b2, January 13, 2000
 
 2000-01-20 (bug fix) fixed interpretation of consecutive ^ characters in
 grid command (melski)
@@ -4839,7 +4839,7 @@ for Appearance Manager (ingham)
 2000-02-10 (feature enhancement) added support for buttons 4 && 5 as
 mousewheel style scrolling in listbox and text widget for Unix.
 
---- Released 8.3.0, February 10, 2000 --- See ChangeLog for details ---
+--- Released 8.3.0, February 10, 2000
 
 2000-03-02 (bug fix) fixed crash in listbox when cursor was configure and
 then widget was destroyed (hobbs)
@@ -4900,7 +4900,7 @@ redraws (hobbs)
 
 2000-04 more docs for public APIs (melski)
 
---- Released 8.3.1, April 26, 2000 --- See ChangeLog for details ---
+--- Released 8.3.1, April 26, 2000
 2000-04 (doc updates) extended, updated docs (melski)
 
 2000-05-09 (feature change) removed WS_EX_TOOLWINDOW style bit for
@@ -4943,7 +4943,7 @@ different widget class (melski)
 2000-05-31 (feature change) replaced bgerror dialog with a new and
 improved one (fellows, melski)
 
---- Released 8.4a1, June 6, 2000 --- See ChangeLog for details ---
+--- Released 8.4a1, June 6, 2000
 
 2000-05-15 (bug fix) changed wm deiconify from using idle callback to
 calling restack and focus code immediately. (hobbs)
@@ -4969,7 +4969,7 @@ and corrected search combining -regexp and -nocase. (melski)
 2000-08 (bug fix) Corrected code for using 'place', cursors, colors and 3D
 borders on multiple screens simultaneously. (hobbs, hipp)
 
---- Released 8.3.2, August 9, 2000 --- See ChangeLog for details ---
+--- Released 8.3.2, August 9, 2000
 
 2000-06-15 (new feature) [tk_getOpenFile ... -multiple] (melski)
 
@@ -5008,7 +5008,7 @@ in tk.tcl, for users of XIM and "dead" keys (hobbs)
 
  * Improved error checking in Windows native dialogs (melski, hobbs)
 
---- Released 8.4a2, November 3, 2000 --- See ChangeLog for details ---
+--- Released 8.4a2, November 3, 2000
 
 2001-04-04 (build improvements) redid Mac build structure (steffen)
 Corrected IRIX-5* configure (english).  Added support for AIX-5 (hobbs).
@@ -5049,7 +5049,7 @@ screens (hipp)
 2000-08-18 (feature enhancement) Removed redundant call to DitherInstance
 (melski)
 
---- Released 8.3.3, April 6, 2001 --- See ChangeLog for details ---
+--- Released 8.3.3, April 6, 2001
 
 2000-11-21 (new feature)[TIP 5] Tk_ClassProcs, Tk_SetClassProcs API (melski)
 
@@ -5081,7 +5081,7 @@ variables into the ::tk:: namespace (porter)
 
  * correct several minor Purify complaints (hobbs)
 
---- Released 8.4a3, August 6, 2000 --- See ChangeLog for details ---
+--- Released 8.4a3, August 6, 2000
 
 2001-08-06 (new feature) added GNU (HURD) build support. (brinkman)
 
@@ -5117,7 +5117,7 @@ expansion to the Win/Mac console. (hobbs)
 
 2001-10-17 (bug fix) updated Mac build support. (steffen)
 
---- Released 8.3.4, October 19, 2001 --- See ChangeLog for details ---
+--- Released 8.3.4, October 19, 2001
 
 2001-08-14 (bug fix)[450545] Tk's Tcl_ObjTypes now registered (fellows)
 
@@ -5180,7 +5180,7 @@ address TIP 72 changes (64-bit) in Tcl (fellows)
 
  * (updated demos) many updates to show new features (fellows)
 
---- Released 8.4a4, March 5, 2002 --- See ChangeLog for details ---
+--- Released 8.4a4, March 5, 2002
 
 2002-03-20 (feature change)[TIP 27][532644] Constness changes (porter)
 
@@ -5259,7 +5259,7 @@ hobbs)
 2002-06-22 (new feature) [TIP 93] enhanced get/delete to accept accept
 multiple range pairs (hobbs)
 
---- Released 8.4b1, July 5, 2002 --- See ChangeLog for details ---
+--- Released 8.4b1, July 5, 2002
 
 2002-07-11 (bug fix) some memory allocation failures now result in
 	error messages rather than panic (fellows)
@@ -5293,7 +5293,7 @@ multiple range pairs (hobbs)
 
 Rewrote Tk test suite to use tcltest package.
 
---- Released 8.4b2, August 9, 2002 --- See ChangeLog for details ---
+--- Released 8.4b2, August 9, 2002
 
 2002-08-20 (bug fix) tk.h checks for matching tcl.h version (porter)
 
@@ -5309,7 +5309,7 @@ Rewrote Tk test suite to use tcltest package.
 
 2002-09-02 (platfrom support) 64-bit compile on HP-11 (martin)
 
---- Released 8.4.0, September 10, 2002 --- See ChangeLog for details ---
+--- Released 8.4.0, September 10, 2002
 
 2002-09-15 (bug fix)[570902] Use PEEK_XCLOSEIM to examine the input context
 queue before invoking XCloseIM. Generate an assert if there is an input
@@ -5367,7 +5367,7 @@ text antialiasing where available, default is enabled.  Added a linked
 boolean ::tk::mac::antialiasedtext with write trace to allow control of
 antialiasing from tcl.  (steffen)
 
---- Released 8.4.1, October 22, 2002 --- See ChangeLog for details ---
+--- Released 8.4.1, October 22, 2002
 
 2002-11-07 (bug fix)[635025,532022] Make [place info] complete and bring into
 line with other geometry managers. (spjuth)
@@ -5477,7 +5477,7 @@ on Windows. (martin)
 of the event structure when that field is valid for that event type. (fellows)
 	*** POTENTIAL INCOMPATIBILITY ***
 
---- Released 8.4.2, March 3, 2003 --- See ChangeLog for details ---
+--- Released 8.4.2, March 3, 2003
 
 2003-03-14 (bug fix)[701812] Stop buttons from being very wide when a
 tk_messageBox has a lot of content on Unix
@@ -5500,7 +5500,7 @@ charset fonts.  gb2312.enc was made to be euc-cn for Tcl because that is
 what is most often meant, but X really wants the original (-raw) gb2312
 encoding.
 
---- Released 8.4.3, May 20, 2003 --- See ChangeLog for details ---
+--- Released 8.4.3, May 20, 2003
 
 2003-07-07 (bug fix)[749353] Improve deletion of images on exit.
 
@@ -5541,7 +5541,7 @@ on unix.
 2003-07-19 (bug fix)[706765] Correctly handle the -sliderrelief option
 while moving the thumb.
 
---- Released 8.4.4, July 22, 2003 --- See ChangeLog for details ---
+--- Released 8.4.4, July 22, 2003
 
 2003-08-13 (bug fix)[787065] Fix Button-2 binding for scale widget.
 
@@ -5586,7 +5586,7 @@ with spaces in their names.
 
 2003-11-17 (bug fix) Fix menubutton -compound state disabled drawing.
 
---- Released 8.4.5, November 20, 2003 --- See ChangeLog for details ---
+--- Released 8.4.5, November 20, 2003
 
 2003-12-17 (platform support)[842952] Mac OS X: [scrollbar]
 
@@ -5619,7 +5619,7 @@ images with partial transparency.
 
 2004-03-01 (platform support)[218561] Allow 64-bit configure on IRIX64-6.5*
 
---- Released 8.4.6, March 1, 2004 --- See ChangeLog for details ---
+--- Released 8.4.6, March 1, 2004
 
 Changes to 8.5a1 include all changes to the 8.4 line through 8.4.6,
 plus the following, which focuses on the high-level feature changes
@@ -5669,7 +5669,7 @@ in this changeset (new minor version) rather than bug fixes:
 
  * [TIP #150] make 'send' available on Windows
 
---- Released 8.5a1, March 3, 2004 --- See ChangeLog for details ---
+--- Released 8.5a1, March 3, 2004
 
 2004-03-17 (platform support) Mac OS X: Grab the Command-H &
 Command-Shift-H keys and use them for Hide and Hide Others before passing
@@ -5726,7 +5726,7 @@ Icelandic (and Faroese) keyboards (riefenstahl)
 2004-07-24 (platform support) Mac OS X: Complete the implementation of
 the CG version of the X drawing emulation layer. (tittle, ingham)
 
---- Released 8.4.7, July 26, 2004 --- See ChangeLog for details ---
+--- Released 8.4.7, July 26, 2004
 
 2004-08-09 (bug fix)[1006286] test wrapping on canvas; Win (dejong)
 
@@ -5780,7 +5780,7 @@ the CG version of the X drawing emulation layer. (tittle, ingham)
 
 2004-11-18 (new feature) configure options --enable-man-suffix (max)
 
---- Released 8.4.8, November 18, 2004 --- See ChangeLog for details ---
+--- Released 8.4.8, November 18, 2004
 
 2004-12-01 (bug fix)[979239] Fix clipping of partially transparent images
 on buttons on unix to avoid X error (hobbs, petasis)
@@ -5788,7 +5788,7 @@ on buttons on unix to avoid X error (hobbs, petasis)
 2004-12-03 (bug fix)[848161] Fix Tk_PhotoPut(Zoomed)Block overlay
 compositing of partially transparent areas.
 
---- Released 8.4.9, December 6, 2004 --- See ChangeLog for details ---
+--- Released 8.4.9, December 6, 2004
 
 Changes to 8.5a2 include all changes to the 8.4 line through 8.4.9, plus
 the following, which focuses on the 8.5-only changes since 8.5a1:
@@ -5883,7 +5883,7 @@ for long lines using unix AA fonts (english)
 
 Updated test suite, documentation, and demos.
 
---- Released 8.5a2, December 7, 2004 --- See ChangeLog for details ---
+--- Released 8.5a2, December 7, 2004
 
 2004-12-09 (performance)[1081966] BMP, JPG image load speed (fellows)
 
@@ -6059,7 +6059,7 @@ display/resizing (south)
 
 Documentation improvements [1087842,1081527,1115907,etc.]
 
---- Released 8.5a3, June 4, 2005 --- See ChangeLog for details ---
+--- Released 8.5a3, June 4, 2005
 
 2005-06-23 (bug fix)[1176610] Aqua: default [entry] borderwidth (steffen)
 
@@ -6177,7 +6177,7 @@ registered applevents (steffen)
 
 Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
---- Released 8.5a4, April 27, 2006 --- See ChangeLog for details ---
+--- Released 8.5a4, April 27, 2006
 
 2006-04-28 (bug fix)[1243318] Aqua: incorrect cursor pos in bindings (steffen)
 
@@ -6240,7 +6240,7 @@ Documentation improvements [1224983,1247835,1151523,1357575,1083838]
 
 2006-10-16 (bug fix)[1558051] Aqua: CG drawing matches X11 (steffen)
 
---- Released 8.5a5, October 20, 2006 --- See ChangeLog for details ---
+--- Released 8.5a5, October 20, 2006
 
 2006-10-30 (new feature)[TIP 48] Addition of themed tk widgets to Tk as Ttk
 (themed Tk).  Adds ttk::notebook, ttk::sizegrip, ttk::combobox,
@@ -6323,7 +6323,7 @@ window class of already existing windows (steffen)
 2007-04-23 (platform support) Aqua: add tcl document extensions and mime type
 to Wish.app's Info.plist (steffen)
 
---- Released 8.5a6, April 25, 2007 --- See ChangeLog for details ---
+--- Released 8.5a6, April 25, 2007
 
 2007-05-04 (new feature)[TIP 145] Enhanced font handling (thoyts)
 
@@ -6378,7 +6378,7 @@ project for Xcode 3.0 (steffen)
 
 2007-09-20 (bug fix)[1791052] [text] DLine layout crash (khomoutov,fellows)
 
---- Released 8.5b1, September 26, 2007 --- See ChangeLog for details ---
+--- Released 8.5b1, September 26, 2007
 
 2007-09-26 (enhancement)[1800742] msg catalog for Hungarian. (reszo)
 
@@ -6409,7 +6409,7 @@ project for Xcode 3.0 (steffen)
 
 Improvements to demo suite to make more use of Tk 8.5 features (fellows,steffen)
 
---- Released 8.5b2, October 26, 2007 --- See ChangeLog for details ---
+--- Released 8.5b2, October 26, 2007
 
 2007-10-29 (appearance change) Default look and fonts on X11 (hobbs)
 	*** POTENTIAL INCOMPATIBILITY; [::tk::classic::restore] to undo ***
@@ -6440,7 +6440,7 @@ Mac OS X Leopard (steffen)
 Many significant improvements to the documentation and demos (fellows, hobbs,
 steffen, kupries)
 
---- Released 8.5b3, Novemeber 19, 2007 --- See ChangeLog for details ---
+--- Released 8.5b3, Novemeber 19, 2007
 
 2007-11-25 (bug fix)[1343984] ttk::notebook bugs (english,boudaillier)
 
@@ -6462,7 +6462,7 @@ use (hobbs)
 
 Several documentation and release notes improvements
 
---- Released 8.5.0, December 18, 2007 --- See ChangeLog for details ---
+--- Released 8.5.0, December 18, 2007
 
 2007-12-30 (bug fix)[1860802] fixed Dutch message catalog (markus,fellows)
 
@@ -6480,7 +6480,7 @@ Several documentation and release notes improvements
 
 2008-02-01 (bug fix)[CVE-2008-0553] buffer overflow in GIF format (max)
 
---- Released 8.5.1, February 5, 2008 --- See ChangeLog for details ---
+--- Released 8.5.1, February 5, 2008
 
 2008-02-27 (bug fix)[1863346] Aqua: memleak in QD drawing (steffen)
 
@@ -6498,7 +6498,7 @@ Several documentation and release notes improvements
 
 2008-03-27 (bug fix) restored [::safe::loadTk] (hobbs)
 
---- Released 8.5.2, March 28, 2008 --- See ChangeLog for details ---
+--- Released 8.5.2, March 28, 2008
 
 2008-04-01 (interface)[1819422] tkStubsPtr no longer in libtk (porter)
 	*** POTENTIAL INCOMPATIBILITY ***
@@ -6532,7 +6532,7 @@ Several documentation and release notes improvements
 
 2008-06-18 (bug fix) Aqua: missing focus on first map (steffen)
 
---- Released 8.6a1, June 25, 2008 --- See ChangeLog for details ---
+--- Released 8.6a1, June 25, 2008
 
 2008-07-04 (bug fix)[2009213] crash in [ttk::scale] (polo,english)
 
@@ -6555,7 +6555,7 @@ and [xy]view methods (jenglish)
 
 Test suite modernization by Ania Pawelczyk.
 
---- Released 8.6a2, August 25, 2008 --- See ChangeLog for details ---
+--- Released 8.6a2, August 25, 2008
 
 2008-08-25 (bug fix)[1936220] fix [tk_getOpenFile -multiple 1] on unix (helfter)
 
@@ -6571,7 +6571,7 @@ Test suite modernization by Ania Pawelczyk.
 format, avoiding sensitivity to locale setting. (fellows)
         *** POTENTIAL INCOMPATIBILITY ***
 
---- Released 8.6a3, October 10, 2008 --- See ChangeLog for details ---
+--- Released 8.6a3, October 10, 2008
 
 2008-10-17 (enhancement) keyboard bindings for ttk::scale (thoyts)
 
@@ -6622,7 +6622,7 @@ in screen distances, reducing precision loss (ferrieux)
 
 2008-12-18 (enhancement)[24442309] Updated German messages (haertel)
 
---- Released 8.6b1, December 19, 2008 --- See ChangeLog for details ---
+--- Released 8.6b1, December 19, 2008
 
 2008-12-27 (bug fix)[2381555] horiz. scroll [$treeview identify] (english)
 
@@ -6937,7 +6937,7 @@ and -to (porter)
 
 2011-08-03 (bug fix)[2891541] fix grab behaviour for main window (thoyts)
 
---- Released 8.6b2, August 8, 2011 --- See ChangeLog for details ---
+--- Released 8.6b2, August 8, 2011
 
 2011-09-22 (bug fix)[3404541] -takefocus option (dzach,english)
 
@@ -7014,7 +7014,7 @@ and -to (porter)
 
 Many revisions to better support a Cygwin environment (nijtmans)
 
---- Released 8.6b3, September 18, 2012 --- See ChangeLog for details ---
+--- Released 8.6b3, September 18, 2012
 
 2012-10-02 (bug fix)[3572016] menu enable after modal dialog (berg,walzer)
 
@@ -7030,7 +7030,7 @@ Many revisions to better support a Cygwin environment (nijtmans)
 
 2012-12-06 (bug fix)[3592736] stop pink greys from buggy mingw builds (fellows)
 
---- Released 8.6.0, December 20, 2012 --- See ChangeLog for details ---
+--- Released 8.6.0, December 20, 2012
 
 2013-01-04 (bug fix) Tk_InitStubs("8.6") rejected in 8.60 interp (nijtmans)
 
