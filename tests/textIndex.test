@@ -754,7 +754,7 @@ set str [string repeat "hello " 20]
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
-updateText
+update
 
 test textIndex-19.1 {Display lines} {
     .t index "2.7 displaylinestart"
@@ -810,7 +810,7 @@ test textIndex-19.12.1 {Display lines} {
 
 test textIndex-19.12.2 {Display lines} {
     .t compare [.t index "2.50 + 100 displaylines"] == "end - 1 c"
-} {1}
+} 1
 
 test textIndex-19.13 {Display lines} {
     destroy {*}[pack content .]

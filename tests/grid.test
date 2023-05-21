@@ -366,9 +366,7 @@ test grid-6.8 {location (weights)} -body {
 } -cleanup {
     grid_reset 6.8
 } -result {{-10->-1 -1} {0->0 0} {16->0 1} {201->1 1}}
-test grid-6.9 {location: check updates pending} -constraints {
-    nonPortable
-} -body {
+test grid-6.9 {location: check updates pending} -body {
     set a ""
     foreach i {0 1 2} {
 	frame .$i -width 120 -height 75 -bg red
@@ -389,12 +387,12 @@ test grid-7.2 {propagate} -body {
     grid propagate .
 } -cleanup {
     grid_reset 7.2
-} -result {1}
+} -result 1
 test grid-7.3 {propagate} -body {
     grid propagate . 0;grid propagate .
 } -cleanup {
     grid_reset 7.3
-} -result {0}
+} -result 0
 test grid-7.4 {propagate} -body {
     grid propagate .x
 } -cleanup {
@@ -596,7 +594,7 @@ test grid-10.5 {column/row configure} -body {
     grid columnconfigure . 265 -weight
 } -cleanup {
     grid_reset 10.5
-} -result {0}
+} -result 0
 test grid-10.6 {column/row configure} -body {
     grid columnconfigure . 0
 } -cleanup {
@@ -622,7 +620,7 @@ test grid-10.10 {column/row configure} -body {
     grid columnconfigure . 0 -minsize
 } -cleanup {
     grid_reset 10.10
-} -result {10}
+} -result 10
 test grid-10.11 {column/row configure} -body {
     grid columnconfigure . 0 -weight bad
 } -cleanup {
@@ -638,7 +636,7 @@ test grid-10.13 {column/row configure} -body {
     grid columnconfigure . 0 -weight
 } -cleanup {
     grid_reset 10.13
-} -result {3}
+} -result 3
 test grid-10.14 {column/row configure} -body {
     grid columnconfigure . 0 -pad foo
 } -cleanup {
@@ -654,7 +652,7 @@ test grid-10.16 {column/row configure} -body {
     grid columnconfigure . 0 -pad
 } -cleanup {
     grid_reset 10.16
-} -result {3}
+} -result 3
 test grid-10.17 {column/row configure} -body {
     frame .f
     set a ""
@@ -1825,7 +1823,6 @@ test grid-17.1 {forget and pending idle handlers} -body {
     set result ok
 } -result ok
 
-
 test grid-18.1 {test respect for internalborder} -body {
     toplevel .pack
     wm geometry .pack 200x200
@@ -2040,7 +2037,7 @@ test grid-23 {grid configure -in leaked from previous container window - bug
     pack forget .f
     update
     winfo ismapped .t ; # must return 1
-} {1}
+} 1
 grid_reset 23
 
 # cleanup

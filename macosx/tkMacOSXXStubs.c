@@ -7,14 +7,15 @@
  *	eventually be moved into other files.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2014 Marc Culler.
+ * Copyright (c) 2014 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 
@@ -79,10 +80,10 @@ TkMacOSXDisplayChanged(
     NSArray *nsScreens;
 
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     nsScreens = [NSScreen screens];
     if (nsScreens && [nsScreens count]) {
@@ -90,11 +91,11 @@ TkMacOSXDisplayChanged(
 	NSRect bounds = [s frame];
 	NSRect maxBounds = NSZeroRect;
 
-	screen->root_depth = NSBitsPerPixelFromDepth([s depth]);
-	screen->width = bounds.size.width;
-	screen->height = bounds.size.height;
-	screen->mwidth = (bounds.size.width * 254 + 360) / 720;
-	screen->mheight = (bounds.size.height * 254 + 360) / 720;
+	DefaultDepthOfScreen(screen) = NSBitsPerPixelFromDepth([s depth]);
+	WidthOfScreen(screen) = bounds.size.width;
+	HeightOfScreen(screen) = bounds.size.height;
+	WidthMMOfScreen(screen) = (bounds.size.width * 254 + 360) / 720;
+	HeightMMOfScreen(screen) = (bounds.size.height * 254 + 360) / 720;
 
 	for (s in nsScreens) {
 	    maxBounds = NSUnionRect(maxBounds, [s visibleFrame]);
@@ -194,7 +195,7 @@ TkpOpenDisplay(
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
-	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
+	if (strcmp(DisplayString(gMacDisplay->display), display_name) == 0) {
 	    return gMacDisplay;
 	} else {
 	    return NULL;
@@ -207,7 +208,7 @@ TkpOpenDisplay(
     bzero(screen, sizeof(Screen));
 
     display->resource_alloc = MacXIdAlloc;
-    display->request	    = 0;
+    LastKnownRequestProcessed(display) = 0;
     display->qlen	    = 0;
     display->fd		    = fd;
     display->screens	    = screen;
@@ -238,9 +239,9 @@ TkpOpenDisplay(
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
 #else
 	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-	major = systemVersion.majorVersion;
-	minor = systemVersion.minorVersion;
-	patch = systemVersion.patchVersion;
+	major = (int)systemVersion.majorVersion;
+	minor = (int)systemVersion.minorVersion;
+	patch = (int)systemVersion.patchVersion;
 #endif
 	display->release = major << 16 | minor << 8 | patch;
     }
@@ -248,20 +249,20 @@ TkpOpenDisplay(
     /*
      * These screen bits never change
      */
-    screen->root	= ROOT_ID;
-    screen->display	= display;
-    screen->black_pixel = 0x00000000;
-    screen->white_pixel = 0x00FFFFFF;
+    RootWindowOfScreen(screen)	= ROOT_ID;
+    DisplayOfScreen(screen)	= display;
+    BlackPixelOfScreen(screen) = 0x00000000;
+    WhitePixelOfScreen(screen) = 0x00FFFFFF;
     screen->ext_data	= (XExtData *) &maxBounds;
 
-    screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
-    screen->root_visual->visualid     = 0;
-    screen->root_visual->c_class      = TrueColor;
-    screen->root_visual->red_mask     = 0x00FF0000;
-    screen->root_visual->green_mask   = 0x0000FF00;
-    screen->root_visual->blue_mask    = 0x000000FF;
-    screen->root_visual->bits_per_rgb = 24;
-    screen->root_visual->map_entries  = 256;
+    DefaultVisualOfScreen(screen) = (Visual *)ckalloc(sizeof(Visual));
+    DefaultVisualOfScreen(screen)->visualid     = 0;
+    DefaultVisualOfScreen(screen)->c_class      = TrueColor;
+    DefaultVisualOfScreen(screen)->red_mask     = 0x00FF0000;
+    DefaultVisualOfScreen(screen)->green_mask   = 0x0000FF00;
+    DefaultVisualOfScreen(screen)->blue_mask    = 0x000000FF;
+    DefaultVisualOfScreen(screen)->bits_per_rgb = 24;
+    DefaultVisualOfScreen(screen)->map_entries  = 256;
 
     /*
      * Initialize screen bits that may change
@@ -308,7 +309,7 @@ void
 TkpCloseDisplay(
     TkDisplay *displayPtr)
 {
-    Display *display = displayPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)displayPtr->display;
 
     if (gMacDisplay != displayPtr) {
 	Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
@@ -316,8 +317,8 @@ TkpCloseDisplay(
 
     gMacDisplay = NULL;
     if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
+	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	ckfree(display->screens);
     }
@@ -434,7 +435,7 @@ XGetAtomName(
     Display *display,
     TCL_UNUSED(Atom))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -450,7 +451,7 @@ XRootWindow(
     Display *display,
     TCL_UNUSED(int))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ROOT_ID;
 }
 
@@ -468,7 +469,7 @@ XGetGeometry(
 {
     TkWindow *winPtr = ((MacDrawable *)d)->winPtr;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     *root_return = ROOT_ID;
     if (winPtr) {
 	*x_return = Tk_X(winPtr);
@@ -645,7 +646,7 @@ XGetWindowProperty(
     unsigned long *bytes_after_return,
     TCL_UNUSED(unsigned char **))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     *actual_type_return = None;
     *actual_format_return = *bytes_after_return = 0;
     *nitems_return = 0;
@@ -670,7 +671,7 @@ XSetIconName(
     /*
      * This is a no-op, no icon name for Macs.
      */
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -685,7 +686,7 @@ XForceScreenSaver(
      * is!
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -705,16 +706,18 @@ XSync(
     /*
      *  The main use of XSync is by the update command, which alternates
      *  between running an event loop to process all events without waiting and
-     *  calling XSync on all displays until no events are left.  There is
-     *  nothing for the mac to do with respect to syncing its one display but
-     *  it can (and, during regression testing, frequently does) happen that
-     *  timer events fire during the event loop. Processing those here seems
-     *  to make the update command work in a way that is more consistent with
-     *  its behavior on other platforms.
+     *  calling XSync on all displays until no events are left.  On X11 the
+     *  call to XSync might cause the window manager to generate more events
+     *  which would then get processed. Apparently this process stabilizes on
+     *  X11, leaving the window manager in a state where all events have been
+     *  generated and no additional events can be genereated by updating widgets.
+     *
+     *  It is not clear what the Aqua port should do when XSync is called, but
+     *  currently the best option seems to be to do nothing.  (See ticket
+     *  [da5f2266df].)
      */
 
-    while (Tcl_DoOneEvent(TCL_TIMER_EVENTS|TCL_DONT_WAIT)){}
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 
@@ -726,7 +729,7 @@ XSetClipRectangles(
     int clip_y_origin,
     XRectangle* rectangles,
     int n,
-    int ordering)
+    TCL_UNUSED(int))
 {
     TkRegion clipRgn = TkCreateRegion();
 
@@ -903,7 +906,7 @@ XSynchronize(
     Display *display,
     TCL_UNUSED(Bool))
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return NULL;
 }
 
@@ -920,7 +923,7 @@ int
 XNoOp(
     Display *display)
 {
-	display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 

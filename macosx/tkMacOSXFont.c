@@ -614,7 +614,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -636,7 +636,7 @@ TkpGetFontFromAttributes(
     if (tkFontPtr == NULL) {
 	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
-	fontPtr = (MacFont *) tkFontPtr;
+	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
     CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
@@ -1189,7 +1189,7 @@ TkpDrawAngledCharsInContext(
     MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
-    CGColorRef fg;
+    CGColorRef fg = NULL;
     NSFont *nsFont;
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
@@ -1207,8 +1207,10 @@ TkpDrawAngledCharsInContext(
     context = drawingContext.context;
     TkSetMacColor(gc->foreground, &fg);
     attributes = [fontPtr->nsAttributes mutableCopy];
-    [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
-    CFRelease(fg);
+    if (fg) {
+	[attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
+	CGColorRelease(fg);
+    }
     nsFont = [attributes objectForKey:NSFontAttributeName];
     [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
@@ -1321,6 +1323,7 @@ TkMacOSXNSFontAttributesForFont(
  *---------------------------------------------------------------------------
  */
 
+#undef TkMacOSXIsCharacterMissing
 int
 TkMacOSXIsCharacterMissing(
     TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
@@ -1363,7 +1366,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
