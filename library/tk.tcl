@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.6.12
+package require -exact Tk  8.6.13
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -178,10 +178,12 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 
     catch {focus $oldFocus}
     grab release $grab
-    if {$destroy eq "withdraw"} {
-	wm withdraw $grab
-    } else {
-	destroy $grab
+    if {[winfo exists $grab]} {
+	if {$destroy eq "withdraw"} {
+	    wm withdraw $grab
+	} else {
+	    destroy $grab
+	}
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
 	if {$oldStatus eq "global"} {

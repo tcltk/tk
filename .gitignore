@@ -16,11 +16,13 @@
 Makefile
 Tk-Info.plist
 Wish-Info.plist
+Credits.html
 autom4te.cache
 config.cache
 config.log
 config.status
 config.status.lineno
+doc/man.macros
 html
 manifest.uuid
 _FOSSIL_
