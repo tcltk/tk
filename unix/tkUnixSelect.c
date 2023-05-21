@@ -1511,7 +1511,7 @@ SelCvtFromX32(
 	} else {
 	    char buf[12];
 
-	    sprintf(buf, "0x%x", (unsigned int) *propPtr);
+	    snprintf(buf, sizeof(buf), "0x%x", (unsigned int) *propPtr);
 	    Tcl_DStringAppendElement(dsPtr, buf);
 	}
     }
@@ -1537,7 +1537,7 @@ SelCvtFromX8(
     for ( ; numValues > 0; propPtr++, numValues--) {
 	char buf[12];
 
-	sprintf(buf, "0x%x", (unsigned char) *propPtr);
+	snprintf(buf, sizeof(buf), "0x%x", (unsigned char) *propPtr);
 	Tcl_DStringAppendElement(dsPtr, buf);
     }
     Tcl_DStringAppend(dsPtr, " ", 1);

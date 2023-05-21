@@ -554,6 +554,14 @@ Ucs2beToUtfProc(
  *-------------------------------------------------------------------------
  */
 
+#if defined(USE_TCL_STUBS)
+/* Since the UCS-2BE encoding is only used when Tk is dynamically loaded in Tcl 8.6,
+ * make sure that Tcl_UtfCharComplete is ALWAYS the pre-TIP #575 version,
+ * even though Tk is being compiled with -DTCL_NO_DEPRECATED! */
+#   undef Tcl_UtfCharComplete
+#   define Tcl_UtfCharComplete ((int (*)(const char *, int))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[326]))
+#endif
+
 static int
 UtfToUcs2beProc(
     TCL_UNUSED(void *),	/* TableEncodingData that specifies
@@ -1427,7 +1435,7 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    TCL_UNUSED(int),		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
@@ -1437,8 +1445,6 @@ TkpDrawAngledCharsInContext(
 {
     int widthUntilStart;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
-
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -2802,7 +2808,7 @@ GetScreenFont(
 	    rest = strchr(rest + 1, '-');
 	}
 	*str = '\0';
-	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
+	snprintf(buf, sizeof(buf), "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
 		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
@@ -2940,7 +2946,7 @@ ListFonts(
 {
     char buf[256];
 
-    sprintf(buf, "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
+    snprintf(buf, sizeof(buf), "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
     return XListFonts(display, buf, 10000, numNamesPtr);
 }
 

@@ -976,7 +976,7 @@ test imgPhoto-10.2 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints 
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-10.3 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints {
     hasTeapotPhoto
 } -setup {
@@ -990,7 +990,7 @@ test imgPhoto-10.3 {Tk_ImgPhotoPutBlock, same source and dest img} -constraints 
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
     imageCleanup
 } -body {
@@ -1000,7 +1000,6 @@ test imgPhoto-10.4 {Tk_ImgPhotoPutBlock, empty image} -setup {
 } -cleanup {
     imageCleanup
 } -result {0 0}
-
 
 test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     imageCleanup
@@ -1033,7 +1032,7 @@ test imgPhoto-12.2 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -constr
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-12.3 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -setup {
     imageCleanup
 } -body {
@@ -1045,7 +1044,7 @@ test imgPhoto-12.3 {Tk_ImgPhotoPutZoomedBlock, same source and dest img} -setup 
     string equal [photo1 data] [photo2 data]
 } -cleanup {
     imageCleanup
-} -result {1}
+} -result 1
 test imgPhoto-12.4 {Tk_ImgPhotoPutZoomedBlock, empty image} -setup {
     imageCleanup
 } -body {
