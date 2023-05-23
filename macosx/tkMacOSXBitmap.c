@@ -307,8 +307,6 @@ TkpGetNativeAppBitmap(
 	}
     }
     if (image) {
-	*width = (int)size.width;
-	*height = (int)size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
 	/*
@@ -323,6 +321,8 @@ TkpGetNativeAppBitmap(
 	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
 	}
     }
+    *width = (int)size.width;
+    *height = (int)size.height;
     return pixmap;
 }
 
