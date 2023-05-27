@@ -1369,6 +1369,13 @@ test treeview-bc602049ab "treeview with custom background does not change size w
     image delete tvbg
 } -result {1}
 
+test treeview-6ee162c3d9 "style configure Treeview -rowheight 0" -setup {
+    tvSetupWithItems
+} -body {
+    ttk::style configure Treeview -rowheight 0  ; # shall not crash
+    update
+} -result {}
+
 test treeview-column0-leak "Test for leak in tree column" -setup {
     destroy .ttt
     set heading [string range _Hej_ 1 3]
