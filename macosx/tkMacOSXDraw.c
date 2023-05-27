@@ -419,7 +419,7 @@ XDrawLines(
 	return BadValue;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -487,7 +487,7 @@ XDrawSegments(
     TkMacOSXDrawingContext dc;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -539,7 +539,7 @@ XFillPolygon(
     TkMacOSXDrawingContext dc;
     int i;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -603,7 +603,7 @@ XDrawRectangle(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -658,7 +658,7 @@ XDrawRectangles(
     XRectangle * rectPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -711,7 +711,7 @@ XFillRectangles(
     XRectangle * rectPtr;
     int i;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -816,7 +816,7 @@ XDrawArc(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -887,7 +887,7 @@ XDrawArcs(
     XArc *arcPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -969,7 +969,7 @@ XFillArc(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -1043,7 +1043,7 @@ XFillArcs(
     XArc * arcPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -1340,15 +1340,6 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    drawingHeight = view ? [view bounds].size.height :
-	CGContextGetClipBoundingBox(dc.context).size.height;
-    CGAffineTransform t = {
-	.a = 1, .b = 0,
-	.c = 0, .d = -1,
-	.tx = 0,
-	.ty = drawingHeight
-    };
-
 #ifdef TK_MAC_DEBUG_CG
     fprintf(stderr, "TkMacOSXSetupDrawingContext: pushing GState for %s\n",
 	    macDraw->winPtr ? Tk_PathName(macDraw->winPtr) : "None");
@@ -1356,7 +1347,17 @@ TkMacOSXSetupDrawingContext(
 
     CGContextSaveGState(dc.context);
     CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-    CGContextConcatCTM(dc.context, t);
+    { /* Restricted scope for t needed for C++ */
+	drawingHeight = view ? [view bounds].size.height :
+	    CGContextGetClipBoundingBox(dc.context).size.height;
+	CGAffineTransform t = {
+	    .a = 1, .b = 0,
+	    .c = 0, .d = -1,
+	    .tx = 0,
+	    .ty = drawingHeight
+	};
+	CGContextConcatCTM(dc.context, t);
+    }
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
