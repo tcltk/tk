@@ -409,7 +409,7 @@ test notebook-7.7d "insert - current tab undisturbed" -body {
 test notebook-7.8a "move tabs - current tab undisturbed - exhaustive" -body {
     .nb select .nb.f0
     foreach i {0 1 2 3 4} {
-    	.nb insert $i .nb.f$i
+	.nb insert $i .nb.f$i
     }
 
     foreach i {0 1 2 3 4} {
@@ -466,7 +466,7 @@ test notebook-1817596-2 "error in insert should have no effect" -body {
     .nb insert end [ttk::label .nb.l1]
     .nb insert end [ttk::label .nb.l2]
     list \
-    	[catch { .nb insert .l2 0 -badoption badvalue } err] \
+	[catch { .nb insert .l2 0 -badoption badvalue } err] \
 	[.nb tabs] \
 } -result [list 1 [list .nb.l1 .nb.l2]] -cleanup { destroy .nb }
 

@@ -250,7 +250,7 @@ test canvText-4.6 {ConfigureText procedure: adjust cursor} -setup {
     .c index test insert
 } -cleanup {
 	.c delete test
-} -result {4}
+} -result 4
 
 
 test canvText-5.1 {ConfigureText procedure: adjust cursor} -body {
@@ -573,7 +573,7 @@ test canvText-8.8 {TextInsert procedure: inserting before cursor} -setup {
     .c icursor test 3
     .c insert test 2 "xyz"
     .c index test insert
-} -result {6}
+} -result 6
 test canvText-8.9 {TextInsert procedure: inserting after cursor} -setup {
     .c create text 20 20 -tag test
     focus .c
@@ -583,7 +583,7 @@ test canvText-8.9 {TextInsert procedure: inserting after cursor} -setup {
     .c icursor test 3
     .c insert test 4 "xyz"
     .c index test insert
-} -result {3}
+} -result 3
 
 # Item used in 9.* tests
 .c create text 20 20 -tag test
@@ -673,19 +673,19 @@ test canvText-9.13 {TextInsert procedure: move cursor} -body {
     .c icursor test 6
     .c dchars test 2 4
     .c index test insert
-} -result {3}
+} -result 3
 test canvText-9.14 {TextInsert procedure: keep cursor >= first} -body {
     .c itemconfig test -text "abcdefghijk"
     .c icursor test 6
     .c dchars test 2 10
     .c index test insert
-} -result {2}
+} -result 2
 test canvText-9.15 {TextInsert procedure: cursor doesn't move} -body {
     .c itemconfig test -text "abcdefghijk"
     .c icursor test 5
     .c dchars test 7 9
     .c index test insert
-} -result {5}
+} -result 5
 .c delete test
 
 
@@ -695,7 +695,7 @@ test canvText-10.1 {TextToPoint procedure} -body {
     .c index test @0,0
 } -cleanup {
 	.c delete test
-} -result {0}
+} -result 0
 
 
 test canvText-11.1 {TextToArea procedure} -setup {
@@ -834,7 +834,7 @@ test canvText-15.1 {SetTextCursor procedure} -setup {
     .c index test insert
 } -cleanup {
     .c delete test
-} -result {3}
+} -result 3
 
 test canvText-16.1 {GetSelText procedure} -setup {
     .c create text 0 0 -tag test

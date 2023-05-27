@@ -406,7 +406,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     }
 }
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -1418,7 +1418,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
 #else
 	    TKLog(@"The fullscreen attribute is ignored on this system.");
@@ -1717,7 +1717,8 @@ WmColormapwindowsCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList, *winPtr2;
-    int i, windowObjc, gotToplevel = 0;
+    int i, windowObjc;
+    int gotToplevel = 0;
     Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
@@ -2073,7 +2074,7 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window)winPtr);
     }
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)window);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
@@ -5792,7 +5793,8 @@ WmWinStyle(
 	{ NULL, 0 }
     };
 
-    int index, i;
+    int index;
+    int  i;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (objc == 3) {
@@ -5916,7 +5918,13 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#else
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -5953,8 +5961,8 @@ WmWinTabbingId(
 	}
 	return TCL_OK;
     }
-#endif
     return TCL_ERROR;
+#endif
 }
 
 /*
@@ -5995,7 +6003,13 @@ WmWinAppearance(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#else
     static const char *const appearanceStrings[] = {
 	"aqua", "darkaqua", "auto", NULL
     };
@@ -6055,8 +6069,6 @@ WmWinAppearance(
     }
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
-#else // MAC_OS_X_VERSION_MAX_ALLOWED > 1090
-    return TCL_ERROR;
 #endif
 }
 
@@ -7203,7 +7215,7 @@ GetMaxSize(
 				 * of the window. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    NSRect *maxBounds = (NSRect*)(winPtr->display->screens->ext_data);
+    NSRect *maxBounds = (NSRect*)(ScreenOfDisplay(winPtr->display, 0)->ext_data);
 
     if (wmPtr->maxWidth > 0) {
 	*maxWidthPtr = wmPtr->maxWidth;

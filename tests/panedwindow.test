@@ -4562,7 +4562,7 @@ test panedwindow-22.2 {PanedWindowReqProc, react to pane geometry changes} -setu
     expr {[lindex $result 1] - [lindex $result 0]}
 } -cleanup {
     deleteWindows
-} -result {10}
+} -result 10
 
 
 test panedwindow-23.1 {ConfigurePanes, can't add panedwindow to itself} -setup {
@@ -5461,7 +5461,7 @@ test panedwindow-27.2 {destroy the window cleanly on rename [Bug #616589]} -setu
     winfo exists .p
 } -cleanup {
     deleteWindows
-} -result {0}
+} -result 0
 
 
 test panedwindow-28.1 {resizing width} -setup {

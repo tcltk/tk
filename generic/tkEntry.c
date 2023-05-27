@@ -19,6 +19,10 @@
 #include "default.h"
 #include "tkEntry.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The following macro defines how many extra pixels to leave on each side of
  * the text in the entry.
@@ -1105,6 +1109,7 @@ ConfigureEntry(
     double oldFrom = 0.0;	/* lint initialization */
     double oldTo = 0.0;		/* lint initialization */
     int code;
+    size_t formatSpace = TCL_DOUBLE_SPACE;
 
     /*
      * Eliminate any existing trace on a variable monitored by the entry.
@@ -1193,7 +1198,7 @@ ConfigureEntry(
 		 */
 
 		int min, max;
-		size_t formatLen, formatSpace = TCL_DOUBLE_SPACE;
+		size_t formatLen;
 		char fbuf[4], *fmt = sbPtr->reqFormat;
 
 		formatLen = strlen(fmt);
@@ -1370,7 +1375,7 @@ ConfigureEntry(
 	    } else if (dvalue < sbPtr->fromValue) {
 		dvalue = sbPtr->fromValue;
 	    }
-	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
+	    snprintf(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat, dvalue);
 
             /*
 	     * No check for error return here as well, because any possible
@@ -3529,11 +3534,11 @@ ExpandPercents(
 		    number = -1;
 		    break;
 		}
-		sprintf(numStorage, "%d", number);
+		snprintf(numStorage, sizeof(numStorage), "%d", number);
 		string = numStorage;
 		break;
 	    case 'i':		/* index of insert/delete */
-		sprintf(numStorage, "%d", index);
+		snprintf(numStorage, sizeof(numStorage), "%d", index);
 		string = numStorage;
 		break;
 	    case 'P':		/* 'Peeked' new value of the string */
@@ -4400,7 +4405,7 @@ SpinboxInvoke(
 		    dvalue = sbPtr->toValue;
 		}
 	    }
-	    sprintf(sbPtr->formatBuf, sbPtr->valueFormat, dvalue);
+	    snprintf(sbPtr->formatBuf, TCL_DOUBLE_SPACE, sbPtr->valueFormat, dvalue);
 	    code = EntryValueChanged(entryPtr, sbPtr->formatBuf);
 	}
     }
@@ -4517,9 +4522,9 @@ ComputeFormat(
 	fDigits++;		/* Zero to left of decimal point. */
     }
     if (fDigits <= eDigits) {
-	sprintf(sbPtr->digitFormat, "%%.%df", afterDecimal);
+	snprintf(sbPtr->digitFormat, sizeof(sbPtr->digitFormat), "%%.%df", afterDecimal);
     } else {
-	sprintf(sbPtr->digitFormat, "%%.%de", numDigits-1);
+	snprintf(sbPtr->digitFormat, sizeof(sbPtr->digitFormat), "%%.%de", numDigits-1);
     }
     sbPtr->valueFormat = sbPtr->digitFormat;
     return TCL_OK;

@@ -47,7 +47,7 @@ static NSUInteger textInputModifiers;
 - (NSEvent *) tkProcessKeyEvent: (NSEvent *) theEvent
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
     NSWindow *w = [theEvent window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w), *grabWinPtr, *focusWinPtr;
@@ -146,7 +146,7 @@ static NSUInteger textInputModifiers;
 
 #if defined(TK_MAC_DEBUG_EVENTS) || NS_KEYLOG == 1
 	TKLog(@"-[%@(%p) %s] repeat=%d mods=%x char=%x code=%lu c=%d type=%d",
-	      [self class], self, _cmd,
+	      [self class], self, sel_getName(_cmd),
 	      (type == NSKeyDown) && [theEvent isARepeat], modifiers, keychar,
 	      virt, w, type);
 #endif

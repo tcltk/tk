@@ -129,11 +129,11 @@
 #undef XGrabServer
 #define XGrabServer(display) (0)
 #undef XNoOp
-#define XNoOp(display) (display->request++,0)
+#define XNoOp(display) (LastKnownRequestProcessed(display)++,0)
 #undef XUngrabServer
 #define XUngrabServer(display) (0)
 #undef XSynchronize
-#define XSynchronize(display, onoff) (display->request++,NULL)
+#define XSynchronize(display, onoff) (LastKnownRequestProcessed(display)++,NULL)
 #undef XVisualIDFromVisual
 #define XVisualIDFromVisual(visual) (visual->visualid)
 
@@ -162,7 +162,7 @@
  */
 
 #define TkpPrintWindowId(buf,w) \
-	sprintf((buf), "0x%lx", (unsigned long) (w))
+	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 
 /*
  * Turn off Tk double-buffering as Aqua windows are already double-buffered.
