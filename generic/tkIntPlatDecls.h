@@ -795,6 +795,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkGenerateActivateEvents_
 
 #define TkMacOSXGetContainer TkGetTransientMaster
+#undef TkMacOSXIsCharacterMissing
+#define TkMacOSXIsCharacterMissing(tkfont) ((void)tkfont, 0)
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

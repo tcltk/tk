@@ -1879,7 +1879,7 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window) winPtr);
     }
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)window);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }

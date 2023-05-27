@@ -403,14 +403,14 @@ test send-10.4 {SendEventProc procedure, leading nulls, bogus commands} {secures
     set a null
     update
     set a
-} {44}
+} 44
 test send-10.5 {SendEventProc procedure, extraneous command options} {secureserver testsend} {
     testsend prop comm Comm \
 	    "c\n-n tktest\n-x miscellanous\n-y who knows?\n-s set a new\n"
     set a null
     update
     set a
-} {new}
+} new
 test send-10.6 {SendEventProc procedure, unknown interpreter} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \

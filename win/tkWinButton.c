@@ -186,7 +186,7 @@ TkpButtonSetDefaults(void)
 {
     int width = GetSystemMetrics(SM_CXEDGE);
 	if (width > 0) {
-	    sprintf(tkDefButtonBorderWidth, "%d", width);
+	    snprintf(tkDefButtonBorderWidth, sizeof(tkDefButtonBorderWidth), "%d", width);
 	}
 }
 

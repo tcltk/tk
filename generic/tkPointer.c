@@ -428,7 +428,7 @@ XGrabPointer(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     tsdPtr->grabWinPtr = (TkWindow *) Tk_IdToWindow(display, grab_window);
     tsdPtr->restrictWinPtr = NULL;
     TkpSetCapture(tsdPtr->grabWinPtr);
@@ -463,7 +463,7 @@ XUngrabPointer(
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     tsdPtr->grabWinPtr = NULL;
     tsdPtr->restrictWinPtr = NULL;
     TkpSetCapture(NULL);
@@ -590,7 +590,7 @@ XDefineCursor(
     if (tsdPtr->cursorWinPtr == winPtr) {
 	UpdateCursor(winPtr);
     }
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
