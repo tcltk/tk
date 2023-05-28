@@ -204,10 +204,12 @@ test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
 test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -fullscreen, -topmost, -type, or -zoomed}
+if {[tk windowingsystem] eq "aqua"} {
+    set result_1_2_5 {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -isdark, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
+} else {set result_1_2_5 {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}}
 test wm-attributes-1.2.5 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
-} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}
-
+} -result $result_1_2_5
 
 ### wm client ###
 test wm-client-1.1 {usage} -returnCodes error -body {

@@ -690,8 +690,8 @@ DoObjConfig(
 	    }
 	    return TCL_ERROR;
 	}
-	if (newIndex == TCL_INDEX_NONE) {
-	    newIndex = (Tcl_Size)INT_MIN;
+	if (newIndex < 0) {
+	    newIndex = INT_MIN;
 	} else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
 	    newIndex++;
 	}
@@ -1454,7 +1454,7 @@ Tk_RestoreSavedOptions(
     Tk_SavedOptions *savePtr)	/* Holds saved option information; must have
 				 * been passed to Tk_SetOptions. */
 {
-    size_t i;
+    Tcl_Size i;
     Option *optionPtr;
     Tcl_Obj *newPtr;		/* New object value of option, which we
 				 * replace with old value and free. Taken from
@@ -1474,7 +1474,7 @@ Tk_RestoreSavedOptions(
 	ckfree(savePtr->nextPtr);
 	savePtr->nextPtr = NULL;
     }
-    for (i = savePtr->numItems - 1; i != (size_t)-1; i--) {
+    for (i = savePtr->numItems - 1; i >= 0; i--) {
 	optionPtr = savePtr->items[i].optionPtr;
 	specPtr = optionPtr->specPtr;
 
@@ -1483,12 +1483,12 @@ Tk_RestoreSavedOptions(
 	 * record.
 	 */
 
-	if (specPtr->objOffset != TCL_INDEX_NONE) {
+	if (specPtr->objOffset >= 0) {
 	    newPtr = *((Tcl_Obj **) ((char *)savePtr->recordPtr + specPtr->objOffset));
 	} else {
 	    newPtr = NULL;
 	}
-	if (specPtr->internalOffset != TCL_INDEX_NONE) {
+	if (specPtr->internalOffset >= 0) {
 	    internalPtr = (char *)savePtr->recordPtr + specPtr->internalOffset;
 	} else {
 	    internalPtr = NULL;
@@ -2029,18 +2029,20 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_INDEX:
-	    if (*((int *) internalPtr) == INT_MIN) {
-		objPtr = TkNewIndexObj(TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) == INT_MAX) {
-		objPtr = Tcl_NewStringObj("end+1", TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) == -1) {
-		objPtr = Tcl_NewStringObj("end", TCL_INDEX_NONE);
-	    } else if (*((int *) internalPtr) < 0) {
-		char buf[32];
-		snprintf(buf, 32, "end%d", 1 + *((int *) internalPtr));
-		objPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
-	    } else {
-		objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+		if (*((int *) internalPtr) == INT_MIN) {
+		    objPtr = TkNewIndexObj(TCL_INDEX_NONE);
+		} else if (*((int *) internalPtr) == INT_MAX) {
+		    objPtr = Tcl_NewStringObj("end+1", TCL_INDEX_NONE);
+		} else if (*((int *) internalPtr) == -1) {
+		    objPtr = Tcl_NewStringObj("end", TCL_INDEX_NONE);
+		} else if (*((int *) internalPtr) < 0) {
+		    char buf[32];
+		    snprintf(buf, 32, "end%d", 1 + *((int *) internalPtr));
+		    objPtr = Tcl_NewStringObj(buf, TCL_INDEX_NONE);
+		} else {
+		    objPtr = Tcl_NewWideIntObj(*((int *) internalPtr));
+		}
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
