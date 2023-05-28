@@ -139,10 +139,8 @@
 #   define TCL_LL_MODIFIER	"ll"
 #endif
 
-#if TCL_MAJOR_VERSION > 8
-#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
-#else
-#   define TKSIZET_MODIFIER ""
+#if !defined(TCL_SIZE_MODIFIER)
+#   define TCL_SIZE_MODIFIER ""
 #endif
 
 /*
@@ -1184,10 +1182,11 @@ extern "C" {
 #endif
 
 /*
- * Themed widget set init function:
+ * Themed widget set init function, and handler called when Tk is destroyed.
  */
 
 MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
+MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
 
 /*
  * Internal functions shared among Tk modules but not exported to the outside

@@ -94,7 +94,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
 	NULL, offsetof(RectOvalItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
-    {TK_CONFIG_PIXELS, "-disabledwidth", NULL, NULL,
+    {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", offsetof(RectOvalItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,
@@ -350,7 +350,7 @@ RectOvalCoords(
 
     if (objc != 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 4, got %" TKSIZET_MODIFIER "u", objc));
+		"wrong # coordinates: expected 0 or 4, got %" TCL_SIZE_MODIFIER "u", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS",
 		(rectOvalPtr->header.typePtr == &tkRectangleType
 			? "RECTANGLE" : "OVAL"), NULL);

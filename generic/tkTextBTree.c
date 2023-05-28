@@ -1197,7 +1197,7 @@ SplitSeg(
     segPtr = linePtr->segPtr;
 
     while (segPtr != NULL) {
-	if (segPtr->size + 1 > count + 1) {
+	if (segPtr->size > count) {
 	    if (count == 0) {
 		return prevPtr;
 	    }
