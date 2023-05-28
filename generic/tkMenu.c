@@ -2421,7 +2421,7 @@ MenuAddOrInsert(
         idPtr = objv[offs];
         if (Tcl_FindHashEntry(&menuPtr->items, Tcl_GetString(idPtr))) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-              "entry \"%s\" already exists", Tcl_GetString(idPtr)));
+		    "entry \"%s\" already exists", Tcl_GetString(idPtr)));
             Tcl_SetErrorCode(interp, "TK", "MENU", "ENTRY_EXISTS", NULL);
             return TCL_ERROR;
         }
@@ -2467,14 +2467,14 @@ MenuAddOrInsert(
             /* Generate an id for the new entry on the main menu */
             do {
                 snprintf(idbuf, sizeof(idbuf), "e%03X", ++menuPtr->serial);
-                entryPtr =
-                  Tcl_CreateHashEntry(&menuListPtr->items, idbuf, &isNew);
+                entryPtr = Tcl_CreateHashEntry(
+			&menuListPtr->items, idbuf, &isNew);
             } while (!isNew);
             idPtr = Tcl_NewStringObj(idbuf, TCL_INDEX_NONE);
         } else {
             /* Reuse the specified or previously generated id on all clones */
             entryPtr = Tcl_CreateHashEntry(
-              &menuListPtr->items, Tcl_GetString(idPtr), &isNew);
+		    &menuListPtr->items, Tcl_GetString(idPtr), &isNew);
         }
         Tcl_SetHashValue(entryPtr, mePtr);
         mePtr->entryPtr = entryPtr;
