@@ -193,6 +193,163 @@ static const Ttk_ElementSpec ButtonBorderElementSpec =
 };
 
 /*----------------------------------------------------------------------
+ * +++ Indicator element.
+ *
+ * Draws the on/off indicator for checkbuttons and radiobuttons.
+ *
+ * Draws a 3-D square (or diamond), raised if off, sunken if on.
+ *
+ * This is actually a regression from Tk 8.5 back to the ugly old Motif
+ * style; use the "alt", "clam", or "default" theme" for newer, nicer
+ * versions.
+ */
+
+typedef struct {
+    Tcl_Obj *backgroundObj;
+    Tcl_Obj *reliefObj;
+    Tcl_Obj *colorObj;
+    Tcl_Obj *sizeObj;
+    Tcl_Obj *marginObj;
+    Tcl_Obj *borderWidthObj;
+} IndicatorElement;
+
+static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
+    { "-background", TK_OPTION_BORDER,
+	offsetof(IndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
+    { "-indicatorcolor", TK_OPTION_BORDER,
+	offsetof(IndicatorElement,colorObj), DEFAULT_BACKGROUND },
+    { "-indicatorrelief", TK_OPTION_RELIEF,
+	offsetof(IndicatorElement,reliefObj), "raised" },
+    { "-indicatordiameter", TK_OPTION_PIXELS,
+	offsetof(IndicatorElement,sizeObj), "9p" },
+    { "-indicatormargin", TK_OPTION_STRING,
+	offsetof(IndicatorElement,marginObj), "0 2 4 2" },
+    { "-borderwidth", TK_OPTION_PIXELS,
+	offsetof(IndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+};
+
+/*
+ * Checkbutton indicators: 3-D square.
+ */
+static void SquareIndicatorElementSize(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
+    Ttk_Padding margins;
+    int diameter = 0;
+    (void)dummy;
+    (void)paddingPtr;
+
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
+    *widthPtr = diameter + Ttk_PaddingWidth(margins);
+    *heightPtr = diameter + Ttk_PaddingHeight(margins);
+}
+
+static void SquareIndicatorElementDraw(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
+{
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
+    Tk_3DBorder border = 0, interior = 0;
+    int relief = TK_RELIEF_RAISED;
+    Ttk_Padding padding;
+    int borderWidth = 2;
+    int diameter;
+    (void)dummy;
+    (void)state;
+
+    interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
+    border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
+    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
+    Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
+    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+
+    b = Ttk_PadBox(b, padding);
+
+    diameter = b.width < b.height ? b.width : b.height;
+    Tk_Fill3DRectangle(tkwin, d, interior, b.x, b.y,
+	    diameter, diameter,borderWidth, TK_RELIEF_FLAT);
+    Tk_Draw3DRectangle(tkwin, d, border, b.x, b.y,
+	    diameter, diameter, borderWidth, relief);
+}
+
+/*
+ * Radiobutton indicators: 3-D diamond.
+ */
+static void DiamondIndicatorElementSize(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
+    Ttk_Padding margins;
+    int diameter = 0;
+    (void)dummy;
+    (void)paddingPtr;
+
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
+    *widthPtr = diameter + 3 + Ttk_PaddingWidth(margins);
+    *heightPtr = diameter + 3 + Ttk_PaddingHeight(margins);
+}
+
+static void DiamondIndicatorElementDraw(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
+{
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
+    Tk_3DBorder border = 0, interior = 0;
+    int borderWidth = 2;
+    int relief = TK_RELIEF_RAISED;
+    int diameter, radius;
+    XPoint points[4];
+    Ttk_Padding padding;
+    (void)dummy;
+    (void)state;
+
+    interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
+    border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
+    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
+    Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
+    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+
+    b = Ttk_PadBox(b, padding);
+
+    diameter = b.width < b.height ? b.width : b.height;
+    radius = diameter / 2;
+
+    points[0].x = b.x;
+    points[0].y = b.y + radius;
+    points[1].x = b.x + radius;
+    points[1].y = b.y + 2*radius;
+    points[2].x = b.x + 2*radius;
+    points[2].y = b.y + radius;
+    points[3].x = b.x + radius;
+    points[3].y = b.y;
+
+    Tk_Fill3DPolygon(tkwin,d,interior,points,4,borderWidth,TK_RELIEF_FLAT);
+    Tk_Draw3DPolygon(tkwin,d,border,points,4,borderWidth,relief);
+}
+
+static const Ttk_ElementSpec CheckbuttonIndicatorElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(IndicatorElement),
+    IndicatorElementOptions,
+    SquareIndicatorElementSize,
+    SquareIndicatorElementDraw
+};
+
+static const Ttk_ElementSpec RadiobuttonIndicatorElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(IndicatorElement),
+    IndicatorElementOptions,
+    DiamondIndicatorElementSize,
+    DiamondIndicatorElementDraw
+};
+
+/*----------------------------------------------------------------------
  * +++ Arrow element(s).
  *
  * Draws a 3-D shaded triangle.
@@ -497,6 +654,11 @@ MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElement(interp, theme, "Button.border",
 	    &ButtonBorderElementSpec, NULL);
+
+    Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
+	    &CheckbuttonIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
+	    &RadiobuttonIndicatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));

@@ -414,11 +414,11 @@ static const IndicatorSpec checkbutton_spec = {
 static const char radiobtnOffData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
@@ -431,11 +431,11 @@ static const char radiobtnOffData[] = "\
 static const char radiobtnOnData[] = "\
     <svg width='16' height='16' version='1.1' xmlns='http://www.w3.org/2000/svg'>\n\
      <defs>\n\
-      <linearGradient id='linearGradientOuter' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientOuter' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#888888' offset='0'/>\n\
        <stop stop-color='#eeeeee' offset='1'/>\n\
       </linearGradient>\n\
-      <linearGradient id='linearGradientInner' x1='7' y1='7' x2='9' y2='9' gradientUnits='userSpaceOnUse'>\n\
+      <linearGradient id='linearGradientInner' x1='5' y1='5' x2='11' y2='11' gradientUnits='userSpaceOnUse'>\n\
        <stop stop-color='#414141' offset='0'/>\n\
        <stop stop-color='#d9d9d9' offset='1'/>\n\
       </linearGradient>\n\
@@ -1119,14 +1119,14 @@ static const Ttk_ElementSpec SliderElementSpec = {
 typedef struct {
     Tcl_Obj *colorObj;
     Tcl_Obj *marginObj;
-    Tcl_Obj *diameterObj;
+    Tcl_Obj *sizeObj;
 } TreeitemIndicator;
 
 static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
     { "-diameter", TK_OPTION_PIXELS,
-	offsetof(TreeitemIndicator,diameterObj), "9" },
+	offsetof(TreeitemIndicator,sizeObj), "6.75p" },
     { "-indicatormargins", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginObj), "2 2 4 2" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -1143,7 +1143,7 @@ static void TreeitemIndicatorSize(
     (void)paddingPtr;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
     *widthPtr = diameter + Ttk_PaddingWidth(margins);
     *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
