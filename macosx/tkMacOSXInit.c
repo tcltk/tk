@@ -49,11 +49,11 @@ static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 @synthesize tkPointerWindow = _tkPointerWindow;
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
-    if (_tkPointerWindow) {
-	Tcl_Release(_tkPointerWindow);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkPointerWindow) {
+	Tcl_Release(_tkPointerWindow);
     }
     _tkPointerWindow = winPtr;
     return;
@@ -61,11 +61,11 @@ static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 @synthesize tkEventTarget = _tkEventTarget;
 - (void) setTkEventTarget: (TkWindow *)winPtr
 {
-    if (_tkEventTarget) {
-	Tcl_Release(_tkEventTarget);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkEventTarget) {
+	Tcl_Release(_tkEventTarget);
     }
     _tkEventTarget = winPtr;
     return;
@@ -73,11 +73,11 @@ static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 @synthesize tkDragTarget = _tkDragTarget;
 - (void) setTkDragTarget: (TkWindow *)winPtr
 {
-    if (_tkDragTarget) {
-	Tcl_Release(_tkDragTarget);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkDragTarget) {
+	Tcl_Release(_tkDragTarget);
     }
     _tkDragTarget = winPtr;
     return;
@@ -114,7 +114,7 @@ static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 #endif
 

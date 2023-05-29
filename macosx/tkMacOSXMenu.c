@@ -276,7 +276,11 @@ static Bool runMenuCommand = true;
 
 - (Tcl_Size) tkIndexOfItem: (NSMenuItem *) menuItem
 {
-    return ((Tcl_Size)[self indexOfItem:menuItem] - (NSUInteger)_tkOffset);
+    NSInteger index = [self indexOfItem:menuItem];
+    if (index < 0 || (NSUInteger) index < _tkOffset) {
+	return TCL_INDEX_NONE;
+    }
+    return ((Tcl_Size)index - (Tcl_Size)_tkOffset);
 }
 
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index
@@ -497,7 +501,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -518,7 +522,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];

@@ -479,8 +479,8 @@ TkSelPropProc(
 	     * offset to -1 to indicate we are done.
 	     */
 
-	    if (numItems + 1 < TK_SEL_BYTES_AT_ONCE + 1) {
-		if (numItems + 1 < 2) {
+	    if (numItems < TK_SEL_BYTES_AT_ONCE) {
+		if (numItems < 1) {
 		    incrPtr->converts[i].offset = -1;
 		    incrPtr->numIncrs--;
 		} else {
