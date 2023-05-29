@@ -930,6 +930,7 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     _pause 200
     toplevel .top2 -width 200 -height 200
     wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
+    _pause 200
     wm deiconify .top2
     raise .top2
     _pause 400
