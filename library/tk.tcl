@@ -178,16 +178,21 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 
     catch {focus $oldFocus}
     grab release $grab
-    if {$destroy eq "withdraw"} {
-	wm withdraw $grab
-    } else {
-	destroy $grab
+    if {[winfo exists $grab]} {
+	if {$destroy eq "withdraw"} {
+	    wm withdraw $grab
+	} else {
+	    destroy $grab
+	}
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
+	# The "grab" command will fail if another application
+	# already holds the grab on a window with the same name.
+	# So catch it. See [7447ed20ec] for an example.
 	if {$oldStatus eq "global"} {
-	    grab -global $oldGrab
+	    catch {grab -global $oldGrab}
 	} else {
-	    grab $oldGrab
+	    catch {grab $oldGrab}
 	}
     }
 }

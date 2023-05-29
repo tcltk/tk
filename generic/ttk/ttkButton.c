@@ -24,7 +24,7 @@ typedef struct
     Tcl_Obj *textObj;
     Tcl_Obj *justifyObj;
     Tcl_Obj *textVariableObj;
-    int underline;
+    Tcl_Obj *underlineObj;
     Tcl_Obj *widthObj;
 
     Ttk_TraceHandle	*textVariableTrace;
@@ -66,7 +66,7 @@ static const Tk_OptionSpec BaseOptionSpecs[] =
 	offsetof(Base,base.textVariableObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TTK_OPTION_UNDERLINE_DEF(Base, base.underline), 0},
+	TTK_OPTION_UNDERLINE_DEF(Base, base.underlineObj), 0},
     {TK_OPTION_STRING, "-width", "width", "Width",
 	NULL, offsetof(Base,base.widthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
@@ -363,7 +363,7 @@ static int ButtonConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 ButtonInvokeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Button *buttonPtr = (Button *)recordPtr;
     if (objc > 2) {
@@ -547,7 +547,7 @@ CheckbuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 CheckbuttonInvokeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Checkbutton *checkPtr = (Checkbutton *)recordPtr;
     WidgetCore *corePtr = &checkPtr->core;
@@ -735,7 +735,7 @@ RadiobuttonPostConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  */
 static int
 RadiobuttonInvokeCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Radiobutton *radioPtr = (Radiobutton *)recordPtr;
     WidgetCore *corePtr = &radioPtr->core;

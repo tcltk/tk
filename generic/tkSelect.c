@@ -598,7 +598,7 @@ Tk_GetSelection(
 
 	    count = TkSelDefaultSelection(infoPtr, target, buffer,
 		    TK_SEL_BYTES_AT_ONCE, &type);
-	    if (count == TCL_INDEX_NONE) {
+	    if (count < 0) {
 		goto cantget;
 	    } else if (count > TK_SEL_BYTES_AT_ONCE) {
 		Tcl_Panic("selection handler returned too many bytes");
@@ -614,7 +614,7 @@ Tk_GetSelection(
 	    while (1) {
 		count = selPtr->proc(selPtr->clientData, offset, buffer,
 			TK_SEL_BYTES_AT_ONCE);
-		if ((count == TCL_INDEX_NONE) || (ip.selPtr == NULL)) {
+		if ((count < 0) || (ip.selPtr == NULL)) {
 		    tsdPtr->pendingPtr = ip.nextPtr;
 		    goto cantget;
 		}
@@ -1372,7 +1372,7 @@ HandleTclCommand(
      * the offset and maximum # of bytes.
      */
 
-    command = Tcl_ObjPrintf("%s %" TKSIZET_MODIFIER "u %" TKSIZET_MODIFIER "u",
+    command = Tcl_ObjPrintf("%s %" TCL_SIZE_MODIFIER "u %" TCL_SIZE_MODIFIER "u",
 	    cmdInfoPtr->command, charOffset, maxBytes);
     Tcl_IncrRefCount(command);
 

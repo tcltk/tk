@@ -860,7 +860,8 @@ Tk_GetDash(
     Tk_Dash *dash)		/* Pointer to record in which to store dash
 				 * information. */
 {
-    int argc, i;
+    Tcl_Size argc;
+    int i;
     const char **largv, **argv = NULL;
     char *pt;
 
