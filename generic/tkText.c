@@ -2850,7 +2850,7 @@ TextPushUndoAction(
 	    Tcl_NewStringObj("set", 3));
     markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
     textPtr->sharedTextPtr->undoMarkId++;
-    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TKSIZET_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
+    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TCL_SIZE_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
     strcat(lMarkName, stringUndoMarkId);
     strcat(rMarkName, stringUndoMarkId);
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
@@ -4083,12 +4083,12 @@ TextSearchIndexInLine(
     curIndex.tree = textPtr->sharedTextPtr->tree;
     curIndex.linePtr = linePtr; curIndex.byteIndex = 0;
     for (segPtr = linePtr->segPtr, leftToScan = byteIndex;
-	    leftToScan + 1 > 1;
+	    leftToScan > 0;
 	    curIndex.byteIndex += segPtr->size, segPtr = segPtr->nextPtr) {
 	if ((segPtr->typePtr == &tkTextCharType) &&
 		(searchSpecPtr->searchElide
 		|| !TkTextIsElided(textPtr, &curIndex, NULL))) {
-	    if (leftToScan + 1 < (int)segPtr->size + 1) {
+	    if (leftToScan < segPtr->size) {
 		if (searchSpecPtr->exact) {
 		    index += leftToScan;
 		} else {
@@ -4279,7 +4279,7 @@ TextSearchFoundMatch(
 	 */
 
 	if (searchSpecPtr->backwards ^
-		(matchOffset + 1 >= searchSpecPtr->stopOffset + 1)) {
+		(matchOffset >= searchSpecPtr->stopOffset)) {
 	    return 0;
 	}
     }
@@ -4304,7 +4304,7 @@ TextSearchFoundMatch(
 
     if (searchSpecPtr->strictLimits && lineNum == searchSpecPtr->stopLine) {
 	if (searchSpecPtr->backwards ^
-		((matchOffset + numChars + 1) > searchSpecPtr->stopOffset + 1)) {
+		((matchOffset + numChars) > searchSpecPtr->stopOffset)) {
 	    return 0;
 	}
     }
@@ -5918,7 +5918,7 @@ SearchCore(
 		 * Only use the last part of the line.
 		 */
 
-		if (searchSpecPtr->startOffset + 1 > (Tcl_Size)firstOffset + 1) {
+		if (searchSpecPtr->startOffset > firstOffset) {
 		    firstOffset = searchSpecPtr->startOffset;
 		}
 		if ((firstOffset >= lastOffset)
@@ -5930,7 +5930,7 @@ SearchCore(
 		 * Use only the first part of the line.
 		 */
 
-		if (searchSpecPtr->startOffset + 1 < (Tcl_Size)lastOffset + 1) {
+		if (searchSpecPtr->startOffset < lastOffset) {
 		    lastOffset = searchSpecPtr->startOffset;
 		}
 	    }
@@ -5958,7 +5958,7 @@ SearchCore(
 
 		if (firstNewLine == -1) {
 		    if (searchSpecPtr->strictLimits
-			    && (firstOffset + matchLength + 1 > (Tcl_Size)lastOffset + 1)) {
+			    && (firstOffset + matchLength > lastOffset)) {
 			/*
 			 * Not enough characters to match.
 			 */
@@ -6076,7 +6076,7 @@ SearchCore(
 			     * exact searches.
 			     */
 
-			    if ((Tcl_Size)lastTotal - skipFirst + 1 >= matchLength + 1) {
+			    if ((Tcl_Size)lastTotal - skipFirst >= matchLength) {
 				/*
 				 * We now have enough text to match, so we
 				 * make a final test and break whatever the
@@ -6234,7 +6234,7 @@ SearchCore(
 			lastNonOverlap = lastTotal;
 		    }
 
-		    if (info.extendStart == TCL_INDEX_NONE) {
+		    if (info.extendStart < 0) {
 			/*
 			 * No multi-line match is possible.
 			 */
@@ -6332,8 +6332,8 @@ SearchCore(
 
 			if ((match &&
 				firstOffset + info.matches[0].end != (Tcl_Size) lastTotal &&
-				firstOffset + info.matches[0].end + 1 < prevFullLine + 1)
-				|| info.extendStart == TCL_INDEX_NONE) {
+				firstOffset + info.matches[0].end < prevFullLine)
+				|| info.extendStart < 0) {
 			    break;
 			}
 
@@ -6344,7 +6344,7 @@ SearchCore(
 			 * that line.
 			 */
 
-			if (match && (info.matches[0].start + 1 >= (Tcl_Size) lastOffset + 1)) {
+			if (match && (info.matches[0].start >= lastOffset)) {
 			    break;
 			}
 			if (match && ((firstOffset + info.matches[0].end)
@@ -6483,9 +6483,9 @@ SearchCore(
 		 * previous match.
 		 */
 
-		if (matchOffset == TCL_INDEX_NONE ||
+		if (matchOffset == -1 ||
 			((searchSpecPtr->all || searchSpecPtr->backwards)
-			&& (((Tcl_Size)firstOffset + 1 < matchOffset + 1)
+			&& ((firstOffset < matchOffset)
 			|| ((firstOffset + info.matches[0].end
 				- info.matches[0].start)
 				> matchOffset + matchLength)))) {
@@ -6545,7 +6545,7 @@ SearchCore(
 		     * explicitly disallow overlapping matches.
 		     */
 
-		    if (matchLength + 1 > 1 && !searchSpecPtr->overlap
+		    if (matchLength > 0 && !searchSpecPtr->overlap
 			    && !searchSpecPtr->backwards) {
 			firstOffset += matchLength;
 			if (firstOffset >= lastOffset) {
@@ -6602,8 +6602,8 @@ SearchCore(
 			 * found which would exercise such a problem.
 			 */
 		    }
-		    if (storeMatch[matches] + storeLength[matches] + 1
-			    >= matchOffset + matchLength + 1) {
+		    if (storeMatch[matches] + storeLength[matches]
+			    >= matchOffset + matchLength) {
 			/*
 			 * The new match totally encloses the previous one, so
 			 * we overwrite the previous one.
@@ -6932,7 +6932,7 @@ TkpTesttextCmd(
     char buf[TK_POS_CHARS];
     Tcl_CmdInfo info;
 
-    if (objc + 1 < 4) {
+    if (objc < 3) {
 	return TCL_ERROR;
     }
 

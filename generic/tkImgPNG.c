@@ -227,16 +227,16 @@ static inline unsigned char Paeth(int a, int b, int c);
 static int		ParseFormat(Tcl_Interp *interp, Tcl_Obj *fmtObj,
 			    PNGImage *pngPtr);
 static int		ReadBase64(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, size_t destSz,
+			    unsigned char *destPtr, Tcl_Size destSz,
 			    unsigned long *crcPtr);
 static int		ReadByteArray(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, size_t destSz,
+			    unsigned char *destPtr, Tcl_Size destSz,
 			    unsigned long *crcPtr);
 static int		ReadData(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, size_t destSz,
+			    unsigned char *destPtr, Tcl_Size destSz,
 			    unsigned long *crcPtr);
 static int		ReadChunkHeader(Tcl_Interp *interp, PNGImage *pngPtr,
-			    size_t *sizePtr, unsigned long *typePtr,
+			    Tcl_Size *sizePtr, unsigned long *typePtr,
 			    unsigned long *crcPtr);
 static int		ReadIDAT(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
@@ -267,9 +267,9 @@ static inline int	WriteByte(Tcl_Interp *interp, PNGImage *pngPtr,
 			    unsigned char c, unsigned long *crcPtr);
 static inline int	WriteChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 			    unsigned long chunkType,
-			    const unsigned char *dataPtr, size_t dataSize);
+			    const unsigned char *dataPtr, Tcl_Size dataSize);
 static int		WriteData(Tcl_Interp *interp, PNGImage *pngPtr,
-			    const unsigned char *srcPtr, size_t srcSz,
+			    const unsigned char *srcPtr, Tcl_Size srcSz,
 			    unsigned long *crcPtr);
 static int		WriteExtraChunks(Tcl_Interp *interp,
 			    PNGImage *pngPtr, Tcl_Obj *metadataInObj);
@@ -454,7 +454,7 @@ ReadBase64(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    size_t destSz,
+    Tcl_Size destSz,
     unsigned long *crcPtr)
 {
     static const unsigned char from64[] = {
@@ -579,14 +579,14 @@ ReadByteArray(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    size_t destSz,
+    Tcl_Size destSz,
     unsigned long *crcPtr)
 {
     /*
      * Check to make sure the number of requested bytes are available.
      */
 
-    if ((size_t)pngPtr->strDataLen < destSz) {
+    if (pngPtr->strDataLen < destSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"unexpected end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EARLY_END", NULL);
@@ -594,7 +594,7 @@ ReadByteArray(
     }
 
     while (destSz) {
-	size_t blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	Tcl_Size blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
 	memcpy(destPtr, pngPtr->strDataBuf, blockSz);
 
@@ -637,7 +637,7 @@ ReadData(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    size_t destSz,
+    Tcl_Size destSz,
     unsigned long *crcPtr)
 {
     if (pngPtr->base64Data) {
@@ -882,7 +882,7 @@ static int
 ReadChunkHeader(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
-    size_t *sizePtr,
+    Tcl_Size *sizePtr,
     unsigned long *typePtr,
     unsigned long *crcPtr)
 {
@@ -1263,7 +1263,7 @@ ReadIHDR(
 {
     unsigned char sigBuf[PNG_SIG_SZ];
     unsigned long chunkType;
-    size_t chunkSz;
+    Tcl_Size chunkSz;
     unsigned long crc;
     unsigned long width, height;
     int mismatch;
@@ -1810,9 +1810,9 @@ UnfilterLine(
     PNGImage *pngPtr)
 {
     unsigned char *thisLine =
-	    Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (int *)NULL);
+	    Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (Tcl_Size *)NULL);
     unsigned char *lastLine =
-	    Tcl_GetByteArrayFromObj(pngPtr->lastLineObj, (int *)NULL);
+	    Tcl_GetByteArrayFromObj(pngPtr->lastLineObj, (Tcl_Size *)NULL);
 
 #define	PNG_FILTER_NONE		0
 #define	PNG_FILTER_SUB		1
@@ -1942,7 +1942,7 @@ DecodeLine(
     int colStep = 1;		/* Column increment each pass */
     int pixStep = 0;		/* extra pixelPtr increment each pass */
     unsigned char lastPixel[6];
-    unsigned char *p = Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (int *)NULL);
+    unsigned char *p = Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (Tcl_Size *)NULL);
 
     p++;
     if (UnfilterLine(interp, pngPtr) == TCL_ERROR) {
@@ -2393,7 +2393,7 @@ ParseFormat(
     PNGImage *pngPtr)
 {
     Tcl_Obj **objv = NULL;
-    int objc = 0;
+    Tcl_Size objc = 0;
     static const char *const fmtOptions[] = {
 	"-alpha", NULL
     };
@@ -2484,7 +2484,7 @@ DecodePNG(
     int destY)
 {
     unsigned long chunkType;
-    size_t chunkSz;
+    Tcl_Size chunkSz;
     unsigned long crc;
 
     /*
@@ -3027,10 +3027,10 @@ WriteData(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     const unsigned char *srcPtr,
-    size_t srcSz,
+    Tcl_Size srcSz,
     unsigned long *crcPtr)
 {
-    if (!srcPtr || !srcSz) {
+    if (!srcPtr || srcSz <= 0) {
 	return TCL_OK;
     }
 
@@ -3165,7 +3165,7 @@ WriteChunk(
     PNGImage *pngPtr,
     unsigned long chunkType,
     const unsigned char *dataPtr,
-    size_t dataSize)
+    Tcl_Size dataSize)
 {
     unsigned long crc = Tcl_ZlibCRC32(0, NULL, 0);
     int result = TCL_OK;
