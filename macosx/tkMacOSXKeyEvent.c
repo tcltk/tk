@@ -660,9 +660,12 @@ setXEventPoint(
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow *topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     } else if (winPtr->wmInfoPtr != NULL) {
 	local.x -= winPtr->wmInfoPtr->xInParent;
