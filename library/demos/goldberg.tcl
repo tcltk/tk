@@ -96,8 +96,8 @@ set C(24c) black;	set C(26) $C(0);
 proc DoDisplay {w} {
     global S C
 
-    ttk::frame $w.ctrl -relief ridge -borderwidth 2 -padding 5
-    pack [frame $w.screen -bd 2 -relief raised] \
+    ttk::frame $w.ctrl -relief ridge -borderwidth 1.5p -padding 3p
+    pack [frame $w.screen -bd 1.5p -relief raised] \
 	    -side left -fill both -expand 1
 
     canvas $w.c -width 860 -height 730 -bg $C(bg) -highlightthickness 0
@@ -142,9 +142,9 @@ proc DoCtrlFrame {w} {
     grid $w.start -in $w.ctrl -row 0 -sticky ew
     grid rowconfigure $w.ctrl 1 -minsize 10
     grid $w.pause -in $w.ctrl -row 2 -sticky ew
-    grid $w.step  -in $w.ctrl -sticky ew -pady 2
+    grid $w.step  -in $w.ctrl -sticky ew -pady 1.5p
     grid $w.bstep -in $w.ctrl -sticky ew
-    grid $w.reset -in $w.ctrl -sticky ew -pady 2
+    grid $w.reset -in $w.ctrl -sticky ew -pady 1.5p
     grid rowconfigure $w.ctrl 10 -minsize 18
     grid $w.details -in $w.ctrl -row 11 -sticky ew
     grid rowconfigure $w.ctrl 11 -minsize 20
@@ -157,16 +157,16 @@ proc DoCtrlFrame {w} {
     trace variable ::S(details) w [list ActiveGUI $w]
     trace variable ::S(speed) w	  [list ActiveGUI $w]
 
-    grid $w.message -in $w.ctrl -row 98 -sticky ew -pady 5
+    grid $w.message -in $w.ctrl -row 98 -sticky ew -pady 3p
     grid $w.message.e -sticky nsew
-    grid $w.speed -in $w.ctrl -row 99 -sticky ew -pady {0 5}
+    grid $w.speed -in $w.ctrl -row 99 -sticky ew -pady {0 3p}
     pack $w.speed.scale -fill both -expand 1
     grid $w.about -in $w.ctrl -row 100 -sticky ew
     bind $w.reset <Button-3> {set S(mode) -1}		;# Debugging
 
     ## See Code / Dismiss buttons hack!
     set btns [addSeeDismiss $w.ctrl.buttons $w]
-    grid [ttk::separator $w.ctrl.sep] -sticky ew -pady 4
+    grid [ttk::separator $w.ctrl.sep] -sticky ew -pady 3p
     set i 0
     foreach b [winfo children $btns] {
 	if {[winfo class $b] eq "TButton"} {
@@ -185,7 +185,6 @@ proc DoDetailFrame {w} {
     set w2 $w.details.f
     ttk::frame $w2
 
-    set bd 2
     ttk::label $w2.l -textvariable S(cnt) -background white
     grid $w2.l - - - -sticky ew -row 0
     for {set i 1} {1} {incr i} {
@@ -272,7 +271,7 @@ proc Go {w {who {}}} {
     set now [clock clicks -milliseconds]
     catch {after cancel $animationCallbacks(goldberg)}
     if {$who ne ""} {				;# Start here for debugging
-	set S(active) $who;
+	set S(active) $who
 	set S(mode) $MGO
     }
     if {$S(mode) == -1} return			;# Debugging
@@ -336,11 +335,11 @@ proc About {w} {
 # START HERE! banner
 proc Draw0 {w} {
     set color $::C(0)
-    set xy {579 119}
-    $w.c create text $xy -text "START HERE!" -fill $color -anchor w \
-	    -tag I0 -font {{Times Roman} 12 italic bold}
+    set xy {699 119}
+    $w.c create text $xy -text "START HERE!" -fill $color -anchor e \
+	    -tag {I0 I0_0} -font {{Times Roman} 12 italic bold}
     set xy {719 119 763 119}
-    $w.c create line $xy -tag I0 -fill $color -width 5 -arrow last \
+    $w.c create line $xy -tag {I0 I0_1} -fill $color -width 5 -arrow last \
 	    -arrowshape {18 18 5}
     $w.c bind I0 <Button-1> Start
 }
@@ -353,11 +352,13 @@ proc Move0 {w {step {}}} {
     }
 
     set pos {
-	{673 119} {678 119} {683 119} {688 119}
-	{693 119} {688 119} {683 119} {678 119}
+	{719 119} {724 119} {729 119} {734 119}
+	{739 119} {734 119} {729 119} {724 119}
     }
     set step [expr {$step % [llength $pos]}]
-    MoveAbs $w I0 [lindex $pos $step]
+    lassign [lindex $pos $step] x y
+    $w.c coords I0_0 [expr {$x - 20}] $y
+    $w.c coords I0_1 $x $y [expr {$x + 44}] $y
     return 1
 }
 

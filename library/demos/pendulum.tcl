@@ -30,21 +30,21 @@ $w.p add [labelframe $w.p.l2 -text "Phase Space"]
 
 # Create the canvas containing the graphical representation of the
 # simulated system.
-canvas $w.c -width 320 -height 200 -background white -bd 2 -relief sunken
-$w.c create text 5 5 -anchor nw -text "Click to Adjust Bob Start Position"
+canvas $w.c -width 240p -height 150p -background white -bd 1.5p -relief sunken
+$w.c create text 3p 3p -anchor nw -text "Click to Adjust Bob Start Position"
 # Coordinates of these items don't matter; they will be set properly below
-$w.c create line 0 25 320 25   -tags plate -fill grey50 -width 2
+$w.c create line 0 25 320 25   -tags plate -fill grey50 -width 1.5p
 $w.c create oval 155 20 165 30 -tags pivot -fill grey50 -outline {}
-$w.c create line 1 1 1 1       -tags rod   -fill black  -width 3
+$w.c create line 1 1 1 1       -tags rod   -fill black  -width 2.25p
 $w.c create oval 1 1 2 2       -tags bob   -fill yellow -outline black
 pack $w.c -in $w.p.l1 -fill both -expand true
 
 # Create the canvas containing the phase space graph; this consists of
 # a line that gets gradually paler as it ages, which is an extremely
 # effective visual trick.
-canvas $w.k -width 320 -height 200 -background white -bd 2 -relief sunken
-$w.k create line 160 200 160 0 -fill grey75 -arrow last -tags y_axis
-$w.k create line 0 100 320 100 -fill grey75 -arrow last -tags x_axis
+canvas $w.k -width 240p -height 150p -background white -bd 1.5p -relief sunken
+$w.k create line 120p 150p 120p 0 -fill grey75 -arrow last -tags y_axis
+$w.k create line 0 75p 240p 75p -fill grey75 -arrow last -tags x_axis
 for {set i 90} {$i>=0} {incr i -10} {
     # Coordinates of these items don't matter; they will be set properly below
     $w.k create line 0 0 1 1 -smooth true -tags graph$i -fill grey$i
@@ -55,12 +55,13 @@ $w.k create text 0 0 -anchor ne -text "δθ" -tags label_dtheta
 pack $w.k -in $w.p.l2 -fill both -expand true
 
 # Initialize some variables
-set points {}
-set Theta   45.0
-set dTheta   0.0
-set pi       3.1415926535897933
-set length 150
-set home   160
+set points  {}
+set Theta    45.0
+set dTheta    0.0
+set pi        3.1415926535897933
+set scaling [tk scaling]
+set length  [expr {112.5*$scaling}]
+set home    [expr {120*$scaling}]
 
 # This procedure makes the pendulum appear at the correct place on the
 # canvas. If the additional arguments "at $x $y" are passed (the 'at'
@@ -69,21 +70,23 @@ set home   160
 # length and angle are computed in reverse from the given location
 # (which is taken to be the centre of the pendulum bob.)
 proc showPendulum {canvas {at {}} {x {}} {y {}}} {
-    global Theta dTheta pi length home
-    if {$at eq "at" && ($x!=$home || $y!=25)} {
+    global Theta dTheta pi length home scaling
+
+    if {$at eq "at" && ($x!=$home || $y!=18*$scaling)} {
 	set dTheta 0.0
 	set x2 [expr {$x - $home}]
-	set y2 [expr {$y - 25}]
+	set y2 [expr {$y - 18*$scaling}]
 	set length [expr {hypot($x2, $y2)}]
 	set Theta  [expr {atan2($x2, $y2) * 180/$pi}]
     } else {
 	set angle [expr {$Theta * $pi/180}]
 	set x [expr {$home + $length*sin($angle)}]
-	set y [expr {25    + $length*cos($angle)}]
+	set y [expr {18*$scaling + $length*cos($angle)}]
     }
-    $canvas coords rod $home 25 $x $y
+    $canvas coords rod $home 18p $x $y
+    set r [expr {12*$scaling}]
     $canvas coords bob \
-	    [expr {$x-15}] [expr {$y-15}] [expr {$x+15}] [expr {$y+15}]
+	    [expr {$x-$r}] [expr {$y-$r}] [expr {$x+$r}] [expr {$y+$r}]
 }
 showPendulum $w.c
 
@@ -92,7 +95,9 @@ showPendulum $w.c
 # respect to time.)
 proc showPhase {canvas} {
     global Theta dTheta points psw psh
-    lappend points [expr {$Theta+$psw}] [expr {-20*$dTheta+$psh}]
+    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+
+    lappend points [expr {$Theta+$psw}] [expr {-20*$scaleFactor*$dTheta+$psh}]
     if {[llength $points] > 100} {
 	set points [lrange $points end-99 end]
     }
@@ -100,6 +105,7 @@ proc showPhase {canvas} {
 	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
 	if {[llength $list] >= 4} {
 	    $canvas coords graph$i $list
+	    $canvas scale graph$i $psw $psh $scaleFactor $scaleFactor
 	}
     }
 }
@@ -125,17 +131,17 @@ bind $w.c <ButtonRelease-1> {
     set animationCallbacks(pendulum) [after 15 repeat [winfo toplevel %W]]
 }
 bind $w.c <Configure> {
-    %W coords plate 0 25 %w 25
+    %W coords plate 0 18p %w 18p
     set home [expr {%w/2}]
-    %W coords pivot [expr {$home-5}] 20 [expr {$home+5}] 30
+    %W coords pivot [expr {$home-3*$scaling}] 15p [expr {$home+3*$scaling}] 21p
 }
 bind $w.k <Configure> {
     set psh [expr {%h/2}]
     set psw [expr {%w/2}]
-    %W coords x_axis 2 $psh [expr {%w-2}] $psh
-    %W coords y_axis $psw [expr {%h-2}] $psw 2
-    %W coords label_dtheta [expr {$psw-4}] 6
-    %W coords label_theta [expr {%w-6}] [expr {$psh+4}]
+    %W coords x_axis 1.5p $psh [expr {%w-1.5*$scaling}] $psh
+    %W coords y_axis $psw [expr {%h-1.5*$scaling}] $psw 1.5p
+    %W coords label_dtheta [expr {$psw-3*$scaling}] 4.5p
+    %W coords label_theta [expr {%w-4.5*$scaling}] [expr {$psh+3*$scaling}]
 }
 
 # This procedure is the "business" part of the simulation that does
