@@ -910,7 +910,6 @@ TkWmDeadWindow(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
     TKWindow *deadNSWindow;
-    TkWindow *dragTarget = [NSApp tkDragTarget];
 
     if (wmPtr == NULL) {
 	return;
@@ -990,9 +989,6 @@ TkWmDeadWindow(
      * state which is recorded in the NSApplication object.
      */
 
-    if (dragTarget && winPtr == TkMacOSXGetHostToplevel(dragTarget)->winPtr) {
-	[NSApp setTkDragTarget:nil];
-    }
     if (winPtr == [NSApp tkPointerWindow]) {
 	NSWindow *w;
 	NSPoint mouse = [NSEvent mouseLocation];

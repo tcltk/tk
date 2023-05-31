@@ -308,6 +308,7 @@ enum {
     if ([NSApp tkDragTarget]) {
 	TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
 	TKWindow *dragWindow = nil;
+	MacDrawable *topMacWin;
 	if (dragPtr) {
 	    dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
 			    dragPtr->window);
@@ -317,7 +318,10 @@ enum {
 	    target = NULL;
 	    return theEvent;
 	}
-	winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
+	topMacWin = TkMacOSXGetHostToplevel(dragPtr);
+	if (topMacWin) {
+	    winPtr = topMacWin->winPtr;
+	}
     } else if (eventType == NSScrollWheel) {
 	winPtr = scrollTarget;
     } else {
@@ -357,9 +361,12 @@ enum {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow* topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     }
     else {
