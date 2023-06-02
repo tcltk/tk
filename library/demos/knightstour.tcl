@@ -81,8 +81,7 @@ proc Edgemost {a b} {
 
 # Display a square number as a standard chess square notation.
 proc N {square} {
-    return [format %c%d [expr {97 + $square % 8}] \
-                [expr {$square / 8 + 1}]]
+    return [format %c%d [expr {97 + $square % 8}] [expr {$square / 8 + 1}]]
 }
 
 # Perform a Knight's move and schedule the next move.
@@ -174,7 +173,7 @@ proc CreateGUI {} {
     wm title $dlg "Knights tour"
     wm withdraw $dlg
     set f [ttk::frame $dlg.f]
-    set c [canvas $f.c -width 240 -height 240]
+    set c [canvas $f.c -width 192p -height 192p]
     text $f.txt -width 10 -height 1 \
         -yscrollcommand [list $f.vs set] -font {Arial 8}
     ttk::scrollbar $f.vs -command [list $f.txt yview]
@@ -197,25 +196,29 @@ proc CreateGUI {} {
             } else {
                 set fill bisque ; set dfill bisque3
             }
-            set coords [list [expr {$col * 30 + 4}] [expr {$row * 30 + 4}] \
-                            [expr {$col * 30 + 30}] [expr {$row * 30 + 30}]]
+            set coords [list [expr {$col * 24 + 3}]p \
+			     [expr {$row * 24 + 3}]p \
+                             [expr {$col * 24 + 24}]p \
+			     [expr {$row * 24 + 24}]p]
             $c create rectangle $coords -fill $fill -disabledfill $dfill \
-                -width 2 -state disabled -outline black
+                -width 1.5p -state disabled -outline black
         }
     }
     if {[tk windowingsystem] ne "x11"} {
-        catch {eval font create KnightFont -size -24}
+        catch {eval font create KnightFont -size 18}
         $c create text 0 0 -font KnightFont -text "♞" \
             -anchor nw -tags knight -fill black -activefill "#600000"
     } else {
         # On X11 we cannot reliably tell if the ♞ glyph is available
         # so just use a polygon
         set pts {
-            2 25   24 25  21 19   20 8   14 0   10 0   0 13   0 16
+            2 25   24 25  21 19   20 8   14 0   10 0    0 13  0 16
             2 17    4 14   5 15    3 17   5 17   9 14  10 15  5 21
         }
         $c create polygon $pts -tag knight -offset 8 \
             -fill black -activefill "#600000"
+	set scaleFactor [expr {$tk::scalingPct / 100.0}]
+	$c scale knight 0 0 $scaleFactor $scaleFactor
     }
     $c moveto knight {*}[lrange [$c coords [expr {1 + int(rand() * 64)}]] 0 1]
     $c bind knight <Button-1> [namespace code [list DragStart %W %x %y]]

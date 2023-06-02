@@ -13,6 +13,9 @@ toplevel $w
 wm title $w "Window Icon Demonstration"
 positionWindow $w
 
+## See Code / Dismiss buttons
+pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
+
 image create photo icon -data {
     iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABGdBTUEAALGP
     C/xhBQAAACBjSFJNAAB6JgAAgIQAAPoAAACA6AAAdTAAAOpgAAA6mAAAF3Cc
@@ -89,11 +92,17 @@ image create photo icon -data {
 
 set ::tk::icons::base_icon(.) icon
 
-pack [button $w.i -text "Set Window Icon to Globe" -image $::tk::icons::base_icon(.) \
-        -compound top -command {wm iconphoto . $::tk::icons::base_icon(.) }]
-pack [button $w.b -text "Set Badge to 3" -command {wm iconbadge . 3}]
-pack [button $w.e -text "Set Badge to 11" -command {wm iconbadge . 11}]
-pack [button $w.f -text "Reset Badge" -command {wm iconbadge . ""}]
+# Create a copy of the image just created, magnified according to the
+# display's DPI scaling level.  Since the zooom factor must be an integer,
+# the copy will only be effectively magnified if $tk::scalingPct >= 200.
+image create photo icon2
+icon2 copy icon -zoom [expr {int($tk::scalingPct / 100.0)}]
 
-## See Code / Dismiss buttons
-pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
+pack [button $w.i -text "Set Window Icon to Globe" -image icon2 \
+        -compound top -command {wm iconphoto . icon}] -fill x -padx 3p
+pack [button $w.b -text "Set Badge to 3" -command {wm iconbadge . 3}] \
+	-fill x -padx 3p
+pack [button $w.e -text "Set Badge to 11" -command {wm iconbadge . 11}] \
+	-fill x -padx 3p
+pack [button $w.f -text "Reset Badge" -command {wm iconbadge . ""}] \
+	-fill x -padx 3p
