@@ -47,7 +47,7 @@ agyc3NsFGrXVZMipWVBCzKv4Q0JvCviDsjAwf4ylxBeX0KcwGs81ccgqGS3MBxc3RjDDVAvdBRcf
 eFy1MFd3bcQHJEQdlddkP5E1Cf9yXfbaV2d9RBAAOw==
 }
 
-# Create a copy of the image just created, magnified according to the 
+# Create a copy of the image just created, magnified according to the
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo logo2
@@ -61,7 +61,7 @@ pack $c -fill both -expand yes -fill both -side left
 $c create rectangle 15p 15p 165p 60p -fill blue -outline black	;# 150p x 45p
 $c create oval 15p 75p 165p 120p -fill green			;# 150p x 45p
 set imgId [$c create image 90p 135p -image logo2 -anchor n]
- 
+
 # Compute the scaled y coordinate of the next canvas item's top edge in pixels
 lassign [$c bbox $imgId] x1 y1 x2 y2		;# x1, y1, x2, y2 are in pixels
 incr y2 [expr {round(15 * [tk scaling])}]	;# convert 15 pt to pixels
