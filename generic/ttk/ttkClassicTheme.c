@@ -208,7 +208,7 @@ typedef struct {
     Tcl_Obj *backgroundObj;
     Tcl_Obj *reliefObj;
     Tcl_Obj *colorObj;
-    Tcl_Obj *diameterObj;
+    Tcl_Obj *sizeObj;
     Tcl_Obj *marginObj;
     Tcl_Obj *borderWidthObj;
 } IndicatorElement;
@@ -221,7 +221,7 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorrelief", TK_OPTION_RELIEF,
 	offsetof(IndicatorElement,reliefObj), "raised" },
     { "-indicatordiameter", TK_OPTION_PIXELS,
-	offsetof(IndicatorElement,diameterObj), "12" },
+	offsetof(IndicatorElement,sizeObj), "9p" },
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(IndicatorElement,marginObj), "0 2 4 2" },
     { "-borderwidth", TK_OPTION_PIXELS,
@@ -243,7 +243,7 @@ static void SquareIndicatorElementSize(
     (void)paddingPtr;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
     *widthPtr = diameter + Ttk_PaddingWidth(margins);
     *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
@@ -290,7 +290,7 @@ static void DiamondIndicatorElementSize(
     (void)paddingPtr;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
     *widthPtr = diameter + 3 + Ttk_PaddingWidth(margins);
     *heightPtr = diameter + 3 + Ttk_PaddingHeight(margins);
 }

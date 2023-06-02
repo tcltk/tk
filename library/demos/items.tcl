@@ -45,11 +45,11 @@ grid columnconfig $w.frame 0 -weight 1 -minsize 0
 
 # Display a 3x3 rectangular grid.
 
-$c create rect 0c 0c 30c 24c -width 2
-$c create line 0c 8c 30c 8c -width 2
-$c create line 0c 16c 30c 16c -width 2
-$c create line 10c 0c 10c 24c -width 2
-$c create line 20c 0c 20c 24c -width 2
+$c create rect 0c 0c 30c 24c -width 1.5p
+$c create line 0c 8c 30c 8c -width 1.5p
+$c create line 0c 16c 30c 16c -width 1.5p
+$c create line 10c 0c 10c 24c -width 1.5p
+$c create line 20c 0c 20c 24c -width 1.5p
 
 set font1 {Helvetica 12}
 set font2 {Helvetica 24 bold}
@@ -74,7 +74,7 @@ $c create line 4.67c 1c 4.67c 4c -arrow last -tags item
 $c create line 6.33c 1c 6.33c 4c -arrow both -tags item
 $c create line 5c 6c 9c 6c 9c 1c 8c 1c 8c 4.8c 8.8c 4.8c 8.8c 1.2c \
 	8.2c 1.2c 8.2c 4.6c 8.6c 4.6c 8.6c 1.4c 8.4c 1.4c 8.4c 4.4c \
-	-width 3 -fill $red -tags item
+	-width 2.25p -fill $red -tags item
 # Main widget program sets variable tk_demoDirectory
 $c create line 1c 5c 7c 5c 7c 7c 9c 7c -width .5c \
 	-stipple @[file join $tk_demoDirectory images gray25.xbm] \
@@ -86,7 +86,7 @@ $c create text 15c .2c -text "Curves (smoothed lines)" -anchor n
 $c create line 11c 4c 11.5c 1c 13.5c 1c 14c 4c -smooth on \
 	-fill $blue -tags item
 $c create line 15.5c 1c 19.5c 1.5c 15.5c 4.5c 19.5c 4c -smooth on \
-	-arrow both -width 3 -tags item
+	-arrow both -width 2.25p -tags item
 $c create line 12c 6c 13.5c 4.5c 16.5c 7.5c 18c 6c \
 	16.5c 4.5c 13.5c 7.5c 12c 6c -smooth on -width 3m -cap round \
 	-stipple @[file join $tk_demoDirectory images gray25.xbm] \
@@ -95,7 +95,7 @@ $c create line 12c 6c 13.5c 4.5c 16.5c 7.5c 18c 6c \
 $c create text 25c .2c -text Polygons -anchor n
 $c create polygon 21c 1.0c 22.5c 1.75c 24c 1.0c 23.25c 2.5c \
 	24c 4.0c 22.5c 3.25c 21c 4.0c 21.75c 2.5c -fill $green \
-	-outline {} -width 4 -tags item
+	-outline {} -width 3p -tags item
 $c create polygon 25c 4c 25c 4c 25c 1c 26c 1c 27c 4c 28c 1c \
 	29c 1c 29c 4c 29c 4c -fill $red -outline {} -smooth on -tags item
 $c create polygon 22c 4.5c 25c 4.5c 25c 6.75c 28c 6.75c \
@@ -148,8 +148,13 @@ image create photo items.ousterhout \
     -file [file join $tk_demoDirectory images ouster.png]
 image create photo items.ousterhout.active -format "png -alpha 0.5" \
     -file [file join $tk_demoDirectory images ouster.png]
-$c create image 13c 20c -tags item -image items.ousterhout \
-    -activeimage items.ousterhout.active
+set zoomFactor [expr {int($tk::scalingPct / 100.0)}]
+foreach img {items.ousterhout items.ousterhout.active} {
+    image create photo ${img}2
+    ${img}2 copy $img -zoom $zoomFactor
+}
+$c create image 13c 20c -tags item -image items.ousterhout2 \
+    -activeimage items.ousterhout.active2
 }
 $c create bitmap 17c 18.5c -tags item \
 	-bitmap @[file join $tk_demoDirectory images noletter.xbm]
