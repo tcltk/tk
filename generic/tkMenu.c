@@ -306,12 +306,12 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 
 static const char *const menuOptions[] = {
     "activate", "add", "cget", "clone", "configure", "delete", "entrycget",
-    "entryconfigure", "index", "insert", "invoke", "post", "postcascade",
+    "entryconfigure", "id", "index", "insert", "invoke", "post", "postcascade",
     "type", "unpost", "xposition", "yposition", NULL
 };
 enum options {
     MENU_ACTIVATE, MENU_ADD, MENU_CGET, MENU_CLONE, MENU_CONFIGURE,
-    MENU_DELETE, MENU_ENTRYCGET, MENU_ENTRYCONFIGURE, MENU_INDEX,
+    MENU_DELETE, MENU_ENTRYCGET, MENU_ENTRYCONFIGURE, MENU_ID, MENU_INDEX,
     MENU_INSERT, MENU_INVOKE, MENU_POST, MENU_POSTCASCADE, MENU_TYPE,
     MENU_UNPOST, MENU_XPOSITION, MENU_YPOSITION
 };
@@ -451,6 +451,8 @@ Tk_MenuObjCmd(
     menuPtr->cursorPtr = NULL;
     menuPtr->mainMenuPtr = menuPtr;
     menuPtr->menuType = UNKNOWN_TYPE;
+    Tcl_InitHashTable(&menuPtr->items, TCL_STRING_KEYS);
+    menuPtr->serial = 0;
     TkMenuInitializeDrawingFields(menuPtr);
 
     Tk_SetClass(menuPtr->tkwin, "Menu");
@@ -821,6 +823,28 @@ MenuWidgetObjCmd(
 	Tcl_Release(mePtr);
 	break;
     }
+    case MENU_ID: {
+	Tcl_Size index;
+	const char *idStr;
+        Tcl_HashEntry *entryPtr;
+
+	if (objc != 3) {
+	    Tcl_WrongNumArgs(interp, 2, objv, "index");
+	    goto error;
+	}
+	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
+	    goto error;
+	}
+	if (index == TCL_INDEX_NONE) {
+	    goto done;
+	}
+        entryPtr = menuPtr->entries[index]->entryPtr;
+        if (entryPtr) {
+            idStr = Tcl_GetHashKey(&menuPtr->items, entryPtr);
+            Tcl_SetObjResult(interp, Tcl_NewStringObj(idStr, TCL_INDEX_NONE));
+        }
+	break;
+    }
     case MENU_INDEX: {
 	Tcl_Size index;
 
@@ -1189,6 +1213,7 @@ DestroyMenuInstance(
 	ckfree(menuPtr->entries);
 	menuPtr->entries = NULL;
     }
+    Tcl_DeleteHashTable(&menuPtr->items);
     TkMenuFreeDrawOptions(menuPtr);
     Tk_FreeConfigOptions((char *) menuPtr,
 	    tsdPtr->menuOptionTable, menuPtr->tkwin);
@@ -1454,6 +1479,10 @@ DestroyMenuEntry(
 	Tcl_UntraceVar2(menuPtr->interp, varName, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuVarProc, mePtr);
+    }
+    if (mePtr->entryPtr) {
+        Tcl_DeleteHashEntry(mePtr->entryPtr);
+        mePtr->entryPtr = NULL;
     }
     TkpDestroyMenuEntry(mePtr);
     TkMenuEntryFreeDrawOptions(mePtr);
@@ -2112,6 +2141,7 @@ GetMenuIndex(
 {
     int i;
     const char *string;
+    Tcl_HashEntry *entryPtr;
 
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
 	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
@@ -2151,6 +2181,13 @@ GetMenuIndex(
 		== TCL_OK) {
 	    goto success;
 	}
+    }
+
+    entryPtr = Tcl_FindHashEntry(&menuPtr->items, string);
+    if (entryPtr) {
+        TkMenuEntry *mePtr = Tcl_GetHashValue(entryPtr);
+        *indexPtr = mePtr->index;
+        return TCL_OK;
     }
 
     for (i = 0; i < (int)menuPtr->numEntries; i++) {
@@ -2301,6 +2338,7 @@ MenuNewEntry(
 	ckfree(mePtr);
 	return NULL;
     }
+    mePtr->entryPtr = NULL;
     TkMenuInitializeEntryDrawingFields(mePtr);
     if (TkpMenuNewEntry(mePtr) != TCL_OK) {
 	Tk_FreeConfigOptions((char *) mePtr, mePtr->optionTable,
@@ -2343,6 +2381,10 @@ MenuAddOrInsert(
     Tcl_Size index;
     TkMenuEntry *mePtr;
     TkMenu *menuListPtr;
+    Tcl_HashEntry *entryPtr;
+    Tcl_Obj *idPtr = NULL;
+    int isNew;
+    int offs;
 
     if (indexPtr != NULL) {
 	if (GetMenuIndex(interp, menuPtr, indexPtr, 1, &index) != TCL_OK) {
@@ -2369,11 +2411,26 @@ MenuAddOrInsert(
 	    sizeof(char *), "menu entry type", 0, &type) != TCL_OK) {
 	return TCL_ERROR;
     }
+    offs = 1;
+
+    /*
+     * Check for a user supplied id
+     */
+
+    if (objc % 2 == 0) {
+        idPtr = objv[offs];
+        if (Tcl_FindHashEntry(&menuPtr->items, Tcl_GetString(idPtr))) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "entry \"%s\" already exists", Tcl_GetString(idPtr)));
+            Tcl_SetErrorCode(interp, "TK", "MENU", "ENTRY_EXISTS", NULL);
+            return TCL_ERROR;
+        }
+        offs++;
+    }
 
     /*
      * Now we have to add an entry for every instance related to this menu.
      */
-
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
     	    menuListPtr = menuListPtr->nextInstancePtr) {
 
@@ -2381,7 +2438,7 @@ MenuAddOrInsert(
     	if (mePtr == NULL) {
     	    return TCL_ERROR;
     	}
-    	if (ConfigureMenuEntry(mePtr, objc - 1, objv + 1) != TCL_OK) {
+    	if (ConfigureMenuEntry(mePtr, objc - offs, objv + offs) != TCL_OK) {
 	    TkMenu *errorMenuPtr;
 	    Tcl_Size i;
 
@@ -2404,6 +2461,23 @@ MenuAddOrInsert(
 	    }
     	    return TCL_ERROR;
     	}
+
+        if (idPtr == NULL) {
+            char idbuf[16];
+            /* Generate an id for the new entry on the main menu */
+            do {
+                snprintf(idbuf, sizeof(idbuf), "e%03X", ++menuPtr->serial);
+                entryPtr = Tcl_CreateHashEntry(
+			&menuListPtr->items, idbuf, &isNew);
+            } while (!isNew);
+            idPtr = Tcl_NewStringObj(idbuf, TCL_INDEX_NONE);
+        } else {
+            /* Reuse the specified or previously generated id on all clones */
+            entryPtr = Tcl_CreateHashEntry(
+		    &menuListPtr->items, Tcl_GetString(idPtr), &isNew);
+        }
+        Tcl_SetHashValue(entryPtr, mePtr);
+        mePtr->entryPtr = entryPtr;
 
     	/*
 	 * If a menu has cascades, then every instance of the menu has to have
@@ -2450,6 +2524,8 @@ MenuAddOrInsert(
     	    }
     	}
     }
+
+    Tcl_SetObjResult(interp, idPtr);
     return TCL_OK;
 }
 
