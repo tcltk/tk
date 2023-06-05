@@ -27,7 +27,7 @@ test menuDraw-2.1 {TkInitializeMenuEntryDrawingFields} -setup {
     .m1 add command
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 
 
 test menuDraw-3.1 {TkMenuFreeDrawOptions} -setup {
@@ -86,7 +86,7 @@ test menuDraw-6.1 {TkMenuConfigureEntryDrawOptions - no tkfont specified} -setup
     .m1 add command -label "foo"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.2 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     deleteWindows
 } -body {
@@ -94,7 +94,7 @@ test menuDraw-6.2 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     .m1 add command -label "foo" -font "Courier 12"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.3 {TkMenuConfigureEntryDrawOptions - active state - wrong entry} -setup {
     deleteWindows
 } -body {
@@ -140,7 +140,7 @@ test menuDraw-6.7 {TkMenuConfigureEntryDrawOptions - tkfont specified} -setup {
     .m1 add command -label "foo" -font "Courier 12"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.8 {TkMenuConfigureEntryDrawOptions - border specified} -setup {
     deleteWindows
 } -body {
@@ -148,7 +148,7 @@ test menuDraw-6.8 {TkMenuConfigureEntryDrawOptions - border specified} -setup {
     .m1 add command -label "foo" -background "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setup {
     deleteWindows
 } -body {
@@ -156,7 +156,7 @@ test menuDraw-6.9 {TkMenuConfigureEntryDrawOptions - foreground specified} -setu
     .m1 add command -label "foo" -foreground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.10 {TkMenuConfigureEntryDrawOptions - activeBorder specified} -setup {
     deleteWindows
 } -body {
@@ -164,7 +164,7 @@ test menuDraw-6.10 {TkMenuConfigureEntryDrawOptions - activeBorder specified} -s
     .m1 add command -label "foo" -activebackground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified} -setup {
     deleteWindows
 } -body {
@@ -172,7 +172,7 @@ test menuDraw-6.11 {TkMenuConfigureEntryDrawOptions - activeforeground specified
     .m1 add command -label "foo" -activeforeground "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.12 {TkMenuConfigureEntryDrawOptions - selectcolor specified} -setup {
     deleteWindows
 } -body {
@@ -180,7 +180,7 @@ test menuDraw-6.12 {TkMenuConfigureEntryDrawOptions - selectcolor specified} -se
     .m1 add radiobutton -label "foo" -selectcolor "red"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menuDraw-6.13 {TkMenuConfigureEntryDrawOptions - textGC disposal} -setup {
     deleteWindows
 } -body {
