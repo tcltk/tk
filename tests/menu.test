@@ -3471,8 +3471,52 @@ test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
 } -cleanup {
     deleteWindows
 } -result 0
+test menu-22.6 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @4bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@4bogus"}
+test menu-22.7 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @10,4bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@10,4bogus"}
+test menu-22.8 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @10,bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@10,bogus"}
+test menu-22.9 {GetIndexFromCoords: index type pecedence} -setup {
+    deleteWindows
+} -body {
+    menu .m -tearoff 0
+    .m add command -label "First entry"
+    .m add command -label "@42nd street"
+    .m add command -label "Last entry"
+    .m index "@42nd*"  ; # shall be interpreted as a pattern, not as @42
+} -cleanup {
+    deleteWindows
+} -result {1}
 
-test menu-22.6 {tk_popup on separator entry} -setup {
+test menu-22.10 {tk_popup on separator entry} -setup {
     deleteWindows
 } -constraints {x11} -body {
     menu .m1
