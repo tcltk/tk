@@ -2177,7 +2177,7 @@ GetMenuIndex(
 #endif
 
     if (string[0] == '@') {
-	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
+	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
 		== TCL_OK) {
 	    goto success;
 	}
