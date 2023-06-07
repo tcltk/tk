@@ -58,9 +58,9 @@ scrollbar $w.s
 # slightly larger frame here...
 
 if {[tk windowingsystem] eq "aqua"} {
-    set frameSize 168
+    set frameSize 126p
 } else {
-    set frameSize 120
+    set frameSize 90p
 }
 
 frame $w.frame -width $frameSize -height $frameSize -borderwidth 2\

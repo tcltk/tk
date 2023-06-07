@@ -25,7 +25,7 @@ pack $btns -side bottom -fill x
 
 # Create the pane itself
 panedwindow $w.pane -orient vertical
-pack $w.pane -side top -expand yes -fill both -pady 2 -padx 2m
+pack $w.pane -side top -expand yes -fill both -pady 1.5p -padx 2m
 
 # The top window is a listbox with scrollbar
 set paneList {

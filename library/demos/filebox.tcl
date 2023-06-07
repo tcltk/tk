@@ -33,7 +33,7 @@ foreach i {open save} {
     pack $f.lab -side left
     pack $f.ent -side left -expand yes -fill x
     pack $f.but -side left
-    pack $f -fill x -padx 1c -pady 3
+    pack $f -fill x -padx 1c -pady 3p
 }
 
 if {[tk windowingsystem] eq "x11"} {
