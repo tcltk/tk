@@ -289,7 +289,7 @@ if test $tk_aqua = yes; then
         LIBS="$LIBS -framework UserNotifications"
     fi
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
-        LIBS="$LIBS -framework UniformTypeIdentifiers"
+        LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
     EXTRA_CC_SWITCHES='-x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
