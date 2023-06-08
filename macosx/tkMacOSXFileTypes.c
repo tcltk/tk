@@ -54,7 +54,7 @@ MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
     }
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&ostype2identifier, INT2PTR(ostype));
     if (hPtr) {
-	char *UTI = Tcl_GetHashValue(hPtr);
+	char *UTI = (char *)Tcl_GetHashValue(hPtr);
 	return [[NSString alloc] initWithCString:UTI
 					encoding:NSASCIIStringEncoding];
     }

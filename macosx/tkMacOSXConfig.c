@@ -4,8 +4,8 @@
  *	This module implements the Macintosh system defaults for
  *	the configuration package.
  *
- * Copyright (c) 1997 by Sun Microsystems, Inc.
- * Copyright 2001, Apple Inc.
+ * Copyright © 1997 Sun Microsystems, Inc.
+ * Copyright © 2001, Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -39,6 +39,10 @@ TkpGetSystemDefault(
     const char *dbName,			/* The option database name. */
     const char *className)		/* The name of the option class. */
 {
+    (void)tkwin;
+    (void)dbName;
+    (void)className;
+
     return NULL;
 }
 
