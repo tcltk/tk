@@ -4,10 +4,10 @@
  *	This file implements functions that decode & handle keyboard events on
  *	MacOS X.
  *
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2012 Adrian Robert.
- * Copyright 2015-2020 Marc Culler.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2012 Adrian Robert.
+ * Copyright © 2015-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -400,6 +400,9 @@ static NSUInteger textInputModifiers;
 - (NSAttributedString *)attributedSubstringForProposedRange:(NSRange)theRange
       actualRange:(NSRangePointer)thePointer
 {
+    (void)theRange;
+    (void)thePointer;
+
     return nil;
 }
 
@@ -417,6 +420,7 @@ static NSUInteger textInputModifiers;
     Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
+    (void)selRange;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
         [aString string] : aString;
@@ -493,6 +497,9 @@ static NSUInteger textInputModifiers;
 {
     NSRect rect;
     NSPoint pt;
+    (void)theRange;
+    (void)thePointer;
+
     pt.x = caret_x;
     pt.y = caret_y;
 
@@ -547,6 +554,8 @@ static NSUInteger textInputModifiers;
 
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
+    (void)thePoint;
+
     if (NS_KEYLOG) {
 	TKLog(@"characterIndexForPoint request");
     }
@@ -556,6 +565,8 @@ static NSUInteger textInputModifiers;
 - (NSAttributedString *)attributedSubstringFromRange: (NSRange)theRange
 {
     static NSAttributedString *str = nil;
+    (void)theRange;
+
     if (str == nil) {
 	str = [NSAttributedString new];
     }
@@ -710,6 +721,10 @@ XGrabKeyboard(
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
+    (void)owner_events;
+    (void)pointer_mode;
+    (void)keyboard_mode;
+    (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
@@ -752,6 +767,9 @@ XUngrabKeyboard(
     Display* display,
     Time time)
 {
+    (void)display;
+    (void)time;
+
     if (modalSession) {
 	[NSApp endModalSession:modalSession];
 	modalSession = nil;
