@@ -3,9 +3,9 @@
  *
  *	This file implements the native aqua entry widget.
  *
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
+ * Copyright © 2001 Apple Computer, Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -259,10 +259,10 @@ TkpDrawSpinboxButtons(
      */
 
     bgGC = Tk_GCForColor(sbPtr->entry.highlightBgColorPtr, d);
-    rects[0].x = Tk_Width(tkwin) - incDecWidth - 1;
+    rects[0].x = (short)(Tk_Width(tkwin) - incDecWidth - 1);
     rects[0].y = 0;
-    rects[0].width = incDecWidth + 1;
-    rects[0].height = Tk_Height(tkwin);
+    rects[0].width = (unsigned short)(incDecWidth + 1);
+    rects[0].height = (unsigned short)Tk_Height(tkwin);
     XFillRectangles(Tk_Display(tkwin), d, bgGC, rects, 1);
 
     if (!TkMacOSXSetupDrawingContext(d, NULL, &dc)) {

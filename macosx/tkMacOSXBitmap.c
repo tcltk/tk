@@ -3,9 +3,9 @@
  *
  *	This file handles the implementation of native bitmaps.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -136,7 +136,7 @@ PixmapFromImage(
     TkMacOSXDrawingContext dc;
     Pixmap pixmap;
 
-    pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
+    pixmap = Tk_GetPixmap(display, None, (int)size.width, (int)size.height, 0);
     if (TkMacOSXSetupDrawingContext(pixmap, NULL, &dc)) {
 	if (dc.context) {
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1,
@@ -321,8 +321,8 @@ TkpGetNativeAppBitmap(
 	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
 	}
     }
-    *width = size.width;
-    *height = size.height;
+    *width = (int)size.width;
+    *height = (int)size.height;
     return pixmap;
 }
 
@@ -350,7 +350,8 @@ TkMacOSXIconBitmapObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tcl_HashEntry *hPtr;
-    int i = 1, len, isNew, result = TCL_ERROR;
+    int isNew, result = TCL_ERROR;
+    int i = 1, len;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
 

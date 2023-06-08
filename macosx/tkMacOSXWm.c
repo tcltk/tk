@@ -5,11 +5,11 @@
  *	application and the window manager. Among other things, it implements
  *	the "wm" command and passes geometry information to the window manager.
  *
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017-2019 Marc Culler.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -342,6 +342,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     NSRect pointrect = {point, {0,0}};
     return [self convertRectToScreen:pointrect].origin;
 }
+
 - (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     NSRect pointrect = {point, {0,0}};
@@ -1173,7 +1174,8 @@ Tk_WmObjCmd(
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
 	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
-    int index, length;
+    int index;
+    int length;
     char *argv1;
     TkWindow *winPtr;
 
@@ -1207,10 +1209,10 @@ Tk_WmObjCmd(
     }
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
-	!= TCL_OK) {
+	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr)
+    if (winPtr && !Tk_IsTopLevel(winPtr)
 	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
@@ -1426,7 +1428,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != [macWindow isDocumentEdited]) {
-	    [macWindow setDocumentEdited:boolean];
+	    [macWindow setDocumentEdited:(BOOL)boolean];
 	}
 	break;
     case WMATT_NOTIFY:
@@ -1577,7 +1579,7 @@ WmGetAttribute(
 
 static int
 WmAttributesCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
