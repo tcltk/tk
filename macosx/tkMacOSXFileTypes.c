@@ -25,9 +25,6 @@ without generating deprecation warnings.
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFileTypes.h"
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
-#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-#endif
 
 #define CHARS_TO_OSTYPE(string) (OSType) string[0] << 24 | \
                                 (OSType) string[1] << 16 | \
