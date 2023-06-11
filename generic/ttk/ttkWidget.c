@@ -6,6 +6,7 @@
 
 #include "tkInt.h"
 #include "ttkThemeInt.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 /*------------------------------------------------------------------------
@@ -125,7 +126,21 @@ static void WidgetWorldChanged(ClientData clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     (void)UpdateLayout(corePtr->interp, corePtr);
+    Ttk_Theme theme;
+    Ttk_Style style = NULL;
+    Tcl_Obj* result;
+    int offTime;
+
     SizeChanged(corePtr);
+
+    theme = Ttk_GetCurrentTheme(corePtr->interp);
+    style = Ttk_GetStyle(theme, ".");
+    result = Ttk_StyleDefault(style, "-insertofftime");
+    if (result) {
+	Tcl_GetIntFromObj(corePtr->interp, result, &offTime);
+	TtkSetBlinkOffTime(corePtr, offTime);
+    }
+
     TtkRedisplayWidget(corePtr);
 }
 

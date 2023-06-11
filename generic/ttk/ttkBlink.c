@@ -154,6 +154,13 @@ CursorEventProc(ClientData clientData, XEvent *eventPtr)
     }
 }
 
+void TtkSetBlinkOffTime(WidgetCore* corePtr, int offTime)
+{
+    CursorManager* cm = GetCursorManager(corePtr->interp);
+
+    cm->offTime = offTime;
+}
+
 /*
  * TtkBlinkCursor (main routine) --
  * 	Arrange to blink the cursor on and off whenever the
