@@ -140,22 +140,22 @@ proc DoCtrlFrame {w} {
     ttk::button $w.about -text About -command [list About $w]
 
     grid $w.start -in $w.ctrl -row 0 -sticky ew
-    grid rowconfigure $w.ctrl 1 -minsize 10
+    grid rowconfigure $w.ctrl 1 -minsize 7.5p
     grid $w.pause -in $w.ctrl -row 2 -sticky ew
     grid $w.step  -in $w.ctrl -sticky ew -pady 1.5p
     grid $w.bstep -in $w.ctrl -sticky ew
     grid $w.reset -in $w.ctrl -sticky ew -pady 1.5p
-    grid rowconfigure $w.ctrl 10 -minsize 18
+    grid rowconfigure $w.ctrl 10 -minsize 13.5p
     grid $w.details -in $w.ctrl -row 11 -sticky ew
-    grid rowconfigure $w.ctrl 11 -minsize 20
+    grid rowconfigure $w.ctrl 11 -minsize 15p
     $w.details configure -labelwidget $w.details.cb
     grid [ttk::frame $w.details.b -height 1]	;# Work around minor bug
     raise $w.details
     raise $w.details.cb
     grid rowconfigure $w.ctrl 50 -weight 1
-    trace variable ::S(mode) w	  [list ActiveGUI $w]
-    trace variable ::S(details) w [list ActiveGUI $w]
-    trace variable ::S(speed) w	  [list ActiveGUI $w]
+    trace add variable ::S(mode) write	  [list ActiveGUI $w]
+    trace add variable ::S(details) write [list ActiveGUI $w]
+    trace add variable ::S(speed) write	  [list ActiveGUI $w]
 
     grid $w.message -in $w.ctrl -row 98 -sticky ew -pady 3p
     grid $w.message.e -sticky nsew
