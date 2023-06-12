@@ -6,7 +6,6 @@
 
 #include "tkInt.h"
 #include "ttkThemeInt.h"
-#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 /*------------------------------------------------------------------------
