@@ -126,21 +126,7 @@ static void WidgetWorldChanged(ClientData clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     (void)UpdateLayout(corePtr->interp, corePtr);
-    Ttk_Theme theme;
-    Ttk_Style style = NULL;
-    Tcl_Obj* result;
-    int offTime;
-
     SizeChanged(corePtr);
-
-    theme = Ttk_GetCurrentTheme(corePtr->interp);
-    style = Ttk_GetStyle(theme, ".");
-    result = Ttk_StyleDefault(style, "-insertofftime");
-    if (result) {
-	Tcl_GetIntFromObj(corePtr->interp, result, &offTime);
-	TtkSetBlinkOffTime(corePtr, offTime);
-    }
-
     TtkRedisplayWidget(corePtr);
 }
 
@@ -336,6 +322,7 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 	case VirtualEvent: {
 	    const char *name = ((XVirtualEvent *)eventPtr)->name;
 	    if ((name != NULL) && !strcmp("ThemeChanged", name)) {
+		TtkBlinkCursorTimes(corePtr);
 		WidgetWorldChanged(corePtr);
 	    }
 	    break;
