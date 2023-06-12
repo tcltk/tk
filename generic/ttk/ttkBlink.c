@@ -167,13 +167,13 @@ void TtkSetBlinkCursorOffTime(WidgetCore* corePtr, int offTime)
 }
 
 /*
- * TtkAdjustBlinkCursor --
+ * TtkSetBlinkCursorTimes --
  * 	Set cursor blink on and off times from the "." style defaults
  * 	-insertontime and -insertofftime - For instance to set cursor
  * 	blinking off:
  * 	    ttk::style configure . -insertofftime 0
  */
-void TtkBlinkCursorTimes(WidgetCore* corePtr)
+void TtkSetBlinkCursorTimes(WidgetCore* corePtr)
 {
     Ttk_Theme theme;
     Ttk_Style style = NULL;
