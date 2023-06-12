@@ -152,6 +152,13 @@ CursorEventProc(ClientData clientData, XEvent *eventPtr)
     }
 }
 
+void TtkSetBlinkCursorOnTime(WidgetCore* corePtr, int onTime)
+{
+    CursorManager* cm = GetCursorManager(corePtr->interp);
+
+    cm->onTime = onTime;
+}
+
 void TtkSetBlinkCursorOffTime(WidgetCore* corePtr, int offTime)
 {
     CursorManager* cm = GetCursorManager(corePtr->interp);
@@ -161,24 +168,29 @@ void TtkSetBlinkCursorOffTime(WidgetCore* corePtr, int offTime)
 
 /*
  * TtkAdjustBlinkCursor --
- * 	Set cursor blink off time from the -insertofftime value
- * 	for the "." style. For instance to set blinking off:
- * 	ttk::style configure . -insertofftime 0
- * 
+ * 	Set cursor blink on and off times from the "." style defaults
+ * 	-insertontime and -insertofftime - For instance to set cursor
+ * 	blinking off:
+ * 	    ttk::style configure . -insertofftime 0
  */
 void TtkBlinkCursorTimes(WidgetCore* corePtr)
 {
     Ttk_Theme theme;
     Ttk_Style style = NULL;
     Tcl_Obj* result;
-    int offTime;
+    int timeInterval;
 
     theme = Ttk_GetCurrentTheme(corePtr->interp);
     style = Ttk_GetStyle(theme, ".");
+    result = Ttk_StyleDefault(style, "-insertontime");
+    if (result) {
+	Tcl_GetIntFromObj(corePtr->interp, result, &timeInterval);
+	TtkSetBlinkCursorOnTime(corePtr, timeInterval);
+    }
     result = Ttk_StyleDefault(style, "-insertofftime");
     if (result) {
-	Tcl_GetIntFromObj(corePtr->interp, result, &offTime);
-	TtkSetBlinkCursorOffTime(corePtr, offTime);
+	Tcl_GetIntFromObj(corePtr->interp, result, &timeInterval);
+	TtkSetBlinkCursorOffTime(corePtr, timeInterval);
     }
 }
 /*
