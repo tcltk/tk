@@ -321,7 +321,6 @@ static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
 	case VirtualEvent: {
 	    const char *name = ((XVirtualEvent *)eventPtr)->name;
 	    if ((name != NULL) && !strcmp("ThemeChanged", name)) {
-		TtkSetBlinkCursorTimes(corePtr);
 		WidgetWorldChanged(corePtr);
 	    }
 	    break;

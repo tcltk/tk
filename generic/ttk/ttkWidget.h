@@ -156,7 +156,6 @@ MODULE_SCOPE void TtkResizeWidget(WidgetCore *);
 MODULE_SCOPE void TtkTrackElementState(WidgetCore *);
 
 MODULE_SCOPE void TtkBlinkCursor(WidgetCore *);
-MODULE_SCOPE void TtkSetBlinkCursorTimes(WidgetCore* corePtr);
 
 /*
  * -state option values (compatibility)
