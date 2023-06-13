@@ -152,16 +152,16 @@ CursorEventProc(ClientData clientData, XEvent *eventPtr)
     }
 }
 
-void TtkSetBlinkCursorOnTime(WidgetCore* corePtr, int onTime)
+void TtkSetBlinkCursorOnTime(Tcl_Interp* interp, int onTime)
 {
-    CursorManager* cm = GetCursorManager(corePtr->interp);
+    CursorManager* cm = GetCursorManager(interp);
 
     cm->onTime = onTime;
 }
 
-void TtkSetBlinkCursorOffTime(WidgetCore* corePtr, int offTime)
+void TtkSetBlinkCursorOffTime(Tcl_Interp* interp, int offTime)
 {
-    CursorManager* cm = GetCursorManager(corePtr->interp);
+    CursorManager* cm = GetCursorManager(interp);
 
     cm->offTime = offTime;
 }
@@ -173,24 +173,24 @@ void TtkSetBlinkCursorOffTime(WidgetCore* corePtr, int offTime)
  * 	blinking off:
  * 	    ttk::style configure . -insertofftime 0
  */
-void TtkSetBlinkCursorTimes(WidgetCore* corePtr)
+void TtkSetBlinkCursorTimes(Tcl_Interp* interp)
 {
     Ttk_Theme theme;
     Ttk_Style style = NULL;
     Tcl_Obj* result;
     int timeInterval;
 
-    theme = Ttk_GetCurrentTheme(corePtr->interp);
+    theme = Ttk_GetCurrentTheme(interp);
     style = Ttk_GetStyle(theme, ".");
     result = Ttk_StyleDefault(style, "-insertontime");
     if (result) {
-	Tcl_GetIntFromObj(corePtr->interp, result, &timeInterval);
-	TtkSetBlinkCursorOnTime(corePtr, timeInterval);
+	Tcl_GetIntFromObj(interp, result, &timeInterval);
+	TtkSetBlinkCursorOnTime(interp, timeInterval);
     }
     result = Ttk_StyleDefault(style, "-insertofftime");
     if (result) {
-	Tcl_GetIntFromObj(corePtr->interp, result, &timeInterval);
-	TtkSetBlinkCursorOffTime(corePtr, timeInterval);
+	Tcl_GetIntFromObj(interp, result, &timeInterval);
+	TtkSetBlinkCursorOffTime(interp, timeInterval);
     }
 }
 /*
