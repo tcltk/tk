@@ -154,7 +154,6 @@ MODULE_SCOPE void TtkRedisplayWidget(WidgetCore *);
 MODULE_SCOPE void TtkResizeWidget(WidgetCore *);
 
 MODULE_SCOPE void TtkTrackElementState(WidgetCore *);
-
 MODULE_SCOPE void TtkBlinkCursor(WidgetCore *);
 
 /*
