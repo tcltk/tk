@@ -66,10 +66,10 @@ proc animateLabelText {w text interval} {
 ## Next, a similar pair of procedures to animate a GIF loaded into a
 ## photo image.
 proc SelectNextImageFrame {w interval} {
-    global animationCallbacks
+    global animationCallbacks image zoomFactor
     set animationCallbacks($w) \
 	    [after $interval SelectNextImageFrame $w $interval]
-    set image [$w cget -image]
+    set image2 [$w cget -image]
 
     # The easy way to animate a GIF!
     set idx -1
@@ -80,15 +80,23 @@ proc SelectNextImageFrame {w interval} {
     }]} then {
 	$image configure -format "GIF -index 0"
     }
+    $image2 copy $image -zoom $zoomFactor
 }
 proc animateLabelImage {w imageData interval} {
-    global animationCallbacks
+    global animationCallbacks image zoomFactor
 
     # Create a multi-frame GIF from base-64-encoded data
     set image [image create photo -format GIF -data $imageData]
 
-    # Install the image into the widget
-    $w configure -image $image
+    # Create a copy of the image just created, magnified according to the
+    # display's DPI scaling level.  Since the zooom factor must be an integer,
+    # the copy will only be effectively magnified if $tk::scalingPct >= 200.
+    set image2 [image create photo]
+    set zoomFactor [expr {int($tk::scalingPct / 100.0)}]
+    $image2 copy $image -zoom $zoomFactor
+
+    # Install the image copy into the widget
+    $w configure -image $image2
 
     # Schedule the start of the animation loop
     set animationCallbacks($w) \
