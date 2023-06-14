@@ -240,7 +240,7 @@ test entry-6.1 {Update linked variable in write trace} -body {
     }
     catch {destroy .e}
     set x ""
-    trace variable x w override
+    trace add variable x write override
     ttk::entry .e -textvariable x
     .e insert 0 "Some text"
     set result [list $x [.e get]]
