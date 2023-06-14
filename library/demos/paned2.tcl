@@ -71,4 +71,4 @@ grid rowconfigure    $f 0 -weight 1
 $f.text insert 1.0 "This is just a normal text widget"
 
 # Now add our contents to the paned window
-$w.pane add $w.pane.top $w.pane.bottom
+$w.pane add $w.pane.top $w.pane.bottom -stretch always

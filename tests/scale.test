@@ -1091,7 +1091,7 @@ test scale-13.6 {SetScaleValue procedure} -body {
 
     .s set 50
     update
-    trace variable y w varTrace
+    trace add variable y write varTrace
     set traceInfo empty
     set x untouched
     .s set 50

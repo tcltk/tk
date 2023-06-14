@@ -37,7 +37,7 @@ ttk::scrollbar $w.scroll -command "$t yview"
 pack $w.scroll -side right -fill y
 panedwindow $w.pane
 pack $w.pane -expand yes -fill both
-$w.pane add $w.f
+$w.pane add $w.f -stretch always
 # Import to raise given creation order above
 raise $w.f
 
@@ -350,7 +350,7 @@ proc textSplitWindow {textW} {
 	    set t [$textW peer create $w.peer \
 	      -yscrollcommand "$w.scroll set"]
 	    $t tag configure peer_warning -font boldFont
-	    $w.pane add $t
+	    $w.pane add $t -stretch always
 	}
     } else {
         return
