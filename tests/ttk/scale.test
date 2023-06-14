@@ -4,7 +4,7 @@ namespace import -force tcltest::*
 loadTestedCommands
 
 test scale-1.0 "Self-destruction" -body {
-    trace variable v w { destroy .s ;# }
+    trace add variable v write { destroy .s ;# }
     ttk::scale .s -variable v
     pack .s ; update
     .s set 1 ; update
