@@ -681,7 +681,7 @@ objs: ${OBJS}
 
 
 ${WISH_EXE}: $(TK_STUB_LIB_FILE) $(WISH_OBJS) $(TK_LIB_FILE) @APP_RSRC_FILE@
-	${CC} ${CFLAGS} ${LDFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ \
+	${CC} ${CFLAGS} $(WISH_OBJS) @TK_BUILD_LIB_SPEC@ ${LDFLAGS} \
 		$(WISH_LIBS) $(CC_SEARCH_FLAGS) -o ${WISH_EXE}
 	@if test "${ZIPFS_BUILD}" = "2" ; then \
 	    if test "x$(MACHER)" = "x" ; then \
@@ -703,7 +703,7 @@ $(TKTEST_EXE): $(TKTEST_OBJS) $(TK_LIB_FILE)
 	$(MAKE) tktest-real LIB_RUNTIME_DIR="`pwd`:$(TCL_BIN_DIR)"
 
 tktest-real: ${TK_STUB_LIB_FILE}
-	${CC} ${CFLAGS} ${LDFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ $(WISH_LIBS) \
+	${CC} ${CFLAGS} $(TKTEST_OBJS) @TK_BUILD_LIB_SPEC@ ${LDFLAGS} $(WISH_LIBS) \
 		${TK_STUB_LIB_FILE} ${TCL_STUB_LIB_SPEC} $(CC_SEARCH_FLAGS) -o $(TKTEST_EXE)
 
 # # FIXME: This xttest rule seems to be broken in a number of ways.  It should
@@ -711,8 +711,8 @@ tktest-real: ${TK_STUB_LIB_FILE}
 # # tktest, and it is not clear where this test.o object file comes from.
 #
 # xttest: test.o tkTest.o tkSquare.o $(TK_LIB_FILE) ${TK_STUB_LIB_FILE}
-# 	${CC} ${CFLAGS} ${LDFLAGS} test.o tkTest.o tkSquare.o \
-# 		@TK_BUILD_LIB_SPEC@ ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
+# 	${CC} ${CFLAGS} test.o tkTest.o tkSquare.o \
+# 		@TK_BUILD_LIB_SPEC@ ${LDFLAGS} ${TK_STUB_LIB_FILE}  ${TCL_STUB_LIB_SPEC} \
 # 		$(WISH_LIBS) $(LD_SEARCH_FLAGS) -lXt -o xttest
 
 # Note, in the target below TCL_LIBRARY needs to be set or else
