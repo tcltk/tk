@@ -156,14 +156,16 @@ void TtkSetBlinkCursorOnTime(Tcl_Interp* interp, int onTime)
 {
     CursorManager* cm = GetCursorManager(interp);
 
-    cm->onTime = onTime;
+    if (onTime >= 0)
+	cm->onTime = onTime;
 }
 
 void TtkSetBlinkCursorOffTime(Tcl_Interp* interp, int offTime)
 {
     CursorManager* cm = GetCursorManager(interp);
 
-    cm->offTime = offTime;
+    if (offTime >= 0)
+	cm->offTime = offTime;
 }
 
 /*
