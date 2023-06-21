@@ -170,12 +170,12 @@ proc DragEnd {w x y} {
 proc CreateGUI {} {
     catch {destroy .knightstour}
     set dlg [toplevel .knightstour]
-    wm title $dlg "Knights tour"
+    wm title $dlg "Knight's Tour"
     wm withdraw $dlg
     set f [ttk::frame $dlg.f]
     set c [canvas $f.c -width 192p -height 192p]
     text $f.txt -width 10 -height 1 \
-        -yscrollcommand [list $f.vs set] -font {Arial 8}
+        -yscrollcommand [list $f.vs set] -font {Helvetica 8}
     ttk::scrollbar $f.vs -command [list $f.txt yview]
 
     variable delay 600
