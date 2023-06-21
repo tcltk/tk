@@ -246,13 +246,6 @@ TkGetIntForIndex(
 	}
 	return TCL_ERROR;
     }
-    if (*indexPtr < -1) {
-	*indexPtr = TCL_INDEX_NONE;
-    } else if (end >= -1) {
-        if (*indexPtr > end) {
-            *indexPtr = end + 1;
-        }
-    }
     return TCL_OK;
 }
 
