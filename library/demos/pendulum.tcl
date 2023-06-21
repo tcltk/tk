@@ -25,8 +25,8 @@ pack $btns -side bottom -fill x
 
 # Create some structural widgets
 pack [panedwindow $w.p] -fill both -expand 1
-$w.p add [labelframe $w.p.l1 -text "Pendulum Simulation"]
-$w.p add [labelframe $w.p.l2 -text "Phase Space"]
+$w.p add [labelframe $w.p.l1 -text "Pendulum Simulation"] -stretch always
+$w.p add [labelframe $w.p.l2 -text "Phase Space"] -stretch always
 
 # Create the canvas containing the graphical representation of the
 # simulated system.
@@ -50,18 +50,21 @@ for {set i 90} {$i>=0} {incr i -10} {
     $w.k create line 0 0 1 1 -smooth true -tags graph$i -fill grey$i
 }
 
-$w.k create text 0 0 -anchor ne -text "θ" -tags label_theta
+$w.k create text 0 0 -anchor ne -text "θ"  -tags label_theta
 $w.k create text 0 0 -anchor ne -text "δθ" -tags label_dtheta
 pack $w.k -in $w.p.l2 -fill both -expand true
 
 # Initialize some variables
-set points  {}
-set Theta    45.0
-set dTheta    0.0
-set pi        3.1415926535897933
-set scaling [tk scaling]
-set length  [expr {112.5*$scaling}]
-set home    [expr {120*$scaling}]
+set points {}
+set Theta  45.0
+set dTheta  0.0
+set pi      3.1415926535897933
+set tkScl  [tk scaling]
+set length [expr {round(111*$tkScl)}]			;# 111p -> pixels
+set xHome  [expr {round(120*$tkScl)}]			;# 120p -> pixels
+set yHome  [expr {round( 18*$tkScl)}]			;#  18p -> pixels
+set rBob   [expr {round( 12*$tkScl)}]			;#  12p -> pixels
+set rPivot [expr {round(  3*$tkScl)}]			;#   3p -> pixels
 
 # This procedure makes the pendulum appear at the correct place on the
 # canvas. If the additional arguments "at $x $y" are passed (the 'at'
@@ -70,23 +73,22 @@ set home    [expr {120*$scaling}]
 # length and angle are computed in reverse from the given location
 # (which is taken to be the centre of the pendulum bob.)
 proc showPendulum {canvas {at {}} {x {}} {y {}}} {
-    global Theta dTheta pi length home scaling
+    global Theta dTheta pi length xHome yHome rBob
 
-    if {$at eq "at" && ($x!=$home || $y!=18*$scaling)} {
+    if {$at eq "at" && ($x!=$xHome || $y!=$yHome)} {
 	set dTheta 0.0
-	set x2 [expr {$x - $home}]
-	set y2 [expr {$y - 18*$scaling}]
+	set x2 [expr {$x - $xHome}]
+	set y2 [expr {$y - $yHome}]
 	set length [expr {hypot($x2, $y2)}]
 	set Theta  [expr {atan2($x2, $y2) * 180/$pi}]
     } else {
 	set angle [expr {$Theta * $pi/180}]
-	set x [expr {$home + $length*sin($angle)}]
-	set y [expr {18*$scaling + $length*cos($angle)}]
+	set x [expr {$xHome + $length*sin($angle)}]
+	set y [expr {$yHome + $length*cos($angle)}]
     }
-    $canvas coords rod $home 18p $x $y
-    set r [expr {12*$scaling}]
-    $canvas coords bob \
-	    [expr {$x-$r}] [expr {$y-$r}] [expr {$x+$r}] [expr {$y+$r}]
+    $canvas coords rod $xHome $yHome $x $y
+    $canvas coords bob [expr {$x - $rBob}] [expr {$y - $rBob}] \
+		       [expr {$x + $rBob}] [expr {$y + $rBob}]
 }
 showPendulum $w.c
 
@@ -95,9 +97,9 @@ showPendulum $w.c
 # respect to time.)
 proc showPhase {canvas} {
     global Theta dTheta points psw psh
-    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    set sclFactor [expr {$tk::scalingPct / 100.0}]
 
-    lappend points [expr {$Theta+$psw}] [expr {-20*$scaleFactor*$dTheta+$psh}]
+    lappend points [expr {$Theta + $psw}] [expr {-20*$sclFactor*$dTheta + $psh}]
     if {[llength $points] > 100} {
 	set points [lrange $points end-99 end]
     }
@@ -105,7 +107,7 @@ proc showPhase {canvas} {
 	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
 	if {[llength $list] >= 4} {
 	    $canvas coords graph$i $list
-	    $canvas scale graph$i $psw $psh $scaleFactor $scaleFactor
+	    $canvas scale graph$i $psw $psh $sclFactor $sclFactor
 	}
     }
 }
@@ -132,16 +134,17 @@ bind $w.c <ButtonRelease-1> {
 }
 bind $w.c <Configure> {
     %W coords plate 0 18p %w 18p
-    set home [expr {%w/2}]
-    %W coords pivot [expr {$home-3*$scaling}] 15p [expr {$home+3*$scaling}] 21p
+    set xHome [expr {%w/2}]
+    %W coords pivot [expr {$xHome - $rPivot}] 15p [expr {$xHome + $rPivot}] 21p
 }
 bind $w.k <Configure> {
     set psh [expr {%h/2}]
     set psw [expr {%w/2}]
-    %W coords x_axis 1.5p $psh [expr {%w-1.5*$scaling}] $psh
-    %W coords y_axis $psw [expr {%h-1.5*$scaling}] $psw 1.5p
-    %W coords label_dtheta [expr {$psw-3*$scaling}] 4.5p
-    %W coords label_theta [expr {%w-4.5*$scaling}] [expr {$psh+3*$scaling}]
+    %W coords x_axis	   1.5p $psh [expr {%w - round(1.5*$tkScl)}] $psh
+    %W coords y_axis	   $psw [expr {%h - round(1.5*$tkScl)}] $psw 1.5p
+    %W coords label_dtheta [expr {$psw - round(3*$tkScl)}] 4.5p
+    %W coords label_theta  [expr {%w - round(4.5*$tkScl)}] \
+			   [expr {$psh + round(3*$tkScl)}]
 }
 
 # This procedure is the "business" part of the simulation that does

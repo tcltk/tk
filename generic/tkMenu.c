@@ -2177,7 +2177,7 @@ GetMenuIndex(
 #endif
 
     if (string[0] == '@') {
-	if (GetIndexFromCoords(NULL, menuPtr, string, indexPtr)
+	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
 		== TCL_OK) {
 	    goto success;
 	}
@@ -3036,10 +3036,13 @@ GetIndexFromCoords(
 	x = y;
 	p = end + 1;
 	y = strtol(p, &end, 0);
-	if (end == p) {
+	if ((end == p) || (*end != '\0')) {
 	    goto error;
 	}
     } else {
+	if (*end != '\0') {
+	    goto error;
+	}
 	x = borderwidth;
     }
 
