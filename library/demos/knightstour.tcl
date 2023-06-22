@@ -89,7 +89,8 @@ proc MovePiece {dlg last square} {
     variable visited
     variable delay
     variable continuous
-    $dlg.f.txt insert end "[llength $visited]. [N $last] .. [N $square]\n" {}
+    set line [format "%2d. %s .. %s" [llength $visited] [N $last] [N $square]]
+    $dlg.f.txt insert end $line\n
     $dlg.f.txt see end
     $dlg.f.c itemconfigure [expr {1+$last}] -state normal -outline black
     $dlg.f.c itemconfigure [expr {1+$square}] -state normal -outline red
@@ -105,14 +106,14 @@ proc MovePiece {dlg last square} {
             if {$initial == $square} {
                 $dlg.f.txt insert end "Closed tour!"
             } else {
-                $dlg.f.txt insert end "Success\n" {}
+                $dlg.f.txt insert end "Success"
                 if {$continuous} {
                     after [expr {$delay * 2}] [namespace code \
                         [list Tour $dlg [expr {int(rand() * 64)}]]]
                 }
             }
         } else {
-            $dlg.f.txt insert end "FAILED!\n" {}
+            $dlg.f.txt insert end "FAILED!"
         }
     }
 }
@@ -144,7 +145,8 @@ proc Exit {dlg} {
 }
 
 proc SetDelay {new} {
-    variable delay [expr {int($new)}]
+    variable speed [expr {int($new)}]
+    variable delay [expr {2000 - $speed}]
 }
 
 proc DragStart {w x y} {
@@ -174,18 +176,19 @@ proc CreateGUI {} {
     wm withdraw $dlg
     set f [ttk::frame $dlg.f]
     set c [canvas $f.c -width 192p -height 192p]
-    text $f.txt -width 10 -height 1 \
-        -yscrollcommand [list $f.vs set] -font {Helvetica 8}
+    text $f.txt -width 12 -height 1 -padx 3p \
+        -yscrollcommand [list $f.vs set] -font TkFixedFont
     ttk::scrollbar $f.vs -command [list $f.txt yview]
 
-    variable delay 600
+    variable speed 1400
+    variable delay [expr {2000 - $speed}]
     variable continuous 0
     ttk::frame $dlg.tf
-    ttk::label $dlg.tf.ls -text Speed
-    ttk::scale $dlg.tf.sc  -from 8 -to 2000 -command [list SetDelay] \
-        -variable [namespace which -variable delay]
     ttk::checkbutton $dlg.tf.cc -text Repeat \
         -variable [namespace which -variable continuous]
+    ttk::scale $dlg.tf.sc  -from 0 -to 1992 -command [list SetDelay] \
+        -variable [namespace which -variable speed]
+    ttk::label $dlg.tf.ls -text Speed
     ttk::button $dlg.tf.b1 -text Start -command [list Tour $dlg]
     ttk::button $dlg.tf.b2 -text Exit -command [list Exit $dlg]
     set square 0
@@ -230,14 +233,14 @@ proc CreateGUI {} {
     grid columnconfigure $f 1 -weight 1
 
     grid $f - - - - - -sticky news
-    set things [list $dlg.tf.ls $dlg.tf.sc $dlg.tf.cc $dlg.tf.b1]
+    set things [list $dlg.tf.cc $dlg.tf.sc $dlg.tf.ls $dlg.tf.b1]
     if {![info exists ::widgetDemo]} {
 	lappend things $dlg.tf.b2
 	if {[tk windowingsystem] ne "aqua"} {
 	    set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
 	}
     }
-    pack {*}$things -side right
+    pack {*}$things -side right -padx 3p
     if {[tk windowingsystem] eq "aqua"} {
 	pack configure {*}$things -padx {4 4} -pady {12 12}
 	pack configure [lindex $things 0] -padx {4 24}
