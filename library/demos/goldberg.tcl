@@ -70,7 +70,7 @@ place $w.hide -in $w.msg -relx 1 -rely 0 -anchor ne
 array set animationCallbacks {}
 bind $w <Destroy> {
     if {"%W" eq [winfo toplevel %W]} {
-	unset S C speed
+	unset S C delays
     }
 }
 
@@ -78,7 +78,8 @@ set S(title) "Tk Goldberg"
 set S(speed) 5
 set S(cnt) 0
 set S(message) "\\nWelcome\\nto\\nTcl/Tk"
-array set speed {1 10 2 20 3 50 4 80 5 100 6 150 7 200 8 300 9 400 10 500}
+array set delays \
+	{1 500  2 400  3 300  4 200  5 150  6 100  7 80  8 50  9 20  10 10}
 
 set MSTART 0; set MGO 1; set MPAUSE 2; set MSSTEP 3; set MBSTEP 4; set MDONE 5
 set S(mode) $::MSTART
@@ -176,17 +177,20 @@ proc DoCtrlFrame {w} {
     bind $w.reset <Button-3> {set S(mode) -1}		;# Debugging
 
     ## See Code / Dismiss buttons hack!
-    set btns [addSeeDismiss $w.ctrl.buttons $w]
-    grid [ttk::separator $w.ctrl.sep] -sticky ew -pady 3p
-    set i 0
-    foreach b [winfo children $btns] {
+    grid [ttk::separator $w.ctrl.sep] -sticky ew -pady {3p 1.5p}
+    set btns {}
+    foreach b [winfo children [addSeeDismiss $w.ctrl.buttons $w]] {
 	if {[winfo class $b] eq "TButton"} {
-	    grid [set b2 [ttk::button $w.ctrl.b[incr i]]] -sticky ew
-	    foreach b3 [$b configure] {
-		set b3 [lindex $b3 0]
-		# Some options are read-only; ignore those errors
-		catch {$b2 configure $b3 [$b cget $b3]}
-	    }
+	    set btns [linsert $btns 0 $b]		;# Prepend
+	}
+    }
+    set i 0
+    foreach b $btns {
+	grid [set b2 [ttk::button $w.ctrl.b[incr i]]] -sticky ew -pady {1.5p 0}
+	foreach b3 [$b configure] {
+	    set b3 [lindex $b3 0]
+	    # Some options are read-only; ignore those errors
+	    catch {$b2 configure $b3 [$b cget $b3]}
 	}
     }
     destroy $btns
@@ -298,7 +302,7 @@ proc DoButton {w what} {
 }
 
 proc Go {w {who {}}} {
-    global S speed animationCallbacks MGO MPAUSE MSSTEP MBSTEP
+    global S delays animationCallbacks MGO MPAUSE MSSTEP MBSTEP
 
     set now [clock clicks -milliseconds]
     catch {after cancel $animationCallbacks(goldberg)}
@@ -319,7 +323,7 @@ proc Go {w {who {}}} {
     }
 
     set elapsed [expr {[clock click -milliseconds] - $now}]
-    set delay [expr {$speed($S(speed)) - $elapsed}]
+    set delay [expr {$delays($S(speed)) - $elapsed}]
     if {$delay <= 0} {
 	set delay 1
     }
