@@ -120,13 +120,11 @@ UnderlineParseProc(
     obj.bytes = (char *)value;
     obj.length = strlen(value);
     obj.typePtr = NULL;
-    code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
+    code = TkGetIntForIndex(&obj, TCL_INDEX_NONE, 0, &underline);
     if (code == TCL_OK) {
-	if (underline < 0) {
-	    underline = (Tcl_Size)INT_MIN;
-	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
-		underline++;
-	} else if (underline >= INT_MAX) {
+	if (underline < INT_MIN) {
+	    underline = INT_MIN;
+	} else if (underline > INT_MAX) {
 	    underline = INT_MAX;
 	}
 	*underlinePtr = (int)underline;

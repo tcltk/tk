@@ -149,6 +149,8 @@ typedef const char *Tk_Uid;
 
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION == 6)
 #   define Tcl_Size int
+#   define TCL_SIZE_MAX INT_MAX
+#   define TCL_SIZE_MODIFIER ""
 #endif
 
 /*
