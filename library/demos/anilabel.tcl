@@ -92,7 +92,7 @@ proc animateLabelImage {w imageData interval} {
     # display's DPI scaling level.  Since the zooom factor must be an integer,
     # the copy will only be effectively magnified if $tk::scalingPct >= 200.
     set image2 [image create photo]
-    set zoomFactor [expr {int($tk::scalingPct / 100.0)}]
+    set zoomFactor [expr {$tk::scalingPct / 100}]
     $image2 copy $image -zoom $zoomFactor
 
     # Install the image copy into the widget
@@ -120,9 +120,9 @@ labelframe $w.right -text "GIF Image"
 pack $w.left $w.right -side left -padx 7.5p -pady 7.5p -expand yes
 
 # This method of scrolling text looks far better with a fixed-width font
-label $w.left.l1 -bd 4 -relief ridge -font fixedFont
-label $w.left.l2 -bd 4 -relief groove -font fixedFont
-label $w.left.l3 -bd 4 -relief flat -font fixedFont -width 18
+label $w.left.l1 -bd 3p -relief ridge -font fixedFont
+label $w.left.l2 -bd 3p -relief groove -font fixedFont
+label $w.left.l3 -bd 3p -relief flat -font fixedFont -width 18
 pack $w.left.l1 $w.left.l2 $w.left.l3 -side top -expand yes -padx 7.5p -pady 7.5p -anchor w
 # Don't need to do very much with this label except turn off the border
 label $w.right.l -bd 0

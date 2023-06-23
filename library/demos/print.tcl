@@ -51,7 +51,7 @@ eFy1MFd3bcQHJEQdlddkP5E1Cf9yXfbaV2d9RBAAOw==
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo logo2
-logo2 copy logo -zoom [expr {int($tk::scalingPct / 100.0)}]
+logo2 copy logo -zoom [expr {$tk::scalingPct / 100}]
 
 set c [canvas $w.m.c -bg white]
 pack $c -fill both -expand yes -fill both -side left

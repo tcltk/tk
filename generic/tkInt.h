@@ -31,6 +31,8 @@
 #ifdef HAVE_SYS_PARAM_H
 #    include <sys/param.h>
 #endif
+#include <stdint.h>
+#include <stdlib.h>
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN

@@ -241,17 +241,10 @@ TkGetIntForIndex(
 	const char *value = Tcl_GetString(indexObj);
 	if (!*value) {
 	    /* empty string */
-	    *indexPtr = TCL_INDEX_NONE;
+	    *indexPtr = (end == -1) ? -1 - TCL_SIZE_MAX : TCL_INDEX_NONE;
 	    return TCL_OK;
 	}
 	return TCL_ERROR;
-    }
-    if (*indexPtr < -1) {
-	*indexPtr = TCL_INDEX_NONE;
-    } else if (end >= -1) {
-        if (*indexPtr > end) {
-            *indexPtr = end + 1;
-        }
     }
     return TCL_OK;
 }
