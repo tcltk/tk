@@ -92,7 +92,7 @@ proc animateLabelImage {w imageData interval} {
     # display's DPI scaling level.  Since the zooom factor must be an integer,
     # the copy will only be effectively magnified if $tk::scalingPct >= 200.
     set image2 [image create photo]
-    set zoomFactor [expr {int($tk::scalingPct / 100.0)}]
+    set zoomFactor [expr {$tk::scalingPct / 100}]
     $image2 copy $image -zoom $zoomFactor
 
     # Install the image copy into the widget

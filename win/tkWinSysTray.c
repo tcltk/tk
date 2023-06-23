@@ -33,14 +33,6 @@
 
 #define GETHINSTANCE Tk_GetHINSTANCE()
 
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
     unsigned id;                /* Identifier for command;  used to

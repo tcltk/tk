@@ -683,17 +683,17 @@ DoObjConfig(
     case TK_OPTION_INDEX: {
 	Tcl_Size newIndex;
 
-	if (TkGetIntForIndex(valuePtr, TCL_INDEX_END, 0, &newIndex) != TCL_OK) {
+	if (TkGetIntForIndex(valuePtr, TCL_INDEX_NONE, 0, &newIndex) != TCL_OK) {
 	    if (interp) {
 		Tcl_AppendResult(interp, "bad index \"", Tcl_GetString(valuePtr),
 			"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
 	    }
 	    return TCL_ERROR;
 	}
-	if (newIndex < 0) {
+	if (newIndex < INT_MIN) {
 	    newIndex = INT_MIN;
-	} else if ((size_t)newIndex > (size_t)TCL_INDEX_END>>1) {
-	    newIndex++;
+	} else if (newIndex > INT_MAX) {
+	    newIndex = INT_MAX;
 	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);
