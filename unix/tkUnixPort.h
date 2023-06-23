@@ -26,7 +26,6 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
