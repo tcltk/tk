@@ -63,7 +63,7 @@ if {[tk windowingsystem] eq "aqua"} {
     set frameSize 90p
 }
 
-frame $w.frame -width $frameSize -height $frameSize -borderwidth 2\
+frame $w.frame -width $frameSize -height $frameSize -borderwidth 2 \
 	-relief sunken -bg [$w.s cget -troughcolor]
 pack $w.frame -side top -pady 1c -padx 1c
 destroy $w.s

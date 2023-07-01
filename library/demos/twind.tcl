@@ -37,7 +37,7 @@ ttk::scrollbar $w.scroll -command "$t yview"
 pack $w.scroll -side right -fill y
 panedwindow $w.pane
 pack $w.pane -expand yes -fill both
-$w.pane add $w.f
+$w.pane add $w.f -stretch always
 # Import to raise given creation order above
 raise $w.f
 
@@ -181,7 +181,7 @@ image create photo img -file [file join $tk_demoDirectory images ouster.png]
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo img2
-img2 copy img -zoom [expr {int($tk::scalingPct / 100.0)}]
+img2 copy img -zoom [expr {$tk::scalingPct / 100}]
 
 $t image create end -image img2
 
@@ -350,7 +350,7 @@ proc textSplitWindow {textW} {
 	    set t [$textW peer create $w.peer \
 	      -yscrollcommand "$w.scroll set"]
 	    $t tag configure peer_warning -font boldFont
-	    $w.pane add $t
+	    $w.pane add $t -stretch always
 	}
     } else {
         return

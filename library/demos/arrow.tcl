@@ -10,11 +10,10 @@ if {![info exists widgetDemo]} {
 package require Tk
 
 # scl --
-# Scales a nonnegative integer according to the display's current scaling
-# percentage.
+# Scales an integer according to the display's current scaling percentage.
 #
 # Arguments:
-#   num -	A nonnegative integer.
+#   num -	An integer.
 
 proc scl num {
     return [expr {round($num*$tk::scalingPct/100.0)}]
@@ -136,7 +135,7 @@ pack $w.msg -side top
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-canvas $c -width 375p -height 262.5p -relief sunken -borderwidth 1.5p
+canvas $c -width 375p -height 262.5p -relief sunken -borderwidth 2
 pack $c -expand yes -fill both
 
 set demo_arrowInfo(a)	  [scl 8]

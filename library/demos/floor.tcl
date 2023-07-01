@@ -1375,4 +1375,4 @@ if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 
 }
 bind $c <Destroy> "unset currentRoom"
 set currentRoom ""
-trace variable currentRoom w "roomChanged $c"
+trace add variable currentRoom write "roomChanged $c"
