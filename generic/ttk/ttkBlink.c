@@ -10,12 +10,10 @@
  * 	to display the cursor or not (e.g., readonly or disabled states);
  * 	TtkBlinkCursor() does not account for this.
  *
- * TODO:
- * 	Add script-level access to configure application-wide blink rate.
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
 #define DEF_CURSOR_ON_TIME	600		/* milliseconds */
@@ -154,6 +152,49 @@ CursorEventProc(ClientData clientData, XEvent *eventPtr)
     }
 }
 
+void TtkSetBlinkCursorOnTime(Tcl_Interp* interp, int onTime)
+{
+    CursorManager* cm = GetCursorManager(interp);
+
+    if (onTime >= 0)
+	cm->onTime = onTime;
+}
+
+void TtkSetBlinkCursorOffTime(Tcl_Interp* interp, int offTime)
+{
+    CursorManager* cm = GetCursorManager(interp);
+
+    if (offTime >= 0)
+	cm->offTime = offTime;
+}
+
+/*
+ * TtkSetBlinkCursorTimes --
+ * 	Set cursor blink on and off times from the "." style defaults
+ * 	-insertontime and -insertofftime - For instance to set cursor
+ * 	blinking off:
+ * 	    ttk::style configure . -insertofftime 0
+ */
+void TtkSetBlinkCursorTimes(Tcl_Interp* interp)
+{
+    Ttk_Theme theme;
+    Ttk_Style style = NULL;
+    Tcl_Obj* result;
+    int timeInterval;
+
+    theme = Ttk_GetCurrentTheme(interp);
+    style = Ttk_GetStyle(theme, ".");
+    result = Ttk_StyleDefault(style, "-insertontime");
+    if (result) {
+	Tcl_GetIntFromObj(interp, result, &timeInterval);
+	TtkSetBlinkCursorOnTime(interp, timeInterval);
+    }
+    result = Ttk_StyleDefault(style, "-insertofftime");
+    if (result) {
+	Tcl_GetIntFromObj(interp, result, &timeInterval);
+	TtkSetBlinkCursorOffTime(interp, timeInterval);
+    }
+}
 /*
  * TtkBlinkCursor (main routine) --
  * 	Arrange to blink the cursor on and off whenever the
