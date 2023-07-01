@@ -161,3 +161,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15
