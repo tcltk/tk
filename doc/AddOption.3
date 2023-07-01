@@ -14,7 +14,7 @@ Tk_AddOption \- Add an option to the option database
 void
 \fBTk_AddOption\fR(\fItkwin, name, value, priority\fR)
 .sp
-void
+Tcl_Obj *
 \fBTk_GetSystemDefault\fR(\fItkwin, dbName, className\fR)
 .SH ARGUMENTS
 .AP Tk_Window tkwin in
@@ -53,7 +53,9 @@ user-specific startup files.
 .IP 80
 Used for options specified interactively after the application starts
 running.
-\fBTk_GetSystemDefault\fR return a Tk_Uid string representation of the given \fIdbname\fR and \fIclassName\fR of a configuration option.
+.PP
+\fBTk_GetSystemDefault\fR returns a Tcl_Obj* with the string identifying
+a configuration option matching the given \fIdbname\fR and \fIclassName\fR.
 Returns NULL if there are no system defaults that match this pair.
 .SH KEYWORDS
 class, name, option, add
