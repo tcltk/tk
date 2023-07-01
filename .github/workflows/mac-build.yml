@@ -54,6 +54,7 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           fi
+        timeout-minutes: 30
   clang:
     runs-on: macos-11
     strategy:
@@ -159,6 +160,7 @@ jobs:
             echo "::error::Failure in ttk test results"
             exit 1
           }
+        timeout-minutes: 15
       - name: Carry out trial installation
         run: |
           make install || {
