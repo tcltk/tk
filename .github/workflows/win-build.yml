@@ -84,6 +84,7 @@ jobs:
         env:
           CI_BUILD_WITH_MSVC: 1
         shell: bash
+        timeout-minutes: 15
       - name: Build Help (OPTS=${{ matrix.symbols }})
         run: |
           &nmake -f makefile.vc htmlhelp OPTS=${{ matrix.symbols }}
@@ -171,3 +172,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15
