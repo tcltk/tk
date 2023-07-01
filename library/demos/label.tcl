@@ -40,8 +40,7 @@ image create photo label.ousterhout \
 # display's DPI scaling level.  Since the zooom factor must be an integer,
 # the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo label.ousterhout2
-label.ousterhout2 copy label.ousterhout \
-    -zoom [expr {int($tk::scalingPct / 100.0)}]
+label.ousterhout2 copy label.ousterhout -zoom [expr {$tk::scalingPct / 100}]
 
 label $w.right.picture -borderwidth 2 -relief sunken -image label.ousterhout2
 label $w.right.caption -text "Tcl/Tk Creator"
