@@ -57,9 +57,9 @@ label $w.msg -font {Helvetica 10} -wraplength 4.5i -justify left -text "This\
 pack $w.msg -side top -fill x
 
 if {[tk windowingsystem] ne "aqua"} {
-    ttk::button $w.hide -text "x" -command [list pack forget $w.msg] -width 2
+    ttk::button $w.hide -text "×" -command [list pack forget $w.msg] -width 2
 } else {
-    button $w.hide -text "x" -command [list pack forget $w.msg] -width 1 \
+    button $w.hide -text "×" -command [list pack forget $w.msg] -width 1 \
 	    -highlightthickness 0 -padx 0 -pady 0
 }
 place $w.hide -in $w.msg -relx 1 -rely 0 -anchor ne
@@ -77,7 +77,7 @@ bind $w <Destroy> {
 set S(title) "Tk Goldberg"
 set S(speed) 5
 set S(cnt) 0
-set S(message) "\\nWelcome\\nto\\nTcl/Tk"
+set S(message) "\\nWelcome\\nto\\nTcl/Tk!"
 array set delays \
 	{1 500  2 400  3 300  4 200  5 150  6 100  7 80  8 50  9 20  10 10}
 
@@ -122,9 +122,9 @@ proc DoDisplay {w} {
     DoCtrlFrame $w
     DoDetailFrame $w
     if {[tk windowingsystem] ne "aqua"} {
-	ttk::button $w.show -text "»" -command [list ShowCtrl $w] -width 2
+	ttk::button $w.show -text "▶" -command [list ShowCtrl $w] -width 2
     } else {
-	button $w.show -text "»" -command [list ShowCtrl $w] -width 1 \
+	button $w.show -text "▶" -command [list ShowCtrl $w] -width 1 \
 		-borderwidth 1 -highlightthickness 0 -padx 0 -pady 0 \
 		-highlightbackground $C(bg)
     }
@@ -218,10 +218,10 @@ proc DoDetailFrame {w} {
 proc ShowCtrl {w} {
     if {[winfo ismapped $w.ctrl]} {
 	pack forget $w.ctrl
-	$w.show config -text "»"
+	$w.show config -text "▶"
     } else {
 	pack $w.ctrl -side right -fill both -ipady 5
-	$w.show config -text "«"
+	$w.show config -text "◀"
     }
 }
 
