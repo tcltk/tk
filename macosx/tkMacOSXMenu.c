@@ -1234,30 +1234,33 @@ CheckForSpecialMenu(
 	return;
     }
     for (TkMenuEntry *cascadeEntryPtr = menuPtr->menuRefPtr->parentEntryPtr;
-	    cascadeEntryPtr;
-	    cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
-	if (cascadeEntryPtr->menuPtr->menuType == MENUBAR
+	 cascadeEntryPtr;
+	 cascadeEntryPtr = cascadeEntryPtr->nextCascadePtr) {
+	/*Fix for 0e7b10c215.*/
+	if (cascadeEntryPtr) {
+	    if (cascadeEntryPtr->menuPtr->menuType == MENUBAR
 		&& cascadeEntryPtr->menuPtr->mainMenuPtr->tkwin) {
-	    TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
-	    int i = 0;
-	    Tcl_DString ds;
+		TkMenu *mainMenuPtr = cascadeEntryPtr->menuPtr->mainMenuPtr;
+		int i = 0;
+		Tcl_DString ds;
 
-	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), TCL_INDEX_NONE);
-	    while (specialMenus[i].name) {
-		Tcl_DStringAppend(&ds, specialMenus[i].name,
-			specialMenus[i].len);
-		if (strcmp(Tcl_DStringValue(&ds),
-			Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
-		    cascadeEntryPtr->entryFlags |= specialMenus[i].flag;
-		} else {
-		    cascadeEntryPtr->entryFlags &= ~specialMenus[i].flag;
+		Tcl_DStringInit(&ds);
+		Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), TCL_INDEX_NONE);
+		while (specialMenus[i].name) {
+		    Tcl_DStringAppend(&ds, specialMenus[i].name,
+				      specialMenus[i].len);
+		    if (strcmp(Tcl_DStringValue(&ds),
+			       Tk_PathName(menuPtr->mainMenuPtr->tkwin)) == 0) {
+			cascadeEntryPtr->entryFlags |= specialMenus[i].flag;
+		    } else {
+			cascadeEntryPtr->entryFlags &= ~specialMenus[i].flag;
+		    }
+		    Tcl_DStringSetLength(&ds, Tcl_DStringLength(&ds) -
+					 specialMenus[i].len);
+		    i++;
 		}
-		Tcl_DStringSetLength(&ds, Tcl_DStringLength(&ds) -
-			specialMenus[i].len);
-		i++;
+		Tcl_DStringFree(&ds);
 	    }
-	    Tcl_DStringFree(&ds);
 	}
     }
 }
@@ -1591,7 +1594,7 @@ GenerateMenuSelectEvent(
 	Tcl_Size index = [menu tkIndexOfItem:menuItem];
 
 	if (index == TCL_INDEX_NONE || index >= menuPtr->numEntries ||
-		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
+		(menuPtr->entries[index])->state == ENTRY_DISABLED ) {
 	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	} else {
 	    TkActivateMenuEntry(menuPtr, index);
