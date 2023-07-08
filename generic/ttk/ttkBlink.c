@@ -50,6 +50,9 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
 {
     static const char *cm_key = "ttk::CursorManager";
     CursorManager *cm = (CursorManager *)Tcl_GetAssocData(interp, cm_key,0);
+    Tk_Window window;
+    Tk_Uid value;
+    int intValue;
 
     if (!cm) {
 	cm = (CursorManager *)ckalloc(sizeof(*cm));
@@ -57,6 +60,27 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
 	cm->owner = 0;
 	cm->onTime = DEF_CURSOR_ON_TIME;
 	cm->offTime = DEF_CURSOR_OFF_TIME;
+
+	/* Override on and off default times with values obtained from
+	 * the option database (if such values are specified).
+	 */
+
+	window = Tk_MainWindow(interp);
+	if (window) {
+	    value = Tk_GetOption(window, "insertOnTime", "OnTime");
+	    if (value) {
+		if (Tcl_GetInt(interp, value, &intValue) == TCL_OK) {
+		    cm->onTime = intValue;
+		}
+	    }
+	    value = Tk_GetOption(window, "insertOffTime", "OffTime");
+	    if (value) {
+		if (Tcl_GetInt(interp, value, &intValue) == TCL_OK) {
+		    cm->offTime = intValue;
+		}
+	    }
+	}
+
 	Tcl_SetAssocData(interp, cm_key, CursorManagerDeleteProc, cm);
     }
     return cm;
