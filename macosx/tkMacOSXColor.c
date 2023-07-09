@@ -410,6 +410,11 @@ SetCGColorComponents(
 {
     CGFloat rgba[4] = {0, 0, 0, 1};
 
+    if (entry->type == HIBrush) {
+     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+     	return err == noErr;
+    }
+
     /*
      * This function is called before our autorelease pool is set up,
      * so it needs its own pool.
@@ -417,11 +422,6 @@ SetCGColorComponents(
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-    if (entry->type == HIBrush) {
-     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
-	[pool drain];
-     	return err == noErr;
-    }
     GetRGBA(entry, pixel, rgba);
     *c = CGColorCreate(sRGB.CGColorSpace, rgba);
     [pool drain];
