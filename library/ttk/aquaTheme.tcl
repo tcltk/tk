@@ -152,7 +152,7 @@ namespace eval ttk::theme::aqua {
 	    -background systemWindowBackgroundColor
 	ttk::style configure Treeview -rowheight 18 \
 	    -background systemTextBackgroundColor \
-            -stripedbackground systemDisabledControlTextColor \
+            -stripedbackground #F5F5F6 \
             -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \
