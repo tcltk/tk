@@ -160,6 +160,10 @@ namespace eval ttk::theme::aqua {
 		selected systemSelectedTextBackgroundColor
 	    }
 
+	#improved appearance for stripebackground
+	bind all <<DarkAqua>> {+ ttk::style configure Treeview -stripedbackground black}
+	bind all <<LightAqua>> {+ ttk::style configure Treeview -stripedbackground #F5F5F6}
+
 	# Enable animation for ttk::progressbar widget:
 	ttk::style configure TProgressbar -period 100 -maxphase 120
 
