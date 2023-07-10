@@ -28,7 +28,7 @@ pack [addSeeDismiss $w.seeDismiss $w {} {
 
 ttk::frame $w.container
 ttk::treeview $w.tree -columns {country capital currency} -show headings \
-    -yscroll "$w.vsb set" -xscroll "$w.hsb set" -stripe 1
+    -yscroll "$w.vsb set" -xscroll "$w.hsb set" 
 ttk::scrollbar $w.vsb -orient vertical -command "$w.tree yview"
 ttk::scrollbar $w.hsb -orient horizontal -command "$w.tree xview"
 pack $w.container -fill both -expand 1
