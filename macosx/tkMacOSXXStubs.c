@@ -187,7 +187,6 @@ TkpOpenDisplay(
     const char *display_name)
 {
     Display *display;
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
 	if (strcmp(DisplayString(gMacDisplay->display), display_name) == 0) {
@@ -196,6 +195,8 @@ TkpOpenDisplay(
 	    return NULL;
 	}
     }
+
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     display = XkbOpenDisplay((char *)display_name, NULL, NULL, NULL, NULL, NULL);
 
