@@ -125,21 +125,14 @@ proc ::tk::ScalingPct {} {
 
 # ::tk::ScaleNum --
 #
-# Scales a nonnegative integer according to the display's current scaling
-# percentage.
+# Scales an integer according to the display's current scaling percentage.
 #
 # Arguments:
-#   num - A nonnegative integer.
+#   num - An integer.
 
 proc ::tk::ScaleNum num {
-    set pct [::tk::ScalingPct]
-    set factor [expr {$num * $pct}]
-    set result [expr {$factor / 100}]
-    if {$factor % 100 >= 50} {
-	incr result
-    }
-
-    return $result
+    variable scalingPct
+    return [expr {round($num * $scalingPct / 100.0)}]
 }
 
 # ::tk::ScanMonitorsFile --

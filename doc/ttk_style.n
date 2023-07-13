@@ -169,6 +169,33 @@ ttk::style layout Horizontal.TScrollbar {
     }
 }
 .CE
+.SH ROOT STYLE
+.PP
+The
+.QW .
+theme root style can be configured like any other style, providing defaults
+for its derived styles. In addition to the usual options,
+.QW .
+styling options configurable with \fBttk::style\fP are:
+.PP
+\fB\-insertofftime\fP \fIamount\fP
+.RS
+Specifies a non-negative integer value indicating the number of milliseconds
+the insertion cursor should remain
+.QW off
+in each blink cycle. If this option is zero then the cursor does not blink:
+it is on all the time. Defaults to 300 ms, unless overriden with a
+\fBRESOURCE_MANAGER\fR property or \fB.Xdefaults\fR file.
+.RE
+.PP
+\fB\-insertontime\fP \fIamount\fP
+.RS
+Specifies a non-negative integer value indicating the number of milliseconds
+the insertion cursor should remain
+.QW on
+in each blink cycle. Defaults to 600 ms, unless overriden with a
+\fBRESOURCE_MANAGER\fR property or \fB.Xdefaults\fR file.
+.RE
 .SH "SEE ALSO"
 ttk::intro(n), ttk::widget(n), photo(n), ttk_image(n)
 .SH KEYWORDS
