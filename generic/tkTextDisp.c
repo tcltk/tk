@@ -6317,7 +6317,12 @@ DisplayDLine(
     StyleValues *sValuePtr;
     int lineHeight, yOffs;
     int yBase, height, baseline, screenY, xOffs;
+#ifndef TK_NO_DOUBLE_BUFFERING
     int extent1, extent2;
+    const int y = 0;
+#else
+    const int y = dlPtr->y;
+#endif /* TK_NO_DOUBLE_BUFFERING */
     int xIndent, rMargin;
     int delayBlockCursorDrawing;
 
@@ -6339,11 +6344,16 @@ DisplayDLine(
 	yOffs = 0;
     }
 
+#ifdef TK_NO_DOUBLE_BUFFERING
+    Tk_ClipDrawableToRect(display, pixmap, dInfoPtr->x, y + yOffs,
+	    dInfoPtr->maxX - dInfoPtr->x, lineHeight);
+#endif /* TK_NO_DOUBLE_BUFFERING */
+
     /*
      * First, clear the area of the line to the background color for the text widget.
      */
 
-    Tk_Fill3DRectangle(textPtr->tkwin, pixmap, textPtr->border, 0, 0,
+    Tk_Fill3DRectangle(textPtr->tkwin, pixmap, textPtr->border, 0, y,
 	    Tk_Width(textPtr->tkwin), dlPtr->height, 0, TK_RELIEF_FLAT);
 
     /*
@@ -6362,17 +6372,17 @@ DisplayDLine(
 
     if (xIndent > 0 && sValuePtr->lMarginColor != NULL) {
 	int pad = textPtr->padX ? textPtr->padX + 1 : 0;
-        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, textPtr->padX, 0,
+        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, textPtr->padX, y,
                 xIndent + dInfoPtr->x - dInfoPtr->curXPixelOffset - pad,
 		dlPtr->height, 0, TK_RELIEF_FLAT);
     }
     if (rMargin > 0 && sValuePtr->rMarginColor != NULL) {
         Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->rMarginColor,
                 dInfoPtr->maxX - rMargin + dInfoPtr->curXPixelOffset,
-                0, rMargin, dlPtr->height, 0, TK_RELIEF_FLAT);
+                y, rMargin, dlPtr->height, 0, TK_RELIEF_FLAT);
     }
 
-    yBase = dlPtr->spaceAbove;
+    yBase = y + dlPtr->spaceAbove;
     height = dlPtr->height - dlPtr->spaceAbove - dlPtr->spaceBelow;
     baseline = dlPtr->baseline - dlPtr->spaceAbove;
     screenY = dlPtr->y + dlPtr->spaceAbove;
@@ -6571,6 +6581,7 @@ DisplayDLine(
 	}
     }
 
+#ifndef TK_NO_DOUBLE_BUFFERING
     /*
      * Copy the pixmap onto the screen. If this is the first or last line on
      * the screen then copy a piece of the line, so that it doesn't overflow
@@ -6584,8 +6595,11 @@ DisplayDLine(
     ComputeCursorExtents(textPtr, &extent1, &extent2);
     xOffs = MAX(0, dInfoPtr->x - extent1);
     XCopyArea(display, pixmap, Tk_WindowId(textPtr->tkwin), dInfoPtr->copyGC,
-	    xOffs, yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
+	    xOffs, y + yOffs, dInfoPtr->maxX - dInfoPtr->x + extent1 + extent2, lineHeight,
 	    xOffs, dlPtr->y + yOffs);
+#else
+    Tk_ClipDrawableToRect(display, pixmap, 0, 0, -1, -1);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     DEBUG(stats.linesRedrawn += 1);
 }
@@ -6655,7 +6669,11 @@ DisplayLineBackground(
     int minX, maxX, xOffset, xIndent, borderWidth;
     StyleValues *sValuePtr;
     Display *display;
+#ifndef TK_NO_DOUBLE_BUFFERING
     const int y = 0;
+#else
+    const int y = dlPtr->y;
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
     /*
      * Pass 1: scan through dlPtr from left to right. For each range of chunks
@@ -8922,9 +8940,13 @@ DisplayText(
     }
 
     if (maxHeight > 0) {
+#ifndef TK_NO_DOUBLE_BUFFERING
 	pixmap = Tk_GetPixmap(Tk_Display(textPtr->tkwin),
 		Tk_WindowId(textPtr->tkwin), Tk_Width(textPtr->tkwin),
 		maxHeight, Tk_Depth(textPtr->tkwin));
+#else
+	pixmap = Tk_WindowId(textPtr->tkwin);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 
 	for (dlPtr = dInfoPtr->dLinePtr; dlPtr && dlPtr->y < dInfoPtr->maxY; dlPtr = dlPtr->nextPtr) {
 	    if (!dlPtr->chunkPtr) {
@@ -8946,7 +8968,9 @@ DisplayText(
 		    goto end;
 		}
 		if (dInfoPtr->dLinesInvalidated) {
+#ifndef TK_NO_DOUBLE_BUFFERING
 		    Tk_FreePixmap(Tk_Display(textPtr->tkwin), pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
 		    goto doScrollbars;
 		}
 		dlPtr->oldY = dlPtr->y;
@@ -9036,7 +9060,9 @@ DisplayText(
 		}
 	    }
 	}
+#ifndef TK_NO_DOUBLE_BUFFERING
 	Tk_FreePixmap(Tk_Display(textPtr->tkwin), pixmap);
+#endif /* TK_NO_DOUBLE_BUFFERING */
     }
 
     /*
