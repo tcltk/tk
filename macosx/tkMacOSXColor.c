@@ -23,6 +23,7 @@ static Tcl_HashTable systemColors;
 static size_t numSystemColors;
 static size_t rgbColorIndex;
 static size_t controlAccentIndex;
+static size_t controlAlternatingRowIndex;
 static size_t selectedTabTextIndex;
 static size_t pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
@@ -71,6 +72,7 @@ void initColorTable()
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
 		} else if (   ![colorName isEqualToString:@"selectedTabTextColor"]
+			   && ![colorName isEqualToString:@"controlAlternatingRowColor"]
 			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
@@ -148,6 +150,9 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     controlAccentIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "ControlAlternatingRowColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    controlAlternatingRowIndex = entry->index;
     hPtr = Tcl_FindHashEntry(&systemColors, "SelectedTabTextColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     selectedTabTextIndex = entry->index;
@@ -332,6 +337,15 @@ GetRGBA(
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
 #endif
+	} else if (entry->index == controlAlternatingRowIndex) {
+	    /*
+	     * Color which is now called alternatingContentBackgroundColor on 10.14.
+	     * Taken from NSColor.controlAlternatingRowBackgroundColors (which was
+	     * replaced by NSColor.alternatingContentBackgroundColors on 10.14).
+	     */
+	    color = [[NSColor colorWithCatalogName:@"System"
+					 colorName:@"controlAlternatingRowColor"]
+			colorUsingColorSpace:sRGB];
 	} else if (entry->index == selectedTabTextIndex) {
 	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
@@ -382,6 +396,11 @@ SetCGColorComponents(
 {
     CGFloat rgba[4] = {0, 0, 0, 1};
 
+    if (entry->type == HIBrush) {
+     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+     	return err == noErr;
+    }
+
     /*
      * This function is called before our autorelease pool is set up,
      * so it needs its own pool.
@@ -389,11 +408,6 @@ SetCGColorComponents(
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-    if (entry->type == HIBrush) {
-     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
-	[pool drain];
-     	return err == noErr;
-    }
     GetRGBA(entry, pixel, rgba);
     *c = CGColorCreate(sRGB.CGColorSpace, rgba);
     [pool drain];

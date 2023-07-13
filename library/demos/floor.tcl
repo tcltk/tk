@@ -54,7 +54,7 @@ proc floorDisplay {w active} {
     $w raise room
 
     # Rescale the coordinates in pixels of all of the
-    # items according to the display's DPI scaling level
+    # items according to the display's DPI scaling level.
 
     set scaleFactor [expr {$tk::scalingPct / 100.0}]
     $w scale all 0 0 $scaleFactor $scaleFactor
@@ -69,7 +69,14 @@ proc floorDisplay {w active} {
     $w create window 450p 75p -anchor w -window $w.entry
     $w create text 450p 75p -anchor e -text "Room: "
 
-    $w config -scrollregion [$w bbox all]
+    # Configure the canvas.
+
+    set bbox [$w bbox all]
+    lassign $bbox x1 y1 x2 y2
+    set morePx [expr {round(20 * $tk::scalingPct / 100.0)}]
+    set width  [expr {$x2 - $x1 + $morePx}]
+    set height [expr {$y2 - $y1 + $morePx}]
+    $w configure -scrollregion $bbox -width $width -height $height
 }
 
 # newRoom --
@@ -1317,9 +1324,8 @@ pack $f -side top -fill both -expand yes
 set h [ttk::scrollbar $f.hscroll -orient horizontal]
 set v [ttk::scrollbar $f.vscroll -orient vertical]
 set f1 [frame $f.f1 -borderwidth 2 -relief sunken]
-set c [canvas $f1.c -width 675p -height 375p -highlightthickness 0 \
-	   -xscrollcommand [list $h set] \
-	   -yscrollcommand [list $v set]]
+set c [canvas $f1.c -highlightthickness 0 \
+	   -xscrollcommand [list $h set] -yscrollcommand [list $v set]]
 pack $c -expand yes -fill both
 grid $f1 -padx 1 -pady 1 -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
 grid $v -padx 1 -pady 1 -row 0 -column 1 -rowspan 1 -columnspan 1 -sticky news
