@@ -533,6 +533,10 @@ To implement a new type of option, you can use \fBTK_OPTION_STRING\fR as
 the type in the Tk_OptionSpec structure and set the \fIobjOffset\fR field
 but not the \fIinternalOffset\fR field.  Then, after calling
 \fBTk_SetOptions\fR, convert the object to internal form yourself.
+.PP
+Ttk widgets do not support the \fIinternalOffset\fR machinery.
+Option values of Ttk widgets are always stored as (Tcl_Obj *), meaning that
+the \fIobjOffset\fR field must be used.
 .SH "CUSTOM OPTION TYPES"
 .PP
 Applications can extend the built-in configuration types with
