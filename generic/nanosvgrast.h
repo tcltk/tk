@@ -73,10 +73,10 @@ NANOSVG_SCOPE NSVGrasterizer* nsvgCreateRasterizer(void);
  *   w - width of the image to render
  *   h - height of the image to render
  *   stride - number of bytes per scaleline in the destination buffer
+ */
 NANOSVG_SCOPE void nsvgRasterize(NSVGrasterizer* r,
 				   NSVGimage* image, float tx, float ty, float scale,
 				   unsigned char* dst, int w, int h, int stride);
- */
 
 /* Deletes rasterizer context. */
 NANOSVG_SCOPE void nsvgDeleteRasterizer(NSVGrasterizer*);
