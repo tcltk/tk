@@ -17,7 +17,7 @@ proc scroll args {
         global scrollInfo
         set scrollInfo $args
 }
-# For trace variable
+# For trace add variable
 proc override args {
         global x
         set x 12345
@@ -1626,7 +1626,7 @@ test entry-5.4 {ConfigureEntry procedure, -textvariable} -setup {
     unset -nocomplain x
     entry .e
 } -body {
-    trace variable x w override
+    trace add variable x write override
     .e insert 0 "Some text"
     .e configure -textvariable x
     list $x [.e get]
@@ -2353,7 +2353,7 @@ test entry-8.18 {DeleteChars procedure} -setup {
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
 } -body {
-    trace variable x w override
+    trace add variable x write override
     entry .e -textvariable x -width 0
     .e insert 0 foo
     list $x [.e get]
@@ -3551,7 +3551,7 @@ test entry-22.2 {lost namespaced textvar} -body {
 test entry-23.1 {error in trace proc attached to the textvariable} -setup {
     destroy .e
 } -body {
-    trace variable myvar w traceit
+    trace add variable myvar write traceit
     proc traceit args {error "Intentional error here!"}
     entry .e -textvariable myvar
     catch {.e insert end mystring} result1

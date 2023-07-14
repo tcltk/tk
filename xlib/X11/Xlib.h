@@ -1743,6 +1743,10 @@ EXTERN Status XInitThreads(
     void
 );
 
+EXTERN Status XFreeThreads(
+    void
+);
+
 EXTERN void XLockDisplay(
     Display*		/* display */
 );
