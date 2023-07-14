@@ -26,7 +26,7 @@ pack $btns -side bottom -fill x
 entry $w.e1
 entry $w.e2
 entry $w.e3 -placeholder {Enter text here} -placeholderforeground gray75
-pack $w.e1 $w.e2 $w.e3 -side top -pady 5 -padx 10 -fill x
+pack $w.e1 $w.e2 $w.e3 -side top -pady 3p -padx 7.5p -fill x
 
 $w.e1 insert 0 "Initial value"
 $w.e2 insert end "This entry contains a long value, much too long "

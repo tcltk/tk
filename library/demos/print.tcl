@@ -47,30 +47,24 @@ agyc3NsFGrXVZMipWVBCzKv4Q0JvCviDsjAwf4ylxBeX0KcwGs81ccgqGS3MBxc3RjDDVAvdBRcf
 eFy1MFd3bcQHJEQdlddkP5E1Cf9yXfbaV2d9RBAAOw==
 }
 
-#
-# Create a copy of the image just created, magnified according
-# to the display's DPI scaling level.  Note that the copy will
-# only be effectively magnified if $tk::scalingPct >= 200.
-#
+# Create a copy of the image just created, magnified according to the
+# display's DPI scaling level.  Since the zooom factor must be an integer,
+# the copy will only be effectively magnified if $tk::scalingPct >= 200.
 image create photo logo2
 logo2 copy logo -zoom [expr {$tk::scalingPct / 100}]
 
 set c [canvas $w.m.c -bg white]
 pack $c -fill both -expand yes -fill both -side left
 
-#
 # For scaling-awareness specify the coordinates of the canvas items in points
 # rather than pixels.  Create the items with a left and top padding of 15 pt.
-#
 $c create rectangle 15p 15p 165p 60p -fill blue -outline black	;# 150p x 45p
 $c create oval 15p 75p 165p 120p -fill green			;# 150p x 45p
 set imgId [$c create image 90p 135p -image logo2 -anchor n]
- 
-#
+
 # Compute the scaled y coordinate of the next canvas item's top edge in pixels
-#
 lassign [$c bbox $imgId] x1 y1 x2 y2		;# x1, y1, x2, y2 are in pixels
-incr y2 [expr {int(15 * [tk scaling])}]		;# convert 15 pt to pixels
+incr y2 [expr {round(15 * [tk scaling])}]	;# convert 15 pt to pixels
 
 $c create text 15p $y2 -anchor nw -font {Helvetica 12} \
 	-text "A short demo of simple canvas elements."
@@ -88,9 +82,9 @@ $t insert end $txt
 frame $w.f
 
 pack [button $w.f.c -text "Print Canvas" -command [list tk print $w.m.c]] \
-	-side left -anchor w -padx 4
+	-side left -anchor w -padx 3p
 pack [button $w.f.t -text "Print Text" -command [list tk print $w.m.t]] \
-	-side right -anchor e -padx 4
+	-side right -anchor e -padx 3p
 
 pack $w.f -side bottom -fill x
 pack $w.m -expand yes -fill both -side top

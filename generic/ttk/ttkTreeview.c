@@ -1922,8 +1922,9 @@ static Ttk_Layout TreeviewGetLayout(
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
-	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
     }
+    tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
+
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.colSeparatorWidth);
     }

@@ -48,6 +48,6 @@ pack [ttk::frame $w.f1] -fill both -expand yes
 lower $w.f
 
 grid anchor $w.f center
-grid   x   $w.m1   x    -in $w.f -padx 3 -pady 2
-grid $w.m2 $w.m4 $w.m3  -in $w.f -padx 3 -pady 2
-grid   x   $w.m5   x    -in $w.f -padx 3 -pady 2
+grid   x   $w.m1   x    -in $w.f -padx 2.25p -pady 1.5p
+grid $w.m2 $w.m4 $w.m3  -in $w.f -padx 2.25p -pady 1.5p
+grid   x   $w.m5   x    -in $w.f -padx 2.25p -pady 1.5p

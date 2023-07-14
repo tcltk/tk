@@ -130,7 +130,7 @@ static void TextCleanup(TextElement *text)
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
-    Tcl_Size underline = TCL_INDEX_NONE;
+    Tcl_Size underline = INT_MIN;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
@@ -175,11 +175,13 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
     if (text->underlineObj != NULL) {
-	TkGetIntForIndex(text->underlineObj, TCL_INDEX_END, 0, &underline);
-	if (underline >= 0) {
-	    if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
-		underline++;
-	    }
+	TkGetIntForIndex(text->underlineObj, TCL_INDEX_NONE, 0, &underline);
+	if (underline < INT_MIN) {
+	    underline = INT_MIN;
+	} else if (underline > INT_MAX) {
+	    underline = INT_MAX;
+	}
+	if (underline != INT_MIN) {
 	    if (text->embossed) {
 		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
 			text->textLayout, b.x+1, b.y+1, underline);

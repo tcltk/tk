@@ -23,17 +23,17 @@ pack $w.msg -side top
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-frame $w.frame -borderwidth 10
+frame $w.frame -borderwidth 7.5p
 pack $w.frame -side top -fill x -expand 1
 
 entry $w.frame.e1 -xscrollcommand "$w.frame.s1 set"
 ttk::scrollbar $w.frame.s1 -orient horizontal -command \
 	"$w.frame.e1 xview"
-frame $w.frame.spacer1 -width 20 -height 10
+frame $w.frame.spacer1 -width 15p -height 7.5p
 entry $w.frame.e2 -xscrollcommand "$w.frame.s2 set"
 ttk::scrollbar $w.frame.s2 -orient horizontal -command \
 	"$w.frame.e2 xview"
-frame $w.frame.spacer2 -width 20 -height 10
+frame $w.frame.spacer2 -width 15p -height 7.5p
 entry $w.frame.e3 -xscrollcommand "$w.frame.s3 set"
 ttk::scrollbar $w.frame.s3 -orient horizontal -command \
 	"$w.frame.e3 xview"
