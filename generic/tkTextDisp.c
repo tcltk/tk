@@ -34,7 +34,7 @@
 #ifdef MAC_OSX_TK
 # include "tkMacOSXInt.h"
 #endif
-#define OK_TO_LOG 1
+#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
 
 #include <stdlib.h>
 #include <assert.h>
