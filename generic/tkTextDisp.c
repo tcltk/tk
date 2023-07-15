@@ -6514,6 +6514,8 @@ DisplayDLine(
 		    }
 		    if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
 			GC fgGC = chunkPtr->stylePtr->fgGC;
+			GC eolGC = chunkPtr->stylePtr->eolGC;
+			GC eotGC = chunkPtr->stylePtr->eotGC;
 			XGCValues gcValues;
 			unsigned long mask;
 
@@ -6523,9 +6525,13 @@ DisplayDLine(
 			XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
 
 			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
+			chunkPtr->stylePtr->eolGC = dInfoPtr->insertFgGC;
+			chunkPtr->stylePtr->eotGC = dInfoPtr->insertFgGC;
 			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
 				baseline, display, pixmap, screenY);
 			chunkPtr->stylePtr->fgGC = fgGC;
+			chunkPtr->stylePtr->eolGC = eolGC;
+			chunkPtr->stylePtr->eotGC = eotGC;
 		    }
 		}
 	    }
