@@ -851,7 +851,7 @@ static const TkTextDispChunkProcs layoutHyphenProcs = {
 };
 
 
-#ifndef CLIPPING_IS_WORKING
+#ifndef TK_CLIPPING_IS_WORKING
 /*
  * Pointer to int, for some portable pointer hacks - it's guaranteed that
  * 'uintptr_'t and 'void *' are convertible in both directions (C99 7.18.1.4).
@@ -863,7 +863,7 @@ typedef union {
 } __ptr_to_int;
 
 static void * MarkPointer(void *ptr) { __ptr_to_int p; p.ptr = ptr; p.flag |= 1; return p.ptr; }
-#endif /* CLIPPING_IS_WORKING */
+#endif /* TK_CLIPPING_IS_WORKING */
 
 static const TkTextDispChunkProcs layoutElideProcs = {
     TEXT_DISP_ELIDED,	/* type */
@@ -6487,7 +6487,7 @@ DisplayDLine(
 	    cxMin += cOffs;
 	    cxMax = cxMin + cWidth;
 
-#ifdef CLIPPING_IS_WORKING
+#ifdef TK_CLIPPING_IS_WORKING
 	    /*
 	     * This is the right implementation if XSetClipRectangles would work; still untested.
 	     */
@@ -6529,7 +6529,7 @@ DisplayDLine(
 		    }
 		}
 	    }
-#else /* if !CLIPPING_IS_WORKING */
+#else /* if !TK_CLIPPING_IS_WORKING */
 	    /*
 	     * We don't have clipping, so we need a different approach.
 	     */
@@ -6579,7 +6579,7 @@ DisplayDLine(
 		XCopyArea(display, pm, pixmap, dInfoPtr->copyGC, 0, 0, cWidth, height, cxMin, yBase);
 		Tk_FreePixmap(display, pm);
 	    }
-#endif /* CLIPPING_IS_WORKING */
+#endif /* TK_CLIPPING_IS_WORKING */
 	}
     }
 

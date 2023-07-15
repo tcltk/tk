@@ -139,6 +139,7 @@
 #define TK_NO_DOUBLE_BUFFERING 1
 #define TK_HAS_DYNAMIC_COLORS 1
 #define TK_DYNAMIC_COLORMAP 0x0fffffff
+#define TK_CLIPPING_IS_WORKING 1
 
 /*
  * Inform tkImgPhInstance.c that we implement TkpPutRGBAImage to render RGBA
