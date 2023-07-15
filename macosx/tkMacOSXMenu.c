@@ -761,9 +761,10 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[TKNSString alloc]
+	title = [[[TKNSString alloc]
 		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
-				length:mePtr->labelLength];
+				length:mePtr->labelLength]
+		autorelease];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
