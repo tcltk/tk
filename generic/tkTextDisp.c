@@ -851,6 +851,7 @@ static const TkTextDispChunkProcs layoutHyphenProcs = {
 };
 
 
+#ifndef CLIPPING_IS_WORKING
 /*
  * Pointer to int, for some portable pointer hacks - it's guaranteed that
  * 'uintptr_'t and 'void *' are convertible in both directions (C99 7.18.1.4).
@@ -862,6 +863,7 @@ typedef union {
 } __ptr_to_int;
 
 static void * MarkPointer(void *ptr) { __ptr_to_int p; p.ptr = ptr; p.flag |= 1; return p.ptr; }
+#endif /* CLIPPING_IS_WORKING */
 
 static const TkTextDispChunkProcs layoutElideProcs = {
     TEXT_DISP_ELIDED,	/* type */
