@@ -126,18 +126,6 @@
 #endif
 
 /*
- * Standard integer support (C99).
- */
-
-#ifdef HAVE_STDINT_H
-#   include <stdint.h>
-#else
-/* work around for the support of ancient compilers */
-#   include "../compat/stdint.h"
-#endif
-
-
-/*
  * Detection of >=64 bit architectures, which supports the use of
  * the appropriate integer types. It's possible that we are detecting
  * a 32 bit architecture although it's a 64 bit architecture, in this
