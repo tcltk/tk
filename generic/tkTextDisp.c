@@ -6489,7 +6489,7 @@ DisplayDLine(
 
 #ifdef TK_CLIPPING_IS_WORKING
 	    /*
-	     * This is the right implementation if XSetClipRectangles would work; still untested.
+	     * This is the right implementation if XSetClipRectangles works.
 	     */
 	    {
 		XRectangle crect;
@@ -6503,7 +6503,7 @@ DisplayDLine(
 		dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
 			baseline, display, pixmap, screenY);
 
-		/* for any reason this doesn't work with the Tk lib even under X11 */
+		/* This doesn't work under X11 with Xft (see [4476fd6144f]), nor on Windows (not implemented, see [82b78e96f5]) */
 		XSetClipRectangles(display, dInfoPtr->insertFgGC, 0, 0, &crect, 1, Unsorted);
 
 		for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
