@@ -809,6 +809,7 @@ TkpConfigureMenuEntry(
     attributedTitle = [[NSAttributedString alloc] initWithString:title
 	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
+    [attributedTitle release];
     [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
