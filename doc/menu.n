@@ -371,6 +371,9 @@ are used.
 .PP
 If the index could match more than one of the above forms, then
 the form earlier in the above list takes precedence.
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .PP
 The following widget commands are possible for menu widgets:
 .TP

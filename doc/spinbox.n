@@ -288,6 +288,9 @@ or
 .QW \fBsel.f\fR .
 In general, out-of-range indices are automatically rounded to the
 nearest legal value.
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .SS SUBCOMMANDS
 .PP
 The following commands are possible for spinbox widgets:
