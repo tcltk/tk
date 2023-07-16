@@ -50,6 +50,8 @@ static TkpClipMask *AllocClipMask(GC gc) {
 	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
     }
+    clip_mask->type = TKP_CLIP_PIXMAP;
+    clip_mask->value.pixmap = None;
     return clip_mask;
 }
 
