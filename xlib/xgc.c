@@ -49,6 +49,8 @@ static TkpClipMask *AllocClipMask(GC gc) {
     if (clip_mask == NULL) {
 	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
+    } else if (clip_mask->type == TKP_CLIP_REGION) {
+	TkDestroyRegion(clip_mask->value.region);
     }
     clip_mask->type = TKP_CLIP_PIXMAP;
     clip_mask->value.pixmap = None;
@@ -75,6 +77,9 @@ static void FreeClipMask(GC gc) {
     TkpClipMask * clip_mask = (TkpClipMask*)gc->clip_mask;
     if (clip_mask == NULL) {
 	return;
+    }
+    if (clip_mask->type == TKP_CLIP_REGION) {
+	TkDestroyRegion(clip_mask->value.region);
     }
     ckfree(clip_mask);
     gc->clip_mask = None;
@@ -431,8 +436,8 @@ XSetClipOrigin(
  *
  *	Sets the clipping region/pixmap for a GC.
  *
- *	Note that unlike the Xlib equivalent, it is not safe to delete the
- *	region after setting it into the GC (except on Mac OS X). The only
+ *	Like the Xlib equivalent, it is safe to delete the
+ *	region after setting it into the GC. The only
  *	uses of TkSetRegion are currently in DisplayFrame and in
  *	ImgPhotoDisplay, which use the GC immediately.
  *
@@ -460,6 +465,8 @@ TkSetRegion(
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
+	clip_mask->value.region = TkCreateRegion();
+	TkpCopyRegion(clip_mask->value.region, r);
     }
     return Success;
 }
