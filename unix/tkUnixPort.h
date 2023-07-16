@@ -166,13 +166,6 @@
 	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 #endif
 
-/*
- * XSetClipRectangles() works only without Xft on Linux.
- * See [82b78e96f5] and [4476fd6144].
- */
-
-#ifndef HAVE_XFT
 #define TK_CLIPPING_IS_WORKING 1
-#endif
 
 #endif /* _UNIXPORT */
