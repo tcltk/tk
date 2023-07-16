@@ -490,7 +490,7 @@ XSetClipMask(
 
 int
 XSetClipRectangles(
-    Display* d,
+    TCL_UNUSED(Display*),
     GC gc,
     int clip_x_origin,
     int clip_y_origin,
@@ -499,6 +499,9 @@ XSetClipRectangles(
     TCL_UNUSED(int))
 {
     TkRegion clipRgn = TkCreateRegion();
+    TkpClipMask * clip_mask = AllocClipMask(gc);
+    clip_mask->type = TKP_CLIP_REGION;
+    clip_mask->value.region = clipRgn;
 
     while (n--) {
 	XRectangle rect = *rectangles;
@@ -508,8 +511,6 @@ XSetClipRectangles(
 	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
 	rectangles++;
     }
-    TkSetRegion(d, gc, clipRgn);
-    TkDestroyRegion(clipRgn);
     return 1;
 }
 
