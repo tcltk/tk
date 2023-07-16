@@ -14,11 +14,6 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
-#ifndef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkBitFieldPriv.h"
-#endif
-
 #ifndef MAX
 # define MAX(a,b) (((int) a) < ((int) b) ? b : a)
 #endif
@@ -1521,7 +1516,6 @@ TkBitInnerJoinDifferenceIsEqual(
 #endif /* TK_UNUSED_BITFIELD_FUNCTIONS */
 
 
-#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
 extern TkBitField *TkBitNew(unsigned size);
 extern const unsigned char *TkBitData(const TkBitField *bf);
@@ -1538,6 +1532,5 @@ extern void TkBitSet(TkBitField *bf, unsigned n);
 extern void TkBitUnset(TkBitField *bf, unsigned n);
 extern void TkBitPut(TkBitField *bf, unsigned n, int value);
 extern unsigned TkBitAdjustSize(unsigned size);
-#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

@@ -13,11 +13,6 @@
 #include "tkAlloc.h"
 #include <assert.h>
 
-#ifndef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkTextUndoPriv.h"
-#endif
-
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif
@@ -1043,7 +1038,6 @@ TkTextUndoNextRedoAtom(
 }
 
 
-#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
 extern void TkTextUndoSetContext(TkTextUndoStack stack, TkTextUndoContext context);
 extern TkTextUndoContext TkTextUndoGetContext(const TkTextUndoStack stack);
@@ -1070,6 +1064,5 @@ extern const TkTextUndoAtom *TkTextUndoCurrentRedoAtom(const TkTextUndoStack sta
 extern const TkTextUndoSubAtom *TkTextUndoGetLastUndoSubAtom(const TkTextUndoStack stack);
 extern int TkTextUndoUndoStackIsFull(const TkTextUndoStack stack);
 extern int TkTextUndoRedoStackIsFull(const TkTextUndoStack stack);
-#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

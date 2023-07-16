@@ -18,15 +18,7 @@
 #include "tk3d.h"
 #include <assert.h>
 
-#if HAVE_INTTYPES_H
-# include <inttypes.h>
-#elif defined(_WIN32) || defined(_WIN64)
-/* work-around for ancient MSVC versions */
-# define PRIx64 "I64x"
-# define PRIx32 "x"
-#else
-# error "configure failed - can't include inttypes.h"
-#endif
+#include <inttypes.h>
 
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
@@ -650,7 +642,7 @@ TkTextMarkCmd(
 #ifdef TK_IS_64_BIT_ARCH
 	    "##ID##0x%016" PRIx64 "##0x%016" PRIx64 "##%08" TCL_Z_MODIFIER "u##", /* we're on a real 64-bit system */
 	    (uint64_t) textPtr, (uint64_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
-#else /* if defined(TK_IS_32_BIT_ARCH) */
+#else /* if !defined(TK_IS_64_BIT_ARCH) */
 	    "##ID##0x%08" PRIx32 "##0x%08" PRIx32 "##%08" TCL_Z_MODIFIER "u##",   /* we're most likely on a 32-bit system */
 	    (uint32_t) textPtr, (uint32_t) textPtr->sharedTextPtr, ++textPtr->uniqueIdCounter
 #endif /* TK_IS_64_BIT_ARCH */
@@ -1711,7 +1703,7 @@ SetMark(
 	if (name[0] == '#' && name[1] == '#' && name[2] == 'I') {
 #ifdef TK_IS_64_BIT_ARCH
 	    static const size_t length = 32 + 2*sizeof(uint64_t);
-#else /* if defined(TK_IS_32_BIT_ARCH) */
+#else /* if !defined(TK_IS_64_BIT_ARCH) */
 	    static const size_t length = 32 + 2*sizeof(uint32_t);
 #endif /* TK_IS_64_BIT_ARCH */
 
@@ -2698,7 +2690,7 @@ TkTextGetCursorWidth(
 void
 TkrTextInsertDisplayProc(
     TkText *textPtr,		/* The current text widget. */
-    TkTextDispChunk *chunkPtr,	/* Chunk that is to be drawn. */
+    TCL_UNUSED(TkTextDispChunk *),	/* Chunk that is to be drawn. */
     int x,			/* X-position in dst at which to draw this chunk (may differ
     				 * from the x-position in the chunk because of scrolling). */
     int y,			/* Y-position at which to draw this chunk in dst (x-position

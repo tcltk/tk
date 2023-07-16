@@ -163,9 +163,7 @@ int TkIntSetInnerJoinDifferenceIsEqual(const TkIntSet *set1, const TkIntSet *set
 
 #undef __warn_unused__
 
-#ifdef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkIntSetPriv.h"
-#endif
+#define _TK_NEED_IMPLEMENTATION
+#include "tkIntSetPriv.h"
 #endif /* _TKINTSET */
 /* vi:set ts=8 sw=4: */
