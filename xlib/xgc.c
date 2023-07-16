@@ -437,9 +437,7 @@ XSetClipOrigin(
  *	Sets the clipping region/pixmap for a GC.
  *
  *	Like the Xlib equivalent, it is safe to delete the
- *	region after setting it into the GC. The only
- *	uses of TkSetRegion are currently in DisplayFrame and in
- *	ImgPhotoDisplay, which use the GC immediately.
+ *	region after setting it into the GC.
  *
  * Results:
  *	None.
