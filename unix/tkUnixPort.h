@@ -166,6 +166,4 @@
 	snprintf((buf), TCL_INTEGER_SPACE, "0x%lx", (unsigned long) (w))
 #endif
 
-#define TK_CLIPPING_IS_WORKING 1
-
 #endif /* _UNIXPORT */
