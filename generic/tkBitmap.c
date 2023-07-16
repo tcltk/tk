@@ -1082,7 +1082,7 @@ BitmapInit(
  * TkReadBitmapFile --
  *
  *	Loads a bitmap image in X bitmap format into the specified drawable.
- *	This is equivelent to the XReadBitmapFile in X.
+ *	This is equivalent to the XReadBitmapFile in X.
  *
  * Results:
  *	Sets the size, hotspot, and bitmap on success.
