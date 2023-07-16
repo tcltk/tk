@@ -133,4 +133,6 @@
 #define TkpCreateNativeBitmap(display, source) None
 #define TkpGetNativeAppBitmap(display, name, w, h) None
 
+#define TK_CLIPPING_IS_WORKING 1
+
 #endif /* _WINPORT */
