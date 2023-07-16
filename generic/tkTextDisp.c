@@ -850,21 +850,6 @@ static const TkTextDispChunkProcs layoutHyphenProcs = {
     CharBboxProc,		/* bboxProc */
 };
 
-
-#ifndef TK_CLIPPING_IS_WORKING
-/*
- * Pointer to int, for some portable pointer hacks - it's guaranteed that
- * 'uintptr_'t and 'void *' are convertible in both directions (C99 7.18.1.4).
- */
-
-typedef union {
-    void *ptr;
-    uintptr_t flag;
-} __ptr_to_int;
-
-static void * MarkPointer(void *ptr) { __ptr_to_int p; p.ptr = ptr; p.flag |= 1; return p.ptr; }
-#endif /* TK_CLIPPING_IS_WORKING */
-
 static const TkTextDispChunkProcs layoutElideProcs = {
     TEXT_DISP_ELIDED,	/* type */
     NULL,		/* displayProc */
@@ -6468,6 +6453,8 @@ DisplayDLine(
 
 	int cxMin, cxMax, cWidth, cOffs;
 	GC bgGC;
+	XRectangle crect;
+	TkRegion clipRegion;
 
 	assert(dInfoPtr->insertFgGC != NULL);
 
@@ -6487,116 +6474,56 @@ DisplayDLine(
 	    cxMin += cOffs;
 	    cxMax = cxMin + cWidth;
 
-#ifdef TK_CLIPPING_IS_WORKING
-	    /*
-	     * This is the right implementation if XSetClipRectangles works.
-	     */
-	    {
-		XRectangle crect;
-		TkRegion clipRegion;
+	    crect.x = cxMin;
+	    crect.y = yBase;
+	    crect.width = cWidth;
+	    crect.height = height;
 
-		crect.x = cxMin;
-		crect.y = yBase;
-		crect.width = cWidth;
-		crect.height = height;
-
-		clipRegion = TkCreateRegion();
-		TkUnionRectWithRegion(&crect, clipRegion, clipRegion);
+	    clipRegion = TkCreateRegion();
+	    TkUnionRectWithRegion(&crect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
-		TkUnixSetXftClipRegion(clipRegion);
+	    TkUnixSetXftClipRegion(clipRegion);
 #endif
 
-		XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
-		dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
-			baseline, display, pixmap, screenY);
+	    XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
+	    dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
+		    baseline, display, pixmap, screenY);
 
-		TkSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
+	    TkSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
 
-		for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
-		    int x = chunkPtr->x + xOffs;
+	    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
+		int x = chunkPtr->x + xOffs;
 
-		    if (x >= cxMax) {
-			break;
-		    }
-		    if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
-			GC fgGC = chunkPtr->stylePtr->fgGC;
-			GC eolGC = chunkPtr->stylePtr->eolGC;
-			GC eotGC = chunkPtr->stylePtr->eotGC;
-			XGCValues gcValues;
-			unsigned long mask;
-
-			/* Setup graphic context with font of this chunk. */
-			mask = GCFont;
-			gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
-			XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
-
-			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
-			chunkPtr->stylePtr->eolGC = dInfoPtr->insertFgGC;
-			chunkPtr->stylePtr->eotGC = dInfoPtr->insertFgGC;
-			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
-				baseline, display, pixmap, screenY);
-			chunkPtr->stylePtr->fgGC = fgGC;
-			chunkPtr->stylePtr->eolGC = eolGC;
-			chunkPtr->stylePtr->eotGC = eotGC;
-		    }
+		if (x >= cxMax) {
+		    break;
 		}
-		XSetClipMask(display, dInfoPtr->insertFgGC, None);
+		if (IsCharChunk(chunkPtr) && cxMin <= x + chunkPtr->width) {
+		    GC fgGC = chunkPtr->stylePtr->fgGC;
+		    GC eolGC = chunkPtr->stylePtr->eolGC;
+		    GC eotGC = chunkPtr->stylePtr->eotGC;
+		    XGCValues gcValues;
+		    unsigned long mask;
+
+		    /* Setup graphic context with font of this chunk. */
+		    mask = GCFont;
+		    gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
+		    XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
+
+		    chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
+		    chunkPtr->stylePtr->eolGC = dInfoPtr->insertFgGC;
+		    chunkPtr->stylePtr->eotGC = dInfoPtr->insertFgGC;
+		    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
+			    baseline, display, pixmap, screenY);
+		    chunkPtr->stylePtr->fgGC = fgGC;
+		    chunkPtr->stylePtr->eolGC = eolGC;
+		    chunkPtr->stylePtr->eotGC = eotGC;
+		}
+	    }
+	    XSetClipMask(display, dInfoPtr->insertFgGC, None);
 #ifdef HAVE_XFT
-		TkUnixSetXftClipRegion(NULL);
+	    TkUnixSetXftClipRegion(NULL);
 #endif
-		TkDestroyRegion(clipRegion);
-	    }
-#else /* if !TK_CLIPPING_IS_WORKING */
-	    /*
-	     * We don't have clipping, so we need a different approach.
-	     */
-	    {
-		Pixmap pm = Tk_GetPixmap(display, Tk_WindowId(textPtr->tkwin),
-			cWidth, height, Tk_Depth(textPtr->tkwin));
-
-		XFillRectangle(display, pm, bgGC, 0, 0, cWidth, height);
-		chunkPtr = dlPtr->cursorChunkPtr;
-
-		/* we are using a (pointer) hack in TkrTextInsertDisplayProc */
-		chunkPtr->layoutProcs->displayProc(textPtr, (TkTextDispChunk *)MarkPointer(chunkPtr),
-			cxMin, yBase, height, baseline, display, pm, screenY);
-
-		while (chunkPtr->prevPtr && chunkPtr->x + xOffs + chunkPtr->width > cxMin) {
-		    chunkPtr = chunkPtr->prevPtr;
-		}
-		for ( ; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
-		    int x = chunkPtr->x + xOffs;
-
-		    if (x >= cxMax) {
-			break;
-		    }
-		    if (IsCharChunk(chunkPtr)) {
-			GC fgGC = chunkPtr->stylePtr->fgGC;
-			GC eolGC = chunkPtr->stylePtr->eolGC;
-			GC eotGC = chunkPtr->stylePtr->eotGC;
-			XGCValues gcValues;
-			unsigned long mask;
-
-			/* Setup graphic context with font of this chunk. */
-			mask = GCFont;
-			gcValues.font = Tk_FontId(chunkPtr->stylePtr->sValuePtr->tkfont);
-			XChangeGC(Tk_Display(textPtr->tkwin), dInfoPtr->insertFgGC, mask, &gcValues);
-
-			chunkPtr->stylePtr->fgGC = dInfoPtr->insertFgGC;
-			chunkPtr->stylePtr->eolGC = dInfoPtr->insertFgGC;
-			chunkPtr->stylePtr->eotGC = dInfoPtr->insertFgGC;
-			chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x - cxMin, 0,
-				height, baseline, display, pm, screenY);
-			chunkPtr->stylePtr->fgGC = fgGC;
-			chunkPtr->stylePtr->eolGC = eolGC;
-			chunkPtr->stylePtr->eotGC = eotGC;
-		    }
-		}
-
-		XCopyArea(display, pm, pixmap, dInfoPtr->copyGC, 0, 0, cWidth, height, cxMin, yBase);
-		Tk_FreePixmap(display, pm);
-	    }
-#endif /* TK_CLIPPING_IS_WORKING */
+	    TkDestroyRegion(clipRegion);
 	}
     }
 
