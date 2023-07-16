@@ -275,7 +275,7 @@ EXTERN int		TkPutImage(unsigned long *colors, int ncolors,
 				XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
 				unsigned int height);
-+/* 81 */
+/* 81 */
 EXTERN int		XSetClipRectangles(Display * display, GC gc,
 				int clip_x_origin, int clip_y_origin,
 				XRectangle rectangles[], int n, int ordering);
