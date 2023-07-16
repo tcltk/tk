@@ -2730,15 +2730,6 @@ TkrTextInsertDisplayProc(
 
     Tk_SetCaretPos(textPtr->tkwin, x, screenY, height);
 
-    if (POINTER_IS_MARKED(chunkPtr)) {
-	/*
-	 * HACK: We are drawing into a tailored pixmap, because Tk has no clipping;
-	 * see DisplayDLine().
-	 */
-
-	x = y = 0;
-    }
-
     /*
      * As a special hack to keep the cursor visible on mono displays (or
      * anywhere else that the selection and insertion cursors have the same
