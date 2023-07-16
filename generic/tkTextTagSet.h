@@ -186,9 +186,7 @@ int TkTextTagSetInnerJoinDifferenceIsEqual(const TkTextTagSet *ts1, const TkText
 
 #undef __warn_unused__
 
-#ifdef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkTextTagSetPriv.h"
-#endif
+#define _TK_NEED_IMPLEMENTATION
+#include "tkTextTagSetPriv.h"
 #endif /* _TKTEXTTAGSET */
 /* vi:set ts=8 sw=4: */

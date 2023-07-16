@@ -155,9 +155,7 @@ int TkBitInnerJoinDifferenceIsEqual(const TkBitField *bf1, const TkBitField *bf2
 
 #endif /* TK_UNUSED_BITFIELD_FUNCTIONS */
 
-#ifdef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkBitFieldPriv.h"
-#endif
+#define _TK_NEED_IMPLEMENTATION
+#include "tkBitFieldPriv.h"
 #endif /* _TKBITFIELD */
 /* vi:set ts=8 sw=4: */

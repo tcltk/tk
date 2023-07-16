@@ -2256,10 +2256,8 @@ MODULE_SCOPE void		TkrTextInsertDisplayProc(struct TkText *textPtr,
 
 #define TK_TEXT_DEBUG(expr)	{ if (tkTextDebug) { expr; } }
 
-#ifdef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkTextPriv.h"
-#endif
+#define _TK_NEED_IMPLEMENTATION
+#include "tkTextPriv.h"
 #endif /* _TKTEXT */
 
 /*

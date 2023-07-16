@@ -11,11 +11,6 @@
 
 #include "tkTextTagSet.h"
 
-#ifndef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkTextTagSetPriv.h"
-#endif
-
 # include <assert.h>
 # include <string.h>
 
@@ -1419,7 +1414,6 @@ TkTextTagSetInnerJoinDifferenceIsEqual(
 
 #endif /* TK_UNUSED_TAGSET_FUNCTIONS */
 
-#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
 extern TkTextTagSet *TkTextTagSetNew(unsigned size);
 extern unsigned TkTextTagSetRefCount(const TkTextTagSet *ts);
@@ -1452,6 +1446,5 @@ extern TkTextTagSet *TkTextTagSetEraseFromThis(TkTextTagSet *ts, unsigned n);
 extern unsigned TkTextTagSetRangeSize(const TkTextTagSet *ts);
 extern const unsigned char *TkTextTagSetData(const TkTextTagSet *ts);
 extern unsigned TkTextTagSetByteSize(const TkTextTagSet *ts);
-#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */
