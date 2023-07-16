@@ -6478,7 +6478,6 @@ DisplayDLine(
 	    crect.y = yBase;
 	    crect.width = cWidth;
 	    crect.height = height;
-
 	    clipRegion = TkCreateRegion();
 	    TkUnionRectWithRegion(&crect, clipRegion, clipRegion);
 #ifdef HAVE_XFT
@@ -6488,7 +6487,6 @@ DisplayDLine(
 	    XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
 	    dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
 		    baseline, display, pixmap, screenY);
-
 	    TkSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
 
 	    for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
