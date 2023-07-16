@@ -72,10 +72,12 @@ static TkpClipMask *AllocClipMask(GC gc) {
  */
 
 static void FreeClipMask(GC gc) {
-    if (gc->clip_mask != None) {
-	ckfree((char *)gc->clip_mask);
-	gc->clip_mask = None;
+    TkpClipMask * clip_mask = (TkpClipMask*)gc->clip_mask;
+    if (clip_mask == NULL) {
+	return;
     }
+    ckfree(clip_mask);
+    gc->clip_mask = None;
 }
 
 /*
