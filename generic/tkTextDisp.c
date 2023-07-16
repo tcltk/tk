@@ -6493,18 +6493,24 @@ DisplayDLine(
 	     */
 	    {
 		XRectangle crect;
+		TkRegion clipRegion;
 
 		crect.x = cxMin;
 		crect.y = yBase;
 		crect.width = cWidth;
 		crect.height = height;
 
+		clipRegion = TkCreateRegion();
+		TkUnionRectWithRegion(&crect, clipRegion, clipRegion);
+#ifdef HAVE_XFT
+		TkUnixSetXftClipRegion(clipRegion);
+#endif
+
 		XFillRectangle(display, pixmap, bgGC, crect.x, crect.y, crect.width, crect.height);
 		dlPtr->cursorChunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, cxMin, yBase, height,
 			baseline, display, pixmap, screenY);
 
-		/* This doesn't work under X11 with Xft (see [4476fd6144f]), nor on Windows (not implemented, see [82b78e96f5]) */
-		XSetClipRectangles(display, dInfoPtr->insertFgGC, 0, 0, &crect, 1, Unsorted);
+		TkSetRegion(display, dInfoPtr->insertFgGC, clipRegion);
 
 		for (chunkPtr = dlPtr->chunkPtr; chunkPtr; chunkPtr = chunkPtr->nextPtr) {
 		    int x = chunkPtr->x + xOffs;
@@ -6534,6 +6540,11 @@ DisplayDLine(
 			chunkPtr->stylePtr->eotGC = eotGC;
 		    }
 		}
+		XSetClipMask(display, dInfoPtr->insertFgGC, None);
+#ifdef HAVE_XFT
+		TkUnixSetXftClipRegion(NULL);
+#endif
+		TkDestroyRegion(clipRegion);
 	    }
 #else /* if !TK_CLIPPING_IS_WORKING */
 	    /*
