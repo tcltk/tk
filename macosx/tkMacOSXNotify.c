@@ -524,7 +524,6 @@ TkMacOSXEventsCheckProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    int eventsFound = 0;
 
     /*
      * runloopMode will be nil if we are in a Tcl event loop.
@@ -570,7 +569,6 @@ TkMacOSXEventsCheckProc(
 
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
 		if (processedEvent) {
-		    eventsFound++;
 
 #ifdef TK_MAC_DEBUG_EVENTS
 		    TKLog(@"   event: %@", currentEvent);

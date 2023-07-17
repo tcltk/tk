@@ -136,7 +136,8 @@ Specifies the name of a global variable whose value will be used
 in place of the \fB\-text\fR resource.
 .OP \-underline underline Underline
 If set, specifies the integer index (0-based) of a character to underline
-in the text string.
+in the text string. \fBend\fR corresponds to the last character, 
+\fBend\fR-1 to the before last character, and so on.
 The underlined character is used for mnemonic activation.
 .OP \-width width Width
 If greater than zero, specifies how much space, in character widths,

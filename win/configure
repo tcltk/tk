@@ -5153,31 +5153,6 @@ fi
 
 
 #--------------------------------------------------------------------
-# Windows XP theme engine header for Ttk
-#--------------------------------------------------------------------
-
-ac_fn_c_check_header_compile "$LINENO" "uxtheme.h" "ac_cv_header_uxtheme_h" "#include <windows.h>
-"
-if test "x$ac_cv_header_uxtheme_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_UXTHEME_H 1" >>confdefs.h
-
-else $as_nop
-  { printf "%s\n" "$as_me:${as_lineno-$LINENO}: xpnative theme will be unavailable" >&5
-printf "%s\n" "$as_me: xpnative theme will be unavailable" >&6;}
-fi
-
-ac_fn_c_check_header_compile "$LINENO" "vssym32.h" "ac_cv_header_vssym32_h" "#include <windows.h>
-#include <uxtheme.h>
-"
-if test "x$ac_cv_header_vssym32_h" = xyes
-then :
-  printf "%s\n" "#define HAVE_VSSYM32_H 1" >>confdefs.h
-
-fi
-
-
-#--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols
 # option.  This macro depends on C flags, and should be called
 # after SC_CONFIG_CFLAGS macro is called.
