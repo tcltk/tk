@@ -119,7 +119,7 @@ static void ReleaseData(
     ckfree(info);
 }
 
-CGImageRef
+static CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
     uint32_t alphaInfo)
