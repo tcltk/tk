@@ -35,16 +35,6 @@
 # include <strings.h>
 #endif
 
-#ifndef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkTextPriv.h"
-#endif
-
-#if defined(_MSC_VER ) && _MSC_VER < 1500
-/* suppress wrong warnings to support ancient compilers */
-# pragma warning (disable : 4305)
-#endif
-
 #ifndef MAX
 # define MAX(a,b) ((a) < (b) ? b : a)
 #endif
@@ -11842,7 +11832,6 @@ TkpTextDump(
 #endif /* NDEBUG */
 
 
-#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
 extern TkSharedText *	TkBTreeGetShared(TkTextBTree tree);
 extern int		TkBTreeGetNumberOfDisplayLines(const TkTextPixelInfo *pixelInfo);
@@ -11886,7 +11875,6 @@ extern void		TkTextIndexSave(TkTextIndex *indexPtr);
 # if TK_MAJOR_VERSION == 8 && TK_MINOR_VERSION < 7 && TCL_UTF_MAX <= 4
 extern int		TkUtfToUniChar(const char *src, int *chPtr);
 # endif
-#endif /* TK_C99_INLINE_SUPPORT */
 
 
 /*
