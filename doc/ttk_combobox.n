@@ -65,7 +65,9 @@ combobox widgets support the following additional commands:
 If \fInewIndex\fR is supplied, sets the combobox value
 to the element at position \fInewIndex\fR in the list of \fB\-values\fR
 (in addition to integers, the \fBend\fR index is supported and indicates
-the last element of the list).
+the last element of the list, moreover the same simple interpretation as
+for the command \fBstring index\fR is supported, with simple integer index
+arithmetic and indexing relative to \fBend\fR).
 Otherwise, returns the index of the current value in the list of
 \fB\-values\fR or \fB\-1\fR if the current value does not appear in the list.
 .TP

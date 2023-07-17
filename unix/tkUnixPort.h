@@ -39,9 +39,7 @@
 #	include <sys/time.h>
 #endif
 #include <time.h>
-#ifdef HAVE_INTTYPES_H
-#    include <inttypes.h>
-#endif
+#include <inttypes.h>
 #include <unistd.h>
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
