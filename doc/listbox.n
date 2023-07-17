@@ -126,6 +126,9 @@ specified by \fIx\fR and \fIy\fR (in pixel coordinates).  If no
 element covers that point, then the closest element to that
 point is used.
 .LP
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 In the widget command descriptions below, arguments named \fIindex\fR,
 \fIfirst\fR, and \fIlast\fR always contain text indices in one of
 the above forms.
