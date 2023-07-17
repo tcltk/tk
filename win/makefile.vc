@@ -23,8 +23,6 @@
 #       noembed  = Embeds Tcl scripts into the wish executable. Currently only
 #                  applicable for static builds. Non-static builds currently
 #                  never embed.
-#	noxp     = If you do not have the uxtheme.h header then you
-#                  cannot include support for XP themeing.
 #	square   = Include the demo square widget.
 #
 # Possible values for TARGET are:
@@ -109,16 +107,9 @@ USING_PRE87_TCL = 1
 
 # Extra makefile options processing for non-standard OPTS values ...
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
-HAVE_UXTHEME_H    = 1
 TTK_SQUARE_WIDGET = 0
 TK_EMBED_SCRIPTS  = $(STATIC_BUILD)
 !else
-!if [nmakehlp -f $(OPTS) "noxp"]
-!message *** Exclude support for XP theme
-HAVE_UXTHEME_H  = 0
-!else
-HAVE_UXTHEME_H  = 1
-!endif
 !if [nmakehlp -f "$(OPTS)" "square"]
 !message *** Include ttk square demo widget
 TTK_SQUARE_WIDGET   = 1
@@ -353,9 +344,6 @@ PRJ_INCLUDES	= -I"$(BITMAPDIR)" -I"$(XLIBDIR)"
 CONFIG_DEFS     =/DHAVE_SYS_TYPES_H=1 /DHAVE_SYS_STAT_H=1 \
 		 /DHAVE_STRING_H=1 /DHAVE_MEMORY_H=1 \
 		 /DHAVE_STRINGS_H=1 /DTCL_UTF_MAX=3 \
-!if $(HAVE_UXTHEME_H)
-		 /DHAVE_UXTHEME_H=1 \
-!endif
 !if $(TTK_SQUARE_WIDGET)
 		 /DTTK_SQUARE_WIDGET=1 \
 !endif
@@ -527,7 +515,8 @@ $(TKSCRIPTZIP): .PHONY
 	@if not exist "$(LIBTKVFS)" $(MKDIR) "$(LIBTKVFS)"
 	@if exist "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)" $(RMDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
 	@$(CPYDIR) $(LIBDIR) "$(LIBTKVFS)\$(TKSCRIPTZIPTOP)"
-	@cd "$(OUT_DIR)" && $(TCLSH) <<
+	@$(TCLSH) <<
+cd {$(OUT_DIR)}
 file delete -force {$@}
 zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 <<
@@ -536,7 +525,8 @@ zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@echo Building Wish Tcl+Tk library zip file
 	@if exist "$(LIBTKVFS)\tcl_library" $(RMDIR) "$(LIBTKVFS)\tcl_library"
-	@cd "$(OUT_DIR)" && $(TCLSH) <<
+	@$(TCLSH) <<
+cd {$(OUT_DIR)}
 file delete -force {$@}
 zipfs mount mnt "$(TCLSCRIPTZIP:\=/)"
 file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"
