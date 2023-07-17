@@ -236,9 +236,7 @@ int TkTextUndoDoUndo(TkTextUndoStack stack);
 int TkTextUndoDoRedo(TkTextUndoStack stack);
 
 
-#ifdef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkTextUndoPriv.h"
-#endif
+#define _TK_NEED_IMPLEMENTATION
+#include "tkTextUndoPriv.h"
 #endif /* _TKTEXTUNDO */
 /* vi:set ts=8 sw=4: */

@@ -16,11 +16,6 @@
 #include "tkBitField.h"
 #include "tkAlloc.h"
 
-#ifndef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkIntSetPriv.h"
-#endif
-
 #include <assert.h>
 
 #ifndef MIN
@@ -2092,7 +2087,6 @@ TkIntSetInnerJoinDifferenceIsEqual(
 #endif /* TK_UNUSED_INTSET_FUNCTIONS */
 
 
-#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
 extern unsigned TkIntSetByteSize(const TkIntSet *set);
 extern const unsigned char *TkIntSetData(const TkIntSet *set);
@@ -2113,6 +2107,5 @@ extern int TkIntSetIntersects(const TkIntSet *set1, const TkIntSet *set2);
 extern unsigned TkIntSetFindFirst(const TkIntSet *set);
 extern unsigned TkIntSetFindNext(const TkIntSet *set);
 extern TkIntSet *TkIntSetAddOrErase(TkIntSet *set, unsigned n, int add);
-#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

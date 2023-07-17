@@ -14,11 +14,6 @@
 
 #include <assert.h>
 
-#ifndef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkRangeListPriv.h"
-#endif
-
 #ifndef MIN
 # define MIN(a,b) ((a) < (b) ? a : b)
 #endif
@@ -700,7 +695,6 @@ TkRangeListPrint(
 #endif /* NDEBUG */
 
 
-#ifdef TK_C99_INLINE_SUPPORT
 /* Additionally we need stand-alone object code. */
 extern int TkRangeSpan(const TkRange *range);
 extern int TkRangeTest(const TkRange *range, int value);
@@ -715,6 +709,5 @@ extern const TkRange *TkRangeListNext(const TkRangeList *ranges, const TkRange *
 extern int TkRangeListIsEmpty(const TkRangeList *ranges);
 extern int TkRangeListContains(const TkRangeList *ranges, int value);
 extern int TkRangeListContainsRange(const TkRangeList *ranges, int low, int high);
-#endif /* TK_C99_INLINE_SUPPORT */
 
 /* vi:set ts=8 sw=4: */

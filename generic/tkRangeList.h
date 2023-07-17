@@ -193,9 +193,7 @@ void TkRangeListPrint(const TkRangeList *ranges);
 #endif
 
 
-#ifdef TK_C99_INLINE_SUPPORT
-# define _TK_NEED_IMPLEMENTATION
-# include "tkRangeListPriv.h"
-#endif
+#define _TK_NEED_IMPLEMENTATION
+#include "tkRangeListPriv.h"
 #endif /* _TKRANGELIST */
 /* vi:set ts=8 sw=4: */
