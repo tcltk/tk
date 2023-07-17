@@ -478,6 +478,30 @@ XOffsetRegion(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef)dst, (HIShapeRef)src);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkMacOSXHIShapeCreateEmpty, TkMacOSXHIShapeCreateMutableWithRect,
  * TkMacOSXHIShapeSetWithShape,
  * TkMacOSHIShapeDifferenceWithRect, TkMacOSHIShapeUnionWithRect,

@@ -1480,6 +1480,8 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
+MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
+
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
 #endif
