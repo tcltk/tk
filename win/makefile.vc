@@ -23,8 +23,6 @@
 #       noembed  = Embeds Tcl scripts into the wish executable. Currently only
 #                  applicable for static builds. Non-static builds currently
 #                  never embed.
-#	noxp     = If you do not have the uxtheme.h header then you
-#                  cannot include support for XP themeing.
 #	square   = Include the demo square widget.
 #
 # Possible values for TARGET are:
@@ -112,10 +110,6 @@ USING_PRE87_TCL = 1
 TTK_SQUARE_WIDGET = 0
 TK_EMBED_SCRIPTS  = $(STATIC_BUILD)
 !else
-!if [nmakehlp -f $(OPTS) "noxp"]
-!message *** Exclude support for XP theme
-!else
-!endif
 !if [nmakehlp -f "$(OPTS)" "square"]
 !message *** Include ttk square demo widget
 TTK_SQUARE_WIDGET   = 1
