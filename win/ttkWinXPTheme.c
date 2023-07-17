@@ -16,19 +16,9 @@
  */
 
 #include "tkWinInt.h"
-#ifndef HAVE_UXTHEME_H
-/* Stub for platforms that lack the XP theme API headers: */
-int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
-#else
-
 #include <windows.h>
 #include <uxtheme.h>
-#if defined(HAVE_VSSYM32_H) || _MSC_VER > 1500
-#   include <vssym32.h>
-#else
-#   include <tmschema.h>
-#endif
-
+#include <vssym32.h>
 #include "ttk/ttkTheme.h"
 
 typedef HTHEME  (STDAPICALLTYPE OpenThemeDataProc)(HWND hwnd,
@@ -1360,5 +1350,3 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 
     return TCL_OK;
 }
-
-#endif /* HAVE_UXTHEME_H */
