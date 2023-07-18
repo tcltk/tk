@@ -125,21 +125,10 @@
 #   define TCL_INDEX_TEMP_TABLE 64
 #endif
 
-/*
- * Detection of >=64 bit architectures, which supports the use of
- * the appropriate integer types. It's possible that we are detecting
- * a 32 bit architecture although it's a 64 bit architecture, in this
- * case a 32 bit system is installed on a 64 bit architecture.
- */
-
 #if (UINTPTR_MAX >= 0xffffffffffffffffu)
     /* This is a real 64 bit architecture. */
 #   define TK_IS_64_BIT_ARCH
 #endif
-
-/*
- * C99 inline support macros for the text widget.
- */
 
 #ifndef TCL_Z_MODIFIER
 #   if defined(_WIN64)
