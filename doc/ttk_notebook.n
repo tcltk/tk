@@ -101,6 +101,10 @@ The literal string
 which returns the number of tabs
 (only valid for
 .QW "\fIpathname \fBindex\fR" ).
+.PP
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard

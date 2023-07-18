@@ -14,7 +14,6 @@
 
 
 #include <windows.h>
-#include <stdlib.h>
 #include <math.h>
 #include <wtypes.h>
 #include <winspool.h>

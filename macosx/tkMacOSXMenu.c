@@ -761,9 +761,10 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[TKNSString alloc]
+	title = [[[TKNSString alloc]
 		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
-				length:mePtr->labelLength];
+				length:mePtr->labelLength]
+		autorelease];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
@@ -813,6 +814,7 @@ TkpConfigureMenuEntry(
     attributedTitle = [[NSAttributedString alloc] initWithString:title
 	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
+    [attributedTitle release];
     [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&

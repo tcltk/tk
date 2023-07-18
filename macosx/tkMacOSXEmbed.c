@@ -437,6 +437,10 @@ TkMacOSXGetHostToplevel(
 {
     TkWindow *contWinPtr, *topWinPtr;
 
+    if (!(winPtr && winPtr->privatePtr)) {
+	return NULL;
+    }
+
     topWinPtr = winPtr->privatePtr->toplevel->winPtr;
     if (!Tk_IsEmbedded(topWinPtr)) {
 	return winPtr->privatePtr->toplevel;
@@ -447,9 +451,6 @@ TkMacOSXGetHostToplevel(
      * TODO: Here we should handle out of process embedding.
      */
 
-    if (!contWinPtr) {
-	return NULL;
-    }
     return TkMacOSXGetHostToplevel(contWinPtr);
 }
 
@@ -666,7 +667,7 @@ Tk_GetOtherWindow(
      * process...
      */
 
-    if (!(((TkWindow *)tkwin)->flags & TK_BOTH_HALVES)) {
+    if (!(tkwin && (((TkWindow*)tkwin)->flags & TK_BOTH_HALVES))) {
 	return NULL;
     }
 

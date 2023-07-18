@@ -31,6 +31,8 @@
 #ifdef HAVE_SYS_PARAM_H
 #    include <sys/param.h>
 #endif
+#include <stdint.h>
+#include <stdlib.h>
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN
@@ -1457,6 +1459,8 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
+
+MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class

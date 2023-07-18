@@ -29,7 +29,7 @@ static int totalRegionRetainCount = 0;
  *
  * XCreateRegion --
  *
- *	Implements the equivelent of the X window function XCreateRegion. See
+ *	Implements the equivalent of the X window function XCreateRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -55,7 +55,7 @@ XCreateRegion(void)
  *
  * XDestroyRegion --
  *
- *	Implements the equivelent of the X window function XDestroyRegion. See
+ *	Implements the equivalent of the X window function XDestroyRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -139,7 +139,7 @@ XSubtractRegion(
  *
  * XUnionRectWithRegion --
  *
- *	Implements the equivelent of the X window function
+ *	Implements the equivalent of the X window function
  *	XUnionRectWithRegion. See Xwindow documentation for more details.
  *
  * Results:
@@ -201,7 +201,7 @@ TkMacOSXIsEmptyRegion(
  *
  * XRectInRegion --
  *
- *	Implements the equivelent of the X window function XRectInRegion. See
+ *	Implements the equivalent of the X window function XRectInRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -237,7 +237,7 @@ XRectInRegion(
  *
  * XClipBox --
  *
- *	Implements the equivelent of the X window function XClipBox. See
+ *	Implements the equivalent of the X window function XClipBox. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -473,6 +473,30 @@ XOffsetRegion(
 {
     ChkErr(HIShapeOffset, (HIMutableShapeRef) r, dx, dy);
     return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef)dst, (HIShapeRef)src);
 }
 
 /*

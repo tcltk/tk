@@ -160,9 +160,6 @@ typedef struct TkWindowPrivate MacDrawable;
  */
 
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
-MODULE_SCOPE void TkpRetainRegion(Region r);
-MODULE_SCOPE void TkpReleaseRegion(Region r);
-MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
 
 /*

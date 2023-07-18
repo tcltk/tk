@@ -3,7 +3,7 @@ on:
   push:
     branches:
     - "main"
-    - "core-8-branch"
+    - "core-8-6-branch"
     tags:
     - "core-**"
 permissions:
@@ -193,3 +193,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15

@@ -11,13 +11,6 @@
  */
 
 #include "tkInt.h"
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 /*
  * Runtime linking of libicu.
