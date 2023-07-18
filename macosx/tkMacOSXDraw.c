@@ -1152,6 +1152,8 @@ TkScrollWindow(
 	srcRgn = HIShapeCreateWithRect(&srcRect);
 	dstRgn = HIShapeCreateWithRect(&dstRect);
 	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
+	CFRelease(dstRgn);
+	CFRelease(srcRgn);
 	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
     }
@@ -1161,10 +1163,6 @@ TkScrollWindow(
      */
 
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
-
-    /*
-     * Mutable shapes are not reference counted, and must be released.
-     */
 
     CFRelease(dmgRgn);
     return result;

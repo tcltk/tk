@@ -38,9 +38,9 @@ ttk::button $w.start -text "Start Progress" -command [list \
 ttk::button $w.stop -text "Stop Progress" -command [list \
 	doBars stop $w.p1 $w.p2]
 
-grid $w.p1 - -pady 5 -padx 10
-grid $w.p2 - -pady 5 -padx 10
-grid $w.start $w.stop -padx 10 -pady 5
+grid $w.p1 - -pady 3p -padx 7.5p
+grid $w.p2 - -pady 3p -padx 7.5p
+grid $w.start $w.stop -padx 7.5p -pady 3p
 grid configure $w.start -sticky e
 grid configure $w.stop -sticky w
 grid columnconfigure $w all -weight 1

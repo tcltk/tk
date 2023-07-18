@@ -516,6 +516,8 @@ static void ThemeChangedProc(ClientData clientData)
  */
 static void ThemeChanged(StylePackageData *pkgPtr)
 {
+    TtkSetBlinkCursorTimes(pkgPtr->interp);
+
     if (!pkgPtr->themeChangePending) {
 	Tcl_DoWhenIdle(ThemeChangedProc, pkgPtr);
 	pkgPtr->themeChangePending = 1;

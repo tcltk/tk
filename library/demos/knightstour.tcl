@@ -81,8 +81,7 @@ proc Edgemost {a b} {
 
 # Display a square number as a standard chess square notation.
 proc N {square} {
-    return [format %c%d [expr {97 + $square % 8}] \
-                [expr {$square / 8 + 1}]]
+    return [format %c%d [expr {97 + $square % 8}] [expr {$square / 8 + 1}]]
 }
 
 # Perform a Knight's move and schedule the next move.
@@ -90,7 +89,8 @@ proc MovePiece {dlg last square} {
     variable visited
     variable delay
     variable continuous
-    $dlg.f.txt insert end "[llength $visited]. [N $last] .. [N $square]\n" {}
+    set line [format "%2d. %s .. %s" [llength $visited] [N $last] [N $square]]
+    $dlg.f.txt insert end $line\n
     $dlg.f.txt see end
     $dlg.f.c itemconfigure [expr {1+$last}] -state normal -outline black
     $dlg.f.c itemconfigure [expr {1+$square}] -state normal -outline red
@@ -106,14 +106,14 @@ proc MovePiece {dlg last square} {
             if {$initial == $square} {
                 $dlg.f.txt insert end "Closed tour!"
             } else {
-                $dlg.f.txt insert end "Success\n" {}
+                $dlg.f.txt insert end "Success"
                 if {$continuous} {
                     after [expr {$delay * 2}] [namespace code \
                         [list Tour $dlg [expr {int(rand() * 64)}]]]
                 }
             }
         } else {
-            $dlg.f.txt insert end "FAILED!\n" {}
+            $dlg.f.txt insert end "FAILED!"
         }
     }
 }
@@ -145,7 +145,8 @@ proc Exit {dlg} {
 }
 
 proc SetDelay {new} {
-    variable delay [expr {int($new)}]
+    variable speed [expr {int($new)}]
+    variable delay [expr {2000 - $speed}]
 }
 
 proc DragStart {w x y} {
@@ -171,22 +172,23 @@ proc DragEnd {w x y} {
 proc CreateGUI {} {
     catch {destroy .knightstour}
     set dlg [toplevel .knightstour]
-    wm title $dlg "Knights tour"
+    wm title $dlg "Knight's Tour"
     wm withdraw $dlg
     set f [ttk::frame $dlg.f]
-    set c [canvas $f.c -width 240 -height 240]
-    text $f.txt -width 10 -height 1 \
-        -yscrollcommand [list $f.vs set] -font {Arial 8}
+    set c [canvas $f.c -width 192p -height 192p]
+    text $f.txt -width 12 -height 1 -padx 3p \
+        -yscrollcommand [list $f.vs set] -font TkFixedFont
     ttk::scrollbar $f.vs -command [list $f.txt yview]
 
-    variable delay 600
+    variable speed 1400
+    variable delay [expr {2000 - $speed}]
     variable continuous 0
     ttk::frame $dlg.tf
-    ttk::label $dlg.tf.ls -text Speed
-    ttk::scale $dlg.tf.sc  -from 8 -to 2000 -command [list SetDelay] \
-        -variable [namespace which -variable delay]
     ttk::checkbutton $dlg.tf.cc -text Repeat \
         -variable [namespace which -variable continuous]
+    ttk::scale $dlg.tf.sc  -from 0 -to 1992 -command [list SetDelay] \
+        -variable [namespace which -variable speed]
+    ttk::label $dlg.tf.ls -text Speed
     ttk::button $dlg.tf.b1 -text Start -command [list Tour $dlg]
     ttk::button $dlg.tf.b2 -text Exit -command [list Exit $dlg]
     set square 0
@@ -197,25 +199,29 @@ proc CreateGUI {} {
             } else {
                 set fill bisque ; set dfill bisque3
             }
-            set coords [list [expr {$col * 30 + 4}] [expr {$row * 30 + 4}] \
-                            [expr {$col * 30 + 30}] [expr {$row * 30 + 30}]]
+            set coords [list [expr {$col * 24 + 3}]p \
+			     [expr {$row * 24 + 3}]p \
+                             [expr {$col * 24 + 24}]p \
+			     [expr {$row * 24 + 24}]p]
             $c create rectangle $coords -fill $fill -disabledfill $dfill \
-                -width 2 -state disabled -outline black
+                -width 1.5p -state disabled -outline black
         }
     }
     if {[tk windowingsystem] ne "x11"} {
-        catch {eval font create KnightFont -size -24}
+        catch {eval font create KnightFont -size 18}
         $c create text 0 0 -font KnightFont -text "♞" \
             -anchor nw -tags knight -fill black -activefill "#600000"
     } else {
         # On X11 we cannot reliably tell if the ♞ glyph is available
         # so just use a polygon
         set pts {
-            2 25   24 25  21 19   20 8   14 0   10 0   0 13   0 16
+            2 25   24 25  21 19   20 8   14 0   10 0    0 13  0 16
             2 17    4 14   5 15    3 17   5 17   9 14  10 15  5 21
         }
         $c create polygon $pts -tag knight -offset 8 \
             -fill black -activefill "#600000"
+	set scaleFactor [expr {$tk::scalingPct / 100.0}]
+	$c scale knight 0 0 $scaleFactor $scaleFactor
     }
     $c moveto knight {*}[lrange [$c coords [expr {1 + int(rand() * 64)}]] 0 1]
     $c bind knight <Button-1> [namespace code [list DragStart %W %x %y]]
@@ -227,14 +233,14 @@ proc CreateGUI {} {
     grid columnconfigure $f 1 -weight 1
 
     grid $f - - - - - -sticky news
-    set things [list $dlg.tf.ls $dlg.tf.sc $dlg.tf.cc $dlg.tf.b1]
+    set things [list $dlg.tf.cc $dlg.tf.sc $dlg.tf.ls $dlg.tf.b1]
     if {![info exists ::widgetDemo]} {
 	lappend things $dlg.tf.b2
 	if {[tk windowingsystem] ne "aqua"} {
 	    set things [linsert $things 0 [ttk::sizegrip $dlg.tf.sg]]
 	}
     }
-    pack {*}$things -side right
+    pack {*}$things -side right -padx 3p
     if {[tk windowingsystem] eq "aqua"} {
 	pack configure {*}$things -padx {4 4} -pady {12 12}
 	pack configure [lindex $things 0] -padx {4 24}
