@@ -22,7 +22,7 @@
  *	string representation of the option.
  *
  * Results:
- *	Returns a Tk_Uid that is the string identifier that identifies this
+ *	Returns a Tcl_Obj* with the string identifier that identifies this
  *	option. Returns NULL if there are no system defaults that match this
  *	pair.
  *

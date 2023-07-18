@@ -53,6 +53,12 @@ proc floorDisplay {w active} {
     fg$active $w $colors(offices)
     $w raise room
 
+    # Rescale the coordinates in pixels of all of the
+    # items according to the display's DPI scaling level.
+
+    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    $w scale all 0 0 $scaleFactor $scaleFactor
+
     # Offset the floors diagonally from each other.
 
     $w move floor1 2c 2c
@@ -60,9 +66,17 @@ proc floorDisplay {w active} {
 
     # Create items for the room entry and its label.
 
-    $w create window 600 100 -anchor w -window $w.entry
-    $w create text 600 100 -anchor e -text "Room: "
-    $w config -scrollregion [$w bbox all]
+    $w create window 450p 75p -anchor w -window $w.entry
+    $w create text 450p 75p -anchor e -text "Room: "
+
+    # Configure the canvas.
+
+    set bbox [$w bbox all]
+    lassign $bbox x1 y1 x2 y2
+    set morePx [expr {round(20 * $tk::scalingPct / 100.0)}]
+    set width  [expr {$x2 - $x1 + $morePx}]
+    set height [expr {$y2 - $y1 + $morePx}]
+    $w configure -scrollregion $bbox -width $width -height $height
 }
 
 # newRoom --
@@ -1296,7 +1310,7 @@ toplevel $w
 wm title $w "Floorplan Canvas Demonstration"
 wm iconname $w "Floorplan"
 wm geometry $w +20+20
-wm minsize $w 100 100
+wm minsize $w 75p 75p
 
 label $w.msg -font $font -wraplength 8i -justify left  -text "This window contains a canvas widget showing the floorplan of Digital Equipment Corporation's Western Research Laboratory.  It has three levels.  At any given time one of the levels is active, meaning that you can see its room structure.  To activate a level, click the left mouse button anywhere on it.  As the mouse moves over the active level, the room under the mouse lights up and its room number appears in the \"Room:\" entry.  You can also type a room number in the entry and the room will light up."
 pack $w.msg -side top
@@ -1310,9 +1324,8 @@ pack $f -side top -fill both -expand yes
 set h [ttk::scrollbar $f.hscroll -orient horizontal]
 set v [ttk::scrollbar $f.vscroll -orient vertical]
 set f1 [frame $f.f1 -borderwidth 2 -relief sunken]
-set c [canvas $f1.c -width 900 -height 500 -highlightthickness 0 \
-	   -xscrollcommand [list $h set] \
-	   -yscrollcommand [list $v set]]
+set c [canvas $f1.c -highlightthickness 0 \
+	   -xscrollcommand [list $h set] -yscrollcommand [list $v set]]
 pack $c -expand yes -fill both
 grid $f1 -padx 1 -pady 1 -row 0 -column 0 -rowspan 1 -columnspan 1 -sticky news
 grid $v -padx 1 -pady 1 -row 0 -column 1 -rowspan 1 -columnspan 1 -sticky news
@@ -1368,4 +1381,4 @@ if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 
 }
 bind $c <Destroy> "unset currentRoom"
 set currentRoom ""
-trace variable currentRoom w "roomChanged $c"
+trace add variable currentRoom write "roomChanged $c"

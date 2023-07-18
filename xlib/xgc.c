@@ -46,7 +46,11 @@ static TkpClipMask *AllocClipMask(GC gc) {
     if (clip_mask == NULL) {
 	clip_mask = (TkpClipMask *)ckalloc(sizeof(TkpClipMask));
 	gc->clip_mask = (Pixmap) clip_mask;
+    } else if (clip_mask->type == TKP_CLIP_REGION) {
+	TkDestroyRegion(clip_mask->value.region);
     }
+    clip_mask->type = TKP_CLIP_PIXMAP;
+    clip_mask->value.pixmap = None;
     return clip_mask;
 }
 
@@ -67,10 +71,15 @@ static TkpClipMask *AllocClipMask(GC gc) {
  */
 
 static void FreeClipMask(GC gc) {
-    if (gc->clip_mask != None) {
-	ckfree((char *)gc->clip_mask);
-	gc->clip_mask = None;
+    TkpClipMask * clip_mask = (TkpClipMask*)gc->clip_mask;
+    if (clip_mask == NULL) {
+	return;
     }
+    if (clip_mask->type == TKP_CLIP_REGION) {
+	TkDestroyRegion(clip_mask->value.region);
+    }
+    ckfree(clip_mask);
+    gc->clip_mask = None;
 }
 
 /*
@@ -420,14 +429,12 @@ XSetClipOrigin(
 /*
  *----------------------------------------------------------------------
  *
- * TkSetRegion, XSetClipMask --
+ * TkSetRegion, XSetClipMask, XSetClipRectangles --
  *
  *	Sets the clipping region/pixmap for a GC.
  *
- *	Note that unlike the Xlib equivalent, it is not safe to delete the
- *	region after setting it into the GC (except on Mac OS X). The only
- *	uses of TkSetRegion are currently in DisplayFrame and in
- *	ImgPhotoDisplay, which use the GC immediately.
+ *	Like the Xlib equivalent, it is safe to delete the
+ *	region after setting it into the GC.
  *
  * Results:
  *	None.
@@ -453,6 +460,8 @@ TkSetRegion(
 
 	clip_mask->type = TKP_CLIP_REGION;
 	clip_mask->value.region = r;
+	clip_mask->value.region = TkCreateRegion();
+	TkpCopyRegion(clip_mask->value.region, r);
     }
     return Success;
 }
@@ -474,6 +483,32 @@ XSetClipMask(
 	clip_mask->value.pixmap = pixmap;
     }
     return Success;
+}
+
+int
+XSetClipRectangles(
+    TCL_UNUSED(Display*),
+    GC gc,
+    int clip_x_origin,
+    int clip_y_origin,
+    XRectangle* rectangles,
+    int n,
+    TCL_UNUSED(int))
+{
+    TkRegion clipRgn = TkCreateRegion();
+    TkpClipMask * clip_mask = AllocClipMask(gc);
+    clip_mask->type = TKP_CLIP_REGION;
+    clip_mask->value.region = clipRgn;
+
+    while (n--) {
+	XRectangle rect = *rectangles;
+
+	rect.x += clip_x_origin;
+	rect.y += clip_y_origin;
+	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
+	rectangles++;
+    }
+    return 1;
 }
 
 /*
