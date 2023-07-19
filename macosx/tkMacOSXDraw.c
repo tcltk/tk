@@ -1131,6 +1131,7 @@ TkScrollWindow(
     if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
 	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
 #else
+    MacDrawable* macDraw = (MacDrawable*)drawable;
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     if (view) {
 #endif
