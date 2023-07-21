@@ -45,8 +45,8 @@ Region
 XCreateRegion(void)
 {
     Region region = (Region) HIShapeCreateMutable();
-    DebugLog("Created region: total regions = %d\n", ++totalRegions);
-    RetainRegion(region);
+    DebugLog("Created region: total regions = %d, total count is %d\n",
+	++totalRegions, ++totalRegionRetainCount);
     return region;
 }
 
@@ -473,6 +473,30 @@ XOffsetRegion(
 {
     ChkErr(HIShapeOffset, (HIMutableShapeRef) r, dx, dy);
     return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef)dst, (HIShapeRef)src);
 }
 
 /*

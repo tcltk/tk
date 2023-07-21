@@ -761,7 +761,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XFilterEvent, /* 78 */
     XmbLookupString, /* 79 */
     TkPutImage, /* 80 */
-    0, /* 81 */
+    XSetClipRectangles, /* 81 */
     XParseColor, /* 82 */
     XCreateGC, /* 83 */
     XFreeGC, /* 84 */

@@ -880,30 +880,6 @@ XForceScreenSaver(
     return Success;
 }
 
-int
-XSetClipRectangles(
-    Display *d,
-    GC gc,
-    int clip_x_origin,
-    int clip_y_origin,
-    XRectangle* rectangles,
-    int n,
-    TCL_UNUSED(int))
-{
-    TkRegion clipRgn = TkCreateRegion();
-
-    while (n--) {
-    	XRectangle rect = *rectangles;
-
-    	rect.x += clip_x_origin;
-    	rect.y += clip_y_origin;
-    	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
-    	rectangles++;
-    }
-    TkSetRegion(d, gc, clipRgn);
-    TkDestroyRegion(clipRgn);
-    return 1;
-}
 /*
  *----------------------------------------------------------------------
  *
