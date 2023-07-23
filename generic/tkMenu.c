@@ -1206,7 +1206,8 @@ DestroyMenuInstance(
 	 * for menu entries (i+1)...numEntries.
 	 */
 
-	DestroyMenuEntry(menuPtr->entries[i]);
+	Tcl_EventuallyFree(menuPtr->entries[i],
+		(Tcl_FreeProc*)DestroyMenuEntry);
 	menuPtr->numEntries = i;
     }
     if (menuPtr->entries != NULL) {
