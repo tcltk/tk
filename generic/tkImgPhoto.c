@@ -1194,9 +1194,6 @@ ImgPhotoCmd(
 
 	switch ((enum transOptions) index) {
 	case PHOTO_TRANS_GET: {
-	    XRectangle testBox;
-	    TkRegion testRegion;
-
 	    if (objc != 5) {
 		Tcl_WrongNumArgs(interp, 3, objv, "x y");
 		return TCL_ERROR;
@@ -1215,19 +1212,9 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 
-	    testBox.x = x;
-	    testBox.y = y;
-	    testBox.width = 1;
-	    testBox.height = 1;
-	    /* What a way to do a test! */
-	    testRegion = TkCreateRegion();
-	    TkUnionRectWithRegion(&testBox, testRegion, testRegion);
-	    TkIntersectRegion(testRegion, modelPtr->validRegion, testRegion);
-	    TkClipBox(testRegion, &testBox);
-	    TkDestroyRegion(testRegion);
+	    pixelPtr = modelPtr->pix32 + (y * modelPtr->width + x) * 4;
 
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		    testBox.width==0 && testBox.height==0));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(pixelPtr[3] == 0));
 	    return TCL_OK;
 	}
 
