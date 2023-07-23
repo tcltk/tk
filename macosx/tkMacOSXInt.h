@@ -178,7 +178,6 @@ MODULE_SCOPE TkMacOSXEmbedHandler *tkMacOSXEmbedHandler;
 MODULE_SCOPE void TkMacOSXDefaultStartupScript(void);
 MODULE_SCOPE void TkpClipDrawableToRect(Display *display, Drawable d, int x,
 	int y, int width, int height);
-MODULE_SCOPE void TkpShiftButton(NSButton *button, NSPoint delta);
 MODULE_SCOPE Bool TkTestLogDisplay(Drawable drawable);
 
 /*

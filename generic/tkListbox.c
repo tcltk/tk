@@ -317,26 +317,23 @@ static const Tk_OptionSpec optionSpecs[] = {
  */
 
 static const Tk_OptionSpec itemAttrOptionSpecs[] = {
-    {TK_OPTION_BORDER, "-background", "background", "Background",
+    {TK_OPTION_BORDER, "-background", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, border),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
-     DEF_LISTBOX_BG_MONO, 0},
+     TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
      NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
      NULL, 0, -1, 0, "-foreground", 0},
-    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
+    {TK_OPTION_COLOR, "-foreground", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, fgColor),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
-    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, selBorder),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
-     DEF_LISTBOX_SELECT_MONO, 0},
-    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, selFgColor),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
-     DEF_LISTBOX_SELECT_FG_MONO, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
 /*
@@ -1280,8 +1277,6 @@ ListboxXviewSubCmd(
 	ChangeListboxOffset(listPtr, index*listPtr->xScrollUnit);
     } else {
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
-	case TK_SCROLL_ERROR:
-	    return TCL_ERROR;
 	case TK_SCROLL_MOVETO:
 	    offset = (int) (fraction*listPtr->maxWidth + 0.5);
 	    break;
@@ -1297,6 +1292,8 @@ ListboxXviewSubCmd(
 	case TK_SCROLL_UNITS:
 	    offset = listPtr->xOffset + count*listPtr->xScrollUnit;
 	    break;
+	default:
+	    return TCL_ERROR;
 	}
 	ChangeListboxOffset(listPtr, offset);
     }
@@ -1367,7 +1364,6 @@ ListboxYviewSubCmd(
 	case TK_SCROLL_UNITS:
 	    index = listPtr->topIndex + count;
 	    break;
-	case TK_SCROLL_ERROR:
 	default:
 	    return TCL_ERROR;
 	}

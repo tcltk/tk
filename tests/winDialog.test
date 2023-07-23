@@ -118,7 +118,7 @@ test winDialog-1.1 {Tk_ChooseColorObjCmd} -constraints {
     then {
         Click cancel
     }
-} -result {0}
+} -result 0
 test winDialog-1.2 {Tk_ChooseColorObjCmd} -constraints {
     testwinevent
 } -body {
@@ -229,7 +229,7 @@ test winDialog-5.1 {GetFileName: no arguments} -constraints {
     then {
         Click cancel
     }
-} -result {0}
+} -result 0
 test winDialog-5.2 {GetFileName: one argument} -constraints {
     nt
 } -body {
@@ -242,7 +242,7 @@ test winDialog-5.3 {GetFileName: many arguments} -constraints {
     then {
         Click cancel
     }
-} -result {0}
+} -result 0
 test winDialog-5.4 {GetFileName: Tcl_GetIndexFromObj() != TCL_OK} -constraints {
     nt
 } -body {
@@ -259,7 +259,7 @@ test winDialog-5.5 {GetFileName: Tcl_GetIndexFromObj() == TCL_OK} -constraints {
     # https://core.tcl-lang.org/tk/tktview/4a0451f5291b3c9168cc560747dae9264e1d2ef6
     # $x is expected to be empty
     append x $y
-} -result {0}
+} -result 0
 test winDialog-5.6 {GetFileName: valid option, but missing value} -constraints {
     nt
 } -body {
@@ -741,7 +741,7 @@ test winDialog-5.16 {GetFileName: parent} -constraints {
         destroy .t
     }
     return $x
-} -result {1}
+} -result 1
 test winDialog-5.17 {GetFileName: title} -constraints {
     nt testwinevent
 } -body {
@@ -751,7 +751,7 @@ test winDialog-5.17 {GetFileName: title} -constraints {
     then {
         Click cancel
     }
-} -result {0}
+} -result 0
 if {[vista?]} {
     # In the newer file dialogs, the file type widget does not even exist
     # if no file types specified
@@ -856,7 +856,7 @@ test winDialog-5.24 {GetFileName: file types: MakeFilter() succeeds} -constraint
         Click cancel
     }
     return $x
-} -result {0}
+} -result 0
 test winDialog-5.25 {GetFileName: file types: MakeFilter() succeeds} -constraints {
     nt
 } -body {
@@ -867,7 +867,7 @@ test winDialog-5.25 {GetFileName: file types: MakeFilter() succeeds} -constraint
         Click cancel
     }
     return $x
-} -result {0}
+} -result 0
 
 
 test winDialog-6.1 {MakeFilter} -constraints {emptyTest nt} -body {}
@@ -892,7 +892,7 @@ test winDialog-9.1 {Tk_ChooseDirectoryObjCmd: no arguments} -constraints {
     }]
     # $x should be "" on a Cancel
     append x $y
-} -result {0}
+} -result 0
 test winDialog-9.2 {Tk_ChooseDirectoryObjCmd: one argument} -constraints {
     nt
 } -body {
@@ -907,7 +907,7 @@ test winDialog-9.3 {Tk_ChooseDirectoryObjCmd: many arguments} -constraints {
     then {
         Click cancel
     }
-} -result {0}
+} -result 0
 test winDialog-9.4 {Tk_ChooseDirectoryObjCmd: Tcl_GetIndexFromObj() != TCL_OK} -constraints {
     nt
 } -body {
@@ -920,7 +920,7 @@ test winDialog-9.5 {Tk_ChooseDirectoryObjCmd: Tcl_GetIndexFromObj() == TCL_OK} -
     then {
         Click cancel
     }
-} -result {0}
+} -result 0
 test winDialog-9.6 {Tk_ChooseDirectoryObjCmd: valid option, but missing value} -constraints {
     nt
 } -body {

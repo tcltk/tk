@@ -4,8 +4,8 @@
  *
  *	This is used to fix limitations within nmake and the environment.
  *
- * Copyright (c) 2002 by David Gravereaux.
- * Copyright (c) 2006 by Pat Thoyts
+ * Copyright (c) 2002 David Gravereaux.
+ * Copyright (c) 2006 Pat Thoyts
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -31,7 +31,7 @@
 #endif
 
 /* ISO hack for dumb VC++ */
-#ifdef _MSC_VER
+#if defined(_WIN32) && defined(_MSC_VER) && _MSC_VER < 1900
 #define   snprintf	_snprintf
 #endif
 
@@ -207,25 +207,25 @@ CheckForCompilerFeature(
 
     hProcess = GetCurrentProcess();
 
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&si, sizeof(STARTUPINFO));
+    memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+    memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags   = STARTF_USESTDHANDLES;
     si.hStdInput = INVALID_HANDLE_VALUE;
 
-    ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
+    memset(&sa, 0, sizeof(SECURITY_ATTRIBUTES));
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = FALSE;
 
     /*
-     * Create a non-inheritible pipe.
+     * Create a non-inheritable pipe.
      */
 
     CreatePipe(&Out.pipe, &h, &sa, 0);
 
     /*
-     * Dupe the write side, make it inheritible, and close the original.
+     * Dupe the write side, make it inheritable, and close the original.
      */
 
     DuplicateHandle(hProcess, h, hProcess, &si.hStdOutput, 0, TRUE,
@@ -343,13 +343,13 @@ CheckForLinkerFeature(
 
     hProcess = GetCurrentProcess();
 
-    ZeroMemory(&pi, sizeof(PROCESS_INFORMATION));
-    ZeroMemory(&si, sizeof(STARTUPINFO));
+    memset(&pi, 0, sizeof(PROCESS_INFORMATION));
+    memset(&si, 0, sizeof(STARTUPINFO));
     si.cb = sizeof(STARTUPINFO);
     si.dwFlags   = STARTF_USESTDHANDLES;
     si.hStdInput = INVALID_HANDLE_VALUE;
 
-    ZeroMemory(&sa, sizeof(SECURITY_ATTRIBUTES));
+    memset(&sa, 0, sizeof(SECURITY_ATTRIBUTES));
     sa.nLength = sizeof(SECURITY_ATTRIBUTES);
     sa.lpSecurityDescriptor = NULL;
     sa.bInheritHandle = TRUE;
@@ -361,7 +361,7 @@ CheckForLinkerFeature(
     CreatePipe(&Out.pipe, &h, &sa, 0);
 
     /*
-     * Dupe the write side, make it inheritible, and close the original.
+     * Dupe the write side, make it inheritable, and close the original.
      */
 
     DuplicateHandle(hProcess, h, hProcess, &si.hStdOutput, 0, TRUE,
@@ -593,7 +593,7 @@ list_free(list_item_t **listPtrPtr)
  * SubstituteFile --
  *	As windows doesn't provide anything useful like sed and it's unreliable
  *	to use the tclsh you are building against (consider x-platform builds -
- *	eg compiling AMD64 target from IX86) we provide a simple substitution
+ *	e.g. compiling AMD64 target from IX86) we provide a simple substitution
  *	option here to handle autoconf style substitutions.
  *	The substitution file is whitespace and line delimited. The file should
  *	consist of lines matching the regular expression:
@@ -619,7 +619,7 @@ SubstituteFile(
     if (fp != NULL) {
 
 	/*
-	 * Build a list of substutitions from the first filename
+	 * Build a list of substitutions from the first filename
 	 */
 
 	sp = fopen(substitutions, "rt");

@@ -4,9 +4,9 @@
  *	Contains the Macintosh implementation of the platform-independent font
  *	package interface.
  *
- * Copyright (c) 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2008-2009 Apple Inc.
+ * Copyright © 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -47,7 +47,7 @@ typedef struct {
 #define MENUITEMFONT_NAME	"menu"
 
 struct SystemFontMapEntry {
-    const ThemeFontID id;
+    ThemeFontID id;
     const char *systemName;
     const char *tkName;
     const char *tkName1;
@@ -74,7 +74,7 @@ static const struct SystemFontMapEntry systemFontMap[] = {
     ThemeFont(MiniSystem, NULL, NULL),
     { kThemeSystemFontDetail,		"systemDetailSystemFont", NULL, NULL },
     { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont", NULL, NULL },
-    { -1, NULL, NULL, NULL }
+    { (ThemeFontID)-1, NULL, NULL, NULL }
 };
 #undef ThemeFont
 
@@ -349,9 +349,9 @@ InitFont(
     nsFont = [nsFont screenFontWithRenderingMode:renderingMode];
     GetTkFontAttributesForNSFont(nsFont, faPtr);
     fmPtr = &fontPtr->font.fm;
-    fmPtr->ascent = floor([nsFont ascender] + [nsFont leading] + 0.5);
-    fmPtr->descent = floor(-[nsFont descender] + 0.5);
-    fmPtr->maxWidth = [nsFont maximumAdvancement].width;
+    fmPtr->ascent = (int)floor([nsFont ascender] + [nsFont leading] + 0.5);
+    fmPtr->descent = (int)floor(-[nsFont descender] + 0.5);
+    fmPtr->maxWidth = (int)[nsFont maximumAdvancement].width;
     fmPtr->fixed = [nsFont isFixedPitch];   /* Does not work for all fonts */
 
     /*
@@ -369,8 +369,8 @@ InitFont(
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
-    descent = floor(-bounds.origin.y + 0.5);
-    ascent = floor(bounds.size.height + bounds.origin.y + 0.5);
+    descent = (int)floor(-bounds.origin.y + 0.5);
+    ascent = (int)floor(bounds.size.height + bounds.origin.y + 0.5);
     if (ascent > fmPtr->ascent) {
 	fmPtr->ascent = ascent;
     }
@@ -614,7 +614,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -636,7 +636,7 @@ TkpGetFontFromAttributes(
     if (tkFontPtr == NULL) {
 	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
-	fontPtr = (MacFont *) tkFontPtr;
+	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
     CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
@@ -1323,6 +1323,7 @@ TkMacOSXNSFontAttributesForFont(
  *---------------------------------------------------------------------------
  */
 
+#undef TkMacOSXIsCharacterMissing
 int
 TkMacOSXIsCharacterMissing(
     TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
@@ -1365,7 +1366,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);

@@ -26,6 +26,10 @@
 #include "tkInt.h"
 #include "tkFont.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The following encoding is used in TYPE_FLAGS:
  *
@@ -509,19 +513,19 @@ Tk_InitOptions(
 
 		switch (source) {
 		case OPTION_DATABASE:
-		    sprintf(msg, "\n    (database entry for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (database entry for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		    break;
 		case SYSTEM_DEFAULT:
-		    sprintf(msg, "\n    (system default for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (system default for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		    break;
 		case TABLE_DEFAULT:
-		    sprintf(msg, "\n    (default value for \"%.50s\")",
+		    snprintf(msg, 200, "\n    (default value for \"%.50s\")",
 			    optionPtr->specPtr->optionName);
 		}
 		if (tkwin != NULL) {
-		    sprintf(msg + strlen(msg) - 1, " in widget \"%.50s\")",
+		    snprintf(msg + strlen(msg) - 1, 200 - (strlen(msg) - 1), " in widget \"%.50s\")",
 			    Tk_PathName(tkwin));
 		}
 		Tcl_AddErrorInfo(interp, msg);
@@ -619,7 +623,7 @@ DoObjConfig(
     } else {
 	oldInternalPtr = (char *) &internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & TK_OPTION_NULL_OK);
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|32 /* TCL_NULL_OK */));
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;

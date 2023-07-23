@@ -121,7 +121,13 @@ namespace eval tk {
 
 	namespace export deleteWindows
 	proc deleteWindows {} {
-	    eval destroy [winfo children .]
+	    destroy {*}[winfo children .]
+	    # This update is needed to avoid intermittent failures on macOS in unixEmbed.test
+	    # with the (GitHub Actions) CI runner.
+	    # Reason for the failures is unclear but could have to do with window ids being deleted
+	    # after the destroy command returns. The detailed mechanism of such delayed deletions
+	    # is not understood, but it appears that this update prevents the test failures.
+	    update
 	}
 
 	namespace export fixfocus
@@ -290,7 +296,7 @@ testConstraint testtext      [llength [info commands testtext]]
 testConstraint testwinevent  [llength [info commands testwinevent]]
 testConstraint testwrapper   [llength [info commands testwrapper]]
 
-# constraint to see what sort of fonts are available
+# constraints about what sort of fonts are available
 testConstraint fonts 1
 destroy .e
 entry .e -width 0 -font {Helvetica -12} -bd 1 -highlightthickness 1
@@ -309,8 +315,42 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
+# Although unexpected, some systems may have a very limited set of fonts available.
+# The following constraints happen to evaluate to false at least on one system: the
+# Github CI runner for Linux with --disable-xft, which has exactly ONE single font
+# ([font families] returns a single element: "fixed"), for which [font actual]
+# returns:
+#    -family fixed -size 9 -weight normal -slant roman -underline 0
+# and [font metrics] returns:
+#    -ascent 11 -descent 2 -linespace 13 -fixed 1
+# The following constraints are hence tailored to check exactly what is needed in the
+# tests they constrain (that is: availability of any font having the given font
+# attributes), so that these constrained tests will in fact run on all systems having
+# reasonable font dotation.
+testConstraint haveTimes12Font [expr {
+    [font actual {times 12} -size] == 12
+}]
+testConstraint haveCourier37Font [expr {
+    [font actual {-family courier -size 37} -size] == 37
+}]
+testConstraint haveTimes14BoldFont [expr {
+    ([font actual {times 14 bold} -size] == 14) &&
+    ([font actual {times 14 bold} -weight] eq "bold")
+}]
+testConstraint haveTimes12BoldItalicUnderlineOverstrikeFont [expr {
+    ([font actual {times 12 bold italic overstrike underline} -weight] eq "bold") &&
+    ([font actual {times 12 bold italic overstrike underline} -slant] eq "italic") &&
+    ([font actual {times 12 bold italic overstrike underline} -underline] eq "1") &&
+    ([font actual {times 12 bold italic overstrike underline} -overstrike] eq "1")
+}]
+set fixedFont {Courier 12}   ; # warning: must be consistent with the files using the constraint below!
+set bigFont   {Helvetica 24} ; # ditto
+testConstraint haveBigFontTwiceLargerThanTextFont [expr {
+    [font actual $fixedFont -size] * 2 <= [font actual $bigFont -size]
+}]
+unset fixedFont bigFont
 
-# constraints for the visuals available..
+# constraints for the visuals available
 testConstraint pseudocolor8 [expr {
     ([catch {
 	toplevel .t -visual {pseudocolor 8} -colormap new

@@ -151,7 +151,7 @@ TkpPrintWindowId(
 				 * the hex representation of a pointer. */
     Window window)		/* Window to be printed into buffer. */
 {
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    snprintf(buf, TCL_INTEGER_SPACE, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
 }
 
 int
@@ -770,7 +770,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XFilterEvent, /* 78 */
     XmbLookupString, /* 79 */
     TkPutImage, /* 80 */
-    0, /* 81 */
+    XSetClipRectangles, /* 81 */
     XParseColor, /* 82 */
     XCreateGC, /* 83 */
     XFreeGC, /* 84 */

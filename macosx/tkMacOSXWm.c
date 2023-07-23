@@ -5,11 +5,11 @@
  *	application and the window manager. Among other things, it implements
  *	the "wm" command and passes geometry information to the window manager.
  *
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2010 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2017-2019 Marc Culler.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2010 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2017-2019 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -342,6 +342,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     NSRect pointrect = {point, {0,0}};
     return [self convertRectToScreen:pointrect].origin;
 }
+
 - (NSPoint) tkConvertPointFromScreen: (NSPoint)point
 {
     NSRect pointrect = {point, {0,0}};
@@ -406,7 +407,7 @@ static void             RemoveTransient(TkWindow *winPtr);
     }
 }
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101200
 - (void)toggleTabBar:(id)sender
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow(self);
@@ -910,7 +911,6 @@ TkWmDeadWindow(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
     TKWindow *deadNSWindow;
-    TkWindow *dragTarget = [NSApp tkDragTarget];
 
     if (wmPtr == NULL) {
 	return;
@@ -990,9 +990,6 @@ TkWmDeadWindow(
      * state which is recorded in the NSApplication object.
      */
 
-    if (dragTarget && winPtr == TkMacOSXGetHostToplevel(dragTarget)->winPtr) {
-	[NSApp setTkDragTarget:nil];
-    }
     if (winPtr == [NSApp tkPointerWindow]) {
 	NSWindow *w;
 	NSPoint mouse = [NSEvent mouseLocation];
@@ -1177,7 +1174,8 @@ Tk_WmObjCmd(
 	WMOPT_POSITIONFROM, WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM,
 	WMOPT_STACKORDER, WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT,
 	WMOPT_WITHDRAW };
-    int index, length;
+    int index;
+    int length;
     char *argv1;
     TkWindow *winPtr;
 
@@ -1211,10 +1209,10 @@ Tk_WmObjCmd(
     }
 
     if (TkGetWindowFromObj(interp, tkwin, objv[2], (Tk_Window *) &winPtr)
-	!= TCL_OK) {
+	    != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (!Tk_IsTopLevel(winPtr)
+    if (winPtr && !Tk_IsTopLevel(winPtr)
 	    && (index != WMOPT_MANAGE) && (index != WMOPT_FORGET)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" isn't a top-level window", winPtr->pathName));
@@ -1418,7 +1416,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
 #else
 	    TKLog(@"The fullscreen attribute is ignored on this system.");
@@ -1430,7 +1428,7 @@ WmSetAttribute(
 	    return TCL_ERROR;
 	}
 	if (boolean != [macWindow isDocumentEdited]) {
-	    [macWindow setDocumentEdited:boolean];
+	    [macWindow setDocumentEdited:(BOOL)boolean];
 	}
 	break;
     case WMATT_NOTIFY:
@@ -1581,7 +1579,7 @@ WmGetAttribute(
 
 static int
 WmAttributesCmd(
-    TCL_UNUSED(Tk_Window),		/* Main window of the application. */
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
     TkWindow *winPtr,		/* Toplevel to work with */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -1717,7 +1715,8 @@ WmColormapwindowsCmd(
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     TkWindow **cmapList, *winPtr2;
-    int i, windowObjc, gotToplevel = 0;
+    int i, windowObjc;
+    int gotToplevel = 0;
     Tcl_Obj **windowObjv, *resultObj;
 
     if ((objc != 3) && (objc != 4)) {
@@ -2073,7 +2072,7 @@ WmFrameCmd(
     if (window == None) {
 	window = Tk_WindowId((Tk_Window)winPtr);
     }
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)window);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
     return TCL_OK;
 }
@@ -5792,7 +5791,8 @@ WmWinStyle(
 	{ NULL, 0 }
     };
 
-    int index, i;
+    int index;
+    int  i;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
 
     if (objc == 3) {
@@ -5916,7 +5916,13 @@ WmWinTabbingId(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 101200)
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 101200
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#else
     Tcl_Obj *result = NULL;
     NSString *idString;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -5953,8 +5959,8 @@ WmWinTabbingId(
 	}
 	return TCL_OK;
     }
-#endif
     return TCL_ERROR;
+#endif
 }
 
 /*
@@ -5995,7 +6001,13 @@ WmWinAppearance(
     int objc,			/* Number of arguments. */
     Tcl_Obj * const objv[])	/* Argument objects. */
 {
-#if MAC_OS_X_VERSION_MAX_ALLOWED > 1090
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= 1090
+    (void) interp;
+    (void) winPtr;
+    (void) objc;
+    (void) objv;
+    return TCL_OK;
+#else
     static const char *const appearanceStrings[] = {
 	"aqua", "darkaqua", "auto", NULL
     };
@@ -6055,8 +6067,6 @@ WmWinAppearance(
     }
     Tcl_SetObjResult(interp, result);
     return TCL_OK;
-#else // MAC_OS_X_VERSION_MAX_ALLOWED > 1090
-    return TCL_ERROR;
 #endif
 }
 
@@ -7203,7 +7213,7 @@ GetMaxSize(
 				 * of the window. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    NSRect *maxBounds = (NSRect*)(winPtr->display->screens->ext_data);
+    NSRect *maxBounds = (NSRect*)(ScreenOfDisplay(winPtr->display, 0)->ext_data);
 
     if (wmPtr->maxWidth > 0) {
 	*maxWidthPtr = wmPtr->maxWidth;
