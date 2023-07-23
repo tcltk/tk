@@ -3150,6 +3150,7 @@ Initialize(
     Tcl_Obj *cmd;
 
     Tcl_Obj *nameObj = NULL;
+    Tcl_Obj* appNameObj = NULL;
     Tcl_Obj *classObj = NULL;
     Tcl_Obj *displayObj = NULL;
     Tcl_Obj *colorMapObj = NULL;
@@ -3321,6 +3322,8 @@ Initialize(
 	TkpGetAppName(interp, &nameDS);
 	nameObj = Tcl_NewStringObj(Tcl_DStringValue(&nameDS),
 		Tcl_DStringLength(&nameDS));
+	appNameObj = nameObj;
+	Tcl_IncrRefCount(appNameObj);
 	Tcl_DStringFree(&nameDS);
     }
 
@@ -3485,6 +3488,10 @@ tkInit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (value) {
 	Tcl_DecrRefCount(value);
 	value = NULL;
+    }
+    if (appNameObj) {
+	Tcl_DecrRefCount(appNameObj);
+	appNameObj = NULL;
     }
     return code;
 }
