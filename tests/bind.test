@@ -36,22 +36,12 @@ proc unsetBindings {} {
 
 # move the mouse pointer away of the testing area
 # otherwise some spurious events may pollute the tests
-# also, this will procure a known grab state at startup
-# for tests mixing grabs and pointer warps
-proc pointerAway {} {
-    toplevel .top
-    wm geometry .top 50x50-50-50
-    update
-    # On KDE/Plasma _with_the_Aurorae_theme_ (at least), setting up the toplevel
-    # will not be finished right after the above 'update'. The WM still
-    # needs some time before the window is fully ready. For me 50 ms is enough,
-    # but let's wait more (it depends on computer performance).
-    after 100 ; update
-    event generate .top <Button-1> -warp 1
-    controlPointerWarpTiming
-    destroy .top
-}
-pointerAway
+toplevel .top
+wm geometry .top 50x50-50-50
+update
+event generate .top <Button-1> -warp 1
+controlPointerWarpTiming
+destroy .top
 
 test bind-1.1 {bind command} -body {
     bind
@@ -3093,7 +3083,7 @@ test bind-22.32 {HandleEventGenerate: options <Expose> -count 20} -setup {
     return $x
 } -cleanup {
     destroy .t.f
-} -result {20}
+} -result 20
 
 test bind-22.33 {HandleEventGenerate: options <Key> -count 20} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -6918,8 +6908,8 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
     global keyInfo numericalKeysym
     set result {}
     bind . <Key> {
-    	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
-    	set numericalKeysym [format "0x%x" %N]
+	set keyInfo [format "%K,0x%%X,0x%%X,%A" %N %k]
+	set numericalKeysym [format "0x%x" %N]
     }
     foreach event {
 	{<Control_L> -control}
@@ -6950,7 +6940,8 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 } -result pass
 
 test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
-    pointerAway
+    event generate {} <Motion> -warp 1 -x 50 -y 50
+    controlPointerWarpTiming
     toplevel .top
     grab release .top
     wm geometry .top 200x200+300+300
@@ -6964,17 +6955,13 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     # but let's wait more (it depends on computer performance).
     after 100 ; update
 } -body {
-    grab .top  ; # this will queue events
-    after 50
-    update
+    grab .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     controlPointerWarpTiming
     foreach {x1 y1} [winfo pointerxy .top.l] {}
     event generate {} <Motion> -warp 1 -x 50 -y 50
     controlPointerWarpTiming
-    grab release .top  ; # this will queue events
-    after 50
-    update
+    grab release .top
     event generate .top.l <Motion> -warp 1 -x 10 -y 10
     controlPointerWarpTiming
     foreach {x2 y2} [winfo pointerxy .top.l] {}
@@ -6986,6 +6973,27 @@ test bind-36.1 {pointer warp with grab on toplevel, bug [e3888d5820]} -setup {
     destroy .top
     unset x1 y1 x2 y2
 } -result 1
+
+test bind-37.1 {Promotion tables do not contain duplicate sequences, bug [43573999ca]} -body {
+    proc A {} {
+       bind .c <B1-Motion><Enter> {}
+       set myv(a) 1
+       set b [array get myv]
+       bind .c <B1-Motion><Enter> "puts Trigger"
+    }
+    pack [canvas .c]
+    bind .c <ButtonRelease-1>  "A"
+    A
+    update
+    event generate .c <Button-1>
+    event generate .c <B1-Motion>
+    event generate .c <B1-Motion>
+    event generate .c <B1-Motion>
+    event generate .c <ButtonRelease-1>
+    event generate .c <B1-Motion>
+} -cleanup {
+    destroy .c
+} -returnCodes ok -result {}  ; # shall not crash (assertion failed)
 
 # cleanup
 cleanupTests

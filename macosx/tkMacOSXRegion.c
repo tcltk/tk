@@ -29,7 +29,7 @@ static int totalRegionRetainCount = 0;
  *
  * TkCreateRegion --
  *
- *	Implements the equivelent of the X window function XCreateRegion. See
+ *	Implements the equivalent of the X window function XCreateRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -45,8 +45,8 @@ TkRegion
 TkCreateRegion(void)
 {
     TkRegion region = (TkRegion) HIShapeCreateMutable();
-    DebugLog("Created region: total regions = %d\n", ++totalRegions);
-    RetainRegion(region);
+    DebugLog("Created region: total regions = %d, total count is %d\n",
+	++totalRegions, ++totalRegionRetainCount);
     return region;
 }
 
@@ -55,7 +55,7 @@ TkCreateRegion(void)
  *
  * TkDestroyRegion --
  *
- *	Implements the equivelent of the X window function XDestroyRegion. See
+ *	Implements the equivalent of the X window function XDestroyRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -139,7 +139,7 @@ TkSubtractRegion(
  *
  * TkUnionRectWithRegion --
  *
- *	Implements the equivelent of the X window function
+ *	Implements the equivalent of the X window function
  *	XUnionRectWithRegion. See Xwindow documentation for more details.
  *
  * Results:
@@ -201,7 +201,7 @@ TkMacOSXIsEmptyRegion(
  *
  * TkRectInRegion --
  *
- *	Implements the equivelent of the X window function XRectInRegion. See
+ *	Implements the equivalent of the X window function XRectInRegion. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -237,7 +237,7 @@ TkRectInRegion(
  *
  * TkClipBox --
  *
- *	Implements the equivelent of the X window function XClipBox. See
+ *	Implements the equivalent of the X window function XClipBox. See
  *	Xwindow documentation for more details.
  *
  * Results:
@@ -473,6 +473,30 @@ XOffsetRegion(
 {
     ChkErr(HIShapeOffset, (HIMutableShapeRef) r, dx, dy);
     return Success;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef)dst, (HIShapeRef)src);
 }
 
 /*

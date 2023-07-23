@@ -171,7 +171,7 @@ AppendSystemError(
 	if (error == ERROR_CALL_NOT_IMPLEMENTED) {
 	    strcpy(msgBuf, "function not supported under Win32s");
 	} else {
-	    sprintf(msgBuf, "unknown error: %ld", error);
+	    snprintf(msgBuf, sizeof(msgBuf), "unknown error: %ld", error);
 	}
 	msg = msgBuf;
     } else {
@@ -198,7 +198,7 @@ AppendSystemError(
 	msg = msgPtr;
     }
 
-    sprintf(id, "%ld", error);
+    snprintf(id, sizeof(id), "%ld", error);
     Tcl_SetErrorCode(interp, "WINDOWS", id, msg, NULL);
     Tcl_AppendToObj(resultPtr, msg, length);
     Tcl_SetObjResult(interp, resultPtr);
@@ -402,14 +402,14 @@ TestwineventObjCmd(
 	    wParam = MAKEWPARAM(id, 0);
 	    lParam = (LPARAM)child;
 	}
-	sprintf(buf, "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
+	snprintf(buf, sizeof(buf), "%d", (int) SendMessageA(hwnd, message, wParam, lParam));
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
 	break;
     }
     default: {
 	char buf[TCL_INTEGER_SPACE];
 
-	sprintf(buf, "%d",
+	snprintf(buf, sizeof(buf), "%d",
 		(int) SendDlgItemMessageA(hwnd, id, message, wParam, lParam));
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(buf, -1));
 	break;

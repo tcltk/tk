@@ -86,7 +86,9 @@
 # endif
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 2)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#   define TKFLEXARRAY
+#elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
@@ -1090,10 +1092,11 @@ extern "C" {
 #endif
 
 /*
- * Themed widget set init function:
+ * Themed widget set init function, and handler called when Tk is destroyed.
  */
 
 MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
+MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
 
 /*
  * Internal functions shared among Tk modules but not exported to the outside
@@ -1333,6 +1336,8 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(TkRegion clipRegion);
 #endif
+
+MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class

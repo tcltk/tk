@@ -15,6 +15,10 @@
 #include "tkText.h"
 #include "default.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Index to use to select last character in line (very large integer):
  */
@@ -1128,7 +1132,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return sprintf(string, "%d.%d",
+    return snprintf(string, TK_POS_CHARS, "%d.%d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 

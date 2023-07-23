@@ -19,7 +19,7 @@ testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowi
 # Starting with macOS Ventura it became necessary to wait for windows to be restacked
 # or to be raised after creation.
 
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     proc restackDelay {} {
 	after 100;
     }
@@ -429,7 +429,7 @@ test unixWm-9.3 {TkWmMapWindow procedure, iconic windows} unix {
     wm geom .t +0+0
     wm iconify .t
     winfo ismapped .t
-} {0}
+} 0
 test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     destroy .t
     toplevel .t -width 100 -height 50 -bg blue
@@ -437,14 +437,14 @@ test unixWm-9.4 {TkWmMapWindow procedure, icon windows} unix {
     wm iconwindow . .t
     update
     set result [winfo ismapped .t]
-} {0}
+} 0
 test unixWm-9.5 {TkWmMapWindow procedure, normal windows} unix {
     destroy .t
     toplevel .t -width 200 -height 20
     wm geom .t +0+0
     update
     winfo ismapped .t
-} {1}
+} 1
 
 test unixWm-10.1 {TkWmDeadWindow procedure, canceling UpdateGeometry idle handler} unix {
     destroy .t
@@ -678,7 +678,7 @@ test unixWm-18.1 {Tk_WmCmd procedure, "frame" option} unix {
 } {1 {wrong # args: should be "wm frame window"}}
 test unixWm-18.2 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
     expr [wm frame .t] == [winfo id .t]
-} {0}
+} 0
 test unixWm-18.3 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
     destroy .t2
     toplevel .t2
@@ -688,7 +688,7 @@ test unixWm-18.3 {Tk_WmCmd procedure, "frame" option} {unix nonPortable} {
     set result [expr [wm frame .t2] == [winfo id .t2]]
     destroy .t2
     set result
-} {1}
+} 1
 
 test unixWm-19.1 {Tk_WmCmd procedure, "geometry" option} unix {
     list [catch {wm geometry .t 12 13} msg] $msg
@@ -799,7 +799,7 @@ test unixWm-21.4 {Tk_WmCmd procedure, "group" option, make window exist} {unix t
     set result [expr [testwrapper .t2] - [lindex $hints 8]]
     destroy .t2
     set result
-} {0}
+} 0
 test unixWm-21.5 {Tk_WmCmd procedure, "group" option, create leader wrapper} {unix testwrapper} {
     destroy .t2
     destroy .t3
@@ -829,7 +829,7 @@ test unixWm-22.2 {Tk_WmCmd procedure, "iconbitmap" option} {unix testwrapper} {
 	    WM_HINTS] 0]]]
     lappend result [wm iconbitmap .t] $bit
 } {{} questhead 0x4 {} 0x0}
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set result_22_3 {0 {}}
 } else {
     set result_22_3 {1 {bitmap "bad-bitmap" not defined}}
@@ -878,7 +878,7 @@ test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu fail
     set result [winfo ismapped .t2]
     destroy .t2
     set result
-} {0}
+} 0
 test unixWm-23.6 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t2
     toplevel .t2
@@ -1240,7 +1240,7 @@ test unixWm-34.2 {Tk_WmCmd procedure, "sizefrom" option} {unix testwrapper} {
 test unixWm-34.3 {Tk_WmCmd procedure, "sizefrom" option} unix {
     list [catch {wm sizefrom .t none} msg]  $msg
 } {1 {bad argument "none": must be program or user}}
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set result_35_1 {1 {bad argument "1": must be normal, iconic, withdrawn, or zoomed}}
 } else {
     set result_35_1 {1 {bad argument "1": must be normal, iconic, or withdrawn}}
@@ -1754,7 +1754,7 @@ test unixWm-48.11 {ParseGeometry procedure} unix {
 } {0}
 test unixWm-48.12 {ParseGeometry procedure} unix {
     catch {wm geometry .t +30+-10}
-} {0}
+} 0
 test unixWm-48.13 {ParseGeometry procedure, resize causes window to move} unix {
     destroy .t
     toplevel .t -width 200 -height 200
@@ -1802,7 +1802,7 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 
 deleteWindows
 wm withdraw .
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     # Modern mac windows have no border.
     set result_50_1 {{} {} .t .t .t2 {} .t2 .t .t}
 } else {
@@ -1842,6 +1842,7 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
     tkwait visibility .t2
     wm overrideredirect .t2 1
     wm geom .t2 +200+200
+    update
     raise .t2
     restackDelay
     set x [winfo rootx .t]
@@ -1880,7 +1881,7 @@ test unixWm-50.3 {
         set y [winfo rooty .x]
     }
     set result [list [child eval {winfo containing [expr $x - 1]  [expr $y + 50]}] \
-	       	     [child eval {winfo containing $x [expr $y + 50]}]]
+	[child eval {winfo containing $x [expr $y + 50]}]]
     interp delete child
     set x [winfo rootx .t]
     set y [winfo rooty .t]
@@ -1983,15 +1984,18 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUb
     destroy .t2
     toplevel .t -width 200 -height 200 -bg green
     tkwait visibility .t
+    update
     wm geometry .t +0+0
-    update idletasks
+    update
     toplevel .t2 -width 200 -height 200 -bg red
     tkwait visibility .t2
+    update
     wm geometry .t2 +0+0
+    update
     restackDelay
     set result [list [winfo containing 100 100]]
     wm iconify .t2
-    update idletasks
+    update
     lappend result [winfo containing 100 100]
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
@@ -2118,7 +2122,7 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     lappend result [winfo containing $x $y]
 } {.t2 .t .t2}
 # The mac won't put an overrideredirect window above the root,
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     wm withdraw .
 }
 test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} unix {
@@ -2147,7 +2151,7 @@ test unixWm-51.9 {TkWmRestackToplevel procedure, other window overrideredirect} 
     restackDelay
     lappend result [winfo containing $x $y]
 } {.t2 .t3}
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     wm deiconify .
 }
 test unixWm-51.10 {TkWmRestackToplevel procedure, don't move window that's already in the right place} unix {
@@ -2267,7 +2271,7 @@ test unixWm-54.2 {TkpMakeMenuWindow procedure, setting override_redirect} {unix 
     set result [wm overrideredirect .m]
     destroy .m
     set result
-} {1}
+} 1
 
 # No tests for TkGetPointerCoords, CreateWrapper, or GetMaxSize.
 
@@ -2525,7 +2529,7 @@ test unixWm-59.3 {exit processing} unix {
 # NOTE: since [wm attributes] is not guaranteed to have any effect,
 # the only thing we can really test here is the syntax.
 #
-if {[tk windowingsystem] == "aqua"} {
+if {[tk windowingsystem] eq "aqua"} {
     set result_60_1 {-alpha 1.0 -fullscreen 0 -modified 0 -notify 0\
 			 -titlepath {} -topmost 0 -transparent 0\
 			 -type unsupported}
