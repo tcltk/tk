@@ -110,7 +110,7 @@ namespace eval ::tk::systray {
 	}
     }
 
-    namespace export create configure destroy
+    namespace export create configure destroy exists
     namespace ensemble create
 }
 
@@ -387,6 +387,11 @@ proc ::tk::systray::destroy {} {
     set _created 0
     set _current {}
     return
+}
+
+proc tk::systray::exists {} {
+    variable _created
+    return $_created
 }
 
 # Check systray options
