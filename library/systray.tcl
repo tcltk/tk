@@ -362,7 +362,6 @@ proc ::tk::systray::configure {args} {
     }
 }
 
-
 # Remove the systray icon.
 proc ::tk::systray::destroy {} {
     variable _created
@@ -389,6 +388,7 @@ proc ::tk::systray::destroy {} {
     return
 }
 
+# Check systray icon existence.
 proc tk::systray::exists {} {
     variable _created
     return $_created
