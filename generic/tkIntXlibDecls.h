@@ -282,7 +282,7 @@ EXTERN int		TkPutImage(unsigned long *colors, int ncolors,
 				int dest_x, int dest_y, unsigned int width,
 				unsigned int height);
 /* 81 */
-EXTERN int		XSetClipRectangles(Display * display, GC gc,
+EXTERN int		XSetClipRectangles(Display *display, GC gc,
 				int clip_x_origin, int clip_y_origin,
 				XRectangle rectangles[], int n, int ordering);
 /* 82 */
@@ -986,7 +986,7 @@ typedef struct TkIntXlibStubs {
     Bool (*xFilterEvent) (XEvent *x, Window w); /* 78 */
     int (*xmbLookupString) (XIC xi, XKeyPressedEvent *xk, char *c, int i, KeySym *k, Status *s); /* 79 */
     int (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 80 */
-    int (*xSetClipRectangles) (Display* display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 81 */
+    int (*xSetClipRectangles) (Display *display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 81 */
     Status (*xParseColor) (Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr); /* 82 */
     GC (*xCreateGC) (Display *display, Drawable d, unsigned long valuemask, XGCValues *values); /* 83 */
     int (*xFreeGC) (Display *display, GC gc); /* 84 */
