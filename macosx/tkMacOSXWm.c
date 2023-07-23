@@ -1972,7 +1972,7 @@ WmGetAttribute(
 	}
 	break;
     case WMATT_FULLSCREEN:
-	result = Tcl_NewWideIntObj([macWindow styleMask] & NSFullScreenWindowMask);
+	result = Tcl_NewBooleanObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
     case WMATT_ISDARK:
 	result = Tcl_NewBooleanObj(TkMacOSXInDarkMode((Tk_Window)winPtr));
