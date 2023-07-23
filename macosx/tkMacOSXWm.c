@@ -1696,7 +1696,7 @@ WmSetAttribute(
 	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean != ((wmPtr->flags & WM_FULLSCREEN) != 0)) {
+	if (boolean != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
 #else
@@ -1972,7 +1972,7 @@ WmGetAttribute(
 	}
 	break;
     case WMATT_FULLSCREEN:
-	result = Tcl_NewWideIntObj((wmPtr->flags & WM_FULLSCREEN) != 0);
+	result = Tcl_NewWideIntObj([macWindow styleMask] & NSFullScreenWindowMask);
 	break;
     case WMATT_ISDARK:
 	result = Tcl_NewBooleanObj(TkMacOSXInDarkMode((Tk_Window)winPtr));
@@ -3190,7 +3190,7 @@ WmIconphotoCmd(
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv,
-			"window ?-default? image1 ?image2 ...?");
+			 "window ?-default? image1 ?image2 ...?");
 	return TCL_ERROR;
     }
 
