@@ -14,6 +14,8 @@ systray \- Creates an icon display in the platform-specific system tray.
 .sp
 \fBtk systray configure \fI?option? ?value option value ...?\fR
 .sp
+\fBtk systray exists\fR
+.sp
 \fBtk systray destroy\fR
 .BE
 .BE
@@ -26,9 +28,12 @@ bound to <Button-1> and <Button-3>.
 .PP
 The \fBtk systray configure\fR command sets one or more options of the systray
 icon. Configurable options are the same as for the \fBcreate\fR subcommand. When
-a single option name is given, the command returns the current valus of this
+a single option name is given, the command returns the current value of this
 option. When no option is given this command returns the list of all options and
 their current value.
+.PP
+The \fBtk systray exists\fR command checks whether a systray icon was created.
+It returns a boolean.
 .PP
  The \fBtk systray destroy\fR command removes the icon from display and
 deallocates it.
