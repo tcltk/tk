@@ -116,6 +116,7 @@ namespace eval ::tk::systray {
 
 
 # Pure-Tcl system notification window for use if native implementation not available.
+# This is supposed to happen only on X11 when libnotify is not present.
 namespace eval ::tk::sysnotify:: {
     # These defaults mimics the default behaviour of gnome and xfce
     # notifications.
@@ -128,9 +129,6 @@ namespace eval ::tk::sysnotify:: {
     option add *Sysnotify.alpha      0.85
 
     proc _notifywindow {title msg} {
-	# TODO: properly define these two gaps:
-	# 	X gap from the right screen edge
-	# 	Y gap from the top screen edge
 
 	# cleanup any previous notify window and create a new one
 	set w ._notify
