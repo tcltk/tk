@@ -1296,7 +1296,7 @@ readCleanup:
 	     */
 	    pixelPtr = modelPtr->pix32 + (y * modelPtr->width + x) * 4;
 	    if (boolMode) {
-		Tcl_SetObjResult(interp, Tcl_NewBooleanObj( ! pixelPtr[3]));
+		Tcl_SetObjResult(interp, Tcl_NewBooleanObj(pixelPtr[3] == 0));
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pixelPtr[3]));
 	    }

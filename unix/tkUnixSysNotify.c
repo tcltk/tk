@@ -216,6 +216,7 @@ SysNotify_Init(
     }
     ln_fns.nopen++;
     Tcl_MutexUnlock(&ln_mutex);
+    if (!notify_init) return TCL_OK;
 
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyCmd,
 	    interp, SysNotifyDeleteCmd);

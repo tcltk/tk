@@ -2317,10 +2317,8 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
     tcl_flags=""
     SC_TCL_EARLY_FLAG(_ISOC99_SOURCE,[#include <stdlib.h>],
 	[char *p = (char *)strtoll; char *q = (char *)strtoull;])
-    if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-	SC_TCL_EARLY_FLAG(_FILE_OFFSET_BITS,[#include <sys/stat.h>],
-	    [switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }],64)
-    fi
+    SC_TCL_EARLY_FLAG(_FILE_OFFSET_BITS,[#include <sys/stat.h>],
+	[switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }],64)
     SC_TCL_EARLY_FLAG(_LARGEFILE64_SOURCE,[#include <sys/stat.h>],
 	[struct stat64 buf; int i = stat64("/", &buf);])
     if test "x${tcl_flags}" = "x" ; then
@@ -2365,22 +2363,20 @@ AC_DEFUN([SC_TCL_64BIT_FLAGS], [
     else
 	AC_MSG_RESULT([no])
 	# Now check for auxiliary declarations
-    if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-	    AC_CACHE_CHECK([for 64-bit time_t], tcl_cv_time_t_64,[
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],
-		    [[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
-		    [tcl_cv_time_t_64=yes],[tcl_cv_time_t_64=no])])
-	    if test "x${tcl_cv_time_t_64}" = "xno" ; then
-		# Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
-		# which SC_TCL_EARLY_FLAGS has defined if necessary.
-		AC_CACHE_CHECK([if _TIME_BITS=64 enables 64-bit time_t], tcl_cv__time_bits,[
-		    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _TIME_BITS 64
+	AC_CACHE_CHECK([for 64-bit time_t], tcl_cv_time_t_64,[
+	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],
+		[[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		[tcl_cv_time_t_64=yes],[tcl_cv_time_t_64=no])])
+	if test "x${tcl_cv_time_t_64}" = "xno" ; then
+	    # Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
+	    # which SC_TCL_EARLY_FLAGS has defined if necessary.
+	    AC_CACHE_CHECK([if _TIME_BITS=64 enables 64-bit time_t], tcl_cv__time_bits,[
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _TIME_BITS 64
 #include <sys/types.h>]],
-			[[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
-			[tcl_cv__time_bits=yes],[tcl_cv__time_bits=no])])
-		if test "x${tcl_cv__time_bits}" = "xyes" ; then
-		    AC_DEFINE(_TIME_BITS, 64, [_TIME_BITS=64 enables 64-bit time_t.])
-		fi
+		    [[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		    [tcl_cv__time_bits=yes],[tcl_cv__time_bits=no])])
+	    if test "x${tcl_cv__time_bits}" = "xyes" ; then
+		AC_DEFINE(_TIME_BITS, 64, [_TIME_BITS=64 enables 64-bit time_t.])
 	    fi
 	fi
 
