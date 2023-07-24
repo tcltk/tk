@@ -2152,8 +2152,8 @@ GetObjectForOption(
 	    objPtr = custom->getProc(custom->clientData, tkwin, (char *)recordPtr,
 		    optionPtr->specPtr->internalOffset);
 	    break;
-        }
-        default:
+	}
+	default:
 	    Tcl_Panic("bad option type in GetObjectForOption");
 	}
     }
