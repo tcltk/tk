@@ -2068,8 +2068,6 @@ dnl # preprocessing tests use only CPPFLAGS.
 	CFLAGS_NOLTO=""
     fi
 
-    AC_CHECK_FUNCS([posix_spawnp])
-
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
     # would use TCL_DL_LIBS instead of TCL_LIBS.
