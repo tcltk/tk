@@ -141,7 +141,7 @@ TkpCopyRegion(
     TkRegion src)
 {
     /* XUnionRegion() in Xlib is optimized to detect copying */
-    XUnionRegion(src, src, dst);
+    XUnionRegion((Region)src, (Region)src, (Region)dst);
 }
 
 /*
