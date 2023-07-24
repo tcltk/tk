@@ -6406,7 +6406,6 @@ printf "%s\n" "#define _ISOC99_SOURCE 1" >>confdefs.h
 	tcl_flags="$tcl_flags _ISOC99_SOURCE"
     fi
 
-    if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
 
     if test ${tcl_cv_flag__file_offset_bits+y}
 then :
@@ -6457,7 +6456,6 @@ printf "%s\n" "#define _FILE_OFFSET_BITS 64" >>confdefs.h
 	tcl_flags="$tcl_flags _FILE_OFFSET_BITS"
     fi
 
-    fi
 
     if test ${tcl_cv_flag__largefile64_source+y}
 then :
@@ -6559,15 +6557,14 @@ printf "%s\n" "yes" >&6; }
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
 	# Now check for auxiliary declarations
-    if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for 64-bit time_t" >&5
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for 64-bit time_t" >&5
 printf %s "checking for 64-bit time_t... " >&6; }
 if test ${tcl_cv_time_t_64+y}
 then :
   printf %s "(cached) " >&6
 else $as_nop
 
-		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+	    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #include <sys/types.h>
 int
@@ -6588,17 +6585,17 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $tcl_cv_time_t_64" >&5
 printf "%s\n" "$tcl_cv_time_t_64" >&6; }
-	    if test "x${tcl_cv_time_t_64}" = "xno" ; then
-		# Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
-		# which SC_TCL_EARLY_FLAGS has defined if necessary.
-		{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if _TIME_BITS=64 enables 64-bit time_t" >&5
+	if test "x${tcl_cv_time_t_64}" = "xno" ; then
+	    # Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
+	    # which SC_TCL_EARLY_FLAGS has defined if necessary.
+	    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking if _TIME_BITS=64 enables 64-bit time_t" >&5
 printf %s "checking if _TIME_BITS=64 enables 64-bit time_t... " >&6; }
 if test ${tcl_cv__time_bits+y}
 then :
   printf %s "(cached) " >&6
 else $as_nop
 
-		    cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 #define _TIME_BITS 64
 #include <sys/types.h>
@@ -6620,11 +6617,10 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam conftest.$ac_ext
 fi
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $tcl_cv__time_bits" >&5
 printf "%s\n" "$tcl_cv__time_bits" >&6; }
-		if test "x${tcl_cv__time_bits}" = "xyes" ; then
+	    if test "x${tcl_cv__time_bits}" = "xyes" ; then
 
 printf "%s\n" "#define _TIME_BITS 64" >>confdefs.h
 
-		fi
 	    fi
 	fi
 
