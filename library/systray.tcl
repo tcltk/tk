@@ -195,6 +195,7 @@ namespace eval ::tk::sysnotify:: {
     # Fade the window into view.
     proc _fadeIn {w} {
 	variable defaults
+        if {![winfo exists $w]} {return}
 	if {[set alpha  [option get $w alpha ""]] eq ""} {
 	    set alpha [dict get $defaults alpha]
 	}
@@ -212,6 +213,7 @@ namespace eval ::tk::sysnotify:: {
 
     # Fade out and destroy window.
     proc _fadeOut {w} {
+        if {![winfo exists $w]} {return}
 	set before [wm attributes $w -alpha]
 	set new    [expr { $before - 0.02 }]
 	wm attributes $w -alpha $new
