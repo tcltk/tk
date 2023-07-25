@@ -118,22 +118,41 @@ namespace eval ::tk::systray {
 # Pure-Tcl system notification window for use if native implementation not available.
 # This is supposed to happen only on X11 when libnotify is not present.
 namespace eval ::tk::sysnotify:: {
-    # These defaults mimics the default behaviour of gnome and xfce
-    # notifications.
-    # These options are meant to be "public"
-    option add *Sysnotify.padX       3
-    option add *Sysnotify.padY       3
-    option add *Sysnotify.background gray15
-    option add *Sysnotify.foreground white
-    option add *Sysnotify.delay      10000
-    option add *Sysnotify.alpha      0.85
+    # These defaults mimic the default behaviour of gnome and xfce notifications.
+    # These are hardcoded defaults.
+    variable defaults {
+	padX            3
+	padY            3
+	background      gray15
+	foreground      white
+	delay           10000
+	alpha           0.85
+    }
+    # These options are meant to be "public". The user could tinker with
+    # these values to adjust the system notification appearance/behaviour.
+    option add *Sysnotify.padX       [dict get $defaults padX]
+    option add *Sysnotify.padY       [dict get $defaults padY]
+    option add *Sysnotify.background [dict get $defaults background]
+    option add *Sysnotify.foreground [dict get $defaults foreground]
+    option add *Sysnotify.delay      [dict get $defaults delay]
+    option add *Sysnotify.alpha      [dict get $defaults alpha]
 
     proc _notifywindow {title msg} {
+	variable defaults
 
 	# cleanup any previous notify window and create a new one
 	set w ._notify
 	_notifyDestroy $w
 	toplevel $w -class Sysnotify
+
+	# read the option database to check out whether the user has set
+	# some options; fall back to our hardcoded defaults otherwise
+	dict for {option value} [dict remove $defaults alpha] {
+	    set $option [option get $w $option ""]
+	    if {[set $option] eq ""} {
+		set $option $value
+	    }
+	}
 
 	set xpos [tk::ScaleNum 16]
 	set ypos [tk::ScaleNum 48]
@@ -146,11 +165,11 @@ namespace eval ::tk::sysnotify:: {
 	option add *Sysnotify.Label.justify    left
 	option add *Sysnotify.Label.wrapLength [expr {[winfo screenwidth .] / 4}]
 	foreach option {padX padY foreground background} {
-	    option add *Sysnotify.Label.$option [option get $w $option ""]
+	    option add *Sysnotify.Label.$option [set $option]
 	}
 	set icon ::tk::icons::information
-	set width [expr {[image width $icon] + 2*[option get $w padX ""]}]
-	set height [expr {[image height $icon] + 2*[option get $w padY ""]}]
+	set width [expr {[image width $icon] + 2 * $padX}]
+	set height [expr {[image height $icon] + 2 * $padY}]
 	label $w.icon -image $icon -width $width -height $height -anchor c
 	label $w.title -text $title -font TkHeadingFont
 	label $w.message -text [_filterMarkup $msg] -font TkTooltipFont
@@ -169,14 +188,17 @@ namespace eval ::tk::sysnotify:: {
 	bind Sysnotify <Enter> [namespace code {_onEnter %W}]
 	bind Sysnotify <Leave> [namespace code {_onLeave %W}]
 	bind $w <Button-1> [namespace code [list _notifyDestroy $w]]
-	after [option get $w delay ""] [namespace code [list _fadeOut $w]]
+	after $delay [namespace code [list _fadeOut $w]]
 	return
     }
 
     # Fade the window into view.
     proc _fadeIn {w} {
+	variable defaults
+	if {[set alpha  [option get $w alpha ""]] eq ""} {
+	    set alpha [dict get $defaults alpha]
+	}
 	raise $w
-	set alpha  [option get $w alpha ""]
 	set before [wm attributes $w -alpha]
 	set new    [expr { min($alpha, $before + 0.10) }]
 	wm attributes $w -alpha $new
@@ -213,8 +235,15 @@ namespace eval ::tk::sysnotify:: {
     }
 
     proc _onLeave {w} {
-	wm attributes $w -alpha [option get $w alpha ""]
-	after [option get $w delay ""] [namespace code [list _fadeOut $w]]
+	variable defaults
+	if {[set alpha [option get $w alpha ""]] eq ""} {
+	    set alpha [dict get $defaults alpha]
+	}
+	if {[set delay [option get $w delay ""]] eq ""} {
+	    set delay [dict get $defaults delay]
+	}
+	wm attributes $w -alpha $alpha
+	after $delay [namespace code [list _fadeOut $w]]
     }
 
     proc _cancelFading {w} {
