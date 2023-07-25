@@ -1,4 +1,4 @@
-# README:  Tk
+# README:   Tk
 
 This is the **Tk 8.7a6** source distribution.
 
