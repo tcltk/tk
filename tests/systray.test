@@ -193,6 +193,23 @@ test systray-16 {systray icon creation from a bitmap, on Linux and macOS only} -
     image delete cross
 } -result {}
 
+test systray-17 {systray icon existence check} -setup {
+    catch {tk systray destroy}
+} -body {
+    tk systray exists
+} -result {0}
+
+test systray-18 {systray icon existence check} -setup {
+    catch {tk systray destroy}
+    image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
+} -body {
+    tk systray create -image _book -text "Systray test"
+    tk systray exists
+} -cleanup {
+    tk systray destroy
+    image delete _book
+} -result {1}
+
 
 test sysnotify-1 {system notification popup} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
