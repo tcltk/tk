@@ -116,62 +116,159 @@ namespace eval ::tk::systray {
 
 
 # Pure-Tcl system notification window for use if native implementation not available.
+# This is supposed to happen only on X11 when libnotify is not present.
 namespace eval ::tk::sysnotify:: {
+    # These defaults mimic the default behaviour of gnome and xfce notifications.
+    # These are hardcoded defaults.
+    variable defaults {
+	padX            3
+	padY            3
+	background      gray15
+	foreground      white
+	delay           10000
+	alpha           0.85
+    }
+    # These options are meant to be "public". The user could tinker with
+    # these values to adjust the system notification appearance/behaviour.
+    option add *Sysnotify.padX       [dict get $defaults padX]
+    option add *Sysnotify.padY       [dict get $defaults padY]
+    option add *Sysnotify.background [dict get $defaults background]
+    option add *Sysnotify.foreground [dict get $defaults foreground]
+    option add *Sysnotify.delay      [dict get $defaults delay]
+    option add *Sysnotify.alpha      [dict get $defaults alpha]
 
     proc _notifywindow {title msg} {
-	catch {destroy ._notify}
-	set w [toplevel ._notify]
-	if {[tk windowingsystem] eq "aqua"} {
-	    ::tk::unsupported::MacWindowStyle style $w utility {hud closeBox resizable}
-	    wm title $w "Alert"
-	}
-	if {[tk windowingsystem] eq "win32"} {
-	    wm attributes $w -toolwindow true
-	    wm title $w "Alert"
-	}
-	label $w.l -bg gray30 -fg white -image ::tk::icons::information
-	pack $w.l -fill both -expand yes -side left
-	message $w.message -aspect 150 -bg gray30 -fg white -text $title\n\n$msg -width 210p
-	pack $w.message -side right -fill both -expand yes
-	if {[tk windowingsystem] eq "x11"} {
-	    wm overrideredirect $w true
-	}
-	wm attributes $w -alpha 0.0
-	set xpos [expr {[winfo screenwidth $w] - [::tk::ScaleNum 325]}]
-	wm geometry $w +$xpos+[::tk::ScaleNum 30]
-	::tk::sysnotify::_fade_in $w
-	after 3000 ::tk::sysnotify::_fade_out $w
-    }
+	variable defaults
 
-    #Fade and destroy window.
-    proc _fade_out {w} {
-	catch {
-	    set prev_degree [wm attributes $w -alpha]
-	    set new_degree [expr {$prev_degree - 0.05}]
-	    set current_degree [wm attributes $w -alpha $new_degree]
-	    if {$new_degree > 0.0 && $new_degree != $prev_degree} {
-		after 10 [list ::tk::sysnotify::_fade_out $w]
-	    } else {
-		destroy $w
+	# cleanup any previous notify window and create a new one
+	set w ._notify
+	_notifyDestroy $w
+	toplevel $w -class Sysnotify
+
+	# read the option database to check out whether the user has set
+	# some options; fall back to our hardcoded defaults otherwise
+	dict for {option value} [dict remove $defaults alpha] {
+	    set $option [option get $w $option ""]
+	    if {[set $option] eq ""} {
+		set $option $value
 	    }
 	}
+
+	set xpos [tk::ScaleNum 16]
+	set ypos [tk::ScaleNum 48]
+	# position from the "ne" corner
+	wm geometry $w -$xpos+$ypos
+	wm overrideredirect $w true
+
+	# internal options
+	option add *Sysnotify.Label.anchor     w
+	option add *Sysnotify.Label.justify    left
+	option add *Sysnotify.Label.wrapLength [expr {[winfo screenwidth .] / 4}]
+	foreach option {padX padY foreground background} {
+	    option add *Sysnotify.Label.$option [set $option]
+	}
+	set icon ::tk::icons::information
+	set width [expr {[image width $icon] + 2 * $padX}]
+	set height [expr {[image height $icon] + 2 * $padY}]
+	label $w.icon -image $icon -width $width -height $height -anchor c
+	label $w.title -text $title -font TkHeadingFont
+	label $w.message -text [_filterMarkup $msg] -font TkTooltipFont
+
+	grid $w.icon $w.title -sticky news
+	grid ^       $w.message -sticky news
+
+	bind Sysnotify <Map> [namespace code {
+	    # set the wm attribute here; it is ignored if set
+	    # before the window is mapped
+	    wm attributes %W -alpha 0.0
+	    if {[wm attributes %W -alpha] == 0.0} {
+		_fadeIn %W
+	    }
+	}]
+	bind Sysnotify <Enter> [namespace code {_onEnter %W}]
+	bind Sysnotify <Leave> [namespace code {_onLeave %W}]
+	bind $w <Button-1> [namespace code [list _notifyDestroy $w]]
+	after $delay [namespace code [list _fadeOut $w]]
+	return
     }
 
-    #Fade the window into view.
-    proc _fade_in {w} {
-	catch {
-	    raise $w
-	    wm attributes $w -topmost 1
-	    set prev_degree [wm attributes $w -alpha]
-	    set new_degree [expr {$prev_degree + 0.05}]
-	    set current_degree [wm attributes $w -alpha $new_degree]
-	    focus -force $w
-	    if {$new_degree < 0.9 && $new_degree != $prev_degree} {
-		after 10 [list ::tk::sysnotify::_fade_in $w]
-	    }
+    # Fade the window into view.
+    proc _fadeIn {w} {
+	variable defaults
+        if {![winfo exists $w]} {return}
+	if {[set alpha  [option get $w alpha ""]] eq ""} {
+	    set alpha [dict get $defaults alpha]
 	}
+	raise $w
+	set before [wm attributes $w -alpha]
+	set new    [expr { min($alpha, $before + 0.10) }]
+	wm attributes $w -alpha $new
+	set after  [wm attributes $w -alpha]
+	if {($before == 1.0) || ($before == $after)} {
+	    # not supported or we're done
+	    return
+	}
+	after 40 [namespace code [list _fadeIn $w]]
     }
-    namespace export *
+
+    # Fade out and destroy window.
+    proc _fadeOut {w} {
+        if {![winfo exists $w]} {return}
+	set before [wm attributes $w -alpha]
+	set new    [expr { $before - 0.02 }]
+	wm attributes $w -alpha $new
+	set after  [wm attributes $w -alpha]
+	if {($after == 1.0) || ($before == $after)} {
+	    _notifyDestroy $w
+	    return
+	}
+	after 40 [namespace code [list _fadeOut $w]]
+    }
+
+    proc _notifyDestroy {w} {
+	# cancel any pending fade in or fade out
+	_cancelFading $w
+	destroy $w
+    }
+
+    proc _onEnter {w} {
+	wm attributes $w -alpha 1.0
+	_cancelFading $w
+    }
+
+    proc _onLeave {w} {
+	variable defaults
+	if {[set alpha [option get $w alpha ""]] eq ""} {
+	    set alpha [dict get $defaults alpha]
+	}
+	if {[set delay [option get $w delay ""]] eq ""} {
+	    set delay [dict get $defaults delay]
+	}
+	wm attributes $w -alpha $alpha
+	after $delay [namespace code [list _fadeOut $w]]
+    }
+
+    proc _cancelFading {w} {
+	after cancel [namespace code [list _fadeOut $w]]
+	after cancel [namespace code [list _fadeIn $w]]
+    }
+
+    # The Desktop Notifications Specification allow for some markup
+    # in the message to display. It also specifies
+    # "Notification servers that do not support these tags should
+    # filter them out"
+    # See https://specifications.freedesktop.org/notification-spec/latest/ar01s04.html
+    # We don't event try to render those properly
+    proc _filterMarkup {txt} {
+	# remove fixed tags
+	set maplist {<b> "" </b> "" <i> "" </i> "" <u> "" </u> "" </a> ""}
+	set txt [string map $maplist $txt]
+	# remove <img> tags leaving (possible) alt text
+	set txt [regsub -- {<img *src="[^"]*" *(alt="([^"]*)")? */?>} $txt {\2}]
+	# remove <a href=""> variable tag
+	set txt [regsub -- {<a[^>]*>} $txt {}]
+	return $txt
+    }
 }
 
 
