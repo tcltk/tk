@@ -109,7 +109,7 @@ proc DoDisplay {w} {
     pack [frame $w.screen -bd 1 -relief raised] \
 	    -side left -fill both -expand 1
 
-    canvas $w.c -width 645p -height 480p -bg $C(bg) -highlightthickness 0
+    canvas $w.c -width 651p -height 480p -bg $C(bg) -highlightthickness 0
     $w.c config -scrollregion {0 0 750p 750p}	;# Kludge: move everything up
     $w.c yview moveto .09
     pack $w.c -in $w.screen -side top -fill both -expand 1
