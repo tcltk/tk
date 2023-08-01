@@ -161,12 +161,12 @@ TkUnionRectWithRegion(
 	    rectangle->width, rectangle->height);
 
     if (src_region == dest_region_return) {
-	ChkErr(TkMacOSHIShapeUnionWithRect,
+	ChkErr(HIShapeUnionWithRect,
 		(HIMutableShapeRef) dest_region_return, &r);
     } else {
 	HIShapeRef rectRgn = HIShapeCreateWithRect(&r);
 
-	ChkErr(TkMacOSHIShapeUnion, rectRgn, (HIShapeRef) src_region,
+	ChkErr(HIShapeUnion, rectRgn, (HIShapeRef) src_region,
 		(HIMutableShapeRef) dest_region_return);
 	CFRelease(rectRgn);
     }
@@ -446,7 +446,7 @@ TkMacOSXSetWithNativeRegion(
     TkRegion r,
     HIShapeRef rgn)
 {
-    ChkErr(TkMacOSXHIShapeSetWithShape, (HIMutableShapeRef) r, rgn);
+    ChkErr(HIShapeSetWithShape, (HIMutableShapeRef) r, rgn);
 }
 
 /*
@@ -502,45 +502,12 @@ TkpCopyRegion(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXHIShapeCreateEmpty, TkMacOSXHIShapeCreateMutableWithRect,
- * TkMacOSXHIShapeSetWithShape,
- * TkMacOSHIShapeDifferenceWithRect, TkMacOSHIShapeUnionWithRect,
- * TkMacOSHIShapeUnion --
+ * TkMacOSHIShapeDifferenceWithRect --
  *
  *	Wrapper functions for missing/buggy HIShape API
  *
  *----------------------------------------------------------------------
  */
-
-HIShapeRef
-TkMacOSXHIShapeCreateEmpty(void)
-{
-    HIShapeRef result;
-
-    result = HIShapeCreateEmpty();
-    return result;
-}
-
-HIMutableShapeRef
-TkMacOSXHIShapeCreateMutableWithRect(
-    const CGRect *inRect)
-{
-    HIMutableShapeRef result;
-
-    result = HIShapeCreateMutableWithRect(inRect);
-    return result;
-}
-
-OSStatus
-TkMacOSXHIShapeSetWithShape(
-    HIMutableShapeRef inDestShape,
-    HIShapeRef inSrcShape)
-{
-    OSStatus result;
-
-    result = HIShapeSetWithShape(inDestShape, inSrcShape);
-    return result;
-}
 
 OSStatus
 TkMacOSHIShapeDifferenceWithRect(
@@ -553,29 +520,6 @@ TkMacOSHIShapeDifferenceWithRect(
     result = HIShapeDifference(inShape, rgn, inShape);
     CFRelease(rgn);
 
-    return result;
-}
-
-OSStatus
-TkMacOSHIShapeUnionWithRect(
-    HIMutableShapeRef inShape,
-    const CGRect *inRect)
-{
-    OSStatus result;
-
-    result = HIShapeUnionWithRect(inShape, inRect);
-    return result;
-}
-
-OSStatus
-TkMacOSHIShapeUnion(
-    HIShapeRef inShape1,
-    HIShapeRef inShape2,
-    HIMutableShapeRef outResult)
-{
-    OSStatus result;
-
-    result = HIShapeUnion(inShape1, inShape2, outResult);
     return result;
 }
 
