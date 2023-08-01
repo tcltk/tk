@@ -66,7 +66,7 @@ static const Tk_OptionSpec ProgressbarOptionSpecs[] =
 	DEF_PROGRESSBAR_LENGTH, offsetof(Progressbar,progress.lengthObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_DOUBLE, "-maximum", "maximum", "Maximum",
-	"100", offsetof(Progressbar,progress.maximumObj), TCL_INDEX_NONE,
+	"100.0", offsetof(Progressbar,progress.maximumObj), TCL_INDEX_NONE,
 	0, 0, 0 },
     {TK_OPTION_STRING_TABLE, "-mode", "mode", "ProgressMode", "determinate",
 	offsetof(Progressbar,progress.modeObj),
@@ -423,7 +423,7 @@ static Ttk_Layout ProgressbarGetLayout(
 /* $sb step ?amount?
  */
 static int ProgressbarStepCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Progressbar *pb = (Progressbar *)recordPtr;
     double value = 0.0, stepAmount = 1.0;
@@ -479,7 +479,7 @@ static int ProgressbarStepCommand(
  * and pass to interpreter.
  */
 static int ProgressbarStartStopCommand(
-    Tcl_Interp *interp, const char *cmdName, int objc, Tcl_Obj *const objv[])
+    Tcl_Interp *interp, const char *cmdName, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Tcl_Obj *cmd = Tcl_NewListObj(objc, objv);
     Tcl_Obj *prefix[2];
@@ -489,7 +489,7 @@ static int ProgressbarStartStopCommand(
 
     prefix[0] = Tcl_NewStringObj(cmdName, -1);
     prefix[1] = objv[0];
-    Tcl_ListObjReplace(interp, cmd, 0,2, 2,prefix);
+    Tcl_ListObjReplace(interp, cmd, 0, 2, 2,prefix);
 
     Tcl_IncrRefCount(cmd);
     status = Tcl_EvalObjEx(interp, cmd, 0);
@@ -501,7 +501,7 @@ static int ProgressbarStartStopCommand(
 static int ProgressbarStartCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
@@ -511,7 +511,7 @@ static int ProgressbarStartCommand(
 static int ProgressbarStopCommand(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     return ProgressbarStartStopCommand(
@@ -561,12 +561,15 @@ TTK_END_LAYOUT
 TTK_BEGIN_LAYOUT(HorizontalProgressbarLayout)
     TTK_GROUP("Horizontal.Progressbar.trough", TTK_FILL_BOTH,
 	TTK_NODE("Horizontal.Progressbar.pbar", TTK_PACK_LEFT|TTK_FILL_Y)
-	TTK_NODE("Horizontal.Progressbar.text", TTK_PACK_LEFT))
+	TTK_NODE("Horizontal.Progressbar.ctext", TTK_PACK_LEFT))
 TTK_END_LAYOUT
 
 /*
  * Initialization:
  */
+
+MODULE_SCOPE
+void TtkProgressbar_Init(Tcl_Interp *interp);
 
 MODULE_SCOPE
 void TtkProgressbar_Init(Tcl_Interp *interp)

@@ -27,7 +27,7 @@ enum {
 - (NSEvent *) tkProcessEvent: (NSEvent *) theEvent
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
     NSEvent	    *processedEvent = theEvent;
     NSEventType	    type = [theEvent type];
@@ -125,7 +125,7 @@ XSync(
      *  [da5f2266df].)
      */
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 

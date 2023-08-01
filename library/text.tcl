@@ -457,16 +457,16 @@ bind Text <B2-Motion> {
 set ::tk::Priv(prevPos) {}
 
 bind Text <MouseWheel> {
-    tk::MouseWheel %W y %D -4.0 pixels
+    tk::MouseWheel %W y [tk::ScaleNum %D] -4.0 pixels
 }
 bind Text <Option-MouseWheel> {
-    tk::MouseWheel %W y %D -1.2 pixels
+    tk::MouseWheel %W y [tk::ScaleNum %D] -1.2 pixels
 }
 bind Text <Shift-MouseWheel> {
-    tk::MouseWheel %W x %D -4.0 pixels
+    tk::MouseWheel %W x [tk::ScaleNum %D] -4.0 pixels
 }
 bind Text <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x %D -1.2 pixels
+    tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 pixels
 }
 
 # ::tk::TextClosestGap --
@@ -485,7 +485,11 @@ proc ::tk::TextClosestGap {w x y} {
     if {$bbox eq ""} {
 	return $pos
     }
-    if {($x - [lindex $bbox 0]) < ([lindex $bbox 2]/2)} {
+    # The check on y coord of the line bbox with dlineinfo is to fix
+    # [a9cf210a42] to properly handle selecting and moving the mouse
+    # out of the widget.
+    if {$y < [lindex [$w dlineinfo $pos] 1] ||
+            $x - [lindex $bbox 0] < [lindex $bbox 2]/2} {
 	return $pos
     }
     $w index "$pos + 1 char"

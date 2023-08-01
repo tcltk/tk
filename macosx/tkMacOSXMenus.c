@@ -205,7 +205,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    NULL, 0) || (GetCurrentEventKeyModifiers() & optionKey)) {
 	[super orderFrontStandardAboutPanel:nil];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", -1,
+	int code = Tcl_EvalEx(_eventInterp, "tkAboutDialog", TCL_INDEX_NONE,
 		TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
@@ -221,7 +221,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	    "::tk::mac::ShowHelp", NULL, 0)) {
 	[super showHelp:sender];
     } else {
-	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowHelp", -1,
+	int code = Tcl_EvalEx(_eventInterp, "::tk::mac::ShowHelp", TCL_INDEX_NONE,
 		TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
@@ -238,9 +238,9 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     if (_eventInterp) {
 	if (Tcl_EvalEx(_eventInterp, "tk_getOpenFile -filetypes {"
 		"{{TCL Scripts} {.tcl} TEXT} {{Text Files} {} TEXT}}",
-		-1, TCL_EVAL_GLOBAL) == TCL_OK) {
+		TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
 	    Tcl_Obj *path = Tcl_GetObjResult(_eventInterp);
-	    int len;
+	    Tcl_Size len;
 
 	    Tcl_GetStringFromObj(path, &len);
 	    if (len) {
@@ -333,12 +333,14 @@ GetWidgetDemoPath(
     Tcl_Obj *result = NULL;
 
     if (Tcl_EvalEx(interp, "::tk::pkgconfig get demodir,runtime",
-		   -1, TCL_EVAL_GLOBAL) == TCL_OK) {
+		   TCL_INDEX_NONE, TCL_EVAL_GLOBAL) == TCL_OK) {
 	Tcl_Obj *libpath, *demo[1] = { Tcl_NewStringObj("widget", 6) };
 
 	libpath = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(libpath);
+	Tcl_IncrRefCount(demo[0]);
 	result = Tcl_FSJoinToPath(libpath, 1, demo);
+	Tcl_DecrRefCount(demo[0]);
 	Tcl_DecrRefCount(libpath);
     }
     Tcl_ResetResult(interp);

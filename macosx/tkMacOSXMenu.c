@@ -174,7 +174,7 @@ TKBackgroundLoop *backgroundLoop = nil;
 @interface TKMenu(TKMenuPrivate)
 - (id) initWithTkMenu: (TkMenu *) tkMenu;
 - (TkMenu *) tkMenu;
-- (int) tkIndexOfItem: (NSMenuItem *) menuItem;
+- (Tcl_Size) tkIndexOfItem: (NSMenuItem *) menuItem;
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index;
 @end
 
@@ -247,7 +247,7 @@ static Bool runMenuCommand = true;
 - (id) initWithTkMenu: (TkMenu *) tkMenu
 {
     NSString *title = [[TKNSString alloc] initWithTclUtfBytes:
-	    Tk_PathName(tkMenu->tkwin) length:-1];
+	    Tk_PathName(tkMenu->tkwin) length:TCL_INDEX_NONE];
 
     self = [self initWithTitle:title];
     [title release];
@@ -274,14 +274,18 @@ static Bool runMenuCommand = true;
     return (TkMenu *)_tkMenu;
 }
 
-- (int) tkIndexOfItem: (NSMenuItem *) menuItem
+- (Tcl_Size) tkIndexOfItem: (NSMenuItem *) menuItem
 {
-    return [self indexOfItem:menuItem] - _tkOffset;
+    NSInteger index = [self indexOfItem:menuItem];
+    if (index < 0 || (NSUInteger) index < _tkOffset) {
+	return TCL_INDEX_NONE;
+    }
+    return ((Tcl_Size)index - (Tcl_Size)_tkOffset);
 }
 
 - (void) insertItem: (NSMenuItem *) newItem atTkIndex: (NSInteger) index
 {
-    [super insertItem:newItem atIndex:index + _tkOffset];
+    [super insertItem:newItem atIndex:index + (NSInteger)_tkOffset];
     _tkItemCount++;
 }
 
@@ -497,7 +501,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -518,7 +522,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -757,9 +761,10 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[TKNSString alloc]
+	title = [[[TKNSString alloc]
 		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
-				length:mePtr->labelLength];
+				length:mePtr->labelLength]
+		autorelease];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
@@ -809,6 +814,7 @@ TkpConfigureMenuEntry(
     attributedTitle = [[NSAttributedString alloc] initWithString:title
 	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
+    [attributedTitle release];
     [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
@@ -1027,7 +1033,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
@@ -1239,7 +1245,7 @@ CheckForSpecialMenu(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), -1);
+	    Tcl_DStringAppend(&ds, Tk_PathName(mainMenuPtr->tkwin), TCL_INDEX_NONE);
 	    while (specialMenus[i].name) {
 		Tcl_DStringAppend(&ds, specialMenus[i].name,
 			specialMenus[i].len);
@@ -1287,7 +1293,7 @@ ParseAccelerator(
     while (1) {
 	i = 0;
 	while (allModifiers[i].name) {
-	    int l = allModifiers[i].len;
+	    size_t l = allModifiers[i].len;
 
 	    if (!strncasecmp(accel, allModifiers[i].name, l) &&
 		    (accel[l] == '-' || accel[l] == '+')) {
@@ -1330,7 +1336,7 @@ ParseAccelerator(
     if (ch) {
 	return [[[NSString alloc] initWithCharacters:&ch length:1] autorelease];
     } else {
-	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:-1] autorelease]
+	return [[[[TKNSString alloc] initWithTclUtfBytes:accel length:TCL_INDEX_NONE] autorelease]
 		lowercaseString];
     }
 }
@@ -1584,11 +1590,11 @@ GenerateMenuSelectEvent(
     TkMenu *menuPtr = [menu tkMenu];
 
     if (menuPtr) {
-	int index = [menu tkIndexOfItem:menuItem];
+	Tcl_Size index = [menu tkIndexOfItem:menuItem];
 
-	if (index < 0 || index >= (int) menuPtr->numEntries ||
+	if (index == TCL_INDEX_NONE || index >= menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
-	    TkActivateMenuEntry(menuPtr, -1);
+	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	} else {
 	    TkActivateMenuEntry(menuPtr, index);
 	    MenuSelectEvent(menuPtr);
@@ -1664,7 +1670,7 @@ RecursivelyClearActiveMenu(
 {
     int i;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     for (i = 0; i < (int) menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 

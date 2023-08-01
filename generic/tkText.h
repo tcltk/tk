@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     Tcl_Size size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[TKFLEXARRAY];		/* Characters that make up character info.
+	char chars[TCL_UTF_MAX];	/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -210,9 +210,9 @@ typedef void 		Tk_ChunkDisplayProc(struct TkText *textPtr,
 			    Drawable dst, int screenY);
 typedef void		Tk_ChunkUndisplayProc(struct TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
-typedef int		Tk_ChunkMeasureProc(TkTextDispChunk *chunkPtr, int x);
+typedef Tcl_Size	Tk_ChunkMeasureProc(TkTextDispChunk *chunkPtr, int x);
 typedef void		Tk_ChunkBboxProc(struct TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
 
@@ -582,8 +582,6 @@ typedef struct TkSharedText {
 				 * statements. */
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
-    int undoMarkId;             /* Counts undo marks temporarily used during
-                                   undo and redo operations. */
     int isDirty;		/* Flag indicating the 'dirtyness' of the
 				 * text widget. If the flag is not zero,
 				 * unsaved modifications have been applied to
@@ -598,6 +596,9 @@ typedef struct TkSharedText {
      */
 
     struct TkText *peers;
+
+    Tcl_Size undoMarkId;             /* Counts undo marks temporarily used during
+                                   undo and redo operations. */
 } TkSharedText;
 
 /*
@@ -1122,7 +1123,7 @@ MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr,
 			    TkTextLine *linePtr, int pixelHeight,
 			    TkTextIndex *indexPtr, int partialCalc);
 MODULE_SCOPE int	TkTextMarkCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextMarkNameToIndex(TkText *textPtr,
 			    const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextMarkSegToIndex(TkText *textPtr,
@@ -1142,25 +1143,25 @@ MODULE_SCOPE void	TkTextRedrawTag(TkSharedText *sharedTextPtr,
 			    int withTag);
 MODULE_SCOPE void	TkTextRelayoutWindow(TkText *textPtr, int mask);
 MODULE_SCOPE int	TkTextScanCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextSeeCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-MODULE_SCOPE int	TkTextSegToOffset(const TkTextSegment *segPtr,
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_Size TkTextSegToOffset(const TkTextSegment *segPtr,
 			    const TkTextLine *linePtr);
 MODULE_SCOPE void	TkTextSetYView(TkText *textPtr,
 			    TkTextIndex *indexPtr, int pickPlace);
 MODULE_SCOPE int	TkTextTagCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextImageCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextImageIndex(TkText *textPtr,
 			    const char *name, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextWindowCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE int	TkTextWindowIndex(TkText *textPtr, const char *name,
 			    TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextYviewCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 MODULE_SCOPE void	TkTextWinFreeClient(Tcl_HashEntry *hPtr,
 			    TkTextEmbWindowClient *client);
 MODULE_SCOPE void       TkTextRunAfterSyncCmd(void *clientData);

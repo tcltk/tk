@@ -95,7 +95,7 @@ int
 TkTextMarkCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "mark". */
@@ -114,7 +114,7 @@ TkTextMarkCmd(
 	MARK_UNSET
     };
 
-    if (objc < 3) {
+    if (objc + 1 < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
@@ -157,7 +157,7 @@ TkTextMarkCmd(
 	    } else {
 		typeStr = "left";
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, TCL_INDEX_NONE));
 	    return TCL_OK;
 	}
 	str = Tcl_GetStringFromObj(objv[4],&length);
@@ -188,9 +188,9 @@ TkTextMarkCmd(
 	}
 	resultObj = Tcl_NewObj();
 	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		"insert", -1));
+		"insert", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		"current", -1));
+		"current", TCL_INDEX_NONE));
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
@@ -223,7 +223,7 @@ TkTextMarkCmd(
 	TkTextSetMark(textPtr, Tcl_GetString(objv[3]), &index);
 	return TCL_OK;
     case MARK_UNSET: {
-	int i;
+	Tcl_Size i;
 
 	for (i = 3; i < objc; i++) {
 	    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable,

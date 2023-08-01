@@ -130,7 +130,7 @@ static void TextCleanup(TextElement *text)
 static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, text->foregroundObj);
-    Tcl_Size underline = TCL_INDEX_NONE;
+    Tcl_Size underline = INT_MIN;
     XGCValues gcValues;
     GC gc1, gc2;
     Tk_Anchor anchor = TK_ANCHOR_CENTER;
@@ -175,11 +175,13 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
 	    text->textLayout, b.x, b.y, 0/*firstChar*/, -1/*lastChar*/);
 
     if (text->underlineObj != NULL) {
-	TkGetIntForIndex(text->underlineObj, TCL_INDEX_END, 0, &underline);
-	if (underline != TCL_INDEX_NONE) {
-	    if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
-		underline++;
-	    }
+	TkGetIntForIndex(text->underlineObj, TCL_INDEX_NONE, 0, &underline);
+	if (underline < INT_MIN) {
+	    underline = INT_MIN;
+	} else if (underline > INT_MAX) {
+	    underline = INT_MAX;
+	}
+	if (underline != INT_MIN) {
 	    if (text->embossed) {
 		Tk_UnderlineTextLayout(Tk_Display(tkwin), d, gc2,
 			text->textLayout, b.x+1, b.y+1, underline);
@@ -239,6 +241,49 @@ static const Ttk_ElementSpec TextElementSpec = {
     sizeof(TextElement),
     TextElementOptions,
     TextElementSize,
+    TextElementDraw
+};
+
+/*----------------------------------------------------------------------
+ * +++ cText (collapsing text) element.
+ *
+ * This element is the same as the Text element, except its dimensions
+ * are 0,0 when the text to display is "".
+ */
+
+static int cTextSetup(TextElement *text, Tk_Window tkwin)
+{
+    if (*Tcl_GetString(text->textObj) == '\0') {
+        return 0;
+    } else {
+        return TextSetup(text, tkwin);
+    }
+}
+
+static void cTextElementSize(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    TextElement *text = (TextElement *)elementRecord;
+    (void)dummy;
+    (void)paddingPtr;
+
+    if (!cTextSetup(text, tkwin))
+	return;
+
+    *heightPtr = text->height;
+    *widthPtr = TextReqWidth(text);
+
+    TextCleanup(text);
+
+    return;
+}
+
+static const Ttk_ElementSpec cTextElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(TextElement),
+    TextElementOptions,
+    cTextElementSize,
     TextElementDraw
 };
 
@@ -509,7 +554,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
  */
 
 #undef  MAX
-#define MAX(a,b) ((a) > (b) ? a : b);
+#define MAX(a,b) ((a) > (b) ? (a) : (b));
 static void LabelSetup(
     LabelElement *c, Tk_Window tkwin, Ttk_State state)
 {
@@ -715,11 +760,15 @@ static const Ttk_ElementSpec LabelElementSpec = {
  */
 
 MODULE_SCOPE
+void TtkLabel_Init(Tcl_Interp *interp);
+
+MODULE_SCOPE
 void TtkLabel_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
     Ttk_RegisterElement(interp, theme, "text", &TextElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "ctext", &cTextElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "image", &ImageElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "label", &LabelElementSpec, NULL);
 }

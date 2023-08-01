@@ -535,10 +535,10 @@ static void		AdjustForTab(TkText *textPtr,
 			    TkTextTabArray *tabArrayPtr, int index,
 			    TkTextDispChunk *chunkPtr);
 static void		CharBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
-static int		CharChunkMeasureChars(TkTextDispChunk *chunkPtr,
+static Tcl_Size	CharChunkMeasureChars(TkTextDispChunk *chunkPtr,
 			    const char *chars, int charsLen,
 			    int start, int end, int startX, int maxX,
 			    int flags, int *nextX);
@@ -546,7 +546,7 @@ static void		CharDisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr, int x, int y,
 			    int height, int baseline, Display *display,
 			    Drawable dst, int screenY);
-static int		CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
+static Tcl_Size	CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		CharUndisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -562,15 +562,15 @@ static void		RemoveFromBaseChunk(TkTextDispChunk *chunkPtr);
  * tag toggle-filled elided region.
  */
 static void		ElideBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
-static int		ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
+static Tcl_Size	ElideMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		DisplayDLine(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
 static void		DisplayLineBackground(TkText *textPtr, DLine *dlPtr,
 			    DLine *prevPtr, Pixmap pixmap);
-static void		DisplayText(ClientData clientData);
+static void		DisplayText(void *clientData);
 static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr,
                             const TkTextIndex *indexPtr);
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
@@ -584,7 +584,7 @@ static void		GetYView(Tcl_Interp *interp, TkText *textPtr,
 static int		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
 static DLine *		LayoutDLine(TkText *textPtr,
 			    const TkTextIndex *indexPtr);
-static int		MeasureChars(Tk_Font tkfont, const char *source,
+static Tcl_Size	MeasureChars(Tk_Font tkfont, const char *source,
 			    int maxBytes, int rangeStart, int rangeLength,
 			    int startX, int maxX, int flags, int *nextXPtr);
 static void		MeasureUp(TkText *textPtr,
@@ -617,9 +617,9 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 			    TkText *textPtr, int objc,
 			    Tcl_Obj *const objv[], double *dblPtr,
 			    int *intPtr);
-static void		AsyncUpdateLineMetrics(ClientData clientData);
+static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
-static void		AsyncUpdateYScrollbar(ClientData clientData);
+static void		AsyncUpdateYScrollbar(void *clientData);
 static int              IsStartOfNotMergedLine(TkText *textPtr,
                             const TkTextIndex *indexPtr);
 
@@ -1219,7 +1219,7 @@ LayoutDLine(
     if (elide && indexPtr->byteIndex == 0) {
 	maxBytes = 0;
 	for (segPtr = info.segPtr; segPtr != NULL; segPtr = segPtr->nextPtr) {
-	    if (segPtr->size + 1 > 1) {
+	    if (segPtr->size > 0) {
 		if (elide == 0) {
 		    /*
 		     * We toggled a tag and the elide state changed to
@@ -1340,7 +1340,7 @@ LayoutDLine(
   connectNextLogicalLine:
     byteOffset = curIndex.byteIndex;
     segPtr = curIndex.linePtr->segPtr;
-    while ((byteOffset + 1 > 1) && (byteOffset + 1 >= segPtr->size + 1)) {
+    while ((byteOffset > 0) && (byteOffset >= segPtr->size)) {
 	byteOffset -= segPtr->size;
 	segPtr = segPtr->nextPtr;
 
@@ -1380,7 +1380,7 @@ LayoutDLine(
 	if (elide && (lastChunkPtr != NULL)
 		&& (lastChunkPtr->displayProc == NULL /*ElideDisplayProc*/)) {
 	    elidesize = segPtr->size - byteOffset;
-	    if (segPtr->size + 1 > byteOffset + 1) {
+	    if (segPtr->size > byteOffset) {
 		curIndex.byteIndex += elidesize;
 		lastChunkPtr->numBytes += elidesize;
 		breakByteOffset = lastChunkPtr->breakIndex
@@ -3013,7 +3013,7 @@ DisplayLineBackground(
 
 static void
 AsyncUpdateLineMetrics(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -3063,7 +3063,7 @@ AsyncUpdateLineMetrics(
     if (tkTextDebug) {
 	char buffer[2 * TCL_INTEGER_SPACE + 1];
 
-	sprintf(buffer, "%d %d", lineNum, dInfoPtr->lastMetricUpdateLine);
+	snprintf(buffer, sizeof(buffer), "%d %d", lineNum, dInfoPtr->lastMetricUpdateLine);
 	LOG("tk_textInvalidateLine", buffer);
     }
 
@@ -3072,7 +3072,7 @@ AsyncUpdateLineMetrics(
      * and we've reached the last line, then we're done.
      */
 
-    if (dInfoPtr->metricEpoch == TCL_INDEX_NONE
+    if (dInfoPtr->metricEpoch == -1
 	    && lineNum == dInfoPtr->lastMetricUpdateLine) {
 	/*
 	 * We have looped over all lines, so we're done. We must release our
@@ -3256,7 +3256,7 @@ TkTextUpdateLineMetrics(
 	     * then we can't be done.
 	     */
 
-	    if (textPtr->dInfoPtr->metricEpoch == TCL_INDEX_NONE && lineNum == endLine) {
+	    if (textPtr->dInfoPtr->metricEpoch == -1 && lineNum == endLine) {
 
 
 		/*
@@ -3271,7 +3271,7 @@ TkTextUpdateLineMetrics(
 	    if (tkTextDebug) {
 		char buffer[4 * TCL_INTEGER_SPACE + 3];
 
-		sprintf(buffer, "%d %d %d %d",
+		snprintf(buffer, sizeof(buffer), "%d %d %d %d",
 			lineNum, endLine, totalLines, count);
 		LOG("tk_textInvalidateLine", buffer);
 	    }
@@ -4141,7 +4141,7 @@ TkTextUpdateOneLine(
 	    Tcl_Panic("Mustn't ever update line height of last artificial line");
 	}
 
-	sprintf(buffer, "%d %d", TkBTreeLinesTo(textPtr,linePtr), pixelHeight);
+	snprintf(buffer, sizeof(buffer), "%d %d", TkBTreeLinesTo(textPtr,linePtr), pixelHeight);
 	LOG("tk_textNumPixels", buffer);
     }
     if (textPtr->dInfoPtr->scrollbarTimer == NULL) {
@@ -4171,7 +4171,7 @@ TkTextUpdateOneLine(
 
 static void
 DisplayText(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -5733,7 +5733,7 @@ int
 TkTextSeeCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "see". */
@@ -5869,7 +5869,7 @@ int
 TkTextXviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "xview". */
@@ -6170,7 +6170,7 @@ int
 TkTextYviewCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "yview". */
@@ -6377,7 +6377,7 @@ int
 TkTextScanCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "scan". */
@@ -6385,7 +6385,7 @@ TkTextScanCmd(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     TkTextIndex index;
     int c, x, y, totalScroll, gain=10;
-    size_t length;
+    Tcl_Size length;
 
     if ((objc != 5) && (objc != 6)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "mark x y");
@@ -6406,8 +6406,7 @@ TkTextScanCmd(
     if ((objc == 6) && (Tcl_GetIntFromObj(interp, objv[5], &gain) != TCL_OK)) {
 	return TCL_ERROR;
     }
-    c = Tcl_GetString(objv[2])[0];
-    length = strlen(Tcl_GetString(objv[2]));
+    c = Tcl_GetStringFromObj(objv[2], &length)[0];
     if (c=='d' && strncmp(Tcl_GetString(objv[2]), "dragto", length)==0) {
 	int newX, maxX;
 
@@ -6541,10 +6540,10 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, -1);
-	Tcl_DStringAppend(&buf, buf1, -1);
-	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -6826,10 +6825,10 @@ GetYView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, -1);
-	Tcl_DStringAppend(&buf, buf1, -1);
-	Tcl_DStringAppend(&buf, buf2, -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
@@ -6859,7 +6858,7 @@ GetYView(
 
 static void
 AsyncUpdateYScrollbar(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkText *textPtr = (TkText *)clientData;
 
@@ -7560,7 +7559,7 @@ static void
 ElideBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),		/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),		/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -7585,7 +7584,7 @@ ElideBboxProc(
  * Measure an elided chunk.
  */
 
-static int
+static Tcl_Size
 ElideMeasureProc(
     TCL_UNUSED(TkTextDispChunk *),	/* Chunk containing desired coord. */
     TCL_UNUSED(int))		/* X-coordinate, in same coordinate system as
@@ -7877,7 +7876,7 @@ TkTextCharLayoutProc(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 CharChunkMeasureChars(
     TkTextDispChunk *chunkPtr,	/* Chunk from which to measure. */
     const char *chars,		/* Chars to use, instead of the chunk's own.
@@ -8187,7 +8186,7 @@ CharUndisplayProc(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 CharMeasureProc(
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired coord. */
     int x)			/* X-coordinate, in same coordinate system as
@@ -8225,7 +8224,7 @@ static void
 CharBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    int byteIndex,		/* Byte offset of desired character within the
+    Tcl_Size byteIndex,		/* Byte offset of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -8247,7 +8246,7 @@ CharBboxProc(
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 	    chunkPtr->x, -1, 0, xPtr);
 
-    if (byteIndex == ciPtr->numBytes) {
+    if (byteIndex == (Tcl_Size)ciPtr->numBytes) {
 	/*
 	 * This situation only happens if the last character in a line is a
 	 * space character, in which case it absorbs all of the extra space in
@@ -8256,7 +8255,7 @@ CharBboxProc(
 
 	*widthPtr = maxX - *xPtr;
     } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == ciPtr->numBytes - 1)) {
+	    && (byteIndex == (Tcl_Size)ciPtr->numBytes - 1)) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
@@ -8675,7 +8674,7 @@ NextTabStop(
  *--------------------------------------------------------------
  */
 
-static int
+static Tcl_Size
 MeasureChars(
     Tk_Font tkfont,		/* Font in which to draw characters. */
     const char *source,		/* Characters to be displayed. Need not be

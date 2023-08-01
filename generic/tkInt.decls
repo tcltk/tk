@@ -145,7 +145,7 @@ declare 34 {
     TkDisplay *TkGetDisplay(Display *display)
 }
 declare 35 {
-    int TkGetDisplayOf(Tcl_Interp *interp, int objc, Tcl_Obj *const objv[],
+    Tcl_Size TkGetDisplayOf(Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[],
 	    Tk_Window *tkwinPtr)
 }
 declare 36 {
@@ -506,11 +506,11 @@ declare 154 {
 
 # entries needed only by tktest:
 declare 156 {
-    int TkpTestembedCmd(void *clientData, Tcl_Interp *interp, int objc,
+    int TkpTestembedCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
 	    Tcl_Obj *const objv[])
 }
 declare 157 {
-    int TkpTesttextCmd(void *dummy, Tcl_Interp *interp, int objc,
+    int TkpTesttextCmd(void *dummy, Tcl_Interp *interp, Tcl_Size objc,
 	    Tcl_Obj *const objv[])
 }
 declare 158 {
@@ -547,7 +547,7 @@ declare 164 {
 }
 declare 165 {
     int TkTextXviewCmd(struct TkText *textPtr, Tcl_Interp *interp,
-	    int objc, Tcl_Obj *const objv[])
+	    Tcl_Size objc, Tcl_Obj *const objv[])
 }
 declare 166 {
     void TkTextChanged(struct TkSharedText *sharedTextPtr,
@@ -631,7 +631,7 @@ declare 183 {
 }
 declare 184 {
     void TkDrawAngledChars(Display *display,Drawable drawable, GC gc,
-	    Tk_Font tkfont, const char *source, int numBytes, double x,
+	    Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x,
 	    double y, double angle)
 }
 
@@ -695,7 +695,7 @@ declare 12 x11 {
 }
 # only needed by tktest:
 declare 13 x11 {
-    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, int objc,
+    int TkpTestsendCmd_(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
 	    Tcl_Obj *const objv[])
 }
 declare 38 x11 {
@@ -721,7 +721,7 @@ declare 44 x11 {
 }
 # only needed by tktest:
 declare 45 x11 {
-    int TkpTestsendCmd_(void *clientData, Tcl_Interp *interp, int objc,
+    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
 	    Tcl_Obj *const objv[])
 }
 
@@ -878,7 +878,7 @@ declare 44 win {
 }
 # only needed by tktest:
 declare 45 win {
-    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, int objc,
+    int TkpTestsendCmd(void *clientData, Tcl_Interp *interp, Tcl_Size objc,
 	    Tcl_Obj *const objv[])
 }
 declare 47 win {
@@ -1339,12 +1339,10 @@ declare 80 win {
 	    Drawable d, GC gc, XImage *image, int src_x, int src_y,
 	    int dest_x, int dest_y, unsigned int width, unsigned int height)
 }
-# This slot is reserved for use by the clipping rectangle patch:
-#  declare 81 win {
-#      XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
-#  	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
-#  }
-
+declare 81 win {
+    int XSetClipRectangles(Display *display, GC gc, int clip_x_origin,
+	    int clip_y_origin, XRectangle rectangles[], int n, int ordering)
+}
 declare 82 win {
     Status XParseColor(Display *display, Colormap map,
           _Xconst char *spec, XColor *colorPtr)

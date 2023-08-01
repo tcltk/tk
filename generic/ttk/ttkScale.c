@@ -63,11 +63,11 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 	offsetof(Scale,scale.orient),
 	0, ttkOrientStrings, STYLE_CHANGED },
 
-    {TK_OPTION_DOUBLE, "-from", "from", "From", "0",
+    {TK_OPTION_DOUBLE, "-from", "from", "From", "0.0",
 	offsetof(Scale,scale.fromObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_DOUBLE, "-to", "to", "To", "1.0",
 	offsetof(Scale,scale.toObj), TCL_INDEX_NONE, 0, 0, 0},
-    {TK_OPTION_DOUBLE, "-value", "value", "Value", "0",
+    {TK_OPTION_DOUBLE, "-value", "value", "Value", "0.0",
 	offsetof(Scale,scale.valueObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
 	DEF_SCALE_LENGTH, offsetof(Scale,scale.lengthObj), TCL_INDEX_NONE, 0, 0,
@@ -261,19 +261,15 @@ static double ScaleFraction(Scale *scalePtr, double value)
  */
 static int
 ScaleGetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scale *scalePtr = (Scale *)recordPtr;
     int x, y, r = TCL_OK;
     double value = 0;
 
-    if ((objc != 2) && (objc != 4)) {
-	Tcl_WrongNumArgs(interp, 1, objv, "get ?x y?");
-	return TCL_ERROR;
-    }
     if (objc == 2) {
 	Tcl_SetObjResult(interp, scalePtr->scale.valueObj);
-    } else {
+    } else if (objc == 4) {
 	r = Tcl_GetIntFromObj(interp, objv[2], &x);
 	if (r == TCL_OK)
 	    r = Tcl_GetIntFromObj(interp, objv[3], &y);
@@ -281,6 +277,9 @@ ScaleGetCommand(
 	    value = PointToValue(scalePtr, x, y);
 	    Tcl_SetObjResult(interp, Tcl_NewDoubleObj(value));
 	}
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "get ?x y?");
+	return TCL_ERROR;
     }
     return r;
 }
@@ -289,7 +288,7 @@ ScaleGetCommand(
  */
 static int
 ScaleSetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scale *scalePtr = (Scale *)recordPtr;
     double from = 0.0, to = 1.0, value;
@@ -357,21 +356,19 @@ ScaleSetCommand(
 
 static int
 ScaleCoordsCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scale *scalePtr = (Scale *)recordPtr;
     double value;
     int r = TCL_OK;
 
-    if (objc < 2 || objc > 3) {
-	Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
-	return TCL_ERROR;
-    }
-
     if (objc == 3) {
 	r = Tcl_GetDoubleFromObj(interp, objv[2], &value);
-    } else {
+    } else if (objc == 2) {
 	r = Tcl_GetDoubleFromObj(interp, scalePtr->scale.valueObj, &value);
+    } else {
+	Tcl_WrongNumArgs(interp, 1, objv, "coords ?value?");
+	return TCL_ERROR;
     }
 
     if (r == TCL_OK) {
@@ -523,6 +520,9 @@ TTK_END_LAYOUT
 /*
  * Initialization.
  */
+MODULE_SCOPE
+void TtkScale_Init(Tcl_Interp *interp);
+
 MODULE_SCOPE
 void TtkScale_Init(Tcl_Interp *interp)
 {

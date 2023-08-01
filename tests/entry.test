@@ -11,17 +11,13 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnUbuntuNoXft [expr {[testConstraint failsOnUbuntu] || (![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft"))}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
         global scrollInfo
         set scrollInfo $args
 }
-# For trace variable
+# For trace add variable
 proc override args {
         global x
         set x 12345
@@ -1630,7 +1626,7 @@ test entry-5.4 {ConfigureEntry procedure, -textvariable} -setup {
     unset -nocomplain x
     entry .e
 } -body {
-    trace variable x w override
+    trace add variable x write override
     .e insert 0 "Some text"
     .e configure -textvariable x
     list $x [.e get]
@@ -1704,7 +1700,7 @@ test entry-5.7 {ConfigureEntry procedure} -setup {
 
 
 test entry-5.8 {ConfigureEntry procedure} -constraints {
-    fonts failsOnXQuarz
+    fonts
 } -setup {
     entry .e -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -2331,7 +2327,7 @@ test entry-8.17 {DeleteChars procedure} -setup {
 } -cleanup {
     destroy .e
 } -result 4
-test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
+test entry-8.18 {DeleteChars procedure} -setup {
     entry .e -width 0 -font {Courier -12} -highlightthickness 2 -bd 2
     pack .e ; update idletasks
     focus .e
@@ -2352,12 +2348,12 @@ test entry-8.18 {DeleteChars procedure} -constraints failsOnUbuntuNoXft -setup {
 } -cleanup {
     destroy .e
     unset XPAD expected
-} -result 1
+} -result {1}
 
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
 } -body {
-    trace variable x w override
+    trace add variable x write override
     entry .e -textvariable x -width 0
     .e insert 0 foo
     list $x [.e get]
@@ -3555,7 +3551,7 @@ test entry-22.2 {lost namespaced textvar} -body {
 test entry-23.1 {error in trace proc attached to the textvariable} -setup {
     destroy .e
 } -body {
-    trace variable myvar w traceit
+    trace add variable myvar write traceit
     proc traceit args {error "Intentional error here!"}
     entry .e -textvariable myvar
     catch {.e insert end mystring} result1

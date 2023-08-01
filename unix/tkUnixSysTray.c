@@ -349,17 +349,17 @@ TrayIconObjectCmd(
 
     case XWC_ORIENTATION:
 	if (icon->myManager == None || icon->wrapper == None) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", TCL_INDEX_NONE));
 	} else {
 	    switch(QueryTrayOrientation(icon)) {
 	    case 0:
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("horizontal", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("horizontal", TCL_INDEX_NONE));
 		break;
 	    case 1:
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("vertical", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("vertical", TCL_INDEX_NONE));
 		break;
 	    default:
-		Tcl_SetObjResult(interp, Tcl_NewStringObj("unknown", -1));
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("unknown", TCL_INDEX_NONE));
 		break;
 	    }
 	}
@@ -435,8 +435,7 @@ DockSelectionAtomFor(
     Tk_Window tkwin)
 {
     char buf[256];
-    /* no snprintf in C89 */
-    sprintf(buf,"_NET_SYSTEM_TRAY_S%d",Tk_ScreenNumber(tkwin));
+    snprintf(buf,256,"_NET_SYSTEM_TRAY_S%d",Tk_ScreenNumber(tkwin));
     return Tk_InternAtom(tkwin,buf);
 }
 
@@ -558,7 +557,7 @@ CheckArgbVisual(
 	    retNitems == 1 &&
 	    retFormat == 32) {
 	char numeric[256];
-	sprintf(numeric,"%ld",*(long*)retProp);
+	snprintf(numeric,256,"%ld",*(long*)retProp);
 	XFree(retProp);
 	match = Tk_GetVisual(icon->interp, icon->tkwin,
                 numeric, &depth, &cmap);
@@ -1598,7 +1597,7 @@ TrayIconCreateCmd(
 
     icon = (DockIcon*)attemptckalloc(sizeof(DockIcon));
     if (!icon) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("running out of memory", TCL_INDEX_NONE));
 	goto handleErrors;
     }
     memset(icon,0,sizeof(*icon));

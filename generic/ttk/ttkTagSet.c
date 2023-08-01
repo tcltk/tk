@@ -126,7 +126,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
 {
     Ttk_TagSet tagset = (Ttk_TagSet)ckalloc(sizeof(*tagset));
     Tcl_Obj **objv;
-    int i, objc;
+    Tcl_Size i, objc;
 
     if (objPtr == NULL) {
 	tagset->tags = NULL;
@@ -288,7 +288,7 @@ int Ttk_ConfigureTag(
     Tcl_Interp *interp,
     Ttk_TagTable tagTable,
     Ttk_Tag tag,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     return Tk_SetOptions(
 	interp, tag->tagRecord, tagTable->optionTable,

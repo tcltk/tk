@@ -5,7 +5,7 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
 
@@ -235,7 +235,7 @@ static Ttk_Side LabelAnchorSide(Ttk_PositionSpec flags)
 typedef struct {
     Tcl_Obj 	*labelAnchorObj;
     Tcl_Obj	*textObj;
-    int	underline;
+    Tcl_Obj	*underlineObj;
     Tk_Window	labelWidget;
 
     Ttk_Manager	*mgr;
@@ -259,7 +259,7 @@ static const Tk_OptionSpec LabelframeOptionSpecs[] = {
 	offsetof(Labelframe,label.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
-	TK_OPTION_UNDERLINE_DEF(Labelframe, label.underline), 0},
+	TTK_OPTION_UNDERLINE_DEF(Labelframe, label.underlineObj), 0},
     {TK_OPTION_WINDOW, "-labelwidget", "labelWidget", "LabelWidget", NULL,
 	TCL_INDEX_NONE, offsetof(Labelframe,label.labelWidget),
 	TK_OPTION_NULL_OK,0,LABELWIDGET_CHANGED|GEOMETRY_CHANGED },
@@ -653,6 +653,9 @@ TTK_END_LAYOUT
 /* ======================================================================
  * +++ Initialization.
  */
+
+MODULE_SCOPE
+void TtkFrame_Init(Tcl_Interp *interp);
 
 MODULE_SCOPE
 void TtkFrame_Init(Tcl_Interp *interp)

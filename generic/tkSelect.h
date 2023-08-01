@@ -160,8 +160,8 @@ typedef struct TkSelInProgress {
 MODULE_SCOPE TkSelInProgress *TkSelGetInProgress(void);
 MODULE_SCOPE void	TkSelSetInProgress(TkSelInProgress *pendingPtr);
 MODULE_SCOPE void	TkSelClearSelection(Tk_Window tkwin, XEvent *eventPtr);
-MODULE_SCOPE int	TkSelDefaultSelection(TkSelectionInfo *infoPtr,
-			    Atom target, char *buffer, int maxBytes,
+MODULE_SCOPE Tcl_Size TkSelDefaultSelection(TkSelectionInfo *infoPtr,
+			    Atom target, char *buffer, Tcl_Size maxBytes,
 			    Atom *typePtr);
 #ifndef TkSelUpdateClipboard
 MODULE_SCOPE void	TkSelUpdateClipboard(TkWindow *winPtr,

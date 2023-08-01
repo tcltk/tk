@@ -405,10 +405,10 @@ package require tk
 	set sbar [ttk::scrollbar $hull.sbar -orient horizontal -takefocus 0]
 	catch {$sbar configure -highlightthickness 0}
 	set canvas [canvas $hull.canvas -highlightthick 0 -takefocus 1 \
-			-width 400 -height 120 \
+			-width 300p -height 90p \
 			-background [ttk::style lookup Treeview -background {} white]]
-	pack $sbar -side bottom -fill x -padx 2 -pady {0 2}
-	pack $canvas -expand yes -fill both -padx 2 -pady {2 0}
+	pack $sbar -side bottom -fill x -padx 1.5p -pady {0 1.5p}
+	pack $canvas -expand yes -fill both -padx 1.5p -pady {1.5p 0}
 
 	$sbar configure -command [list $canvas xview]
 	$canvas configure -xscrollcommand [list $sbar set]

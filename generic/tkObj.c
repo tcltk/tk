@@ -132,12 +132,14 @@ extern int TclGetIntForIndex(Tcl_Interp*,  Tcl_Obj *, int, int*);
  * initial display-independent settings.
  */
 
-static const Tcl_ObjType pixelObjType = {
-    "pixel",			/* name */
+static const TkObjType pixelObjType = {
+    {"pixel",			/* name */
     FreePixelInternalRep,	/* freeIntRepProc */
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -146,12 +148,14 @@ static const Tcl_ObjType pixelObjType = {
  * initial display-independent settings.
  */
 
-static const Tcl_ObjType mmObjType = {
-    "mm",			/* name */
+static const TkObjType mmObjType = {
+    {"mm",			/* name */
     FreeMMInternalRep,		/* freeIntRepProc */
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -159,12 +163,14 @@ static const Tcl_ObjType mmObjType = {
  * Tcl object.
  */
 
-static const Tcl_ObjType windowObjType = {
-    "window",			/* name */
+static const TkObjType windowObjType = {
+    {"window",			/* name */
     FreeWindowInternalRep,	/* freeIntRepProc */
     DupWindowInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -208,7 +214,7 @@ GetTypeCache(void)
  *
  * TkGetIntForIndex --
  *
- *	Almost the same as Tcl_GetIntForIndex, but it return an int. Accepts
+ *	Almost the same as Tcl_GetIntForIndex, but it retrieves an int. Accepts
  *	"" (empty string) as well.
  *
  * Results:
@@ -234,18 +240,11 @@ TkGetIntForIndex(
     if (Tcl_GetIntForIndex(NULL, indexObj, end + lastOK, indexPtr) != TCL_OK) {
 	const char *value = Tcl_GetString(indexObj);
 	if (!*value) {
-	    *indexPtr = TCL_INDEX_NONE;
+	    /* empty string */
+	    *indexPtr = (end == -1) ? -1 - TCL_SIZE_MAX : TCL_INDEX_NONE;
 	    return TCL_OK;
 	}
 	return TCL_ERROR;
-    }
-#if TCL_MAJOR_VERSION < 9
-    if (*indexPtr < -1) {
-	*indexPtr = TCL_INDEX_NONE;
-    } else if (end >= -1)
-#endif
-    if ((*indexPtr + 1) > (end + 1)) {
-	*indexPtr = end + 1;
     }
     return TCL_OK;
 }
@@ -294,7 +293,7 @@ GetPixelsFromObjEx(
      * semantics.
      */
 
-    if (objPtr->typePtr != &pixelObjType) {
+    if (objPtr->typePtr != &pixelObjType.objType) {
 	ThreadSpecificData *typeCache = GetTypeCache();
 
 	if (objPtr->typePtr == typeCache->doubleTypePtr) {
@@ -314,7 +313,7 @@ GetPixelsFromObjEx(
     }
 
  retry:
-    fresh = (objPtr->typePtr != &pixelObjType);
+    fresh = (objPtr->typePtr != &pixelObjType.objType);
     if (fresh) {
 	result = SetPixelFromAny(interp, objPtr);
 	if (result != TCL_OK) {
@@ -421,7 +420,7 @@ Tk_GetDoublePixelsFromObj(
     if (result != TCL_OK) {
 	return result;
     }
-    if (objPtr->typePtr == &pixelObjType && !SIMPLE_PIXELREP(objPtr)) {
+    if (objPtr->typePtr == &pixelObjType.objType && !SIMPLE_PIXELREP(objPtr)) {
 	PixelRep *pixelPtr = GET_COMPLEXPIXEL(objPtr);
 
 	if (pixelPtr->units >= 0) {
@@ -577,7 +576,7 @@ SetPixelFromAny(
 	typePtr->freeIntRepProc(objPtr);
     }
 
-    objPtr->typePtr = &pixelObjType;
+    objPtr->typePtr = &pixelObjType.objType;
 
     i = (int) d;
     if ((units < 0) && (i == d)) {
@@ -637,7 +636,7 @@ Tk_GetMMFromObj(
 	10.0,	25.4,	1.0,	0.35278 /*25.4 / 72.0*/
     };
 
-    if (objPtr->typePtr != &mmObjType) {
+    if (objPtr->typePtr != &mmObjType.objType) {
 	result = SetMMFromAny(interp, objPtr);
 	if (result != TCL_OK) {
 	    return result;
@@ -865,7 +864,7 @@ SetMMFromAny(
 	typePtr->freeIntRepProc(objPtr);
     }
 
-    objPtr->typePtr = &mmObjType;
+    objPtr->typePtr = &mmObjType.objType;
 
     mmPtr = (MMRep *)ckalloc(sizeof(MMRep));
     mmPtr->value = d;
@@ -909,7 +908,7 @@ TkGetWindowFromObj(
     TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
     WindowRep *winPtr;
 
-    if (objPtr->typePtr != &windowObjType) {
+    if (objPtr->typePtr != &windowObjType.objType) {
 	int result = SetWindowFromAny(interp, objPtr);
 	if (result != TCL_OK) {
 	    return result;
@@ -984,7 +983,7 @@ SetWindowFromAny(
     winPtr->epoch = 0;
 
     objPtr->internalRep.twoPtrValue.ptr1 = winPtr;
-    objPtr->typePtr = &windowObjType;
+    objPtr->typePtr = &windowObjType.objType;
 
     return TCL_OK;
 }
@@ -1071,7 +1070,7 @@ Tcl_Obj *
 Tk_NewWindowObj(
     Tk_Window tkwin)
 {
-    Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), -1);
+    Tcl_Obj *objPtr = Tcl_NewStringObj(Tk_PathName(tkwin), TCL_INDEX_NONE);
     TkMainInfo *mainPtr = ((TkWindow *) tkwin)->mainPtr;
     WindowRep *winPtr;
 
@@ -1124,7 +1123,7 @@ TkParsePadAmount(
      * shimmered between a list and a pixel spec.
      */
 
-    if (specObj->typePtr == &pixelObjType) {
+    if (specObj->typePtr == &pixelObjType.objType) {
 	if (Tk_GetPixelsFromObj(interp, tkwin, specObj, &firstInt) != TCL_OK){
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad pad value \"%s\": must be positive screen distance",
@@ -1146,7 +1145,7 @@ TkParsePadAmount(
     }
     if (objc != 1 && objc != 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"wrong number of parts to pad specification", -1));
+		"wrong number of parts to pad specification", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "PARTS", NULL);
 	return TCL_ERROR;
     }
@@ -1212,16 +1211,16 @@ TkParsePadAmount(
 void
 TkRegisterObjTypes(void)
 {
-    Tcl_RegisterObjType(&tkBorderObjType);
-    Tcl_RegisterObjType(&tkBitmapObjType);
-    Tcl_RegisterObjType(&tkColorObjType);
-    Tcl_RegisterObjType(&tkCursorObjType);
-    Tcl_RegisterObjType(&tkFontObjType);
-    Tcl_RegisterObjType(&mmObjType);
-    Tcl_RegisterObjType(&pixelObjType);
-    Tcl_RegisterObjType(&tkStateKeyObjType);
-    Tcl_RegisterObjType(&windowObjType);
-    Tcl_RegisterObjType(&tkTextIndexType);
+    Tcl_RegisterObjType(&tkBorderObjType.objType);
+    Tcl_RegisterObjType(&tkBitmapObjType.objType);
+    Tcl_RegisterObjType(&tkColorObjType.objType);
+    Tcl_RegisterObjType(&tkCursorObjType.objType);
+    Tcl_RegisterObjType(&tkFontObjType.objType);
+    Tcl_RegisterObjType(&mmObjType.objType);
+    Tcl_RegisterObjType(&pixelObjType.objType);
+    Tcl_RegisterObjType(&tkStateKeyObjType.objType);
+    Tcl_RegisterObjType(&windowObjType.objType);
+    Tcl_RegisterObjType(&tkTextIndexType.objType);
 }
 
 /*

@@ -14,6 +14,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The includes below are for pre-defined bitmaps.
  *
@@ -121,12 +125,14 @@ static void		InitBitmapObj(Tcl_Obj *objPtr);
  * field of the Tcl_Obj points to a TkBitmap object.
  */
 
-const Tcl_ObjType tkBitmapObjType = {
-    "bitmap",			/* name */
+const TkObjType tkBitmapObjType = {
+    {"bitmap",			/* name */
     FreeBitmapObjProc,		/* freeIntRepProc */
     DupBitmapObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -164,7 +170,7 @@ Tk_AllocBitmapFromObj(
 {
     TkBitmap *bitmapPtr;
 
-    if (objPtr->typePtr != &tkBitmapObjType) {
+    if (objPtr->typePtr != &tkBitmapObjType.objType) {
 	InitBitmapObj(objPtr);
     }
     bitmapPtr = (TkBitmap *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -344,7 +350,7 @@ GetBitmap(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't specify bitmap with '@' in a safe interpreter",
-		    -1));
+		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    goto error;
 	}
@@ -834,7 +840,7 @@ Tk_GetBitmapFromData(
 	name = (char *)Tcl_GetHashValue(dataHashPtr);
     } else {
 	dispPtr->bitmapAutoNumber++;
-	sprintf(string, "_tk%d", dispPtr->bitmapAutoNumber);
+	snprintf(string, sizeof(string), "_tk%d", dispPtr->bitmapAutoNumber);
 	name = string;
 	Tcl_SetHashValue(dataHashPtr, name);
 	if (Tk_DefineBitmap(interp, name, source, width, height) != TCL_OK) {
@@ -905,7 +911,7 @@ GetBitmapFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkBitmapObjType) {
+    if (objPtr->typePtr != &tkBitmapObjType.objType) {
 	InitBitmapObj(objPtr);
     }
 
@@ -980,7 +986,7 @@ InitBitmapObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkBitmapObjType;
+    objPtr->typePtr = &tkBitmapObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -1078,7 +1084,7 @@ BitmapInit(
  * TkReadBitmapFile --
  *
  *	Loads a bitmap image in X bitmap format into the specified drawable.
- *	This is equivelent to the XReadBitmapFile in X.
+ *	This is equivalent to the XReadBitmapFile in X.
  *
  * Results:
  *	Sets the size, hotspot, and bitmap on success.

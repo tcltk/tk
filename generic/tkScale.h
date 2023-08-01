@@ -73,9 +73,9 @@ typedef struct TkScale {
 				 * values. 0 means we get to choose the number
 				 * based on resolution and/or the range of the
 				 * scale. */
-    char valueFormat[16];	/* Sprintf conversion specifier computed from
+    char valueFormat[16];	/* Snprintf conversion specifier computed from
 				 * digits and other information. */
-    char tickFormat[16];	/* Sprintf conversion specifier computed from
+    char tickFormat[16];	/* Snprintf conversion specifier computed from
 				 * tick interval. */
     double bigIncrement;	/* Amount to use for large increments to scale
 				 * value. (0 means we pick a value). */

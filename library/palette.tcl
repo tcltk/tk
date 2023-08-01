@@ -71,6 +71,20 @@ proc ::tk_setPalette {args} {
     if {![info exists new(highlightBackground)]} {
 	set new(highlightBackground) $new(background)
     }
+    # 'buttonBackground' is the background color of the buttons in
+    # the spinbox widget.
+    if {![info exists new(buttonBackground)]} {
+	set new(buttonBackground) $new(background)
+    }
+    # 'selectColor' is the background of check & radio buttons.
+    if {![info exists new(selectColor)]} {
+	foreach {r g b} $bg {break}
+	if {$r+1.5*$g+0.5*$b > 100000} {
+	    set new(selectColor) white
+	} else {
+	    set new(selectColor) black
+	}
+    }
     if {![info exists new(activeBackground)]} {
 	# Pick a default active background that islighter than the
 	# normal background.  To do this, round each color component
