@@ -140,7 +140,7 @@ EXTERN const char *	TkGetDefaultScreenName(Tcl_Interp *interp,
 /* 34 */
 EXTERN TkDisplay *	TkGetDisplay(Display *display);
 /* 35 */
-EXTERN int		TkGetDisplayOf(Tcl_Interp *interp, int objc,
+EXTERN Tcl_Size		TkGetDisplayOf(Tcl_Interp *interp, Tcl_Size objc,
 				Tcl_Obj *const objv[], Tk_Window *tkwinPtr);
 /* 36 */
 EXTERN TkWindow *	TkGetFocusWin(TkWindow *winPtr);
@@ -442,10 +442,10 @@ EXTERN void		TkDeleteThreadExitHandler(Tcl_ExitProc *proc,
 /* Slot 155 is reserved */
 /* 156 */
 EXTERN int		TkpTestembedCmd(void *clientData, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 /* 157 */
 EXTERN int		TkpTesttextCmd(void *dummy, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 /* 158 */
 EXTERN int		TkSelGetSelection(Tcl_Interp *interp,
 				Tk_Window tkwin, Atom selection, Atom target,
@@ -476,7 +476,7 @@ EXTERN struct TkTextSegment * TkTextSetMark(struct TkText *textPtr,
 				struct TkTextIndex *indexPtr);
 /* 165 */
 EXTERN int		TkTextXviewCmd(struct TkText *textPtr,
-				Tcl_Interp *interp, int objc,
+				Tcl_Interp *interp, Tcl_Size objc,
 				Tcl_Obj *const objv[]);
 /* 166 */
 EXTERN void		TkTextChanged(struct TkSharedText *sharedTextPtr,
@@ -562,8 +562,8 @@ EXTERN int		TkIntersectAngledTextLayout(Tk_TextLayout layout,
 /* 184 */
 EXTERN void		TkDrawAngledChars(Display *display,
 				Drawable drawable, GC gc, Tk_Font tkfont,
-				const char *source, int numBytes, double x,
-				double y, double angle);
+				const char *source, Tcl_Size numBytes,
+				double x, double y, double angle);
 /* 185 */
 EXTERN void		TkpRedrawWidget(Tk_Window tkwin);
 /* 186 */
@@ -612,7 +612,7 @@ typedef struct TkIntStubs {
     TkCursor * (*tkGetCursorByName) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid string); /* 32 */
     const char * (*tkGetDefaultScreenName) (Tcl_Interp *interp, const char *screenName); /* 33 */
     TkDisplay * (*tkGetDisplay) (Display *display); /* 34 */
-    int (*tkGetDisplayOf) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], Tk_Window *tkwinPtr); /* 35 */
+    Tcl_Size (*tkGetDisplayOf) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], Tk_Window *tkwinPtr); /* 35 */
     TkWindow * (*tkGetFocusWin) (TkWindow *winPtr); /* 36 */
     int (*tkGetInterpNames) (Tcl_Interp *interp, Tk_Window tkwin); /* 37 */
     int (*tkGetMiterPoints) (double p1[], double p2[], double p3[], double width, double m1[], double m2[]); /* 38 */
@@ -760,8 +760,8 @@ typedef struct TkIntStubs {
     void (*tkCreateThreadExitHandler) (Tcl_ExitProc *proc, void *clientData); /* 153 */
     void (*tkDeleteThreadExitHandler) (Tcl_ExitProc *proc, void *clientData); /* 154 */
     void (*reserved155)(void);
-    int (*tkpTestembedCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 156 */
-    int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 157 */
+    int (*tkpTestembedCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 156 */
+    int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
     int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
@@ -769,7 +769,7 @@ typedef struct TkIntStubs {
     struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, int byteIndex, struct TkTextIndex *indexPtr); /* 162 */
     Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
-    int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 165 */
+    int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 165 */
     void (*tkTextChanged) (struct TkSharedText *sharedTextPtr, struct TkText *textPtr, const struct TkTextIndex *index1Ptr, const struct TkTextIndex *index2Ptr); /* 166 */
     int (*tkBTreeNumLines) (TkTextBTree tree, const struct TkText *textPtr); /* 167 */
     void (*tkTextInsertDisplayProc) (struct TkText *textPtr, struct TkTextDispChunk *chunkPtr, int x, int y, int height, int baseline, Display *display, Drawable dst, int screenY); /* 168 */
@@ -788,7 +788,7 @@ typedef struct TkIntStubs {
     void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int lastChar); /* 181 */
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
-    void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, int numBytes, double x, double y, double angle); /* 184 */
+    void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x, double y, double angle); /* 184 */
     void (*tkpRedrawWidget) (Tk_Window tkwin); /* 185 */
     int (*tkpWillDrawWidget) (Tk_Window tkwin); /* 186 */
     int (*tkDebugPhotoStringMatchDef) (Tcl_Interp *inter, Tcl_Obj *data, Tcl_Obj *formatString, int *widthPtr, int *heightPtr); /* 187 */

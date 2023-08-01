@@ -31,6 +31,8 @@
 #ifdef HAVE_SYS_PARAM_H
 #    include <sys/param.h>
 #endif
+#include <stdint.h>
+#include <stdlib.h>
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN
@@ -80,23 +82,16 @@
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 #endif
 
-#if defined(__GNUC__) && (__GNUC__ > 2)
+#if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
+#   define TKFLEXARRAY
+#elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
 #endif
 
-#if TCL_MAJOR_VERSION < 9
-#   undef Tcl_ExternalToUtfDStringEx
-#   undef Tcl_UtfToExternalDStringEx
-    /* just assume 'flags' is TCL_ENCODING_NOCOMPLAIN, and return value not used. */
-#   define Tcl_ExternalToUtfDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_ExternalToUtfDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   define Tcl_UtfToExternalDStringEx(encoding, data, length, flags, ds) \
-	(Tcl_UtfToExternalDString(encoding, data, length, ds), TCL_INDEX_NONE)
-#   if !defined(Tcl_GetParent) && (TCL_MINOR_VERSION < 7)
-#	define Tcl_GetParent Tcl_GetMaster
-#   endif
+#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
+#   define Tcl_GetParent Tcl_GetMaster
 #endif
 
 /*
@@ -146,10 +141,8 @@
 #   define TCL_LL_MODIFIER	"ll"
 #endif
 
-#if TCL_MAJOR_VERSION > 8
-#   define TKSIZET_MODIFIER TCL_Z_MODIFIER
-#else
-#   define TKSIZET_MODIFIER ""
+#if !defined(TCL_SIZE_MODIFIER)
+#   define TCL_SIZE_MODIFIER ""
 #endif
 
 /*
@@ -265,7 +258,7 @@ typedef struct TkDisplay {
     TkLockUsage lockUsage;
 				/* Indicates how to interpret lock
 				 * modifier. */
-    int numModKeyCodes;		/* Number of entries in modKeyCodes array
+    Tcl_Size numModKeyCodes;		/* Number of entries in modKeyCodes array
 				 * below. */
     KeyCode *modKeyCodes;	/* Pointer to an array giving keycodes for all
 				 * of the keys that have modifiers associated
@@ -990,7 +983,11 @@ typedef struct {
 
 typedef struct TkEnsemble {
     const char *name;
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *proc;
+#else
     Tcl_ObjCmdProc *proc;
+#endif
     const struct TkEnsemble *subensemble;
 } TkEnsemble;
 
@@ -1103,13 +1100,22 @@ typedef struct TkpClipMask {
  * be properly registered with Tcl:
  */
 
-MODULE_SCOPE const Tcl_ObjType tkBorderObjType;
-MODULE_SCOPE const Tcl_ObjType tkBitmapObjType;
-MODULE_SCOPE const Tcl_ObjType tkColorObjType;
-MODULE_SCOPE const Tcl_ObjType tkCursorObjType;
-MODULE_SCOPE const Tcl_ObjType tkFontObjType;
-MODULE_SCOPE const Tcl_ObjType tkStateKeyObjType;
-MODULE_SCOPE const Tcl_ObjType tkTextIndexType;
+typedef struct {
+    Tcl_ObjType objType;
+    size_t version;
+} TkObjType;
+
+#ifndef TCL_OBJTYPE_V0
+#   define TCL_OBJTYPE_V0 /* just empty */
+#endif
+
+MODULE_SCOPE const TkObjType tkBorderObjType;
+MODULE_SCOPE const TkObjType tkBitmapObjType;
+MODULE_SCOPE const TkObjType tkColorObjType;
+MODULE_SCOPE const TkObjType tkCursorObjType;
+MODULE_SCOPE const TkObjType tkFontObjType;
+MODULE_SCOPE const TkObjType tkStateKeyObjType;
+MODULE_SCOPE const TkObjType tkTextIndexType;
 
 /*
  * Miscellaneous variables shared among Tk modules but not exported to the
@@ -1178,10 +1184,11 @@ extern "C" {
 #endif
 
 /*
- * Themed widget set init function:
+ * Themed widget set init function, and handler called when Tk is destroyed.
  */
 
 MODULE_SCOPE int	Ttk_Init(Tcl_Interp *interp);
+MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
 
 /*
  * Internal functions shared among Tk modules but not exported to the outside
@@ -1198,7 +1205,7 @@ MODULE_SCOPE int	Tk_BindtagsObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_BusyObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 MODULE_SCOPE int	Tk_ButtonObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
@@ -1364,8 +1371,8 @@ MODULE_SCOPE void       TkFocusSplit(TkWindow *winPtr);
 MODULE_SCOPE void       TkFocusJoin(TkWindow *winPtr);
 MODULE_SCOPE void	TkpDrawCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
-			    const char *source, int numBytes, int rangeStart,
-			    int rangeLength, int x, int y);
+			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
+			    Tcl_Size rangeLength, int x, int y);
 MODULE_SCOPE void	TkpDrawAngledCharsInContext(Display * display,
 			    Drawable drawable, GC gc, Tk_Font tkfont,
 			    const char *source, Tcl_Size numBytes, Tcl_Size rangeStart,
@@ -1391,7 +1398,7 @@ MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
 			    Window *parentPtr, Tk_Window tkParent,
 			    TkBusy busy);
 MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const *objv, int flags);
+			    Tcl_Size objc, Tcl_Obj *const *objv, int flags);
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
@@ -1415,7 +1422,7 @@ MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
 #   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
 #   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
 #else
-#   define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj(value))
+#   define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
 #   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 #endif
 
@@ -1452,6 +1459,8 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 #ifdef HAVE_XFT
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
+
+MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class

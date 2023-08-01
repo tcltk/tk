@@ -33,22 +33,6 @@
 
 #define GETHINSTANCE Tk_GetHINSTANCE()
 
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
-
-#ifdef _MSC_VER
-/*
- * Earlier versions of MSVC don't know snprintf, but _snprintf is compatible.
- * Note that sprintf is deprecated.
- */
-# define snprintf _snprintf
-#endif
-
 typedef struct IcoInfo {
     HICON hIcon;                /* icon handle returned by LoadIcon. */
     unsigned id;                /* Identifier for command;  used to
@@ -248,7 +232,7 @@ TaskbarOperation(
     if (icoPtr->taskbar_txt != NULL) {
         Tcl_DString dst;
         Tcl_DStringInit(&dst);
-        str = (WCHAR *)Tcl_UtfToWCharDString(Tcl_GetString(icoPtr->taskbar_txt), -1, &dst);
+        str = (WCHAR *)Tcl_UtfToWCharDString(Tcl_GetString(icoPtr->taskbar_txt), TCL_INDEX_NONE, &dst);
         wcsncpy(ni.szTip, str, (Tcl_DStringLength(&dst) + 2) / 2);
         Tcl_DStringFree(&dst);
     } else {
@@ -702,7 +686,7 @@ TaskbarEval(
         }
         if (result != TCL_OK) {
             char buffer[100];
-            sprintf(buffer, "\n  (command bound to taskbar-icon ico#%d)", icoPtr->id);
+            snprintf(buffer, 100, "\n  (command bound to taskbar-icon ico#%d)", icoPtr->id);
             Tcl_AddErrorInfo(icoPtr->interp, buffer);
             Tcl_BackgroundError(icoPtr->interp);
         }
@@ -988,7 +972,7 @@ WinSystrayCmd(
                 }
             }
             if (cmd == CMD_ADD && imageObj == NULL) {
-                Tcl_SetObjResult(interp, Tcl_NewStringObj("missing required option \"-image\"", -1));
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("missing required option \"-image\"", TCL_INDEX_NONE));
                 return TCL_ERROR;
             }
             if (imageObj != NULL) {
@@ -1037,7 +1021,7 @@ WinSystrayCmd(
             if (cmd == CMD_ADD) {
                 char buffer[5 + TCL_INTEGER_SPACE];
                 int n;
-                n = _snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
+                n = snprintf(buffer, sizeof(buffer) - 1, "ico#%d", icoPtr->id);
                 buffer[n] = 0;
                 Tcl_SetObjResult(interp, Tcl_NewStringObj(buffer, n));
             }
@@ -1123,14 +1107,14 @@ WinSysNotifyCmd(
     if (msgtitle != NULL) {
         WCHAR *title;
         Tcl_DStringInit(&titledst);
-        title = Tcl_UtfToWCharDString(msgtitle, -1, &titledst);
+        title = Tcl_UtfToWCharDString(msgtitle, TCL_INDEX_NONE, &titledst);
         wcsncpy(ni.szInfoTitle, title, (Tcl_DStringLength(&titledst) + 2) / 2);
         Tcl_DStringFree(&titledst);
     }
     if (msginfo != NULL) {
         WCHAR *info;
         Tcl_DStringInit(&infodst);
-        info = Tcl_UtfToWCharDString(msginfo, -1, &infodst);
+        info = Tcl_UtfToWCharDString(msginfo, TCL_INDEX_NONE, &infodst);
         wcsncpy(ni.szInfo, info, (Tcl_DStringLength(&infodst) + 2) / 2);
         Tcl_DStringFree(&infodst);
     }
@@ -1164,7 +1148,7 @@ WinIcoInit(
 
     mainWindow = Tk_MainWindow(interp);
     if (mainWindow == NULL) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj("main window has been destroyed", -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("main window has been destroyed", TCL_INDEX_NONE));
         return TCL_ERROR;
     }
 

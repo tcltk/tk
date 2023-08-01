@@ -11,13 +11,6 @@
  */
 
 #include "tkInt.h"
-#ifdef HAVE_STDLIB_H
-#include <stdlib.h>
-#endif
-
-#ifdef HAVE_STDINT_H
-#include <stdint.h>
-#endif
 
 /*
  * Runtime linking of libicu.
@@ -70,7 +63,7 @@ TCL_DECLARE_MUTEX(icu_mutex);
 
 static int
 startEndOfCmd(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -120,7 +113,7 @@ startEndOfCmd(
     	return TCL_ERROR;
     }
     if (flags & FLAG_FOLLOWING) {
-	if ((idx == TCL_INDEX_NONE) && (flags & FLAG_WORD)) {
+	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
 	}
 	idx = icu_following(it, idx);
@@ -216,7 +209,7 @@ Icu_Init(
 
 	/* Going back down to ICU version 50 */
 	while ((icu_fns.lib == NULL) && (icuversion[1] >= '5')) {
-	    if (icuversion[2]-- < '0') {
+	    if (--icuversion[2] < '0') {
 		icuversion[1]--; icuversion[2] = '9';
 	    }
 #if defined(_WIN32) && !defined(STATIC_BUILD)
@@ -228,7 +221,7 @@ Icu_Init(
 	    i = 0;
 	    while (iculibs[i] != NULL) {
 		Tcl_ResetResult(interp);
-		nameobj = Tcl_NewStringObj(iculibs[i], -1);
+		nameobj = Tcl_NewStringObj(iculibs[i], TCL_INDEX_NONE);
 		char *nameStr = Tcl_GetString(nameobj);
 		char *p = strchr(nameStr, '?');
 		if (p != NULL) {
@@ -250,7 +243,7 @@ Icu_Init(
 #if defined(_WIN32)
 	if (icu_fns.lib == NULL) {
 	    Tcl_ResetResult(interp);
-		nameobj = Tcl_NewStringObj("icu.dll", -1);
+		nameobj = Tcl_NewStringObj("icu.dll", TCL_INDEX_NONE);
 		Tcl_IncrRefCount(nameobj);
 		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
 			== TCL_OK) {
@@ -260,7 +253,7 @@ Icu_Init(
 	}
 	if (icu_fns.lib == NULL) {
 	    Tcl_ResetResult(interp);
-		nameobj = Tcl_NewStringObj("icuuc.dll", -1);
+		nameobj = Tcl_NewStringObj("icuuc.dll", TCL_INDEX_NONE);
 		Tcl_IncrRefCount(nameobj);
 		if (Tcl_LoadFile(interp, nameobj, NULL, 0, NULL, &icu_fns.lib)
 			== TCL_OK) {

@@ -50,7 +50,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowActivation: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -85,7 +85,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowBoundsChanged: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     BOOL movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
@@ -123,7 +123,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowExpanded: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -180,7 +180,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowEnteredFullScreen: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
 	return;
@@ -191,7 +191,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowExitedFullScreen: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
 	return;
@@ -202,7 +202,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowCollapsed: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -216,7 +216,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (BOOL) windowShouldClose: (NSWindow *) w
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, w);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), w);
 #endif
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -275,12 +275,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowDragStart: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 
 - (void) windowUnmapped: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -309,7 +309,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
 #endif
@@ -342,7 +342,7 @@ static void RefocusGrabWindow(void *data) {
     (void)notification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     [NSApp tkCheckPasteboard];
 
@@ -377,7 +377,7 @@ static void RefocusGrabWindow(void *data) {
     (void)notification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
 
     /*
@@ -415,14 +415,14 @@ static void RefocusGrabWindow(void *data) {
 - (void) applicationShowHide: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     const char *cmd = ([[notification name] isEqualToString:
 	    NSApplicationDidUnhideNotification] ?
 	    "::tk::mac::OnShow" : "::tk::mac::OnHide");
 
     if (_eventInterp && Tcl_FindCommand(_eventInterp, cmd, NULL, 0)) {
-	int code = Tcl_EvalEx(_eventInterp, cmd, -1, TCL_EVAL_GLOBAL);
+	int code = Tcl_EvalEx(_eventInterp, cmd, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
@@ -436,7 +436,7 @@ static void RefocusGrabWindow(void *data) {
     (void)notification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     TkDisplay *dispPtr = TkGetDisplayList();
 
@@ -871,7 +871,7 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve(protPtr);
 	    interp = protPtr->interp;
 	    Tcl_Preserve(interp);
-	    result = Tcl_EvalEx(interp, protPtr->command, -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(interp, protPtr->command, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    if (result != TCL_OK) {
 		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 			"\n    (command for \"%s\" window manager protocol)",
@@ -945,7 +945,7 @@ Tk_MacOSXIsAppInFront(void)
 
 static Tk_RestrictAction
 ExposeRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
@@ -1009,6 +1009,7 @@ ConfigureRestrictProc(
     return NO;
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
 {
 
@@ -1021,6 +1022,7 @@ ConfigureRestrictProc(
 
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
+#endif
 
 - (void) addTkDirtyRect: (NSRect) rect
 {
@@ -1087,7 +1089,7 @@ ConfigureRestrictProc(
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
-	ClientData oldArg;
+	void *oldArg;
     	Tk_RestrictProc *oldProc;
 
 	/*
@@ -1152,7 +1154,7 @@ ConfigureRestrictProc(
     int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    ClientData oldArg;
+    void *oldArg;
     Tk_RestrictProc *oldProc;
     if (!winPtr) {
 	return;
@@ -1269,7 +1271,7 @@ static const char *const accentNames[] = {
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
-    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
 }
 
 - (void)observeValueForKeyPath:(NSString *)keyPath
@@ -1297,7 +1299,7 @@ static const char *const accentNames[] = {
 - (void) tkToolbarButton: (id) sender
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), sender);
 #endif
     union {XEvent general; XVirtualEvent virt;} event;
     int x, y;
@@ -1350,7 +1352,7 @@ static const char *const accentNames[] = {
     (void)theEvent;
 
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
 }
 

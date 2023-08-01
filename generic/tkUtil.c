@@ -13,17 +13,23 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The structure below defines the implementation of the "statekey" Tcl
  * object, used for quickly finding a mapping in a TkStateMap.
  */
 
-const Tcl_ObjType tkStateKeyObjType = {
-    "statekey",			/* name */
+const TkObjType tkStateKeyObjType = {
+    {"statekey",			/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -46,7 +52,7 @@ const Tcl_ObjType tkStateKeyObjType = {
 
 int
 TkStateParseProc(
-    ClientData clientData,	/* some flags.*/
+    void *clientData,	/* some flags.*/
     Tcl_Interp *interp,		/* Used for reporting errors. */
     TCL_UNUSED(Tk_Window),		/* Window containing canvas widget. */
     const char *value,		/* Value of option. */
@@ -87,15 +93,15 @@ TkStateParseProc(
     msgObj = Tcl_ObjPrintf("bad %s value \"%s\": must be normal",
 	    ((flags & 4) ? "-default" : "state"), value);
     if (flags & 1) {
-	Tcl_AppendToObj(msgObj, ", active", -1);
+	Tcl_AppendToObj(msgObj, ", active", TCL_INDEX_NONE);
     }
     if (flags & 2) {
-	Tcl_AppendToObj(msgObj, ", hidden", -1);
+	Tcl_AppendToObj(msgObj, ", hidden", TCL_INDEX_NONE);
     }
     if (flags & 3) {
-	Tcl_AppendToObj(msgObj, ",", -1);
+	Tcl_AppendToObj(msgObj, ",", TCL_INDEX_NONE);
     }
-    Tcl_AppendToObj(msgObj, " or disabled", -1);
+    Tcl_AppendToObj(msgObj, " or disabled", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
     Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
     *statePtr = TK_STATE_NORMAL;
@@ -257,7 +263,7 @@ TkOrientPrintProc(
 
 int
 TkOffsetParseProc(
-    ClientData clientData,	/* not used */
+    void *clientData,	/* not used */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
     const char *value,		/* Name of image */
@@ -383,12 +389,12 @@ TkOffsetParseProc(
   badTSOffset:
     msgObj = Tcl_ObjPrintf("bad offset \"%s\": expected \"x,y\"", value);
     if (PTR2INT(clientData) & TK_OFFSET_RELATIVE) {
-	Tcl_AppendToObj(msgObj, ", \"#x,y\"", -1);
+	Tcl_AppendToObj(msgObj, ", \"#x,y\"", TCL_INDEX_NONE);
     }
     if (PTR2INT(clientData) & TK_OFFSET_INDEX) {
-	Tcl_AppendToObj(msgObj, ", <index>", -1);
+	Tcl_AppendToObj(msgObj, ", <index>", TCL_INDEX_NONE);
     }
-    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", -1);
+    Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
     Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
     return TCL_ERROR;
@@ -423,7 +429,7 @@ TkOffsetPrintProc(
 	    return "end";
 	}
 	p = (char *)ckalloc(32);
-	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
+	snprintf(p, 32, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
     }
@@ -456,7 +462,7 @@ TkOffsetPrintProc(
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
-    sprintf(q, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
+    snprintf(q, 32, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
     *freeProcPtr = TCL_DYNAMIC;
     return p;
 }
@@ -473,7 +479,7 @@ TkOffsetPrintProc(
 
 int
 TkPixelParseProc(
-    ClientData clientData,	/* If non-NULL, negative values are allowed as
+    void *clientData,	/* If non-NULL, negative values are allowed as
 				 * well. */
     Tcl_Interp *interp,		/* Interpreter to send results back to */
     Tk_Window tkwin,		/* Window on same display as tile */
@@ -640,7 +646,7 @@ Tk_DrawFocusHighlight(
 int
 Tk_GetScrollInfo(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int argc,			/* # arguments for command. */
+    Tcl_Size argc,			/* # arguments for command. */
     const char **argv,		/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
@@ -723,7 +729,7 @@ Tk_GetScrollInfo(
 int
 Tk_GetScrollInfoObj(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    int objc,			/* # arguments for command. */
+    Tcl_Size objc,			/* # arguments for command. */
     Tcl_Obj *const objv[],	/* Arguments for command. */
     double *dblPtr,		/* Filled in with argument "moveto" option, if
 				 * any. */
@@ -731,8 +737,13 @@ Tk_GetScrollInfoObj(
 				 * scroll, if any. */
 {
     Tcl_Size length;
-    const char *arg = Tcl_GetStringFromObj(objv[2], &length);
+    const char *arg;
 
+    if (objc + 1 < 5) {
+	Tcl_WrongNumArgs(interp, 2, objv, "moveto|scroll args");
+	return TK_SCROLL_ERROR;
+    }
+    arg = Tcl_GetStringFromObj(objv[2], &length);
 #define ArgPfxEq(str) \
 	((arg[0] == str[0]) && !strncmp(arg, str, length))
 
@@ -967,7 +978,7 @@ TkFindStateNumObj(
      * See if the value is in the object cache.
      */
 
-    if ((keyPtr->typePtr == &tkStateKeyObjType)
+    if ((keyPtr->typePtr == &tkStateKeyObjType.objType)
 	    && (keyPtr->internalRep.twoPtrValue.ptr1 == mapPtr)) {
 	return PTR2INT(keyPtr->internalRep.twoPtrValue.ptr2);
     }
@@ -985,7 +996,7 @@ TkFindStateNumObj(
 	    }
 	    keyPtr->internalRep.twoPtrValue.ptr1 = (void *) mapPtr;
 	    keyPtr->internalRep.twoPtrValue.ptr2 = INT2PTR(mPtr->numKey);
-	    keyPtr->typePtr = &tkStateKeyObjType;
+	    keyPtr->typePtr = &tkStateKeyObjType.objType;
 	    return mPtr->numKey;
 	}
     }
@@ -1035,12 +1046,13 @@ TkFindStateNumObj(
 int
 TkBackgroundEvalObjv(
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const *objv,
     int flags)
 {
     Tcl_InterpState state;
-    int n, r = TCL_OK;
+    int r = TCL_OK;
+    Tcl_Size n;
 
     /*
      * Record the state of the interpreter.
@@ -1094,7 +1106,7 @@ TkMakeEnsemble(
     Tcl_Interp *interp,
     const char *namesp,
     const char *name,
-    ClientData clientData,
+    void *clientData,
     const TkEnsemble map[])
 {
     Tcl_Namespace *namespacePtr = NULL;
@@ -1117,7 +1129,7 @@ TkMakeEnsemble(
 	}
     }
 
-    nameObj = Tcl_NewStringObj(name, -1);
+    nameObj = Tcl_NewStringObj(name, TCL_INDEX_NONE);
     ensemble = Tcl_FindEnsemble(interp, nameObj, 0);
     Tcl_DecrRefCount(nameObj);
     if (ensemble == NULL) {
@@ -1129,24 +1141,29 @@ TkMakeEnsemble(
     }
 
     Tcl_DStringSetLength(&ds, 0);
-    Tcl_DStringAppend(&ds, namesp, -1);
+    Tcl_DStringAppend(&ds, namesp, TCL_INDEX_NONE);
     if (!(strlen(namesp) == 2 && namesp[1] == ':')) {
-	Tcl_DStringAppend(&ds, "::", -1);
+	Tcl_DStringAppend(&ds, "::", TCL_INDEX_NONE);
     }
-    Tcl_DStringAppend(&ds, name, -1);
+    Tcl_DStringAppend(&ds, name, TCL_INDEX_NONE);
 
     dictObj = Tcl_NewObj();
     for (i = 0; map[i].name != NULL ; ++i) {
 	Tcl_Obj *fqdnObj;
 
-	nameObj = Tcl_NewStringObj(map[i].name, -1);
+	nameObj = Tcl_NewStringObj(map[i].name, TCL_INDEX_NONE);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds));
 	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
+#if TCL_MAJOR_VERSION > 8
+	    Tcl_CreateObjCommand2(interp, Tcl_GetString(fqdnObj),
+		    map[i].proc, clientData, NULL);
+#else
 	    Tcl_CreateObjCommand(interp, Tcl_GetString(fqdnObj),
 		    map[i].proc, clientData, NULL);
+#endif
 	} else if (map[i].subensemble) {
 	    TkMakeEnsemble(interp, Tcl_DStringValue(&ds),
 		    map[i].name, clientData, map[i].subensemble);

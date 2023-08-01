@@ -16,6 +16,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The maximum amount of memory to allocate for data read from the file. If we
  * need more than this, we do it in pieces.
@@ -307,8 +311,8 @@ FileWritePPM(
 	return TCL_ERROR;
     }
 
-    sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
-    Tcl_Write(chan, header, -1);
+    snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
+    Tcl_Write(chan, header, TCL_INDEX_NONE);
 
     pixLinePtr = blockPtr->pixelPtr + blockPtr->offset[0];
     greenOffset = blockPtr->offset[1] - blockPtr->offset[0];
@@ -378,7 +382,7 @@ StringWritePPM(
     char header[16 + TCL_INTEGER_SPACE * 2];
     Tcl_Obj *byteArrayObj;
 
-    sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
+    snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
 
     /*
      * Construct a byte array of the right size with the header and
@@ -499,13 +503,13 @@ StringReadPPM(
 	    &maxIntensity, &dataBuffer, &dataSize);
     if (type == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"couldn't read raw PPM header from string", -1));
+		"couldn't read raw PPM header from string", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "NO_HEADER", NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"PPM image data has dimension(s) <= 0", -1));
+		"PPM image data has dimension(s) <= 0", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "DIMENSIONS", NULL);
 	return TCL_ERROR;
     }
@@ -557,7 +561,7 @@ StringReadPPM(
 
 	if (block.pitch*height > dataSize) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "truncated PPM data", -1));
+		    "truncated PPM data", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", NULL);
 	    return TCL_ERROR;
 	}
@@ -593,7 +597,7 @@ StringReadPPM(
 	if (dataSize < nBytes) {
 	    ckfree(pixelPtr);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "truncated PPM data", -1));
+		    "truncated PPM data", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PPM", "TRUNCATED", NULL);
 	    return TCL_ERROR;
 	}

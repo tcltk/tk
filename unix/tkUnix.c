@@ -121,6 +121,32 @@ Tk_UpdatePointer(
 /*
  *----------------------------------------------------------------------
  *
+ * TkpCopyRegion --
+ *
+ *	Makes the destination region a copy of the source region.
+ *	Currently unused on X11.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    /* XUnionRegion() in Xlib is optimized to detect copying */
+    XUnionRegion((Region)src, (Region)src, (Region)dst);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * TkpBuildRegionFromAlphaData --
  *
  *	Set up a rectangle of the given region based on the supplied alpha

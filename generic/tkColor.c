@@ -15,6 +15,10 @@
 #include "tkInt.h"
 #include "tkColor.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Structures of the following following type are used as keys for
  * colorValueTable (in TkDisplay).
@@ -52,12 +56,14 @@ static void		InitColorObj(Tcl_Obj *objPtr);
  * of the Tcl_Obj points to a TkColor object.
  */
 
-const Tcl_ObjType tkColorObjType = {
-    "color",			/* name */
+const TkObjType tkColorObjType = {
+    {"color",			/* name */
     FreeColorObjProc,		/* freeIntRepProc */
     DupColorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -95,7 +101,7 @@ Tk_AllocColorFromObj(
 {
     TkColor *tkColPtr;
 
-    if (objPtr->typePtr != &tkColorObjType) {
+    if (objPtr->typePtr != &tkColorObjType.objType) {
 	InitColorObj(objPtr);
     }
     tkColPtr = (TkColor *) objPtr->internalRep.twoPtrValue.ptr1;
@@ -371,7 +377,7 @@ Tk_NameOfColor(
 	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-	sprintf(tsdPtr->rgbString, "#%04x%04x%04x", colorPtr->red,
+	snprintf(tsdPtr->rgbString, sizeof(tsdPtr->rgbString), "#%04x%04x%04x", colorPtr->red,
 		colorPtr->green, colorPtr->blue);
 
 	/*
@@ -657,7 +663,7 @@ Tk_GetColorFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkColorObjType) {
+    if (objPtr->typePtr != &tkColorObjType.objType) {
 	InitColorObj(objPtr);
     }
 
@@ -745,7 +751,7 @@ InitColorObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkColorObjType;
+    objPtr->typePtr = &tkColorObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -818,9 +824,9 @@ TkDebugColor(
 	    Tcl_Obj *objPtr = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(tkColPtr->resourceRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)tkColPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(tkColPtr->objRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)tkColPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

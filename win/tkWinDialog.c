@@ -568,14 +568,14 @@ static UINT APIENTRY	ChooseDirectoryValidateProc(HWND hdlg, UINT uMsg,
 static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static void             CleanupOFNOptions(OFNOpts *optsPtr);
-static int              ParseOFNOptions(ClientData clientData,
+static int              ParseOFNOptions(void *clientData,
                             Tcl_Interp *interp, int objc,
                             Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
 static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr,
                          enum OFNOper oper);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                             enum OFNOper oper);
-static int 		GetFileName(ClientData clientData,
+static int 		GetFileName(void *clientData,
                                     Tcl_Interp *interp, int objc,
                                     Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
@@ -588,7 +588,7 @@ static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
-static void		SetTkDialog(ClientData clientData);
+static void		SetTkDialog(void *clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
 
 /*
@@ -690,7 +690,7 @@ TkWinDialogDebug(
 
 int
 Tk_ChooseColorObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -846,14 +846,13 @@ static UINT CALLBACK
 ColorDlgHookProc(
     HWND hDlg,			/* Handle to the color dialog. */
     UINT uMsg,			/* Type of message. */
-    WPARAM wParam,		/* First message parameter. */
+    TCL_UNUSED(WPARAM),	/* First message parameter. */
     LPARAM lParam)		/* Second message parameter. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *title;
     CHOOSECOLORW *ccPtr;
-    (void)wParam;
 
     if (WM_INITDIALOG == uMsg) {
 
@@ -868,7 +867,7 @@ ColorDlgHookProc(
 	    Tcl_DString ds;
 
 	    Tcl_DStringInit(&ds);
-	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, -1, &ds));
+	    SetWindowTextW(hDlg, Tcl_UtfToWCharDString(title, TCL_INDEX_NONE, &ds));
 	    Tcl_DStringFree(&ds);
 	}
 	if (tsdPtr->debugFlag) {
@@ -899,7 +898,7 @@ ColorDlgHookProc(
 
 int
 Tk_GetOpenFileObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -926,7 +925,7 @@ Tk_GetOpenFileObjCmd(
 
 int
 Tk_GetSaveFileObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -973,7 +972,7 @@ static void CleanupOFNOptions(OFNOpts *optsPtr)
 
 static int
 ParseOFNOptions(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
@@ -1029,7 +1028,7 @@ ParseOFNOptions(
     case OFN_FILE_OPEN: options = openOptions; break;
     }
 
-    ZeroMemory(optsPtr, sizeof(*optsPtr));
+    memset(optsPtr, 0, sizeof(*optsPtr));
     /* optsPtr->forceXPStyle = 1; */
     optsPtr->tkwin = (Tk_Window)clientData;
     optsPtr->confirmOverwrite = 1; /* By default we ask for confirmation */
@@ -1050,7 +1049,7 @@ ParseOFNOptions(
             if (strcmp(Tcl_GetString(objv[i]), "-xpstyle"))
                 goto error_return;
             if (i + 1 == objc) {
-                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", -1));
+                Tcl_SetObjResult(interp, Tcl_NewStringObj("value for \"-xpstyle\" missing", TCL_INDEX_NONE));
                 Tcl_SetErrorCode(interp, "TK", "FILEDIALOG", "VALUE", NULL);
                 goto error_return;
             }
@@ -1344,7 +1343,7 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
 
     if (Tcl_DStringValue(&optsPtr->utfDirString)[0] != '\0') {
         Tcl_Obj *normPath, *iniDirPath;
-        iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), -1);
+        iniDirPath = Tcl_NewStringObj(Tcl_DStringValue(&optsPtr->utfDirString), TCL_INDEX_NONE);
         Tcl_IncrRefCount(iniDirPath);
         normPath = Tcl_FSGetNormalizedPath(interp, iniDirPath);
         /* XXX - Note on failures do not raise error, simply ignore ini dir */
@@ -1521,7 +1520,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    ZeroMemory(&ofnData, sizeof(OFNData));
+    memset(&ofnData, 0, sizeof(OFNData));
     Tcl_DStringInit(&utfFilterString);
     Tcl_DStringInit(&dirString); /* XXX - original code was missing this
                                     leaving dirString uninitialized for
@@ -1535,7 +1534,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
     Tk_MakeWindowExist(optsPtr->tkwin);
     hWnd = Tk_GetHWND(Tk_WindowId(optsPtr->tkwin));
 
-    ZeroMemory(&ofn, sizeof(OPENFILENAME));
+    memset(&ofn, 0, sizeof(OPENFILENAME));
     ofn.lStructSize = sizeof(OPENFILENAME);
     ofn.hwndOwner = hWnd;
     ofn.hInstance = TkWinGetHInstance(ofn.hwndOwner);
@@ -1572,7 +1571,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    ++str;
 	}
 	Tcl_DStringInit(&extString);
-	ofn.lpstrDefExt = Tcl_UtfToWCharDString(str, -1, &extString);
+	ofn.lpstrDefExt = Tcl_UtfToWCharDString(str, TCL_INDEX_NONE, &extString);
     }
 
     Tcl_DStringInit(&filterString);
@@ -1608,7 +1607,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
     if (optsPtr->titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	ofn.lpstrTitle = Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), -1, &titleString);
+	ofn.lpstrTitle = Tcl_UtfToWCharDString(Tcl_GetString(optsPtr->titleObj), TCL_INDEX_NONE, &titleString);
     }
 
     /*
@@ -1697,7 +1696,7 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 
 		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 			    Tcl_DStringLength(&ds));
-		    Tcl_AppendToObj(fullnameObj, "/", -1);
+		    Tcl_AppendToObj(fullnameObj, "/", TCL_INDEX_NONE);
 		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filenameBuf),
 			    Tcl_DStringLength(&filenameBuf));
 		    gotFilename = 1;
@@ -1720,14 +1719,14 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 	    Tcl_DStringFree(&ds);
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    ConvertExternalFilename(ofn.lpstrFile, &ds), -1));
+		    ConvertExternalFilename(ofn.lpstrFile, &ds), TCL_INDEX_NONE));
 	    gotFilename = (Tcl_DStringLength(&ds) > 0);
 	    Tcl_DStringFree(&ds);
 	}
 	result = TCL_OK;
 	if ((ofn.nFilterIndex > 0) && gotFilename && optsPtr->typeVariableObj
 		&& optsPtr->filterObj) {
-	    int listObjc, count;
+	    Tcl_Size listObjc, count;
 	    Tcl_Obj **listObjv = NULL;
 	    Tcl_Obj **typeInfo = NULL;
 
@@ -1811,7 +1810,7 @@ end:
 
 static int
 GetFileName(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
@@ -1858,14 +1857,13 @@ static UINT APIENTRY
 OFNHookProc(
     HWND hdlg,			/* Handle to child dialog window. */
     UINT uMsg,			/* Message identifier */
-    WPARAM wParam,		/* Message parameter */
+    TCL_UNUSED(WPARAM),	/* Message parameter */
     LPARAM lParam)		/* Message parameter */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     OPENFILENAME *ofnPtr;
     OFNData *ofnData;
-    (void)wParam;
 
     if (uMsg == WM_INITDIALOG) {
 	TkWinSetUserData(hdlg, lParam);
@@ -2147,7 +2145,7 @@ MakeFilter(
 	*p = '\0';
     }
 
-    Tcl_DStringAppend(dsPtr, filterStr, (int) (p - filterStr));
+    Tcl_DStringAppend(dsPtr, filterStr, (Tcl_Size) (p - filterStr));
     ckfree(filterStr);
 
     TkFreeFileFilters(&flist);
@@ -2238,7 +2236,7 @@ static int MakeFilterVista(
          filterPtr = filterPtr->next, ++i) {
 	const char *sep;
 	FileFilterClause *clausePtr;
-	int nbytes;
+	size_t nbytes;
 
 	/* Check if this entry should be shown as the default */
 	if (initial && strcmp(initial, filterPtr->name) == 0)
@@ -2246,7 +2244,7 @@ static int MakeFilterVista(
 
 	/* First stash away the text description of the pattern */
         Tcl_DStringInit(&ds);
-        Tcl_UtfToWCharDString(filterPtr->name, -1, &ds);
+        Tcl_UtfToWCharDString(filterPtr->name, TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszName = (LPCWSTR)ckalloc(nbytes);
@@ -2267,15 +2265,15 @@ static int MakeFilterVista(
 	    GlobPattern *globPtr;
 	    for (globPtr = clausePtr->patterns; globPtr;
 		    globPtr = globPtr->next) {
-		Tcl_DStringAppend(&patterns, sep, -1);
-		Tcl_DStringAppend(&patterns, globPtr->pattern, -1);
+		Tcl_DStringAppend(&patterns, sep, TCL_INDEX_NONE);
+		Tcl_DStringAppend(&patterns, globPtr->pattern, TCL_INDEX_NONE);
 		sep = ";";
 	    }
 	}
 
 	/* Again we need a Unicode form of the string */
         Tcl_DStringInit(&ds);
-        Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), -1, &ds);
+        Tcl_UtfToWCharDString(Tcl_DStringValue(&patterns), TCL_INDEX_NONE, &ds);
 	nbytes = Tcl_DStringLength(&ds); /* # bytes, not Unicode chars */
 	nbytes += sizeof(WCHAR);         /* Terminating \0 */
 	dlgFilterPtr[i].pszSpec = (LPCWSTR)ckalloc(nbytes);
@@ -2369,7 +2367,7 @@ static int MakeFilterVista(
 
 int
 Tk_ChooseDirectoryObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2403,7 +2401,7 @@ Tk_ChooseDirectoryObjCmd(
     /* Older dialogs */
 
     path[0] = '\0';
-    ZeroMemory(&cdCBData, sizeof(ChooseDir));
+    memset(&cdCBData, 0, sizeof(ChooseDir));
     cdCBData.interp = interp;
     cdCBData.mustExist = ofnOpts.mustExist;
 
@@ -2412,7 +2410,7 @@ Tk_ChooseDirectoryObjCmd(
 	LPCWSTR uniStr;
 
 	Tcl_DStringInit(&tempString);
-	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), -1,
+	Tcl_UtfToWCharDString(Tcl_DStringValue(&ofnOpts.utfDirString), TCL_INDEX_NONE,
                           &tempString);
         uniStr = (WCHAR *) Tcl_DStringValue(&tempString);
 
@@ -2445,7 +2443,7 @@ Tk_ChooseDirectoryObjCmd(
 
     if (ofnOpts.titleObj != NULL) {
 	Tcl_DStringInit(&titleString);
-	bInfo.lpszTitle = Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), -1, &titleString);
+	bInfo.lpszTitle = Tcl_UtfToWCharDString(Tcl_GetString(ofnOpts.titleObj), TCL_INDEX_NONE, &titleString);
     } else {
 	bInfo.lpszTitle = L"Please choose a directory, then select OK.";
     }
@@ -2503,7 +2501,7 @@ Tk_ChooseDirectoryObjCmd(
 	if (pidl != NULL) {
 	    if (!SHGetPathFromIDListW(pidl, path)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"error: not a file system folder", -1));
+			"error: not a file system folder", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "DIRDIALOG", "PSEUDO", NULL);
 	    }
 	    pMalloc->lpVtbl->Free(pMalloc, (void *) pidl);
@@ -2533,7 +2531,7 @@ Tk_ChooseDirectoryObjCmd(
 	Tcl_DString ds;
 
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		ConvertExternalFilename(path, &ds), -1));
+		ConvertExternalFilename(path, &ds), TCL_INDEX_NONE));
 	Tcl_DStringFree(&ds);
     }
 
@@ -2601,7 +2599,7 @@ ChooseDirectoryValidateProc(
 	    return 1;
 	}
 	Tcl_DStringSetLength(&initDirString, 0);
-	wcsncpy(string, Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), -1, &initDirString),
+	wcsncpy(string, Tcl_UtfToWCharDString(Tcl_DStringValue(&tempString), TCL_INDEX_NONE, &initDirString),
 		MAX_PATH);
 	Tcl_DStringFree(&initDirString);
 	Tcl_DStringFree(&tempString);
@@ -2727,7 +2725,7 @@ ChooseDirectoryValidateProc(
 
 int
 Tk_MessageBoxObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2906,7 +2904,7 @@ Tk_MessageBoxObjCmd(
 
     Tcl_DecrRefCount(tmpObj);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    TkFindStateString(buttonMap, winCode), -1));
+	    TkFindStateString(buttonMap, winCode), TCL_INDEX_NONE));
     return TCL_OK;
 }
 
@@ -2961,13 +2959,13 @@ MsgBoxCBTProc(
 
 static void
 SetTkDialog(
-    ClientData clientData)
+    void *clientData)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     char buf[32];
 
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
+    snprintf(buf, sizeof(buf), "0x%" TCL_Z_MODIFIER "x", (size_t)clientData);
     Tcl_SetVar2(tsdPtr->debugInterp, "tk_dialog", NULL, buf, TCL_GLOBAL_ONLY);
 }
 
@@ -3023,24 +3021,24 @@ GetFontObj(
     Tcl_DStringInit(&ds);
     Tcl_WCharToUtfDString(plf->lfFaceName, wcslen(plf->lfFaceName), &ds);
     Tcl_ListObjAppendElement(NULL, resObj,
-	    Tcl_NewStringObj(Tcl_DStringValue(&ds), -1));
+	    Tcl_NewStringObj(Tcl_DStringValue(&ds), TCL_INDEX_NONE));
     Tcl_DStringFree(&ds);
     pt = -MulDiv(plf->lfHeight, 72, GetDeviceCaps(hdc, LOGPIXELSY));
     Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewWideIntObj(pt));
     if (plf->lfWeight >= 700) {
-	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", -1));
+	Tcl_ListObjAppendElement(NULL, resObj, Tcl_NewStringObj("bold", TCL_INDEX_NONE));
     }
     if (plf->lfItalic) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("italic", -1));
+		Tcl_NewStringObj("italic", TCL_INDEX_NONE));
     }
     if (plf->lfUnderline) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("underline", -1));
+		Tcl_NewStringObj("underline", TCL_INDEX_NONE));
     }
     if (plf->lfStrikeOut) {
 	Tcl_ListObjAppendElement(NULL, resObj,
-		Tcl_NewStringObj("overstrike", -1));
+		Tcl_NewStringObj("overstrike", TCL_INDEX_NONE));
     }
     return resObj;
 }
@@ -3052,7 +3050,7 @@ ApplyLogfont(
     HDC hdc,
     LOGFONTW *logfontPtr)
 {
-    int objc;
+    Tcl_Size objc;
     Tcl_Obj **objv, **tmpv;
 
     Tcl_ListObjGetElements(NULL, cmdObj, &objc, &objv);
@@ -3108,7 +3106,7 @@ HookProc(
 	    Tcl_DString title;
 
 	    Tcl_DStringInit(&title);
-	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), -1, &title);
+	    Tcl_UtfToWCharDString(Tcl_GetString(phd->titleObj), TCL_INDEX_NONE, &title);
 	    if (Tcl_DStringLength(&title) > 0) {
 		SetWindowTextW(hwndDlg, (LPCWSTR) Tcl_DStringValue(&title));
 	    }
@@ -3232,14 +3230,15 @@ FontchooserCget(
 
 static int
 FontchooserConfigureCmd(
-    ClientData clientData,	/* Main window */
+    void *clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     HookData *hdPtr = NULL;
-    int i, r = TCL_OK;
+    Tcl_Size i;
+    int r = TCL_OK;
     static const char *const optionStrings[] = {
 	"-command", "-font", "-parent", "-title", "-visible", NULL
     };
@@ -3255,7 +3254,7 @@ FontchooserConfigureCmd(
 	Tcl_Obj *dictObj = Tcl_NewDictObj();
 
 	for (i = 0; r == TCL_OK && optionStrings[i] != NULL; ++i) {
-	    keyObj = Tcl_NewStringObj(optionStrings[i], -1);
+	    keyObj = Tcl_NewStringObj(optionStrings[i], TCL_INDEX_NONE);
 	    valueObj = FontchooserCget(hdPtr, i);
 	    r = Tcl_DictObjPut(interp, dictObj, keyObj, valueObj);
 	}
@@ -3291,7 +3290,7 @@ FontchooserConfigureCmd(
 	    static const char *msg = "cannot change read-only option "
 		    "\"-visible\": use the show or hide command";
 
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(msg, TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "FONTDIALOG", "READONLY", NULL);
 	    return TCL_ERROR;
 	}
@@ -3375,10 +3374,10 @@ FontchooserConfigureCmd(
 
 static int
 FontchooserShowCmd(
-    ClientData clientData,	/* Main window */
+    void *clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     Tcl_DString ds;
     Tk_Window tkwin = (Tk_Window)clientData, parent;
@@ -3387,8 +3386,6 @@ FontchooserShowCmd(
     HDC hdc;
     HookData *hdPtr;
     int r = TCL_OK, oldMode = 0;
-    (void)objc;
-    (void)objv;
 
     hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
 
@@ -3403,8 +3400,8 @@ FontchooserShowCmd(
 
     Tk_MakeWindowExist(parent);
 
-    ZeroMemory(&cf, sizeof(CHOOSEFONTW));
-    ZeroMemory(&lf, sizeof(LOGFONTW));
+    memset(&cf, 0, sizeof(CHOOSEFONTW));
+    memset(&lf, 0, sizeof(LOGFONTW));
     lf.lfCharSet = DEFAULT_CHARSET;
     cf.lStructSize = sizeof(CHOOSEFONTW);
     cf.hwndOwner = Tk_GetHWND(Tk_WindowId(parent));
@@ -3428,7 +3425,7 @@ FontchooserShowCmd(
 	fontPtr = (TkFont *) f;
 	cf.Flags |= CF_INITTOLOGFONTSTRUCT;
 	Tcl_DStringInit(&ds);
-	wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(fontPtr->fa.family, -1, &ds),
+	wcsncpy(lf.lfFaceName, Tcl_UtfToWCharDString(fontPtr->fa.family, TCL_INDEX_NONE, &ds),
 		LF_FACESIZE-1);
 	Tcl_DStringFree(&ds);
 	lf.lfFaceName[LF_FACESIZE-1] = 0;
@@ -3450,7 +3447,7 @@ FontchooserShowCmd(
     }
 
     if (TCL_OK == r && hdPtr->cmdObj != NULL) {
-	int len = 0;
+	Tcl_Size len = 0;
 
 	r = Tcl_ListObjLength(interp, hdPtr->cmdObj, &len);
 	if (len > 0) {
@@ -3491,15 +3488,12 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData dummy,	/* Main window */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(Tcl_Size),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     HookData *hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
-    (void)dummy;
-    (void)objc;
-    (void)objv;
 
     if (hdPtr->hwnd && IsWindow(hdPtr->hwnd)) {
 	EndDialog(hdPtr->hwnd, 0);
@@ -3519,10 +3513,11 @@ FontchooserHideCmd(
  */
 
 static void
-DeleteHookData(ClientData clientData, Tcl_Interp *dummy)
+DeleteHookData(
+    void *clientData,
+    TCL_UNUSED(Tcl_Interp *))
 {
     HookData *hdPtr = (HookData *)clientData;
-    (void)dummy;
 
     if (hdPtr->parentObj) {
 	Tcl_DecrRefCount(hdPtr->parentObj);
@@ -3559,10 +3554,11 @@ const TkEnsemble tkFontchooserEnsemble[] = {
 };
 
 int
-TkInitFontchooser(Tcl_Interp *interp, ClientData dummy)
+TkInitFontchooser(
+    Tcl_Interp *interp,
+    TCL_UNUSED(void *))
 {
     HookData *hdPtr = (HookData *)ckalloc(sizeof(HookData));
-    (void)dummy;
 
     memset(hdPtr, 0, sizeof(HookData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteHookData, hdPtr);

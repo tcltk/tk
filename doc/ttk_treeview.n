@@ -556,6 +556,10 @@ An integer \fIn\fR, specifying the \fIn\fRth data column.
 A string of the form \fB#\fIn\fR, where \fIn\fR is an integer,
 specifying the \fIn\fRth display column.
 .PP
+Column identifiers support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
+.PP
 \fBNOTE:\fR
 Item \fB\-values\fR may be displayed in a different order than
 the order in which they are stored.
@@ -607,6 +611,11 @@ are:
 \fB\-font\fP \fIfont\fP
 .br
 \fB\-foreground\fP \fIcolor\fP
+.br
+\fB\-indent\fP \fIamount\fP
+.RS
+Specifies how many pixels items are indented from their parents. Defaults to 20.
+.RE
 .br
 \fB\-columnseparatorwidth\fP \fIpixels\fP
 .br

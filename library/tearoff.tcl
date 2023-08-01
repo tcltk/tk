@@ -134,51 +134,24 @@ proc ::tk::MenuDup {src dst type} {
 	lappend cmd [lindex $option 0] [lindex $option 4]
     }
     eval $cmd
+
+    # Copy the meny entries, if any
+
     set last [$src index last]
-    if {$last < 0} {
-	return
-    }
-    for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
-	set cmd [list $dst add [$src type $i]]
-	foreach option [$src entryconfigure $i]  {
-	    lappend cmd [lindex $option 0] [lindex $option 4]
+    if {$last >= 0} {
+	for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
+	    set cmd [list $dst add [$src type $i] [$src id $i]]
+	    foreach option [$src entryconfigure $i]  {
+		lappend cmd [lindex $option 0] [lindex $option 4]
+	    }
+	    eval $cmd
 	}
-	eval $cmd
     }
 
-    # Duplicate the binding tags and bindings from the source menu.
+    # Duplicate the binding tags from the source menu, replacing src with dst
 
     set tags [bindtags $src]
-    set srcLen [string length $src]
-
-    # Copy tags to x, replacing each substring of src with dst.
-
-    while {[set index [string first $src $tags]] >= 0} {
-	if {$index > 0} {
-	    append x [string range $tags 0 $index-1]$dst
-	}
-	set tags [string range $tags $index+$srcLen end]
-    }
-    append x $tags
-
-    bindtags $dst $x
-
-    foreach event [bind $src] {
-	unset x
-	set script [bind $src $event]
-	set eventLen [string length $event]
-
-	# Copy script to x, replacing each substring of event with dst.
-
-	while {[set index [string first $event $script]] >= 0} {
-	    if {$index > 0} {
-		append x [string range $script 0 $index-1]
-	    }
-	    append x $dst
-	    set script [string range $script $index+$eventLen end]
-	}
-	append x $script
-
-	bind $dst $event $x
-    }
+    set x [lsearch -exact $tags $src]
+    if {$x >= 0} {lset tags $x $dst}
+    bindtags $dst $tags
 }

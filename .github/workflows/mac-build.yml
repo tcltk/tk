@@ -1,5 +1,11 @@
 name: macOS
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-8-6-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 env:
@@ -16,11 +22,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Check out Tcl
+      - name: Check out Tcl 8.7
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: core-8-branch
           path: tcl
       - name: Prepare checked out repositories
         run: |
@@ -48,6 +54,7 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           fi
+        timeout-minutes: 30
   clang:
     runs-on: macos-11
     strategy:
@@ -67,11 +74,11 @@ jobs:
         uses: actions/checkout@v3
         with:
           path: tk
-      - name: Check out Tcl
+      - name: Check out Tcl 8.7
         uses: actions/checkout@v3
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: core-8-branch
           path: tcl
       - name: Prepare checked out repositories
         env:
@@ -88,9 +95,8 @@ jobs:
           sudo /opt/X11/libexec/privileged_startx || true
         working-directory: .
       - name: Build Tcl
-        # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --disable-zipfs "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Tcl Configure"
             exit 1
@@ -107,9 +113,8 @@ jobs:
         env:
           CFGOPT: --enable-symbols=${{ matrix.symbols }}
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
-        # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" --disable-xft || {
+          ./configure $CFGOPT --disable-zipfs "--prefix=$HOME/install dir" --disable-xft || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -155,6 +160,7 @@ jobs:
             echo "::error::Failure in ttk test results"
             exit 1
           }
+        timeout-minutes: 15
       - name: Carry out trial installation
         run: |
           make install || {

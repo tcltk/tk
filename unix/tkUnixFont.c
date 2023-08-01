@@ -562,9 +562,9 @@ Ucs2beToUtfProc(
  */
 
 #if defined(USE_TCL_STUBS)
-/* Since the UCS-2BE encoding is only used when Tk 8.7 is dynamically loaded in Tcl 8.6,
+/* Since the UCS-2BE encoding is only used when Tk is dynamically loaded in Tcl 8.6,
  * make sure that Tcl_UtfCharComplete is ALWAYS the pre-TIP #575 version,
- * even though Tk 8.7 is being compiled with -DTCL_NO_DEPRECATED! */
+ * even though Tk is being compiled with -DTCL_NO_DEPRECATED! */
 #   undef Tcl_UtfCharComplete
 #   define Tcl_UtfCharComplete ((int (*)(const char *, int))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[326]))
 #endif
@@ -891,7 +891,7 @@ TkpGetFontFamilies(
     hPtr = Tcl_FirstHashEntry(&familyTable, &search);
     resultPtr = Tcl_NewObj();
     while (hPtr != NULL) {
-	strPtr = Tcl_NewStringObj((const char *)Tcl_GetHashKey(&familyTable, hPtr), -1);
+	strPtr = Tcl_NewStringObj((const char *)Tcl_GetHashKey(&familyTable, hPtr), TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	hPtr = Tcl_NextHashEntry(&search);
     }
@@ -932,10 +932,10 @@ TkpGetSubFonts(
     fontPtr = (UnixFont *) tkfont;
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	familyPtr = fontPtr->subFontArray[i].familyPtr;
-	objv[0] = Tcl_NewStringObj(familyPtr->faceName, -1);
-	objv[1] = Tcl_NewStringObj(familyPtr->foundry, -1);
+	objv[0] = Tcl_NewStringObj(familyPtr->faceName, TCL_INDEX_NONE);
+	objv[1] = Tcl_NewStringObj(familyPtr->foundry, TCL_INDEX_NONE);
 	objv[2] = Tcl_NewStringObj(
-		Tcl_GetEncodingName(familyPtr->encoding), -1);
+		Tcl_GetEncodingName(familyPtr->encoding), TCL_INDEX_NONE);
 	listPtr = Tcl_NewListObj(3, objv);
 	Tcl_ListObjAppendElement(NULL, resultPtr, listPtr);
     }
@@ -1007,7 +1007,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes1,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
@@ -1025,6 +1025,7 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
+    int numBytes = numBytes1;
     UnixFont *fontPtr;
     SubFont *lastSubFontPtr;
     int curX, curByte, ch;
@@ -1064,8 +1065,8 @@ Tk_MeasureChars(
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
-		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1082,8 +1083,8 @@ Tk_MeasureChars(
 	    p = next;
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
-	(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source, p - source,
-		TCL_ENCODING_NOCOMPLAIN, &runString);
+	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
+		&runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
 		    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1331,8 +1332,8 @@ Tk_DrawChars(
 		do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
 
-		(void)Tcl_UtfToExternalDStringEx(familyPtr->encoding, source,
-			p - source, TCL_ENCODING_NOCOMPLAIN, &runString);
+		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y,
 			    (XChar2b *) Tcl_DStringValue(&runString),
@@ -1415,9 +1416,9 @@ TkpDrawCharsInContext(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    TCL_UNUSED(int),		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1443,18 +1444,17 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    Tcl_Size numBytes,		/* Number of bytes in string. */
+    TCL_UNUSED(Tcl_Size),		/* Number of bytes in string. */
     Tcl_Size rangeStart,		/* Index of first byte to draw. */
-    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size rangeLength1,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
+    int rangeLength = rangeLength1;
     int widthUntilStart;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
-
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -2125,10 +2125,10 @@ FindSubFontForChar(
 
     nameList = ListFonts(fontPtr->display, "*", &numNames);
     for (i = 0; i < numNames; i++) {
-	char *fallbck = strchr(nameList[i] + 1, '-') + 1;
-	strchr(fallbck, '-')[0] = '\0';
-	if (SeenName(fallbck, &ds) == 0) {
-	    subFontPtr = CanUseFallback(fontPtr, fallbck, ch,
+	fallback = strchr(nameList[i] + 1, '-') + 1;
+	strchr(fallback, '-')[0] = '\0';
+	if (SeenName(fallback, &ds) == 0) {
+	    subFontPtr = CanUseFallback(fontPtr, fallback, ch,
 		    fixSubFontPtrPtr);
 	    if (subFontPtr != NULL) {
 		XFreeFontNames(nameList);
@@ -2818,7 +2818,7 @@ GetScreenFont(
 	    rest = strchr(rest + 1, '-');
 	}
 	*str = '\0';
-	sprintf(buf, "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
+	snprintf(buf, sizeof(buf), "%.200s-%d-*-*-*-*-*%s", nameList[bestIdx[1]],
 		(int)(-wantPtr->fa.size+0.5), rest);
 	*str = '-';
 	fontStructPtr = XLoadQueryFont(display, buf);
@@ -2956,7 +2956,7 @@ ListFonts(
 {
     char buf[256];
 
-    sprintf(buf, "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
+    snprintf(buf, sizeof(buf), "-*-%.80s-*-*-*-*-*-*-*-*-*-*-*-*", faceName);
     return XListFonts(display, buf, 10000, numNamesPtr);
 }
 
@@ -3188,10 +3188,11 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes1,		/* Number of bytes in string. */
     double x, double y,
     double angle)
 {
+    int numBytes = numBytes1;
     if (angle == 0.0) {
 	Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y);
     } else {

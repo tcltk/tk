@@ -45,7 +45,7 @@ spinbox $w.s3 -values $australianCities -width 10
 #entry $w.e1
 #entry $w.e2
 #entry $w.e3
-pack $w.s1 $w.s2 $w.s3 -side top -pady 5 -padx 10 ;#-fill x
+pack $w.s1 $w.s2 $w.s3 -side top -pady 3p -padx 7.5p ;#-fill x
 
 #$w.e1 insert 0 "Initial value"
 #$w.e2 insert end "This entry contains a long value, much too long "

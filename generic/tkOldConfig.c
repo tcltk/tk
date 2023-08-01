@@ -24,6 +24,10 @@
 #  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
 #endif
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -41,7 +45,7 @@ static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
 			    const Tk_ConfigSpec *staticSpecs);
-static void		DeleteSpecCacheTable(ClientData clientData,
+static void		DeleteSpecCacheTable(void *clientData,
 			    Tcl_Interp *interp);
 
 /*
@@ -72,7 +76,7 @@ Tk_ConfigureWidget(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    int argc,			/* Number of elements in argv. */
+    Tcl_Size argc,			/* Number of elements in argv. */
     const char **argv,		/* Command-line options. */
     char *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
@@ -94,7 +98,7 @@ Tk_ConfigureWidget(
 	 * we're on our way out of the application
 	 */
 
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
 	return TCL_ERROR;
     }
@@ -127,7 +131,11 @@ Tk_ConfigureWidget(
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetString((Tcl_Obj *) *argv);
 	} else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	    arg = *argv;
+#endif
 	}
 	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
@@ -147,7 +155,11 @@ Tk_ConfigureWidget(
 	if (flags & TK_CONFIG_OBJS) {
 	    arg = Tcl_GetString((Tcl_Obj *) argv[1]);
 	} else {
+#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
+	    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#else
 	    arg = argv[1];
+#endif
 	}
 	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
@@ -352,6 +364,9 @@ DoConfig(
     }
 
     do {
+	if (specPtr->offset < 0) {
+	    break;
+	}
 	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
@@ -633,7 +648,7 @@ Tk_ConfigureInfo(
 	    return TCL_ERROR;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, TCL_INDEX_NONE));
 	ckfree(list);
 	return TCL_OK;
     }
@@ -651,7 +666,7 @@ Tk_ConfigureInfo(
 		|| (specPtr->specFlags & hateFlags)) {
 	    continue;
 	}
-	if (specPtr->argvName == NULL) {
+	if ((specPtr->argvName == NULL) || (specPtr->offset < 0)) {
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
@@ -766,6 +781,9 @@ FormatConfigValue(
     const char *result;
 
     *freeProcPtr = NULL;
+    if (specPtr->offset < 0) {
+	return NULL;
+    }
     ptr = (char *)widgRec + specPtr->offset;
     result = "";
     switch (specPtr->type) {
@@ -777,7 +795,7 @@ FormatConfigValue(
 	}
 	break;
     case TK_CONFIG_INT:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, 200, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_DOUBLE:
@@ -855,7 +873,7 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, 200, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_MM:
@@ -937,7 +955,7 @@ Tk_ConfigureValue(
     }
     result = FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer,
 	    &freeProc);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
 	    ckfree((char *) result);
@@ -985,6 +1003,9 @@ Tk_FreeOptions(
 
     for (specPtr = specs; specPtr->type != TK_CONFIG_END; specPtr++) {
 	if ((specPtr->specFlags & needFlags) != needFlags) {
+	    continue;
+	}
+	if (specPtr->offset < 0) {
 	    continue;
 	}
 	ptr = widgRec + specPtr->offset;
@@ -1153,7 +1174,7 @@ GetCachedSpecs(
 
 static void
 DeleteSpecCacheTable(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(Tcl_Interp *))
 {
     Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;

@@ -204,10 +204,12 @@ test wm-attributes-1.2.3 {usage} -constraints win -returnCodes error -body {
 test wm-attributes-1.2.4 {usage} -constraints {unix notAqua} -returnCodes error -body {
     wm attributes . _
 } -result {bad attribute "_": must be -alpha, -fullscreen, -topmost, -type, or -zoomed}
+if {[tk windowingsystem] eq "aqua"} {
+    set result_1_2_5 {bad attribute "_": must be -alpha, -appearance, -buttons, -fullscreen, -isdark, -modified, -notify, -titlepath, -topmost, -transparent, -stylemask, -class, -tabbingid, -tabbingmode, or -type}
+} else {set result_1_2_5 {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}}
 test wm-attributes-1.2.5 {usage} -constraints aqua -returnCodes error -body {
     wm attributes . _
-} -result {bad attribute "_": must be -alpha, -fullscreen, -modified, -notify, -titlepath, -topmost, -transparent, or -type}
-
+} -result $result_1_2_5
 
 ### wm client ###
 test wm-client-1.1 {usage} -returnCodes error -body {
@@ -1107,10 +1109,10 @@ test wm-maxsize-1.3 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm maxsize window ?width height?"}
 test wm-maxsize-1.4 {usage} -returnCodes error -body {
     wm maxsize . x 100
-} -result {expected integer but got "x"}
+} -result {bad screen distance "x"}
 test wm-maxsize-1.5 {usage} -returnCodes error -body {
     wm maxsize . 100 bogus
-} -result {expected integer but got "bogus"}
+} -result {bad screen distance "bogus"}
 test wm-maxsize-1.6 {usage} -setup {
     destroy .t2
 } -body {
@@ -1207,10 +1209,10 @@ test wm-minsize-1.3 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm minsize window ?width height?"}
 test wm-minsize-1.4 {usage} -returnCodes error -body {
     wm minsize . x 100
-} -result {expected integer but got "x"}
+} -result {bad screen distance "x"}
 test wm-minsize-1.5 {usage} -returnCodes error -body {
     wm minsize . 100 bogus
-} -result {expected integer but got "bogus"}
+} -result {bad screen distance "bogus"}
 test wm-minsize-1.6 {usage} -setup {
     destroy .t2
 } -body {
@@ -2456,11 +2458,6 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
 test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     catch {destroy .l .f.b .f}
     set res {}
-    if {[tk windowingsystem] == "aqua"} {
-	proc doUpdate {} {update idletasks}
-    } else {
-	proc doUpdate {} {update}
-    }
 } -body {
     label .l -text "Top Dot"
     frame .f
@@ -2470,13 +2467,13 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     pack .f -side bottom
     set res [winfo manager .f]
     pack forget .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
     wm manage .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
     wm forget .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
 } -cleanup {
     destroy .l .f.b .f

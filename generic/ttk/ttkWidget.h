@@ -90,26 +90,32 @@ MODULE_SCOPE int TtkCoreConfigure(Tcl_Interp*, void *, int mask);
 /* Common widget commands:
  */
 MODULE_SCOPE int TtkWidgetCgetCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetConfigureCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetIdentifyCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetInstateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStateCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 MODULE_SCOPE int TtkWidgetStyleCommand(
-	void *,Tcl_Interp *, int, Tcl_Obj*const[]);
+	void *,Tcl_Interp *, Tcl_Size, Tcl_Obj*const[]);
 
 /* Widget constructor:
  */
 MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	void *, Tcl_Interp*, int, Tcl_Obj*const[]);
+	void *, Tcl_Interp*, Tcl_Size, Tcl_Obj*const[]);
 
+#if TCL_MAJOR_VERSION > 8
+#define RegisterWidget(interp, name, specPtr) \
+    Tcl_CreateObjCommand2(interp, name, \
+	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
+#else
 #define RegisterWidget(interp, name, specPtr) \
     Tcl_CreateObjCommand(interp, name, \
 	TtkWidgetConstructorObjCmd, (void *)specPtr,NULL)
+#endif
 
 /* WIDGET_TAKEFOCUS_TRUE --
  * WIDGET_TAKEFOCUS_FALSE --
@@ -190,7 +196,7 @@ MODULE_SCOPE ScrollHandle TtkCreateScrollHandle(WidgetCore *, Scrollable *);
 MODULE_SCOPE void TtkFreeScrollHandle(ScrollHandle);
 
 MODULE_SCOPE int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle);
+    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle);
 
 MODULE_SCOPE void TtkUpdateScrollInfo(ScrollHandle h);
 MODULE_SCOPE void TtkScrollTo(ScrollHandle, int newFirst, int updateScrollInfo);
@@ -227,7 +233,7 @@ MODULE_SCOPE void Ttk_DeleteTagFromTable(Ttk_TagTable, Ttk_Tag);
 
 MODULE_SCOPE int Ttk_ConfigureTag(
     Tcl_Interp *interp, Ttk_TagTable tagTable, Ttk_Tag tag,
-    int objc, Tcl_Obj *const objv[]);
+    Tcl_Size objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE Ttk_TagSet Ttk_GetTagSetFromObj(
     Tcl_Interp *interp, Ttk_TagTable, Tcl_Obj *objPtr);

@@ -1,7 +1,7 @@
 /*
  * tkUnixScale.c --
  *
- *	This file implements the X specific portion of the scrollbar widget.
+ *	This file implements the X specific portion of the scale widget.
  *
  * Copyright © 1996 Sun Microsystems, Inc.
  * Copyright © 1998-2000 Scriptics Corporation.
@@ -13,8 +13,8 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#if defined(_WIN32)
-#define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
 
 /*
@@ -268,7 +268,7 @@ DisplayVerticalValue(
     const char *format)		/* Format string to use for the value */
 {
     Tk_Window tkwin = scalePtr->tkwin;
-    int y, width, length;
+    int y, width;
     char valueString[TCL_DOUBLE_SPACE];
     Tk_FontMetrics fm;
 
@@ -277,7 +277,7 @@ DisplayVerticalValue(
     if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
-    length = (int) strlen(valueString);
+    Tcl_Size length = strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
@@ -491,7 +491,7 @@ DisplayHorizontalValue(
     const char *format)		/* Format string to use for the value */
 {
     Tk_Window tkwin = scalePtr->tkwin;
-    int x, y, length, width;
+    int x, y, width;
     char valueString[TCL_DOUBLE_SPACE];
     Tk_FontMetrics fm;
 
@@ -501,7 +501,7 @@ DisplayHorizontalValue(
     if (snprintf(valueString, TCL_DOUBLE_SPACE, format, value) < 0) {
 	valueString[TCL_DOUBLE_SPACE - 1] = '\0';
     }
-    length = (int) strlen(valueString);
+    Tcl_Size length = strlen(valueString);
     width = Tk_TextWidth(scalePtr->tkfont, valueString, length);
 
     /*
@@ -572,10 +572,10 @@ TkpDisplayScale(
 	    string[TCL_DOUBLE_SPACE - 1] = '\0';
 	}
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, scalePtr->command, -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, string, -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, scalePtr->command, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, string, TCL_INDEX_NONE);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");

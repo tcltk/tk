@@ -13,6 +13,7 @@
 
 #include "tkInt.h"
 #include "tkWinSendCom.h"
+#include "tkWinInt.h"
 
 /*
  * Should be defined in WTypes.h but mingw 1.0 is missing them.
@@ -62,8 +63,8 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
-static void		CmdDeleteProc(ClientData clientData);
-static void		InterpDeleteProc(ClientData clientData,
+static void		CmdDeleteProc(void *clientData);
+static void		InterpDeleteProc(void *clientData,
 			    Tcl_Interp *interp);
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
@@ -75,7 +76,7 @@ static HRESULT		RegisterInterp(const char *name,
 static int		FindInterpreterObject(Tcl_Interp *interp,
 			    const char *name, LPDISPATCH *ppdisp);
 static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
-			    int async, ClientData clientData, int objc,
+			    int async, void *clientData, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		SendTrace(const char *format, ...);
 static Tcl_EventProc	SendEventProc;
@@ -147,7 +148,7 @@ Tk_SetAppName(
 	hr = CoInitialize(0);
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "failed to initialize the COM library", -1));
+		    "failed to initialize the COM library", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
 	    return "";
 	}
@@ -322,7 +323,7 @@ TkGetInterpNames(
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Information about sender (only dispPtr
+    void *clientData,	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -374,7 +375,7 @@ Tk_SendObjCmd(
     if (displayPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"option not implemented: \"displayof\" is not available"
-		" for this platform.", -1));
+		" for this platform.", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
 	result = TCL_ERROR;
     }
@@ -488,7 +489,7 @@ FindInterpreterObject(
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 CmdDeleteProc(
-    ClientData clientData)
+    void *clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
 
@@ -587,7 +588,7 @@ RevokeObjectRegistration(
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 InterpDeleteProc(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp)
 {
     CoUninitialize();
@@ -625,7 +626,7 @@ BuildMoniker(
 	Tcl_DString dString;
 
 	Tcl_DStringInit(&dString);
-	Tcl_UtfToWCharDString(name, -1, &dString);
+	Tcl_UtfToWCharDString(name, TCL_INDEX_NONE, &dString);
 	hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
 	Tcl_DStringFree(&dString);
 	if (SUCCEEDED(hr)) {
@@ -677,13 +678,13 @@ RegisterInterp(
 	    if (i > 1) {
 		if (i == 2) {
 		    Tcl_DStringInit(&dString);
-		    Tcl_DStringAppend(&dString, name, -1);
+		    Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		    Tcl_DStringAppend(&dString, " #", 2);
 		    offset = Tcl_DStringLength(&dString);
-		    Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
+		    Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
 		    actualName = Tcl_DStringValue(&dString);
 		}
-		sprintf(Tcl_DStringValue(&dString) + offset, "%d", i);
+		snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", i);
 	    }
 
 	    hr = BuildMoniker(actualName, &pmk);
@@ -739,9 +740,8 @@ Send(
 				 * object. */
     Tcl_Interp *interp,		/* The local interpreter. */
     int async,			/* Flag for the calling style. */
-    ClientData dummy,	/* The RegisteredInterp structure for this
-				 * interp. */
-    int objc,			/* Number of arguments to be sent. */
+    TCL_UNUSED(void *),
+    Tcl_Size objc,			/* Number of arguments to be sent. */
     Tcl_Obj *const objv[])	/* The arguments to be sent. */
 {
     VARIANT vCmd, vResult;
@@ -753,7 +753,6 @@ Send(
     DISPID dispid;
     Tcl_DString ds;
     const char *src;
-    (void)dummy;
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -970,10 +969,9 @@ TkWinSend_QueueCommand(
 static int
 SendEventProc(
     Tcl_Event *eventPtr,
-    int flags)
+    TCL_UNUSED(int))
 {
     SendEvent *evPtr = (SendEvent *)eventPtr;
-    (void)flags;
 
     TRACE("SendEventProc\n");
 

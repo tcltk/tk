@@ -1,5 +1,11 @@
 name: Build Binaries
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-8-6-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 jobs:
@@ -33,7 +39,7 @@ jobs:
         working-directory: "."
       - name: Configure Tcl
         run: |
-          ./configure $CFGOPT --enable-zipfs --prefix=$INST_DIR
+          ./configure $CFGOPT --prefix=$INST_DIR
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
@@ -75,7 +81,7 @@ jobs:
         shell: bash
     env:
       CC: gcc
-      CFGOPT: --disable-symbols --disable-shared --enable-64bit
+      CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v3
@@ -101,11 +107,11 @@ jobs:
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
           echo "VER_PATH=$(cd tcl/tools; pwd)/addVerToFile.tcl" >> $GITHUB_ENV
           echo "CREATE_DMG=$(cd create-dmg;pwd)/create-dmg" >> $GITHUB_ENV
-          echo "CFLAGS=-arch x86_64 -arch arm64e" >> $GITHUB_ENV
+          echo "CFLAGS=-arch x86_64 -arch arm64" >> $GITHUB_ENV
         working-directory: "."
       - name: Configure Tcl
         run: |
-          ./configure $CFGOPT --enable-zipfs --prefix=$INST_DIR
+          ./configure $CFGOPT --prefix=$INST_DIR
         working-directory: tcl/unix
       - name: Build & Install Tcl
         run: |
@@ -185,7 +191,7 @@ jobs:
         working-directory: "."
       - name: Configure Tcl
         run: |
-          ./configure $CFGOPT --enable-zipfs --prefix=$INST_DIR
+          ./configure $CFGOPT --prefix=$INST_DIR
         working-directory: tcl/win
       - name: Build & Install Tcl
         run: |

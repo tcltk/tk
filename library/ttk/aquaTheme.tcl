@@ -75,6 +75,20 @@ namespace eval ttk::theme::aqua {
 		pressed RecessedFont
 	    }
 
+	# Sidebar (radio) button
+	font create SidebarFont -family .AppleSystemUIFont -size 11 -weight normal
+	ttk::style configure SidebarButton \
+	    -foreground systemControlTextColor \
+	    -font SidebarFont
+	ttk::style map SidebarButton \
+	    -foreground {
+		{disabled selected} systemWindowBackgroundColor3
+		{disabled !selected} systemDisabledControlTextColor
+		selected systemTextColor
+		active systemTextColor
+		pressed systemTextColor
+	    }
+
 	# For Entry, Combobox and Spinbox widgets the selected text background
 	# is the "Highlight color" selected in preferences when the widget
 	# has focus.  It is a gray color when the widget does not have focus or
@@ -137,8 +151,8 @@ namespace eval ttk::theme::aqua {
 	    -foreground systemTextColor \
 	    -background systemWindowBackgroundColor
 	ttk::style configure Treeview -rowheight 18 \
-	    -background systemTextBackgroundColor \
-            -stripedbackground systemDisabledControlTextColor \
+	    -background systemControlBackgroundColor \
+	    -stripedbackground systemControlAlternatingRowColor \
             -foreground systemTextColor \
 	    -fieldbackground systemTextBackgroundColor
 	ttk::style map Treeview \

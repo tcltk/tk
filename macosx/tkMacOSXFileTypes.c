@@ -25,9 +25,6 @@ without generating deprecation warnings.
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXFileTypes.h"
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
-#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-#endif
 
 #define CHARS_TO_OSTYPE(string) (OSType) string[0] << 24 | \
                                 (OSType) string[1] << 16 | \
@@ -42,7 +39,7 @@ static void initOSTypeTable(void) {
     const IdentifierForOSType *entry;
     Tcl_InitHashTable(&ostype2identifier, TCL_ONE_WORD_KEYS);
     for (entry = OSTypeDB; entry->ostype != NULL; entry++) {
-	const char *key = INT2PTR(CHARS_TO_OSTYPE(entry->ostype));
+	const void *key = INT2PTR(CHARS_TO_OSTYPE(entry->ostype));
         hPtr = Tcl_CreateHashEntry(&ostype2identifier, key, &newPtr);
 	if (newPtr) {
 	    Tcl_SetHashValue(hPtr, entry->identifier);
@@ -57,7 +54,7 @@ MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
     }
     Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&ostype2identifier, INT2PTR(ostype));
     if (hPtr) {
-	char *UTI = Tcl_GetHashValue(hPtr);
+	char *UTI = (char *)Tcl_GetHashValue(hPtr);
 	return [[NSString alloc] initWithCString:UTI
 					encoding:NSASCIIStringEncoding];
     }

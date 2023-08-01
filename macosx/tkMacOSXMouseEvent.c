@@ -88,7 +88,7 @@ enum {
     NSEventType eventType = [theEvent type];
     TKContentView *contentView = [eventWindow contentView];
     NSPoint location = [theEvent locationInWindow];
-    NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
+    //NSPoint viewLocation = [contentView convertPoint:location fromView:nil];
     TkWindow *winPtr = NULL, *grabWinPtr, *scrollTarget = NULL;
     Tk_Window tkwin = NULL, capture, target;
     NSPoint local, global;
@@ -105,7 +105,7 @@ enum {
     static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
 
     /*
@@ -117,7 +117,8 @@ enum {
      * window attribute set to nil.
      */
 
-    if (![eventWindow isMemberOfClass:[TKWindow class]]) {
+    if (![eventWindow isMemberOfClass:[TKWindow class]] &&
+	![eventWindow isMemberOfClass:[TKPanel class]]) {
 	if ([theEvent timestamp] == 0) {
 	    isTestingEvent = YES;
 	    eventWindow = [NSApp keyWindow];
@@ -130,7 +131,7 @@ enum {
 	if (!isTestingEvent && !isMotionEvent) {
 	    return theEvent;
 	}
-    } else if (!NSPointInRect(viewLocation, [contentView bounds])) {
+    } else if (!NSPointInRect(location, [contentView bounds])) {
 	isOutside = YES;
     }
     button = [theEvent buttonNumber] + Button1;
@@ -246,10 +247,10 @@ enum {
 	    NSRect bounds = [contentView bounds];
 	    NSRect grip = NSMakeRect(bounds.size.width - 10, 0, 10, 10);
 	    bounds = NSInsetRect(bounds, 2.0, 2.0);
-	    if (!NSPointInRect(viewLocation, bounds)) {
+	    if (!NSPointInRect(location, bounds)) {
 		return theEvent;
 	    }
-	    if (NSPointInRect(viewLocation, grip)) {
+	    if (NSPointInRect(location, grip)) {
 		return theEvent;
 	    }
 	    if ([NSApp tkLiveResizeEnded]) {
@@ -318,6 +319,7 @@ enum {
     if ([NSApp tkDragTarget]) {
 	TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
 	TKWindow *dragWindow = nil;
+	MacDrawable *topMacWin;
 	if (dragPtr) {
 	    dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
 			    dragPtr->window);
@@ -327,7 +329,10 @@ enum {
 	    target = NULL;
 	    return theEvent;
 	}
-	winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
+	topMacWin = TkMacOSXGetHostToplevel(dragPtr);
+	if (topMacWin) {
+	    winPtr = topMacWin->winPtr;
+	}
     } else if (eventType == NSScrollWheel) {
 	winPtr = scrollTarget;
     } else {
@@ -367,9 +372,12 @@ enum {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow* topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     }
     else {

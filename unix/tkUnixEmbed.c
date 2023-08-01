@@ -111,7 +111,7 @@ Tk_UseWindow(
 
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't modify container after widget is created", -1));
+		"can't modify container after widget is created", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
@@ -874,9 +874,9 @@ TkpClaimFocus(
 
 int
 TkpTestembedCmd(
-    ClientData dummy,	/* Main window for application. */
+    void *dummy,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     int all;
@@ -910,7 +910,7 @@ TkpTestembedCmd(
 	if (containerPtr->parent == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
-	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->parent);
+	    snprintf(buffer, sizeof(buffer), "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->parent);
 	    Tcl_DStringAppendElement(&dString, buffer);
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");
@@ -927,7 +927,7 @@ TkpTestembedCmd(
 	if (containerPtr->wrapper == None) {
 	    Tcl_DStringAppendElement(&dString, "");
 	} else if (all) {
-	    sprintf(buffer, "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->wrapper);
+	    snprintf(buffer, sizeof(buffer), "0x%" TCL_Z_MODIFIER "x", (size_t) containerPtr->wrapper);
 	    Tcl_DStringAppendElement(&dString, buffer);
 	} else {
 	    Tcl_DStringAppendElement(&dString, "XXX");

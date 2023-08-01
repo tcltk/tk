@@ -13,6 +13,9 @@ toplevel $w
 wm title $w "System Tray Demonstration"
 positionWindow $w
 
+## See Code / Dismiss buttons
+pack [addSeeDismiss $w.buttons $w] -side bottom -fill x
+
 catch {tk systray destroy}
 set trayIconExists false
 
@@ -34,10 +37,10 @@ labelframe $w.f -text "Tray Icon"
 button $w.f.b0 -text "Create" -command create
 button $w.f.b1 -text "Modify" -command modify
 button $w.f.b2 -text "Destroy" -command remove
-pack $w.f.b0 $w.f.b1 $w.f.b2 -padx 5 -pady 3 -side left -expand true -fill x
+pack $w.f.b0 $w.f.b1 $w.f.b2 -padx 3p -pady 3p -side left -expand true -fill x
 
 button $w.b3 -text "Display Notification" -command notify
-pack $w.f $w.b3 -expand true -fill x -padx 5 -pady 5
+pack $w.f $w.b3 -fill x -padx 3p -pady 3p
 
 proc create {} {
     global trayIconExists
@@ -84,6 +87,3 @@ proc remove {} {
 }
 
 create
-
-## See Code / Dismiss buttons
-pack [addSeeDismiss $w.buttons $w] -side bottom -fill x

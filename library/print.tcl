@@ -786,60 +786,59 @@ namespace eval ::tk::print {
 
 	    # The printer to use
 	    set pf [ttk::frame $p.printerf]
-	    pack $pf -side top -fill x -expand no -padx 12 -pady 12
+	    pack $pf -side top -fill x -expand no -padx 9p -pady 9p
 
 	    ttk::label $pf.printerl -text "[mc "Printer"] :"
 	    ttk::combobox $pf.printer \
 		-textvariable [myvar dlg::sel](printer) \
 		-state readonly \
 		-values $optlist(printer)
-	    pack $pf.printerl -side left -padx {0 6}
+	    pack $pf.printerl -side left -padx {0 4.5p}
 	    pack $pf.printer  -side left
 
 	    # Start of printing options
 	    set of [ttk::labelframe $p.optionsframe -text [mc "Options"]]
-	    pack $of -fill x -padx 12 -pady {0 12} -ipadx 3 -ipady 3
+	    pack $of -fill x -padx 9p -pady {0 9p} -ipadx 2p -ipady 2p
 
 	    # COPIES
 	    ttk::label $of.copiesl -text "[mc "Copies"] :"
 	    ttk::spinbox $of.copies -from 1 -to 1000 \
-		-textvariable [myvar dlg::sel](copies) \
-		-width 5
-	    grid  $of.copiesl $of.copies -sticky ew -padx 3 -pady 3
+		-textvariable [myvar dlg::sel](copies)
+	    grid $of.copiesl $of.copies -sticky ew -padx 2p -pady 2p
 
 	    # PAPER SIZE
 	    ttk::label $of.paperl -text "[mc "Paper"] :"
 	    ttk_optionMenu $of.paper [myvar dlg::sel](paper) {*}$optlist(paper)
-	    grid $of.paperl $of.paper -sticky ew -padx 3 -pady 3
+	    grid $of.paperl $of.paper -sticky ew -padx 2p -pady 2p
 
 	    # additional options for canvas output
 	    if {[winfo class $w] eq "Canvas"} {
 		# SCALE
 		ttk::label $of.percentl -text "[mc "Scale"] :"
 		ttk_optionMenu $of.percent [myvar dlg::sel](zoom) {*}$optlist(zoom)
-		grid $of.percentl $of.percent -sticky ew -padx 3 -pady 3
+		grid $of.percentl $of.percent -sticky ew -padx 2p -pady 2p
 
 		# ORIENT
 		ttk::label $of.orientl -text "[mc "Orientation"] :"
 		ttk_optionMenu $of.orient [myvar dlg::sel](orient) {*}$optlist(orient)
-		grid $of.orientl $of.orient -sticky ew -padx 3 -pady 3
+		grid $of.orientl $of.orient -sticky ew -padx 2p -pady 2p
 
 		# COLOR
 		ttk::label $of.colorl -text "[mc "Output"] :"
 		ttk_optionMenu $of.color [myvar dlg::sel](color) {*}$optlist(color)
-		grid $of.colorl $of.color -sticky ew -padx 3 -pady 3
+		grid $of.colorl $of.color -sticky ew -padx 2p -pady 2p
 	    }
 
 	    # The buttons frame.
 	    set bf [ttk::frame $p.buttonf]
-	    pack $bf -fill x -expand no -side bottom -padx 12 -pady {0 12}
+	    pack $bf -fill x -expand no -side bottom -padx 9p -pady {0 9p}
 
 	    ttk::button $bf.print -text [mc "Print"] \
 		-command [namespace code [list _runprint $w $p]]
 	    ttk::button $bf.cancel -text [mc "Cancel"] \
 		-command [namespace code [list _cancel $p]]
 	    pack $bf.print  -side right
-	    pack $bf.cancel -side right -padx {0 6}
+	    pack $bf.cancel -side right -padx {0 4.5p}
 	    #Center the window as a dialog.
 	    ::tk::PlaceWindow $p
 	}

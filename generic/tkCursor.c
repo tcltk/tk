@@ -14,6 +14,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * A TkCursor structure exists for each cursor that is currently active. Each
  * structure is indexed with two hash tables defined below. One of the tables
@@ -55,12 +59,14 @@ static void		InitCursorObj(Tcl_Obj *objPtr);
  * option is set.
  */
 
-Tcl_ObjType const tkCursorObjType = {
-    "cursor",			/* name */
+const TkObjType tkCursorObjType = {
+    {"cursor",			/* name */
     FreeCursorObjProc,		/* freeIntRepProc */
     DupCursorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 /*
@@ -97,7 +103,7 @@ Tk_AllocCursorFromObj(
 {
     TkCursor *cursorPtr;
 
-    if (objPtr->typePtr != &tkCursorObjType) {
+    if (objPtr->typePtr != &tkCursorObjType.objType) {
 	InitCursorObj(objPtr);
     }
     cursorPtr = (TkCursor *)objPtr->internalRep.twoPtrValue.ptr1;
@@ -425,7 +431,7 @@ Tk_NameOfCursor(
 
     if (!dispPtr->cursorInit) {
     printid:
-	sprintf(dispPtr->cursorString, "cursor id 0x%" TCL_Z_MODIFIER "x", (size_t)cursor);
+	snprintf(dispPtr->cursorString, sizeof(dispPtr->cursorString), "cursor id 0x%" TCL_Z_MODIFIER "x", PTR2INT(cursor));
 	return dispPtr->cursorString;
     }
     idHashPtr = Tcl_FindHashEntry(&dispPtr->cursorIdTable, cursor);
@@ -694,7 +700,7 @@ GetCursorFromObj(
     Tcl_HashEntry *hashPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
 
-    if (objPtr->typePtr != &tkCursorObjType) {
+    if (objPtr->typePtr != &tkCursorObjType.objType) {
 	InitCursorObj(objPtr);
     }
 
@@ -771,7 +777,7 @@ InitCursorObj(
     if ((typePtr != NULL) && (typePtr->freeIntRepProc != NULL)) {
 	typePtr->freeIntRepProc(objPtr);
     }
-    objPtr->typePtr = &tkCursorObjType;
+    objPtr->typePtr = &tkCursorObjType.objType;
     objPtr->internalRep.twoPtrValue.ptr1 = NULL;
 }
 
@@ -862,9 +868,9 @@ TkDebugCursor(
 	for ( ; (cursorPtr != NULL); cursorPtr = cursorPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(cursorPtr->resourceRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)cursorPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj(cursorPtr->objRefCount));
+		    Tcl_NewWideIntObj((Tcl_WideInt)cursorPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

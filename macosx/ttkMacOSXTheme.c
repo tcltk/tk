@@ -263,6 +263,9 @@ static CGRect NormalizeButtonBounds(
     case TkRecessedButton:
 	bounds.size.height -= 2;
 	break;
+    case TkSidebarButton:
+	bounds.size.height += 8;
+	break;
     case kThemeRoundButtonHelp:
 	if (isDark) {
 	    bounds.size.height = bounds.size.width = 22;
@@ -1204,6 +1207,9 @@ static void DrawButton(
     case TkRecessedButton:
 	DrawGrayButton(context, bounds, &recessedDesign, state, tkwin);
 	break;
+    case TkSidebarButton:
+	DrawGrayButton(context, bounds, &sidebarDesign, state, tkwin);
+	break;
     case kThemeRoundedBevelButton:
 	DrawGrayButton(context, bounds, &bevelDesign, state, tkwin);
 	break;
@@ -1689,6 +1695,9 @@ static void ButtonElementSize(
 
     ButtonElementMinSize(clientData, minWidth, minHeight);
     switch (info.kind) {
+    case TkSidebarButton:
+	*paddingPtr = Ttk_MakePadding(30, 10, 30, 10);
+	return;
     case TkGradientButton:
 	*paddingPtr = Ttk_MakePadding(1, 1, 1, 1);
         /* Fall through. */
@@ -1769,6 +1778,7 @@ static void ButtonElementDraw(
     case kThemeArrowButton:
     case kThemeCheckBox:
     case kThemeRadioButton:
+    case TkSidebarButton:
     	break;
 
     /*
@@ -2573,9 +2583,9 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
     {"-orient", TK_OPTION_STRING,
      offsetof(PbarElement, orientObj), "horizontal"},
     {"-value", TK_OPTION_DOUBLE,
-     offsetof(PbarElement, valueObj), "0"},
+     offsetof(PbarElement, valueObj), "0.0"},
     {"-maximum", TK_OPTION_DOUBLE,
-     offsetof(PbarElement, maximumObj), "100"},
+     offsetof(PbarElement, maximumObj), "100.0"},
     {"-phase", TK_OPTION_INT,
      offsetof(PbarElement, phaseObj), "0"},
     {"-mode", TK_OPTION_STRING,
@@ -3445,6 +3455,13 @@ TTK_LAYOUT("RecessedButton",
     TTK_GROUP("Button.padding", TTK_FILL_BOTH,
     TTK_NODE("Button.label", TTK_FILL_BOTH))))
 
+/* Sidebar Button - text only radio button for sidebars */
+
+TTK_LAYOUT("SidebarButton",
+    TTK_GROUP("SidebarButton.button", TTK_FILL_BOTH,
+    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
+    TTK_NODE("Button.label", TTK_FILL_BOTH))))
+
 /* DisclosureButton (not a triangle) -- No label, no border*/
 TTK_LAYOUT("DisclosureButton",
     TTK_NODE("DisclosureButton.button", TTK_FILL_BOTH))
@@ -3581,6 +3598,8 @@ static int AquaTheme_Init(
 	&ButtonElementSpec, &RadioButtonParams);
     Ttk_RegisterElementSpec(themePtr, "RecessedButton.button",
 	&ButtonElementSpec, &RecessedButtonParams);
+    Ttk_RegisterElementSpec(themePtr, "SidebarButton.button",
+	&ButtonElementSpec, &SidebarButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Toolbutton.border",
 	&ButtonElementSpec, &BevelButtonParams);
     Ttk_RegisterElementSpec(themePtr, "Menubutton.button",

@@ -15,6 +15,10 @@
 #include "tkText.h"
 #include "default.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Index to use to select last character in line (very large integer):
  */
@@ -79,12 +83,14 @@ static void		UpdateStringOfTextIndex(Tcl_Obj *objPtr);
  * text widgets internally.
  */
 
-const Tcl_ObjType tkTextIndexType = {
-    "textindex",		/* name */
+const TkObjType tkTextIndexType = {
+    {"textindex",		/* name */
     FreeTextIndexInternalRep,	/* freeIntRepProc */
     DupTextIndexInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
-    NULL			/* setFromAnyProc */
+    NULL,			/* setFromAnyProc */
+    TCL_OBJTYPE_V0},
+    0
 };
 
 static void
@@ -128,7 +134,7 @@ DupTextIndexInternalRep(
     }
     SET_TEXTINDEX(copyPtr, dupIndexPtr);
     SET_INDEXEPOCH(copyPtr, epoch);
-    copyPtr->typePtr = &tkTextIndexType;
+    copyPtr->typePtr = &tkTextIndexType.objType;
 }
 
 /*
@@ -190,7 +196,7 @@ MakeObjIndex(
     indexPtr->linePtr = origPtr->linePtr;
     indexPtr->byteIndex = origPtr->byteIndex;
     SET_TEXTINDEX(objPtr, indexPtr);
-    objPtr->typePtr = &tkTextIndexType;
+    objPtr->typePtr = &tkTextIndexType.objType;
     indexPtr->textPtr = textPtr;
 
     if (textPtr != NULL) {
@@ -213,7 +219,7 @@ TkTextGetIndexFromObj(
     TkTextIndex *indexPtr = NULL;
     int cache;
 
-    if (objPtr->typePtr == &tkTextIndexType) {
+    if (objPtr->typePtr == &tkTextIndexType.objType) {
 	Tcl_Size epoch;
 
 	indexPtr = GET_TEXTINDEX(objPtr);
@@ -608,13 +614,13 @@ TkTextIndexToSeg(
  *---------------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkTextSegToOffset(
     const TkTextSegment *segPtr,/* Segment whose offset is desired. */
     const TkTextLine *linePtr)	/* Line containing segPtr. */
 {
     const TkTextSegment *segPtr2;
-    int offset = 0;
+    Tcl_Size offset = 0;
 
     for (segPtr2 = linePtr->segPtr; segPtr2 != segPtr;
 	    segPtr2 = segPtr2->nextPtr) {
@@ -794,7 +800,7 @@ GetIndex(
      */
 
     Tcl_DStringInit(&copy);
-    p = strrchr(Tcl_DStringAppend(&copy, string, -1), '.');
+    p = strrchr(Tcl_DStringAppend(&copy, string, TCL_INDEX_NONE), '.');
     if (p != NULL) {
 	TkTextSearch search;
 	TkTextTag *tagPtr;
@@ -1136,7 +1142,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return sprintf(string, "%d.%d",
+    return snprintf(string, TK_POS_CHARS, "%d.%d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 

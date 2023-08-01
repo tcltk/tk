@@ -87,6 +87,7 @@ XDestroyWindow(
 	if (macWin->toplevel->referenceCount == 0) {
 	    ckfree(macWin->toplevel);
 	}
+	macWin->winPtr->privatePtr = NULL;
 	ckfree(macWin);
 	return Success;
     }
@@ -103,6 +104,7 @@ XDestroyWindow(
         macWin->drawRgn = NULL;
     }
     macWin->view = nil;
+    macWin->winPtr->privatePtr = NULL;
 
     /*
      * Delay deletion of a toplevel data structure until all children have
@@ -163,7 +165,7 @@ XMapWindow(
 	TkMacOSXMakeRealWindowExist(macWin->toplevel->winPtr);
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
 	    TKContentView *view = [win contentView];
@@ -312,7 +314,7 @@ XUnmapWindow(
     if (!window) {
 	return BadWindow;
     }
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
@@ -397,13 +399,13 @@ XResizeWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TKWindow *w = (TKWindow *)macWin->winPtr->wmInfoPtr->window;
 
 	if (w) {
 	    if ([w styleMask] & NSFullScreenWindowMask) {
-		[w tkLayoutChanged];
+		[(TKWindow *)w tkLayoutChanged];
 	    } else {
 		NSRect r = [w contentRectForFrameRect:[w frame]];
 
@@ -446,7 +448,7 @@ XMoveResizeWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 
@@ -499,7 +501,7 @@ XMoveWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 
@@ -642,7 +644,7 @@ XRaiseWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Above, NULL);
     } else {
@@ -676,7 +678,7 @@ XLowerWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
@@ -715,7 +717,7 @@ XConfigureWindow(
     MacDrawable *macWin = (MacDrawable *)w;
     TkWindow *winPtr = macWin->winPtr;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     /*
      * Change the shape and/or position of the window.
@@ -1432,7 +1434,7 @@ Tk_GetPixmap(
     MacDrawable *macPix;
 
     if (display != NULL) {
-	display->request++;
+	LastKnownRequestProcessed(display)++;
     }
     macPix = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
@@ -1474,18 +1476,14 @@ Tk_FreePixmap(
 {
     MacDrawable *macPix = (MacDrawable *)pixmap;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (macPix->context) {
 	char *data = (char *)CGBitmapContextGetData(macPix->context);
 
 	if (data) {
 	    ckfree(data);
 	}
-	/*
-	 * Releasing the context here causes a crash in the 8.7 regression
-	 * tests, but not in 8.6.
-	 *	CFRelease(macPix->context);
-	 */
+	CFRelease(macPix->context);
     }
     ckfree(macPix);
 }

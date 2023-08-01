@@ -140,7 +140,7 @@ EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
 EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 /* Slot 46 is reserved */
 /* 47 */
 EXTERN Tk_Window	TkpGetCapture(void);
@@ -287,8 +287,8 @@ EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 12 */
 EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 /* 13 */
-EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+EXTERN int		TkpTestsendCmd_(void *clientData, Tcl_Interp *interp,
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
 /* Slot 16 is reserved */
@@ -328,8 +328,8 @@ EXTERN void		TkWmCleanup_(TkDisplay *dispPtr);
 /* 44 */
 EXTERN void		TkSendCleanup_(TkDisplay *dispPtr);
 /* 45 */
-EXTERN int		TkpTestsendCmd_(void *clientData, Tcl_Interp *interp,
-				int objc, Tcl_Obj *const objv[]);
+EXTERN int		TkpTestsendCmd(void *clientData, Tcl_Interp *interp,
+				Tcl_Size objc, Tcl_Obj *const objv[]);
 #endif /* X11 */
 
 typedef struct TkIntPlatStubs {
@@ -382,7 +382,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
     void (*reserved46)(void);
     Tk_Window (*tkpGetCapture) (void); /* 47 */
 #endif /* WIN */
@@ -458,7 +458,7 @@ typedef struct TkIntPlatStubs {
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 10 */
     void (*reserved11)(void);
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 12 */
-    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 13 */
+    int (*tkpTestsendCmd_) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 13 */
     void (*reserved14)(void);
     void (*reserved15)(void);
     void (*reserved16)(void);
@@ -490,7 +490,7 @@ typedef struct TkIntPlatStubs {
     void (*tkUnixSetMenubar_) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
     void (*tkWmCleanup_) (TkDisplay *dispPtr); /* 43 */
     void (*tkSendCleanup_) (TkDisplay *dispPtr); /* 44 */
-    int (*tkpTestsendCmd_) (void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]); /* 45 */
+    int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
 #endif /* X11 */
 } TkIntPlatStubs;
 
@@ -731,8 +731,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 /* Slot 11 is reserved */
 #define TkpWmSetState \
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 12 */
-#define TkpTestsendCmd \
-	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 13 */
+#define TkpTestsendCmd_ \
+	(tkIntPlatStubsPtr->tkpTestsendCmd_) /* 13 */
 /* Slot 14 is reserved */
 /* Slot 15 is reserved */
 /* Slot 16 is reserved */
@@ -771,8 +771,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkWmCleanup_) /* 43 */
 #define TkSendCleanup_ \
 	(tkIntPlatStubsPtr->tkSendCleanup_) /* 44 */
-#define TkpTestsendCmd_ \
-	(tkIntPlatStubsPtr->tkpTestsendCmd_) /* 45 */
+#define TkpTestsendCmd \
+	(tkIntPlatStubsPtr->tkpTestsendCmd) /* 45 */
 #endif /* X11 */
 
 #endif /* defined(USE_TK_STUBS) */
@@ -789,6 +789,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkpTestsendCmd_
 #undef TkGenerateActivateEvents_
 #undef TkMacOSXSetUpClippingRgn
+#undef TkMacOSXIsCharacterMissing
+#define TkMacOSXIsCharacterMissing(tkfont) ((void)tkfont, 0)
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

@@ -244,7 +244,7 @@ ConvertPoints(
 	if (tsdPtr->winPoints != NULL) {
 	    ckfree(tsdPtr->winPoints);
 	}
-	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * npoints);
+	tsdPtr->winPoints = (POINT *)ckalloc(sizeof(POINT) * (size_t)npoints);
 	if (tsdPtr->winPoints == NULL) {
 	    tsdPtr->nWinPoints = -1;
 	    return NULL;
@@ -369,7 +369,7 @@ XCopyPlane(
     HBRUSH bgBrush, fgBrush, oldBrush;
     TkpClipMask *clipPtr = (TkpClipMask*)gc->clip_mask;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     if (plane != 1) {
 	Tcl_Panic("Unexpected plane specified for XCopyPlane");
@@ -520,7 +520,7 @@ TkPutImage(
     HBITMAP bitmap;
     char *data;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     dc = TkWinGetDrawableDC(display, d, &state);
     SetROP2(dc, tkpWinRopModes[gc->function]);
@@ -554,7 +554,7 @@ TkPutImage(
 
 	if (usePalette) {
 	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER)
-		    + sizeof(RGBQUAD)*ncolors);
+		    + sizeof(RGBQUAD)*(size_t)ncolors);
 	} else {
 	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER));
 	}
@@ -563,7 +563,7 @@ TkPutImage(
 	infoPtr->bmiHeader.biWidth = image->width;
 	infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
 	infoPtr->bmiHeader.biPlanes = 1;
-	infoPtr->bmiHeader.biBitCount = image->bits_per_pixel;
+	infoPtr->bmiHeader.biBitCount = (WORD)image->bits_per_pixel;
 	infoPtr->bmiHeader.biCompression = BI_RGB;
 	infoPtr->bmiHeader.biSizeImage = 0;
 	infoPtr->bmiHeader.biXPelsPerMeter = 0;
@@ -571,7 +571,7 @@ TkPutImage(
 	infoPtr->bmiHeader.biClrImportant = 0;
 
 	if (usePalette) {
-	    infoPtr->bmiHeader.biClrUsed = ncolors;
+	    infoPtr->bmiHeader.biClrUsed = (DWORD)ncolors;
 	    for (i = 0; i < ncolors; i++) {
 		infoPtr->bmiColors[i].rgbBlue = GetBValue(colors[i]);
 		infoPtr->bmiColors[i].rgbGreen = GetGValue(colors[i]);
@@ -764,7 +764,7 @@ MakeAndStrokePath(
                                 this is either Polyline or Polygon. */
 {
     BeginPath(dc);
-    func(dc, winPoints, npoints);
+    func(dc, winPoints, (int)npoints);
     /*
      * In the case of closed polylines, the first and last points
      * are the same. We want miter or bevel join be rendered also
@@ -980,13 +980,12 @@ XFillPolygon(
     GC gc,
     XPoint *points,
     int npoints,
-    int shape,
+    TCL_UNUSED(int),
     int mode)
 {
     HPEN pen;
     TkWinDCState state;
     HDC dc;
-    (void)shape;
 
     if (d == None) {
 	return BadDrawable;
@@ -1042,7 +1041,7 @@ XDrawRectangle(
     oldBrush = (HBRUSH)SelectObject(dc, GetStockObject(NULL_BRUSH));
     SetROP2(dc, tkpWinRopModes[gc->function]);
 
-    Rectangle(dc, x, y, (int) x+width+1, (int) y+height+1);
+    Rectangle(dc, x, y, x + (int)width + 1, y + (int)height + 1);
 
     DeleteObject(SelectObject(dc, oldPen));
     SelectObject(dc, oldBrush);
@@ -1096,7 +1095,7 @@ XDrawArc(
     unsigned int width, unsigned int height,
     int start, int extent)
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 0);
 }
@@ -1111,7 +1110,7 @@ XDrawArcs(
 {
     int ret = Success;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     while (narcs-- > 0) {
 	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
@@ -1150,7 +1149,7 @@ XFillArc(
     unsigned int width, unsigned int height,
     int start, int extent)
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     return DrawOrFillArc(display, d, gc, x, y, width, height, start, extent, 1);
 }
@@ -1165,7 +1164,7 @@ XFillArcs(
 {
     int ret = Success;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     while (narcs-- > 0) {
 	ret = DrawOrFillArc(display, d, gc, arcs[0].x, arcs[0].y,
@@ -1273,16 +1272,16 @@ DrawOrFillArc(
 	 */
 
 	SetBkMode(dc, TRANSPARENT);
-	Arc(dc, x, y, (int) (x+width+1), (int) (y+height+1), xstart, ystart,
+	Arc(dc, x, y,  x + (int)width + 1, y + (int)height + 1, xstart, ystart,
 		xend, yend);
     } else {
 	brush = CreateSolidBrush(gc->foreground);
 	oldBrush = (HBRUSH)SelectObject(dc, brush);
 	if (gc->arc_mode == ArcChord) {
-	    Chord(dc, x, y, (int) (x+width+1), (int) (y+height+1),
+	    Chord(dc, x, y,  x + (int)width + 1, y + (int)height + 1,
 		    xstart, ystart, xend, yend);
 	} else if (gc->arc_mode == ArcPieSlice) {
-	    Pie(dc, x, y, (int) (x+width+1), (int) (y+height+1),
+	    Pie(dc, x, y,  x+(int)width+1, y + (int)height + 1,
 		    xstart, ystart, xend, yend);
 	}
 	DeleteObject(SelectObject(dc, oldBrush));
@@ -1399,7 +1398,7 @@ SetUpGraphicsPort(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-    GC gc,			/* GC for window to be scrolled. */
+    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
     int x, int y, int width, int height,
 				/* Position rectangle to be scrolled. */
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1407,7 +1406,6 @@ TkScrollWindow(
 {
     HWND hwnd = TkWinGetHWND(Tk_WindowId(tkwin));
     RECT scrollRect;
-    (void)gc;
 
     scrollRect.left = x;
     scrollRect.top = y;
@@ -1480,12 +1478,10 @@ void
 Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
-    GC bgGC,
+    TCL_UNUSED(GC),
     int highlightWidth,
     Drawable drawable)
 {
-    (void)bgGC;
-
     TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth, drawable, 0);
 }
 

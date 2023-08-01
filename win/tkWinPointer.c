@@ -31,7 +31,7 @@ static int mouseTimerSet = 0;		/* 1 if the mouse timer is active. */
  * Forward declarations of procedures used in this file.
  */
 
-static void		MouseTimerProc(ClientData clientData);
+static void		MouseTimerProc(void *clientData);
 
 /*
  *----------------------------------------------------------------------
@@ -235,10 +235,9 @@ XUngrabKeyboard(
 
 void
 MouseTimerProc(
-    ClientData dummy)
+    TCL_UNUSED(void *))
 {
     POINT pos;
-    (void)dummy;
 
     mouseTimerSet = 0;
 
@@ -324,22 +323,16 @@ TkGetPointerCoords(
 Bool
 XQueryPointer(
     Display *display,
-    Window w,
-    Window *root_return,
-    Window *child_return,
+    TCL_UNUSED(Window),
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Window *),
     int *root_x_return,
     int *root_y_return,
-    int *win_x_return,
-    int *win_y_return,
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     unsigned int *mask_return)
 {
-    (void)w;
-    (void)root_return;
-    (void)child_return;
-    (void)win_x_return;
-    (void)win_y_return;
-
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     TkGetPointerCoords(NULL, root_x_return, root_y_return);
     *mask_return = TkWinGetModifierState();
     return True;
@@ -476,7 +469,7 @@ XGetInputFocus(
 
     *focus_return = tkwin ? Tk_WindowId(tkwin) : 0;
     *revert_to_return = RevertToParent;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return Success;
 }
 
@@ -501,13 +494,10 @@ int
 XSetInputFocus(
     Display *display,
     Window focus,
-    int revert_to,
-    Time time)
+    TCL_UNUSED(int),
+    TCL_UNUSED(Time))
 {
-    (void)revert_to;
-    (void)time;
-
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (focus != None) {
 	SetFocus(Tk_GetHWND(focus));
     }

@@ -20,11 +20,12 @@
 #include "tkMacOSXColor.h"
 
 static Tcl_HashTable systemColors;
-static int numSystemColors;
-static int rgbColorIndex;
-static int controlAccentIndex;
-static int selectedTabTextIndex;
-static int pressedButtonTextIndex;
+static size_t numSystemColors;
+static size_t rgbColorIndex;
+static size_t controlAccentIndex;
+static size_t controlAlternatingRowIndex;
+static size_t selectedTabTextIndex;
+static size_t pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -43,7 +44,8 @@ void initColorTable()
     SystemColorDatum *entry, *oldEntry;
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
-    int newPtr, index = 0;
+    int newPtr;
+    size_t index = 0;
     NSColorList *systemColorList = [NSColorList colorListNamed:@"System"];
     NSString *key;
 
@@ -70,6 +72,7 @@ void initColorTable()
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
 		} else if (   ![colorName isEqualToString:@"selectedTabTextColor"]
+			   && ![colorName isEqualToString:@"controlAlternatingRowColor"]
 			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
@@ -93,13 +96,13 @@ void initColorTable()
      */
 
     for (key in [systemColorList allKeys]) {
-	int length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
+	NSUInteger length = [key lengthOfBytesUsingEncoding:NSUTF8StringEncoding];
 	char *name;
 	entry = (SystemColorDatum *)ckalloc(sizeof(SystemColorDatum));
 	bzero(entry, sizeof(SystemColorDatum));
 	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
-	name[0] = toupper(name[0]);
+	name[0] = (char)toupper(UCHAR(name[0]));
         if (!strcmp(name, "WindowBackgroundColor")) {
 
 	    /*
@@ -147,6 +150,9 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     controlAccentIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "ControlAlternatingRowColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    controlAlternatingRowIndex = entry->index;
     hPtr = Tcl_FindHashEntry(&systemColors, "SelectedTabTextColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     selectedTabTextIndex = entry->index;
@@ -185,9 +191,9 @@ TkMacOSXRGBPixel(
 {
     MacPixel p = {0};
     p.pixel.colortype = rgbColor;
-    p.pixel.value = ((red & 0xff) << 16)  |
+    p.pixel.value = (unsigned int)(((red & 0xff) << 16)  |
 	            ((green & 0xff) << 8) |
-	            (blue & 0xff);
+	            (blue & 0xff));
     return p.ulong;
 }
 
@@ -243,7 +249,7 @@ GetEntryFromPixel(
     unsigned long pixel)
 {
     MacPixel p = {0};
-    int index = rgbColorIndex;
+    size_t index = rgbColorIndex;
 
     p.ulong = pixel;
     if (p.pixel.colortype != rgbColor) {
@@ -331,6 +337,15 @@ GetRGBA(
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
 #endif
+	} else if (entry->index == controlAlternatingRowIndex) {
+	    /*
+	     * Color which is now called alternatingContentBackgroundColor on 10.14.
+	     * Taken from NSColor.controlAlternatingRowBackgroundColors (which was
+	     * replaced by NSColor.alternatingContentBackgroundColors on 10.14).
+	     */
+	    color = [[NSColor colorWithCatalogName:@"System"
+					 colorName:@"controlAlternatingRowColor"]
+			colorUsingColorSpace:sRGB];
 	} else if (entry->index == selectedTabTextIndex) {
 	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
@@ -381,6 +396,11 @@ SetCGColorComponents(
 {
     CGFloat rgba[4] = {0, 0, 0, 1};
 
+    if (entry->type == HIBrush) {
+     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
+     	return err == noErr;
+    }
+
     /*
      * This function is called before our autorelease pool is set up,
      * so it needs its own pool.
@@ -388,11 +408,6 @@ SetCGColorComponents(
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-    if (entry->type == HIBrush) {
-     	OSStatus err = ChkErr(HIThemeBrushCreateCGColor, entry->value, c);
-	[pool drain];
-     	return err == noErr;
-    }
     GetRGBA(entry, pixel, rgba);
     *c = CGColorCreate(sRGB.CGColorSpace, rgba);
     [pool drain];
@@ -503,7 +518,7 @@ TkMacOSXGetNSColor(
     if (cgColor) {
 	nsColor = [NSColor colorWithColorSpace:sRGB
 			components:CGColorGetComponents(cgColor)
-			count:CGColorGetNumberOfComponents(cgColor)];
+			count:(NSInteger)CGColorGetNumberOfComponents(cgColor)];
 	CGColorRelease(cgColor);
     }
     return nsColor;
@@ -621,7 +636,7 @@ TkpGetColor(
 	    CGColorRef c = NULL;
 
 	    p.pixel.colortype = entry->type;
-	    p.pixel.value = entry->index;
+	    p.pixel.value = (unsigned int)entry->index;
 	    color.pixel = p.ulong;
 	    if (entry->type == semantic) {
 		CGFloat rgba[4];
@@ -659,9 +674,9 @@ TkpGetColor(
 #else
 		GetRGBA(entry, p.ulong, rgba);
 #endif
-		color.red   = rgba[0] * 65535.0;
-		color.green = rgba[1] * 65535.0;
-		color.blue  = rgba[2] * 65535.0;
+		color.red   = (unsigned short)(rgba[0] * 65535.0);
+		color.green = (unsigned short)(rgba[1] * 65535.0);
+		color.blue  = (unsigned short)(rgba[2] * 65535.0);
 		goto validXColor;
 	    } else if (SetCGColorComponents(entry, 0, &c)) {
 		const size_t n = CGColorGetNumberOfComponents(c);
@@ -669,12 +684,12 @@ TkpGetColor(
 
 		switch (n) {
 		case 4:
-		    color.red   = rgba[0] * 65535.0;
-		    color.green = rgba[1] * 65535.0;
-		    color.blue  = rgba[2] * 65535.0;
+		    color.red   = (unsigned short)(rgba[0] * 65535.0);
+		    color.green = (unsigned short)(rgba[1] * 65535.0);
+		    color.blue  = (unsigned short)(rgba[2] * 65535.0);
 		    break;
 		case 2:
-		    color.red = color.green = color.blue = rgba[0] * 65535.0;
+		    color.red = color.green = color.blue = (unsigned short)(rgba[0] * 65535.0);
 		    break;
 		default:
 		    Tcl_Panic("CGColor with %d components", (int) n);
@@ -755,7 +770,7 @@ XAllocColor(
     TCL_UNUSED(Colormap),		/* Not used. */
     XColor *colorPtr)		/* XColor struct to modify. */
 {
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     colorPtr->pixel = TkpGetPixel(colorPtr);
     return 1;
 }

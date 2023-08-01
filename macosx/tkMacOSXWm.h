@@ -171,7 +171,7 @@ typedef struct TkWmInfo {
      */
 
     TkWindow **cmapList;	/* Array of window with private colormaps. */
-    int cmapCount;		/* Number of windows in array. */
+    Tcl_Size cmapCount;		/* Number of windows in array. */
 
     /*
      * Miscellaneous information.

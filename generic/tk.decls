@@ -146,7 +146,7 @@ declare 28 {
 declare 29 {
     int Tk_ConfigureWidget(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    int argc, const char **argv, char *widgRec,
+	    Tcl_Size argc, const char **argv, char *widgRec,
 	    int flags)
 }
 declare 30 {
@@ -439,7 +439,7 @@ declare 107 {
 }
 declare 108 {
     int Tk_GetScrollInfo(Tcl_Interp *interp,
-	    int argc, const char **argv, double *dblPtr, int *intPtr)
+	    Tcl_Size argc, const char **argv, double *dblPtr, int *intPtr)
 }
 declare 109 {
     int Tk_GetScreenMM(Tcl_Interp *interp,
@@ -799,7 +799,7 @@ declare 209 {
 }
 declare 210 {
     int	 Tk_GetScrollInfoObj(Tcl_Interp *interp,
-	    int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
+	    Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr)
 }
 declare 211 {
     int	 Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
@@ -996,7 +996,7 @@ declare 259 {
     void  Tk_FreeStyleFromObj(Tcl_Obj *objPtr)
 }
 declare 260 {
-    Tk_StyledElement Tk_GetStyledElement(Tk_Style style, int elementId,
+    Tk_StyledElement Tk_GetStyledElement(Tk_Style style, Tcl_Size elementId,
 	Tk_OptionTable optionTable)
 }
 declare 261 {

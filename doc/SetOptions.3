@@ -58,7 +58,7 @@ For options such as \fBTK_OPTION_COLOR\fR, this argument indicates
 the window in which the option will be used.  If \fIoptionTable\fR uses
 no window-dependent options, then a NULL value may be supplied for
 this argument.
-.AP int objc in
+.AP Tcl_Size objc in
 Number of values in \fIobjv\fR.
 .AP Tcl_Obj "*const *objv" in
 Command-line arguments for setting configuring options.
@@ -127,20 +127,20 @@ called to free all of its resources.  All of the option tables
 for a Tcl interpreter are freed automatically if the interpreter is deleted.
 .PP
 \fBTk_InitOptions\fR is invoked when a new widget is created to set the
-default values for all of the widget's configuration options that do not
-have \fBTK_OPTION_DONT_SET_DEFAULT\fR set in their \fIflags\fR field.
+default values.
 \fBTk_InitOptions\fR is passed a token for an option table
 (\fIoptionTable\fR) and a pointer to a widget record (\fIrecordPtr\fR),
 which is the C structure that holds information about this widget.
 \fBTk_InitOptions\fR uses the information in the option table to choose an
-appropriate default for each option, except those having
-\fBTK_OPTION_DONT_SET_DEFAULT\fR set, then it stores the default value
+appropriate default for each option, then it stores the default value
 directly into the widget record, overwriting any information that was
 already present in the widget record.  \fBTk_InitOptions\fR normally
 returns \fBTCL_OK\fR.  If an error occurred while setting the default
 values (e.g., because a default value was erroneous) then \fBTCL_ERROR\fR
 is returned and an error message is left in \fIinterp\fR's result if
-\fIinterp\fR is not NULL.
+\fIinterp\fR is not NULL. For any widget's configuration option that
+has \fBTK_OPTION_DONT_SET_DEFAULT\fR set in its \fIflags\fR field,
+the above initialization is fully skipped, see below.
 .PP
 \fBTk_SetOptions\fR is invoked to modify configuration options based
 on information specified in a Tcl command.  The command might be one that
@@ -419,6 +419,15 @@ specify octal or hexadecimal numbers, respectively).  The internal
 form is a C \fBint\fR value.  This option type supports the \fBTK_OPTION_NULL_OK\fR
 flag; if a NULL value is set, the internal representation is set to INT_MIN.
 .TP
+\fBTK_OPTION_INDEX\fR
+The string value must be an index in the format accepted by \fBTcl_GetIntForIndex()\fR
+or the empty string.  The internal form is a C \fBint\fR value. If the string
+starts with \fB-\fR, the internal representation will be set to INT_MIN. If the
+string has the form \fBend-???\fR, then the result will be a negative number:
+\fB-1\fR stands for \fBend\fR, \fB-2\fR stands for \fBend-1\fR and so on.
+This option type supports the \fBTK_OPTION_NULL_OK\fR flag;
+if a NULL value is set, the internal representation is set to INT_MIN.
+.TP
 \fBTK_OPTION_JUSTIFY\fR
 The value must be a standard justification value such as \fBleft\fR.
 The internal form is a Tk_Justify like the values returned by
@@ -524,6 +533,10 @@ To implement a new type of option, you can use \fBTK_OPTION_STRING\fR as
 the type in the Tk_OptionSpec structure and set the \fIobjOffset\fR field
 but not the \fIinternalOffset\fR field.  Then, after calling
 \fBTk_SetOptions\fR, convert the object to internal form yourself.
+.PP
+Ttk widgets do not support the \fIinternalOffset\fR machinery.
+Option values of Ttk widgets are always stored as (Tcl_Obj *), meaning that
+the \fIobjOffset\fR field must be used.
 .SH "CUSTOM OPTION TYPES"
 .PP
 Applications can extend the built-in configuration types with

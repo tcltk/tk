@@ -93,9 +93,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-relwidth", NULL, NULL, "",
 	 offsetof(Content, relWidthPtr), offsetof(Content, relWidth),
 	 TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0", TCL_INDEX_NONE,
+    {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0.0", TCL_INDEX_NONE,
 	 offsetof(Content, relX), 0, 0, 0},
-    {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0", TCL_INDEX_NONE,
+    {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0.0", TCL_INDEX_NONE,
 	 offsetof(Content, relY), 0, 0, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL, "", offsetof(Content, widthPtr),
 	 offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
@@ -137,9 +137,9 @@ typedef struct Container {
  * The following structure is the official type record for the placer:
  */
 
-static void		PlaceRequestProc(ClientData clientData,
+static void		PlaceRequestProc(void *clientData,
 			    Tk_Window tkwin);
-static void		PlaceLostContentProc(ClientData clientData,
+static void		PlaceLostContentProc(void *clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr placerType = {
@@ -152,7 +152,7 @@ static const Tk_GeomMgr placerType = {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		ContentStructureProc(ClientData clientData,
+static void		ContentStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_OptionTable table, int objc,
@@ -163,9 +163,9 @@ static void		FreeContent(Content *contentPtr);
 static Content *		FindContent(Tk_Window tkwin);
 static Container *		CreateContainer(Tk_Window tkwin);
 static Container *		FindContainer(Tk_Window tkwin);
-static void		PlaceStructureProc(ClientData clientData,
+static void		PlaceStructureProc(void *clientData,
 			    XEvent *eventPtr);
-static void		RecomputePlacement(ClientData clientData);
+static void		RecomputePlacement(void *clientData);
 static void		UnlinkContent(Content *contentPtr);
 
 /*
@@ -187,7 +187,7 @@ static void		UnlinkContent(Content *contentPtr);
 
 int
 Tk_PlaceObjCmd(
-    ClientData clientData,	/* Interpreter main window. */
+    void *clientData,	/* Interpreter main window. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -786,10 +786,10 @@ PlaceInfoCommand(
     }
     infoObj = Tcl_NewObj();
     if (contentPtr->containerPtr != NULL) {
-	Tcl_AppendToObj(infoObj, "-in", -1);
+	Tcl_AppendToObj(infoObj, "-in", TCL_INDEX_NONE);
 	Tcl_ListObjAppendElement(NULL, infoObj,
 		Tk_NewWindowObj(contentPtr->containerPtr->tkwin));
-	Tcl_AppendToObj(infoObj, " ", -1);
+	Tcl_AppendToObj(infoObj, " ", TCL_INDEX_NONE);
     }
     Tcl_AppendPrintfToObj(infoObj,
 	    "-x %d -relx %.4g -y %d -rely %.4g",
@@ -797,24 +797,24 @@ PlaceInfoCommand(
     if (contentPtr->widthPtr) {
 	Tcl_AppendPrintfToObj(infoObj, " -width %d", contentPtr->width);
     } else {
-	Tcl_AppendToObj(infoObj, " -width {}", -1);
+	Tcl_AppendToObj(infoObj, " -width {}", TCL_INDEX_NONE);
     }
     if (contentPtr->relWidthPtr) {
 	Tcl_AppendPrintfToObj(infoObj,
 		" -relwidth %.4g", contentPtr->relWidth);
     } else {
-	Tcl_AppendToObj(infoObj, " -relwidth {}", -1);
+	Tcl_AppendToObj(infoObj, " -relwidth {}", TCL_INDEX_NONE);
     }
     if (contentPtr->heightPtr) {
 	Tcl_AppendPrintfToObj(infoObj, " -height %d", contentPtr->height);
     } else {
-	Tcl_AppendToObj(infoObj, " -height {}", -1);
+	Tcl_AppendToObj(infoObj, " -height {}", TCL_INDEX_NONE);
     }
     if (contentPtr->relHeightPtr) {
 	Tcl_AppendPrintfToObj(infoObj,
 		" -relheight %.4g", contentPtr->relHeight);
     } else {
-	Tcl_AppendToObj(infoObj, " -relheight {}", -1);
+	Tcl_AppendToObj(infoObj, " -relheight {}", TCL_INDEX_NONE);
     }
 
     Tcl_AppendPrintfToObj(infoObj, " -anchor %s -bordermode %s",
@@ -843,7 +843,7 @@ PlaceInfoCommand(
 
 static void
 RecomputePlacement(
-    ClientData clientData)	/* Pointer to Container record. */
+    void *clientData)	/* Pointer to Container record. */
 {
     Container *containerPtr = (Container *)clientData;
     Content *contentPtr;
@@ -1062,7 +1062,7 @@ RecomputePlacement(
 
 static void
 PlaceStructureProc(
-    ClientData clientData,	/* Pointer to Container structure for window
+    void *clientData,	/* Pointer to Container structure for window
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
@@ -1141,7 +1141,7 @@ PlaceStructureProc(
 
 static void
 ContentStructureProc(
-    ClientData clientData,	/* Pointer to Content structure for window
+    void *clientData,	/* Pointer to Content structure for window
 				 * referred to by eventPtr. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
@@ -1178,7 +1178,7 @@ ContentStructureProc(
 
 static void
 PlaceRequestProc(
-    ClientData clientData,	/* Pointer to our record for content. */
+    void *clientData,	/* Pointer to our record for content. */
     TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
 {
     Content *contentPtr = (Content *)clientData;
@@ -1223,7 +1223,7 @@ PlaceRequestProc(
 
 static void
 PlaceLostContentProc(
-    ClientData clientData,	/* Content structure for content window that was
+    void *clientData,	/* Content structure for content window that was
 				 * stolen away. */
     Tk_Window tkwin)		/* Tk's handle for the content window. */
 {

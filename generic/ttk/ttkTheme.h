@@ -223,7 +223,7 @@ typedef struct Ttk_ElementSpec {
 
 typedef int (*Ttk_ElementFactory)
 	(Tcl_Interp *, void *clientData,
-	 Ttk_Theme, const char *elementName, int objc, Tcl_Obj *const objv[]);
+	 Ttk_Theme, const char *elementName, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  * Null element implementation:
@@ -378,13 +378,17 @@ MODULE_SCOPE int		TtkGetOrientFromObj(Tcl_Interp *interp,
 
 typedef struct TtkEnsemble {
     const char *name;			/* subcommand name */
-    Tcl_ObjCmdProc *command; 		/* subcommand implementation, OR: */
+#if TCL_MAJOR_VERSION > 8
+    Tcl_ObjCmdProc2 *command; 		/* subcommand implementation, OR: */
+#else
+    Tcl_ObjCmdProc *command;
+#endif
     const struct TtkEnsemble *ensemble;	/* subcommand ensemble */
 } Ttk_Ensemble;
 
 MODULE_SCOPE int Ttk_InvokeEnsemble(	/* Run an ensemble command */
-    const Ttk_Ensemble *commands, int cmdIndex,
-    void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+    const Ttk_Ensemble *commands, Tcl_Size cmdIndex,
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 MODULE_SCOPE int TtkEnumerateHashTable(Tcl_Interp *, Tcl_HashTable *);
 
