@@ -599,6 +599,9 @@ proc ::tk::EntryTranspose w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
+	if {[$w cget -show] ne ""} {
+	    return end
+	}
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
 	if {$pos >= 0} {
 	    set pos [tcl_startOfNextWord [$w get] $pos]
@@ -610,6 +613,9 @@ if {[tk windowingsystem] eq "win32"}  {
     }
 } else {
     proc ::tk::EntryNextWord {w start} {
+	if {[$w cget -show] ne ""} {
+	    return end
+	}
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
 	if {$pos < 0} {
 	    return end
@@ -628,6 +634,9 @@ if {[tk windowingsystem] eq "win32"}  {
 # start -	Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
+    if {[$w cget -show] ne ""} {
+	return 0
+    }
     set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return 0
