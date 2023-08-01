@@ -47,6 +47,8 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
+#undef TkMacOSXIsCharacterMissing
+#define TkMacOSXIsCharacterMissing (int (*)(Tk_Font, unsigned int))(void *)doNothing
 
 #if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
 #   define Tk_TranslateWinEvent TkTranslateWinEvent
@@ -191,7 +193,7 @@ TkpPrintWindowId(
 				 * the hex representation of a pointer. */
     Window window)		/* Window to be printed into buffer. */
 {
-    sprintf(buf, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
+    snprintf(buf, TCL_INTEGER_SPACE, "0x%" TCL_Z_MODIFIER "x", (size_t)window);
 }
 
 int
@@ -638,7 +640,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkSendCleanup, /* 10 */
     0, /* 11 */
     TkpWmSetState, /* 12 */
-    TkpTestsendCmd, /* 13 */
+    TkpTestsendCmd_, /* 13 */
     0, /* 14 */
     0, /* 15 */
     0, /* 16 */
@@ -670,7 +672,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkUnixSetMenubar_, /* 42 */
     TkWmCleanup_, /* 43 */
     TkSendCleanup_, /* 44 */
-    TkpTestsendCmd_, /* 45 */
+    TkpTestsendCmd, /* 45 */
 #endif /* X11 */
 };
 
@@ -759,7 +761,7 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XFilterEvent, /* 78 */
     XmbLookupString, /* 79 */
     TkPutImage, /* 80 */
-    0, /* 81 */
+    XSetClipRectangles, /* 81 */
     XParseColor, /* 82 */
     XCreateGC, /* 83 */
     XFreeGC, /* 84 */

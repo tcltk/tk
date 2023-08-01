@@ -16,6 +16,10 @@
 #include "tkBusy.h"
 #include "default.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Things about the busy system that may be configured. Note that on some
  * platforms this may or may not have an effect.
@@ -32,11 +36,11 @@ static const Tk_OptionSpec busyOptionSpecs[] = {
  * Forward declarations of functions defined in this file.
  */
 
-static void		BusyEventProc(ClientData clientData,
+static void		BusyEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		BusyGeometryProc(ClientData clientData,
+static void		BusyGeometryProc(void *clientData,
 			    Tk_Window tkwin);
-static void		BusyCustodyProc(ClientData clientData,
+static void		BusyCustodyProc(void *clientData,
 			    Tk_Window tkwin);
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
 			    int objc, Tcl_Obj *const objv[]);
@@ -53,10 +57,10 @@ static int		HoldBusy(Tcl_HashTable *busyTablePtr,
 static void		MakeTransparentWindowExist(Tk_Window tkwin,
 			    Window parent);
 static inline Tk_Window	NextChild(Tk_Window tkwin);
-static void		RefWinEventProc(ClientData clientData,
+static void		RefWinEventProc(void *clientData,
 			    XEvent *eventPtr);
 static inline void	SetWindowInstanceData(Tk_Window tkwin,
-			    ClientData instanceData);
+			    void *instanceData);
 
 /*
  * The "busy" geometry manager definition.
@@ -96,7 +100,7 @@ NextChild(
 static inline void
 SetWindowInstanceData(
     Tk_Window tkwin,
-    ClientData instanceData)
+    void *instanceData)
 {
     struct TkWindow *winPtr = (struct TkWindow *) tkwin;
 
@@ -124,7 +128,7 @@ SetWindowInstanceData(
 
 static void
 BusyCustodyProc(
-    ClientData clientData,	/* Information about the busy window. */
+    void *clientData,	/* Information about the busy window. */
     TCL_UNUSED(Tk_Window))		/* Not used. */
 {
     Busy *busyPtr = (Busy *)clientData;
@@ -246,7 +250,7 @@ DoConfigureNotify(
 
 static void
 RefWinEventProc(
-    ClientData clientData,	/* Busy window record */
+    void *clientData,	/* Busy window record */
     XEvent *eventPtr)	/* Event which triggered call to routine */
 {
     Busy *busyPtr = (Busy *)clientData;
@@ -372,7 +376,7 @@ DestroyBusy(
 
 static void
 BusyEventProc(
-    ClientData clientData,	/* Busy window record */
+    void *clientData,	/* Busy window record */
     XEvent *eventPtr)		/* Event which triggered call to routine */
 {
     Busy *busyPtr = (Busy *)clientData;
@@ -550,7 +554,7 @@ CreateBusy(
 	    tkChild = NextChild(tkChild)) {
 	Tk_MakeWindowExist(tkChild);
     }
-    sprintf(name, fmt, Tk_Name(tkRef));
+    snprintf(name, length + 6, fmt, Tk_Name(tkRef));
     tkBusy = Tk_CreateWindow(interp, tkParent, name, NULL);
     ckfree(name);
 
@@ -682,8 +686,8 @@ GetBusy(
     Tcl_HashEntry *hPtr;
     Tk_Window tkwin;
 
-    if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), windowObj,
-	    &tkwin) != TCL_OK) {
+    tkwin = Tk_MainWindow(interp);
+    if (!tkwin || (TkGetWindowFromObj(interp, tkwin, windowObj, &tkwin) != TCL_OK)) {
 	return NULL;
     }
     hPtr = Tcl_FindHashEntry(busyTablePtr, tkwin);
@@ -739,6 +743,7 @@ HoldBusy(
     if (isNew) {
 	busyPtr = CreateBusy(interp, tkwin);
 	if (busyPtr == NULL) {
+	    Tcl_DeleteHashEntry(hPtr);
 	    return TCL_ERROR;
 	}
 	Tcl_SetHashValue(hPtr, busyPtr);
@@ -761,7 +766,7 @@ HoldBusy(
 	TkpHideBusyWindow(busyPtr);
     }
     if (result == TCL_OK) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
     }
     return result;
 }
@@ -785,9 +790,9 @@ HoldBusy(
 
 int
 Tk_BusyObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -836,7 +841,7 @@ Tk_BusyObjCmd(
 	    Tcl_ResetResult(interp);
             return TCL_OK;
 	}
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), -1));
+        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
         return TCL_OK;
 
     case BUSY_CGET:

@@ -11,6 +11,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkWinInt.h"
 
 #include <commctrl.h>
@@ -119,17 +120,16 @@ void
 TkGetServerInfo(
     Tcl_Interp *interp,		/* The server information is returned in this
 				 * interpreter's result. */
-    Tk_Window tkwin)		/* Token for window; this selects a particular
+    TCL_UNUSED(Tk_Window))		/* Token for window; this selects a particular
 				 * display and server. */
 {
     static char buffer[32]; /* Empty string means not initialized yet. */
     OSVERSIONINFOW os;
-    (void)tkwin;
 
     if (!buffer[0]) {
 	GetVersionExW(&os);
 	/* Write the first character last, preventing multi-thread issues. */
-	sprintf(buffer+1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
+	snprintf(buffer+1, sizeof(buffer)-1, "indows %d.%d %d %s", (int)os.dwMajorVersion,
 		(int)os.dwMinorVersion, (int)os.dwBuildNumber,
 #ifdef _WIN64
 		"Win64"
@@ -282,7 +282,7 @@ TkWinXInit(
 
 void
 TkWinXCleanup(
-    ClientData clientData)
+    void *clientData)
 {
     HINSTANCE hInstance = (HINSTANCE)clientData;
 
@@ -390,11 +390,9 @@ TkWinGetPlatformTheme(void)
 
 const char *
 TkGetDefaultScreenName(
-    Tcl_Interp *dummy,		/* Not used. */
+    TCL_UNUSED(Tcl_Interp *),
     const char *screenName)	/* If NULL, use default string. */
 {
-    (void)dummy;
-
     if ((screenName == NULL) || (screenName[0] == '\0')) {
 	screenName = winScreenName;
     }
@@ -425,17 +423,17 @@ TkWinDisplayChanged(
     HDC dc;
     Screen *screen;
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     dc = GetDC(NULL);
-    screen->width = GetDeviceCaps(dc, HORZRES);
-    screen->height = GetDeviceCaps(dc, VERTRES);
-    screen->mwidth = MulDiv(screen->width, 254,
+    WidthOfScreen(screen) = GetDeviceCaps(dc, HORZRES);
+    HeightOfScreen(screen) = GetDeviceCaps(dc, VERTRES);
+    WidthMMOfScreen(screen) = MulDiv(WidthOfScreen(screen), 254,
 	    GetDeviceCaps(dc, LOGPIXELSX) * 10);
-    screen->mheight = MulDiv(screen->height, 254,
+    HeightMMOfScreen(screen) = MulDiv(HeightOfScreen(screen), 254,
 	    GetDeviceCaps(dc, LOGPIXELSY) * 10);
 
     /*
@@ -456,43 +454,43 @@ TkWinDisplayChanged(
     screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
     screen->root_visual->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
-	screen->root_visual->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	screen->root_visual->c_class = PseudoColor;
-	screen->root_visual->red_mask = 0x0;
-	screen->root_visual->green_mask = 0x0;
-	screen->root_visual->blue_mask = 0x0;
-    } else if (screen->root_depth == 4) {
-	screen->root_visual->c_class = StaticColor;
-	screen->root_visual->map_entries = 16;
-    } else if (screen->root_depth == 8) {
-	screen->root_visual->c_class = StaticColor;
-	screen->root_visual->map_entries = 256;
-    } else if (screen->root_depth == 12) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 32;
-	screen->root_visual->red_mask = 0xf0;
-	screen->root_visual->green_mask = 0xf000;
-	screen->root_visual->blue_mask = 0xf00000;
-    } else if (screen->root_depth == 16) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 64;
-	screen->root_visual->red_mask = 0xf8;
-	screen->root_visual->green_mask = 0xfc00;
-	screen->root_visual->blue_mask = 0xf80000;
-    } else if (screen->root_depth >= 24) {
-	screen->root_visual->c_class = TrueColor;
-	screen->root_visual->map_entries = 256;
-	screen->root_visual->red_mask = 0xff;
-	screen->root_visual->green_mask = 0xff00;
-	screen->root_visual->blue_mask = 0xff0000;
+	DefaultVisualOfScreen(screen)->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
+	DefaultVisualOfScreen(screen)->c_class = PseudoColor;
+	DefaultVisualOfScreen(screen)->red_mask = 0x0;
+	DefaultVisualOfScreen(screen)->green_mask = 0x0;
+	DefaultVisualOfScreen(screen)->blue_mask = 0x0;
+    } else if (DefaultDepthOfScreen(screen) == 4) {
+	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+	DefaultVisualOfScreen(screen)->map_entries = 16;
+    } else if (DefaultDepthOfScreen(screen) == 8) {
+	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+	DefaultVisualOfScreen(screen)->map_entries = 256;
+    } else if (DefaultDepthOfScreen(screen) == 12) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 32;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf0;
+	DefaultVisualOfScreen(screen)->green_mask = 0xf000;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf00000;
+    } else if (DefaultDepthOfScreen(screen) == 16) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 64;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf8;
+	DefaultVisualOfScreen(screen)->green_mask = 0xfc00;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf80000;
+    } else if (DefaultDepthOfScreen(screen) >= 24) {
+	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->map_entries = 256;
+	DefaultVisualOfScreen(screen)->red_mask = 0xff;
+	DefaultVisualOfScreen(screen)->green_mask = 0xff00;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xff0000;
     }
-    screen->root_visual->bits_per_rgb = screen->root_depth;
+    DefaultVisualOfScreen(screen)->bits_per_rgb = DefaultDepthOfScreen(screen);
     ReleaseDC(NULL, dc);
 
-    if (screen->cmap != None) {
-	XFreeColormap(display, screen->cmap);
+    if (DefaultColormapOfScreen(screen) != None) {
+	XFreeColormap(display, DefaultColormapOfScreen(screen));
     }
-    screen->cmap = XCreateColormap(display, None, screen->root_visual,
+    DefaultColormapOfScreen(screen) = XCreateColormap(display, None, DefaultVisualOfScreen(screen),
 	    AllocNone);
 }
 
@@ -522,7 +520,7 @@ TkpOpenDisplay(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->winDisplay != NULL) {
-	if (!strcmp(tsdPtr->winDisplay->display->display_name, display_name)) {
+	if (!strcmp(DisplayString(tsdPtr->winDisplay->display), display_name)) {
 	    return tsdPtr->winDisplay;
 	} else {
 	    return NULL;
@@ -533,7 +531,7 @@ TkpOpenDisplay(
     TkWinDisplayChanged(display);
 
     tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));
-    ZeroMemory(tsdPtr->winDisplay, sizeof(TkDisplay));
+    memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
     tsdPtr->wheelTickPrev = GetTickCount();
@@ -562,20 +560,20 @@ XkbOpenDisplay(
 	int *minor_rtrn,
 	int *reason)
 {
-    Display *display = (Display *)ckalloc(sizeof(Display));
+    _XPrivDisplay display = (_XPrivDisplay)ckalloc(sizeof(Display));
     Screen *screen = (Screen *)ckalloc(sizeof(Screen));
     TkWinDrawable *twdPtr = (TkWinDrawable *)ckalloc(sizeof(TkWinDrawable));
 
-    ZeroMemory(screen, sizeof(Screen));
-    ZeroMemory(display, sizeof(Display));
+    memset(screen, 0, sizeof(Screen));
+    memset(display, 0, sizeof(Display));
 
     /*
      * Note that these pixel values are not palette relative.
      */
 
-    screen->white_pixel = RGB(255, 255, 255);
-    screen->black_pixel = RGB(0, 0, 0);
-    screen->cmap = None;
+    WhitePixelOfScreen(screen) = RGB(255, 255, 255);
+    BlackPixelOfScreen(screen) = RGB(0, 0, 0);
+    DefaultColormapOfScreen(screen) = None;
 
     display->screens		= screen;
     display->nscreens		= 1;
@@ -585,12 +583,11 @@ XkbOpenDisplay(
     twdPtr->window.winPtr = NULL;
     twdPtr->window.handle = NULL;
     screen->root = (Window)twdPtr;
-    screen->display = display;
+    screen->display = (Display *)display;
 
     display->display_name = (char  *)ckalloc(strlen(name) + 1);
     strcpy(display->display_name, name);
 
-    display->cursor_font = 1;
     display->nscreens = 1;
     display->request = 1;
     display->qlen = 0;
@@ -601,7 +598,7 @@ XkbOpenDisplay(
     if (minor_rtrn) *minor_rtrn = 0;
     if (reason) *reason = 0;
 
-    return display;
+    return (Display *)display;
 }
 
 /*
@@ -625,7 +622,7 @@ void
 TkpCloseDisplay(
     TkDisplay *dispPtr)
 {
-    Display *display = dispPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)dispPtr->display;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
@@ -639,17 +636,17 @@ TkpCloseDisplay(
     if (display->display_name != NULL) {
 	ckfree(display->display_name);
     }
-    if (display->screens != NULL) {
-	if (display->screens->root_visual != NULL) {
-	    ckfree(display->screens->root_visual);
+    if (ScreenOfDisplay(display, 0) != NULL) {
+	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
+	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	if (display->screens->root != None) {
-	    ckfree((char *)display->screens->root);
+	if (RootWindowOfScreen(ScreenOfDisplay(display, 0)) != None) {
+	    ckfree((void *)RootWindowOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	if (display->screens->cmap != None) {
-	    XFreeColormap(display, display->screens->cmap);
+	if (DefaultColormapOfScreen(ScreenOfDisplay(display, 0)) != None) {
+	    XFreeColormap(display, DefaultColormapOfScreen(ScreenOfDisplay(display, 0)));
 	}
-	ckfree(display->screens);
+	ckfree(ScreenOfDisplay(display, 0));
     }
     ckfree(display);
 }
@@ -707,12 +704,9 @@ TkClipCleanup(
 
 int
 XBell(
-    Display *display,
-    int percent)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(int))
 {
-    (void)display;
-    (void)percent;
-
     MessageBeep(MB_OK);
     return Success;
 }
@@ -998,7 +992,7 @@ GenerateXEvent(
     }
 
     memset(&event.x, 0, sizeof(XEvent));
-    event.x.xany.serial = winPtr->display->request++;
+    event.x.xany.serial = LastKnownRequestProcessed(winPtr->display)++;
     event.x.xany.send_event = False;
     event.x.xany.display = winPtr->display;
     event.x.xany.window = winPtr->window;
@@ -1523,7 +1517,7 @@ UpdateInputLanguage(
     if (charsetInfo.ciACP == CP_UTF8) {
 	strcpy(codepage, "utf-8");
     } else {
-	sprintf(codepage, "cp%d", charsetInfo.ciACP);
+	snprintf(codepage, sizeof(codepage), "cp%d", charsetInfo.ciACP);
     }
 
     if ((encoding = Tcl_GetEncoding(NULL, codepage)) == NULL) {
@@ -1667,7 +1661,7 @@ HandleIMEComposition(
 	winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
 	memset(&event, 0, sizeof(XEvent));
-	event.xkey.serial = winPtr->display->request++;
+	event.xkey.serial = LastKnownRequestProcessed(winPtr->display)++;
 	event.xkey.send_event = -3;
 	event.xkey.display = winPtr->display;
 	event.xkey.window = winPtr->window;
@@ -1957,10 +1951,9 @@ Tk_SetCaretPos(
 
 long
 Tk_GetUserInactiveTime(
-     Display *dpy)		/* Ignored on Windows */
+     TCL_UNUSED(Display *))
 {
     LASTINPUTINFO li;
-    (void)dpy;
 
     li.cbSize = sizeof(li);
     if (!GetLastInputInfo(&li)) {
@@ -1993,10 +1986,9 @@ Tk_GetUserInactiveTime(
 
 void
 Tk_ResetUserInactiveTime(
-    Display *dpy)
+    TCL_UNUSED(Display *))
 {
     INPUT inp;
-    (void)dpy;
 
     inp.type = INPUT_MOUSE;
     inp.mi.dx = 0;

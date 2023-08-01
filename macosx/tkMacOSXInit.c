@@ -35,7 +35,7 @@ static char scriptPath[PATH_MAX + 1] = "";
 
 static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
-static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
+static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 			    int objc, Tcl_Obj *const objv[]);
 
 #pragma mark TKApplication(TKInit)
@@ -49,11 +49,11 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize tkPointerWindow = _tkPointerWindow;
 - (void) setTkPointerWindow: (TkWindow *)winPtr
 {
-    if (_tkPointerWindow) {
-	Tcl_Release(_tkPointerWindow);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkPointerWindow) {
+	Tcl_Release(_tkPointerWindow);
     }
     _tkPointerWindow = winPtr;
     return;
@@ -61,11 +61,11 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize tkEventTarget = _tkEventTarget;
 - (void) setTkEventTarget: (TkWindow *)winPtr
 {
-    if (_tkEventTarget) {
-	Tcl_Release(_tkEventTarget);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkEventTarget) {
+	Tcl_Release(_tkEventTarget);
     }
     _tkEventTarget = winPtr;
     return;
@@ -73,11 +73,11 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize tkDragTarget = _tkDragTarget;
 - (void) setTkDragTarget: (TkWindow *)winPtr
 {
-    if (_tkDragTarget) {
-	Tcl_Release(_tkDragTarget);
-    }
     if (winPtr) {
 	Tcl_Preserve(winPtr);
+    }
+    if (_tkDragTarget) {
+	Tcl_Release(_tkDragTarget);
     }
     _tkDragTarget = winPtr;
     return;
@@ -114,7 +114,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 #endif
 
@@ -258,8 +258,8 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 #else
     NSOperatingSystemVersion systemVersion;
     systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-    majorVersion = systemVersion.majorVersion;
-    minorVersion = systemVersion.minorVersion;
+    majorVersion = (int)systemVersion.majorVersion;
+    minorVersion = (int)systemVersion.minorVersion;
 #endif
 
     if (majorVersion == 10 && minorVersion == 16) {
@@ -275,7 +275,7 @@ static int		TkMacOSVersionObjCmd(ClientData cd, Tcl_Interp *ip,
 	struct utsname name;
 	char *endptr;
 	if (uname(&name) == 0) {
-	    majorVersion = strtol(name.release, &endptr, 10) - 9;
+	    majorVersion = (int)strtol(name.release, &endptr, 10) - 9;
 	    minorVersion = 0;
 	}
     }
@@ -430,7 +430,7 @@ TCL_NORETURN void TkpExitProc(
     if (doCleanup == YES) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
-    exit((long)clientdata); /* Convince the compiler that we don't return. */
+    exit((int)PTR2INT(clientdata)); /* Convince the compiler that we don't return. */
 }
 #endif
 
@@ -715,7 +715,7 @@ TkMacOSXGetAppPathObjCmd(
      */
 
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), -1));
+	    CFStringGetCStringPtr(appPath, CFStringGetSystemEncoding()), TCL_INDEX_NONE));
 
     CFRelease(mainBundleURL);
     CFRelease(appPath);
@@ -757,7 +757,7 @@ TkpGetAppName(
 	    name = p+1;
 	}
     }
-    Tcl_DStringAppend(namePtr, name, -1);
+    Tcl_DStringAppend(namePtr, name, TCL_INDEX_NONE);
 }
 
 /*
@@ -780,7 +780,7 @@ TkpGetAppName(
 
 static int
 TkMacOSVersionObjCmd(
-    TCL_UNUSED(void *), /* ClientData */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -822,9 +822,9 @@ TkpDisplayWarning(
     Tcl_Channel errChannel = Tcl_GetStdChannel(TCL_STDERR);
 
     if (errChannel) {
-	Tcl_WriteChars(errChannel, title, -1);
+	Tcl_WriteChars(errChannel, title, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, ": ", 2);
-	Tcl_WriteChars(errChannel, msg, -1);
+	Tcl_WriteChars(errChannel, msg, TCL_INDEX_NONE);
 	Tcl_WriteChars(errChannel, "\n", 1);
     }
 }
@@ -865,7 +865,7 @@ TkMacOSXDefaultStartupScript(void)
 
 	    if (CFURLGetFileSystemRepresentation(appMainURL, true,
 		    (unsigned char *) startupScript, PATH_MAX)) {
-		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript,-1), NULL);
+		Tcl_SetStartupScript(Tcl_NewStringObj(startupScript, TCL_INDEX_NONE), NULL);
 		scriptFldrURL = CFURLCreateCopyDeletingLastPathComponent(NULL,
 			appMainURL);
 		if (scriptFldrURL != NULL) {

@@ -9,8 +9,8 @@
 #include "tkInt.h"
 #include "ttkThemeInt.h"
 
-#define MAX(a,b) (a > b ? a : b)
-#define MIN(a,b) (a < b ? a : b)
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 /*------------------------------------------------------------------------
  * +++ Ttk_Box and Ttk_Padding utilities:
@@ -316,7 +316,8 @@ int Ttk_GetPaddingFromObj(
     Ttk_Padding *pad)
 {
     Tcl_Obj **padv;
-    int i, padc, pixels[4];
+    Tcl_Size i, padc;
+    int pixels[4];
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, objPtr, &padc, &padv)) {
 	goto error;
@@ -354,7 +355,8 @@ error:
 int Ttk_GetBorderFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Padding *pad)
 {
     Tcl_Obj **padv;
-    int i, padc, pixels[4];
+    Tcl_Size i, padc;
+    int pixels[4];
 
     if (TCL_OK != Tcl_ListObjGetElements(interp, objPtr, &padc, &padv)) {
 	goto error;
@@ -611,7 +613,7 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
     static const char *const optStrings[] = {
 	"-side", "-sticky", "-expand", "-border", "-unit", "-children", 0 };
 
-    int i = 0, objc;
+    Tcl_Size i = 0, objc;
     Tcl_Obj **objv;
     Ttk_TemplateNode *head = 0, *tail = 0;
 

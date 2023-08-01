@@ -13,6 +13,10 @@
 #include "tkPort.h"
 #include "tkText.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Macro that determines the size of an embedded image segment:
  */
@@ -29,7 +33,7 @@ static TkTextSegment *	EmbImageCleanupProc(TkTextSegment *segPtr,
 static void		EmbImageCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static void		EmbImageBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbImageConfigure(TkText *textPtr,
@@ -46,7 +50,7 @@ static int		EmbImageLayoutProc(TkText *textPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars,
 			    int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
-static void		EmbImageProc(ClientData clientData, int x, int y,
+static void		EmbImageProc(void *clientData, int x, int y,
 			    int width, int height, int imageWidth,
 			    int imageHeight);
 
@@ -119,7 +123,7 @@ int
 TkTextImageCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "image". */
@@ -385,7 +389,7 @@ EmbImageConfigure(
     if (name == NULL) {
 	Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(
 		"Either a \"-name\" or a \"-image\" argument must be"
-		" provided to the \"image create\" subcommand", -1));
+		" provided to the \"image create\" subcommand", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "IMAGE_CREATE_USAGE",
 		NULL);
 	return TCL_ERROR;
@@ -410,19 +414,19 @@ EmbImageConfigure(
     }
 
     Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, -1);
+    Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
 
     if (conflict) {
     	char buf[4 + TCL_INTEGER_SPACE];
 
-	sprintf(buf, "#%d", count+1);
-	Tcl_DStringAppend(&newName, buf, -1);
+	snprintf(buf, sizeof(buf), "#%d", count+1);
+	Tcl_DStringAppend(&newName, buf, TCL_INDEX_NONE);
     }
     name = Tcl_DStringValue(&newName);
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
-    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
+    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
     eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
     strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
@@ -717,7 +721,7 @@ static void
 EmbImageBboxProc(
     TCL_UNUSED(TkText *),
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -833,7 +837,7 @@ TkTextImageIndex(
 
 static void
 EmbImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     TCL_UNUSED(int),		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     TCL_UNUSED(int),

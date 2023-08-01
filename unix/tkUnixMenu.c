@@ -320,12 +320,12 @@ Tk_SetMainMenubar(
 
 static void
 GetMenuIndicatorGeometry(
-    TkMenu *menuPtr,		/* The menu we are drawing. */
-    TkMenuEntry *mePtr,		/* The entry we are interested in. */
+    TkMenu *menuPtr,			/* The menu we are drawing. */
+    TkMenuEntry *mePtr,			/* The entry we are interested in. */
     TCL_UNUSED(Tk_Font),		/* The precalculated font */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The precalculated metrics */
-    int *widthPtr,		/* The resulting width */
-    int *heightPtr)		/* The resulting height */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The precalculated metrics */
+    int *widthPtr,			/* The resulting width */
+    int *heightPtr)			/* The resulting height */
 {
     int borderWidth;
 
@@ -391,9 +391,22 @@ GetMenuAccelGeometry(
     int *widthPtr,		/* The width of the acclerator area */
     int *heightPtr)		/* The height of the accelerator area */
 {
+    Tcl_Interp *interp = Tk_Interp(menuPtr->tkwin);
+    const char *scalingPctPtr;
+    double scalingFactor = 1.0;
+
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-    	*widthPtr = 2 * CASCADE_ARROW_WIDTH;
+	/*
+	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
+	 */
+
+	scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
+	if (scalingPctPtr != NULL) {
+	    scalingFactor = atof(scalingPctPtr) / 100;
+	}
+
+    	*widthPtr = 2 * CASCADE_ARROW_WIDTH * scalingFactor;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
@@ -488,6 +501,10 @@ DrawMenuEntryAccelerator(
 {
     XPoint points[3];
     int borderWidth, activeBorderWidth;
+    int arrowWidth = CASCADE_ARROW_WIDTH, arrowHeight = CASCADE_ARROW_HEIGHT;
+    Tcl_Interp *interp = Tk_Interp(menuPtr->tkwin);
+    const char *scalingPctPtr;
+    double scalingFactor = 1.0;
 
     /*
      * Draw accelerator or cascade arrow.
@@ -502,18 +519,29 @@ DrawMenuEntryAccelerator(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-    	points[0].x = x + width - borderWidth - activeBorderWidth
-		- CASCADE_ARROW_WIDTH;
-    	points[0].y = y + (height - CASCADE_ARROW_HEIGHT)/2;
+	/*
+	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
+	 * and multiply the cascade arrow's dimensions by it
+	 */
+
+	scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
+	if (scalingPctPtr != NULL) {
+	    scalingFactor = atof(scalingPctPtr) / 100;
+	}
+	arrowWidth *= scalingFactor;
+	arrowHeight *= scalingFactor;
+
+    	points[0].x = x + width - borderWidth - activeBorderWidth - arrowWidth;
+    	points[0].y = y + (height - arrowHeight)/2;
     	points[1].x = points[0].x;
-    	points[1].y = points[0].y + CASCADE_ARROW_HEIGHT;
-    	points[2].x = points[0].x + CASCADE_ARROW_WIDTH;
-    	points[2].y = points[0].y + CASCADE_ARROW_HEIGHT/2;
+    	points[1].y = points[0].y + arrowHeight;
+    	points[2].x = points[0].x + arrowWidth;
+    	points[2].y = points[0].y + arrowHeight/2;
     	Tk_Fill3DPolygon(menuPtr->tkwin, d,
 		(mePtr->state == ENTRY_ACTIVE) ? activeBorder : bgBorder,
 		points, 3, DECORATION_BORDER_WIDTH,
-	    	(menuPtr->postedCascade == mePtr)
-	    	? TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
+	    	(menuPtr->postedCascade == mePtr) ?
+		TK_RELIEF_SUNKEN : TK_RELIEF_RAISED);
     } else if (mePtr->accelPtr != NULL) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 	int left = x + mePtr->labelWidth + activeBorderWidth
@@ -546,18 +574,18 @@ DrawMenuEntryAccelerator(
 
 static void
 DrawMenuEntryIndicator(
-    TkMenu *menuPtr,		/* The menu we are drawing */
-    TkMenuEntry *mePtr,		/* The entry we are drawing */
-    Drawable d,			/* The drawable to draw into */
-    Tk_3DBorder border,		/* The background color */
-    XColor *indicatorColor,	/* The color to draw indicators with */
-    XColor *disableColor,	/* The color use use when disabled */
+    TkMenu *menuPtr,			/* The menu we are drawing */
+    TkMenuEntry *mePtr,			/* The entry we are drawing */
+    Drawable d,				/* The drawable to draw into */
+    Tk_3DBorder border,			/* The background color */
+    XColor *indicatorColor,		/* The color to draw indicators with */
+    XColor *disableColor,		/* The color use use when disabled */
     TCL_UNUSED(Tk_Font),		/* The font to draw with */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The font metrics of the font */
-    int x,			/* The left of the entry rect */
-    int y,			/* The top of the entry rect */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The font metrics of the font */
+    int x,				/* The left of the entry rect */
+    int y,				/* The top of the entry rect */
     TCL_UNUSED(int),			/* Width of menu entry */
-    int height)			/* Height of menu entry */
+    int height)				/* Height of menu entry */
 {
     /*
      * Draw check-button indicator.
@@ -620,12 +648,12 @@ DrawMenuEntryIndicator(
 
 static void
 DrawMenuSeparator(
-    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenu *menuPtr,			/* The menu we are drawing */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are drawing */
-    Drawable d,			/* The drawable we are using */
+    Drawable d,				/* The drawable we are using */
     TCL_UNUSED(GC),			/* The gc to draw into */
     TCL_UNUSED(Tk_Font),		/* The font to draw with */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The font metrics from the font */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The font metrics from the font */
     int x, int y,
     int width, int height)
 {
@@ -936,7 +964,7 @@ TkpPostTearoffMenu(
     int vRootX, vRootY, vRootWidth, vRootHeight;
     int result;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
     TkRecomputeMenu(menuPtr);
     result = TkPostCommand(menuPtr);
     if (result != TCL_OK) {
@@ -1026,9 +1054,9 @@ GetMenuSeparatorGeometry(
     TCL_UNUSED(TkMenu *),		/* The menu we are measuring */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are measuring */
     TCL_UNUSED(Tk_Font),		/* The precalculated font */
-    const Tk_FontMetrics *fmPtr,/* The precalcualted font metrics */
-    int *widthPtr,		/* The resulting width */
-    int *heightPtr)		/* The resulting height */
+    const Tk_FontMetrics *fmPtr,	/* The precalcualted font metrics */
+    int *widthPtr,			/* The resulting width */
+    int *heightPtr)			/* The resulting height */
 {
     *widthPtr = 0;
     *heightPtr = fmPtr->linespace;
@@ -1052,12 +1080,12 @@ GetMenuSeparatorGeometry(
 
 static void
 GetTearoffEntryGeometry(
-    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenu *menuPtr,			/* The menu we are drawing */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are measuring */
-    Tk_Font tkfont,		/* The precalculated font */
-    const Tk_FontMetrics *fmPtr,/* The precalculated font metrics */
-    int *widthPtr,		/* The resulting width */
-    int *heightPtr)		/* The resulting height */
+    Tk_Font tkfont,			/* The precalculated font */
+    const Tk_FontMetrics *fmPtr,	/* The precalculated font metrics */
+    int *widthPtr,			/* The resulting width */
+    int *heightPtr)			/* The resulting height */
 {
     if (menuPtr->menuType != MAIN_MENU) {
 	*heightPtr = 0;
@@ -1268,12 +1296,12 @@ TkpComputeMenubarGeometry(
 
 static void
 DrawTearoffEntry(
-    TkMenu *menuPtr,		/* The menu we are drawing */
+    TkMenu *menuPtr,			/* The menu we are drawing */
     TCL_UNUSED(TkMenuEntry *),		/* The entry we are drawing */
-    Drawable d,			/* The drawable we are drawing into */
+    Drawable d,				/* The drawable we are drawing into */
     TCL_UNUSED(GC),			/* The gc we are drawing with */
     TCL_UNUSED(Tk_Font),		/* The font we are drawing with */
-    TCL_UNUSED(const Tk_FontMetrics *),/* The metrics we are drawing with */
+    TCL_UNUSED(const Tk_FontMetrics *),	/* The metrics we are drawing with */
     int x, int y,
     int width, int height)
 {
@@ -1325,8 +1353,7 @@ DrawTearoffEntry(
 void
 TkpInitializeMenuBindings(
     TCL_UNUSED(Tcl_Interp *),		/* The interpreter to set. */
-    TCL_UNUSED(Tk_BindingTable))
-				/* The table to add to. */
+    TCL_UNUSED(Tk_BindingTable))	/* The table to add to. */
 {
     /*
      * Nothing to do.

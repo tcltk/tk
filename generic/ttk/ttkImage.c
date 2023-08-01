@@ -79,7 +79,8 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     Tk_ImageChangedProc *imageChangedProc, ClientData imageChangedClientData)
 {
     Ttk_ImageSpec *imageSpec = 0;
-    int i = 0, n = 0, objc;
+    int i = 0, n = 0;
+    Tcl_Size objc;
     Tcl_Obj **objv;
 
     imageSpec = (Ttk_ImageSpec *)ckalloc(sizeof(*imageSpec));
@@ -354,7 +355,7 @@ Ttk_CreateImageElement(
     void *dummy,
     Ttk_Theme theme,
     const char *elementName,
-    int objc, Tcl_Obj *const objv[])
+    Tcl_Size objc, Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] =
 	 { "-border","-height","-padding","-sticky","-width",NULL };
@@ -363,10 +364,10 @@ Ttk_CreateImageElement(
     Ttk_ImageSpec *imageSpec = 0;
     ImageData *imageData = 0;
     int padding_specified = 0;
-    int i;
+    Tcl_Size i;
     (void)dummy;
 
-    if (objc <= 0) {
+    if (objc + 1 < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"Must supply a base image", -1));
 	Tcl_SetErrorCode(interp, "TTK", "IMAGE", "BASE", NULL);
@@ -454,6 +455,9 @@ error:
     FreeImageData(imageData);
     return TCL_ERROR;
 }
+
+MODULE_SCOPE
+void TtkImage_Init(Tcl_Interp *interp);
 
 MODULE_SCOPE
 void TtkImage_Init(Tcl_Interp *interp)

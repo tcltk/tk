@@ -71,10 +71,10 @@ enum macColormap {
 typedef struct {
     const char *name;
     enum colorType type;
-    int value;
+    ThemeBrush value;
     const char *macName;
     /* Fields below are filled in after or during construction of the hash table. */
-    int index;
+    size_t index;
     NSString *selector;
 } SystemColorDatum;
 
@@ -187,6 +187,8 @@ static SystemColorDatum systemColorData[] = {
 {"PlaceholderTextColor",	    semantic, 0, "grayColor", 0, NULL },
 {"SeparatorColor",		    semantic, 0, "grayColor", 0, NULL },
 {"UnemphasizedSelectedTextBackgroundColor", semantic, 0, "grayColor", 0, NULL },
+/* This color is available since 10.3, so the fallback is unused */
+{"ControlAlternatingRowColor",	    semantic, 0, "grayColor" , 0, NULL },
 {NULL,				    rgbColor, 0, NULL, 0, NULL }
 };
 

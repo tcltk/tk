@@ -316,7 +316,8 @@ Specifies the integer index of a character to underline in the widget.
 This option is used by the default bindings to implement keyboard
 traversal for menu buttons and menu entries.
 0 corresponds to the first character of the text displayed in the
-widget, 1 to the next character, and so on.
+widget, 1 to the next character, and so on. \fBend\fR corresponds to the
+last character, \fBend\fR-1 to the before last character, and so on.
 .OP \-wraplength wrapLength WrapLength
 For widgets that can perform word-wrapping, this option specifies
 the maximum line length.

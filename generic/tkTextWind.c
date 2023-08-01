@@ -20,9 +20,9 @@
  * geometry manager:
  */
 
-static void		EmbWinRequestProc(ClientData clientData,
+static void		EmbWinRequestProc(void *clientData,
 			    Tk_Window tkwin);
-static void		EmbWinLostContentProc(ClientData clientData,
+static void		EmbWinLostContentProc(void *clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr textGeomType = {
@@ -47,19 +47,19 @@ static TkTextSegment *	EmbWinCleanupProc(TkTextSegment *segPtr,
 static void		EmbWinCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static void		EmbWinBboxProc(TkText *textPtr,
-			    TkTextDispChunk *chunkPtr, int index, int y,
+			    TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr,int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr,
 			    int objc, Tcl_Obj *const objv[]);
-static void		EmbWinDelayedUnmap(ClientData clientData);
+static void		EmbWinDelayedUnmap(void *clientData);
 static int		EmbWinDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
 static int		EmbWinLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars,int noCharsYet,
 			    TkWrapMode wrapMode, TkTextDispChunk *chunkPtr);
-static void		EmbWinStructureProc(ClientData clientData,
+static void		EmbWinStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static void		EmbWinUndisplayProc(TkText *textPtr,
 			    TkTextDispChunk *chunkPtr);
@@ -135,7 +135,7 @@ int
 TkTextWindowCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "window". */
@@ -521,7 +521,7 @@ EmbWinConfigure(
 
 static void
 EmbWinStructureProc(
-    ClientData clientData,	/* Pointer to record describing window item. */
+    void *clientData,	/* Pointer to record describing window item. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
@@ -567,7 +567,7 @@ EmbWinStructureProc(
 
 static void
 EmbWinRequestProc(
-    ClientData clientData,	/* Pointer to record for window item. */
+    void *clientData,	/* Pointer to record for window item. */
     TCL_UNUSED(Tk_Window))	/* Window that changed its desired size. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
@@ -611,7 +611,7 @@ EmbWinRequestProc(
 
 static void
 EmbWinLostContentProc(
-    ClientData clientData,	/* Pointer to record describing window item. */
+    void *clientData,	/* Pointer to record describing window item. */
     Tk_Window tkwin)		/* Window that was claimed away by another
 				 * geometry manager. */
 {
@@ -908,10 +908,10 @@ EmbWinLayoutProc(
 
 	if (dsPtr != NULL) {
 	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
-	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), -1, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
-	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, -1, TCL_EVAL_GLOBAL);
+	    code = Tcl_EvalEx(textPtr->interp, ewPtr->body.ew.create, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	}
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(textPtr->interp, code);
@@ -1225,7 +1225,7 @@ static void
 EmbWinBboxProc(
     TkText *textPtr,		/* Information about text widget. */
     TkTextDispChunk *chunkPtr,	/* Chunk containing desired char. */
-    TCL_UNUSED(int),			/* Index of desired character within the
+    TCL_UNUSED(Tcl_Size),			/* Index of desired character within the
 				 * chunk. */
     int y,			/* Topmost pixel in area allocated for this
 				 * line. */
@@ -1300,7 +1300,7 @@ EmbWinBboxProc(
 
 static void
 EmbWinDelayedUnmap(
-    ClientData clientData)	/* Token for the window to be unmapped. */
+    void *clientData)	/* Token for the window to be unmapped. */
 {
     TkTextEmbWindowClient *client = (TkTextEmbWindowClient *)clientData;
 

@@ -32,14 +32,12 @@
 Atom
 XInternAtom(
     Display *display,
-    _Xconst char *atom_name,
-    Bool only_if_exists)
+    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(Bool))
 {
     static Atom atom = XA_LAST_PREDEFINED;
-    (void)atom_name;
-    (void)only_if_exists;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ++atom;
 }
 

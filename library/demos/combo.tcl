@@ -56,7 +56,7 @@ bind $w.c1.c <Return> {
     }
 }
 
-pack $w.c1 $w.c2 $w.c3 -side top -pady 5 -padx 10
-pack $w.c1.c -pady 5 -padx 10
-pack $w.c2.c -pady 5 -padx 10
-pack $w.c3.c -pady 5 -padx 10
+pack $w.c1 $w.c2 $w.c3 -side top -pady 3p -padx 7.5p
+pack $w.c1.c -pady 3p -padx 7.5p
+pack $w.c2.c -pady 3p -padx 7.5p
+pack $w.c3.c -pady 3p -padx 7.5p

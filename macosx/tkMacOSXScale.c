@@ -51,7 +51,7 @@ static ControlActionUPP scaleActionProc = NULL; /* Pointer to func. */
  * Forward declarations for procedures defined later in this file:
  */
 
-static void		MacScaleEventProc(ClientData clientData,
+static void		MacScaleEventProc(void *clientData,
 			    XEvent *eventPtr);
 static pascal void	ScaleActionProc(ControlRef theControl,
 			    ControlPartCode partCode);
@@ -139,7 +139,7 @@ TkpDestroyScale(
 
 void
 TkpDisplayScale(
-    ClientData clientData)	/* Widget record for scale. */
+    void *clientData)	/* Widget record for scale. */
 {
     TkScale *scalePtr = clientData;
     Tk_Window tkwin = scalePtr->tkwin;
@@ -174,10 +174,10 @@ TkpDisplayScale(
             string[TCL_DOUBLE_SPACE - 1] = '\0';
         }
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, scalePtr->command, -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, string, -1);
-	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, scalePtr->command, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, string, TCL_INDEX_NONE);
+	result = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (result != TCL_OK) {
 	    Tcl_AddErrorInfo(interp, "\n    (command executed by scale)");
@@ -378,7 +378,7 @@ TkpScaleElement(
 
 static void
 MacScaleEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     MacScale *macScalePtr = (MacScale *) clientData;

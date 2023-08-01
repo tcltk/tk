@@ -16,19 +16,9 @@
  */
 
 #include "tkWinInt.h"
-#ifndef HAVE_UXTHEME_H
-/* Stub for platforms that lack the XP theme API headers: */
-int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd) { return TCL_OK; }
-#else
-
 #include <windows.h>
 #include <uxtheme.h>
-#if defined(HAVE_VSSYM32_H) || _MSC_VER > 1500
-#   include <vssym32.h>
-#else
-#   include <tmschema.h>
-#endif
-
+#include <vssym32.h>
 #include "ttk/ttkTheme.h"
 
 typedef HTHEME  (STDAPICALLTYPE OpenThemeDataProc)(HWND hwnd,
@@ -140,12 +130,13 @@ XPThemeDeleteProc(void *clientData)
 }
 
 static int
-XPThemeEnabled(Ttk_Theme theme, void *clientData)
+XPThemeEnabled(
+    TCL_UNUSED(Ttk_Theme),
+    void *clientData)
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
     int active = themeData->procs->IsThemeActive();
     int themed = themeData->procs->IsAppThemed();
-    (void)theme;
 
     return (active && themed);
 }
@@ -492,13 +483,16 @@ FreeElementData(ElementData *elementData)
  */
 
 static void GenericElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
     ElementData *elementData = (ElementData *)clientData;
     HRESULT result;
     SIZE size;
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, 0))
 	return;
@@ -529,12 +523,15 @@ static void GenericElementSize(
 }
 
 static void GenericElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     RECT rc;
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d)) {
 	return;
@@ -640,13 +637,16 @@ static const Ttk_ElementSpec SpinboxArrowElementSpec = {
  */
 
 static void ThumbElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
     RECT rc = BoxToRect(b);
-    (void)elementRecord;
 
     /*
      * Don't draw the thumb if we are disabled.
@@ -720,13 +720,16 @@ static const Ttk_ElementSpec PbarElementSpec =
  * 	we can use the same statemap no matter what the partId.
  */
 static void TabElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *),
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
     RECT rc = BoxToRect(b);
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
@@ -863,7 +866,7 @@ static void TextElementSize(
 }
 
 static void TextElementDraw(
-    ClientData clientData, void *elementRecord, Tk_Window tkwin,
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
     TextElement *element = elementRecord;
@@ -1072,12 +1075,12 @@ GetSysFlagFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
     };
 
     Tcl_Obj **objv;
-    int i, objc;
+    Tcl_Size i, objc;
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK)
 	return TCL_ERROR;
     if (objc != 2) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # args", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("wrong # args", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
 	return TCL_ERROR;
     }
@@ -1109,12 +1112,12 @@ Ttk_CreateVsapiElement(
     void *clientData,
     Ttk_Theme theme,
     const char *elementName,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     XPThemeData *themeData = (XPThemeData *)clientData;
     ElementInfo *elementPtr = NULL;
-    ClientData elementData;
+    void *elementData;
     LPCWSTR className;
     int partId = 0;
     Ttk_StateTable *stateTable;
@@ -1134,7 +1137,7 @@ Ttk_CreateVsapiElement(
 
     if (objc < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-	    "missing required arguments 'class' and/or 'partId'", -1));
+	    "missing required arguments 'class' and/or 'partId'", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TTK", "VSAPI", "REQUIRED", NULL);
 	return TCL_ERROR;
     }
@@ -1148,7 +1151,8 @@ Ttk_CreateVsapiElement(
 
     /* flags or padding */
     if (objc > 3) {
-	int i = 3, option = 0;
+	Tcl_Size i = 3;
+	int option = 0;
 	for (i = 3; i < objc; i += 2) {
 	    int tmp = 0;
 	    if (i == objc -1) {
@@ -1215,7 +1219,8 @@ Ttk_CreateVsapiElement(
     /* convert a statemap into a state table */
     if (objc > 2) {
 	Tcl_Obj **specs;
-	int n,j,count, status = TCL_OK;
+	Tcl_Size n, j, count;
+	int status = TCL_OK;
 	if (Tcl_ListObjGetElements(interp, objv[2], &count, &specs) != TCL_OK)
 	    goto retErr;
 	/* we over-allocate to ensure there is a terminating entry */
@@ -1263,7 +1268,7 @@ Ttk_CreateVsapiElement(
 	theme, elementName, elementPtr->elementSpec, elementData);
 
     Ttk_RegisterCleanup(interp, elementData, DestroyElementData);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(elementName, TCL_INDEX_NONE));
     Tcl_DStringFree(&classBuf);
     return TCL_OK;
 
@@ -1275,6 +1280,8 @@ retErr:
 /*----------------------------------------------------------------------
  * +++ Initialization routine:
  */
+
+MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd);
 
 MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
@@ -1326,7 +1333,7 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
      * New elements:
      */
     for (infoPtr = ElementInfoTable; infoPtr->elementName != 0; ++infoPtr) {
-	ClientData clientData = NewElementData(procs, infoPtr);
+	void *clientData = NewElementData(procs, infoPtr);
 	Ttk_RegisterElementSpec(
 	    themePtr, infoPtr->elementName, infoPtr->elementSpec, clientData);
 	Ttk_RegisterCleanup(interp, clientData, DestroyElementData);
@@ -1343,5 +1350,3 @@ MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 
     return TCL_OK;
 }
-
-#endif /* HAVE_UXTHEME_H */

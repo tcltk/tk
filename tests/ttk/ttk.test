@@ -29,7 +29,7 @@ proc selfdestruct {w args} {
 }
 test ttk-6.1 "Self-destructing checkbutton" -body {
     pack [ttk::checkbutton .sd -text "Self-destruction" -variable ::sd]
-    trace variable sd w [list selfdestruct .sd]
+    trace add variable sd write [list selfdestruct .sd]
     update
     .sd invoke
 } -returnCodes error
@@ -41,7 +41,7 @@ test ttk-6.2 "Checkbutton self-destructed" -body {
 
 test ttk-6.4 "Destroy widget in configure" -setup {
     set OUCH ouch
-    trace variable OUCH r { kill.b }
+    trace add variable OUCH read { kill.b }
     proc kill.b {args} { destroy .b }
 } -cleanup {
     unset OUCH
@@ -111,7 +111,7 @@ test ttk-construction-failure-1 "Excercise construction failure path" -setup {
 
 test ttk-construction-failure-2 "Destroy widget in constructor" -setup {
     set OUCH ouch
-    trace variable OUCH r { kill.b }
+    trace add variable OUCH read { kill.b }
     proc kill.b {args} { destroy .b }
 } -cleanup {
     unset OUCH
@@ -600,7 +600,7 @@ test ttk-15.1 {Bug 3062331} -setup {
 } -body {
     set Y {}
     ttk::button .b -textvariable Y
-    trace variable Y u "destroy .b; #"
+    trace add variable Y unset "destroy .b; #"
     unset Y
 } -cleanup {
     destroy .b

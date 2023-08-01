@@ -206,7 +206,7 @@ void TtkUpdateScrollInfo(ScrollHandle h)
  *  $w [xy]view scroll $number $what -- scrollbar interface
  */
 int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle h)
+    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
     int newFirst;
@@ -229,8 +229,6 @@ int TtkScrollviewCommand(
 	int count;
 
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
-	    case TK_SCROLL_ERROR:
-		return TCL_ERROR;
 	    case TK_SCROLL_MOVETO:
 		newFirst = (int) ((fraction * s->total) + 0.5);
 		break;
@@ -242,6 +240,8 @@ int TtkScrollviewCommand(
 		newFirst = s->first + count * perPage;
 		break;
 	    }
+	    default:
+		return TCL_ERROR;
 	}
     }
 

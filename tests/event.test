@@ -856,7 +856,9 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     _pause 200
     toplevel .top2 -width 200 -height 200
     wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
+    update idletasks
     wm deiconify .top2
+    update idletasks
     raise .top2
     _pause 400
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
@@ -864,6 +866,7 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     bind . <Enter> {lappend res %W}
     set res [list ]
     destroy .top2
+    update idletasks
     _pause 200
     set res
 } -cleanup {
@@ -884,7 +887,9 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     _pause 200
     toplevel .top2 -width 200 -height 200
     wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
+    _pause 200
     wm deiconify .top2
+    update idletasks
     raise .top2
     _pause 400
     event generate .top2 <Motion> -warp 1 -x 50 -y 50

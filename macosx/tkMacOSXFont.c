@@ -47,7 +47,7 @@ typedef struct {
 #define MENUITEMFONT_NAME	"menu"
 
 struct SystemFontMapEntry {
-    const ThemeFontID id;
+    ThemeFontID id;
     const char *systemName;
     const char *tkName;
     const char *tkName1;
@@ -74,7 +74,7 @@ static const struct SystemFontMapEntry systemFontMap[] = {
     ThemeFont(MiniSystem, NULL, NULL),
     { kThemeSystemFontDetail,		"systemDetailSystemFont", NULL, NULL },
     { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont", NULL, NULL },
-    { -1, NULL, NULL, NULL }
+    { (ThemeFontID)-1, NULL, NULL, NULL }
 };
 #undef ThemeFont
 
@@ -166,7 +166,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 	for (index = 0; index < [_string length]; index++) {
 	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
 	}
-	Tcl_DStringSetLength(&_ds, p - Tcl_DStringValue(&_ds));
+	Tcl_DStringSetLength(&_ds, (Tcl_Size)(p - Tcl_DStringValue(&_ds)));
     }
     return _ds;
 }
@@ -205,7 +205,8 @@ GetTkFontAttributesForNSFont(
     NSFontTraitMask traits = [[NSFontManager sharedFontManager]
 	    traitsOfFont:nsFont];
     faPtr->family = Tk_GetUid([[nsFont familyName] UTF8String]);
-    faPtr->size = [nsFont pointSize];
+#define FACTOR 0.75
+    faPtr->size = [nsFont pointSize] * FACTOR;
     faPtr->weight = (traits & NSBoldFontMask ? TK_FW_BOLD : TK_FW_NORMAL);
     faPtr->slant = (traits & NSItalicFontMask ? TK_FS_ITALIC : TK_FS_ROMAN);
 
@@ -244,12 +245,12 @@ FindNSFont(
     NSString *family;
 
     if (familyName) {
-	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:-1] autorelease];
+	family = [[[TKNSString alloc] initWithTclUtfBytes:familyName length:TCL_INDEX_NONE] autorelease];
     } else {
 	family = [defaultFont familyName];
     }
     if (size == 0.0) {
-	size = [defaultFont pointSize];
+	size = [defaultFont pointSize] * FACTOR;
     }
     nsFont = [fm fontWithFamily:family traits:traits weight:weight size:size];
 
@@ -349,9 +350,9 @@ InitFont(
     nsFont = [nsFont screenFontWithRenderingMode:renderingMode];
     GetTkFontAttributesForNSFont(nsFont, faPtr);
     fmPtr = &fontPtr->font.fm;
-    fmPtr->ascent = floor([nsFont ascender] + [nsFont leading] + 0.5);
-    fmPtr->descent = floor(-[nsFont descender] + 0.5);
-    fmPtr->maxWidth = [nsFont maximumAdvancement].width;
+    fmPtr->ascent = (int)floor([nsFont ascender] + [nsFont leading] + 0.5);
+    fmPtr->descent = (int)floor(-[nsFont descender] + 0.5);
+    fmPtr->maxWidth = (int)[nsFont maximumAdvancement].width;
     fmPtr->fixed = [nsFont isFixedPitch];   /* Does not work for all fonts */
 
     /*
@@ -369,8 +370,8 @@ InitFont(
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
-    descent = floor(-bounds.origin.y + 0.5);
-    ascent = floor(bounds.size.height + bounds.origin.y + 0.5);
+    descent = (int)floor(-bounds.origin.y + 0.5);
+    ascent = (int)floor(bounds.size.height + bounds.origin.y + 0.5);
     if (ascent > fmPtr->ascent) {
 	fmPtr->ascent = ascent;
     }
@@ -450,8 +451,7 @@ startOfClusterObjCmd(
 {
     TKNSString *S;
     const char *stringArg;
-    int numBytes;
-    Tcl_Size index;
+    Tcl_Size numBytes, index;
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
@@ -489,8 +489,7 @@ endOfClusterObjCmd(
 {
     TKNSString *S;
     char *stringArg;
-    int numBytes;
-    Tcl_Size index;
+    Tcl_Size index, numBytes;
 
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
@@ -715,7 +714,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size / FACTOR) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -737,7 +736,7 @@ TkpGetFontFromAttributes(
     if (tkFontPtr == NULL) {
 	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
-	fontPtr = (MacFont *) tkFontPtr;
+	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
     CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
@@ -804,7 +803,7 @@ TkpGetFontFamilies(
 
     for (NSString *family in list) {
 	Tcl_ListObjAppendElement(NULL, resultPtr,
-		Tcl_NewStringObj([family UTF8String], -1));
+		Tcl_NewStringObj([family UTF8String], TCL_INDEX_NONE));
     }
     Tcl_SetObjResult(interp, resultPtr);
 }
@@ -844,7 +843,7 @@ TkpGetSubFonts(
 
 	    if (family) {
 		Tcl_ListObjAppendElement(NULL, resultPtr,
-			Tcl_NewStringObj([family UTF8String], -1));
+			Tcl_NewStringObj([family UTF8String], TCL_INDEX_NONE));
 	    }
 	}
     }
@@ -1012,7 +1011,7 @@ TkpMeasureCharsInContext(
     double width;
     int length, fit;
 
-    if (rangeStart < 0 || rangeLength <= 0 ||
+    if (rangeStart == TCL_INDEX_NONE || rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
 	    (maxLength == 0 && !(flags & TK_AT_LEAST_ONE))) {
 	*lengthPtr = 0;
@@ -1204,7 +1203,7 @@ TkDrawAngledChars(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
@@ -1247,9 +1246,9 @@ TkpDrawCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
-    int rangeStart,		/* Index of first byte to draw. */
-    int rangeLength,		/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
+    Tcl_Size rangeStart,		/* Index of first byte to draw. */
+    Tcl_Size rangeLength,		/* Length of range to draw in bytes. */
     int x, int y)		/* Coordinates at which to place origin of the
 				 * whole (not just the range) string when
 				 * drawing. */
@@ -1408,31 +1407,6 @@ TkMacOSXNSFontAttributesForFont(
 }
 
 /*
- *---------------------------------------------------------------------------
- *
- * TkMacOSXIsCharacterMissing --
- *
- *	Given a tkFont and a character determine whether the character has
- *	a glyph defined in the font or not.
- *
- * Results:
- *	Returns a 1 if the character is missing, a 0 if it is not.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-int
-TkMacOSXIsCharacterMissing(
-    TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
-    TCL_UNUSED(unsigned int))	/* The character we are looking for. */
-{
-    return 0;
-}
-
-/*
  *----------------------------------------------------------------------
  *
  * TkMacOSXFontDescriptionForNSFontAndNSFontAttributes --
@@ -1465,8 +1439,8 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 	id strikethrough = [nsAttributes objectForKey:
 		NSStrikethroughStyleAttributeName];
 
-	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+	objv[i++] = Tcl_NewStringObj(familyName, TCL_INDEX_NONE);
+	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] * FACTOR + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);
