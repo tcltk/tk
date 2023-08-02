@@ -339,5 +339,24 @@ test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup 
 } -result {invalid invalid} -cleanup {
     destroy .e
 }
+test entry-11.2 {Bug [2a32225cd1] - Navigation in a password made of several words} -setup {
+    destroy .e
+    pack [ttk::entry .e -show *]
+    update
+    set res {}
+} -body {
+    .e insert end "A sample password made of several words"
+    .e icursor end
+    event generate .e <<PrevWord>>  ; # shall move insert to index 0
+    .e delete insert end
+    lappend res [.e get]
+    .e insert end "A sample password made of several words"
+    .e icursor 2
+    event generate .e <<NextWord>>  ; # shall move insert to index end
+    .e delete 0 insert
+    lappend res [.e get]
+} -cleanup {
+    destroy .e
+} -result {{} {}}
 
 tcltest::cleanupTests
