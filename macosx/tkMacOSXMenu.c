@@ -3,10 +3,10 @@
  *
  *	This module implements the Mac-platform specific features of menus.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009 Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2012 Adrian Robert.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2012 Adrian Robert.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -166,7 +166,6 @@ static int	ModifierCharWidth(Tk_Font tkfont);
 @end
 
 TKBackgroundLoop *backgroundLoop = nil;
-
 
 #pragma mark TKMenu
 
@@ -501,7 +500,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -522,7 +521,7 @@ static Bool runMenuCommand = true;
 {
     (void)notification;
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (backgroundLoop) {
 	[backgroundLoop cancel];
@@ -757,9 +756,10 @@ TkpConfigureMenuEntry(
     [menuItem setImage:image];
     if ((!image || mePtr->compound != COMPOUND_NONE) && mePtr->labelPtr &&
 	    mePtr->labelLength) {
-	title = [[TKNSString alloc]
+	title = [[[TKNSString alloc]
 		    initWithTclUtfBytes:Tcl_GetString(mePtr->labelPtr)
-				length:mePtr->labelLength];
+				length:mePtr->labelLength]
+		autorelease];
 	if ([title hasSuffix:@"..."]) {
 	    title = [NSString stringWithFormat:@"%@%C",
 		    [title substringToIndex:[title length] - 3], 0x2026];
@@ -809,6 +809,7 @@ TkpConfigureMenuEntry(
     attributedTitle = [[NSAttributedString alloc] initWithString:title
 	attributes:attributes];
     [menuItem setAttributedTitle:attributedTitle];
+    [attributedTitle release];
     [menuItem setEnabled:(mePtr->state != ENTRY_DISABLED)];
     [menuItem setState:((mePtr->type == CHECK_BUTTON_ENTRY ||
 	    mePtr->type == RADIO_BUTTON_ENTRY) && mePtr->indicatorOn &&
@@ -1048,7 +1049,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index >= menuPtr->numEntries) {
+    if (index < 0 || index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {

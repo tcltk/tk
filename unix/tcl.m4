@@ -590,7 +590,6 @@ AC_DEFUN([SC_ENABLE_FRAMEWORK], [
 #		TCL_THREADS
 #		_REENTRANT
 #		_THREAD_SAFE
-#
 #------------------------------------------------------------------------
 
 AC_DEFUN([SC_ENABLE_THREADS], [
@@ -1185,7 +1184,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    LD_SEARCH_FLAGS=""
 	    ;;
 	CYGWIN_*|MINGW32_*|MSYS_*)
-	    SHLIB_CFLAGS=""
+	    SHLIB_CFLAGS="-fno-common"
 	    SHLIB_LD='${CC} -shared'
 	    SHLIB_SUFFIX=".dll"
 	    DL_OBJS="tclLoadDl.o"
@@ -1195,8 +1194,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
 	    TCL_NEEDS_EXP_FILE=1
-	    TCL_EXPORT_FILE_SUFFIX='${VERSION}.dll.a'
-	    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,\$[@].a"
 	    AC_CACHE_CHECK(for Cygwin version of gcc,
 		ac_cv_cygwin,
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -1215,9 +1212,9 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    fi
 	    do64bit_ok=yes
 	    if test "x${SHARED_BUILD}" = "xnever"; then
-		echo "running cd ../win; ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args"
+		echo "running cd ../win; ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args --enable-64bit --host=x86_64-w64-mingw32"
 		# The eval makes quoting arguments work.
-		if cd ../win; eval ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args; cd ../unix
+		if cd ../win; eval ${CONFIG_SHELL-/bin/sh} ./configure $ac_configure_args --enable-64bit --host=x86_64-w64-mingw32; cd ../unix
 		then :
 		else
 		    { echo "configure: error: configure failed for ../win" 1>&2; exit 1; }
@@ -1373,7 +1370,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    ])
 	    ;;
 	Linux*|GNU*|NetBSD-Debian|DragonFly-*|FreeBSD-*)
-	    SHLIB_CFLAGS="-fPIC"
+	    SHLIB_CFLAGS="-fPIC -fno-common"
 	    SHLIB_SUFFIX=".so"
 
 	    CFLAGS_OPTIMIZE="-O2"
@@ -1500,7 +1497,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		# The -pthread needs to go in the CFLAGS, not LIBS
 		LIBS=`echo $LIBS | sed s/-pthread//`
 		CFLAGS="$CFLAGS -pthread"
-	    	LDFLAGS="$LDFLAGS -pthread"
+		LDFLAGS="$LDFLAGS -pthread"
 	    ])
 	    ;;
 	Darwin-*)
@@ -1541,16 +1538,16 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 			    CFLAGS="$CFLAGS -arch x86_64"
 			    do64bit_ok=yes
 			]);;
-		    arm64|arm64e)
-			AC_CACHE_CHECK([if compiler accepts -arch arm64e flag],
-				tcl_cv_cc_arch_arm64e, [
+		    arm64)
+			AC_CACHE_CHECK([if compiler accepts -arch arm64 flag],
+				tcl_cv_cc_arch_arm64, [
 			    hold_cflags=$CFLAGS
-			    CFLAGS="$CFLAGS -arch arm64e"
+			    CFLAGS="$CFLAGS -arch arm64"
 			    AC_LINK_IFELSE([AC_LANG_PROGRAM([[]], [[]])],
-				    [tcl_cv_cc_arch_arm64e=yes],[tcl_cv_cc_arch_arm64e=no])
+				    [tcl_cv_cc_arch_arm64=yes],[tcl_cv_cc_arch_arm64=no])
 			    CFLAGS=$hold_cflags])
-			AS_IF([test $tcl_cv_cc_arch_arm64e = yes], [
-			    CFLAGS="$CFLAGS -arch arm64e"
+			AS_IF([test $tcl_cv_cc_arch_arm64 = yes], [
+			    CFLAGS="$CFLAGS -arch arm64"
 			    do64bit_ok=yes
 			]);;
 		    *)
@@ -1558,7 +1555,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 		esac
 	    ], [
 		# Check for combined 32-bit and 64-bit fat build
-		AS_IF([echo "$CFLAGS " |grep -E -q -- '-arch (ppc64|x86_64|arm64e) ' \
+		AS_IF([echo "$CFLAGS " |grep -E -q -- '-arch (ppc64|x86_64|arm64) ' \
 		    && echo "$CFLAGS " |grep -E -q -- '-arch (ppc|i386) '], [
 		    fat_32_64=yes])
 	    ])
@@ -1594,7 +1591,7 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    ])
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
-	    LD_LIBRARY_PATH_VAR="DYLD_LIBRARY_PATH"
+	    LD_LIBRARY_PATH_VAR="DYLD_FALLBACK_LIBRARY_PATH"
 	    AC_DEFINE(MAC_OSX_TCL, 1, [Is this a Mac I see before me?])
 	    PLAT_OBJS='${MAC_OSX_OBJS}'
 	    PLAT_SRCS='${MAC_OSX_SRCS}'
@@ -1740,11 +1737,11 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    # this test works, since "uname -s" was non-standard in 3.2.4 and
 	    # below.
 	    AS_IF([test "$GCC" = yes], [
-	    	SHLIB_CFLAGS="-fPIC -melf"
-	    	LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
+		SHLIB_CFLAGS="-fPIC -melf"
+		LDFLAGS="$LDFLAGS -melf -Wl,-Bexport"
 	    ], [
-	    	SHLIB_CFLAGS="-Kpic -belf"
-	    	LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
+		SHLIB_CFLAGS="-Kpic -belf"
+		LDFLAGS="$LDFLAGS -belf -Wl,-Bexport"
 	    ])
 	    SHLIB_LD="ld -G"
 	    SHLIB_LD_LIBS=""
@@ -2006,7 +2003,7 @@ dnl # preprocessing tests use only CPPFLAGS.
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
         MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${LDFLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
         AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)";if test -f $(LIB_FILE).a; then $(INSTALL_DATA) $(LIB_FILE).a "$(LIB_INSTALL_DIR)"; fi;'
+            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
             DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
         ], [
             INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
@@ -2037,36 +2034,36 @@ dnl # preprocessing tests use only CPPFLAGS.
         TCL_LIBS="${DL_LIBS} ${LIBS} ${MATH_LIBS}"])
     AC_SUBST(TCL_LIBS)
 
-	# See if the compiler supports casting to a union type.
-	# This is used to stop gcc from printing a compiler
-	# warning when initializing a union member.
+    # See if the compiler supports casting to a union type.
+    # This is used to stop gcc from printing a compiler
+    # warning when initializing a union member.
 
-	AC_CACHE_CHECK(for cast to union support,
-	    tcl_cv_cast_to_union,
-	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
-		  union foo { int i; double d; };
-		  union foo f = (union foo) (int) 0;
-	    ]])],
-	    [tcl_cv_cast_to_union=yes],
-	    [tcl_cv_cast_to_union=no])
-	)
-	if test "$tcl_cv_cast_to_union" = "yes"; then
-	    AC_DEFINE(HAVE_CAST_TO_UNION, 1,
-		    [Defined when compiler supports casting to union type.])
-	fi
-	hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
-	AC_CACHE_CHECK(for working -fno-lto,
-	    ac_cv_nolto,
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
-	    [ac_cv_nolto=yes],
-	    [ac_cv_nolto=no])
-	)
-	CFLAGS=$hold_cflags
-	if test "$ac_cv_nolto" = "yes" ; then
-	    CFLAGS_NOLTO="-fno-lto"
-	else
-	    CFLAGS_NOLTO=""
-	fi
+    AC_CACHE_CHECK(for cast to union support,
+	tcl_cv_cast_to_union,
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[]], [[
+		union foo { int i; double d; };
+		union foo f = (union foo) (int) 0;
+	]])],
+	[tcl_cv_cast_to_union=yes],
+	[tcl_cv_cast_to_union=no])
+    )
+    if test "$tcl_cv_cast_to_union" = "yes"; then
+	AC_DEFINE(HAVE_CAST_TO_UNION, 1,
+		[Defined when compiler supports casting to union type.])
+    fi
+    hold_cflags=$CFLAGS; CFLAGS="$CFLAGS -fno-lto"
+    AC_CACHE_CHECK(for working -fno-lto,
+	ac_cv_nolto,
+    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
+	[ac_cv_nolto=yes],
+	[ac_cv_nolto=no])
+    )
+    CFLAGS=$hold_cflags
+    if test "$ac_cv_nolto" = "yes" ; then
+	CFLAGS_NOLTO="-fno-lto"
+    else
+	CFLAGS_NOLTO=""
+    fi
 
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
@@ -2471,20 +2468,19 @@ AC_DEFUN([SC_TCL_LINK_LIBS], [
 #
 #	Might define the following vars:
 #		_ISOC99_SOURCE
-#		_LARGEFILE64_SOURCE
-#		_LARGEFILE_SOURCE64
+#		_FILE_OFFSET_BITS
 #
 #--------------------------------------------------------------------
 
 AC_DEFUN([SC_TCL_EARLY_FLAG],[
     AC_CACHE_VAL([tcl_cv_flag_]translit($1,[A-Z],[a-z]),
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$2]], [[$3]])],
-	    [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[[#define ]$1[ 1
+	    [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[[#define ]$1[ ]m4_default([$4],[1])[
 ]$2]], [[$3]])],
 	[tcl_cv_flag_]translit($1,[A-Z],[a-z])=yes,
 	[tcl_cv_flag_]translit($1,[A-Z],[a-z])=no)]))
     if test ["x${tcl_cv_flag_]translit($1,[A-Z],[a-z])[}" = "xyes"] ; then
-	AC_DEFINE($1, 1, [Add the ]$1[ flag when building])
+	AC_DEFINE($1, m4_default([$4],[1]), [Add the ]$1[ flag when building])
 	tcl_flags="$tcl_flags $1"
     fi
 ])
@@ -2494,10 +2490,8 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
     tcl_flags=""
     SC_TCL_EARLY_FLAG(_ISOC99_SOURCE,[#include <stdlib.h>],
 	[char *p = (char *)strtoll; char *q = (char *)strtoull;])
-    SC_TCL_EARLY_FLAG(_LARGEFILE64_SOURCE,[#include <sys/stat.h>],
-	[struct stat64 buf; int i = stat64("/", &buf);])
-    SC_TCL_EARLY_FLAG(_LARGEFILE_SOURCE64,[#include <sys/stat.h>],
-	[char *p = (char *)open64;])
+    SC_TCL_EARLY_FLAG(_FILE_OFFSET_BITS,[#include <sys/stat.h>],
+	[switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }],64)
     if test "x${tcl_flags}" = "x" ; then
 	AC_MSG_RESULT([none])
     else
@@ -2521,6 +2515,7 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
 #		HAVE_STRUCT_DIRENT64, HAVE_DIR64
 #		HAVE_STRUCT_STAT64
 #		HAVE_TYPE_OFF64_T
+#		_TIME_BITS
 #
 #--------------------------------------------------------------------
 
@@ -2546,6 +2541,23 @@ AC_DEFUN([SC_TCL_64BIT_FLAGS], [
 	AC_MSG_RESULT([${tcl_cv_type_64bit}])
 
 	# Now check for auxiliary declarations
+	AC_CACHE_CHECK([for 64-bit time_t], tcl_cv_time_t_64,[
+	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],
+		[[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		[tcl_cv_time_t_64=yes],[tcl_cv_time_t_64=no])])
+	if test "x${tcl_cv_time_t_64}" = "xno" ; then
+	    # Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
+	    # which SC_TCL_EARLY_FLAGS has defined if necessary.
+	    AC_CACHE_CHECK([if _TIME_BITS=64 enables 64-bit time_t], tcl_cv__time_bits,[
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _TIME_BITS 64
+#include <sys/types.h>]],
+		    [[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		    [tcl_cv__time_bits=yes],[tcl_cv__time_bits=no])])
+	    if test "x${tcl_cv__time_bits}" = "xyes" ; then
+		AC_DEFINE(_TIME_BITS, 64, [_TIME_BITS=64 enables 64-bit time_t.])
+	    fi
+	fi
+
 	AC_CACHE_CHECK([for struct dirent64], tcl_cv_struct_dirent64,[
 	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
 #include <dirent.h>]], [[struct dirent64 p;]])],

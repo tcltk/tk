@@ -117,7 +117,7 @@ extern "C" {
  * Decide whether or not to use input methods.
  */
 
-#ifdef XNQueryInputStyle
+#if defined(XNQueryInputStyle) && !defined(_WIN32) && !defined(MAC_OSX_TK)
 #define TK_USE_INPUT_METHODS
 #endif
 
