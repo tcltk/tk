@@ -338,7 +338,9 @@ GetWidgetDemoPath(
 
 	libpath = Tcl_GetObjResult(interp);
 	Tcl_IncrRefCount(libpath);
+	Tcl_IncrRefCount(demo[0]);
 	result = Tcl_FSJoinToPath(libpath, 1, demo);
+	Tcl_DecrRefCount(demo[0]);
 	Tcl_DecrRefCount(libpath);
     }
     Tcl_ResetResult(interp);
