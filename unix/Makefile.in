@@ -828,8 +828,6 @@ install-binaries: $(TK_STUB_LIB_FILE) $(TK_LIB_FILE) ${WISH_EXE}
 	@if test -f "tk${MAJOR_VERSION}${MINOR_VERSION}.dll"; then \
 	    $(INSTALL_LIBRARY) "tk${MAJOR_VERSION}${MINOR_VERSION}.dll" "$(DLL_INSTALL_DIR)";\
 	    chmod 555 "$(DLL_INSTALL_DIR)/tk${MAJOR_VERSION}${MINOR_VERSION}.dll";\
-	    $(INSTALL_LIBRARY) "../win/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a" "$(LIB_INSTALL_DIR)";\
-	    chmod 555 "$(LIB_INSTALL_DIR)/libtk${MAJOR_VERSION}${MINOR_VERSION}.dll.a";\
 	fi
 	@echo "Installing ${WISH_EXE} as $(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
 	@$(INSTALL_PROGRAM) ${WISH_EXE} "$(BIN_INSTALL_DIR)/wish$(VERSION)${EXE_SUFFIX}"
