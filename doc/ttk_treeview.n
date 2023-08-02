@@ -505,10 +505,15 @@ are:
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
+\fB\-indent\fP \fIamount\fP
+.RS
+Specifies how many pixels items are indented from their parents. Defaults to 20.
+.RE
+.br
 \fB\-rowheight\fP \fIamount\fP
 .RS
 The \fB\-rowheight\fP value is not corrected by the \fBtk scaling\fP
-value or by the configured font size and must always be set.  Also make
+value or by the configured font size. It defaults to 20 pixels. Make
 sure that the \fB\-rowheight\fP is large enough to contain any images.
 .PP
 To adjust the \fB\-rowheight\fP for the Treeview style, use the following code

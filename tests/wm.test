@@ -881,6 +881,7 @@ test wm-iconphoto-1.5.2 {usage} -constraints x11 -body {
     wm iconphoto . -default [image create photo -file {}]
 } -result {}
 
+
 # All other iconphoto tests are platform specific
 
 
@@ -1490,14 +1491,14 @@ test wm-stackorder-4.1 {wm stackorder isabove|isbelow} -body {
     wm stackorder . isabove .t
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test wm-stackorder-4.2 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update
     raise .t
     wm stackorder . isbelow .t
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update
     raise .
@@ -1505,7 +1506,7 @@ test wm-stackorder-4.3 {wm stackorder isabove|isbelow} -body {
     wm stackorder .t isa .
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
     toplevel .t ; update
     raise .
@@ -1513,7 +1514,7 @@ test wm-stackorder-4.4 {wm stackorder isabove|isbelow} -body {
     wm stackorder .t isb .
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 deleteWindows
 
 test wm-stackorder-5.1 {a menu is not a toplevel} -body {
@@ -2284,7 +2285,7 @@ test wm-forget-1.1 "bug #2009788: forget toplevel can cause crash" -body {
     winfo exists .parent.child
 } -cleanup {
     deleteWindows
-}  -result {1}
+}  -result 1
 test wm-forget-1.2 "bug #2009788: forget toplevel can cause crash" -body {
     toplevel .parent
     update
@@ -2293,7 +2294,7 @@ test wm-forget-1.2 "bug #2009788: forget toplevel can cause crash" -body {
     winfo exists .parent.child
 } -cleanup {
     deleteWindows
-}  -result {1}
+}  -result 1
 test wm-forget-1.3 "bug #2009788: forget toplevel can cause crash" -body {
     toplevel .parent
     toplevel .parent.child
@@ -2302,7 +2303,7 @@ test wm-forget-1.3 "bug #2009788: forget toplevel can cause crash" -body {
     winfo exists .parent.child
 } -cleanup {
     deleteWindows
-}  -result {1}
+}  -result 1
 test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
     toplevel .parent
     toplevel .parent.child
@@ -2317,11 +2318,6 @@ test wm-forget-1.4 "pack into unmapped toplevel causes crash" -body {
 test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     catch {destroy .l .f.b .f}
     set res {}
-    if {[tk windowingsystem] eq "aqua"} {
-	proc doUpdate {} {update idletasks}
-    } else {
-	proc doUpdate {} {update}
-    }
 } -body {
     label .l -text "Top Dot"
     frame .f
@@ -2331,13 +2327,13 @@ test wm-forget-2 {bug [e9112ef96e] - [wm forget] doesn't completely} -setup {
     pack .f -side bottom
     set res [winfo manager .f]
     pack forget .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
     wm manage .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
     wm forget .f
-    doUpdate
+    update
     lappend res [winfo manager .f]
 } -cleanup {
     destroy .l .f.b .f

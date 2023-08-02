@@ -377,7 +377,9 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
-	if (event.type > MappingNotify) {
+	if ((event.type >= VirtualEvent) && (event.type <= MouseWheelEvent)) {
+	    /* See [fe87e9af39]. Those are internal Tk event types, if they come
+	     * from an external source they most likely would be totally mis-interpreted */
 	    continue;
 	}
 	w = None;

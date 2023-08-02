@@ -3,9 +3,9 @@
  *
  *	This file handles the implementation of native bitmaps.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -49,9 +49,6 @@ static BuiltInIcon builtInIcons[] = {
 };
 
 #define builtInIconSize 32
-
-#define OSTYPE_TO_UTI(x) ((NSString *)UTTypeCreatePreferredIdentifierForTag( \
-     kUTTagClassOSType, UTCreateStringForOSType(x), nil))
 
 static Tcl_HashTable iconBitmapTable = {};
 typedef struct {
@@ -136,7 +133,7 @@ PixmapFromImage(
     TkMacOSXDrawingContext dc;
     Pixmap pixmap;
 
-    pixmap = Tk_GetPixmap(display, None, size.width, size.height, 0);
+    pixmap = Tk_GetPixmap(display, None, (int)size.width, (int)size.height, 0);
     if (TkMacOSXSetupDrawingContext(pixmap, NULL, &dc)) {
 	if (dc.context) {
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1,
@@ -175,7 +172,7 @@ TkpCreateNativeBitmap(
     Display *display,
     const void *source)		/* Info about the icon to build. */
 {
-    NSString *filetype = [NSString stringWithUTF8String:(char *)source];
+    NSString *filetype = TkMacOSXOSTypeToUTI(PTR2UINT(source));
     NSImage *iconImage = TkMacOSXIconForFileType(filetype);
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
     Pixmap pixmap = PixmapFromImage(display, iconImage, size);
@@ -307,8 +304,6 @@ TkpGetNativeAppBitmap(
 	}
     }
     if (image) {
-	*width = size.width;
-	*height = size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
 	/*
@@ -323,6 +318,8 @@ TkpGetNativeAppBitmap(
 	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
 	}
     }
+    *width = (int)size.width;
+    *height = (int)size.height;
     return pixmap;
 }
 
@@ -350,7 +347,8 @@ TkMacOSXIconBitmapObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tcl_HashEntry *hPtr;
-    int i = 1, len, isNew, result = TCL_ERROR;
+    int isNew, result = TCL_ERROR;
+    int i = 1, len;
     const char *name, *value;
     IconBitmap ib, *iconBitmap;
 

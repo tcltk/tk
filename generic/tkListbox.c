@@ -317,26 +317,23 @@ static const Tk_OptionSpec optionSpecs[] = {
  */
 
 static const Tk_OptionSpec itemAttrOptionSpecs[] = {
-    {TK_OPTION_BORDER, "-background", "background", "Background",
+    {TK_OPTION_BORDER, "-background", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, border),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
-     DEF_LISTBOX_BG_MONO, 0},
+     TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
      NULL, 0, -1, 0, "-background", 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
      NULL, 0, -1, 0, "-foreground", 0},
-    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
+    {TK_OPTION_COLOR, "-foreground", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, fgColor),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT, 0, 0},
-    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, selBorder),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
-     DEF_LISTBOX_SELECT_MONO, 0},
-    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
      NULL, -1, Tk_Offset(ItemAttr, selFgColor),
-     TK_OPTION_NULL_OK|TK_OPTION_DONT_SET_DEFAULT,
-     DEF_LISTBOX_SELECT_FG_MONO, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, 0, 0}
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
 /*

@@ -22,10 +22,10 @@
  *	may not get done for awhile. So this sketch is offered for the brave
  *	to attempt if they need the functionality...
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -209,7 +209,8 @@ Tk_SetAppName(
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
     Tcl_Interp *interp = winPtr->mainPtr->interp;
-    int i, suffix, offset, result;
+    int suffix, result;
+    int i, offset;
     RegisteredInterp *riPtr, *prevPtr;
     const char *actualName;
     Tcl_DString dString;
@@ -263,11 +264,11 @@ Tk_SetAppName(
 		Tcl_DStringAppend(&dString, name, -1);
 		Tcl_DStringAppend(&dString, " #", 2);
 		offset = Tcl_DStringLength(&dString);
-		Tcl_DStringSetLength(&dString, offset + 10);
+		Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
 	    suffix++;
-	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", suffix);
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", suffix);
 	    i = 0;
 	} else {
 	    i++;
@@ -281,9 +282,9 @@ Tk_SetAppName(
      * We have found a unique name. Now add it to the registry.
      */
 
-    riPtr = ckalloc(sizeof(RegisteredInterp));
+    riPtr = (RegisteredInterp *)ckalloc(sizeof(RegisteredInterp));
     riPtr->interp = interp;
-    riPtr->name = ckalloc(strlen(actualName) + 1);
+    riPtr->name = (char *)ckalloc(strlen(actualName) + 1);
     riPtr->nextPtr = interpListPtr;
     interpListPtr = riPtr;
     strcpy(riPtr->name, actualName);
@@ -320,7 +321,7 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Used only for deletion */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* The interp we are sending from */
     int objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
@@ -461,7 +462,7 @@ Tk_SendObjCmd(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
+    TCL_UNUSED(Tk_Window))		/* Window whose display is to be used for the
 				 * lookup. */
 {
     Tcl_Obj *listObjPtr;
@@ -498,9 +499,7 @@ TkGetInterpNames(
 
 static int
 SendInit(
-    Tcl_Interp *interp)		/* Interpreter to use for error reporting (no
-				 * errors are ever returned, but the
-				 * interpreter is needed anyway). */
+    TCL_UNUSED(Tcl_Interp *))
 {
     return TCL_OK;
 }

@@ -13,23 +13,64 @@ tcltest::loadTestedCommands
 
 deleteWindows
 
-set fixedFont {"Courier" -12}
+set fixedFont {Courier -12}
 set fixedHeight [font metrics $fixedFont -linespace]
 set fixedWidth [font measure $fixedFont m]
 set fixedAscent [font metrics $fixedFont -ascent]
 
+# On Windows at least, the tests do work with {Courier -10}, {Courier -12} or {Courier -14} as fixedFont.
+# Warn the user if the actual font is too different from what was requested.
+if {[font metrics [font actual $fixedFont] -fixed] != 1} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+does not seem to be a fixed-width font as expected. If this is really the case, many upcoming\
+tests will fail."
+}
+if {$fixedHeight < 12 || $fixedHeight > 17} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+is $fixedHeight pixels height while the tests expect between 12 and 17 (inclusive) pixels.\
+Some of the upcoming tests will probably fail."
+}
+if {$fixedWidth < 6 || $fixedWidth > 8} {
+    puts "---> Warning: the font actually used by the tests, which is \"[font actual $fixedFont]\",\
+is $fixedWidth pixels in width while the tests expect between 6 and 8 (inclusive) pixels.\
+Some of the upcoming tests will probably fail."
+}
+
 # Widget used in almost all tests
-set tWidth 30
-set tHeight 6
-text .t -width $tWidth -height $tHeight -bd 2 -highlightthickness 2 \
-        -font $fixedFont
+# Option  -width 30  (characters) below is a fundamental assumption of many
+# upcoming tests when wrapping enters in play
+# Also  -height 6  (lines) is an important assumption
+# Moreover the widget must have the same padding in x and y (see proc bo)
+# However the tests are not sensitive to  -borderwidth  and  -highlightthickness
+text .t -font $fixedFont -width 30 -height 6 -borderwidth 2 -highlightthickness 2
 pack .t -expand 1 -fill both
 update
 .t debug on
 
-set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
-
 wm geometry . {}
+
+# full border size of the text widget, i.e. first x or y coordinate inside the text widget
+# warning:  -padx  is supposed to be the same as  -pady  (same border size horizontally and
+# vertically around the widget)
+proc bo {{w .t}} {
+    return [expr {[$w cget -borderwidth] + [$w cget -highlightthickness] + [$w cget -padx]}]
+}
+# x-width of $n chars, fixed width font
+proc xw {n} {
+    global fixedWidth
+    return [expr {$n * $fixedWidth}]
+}
+# x-coordinate of the first pixel of $n-th char (count starts at zero), left justified
+proc xchar {n {w .t}} {
+    return [expr {[bo $w] + [xw $n]}]
+}
+# y-coordinate of the first pixel of $l-th display line (count starts at 1)
+proc yline {l {w .t}} {
+    global fixedHeight
+    return [expr {[bo $w] + ($l - 1) * $fixedHeight}]
+}
+
+set color [expr {[winfo depth .t] > 1 ? "green" : "black"}]
 
 # The statements below reset the main window;  it's needed if the window
 # manager is mwm to make mwm forget about a previous minimum size setting.
@@ -43,13 +84,6 @@ wm deiconify .
 # when the tests begin.
 
 update
-
-set bw [.t cget -borderwidth]
-set px [.t cget -padx]
-set py [.t cget -pady]
-set hlth [.t cget -highlightthickness]
-set padx [expr {$bw+$px+$hlth}]
-set pady [expr {$bw+$py+$hlth}]
 
 # ----------------------------------------------------------------------
 
@@ -65,8 +99,8 @@ test textWind-1.1 {basic tests of options} -setup {
         [.t window configure .f -window]
 } -result [list \
     1 \
-    3x3+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight+(($fixedHeight-3)/2)}] \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight+(($fixedHeight-3)/2)}] 3 3] \
+    3x3+[xchar 2]+[expr {[yline 2]+($fixedHeight-3)/2}] \
+    [list [xchar 2] [expr {[yline 2]+($fixedHeight-3)/2}] 3 3] \
     {-window {} {} {} .f}]
 
 test textWind-1.2 {basic tests of options} -setup {
@@ -81,8 +115,8 @@ test textWind-1.2 {basic tests of options} -setup {
         [.t window configure .f -align]
 } -result [list \
     1 \
-    3x3+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight}] \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight}] 3 3] \
+    3x3+[xchar 2]+[yline 2] \
+    [list [xchar 2] [yline 2] 3 3] \
     {-align {} {} center top}]
 
 test textWind-1.3 {basic tests of options} -setup {
@@ -105,9 +139,9 @@ test textWind-1.4 {basic tests of options} -setup {
     update
     list [winfo geom .f] [.t window configure .f -padx] [.t bbox 2.3]
 } -result [list \
-    10x20+[expr {$padx+2*$fixedWidth+5}]+[expr {$pady+$fixedHeight}] \
+    10x20+[expr {[xchar 2]+5}]+[yline 2] \
     {-padx {} {} 0 5} \
-    [list [expr {$padx+2*$fixedWidth+10+2*5}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
+    [list [expr {[xchar 2]+10+2*5}] [expr {[yline 2]+(20-$fixedHeight)/2}] $fixedWidth $fixedHeight]]
 
 test textWind-1.5 {basic tests of options} -setup {
     .t delete 1.0 end
@@ -119,9 +153,9 @@ test textWind-1.5 {basic tests of options} -setup {
     update
     list [winfo geom .f] [.t window configure .f -pady] [.t bbox 2.31]
 } -result [list \
-    10x20+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight+4}] \
+    10x20+[xchar 2]+[expr {[yline 2]+4}] \
     {-pady {} {} 0 4} \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight+20+2*4}] $fixedWidth $fixedHeight]]
+    [list [xchar 2] [expr {[yline 2]+20+2*4}] $fixedWidth $fixedHeight]]
 
 test textWind-1.6 {basic tests of options} -setup {
     .t delete 1.0 end
@@ -133,9 +167,8 @@ test textWind-1.6 {basic tests of options} -setup {
     update
     list [winfo geom .f] [.t window configure .f -stretch]
 } -result [list \
-    5x$fixedHeight+[expr {$padx+2*$fixedWidth}]+[expr {$pady+$fixedHeight}] \
+    5x$fixedHeight+[xchar 2]+[yline 2] \
     {-stretch {} {} 0 1}]
-
 
 .t delete 1.0 end
 .t insert end "This is the first line"
@@ -171,7 +204,7 @@ test textWind-2.7 {TkTextWindowCmd procedure, "cget" option} -setup {
     .t window cget .f -pady
 } -cleanup {
     destroy .f
-} -returnCodes ok -result {2}
+} -returnCodes ok -result 2
 test textWind-2.8 {TkTextWindowCmd procedure} -body {
     .t window co
 } -returnCodes error -result {wrong # args: should be ".t window configure index ?-option value ...?"}
@@ -199,7 +232,6 @@ test textWind-2.11 {TkTextWindowCmd procedure} -setup {
     destroy .f
 } -result  {{-align {} {} center baseline} {-create {} {} {} foo} {-padx {} {} 0 1} {-pady {} {} 0 2} {-stretch {} {} 0 0} {-window {} {} {} .f}}
 test textWind-2.12 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 10 -height 6 -bg $color
     .t window create 2.2 -window .f -align baseline -padx 1 -pady 2 -create foo
@@ -215,7 +247,6 @@ test textWind-2.12 {TkTextWindowCmd procedure} -setup {
     destroy .f
 } -result {{} {-padx {} {} 0 33}}
 test textWind-2.13 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 10 -height 6 -bg $color
     .t window create 2.2 -window .f -align baseline -padx 1 -pady 2 -create foo
@@ -242,7 +273,6 @@ test textWind-2.15 {TkTextWindowCmd procedure} -setup {
     .t window create gorp
 } -returnCodes error -result {bad text index "gorp"}
 test textWind-2.16 {TkTextWindowCmd procedure, don't insert after end} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 10 -height 6 -bg $color
     .t window create 2.2 -window .f -align baseline -padx 1 -pady 2
@@ -259,7 +289,6 @@ test textWind-2.17 {TkTextWindowCmd procedure} -setup {
     list [catch {.t window create 1.0} msg] $msg [.t window configure 1.0]
 } -result {0 {} {{-align {} {} center center} {-create {} {} {} {}} {-padx {} {} 0 0} {-pady {} {} 0 0} {-stretch {} {} 0 0} {-window {} {} {} {}}}}
 test textWind-2.18 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 20 -height 10 -bg $color
     .t window create end -window .f
@@ -269,7 +298,6 @@ test textWind-2.18 {TkTextWindowCmd procedure} -setup {
     .t window create 1.0 -window .f -gorp stupid
 } -returnCodes error -result {unknown option "-gorp"}
 test textWind-2.19 {TkTextWindowCmd procedure} -setup {
-# I kept this as it "influenced" the test case in previous releases
     destroy .f
     frame .f -width 20 -height 10 -bg $color
     .t window create end -window .f
@@ -323,7 +351,6 @@ test textWind-2.25 {TkTextWindowCmd procedure, "names" option} -setup {
     destroy .f .f2 .t.f .t.f2
 } -result {.f .f2 .t.f .t.f2}
 
-
 test textWind-3.1 {EmbWinConfigure procedure} -setup {
     destroy .f
 } -body {
@@ -362,7 +389,7 @@ test textWind-3.3 {EmbWinConfigure procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list 1 0 \
-    [list [expr {$padx+3*$fixedWidth}] $pady $fixedWidth $fixedHeight]]
+    [list [xchar 3] [yline 1] $fixedWidth $fixedHeight]]
 
 test textWind-3.4 {EmbWinConfigure procedure} -setup {
     destroy .t.f
@@ -392,7 +419,7 @@ test textWind-3.5 {EmbWinConfigure procedure} -setup {
 } -cleanup {
     destroy .t.f
 } -result [list 1 0 \
-    [list [expr {$padx+3*$fixedWidth}] $pady $fixedWidth $fixedHeight]]
+    [list [xchar 3] [yline 1] $fixedWidth $fixedHeight]]
 
 test textWind-3.6 {EmbWinConfigure procedure} -setup {
     destroy .f
@@ -407,7 +434,7 @@ test textWind-3.6 {EmbWinConfigure procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list 0 1.3 1 \
-    [list [expr {$padx+3*$fixedWidth+10}] [expr {$pady+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
+    [list [expr {[xchar 3]+10}] [expr {[yline 1]+(20-$fixedHeight)/2}] $fixedWidth $fixedHeight]]
 
 test textWind-3.7 {EmbWinConfigure procedure} -setup {
     destroy .f
@@ -465,10 +492,10 @@ test textWind-3.11 {EmbWinConfigure procedure} -setup {
     .t index .t.b
 } -result {1.6}
 
-
 .t delete 1.0 end
 frame .f -width 10 -height 20 -bg $color
 .t window create 1.0 -window .f
+
 test textWind-4.1 {AlignParseProc and AlignPrintProc procedures} -body {
     .t window configure 1.0 -align baseline
     .t window configure 1.0 -align
@@ -519,8 +546,8 @@ test textWind-5.2 {EmbWinStructureProc procedure} -setup {
     catch {.t index .f}
     list [.t bbox 1.2] [.t bbox 1.3]
 } -result [list \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0] \
-    [list [expr {$padx+2*$fixedWidth}] $pady $fixedWidth $fixedHeight]]
+    [list [xchar 2] [expr {[yline 1]+$fixedHeight/2}] 0 0] \
+    [list [xchar 2] [yline 1] $fixedWidth $fixedHeight]]
 
 test textWind-5.3 {EmbWinStructureProc procedure} -setup {
     .t delete 1.0 end
@@ -547,8 +574,8 @@ test textWind-5.4 {EmbWinStructureProc procedure} -setup {
     catch {.t index .f}
     list [.t bbox 1.2] [.t bbox 1.3]
 } -result [list \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+$fixedHeight}] 0 0] \
-    [list [expr {$padx+2*$fixedWidth}] $pady $fixedWidth $fixedHeight]]
+    [list [xchar 2] [yline 2] 0 0] \
+    [list [xchar 2] [yline 1] $fixedWidth $fixedHeight]]
 
 test textWind-5.5 {EmbWinStructureProc procedure} -setup {
     .t delete 1.0 end
@@ -562,9 +589,8 @@ test textWind-5.5 {EmbWinStructureProc procedure} -setup {
     update
     list [catch {.t index .f} msg] $msg [.t bbox 1.2] [.t bbox 1.3]
 } -result [list 0 1.2 \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+(($fixedHeight-10)/2)}] 20 10] \
-    [list [expr {$padx+2*$fixedWidth+20}] $pady $fixedWidth $fixedHeight]]
-
+    [list [xchar 2] [expr {[yline 1]+($fixedHeight-10)/2}] 20 10] \
+    [list [expr {[xchar 2]+20}] [yline 1] $fixedWidth $fixedHeight]]
 
 test textWind-6.1 {EmbWinRequestProc procedure} -setup {
     .t delete 1.0 end
@@ -580,11 +606,10 @@ test textWind-6.1 {EmbWinRequestProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    [list [expr {$padx+2*$fixedWidth}] $pady 10 20] \
-    [list [expr {$padx+2*$fixedWidth+10}] [expr {$pady+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight] \
-    [list [expr {$padx+2*$fixedWidth}] $pady 25 30] \
-    [list [expr {$padx+2*$fixedWidth+25}] [expr {$pady+((30-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
-
+    [list [xchar 2] [yline 1] 10 20] \
+    [list [expr {[xchar 2]+10}] [expr {[yline 1]+(20-$fixedHeight)/2}] $fixedWidth $fixedHeight] \
+    [list [xchar 2] [yline 1] 25 30] \
+    [list [expr {[xchar 2]+25}] [expr {[yline 1]+(30-$fixedHeight)/2}] $fixedWidth $fixedHeight]]
 
 test textWind-7.1 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
@@ -600,8 +625,8 @@ test textWind-7.1 {EmbWinLostContentProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    10x20+[expr {$padx+100}]+[expr {$pady+50}] \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
+    10x20+[expr {[bo]+100}]+[expr {[bo]+50}] \
+    [list [xchar 2] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-7.2 {EmbWinLostContentProc procedure} -setup {
     .t delete 1.0 end
@@ -617,8 +642,8 @@ test textWind-7.2 {EmbWinLostContentProc procedure} -setup {
 } -cleanup {
     destroy .t.f
 } -result [list \
-    10x20+[expr {$padx+100}]+[expr {$pady+50}] \
-    [list [expr {$padx+2*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
+    10x20+[expr {[bo]+100}]+[expr {[bo]+50}] \
+    [list [xchar 2] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-8.1 {EmbWinDeleteProc procedure} -setup {
     .t delete 1.0 end
@@ -632,8 +657,8 @@ test textWind-8.1 {EmbWinDeleteProc procedure} -setup {
     .t delete 1.2
     list $x [.t bbox 1.2] [.t bbox 1.3] [winfo exists .f]
 } -result [list destroyed \
-    [list [expr {$padx+2*$fixedWidth}] $pady $fixedWidth $fixedHeight] \
-    [list [expr {$padx+3*$fixedWidth}] $pady $fixedWidth $fixedHeight] \
+    [list [xchar 2] [yline 1] $fixedWidth $fixedHeight] \
+    [list [xchar 3] [yline 1] $fixedWidth $fixedHeight] \
     0]
 
 test textWind-8.2 {EmbWinDeleteProc procedure} -setup {
@@ -649,7 +674,6 @@ test textWind-8.2 {EmbWinDeleteProc procedure} -setup {
     .t index .f
 } -returnCodes error -result {bad text index ".f"}
 
-
 test textWind-9.1 {EmbWinCleanupProc procedure} -setup {
     .t delete 1.0 end
     destroy .f
@@ -662,7 +686,6 @@ test textWind-9.1 {EmbWinCleanupProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result {1.7}
-
 
 test textWind-10.1 {EmbWinLayoutProc procedure} -setup {
     .t delete 1.0 end
@@ -696,7 +719,7 @@ test textWind-10.2 {EmbWinLayoutProc procedure, error in creating window} -setup
     rename bgerror {}
 } -result [list \
     {{couldn't create window}} \
-    [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
+    [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-10.3 {EmbWinLayoutProc procedure, error in creating window} -setup {
     .t delete 1.0 end
@@ -716,7 +739,7 @@ test textWind-10.3 {EmbWinLayoutProc procedure, error in creating window} -setup
     rename bgerror {}
 } -result [list \
     {{bad window path name "gorp"}} \
-    [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
+    [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} -setup {
     .t delete 1.0 end
@@ -747,7 +770,7 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} -setup
     rename bgerror {}
 } -result [list \
     {{can't embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} \
-    [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0] \
+    [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0] \
     1]
 
 test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup {
@@ -794,7 +817,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup
     rename bgerror {}
 } -result [list \
     {{can't embed .t relative to .t}} \
-    [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
+    [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -setup {
     .t delete 1.0 end
@@ -817,7 +840,7 @@ test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -setup
     rename bgerror {}
 } -result [list \
     {{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}} \
-    [list [expr {$padx+5*$fixedWidth}] [expr {$pady+($fixedHeight/2)}] 0 0]]
+    [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-10.8 {EmbWinLayoutProc procedure, error in creating window} -setup {
     .t delete 1.0 end
@@ -864,14 +887,14 @@ test textWind-10.10 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width [expr {($tWidth-12)*$fixedWidth-1}] -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {([.t cget -width]-12)*$fixedWidth-1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list [expr {$padx+12*$fixedWidth}] $pady [expr {$tWidth*$fixedWidth-12*$fixedWidth}] 20] \
-    [list $padx [expr {$pady+20}] $fixedWidth $fixedHeight]]
+    [list [xchar 12] [yline 1] [xw [expr {[.t cget -width]-12}]] 20] \
+    [list [xchar 0] [expr {[yline 1]+20}] $fixedWidth $fixedHeight]]
 
 test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
     .t delete 1.0 end
@@ -879,15 +902,15 @@ test textWind-10.11 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width [expr {($tWidth-12)*$fixedWidth}] -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {([.t cget -width]-12)*$fixedWidth}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list [expr {$padx+12*$fixedWidth}] $pady [expr {$tWidth*$fixedWidth-12*$fixedWidth}] 20] \
-    [list $padx [expr {$pady+20}] $fixedWidth $fixedHeight]]
+    [list [xchar 12] [yline 1] [xw [expr {[.t cget -width]-12}]] 20] \
+    [list [xchar 0] [expr {[yline 1]+20}] $fixedWidth $fixedHeight]]
 
 test textWind-10.12 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
     .t delete 1.0 end
@@ -895,15 +918,15 @@ test textWind-10.12 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap char
     .t insert 1.0 "Some sample text"
-    frame .f -width [expr {($tWidth-12)*$fixedWidth+1}] -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {([.t cget -width]-12)*$fixedWidth+1}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list $padx [expr {$pady+$fixedHeight}] [expr {($tWidth-12)*$fixedWidth+1}] 20] \
-    [list [expr {$padx+($tWidth-12)*$fixedWidth+1}] [expr {$pady+$fixedHeight+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
+    [list [xchar 0] [yline 2] [expr {[xw [expr {[.t cget -width]-12}]]+1}] 20] \
+    [list [expr {[xchar 0]+[expr {[xw [expr {[.t cget -width]-12}]]+1}]}] [expr {[yline 2]+(20-$fixedHeight)/2}] $fixedWidth $fixedHeight]]
 
 test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
     .t delete 1.0 end
@@ -911,14 +934,14 @@ test textWind-10.13 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 20 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {([.t cget -width]-12)*$fixedWidth+5}] -height 20 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list [expr {$padx+12*$fixedWidth}] $pady [expr {$tWidth*$fixedWidth-12*$fixedWidth}] 20] \
+    [list [xchar 12] [yline 1] [xw [expr {[.t cget -width]-12}]] 20] \
     {}]
 
 test textWind-10.14 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
@@ -927,14 +950,14 @@ test textWind-10.14 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -body {
     .t configure -wrap none
     .t insert 1.0 "Some sample text"
-    frame .f -width [expr {($tWidth-12)*$fixedWidth+5}] -height 220 -bg $color -bd 2 -relief raised
+    frame .f -width [expr {([.t cget -width]-12)*$fixedWidth+5}] -height 220 -bg $color -bd 2 -relief raised
     .t window create 1.12 -window .f
     update
     list [.t bbox .f] [.t bbox 1.13]
 } -cleanup {
     destroy .f
 } -result [list \
-    [list [expr {$padx+12*$fixedWidth}] $pady [expr {$tWidth*$fixedWidth-12*$fixedWidth}] [expr {$tHeight*$fixedHeight}]] \
+    [list [xchar 12] [yline 1] [xw [expr {[.t cget -width]-12}]] [expr {[.t cget -height]*$fixedHeight}]] \
     {}]
 
 test textWind-10.15 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
@@ -950,7 +973,7 @@ test textWind-10.15 {EmbWinLayoutProc procedure, doesn't fit on line} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    [list $padx [expr {$pady+$fixedHeight}] [expr {$tWidth*$fixedWidth}] [expr {($tHeight-1)*$fixedHeight}]] \
+    [list [xchar 0] [yline 2] [xw [.t cget -width]] [expr {([.t cget -height]-1)*$fixedHeight}]] \
     {}]
 
 test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} -setup {
@@ -972,7 +995,7 @@ test textWind-11.1 {EmbWinDisplayProc procedure, geometry transforms} -setup {
 } -cleanup {
     destroy .f
     place forget .t
-} -result [list 30x20+[expr {$padx+30+12*$fixedWidth}]+[expr {$pady+50}]]
+} -result [list 30x20+[expr {[xchar 12]+30}]+[expr {[yline 1]+50}]]
 
 test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     .t delete 1.0 end
@@ -994,7 +1017,7 @@ test textWind-11.2 {EmbWinDisplayProc procedure, geometry transforms} -setup {
     destroy .t.f
     place forget .t
     pack .t
-} -result [list 30x20+[expr {$padx+12*$fixedWidth}]+$pady]
+} -result [list 30x20+[xchar 12]+[yline 1]]
 
 test textWind-11.3 {EmbWinDisplayProc procedure, configuration optimization} -setup {
     .t delete 1.0 end
@@ -1039,8 +1062,8 @@ test textWind-11.4 {EmbWinDisplayProc procedure, horizontal scrolling} -setup {
 } -cleanup {
     destroy .f .f2
 } -result [list 1 \
-    30x20+[expr {$padx+14*$fixedWidth}]+[expr {$pady+$fixedHeight}] \
-    [list [expr {$padx+14*$fixedWidth}] [expr {$pady+$fixedHeight}] 30 20] \
+    30x20+[xchar 14]+[yline 2] \
+    [list [xchar 14] [yline 2] 30 20] \
     0]
 
 test textWind-11.5 {EmbWinDisplayProc procedure, horizontal scrolling} -setup {
@@ -1064,8 +1087,8 @@ test textWind-11.5 {EmbWinDisplayProc procedure, horizontal scrolling} -setup {
   destroy .f .f2
   .t configure -wrap char
 } -result [list 0 1 \
-    40x10+[expr {$padx+37*$fixedWidth+30-25*$fixedWidth}]+[expr {$pady+$fixedHeight+((20-10)/2)}] \
-    [list [expr {$padx+37*$fixedWidth+30-25*$fixedWidth}] [expr {$pady+$fixedHeight+((20-10)/2)}] 40 10]]
+    40x10+[expr {[xchar [expr {37-25}]]+30}]+[expr {[yline 2]+(20-10)/2}] \
+    [list [expr {[xchar [expr {37-25}]]+30}] [expr {[yline 2]+(20-10)/2}] 40 10]]
 
 test textWind-12.1 {EmbWinUndisplayProc procedure, mapping/unmapping} -setup {
     .t delete 1.0 end
@@ -1096,7 +1119,6 @@ test textWind-12.1 {EmbWinUndisplayProc procedure, mapping/unmapping} -setup {
     destroy .f
 } -result {created mapped modified replaced unmapped mapped off-screen unmapped}
 
-
 test textWind-13.1 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
     destroy .f
@@ -1109,8 +1131,8 @@ test textWind-13.1 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x5+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1}] 5 5]]
+    5x5+[expr {[xchar 2]+2}]+[expr {[yline 1]+1}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1}] 5 5]]
 
 test textWind-13.2 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1124,8 +1146,8 @@ test textWind-13.2 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x5+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1+(($fixedHeight-7)/2)}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1+(($fixedHeight-7)/2)}] 5 5]]
+    5x5+[expr {[xchar 2]+2}]+[expr {[yline 1]+1+(($fixedHeight-7)/2)}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1+(($fixedHeight-7)/2)}] 5 5]]
 
 test textWind-13.3 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1139,8 +1161,8 @@ test textWind-13.3 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x5+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1+($fixedAscent-6)}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1+($fixedAscent-6)}] 5 5]]
+    5x5+[expr {[xchar 2]+2}]+[expr {[yline 1]+1+($fixedAscent-6)}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1+($fixedAscent-6)}] 5 5]]
 
 test textWind-13.4 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1154,8 +1176,8 @@ test textWind-13.4 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x5+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1+($fixedHeight-7)}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1+($fixedHeight-7)}] 5 5]]
+    5x5+[expr {[xchar 2]+2}]+[expr {[yline 1]+1+($fixedHeight-7)}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1+($fixedHeight-7)}] 5 5]]
 
 test textWind-13.5 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1169,8 +1191,8 @@ test textWind-13.5 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x[expr {$fixedHeight-2}]+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1}] 5 [expr {$fixedHeight-2}]]]
+    5x[expr {$fixedHeight-2}]+[expr {[xchar 2]+2}]+[expr {[yline 1]+1}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1}] 5 [expr {$fixedHeight-2}]]]
 
 test textWind-13.6 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1184,8 +1206,8 @@ test textWind-13.6 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x[expr {$fixedHeight-2}]+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1}] 5 [expr {$fixedHeight-2}]]]
+    5x[expr {$fixedHeight-2}]+[expr {[xchar 2]+2}]+[expr {[yline 1]+1}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1}] 5 [expr {$fixedHeight-2}]]]
 
 test textWind-13.7 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1199,8 +1221,8 @@ test textWind-13.7 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x[expr {$fixedAscent-1}]+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1}] 5 [expr {$fixedAscent-1}]]]
+    5x[expr {$fixedAscent-1}]+[expr {[xchar 2]+2}]+[expr {[yline 1]+1}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1}] 5 [expr {$fixedAscent-1}]]]
 
 test textWind-13.8 {EmbWinBboxProc procedure} -setup {
     .t delete 1.0 end
@@ -1214,8 +1236,8 @@ test textWind-13.8 {EmbWinBboxProc procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list \
-    5x[expr {$fixedHeight-2}]+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+1}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+1}] 5 [expr {$fixedHeight-2}]]]
+    5x[expr {$fixedHeight-2}]+[expr {[xchar 2]+2}]+[expr {[yline 1]+1}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+1}] 5 [expr {$fixedHeight-2}]]]
 
 test textWind-13.9 {EmbWinBboxProc procedure, spacing options} -setup {
     .t delete 1.0 end
@@ -1232,9 +1254,8 @@ test textWind-13.9 {EmbWinBboxProc procedure, spacing options} -setup {
     .t configure -spacing1 0 -spacing3 0
     destroy .f
 } -result [list \
-    5x5+[expr {$padx+2*$fixedWidth+2}]+[expr {$pady+5+(($fixedHeight-5)/2)}] \
-    [list [expr {$padx+2*$fixedWidth+2}] [expr {$pady+5+(($fixedHeight-5)/2)}] 5 5]]
-
+    5x5+[expr {[xchar 2]+2}]+[expr {[yline 1]+5+(($fixedHeight-5)/2)}] \
+    [list [expr {[xchar 2]+2}] [expr {[yline 1]+5+(($fixedHeight-5)/2)}] 5 5]]
 
 test textWind-14.1 {EmbWinDelayedUnmap procedure} -setup {
     .t delete 1.0 end
@@ -1329,8 +1350,7 @@ test textWind-15.2 {TkTextWindowIndex procedure} -setup {
 } -cleanup {
     destroy .f
 } -result [list 1.6 \
-    [list [expr {$padx+6*$fixedWidth+30}] [expr {$pady+((20-$fixedHeight)/2)}] $fixedWidth $fixedHeight]]
-
+    [list [expr {[xchar 6]+30}] [expr {[yline 1]+(20-$fixedHeight)/2}] $fixedWidth $fixedHeight]]
 
 test textWind-16.1 {EmbWinTextStructureProc procedure} -setup {
     .t delete 1.0 end
@@ -1367,10 +1387,10 @@ test textWind-16.2 {EmbWinTextStructureProc procedure} -setup {
 } -cleanup {
     destroy .f .f2
 } -result [list \
-    30x20+[expr {$padx+6*$fixedWidth}]+$pady \
-    [list [expr {$padx+6*$fixedWidth}] $pady 30 20] \
-    30x20+[expr {$padx+6*$fixedWidth}]+[expr {$pady+30}] \
-    [list [expr {$padx+6*$fixedWidth}] $pady 30 20]]
+    30x20+[expr {[xchar 6]}]+[yline 1] \
+    [list [expr {[xchar 6]}] [yline 1] 30 20] \
+    30x20+[expr {[xchar 6]}]+[expr {[yline 1]+30}] \
+    [list [expr {[xchar 6]}] [yline 1] 30 20]]
 
 test textWind-16.3 {EmbWinTextStructureProc procedure} -setup {
     .t delete 1.0 end
@@ -1399,8 +1419,7 @@ test textWind-16.4 {EmbWinTextStructureProc procedure} -setup {
     list [winfo ismapped .t.f] [.t bbox .t.f]
 } -cleanup {
     pack .t
-} -result [list 1 [list [expr {$padx+6*$fixedWidth}] $pady 30 20]]
-
+} -result [list 1 [list [expr {[xchar 6]}] [yline 1] 30 20]]
 
 test textWind-17.1 {peer widgets and embedded windows} -setup {
     destroy .t .tt .f
@@ -1414,7 +1433,7 @@ test textWind-17.1 {peer widgets and embedded windows} -setup {
     update
     destroy .t .tt
     winfo exists .f
-} -result {0}
+} -result 0
 
 test textWind-17.2 {peer widgets and embedded windows} -setup {
     destroy .t .f .tt

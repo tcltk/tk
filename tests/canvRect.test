@@ -427,15 +427,13 @@ test canvRect-10.1 {TranslateRectOval procedure} -setup {
 
 
 test canvRect-11.1 {RectOvalToPostscript procedure} -constraints {
-     nonPortable macCrash
+    nonPortable
 } -setup {
     .c delete withtag all
 } -body {
-    # Crashes on Mac because the XGetImage() call isn't implemented, causing a
-    # dereference of NULL.
     # This test is non-portable because different color information
-	# will get generated on different displays (e.g. mono displays
-	# vs. color).
+    # will get generated on different displays (e.g. mono displays
+    # vs. color).
     .c configure -bd 0 -highlightthickness 0
     .c create rect 50 60 90 80 -fill black -stipple gray50 -outline {}
     .c create oval 100 150 200 200 -fill {} -outline #ff0000 -width 5

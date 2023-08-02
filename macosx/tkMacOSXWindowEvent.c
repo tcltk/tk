@@ -4,10 +4,10 @@
  *	This file defines the routines for both creating and handling Window
  *	Manager class events for Tk.
  *
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2015 Kevin Walzer/WordTech Communications LLC.
- * Copyright (c) 2015 Marc Culler.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -50,7 +50,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowActivation: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -85,7 +85,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowBoundsChanged: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     BOOL movedOnly = [[notification name]
 	    isEqualToString:NSWindowDidMoveNotification];
@@ -123,7 +123,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowExpanded: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -180,7 +180,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowEnteredFullScreen: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
 	return;
@@ -191,7 +191,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowExitedFullScreen: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     if (![[notification object] respondsToSelector: @selector (tkLayoutChanged)]) {
 	return;
@@ -202,7 +202,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (void) windowCollapsed: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
@@ -216,7 +216,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 - (BOOL) windowShouldClose: (NSWindow *) w
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, w);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), w);
 #endif
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -275,12 +275,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowDragStart: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 
 - (void) windowUnmapped: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
@@ -309,7 +309,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
 
-#if !(MAC_OS_X_VERSION_MAX_ALLOWED < 1070)
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
     observe(NSWindowDidEnterFullScreenNotification, windowEnteredFullScreen:);
     observe(NSWindowDidExitFullScreenNotification, windowExitedFullScreen:);
 #endif
@@ -342,7 +342,7 @@ static void RefocusGrabWindow(void *data) {
     (void)notification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     [NSApp tkCheckPasteboard];
 
@@ -377,7 +377,7 @@ static void RefocusGrabWindow(void *data) {
     (void)notification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
 
     /*
@@ -415,7 +415,7 @@ static void RefocusGrabWindow(void *data) {
 - (void) applicationShowHide: (NSNotification *) notification
 {
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     const char *cmd = ([[notification name] isEqualToString:
 	    NSApplicationDidUnhideNotification] ?
@@ -436,7 +436,7 @@ static void RefocusGrabWindow(void *data) {
     (void)notification;
 
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 #endif
     TkDisplay *dispPtr = TkGetDisplayList();
 
@@ -1009,6 +1009,7 @@ ConfigureRestrictProc(
     return NO;
 }
 
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
 {
 
@@ -1021,6 +1022,7 @@ ConfigureRestrictProc(
 
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
 }
+#endif
 
 - (void) addTkDirtyRect: (NSRect) rect
 {
@@ -1277,6 +1279,8 @@ static const char *const accentNames[] = {
 			change:(NSDictionary *)change
 		       context:(void *)context
 {
+    (void) change;
+    (void) context;
     NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
     if (object == preferences && [keyPath isEqualToString:@"AppleHighlightColor"]) {
 	if (@available(macOS 10.14, *)) {
@@ -1295,7 +1299,7 @@ static const char *const accentNames[] = {
 - (void) tkToolbarButton: (id) sender
 {
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), sender);
 #endif
     union {XEvent general; XVirtualEvent virt;} event;
     int x, y;
@@ -1348,7 +1352,7 @@ static const char *const accentNames[] = {
     (void)theEvent;
 
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
 }
 

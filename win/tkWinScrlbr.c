@@ -360,7 +360,7 @@ UpdateScrollbarMetrics(void)
     vArrowHeight = GetSystemMetrics(SM_CYVSCROLL);
     vThumb = GetSystemMetrics(SM_CYVTHUMB);
 
-    sprintf(tkDefScrollbarWidth, "%d", arrowWidth);
+    snprintf(tkDefScrollbarWidth, sizeof(tkDefScrollbarWidth), "%d", arrowWidth);
 }
 
 /*

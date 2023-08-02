@@ -366,7 +366,7 @@ if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
     LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore"
     if test -d "/System/Library/Frameworks/UniformTypeIdentifiers.framework"; then
-        LIBS="$LIBS -framework UniformTypeIdentifiers"
+        LIBS="$LIBS -weak_framework UniformTypeIdentifiers"
     fi
     EXTRA_CC_SWITCHES='-std=gnu99 -x objective-c'
     TK_WINDOWINGSYSTEM=AQUA
@@ -783,7 +783,7 @@ fi
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
 eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
-eval "TK_STUB_LIB_DIR=${libdir}"
+eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
     TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}"

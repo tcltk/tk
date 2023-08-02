@@ -1,5 +1,11 @@
 name: Linux
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-8-6-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 defaults:
@@ -93,7 +99,7 @@ jobs:
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
@@ -101,7 +107,7 @@ jobs:
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v3
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
@@ -155,3 +161,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15

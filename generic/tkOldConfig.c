@@ -14,6 +14,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Forward declarations for functions defined later in this file:
  */
@@ -773,7 +777,7 @@ FormatConfigValue(
 	}
 	break;
     case TK_CONFIG_INT:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, 200, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_DOUBLE:
@@ -851,7 +855,7 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	sprintf(buffer, "%d", *((int *)ptr));
+	snprintf(buffer, 200, "%d", *((int *)ptr));
 	result = buffer;
 	break;
     case TK_CONFIG_MM:

@@ -1176,7 +1176,8 @@ DestroyMenuInstance(
 	 * for menu entries (i+1)...numEntries.
 	 */
 
-	DestroyMenuEntry(menuPtr->entries[i]);
+	Tcl_EventuallyFree(menuPtr->entries[i],
+		(Tcl_FreeProc*)DestroyMenuEntry);
 	menuPtr->numEntries = i;
     }
     if (menuPtr->entries != NULL) {
@@ -2956,10 +2957,13 @@ GetIndexFromCoords(
 	x = y;
 	p = end + 1;
 	y = strtol(p, &end, 0);
-	if (end == p) {
+	if ((end == p) || (*end != '\0')) {
 	    goto error;
 	}
     } else {
+	if (*end != '\0') {
+	    goto error;
+	}
 	x = borderwidth;
     }
 

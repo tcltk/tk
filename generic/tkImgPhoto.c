@@ -151,8 +151,12 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static const Tk_ConfigSpec configSpecs[] = {
+    {TK_CONFIG_STRING, "-data", NULL, NULL,
+	 NULL, -1, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
 	 NULL, Tk_Offset(PhotoModel, fileString), TK_CONFIG_NULL_OK, NULL},
+    {TK_CONFIG_STRING, "-format", NULL, NULL,
+	 NULL, -1, TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_DOUBLE, "-gamma", NULL, NULL,
 	 DEF_PHOTO_GAMMA, Tk_Offset(PhotoModel, gamma), 0, NULL},
     {TK_CONFIG_INT, "-height", NULL, NULL,
@@ -1190,9 +1194,6 @@ ImgPhotoCmd(
 
 	switch ((enum transOptions) index) {
 	case PHOTO_TRANS_GET: {
-	    XRectangle testBox;
-	    TkRegion testRegion;
-
 	    if (objc != 5) {
 		Tcl_WrongNumArgs(interp, 3, objv, "x y");
 		return TCL_ERROR;
@@ -1211,19 +1212,9 @@ ImgPhotoCmd(
 		return TCL_ERROR;
 	    }
 
-	    testBox.x = x;
-	    testBox.y = y;
-	    testBox.width = 1;
-	    testBox.height = 1;
-	    /* What a way to do a test! */
-	    testRegion = TkCreateRegion();
-	    TkUnionRectWithRegion(&testBox, testRegion, testRegion);
-	    TkIntersectRegion(testRegion, modelPtr->validRegion, testRegion);
-	    TkClipBox(testRegion, &testBox);
-	    TkDestroyRegion(testRegion);
+	    pixelPtr = modelPtr->pix32 + (y * modelPtr->width + x) * 4;
 
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		    testBox.width==0 && testBox.height==0));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(pixelPtr[3] == 0));
 	    return TCL_OK;
 	}
 
@@ -1806,37 +1797,31 @@ ImgPhotoConfigureModel(
     Tcl_Obj *oldData, *data = NULL, *oldFormat, *format = NULL;
     Tcl_Obj *tempdata, *tempformat;
     size_t length;
-    int i, j, result, imageWidth, imageHeight, oldformat;
+    int i, result, imageWidth, imageHeight, oldformat;
     double oldGamma;
     Tcl_Channel chan;
     Tk_PhotoImageFormat *imageFormat;
-    const char **args;
 
-    args = (const char **)ckalloc((objc + 1) * sizeof(char *));
-    for (i = 0, j = 0; i < objc; i++,j++) {
-	args[j] = Tcl_GetString(objv[i]);
+    for (i = 0; i < objc; i++) {
+	const char *arg = Tcl_GetString(objv[i]);
 	length = objv[i]->length;
-	if ((length > 1) && (args[j][0] == '-')) {
-	    if ((args[j][1] == 'd') &&
-		    !strncmp(args[j], "-data", length)) {
+	if ((length > 1) && (arg[0] == '-')) {
+	    if ((arg[1] == 'd') &&
+		    !strncmp(arg, "-data", length)) {
 		if (++i < objc) {
 		    data = objv[i];
-		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-data\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
 			    "MISSING_VALUE", NULL);
 		    return TCL_ERROR;
 		}
-	    } else if ((args[j][1] == 'f') &&
-		    !strncmp(args[j], "-format", length)) {
+	    } else if ((arg[1] == 'f') &&
+		    !strncmp(arg, "-format", length)) {
 		if (++i < objc) {
 		    format = objv[i];
-		    j--;
 		} else {
-		    ckfree(args);
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "value for \"-format\" missing", -1));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
@@ -1875,11 +1860,9 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    j, args, (char *) modelPtr, flags) != TCL_OK) {
-	ckfree(args);
+	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
 	goto errorExit;
     }
-    ckfree(args);
 
     /*
      * Regard the empty string for -file, -data or -format as the null value.
