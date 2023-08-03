@@ -855,7 +855,7 @@ TkMacOSXUpdateClipRgn(
 	     */
 
 	    TkMacOSXWinCGBounds(winPtr, &bounds);
-	    rgn = TkMacOSXHIShapeCreateMutableWithRect(&bounds);
+	    rgn = HIShapeCreateMutableWithRect(&bounds);
 
 	    /*
 	     * Clip away the area of any windows that may obscure this window.
@@ -955,7 +955,7 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
 	    }
-	    macWin->aboveVisRgn = TkMacOSXHIShapeCreateEmpty();
+	    macWin->aboveVisRgn = HIShapeCreateEmpty();
 	}
 	if (!macWin->visRgn) {
 	    macWin->visRgn = HIShapeCreateCopy(macWin->aboveVisRgn);
