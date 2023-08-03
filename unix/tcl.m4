@@ -1193,7 +1193,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    DL_LIBS="-ldl"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
-	    TCL_NEEDS_EXP_FILE=1
 	    AC_CACHE_CHECK(for Cygwin version of gcc,
 		ac_cv_cygwin,
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
