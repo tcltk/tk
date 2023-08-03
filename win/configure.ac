@@ -226,7 +226,6 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 
 TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
-TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
@@ -282,14 +281,13 @@ eval "EXESUFFIX=${EXESUFFIX}"
 
 CFG_TK_SHARED_LIB_SUFFIX=${TK_SHARED_LIB_SUFFIX}
 CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
-CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 
 #--------------------------------------------------------------------
 # Adjust the defines for how the resources are built depending
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
+if test ${SHARED_BUILD} = 0; then
     RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
@@ -333,7 +331,6 @@ AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
-AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
 
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(EXTRA_CFLAGS)
