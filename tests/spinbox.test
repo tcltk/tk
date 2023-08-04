@@ -1958,7 +1958,7 @@ test spinbox-5.4 {ConfigureSpinbox procedure, -textvariable} -setup {
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
 } -result {12345 12345}
 
 test spinbox-5.5 {ConfigureSpinbox procedure} -setup {
@@ -2649,7 +2649,7 @@ test spinbox-9.1 {SpinboxValueChanged procedure} -setup {
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
 } -result {12345 12345}
 
 
