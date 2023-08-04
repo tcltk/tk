@@ -1615,7 +1615,7 @@ test entry-5.4 {ConfigureEntry procedure, -textvariable} -setup {
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
     unset x;
 } -result {12345 12345}
 
@@ -2342,7 +2342,7 @@ test entry-9.1 {EntryValueChanged procedure} -setup {
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
     unset x
 } -result {12345 12345}
 
