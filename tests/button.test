@@ -2914,7 +2914,7 @@ test button-3.24 {ButtonWidgetCmd procedure, "deselect" option} -body {
     .c deselect
 } -cleanup {
     destroy .c
-    trace vdelete checkvar w bogusTrace
+    trace remove variable checkvar write bogusTrace
 } -returnCodes {error} -result {can't set "checkvar": trace aborted}
 test button-3.25 {ButtonWidgetCmd procedure, "deselect" option} -body {
     checkbutton .c -variable checkvar -onvalue 1 -offvalue 0
@@ -2923,7 +2923,7 @@ test button-3.25 {ButtonWidgetCmd procedure, "deselect" option} -body {
     catch {.c deselect}
     list $errorInfo $checkvar
 } -cleanup {
-    trace vdelete checkvar w bogusTrace
+    trace remove variable checkvar write bogusTrace
     destroy .c
 } -match {glob} -result {{*trace aborted
     while executing
@@ -2936,7 +2936,7 @@ test button-3.26 {ButtonWidgetCmd procedure, "deselect" option} -body {
     .r deselect
 } -cleanup {
     destroy .r
-    trace vdelete radiovar w bogusTrace
+    trace remove variable radiovar write bogusTrace
 } -match {glob} -returnCodes {error} -result {can't set "radiovar": trace aborted}
 test button-3.27 {ButtonWidgetCmd procedure, "deselect" option} -body {
     radiobutton .r -variable radiovar -value red
@@ -2946,7 +2946,7 @@ test button-3.27 {ButtonWidgetCmd procedure, "deselect" option} -body {
     list $errorInfo $radiovar
 } -cleanup {
     destroy .r
-    trace vdelete radiovar w bogusTrace
+    trace remove variable radiovar write bogusTrace
 } -match glob -result {{*trace aborted
     while executing
 *
@@ -3074,7 +3074,7 @@ test button-3.44 {ButtonWidgetCmd procedure, "select" option} -body {
     .r select
 } -cleanup {
     destroy .r
-    trace vdelete radiovar w bogusTrace
+    trace remove variable radiovar write bogusTrace
 } -returnCodes {error} -result {can't set "radiovar": trace aborted}
 test button-3.45 {ButtonWidgetCmd procedure, "select" option} -body {
     radiobutton .r -variable radiovar -value red
@@ -3084,7 +3084,7 @@ test button-3.45 {ButtonWidgetCmd procedure, "select" option} -body {
     list $errorInfo $radiovar
 } -cleanup {
     destroy .r
-    trace vdelete radiovar w bogusTrace
+    trace remove variable radiovar write bogusTrace
 } -match {glob} -result {{*trace aborted
     while executing
 *
@@ -3135,7 +3135,7 @@ test button-3.51 {ButtonWidgetCmd procedure, "toggle" option} -body {
     .c toggle
 } -cleanup {
     destroy .c
-    trace vdelete checkvar w bogusTrace
+    trace remove variable checkvar write bogusTrace
 } -returnCodes {error} -result {can't set "checkvar": trace aborted}
 test button-3.52 {ButtonWidgetCmd procedure, "toggle" option} -body {
     checkbutton .c -variable checkvar -onvalue xyz -offvalue abc
@@ -3144,7 +3144,7 @@ test button-3.52 {ButtonWidgetCmd procedure, "toggle" option} -body {
     catch {.c toggle}
     list $errorInfo $checkvar
 } -cleanup {
-    trace vdelete checkvar w bogusTrace
+    trace remove variable checkvar write bogusTrace
     destroy .c
 } -match {glob} -result {{*trace aborted
     while executing
@@ -3156,7 +3156,7 @@ test button-3.53 {ButtonWidgetCmd procedure, "toggle" option} -body {
     trace add variable checkvar write bogusTrace
     .c toggle
 } -cleanup {
-    trace vdelete checkvar w bogusTrace
+    trace remove variable checkvar write bogusTrace
     destroy .c
 } -returnCodes {error} -result {can't set "checkvar": trace aborted}
 test button-3.54 {ButtonWidgetCmd procedure, "toggle" option} -body {
@@ -3166,7 +3166,7 @@ test button-3.54 {ButtonWidgetCmd procedure, "toggle" option} -body {
     catch {.c toggle}
     list $errorInfo $checkvar
 } -cleanup {
-    trace vdelete checkvar w bogusTrace
+    trace remove variable checkvar write bogusTrace
     destroy .c
 } -match {glob} -result {{*trace aborted
     while executing
@@ -3308,7 +3308,7 @@ test button-5.10 {ConfigureButton - error in setting variable} -setup {
     radiobutton .r -variable x
 } -cleanup {
     destroy .r
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -returnCodes {error} -result {can't set "x": trace aborted}
 
 test button-5.11 {ConfigureButton - bad image name} -body {
@@ -3340,7 +3340,7 @@ test button-5.14 {ConfigureButton - variable handling} -setup {
     trace add variable x write bogusTrace
     radiobutton .r -text foo -textvariable x
 } -cleanup {
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
     destroy .r
 } -returnCodes {error} -result {can't set "x": trace aborted}
 test button-5.15 {ConfigureButton - variable handling} -setup {
@@ -3350,7 +3350,7 @@ test button-5.15 {ConfigureButton - variable handling} -setup {
     catch {radiobutton .r -text foo -textvariable x}
 	return $x
 } -cleanup {
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
     destroy .r
 } -result {foo}
 
@@ -3542,7 +3542,7 @@ test button-8.2 {TkInvokeButton procedure} -setup {
     .c invoke
 } -cleanup {
     destroy .c
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -returnCodes {error} -result {can't set "x": trace aborted}
 test button-8.3 {TkInvokeButton procedure} -setup {
     set x 0
@@ -3553,7 +3553,7 @@ test button-8.3 {TkInvokeButton procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -result 1
 test button-8.4 {TkInvokeButton procedure} -setup {
     set x 1
@@ -3563,7 +3563,7 @@ test button-8.4 {TkInvokeButton procedure} -setup {
     .c invoke
 } -cleanup {
     destroy .c
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -returnCodes {error} -result {can't set "x": trace aborted}
 test button-8.5 {TkInvokeButton procedure} -setup {
     set x 1
@@ -3574,7 +3574,7 @@ test button-8.5 {TkInvokeButton procedure} -setup {
     return $x
 } -cleanup {
     destroy .c
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -result 0
 
 test button-8.6 {TkInvokeButton procedure} -setup {
@@ -3597,7 +3597,7 @@ test button-8.7 {TkInvokeButton procedure} -body {
     .r invoke
 } -cleanup {
     destroy .r
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -returnCodes {error} -result {can't set "x": trace aborted}
 test button-8.8 {TkInvokeButton procedure} -body {
     radiobutton .r -variable x -value red
@@ -3607,7 +3607,7 @@ test button-8.8 {TkInvokeButton procedure} -body {
     list $errorInfo $x
 } -cleanup {
     destroy .r
-    trace vdelete x w bogusTrace
+    trace remove variable x write bogusTrace
 } -match {glob} -result {{*trace aborted
     while executing
 *
