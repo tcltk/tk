@@ -6,8 +6,15 @@
 
 # ::tk::ScalingPct --
 #
-# Returns the display's current scaling percentage (100, 125, 150, 175, 200, or
-# a greater integer value).
+# Returns the display's "scaling percentage" (floating-point number,
+# the display resolution expressed as a percentage of 96dpi).
+#
+# On X11 systems (but not on SDL systems that claim to be X11), the first
+# call of the command also sets [tk scaling] and ::tk::fontScalingFactor
+# to values extracted from the X11 configuration.
+#
+# The command is called once during Tk initialization, from tk8.7/icons.tcl,
+# when the latter is sourced by tk8.7/tk.tcl.
 
 proc ::tk::ScalingPct {} {
     variable scalingPct
@@ -96,23 +103,13 @@ proc ::tk::ScalingPct {} {
 	    #
 	    ScanMonitorsFile $result $chan pct
 	}
-    }
 
-    #
-    # Set pct to a multiple of 25
-    #
-    for {set pct2 100} {1} {incr pct2 25} {
-	if {$pct < $pct2 + 12.5} {
-	    set pct $pct2
-	    break
-	}
-    }
-
-    if {$onX11 && ($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
-	#
-	# Set Tk's scaling factor according to $pct
-	#
-	tk scaling [expr {$pct / 75.0}]
+        if {($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
+	    #
+	    # Set Tk's scaling factor according to $pct
+	    #
+	    tk scaling [expr {$pct / 75.0}]
+        }
     }
 
     set scalingPct $pct
