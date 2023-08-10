@@ -9,10 +9,6 @@
 # Returns the display's current scaling percentage (100, 125, 150, 175, 200, or
 # a greater integer value).
 
-namespace eval ::tk {
-    namespace export ScalingPct ScaleNum
-}
-
 proc ::tk::ScalingPct {} {
     variable scalingPct
     if {[info exists scalingPct]} {
@@ -133,6 +129,21 @@ proc ::tk::ScalingPct {} {
 proc ::tk::ScaleNum num {
     variable scalingPct
     return [expr {round($num * $scalingPct / 100.0)}]
+}
+
+# ::tk::FontScalingFactor --
+#
+# Accessor command for variable ::tk::fontScalingFactor
+#
+# Arguments: none
+
+proc ::tk::FontScalingFactor {} {
+    variable fontScalingFactor
+    if {[info exists fontScalingFactor]} {
+	return $fontScalingFactor
+    } else {
+	return 1
+    }
 }
 
 # ::tk::ScanMonitorsFile --
