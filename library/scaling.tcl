@@ -112,7 +112,7 @@ proc ::tk::ScalingPct {} {
 	}
     }
 
-    if {$onX11 && $pct != 100 && $pct != $origPct} {
+    if {$onX11 && ($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
 	#
 	# Set Tk's scaling factor according to $pct
 	#
