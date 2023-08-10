@@ -125,7 +125,7 @@ switch -- [tk windowingsystem] {
 	    set family "Helvetica"
 	    set fixed  "courier"
 	}
-	if {$::tk::fontScalingFactor == 1} {
+	if {[::tk::FontScalingFactor] == 1} {
 	    set size 10
 	    set ttsize 9
 	    set capsize 12
