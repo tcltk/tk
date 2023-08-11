@@ -109,9 +109,9 @@ proc DoDisplay {w} {
     pack [frame $w.screen -bd 1 -relief raised] \
 	    -side left -fill both -expand 1
 
-    canvas $w.c -width 651p -height 480p -bg $C(bg) -highlightthickness 0
-    $w.c config -scrollregion {0 0 750p 750p}	;# Kludge: move everything up
-    $w.c yview moveto .09
+    canvas $w.c -width 456p -height 381p -bg $C(bg) -highlightthickness 0
+    $w.c config -scrollregion {0 0 525p 525p}	;# Kludge: move everything up
+    $w.c yview moveto .03
     pack $w.c -in $w.screen -side top -fill both -expand 1
 
     bind $w.c <Button-3> [list $w.pause invoke]
@@ -234,7 +234,8 @@ proc DrawAll {w} {
 	$p $w
     }
 
-    set scaleFactor [expr {max(1.0, [tk scaling] * .75)}]
+    # ([tk scaling] * .75) is "100%".  Scale to "70%".
+    set scaleFactor [expr {[tk scaling] * .75 * .70}]
     $w.c scale all 0 0 $scaleFactor $scaleFactor
 
     # Tile the strike box with the built-in bitmap gray25
@@ -1867,7 +1868,8 @@ proc Anchor {w item where} {
 }
 
 proc scl {lst} {
-    set scaleFactor [expr {max(1.0, [tk scaling] * .75)}]
+    # ([tk scaling] * .75) is "100%".  Scale to "70%".
+    set scaleFactor [expr {[tk scaling] * .75 * .70}]
     set lst2 {}
     foreach elem $lst {
 	set elem2 {}
