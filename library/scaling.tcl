@@ -13,16 +13,27 @@
 # call of the command also sets [tk scaling] and ::tk::fontScalingFactor
 # to values extracted from the X11 configuration.
 #
-# The command is called once during Tk initialization, from tk8.7/icons.tcl,
+# The command is called during Tk initialization, from tk8.7/icons.tcl,
 # when the latter is sourced by tk8.7/tk.tcl.
 
 proc ::tk::ScalingPct {} {
-    variable scalingPct
-    if {[info exists scalingPct]} {
-	return $scalingPct
-    }
+    variable DoneX11ScalingInit
 
     set pct [expr {[tk scaling] * 75}]
+
+    if {![info exists DoneX11ScalingInit]} {
+	set pct [::tk::ScalingInitX11 $pct]
+	set DoneX11ScalingInit 1
+    }
+
+    # Keep scalingPct because it is used in demos.
+    variable scalingPct
+    set scalingPct $pct
+
+    return $pct
+}
+
+proc ::tk::ScalingInitX11 {pct} {
     set origPct $pct
 
     set onX11 [expr {[tk windowingsystem] eq "x11"}]
@@ -111,8 +122,6 @@ proc ::tk::ScalingPct {} {
 	    tk scaling [expr {$pct / 75.0}]
         }
     }
-
-    set scalingPct $pct
     return $pct
 }
 
@@ -124,8 +133,7 @@ proc ::tk::ScalingPct {} {
 #   num - An integer.
 
 proc ::tk::ScaleNum num {
-    variable scalingPct
-    return [expr {round($num * $scalingPct / 100.0)}]
+    return [expr {round($num * [tk scaling] * .75)}]
 }
 
 # ::tk::FontScalingFactor --
