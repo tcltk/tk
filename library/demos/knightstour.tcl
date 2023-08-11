@@ -220,7 +220,7 @@ proc CreateGUI {} {
         }
         $c create polygon $pts -tag knight -offset 8 \
             -fill black -activefill "#600000"
-	set scaleFactor [expr {$tk::scalingPct / 100.0}]
+	set scaleFactor [expr {[tk scaling] * .75}]
 	$c scale knight 0 0 $scaleFactor $scaleFactor
     }
     $c moveto knight {*}[lrange [$c coords [expr {1 + int(rand() * 64)}]] 0 1]

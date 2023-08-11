@@ -48,7 +48,7 @@ proc waveCoordsTracer {w args} {
     # processing; Tk does that for us automatically.
     $w.c coords wave $waveCoords
 
-    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    set scaleFactor [expr {[tk scaling] * .75}]
     $w.c scale wave 0 0 $scaleFactor $scaleFactor
 }
 trace add variable waveCoords write [list waveCoordsTracer $w]

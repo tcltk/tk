@@ -16,7 +16,7 @@ package require Tk
 #   num -	An integer.
 
 proc scl num {
-    return [expr {round($num*$tk::scalingPct/100.0)}]
+    return [expr {round($num * max(1.0, [tk scaling] * .75))}]
 }
 
 # arrowSetup --

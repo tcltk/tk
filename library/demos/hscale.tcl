@@ -43,7 +43,7 @@ proc setWidth {w width} {
     $w coords poly 20 15 20 35 $x2 35 $x2 45 $width 25 $x2 5 $x2 15 20 15
     $w coords line 20 15 20 35 $x2 35 $x2 45 $width 25 $x2 5 $x2 15 20 15
 
-    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    set scaleFactor [expr {[tk scaling] * .75}]
     $w scale poly 0 0 $scaleFactor $scaleFactor
     $w scale line 0 0 $scaleFactor $scaleFactor
 }

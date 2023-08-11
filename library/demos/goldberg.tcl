@@ -234,7 +234,7 @@ proc DrawAll {w} {
 	$p $w
     }
 
-    set scaleFactor [expr {$::tk::scalingPct / 100.0}]
+    set scaleFactor [expr {max(1.0, [tk scaling] * .75)}]
     $w.c scale all 0 0 $scaleFactor $scaleFactor
 
     # Tile the strike box with the built-in bitmap gray25
@@ -1867,13 +1867,14 @@ proc Anchor {w item where} {
 }
 
 proc scl {lst} {
+    set scaleFactor [expr {max(1.0, [tk scaling] * .75)}]
     set lst2 {}
     foreach elem $lst {
 	set elem2 {}
 	set idx 0
 	foreach val $elem {
 	    if {$idx < 2} {
-		set val [expr {round($val * $::tk::scalingPct / 100.0)}]
+		set val [expr {round($val * $scaleFactor)}]
 	    }
 	    lappend elem2 $val
 	    incr idx

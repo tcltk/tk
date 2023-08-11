@@ -37,19 +37,21 @@ grid $w.hsb         -in $w.container -sticky nsew
 grid column $w.container 0 -weight 1
 grid row    $w.container 0 -weight 1
 
-image create photo upArrow -format $tk::svgFmt -data {
+set SvgFormat [list svg -scale [expr {[tk scaling] * .75}]]
+
+image create photo upArrow -format $SvgFormat -data {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
      <path d="m4 4 4-4 4 4z" fill="#000"/>
     </svg>
 }
-image create photo downArrow -format $tk::svgFmt -data {
+image create photo downArrow -format $SvgFormat -data {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
      <path d="m4 0 4 4 4-4z" fill="#000"/>
     </svg>
 }
-image create photo noArrow -format $tk::svgFmt -data {
+image create photo noArrow -format $SvgFormat -data {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
     </svg>
@@ -76,7 +78,7 @@ set data {
 
 ## Code to insert the data nicely
 set font [ttk::style lookup Heading -font]
-set morePx [expr {[image width noArrow] + round(4 * $tk::scalingPct / 100.0)}]
+set morePx [expr {[image width noArrow] + round(4 * max(1.0, [tk scaling] * .75))}]
 foreach col {country capital currency} name {Country Capital Currency} {
     $w.tree heading $col -text $name -image noArrow -anchor w \
 	-command [list SortBy $w.tree $col 0]

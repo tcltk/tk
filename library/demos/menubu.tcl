@@ -61,7 +61,7 @@ if {[tk windowingsystem] eq "aqua"} {
     set topBorderColor gray50
     set bottomBorderColor gray75
 }
-set dim  [expr {round(16 * $tk::scalingPct / 100.0)}]
+set dim  [expr {round(16 * max(1.0, [tk scaling] * .75))}]
 set dim1 [expr {$dim - 1}]
 set dim2 [expr {$dim - 2}]
 for {set i 0} {$i <= [$m index last]} {incr i} {

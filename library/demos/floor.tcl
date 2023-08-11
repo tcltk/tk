@@ -56,7 +56,7 @@ proc floorDisplay {w active} {
     # Rescale the coordinates in pixels of all of the
     # items according to the display's DPI scaling level.
 
-    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    set scaleFactor [expr {[tk scaling] * .75}]
     $w scale all 0 0 $scaleFactor $scaleFactor
 
     # Offset the floors diagonally from each other.
@@ -73,7 +73,7 @@ proc floorDisplay {w active} {
 
     set bbox [$w bbox all]
     lassign $bbox x1 y1 x2 y2
-    set morePx [expr {round(20 * $tk::scalingPct / 100.0)}]
+    set morePx [expr {round(20 * $scaleFactor)}]
     set width  [expr {$x2 - $x1 + $morePx}]
     set height [expr {$y2 - $y1 + $morePx}]
     $w configure -scrollregion $bbox -width $width -height $height

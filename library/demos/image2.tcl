@@ -57,7 +57,8 @@ proc loadImage {w x y} {
     set file [file join $dirName [$w.f.list get @$x,$y]]
     set opts [list -file $file]
     if {[string tolower [file extension $file]] eq ".svg"} {
-	lappend opts -format $tk::svgFmt
+        # 100% scaling is {[tk scaling] * .75}; set scaling to 50%.
+	lappend opts -format [list svg -scale [expr {[tk scaling] * .375}]]
     } else {
 	lappend opts -format {}
     }
