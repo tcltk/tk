@@ -44,7 +44,7 @@ proc setHeight {w height} {
     $w coords poly 15 20 35 20 35 $y2 45 $y2 25 $height 5 $y2 15 $y2 15 20
     $w coords line 15 20 35 20 35 $y2 45 $y2 25 $height 5 $y2 15 $y2 15 20
 
-    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    set scaleFactor [expr {[tk scaling] * .75}]
     $w scale poly 0 0 $scaleFactor $scaleFactor
     $w scale line 0 0 $scaleFactor $scaleFactor
 }

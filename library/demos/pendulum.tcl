@@ -97,9 +97,10 @@ showPendulum $w.c
 # respect to time.)
 proc showPhase {canvas} {
     global Theta dTheta points psw psh
-    set sclFactor [expr {$tk::scalingPct / 100.0}]
+    set scaleFactor [expr {[tk scaling] * .75}]
 
-    lappend points [expr {$Theta + $psw}] [expr {-20*$sclFactor*$dTheta + $psh}]
+    lappend points [expr {$Theta + $psw}] \
+            [expr {-20*$scaleFactor*$dTheta + $psh}]
     if {[llength $points] > 100} {
 	set points [lrange $points end-99 end]
     }
@@ -107,7 +108,7 @@ proc showPhase {canvas} {
 	set list [lrange $points end-[expr {$i-1}] end-[expr {$i-12}]]
 	if {[llength $list] >= 4} {
 	    $canvas coords graph$i $list
-	    $canvas scale graph$i $psw $psh $sclFactor $sclFactor
+	    $canvas scale graph$i $psw $psh $scaleFactor $scaleFactor
 	}
     }
 }

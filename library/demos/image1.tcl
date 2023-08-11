@@ -30,9 +30,13 @@ image create photo image1b \
 	-file [file join $tk_demoDirectory images earthris.gif]
 
 # Create copies of the images just created, magnified according to the
-# display's DPI scaling level.  Since the zooom factor must be an integer,
-# the copies will only be effectively magnified if $tk::scalingPct >= 200.
-set zoomFactor [expr {$tk::scalingPct / 100}]
+# display's DPI scaling level.  The zoom factor must be an integer, and so:
+# - for display resolution >= 192dpi ([tk scaling] >= 2.666667) the copy will
+#   be magnified.
+# - for display resolution < 96dpi ([tk scaling] < 1.333333), the zoom factor
+#   would be 0, so a minimum zoom factor of 1 is enforced with the
+#   max() function.
+set zoomFactor [expr {max(1, int([tk scaling] * .75))}]
 image create photo image1a2
 image1a2 copy image1a -zoom $zoomFactor
 image create photo image1b2

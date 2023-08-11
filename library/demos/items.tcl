@@ -148,7 +148,7 @@ image create photo items.ousterhout \
     -file [file join $tk_demoDirectory images ouster.png]
 image create photo items.ousterhout.active -format "png -alpha 0.5" \
     -file [file join $tk_demoDirectory images ouster.png]
-set zoomFactor [expr {$tk::scalingPct / 100}]
+set zoomFactor [expr {max(1, int([tk scaling] * .75))}]
 foreach img {items.ousterhout items.ousterhout.active} {
     image create photo ${img}2
     ${img}2 copy $img -zoom $zoomFactor

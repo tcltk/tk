@@ -26,10 +26,6 @@ proc ::tk::ScalingPct {} {
 	set DoneX11ScalingInit 1
     }
 
-    # Keep scalingPct because it is used in demos.
-    variable scalingPct
-    set scalingPct $pct
-
     return $pct
 }
 
