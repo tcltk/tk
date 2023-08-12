@@ -50,20 +50,13 @@ wm iconname $w "goldberg"
 wm resizable $w 0 0
 #positionWindow $w
 
-label $w.msg -font {Helvetica 10} -wraplength 4.5i -justify left -text "This\
-	is a demonstration of just how complex you can make your animations\
-	become. Click the ball to start things moving!\n\n\"Man will always\
-	find a difficult means to perform a simple task\"\n - Rube Goldberg"
-pack $w.msg -side top -fill x
-
-if {[tk windowingsystem] ne "aqua"} {
-    ttk::button $w.hide -text "×" -command [list pack forget $w.msg] -width 2
-} else {
-    button $w.hide -text "×" -command [list pack forget $w.msg] -width 1 \
-	    -highlightthickness 0 -padx 0 -pady 0
+proc StartMessage {w} {
+    set msg1 "This\
+	    is a demonstration of just how complex you can make your animations\
+	    become. Click the ball to start things moving!\n\n\"Man will always\
+	    find a difficult means to perform a simple task\"\n - Rube Goldberg"
+    PlacedDialog $w.c.messframe $msg1 {Helvetica 12}
 }
-place $w.hide -in $w.msg -relx 1 -rely 0 -anchor ne
-
 ###--- End of Boilerplate ---###
 
 # Ensure that this this is an array
@@ -361,8 +354,9 @@ proc NextStep {w} {
 proc About {w} {
     set msg "$::S(title)\nby Keith Vetter, March 2003\n(Reproduced by kind\
 	    permission of the author)\n\n\"Man will always find a difficult\
-	    means to perform a simple task.\"\nRube Goldberg"
-    tk_messageBox -parent $w -message $msg -title About
+	    means to perform a simple task.\"\n - Rube Goldberg"
+    PlacedDialog $w.c.messframe $msg {Helvetica 12 bold}
+    return
 }
 ################################################################
 #
@@ -1656,7 +1650,7 @@ proc Move26 {w {step {}}} {
 
     if {$step >= 3} {
 	$w.c delete I24 I26
-	$w.c create text 318p 489p -anchor s -tag I26 \
+	$w.c create text 232p 342p -anchor s -tag I26 \
 		-fill $::C(26) -text "click to continue" -font {Times 24 bold}
 	bind $w.c <Button-1> [list Reset $w]
 	return 4
@@ -1885,6 +1879,52 @@ proc scl {lst} {
     return $lst2
 }
 
+# Simple placed dialog - stacked dialogs are not allowed,
+# the command does nothing if another grab already exists.
+
+proc PlacedDialog {w msg {labelFnt {Helvetica 10}}} {
+    if {[grab current] ne {}} {
+        return
+    }
+    destroy $w
+
+    frame $w -relief raised -bd 5pt
+    label $w.lab -font $labelFnt -wraplength 3i -justify left -text $msg
+    button $w.but -text "OK" -underline 0 -default active -command [list ClosePlacedDialog $w]
+
+    foreach key {Escape Return space o O} {
+	bind $w.but "<KeyPress-${key}>" [list ClosePlacedDialog $w]
+    }
+    foreach child {{} .but .lab} {
+	bind $w$child <<NextWindow>> break
+	bind $w$child <<PrevWindow>> break
+    }
+
+    pack $w.lab -padx 10p -pady {10p 5p}
+    pack $w.but -padx 10p -pady {0p 10p}
+    place $w -anchor center -relx 0.5 -rely 0.5
+
+    set tl [winfo toplevel $w]
+    set ::PlacedDialogOldFocus [focus -lastfor $tl]
+    focus $w.but
+    grab set $w
+    return
+}
+
+proc ClosePlacedDialog {w} {
+    set tl [winfo toplevel $w]
+    if {![winfo exists $::PlacedDialogOldFocus]} {
+        set ::PlacedDialogOldFocus $tl
+    }
+    focus $::PlacedDialogOldFocus
+    set ::PlacedDialogOldFocus {}
+    grab release $w
+    destroy $w
+    return
+}
+
+
 DoDisplay $w
 Reset $w
 Go $w						;# Start everything going
+StartMessage $w					;# Message box at startup
