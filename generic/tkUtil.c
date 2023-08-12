@@ -1181,6 +1181,38 @@ TkMakeEnsemble(
 /*
  *----------------------------------------------------------------------
  *
+ * TkScalingLevel --
+ *
+ *	Returns the display's DPI scaling level as 1.0, 1.25, 1.5, ....
+ *
+ * Results:
+ *      The scaling level.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkScalingLevel(
+    Tk_Window tkwin)
+{
+    static double level = 0.0;
+
+    if (level == 0.0) {
+	Tcl_Interp *interp = Tk_Interp(tkwin);
+	const char *scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct",
+		TCL_GLOBAL_ONLY);
+	level = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
+    }
+
+    return level;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SendVirtualEvent --
  *
  * 	Send a virtual event notification to the specified target window.

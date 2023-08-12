@@ -480,28 +480,19 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-static double scalingFactor;
-
 static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    const char *scalingPctPtr;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
+    double scalingLevel = TkScalingLevel(tkwin);
     (void)paddingPtr;
 
-    /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-     */
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = spec->width * scalingFactor + Ttk_PaddingWidth(margins);
-    *heightPtr = spec->height * scalingFactor + Ttk_PaddingHeight(margins);
+    *widthPtr = spec->width * scalingLevel + Ttk_PaddingWidth(margins);
+    *heightPtr = spec->height * scalingLevel + Ttk_PaddingHeight(margins);
 }
 
 static void ColorToStr(
@@ -527,6 +518,7 @@ static void IndicatorElementDraw(
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
+    double scalingLevel = TkScalingLevel(tkwin);
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
     char bgColorStr[7], fgColorStr[7], indicatorColorStr[7],
@@ -554,8 +546,8 @@ static void IndicatorElementDraw(
      */
     if (   b.x < 0
 	|| b.y < 0
-	|| Tk_Width(tkwin) < b.x + spec->width * scalingFactor
-	|| Tk_Height(tkwin) < b.y + spec->height * scalingFactor)
+	|| Tk_Width(tkwin) < b.x + spec->width * scalingLevel
+	|| Tk_Height(tkwin) < b.y + spec->height * scalingLevel)
     {
 	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
@@ -657,8 +649,8 @@ static void IndicatorElementDraw(
     /*
      * Display the image
      */
-    Tk_RedrawImage(img, 0, 0, spec->width * scalingFactor,
-	spec->height * scalingFactor, d, b.x, b.y);
+    Tk_RedrawImage(img, 0, 0, spec->width * scalingLevel,
+	spec->height * scalingLevel, d, b.x, b.y);
     Tk_FreeImage(img);
 }
 
@@ -711,38 +703,75 @@ static void ArrowElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
-	ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    int width = SCROLLBAR_WIDTH;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    int size = SCROLLBAR_WIDTH;
+    Ttk_Padding padding;
+    double scalingLevel = TkScalingLevel(tkwin);
     (void)paddingPtr;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
-    width -= Ttk_PaddingWidth(ArrowPadding);
-    TtkArrowSize(width/2, direction, widthPtr, heightPtr);
-    *widthPtr += Ttk_PaddingWidth(ArrowPadding);
-    *heightPtr += Ttk_PaddingHeight(ArrowPadding);
+    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
+
+    padding.left = round(ArrowPadding.left * scalingLevel);
+    padding.right = padding.left + 1;
+    padding.top = round(ArrowPadding.top * scalingLevel);
+    padding.bottom = padding.top + 1;
+
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
 }
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-	ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
-    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     int relief = TK_RELIEF_RAISED;
     int borderWidth = 2;
+    Ttk_Padding padding;
+    double scalingLevel = TkScalingLevel(tkwin);
+    int cx = 0, cy = 0;
+    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
+    GC gc = Tk_GCForColor(arrowColor, d);
     (void)state;
 
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, 0, TK_RELIEF_FLAT);
-    DrawBorder(tkwin,d,border,borderColor,b,borderWidth,relief);
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    0, TK_RELIEF_FLAT);
+    DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 
-    TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
-	Ttk_PadBox(b, ArrowPadding), direction);
+    padding.left = round(ArrowPadding.left * scalingLevel);
+    padding.right = padding.left + 1;
+    padding.top = round(ArrowPadding.top * scalingLevel);
+    padding.bottom = padding.top + 1;
+
+    b = Ttk_PadBox(b, padding);
+
+    switch (direction) {
+	case ARROW_UP:
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
+	    break;
+	case ARROW_LEFT:
+	case ARROW_RIGHT:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
+	    break;
+    }
+
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
 }
 
 static const Ttk_ElementSpec ArrowElementSpec = {

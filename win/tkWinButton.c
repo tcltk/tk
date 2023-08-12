@@ -111,7 +111,7 @@ static LRESULT CALLBACK	ButtonProc(HWND hwnd, UINT message,
 			    WPARAM wParam, LPARAM lParam);
 static Window		CreateProc(Tk_Window tkwin, Window parent,
 			    void *instanceData);
-static void		InitBoxes(Tcl_Interp *interp);
+static void		InitBoxes(Tk_Window tkwin);
 static void		ColorToStr(COLORREF color, char *colorStr);
 static void		ImageChanged(ClientData clientData,
 			    int x, int y, int width, int height,
@@ -149,22 +149,13 @@ const Tk_ClassProcs tkpButtonProcs = {
  */
 
 static void
-InitBoxes(Tcl_Interp *interp)
+InitBoxes(Tk_Window tkwin)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+    double scalingLevel = TkScalingLevel(tkwin);
 
-    const char *scalingPctPtr;
-    double scalingFactor;
-
-    /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-     */
-
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-
-    tsdPtr->boxSize = (int)(16.0 * scalingFactor);
+    tsdPtr->boxSize = (int)(16.0 * scalingLevel);
     tsdPtr->initialized = TRUE;
 }
 
