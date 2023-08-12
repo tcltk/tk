@@ -35,7 +35,7 @@ menu $w.m3.menu -tearoff 0
 menu $w.m4.menu -tearoff 0
 menu $w.m5.menu -tearoff 0
 
-foreach theme [ttk::themes] {
+foreach theme [lsort [ttk::themes]] {
     $w.m1.menu add command -label $theme -command [list ttk::setTheme $theme]
     $w.m2.menu add command -label $theme -command [list ttk::setTheme $theme]
     $w.m3.menu add command -label $theme -command [list ttk::setTheme $theme]
