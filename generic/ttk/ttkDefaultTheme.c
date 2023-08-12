@@ -818,13 +818,21 @@ static void MenubuttonArrowElementSize(
 {
     MenubuttonArrowElement *arrow = (MenubuttonArrowElement *)elementRecord;
     int size = MENUBUTTON_ARROW_SIZE;
+    Ttk_Padding padding;
+    double scalingLevel = TkScalingLevel(tkwin);
     (void)dummy;
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
+
+    padding.left = round(MenubuttonArrowPadding.left * scalingLevel);
+    padding.top = round(MenubuttonArrowPadding.top * scalingLevel);
+    padding.right = round(MenubuttonArrowPadding.right * scalingLevel);
+    padding.bottom = round(MenubuttonArrowPadding.bottom * scalingLevel);
+
     *widthPtr = *heightPtr = 2 * size + 1;
-    *widthPtr += Ttk_PaddingWidth(MenubuttonArrowPadding);
-    *heightPtr += Ttk_PaddingHeight(MenubuttonArrowPadding);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
 }
 
 static void MenubuttonArrowElementDraw(
@@ -838,6 +846,8 @@ static void MenubuttonArrowElementDraw(
     int postDirection = POST_BELOW;
     ArrowDirection arrowDirection = ARROW_DOWN;
     int width = 0, height = 0;
+    Ttk_Padding padding;
+    double scalingLevel = TkScalingLevel(tkwin);
     (void)dummy;
     (void)state;
 
@@ -855,7 +865,13 @@ static void MenubuttonArrowElementDraw(
     }
 
     TtkArrowSize(size, arrowDirection, &width, &height);
-    b = Ttk_PadBox(b, MenubuttonArrowPadding);
+
+    padding.left = round(MenubuttonArrowPadding.left * scalingLevel);
+    padding.top = round(MenubuttonArrowPadding.top * scalingLevel);
+    padding.right = round(MenubuttonArrowPadding.right * scalingLevel);
+    padding.bottom = round(MenubuttonArrowPadding.bottom * scalingLevel);
+
+    b = Ttk_PadBox(b, padding);
     b = Ttk_AnchorBox(b, width, height, TK_ANCHOR_CENTER);
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, arrowDirection);
 }
