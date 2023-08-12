@@ -59,6 +59,24 @@ proc StartMessage {w} {
 }
 ###--- End of Boilerplate ---###
 
+array set BaseDimensions {
+    CanX    651
+    CanY    544
+    ScrX    750
+    ScrY    750
+    MsgX    331
+    MsgY    489
+}
+
+# The original value was 1.0 but this can make the demo
+# too large for the screen.  Try a smaller value.
+set overallFactor 0.7
+
+foreach el [array names BaseDimensions] {
+    set Dims($el) [expr {$BaseDimensions($el) * $overallFactor}]p
+}
+set scaleFactor [expr {$::tk::scalingPct / 100.0 * $overallFactor}]
+
 # Ensure that this this is an array
 array set animationCallbacks {}
 bind $w <Destroy> {
@@ -96,14 +114,14 @@ set C(24a) red;		set C(24b) white;
 set C(24c) black;	set C(26) $C(0);
 
 proc DoDisplay {w} {
-    global S C
+    global S C Dims
 
     ttk::frame $w.ctrl -relief ridge -borderwidth 1 -padding 3p
     pack [frame $w.screen -bd 1 -relief raised] \
 	    -side left -fill both -expand 1
 
-    canvas $w.c -width 456p -height 381p -bg $C(bg) -highlightthickness 0
-    $w.c config -scrollregion {0 0 525p 525p}	;# Kludge: move everything up
+    canvas $w.c -width $Dims(CanX) -height $Dims(CanY) -bg $C(bg) -highlightthickness 0
+    $w.c config -scrollregion [list 0 0 $Dims(ScrX) $Dims(ScrY)]	;# Kludge: move everything up
     $w.c yview moveto .03
     pack $w.c -in $w.screen -side top -fill both -expand 1
 
@@ -219,6 +237,7 @@ proc ShowCtrl {w} {
 }
 
 proc DrawAll {w} {
+    global scaleFactor
     ResetStep
     $w.c delete all
     for {set i 0} {1} {incr i} {
@@ -227,26 +246,25 @@ proc DrawAll {w} {
 	$p $w
     }
 
-    set scaleFactor [expr {$::tk::scalingPct / 100.0 * 0.7}]
     $w.c scale all 0 0 $scaleFactor $scaleFactor
 
-    # Tile the strike box with the built-in bitmap gray25
+    # Tile the strike box with the demo's built-in 16x16 bitmap gray25
+    # Adjust x1, y2 to make dimensions multiples of 16 pixels
     lassign [$w.c coords StrikeBox] x1 y1 x2 y2
-    set x1 [expr {round($x1)}]; set y1 [expr {round($y1)}]
-    set x2 [expr {round($x2)}]; set y2 [expr {round($y2)}]
-    set rowCount [expr {($y2 - $y1) / 16}]
-    set colCount [expr {($x2 - $x1) / 16}]
+    set x2 [expr {round($x2)}]
+    set y1 [expr {round($y1)}]
+    set rowCount [expr {round(($y2 - $y1) / 16.0)}]
+    set colCount [expr {round(($x2 - $x1) / 16.0)}]
+    set x1 [expr {$x2 - $colCount * 16}]
+    set y2 [expr {$y1 + $rowCount * 16}]
+
+    $w.c coords StrikeBox $x1 $y1 $x2 $y2
     for {set row 0; set y $y1} {$row < $rowCount} {incr row; incr y 16} {
 	for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 16} {
 	    $w.c create bitmap $x $y -bitmap gray25 -anchor nw \
 		    -foreground $::C(fg)
 	}
-	$w.c create bitmap $x2 $y -bitmap gray25 -anchor ne -foreground $::C(fg)
     }
-    for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 16} {
-	$w.c create bitmap $x $y2 -bitmap gray25 -anchor sw -foreground $::C(fg)
-    }
-    $w.c create bitmap $x2 $y2 -bitmap gray25 -anchor se -foreground $::C(fg)
 }
 
 proc ActiveGUI {w var1 var2 op} {
@@ -1645,12 +1663,12 @@ proc Move25 {w {step {}}} {
 
 # Collapsing balloon
 proc Move26 {w {step {}}} {
-    global S
+    global S Dims
     set step [GetStep 26 $step]
 
     if {$step >= 3} {
 	$w.c delete I24 I26
-	$w.c create text 232p 342p -anchor s -tag I26 \
+	$w.c create text $Dims(MsgX) $Dims(MsgY) -anchor s -tag I26 \
 		-fill $::C(26) -text "click to continue" -font {Times 24 bold}
 	bind $w.c <Button-1> [list Reset $w]
 	return 4
@@ -1861,13 +1879,14 @@ proc Anchor {w item where} {
 }
 
 proc scl {lst} {
+    global scaleFactor
     set lst2 {}
     foreach elem $lst {
 	set elem2 {}
 	set idx 0
 	foreach val $elem {
 	    if {$idx < 2} {
-		set val [expr {round($val * $::tk::scalingPct / 100.0 * 0.7)}]
+		set val [expr {round($val * $scaleFactor)}]
 	    }
 	    lappend elem2 $val
 	    incr idx
