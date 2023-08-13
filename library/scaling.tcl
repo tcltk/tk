@@ -13,33 +13,48 @@
 # call of the command also sets [tk scaling] and ::tk::fontScalingFactor
 # to values extracted from the X11 configuration.
 #
-# The command is called during Tk initialization, from tk8.7/icons.tcl,
-# when the latter is sourced by tk8.7/tk.tcl.
+# The command is called during Tk initialization, from icons.tcl, when
+# the latter is sourced by tk.tcl.
 
 proc ::tk::ScalingPct {} {
-    variable DoneX11ScalingInit
+    variable doneX11ScalingInit
 
     set pct [expr {[tk scaling] * 75}]
 
-    if {![info exists DoneX11ScalingInit]} {
+    if {![info exists doneScalingInitX11]} {
 	set pct [::tk::ScalingInitX11 $pct]
-	set DoneX11ScalingInit 1
+	set doneScalingInitX11 1
     }
 
-    # Keep scalingPct because it is used in demos.
+if 1 {
     variable scalingPct
     set scalingPct $pct
+} else {
+    #
+    # Save the value of pct rounded to the nearest multiple of 25 that is at
+    # least 100, in the variable scalingPct, which is used in the Widget Demo
+    # and should be used similarly in applications and library packages, too.
+    # For details, see the man page tkvars.n, shown via "man tk_scalingPct".
+    #
+    variable scalingPct
+    for {set pct2 100} {1} {incr pct2 25} {
+	if {$pct < $pct2 + 12.5} {
+	    set scalingPct $pct2
+	    break
+	}
+    }
+}
 
     return $pct
 }
 
 proc ::tk::ScalingInitX11 {pct} {
-    set origPct $pct
-
     set onX11 [expr {[tk windowingsystem] eq "x11"}]
     set usingSDL [expr {[info exists ::tk::sdltk] && $::tk::sdltk}]
 
     if {$onX11 && !$usingSDL} {
+	set origPct $pct
+
 	#
 	# Try to get the window scaling factor (1 or 2), partly
 	# based on https://wiki.archlinux.org/title/HiDPI
@@ -133,14 +148,12 @@ proc ::tk::ScalingInitX11 {pct} {
 #   num - An integer.
 
 proc ::tk::ScaleNum num {
-    return [expr {round($num * [tk scaling] * .75)}]
+    return [expr {round($num * [tk scaling] * 0.75)}]
 }
 
 # ::tk::FontScalingFactor --
 #
-# Accessor command for variable ::tk::fontScalingFactor
-#
-# Arguments: none
+# Accessor command for variable ::tk::fontScalingFactor.
 
 proc ::tk::FontScalingFactor {} {
     variable fontScalingFactor
