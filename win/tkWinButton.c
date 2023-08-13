@@ -1009,7 +1009,7 @@ TkpComputeButtonGeometry(
     butPtr->indicatorSpace = 0;
 
     if (!tsdPtr->initialized) {
-	InitBoxes(Tk_Interp(butPtr->tkwin));
+	InitBoxes(butPtr->tkwin);
     }
 
     /*
