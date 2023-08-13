@@ -17,33 +17,25 @@
 # the latter is sourced by tk.tcl.
 
 proc ::tk::ScalingPct {} {
-    variable doneX11ScalingInit
-
     set pct [expr {[tk scaling] * 75}]
 
+    variable doneScalingInitX11
     if {![info exists doneScalingInitX11]} {
-	set pct [::tk::ScalingInitX11 $pct]
-	set doneScalingInitX11 1
+        set pct [::tk::ScalingInitX11 $pct] 
+        set doneScalingInitX11 1
     }
 
-if 1 {
-    variable scalingPct
-    set scalingPct $pct
-} else {
     #
-    # Save the value of pct rounded to the nearest multiple of 25 that is at
-    # least 100, in the variable scalingPct, which is used in the Widget Demo
-    # and should be used similarly in applications and library packages, too.
-    # For details, see the man page tkvars.n, shown via "man tk_scalingPct".
+    # Save the value of pct rounded to the nearest multiple 
+    # of 25 that is at least 100, in the variable scalingPct.
+    # See "man n tk_scalingPct" for use of ::tk::scalingPct.
     #
     variable scalingPct
-    for {set pct2 100} {1} {incr pct2 25} {
-	if {$pct < $pct2 + 12.5} {
-	    set scalingPct $pct2
-	    break
-	}
+    for {set scalingPct 100} {1} {incr scalingPct 25} {
+        if {$pct < $scalingPct + 12.5} {
+            break
+        }
     }
-}
 
     return $pct
 }
