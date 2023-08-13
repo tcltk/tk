@@ -60,12 +60,13 @@ proc StartMessage {w} {
 ###--- End of Boilerplate ---###
 
 array set BaseDimensions {
-    CanX    651
-    CanY    544
+    CanX    645
+    CanY    548
     ScrX    750
     ScrY    750
-    MsgX    331
-    MsgY    489
+    MsgX    323
+    MsgY    573
+    MovY    -45
 }
 
 # The original value was 1.0 but this can make the demo
@@ -122,7 +123,7 @@ proc DoDisplay {w} {
 
     canvas $w.c -width $Dims(CanX) -height $Dims(CanY) -bg $C(bg) -highlightthickness 0
     $w.c config -scrollregion [list 0 0 $Dims(ScrX) $Dims(ScrY)]	;# Kludge: move everything up
-    $w.c yview moveto .03
+    $w.c yview moveto .05
     pack $w.c -in $w.screen -side top -fill both -expand 1
 
     bind $w.c <Button-3> [list $w.pause invoke]
@@ -1615,7 +1616,7 @@ proc Draw24 {w} {
     $w.c create line $xy -fill $::C(fg) -smooth 1 -width 1.5p -tag I24
 }
 proc Move24 {w {step {}}} {
-    global S
+    global S Dims
     set step [GetStep 24 $step]
 
     if {$step > 4} {
@@ -1641,7 +1642,7 @@ proc Move24 {w {step {}}} {
     }
 
     $w.c itemconfig I24t -font [list Times [expr {18 + 6*$step}] bold]
-    $w.c move I24 0 -45p
+    $w.c move I24 0 $Dims(MovY)
     $w.c scale I24 {*}[Centroid $w I24] 1.25 1.25
     return 1
 }
