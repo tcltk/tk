@@ -251,6 +251,32 @@ test imgSVGnano-5.2 {bug d6e9b4db40 - "<svg" and ">" must be present} -body {
     tcltest::removeFile plus.svg
     tcltest::removeFile bad.svg
 
+# Metadata
+
+test imgSVGnano-6.0 {bug daa10097: only 3 metadata list items on configure} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+    set a {}
+    foreach line [::tk::icons::information configure] {
+        if {[lindex $line 0] eq {-metadata}} {
+            set a $line
+        }
+    }
+    set a
+} -cleanup {
+    image delete foo
+} -result {-metadata {} {} {} {}}
+
+test imgSVGnano-6.1 {bug daa10097: 4 metadata list items on configure -metadata} -setup {
+    catch {rename foo ""}
+} -body {
+    image create photo foo -data $data(plus)
+	foo configure -metadata
+} -cleanup {
+    image delete foo
+} -result {-metadata {} {} {} {}}
+
 };# end of namespace svgnano
 
 namespace delete svgnano
