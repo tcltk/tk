@@ -559,7 +559,7 @@ ImgPhotoCmd(
 		Tcl_AppendStringsToObj(subobj, " {}", NULL);
 	    }
 	    Tcl_ListObjAppendElement(interp, obj, subobj);
-	    subobj = Tcl_NewStringObj("-metadata {} {} {}", 16);
+	    subobj = Tcl_NewStringObj("-metadata {} {} {}", 18);
 	    if (modelPtr->metadata) {
 		Tcl_ListObjAppendElement(NULL, subobj, modelPtr->metadata);
 	    } else {
