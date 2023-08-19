@@ -37,7 +37,7 @@ proc ::tk::ScalingPct {} {
         }
     }
 
-    return $pct
+    return $scalingPct
 }
 
 proc ::tk::ScalingInitX11 {pct} {
