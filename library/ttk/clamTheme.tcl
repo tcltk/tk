@@ -91,7 +91,8 @@ namespace eval ttk::theme::clam {
 			disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p -padding 3.75p -relief raised
+	    -width -11 -arrowsize 3.75p -arrowpadding 2.25p -padding 3.75p \
+	    -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \

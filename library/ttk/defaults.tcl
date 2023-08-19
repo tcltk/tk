@@ -127,10 +127,11 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	}
 
 	ttk::style configure TMenubutton \
-	    -relief raised -indicatormargin {3.75p 0} -padding {7.5p 2.25p}
+	    -relief raised -arrowsize 3.75p -arrowpadding 2.25p \
+	    -padding {7.5p 2.25p}
 
 	ttk::style configure TEntry \
-	    -relief sunken -fieldbackground $colors(-window) -padding 1
+	    -fieldbackground $colors(-window) -padding 1 -showfocus 1
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
