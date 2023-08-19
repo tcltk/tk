@@ -53,19 +53,20 @@ wm resizable $w 0 0
 proc StartMessage {w} {
     set msg1 "This\
 	    is a demonstration of just how complex you can make your animations\
-	    become. Click the ball to start things moving!\n\n\"Man will always\
-	    find a difficult means to perform a simple task\"\n - Rube Goldberg"
+	    become. Close this dialog and click the ball to start things\
+	    moving!\n\n\"Man will always find a difficult means to perform a\
+	    simple task\"\n - Rube Goldberg"
     PlacedDialog $w.c.messframe $msg1 {Helvetica 12}
 }
 ###--- End of Boilerplate ---###
 
 array set BaseDimensions {
-    CanX    645
-    CanY    548
+    CanX    704
+    CanY    592
     ScrX    750
     ScrY    750
-    MsgX    323
-    MsgY    573
+    MsgX    356
+    MsgY    619
     MovY    -45
 }
 
@@ -76,7 +77,8 @@ set overallFactor 0.7
 foreach el [array names BaseDimensions] {
     set Dims($el) [expr {$BaseDimensions($el) * $overallFactor}]p
 }
-set scaleFactor [expr {$::tk::scalingPct / 100.0 * $overallFactor}]
+set scalingPct [expr {[tk scaling] * 75}]
+set scaleFactor [expr {$scalingPct / 100.0 * $overallFactor}]
 
 # Ensure that this this is an array
 array set animationCallbacks {}
