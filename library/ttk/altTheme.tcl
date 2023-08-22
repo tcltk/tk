@@ -59,16 +59,16 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TMenubutton \
 	    -width -11 -padding 2.25p -arrowsize 3.75p -relief raised
 
-	ttk::style configure TEntry -padding 1
+	ttk::style configure TEntry -padding 1 -showfocus 1 \
+	    -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox -padding 1 -arrowsize 10.5p
 	ttk::style map TCombobox -fieldbackground \
-		[list readonly $colors(-frame) disabled $colors(-frame)] \
-		-arrowcolor [list disabled $colors(-disabledfg)]
-	ttk::style configure ComboboxPopdownFrame \
-		-relief solid -borderwidth 1
+	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
+	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \

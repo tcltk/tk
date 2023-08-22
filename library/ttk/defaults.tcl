@@ -90,20 +90,18 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -foreground 	$colors(-foreground) \
 	    -troughcolor 	$colors(-darker) \
 	    -font 		TkDefaultFont \
-	    -selectborderwidth	1 \
+	    -selectborderwidth	0 \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
+	    -insertcolor	$colors(-foreground) \
+	    -focuscolor		$colors(-text) \
 	    ;
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
 	ttk::style map "." -foreground \
-	    [list disabled $colors(-disabledfg) !disabled $colors(-text)]
-	ttk::style map "." -insertcolor \
-	    [list !disabled $colors(-foreground)]
-	ttk::style map "." -focuscolor \
-	    [list !disabled $colors(-text)]
+	    [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TButton \
 	    -anchor center -padding 2.25p -width -9 \
@@ -131,37 +129,46 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -padding {7.5p 2.25p}
 
 	ttk::style configure TEntry \
-	    -fieldbackground $colors(-window) -padding 1 -showfocus 1
+	    -fieldbackground $colors(-window) -padding 1 \
+	    -showfocus 1 -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -arrowsize 9p -padding 1
+	ttk::style configure TCombobox \
+	    -arrowsize 9p -arrowcolor $colors(-text) \
+	    -fieldbackground $colors(-window) -padding 1
 	ttk::style map TCombobox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
-	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
+	ttk::style configure TSpinbox \
+	    -arrowsize 7.5p -arrowcolor $colors(-text) \
+	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
-	    [list readonly $colors(-frame) disabled $colors(-frame) !disabled $colors(-window)] \
-	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
+	    [list readonly $colors(-frame) disabled $colors(-frame)] \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TLabelframe \
 	    -relief groove -borderwidth 2
 
 	ttk::style configure TScrollbar \
-	    -width 9p -arrowsize 9p
+	    -width 9p -arrowsize 9p -arrowcolor $colors(-text)
 	ttk::style map TScrollbar \
-	    -arrowcolor [list disabled $colors(-disabledfg) !disabled $colors(-text)]
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TScale \
-	    -sliderrelief raised \
-	    -sliderlength 22.5p \
-	    -sliderthickness 11.25p
+	    -innercolor $colors(-selectbg) \
+	    -outercolor $colors(-window) \
+	    -bordercolor $colors(-darker) \
+	    -groovewidth 3p
+	ttk::style map TScale \
+	    -outercolor [list active $colors(-activebg)]
 
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) \
+	    -borderwidth 0 \
 	    -barsize 22.5p \
-	    -thickness 11.25p
+	    -thickness 3p
 
 	ttk::style configure TNotebook.Tab \
 	    -padding {3p 1.5p} -background $colors(-darker)
