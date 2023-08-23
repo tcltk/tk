@@ -367,28 +367,19 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-static double scalingFactor;
-
 static void IndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
-    const char *scalingPctPtr;
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
+    double scalingLevel = TkScalingLevel(tkwin);
     (void)paddingPtr;
 
-    /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-     */
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
-    *widthPtr = spec->width * scalingFactor + Ttk_PaddingWidth(margins);
-    *heightPtr = spec->height * scalingFactor + Ttk_PaddingHeight(margins);
+    *widthPtr = spec->width * scalingLevel + Ttk_PaddingWidth(margins);
+    *heightPtr = spec->height * scalingLevel + Ttk_PaddingHeight(margins);
 }
 
 static void ColorToStr(
@@ -414,6 +405,7 @@ static void IndicatorElementDraw(
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
+    double scalingLevel = TkScalingLevel(tkwin);
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
 
     char upperBdColorStr[7], lowerBdColorStr[7], bgColorStr[7], fgColorStr[7];
@@ -439,8 +431,8 @@ static void IndicatorElementDraw(
      */
     if (   b.x < 0
 	|| b.y < 0
-	|| Tk_Width(tkwin) < b.x + spec->width * scalingFactor
-	|| Tk_Height(tkwin) < b.y + spec->height * scalingFactor)
+	|| Tk_Width(tkwin) < b.x + spec->width * scalingLevel
+	|| Tk_Height(tkwin) < b.y + spec->height * scalingLevel)
     {
 	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
@@ -534,8 +526,8 @@ static void IndicatorElementDraw(
     /*
      * Display the image
      */
-    Tk_RedrawImage(img, 0, 0, spec->width * scalingFactor,
-	spec->height * scalingFactor, d, b.x, b.y);
+    Tk_RedrawImage(img, 0, 0, spec->width * scalingLevel,
+	spec->height * scalingLevel, d, b.x, b.y);
     Tk_FreeImage(img);
 }
 
@@ -545,73 +537,6 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
     IndicatorElementOptions,
     IndicatorElementSize,
     IndicatorElementDraw
-};
-
-#define MENUBUTTON_ARROW_SIZE 5
-
-typedef struct {
-    Tcl_Obj *sizeObj;
-    Tcl_Obj *colorObj;
-    Tcl_Obj *paddingObj;
-} MenuIndicatorElement;
-
-static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
-{
-    { "-arrowsize", TK_OPTION_PIXELS,
-	offsetof(MenuIndicatorElement,sizeObj),
-	STR(MENUBUTTON_ARROW_SIZE)},
-    { "-arrowcolor",TK_OPTION_COLOR,
-	offsetof(MenuIndicatorElement,colorObj),
-	"black" },
-    { "-arrowpadding",TK_OPTION_STRING,
-	offsetof(MenuIndicatorElement,paddingObj),
-	"3" },
-    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
-};
-
-static void MenuIndicatorElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    MenuIndicatorElement *indicator = (MenuIndicatorElement *)elementRecord;
-    Ttk_Padding margins;
-    int size = MENUBUTTON_ARROW_SIZE;
-    (void)dummy;
-    (void)paddingPtr;
-
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &margins);
-    TtkArrowSize(size, ARROW_DOWN, widthPtr, heightPtr);
-    *widthPtr += Ttk_PaddingWidth(margins);
-    *heightPtr += Ttk_PaddingHeight(margins);
-}
-
-static void MenuIndicatorElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
-{
-    MenuIndicatorElement *indicator = (MenuIndicatorElement *)elementRecord;
-    XColor *arrowColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
-    GC gc = Tk_GCForColor(arrowColor, d);
-    int size = MENUBUTTON_ARROW_SIZE;
-    int width, height;
-    (void)dummy;
-    (void)state;
-
-    Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
-
-    TtkArrowSize(size, ARROW_DOWN, &width, &height);
-    b = Ttk_StickBox(b, width, height, 0);
-    TtkFillArrow(Tk_Display(tkwin), d, gc, b, ARROW_DOWN);
-}
-
-static const Ttk_ElementSpec MenuIndicatorElementSpec =
-{
-    TK_STYLE_VERSION_2,
-    sizeof(MenuIndicatorElement),
-    MenuIndicatorElementOptions,
-    MenuIndicatorElementSize,
-    MenuIndicatorElementDraw
 };
 
 /*------------------------------------------------------------------------
@@ -927,8 +852,10 @@ static void ArrowElementDraw(
 {
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    GC gc = Ttk_GCForColor(tkwin,sb->arrowColorObj, d);
-    int h, cx, cy;
+    double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
+    int cx, cy;
+    GC gc = Ttk_GCForColor(tkwin, sb->arrowColorObj, d);
     (void)state;
 
     DrawSmoothBorder(tkwin, d, b,
@@ -938,9 +865,19 @@ static void ArrowElementDraw(
 	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
 	b.x+2, b.y+2, b.width-4, b.height-4);
 
-    b = Ttk_PadBox(b, Ttk_UniformPadding(3));
-    h = b.width < b.height ? b.width : b.height;
-    TtkArrowSize(h/2, direction, &cx, &cy);
+    b = Ttk_PadBox(b, padding);
+
+    switch (direction) {
+	case ARROW_UP:
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    break;
+	case ARROW_LEFT:
+	case ARROW_RIGHT:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    break;
+    }
+
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -1141,8 +1078,6 @@ TtkClamTheme_Init(Tcl_Interp *interp)
 	    &IndicatorElementSpec, (void *)&checkbutton_spec);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
 	    &IndicatorElementSpec, (void *)&radiobutton_spec);
-    Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
-	    &MenuIndicatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);

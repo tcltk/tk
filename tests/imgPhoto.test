@@ -2104,6 +2104,21 @@ test imgPhoto-21.3 {option -metadata, get default value} -setup {
     catch {image delete photo1}
 } -result {}
 
+test imgPhoto-21.4 {bug daa10097: only 3 metadata list items on configure} -setup {
+    image create photo photo1
+} -body {
+    set a {}
+    foreach line [photo1 configure] {
+        if {[lindex $line 0] eq {-metadata}} {
+            set a $line
+        }
+    }
+    set a
+} -cleanup {
+    catch {image delete photo1}
+} -result {-metadata {} {} {} {}}
+
+
 # imgPhoto-22.x : Tk_PhotoSetMetadata
 
 test imgPhoto-22.1 {option -metadata, set value} -setup {

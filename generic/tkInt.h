@@ -1411,6 +1411,7 @@ MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
+MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,

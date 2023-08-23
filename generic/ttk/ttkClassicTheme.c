@@ -350,6 +350,83 @@ static const Ttk_ElementSpec RadiobuttonIndicatorElementSpec = {
 };
 
 /*----------------------------------------------------------------------
+ * +++ Menubutton indicators.
+ *
+ * These aren't functional like radio/check indicators,
+ * they're just affordability indicators.
+ *
+ * Standard Tk sets the indicator size to 4.0 mm by 1.7 mm.
+ * I have no idea where these numbers came from.
+ */
+
+typedef struct {
+    Tcl_Obj *backgroundObj;
+    Tcl_Obj *widthObj;
+    Tcl_Obj *heightObj;
+    Tcl_Obj *borderWidthObj;
+    Tcl_Obj *reliefObj;
+    Tcl_Obj *marginObj;
+} MenuIndicatorElement;
+
+static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
+    { "-background", TK_OPTION_BORDER,
+	offsetof(MenuIndicatorElement,backgroundObj), DEFAULT_BACKGROUND },
+    { "-indicatorwidth", TK_OPTION_PIXELS,
+	offsetof(MenuIndicatorElement,widthObj), "4.0m" },
+    { "-indicatorheight", TK_OPTION_PIXELS,
+	offsetof(MenuIndicatorElement,heightObj), "1.7m" },
+    { "-borderwidth", TK_OPTION_PIXELS,
+	offsetof(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+    { "-indicatorrelief", TK_OPTION_RELIEF,
+	offsetof(MenuIndicatorElement,reliefObj),"raised" },
+    { "-indicatormargin", TK_OPTION_STRING,
+	    offsetof(MenuIndicatorElement,marginObj), "5 0" },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+};
+
+static void MenuIndicatorElementSize(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    MenuIndicatorElement *mi = (MenuIndicatorElement *)elementRecord;
+    Ttk_Padding margins;
+    (void)dummy;
+    (void)paddingPtr;
+
+    Tk_GetPixelsFromObj(NULL, tkwin, mi->widthObj, widthPtr);
+    Tk_GetPixelsFromObj(NULL, tkwin, mi->heightObj, heightPtr);
+    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj, &margins);
+    *widthPtr += Ttk_PaddingWidth(margins);
+    *heightPtr += Ttk_PaddingHeight(margins);
+}
+
+static void MenuIndicatorElementDraw(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
+{
+    MenuIndicatorElement *mi = (MenuIndicatorElement *)elementRecord;
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, mi->backgroundObj);
+    Ttk_Padding margins;
+    int borderWidth = 2;
+    (void)dummy;
+    (void)state;
+
+    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj,&margins);
+    b = Ttk_PadBox(b, margins);
+    Tk_GetPixelsFromObj(NULL, tkwin, mi->borderWidthObj, &borderWidth);
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    borderWidth, TK_RELIEF_RAISED);
+}
+
+static const Ttk_ElementSpec MenuIndicatorElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(MenuIndicatorElement),
+    MenuIndicatorElementOptions,
+    MenuIndicatorElementSize,
+    MenuIndicatorElementDraw
+};
+
+/*----------------------------------------------------------------------
  * +++ Arrow element(s).
  *
  * Draws a 3-D shaded triangle.
@@ -393,7 +470,7 @@ static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-	ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 2;
@@ -659,6 +736,8 @@ MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
 	    &CheckbuttonIndicatorElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
 	    &RadiobuttonIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
+	    &MenuIndicatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, INT2PTR(ARROW_UP));
