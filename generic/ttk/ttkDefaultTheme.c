@@ -692,6 +692,7 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
  */
 
 typedef struct {
+    Tcl_Obj *smallObj;
     Tcl_Obj *sizeObj;
     Tcl_Obj *colorObj;		/* Arrow color */
     Tcl_Obj *borderObj;
@@ -700,6 +701,8 @@ typedef struct {
 } ArrowElement;
 
 static const Ttk_ElementOptionSpec ArrowElementOptions[] = {
+    { "-smallarrow", TK_OPTION_BOOLEAN,
+	offsetof(ArrowElement,smallObj), "0" },
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
     { "-arrowcolor", TK_OPTION_COLOR,
@@ -726,22 +729,30 @@ static void ArrowElementSize(
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
-    int size = SCROLLBAR_WIDTH;
-    Ttk_Padding padding;
     double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding;
+    int size = SCROLLBAR_WIDTH, small = 0;
     (void)paddingPtr;
-
-    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
 
     padding.left = round(ArrowPadding.left * scalingLevel);
     padding.right = padding.left + 1;
     padding.top = round(ArrowPadding.top * scalingLevel);
     padding.bottom = padding.top + 1;
 
+    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     size -= Ttk_PaddingWidth(padding);
     TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(padding);
     *heightPtr += Ttk_PaddingHeight(padding);
+
+    Tcl_GetBooleanFromObj(NULL, arrow->smallObj, &small);
+    if (!small) {
+	if (*widthPtr < *heightPtr) {
+	    *widthPtr = *heightPtr;
+	} else {
+	    *heightPtr = *widthPtr;
+	}
+    }
 }
 
 static void ArrowElementDraw(
@@ -1044,7 +1055,6 @@ static void SliderElementSize(
 	    *widthPtr = thickness + (borderWidth *2);
 	    *heightPtr = *widthPtr/2;
 	    break;
-
 	case TTK_ORIENT_HORIZONTAL:
 	    *heightPtr = thickness + (borderWidth *2);
 	    *widthPtr = *heightPtr/2;
