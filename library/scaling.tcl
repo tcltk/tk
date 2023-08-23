@@ -4,48 +4,127 @@
 #
 # Copyright © 2022 Csaba Nemethi <csaba.nemethi@t-online.de>
 
-# ::tk::ScalingPct --
+# ::tk_scalingPct --
+#
+# Usage: tk_scalingPct ?-displayof path?
+# (replaces command ::tk::ScalingPct)
 #
 # Returns the display's "scaling percentage" (floating-point number,
 # the display resolution expressed as a percentage of 96dpi).
 #
 # On X11 systems (but not on SDL systems that claim to be X11), the first
-# call of the command also sets [tk scaling] and ::tk::fontScalingFactor
-# to values extracted from the X11 configuration.
+# call of the command for a particular display also sets [tk scaling] and
+# ::tk::fontScalingFactor to values extracted from the X11 configuration.
 #
-# The command is called during Tk initialization, from icons.tcl, when
-# the latter is sourced by tk.tcl.
+# The command is called without arguments during Tk initialization, from
+# file icons.tcl, when the latter is sourced by tk.tcl.
 
-proc ::tk::ScalingPct {} {
-    set pct [expr {[tk scaling] * 75}]
+proc ::tk_scalingPct {args} {
+    variable ::tk::doneScalingInitX11
+    set msg {usage: tk_scalingPct ?-displayof path?}
 
-    variable doneScalingInitX11
-    if {![info exists doneScalingInitX11]} {
-        set pct [::tk::ScalingInitX11 $pct] 
-        set doneScalingInitX11 1
+    set lenny [llength $args]
+    if {    ($lenny > 2)
+         || ($lenny == 1)
+         || (($lenny == 2) && ([lindex $args 0] ne {-displayof}))
+    } {
+	return -code error $msg
+    } elseif {$lenny == 2} {
+	set path [lindex $args 1]
+    } else {
+	set path .
+    }
+
+    if {![winfo exists $path]} {
+	return -code error "window \"$path\" does not exist"
+    }
+
+    set pct [expr {[tk scaling -displayof $path] * 75}]
+    set screen [winfo screen $path]
+
+    if {![info exists doneScalingInitX11($screen)]} {
+	# - FIXME we need to discover all X11 screens and initialise them at
+	#   startup.  (On other [tk windowingsystem]s the system does the
+	#   initialisation.)
+	# - But we do not have reliable discovery of screens and so only the
+	#   screen of the root window "." is initialised at startup.
+	# - For other screens we do lazy initialisation here (and
+	#   unfortunately not in situations other than [::tk_scalingPct] in
+	#   which the screen is used).
+	set pct [::tk::ScalingInitX11 $pct $path]
+	set doneScalingInitX11($screen) 1
     }
 
     #
     # Save the value of pct rounded to the nearest multiple 
     # of 25 that is at least 100, in the variable scalingPct.
-    # See "man n tk_scalingPct" for use of ::tk::scalingPct.
+    # FIXME Manual "man n tk_scalingPct" is not yet in sync and describes ::tk::scalingPct.
     #
-    variable scalingPct
+    variable ::tk::scalingPct
     for {set scalingPct 100} {1} {incr scalingPct 25} {
         if {$pct < $scalingPct + 12.5} {
             break
         }
     }
-
     return $scalingPct
 }
 
-proc ::tk::ScalingInitX11 {pct} {
+# ::tk_svgFormat --
+#
+# Usage: tk_svgFormat ?-displayof path?
+#
+# Returns a suitable -format value for a SVG image.
+
+proc ::tk_svgFormat {args} {
+    set msg {usage: tk_svgFormat ?-displayof path?}
+
+    set lenny [llength $args]
+    if {    ($lenny > 2)
+         || ($lenny == 1)
+         || (($lenny == 2) && ([lindex $args 0] ne {-displayof}))
+    } {
+	return -code error $msg
+    } elseif {$lenny == 2} {
+	set path [lindex $args 1]
+    } else {
+	set path .
+    }
+
+    if {![winfo exists $path]} {
+	return -code error "window \"$path\" does not exist"
+    }
+
+    # FIXME Manual "man n tk_svgFormat" is not yet in sync and describes ::tk::svgFmt.
+    variable ::tk::svgFmt
+    set ::tk::svgFmt [list svg -scale [expr {[::tk_scalingPct -displayof $path] / 100.0}]]
+    return $::tk::svgFmt
+}
+
+# ::tk::ScalingInitX11
+#
+# Arguments:
+# pct      - scaling percentage that corresponts exactly
+#            to [tk scaling -displayof $w]
+# w        - a Tk window path on the screen to be initialized
+#
+# If not on "true" (non-SDL) X11, the command returns the argument $pct and
+# does nothing else.
+#
+# If on "true" (non-SDL) X11, the command:
+# - Sets ::tk::fontScalingFactor to 1 or 2.
+# - May set [tk scaling -displayof $w].
+# - May set the return value to argument $pct; usually sets a replacement value.
+
+proc ::tk::ScalingInitX11 {pct {w .}} {
     set onX11 [expr {[tk windowingsystem] eq "x11"}]
     set usingSDL [expr {[info exists ::tk::sdltk] && $::tk::sdltk}]
 
     if {$onX11 && !$usingSDL} {
 	set origPct $pct
+	set screen [winfo screen $w]
+	# "-display $screen" are passed as arguments to the external binaries xrdb, xrandr.
+	# "-displayof $w" are passed as arguments when setting [tk scaling].
+	# Neither $screen nor $w is used elsewhere.
 
 	#
 	# Try to get the window scaling factor (1 or 2), partly
@@ -106,7 +185,7 @@ proc ::tk::ScalingInitX11 {pct} {
 	#
 	if {$winScalingFactor >= 2} {
 	    set pct 200
-	} elseif {[catch {exec xrdb -query | grep Xft.dpi} result] == 0} {
+	} elseif {[catch {exec xrdb -query -display $screen | grep Xft.dpi} result] == 0} {
 	    #
 	    # Derive the value of pct from that of the font DPI
 	    #
@@ -114,7 +193,7 @@ proc ::tk::ScalingInitX11 {pct} {
 	    set pct [expr {100 * $dpi / 96}]
 	} elseif {[catch {exec ps -e | grep gnome-session}] == 0 &&
 		  ![info exists ::env(WAYLAND_DISPLAY)] &&
-		  [catch {exec xrandr | grep " connected"} result] == 0 &&
+		  [catch {exec xrandr --display $screen | grep " connected"} result] == 0 &&
 		  [catch {open $::env(HOME)/.config/monitors.xml} chan] == 0} {
 	    #
 	    # Update pct by scanning the file ~/.config/monitors.xml
@@ -126,7 +205,7 @@ proc ::tk::ScalingInitX11 {pct} {
 	    #
 	    # Set Tk's scaling factor according to $pct
 	    #
-	    tk scaling [expr {$pct / 75.0}]
+	    tk scaling -displayof $w [expr {$pct / 75.0}]
         }
     }
     return $pct
@@ -139,8 +218,8 @@ proc ::tk::ScalingInitX11 {pct} {
 # Arguments:
 #   num - An integer.
 
-proc ::tk::ScaleNum num {
-    return [expr {round($num * [tk scaling] * 0.75)}]
+proc ::tk::ScaleNum {num {w .}} {
+    return [expr {round($num * [tk scaling -displayof $w] * 0.75)}]
 }
 
 # ::tk::FontScalingFactor --
@@ -175,7 +254,9 @@ proc ::tk::ScanMonitorsFile {xrandrResult chan pctName} {
     foreach line [split $xrandrResult "\n"] {
 	set idx [string first " " $line]
 	set output [string range $line 0 [incr idx -1]]
-	lappend outputList $output
+	if {$output ne {}} {
+	    lappend outputList $output
+	}
     }
     set outputList [lsort $outputList]
 

@@ -197,6 +197,8 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 
     # 2. Fill the top part with bitmap and message
 
+    # Make sure icon size is in sync with [tk scaling].
+    ::tk::PrepareIconsForDisplay .
     # Max-width of message is the width of the screen...
     set wrapwidth [winfo screenwidth $dlg]
     # ...minus the width of the icon, padding and a fudge factor for

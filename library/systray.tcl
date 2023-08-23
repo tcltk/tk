@@ -168,6 +168,8 @@ namespace eval ::tk::sysnotify:: {
 	    option add *Sysnotify.Label.$option [set $option]
 	}
 	set icon ::tk::icons::information
+	# Make sure icon size is in sync with [tk scaling].
+	PrepareIconsForDisplay .
 	set width [expr {[image width $icon] + 2 * $padX}]
 	set height [expr {[image height $icon] + 2 * $padY}]
 	label $w.icon -image $icon -width $width -height $height -anchor c
