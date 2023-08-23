@@ -111,7 +111,7 @@ static unsigned char w3_bits[] = {
    0x00, 0xc0, 0x03, 0x00, 0x00, 0x80, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
    0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};"
-
+
 # ::tk::MessageBox --
 #
 #	Pops up a messagebox with an application-supplied message with
@@ -197,6 +197,8 @@ proc ::tk::MessageBox {args} {
     # Now in place of ::tk::Priv(button), use ::tk::Priv.${disp}(button) which
     # is the intended target variable of upvar and will not be redefined when
     # ::tk::ScreenChanged is called.
+
+    set screen [PrepareIconsForDisplay $data(-parent)]
 
     switch -- $data(-type) {
 	abortretryignore {
@@ -326,16 +328,16 @@ proc ::tk::MessageBox {args} {
 	} else {
 	    switch $data(-icon) {
                 error {
-                    ttk::label $w.bitmap -image ::tk::icons::error
+                    ttk::label $w.bitmap -image ::tk::icons::error$screen
                 }
                 info {
-                    ttk::label $w.bitmap -image ::tk::icons::information
+                    ttk::label $w.bitmap -image ::tk::icons::information$screen
                 }
                 question {
-                    ttk::label $w.bitmap -image ::tk::icons::question
+                    ttk::label $w.bitmap -image ::tk::icons::question$screen
                 }
                 default {
-                    ttk::label $w.bitmap -image ::tk::icons::warning
+                    ttk::label $w.bitmap -image ::tk::icons::warning$screen
                 }
 	    }
 	}
