@@ -69,7 +69,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TMenubutton -relief raised \
 	    -indicatormargin {3.75p 0} -padding {3m 1m}
 
-	ttk::style configure TEntry -relief sunken -padding 1 -font TkTextFont
+	ttk::style configure TEntry -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
