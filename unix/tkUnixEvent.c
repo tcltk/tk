@@ -175,7 +175,6 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
-
     dispPtr = ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
