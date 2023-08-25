@@ -175,11 +175,15 @@ TkpOpenDisplay(
     if (display == NULL) {
 	return NULL;
     }
+
     dispPtr = ckalloc(sizeof(TkDisplay));
     memset(dispPtr, 0, sizeof(TkDisplay));
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
+    if (XSetLocaleModifiers("") == NULL) {
+	return;
+    }
     OpenIM(dispPtr);
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
 	    InstantiateIMCallback, (XPointer) dispPtr);
@@ -742,10 +746,6 @@ OpenIM(
     int i;
     XIMStyles *stylePtr;
     XIMStyle bestStyle = 0;
-
-    if (XSetLocaleModifiers("") == NULL) {
-	return;
-    }
 
     ++dispPtr->ximGeneration;
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
