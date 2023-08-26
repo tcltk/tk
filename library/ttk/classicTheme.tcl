@@ -86,15 +86,15 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 11.25p -width 11.25p
+	    -arrowsize 11.25p -width 11.25p -troughborderwidth 2
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \
-	    -sliderlength 22.5p -sliderthickness 11.25p
+	    -sliderlength 22.5p -sliderthickness 11.25p -troughborderwidth 2
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
 
 	ttk::style configure TProgressbar -background SteelBlue \
-	    -barsize 22.5p -thickness 11.25p
+	    -barsize 22.5p -thickness 11.25p -troughborderwidth 2
 
 	ttk::style configure TNotebook.Tab \
 	    -padding {3m 1m} \
