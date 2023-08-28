@@ -172,20 +172,19 @@ TkpDrawCheckIndicator(
 {
     const char *svgDataPtr;
     int hasBorder, hasInterior, dim;
+    double scalingLevel = TkScalingLevel(tkwin);
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
     char darkColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
+    Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[60];
     Tk_Image img;
     size_t svgDataLen;
     char *svgDataCopy;
     char *darkColorPtr, *lightColorPtr, *interiorColorPtr, *indicatorColorPtr;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *cmdFmt;
     size_t scriptSize;
     char *script;
     int code;
-    const char *scalingPctPtr;
-    double scalingFactor;
 
     /*
      * Sanity check
@@ -235,6 +234,7 @@ TkpDrawCheckIndicator(
 	dim = RADIO_MENU_DIM;
 	break;
     }
+    dim = (int)(dim * scalingLevel);
 
     /*
      * Construct the color strings darkColorStr, lightColorStr,
@@ -337,14 +337,6 @@ TkpDrawCheckIndicator(
 	}
 	img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     }
-
-    /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...) and multiply dim by it
-     */
-
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-    dim = (int)(dim * scalingFactor);
 
     /*
      * Adjust the image's coordinates in the drawable and display the image
