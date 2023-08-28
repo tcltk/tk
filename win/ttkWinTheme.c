@@ -157,17 +157,9 @@ static void FrameControlElementSize(
     int cy = GETMETRIC(p->cyId);
 
     if ((p->cxId & _FIXEDSIZE) && cx == BASE_DIM) {
-	/*
-	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-	 * and multiply cx and cy by it
-	 */
-	Tcl_Interp *interp = Tk_Interp(tkwin);
-	const char *scalingPctPtr =
-	    Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-	double scalingFactor = (scalingPctPtr == NULL ? 1.0 :
-				atof(scalingPctPtr) / 100);
-	cx *= scalingFactor;
-	cy *= scalingFactor;
+	double scalingLevel = TkScalingLevel(tkwin);
+	cx *= scalingLevel;
+	cy *= scalingLevel;
 
 	/*
 	 * Update the corresponding element of the array FrameControlElements
