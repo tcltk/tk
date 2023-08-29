@@ -405,8 +405,10 @@ static void IndicatorElementDraw(
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding padding;
-    double scalingLevel = TkScalingLevel(tkwin);
     const IndicatorSpec *spec = (const IndicatorSpec *)clientData;
+    double scalingLevel = TkScalingLevel(tkwin);
+    int width = spec->width * scalingLevel;
+    int height = spec->height * scalingLevel;
 
     char upperBdColorStr[7], lowerBdColorStr[7], bgColorStr[7], fgColorStr[7];
     unsigned int selected = (state & TTK_STATE_SELECTED);
@@ -431,8 +433,8 @@ static void IndicatorElementDraw(
      */
     if (   b.x < 0
 	|| b.y < 0
-	|| Tk_Width(tkwin) < b.x + spec->width * scalingLevel
-	|| Tk_Height(tkwin) < b.y + spec->height * scalingLevel)
+	|| Tk_Width(tkwin) < b.x + width
+	|| Tk_Height(tkwin) < b.y + height)
     {
 	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
@@ -454,12 +456,12 @@ static void IndicatorElementDraw(
 	       fgColorStr);
 
     /*
-     * Check whether there is an SVG image for the indicator's
+     * Check whether there is an SVG image of this size for the indicator's
      * type (0 = checkbtn, 1 = radiobtn) and these color strings
      */
     snprintf(imgName, sizeof(imgName),
-	     "::tk::icons::indicator_clam%d_%s_%s_%s_%s",
-	     spec->offDataPtr == radiobtnOffData,
+	     "::tk::icons::indicator_clam%d_%d_%s_%s_%s_%s",
+	     width, spec->offDataPtr == radiobtnOffData,
 	     upperBdColorStr, lowerBdColorStr, bgColorStr,
 	     selected ? fgColorStr : "XXXXXX");
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
@@ -526,8 +528,7 @@ static void IndicatorElementDraw(
     /*
      * Display the image
      */
-    Tk_RedrawImage(img, 0, 0, spec->width * scalingLevel,
-	spec->height * scalingLevel, d, b.x, b.y);
+    Tk_RedrawImage(img, 0, 0, width, height, d, b.x, b.y);
     Tk_FreeImage(img);
 }
 
@@ -777,7 +778,6 @@ static void SliderElementSize(
 	*heightPtr = thickness;
 	*widthPtr = length;
     }
-
 }
 
 static const Ttk_ElementSpec SliderElementSpec = {
@@ -1073,6 +1073,8 @@ TtkClamTheme_Init(Tcl_Interp *interp)
 	theme, "leftarrow", &ArrowElementSpec, INT2PTR(ARROW_LEFT));
     Ttk_RegisterElement(interp,
 	theme, "rightarrow", &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
+    Ttk_RegisterElement(interp,
+	theme, "arrow", &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
 	    &IndicatorElementSpec, (void *)&checkbutton_spec);

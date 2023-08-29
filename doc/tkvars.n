@@ -61,27 +61,31 @@ corresponding to the display's DPI scaling level.  This value is at least
 225, ...).  The sizes and various attributes of the Tk core and Ttk
 widgets and their components, as well as the sizes of the images used by
 Tk are chosen according to the scaling percentage, and this is
-recommended for applications and library packages, too.  Note that any
-access to this variable is supposed to be strictly read-only!
+recommended for applications and library packages, too.
 .RS
 .PP
+Note that any access to this variable is supposed to be strictly
+read-only!  Note also that whenever the scaling factor used to convert
+between physical units and pixels is changed via \fBtk scaling\fR, the
+value of the variable \fBtk::scalingPct\fR is automatically updated.
+.PP
 On the windowing systems \fBwin32\fR and \fBaqua\fR the scaling
-percentage is computed from [\fBtk scaling\fR].  (On \fBaqua\fR the
-result is always 100, and the desktop engine automatically scales
-everything as needed.)  On \fBx11\fR, deriving the scaling percentage
-from [\fBtk scaling\fR] is done as fallback method only, because the
+percentage is computed by rounding [\fBtk scaling\fR] * 75 to the
+nearest multiple of 25 that is at least 100.  (On \fBaqua\fR the result
+is always 100, and the desktop engine automatically scales everything as
+needed.)  On \fBx11\fR, deriving the scaling percentage from
+[\fBtk scaling\fR] is done as fallback method only, because the
 implementation of display scaling is highly dependent on the desktop
 environment and it mostly manipulates system resources that are resident
 outside of Xlib, which Tk is based on.  Moreover, for technical reasons,
-in many cases the value assigned to the variable \fBtk::scalingPct\fR
-will be different from the one selected in the system settings (e.g.,
-200 rather than 125, 150, or 175 when running GNOME on Xorg or the
-Cinnamon desktop). On \fBx11\fR the scaling percentage is computed
-mostly (but not exclusively) from the value of the X resource Xft.dpi,
-and, as an additional step, Tk synchronizes the scaling factor used to
-convert between physical units and pixels with the scaling percentage,
-by passing a value derived from the latter to the \fBtk scaling\fR
-command.
+the value assigned to the variable \fBtk::scalingPct\fR can be different
+from the one selected in the system settings (e.g., 200 rather than 125,
+150, or 175 when running GNOME on Xorg or the Cinnamon desktop).  On
+\fBx11\fR the scaling percentage is computed mostly (but not
+exclusively) from the value of the X resource Xft.dpi, and, as an
+additional step, Tk synchronizes the scaling factor used to convert
+between physical units and pixels with the scaling percentage, with the
+aid of the \fBtk scaling\fR command.
 .RE
 .TP
 \fBtk_strictMotif\fR
@@ -109,6 +113,10 @@ configure\fR, \fIimageName\fB put\fR, and \fIimageName\fB read\fR as the
 value of their \fB\-format\fR option when creating or manipulating SVG
 images, to make sure that their sizes will correspond to the display's
 DPI scaling level.
+.PP
+Note that whenever the scaling factor used to convert between physical
+units and pixels is changed via \fBtk scaling\fR, the value of the
+variable \fBtk::svgFmt\fR is automatically updated.
 .RE
 .TP
 \fBtk_version\fR

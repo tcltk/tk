@@ -50,23 +50,38 @@ wm iconname $w "goldberg"
 wm resizable $w 0 0
 #positionWindow $w
 
-label $w.msg -font {Helvetica 10} -wraplength 4.5i -justify left -text "This\
-	is a demonstration of just how complex you can make your animations\
-	become. Click the ball to start things moving!\n\n\"Man will always\
-	find a difficult means to perform a simple task\"\n - Rube Goldberg"
-pack $w.msg -side top -fill x
-
-if {[tk windowingsystem] ne "aqua"} {
-    ttk::button $w.hide -text "×" -command [list pack forget $w.msg] -width 2
-} else {
-    button $w.hide -text "×" -command [list pack forget $w.msg] -width 1 \
-	    -highlightthickness 0 -padx 0 -pady 0
+proc StartMessage {w} {
+    set msg1 "This\
+	    is a demonstration of just how complex you can make your animations\
+	    become. Close this dialog and click the ball to start things\
+	    moving!\n\n\"Man will always find a difficult means to perform a\
+	    simple task\"\n - Rube Goldberg"
+    PlacedDialog $w.c.messframe $msg1 {Helvetica 12}
 }
-place $w.hide -in $w.msg -relx 1 -rely 0 -anchor ne
-
 ###--- End of Boilerplate ---###
 
-# Ensure that this this is an array
+array set BaseDimensions {
+    CanX    675
+    CanY    540
+    ScrX    750
+    ScrY    750
+    MsgX    338
+    MsgY    573
+    MovX     10
+    MovY    -45
+}
+
+# The original value was 1.0 but this can make the demo
+# too large for the screen.  Try a smaller value.
+set overallFactor 0.7
+
+foreach el [array names BaseDimensions] {
+    set Dims($el) [expr {$BaseDimensions($el) * $overallFactor}]p
+}
+
+set scaleFactor [expr {$::tk::scalingPct / 100.0 * $overallFactor}]
+
+# Ensure that this is an array
 array set animationCallbacks {}
 bind $w <Destroy> {
     if {"%W" eq [winfo toplevel %W]} {
@@ -103,15 +118,16 @@ set C(24a) red;		set C(24b) white;
 set C(24c) black;	set C(26) $C(0);
 
 proc DoDisplay {w} {
-    global S C
+    global S C Dims
 
     ttk::frame $w.ctrl -relief ridge -borderwidth 1 -padding 3p
     pack [frame $w.screen -bd 1 -relief raised] \
 	    -side left -fill both -expand 1
 
-    canvas $w.c -width 651p -height 480p -bg $C(bg) -highlightthickness 0
-    $w.c config -scrollregion {0 0 750p 750p}	;# Kludge: move everything up
-    $w.c yview moveto .09
+    canvas $w.c -width $Dims(CanX) -height $Dims(CanY) -bg $C(bg) \
+	    -highlightthickness 0
+    $w.c config -scrollregion [list 0 0 $Dims(ScrX) $Dims(ScrY)]
+    $w.c yview moveto .06			;# Kludge: move everything up
     pack $w.c -in $w.screen -side top -fill both -expand 1
 
     bind $w.c <Button-3> [list $w.pause invoke]
@@ -219,6 +235,7 @@ proc ShowCtrl {w} {
     if {[winfo ismapped $w.ctrl]} {
 	pack forget $w.ctrl
 	$w.show config -text "▶"
+	after 100 [list $w.c yview moveto .06]	;# Kludge: move everything up
     } else {
 	pack $w.ctrl -side right -fill both -ipady 5
 	$w.show config -text "◀"
@@ -226,6 +243,7 @@ proc ShowCtrl {w} {
 }
 
 proc DrawAll {w} {
+    global scaleFactor
     ResetStep
     $w.c delete all
     for {set i 0} {1} {incr i} {
@@ -234,26 +252,39 @@ proc DrawAll {w} {
 	$p $w
     }
 
-    set scaleFactor [expr {$::tk::scalingPct / 100.0}]
     $w.c scale all 0 0 $scaleFactor $scaleFactor
 
-    # Tile the strike box with the built-in bitmap gray25
+    # Tile the strike box with a 4x4 bitmap image derived
+    # from Tk's built-in 16x16 bitmap gray25.  Adjust
+    # x1, y2 to make dimensions multiples of 4 pixels.
+
+    image create bitmap smallGray25 -data {
+	#define smallGray25_width 4
+	#define smallGray25_height 4
+	static unsigned char smallGray25_bits[] = {
+	    0x08, 0x02, 0x08, 0x02};
+    } -foreground $::C(fg)
+
     lassign [$w.c coords StrikeBox] x1 y1 x2 y2
-    set x1 [expr {round($x1)}]; set y1 [expr {round($y1)}]
-    set x2 [expr {round($x2)}]; set y2 [expr {round($y2)}]
-    set rowCount [expr {($y2 - $y1) / 16}]
-    set colCount [expr {($x2 - $x1) / 16}]
-    for {set row 0; set y $y1} {$row < $rowCount} {incr row; incr y 16} {
-	for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 16} {
-	    $w.c create bitmap $x $y -bitmap gray25 -anchor nw \
-		    -foreground $::C(fg)
+    set oldMidY [expr {round(($y1 + $y2) / 2.0)}]
+
+    set rowCount [expr {round(($y2 - $y1) / 4.0)}]
+    set colCount [expr {round(($x2 - $x1) / 4.0)}]
+    set x2 [expr {round($x2)}]
+    set x1 [expr {$x2 - $colCount * 4}]
+    set y1 [expr {round($y1)}]
+    set y2 [expr {$y1 + $rowCount * 4}]
+
+    set newMidY [expr {round(($y1 + $y2) / 2.0)}]
+    set deltaY [expr {$oldMidY - $newMidY}]
+    incr y1 $deltaY; incr y2 $deltaY
+    $w.c coords StrikeBox $x1 $y1 $x2 $y2
+
+    for {set row 0; set y $y1} {$row < $rowCount} {incr row; incr y 4} {
+	for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 4} {
+	    $w.c create image $x $y -image smallGray25 -anchor nw
 	}
-	$w.c create bitmap $x2 $y -bitmap gray25 -anchor ne -foreground $::C(fg)
     }
-    for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 16} {
-	$w.c create bitmap $x $y2 -bitmap gray25 -anchor sw -foreground $::C(fg)
-    }
-    $w.c create bitmap $x2 $y2 -bitmap gray25 -anchor se -foreground $::C(fg)
 }
 
 proc ActiveGUI {w var1 var2 op} {
@@ -361,8 +392,9 @@ proc NextStep {w} {
 proc About {w} {
     set msg "$::S(title)\nby Keith Vetter, March 2003\n(Reproduced by kind\
 	    permission of the author)\n\n\"Man will always find a difficult\
-	    means to perform a simple task.\"\nRube Goldberg"
-    tk_messageBox -parent $w -message $msg -title About
+	    means to perform a simple task.\"\n - Rube Goldberg"
+    PlacedDialog $w.c.messframe $msg {Helvetica 12 bold}
+    return
 }
 ################################################################
 #
@@ -1603,7 +1635,7 @@ proc Draw24 {w} {
     $w.c create line $xy -fill $::C(fg) -smooth 1 -width 1.5p -tag I24
 }
 proc Move24 {w {step {}}} {
-    global S
+    global S Dims
     set step [GetStep 24 $step]
 
     if {$step > 4} {
@@ -1629,7 +1661,7 @@ proc Move24 {w {step {}}} {
     }
 
     $w.c itemconfig I24t -font [list Times [expr {18 + 6*$step}] bold]
-    $w.c move I24 0 -45p
+    $w.c move I24 $Dims(MovX) $Dims(MovY)
     $w.c scale I24 {*}[Centroid $w I24] 1.25 1.25
     return 1
 }
@@ -1651,12 +1683,12 @@ proc Move25 {w {step {}}} {
 
 # Collapsing balloon
 proc Move26 {w {step {}}} {
-    global S
+    global S Dims
     set step [GetStep 26 $step]
 
     if {$step >= 3} {
 	$w.c delete I24 I26
-	$w.c create text 318p 489p -anchor s -tag I26 \
+	$w.c create text $Dims(MsgX) $Dims(MsgY) -anchor s -tag I26 \
 		-fill $::C(26) -text "click to continue" -font {Times 24 bold}
 	bind $w.c <Button-1> [list Reset $w]
 	return 4
@@ -1867,13 +1899,14 @@ proc Anchor {w item where} {
 }
 
 proc scl {lst} {
+    global scaleFactor
     set lst2 {}
     foreach elem $lst {
 	set elem2 {}
 	set idx 0
 	foreach val $elem {
 	    if {$idx < 2} {
-		set val [expr {round($val * $::tk::scalingPct / 100.0)}]
+		set val [expr {round($val * $scaleFactor)}]
 	    }
 	    lappend elem2 $val
 	    incr idx
@@ -1885,6 +1918,53 @@ proc scl {lst} {
     return $lst2
 }
 
+# Simple placed dialog - stacked dialogs are not allowed,
+# the command does nothing if another grab already exists.
+
+proc PlacedDialog {w msg {labelFnt {Helvetica 10}}} {
+    if {[grab current] ne {}} {
+        return
+    }
+    destroy $w
+
+    frame $w -relief raised -bd 5p
+    label $w.lab -font $labelFnt -wraplength 3i -justify left -text $msg
+    ttk::button $w.but -text "OK" -underline 0 \
+	    -command [list ClosePlacedDialog $w]
+
+    foreach key {Escape Return o O} {
+	bind $w.but "<KeyPress-${key}>" { ClosePlacedDialog [winfo parent %W] }
+    }
+    foreach child {{} .but .lab} {
+	bind $w$child <<NextWindow>> break
+	bind $w$child <<PrevWindow>> break
+    }
+
+    pack $w.lab -padx 10p -pady {10p 5p}
+    pack $w.but -padx 10p -pady {0p 10p}
+    place $w -anchor center -relx 0.5 -rely 0.5
+
+    set tl [winfo toplevel $w]
+    set ::PlacedDialogOldFocus [focus -lastfor $tl]
+    focus $w.but
+    grab set $w
+    return
+}
+
+proc ClosePlacedDialog {w} {
+    set tl [winfo toplevel $w]
+    if {![winfo exists $::PlacedDialogOldFocus]} {
+        set ::PlacedDialogOldFocus $tl
+    }
+    focus $::PlacedDialogOldFocus
+    set ::PlacedDialogOldFocus {}
+    grab release $w
+    destroy $w
+    return
+}
+
+
 DoDisplay $w
 Reset $w
 Go $w						;# Start everything going
+StartMessage $w					;# Message box at startup
