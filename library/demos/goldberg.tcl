@@ -61,12 +61,13 @@ proc StartMessage {w} {
 ###--- End of Boilerplate ---###
 
 array set BaseDimensions {
-    CanX    704
-    CanY    592
+    CanX    675
+    CanY    540
     ScrX    750
     ScrY    750
-    MsgX    356
-    MsgY    619
+    MsgX    338
+    MsgY    573
+    MovX     10
     MovY    -45
 }
 
@@ -77,10 +78,10 @@ set overallFactor 0.7
 foreach el [array names BaseDimensions] {
     set Dims($el) [expr {$BaseDimensions($el) * $overallFactor}]p
 }
-set scalingPct [expr {[tk scaling] * 75}]
-set scaleFactor [expr {$scalingPct / 100.0 * $overallFactor}]
 
-# Ensure that this this is an array
+set scaleFactor [expr {$::tk::scalingPct / 100.0 * $overallFactor}]
+
+# Ensure that this is an array
 array set animationCallbacks {}
 bind $w <Destroy> {
     if {"%W" eq [winfo toplevel %W]} {
@@ -123,9 +124,10 @@ proc DoDisplay {w} {
     pack [frame $w.screen -bd 1 -relief raised] \
 	    -side left -fill both -expand 1
 
-    canvas $w.c -width $Dims(CanX) -height $Dims(CanY) -bg $C(bg) -highlightthickness 0
-    $w.c config -scrollregion [list 0 0 $Dims(ScrX) $Dims(ScrY)]	;# Kludge: move everything up
-    $w.c yview moveto .05
+    canvas $w.c -width $Dims(CanX) -height $Dims(CanY) -bg $C(bg) \
+	    -highlightthickness 0
+    $w.c config -scrollregion [list 0 0 $Dims(ScrX) $Dims(ScrY)]
+    $w.c yview moveto .06			;# Kludge: move everything up
     pack $w.c -in $w.screen -side top -fill both -expand 1
 
     bind $w.c <Button-3> [list $w.pause invoke]
@@ -233,6 +235,7 @@ proc ShowCtrl {w} {
     if {[winfo ismapped $w.ctrl]} {
 	pack forget $w.ctrl
 	$w.show config -text "▶"
+	after 100 [list $w.c yview moveto .06]	;# Kludge: move everything up
     } else {
 	pack $w.ctrl -side right -fill both -ipady 5
 	$w.show config -text "◀"
@@ -251,21 +254,35 @@ proc DrawAll {w} {
 
     $w.c scale all 0 0 $scaleFactor $scaleFactor
 
-    # Tile the strike box with the demo's built-in 16x16 bitmap gray25
-    # Adjust x1, y2 to make dimensions multiples of 16 pixels
-    lassign [$w.c coords StrikeBox] x1 y1 x2 y2
-    set x2 [expr {round($x2)}]
-    set y1 [expr {round($y1)}]
-    set rowCount [expr {round(($y2 - $y1) / 16.0)}]
-    set colCount [expr {round(($x2 - $x1) / 16.0)}]
-    set x1 [expr {$x2 - $colCount * 16}]
-    set y2 [expr {$y1 + $rowCount * 16}]
+    # Tile the strike box with a 4x4 bitmap image derived
+    # from Tk's built-in 16x16 bitmap gray25.  Adjust
+    # x1, y2 to make dimensions multiples of 4 pixels.
 
+    image create bitmap smallGray25 -data {
+	#define smallGray25_width 4
+	#define smallGray25_height 4
+	static unsigned char smallGray25_bits[] = {
+	    0x08, 0x02, 0x08, 0x02};
+    } -foreground $::C(fg)
+
+    lassign [$w.c coords StrikeBox] x1 y1 x2 y2
+    set oldMidY [expr {round(($y1 + $y2) / 2.0)}]
+
+    set rowCount [expr {round(($y2 - $y1) / 4.0)}]
+    set colCount [expr {round(($x2 - $x1) / 4.0)}]
+    set x2 [expr {round($x2)}]
+    set x1 [expr {$x2 - $colCount * 4}]
+    set y1 [expr {round($y1)}]
+    set y2 [expr {$y1 + $rowCount * 4}]
+
+    set newMidY [expr {round(($y1 + $y2) / 2.0)}]
+    set deltaY [expr {$oldMidY - $newMidY}]
+    incr y1 $deltaY; incr y2 $deltaY
     $w.c coords StrikeBox $x1 $y1 $x2 $y2
-    for {set row 0; set y $y1} {$row < $rowCount} {incr row; incr y 16} {
-	for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 16} {
-	    $w.c create bitmap $x $y -bitmap gray25 -anchor nw \
-		    -foreground $::C(fg)
+
+    for {set row 0; set y $y1} {$row < $rowCount} {incr row; incr y 4} {
+	for {set col 0; set x $x1} {$col < $colCount} {incr col; incr x 4} {
+	    $w.c create image $x $y -image smallGray25 -anchor nw
 	}
     }
 }
@@ -1644,7 +1661,7 @@ proc Move24 {w {step {}}} {
     }
 
     $w.c itemconfig I24t -font [list Times [expr {18 + 6*$step}] bold]
-    $w.c move I24 0 $Dims(MovY)
+    $w.c move I24 $Dims(MovX) $Dims(MovY)
     $w.c scale I24 {*}[Centroid $w I24] 1.25 1.25
     return 1
 }
@@ -1910,12 +1927,13 @@ proc PlacedDialog {w msg {labelFnt {Helvetica 10}}} {
     }
     destroy $w
 
-    frame $w -relief raised -bd 5pt
+    frame $w -relief raised -bd 5p
     label $w.lab -font $labelFnt -wraplength 3i -justify left -text $msg
-    button $w.but -text "OK" -underline 0 -default active -command [list ClosePlacedDialog $w]
+    ttk::button $w.but -text "OK" -underline 0 \
+	    -command [list ClosePlacedDialog $w]
 
-    foreach key {Escape Return space o O} {
-	bind $w.but "<KeyPress-${key}>" [list ClosePlacedDialog $w]
+    foreach key {Escape Return o O} {
+	bind $w.but "<KeyPress-${key}>" { ClosePlacedDialog [winfo parent %W] }
     }
     foreach child {{} .but .lab} {
 	bind $w$child <<NextWindow>> break
