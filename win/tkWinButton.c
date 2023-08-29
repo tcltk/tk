@@ -418,13 +418,13 @@ TkpDrawIndicator(
     }
 
     /*
-    * Check whether there is an SVG image for the indicator's
+    * Check whether there is an SVG image of this size for the indicator's
     * type (0 = checkbtn, 1 = radiobtn) and these color strings
     */
 
     snprintf(imgName, sizeof(imgName),
-	     "::tk::icons::indicator%d_%s_%s_%s_%s_%s_%s",
-	     butPtr->type == TYPE_RADIO_BUTTON,
+	     "::tk::icons::indicator%d_%d_%s_%s_%s_%s_%s_%s",
+	     dim, butPtr->type == TYPE_RADIO_BUTTON,
 	     topOuterColorStr, btmOuterColorStr, topInnerColorStr,
 	     btmInnerColorStr, interiorColorStr,
 	     (butPtr->flags & (SELECTED|TRISTATED)) ? checkColorStr : "XXXXXX");
