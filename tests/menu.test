@@ -4100,24 +4100,6 @@ test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
     destroy .m
 } -returnCodes error -result {ambiguous type "": must be menubar, normal, or tearoff}
 
-test menu-40.1 {use-after-free fix - bug 1797555fff} -setup {
-    toplevel .t
-    menu .t.menubar -type menubar
-    menu .t.menubar.select -title Select
-    menu .t.menubar.select.chain -title Chain
-    .t.menubar.select insert 1 cascade -menu .t.menubar.select.chain -label Chain
-    .t.menubar add cascade -menu .t.menubar.select -label Select
-    .t configure -menu .t.menubar
-    .t.menubar.select.chain insert 1 command
-    update idletasks
-} -body {
-    # The following two lines caused Tk to read from and write to freed memory
-    destroy .t.menubar.select.chain
-    .t.menubar.select delete 1
-} -cleanup {
-    destroy .t
-} -result {}
-
 test menu-40.1 {identifiers - auto generated} -setup {
     destroy .m
 } -body {
@@ -4269,6 +4251,24 @@ test menu-40.14 {identifiers - reserved word} -setup {
 } -cleanup {
     destroy .m
 } -result {2}
+
+test menu-41.1 {use-after-free fix - bug 1797555fff} -setup {
+    toplevel .t
+    menu .t.menubar -type menubar
+    menu .t.menubar.select -title Select
+    menu .t.menubar.select.chain -title Chain
+    .t.menubar.select insert 1 cascade -menu .t.menubar.select.chain -label Chain
+    .t.menubar add cascade -menu .t.menubar.select -label Select
+    .t configure -menu .t.menubar
+    .t.menubar.select.chain insert 1 command
+    update idletasks
+} -body {
+    # The following two lines caused Tk to read from and write to freed memory
+    destroy .t.menubar.select.chain
+    .t.menubar.select delete 1
+} -cleanup {
+    destroy .t
+} -result {}
 
 # cleanup
 imageFinish
