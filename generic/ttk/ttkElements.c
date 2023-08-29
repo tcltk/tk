@@ -738,12 +738,13 @@ static void IndicatorElementDraw(
 	       borderColorStr);
 
     /*
-     * Check whether there is an SVG image for the indicator's
-     * type (0 = checkbtn, 1 = radiobtn), "state" (0 = off,
-     * 1 = on, 2 = tristate), and these color strings
+     * Check whether there is an SVG image of this size for the
+     * indicator's type (0 = checkbtn, 1 = radiobtn), "state"
+     * (0 = off, 1 = on, 2 = tristate), and these color strings
      */
     snprintf(imgName, sizeof(imgName),
-	     "::tk::icons::indicator_default%d,%d_%s_%s_%s",
+	     "::tk::icons::indicator_default%d_%d,%d_%s_%s_%s",
+	     width,
 	     spec->offDataPtr == radiobtnOffData,
 	     tristate ? 2 : (selected ? 1 : 0),
 	     bgColorStr,
@@ -1313,10 +1314,11 @@ static void SliderElementDraw(
     ColorToStr(borderColor, borderColorStr);
 
     /*
-     * Check whether there is an SVG image for these color strings
+     * Check whether there is an SVG image of this size for these color strings
      */
-    snprintf(imgName, sizeof(imgName), "::tk::icons::slider_default_%s_%s_%s",
-	     innerColorStr, outerColorStr, borderColorStr);
+    snprintf(imgName, sizeof(imgName),
+	     "::tk::icons::slider_default%d_%s_%s_%s",
+	     dim, innerColorStr, outerColorStr, borderColorStr);
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
