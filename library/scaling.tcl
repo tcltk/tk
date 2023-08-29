@@ -6,23 +6,24 @@
 
 # ::tk::ScalingPct --
 #
-# Returns the display's "scaling percentage" (floating-point number,
-# the display resolution expressed as a percentage of 96dpi).
+# Returns the display's "scaling percentage" (the display resolution expressed
+# as a percentage of 96dpi), rounded to the nearest multiple of 25 that is at
+# least 100.
 #
-# On X11 systems (but not on SDL systems that claim to be X11), the first
-# call of the command also sets [tk scaling] and ::tk::fontScalingFactor
-# to values extracted from the X11 configuration.
+# On X11 systems (but not on SDL systems that claim to be X11), the first call
+# of the command also sets [tk scaling] and ::tk::fontScalingFactor to values
+# extracted from the X11 configuration.
 #
-# The command is called during Tk initialization, from icons.tcl, when
-# the latter is sourced by tk.tcl.
+# The command is called during Tk initialization, from icons.tcl, when the
+# latter is sourced by tk.tcl.
 
 proc ::tk::ScalingPct {} {
     set pct [expr {[tk scaling] * 75}]
 
     variable doneScalingInitX11
     if {![info exists doneScalingInitX11]} {
-        set pct [::tk::ScalingInitX11 $pct] 
-        set doneScalingInitX11 1
+	set pct [::tk::ScalingInitX11 $pct] 
+	set doneScalingInitX11 1
     }
 
     #
@@ -32,9 +33,9 @@ proc ::tk::ScalingPct {} {
     #
     variable scalingPct
     for {set scalingPct 100} {1} {incr scalingPct 25} {
-        if {$pct < $scalingPct + 12.5} {
-            break
-        }
+	if {$pct < $scalingPct + 12.5} {
+	    break
+	}
     }
 
     return $scalingPct
@@ -111,7 +112,7 @@ proc ::tk::ScalingInitX11 {pct} {
 	    # Derive the value of pct from that of the font DPI
 	    #
 	    set dpi [lindex $result 1]
-	    set pct [expr {100 * $dpi / 96}]
+	    set pct [expr {100.0 * $dpi / 96}]
 	} elseif {[catch {exec ps -e | grep gnome-session}] == 0 &&
 		  ![info exists ::env(WAYLAND_DISPLAY)] &&
 		  [catch {exec xrandr | grep " connected"} result] == 0 &&
@@ -122,12 +123,12 @@ proc ::tk::ScalingInitX11 {pct} {
 	    ScanMonitorsFile $result $chan pct
 	}
 
-        if {($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
+	if {($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
 	    #
 	    # Set Tk's scaling factor according to $pct
 	    #
 	    tk scaling [expr {$pct / 75.0}]
-        }
+	}
     }
     return $pct
 }

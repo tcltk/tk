@@ -594,12 +594,12 @@ static void IndicatorElementDraw(
 	       borderColorStr);
 
     /*
-     * Check whether there is an SVG image for the indicator's
+     * Check whether there is an SVG image of this size for the indicator's
      * type (0 = checkbtn, 1 = radiobtn) and these color strings
      */
     snprintf(imgName, sizeof(imgName),
-	     "::tk::icons::indicator_alt%d_%s_%s_%s_%s_%s",
-	     spec->offDataPtr == radiobtnOffData,
+	     "::tk::icons::indicator_alt%d_%d_%s_%s_%s_%s_%s",
+	     width, spec->offDataPtr == radiobtnOffData,
 	     shadeColorStr, indicatorColorStr, borderColorStr, bgColorStr,
 	     selected ? fgColorStr : "XXXXXX");
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
