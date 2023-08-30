@@ -73,7 +73,7 @@ array set BaseDimensions {
 
 # The original value was 1.0 but this can make the demo
 # too large for the screen.  Try a smaller value.
-set overallFactor 0.7
+set overallFactor 0.75
 
 foreach el [array names BaseDimensions] {
     set Dims($el) [expr {$BaseDimensions($el) * $overallFactor}]p
@@ -130,6 +130,7 @@ proc DoDisplay {w} {
     $w.c yview moveto .06			;# Kludge: move everything up
     pack $w.c -in $w.screen -side top -fill both -expand 1
 
+    bind $w.c <Configure> { %W yview moveto .06 }
     bind $w.c <Button-3> [list $w.pause invoke]
     bind $w.c <Destroy> {
 	after cancel $animationCallbacks(goldberg)
@@ -168,14 +169,14 @@ proc DoCtrlFrame {w} {
     ttk::button $w.about -text About -command [list About $w]
 
     grid $w.start -in $w.ctrl -row 0 -sticky ew
-    grid rowconfigure $w.ctrl 1 -minsize 7.5p
+    grid rowconfigure $w.ctrl 1 -minsize 3p
     grid $w.pause -in $w.ctrl -row 2 -sticky ew
     grid $w.step  -in $w.ctrl -sticky ew -pady 1.5p
     grid $w.bstep -in $w.ctrl -sticky ew
     grid $w.reset -in $w.ctrl -sticky ew -pady 1.5p
-    grid rowconfigure $w.ctrl 10 -minsize 13.5p
+    grid rowconfigure $w.ctrl 10 -minsize 3p
     grid $w.details -in $w.ctrl -row 11 -sticky ew
-    grid rowconfigure $w.ctrl 11 -minsize 15p
+    grid rowconfigure $w.ctrl 11 -minsize 3p
     $w.details configure -labelwidget $w.details.cb
     grid [ttk::frame $w.details.b -height 1]	;# Work around minor bug
     raise $w.details
@@ -185,7 +186,7 @@ proc DoCtrlFrame {w} {
     trace add variable ::S(details) write [list ActiveGUI $w]
     trace add variable ::S(speed) write	  [list ActiveGUI $w]
 
-    grid $w.message -in $w.ctrl -row 98 -sticky ew -pady 3p
+    grid $w.message -in $w.ctrl -row 98 -sticky ew -pady {0 3p}
     grid $w.message.e -sticky nsew
     grid $w.speed -in $w.ctrl -row 99 -sticky ew -pady {0 3p}
     pack $w.speed.scale -fill both -expand 1
@@ -235,7 +236,6 @@ proc ShowCtrl {w} {
     if {[winfo ismapped $w.ctrl]} {
 	pack forget $w.ctrl
 	$w.show config -text "▶"
-	after 100 [list $w.c yview moveto .06]	;# Kludge: move everything up
     } else {
 	pack $w.ctrl -side right -fill both -ipady 5
 	$w.show config -text "◀"
@@ -1927,7 +1927,7 @@ proc PlacedDialog {w msg {labelFnt {Helvetica 10}}} {
     }
     destroy $w
 
-    frame $w -relief raised -bd 5p
+    frame $w -relief raised -bd 3p
     label $w.lab -font $labelFnt -wraplength 3i -justify left -text $msg
     ttk::button $w.but -text "OK" -underline 0 \
 	    -command [list ClosePlacedDialog $w]
