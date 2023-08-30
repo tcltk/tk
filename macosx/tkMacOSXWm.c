@@ -1289,6 +1289,11 @@ TkWmDeadWindow(
 	    [NSApp _setMainWindow:nil];
 	}
 	[deadNSWindow close];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+	[preferences removeObserver:deadNSWindow.contentView
+		      forKeyPath:@"AppleHighlightColor"];
+#endif
 	[deadNSWindow release];
 
 #if DEBUG_ZOMBIES > 1
@@ -6763,6 +6768,21 @@ TkMacOSXMakeRealWindowExist(
     }
     TKContentView *contentView = [[TKContentView alloc]
 				     initWithFrame:NSZeroRect];
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+    NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
+
+    /*
+     * AppKit calls the viewDidChangeEffectiveAppearance method when the
+     * user changes the Accent Color but not when the user changes the
+     * Highlight Color.  So we register to receive KVO notifications for
+     * Highlight Color as well.
+     */
+
+    [preferences addObserver:contentView
+		  forKeyPath:@"AppleHighlightColor"
+		     options:NSKeyValueObservingOptionNew
+		     context:NULL];
+#endif
     [window setContentView:contentView];
     [contentView release];
     [window setDelegate:NSApp];
