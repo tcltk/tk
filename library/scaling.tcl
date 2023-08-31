@@ -22,12 +22,12 @@ proc ::tk::ScalingPct {} {
 
     variable doneScalingInitX11
     if {![info exists doneScalingInitX11]} {
-	set pct [::tk::ScalingInitX11 $pct] 
+	set pct [::tk::ScalingInitX11 $pct]
 	set doneScalingInitX11 1
     }
 
     #
-    # Save the value of pct rounded to the nearest multiple 
+    # Save the value of pct rounded to the nearest multiple
     # of 25 that is at least 100, in the variable scalingPct.
     # See "man n tk_scalingPct" for use of ::tk::scalingPct.
     #
