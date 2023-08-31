@@ -114,9 +114,10 @@ value of their \fB\-format\fR option when creating or manipulating SVG
 images, to make sure that their sizes will correspond to the display's
 DPI scaling level.
 .PP
-Note that whenever the scaling factor used to convert between physical
-units and pixels is changed via \fBtk scaling\fR, the value of the
-variable \fBtk::svgFmt\fR is automatically updated.
+Note that any access to this variable is supposed to be strictly
+read-only!  Note also that whenever the scaling factor used to convert
+between physical units and pixels is changed via \fBtk scaling\fR, the
+value of the variable \fBtk::svgFmt\fR is automatically updated.
 .RE
 .TP
 \fBtk_version\fR
