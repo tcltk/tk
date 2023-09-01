@@ -12,7 +12,6 @@
  */
 
 #include "tkMacOSXPrivate.h"
-static void RetainRegion(TkRegion r);
 static void ReleaseRegion(TkRegion r);
 
 #ifdef DEBUG
@@ -329,30 +328,6 @@ TkpBuildRegionFromAlphaData(
 	}
 	dataPtr += lineStride;
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * RetainRegion --
- *
- *	Increases reference count of region.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-RetainRegion(
-    TkRegion r)
-{
-    CFRetain(r);
-    DebugLog("Retained region: total count is %d\n", ++totalRegionRetainCount);
 }
 
 /*
