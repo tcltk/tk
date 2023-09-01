@@ -215,12 +215,7 @@ Tk_ParseArgv(
 	    if (argc == 0) {
 		goto missingArg;
 	    }
-	    *((double *) infoPtr->dst) = strtod(argv[srcIndex], &endPtr);
-	    if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"expected %s argument for \"%s\" but got \"%s\"",
-			"floating-point", infoPtr->key, argv[srcIndex]));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "FLOAT", curArg, NULL);
+	    if (Tcl_GetDouble(interp, argv[srcIndex], ((double *) infoPtr->dst)) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    srcIndex++;

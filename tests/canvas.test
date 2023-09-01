@@ -725,7 +725,7 @@ test canvas-15.19 "basic coords check: centimeters are larger than pixels" -setu
     destroy .c
     canvas .c
 } -body {
-    set id [.c create rect 0 0 1cm 1cm]
+    set id [.c create rect 0 0 1c 1c]
     expr {[lindex [.c coords $id] 2]>1}
 } -result 1
 test canvas-15.20 {bug [237971ce]} -setup {
