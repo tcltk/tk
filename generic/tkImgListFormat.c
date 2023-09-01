@@ -1001,7 +1001,6 @@ ParseColorAsStandard(
     XColor parsedColor;
     const char *suffixString, *colorString;
     char colorBuffer[TK_PHOTO_MAX_COLOR_LENGTH + 1];
-    char *tmpString;
     double fracAlpha;
     unsigned int suffixAlpha;
     int i;
@@ -1047,8 +1046,7 @@ ParseColorAsStandard(
         suffixAlpha = 255;
         break;
     case '@':
-        fracAlpha = strtod(suffixString + 1, &tmpString);
-        if (*tmpString != '\0') {
+        if (Tcl_GetDouble(NULL, suffixString + 1, &fracAlpha) != TCL_OK) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid alpha "
                     "suffix \"%s\": expected floating-point value",
                     suffixString));
