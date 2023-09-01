@@ -4084,7 +4084,7 @@ test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
     destroy .m
 } -returnCodes error -result {ambiguous type "": must be normal, tearoff, or menubar}
 
-test menu-40.1 {use-after-free fix - bug 1797555fff} -setup {
+test menu-39.2 {use-after-free fix - bug 1797555fff} -setup {
     toplevel .t
     menu .t.menubar -type menubar
     menu .t.menubar.select -title Select
