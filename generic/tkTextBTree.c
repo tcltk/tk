@@ -9082,7 +9082,7 @@ ResizeLengths(
 
     if (data->lengths == data->lengthsBuf) {
 	data->lengths = (int32_t *)malloc(bufSize);
-	memcpy(data->lengths, data->lengthsBuf, sizeof(data->lengthsBuf));
+	memcpy(data->lengths, data->lengthsBuf, bufSize);
     } else {
 	data->lengths = (int32_t *)realloc(data->lengths, bufSize);
     }
