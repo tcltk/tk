@@ -87,7 +87,7 @@ set printData {
 
 proc createImages {} {
     foreach action {view refresh print} {
-	set fgColor [ttk::style lookup . -foreground]
+	set fgColor [ttk::style lookup . -foreground {} black]
 	lassign [winfo rgb . $fgColor] r g b
 	set fgColor [format "#%02x%02x%02x" \
 		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
@@ -107,11 +107,7 @@ proc createImages {} {
 
 createImages
 foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
-    bind . $event {
-	if {"%W" eq "."} {
-	    createImages
-	}
-    }
+    bind [winfo class .] $event { createImages }
 }
 unset event
 
