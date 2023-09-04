@@ -20,11 +20,11 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl 8.7
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-branch
@@ -84,17 +84,17 @@ jobs:
       CFGOPT: --disable-symbols --disable-shared
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl 8.7
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-branch
           path: tcl
       - name: Checkout create-dmg
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: create-dmg/create-dmg
           ref: v1.0.8
@@ -172,11 +172,11 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make zip
       - name: Checkout Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl 8.7
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-branch
