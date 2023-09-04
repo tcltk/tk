@@ -1199,6 +1199,17 @@ DestroyMenuInstance(
      */
 
     for (i = menuPtr->numEntries; --i >= 0; ) {
+        /*
+         * Clean up the hash entry for the menu item ID.
+         * This cannot be postponed until the entry is eventually freed,
+         * because the hash table may already have been deleted by then.
+         */
+
+        if (menuPtr->entries[i]->entryPtr) {
+            Tcl_DeleteHashEntry(menuPtr->entries[i]->entryPtr);
+            menuPtr->entries[i]->entryPtr = NULL;
+        }
+
 	/*
 	 * As each menu entry is deleted from the end of the array of entries,
 	 * decrement menuPtr->numEntries. Otherwise, the act of deleting menu
