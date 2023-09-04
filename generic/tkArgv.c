@@ -181,10 +181,6 @@ Tk_ParseArgv(
 		goto missingArg;
 	    }
 	    if (Tcl_GetInt(interp, argv[srcIndex], (int *) infoPtr->dst) != TCL_OK) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"expected %s argument for \"%s\" but got \"%s\"",
-			"integer", infoPtr->key, argv[srcIndex]));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "INTEGER", curArg,NULL);
 		return TCL_ERROR;
 	    }
 	    srcIndex++;
