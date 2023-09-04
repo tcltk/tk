@@ -95,8 +95,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
 	    -insertcolor	$colors(-foreground) \
-	    -focuscolor		$colors(-text) \
-	    ;
+	    -focuscolor		$colors(-text)
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
@@ -126,7 +125,9 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TMenubutton \
 	    -relief raised -arrowsize 3.75p -arrowpadding 2.25p \
-	    -padding {7.5p 2.25p}
+	    -arrowcolor $colors(-text) -padding {7.5p 2.25p}
+	ttk::style map TMenubutton \
+	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TEntry \
 	    -fieldbackground $colors(-window) -padding 1 \
