@@ -982,7 +982,7 @@ Tk_SendObjCmd(
 	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], sendOptions,
 		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    break;
 	}
