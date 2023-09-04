@@ -859,7 +859,7 @@ ParseColorAsList(
 
     /*
      * strtol can give false positives with a sequence of space chars.
-     * To avoid that, avance the pointer to the next non-blank char.
+     * To avoid that, advance the pointer to the next non-blank char.
      */
 
     while(isspace(UCHAR(*curPos))) {

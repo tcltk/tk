@@ -742,7 +742,7 @@ UpdateStringOfMM(
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
-    Tcl_Size len;
+    size_t len;
 
     mmPtr = (MMRep *)objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
