@@ -2245,6 +2245,14 @@ test menu-6.16 {TkDestroyMenu} -setup {
     .t3 configure -menu .m1
     list [destroy .m1] [destroy .t2] [destroy .t3] [. configure -menu ""]
 } -result {{} {} {} {}}
+test menu-6.17 {TkDestroyMenu - bug 14a9b62e1d} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -command {destroy .m1}
+    .m1 invoke end
+    winfo exists .m1
+} -result {0}
 
 test menu-7.1 {UnhookCascadeEntry} -setup {
     deleteWindows
