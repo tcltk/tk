@@ -512,7 +512,7 @@ SetPixelFromAny(
 {
     ThreadSpecificData *typeCache = GetTypeCache();
     const Tcl_ObjType *typePtr;
-    const char *string;
+    char *string;
     char *rest;
     double d;
     int i, units;
@@ -532,20 +532,27 @@ SetPixelFromAny(
     } else if (Tcl_GetDoubleFromObj(NULL, objPtr, &d) == TCL_OK) {
 	units = -1;
     } else {
+	char savechar;
 	string = Tcl_GetString(objPtr);
 
-	d = strtod(string, &rest);
-	if (rest == string) {
-	    goto error;
+	rest = string + strlen(string);
+	while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	    --rest; /* skip all spaces at the end */
 	}
-	while ((*rest != '\0') && isspace(UCHAR(*rest))) {
-	    rest++;
+	if (rest > string) {
+	    --rest; /* point to the character just before the last space */
+	}
+	if (rest == string) {
+	error:
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad screen distance \"%.50s\"", string));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	    }
+	    return TCL_ERROR;
 	}
 
 	switch (*rest) {
-	case '\0':
-	    units = -1;
-	    break;
 	case 'm':
 	    units = 0;
 	    break;
@@ -561,7 +568,15 @@ SetPixelFromAny(
 	default:
 	    goto error;
 	}
+	savechar = *rest;
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, string, &d) != TCL_OK) {
+	    *rest = savechar;
+	    goto error;
+	}
+	*rest = savechar;
     }
+
     /*
      * Free the old internalRep before setting the new one.
      */
@@ -586,14 +601,6 @@ SetPixelFromAny(
 	SET_COMPLEXPIXEL(objPtr, pixelPtr);
     }
     return TCL_OK;
-
-  error:
-    if (interp != NULL) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad screen distance \"%.50s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
-    }
-    return TCL_ERROR;
 }
 
 /*
@@ -805,13 +812,21 @@ SetMMFromAny(
     } else if (Tcl_GetDoubleFromObj(NULL, objPtr, &d) == TCL_OK) {
 	units = -1;
     } else {
+	char savechar;
+
 	/*
 	 * It wasn't a known int or double, so parse it.
 	 */
 
 	string = Tcl_GetString(objPtr);
 
-	d = strtod(string, &rest);
+	rest = string + strlen(string);
+	while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	    --rest; /* skip all spaces at the end */
+	}
+	if (rest > string) {
+	    --rest; /* point to the character just before the last space */
+	}
 	if (rest == string) {
 	error:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -819,14 +834,7 @@ SetMMFromAny(
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DISTANCE", NULL);
 	    return TCL_ERROR;
 	}
-	while ((*rest != '\0') && isspace(UCHAR(*rest))) {
-	    rest++;
-	}
-
 	switch (*rest) {
-	case '\0':
-	    units = -1;
-	    break;
 	case 'c':
 	    units = 0;
 	    break;
@@ -842,6 +850,13 @@ SetMMFromAny(
 	default:
 	    goto error;
 	}
+	savechar = *rest;
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, string, &d) != TCL_OK) {
+	    *rest = savechar;
+	    goto error;
+	}
+	*rest = savechar;
     }
 
     /*
