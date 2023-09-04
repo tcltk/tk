@@ -3022,30 +3022,30 @@ GetIndexFromCoords(
 {
     int x, y, i;
     const char *p;
-    char *end;
+    const char *rest;
     int x2, borderwidth, max;
 
     TkRecomputeMenu(menuPtr);
     p = string + 1;
-    y = strtol(p, &end, 0);
-    if (end == p) {
-	goto error;
-    }
-    Tk_GetPixelsFromObj(interp, menuPtr->tkwin,
-	menuPtr->borderWidthPtr, &borderwidth);
-    if (*end == ',') {
-	x = y;
-	p = end + 1;
-	y = strtol(p, &end, 0);
-	if ((end == p) || (*end != '\0')) {
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
+	    menuPtr->borderWidthPtr, &borderwidth);
+    rest = strchr(p, ',');
+    if (rest) {
+	Tcl_DString ds;
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, p, rest - p);
+
+	if (Tcl_GetInt(NULL, Tcl_DStringValue(&ds), &x) != TCL_OK) {
 	    goto error;
 	}
     } else {
-	if (*end != '\0') {
+	x = borderwidth;
+	rest = string;
+    }
+    p = rest + 1;
+    if (Tcl_GetInt(NULL, p, &y) != TCL_OK) {
 	    goto error;
 	}
-	x = borderwidth;
-    }
 
     *indexPtr = -1;
 

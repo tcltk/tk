@@ -1142,16 +1142,18 @@ Tk_HandleEvent(
 
 
 #if !defined(_WIN32) && !defined(MAC_OSX_TK)
-    if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
-	if (eventPtr->type == ButtonRelease) {
-	    return;
-	} else if (eventPtr->type == ButtonPress) {
-	    int but = eventPtr->xbutton.button;
-	    eventPtr->type = MouseWheelEvent;
-	    eventPtr->xany.send_event = -1;
-	    eventPtr->xkey.keycode = (but & 1) ? -120 : 120;
-	    if (but > Button5) {
-		eventPtr->xkey.state |= ShiftMask;
+    if ((eventPtr->type == ButtonRelease) || (eventPtr->type == ButtonPress)) {
+	if ((eventPtr->xbutton.button >= Button4) && (eventPtr->xbutton.button < Button8)) {
+	    if (eventPtr->type == ButtonRelease) {
+		return;
+	    } else { /* eventPtr->type == ButtonPress */
+		int but = eventPtr->xbutton.button;
+		eventPtr->type = MouseWheelEvent;
+		eventPtr->xany.send_event = -1;
+		eventPtr->xkey.keycode = (but & 1) ? -120 : 120;
+		if (but > Button5) {
+		    eventPtr->xkey.state |= ShiftMask;
+		}
 	    }
 	}
     }
