@@ -1737,17 +1737,19 @@ GetPolygonIndex(
     if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
-	char *end;
+	char *rest;
 	const char *p;
 
 	p = string+1;
-	x = strtod(p, &end);
-	if ((end == p) || (*end != ',')) {
+	rest = strchr(p, ',');
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, p, &x) != TCL_OK) {
+	    *rest = ',';
 	    goto badIndex;
 	}
-	p = end+1;
-	y = strtod(p, &end);
-	if ((end == p) || (*end != 0)) {
+	*rest = ',';
+	p = rest+1;
+	if (Tcl_GetDouble(NULL, p, &y) != TCL_OK) {
 	    goto badIndex;
 	}
 	bestDist = 1.0e36;
