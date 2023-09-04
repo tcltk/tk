@@ -1502,18 +1502,23 @@ GetTextIndex(
     } else if (c == '@') {
 	int x, y;
 	double tmp, cs = textPtr->cosine, s = textPtr->sine;
-	char *end;
+	char *rest;
 	const char *p;
 
 	p = string+1;
-	tmp = strtod(p, &end);
-	if ((end == p) || (*end != ',')) {
+	rest = strchr(p, ',');
+	if (!rest) {
 	    goto badIndex;
 	}
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, p, &tmp) != TCL_OK) {
+	    *rest = ',';
+	    goto badIndex;
+	}
+	*rest = ',';
 	x = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
-	p = end+1;
-	tmp = strtod(p, &end);
-	if ((end == p) || (*end != 0)) {
+	p = rest+1;
+	if (Tcl_GetDouble(NULL, p, &tmp) != TCL_OK) {
 	    goto badIndex;
 	}
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
