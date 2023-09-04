@@ -19,11 +19,11 @@ jobs:
         working-directory: tk/macosx
     steps:
       - name: Check out Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Check out Tcl 8.7
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-branch
@@ -71,11 +71,11 @@ jobs:
         working-directory: tk/unix
     steps:
       - name: Check out Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Check out Tcl 8.7
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-branch
