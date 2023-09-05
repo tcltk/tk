@@ -220,7 +220,7 @@ TKTEST_EXE		= tktest${EXE_SUFFIX}
 # with the distribution, which is slower but guaranteed to work.
 
 INSTALL_STRIP_PROGRAM   = -s
-INSTALL_STRIP_LIBRARY   = -S -x
+INSTALL_STRIP_LIBRARY   = -R -x
 
 INSTALL			= $(SHELL) $(UNIX_DIR)/install-sh -c
 INSTALL_PROGRAM		= ${INSTALL}
@@ -1674,8 +1674,8 @@ DISTROOT = /tmp/dist
 DISTNAME = tk${VERSION}${PATCH_LEVEL}
 ZIPNAME	 = tk${MAJOR_VERSION}${MINOR_VERSION}${PATCH_LEVEL}-src.zip
 DISTDIR	 = $(DISTROOT)/$(DISTNAME)
-DIST_INSTALL_DATA   = CPPROG='cp -p' $(INSTALL) -m 644
-DIST_INSTALL_SCRIPT = CPPROG='cp -p' $(INSTALL) -m 755
+DIST_INSTALL_DATA   = $(INSTALL) -p -m 644
+DIST_INSTALL_SCRIPT = $(INSTALL) -p -m 755
 
 $(UNIX_DIR)/configure: $(UNIX_DIR)/configure.ac $(UNIX_DIR)/tcl.m4 \
 		$(UNIX_DIR)/aclocal.m4
