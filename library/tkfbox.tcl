@@ -22,39 +22,71 @@ namespace eval ::tk::dialog::file {
     variable showHiddenBtn 0
     variable showHiddenVar 1
 
+    # Based on Vimix/16/actions/go-up.svg
+    # See https://github.com/vinceliuice/vimix-icon-theme
+    set updirImageData {
+	<?xml version="1.0" encoding="UTF-8"?>
+	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	 <path d="m7 14v-9l-4 4-1-1 6-6 6 6-1 1-4-4v9z" fill="#000000"/>
+	</svg>
+    }
+
+    proc CreateUpdirImage {{name ""}} {
+	variable updirImageData
+	set idx1 [string first "#000000" $updirImageData]
+	set idx2 [expr {$idx1 + 6}]
+
+	set fgColor [ttk::style lookup . -foreground {} black]
+	lassign [winfo rgb . $fgColor] r g b
+	set fgColor [format "#%02x%02x%02x" \
+		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+
+	set data [string replace $updirImageData $idx1 $idx2 $fgColor]
+
+	if {$name eq ""} {
+	    return [image create photo -format $::tk::svgFmt -data $data]
+	} else {
+	    return [image create photo $name -format $::tk::svgFmt -data $data]
+	}
+    }
+
+    # Based on https://icons8.com/icon/JXYalxb9XWWd/folder
+    set folderImageData {
+	<?xml version="1.0" encoding="UTF-8"?>
+	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	 <path d="m0.5 13.5v-12h4.293l2 2h8.707v10z" fill="#59afff"/>
+	 <path d="m4.586 2 2 2h8.414v9h-14v-11h3.586m0.414-1h-5v13h16v-11h-9l-2-2z" fill="#2d8cff"/>
+	 <path d="m0.5 14.5v-10h4.618l2-1h8.382v11z" fill="#8cc5ff"/>
+	 <path d="m15 4v10h-14v-9h4.236l0.211-0.106 1.789-0.894h7.764m1-1h-9l-2 1h-5v11h16z" fill="#2d8cff"/>
+	</svg>
+    }
+
+    # Based on https://icons8.com/icon/mEF_vyjYlnE3/file
+    set fileImageData {
+	<?xml version="1.0" encoding="UTF-8"?>
+	<svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+	 <path d="m2 1h8l4 4v11h-12z" fill="#808080"/>
+	 <path d="m3 2h6.5l3.5 3.5v9.5h-10z" fill="#f0f0f0"/>
+	 <path d="m9 1v5h5v-1h-4v-4h-1z" fill="#808080"/>
+	</svg>
+    }
+
     # Create the images if they did not already exist.
     if {![info exists ::tk::Priv(updirImage)]} {
-	# Based on Vimix/16/actions/go-up.svg
-	# See https://github.com/vinceliuice/vimix-icon-theme
-	set ::tk::Priv(updirImage)  [image create photo -format $::tk::svgFmt -data {
-	    <?xml version="1.0" encoding="UTF-8"?>
-	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <path d="m7 14v-9l-4 4-1-1 6-6 6 6-1 1-4-4v9z"/>
-	    </svg>
-	}]
+	set ::tk::Priv(updirImage)  [CreateUpdirImage]
+
+	bindtags . [linsert [bindtags .] 1 TkFileDialog]
+	bind TkFileDialog <<ThemeChanged>> {
+	    ::tk::dialog::file::CreateUpdirImage $::tk::Priv(updirImage)
+	}
     }
     if {![info exists ::tk::Priv(folderImage)]} {
-	# Based on https://icons8.com/icon/JXYalxb9XWWd/folder
-	set ::tk::Priv(folderImage) [image create photo -format $::tk::svgFmt -data {
-	    <?xml version="1.0" encoding="UTF-8"?>
-	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <path d="m0.5 13.5v-12h4.293l2 2h8.707v10z" fill="#59afff"/>
-	     <path d="m4.586 2 2 2h8.414v9h-14v-11h3.586m0.414-1h-5v13h16v-11h-9l-2-2z" fill="#2d8cff"/>
-	     <path d="m0.5 14.5v-10h4.618l2-1h8.382v11z" fill="#8cc5ff"/>
-	     <path d="m15 4v10h-14v-9h4.236l0.211-0.106 1.789-0.894h7.764m1-1h-9l-2 1h-5v11h16z" fill="#2d8cff"/>
-	    </svg>
-	}]
+	set ::tk::Priv(folderImage) [image create photo \
+		-format $::tk::svgFmt -data $folderImageData]
     }
     if {![info exists ::tk::Priv(fileImage)]} {
-	# Based on https://icons8.com/icon/mEF_vyjYlnE3/file
-	set ::tk::Priv(fileImage)   [image create photo -format $::tk::svgFmt -data {
-	    <?xml version="1.0" encoding="UTF-8"?>
-	    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-	     <path d="m2 1h8l4 4v11h-12z" fill="#808080"/>
-	     <path d="m3 2h6.5l3.5 3.5v9.5h-10z" fill="#f0f0f0"/>
-	     <path d="m9 1v5h5v-1h-4v-4h-1z" fill="#808080"/>
-	    </svg>
-	}]
+	set ::tk::Priv(fileImage)   [image create photo \
+		-format $::tk::svgFmt -data $fileImageData]
     }
 }
 
