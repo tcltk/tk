@@ -9,6 +9,12 @@
 #include "ttkThemeInt.h"
 #include "ttkWidget.h"
 
+#if defined(_WIN32)
+  #define WIN32_XDRAWLINE_HACK 1
+#else
+  #define WIN32_XDRAWLINE_HACK 0
+#endif
+
 #define DEFAULT_BORDERWIDTH "2"
 #define DEFAULT_ARROW_SIZE "15"
 #define MIN_THUMB_SIZE 10
@@ -236,7 +242,15 @@ static void FieldElementDraw(
 
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
 	GC gcFocus = Tk_GCForColor(focusColor, d);
-	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
+	int x1 = b.x, x2 = b.x + b.width - 1;
+	int y1 = b.y, y2 = b.y + b.height - 1;
+	int w = WIN32_XDRAWLINE_HACK;
+
+	XDrawLine(disp, d, gcFocus, x1+1, y1, x2-1+w, y1);	/* N */
+	XDrawLine(disp, d, gcFocus, x1+1, y2, x2-1+w, y2);	/* S */
+	XDrawLine(disp, d, gcFocus, x1, y1+1, x1, y2-1+w);	/* W */
+	XDrawLine(disp, d, gcFocus, x2, y1+1, x2, y2-1+w);	/* E */
+
 	b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
 
@@ -1515,6 +1529,7 @@ static void TabElementDraw(
     int cut = 2;
     XPoint pts[6];
     int n = 0;
+    int w = WIN32_XDRAWLINE_HACK;
     (void)dummy;
 
     Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
@@ -1532,18 +1547,11 @@ static void TabElementDraw(
     pts[n].x = b.x + cut;  		pts[n].y = b.y; ++n;
     pts[n].x = b.x + b.width-1-cut;	pts[n].y = b.y; ++n;
     pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height; ++n;
+    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height - 1 + w; ++n;
 
     XFillPolygon(Tk_Display(tkwin), d,
 	Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	pts, 6, Convex, CoordModeOrigin);
-
-#ifndef _WIN32
-    /*
-     * Account for whether XDrawLines draws endpoints by platform
-     */
-    --pts[5].y;
-#endif
 
     while (borderWidth--) {
 	XDrawLines(Tk_Display(tkwin), d,
