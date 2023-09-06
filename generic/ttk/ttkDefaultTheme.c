@@ -8,9 +8,9 @@
 #include "ttkThemeInt.h"
 
 #if defined(_WIN32)
-static const int WIN32_XDRAWLINE_HACK = 1;
+  #define WIN32_XDRAWLINE_HACK 1
 #else
-static const int WIN32_XDRAWLINE_HACK = 0;
+  #define WIN32_XDRAWLINE_HACK 0
 #endif
 
 #if defined(MAC_OSX_TK)
@@ -372,7 +372,15 @@ static void FieldElementDraw(
 
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
 	GC gcFocus = Tk_GCForColor(focusColor, d);
-	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
+	int x1 = b.x, x2 = b.x + b.width - 1;
+	int y1 = b.y, y2 = b.y + b.height - 1;
+	int w = WIN32_XDRAWLINE_HACK;
+
+	XDrawLine(disp, d, gcFocus, x1+1, y1, x2-1+w, y1);	/* N */
+	XDrawLine(disp, d, gcFocus, x1+1, y2, x2-1+w, y2);	/* S */
+	XDrawLine(disp, d, gcFocus, x1, y1+1, x1, y2-1+w);	/* W */
+	XDrawLine(disp, d, gcFocus, x2, y1+1, x2, y2-1+w);	/* E */
+
 	b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
 

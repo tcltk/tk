@@ -13,9 +13,9 @@
  * theme. Defining this macro as true handles this case.
  */
 #if defined(_WIN32) && !defined(WIN32_XDRAWLINE_HACK)
-#	define WIN32_XDRAWLINE_HACK 1
+  #define WIN32_XDRAWLINE_HACK 1
 #else
-#	define WIN32_XDRAWLINE_HACK 0
+  #define WIN32_XDRAWLINE_HACK 0
 #endif
 
 #define STR(x) StR(x)
@@ -67,24 +67,24 @@ static void DrawSmoothBorder(
     if (   outerColorObj
 	&& (gc=Ttk_GCForColor(tkwin,outerColorObj,d)))
     {
-	XDrawLine(display,d,gc, x1+1,y1, x2-1+w,y1); /* N */
-	XDrawLine(display,d,gc, x1+1,y2, x2-1+w,y2); /* S */
-	XDrawLine(display,d,gc, x1,y1+1, x1,y2-1+w); /* E */
-	XDrawLine(display,d,gc, x2,y1+1, x2,y2-1+w); /* W */
+	XDrawLine(display,d,gc, x1+1,y1, x2-1+w,y1);		/* N */
+	XDrawLine(display,d,gc, x1+1,y2, x2-1+w,y2);		/* S */
+	XDrawLine(display,d,gc, x1,y1+1, x1,y2-1+w);		/* W */
+	XDrawLine(display,d,gc, x2,y1+1, x2,y2-1+w);		/* E */
     }
 
     if (   upperColorObj
 	&& (gc=Ttk_GCForColor(tkwin,upperColorObj,d)))
     {
-	XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1); /* N */
-	XDrawLine(display,d,gc, x1+1,y1+1, x1+1,y2-1);   /* E */
+	XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1);	/* N */
+	XDrawLine(display,d,gc, x1+1,y1+1, x1+1,y2-1);		/* W */
     }
 
     if (   lowerColorObj
 	&& (gc=Ttk_GCForColor(tkwin,lowerColorObj,d)))
     {
-	XDrawLine(display,d,gc, x2-1,y2-1, x1+1-w,y2-1); /* S */
-	XDrawLine(display,d,gc, x2-1,y2-1, x2-1,y1+1-w); /* W */
+	XDrawLine(display,d,gc, x2-1,y2-1, x1+1-w,y2-1);	/* S */
+	XDrawLine(display,d,gc, x2-1,y2-1, x2-1,y1+1-w);	/* E */
     }
 }
 
