@@ -234,7 +234,7 @@ are reserved in the protocol for errors and replies. */
 #define Mod5Mask		(1<<7)
 
 /* See bug [9e31fd9449], this way prevents conflicts with Win32 headers */
-enum _Bug9e31fd9449 { None = 0, ControlMask = (1<<2) };
+enum { None = 0, ControlMask = (1<<2) };
 
 /* modifier names.  Used to build a SetModifierMapping request or
    to read a GetModifierMapping request.  These correspond to the

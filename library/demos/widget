@@ -86,15 +86,14 @@ set printData {
 }
 
 proc createImages {} {
-    foreach action {view refresh print} {
-	set fgColor [ttk::style lookup . -foreground {} black]
-	lassign [winfo rgb . $fgColor] r g b
-	set fgColor [format "#%02x%02x%02x" \
-		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+    set fgColor [ttk::style lookup . -foreground {} black]
+    lassign [winfo rgb . $fgColor] r g b
+    set fgColor [format "#%02x%02x%02x" \
+	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
 
-	global ${action}Data
-	set data [set ${action}Data]
-	for {set startIdx 0} \
+    foreach action {view refresh print} {
+	upvar ${action}Data imgData
+	for {set data $imgData; set startIdx 0} \
 		{[set idx1 [string first "#000000" $data $startIdx]] >= 0} \
 		{set startIdx [expr {$idx1 + 7}]} {
 	    set idx2 [expr {$idx1 + 6}]

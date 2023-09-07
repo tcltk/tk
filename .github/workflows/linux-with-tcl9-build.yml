@@ -32,11 +32,11 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: main
@@ -117,11 +117,11 @@ jobs:
           - "--enable-symbols"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: main

@@ -40,6 +40,19 @@ typedef struct PixelRep {
     ((PixelRep *) (objPtr)->internalRep.twoPtrValue.ptr2)
 
 /*
+ * One of these structures is created per thread to store thread-specific
+ * data. In this case, it is used to contain references to selected
+ * Tcl_ObjTypes that we can use as screen distances without conversion. The
+ * "dataKey" below is used to locate the ThreadSpecificData for the current
+ * thread.
+ */
+
+typedef struct {
+    const Tcl_ObjType *doubleTypePtr;
+} ThreadSpecificData;
+static Tcl_ThreadDataKey dataKey;
+
+/*
  * The following structure is the internal representation for mm objects.
  */
 
@@ -77,6 +90,7 @@ static void		DupWindowInternalRep(Tcl_Obj *srcPtr,Tcl_Obj*copyPtr);
 static void		FreeMMInternalRep(Tcl_Obj *objPtr);
 static void		FreePixelInternalRep(Tcl_Obj *objPtr);
 static void		FreeWindowInternalRep(Tcl_Obj *objPtr);
+static ThreadSpecificData *GetTypeCache(void);
 static void		UpdateStringOfMM(Tcl_Obj *objPtr);
 static int		SetMMFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
 static int		SetPixelFromAny(Tcl_Interp *interp, Tcl_Obj *objPtr);
@@ -157,6 +171,37 @@ static const TkObjType windowObjType = {
     TCL_OBJTYPE_V0},
     0
 };
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * GetTypeCache --
+ *
+ *	Get (and build if necessary) the cache of useful Tcl object types for
+ *	comparisons in the conversion functions.  This allows optimized checks
+ *	for standard cases.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static ThreadSpecificData *
+GetTypeCache(void)
+{
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
+    if (tsdPtr->doubleTypePtr == NULL) {
+	/* Smart initialization of doubleTypePtr without
+	 * hash-table lookup or creating complete Tcl_Obj's */
+	Tcl_Obj obj;
+	obj.length = 3;
+	obj.bytes = (char *)"0.0";
+	obj.typePtr = NULL;
+	Tcl_GetDoubleFromObj(NULL, &obj, &obj.internalRep.doubleValue);
+	tsdPtr->doubleTypePtr = obj.typePtr;
+    }
+    return tsdPtr;
+}
 
 /*
  *----------------------------------------------------------------------
@@ -465,13 +510,15 @@ SetPixelFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
+    ThreadSpecificData *typeCache = GetTypeCache();
     const Tcl_ObjType *typePtr;
-    const char *string;
+    char *string;
     char *rest;
     double d;
     int i, units;
 
-    if (Tcl_GetIntFromObj(NULL, objPtr, &units) == TCL_OK) {
+    if (objPtr->typePtr != typeCache->doubleTypePtr
+	    && Tcl_GetIntFromObj(NULL, objPtr, &units) == TCL_OK) {
 	d = (double) units;
 	units = -1;
 
@@ -485,20 +532,27 @@ SetPixelFromAny(
     } else if (Tcl_GetDoubleFromObj(NULL, objPtr, &d) == TCL_OK) {
 	units = -1;
     } else {
+	char savechar;
 	string = Tcl_GetString(objPtr);
 
-	d = strtod(string, &rest);
-	if (rest == string) {
-	    goto error;
+	rest = string + strlen(string);
+	while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	    --rest; /* skip all spaces at the end */
 	}
-	while ((*rest != '\0') && isspace(UCHAR(*rest))) {
-	    rest++;
+	if (rest > string) {
+	    --rest; /* point to the character just before the last space */
+	}
+	if (rest == string) {
+	error:
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad screen distance \"%.50s\"", string));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	    }
+	    return TCL_ERROR;
 	}
 
 	switch (*rest) {
-	case '\0':
-	    units = -1;
-	    break;
 	case 'm':
 	    units = 0;
 	    break;
@@ -514,7 +568,15 @@ SetPixelFromAny(
 	default:
 	    goto error;
 	}
+	savechar = *rest;
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, string, &d) != TCL_OK) {
+	    *rest = savechar;
+	    goto error;
+	}
+	*rest = savechar;
     }
+
     /*
      * Free the old internalRep before setting the new one.
      */
@@ -539,14 +601,6 @@ SetPixelFromAny(
 	SET_COMPLEXPIXEL(objPtr, pixelPtr);
     }
     return TCL_OK;
-
-  error:
-    if (interp != NULL) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"bad screen distance \"%.50s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
-    }
-    return TCL_ERROR;
 }
 
 /*
@@ -695,7 +749,7 @@ UpdateStringOfMM(
 {
     MMRep *mmPtr;
     char buffer[TCL_DOUBLE_SPACE];
-    Tcl_Size len;
+    size_t len;
 
     mmPtr = (MMRep *)objPtr->internalRep.twoPtrValue.ptr1;
     /* assert( mmPtr->units == -1 && objPtr->bytes == NULL ); */
@@ -735,6 +789,7 @@ SetMMFromAny(
     Tcl_Interp *interp,		/* Used for error reporting if not NULL. */
     Tcl_Obj *objPtr)		/* The object to convert. */
 {
+    ThreadSpecificData *typeCache = GetTypeCache();
     const Tcl_ObjType *typePtr;
     char *string;
     char *rest;
@@ -742,7 +797,8 @@ SetMMFromAny(
     int units;
     MMRep *mmPtr;
 
-    if (Tcl_GetIntFromObj(NULL, objPtr, &units) == TCL_OK) {
+    if (objPtr->typePtr != typeCache->doubleTypePtr
+	    && Tcl_GetIntFromObj(NULL, objPtr, &units) == TCL_OK) {
 	d = (double) units;
 	units = -1;
 
@@ -756,13 +812,21 @@ SetMMFromAny(
     } else if (Tcl_GetDoubleFromObj(NULL, objPtr, &d) == TCL_OK) {
 	units = -1;
     } else {
+	char savechar;
+
 	/*
 	 * It wasn't a known int or double, so parse it.
 	 */
 
 	string = Tcl_GetString(objPtr);
 
-	d = strtod(string, &rest);
+	rest = string + strlen(string);
+	while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	    --rest; /* skip all spaces at the end */
+	}
+	if (rest > string) {
+	    --rest; /* point to the character just before the last space */
+	}
 	if (rest == string) {
 	error:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -770,14 +834,7 @@ SetMMFromAny(
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DISTANCE", NULL);
 	    return TCL_ERROR;
 	}
-	while ((*rest != '\0') && isspace(UCHAR(*rest))) {
-	    rest++;
-	}
-
 	switch (*rest) {
-	case '\0':
-	    units = -1;
-	    break;
 	case 'c':
 	    units = 0;
 	    break;
@@ -793,6 +850,13 @@ SetMMFromAny(
 	default:
 	    goto error;
 	}
+	savechar = *rest;
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, string, &d) != TCL_OK) {
+	    *rest = savechar;
+	    goto error;
+	}
+	*rest = savechar;
     }
 
     /*

@@ -1873,7 +1873,7 @@ GetLineIndex(
 {
     Tcl_Size idx, length;
     LineItem *linePtr = (LineItem *) itemPtr;
-    const char *string;
+    char *string;
 
     if (TCL_OK == TkGetIntForIndex(obj, 2*linePtr->numPoints - 1, 1, &idx)) {
 	if (idx < 0) {
@@ -1892,17 +1892,24 @@ GetLineIndex(
     if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
-	char *end;
-	const char *p;
+	char savechar;
+	char *p, *sep;
 
 	p = string+1;
-	x = strtod(p, &end);
-	if ((end == p) || (*end != ',')) {
+	sep = strchr(p, ',');
+	if (!sep) {
 	    goto badIndex;
 	}
-	p = end+1;
-	y = strtod(p, &end);
-	if ((end == p) || (*end != 0)) {
+	savechar = *sep;
+	*sep = '\0';
+	i = Tcl_GetDouble(NULL, p, &x);
+	*sep = savechar;
+	if (i != TCL_OK) {
+	    goto badIndex;
+	}
+	p = sep+1;
+	i = Tcl_GetDouble(NULL, p, &y);
+	if (i != TCL_OK) {
 	    goto badIndex;
 	}
 	bestDist = 1.0e36;
