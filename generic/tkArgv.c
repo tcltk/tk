@@ -83,7 +83,6 @@ Tk_ParseArgv(
 				 * than srcIndex). */
     int argc;			/* # arguments in argv still to process. */
     size_t length;		/* Number of characters in current argument. */
-    char *endPtr;		/* Used for identifying junk in arguments. */
     int i;
 
     if (flags & TK_ARGV_DONT_SKIP_FIRST_ARG) {
@@ -106,7 +105,7 @@ Tk_ParseArgv(
 	}
 
 	/*
-	 * Loop throught the argument descriptors searching for one with the
+	 * Loop through the argument descriptors searching for one with the
 	 * matching key string. If found, leave a pointer to it in matchPtr.
 	 */
 
@@ -181,12 +180,7 @@ Tk_ParseArgv(
 	    if (argc == 0) {
 		goto missingArg;
 	    }
-	    *((int *) infoPtr->dst) = strtol(argv[srcIndex], &endPtr, 0);
-	    if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"expected %s argument for \"%s\" but got \"%s\"",
-			"integer", infoPtr->key, argv[srcIndex]));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "INTEGER", curArg,NULL);
+	    if (Tcl_GetInt(interp, argv[srcIndex], (int *) infoPtr->dst) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    srcIndex++;
@@ -215,12 +209,7 @@ Tk_ParseArgv(
 	    if (argc == 0) {
 		goto missingArg;
 	    }
-	    *((double *) infoPtr->dst) = strtod(argv[srcIndex], &endPtr);
-	    if ((endPtr == argv[srcIndex]) || (*endPtr != 0)) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"expected %s argument for \"%s\" but got \"%s\"",
-			"floating-point", infoPtr->key, argv[srcIndex]));
-		Tcl_SetErrorCode(interp, "TK", "ARG", "FLOAT", curArg, NULL);
+	    if (Tcl_GetDouble(interp, argv[srcIndex], ((double *) infoPtr->dst)) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    srcIndex++;
