@@ -143,7 +143,7 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox \
-	    -arrowsize 7.5p -smallarrow 1 -arrowcolor $colors(-text) \
+	    -arrowsize 7.5p -arrowcolor $colors(-text) \
 	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
