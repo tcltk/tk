@@ -168,7 +168,7 @@ UnderlinePrintProc(
     }
     p = (char *)ckalloc(32);
     if (underline < 0) {
-	snprintf(p, 32, "end%d", underline);
+	snprintf(p, 32, "end%d", 1 + underline);
     } else {
 	snprintf(p, 32, "%d", underline);
     }
