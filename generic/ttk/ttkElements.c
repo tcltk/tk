@@ -1597,7 +1597,6 @@ static void TabElementDraw(
     int cut = 2;
     XPoint pts[6];
     int n = 0;
-    int w = WIN32_XDRAWLINE_HACK;
     (void)dummy;
 
     Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
@@ -1615,11 +1614,13 @@ static void TabElementDraw(
     pts[n].x = b.x + cut;  		pts[n].y = b.y; ++n;
     pts[n].x = b.x + b.width-1-cut;	pts[n].y = b.y; ++n;
     pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height - 1 + w; ++n;
+    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height; ++n;
 
     XFillPolygon(Tk_Display(tkwin), d,
 	Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	pts, 6, Convex, CoordModeOrigin);
+
+    pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
 
     while (borderWidth--) {
 	XDrawLines(Tk_Display(tkwin), d,
