@@ -298,7 +298,8 @@ static void LabelframeStyleOptions(Labelframe *lf, LabelframeStyle *style)
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &style->labelAnchor);
     }
     if ((objPtr = Ttk_QueryOption(layout,"-labelmargins", 0)) != NULL) {
-	Ttk_GetBorderFromObj(NULL, objPtr, &style->labelMargins);
+	Ttk_GetPaddingFromObj(NULL, lf->core.tkwin, objPtr,
+	    &style->labelMargins);
     } else {
 	if (style->labelAnchor & (TTK_PACK_TOP|TTK_PACK_BOTTOM)) {
 	    style->labelMargins =
