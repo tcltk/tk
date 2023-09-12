@@ -907,8 +907,8 @@ static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 1, relief = TK_RELIEF_RAISED;
     Ttk_Padding padding;
@@ -963,7 +963,8 @@ static const Ttk_ElementSpec ArrowElementSpec = {
 
 /*
  * Modified arrow element for comboboxes and spinboxes:
- * 	Left edge is drawn in the same color as the right one.
+ * 	The width and height are different, and the left edge is drawn in the
+ *	same color as the right one.
  */
 
 static void BoxArrowElementSize(
@@ -993,8 +994,8 @@ static void BoxArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ArrowElement *arrow = (ArrowElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 1, relief = TK_RELIEF_RAISED;
     Display *disp = Tk_Display(tkwin);

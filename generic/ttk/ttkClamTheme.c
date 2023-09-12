@@ -600,13 +600,15 @@ static void GripElementDraw(
 	int x = b.x + (b.width - gripSize) / 2;
 	int y1 = b.y + gripPad, y2 = b.y + b.height - gripPad - 1 + w;
 	for (i=0; i<gripSize; ++i) {
-	    XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC,  x,y1, x,y2); ++x;
+	    XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC, x,y1, x,y2);
+	    ++x;
 	}
     } else {
 	int y = b.y + (b.height - gripSize) / 2;
 	int x1 = b.x + gripPad, x2 = b.x + b.width - gripPad - 1 + w;
 	for (i=0; i<gripSize; ++i) {
-	    XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC,  x1,y, x2,y); ++y;
+	    XDrawLine(Tk_Display(tkwin), d, (i&1)?lightGC:darkGC, x1,y, x2,y);
+	    ++y;
 	}
     }
 }
@@ -828,30 +830,38 @@ static const Ttk_ElementSpec PbarElementSpec = {
     PbarElementDraw
 };
 
-
 /*------------------------------------------------------------------------
  * +++ Scrollbar arrows.
  */
 static void ArrowElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
     int size = SCROLLBAR_THICKNESS;
-    (void)dummy;
-    (void)tkwin;
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
-    *widthPtr = *heightPtr = size;
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned state)
 {
-    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
     double scalingLevel = TkScalingLevel(tkwin);
     Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
     int cx, cy;
@@ -871,10 +881,16 @@ static void ArrowElementDraw(
 	case ARROW_UP:
 	case ARROW_DOWN:
 	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
 	    break;
 	case ARROW_LEFT:
 	case ARROW_RIGHT:
 	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
 	    break;
     }
 
@@ -891,6 +907,35 @@ static const Ttk_ElementSpec ArrowElementSpec = {
     ArrowElementDraw
 };
 
+/*
+ * Modified arrow element for spinboxes:
+ * 	The width and height are different.
+ */
+static void SpinboxArrowElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = (ArrowDirection)PTR2INT(clientData);
+    double scalingLevel = TkScalingLevel(tkwin);
+    Ttk_Padding padding = Ttk_UniformPadding(round(3 * scalingLevel));
+    int size = 10;
+    (void)paddingPtr;
+
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+}
+
+static const Ttk_ElementSpec SpinboxArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
+    SpinboxArrowElementSize,
+    ArrowElementDraw
+};
 
 /*------------------------------------------------------------------------
  * +++ Notebook elements.
@@ -1055,26 +1100,30 @@ TtkClamTheme_Init(Tcl_Interp *interp)
         return TCL_ERROR;
     }
 
-    Ttk_RegisterElement(interp,
-	theme, "border", &BorderElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "field", &FieldElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Combobox.field", &ComboboxFieldElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "trough", &TroughElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "thumb", &ThumbElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "uparrow", &ArrowElementSpec, INT2PTR(ARROW_UP));
-    Ttk_RegisterElement(interp,
-	theme, "downarrow", &ArrowElementSpec, INT2PTR(ARROW_DOWN));
-    Ttk_RegisterElement(interp,
-	theme, "leftarrow", &ArrowElementSpec, INT2PTR(ARROW_LEFT));
-    Ttk_RegisterElement(interp,
-	theme, "rightarrow", &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
-    Ttk_RegisterElement(interp,
-	theme, "arrow", &ArrowElementSpec, INT2PTR(ARROW_UP));
+    Ttk_RegisterElement(interp, theme, "border",
+	    &BorderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "field",
+	    &FieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Combobox.field",
+	    &ComboboxFieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "trough",
+	    &TroughElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "thumb",
+	    &ThumbElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "uparrow",
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
+    Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
+	    &SpinboxArrowElementSpec, INT2PTR(ARROW_UP));
+    Ttk_RegisterElement(interp, theme, "downarrow",
+	    &ArrowElementSpec, INT2PTR(ARROW_DOWN));
+    Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
+	    &SpinboxArrowElementSpec, INT2PTR(ARROW_DOWN));
+    Ttk_RegisterElement(interp, theme, "leftarrow",
+	    &ArrowElementSpec, INT2PTR(ARROW_LEFT));
+    Ttk_RegisterElement(interp, theme, "rightarrow",
+	    &ArrowElementSpec, INT2PTR(ARROW_RIGHT));
+    Ttk_RegisterElement(interp, theme, "arrow",
+	    &ArrowElementSpec, INT2PTR(ARROW_UP));
 
     Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
 	    &IndicatorElementSpec, (void *)&checkbutton_spec);
