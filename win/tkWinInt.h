@@ -148,6 +148,7 @@ MODULE_SCOPE const int tkpWinBltModes[];
  */
 
 MODULE_SCOPE void TkWinUpdatingClipboard(int mode);
+MODULE_SCOPE int TkWinOpenClipboardRetry(HWND hwnd);
 
 /*
  * Used by tkWinDialog.c to associate the right icon with tk_messageBox
