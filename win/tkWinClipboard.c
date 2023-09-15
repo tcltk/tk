@@ -38,7 +38,7 @@ static void		UpdateClipboard(HWND hwnd);
  */
 
 int
-OpenClipboardRetry(
+TkWinOpenClipboardRetry(
     HWND hwnd)
 {
     int attempt;
@@ -83,7 +83,7 @@ TkSelGetSelection(
 	    || (target != XA_STRING)) {
 	goto error;
     }
-    if (OpenClipboardRetry(NULL) != TCL_OK) {
+    if (TkWinOpenClipboardRetry(NULL) != TCL_OK) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	        "clipboard cannot be opened, another application grabbed it"));
         Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
@@ -419,7 +419,7 @@ UpdateClipboard(
     HWND hwnd)
 {
     TkWinUpdatingClipboard(TRUE);
-    OpenClipboardRetry(hwnd);
+    TkWinOpenClipboardRetry(hwnd);
     EmptyClipboard();
 
     SetClipboardData(CF_UNICODETEXT, NULL);
