@@ -174,7 +174,9 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TNotebook.Tab \
 	    -padding {3p 1.5p} -background $colors(-darker)
 	ttk::style map TNotebook.Tab \
-	    -background [list selected $colors(-frame)]
+	    -background [list selected $colors(-frame)] \
+	    -highlight [list selected 1] \
+	    -highlightcolor [list selected $colors(-selectbg)]
 
 	# Treeview.
 	#
