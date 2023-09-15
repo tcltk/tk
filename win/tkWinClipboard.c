@@ -419,7 +419,7 @@ UpdateClipboard(
     HWND hwnd)
 {
     TkWinUpdatingClipboard(TRUE);
-    OpenClipboard(hwnd);
+    OpenClipboardRetry(hwnd);
     EmptyClipboard();
 
     SetClipboardData(CF_UNICODETEXT, NULL);
