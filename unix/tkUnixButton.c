@@ -268,12 +268,13 @@ TkpDrawCheckIndicator(
     }
 
     /*
-     * Check whether there is an SVG image for
-     * the value of mode and these color strings
+     * Check whether there is an SVG image of this size
+     * for the value of mode and these color strings
      */
 
-    snprintf(imgName, sizeof(imgName), "::tk::icons::indicator%d_%s_%s_%s_%s",
-	     mode,
+    snprintf(imgName, sizeof(imgName),
+	     "::tk::icons::indicator%d_%d_%s_%s_%s_%s",
+	     dim, mode,
 	     hasBorder ? darkColorStr : "XXXXXX",
 	     hasBorder ? lightColorStr : "XXXXXX",
 	     hasInterior ? interiorColorStr : "XXXXXX",

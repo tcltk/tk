@@ -63,32 +63,57 @@ set font mainFont
 #
 # See https://github.com/twbs/icons.
 
-image create photo ::img::refresh -format $::tk::svgFmt -data {
+set viewData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z" fill="#000000"/>
     </svg>
 }
 
-image create photo ::img::view -format $::tk::svgFmt -data {
+set refreshData {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/>
+     <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192Zm3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z" fill="#000000"/>
     </svg>
 }
+
+set printData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z" fill="#000000"/>
+     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z" fill="#000000"/>
+    </svg>
+}
+
+proc createImages {} {
+    set fgColor [ttk::style lookup . -foreground {} black]
+    lassign [winfo rgb . $fgColor] r g b
+    set fgColor [format "#%02x%02x%02x" \
+	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+
+    foreach action {view refresh print} {
+	upvar ${action}Data imgData
+	for {set data $imgData; set startIdx 0} \
+		{[set idx1 [string first "#000000" $data $startIdx]] >= 0} \
+		{set startIdx [expr {$idx1 + 7}]} {
+	    set idx2 [expr {$idx1 + 6}]
+	    set data [string replace $data $idx1 $idx2 $fgColor]
+	}
+
+	image create photo ::img::$action -format $::tk::svgFmt -data $data
+    }
+}
+
+createImages
+foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
+    bind [winfo class .] $event { createImages }
+}
+unset event
 
 image create photo ::img::delete -format $::tk::svgFmt -data {
     <?xml version="1.0" encoding="UTF-8"?>
     <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" fill="#800000"/>
-    </svg>
-}
-
-image create photo ::img::print -format $::tk::svgFmt -data {
-    <?xml version="1.0" encoding="UTF-8"?>
-    <svg width="16" height="16" version="1.1" xmlns="http://www.w3.org/2000/svg">
-     <path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/>
-     <path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/>
+     <path d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854Z" fill="#d00000"/>
     </svg>
 }
 

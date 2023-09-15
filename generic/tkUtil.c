@@ -1198,16 +1198,16 @@ double
 TkScalingLevel(
     Tk_Window tkwin)
 {
-    static double level = 0.0;
-
-    if (level == 0.0) {
-	Tcl_Interp *interp = Tk_Interp(tkwin);
-	const char *scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct",
-		TCL_GLOBAL_ONLY);
-	level = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
+	    TCL_GLOBAL_ONLY);
+    if (scalingPctPtr == NULL) {
+	return 1.0;
+    } else {
+	int scalingPct;
+	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
+	return scalingPct / 100.0;
     }
-
-    return level;
 }
 
 /*

@@ -2728,7 +2728,7 @@ GetListboxIndex(
 {
     int result, index;
     Tcl_Size idx;
-    const char *stringRep;
+    char *stringRep;
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
@@ -2770,17 +2770,22 @@ GetListboxIndex(
          */
 
 	int y;
-	const char *start;
-	char *end;
+	char *start;
+	char *rest;
 
 	start = stringRep + 1;
-	y = strtol(start, &end, 0);
-	if ((start == end) || (*end != ',')) {
+	rest = strchr(start, ',');
+	if (!rest) {
 	    goto badIndex;
 	}
-	start = end+1;
-	y = strtol(start, &end, 0);
-	if ((start == end) || (*end != '\0')) {
+	*rest = '\0';
+	if (Tcl_GetInt(NULL, start, &y) != TCL_OK) {
+	    *rest = ',';
+	    goto badIndex;
+	}
+	*rest = ',';
+	start = rest+1;
+	if (Tcl_GetInt(NULL, start, &y) != TCL_OK) {
 	    goto badIndex;
 	}
 	*indexPtr = NearestListboxElement(listPtr, y);
