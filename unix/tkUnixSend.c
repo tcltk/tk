@@ -952,16 +952,16 @@ Tk_SendObjCmd(
 {
     enum {
 	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
-    };
+    } index;
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
+    const char *stringRep, *destName;
     TkWindow *winPtr;
     Window commWindow;
     PendingCommand pending;
     RegisteredInterp *riPtr;
-    const char *destName;
-    int result, index, async, i, firstArg;
+    int result, async, i, firstArg;
     Tk_RestrictProc *prevProc;
     ClientData prevArg;
     TkDisplay *dispPtr;
@@ -982,26 +982,36 @@ Tk_SendObjCmd(
     if (winPtr == NULL) {
 	return TCL_ERROR;
     }
-    for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
-		sizeof(char *), "option", 0, &index) != TCL_OK) {
-	    break;
-	}
-	if (index == SEND_ASYNC) {
-	    ++async;
-	} else if (index == SEND_DISPLAYOF) {
-	    winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[++i]),
-		    (Tk_Window) winPtr);
-	    if (winPtr == NULL) {
+
+    /*
+     * Process the command options.
+     */
+
+    for (i = 1; i < (objc - 1); i++) {
+	stringRep = Tcl_GetString(objv[i]);
+	if (stringRep[0] == '-') {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	} else if (index == SEND_LAST) {
-	    i++;
+	    if (index == SEND_ASYNC) {
+		++async;
+	    } else if (index == SEND_DISPLAYOF) {
+		winPtr = (TkWindow *) Tk_NameToWindow(interp, Tcl_GetString(objv[++i]),
+			(Tk_Window) winPtr);
+		if (winPtr == NULL) {
+		    return TCL_ERROR;
+		}
+	    } else /* if (index == SEND_LAST) */ {
+		i++;
+		break;
+	    }
+	} else {
 	    break;
 	}
     }
 
-    if (objc < (i+2)) {
+    if (objc < (i + 2)) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-option value ...? interpName arg ?arg ...?");
 	return TCL_ERROR;

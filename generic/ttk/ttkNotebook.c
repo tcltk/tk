@@ -169,12 +169,13 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabmargins", 0)) != 0) {
-	Ttk_GetBorderFromObj(NULL, objPtr, &nbstyle->tabMargins);
+	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr,
+	    &nbstyle->tabMargins);
     }
 
     nbstyle->padding = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-padding", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL,nb->core.tkwin,objPtr,&nbstyle->padding);
+	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr, &nbstyle->padding);
     }
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
@@ -497,7 +498,7 @@ static void PlaceTabs(
 	    Tcl_Obj *expandObj = Ttk_QueryOption(tabLayout,"-expand",tabState);
 
 	    if (expandObj) {
-		Ttk_GetBorderFromObj(NULL, expandObj, &expand);
+		Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, expandObj, &expand);
 	    }
 
 	    tab->parcel =

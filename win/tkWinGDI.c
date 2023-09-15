@@ -2142,11 +2142,7 @@ static int GdiCopyBits(
 	    }
 	} else if (strcmp(argv[k], "-scale") == 0) {
 	    if (argv[++k]) {
-		scale = strtod(argv[k], &strend);
-		if (strend == 0 || strend == argv[k]) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "Can't understand scale specification %s",
-			    argv[k]));
+		if (Tcl_GetDouble(interp, argv[k], &scale) != TCL_OK) {
 		    return TCL_ERROR;
 		}
 		if (scale <= 0.01 || scale >= 100.0) {

@@ -573,53 +573,63 @@ Tk_GetScreenMM(
     const char *string,		/* String describing a screen distance. */
     double *doublePtr)		/* Place to store converted result. */
 {
-    char *end;
+    const char *rest;
     double d;
+    Tcl_DString ds;
 
-    d = strtod(string, &end);
-    if (end == string) {
-	goto error;
-    }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    switch (*end) {
-    case 0:
+    if (Tcl_GetDouble(NULL, string, &d) == TCL_OK) {
+	if (!tkwin) {
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj("bad screen", -1));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "SCREEN_DISTANCE", NULL);
+	    }
+	    return TCL_ERROR;
+	}
 	d /= WidthOfScreen(Tk_Screen(tkwin));
 	d *= WidthMMOfScreen(Tk_Screen(tkwin));
-	break;
+	*doublePtr = d;
+	return TCL_OK;
+    }
+    rest = string + strlen(string);
+    while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	--rest; /* skip all spaces at the end */
+    }
+    if (rest > string) {
+	--rest; /* point to the character just before the last space */
+    }
+	if (rest == string) {
+	error:
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad screen distance \"%s\"", string));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "SCREEN_DISTANCE", NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, string, rest-string);
+    if (Tcl_GetDouble(NULL, Tcl_DStringValue(&ds), &d) != TCL_OK) {
+	Tcl_DStringFree(&ds);
+	goto error;
+    }
+    Tcl_DStringFree(&ds);
+    switch (*rest) {
     case 'c':
 	d *= 10;
-	end++;
 	break;
     case 'i':
 	d *= 25.4;
-	end++;
 	break;
     case 'm':
-	end++;
 	break;
     case 'p':
 	d *= 25.4/72.0;
-	end++;
 	break;
     default:
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    if (*end != 0) {
-	goto error;
-    }
     *doublePtr = d;
     return TCL_OK;
-
-  error:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad screen distance \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "SCREEN_DISTANCE", NULL);
-    return TCL_ERROR;
 }
 
 /*
@@ -693,61 +703,66 @@ TkGetDoublePixels(
     const char *string,		/* String describing a number of pixels. */
     double *doublePtr)		/* Place to store converted result. */
 {
-    char *end;
+    const char *rest;
     double d;
+    Tcl_DString ds;
 
+    if (Tcl_GetDouble(NULL, string, &d) == TCL_OK) {
+	*doublePtr = d;
+	return TCL_OK;
+    }
     if (!tkwin) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad screen"));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	if (interp != NULL) {
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("bad screen", -1));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	}
 	return TCL_ERROR;
     }
-    d = strtod((char *) string, &end);
-    if (end == string) {
+    rest = string + strlen(string);
+    while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	--rest; /* skip all spaces at the end */
+    }
+    if (rest > string) {
+	--rest; /* point to the character just before the last space */
+    }
+	if (rest == string) {
+	error:
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad screen distance \"%s\"", string));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, string, rest-string);
+    if (Tcl_GetDouble(NULL, Tcl_DStringValue(&ds), &d) != TCL_OK) {
+	Tcl_DStringFree(&ds);
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    switch (*end) {
-    case 0:
-	break;
+    Tcl_DStringFree(&ds);
+    switch (*rest) {
     case 'c':
 	d *= 10*WidthOfScreen(Tk_Screen(tkwin));
 	d /= WidthMMOfScreen(Tk_Screen(tkwin));
-	end++;
 	break;
     case 'i':
 	d *= 25.4*WidthOfScreen(Tk_Screen(tkwin));
 	d /= WidthMMOfScreen(Tk_Screen(tkwin));
-	end++;
 	break;
     case 'm':
 	d *= WidthOfScreen(Tk_Screen(tkwin));
 	d /= WidthMMOfScreen(Tk_Screen(tkwin));
-	end++;
 	break;
     case 'p':
 	d *= (25.4/72.0)*WidthOfScreen(Tk_Screen(tkwin));
 	d /= WidthMMOfScreen(Tk_Screen(tkwin));
-	end++;
 	break;
     default:
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    if (*end != 0) {
-	goto error;
-    }
     *doublePtr = d;
     return TCL_OK;
-
-  error:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "bad screen distance \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
-    return TCL_ERROR;
 }
 
 /*

@@ -56,15 +56,15 @@ proc ::tk_scalingPct {args} {
     }
 
     #
-    # Save the value of pct rounded to the nearest multiple 
+    # Save the value of pct rounded to the nearest multiple
     # of 25 that is at least 100, in the variable scalingPct.
     # FIXME Manual "man n tk_scalingPct" is not yet in sync and describes ::tk::scalingPct.
     #
     variable ::tk::scalingPct
     for {set scalingPct 100} {1} {incr scalingPct 25} {
-        if {$pct < $scalingPct + 12.5} {
-            break
-        }
+	if {$pct < $scalingPct + 12.5} {
+	    break
+	}
     }
     return $scalingPct
 }
@@ -190,7 +190,7 @@ proc ::tk::ScalingInitX11 {pct {w .}} {
 	    # Derive the value of pct from that of the font DPI
 	    #
 	    set dpi [lindex $result 1]
-	    set pct [expr {100 * $dpi / 96}]
+	    set pct [expr {100.0 * $dpi / 96}]
 	} elseif {[catch {exec ps -e | grep gnome-session}] == 0 &&
 		  ![info exists ::env(WAYLAND_DISPLAY)] &&
 		  [catch {exec xrandr --display $screen | grep " connected"} result] == 0 &&
@@ -201,12 +201,12 @@ proc ::tk::ScalingInitX11 {pct {w .}} {
 	    ScanMonitorsFile $result $chan pct
 	}
 
-        if {($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
+	if {($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
 	    #
 	    # Set Tk's scaling factor according to $pct
 	    #
 	    tk scaling -displayof $w [expr {$pct / 75.0}]
-        }
+	}
     }
     return $pct
 }
