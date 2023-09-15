@@ -13,6 +13,7 @@
 #include "tkWinInt.h"
 #include "tkSelect.h"
 #include <shlobj.h>    /* for DROPFILES */
+#include <Windows.h>
 
 static void		UpdateClipboard(HWND hwnd);
 
@@ -37,6 +38,28 @@ static void		UpdateClipboard(HWND hwnd);
  */
 
 int
+TkWinOpenClipboardRetry(
+    HWND hwnd)
+{
+    int attempt;
+
+    /* OpenClipboard may fail if another application has opened the clipboard.
+     * Try up to 8 times, with an initial delay of 1 ms and an exponential back off
+     * for a maximum total delay of 127 ms (1+2+4+8+16+32+64).
+     */
+	
+    for (attempt = 0; attempt < 8; attempt++) {
+	if (OpenClipboard(hwnd)) {
+	    return TCL_OK;
+	}
+	if (attempt > 0) {
+	    Tcl_Sleep(1 << (attempt - 1));
+	}
+    }
+    return TCL_ERROR;
+}
+
+int
 TkSelGetSelection(
     Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
     Tk_Window tkwin,		/* Window on whose behalf to retrieve the
@@ -59,7 +82,7 @@ TkSelGetSelection(
 	    || (target != XA_STRING)) {
 	goto error;
     }
-    if (!OpenClipboard(NULL)) {
+    if (TkWinOpenClipboardRetry(NULL) != TCL_OK) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	        "clipboard cannot be opened, another application grabbed it"));
         Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
@@ -395,7 +418,7 @@ UpdateClipboard(
     HWND hwnd)
 {
     TkWinUpdatingClipboard(TRUE);
-    OpenClipboard(hwnd);
+    TkWinOpenClipboardRetry(hwnd);
     EmptyClipboard();
 
     SetClipboardData(CF_UNICODETEXT, NULL);
