@@ -1563,13 +1563,19 @@ static const Ttk_ElementSpec PbarElementSpec = {
 typedef struct {
     Tcl_Obj *borderWidthObj;
     Tcl_Obj *backgroundObj;
+    Tcl_Obj *highlightObj;
+    Tcl_Obj *highlightColorObj;
 } TabElement;
 
 static const Ttk_ElementOptionSpec TabElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
-	offsetof(TabElement,borderWidthObj),"1" },
+	offsetof(TabElement,borderWidthObj), "1" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(TabElement,backgroundObj), DEFAULT_BACKGROUND },
+    { "-highlight", TK_OPTION_BOOLEAN,
+	offsetof(TabElement,highlightObj), "0" },
+    { "-highlightcolor", TK_OPTION_COLOR,
+	offsetof(TabElement,highlightColorObj), "#4a6984" },
     {0,TK_OPTION_BOOLEAN,0,0}
 };
 
@@ -1594,10 +1600,12 @@ static void TabElementDraw(
 {
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
-    int borderWidth = 1;
-    int cut = 2;
+    int borderWidth = 1, highlight = 0;
     XPoint pts[6];
     int n = 0;
+    double scalingLevel = TkScalingLevel(tkwin);
+    int cut = round(2 * scalingLevel);
+    Display *disp = Tk_Display(tkwin);
     (void)dummy;
 
     Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
@@ -1608,6 +1616,8 @@ static void TabElementDraw(
 	 * to overwrite the client area border.
 	 */
 	b.height += borderWidth;
+
+	Tcl_GetBooleanFromObj(NULL, tab->highlightObj, &highlight);
     }
 
     pts[n].x = b.x; 			pts[n].y = b.y + b.height - 1; ++n;
@@ -1617,23 +1627,25 @@ static void TabElementDraw(
     pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + cut; ++n;
     pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height; ++n;
 
-    XFillPolygon(Tk_Display(tkwin), d,
-	Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
-	pts, 6, Convex, CoordModeOrigin);
+    XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
+	    pts, 6, Convex, CoordModeOrigin);
 
     pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
 
     while (borderWidth--) {
-	XDrawLines(Tk_Display(tkwin), d,
-		Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
-	XDrawLines(Tk_Display(tkwin), d,
-		Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
 		pts+3, 3, CoordModeOrigin);
 	++pts[0].x; ++pts[1].x; ++pts[2].x;             --pts[4].x; --pts[5].x;
 	                        ++pts[2].y; ++pts[3].y;
     }
 
+    if (highlight) {
+	XColor *hlColor = Tk_GetColorFromObj(tkwin, tab->highlightColorObj);
+	XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+		b.x + cut, b.y, b.width - 2*cut, cut);
+    }
 }
 
 static const Ttk_ElementSpec TabElementSpec = {
@@ -1651,6 +1663,20 @@ static const Ttk_ElementSpec TabElementSpec = {
 typedef TabElement ClientElement;
 #define ClientElementOptions TabElementOptions
 
+static void ClientElementSize(
+    void *dummy, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    ClientElement *ce = (ClientElement *)elementRecord;
+    int borderWidth = 1;
+    (void)dummy;
+    (void)widthPtr;
+    (void)heightPtr;
+
+    Tk_GetPixelsFromObj(0, tkwin, ce->borderWidthObj, &borderWidth);
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+}
+
 static void ClientElementDraw(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
@@ -1665,20 +1691,6 @@ static void ClientElementDraw(
 
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
-}
-
-static void ClientElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    ClientElement *ce = (ClientElement *)elementRecord;
-    int borderWidth = 1;
-    (void)dummy;
-    (void)widthPtr;
-    (void)heightPtr;
-
-    Tk_GetPixelsFromObj(0, tkwin, ce->borderWidthObj, &borderWidth);
-    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
 static const Ttk_ElementSpec ClientElementSpec = {
