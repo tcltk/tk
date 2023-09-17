@@ -883,7 +883,7 @@ Tk_TranslateWinEvent(
     case WM_RENDERALLFORMATS: {
         TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
-        if (winPtr && TkWinOpenClipboardRetry(hwnd)) {
+        if (winPtr && TkWinOpenClipboardRetry(hwnd) == TCL_OK) {
             /*
              * Make sure that nobody had taken ownership of the clipboard
              * before we opened it.
