@@ -418,11 +418,12 @@ UpdateClipboard(
     HWND hwnd)
 {
     TkWinUpdatingClipboard(TRUE);
-    TkWinOpenClipboardRetry(hwnd);
-    EmptyClipboard();
+    if (TkWinOpenClipboardRetry(hwnd) == TCL_OK) {
+	EmptyClipboard();
 
-    SetClipboardData(CF_UNICODETEXT, NULL);
-    CloseClipboard();
+	SetClipboardData(CF_UNICODETEXT, NULL);
+	CloseClipboard();
+    }
     TkWinUpdatingClipboard(FALSE);
 }
 
