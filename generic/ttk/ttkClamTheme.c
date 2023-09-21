@@ -198,17 +198,14 @@ static const Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj 	*borderColorObj;
     Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*darkColorObj;
     Tcl_Obj 	*backgroundObj;
 } FieldElement;
 
 static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(FieldElement,borderColorObj), DARKEST_COLOR },
-    { "-lightcolor", TK_OPTION_COLOR,
+    { "-fieldlightcolor", TK_OPTION_COLOR,
 	offsetof(FieldElement,lightColorObj), LIGHT_COLOR },
-    { "-darkcolor", TK_OPTION_COLOR,
-	offsetof(FieldElement,darkColorObj), DARK_COLOR },
     { "-fieldbackground", TK_OPTION_BORDER,
 	offsetof(FieldElement,backgroundObj), "white" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }

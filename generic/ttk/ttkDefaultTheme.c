@@ -326,7 +326,7 @@ static const Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj	*borderObj;
     Tcl_Obj	*borderColorObj;	/* Extra border color */
-    Tcl_Obj	*showFocusObj;
+    Tcl_Obj	*focusWidthObj;
     Tcl_Obj	*focusColorObj;
 } FieldElement;
 
@@ -335,8 +335,8 @@ static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     	"white" },
     { "-bordercolor",TK_OPTION_COLOR, offsetof(FieldElement,borderColorObj),
 	"black" },
-    { "-showfocus", TK_OPTION_BOOLEAN, offsetof(FieldElement,showFocusObj),
-	"0" },
+    { "-focuswidth", TK_OPTION_PIXELS, offsetof(FieldElement,focusWidthObj),
+	"2" },
     { "-focuscolor", TK_OPTION_COLOR, offsetof(FieldElement,focusColorObj),
 	"#4a6984" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -362,30 +362,38 @@ static void FieldElementDraw(
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, field->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, field->borderColorObj);
-    int showFocus = 0;
+    int focusWidth = 2;
     (void)dummy;
 
-    Tcl_GetBooleanFromObj(NULL, field->showFocusObj, &showFocus);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
 
-    if (showFocus && (state & TTK_STATE_FOCUS)) {
+    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
 	Display *disp = Tk_Display(tkwin);
-
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
-	GC gcFocus = Tk_GCForColor(focusColor, d);
-	int x1 = b.x, x2 = b.x + b.width - 1;
-	int y1 = b.y, y2 = b.y + b.height - 1;
-	int w = WIN32_XDRAWLINE_HACK;
+	GC focusGC = Tk_GCForColor(focusColor, d);
 
-	XDrawLine(disp, d, gcFocus, x1+1, y1, x2-1+w, y1);	/* N */
-	XDrawLine(disp, d, gcFocus, x1+1, y2, x2-1+w, y2);	/* S */
-	XDrawLine(disp, d, gcFocus, x1, y1+1, x1, y2-1+w);	/* W */
-	XDrawLine(disp, d, gcFocus, x2, y1+1, x2, y2-1+w);	/* E */
+	if (focusWidth > 1) {
+	    int x1 = b.x, x2 = b.x + b.width - 1;
+	    int y1 = b.y, y2 = b.y + b.height - 1;
+	    int w = WIN32_XDRAWLINE_HACK;
+
+	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
+	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
+	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
+	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
+	} else {
+	    GC borderGC = Tk_GCForColor(borderColor, d);
+	    DrawCorner(tkwin, d, border, borderGC,
+		b.x, b.y, b.width, b.height, 0, DARK);
+	    DrawCorner(tkwin, d, border, borderGC,
+		b.x, b.y, b.width, b.height, 1, DARK);
+	}
 
 	b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
-	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
+	XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
 
-	GC gcBg = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
-	XFillRectangle(disp, d, gcBg, b.x+1, b.y+1, b.width-2, b.height-2);
+	GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
     } else {
 	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    0, TK_RELIEF_SUNKEN);
