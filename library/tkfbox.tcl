@@ -31,7 +31,7 @@ namespace eval ::tk::dialog::file {
 	</svg>
     }
 
-    proc CreateUpdirImage {{name ""}} {
+    proc UpdateUpdirImageData {} {
 	variable updirImageData
 	set idx1 [string first "#000000" $updirImageData]
 	set idx2 [expr {$idx1 + 6}]
@@ -41,13 +41,7 @@ namespace eval ::tk::dialog::file {
 	set fgColor [format "#%02x%02x%02x" \
 		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
 
-	set data [string replace $updirImageData $idx1 $idx2 $fgColor]
-
-	if {$name eq ""} {
-	    return [image create photo -format $::tk::svgFmt -data $data]
-	} else {
-	    return [image create photo $name -format $::tk::svgFmt -data $data]
-	}
+	return [string replace $updirImageData $idx1 $idx2 $fgColor]
     }
 
     # Based on https://icons8.com/icon/JXYalxb9XWWd/folder
@@ -73,11 +67,13 @@ namespace eval ::tk::dialog::file {
 
     # Create the images if they did not already exist.
     if {![info exists ::tk::Priv(updirImage)]} {
-	set ::tk::Priv(updirImage)  [CreateUpdirImage]
+	set ::tk::Priv(updirImage)  [image create photo \
+		-format $::tk::svgFmt -data [UpdateUpdirImageData]]
 
 	bindtags . [linsert [bindtags .] 1 TkFileDialog]
 	bind TkFileDialog <<ThemeChanged>> {
-	    ::tk::dialog::file::CreateUpdirImage $::tk::Priv(updirImage)
+	    $::tk::Priv(updirImage) configure \
+		    -data [::tk::dialog::file::UpdateUpdirImageData]
 	}
     }
     if {![info exists ::tk::Priv(folderImage)]} {
