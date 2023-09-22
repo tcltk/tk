@@ -71,11 +71,13 @@ namespace eval ::tk::dialog::file {
 	set ::tk::Priv(updirImage)  [image create photo \
 		-format $::tk::svgFmt -data [UpdateUpdirImageData]]
 
-	bindtags . [linsert [bindtags .] 1 TkFileDialog]
-	bind TkFileDialog <<ThemeChanged>> {
-	    if {$::tk::Priv(updirImage) in [image names]} {
-		$::tk::Priv(updirImage) configure \
-			-data [::tk::dialog::file::UpdateUpdirImageData]
+	if {"TkFileDialog" ni [bindtags .]} {
+	    bindtags . [linsert [bindtags .] 1 TkFileDialog]
+	    bind TkFileDialog <<ThemeChanged>> {
+		if {$::tk::Priv(updirImage) in [image names]} {
+		    $::tk::Priv(updirImage) configure \
+			    -data [::tk::dialog::file::UpdateUpdirImageData]
+		}
 	    }
 	}
     }
