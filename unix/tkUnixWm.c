@@ -38,6 +38,8 @@ typedef struct ProtocolHandler {
 #define HANDLER_SIZE(cmdLength) \
     (offsetof(ProtocolHandler, command) + 1 + cmdLength)
 
+#define PROPMAXELEMENTS 64
+
 /*
  * Data for [wm attributes] command:
  */
@@ -451,6 +453,9 @@ static int		WmOverrideredirectCmd(Tk_Window tkwin,
 			    TkWindow *winPtr, Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmPositionfromCmd(Tk_Window tkwin, TkWindow *winPtr,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj *const objv[]);
+static int		WmPropertyCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		WmProtocolCmd(Tk_Window tkwin, TkWindow *winPtr,
@@ -1022,7 +1027,7 @@ Tk_WmObjCmd(
 	"frame", "geometry", "grid", "group", "iconbadge", "iconbitmap",
 	"iconify", "iconmask", "iconname", "iconphoto",
 	"iconposition", "iconwindow", "manage", "maxsize",
-	"minsize", "overrideredirect", "positionfrom",
+	"minsize", "overrideredirect", "positionfrom", "property",
 	"protocol", "resizable", "sizefrom", "stackorder",
 	"state", "title", "transient", "withdraw", NULL };
     enum options {
@@ -1033,6 +1038,7 @@ Tk_WmObjCmd(
 	WMOPT_ICONIFY, WMOPT_ICONMASK, WMOPT_ICONNAME, WMOPT_ICONPHOTO,
 	WMOPT_ICONPOSITION, WMOPT_ICONWINDOW, WMOPT_MANAGE, WMOPT_MAXSIZE,
 	WMOPT_MINSIZE, WMOPT_OVERRIDEREDIRECT, WMOPT_POSITIONFROM,
+	WMOPT_PROPERTY,
 	WMOPT_PROTOCOL, WMOPT_RESIZABLE, WMOPT_SIZEFROM, WMOPT_STACKORDER,
 	WMOPT_STATE, WMOPT_TITLE, WMOPT_TRANSIENT, WMOPT_WITHDRAW };
     int index;
@@ -1145,6 +1151,8 @@ Tk_WmObjCmd(
 	return WmOverrideredirectCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_POSITIONFROM:
 	return WmPositionfromCmd(tkwin, winPtr, interp, objc, objv);
+    case WMOPT_PROPERTY:
+	return WmPropertyCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_PROTOCOL:
 	return WmProtocolCmd(tkwin, winPtr, interp, objc, objv);
     case WMOPT_RESIZABLE:
@@ -3135,6 +3143,215 @@ WmProtocolCmd(
     if (!(wmPtr->flags & WM_NEVER_MAPPED)) {
 	UpdateWmProtocols(wmPtr);
     }
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * WmPropertyCmd --
+ *
+ *	This function is invoked to process the "wm property" Tcl command. See
+ *	the user documentation for details on what it does.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	See the user documentation.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+WmPropertyCmd(
+    TCL_UNUSED(Tk_Window),	/* Main window of the application. */
+    TkWindow *winPtr,		/* Toplevel to work with */
+    Tcl_Interp *interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument objects. */
+{
+    WmInfo *wmPtr = winPtr->wmInfoPtr;
+    Atom property, type = XA_STRING;
+    Atom XA_UTF8_STRING = Tk_InternAtom((Tk_Window)winPtr, "UTF8_STRING");
+    int i, count, value, width = 0;
+    const char *name;
+    const unsigned char *bytes;
+    unsigned char data8[PROPMAXELEMENTS * sizeof(long)];
+    unsigned short *data16;
+    unsigned long *data32;
+    Tcl_Size length;
+    Tcl_Obj **elements;
+
+    if ((objc < 3) || (objc > 7)) {
+	Tcl_WrongNumArgs(interp, 2, objv,
+          "window ?name? ?value? ?type? ?width?");
+	return TCL_ERROR;
+    }
+    if (objc == 3) {
+	/*
+	 * Return a list of all defined properties for the window.
+	 */
+	Tcl_Obj *resultObj = Tcl_NewObj();
+        Atom *atoms;
+
+        if (wmPtr->wrapperPtr != NULL) {
+            atoms = XListProperties(wmPtr->wrapperPtr->display,
+              wmPtr->wrapperPtr->window, &count);
+        } else {
+            count = 0;
+        }
+
+        for (i = 0; i < count; i++) {
+            Tcl_ListObjAppendElement(NULL, resultObj, 
+              Tcl_NewStringObj(Tk_GetAtomName((Tk_Window)winPtr,
+                atoms[i]), -1));
+        }
+	Tcl_SetObjResult(interp, resultObj);
+	return TCL_OK;
+    }
+
+    name = Tcl_GetString(objv[3]);
+    property = Tk_InternAtom((Tk_Window)winPtr, name);
+
+    if (objc == 4) {
+	/*
+	 * Return the value of a given property.
+	 */
+
+        int format;
+        unsigned long nitems, remain;
+        unsigned char *data;
+        long maxLength = PROPMAXELEMENTS;
+
+        if (wmPtr->wrapperPtr == NULL) return TCL_OK;
+
+        if (GetWindowProperty(wmPtr->wrapperPtr, property, maxLength,
+          AnyPropertyType, &type, &format, &nitems, &remain, &data)) {
+            Tcl_Obj *options = Tcl_NewDictObj();
+            Tcl_Obj *resultObj;
+            const char *typeStr;
+
+            count = nitems;
+            switch (format) {
+             case 8:
+                Tcl_SetObjResult(interp, Tcl_NewByteArrayObj(data, count));
+                break;
+             case 16:
+                data16 = (unsigned short *)data;
+                resultObj = Tcl_NewListObj(count, NULL);
+                for (i = 0; i < count; i++) {
+                    Tcl_ListObjAppendElement(NULL, resultObj,
+                      Tcl_NewIntObj(data16[i]));
+                }
+                Tcl_SetObjResult(interp, resultObj);
+                break;
+             case 32:
+                data32 = (unsigned long *)data;
+                resultObj = Tcl_NewListObj(count, NULL);
+                for (i = 0; i < count; i++) {
+                    Tcl_ListObjAppendElement(NULL, resultObj,
+                      Tcl_NewIntObj(data32[i]));
+                }
+                Tcl_SetObjResult(interp, resultObj);
+                break;
+            }
+            XFree(data);
+            if (type != None) {
+                typeStr = Tk_GetAtomName((Tk_Window)winPtr, type);
+                Tcl_DictObjPut(NULL, options,
+                  Tcl_NewStringObj("-propertytype", -1), 
+                  Tcl_NewStringObj(typeStr, -1));
+                Tcl_DictObjPut(NULL, options,
+                  Tcl_NewStringObj("-propertyformat", -1), Tcl_NewIntObj(format));
+                Tcl_SetReturnOptions(interp, options);
+            }
+        }
+	return TCL_OK;
+    }
+
+    /* Properties starting with WM_ or _NET_WM_ are considered reserved */
+    /* Those properties may only be changed using dedicated wm commands */
+    if (strncmp(name, "WM_", 3) == 0 || strncmp(name, "_NET_WM_", 8) == 0) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf("changing reserved property "
+          "\"%s\" is not allowed", name));
+        return TCL_ERROR;
+    }
+
+    if (objc >= 6) {
+        if (strcmp(Tcl_GetString(objv[5]), "None") == 0) {
+            /* Delete the property */
+            if (wmPtr->wrapperPtr != NULL) {
+                XDeleteProperty(wmPtr->wrapperPtr->display,
+                  wmPtr->wrapperPtr->window, property);
+            }
+            return TCL_OK;
+        }
+        type = Tk_InternAtom((Tk_Window)winPtr, Tcl_GetString(objv[5]));
+    }
+
+    if (objc >= 7) {
+        if (Tcl_GetIntFromObj(interp, objv[6], &width) != TCL_OK) {
+            return TCL_ERROR;
+        }
+    }
+
+    if (width == 0) {
+        width = type == XA_STRING || type == XA_UTF8_STRING ? 8 : 32;
+    }
+
+    if ((width != 8 && width != 16 && width != 32)
+      || ((type == XA_ATOM || type == XA_BITMAP) && width != 32)
+      || ((type == XA_STRING || type == XA_UTF8_STRING) && width != 8)) {
+        Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid width: %d", width));
+        return TCL_ERROR;
+    }
+
+    switch (width) {
+     case 8:
+        bytes = Tcl_GetByteArrayFromObj(objv[4], &length);
+        if (length <= PROPMAXELEMENTS) {
+            memcpy(data8, bytes, length);
+        }
+        break;
+     case 16:
+        data16 = (unsigned short *) data8;
+        if (Tcl_ListObjGetElements(interp, objv[4],
+          &length, &elements) != TCL_OK) return TCL_ERROR;
+        if (length <= PROPMAXELEMENTS) {
+            for (i = 0; i < length; i++) {
+                if (Tcl_GetIntFromObj(interp, elements[i], &value) != TCL_OK) {
+                    return TCL_ERROR;
+                }
+                data16[i] = value;
+            }
+        }
+        break;
+     case 32:
+        data32 = (unsigned long *) data8;
+        if (Tcl_ListObjGetElements(interp, objv[4],
+          &length, &elements) != TCL_OK) return TCL_ERROR;
+        if (length <= PROPMAXELEMENTS) {
+            for (i = 0; i < length; i++) {
+                if (Tcl_GetIntFromObj(NULL, elements[i], &value) != TCL_OK) {
+                    data32[i] = Tk_InternAtom((Tk_Window)winPtr,
+                      Tcl_GetString(elements[i]));
+                } else {
+                    data32[i] = value;
+                }
+            }
+        }
+    }
+
+    if (length > PROPMAXELEMENTS) {
+        Tcl_SetObjResult(interp, Tcl_NewStringObj("too many elements", -1));
+        return TCL_ERROR;
+    }
+
+    /* Create the wrapper window, if necessary */
+    if (wmPtr->wrapperPtr == NULL) CreateWrapper(wmPtr);
+    /* Create or update the property */
+    SetWindowProperty(wmPtr->wrapperPtr, name, type, width, data8, length);
     return TCL_OK;
 }
 

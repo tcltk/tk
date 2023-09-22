@@ -122,9 +122,15 @@ test wm-1.1 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -bo
     wm
 } -result {wrong # args: should be "wm option window ?arg ...?"}
 # Next test will fail every time set of subcommands is changed
-test wm-1.2 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -body {
-    wm foo
-} -result {bad option "foo": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}
+if {[testConstraint x11]} {
+    test wm-1.2 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -body {
+	wm foo
+    } -result {bad option "foo": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, property, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}
+} else {
+    test wm-1.2 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -body {
+	wm foo
+    } -result {bad option "foo": must be aspect, attributes, client, colormapwindows, command, deiconify, focusmodel, forget, frame, geometry, grid, group, iconbadge, iconbitmap, iconify, iconmask, iconname, iconphoto, iconposition, iconwindow, manage, maxsize, minsize, overrideredirect, positionfrom, protocol, resizable, sizefrom, stackorder, state, title, transient, or withdraw}
+}
 test wm-1.3 {Tk_WmObjCmd procedure, miscellaneous errors} -returnCodes error -body {
     wm command
 } -result {wrong # args: should be "wm option window ?arg ...?"}
@@ -1336,6 +1342,98 @@ test wm-positionfrom-2.1 {setting and reading values} -setup {
     destroy .t2
 } -result {user program {}}
 
+
+### wm property ###
+test wm-property-1.1 {usage} -returnCodes error -constraints x11 -body {
+    wm property
+} -result {wrong # args: should be "wm option window ?arg ...?"}
+test wm-property-1.2 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t 1 2 3 4 5
+} -result {wrong # args: should be "wm property window ?name? ?value? ?type? ?width?"}
+test wm-property-1.3 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t _TCL_TEST 42 CARDINAL 24
+} -result {invalid width: 24}
+test wm-property-1.4 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t _TCL_TEST "Some string" STRING 16
+} -result {invalid width: 16}
+test wm-property-1.5 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t _TCL_TEST {invalid "list''} INTEGER 16
+} -result {unmatched open quote in list}
+test wm-property-1.6 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t _TCL_TEST {xx yy zz} INTEGER 16
+} -result {expected integer but got "xx"}
+test wm-property-1.7 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t _TCL_TEST [lrepeat 66 99] INTEGER
+} -result {too many elements}
+test wm-property-1.8 {usage} -returnCodes error -constraints x11 -body {
+    wm property .t WM_NAME "New name"
+} -result {changing reserved property "WM_NAME" is not allowed}
+
+test wm-property-2.1 {reading values} -constraints x11 -body {
+    expr {"WM_NAME" in [wm property .t]}
+} -result 1
+test wm-property-2.2 {reading values} -constraints x11 -body {
+    wm property .t WM_NAME
+} -result "t"
+test wm-property-2.3 {reading values} -constraints x11 -body {
+    catch {wm property .t WM_NAME} data opts
+    dict values [dict filter $opts key -property*]
+} -result "STRING 8"
+test wm-property-2.4 {reading values} -constraints x11 -body {
+    catch {wm property .t WM_PROTOCOLS} data opts
+    dict values [dict filter $opts key -property*]
+} -result "ATOM 32"
+
+test wm-property-3.1 {setting values} -constraints x11 -body {
+    wm property .t _TCL_TEST "Some string"
+    catch {wm property .t _TCL_TEST} data opts
+    linsert [dict values [dict filter $opts key -property*]] 0 $data
+} -result {{Some string} STRING 8}
+test wm-property-3.2 {setting values} -constraints x11 -body {
+    wm property .t _TCL_TEST [lrepeat 64 88] CARDINAL
+    catch {wm property .t _TCL_TEST} data opts
+    linsert [dict values [dict filter $opts key -property*]] 0 \
+      [llength $data] [lsort -unique -integer $data]
+} -result {64 88 CARDINAL 32}
+test wm-property-3.3 {setting values} -constraints x11 -body {
+    wm property .t _TCL_TEST {WM_STATE WM_PROTOCOLS _TCL_TEST_ATOM} ATOM
+    lmap n [wm property .t _TCL_TEST] {winfo atomname $n}
+} -result {WM_STATE WM_PROTOCOLS _TCL_TEST_ATOM}
+
+test wm-property-4.1 {deleting values} -constraints x11 -body {
+    wm property .t _TCL_TEST "Some string"
+    wm property .t _TCL_TEST "Delete" None
+    try {wm property .t _TCL_TEST} on ok {data opts} {
+	linsert [dict values [dict filter $opts key -property*]] 0 $data
+    }
+} -result {{}}
+test wm-property-4.2 {deleting values} -constraints x11 -body {
+    wm property .t _TCL_TEST_NOTSET "Delete" None
+    try {wm property .t _TCL_TEST_NOTSET} on ok {data opts} {
+	linsert [dict values [dict filter $opts key -property*]] 0 $data
+    }
+} -result {{}}
+
+test wm-property-5.1 {unmapped window} -constraints x11 -body {
+    toplevel .t1
+    wm property .t1
+} -cleanup {
+    destroy .t1
+} -result {}
+test wm-property-5.2 {unmapped window} -constraints x11 -body {
+    toplevel .t1
+    wm property .t1 WM_NAME
+} -cleanup {
+    destroy .t1
+} -result {}
+test wm-property-5.3 {unmapped window} -constraints x11 -body {
+    toplevel .t1
+    wm property .t1 _TCL_TEST "Some string"
+    catch {wm property .t1 _TCL_TEST} data opts
+    linsert [dict values [dict filter $opts key -property*]] 0 $data
+} -cleanup {
+    destroy .t1
+} -result {{Some string} STRING 8}
 
 ### wm protocol ###
 test wm-protocol-1.1 {usage} -returnCodes error -body {
