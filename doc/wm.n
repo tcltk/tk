@@ -701,6 +701,32 @@ Tk will automatically set the position source to \fBuser\fR
 when a \fBwm geometry\fR command is invoked, unless the source has
 been set explicitly to \fBprogram\fR.
 .TP
+\fBwm property \fIwindow\fR ?\fIname\fR? ?\fIvalue\fR? ?\fItype\fR? ?\fIwidth\fR?
+.
+This command provides access to the X properties of a Tk toplevel window.
+The command is only available on the x11 windowing system.
+If \fIname\fR and \fIvalue\fR are specified, the property is updated. The
+\fItype\fR and \fIwidth\fR arguments may be used to specify in which format
+the property value is to be stored.
+Any valid atom name can be used for \fItype\fR. Common values include
+\fBSTRING\fR, \fBINTEGER\fR, \fBCARDINAL\fR (i.e. unsigned integer), and
+\fBATOM\fR. The special type \fBNone\fR causes the property to be deleted.
+The default for \fItype\fR is \fBSTRING\fR.
+Note that type names are case sensitive.
+Allowed values for \fIwidth\fR are 8, 16, and 32. If omitted, \fIwidth\fR
+defaults to 8 for \fBSTRING\fR and \fBUTF8-STRING\fR types, and to 32 for
+all other types.
+For properties consisting of 8-bit fields, \fIvalue\fR is interpreted as a
+byte array. For 16-bit fields it must be specified as a list of integers.
+For 32-bit fields, \fIvalue\fR is parsed as a list, where each element may
+either be an integer or an atom name.
+If \fIname\fR is specified, but no \fIvalue\fR, the current value of the
+named property is returned, if set. The type and width of the property value
+are returned in the \fB-propertytype\fR and \fB-propertyformat\fR return
+options.
+If not even the \fIname\fR argument is present, the command returns a list
+of the names of all properties that currently exist for the toplevel window.
+.TP
 \fBwm protocol \fIwindow\fR ?\fIname\fR? ?\fIcommand\fR?
 .
 This command is used to manage window manager protocols. The \fIname\fR
