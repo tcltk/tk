@@ -66,21 +66,26 @@ namespace eval ::tk::dialog::file {
     }
 
     # Create the images if they did not already exist.
-    if {![info exists ::tk::Priv(updirImage)]} {
+    if {![info exists ::tk::Priv(updirImage)] ||
+	    $::tk::Priv(updirImage) ni [image names]} {
 	set ::tk::Priv(updirImage)  [image create photo \
 		-format $::tk::svgFmt -data [UpdateUpdirImageData]]
 
 	bindtags . [linsert [bindtags .] 1 TkFileDialog]
 	bind TkFileDialog <<ThemeChanged>> {
-	    $::tk::Priv(updirImage) configure \
-		    -data [::tk::dialog::file::UpdateUpdirImageData]
+	    if {$::tk::Priv(updirImage) in [image names]} {
+		$::tk::Priv(updirImage) configure \
+			-data [::tk::dialog::file::UpdateUpdirImageData]
+	    }
 	}
     }
-    if {![info exists ::tk::Priv(folderImage)]} {
+    if {![info exists ::tk::Priv(folderImage)] ||
+	    $::tk::Priv(folderImage) ni [image names]} {
 	set ::tk::Priv(folderImage) [image create photo \
 		-format $::tk::svgFmt -data $folderImageData]
     }
-    if {![info exists ::tk::Priv(fileImage)]} {
+    if {![info exists ::tk::Priv(fileImage)] ||
+	    $::tk::Priv(fileImage) ni [image names]} {
 	set ::tk::Priv(fileImage)   [image create photo \
 		-format $::tk::svgFmt -data $fileImageData]
     }
