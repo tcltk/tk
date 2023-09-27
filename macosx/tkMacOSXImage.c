@@ -15,12 +15,13 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXImage.h"
 #include "tkColor.h"
 #include "xbytes.h"
 
-static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
-	   int x, int y, unsigned int width, unsigned int height);
+//static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
+//static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
+//	   int x, int y, unsigned int width, unsigned int height);
 
 /* Pixel formats
  *
@@ -628,7 +629,7 @@ int TkpPutRGBAImage(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
     int x,
@@ -690,7 +691,7 @@ CreateCGImageFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromPixmap(
     Drawable pixmap)
 {

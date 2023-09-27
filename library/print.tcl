@@ -957,16 +957,10 @@ proc ::tk::print {w} {
 	    tailcall ::tk::print::_print $w
 	}
 	"Canvas,aqua" {
-	    set psfile [::tk::print::makeTempFile tk_canvas.ps]
-	    try {
-		$w postscript -file $psfile
-		set printfile [::tk::print::makePDF $psfile tk_canvas.pdf]
-		::tk::print::_print $printfile
-	    } finally {
-		file delete $psfile
-	    }
-	}
-
+	    ::tk::print::_printcanvas $w
+	    set printfile /tmp/tk_canvas.pdf
+	    ::tk::print::_print $printfile
+	} 
 	"Text,win32" {
 	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {Arial 12}
 	}
