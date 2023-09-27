@@ -383,6 +383,8 @@ int MakePDF
 		canvas = CreateCGImageFromDrawableRect(mac_drawable, 0, 0, width, height);
 		CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 					 width, height);
+					 
+		/*Render image to PDF file.*/			 
 		if (canvas) {
 			url = CFURLCreateWithFileSystemPath (NULL, CFSTR("/tmp/tk_canvas.pdf"),
 								 kCFURLPOSIXPathStyle, 0);
