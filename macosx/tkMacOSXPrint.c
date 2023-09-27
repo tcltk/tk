@@ -345,71 +345,71 @@ FinishPrint(
  */
 
 int MakePDF
-	(void *clientData,
-	 Tcl_Interp *ip,
- 	 int objc,
- 	 Tcl_Obj *const objv[])
+(void *clientData,
+ Tcl_Interp *ip,
+ int objc,
+ Tcl_Obj *const objv[])
 {
-		Tk_Window path;
-		Drawable d = NULL;
-		int x, y; 
-		unsigned int width, height;
-		CGImageRef canvas = NULL;
-		CGContextRef pdfContext;
-		CFURLRef url;
-		CFDataRef boxData = NULL;
-		CFMutableDictionaryRef imgDictionary = NULL;
-		CFMutableDictionaryRef pageDictionary = NULL;
+    Tk_Window path;
+    Drawable d = NULL;
+    int x, y; 
+    unsigned int width, height;
+    CGImageRef canvas = NULL;
+    CGContextRef pdfContext;
+    CFURLRef url;
+    CFDataRef boxData = NULL;
+    CFMutableDictionaryRef imgDictionary = NULL;
+    CFMutableDictionaryRef pageDictionary = NULL;
 
-		if (objc != 2) {
-			Tcl_WrongNumArgs(ip, 1, objv, "path?");
-			return TCL_ERROR;
-		}
+    if (objc != 2) {
+	Tcl_WrongNumArgs(ip, 1, objv, "path?");
+	return TCL_ERROR;
+    }
 
-		/*Get window and render to image.*/
+    /*Get window and render to image.*/
  
-		path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
-		if (path == NULL) {
-			return TCL_ERROR;
-		}
+    path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    if (path == NULL) {
+	return TCL_ERROR;
+    }
 
-		Tk_MakeWindowExist(path);
-		Tk_MapWindow(path);
-		d = Tk_WindowId(path);
-		width = Tk_Width(path);
-		height = Tk_Height(path);
-		MacDrawable *mac_drawable = (MacDrawable *)d;
+    Tk_MakeWindowExist(path);
+    Tk_MapWindow(path);
+    d = Tk_WindowId(path);
+    width = Tk_Width(path);
+    height = Tk_Height(path);
+    MacDrawable *mac_drawable = (MacDrawable *)d;
 
-		canvas = CreateCGImageFromDrawableRect(mac_drawable, 0, 0, width, height);
-		CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
-					 width, height);
+    canvas = CreateCGImageFromDrawableRect(mac_drawable, 0, 0, width, height);
+    CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
+			     width, height);
 					 
-		/*Render image to PDF file.*/			 
-		if (canvas) {
-			url = CFURLCreateWithFileSystemPath (NULL, CFSTR("/tmp/tk_canvas.pdf"),
-								 kCFURLPOSIXPathStyle, 0);
-			imgDictionary = CFDictionaryCreateMutable(NULL, 0,
-								  &kCFTypeDictionaryKeyCallBacks,
-								  &kCFTypeDictionaryValueCallBacks); 
-			CFDictionarySetValue(imgDictionary, kCGPDFContextTitle, CFSTR("tk_canvas"));
-			CFDictionarySetValue(imgDictionary, kCGPDFContextCreator, CFSTR("Tk"));
-			pdfContext = CGPDFContextCreateWithURL (url, &rect, imgDictionary); 
-			CFRelease(imgDictionary);
-			CFRelease(url);
-			pageDictionary = CFDictionaryCreateMutable(NULL, 0,
-								   &kCFTypeDictionaryKeyCallBacks,
-								   &kCFTypeDictionaryValueCallBacks); 
-			boxData = CFDataCreate(NULL,(const UInt8 *)&rect, sizeof (CGRect));
-			CFDictionarySetValue(pageDictionary, kCGPDFContextMediaBox, boxData);
-			CGPDFContextBeginPage (pdfContext, pageDictionary);
-			CGContextDrawImage (pdfContext, rect,canvas);
-			CGImageRelease (canvas);
-			CGPDFContextEndPage (pdfContext);
-			CGContextRelease (pdfContext);
-			CFRelease(pageDictionary);
-			CFRelease(boxData);
-		}
-		return TCL_OK;
+    /*Render image to PDF file.*/			 
+    if (canvas) {
+	url = CFURLCreateWithFileSystemPath (NULL, CFSTR("/tmp/tk_canvas.pdf"),
+					     kCFURLPOSIXPathStyle, 0);
+	imgDictionary = CFDictionaryCreateMutable(NULL, 0,
+						  &kCFTypeDictionaryKeyCallBacks,
+						  &kCFTypeDictionaryValueCallBacks); 
+	CFDictionarySetValue(imgDictionary, kCGPDFContextTitle, CFSTR("tk_canvas"));
+	CFDictionarySetValue(imgDictionary, kCGPDFContextCreator, CFSTR("Tk"));
+	pdfContext = CGPDFContextCreateWithURL (url, &rect, imgDictionary); 
+	CFRelease(imgDictionary);
+	CFRelease(url);
+	pageDictionary = CFDictionaryCreateMutable(NULL, 0,
+						   &kCFTypeDictionaryKeyCallBacks,
+						   &kCFTypeDictionaryValueCallBacks); 
+	boxData = CFDataCreate(NULL,(const UInt8 *)&rect, sizeof (CGRect));
+	CFDictionarySetValue(pageDictionary, kCGPDFContextMediaBox, boxData);
+	CGPDFContextBeginPage (pdfContext, pageDictionary);
+	CGContextDrawImage (pdfContext, rect,canvas);
+	CGImageRelease (canvas);
+	CGPDFContextEndPage (pdfContext);
+	CGContextRelease (pdfContext);
+	CFRelease(pageDictionary);
+	CFRelease(boxData);
+    }
+    return TCL_OK;
 }
 
 /*
