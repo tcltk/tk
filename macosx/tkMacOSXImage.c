@@ -19,10 +19,6 @@
 #include "tkColor.h"
 #include "xbytes.h"
 
-//static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-//static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
-//	   int x, int y, unsigned int width, unsigned int height);
-
 /* Pixel formats
  *
  * Tk uses the XImage structure defined in Xlib.h for storing images.  The
