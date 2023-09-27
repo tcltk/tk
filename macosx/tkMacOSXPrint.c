@@ -26,6 +26,8 @@
 
 NSString * fileName = nil;
 CFStringRef urlFile = NULL;
+
+/*Forward declaration of functions.*/
 int			StartPrint(void *clientData, Tcl_Interp * interp,
 			    int objc, Tcl_Obj * const objv[]);
 OSStatus	FinishPrint(NSString *file, int buttonValue);
