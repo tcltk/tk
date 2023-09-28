@@ -682,8 +682,8 @@ CreateCGImageFromDrawableRect(
  *	Returns a CFDataRef that can be written to a file. 
  *
  *      NOTE: The x,y coordinates should be relative to a coordinate system
- *      with origin at the top left, as used by XImage and CGImage, not bottom
- *      left as used by NSView.
+ *      with origin at the bottom left as used by NSView,  not top left
+ *      as used by XImage and CGImage.
  *
  * Side effects:
  *     None
