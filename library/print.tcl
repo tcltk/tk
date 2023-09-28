@@ -31,8 +31,13 @@ namespace eval ::tk::print {
 	    puts -nonewline $f $contents
 	} finally {
 	    close $f
+	    if {[file extension $filename] == ".ps"} {
+		#don't apply formatting to PostScript
+		file rename -force $dumpfile $tmpfile
+	    } else {
 	    #Make text fixed width for improved printed output
-	    exec fmt -w 75 $dumpfile > $tmpfile
+		exec fmt -w 75 $dumpfile > $tmpfile
+	    }
 	    return $tmpfile
 	}
     }
