@@ -376,8 +376,6 @@ int MakePDF
     height = Tk_Height(path);
     MacDrawable *mac_drawable = (MacDrawable *)d;
 
-    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(mac_drawable);
-
     pdfData = CreatePDFFromDrawableRect(mac_drawable, 0, 0, width, height);
  
     NSData *viewData = (NSData*)pdfData;
