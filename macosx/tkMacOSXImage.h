@@ -21,3 +21,5 @@
 CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
 CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
 	   int x, int y, unsigned int width, unsigned int height);
+CFDataRef CreatePDFFromDrawableRect( Drawable drawable,
+	   int x, int y, unsigned int width, unsigned int height);

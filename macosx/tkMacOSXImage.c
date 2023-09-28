@@ -670,6 +670,57 @@ CreateCGImageFromDrawableRect(
     }
     return result;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreatePDFFromDrawableRect
+ *
+ *	Extract PDF data from a MacOSX drawable.
+ *
+ * Results:
+ *	Returns a CFDataRef that can be written to a file. 
+ *
+ *      NOTE: The x,y coordinates should be relative to a coordinate system
+ *      with origin at the top left, as used by XImage and CGImage, not bottom
+ *      left as used by NSView.
+ *
+ * Side effects:
+ *     None
+ *
+ *----------------------------------------------------------------------
+ */
+
+CFDataRef
+CreatePDFFromDrawableRect(
+			  Drawable drawable,
+			  int x,
+			  int y,
+			  unsigned int width,
+			  unsigned int height)
+{
+    MacDrawable *mac_drawable = (MacDrawable *)drawable;
+    NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
+    if (view == nil) {
+	TkMacOSXDbgMsg("Invalid source drawable");
+	return NULL;
+    }
+    NSRect bounds, viewSrcRect;
+	
+    /*
+     * Get the child window area in NSView coordinates 
+     * (origin at bottom left).
+     */
+
+    bounds = [view bounds];
+    viewSrcRect = NSMakeRect(mac_drawable->xOff + x,
+			     bounds.size.height - height - (mac_drawable->yOff + y),
+			     width, height);
+    NSData *viewData = [view dataWithPDFInsideRect:viewSrcRect];
+    CFDataRef result = (CFDataRef)viewData;
+    return result;
+}
+
 
 /*
  *----------------------------------------------------------------------
