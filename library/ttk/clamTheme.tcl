@@ -30,6 +30,7 @@ namespace eval ttk::theme::clam {
 	    -bordercolor $colors(-darkest) \
 	    -darkcolor $colors(-dark) \
 	    -lightcolor $colors(-lighter) \
+	    -fieldlightcolor $colors(-lighter) \
 	    -troughcolor $colors(-darker) \
 	    -selectbackground $colors(-selectbg) \
 	    -selectforeground $colors(-selectfg) \
@@ -40,8 +41,8 @@ namespace eval ttk::theme::clam {
 	    -background [list disabled $colors(-frame) \
 			     active $colors(-lighter)] \
 	    -foreground [list disabled $colors(-disabledfg)] \
-	    -selectbackground [list  !focus $colors(-darkest)] \
-	    -selectforeground [list  !focus white]
+	    -selectbackground [list !focus $colors(-darkest)] \
+	    -selectforeground [list !focus white]
 
 	# -selectbackground [list  !focus "#847d73"]
 
@@ -96,10 +97,9 @@ namespace eval ttk::theme::clam {
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
-	    -background [list  readonly $colors(-frame)] \
-	    -bordercolor [list  focus $colors(-selectbg)] \
-	    -lightcolor {focus #6f9dc6} \
-	    -darkcolor {focus #6f9dc6}
+	    -background [list readonly $colors(-frame)] \
+	    -bordercolor [list focus $colors(-selectbg)] \
+	    -fieldlightcolor [list focus #6f9dc6]
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
 	    -arrowsize 10.5p
@@ -109,14 +109,16 @@ namespace eval ttk::theme::clam {
 	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg)] \
+	    -fieldlightcolor [list focus $colors(-selectbg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
-	    -background [list  readonly $colors(-frame)] \
-            -arrowcolor [list disabled $colors(-disabledfg)]
+	    -background [list readonly $colors(-frame)] \
+            -arrowcolor [list disabled $colors(-disabledfg)] \
+	    -fieldlightcolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \

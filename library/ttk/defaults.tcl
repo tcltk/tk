@@ -131,20 +131,22 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 
 	ttk::style configure TEntry \
 	    -fieldbackground $colors(-window) -padding 1 \
-	    -showfocus 1 -focuscolor $colors(-selectbg)
+	    -focuswidth 2 -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TCombobox \
 	    -arrowsize 9p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding 1
+	    -fieldbackground $colors(-window) -padding 1 \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TSpinbox \
 	    -arrowsize 7.5p -arrowcolor $colors(-text) \
-	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0}
+	    -fieldbackground $colors(-window) -padding {1.5p 0 7.5p 0} \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -174,7 +176,9 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	ttk::style configure TNotebook.Tab \
 	    -padding {3p 1.5p} -background $colors(-darker)
 	ttk::style map TNotebook.Tab \
-	    -background [list selected $colors(-frame)]
+	    -background [list selected $colors(-frame)] \
+	    -highlight [list selected 1] \
+	    -highlightcolor [list selected $colors(-selectbg)]
 
 	# Treeview.
 	#
