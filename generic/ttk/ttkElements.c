@@ -247,6 +247,9 @@ static void FieldElementDraw(
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
 
+	    /*
+	     * Draw the outer rounded rectangle
+	     */
 	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
 	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
 	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
@@ -255,6 +258,10 @@ static void FieldElementDraw(
 	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	}
 
+	/*
+	 * If focusWidth > 1 then draw the inner rectangle,
+	 * else the only one replacing the (outer) border
+	 */
 	XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
 
 	GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
