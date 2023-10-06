@@ -110,7 +110,7 @@ namespace eval ttk::theme::clam {
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)] \
-	    -fieldlightcolor [list focus $colors(-selectbg)]
+	    -bordercolor [list focus $colors(-selectbg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
@@ -118,7 +118,7 @@ namespace eval ttk::theme::clam {
 	ttk::style map TSpinbox \
 	    -background [list readonly $colors(-frame)] \
             -arrowcolor [list disabled $colors(-disabledfg)] \
-	    -fieldlightcolor [list focus $colors(-selectbg)]
+	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \

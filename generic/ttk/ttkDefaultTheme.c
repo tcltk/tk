@@ -377,20 +377,35 @@ static void FieldElementDraw(
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
 
+	    /*
+	     * Draw the outer rounded rectangle
+	     */
 	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
 	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
 	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
 	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
-	} else {
-	    GC borderGC = Tk_GCForColor(borderColor, d);
-	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 0, DARK);
-	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 1, DARK);
-	}
 
-	b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
-	XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    /*
+	     * Draw the inner rectangle
+	     */
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	} else {
+	    /*
+	     * Draw the outer rectangle
+	     */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Draw the inner border
+	     */
+	    GC borderGC = Tk_GCForColor(borderColor, d);
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    DrawCorner(tkwin, d, border, borderGC,
+		b.x, b.y, b.width, b.height, 0, BRDR);
+	    DrawCorner(tkwin, d, border, borderGC,
+		b.x, b.y, b.width, b.height, 1, LITE);
+	}
 
 	GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
