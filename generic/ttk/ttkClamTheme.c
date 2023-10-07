@@ -204,7 +204,7 @@ typedef struct {
 static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(FieldElement,borderColorObj), DARKEST_COLOR },
-    { "-fieldlightcolor", TK_OPTION_COLOR,
+    { "-lightcolor", TK_OPTION_COLOR,
 	offsetof(FieldElement,lightColorObj), LIGHT_COLOR },
     { "-fieldbackground", TK_OPTION_BORDER,
 	offsetof(FieldElement,backgroundObj), "white" },
