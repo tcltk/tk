@@ -30,7 +30,6 @@ namespace eval ttk::theme::clam {
 	    -bordercolor $colors(-darkest) \
 	    -darkcolor $colors(-dark) \
 	    -lightcolor $colors(-lighter) \
-	    -fieldlightcolor $colors(-lighter) \
 	    -troughcolor $colors(-darker) \
 	    -selectbackground $colors(-selectbg) \
 	    -selectforeground $colors(-selectfg) \
@@ -99,7 +98,7 @@ namespace eval ttk::theme::clam {
 	ttk::style map TEntry \
 	    -background [list readonly $colors(-frame)] \
 	    -bordercolor [list focus $colors(-selectbg)] \
-	    -fieldlightcolor [list focus #6f9dc6]
+	    -lightcolor [list focus #6f9dc6]
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
 	    -arrowsize 10.5p
