@@ -4,8 +4,8 @@
  *	This file implements functions that decode & handle mouse events on
  *	MacOS X.
  *
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -98,7 +98,7 @@ enum {
     static NSTimeInterval timestamp = 0;
 
 #ifdef TK_MAC_DEBUG_EVENTS
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, theEvent);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), theEvent);
 #endif
 
     /*
@@ -308,6 +308,7 @@ enum {
     if ([NSApp tkDragTarget]) {
 	TkWindow *dragPtr = (TkWindow *) [NSApp tkDragTarget];
 	TKWindow *dragWindow = nil;
+	MacDrawable *topMacWin;
 	if (dragPtr) {
 	    dragWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
 			    dragPtr->window);
@@ -317,7 +318,10 @@ enum {
 	    target = NULL;
 	    return theEvent;
 	}
-	winPtr = TkMacOSXGetHostToplevel((TkWindow *) [NSApp tkDragTarget])->winPtr;
+	topMacWin = TkMacOSXGetHostToplevel(dragPtr);
+	if (topMacWin) {
+	    winPtr = topMacWin->winPtr;
+	}
     } else if (eventType == NSScrollWheel) {
 	winPtr = scrollTarget;
     } else {
@@ -357,9 +361,12 @@ enum {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow* topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     }
     else {

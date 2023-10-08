@@ -1416,7 +1416,7 @@ DisplayFrame(
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
-    TkRegion clipRegion = NULL;
+    Bool useClipping = False;
 
     framePtr->flags &= ~REDRAW_PENDING;
     if ((framePtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1551,11 +1551,9 @@ DisplayFrame(
 	    if ((labelframePtr->labelBox.width < labelframePtr->labelReqWidth)
 		    || (labelframePtr->labelBox.height <
 			    labelframePtr->labelReqHeight)) {
-		clipRegion = TkCreateRegion();
-		TkUnionRectWithRegion(&labelframePtr->labelBox, clipRegion,
-			clipRegion);
-		TkSetRegion(framePtr->display, labelframePtr->textGC,
-			clipRegion);
+		useClipping = True;
+		XSetClipRectangles(framePtr->display, labelframePtr->textGC, 0, 0,
+			&labelframePtr->labelBox, 1, Unsorted);
 	    }
 
 	    Tk_DrawTextLayout(framePtr->display, pixmap,
@@ -1563,9 +1561,8 @@ DisplayFrame(
 		    labelframePtr->labelTextX + LABELSPACING,
 		    labelframePtr->labelTextY + LABELSPACING, 0, -1);
 
-	    if (clipRegion != NULL) {
+	    if (useClipping) {
 		XSetClipMask(framePtr->display, labelframePtr->textGC, None);
-		TkDestroyRegion(clipRegion);
 	    }
 	} else {
 	    /*

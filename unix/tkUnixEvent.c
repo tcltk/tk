@@ -180,6 +180,7 @@ TkpOpenDisplay(
     dispPtr->display = display;
     dispPtr->flags |= use_xkb;
 #ifdef TK_USE_INPUT_METHODS
+    XSetLocaleModifiers("");
     OpenIM(dispPtr);
     XRegisterIMInstantiateCallback(dispPtr->display, NULL, NULL, NULL,
 	    InstantiateIMCallback, (XPointer) dispPtr);
@@ -377,7 +378,9 @@ TransferXEventsToTcl(
 
     while (QLength(display) > 0) {
 	XNextEvent(display, &event.x);
-	if (event.type > MappingNotify) {
+	if ((event.type >= VirtualEvent) && (event.type <= MouseWheelEvent)) {
+	    /* See [fe87e9af39]. Those are internal Tk event types, if they come
+	     * from an external source they most likely would be totally mis-interpreted */
 	    continue;
 	}
 	w = None;
@@ -740,10 +743,6 @@ OpenIM(
     int i;
     XIMStyles *stylePtr;
     XIMStyle bestStyle = 0;
-
-    if (XSetLocaleModifiers("") == NULL) {
-	return;
-    }
 
     ++dispPtr->ximGeneration;
     dispPtr->inputMethod = XOpenIM(dispPtr->display, NULL, NULL, NULL);
