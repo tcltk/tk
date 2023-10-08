@@ -6949,7 +6949,9 @@ TkpMakeMenuWindow(
 	    typeObj = Tcl_NewStringObj("popup_menu", -1);
 	}
     }
+    Tcl_IncrRefCount(typeObj);
     SetNetWmType((TkWindow *)tkwin, typeObj);
+    Tcl_DecrRefCount(typeObj);
 
     /*
      * The override-redirect and save-under bits must be set on the wrapper

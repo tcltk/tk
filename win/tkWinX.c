@@ -577,7 +577,6 @@ TkpOpenDisplay(
     display->display_name = ckalloc(strlen(display_name) + 1);
     strcpy(display->display_name, display_name);
 
-    display->cursor_font = 1;
     display->nscreens = 1;
     LastKnownRequestProcessed(display) = 1;
     display->qlen = 0;

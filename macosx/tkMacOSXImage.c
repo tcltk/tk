@@ -114,12 +114,12 @@ _XInitImageFuncPtrs(
 static void ReleaseData(
     void *info,
     TCL_UNUSED(const void *), /* data */
-    TCL_UNUSED(size_t))       /* size */
+    TCL_UNUSED(size_t))        /* size */
 {
     ckfree(info);
 }
 
-CGImageRef
+static CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
     uint32_t alphaInfo)
@@ -388,7 +388,7 @@ ImagePutPixel(
 XImage *
 XCreateImage(
     Display* display,
-    TCL_UNUSED(Visual*),  /* visual */
+    TCL_UNUSED(Visual*), /* visual */
     unsigned int depth,
     int format,
     int offset,
@@ -503,6 +503,7 @@ TkMacOSXPutImage(
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
+
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
@@ -747,7 +748,7 @@ XGetImage(
     int y,
     unsigned int width,
     unsigned int height,
-    TCL_UNUSED(unsigned long), /* plane_mask */
+    TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
     NSBitmapImageRep* bitmapRep = nil;
@@ -775,7 +776,6 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
-	bitmap = (char *)ckalloc(size);
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
 	    || [bitmapRep samplesPerPixel] != 4
 	    || [bitmapRep isPlanar] != 0
@@ -785,6 +785,7 @@ XGetImage(
 	    [bitmapRep release];
 	    return NULL;
 	}
+	bitmap = (char *)ckalloc(size);
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
 	[bitmapRep release];
 

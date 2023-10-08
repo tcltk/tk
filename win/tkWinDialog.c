@@ -800,8 +800,8 @@ Tk_ChooseColorObjCmd(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, optionStrings,
-		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+		"option", TCL_EXACT, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (i + 1 == objc) {
@@ -902,14 +902,13 @@ static UINT CALLBACK
 ColorDlgHookProc(
     HWND hDlg,			/* Handle to the color dialog. */
     UINT uMsg,			/* Type of message. */
-    WPARAM wParam,		/* First message parameter. */
+    TCL_UNUSED(WPARAM),	/* First message parameter. */
     LPARAM lParam)		/* Second message parameter. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     const char *title;
     CHOOSECOLORW *ccPtr;
-    (void)wParam;
 
     if (WM_INITDIALOG == uMsg) {
 
@@ -1071,7 +1070,7 @@ ParseOFNOptions(
     };
     static const struct Options dirOptions[] = {
 	{"-initialdir", FILE_INITDIR},
-        {"-mustexist",  FILE_MUSTEXIST},
+	{"-mustexist",  FILE_MUSTEXIST},
 	{"-parent",	FILE_PARENT},
 	{"-title",	FILE_TITLE},
 	{NULL,		FILE_DEFAULT/*ignored*/ }
@@ -1211,30 +1210,29 @@ static int VistaFileDialogsAvailable(void)
         Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (tsdPtr->newFileDialogsState == FDLG_STATE_INIT) {
-        tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
-        LoadShellProcs();
-        if (ShellProcs.SHCreateItemFromParsingName != NULL) {
-            hr = CoInitialize(0);
-            /* XXX - need we schedule CoUninitialize at thread shutdown ? */
+	tsdPtr->newFileDialogsState = FDLG_STATE_USE_OLD;
+	LoadShellProcs();
+	if (ShellProcs.SHCreateItemFromParsingName != NULL) {
+	    hr = CoInitialize(0);
+	    /* XXX - need we schedule CoUninitialize at thread shutdown ? */
 
-            /* Ensure all COM interfaces we use are available */
-            if (SUCCEEDED(hr)) {
-                hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
-                                      CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
-                if (SUCCEEDED(hr)) {
-                    fdlgPtr->lpVtbl->Release(fdlgPtr);
-                    hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
-                             CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog,
-                                          (void **) &fdlgPtr);
-                    if (SUCCEEDED(hr)) {
-                        fdlgPtr->lpVtbl->Release(fdlgPtr);
+	    /* Ensure all COM interfaces we use are available */
+	    if (SUCCEEDED(hr)) {
+		hr = CoCreateInstance(&ClsidFileOpenDialog, NULL,
+			CLSCTX_INPROC_SERVER, &IIDIFileOpenDialog, (void **) &fdlgPtr);
+		if (SUCCEEDED(hr)) {
+		    fdlgPtr->lpVtbl->Release(fdlgPtr);
+		    hr = CoCreateInstance(&ClsidFileSaveDialog, NULL,
+			    CLSCTX_INPROC_SERVER, &IIDIFileSaveDialog, (void **) &fdlgPtr);
+		    if (SUCCEEDED(hr)) {
+			fdlgPtr->lpVtbl->Release(fdlgPtr);
 
-                        /* Looks like we have all we need */
-                        tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
-                    }
-                }
-            }
-        }
+			/* Looks like we have all we need */
+			tsdPtr->newFileDialogsState = FDLG_STATE_USE_NEW;
+		    }
+		}
+	    }
+	}
     }
 
     return (tsdPtr->newFileDialogsState == FDLG_STATE_USE_NEW);
@@ -1918,14 +1916,13 @@ static UINT APIENTRY
 OFNHookProc(
     HWND hdlg,			/* Handle to child dialog window. */
     UINT uMsg,			/* Message identifier */
-    WPARAM wParam,		/* Message parameter */
+    TCL_UNUSED(WPARAM),	/* Message parameter */
     LPARAM lParam)		/* Message parameter */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     OPENFILENAME *ofnPtr;
     OFNData *ofnData;
-    (void)wParam;
 
     if (uMsg == WM_INITDIALOG) {
 	TkWinSetUserData(hdlg, lParam);
@@ -2827,8 +2824,8 @@ Tk_MessageBoxObjCmd(
 	optionPtr = objv[i];
 	valuePtr = objv[i + 1];
 
-	if (Tcl_GetIndexFromObjStruct(interp, optionPtr, optionStrings,
-		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, optionPtr, optionStrings,
+		"option", TCL_EXACT, &index) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (i + 1 == objc) {
@@ -3265,7 +3262,7 @@ FontchooserCget(
 	}
 	break;
     case FontchooserVisible:
-	resObj = Tcl_NewBooleanObj(hdPtr->hwnd && IsWindow(hdPtr->hwnd));
+	resObj = Tcl_NewBooleanObj((hdPtr->hwnd != NULL) && IsWindow(hdPtr->hwnd));
 	break;
     default:
 	resObj = Tcl_NewStringObj("", 0);
@@ -3328,8 +3325,8 @@ FontchooserConfigureCmd(
     for (i = 1; i < objc; i += 2) {
 	int optionIndex;
 
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], optionStrings,
-		sizeof(char *),  "option", 0, &optionIndex) != TCL_OK) {
+	if (Tcl_GetIndexFromObj(interp, objv[i], optionStrings,
+		"option", 0, &optionIndex) != TCL_OK) {
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
@@ -3437,8 +3434,8 @@ static int
 FontchooserShowCmd(
     ClientData clientData,	/* Main window */
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     Tcl_DString ds;
     Tk_Window tkwin = (Tk_Window)clientData, parent;
@@ -3447,8 +3444,6 @@ FontchooserShowCmd(
     HDC hdc;
     HookData *hdPtr;
     int r = TCL_OK, oldMode = 0;
-    (void)objc;
-    (void)objv;
 
     hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
 
@@ -3551,15 +3546,12 @@ FontchooserShowCmd(
 
 static int
 FontchooserHideCmd(
-    ClientData dummy,	/* Main window */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj *const objv[])
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     HookData *hdPtr = (HookData *)Tcl_GetAssocData(interp, "::tk::fontchooser", NULL);
-    (void)dummy;
-    (void)objc;
-    (void)objv;
 
     if (hdPtr->hwnd && IsWindow(hdPtr->hwnd)) {
 	EndDialog(hdPtr->hwnd, 0);
@@ -3579,10 +3571,11 @@ FontchooserHideCmd(
  */
 
 static void
-DeleteHookData(ClientData clientData, Tcl_Interp *dummy)
+DeleteHookData(
+    void *clientData,
+    TCL_UNUSED(Tcl_Interp *))
 {
     HookData *hdPtr = (HookData *)clientData;
-    (void)dummy;
 
     if (hdPtr->parentObj) {
 	Tcl_DecrRefCount(hdPtr->parentObj);
@@ -3619,10 +3612,11 @@ const TkEnsemble tkFontchooserEnsemble[] = {
 };
 
 int
-TkInitFontchooser(Tcl_Interp *interp, ClientData dummy)
+TkInitFontchooser(
+    Tcl_Interp *interp,
+    TCL_UNUSED(void *))
 {
     HookData *hdPtr = (HookData *)ckalloc(sizeof(HookData));
-    (void)dummy;
 
     memset(hdPtr, 0, sizeof(HookData));
     Tcl_SetAssocData(interp, "::tk::fontchooser", DeleteHookData, hdPtr);
