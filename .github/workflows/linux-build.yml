@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-8-6-branch"
+    - "less_tests_constraints"
     tags:
     - "core-**"
 permissions:
