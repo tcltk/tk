@@ -7,14 +7,15 @@
  *	eventually be moved into other files.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009, Apple Inc.
  * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2014 Marc Culler.
+ * Copyright (c) 2014 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#define XLIB_ILLEGAL_ACCESS
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXEvent.h"
 
@@ -79,10 +80,10 @@ TkMacOSXDisplayChanged(
     NSArray *nsScreens;
 
 
-    if (display == NULL || display->screens == NULL) {
+    if (display == NULL || (((_XPrivDisplay)(display))->screens) == NULL) {
 	return;
     }
-    screen = display->screens;
+    screen = (((_XPrivDisplay)(display))->screens);
 
     nsScreens = [NSScreen screens];
     if (nsScreens && [nsScreens count]) {
@@ -191,16 +192,16 @@ TkpOpenDisplay(
     static NSRect maxBounds = {{0, 0}, {0, 0}};
     static char vendor[25] = "";
     NSArray *cgVers;
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
-	if (strcmp(gMacDisplay->display->display_name, display_name) == 0) {
+	if (strcmp(DisplayString(gMacDisplay->display), display_name) == 0) {
 	    return gMacDisplay;
 	} else {
 	    return NULL;
 	}
     }
 
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
     display = (Display *)ckalloc(sizeof(Display));
     screen = (Screen *)ckalloc(sizeof(Screen));
     bzero(display, sizeof(Display));
@@ -238,9 +239,9 @@ TkpOpenDisplay(
 	Gestalt(gestaltSystemVersionBugFix, (SInt32*)&patch);
 #else
 	NSOperatingSystemVersion systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-	major = systemVersion.majorVersion;
-	minor = systemVersion.minorVersion;
-	patch = systemVersion.patchVersion;
+	major = (int)systemVersion.majorVersion;
+	minor = (int)systemVersion.minorVersion;
+	patch = (int)systemVersion.patchVersion;
 #endif
 	display->release = major << 16 | minor << 8 | patch;
     }
@@ -308,7 +309,7 @@ void
 TkpCloseDisplay(
     TkDisplay *displayPtr)
 {
-    Display *display = displayPtr->display;
+    _XPrivDisplay display = (_XPrivDisplay)displayPtr->display;
 
     if (gMacDisplay != displayPtr) {
 	Tcl_Panic("TkpCloseDisplay: tried to call TkpCloseDisplay on bad display");
@@ -316,8 +317,8 @@ TkpCloseDisplay(
 
     gMacDisplay = NULL;
     if (display->screens != NULL) {
-	if (DefaultVisualOfScreen(display->screens) != NULL) {
-	    ckfree(DefaultVisualOfScreen(display->screens));
+	if (DefaultVisualOfScreen(ScreenOfDisplay(display, 0)) != NULL) {
+	    ckfree(DefaultVisualOfScreen(ScreenOfDisplay(display, 0)));
 	}
 	ckfree(display->screens);
     }
@@ -720,30 +721,6 @@ XSync(
     return 0;
 }
 
-int
-XSetClipRectangles(
-    Display *d,
-    GC gc,
-    int clip_x_origin,
-    int clip_y_origin,
-    XRectangle* rectangles,
-    int n,
-    TCL_UNUSED(int))
-{
-    TkRegion clipRgn = TkCreateRegion();
-
-    while (n--) {
-    	XRectangle rect = *rectangles;
-
-    	rect.x += clip_x_origin;
-    	rect.y += clip_y_origin;
-    	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
-    	rectangles++;
-    }
-    TkSetRegion(d, gc, clipRgn);
-    TkDestroyRegion(clipRgn);
-    return 1;
-}
 /*
  *----------------------------------------------------------------------
  *
@@ -922,7 +899,7 @@ int
 XNoOp(
     Display *display)
 {
-	LastKnownRequestProcessed(display)++;
+    LastKnownRequestProcessed(display)++;
     return 0;
 }
 

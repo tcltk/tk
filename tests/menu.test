@@ -2229,6 +2229,14 @@ test menu-6.16 {TkDestroyMenu} -setup {
     .t3 configure -menu .m1
     list [destroy .m1] [destroy .t2] [destroy .t3] [. configure -menu ""]
 } -result {{} {} {} {}}
+test menu-6.17 {TkDestroyMenu - bug 14a9b62e1d} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -command {destroy .m1}
+    .m1 invoke end
+    winfo exists .m1
+} -result {0}
 
 test menu-7.1 {UnhookCascadeEntry} -setup {
     deleteWindows
@@ -3341,6 +3349,58 @@ test menu-20.11 {CloneMenu} -setup {
     menu .m2
     .m1 clone .m2
 } -returnCodes error -result {window name "m2" already exists in parent}
+test menu-20.12 {CloneMenu - copied bindings on empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 0
+    bind .m1 <<Test>> {append x <<Test>>}
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.13 {CloneMenu - copied bindings on non-empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 1
+    bind .m1 <<Test>> {append x <<Test>>}
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.14 {CloneMenu - new binding on empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 0
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    bind .m1 <<Test>> {append x <<Test>>}
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.15 {CloneMenu - new binding on non-empty menu} -setup {
+    deleteWindows
+    set x {}
+} -body {
+    menu .m1 -tearoff 1
+    .m1 clone .m2 tearoff
+    .m2 post 100 100
+    bind .m1 <<Test>> {append x <<Test>>}
+    event generate .m2 <<Test>>
+    return $x
+} -result {<<Test>>}
+test menu-20.16 {CloneMenu - bindtags} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    bindtags .m1 [linsert [bindtags .m1] 1 .m1.sub1]
+    .m1 clone .m2
+    bindtags .m2
+} -result {.m2 .m1 .m1.sub1 Menu all}
 
 test menu-21.1 {MenuDoYPosition} -setup {
     deleteWindows
@@ -3419,8 +3479,52 @@ test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
 } -cleanup {
     deleteWindows
 } -result 0
+test menu-22.6 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @4bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@4bogus"}
+test menu-22.7 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @10,4bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@10,4bogus"}
+test menu-22.8 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @10,bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@10,bogus"}
+test menu-22.9 {GetIndexFromCoords: index type pecedence} -setup {
+    deleteWindows
+} -body {
+    menu .m -tearoff 0
+    .m add command -label "First entry"
+    .m add command -label "@42nd street"
+    .m add command -label "Last entry"
+    .m index "@42nd*"  ; # shall be interpreted as a pattern, not as @42
+} -cleanup {
+    deleteWindows
+} -result {1}
 
-test menu-22.6 {tk_popup on separator entry} -setup {
+test menu-22.10 {tk_popup on separator entry} -setup {
     deleteWindows
 } -constraints {x11} -body {
     menu .m1
@@ -3987,6 +4091,24 @@ test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
 } -cleanup {
     destroy .m
 } -returnCodes error -result {ambiguous type "": must be normal, tearoff, or menubar}
+
+test menu-39.2 {use-after-free fix - bug 1797555fff} -setup {
+    toplevel .t
+    menu .t.menubar -type menubar
+    menu .t.menubar.select -title Select
+    menu .t.menubar.select.chain -title Chain
+    .t.menubar.select insert 1 cascade -menu .t.menubar.select.chain -label Chain
+    .t.menubar add cascade -menu .t.menubar.select -label Select
+    .t configure -menu .t.menubar
+    .t.menubar.select.chain insert 1 command
+    update idletasks
+} -body {
+    # The following two lines caused Tk to read from and write to freed memory
+    destroy .t.menubar.select.chain
+    .t.menubar.select delete 1
+} -cleanup {
+    destroy .t
+} -result {}
 
 
 # cleanup

@@ -1,5 +1,11 @@
 name: Windows
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-8-6-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 env:
@@ -19,11 +25,11 @@ jobs:
           - "symbols"
     steps:
       - name: Checkout Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
@@ -78,6 +84,7 @@ jobs:
         env:
           CI_BUILD_WITH_MSVC: 1
         shell: bash
+        timeout-minutes: 15
       - name: Build Help (OPTS=${{ matrix.symbols }})
         run: |
           &nmake -f makefile.vc htmlhelp OPTS=${{ matrix.symbols }}
@@ -109,9 +116,9 @@ jobs:
           msystem: MINGW64
           install: git mingw-w64-x86_64-toolchain make
       - name: Checkout Tk
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Checkout Tcl
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
@@ -165,3 +172,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15

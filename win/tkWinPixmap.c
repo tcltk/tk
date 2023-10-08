@@ -197,23 +197,17 @@ TkSetPixmapColormap(
 
 int
 XGetGeometry(
-    Display *display,
+    TCL_UNUSED(Display *),
     Drawable d,
-    Window *root_return,
-    int *x_return,
-    int *y_return,
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     unsigned int *width_return,
     unsigned int *height_return,
-    unsigned int *border_width_return,
-    unsigned int *depth_return)
+    TCL_UNUSED(unsigned int *),
+    TCL_UNUSED(unsigned int *))
 {
     TkWinDrawable *twdPtr = (TkWinDrawable *)d;
-    (void)display;
-    (void)root_return;
-    (void)x_return;
-    (void)y_return;
-    (void)border_width_return;
-    (void)depth_return;
 
     if (twdPtr->type == TWD_BITMAP) {
 	HDC dc;

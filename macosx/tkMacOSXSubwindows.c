@@ -3,9 +3,9 @@
  *
  *	Implements subwindows for the macintosh version of Tk.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -87,6 +87,7 @@ XDestroyWindow(
 	if (macWin->toplevel->referenceCount == 0) {
 	    ckfree(macWin->toplevel);
 	}
+	macWin->winPtr->privatePtr = NULL;
 	ckfree(macWin);
 	return Success;
     }
@@ -103,6 +104,7 @@ XDestroyWindow(
         macWin->drawRgn = NULL;
     }
     macWin->view = nil;
+    macWin->winPtr->privatePtr = NULL;
 
     /*
      * Delay deletion of a toplevel data structure until all children have
@@ -853,7 +855,7 @@ TkMacOSXUpdateClipRgn(
 	     */
 
 	    TkMacOSXWinCGBounds(winPtr, &bounds);
-	    rgn = TkMacOSXHIShapeCreateMutableWithRect(&bounds);
+	    rgn = HIShapeCreateMutableWithRect(&bounds);
 
 	    /*
 	     * Clip away the area of any windows that may obscure this window.
@@ -962,7 +964,7 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
 	    }
-	    macWin->aboveVisRgn = TkMacOSXHIShapeCreateEmpty();
+	    macWin->aboveVisRgn = HIShapeCreateEmpty();
 	}
 	if (!macWin->visRgn) {
 	    macWin->visRgn = HIShapeCreateCopy(macWin->aboveVisRgn);

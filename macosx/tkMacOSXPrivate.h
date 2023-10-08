@@ -217,18 +217,8 @@ typedef struct TkMacOSXDrawingContext {
 MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
 MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
 			    HIShapeRef rgn);
-MODULE_SCOPE HIShapeRef	TkMacOSXHIShapeCreateEmpty(void);
-MODULE_SCOPE HIMutableShapeRef TkMacOSXHIShapeCreateMutableWithRect(
-			    const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSXHIShapeSetWithShape(
-			    HIMutableShapeRef inDestShape,
-			    HIShapeRef inSrcShape);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSHIShapeUnionWithRect(HIMutableShapeRef inShape,
-			    const CGRect *inRect);
-MODULE_SCOPE OSStatus	TkMacOSHIShapeUnion(HIShapeRef inShape1,
-			    HIShapeRef inShape2, HIMutableShapeRef outResult);
 MODULE_SCOPE int	TkMacOSXCountRectsInRegion(HIShapeRef shape);
 MODULE_SCOPE void       TkMacOSXPrintRectsInRegion(HIShapeRef shape);
 /*

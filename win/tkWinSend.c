@@ -4,7 +4,7 @@
  *	This file provides functions that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter.
  *
- * Copyright (c) 1997 by Sun Microsystems, Inc.
+ * Copyright (c) 1997 Sun Microsystems, Inc.
  * Copyright (c) 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
@@ -344,7 +344,7 @@ Tk_SendObjCmd(
      */
 
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], sendOptions,
 		sizeof(char *), "option", 0, &optind) != TCL_OK) {
 	    break;
 	}
@@ -740,8 +740,7 @@ Send(
 				 * object. */
     Tcl_Interp *interp,		/* The local interpreter. */
     int async,			/* Flag for the calling style. */
-    ClientData dummy,	/* The RegisteredInterp structure for this
-				 * interp. */
+    TCL_UNUSED(void *),
     int objc,			/* Number of arguments to be sent. */
     Tcl_Obj *const objv[])	/* The arguments to be sent. */
 {
@@ -754,7 +753,6 @@ Send(
     DISPID dispid;
     Tcl_DString ds;
     const char *src;
-    (void)dummy;
 
     cmd = Tcl_ConcatObj(objc, objv);
 
@@ -971,10 +969,9 @@ TkWinSend_QueueCommand(
 static int
 SendEventProc(
     Tcl_Event *eventPtr,
-    int flags)
+    TCL_UNUSED(int))
 {
     SendEvent *evPtr = (SendEvent *)eventPtr;
-    (void)flags;
 
     TRACE("SendEventProc\n");
 

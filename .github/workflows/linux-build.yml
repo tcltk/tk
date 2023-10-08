@@ -1,5 +1,11 @@
 name: Linux
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-8-6-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 defaults:
@@ -26,11 +32,11 @@ jobs:
           - "--disable-xss"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Checkout Tcl
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
@@ -116,7 +122,7 @@ jobs:
           - "mem"
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Setup Environment (compiler=${{ matrix.compiler }})
@@ -155,3 +161,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 15

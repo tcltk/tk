@@ -6,7 +6,7 @@
  *
  * Copyright (c) 1994 Software Research Associates, Inc.
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -850,7 +850,7 @@ Tk_MeasureChars(
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
 	    Tcl_UtfToExternalDString(familyPtr->encoding, start,
-		    (int) (p - start), &runString);
+		    p - start, &runString);
 	    size.cx = 0;
 	    familyPtr->getTextExtentPoint32Proc(hdc,
 		    (WCHAR *)Tcl_DStringValue(&runString),
@@ -878,7 +878,7 @@ Tk_MeasureChars(
 
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_UtfToExternalDString(familyPtr->encoding, start,
-		(int) (p - start), &runString);
+		p - start, &runString);
 	size.cx = 0;
 	familyPtr->getTextExtentPoint32Proc(hdc, (WCHAR *) Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont,
@@ -1416,7 +1416,7 @@ TkpDrawAngledCharsInContext(
 				 * passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    TCL_UNUSED(int),		/* Number of bytes in string. */
     int rangeStart,		/* Index of first byte to draw. */
     int rangeLength,		/* Length of range to draw in bytes. */
     double x, double y,		/* Coordinates at which to place origin of the
@@ -1426,7 +1426,6 @@ TkpDrawAngledCharsInContext(
 {
     int widthUntilStart;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
-    (void) numBytes; /*unused*/
 
     Tk_MeasureChars(tkfont, source, rangeStart, -1, 0, &widthUntilStart);
     TkDrawAngledChars(display, drawable, gc, tkfont, source + rangeStart,
@@ -1494,7 +1493,7 @@ MultiFontTextOut(
 	    if (p > source) {
 		familyPtr = lastSubFontPtr->familyPtr;
  		Tcl_UtfToExternalDString(familyPtr->encoding, source,
-			(int) (p - source), &runString);
+			p - source, &runString);
 		familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 			(WCHAR *)Tcl_DStringValue(&runString),
 			Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
@@ -1516,7 +1515,7 @@ MultiFontTextOut(
     if (p > source) {
 	familyPtr = lastSubFontPtr->familyPtr;
  	Tcl_UtfToExternalDString(familyPtr->encoding, source,
-		(int) (p - source), &runString);
+		p - source, &runString);
 	familyPtr->textOutProc(hdc, (int)(x-(double)tm.tmOverhang/2.0), y,
 		(WCHAR *)Tcl_DStringValue(&runString),
 		Tcl_DStringLength(&runString) >> familyPtr->isWideFont);
@@ -1818,7 +1817,7 @@ AllocFontFamily(
 	    &familyPtr->endCount, &familyPtr->isSymbolFont);
 
     encoding = NULL;
-    if (familyPtr->isSymbolFont != 0) {
+    if (familyPtr->isSymbolFont) {
 	/*
 	 * Symbol fonts are handled specially. For instance, Unicode 0393
 	 * (GREEK CAPITAL GAMMA) must be mapped to Symbol character 0047

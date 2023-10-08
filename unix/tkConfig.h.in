@@ -188,14 +188,11 @@
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
 
+/* Add the _FILE_OFFSET_BITS flag when building */
+#undef _FILE_OFFSET_BITS
+
 /* Add the _ISOC99_SOURCE flag when building */
 #undef _ISOC99_SOURCE
-
-/* Add the _LARGEFILE64_SOURCE flag when building */
-#undef _LARGEFILE64_SOURCE
-
-/* Add the _LARGEFILE_SOURCE64 flag when building */
-#undef _LARGEFILE_SOURCE64
 
 /* # needed in sys/socket.h Should OS/390 do the right thing with sockets? */
 #undef _OE_SOCKETS
@@ -208,6 +205,9 @@
 
 /* Do we want the thread-safe OS API? */
 #undef _THREAD_SAFE
+
+/* _TIME_BITS=64 enables 64-bit time_t. */
+#undef _TIME_BITS
 
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE
