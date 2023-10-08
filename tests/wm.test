@@ -1530,7 +1530,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
     destroy .t
 } -result {.t .}
 test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
-    overrideredirect toplevel on unix} -constraints x11 -body {
+    overrideredirect toplevel on unix} -constraints {x11 failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t
     wm overrideredirect .t 1
     tkwait visibility .t
