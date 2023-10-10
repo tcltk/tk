@@ -137,7 +137,7 @@ BusyCustodyProc(
 	    busyPtr);
     TkpHideBusyWindow(busyPtr);
     busyPtr->tkBusy = NULL;
-    Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+    Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)(void *)DestroyBusy);
 }
 
 /*
@@ -262,7 +262,7 @@ RefWinEventProc(
 	 * Arrange for the busy structure to be removed at a proper time.
 	 */
 
-	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)(void *)DestroyBusy);
 	break;
 
     case ConfigureNotify:
@@ -383,7 +383,7 @@ BusyEventProc(
 
     if (eventPtr->type == DestroyNotify) {
 	busyPtr->tkBusy = NULL;
-	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)(void *)DestroyBusy);
     }
 }
 
@@ -901,7 +901,7 @@ Tk_BusyObjCmd(
 	    return TCL_ERROR;
 	}
 	TkpHideBusyWindow(busyPtr);
-	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)(void *)DestroyBusy);
 	return TCL_OK;
 
     case BUSY_HOLD:

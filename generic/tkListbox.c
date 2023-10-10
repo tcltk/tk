@@ -2619,7 +2619,7 @@ ListboxEventProc(
 	    if (listPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayListbox, clientData);
 	    }
-	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *) DestroyListbox);
+	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *)(void *)DestroyListbox);
 	}
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
