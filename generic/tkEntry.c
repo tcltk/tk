@@ -2498,7 +2498,7 @@ EntryEventProc(
 	    if (entryPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayEntry, clientData);
 	    }
-	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *) DestroyEntry);
+	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *)(void *)DestroyEntry);
 	}
 	break;
     case ConfigureNotify:

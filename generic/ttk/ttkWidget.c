@@ -238,7 +238,7 @@ DestroyWidget(WidgetCore *corePtr)
 	/* NB: this can reenter the interpreter via a command traces */
 	Tcl_DeleteCommandFromToken(corePtr->interp, cmd);
     }
-    Tcl_EventuallyFree(corePtr, (Tcl_FreeProc *) FreeWidget);
+    Tcl_EventuallyFree(corePtr, (Tcl_FreeProc *)(void *)FreeWidget);
 }
 
 /*

@@ -1177,7 +1177,7 @@ DestroyMenuInstance(
 	 */
 
 	Tcl_EventuallyFree(menuPtr->entries[i],
-		(Tcl_FreeProc*)DestroyMenuEntry);
+		(Tcl_FreeProc*)(void *)DestroyMenuEntry);
 	menuPtr->numEntries = i;
     }
     if (menuPtr->entries != NULL) {
@@ -1617,7 +1617,7 @@ ConfigureMenu(
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
 
-	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *)(void *)DestroyMenuEntry);
 
 	    for (i = 0; i < menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
@@ -2386,7 +2386,7 @@ MenuAddOrInsert(
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
     		Tcl_EventuallyFree(errorMenuPtr->entries[index],
-    	    		(Tcl_FreeProc *) DestroyMenuEntry);
+    	    		(Tcl_FreeProc *)(void *)DestroyMenuEntry);
 		for (i = index; i < errorMenuPtr->numEntries - 1; i++) {
 		    errorMenuPtr->entries[i] = errorMenuPtr->entries[i + 1];
 		    errorMenuPtr->entries[i]->index = i;
@@ -3521,7 +3521,7 @@ DeleteMenuCloneEntries(
     for (menuListPtr = menuPtr->masterMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	for (i = last; i >= first; i--) {
-	    Tcl_EventuallyFree(menuListPtr->entries[i], (Tcl_FreeProc *) DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[i], (Tcl_FreeProc *)(void *)DestroyMenuEntry);
 	}
 	for (i = last + 1; i < menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;

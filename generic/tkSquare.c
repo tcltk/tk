@@ -410,7 +410,7 @@ SquareObjEventProc(
 	if (squarePtr->updatePending) {
 	    Tcl_CancelIdleCall(SquareDisplay, squarePtr);
 	}
-	Tcl_EventuallyFree(squarePtr, (Tcl_FreeProc *) SquareDestroy);
+	Tcl_EventuallyFree(squarePtr, (Tcl_FreeProc *)(void *)SquareDestroy);
     }
 }
 
