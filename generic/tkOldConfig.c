@@ -716,7 +716,7 @@ FormatConfigInfo(
     }
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
-	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
+	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *)(void *)free)) {
 	    ckfree((char *) argv[4]);
 	} else {
 	    freeProc((char *) argv[4]);
@@ -939,7 +939,7 @@ Tk_ConfigureValue(
 	    &freeProc);
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
     if (freeProc != NULL) {
-	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *) free)) {
+	if ((freeProc == TCL_DYNAMIC) || (freeProc == (Tcl_FreeProc *)(void *)free)) {
 	    ckfree((char *) result);
 	} else {
 	    freeProc((char *) result);
