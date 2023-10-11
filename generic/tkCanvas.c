@@ -267,7 +267,7 @@ static void		CanvasWorldChanged(ClientData instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int objc,
 			    Tcl_Obj *const *objv, int flags);
-static void		DestroyCanvas(void *memPtr);
+static Tcl_FreeProc	DestroyCanvas;
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
@@ -2168,7 +2168,7 @@ CanvasWidgetCmd(
 
 static void
 DestroyCanvas(
-    void *memPtr)		/* Info about canvas widget. */
+    char *memPtr)		/* Info about canvas widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)memPtr;
     Tk_Item *itemPtr;
@@ -2730,7 +2730,7 @@ CanvasEventProc(
 	if (canvasPtr->flags & REDRAW_PENDING) {
 	    Tcl_CancelIdleCall(DisplayCanvas, canvasPtr);
 	}
-	Tcl_EventuallyFree(canvasPtr, (Tcl_FreeProc *)(void *)DestroyCanvas);
+	Tcl_EventuallyFree(canvasPtr, DestroyCanvas);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 

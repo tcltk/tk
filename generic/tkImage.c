@@ -86,7 +86,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static void		ImageTypeThreadExitProc(ClientData clientData);
-static void		DeleteImage(void *blockPtr);
+static Tcl_FreeProc	DeleteImage;
 static void		EventuallyDeleteImage(ImageModel *modelPtr,
 			    int forgetImageHashNow);
 
@@ -406,7 +406,7 @@ Tk_ImageObjCmd(
 	    if (modelPtr->deleted) {
 		goto alreadyDeleted;
 	    }
-	    DeleteImage(modelPtr);
+	    DeleteImage((char *)modelPtr);
 	}
 	break;
     case IMAGE_NAMES:
@@ -958,11 +958,11 @@ Tk_DeleteImage(
 
 static void
 DeleteImage(
-    void *blockPtr)	/* Pointer to main data structure for image. */
+    char *blockPtr)	/* Pointer to main data structure for image. */
 {
     Image *imagePtr;
     Tk_ImageType *typePtr;
-    ImageModel *modelPtr = (ImageModel *) blockPtr;
+    ImageModel *modelPtr = (ImageModel *)blockPtr;
 
     typePtr = modelPtr->typePtr;
     modelPtr->typePtr = NULL;
@@ -1016,7 +1016,7 @@ EventuallyDeleteImage(
     }
     if (!modelPtr->deleted) {
 	modelPtr->deleted = 1;
-	Tcl_EventuallyFree(modelPtr, (Tcl_FreeProc *)(void *)DeleteImage);
+	Tcl_EventuallyFree(modelPtr, DeleteImage);
     }
 }
 

@@ -98,7 +98,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 static void		SquareDeletedProc(ClientData clientData);
 static int		SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
-static void		SquareDestroy(void *memPtr);
+static Tcl_FreeProc	SquareDestroy;
 static void		SquareDisplay(ClientData clientData);
 static void		KeepInWindow(Square *squarePtr);
 static void		SquareObjEventProc(ClientData clientData,
@@ -410,7 +410,7 @@ SquareObjEventProc(
 	if (squarePtr->updatePending) {
 	    Tcl_CancelIdleCall(SquareDisplay, squarePtr);
 	}
-	Tcl_EventuallyFree(squarePtr, (Tcl_FreeProc *)(void *)SquareDestroy);
+	Tcl_EventuallyFree(squarePtr, SquareDestroy);
     }
 }
 
