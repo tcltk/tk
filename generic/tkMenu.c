@@ -840,7 +840,7 @@ MenuWidgetObjCmd(
 	}
         entryPtr = menuPtr->entries[index]->entryPtr;
         if (entryPtr) {
-            idStr = Tcl_GetHashKey(&menuPtr->items, entryPtr);
+            idStr = (const char *)Tcl_GetHashKey(&menuPtr->items, entryPtr);
             Tcl_SetObjResult(interp, Tcl_NewStringObj(idStr, TCL_INDEX_NONE));
         }
 	break;
@@ -1218,7 +1218,7 @@ DestroyMenuInstance(
 	 */
 
 	Tcl_EventuallyFree(menuPtr->entries[i],
-		(Tcl_FreeProc*)DestroyMenuEntry);
+		DestroyMenuEntry);
 	menuPtr->numEntries = i;
     }
     if (menuPtr->entries != NULL) {
@@ -1663,7 +1663,7 @@ ConfigureMenu(
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
 
-	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[0], DestroyMenuEntry);
 
 	    for (i = 0; i < (int)menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
@@ -2197,7 +2197,7 @@ GetMenuIndex(
 
     entryPtr = Tcl_FindHashEntry(&menuPtr->items, string);
     if (entryPtr) {
-        TkMenuEntry *mePtr = Tcl_GetHashValue(entryPtr);
+        TkMenuEntry *mePtr = (TkMenuEntry *)Tcl_GetHashValue(entryPtr);
         *indexPtr = mePtr->index;
         return TCL_OK;
     }
@@ -2458,7 +2458,7 @@ MenuAddOrInsert(
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
     		Tcl_EventuallyFree(errorMenuPtr->entries[index],
-    	    		(Tcl_FreeProc *) DestroyMenuEntry);
+    	    		DestroyMenuEntry);
 		for (i = index; i < errorMenuPtr->numEntries - 1; i++) {
 		    errorMenuPtr->entries[i] = errorMenuPtr->entries[i + 1];
 		    errorMenuPtr->entries[i]->index = i;
@@ -3612,7 +3612,7 @@ DeleteMenuCloneEntries(
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	for (i = last; i >= first; i--) {
-	    Tcl_EventuallyFree(menuListPtr->entries[i], (Tcl_FreeProc *) DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[i], DestroyMenuEntry);
 	}
 	for (i = last + 1; i < (int)menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;

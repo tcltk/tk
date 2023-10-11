@@ -485,10 +485,10 @@ static void IndicatorElementDraw(
 	 * Update the colors within svgDataCopy
 	 */
 
-	upperBdColorPtr = strstr(svgDataPtr, "9e9a91");
-	lowerBdColorPtr = strstr(svgDataPtr, "cfcdc8");
-	bgColorPtr =	  strstr(svgDataPtr, "ffffff");
-	fgColorPtr =	  strstr(svgDataPtr, "000000");
+	upperBdColorPtr = strstr((char *)svgDataPtr, "9e9a91");
+	lowerBdColorPtr = strstr((char *)svgDataPtr, "cfcdc8");
+	bgColorPtr =	  strstr((char *)svgDataPtr, "ffffff");
+	fgColorPtr =	  strstr((char *)svgDataPtr, "000000");
 
 	assert(upperBdColorPtr);
 	assert(lowerBdColorPtr);

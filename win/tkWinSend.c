@@ -328,13 +328,13 @@ Tk_SendObjCmd(
 {
     enum {
 	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
-    } index;
+    };
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
     const char *stringRep;
     int result = TCL_OK;
-    int i, async = 0;
+    int i, async = 0, index;
 
     /*
      * Process the command options.

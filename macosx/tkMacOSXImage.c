@@ -1051,7 +1051,7 @@ struct TkMacOSXNSImageModel {
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
     bool pressed;                     /* Image is for use in a pressed button.*/
-    bool template;                    /* Image is for use as a template.*/
+    bool templ;                       /* Image is for use as a template.*/
     char *imageName ;                 /* Malloc'ed image name. */
     char *source;       	      /* Malloc'ed string describing the image. */
     char *as;                         /* Malloc'ed interpretation of source */
@@ -1130,7 +1130,7 @@ static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
      -1, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, offsetof(TkMacOSXNSImageModel, template), TK_OPTION_VAR(bool), NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, templ), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
@@ -1290,7 +1290,7 @@ TkMacOSXNSImageConfigureModel(
 	[modelPtr->darkModeImage release];
 	newImage.size = size;
 	modelPtr->image = [newImage retain];
-	if (modelPtr->template) {
+	if (modelPtr->templ) {
 	    newImage.template = YES;
 	}
 	modelPtr->darkModeImage = [[newImage copy] retain];

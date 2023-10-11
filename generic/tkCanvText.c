@@ -1506,7 +1506,7 @@ GetTextIndex(
 	const char *p;
 
 	p = string+1;
-	rest = strchr(p, ',');
+	rest = strchr((char *)p, ',');
 	if (!rest) {
 	    goto badIndex;
 	}

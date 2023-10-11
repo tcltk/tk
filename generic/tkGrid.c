@@ -2908,7 +2908,7 @@ GridStructureProc(
 	    Tcl_CancelIdleCall(ArrangeGrid, gridPtr);
 	}
 	gridPtr->tkwin = NULL;
-	Tcl_EventuallyFree(gridPtr, (Tcl_FreeProc *)DestroyGrid);
+	Tcl_EventuallyFree(gridPtr, DestroyGrid);
     } else if (eventPtr->type == MapNotify) {
 	if ((gridPtr->contentPtr != NULL)
 		&& !(gridPtr->flags & REQUESTED_RELAYOUT)) {
