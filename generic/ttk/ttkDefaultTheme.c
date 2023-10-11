@@ -657,12 +657,12 @@ static void IndicatorElementDraw(
 	 * Update the colors within svgDataCopy
 	 */
 
-	shadeColorPtr =	    strstr(svgDataPtr, "888888");
-	highlightColorPtr = strstr(svgDataPtr, "eeeeee");
-	borderColorPtr =    strstr(svgDataPtr, "414141");
-	bgColorPtr =	    strstr(svgDataPtr, "d9d9d9");
-	indicatorColorPtr = strstr(svgDataPtr, "ffffff");
-	fgColorPtr =	    strstr(svgDataPtr, "000000");
+	shadeColorPtr =	    strstr((char *)svgDataPtr, "888888");
+	highlightColorPtr = strstr((char *)svgDataPtr, "eeeeee");
+	borderColorPtr =    strstr((char *)svgDataPtr, "414141");
+	bgColorPtr =	    strstr((char *)svgDataPtr, "d9d9d9");
+	indicatorColorPtr = strstr((char *)svgDataPtr, "ffffff");
+	fgColorPtr =	    strstr((char *)svgDataPtr, "000000");
 
 	assert(shadeColorPtr);
 	assert(highlightColorPtr);
