@@ -1481,7 +1481,7 @@ PackStructureProc(
 	    Tcl_CancelIdleCall(ArrangePacking, packPtr);
 	}
 	packPtr->tkwin = NULL;
-	Tcl_EventuallyFree(packPtr, (Tcl_FreeProc *) DestroyPacker);
+	Tcl_EventuallyFree(packPtr, DestroyPacker);
     } else if (eventPtr->type == MapNotify) {
 	/*
 	 * When a container gets mapped, must redo the geometry computation so

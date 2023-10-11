@@ -799,8 +799,8 @@ static void IndicatorElementDraw(
 	 * Update the colors within svgDataCopy
 	 */
 	if (selected || tristate) {
-	    bgColorPtr = strstr(svgDataPtr, "4a6984");
-	    fgColorPtr = strstr(svgDataPtr, "ffffff");
+	    bgColorPtr = strstr((char *)svgDataPtr, "4a6984");
+	    fgColorPtr = strstr((char *)svgDataPtr, "ffffff");
 
 	    assert(bgColorPtr);
 	    assert(fgColorPtr);
@@ -808,8 +808,8 @@ static void IndicatorElementDraw(
 	    memcpy(bgColorPtr, bgColorStr, 6);
 	    memcpy(fgColorPtr, fgColorStr, 6);
 	} else {
-	    bgColorPtr =     strstr(svgDataPtr, "ffffff");
-	    borderColorPtr = strstr(svgDataPtr, "888888");
+	    bgColorPtr =     strstr((char *)svgDataPtr, "ffffff");
+	    borderColorPtr = strstr((char *)svgDataPtr, "888888");
 
 	    assert(bgColorPtr);
 	    assert(borderColorPtr);
@@ -1430,9 +1430,9 @@ static void SliderElementDraw(
 	/*
 	 * Update the colors within svgDataCopy
 	 */
-	innerColorPtr = strstr(svgDataPtr, "4a6984");
-	outerColorPtr = strstr(svgDataPtr, "ffffff");
-	borderColorPtr = strstr(svgDataPtr, "c3c3c3");
+	innerColorPtr = strstr((char *)svgDataPtr, "4a6984");
+	outerColorPtr = strstr((char *)svgDataPtr, "ffffff");
+	borderColorPtr = strstr((char *)svgDataPtr, "c3c3c3");
 	assert(innerColorPtr);
 	assert(outerColorPtr);
 	assert(borderColorPtr);
