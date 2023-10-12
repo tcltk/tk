@@ -6,8 +6,8 @@
  *
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 by Scriptics Corporation.
- * Copyright (c) 2018-2019 by Gregor Cramer.
+ * Copyright (c) 1998 Scriptics Corporation.
+ * Copyright (c) 2018-2019 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -231,7 +231,7 @@ typedef struct {
  */
 
 typedef struct {
-    ClientData object;		/* For binding table, identifies the binding tag of the object
+    void *object;		/* For binding table, identifies the binding tag of the object
     				 * (or class of objects) relative to which the event occurred.
 				 * For virtual event table, always NULL. */
     unsigned type;		/* Type of event (from X). */
@@ -697,7 +697,7 @@ static void		DeleteVirtualEventTable(VirtualEventTable *vetPtr);
 static void		ExpandPercents(TkWindow *winPtr, const char *before, Event *eventPtr,
 			    unsigned scriptCount, Tcl_DString *dsPtr);
 static PatSeq *		FindSequence(Tcl_Interp *interp, LookupTables *lookupTables,
-			    ClientData object, const char *eventString, int create,
+			    void *object, const char *eventString, int create,
 			    int allowVirtual, unsigned *maskPtr);
 static void		GetAllVirtualEvents(Tcl_Interp *interp, VirtualEventTable *vetPtr);
 static const char *	GetField(const char *p, char *copy, unsigned size);
@@ -710,16 +710,16 @@ static int		HandleEventGenerate(Tcl_Interp *interp, Tk_Window main,
 static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
-			    ClientData object, PatSeq **physPtrPtr);
+			    void *object, PatSeq **physPtrPtr);
 static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, unsigned *eventMaskPtr);
-static void		DoWarp(ClientData clientData);
+static void		DoWarp(void *clientData);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
-static void		ClearLookupTable(LookupTables *lookupTables, ClientData object);
-static void		ClearPromotionLists(Tk_BindingTable bindPtr, ClientData object);
+static void		ClearLookupTable(LookupTables *lookupTables, void *object);
+static void		ClearPromotionLists(Tk_BindingTable bindPtr, void *object);
 static PSEntry *	MakeListEntry(PSList *pool, PatSeq *psPtr, int needModMasks);
 static void		RemovePatSeqFromLookup(LookupTables *lookupTables, PatSeq *psPtr);
 static void		RemovePatSeqFromPromotionLists(Tk_BindingTable bindPtr, PatSeq *psPtr);
@@ -737,7 +737,7 @@ void			TkpDumpPSList(const PSList *psList);
 static int BindCount = 0;  /* Can be set or queried from Tcl through 'event debug' subcommand. Otherwise not used. */
 #endif
 
-static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
+static Tcl_Size Max(Tcl_Size a, Tcl_Size b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static int IsOdd(int n) { return n & 1; }
 
@@ -834,14 +834,14 @@ CountSpecialized(
     return sndCount - fstCount;
 }
 
-int
+static int
 IsKeyEventType(
-    unsigned eventType)
+    int eventType)
 {
     return eventType == KeyPress || eventType == KeyRelease;
 }
 
-int
+static int
 IsButtonEventType(
     unsigned eventType)
 {
@@ -913,7 +913,7 @@ static void
 ClearList(
     PSList *psList,
     PSList *pool,
-    ClientData object)
+    void *object)
 {
     assert(psList);
     assert(pool);
@@ -1137,7 +1137,7 @@ GetLookupForEvent(
 static void
 ClearLookupTable(
     LookupTables *lookupTables,
-    ClientData object)
+    void *object)
 {
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
@@ -1187,10 +1187,9 @@ ClearLookupTable(
 static void
 ClearPromotionLists(
     Tk_BindingTable bindPtr,
-    ClientData object)
+    void *object)
 {
-    unsigned newArraySize = 0;
-    unsigned i;
+    size_t i, newArraySize = 0;
 
     assert(bindPtr);
 
@@ -1612,7 +1611,7 @@ unsigned long
 Tk_CreateBinding(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_BindingTable bindPtr,	/* Table in which to create binding. */
-    ClientData object,		/* Token for object with which binding is associated. */
+    void *object,		/* Token for object with which binding is associated. */
     const char *eventString,	/* String describing event sequence that triggers binding. */
     const char *script,		/* Contains Tcl script to execute when binding triggers. */
     int append)			/* 0 means replace any existing binding for eventString;
@@ -1711,7 +1710,7 @@ int
 Tk_DeleteBinding(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Tk_BindingTable bindPtr,	/* Table in which to delete binding. */
-    ClientData object,		/* Token for object with which binding is associated. */
+    void *object,		/* Token for object with which binding is associated. */
     const char *eventString)	/* String describing event sequence that triggers binding. */
 {
     PatSeq *psPtr;
@@ -1784,7 +1783,7 @@ const char *
 Tk_GetBinding(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_BindingTable bindPtr,	/* Table in which to look for binding. */
-    ClientData object,		/* Token for object with which binding is associated. */
+    void *object,		/* Token for object with which binding is associated. */
     const char *eventString)	/* String describing event sequence that triggers binding. */
 {
     const PatSeq *psPtr;
@@ -1822,7 +1821,7 @@ void
 Tk_GetAllBindings(
     Tcl_Interp *interp,		/* Interpreter returning result or error. */
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
-    ClientData object)		/* Token for object. */
+    void *object)		/* Token for object. */
 {
     Tcl_HashEntry *hPtr;
 
@@ -1913,7 +1912,7 @@ RemovePatSeqFromPromotionLists(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     PatSeq *psPtr)		/* Remove this pattern sequence. */
 {
-    unsigned i;
+    size_t i;
 
     assert(bindPtr);
     assert(psPtr);
@@ -2011,7 +2010,7 @@ DeletePatSeq(
 void
 Tk_DeleteAllBindings(
     Tk_BindingTable bindPtr,	/* Table in which to delete bindings. */
-    ClientData object)		/* Token for object. */
+    void *object)		/* Token for object. */
 {
     PatSeq *psPtr;
     PatSeq *nextPtr;
@@ -2138,8 +2137,8 @@ Tk_BindEvent(
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
     				 * locate display information). */
-    int numObjects,		/* Number of objects at *objArr. */
-    ClientData *objArr)		/* Array of one or more objects to check for a matching binding. */
+    Tcl_Size numObjects,		/* Number of objects at *objArr. */
+    void **objArr)		/* Array of one or more objects to check for a matching binding. */
 {
     Tcl_Interp *interp;
     ScreenInfo *screenPtr;
@@ -2160,9 +2159,9 @@ Tk_BindEvent(
     unsigned scriptCount;
     int oldScreen;
     unsigned flags;
-    unsigned arraySize;
+    Tcl_Size arraySize;
     unsigned newArraySize;
-    unsigned i, k;
+    Tcl_Size i, k;
 
     assert(bindPtr);
     assert(eventPtr);
@@ -2235,7 +2234,7 @@ Tk_BindEvent(
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
 	/* Modifier keys should not influence button events. */
-	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
+	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		reset = 0;
 	    }
@@ -2361,7 +2360,7 @@ Tk_BindEvent(
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
     if (!PromArr_IsEmpty(bindPtr->promArr)) {
-	for (k = 0; k < (unsigned) numObjects; ++k) {
+	for (k = 0; k < numObjects; ++k) {
 	    psl[1] = PromArr_Last(bindPtr->promArr);
 	    psl[0] = psl[1] - 1;
 
@@ -2393,7 +2392,7 @@ Tk_BindEvent(
      * 2. Look for bindings without detail.
      */
 
-    for (k = 0; k < (unsigned) numObjects; ++k) {
+    for (k = 0; k < numObjects; ++k) {
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
@@ -2407,7 +2406,7 @@ Tk_BindEvent(
 
 	if (!PSList_IsEmpty(psSuccList)) {
 	    /* We have promoted sequences, adjust array size. */
-	    arraySize = Max(1u, arraySize);
+	    arraySize = Max(1, arraySize);
 	}
 
 	bestPtr = psPtr[0] ? psPtr[0] : psPtr[1];
@@ -2583,7 +2582,7 @@ Tk_BindEvent(
     Tcl_Preserve(bindInfoPtr);
 
     for (p = Tcl_DStringValue(&scripts), end = p + Tcl_DStringLength(&scripts); p < end; ) {
-	unsigned len = strlen(p);
+	size_t len = strlen(p);
 	int code;
 
 	if (!bindInfoPtr->deleted) {
@@ -2648,7 +2647,7 @@ static int
 VirtPatIsBound(
     Tk_BindingTable bindPtr,	/* Table in which to look for bindings. */
     PatSeq *psPtr,		/* Test this pattern. */
-    ClientData object,		/* Check for this binding tag. */
+    void *object,		/* Check for this binding tag. */
     PatSeq **physPtrPtr)	/* Input: the best physical event.
     				 * Output: the physical event associated with matching virtual event. */
 {
@@ -2777,7 +2776,7 @@ MatchPatterns(
     				 * Can be NULL. */
     unsigned patIndex,		/* Match only this tag in sequence. */
     const Event *curEvent,	/* Match this event. */
-    ClientData object,		/* Check for this binding tag. */
+    void *object,		/* Check for this binding tag. */
     PatSeq **physPtrPtr)	/* Input: the best physical event; NULL if we test physical events.
     				 * Output: the associated physical event for the best matching virtual
 				 * event; NULL when we match physical events. */
@@ -2788,7 +2787,8 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
-    int i, isModKeyOnly = 0;
+    int isModKeyOnly = 0;
+    Tcl_Size i;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -3260,8 +3260,8 @@ ExpandPercents(
 	}
 	{   /* local scope */
 	    int cvtFlags;
-	    unsigned spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
-	    unsigned length = Tcl_DStringLength(dsPtr);
+	    Tcl_Size spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
+	    Tcl_Size length = Tcl_DStringLength(dsPtr);
 
 	    Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
 	    spaceNeeded = Tcl_ConvertElement(
@@ -3335,7 +3335,7 @@ ChangeScreen(
 
 int
 Tk_EventObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -4542,7 +4542,7 @@ NameToWindow(
 
 static void
 DoWarp(
-    ClientData clientData)
+    void *clientData)
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
 
@@ -4645,7 +4645,7 @@ static PatSeq *
 FindSequence(
     Tcl_Interp *interp,		/* Interpreter to use for error reporting. */
     LookupTables *lookupTables,	/* Tables used for lookup. */
-    ClientData object,		/* For binding table, token for object with which binding is
+    void *object,		/* For binding table, token for object with which binding is
     				 * associated. For virtual event table, NULL. */
     const char *eventString,	/* String description of pattern to match on. See user
     				 * documentation for details. */
