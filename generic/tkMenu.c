@@ -643,7 +643,7 @@ MenuWidgetObjCmd(
 	if (menuPtr->active == index) {
 	    goto done;
 	}
-	if ((index != TCL_INDEX_NONE) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
+	if ((index >= 0) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
 		|| (menuPtr->entries[index]->state == ENTRY_DISABLED))) {
 	    index = TCL_INDEX_NONE;
 	}
@@ -826,7 +826,7 @@ MenuWidgetObjCmd(
     case MENU_ID: {
 	Tcl_Size index;
 	const char *idStr;
-        Tcl_HashEntry *entryPtr;
+	Tcl_HashEntry *entryPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -835,14 +835,14 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    goto done;
 	}
-        entryPtr = menuPtr->entries[index]->entryPtr;
-        if (entryPtr) {
-            idStr = (const char *)Tcl_GetHashKey(&menuPtr->items, entryPtr);
-            Tcl_SetObjResult(interp, Tcl_NewStringObj(idStr, TCL_INDEX_NONE));
-        }
+	entryPtr = menuPtr->entries[index]->entryPtr;
+	if (entryPtr) {
+	    idStr = (const char *)Tcl_GetHashKey(&menuPtr->items, entryPtr);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(idStr, TCL_INDEX_NONE));
+	}
 	break;
     }
     case MENU_INDEX: {
@@ -2157,7 +2157,7 @@ GetMenuIndex(
 
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
 	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
-	if (*indexPtr != TCL_INDEX_NONE || Tcl_GetString(objPtr)[0] != '-') {
+	if (*indexPtr >= 0 || Tcl_GetString(objPtr)[0] != '-') {
 	    if (*indexPtr >= menuPtr->numEntries) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	    }
@@ -2679,7 +2679,7 @@ TkActivateMenuEntry(
     TkMenuEntry *mePtr;
     int result = TCL_OK;
 
-    if (menuPtr->active != TCL_INDEX_NONE) {
+    if (menuPtr->active >= 0) {
 	mePtr = menuPtr->entries[menuPtr->active];
 
 	/*
@@ -2693,7 +2693,7 @@ TkActivateMenuEntry(
 	TkEventuallyRedrawMenu(menuPtr, menuPtr->entries[menuPtr->active]);
     }
     menuPtr->active = index;
-    if (index != TCL_INDEX_NONE) {
+    if (index >= 0) {
 	mePtr = menuPtr->entries[index];
 	mePtr->state = ENTRY_ACTIVE;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);

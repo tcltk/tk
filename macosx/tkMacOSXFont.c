@@ -468,7 +468,7 @@ startOfClusterObjCmd(
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index != TCL_INDEX_NONE) {
+    if (index >= 0) {
 	if ((size_t)index >= [S length]) {
 	    index = (Tcl_Size)[S length];
 	} else {
@@ -508,8 +508,8 @@ endOfClusterObjCmd(
 	return TCL_ERROR;
     }
     if ((size_t)index + 1 <= [S length]) {
-	if (index == TCL_INDEX_NONE) {
-		index = 0;
+	if (index < 0) {
+	    index = 0;
 	} else {
 	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
 	    index = range.location + range.length;
@@ -1011,7 +1011,7 @@ TkpMeasureCharsInContext(
     double width;
     int length, fit;
 
-    if (rangeStart == TCL_INDEX_NONE || rangeStart < 0 || rangeLength <= 0 ||
+    if (rangeStart < 0 || rangeLength <= 0 ||
 	    rangeStart + rangeLength > numBytes ||
 	    (maxLength == 0 && !(flags & TK_AT_LEAST_ONE))) {
 	*lengthPtr = 0;
@@ -1294,7 +1294,7 @@ TkpDrawAngledCharsInContext(
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
-    if (rangeStart == TCL_INDEX_NONE || rangeLength + 1 <= 1  ||
+    if (rangeStart < 0 || rangeLength <= 0 ||
 	rangeStart + rangeLength > numBytes ||
 	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
