@@ -1592,7 +1592,7 @@ GenerateMenuSelectEvent(
     if (menuPtr) {
 	Tcl_Size index = [menu tkIndexOfItem:menuItem];
 
-	if (index == TCL_INDEX_NONE || index >= menuPtr->numEntries ||
+	if (index < 0 || index >= menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
 	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	} else {
