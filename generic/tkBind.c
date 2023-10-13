@@ -737,7 +737,7 @@ void			TkpDumpPSList(const PSList *psList);
 static int BindCount = 0;  /* Can be set or queried from Tcl through 'event debug' subcommand. Otherwise not used. */
 #endif
 
-static Tcl_Size Max(Tcl_Size a, Tcl_Size b) { return a < b ? b : a; }
+static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static int IsOdd(int n) { return n & 1; }
 
@@ -2137,7 +2137,7 @@ Tk_BindEvent(
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
     				 * locate display information). */
-    Tcl_Size numObjects,		/* Number of objects at *objArr. */
+    unsigned numObjects,		/* Number of objects at *objArr. */
     void **objArr)		/* Array of one or more objects to check for a matching binding. */
 {
     Tcl_Interp *interp;
@@ -2159,9 +2159,9 @@ Tk_BindEvent(
     unsigned scriptCount;
     int oldScreen;
     unsigned flags;
-    Tcl_Size arraySize;
+    unsigned arraySize;
     unsigned newArraySize;
-    Tcl_Size i, k;
+    unsigned i, k;
 
     assert(bindPtr);
     assert(eventPtr);
@@ -2788,7 +2788,7 @@ MatchPatterns(
     unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
     int isModKeyOnly = 0;
-    Tcl_Size i;
+    unsigned i;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -3260,8 +3260,8 @@ ExpandPercents(
 	}
 	{   /* local scope */
 	    int cvtFlags;
-	    Tcl_Size spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
-	    Tcl_Size length = Tcl_DStringLength(dsPtr);
+	    unsigned spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
+	    unsigned length = Tcl_DStringLength(dsPtr);
 
 	    Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
 	    spaceNeeded = Tcl_ConvertElement(
