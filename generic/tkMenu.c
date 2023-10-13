@@ -2169,29 +2169,29 @@ GetMenuIndex(
 
     if ((string[0] == 'a') && (strcmp(string, "active") == 0)) {
 	*indexPtr = menuPtr->active;
-	goto success;
+	return TCL_OK;
     }
 
     if ((string[0] == 'l') && (strcmp(string, "last") == 0)) {
 	*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
-	goto success;
+	return TCL_OK;
     }
 
     if (string[0] == 0) {
 	*indexPtr = TCL_INDEX_NONE;
-	goto success;
+	return TCL_OK;
     }
 #if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
 	*indexPtr = TCL_INDEX_NONE;
-	goto success;
+	return TCL_OK;
     }
 #endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
 		== TCL_OK) {
-	    goto success;
+	    return TCL_OK;
 	}
     }
 
@@ -2208,7 +2208,7 @@ GetMenuIndex(
 
 	if ((label != NULL) && (Tcl_StringCaseMatch(label, string, 0))) {
 	    *indexPtr = i;
-	    goto success;
+	    return TCL_OK;
 	}
     }
 
@@ -2216,9 +2216,6 @@ GetMenuIndex(
 	    "bad menu entry index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
     return TCL_ERROR;
-
-  success:
-    return TCL_OK;
 }
 
 /*
