@@ -2137,7 +2137,7 @@ Tk_BindEvent(
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
     				 * locate display information). */
-    unsigned numObjects,		/* Number of objects at *objArr. */
+    int numObjects,		/* Number of objects at *objArr. */
     void **objArr)		/* Array of one or more objects to check for a matching binding. */
 {
     Tcl_Interp *interp;
@@ -2234,7 +2234,7 @@ Tk_BindEvent(
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
 	/* Modifier keys should not influence button events. */
-	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		reset = 0;
 	    }
@@ -2360,7 +2360,7 @@ Tk_BindEvent(
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
     if (!PromArr_IsEmpty(bindPtr->promArr)) {
-	for (k = 0; k < numObjects; ++k) {
+	for (k = 0; k < (unsigned) numObjects; ++k) {
 	    psl[1] = PromArr_Last(bindPtr->promArr);
 	    psl[0] = psl[1] - 1;
 
@@ -2392,7 +2392,7 @@ Tk_BindEvent(
      * 2. Look for bindings without detail.
      */
 
-    for (k = 0; k < numObjects; ++k) {
+    for (k = 0; k < (unsigned) numObjects; ++k) {
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
@@ -2406,7 +2406,7 @@ Tk_BindEvent(
 
 	if (!PSList_IsEmpty(psSuccList)) {
 	    /* We have promoted sequences, adjust array size. */
-	    arraySize = Max(1, arraySize);
+	    arraySize = Max(1u, arraySize);
 	}
 
 	bestPtr = psPtr[0] ? psPtr[0] : psPtr[1];
@@ -2787,8 +2787,7 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
-    int isModKeyOnly = 0;
-    unsigned i;
+    int i, isModKeyOnly = 0;
 
     assert(dispPtr);
     assert(bindPtr);
