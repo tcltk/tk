@@ -1448,9 +1448,6 @@ COMPILERFLAGS  = /D_ATL_XP_TARGETING
 !if "$(TCL_BUILD_FOR)" == "8"
 OPTDEFINES	= $(OPTDEFINES) /DTCL_MAJOR_VERSION=8
 !endif
-!if "$(TCL_BUILD_FOR)" == "8"
-OPTDEFINES	= $(OPTDEFINES) /DTCL_MAJOR_VERSION=8
-!endif
 
 # Like the TEA system only set this non empty for non-Tk extensions
 # Note: some extensions use PACKAGE_NAME and others use PACKAGE_TCLNAME
