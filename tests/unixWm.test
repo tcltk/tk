@@ -1564,8 +1564,8 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
 destroy .t
 toplevel .t -width 80 -height 60
 test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix failsOnXQuarz} {
-    tkwait visibility .t
     wm overrideredirect .t 1
+    tkwait visibility .t
     update
     wm geometry .t +5-10
     update
@@ -1574,8 +1574,8 @@ test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix failsO
 destroy .t
 toplevel .t -width 80 -height 60
 test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} {unix failsOnXQuarz} {
-    tkwait visibility .t
     wm overrideredirect .t 1
+    tkwait visibility .t
     update
     wm geometry .t -30+$Y2
     update
