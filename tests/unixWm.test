@@ -121,11 +121,11 @@ set i 1
 foreach geom "+$X+80 +$X+40 +$X+$Y0" {
     test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
-	update idletasks
+	sleep 10
 	wm geom .t $geom
 	update idletasks
 	wm deiconify .t
-	update idletasks
+	sleep 10
 	wm geom .t
     } 100x150$geom
     incr i
@@ -245,10 +245,6 @@ test unixWm-6.4 {size changes} {unix nonPortable userInteraction} {
     update
     list $width $height $w2 $h2 [wm geom .t]
 } {0 0 230 110 114x261+10+10}
-
-# I don't know why the wait below is needed, but without it the test
-# fails under twm.
-sleep 200
 
 test unixWm-6.5 {window initially iconic} {unix nonPortable} {
     destroy .t
