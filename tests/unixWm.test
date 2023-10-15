@@ -1623,7 +1623,7 @@ test unixWm-45.1 {UpdateSizeHints procedure, grid information} {unix testwrapper
 	    [expr [lindex $property 7]] [expr [lindex $property 8]] \
 	    [expr [lindex $property 9]] [expr [lindex $property 10]]
 } {40 30 320 210 10 5}
-test unixWm-45.2 {UpdateSizeHints procedure} {unix testwrapper failsOnXQuarz} {
+test unixWm-45.2 {UpdateSizeHints procedure} {unix testwrapper} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm minsize .t 30 40
@@ -1651,7 +1651,7 @@ test unixWm-45.3 {UpdateSizeHints procedure, grid with menu} {testmenubar testwr
 	    [expr [lindex $property 7]] [expr [lindex $property 8]] \
 	    [expr [lindex $property 9]] [expr [lindex $property 10]]
 } {60 40 53 320 233 10 5}
-test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenubar testwrapper failsOnXQuarz} {
+test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenubar testwrapper} {
     destroy .t
     toplevel .t -width 80 -height 60
     frame .t.menu -height 23 -width 50
