@@ -1835,8 +1835,8 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
     update
     restackDelay
     toplevel .t2 -width 200 -height 100 -bg blue
-    tkwait visibility .t2
     wm overrideredirect .t2 1
+    tkwait visibility .t2
     wm geom .t2 +200+200
     update
     raise .t2
