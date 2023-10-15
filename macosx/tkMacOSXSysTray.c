@@ -162,8 +162,7 @@ typedef TkStatusItem** StatusItemInfo;
 
 static void
 MacSystrayDestroy(
-    void *clientData,
-    TCL_UNUSED(Tcl_Interp *))
+    void *clientData)
 {
     StatusItemInfo info = (StatusItemInfo)clientData;
     if (info) {
@@ -481,7 +480,7 @@ MacSystrayInit(Tcl_Interp *interp)
     *info = 0;
 
     Tcl_CreateObjCommand(interp, "::tk::systray::_systray", MacSystrayObjCmd, info,
-            (Tcl_CmdDeleteProc *)MacSystrayDestroy);
+	    MacSystrayDestroy);
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", SysNotifyObjCmd, NULL, NULL);
     return TCL_OK;
 }
