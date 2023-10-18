@@ -132,6 +132,16 @@ static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
 #undef observe
 }
 
+
+/*
+ * Fix for 10b38a7a7c.
+ */
+
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
+{
+    return YES;
+}
+
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
 {
     (void)aNotification;
