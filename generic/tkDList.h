@@ -7,7 +7,7 @@
  * before or after an existing element or at the head/tail of the list.
  * A list may be traversed in the forward or backward direction.
  *
- * Copyright (c) 2018 by Gregor Cramer.
+ * Copyright (c) 2018 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -28,8 +28,8 @@
  * MyList listHdr = TK_DLIST_LIST_INITIALIZER; // or MyList_Init(&listHdr)
  * MyListEntry *p;
  * int i = 0;
- * MyList_Append(&listHdr, ckalloc(sizeof(MyListEntry)));
- * MyList_Append(&listHdr, ckalloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
+ * MyList_Append(&listHdr, (MyListEntry *)ckalloc(sizeof(MyListEntry)));
  * TK_DLIST_FOREACH(p, &listHdr) { p->value = i++; }
  * // ...
  * MyList_RemoveHead(&listHdr);
@@ -361,9 +361,9 @@ LT##_Prepend(LT *head, struct ElemType *elem)					\
 {										\
     assert(head);								\
     assert(elem);								\
-    elem->_dl_.prev = (void *) head;						\
+    elem->_dl_.prev = (PSEntry *) head;						\
     if (!head->first) {								\
-	elem->_dl_.next = (void *) head;					\
+	elem->_dl_.next = (PSEntry *) head;					\
 	head->last = elem;							\
     } else {									\
 	elem->_dl_.next = head->first;						\
@@ -378,9 +378,9 @@ LT##_Append(LT *head, struct ElemType *elem)					\
 {										\
     assert(head);								\
     assert(elem);								\
-    elem->_dl_.next = (void *) head;						\
+    elem->_dl_.next = (PSEntry *) head;						\
     if (!head->first) {								\
-	elem->_dl_.prev = (void *) head;					\
+	elem->_dl_.prev = (PSEntry *) head;					\
 	head->first = elem;							\
     } else {									\
 	elem->_dl_.prev = head->last;						\
@@ -402,9 +402,9 @@ LT##_Move(LT *dst, LT *src)							\
 	    dst->last = src->last;						\
 	} else {								\
 	    *dst = *src;							\
-	    dst->first->_dl_.prev = (void *) dst;				\
+	    dst->first->_dl_.prev = (PSEntry *) dst;				\
 	}									\
-	dst->last->_dl_.next = (void *) dst;					\
+	dst->last->_dl_.next = (PSEntry *) dst;					\
 	LT##_Init(src);								\
     }										\
 }										\
@@ -528,11 +528,11 @@ LT##_Traverse(LT *head, LT##_Func func)						\
 
 #define TK_DLIST_FOREACH(var, head)						\
     assert(head);								\
-    for (var = head->first ? head->first : (void *) head; var != (void *) head; var = var->_dl_.next)
+    for (var = head->first ? head->first : (PSEntry *) head; var != (PSEntry *) head; var = var->_dl_.next)
 
 #define TK_DLIST_FOREACH_REVERSE(var, head)					\
     assert(head);								\
-    for (var = head->last ? head->last : (void *) head; var != (void *) head; var = var->_dl_.prev)
+    for (var = head->last ? head->last : (PSEntry *) head; var != (PSEntry *) head; var = var->_dl_.prev)
 
 #endif /* TK_DLIST_DEFINED */
 

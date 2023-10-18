@@ -389,7 +389,7 @@ static int		ConfigureListboxItem(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int index);
 static int		ListboxDeleteSubCmd(Listbox *listPtr,
 			    int first, int last);
-static void		DestroyListbox(void *memPtr);
+static Tcl_FreeProc	DestroyListbox;
 static void		DestroyListboxOptionTables(ClientData clientData,
 			    Tcl_Interp *interp);
 static void		DisplayListbox(ClientData clientData);
@@ -1436,9 +1436,9 @@ ListboxGetItemAttributes(
 
 static void
 DestroyListbox(
-    void *memPtr)		/* Info about listbox widget. */
+    char *memPtr)		/* Info about listbox widget. */
 {
-    Listbox *listPtr = memPtr;
+    Listbox *listPtr = (Listbox *)memPtr;
     Tcl_HashEntry *entry;
     Tcl_HashSearch search;
 
@@ -2619,7 +2619,7 @@ ListboxEventProc(
 	    if (listPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayListbox, clientData);
 	    }
-	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *) DestroyListbox);
+	    Tcl_EventuallyFree(clientData, DestroyListbox);
 	}
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;

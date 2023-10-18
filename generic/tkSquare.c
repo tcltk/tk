@@ -98,7 +98,6 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 static void		SquareDeletedProc(ClientData clientData);
 static int		SquareConfigure(Tcl_Interp *interp, Square *squarePtr);
-static void		SquareDestroy(void *memPtr);
 static void		SquareDisplay(ClientData clientData);
 static void		KeepInWindow(Square *squarePtr);
 static void		SquareObjEventProc(ClientData clientData,
@@ -410,7 +409,7 @@ SquareObjEventProc(
 	if (squarePtr->updatePending) {
 	    Tcl_CancelIdleCall(SquareDisplay, squarePtr);
 	}
-	Tcl_EventuallyFree(squarePtr, (Tcl_FreeProc *) SquareDestroy);
+	Tcl_EventuallyFree(squarePtr, TCL_DYNAMIC);
     }
 }
 
@@ -532,33 +531,6 @@ SquareDisplay(
 		0, 0);
 	Tk_FreePixmap(Tk_Display(tkwin), pm);
     }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * SquareDestroy --
- *
- *	This procedure is invoked by Tcl_EventuallyFree or Tcl_Release to
- *	clean up the internal structure of a square at a safe time (when
- *	no-one is using it anymore).
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	Everything associated with the square is freed up.
- *
- *----------------------------------------------------------------------
- */
-
-static void
-SquareDestroy(
-    void *memPtr)		/* Info about square widget. */
-{
-    Square *squarePtr = memPtr;
-
-    ckfree(squarePtr);
 }
 
 /*

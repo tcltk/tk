@@ -12,8 +12,8 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
-#include "default.h"
 #include "tkInt.h"
+#include "default.h"
 
 /*
  * The following enum is used to define the type of the frame.
@@ -305,26 +305,26 @@ static const Tk_OptionSpec *const optionSpecs[] = {
 static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    int objc, Tcl_Obj *const objv[]);
-static int		CreateFrame(ClientData clientData, Tcl_Interp *interp,
+static int		CreateFrame(void *clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[],
 			    enum FrameType type, const char *appName);
-static void		DestroyFrame(void *memPtr);
+static Tcl_FreeProc	DestroyFrame;
 static void		DestroyFramePartly(Frame *framePtr);
-static void		DisplayFrame(ClientData clientData);
-static void		FrameCmdDeletedProc(ClientData clientData);
-static void		FrameEventProc(ClientData clientData,
+static void		DisplayFrame(void *clientData);
+static void		FrameCmdDeletedProc(void *clientData);
+static void		FrameEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		FrameLostContentProc(ClientData clientData,
+static void		FrameLostContentProc(void *clientData,
 			    Tk_Window tkwin);
-static void		FrameRequestProc(ClientData clientData,
+static void		FrameRequestProc(void *clientData,
 			    Tk_Window tkwin);
-static void		FrameStructureProc(ClientData clientData,
+static void		FrameStructureProc(void *clientData,
 			    XEvent *eventPtr);
-static int		FrameWidgetObjCmd(ClientData clientData,
+static int		FrameWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
-static void		FrameWorldChanged(ClientData instanceData);
-static void		MapFrame(ClientData clientData);
+static void		FrameWorldChanged(void *instanceData);
+static void		MapFrame(void *clientData);
 
 /*
  * The structure below defines frame class behavior by means of functions that
@@ -346,7 +346,7 @@ static const Tk_ClassProcs frameClass = {
 static const Tk_GeomMgr frameGeomType = {
     "labelframe",		/* name */
     FrameRequestProc,		/* requestProc */
-    FrameLostContentProc		/* lostSlaveProc */
+    FrameLostContentProc		/* lostContentProc */
 };
 
 /*
@@ -370,7 +370,7 @@ static const Tk_GeomMgr frameGeomType = {
 
 int
 Tk_FrameObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -380,7 +380,7 @@ Tk_FrameObjCmd(
 
 int
 Tk_ToplevelObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -390,7 +390,7 @@ Tk_ToplevelObjCmd(
 
 int
 Tk_LabelframeObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -419,7 +419,7 @@ Tk_LabelframeObjCmd(
 
 int
 TkCreateFrame(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int argc,			/* Number of arguments. */
     const char *const *argv,	/* Argument strings. */
@@ -431,7 +431,7 @@ TkCreateFrame(
 				 * application. */
 {
     int result, i;
-    Tcl_Obj **objv = ckalloc((argc+1) * sizeof(Tcl_Obj **));
+    Tcl_Obj **objv = (Tcl_Obj **)ckalloc((argc+1) * sizeof(Tcl_Obj **));
 
     for (i=0; i<argc; i++) {
 	objv[i] = Tcl_NewStringObj(argv[i], -1);
@@ -449,7 +449,7 @@ TkCreateFrame(
 
 int
 TkListCreateFrame(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Obj *listObj,		/* List of arguments. */
     int toplevel,		/* Non-zero means create a toplevel window,
@@ -472,7 +472,7 @@ TkListCreateFrame(
 
 static int
 CreateFrame(
-    ClientData clientData,	/* NULL. */
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
@@ -488,7 +488,8 @@ CreateFrame(
     Tk_Window newWin;
     const char *className, *screenName, *visualName, *colormapName;
     const char *arg, *useOption;
-    int i, length, depth;
+    int i, depth;
+    int length;
     unsigned int mask;
     Colormap colormap;
     Visual *visual;
@@ -520,19 +521,19 @@ CreateFrame(
 	    continue;
 	}
 	if ((arg[1] == 'c') && (length >= 3)
-		&& (strncmp(arg, "-class", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-class", length) == 0)) {
 	    className = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'c') && (length >= 3)
-		&& (strncmp(arg, "-colormap", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-colormap", length) == 0)) {
 	    colormapName = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 's') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-screen", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-screen", length) == 0)) {
 	    screenName = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'u') && (type == TYPE_TOPLEVEL)
-		&& (strncmp(arg, "-use", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-use", length) == 0)) {
 	    useOption = Tcl_GetString(objv[i+1]);
 	} else if ((arg[1] == 'v')
-		&& (strncmp(arg, "-visual", (unsigned) length) == 0)) {
+		&& (strncmp(arg, "-visual", length) == 0)) {
 	    visualName = Tcl_GetString(objv[i+1]);
 	}
     }
@@ -647,10 +648,10 @@ CreateFrame(
      */
 
     if (type == TYPE_LABELFRAME) {
-	framePtr = ckalloc(sizeof(Labelframe));
+	framePtr = (Frame *)ckalloc(sizeof(Labelframe));
 	memset(framePtr, 0, sizeof(Labelframe));
     } else {
-	framePtr = ckalloc(sizeof(Frame));
+	framePtr = (Frame *)ckalloc(sizeof(Frame));
 	memset(framePtr, 0, sizeof(Frame));
     }
     framePtr->tkwin = newWin;
@@ -730,7 +731,7 @@ CreateFrame(
 
 static int
 FrameWidgetObjCmd(
-    ClientData clientData,	/* Information about frame widget. */
+    void *clientData,	/* Information about frame widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -741,9 +742,10 @@ FrameWidgetObjCmd(
     enum options {
 	FRAME_CGET, FRAME_CONFIGURE
     };
-    Frame *framePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
     int result = TCL_OK, index;
-    int c, i, length;
+    int c, i;
+    int length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
@@ -794,17 +796,17 @@ FrameWidgetObjCmd(
 		}
 		c = arg[1];
 		if (((c == 'c') && (length >= 2)
-			&& (strncmp(arg, "-class", (unsigned)length) == 0))
+			&& (strncmp(arg, "-class", length) == 0))
 		    || ((c == 'c') && (length >= 3)
-			&& (strncmp(arg, "-colormap", (unsigned)length) == 0))
+			&& (strncmp(arg, "-colormap", length) == 0))
 		    || ((c == 'c') && (length >= 3)
-			&& (strncmp(arg, "-container", (unsigned)length) == 0))
+			&& (strncmp(arg, "-container", length) == 0))
 		    || ((c == 's') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-screen", (unsigned)length) == 0))
+			&& (strncmp(arg, "-screen", length) == 0))
 		    || ((c == 'u') && (framePtr->type == TYPE_TOPLEVEL)
-			&& (strncmp(arg, "-use", (unsigned)length) == 0))
+			&& (strncmp(arg, "-use", length) == 0))
 		    || ((c == 'v')
-			&& (strncmp(arg, "-visual", (unsigned)length) == 0))) {
+			&& (strncmp(arg, "-visual", length) == 0))) {
 
 #ifdef _WIN32
 		    if (c == 'u') {
@@ -857,10 +859,10 @@ FrameWidgetObjCmd(
 
 static void
 DestroyFrame(
-    void *memPtr)		/* Info about frame widget. */
+    char *memPtr)		/* Info about frame widget. */
 {
-    Frame *framePtr = memPtr;
-    Labelframe *labelframePtr = memPtr;
+    Frame *framePtr = (Frame *)memPtr;
+    Labelframe *labelframePtr = (Labelframe *)memPtr;
 
     if (framePtr->type == TYPE_LABELFRAME) {
 	Tk_FreeTextLayout(labelframePtr->textLayout);
@@ -953,7 +955,7 @@ ConfigureFrame(
     if (framePtr->menuName == NULL) {
     	oldMenuName = NULL;
     } else {
-    	oldMenuName = ckalloc(strlen(framePtr->menuName) + 1);
+    	oldMenuName = (char *)ckalloc(strlen(framePtr->menuName) + 1);
     	strcpy(oldMenuName, framePtr->menuName);
     }
 
@@ -1092,10 +1094,10 @@ ConfigureFrame(
 
 static void
 FrameWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
-    Frame *framePtr = instanceData;
-    Labelframe *labelframePtr = instanceData;
+    Frame *framePtr = (Frame *)instanceData;
+    Labelframe *labelframePtr = (Labelframe *)instanceData;
     Tk_Window tkwin = framePtr->tkwin;
     XGCValues gcValues;
     GC gc;
@@ -1410,9 +1412,9 @@ ComputeFrameGeometry(
 
 static void
 DisplayFrame(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
-    Frame *framePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
@@ -1631,10 +1633,10 @@ DisplayFrame(
 
 static void
 FrameEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)	/* Information about event. */
 {
-    Frame *framePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
@@ -1676,7 +1678,7 @@ FrameEventProc(
 	    Tcl_CancelIdleCall(DisplayFrame, framePtr);
 	}
 	Tcl_CancelIdleCall(MapFrame, framePtr);
-	Tcl_EventuallyFree(framePtr, (Tcl_FreeProc *) DestroyFrame);
+	Tcl_EventuallyFree(framePtr, DestroyFrame);
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    framePtr->flags |= GOT_FOCUS;
@@ -1724,9 +1726,9 @@ FrameEventProc(
 
 static void
 FrameCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
-    Frame *framePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
     Tk_Window tkwin = framePtr->tkwin;
 
     if (framePtr->menuName != NULL) {
@@ -1775,9 +1777,9 @@ FrameCmdDeletedProc(
 
 static void
 MapFrame(
-    ClientData clientData)		/* Pointer to frame structure. */
+    void *clientData)		/* Pointer to frame structure. */
 {
-    Frame *framePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
 
     /*
      * Wait for all other background events to be processed before mapping
@@ -1832,7 +1834,7 @@ TkInstallFrameMenu(
     TkWindow *winPtr = (TkWindow *) tkwin;
 
     if (winPtr->mainPtr != NULL) {
-	Frame *framePtr = winPtr->instanceData;
+	Frame *framePtr = (Frame *)winPtr->instanceData;
 
 	if (framePtr == NULL) {
 	    Tcl_Panic("TkInstallFrameMenu couldn't get frame pointer");
@@ -1862,10 +1864,10 @@ TkInstallFrameMenu(
 
 static void
 FrameStructureProc(
-    ClientData clientData,	/* Pointer to record describing frame. */
+    void *clientData,	/* Pointer to record describing frame. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
-    Labelframe *labelframePtr = clientData;
+    Labelframe *labelframePtr = (Labelframe *)clientData;
 
     if (eventPtr->type == DestroyNotify) {
 	/*
@@ -1900,10 +1902,10 @@ FrameStructureProc(
 
 static void
 FrameRequestProc(
-    ClientData clientData,	/* Pointer to record for frame. */
-    Tk_Window tkwin)		/* Window that changed its desired size. */
+    void *clientData,	/* Pointer to record for frame. */
+    TCL_UNUSED(Tk_Window))		/* Window that changed its desired size. */
 {
-    Frame *framePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
 
     FrameWorldChanged(framePtr);
 }
@@ -1927,12 +1929,12 @@ FrameRequestProc(
 
 static void
 FrameLostContentProc(
-    ClientData clientData,	/* Frame structure for content window that was
+    void *clientData,	/* Frame structure for content window that was
 				 * stolen away. */
-    Tk_Window tkwin)		/* Tk's handle for the content window. */
+    TCL_UNUSED(Tk_Window))		/* Tk's handle for the content window window. */
 {
-    Frame *framePtr = clientData;
-    Labelframe *labelframePtr = clientData;
+    Frame *framePtr = (Frame *)clientData;
+    Labelframe *labelframePtr = (Labelframe *)clientData;
 
     /*
      * This should only happen in a labelframe but it doesn't hurt to be
@@ -1955,7 +1957,7 @@ void
 TkMapTopFrame(
      Tk_Window tkwin)
 {
-    Frame *framePtr = ((TkWindow *) tkwin)->instanceData;
+    Frame *framePtr = (Frame *)((TkWindow *) tkwin)->instanceData;
     Tk_OptionTable optionTable;
 
     if (Tk_IsTopLevel(tkwin) && framePtr->type == TYPE_FRAME) {
@@ -2019,7 +2021,7 @@ TkToplevelWindowForCommand(
     if (cmdInfo.objProc != FrameWidgetObjCmd) {
 	return NULL;
     }
-    framePtr = cmdInfo.objClientData;
+    framePtr = (Frame *)cmdInfo.objClientData;
     if (framePtr->type != TYPE_TOPLEVEL) {
 	return NULL;
     }
