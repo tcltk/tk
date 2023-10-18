@@ -284,7 +284,7 @@ fi
 
 if test $tk_aqua = yes; then
     AC_DEFINE(MAC_OSX_TK, 1, [Are we building TkAqua?])
-    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security"
+    LIBS="$LIBS -framework Cocoa -framework Carbon -framework IOKit -framework QuartzCore -framework Security -framework CoreGraphics"
     if test -d /System/Library/Frameworks/UserNotifications.framework; then
         LIBS="$LIBS -framework UserNotifications"
     fi
