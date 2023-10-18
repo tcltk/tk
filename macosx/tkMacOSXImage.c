@@ -15,12 +15,9 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXImage.h"
 #include "tkColor.h"
 #include "xbytes.h"
-
-static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
-	   int x, int y, unsigned int width, unsigned int height);
 
 /* Pixel formats
  *
@@ -628,7 +625,7 @@ int TkpPutRGBAImage(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
     int x,
@@ -673,6 +670,57 @@ CreateCGImageFromDrawableRect(
     }
     return result;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreatePDFFromDrawableRect
+ *
+ *	Extract PDF data from a MacOSX drawable.
+ *
+ * Results:
+ *	Returns a CFDataRef that can be written to a file. 
+ *
+ *      NOTE: The x,y coordinates should be relative to a coordinate system
+ *      with origin at the bottom left as used by NSView,  not top left
+ *      as used by XImage and CGImage.
+ *
+ * Side effects:
+ *     None
+ *
+ *----------------------------------------------------------------------
+ */
+
+CFDataRef
+CreatePDFFromDrawableRect(
+			  Drawable drawable,
+			  int x,
+			  int y,
+			  unsigned int width,
+			  unsigned int height)
+{
+    MacDrawable *mac_drawable = (MacDrawable *)drawable;
+    NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
+    if (view == nil) {
+	TkMacOSXDbgMsg("Invalid source drawable");
+	return NULL;
+    }
+    NSRect bounds, viewSrcRect;
+	
+    /*
+     * Get the child window area in NSView coordinates 
+     * (origin at bottom left).
+     */
+
+    bounds = [view bounds];
+    viewSrcRect = NSMakeRect(mac_drawable->xOff + x,
+			     bounds.size.height - height - (mac_drawable->yOff + y),
+			     width, height);
+    NSData *viewData = [view dataWithPDFInsideRect:viewSrcRect];
+    CFDataRef result = (CFDataRef)viewData;
+    return result;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -690,7 +738,7 @@ CreateCGImageFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromPixmap(
     Drawable pixmap)
 {
