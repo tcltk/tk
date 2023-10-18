@@ -5,7 +5,7 @@
  * Random access to any item is very fast. New items can be either appended
  * or prepended. An array may be traversed in the forward or backward direction.
  *
- * Copyright (c) 2018-2019 by Gregor Cramer.
+ * Copyright (c) 2018-2019 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -188,7 +188,7 @@ AT##_Init(AT *arr)								\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_ElemSize()									\
+AT##_ElemSize(void)									\
 {										\
     return sizeof(ElemType);							\
 }										\
@@ -273,7 +273,7 @@ AT##_Resize(AT **arrp, size_t newSize)						\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newSize - 1) + sizeof(AT);		\
-	*arrp = ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newSize < (*arrp)->size) {					\
@@ -399,7 +399,7 @@ typedef struct AT {								\
 										\
 __TK_ARRAY_UNUSED								\
 static size_t									\
-AT##_ElemSize()									\
+AT##_ElemSize(void)									\
 {										\
     return sizeof(ElemType);							\
 }										\
@@ -484,7 +484,7 @@ AT##_Resize(AT **arrp, size_t newCapacity)					\
     } else {									\
 	int init = *arrp == NULL;						\
 	size_t memSize = AT##_BufferSize(newCapacity - 1) + sizeof(AT);		\
-	*arrp = ckrealloc(*arrp, memSize);					\
+	*arrp = (AT *)ckrealloc(*arrp, memSize);					\
 	if (init) {								\
 	    (*arrp)->size = 0;							\
 	} else if (newCapacity < (*arrp)->size) {				\
