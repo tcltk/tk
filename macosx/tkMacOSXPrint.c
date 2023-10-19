@@ -346,14 +346,13 @@ FinishPrint(
  */
 
 int MakePDF
-(void *clientData,
+(TCL_UNUSED(ClientData),
  Tcl_Interp *ip,
  int objc,
  Tcl_Obj *const objv[])
 {
     Tk_Window path;
-    Drawable d = NULL;
-    int x, y; 
+    Drawable d;
     unsigned int width, height;
     CFDataRef pdfData;
 
@@ -374,9 +373,8 @@ int MakePDF
     d = Tk_WindowId(path);
     width = Tk_Width(path);
     height = Tk_Height(path);
-    MacDrawable *mac_drawable = (MacDrawable *)d;
 
-    pdfData = CreatePDFFromDrawableRect(mac_drawable, 0, 0, width, height);
+    pdfData = CreatePDFFromDrawableRect(d, 0, 0, width, height);
  
     NSData *viewData = (NSData*)pdfData;
     [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
