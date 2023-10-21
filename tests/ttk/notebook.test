@@ -524,4 +524,19 @@ test notebook-1343984-2 "don't autoselect on destroy" -body {
     set ::history
 } -result [list DESTROY .nb.frame1 DESTROY .nb.frame2 DESTROY .nb.frame3]
 
+test notebook-198376af5a {moving tab position to a different edge} -body {
+    destroy .nb
+    ttk::notebook .nb -width 200 -height 100 -padding 0
+    ttk::frame .nb.f1
+    ttk::frame .nb.f2
+    .nb add .nb.f1 -text "One"
+    .nb add .nb.f2 -text "Two"
+    pack .nb
+    update
+    ttk::style configure TNotebook -tabposition s
+    update
+    # without the bugfix for [198376af5a] the following line returns .nb
+    winfo contain [expr {[winfo rootx .nb] + 10}] [expr {[winfo rooty .nb] + 10}]
+} -result .nb.f1
+
 tcltest::cleanupTests
