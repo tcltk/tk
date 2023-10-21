@@ -535,8 +535,7 @@ test notebook-198376af5a {moving tab position to a different edge} -body {
     update
     ttk::style configure TNotebook -tabposition s
     update
-    # without the bugfix for [198376af5a] the following line returns .nb
-    winfo containing [expr {[winfo rootx .nb] + 10}] [expr {[winfo rooty .nb] + 10}]
-} -result .nb.f1
+    winfo y .nb.f1
+} -result 1
 
 tcltest::cleanupTests
