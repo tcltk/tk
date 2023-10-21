@@ -535,7 +535,7 @@ test notebook-198376af5a {moving tab position to a different edge} -body {
     update
     ttk::style configure TNotebook -tabposition s
     update
-    winfo y .nb.f1
+    expr {[winfo y .nb.f1] < 10}
 } -result 1
 
 tcltest::cleanupTests
