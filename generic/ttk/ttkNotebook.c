@@ -582,10 +582,11 @@ static void NotebookDoLayout(void *recordPtr)
     if (cavity.height <= 0) cavity.height = 1;
     if (cavity.width <= 0) cavity.width = 1;
 
-    nb->notebook.clientArea = cavity;
-
-    if (currentIndex >= 0) {
-	NotebookPlaceContent(nb, currentIndex);
+    if (!Ttk_BoxEqual(nb->notebook.clientArea, cavity)) {
+	nb->notebook.clientArea = cavity;
+	if (currentIndex >= 0) {
+	    NotebookPlaceContent(nb, currentIndex);
+	}
     }
 }
 
