@@ -269,9 +269,7 @@ testConstraint nonUnixUserInteraction [expr {
 }]
 testConstraint haveDISPLAY [expr {[info exists env(DISPLAY)] && [testConstraint x11]}]
 testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
-testConstraint noExceed [expr {
-    ![testConstraint unix] || [catch {font actual "\{xyz"}]
-}]
+
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug
 testConstraint aquaKnownBug [expr {[testConstraint notAqua] || [testConstraint knownBug]}]

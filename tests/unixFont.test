@@ -69,7 +69,7 @@ proc getsize {} {
     return "[winfo reqwidth .b.l] [winfo reqheight .b.l]"
 }
 
-test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11 noExceed} {
+test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11} {
     list [catch {font measure {} xyz} msg] $msg
 } {1 {font "" doesn't exist}}
 test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 failsOnUbuntu} {
