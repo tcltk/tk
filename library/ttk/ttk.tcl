@@ -12,7 +12,6 @@ namespace eval ::ttk {
     }
 }
 
-source -encoding utf-8 [file join $::ttk::library fonts.tcl]
 source -encoding utf-8 [file join $::ttk::library cursors.tcl]
 source -encoding utf-8 [file join $::ttk::library utils.tcl]
 
