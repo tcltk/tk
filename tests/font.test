@@ -130,7 +130,7 @@ test font-4.6 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 2
     font actual xyz -displayof . abc def
 } -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
-test font-4.7 {font command: actual: arguments} -constraints noExceed -body {
+test font-4.7 {font command: actual: arguments} -body {
     # (tkfont == NULL)
     font actual "\{xyz"
 } -returnCodes error -result "font \"{xyz\" doesn't exist"
@@ -138,7 +138,7 @@ test font-4.8 {font command: actual: all attributes} -body {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } -result {-family}
-test font-4.9 {font command: actual} -constraints {unix noExceed failsOnUbuntu} -body {
+test font-4.9 {font command: actual} -constraints {unix failsOnUbuntu} -body {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } -result {times}
@@ -402,7 +402,7 @@ test font-9.3 {font command: measure: arguments} -body {
     # (objc - skip != 4)
     font measure xyz abc def
 } -returnCodes error -result {wrong # args: should be "font measure font ?-displayof window? text"}
-test font-9.4 {font command: measure: arguments} -constraints noExceed -body {
+test font-9.4 {font command: measure: arguments} -body {
     # (tkfont == NULL)
     font measure "\{xyz" abc
 } -returnCodes error -result "font \"{xyz\" doesn't exist"
@@ -440,7 +440,7 @@ test font-10.5 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 2
     font metrics xyz -displayof . abc
 } -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -linespace, or -fixed}
-test font-10.6 {font command: metrics: bad font} -constraints noExceed -body {
+test font-10.6 {font command: metrics: bad font} -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
 } -returnCodes error -result "font \"{xyz\" doesn't exist"
@@ -701,7 +701,7 @@ test font-15.9 {Tk_AllocFontFromObj procedure: get attribute font} -setup {
 } -cleanup {
 	destroy .t.f
 } -returnCodes error -result {expected integer but got "yyy"}
-test font-15.10 {Tk_AllocFontFromObj procedure: no match} -constraints noExceed -body {
+test font-15.10 {Tk_AllocFontFromObj procedure: no match} -body {
     # (ParseFontNameObj() != TCL_OK)
     font actual "\{xyz"
 } -returnCodes error -result "font \"{xyz\" doesn't exist"
@@ -2244,10 +2244,10 @@ test font-38.5 {ParseFontNameObj procedure: begins with *} -body {
 test font-38.6 {ParseFontNameObj procedure: begins with *} -body {
     font actual *-times-xyz -family
 } -result [font actual {times 0} -family]
-test font-38.7 {ParseFontNameObj procedure: arguments} -constraints noExceed -body {
+test font-38.7 {ParseFontNameObj procedure: arguments} -body {
     font actual "\{xyz"
 } -returnCodes error -result "font \"{xyz\" doesn't exist"
-test font-38.8 {ParseFontNameObj procedure: arguments} -constraints noExceed -body {
+test font-38.8 {ParseFontNameObj procedure: arguments} -body {
     font actual ""
 } -returnCodes error -result {font "" doesn't exist}
 test font-38.9 {ParseFontNameObj procedure: arguments} -body {
@@ -2347,7 +2347,7 @@ test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
 } -cleanup {
     tk scaling $oldscale
 } -result 24
-test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Font} -setup {
+test font-44.2 {TkFontGetPoints: size >= 0} -constraints {haveTimes12Font} -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5
@@ -2363,7 +2363,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
 } -result {Times New Roman}
-test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed failsOnUbuntu} -body {
+test font-45.3 {TkFontGetAliasList: match} -constraints {failsOnUbuntu} -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
         # avoid test failure on systems that have a real "times new roman" font
         set res 1
