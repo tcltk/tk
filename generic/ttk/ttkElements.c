@@ -255,21 +255,35 @@ static void FieldElementDraw(
 	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
 	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
 
+	    /*
+	     * Draw the inner rectangle
+	     */
 	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Fill the inner rectangle
+	     */
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
+	} else {
+	    /*
+	     * Draw the field element as usual
+	     */
+	    int borderWidth = 2;
+	    Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj,
+		    &borderWidth);
+	    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		    borderWidth, TK_RELIEF_SUNKEN);
+
+	    /*
+	     * Change the color of the border's outermost pixels
+	     */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
 	}
-
-	/*
-	 * If focusWidth > 1 then draw the inner rectangle,
-	 * else the only one replacing the (outer) border
-	 */
-	XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
-
-	GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
-	XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
     } else {
 	int borderWidth = 2;
 	Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
-
 	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 		borderWidth, TK_RELIEF_SUNKEN);
     }
@@ -799,8 +813,8 @@ static void IndicatorElementDraw(
 	 * Update the colors within svgDataCopy
 	 */
 	if (selected || tristate) {
-	    bgColorPtr = strstr((char *)svgDataPtr, "4a6984");
-	    fgColorPtr = strstr((char *)svgDataPtr, "ffffff");
+	    bgColorPtr = strstr(svgDataPtr, "4a6984");
+	    fgColorPtr = strstr(svgDataPtr, "ffffff");
 
 	    assert(bgColorPtr);
 	    assert(fgColorPtr);
@@ -808,8 +822,8 @@ static void IndicatorElementDraw(
 	    memcpy(bgColorPtr, bgColorStr, 6);
 	    memcpy(fgColorPtr, fgColorStr, 6);
 	} else {
-	    bgColorPtr =     strstr((char *)svgDataPtr, "ffffff");
-	    borderColorPtr = strstr((char *)svgDataPtr, "888888");
+	    bgColorPtr =     strstr(svgDataPtr, "ffffff");
+	    borderColorPtr = strstr(svgDataPtr, "888888");
 
 	    assert(bgColorPtr);
 	    assert(borderColorPtr);
@@ -1430,9 +1444,9 @@ static void SliderElementDraw(
 	/*
 	 * Update the colors within svgDataCopy
 	 */
-	innerColorPtr = strstr((char *)svgDataPtr, "4a6984");
-	outerColorPtr = strstr((char *)svgDataPtr, "ffffff");
-	borderColorPtr = strstr((char *)svgDataPtr, "c3c3c3");
+	innerColorPtr = strstr(svgDataPtr, "4a6984");
+	outerColorPtr = strstr(svgDataPtr, "ffffff");
+	borderColorPtr = strstr(svgDataPtr, "c3c3c3");
 	assert(innerColorPtr);
 	assert(outerColorPtr);
 	assert(borderColorPtr);
