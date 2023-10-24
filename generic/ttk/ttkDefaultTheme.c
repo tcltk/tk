@@ -390,25 +390,25 @@ static void FieldElementDraw(
 	     */
 	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
 	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Fill the inner rectangle
+	     */
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
 	} else {
 	    /*
-	     * Draw the outer rectangle
+	     * Draw the field element as usual
 	     */
-	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		0, TK_RELIEF_SUNKEN);
+	    DrawFieldBorder(tkwin, d, border, borderColor, b);
 
 	    /*
-	     * Draw the inner border
+	     * Change the color of the border's outermost pixels
 	     */
-	    GC borderGC = Tk_GCForColor(borderColor, d);
-	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
-	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 0, BRDR);
-	    DrawCorner(tkwin, d, border, borderGC,
-		b.x, b.y, b.width, b.height, 1, LITE);
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
 	}
-
-	GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
-	XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
     } else {
 	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    0, TK_RELIEF_SUNKEN);
@@ -657,12 +657,12 @@ static void IndicatorElementDraw(
 	 * Update the colors within svgDataCopy
 	 */
 
-	shadeColorPtr =	    strstr((char *)svgDataPtr, "888888");
-	highlightColorPtr = strstr((char *)svgDataPtr, "eeeeee");
-	borderColorPtr =    strstr((char *)svgDataPtr, "414141");
-	bgColorPtr =	    strstr((char *)svgDataPtr, "d9d9d9");
-	indicatorColorPtr = strstr((char *)svgDataPtr, "ffffff");
-	fgColorPtr =	    strstr((char *)svgDataPtr, "000000");
+	shadeColorPtr =	    strstr(svgDataPtr, "888888");
+	highlightColorPtr = strstr(svgDataPtr, "eeeeee");
+	borderColorPtr =    strstr(svgDataPtr, "414141");
+	bgColorPtr =	    strstr(svgDataPtr, "d9d9d9");
+	indicatorColorPtr = strstr(svgDataPtr, "ffffff");
+	fgColorPtr =	    strstr(svgDataPtr, "000000");
 
 	assert(shadeColorPtr);
 	assert(highlightColorPtr);
