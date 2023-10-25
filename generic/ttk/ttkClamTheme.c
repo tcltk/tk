@@ -469,8 +469,8 @@ static void IndicatorElementDraw(
 	svgDataPtr = (selected ? spec->onDataPtr : spec->offDataPtr);
 
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
 	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
@@ -479,16 +479,15 @@ static void IndicatorElementDraw(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 
-	upperBdColorPtr = strstr(svgDataPtr, "9e9a91");
-	lowerBdColorPtr = strstr(svgDataPtr, "cfcdc8");
-	bgColorPtr =	  strstr(svgDataPtr, "ffffff");
-	fgColorPtr =	  strstr(svgDataPtr, "000000");
+	upperBdColorPtr = strstr(svgDataCopy, "9e9a91");
+	lowerBdColorPtr = strstr(svgDataCopy, "cfcdc8");
+	bgColorPtr =	  strstr(svgDataCopy, "ffffff");
+	fgColorPtr =	  strstr(svgDataCopy, "000000");
 
 	assert(upperBdColorPtr);
 	assert(lowerBdColorPtr);
