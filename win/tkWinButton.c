@@ -443,9 +443,8 @@ TkpDrawIndicator(
 	}
 
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated
-	 * memory area svgDataCopy and assign the latter's address to
-	 * svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 
 	svgDataLen = strlen(svgDataPtr);
