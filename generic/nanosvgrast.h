@@ -345,6 +345,7 @@ static float nsvg__normalize(float *x, float* y)
 }
 
 static float nsvg__absf(float x) { return x < 0 ? -x : x; }
+static float nsvg__roundf(float x) { return (x >= 0) ? floorf(x + 0.5) : ceilf(x - 0.5); }
 
 static void nsvg__flattenCubicBez(NSVGrasterizer* r,
 								  float x1, float y1, float x2, float y2,
@@ -886,17 +887,11 @@ static NSVGactiveEdge* nsvg__addActive(NSVGrasterizer* r, NSVGedge* e, float sta
 	dxdy = (e->x1 - e->x0) / (e->y1 - e->y0);
 /*	STBTT_assert(e->y0 <= start_point); */
 	/* round dx down to avoid going too far */
-	/*
-	 * HaO 2023-10-23
-	 * pull request
-	 * https://github.com/memononen/nanosvg/pull/247
-	 * replaces floorf by roundf in the following 3 lines
-	 */
 	if (dxdy < 0)
-		z->dx = (int)(-roundf(NSVG__FIX * -dxdy));
+		z->dx = (int)(-nsvg__roundf(NSVG__FIX * -dxdy));
 	else
-		z->dx = (int)roundf(NSVG__FIX * dxdy);
-	z->x = (int)roundf(NSVG__FIX * (e->x0 + dxdy * (startPoint - e->y0)));
+		z->dx = (int)nsvg__roundf(NSVG__FIX * dxdy);
+	z->x = (int)nsvg__roundf(NSVG__FIX * (e->x0 + dxdy * (startPoint - e->y0)));
 /*	z->x -= off_x * FIX; */
 	z->ey = e->y1;
 	z->next = 0;
