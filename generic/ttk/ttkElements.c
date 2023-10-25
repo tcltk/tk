@@ -797,8 +797,8 @@ static void IndicatorElementDraw(
 		      (selected ? spec->onDataPtr : spec->offDataPtr));
 
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
 	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
@@ -807,14 +807,13 @@ static void IndicatorElementDraw(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 	if (selected || tristate) {
-	    bgColorPtr = strstr(svgDataPtr, "4a6984");
-	    fgColorPtr = strstr(svgDataPtr, "ffffff");
+	    bgColorPtr = strstr(svgDataCopy, "4a6984");
+	    fgColorPtr = strstr(svgDataCopy, "ffffff");
 
 	    assert(bgColorPtr);
 	    assert(fgColorPtr);
@@ -822,8 +821,8 @@ static void IndicatorElementDraw(
 	    memcpy(bgColorPtr, bgColorStr, 6);
 	    memcpy(fgColorPtr, fgColorStr, 6);
 	} else {
-	    bgColorPtr =     strstr(svgDataPtr, "ffffff");
-	    borderColorPtr = strstr(svgDataPtr, "888888");
+	    bgColorPtr =     strstr(svgDataCopy, "ffffff");
+	    borderColorPtr = strstr(svgDataCopy, "888888");
 
 	    assert(bgColorPtr);
 	    assert(borderColorPtr);
@@ -1429,8 +1428,8 @@ static void SliderElementDraw(
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
 	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
@@ -1439,14 +1438,13 @@ static void SliderElementDraw(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
-	innerColorPtr = strstr(svgDataPtr, "4a6984");
-	outerColorPtr = strstr(svgDataPtr, "ffffff");
-	borderColorPtr = strstr(svgDataPtr, "c3c3c3");
+	innerColorPtr = strstr(svgDataCopy, "4a6984");
+	outerColorPtr = strstr(svgDataCopy, "ffffff");
+	borderColorPtr = strstr(svgDataCopy, "c3c3c3");
 	assert(innerColorPtr);
 	assert(outerColorPtr);
 	assert(borderColorPtr);
