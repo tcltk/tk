@@ -888,14 +888,17 @@ TkpDestroyMenuEntry(
     TKMenu *menu;
     NSInteger index;
 
-    if (mePtr->platformEntryData && mePtr->menuPtr->platformData) {
-	menu = (TKMenu *) mePtr->menuPtr->platformData;
+    if (mePtr->platformEntryData) {
 	menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	index = [menu indexOfItem:menuItem];
+	if (mePtr->menuPtr->platformData) {
+	    menu = (TKMenu *) mePtr->menuPtr->platformData;
+	    index = [menu indexOfItem:menuItem];
 
-	if (index > -1) {
-	    [menu removeItemAtIndex:index];
+	    if (index > -1) {
+		[menu removeItemAtIndex:index];
+	    }
 	}
+	[menuItem setTag:(NSInteger) NULL];
 	[menuItem release];
 	mePtr->platformEntryData = NULL;
     }
@@ -1584,7 +1587,7 @@ GenerateMenuSelectEvent(
 {
     TkMenu *menuPtr = [menu tkMenu];
 
-    if (menuPtr) {
+    if (menuPtr && menuPtr->entries) {
 	int index = [menu tkIndexOfItem:menuItem];
 
 	if (index < 0 || index >= (int) menuPtr->numEntries ||
@@ -1665,7 +1668,9 @@ RecursivelyClearActiveMenu(
 {
     int i;
 
-    TkActivateMenuEntry(menuPtr, -1);
+    if (menuPtr->entries) {
+	TkActivateMenuEntry(menuPtr, -1);
+    }
     for (i = 0; i < (int) menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 
