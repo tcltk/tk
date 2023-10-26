@@ -332,7 +332,7 @@ static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 static int		CreateFrame(void *clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[],
 			    enum FrameType type, const char *appName);
-static void		DestroyFrame(void *memPtr);
+static Tcl_FreeProc	DestroyFrame;
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(void *clientData);
 static void		DrawFrameBackground(Tk_Window tkwin, Pixmap pixmap,
@@ -889,7 +889,11 @@ FrameWidgetObjCmd(
 
 static void
 DestroyFrame(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about frame widget. */
+#else
+    char *memPtr)
+#endif
 {
     Frame *framePtr = (Frame *)memPtr;
     Labelframe *labelframePtr = (Labelframe *)memPtr;
