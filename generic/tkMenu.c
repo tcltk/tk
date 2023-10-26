@@ -333,7 +333,7 @@ static void		DeleteMenuCloneEntries(TkMenu *menuPtr,
 static void		DestroyMenuHashTable(void *clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
-static void		DestroyMenuEntry(void *memPtr);
+static Tcl_FreeProc	DestroyMenuEntry;
 static Tcl_Size	GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
 			    Tcl_Size *indexPtr);
@@ -1418,7 +1418,11 @@ UnhookCascadeEntry(
 
 static void
 DestroyMenuEntry(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Pointer to entry to be freed. */
+#else
+    char *memPtr)
+#endif
 {
     TkMenuEntry *mePtr = (TkMenuEntry *)memPtr;
     TkMenu *menuPtr = mePtr->menuPtr;

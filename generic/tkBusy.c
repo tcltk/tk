@@ -45,7 +45,7 @@ static void		BusyCustodyProc(void *clientData,
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
-static void		DestroyBusy(void *dataPtr);
+static Tcl_FreeProc	DestroyBusy;
 static void		DoConfigureNotify(Tk_FakeWin *winPtr);
 static inline Tk_Window	FirstChild(Tk_Window parent);
 static Busy *		GetBusy(Tcl_Interp *interp,
@@ -333,7 +333,11 @@ RefWinEventProc(
 
 static void
 DestroyBusy(
+#if TCL_MAJOR_VERSION > 8
     void *data)			/* Busy window structure record */
+#else
+    char *data)
+#endif
 {
     Busy *busyPtr = (Busy *)data;
 

@@ -408,7 +408,7 @@ static const char *const selElementNames[] = {
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static int		DeleteChars(Entry *entryPtr, Tcl_Size index, Tcl_Size count);
-static void		DestroyEntry(void *memPtr);
+static Tcl_FreeProc	DestroyEntry;
 static void		DisplayEntry(void *clientData);
 static void		EntryBlinkProc(void *clientData);
 static void		EntryCmdDeletedProc(void *clientData);
@@ -1038,7 +1038,11 @@ EntryWidgetObjCmd(
 
 static void
 DestroyEntry(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about entry widget. */
+#else
+    char *memPtr)
+#endif
 {
     Entry *entryPtr = (Entry *)memPtr;
 
