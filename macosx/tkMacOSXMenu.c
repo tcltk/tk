@@ -1668,9 +1668,13 @@ RecursivelyClearActiveMenu(
 {
     int i;
 
-    if (menuPtr->entries) {
-	TkActivateMenuEntry(menuPtr, -1);
+    if (!menuPtr->entries) {
+	/*
+	 * The Tk menu is being destroyed.
+	 */
+	return;
     }
+    TkActivateMenuEntry(menuPtr, -1);
     for (i = 0; i < (int) menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 

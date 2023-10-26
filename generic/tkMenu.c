@@ -2587,6 +2587,10 @@ TkActivateMenuEntry(
     TkMenuEntry *mePtr;
     int result = TCL_OK;
 
+    if (! menuPtr->entries) {
+	return result;
+    }
+
     if (menuPtr->active >= 0) {
 	mePtr = menuPtr->entries[menuPtr->active];
 
