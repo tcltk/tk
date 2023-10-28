@@ -2337,7 +2337,7 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -constraint withoutXft -setup {
+test font-44.1 {TkFontGetPixels: size < 0} -constraints withoutXft -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5
