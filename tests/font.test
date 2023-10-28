@@ -14,8 +14,6 @@ tcltest::loadTestedCommands
 # Some tests require support for 4-byte UTF-8 sequences
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-
 set defaultfontlist [font names]
 
 proc getnondefaultfonts {} {
@@ -138,7 +136,7 @@ test font-4.8 {font command: actual: all attributes} -body {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } -result {-family}
-test font-4.9 {font command: actual} -constraints {unix failsOnUbuntu} -body {
+test font-4.9 {font command: actual} -constraints {unix withoutXft} -body {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } -result {times}
@@ -384,7 +382,7 @@ test font-8.3 {font command: families: arguments} -body {
     # (objc - skip != 2) when skip == 2
     font families -displayof . xyz
 } -returnCodes error -result {wrong # args: should be "font families ?-displayof window?"}
-test font-8.4 {font command: families} -constraints failsOnUbuntu -body {
+test font-8.4 {font command: families} -constraints withoutXft -body {
     # TkpGetFontFamilies()
     regexp -nocase times [font families]
 } -result 1
@@ -928,7 +926,7 @@ test font-21.5 {Tk_PostscriptFontName procedure: spaces} -constraints {
     }
 } -result {LucidaBright}
 test font-21.6 {Tk_PostscriptFontName procedure: spaces} -constraints {
-	x11 failsOnUbuntu
+	x11 withoutXft
 } -body {
     psfontname "{new century schoolbook} 10"
 } -result {NewCenturySchlbk-Roman}
@@ -2339,7 +2337,7 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
+test font-44.1 {TkFontGetPixels: size < 0} -constraint withoutXft -setup {
     set oldscale [tk scaling]
 } -body {
     tk scaling 0.5
@@ -2363,7 +2361,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
 } -result {Times New Roman}
-test font-45.3 {TkFontGetAliasList: match} -constraints {failsOnUbuntu} -body {
+test font-45.3 {TkFontGetAliasList: match} -constraints withoutXft -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
         # avoid test failure on systems that have a real "times new roman" font
         set res 1

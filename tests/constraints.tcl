@@ -313,6 +313,9 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
+testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
+testConstraint withoutXft [expr {![testConstraint withXft]}]
+unset fs
 # Although unexpected, some systems may have a very limited set of fonts available.
 # The following constraints happen to evaluate to false at least on one system: the
 # Github CI runner for Linux with --disable-xft, which has exactly ONE single font
