@@ -4,7 +4,7 @@
 
 #include "tkInt.h"
 
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
 
