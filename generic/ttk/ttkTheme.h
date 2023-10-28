@@ -138,7 +138,8 @@ typedef struct 	/* Hey, this is an XRectangle! */
 
 TTKAPI Ttk_Box Ttk_MakeBox(int x, int y, int width, int height);
 TTKAPI int Ttk_BoxContains(Ttk_Box, int x, int y);
-TTKAPI int Ttk_BoxEqual(Ttk_Box, Ttk_Box);
+
+MODULE_SCOPE int TtkBoxEqual(Ttk_Box, Ttk_Box);
 
 #define Ttk_WinBox(tkwin) Ttk_MakeBox(0,0,Tk_Width(tkwin),Tk_Height(tkwin))
 
