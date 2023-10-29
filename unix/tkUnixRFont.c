@@ -497,7 +497,8 @@ TkpGetFontFromAttributes(
 
 #ifdef DEBUG_FONTSEL
     printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
-	    faPtr->size, faPtr->weight, faPtr->slant);
+	    (int) faPtr->size,
+	    faPtr->weight, faPtr->slant);
 #endif /* DEBUG_FONTSEL */
     pattern = XftPatternCreate();
     if (faPtr->family) {
@@ -940,7 +941,7 @@ Tk_DrawChars(
 
     if (fontPtr->ftDraw == 0) {
 #ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%x\n", drawable);
+	printf("Switch to drawable 0x%lx\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
@@ -1199,7 +1200,7 @@ TkDrawAngledChars(
 
     if (fontPtr->ftDraw == 0) {
 #ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%x\n", drawable);
+	printf("Switch to drawable 0x%lx\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
