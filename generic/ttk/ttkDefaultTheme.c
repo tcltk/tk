@@ -326,7 +326,7 @@ static const Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj	*borderObj;
     Tcl_Obj	*borderColorObj;	/* Extra border color */
-    Tcl_Obj	*showFocusObj;
+    Tcl_Obj	*focusWidthObj;
     Tcl_Obj	*focusColorObj;
 } FieldElement;
 
@@ -335,8 +335,8 @@ static const Ttk_ElementOptionSpec FieldElementOptions[] = {
     	"white" },
     { "-bordercolor",TK_OPTION_COLOR, offsetof(FieldElement,borderColorObj),
 	"black" },
-    { "-showfocus", TK_OPTION_BOOLEAN, offsetof(FieldElement,showFocusObj),
-	"0" },
+    { "-focuswidth", TK_OPTION_PIXELS, offsetof(FieldElement,focusWidthObj),
+	"2" },
     { "-focuscolor", TK_OPTION_COLOR, offsetof(FieldElement,focusColorObj),
 	"#4a6984" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -362,30 +362,53 @@ static void FieldElementDraw(
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, field->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, field->borderColorObj);
-    int showFocus = 0;
+    int focusWidth = 2;
     (void)dummy;
 
-    Tcl_GetBooleanFromObj(NULL, field->showFocusObj, &showFocus);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
 
-    if (showFocus && (state & TTK_STATE_FOCUS)) {
+    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
 	Display *disp = Tk_Display(tkwin);
-
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
-	GC gcFocus = Tk_GCForColor(focusColor, d);
-	int x1 = b.x, x2 = b.x + b.width - 1;
-	int y1 = b.y, y2 = b.y + b.height - 1;
-	int w = WIN32_XDRAWLINE_HACK;
+	GC focusGC = Tk_GCForColor(focusColor, d);
 
-	XDrawLine(disp, d, gcFocus, x1+1, y1, x2-1+w, y1);	/* N */
-	XDrawLine(disp, d, gcFocus, x1+1, y2, x2-1+w, y2);	/* S */
-	XDrawLine(disp, d, gcFocus, x1, y1+1, x1, y2-1+w);	/* W */
-	XDrawLine(disp, d, gcFocus, x2, y1+1, x2, y2-1+w);	/* E */
+	if (focusWidth > 1) {
+	    int x1 = b.x, x2 = b.x + b.width - 1;
+	    int y1 = b.y, y2 = b.y + b.height - 1;
+	    int w = WIN32_XDRAWLINE_HACK;
 
-	b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
-	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
+	    /*
+	     * Draw the outer rounded rectangle
+	     */
+	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
+	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
+	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
+	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
 
-	GC gcBg = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
-	XFillRectangle(disp, d, gcBg, b.x+1, b.y+1, b.width-2, b.height-2);
+	    /*
+	     * Draw the inner rectangle
+	     */
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Fill the inner rectangle
+	     */
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
+	} else {
+	    /*
+	     * Draw the field element as usual
+	     */
+	    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		0, TK_RELIEF_SUNKEN);
+	    DrawFieldBorder(tkwin, d, border, borderColor, b);
+
+	    /*
+	     * Change the color of the border's outermost pixels
+	     */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	}
     } else {
 	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    0, TK_RELIEF_SUNKEN);
@@ -618,8 +641,8 @@ static void IndicatorElementDraw(
 	svgDataPtr = (selected ? spec->onDataPtr : spec->offDataPtr);
 
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
 	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
@@ -628,18 +651,17 @@ static void IndicatorElementDraw(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 
-	shadeColorPtr =	    strstr(svgDataPtr, "888888");
-	highlightColorPtr = strstr(svgDataPtr, "eeeeee");
-	borderColorPtr =    strstr(svgDataPtr, "414141");
-	bgColorPtr =	    strstr(svgDataPtr, "d9d9d9");
-	indicatorColorPtr = strstr(svgDataPtr, "ffffff");
-	fgColorPtr =	    strstr(svgDataPtr, "000000");
+	shadeColorPtr =	    strstr(svgDataCopy, "888888");
+	highlightColorPtr = strstr(svgDataCopy, "eeeeee");
+	borderColorPtr =    strstr(svgDataCopy, "414141");
+	bgColorPtr =	    strstr(svgDataCopy, "d9d9d9");
+	indicatorColorPtr = strstr(svgDataCopy, "ffffff");
+	fgColorPtr =	    strstr(svgDataCopy, "000000");
 
 	assert(shadeColorPtr);
 	assert(highlightColorPtr);

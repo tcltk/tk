@@ -328,13 +328,13 @@ Tk_SendObjCmd(
 {
     enum {
 	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
-    } index;
+    };
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
     const char *stringRep, *destName;
     /*int async = 0;*/
-    int i, firstArg;
+    int i, firstArg, index;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;

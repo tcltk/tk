@@ -221,7 +221,7 @@ static const styleMaskBit styleMaskBits[] = {
      * Cannot be a docmodal.
      */
     {"HUDwindow", NSWindowStyleMaskHUDWindow, NSWindowClass_panel},
-    {NULL, 0, 0}
+    {NULL, 0, NSWindowClass_any}
 };
 
 typedef struct tabbingMode_t {
@@ -2086,7 +2086,7 @@ WmAttributesCmd(
 	    }
 	} else if (strcmp(Tcl_GetString(objv[3]), "-tabbingid") == 0) {
 	    char *identifier = Tcl_GetStringFromObj(objv[4], &length);
-	    char *value = ckalloc(length + 1);
+	    char *value = (char *)ckalloc(length + 1);
 	    strncpy(value, identifier, length + 1);
 	    Tcl_HashEntry *hPtr = Tcl_CreateHashEntry(&pathnameToTabbingId,
 				      Tcl_GetString(objv[2]), &isNew);
@@ -2727,7 +2727,7 @@ WmGridCmd(
 	 * ungridded numbers.
 	 */
 
-	wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+	wmPtr->sizeHintsFlags &= ~PBaseSize;
 	if (wmPtr->width != -1) {
 	    wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		    - wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -4582,8 +4582,7 @@ Tk_SetGrid(
 	    && (wmPtr->reqGridHeight == reqHeight)
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
-	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == (PBaseSize|PResizeInc))) {
+	    && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
 	return;
     }
 
@@ -4613,7 +4612,7 @@ Tk_SetGrid(
     wmPtr->reqGridHeight = reqHeight;
     wmPtr->widthInc = widthInc;
     wmPtr->heightInc = heightInc;
-    wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
+    wmPtr->sizeHintsFlags |= PBaseSize;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
@@ -4661,7 +4660,7 @@ Tk_UnsetGrid(
     }
 
     wmPtr->gridWin = NULL;
-    wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+    wmPtr->sizeHintsFlags &= ~PBaseSize;
     if (wmPtr->width != -1) {
 	wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		- wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -6697,7 +6696,7 @@ TkMacOSXMakeRealWindowExist(
 	}
 	hPtr = Tcl_FindHashEntry(&pathnameToTabbingId, Tk_PathName(winPtr));
 	if (hPtr) {
-	    tabbingId = Tcl_GetHashValue(hPtr);
+	    tabbingId = (char *)Tcl_GetHashValue(hPtr);
 	    Tcl_DeleteHashEntry(hPtr);
 	}
 	hPtr = Tcl_FindHashEntry(&pathnameToTabbingMode, Tk_PathName(winPtr));

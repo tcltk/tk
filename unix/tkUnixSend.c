@@ -952,7 +952,7 @@ Tk_SendObjCmd(
 {
     enum {
 	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
-    } index;
+    };
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
@@ -961,7 +961,7 @@ Tk_SendObjCmd(
     Window commWindow;
     PendingCommand pending;
     RegisteredInterp *riPtr;
-    int result, async, i, firstArg;
+    int result, async, i, firstArg, index;
     Tk_RestrictProc *prevProc;
     ClientData prevArg;
     TkDisplay *dispPtr;

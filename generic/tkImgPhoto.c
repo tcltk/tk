@@ -904,11 +904,10 @@ ImgPhotoCmd(
 	    }
 	} else {
 	    typedef int (*NewStringWriteProc)(Tcl_Interp *interp,
-		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
-		    void *dummy);
+		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr);
 
 	    result = ((NewStringWriteProc)(void *)stringWriteProc)(interp,
-		    options.format, &block, NULL);
+		    options.format, &block);
 	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);

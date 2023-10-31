@@ -333,7 +333,7 @@ static void		DeleteMenuCloneEntries(TkMenu *menuPtr,
 static void		DestroyMenuHashTable(void *clientData,
 			    Tcl_Interp *interp);
 static void		DestroyMenuInstance(TkMenu *menuPtr);
-static void		DestroyMenuEntry(void *memPtr);
+static Tcl_FreeProc	DestroyMenuEntry;
 static Tcl_Size	GetIndexFromCoords(Tcl_Interp *interp,
 			    TkMenu *menuPtr, const char *string,
 			    Tcl_Size *indexPtr);
@@ -643,7 +643,7 @@ MenuWidgetObjCmd(
 	if (menuPtr->active == index) {
 	    goto done;
 	}
-	if ((index != TCL_INDEX_NONE) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
+	if ((index >= 0) && ((menuPtr->entries[index]->type==SEPARATOR_ENTRY)
 		|| (menuPtr->entries[index]->state == ENTRY_DISABLED))) {
 	    index = TCL_INDEX_NONE;
 	}
@@ -826,7 +826,7 @@ MenuWidgetObjCmd(
     case MENU_ID: {
 	Tcl_Size index;
 	const char *idStr;
-        Tcl_HashEntry *entryPtr;
+	Tcl_HashEntry *entryPtr;
 
 	if (objc != 3) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "index");
@@ -835,14 +835,14 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	if (index == TCL_INDEX_NONE) {
+	if (index < 0) {
 	    goto done;
 	}
-        entryPtr = menuPtr->entries[index]->entryPtr;
-        if (entryPtr) {
-            idStr = Tcl_GetHashKey(&menuPtr->items, entryPtr);
-            Tcl_SetObjResult(interp, Tcl_NewStringObj(idStr, TCL_INDEX_NONE));
-        }
+	entryPtr = menuPtr->entries[index]->entryPtr;
+	if (entryPtr) {
+	    idStr = (const char *)Tcl_GetHashKey(&menuPtr->items, entryPtr);
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(idStr, TCL_INDEX_NONE));
+	}
 	break;
     }
     case MENU_INDEX: {
@@ -1218,7 +1218,7 @@ DestroyMenuInstance(
 	 */
 
 	Tcl_EventuallyFree(menuPtr->entries[i],
-		(Tcl_FreeProc*)DestroyMenuEntry);
+		DestroyMenuEntry);
 	menuPtr->numEntries = i;
     }
     if (menuPtr->entries != NULL) {
@@ -1418,7 +1418,11 @@ UnhookCascadeEntry(
 
 static void
 DestroyMenuEntry(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Pointer to entry to be freed. */
+#else
+    char *memPtr)
+#endif
 {
     TkMenuEntry *mePtr = (TkMenuEntry *)memPtr;
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -1663,7 +1667,7 @@ ConfigureMenu(
 	} else if ((menuListPtr->numEntries > 0)
 		&& (menuListPtr->entries[0]->type == TEAROFF_ENTRY)) {
 
-	    Tcl_EventuallyFree(menuListPtr->entries[0], (Tcl_FreeProc *) DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[0], DestroyMenuEntry);
 
 	    for (i = 0; i < (int)menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
@@ -2157,7 +2161,7 @@ GetMenuIndex(
 
     if (TkGetIntForIndex(objPtr, menuPtr->numEntries - 1, lastOK, indexPtr) == TCL_OK) {
 	/* TCL_INDEX_NONE is only accepted if it does not result from a negative number */
-	if (*indexPtr != TCL_INDEX_NONE || Tcl_GetString(objPtr)[0] != '-') {
+	if (*indexPtr >= 0 || Tcl_GetString(objPtr)[0] != '-') {
 	    if (*indexPtr >= menuPtr->numEntries) {
 		*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
 	    }
@@ -2169,35 +2173,35 @@ GetMenuIndex(
 
     if ((string[0] == 'a') && (strcmp(string, "active") == 0)) {
 	*indexPtr = menuPtr->active;
-	goto success;
+	return TCL_OK;
     }
 
     if ((string[0] == 'l') && (strcmp(string, "last") == 0)) {
 	*indexPtr = menuPtr->numEntries - ((lastOK) ? 0 : 1);
-	goto success;
+	return TCL_OK;
     }
 
     if (string[0] == 0) {
 	*indexPtr = TCL_INDEX_NONE;
-	goto success;
+	return TCL_OK;
     }
 #if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
     if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
 	*indexPtr = TCL_INDEX_NONE;
-	goto success;
+	return TCL_OK;
     }
 #endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
 		== TCL_OK) {
-	    goto success;
+	    return TCL_OK;
 	}
     }
 
     entryPtr = Tcl_FindHashEntry(&menuPtr->items, string);
     if (entryPtr) {
-        TkMenuEntry *mePtr = Tcl_GetHashValue(entryPtr);
+        TkMenuEntry *mePtr = (TkMenuEntry *)Tcl_GetHashValue(entryPtr);
         *indexPtr = mePtr->index;
         return TCL_OK;
     }
@@ -2208,7 +2212,7 @@ GetMenuIndex(
 
 	if ((label != NULL) && (Tcl_StringCaseMatch(label, string, 0))) {
 	    *indexPtr = i;
-	    goto success;
+	    return TCL_OK;
 	}
     }
 
@@ -2216,9 +2220,6 @@ GetMenuIndex(
 	    "bad menu entry index \"%s\"", string));
     Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
     return TCL_ERROR;
-
-  success:
-    return TCL_OK;
 }
 
 /*
@@ -2458,7 +2459,7 @@ MenuAddOrInsert(
 		    errorMenuPtr != NULL;
 		    errorMenuPtr = errorMenuPtr->nextInstancePtr) {
     		Tcl_EventuallyFree(errorMenuPtr->entries[index],
-    	    		(Tcl_FreeProc *) DestroyMenuEntry);
+    	    		DestroyMenuEntry);
 		for (i = index; i < errorMenuPtr->numEntries - 1; i++) {
 		    errorMenuPtr->entries[i] = errorMenuPtr->entries[i + 1];
 		    errorMenuPtr->entries[i]->index = i;
@@ -2679,7 +2680,7 @@ TkActivateMenuEntry(
     TkMenuEntry *mePtr;
     int result = TCL_OK;
 
-    if (menuPtr->active != TCL_INDEX_NONE) {
+    if (menuPtr->active >= 0) {
 	mePtr = menuPtr->entries[menuPtr->active];
 
 	/*
@@ -2693,7 +2694,7 @@ TkActivateMenuEntry(
 	TkEventuallyRedrawMenu(menuPtr, menuPtr->entries[menuPtr->active]);
     }
     menuPtr->active = index;
-    if (index != TCL_INDEX_NONE) {
+    if (index >= 0) {
 	mePtr = menuPtr->entries[index];
 	mePtr->state = ENTRY_ACTIVE;
 	TkEventuallyRedrawMenu(menuPtr, mePtr);
@@ -3612,7 +3613,7 @@ DeleteMenuCloneEntries(
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
 	    menuListPtr = menuListPtr->nextInstancePtr) {
 	for (i = last; i >= first; i--) {
-	    Tcl_EventuallyFree(menuListPtr->entries[i], (Tcl_FreeProc *) DestroyMenuEntry);
+	    Tcl_EventuallyFree(menuListPtr->entries[i], DestroyMenuEntry);
 	}
 	for (i = last + 1; i < (int)menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;
