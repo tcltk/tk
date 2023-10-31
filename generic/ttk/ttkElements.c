@@ -191,7 +191,7 @@ static const Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj	*borderObj;
     Tcl_Obj	*borderWidthObj;
-    Tcl_Obj	*showFocusObj;
+    Tcl_Obj	*focusWidthObj;
     Tcl_Obj	*focusColorObj;
 } FieldElement;
 
@@ -200,8 +200,8 @@ static const Ttk_ElementOptionSpec FieldElementOptions[] = {
 	offsetof(FieldElement,borderObj), "white" },
     { "-borderwidth", TK_OPTION_PIXELS,
 	offsetof(FieldElement,borderWidthObj), "2" },
-    { "-showfocus", TK_OPTION_BOOLEAN,
-	offsetof(FieldElement,showFocusObj), "0" },
+    { "-focuswidth", TK_OPTION_PIXELS,
+	offsetof(FieldElement,focusWidthObj), "2" },
     { "-focuscolor", TK_OPTION_COLOR,
 	offsetof(FieldElement,focusColorObj), "#4a6984" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -213,15 +213,15 @@ static void FieldElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     FieldElement *field = (FieldElement *)elementRecord;
-    int borderWidth = 2, showFocus = 0;
+    int borderWidth = 2, focusWidth = 2;
     (void)dummy;
     (void)widthPtr;
     (void)heightPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
-    Tcl_GetBooleanFromObj(NULL, field->showFocusObj, &showFocus);
-    if (showFocus && borderWidth < 2) {
-	borderWidth += (2 - borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
+    if (focusWidth > 0 && borderWidth < 2) {
+	borderWidth += (focusWidth - borderWidth);
     }
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -232,34 +232,58 @@ static void FieldElementDraw(
 {
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, field->borderObj);
-    int showFocus = 0;
+    int focusWidth = 2;
     (void)dummy;
 
-    Tcl_GetBooleanFromObj(NULL, field->showFocusObj, &showFocus);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
 
-    if (showFocus && (state & TTK_STATE_FOCUS)) {
+    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
 	Display *disp = Tk_Display(tkwin);
-
 	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
-	GC gcFocus = Tk_GCForColor(focusColor, d);
-	int x1 = b.x, x2 = b.x + b.width - 1;
-	int y1 = b.y, y2 = b.y + b.height - 1;
-	int w = WIN32_XDRAWLINE_HACK;
+	GC focusGC = Tk_GCForColor(focusColor, d);
 
-	XDrawLine(disp, d, gcFocus, x1+1, y1, x2-1+w, y1);	/* N */
-	XDrawLine(disp, d, gcFocus, x1+1, y2, x2-1+w, y2);	/* S */
-	XDrawLine(disp, d, gcFocus, x1, y1+1, x1, y2-1+w);	/* W */
-	XDrawLine(disp, d, gcFocus, x2, y1+1, x2, y2-1+w);	/* E */
+	if (focusWidth > 1) {
+	    int x1 = b.x, x2 = b.x + b.width - 1;
+	    int y1 = b.y, y2 = b.y + b.height - 1;
+	    int w = WIN32_XDRAWLINE_HACK;
 
-	b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
-	XDrawRectangle(disp, d, gcFocus, b.x, b.y, b.width-1, b.height-1);
+	    /*
+	     * Draw the outer rounded rectangle
+	     */
+	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
+	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
+	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
+	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
 
-	GC gcBg = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
-	XFillRectangle(disp, d, gcBg, b.x+1, b.y+1, b.width-2, b.height-2);
+	    /*
+	     * Draw the inner rectangle
+	     */
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Fill the inner rectangle
+	     */
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
+	} else {
+	    /*
+	     * Draw the field element as usual
+	     */
+	    int borderWidth = 2;
+	    Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj,
+		    &borderWidth);
+	    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		    borderWidth, TK_RELIEF_SUNKEN);
+
+	    /*
+	     * Change the color of the border's outermost pixels
+	     */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	}
     } else {
 	int borderWidth = 2;
 	Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
-
 	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 		borderWidth, TK_RELIEF_SUNKEN);
     }
@@ -773,8 +797,8 @@ static void IndicatorElementDraw(
 		      (selected ? spec->onDataPtr : spec->offDataPtr));
 
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
 	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
@@ -783,14 +807,13 @@ static void IndicatorElementDraw(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 	if (selected || tristate) {
-	    bgColorPtr = strstr(svgDataPtr, "4a6984");
-	    fgColorPtr = strstr(svgDataPtr, "ffffff");
+	    bgColorPtr = strstr(svgDataCopy, "4a6984");
+	    fgColorPtr = strstr(svgDataCopy, "ffffff");
 
 	    assert(bgColorPtr);
 	    assert(fgColorPtr);
@@ -798,8 +821,8 @@ static void IndicatorElementDraw(
 	    memcpy(bgColorPtr, bgColorStr, 6);
 	    memcpy(fgColorPtr, fgColorStr, 6);
 	} else {
-	    bgColorPtr =     strstr(svgDataPtr, "ffffff");
-	    borderColorPtr = strstr(svgDataPtr, "888888");
+	    bgColorPtr =     strstr(svgDataCopy, "ffffff");
+	    borderColorPtr = strstr(svgDataCopy, "888888");
 
 	    assert(bgColorPtr);
 	    assert(borderColorPtr);
@@ -1405,8 +1428,8 @@ static void SliderElementDraw(
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 	svgDataLen = strlen(svgDataPtr);
 	svgDataCopy = (char *)attemptckalloc(svgDataLen + 1);
@@ -1415,14 +1438,13 @@ static void SliderElementDraw(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
-	innerColorPtr = strstr(svgDataPtr, "4a6984");
-	outerColorPtr = strstr(svgDataPtr, "ffffff");
-	borderColorPtr = strstr(svgDataPtr, "c3c3c3");
+	innerColorPtr = strstr(svgDataCopy, "4a6984");
+	outerColorPtr = strstr(svgDataCopy, "ffffff");
+	borderColorPtr = strstr(svgDataCopy, "c3c3c3");
 	assert(innerColorPtr);
 	assert(outerColorPtr);
 	assert(borderColorPtr);

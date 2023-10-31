@@ -246,7 +246,7 @@ static int		ConfigureCanvas(Tcl_Interp *interp,
 static void		DefaultRotateImplementation(TkCanvas *canvasPtr,
 			    Tk_Item *itemPtr, double x, double y,
 			    double angleRadians);
-static void		DestroyCanvas(void *memPtr);
+static Tcl_FreeProc	DestroyCanvas;
 static int		DrawCanvas(Tcl_Interp *interp, void *clientData, Tk_PhotoHandle photohandle, int subsample, int zoom);
 static void		DisplayCanvas(void *clientData);
 static void		DoItem(Tcl_Obj *accumObj,
@@ -2242,7 +2242,11 @@ CanvasWidgetCmd(
 
 static void
 DestroyCanvas(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about canvas widget. */
+#else
+    char *memPtr)
+#endif
 {
     TkCanvas *canvasPtr = (TkCanvas *)memPtr;
     Tk_Item *itemPtr;
@@ -3328,7 +3332,7 @@ CanvasEventProc(
 	if (canvasPtr->flags & REDRAW_PENDING) {
 	    Tcl_CancelIdleCall(DisplayCanvas, canvasPtr);
 	}
-	Tcl_EventuallyFree(canvasPtr, (Tcl_FreeProc *) DestroyCanvas);
+	Tcl_EventuallyFree(canvasPtr, DestroyCanvas);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 

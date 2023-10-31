@@ -31,7 +31,7 @@ namespace eval ::tk::dialog::file {
 	</svg>
     }
 
-    proc CreateUpdirImage {{name ""}} {
+    proc UpdateUpdirImageData {} {
 	variable updirImageData
 	set idx1 [string first "#000000" $updirImageData]
 	set idx2 [expr {$idx1 + 6}]
@@ -41,13 +41,7 @@ namespace eval ::tk::dialog::file {
 	set fgColor [format "#%02x%02x%02x" \
 		[expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
 
-	set data [string replace $updirImageData $idx1 $idx2 $fgColor]
-
-	if {$name eq ""} {
-	    return [image create photo -format $::tk::svgFmt -data $data]
-	} else {
-	    return [image create photo $name -format $::tk::svgFmt -data $data]
-	}
+	return [string replace $updirImageData $idx1 $idx2 $fgColor]
     }
 
     # Based on https://icons8.com/icon/JXYalxb9XWWd/folder
@@ -72,19 +66,28 @@ namespace eval ::tk::dialog::file {
     }
 
     # Create the images if they did not already exist.
-    if {![info exists ::tk::Priv(updirImage)]} {
-	set ::tk::Priv(updirImage)  [CreateUpdirImage]
+    if {![info exists ::tk::Priv(updirImage)] ||
+	    $::tk::Priv(updirImage) ni [image names]} {
+	set ::tk::Priv(updirImage)  [image create photo \
+		-format $::tk::svgFmt -data [UpdateUpdirImageData]]
 
-	bindtags . [linsert [bindtags .] 1 TkFileDialog]
-	bind TkFileDialog <<ThemeChanged>> {
-	    ::tk::dialog::file::CreateUpdirImage $::tk::Priv(updirImage)
+	if {"TkFileDialog" ni [bindtags .]} {
+	    bindtags . [linsert [bindtags .] 1 TkFileDialog]
+	    bind TkFileDialog <<ThemeChanged>> {
+		if {$::tk::Priv(updirImage) in [image names]} {
+		    $::tk::Priv(updirImage) configure \
+			    -data [::tk::dialog::file::UpdateUpdirImageData]
+		}
+	    }
 	}
     }
-    if {![info exists ::tk::Priv(folderImage)]} {
+    if {![info exists ::tk::Priv(folderImage)] ||
+	    $::tk::Priv(folderImage) ni [image names]} {
 	set ::tk::Priv(folderImage) [image create photo \
 		-format $::tk::svgFmt -data $folderImageData]
     }
-    if {![info exists ::tk::Priv(fileImage)]} {
+    if {![info exists ::tk::Priv(fileImage)] ||
+	    $::tk::Priv(fileImage) ni [image names]} {
 	set ::tk::Priv(fileImage)   [image create photo \
 		-format $::tk::svgFmt -data $fileImageData]
     }

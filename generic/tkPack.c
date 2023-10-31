@@ -120,7 +120,7 @@ static const Tk_GeomMgr packerType = {
 static void		ArrangePacking(void *clientData);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    int objc, Tcl_Obj *const objv[]);
-static void		DestroyPacker(void *memPtr);
+static Tcl_FreeProc	DestroyPacker;
 static Packer *		GetPacker(Tk_Window tkwin);
 #ifndef TK_NO_DEPRECATED
 static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
@@ -1404,8 +1404,11 @@ Unlink(
 
 static void
 DestroyPacker(
-    void *memPtr)		/* Info about packed window that is now
-				 * dead. */
+#if TCL_MAJOR_VERSION > 8
+    void *memPtr)		/* Info about packed window that is now dead. */
+#else
+    char *memPtr)
+#endif
 {
     Packer *packPtr = (Packer *)memPtr;
 
@@ -1481,7 +1484,7 @@ PackStructureProc(
 	    Tcl_CancelIdleCall(ArrangePacking, packPtr);
 	}
 	packPtr->tkwin = NULL;
-	Tcl_EventuallyFree(packPtr, (Tcl_FreeProc *) DestroyPacker);
+	Tcl_EventuallyFree(packPtr, DestroyPacker);
     } else if (eventPtr->type == MapNotify) {
 	/*
 	 * When a container gets mapped, must redo the geometry computation so

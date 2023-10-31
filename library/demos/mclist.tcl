@@ -99,14 +99,14 @@ set data {
 }
 
 ## Code to insert the data nicely
-set font [ttk::style lookup Heading -font]
+set font [ttk::style lookup Heading -font {} TkDefaultFont]
 set morePx [expr {[image width noArrow] + round(4 * $tk::scalingPct / 100.0)}]
 foreach col {country capital currency} name {Country Capital Currency} {
     $w.tree heading $col -text $name -image noArrow -anchor w \
 	-command [list SortBy $w.tree $col 0]
     $w.tree column $col -width [expr {[font measure $font $name] + $morePx}]
 }
-set font [ttk::style lookup Treeview -font]
+set font [ttk::style lookup Treeview -font {} TkDefaultFont]
 foreach {country capital currency} $data {
     $w.tree insert {} end -values [list $country $capital $currency]
     foreach col {country capital currency} {
