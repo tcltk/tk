@@ -2349,14 +2349,15 @@ test font-44.1 {TkFontGetPixels: size < 0} -constraints withoutXft -setup {
 } -cleanup {
     tk scaling $oldscale
 } -result 24
-test font-44.2 {TkFontGetPoints: size >= 0} -constraints {haveTimes12Font} -setup {
+test font-44.2 {TkFontGetPoints: size >= 0} -setup {
     set oldscale [tk scaling]
 } -body {
+    set oldSize [font actual {times 12} -size]
     tk scaling 0.5
-    font actual {times 12} -size
+    expr {[font actual {times 12} -size] == $oldSize}
 } -cleanup {
     tk scaling $oldscale
-} -result 12
+} -result 1
 
 
 test font-45.1 {TkFontGetAliasList: no match} -body {
