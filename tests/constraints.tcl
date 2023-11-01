@@ -343,9 +343,6 @@ testConstraint haveTimesFamilyFont [expr {
 # tests they constrain (that is: availability of any font having the given font
 # attributes), so that these constrained tests will in fact run on all systems having
 # reasonable font dotation.
-testConstraint haveTimes12Font [expr {
-    [font actual {times 12} -size] == 12
-}]
 testConstraint haveCourier37Font [expr {
     [font actual {-family courier -size 37} -size] == 37
 }]
