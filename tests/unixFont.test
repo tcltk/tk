@@ -117,7 +117,7 @@ test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11
 test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 failsOnUbuntu} {
     lindex [font actual {-family courier}] 1
 } {courier}
-test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 haveCourier37Font} {
+test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 havePointsize37Font} {
     lindex [font actual {-family courier -size 37}] 3
 } 37
 test unixfont-2.11 {TkpGetFontFromAttributes: font cannot be loaded} x11 {
