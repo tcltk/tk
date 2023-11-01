@@ -33,16 +33,16 @@ foreach {constraint font} {
     hasCourierNew "courier new"
     hasTimesNew   "times new roman"
 } {
+    testConstraint $constraint 0
     if {([tk windowingsystem] eq "x11") && [llength $fontsystemcmd]} {
 	if {$withXft} {
-	    # check whether $font is available
-	    testConstraint $constraint 0
 	    if {[exec $fontsystemcmd $font family] ne ""} {
 	        testConstraint $constraint 1
 	    }
 	} else {
-	    # $font is supposed to be available by default
-	    testConstraint $constraint 1
+	    if {![catch {eval exec $fontsystemcmd [list *-$font-*]} res]} {
+	        testConstraint $constraint 1
+	    }
 	    if {![catch {eval exec $fontsystemcmd [list *-$font-*]} res]
 		    && ![string match *unmatched* $res]} {
 		# Newer Unix systems have more default fonts installed,
@@ -51,8 +51,6 @@ foreach {constraint font} {
 		testConstraint $constraint 0
 	    }
 	}
-    } else {
-	testConstraint $constraint 0
     }
 }
 
