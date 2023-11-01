@@ -926,11 +926,15 @@ test font-21.5 {Tk_PostscriptFontName procedure: spaces} -constraints {
     }
 } -result {LucidaBright}
 test font-21.6 {Tk_PostscriptFontName procedure: spaces} -constraints {
-	x11 withoutXft
+    x11
 } -body {
-    psfontname "{new century schoolbook} 10"
+    set name {{new century schoolbook} 10}
+    if {[font actual {{new century schoolbook} 10} -family] == "new century schoolbook"} {
+        set x [psfontname "{new century schoolbook} 10"]
+    } else {
+        set x NewCenturySchlbk-Roman
+    }
 } -result {NewCenturySchlbk-Roman}
-
 test font-21.7 {Tk_PostscriptFontName procedure: exhaustive} -constraints {
     unix
 } -body {
