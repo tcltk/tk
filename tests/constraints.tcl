@@ -313,9 +313,24 @@ destroy .t
 if {![string match {{22 3 6 15} {31 18 [34] 15}} $x]} {
     testConstraint fonts 0
 }
+
 testConstraint withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
 testConstraint withoutXft [expr {![testConstraint withXft]}]
 unset fs
+
+# Expected results of some tests on Linux rely on availability of the "times"
+# font. This font is generally provided when Tk uses the old X font system,
+# but not when using Xft on top of fontconfig. Specifically (old system):
+#    xlsfonts | grep times
+# may return quite some output while (new system):
+#    fc-list | grep times
+# return value is empty. That's not surprising since the two font systems are
+# separate (availability of a font in one of them does not mean it's available
+# in the other one). The following constraint is useful in this situation.
+testConstraint haveTimesFamilyFont [expr {
+    [string tolower [font actual {-family times} -family]] == "times"
+}]
+
 # Although unexpected, some systems may have a very limited set of fonts available.
 # The following constraints happen to evaluate to false at least on one system: the
 # Github CI runner for Linux with --disable-xft, which has exactly ONE single font
