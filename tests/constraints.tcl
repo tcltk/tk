@@ -343,14 +343,14 @@ testConstraint haveTimesFamilyFont [expr {
 # tests they constrain (that is: availability of any font having the given font
 # attributes), so that these constrained tests will in fact run on all systems having
 # reasonable font dotation.
-testConstraint haveCourier37Font [expr {
+testConstraint havePointsize37Font [expr {
     [font actual {-family courier -size 37} -size] == 37
 }]
-testConstraint haveTimes14BoldFont [expr {
+testConstraint havePointsize14BoldFont [expr {
     ([font actual {times 14 bold} -size] == 14) &&
     ([font actual {times 14 bold} -weight] eq "bold")
 }]
-testConstraint haveTimes12BoldItalicUnderlineOverstrikeFont [expr {
+testConstraint haveBoldItalicUnderlineOverstrikeFont [expr {
     ([font actual {times 12 bold italic overstrike underline} -weight] eq "bold") &&
     ([font actual {times 12 bold italic overstrike underline} -slant] eq "italic") &&
     ([font actual {times 12 bold italic overstrike underline} -underline] eq "1") &&
