@@ -19,9 +19,8 @@ tcltest::loadTestedCommands
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
-set withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-
 if {[tk windowingsystem] eq "x11"} {
+    set withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
     if {$withXft} {
         set fontsystemcmd [auto_execok fc-list]
     } else {
@@ -37,12 +36,13 @@ foreach {constraint font} {
     if {([tk windowingsystem] eq "x11") && [llength $fontsystemcmd]} {
 	if {$withXft} {
 	    if {[exec $fontsystemcmd $font family] ne ""} {
-	        testConstraint $constraint 1
+		testConstraint $constraint 1
 	    }
 	} else {
-	    if {![catch {eval exec $fontsystemcmd [list *-$font-*]} res]} {
-	        testConstraint $constraint 1
-	    }
+	    # With the old font system, the constraint is true by default,
+	    # except on the mac with XQuartz
+	    testConstraint $constraint [expr {!(($tcl_platform(os) eq "Darwin") \
+					     && ([tk windowingsystem] eq "x11"))}]
 	    if {![catch {eval exec $fontsystemcmd [list *-$font-*]} res]
 		    && ![string match *unmatched* $res]} {
 		# Newer Unix systems have more default fonts installed,
@@ -53,6 +53,7 @@ foreach {constraint font} {
 	}
     }
 }
+unset -nocomplain withXft
 
 catch {destroy .b}
 toplevel .b
