@@ -84,7 +84,7 @@ proc getsize {} {
 test unixfont-1.1 {TkpGetNativeFont procedure: not native} {x11} {
     list [catch {font measure {} xyz} msg] $msg
 } {1 {font "" doesn't exist}}
-test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 failsOnUbuntu} {
+test unixfont-1.2 {TkpGetNativeFont procedure: native} {x11 haveFixedFamilyFont} {
     font measure fixed 0
 } 6
 
@@ -117,16 +117,16 @@ test unixfont-2.5 {TkpGetFontFromAttributes procedure: fallback} x11 {
     font actual {-xyz-xyz-*-*-*-*-*-*-*-*-*-*-*-*}
     set x {}
 } {}
-test unixfont-2.6 {TkpGetFontFromAttributes: fallback to fixed family} {x11 failsOnUbuntu} {
+test unixfont-2.6 {TkpGetFontFromAttributes: fallback to fixed family} {x11 haveFixedFamilyFont} {
     lindex [font actual {-family fixed -size 10}] 1
 } {fixed}
 test unixfont-2.7 {TkpGetFontFromAttributes: fixed family not available!} x11 {
     # no test available
 } {}
-test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11 failsOnUbuntu} {
+test unixfont-2.8 {TkpGetFontFromAttributes: loop over returned font names} {x11 haveFixedFamilyFont} {
     lindex [font actual {-family fixed -size 31}] 1
 } {fixed}
-test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 failsOnUbuntu} {
+test unixfont-2.9 {TkpGetFontFromAttributes: reject adobe courier if possible} {x11 haveCourierFamilyFont} {
     lindex [font actual {-family courier}] 1
 } {courier}
 test unixfont-2.10 {TkpGetFontFromAttributes: scalable font found} {x11 havePointsize37Font} {
