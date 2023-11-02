@@ -326,9 +326,16 @@ unset fs
 #    fc-list | grep times
 # return value is empty. That's not surprising since the two font systems are
 # separate (availability of a font in one of them does not mean it's available
-# in the other one). The following constraint is useful in this situation.
+# in the other one). The following constraints are useful in this kind of
+# situation.
 testConstraint haveTimesFamilyFont [expr {
     [string tolower [font actual {-family times} -family]] == "times"
+}]
+testConstraint haveFixedFamilyFont [expr {
+    [string tolower [font actual {-family fixed} -family]] == "fixed"
+}]
+testConstraint haveCourierFamilyFont [expr {
+    [string tolower [font actual {-family courier} -family]] == "courier"
 }]
 
 # Although unexpected, some systems may have a very limited set of fonts available.
