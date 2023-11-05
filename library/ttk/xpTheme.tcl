@@ -14,17 +14,15 @@ namespace eval ttk::theme::xpnative {
 	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont
 
-	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText]
+	ttk::style map "." -foreground [list disabled SystemGrayText]
 
 	ttk::style configure TButton -anchor center -padding 0.75p -width -11
 	ttk::style configure TRadiobutton -padding 1.5p
 	ttk::style configure TCheckbutton -padding 1.5p
 	ttk::style configure TMenubutton -padding {6p 3p}
 
-	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 1.5p 0}
-	ttk::style map TNotebook.Tab \
-	    -expand {selected {1.5p 1.5p 1.5p 1.5p}}
+	ttk::style configure TNotebook -tabmargins {2 2 2 0}
+	ttk::style map TNotebook.Tab -expand {selected {2 2 2 2}}
 
 	ttk::style configure TLabelframe.Label -foreground "#0046d5"
 
