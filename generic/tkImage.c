@@ -372,8 +372,17 @@ Tk_ImageObjCmd(
 	    args[objc] = NULL;
 	}
 	Tcl_Preserve(modelPtr);
-	if (typePtr->createProc(interp, name, objc, args, typePtr,
-		(Tk_ImageModel)modelPtr, &modelPtr->modelData) != TCL_OK){
+	if (oldimage) {
+	    typedef int (OldCreateProc)(Tcl_Interp*, char*, int, char**,
+		Tk_ImageType*, Tk_ImageModel, ClientData*);
+	    i = ((OldCreateProc*)typePtr->createProc)(interp,
+		(char*)name, objc, (char**)args, typePtr,
+		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
+	} else {
+	    i = typePtr->createProc(interp, name, objc, args, typePtr,
+		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
+	}
+	if (i != TCL_OK){
 	    EventuallyDeleteImage(modelPtr, 0);
 	    Tcl_Release(modelPtr);
 	    if (oldimage) {
