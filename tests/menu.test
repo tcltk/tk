@@ -15,6 +15,7 @@ imageInit
 set earthPhotoFile [file join [file dirname [info script]] earth.gif]
 testConstraint hasEarthPhoto [file exists $earthPhotoFile]
 testConstraint pressbutton [llength [info commands pressbutton]]
+testConstraint movemouse [llength [info commands movemouse]]
 
 test menu-1.1 {Tk_MenuCmd procedure} -body {
     menu
@@ -4114,16 +4115,34 @@ test menu-39.2 {use-after-free fix - bug 1797555fff} -setup {
 test menu-40.1 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f} -setup {
 } -constraints {pressbutton} -body {
     set done false
+    event generate {} <Motion> -x 100 -y 100
     toplevel .t 
     menu .t.m
     .t.m add command -command {puts Marco} -label Marco
     .t.m add command -command {puts Polo} -label Polo
-    event generate {} <Motion> -warp 1 -x 100 -y 100
     after 1000 {.t.m post 500 500}
-    after 3000 {destroy .t}
-    after 3500 {pressbutton 530 510}
-    after 4000 {set done true}
+    after 2000 {destroy .t}
+    after 2500 {pressbutton 530 510}
+    after 3000 {set done true}
     tkwait variable done
+}
+
+test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f} -setup {
+} -constraints {movemouse} -body {
+    set done false
+    event generate {} <Motion> -x 100 -y 100
+    toplevel .t 
+    menu .t.m
+    .t.m add command -command {puts Marco} -label Marco
+    .t.m add command -command {puts Polo} -label Polo
+    after 1000 {.t.m post 500 500}
+    after 2000 {movemouse 530 510}
+    after 3000 {destroy .t}
+    after 3500 {movemouse 530 530}
+    after 4000 pressbutton 530 530
+    after 4500 {set done true}
+    tkwait variable done
+    pressbutton 530 510
 }
 
 # cleanup
