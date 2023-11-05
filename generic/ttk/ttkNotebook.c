@@ -135,6 +135,11 @@ typedef struct
     Ttk_Padding 	padding;	/* External padding */
 } NotebookStyle;
 
+/* Global variable to be set from within NotebookStyleOptions() to one
+ * of the values TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
+ */
+Ttk_PositionSpec nbTabsStickBit;
+
 static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 {
     Tcl_Obj *objPtr;
@@ -158,6 +163,10 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabplacement", 0)) != 0) {
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPlacement);
     }
+
+    /* Save the stick bit in the global variable nbTabsStickBit
+     */
+    nbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
 
     /* Compute tabOrient as function of tabPlacement:
      */
@@ -1415,9 +1424,9 @@ TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(TabLayout)
     TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-	TTK_GROUP("Notebook.padding", TTK_PACK_TOP|TTK_FILL_BOTH,
-	    TTK_GROUP("Notebook.focus", TTK_PACK_TOP|TTK_FILL_BOTH,
-		TTK_NODE("Notebook.label", TTK_PACK_TOP))))
+	TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Notebook.focus", TTK_FILL_BOTH,
+		TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------
