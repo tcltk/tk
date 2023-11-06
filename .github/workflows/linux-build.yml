@@ -4,6 +4,7 @@ on:
     branches:
     - "main"
     - "core-8-6-branch"
+    - "bug-61550f38bf"
     tags:
     - "core-**"
 permissions:
