@@ -794,16 +794,20 @@ static void TabElementDraw(
 
     if (state & TTK_STATE_USER1)
 	partId = TABP_TABITEMLEFTEDGE;
-    elementData->procs->DrawThemeBackground(
-	elementData->hTheme, elementData->hDC, partId, stateId, &rc, NULL);
-
-    if (nbTabsStickBit != TTK_STICK_S) {
+    if (nbTabsStickBit == TTK_STICK_S) {
 	/*
-	 * Erase the border
+	 * Draw the border and fill into rc
 	 */
-	elementData->procs->DrawThemeEdge(
-	    elementData->hTheme, elementData->hDC, partId, stateId, &rc,
-	    BDR_RAISEDINNER, BF_MONO|BF_RECT, NULL);
+	elementData->procs->DrawThemeBackground(
+	    elementData->hTheme, elementData->hDC, partId, stateId, &rc, NULL);
+    } else {
+	/*
+	 * Draw the fill but no border into rc
+	 */
+	RECT rc2 = rc;
+	--rc2.top; --rc2.left; ++rc2.bottom; ++rc2.right;
+	elementData->procs->DrawThemeBackground(
+	    elementData->hTheme, elementData->hDC, partId, stateId, &rc2, &rc);
     }
 
     if (state & TTK_STATE_SELECTED) {
