@@ -550,6 +550,7 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
+	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	CGFloat delta;
 	XEvent xEvent = {0};
 	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -566,7 +567,6 @@ enum {
 
 #define WHEEL_DELTA 120
 #define WHEEL_DELAY 300000000
-#define WHEEL_INCREMENT 0.100006103515625
 	
 	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
 	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
@@ -575,10 +575,8 @@ enum {
 	}
 	tsdPtr->wheelTickPrev = wheelTick;
 	delta = [theEvent scrollingDeltaY];
-	if (![theEvent hasPreciseScrollingDeltas]) {
-	    delta /= WHEEL_INCREMENT;
-	}
 	if (delta != 0.0) {
+	    delta = deltaIsPrecise ? delta / 2 : 10 * delta;
 	    delta = (tsdPtr->vWheelAcc += delta);
 	    if (timeout && fabs(delta) < 1.0) {
 		delta = ((delta < 0.0) ? -1.0 : 1.0);
@@ -593,10 +591,8 @@ enum {
 	    }
 	}
 	delta = [theEvent scrollingDeltaX];
-	if (![theEvent hasPreciseScrollingDeltas]) {
-	    delta /= WHEEL_INCREMENT;
-	}
 	if (delta != 0.0) {
+	    delta = deltaIsPrecise ? delta / 2 : 10 * delta;
 	    delta = (tsdPtr->hWheelAcc += delta);
 	    if (timeout && fabs(delta) < 1.0) {
 		delta = ((delta < 0.0) ? -1.0 : 1.0);
