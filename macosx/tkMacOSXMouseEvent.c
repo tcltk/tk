@@ -566,13 +566,18 @@ enum {
 
 #define WHEEL_DELTA 120
 #define WHEEL_DELAY 300000000
+#define WHEEL_INCREMENT 0.100006103515625
+	
 	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
 	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
 	if (timeout) {
 	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
 	}
 	tsdPtr->wheelTickPrev = wheelTick;
-	delta = [theEvent deltaY];
+	delta = [theEvent scrollingDeltaY];
+	if (![theEvent hasPreciseScrollingDeltas]) {
+	    delta /= WHEEL_INCREMENT;
+	}
 	if (delta != 0.0) {
 	    delta = (tsdPtr->vWheelAcc += delta);
 	    if (timeout && fabs(delta) < 1.0) {
@@ -587,7 +592,10 @@ enum {
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
 	}
-	delta = [theEvent deltaX];
+	delta = [theEvent scrollingDeltaX];
+	if (![theEvent hasPreciseScrollingDeltas]) {
+	    delta /= WHEEL_INCREMENT;
+	}
 	if (delta != 0.0) {
 	    delta = (tsdPtr->hWheelAcc += delta);
 	    if (timeout && fabs(delta) < 1.0) {
