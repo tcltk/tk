@@ -2342,9 +2342,9 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 test font-44.1 {TkFontGetPixels: size < 0} -setup {
     set oldscale [tk scaling]
 } -body {
-    set oldsize [expr {[font actual {times -12} -size] * $oldscale}]
+    set oldsize [expr {round([font actual {times -12} -size] * $oldscale)}]
     tk scaling 0.5
-    expr {[font actual {times -12} -size] == $oldsize / 0.5}
+    expr {round([font actual {times -12} -size] - $oldsize / 0.5) == 0}
 } -cleanup {
     tk scaling $oldscale
 } -result 1
