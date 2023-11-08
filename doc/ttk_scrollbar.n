@@ -166,7 +166,7 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
-\fB\-gripcount\fP \fIcount\fP (number of lines on the thumb)
+\fB\-gripsize\fP \fIsize\fP (number of screen units)
 .br
 \fB\-lightcolor\fP \fIcolor\fP (color of the light part of the 3D relief)
 .br
