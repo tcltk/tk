@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     tags:
     - "core-**"
@@ -27,7 +28,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: tip-626
+          ref: main
           path: tcl
       - name: Setup Environment
         run: |
@@ -91,7 +92,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: tip-626
+          ref: main
           path: tcl
       - name: Checkout create-dmg
         uses: actions/checkout@v4
@@ -179,7 +180,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: tip-626
+          ref: main
           path: tcl
       - name: Setup Environment
         run: |
