@@ -1221,6 +1221,7 @@ DestroyMenuInstance(
 		DestroyMenuEntry);
 	menuPtr->numEntries = i;
     }
+    menuPtr->active = -1;
     if (menuPtr->entries != NULL) {
 	ckfree(menuPtr->entries);
 	menuPtr->entries = NULL;
