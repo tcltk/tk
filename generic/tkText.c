@@ -23,7 +23,6 @@
 #if TCL_MAJOR_VERSION > 8 || (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION >= 7)
 #include "tkFont.h"
 #endif
-#include "tkAlloc.h"
 #include <stdlib.h>
 #include <assert.h>
 #include "default.h"
@@ -955,7 +954,8 @@ CreateWidget(
     }
 
     if (!sharedTextPtr) {
-	sharedTextPtr = (TkSharedText *)calloc(1, sizeof(TkSharedText));
+	sharedTextPtr = (TkSharedText *)ckalloc(sizeof(TkSharedText));
+	memset(sharedTextPtr, 0, sizeof(TkSharedText));
 
 	Tcl_InitHashTable(&sharedTextPtr->tagTable, TCL_STRING_KEYS);
 	Tcl_InitHashTable(&sharedTextPtr->markTable, TCL_STRING_KEYS);
@@ -971,7 +971,7 @@ CreateWidget(
 	sharedTextPtr->affectGeometryTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
 	sharedTextPtr->affectGeometryNonSelTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
 	sharedTextPtr->affectLineHeightTags = TkBitResize(NULL, TK_TEXT_SET_MAX_BIT_SIZE);
-	sharedTextPtr->tagLookup = (TkTextTag **)malloc(TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *));
+	sharedTextPtr->tagLookup = (TkTextTag **)ckalloc(TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *));
 	sharedTextPtr->emptyTagInfoPtr = TkTextTagSetResize(NULL, 0);
 	sharedTextPtr->maxRedoDepth = -1;
 	sharedTextPtr->autoSeparators = 1;
@@ -987,7 +987,8 @@ CreateWidget(
 
 	DEBUG(memset(sharedTextPtr->tagLookup, 0, TK_TEXT_SET_MAX_BIT_SIZE*sizeof(TkTextTag *)));
 
-	sharedTextPtr->mainPeer = (TkText *)calloc(1, sizeof(TkText));
+	sharedTextPtr->mainPeer = (TkText *)ckalloc(sizeof(TkText));
+	memset(sharedTextPtr->mainPeer, 0, sizeof(TkText));
 	sharedTextPtr->mainPeer->startMarker = sharedTextPtr->startMarker;
 	sharedTextPtr->mainPeer->endMarker = sharedTextPtr->endMarker;
 	sharedTextPtr->mainPeer->sharedTextPtr = sharedTextPtr;
@@ -1000,7 +1001,7 @@ CreateWidget(
 	 * Add this shared resource to global list.
 	 */
 	{
-	    WatchShared *wShared = malloc(sizeof(WatchShared));
+	    WatchShared *wShared = ckalloc(sizeof(WatchShared));
 	    wShared->sharedTextPtr = sharedTextPtr;
 	    wShared->nextPtr = watchShared;
 	    watchShared = wShared;
@@ -1022,7 +1023,8 @@ CreateWidget(
      * and 'insert', 'current' mark pointers are all NULL to start.
      */
 
-    textPtr = (TkText *)calloc(1, sizeof(TkText));
+    textPtr = (TkText *)ckalloc(sizeof(TkText));
+    memset(textPtr, 0, sizeof(TkText));
     textPtr->tkwin = newWin;
     textPtr->display = Tk_Display(newWin);
     textPtr->interp = interp;
@@ -1355,14 +1357,14 @@ AppendScript(
     Tcl_Obj *newScriptObj;
 
     if (totalLen + 2 > sizeof(buffer)) {
-	newScript = (char *)malloc(totalLen + 1);
+	newScript = (char *)ckalloc(totalLen + 1);
     }
 
     memcpy(newScript, oldScript, lenOfOld);
     newScript[lenOfOld] = '\n';
     memcpy(newScript + lenOfOld + 1, script, lenOfNew + 1);
     newScriptObj = Tcl_NewStringObj(newScript, totalLen);
-    if (newScript != buffer) { free(newScript); }
+    if (newScript != buffer) { ckfree(newScript); }
     return newScriptObj;
 }
 
@@ -1484,7 +1486,7 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 
-	listPtr = (TkTextStringList *)malloc(sizeof(TkTextStringList));
+	listPtr = (TkTextStringList *)ckalloc(sizeof(TkTextStringList));
 	Tcl_IncrRefCount(listPtr->strObjPtr = objv[2]);
 	listPtr->nextPtr = textPtr->varBindingList;
 	textPtr->varBindingList = listPtr;
@@ -1561,7 +1563,7 @@ TextWidgetObjCmd(
 	}
 	if ((length = GetByteLength(objv[2])) < textPtr->brksBufferSize) {
 	    textPtr->brksBufferSize = MAX(length, textPtr->brksBufferSize + 512);
-	    textPtr->brksBuffer = (char *)realloc(textPtr->brksBuffer, textPtr->brksBufferSize);
+	    textPtr->brksBuffer = (char *)ckrealloc(textPtr->brksBuffer, textPtr->brksBufferSize);
 	}
 	TkTextComputeBreakLocations(interp, Tcl_GetString(objv[2]), length, lang, textPtr->brksBuffer);
 	arrPtr = Tcl_NewObj();
@@ -1961,7 +1963,7 @@ TextWidgetObjCmd(
 
 	    objc -= 2;
 	    objv += 2;
-	    indices = (TkTextIndex *)malloc((objc + 1)*sizeof(TkTextIndex));
+	    indices = (TkTextIndex *)ckalloc((objc + 1)*sizeof(TkTextIndex));
 
 	    /*
 	     * First pass verifies that all indices are valid.
@@ -1970,7 +1972,7 @@ TextWidgetObjCmd(
 	    for (i = 0; i < objc; i++) {
 		if (!TkTextGetIndexFromObj(interp, textPtr, objv[i], &indices[i])) {
 		    result = TCL_ERROR;
-		    free(indices);
+		    ckfree(indices);
 		    goto done;
 		}
 	    }
@@ -1984,7 +1986,7 @@ TextWidgetObjCmd(
 		TkTextIndexForwChars(textPtr, &indices[i], 1, &indices[i], COUNT_INDICES);
 		objc += 1;
 	    }
-	    useIdx = (char *)malloc(objc);
+	    useIdx = (char *)ckalloc(objc);
 	    memset(useIdx, 0, (unsigned) objc);
 
 	    /*
@@ -2056,8 +2058,8 @@ TextWidgetObjCmd(
 			    flags, 1, triggerWatch, triggerWatch, triggerUserMod, i == lastUsed);
 		}
 	    }
-	    free(indices);
-	    free(useIdx);
+	    ckfree(indices);
+	    ckfree(useIdx);
 	}
 
 	if (!ok) {
@@ -2634,7 +2636,7 @@ TextWidgetObjCmd(
 	int sharedIsReleased = textPtr->sharedIsReleased;
 
 	assert(textPtr->flags & MEM_RELEASED);
-	free(textPtr);
+	ckfree(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
 	if (sharedIsReleased) {
 	    return result;
@@ -3479,7 +3481,7 @@ DestroyText(
 
 	Tcl_UnsetVar2(textPtr->interp, Tcl_GetString(listPtr->strObjPtr), NULL, TCL_GLOBAL_ONLY);
 	Tcl_GuardedDecrRefCount(listPtr->strObjPtr);
-	free(listPtr);
+	ckfree(listPtr);
 	listPtr = nextPtr;
     }
 
@@ -3574,8 +3576,8 @@ DestroyText(
 
 	ClearRetainedUndoTokens(sharedTextPtr);
 	TkTextUndoDestroyStack(&sharedTextPtr->undoStack);
-	free(sharedTextPtr->undoTagList);
-	free(sharedTextPtr->undoMarkList);
+	ckfree(sharedTextPtr->undoTagList);
+	ckfree(sharedTextPtr->undoMarkList);
 	TkBTreeDestroy(sharedTextPtr->tree);
 	assert(sharedTextPtr->startMarker->refCount == 1);
 	FREE_SEGMENT(sharedTextPtr->startMarker);
@@ -3605,13 +3607,13 @@ DestroyText(
 	Tcl_DeleteHashTable(&sharedTextPtr->imageTable);
 	TkTextDeleteBreakInfoTableEntries(&sharedTextPtr->breakInfoTable);
 	Tcl_DeleteHashTable(&sharedTextPtr->breakInfoTable);
-	free(sharedTextPtr->mainPeer);
-	free(sharedTextPtr->tagLookup);
+	ckfree(sharedTextPtr->mainPeer);
+	ckfree(sharedTextPtr->tagLookup);
 
 	if (sharedTextPtr->tagBindingTable) {
 	    Tk_DeleteBindingTable(sharedTextPtr->tagBindingTable);
 	}
-	free(sharedTextPtr);
+	ckfree(sharedTextPtr);
 	DEBUG_ALLOC(tkTextCountDestroyShared++);
 
 	textPtr->sharedIsReleased = 1;
@@ -3637,13 +3639,13 @@ DestroyText(
 		watchShared = thisPtr->nextPtr;
 	    }
 
-	    free(thisPtr);
+	    ckfree(thisPtr);
 	}
 #endif
     }
 
     if (textPtr->tabArrayPtr) {
-	free(textPtr->tabArrayPtr);
+	ckfree(textPtr->tabArrayPtr);
     }
     if (textPtr->insertBlinkHandler) {
 	Tcl_DeleteTimerHandler(textPtr->insertBlinkHandler);
@@ -3682,7 +3684,7 @@ TkTextDecrRefCountAndTestIfDestroyed(
     if (--textPtr->refCount == 0) {
 	assert(textPtr->flags & DESTROYED);
 	assert(textPtr->flags & MEM_RELEASED);
-	free(textPtr);
+	ckfree(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
 	return 1;
     }
@@ -3717,7 +3719,7 @@ TkTextReleaseIfDestroyed(
     }
     if (--textPtr->refCount == 0) {
 	assert(textPtr->flags & MEM_RELEASED);
-	free(textPtr);
+	ckfree(textPtr);
 	DEBUG_ALLOC(tkTextCountDestroyPeer++);
     }
     return 1;
@@ -3832,7 +3834,7 @@ TkConfigureText(
 	Tcl_Obj *endIndexObj = NULL;
 	int i, rc;
 
-	myObjv = (Tcl_Obj **)malloc(objc * sizeof(Tcl_Obj *));
+	myObjv = (Tcl_Obj **)ckalloc(objc * sizeof(Tcl_Obj *));
 
 	for (i = 0; i < objc; ++i) {
 	    Tcl_Obj *obj = objv[i];
@@ -3913,7 +3915,7 @@ TkConfigureText(
 	if (startIndexObj) { Tcl_GuardedDecrRefCount(startIndexObj); }
 	if (endIndexObj)   { Tcl_GuardedDecrRefCount(endIndexObj); }
 
-	free(myObjv);
+	ckfree(myObjv);
 
 	if (rc != TCL_OK) {
 	    goto error;
@@ -4106,7 +4108,7 @@ TkConfigureText(
      */
 
     if (textPtr->tabArrayPtr) {
-	free(textPtr->tabArrayPtr);
+	ckfree(textPtr->tabArrayPtr);
 	textPtr->tabArrayPtr = NULL;
     }
     if (textPtr->tabOptionPtr) {
@@ -5096,7 +5098,7 @@ InsertChars(
      */
 
     if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
-	textPosition = (TkTextPosition *)malloc(sizeof(TkTextPosition)*sharedTextPtr->numPeers);
+	textPosition = (TkTextPosition *)ckalloc(sizeof(TkTextPosition)*sharedTextPtr->numPeers);
     } else {
 	textPosition = textPosBuf;
     }
@@ -5109,7 +5111,7 @@ InsertChars(
     TkTextIndexToByteIndex(&startIndex); /* we need the byte position after insertion */
 
     if (parseHyphens) {
-	text = (length >= sizeof(textBuf)) ? (char *)malloc(length + 1) : textBuf;
+	text = (length >= sizeof(textBuf)) ? (char *)ckalloc(length + 1) : textBuf;
 	ParseHyphens(string, string + length, (char *) text);
     }
 
@@ -5144,7 +5146,7 @@ InsertChars(
 	    TkTextPushUndoToken(sharedTextPtr, undoInfo.token, undoInfo.byteSize);
 	} else {
 	    assert(!undoInfo.token->undoType->destroyProc);
-	    free(undoInfo.token);
+	    ckfree(undoInfo.token);
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
 	if (triggerStackEvent) {
@@ -5159,7 +5161,7 @@ InsertChars(
     SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
 
     if (textPosition != textPosBuf) {
-	free(textPosition);
+	ckfree(textPosition);
     }
 
     /*
@@ -5175,7 +5177,7 @@ InsertChars(
     }
 
     if (parseHyphens && text != textBuf) {
-	free((char *) text);
+	ckfree((char *) text);
     }
 }
 
@@ -5259,7 +5261,7 @@ TextUndoRedoCallback(
 
     if (sharedTextPtr->triggerWatchCmd) {
 	if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
-	    peers = (TkText **)malloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
+	    peers = (TkText **)ckalloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
 	}
 	for (tPtr = sharedTextPtr->peers; tPtr; tPtr = tPtr->next) {
 	    if (tPtr->watchCmd) {
@@ -5290,7 +5292,7 @@ TextUndoRedoCallback(
 	    }
 	    if (!textPosition) {
 		if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
-		    textPosition = (TkTextPosition *)malloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
+		    textPosition = (TkTextPosition *)ckalloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
 		} else {
 		    textPosition = textPosBuf;
 		}
@@ -5382,7 +5384,7 @@ TextUndoRedoCallback(
     if (textPosition) {
 	SetNewTopPosition(sharedTextPtr, NULL, textPosition, 1);
 	if (textPosition != textPosBuf) {
-	    free(textPosition);
+	    ckfree(textPosition);
 	}
     }
 
@@ -5405,7 +5407,7 @@ TextUndoRedoCallback(
      */
 
     if (peers != peerArr) {
-	free(peers);
+	ckfree(peers);
     }
 }
 
@@ -5505,7 +5507,7 @@ TextUndoFreeCallback(
 	if (token->undoType->destroyProc) {
 	    token->undoType->destroyProc((TkSharedText *)TkTextUndoGetContext(stack), (TkTextUndoToken *)subAtom->item, 0);
 	}
-	free(subAtom->item);
+	ckfree(subAtom->item);
 	DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
     }
 }
@@ -5844,7 +5846,7 @@ DeleteIndexRange(
     TkrTextChanged(sharedTextPtr, NULL, &index1, &index2);
 
     if (sharedTextPtr->numPeers > sizeof(textPosBuf)/sizeof(textPosBuf[0])) {
-	textPosition = (TkTextPosition *)malloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
+	textPosition = (TkTextPosition *)ckalloc(sizeof(textPosition[0])*sharedTextPtr->numPeers);
     } else {
 	textPosition = textPosBuf;
     }
@@ -5882,7 +5884,7 @@ DeleteIndexRange(
 	} else {
 	    assert(undoInfo.token->undoType->destroyProc);
 	    undoInfo.token->undoType->destroyProc(sharedTextPtr, undoInfo.token, 0);
-	    free(undoInfo.token);
+	    ckfree(undoInfo.token);
 	    DEBUG_ALLOC(tkTextCountDestroyUndoToken++);
 	}
 
@@ -5894,7 +5896,7 @@ DeleteIndexRange(
     SetNewTopPosition(sharedTextPtr, textPtr, textPosition, viewUpdate);
 
     if (textPosition != textPosBuf) {
-	free(textPosition);
+	ckfree(textPosition);
     }
 
     /*
@@ -7093,7 +7095,7 @@ TkTextGetTabs(
      * Parse the elements of the list one at a time to fill in the array.
      */
 
-    tabArrayPtr = (TkTextTabArray *)malloc(sizeof(TkTextTabArray) + (count - 1)*sizeof(TkTextTab));
+    tabArrayPtr = (TkTextTabArray *)ckalloc(sizeof(TkTextTabArray) + (count - 1)*sizeof(TkTextTab));
     tabArrayPtr->numTabs = 0;
     prevStop = 0.0;
     lastStop = 0.0;
@@ -7207,7 +7209,7 @@ TkTextGetTabs(
     return tabArrayPtr;
 
   error:
-    free(tabArrayPtr);
+    ckfree(tabArrayPtr);
     return NULL;
 }
 
@@ -7712,7 +7714,7 @@ DumpLine(
 
 			if (length >= bufSize) {
 			    bufSize = MAX(length + 1, 2*length);
-			    buffer = (char *)realloc(buffer, bufSize);
+			    buffer = (char *)ckrealloc(buffer, bufSize);
 			}
 
 			memcpy(buffer, segPtr->body.chars + first, length);
@@ -7808,7 +7810,7 @@ DumpLine(
 	}
     }
 
-    free(buffer);
+    ckfree(buffer);
     return !textChanged;
 }
 
@@ -7934,7 +7936,7 @@ TextChecksumCmd(
     crc = 0;
 
     if ((what & SEG_GROUP_TAG)) {
-	tagArrPtr = (TkTextTag **)malloc(sizeof(tagArrPtr[0])*sharedTextPtr->numTags);
+	tagArrPtr = (TkTextTag **)ckalloc(sizeof(tagArrPtr[0])*sharedTextPtr->numTags);
     }
 
     /*
@@ -8008,7 +8010,7 @@ TextChecksumCmd(
     }
 
     if ((what & SEG_GROUP_TAG)) {
-	free(tagArrPtr);
+	ckfree(tagArrPtr);
     }
     Tcl_SetObjResult(interp, Tcl_NewWideIntObj(crc));
     return TCL_OK;
@@ -8419,7 +8421,7 @@ TextInspectCmd(
     prevTagPtr = NULL;
     prevPtr = NULL;
     tagArrSize = 128;
-    tagArray = (TkTextTag **)malloc(tagArrSize * sizeof(tagArray[0]));
+    tagArray = (TkTextTag **)ckalloc(tagArrSize * sizeof(tagArray[0]));
     flags = 0;
 
     if (what & TK_DUMP_DONT_RESOLVE_FONTS)      { flags |= INSPECT_DONT_RESOLVE_FONTS; }
@@ -8605,7 +8607,7 @@ TextInspectCmd(
 		    if (prevTagPtr->flag == epoch) { /* should be closed? */
 			if (numTags == tagArrSize) {
 			    tagArrSize *= 2;
-			    tagArray = (TkTextTag **)realloc(tagArray, tagArrSize * sizeof(tagArray[0]));
+			    tagArray = (TkTextTag **)ckrealloc(tagArray, tagArrSize * sizeof(tagArray[0]));
 			}
 			tagArray[numTags++] = prevTagPtr;
 			prevTagPtr->flag = 0; /* mark as closed */
@@ -8645,7 +8647,7 @@ TextInspectCmd(
 			if (tPtr->flag != epoch) { /* should be opened? */
 			    if (numTags == tagArrSize) {
 				tagArrSize *= 2;
-				tagArray = (TkTextTag **)realloc(tagArray, tagArrSize * sizeof(tagArray[0]));
+				tagArray = (TkTextTag **)ckrealloc(tagArray, tagArrSize * sizeof(tagArray[0]));
 			    }
 			    tagArray[numTags++] = tPtr;
 			    tPtr->flag = epoch; /* mark as open */
@@ -8656,7 +8658,7 @@ TextInspectCmd(
 		    for (tPtr = tagPtr; tPtr; tPtr = tPtr->nextPtr) {
 			if (numTags == tagArrSize) {
 			    tagArrSize *= 2;
-			    tagArray = (TkTextTag **)realloc(tagArray, tagArrSize * sizeof(tagArray[0]));
+			    tagArray = (TkTextTag **)ckrealloc(tagArray, tagArrSize * sizeof(tagArray[0]));
 			}
 			tagArray[numTags++] = tPtr;
 		    }
@@ -8676,7 +8678,7 @@ TextInspectCmd(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(Tcl_DStringValue(str), Tcl_DStringLength(str)));
     Tcl_DStringFree(str);
     Tcl_DStringFree(opts);
-    free(tagArray);
+    ckfree(tagArray);
 
     textPtr->selTagPtr->textPtr = textPtr; /* restore */
     sharedTextPtr->inspectEpoch = epoch;
@@ -9570,7 +9572,7 @@ TriggerWatchEdit(
     numPeers = sharedTextPtr->numPeers;
 
     if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
-	peers = (TkText **)malloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
+	peers = (TkText **)ckalloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
     }
 
     /*
@@ -9673,7 +9675,7 @@ TriggerWatchEdit(
     }
 
     if (peers != peerArr) {
-	free(peers);
+	ckfree(peers);
     }
     if (numPeers > 0) { /* otherwise sharedTextPtr is not valid anymore */
 	sharedTextPtr->triggerWatchCmd = 1;
@@ -9727,7 +9729,7 @@ TkTextPerformWatchCmd(
     sharedTextPtr->triggerWatchCmd = 0; /* do not trigger recursively */
 
     if (sharedTextPtr->numPeers > sizeof(peerArr) / sizeof(peerArr[0])) {
-	peers = (TkText **)malloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
+	peers = (TkText **)ckalloc(sharedTextPtr->numPeers * sizeof(peerArr[0]));
     }
     if (textPtr) {
 	peers[numPeers++] = textPtr;
@@ -9768,7 +9770,7 @@ TkTextPerformWatchCmd(
 	TkTextDecrRefCountAndTestIfDestroyed(peers[i]);
     }
     if (peers != peerArr) {
-	free(peers);
+	ckfree(peers);
     }
 }
 
@@ -11069,11 +11071,11 @@ SearchCore(
 			     */
 
 			    int matchNumSize = matchNum * sizeof(int32_t);
-			    int32_t *newArray = (int32_t *)malloc(4*matchNumSize);
+			    int32_t *newArray = (int32_t *)ckalloc(4*matchNumSize);
 			    memcpy(newArray, storeMatch, matchNumSize);
 			    memcpy(newArray + 2*matchNum, storeLength, matchNumSize);
 			    if (storeMatch != smArray) {
-				free((char *) storeMatch);
+				ckfree((char *) storeMatch);
 			    }
 			    matchNum *= 2;
 			    storeMatch = newArray;
@@ -11296,7 +11298,7 @@ SearchCore(
      */
 
     if (storeMatch != smArray) {
-	free((char *) storeMatch);
+	ckfree((char *) storeMatch);
     }
 
     return code;

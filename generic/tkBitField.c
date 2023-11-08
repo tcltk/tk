@@ -11,7 +11,6 @@
 
 #include "tkBitField.h"
 #include "tkIntSet.h"
-#include "tkAlloc.h"
 #include <assert.h>
 
 #ifndef MAX
@@ -266,7 +265,7 @@ TkBitDestroy(
 
     if (*bfPtr) {
 	DEBUG_ALLOC(Free(*bfPtr));
-	free(*bfPtr);
+	ckfree(*bfPtr);
 	*bfPtr = NULL;
 	DEBUG_ALLOC(tkBitCountDestroy++);
     }
@@ -279,7 +278,7 @@ TkBitResize(
     unsigned newSize)
 {
     if (!bf) {
-	bf = (TkBitField *)malloc(BF_SIZE(newSize));
+	bf = (TkBitField *)ckalloc(BF_SIZE(newSize));
 	DEBUG_ALLOC(Use(bf));
 	bf->size = newSize;
 	bf->refCount = 1;
@@ -301,10 +300,10 @@ TkBitResize(
 
 	if (bf->refCount <= 1) {
 	    DEBUG_ALLOC(Free(bf));
-	    bf = (TkBitField *)realloc((char *) bf, BF_SIZE(newSize));
+	    bf = (TkBitField *)ckrealloc((char *) bf, BF_SIZE(newSize));
 	    DEBUG_ALLOC(Use(bf));
 	} else {
-	    TkBitField *newBF = (TkBitField *)malloc(BF_SIZE(newSize));
+	    TkBitField *newBF = (TkBitField *)ckalloc(BF_SIZE(newSize));
 	    DEBUG_ALLOC(Use(newBF));
 	    memcpy(newBF->bits, bf->bits, NBYTES(MIN(oldWords, newWords)));
 	    newBF->refCount = 1;
@@ -382,7 +381,7 @@ TkBitCopy(
 	size = bf->size;
     }
 
-    copy = (TkBitField *)malloc(BF_SIZE(size));
+    copy = (TkBitField *)ckalloc(BF_SIZE(size));
     DEBUG_ALLOC(Use(copy));
     oldWords = NWORDS(bf->size);
     newWords = NWORDS(size);

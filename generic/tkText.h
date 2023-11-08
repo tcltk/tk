@@ -1805,7 +1805,7 @@ enum { DISP_LINE_START = 0, DISP_LINE_END = 1 };
     /* printf("destroy(%p) %s:%d\n", ptr, __FILE__, __LINE__); */ \
     assert(ptr->typePtr); \
     assert(!(ptr->typePtr = NULL)); \
-    free(ptr); }
+    ckfree(ptr); }
 
 #define NEW_SEGMENT(ptr) \
     /* printf("alloc(%p) %s:%d\n", ptr, __FILE__, __LINE__) */
