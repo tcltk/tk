@@ -234,7 +234,7 @@ Tk_ItemType tkArcType = {
     ArcCoords,			/* coordProc */
     DeleteArc,			/* deleteProc */
     DisplayArc,			/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     ArcToPoint,			/* pointProc */
     ArcToArea,			/* areaProc */
     ArcToPostscript,		/* postscriptProc */
@@ -452,7 +452,7 @@ ConfigureArc(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) arcPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, arcPtr, flags)) {
 	return TCL_ERROR;
     }
 
