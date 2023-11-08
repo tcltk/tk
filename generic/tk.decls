@@ -146,7 +146,7 @@ declare 28 {
 declare 29 {
     int Tk_ConfigureWidget(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    Tcl_Size argc, const char **argv, char *widgRec,
+	    Tcl_Size objc, Tcl_Obj *const *objv, void *widgRec,
 	    int flags)
 }
 declare 30 {

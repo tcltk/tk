@@ -2047,7 +2047,7 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objc, objv, modelPtr, flags) != TCL_OK) {
 	goto errorExit;
     }
 

@@ -38,7 +38,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -142,7 +142,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
