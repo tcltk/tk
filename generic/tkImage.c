@@ -373,7 +373,7 @@ Tk_ImageObjCmd(
 	}
 	Tcl_Preserve(modelPtr);
 	if (oldimage) {
-	    typedef int (OldCreateProc)(Tcl_Interp*, char*, int, char**,
+	    typedef int (OldCreateProc)(Tcl_Interp*, char*, Tcl_Size, char**,
 		Tk_ImageType*, Tk_ImageModel, ClientData*);
 	    i = ((OldCreateProc*)typePtr->createProc)(interp,
 		(char*)name, objc, (char**)args, typePtr,
