@@ -120,7 +120,7 @@ Tk_ItemType tkWindowType = {
     WinItemCoords,		/* coordProc */
     DeleteWinItem,		/* deleteProc */
     DisplayWinItem,		/* displayProc */
-    1|TK_CONFIG_OBJS,		/* flags */
+    TK_ALWAYS_REDRAW,		/* flags */
     WinItemToPoint,		/* pointProc */
     WinItemToArea,		/* areaProc */
     WinItemToPostscript,	/* postscriptProc */
@@ -316,7 +316,7 @@ ConfigureWinItem(
     oldWindow = winItemPtr->tkwin;
     canvasTkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, canvasTkwin, configSpecs, objc,
-	    (const char **) objv, (char *) winItemPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, winItemPtr, flags)) {
 	return TCL_ERROR;
     }
 
