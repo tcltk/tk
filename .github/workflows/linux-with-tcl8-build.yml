@@ -1,8 +1,9 @@
-name: Linux (with Tcl 8.6)
+name: Linux (with Tcl 8.7)
 on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     tags:
     - "core-**"
@@ -38,11 +39,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev
+          sudo apt-get install libxss-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -69,7 +70,7 @@ jobs:
         working-directory: tcl/unix
       - name: Configure (opts=${{ matrix.cfgopt }})
         run: |
-          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH --disable-zipfs "--prefix=$HOME/install dir" || {
+          ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -123,11 +124,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-6-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev
+          sudo apt-get install libxss-dev xvfb libicu-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

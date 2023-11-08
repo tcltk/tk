@@ -17,8 +17,8 @@
 #define _TK
 
 #include <tcl.h>
-#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 6)
-#	error Tk 8.7 must be compiled with tcl.h from Tcl 8.6 or better
+#if (TCL_MAJOR_VERSION < 8) || (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
+#	error Tk 9.0 must be compiled with tcl.h from Tcl 8.7 or better
 #endif
 
 #ifndef EXTERN
@@ -66,17 +66,16 @@ extern "C" {
  */
 
 #ifndef TK_MAJOR_VERSION
-#   define TK_MAJOR_VERSION 8
+#   define TK_MAJOR_VERSION 9
 #endif
-#if TK_MAJOR_VERSION != 8
-#   error "This header-file is for Tk 8 only"
-#endif
-#define TK_MINOR_VERSION	7
-#define TK_RELEASE_LEVEL	TCL_ALPHA_RELEASE
-#define TK_RELEASE_SERIAL	6
+#if TK_MAJOR_VERSION == 9
+#   define TK_MINOR_VERSION	0
+#   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
+#   define TK_RELEASE_SERIAL	0
 
-#define TK_VERSION		"8.7"
-#define TK_PATCH_LEVEL		"8.7a6"
+#   define TK_VERSION		"9.0"
+#   define TK_PATCH_LEVEL		"9.0b1"
+#endif /* TK_MAJOR_VERSION */
 
 /*
  * A special definition used to allow this header file to be included from
@@ -146,14 +145,6 @@ typedef struct Tk_StyledElement_ *Tk_StyledElement;
  */
 
 typedef const char *Tk_Uid;
-
-#if (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
-#   ifndef Tcl_Size
-#	define Tcl_Size int
-#   endif
-#   define TCL_SIZE_MAX INT_MAX
-#   define TCL_SIZE_MODIFIER ""
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1092,9 +1083,7 @@ typedef struct Tk_ItemType {
 				 * type. */
     Tk_ItemDisplayProc *displayProc;
 				/* Procedure to display items of this type. */
-    int alwaysRedraw;		/* Non-zero means displayProc should be called
-				 * even when the item has been moved
-				 * off-screen. */
+    int flags;		/* Combination of TK_ALWAYS_REDRAW/TK_MOVABLE_POINTS */
     Tk_ItemPointProc *pointProc;/* Computes distance from item to a given
 				 * point. */
     Tk_ItemAreaProc *areaProc;	/* Computes whether item is inside, outside,
@@ -1131,11 +1120,11 @@ typedef struct Tk_ItemType {
 } Tk_ItemType;
 
 /*
- * Flag (used in the alwaysRedraw field) to say whether an item supports
- * point-level manipulation like the line and polygon items.
+ * Possible flags for 'flags' field.
  */
 
-#define TK_MOVABLE_POINTS	2
+#define TK_ALWAYS_REDRAW	1	/* item should be redrawn always*/
+#define TK_MOVABLE_POINTS	2	/* item supports point-level manipulation */
 
 #endif /* __NO_OLD_CONFIG */
 

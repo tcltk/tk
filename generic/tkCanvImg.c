@@ -116,7 +116,7 @@ Tk_ItemType tkImageType = {
     ImageCoords,		/* coordProc */
     DeleteImage,		/* deleteProc */
     DisplayImage,		/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     ImageToPoint,		/* pointProc */
     ImageToArea,		/* areaProc */
     ImageToPostscript,		/* postscriptProc */
@@ -302,7 +302,7 @@ ConfigureImage(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) imgPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, imgPtr, flags)) {
 	return TCL_ERROR;
     }
 
