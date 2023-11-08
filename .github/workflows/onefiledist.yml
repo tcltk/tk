@@ -31,7 +31,7 @@ jobs:
           path: tcl
       - name: Setup Environment
         run: |
-          sudo apt-get install libxss-dev
+          sudo apt-get install libxss-dev libxft-dev
           touch tcl/generic/tclStubInit.c tcl/generic/tclOOStubInit.c
           touch tk/generic/tkStubInit.c
           echo "INST_DIR=$(cd install;pwd)" >> $GITHUB_ENV
