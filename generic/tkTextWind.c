@@ -17,7 +17,6 @@
 #include "tkText.h"
 #include "tkTextTagSet.h"
 #include "tkTextUndo.h"
-#include "tkAlloc.h"
 #include <assert.h>
 
 #ifdef NDEBUG
@@ -253,7 +252,7 @@ UndoLinkSegmentPerform(
 
     if (redoInfo) {
 	RedoTokenLinkSegment *redoToken;
-	redoToken = (RedoTokenLinkSegment *)malloc(sizeof(RedoTokenLinkSegment));
+	redoToken = (RedoTokenLinkSegment *)ckalloc(sizeof(RedoTokenLinkSegment));
 	redoToken->undoType = &redoTokenLinkSegmentType;
 	redoToken->client = token->client;
 	TkBTreeMakeUndoIndex(sharedTextPtr, segPtr, &redoToken->index);
@@ -584,7 +583,7 @@ TkTextWindowCmd(
 	    assert(sharedTextPtr->undoStack);
 	    assert(ewPtr->typePtr == &tkTextEmbWindowType);
 
-	    token = (UndoTokenLinkSegment *)malloc(sizeof(UndoTokenLinkSegment));
+	    token = (UndoTokenLinkSegment *)ckalloc(sizeof(UndoTokenLinkSegment));
 	    token->undoType = &undoTokenLinkSegmentType;
 	    token->segPtr = ewPtr;
 	    token->client = client;
@@ -643,7 +642,8 @@ MakeWindow(
     TkTextSegment *ewPtr;
     TkTextEmbWindowClient *client;
 
-    ewPtr = (TkTextSegment *)calloc(1, SEG_SIZE(TkTextEmbWindow));
+    ewPtr = (TkTextSegment *)ckalloc(SEG_SIZE(TkTextEmbWindow));
+    memset(ewPtr, 0, SEG_SIZE(TkTextEmbWindow))
     NEW_SEGMENT(ewPtr);
     ewPtr->typePtr = &tkTextEmbWindowType;
     ewPtr->size = 1;
@@ -654,7 +654,8 @@ MakeWindow(
     ewPtr->body.ew.optionTable = Tk_CreateOptionTable(textPtr->interp, optionSpecs);
     DEBUG_ALLOC(tkTextCountNewSegment++);
 
-    client = (TkTextEmbWindowClient *)calloc(1, sizeof(TkTextEmbWindowClient));
+    client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
+    memset(client, 0, sizeof(TkTextEmbWindowClient));
     client->textPtr = textPtr;
     client->parent = ewPtr;
     ewPtr->body.ew.clients = client;
@@ -695,7 +696,7 @@ TkTextMakeWindow(
 	return NULL;
     }
 
-    argv = (Tcl_Obj **)malloc(objc*sizeof(argv[0]));
+    argv = (Tcl_Obj **)ckalloc(objc*sizeof(argv[0]));
     memcpy(argv, objv, objc*sizeof(argv[0]));
     for (i = 0; i < objc; i += 2) {
 	if (strncmp(Tcl_GetString(argv[i]), "-w", 2) == 0) {
@@ -873,7 +874,8 @@ EmbWinConfigure(
 		 * Have to make the new client.
 		 */
 
-		client = (TkTextEmbWindowClient *)calloc(1, sizeof(TkTextEmbWindowClient));
+		client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
+		memset(client, 0, sizeof(TkTextEmbWindowClient));
 		client->next = ewPtr->body.ew.clients;
 		client->textPtr = textPtr;
 		client->parent = ewPtr;
@@ -1066,7 +1068,7 @@ EmbWinLostContentProc(
 	}
 	loop->next = client->next;
     }
-    free(client);
+    ckfree(client);
 
     TkTextIndexClear(&index, textPtr);
     TkTextIndexSetSegment(&index, ewPtr);
@@ -1133,7 +1135,7 @@ TkTextWinFreeClient(
      * Free up this client.
      */
 
-    free(client);
+    ckfree(client);
 }
 
 /*
@@ -1498,7 +1500,8 @@ EmbWinLayoutProc(
 	     * now need to add to our client list.
 	     */
 
-	    client = (TkTextEmbWindowClient *)calloc(1, sizeof(TkTextEmbWindowClient));
+	    client = (TkTextEmbWindowClient *)ckalloc(sizeof(TkTextEmbWindowClient));
+	    memset(client, 0, sizeof(TkTextEmbWindowClient));
 	    client->next = ewPtr->body.ew.clients;
 	    client->textPtr = textPtr;
 	    client->parent = ewPtr;
