@@ -1207,7 +1207,7 @@ typedef struct {
 static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TreeitemIndicator,colorObj), DEFAULT_FOREGROUND },
-    { "-diameter", TK_OPTION_PIXELS,
+    { "-size", TK_OPTION_PIXELS,
 	offsetof(TreeitemIndicator,sizeObj), "6.75p" },
     { "-indicatormargins", TK_OPTION_STRING,
 	offsetof(TreeitemIndicator,marginObj), "2 2 4 2" },
