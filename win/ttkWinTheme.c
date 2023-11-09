@@ -787,7 +787,7 @@ static void TabElementDraw(
     int borderWidth = 1;
 
     /*
-     * Correct the coordinates of b if needed.
+     * Correct the members of b if needed.
      */
     switch (nbTabsStickBit) {
 	default:
@@ -797,10 +797,10 @@ static void TabElementDraw(
 	    b.y -= 2;
 	    break;
 	case TTK_STICK_E:
-	    b.x += 2;
+	    b.width += 2;
 	    break;
 	case TTK_STICK_W:
-	    b.x -= 2;
+	    b.x -= 2; b.width +=2;
 	    break;
     }
 

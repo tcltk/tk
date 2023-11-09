@@ -770,7 +770,7 @@ static void TabElementDraw(
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     /*
-     * Correct the coordinates of b if needed
+     * Correct the members of b if needed
      */
     switch (nbTabsStickBit) {
 	default:
@@ -780,10 +780,10 @@ static void TabElementDraw(
 	    b.y -= 4;
 	    break;
 	case TTK_STICK_E:
-	    b.x += 3;
+	    b.width += 3;
 	    break;
 	case TTK_STICK_W:
-	    b.x -= 5;
+	    b.x -= 5; b.width += 5;
 	    break;
     }
 
