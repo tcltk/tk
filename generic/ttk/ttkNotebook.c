@@ -519,6 +519,23 @@ static void PlaceTabs(
     }
 }
 
+/*
+ * NotebookPlaceContent --
+ * 	Set the position and size of a child widget
+ * 	based on the current client area and content window options:
+ */
+static void NotebookPlaceContent(Notebook* nb, Tcl_Size index)
+{
+    Tab* tab = (Tab*)Ttk_ContentData(nb->notebook.mgr, index);
+    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
+    Ttk_Box box =
+	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
+	    Tk_ReqWidth(window), Tk_ReqHeight(window), tab->sticky);
+
+    Ttk_PlaceContent(nb->notebook.mgr, index,
+	box.x, box.y, box.width, box.height);
+}
+
 /* NotebookDoLayout --
  *	Computes notebook layout and places tabs.
  *
@@ -534,6 +551,7 @@ static void NotebookDoLayout(void *recordPtr)
     Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
     Ttk_Box tabrowBox;
     NotebookStyle nbstyle;
+    Tcl_Size currentIndex = nb->notebook.currentIndex;
 
     NotebookStyleOptions(nb, &nbstyle);
 
@@ -573,24 +591,12 @@ static void NotebookDoLayout(void *recordPtr)
     if (cavity.height <= 0) cavity.height = 1;
     if (cavity.width <= 0) cavity.width = 1;
 
-    nb->notebook.clientArea = cavity;
-}
-
-/*
- * NotebookPlaceContent --
- * 	Set the position and size of a child widget
- * 	based on the current client area and content window options:
- */
-static void NotebookPlaceContent(Notebook *nb, Tcl_Size index)
-{
-    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
-    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
-    Ttk_Box box =
-	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
-	    Tk_ReqWidth(window), Tk_ReqHeight(window),tab->sticky);
-
-    Ttk_PlaceContent(nb->notebook.mgr, index,
-	box.x, box.y, box.width, box.height);
+    if (!TtkBoxEqual(nb->notebook.clientArea, cavity)) {
+	nb->notebook.clientArea = cavity;
+	if (currentIndex >= 0) {
+	    NotebookPlaceContent(nb, currentIndex);
+	}
+    }
 }
 
 /* NotebookPlaceContents --
