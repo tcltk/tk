@@ -456,16 +456,9 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-if {[tk windowingsystem] eq "aqua"} {
-    bind Text <MouseWheel> {
-	tk::MouseWheel %W y [tk::ScaleNum %D] -1.0 pixels
-    }
-} else {
-    bind Text <MouseWheel> {
-	tk::MouseWheel %W y [tk::ScaleNum %D] -4.0 pixels
-    }
+bind Text <MouseWheel> {
+    tk::MouseWheel %W y [tk::ScaleNum %D] -4.0 pixels
 }
-
 bind Text <Option-MouseWheel> {
     tk::MouseWheel %W y [tk::ScaleNum %D] -1.2 pixels
 }

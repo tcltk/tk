@@ -543,6 +543,22 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
+
+	/*
+	 * For consistency with Windows behavior we are supposed to
+	 * multiply the number of pixels to scroll by times 120.0.
+	 * Then ::tk::MouseWheel will divide the scroll size by 120.0
+	 * unless another factor is specified.  The Text widget uses
+	 * a factor of 4.0 in the proc which it binds to the MouseWheel
+	 * event.  This has the effect of making the minimum scroll
+	 * size for the Text widget be 30 px.  For smooth scrolling
+	 * we want to scroll the Text widget by the number of pixels
+	 * specified in the scrollingDelta properties of the
+	 * NSScrollWheel event, not that number times 30.  So
+	 * instead of multiplying by 120.0 we multiply by 4.0.
+	 */
+#define MSteryFactor 4.0
+
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	CGFloat delta;
 	XEvent xEvent = {0};
@@ -560,7 +576,7 @@ enum {
 	}
 	if (delta != 0.0) {
 	    xEvent.xbutton.state = state;
-	    xEvent.xkey.keycode = delta;
+	    xEvent.xkey.keycode = delta * MSteryFactor;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
@@ -570,7 +586,7 @@ enum {
 	}
 	if (delta != 0.0) {
 	    xEvent.xbutton.state = state | ShiftMask;
-	    xEvent.xkey.keycode = delta;
+	    xEvent.xkey.keycode = delta * MSteryFactor;
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
