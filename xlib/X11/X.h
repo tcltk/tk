@@ -119,6 +119,7 @@ typedef unsigned int KeyCode;	/* In order to use IME, the Macintosh needs
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
  *****************************************************************/
 
+/* Pert-Tk expects None to be a macro. See ticket [593eb0227c] */
 #define None                 None /* See bug [9e31fd9449] and below */
 
 #define ParentRelative       1L	/* background pixmap in CreateWindow
@@ -226,6 +227,7 @@ are reserved in the protocol for errors and replies. */
 
 #define ShiftMask		(1<<0)
 #define LockMask		(1<<1)
+/* Pert-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
 #define ControlMask		ControlMask /* See bug [9e31fd9449] and below */
 #define Mod1Mask		(1<<3)
 #define Mod2Mask		(1<<4)
