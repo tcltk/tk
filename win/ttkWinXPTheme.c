@@ -767,6 +767,7 @@ static void TabElementDraw(
 {
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
+    int isSelected = (state & TTK_STATE_SELECTED);
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
 
     /*
@@ -777,13 +778,13 @@ static void TabElementDraw(
 	case TTK_STICK_S:
 	    break;
 	case TTK_STICK_N:
-	    b.y -= 4;
+	    b.y -= isSelected ? 0 : 1; b.height -= isSelected ? 1 : 0;
 	    break;
 	case TTK_STICK_E:
-	    b.width += 3;
+	    b.width -= isSelected ? 1 : 0;
 	    break;
 	case TTK_STICK_W:
-	    b.x -= 5; b.width += 5;
+	    b.x -= isSelected ? 3 : 4; b.width += isSelected ? 1 : 2;
 	    break;
     }
 
@@ -792,9 +793,11 @@ static void TabElementDraw(
     if (!InitElementData(elementData, tkwin, d))
 	return;
 
-    if (state & TTK_STATE_USER1)
-	partId = TABP_TABITEMLEFTEDGE;
     if (nbTabsStickBit == TTK_STICK_S) {
+	if (state & TTK_STATE_USER1) {
+	    partId = TABP_TABITEMLEFTEDGE;
+	}
+
 	/*
 	 * Draw the border and fill into rc
 	 */
@@ -810,37 +813,28 @@ static void TabElementDraw(
 	    elementData->hTheme, elementData->hDC, partId, stateId, &rc2, &rc);
     }
 
-    if (state & TTK_STATE_SELECTED) {
-	/*
-	 * Draw a flat border at 3 edges
-	 */
-	switch (nbTabsStickBit) {
-	    default:
-	    case TTK_STICK_S:
-		break;
-	    case TTK_STICK_N:
-		elementData->procs->DrawThemeEdge(
-		    elementData->hTheme, elementData->hDC, partId, stateId, &rc,
-		    BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_RIGHT|BF_BOTTOM, NULL);
-		break;
-	    case TTK_STICK_E:
-		elementData->procs->DrawThemeEdge(
-		    elementData->hTheme, elementData->hDC, partId, stateId, &rc,
-		    BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_TOP|BF_BOTTOM, NULL);
-		break;
-	    case TTK_STICK_W:
-		elementData->procs->DrawThemeEdge(
-		    elementData->hTheme, elementData->hDC, partId, stateId, &rc,
-		    BDR_RAISEDINNER, BF_FLAT|BF_TOP|BF_RIGHT|BF_BOTTOM, NULL);
-		break;
-	}
-    } else if (nbTabsStickBit != TTK_STICK_S) {
-	/*
-	 * Draw a flat border at all 4 edges
-	 */
-	elementData->procs->DrawThemeEdge(
-	    elementData->hTheme, elementData->hDC, partId, stateId, &rc,
-	    BDR_RAISEDINNER, BF_FLAT|BF_RECT, NULL);
+    /*
+     * Draw a flat border at 3 edges
+     */
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    break;
+	case TTK_STICK_N:
+	    elementData->procs->DrawThemeEdge(
+		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
+		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_RIGHT|BF_BOTTOM, NULL);
+	    break;
+	case TTK_STICK_E:
+	    elementData->procs->DrawThemeEdge(
+		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
+		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_TOP|BF_BOTTOM, NULL);
+	    break;
+	case TTK_STICK_W:
+	    elementData->procs->DrawThemeEdge(
+		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
+		BDR_RAISEDINNER, BF_FLAT|BF_TOP|BF_RIGHT|BF_BOTTOM, NULL);
+	    break;
     }
 
     FreeElementData(elementData);

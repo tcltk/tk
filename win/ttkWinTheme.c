@@ -786,24 +786,6 @@ static void TabElementDraw(
     Display *disp = Tk_Display(tkwin);
     int borderWidth = 1;
 
-    /*
-     * Correct the members of b if needed.
-     */
-    switch (nbTabsStickBit) {
-	default:
-	case TTK_STICK_S:
-	    break;
-	case TTK_STICK_N:
-	    b.y -= 2;
-	    break;
-	case TTK_STICK_E:
-	    b.width += 2;
-	    break;
-	case TTK_STICK_W:
-	    b.x -= 2; b.width +=2;
-	    break;
-    }
-
     if (state & TTK_STATE_SELECTED) {
 	/*
 	 * Draw slightly outside of the allocated parcel,
@@ -821,7 +803,6 @@ static void TabElementDraw(
 		b.width += 2;
 		break;
 	    case TTK_STICK_W:
-		b.width += 2; b.x -= 2;
 		break;
 	}
     }
