@@ -3265,7 +3265,7 @@ static int TreeviewDetachedCommand(
     if (objc == 2) {
 	/* List detached items */
 	Tcl_HashSearch search;
-	Tcl_HashEntry *entryPtr = Tcl_FirstHashEntry(tv->tree.items, &search);
+	Tcl_HashEntry *entryPtr = Tcl_FirstHashEntry(&tv->tree.items, &search);
 	Tcl_Obj *objPtr = Tcl_NewObj();
 
 	while (entryPtr != NULL) {
@@ -3275,7 +3275,7 @@ static int TreeviewDetachedCommand(
 		Tcl_ListObjAppendElement(NULL, objPtr, ItemID(tv, item));
 	    }
 	}
-	TclSetObjResult(interp, objPtr);
+	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     } else if (objc == 3) {
 	/* Query; the root is never reported as detached */
