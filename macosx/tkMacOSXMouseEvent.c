@@ -576,7 +576,7 @@ enum {
 	}
 	if (delta != 0.0) {
 	    xEvent.xbutton.state = state;
-	    xEvent.xkey.keycode = delta * MSteryFactor;
+	    xEvent.xkey.keycode = (unsigned int)(int)(delta * MSteryFactor);
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
@@ -586,7 +586,7 @@ enum {
 	}
 	if (delta != 0.0) {
 	    xEvent.xbutton.state = state | ShiftMask;
-	    xEvent.xkey.keycode = delta * MSteryFactor;
+	    xEvent.xkey.keycode = (unsigned int)(int)(delta * MSteryFactor);
 	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	}
