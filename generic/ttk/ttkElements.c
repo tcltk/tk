@@ -1601,6 +1601,8 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
     {0,TK_OPTION_BOOLEAN,0,0}
 };
 
+extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
+
 static void TabElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
@@ -1612,8 +1614,22 @@ static void TabElementSize(
     (void)heightPtr;
 
     Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
-    paddingPtr->top = paddingPtr->left = paddingPtr->right = borderWidth;
-    paddingPtr->bottom = 0;
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    paddingPtr->bottom = 0;
+	    break;
+	case TTK_STICK_N:
+	    paddingPtr->top = 0;
+	    break;
+	case TTK_STICK_E:
+	    paddingPtr->right = 0;
+	    break;
+	case TTK_STICK_W:
+	    paddingPtr->left = 0;
+	    break;
+    }
 }
 
 static void TabElementDraw(
@@ -1622,51 +1638,145 @@ static void TabElementDraw(
 {
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
-    int borderWidth = 1, highlight = 0;
+    int highlight = 0;
+    XColor *hlColor = NULL;
     XPoint pts[6];
-    int n = 0;
     double scalingLevel = TkScalingLevel(tkwin);
     int cut = round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
+    int borderWidth = 1;
     (void)dummy;
-
-    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
 
     if (state & TTK_STATE_SELECTED) {
 	/*
 	 * Draw slightly outside of the allocated parcel,
 	 * to overwrite the client area border.
 	 */
-	b.height += borderWidth;
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		b.height += 1;
+		break;
+	    case TTK_STICK_N:
+		b.height += 1; b.y -= 1;
+		break;
+	    case TTK_STICK_E:
+		b.width += 1;
+		break;
+	    case TTK_STICK_W:
+		b.width += 1; b.x -= 1;
+		break;
+	}
 
 	Tcl_GetBooleanFromObj(NULL, tab->highlightObj, &highlight);
+	if (highlight) {
+	    hlColor = Tk_GetColorFromObj(tkwin, tab->highlightColorObj);
+	}
     }
 
-    pts[n].x = b.x; 			pts[n].y = b.y + b.height - 1; ++n;
-    pts[n].x = b.x;			pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + cut;  		pts[n].y = b.y; ++n;
-    pts[n].x = b.x + b.width-1-cut;	pts[n].y = b.y; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height; ++n;
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    pts[0].x = b.x;  pts[0].y = b.y + b.height-1;
+	    pts[1].x = b.x;  pts[1].y = b.y + cut;
+	    pts[2].x = b.x + cut;  pts[2].y = b.y;
+	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y;
+	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + cut;
+	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y + b.height;
+	    break;
+	case TTK_STICK_N:
+	    pts[0].x = b.x;  pts[0].y = b.y;
+	    pts[1].x = b.x;  pts[1].y = b.y + b.height-1 - cut;
+	    pts[2].x = b.x + cut;  pts[2].y = b.y + b.height-1;
+	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y + b.height-1;
+	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + b.height-1 - cut;
+	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y-1;
+	    break;
+	case TTK_STICK_E:
+	    pts[0].x = b.x + b.width-1;  pts[0].y = b.y;
+	    pts[1].x = b.x + cut;  pts[1].y = b.y;
+	    pts[2].x = b.x;  pts[2].y = b.y + cut;
+	    pts[3].x = b.x;  pts[3].y = b.y + b.height-1 - cut;
+	    pts[4].x = b.x + cut;  pts[4].y = b.y + b.height-1;
+	    pts[5].x = b.x + b.width;  pts[5].y = b.y + b.height-1;
+	    break;
+	case TTK_STICK_W:
+	    pts[0].x = b.x;  pts[0].y = b.y;
+	    pts[1].x = b.x + b.width-1 - cut;  pts[1].y = b.y;
+	    pts[2].x = b.x + b.width-1;  pts[2].y = b.y + cut;
+	    pts[3].x = b.x + b.width-1;  pts[3].y = b.y + b.height-1 - cut;
+	    pts[4].x = b.x + b.width-1 - cut;  pts[4].y = b.y + b.height-1;
+	    pts[5].x = b.x-1;  pts[5].y = b.y + b.height-1;
+	    break;
+    }
 
     XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	    pts, 6, Convex, CoordModeOrigin);
 
-    pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+	case TTK_STICK_N:
+	    pts[5].y += 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+	case TTK_STICK_E:
+	    pts[5].x -= 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+	case TTK_STICK_W:
+	    pts[5].x += 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+    }
 
+    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
 		pts+3, 3, CoordModeOrigin);
-	++pts[0].x; ++pts[1].x; ++pts[2].x;             --pts[4].x; --pts[5].x;
-	                        ++pts[2].y; ++pts[3].y;
+
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		++pts[0].x;  ++pts[1].x;  ++pts[2].y;
+		++pts[3].y;  --pts[4].x;  --pts[5].x;
+		break;
+	    case TTK_STICK_N:
+		++pts[0].x;  ++pts[1].x;  --pts[2].y;
+		--pts[3].y;  --pts[4].x;  --pts[5].x;
+		break;
+	    case TTK_STICK_E:
+		++pts[0].y;  ++pts[1].y;  ++pts[2].x;
+		++pts[3].x;  --pts[4].y;  --pts[5].y;
+		break;
+	    case TTK_STICK_W:
+		++pts[0].y;  ++pts[1].y;  --pts[2].x;
+		--pts[3].x;  --pts[4].y;  --pts[5].y;
+		break;
+	}
     }
 
     if (highlight) {
-	XColor *hlColor = Tk_GetColorFromObj(tkwin, tab->highlightColorObj);
-	XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
-		b.x + cut, b.y, b.width - 2*cut, cut);
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + cut, b.y, b.width - 2*cut, cut);
+		break;
+	    case TTK_STICK_N:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + cut, b.y + b.height - cut, b.width - 2*cut, cut);
+		break;
+	    case TTK_STICK_E:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x, b.y + cut, cut, b.height - 2*cut);
+		break;
+	    case TTK_STICK_W:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + b.width - cut, b.y + cut, cut, b.height - 2*cut);
+		break;
+	}
     }
 }
 

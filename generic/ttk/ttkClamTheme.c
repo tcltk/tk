@@ -959,6 +959,8 @@ static const Ttk_ElementOptionSpec NotebookElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
+extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
+
 static void TabElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
@@ -970,8 +972,22 @@ static void TabElementSize(
     (void)widthPtr;
     (void)heightPtr;
 
-    paddingPtr->top = paddingPtr->left = paddingPtr->right = borderWidth;
-    paddingPtr->bottom = 0;
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    paddingPtr->bottom = 0;
+	    break;
+	case TTK_STICK_N:
+	    paddingPtr->top = 0;
+	    break;
+	case TTK_STICK_E:
+	    paddingPtr->right = 0;
+	    break;
+	case TTK_STICK_W:
+	    paddingPtr->left = 0;
+	    break;
+    }
 }
 
 static void TabElementDraw(
@@ -981,35 +997,106 @@ static void TabElementDraw(
     NotebookElement *tab = (NotebookElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     Display *display = Tk_Display(tkwin);
-    int borderWidth = 2, dh = 0;
-    int x1,y1,x2,y2;
+    int borderWidth = 2, delta = 0;
+    int x1, y1, x2, y2;
     GC gc;
     const int w = WIN32_XDRAWLINE_HACK;
     (void)dummy;
 
     if (state & TTK_STATE_SELECTED) {
-	dh = borderWidth;
+	delta = borderWidth;
     }
 
-    if (state & TTK_STATE_USER2) {	/* Rightmost tab */
-	--b.width;
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    if (state & TTK_STATE_USER2) {		/* rightmost tab */
+		--b.width;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x+2, b.y+2, b.width-1, b.height-2+delta,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x;		y1 = b.y;		/* top left */
+	    x2 = b.x + b.width; y2 = b.y + b.height-1;	/* bottom right */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1+1, x1, y2+1+w);
+	    XDrawLine(display, d, gc, x2, y1+1, x2, y2+1+w);
+	    XDrawLine(display, d, gc, x1+1, y1, x2-1+w, y1);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2+delta+w);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x2-1+w, y1+1);
+	    break;
+
+	case TTK_STICK_N:
+	    if (state & TTK_STATE_USER2) {		/* rightmost tab */
+		--b.width;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x+2, b.y-delta, b.width-1, b.height-2+delta,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x;		y1 = b.y + b.height-1;	/* bottom left */
+	    x2 = b.x + b.width; y2 = b.y;		/* top right */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1-1, x1, y2-1-w);
+	    XDrawLine(display, d, gc, x2, y1-1, x2, y2-1-w);
+	    XDrawLine(display, d, gc, x1+1, y1, x2-1+w, y1);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1+1, y1-1, x1+1, y2-delta-w);
+	    XDrawLine(display, d, gc, x1+1, y1-1, x2-1+w, y1-1);
+	    break;
+
+	case TTK_STICK_E:
+	    if (state & TTK_STATE_USER2) {		/* bottommost tab */
+		--b.height;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x+2, b.y+2, b.width-2+delta, b.height-1,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x;		  y1 = b.y;		/* top left */
+	    x2 = b.x + b.width-1; y2 = b.y + b.height;	/* bottom right */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1+1, x1, y2-1+w);
+	    XDrawLine(display, d, gc, x1+1, y1, x2+1+w, y1);
+	    XDrawLine(display, d, gc, x1+1, y2, x2+1+w, y2);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2-1+w);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x2+delta+w, y1+1);
+	    break;
+
+	case TTK_STICK_W:
+	    if (state & TTK_STATE_USER2) {		/* bottommost tab */
+		--b.height;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x-delta, b.y+2, b.width-2+delta, b.height-1,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x + b.width-1; y1 = b.y;		/* top right */
+	    x2 = b.x;		  y2 = b.y + b.height;	/* bottom left */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1+1, x1, y2-1+w);
+	    XDrawLine(display, d, gc, x1-1, y1, x2-1-w, y1);
+	    XDrawLine(display, d, gc, x1-1, y2, x2-1-w, y2);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1-1, y1+1, x1-1, y2-1+w);
+	    XDrawLine(display, d, gc, x1-1, y1+1, x2-delta-w, y1+1);
+	    break;
     }
-
-    Tk_Fill3DRectangle(tkwin, d, border,
-	b.x+2, b.y+2, b.width-1, b.height-2+dh, borderWidth, TK_RELIEF_FLAT);
-
-    x1 = b.x, x2 = b.x + b.width;
-    y1 = b.y, y2 = b.y + b.height;
-
-
-    gc=Ttk_GCForColor(tkwin,tab->borderColorObj,d);
-    XDrawLine(display,d,gc, x1,y1+1, x1,y2+w);
-    XDrawLine(display,d,gc, x2,y1+1, x2,y2+w);
-    XDrawLine(display,d,gc, x1+1,y1, x2-1+w,y1);
-
-    gc=Ttk_GCForColor(tkwin,tab->lightColorObj,d);
-    XDrawLine(display,d,gc, x1+1,y1+1, x1+1,y2-1+dh+w);
-    XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1);
 }
 
 static const Ttk_ElementSpec TabElementSpec =
