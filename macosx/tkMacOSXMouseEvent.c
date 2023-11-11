@@ -550,7 +550,7 @@ enum {
 	 * any modifier bits.
 	 */
 
-        #define HiresScrollMask 1 << 9
+#define HiresScrollMask (1 << 9)
         
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	CGFloat delta;
