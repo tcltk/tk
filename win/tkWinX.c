@@ -81,9 +81,6 @@ typedef struct {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
-    DWORD wheelTickPrev;	/* For high resolution wheels. */
-    int vWheelAcc;		/* For high resolution wheels (vertical). */
-    int hWheelAcc;		/* For high resolution wheels (horizontal). */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -534,9 +531,6 @@ TkpOpenDisplay(
     memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
-    tsdPtr->wheelTickPrev = GetTickCount();
-    tsdPtr->vWheelAcc = 0;
-    tsdPtr->hWheelAcc = 0;
 
     /*
      * Key map info must be available immediately, because of "send event".
@@ -1130,18 +1124,7 @@ GenerateXEvent(
 	     * Support for high resolution wheels (vertical).
 	     */
 
-	    DWORD wheelTick = GetTickCount();
-	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
-	    int intDelta;
-
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (timeout) {
-		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	    }
-	    tsdPtr->vWheelAcc += (short) HIWORD(wParam);
-	    if (!tsdPtr->vWheelAcc || (!timeout && abs(tsdPtr->vWheelAcc) < WHEEL_DELTA * 6 / 10)) {
-		return;
-	    }
+	    int delta = (short) HIWORD(wParam);
 
 	    /*
 	     * We have invented a new X event type to handle this event. It
@@ -1151,17 +1134,13 @@ GenerateXEvent(
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    intDelta = (abs(tsdPtr->vWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
-	    if (intDelta == 0) {
-		intDelta = (tsdPtr->vWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
-	    } else if (tsdPtr->vWheelAcc < 0) {
-		intDelta = -intDelta;
-	    }
 	    event.x.type = MouseWheelEvent;
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
-	    event.x.xkey.keycode = intDelta;
-	    tsdPtr->vWheelAcc -= intDelta;
+	    event.x.xkey.keycode = (unsigned int)delta;
+	    if ( delta % 120 != 0) {
+		event.x.xkey.state |= (1 << 9);
+	    }
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
@@ -1169,18 +1148,7 @@ GenerateXEvent(
 	     * Support for high resolution wheels (horizontal).
 	     */
 
-	    DWORD wheelTick = GetTickCount();
-	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
-	    int intDelta;
-
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (timeout) {
-		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	    }
-	    tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
-	    if (!tsdPtr->hWheelAcc || (!timeout && abs(tsdPtr->hWheelAcc) < WHEEL_DELTA * 6 / 10)) {
-		return;
-	    }
+	    int delta = (short) HIWORD(wParam);
 
 	    /*
 	     * We have invented a new X event type to handle this event. It
@@ -1190,18 +1158,14 @@ GenerateXEvent(
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    intDelta =  (abs(tsdPtr->hWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
-	    if (intDelta == 0) {
-		intDelta = (tsdPtr->hWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
-	    } else if (tsdPtr->hWheelAcc < 0) {
-		intDelta = -intDelta;
-	    }
 	    event.x.type = MouseWheelEvent;
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
 	    event.x.xkey.state |= ShiftMask;
-	    event.x.xkey.keycode = intDelta;
-	    tsdPtr->hWheelAcc -= intDelta;
+	    event.x.xkey.keycode = delta;
+	    if ( delta % 120 != 0) {
+		event.x.xkey.state |= (1 << 9);
+	    }
 	    break;
 	}
 	case WM_SYSKEYDOWN:
