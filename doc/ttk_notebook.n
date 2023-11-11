@@ -233,7 +233,7 @@ are:
 \fB\-tabposition\fP \fIposition\fP
 .RS
 Specifies the position of the tab row or column as a string of length
-1 or 2.  The first character indicates the size as \fBn\fP, \fBs\fP,
+1 or 2.  The first character indicates the side as \fBn\fP, \fBs\fP,
 \fBw\fP, or \fBe\fP, while the second character (if present) is the
 sticky bit (specified as \fBw\fP, \fBe\fP, \fBn\fP, or \fBs\fP) within
 the tab position.  The default position is \fBn\fP for the \fBaqua\fP
