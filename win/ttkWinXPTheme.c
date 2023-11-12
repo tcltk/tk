@@ -39,6 +39,10 @@ typedef HRESULT (STDAPICALLTYPE CloseThemeDataProc)(HTHEME hTheme);
 typedef HRESULT (STDAPICALLTYPE DrawThemeBackgroundProc)(HTHEME hTheme,
                  HDC hdc, int iPartId, int iStateId, const RECT *pRect,
                  OPTIONAL const RECT *pClipRect);
+typedef HRESULT (STDAPICALLTYPE DrawThemeEdgeProc)(HTHEME hTheme,
+		 HDC hdc, int iPartId, int iStateId, const RECT *pDestRect,
+		 unsigned int uEdge, unsigned int uFlags,
+		 OPTIONAL RECT *pContentRect);
 typedef HRESULT	(STDAPICALLTYPE GetThemePartSizeProc)(HTHEME,HDC,
 		 int iPartId, int iStateId,
 		 RECT *prc, enum THEMESIZE eSize, SIZE *psz);
@@ -60,6 +64,7 @@ typedef struct
     GetThemePartSizeProc		*GetThemePartSize;
     GetThemeSysSizeProc			*GetThemeSysSize;
     DrawThemeBackgroundProc		*DrawThemeBackground;
+    DrawThemeEdgeProc			*DrawThemeEdge;
     DrawThemeTextProc		        *DrawThemeText;
     GetThemeTextExtentProc		*GetThemeTextExtent;
     IsThemeActiveProc			*IsThemeActive;
@@ -113,6 +118,7 @@ LoadXPThemeProcs(HINSTANCE *phlib)
 	    && LOADPROC(GetThemePartSize)
 	    && LOADPROC(GetThemeSysSize)
 	    && LOADPROC(DrawThemeBackground)
+	    && LOADPROC(DrawThemeEdge)
 	    && LOADPROC(GetThemeTextExtent)
 	    && LOADPROC(DrawThemeText)
 	    && LOADPROC(IsThemeActive)
@@ -721,22 +727,110 @@ static Ttk_ElementSpec PbarElementSpec =
  *	The TIS_* and TILES_* definitions are identical, so
  * 	we can use the same statemap no matter what the partId.
  */
+
+extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
+
+static void TabElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    GenericElementSize(clientData, elementRecord, tkwin,
+    	widthPtr, heightPtr, paddingPtr);
+
+    *paddingPtr = Ttk_UniformPadding(3);
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    paddingPtr->bottom = 0;
+	    break;
+	case TTK_STICK_N:
+	    paddingPtr->top = 0;
+	    break;
+	case TTK_STICK_E:
+	    paddingPtr->right = 0;
+	    break;
+	case TTK_STICK_W:
+	    paddingPtr->left = 0;
+	    break;
+    }
+}
+
 static void TabElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
+    int isSelected = (state & TTK_STATE_SELECTED);
+    int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+
+    /*
+     * Correct the members of b if needed
+     */
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    break;
+	case TTK_STICK_N:
+	    b.y -= isSelected ? 0 : 1; b.height -= isSelected ? 1 : 0;
+	    break;
+	case TTK_STICK_E:
+	    b.width -= isSelected ? 1 : 0;
+	    break;
+	case TTK_STICK_W:
+	    b.x -= isSelected ? 1 : 2; b.width -= isSelected ? 1 : 0;
+	    break;
+    }
+
     RECT rc = BoxToRect(b);
-    (void)elementRecord;
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
-    if (state & TTK_STATE_USER1)
-	partId = TABP_TABITEMLEFTEDGE;
-    elementData->procs->DrawThemeBackground(
-	elementData->hTheme, elementData->hDC, partId,
-	Ttk_StateTableLookup(elementData->info->statemap, state), &rc, NULL);
+
+    if (nbTabsStickBit == TTK_STICK_S) {
+	if (state & TTK_STATE_USER1) {
+	    partId = TABP_TABITEMLEFTEDGE;
+	}
+
+	/*
+	 * Draw the border and fill into rc
+	 */
+	elementData->procs->DrawThemeBackground(
+	    elementData->hTheme, elementData->hDC, partId, stateId, &rc, NULL);
+    } else {
+	/*
+	 * Draw the fill but no border into rc
+	 */
+	RECT rc2 = rc;
+	--rc2.top; --rc2.left; ++rc2.bottom; ++rc2.right;
+	elementData->procs->DrawThemeBackground(
+	    elementData->hTheme, elementData->hDC, partId, stateId, &rc2, &rc);
+    }
+
+    /*
+     * Draw a flat border at 3 edges
+     */
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    break;
+	case TTK_STICK_N:
+	    elementData->procs->DrawThemeEdge(
+		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
+		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_RIGHT|BF_BOTTOM, NULL);
+	    break;
+	case TTK_STICK_E:
+	    elementData->procs->DrawThemeEdge(
+		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
+		BDR_RAISEDINNER, BF_FLAT|BF_LEFT|BF_TOP|BF_BOTTOM, NULL);
+	    break;
+	case TTK_STICK_W:
+	    elementData->procs->DrawThemeEdge(
+		elementData->hTheme, elementData->hDC, partId, stateId, &rc,
+		BDR_RAISEDINNER, BF_FLAT|BF_TOP|BF_RIGHT|BF_BOTTOM, NULL);
+	    break;
+    }
+
     FreeElementData(elementData);
 }
 
@@ -745,7 +839,7 @@ static Ttk_ElementSpec TabElementSpec =
     TK_STYLE_VERSION_2,
     sizeof(NullElement),
     TtkNullElementOptions,
-    GenericElementSize,
+    TabElementSize,
     TabElementDraw
 };
 

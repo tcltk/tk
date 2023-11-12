@@ -645,6 +645,156 @@ static Ttk_ElementSpec SliderElementSpec = {
  * +++ Notebook elements.
  */
 
+typedef struct {
+    Tcl_Obj *borderWidthObj;
+    Tcl_Obj *backgroundObj;
+} TabElement;
+
+static const Ttk_ElementOptionSpec TabElementOptions[] = {
+    { "-borderwidth", TK_OPTION_PIXELS,
+	offsetof(TabElement,borderWidthObj), "1" },
+    { "-background", TK_OPTION_BORDER,
+	offsetof(TabElement,backgroundObj), DEFAULT_BACKGROUND },
+    {0,TK_OPTION_BOOLEAN,0,0}
+};
+
+extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
+
+static void TabElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    TabElement *tab = (TabElement *)elementRecord;
+    int borderWidth = 1;
+
+    Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    paddingPtr->bottom = 0;
+	    break;
+	case TTK_STICK_N:
+	    paddingPtr->top = 0;
+	    break;
+	case TTK_STICK_E:
+	    paddingPtr->right = 0;
+	    break;
+	case TTK_STICK_W:
+	    paddingPtr->left = 0;
+	    break;
+    }
+}
+
+static void TabElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
+{
+    TabElement *tab = (TabElement *)elementRecord;
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
+    XPoint pts[6];
+    int cut = 2;
+    Display *disp = Tk_Display(tkwin);
+    int borderWidth = 1;
+
+    if (state & TTK_STATE_SELECTED) {
+	/*
+	 * Draw slightly outside of the allocated parcel,
+	 * to overwrite the client area border.
+	 */
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		b.height += 2;
+		break;
+	    case TTK_STICK_N:
+		b.height += 2; b.y -= 2;
+		break;
+	    case TTK_STICK_E:
+		b.width += 2;
+		break;
+	    case TTK_STICK_W:
+		b.width += 2; b.x -= 2;
+		break;
+	}
+    }
+
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    pts[0].x = b.x;  pts[0].y = b.y + b.height-1;
+	    pts[1].x = b.x;  pts[1].y = b.y + cut;
+	    pts[2].x = b.x + cut;  pts[2].y = b.y;
+	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y;
+	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + cut;
+	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y + b.height;
+	    break;
+	case TTK_STICK_N:
+	    pts[0].x = b.x;  pts[0].y = b.y;
+	    pts[1].x = b.x;  pts[1].y = b.y + b.height-1 - cut;
+	    pts[2].x = b.x + cut;  pts[2].y = b.y + b.height-1;
+	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y + b.height-1;
+	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + b.height-1 - cut;
+	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y-1;
+	    break;
+	case TTK_STICK_E:
+	    pts[0].x = b.x + b.width-1;  pts[0].y = b.y;
+	    pts[1].x = b.x + cut;  pts[1].y = b.y;
+	    pts[2].x = b.x;  pts[2].y = b.y + cut;
+	    pts[3].x = b.x;  pts[3].y = b.y + b.height-1 - cut;
+	    pts[4].x = b.x + cut;  pts[4].y = b.y + b.height-1;
+	    pts[5].x = b.x + b.width;  pts[5].y = b.y + b.height-1;
+	    break;
+	case TTK_STICK_W:
+	    pts[0].x = b.x;  pts[0].y = b.y;
+	    pts[1].x = b.x + b.width-1 - cut;  pts[1].y = b.y;
+	    pts[2].x = b.x + b.width-1;  pts[2].y = b.y + cut;
+	    pts[3].x = b.x + b.width-1;  pts[3].y = b.y + b.height-1 - cut;
+	    pts[4].x = b.x + b.width-1 - cut;  pts[4].y = b.y + b.height-1;
+	    pts[5].x = b.x-1;  pts[5].y = b.y + b.height-1;
+	    break;
+    }
+
+    XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
+	    pts, 6, Convex, CoordModeOrigin);
+
+    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
+    while (borderWidth--) {
+	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
+		pts, 4, CoordModeOrigin);
+	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
+		pts+3, 3, CoordModeOrigin);
+
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		++pts[0].x;  ++pts[1].x;  ++pts[2].y;
+		++pts[3].y;  --pts[4].x;  --pts[5].x;
+		break;
+	    case TTK_STICK_N:
+		++pts[0].x;  ++pts[1].x;  --pts[2].y;
+		--pts[3].y;  --pts[4].x;  --pts[5].x;
+		break;
+	    case TTK_STICK_E:
+		++pts[0].y;  ++pts[1].y;  ++pts[2].x;
+		++pts[3].x;  --pts[4].y;  --pts[5].y;
+		break;
+	    case TTK_STICK_W:
+		++pts[0].y;  ++pts[1].y;  --pts[2].x;
+		--pts[3].x;  --pts[4].y;  --pts[5].y;
+		break;
+	}
+    }
+}
+
+static const Ttk_ElementSpec TabElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(TabElement),
+    TabElementOptions,
+    TabElementSize,
+    TabElementDraw
+};
+
 static void ClientElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
@@ -718,6 +868,7 @@ int TtkWinTheme_Init(Tcl_Interp *interp, HWND hwnd)
     Ttk_RegisterElementSpec(themePtr, "Scrollbar.trough", &TroughElementSpec,
     	TroughClientDataInit(interp));
 
+    Ttk_RegisterElementSpec(themePtr, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElementSpec(themePtr, "client", &ClientElementSpec, NULL);
 
     for (fce = FrameControlElements; fce->name != 0; ++fce) {
