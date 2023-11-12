@@ -1083,9 +1083,7 @@ typedef struct Tk_ItemType {
 				 * type. */
     Tk_ItemDisplayProc *displayProc;
 				/* Procedure to display items of this type. */
-    int alwaysRedraw;		/* Non-zero means displayProc should be called
-				 * even when the item has been moved
-				 * off-screen. */
+    int flags;		/* Combination of TK_ALWAYS_REDRAW/TK_MOVABLE_POINTS */
     Tk_ItemPointProc *pointProc;/* Computes distance from item to a given
 				 * point. */
     Tk_ItemAreaProc *areaProc;	/* Computes whether item is inside, outside,
@@ -1122,11 +1120,11 @@ typedef struct Tk_ItemType {
 } Tk_ItemType;
 
 /*
- * Flag (used in the alwaysRedraw field) to say whether an item supports
- * point-level manipulation like the line and polygon items.
+ * Possible flags for 'flags' field.
  */
 
-#define TK_MOVABLE_POINTS	2
+#define TK_ALWAYS_REDRAW	1	/* item should be redrawn always*/
+#define TK_MOVABLE_POINTS	2	/* item supports point-level manipulation */
 
 #endif /* __NO_OLD_CONFIG */
 
