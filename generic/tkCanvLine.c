@@ -234,7 +234,7 @@ Tk_ItemType tkLineType = {
     LineCoords,				/* coordProc */
     DeleteLine,				/* deleteProc */
     DisplayLine,			/* displayProc */
-    TK_CONFIG_OBJS | TK_MOVABLE_POINTS,	/* flags */
+    TK_MOVABLE_POINTS,		/* flags */
     LineToPoint,			/* pointProc */
     LineToArea,				/* areaProc */
     LineToPostscript,			/* postscriptProc */
@@ -486,7 +486,7 @@ ConfigureLine(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) linePtr, flags|TK_CONFIG_OBJS)) {
+	    objv, linePtr, flags)) {
 	return TCL_ERROR;
     }
 
