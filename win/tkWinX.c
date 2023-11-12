@@ -48,8 +48,20 @@
  * as pixels.  If that proves annoying it will need to be addressed.
  */
 
+#define WHEELDELTA 120
 #define HiresScrollMask (1 << 9)
 
+/*
+ * Our heuristic for deciding whether a WM_MOUSEWHEEL message
+ * comes from a high resolution scrolling device is that we
+ * assume it is high resolution unless there are two consecutive
+ * delta values that are both multiples of 120.  This is static,
+ * rather than thread-specific, since input devices are shared
+ * by all threads.
+ */
+
+static int lastMod = 0;
+ 
 /*
  * imm.h is needed by HandleIMEComposition
  */
@@ -1140,6 +1152,7 @@ GenerateXEvent(
 	     */
 
 	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
 
 	    /*
 	     * We have invented a new X event type to handle this event. It
@@ -1153,9 +1166,10 @@ GenerateXEvent(
 	    event.x.xany.send_event = -1;
 	    event.key.nbytes = 0;
 	    event.x.xkey.keycode = (unsigned int)delta;
-	    if ( delta % 120 != 0) {
+	    if ( mod != 0 || lastMod != 0) {
 		event.x.xkey.state |= HiresScrollMask;
 	    }
+	    lastMod = mod;
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
@@ -1164,6 +1178,7 @@ GenerateXEvent(
 	     */
 
 	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
 
 	    /*
 	     * We have invented a new X event type to handle this event. It
@@ -1178,9 +1193,10 @@ GenerateXEvent(
 	    event.key.nbytes = 0;
 	    event.x.xkey.state |= ShiftMask;
 	    event.x.xkey.keycode = delta;
-	    if ( delta % 120 != 0) {
+	    if ( mod != 0 || lastMod != 0) {
 		event.x.xkey.state |= HiresScrollMask;
 	    }
+	    lastMod = mod;
 	    break;
 	}
 	case WM_SYSKEYDOWN:
