@@ -11,9 +11,9 @@ site](https://sourceforge.net/projects/tcl/files/Tcl/).
 [![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-6-branch)
 <br>
 8.7 (in development, daily build))
-[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Amain)
-[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Amain)
-[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Amain)
+[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Acore-8-branch)
+[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Acore-8-branch)
+[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-branch)
 
 ## <a id="intro">1.</a> Introduction
 
