@@ -1,8 +1,9 @@
-name: Linux (with Tcl 9.0)
+name: Linux (with Tcl 8.7)
 on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     tags:
     - "core-**"
@@ -38,7 +39,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: core-8-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
@@ -123,7 +124,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: main
+          ref: core-8-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |

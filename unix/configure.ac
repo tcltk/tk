@@ -3,7 +3,7 @@ dnl	This file is an input file used by the GNU "autoconf" program to
 dnl	generate the file "configure", which is run during Tk installation
 dnl	to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
+AC_INIT([tk],[9.0])
 AC_PREREQ([2.69])
 
 dnl This is only used when included from macosx/configure.ac
@@ -23,10 +23,10 @@ m4_ifdef([SC_USE_CONFIG_HEADERS], [
     #endif /* _TKCONFIG */])
 ])
 
-TK_VERSION=8.7
-TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a6"
+TK_VERSION=9.0
+TK_MAJOR_VERSION=9
+TK_MINOR_VERSION=0
+TK_PATCH_LEVEL="b1"
 VERSION=${TK_VERSION}
 LOCALES="cs da de el en en_gb eo es fr hu it nl pl pt ru sv"
 
@@ -38,12 +38,8 @@ SC_PATH_TCLCONFIG
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MAJOR_VERSION}" -ne 8 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
-Found config for Tcl ${TCL_VERSION}])
-fi
-if test "${TCL_MINOR_VERSION}" -lt 6 ; then
-    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.6+
+if test "${TCL_MINOR_VERSION}" -lt 7 ; then
+    AC_MSG_ERROR([${PACKAGE_NAME} ${PACKAGE_VERSION} requires Tcl 8.7+
 Found config for Tcl ${TCL_VERSION}])
 fi
 fi
@@ -714,17 +710,8 @@ AC_SUBST(INSTALL_MSGS)
 #--------------------------------------------------------------------
 
 # Replace ${VERSION} with contents of ${TK_VERSION}
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
     TK_STUB_LIB_FILE="libtkstub.a"
     TK_STUB_LIB_FLAG="-ltkstub"
-else
-    eval "TK_STUB_LIB_FILE=libtkstub${TK_UNSHARED_LIB_SUFFIX}"
-if test "${TCL_LIB_VERSIONS_OK}" = "ok"; then
-    TK_STUB_LIB_FLAG="-ltkstub${TK_VERSION}"
-else
-    TK_STUB_LIB_FLAG="-ltkstub`echo ${TK_VERSION} | tr -d .`"
-fi
-fi
 eval "TK_STUB_LIB_DIR=\"${libdir}\""
 
 TK_BUILD_STUB_LIB_SPEC="-L`pwd | sed -e 's/ /\\\\ /g'` ${TK_STUB_LIB_FLAG}"
