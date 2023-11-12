@@ -803,6 +803,7 @@ static void TabElementDraw(
 		b.width += 2;
 		break;
 	    case TTK_STICK_W:
+		b.width += 2; b.x -= 2;
 		break;
 	}
     }
