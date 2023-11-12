@@ -455,30 +455,30 @@ bind Text <B2-Motion> {
     }
 }
 set ::tk::Priv(prevPos) {}
-
+set HiresScrollMask 512
 bind Text <MouseWheel> {
-    if {[ expr  %s & 512 ]} {
+    if {[ expr  %s & $HiresScrollMask ]} {
 	tk::MouseWheel %W y %D -1.0 pixels
     } else {
 	tk::MouseWheel %W y [tk::ScaleNum %D] -4.0 pixels
     }
 }
 bind Text <Option-MouseWheel> {
-    if {[ expr  %s & 512 ]} {
+    if {[ expr %s & $HiresScrollMask ]} {
 	tk::MouseWheel %W y %D pixels
     } else {
 	tk::MouseWheel %W y [tk::ScaleNum %D] -1.2 pixels
     }
 }
 bind Text <Shift-MouseWheel> {
-    if {[ expr  %s & 512 ]} {
+    if {[ expr %s & $HiresScrollMask ]} {
 	tk::MouseWheel %W x %D -1.0 pixels
     } else {
 	tk::MouseWheel %W x [tk::ScaleNum %D] -4.0 pixels
     }
 }
 bind Text <Shift-Option-MouseWheel> {
-    if {[ expr  %s & 512 ]} {
+    if {[ expr %s & $HiresScrollMask ]} {
 	tk::MouseWheel %W x %D -1.0 pixels
     } else {
 	tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 pixels
