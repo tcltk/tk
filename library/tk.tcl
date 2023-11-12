@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  8.7a6
+package require -exact tk  9.0b1
 
 # Create a ::tk namespace
 namespace eval ::tk {
