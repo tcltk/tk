@@ -784,7 +784,7 @@ static void TabElementDraw(
 	    b.width -= isSelected ? 1 : 0;
 	    break;
 	case TTK_STICK_W:
-	    b.x -= isSelected ? 3 : 4; b.width += isSelected ? 1 : 2;
+	    b.x -= isSelected ? 1 : 2; b.width -= isSelected ? 1 : 0;
 	    break;
     }
 
