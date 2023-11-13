@@ -498,8 +498,9 @@ ItemIndex(
 	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objPtr, indexPtr);
     } else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
+#if defined(TK_NO_DEPRECATED)
+	Tcl_AppendResult(interp, "Flag TK_CONFIG_OBJS is mandatory", (void *)NULL);
+	return TCL_ERROR;
 #else
 	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, (Tcl_Obj *) Tcl_GetString(objPtr), indexPtr);
