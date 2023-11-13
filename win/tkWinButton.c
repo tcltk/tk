@@ -443,9 +443,8 @@ TkpDrawIndicator(
 	}
 
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated
-	 * memory area svgDataCopy and assign the latter's address to
-	 * svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 
 	svgDataLen = strlen(svgDataPtr);
@@ -455,18 +454,17 @@ TkpDrawIndicator(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 
-	topOuterColorPtr = strstr(svgDataPtr, "a0a0a0");
-	btmOuterColorPtr = strstr(svgDataPtr, "eeeeee");
-	topInnerColorPtr = strstr(svgDataPtr, "696969");
-	btmInnerColorPtr = strstr(svgDataPtr, "e3e3e3");
-	interiorColorPtr = strstr(svgDataPtr, "ffffff");
-	checkColorPtr =    strstr(svgDataPtr, "000000");
+	topOuterColorPtr = strstr(svgDataCopy, "a0a0a0");
+	btmOuterColorPtr = strstr(svgDataCopy, "eeeeee");
+	topInnerColorPtr = strstr(svgDataCopy, "696969");
+	btmInnerColorPtr = strstr(svgDataCopy, "e3e3e3");
+	interiorColorPtr = strstr(svgDataCopy, "ffffff");
+	checkColorPtr =    strstr(svgDataCopy, "000000");
 
 	assert(topOuterColorPtr);
 	assert(btmOuterColorPtr);

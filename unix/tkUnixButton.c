@@ -282,8 +282,8 @@ TkpDrawCheckIndicator(
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 
 	svgDataLen = strlen(svgDataPtr);
@@ -293,16 +293,15 @@ TkpDrawCheckIndicator(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 
-	darkColorPtr =      strstr(svgDataPtr, "DARKKK");
-	lightColorPtr =     strstr(svgDataPtr, "LIGHTT");
-	interiorColorPtr =  strstr(svgDataPtr, "INTROR");
-	indicatorColorPtr = strstr(svgDataPtr, "INDCTR");
+	darkColorPtr =      strstr(svgDataCopy, "DARKKK");
+	lightColorPtr =     strstr(svgDataCopy, "LIGHTT");
+	interiorColorPtr =  strstr(svgDataCopy, "INTROR");
+	indicatorColorPtr = strstr(svgDataCopy, "INDCTR");
 
 	if (darkColorPtr != NULL) {
 	    memcpy(darkColorPtr, darkColorStr, 6);

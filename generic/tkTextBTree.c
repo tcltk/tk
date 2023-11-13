@@ -632,10 +632,18 @@ AdjustStartEndRefs(
 	    i++;
 	}
 	treePtr->startEndCount = count;
-	treePtr->startEnd = (TkTextLine **)ckrealloc(treePtr->startEnd,
-		sizeof(TkTextLine *) * count);
-	treePtr->startEndRef = (TkText **)ckrealloc(treePtr->startEndRef,
-		sizeof(TkText *) * count);
+	if (count > 0) {
+	    treePtr->startEnd = (TkTextLine**)ckrealloc(treePtr->startEnd,
+		    sizeof(TkTextLine*) * count);
+	    treePtr->startEndRef = (TkText**)ckrealloc(treePtr->startEndRef,
+		    sizeof(TkText*) * count);
+	}
+	else {
+	    ckfree(treePtr->startEndRef);
+	    treePtr->startEndRef = NULL;
+	    ckfree(treePtr->startEnd);
+	    treePtr->startEnd = NULL;
+	}
     }
     if ((action & TEXT_ADD_REFS)
 	    && (textPtr->start != NULL || textPtr->end != NULL)) {
