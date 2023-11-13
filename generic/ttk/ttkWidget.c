@@ -202,15 +202,6 @@ WidgetInstanceObjCmdDeleted(ClientData clientData)
 	Tk_DestroyWindow(corePtr->tkwin);
 }
 
-/* FreeWidget --
- *	 Final cleanup for widget; called via Tcl_EventuallyFree().
- */
-static void
-FreeWidget(void *memPtr)
-{
-    ckfree(memPtr);
-}
-
 /* DestroyWidget --
  * 	Main widget destructor; called from <DestroyNotify> event handler.
  */
@@ -239,7 +230,7 @@ DestroyWidget(WidgetCore *corePtr)
 	/* NB: this can reenter the interpreter via a command traces */
 	Tcl_DeleteCommandFromToken(corePtr->interp, cmd);
     }
-    Tcl_EventuallyFree(corePtr, (Tcl_FreeProc *) FreeWidget);
+    Tcl_EventuallyFree(corePtr, TCL_DYNAMIC);
 }
 
 /*

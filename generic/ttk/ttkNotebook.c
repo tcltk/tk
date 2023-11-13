@@ -135,9 +135,11 @@ typedef struct
     Ttk_Padding 	padding;	/* External padding */
 } NotebookStyle;
 
-static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
+static void NotebookStyleOptions(
+    Notebook *nb, NotebookStyle *nbstyle, Tk_Window tkwin)
 {
     Tcl_Obj *objPtr;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     nbstyle->tabPosition = TTK_PACK_TOP | TTK_STICK_W;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabposition", 0)) != 0) {
@@ -159,6 +161,13 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPlacement);
     }
 
+    /* Save the stick bit for later.  One of the values
+     * TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
+     */
+    if (mainInfoPtr != NULL) {
+	mainInfoPtr->ttkNbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
+    }
+
     /* Compute tabOrient as function of tabPlacement:
      */
     if (nbstyle->tabPlacement & (TTK_PACK_LEFT|TTK_PACK_RIGHT)) {
@@ -169,12 +178,13 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabmargins", 0)) != 0) {
-	Ttk_GetBorderFromObj(NULL, objPtr, &nbstyle->tabMargins);
+	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr,
+	    &nbstyle->tabMargins);
     }
 
     nbstyle->padding = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-padding", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL,nb->core.tkwin,objPtr,&nbstyle->padding);
+	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr, &nbstyle->padding);
     }
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
@@ -385,6 +395,7 @@ static void TabrowSize(
 static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 {
     Notebook *nb = (Notebook *)clientData;
+    Tk_Window nbwin = nb->core.tkwin;
     NotebookStyle nbstyle;
     Ttk_Padding padding;
     Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
@@ -393,7 +404,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 	tabrowWidth = 0, tabrowHeight = 0;
     Tcl_Size i;
 
-    NotebookStyleOptions(nb, &nbstyle);
+    NotebookStyleOptions(nb, &nbstyle, nbwin);
 
     /* Compute max requested size of all content windows:
      */
@@ -497,7 +508,7 @@ static void PlaceTabs(
 	    Tcl_Obj *expandObj = Ttk_QueryOption(tabLayout,"-expand",tabState);
 
 	    if (expandObj) {
-		Ttk_GetBorderFromObj(NULL, expandObj, &expand);
+		Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, expandObj, &expand);
 	    }
 
 	    tab->parcel =
@@ -507,6 +518,23 @@ static void PlaceTabs(
 		    expand);
 	}
     }
+}
+
+/*
+ * NotebookPlaceContent --
+ * 	Set the position and size of a child widget
+ * 	based on the current client area and content window options:
+ */
+static void NotebookPlaceContent(Notebook* nb, Tcl_Size index)
+{
+    Tab* tab = (Tab*)Ttk_ContentData(nb->notebook.mgr, index);
+    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
+    Ttk_Box box =
+	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
+	    Tk_ReqWidth(window), Tk_ReqHeight(window), tab->sticky);
+
+    Ttk_PlaceContent(nb->notebook.mgr, index,
+	box.x, box.y, box.width, box.height);
 }
 
 /* NotebookDoLayout --
@@ -524,8 +552,9 @@ static void NotebookDoLayout(void *recordPtr)
     Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
     Ttk_Box tabrowBox;
     NotebookStyle nbstyle;
+    Tcl_Size currentIndex = nb->notebook.currentIndex;
 
-    NotebookStyleOptions(nb, &nbstyle);
+    NotebookStyleOptions(nb, &nbstyle, nbwin);
 
     /* Notebook internal padding:
      */
@@ -563,24 +592,12 @@ static void NotebookDoLayout(void *recordPtr)
     if (cavity.height <= 0) cavity.height = 1;
     if (cavity.width <= 0) cavity.width = 1;
 
-    nb->notebook.clientArea = cavity;
-}
-
-/*
- * NotebookPlaceContent --
- * 	Set the position and size of a child widget
- * 	based on the current client area and content window options:
- */
-static void NotebookPlaceContent(Notebook *nb, Tcl_Size index)
-{
-    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
-    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
-    Ttk_Box box =
-	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
-	    Tk_ReqWidth(window), Tk_ReqHeight(window),tab->sticky);
-
-    Ttk_PlaceContent(nb->notebook.mgr, index,
-	box.x, box.y, box.width, box.height);
+    if (!TtkBoxEqual(nb->notebook.clientArea, cavity)) {
+	nb->notebook.clientArea = cavity;
+	if (currentIndex >= 0) {
+	    NotebookPlaceContent(nb, currentIndex);
+	}
+    }
 }
 
 /* NotebookPlaceContents --
