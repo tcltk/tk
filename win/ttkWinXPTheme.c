@@ -728,12 +728,17 @@ static Ttk_ElementSpec PbarElementSpec =
  * 	we can use the same statemap no matter what the partId.
  */
 
-extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
-
 static void TabElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
+
     GenericElementSize(clientData, elementRecord, tkwin,
     	widthPtr, heightPtr, paddingPtr);
 
@@ -759,10 +764,16 @@ static void TabElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     ElementData *elementData = (ElementData *)clientData;
     int partId = elementData->info->partId;
     int isSelected = (state & TTK_STATE_SELECTED);
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     /*
      * Correct the members of b if needed
