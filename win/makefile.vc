@@ -523,7 +523,7 @@ $(WISHSCRIPTZIP): $(TKSCRIPTZIP)
 	@$(TCLSH) <<
 cd {$(OUT_DIR)}
 file delete -force {$@}
-zipfs mount mnt "$(TCLSCRIPTZIP:\=/)"
+zipfs mount "$(TCLSCRIPTZIP:\=/)" mnt
 file copy [file join [zipfs root] mnt tcl_library] "$(LIBTKVFS:\=/)"
 zipfs mkzip {$@} {$(LIBTKVFS)} {$(LIBTKVFS)}
 <<

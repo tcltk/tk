@@ -85,7 +85,7 @@ set printData {
     </svg>
 }
 
-proc createImages {} {
+proc images {arg} {
     set fgColor [ttk::style lookup . -foreground {} black]
     lassign [winfo rgb . $fgColor] r g b
     set fgColor [format "#%02x%02x%02x" \
@@ -100,15 +100,22 @@ proc createImages {} {
 	    set data [string replace $data $idx1 $idx2 $fgColor]
 	}
 
-	image create photo ::img::$action -format $::tk::svgFmt -data $data
+	switch $arg {
+	    create {
+		image create photo ::img::$action -format $::tk::svgFmt \
+			-data $data
+	    }
+	    configure { ::img::$action configure -data $data }
+	}
     }
 }
 
-createImages
+images create
+set mainClass [winfo class .]
 foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
-    bind [winfo class .] $event { createImages }
+    bind $mainClass $event { images configure }
 }
-unset event
+unset mainClass event
 
 image create photo ::img::delete -format $::tk::svgFmt -data {
     <?xml version="1.0" encoding="UTF-8"?>

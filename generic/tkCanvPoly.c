@@ -1741,7 +1741,7 @@ GetPolygonIndex(
 	const char *p;
 
 	p = string+1;
-	rest = strchr(p, ',');
+	rest = strchr((char *)p, ',');
 	*rest = '\0';
 	if (Tcl_GetDouble(NULL, p, &x) != TCL_OK) {
 	    *rest = ',';

@@ -64,9 +64,9 @@ namespace eval ttk::theme::winnative {
 
 	ttk::style configure TScale -groovewidth 3p
 
-	ttk::style configure TNotebook -tabmargins {1.5p 1.5p 1.5p 0}
+	ttk::style configure TNotebook -tabmargins {2 2 2 0}
 	ttk::style configure TNotebook.Tab -padding {2.25p 0.75p} -borderwidth 1
-	ttk::style map TNotebook.Tab -expand {selected {1.5p 1.5p 1.5p 0}}
+	ttk::style map TNotebook.Tab -expand {selected {2 2 2 0}}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised

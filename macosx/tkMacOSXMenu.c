@@ -893,14 +893,17 @@ TkpDestroyMenuEntry(
     TKMenu *menu;
     NSInteger index;
 
-    if (mePtr->platformEntryData && mePtr->menuPtr->platformData) {
-	menu = (TKMenu *) mePtr->menuPtr->platformData;
+    if (mePtr->platformEntryData) {
 	menuItem = (NSMenuItem *) mePtr->platformEntryData;
-	index = [menu indexOfItem:menuItem];
+	if (mePtr->menuPtr->platformData) {
+	    menu = (TKMenu *) mePtr->menuPtr->platformData;
+	    index = [menu indexOfItem:menuItem];
 
-	if (index > -1) {
-	    [menu removeItemAtIndex:index];
+	    if (index > -1) {
+		[menu removeItemAtIndex:index];
+	    }
 	}
+	[menuItem setTag:(NSInteger) NULL];
 	[menuItem release];
 	mePtr->platformEntryData = NULL;
     }
@@ -1592,7 +1595,7 @@ GenerateMenuSelectEvent(
     if (menuPtr) {
 	Tcl_Size index = [menu tkIndexOfItem:menuItem];
 
-	if (index == TCL_INDEX_NONE || index >= menuPtr->numEntries ||
+	if (index < 0 || index >= menuPtr->numEntries ||
 		(menuPtr->entries[index])->state == ENTRY_DISABLED) {
 	    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 	} else {

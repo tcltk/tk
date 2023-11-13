@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     tags:
     - "core-**"
@@ -38,11 +39,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev
+          sudo apt-get install libxss-dev libxft-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV
@@ -142,11 +143,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install libxss-dev xvfb libicu-dev
+          sudo apt-get install libxss-dev libxft-dev xvfb libicu-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT" >> $GITHUB_ENV

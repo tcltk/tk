@@ -2000,7 +2000,7 @@ WmGridCmd(
 	 * ungridded numbers.
 	 */
 
-	wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+	wmPtr->sizeHintsFlags &= ~PBaseSize;
 	if (wmPtr->width != -1) {
 	    wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		    - wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -3863,8 +3863,7 @@ Tk_SetGrid(
 	    && (wmPtr->reqGridHeight == reqHeight)
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
-	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == (PBaseSize|PResizeInc))) {
+	    && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
 	return;
     }
 
@@ -3895,7 +3894,7 @@ Tk_SetGrid(
     wmPtr->reqGridHeight = reqHeight;
     wmPtr->widthInc = widthInc;
     wmPtr->heightInc = heightInc;
-    wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
+    wmPtr->sizeHintsFlags |= PBaseSize;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
@@ -3954,7 +3953,7 @@ Tk_UnsetGrid(
     }
 
     wmPtr->gridWin = NULL;
-    wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+    wmPtr->sizeHintsFlags &= ~PBaseSize;
     if (wmPtr->width != -1) {
 	wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		- wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -4922,7 +4921,7 @@ UpdateSizeHints(
     hintsPtr->max_aspect.x = wmPtr->maxAspect.x;
     hintsPtr->max_aspect.y = wmPtr->maxAspect.y;
     hintsPtr->win_gravity = wmPtr->gravity;
-    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize;
+    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize | PResizeInc;
 
     /*
      * If the window isn't supposed to be resizable, then set the minimum and

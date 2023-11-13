@@ -3739,7 +3739,7 @@ WmGridCmd(
 	 * ungridded numbers.
 	 */
 
-	wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+	wmPtr->sizeHintsFlags &= ~PBaseSize;
 	if (wmPtr->width != -1) {
 	    wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		    - wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -5716,8 +5716,7 @@ Tk_SetGrid(
 	    && (wmPtr->reqGridHeight == reqHeight)
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
-	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == (PBaseSize|PResizeInc))) {
+	    && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
 	return;
     }
 
@@ -5748,7 +5747,7 @@ Tk_SetGrid(
     wmPtr->reqGridHeight = reqHeight;
     wmPtr->widthInc = widthInc;
     wmPtr->heightInc = heightInc;
-    wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
+    wmPtr->sizeHintsFlags |= PBaseSize;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
 	wmPtr->flags |= WM_UPDATE_PENDING;
@@ -5799,7 +5798,7 @@ Tk_UnsetGrid(
     }
 
     wmPtr->gridWin = NULL;
-    wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+    wmPtr->sizeHintsFlags &= ~PBaseSize;
     if (wmPtr->width != -1) {
 	wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		- wmPtr->reqGridWidth)*wmPtr->widthInc;

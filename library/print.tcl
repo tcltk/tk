@@ -24,15 +24,24 @@ namespace eval ::tk::print {
     #    Full filename for created file
     #
     proc makeTempFile {filename {contents ""}} {
-	set f [file tempfile filename $filename]
+	set dumpfile [file join /tmp rawprint.txt]
+	set tmpfile [file join /tmp $filename]
+	set f [open $dumpfile w]
 	try {
 	    puts -nonewline $f $contents
-	    return $filename
 	} finally {
 	    close $f
+	    if {[file extension $filename] == ".ps"} {
+		#don't apply formatting to PostScript
+		file rename -force $dumpfile $tmpfile
+	    } else {
+	    #Make text fixed width for improved printed output
+		exec fmt -w 75 $dumpfile > $tmpfile
+	    }
+	    return $tmpfile
 	}
     }
-
+  
     if {[tk windowingsystem] eq "win32"} {
 	variable printer_name
 	variable copies
@@ -957,16 +966,10 @@ proc ::tk::print {w} {
 	    tailcall ::tk::print::_print $w
 	}
 	"Canvas,aqua" {
-	    set psfile [::tk::print::makeTempFile tk_canvas.ps]
-	    try {
-		$w postscript -file $psfile
-		set printfile [::tk::print::makePDF $psfile tk_canvas.pdf]
-		::tk::print::_print $printfile
-	    } finally {
-		file delete $psfile
-	    }
-	}
-
+	    ::tk::print::_printcanvas $w
+	    set printfile /tmp/tk_canvas.pdf
+	    ::tk::print::_print $printfile
+	} 
 	"Text,win32" {
 	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {Arial 12}
 	}
@@ -976,7 +979,7 @@ proc ::tk::print {w} {
 	"Text,aqua" {
 	    set txtfile [::tk::print::makeTempFile tk_text.txt [$w get 1.0 end]]
 	    try {
-		set printfile [::tk::print::makePDF $txtfile tk_text.pdf]
+		set printfile [::tk::print::makePDF $txtfile [file join /tmp tk_text.pdf]]
 		::tk::print::_print $printfile
 	    } finally {
 		file delete $txtfile
