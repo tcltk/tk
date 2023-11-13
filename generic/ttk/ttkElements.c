@@ -1601,20 +1601,25 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
     {0,TK_OPTION_BOOLEAN,0,0}
 };
 
-extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
-
 static void TabElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     TabElement *tab = (TabElement *)elementRecord;
     int borderWidth = 1;
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     (void)dummy;
     (void)widthPtr;
     (void)heightPtr;
 
     Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
+
     switch (nbTabsStickBit) {
 	default:
 	case TTK_STICK_S:
@@ -1636,6 +1641,8 @@ static void TabElementDraw(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     int highlight = 0;
@@ -1646,6 +1653,10 @@ static void TabElementDraw(
     Display *disp = Tk_Display(tkwin);
     int borderWidth = 1;
     (void)dummy;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     if (state & TTK_STATE_SELECTED) {
 	/*
