@@ -2349,7 +2349,7 @@ puts "font actual {times -12}: [font actual {times -12}]"
 puts "oldsize: $oldsize"
     tk scaling 0.5
 puts "font actual {times -12}: [font actual {times -12}]"
-    expr {([font actual {times -12} -size] / $oldscale * 0.5 - $oldsize) < 0.001}
+    expr {abs([font actual {times -12} -size] / $oldscale * 0.5 - $oldsize) < 0.001}
 } -cleanup {
     tk scaling $oldscale
 } -result 1
