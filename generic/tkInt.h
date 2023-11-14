@@ -723,7 +723,8 @@ typedef struct TkMainInfo {
 				 * Tcl's version of [update] after Tk is shut
 				 * down, in case it's a Tcl_ObjCmdProc2 */
 #endif
-
+    unsigned int ttkNbTabsStickBit;
+    				/* Information used by ttk::notebook. */
 } TkMainInfo;
 
 /*
