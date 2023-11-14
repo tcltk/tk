@@ -545,7 +545,7 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
 typedef struct {
     Tcl_Obj 	*lightColorObj;
     Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*gripCountObj;
+    Tcl_Obj 	*gripSizeObj;
 } GripElement;
 
 static const Ttk_ElementOptionSpec GripElementOptions[] = {
@@ -553,8 +553,8 @@ static const Ttk_ElementOptionSpec GripElementOptions[] = {
 	offsetof(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(GripElement,borderColorObj), DARKEST_COLOR },
-    { "-gripcount", TK_OPTION_PIXELS,
-	offsetof(GripElement,gripCountObj), "5" },
+    { "-gripsize", TK_OPTION_PIXELS,
+	offsetof(GripElement,gripSizeObj), "7.5p" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -567,8 +567,7 @@ static void GripElementSize(
     int gripSize = 0;
     (void)paddingPtr;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripSize);
-    gripSize *= 2;
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = gripSize;
     } else {
@@ -589,8 +588,7 @@ static void GripElementDraw(
     int i;
     (void)state;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripSize);
-    gripSize *= 2;
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	int x = b.x + (b.width - gripSize) / 2;
@@ -633,7 +631,7 @@ typedef struct { /* Common element record for scrollbar elements */
     Tcl_Obj 	*darkColorObj;
     Tcl_Obj 	*arrowColorObj;
     Tcl_Obj 	*arrowSizeObj;
-    Tcl_Obj 	*gripCountObj;
+    Tcl_Obj 	*gripSizeObj;
     Tcl_Obj 	*sliderlengthObj;
 } ScrollbarElement;
 
@@ -654,8 +652,8 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
-    { "-gripcount", TK_OPTION_PIXELS,
-	offsetof(ScrollbarElement,gripCountObj), "5" },
+    { "-gripsize", TK_OPTION_PIXELS,
+	offsetof(ScrollbarElement,gripSizeObj), "7.5p" },
     { "-sliderlength", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,sliderlengthObj), "30" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -720,8 +718,7 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
-    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripCountObj, &gripSize);
-    gripSize *= 2;
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripSizeObj, &gripSize);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 
@@ -959,18 +956,22 @@ static const Ttk_ElementOptionSpec NotebookElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
-
 static void TabElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2;
     (void)dummy;
     (void)elementRecord;
     (void)tkwin;
     (void)widthPtr;
     (void)heightPtr;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
     switch (nbTabsStickBit) {
@@ -994,14 +995,20 @@ static void TabElementDraw(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
+    int borderWidth = 2, delta = 0;
     NotebookElement *tab = (NotebookElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     Display *display = Tk_Display(tkwin);
-    int borderWidth = 2, delta = 0;
     int x1, y1, x2, y2;
     GC gc;
     const int w = WIN32_XDRAWLINE_HACK;
     (void)dummy;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     if (state & TTK_STATE_SELECTED) {
 	delta = borderWidth;
