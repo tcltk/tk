@@ -545,7 +545,7 @@ static const Ttk_ElementSpec IndicatorElementSpec = {
 typedef struct {
     Tcl_Obj 	*lightColorObj;
     Tcl_Obj 	*borderColorObj;
-    Tcl_Obj 	*gripSizeObj;
+    Tcl_Obj 	*gripCountObj;
 } GripElement;
 
 static const Ttk_ElementOptionSpec GripElementOptions[] = {
@@ -553,8 +553,8 @@ static const Ttk_ElementOptionSpec GripElementOptions[] = {
 	offsetof(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(GripElement,borderColorObj), DARKEST_COLOR },
-    { "-gripsize", TK_OPTION_PIXELS,
-	offsetof(GripElement,gripSizeObj), "7.5p" },
+    { "-gripcount", TK_OPTION_PIXELS,
+	offsetof(GripElement,gripCountObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -567,7 +567,8 @@ static void GripElementSize(
     int gripSize = 0;
     (void)paddingPtr;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripSize);
+    gripSize *= 2;
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = gripSize;
     } else {
@@ -588,7 +589,8 @@ static void GripElementDraw(
     int i;
     (void)state;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripSizeObj, &gripSize);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripSize);
+    gripSize *= 2;
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	int x = b.x + (b.width - gripSize) / 2;
@@ -631,7 +633,7 @@ typedef struct { /* Common element record for scrollbar elements */
     Tcl_Obj 	*darkColorObj;
     Tcl_Obj 	*arrowColorObj;
     Tcl_Obj 	*arrowSizeObj;
-    Tcl_Obj 	*gripSizeObj;
+    Tcl_Obj 	*gripCountObj;
     Tcl_Obj 	*sliderlengthObj;
 } ScrollbarElement;
 
@@ -652,8 +654,8 @@ static const Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 	offsetof(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
-    { "-gripsize", TK_OPTION_PIXELS,
-	offsetof(ScrollbarElement,gripSizeObj), "7.5p" },
+    { "-gripcount", TK_OPTION_PIXELS,
+	offsetof(ScrollbarElement,gripCountObj), "5" },
     { "-sliderlength", TK_OPTION_PIXELS,
 	offsetof(ScrollbarElement,sliderlengthObj), "30" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -718,7 +720,8 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
-    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripSizeObj, &gripSize);
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripCountObj, &gripSize);
+    gripSize *= 2;
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 
