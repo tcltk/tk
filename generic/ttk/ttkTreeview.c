@@ -3245,6 +3245,50 @@ static int TreeviewDetachCommand(
     return TCL_OK;
 }
 
+/* Is an item detached? The root is never detached. */
+static int IsDetached(Treeview *tv, TreeItem *item)
+{
+	return item->next == NULL && item->prev == NULL &&
+			item->parent == NULL && item != tv->tree.root;
+}
+
+/* + $tv detached ?$item? --
+ * 	List detached items (in arbitrary order) or query the detached state of
+ * 	$item.
+ */
+static int TreeviewDetachedCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item;
+
+    if (objc == 2) {
+	/* List detached items */
+	Tcl_HashSearch search;
+	Tcl_HashEntry *entryPtr = Tcl_FirstHashEntry(&tv->tree.items, &search);
+	Tcl_Obj *objPtr = Tcl_NewObj();
+
+	while (entryPtr != NULL) {
+	    item = Tcl_GetHashValue(entryPtr);
+	    entryPtr = Tcl_NextHashEntry(&search);
+	    if (IsDetached(tv, item)) {
+		Tcl_ListObjAppendElement(NULL, objPtr, ItemID(tv, item));
+	    }
+	}
+	Tcl_SetObjResult(interp, objPtr);
+	return TCL_OK;
+    } else if (objc == 3) {
+	/* Query; the root is never reported as detached */
+	if (!(item = FindItem(interp, tv, objv[2]))) {
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(IsDetached(tv, item)));
+	return TCL_OK;
+    } else {
+	Tcl_WrongNumArgs(interp, 2, objv, "?item?");
+	return TCL_ERROR;
+    }
+}
 /* + $tv delete $items --
  * 	Delete each item in $items.
  *
@@ -4353,6 +4397,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "delete", 	TreeviewDeleteCommand,0 },
     { "detach", 	TreeviewDetachCommand,0 },
+    { "detached", 	TreeviewDetachedCommand,0 },
     { "drag",   	TreeviewDragCommand,0 },
     { "drop",   	TreeviewDropCommand,0 },
     { "exists", 	TreeviewExistsCommand,0 },
