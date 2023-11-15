@@ -679,10 +679,7 @@ EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp,
 /* 211 */
 EXTERN int		Tk_InitOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_OptionTable optionToken, Tk_Window tkwin);
-/* 212 */
-EXTERN void		Tk_MainEx(Tcl_Size argc, char **argv,
-				Tcl_AppInitProc *appInitProc,
-				Tcl_Interp *interp);
+/* Slot 212 is reserved */
 /* 213 */
 EXTERN void		Tk_RestoreSavedOptions(Tk_SavedOptions *savePtr);
 /* 214 */
@@ -1149,7 +1146,7 @@ typedef struct TkStubs {
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
     int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
-    TCL_DEPRECATED_API("Don't use this function in a stub-enabled extension") void (*tk_MainEx) (Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
+    void (*reserved212)(void);
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
     int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Size objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
@@ -1666,8 +1663,7 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_GetScrollInfoObj) /* 210 */
 #define Tk_InitOptions \
 	(tkStubsPtr->tk_InitOptions) /* 211 */
-#define Tk_MainEx \
-	(tkStubsPtr->tk_MainEx) /* 212 */
+/* Slot 212 is reserved */
 #define Tk_RestoreSavedOptions \
 	(tkStubsPtr->tk_RestoreSavedOptions) /* 213 */
 #define Tk_SetOptions \
@@ -1845,6 +1841,8 @@ extern const TkStubs *tkStubsPtr;
 #   undef Tk_ClipDrawableToRect
 #endif
 
+EXTERN void  Tk_MainEx(Tcl_Size argc, char **argv,
+	Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #if defined(_WIN32) && defined(UNICODE)
 #   define Tk_MainEx Tk_MainExW
     EXTERN void Tk_MainExW(Tcl_Size argc, wchar_t **argv,

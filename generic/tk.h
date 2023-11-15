@@ -268,15 +268,6 @@ typedef struct Tk_ObjCustomOption {
 } Tk_ObjCustomOption;
 
 /*
- * Macro to use to fill in "offset" fields of the Tk_OptionSpec structure.
- * Computes number of bytes from beginning of structure to a given field.
- */
-
-#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9) && !defined(BUILD_tk)
-#   define Tk_Offset(type, field) ((int) offsetof(type, field))
-#endif
-
-/*
  * The following two structures are used for error handling. When config
  * options are being modified, the old values are saved in a Tk_SavedOptions
  * structure. If an error occurs, then the contents of the structure can be

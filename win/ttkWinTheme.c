@@ -742,8 +742,8 @@ static void TabElementSize(
     TCL_UNUSED(void *),
     void *elementRecord,
     Tk_Window tkwin,
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     Ttk_Padding *paddingPtr)
 {
     TabElement *tab = (TabElement *)elementRecord;

@@ -34,7 +34,7 @@ extern const char *TtkInitializeStubs(
 /* !BEGIN!: Do not edit below this line. */
 
 #define TTK_STUBS_EPOCH 0
-#define TTK_STUBS_REVISION 31
+#define TTK_STUBS_REVISION 30
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,14 +138,6 @@ TTKAPI Ttk_Box		Ttk_PlaceBox(Ttk_Box *cavity, int w, int h,
 				Ttk_Side side, Ttk_Sticky sticky);
 /* 35 */
 TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
-/* Slot 36 is reserved */
-/* Slot 37 is reserved */
-/* Slot 38 is reserved */
-/* Slot 39 is reserved */
-/* 40 */
-TTK_DEPRECATED("")
-int			Ttk_GetOrientFromObj(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, int *orient);
 
 typedef struct TtkStubs {
     int magic;
@@ -189,11 +181,6 @@ typedef struct TtkStubs {
     Ttk_Box (*ttk_ExpandBox) (Ttk_Box b, Ttk_Padding p); /* 33 */
     Ttk_Box (*ttk_PlaceBox) (Ttk_Box *cavity, int w, int h, Ttk_Side side, Ttk_Sticky sticky); /* 34 */
     Tcl_Obj * (*ttk_NewBoxObj) (Ttk_Box box); /* 35 */
-    void (*reserved36)(void);
-    void (*reserved37)(void);
-    void (*reserved38)(void);
-    void (*reserved39)(void);
-    TCL_DEPRECATED_API("") int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *orient); /* 40 */
 } TtkStubs;
 
 extern const TtkStubs *ttkStubsPtr;
@@ -274,12 +261,6 @@ extern const TtkStubs *ttkStubsPtr;
 	(ttkStubsPtr->ttk_PlaceBox) /* 34 */
 #define Ttk_NewBoxObj \
 	(ttkStubsPtr->ttk_NewBoxObj) /* 35 */
-/* Slot 36 is reserved */
-/* Slot 37 is reserved */
-/* Slot 38 is reserved */
-/* Slot 39 is reserved */
-#define Ttk_GetOrientFromObj \
-	(ttkStubsPtr->ttk_GetOrientFromObj) /* 40 */
 
 #endif /* defined(USE_TTK_STUBS) */
 

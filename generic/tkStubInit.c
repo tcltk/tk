@@ -39,7 +39,6 @@ MODULE_SCOPE const TkStubs tkStubs;
  * Remove macro that might interfere with the definition below.
  */
 
-#undef Tk_MainEx
 #undef Tk_FreeXId
 #undef Tk_FreeStyleFromObj
 #undef Tk_GetStyleFromObj
@@ -82,7 +81,6 @@ doNothing(void)
 }
 
 #if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
-#define Tk_MainEx 0
 #define Tk_FreeXId 0
 #define Tk_FreeStyleFromObj 0
 #define Tk_GetStyleFromObj 0
@@ -1257,7 +1255,7 @@ const TkStubs tkStubs = {
     Tk_GetReliefFromObj, /* 209 */
     Tk_GetScrollInfoObj, /* 210 */
     Tk_InitOptions, /* 211 */
-    Tk_MainEx, /* 212 */
+    0, /* 212 */
     Tk_RestoreSavedOptions, /* 213 */
     Tk_SetOptions, /* 214 */
     Tk_InitConsoleChannels, /* 215 */

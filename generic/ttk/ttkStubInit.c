@@ -8,10 +8,6 @@
 
 MODULE_SCOPE const TtkStubs ttkStubs;
 
-#if defined(TK_NO_DEPRECATED) || TK_MAJOR_VERSION > 8
-#define Ttk_GetOrientFromObj 0
-#endif
-
 #ifdef __GNUC__
 /*
  * The rest of this file shouldn't warn about deprecated functions; they're
@@ -63,11 +59,6 @@ const TtkStubs ttkStubs = {
     Ttk_ExpandBox, /* 33 */
     Ttk_PlaceBox, /* 34 */
     Ttk_NewBoxObj, /* 35 */
-    0, /* 36 */
-    0, /* 37 */
-    0, /* 38 */
-    0, /* 39 */
-    Ttk_GetOrientFromObj, /* 40 */
 };
 
 /* !END!: Do not edit above this line. */
