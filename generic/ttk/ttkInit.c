@@ -55,16 +55,6 @@ const char *const ttkOrientStrings[] = {
     "horizontal", "vertical", NULL
 };
 
-#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
-int Ttk_GetOrientFromObj(
-    Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr)
-{
-    *resultPtr = TTK_ORIENT_HORIZONTAL;
-    return Tcl_GetIndexFromObj(interp, objPtr, ttkOrientStrings,
-	    "orientation", 0, resultPtr);
-}
-#endif
-
 int TtkGetOrientFromObj(
     Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *resultPtr)
 {

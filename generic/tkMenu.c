@@ -855,12 +855,11 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	if (index < 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewObj());
-	} else
-#endif
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	} else {
+	    Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	}
 	break;
     }
     case MENU_INSERT:
@@ -2186,12 +2185,6 @@ GetMenuIndex(
 	*indexPtr = TCL_INDEX_NONE;
 	return TCL_OK;
     }
-#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
-    if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
-	*indexPtr = TCL_INDEX_NONE;
-	return TCL_OK;
-    }
-#endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
