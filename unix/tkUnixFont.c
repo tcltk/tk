@@ -2080,7 +2080,7 @@ FontMapLoadPage(
 	int hi, lo;
 
 	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
-		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
+		TCL_ENCODING_PROFILE_STRICT, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
 	}
@@ -2354,7 +2354,7 @@ CanUseFallback(
 	    numEncodings++;
 	}
 	Tcl_UtfToExternal(NULL, encoding, src, srcLen,
-		TCL_ENCODING_STOPONERROR, NULL, dst, sizeof(dst), &srcRead,
+		TCL_ENCODING_PROFILE_STRICT, NULL, dst, sizeof(dst), &srcRead,
 		&dstWrote, NULL);
 	if (dstWrote == 0) {
 	    goto crossout;
