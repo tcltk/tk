@@ -909,7 +909,7 @@ Tk_MeasureChars(
 	for (p = start; p < end; ) {
 	    next = p + TkUtfToUniChar(p, &ch);
 	    Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
-		    (int) (next - p), 0, NULL, buf, sizeof(buf), NULL,
+		    (int) (next - p), TCL_ENCODING_PROFILE_TCL8, NULL, buf, sizeof(buf), NULL,
 		    &dstWrote, NULL);
 	    Tcl_DStringAppend(&runString,buf,dstWrote);
 	    size.cx = 0;

@@ -153,6 +153,7 @@ typedef const char *Tk_Uid;
 #   endif
 #   define TCL_SIZE_MAX INT_MAX
 #   define TCL_SIZE_MODIFIER ""
+#   define TCL_ENCODING_PROFILE_TCL8     0x01000000
 #endif
 
 /*
