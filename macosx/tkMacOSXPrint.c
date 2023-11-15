@@ -32,7 +32,7 @@ CFStringRef urlFile = NULL;
 int			StartPrint(void *clientData, Tcl_Interp * interp,
 			    int objc, Tcl_Obj * const objv[]);
 OSStatus	FinishPrint(NSString *file, int buttonValue);
-int   		MakePDF(void *clientData, Tcl_Interp *ip, 
+int   		MakePDF(void *clientData, Tcl_Interp *ip,
 				int objc,  Tcl_Obj *const objv[]);
 int			MacPrint_Init(Tcl_Interp * interp);
 
@@ -362,7 +362,7 @@ int MakePDF
     }
 
     /*Get window and render to PDF.*/
- 
+
     path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
     if (path == NULL) {
 	return TCL_ERROR;
@@ -375,7 +375,7 @@ int MakePDF
     height = Tk_Height(path);
 
     pdfData = CreatePDFFromDrawableRect(d, 0, 0, width, height);
- 
+
     NSData *viewData = (NSData*)pdfData;
     [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
     return TCL_OK;

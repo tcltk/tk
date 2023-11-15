@@ -904,7 +904,7 @@ Tk_MeasureChars(
 	    } else {
 		lastSubFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 0, NULL,
+		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, TCL_ENCODING_PROFILE_TCL8, NULL,
 			(char *)&buf[0].byte1, sizeof(buf), NULL, &dstWrote, NULL);
 		if (familyPtr->isTwoByteFont) {
 		    newX += XTextWidth16(lastSubFontPtr->fontStructPtr,
