@@ -679,7 +679,7 @@ CreateCGImageFromDrawableRect(
  *	Extract PDF data from a MacOSX drawable.
  *
  * Results:
- *	Returns a CFDataRef that can be written to a file. 
+ *	Returns a CFDataRef that can be written to a file.
  *
  *      NOTE: The x,y coordinates should be relative to a coordinate system
  *      with origin at the bottom left as used by NSView,  not top left
@@ -706,9 +706,9 @@ CreatePDFFromDrawableRect(
 	return NULL;
     }
     NSRect bounds, viewSrcRect;
-	
+
     /*
-     * Get the child window area in NSView coordinates 
+     * Get the child window area in NSView coordinates
      * (origin at bottom left).
      */
 
