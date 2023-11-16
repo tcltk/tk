@@ -1500,8 +1500,7 @@ typedef struct Tk_ElementSpec {
  *----------------------------------------------------------------------
  *
  * The definitions below provide backward compatibility for functions and
- * types related to event handling that used to be in Tk but have moved to
- * Tcl.
+ * types that used to be in Tk but have moved to Tcl.
  *
  *----------------------------------------------------------------------
  */
@@ -1555,16 +1554,6 @@ typedef Tcl_Size (Tk_SelectionProc) (void *clientData, Tcl_Size offset,
  */
 
 #include "tkDecls.h"
-
-/*
- *----------------------------------------------------------------------
- *
- * Allow users to say that they don't want to alter their source to add extra
- * arguments to Tk_PhotoPutBlock() et al.
- *
- * This goes after the inclusion of the stubbed-decls so that the declarations
- * of what is actually there can be correct.
- */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
