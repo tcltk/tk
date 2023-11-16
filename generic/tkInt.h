@@ -1469,7 +1469,6 @@ MODULE_SCOPE int	TkUnsupported1ObjCmd(void *clientData,
 MODULE_SCOPE int SquareObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
-MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #else
