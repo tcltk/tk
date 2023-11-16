@@ -305,14 +305,6 @@ Tktest_Init(
     }
 
     /*
-     *	Enable testing of legacy interfaces.
-     */
-
-    if (TkOldTestInit(interp) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    /*
      * And finally add any platform specific test commands.
      */
 
