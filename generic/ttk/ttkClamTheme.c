@@ -717,7 +717,7 @@ static void ThumbElementDraw(
     /*
      * Draw grip:
      */
-    TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->gripSizeObj, &gripSize);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
@@ -763,7 +763,7 @@ static void SliderElementSize(
     (void)paddingPtr;
 
     length = thickness = SCROLLBAR_THICKNESS;
-    TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->sliderlengthObj, &length);
     if (orient == TTK_ORIENT_VERTICAL) {

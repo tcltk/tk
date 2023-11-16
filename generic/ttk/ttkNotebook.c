@@ -1123,10 +1123,9 @@ static int NotebookIdentifyCommand(
 	    }
 	    break;
 	case IDENTIFY_TAB:
-#if !defined TK_NO_DEPRECATED && (TCL_MAJOR_VERSION < 9)
-	    if (tabIndex >= 0)
-#endif
-	    Tcl_SetObjResult(interp, TkNewIndexObj(tabIndex));
+	    if (tabIndex >= 0) {
+		Tcl_SetObjResult(interp, TkNewIndexObj(tabIndex));
+	    }
 	    break;
     }
     return TCL_OK;
@@ -1151,10 +1150,9 @@ static int NotebookIndexCommand(
 
     status = FindTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-	if (index >= 0)
-#endif
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	if (index >= 0) {
+	    Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	}
     }
 
     return status;
