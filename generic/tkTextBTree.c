@@ -9088,7 +9088,7 @@ ResizeLengths(
 
     if (data->lengths == data->lengthsBuf) {
 	data->lengths = (int32_t *)ckalloc(bufSize);
-	memcpy(data->lengths, data->lengthsBuf, bufSize);
+	memcpy(data->lengths, data->lengthsBuf, MIN(sizeof(data->lengthsBuf), bufSize));
     } else {
 	data->lengths = (int32_t *)ckrealloc(data->lengths, bufSize);
     }
