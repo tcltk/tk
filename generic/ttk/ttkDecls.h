@@ -13,11 +13,7 @@ extern const char *TtkInitializeStubs(
 	interp, TTK_VERSION, TTK_STUBS_EPOCH, TTK_STUBS_REVISION)
 #else
 
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-#   define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "Ttk", TTK_VERSION, 0, NULL)
-#else
-#   define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "ttk", TTK_VERSION, 0, NULL)
-#endif
+#define Ttk_InitStubs(interp) Tcl_PkgRequireEx(interp, "ttk", TTK_VERSION, 0, NULL)
 
 #endif
 
@@ -34,7 +30,7 @@ extern const char *TtkInitializeStubs(
 /* !BEGIN!: Do not edit below this line. */
 
 #define TTK_STUBS_EPOCH 0
-#define TTK_STUBS_REVISION 30
+#define TTK_STUBS_REVISION 31
 
 #ifdef __cplusplus
 extern "C" {
@@ -138,6 +134,13 @@ TTKAPI Ttk_Box		Ttk_PlaceBox(Ttk_Box *cavity, int w, int h,
 				Ttk_Side side, Ttk_Sticky sticky);
 /* 35 */
 TTKAPI Tcl_Obj *	Ttk_NewBoxObj(Ttk_Box box);
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* Slot 38 is reserved */
+/* Slot 39 is reserved */
+/* 40 */
+TTKAPI int		Ttk_GetOrientFromObj(Tcl_Interp *interp,
+				Tcl_Obj *objPtr, Ttk_Orient *orient);
 
 typedef struct TtkStubs {
     int magic;
@@ -181,6 +184,11 @@ typedef struct TtkStubs {
     Ttk_Box (*ttk_ExpandBox) (Ttk_Box b, Ttk_Padding p); /* 33 */
     Ttk_Box (*ttk_PlaceBox) (Ttk_Box *cavity, int w, int h, Ttk_Side side, Ttk_Sticky sticky); /* 34 */
     Tcl_Obj * (*ttk_NewBoxObj) (Ttk_Box box); /* 35 */
+    void (*reserved36)(void);
+    void (*reserved37)(void);
+    void (*reserved38)(void);
+    void (*reserved39)(void);
+    int (*ttk_GetOrientFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *orient); /* 40 */
 } TtkStubs;
 
 extern const TtkStubs *ttkStubsPtr;
@@ -261,6 +269,12 @@ extern const TtkStubs *ttkStubsPtr;
 	(ttkStubsPtr->ttk_PlaceBox) /* 34 */
 #define Ttk_NewBoxObj \
 	(ttkStubsPtr->ttk_NewBoxObj) /* 35 */
+/* Slot 36 is reserved */
+/* Slot 37 is reserved */
+/* Slot 38 is reserved */
+/* Slot 39 is reserved */
+#define Ttk_GetOrientFromObj \
+	(ttkStubsPtr->ttk_GetOrientFromObj) /* 40 */
 
 #endif /* defined(USE_TTK_STUBS) */
 

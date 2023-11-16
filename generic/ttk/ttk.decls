@@ -139,3 +139,12 @@ declare 34 {
 declare 35 {
     Tcl_Obj *Ttk_NewBoxObj(Ttk_Box box)
 }
+
+#
+# Utilities.
+#
+declare 40 {
+    int Ttk_GetOrientFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr, Ttk_Orient *orient)
+}
+
+

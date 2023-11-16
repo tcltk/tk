@@ -303,7 +303,7 @@ static int ProgressbarSize(void *recordPtr, int *widthPtr, int *heightPtr)
     /* Override requested width (height) based on -length and -orient
      */
     Tk_GetPixelsFromObj(NULL, pb->core.tkwin, pb->progress.lengthObj, &length);
-    TtkGetOrientFromObj(NULL, pb->progress.orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, pb->progress.orientObj, &orient);
 
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = length;
@@ -376,7 +376,7 @@ static void ProgressbarDoLayout(void *recordPtr)
 
     Tcl_GetDoubleFromObj(NULL, pb->progress.valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pb->progress.maximumObj, &maximum);
-    TtkGetOrientFromObj(NULL, pb->progress.orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, pb->progress.orientObj, &orient);
 
     if (pbar) {
 	double fraction = value / maximum;

@@ -497,7 +497,7 @@ static void GeneralSeparatorElementDraw(
     SeparatorElement *separator = (SeparatorElement *)elementRecord;
     Ttk_Orient orient;
 
-    TtkGetOrientFromObj(NULL, separator->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, separator->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
 	    HorizontalSeparatorElementDraw(
@@ -1199,7 +1199,7 @@ static void TroughElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->grooveWidthObj, &grooveWidth);
     Tk_GetReliefFromObj(NULL, troughPtr->reliefObj, &relief);
-    TtkGetOrientFromObj(NULL, troughPtr->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, troughPtr->orientObj, &orient);
 
     if (grooveWidth > 0 && grooveWidth < b.height && grooveWidth < b.width) {
 	if (orient == TTK_ORIENT_HORIZONTAL) {
@@ -1268,7 +1268,7 @@ static void ThumbElementSize(
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->thicknessObj, &thickness);
-    TtkGetOrientFromObj(NULL, thumb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
 	*widthPtr = thickness;
@@ -1399,7 +1399,7 @@ static void SliderElementDraw(
      * Fill the thin trough area preceding the
      * slider's center with the inner color
      */
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
 	    XFillRectangle(disp, d, gc, troughInnerBox.x, troughInnerBox.y,
@@ -1535,7 +1535,7 @@ static void PbarElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    TtkGetOrientFromObj(NULL, pbar->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
