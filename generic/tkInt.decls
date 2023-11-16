@@ -392,13 +392,13 @@ declare 119 {
     int XUnionRectWithRegion(XRectangle *rect,
 	    Region src, Region dr_return)
 }
-declare 121 aqua {
+declare 121 {
     Pixmap TkpCreateNativeBitmap(Display *display, const void *source)
 }
-declare 122 aqua {
+declare 122 {
     void TkpDefineNativeBitmaps(void)
 }
-declare 124 aqua {
+declare 124 {
     Pixmap TkpGetNativeAppBitmap(Display *display,
 	    const char *name, int *width, int *height)
 }
@@ -624,20 +624,20 @@ interface tkIntPlat
 ################################
 # Unix specific functions
 
-declare 0 x11 {
-    void TkCreateXEventSource(void)
-}
 declare 2 x11 {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
-declare 8 x11 {
+declare 6 x11 {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
+}
+declare 7 x11 {
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 9 x11 {
     void TkWmCleanup(TkDisplay *dispPtr)
 }
-declare 12 x11 {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+declare 37 x11 {
+    void TkCreateXEventSource(void)
 }
 # only needed by tktest:
 declare 38 x11 {
@@ -673,6 +673,9 @@ declare 45 x11 {
 declare 0 win {
     char *TkAlignImageData(XImage *image, int alignment, int bitOrder)
 }
+declare 1 win {
+    void TkWinCancelMouseTimer(void)
+}
 declare 2 win {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
@@ -689,19 +692,16 @@ declare 6 win {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 declare 7 win {
-    void TkpSetCapture(TkWindow *winPtr)
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 8 win {
     void TkpSetCursor(TkpCursor cursor)
 }
 declare 9 win {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+    void TkpSetCapture(TkWindow *winPtr)
 }
 declare 10 win {
     void TkSetPixmapColormap(Pixmap pixmap, Colormap colormap)
-}
-declare 11 win {
-    void TkWinCancelMouseTimer(void)
 }
 declare 12 win {
     void TkWinClipboardRender(TkDisplay *dispPtr, UINT format)
@@ -827,37 +827,39 @@ declare 47 win {
 ################################
 # Aqua specific functions
 
+declare 1 aqua {
+    void TkAboutDlg(void)
+}
 declare 2 aqua {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
 declare 3 aqua {
-    void TkPointerDeadWindow(TkWindow *winPtr)
+    unsigned long TkpGetMS(void)
 }
 declare 4 aqua {
-    void TkpSetCapture(TkWindow *winPtr)
+    void TkPointerDeadWindow(TkWindow *winPtr)
 }
 declare 5 aqua {
     void TkpSetCursor(TkpCursor cursor)
 }
 declare 6 aqua {
-    void TkpWmSetState(TkWindow *winPtr, int state)
+    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 declare 7 aqua {
-    void TkAboutDlg(void)
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 8 aqua {
     unsigned int TkMacOSXButtonKeyState(void)
 }
 declare 9 aqua {
-    void TkMacOSXClearMenubarActive(void)
+    void TkpSetCapture(TkWindow *winPtr)
 }
 declare 10 aqua {
     int TkMacOSXDispatchMenuEvent(int menuID, int index)
 }
-# Now a static function
-# declare 11 aqua {
-#     void TkMacOSXInstallCursor(int resizeOverride)
-# }
+declare 11 aqua {
+    void TkMacOSXClearMenubarActive(void)
+}
 declare 12 aqua {
     void TkMacOSXHandleTearoffMenu(void)
 }
@@ -874,16 +876,6 @@ declare 18 aqua {
     void TkMacOSXHandleMenuSelect(short theMenu, unsigned short theItem,
 	    int optionKeyPressed)
 }
-
-# removed duplicates from tkPlat table(tk.decls)
-#declare 19 aqua {
-#    void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
-#}
-#
-#declare 20 aqua {
-#    void TkMacOSXInitMenus(Tcl_Interp *interp)
-#}
-
 declare 21 aqua {
     void TkMacOSXInvalidateWindow(MacDrawable *macWin, int flag)
 }
@@ -896,10 +888,6 @@ declare 24 aqua {
 declare 25 aqua {
     void TkMacOSXMenuClick(void)
 }
-# The corresponding Unregister was not a stub, and this should be static.
-#declare 26 aqua {
-#    void TkMacOSXRegisterOffScreenWindow(Window window, void *portPtr)
-#}
 declare 27 aqua {
     int TkMacOSXResizable(TkWindow *winPtr)
 }
@@ -915,10 +903,6 @@ declare 31 aqua {
 declare 32 aqua {
     void TkMacOSXUpdateClipRgn(TkWindow *winPtr)
 }
-# This was not implemented.  Perhaps meant to be OffScreen ?
-#declare 33 aqua {
-#    void TkMacOSXUnregisterMacWindow(void *portPtr)
-#}
 declare 34 aqua {
     int TkMacOSXUseMenuID(short macID)
 }
@@ -971,15 +955,9 @@ declare 51 aqua {
 declare 52 aqua {
     void TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag)
 }
-declare 53 aqua {
-    unsigned long TkpGetMS(void)
-}
 # For Canvas3d, requested by Sean Woods
 declare 54 aqua {
     void *TkMacOSXDrawable(Drawable drawable)
-}
-declare 55 aqua {
-    int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 
 ##############################################################################

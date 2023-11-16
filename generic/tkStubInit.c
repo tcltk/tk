@@ -53,8 +53,14 @@ doNothing(void)
 }
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
+#   undef TkpDefineNativeBitmaps
+#   undef TkpCreateNativeBitmap
+#   undef TkpGetNativeAppBitmap
 #   define TkpWillDrawWidget ((int (*)(Tk_Window))(void *)doNothing)
 #   define TkpRedrawWidget ((void (*)(Tk_Window))(void *)doNothing)
+#   define TkpDefineNativeBitmaps ((void (*)())(void *)doNothing)
+#   define TkpCreateNativeBitmap ((Pixmap (*)(Display *, const void *))(void *)doNothing)
+#   define TkpGetNativeAppBitmap ((Pixmap (*)(Display *, const char*, int *, int *))(void *)doNothing)
 #endif
 
 #ifdef _WIN32
@@ -353,37 +359,10 @@ static const TkIntStubs tkIntStubs = {
     XSetRegion, /* 118 */
     XUnionRectWithRegion, /* 119 */
     0, /* 120 */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 121 */
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    0, /* 121 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 121 */ /* Dummy entry for stubs table backwards compatibility */
     TkpCreateNativeBitmap, /* 121 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 122 */
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    0, /* 122 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 122 */ /* Dummy entry for stubs table backwards compatibility */
     TkpDefineNativeBitmaps, /* 122 */
-#endif /* AQUA */
     0, /* 123 */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 124 */
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    0, /* 124 */
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    0, /* 124 */ /* Dummy entry for stubs table backwards compatibility */
     TkpGetNativeAppBitmap, /* 124 */
-#endif /* AQUA */
     0, /* 125 */
     0, /* 126 */
     0, /* 127 */
@@ -454,17 +433,17 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0,
 #if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     TkAlignImageData, /* 0 */
-    0, /* 1 */
+    TkWinCancelMouseTimer, /* 1 */
     TkGenerateActivateEvents, /* 2 */
     TkpGetMS, /* 3 */
     TkPointerDeadWindow, /* 4 */
     TkpPrintWindowId, /* 5 */
     TkpScanWindowId, /* 6 */
-    TkpSetCapture, /* 7 */
+    TkpWmSetState, /* 7 */
     TkpSetCursor, /* 8 */
-    TkpWmSetState, /* 9 */
+    TkpSetCapture, /* 9 */
     TkSetPixmapColormap, /* 10 */
-    TkWinCancelMouseTimer, /* 11 */
+    0, /* 11 */
     TkWinClipboardRender, /* 12 */
     TkWinEmbeddedEventProc, /* 13 */
     TkWinFillRect, /* 14 */
@@ -504,17 +483,17 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     0, /* 0 */
-    0, /* 1 */
+    TkAboutDlg, /* 1 */
     TkGenerateActivateEvents, /* 2 */
-    TkPointerDeadWindow, /* 3 */
-    TkpSetCapture, /* 4 */
+    TkpGetMS, /* 3 */
+    TkPointerDeadWindow, /* 4 */
     TkpSetCursor, /* 5 */
-    TkpWmSetState, /* 6 */
-    TkAboutDlg, /* 7 */
+    TkpScanWindowId, /* 6 */
+    TkpWmSetState, /* 7 */
     TkMacOSXButtonKeyState, /* 8 */
-    TkMacOSXClearMenubarActive, /* 9 */
+    TkpSetCapture, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
-    0, /* 11 */
+    TkMacOSXClearMenubarActive, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
@@ -556,24 +535,23 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
     TkMacOSXSetDrawingEnabled, /* 52 */
-    TkpGetMS, /* 53 */
+    0, /* 53 */
     TkMacOSXDrawable, /* 54 */
-    TkpScanWindowId, /* 55 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-    TkCreateXEventSource, /* 0 */
+    0, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
     0, /* 3 */
     0, /* 4 */
     0, /* 5 */
-    0, /* 6 */
-    0, /* 7 */
-    TkpScanWindowId, /* 8 */
+    TkpScanWindowId, /* 6 */
+    TkpWmSetState, /* 7 */
+    0, /* 8 */
     TkWmCleanup, /* 9 */
     0, /* 10 */
     0, /* 11 */
-    TkpWmSetState, /* 12 */
+    0, /* 12 */
     0, /* 13 */
     0, /* 14 */
     0, /* 15 */
@@ -598,7 +576,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 34 */
     0, /* 35 */
     0, /* 36 */
-    0, /* 37 */
+    TkCreateXEventSource, /* 37 */
     TkpCmapStressed, /* 38 */
     TkpSync, /* 39 */
     TkUnixContainerId, /* 40 */
