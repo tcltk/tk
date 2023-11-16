@@ -545,10 +545,6 @@ typedef struct TkDisplay {
 				 * the display when we no longer have any Tk
 				 * applications using it. */
 
-    /*
-     * The following field were all added for Tk8.3
-     */
-
     Tk_Window warpWindow;
     Tk_Window warpMainwin;	/* For finding the root window for warping
 				 * purposes. */
