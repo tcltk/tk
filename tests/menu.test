@@ -3613,7 +3613,7 @@ test menu-24.3 {TkNewMenuName} -setup {
 } -result {0 {} {} {} {}}
 
 
-test menu-25.1 {TkSetWindowMenuBar} -setup {
+test menu-25.1 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3621,7 +3621,7 @@ test menu-25.1 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.2 {TkSetWindowMenuBar} -setup {
+test menu-25.2 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3629,7 +3629,7 @@ test menu-25.2 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.3 {TkSetWindowMenuBar} -setup {
+test menu-25.3 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3639,7 +3639,7 @@ test menu-25.3 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.4 {TkSetWindowMenuBar} -setup {
+test menu-25.4 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3650,7 +3650,7 @@ test menu-25.4 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.5 {TkSetWindowMenuBar} -setup {
+test menu-25.5 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3662,7 +3662,7 @@ test menu-25.5 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.6 {TkSetWindowMenuBar} -setup {
+test menu-25.6 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3674,7 +3674,7 @@ test menu-25.6 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.7 {TkSetWindowMenuBar} -setup {
+test menu-25.7 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3687,7 +3687,7 @@ test menu-25.7 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.8 {TkSetWindowMenuBar} -setup {
+test menu-25.8 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3701,7 +3701,7 @@ test menu-25.8 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.9 {TkSetWindowMenuBar} -setup {
+test menu-25.9 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3716,7 +3716,7 @@ test menu-25.9 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.10 {TkSetWindowMenuBar} -setup {
+test menu-25.10 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3731,7 +3731,7 @@ test menu-25.10 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.11 {TkSetWindowMenuBar} -setup {
+test menu-25.11 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3746,7 +3746,7 @@ test menu-25.11 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.12 {TkSetWindowMenuBar} -setup {
+test menu-25.12 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3755,7 +3755,7 @@ test menu-25.12 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.13 {TkSetWindowMenuBar} -setup {
+test menu-25.13 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3763,7 +3763,7 @@ test menu-25.13 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.14 {TkSetWindowMenuBar} -setup {
+test menu-25.14 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3772,7 +3772,7 @@ test menu-25.14 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.15 {TkSetWindowMenuBar} -setup {
+test menu-25.15 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3780,7 +3780,7 @@ test menu-25.15 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.16 {TkSetWindowMenuBar} -setup {
+test menu-25.16 {Tk_SetWindowMenuBar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""

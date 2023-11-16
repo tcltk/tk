@@ -549,17 +549,6 @@ typedef struct TkDisplay {
      * The following field were all added for Tk8.3
      */
 
-#if TCL_MAJOR_VERSION < 9
-#if !defined(TK_NO_DEPRECATED)
-    int mouseButtonState;	/* Current mouse button state for this
-				 * display. NOT USED as of 8.6.10 */
-    Window mouseButtonWindow;	/* Window the button state was set in, added
-				 * in Tk 8.4. */
-#else
-    int notused1;
-    XID notused2;
-#endif /* !TK_NO_DEPRECATED */
-#endif
     Tk_Window warpWindow;
     Tk_Window warpMainwin;	/* For finding the root window for warping
 				 * purposes. */
