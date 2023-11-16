@@ -179,12 +179,6 @@ Tk_ScrollbarObjCmd(
     scrollPtr->sliderLast = 0;
     scrollPtr->activeField = 0;
     scrollPtr->activeRelief = TK_RELIEF_RAISED;
-#ifndef TK_NO_DEPRECATED
-    scrollPtr->totalUnits = 0;
-    scrollPtr->windowUnits = 0;
-    scrollPtr->firstUnit = 0;
-    scrollPtr->lastUnit = 0;
-#endif /* TK_NO_DEPRECATED */
     scrollPtr->firstFraction = 0.0;
     scrollPtr->lastFraction = 0.0;
     scrollPtr->cursor = NULL;
@@ -379,16 +373,6 @@ ScrollbarWidgetObjCmd(
 		Tcl_WrongNumArgs(interp, 1, objv, "get");
 	    goto error;
 	}
-#ifndef TK_NO_DEPRECATED
-	if (scrollPtr->flags & OLD_STYLE_COMMANDS) {
-	    resObjs[0] = Tcl_NewWideIntObj(scrollPtr->totalUnits);
-	    resObjs[1] = Tcl_NewWideIntObj(scrollPtr->windowUnits);
-	    resObjs[2] = Tcl_NewWideIntObj(scrollPtr->firstUnit);
-	    resObjs[3] = Tcl_NewWideIntObj(scrollPtr->lastUnit);
-	    Tcl_SetObjResult(interp, Tcl_NewListObj(4, resObjs));
-	    break;
-	}
-#endif /* TK_NO_DEPRECATED */
 	resObjs[0] = Tcl_NewDoubleObj(scrollPtr->firstFraction);
 	resObjs[1] = Tcl_NewDoubleObj(scrollPtr->lastFraction);
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, resObjs));
@@ -440,48 +424,6 @@ ScrollbarWidgetObjCmd(
 	    } else {
 		scrollPtr->lastFraction = last;
 	    }
-#ifndef TK_NO_DEPRECATED
-	    scrollPtr->flags &= ~OLD_STYLE_COMMANDS;
-	} else if (objc == 6) {
-	    int totalUnits, windowUnits, firstUnit, lastUnit;
-	    if (Tcl_GetIntFromObj(interp, objv[2], &totalUnits) != TCL_OK) {
-		goto error;
-	    }
-	    if (totalUnits < 0) {
-		totalUnits = 0;
-	    }
-	    if (Tcl_GetIntFromObj(interp, objv[3], &windowUnits) != TCL_OK) {
-		goto error;
-	    }
-	    if (windowUnits < 0) {
-		windowUnits = 0;
-	    }
-	    if (Tcl_GetIntFromObj(interp, objv[4], &firstUnit) != TCL_OK) {
-		goto error;
-	    }
-	    if (Tcl_GetIntFromObj(interp, objv[5], &lastUnit) != TCL_OK) {
-		goto error;
-	    }
-	    if (totalUnits > 0) {
-		if (lastUnit < firstUnit) {
-		    lastUnit = firstUnit;
-		}
-	    } else {
-		firstUnit = lastUnit = 0;
-	    }
-	    scrollPtr->totalUnits = totalUnits;
-	    scrollPtr->windowUnits = windowUnits;
-	    scrollPtr->firstUnit = firstUnit;
-	    scrollPtr->lastUnit = lastUnit;
-	    if (scrollPtr->totalUnits == 0) {
-		scrollPtr->firstFraction = 0.0;
-		scrollPtr->lastFraction = 1.0;
-	    } else {
-		scrollPtr->firstFraction = ((double) firstUnit)/totalUnits;
-		scrollPtr->lastFraction = ((double) (lastUnit+1))/totalUnits;
-	    }
-	    scrollPtr->flags |= OLD_STYLE_COMMANDS;
-#endif /* !TK_NO_DEPRECATED */
 	} else {
 		Tcl_WrongNumArgs(interp, 1, objv, "set firstFraction lastFraction");
 	    goto error;
