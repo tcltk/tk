@@ -340,21 +340,15 @@ EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
 /* Slot 120 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap(Display *display,
 				const void *source);
-#endif /* AQUA */
-#ifdef MAC_OSX_TK /* AQUA */
 /* 122 */
 EXTERN void		TkpDefineNativeBitmaps(void);
-#endif /* AQUA */
 /* Slot 123 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 /* 124 */
 EXTERN Pixmap		TkpGetNativeAppBitmap(Display *display,
 				const char *name, int *width, int *height);
-#endif /* AQUA */
 /* Slot 125 is reserved */
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
@@ -675,37 +669,10 @@ typedef struct TkIntStubs {
     int (*xSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
     int (*xUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
     void (*reserved120)(void);
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    void (*reserved121)(void);
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    void (*reserved121)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    void (*reserved121)(void); /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpCreateNativeBitmap) (Display *display, const void *source); /* 121 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    void (*reserved122)(void);
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    void (*reserved122)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    void (*reserved122)(void); /* Dummy entry for stubs table backwards compatibility */
     void (*tkpDefineNativeBitmaps) (void); /* 122 */
-#endif /* AQUA */
     void (*reserved123)(void);
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    void (*reserved124)(void);
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    void (*reserved124)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    void (*reserved124)(void); /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpGetNativeAppBitmap) (Display *display, const char *name, int *width, int *height); /* 124 */
-#endif /* AQUA */
     void (*reserved125)(void);
     void (*reserved126)(void);
     void (*reserved127)(void);
@@ -1012,19 +979,13 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define XUnionRectWithRegion \
 	(tkIntStubsPtr->xUnionRectWithRegion) /* 119 */
 /* Slot 120 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
-#endif /* AQUA */
-#ifdef MAC_OSX_TK /* AQUA */
 #define TkpDefineNativeBitmaps \
 	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
-#endif /* AQUA */
 /* Slot 123 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 #define TkpGetNativeAppBitmap \
 	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
-#endif /* AQUA */
 /* Slot 125 is reserved */
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
@@ -1150,8 +1111,14 @@ extern const TkIntStubs *tkIntStubsPtr;
 #if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
+#   undef TkpDefineNativeBitmaps
+#   undef TkpCreateNativeBitmap
+#   undef TkpGetNativeAppBitmap
 #   define TkpWillDrawWidget(w) 0
 #   define TkpRedrawWidget(w)
+#   define TkpDefineNativeBitmaps()
+#   define TkpCreateNativeBitmap(display, source) None
+#   define TkpGetNativeAppBitmap(display, name, w, h) None
 #endif
 
 #endif /* _TKINTDECLS */
