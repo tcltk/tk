@@ -139,11 +139,6 @@ typedef struct {
     Tk_PhotoImageFormat *formatList;
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    Tk_PhotoImageFormat *oldFormatList;
-				/* Pointer to the first in the list of known
-				 * photo image formats.*/
-#endif
     Tk_PhotoImageFormatVersion3 *formatListVersion3;
 				/* Pointer to the first in the list of known
 				 * photo image formats in Version3 format.*/
@@ -247,13 +242,6 @@ PhotoFormatThreadExitProc(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    while (tsdPtr->oldFormatList != NULL) {
-	freePtr = tsdPtr->oldFormatList;
-	tsdPtr->oldFormatList = tsdPtr->oldFormatList->nextPtr;
-	ckfree(freePtr);
-    }
-#endif
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
@@ -305,12 +293,6 @@ Tk_CreatePhotoImageFormat(
     }
     copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    if (isupper((unsigned char) *formatPtr->name)) {
-	copyPtr->nextPtr = tsdPtr->oldFormatList;
-	tsdPtr->oldFormatList = copyPtr;
-    } else
-#endif
     {
 	/* for compatibility with aMSN: make a copy of formatPtr->name */
 	char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
@@ -812,23 +794,6 @@ ImgPhotoCmd(
                 }
 	    }
 	}
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	if (stringWriteProc == NULL) {
-	    oldformat = 1;
-	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
-                    imageFormat = imageFormat->nextPtr) {
-                if ((strncasecmp(Tcl_GetString(options.format),
-                        imageFormat->name,
-                        strlen(imageFormat->name)) == 0)) {
-                    matched = 1;
-                    if (imageFormat->stringWriteProc != NULL) {
-                        stringWriteProc = imageFormat->stringWriteProc;
-                        break;
-                    }
-                }
-	    }
-	}
-#endif
 	if (stringWriteProc == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -1489,22 +1454,6 @@ readCleanup:
 		}
 	    }
 	}
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	if (imageFormat == NULL) {
-	    oldformat = 1;
-	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
-		    imageFormat = imageFormat->nextPtr) {
-		if ((fmtString == NULL)
-			|| (strncasecmp(fmtString, imageFormat->name,
-				strlen(imageFormat->name)) == 0)) {
-		    matched = 1;
-		    if (imageFormat->fileWriteProc != NULL) {
-			break;
-		    }
-		}
-	    }
-	}
-#endif
 	if (imageFormat == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -2755,42 +2704,6 @@ MatchFileFormat(
 	    }
 	}
     }
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-if (formatPtr == NULL) {
-	useoldformat = 1;
-	for (formatPtr = tsdPtr->oldFormatList; formatPtr != NULL;
-		formatPtr = formatPtr->nextPtr) {
-	    if (formatString != NULL) {
-		if (strncasecmp(formatString,
-			formatPtr->name, strlen(formatPtr->name)) != 0) {
-		    continue;
-		}
-		matched = 1;
-		if (formatPtr->fileMatchProc == NULL) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "-file option isn't supported for %s images",
-			    formatString));
-		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			    "NOT_FILE_FORMAT", NULL);
-		    return TCL_ERROR;
-		}
-	    }
-	    if (formatPtr->fileMatchProc != NULL) {
-		(void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
-		if (formatPtr->fileMatchProc(chan, fileName, (Tcl_Obj *)
-			formatString, widthPtr, heightPtr, interp)) {
-		    if (*widthPtr < 1) {
-			*widthPtr = 1;
-		    }
-		    if (*heightPtr < 1) {
-			*heightPtr = 1;
-		    }
-		    break;
-		}
-	    }
-	}
-    }
-#endif
 
     /*
      * For old and not version 3 format, exit now with success
@@ -2987,38 +2900,6 @@ MatchStringFormat(
 	    break;
 	}
     }
-
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    if (formatPtr == NULL) {
-	useoldformat = 1;
-	for (formatPtr = tsdPtr->oldFormatList; formatPtr != NULL;
-		formatPtr = formatPtr->nextPtr) {
-	    if (formatObj != NULL) {
-		if (strncasecmp(formatString,
-			formatPtr->name, strlen(formatPtr->name)) != 0) {
-		    continue;
-		}
-		matched = 1;
-		if (formatPtr->stringMatchProc == NULL) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "-data option isn't supported for %s images",
-			    formatString));
-		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			    "NOT_DATA_FORMAT", NULL);
-		    return TCL_ERROR;
-		}
-	    }
-	    if ((formatPtr->stringMatchProc != NULL)
-		    && (formatPtr->stringReadProc != NULL)
-		    && formatPtr->stringMatchProc(
-			    (Tcl_Obj *) Tcl_GetString(data),
-			    (Tcl_Obj *) formatString,
-			    widthPtr, heightPtr, interp)) {
-		break;
-	    }
-	}
-    }
-#endif
 
     if (formatPtr == NULL) {
 	useoldformat = 0;
