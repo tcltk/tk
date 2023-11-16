@@ -43,7 +43,7 @@ jobs:
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.6-dev libxss-dev
+          sudo apt-get install tcl8.6-dev libxss-dev libxft-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
@@ -127,7 +127,7 @@ jobs:
           path: tk
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.6-dev libxss-dev xvfb
+          sudo apt-get install tcl8.6-dev libxss-dev libxft-dev xvfb
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV

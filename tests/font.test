@@ -2341,14 +2341,15 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -constraints failsOnUbuntu -setup {
+test font-44.1 {TkFontGetPixels: size < 0} -setup {
     set oldscale [tk scaling]
 } -body {
+    set oldsize [expr {-(-12.0 / $oldscale)}]
     tk scaling 0.5
-    font actual {times -12} -size
+    expr {round([font actual {times -12} -size] / $oldscale * 0.5) - round($oldsize) == 0}
 } -cleanup {
     tk scaling $oldscale
-} -result 24
+} -result 1
 test font-44.2 {TkFontGetPoints: size >= 0} -setup {
     set oldscale [tk scaling]
 } -body {

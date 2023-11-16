@@ -126,6 +126,9 @@ typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
 
 #ifndef _WIN32
 #   define None              0L      /* See bug [9e31fd9449] and below */
+#else
+/* Pert-Tk expects None to be a macro. See ticket [593eb0227c] */
+#   define None              None    /* uses the enum below */
 #endif
 
 #define ParentRelative       1L	/* background pixmap in CreateWindow
@@ -234,6 +237,9 @@ are reserved in the protocol for errors and replies. */
 #define LockMask		(1<<1)
 #ifndef _WIN32
 #   define ControlMask		(1<<2) /* See bug [9e31fd9449] and below */
+#else
+/* Pert-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
+#   define ControlMask		ControlMask /* uses the enum below */
 #endif
 #define Mod1Mask		(1<<3)
 #define Mod2Mask		(1<<4)
