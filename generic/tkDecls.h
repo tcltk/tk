@@ -1774,9 +1774,6 @@ extern const TkStubs *tkStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
-#define Tk_FreeXId(display,xid) /* no-op */
-#define Tk_GetStyleFromObj(obj) Tk_AllocStyleFromObj(NULL, obj)
-#define Tk_FreeStyleFromObj(obj) /* no-op */
 #define Tk_GetImageMasterData Tk_GetImageModelData
 
 #ifndef MAC_OSX_TK
@@ -1796,7 +1793,5 @@ EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
-
-#undef TkUnusedStubEntry
 
 #endif /* _TKDECLS */
