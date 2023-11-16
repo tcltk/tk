@@ -95,14 +95,6 @@
 #endif
 
 static const Tcl_Config cfg[] = {
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    {"debug",			CFG_DEBUG},
-    {"threaded",		CFG_THREADED},
-    {"profiled",		CFG_PROFILED},
-    {"64bit",			CFG_64},
-    {"optimized",		CFG_OPTIMIZED},
-    {"mem_debug",		CFG_MEMDEBUG},
-#endif
     {"fontsystem",		CFG_FONTSYSTEM},
 
     /* Runtime paths to various stuff */
