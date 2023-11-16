@@ -1121,7 +1121,6 @@
 		F966BC3C08F27A3C005CB29B /* message.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = message.test; sourceTree = "<group>"; };
 		F966BC3D08F27A3C005CB29B /* msgbox.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = msgbox.test; sourceTree = "<group>"; };
 		F966BC3E08F27A3C005CB29B /* obj.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = obj.test; sourceTree = "<group>"; };
-		F966BC3F08F27A3C005CB29B /* oldpack.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = oldpack.test; sourceTree = "<group>"; };
 		F966BC4008F27A3C005CB29B /* option.file1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = option.file1; sourceTree = "<group>"; };
 		F966BC4108F27A3C005CB29B /* option.file2 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = option.file2; sourceTree = "<group>"; };
 		F966BC4208F27A3C005CB29B /* option.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = option.test; sourceTree = "<group>"; };
@@ -2676,7 +2675,6 @@
 				F966BC3C08F27A3C005CB29B /* message.test */,
 				F966BC3D08F27A3C005CB29B /* msgbox.test */,
 				F966BC3E08F27A3C005CB29B /* obj.test */,
-				F966BC3F08F27A3C005CB29B /* oldpack.test */,
 				F966BC4008F27A3C005CB29B /* option.file1 */,
 				F966BC4108F27A3C005CB29B /* option.file2 */,
 				F966BC4208F27A3C005CB29B /* option.test */,
