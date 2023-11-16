@@ -3269,7 +3269,7 @@ static int TreeviewDetachedCommand(
 	Tcl_Obj *objPtr = Tcl_NewObj();
 
 	while (entryPtr != NULL) {
-	    item = Tcl_GetHashValue(entryPtr);
+	    item = (TreeItem *)Tcl_GetHashValue(entryPtr);
 	    entryPtr = Tcl_NextHashEntry(&search);
 	    if (IsDetached(tv, item)) {
 		Tcl_ListObjAppendElement(NULL, objPtr, ItemID(tv, item));
