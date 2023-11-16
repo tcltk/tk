@@ -693,6 +693,8 @@ typedef struct TkMainInfo {
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
+    unsigned int ttkNbTabsStickBit;
+    				/* Information used by ttk::notebook. */
 } TkMainInfo;
 
 /*
