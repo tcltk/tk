@@ -963,7 +963,7 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
     deleteWindows
 } -result {{configure .t1 200 200} 200x200+0+0}
 
-# Can't think up any tests for TkpGetOtherWindow procedure.
+# Can't think up any tests for Tk_GetOtherWindow procedure.
 
 test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
     unix notAqua

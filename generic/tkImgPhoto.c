@@ -271,7 +271,7 @@ PhotoFormatThreadExitProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_CreateOldPhotoImageFormat, Tk_CreatePhotoImageFormat,
+ * Tk_CreatePhotoImageFormat,
  * Tk_CreatePhotoImageFormatVersion3 --
  *
  *	This function is invoked by an image file handler to register a new
@@ -287,29 +287,6 @@ PhotoFormatThreadExitProc(
  *
  *----------------------------------------------------------------------
  */
-
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-void
-Tk_CreateOldPhotoImageFormat(
-    const Tk_PhotoImageFormat *formatPtr)
-				/* Structure describing the format. All of the
-				 * fields except "nextPtr" must be filled in
-				 * by caller. */
-{
-    Tk_PhotoImageFormat *copyPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
-	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
-    }
-    copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
-    *copyPtr = *formatPtr;
-    copyPtr->nextPtr = tsdPtr->oldFormatList;
-    tsdPtr->oldFormatList = copyPtr;
-}
-#endif
 
 void
 Tk_CreatePhotoImageFormat(
@@ -4529,107 +4506,6 @@ ImgPhotoPostscript(
 
     return Tk_PostscriptPhoto(interp, &block, psInfo, width, height);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoPutBlock_NoComposite, Tk_PhotoPutZoomedBlock_NoComposite --
- *
- * These backward-compatibility functions just exist to fill slots in stubs
- * table. For the behaviour of *_NoComposite, refer to the corresponding
- * function without the extra suffix, except that the compositing rule is
- * always "overlay" and the function always panics on memory-allocation
- * failure.
- *
- *----------------------------------------------------------------------
- */
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-void
-Tk_PhotoPutBlock_NoComposite(
-    Tk_PhotoHandle handle,
-    Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height)
-{
-    if (Tk_PhotoPutBlock(NULL, handle, blockPtr, x, y, width, height,
-	    TK_PHOTO_COMPOSITE_OVERLAY) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoPutZoomedBlock_NoComposite(
-    Tk_PhotoHandle handle,
-    Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height,
-    int zoomX, int zoomY, int subsampleX, int subsampleY)
-{
-    if (Tk_PhotoPutZoomedBlock(NULL, handle, blockPtr, x, y, width, height,
-	    zoomX, zoomY, subsampleX, subsampleY,
-	    TK_PHOTO_COMPOSITE_OVERLAY) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoExpand_Panic, Tk_PhotoPutBlock_Panic,
- * Tk_PhotoPutZoomedBlock_Panic, Tk_PhotoSetSize_Panic
- *
- * Backward compatibility functions for preserving the old behaviour (i.e.
- * panic on memory allocation failure) so that extensions do not need to be
- * significantly updated to take account of TIP #116. These call the new
- * interface (i.e. the interface without the extra suffix), but panic if an
- * error condition is returned.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_PhotoExpand_Panic(
-    Tk_PhotoHandle handle,
-    int width, int height)
-{
-    if (Tk_PhotoExpand(NULL, handle, width, height) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoPutBlock_Panic(
-    Tk_PhotoHandle handle,
-    Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height, int compRule)
-{
-    if (Tk_PhotoPutBlock(NULL, handle, blockPtr, x, y, width, height,
-	    compRule) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoPutZoomedBlock_Panic(
-    Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height,
-    int zoomX, int zoomY, int subsampleX, int subsampleY,
-    int compRule)
-{
-    if (Tk_PhotoPutZoomedBlock(NULL, handle, blockPtr, x, y, width, height,
-	    zoomX, zoomY, subsampleX, subsampleY, compRule) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoSetSize_Panic(
-    Tk_PhotoHandle handle,
-    int width, int height)
-{
-    if (Tk_PhotoSetSize(NULL, handle, width, height) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-#endif /* TK_NO_DEPRECATED */
 
 /*
  * Local Variables:

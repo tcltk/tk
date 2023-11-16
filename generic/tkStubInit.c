@@ -39,28 +39,11 @@ MODULE_SCOPE const TkStubs tkStubs;
  * Remove macro that might interfere with the definition below.
  */
 
-#undef Tk_FreeXId
-#undef Tk_FreeStyleFromObj
-#undef Tk_GetStyleFromObj
-#undef TkWinGetPlatformId
 #undef TkPutImage
 #undef XPutImage
 #define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
 #undef TkMacOSXIsCharacterMissing
 #define TkMacOSXIsCharacterMissing (int (*)(Tk_Font, unsigned int))(void *)doNothing
-
-#if defined(_WIN32) && !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-#   define Tk_TranslateWinEvent TkTranslateWinEvent
-#   define Tk_PointerEvent TkWinPointerEvent
-#define TkWinGetPlatformId winGetPlatformId
-static int TkWinGetPlatformId(void) {
-    return 2;
-}
-#else
-#   define Tk_TranslateWinEvent 0
-#   define Tk_PointerEvent 0
-#   define TkWinGetPlatformId 0
-#endif
 
 #if defined(TK_NO_DEPRECATED) || (TCL_MAJOR_VERSION > 8)
 #   define TkSetWindowMenuBar 0
@@ -79,29 +62,6 @@ doNothing(void)
     /* dummy implementation, no need to do anything */
     return 0;
 }
-
-#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
-#define Tk_FreeXId 0
-#define Tk_FreeStyleFromObj 0
-#define Tk_GetStyleFromObj 0
-#define TkWinGetPlatformId 0
-#define Tk_PhotoPutBlock_NoComposite 0
-#define Tk_PhotoPutZoomedBlock_NoComposite 0
-#define Tk_PhotoExpand_Panic 0
-#define Tk_PhotoPutBlock_Panic 0
-#define Tk_PhotoPutZoomedBlock_Panic 0
-#define Tk_PhotoSetSize_Panic 0
-#define Tk_CreateOldPhotoImageFormat 0
-#else
-#define Tk_FreeXId ((void (*)(Display *, XID))(void *)doNothing)
-#define Tk_FreeStyleFromObj ((void (*)(Tcl_Obj *))(void *)doNothing)
-#define Tk_GetStyleFromObj getStyleFromObj
-static Tk_Style Tk_GetStyleFromObj(Tcl_Obj *obj)
-{
-	return Tk_AllocStyleFromObj(NULL, obj);
-}
-#endif /* !TK_NO_DEPRECATED */
-
 #define TkpCmapStressed_ TkpCmapStressed
 #define TkpSync_ TkpSync
 #define TkUnixContainerId_ TkUnixContainerId
@@ -550,7 +510,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWinSetForegroundWindow, /* 30 */
     TkWinDialogDebug, /* 31 */
     TkWinGetMenuSystemDefault, /* 32 */
-    TkWinGetPlatformId, /* 33 */
+    0, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
     TkWinGetPlatformTheme, /* 35 */
     TkWinChildProc, /* 36 */
@@ -1009,8 +969,6 @@ static const TkPlatStubs tkPlatStubs = {
     Tk_GetHINSTANCE, /* 1 */
     Tk_GetHWND, /* 2 */
     Tk_HWNDToWindow, /* 3 */
-    Tk_PointerEvent, /* 4 */
-    Tk_TranslateWinEvent, /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     0, /* 0 */
@@ -1018,7 +976,7 @@ static const TkPlatStubs tkPlatStubs = {
     0, /* 2 */
     0, /* 3 */
     TkMacOSXInitAppleEvents, /* 4 */
-    TkGenWMConfigureEvent_, /* 5 */
+    0, /* 5 */
     TkMacOSXInvalClipRgns, /* 6 */
     0, /* 7 */
     TkMacOSXGetRootControl, /* 8 */
@@ -1120,7 +1078,7 @@ const TkStubs tkStubs = {
     Tk_FreeOptions, /* 74 */
     Tk_FreePixmap, /* 75 */
     Tk_FreeTextLayout, /* 76 */
-    Tk_FreeXId, /* 77 */
+    0, /* 77 */
     Tk_GCForColor, /* 78 */
     Tk_GeometryRequest, /* 79 */
     Tk_Get3DBorder, /* 80 */
@@ -1161,7 +1119,7 @@ const TkStubs tkStubs = {
     Tk_HandleEvent, /* 115 */
     Tk_IdToWindow, /* 116 */
     Tk_ImageChanged, /* 117 */
-    Tk_Init, /* 118 */
+    0, /* 118 */
     Tk_InternAtom, /* 119 */
     Tk_IntersectTextLayout, /* 120 */
     Tk_MaintainGeometry, /* 121 */
@@ -1187,13 +1145,13 @@ const TkStubs tkStubs = {
     Tk_NameToWindow, /* 141 */
     Tk_OwnSelection, /* 142 */
     Tk_ParseArgv, /* 143 */
-    Tk_PhotoPutBlock_NoComposite, /* 144 */
-    Tk_PhotoPutZoomedBlock_NoComposite, /* 145 */
+    0, /* 144 */
+    0, /* 145 */
     Tk_PhotoGetImage, /* 146 */
     Tk_PhotoBlank, /* 147 */
-    Tk_PhotoExpand_Panic, /* 148 */
+    0, /* 148 */
     Tk_PhotoGetSize, /* 149 */
-    Tk_PhotoSetSize_Panic, /* 150 */
+    0, /* 150 */
     Tk_PointToChar, /* 151 */
     Tk_PostscriptFontName, /* 152 */
     Tk_PreserveColormap, /* 153 */
@@ -1202,7 +1160,7 @@ const TkStubs tkStubs = {
     Tk_ResizeWindow, /* 156 */
     Tk_RestackWindow, /* 157 */
     Tk_RestrictEvents, /* 158 */
-    Tk_SafeInit, /* 159 */
+    0, /* 159 */
     Tk_SetAppName, /* 160 */
     Tk_SetBackgroundFromBorder, /* 161 */
     Tk_SetClass, /* 162 */
@@ -1259,7 +1217,7 @@ const TkStubs tkStubs = {
     Tk_RestoreSavedOptions, /* 213 */
     Tk_SetOptions, /* 214 */
     Tk_InitConsoleChannels, /* 215 */
-    Tk_CreateConsoleWindow, /* 216 */
+    0, /* 216 */
     Tk_CreateSmoothMethod, /* 217 */
     0, /* 218 */
     0, /* 219 */
@@ -1289,8 +1247,8 @@ const TkStubs tkStubs = {
     Tk_SetInternalBorderEx, /* 243 */
     Tk_SetMinimumRequestSize, /* 244 */
     Tk_SetCaretPos, /* 245 */
-    Tk_PhotoPutBlock_Panic, /* 246 */
-    Tk_PhotoPutZoomedBlock_Panic, /* 247 */
+    0, /* 246 */
+    0, /* 247 */
     Tk_CollapseMotionEvents, /* 248 */
     Tk_RegisterStyleEngine, /* 249 */
     Tk_GetStyleEngine, /* 250 */
@@ -1301,8 +1259,8 @@ const TkStubs tkStubs = {
     Tk_FreeStyle, /* 255 */
     Tk_NameOfStyle, /* 256 */
     Tk_AllocStyleFromObj, /* 257 */
-    Tk_GetStyleFromObj, /* 258 */
-    Tk_FreeStyleFromObj, /* 259 */
+    0, /* 258 */
+    0, /* 259 */
     Tk_GetStyledElement, /* 260 */
     Tk_GetElementSize, /* 261 */
     Tk_GetElementBox, /* 262 */
@@ -1315,8 +1273,8 @@ const TkStubs tkStubs = {
     Tk_GetUserInactiveTime, /* 269 */
     Tk_ResetUserInactiveTime, /* 270 */
     Tk_Interp, /* 271 */
-    Tk_CreateOldImageType, /* 272 */
-    Tk_CreateOldPhotoImageFormat, /* 273 */
+    0, /* 272 */
+    0, /* 273 */
     Tk_AlwaysShowSelection, /* 274 */
     Tk_GetButtonMask, /* 275 */
     Tk_GetDoublePixelsFromObj, /* 276 */

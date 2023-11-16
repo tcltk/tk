@@ -51,12 +51,6 @@
 # ImgGetPhoto:                          no tests
 # Tk_PhotoGetImage                      no tests
 # ImgPostscriptPhoto                    no tests
-# Tk_PhotoPutBlock_NoComposite          no tests, probably none needed
-# Tk_PhotoPutZoomedBlock_NoComposite    no tests, probably none needed
-# Tk_PhotoExpand_Panic                  no tests, probably none needed
-# Tk_PhotoPutBlock_Panic                no tests, probably none needed
-# Tk_PhotoPutZoomedBlock_Panic          no tests, probably none needed
-# Tk_PhotoSetSize_Panic                 no tests, probably none needed
 # Tk_PhotoGetMetadata:                  imgPhoto-21.*
 # Tk_PhotoSetMetadata:                  imgPhoto-22.*
 #--------------------------------------------------------------------------

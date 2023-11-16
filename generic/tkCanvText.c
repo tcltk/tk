@@ -150,11 +150,7 @@ UnderlinePrintProc(
     char *p;
 
     if (underline == INT_MIN) {
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	p = (char *)"-1";
-#else
 	p = (char *)"";
-#endif
 	*freeProcPtr = TCL_STATIC;
 	return p;
     } else if (underline == INT_MAX) {

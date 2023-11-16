@@ -129,7 +129,7 @@ ImageTypeThreadExitProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_CreateOldImageType, Tk_CreateImageType --
+ * Tk_CreateImageType --
  *
  *	This function is invoked by an image manager to tell Tk about a new
  *	kind of image and the functions that manage the new type. The function
@@ -144,27 +144,6 @@ ImageTypeThreadExitProc(
  *
  *----------------------------------------------------------------------
  */
-
-void
-Tk_CreateOldImageType(
-    const Tk_ImageType *typePtr)
-				/* Structure describing the type. All of the
-				 * fields except "nextPtr" must be filled in
-				 * by caller. */
-{
-    Tk_ImageType *copyPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
-	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
-    }
-    copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));
-    *copyPtr = *typePtr;
-    copyPtr->nextPtr = tsdPtr->oldImageTypeList;
-    tsdPtr->oldImageTypeList = copyPtr;
-}
 
 void
 Tk_CreateImageType(

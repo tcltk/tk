@@ -326,9 +326,6 @@ declare 75 {
 declare 76 {
     void Tk_FreeTextLayout(Tk_TextLayout textLayout)
 }
-declare 77 {deprecated {function does nothing, call can be removed}} {
-    void Tk_FreeXId(Display *display, XID xid)
-}
 declare 78 {
     GC Tk_GCForColor(XColor *colorPtr, Drawable drawable)
 }
@@ -475,9 +472,6 @@ declare 117 {
     void Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 	    int width, int height, int imageWidth, int imageHeight)
 }
-declare 118 {
-    int Tk_Init(Tcl_Interp *interp)
-}
 declare 119 {
     Atom Tk_InternAtom(Tk_Window tkwin, const char *name)
 }
@@ -564,31 +558,14 @@ declare 143 {
 	    Tk_Window tkwin, int *argcPtr, const char **argv,
 	    const Tk_ArgvInfo *argTable, int flags)
 }
-declare 144 {deprecated {function signature changed}} {
-    void Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height)
-}
-declare 145 {deprecated {function signature changed}} {
-    void Tk_PhotoPutZoomedBlock_NoComposite(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height, int zoomX, int zoomY,
-	    int subsampleX, int subsampleY)
-}
 declare 146 {
     int Tk_PhotoGetImage(Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr)
 }
 declare 147 {
     void Tk_PhotoBlank(Tk_PhotoHandle handle)
 }
-declare 148 {deprecated {function signature changed}} {
-    void Tk_PhotoExpand_Panic(Tk_PhotoHandle handle, int width, int height )
-}
 declare 149 {
     void Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr, int *heightPtr)
-}
-declare 150 {deprecated {function signature changed}} {
-    void Tk_PhotoSetSize_Panic(Tk_PhotoHandle handle, int width, int height)
 }
 declare 151 {
     int Tk_PointToChar(Tk_TextLayout layout, int x, int y)
@@ -616,9 +593,6 @@ declare 157 {
 declare 158 {
     Tk_RestrictProc *Tk_RestrictEvents(Tk_RestrictProc *proc,
 	    void *arg, void **prevArgPtr)
-}
-declare 159 {
-    int Tk_SafeInit(Tcl_Interp *interp)
 }
 declare 160 {
     const char *Tk_SetAppName(Tk_Window tkwin, const char *name)
@@ -817,9 +791,6 @@ declare 214 {
 declare 215 {
     void Tk_InitConsoleChannels(Tcl_Interp *interp)
 }
-declare 216 {
-    int Tk_CreateConsoleWindow(Tcl_Interp *interp)
-}
 declare 217 {
     void Tk_CreateSmoothMethod(Tcl_Interp *interp, const Tk_SmoothMethod *method)
 }
@@ -939,17 +910,6 @@ declare 244 {
 declare 245 {
     void Tk_SetCaretPos(Tk_Window tkwin, int x, int y, int height)
 }
-declare 246 {deprecated {function signature changed}} {
-    void Tk_PhotoPutBlock_Panic(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height, int compRule)
-}
-declare 247 {deprecated {function signature changed}} {
-    void Tk_PhotoPutZoomedBlock_Panic(Tk_PhotoHandle handle,
-	    Tk_PhotoImageBlock *blockPtr, int x, int y,
-	    int width, int height, int zoomX, int zoomY,
-	    int subsampleX, int subsampleY, int compRule)
-}
 declare 248 {
     int Tk_CollapseMotionEvents(Display *display, int collapse)
 }
@@ -984,12 +944,6 @@ declare 256 {
 }
 declare 257 {
     Tk_Style  Tk_AllocStyleFromObj(Tcl_Interp *interp, Tcl_Obj *objPtr)
-}
-declare 258 {
-    Tk_Style Tk_GetStyleFromObj(Tcl_Obj *objPtr)
-}
-declare 259 {
-    void  Tk_FreeStyleFromObj(Tcl_Obj *objPtr)
 }
 declare 260 {
     Tk_StyledElement Tk_GetStyledElement(Tk_Style style, Tcl_Size elementId,
@@ -1046,23 +1000,6 @@ declare 270 {
 # TIP #264
 declare 271 {
     Tcl_Interp *Tk_Interp(Tk_Window tkwin)
-}
-
-# Now that the Tk 8.2 -> 8.3 transition is long past, use more conventional
-# means to continue support for extensions using the USE_OLD_IMAGE to
-# continue use of their string-based Tcl_ImageTypes and Tcl_PhotoImageFormats.
-#
-# Note that this restores the usual rules for stub compatibility.  Stub-enabled
-# extensions compiled against 8.5 headers and linked to the 8.5 stub library
-# will produce a file [load]able into an interp with Tk 8.X, for X >= 5.
-# It will *not* be [load]able into interps with Tk 8.4 (or Tk 8.2!).
-# Developers who need to produce a file [load]able into legacy interps must
-# build against legacy sources.
-declare 272 {
-    void Tk_CreateOldImageType(const Tk_ImageType *typePtr)
-}
-declare 273 {
-    void Tk_CreateOldPhotoImageFormat(const Tk_PhotoImageFormat *formatPtr)
 }
 
 # TIP#580
@@ -1151,26 +1088,11 @@ declare 2 win {
 declare 3 win {
     Tk_Window Tk_HWNDToWindow(HWND hwnd)
 }
-declare 4 win {
-    void Tk_PointerEvent(HWND hwnd, int x, int y)
-}
-declare 5 win {
-    int Tk_TranslateWinEvent(HWND hwnd,
-	    UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result)
-}
 
 ################################
 # Aqua specific functions
-# Stub removed because the function no longer exists.
-#declare 3 aqua {
-#    void TkMacOSXInitMenus(Tcl_Interp *interp)
-#}
 declare 4 aqua {
     void TkMacOSXInitAppleEvents(Tcl_Interp *interp)
-}
-declare 5 aqua {
-    void TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y, int width,
-	    int height, int flags)
 }
 declare 6 aqua {
     void TkMacOSXInvalClipRgns(Tk_Window tkwin)
