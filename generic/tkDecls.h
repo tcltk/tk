@@ -288,9 +288,7 @@ EXTERN void		Tk_FreeOptions(const Tk_ConfigSpec *specs,
 EXTERN void		Tk_FreePixmap(Display *display, Pixmap pixmap);
 /* 76 */
 EXTERN void		Tk_FreeTextLayout(Tk_TextLayout textLayout);
-/* 77 */
-TK_DEPRECATED("function does nothing, call can be removed")
-void			Tk_FreeXId(Display *display, XID xid);
+/* Slot 77 is reserved */
 /* 78 */
 EXTERN GC		Tk_GCForColor(XColor *colorPtr, Drawable drawable);
 /* 79 */
@@ -413,8 +411,7 @@ EXTERN Tk_Window	Tk_IdToWindow(Display *display, Window window);
 EXTERN void		Tk_ImageChanged(Tk_ImageModel model, int x, int y,
 				int width, int height, int imageWidth,
 				int imageHeight);
-/* 118 */
-EXTERN int		Tk_Init(Tcl_Interp *interp);
+/* Slot 118 is reserved */
 /* 119 */
 EXTERN Atom		Tk_InternAtom(Tk_Window tkwin, const char *name);
 /* 120 */
@@ -476,34 +473,18 @@ EXTERN void		Tk_OwnSelection(Tk_Window tkwin, Atom selection,
 EXTERN int		Tk_ParseArgv(Tcl_Interp *interp, Tk_Window tkwin,
 				int *argcPtr, const char **argv,
 				const Tk_ArgvInfo *argTable, int flags);
-/* 144 */
-TK_DEPRECATED("function signature changed")
-void			Tk_PhotoPutBlock_NoComposite(Tk_PhotoHandle handle,
-				Tk_PhotoImageBlock *blockPtr, int x, int y,
-				int width, int height);
-/* 145 */
-TK_DEPRECATED("function signature changed")
-void			Tk_PhotoPutZoomedBlock_NoComposite(
-				Tk_PhotoHandle handle,
-				Tk_PhotoImageBlock *blockPtr, int x, int y,
-				int width, int height, int zoomX, int zoomY,
-				int subsampleX, int subsampleY);
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
 /* 146 */
 EXTERN int		Tk_PhotoGetImage(Tk_PhotoHandle handle,
 				Tk_PhotoImageBlock *blockPtr);
 /* 147 */
 EXTERN void		Tk_PhotoBlank(Tk_PhotoHandle handle);
-/* 148 */
-TK_DEPRECATED("function signature changed")
-void			Tk_PhotoExpand_Panic(Tk_PhotoHandle handle,
-				int width, int height);
+/* Slot 148 is reserved */
 /* 149 */
 EXTERN void		Tk_PhotoGetSize(Tk_PhotoHandle handle, int *widthPtr,
 				int *heightPtr);
-/* 150 */
-TK_DEPRECATED("function signature changed")
-void			Tk_PhotoSetSize_Panic(Tk_PhotoHandle handle,
-				int width, int height);
+/* Slot 150 is reserved */
 /* 151 */
 EXTERN int		Tk_PointToChar(Tk_TextLayout layout, int x, int y);
 /* 152 */
@@ -529,8 +510,7 @@ EXTERN int		Tk_RestackWindow(Tk_Window tkwin, int aboveBelow,
 /* 158 */
 EXTERN Tk_RestrictProc * Tk_RestrictEvents(Tk_RestrictProc *proc, void *arg,
 				void **prevArgPtr);
-/* 159 */
-EXTERN int		Tk_SafeInit(Tcl_Interp *interp);
+/* Slot 159 is reserved */
 /* 160 */
 EXTERN const char *	Tk_SetAppName(Tk_Window tkwin, const char *name);
 /* 161 */
@@ -689,8 +669,7 @@ EXTERN int		Tk_SetOptions(Tcl_Interp *interp, void *recordPtr,
 				Tk_SavedOptions *savePtr, int *maskPtr);
 /* 215 */
 EXTERN void		Tk_InitConsoleChannels(Tcl_Interp *interp);
-/* 216 */
-EXTERN int		Tk_CreateConsoleWindow(Tcl_Interp *interp);
+/* Slot 216 is reserved */
 /* 217 */
 EXTERN void		Tk_CreateSmoothMethod(Tcl_Interp *interp,
 				const Tk_SmoothMethod *method);
@@ -782,17 +761,8 @@ EXTERN void		Tk_SetMinimumRequestSize(Tk_Window tkwin,
 /* 245 */
 EXTERN void		Tk_SetCaretPos(Tk_Window tkwin, int x, int y,
 				int height);
-/* 246 */
-TK_DEPRECATED("function signature changed")
-void			Tk_PhotoPutBlock_Panic(Tk_PhotoHandle handle,
-				Tk_PhotoImageBlock *blockPtr, int x, int y,
-				int width, int height, int compRule);
-/* 247 */
-TK_DEPRECATED("function signature changed")
-void			Tk_PhotoPutZoomedBlock_Panic(Tk_PhotoHandle handle,
-				Tk_PhotoImageBlock *blockPtr, int x, int y,
-				int width, int height, int zoomX, int zoomY,
-				int subsampleX, int subsampleY, int compRule);
+/* Slot 246 is reserved */
+/* Slot 247 is reserved */
 /* 248 */
 EXTERN int		Tk_CollapseMotionEvents(Display *display,
 				int collapse);
@@ -818,10 +788,8 @@ EXTERN const char *	Tk_NameOfStyle(Tk_Style style);
 /* 257 */
 EXTERN Tk_Style		Tk_AllocStyleFromObj(Tcl_Interp *interp,
 				Tcl_Obj *objPtr);
-/* 258 */
-EXTERN Tk_Style		Tk_GetStyleFromObj(Tcl_Obj *objPtr);
-/* 259 */
-EXTERN void		Tk_FreeStyleFromObj(Tcl_Obj *objPtr);
+/* Slot 258 is reserved */
+/* Slot 259 is reserved */
 /* 260 */
 EXTERN Tk_StyledElement	 Tk_GetStyledElement(Tk_Style style,
 				Tcl_Size elementId,
@@ -869,11 +837,8 @@ EXTERN long		Tk_GetUserInactiveTime(Display *dpy);
 EXTERN void		Tk_ResetUserInactiveTime(Display *dpy);
 /* 271 */
 EXTERN Tcl_Interp *	Tk_Interp(Tk_Window tkwin);
-/* 272 */
-EXTERN void		Tk_CreateOldImageType(const Tk_ImageType *typePtr);
-/* 273 */
-EXTERN void		Tk_CreateOldPhotoImageFormat(
-				const Tk_PhotoImageFormat *formatPtr);
+/* Slot 272 is reserved */
+/* Slot 273 is reserved */
 /* 274 */
 EXTERN int		Tk_AlwaysShowSelection(Tk_Window tkwin);
 /* 275 */
@@ -1011,7 +976,7 @@ typedef struct TkStubs {
     void (*tk_FreeOptions) (const Tk_ConfigSpec *specs, char *widgRec, Display *display, int needFlags); /* 74 */
     void (*tk_FreePixmap) (Display *display, Pixmap pixmap); /* 75 */
     void (*tk_FreeTextLayout) (Tk_TextLayout textLayout); /* 76 */
-    TCL_DEPRECATED_API("function does nothing, call can be removed") void (*tk_FreeXId) (Display *display, XID xid); /* 77 */
+    void (*reserved77)(void);
     GC (*tk_GCForColor) (XColor *colorPtr, Drawable drawable); /* 78 */
     void (*tk_GeometryRequest) (Tk_Window tkwin, int reqWidth, int reqHeight); /* 79 */
     Tk_3DBorder (*tk_Get3DBorder) (Tcl_Interp *interp, Tk_Window tkwin, Tk_Uid colorName); /* 80 */
@@ -1052,7 +1017,7 @@ typedef struct TkStubs {
     void (*tk_HandleEvent) (XEvent *eventPtr); /* 115 */
     Tk_Window (*tk_IdToWindow) (Display *display, Window window); /* 116 */
     void (*tk_ImageChanged) (Tk_ImageModel model, int x, int y, int width, int height, int imageWidth, int imageHeight); /* 117 */
-    int (*tk_Init) (Tcl_Interp *interp); /* 118 */
+    void (*reserved118)(void);
     Atom (*tk_InternAtom) (Tk_Window tkwin, const char *name); /* 119 */
     int (*tk_IntersectTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height); /* 120 */
     void (*tk_MaintainGeometry) (Tk_Window window, Tk_Window container, int x, int y, int width, int height); /* 121 */
@@ -1078,13 +1043,13 @@ typedef struct TkStubs {
     Tk_Window (*tk_NameToWindow) (Tcl_Interp *interp, const char *pathName, Tk_Window tkwin); /* 141 */
     void (*tk_OwnSelection) (Tk_Window tkwin, Atom selection, Tk_LostSelProc *proc, void *clientData); /* 142 */
     int (*tk_ParseArgv) (Tcl_Interp *interp, Tk_Window tkwin, int *argcPtr, const char **argv, const Tk_ArgvInfo *argTable, int flags); /* 143 */
-    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height); /* 144 */
-    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutZoomedBlock_NoComposite) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY); /* 145 */
+    void (*reserved144)(void);
+    void (*reserved145)(void);
     int (*tk_PhotoGetImage) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr); /* 146 */
     void (*tk_PhotoBlank) (Tk_PhotoHandle handle); /* 147 */
-    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoExpand_Panic) (Tk_PhotoHandle handle, int width, int height); /* 148 */
+    void (*reserved148)(void);
     void (*tk_PhotoGetSize) (Tk_PhotoHandle handle, int *widthPtr, int *heightPtr); /* 149 */
-    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoSetSize_Panic) (Tk_PhotoHandle handle, int width, int height); /* 150 */
+    void (*reserved150)(void);
     int (*tk_PointToChar) (Tk_TextLayout layout, int x, int y); /* 151 */
     int (*tk_PostscriptFontName) (Tk_Font tkfont, Tcl_DString *dsPtr); /* 152 */
     void (*tk_PreserveColormap) (Display *display, Colormap colormap); /* 153 */
@@ -1093,7 +1058,7 @@ typedef struct TkStubs {
     void (*tk_ResizeWindow) (Tk_Window tkwin, int width, int height); /* 156 */
     int (*tk_RestackWindow) (Tk_Window tkwin, int aboveBelow, Tk_Window other); /* 157 */
     Tk_RestrictProc * (*tk_RestrictEvents) (Tk_RestrictProc *proc, void *arg, void **prevArgPtr); /* 158 */
-    int (*tk_SafeInit) (Tcl_Interp *interp); /* 159 */
+    void (*reserved159)(void);
     const char * (*tk_SetAppName) (Tk_Window tkwin, const char *name); /* 160 */
     void (*tk_SetBackgroundFromBorder) (Tk_Window tkwin, Tk_3DBorder border); /* 161 */
     void (*tk_SetClass) (Tk_Window tkwin, const char *className); /* 162 */
@@ -1150,7 +1115,7 @@ typedef struct TkStubs {
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
     int (*tk_SetOptions) (Tcl_Interp *interp, void *recordPtr, Tk_OptionTable optionTable, Tcl_Size objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
-    int (*tk_CreateConsoleWindow) (Tcl_Interp *interp); /* 216 */
+    void (*reserved216)(void);
     void (*tk_CreateSmoothMethod) (Tcl_Interp *interp, const Tk_SmoothMethod *method); /* 217 */
     void (*reserved218)(void);
     void (*reserved219)(void);
@@ -1180,8 +1145,8 @@ typedef struct TkStubs {
     void (*tk_SetInternalBorderEx) (Tk_Window tkwin, int left, int right, int top, int bottom); /* 243 */
     void (*tk_SetMinimumRequestSize) (Tk_Window tkwin, int minWidth, int minHeight); /* 244 */
     void (*tk_SetCaretPos) (Tk_Window tkwin, int x, int y, int height); /* 245 */
-    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int compRule); /* 246 */
-    TCL_DEPRECATED_API("function signature changed") void (*tk_PhotoPutZoomedBlock_Panic) (Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr, int x, int y, int width, int height, int zoomX, int zoomY, int subsampleX, int subsampleY, int compRule); /* 247 */
+    void (*reserved246)(void);
+    void (*reserved247)(void);
     int (*tk_CollapseMotionEvents) (Display *display, int collapse); /* 248 */
     Tk_StyleEngine (*tk_RegisterStyleEngine) (const char *name, Tk_StyleEngine parent); /* 249 */
     Tk_StyleEngine (*tk_GetStyleEngine) (const char *name); /* 250 */
@@ -1192,8 +1157,8 @@ typedef struct TkStubs {
     void (*tk_FreeStyle) (Tk_Style style); /* 255 */
     const char * (*tk_NameOfStyle) (Tk_Style style); /* 256 */
     Tk_Style (*tk_AllocStyleFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr); /* 257 */
-    Tk_Style (*tk_GetStyleFromObj) (Tcl_Obj *objPtr); /* 258 */
-    void (*tk_FreeStyleFromObj) (Tcl_Obj *objPtr); /* 259 */
+    void (*reserved258)(void);
+    void (*reserved259)(void);
     Tk_StyledElement (*tk_GetStyledElement) (Tk_Style style, Tcl_Size elementId, Tk_OptionTable optionTable); /* 260 */
     void (*tk_GetElementSize) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int width, int height, int inner, int *widthPtr, int *heightPtr); /* 261 */
     void (*tk_GetElementBox) (Tk_Style style, Tk_StyledElement element, void *recordPtr, Tk_Window tkwin, int x, int y, int width, int height, int inner, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 262 */
@@ -1206,8 +1171,8 @@ typedef struct TkStubs {
     long (*tk_GetUserInactiveTime) (Display *dpy); /* 269 */
     void (*tk_ResetUserInactiveTime) (Display *dpy); /* 270 */
     Tcl_Interp * (*tk_Interp) (Tk_Window tkwin); /* 271 */
-    void (*tk_CreateOldImageType) (const Tk_ImageType *typePtr); /* 272 */
-    void (*tk_CreateOldPhotoImageFormat) (const Tk_PhotoImageFormat *formatPtr); /* 273 */
+    void (*reserved272)(void);
+    void (*reserved273)(void);
     int (*tk_AlwaysShowSelection) (Tk_Window tkwin); /* 274 */
     unsigned (*tk_GetButtonMask) (unsigned button); /* 275 */
     int (*tk_GetDoublePixelsFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, double *doublePtr); /* 276 */
@@ -1393,8 +1358,7 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_FreePixmap) /* 75 */
 #define Tk_FreeTextLayout \
 	(tkStubsPtr->tk_FreeTextLayout) /* 76 */
-#define Tk_FreeXId \
-	(tkStubsPtr->tk_FreeXId) /* 77 */
+/* Slot 77 is reserved */
 #define Tk_GCForColor \
 	(tkStubsPtr->tk_GCForColor) /* 78 */
 #define Tk_GeometryRequest \
@@ -1475,8 +1439,7 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_IdToWindow) /* 116 */
 #define Tk_ImageChanged \
 	(tkStubsPtr->tk_ImageChanged) /* 117 */
-#define Tk_Init \
-	(tkStubsPtr->tk_Init) /* 118 */
+/* Slot 118 is reserved */
 #define Tk_InternAtom \
 	(tkStubsPtr->tk_InternAtom) /* 119 */
 #define Tk_IntersectTextLayout \
@@ -1527,20 +1490,16 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_OwnSelection) /* 142 */
 #define Tk_ParseArgv \
 	(tkStubsPtr->tk_ParseArgv) /* 143 */
-#define Tk_PhotoPutBlock_NoComposite \
-	(tkStubsPtr->tk_PhotoPutBlock_NoComposite) /* 144 */
-#define Tk_PhotoPutZoomedBlock_NoComposite \
-	(tkStubsPtr->tk_PhotoPutZoomedBlock_NoComposite) /* 145 */
+/* Slot 144 is reserved */
+/* Slot 145 is reserved */
 #define Tk_PhotoGetImage \
 	(tkStubsPtr->tk_PhotoGetImage) /* 146 */
 #define Tk_PhotoBlank \
 	(tkStubsPtr->tk_PhotoBlank) /* 147 */
-#define Tk_PhotoExpand_Panic \
-	(tkStubsPtr->tk_PhotoExpand_Panic) /* 148 */
+/* Slot 148 is reserved */
 #define Tk_PhotoGetSize \
 	(tkStubsPtr->tk_PhotoGetSize) /* 149 */
-#define Tk_PhotoSetSize_Panic \
-	(tkStubsPtr->tk_PhotoSetSize_Panic) /* 150 */
+/* Slot 150 is reserved */
 #define Tk_PointToChar \
 	(tkStubsPtr->tk_PointToChar) /* 151 */
 #define Tk_PostscriptFontName \
@@ -1557,8 +1516,7 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_RestackWindow) /* 157 */
 #define Tk_RestrictEvents \
 	(tkStubsPtr->tk_RestrictEvents) /* 158 */
-#define Tk_SafeInit \
-	(tkStubsPtr->tk_SafeInit) /* 159 */
+/* Slot 159 is reserved */
 #define Tk_SetAppName \
 	(tkStubsPtr->tk_SetAppName) /* 160 */
 #define Tk_SetBackgroundFromBorder \
@@ -1670,8 +1628,7 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_SetOptions) /* 214 */
 #define Tk_InitConsoleChannels \
 	(tkStubsPtr->tk_InitConsoleChannels) /* 215 */
-#define Tk_CreateConsoleWindow \
-	(tkStubsPtr->tk_CreateConsoleWindow) /* 216 */
+/* Slot 216 is reserved */
 #define Tk_CreateSmoothMethod \
 	(tkStubsPtr->tk_CreateSmoothMethod) /* 217 */
 /* Slot 218 is reserved */
@@ -1728,10 +1685,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_SetMinimumRequestSize) /* 244 */
 #define Tk_SetCaretPos \
 	(tkStubsPtr->tk_SetCaretPos) /* 245 */
-#define Tk_PhotoPutBlock_Panic \
-	(tkStubsPtr->tk_PhotoPutBlock_Panic) /* 246 */
-#define Tk_PhotoPutZoomedBlock_Panic \
-	(tkStubsPtr->tk_PhotoPutZoomedBlock_Panic) /* 247 */
+/* Slot 246 is reserved */
+/* Slot 247 is reserved */
 #define Tk_CollapseMotionEvents \
 	(tkStubsPtr->tk_CollapseMotionEvents) /* 248 */
 #define Tk_RegisterStyleEngine \
@@ -1752,10 +1707,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_NameOfStyle) /* 256 */
 #define Tk_AllocStyleFromObj \
 	(tkStubsPtr->tk_AllocStyleFromObj) /* 257 */
-#define Tk_GetStyleFromObj \
-	(tkStubsPtr->tk_GetStyleFromObj) /* 258 */
-#define Tk_FreeStyleFromObj \
-	(tkStubsPtr->tk_FreeStyleFromObj) /* 259 */
+/* Slot 258 is reserved */
+/* Slot 259 is reserved */
 #define Tk_GetStyledElement \
 	(tkStubsPtr->tk_GetStyledElement) /* 260 */
 #define Tk_GetElementSize \
@@ -1780,10 +1733,8 @@ extern const TkStubs *tkStubsPtr;
 	(tkStubsPtr->tk_ResetUserInactiveTime) /* 270 */
 #define Tk_Interp \
 	(tkStubsPtr->tk_Interp) /* 271 */
-#define Tk_CreateOldImageType \
-	(tkStubsPtr->tk_CreateOldImageType) /* 272 */
-#define Tk_CreateOldPhotoImageFormat \
-	(tkStubsPtr->tk_CreateOldPhotoImageFormat) /* 273 */
+/* Slot 272 is reserved */
+/* Slot 273 is reserved */
 #define Tk_AlwaysShowSelection \
 	(tkStubsPtr->tk_AlwaysShowSelection) /* 274 */
 #define Tk_GetButtonMask \
@@ -1823,16 +1774,7 @@ extern const TkStubs *tkStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
-/* Functions that don't belong in the stub table */
-#undef Tk_MainEx
-#undef Tk_Init
-#undef Tk_SafeInit
-#undef Tk_CreateConsoleWindow
-
-#undef Tk_FreeXId
-#define Tk_FreeXId(display,xid)
-#undef Tk_GetStyleFromObj
-#undef Tk_FreeStyleFromObj
+#define Tk_FreeXId(display,xid) /* no-op */
 #define Tk_GetStyleFromObj(obj) Tk_AllocStyleFromObj(NULL, obj)
 #define Tk_FreeStyleFromObj(obj) /* no-op */
 #define Tk_GetImageMasterData Tk_GetImageModelData
@@ -1848,17 +1790,9 @@ EXTERN void  Tk_MainEx(Tcl_Size argc, char **argv,
     EXTERN void Tk_MainExW(Tcl_Size argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 #endif
-
-
-#if defined(TK_NO_DEPRECATED) || TCL_MAJOR_VERSION > 8
-#undef Tk_PhotoPutBlock_NoComposite
-#undef Tk_PhotoPutZoomedBlock_NoComposite
-#undef Tk_PhotoExpand_Panic
-#undef Tk_PhotoPutBlock_Panic
-#undef Tk_PhotoPutZoomedBlock_Panic
-#undef Tk_PhotoSetSize_Panic
-#undef Tk_CreateOldPhotoImageFormat
-#endif /* TK_NO_DEPRECATED */
+EXTERN int Tk_Init(Tcl_Interp *interp);
+EXTERN int Tk_SafeInit(Tcl_Interp *interp);
+EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

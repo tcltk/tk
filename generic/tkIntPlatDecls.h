@@ -113,8 +113,7 @@ EXTERN void		TkWinDialogDebug(int debug);
 /* 32 */
 EXTERN Tcl_Obj *	TkWinGetMenuSystemDefault(Tk_Window tkwin,
 				const char *dbName, const char *className);
-/* 33 */
-EXTERN int		TkWinGetPlatformId(void);
+/* Slot 33 is reserved */
 /* 34 */
 EXTERN void		TkWinSetHINSTANCE(HINSTANCE hInstance);
 /* 35 */
@@ -370,7 +369,7 @@ typedef struct TkIntPlatStubs {
     void (*tkWinSetForegroundWindow) (TkWindow *winPtr); /* 30 */
     void (*tkWinDialogDebug) (int debug); /* 31 */
     Tcl_Obj * (*tkWinGetMenuSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 32 */
-    int (*tkWinGetPlatformId) (void); /* 33 */
+    void (*reserved33)(void);
     void (*tkWinSetHINSTANCE) (HINSTANCE hInstance); /* 34 */
     int (*tkWinGetPlatformTheme) (void); /* 35 */
     LRESULT (__stdcall *tkWinChildProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 36 */
@@ -572,8 +571,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkWinDialogDebug) /* 31 */
 #define TkWinGetMenuSystemDefault \
 	(tkIntPlatStubsPtr->tkWinGetMenuSystemDefault) /* 32 */
-#define TkWinGetPlatformId \
-	(tkIntPlatStubsPtr->tkWinGetPlatformId) /* 33 */
+/* Slot 33 is reserved */
 #define TkWinSetHINSTANCE \
 	(tkIntPlatStubsPtr->tkWinSetHINSTANCE) /* 34 */
 #define TkWinGetPlatformTheme \
@@ -779,23 +777,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
-#undef TkpCmapStressed_
-#undef TkpSync_
-#undef TkUnixContainerId_
-#undef TkUnixDoOneXEvent_
-#undef TkUnixSetMenubar_
-#undef TkWmCleanup_
-#undef TkSendCleanup_
-#undef TkpTestsendCmd_
-#undef TkGenerateActivateEvents_
-#undef TkMacOSXSetUpClippingRgn
-#undef TkMacOSXIsCharacterMissing
-#define TkMacOSXIsCharacterMissing(tkfont) ((void)tkfont, 0)
-
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
-
-#undef TkWinGetPlatformId
-#define TkWinGetPlatformId() (2) /* VER_PLATFORM_WIN32_NT */
 
 #endif /* _TKINTPLATDECLS */
