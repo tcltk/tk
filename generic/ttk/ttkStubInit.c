@@ -59,6 +59,11 @@ const TtkStubs ttkStubs = {
     Ttk_ExpandBox, /* 33 */
     Ttk_PlaceBox, /* 34 */
     Ttk_NewBoxObj, /* 35 */
+    0, /* 36 */
+    0, /* 37 */
+    0, /* 38 */
+    0, /* 39 */
+    Ttk_GetOrientFromObj, /* 40 */
 };
 
 /* !END!: Do not edit above this line. */
