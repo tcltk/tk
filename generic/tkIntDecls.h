@@ -1178,24 +1178,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#undef TkpCmapStressed_
-#undef TkpSync_
-#undef TkUnixContainerId_
-#undef TkUnixDoOneXEvent_
-#undef TkUnixSetMenubar_
-#undef TkWmCleanup_
-#undef TkSendCleanup_
-#undef TkpTestsendCmd_
-#undef TkSetWindowMenuBar
-#undef TkpDrawHighlightBorder
-#undef TkpUseWindow
-#undef TkpSetMainMenubar
-#undef TkpGetOtherWindow
-#undef TkpGetSystemDefault
-#undef TkpMakeContainer
-#undef TkpMakeWindow
-
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION == 8)
+#if !defined(TK_NO_DEPRECATED)
 #   define TkSetWindowMenuBar Tk_SetWindowMenubar
 #   define TkpDrawHighlightBorder Tk_DrawHighlightBorder
 #   define TkpUseWindow Tk_UseWindow

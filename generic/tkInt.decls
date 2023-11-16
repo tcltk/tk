@@ -831,9 +831,6 @@ declare 32 win {
     Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window tkwin,
 	    const char *dbName, const char *className)
 }
-declare 33 win {
-    int TkWinGetPlatformId(void)
-}
 
 # new for 8.4.1
 
