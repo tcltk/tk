@@ -232,7 +232,7 @@ TkpScanWindowId(
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Creates a Windows window object based on the current attributes of the
  *	specified TkWindow.
