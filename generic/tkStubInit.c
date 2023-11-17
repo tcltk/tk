@@ -441,9 +441,9 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpScanWindowId, /* 6 */
     TkpWmSetState, /* 7 */
     TkpSetCursor, /* 8 */
-    TkpSetCapture, /* 9 */
+    TkWmCleanup, /* 9 */
     TkSetPixmapColormap, /* 10 */
-    0, /* 11 */
+    TkpSetCapture, /* 11 */
     TkWinClipboardRender, /* 12 */
     TkWinEmbeddedEventProc, /* 13 */
     TkWinFillRect, /* 14 */
@@ -475,7 +475,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkUnixContainerId, /* 40 */
     TkUnixDoOneXEvent, /* 41 */
     TkUnixSetMenubar, /* 42 */
-    TkWmCleanup, /* 43 */
+    0, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
     0, /* 46 */
@@ -491,9 +491,9 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkpScanWindowId, /* 6 */
     TkpWmSetState, /* 7 */
     TkMacOSXButtonKeyState, /* 8 */
-    TkpSetCapture, /* 9 */
+    TkMacOSXClearMenubarActive, /* 9 */
     TkMacOSXDispatchMenuEvent, /* 10 */
-    TkMacOSXClearMenubarActive, /* 11 */
+    TkpSetCapture, /* 11 */
     TkMacOSXHandleTearoffMenu, /* 12 */
     0, /* 13 */
     TkMacOSXDoHLEvent, /* 14 */
@@ -582,7 +582,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkUnixContainerId, /* 40 */
     TkUnixDoOneXEvent, /* 41 */
     TkUnixSetMenubar, /* 42 */
-    TkWmCleanup, /* 43 */
+    0, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
 #endif /* X11 */
