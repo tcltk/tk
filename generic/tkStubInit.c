@@ -591,6 +591,7 @@ static const TkIntPlatStubs tkIntPlatStubs = {
 static const TkIntXlibStubs tkIntXlibStubs = {
     TCL_STUB_MAGIC,
     0,
+#if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
     XSetDashes, /* 0 */
     XGetModifierMapping, /* 1 */
     XCreateImage, /* 2 */
@@ -750,6 +751,168 @@ static const TkIntXlibStubs tkIntXlibStubs = {
     XFreeStringList, /* 156 */
     XkbKeycodeToKeysym, /* 157 */
     XkbOpenDisplay, /* 158 */
+#endif /* WIN */
+#ifdef MAC_OSX_TCL /* MACOSX */
+    XSetDashes, /* 0 */
+    XGetModifierMapping, /* 1 */
+    XCreateImage, /* 2 */
+    XGetImage, /* 3 */
+    XGetAtomName, /* 4 */
+    XKeysymToString, /* 5 */
+    XCreateColormap, /* 6 */
+    XCreatePixmapCursor, /* 7 */
+    XCreateGlyphCursor, /* 8 */
+    XGContextFromGC, /* 9 */
+    XListHosts, /* 10 */
+    XKeycodeToKeysym, /* 11 */
+    XStringToKeysym, /* 12 */
+    XRootWindow, /* 13 */
+    XSetErrorHandler, /* 14 */
+    XIconifyWindow, /* 15 */
+    XWithdrawWindow, /* 16 */
+    XGetWMColormapWindows, /* 17 */
+    XAllocColor, /* 18 */
+    XBell, /* 19 */
+    XChangeProperty, /* 20 */
+    XChangeWindowAttributes, /* 21 */
+    XClearWindow, /* 22 */
+    XConfigureWindow, /* 23 */
+    XCopyArea, /* 24 */
+    XCopyPlane, /* 25 */
+    XCreateBitmapFromData, /* 26 */
+    XDefineCursor, /* 27 */
+    XDeleteProperty, /* 28 */
+    XDestroyWindow, /* 29 */
+    XDrawArc, /* 30 */
+    XDrawLines, /* 31 */
+    XDrawRectangle, /* 32 */
+    XFillArc, /* 33 */
+    XFillPolygon, /* 34 */
+    XFillRectangles, /* 35 */
+    XForceScreenSaver, /* 36 */
+    XFreeColormap, /* 37 */
+    XFreeColors, /* 38 */
+    XFreeCursor, /* 39 */
+    XFreeModifiermap, /* 40 */
+    XGetGeometry, /* 41 */
+    XGetInputFocus, /* 42 */
+    XGetWindowProperty, /* 43 */
+    XGetWindowAttributes, /* 44 */
+    XGrabKeyboard, /* 45 */
+    XGrabPointer, /* 46 */
+    XKeysymToKeycode, /* 47 */
+    XLookupColor, /* 48 */
+    XMapWindow, /* 49 */
+    XMoveResizeWindow, /* 50 */
+    XMoveWindow, /* 51 */
+    XNextEvent, /* 52 */
+    XPutBackEvent, /* 53 */
+    XQueryColors, /* 54 */
+    XQueryPointer, /* 55 */
+    XQueryTree, /* 56 */
+    XRaiseWindow, /* 57 */
+    XRefreshKeyboardMapping, /* 58 */
+    XResizeWindow, /* 59 */
+    XSelectInput, /* 60 */
+    XSendEvent, /* 61 */
+    XSetCommand, /* 62 */
+    XSetIconName, /* 63 */
+    XSetInputFocus, /* 64 */
+    XSetSelectionOwner, /* 65 */
+    XSetWindowBackground, /* 66 */
+    XSetWindowBackgroundPixmap, /* 67 */
+    XSetWindowBorder, /* 68 */
+    XSetWindowBorderPixmap, /* 69 */
+    XSetWindowBorderWidth, /* 70 */
+    XSetWindowColormap, /* 71 */
+    XTranslateCoordinates, /* 72 */
+    XUngrabKeyboard, /* 73 */
+    XUngrabPointer, /* 74 */
+    XUnmapWindow, /* 75 */
+    XWindowEvent, /* 76 */
+    XDestroyIC, /* 77 */
+    XFilterEvent, /* 78 */
+    XmbLookupString, /* 79 */
+    TkPutImage, /* 80 */
+    XSetClipRectangles, /* 81 */
+    XParseColor, /* 82 */
+    XCreateGC, /* 83 */
+    XFreeGC, /* 84 */
+    XInternAtom, /* 85 */
+    XSetBackground, /* 86 */
+    XSetForeground, /* 87 */
+    XSetClipMask, /* 88 */
+    XSetClipOrigin, /* 89 */
+    XSetTSOrigin, /* 90 */
+    XChangeGC, /* 91 */
+    XSetFont, /* 92 */
+    XSetArcMode, /* 93 */
+    XSetStipple, /* 94 */
+    XSetFillRule, /* 95 */
+    XSetFillStyle, /* 96 */
+    XSetFunction, /* 97 */
+    XSetLineAttributes, /* 98 */
+    _XInitImageFuncPtrs, /* 99 */
+    XCreateIC, /* 100 */
+    XGetVisualInfo, /* 101 */
+    XSetWMClientMachine, /* 102 */
+    XStringListToTextProperty, /* 103 */
+    XDrawLine, /* 104 */
+    XWarpPointer, /* 105 */
+    XFillRectangle, /* 106 */
+    XFlush, /* 107 */
+    XGrabServer, /* 108 */
+    XUngrabServer, /* 109 */
+    XFree, /* 110 */
+    XNoOp, /* 111 */
+    XSynchronize, /* 112 */
+    XSync, /* 113 */
+    XVisualIDFromVisual, /* 114 */
+    0, /* 115 */
+    0, /* 116 */
+    0, /* 117 */
+    0, /* 118 */
+    0, /* 119 */
+    XOffsetRegion, /* 120 */
+    XUnionRegion, /* 121 */
+    XCreateWindow, /* 122 */
+    0, /* 123 */
+    0, /* 124 */
+    0, /* 125 */
+    0, /* 126 */
+    0, /* 127 */
+    0, /* 128 */
+    XLowerWindow, /* 129 */
+    XFillArcs, /* 130 */
+    XDrawArcs, /* 131 */
+    XDrawRectangles, /* 132 */
+    XDrawSegments, /* 133 */
+    XDrawPoint, /* 134 */
+    XDrawPoints, /* 135 */
+    XReparentWindow, /* 136 */
+    XPutImage, /* 137 */
+    XPolygonRegion, /* 138 */
+    XPointInRegion, /* 139 */
+    XVaCreateNestedList, /* 140 */
+    XSetICValues, /* 141 */
+    XGetICValues, /* 142 */
+    XSetICFocus, /* 143 */
+    0, /* 144 */
+    0, /* 145 */
+    0, /* 146 */
+    XFreeFontSet, /* 147 */
+    XCloseIM, /* 148 */
+    XRegisterIMInstantiateCallback, /* 149 */
+    XUnregisterIMInstantiateCallback, /* 150 */
+    XSetLocaleModifiers, /* 151 */
+    XOpenIM, /* 152 */
+    XGetIMValues, /* 153 */
+    XSetIMValues, /* 154 */
+    XCreateFontSet, /* 155 */
+    XFreeStringList, /* 156 */
+    XkbKeycodeToKeysym, /* 157 */
+    XkbOpenDisplay, /* 158 */
+#endif /* MACOSX */
 };
 
 static const TkPlatStubs tkPlatStubs = {
