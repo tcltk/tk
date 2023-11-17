@@ -57,10 +57,11 @@ EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 /* 8 */
 EXTERN void		TkpSetCursor(TkpCursor cursor);
 /* 9 */
-EXTERN void		TkpSetCapture(TkWindow *winPtr);
+EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
 /* 10 */
 EXTERN void		TkSetPixmapColormap(Pixmap pixmap, Colormap colormap);
-/* Slot 11 is reserved */
+/* 11 */
+EXTERN void		TkpSetCapture(TkWindow *winPtr);
 /* 12 */
 EXTERN void		TkWinClipboardRender(TkDisplay *dispPtr, UINT format);
 /* 13 */
@@ -133,8 +134,7 @@ EXTERN Window		TkUnixContainerId(TkWindow *winPtr);
 EXTERN int		TkUnixDoOneXEvent(Tcl_Time *timePtr);
 /* 42 */
 EXTERN void		TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar);
-/* 43 */
-EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
+/* Slot 43 is reserved */
 /* 44 */
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
@@ -165,11 +165,11 @@ EXTERN int		TkpWmSetState(TkWindow *winPtr, int state);
 /* 8 */
 EXTERN unsigned int	TkMacOSXButtonKeyState(void);
 /* 9 */
-EXTERN void		TkpSetCapture(TkWindow *winPtr);
+EXTERN void		TkMacOSXClearMenubarActive(void);
 /* 10 */
 EXTERN int		TkMacOSXDispatchMenuEvent(int menuID, int index);
 /* 11 */
-EXTERN void		TkMacOSXClearMenubarActive(void);
+EXTERN void		TkpSetCapture(TkWindow *winPtr);
 /* 12 */
 EXTERN void		TkMacOSXHandleTearoffMenu(void);
 /* Slot 13 is reserved */
@@ -308,8 +308,7 @@ EXTERN Window		TkUnixContainerId(TkWindow *winPtr);
 EXTERN int		TkUnixDoOneXEvent(Tcl_Time *timePtr);
 /* 42 */
 EXTERN void		TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar);
-/* 43 */
-EXTERN void		TkWmCleanup(TkDisplay *dispPtr);
+/* Slot 43 is reserved */
 /* 44 */
 EXTERN void		TkSendCleanup(TkDisplay *dispPtr);
 /* 45 */
@@ -331,9 +330,9 @@ typedef struct TkIntPlatStubs {
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 7 */
     void (*tkpSetCursor) (TkpCursor cursor); /* 8 */
-    void (*tkpSetCapture) (TkWindow *winPtr); /* 9 */
+    void (*tkWmCleanup) (TkDisplay *dispPtr); /* 9 */
     void (*tkSetPixmapColormap) (Pixmap pixmap, Colormap colormap); /* 10 */
-    void (*reserved11)(void);
+    void (*tkpSetCapture) (TkWindow *winPtr); /* 11 */
     void (*tkWinClipboardRender) (TkDisplay *dispPtr, UINT format); /* 12 */
     LRESULT (*tkWinEmbeddedEventProc) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam); /* 13 */
     void (*tkWinFillRect) (HDC dc, int x, int y, int width, int height, int pixel); /* 14 */
@@ -365,7 +364,7 @@ typedef struct TkIntPlatStubs {
     Window (*tkUnixContainerId) (TkWindow *winPtr); /* 40 */
     int (*tkUnixDoOneXEvent) (Tcl_Time *timePtr); /* 41 */
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
-    void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
+    void (*reserved43)(void);
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
     int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
     void (*reserved46)(void);
@@ -381,9 +380,9 @@ typedef struct TkIntPlatStubs {
     int (*tkpScanWindowId) (Tcl_Interp *interp, const char *string, Window *idPtr); /* 6 */
     int (*tkpWmSetState) (TkWindow *winPtr, int state); /* 7 */
     unsigned int (*tkMacOSXButtonKeyState) (void); /* 8 */
-    void (*tkpSetCapture) (TkWindow *winPtr); /* 9 */
+    void (*tkMacOSXClearMenubarActive) (void); /* 9 */
     int (*tkMacOSXDispatchMenuEvent) (int menuID, int index); /* 10 */
-    void (*tkMacOSXClearMenubarActive) (void); /* 11 */
+    void (*tkpSetCapture) (TkWindow *winPtr); /* 11 */
     void (*tkMacOSXHandleTearoffMenu) (void); /* 12 */
     void (*reserved13)(void);
     int (*tkMacOSXDoHLEvent) (void *theEvent); /* 14 */
@@ -472,7 +471,7 @@ typedef struct TkIntPlatStubs {
     Window (*tkUnixContainerId) (TkWindow *winPtr); /* 40 */
     int (*tkUnixDoOneXEvent) (Tcl_Time *timePtr); /* 41 */
     void (*tkUnixSetMenubar) (Tk_Window tkwin, Tk_Window menubar); /* 42 */
-    void (*tkWmCleanup) (TkDisplay *dispPtr); /* 43 */
+    void (*reserved43)(void);
     void (*tkSendCleanup) (TkDisplay *dispPtr); /* 44 */
     int (*tkpTestsendCmd) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 45 */
 #endif /* X11 */
@@ -509,11 +508,12 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 7 */
 #define TkpSetCursor \
 	(tkIntPlatStubsPtr->tkpSetCursor) /* 8 */
-#define TkpSetCapture \
-	(tkIntPlatStubsPtr->tkpSetCapture) /* 9 */
+#define TkWmCleanup \
+	(tkIntPlatStubsPtr->tkWmCleanup) /* 9 */
 #define TkSetPixmapColormap \
 	(tkIntPlatStubsPtr->tkSetPixmapColormap) /* 10 */
-/* Slot 11 is reserved */
+#define TkpSetCapture \
+	(tkIntPlatStubsPtr->tkpSetCapture) /* 11 */
 #define TkWinClipboardRender \
 	(tkIntPlatStubsPtr->tkWinClipboardRender) /* 12 */
 #define TkWinEmbeddedEventProc \
@@ -575,8 +575,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 41 */
 #define TkUnixSetMenubar \
 	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 42 */
-#define TkWmCleanup \
-	(tkIntPlatStubsPtr->tkWmCleanup) /* 43 */
+/* Slot 43 is reserved */
 #define TkSendCleanup \
 	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #define TkpTestsendCmd \
@@ -603,12 +602,12 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkpWmSetState) /* 7 */
 #define TkMacOSXButtonKeyState \
 	(tkIntPlatStubsPtr->tkMacOSXButtonKeyState) /* 8 */
-#define TkpSetCapture \
-	(tkIntPlatStubsPtr->tkpSetCapture) /* 9 */
+#define TkMacOSXClearMenubarActive \
+	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 9 */
 #define TkMacOSXDispatchMenuEvent \
 	(tkIntPlatStubsPtr->tkMacOSXDispatchMenuEvent) /* 10 */
-#define TkMacOSXClearMenubarActive \
-	(tkIntPlatStubsPtr->tkMacOSXClearMenubarActive) /* 11 */
+#define TkpSetCapture \
+	(tkIntPlatStubsPtr->tkpSetCapture) /* 11 */
 #define TkMacOSXHandleTearoffMenu \
 	(tkIntPlatStubsPtr->tkMacOSXHandleTearoffMenu) /* 12 */
 /* Slot 13 is reserved */
@@ -739,8 +738,7 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkUnixDoOneXEvent) /* 41 */
 #define TkUnixSetMenubar \
 	(tkIntPlatStubsPtr->tkUnixSetMenubar) /* 42 */
-#define TkWmCleanup \
-	(tkIntPlatStubsPtr->tkWmCleanup) /* 43 */
+/* Slot 43 is reserved */
 #define TkSendCleanup \
 	(tkIntPlatStubsPtr->tkSendCleanup) /* 44 */
 #define TkpTestsendCmd \
