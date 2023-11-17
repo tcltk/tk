@@ -8658,6 +8658,19 @@ test text-39.14 "Bug 9ffb79059bacafe3796bc3ab3ae701f402f4c813 \
 } -cleanup {
     destroy .t
 } -result {}
+test text-39.15 "Bug 84b066a8ffd626f514348e598707ef126693423b \
+                 crash with text tags operation and -undo 1" -setup {
+    pack [text .t -undo 1]
+    update
+} -body {
+    .t insert end "'Line1'"
+    .t tag add operator 1.0 1.1
+    .t tag add operator 1.3 1.4
+    .t tag add operator 1.6 1.7
+    .t tag remove operator 1.0 1.4    ; # used to crash
+} -cleanup {
+    destroy .t
+} -result {}
 
 
 test text-40.1 {Extending selection with mouse going outside the widget - Bug a9cf210a42} -setup {
