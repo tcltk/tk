@@ -432,18 +432,18 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TCL_STUB_MAGIC,
     0,
 #if defined(_WIN32) || defined(__CYGWIN__) /* WIN */
-    TkAlignImageData, /* 0 */
-    TkWinCancelMouseTimer, /* 1 */
+    TkCreateXEventSource, /* 0 */
+    0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
     TkpGetMS, /* 3 */
     TkPointerDeadWindow, /* 4 */
     TkpPrintWindowId, /* 5 */
     TkpScanWindowId, /* 6 */
-    TkpWmSetState, /* 7 */
+    TkpSetCapture, /* 7 */
     TkpSetCursor, /* 8 */
-    TkWmCleanup, /* 9 */
+    TkpWmSetState, /* 9 */
     TkSetPixmapColormap, /* 10 */
-    TkpSetCapture, /* 11 */
+    TkWinCancelMouseTimer, /* 11 */
     TkWinClipboardRender, /* 12 */
     TkWinEmbeddedEventProc, /* 13 */
     TkWinFillRect, /* 14 */
@@ -465,17 +465,17 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkWinSetForegroundWindow, /* 30 */
     TkWinDialogDebug, /* 31 */
     TkWinGetMenuSystemDefault, /* 32 */
-    0, /* 33 */
+    TkAlignImageData, /* 33 */
     TkWinSetHINSTANCE, /* 34 */
     TkWinGetPlatformTheme, /* 35 */
     TkWinChildProc, /* 36 */
-    TkCreateXEventSource, /* 37 */
+    0, /* 37 */
     TkpCmapStressed, /* 38 */
     TkpSync, /* 39 */
     TkUnixContainerId, /* 40 */
     TkUnixDoOneXEvent, /* 41 */
     TkUnixSetMenubar, /* 42 */
-    0, /* 43 */
+    TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
     0, /* 46 */
@@ -539,16 +539,16 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkMacOSXDrawable, /* 54 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
-    0, /* 0 */
+    TkCreateXEventSource, /* 0 */
     0, /* 1 */
     TkGenerateActivateEvents, /* 2 */
     0, /* 3 */
     0, /* 4 */
     0, /* 5 */
     TkpScanWindowId, /* 6 */
-    TkpWmSetState, /* 7 */
+    0, /* 7 */
     0, /* 8 */
-    TkWmCleanup, /* 9 */
+    TkpWmSetState, /* 9 */
     0, /* 10 */
     0, /* 11 */
     0, /* 12 */
@@ -576,13 +576,13 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     0, /* 34 */
     0, /* 35 */
     0, /* 36 */
-    TkCreateXEventSource, /* 37 */
+    0, /* 37 */
     TkpCmapStressed, /* 38 */
     TkpSync, /* 39 */
     TkUnixContainerId, /* 40 */
     TkUnixDoOneXEvent, /* 41 */
     TkUnixSetMenubar, /* 42 */
-    0, /* 43 */
+    TkWmCleanup, /* 43 */
     TkSendCleanup, /* 44 */
     TkpTestsendCmd, /* 45 */
 #endif /* X11 */
