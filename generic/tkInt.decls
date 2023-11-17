@@ -624,20 +624,17 @@ interface tkIntPlat
 ################################
 # Unix specific functions
 
+declare 0 x11 {
+    void TkCreateXEventSource(void)
+}
 declare 2 x11 {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
 }
 declare 6 x11 {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
-declare 7 x11 {
-    int TkpWmSetState(TkWindow *winPtr, int state)
-}
 declare 9 x11 {
-    void TkWmCleanup(TkDisplay *dispPtr)
-}
-declare 37 x11 {
-    void TkCreateXEventSource(void)
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 # only needed by tktest:
 declare 38 x11 {
@@ -655,6 +652,9 @@ declare 41 x11 {
 declare 42 x11 {
     void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
 }
+declare 43 x11 {
+    void TkWmCleanup(TkDisplay *dispPtr)
+}
 declare 44 x11 {
     void TkSendCleanup(TkDisplay *dispPtr)
 }
@@ -668,10 +668,7 @@ declare 45 x11 {
 # Windows specific functions
 
 declare 0 win {
-    char *TkAlignImageData(XImage *image, int alignment, int bitOrder)
-}
-declare 1 win {
-    void TkWinCancelMouseTimer(void)
+    void TkCreateXEventSource(void)
 }
 declare 2 win {
     void TkGenerateActivateEvents(TkWindow *winPtr, int active)
@@ -689,19 +686,19 @@ declare 6 win {
     int TkpScanWindowId(Tcl_Interp *interp, const char *string, Window *idPtr)
 }
 declare 7 win {
-    int TkpWmSetState(TkWindow *winPtr, int state)
+    void TkpSetCapture(TkWindow *winPtr)
 }
 declare 8 win {
     void TkpSetCursor(TkpCursor cursor)
 }
 declare 9 win {
-    void TkWmCleanup(TkDisplay *dispPtr)
+    int TkpWmSetState(TkWindow *winPtr, int state)
 }
 declare 10 win {
     void TkSetPixmapColormap(Pixmap pixmap, Colormap colormap)
 }
 declare 11 win {
-    void TkpSetCapture(TkWindow *winPtr)
+    void TkWinCancelMouseTimer(void)
 }
 declare 12 win {
     void TkWinClipboardRender(TkDisplay *dispPtr, UINT format)
@@ -773,6 +770,9 @@ declare 32 win {
     Tcl_Obj *TkWinGetMenuSystemDefault(Tk_Window tkwin,
 	    const char *dbName, const char *className)
 }
+declare 33 win {
+    char *TkAlignImageData(XImage *image, int alignment, int bitOrder)
+}
 
 # new for 8.4.1
 
@@ -790,10 +790,6 @@ declare 36 win {
 	    UINT message, WPARAM wParam, LPARAM lParam)
 }
 
-# new for 8.4.20+/8.5.12+, Cygwin only
-declare 37 win {
-    void TkCreateXEventSource(void)
-}
 declare 38 win {
     int TkpCmapStressed(Tk_Window tkwin, Colormap colormap)
 }
@@ -808,6 +804,9 @@ declare 41 win {
 }
 declare 42 win {
     void TkUnixSetMenubar(Tk_Window tkwin, Tk_Window menubar)
+}
+declare 43 win {
+    void TkWmCleanup(TkDisplay *dispPtr)
 }
 declare 44 win {
     void TkSendCleanup(TkDisplay *dispPtr)
