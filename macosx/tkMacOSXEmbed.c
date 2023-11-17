@@ -61,7 +61,7 @@ static void	EmbedWindowDeleted(TkWindow *winPtr);
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Creates an X Window (Mac subwindow).
  *
