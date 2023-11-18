@@ -1056,7 +1056,7 @@ static void ThumbElementSize(
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->sizeObj, &size);
-    TtkGetOrientFromObj(NULL, thumb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
 	*widthPtr = size;
@@ -1147,7 +1147,7 @@ static void SliderElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
 

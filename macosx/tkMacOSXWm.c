@@ -6978,7 +6978,7 @@ TkpGetWrapperWindow(
  *----------------------------------------------------------------------
  */
 
-void
+int
 TkpWmSetState(
     TkWindow *winPtr,		/* Toplevel window to operate on. */
     int state)			/* One of IconicState, ZoomState, NormalState,
@@ -6989,7 +6989,7 @@ TkpWmSetState(
 
     wmPtr->hints.initial_state = state;
     if (wmPtr->flags & WM_NEVER_MAPPED) {
-	return;
+	goto setStateEnd;
     }
 
     macWin = TkMacOSXGetNSWindowForDrawable(winPtr->window);
@@ -7033,6 +7033,8 @@ TkpWmSetState(
      */
 
     while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
+setStateEnd:
+    return 1;
 }
 
 /*

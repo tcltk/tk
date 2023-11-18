@@ -3296,8 +3296,8 @@ CanvasEventProc(
 
 	/*
 	 * Special hack: if the canvas is unmapped, then must notify all items
-	 * with "alwaysRedraw" set, so that they know that they are no longer
-	 * displayed.
+	 * with flag TK_ALWAYS_REDRAW set, so that they know that they are no
+	 * longer displayed.
 	 */
 
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;

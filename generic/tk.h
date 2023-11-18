@@ -268,15 +268,6 @@ typedef struct Tk_ObjCustomOption {
 } Tk_ObjCustomOption;
 
 /*
- * Macro to use to fill in "offset" fields of the Tk_OptionSpec structure.
- * Computes number of bytes from beginning of structure to a given field.
- */
-
-#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9) && !defined(BUILD_tk)
-#   define Tk_Offset(type, field) ((int) offsetof(type, field))
-#endif
-
-/*
  * The following two structures are used for error handling. When config
  * options are being modified, the old values are saved in a Tk_SavedOptions
  * structure. If an error occurs, then the contents of the structure can be
@@ -418,9 +409,6 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#ifndef TK_NO_DEPRECATED
-#  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
-#endif /* !TK_NO_DEPRECATED */
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
@@ -755,10 +743,6 @@ typedef XActivateDeactivateEvent XDeactivateEvent;
     (((Tk_FakeWin *) (tkwin))->flags & TK_WM_MANAGEABLE)
 #define Tk_ReqWidth(tkwin)	(((Tk_FakeWin *) (tkwin))->reqWidth)
 #define Tk_ReqHeight(tkwin)	(((Tk_FakeWin *) (tkwin))->reqHeight)
-#ifndef TK_NO_DEPRECATED
-#define Tk_InternalBorderWidth(tkwin) \
-    (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
-#endif /* !TK_NO_DEPRECATED */
 #define Tk_InternalBorderLeft(tkwin) \
     (((Tk_FakeWin *) (tkwin))->internalBorderLeft)
 #define Tk_InternalBorderRight(tkwin) \
@@ -1235,15 +1219,9 @@ typedef struct Tk_Outline {
  */
 
 typedef struct Tk_ImageType Tk_ImageType;
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9 && defined(USE_OLD_IMAGE)
-typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, char *name, Tcl_Size argc,
-	char **argv, Tk_ImageType *typePtr, Tk_ImageModel model,
-	void **clientDataPtr);
-#else
 typedef int (Tk_ImageCreateProc) (Tcl_Interp *interp, const char *name, Tcl_Size objc,
 	Tcl_Obj *const objv[], const Tk_ImageType *typePtr, Tk_ImageModel model,
 	void **clientDataPtr);
-#endif /* USE_OLD_IMAGE */
 typedef void *(Tk_ImageGetProc) (Tk_Window tkwin, void *clientData);
 typedef void (Tk_ImageDisplayProc) (void *clientData, Display *display,
 	Drawable drawable, int imageX, int imageY, int width, int height,
@@ -1338,22 +1316,6 @@ typedef struct Tk_PhotoImageBlock {
  */
 
 typedef struct Tk_PhotoImageFormat Tk_PhotoImageFormat;
-#ifdef USE_OLD_IMAGE
-typedef int (Tk_ImageFileMatchProc) (Tcl_Channel chan, char *fileName,
-	char *formatString, int *widthPtr, int *heightPtr);
-typedef int (Tk_ImageStringMatchProc) (char *string, char *formatString,
-	int *widthPtr, int *heightPtr);
-typedef int (Tk_ImageFileReadProc) (Tcl_Interp *interp, Tcl_Channel chan,
-	char *fileName, char *formatString, Tk_PhotoHandle imageHandle,
-	int destX, int destY, int width, int height, int srcX, int srcY);
-typedef int (Tk_ImageStringReadProc) (Tcl_Interp *interp, char *string,
-	char *formatString, Tk_PhotoHandle imageHandle, int destX, int destY,
-	int width, int height, int srcX, int srcY);
-typedef int (Tk_ImageFileWriteProc) (Tcl_Interp *interp, char *fileName,
-	char *formatString, Tk_PhotoImageBlock *blockPtr);
-typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp,
-	Tcl_DString *dataPtr, char *formatString, Tk_PhotoImageBlock *blockPtr);
-#else
 typedef int (Tk_ImageFileMatchProc) (Tcl_Channel chan, const char *fileName,
 	Tcl_Obj *format, int *widthPtr, int *heightPtr, Tcl_Interp *interp);
 typedef int (Tk_ImageStringMatchProc) (Tcl_Obj *dataObj, Tcl_Obj *format,
@@ -1368,7 +1330,6 @@ typedef int (Tk_ImageFileWriteProc) (Tcl_Interp *interp, const char *fileName,
 	Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr);
 typedef int (Tk_ImageStringWriteProc) (Tcl_Interp *interp, Tcl_Obj *format,
 	Tk_PhotoImageBlock *blockPtr);
-#endif /* USE_OLD_IMAGE */
 
 /*
  * The following alternate definitions are used with the Tk8.7 file format
@@ -1537,47 +1498,10 @@ typedef struct Tk_ElementSpec {
  *----------------------------------------------------------------------
  *
  * The definitions below provide backward compatibility for functions and
- * types related to event handling that used to be in Tk but have moved to
- * Tcl.
+ * types that used to be in Tk but have moved to Tcl.
  *
  *----------------------------------------------------------------------
  */
-
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-#define TK_READABLE		TCL_READABLE
-#define TK_WRITABLE		TCL_WRITABLE
-#define TK_EXCEPTION		TCL_EXCEPTION
-
-#define TK_DONT_WAIT		TCL_DONT_WAIT
-#define TK_X_EVENTS		TCL_WINDOW_EVENTS
-#define TK_WINDOW_EVENTS	TCL_WINDOW_EVENTS
-#define TK_FILE_EVENTS		TCL_FILE_EVENTS
-#define TK_TIMER_EVENTS		TCL_TIMER_EVENTS
-#define TK_IDLE_EVENTS		TCL_IDLE_EVENTS
-#define TK_ALL_EVENTS		TCL_ALL_EVENTS
-
-#define Tk_IdleProc		Tcl_IdleProc
-#define Tk_FileProc		Tcl_FileProc
-#define Tk_TimerProc		Tcl_TimerProc
-#define Tk_TimerToken		Tcl_TimerToken
-
-#define Tk_BackgroundError	Tcl_BackgroundError
-#define Tk_CancelIdleCall	Tcl_CancelIdleCall
-#define Tk_CreateFileHandler	Tcl_CreateFileHandler
-#define Tk_CreateTimerHandler	Tcl_CreateTimerHandler
-#define Tk_DeleteFileHandler	Tcl_DeleteFileHandler
-#define Tk_DeleteTimerHandler	Tcl_DeleteTimerHandler
-#define Tk_DoOneEvent		Tcl_DoOneEvent
-#define Tk_DoWhenIdle		Tcl_DoWhenIdle
-#define Tk_Sleep		Tcl_Sleep
-
-/* Additional stuff that has moved to Tcl: */
-
-#define Tk_EventuallyFree	Tcl_EventuallyFree
-#define Tk_FreeProc		Tcl_FreeProc
-#define Tk_Preserve		Tcl_Preserve
-#define Tk_Release		Tcl_Release
-#endif
 
 /* Removed Tk_Main, use macro instead */
 #if defined(_WIN32) || defined(__CYGWIN__)
@@ -1628,58 +1552,6 @@ typedef Tcl_Size (Tk_SelectionProc) (void *clientData, Tcl_Size offset,
  */
 
 #include "tkDecls.h"
-
-#ifdef USE_OLD_IMAGE
-#undef Tk_CreateImageType
-#define Tk_CreateImageType		Tk_CreateOldImageType
-#undef Tk_CreatePhotoImageFormat
-#define Tk_CreatePhotoImageFormat	Tk_CreateOldPhotoImageFormat
-#endif /* USE_OLD_IMAGE */
-
-/*
- *----------------------------------------------------------------------
- *
- * Allow users to say that they don't want to alter their source to add extra
- * arguments to Tk_PhotoPutBlock() et al.
- *
- * This goes after the inclusion of the stubbed-decls so that the declarations
- * of what is actually there can be correct.
- */
-
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-#ifdef USE_COMPOSITELESS_PHOTO_PUT_BLOCK
-#   ifdef Tk_PhotoPutBlock
-#	undef Tk_PhotoPutBlock
-#   endif
-#   define Tk_PhotoPutBlock		Tk_PhotoPutBlock_NoComposite
-#   ifdef Tk_PhotoPutZoomedBlock
-#	undef Tk_PhotoPutZoomedBlock
-#   endif
-#   define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_NoComposite
-#   define USE_PANIC_ON_PHOTO_ALLOC_FAILURE
-#else /* !USE_COMPOSITELESS_PHOTO_PUT_BLOCK */
-#   ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
-#	ifdef Tk_PhotoPutBlock
-#	    undef Tk_PhotoPutBlock
-#	endif
-#	define Tk_PhotoPutBlock		Tk_PhotoPutBlock_Panic
-#	ifdef Tk_PhotoPutZoomedBlock
-#	    undef Tk_PhotoPutZoomedBlock
-#	endif
-#	define Tk_PhotoPutZoomedBlock	Tk_PhotoPutZoomedBlock_Panic
-#   endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
-#endif /* USE_COMPOSITELESS_PHOTO_PUT_BLOCK */
-#ifdef USE_PANIC_ON_PHOTO_ALLOC_FAILURE
-#   ifdef Tk_PhotoExpand
-#	undef Tk_PhotoExpand
-#   endif
-#   define Tk_PhotoExpand		Tk_PhotoExpand_Panic
-#   ifdef Tk_PhotoSetSize
-#	undef Tk_PhotoSetSize
-#   endif
-#   define Tk_PhotoSetSize		Tk_PhotoSetSize_Panic
-#endif /* USE_PANIC_ON_PHOTO_ALLOC_FAILURE */
-#endif /* !TK_NO_DEPRECATED */
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

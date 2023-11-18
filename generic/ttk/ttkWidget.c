@@ -480,7 +480,7 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
 
     /* Prefix:
      */
-    TtkGetOrientFromObj(NULL, orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL)
 	Tcl_DStringAppend(&styleName, "Horizontal.", -1);
     else
