@@ -429,14 +429,6 @@ to process the default string:  the client can compute the default
 once, save the value, and provide it before calling
 \fBTk_ConfigureWidget\fR.
 .TP
-\fBTK_CONFIG_OPTION_SPECIFIED\fR
-This bit is
-deprecated. It used to be set and cleared by \fBTk_ConfigureWidget\fR
-so that callers could detect what entries were specified in
-\fIobjv\fR, but it was removed because it was inherently
-thread-unsafe. Code that wishes to detect what options were specified
-should use \fBTk_SetOptions\fR instead.
-.PP
 The \fBTK_CONFIG_MONO_ONLY\fR and \fBTK_CONFIG_COLOR_ONLY\fR flags are typically
 used to specify different default values for
 monochrome and color displays.  This is done by creating two

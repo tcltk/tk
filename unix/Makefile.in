@@ -348,7 +348,7 @@ ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
 WISH_OBJS = tkAppInit.o
 
-TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o tkOldTest.o \
+TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o \
 	$(@TK_WINDOWINGSYSTEM@_TKTEST_OBJS)
 
 WIDG_OBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
@@ -462,7 +462,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTextImage.c \
 	$(GENERIC_DIR)/tkTextIndex.c $(GENERIC_DIR)/tkTextMark.c \
 	$(GENERIC_DIR)/tkTextTag.c $(GENERIC_DIR)/tkTextWind.c \
-	$(GENERIC_DIR)/tkOldConfig.c $(GENERIC_DIR)/tkOldTest.c \
+	$(GENERIC_DIR)/tkOldConfig.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
 	$(GENERIC_DIR)/tkStubInit.c
 
@@ -1241,9 +1241,6 @@ tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhoto.h
 tkImgPhInstance.o: $(GENERIC_DIR)/tkImgPhInstance.c $(GENERIC_DIR)/tkImgPhoto.h
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhInstance.c
 
-tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
-	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkOldTest.c
-
 tkTest.o: $(GENERIC_DIR)/tkTest.c tkUuid.h
 	$(CC) -c $(APP_CC_SWITCHES) $(GENERIC_DIR)/tkTest.c
 
@@ -1402,7 +1399,7 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
-tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c 
+tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXImage.c
 
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh

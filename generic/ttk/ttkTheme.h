@@ -369,9 +369,6 @@ typedef enum { 		/* -orient option values */
     TTK_ORIENT_VERTICAL
 } Ttk_Orient;
 
-MODULE_SCOPE int		TtkGetOrientFromObj(Tcl_Interp *interp,
-				Tcl_Obj *objPtr, Ttk_Orient *orient);
-
 /*------------------------------------------------------------------------
  * +++ Utilities.
  */

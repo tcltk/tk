@@ -46,12 +46,6 @@ EXTERN HINSTANCE	Tk_GetHINSTANCE(void);
 EXTERN HWND		Tk_GetHWND(Window window);
 /* 3 */
 EXTERN Tk_Window	Tk_HWNDToWindow(HWND hwnd);
-/* 4 */
-EXTERN void		Tk_PointerEvent(HWND hwnd, int x, int y);
-/* 5 */
-EXTERN int		Tk_TranslateWinEvent(HWND hwnd, UINT message,
-				WPARAM wParam, LPARAM lParam,
-				LRESULT *result);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* Slot 0 is reserved */
@@ -60,9 +54,7 @@ EXTERN int		Tk_TranslateWinEvent(HWND hwnd, UINT message,
 /* Slot 3 is reserved */
 /* 4 */
 EXTERN void		TkMacOSXInitAppleEvents(Tcl_Interp *interp);
-/* 5 */
-EXTERN void		TkGenWMConfigureEvent_(Tk_Window tkwin, int x, int y,
-				int width, int height, int flags);
+/* Slot 5 is reserved */
 /* 6 */
 EXTERN void		TkMacOSXInvalClipRgns(Tk_Window tkwin);
 /* Slot 7 is reserved */
@@ -94,8 +86,6 @@ typedef struct TkPlatStubs {
     HINSTANCE (*tk_GetHINSTANCE) (void); /* 1 */
     HWND (*tk_GetHWND) (Window window); /* 2 */
     Tk_Window (*tk_HWNDToWindow) (HWND hwnd); /* 3 */
-    void (*tk_PointerEvent) (HWND hwnd, int x, int y); /* 4 */
-    int (*tk_TranslateWinEvent) (HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam, LRESULT *result); /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
     void (*reserved0)(void);
@@ -103,7 +93,7 @@ typedef struct TkPlatStubs {
     void (*reserved2)(void);
     void (*reserved3)(void);
     void (*tkMacOSXInitAppleEvents) (Tcl_Interp *interp); /* 4 */
-    void (*tkGenWMConfigureEvent_) (Tk_Window tkwin, int x, int y, int width, int height, int flags); /* 5 */
+    void (*reserved5)(void);
     void (*tkMacOSXInvalClipRgns) (Tk_Window tkwin); /* 6 */
     void (*reserved7)(void);
     void * (*tkMacOSXGetRootControl) (Drawable drawable); /* 8 */
@@ -139,10 +129,6 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 	(tkPlatStubsPtr->tk_GetHWND) /* 2 */
 #define Tk_HWNDToWindow \
 	(tkPlatStubsPtr->tk_HWNDToWindow) /* 3 */
-#define Tk_PointerEvent \
-	(tkPlatStubsPtr->tk_PointerEvent) /* 4 */
-#define Tk_TranslateWinEvent \
-	(tkPlatStubsPtr->tk_TranslateWinEvent) /* 5 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
 /* Slot 0 is reserved */
@@ -151,8 +137,7 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 /* Slot 3 is reserved */
 #define TkMacOSXInitAppleEvents \
 	(tkPlatStubsPtr->tkMacOSXInitAppleEvents) /* 4 */
-#define TkGenWMConfigureEvent_ \
-	(tkPlatStubsPtr->tkGenWMConfigureEvent_) /* 5 */
+/* Slot 5 is reserved */
 #define TkMacOSXInvalClipRgns \
 	(tkPlatStubsPtr->tkMacOSXInvalClipRgns) /* 6 */
 /* Slot 7 is reserved */
@@ -185,7 +170,6 @@ extern const TkPlatStubs *tkPlatStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#undef TkGenWMConfigureEvent_
 #define Tk_MacOSXGetNSViewForDrawable TkMacOSXGetRootControl
 
 #endif /* _TKPLATDECLS */

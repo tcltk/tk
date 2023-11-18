@@ -16,34 +16,6 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
-#if TCL_MAJOR_VERSION < 9
-#undef Tcl_MacOSXNotifierAddRunLoopMode
-#ifdef USE_TCL_STUBS
-#ifdef __cplusplus
-extern "C" {
-#endif
-/*  Little hack to eliminate the need for "tclInt.h" here:
-    Just copy a small portion of TclIntPlatStubs, just
-    enough to make it work. See [600b72bfbc] */
-typedef struct TclIntPlatStubs {
-    int magic;
-    void *hooks;
-    void (*dummy[19]) (void); /* dummy entries 0-18, not used */
-    void (*tclMacOSXNotifierAddRunLoopMode) (const void *runLoopMode); /* 19 */
-} TclIntPlatStubs;
-extern const TclIntPlatStubs *tclIntPlatStubsPtr;
-#ifdef __cplusplus
-}
-#endif
-#define Tcl_MacOSXNotifierAddRunLoopMode \
-	(tclIntPlatStubsPtr->tclMacOSXNotifierAddRunLoopMode) /* 19 */
-#elif TCL_MINOR_VERSION < 7
-    extern void TclMacOSXNotifierAddRunLoopMode(const void *runLoopMode);
-#   define Tcl_MacOSXNotifierAddRunLoopMode TclMacOSXNotifierAddRunLoopMode
-#else
-    extern void Tcl_MacOSXNotifierAddRunLoopMode(const void *runLoopMode);
-#endif
-#endif
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */

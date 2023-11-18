@@ -281,7 +281,6 @@ WISH_OBJS = \
 TKTEST_OBJS = \
 	tkSquare.$(OBJEXT) \
 	tkTest.$(OBJEXT) \
-	tkOldTest.$(OBJEXT) \
 	tkWinTest.$(OBJEXT)
 
 XLIB_OBJS = \
@@ -763,9 +762,6 @@ testMain.$(OBJEXT): winMain.c
 	$(CC) -c $(CC_SWITCHES) -DTK_TEST -DUNICODE=1 -D_UNICODE=1 @DEPARG@ $(CC_OBJNAME)
 
 tkTest.$(OBJEXT): tkTest.c
-	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
-
-tkOldTest.$(OBJEXT): tkOldTest.c
 	$(CC) -c $(CC_SWITCHES) @DEPARG@ $(CC_OBJNAME)
 
 tkWinTest.$(OBJEXT): tkWinTest.c

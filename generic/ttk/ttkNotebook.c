@@ -135,14 +135,11 @@ typedef struct
     Ttk_Padding 	padding;	/* External padding */
 } NotebookStyle;
 
-/* Global variable to be set from within NotebookStyleOptions() to one
- * of the values TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
- */
-Ttk_PositionSpec nbTabsStickBit;
-
-static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
+static void NotebookStyleOptions(
+    Notebook *nb, NotebookStyle *nbstyle, Tk_Window tkwin)
 {
     Tcl_Obj *objPtr;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     nbstyle->tabPosition = TTK_PACK_TOP | TTK_STICK_W;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabposition", 0)) != 0) {
@@ -164,9 +161,12 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPlacement);
     }
 
-    /* Save the stick bit in the global variable nbTabsStickBit
+    /* Save the stick bit for later.  One of the values
+     * TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
      */
-    nbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
+    if (mainInfoPtr != NULL) {
+	mainInfoPtr->ttkNbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
+    }
 
     /* Compute tabOrient as function of tabPlacement:
      */
@@ -395,6 +395,7 @@ static void TabrowSize(
 static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 {
     Notebook *nb = (Notebook *)clientData;
+    Tk_Window nbwin = nb->core.tkwin;
     NotebookStyle nbstyle;
     Ttk_Padding padding;
     Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
@@ -403,7 +404,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 	tabrowWidth = 0, tabrowHeight = 0;
     Tcl_Size i;
 
-    NotebookStyleOptions(nb, &nbstyle);
+    NotebookStyleOptions(nb, &nbstyle, nbwin);
 
     /* Compute max requested size of all content windows:
      */
@@ -553,7 +554,7 @@ static void NotebookDoLayout(void *recordPtr)
     NotebookStyle nbstyle;
     Tcl_Size currentIndex = nb->notebook.currentIndex;
 
-    NotebookStyleOptions(nb, &nbstyle);
+    NotebookStyleOptions(nb, &nbstyle, nbwin);
 
     /* Notebook internal padding:
      */
@@ -1122,10 +1123,9 @@ static int NotebookIdentifyCommand(
 	    }
 	    break;
 	case IDENTIFY_TAB:
-#if !defined TK_NO_DEPRECATED && (TCL_MAJOR_VERSION < 9)
-	    if (tabIndex >= 0)
-#endif
-	    Tcl_SetObjResult(interp, TkNewIndexObj(tabIndex));
+	    if (tabIndex >= 0) {
+		Tcl_SetObjResult(interp, TkNewIndexObj(tabIndex));
+	    }
 	    break;
     }
     return TCL_OK;
@@ -1150,10 +1150,9 @@ static int NotebookIndexCommand(
 
     status = FindTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-	if (index >= 0)
-#endif
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	if (index >= 0) {
+	    Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	}
     }
 
     return status;
