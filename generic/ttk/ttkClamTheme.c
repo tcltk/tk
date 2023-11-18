@@ -717,7 +717,7 @@ static void ThumbElementDraw(
     /*
      * Draw grip:
      */
-    TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->gripSizeObj, &gripSize);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
@@ -763,7 +763,7 @@ static void SliderElementSize(
     (void)paddingPtr;
 
     length = thickness = SCROLLBAR_THICKNESS;
-    TtkGetOrientFromObj(NULL, sb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->sliderlengthObj, &length);
     if (orient == TTK_ORIENT_VERTICAL) {
@@ -956,18 +956,22 @@ static const Ttk_ElementOptionSpec NotebookElementOptions[] = {
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
-
 static void TabElementSize(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2;
     (void)dummy;
     (void)elementRecord;
     (void)tkwin;
     (void)widthPtr;
     (void)heightPtr;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
     switch (nbTabsStickBit) {
@@ -991,14 +995,20 @@ static void TabElementDraw(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
+    int borderWidth = 2, delta = 0;
     NotebookElement *tab = (NotebookElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     Display *display = Tk_Display(tkwin);
-    int borderWidth = 2, delta = 0;
     int x1, y1, x2, y2;
     GC gc;
     const int w = WIN32_XDRAWLINE_HACK;
     (void)dummy;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     if (state & TTK_STATE_SELECTED) {
 	delta = borderWidth;

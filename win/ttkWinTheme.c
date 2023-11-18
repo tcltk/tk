@@ -621,7 +621,7 @@ static void ThumbElementSize(
     ThumbElement *thumbPtr = (ThumbElement *)elementRecord;
     Ttk_Orient orient;
 
-    TtkGetOrientFromObj(NULL, thumbPtr->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, thumbPtr->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = GetSystemMetrics(SM_CXHTHUMB);
 	*heightPtr = GetSystemMetrics(SM_CYHSCROLL);
@@ -686,7 +686,7 @@ static void SliderElementSize(
     SliderElement *slider = (SliderElement *)elementRecord;
     Ttk_Orient orient;
 
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL) {
 	*widthPtr = (GetSystemMetrics(SM_CXHTHUMB) / 2) | 1;
 	*heightPtr = GetSystemMetrics(SM_CYHSCROLL);
@@ -738,21 +738,26 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
     {0,TK_OPTION_BOOLEAN,0,0}
 };
 
-extern Ttk_PositionSpec nbTabsStickBit;			/* see ttkNotebook.c */
-
 static void TabElementSize(
     TCL_UNUSED(void *),
     void *elementRecord,
     Tk_Window tkwin,
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(int *),
+    TCL_UNUSED(int *),
     Ttk_Padding *paddingPtr)
 {
     TabElement *tab = (TabElement *)elementRecord;
     int borderWidth = 1;
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
+
     switch (nbTabsStickBit) {
 	default:
 	case TTK_STICK_S:
@@ -778,6 +783,8 @@ static void TabElementDraw(
     Ttk_Box b,
     unsigned int state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     XPoint pts[6];
@@ -785,6 +792,10 @@ static void TabElementDraw(
     int cut = round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
     int borderWidth = 1;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     if (state & TTK_STATE_SELECTED) {
 	/*

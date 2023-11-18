@@ -1246,8 +1246,7 @@ Tk_SendVirtualEvent(
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+#if TCL_UTF_MAX < 4
 /*
  *---------------------------------------------------------------------------
  *

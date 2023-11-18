@@ -2480,7 +2480,7 @@ static void TrackElementDraw(
     double from = 0, to = 100, value = 0, fraction, max;
     CGRect bounds = BoxToRect(d, b);
 
-    TtkGetOrientFromObj(NULL, elem->orientObj, &orientation);
+    Ttk_GetOrientFromObj(NULL, elem->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, elem->fromObj, &from);
     Tcl_GetDoubleFromObj(NULL, elem->toObj, &to);
     Tcl_GetDoubleFromObj(NULL, elem->valueObj, &value);
@@ -2622,7 +2622,7 @@ static void PbarElementDraw(
     int isIndeterminate = !strcmp("indeterminate",
 				  Tcl_GetString(pbar->modeObj));
 
-    TtkGetOrientFromObj(NULL, pbar->orientObj, &orientation);
+    Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orientation);
     Tcl_GetDoubleFromObj(NULL, pbar->valueObj, &value);
     Tcl_GetDoubleFromObj(NULL, pbar->maximumObj, &maximum);
     Tcl_GetIntFromObj(NULL, pbar->phaseObj, &phase);
@@ -2697,7 +2697,7 @@ static void TroughElementSize(
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
     SInt32 thickness = 15;
 
-    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     ChkErr(GetThemeMetric, kThemeMetricScrollBarWidth, &thickness);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	*minHeight = thickness;
@@ -2725,7 +2725,7 @@ static void TroughElementDraw(
     CGRect bounds = BoxToRect(d, b);
     GrayColor bgGray;
 
-    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_HORIZONTAL) {
 	bounds = CGRectInset(bounds, 0, 1);
     } else {
@@ -2761,7 +2761,7 @@ static void ThumbElementSize(
     ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
-    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
     if (orientation == TTK_ORIENT_VERTICAL) {
 	*minHeight = 18;
 	*minWidth = 8;
@@ -2782,7 +2782,7 @@ static void ThumbElementDraw(
     ScrollbarElement *scrollbar = (ScrollbarElement *)elementRecord;
     Ttk_Orient orientation = TTK_ORIENT_HORIZONTAL;
 
-    TtkGetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
+    Ttk_GetOrientFromObj(NULL, scrollbar->orientObj, &orientation);
 
     /*
      * In order to make ttk scrollbars work correctly it is necessary to be

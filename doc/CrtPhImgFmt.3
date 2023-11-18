@@ -457,45 +457,6 @@ typedef int \fBTk_ImageStringWriteProc\fR(
         Tcl_Obj *\fIformat\fR,
         Tk_PhotoImageBlock *\fIblockPtr\fR);
 .CE
-.PP
-.SH "LEGACY INTERFACE SUPPORT"
-.PP
-In Tk 8.2 and earlier, the definition of all the function pointer
-types stored in fields of a \fBTk_PhotoImageFormat\fR struct were
-incompatibly different.  Legacy programs and libraries dating from
-those days may still contain code that defines extended Tk photo image
-formats using the old interface.  The Tk header file will still support
-this legacy interface if the code is compiled with the
-macro \fBUSE_OLD_IMAGE\fR defined.  Alternatively, the legacy interfaces
-are used if the first character of \fIformatPtr->name\fR is an
-uppercase ASCII character (\fBA\fR-\fBZ\fR), and explicit casts
-are used to forgive the type mismatch.  For example,
-.CS
-static Tk_PhotoImageFormat myFormat = {
-    "MyFormat",
-    (Tk_ImageFileMatchProc *) FileMatch,
-    NULL,
-    (Tk_ImageFileReadProc *) FileRead,
-    NULL,
-    NULL,
-    NULL
-};
-.CE
-would define a minimal \fBTk_PhotoImageFormat\fR that operates provide
-only file reading capability, where \fBFileMatch\fR and \fBFileRead\fR
-are written according to the legacy interfaces of Tk 8.2 or earlier.
-.PP
-Any stub-enabled extension providing an extended photo image format
-via the legacy interface enabled by the \fBUSE_OLD_IMAGE\fR macro
-that is compiled against Tk 8.5 headers and linked against the
-Tk 8.5 stub library will produce a file that can be loaded only
-into interps with Tk 8.5 or later; that is, the normal stub-compatibility
-rules.  If a developer needs to generate from such code a file
-that is loadable into interps with Tk 8.4 or earlier, they must
-use Tk 8.4 headers and stub libraries to do so.
-.PP
-Any new code written today should not make use of the legacy
-interfaces.  Expect their support to go away in Tk 9.
 .SH "SEE ALSO"
 Tk_FindPhoto, Tk_PhotoPutBlock
 .SH KEYWORDS
