@@ -129,11 +129,31 @@ bind Scrollbar <<LineEnd>> {
 }
 }
 
+set HiresScrollMask 512
+set ShiftMask 1
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W hv %D -40.0
+    if {[expr {%s & $ShiftMask}]} {
+	set orientation "h";
+    } else {
+	set orientation "v";
+    }
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::ScrollByUnits %W $orientation %D -10.0
+    } else {
+	tk::ScrollByUnits %W $orientation [tk::ScaleNum %D] -30.0
+    }
 }
 bind Scrollbar <Option-MouseWheel> {
-    tk::ScrollByUnits %W hv %D -12.0
+    if {[expr {%s & $ShiftMask}]} {
+	set orientation "h";
+    } else {
+	set orientation "v";
+    }
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::ScrollByUnits %W $orientation %D -1.0
+    } else {
+	tk::ScrollByUnits %W $orientation [tk::ScaleNum %D] -3.0
+    }
 }
 
 # tk::ScrollButtonDown --
@@ -308,16 +328,24 @@ proc ::tk::ScrollEndDrag {w x y} {
 
 proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
     set cmd [$w cget -command]
-    if {$cmd eq "" || ([string first \
-	    [string index [$w cget -orient] 0] $orient] < 0)} {
+    if {$cmd eq ""} {
 	return
     }
-    set info [$w get]
-    if {[llength $info] == 2} {
-	uplevel #0 $cmd scroll [expr {$amount/$factor}] units
-    } else {
-	uplevel #0 $cmd [expr {[lindex $info 2] + [expr {$amount/$factor}]}]
+    set xyview [lindex [split $cmd] end]
+    if {$orient eq "v"} {
+	if {$xyview eq "xview"} {
+	    return
+	}
+	set size [winfo height $w]
     }
+    if {$orient eq "h"} {
+	if {$xyview eq "yview"} {
+	    return
+	}
+	set size [winfo width $w]
+    }
+    set scale [expr {[$w delta 1.0 1.0] * $size}]
+    uplevel #0 $cmd scroll [expr {$amount * $scale / $factor}] units
 }
 
 # ::tk::ScrollByPages --

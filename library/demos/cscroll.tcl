@@ -27,6 +27,25 @@ pack $btns -side bottom -fill x
 frame $w.grid
 ttk::scrollbar $w.hscroll -orient horizontal -command "$c xview"
 ttk::scrollbar $w.vscroll -command "$c yview"
+# Override the scrollbar's mousewheel binding to speed it up: 
+set fastwheel {
+    set HiresScrollMask 512
+    set ShiftMask 1
+    if {[expr {%s & $ShiftMask}]} {
+	set orientation "h";
+    } else {
+	set orientation "v";
+    }
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::ScrollByUnits %W $orientation %D -1.0
+    } else {
+	tk::ScrollByUnits %W $orientation %D -30.0
+    }
+    break
+}
+bind $w.vscroll <MouseWheel> $fastwheel
+bind $w.hscroll <MouseWheel> $fastwheel
+
 canvas $c -relief sunken -borderwidth 2 -scrollregion {-11c -11c 50c 20c} \
 	-xscrollcommand "$w.hscroll set" \
 	-yscrollcommand "$w.vscroll set"
