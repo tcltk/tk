@@ -175,18 +175,34 @@ bind Listbox <Button-2> {
 bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
-
+set HiresScrollMask 512
 bind Listbox <MouseWheel> {
-    tk::MouseWheel %W y %D -40.0
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::MouseWheel %W y %D -1.0 units
+    } else {
+	tk::MouseWheel %W y [tk::ScaleNum %D] -30.0 units
+    }
 }
 bind Listbox <Option-MouseWheel> {
-    tk::MouseWheel %W y %D -12.0
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::MouseWheel %W y %D -0.3 units
+    } else {
+	tk::MouseWheel %W y [tk::ScaleNum %D] -10.0 units
+    }
 }
 bind Listbox <Shift-MouseWheel> {
-    tk::MouseWheel %W x %D -40.0
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::MouseWheel %W x %D -12.0 units
+    } else {
+	tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 units
+    }
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x %D -12.0
+    if {[expr {%s & $HiresScrollMask}]} {
+	tk::MouseWheel %W x %D -4.0 units
+    } else {
+	tk::MouseWheel %W x [tk::ScaleNum %D] -0.3 units
+    }
 }
 
 # ::tk::ListboxBeginSelect --
