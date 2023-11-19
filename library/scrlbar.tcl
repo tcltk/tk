@@ -129,30 +129,20 @@ bind Scrollbar <<LineEnd>> {
 }
 }
 
-set HiresScrollMask 512
-set ShiftMask 1
 bind Scrollbar <MouseWheel> {
-    if {[expr {%s & $ShiftMask}]} {
-	set orientation "h";
+    set direction [tk::ScrollDirection %s]
+    if {[tk::IsHiResScroll %s]} {
+	tk::ScrollByUnits %W $direction %D -10.0
     } else {
-	set orientation "v";
-    }
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::ScrollByUnits %W $orientation %D -10.0
-    } else {
-	tk::ScrollByUnits %W $orientation [tk::ScaleNum %D] -30.0
+	tk::ScrollByUnits %W $direction [tk::ScaleNum %D] -30.0
     }
 }
 bind Scrollbar <Option-MouseWheel> {
-    if {[expr {%s & $ShiftMask}]} {
-	set orientation "h";
+    set direction [tk::ScrollDirection %s]
+    if {[tk::IsHiResScroll %s]} {
+	tk::ScrollByUnits %W $direction %D -1.0
     } else {
-	set orientation "v";
-    }
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::ScrollByUnits %W $orientation %D -1.0
-    } else {
-	tk::ScrollByUnits %W $orientation [tk::ScaleNum %D] -3.0
+	tk::ScrollByUnits %W $direction [tk::ScaleNum %D] -3.0
     }
 }
 
