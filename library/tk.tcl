@@ -543,30 +543,6 @@ proc ::tk::CancelRepeat {} {
     set Priv(afterId) {}
 }
 
-
-# ::tk::IsHiResScroll $state --
-# Checks whether the HiResScrollMask bit is set in the state.
-
-proc ::tk::IsHiResScroll state {
-    if {[expr {$state & 512}]} {
-	return 1
-    } else {
-	return 0
-    }
-}
-
-# ::tk::ScrollDirection $state --
-# Checks if ShiftMask is set in the MouseWheelEvent state.
-# Returns h for a horizontal scroll, v for a vertical scroll
-
-proc ::tk::ScrollDirection state {
-    if {[expr {$state & 1}]} {
-	return "h"
-    } else {
-	return "v"
-    }
-}
-
 ## ::tk::MouseWheel $w $dir $amount $factor $units
 
 proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
