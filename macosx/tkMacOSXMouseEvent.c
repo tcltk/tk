@@ -543,17 +543,8 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
-
-        /*
-	 * This state bit means that the delta should be interpreted
-	 * as a number of pixels.  It is chosen to not conflict with
-	 * any modifier bits.
-	 */
-
-#define HiresScrollMask (1 << 9)
-        
-	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	CGFloat delta;
+	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
 	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
@@ -563,25 +554,24 @@ enum {
 	xEvent.xany.send_event = false;
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
-	delta = [theEvent scrollingDeltaY];
-	if (! deltaIsPrecise) {
-	    delta = delta > 0 ? ceil(10.0 * delta) : - ceil(-10.0 * delta);
+	if (!deltaIsPrecise) {
+	    delta = [theEvent scrollingDeltaY];
+	    if (delta != 0.0) {
+		xEvent.xbutton.state = state;
+		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
+	    delta = [theEvent scrollingDeltaX];
+	    if (delta != 0.0) {
+		xEvent.xbutton.state = state | ShiftMask;
+		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
+		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
 	}
-	if (delta != 0.0) {
-	    xEvent.xbutton.state = state | HiresScrollMask;
-	    xEvent.xkey.keycode = (unsigned int)(int)delta;
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
-	}
-	delta = [theEvent scrollingDeltaX];
-	if (! deltaIsPrecise) {
-	    delta = delta > 0 ? ceil(10.0 * delta) : - ceil(-10.0 * delta);
-	}
-	if (delta != 0.0) {
-	    xEvent.xbutton.state = state | ShiftMask | HiresScrollMask;
-	    xEvent.xkey.keycode = (unsigned int)(int)delta;
-	    xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
-	    Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	else {
+	    printf("Touchpad scroll.\n");
 	}
     }
 

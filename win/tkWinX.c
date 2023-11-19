@@ -36,20 +36,12 @@
 #define WM_MOUSEHWHEEL 0x020E
 #endif
 
-/* This flag is set in the state of the MouseWheelEvent to indicate
- * that the value stored in the keycode field should be interpreted
- * as the number of pixels to scroll.  A WM_MOUSEWHEEL message sent
- * by a trackpad contains the number of pixels as the delta value,
- * while low precision scrollwheels always send an integer multiple
- * of WHEELDELTA (= 120) as the delta value.  We set this flag
- * whenever the WM_MOUSEWHEEL delta is not a multiple of 120.  This
- * ignores the (rare) possibility that a trackpad might generate
- * a message with delta a multiple of 120, intended to be interpreted
- * as pixels.  If that proves annoying it will need to be addressed.
+/* A WM_MOUSEWHEEL message sent by a trackpad contains the number of pixels as
+ * the delta value, while low precision scrollwheels always send an integer
+ * multiple of WHEELDELTA (= 120) as the delta value.
  */
 
 #define WHEELDELTA 120
-#define HiresScrollMask (1 << 9)
 
 /*
  * Our heuristic for deciding whether a WM_MOUSEWHEEL message
@@ -1153,21 +1145,22 @@ GenerateXEvent(
 
 	    int delta = (short) HIWORD(wParam);
 	    int mod = delta % WHEELDELTA;
-
-	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
-	     * TkpGetString. [Bug 1118340].
-	     */
-
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.keycode = (unsigned int)delta;
 	    if ( mod != 0 || lastMod != 0) {
-		event.x.xkey.state |= HiresScrollMask;
+		printf("Trackpad scroll\n");
+	    } else {
+
+		/*
+		 * We have invented a new X event type to handle this
+		 * event. It still uses the KeyPress struct. However, the
+		 * keycode field has been overloaded to hold the zDelta of the
+		 * wheel. Set nbytes to 0 to prevent conversion of the keycode
+		 * to a keysym in TkpGetString. [Bug 1118340].
+		 */
+
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.keycode = (unsigned int)delta;
 	    }
 	    lastMod = mod;
 	    break;
@@ -1179,22 +1172,23 @@ GenerateXEvent(
 
 	    int delta = (short) HIWORD(wParam);
 	    int mod = delta % WHEELDELTA;
-
-	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
-	     * TkpGetString. [Bug 1118340].
-	     */
-
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.state |= ShiftMask;
-	    event.x.xkey.keycode = delta;
 	    if ( mod != 0 || lastMod != 0) {
-		event.x.xkey.state |= HiresScrollMask;
+		printf("Trackpad scroll\n");
+	    } else {
+
+		/*
+		 * We have invented a new X event type to handle this event. It
+		 * still uses the KeyPress struct. However, the keycode field has
+		 * been overloaded to hold the zDelta of the wheel. Set nbytes to
+		 * 0 to prevent conversion of the keycode to a keysym in
+		 * TkpGetString. [Bug 1118340].
+		 */
+
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state |= ShiftMask;
+		event.x.xkey.keycode = delta;
 	    }
 	    lastMod = mod;
 	    break;
