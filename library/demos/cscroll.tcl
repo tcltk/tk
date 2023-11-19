@@ -17,7 +17,7 @@ wm iconname $w "cscroll"
 positionWindow $w
 set c $w.c
 
-label $w.msg -font $font -wraplength 4i -justify left -text "This window displays a canvas widget that can be scrolled either using the scrollbars or by dragging with either shift-button 1 or button 2 in the canvas.  If you click button 1 on one of the rectangles, its indices will be printed on stdout."
+label $w.msg -font $font -wraplength 4i -justify left -text "This window displays a canvas widget that can be scrolled either using the scrollbars or by dragging with button 2 in the canvas.  If you click button 1 on one of the rectangles, its indices will be printed on stdout."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
@@ -25,27 +25,8 @@ set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
 frame $w.grid
-ttk::scrollbar $w.hscroll -orient horizontal -command "$c xview"
-ttk::scrollbar $w.vscroll -command "$c yview"
-# Override the scrollbar's mousewheel binding to speed it up: 
-set fastwheel {
-    set HiresScrollMask 512
-    set ShiftMask 1
-    if {[expr {%s & $ShiftMask}]} {
-	set orientation "h";
-    } else {
-	set orientation "v";
-    }
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::ScrollByUnits %W $orientation %D -1.0
-    } else {
-	tk::ScrollByUnits %W $orientation %D -30.0
-    }
-    break
-}
-bind $w.vscroll <MouseWheel> $fastwheel
-bind $w.hscroll <MouseWheel> $fastwheel
-
+scrollbar $w.hscroll -orient horizontal -command "$c xview"
+scrollbar $w.vscroll -command "$c yview"
 canvas $c -relief sunken -borderwidth 2 -scrollregion {-11c -11c 50c 20c} \
 	-xscrollcommand "$w.hscroll set" \
 	-yscrollcommand "$w.vscroll set"
@@ -75,28 +56,9 @@ for {set i 0} {$i < 20} {incr i} {
 $c bind all <Enter> "scrollEnter $c"
 $c bind all <Leave> "scrollLeave $c"
 $c bind all <Button-1> "scrollButton $c"
-
-bind $c <Button-2> "$c scan mark %x %y"
-bind $c <B2-Motion> "$c scan dragto %x %y"
-bind $c <Shift-Button-1> "$c scan mark %x %y"
-bind $c <Shift-B1-Motion> "$c scan dragto %x %y"
-
-if {[package vsatisfies [package provide Tk] 8.7-]} {
-    # Bindings for 8.7 and up
-    $c configure -yscrollincrement 1 -xscrollincrement 1
-    bind $c <MouseWheel> {
-	tk::MouseWheel %W y %D -1.0
-    }
-    bind $c <Shift-MouseWheel> {
-	tk::MouseWheel %W x %D -1.0
-    }
-    bind $c <Option-MouseWheel> {
-	tk::MouseWheel %W y %D -0.3
-    }
-    bind $c <Option-Shift-MouseWheel> {
-	tk::MouseWheel %W x %D -0.3
-    }
-} else {
+if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk] 8.7-]} {
+    bind $c <Button-3> "$c scan mark %x %y"
+    bind $c <B3-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
 	%W yview scroll [expr {-%D}] units
     }
@@ -109,6 +71,46 @@ if {[package vsatisfies [package provide Tk] 8.7-]} {
     bind $c <Shift-Option-MouseWheel> {
 	%W xview scroll [expr {-10*%D}] units
     }
+} else {
+    bind $c <Button-2> "$c scan mark %x %y"
+    bind $c <B2-Motion> "$c scan dragto %x %y"
+    # We must make sure that positive and negative movements are rounded
+    # equally to integers, avoiding the problem that
+    #     (int)1/-30 = -1,
+    # but
+    #     (int)-1/-30 = 0
+    # The following code ensure equal +/- behaviour.
+    bind $c <MouseWheel> {
+	if {%D >= 0} {
+	    %W yview scroll [expr {%D/-30}] units
+	} else {
+	    %W yview scroll [expr {(%D-29)/-30}] units
+	}
+    }
+    bind $c <Option-MouseWheel> {
+	if {%D >= 0} {
+	    %W yview scroll [expr {%D/-3}] units
+	} else {
+	    %W yview scroll [expr {(%D-2)/-3}] units
+	}
+    }
+    bind $c <Shift-MouseWheel> {
+	if {%D >= 0} {
+	    %W xview scroll [expr {%D/-30}] units
+	} else {
+	    %W xview scroll [expr {(%D-29)/-30}] units
+	}
+    }
+    bind $c <Shift-Option-MouseWheel> {
+	if {%D >= 0} {
+	    %W xview scroll [expr {%D/-3}] units
+	} else {
+	    %W xview scroll [expr {(%D-2)/-3}] units
+	}
+    }
+}
+
+if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide Tk] 8.7-]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
