@@ -549,6 +549,13 @@ proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
     $w ${dir}view scroll [expr {$amount/$factor}] $units
 }
 
+## ::tk::PreciseScrollDeltas $dxdy
+proc ::tk::PreciseScrollDeltas {dxdy} {
+    set deltaX [expr {$dxdy >> 16}]
+    set low [expr {$dxdy & 0xffff}]
+    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}] 
+    return [list $deltaX $deltaY]
+}
 
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
