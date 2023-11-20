@@ -543,10 +543,9 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
-	CGFloat delta;
+	unsigned int delta;
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
-	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
 	xEvent.xbutton.y = win_y;
 	xEvent.xbutton.x_root = global.x;
@@ -554,24 +553,33 @@ enum {
 	xEvent.xany.send_event = false;
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
-	if (!deltaIsPrecise) {
-	    delta = [theEvent scrollingDeltaY];
+	if (deltaIsPrecise) {
+	    int deltaX = [theEvent scrollingDeltaX];
+	    int deltaY = [theEvent scrollingDeltaY];
+	    delta = (deltaX << 16) | (deltaY & 0xffff);
+	    if (delta != 0) {
+	     	xEvent.type = MouseWheelEvent;
+	     	xEvent.xbutton.state = state | ControlMask ;
+	     	xEvent.xkey.keycode = delta;
+	     	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+	     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
+	    }
+	} else {
+	    delta = (unsigned int)(int)[theEvent scrollingDeltaY];
 	    if (delta != 0.0) {
+		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state;
 		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	    delta = [theEvent scrollingDeltaX];
+	    delta = (unsigned int)(int)[theEvent scrollingDeltaX];
 	    if (delta != 0.0) {
 		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	}
-	else {
-	    printf("Touchpad scroll.\n");
 	}
     }
 
