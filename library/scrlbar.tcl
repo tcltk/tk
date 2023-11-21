@@ -129,12 +129,24 @@ bind Scrollbar <<LineEnd>> {
 }
 }
 
-bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W hv %D -40.0
-}
 bind Scrollbar <Option-MouseWheel> {
     tk::ScrollByUnits %W hv %D -12.0
 }
+
+bind Scrollbar <MouseWheel> {
+    tk::ScrollByUnits %W hv %D -40.0
+}
+
+bind Scrollbar <Control-MouseWheel> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    if {$deltaX != 0} {
+	tk::ScrollByPixels %W h $deltaX
+    }
+    if {$deltaY != 0} {
+	tk::ScrollByPixels %W v $deltaY
+    }
+}
+
 
 # tk::ScrollButtonDown --
 # This procedure is invoked when a button is pressed in a scrollbar.
@@ -293,6 +305,51 @@ proc ::tk::ScrollEndDrag {w x y} {
 	ScrollToPos $w [expr {$Priv(initPos) + $delta}]
     }
     set Priv(initPos) ""
+}
+
+# ::tk::ScrollByPixels --
+# This procedure tells the scrollbar's associated widget to scroll up
+# or down by a given number of pixels.  It notifies the associated widget
+# in different ways for old and new command syntaxes.
+#
+# Arguments:
+# w -		The scrollbar widget.
+# orient -	Which kind of scrollbar this applies to: "h" for
+#		horizontal, "v" for vertical.
+# amount -	How many pixels to scroll.
+
+proc ::tk::ScrollByPixels {w orient amount} {
+    set cmd [$w cget -command]
+    if {$cmd eq ""} {
+	return
+    }
+    set xyview [lindex [split $cmd] end]
+    if {$orient eq "v"} {
+	if {$xyview eq "xview"} {
+	    return
+	}
+	set size [winfo height $w]
+    }
+    if {$orient eq "h"} {
+	if {$xyview eq "yview"} {
+	    return
+	}
+	set size [winfo width $w]
+    }
+
+    # The moveto command allows scrolling by pixel deltas even for
+    # widgets which only support scrolling by units or pages.  The
+    # code below works with both the current and old syntax for the
+    # scrollbar get command.
+
+    set info [$w get]
+    if {[llength $info] == 2} {
+	set first [lindex $info 0]
+    } else {
+	set first [lindex $info 2]
+    }
+    set pixels [expr {-$amount}]
+    uplevel #0 $cmd moveto [expr $first + [$w delta $pixels $pixels]]
 }
 
 # ::tk::ScrollByUnits --
