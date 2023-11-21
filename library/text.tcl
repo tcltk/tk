@@ -459,10 +459,10 @@ set ::tk::Priv(prevPos) {}
 bind Text <Control-MouseWheel> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0} {
-	%W xview scroll $deltaX pixels
+	%W xview scroll [expr {-$deltaX}] pixels
     }
     if {$deltaY != 0} {
-	%W yview scroll $deltaY pixels
+	%W yview scroll [expr {-$deltaY}] pixels
     }
 }
 bind Text <MouseWheel> {

@@ -175,33 +175,25 @@ bind Listbox <Button-2> {
 bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
-set HiresScrollMask 512
 bind Listbox <MouseWheel> {
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::MouseWheel %W y %D -1.0 units
-    } else {
-	tk::MouseWheel %W y [tk::ScaleNum %D] -30.0 units
-    }
+    tk::MouseWheel %W y [tk::ScaleNum %D] -30.0 units
 }
 bind Listbox <Option-MouseWheel> {
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::MouseWheel %W y %D -0.3 units
-    } else {
-	tk::MouseWheel %W y [tk::ScaleNum %D] -10.0 units
-    }
+    tk::MouseWheel %W y [tk::ScaleNum %D] -10.0 units
 }
 bind Listbox <Shift-MouseWheel> {
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::MouseWheel %W x %D -12.0 units
-    } else {
-	tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 units
-    }
+    tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 units
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    if {[expr {%s & $HiresScrollMask}]} {
-	tk::MouseWheel %W x %D -4.0 units
-    } else {
-	tk::MouseWheel %W x [tk::ScaleNum %D] -0.3 units
+    tk::MouseWheel %W x [tk::ScaleNum %D] -0.3 units
+}
+bind Listbox <Control-MouseWheel> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    if {$deltaX != 0} {
+	%W xview scroll [expr {-$deltaX}] units 
+    }
+    if {$deltaY != 0} {
+	%W yview scroll [expr {-$deltaY / 2.0}] units
     }
 }
 

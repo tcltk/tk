@@ -559,7 +559,7 @@ enum {
 	    delta = (deltaX << 16) | (deltaY & 0xffff);
 	    if (delta != 0) {
 	     	xEvent.type = MouseWheelEvent;
-	     	xEvent.xbutton.state = state | ControlMask ;
+	     	xEvent.xbutton.state = state | ControlMask;
 	     	xEvent.xkey.keycode = delta;
 	     	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
@@ -575,6 +575,7 @@ enum {
 	    }
 	    delta = (unsigned int)(int)[theEvent scrollingDeltaX];
 	    if (delta != 0.0) {
+		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state | ShiftMask;
 		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
