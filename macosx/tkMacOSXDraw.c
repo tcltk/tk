@@ -248,7 +248,6 @@ TkMacOSXGetCGContextForDrawable(
 
     if (macDraw && (macDraw->flags & TK_IS_PIXMAP) && !macDraw->context) {
 	const size_t bitsPerComponent = 8;
-	size_t bitsPerPixel, bytesPerRow, len;
 	CGColorSpaceRef colorspace = NULL;
 	CGBitmapInfo bitmapInfo =
 #ifdef __LITTLE_ENDIAN__
@@ -256,25 +255,17 @@ TkMacOSXGetCGContextForDrawable(
 #else
 		kCGBitmapByteOrderDefault;
 #endif
-	char *data;
 	CGRect bounds = CGRectMake(0, 0,
 		macDraw->size.width, macDraw->size.height);
 
 	if (macDraw->flags & TK_IS_BW_PIXMAP) {
-	    bitsPerPixel = 8;
 	    bitmapInfo = (CGBitmapInfo)kCGImageAlphaOnly;
 	} else {
 	    colorspace = CGColorSpaceCreateDeviceRGB();
-	    bitsPerPixel = 32;
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
-	bytesPerRow = ((size_t)
-		macDraw->size.width * bitsPerPixel + 127) >> 3 & ~15;
-	len = macDraw->size.height * bytesPerRow;
-	data = (char *)ckalloc(len);
-	bzero(data, len);
-	macDraw->context = CGBitmapContextCreate(data, (unsigned)macDraw->size.width,
-		(unsigned)macDraw->size.height, bitsPerComponent, bytesPerRow,
+	macDraw->context = CGBitmapContextCreate(NULL, (unsigned)macDraw->size.width,
+		(unsigned)macDraw->size.height, bitsPerComponent, 0,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
 	    CGContextClearRect(macDraw->context, bounds);
