@@ -577,8 +577,10 @@ BlendComplexAlpha(
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
 		newPixel = RGB(r, g, b);
+#ifndef _WIN32
 		/* Bug 1d8b7124b622: preserve alpha if present. */
 		newPixel |= pixel & other_mask;
+#endif
 		XPutPixel(bgImg, x, y, newPixel);
 	    }
 	}
