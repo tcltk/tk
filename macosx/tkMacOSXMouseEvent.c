@@ -543,7 +543,8 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
-	unsigned int delta;
+	int delta;
+	CGFloat Delta;
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
 	xEvent.xbutton.x = win_x;
@@ -565,19 +566,23 @@ enum {
 	     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
 	} else {
-	    delta = (unsigned int)(int)[theEvent scrollingDeltaY];
-	    if (delta != 0.0) {
+	    /*
+	     * A low precision scroll is 120 or -120 wheel units per click.
+	     * Each click generates one event.
+	     */
+	    Delta = [theEvent scrollingDeltaY];
+	    if (Delta != 0.0) {
 		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state;
-		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
+		xEvent.xkey.keycode = Delta > 0.0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	    delta = (unsigned int)(int)[theEvent scrollingDeltaX];
-	    if (delta != 0.0) {
+	    Delta = [theEvent scrollingDeltaX];
+	    if (Delta != 0.0) {
 		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state | ShiftMask;
-		xEvent.xkey.keycode = delta > 0 ? 120 : -120;
+		xEvent.xkey.keycode = Delta > 0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
