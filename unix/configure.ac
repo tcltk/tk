@@ -126,7 +126,7 @@ SC_TCL_64BIT_FLAGS
 #	Check endianness because we can optimize some operations
 #--------------------------------------------------------------------
 
-AC_C_BIGENDIAN
+AC_C_BIGENDIAN(,,,[#])
 
 #------------------------------------------------------------------------
 # If Tcl and Tk are installed in different places, adjust the library

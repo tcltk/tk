@@ -6957,9 +6957,7 @@ printf "%s\n" "$ac_cv_c_bigendian" >&6; }
    no)
       ;; #(
    universal)
-
-printf "%s\n" "#define AC_APPLE_UNIVERSAL_BUILD 1" >>confdefs.h
-
+     #
      ;; #(
    *)
      as_fn_error $? "unknown endianness
@@ -9147,7 +9145,6 @@ LTLIBOBJS=$ac_ltlibobjs
 
 
 CFLAGS="${CFLAGS} ${CPPFLAGS}"; CPPFLAGS=""
-
 
 : "${CONFIG_STATUS=./config.status}"
 ac_write_fail=0
