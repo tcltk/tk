@@ -109,7 +109,7 @@ if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk
 	}
     }
     #Touchpad scrolling
-    bind $c <Control-MouseWheel> {
+    bind $c <Extended-MouseWheel> {
 	lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
 	if {$deltaX != 0 || $deltaY != 0} {
 	    tk::CanvasScrollByPixels %W $deltaX $deltaY
