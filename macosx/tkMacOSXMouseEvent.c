@@ -560,7 +560,7 @@ enum {
 	    delta = (deltaX << 16) | (deltaY & 0xffff);
 	    if (delta != 0) {
 	     	xEvent.type = MouseWheelEvent;
-	     	xEvent.xbutton.state = state | ControlMask;
+	     	xEvent.xbutton.state = state | EXTENDED_MASK;
 	     	xEvent.xkey.keycode = delta;
 	     	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 	     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
