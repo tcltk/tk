@@ -176,16 +176,16 @@ bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
 bind Listbox <MouseWheel> {
-    tk::MouseWheel %W y [tk::ScaleNum %D] -40.0 units
+    tk::MouseWheel %W y %D -40.0 units
 }
 bind Listbox <Option-MouseWheel> {
-    tk::MouseWheel %W y [tk::ScaleNum %D] -12.0 units
+    tk::MouseWheel %W y %D -12.0 units
 }
 bind Listbox <Shift-MouseWheel> {
-    tk::MouseWheel %W x [tk::ScaleNum %D] -40.0 units
+    tk::MouseWheel %W x %D -40.0 units
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x [tk::ScaleNum %D] -12.0 units
+    tk::MouseWheel %W x %D -12.0 units
 }
 bind Listbox <Control-MouseWheel> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
