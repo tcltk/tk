@@ -139,10 +139,10 @@ bind Scrollbar <MouseWheel> {
 
 bind Scrollbar <Control-MouseWheel> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
-    if {$deltaX != 0} {
+    if {$deltaX != 0 && [%W cget -orient] eq "horizontal"} {
 	tk::ScrollbarScrollByPixels %W h $deltaX
     }
-    if {$deltaY != 0} {
+    if {$deltaY != 0 && [%W cget -orient] eq "vertical"} {
 	tk::ScrollbarScrollByPixels %W v $deltaY
     }
 }
