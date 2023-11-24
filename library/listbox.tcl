@@ -187,7 +187,7 @@ bind Listbox <Shift-MouseWheel> {
 bind Listbox <Shift-Option-MouseWheel> {
     tk::MouseWheel %W x %D -12.0 units
 }
-bind Listbox <Control-MouseWheel> {
+bind Listbox <Extended-MouseWheel> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0} {
 	%W xview scroll [expr {-$deltaX}] units 

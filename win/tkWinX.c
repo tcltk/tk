@@ -1144,7 +1144,7 @@ GenerateXEvent(
 	     * Send an Xevent using a KeyPress struct, but with the type field
 	     * set to MouseWheelEventq and the keypress field set to the value
 	     * of the MouseWheel delta.  For high resolution events the
-	     * ControlMask bit is set and delta is stored in the high word of
+	     * EXTENDED_MASK bit is set and delta is stored in the high word of
 	     * the keycode.  For low resolution scrolls the delta is in the
 	     * low word of the keycode.  Set nbytes to 0 to prevent conversion
 	     * of the keycode to a keysym in TkpGetString. [Bug 1118340].
@@ -1157,7 +1157,7 @@ GenerateXEvent(
 		event.x.type = MouseWheelEvent;
 		event.x.xany.send_event = -1;
 		event.key.nbytes = 0;
-		event.x.xkey.state = state | ControlMask ;
+		event.x.xkey.state = state | EXTENDED_MASK ;
 		event.x.xkey.keycode = (unsigned int) delta;
 	    } else {
 		event.x.type = MouseWheelEvent;
@@ -1174,8 +1174,8 @@ GenerateXEvent(
 	     * Send an Xevent using a KeyPress struct, but with the type field
 	     * set to MouseWheelEventq and the keypress field set to the value
 	     * of the MouseWheel delta.  For high resolution scrolls the
-	     * ControlMask bit is set and deltaX is stored in the high word of
-	     * the keycode.  For low resolution scrolls the delta is in the
+	     * EXTENDEDMASK bit is set and deltaX is stored in the high word
+	     * of the keycode.  For low resolution scrolls the delta is in the
 	     * low word of the keycode and the ShiftMask bit is set.  Set
 	     * nbytes to 0 to prevent conversion of the keycode to a keysym in
 	     * TkpGetString. [Bug 1118340].
@@ -1188,7 +1188,7 @@ GenerateXEvent(
 		event.x.type = MouseWheelEvent;
 		event.x.xany.send_event = -1;
 		event.key.nbytes = 0;
-		event.x.xkey.state = state | ControlMask ;
+		event.x.xkey.state = state | EXTENDED_MASK ;
 		event.x.xkey.keycode = delta << 16;
 	    } else {
 		event.x.type = MouseWheelEvent;

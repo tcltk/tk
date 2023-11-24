@@ -456,7 +456,7 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-bind Text <Control-MouseWheel> {
+bind Text <Extended-MouseWheel> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0} {
 	%W xview scroll [expr {-$deltaX}] pixels
