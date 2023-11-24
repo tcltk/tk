@@ -140,10 +140,10 @@ bind Scrollbar <MouseWheel> {
 bind Scrollbar <Control-MouseWheel> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0} {
-	ScrollByPixels %W h $deltaX
+	tk::ScrollbarScrollByPixels %W h $deltaX
     }
     if {$deltaY != 0} {
-	ScrollByPixels %W v $deltaY
+	tk::ScrollbarScrollByPixels %W v $deltaY
     }
 }
 
@@ -307,7 +307,7 @@ proc ::tk::ScrollEndDrag {w x y} {
     set Priv(initPos) ""
 }
 
-# ScrollByPixels --
+# ::tk::ScrollbarScrollByPixels --
 # This procedure tells the scrollbar's associated widget to scroll up
 # or down by a given number of pixels.  It only works with scrollbars
 # because it uses the delta command.
@@ -318,7 +318,7 @@ proc ::tk::ScrollEndDrag {w x y} {
 #		horizontal, "v" for vertical.
 # amount -	How many pixels to scroll.
 
-proc ScrollByPixels {w orient amount} {
+proc ::tk::ScrollbarScrollByPixels {w orient amount} {
     set cmd [$w cget -command]
     if {$cmd eq ""} {
 	return
