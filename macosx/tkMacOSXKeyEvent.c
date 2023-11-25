@@ -417,6 +417,9 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    if (!winPtr) {
+	return;
+    }
     Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
