@@ -96,22 +96,6 @@ typedef struct TkScrollbar {
      * the OLD_STYLE_COMMANDS flag is 1.
      */
 
-#ifndef TK_NO_DEPRECATED
-    int totalUnits;		/* Total dimension of application, in units.
-				 * Valid only if the OLD_STYLE_COMMANDS flag
-				 * is set. */
-    int windowUnits;		/* Maximum number of units that can be
-				 * displayed in the window at once. Valid only
-				 * if the OLD_STYLE_COMMANDS flag is set. */
-    int firstUnit;		/* Number of last unit visible in
-				 * application's window. Valid only if the
-				 * OLD_STYLE_COMMANDS flag is set. */
-    int lastUnit;		/* Index of last unit visible in window.
-				 * Valid only if the OLD_STYLE_COMMANDS flag
-				 * isn't set. */
-#else
-    int dummy1,dummy2,dummy3,dummy4; /* sizeof(TkScrollbar) should not depend on TK_NO_DEPRECATED */
-#endif /* TK_NO_DEPRECATED */
     double firstFraction;	/* Position of first visible thing in window,
 				 * specified as a fraction between 0 and
 				 * 1.0. */
@@ -157,9 +141,6 @@ typedef struct TkScrollbar {
  */
 
 #define REDRAW_PENDING		1
-#ifndef TK_NO_DEPRECATED
-#   define OLD_STYLE_COMMANDS	2
-#endif /* TK_NO_DEPRECATED */
 #define GOT_FOCUS		4
 
 /*
