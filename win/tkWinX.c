@@ -1189,7 +1189,7 @@ GenerateXEvent(
 		event.x.xany.send_event = -1;
 		event.key.nbytes = 0;
 		event.x.xkey.state = state | EXTENDED_MASK ;
-		event.x.xkey.keycode = delta << 16;
+		event.x.xkey.keycode = (unsigned int)(-(delta << 16));
 	    } else {
 		event.x.type = MouseWheelEvent;
 		event.x.xany.send_event = -1;
