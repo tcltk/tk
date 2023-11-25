@@ -212,11 +212,22 @@ values should scroll up and negative values should scroll down.
 .RS
 .PP
 Horizontal scrolling uses \fBShift-MouseWheel\fR events, with positive
-\fB%D\fR \fIdelta\fR substitution indicating left scrolling and negative
-right scrolling.
-Horizontal scrolling events may fire from
-many different hardware units such as tilt wheels or touchpads.  Horizontal
-scrolling can also be emulated by holding Shift and scrolling vertically.
+\fB%D\fR \fIdelta\fR substitution indicating left scrolling and
+negative right scrolling. Horizontal scrolling events are generated
+tilt wheels on some mice.  Horizontal scrolling can also be emulated
+by holding Shift and scrolling vertically.
+.PP
+On some platforms (currently Windows and macOS) there is support for
+high-resolution scrolling devices, such as touchpads.  This is
+provided via \fBExtended-MouseWheel\fR events.  These events store two
+16 bit delta values in the integer provided by the \fB%D\fR
+subsstitution.  The \fIX\fR delta is in the high order 16 bits and the
+\fIY\fR delta is in the low order 16 bits.  These values can be
+unpacked by using the tk::PreciseScrollDeltas utility procedure.  For
+example:
+.CS
+lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+.CE
 .RE
 .IP "\fBKeyPress\fR, \fBKeyRelease\fR" 5
 The \fBKeyPress\fR and \fBKeyRelease\fR events are generated
