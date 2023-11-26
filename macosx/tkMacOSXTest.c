@@ -25,7 +25,7 @@
 static Tcl_ObjCmdProc DebuggerObjCmd;
 #endif
 static Tcl_ObjCmdProc TestpressbuttonObjCmd;
-static Tcl_ObjCmdProc MoveMouseObjCmd;
+static Tcl_ObjCmdProc TestmovemouseObjCmd;
 static Tcl_ObjCmdProc InjectKeyEventObjCmd;
 static Tcl_ObjCmdProc MenuBarHeightObjCmd;
 
@@ -59,7 +59,7 @@ TkplatformtestInit(
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
     Tcl_CreateObjCommand(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "movemouse", MoveMouseObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
@@ -271,7 +271,7 @@ TestpressbuttonObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * MoveMouseObjCmd --
+ * TestmovemouseObjCmd --
  *
  *	This Tcl command simulates a mouse motion to a specific screen
  *      location.  It injects an NSEvent into the NSApplication event queue,
@@ -288,7 +288,7 @@ TestpressbuttonObjCmd(
  */
 
 static int
-MoveMouseObjCmd(
+TestmovemouseObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
