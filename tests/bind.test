@@ -6826,7 +6826,7 @@ proc testKey {window event type mods} {
     }
     set save $keyInfo
     set keyInfo {}
-    set injectcmd [list injectkeyevent $type $numericKeysym]
+    set injectcmd [list testinjectkeyevent $type $numericKeysym]
     foreach {option} $mods {
 	lappend injectcmd $option
     }
@@ -6897,7 +6897,7 @@ test bind-35.2 {Can bind to function keys} -constraints {aqua} -body {
     set numericKeysym {}
     focus -force .
     event generate . <F2>
-    injectkeyevent press $numericKeysym -function
+    testinjectkeyevent press $numericKeysym -function
     vwait keyInfo
     return $keyInfo
 } -cleanup {
@@ -6927,7 +6927,7 @@ test bind-35.3 {Events agree for modifier keys} -constraints {aqua} -setup {
 	    vwait keyInfo
 	}
 	set save $keyInfo
-	injectkeyevent flagschanged $numericKeysym [lindex $event 1]
+	testinjectkeyevent flagschanged $numericKeysym [lindex $event 1]
 	if {$keyInfo == {}} {
 	    vwait keyInfo
 	}
