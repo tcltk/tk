@@ -779,7 +779,6 @@
 		F966BA6E08F27A38005CB29B /* MapWindow.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = MapWindow.3; sourceTree = "<group>"; };
 		F966BA6F08F27A38005CB29B /* MeasureChar.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = MeasureChar.3; sourceTree = "<group>"; };
 		F966BA7008F27A38005CB29B /* menu.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menu.n; sourceTree = "<group>"; };
-		F966BA7108F27A38005CB29B /* menubar.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menubar.n; sourceTree = "<group>"; };
 		F966BA7208F27A38005CB29B /* menubutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menubutton.n; sourceTree = "<group>"; };
 		F966BA7308F27A38005CB29B /* message.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = message.n; sourceTree = "<group>"; };
 		F966BA7408F27A38005CB29B /* messageBox.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = messageBox.n; sourceTree = "<group>"; };
@@ -1002,7 +1001,6 @@
 		F966BB7408F27A3A005CB29B /* menu.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = menu.tcl; sourceTree = "<group>"; };
 		F966BB7508F27A3A005CB29B /* mkpsenc.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = mkpsenc.tcl; sourceTree = "<group>"; };
 		F966BB7608F27A3A005CB29B /* msgbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = msgbox.tcl; sourceTree = "<group>"; };
-		F966BB8608F27A3A005CB29B /* obsolete.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = obsolete.tcl; sourceTree = "<group>"; };
 		F966BB8708F27A3A005CB29B /* optMenu.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = optMenu.tcl; sourceTree = "<group>"; };
 		F966BB8808F27A3A005CB29B /* palette.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = palette.tcl; sourceTree = "<group>"; };
 		F966BB8908F27A3B005CB29B /* panedwindow.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = panedwindow.tcl; sourceTree = "<group>"; };
@@ -1015,7 +1013,6 @@
 		F966BB9108F27A3B005CB29B /* text.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = text.tcl; sourceTree = "<group>"; };
 		F966BB9208F27A3B005CB29B /* tk.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tk.tcl; sourceTree = "<group>"; };
 		F966BB9308F27A3B005CB29B /* tkfbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tkfbox.tcl; sourceTree = "<group>"; };
-		F966BB9408F27A3B005CB29B /* unsupported.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = unsupported.tcl; sourceTree = "<group>"; };
 		F966BB9508F27A3B005CB29B /* xmfbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = xmfbox.tcl; sourceTree = "<group>"; };
 		F966BB9608F27A3B005CB29B /* license.terms */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = license.terms; sourceTree = "<group>"; };
 		F966BBBA08F27A3B005CB29B /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = configure.ac; sourceTree = "<group>"; };
@@ -2245,7 +2242,6 @@
 				F966BA6E08F27A38005CB29B /* MapWindow.3 */,
 				F966BA6F08F27A38005CB29B /* MeasureChar.3 */,
 				F966BA7008F27A38005CB29B /* menu.n */,
-				F966BA7108F27A38005CB29B /* menubar.n */,
 				F966BA7208F27A38005CB29B /* menubutton.n */,
 				F966BA7308F27A38005CB29B /* message.n */,
 				F966BA7408F27A38005CB29B /* messageBox.n */,
@@ -2455,7 +2451,6 @@
 				F966BB7408F27A3A005CB29B /* menu.tcl */,
 				F966BB7508F27A3A005CB29B /* mkpsenc.tcl */,
 				F966BB7608F27A3A005CB29B /* msgbox.tcl */,
-				F966BB8608F27A3A005CB29B /* obsolete.tcl */,
 				F966BB8708F27A3A005CB29B /* optMenu.tcl */,
 				F966BB8808F27A3A005CB29B /* palette.tcl */,
 				F966BB8908F27A3B005CB29B /* panedwindow.tcl */,
@@ -2469,7 +2464,6 @@
 				F966BB9208F27A3B005CB29B /* tk.tcl */,
 				F966BB9308F27A3B005CB29B /* tkfbox.tcl */,
 				F96888360AF787B3000797B5 /* ttk */,
-				F966BB9408F27A3B005CB29B /* unsupported.tcl */,
 				F966BB9508F27A3B005CB29B /* xmfbox.tcl */,
 			);
 			path = library;
