@@ -1200,11 +1200,10 @@ DestroyMenuInstance(
  *
  * TkDestroyMenu --
  *
- *	This function is invoked by Tcl_EventuallyFree or Tcl_Release to clean
- *	up the internal structure of a menu at a safe time (when no-one is
- *	using it anymore). If called on a main instance, destroys all of the
- *	instances. If called on a non-main instance, just destroys
- *	that instance.
+ *	This function is invoked to clean up the internal structure of a menu
+ *	at a safe time (when no-one is using it anymore). If called on a main
+ *	instance, destroys all of the instances. If called on a non-main
+ *	instance, just destroys that instance.
  *
  * Results:
  *	None.
