@@ -26,7 +26,7 @@ static Tcl_ObjCmdProc DebuggerObjCmd;
 #endif
 static Tcl_ObjCmdProc TestpressbuttonObjCmd;
 static Tcl_ObjCmdProc TestmovemouseObjCmd;
-static Tcl_ObjCmdProc InjectKeyEventObjCmd;
+static Tcl_ObjCmdProc TestinjectkeyeventObjCmd;
 static Tcl_ObjCmdProc TestmenubarheightObjCmd;
 
 
@@ -60,7 +60,7 @@ TkplatformtestInit(
 #endif
     Tcl_CreateObjCommand(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "testinjectkeyevent", TestinjectkeyeventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
     return TCL_OK;
 }
@@ -348,7 +348,7 @@ TestmovemouseObjCmd(
 }
 
 static int
-InjectKeyEventObjCmd(
+TestinjectkeyeventObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
