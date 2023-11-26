@@ -66,7 +66,7 @@ update idletasks
 set courier {Courier -10}
 set cx [font measure $courier 0]
 
-label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font fixed
+label .b.l -padx 0 -pady 0 -bd 0 -highlightthickness 0 -justify left -text "0" -font TkFixedFont
 pack .b.l
 canvas .b.c -closeenough 0
 
@@ -181,11 +181,11 @@ test unixfont-5.7 {Tk_MeasureChars procedure: already saw space in line} x11 {
     .b.l config -text "000000     00000"
     getsize
 } "[expr $ax*6] [expr $ay*2]"
-test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11 failsOnUbuntu} {
+test unixfont-5.8 {Tk_MeasureChars procedure: internal spaces significant} {x11} {
     .b.l config -text "00  000     00000"
     getsize
 } "[expr $ax*7] [expr $ay*2]"
-test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {x11 failsOnUbuntu} {
+test unixfont-5.9 {Tk_MeasureChars procedure: TK_PARTIAL_OK} {x11} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0000"
     .b.c index $t @[expr int($ax*2.5)],1
@@ -201,7 +201,7 @@ test unixfont-5.11 {Tk_MeasureChars: TK_AT_LEAST_ONE + not even one char fit!} x
     .b.l config -wrap $a
     set x
 } "$ax [expr $ay*6]"
-test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {x11 failsOnUbuntu} {
+test unixfont-5.12 {Tk_MeasureChars procedure: include eol spaces} {x11} {
     .b.l config -text "000   \n000"
     getsize
 } "[expr $ax*6] [expr $ay*2]"
