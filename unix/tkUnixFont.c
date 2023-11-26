@@ -105,7 +105,7 @@ typedef struct UnixFont {
 				 * order to draw/measure all the characters
 				 * encountered by this font so far. All fonts
 				 * start off with one SubFont initialized by
-				 * AllocFont() from the original set of font
+				 * InitFont() from the original set of font
 				 * attributes. Usually points to
 				 * staticSubFonts, but may point to malloced
 				 * space if there are lots of SubFonts. */
