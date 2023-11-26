@@ -136,7 +136,7 @@ test font-4.8 {font command: actual: all attributes} -body {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
 } -result {-family}
-test font-4.9 {font command: actual} -constraints {unix haveTimesFamilyFont} -body {
+test font-4.9 {font command: actual} -constraints {haveTimesFamilyFont} -body {
     # (objc > 3) so objPtr = objv[3 + skip]
     string tolower [font actual {-family times} -family]
 } -result {times}
