@@ -88,8 +88,6 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 	    && ([lindex $vals 2]/256 == $blue)
 }
 
-testConstraint pressbutton [llength [info commands pressbutton]]
-
 test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} -constraints {
     unix
 } -setup {
@@ -1290,7 +1288,7 @@ test unixEmbed-11.1 {focus -force works for embedded toplevels} -constraints {
     deleteWindows
 } -result .embed
 test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
-    unix pressbutton
+    unix testpressbutton
 } -setup {
     deleteWindows
 } -body {
@@ -1312,12 +1310,12 @@ test unixEmbed-11.2 {mouse coordinates in embedded toplevels} -constraints {
     set x [expr {[winfo rootx .main.b] + [winfo width .main.b]/2}]
     set y [expr {[winfo rooty .main.b] + [winfo height .main.b]/2}]
     lappend result [winfo containing $x $y]
-    pressbutton $x $y
+    testpressbutton $x $y
     update
     set x [expr {[winfo rootx .embed.b] + [winfo width .embed.b]/2}]
     set y [expr {[winfo rooty .embed.b] + [winfo height .embed.b]/2}]
     lappend result [winfo containing $x $y]
-    pressbutton $x $y
+    testpressbutton $x $y
     update
     set result
 } -cleanup {
