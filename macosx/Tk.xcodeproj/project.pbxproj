@@ -1013,7 +1013,6 @@
 		F966BB9108F27A3B005CB29B /* text.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = text.tcl; sourceTree = "<group>"; };
 		F966BB9208F27A3B005CB29B /* tk.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tk.tcl; sourceTree = "<group>"; };
 		F966BB9308F27A3B005CB29B /* tkfbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tkfbox.tcl; sourceTree = "<group>"; };
-		F966BB9408F27A3B005CB29B /* unsupported.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = unsupported.tcl; sourceTree = "<group>"; };
 		F966BB9508F27A3B005CB29B /* xmfbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = xmfbox.tcl; sourceTree = "<group>"; };
 		F966BB9608F27A3B005CB29B /* license.terms */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = license.terms; sourceTree = "<group>"; };
 		F966BBBA08F27A3B005CB29B /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = configure.ac; sourceTree = "<group>"; };
@@ -2465,7 +2464,6 @@
 				F966BB9208F27A3B005CB29B /* tk.tcl */,
 				F966BB9308F27A3B005CB29B /* tkfbox.tcl */,
 				F96888360AF787B3000797B5 /* ttk */,
-				F966BB9408F27A3B005CB29B /* unsupported.tcl */,
 				F966BB9508F27A3B005CB29B /* xmfbox.tcl */,
 			);
 			path = library;
