@@ -24,7 +24,7 @@
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static Tcl_ObjCmdProc DebuggerObjCmd;
 #endif
-static Tcl_ObjCmdProc PressButtonObjCmd;
+static Tcl_ObjCmdProc TestpressbuttonObjCmd;
 static Tcl_ObjCmdProc MoveMouseObjCmd;
 static Tcl_ObjCmdProc InjectKeyEventObjCmd;
 static Tcl_ObjCmdProc MenuBarHeightObjCmd;
@@ -58,7 +58,7 @@ TkplatformtestInit(
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
-    Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "movemouse", MoveMouseObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
@@ -170,7 +170,7 @@ TkTestLogDisplay(
 /*
  *----------------------------------------------------------------------
  *
- * PressButtonObjCmd --
+ * TestpressbuttonObjCmd --
  *
  *	This Tcl command simulates a button press at a specific screen
  *      location.  It injects NSEvents into the NSApplication event queue, as
@@ -189,7 +189,7 @@ TkTestLogDisplay(
  */
 
 static int
-PressButtonObjCmd(
+TestpressbuttonObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
