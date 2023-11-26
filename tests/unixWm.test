@@ -51,7 +51,7 @@ proc makeToplevels {} {
 # width of the dock, if it happens to be on the left.
 
 if {[tk windowingsystem] eq "aqua"} {
-    set mb [expr [menubarheight] + 1]
+    set mb [expr [testmenubarheight] + 1]
     set X  100
     set Y0 $mb
     set Y2 [expr $mb + 2]

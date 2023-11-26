@@ -27,7 +27,7 @@ static Tcl_ObjCmdProc DebuggerObjCmd;
 static Tcl_ObjCmdProc TestpressbuttonObjCmd;
 static Tcl_ObjCmdProc TestmovemouseObjCmd;
 static Tcl_ObjCmdProc InjectKeyEventObjCmd;
-static Tcl_ObjCmdProc MenuBarHeightObjCmd;
+static Tcl_ObjCmdProc TestmenubarheightObjCmd;
 
 
 /*
@@ -61,7 +61,7 @@ TkplatformtestInit(
     Tcl_CreateObjCommand(interp, "testpressbutton", TestpressbuttonObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testmovemouse", TestmovemouseObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "testmenubarheight", TestmenubarheightObjCmd, NULL, NULL);
     return TCL_OK;
 }
 
@@ -98,7 +98,7 @@ DebuggerObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * MenuBarHeightObjCmd --
+ * TestmenubarheightObjCmd --
  *
  *	This procedure calls [NSMenu menuBarHeight] and returns the result
  *      as an integer.  Windows can never be placed to overlap the MenuBar,
@@ -114,7 +114,7 @@ DebuggerObjCmd(
  */
 
 static int
-MenuBarHeightObjCmd(
+TestmenubarheightObjCmd(
     TCL_UNUSED(void *),		/* Not used. */
     Tcl_Interp *interp,			/* Not used. */
     TCL_UNUSED(int),				/* Not used. */
