@@ -846,7 +846,7 @@ Tk_MeasureChars(
     start = source;
     end = start + numBytes;
     for (p = start; p < end; ) {
-	next = p + TkUtfToUniChar(p, &ch);
+	next = p + Tcl_UtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	if (thisSubFontPtr != lastSubFontPtr) {
 	    familyPtr = lastSubFontPtr->familyPtr;
@@ -907,7 +907,7 @@ Tk_MeasureChars(
 	familyPtr = lastSubFontPtr->familyPtr;
 	Tcl_DStringInit(&runString);
 	for (p = start; p < end; ) {
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    Tcl_UtfToExternal(NULL, familyPtr->encoding, p,
 		    (int) (next - p), TCL_ENCODING_PROFILE_TCL8, NULL, buf, sizeof(buf), NULL,
 		    &dstWrote, NULL);
@@ -962,7 +962,7 @@ Tk_MeasureChars(
 	p = source;
 	ch = ' ';
 	while (p < end) {
-	    next = p + TkUtfToUniChar(p, &ch2);
+	    next = p + Tcl_UtfToUniChar(p, &ch2);
 	    if ((ch != ' ') && (ch2 == ' ')) {
 		lastWordBreak = p;
 	    }
@@ -1479,7 +1479,7 @@ MultiFontTextOut(
 
     end = source + numBytes;
     for (p = source; p < end; ) {
-	next = p + TkUtfToUniChar(p, &ch);
+	next = p + Tcl_UtfToUniChar(p, &ch);
 	thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 
 	/*
@@ -2262,7 +2262,7 @@ FontMapLoadPage(
 	end = (row + 1) << FONTMAP_SHIFT;
 	for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	    if (Tcl_UtfToExternal(NULL, encoding, src,
-		    TkUniCharToUtf(i, src), TCL_ENCODING_PROFILE_STRICT, NULL,
+		    Tcl_UniCharToUtf(i, src), TCL_ENCODING_PROFILE_STRICT, NULL,
 		    buf, sizeof(buf), NULL, NULL, NULL) != TCL_OK) {
 		continue;
 	    }
