@@ -17,6 +17,16 @@ bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
 bind TNotebook <Destroy>		{ ttk::notebook::Cleanup %W }
 
 ttk::bindMouseWheel TNotebook		[list ttk::notebook::CycleTab %W]
+bind TNotebook <Shift-MouseWheel> {
+    # Ignore the event
+}
+bind TNotebook <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    # TouchpadScroll events fire about 60 times per second.
+    if {$deltaX != 0 && [expr {%# %% 30}] == 0} {
+	ttk::notebook::CondCycleTab %W %D
+    }
+}
 
 # ActivateTab $nb $tab --
 #	Select the specified tab and set focus.
@@ -72,6 +82,24 @@ proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
 	if {$select != $current} {
 	    ActivateTab $w $select
 	}
+    }
+}
+
+# CondCycleTab --
+#	Conditionally invoke the ttk::notebook::CycleTab proc.
+#
+proc ttk::notebook::CondCycleTab {w dxdy} {
+    if {[set style [$w cget -style]] eq ""} {
+	set style TNotebook
+    }
+    set tabSide [string index [ttk::style lookup $style -tabposition {} nw] 0]
+
+    lassign [tk::PreciseScrollDeltas $dxdy] deltaX deltaY
+    if {$tabSide in {n s} && $deltaX != 0} {
+	CycleTab $w [expr {$deltaX > 0 ? -1 : 1}]
+    }
+    if {$tabSide in {w e} && $deltaY != 0} {
+	CycleTab $w [expr {$deltaY > 0 ? -1 : 1}]
     }
 }
 
