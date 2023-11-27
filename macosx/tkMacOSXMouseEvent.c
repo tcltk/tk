@@ -543,6 +543,7 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
+	static int scrollCounter = 0;
 	int delta;
 	CGFloat Delta;
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
@@ -562,7 +563,7 @@ enum {
 	     	xEvent.type = TouchpadScroll;
 	     	xEvent.xbutton.state = state;
 	     	xEvent.xkey.keycode = delta;
-	     	xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
+	     	xEvent.xany.serial = scrollCounter++;
 	     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
 	} else {
