@@ -779,7 +779,6 @@
 		F966BA6E08F27A38005CB29B /* MapWindow.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = MapWindow.3; sourceTree = "<group>"; };
 		F966BA6F08F27A38005CB29B /* MeasureChar.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = MeasureChar.3; sourceTree = "<group>"; };
 		F966BA7008F27A38005CB29B /* menu.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menu.n; sourceTree = "<group>"; };
-		F966BA7108F27A38005CB29B /* menubar.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menubar.n; sourceTree = "<group>"; };
 		F966BA7208F27A38005CB29B /* menubutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menubutton.n; sourceTree = "<group>"; };
 		F966BA7308F27A38005CB29B /* message.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = message.n; sourceTree = "<group>"; };
 		F966BA7408F27A38005CB29B /* messageBox.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = messageBox.n; sourceTree = "<group>"; };
@@ -2245,7 +2244,6 @@
 				F966BA6E08F27A38005CB29B /* MapWindow.3 */,
 				F966BA6F08F27A38005CB29B /* MeasureChar.3 */,
 				F966BA7008F27A38005CB29B /* menu.n */,
-				F966BA7108F27A38005CB29B /* menubar.n */,
 				F966BA7208F27A38005CB29B /* menubutton.n */,
 				F966BA7308F27A38005CB29B /* message.n */,
 				F966BA7408F27A38005CB29B /* messageBox.n */,
