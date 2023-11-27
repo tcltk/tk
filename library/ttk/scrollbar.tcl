@@ -21,7 +21,7 @@ bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 #
 bind TScrollbar <MouseWheel> [bind Scrollbar <MouseWheel>]
 bind TScrollbar <Option-MouseWheel> [bind Scrollbar <Option-MouseWheel>]
-bind TScrollbar <Extended-MouseWheel> [bind Scrollbar <Extended-MouseWheel>]
+bind TScrollbar <TouchpadScroll> [bind Scrollbar <TouchpadScroll>]
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]
