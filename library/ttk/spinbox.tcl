@@ -24,6 +24,15 @@ bind TSpinbox <<Increment>>		{ ttk::spinbox::Spin %W +1 }
 bind TSpinbox <<Decrement>> 		{ ttk::spinbox::Spin %W -1 }
 
 ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::Spin %W]
+bind TSpinbox <Shift-MouseWheel> {
+    # Ignore the event
+}
+bind TSpinbox <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    if {$deltaY != 0 && [expr {%# %% 12}] == 0} {
+	ttk::spinbox::Spin %W [expr {$deltaY > 0 ? -1 : 1}]
+    }
+}
 
 ## Motion --
 #	Sets cursor.
