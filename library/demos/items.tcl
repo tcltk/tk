@@ -34,8 +34,7 @@ canvas $c -scrollregion {0c 0c 30c 24c} -width 15c -height 10c \
 ttk::scrollbar $w.frame.vscroll -command "$c yview"
 ttk::scrollbar $w.frame.hscroll -orient horizontal -command "$c xview"
 
-#Touchpad scrolling
-bind $c <Extended-MouseWheel> {
+bind $c <TouchpadScroll> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0 || $deltaY != 0} {
 	tk::CanvasScrollByPixels %W $deltaX $deltaY

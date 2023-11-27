@@ -173,11 +173,11 @@ types; where two names appear together, they are synonyms.
 \fBButton\fR, \fBButtonPress\fR	\fBEnter\fR	\fBMapRequest\fR
 \fBButtonRelease\fR	\fBExpose\fR	\fBMotion\fR
 \fBCirculate\fR	\fBFocusIn\fR	\fBMouseWheel\fR
-\fBCirculateRequest\fR	\fBFocusOut\fR	\fBProperty\fR
-\fBColormap\fR	\fBGravity\fR	\fBReparent\fR
-\fBConfigure\fR	\fBKey\fR, \fBKeyPress\fR	\fBResizeRequest\fR
-\fBConfigureRequest\fR	\fBKeyRelease\fR	\fBUnmap\fR
-\fBCreate\fR	\fBLeave\fR	\fBVisibility\fR
+\fBTouchpadScroll\fR	\fBCirculateRequest\fR	\fBFocusOut\fR
+\fBProperty\fR	\fBColormap\fR	\fBGravity\fR
+\fBReparent\fR	\fBConfigure\fR	\fBKey\fR, \fBKeyPress\fR
+\fBResizeRequest\fR	\fBConfigureRequest\fR	\fBKeyRelease\fR
+\fBUnmap\fR   \fBCreate\fR	\fBLeave\fR	\fBVisibility\fR
 \fBDeactivate\fR
 .DE
 Most of the above events have the same fields and behaviors as events
@@ -198,7 +198,7 @@ active.  Likewise, the \fBDeactive\fR event is sent when the window's
 state changes from active to deactive.  There are no useful percent
 substitutions you would make when binding to these events.
 .IP \fBMouseWheel\fR 5
-Many contemporary mice support a mouse wheel, which is used
+Many contemporary mice include a mouse wheel, which is used
 for scrolling documents without using the scrollbars.  By rolling the
 wheel, the system will generate \fBMouseWheel\fR events that the
 application can use to scroll.  The event is routed to the
@@ -216,19 +216,19 @@ Horizontal scrolling uses \fBShift-MouseWheel\fR events, with positive
 negative right scrolling. Horizontal scrolling events are generated
 tilt wheels on some mice.  Horizontal scrolling can also be emulated
 by holding Shift and scrolling vertically.
-.PP
+.RE
+.IP "\fBTouchpadScroll\fR" 5
 On some platforms (currently Windows and macOS) there is support for
 high-resolution scrolling devices, such as touchpads.  This is
-provided via \fBExtended-MouseWheel\fR events.  These events store two
+provided via \fBTouchpadScroll\fR events.  These events store two
 16 bit delta values in the integer provided by the \fB%D\fR
-subsstitution.  The \fIX\fR delta is in the high order 16 bits and the
+substitution.  The \fIX\fR delta is in the high order 16 bits and the
 \fIY\fR delta is in the low order 16 bits.  These values can be
 unpacked by using the tk::PreciseScrollDeltas utility procedure.  For
 example:
 .CS
 lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
 .CE
-.RE
 .IP "\fBKeyPress\fR, \fBKeyRelease\fR" 5
 The \fBKeyPress\fR and \fBKeyRelease\fR events are generated
 whenever a key is pressed or released.  \fBKeyPress\fR and \fBKeyRelease\fR

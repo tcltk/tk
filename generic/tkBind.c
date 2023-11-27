@@ -528,6 +528,7 @@ static const EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
+    {"TouchpadScroll",  TouchpadScroll,         TouchpadScrollMask},
     {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
     {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
     {"Create",		CreateNotify,		SubstructureNotifyMask},
@@ -632,7 +633,8 @@ static const int flagArray[TK_LASTEVENT] = {
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,
    /* Deactivate */		ACTIVATE,
-   /* MouseWheel */		WHEEL
+   /* MouseWheel */		WHEEL,
+   /* TouchpadScroll */		WHEEL
 };
 
 /*
@@ -5016,7 +5018,6 @@ ParseEventDescription(
 	    eventFlags = 0;
 	    if ((hPtr = Tcl_FindHashEntry(&eventTable, field))) {
 		const EventInfo *eiPtr = (const EventInfo *)Tcl_GetHashValue(hPtr);
-
 		patPtr->eventType = eiPtr->type;
 		eventFlags = flagArray[eiPtr->type];
 		eventMask = eiPtr->eventMask;
@@ -5091,7 +5092,6 @@ ParseEventDescription(
 	    } else if (patPtr->eventType == MotionNotify) {
 		patPtr->info = ButtonNumberFromState(patPtr->modMask);
 	    }
-
 	    p = SkipFieldDelims(p);
 
 	    if (*p != '>') {

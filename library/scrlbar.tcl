@@ -137,7 +137,7 @@ bind Scrollbar <MouseWheel> {
     tk::ScrollByUnits %W hv %D -40.0
 }
 
-bind Scrollbar <Extended-MouseWheel> {
+bind Scrollbar <TouchpadScroll> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0 && [%W cget -orient] eq "horizontal"} {
 	tk::ScrollbarScrollByPixels %W h $deltaX

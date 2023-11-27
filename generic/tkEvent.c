@@ -123,7 +123,8 @@ static const unsigned long eventMasks[TK_LASTEVENT] = {
     VirtualEventMask,			/* VirtualEvents */
     ActivateMask,			/* ActivateNotify */
     ActivateMask,			/* DeactivateNotify */
-    MouseWheelMask			/* MouseWheelEvent */
+    MouseWheelMask,			/* MouseWheelEvent */
+    TouchpadScrollMask			/* TouchpadScroll */
 };
 
 /*
