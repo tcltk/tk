@@ -53,7 +53,14 @@
  */
 
 static int lastMod = 0;
- 
+
+/* 
+ * The serial field of TouchpadScroll events is a counter for
+ * events of this type only.
+ */
+
+static int scrollCounter = 0;
+
 /*
  * imm.h is needed by HandleIMEComposition
  */
@@ -1142,22 +1149,22 @@ GenerateXEvent(
 	    
 	    /*
 	     * Send an Xevent using a KeyPress struct, but with the type field
-	     * set to MouseWheelEventq and the keypress field set to the value
-	     * of the MouseWheel delta.  For high resolution events the
-	     * EXTENDED_MASK bit is set and delta is stored in the high word of
-	     * the keycode.  For low resolution scrolls the delta is in the
-	     * low word of the keycode.  Set nbytes to 0 to prevent conversion
-	     * of the keycode to a keysym in TkpGetString. [Bug 1118340].
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events. The Y delta
+	     * is stored in the low order 16 bits of the keycode field.  Set
+	     * nbytes to 0 to prevent conversion of the keycode to a keysym in
+	     * TkpGetString. [Bug 1118340].
 	     */
 
 	    int delta = (short) HIWORD(wParam);
 	    int mod = delta % WHEELDELTA;
 	    if ( mod != 0 || lastMod != 0) {
 		/* High resolution. */
-		event.x.type = MouseWheelEvent;
+		event.x.type = TouchpadScroll;
 		event.x.xany.send_event = -1;
 		event.key.nbytes = 0;
-		event.x.xkey.state = state | EXTENDED_MASK ;
+		event.x.xkey.state = state;
+		event.xany.serial = scrollCounter++;
 		event.x.xkey.keycode = (unsigned int) delta;
 	    } else {
 		event.x.type = MouseWheelEvent;
@@ -1169,26 +1176,26 @@ GenerateXEvent(
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
-	    
+
 	    /*
 	     * Send an Xevent using a KeyPress struct, but with the type field
-	     * set to MouseWheelEventq and the keypress field set to the value
-	     * of the MouseWheel delta.  For high resolution scrolls the
-	     * EXTENDEDMASK bit is set and deltaX is stored in the high word
-	     * of the keycode.  For low resolution scrolls the delta is in the
-	     * low word of the keycode and the ShiftMask bit is set.  Set
-	     * nbytes to 0 to prevent conversion of the keycode to a keysym in
-	     * TkpGetString. [Bug 1118340].
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events.  For low
+	     * resolution scrolls the X delta is stored in the keycode field
+	     * and For high resolution scrolls the X delta is in the high word
+	     * of the keycode.  Set nbytes to 0 to prevent conversion of the
+	     * keycode to a keysym in TkpGetString. [Bug 1118340].
 	     */
 
 	    int delta = (short) HIWORD(wParam);
 	    int mod = delta % WHEELDELTA;
 	    if ( mod != 0 || lastMod != 0) {
 		/* High resolution. */
-		event.x.type = MouseWheelEvent;
+		event.x.type = TouchpadScroll;
 		event.x.xany.send_event = -1;
 		event.key.nbytes = 0;
-		event.x.xkey.state = state | EXTENDED_MASK ;
+		event.x.xkey.state = state;
+		event.xany.serial = scrollCounter++;
 		event.x.xkey.keycode = (unsigned int)(-(delta << 16));
 	    } else {
 		event.x.type = MouseWheelEvent;
