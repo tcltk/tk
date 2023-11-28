@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
+AC_INIT([tk],[9.0])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.69])
 
@@ -12,10 +12,10 @@ AC_PREREQ([2.69])
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=8.7
-TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a6"
+TK_VERSION=9.0
+TK_MAJOR_VERSION=9
+TK_MINOR_VERSION=0
+TK_PATCH_LEVEL="b1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -77,15 +77,10 @@ SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt 7; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
-fi
-if test "${TCL_MINOR_VERSION}" -lt 6; then
-    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.7+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.7 or better.])
 fi
 fi
 
@@ -247,11 +242,7 @@ else
 fi
 fi
 
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
-else
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
-fi
+eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names

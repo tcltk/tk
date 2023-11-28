@@ -41,7 +41,7 @@ namespace eval ::tk::print {
 	    return $tmpfile
 	}
     }
-  
+
     if {[tk windowingsystem] eq "win32"} {
 	variable printer_name
 	variable copies
@@ -969,7 +969,7 @@ proc ::tk::print {w} {
 	    ::tk::print::_printcanvas $w
 	    set printfile /tmp/tk_canvas.pdf
 	    ::tk::print::_print $printfile
-	} 
+	}
 	"Text,win32" {
 	    tailcall ::tk::print::_print_data [$w get 1.0 end] 1 {Arial 12}
 	}

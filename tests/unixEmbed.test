@@ -90,21 +90,21 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 
 testConstraint pressbutton [llength [info commands pressbutton]]
 
-test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} -constraints {
+test unixEmbed-1.1 {Tk_UseWindow procedure, bad window identifier} -constraints {
     unix
 } -setup {
     deleteWindows
 } -body {
     toplevel .t -use xyz
 } -returnCodes error -result {expected integer but got "xyz"}
-test unixEmbed-1.2 {TkpUseWindow procedure, bad window identifier} -constraints {
+test unixEmbed-1.2 {Tk_UseWindow procedure, bad window identifier} -constraints {
     unix
 } -setup {
     deleteWindows
 } -body {
     toplevel .t -use 47
 } -returnCodes error -result {couldn't create child of window "47"}
-test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} -constraints {
+test unixEmbed-1.3 {Tk_UseWindow procedure, inheriting colormap} -constraints {
     unix nonPortable
 } -setup {
     deleteWindows
@@ -118,7 +118,7 @@ test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} -constraints {
 } -cleanup {
     deleteWindows
 } -result 0
-test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} -constraints {
+test unixEmbed-1.4 {Tk_UseWindow procedure, inheriting colormap} -constraints {
     unix nonPortable
 } -setup {
     deleteWindows
@@ -132,7 +132,7 @@ test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} -constraints {
     deleteWindows
 } -result 1
 
-test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.5 {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed notAqua
 } -setup {
     deleteWindows
@@ -149,7 +149,7 @@ test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constra
 } -cleanup {
     deleteWindows
 } -result {{{XXX {} {} .t}} 0}
-test unixEmbed-1.5a {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.5a {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed
 } -setup {
     deleteWindows
@@ -170,7 +170,7 @@ test unixEmbed-1.5a {TkpUseWindow procedure, creating Container records} -constr
     interp delete child
     deleteWindows
 } -result {{{XXX {} {} .t}} 0}
-test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.6 {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed notAqua
 } -setup {
     deleteWindows
@@ -189,7 +189,7 @@ test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constra
 } -cleanup {
     deleteWindows
 } -result {{XXX {} {} .t2} {XXX {} {} .t1}}
-test unixEmbed-1.6a {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.6a {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed
 } -setup {
     deleteWindows
@@ -212,7 +212,7 @@ test unixEmbed-1.6a {TkpUseWindow procedure, creating Container records} -constr
     interp delete child
     deleteWindows
 } -result {{XXX {} {} .t2} {XXX {} {} .t1}}
-test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} -constraints {
+test unixEmbed-1.7 {Tk_UseWindow procedure, container and embedded in same app} -constraints {
     unix testembed
 } -setup {
     deleteWindows
@@ -963,7 +963,7 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
     deleteWindows
 } -result {{configure .t1 200 200} 200x200+0+0}
 
-# Can't think up any tests for TkpGetOtherWindow procedure.
+# Can't think up any tests for Tk_GetOtherWindow procedure.
 
 test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
     unix notAqua

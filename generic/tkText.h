@@ -39,7 +39,7 @@
 # define DEBUG_ALLOC(expr)
 #endif
 
-#if TK_MAJOR_VERSION < 9
+#ifndef TK_NO_DEPRECATED
 
 /* We are still supporting the deprecated -startline/-endline options. */
 # define SUPPORT_DEPRECATED_STARTLINE_ENDLINE 1

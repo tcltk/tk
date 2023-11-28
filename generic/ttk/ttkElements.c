@@ -497,7 +497,7 @@ static void GeneralSeparatorElementDraw(
     SeparatorElement *separator = (SeparatorElement *)elementRecord;
     Ttk_Orient orient;
 
-    TtkGetOrientFromObj(NULL, separator->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, separator->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
 	    HorizontalSeparatorElementDraw(
@@ -1199,7 +1199,7 @@ static void TroughElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->grooveWidthObj, &grooveWidth);
     Tk_GetReliefFromObj(NULL, troughPtr->reliefObj, &relief);
-    TtkGetOrientFromObj(NULL, troughPtr->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, troughPtr->orientObj, &orient);
 
     if (grooveWidth > 0 && grooveWidth < b.height && grooveWidth < b.width) {
 	if (orient == TTK_ORIENT_HORIZONTAL) {
@@ -1268,7 +1268,7 @@ static void ThumbElementSize(
     (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->thicknessObj, &thickness);
-    TtkGetOrientFromObj(NULL, thumb->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
 
     if (orient == TTK_ORIENT_VERTICAL) {
 	*widthPtr = thickness;
@@ -1399,7 +1399,7 @@ static void SliderElementDraw(
      * Fill the thin trough area preceding the
      * slider's center with the inner color
      */
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
 	    XFillRectangle(disp, d, gc, troughInnerBox.x, troughInnerBox.y,
@@ -1535,7 +1535,7 @@ static void PbarElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    TtkGetOrientFromObj(NULL, pbar->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->borderWidthObj, &borderWidth);
@@ -1607,66 +1607,187 @@ static void TabElementSize(
 {
     TabElement *tab = (TabElement *)elementRecord;
     int borderWidth = 1;
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     (void)dummy;
     (void)widthPtr;
     (void)heightPtr;
 
     Tk_GetPixelsFromObj(0, tkwin, tab->borderWidthObj, &borderWidth);
-    paddingPtr->top = paddingPtr->left = paddingPtr->right = borderWidth;
-    paddingPtr->bottom = 0;
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
+
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    paddingPtr->bottom = 0;
+	    break;
+	case TTK_STICK_N:
+	    paddingPtr->top = 0;
+	    break;
+	case TTK_STICK_E:
+	    paddingPtr->right = 0;
+	    break;
+	case TTK_STICK_W:
+	    paddingPtr->left = 0;
+	    break;
+    }
 }
 
 static void TabElementDraw(
     void *dummy, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
-    int borderWidth = 1, highlight = 0;
+    int highlight = 0;
+    XColor *hlColor = NULL;
     XPoint pts[6];
-    int n = 0;
     double scalingLevel = TkScalingLevel(tkwin);
     int cut = round(2 * scalingLevel);
     Display *disp = Tk_Display(tkwin);
+    int borderWidth = 1;
     (void)dummy;
 
-    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     if (state & TTK_STATE_SELECTED) {
 	/*
 	 * Draw slightly outside of the allocated parcel,
 	 * to overwrite the client area border.
 	 */
-	b.height += borderWidth;
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		b.height += 1;
+		break;
+	    case TTK_STICK_N:
+		b.height += 1; b.y -= 1;
+		break;
+	    case TTK_STICK_E:
+		b.width += 1;
+		break;
+	    case TTK_STICK_W:
+		b.width += 1; b.x -= 1;
+		break;
+	}
 
 	Tcl_GetBooleanFromObj(NULL, tab->highlightObj, &highlight);
+	if (highlight) {
+	    hlColor = Tk_GetColorFromObj(tkwin, tab->highlightColorObj);
+	}
     }
 
-    pts[n].x = b.x; 			pts[n].y = b.y + b.height - 1; ++n;
-    pts[n].x = b.x;			pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + cut;  		pts[n].y = b.y; ++n;
-    pts[n].x = b.x + b.width-1-cut;	pts[n].y = b.y; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + cut; ++n;
-    pts[n].x = b.x + b.width-1; 	pts[n].y = b.y + b.height; ++n;
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    pts[0].x = b.x;  pts[0].y = b.y + b.height-1;
+	    pts[1].x = b.x;  pts[1].y = b.y + cut;
+	    pts[2].x = b.x + cut;  pts[2].y = b.y;
+	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y;
+	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + cut;
+	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y + b.height;
+	    break;
+	case TTK_STICK_N:
+	    pts[0].x = b.x;  pts[0].y = b.y;
+	    pts[1].x = b.x;  pts[1].y = b.y + b.height-1 - cut;
+	    pts[2].x = b.x + cut;  pts[2].y = b.y + b.height-1;
+	    pts[3].x = b.x + b.width-1 - cut;  pts[3].y = b.y + b.height-1;
+	    pts[4].x = b.x + b.width-1;  pts[4].y = b.y + b.height-1 - cut;
+	    pts[5].x = b.x + b.width-1;  pts[5].y = b.y-1;
+	    break;
+	case TTK_STICK_E:
+	    pts[0].x = b.x + b.width-1;  pts[0].y = b.y;
+	    pts[1].x = b.x + cut;  pts[1].y = b.y;
+	    pts[2].x = b.x;  pts[2].y = b.y + cut;
+	    pts[3].x = b.x;  pts[3].y = b.y + b.height-1 - cut;
+	    pts[4].x = b.x + cut;  pts[4].y = b.y + b.height-1;
+	    pts[5].x = b.x + b.width;  pts[5].y = b.y + b.height-1;
+	    break;
+	case TTK_STICK_W:
+	    pts[0].x = b.x;  pts[0].y = b.y;
+	    pts[1].x = b.x + b.width-1 - cut;  pts[1].y = b.y;
+	    pts[2].x = b.x + b.width-1;  pts[2].y = b.y + cut;
+	    pts[3].x = b.x + b.width-1;  pts[3].y = b.y + b.height-1 - cut;
+	    pts[4].x = b.x + b.width-1 - cut;  pts[4].y = b.y + b.height-1;
+	    pts[5].x = b.x-1;  pts[5].y = b.y + b.height-1;
+	    break;
+    }
 
     XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	    pts, 6, Convex, CoordModeOrigin);
 
-    pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    pts[5].y -= 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+	case TTK_STICK_N:
+	    pts[5].y += 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+	case TTK_STICK_E:
+	    pts[5].x -= 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+	case TTK_STICK_W:
+	    pts[5].x += 1 - WIN32_XDRAWLINE_HACK;
+	    break;
+    }
 
+    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC),
 		pts+3, 3, CoordModeOrigin);
-	++pts[0].x; ++pts[1].x; ++pts[2].x;             --pts[4].x; --pts[5].x;
-	                        ++pts[2].y; ++pts[3].y;
+
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		++pts[0].x;  ++pts[1].x;  ++pts[2].y;
+		++pts[3].y;  --pts[4].x;  --pts[5].x;
+		break;
+	    case TTK_STICK_N:
+		++pts[0].x;  ++pts[1].x;  --pts[2].y;
+		--pts[3].y;  --pts[4].x;  --pts[5].x;
+		break;
+	    case TTK_STICK_E:
+		++pts[0].y;  ++pts[1].y;  ++pts[2].x;
+		++pts[3].x;  --pts[4].y;  --pts[5].y;
+		break;
+	    case TTK_STICK_W:
+		++pts[0].y;  ++pts[1].y;  --pts[2].x;
+		--pts[3].x;  --pts[4].y;  --pts[5].y;
+		break;
+	}
     }
 
     if (highlight) {
-	XColor *hlColor = Tk_GetColorFromObj(tkwin, tab->highlightColorObj);
-	XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
-		b.x + cut, b.y, b.width - 2*cut, cut);
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + cut, b.y, b.width - 2*cut, cut);
+		break;
+	    case TTK_STICK_N:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + cut, b.y + b.height - cut, b.width - 2*cut, cut);
+		break;
+	    case TTK_STICK_E:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x, b.y + cut, cut, b.height - 2*cut);
+		break;
+	    case TTK_STICK_W:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + b.width - cut, b.y + cut, cut, b.height - 2*cut);
+		break;
+	}
     }
 }
 

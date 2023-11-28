@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     - "revised_text"
     tags:
@@ -23,11 +24,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Check out Tcl 8.7
+      - name: Check out Tcl 9.0
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Prepare checked out repositories
         run: |
@@ -75,11 +76,11 @@ jobs:
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Check out Tcl 8.7
+      - name: Check out Tcl 9.0
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
-          ref: core-8-branch
+          ref: main
           path: tcl
       - name: Prepare checked out repositories
         env:
