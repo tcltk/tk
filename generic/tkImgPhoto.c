@@ -485,7 +485,7 @@ ImgPhotoCmd(
 	    }
 	} else {
 	    Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
-		    (char *) modelPtr, Tcl_GetString(objv[2]), 0);
+		    modelPtr, Tcl_GetString(objv[2]), 0);
 	}
 	return TCL_OK;
     }
@@ -499,7 +499,7 @@ ImgPhotoCmd(
 	    Tcl_Obj *obj, *subobj;
 
 	    result = Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) modelPtr, NULL, 0);
+		    configSpecs, modelPtr, NULL, 0);
 	    if (result != TCL_OK) {
 		return result;
 	    }
@@ -575,7 +575,7 @@ ImgPhotoCmd(
 		return TCL_OK;
 	    } else {
 		return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-			configSpecs, (char *) modelPtr, arg, 0);
+			configSpecs, modelPtr, arg, 0);
 	    }
 	} else {
 	    return ImgPhotoConfigureModel(interp, modelPtr, objc-2, objv+2,
@@ -1973,7 +1973,7 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objc, objv, modelPtr, flags) != TCL_OK) {
 	goto errorExit;
     }
 
@@ -2388,7 +2388,7 @@ ImgPhotoDelete(
     if (modelPtr->metadata != NULL) {
 	Tcl_DecrRefCount(modelPtr->metadata);
     }
-    Tk_FreeOptions(configSpecs, (char *) modelPtr, NULL, 0);
+    Tk_FreeOptions(configSpecs, modelPtr, NULL, 0);
     ckfree(modelPtr);
 }
 

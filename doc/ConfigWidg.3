@@ -15,7 +15,7 @@ Tk_ConfigureWidget, Tk_ConfigureInfo, Tk_ConfigureValue, Tk_FreeOptions \- proce
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_ConfigureWidget(\fIinterp, tkwin, specs, argc, argv, widgRec, flags\fB)\fR
+\fBTk_ConfigureWidget(\fIinterp, tkwin, specs, objc, objv, widgRec, flags\fB)\fR
 .sp
 int
 \fBTk_ConfigureInfo(\fIinterp, tkwin, specs, widgRec, argvName, flags\fB)\fR
@@ -25,7 +25,7 @@ int
 .sp
 \fBTk_FreeOptions(\fIspecs, widgRec, display, flags\fB)\fR
 .SH ARGUMENTS
-.AS char *widgRec in/out
+.AS void *widgRec in/out
 .AP Tcl_Interp *interp in
 Interpreter to use for returning error messages.
 .AP Tk_Window tkwin in
@@ -33,9 +33,9 @@ Window used to represent widget (needed to set up X resources).
 .AP "const Tk_ConfigSpec" *specs in
 Pointer to table specifying legal configuration options for this
 widget.
-.AP int argc in
-Number of arguments in \fIargv\fR.
-.AP "const char" **argv in
+.AP int objc in
+Number of arguments in \fIobjv\fR.
+.AP "Tcl_Obj *const *" objv in
 Command-line options for configuring widget.
 .AP char *widgRec in/out
 Points to widget record structure.  Fields in this structure get
@@ -75,16 +75,16 @@ It is typically
 invoked when widgets are created, and again when the \fBconfigure\fR
 command is invoked for a widget.
 Although intended primarily for widgets, \fBTk_ConfigureWidget\fR
-can be used in other situations where \fIargc-argv\fR information
+can be used in other situations where \fIobjc-objv\fR information
 is to be used to fill in a record structure, such as configuring
 graphical elements for a canvas widget or entries of a menu.
 .PP
 \fBTk_ConfigureWidget\fR processes
 a table specifying the configuration options that are supported
-(\fIspecs\fR) and a collection of command-line arguments (\fIargc\fR and
-\fIargv\fR) to fill in fields of a record (\fIwidgRec\fR).
+(\fIspecs\fR) and a collection of command-line arguments (\fIobjc\fR and
+\fIobjv\fR) to fill in fields of a record (\fIwidgRec\fR).
 It uses the option database and defaults specified in \fIspecs\fR
-to fill in fields of \fIwidgRec\fR that are not specified in \fIargv\fR.
+to fill in fields of \fIwidgRec\fR that are not specified in \fIobjv\fR.
 \fBTk_ConfigureWidget\fR normally returns the value \fBTCL_OK\fR; in this
 case it does not modify \fIinterp\fR.
 If an error
@@ -120,12 +120,12 @@ The \fIargvName\fR field is a string such as
 .QW \-font
 or
 .QW \-bg ,
-which is compared with the values in \fIargv\fR (if \fIargvName\fR is
+which is compared with the values in \fIobjv\fR (if \fIargvName\fR is
 NULL it means this is a grouped entry;  see \fBGROUPED ENTRIES\fR below).  The
 \fIdbName\fR and \fIdbClass\fR fields are used to look up a value
 for this option in the option database.  The \fIdefValue\fR field
 specifies a default value for this configuration option if no
-value is specified in either \fIargv\fR or the option database.
+value is specified in either \fIobjv\fR or the option database.
 \fIOffset\fR indicates where in \fIwidgRec\fR to store information
 about this option, and \fIspecFlags\fR contains additional information
 to control the processing of this configuration option (see FLAGS
@@ -133,14 +133,14 @@ below).
 The last field, \fIcustomPtr\fR, is only used if \fItype\fR is
 \fBTK_CONFIG_CUSTOM\fR;  see CUSTOM OPTION TYPES below.
 .PP
-\fBTk_ConfigureWidget\fR first processes \fIargv\fR to see which
+\fBTk_ConfigureWidget\fR first processes \fIobjv\fR to see which
 (if any) configuration options are specified there.  \fIArgv\fR
 must contain an even number of fields;  the first of each pair
 of fields must match the \fIargvName\fR of some entry in \fIspecs\fR
 (unique abbreviations are acceptable),
 and the second field of the pair contains the value for that
 configuration option.  If there are entries in \fIspec\fR for which
-there were no matching entries in \fIargv\fR,
+there were no matching entries in \fIobjv\fR,
 \fBTk_ConfigureWidget\fR uses the \fIdbName\fR and \fIdbClass\fR
 fields of the \fIspecs\fR entry to probe the option database;  if
 a value is found, then it is used as the value for the option.
@@ -149,7 +149,7 @@ Finally, if no entry is found in the option database, the
 value for the configuration option.  If the \fIdefValue\fR is
 NULL, or if the \fBTK_CONFIG_DONT_SET_DEFAULT\fR bit is set in
 \fIflags\fR, then there is no default value and this \fIspecs\fR entry
-will be ignored if no value is specified in \fIargv\fR or the
+will be ignored if no value is specified in \fIobjv\fR or the
 option database.
 .PP
 Once a string value has been determined for a configuration option,
@@ -333,13 +333,13 @@ freed by passing it to \fBTcl_Free\fR.
 .TP
 \fBTK_CONFIG_SYNONYM\fR
 This \fItype\fR value identifies special entries in \fIspecs\fR that
-are synonyms for other entries.  If an \fIargv\fR value matches the
+are synonyms for other entries.  If an \fIobjv\fR value matches the
 \fIargvName\fR of a \fBTK_CONFIG_SYNONYM\fR entry, the entry is not used
 directly. Instead, \fBTk_ConfigureWidget\fR searches \fIspecs\fR
 for another entry whose \fIargvName\fR is the same as the \fIdbName\fR
 field in the \fBTK_CONFIG_SYNONYM\fR entry;  this new entry is used just
-as if its \fIargvName\fR had matched the \fIargv\fR value.  The
-synonym mechanism allows multiple \fIargv\fR values to be used for
+as if its \fIargvName\fR had matched the \fIobjv\fR value.  The
+synonym mechanism allows multiple \fIobjv\fR values to be used for
 a single configuration option, such as
 .QW \-background
 and
@@ -384,7 +384,7 @@ First, if the \fIflags\fR argument to \fBTk_ConfigureWidget\fR has
 the \fBTK_CONFIG_ARGV_ONLY\fR bit set (i.e., \fIflags\fR | \fBTK_CONFIG_ARGV_ONLY\fR != 0),
 then the option database and
 \fIdefValue\fR fields are not used.  In this case, if an entry in
-\fIspecs\fR does not match a field in \fIargv\fR then nothing happens:
+\fIspecs\fR does not match a field in \fIobjv\fR then nothing happens:
 the corresponding target is not modified.  This feature is useful
 when the goal is to modify certain configuration options while
 leaving others in their current state, such as when a \fBconfigure\fR
