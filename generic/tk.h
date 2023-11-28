@@ -1136,7 +1136,8 @@ typedef struct Tk_ItemType {
  * point-level manipulation like the line and polygon items.
  */
 
-#define TK_MOVABLE_POINTS	2
+#define TK_ALWAYS_REDRAW	1	/* item should be redrawn always*/
+#define TK_MOVABLE_POINTS	2	/* item supports point-level manipulation */
 
 #endif /* __NO_OLD_CONFIG */
 
