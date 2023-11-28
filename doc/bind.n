@@ -229,6 +229,9 @@ example:
 .CS
 lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
 .CE
+The \fB$#\fR substitution is a counter for \fBToucpadScroll\fR events
+which can be used by widgets that only support scrolling by units to
+ignore some portion of the events.
 .IP "\fBKeyPress\fR, \fBKeyRelease\fR" 5
 The \fBKeyPress\fR and \fBKeyRelease\fR events are generated
 whenever a key is pressed or released.  \fBKeyPress\fR and \fBKeyRelease\fR
