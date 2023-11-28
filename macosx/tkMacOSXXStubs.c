@@ -865,6 +865,17 @@ XSetIconName(
     return Success;
 }
 
+Bool
+XFilterEvent(
+    XEvent *event,
+    Window window)
+{
+    (void)event;
+    (void)window;
+
+    return 0;
+}
+
 int
 XForceScreenSaver(
     Display* display,

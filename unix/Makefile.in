@@ -112,7 +112,7 @@ TCL_PLATFORM_DIR	= $(TCLDIR)/unix
 # for this version of Tk:
 TCL_BIN_DIR		= @TCL_BIN_DIR@
 
-# The linker flags needed to link in the Tcl library (ex: -ltcl8.7)
+# The linker flags needed to link in the Tcl library (ex: -ltcl9.0)
 TCL_LIB_FLAG		= @TCL_LIB_FLAG@
 
 # Flag, 1: we're building a shared lib, 0 we're not
@@ -348,7 +348,7 @@ ${MEM_DEBUG_FLAGS} ${KEYSYM_FLAGS} @EXTRA_CC_SWITCHES@
 
 WISH_OBJS = tkAppInit.o
 
-TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o tkOldTest.o \
+TKTEST_OBJS = tkTestInit.o tkTest.o tkSquare.o \
 	$(@TK_WINDOWINGSYSTEM@_TKTEST_OBJS)
 
 WIDG_OBJS = tkButton.o tkEntry.o tkFrame.o tkListbox.o \
@@ -465,7 +465,7 @@ GENERIC_SRCS = \
 	$(GENERIC_DIR)/tkTextMark.c $(GENERIC_DIR)/tkTextTag.c \
 	$(GENERIC_DIR)/tkTextTagSet.c $(GENERIC_DIR)/tkTextUndo.c \
 	$(GENERIC_DIR)/tkTextWind.c \
-	$(GENERIC_DIR)/tkOldConfig.c $(GENERIC_DIR)/tkOldTest.c \
+	$(GENERIC_DIR)/tkOldConfig.c \
 	$(GENERIC_DIR)/tkSquare.c $(GENERIC_DIR)/tkTest.c \
 	$(GENERIC_DIR)/tkStubInit.c
 
@@ -1247,9 +1247,6 @@ tkImgPhoto.o: $(GENERIC_DIR)/tkImgPhoto.c $(GENERIC_DIR)/tkImgPhoto.h
 tkImgPhInstance.o: $(GENERIC_DIR)/tkImgPhInstance.c $(GENERIC_DIR)/tkImgPhoto.h
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkImgPhInstance.c
 
-tkOldTest.o: $(GENERIC_DIR)/tkOldTest.c
-	$(CC) -c $(CC_SWITCHES) -DUSE_TK_STUBS $(GENERIC_DIR)/tkOldTest.c
-
 tkRangeList.o: $(GENERIC_DIR)/tkRangeList.c
 	$(CC) -c $(CC_SWITCHES) $(GENERIC_DIR)/tkRangeList.c
 
@@ -1423,7 +1420,7 @@ tkMacOSXFont.o: $(MAC_OSX_DIR)/tkMacOSXFont.c
 tkMacOSXHLEvents.o: $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXHLEvents.c
 
-tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c 
+tkMacOSXImage.o: $(MAC_OSX_DIR)/tkMacOSXImage.c
 	$(CC) -c $(CC_SWITCHES) $(MAC_OSX_DIR)/tkMacOSXImage.c
 
 tkMacOSXInit.o: $(MAC_OSX_DIR)/tkMacOSXInit.c tkConfig.sh

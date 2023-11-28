@@ -1029,7 +1029,7 @@ TkCreateMainWindow(
 #ifdef STATIC_BUILD
 		".static"
 #endif
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+#if TCL_UTF_MAX < 4
 		".utf-16"
 #endif
 #if defined(_WIN32)
@@ -3182,7 +3182,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
 	return TCL_ERROR;
     }
 

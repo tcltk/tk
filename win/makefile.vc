@@ -153,7 +153,6 @@ TKTESTOBJS = \
 	$(TMP_DIR)\testMain.obj \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\tkTest.obj \
-	$(TMP_DIR)\tkOldTest.obj \
 	$(TMP_DIR)\tkWinTest.obj
 
 XLIBOBJS = \
@@ -626,9 +625,6 @@ $(TMP_DIR)\tkUuid.h:	$(ROOT)\manifest.uuid
 	copy $(WIN_DIR)\tkUuid.h.in+$(ROOT)\manifest.uuid $(TMP_DIR)\tkUuid.h
 
 $(TMP_DIR)\tkTest.obj: $(GENERICDIR)\tkTest.c
-	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
-
-$(TMP_DIR)\tkOldTest.obj: $(GENERICDIR)\tkOldTest.c
 	$(cc32) $(stubscflags) /DUSE_TK_STUBS -Fo$@ $?
 
 $(TMP_DIR)\tkWinTest.obj: $(WIN_DIR)\tkWinTest.c

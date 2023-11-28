@@ -238,16 +238,6 @@ static unsigned		RankAttributes(FontAttributes *wantPtr,
 static void		ReleaseFont(UnixFont *fontPtr);
 static void		ReleaseSubFont(Display *display, SubFont *subFontPtr);
 static int		SeenName(const char *name, Tcl_DString *dsPtr);
-#if TCL_MAJOR_VERSION < 9
-static int		Ucs2beToUtfProc(void *clientData, const char*src,
-			    int srcLen, int flags, Tcl_EncodingState*statePtr,
-			    char *dst, int dstLen, int *srcReadPtr,
-			    int *dstWrotePtr, int *dstCharsPtr);
-static int		UtfToUcs2beProc(void *clientData, const char*src,
-			    int srcLen, int flags, Tcl_EncodingState*statePtr,
-			    char *dst, int dstLen, int *srcReadPtr,
-			    int *dstWrotePtr, int *dstCharsPtr);
-#endif
 
 /*
  *-------------------------------------------------------------------------
@@ -314,9 +304,6 @@ TkpFontPkgInit(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     SubFont dummy;
     int i;
-#if TCL_MAJOR_VERSION < 9
-    Tcl_Encoding ucs2;
-#endif
 
     if (tsdPtr->controlFamily.encoding == NULL) {
 
@@ -337,15 +324,6 @@ TkpFontPkgInit(
 	 * if it doesn't exist yet. It is used in iso10646 fonts.
 	 */
 
-#if TCL_MAJOR_VERSION < 9
-	ucs2 = Tcl_GetEncoding(NULL, "ucs-2be");
-	if (ucs2 == NULL) {
-	    Tcl_EncodingType ucs2type = {"ucs-2be", Ucs2beToUtfProc, UtfToUcs2beProc, NULL, NULL, 2};
-	    Tcl_CreateEncoding(&ucs2type);
-	} else {
-	    Tcl_FreeEncoding(ucs2);
-	}
-#endif
 	Tcl_CreateThreadExitHandler(FontPkgCleanup, NULL);
     }
 }
@@ -447,202 +425,6 @@ ControlUtfProc(
     *dstCharsPtr = dst - dstStart;
     return result;
 }
-
-/*
- *-------------------------------------------------------------------------
- *
- * Ucs2beToUtfProc --
- *
- *	Convert from UCS-2BE (big-endian 16-bit Unicode) to UTF-8.
- *
- * Results:
- *	Returns TCL_OK if conversion was successful.
- *
- * Side effects:
- *	None.
- *
- *-------------------------------------------------------------------------
- */
-
-#if TCL_MAJOR_VERSION < 9
-static int
-Ucs2beToUtfProc(
-    TCL_UNUSED(void *),		/* Not used. */
-    const char *src,		/* Source string in Unicode. */
-    int srcLen,			/* Source string length in bytes. */
-    int flags,			/* Conversion control flags. */
-    TCL_UNUSED(Tcl_EncodingState *),/* Place for conversion routine to store state
-				 * information used during a piecewise
-				 * conversion. Contents of statePtr are
-				 * initialized and/or reset by conversion
-				 * routine under control of flags argument. */
-    char *dst,			/* Output buffer in which converted string is
-				 * stored. */
-    int dstLen,			/* The maximum length of output buffer in
-				 * bytes. */
-    int *srcReadPtr,		/* Filled with the number of bytes from the
-				 * source string that were converted. This may
-				 * be less than the original source length if
-				 * there was a problem converting some source
-				 * characters. */
-    int *dstWrotePtr,		/* Filled with the number of bytes that were
-				 * stored in the output buffer as a result of
-				 * the conversion. */
-    int *dstCharsPtr)		/* Filled with the number of characters that
-				 * correspond to the bytes stored in the
-				 * output buffer. */
-{
-    const char *srcStart, *srcEnd;
-    const char *dstEnd, *dstStart;
-    int result, numChars, charLimit = INT_MAX;
-    unsigned short ch;
-
-    if (flags & TCL_ENCODING_CHAR_LIMIT) {
-	charLimit = *dstCharsPtr;
-    }
-    result = TCL_OK;
-
-    /* check alignment with ucs-2 (2 == sizeof(UCS-2)) */
-    if ((srcLen % 2) != 0) {
-	result = TCL_CONVERT_MULTIBYTE;
-	srcLen--;
-    }
-    /* If last code point is a high surrogate, we cannot handle that yet */
-    if ((srcLen >= 2) && ((src[srcLen - 2] & 0xFC) == 0xD8)) {
-	result = TCL_CONVERT_MULTIBYTE;
-	srcLen -= 2;
-    }
-
-    srcStart = src;
-    srcEnd = src + srcLen;
-
-    dstStart = dst;
-    dstEnd = dst + dstLen - 4;
-
-    for (numChars = 0; src < srcEnd && numChars <= charLimit; numChars++) {
-	if (dst > dstEnd) {
-	    result = TCL_CONVERT_NOSPACE;
-	    break;
-	}
-
-	ch = (src[0] & 0xFF) << 8 | (src[1] & 0xFF);
-	src += 2 /* sizeof(UTF-16) */;
-
-	/*
-	 * Special case for 1-byte utf chars for speed. Make sure we work with
-	 * unsigned short-size data.
-	 */
-	if (ch && ch < 0x80) {
-	    *dst++ = (ch & 0xFF);
-	} else {
-	    dst += Tcl_UniCharToUtf(ch, dst);
-	}
-    }
-
-    *srcReadPtr = src - srcStart;
-    *dstWrotePtr = dst - dstStart;
-    *dstCharsPtr = numChars;
-    return result;
-}
-
-/*
- *-------------------------------------------------------------------------
- *
- * UtfToUcs2beProc --
- *
- *	Convert from UTF-8 to UCS-2BE (fixed 2-byte encoding).
- *
- * Results:
- *	Returns TCL_OK if conversion was successful.
- *
- * Side effects:
- *	None.
- *
- *-------------------------------------------------------------------------
- */
-
-#if defined(USE_TCL_STUBS)
-/* Since the UCS-2BE encoding is only used when Tk is dynamically loaded in Tcl 8.6,
- * make sure that Tcl_UtfCharComplete is ALWAYS the pre-TIP #575 version,
- * even though Tk is being compiled with -DTCL_NO_DEPRECATED! */
-#   undef Tcl_UtfCharComplete
-#   define Tcl_UtfCharComplete ((int (*)(const char *, int))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[326]))
-#endif
-
-static int
-UtfToUcs2beProc(
-    TCL_UNUSED(void *),	/* TableEncodingData that specifies
-				 * encoding. */
-    const char *src,		/* Source string in UTF-8. */
-    int srcLen,			/* Source string length in bytes. */
-    int flags,			/* Conversion control flags. */
-    TCL_UNUSED(Tcl_EncodingState *),/* Place for conversion routine to store state
-				 * information used during a piecewise
-				 * conversion. Contents of statePtr are
-				 * initialized and/or reset by conversion
-				 * routine under control of flags argument. */
-    char *dst,			/* Output buffer in which converted string is
-				 * stored. */
-    int dstLen,			/* The maximum length of output buffer in
-				 * bytes. */
-    int *srcReadPtr,		/* Filled with the number of bytes from the
-				 * source string that were converted. This may
-				 * be less than the original source length if
-				 * there was a problem converting some source
-				 * characters. */
-    int *dstWrotePtr,		/* Filled with the number of bytes that were
-				 * stored in the output buffer as a result of
-				 * the conversion. */
-    int *dstCharsPtr)		/* Filled with the number of characters that
-				 * correspond to the bytes stored in the
-				 * output buffer. */
-{
-    const char *srcStart, *srcEnd, *srcClose, *dstStart, *dstEnd;
-    int result, numChars;
-    int ch;
-
-    srcStart = src;
-    srcEnd = src + srcLen;
-    srcClose = srcEnd;
-    if (!(flags & TCL_ENCODING_END)) {
-	srcClose -= 6;
-    }
-
-    dstStart = dst;
-    dstEnd = dst + dstLen - 2 /* sizeof(UCS-2) */;
-
-    result = TCL_OK;
-    for (numChars = 0; src < srcEnd; numChars++) {
-	if ((src > srcClose) && (!Tcl_UtfCharComplete(src, srcEnd - src))) {
-	    /*
-	     * If there is more string to follow, this will ensure that the
-	     * last UTF-8 character in the source buffer hasn't been cut off.
-	     */
-	    result = TCL_CONVERT_MULTIBYTE;
-	    break;
-	}
-	if (dst > dstEnd) {
-	    result = TCL_CONVERT_NOSPACE;
-	    break;
-	}
-	src += TkUtfToUniChar(src, &ch);
-	if (ch > 0xFFFF) {
-	    ch = 0xFFFD;
-	}
-
-	/*
-	 * Ensure big-endianness (store big bits first).
-	 */
-
-	*dst++ = (char)((ch >> 8) & 0xFF);
-	*dst++ = (char)(ch & 0xFF);
-    }
-    *srcReadPtr = src - srcStart;
-    *dstWrotePtr = dst - dstStart;
-    *dstCharsPtr = numChars;
-    return result;
-}
-#endif
 
 /*
  *---------------------------------------------------------------------------
@@ -1065,7 +847,7 @@ Tk_MeasureChars(
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		(void)Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1083,7 +865,7 @@ Tk_MeasureChars(
 	    p = next;
 	}
 	familyPtr = lastSubFontPtr->familyPtr;
-	Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
+	(void)Tcl_UtfToExternalDString(familyPtr->encoding, source, p - source,
 		&runString);
 	if (familyPtr->isTwoByteFont) {
 	    curX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1122,7 +904,7 @@ Tk_MeasureChars(
 	    } else {
 		lastSubFontPtr = FindSubFontForChar(fontPtr, ch, NULL);
 		familyPtr = lastSubFontPtr->familyPtr;
-		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, 0, NULL,
+		Tcl_UtfToExternal(NULL, familyPtr->encoding, p, next - p, TCL_ENCODING_PROFILE_TCL8, NULL,
 			(char *)&buf[0].byte1, sizeof(buf), NULL, &dstWrote, NULL);
 		if (familyPtr->isTwoByteFont) {
 		    newX += XTextWidth16(lastSubFontPtr->fontStructPtr,
@@ -1332,7 +1114,7 @@ Tk_DrawChars(
 		do_width = (needWidth || (p != end)) ? 1 : 0;
 		familyPtr = lastSubFontPtr->familyPtr;
 
-		Tcl_UtfToExternalDString(familyPtr->encoding, source,
+		(void)Tcl_UtfToExternalDString(familyPtr->encoding, source,
 			p - source, &runString);
 		if (familyPtr->isTwoByteFont) {
 		    XDrawString16(display, drawable, gc, x, y,
@@ -2298,7 +2080,7 @@ FontMapLoadPage(
 	int hi, lo;
 
 	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
-		TCL_ENCODING_STOPONERROR, NULL, buf, sizeof(buf), NULL,
+		TCL_ENCODING_PROFILE_STRICT, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
 	}
@@ -2572,7 +2354,7 @@ CanUseFallback(
 	    numEncodings++;
 	}
 	Tcl_UtfToExternal(NULL, encoding, src, srcLen,
-		TCL_ENCODING_STOPONERROR, NULL, dst, sizeof(dst), &srcRead,
+		TCL_ENCODING_PROFILE_STRICT, NULL, dst, sizeof(dst), &srcRead,
 		&dstWrote, NULL);
 	if (dstWrote == 0) {
 	    goto crossout;

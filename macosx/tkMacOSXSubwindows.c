@@ -1478,11 +1478,6 @@ Tk_FreePixmap(
 
     LastKnownRequestProcessed(display)++;
     if (macPix->context) {
-	char *data = (char *)CGBitmapContextGetData(macPix->context);
-
-	if (data) {
-	    ckfree(data);
-	}
 	CFRelease(macPix->context);
     }
     ckfree(macPix);

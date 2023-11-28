@@ -54,11 +54,7 @@ static const Ttk_ElementOptionSpec TextElementOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(TextElement,foregroundObj), "black" },
     { "-underline", TK_OPTION_INDEX,
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-	offsetof(TextElement,underlineObj), "-1"},
-#else
 	offsetof(TextElement,underlineObj), NULL},
-#endif
     { "-width", TK_OPTION_INT,
 	offsetof(TextElement,widthObj), "-1"},
     { "-anchor", TK_OPTION_ANCHOR,
@@ -518,11 +514,7 @@ static const Ttk_ElementOptionSpec LabelElementOptions[] = {
     { "-foreground", TK_OPTION_COLOR,
 	offsetof(LabelElement,text.foregroundObj), "black" },
     { "-underline", TK_OPTION_INDEX,
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	offsetof(LabelElement,text.underlineObj), "-1"},
-#else
-	offsetof(LabelElement,text.underlineObj), NULL},
-#endif
     { "-width", TK_OPTION_INT,
 	offsetof(LabelElement,text.widthObj), ""},
     { "-anchor", TK_OPTION_ANCHOR,

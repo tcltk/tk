@@ -146,15 +146,6 @@
 #endif
 
 /*
- * These calls implement native bitmaps which are not supported under
- * UNIX.  The macros eliminate the calls.
- */
-
-#define TkpDefineNativeBitmaps()
-#define TkpCreateNativeBitmap(display, source) None
-#define TkpGetNativeAppBitmap(display, name, w, h) None
-
-/*
  * This macro stores a representation of the window handle in a string.
  * This should perhaps use the real size of an XID.
  */

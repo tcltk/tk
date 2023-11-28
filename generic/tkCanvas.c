@@ -260,9 +260,6 @@ static int		FindItems(Tcl_Interp *interp, TkCanvas *canvasPtr,
 static int		FindArea(Tcl_Interp *interp, TkCanvas *canvasPtr,
 			    Tcl_Obj *const *objv, Tk_Uid uid, int enclosed);
 static double		GridAlign(double coord, double spacing);
-#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9)
-static const char**	TkGetStringsFromObjs(Tcl_Size objc, Tcl_Obj *const *objv);
-#endif
 static void		InitCanvas(void);
 static void		PickCurrentItem(TkCanvas *canvasPtr, XEvent *eventPtr);
 static Tcl_Obj *	ScrollFractions(int screen1,
@@ -328,7 +325,7 @@ static inline int
 AlwaysRedraw(
     Tk_Item *itemPtr)
 {
-    return itemPtr->typePtr->alwaysRedraw & 1;
+    return itemPtr->typePtr->flags & TK_ALWAYS_REDRAW;
 }
 
 static inline int
@@ -339,25 +336,9 @@ ItemConfigure(
     Tcl_Obj *const objv[])
 {
     Tcl_Interp *interp = canvasPtr->interp;
-    int result;
 
-    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, objc, objv, TK_CONFIG_ARGV_ONLY);
-    } else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	const char **args = TkGetStringsFromObjs(objc, objv);
-
-	result = itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, objc, (Tcl_Obj **) args, TK_CONFIG_ARGV_ONLY);
-	if (args != NULL) {
-	    ckfree(args);
-	}
-#endif
-    }
-    return result;
+    return itemPtr->typePtr->configProc(interp, (Tk_Canvas) canvasPtr,
+	    itemPtr, objc, objv, TK_CONFIG_ARGV_ONLY);
 }
 
 static inline int
@@ -367,7 +348,7 @@ ItemConfigInfo(
     Tcl_Obj *fieldName)
 {
     return Tk_ConfigureInfo(canvasPtr->interp, canvasPtr->tkwin,
-	    itemPtr->typePtr->configSpecs, (char *) itemPtr,
+	    itemPtr->typePtr->configSpecs, itemPtr,
 	    (fieldName ? Tcl_GetString(fieldName) : NULL), 0);
 }
 
@@ -378,7 +359,7 @@ ItemConfigValue(
     Tcl_Obj *fieldName)
 {
     return Tk_ConfigureValue(canvasPtr->interp, canvasPtr->tkwin,
-	    itemPtr->typePtr->configSpecs, (char *) itemPtr,
+	    itemPtr->typePtr->configSpecs, itemPtr,
 	    Tcl_GetString(fieldName), 0);
 }
 
@@ -394,21 +375,9 @@ ItemCoords(
 
     if (itemPtr->typePtr->coordProc == NULL) {
 	result = TCL_OK;
-    } else if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
+    } else {
 	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc, objv);
-    } else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	const char **args = TkGetStringsFromObjs(objc, objv);
-
-	result = itemPtr->typePtr->coordProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, objc, (Tcl_Obj **) args);
-	if (args != NULL) {
-	    ckfree(args);
-	}
-#endif
     }
     return result;
 }
@@ -422,25 +391,9 @@ ItemCreate(
     Tcl_Obj *const objv[])
 {
     Tcl_Interp *interp = canvasPtr->interp;
-    int result;
 
-    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
+	return itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
 		itemPtr, objc-3, objv+3);
-    } else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	const char **args = TkGetStringsFromObjs(objc-3, objv+3);
-
-	result = itemPtr->typePtr->createProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, objc-3, (Tcl_Obj **) args);
-	if (args != NULL) {
-	    ckfree(args);
-	}
-#endif
-    }
-    return result;
 }
 
 static inline void
@@ -494,17 +447,9 @@ ItemIndex(
 
     if (itemPtr->typePtr->indexProc == NULL) {
 	return TCL_OK;
-    } else if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, objPtr, indexPtr);
-    } else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
-		itemPtr, (Tcl_Obj *) Tcl_GetString(objPtr), indexPtr);
-#endif
     }
+    return itemPtr->typePtr->indexProc(interp, (Tk_Canvas) canvasPtr,
+	    itemPtr, objPtr, indexPtr);
 }
 
 static inline void
@@ -514,17 +459,8 @@ ItemInsert(
     int beforeThis,
     Tcl_Obj *toInsert)
 {
-    if (itemPtr->typePtr->alwaysRedraw & TK_CONFIG_OBJS) {
-	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
-		beforeThis, toInsert);
-    } else {
-#if defined(TK_NO_DEPRECATED) || (TK_MAJOR_VERSION > 8)
-    Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory");
-#else
-	itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
-		beforeThis, (Tcl_Obj *) Tcl_GetString(toInsert));
-#endif
-    }
+    itemPtr->typePtr->insertProc((Tk_Canvas) canvasPtr, itemPtr,
+	    beforeThis, toInsert);
 }
 
 static inline int
@@ -1163,15 +1099,15 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 	result = Tk_ConfigureValue(interp, canvasPtr->tkwin, configSpecs,
-		(char *) canvasPtr, Tcl_GetString(objv[2]), 0);
+		canvasPtr, Tcl_GetString(objv[2]), 0);
 	break;
     case CANV_CONFIGURE:
 	if (objc == 2) {
 	    result = Tk_ConfigureInfo(interp, canvasPtr->tkwin, configSpecs,
-		    (char *) canvasPtr, NULL, 0);
+		    canvasPtr, NULL, 0);
 	} else if (objc == 3) {
 	    result = Tk_ConfigureInfo(interp, canvasPtr->tkwin, configSpecs,
-		    (char *) canvasPtr, Tcl_GetString(objv[2]), 0);
+		    canvasPtr, Tcl_GetString(objv[2]), 0);
 	} else {
 	    result = ConfigureCanvas(interp, canvasPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
@@ -1230,7 +1166,7 @@ CanvasWidgetCmd(
 	     */
 
 	    if (itemPtr == NULL ||
-		    !(itemPtr->typePtr->alwaysRedraw & TK_MOVABLE_POINTS)) {
+		    !(itemPtr->typePtr->flags & TK_MOVABLE_POINTS)) {
 		continue;
 	    }
 
@@ -2285,7 +2221,7 @@ DestroyCanvas(
     if (canvasPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(canvasPtr->bindingTable);
     }
-    Tk_FreeOptions(configSpecs, (char *) canvasPtr, canvasPtr->display, 0);
+    Tk_FreeOptions(configSpecs, canvasPtr, canvasPtr->display, 0);
     canvasPtr->tkwin = NULL;
     ckfree(canvasPtr);
 }
@@ -2324,8 +2260,8 @@ ConfigureCanvas(
     Tk_State old_canvas_state=canvasPtr->canvas_state;
 
     if (Tk_ConfigureWidget(interp, canvasPtr->tkwin, configSpecs,
-	    objc, (const char **) objv, (char *) canvasPtr,
-	    flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objc, objv, canvasPtr,
+	    flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -3360,8 +3296,8 @@ CanvasEventProc(
 
 	/*
 	 * Special hack: if the canvas is unmapped, then must notify all items
-	 * with "alwaysRedraw" set, so that they know that they are no longer
-	 * displayed.
+	 * with flag TK_ALWAYS_REDRAW set, so that they know that they are no
+	 * longer displayed.
 	 */
 
 	for (itemPtr = canvasPtr->firstItemPtr; itemPtr != NULL;
@@ -6090,43 +6026,7 @@ CanvasSetOrigin(
 	    canvasPtr->xOrigin + Tk_Width(canvasPtr->tkwin),
 	    canvasPtr->yOrigin + Tk_Height(canvasPtr->tkwin));
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * TkGetStringsFromObjs --
- *
- * Results:
- *	Converts object list into string list.
- *
- * Side effects:
- *	Memory is allocated for the objv array, which must be freed using
- *	ckfree() when no longer needed.
- *
- *----------------------------------------------------------------------
- */
 
-#if !defined(TK_NO_DEPRECATED) && (TK_MAJOR_VERSION < 9)
-static const char **
-TkGetStringsFromObjs(
-    Tcl_Size objc,
-    Tcl_Obj *const objv[])
-{
-    Tcl_Size i;
-    const char **argv;
-
-    if (objc <= 0) {
-	return NULL;
-    }
-    argv = (const char **)ckalloc((objc+1) * sizeof(char *));
-    for (i = 0; i < objc; i++) {
-	argv[i] = Tcl_GetString(objv[i]);
-    }
-    argv[objc] = 0;
-    return argv;
-}
-#endif
-
 /*
  *--------------------------------------------------------------
  *

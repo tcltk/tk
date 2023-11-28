@@ -562,7 +562,7 @@ test winMenu-12.3 {TkpSetWindowMenuBar - no update pending} -constraints {
 } -result {0 {} {} {}}
 
 
-test winMenu-13.1 {TkpSetMainMenubar - nothing to do} -constraints {
+test winMenu-13.1 {Tk_SetMainMenubar - nothing to do} -constraints {
     emptyTest win
 } -body {}
 

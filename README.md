@@ -1,6 +1,6 @@
 # README:  Tk
 
-This is the **Tk 8.7a6** source distribution.
+This is the **Tk 9.0b1** source distribution.
 
 You can get any source release of Tk from [our distribution
 site](https://sourceforge.net/projects/tcl/files/Tcl/).
@@ -11,6 +11,10 @@ site](https://sourceforge.net/projects/tcl/files/Tcl/).
 [![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-6-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-6-branch)
 <br>
 8.7 (in development, daily build))
+[![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Acore-8-branch)
+[![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Acore-8-branch)
+[![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=core-8-branch)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Acore-8-branch)
+9.0 (in development, daily build))
 [![Build Status](https://github.com/tcltk/tk/workflows/Linux/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Linux%22+branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/workflows/Windows/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22Windows%22+branch%3Amain)
 [![Build Status](https://github.com/tcltk/tk/workflows/macOS/badge.svg?branch=main)](https://github.com/tcltk/tk/actions?query=workflow%3A%22macOS%22+branch%3Amain)
@@ -21,7 +25,7 @@ This directory contains the sources and documentation for Tk, a
 cross-platform GUI toolkit implemented with the Tcl scripting language.
 
 For details on features, incompatibilities, and potential problems with
-this release, see [the Tcl/Tk 8.7 Web page](https://www.tcl-lang.org/software/tcltk/8.7.html)
+this release, see [the Tcl/Tk 9.0 Web page](https://www.tcl-lang.org/software/tcltk/9.0.html)
 or refer to the "changes" file in this directory, which contains a
 historical record of all changes to Tk.
 

@@ -124,13 +124,4 @@
 #define TkpGetPixel(p) (((((p)->red >> 8) & 0xff) \
 	| ((p)->green & 0xff00) | (((p)->blue << 8) & 0xff0000)) | 0x20000000)
 
-/*
- * These calls implement native bitmaps which are not currently
- * supported under Windows.  The macros eliminate the calls.
- */
-
-#define TkpDefineNativeBitmaps()
-#define TkpCreateNativeBitmap(display, source) None
-#define TkpGetNativeAppBitmap(display, name, w, h) None
-
 #endif /* _WINPORT */

@@ -220,7 +220,7 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	offsetof(IndicatorElement,colorObj), DEFAULT_BACKGROUND },
     { "-indicatorrelief", TK_OPTION_RELIEF,
 	offsetof(IndicatorElement,reliefObj), "raised" },
-    { "-indicatordiameter", TK_OPTION_PIXELS,
+    { "-indicatorsize", TK_OPTION_PIXELS,
 	offsetof(IndicatorElement,sizeObj), "9p" },
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(IndicatorElement,marginObj), "0 2 4 2" },
@@ -564,7 +564,7 @@ static void SliderElementSize(
     (void)dummy;
     (void)paddingPtr;
 
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
 
@@ -593,7 +593,7 @@ static void SliderElementDraw(
     (void)state;
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
 
