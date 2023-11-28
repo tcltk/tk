@@ -304,7 +304,7 @@ bind TtkScrollable <Shift-Option-MouseWheel> \
 ## Touchpad scrolling
 #
 bind TtkScrollable <TouchpadScroll> {
-    if {[expr {%# %% 4}] != 0} {
+    if {[expr {%# %% 15}] != 0} {
         return
     }
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
