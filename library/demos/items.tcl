@@ -37,7 +37,7 @@ ttk::scrollbar $w.frame.hscroll -orient horizontal -command "$c xview"
 bind $c <TouchpadScroll> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0 || $deltaY != 0} {
-	tk::CanvasScrollByPixels %W $deltaX $deltaY
+	tk::ScrollByPixels %W $deltaX $deltaY
     }
 }
 

@@ -111,7 +111,7 @@ if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk
     bind $c <TouchpadScroll> {
 	lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
 	if {$deltaX != 0 || $deltaY != 0} {
-	    tk::CanvasScrollByPixels %W $deltaX $deltaY
+	    tk::ScrollByPixels %W $deltaX $deltaY
 	}
     }
 }
