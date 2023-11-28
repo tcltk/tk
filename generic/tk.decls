@@ -136,17 +136,17 @@ declare 26 {
 declare 27 {
     int Tk_ConfigureInfo(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    char *widgRec, const char *argvName, int flags)
+	    void *widgRec, const char *argvName, int flags)
 }
 declare 28 {
     int Tk_ConfigureValue(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    char *widgRec, const char *argvName, int flags)
+	    void *widgRec, const char *argvName, int flags)
 }
 declare 29 {
     int Tk_ConfigureWidget(Tcl_Interp *interp,
 	    Tk_Window tkwin, const Tk_ConfigSpec *specs,
-	    Tcl_Size argc, const char **argv, char *widgRec,
+	    Tcl_Size argc, const char **argv, void *widgRec,
 	    int flags)
 }
 declare 30 {
@@ -318,7 +318,7 @@ declare 73 {
 }
 declare 74 {
     void Tk_FreeOptions(const Tk_ConfigSpec *specs,
-	    char *widgRec, Display *display, int needFlags)
+	    void *widgRec, Display *display, int needFlags)
 }
 declare 75 {
     void Tk_FreePixmap(Display *display, Pixmap pixmap)

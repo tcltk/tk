@@ -78,7 +78,7 @@ Tk_ConfigureWidget(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
     Tcl_Size argc,			/* Number of elements in argv. */
     const char **argv,		/* Command-line options. */
-    char *widgRec,		/* Record whose fields are to be modified.
+    void *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
     int flags)			/* Used to specify additional flags that must
 				 * be present in config specs for them to be
@@ -608,7 +608,7 @@ Tk_ConfigureInfo(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
     const Tk_ConfigSpec *specs, /* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* If non-NULL, indicates a single option
 				 * whose info is to be returned. Otherwise
@@ -922,7 +922,7 @@ Tk_ConfigureValue(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
     const Tk_ConfigSpec *specs, /* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* Gives the command-line name for the option
 				 * whose value is to be returned. */
@@ -990,7 +990,7 @@ Tk_ConfigureValue(
 void
 Tk_FreeOptions(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     Display *display,		/* X display; needed for freeing some
 				 * resources. */
@@ -1008,7 +1008,7 @@ Tk_FreeOptions(
 	if (specPtr->offset < 0) {
 	    continue;
 	}
-	ptr = widgRec + specPtr->offset;
+	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **) ptr) != NULL) {

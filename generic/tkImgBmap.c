@@ -768,14 +768,14 @@ ImgBmapCmd(
 	    return TCL_ERROR;
 	}
 	return Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
-		(char *) modelPtr, Tcl_GetString(objv[2]), 0);
+		modelPtr, Tcl_GetString(objv[2]), 0);
     case 1: /* configure */
 	if (objc == 2) {
 	    return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) modelPtr, NULL, 0);
+		    configSpecs, modelPtr, NULL, 0);
 	} else if (objc == 3) {
 	    return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) modelPtr,
+		    configSpecs, modelPtr,
 		    Tcl_GetString(objv[2]), 0);
 	} else {
 	    return ImgBmapConfigureModel(modelPtr, objc-2, objv+2,
@@ -1017,7 +1017,7 @@ ImgBmapDelete(
     if (modelPtr->maskData != NULL) {
 	ckfree(modelPtr->maskData);
     }
-    Tk_FreeOptions(configSpecs, (char *) modelPtr, NULL, 0);
+    Tk_FreeOptions(configSpecs, modelPtr, NULL, 0);
     ckfree(modelPtr);
 }
 

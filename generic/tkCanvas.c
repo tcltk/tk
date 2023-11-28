@@ -367,7 +367,7 @@ ItemConfigInfo(
     Tcl_Obj *fieldName)
 {
     return Tk_ConfigureInfo(canvasPtr->interp, canvasPtr->tkwin,
-	    itemPtr->typePtr->configSpecs, (char *) itemPtr,
+	    itemPtr->typePtr->configSpecs, itemPtr,
 	    (fieldName ? Tcl_GetString(fieldName) : NULL), 0);
 }
 
@@ -378,7 +378,7 @@ ItemConfigValue(
     Tcl_Obj *fieldName)
 {
     return Tk_ConfigureValue(canvasPtr->interp, canvasPtr->tkwin,
-	    itemPtr->typePtr->configSpecs, (char *) itemPtr,
+	    itemPtr->typePtr->configSpecs, itemPtr,
 	    Tcl_GetString(fieldName), 0);
 }
 
@@ -1164,15 +1164,15 @@ CanvasWidgetCmd(
 	    goto done;
 	}
 	result = Tk_ConfigureValue(interp, canvasPtr->tkwin, configSpecs,
-		(char *) canvasPtr, Tcl_GetString(objv[2]), 0);
+		canvasPtr, Tcl_GetString(objv[2]), 0);
 	break;
     case CANV_CONFIGURE:
 	if (objc == 2) {
 	    result = Tk_ConfigureInfo(interp, canvasPtr->tkwin, configSpecs,
-		    (char *) canvasPtr, NULL, 0);
+		    canvasPtr, NULL, 0);
 	} else if (objc == 3) {
 	    result = Tk_ConfigureInfo(interp, canvasPtr->tkwin, configSpecs,
-		    (char *) canvasPtr, Tcl_GetString(objv[2]), 0);
+		    canvasPtr, Tcl_GetString(objv[2]), 0);
 	} else {
 	    result = ConfigureCanvas(interp, canvasPtr, objc-2, objv+2,
 		    TK_CONFIG_ARGV_ONLY);
@@ -2286,7 +2286,7 @@ DestroyCanvas(
     if (canvasPtr->bindingTable != NULL) {
 	Tk_DeleteBindingTable(canvasPtr->bindingTable);
     }
-    Tk_FreeOptions(configSpecs, (char *) canvasPtr, canvasPtr->display, 0);
+    Tk_FreeOptions(configSpecs, canvasPtr, canvasPtr->display, 0);
     canvasPtr->tkwin = NULL;
     ckfree(canvasPtr);
 }
