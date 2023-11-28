@@ -128,7 +128,7 @@ Tk_ItemType tkBitmapType = {
     BitmapCoords,		/* coordProc */
     DeleteBitmap,		/* deleteProc */
     DisplayBitmap,		/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     BitmapToPoint,		/* pointProc */
     BitmapToArea,		/* areaProc */
     BitmapToPostscript,		/* postscriptProc */
@@ -324,7 +324,7 @@ ConfigureBitmap(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) bmapPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, bmapPtr, flags)) {
 	return TCL_ERROR;
     }
 
