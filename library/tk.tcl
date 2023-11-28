@@ -845,16 +845,18 @@ if {$::ttk::library ne ""} {
     uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
 }
 
-# Helper for smooth scrolling of Canvas widgets
-proc ::tk::CanvasScrollByPixels {canvas deltaX deltaY} {
-    set width [expr {1.0 * [$canvas cget -width]}]
-    set height [expr {1.0 * [$canvas cget -height]}]
-    set X [lindex [$canvas xview] 0]
-    set Y [lindex [$canvas yview] 0]
+# Helper for smooth scrolling of widgets that support xview moveto,
+# yview moveto, height and width.
+
+proc ::tk::ScrollByPixels {w deltaX deltaY} {
+    set width [expr {1.0 * [$w cget -width]}]
+    set height [expr {1.0 * [$w cget -height]}]
+    set X [lindex [$w xview] 0]
+    set Y [lindex [$w yview] 0]
     set x [expr {$X - $deltaX / $width}]
     set y [expr {$Y - $deltaY / $height}]
-    $canvas xview moveto $x
-    $canvas yview moveto $y
+    $w xview moveto $x
+    $w yview moveto $y
 }
 
 
