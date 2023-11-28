@@ -21,9 +21,8 @@ bind TNotebook <Shift-MouseWheel> {
     # Ignore the event
 }
 bind TNotebook <TouchpadScroll> {
-    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     # TouchpadScroll events fire about 60 times per second.
-    if {$deltaX != 0 && [expr {%# %% 30}] == 0} {
+    if {[expr {%# %% 30}] == 0} {
 	ttk::notebook::CondCycleTab %W %D
     }
 }
