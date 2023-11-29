@@ -2853,23 +2853,13 @@ DrawCanvas(
              * TK_PHOTO_COMPOSITE_SET later?
              */
 
-#define COPY_PIXEL 0
-
-	    if (COPY_PIXEL) {
-		/*
-		 * This platform packs pixels in RGBA byte order, as expected
-		 * by Tk_PhotoPutBlock() so we can just copy the pixel as an int.
-		 */
-		*((unsigned int *) (blockPtr.pixelPtr + pixel_offset)) = pixel;
-	    } else {
-		blockPtr.pixelPtr[pixel_offset + 0] =
-                    (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
-		blockPtr.pixelPtr[pixel_offset + 1] =
-                    (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
-		blockPtr.pixelPtr[pixel_offset + 2] =
-                    (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
-		blockPtr.pixelPtr[pixel_offset + 3] = 0xFF;
-	    }
+	    blockPtr.pixelPtr[pixel_offset + blockPtr.offset[0]] =
+		    (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
+	    blockPtr.pixelPtr[pixel_offset + blockPtr.offset[1]] =
+		    (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
+	    blockPtr.pixelPtr[pixel_offset + blockPtr.offset[2]] =
+		    (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
+	    blockPtr.pixelPtr[pixel_offset + blockPtr.offset[3]] = 0xFF;
 
 #ifdef DEBUG_DRAWCANVAS
 	    fprintf(stderr, "Converted pixel %x to %hhx %hhx %hhx %hhx \n",
