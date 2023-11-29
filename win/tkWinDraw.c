@@ -519,6 +519,7 @@ TkPutImage(
     BITMAPINFO *infoPtr;
     HBITMAP bitmap;
     char *data;
+    Visual *visual;
 
     LastKnownRequestProcessed(display)++;
 
@@ -556,7 +557,7 @@ TkPutImage(
 	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER)
 		    + sizeof(RGBQUAD)*(size_t)ncolors);
 	} else {
-	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER));
+	    infoPtr = (BITMAPINFO *)ckalloc(sizeof(BITMAPINFOHEADER) + sizeof(DWORD)*4);
 	}
 
 	infoPtr->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -564,14 +565,14 @@ TkPutImage(
 	infoPtr->bmiHeader.biHeight = -image->height; /* Top-down order */
 	infoPtr->bmiHeader.biPlanes = 1;
 	infoPtr->bmiHeader.biBitCount = (WORD)image->bits_per_pixel;
-	infoPtr->bmiHeader.biCompression = BI_RGB;
 	infoPtr->bmiHeader.biSizeImage = 0;
 	infoPtr->bmiHeader.biXPelsPerMeter = 0;
 	infoPtr->bmiHeader.biYPelsPerMeter = 0;
 	infoPtr->bmiHeader.biClrImportant = 0;
 
 	if (usePalette) {
-	    infoPtr->bmiHeader.biClrUsed = (DWORD)ncolors;
+	    infoPtr->bmiHeader.biCompression = BI_RGB;
+	    infoPtr->bmiHeader.biClrUsed = ncolors;
 	    for (i = 0; i < ncolors; i++) {
 		infoPtr->bmiColors[i].rgbBlue = GetBValue(colors[i]);
 		infoPtr->bmiColors[i].rgbGreen = GetGValue(colors[i]);
@@ -579,7 +580,13 @@ TkPutImage(
 		infoPtr->bmiColors[i].rgbReserved = 0;
 	    }
 	} else {
-	    infoPtr->bmiHeader.biClrUsed = 0;
+	    infoPtr->bmiHeader.biCompression = BI_BITFIELDS;
+	    /* Modelled on XGetVisualInfo() in xutil.c.
+	     * We want to get the rgb masks for the default visual for the given display. */
+	    visual = DefaultVisual(display,0);
+	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))) = visual->blue_mask;
+	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))+1) = visual->green_mask;
+	    *((DWORD *)((unsigned char *)infoPtr + sizeof(BITMAPINFOHEADER))+2) = visual->red_mask;
 	}
 	bitmap = CreateDIBitmap(dc, &infoPtr->bmiHeader, CBM_INIT,
 		image->data, infoPtr, DIB_RGB_COLORS);

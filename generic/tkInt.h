@@ -1419,7 +1419,7 @@ MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
-MODULE_SCOPE void	TkDecomposeMaskToShiftAndBits(unsigned long mask,
+MODULE_SCOPE void	TkDecomposeMaskToShiftAndBits(unsigned mask,
 			    int *shift, int *bits);
 
 #if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)

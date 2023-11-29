@@ -464,9 +464,9 @@ BlendComplexAlpha(
      * Previously this was only on non-Win32 systems, and on Win32 the
      * GetxValue() and RGB() macros from windows.h were used.
      */
-    TkDecomposeMaskToShiftAndBits(rmask = iPtr->visualInfo.visual->red_mask,&rshift,&rbits);
-    TkDecomposeMaskToShiftAndBits(gmask = iPtr->visualInfo.visual->green_mask,&gshift,&gbits);
-    TkDecomposeMaskToShiftAndBits(bmask = iPtr->visualInfo.visual->blue_mask,&bshift,&bbits);
+    TkDecomposeMaskToShiftAndBits((rmask = iPtr->visualInfo.visual->red_mask),&rshift,&rbits);
+    TkDecomposeMaskToShiftAndBits((gmask = iPtr->visualInfo.visual->green_mask),&gshift,&gbits);
+    TkDecomposeMaskToShiftAndBits((bmask = iPtr->visualInfo.visual->blue_mask),&bshift,&bbits);
 
     /*
      * Only UNIX requires the special case for <24bpp. It varies with 3 extra
