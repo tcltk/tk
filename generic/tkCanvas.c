@@ -2516,7 +2516,7 @@ CanvasWorldChanged(
  */
 void
 TkDecomposeMaskToShiftAndBits(
-    unsigned int mask,     /* The pixel mask to examine */
+    unsigned mask,     /* The pixel mask to examine */
     int *shift,             /* Where to put the shift count (position of lowest bit) */
     int *bits)              /* Where to put the bit count (width of the pixel mask) */
 {
@@ -2916,30 +2916,9 @@ DrawCanvas(
              * colours and place them in the photo block. Perhaps we could
              * just not bother with the alpha byte because we are using
              * TK_PHOTO_COMPOSITE_SET later?
-             * ***Windows: We have to swap the red and blue values. The
-             * XImage storage is B - G - R - A which becomes a 32bit ARGB
-             * quad. However the visual mask is a 32bit ABGR quad. And
-             * Tk_PhotoPutBlock() wants R-G-B-A which is a 32bit ABGR quad.
-             * If the visual mask was correct there would be no need to
-             * swap anything here.
              */
 
-#ifdef _WIN32
-#define   R_OFFSET blockPtr.offset[2]
-#define   G_OFFSET blockPtr.offset[1]
-#define   B_OFFSET blockPtr.offset[0]
-#define   A_OFFSET blockPtr.offset[3]
-#else
-#define   R_OFFSET blockPtr.offset[0]
-#define   G_OFFSET blockPtr.offset[1]
-#define   B_OFFSET blockPtr.offset[2]
-#define   A_OFFSET blockPtr.offset[3]
-#endif
-#ifdef TK_XGETIMAGE_USES_ABGR32
-#define COPY_PIXEL (ximagePtr->bits_per_pixel == 32)
-#else
 #define COPY_PIXEL 0
-#endif
 
 	    if (COPY_PIXEL) {
 		/*
@@ -2948,13 +2927,13 @@ DrawCanvas(
 		 */
 		*((unsigned int *) (blockPtr.pixelPtr + pixel_offset)) = pixel;
 	    } else {
-		blockPtr.pixelPtr[pixel_offset + R_OFFSET] =
+		blockPtr.pixelPtr[pixel_offset + 0] =
                     (unsigned char)((pixel & visualPtr->red_mask) >> rshift);
-		blockPtr.pixelPtr[pixel_offset + G_OFFSET] =
+		blockPtr.pixelPtr[pixel_offset + 1] =
                     (unsigned char)((pixel & visualPtr->green_mask) >> gshift);
-		blockPtr.pixelPtr[pixel_offset + B_OFFSET] =
+		blockPtr.pixelPtr[pixel_offset + 2] =
                     (unsigned char)((pixel & visualPtr->blue_mask) >> bshift);
-		blockPtr.pixelPtr[pixel_offset + A_OFFSET] = 0xFF;
+		blockPtr.pixelPtr[pixel_offset + 3] = 0xFF;
 	    }
 
 #ifdef DEBUG_DRAWCANVAS
