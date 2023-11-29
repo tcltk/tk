@@ -452,39 +452,39 @@ TkWinDisplayChanged(
 	ckfree(screen->root_visual);
     }
     screen->root_visual = (Visual *)ckalloc(sizeof(Visual));
-    screen->root_visual->visualid = 0;
+    DefaultVisualOfScreen(screen)->visualid = 0;
     if (GetDeviceCaps(dc, RASTERCAPS) & RC_PALETTE) {
 	DefaultVisualOfScreen(screen)->map_entries = GetDeviceCaps(dc, SIZEPALETTE);
-	DefaultVisualOfScreen(screen)->c_class = PseudoColor;
+	DefaultVisualOfScreen(screen)->class = PseudoColor;
 	DefaultVisualOfScreen(screen)->red_mask = 0x0;
 	DefaultVisualOfScreen(screen)->green_mask = 0x0;
 	DefaultVisualOfScreen(screen)->blue_mask = 0x0;
-    } else if (DefaultDepthOfScreen(screen) == 4) {
-	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+    } else if (screen->root_depth == 4) {
+	DefaultVisualOfScreen(screen)->class = StaticColor;
 	DefaultVisualOfScreen(screen)->map_entries = 16;
-    } else if (DefaultDepthOfScreen(screen) == 8) {
-	DefaultVisualOfScreen(screen)->c_class = StaticColor;
+    } else if (screen->root_depth == 8) {
+	DefaultVisualOfScreen(screen)->class = StaticColor;
 	DefaultVisualOfScreen(screen)->map_entries = 256;
-    } else if (DefaultDepthOfScreen(screen) == 12) {
-	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+    } else if (screen->root_depth == 12) {
+	DefaultVisualOfScreen(screen)->class = TrueColor;
 	DefaultVisualOfScreen(screen)->map_entries = 32;
-	DefaultVisualOfScreen(screen)->red_mask = 0xf0;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf00000;
 	DefaultVisualOfScreen(screen)->green_mask = 0xf000;
-	DefaultVisualOfScreen(screen)->blue_mask = 0xf00000;
-    } else if (DefaultDepthOfScreen(screen) == 16) {
-	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf0;
+    } else if (screen->root_depth == 16) {
+	DefaultVisualOfScreen(screen)->class = TrueColor;
 	DefaultVisualOfScreen(screen)->map_entries = 64;
-	DefaultVisualOfScreen(screen)->red_mask = 0xf8;
+	DefaultVisualOfScreen(screen)->red_mask = 0xf80000;
 	DefaultVisualOfScreen(screen)->green_mask = 0xfc00;
-	DefaultVisualOfScreen(screen)->blue_mask = 0xf80000;
-    } else if (DefaultDepthOfScreen(screen) >= 24) {
-	DefaultVisualOfScreen(screen)->c_class = TrueColor;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xf8;
+    } else if (screen->root_depth >= 24) {
+	DefaultVisualOfScreen(screen)->class = TrueColor;
 	DefaultVisualOfScreen(screen)->map_entries = 256;
-	DefaultVisualOfScreen(screen)->red_mask = 0xff;
+	DefaultVisualOfScreen(screen)->red_mask = 0xff0000;
 	DefaultVisualOfScreen(screen)->green_mask = 0xff00;
-	DefaultVisualOfScreen(screen)->blue_mask = 0xff0000;
+	DefaultVisualOfScreen(screen)->blue_mask = 0xff;
     }
-    DefaultVisualOfScreen(screen)->bits_per_rgb = DefaultDepthOfScreen(screen);
+    DefaultVisualOfScreen(screen)->bits_per_rgb = screen->root_depth;
     ReleaseDC(NULL, dc);
 
     if (DefaultColormapOfScreen(screen) != None) {
