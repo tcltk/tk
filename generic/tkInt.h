@@ -80,6 +80,7 @@
 # define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
 # define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
+# define TCL_COMBINE		0
 #endif
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
