@@ -287,16 +287,16 @@ ScrollbarWidgetObjCmd(
 	    goto error;
 	}
 	result = Tk_ConfigureValue(interp, scrollPtr->tkwin,
-		configSpecs, (char *) scrollPtr, Tcl_GetString(objv[2]), 0);
+		configSpecs, scrollPtr, Tcl_GetString(objv[2]), 0);
 	break;
     }
     case COMMAND_CONFIGURE: {
 	if (objc == 2) {
 	    result = Tk_ConfigureInfo(interp, scrollPtr->tkwin,
-		    configSpecs, (char *) scrollPtr, NULL, 0);
+		    configSpecs, scrollPtr, NULL, 0);
 	} else if (objc == 3) {
 	    result = Tk_ConfigureInfo(interp, scrollPtr->tkwin,
-		    configSpecs, (char *) scrollPtr, Tcl_GetString(objv[2]), 0);
+		    configSpecs, scrollPtr, Tcl_GetString(objv[2]), 0);
 	} else {
 	    result = ConfigureScrollbar(interp, scrollPtr, objc-2,
 		    objv+2, TK_CONFIG_ARGV_ONLY);
@@ -474,7 +474,7 @@ ConfigureScrollbar(
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
     if (Tk_ConfigureWidget(interp, scrollPtr->tkwin, configSpecs, objc,
-	    (const char **)objv, (char *) scrollPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objv, scrollPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -548,7 +548,7 @@ TkScrollbarEventProc(
 	 * Tk_FreeOptions handle all the standard option-related stuff.
 	 */
 
-	Tk_FreeOptions(configSpecs, (char*) scrollPtr, scrollPtr->display, 0);
+	Tk_FreeOptions(configSpecs, scrollPtr, scrollPtr->display, 0);
 	Tcl_EventuallyFree(scrollPtr, TCL_DYNAMIC);
     } else if (eventPtr->type == ConfigureNotify) {
 	TkpComputeScrollbarGeometry(scrollPtr);
