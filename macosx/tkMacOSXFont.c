@@ -164,7 +164,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
 	p = Tcl_DStringValue(&_ds);
 	for (index = 0; index < [_string length]; index++) {
-	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
+	    p += Tcl_UniCharToUtf([_string characterAtIndex: index]|TCL_COMBINE, p);
 	}
 	Tcl_DStringSetLength(&_ds, (Tcl_Size)(p - Tcl_DStringValue(&_ds)));
     }
