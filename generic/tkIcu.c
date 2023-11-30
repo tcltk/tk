@@ -114,9 +114,9 @@ startEndOfCmd(
     }
     if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < idx; i++) {
-	    newIdx += 1 + (((ustr[newIdx-1]&0xFFC0) == 0xD800) && ((ustr[newIdx]&0xFFC0) == 0xDC00));
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < index; i++) {
+	    newIdx += 1 + (((newIdx < (Tcl_Size)len-1) && (ustr[newIdx]&0xFC00) == 0xD800) && ((ustr[newIdx+1]&0xFC00) == 0xDC00));
 	}
 	idx = newIdx;
     }
@@ -130,7 +130,7 @@ startEndOfCmd(
 	}
     } else if (idx > 0) {
 	if (!(flags & FLAG_WORD)) {
-	    idx += 1 + (((ustr[idx]&0xFFC0) == 0xD800) && ((ustr[idx+1]&0xFFC0) == 0xDC00));
+	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
 	idx = icu_preceding(it, idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
@@ -158,7 +158,7 @@ startEndOfCmd(
 	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 	    Tcl_Size newIdx = 1;
 	    for (Tcl_Size i = 1; i < idx; i++) {
-    	if (((ustr[i-1]&0xFFC0) != 0xD800) || ((ustr[i]&0xFFC0) != 0xDC00)) newIdx++;
+    	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
 	    }
 	    idx = newIdx;
 	}
