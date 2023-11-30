@@ -155,7 +155,7 @@ startEndOfCmd(
     Tcl_DStringFree(&ds);
     if (idx != TCL_INDEX_NONE) {
 	if (idx > 0 && len != ulen) {
-	    /* The string contains codepoints > \uFFFF. Determine UTF-16 index */
+	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 	    Tcl_Size newIdx = 1;
 	    for (Tcl_Size i = 1; i < idx; i++) {
     	if (((ustr[i-1]&0xFFC0) != 0xD800) || ((ustr[i]&0xFFC0) != 0xDC00)) newIdx++;

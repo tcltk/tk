@@ -27,16 +27,6 @@
 #include "tkWinInt.h"
 #endif
 
-/*
- * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
- * mis-specified with non-increasing values. These are converted into tabs
- * which are the equivalent of at least a character width apart.
- */
-
-#if (TK_MAJOR_VERSION < 9)
-#define _TK_ALLOW_DECREASING_TABS
-#endif
-
 #include "tkText.h"
 
 /*
@@ -4568,27 +4558,12 @@ TkTextGetTabs(
 	     * illegal.
 	     */
 
-#ifdef _TK_ALLOW_DECREASING_TABS
-	    /*
-	     * Force the tab to be a typical character width to the right of
-	     * the previous one, and update the 'lastStop' with the changed
-	     * position.
-	     */
-
-	    if (textPtr->charWidth > 0) {
-		tabPtr->location = (tabPtr-1)->location + textPtr->charWidth;
-	    } else {
-		tabPtr->location = (tabPtr-1)->location + 8;
-	    }
-	    lastStop = tabPtr->location;
-#else
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "tabs must be monotonically increasing, but \"%s\" is "
 		    "smaller than or equal to the previous tab",
 		    Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
 	    goto error;
-#endif /* _TK_ALLOW_DECREASING_TABS */
 	}
 
 	tabArrayPtr->numTabs++;

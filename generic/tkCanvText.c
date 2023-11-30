@@ -272,7 +272,7 @@ Tk_ItemType tkTextType = {
     TextCoords,			/* coordProc */
     DeleteText,			/* deleteProc */
     DisplayCanvText,		/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     TextToPoint,		/* pointProc */
     TextToArea,			/* areaProc */
     TextToPostscript,		/* postscriptProc */
@@ -494,7 +494,7 @@ ConfigureText(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) textPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, textPtr, flags)) {
 	return TCL_ERROR;
     }
 

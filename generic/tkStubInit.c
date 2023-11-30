@@ -42,8 +42,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #undef TkPutImage
 #undef XPutImage
 
-#define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
-
 #if !defined(MAC_OSX_TK)
 static int
 doNothing(void)
@@ -535,8 +533,6 @@ static const TkIntPlatStubs tkIntPlatStubs = {
     TkGenerateButtonEvent, /* 50 */
     TkGenWMDestroyEvent, /* 51 */
     TkMacOSXSetDrawingEnabled, /* 52 */
-    0, /* 53 */
-    TkMacOSXDrawable, /* 54 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     TkCreateXEventSource, /* 0 */

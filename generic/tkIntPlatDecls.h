@@ -248,9 +248,6 @@ EXTERN int		TkGenerateButtonEvent(int x, int y, Window window,
 EXTERN void		TkGenWMDestroyEvent(Tk_Window tkwin);
 /* 52 */
 EXTERN void		TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag);
-/* Slot 53 is reserved */
-/* 54 */
-EXTERN void *		TkMacOSXDrawable(Drawable drawable);
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 /* 0 */
@@ -424,8 +421,6 @@ typedef struct TkIntPlatStubs {
     int (*tkGenerateButtonEvent) (int x, int y, Window window, unsigned int state); /* 50 */
     void (*tkGenWMDestroyEvent) (Tk_Window tkwin); /* 51 */
     void (*tkMacOSXSetDrawingEnabled) (TkWindow *winPtr, int flag); /* 52 */
-    void (*reserved53)(void);
-    void * (*tkMacOSXDrawable) (Drawable drawable); /* 54 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
     void (*tkCreateXEventSource) (void); /* 0 */
@@ -680,9 +675,6 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 	(tkIntPlatStubsPtr->tkGenWMDestroyEvent) /* 51 */
 #define TkMacOSXSetDrawingEnabled \
 	(tkIntPlatStubsPtr->tkMacOSXSetDrawingEnabled) /* 52 */
-/* Slot 53 is reserved */
-#define TkMacOSXDrawable \
-	(tkIntPlatStubsPtr->tkMacOSXDrawable) /* 54 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(__CYGWIN__) || defined(MAC_OSX_TK)) /* X11 */
 #define TkCreateXEventSource \
@@ -748,6 +740,10 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #endif /* defined(USE_TK_STUBS) */
 
 /* !END!: Do not edit above this line. */
+
+#ifndef TK_NO_DEPRECATED
+#   define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
