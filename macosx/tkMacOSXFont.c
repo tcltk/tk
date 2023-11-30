@@ -27,6 +27,21 @@
 */
 
 /*
+ * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
+ * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
+ * tricky to get this function, because we are compiling with TCL_UTF_MAX=4.
+ */
+#if TCL_MAJOR_VERSION < 9
+#   undef TclNumUtfChars
+#   ifdef USE_TCL_STUBS
+#	define TclNumUtfChars \
+	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
+#   else
+#	define TclNumUtfChars Tcl_NumUtfChars
+#   endif
+#endif
+
+/*
  * The following structure represents our Macintosh-specific implementation
  * of a font object.
  */
@@ -471,9 +486,9 @@ startOfClusterObjCmd(
     }
     if (index > 0 && (Tcl_Size)[S length] != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < index; i++) {
-	    newIdx += 1 + ((([S characterAtIndex:newIdx-1]&0xFFC0) == 0xD800) && (([S characterAtIndex:newIdx]&0xFFC0) == 0xDC00));
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < index; i++) {
+	    newIdx += 1 + (((newIdx < (Tcl_Size)[S length]-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
 	index = newIdx;
     }
@@ -488,7 +503,7 @@ startOfClusterObjCmd(
 	/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 	Tcl_Size newIdx = 1;
 	for (Tcl_Size i = 1; i < index; i++) {
-		if ((([S characterAtIndex:i-1]&0xFFC0) != 0xD800) || (([S characterAtIndex:i]&0xFFC0) != 0xDC00)) newIdx++;
+		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
 	}
 	index = newIdx;
     }
@@ -527,9 +542,9 @@ endOfClusterObjCmd(
     }
     if (index > 0 && (Tcl_Size)[S length] != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < index; i++) {
-	    newIdx += 1 + ((([S characterAtIndex:newIdx-1]&0xFFC0) == 0xD800) && (([S characterAtIndex:newIdx]&0xFFC0) == 0xDC00));
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < index; i++) {
+	    newIdx += 1 + (((newIdx < (Tcl_Size)[S length]-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
 	index = newIdx;
     }
@@ -544,7 +559,7 @@ endOfClusterObjCmd(
 	/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
 	Tcl_Size newIdx = 1;
 	for (Tcl_Size i = 1; i < index; i++) {
-		if ((([S characterAtIndex:i-1]&0xFFC0) != 0xD800) || (([S characterAtIndex:i]&0xFFC0) != 0xDC00)) newIdx++;
+		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
 	}
 	index = newIdx;
     }
@@ -1064,8 +1079,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
+    start = TclNumUtfChars(source, rangeStart);
+    len = TclNumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -1365,8 +1380,8 @@ TkpDrawAngledCharsInContext(
              -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    start = Tcl_NumUtfChars(source, rangeStart);
-    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
+    start = TclNumUtfChars(source, rangeStart);
+    length = TclNumUtfChars(source, rangeStart + rangeLength) - start;
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
 
