@@ -132,18 +132,18 @@ EXTERN int		Tk_ClipboardClear(Tcl_Interp *interp,
 				Tk_Window tkwin);
 /* 27 */
 EXTERN int		Tk_ConfigureInfo(Tcl_Interp *interp, Tk_Window tkwin,
-				const Tk_ConfigSpec *specs, char *widgRec,
+				const Tk_ConfigSpec *specs, void *widgRec,
 				const char *argvName, int flags);
 /* 28 */
 EXTERN int		Tk_ConfigureValue(Tcl_Interp *interp,
 				Tk_Window tkwin, const Tk_ConfigSpec *specs,
-				char *widgRec, const char *argvName,
+				void *widgRec, const char *argvName,
 				int flags);
 /* 29 */
 EXTERN int		Tk_ConfigureWidget(Tcl_Interp *interp,
 				Tk_Window tkwin, const Tk_ConfigSpec *specs,
-				Tcl_Size argc, const char **argv,
-				char *widgRec, int flags);
+				Tcl_Size objc, Tcl_Obj *const *objv,
+				void *widgRec, int flags);
 /* 30 */
 EXTERN void		Tk_ConfigureWindow(Tk_Window tkwin,
 				unsigned int valueMask,
@@ -282,7 +282,7 @@ EXTERN void		Tk_FreeGC(Display *display, GC gc);
 EXTERN void		Tk_FreeImage(Tk_Image image);
 /* 74 */
 EXTERN void		Tk_FreeOptions(const Tk_ConfigSpec *specs,
-				char *widgRec, Display *display,
+				void *widgRec, Display *display,
 				int needFlags);
 /* 75 */
 EXTERN void		Tk_FreePixmap(Display *display, Pixmap pixmap);
@@ -926,9 +926,9 @@ typedef struct TkStubs {
     void (*tk_ClearSelection) (Tk_Window tkwin, Atom selection); /* 24 */
     int (*tk_ClipboardAppend) (Tcl_Interp *interp, Tk_Window tkwin, Atom target, Atom format, const char *buffer); /* 25 */
     int (*tk_ClipboardClear) (Tcl_Interp *interp, Tk_Window tkwin); /* 26 */
-    int (*tk_ConfigureInfo) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 27 */
-    int (*tk_ConfigureValue) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, char *widgRec, const char *argvName, int flags); /* 28 */
-    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, Tcl_Size argc, const char **argv, char *widgRec, int flags); /* 29 */
+    int (*tk_ConfigureInfo) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, void *widgRec, const char *argvName, int flags); /* 27 */
+    int (*tk_ConfigureValue) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, void *widgRec, const char *argvName, int flags); /* 28 */
+    int (*tk_ConfigureWidget) (Tcl_Interp *interp, Tk_Window tkwin, const Tk_ConfigSpec *specs, Tcl_Size objc, Tcl_Obj *const *objv, void *widgRec, int flags); /* 29 */
     void (*tk_ConfigureWindow) (Tk_Window tkwin, unsigned int valueMask, XWindowChanges *valuePtr); /* 30 */
     Tk_TextLayout (*tk_ComputeTextLayout) (Tk_Font font, const char *str, Tcl_Size numChars, int wrapLength, Tk_Justify justify, int flags, int *widthPtr, int *heightPtr); /* 31 */
     Tk_Window (*tk_CoordsToWindow) (int rootX, int rootY, Tk_Window tkwin); /* 32 */
@@ -973,7 +973,7 @@ typedef struct TkStubs {
     void (*tk_FreeFont) (Tk_Font f); /* 71 */
     void (*tk_FreeGC) (Display *display, GC gc); /* 72 */
     void (*tk_FreeImage) (Tk_Image image); /* 73 */
-    void (*tk_FreeOptions) (const Tk_ConfigSpec *specs, char *widgRec, Display *display, int needFlags); /* 74 */
+    void (*tk_FreeOptions) (const Tk_ConfigSpec *specs, void *widgRec, Display *display, int needFlags); /* 74 */
     void (*tk_FreePixmap) (Display *display, Pixmap pixmap); /* 75 */
     void (*tk_FreeTextLayout) (Tk_TextLayout textLayout); /* 76 */
     void (*reserved77)(void);
@@ -1790,6 +1790,16 @@ EXTERN void  Tk_MainEx(Tcl_Size argc, char **argv,
 EXTERN int Tk_Init(Tcl_Interp *interp);
 EXTERN int Tk_SafeInit(Tcl_Interp *interp);
 EXTERN int Tk_CreateConsoleWindow(Tcl_Interp *interp);
+
+#if TK_MAJOR_VERSION < 9
+/* Restore 8.x signature of Tk_ConfigureWidget, but panic if TK_CONFIG_OBJS flag is not set */
+#undef Tk_ConfigureWidget
+#define Tk_ConfigureWidget(interp, tkwin, specs, argc, argv, widgRec, flags) \
+	((int (*)(Tcl_Interp *, Tk_Window, const Tk_ConfigSpec *, \
+	int, const char **, char *, int))(void *)(tkStubsPtr->tk_ConfigureWidget)) \
+	(((flags & TK_CONFIG_OBJS) ? interp : (Tcl_Panic("Flag TK_CONFIG_OBJS is mandatory in Tk_ConfigureWidget"), \
+	NULL)), tkwin, specs, argc, argv, widgRec, flags)
+#endif
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

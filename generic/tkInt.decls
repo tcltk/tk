@@ -951,10 +951,10 @@ declare 51 aqua {
 declare 52 aqua {
     void TkMacOSXSetDrawingEnabled(TkWindow *winPtr, int flag)
 }
-# For Canvas3d, requested by Sean Woods
-declare 54 aqua {
-    void *TkMacOSXDrawable(Drawable drawable)
-}
+# Made public as Tk_MacOSXGetNSWindowForDrawable
+#declare 54 aqua {
+#    void *TkMacOSXDrawable(Drawable drawable)
+#}
 
 ##############################################################################
 
