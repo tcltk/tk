@@ -23,7 +23,10 @@ bind TSpinbox <Down> 			{ event generate %W <<Decrement>> }
 bind TSpinbox <<Increment>>		{ ttk::spinbox::Spin %W +1 }
 bind TSpinbox <<Decrement>> 		{ ttk::spinbox::Spin %W -1 }
 
-ttk::bindMouseWheel TSpinbox 		[list ttk::spinbox::Spin %W]
+ttk::bindMouseWheel TSpinbox 		{ ttk::spinbox::Spin %W }
+bind TSpinbox <Shift-MouseWheel> {
+    # Ignore the event
+}
 
 ## Motion --
 #	Sets cursor.
