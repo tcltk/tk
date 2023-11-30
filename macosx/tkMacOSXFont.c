@@ -29,15 +29,20 @@
 /*
  * TclNumUtfChars() is the same as Tcl_NumUtfChars(), but counting
  * in UTF-16 in stead of UTF-32. For Tcl 8.7 it's a little bit
- * tricky to get this function, because we are compiling with TCL_UTF_MAX=4.
+ * tricky to get this function, because we are compiling with
+ * TCL_UTF_MAX=4. Same for TclUtfAtIndex()
  */
 #if TCL_MAJOR_VERSION < 9
 #   undef TclNumUtfChars
+#   undef TclUtfAtIndex
 #   ifdef USE_TCL_STUBS
 #	define TclNumUtfChars \
 	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
+#	define TclUtfAtIndex \
+	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
 #   else
 #	define TclNumUtfChars Tcl_NumUtfChars
+#	define TclUtfAtIndex Tcl_UtfAtIndex
 #   endif
 #endif
 
@@ -179,7 +184,7 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
 	Tcl_DStringSetLength(&_ds, 3 * [_string length]);
 	p = Tcl_DStringValue(&_ds);
 	for (index = 0; index < [_string length]; index++) {
-	    p += Tcl_UniCharToUtf([_string characterAtIndex: index], p);
+	    p += Tcl_UniCharToUtf([_string characterAtIndex: index]|TCL_COMBINE, p);
 	}
 	Tcl_DStringSetLength(&_ds, (Tcl_Size)(p - Tcl_DStringValue(&_ds)));
     }
@@ -1181,7 +1186,7 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
+    fit = (TclUtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
