@@ -52,7 +52,10 @@ bind TCombobox <Triple-Button-1> 	{ ttk::combobox::Press "3" %W %x %y }
 bind TCombobox <B1-Motion>		{ ttk::combobox::Drag %W %x }
 bind TCombobox <Motion>			{ ttk::combobox::Motion %W %x %y }
 
-ttk::bindMouseWheel TCombobox [list ttk::combobox::Scroll %W]
+ttk::bindMouseWheel TCombobox		{ ttk::combobox::Scroll %W }
+bind TCombobox <Shift-MouseWheel> {
+    # Ignore the event
+}
 
 bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
 
