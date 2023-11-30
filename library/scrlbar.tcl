@@ -129,10 +129,19 @@ bind Scrollbar <<LineEnd>> {
 }
 }
 
+bind Scrollbar <Enter> {+
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
+}
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W hv %D -40.0
+    tk::ScrollByUnits %W vh %D -40.0
 }
 bind Scrollbar <Option-MouseWheel> {
+    tk::ScrollByUnits %W vh %D -12.0
+}
+bind Scrollbar <Shift-MouseWheel> {
+    tk::ScrollByUnits %W hv %D -40.0
+}
+bind Scrollbar <Shift-Option-MouseWheel> {
     tk::ScrollByUnits %W hv %D -12.0
 }
 
@@ -303,7 +312,7 @@ proc ::tk::ScrollEndDrag {w x y} {
 # Arguments:
 # w -		The scrollbar widget.
 # orient -	Which kinds of scrollbars this applies to:  "h" for
-#		horizontal, "v" for vertical, "hv" for both.
+#		horizontal, "v" for vertical, "hv" or "vh" for both.
 # amount -	How many units to scroll:  typically 1 or -1.
 
 proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
@@ -312,6 +321,21 @@ proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
+
+    if {[string length $orient] == 2 && $factor != 1.0} {
+	# Count both the <MouseWheel> and <Shift-MouseWheel>
+	# events, and ignore the non-dominant ones
+
+	variable ::tk::Priv
+	set axis [expr {[string index $orient 0] eq "h" ? "x" : "y"}]
+	incr Priv(${axis}Events)
+	if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+		($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+		 $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+	    return
+	}
+    }
+
     set info [$w get]
     if {[llength $info] == 2} {
 	uplevel #0 $cmd scroll [expr {$amount/$factor}] units
