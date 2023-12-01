@@ -15,53 +15,53 @@ testConstraint needsICU [expr {[catch {info body ::tk::startOfCluster}]}]
 
 
 test cluster-1.0 {::tk::startOfCluster} -body {
-    ::tk::startOfCluster 🤡 -1
+    ::tk::startOfCluster é -1
 } -result {}
 test cluster-1.1 {::tk::startOfCluster} -body {
-    ::tk::startOfCluster 🤡 0
+    ::tk::startOfCluster é 0
 } -result 0
 test cluster-1.2 {::tk::startOfCluster} -constraints needsICU -body {
-    ::tk::startOfCluster 🤡 1
+    ::tk::startOfCluster é 1
 } -result 0
 test cluster-1.3 {::tk::startOfCluster} -constraints needsICU -body {
-    ::tk::startOfCluster 🤡 2
+    ::tk::startOfCluster é 2
 } -result 2
 test cluster-1.4 {::tk::startOfCluster} -constraints needsICU -body {
-    ::tk::startOfCluster 🤡 3
+    ::tk::startOfCluster é 3
 } -result 2
 test cluster-1.5 {::tk::startOfCluster} -constraints needsICU -body {
-    ::tk::startOfCluster 🤡 end
+    ::tk::startOfCluster é end
 } -result 0
 test cluster-1.6 {::tk::startOfCluster} -body {
-    ::tk::startOfCluster 🤡 {}
+    ::tk::startOfCluster é {}
 } -result {}
 test cluster-1.7 {::tk::startOfCluster} -constraints needsICU -body {
-    ::tk::startOfCluster 🤡 end-1
+    ::tk::startOfCluster é end-1
 } -result 0
 
 test cluster-2.0 {::tk::endOfCluster} -body {
-    ::tk::endOfCluster 🤡 -1
+    ::tk::endOfCluster é -1
 } -result 0
 test cluster-2.1 {::tk::endOfCluster} -constraints needsICU -body {
-    ::tk::endOfCluster 🤡 0
+    ::tk::endOfCluster é 0
 } -result 2
 test cluster-2.2 {::tk::endOfCluster} -constraints needsICU -body {
-    ::tk::endOfCluster 🤡 1
+    ::tk::endOfCluster é 1
 } -result 2
 test cluster-2.3 {::tk::endOfCluster} -body {
-    ::tk::endOfCluster 🤡 2
+    ::tk::endOfCluster é 2
 } -result {}
 test cluster-2.4 {::tk::endOfCluster} -body {
-    ::tk::endOfCluster 🤡 3
+    ::tk::endOfCluster é 3
 } -result {}
 test cluster-2.5 {::tk::endOfCluster} -constraints needsICU -body {
-    ::tk::endOfCluster 🤡 end
+    ::tk::endOfCluster é end
 } -result 2
 test cluster-2.6 {::tk::endOfCluster} -body {
-    ::tk::endOfCluster 🤡 {}
+    ::tk::endOfCluster é {}
 } -result 0
 test cluster-2.7 {::tk::endOfCluster} -constraints needsICU -body {
-    ::tk::endOfCluster 🤡 end-1
+    ::tk::endOfCluster é end-1
 } -result 2
 
 test cluster-3.0 {::tk::endOfWord} -body {

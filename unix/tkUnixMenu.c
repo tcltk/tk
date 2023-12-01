@@ -867,7 +867,7 @@ DrawMenuUnderline(
 
 	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline);
-	    end = start + TkUtfToUniChar(start, &ch);
+	    end = start + Tcl_UtfToUniChar(start, &ch);
 
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);

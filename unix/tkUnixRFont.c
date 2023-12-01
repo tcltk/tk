@@ -80,7 +80,7 @@ TCL_DECLARE_MUTEX(xftMutex);
 static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
 {
     if (numBytes >= 6) {
-    	return TkUtfToUniChar(source, (int *)c);
+    	return Tcl_UtfToUniChar(source, (int *)c);
     }
     return FcUtf8ToUcs4((const FcChar8 *)source, c, numBytes);
 }
@@ -744,7 +744,7 @@ Tk_MeasureChars(
     while (numBytes > 0) {
 	int unichar;
 
-	clen = TkUtfToUniChar(source, &unichar);
+	clen = Tcl_UtfToUniChar(source, &unichar);
 	c = (FcChar32) unichar;
 
 	if (clen <= 0) {

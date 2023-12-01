@@ -113,7 +113,7 @@ TkpGetString(
 	 * Special case for WM_UNICHAR and win2000 multilingual IME input
 	 */
 
-	len = TkUniCharToUtf(keyEv->keycode, buf);
+	len = Tcl_UniCharToUtf(keyEv->keycode, buf);
 	Tcl_DStringAppend(dsPtr, buf, len);
     } else {
 	/*
@@ -125,7 +125,7 @@ TkpGetString(
 
 	if (((keysym != NoSymbol) && (keysym > 0) && (keysym < 256))
 		|| (keysym == XK_Return) || (keysym == XK_Tab)) {
-	    len = TkUniCharToUtf(keysym & 255, buf);
+	    len = Tcl_UniCharToUtf(keysym & 255, buf);
 	    Tcl_DStringAppend(dsPtr, buf, len);
 	}
     }
