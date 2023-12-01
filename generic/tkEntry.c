@@ -2002,8 +2002,8 @@ EntryComputeGeometry(
 	 * resulting string.
 	 */
 
-	TkUtfToUniChar(entryPtr->showChar, &ch);
-	size = TkUniCharToUtf(ch, buf);
+	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
+	size = Tcl_UniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
 	p = (char *)ckalloc(entryPtr->numDisplayBytes + 1);
@@ -3584,7 +3584,7 @@ ExpandPercents(
 
 	before++; /* skip over % */
 	if (*before != '\0') {
-	    before += TkUtfToUniChar(before, &ch);
+	    before += Tcl_UtfToUniChar(before, &ch);
 	} else {
 	    ch = '%';
 	}
@@ -3604,7 +3604,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = TkUniCharToUtf(ch, numStorage);
+		length = Tcl_UniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
@@ -3664,7 +3664,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = TkUniCharToUtf(ch, numStorage);
+		length = Tcl_UniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;

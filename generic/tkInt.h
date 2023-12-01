@@ -1437,14 +1437,6 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 # define c_class class
 #endif
 
-#if TCL_UTF_MAX > 3
-#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
-#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
-#else
-    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
-#endif
-
 #if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
 #   define tcl_CreateFileHandler reserved9
 #endif

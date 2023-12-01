@@ -576,7 +576,7 @@ Tk_FontObjCmd(
 
 	if (charPtr != NULL) {
 	    const char *string = Tcl_GetString(charPtr);
-	    size_t len = TkUtfToUniChar(string, &uniChar);
+	    size_t len = Tcl_UtfToUniChar(string, &uniChar);
 
 	    if (len != (size_t)charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
@@ -1744,14 +1744,14 @@ Tk_PostscriptFontName(
 		src++;
 		upper = 1;
 	    }
-	    src += TkUtfToUniChar(src, &ch);
+	    src += Tcl_UtfToUniChar(src, &ch);
 	    if (upper) {
 		ch = Tcl_UniCharToUpper(ch);
 		upper = 0;
 	    } else {
 		ch = Tcl_UniCharToLower(ch);
 	    }
-	    dest += TkUniCharToUtf(ch, dest);
+	    dest += Tcl_UniCharToUtf(ch, dest);
 	}
 	*dest = '\0';
 	Tcl_DStringSetLength(dsPtr, dest - Tcl_DStringValue(dsPtr));
@@ -2789,7 +2789,7 @@ Tk_CharBbox(
 	    }
 	    if (widthPtr != NULL) {
 		int ch;
-		Tk_MeasureChars(tkfont, end, TkUtfToUniChar(end, &ch), -1, 0, &w);
+		Tk_MeasureChars(tkfont, end, Tcl_UtfToUniChar(end, &ch), -1, 0, &w);
 	    }
 	    goto check;
 	}
@@ -3335,7 +3335,7 @@ Tk_TextLayoutToPostscript(
 	     * international postscript fonts.
 	     */
 
-	    p += TkUtfToUniChar(p, &ch);
+	    p += Tcl_UtfToUniChar(p, &ch);
 	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
 		/*
 		 * Tricky point: the "03" is necessary in the snprintf below,
