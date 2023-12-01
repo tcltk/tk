@@ -16,7 +16,21 @@ bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
 }
 bind TNotebook <Destroy>		{ ttk::notebook::Cleanup %W }
 
-ttk::bindMouseWheel TNotebook		[list ttk::notebook::CycleTab %W]
+bind TNotebook <Enter> {
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
+}
+bind TNotebook <MouseWheel> {
+    ttk::notebook::CondCycleTab %W y %D -120.0
+}
+bind TNotebook <Option-MouseWheel> {
+    ttk::notebook::CondCycleTab %W y %D -12.0
+}
+bind TNotebook <Shift-MouseWheel> {
+    ttk::notebook::CondCycleTab %W x %D -120.0
+}
+bind TNotebook <Shift-Option-MouseWheel> {
+    ttk::notebook::CondCycleTab %W x %D -12.0
+}
 
 # ActivateTab $nb $tab --
 #	Select the specified tab and set focus.
@@ -73,6 +87,24 @@ proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
 	    ActivateTab $w $select
 	}
     }
+}
+
+# CondCycleTab --
+#	Conditionally invoke the ttk::notebook::CycleTab proc.
+#
+proc ttk::notebook::CondCycleTab {w axis dir {factor 1.0}} {
+    # Count both the <MouseWheel> and <Shift-MouseWheel>
+    # events, and ignore the non-dominant ones
+
+    variable ::tk::Priv
+    incr Priv(${axis}Events)
+    if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+	    ($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+	     $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+	return
+    }
+
+    CycleTab $w $dir $factor
 }
 
 # MnemonicTab $nb $key --
