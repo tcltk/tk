@@ -456,15 +456,6 @@ bind Text <B2-Motion> {
 }
 set ::tk::Priv(prevPos) {}
 
-bind Text <TouchpadScroll> {
-    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
-    if {$deltaX != 0} {
-	%W xview scroll [expr {-$deltaX}] pixels
-    }
-    if {$deltaY != 0} {
-	%W yview scroll [expr {-$deltaY}] pixels
-    }
-}
 bind Text <MouseWheel> {
     tk::MouseWheel %W y [tk::ScaleNum %D] -4.0 pixels
 }
@@ -476,6 +467,15 @@ bind Text <Shift-MouseWheel> {
 }
 bind Text <Shift-Option-MouseWheel> {
     tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 pixels
+}
+bind Text <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    if {$deltaX != 0} {
+	%W xview scroll [tk::ScaleNum [expr {-$deltaX}]] pixels
+    }
+    if {$deltaY != 0} {
+	%W yview scroll [tk::ScaleNum [expr {-$deltaY}]] pixels
+    }
 }
 
 # ::tk::TextClosestGap --
