@@ -2581,8 +2581,11 @@ DecomposeMaskToShiftAndBits(
 #define OVERDRAW_PIXELS 32        /* How much larger we make the pixmap
                                    * that the canvas objects are drawn into */
 
-/* From stackoverflow.com/questions/2100331/c-macro-definition-to-determine-big-endian-or-little-endian-machine */
-#define IS_BIG_ENDIAN (*(unsigned short *)"\0\xff" < 0x100)
+#ifdef WORDS_BIGENDIAN
+#define IS_BIG_ENDIAN 1
+#else
+#define IS_BIG_ENDIAN 0
+#endif
 
 #define BYTE_SWAP16(n) ((((unsigned short)n)>>8) | (((unsigned short)n)<<8))
 #define BYTE_SWAP32(n) (((n>>24)&0x000000FF) | ((n<<8)&0x00FF0000) | ((n>>8)&0x0000FF00) | ((n<<24)&0xFF000000))
