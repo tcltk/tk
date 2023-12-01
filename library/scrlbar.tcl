@@ -327,12 +327,14 @@ proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
 	# events, and ignore the non-dominant ones
 
 	variable ::tk::Priv
-	set axis [expr {[string index $orient 0] eq "h" ? "x" : "y"}]
-	incr Priv(${axis}Events)
-	if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
-		($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
-		 $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
-	    return
+	if {[info exists Priv(xEvents)] && [info exists Priv(yEvents)]} {
+	    set axis [expr {[string index $orient 0] eq "h" ? "x" : "y"}]
+	    incr Priv(${axis}Events)
+	    if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+		    ($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+		     $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+		return
+	    }
 	}
     }
 
