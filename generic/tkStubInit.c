@@ -54,10 +54,6 @@ MODULE_SCOPE const TkStubs tkStubs;
 #define TkBTreeNumLines TkrBTreeNumLines
 #define TkTextInsertDisplayProc TkrTextInsertDisplayProc
 
-#define TkMacOSXSetUpClippingRgn (void (*)(Drawable))(void *)doNothing
-#undef TkMacOSXIsCharacterMissing
-#define TkMacOSXIsCharacterMissing (int (*)(Tk_Font, unsigned int))(void *)doNothing
-
 #if !defined(MAC_OSX_TK)
 static int
 doNothing(void)

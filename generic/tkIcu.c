@@ -92,13 +92,13 @@ startEndOfCmd(
     str = Tcl_GetStringFromObj(objv[1], &len);
     Tcl_UtfToChar16DString(str, len, &ds);
     len = Tcl_DStringLength(&ds)/2;
-    if (TkGetIntForIndex(objv[2], len-1, 0, &idx) != TCL_OK) {
+    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    if (TkGetIntForIndex(objv[2], ulen-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
 	return TCL_ERROR;
     }
-
     it = icu_open((UBreakIteratorTypex)(flags&3), locale,
     		NULL, -1, &errorCode);
     if (it != NULL) {
@@ -112,6 +112,14 @@ startEndOfCmd(
     	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", NULL);
     	return TCL_ERROR;
     }
+    if (idx > 0 && len != ulen) {
+	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < (Tcl_Size)len-1) && (ustr[newIdx]&0xFC00) == 0xD800) && ((ustr[newIdx+1]&0xFC00) == 0xDC00));
+	}
+	idx = newIdx;
+    }
     if (flags & FLAG_FOLLOWING) {
 	if ((idx < 0) && (flags & FLAG_WORD)) {
 	    idx = 0;
@@ -122,7 +130,7 @@ startEndOfCmd(
 	}
     } else if (idx > 0) {
 	if (!(flags & FLAG_WORD)) {
-		idx += 1 + (((ustr[idx]&0xFFC0) == 0xD800) && ((ustr[idx+1]&0xFFC0) == 0xDC00));
+	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
 	idx = icu_preceding(it, idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
@@ -146,6 +154,14 @@ startEndOfCmd(
     icu_close(it);
     Tcl_DStringFree(&ds);
     if (idx != TCL_INDEX_NONE) {
+	if (idx > 0 && len != ulen) {
+	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+	    Tcl_Size newIdx = 1;
+	    for (Tcl_Size i = 1; i < idx; i++) {
+    	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
+	    }
+	    idx = newIdx;
+	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
     return TCL_OK;
@@ -187,7 +203,7 @@ Icu_Init(
 {
     Tcl_MutexLock(&icu_mutex);
     char symbol[24];
-    char icuversion[4] = "_75"; /* Highest ICU version + 1 */
+    char icuversion[4] = "_80"; /* Highest ICU version + 1 */
 
     if (icu_fns.nopen == 0) {
 	int i = 0;
@@ -207,8 +223,8 @@ Icu_Init(
 	    NULL
 	};
 
-	/* Going back down to ICU version 50 */
-	while ((icu_fns.lib == NULL) && (icuversion[1] >= '5')) {
+	/* Going back down to ICU version 60 */
+	while ((icu_fns.lib == NULL) && (icuversion[1] >= '6')) {
 	    if (--icuversion[2] < '0') {
 		icuversion[1]--; icuversion[2] = '9';
 	    }

@@ -741,6 +741,10 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 
 /* !END!: Do not edit above this line. */
 
+#ifndef TK_NO_DEPRECATED
+#   define TkMacOSXDrawable Tk_MacOSXGetNSWindowForDrawable
+#endif
+
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
