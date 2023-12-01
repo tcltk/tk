@@ -5300,7 +5300,7 @@ TkStringToKeysym(
 #endif /* REDO_KEYSYM_LOOKUP */
     int keysym;
 
-    size_t len = TkUtfToUniChar(name, &keysym);
+    size_t len = Tcl_UtfToUniChar(name, &keysym);
     if (name[len] == '\0') {
         if (!Tcl_UniCharIsPrint(keysym)) {
     	/* This form not supported */
@@ -5384,7 +5384,7 @@ TkKeysymToString(
 	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
 	char buf[10];
 	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
-	    buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	    buf[Tcl_UniCharToUtf(keysym - 0x1000000, buf)] = '\0';
 	} else if (keysym >= 0x1010000) {
 	    snprintf(buf, sizeof(buf), "U%08X", (int)(keysym - 0x1000000));
 	} else {

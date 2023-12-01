@@ -393,7 +393,7 @@ ControlUtfProc(
 	    result = TCL_CONVERT_NOSPACE;
 	    break;
 	}
-	src += TkUtfToUniChar(src, &ch);
+	src += Tcl_UtfToUniChar(src, &ch);
 	dst[0] = '\\';
 	if (((size_t)ch < sizeof(mapChars)) && (mapChars[ch] != 0)) {
 	    dst[1] = mapChars[ch];
@@ -843,7 +843,7 @@ Tk_MeasureChars(
 	curX = 0;
 	end = source + numBytes;
 	for (p = source; p < end; ) {
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	    if (thisSubFontPtr != lastSubFontPtr) {
 		familyPtr = lastSubFontPtr->familyPtr;
@@ -890,7 +890,7 @@ Tk_MeasureChars(
 	 * individually.
 	 */
 
-	next = source + TkUtfToUniChar(source, &ch);
+	next = source + Tcl_UtfToUniChar(source, &ch);
 	newX = curX = termX = 0;
 
 	term = source;
@@ -925,7 +925,7 @@ Tk_MeasureChars(
 		break;
 	    }
 
-	    next += TkUtfToUniChar(next, &ch);
+	    next += Tcl_UtfToUniChar(next, &ch);
 	    if ((ch < 256) && isspace(ch)) {
 		if (sawNonSpace) {
 		    term = p;
@@ -950,13 +950,13 @@ Tk_MeasureChars(
 	     */
 
 	    curX = newX;
-	    p += TkUtfToUniChar(p, &ch);
+	    p += Tcl_UtfToUniChar(p, &ch);
 	}
 	if ((flags & TK_AT_LEAST_ONE) && (term == source) && (p < end)) {
 	    term = p;
 	    termX = curX;
 	    if (term == source) {
-		term += TkUtfToUniChar(term, &ch);
+		term += Tcl_UtfToUniChar(term, &ch);
 		termX = newX;
 	    }
 	} else if ((p >= end) || !(flags & TK_WHOLE_WORDS)) {
@@ -1102,7 +1102,7 @@ Tk_DrawChars(
     needWidth = fontPtr->font.fa.underline + fontPtr->font.fa.overstrike;
     for (p = source; p <= end; ) {
 	if (p < end) {
-	    next = p + TkUtfToUniChar(p, &ch);
+	    next = p + Tcl_UtfToUniChar(p, &ch);
 	    thisSubFontPtr = FindSubFontForChar(fontPtr, ch, &lastSubFontPtr);
 	} else {
 	    next = p + 1;
@@ -2079,7 +2079,7 @@ FontMapLoadPage(
     for (i = row << FONTMAP_SHIFT; i < end; i++) {
 	int hi, lo;
 
-	if (Tcl_UtfToExternal(NULL, encoding, src, TkUniCharToUtf(i, src),
+	if (Tcl_UtfToExternal(NULL, encoding, src, Tcl_UniCharToUtf(i, src),
 		TCL_ENCODING_PROFILE_STRICT, NULL, buf, sizeof(buf), NULL,
 		NULL, NULL) != TCL_OK) {
 	    continue;
@@ -2275,7 +2275,7 @@ CanUseFallback(
     }
     nameListOrig = nameList;
 
-    srcLen = TkUniCharToUtf(ch, src);
+    srcLen = Tcl_UniCharToUtf(ch, src);
 
     want.fa = fontPtr->font.fa;
     want.xa = fontPtr->xa;

@@ -501,7 +501,7 @@ TkpGetString(
 
     macKC.uint = eventPtr->xkey.keycode;
     if (IS_PRINTABLE(macKC.v.keychar)) {
-	length = TkUniCharToUtf(macKC.v.keychar, utfChars);
+	length = Tcl_UniCharToUtf(macKC.v.keychar, utfChars);
     }
     utfChars[length] = 0;
 

@@ -4582,7 +4582,7 @@ TkTextGetTabs(
 	 * There may be a more efficient way of getting this.
 	 */
 
-	TkUtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
+	Tcl_UtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
 	if (!Tcl_UniCharIsAlpha(ch)) {
 	    continue;
 	}
@@ -6161,7 +6161,7 @@ SearchCore(
 			}
 		    } else {
 			firstOffset = p - startOfLine +
-				TkUtfToUniChar(startOfLine+matchOffset,&ch);
+				Tcl_UtfToUniChar(startOfLine+matchOffset,&ch);
 		    }
 		}
 	    } while (searchSpecPtr->all);
