@@ -17,11 +17,17 @@ bind TScrollbar <Button-2> 		{ ttk::scrollbar::Jump %W %x %y }
 bind TScrollbar <B2-Motion>		{ ttk::scrollbar::Drag %W %x %y }
 bind TScrollbar <ButtonRelease-2>	{ ttk::scrollbar::Release %W %x %y }
 
-# Redirect scrollwheel bindings to the scrollbar widget
+# Copy the mouse wheel event bindings from Scrollbar to TScrollbar
 #
-bind TScrollbar <MouseWheel> [bind Scrollbar <MouseWheel>]
-bind TScrollbar <Option-MouseWheel> [bind Scrollbar <Option-MouseWheel>]
-bind TScrollbar <TouchpadScroll> [bind Scrollbar <TouchpadScroll>]
+bind TScrollbar <Enter> {
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
+}
+foreach event {<MouseWheel> <Option-MouseWheel>
+	       <Shift-MouseWheel> <Shift-Option-MouseWheel>
+	       <TouchpadScroll>} {
+    bind TScrollbar $event [bind Scrollbar $event]
+}
+unset event
 
 proc ttk::scrollbar::Scroll {w n units} {
     set cmd [$w cget -command]

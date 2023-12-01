@@ -16,14 +16,25 @@ bind TNotebook <Control-ISO_Left_Tab>	{ ttk::notebook::CycleTab %W -1; break }
 }
 bind TNotebook <Destroy>		{ ttk::notebook::Cleanup %W }
 
-ttk::bindMouseWheel TNotebook		[list ttk::notebook::CycleTab %W]
+bind TNotebook <Enter> {
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
+}
+bind TNotebook <MouseWheel> {
+    ttk::notebook::CondCycleTab1 %W y %D -120.0
+}
+bind TNotebook <Option-MouseWheel> {
+    ttk::notebook::CondCycleTab1 %W y %D -12.0
+}
 bind TNotebook <Shift-MouseWheel> {
-    # Ignore the event
+    ttk::notebook::CondCycleTab1 %W x %D -120.0
+}
+bind TNotebook <Shift-Option-MouseWheel> {
+    ttk::notebook::CondCycleTab1 %W x %D -12.0
 }
 bind TNotebook <TouchpadScroll> {
     # TouchpadScroll events fire about 60 times per second.
     if {[expr {%# %% 30}] == 0} {
-	ttk::notebook::CondCycleTab %W %D
+	ttk::notebook::CondCycleTab2 %W %D
     }
 }
 
@@ -84,10 +95,28 @@ proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
     }
 }
 
-# CondCycleTab --
+# CondCycleTab1 --
 #	Conditionally invoke the ttk::notebook::CycleTab proc.
 #
-proc ttk::notebook::CondCycleTab {w dxdy} {
+proc ttk::notebook::CondCycleTab1 {w axis dir {factor 1.0}} {
+    # Count both the <MouseWheel> and <Shift-MouseWheel>
+    # events, and ignore the non-dominant ones
+
+    variable ::tk::Priv
+    incr Priv(${axis}Events)
+    if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+	    ($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+	     $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+	return
+    }
+
+    CycleTab $w $dir $factor
+}
+
+# CondCycleTab2 --
+#	Conditionally invoke the ttk::notebook::CycleTab proc.
+#
+proc ttk::notebook::CondCycleTab2 {w dxdy} {
     if {[set style [$w cget -style]] eq ""} {
 	set style TNotebook
     }
@@ -95,10 +124,9 @@ proc ttk::notebook::CondCycleTab {w dxdy} {
 
     lassign [tk::PreciseScrollDeltas $dxdy] deltaX deltaY
     if {$tabSide in {n s} && $deltaX != 0} {
-	CycleTab $w [expr {$deltaX > 0 ? -1 : 1}]
-    }
-    if {$tabSide in {w e} && $deltaY != 0} {
-	CycleTab $w [expr {$deltaY > 0 ? -1 : 1}]
+	CycleTab $w [expr {$deltaX < 0 ? -1 : 1}]
+    } elseif {$tabSide in {w e} && $deltaY != 0} {
+	CycleTab $w [expr {$deltaY < 0 ? -1 : 1}]
     }
 }
 
