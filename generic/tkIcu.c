@@ -186,7 +186,7 @@ Icu_Init(
 {
     Tcl_MutexLock(&icu_mutex);
     char symbol[24];
-    char icuversion[4] = "_75"; /* Highest ICU version + 1 */
+    char icuversion[4] = "_80"; /* Highest ICU version + 1 */
 
     if (icu_fns.nopen == 0) {
 	int i = 0;
@@ -206,8 +206,8 @@ Icu_Init(
 	    NULL
 	};
 
-	/* Going back down to ICU version 50 */
-	while ((icu_fns.lib == NULL) && (icuversion[1] >= '5')) {
+	/* Going back down to ICU version 60 */
+	while ((icu_fns.lib == NULL) && (icuversion[1] >= '6')) {
 	    if (--icuversion[2] < '0') {
 		icuversion[1]--; icuversion[2] = '9';
 	    }
