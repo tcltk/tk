@@ -98,7 +98,6 @@ startEndOfCmd(
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
 	return TCL_ERROR;
     }
-
     it = icu_open((UBreakIteratorTypex)(flags&3), locale,
     		NULL, -1, &errorCode);
     if (it != NULL) {
@@ -122,7 +121,7 @@ startEndOfCmd(
 	}
     } else if (idx > 0) {
 	if (!(flags & FLAG_WORD)) {
-		idx += 1 + (((ustr[idx]&0xFFC0) == 0xD800) && ((ustr[idx+1]&0xFFC0) == 0xDC00));
+	    idx += 1 + (((ustr[idx]&0xFC00) == 0xD800) && ((ustr[idx+1]&0xFC00) == 0xDC00));
 	}
 	idx = icu_preceding(it, idx);
 	if (idx == 0 && (flags & FLAG_WORD)) {
