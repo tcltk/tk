@@ -98,13 +98,10 @@ proc ttk::notebook::CondCycleTab {w axis dir {factor 1.0}} {
 
     variable ::tk::Priv
     incr Priv(${axis}Events)
-    if {[info exists Priv(xEvents)] && [info exists Priv(yEvents)]} {
-
-	if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
-		($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
-		 $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+    if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+	    ($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+	     $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
 	return
-	}
     }
 
     CycleTab $w $dir $factor
