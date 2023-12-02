@@ -41,10 +41,10 @@
 
 #if NEED_EXTRA_INFO
 typedef struct {
-    Tcl_Obj* objPtr;		/* The cached Tcl_Obj*. */
-    Display* display;		/* Display of (Font|Border|Color)Obj */
+    Tcl_Obj *objPtr;		/* The cached Tcl_Obj*. */
+    Display *display;		/* Display of (Font|Border|Color)Obj */
     int screenNum;		/* Screen number of (Font|Border|Color)Obj */
-    Visual* visual;		/* Visual of (Font|Border|Color)Obj */
+    Visual *visual;		/* Visual of (Font|Border|Color)Obj */
     Colormap colormap;		/* Colormap of (Font|Border|Color)Obj */
 } Ttk_Cached;
 #endif
@@ -330,7 +330,7 @@ static Tcl_Obj *Ttk_Use(
     Tcl_Obj *objPtr)
 {
     int newEntry;
-    Tcl_HashEntry* entryPtr;
+    Tcl_HashEntry *entryPtr;
     Tcl_Obj *cacheObj;
 #if !NEED_EXTRA_INFO
     entryPtr = Tcl_CreateHashEntry(table, Tcl_GetString(objPtr), &newEntry);
@@ -432,7 +432,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 {
     const char *imageName = Tcl_GetString(objPtr);
     int newEntry;
-    Tcl_HashEntry* entryPtr;
+    Tcl_HashEntry *entryPtr;
     Tk_Image image;
 
     InitCacheWindow(cache, tkwin);
