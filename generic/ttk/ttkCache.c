@@ -273,7 +273,7 @@ static Tcl_Obj *Ttk_Use(
 
     Tcl_DStringInit(&ds);
     Tcl_DStringAppend(&ds, Tcl_GetString(objPtr), -1);
-    sprintf(buffer, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
+    snprintf(buffer, 64, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
 	    Tk_Visual(tkwin)->visualid, (unsigned long)Tk_Colormap(tkwin));
     Tcl_DStringAppend(&ds, buffer, -1);
     entryPtr = Tcl_CreateHashEntry(table, Tcl_DStringValue(&ds), &newEntry);
@@ -362,7 +362,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 
     Tcl_DStringInit(&ds);
     Tcl_DStringAppend(&ds, imageName, -1);
-    sprintf(buffer, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
+    snprintf(buffer, 64, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
 	Tk_Visual(tkwin)->visualid, (unsigned long)Tk_Colormap(tkwin));
     Tcl_DStringAppend(&ds, buffer, -1);
     entryPtr = Tcl_CreateHashEntry(&cache->imageTable,
