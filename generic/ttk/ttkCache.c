@@ -28,6 +28,27 @@
 #include "tkInt.h"
 #include "ttkTheme.h"
 
+#if defined(_WIN32) || defined(MAC_OSX_TK)
+#   define NEED_EXTRA_INFO 0
+#else
+ /*
+  * Display, Screen, Visual, and Colormap need be tracked, too.
+  * Required on X11 with multiple display connections or
+  * special visuals/colormaps.
+  */
+#   define NEED_EXTRA_INFO 1
+#endif
+
+#if NEED_EXTRA_INFO
+typedef struct {
+    Tcl_Obj* objPtr;		/* The cached Tcl_Obj*. */
+    Display* display;		/* Display of (Font|Border|Color)Obj */
+    int screenNum;		/* Screen number of (Font|Border|Color)Obj */
+    Visual* visual;		/* Visual of (Font|Border|Color)Obj */
+    Colormap colormap;		/* Colormap of (Font|Border|Color)Obj */
+} Ttk_Cached;
+#endif
+
 #ifdef _WIN32
 #include "tkWinInt.h"
 #endif
@@ -36,8 +57,8 @@ struct Ttk_ResourceCache_ {
     Tcl_Interp	  *interp;	/* Interpreter for error reporting */
     Tk_Window	  tkwin;	/* Cache window. */
     Tcl_HashTable fontTable;	/* Entries: Tcl_Obj* holding FontObjs */
-    Tcl_HashTable colorTable;	/* Entries: Tcl_Obj* holding ColorObjs */
     Tcl_HashTable borderTable;	/* Entries: Tcl_Obj* holding BorderObjs */
+    Tcl_HashTable colorTable;	/* Entries: Tcl_Obj* holding ColorObjs */
     Tcl_HashTable imageTable;	/* Entries: Tk_Images */
 
     Tcl_HashTable namedColors;	/* Entries: RGB values as Tcl_StringObjs */
@@ -54,8 +75,8 @@ Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
     cache->tkwin = NULL;	/* initialized later */
     cache->interp = interp;
     Tcl_InitHashTable(&cache->fontTable, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&cache->colorTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&cache->borderTable, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&cache->colorTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&cache->imageTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&cache->namedColors, TCL_STRING_KEYS);
 
@@ -76,45 +97,92 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
      */
     entryPtr = Tcl_FirstHashEntry(&cache->fontTable, &search);
     while (entryPtr != NULL) {
+#if !NEED_EXTRA_INFO
 	Tcl_Obj *fontObj = Tcl_GetHashValue(entryPtr);
 	if (fontObj) {
 	    Tk_FreeFontFromObj(cache->tkwin, fontObj);
 	    Tcl_DecrRefCount(fontObj);
 	}
+#else
+	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	if (cachedPtr) {
+	    TkWindow fakeWin;
+	    Tcl_Obj *fontObj = cachedPtr->objPtr;
+	    fakeWin = *((TkWindow *) cache->tkwin);
+	    fakeWin.display = cachedPtr->display;
+	    fakeWin.screenNum = cachedPtr->screenNum;
+	    fakeWin.visual = cachedPtr->visual;
+	    fakeWin.atts.colormap = cachedPtr->colormap;
+	    Tk_FreeFontFromObj((Tk_Window) &fakeWin, fontObj);
+	    Tcl_DecrRefCount(fontObj);
+	    ckfree(cachedPtr);
+	}
+#endif
 	entryPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&cache->fontTable);
     Tcl_InitHashTable(&cache->fontTable, TCL_STRING_KEYS);
 
     /*
-     * Free colors:
-     */
-    entryPtr = Tcl_FirstHashEntry(&cache->colorTable, &search);
-    while (entryPtr != NULL) {
-	Tcl_Obj *colorObj = Tcl_GetHashValue(entryPtr);
-	if (colorObj) {
-	    Tk_FreeColorFromObj(cache->tkwin, colorObj);
-	    Tcl_DecrRefCount(colorObj);
-	}
-	entryPtr = Tcl_NextHashEntry(&search);
-    }
-    Tcl_DeleteHashTable(&cache->colorTable);
-    Tcl_InitHashTable(&cache->colorTable, TCL_STRING_KEYS);
-
-    /*
      * Free borders:
      */
     entryPtr = Tcl_FirstHashEntry(&cache->borderTable, &search);
     while (entryPtr != NULL) {
+#if !NEED_EXTRA_INFO
 	Tcl_Obj *borderObj = Tcl_GetHashValue(entryPtr);
 	if (borderObj) {
 	    Tk_Free3DBorderFromObj(cache->tkwin, borderObj);
 	    Tcl_DecrRefCount(borderObj);
 	}
-	entryPtr = Tcl_NextHashEntry(&search);
+#else
+	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	if (cachedPtr) {
+	    TkWindow fakeWin;
+	    Tcl_Obj *borderObj = cachedPtr->objPtr;
+	    fakeWin = *((TkWindow *) cache->tkwin);
+	    fakeWin.display = cachedPtr->display;
+	    fakeWin.screenNum = cachedPtr->screenNum;
+	    fakeWin.visual = cachedPtr->visual;
+	    fakeWin.atts.colormap = cachedPtr->colormap;
+	    Tk_Free3DBorderFromObj((Tk_Window) &fakeWin, borderObj);
+	    Tcl_DecrRefCount(borderObj);
+	    ckfree(cachedPtr);
+	}
+#endif	entryPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&cache->borderTable);
     Tcl_InitHashTable(&cache->borderTable, TCL_STRING_KEYS);
+
+    /*
+     * Free colors:
+     */
+    entryPtr = Tcl_FirstHashEntry(&cache->colorTable, &search);
+    while (entryPtr != NULL) {
+#if !NEED_EXTRA_INFO
+	Tcl_Obj *colorObj = Tcl_GetHashValue(entryPtr);
+	if (colorObj) {
+	    Tk_FreeColorFromObj(cache->tkwin, colorObj);
+	    Tcl_DecrRefCount(colorObj);
+	}
+#else
+	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	if (cachedPtr) {
+	    TkWindow fakeWin;
+	    Tcl_Obj *colorObj = cachedPtr->objPtr;
+	    fakeWin = *((TkWindow *) cache->tkwin);
+	    fakeWin.display = cachedPtr->display;
+	    fakeWin.screenNum = cachedPtr->screenNum;
+	    fakeWin.visual = cachedPtr->visual;
+	    fakeWin.atts.colormap = cachedPtr->colormap;
+	    Tk_FreeColorFromObj((Tk_Window) &fakeWin, colorObj);
+	    Tcl_DecrRefCount(colorObj);
+	    ckfree(cachedPtr);
+	}
+#endif
+	entryPtr = Tcl_NextHashEntry(&search);
+    }
+    Tcl_DeleteHashTable(&cache->colorTable);
+    Tcl_InitHashTable(&cache->colorTable, TCL_STRING_KEYS);
 
     /*
      * Free images:
@@ -183,14 +251,12 @@ static void CacheWinEventHandler(ClientData clientData, XEvent *eventPtr)
 /*
  * InitCacheWindow --
  * 	Specify the cache window if not already set.
- * 	@@@ SHOULD: use separate caches for each combination
- * 	@@@ of display, visual, and colormap.
  */
 static void InitCacheWindow(Ttk_ResourceCache cache, Tk_Window tkwin)
 {
     if (cache->tkwin == NULL) {
-	cache->tkwin = tkwin;
-	Tk_CreateEventHandler(tkwin, StructureNotifyMask,
+	cache->tkwin = Tk_MainWindow(cache->interp);
+	Tk_CreateEventHandler(cache->tkwin, StructureNotifyMask,
 		CacheWinEventHandler, cache);
     }
 }
@@ -265,7 +331,7 @@ static Tcl_Obj *Ttk_Use(
     int newEntry;
     Tcl_HashEntry* entryPtr;
     Tcl_Obj *cacheObj;
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if !NEED_EXTRA_INFO
     entryPtr = Tcl_CreateHashEntry(table, Tcl_GetString(objPtr), &newEntry);
 #else
     Tcl_DString ds;
@@ -281,14 +347,29 @@ static Tcl_Obj *Ttk_Use(
 #endif
 
     if (!newEntry) {
+#if !NEED_EXTRA_INFO
 	return Tcl_GetHashValue(entryPtr);
+#else
+	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
+	return cachedPtr->objPtr;
+#endif
     }
 
     cacheObj = Tcl_DuplicateObj(objPtr);
     Tcl_IncrRefCount(cacheObj);
 
     if (allocate(interp, tkwin, cacheObj)) {
+#if !NEED_EXTRA_INFO
 	Tcl_SetHashValue(entryPtr, cacheObj);
+#else
+	Ttk_Cached *cachedPtr = ckalloc(sizeof(*cachedPtr));
+	cachedPtr->objPtr = cacheObj;
+	cachedPtr->display = Tk_Display(tkwin);
+	cachedPtr->screenNum = Tk_ScreenNumber(tkwin);
+	cachedPtr->visual = Tk_Visual(tkwin);
+	cachedPtr->colormap = Tk_Colormap(tkwin);
+	Tcl_SetHashValue(entryPtr, cachedPtr);
+#endif
 	return cacheObj;
     } else {
 	Tcl_DecrRefCount(cacheObj);
@@ -354,7 +435,7 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
     Tk_Image image;
 
     InitCacheWindow(cache, tkwin);
-#if defined(_WIN32) || defined(MAC_OSX_TK)
+#if !NEED_EXTRA_INFO
     entryPtr = Tcl_CreateHashEntry(&cache->imageTable, imageName, &newEntry);
 #else
     Tcl_DString ds;
