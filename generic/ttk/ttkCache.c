@@ -148,7 +148,8 @@ static void Ttk_ClearCache(Ttk_ResourceCache cache)
 	    Tcl_DecrRefCount(borderObj);
 	    ckfree(cachedPtr);
 	}
-#endif	entryPtr = Tcl_NextHashEntry(&search);
+#endif
+	entryPtr = Tcl_NextHashEntry(&search);
     }
     Tcl_DeleteHashTable(&cache->borderTable);
     Tcl_InitHashTable(&cache->borderTable, TCL_STRING_KEYS);
