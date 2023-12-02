@@ -39,7 +39,7 @@ typedef struct {
     Display *display;
     int screen;
     Colormap colormap;
-    Visual* visual;
+    Visual *visual;
     XftDraw *ftDraw;
     int ncolors;
     int firstColor;
