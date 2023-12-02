@@ -21,9 +21,6 @@
  * The plumbing and control flow here is quite contorted;
  * it would be better to address this problem in the core instead.
  *
- * @@@ BUGS/TODO: Need distinct caches for each combination
- * of display, visual, and colormap.
- *
  * @@@ Colormap flashing on PseudoColor visuals is still possible,
  * but this will be a transient effect.
  */
@@ -266,9 +263,22 @@ static Tcl_Obj *Ttk_Use(
     Tcl_Obj *objPtr)
 {
     int newEntry;
-    Tcl_HashEntry *entryPtr =
-	Tcl_CreateHashEntry(table,Tcl_GetString(objPtr),&newEntry);
+    Tcl_HashEntry* entryPtr;
     Tcl_Obj *cacheObj;
+#if defined(_WIN32) || defined(MAC_OSX_TK)
+    entryPtr = Tcl_CreateHashEntry(table, Tcl_GetString(objPtr), &newEntry);
+#else
+    Tcl_DString ds;
+    char buffer[64];
+
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, Tcl_GetString(objPtr), -1);
+    sprintf(buffer, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
+	    Tk_Visual(tkwin)->visualid, (unsigned long)Tk_Colormap(tkwin));
+    Tcl_DStringAppend(&ds, buffer, -1);
+    entryPtr = Tcl_CreateHashEntry(table, Tcl_DStringValue(&ds), &newEntry);
+    Tcl_DStringFree(&ds);
+#endif
 
     if (!newEntry) {
 	return Tcl_GetHashValue(entryPtr);
@@ -340,11 +350,25 @@ Tk_Image Ttk_UseImage(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 {
     const char *imageName = Tcl_GetString(objPtr);
     int newEntry;
-    Tcl_HashEntry *entryPtr =
-	Tcl_CreateHashEntry(&cache->imageTable,imageName,&newEntry);
+    Tcl_HashEntry* entryPtr;
     Tk_Image image;
 
     InitCacheWindow(cache, tkwin);
+#if defined(_WIN32) || defined(MAC_OSX_TK)
+    entryPtr = Tcl_CreateHashEntry(&cache->imageTable, imageName, &newEntry);
+#else
+    Tcl_DString ds;
+    char buffer[64];
+
+    Tcl_DStringInit(&ds);
+    Tcl_DStringAppend(&ds, imageName, -1);
+    sprintf(buffer, ",%d,%lu,%lu", ConnectionNumber(Tk_Display(tkwin)),
+	Tk_Visual(tkwin)->visualid, (unsigned long)Tk_Colormap(tkwin));
+    Tcl_DStringAppend(&ds, buffer, -1);
+    entryPtr = Tcl_CreateHashEntry(&cache->imageTable,
+	Tcl_DStringValue(&ds), &newEntry);
+    Tcl_DStringFree(&ds);
+#endif
 
     if (!newEntry) {
 	return Tcl_GetHashValue(entryPtr);
