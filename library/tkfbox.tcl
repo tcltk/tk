@@ -21,10 +21,13 @@ namespace eval ::tk::dialog::file {
     namespace import -force ::tk::msgcat::*
     variable showHiddenBtn 0
     variable showHiddenVar 1
+    variable updirImage
+    variable folderImage
+    variable fileImage
 
     # Create the images if they did not already exist.
-    if {![info exists ::tk::Priv(updirImage)]} {
-	set ::tk::Priv(updirImage) [image create photo -data {
+    if {![info exists updirImage]} {
+	set updirImage [image create photo -data {
 	    iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAABmJLR0QA/gD+AP7rGN
 	    SCAAAACXBIWXMAAA3WAAAN1gGQb3mcAAAACXZwQWcAAAAWAAAAFgDcxelYAAAENUlE
 	    QVQ4y7WUbWiVZRjHf/f9POcc9+Kc5bC2aIq5sGG0XnTzNU13zAIlFMNc9CEhTCKwCC
@@ -54,8 +57,8 @@ namespace eval ::tk::dialog::file {
 	    dFNvZnR3YXJlAHd3dy5pbmtzY2FwZS5vcmeb7jwaAAAAAElFTkSuQmCC
 	}]
     }
-    if {![info exists ::tk::Priv(folderImage)]} {
-	set ::tk::Priv(folderImage) [image create photo -data {
+    if {![info exists folderImage]} {
+	set folderImage [image create photo -data {
 	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABHNCSVQICAgIfAhkiA
 	    AAAAlwSFlzAAAN1wAADdcBQiibeAAAABl0RVh0U29mdHdhcmUAd3d3Lmlua3NjYXBl
 	    Lm9yZ5vuPBoAAAHCSURBVDiNpZAxa5NRFIafc+9XLCni4BC6FBycMnbrLpkcgtDVX6
@@ -70,8 +73,8 @@ namespace eval ::tk::dialog::file {
 	    fHd5+C8+P7+J8BIoxFwovfRxYhnhxjpzEAAAAASUVORK5CYII=
 	}]
     }
-    if {![info exists ::tk::Priv(fileImage)]} {
-	set ::tk::Priv(fileImage)   [image create photo -data {
+    if {![info exists fileImage]} {
+	set fileImage [image create photo -data {
 	    iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABmJLR0QA/wD/AP+gva
 	    eTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH1QQWFA84umAmQgAAANpJREFU
 	    OMutkj1uhDAQhb8HSLtbISGfgZ+zbJkix0HmFhwhUdocBnMBGvqtTIqIFSReWKK8ai
@@ -95,8 +98,8 @@ namespace eval ::tk::dialog::file {
 #
 
 proc ::tk::dialog::file:: {type args} {
-    variable ::tk::Priv
     variable showHiddenBtn
+    variable selectFilePath
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
 
@@ -216,7 +219,7 @@ proc ::tk::dialog::file:: {type args} {
     # window, since otherwise the window manager may take the focus away so we
     # can't redirect it.  Finally, restore any grab that was in effect.
 
-    vwait ::tk::Priv(selectFilePath)
+    vwait [namespace current]::selectFilePath
 
     ::tk::RestoreFocusGrab $w $data(ent) withdraw
 
@@ -230,7 +233,7 @@ proc ::tk::dialog::file:: {type args} {
 	$data(dirMenuBtn) configure -textvariable {}
     }
 
-    return $Priv(selectFilePath)
+    return $selectFilePath
 }
 
 # ::tk::dialog::file::Config --
@@ -332,10 +335,9 @@ proc ::tk::dialog::file::Config {dataName type argList} {
 }
 
 proc ::tk::dialog::file::Create {w class} {
+    variable updirImage
     set dataName [lindex [split $w .] end]
     upvar ::tk::dialog::file::$dataName data
-    variable ::tk::Priv
-    global tk_library
 
     toplevel $w -class $class
     if {[tk windowingsystem] eq "x11"} {wm attributes $w -type dialog}
@@ -359,7 +361,7 @@ proc ::tk::dialog::file::Create {w class} {
     $data(dirMenu) add radiobutton -label "" -variable \
 	    [format %s(selectPath) ::tk::dialog::file::$dataName]
     set data(upBtn) [ttk::button $f1.up]
-    $data(upBtn) configure -image $Priv(updirImage)
+    $data(upBtn) configure -image $updirImage
 
     $f1.menu configure -takefocus 1;# -highlightthickness 2
 
@@ -556,13 +558,13 @@ proc ::tk::dialog::file::Update {w} {
 
     set dataName [winfo name $w]
     upvar ::tk::dialog::file::$dataName data
-    variable ::tk::Priv
     variable showHiddenVar
-    global tk_library
+    variable folderImage
+    variable fileImage
     unset -nocomplain data(updateId)
 
-    set folder $Priv(folderImage)
-    set file   $Priv(fileImage)
+    set folder $folderImage
+    set file   $fileImage
 
     set appPWD [pwd]
     if {[catch {
@@ -991,20 +993,20 @@ proc ::tk::dialog::file::OkCmd {w} {
 # Gets called when user presses the "Cancel" button
 #
 proc ::tk::dialog::file::CancelCmd {w} {
+    variable selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
-    variable ::tk::Priv
 
-    bind $data(okBtn) <Destroy> {}
-    set Priv(selectFilePath) ""
+    set selectFilePath ""
 }
 
 # Gets called when user destroys the dialog directly [Bug 987169]
 #
 proc ::tk::dialog::file::Destroyed {w} {
+    variable selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
-    variable ::tk::Priv
 
-    set Priv(selectFilePath) ""
+    bind $data(okBtn) <Destroy> {}
+    set selectFilePath ""
 }
 
 # Gets called when user browses the IconList widget (dragging mouse, arrow
@@ -1086,32 +1088,32 @@ proc ::tk::dialog::file::ListInvoke {w filenames} {
 # ::tk::dialog::file::Done --
 #
 #	Gets called when user has input a valid filename.  Pops up a dialog
-#	box to confirm selection when necessary.  Sets the
-#	tk::Priv(selectFilePath) variable, which will break the "vwait" loop
+#	box to confirm selection when necessary.  Sets the namespace variable
+#	"selectFilePath", which will break the "vwait" loop
 #	in ::tk::dialog::file:: and return the selected filename to the script
 #	that calls tk_getOpenFile or tk_getSaveFile
 #
-proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
+proc ::tk::dialog::file::Done {w {selFilePath ""}} {
+    variable selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
-    variable ::tk::Priv
 
-    if {$selectFilePath eq ""} {
+    if {$selFilePath eq ""} {
 	if {$data(-multiple)} {
-	    set selectFilePath {}
+	    set selFilePath {}
 	    foreach f $data(selectFile) {
-		lappend selectFilePath [JoinFile $data(selectPath) $f]
+		lappend selFilePath [JoinFile $data(selectPath) $f]
 	    }
 	} else {
-	    set selectFilePath [JoinFile $data(selectPath) $data(selectFile)]
+	    set selFilePath [JoinFile $data(selectPath) $data(selectFile)]
 	}
 
-	set Priv(selectFile) $data(selectFile)
-	set Priv(selectPath) $data(selectPath)
+	set ::tk::Priv(selectFile) $data(selectFile)
+	set ::tk::Priv(selectPath) $data(selectPath)
 
-	if {($data(type) eq "save") && $data(-confirmoverwrite) && [file exists $selectFilePath]} {
+	if {($data(type) eq "save") && $data(-confirmoverwrite) && [file exists $selFilePath]} {
 	    set reply [tk_messageBox -icon warning -type yesno -parent $w \
 		    -message [mc "File \"%1\$s\" already exists.\nDo you want\
-		    to overwrite it?" $selectFilePath]]
+		    to overwrite it?" $selFilePath]]
 	    if {$reply eq "no"} {
 		return
 	    }
@@ -1126,8 +1128,7 @@ proc ::tk::dialog::file::Done {w {selectFilePath ""}} {
 		    [lsearch -exact $data(-filetypes) $data(filterType)] 0]
 	}
     }
-    bind $data(okBtn) <Destroy> {}
-    set Priv(selectFilePath) $selectFilePath
+    set selectFilePath $selFilePath
 }
 
 # ::tk::dialog::file::GlobFiltered --

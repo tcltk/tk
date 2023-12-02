@@ -22,7 +22,7 @@ namespace eval ::tk::dialog::file::chooseDir {
 #	args		Options parsed by the procedure.
 #
 proc ::tk::dialog::file::chooseDir:: {args} {
-    variable ::tk::Priv
+    variable variable [namespace parent]::selectFilePath
     set dataName __tk_choosedir
     upvar ::tk::dialog::file::$dataName data
     Config $dataName $args
@@ -108,7 +108,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait ::tk::Priv(selectFilePath)
+    vwait [namespace parent]::selectFilePath
 
     ::tk::RestoreFocusGrab $w $data(ent) withdraw
 
@@ -125,7 +125,7 @@ proc ::tk::dialog::file::chooseDir:: {args} {
     # Return value to user
     #
 
-    return $Priv(selectFilePath)
+    return $selectFilePath
 }
 
 # ::tk::dialog::file::chooseDir::Config --
@@ -291,20 +291,20 @@ proc ::tk::dialog::file::chooseDir::ListBrowse {w text} {
 # ::tk::dialog::file::chooseDir::Done --
 #
 #	Gets called when user has input a valid filename.  Pops up a
-#	dialog box to confirm selection when necessary. Sets the
-#	Priv(selectFilePath) variable, which will break the "vwait"
+#	dialog box to confirm selection when necessary. Sets the namespace
+#	variable selectFilePath, which will break the "vwait"
 #	loop in tk_chooseDirectory and return the selected filename to the
 #	script that calls tk_getOpenFile or tk_getSaveFile
 #
-proc ::tk::dialog::file::chooseDir::Done {w {selectFilePath ""}} {
+proc ::tk::dialog::file::chooseDir::Done {w {selFilePath ""}} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    variable ::tk::Priv
+    variable [namespace parent]::selectFilePath
 
-    if {$selectFilePath eq ""} {
-	set selectFilePath $data(selectPath)
+    if {$selFilePath eq ""} {
+	set selFilePath $data(selectPath)
     }
-    if {$data(-mustexist) && ![file isdirectory $selectFilePath]} {
+    if {$data(-mustexist) && ![file isdirectory $selFilePath]} {
 	return
     }
-    set Priv(selectFilePath) $selectFilePath
+    set selectFilePath $selFilePath
 }

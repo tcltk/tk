@@ -34,7 +34,7 @@ namespace eval ::tk::dialog::file {}
 #       the returned filenames.
 
 proc ::tk::MotifFDialog {type args} {
-    variable ::tk::Priv
+    variable ::tk::dialog::file::selectFilePath
     set dataName __tk_filedialog
     upvar ::tk::dialog::file::$dataName data
 
@@ -51,8 +51,8 @@ proc ::tk::MotifFDialog {type args} {
     # may take the focus away so we can't redirect it.  Finally,
     # restore any grab that was in effect.
 
-    vwait ::tk::Priv(selectFilePath)
-    set result $Priv(selectFilePath)
+    vwait ::tk::dialog::file::selectFilePath
+    set result $selectFilePath
     ::tk::RestoreFocusGrab $w $data(sEnt) withdraw
 
     return $result
@@ -207,10 +207,10 @@ proc ::tk::MotifFDialog_FileTypes {w} {
 #
 proc ::tk::MotifFDialog_SetFilter {w type} {
     upvar ::tk::dialog::file::[winfo name $w] data
-    variable ::tk::Priv
+    variable ::tk::dialog::file::selectFileType
 
     set data(filter) [lindex $type 1]
-    set Priv(selectFileType) [lindex [lindex $type 0] 0]
+    set selectFileType [lindex [lindex $type 0] 0]
 
     MotifFDialog_Update $w
 }
@@ -402,7 +402,7 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     bind $data(fEnt) <Return> [list tk::MotifFDialog_ActivateFEnt $w]
     bind $data(sEnt) <Return> [list tk::MotifFDialog_ActivateSEnt $w]
     bind $w <Escape> [list tk::MotifFDialog_CancelCmd $w]
-    bind $w.bot <Destroy> {set ::tk::Priv(selectFilePath) {}}
+    bind $w.bot <Destroy> {set ::tk::dialog::file::selectFilePath {}}
 
     wm protocol $w WM_DELETE_WINDOW [list tk::MotifFDialog_CancelCmd $w]
 }
@@ -815,7 +815,7 @@ proc ::tk::MotifFDialog_ActivateFEnt {w} {
 #	None.
 
 proc ::tk::MotifFDialog_ActivateSEnt {w} {
-    variable ::tk::Priv
+    variable ::tk::dialog::file::selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
 
     set selectFilePath [string trim [$data(sEnt) get]]
@@ -875,14 +875,14 @@ proc ::tk::MotifFDialog_ActivateSEnt {w} {
     }
 
     if {$data(-multiple) != 0} {
-	set Priv(selectFilePath) $newFileList
+	set selectFilePath $newFileList
     } else {
-	set Priv(selectFilePath) [lindex $newFileList 0]
+	set selectFilePath [lindex $newFileList 0]
     }
 
     # Set selectFile and selectPath to first item in list
-    set Priv(selectFile)     [file tail    [lindex $newFileList 0]]
-    set Priv(selectPath)     [file dirname [lindex $newFileList 0]]
+    set ::tk::Priv(selectFile)     [file tail    [lindex $newFileList 0]]
+    set ::tk::Priv(selectPath)     [file dirname [lindex $newFileList 0]]
 }
 
 
@@ -899,11 +899,12 @@ proc ::tk::MotifFDialog_FilterCmd {w} {
 }
 
 proc ::tk::MotifFDialog_CancelCmd {w} {
+    variable ::tk::dialog::file::selectFilePath
     variable ::tk::Priv
 
-    set Priv(selectFilePath) ""
-    set Priv(selectFile)     ""
-    set Priv(selectPath)     ""
+    set selectFilePath ""
+    set ::tk::Priv(selectFile)     ""
+    set ::tk::Priv(selectPath)     ""
 }
 
 proc ::tk::ListBoxKeyAccel_Set {w} {
@@ -982,8 +983,8 @@ proc ::tk::ListBoxKeyAccel_Reset {w} {
 }
 
 proc ::tk_getFileType {} {
-    variable ::tk::Priv
+    variable ::tk::dialog::file::selectFileType
 
-    return $Priv(selectFileType)
+    return $selectFileType
 }
 
