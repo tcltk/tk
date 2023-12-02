@@ -79,6 +79,7 @@ test scrollbar-10.1.1 {<MouseWheel> event on scrollbar} -setup {
     pack [ttk::scrollbar .s -command {.t yview}] -fill y -expand 1 -side left
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -94,6 +95,7 @@ test scrollbar-10.2.1 {<Shift-MouseWheel> event on horizontal scrollbar} -setup 
     pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <Shift-MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
@@ -108,6 +110,7 @@ test scrollbar-10.2.2 {<MouseWheel> event on horizontal scrollbar} -setup {
     pack [ttk::scrollbar .s -command {.t xview} -orient horizontal] -fill x -expand 1 -side top
     update
     focus -force .s
+    event generate .s <Enter>
     event generate .s <MouseWheel> -delta -120
     after 200 {set eventprocessed 1} ; vwait eventprocessed
     .t index @0,0
