@@ -352,7 +352,7 @@ static Tcl_Obj *Ttk_Use(
 	return Tcl_GetHashValue(entryPtr);
 #else
 	Ttk_Cached *cachedPtr = Tcl_GetHashValue(entryPtr);
-	return cachedPtr->objPtr;
+	return cachedPtr ? cachedPtr->objPtr : NULL;
 #endif
     }
 
