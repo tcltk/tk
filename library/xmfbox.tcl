@@ -804,7 +804,7 @@ proc ::tk::MotifFDialog_ActivateFEnt {w} {
 # ::tk::MotifFDialog_ActivateSEnt --
 #
 #	This procedure is called when the user presses Return inside
-#	the "selection" entry. It sets the ::tk::Priv(selectFilePath)
+#	the "selection" entry. It sets the ::tk::dialog::file::selectFilePath
 #	variable so that the vwait loop in tk::MotifFDialog will be
 #	terminated.
 #
