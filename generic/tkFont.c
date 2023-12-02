@@ -1140,7 +1140,12 @@ Tk_AllocFontFromObj(
 
 	    FreeFontObj(objPtr);
 	    oldFontPtr = NULL;
-	} else if (Tk_Screen(tkwin) == oldFontPtr->screen) {
+	} else if (Tk_Screen(tkwin) == oldFontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == oldFontPtr->colormap
+		&& Tk_Visual(tkwin) == oldFontPtr->visual
+#endif
+	) {
 	    oldFontPtr->resourceRefCount++;
 	    return (Tk_Font) oldFontPtr;
 	}
@@ -1162,7 +1167,12 @@ Tk_AllocFontFromObj(
     firstFontPtr = (TkFont *)Tcl_GetHashValue(cacheHashPtr);
     for (fontPtr = firstFontPtr; (fontPtr != NULL);
 	    fontPtr = fontPtr->nextPtr) {
-	if (Tk_Screen(tkwin) == fontPtr->screen) {
+	if (Tk_Screen(tkwin) == fontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == fontPtr->colormap
+		&& Tk_Visual(tkwin) == fontPtr->visual
+#endif
+	    ) {
 	    fontPtr->resourceRefCount++;
 	    fontPtr->objRefCount++;
 	    objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
@@ -1233,6 +1243,10 @@ Tk_AllocFontFromObj(
     fontPtr->cacheHashPtr = cacheHashPtr;
     fontPtr->namedHashPtr = namedHashPtr;
     fontPtr->screen = Tk_Screen(tkwin);
+#ifdef HAVE_XFT
+    fontPtr->colormap = Tk_Colormap(tkwin);
+    fontPtr->visual = Tk_Visual(tkwin);
+#endif
     fontPtr->nextPtr = firstFontPtr;
     Tcl_SetHashValue(cacheHashPtr, fontPtr);
 
@@ -1325,7 +1339,12 @@ Tk_GetFontFromObj(
 
 	    FreeFontObj(objPtr);
 	    fontPtr = NULL;
-	} else if (Tk_Screen(tkwin) == fontPtr->screen) {
+	} else if (Tk_Screen(tkwin) == fontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == fontPtr->colormap
+		&& Tk_Visual(tkwin) == fontPtr->visual
+#endif
+	    ) {
 	    return (Tk_Font) fontPtr;
 	}
     }
@@ -1344,7 +1363,12 @@ Tk_GetFontFromObj(
     if (hashPtr != NULL) {
 	for (fontPtr = (TkFont *)Tcl_GetHashValue(hashPtr); fontPtr != NULL;
 		fontPtr = fontPtr->nextPtr) {
-	    if (Tk_Screen(tkwin) == fontPtr->screen) {
+	    if (Tk_Screen(tkwin) == fontPtr->screen
+#ifdef HAVE_XFT
+		&& Tk_Colormap(tkwin) == fontPtr->colormap
+		&& Tk_Visual(tkwin) == fontPtr->visual
+#endif
+	    ) {
 		fontPtr->objRefCount++;
 		objPtr->internalRep.twoPtrValue.ptr1 = fontPtr;
 		objPtr->internalRep.twoPtrValue.ptr2 = fiPtr;
