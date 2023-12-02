@@ -153,7 +153,7 @@ test xmfbox-2.6 {tk::MotifFDialog_ActivateFList, ~ in file names} -constraints {
     tk::MotifFDialog_BrowseFList $x
     tk::MotifFDialog_ActivateFList $x
     list $::tk::dialog::file::foo(selectPath) \
-	    $::tk::dialog::file::foo(selectFile) $tk::Priv(selectFilePath)
+	    $::tk::dialog::file::foo(selectFile) $::tk::dialog::file::selectFilePath
 } -result "$testPWD ~nosuchuser1 $testPWD/~nosuchuser1"
 
 # cleanup
