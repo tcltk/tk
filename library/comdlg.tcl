@@ -125,14 +125,14 @@ proc tclListValidFlags {v} {
 #	toplevel widget.
 #
 proc ::tk::FocusGroup_Create {t} {
-    variable ::tk::Priv
+    variable ::tk::FocusGroup
     if {[winfo toplevel $t] ne $t} {
 	return -code error -errorcode [list TK LOOKUP TOPLEVEL $t] \
 	    "$t is not a toplevel window"
     }
-    if {![info exists Priv(fg,$t)]} {
-	set Priv(fg,$t) 1
-	set Priv(focus,$t) ""
+    if {![info exists FocusGroup(fg,$t)]} {
+	set FocusGroup(fg,$t) 1
+	set FocusGroup(focus,$t) ""
 	bind $t <FocusIn>  [list tk::FocusGroup_In  $t %W %d]
 	bind $t <FocusOut> [list tk::FocusGroup_Out $t %W %d]
 	bind $t <Destroy>  [list tk::FocusGroup_Destroy $t %W]
@@ -146,8 +146,8 @@ proc ::tk::FocusGroup_Create {t} {
 #
 proc ::tk::FocusGroup_BindIn {t w cmd} {
     variable FocusIn
-    variable ::tk::Priv
-    if {![info exists Priv(fg,$t)]} {
+    variable ::tk::FocusGroup
+    if {![info exists FocusGroup(fg,$t)]} {
 	return -code error -errorcode [list TK LOOKUP FOCUS_GROUP $t] \
 	    "focus group \"$t\" doesn't exist"
     }
@@ -163,8 +163,8 @@ proc ::tk::FocusGroup_BindIn {t w cmd} {
 #
 proc ::tk::FocusGroup_BindOut {t w cmd} {
     variable FocusOut
-    variable ::tk::Priv
-    if {![info exists Priv(fg,$t)]} {
+    variable ::tk::FocusGroup
+    if {![info exists FocusGroup(fg,$t)]} {
 	return -code error -errorcode [list TK LOOKUP FOCUS_GROUP $t] \
 	    "focus group \"$t\" doesn't exist"
     }
@@ -179,11 +179,11 @@ proc ::tk::FocusGroup_BindOut {t w cmd} {
 proc ::tk::FocusGroup_Destroy {t w} {
     variable FocusIn
     variable FocusOut
-    variable ::tk::Priv
+    variable ::tk::FocusGroup
 
     if {$t eq $w} {
-	unset Priv(fg,$t)
-	unset Priv(focus,$t)
+	unset FocusGroup(fg,$t)
+	unset FocusGroup(focus,$t)
 
 	foreach name [array names FocusIn $t,*] {
 	    unset FocusIn($name)
@@ -192,8 +192,9 @@ proc ::tk::FocusGroup_Destroy {t w} {
 	    unset FocusOut($name)
 	}
     } else {
-	if {[info exists Priv(focus,$t)] && ($Priv(focus,$t) eq $w)} {
-	    set Priv(focus,$t) ""
+	if {[info exists FocusGroup(focus,$t)] &&
+	    ($FocusGroup(focus,$t) eq $w)} {
+	    set FocusGroup(focus,$t) ""
 	}
 	unset -nocomplain FocusIn($t,$w) FocusOut($t,$w)
     }
@@ -206,7 +207,7 @@ proc ::tk::FocusGroup_Destroy {t w} {
 #
 proc ::tk::FocusGroup_In {t w detail} {
     variable FocusIn
-    variable ::tk::Priv
+    variable ::tk::FocusGroup
 
     if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out&in of the window *or*
@@ -217,15 +218,15 @@ proc ::tk::FocusGroup_In {t w detail} {
 	set FocusIn($t,$w) ""
 	return
     }
-    if {![info exists Priv(focus,$t)]} {
+    if {![info exists FocusGroup(focus,$t)]} {
 	return
     }
-    if {$Priv(focus,$t) eq $w} {
+    if {$FocusGroup(focus,$t) eq $w} {
 	# This is already in focus
 	#
 	return
     } else {
-	set Priv(focus,$t) $w
+	set FocusGroup(focus,$t) $w
 	eval $FocusIn($t,$w)
     }
 }
@@ -239,20 +240,20 @@ proc ::tk::FocusGroup_In {t w detail} {
 #
 proc ::tk::FocusGroup_Out {t w detail} {
     variable FocusOut
-    variable ::tk::Priv
+    variable ::tk::FocusGroup
 
     if {$detail ne "NotifyNonlinear" && $detail ne "NotifyNonlinearVirtual"} {
 	# This is caused by mouse moving out of the window
 	return
     }
-    if {![info exists Priv(focus,$t)]} {
+    if {![info exists FocusGroup(focus,$t)]} {
 	return
     }
     if {![info exists FocusOut($t,$w)]} {
 	return
     } else {
 	eval $FocusOut($t,$w)
-	set Priv(focus,$t) ""
+	set FocusGroup(focus,$t) ""
     }
 }
 
