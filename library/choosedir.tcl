@@ -22,7 +22,7 @@ namespace eval ::tk::dialog::file::chooseDir {
 #	args		Options parsed by the procedure.
 #
 proc ::tk::dialog::file::chooseDir:: {args} {
-    variable variable [namespace parent]::selectFilePath
+    variable [namespace parent]::selectFilePath
     set dataName __tk_choosedir
     upvar ::tk::dialog::file::$dataName data
     Config $dataName $args
