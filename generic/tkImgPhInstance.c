@@ -461,14 +461,13 @@ BlendComplexAlpha(
      */
 
 #ifndef _WIN32
-    unsigned long red_mask, green_mask, blue_mask, other_mask;
+    unsigned long red_mask, green_mask, blue_mask;
     unsigned long red_shift, green_shift, blue_shift;
     Visual *visual = iPtr->visualInfo.visual;
 
     red_mask = visual->red_mask;
     green_mask = visual->green_mask;
     blue_mask = visual->blue_mask;
-    other_mask = ~(red_mask | green_mask | blue_mask);
     red_shift = 0;
     green_shift = 0;
     blue_shift = 0;
@@ -550,8 +549,6 @@ BlendComplexAlpha(
 	     */
 
 	    if (alpha) {
-		unsigned long newPixel;
-
 		/*
 		 * We could perhaps be more efficient than XGetPixel for 24
 		 * and 32 bit displays, but this seems "fast enough".
@@ -560,7 +557,6 @@ BlendComplexAlpha(
 		r = modelPtr[0];
 		g = modelPtr[1];
 		b = modelPtr[2];
-		pixel = XGetPixel(bgImg, x, y);
 		if (alpha != 255) {
 		    /*
 		     * Only blend pixels that have some transparency
@@ -568,6 +564,7 @@ BlendComplexAlpha(
 
 		    unsigned char ra, ga, ba;
 
+		    pixel = XGetPixel(bgImg, x, y);
 		    ra = GetRValue(pixel);
 		    ga = GetGValue(pixel);
 		    ba = GetBValue(pixel);
@@ -576,12 +573,7 @@ BlendComplexAlpha(
 		    g = ALPHA_BLEND(ga, g, alpha, unalpha);
 		    b = ALPHA_BLEND(ba, b, alpha, unalpha);
 		}
-		newPixel = RGB(r, g, b);
-#ifndef _WIN32
-		/* Bug 1d8b7124b622: preserve alpha if present. */
-		newPixel |= pixel & other_mask;
-#endif
-		XPutPixel(bgImg, x, y, newPixel);
+		XPutPixel(bgImg, x, y, RGB(r, g, b));
 	    }
 	}
     }
