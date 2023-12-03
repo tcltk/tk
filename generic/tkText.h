@@ -60,7 +60,15 @@
 /* We are still supporting the deprecated commands "edit canundo/redo". */
 # define SUPPORT_DEPRECATED_CANUNDO_REDO 1
 
-#endif /* TK_MAJOR_VERSION < 9 */
+#else /* TK_NO_DEPRECATED */
+
+# define SUPPORT_DEPRECATED_STARTLINE_ENDLINE 0
+# define SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET 0
+# define BEGIN_DOES_NOT_BELONG_TO_BASE 0
+# define SUPPORT_DEPRECATED_TAG_OPTIONS 0
+# define SUPPORT_DEPRECATED_CANUNDO_REDO 0
+
+#endif /* TK_NO_DEPRECATED */
 
 #ifdef _MSC_VER
 /* earlier versions of MSVC don't know snprintf, but _snprintf is compatible. */
