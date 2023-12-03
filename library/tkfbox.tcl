@@ -996,6 +996,7 @@ proc ::tk::dialog::file::CancelCmd {w} {
     variable selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
 
+    bind $data(okBtn) <Destroy> {}
     set selectFilePath ""
 }
 
@@ -1005,7 +1006,6 @@ proc ::tk::dialog::file::Destroyed {w} {
     variable selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    bind $data(okBtn) <Destroy> {}
     set selectFilePath ""
 }
 
