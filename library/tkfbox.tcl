@@ -437,7 +437,7 @@ proc ::tk::dialog::file::Create {w class} {
 
     set data(okBtn)     [::tk::AmpWidget ttk::button $f2.ok \
 	    -text [mc "&OK"]     -default active];# -pady 3]
-    bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed $w]
+    bind $data(okBtn) <Destroy> [list ::tk::dialog::file::Destroyed %W]
     set data(cancelBtn) [::tk::AmpWidget ttk::button $f2.cancel \
 	    -text [mc "&Cancel"] -default normal];# -pady 3]
 
@@ -996,16 +996,15 @@ proc ::tk::dialog::file::CancelCmd {w} {
     variable selectFilePath
     upvar ::tk::dialog::file::[winfo name $w] data
 
-    bind $data(okBtn) <Destroy> {}
     set selectFilePath ""
 }
 
 # Gets called when user destroys the dialog directly [Bug 987169]
 #
-proc ::tk::dialog::file::Destroyed {w} {
+proc ::tk::dialog::file::Destroyed {okBtn} {
     variable selectFilePath
-    upvar ::tk::dialog::file::[winfo name $w] data
 
+    bind $okBtn <Destroy> {}
     set selectFilePath ""
 }
 
