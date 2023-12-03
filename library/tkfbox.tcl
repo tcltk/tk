@@ -994,7 +994,6 @@ proc ::tk::dialog::file::OkCmd {w} {
 #
 proc ::tk::dialog::file::CancelCmd {w} {
     variable selectFilePath
-    upvar ::tk::dialog::file::[winfo name $w] data
 
     set selectFilePath ""
 }
