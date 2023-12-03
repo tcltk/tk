@@ -1077,18 +1077,20 @@ TkWmUnmapWindow(
     TkWindow *winPtr)		/* Top-level window that's about to be
 				 * unmapped. */
 {
-    XEvent event;
-
-    event.xany.serial = LastKnownRequestProcessed(winPtr->display);
-    event.xany.send_event = False;
-    event.xany.display = winPtr->display;
-    event.xunmap.type = UnmapNotify;
-    event.xunmap.window = winPtr->window;
-    event.xunmap.event = winPtr->window;
-    event.xunmap.from_configure = false;
     winPtr->flags &= ~TK_MAPPED;
-    XUnmapWindow(winPtr->display, winPtr->window);
-    Tk_HandleEvent(&event);
+    if ((winPtr->window != None)
+	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)) {
+	XEvent event;
+
+	event.xany.serial = LastKnownRequestProcessed(winPtr->display);
+	event.xany.send_event = False;
+	event.xany.display = winPtr->display;
+	event.xunmap.type = UnmapNotify;
+	event.xunmap.window = winPtr->window;
+	event.xunmap.event = winPtr->window;
+	event.xunmap.from_configure = false;
+	Tk_HandleEvent(&event);
+    }
 }
 
 /*
