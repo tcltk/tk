@@ -574,6 +574,7 @@ test visual-9.1 {Using two different visuals on the same screen - bug c23f79ef96
     set res [winfo depth .]
     toplevel .t -visual $32bitsVisual
     pack [label .t.l -text "Any text"]  ; # Shall not crash ("X Error of failed request:  BadValue [...]")
+    update
     lappend res [winfo depth .t]
 } -cleanup {
     deleteWindows
