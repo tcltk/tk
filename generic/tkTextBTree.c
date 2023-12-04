@@ -572,6 +572,7 @@ SegIsAtStartOfLine(
     return 1; /* never reached */
 }
 
+#if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
 static int
 SegIsAtEndOfLine(
     const TkTextSegment *segPtr)
@@ -583,6 +584,7 @@ SegIsAtEndOfLine(
     }
     return !segPtr->nextPtr;
 }
+#endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
 static TkTextSegment *
 GetPrevTagInfoSegment(

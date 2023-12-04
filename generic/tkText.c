@@ -1217,7 +1217,12 @@ ErrorNotAllowed(
 
 int
 TkTextAttemptToModifyDisabledWidget(
-    TCL_UNUSED(Tcl_Interp *))
+#if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
+    TCL_UNUSED(Tcl_Interp *)
+#else
+    Tcl_Interp *interp
+#endif
+)
 {
 #if SUPPORT_DEPRECATED_MODS_OF_DISABLED_WIDGET
     static int showWarning = 1;
@@ -1615,6 +1620,8 @@ TextWidgetObjCmd(
 	    Tcl_GuardedDecrRefCount(optionObj);
 
 #else /* if !SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
+
+	    Tcl_Obj *objPtr = NULL;
 
 	    objPtr = Tk_GetOptionValue(interp, textPtr,
 		    textPtr->optionTable, objv[2], textPtr->tkwin);
@@ -3298,8 +3305,10 @@ ClearText(
 	tPtr->abortSelections = 1;
 	textPtr->lastLineY = TK_TEXT_NEARBY_IS_UNDETERMINED;
 	tPtr->refCount -= 1;
+#if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
 	tPtr->startLine = NULL;
 	tPtr->endLine = NULL;
+#endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
 	if (tPtr->startMarker->refCount == 1) {
 	    assert(textPtr->startMarker != textPtr->sharedTextPtr->startMarker);
@@ -3784,6 +3793,7 @@ TkTextTestLangCode(
  *----------------------------------------------------------------------
  */
 
+#if SUPPORT_DEPRECATED_STARTLINE_ENDLINE
 static int
 IsNumberOrEmpty(
     const char *str)
@@ -3795,6 +3805,7 @@ IsNumberOrEmpty(
     }
     return 1;
 }
+#endif /* SUPPORT_DEPRECATED_STARTLINE_ENDLINE */
 
 int
 TkConfigureText(
