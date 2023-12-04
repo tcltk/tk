@@ -1740,18 +1740,16 @@ Tk_MapWindow(
 	TkWmMapWindow(winPtr);
 	return;
     }
-    if ((winPtr->window != None)
-	    && (XMapWindow(winPtr->display, winPtr->window) == Success)) {
-	winPtr->flags |= TK_MAPPED;
-	event.type = MapNotify;
-	event.xmap.serial = LastKnownRequestProcessed(winPtr->display);
-	event.xmap.send_event = False;
-	event.xmap.display = winPtr->display;
-	event.xmap.event = winPtr->window;
-	event.xmap.window = winPtr->window;
-	event.xmap.override_redirect = winPtr->atts.override_redirect;
-	Tk_HandleEvent(&event);
-    }
+    winPtr->flags |= TK_MAPPED;
+    XMapWindow(winPtr->display, winPtr->window);
+    event.type = MapNotify;
+    event.xmap.serial = LastKnownRequestProcessed(winPtr->display);
+    event.xmap.send_event = False;
+    event.xmap.display = winPtr->display;
+    event.xmap.event = winPtr->window;
+    event.xmap.window = winPtr->window;
+    event.xmap.override_redirect = winPtr->atts.override_redirect;
+    Tk_HandleEvent(&event);
 }
 
 /*
@@ -1902,9 +1900,8 @@ Tk_UnmapWindow(
 	return;
     }
     winPtr->flags &= ~TK_MAPPED;
-    if ((winPtr->window != None)
-	    && (XUnmapWindow(winPtr->display, winPtr->window) == Success)
-	    && !(winPtr->flags & TK_TOP_HIERARCHY)) {
+    XUnmapWindow(winPtr->display, winPtr->window);
+    if (!(winPtr->flags & TK_TOP_HIERARCHY)) {
 	XEvent event;
 
 	event.type = UnmapNotify;
