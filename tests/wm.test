@@ -36,7 +36,7 @@ testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowi
 #
 
 proc raiseDelay {} {
-    after 100;
+    after 200;
     update
     update idletasks
 }
