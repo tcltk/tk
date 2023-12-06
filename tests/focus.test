@@ -78,6 +78,7 @@ if {[testConstraint altDisplay]} {
 
 test focus-1.1 {Tk_FocusCmd procedure} -constraints unix -body {
     focusClear
+    after 100
     focus
 } -result {}
 test focus-1.2 {Tk_FocusCmd procedure} -constraints {
