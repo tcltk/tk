@@ -229,6 +229,9 @@ TkImgPhotoGet(
     char buf[TCL_INTEGER_SPACE * 3];
     XColor *white, *black;
     XGCValues gcValues;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+    int gcmask;
+#endif
 
     /*
      * Table of "best" choices for palette for PseudoColor displays with
@@ -261,7 +264,11 @@ TkImgPhotoGet(
     for (instancePtr = modelPtr->instancePtr; instancePtr != NULL;
 	    instancePtr = instancePtr->nextPtr) {
 	if ((colormap == instancePtr->colormap)
-		&& (Tk_Display(tkwin) == instancePtr->display)) {
+	    && (Tk_Display(tkwin) == instancePtr->display)
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+	    && (Tk_Visual(tkwin) == instancePtr->visualInfo.visual)
+#endif
+	    ) {
 	    /*
 	     * Re-use this instance.
 	     */
@@ -318,6 +325,10 @@ TkImgPhotoGet(
     nGreen = nBlue = 0;
     mono = 1;
     instancePtr->visualInfo = *visInfoPtr;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+    gcmask = 0;
+    instancePtr->visualInfo.visual = Tk_Visual(tkwin);
+#endif
     switch (visInfoPtr->c_class) {
     case DirectColor:
     case TrueColor:
@@ -325,6 +336,14 @@ TkImgPhotoGet(
 	nGreen = 1 << CountBits(visInfoPtr->green_mask);
 	nBlue = 1 << CountBits(visInfoPtr->blue_mask);
 	mono = 0;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
+	if (visInfoPtr->depth > 24) {
+	    gcValues.plane_mask = visInfoPtr->red_mask
+		    | visInfoPtr->green_mask
+		    | visInfoPtr->blue_mask;
+	    gcmask = GCPlaneMask;
+	}
+#endif
 	break;
     case PseudoColor:
     case StaticColor:
@@ -369,8 +388,13 @@ TkImgPhotoGet(
     Tk_FreeColor(white);
     Tk_FreeColor(black);
     gcValues.graphics_exposures = False;
+#if (!defined(_WIN32) && !defined(MAC_OSX_TK))
     instancePtr->gc = Tk_GetGC(tkwin,
-	    GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
+	gcmask|GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
+#else
+    instancePtr->gc = Tk_GetGC(tkwin,
+	GCForeground|GCBackground|GCGraphicsExposures, &gcValues);
+#endif
 
     /*
      * Set configuration options and finish the initialization of the
