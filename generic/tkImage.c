@@ -87,6 +87,9 @@ static Tcl_ThreadDataKey dataKey;
 
 static void		ImageTypeThreadExitProc(ClientData clientData);
 static Tcl_FreeProc	DeleteImage;
+static void		NullChangeProc(ClientData clientData, int x, int y,
+			    int width, int height,
+			    int imageWidth, int imageHeight);
 static void		EventuallyDeleteImage(ImageModel *modelPtr,
 			    int forgetImageHashNow);
 
@@ -654,6 +657,91 @@ Tk_GetImage(
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, NULL);
     }
     return NULL;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkImageForWindow --
+ *
+ *	This function is invoked to retrieve an image for a particular
+ *	window.
+ *
+ * Results:
+ *	The return value is a token for the image. This is allocated
+ *	when the input image does not already refer to the window, so
+ *	the caller must test for the result being equal with the input
+ *	image in order to decide if a Tk_FreeImage() is required.
+ *
+ * Side effects:
+ *	See Tk_GetImage().
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tk_Image
+TkImageForWindow(
+    Tk_Image image,		/* The input image. */
+    Tk_Window tkwin)		/* Token for window in which image will be
+				 * used. */
+{
+    Image *imagePtr = (Image *) image;
+    ImageModel *modelPtr = imagePtr->modelPtr;
+
+    if (imagePtr->tkwin == tkwin) {
+	return image;
+    }
+    if (modelPtr->typePtr == NULL) {
+	return NULL;
+    }
+    if (modelPtr->deleted) {
+	return NULL;
+    }
+    imagePtr = (Image *) ckalloc(sizeof(Image));
+    imagePtr->tkwin = tkwin;
+    imagePtr->display = Tk_Display(tkwin);
+    imagePtr->modelPtr = modelPtr;
+    imagePtr->instanceData =
+	    modelPtr->typePtr->getProc(tkwin, modelPtr->modelData);
+    imagePtr->changeProc = NullChangeProc;
+    imagePtr->widgetClientData = NULL;
+    imagePtr->nextPtr = modelPtr->instancePtr;
+    modelPtr->instancePtr = imagePtr;
+    return (Tk_Image) imagePtr;
+}
+
+static void
+NullChangeProc(ClientData clientData, int x, int y, int width, int height,
+    int imageWidth, int imageHeight)
+{
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkImageEqual --
+ *
+ *	Are two images equal, i.e. referring to the same model?
+ *
+ * Results:
+ *	True or false.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int
+TkImageEqual(Tk_Image image1, Tk_Image image2)
+{
+    Image *image1Ptr = (Image *) image1;
+    Image *image2Ptr = (Image *) image2;
+
+    if ((image1Ptr != NULL) && (image2Ptr != NULL)) {
+	return (image1Ptr->modelPtr == image2Ptr->modelPtr);
+    }
+    return 0;
 }
 
 /*

@@ -15,6 +15,16 @@
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
+#if defined(PLATFORM_SDL) || defined(_WIN32) || defined(MAC_OSX_TK)
+#   define NEED_EXTRA_INFO 0
+#else
+    /*
+     * Images are to be managed per Tk_Window to take the Display
+     * into account.
+     */
+#   define NEED_EXTRA_INFO 1
+#endif
+  
 /*------------------------------------------------------------------------
  * +++ ImageSpec management.
  */
@@ -26,6 +36,9 @@ struct TtkImageSpec {
     Tk_Image		*images;	/* ... per-state images to use */
     Tk_ImageChangedProc *imageChanged;
     ClientData		imageChangedClientData;
+#if NEED_EXTRA_INFO
+    Tk_Image 		useImage;
+#endif
 };
 
 /* NullImageChanged --
@@ -81,6 +94,9 @@ TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
     imageSpec->images = 0;
     imageSpec->imageChanged = imageChangedProc;
     imageSpec->imageChangedClientData = imageChangedClientData;
+#if NEED_EXTRA_INFO
+    imageSpec->useImage = 0;
+#endif
 
     if (Tcl_ListObjGetElements(interp, objPtr, &objc, &objv) != TCL_OK) {
 	goto error;
@@ -149,6 +165,9 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
     if (imageSpec->baseImage) { Tk_FreeImage(imageSpec->baseImage); }
     if (imageSpec->states) { ckfree(imageSpec->states); }
     if (imageSpec->images) { ckfree(imageSpec->images); }
+#if NEED_EXTRA_INFO
+    if (imageSpec->useImage) { Tk_FreeImage(imageSpec->useImage); }
+#endif
 
     ckfree(imageSpec);
 }
@@ -156,15 +175,38 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 /* TtkSelectImage --
  * 	Return a state-specific image from an ImageSpec
  */
-Tk_Image TtkSelectImage(Ttk_ImageSpec *imageSpec, Ttk_State state)
+Tk_Image TtkSelectImage(Ttk_ImageSpec *imageSpec, Tk_Window tkwin,
+    Ttk_State state)
 {
+    Tk_Image result = 0;
+#if NEED_EXTRA_INFO
+    Tk_Image image;
+#endif
     int i;
     for (i = 0; i < imageSpec->mapCount; ++i) {
 	if (Ttk_StateMatches(state, imageSpec->states+i)) {
-	    return imageSpec->images[i];
+	    result = imageSpec->images[i];
+	    break;
 	}
     }
-    return imageSpec->baseImage;
+    if (!result) {
+	result = imageSpec->baseImage;
+    }
+#if NEED_EXTRA_INFO
+    if (tkwin) {
+	image = TkImageForWindow(result, tkwin);
+	if (image != result) {
+	    if (imageSpec->useImage) {
+		Tk_FreeImage(imageSpec->useImage);
+	    }
+	    imageSpec->useImage = image;
+	    if (image) {
+		result = image;
+	    }
+	}
+    }
+#endif
+    return result;
 }
 
 /*------------------------------------------------------------------------
@@ -307,10 +349,10 @@ static void ImageElementDraw(
 	}
     }
     if (!image) {
-	image = TtkSelectImage(imageData->imageSpec, state);
+	image = TtkSelectImage(imageData->imageSpec, tkwin, state);
     }
 #else
-    image = TtkSelectImage(imageData->imageSpec, state);
+    image = TtkSelectImage(imageData->imageSpec, tkwin, state);
 #endif
 
     if (!image) {
