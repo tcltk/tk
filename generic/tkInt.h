@@ -1327,6 +1327,8 @@ MODULE_SCOPE void	TkpCancelWarp(TkDisplay *dispPtr);
 MODULE_SCOPE int	TkListCreateFrame(ClientData clientData,
 			    Tcl_Interp *interp, Tcl_Obj *listObj,
 			    int toplevel, Tcl_Obj *nameObj);
+MODULE_SCOPE Tk_Image	TkImageForWindow(Tk_Image image, Tk_Window tkwin);
+MODULE_SCOPE int	TkImageEqual(Tk_Image image1, Tk_Image image2);
 
 #ifdef _WIN32
 #define TkParseColor XParseColor
