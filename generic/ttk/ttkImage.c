@@ -15,7 +15,7 @@
 
 #define MIN(a,b) ((a) < (b) ? (a) : (b))
 
-#if defined(PLATFORM_SDL) || defined(_WIN32) || defined(MAC_OSX_TK)
+#if defined(_WIN32) || defined(MAC_OSX_TK)
 #   define NEED_EXTRA_INFO 0
 #else
     /*
