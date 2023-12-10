@@ -50,6 +50,7 @@ test image-2.2 "Deletion of displayed image (radiobutton)" -setup {
 test image-3.1 {Using ttk::style element create with multiple displays - bug fde9dc2392} -constraints {
     altDisplay
 } -setup {
+    set curTheme [ttk::style theme use]
     ttk::style theme use default
     image create photo clear -data {
         iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/g
@@ -77,8 +78,12 @@ test image-3.1 {Using ttk::style element create with multiple displays - bug fde
         }
     }
 } -body {
-    toplevel .t -screen :1
+    toplevel .t -screen $env(TK_ALT_DISPLAY)
     grid [ttk::entry .t.e -style ClrTEntry]  ; # Shall not crash ("X Error of failed request:  BadDrawable [...]")
+} -cleanup {
+    image delete clear
+    destroy .t
+    ttk::style theme use $curTheme
 } -result {}
 
 #
