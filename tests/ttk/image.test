@@ -47,5 +47,39 @@ test image-2.2 "Deletion of displayed image (radiobutton)" -setup {
     destroy .ttk_image22
 } -result {}
 
+test image-3.1 {Using ttk::style element create with multiple displays - bug fde9dc2392} -constraints {
+    altDisplay
+} -setup {
+    ttk::style theme use default
+    image create photo clear -data {
+        iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAMAAAAoLQ9TAAAAA3NCSVQICAjb4U/g
+        AAAACXBIWXMAAAG7AAABuwE67OPiAAAAGXRFWHRTb2Z0d2FyZQB3d3cuaW5rc2Nh
+        cGUub3Jnm+48GgAAATVQTFRF////AAAAOkI6AAAALDIsAAAAICAgAAAAFRUSAAAA
+        BQUFPT48AAAAPT47Y2NjAAAAAQEBMDEvAgICJCUkAgICGBgXBAQEDQ0NAQEBAgIC
+        BAQEBQUFBgYGBwcHCAgIDAwMDQ0NEBAQFBQTFBQUGRkZICAgISIhIiIiJycmLzAu
+        MTExMjMxNzc3Ojo6PT47Pz8/QUFBQUI/REVDRUVFR0dHSkpKSktIS0tLTU5LTk5O
+        Tk9NUFBQU1NTVFRUVlZVVldUWFlWWVlZW1tbZGRjZGZiZmhkaGhoampqamtncXFx
+        dXV1eXl5enp6hISEhoaGioqKkJCQn5+frKysrq6usrKxt7i3wcHBxMXExsbGz9DP
+        1NTU3t7e4eHh5+fn6enp6urq7e3t8PDw8/Pz9PT0+vr6+/v7/Pz8dUr3qgAAABh0
+        Uk5TAB8fLi4/P1RUZWW4ysrU5eXl8PD4+P39CqmsmgAAAJ1JREFUGBmdwQMWAgEA
+        BcCfbdu2bdt2W3v/I4Q9QO81A/yJLgpTBPhiyurjQb837LR9+GArijNiUh8R86Ib
+        b1xVqrZ/3BcEecnZAfA10UyydHg8yVshYgQg8UdCweCUJJ9Tj1MLgKe2WG2Jw/V0
+        PeZ0OrxxlAb99rwpr887lx4fLLkjvszHKqtGwIAvhtSbrja7rWrWBApNaKaI8dsL
+        XHIcGL0rDy8AAAAASUVORK5CYII=
+    }
+    ttk::style element create clrbutton image clear
+    ttk::style layout ClrTEntry {
+        Entry.field -sticky nswe -children {
+            Entry.padding -sticky nswe -children {
+                clrbutton -side right
+                Entry.textarea -sticky nswe
+            }
+        }
+    }
+} -body {
+    toplevel .t -screen :1
+    grid [ttk::entry .t.e -style ClrTEntry]  ; # Shall not crash ("X Error of failed request:  BadDrawable [...]")
+} -result {}
+
 #
 tcltest::cleanupTests
