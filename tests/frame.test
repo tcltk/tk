@@ -431,10 +431,6 @@ test frame-2.14 {toplevel configuration options} -setup {
 } -returnCodes error -cleanup {
     deleteWindows
 } -result {unknown or ambiguous visual name "who_knows?": class must be best, directcolor, grayscale, greyscale, pseudocolor, staticcolor, staticgray, staticgrey, truecolor, or default}
-set expectedScreen ""
-if {[tcltest::testConstraint haveDISPLAY]} {
-    set expectedScreen [list -screen screen Screen {} $env(DISPLAY)]
-}
 test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
@@ -443,7 +439,7 @@ test frame-2.15 {toplevel configuration options} -constraints haveDISPLAY -setup
     .t configure -screen
 } -cleanup {
     deleteWindows
-} -result $expectedScreen
+} -result [list -screen screen Screen {} $env(DISPLAY)]
 test frame-2.16 {toplevel configuration options} -constraints haveDISPLAY -setup {
     deleteWindows
 } -body {
