@@ -20,16 +20,22 @@ bind TNotebook <Enter> {
     set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
 }
 bind TNotebook <MouseWheel> {
-    ttk::notebook::CondCycleTab %W y %D -120.0
+    ttk::notebook::CondCycleTab1 %W y %D -120.0
 }
 bind TNotebook <Option-MouseWheel> {
-    ttk::notebook::CondCycleTab %W y %D -12.0
+    ttk::notebook::CondCycleTab1 %W y %D -12.0
 }
 bind TNotebook <Shift-MouseWheel> {
-    ttk::notebook::CondCycleTab %W x %D -120.0
+    ttk::notebook::CondCycleTab1 %W x %D -120.0
 }
 bind TNotebook <Shift-Option-MouseWheel> {
-    ttk::notebook::CondCycleTab %W x %D -12.0
+    ttk::notebook::CondCycleTab1 %W x %D -12.0
+}
+bind TNotebook <TouchpadScroll> {
+    # TouchpadScroll events fire about 60 times per second.
+    if {[expr {%# %% 30}] == 0} {
+	ttk::notebook::CondCycleTab2 %W %D
+    }
 }
 
 # ActivateTab $nb $tab --
@@ -89,10 +95,10 @@ proc ttk::notebook::CycleTab {w dir {factor 1.0}} {
     }
 }
 
-# CondCycleTab --
+# CondCycleTab1 --
 #	Conditionally invoke the ttk::notebook::CycleTab proc.
 #
-proc ttk::notebook::CondCycleTab {w axis dir {factor 1.0}} {
+proc ttk::notebook::CondCycleTab1 {w axis dir {factor 1.0}} {
     # Count both the <MouseWheel> and <Shift-MouseWheel>
     # events, and ignore the non-dominant ones
 
@@ -105,6 +111,23 @@ proc ttk::notebook::CondCycleTab {w axis dir {factor 1.0}} {
     }
 
     CycleTab $w $dir $factor
+}
+
+# CondCycleTab2 --
+#	Conditionally invoke the ttk::notebook::CycleTab proc.
+#
+proc ttk::notebook::CondCycleTab2 {w dxdy} {
+    if {[set style [$w cget -style]] eq ""} {
+	set style TNotebook
+    }
+    set tabSide [string index [ttk::style lookup $style -tabposition {} nw] 0]
+
+    lassign [tk::PreciseScrollDeltas $dxdy] deltaX deltaY
+    if {$tabSide in {n s} && $deltaX != 0} {
+	CycleTab $w [expr {$deltaX < 0 ? -1 : 1}]
+    } elseif {$tabSide in {w e} && $deltaY != 0} {
+	CycleTab $w [expr {$deltaY < 0 ? -1 : 1}]
+    }
 }
 
 # MnemonicTab $nb $key --

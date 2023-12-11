@@ -23,7 +23,8 @@ bind TScrollbar <Enter> {
     set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
 }
 foreach event {<MouseWheel> <Option-MouseWheel>
-	       <Shift-MouseWheel> <Shift-Option-MouseWheel>} {
+	       <Shift-MouseWheel> <Shift-Option-MouseWheel>
+	       <TouchpadScroll>} {
     bind TScrollbar $event [bind Scrollbar $event]
 }
 unset event

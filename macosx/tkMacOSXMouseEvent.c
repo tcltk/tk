@@ -25,13 +25,6 @@ typedef struct {
     Point local;
 } MouseEventData;
 
-typedef struct {
-    uint64_t wheelTickPrev;	/* For high resolution wheels. */
-    double vWheelAcc;		/* For high resolution wheels (vertical). */
-    double hWheelAcc;		/* For high resolution wheels (horizontal). */
-} ThreadSpecificData;
-static Tcl_ThreadDataKey dataKey;
-
 static Tk_Window captureWinPtr = NULL;	/* Current capture window; may be
 					 * NULL. */
 
@@ -550,12 +543,11 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
-	CGFloat delta;
+	static int scrollCounter = 0;
+	int delta;
+	CGFloat Delta;
+	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
 	XEvent xEvent = {0};
-	ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-		Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-	xEvent.type = MouseWheelEvent;
 	xEvent.xbutton.x = win_x;
 	xEvent.xbutton.y = win_y;
 	xEvent.xbutton.x_root = global.x;
@@ -563,41 +555,35 @@ enum {
 	xEvent.xany.send_event = false;
 	xEvent.xany.display = Tk_Display(target);
 	xEvent.xany.window = Tk_WindowId(target);
-
-#define WHEEL_DELTA 120
-#define WHEEL_DELAY 300000000
-	uint64_t wheelTick = clock_gettime_nsec_np(CLOCK_MONOTONIC_RAW);
-	Bool timeout = (wheelTick - tsdPtr->wheelTickPrev) >= WHEEL_DELAY;
-	if (timeout) {
-	    tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	}
-	tsdPtr->wheelTickPrev = wheelTick;
-	delta = [theEvent deltaY];
-	if (delta != 0.0) {
-	    delta = (tsdPtr->vWheelAcc += delta);
-	    if (timeout && fabs(delta) < 1.0) {
-		delta = ((delta < 0.0) ? -1.0 : 1.0);
+	if (deltaIsPrecise) {
+	    int deltaX = [theEvent scrollingDeltaX];
+	    int deltaY = [theEvent scrollingDeltaY];
+	    delta = (deltaX << 16) | (deltaY & 0xffff);
+	    if (delta != 0) {
+	     	xEvent.type = TouchpadScroll;
+	     	xEvent.xbutton.state = state;
+	     	xEvent.xkey.keycode = delta;
+	     	xEvent.xany.serial = scrollCounter++;
+	     	Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	    if (fabs(delta) >= 0.6) {
-		int intDelta = round(delta);
+	} else {
+	    /*
+	     * A low precision scroll is 120 or -120 wheel units per click.
+	     * Each click generates one event.
+	     */
+	    Delta = [theEvent scrollingDeltaY];
+	    if (Delta != 0.0) {
+		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state;
-		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
-		tsdPtr->vWheelAcc -= intDelta;
+		xEvent.xkey.keycode = Delta > 0.0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }
-	}
-	delta = [theEvent deltaX];
-	if (delta != 0.0) {
-	    delta = (tsdPtr->hWheelAcc += delta);
-	    if (timeout && fabs(delta) < 1.0) {
-		delta = ((delta < 0.0) ? -1.0 : 1.0);
-	    }
-	    if (fabs(delta) >= 0.6) {
-	    int intDelta = round(delta);
+	    Delta = [theEvent scrollingDeltaX];
+	    if (Delta != 0.0) {
+		xEvent.type = MouseWheelEvent;
 		xEvent.xbutton.state = state | ShiftMask;
-		xEvent.xkey.keycode = WHEEL_DELTA * intDelta;
-		tsdPtr->hWheelAcc -= intDelta;
+		xEvent.xkey.keycode = Delta > 0 ? 120 : -120;
 		xEvent.xany.serial = LastKnownRequestProcessed(Tk_Display(tkwin));
 		Tk_QueueWindowEvent(&xEvent, TCL_QUEUE_TAIL);
 	    }

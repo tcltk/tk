@@ -670,8 +670,10 @@ typedef struct Tk_GeomMgr {
 #define ActivateNotify	    (MappingNotify + 2)
 #define DeactivateNotify    (MappingNotify + 3)
 #define MouseWheelEvent     (MappingNotify + 4)
-#define TK_LASTEVENT	    (MappingNotify + 5)
+#define TouchpadScroll      (MappingNotify + 5)
+#define TK_LASTEVENT	    (MappingNotify + 6)
 
+#define TouchpadScrollMask  (1L << 27)
 #define MouseWheelMask	    (1L << 28)
 #define ActivateMask	    (1L << 29)
 #define VirtualEventMask    (1L << 30)

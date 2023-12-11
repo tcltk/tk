@@ -17,7 +17,7 @@ wm iconname $w "cscroll"
 positionWindow $w
 set c $w.c
 
-label $w.msg -font $font -wraplength 4i -justify left -text "This window displays a canvas widget that can be scrolled either using the scrollbars or by dragging with button 2 in the canvas.  If you click button 1 on one of the rectangles, its indices will be printed on stdout."
+label $w.msg -font $font -wraplength 4i -justify left -text "This window displays a canvas widget that can be scrolled by using the scrollbars, by dragging with button 2 in the canvas, by using a mouse wheel, or with the two-finger gesture on a touchpad.  If you click button 1 on one of the rectangles, its indices will be printed on stdout."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
@@ -25,8 +25,8 @@ set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
 frame $w.grid
-ttk::scrollbar $w.hscroll -orient horizontal -command "$c xview"
-ttk::scrollbar $w.vscroll -command "$c yview"
+scrollbar $w.hscroll -orient horizontal -command "$c xview"
+scrollbar $w.vscroll -command "$c yview"
 canvas $c -relief sunken -borderwidth 2 -scrollregion {-11c -11c 50c 20c} \
 	-xscrollcommand "$w.hscroll set" \
 	-yscrollcommand "$w.vscroll set"
@@ -106,6 +106,12 @@ if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk
 	    %W xview scroll [expr {%D/-3}] units
 	} else {
 	    %W xview scroll [expr {(%D-2)/-3}] units
+	}
+    }
+    bind $c <TouchpadScroll> {
+	lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+	if {$deltaX != 0 || $deltaY != 0} {
+	    tk::ScrollByPixels %W $deltaX $deltaY
 	}
     }
 }
