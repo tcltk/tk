@@ -54,7 +54,7 @@
 
 static int lastMod = 0;
 
-/* 
+/*
  * The serial field of TouchpadScroll events is a counter for
  * events of this type only.
  */
@@ -1146,7 +1146,7 @@ GenerateXEvent(
 
 	switch (message) {
 	case WM_MOUSEWHEEL: {
-	    
+
 	    /*
 	     * Send an Xevent using a KeyPress struct, but with the type field
 	     * set to MouseWheelEvent for low resolution scrolls and to

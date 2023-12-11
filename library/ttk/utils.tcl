@@ -309,7 +309,7 @@ bind TtkScrollable <TouchpadScroll> {
     }
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     if {$deltaX != 0} {
- 	%W xview scroll [expr {-$deltaX}] units 
+ 	%W xview scroll [expr {-$deltaX}] units
     }
     if {$deltaY != 0} {
 	%W yview scroll [expr {-$deltaY}] units
