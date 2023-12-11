@@ -84,6 +84,7 @@ test image-3.1 {Using ttk::style element create with multiple displays - bug fde
     image delete clear
     destroy .t
     ttk::style theme use $curTheme
+    unset curTheme
 } -result {}
 
 #
