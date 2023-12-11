@@ -553,7 +553,7 @@ proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
 proc ::tk::PreciseScrollDeltas {dxdy} {
     set deltaX [expr {$dxdy >> 16}]
     set low [expr {$dxdy & 0xffff}]
-    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}] 
+    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}]
     return [list $deltaX $deltaY]
 }
 
