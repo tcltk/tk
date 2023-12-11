@@ -1522,8 +1522,6 @@ EXTERN const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
 #define Tk_InitStubs(interp, version, exact) \
     Tk_PkgInitStubsCheck(interp, version, exact)
 #endif /* USE_TK_STUBS */
-
-#define Tk_InitImageArgs(interp, argc, argv) /**/
 
 /*
  *----------------------------------------------------------------------
