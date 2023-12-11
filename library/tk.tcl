@@ -549,6 +549,13 @@ proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
     $w ${dir}view scroll [expr {$amount/$factor}] $units
 }
 
+## ::tk::PreciseScrollDeltas $dxdy
+proc ::tk::PreciseScrollDeltas {dxdy} {
+    set deltaX [expr {$dxdy >> 16}]
+    set low [expr {$dxdy & 0xffff}]
+    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}] 
+    return [list $deltaX $deltaY]
+}
 
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
@@ -837,6 +844,21 @@ if {[tk windowingsystem] eq "x11"} {
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
 }
+
+# Helper for smooth scrolling of widgets that support xview moveto,
+# yview moveto, height and width.
+
+proc ::tk::ScrollByPixels {w deltaX deltaY} {
+    set width [expr {1.0 * [$w cget -width]}]
+    set height [expr {1.0 * [$w cget -height]}]
+    set X [lindex [$w xview] 0]
+    set Y [lindex [$w yview] 0]
+    set x [expr {$X - $deltaX / $width}]
+    set y [expr {$Y - $deltaY / $height}]
+    $w xview moveto $x
+    $w yview moveto $y
+}
+
 
 # Local Variables:
 # mode: tcl
