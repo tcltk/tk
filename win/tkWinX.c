@@ -54,12 +54,12 @@
 
 static int lastMod = 0;
 
-/* 
+/*
  * The serial field of TouchpadScroll events is a counter for
  * events of this type only.
  */
 
-static int scrollCounter = 0;
+static unsigned long scrollCounter = 0;
 
 /*
  * imm.h is needed by HandleIMEComposition
