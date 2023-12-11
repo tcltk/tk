@@ -21,8 +21,7 @@ testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowi
 
 if {[tk windowingsystem] eq "aqua"} {
     proc restackDelay {} {
-	after 200;
-	update idletasks
+	after 100;
     }
 } else {
     proc restackDelay {} {}
@@ -2081,15 +2080,17 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
     foreach w {.t .t2 .t3} {
 	destroy $w
 	toplevel $w -width 200 -height 200 -bg green
-	tkwait visibility $w
-	wm geometry $w +100+100
+	wm geometry $w +0+0
+	update
     }
     raise .t .t2
     restackDelay
-    set result [list [winfo containing 200 200]]
+    update
+    set result [list [winfo containing 100 100]]
     lower .t3
     restackDelay
-    lappend result [winfo containing 200 200]
+    sleep 10
+    lappend result [winfo containing 100 100]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
     destroy .t
