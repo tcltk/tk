@@ -1386,9 +1386,6 @@ MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
 			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkDoWarpWrtWin(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
-MODULE_SCOPE int	TkListCreateFrame(void *clientData,
-			    Tcl_Interp *interp, Tcl_Obj *listObj,
-			    int toplevel, Tcl_Obj *nameObj);
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
