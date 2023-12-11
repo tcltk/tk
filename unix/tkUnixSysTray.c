@@ -1513,7 +1513,7 @@ TrayIconConfigureMethod(
 	}
     }
 
-    if (Tk_SetOptions(interp,(char*)icon,icon->options,objc,objv,
+    if (Tk_SetOptions(interp, icon,icon->options,objc,objv,
             icon->tkwin,&saved,&mask) != TCL_OK) {
 	return TCL_ERROR; /* msg by Tk_SetOptions */
     }
