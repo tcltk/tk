@@ -20,6 +20,7 @@
 #   pragma comment (lib, "advapi32.lib")
 #endif
 
+
 /*
  * The zmouse.h file includes the definition for WM_MOUSEWHEEL.
  */
@@ -34,6 +35,31 @@
 #ifndef WM_MOUSEHWHEEL
 #define WM_MOUSEHWHEEL 0x020E
 #endif
+
+/* A WM_MOUSEWHEEL message sent by a trackpad contains the number of pixels as
+ * the delta value, while low precision scrollwheels always send an integer
+ * multiple of WHEELDELTA (= 120) as the delta value.
+ */
+
+#define WHEELDELTA 120
+
+/*
+ * Our heuristic for deciding whether a WM_MOUSEWHEEL message
+ * comes from a high resolution scrolling device is that we
+ * assume it is high resolution unless there are two consecutive
+ * delta values that are both multiples of 120.  This is static,
+ * rather than thread-specific, since input devices are shared
+ * by all threads.
+ */
+
+static int lastMod = 0;
+
+/* 
+ * The serial field of TouchpadScroll events is a counter for
+ * events of this type only.
+ */
+
+static int scrollCounter = 0;
 
 /*
  * imm.h is needed by HandleIMEComposition
@@ -81,9 +107,6 @@ typedef struct {
 				 * screen. */
     int updatingClipboard;	/* If 1, we are updating the clipboard. */
     int surrogateBuffer;	/* Buffer for first of surrogate pair. */
-    DWORD wheelTickPrev;	/* For high resolution wheels. */
-    int vWheelAcc;		/* For high resolution wheels (vertical). */
-    int hWheelAcc;		/* For high resolution wheels (horizontal). */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -534,9 +557,6 @@ TkpOpenDisplay(
     memset(tsdPtr->winDisplay, 0, sizeof(TkDisplay));
     tsdPtr->winDisplay->display = display;
     tsdPtr->updatingClipboard = FALSE;
-    tsdPtr->wheelTickPrev = GetTickCount();
-    tsdPtr->vWheelAcc = 0;
-    tsdPtr->hWheelAcc = 0;
 
     /*
      * Key map info must be available immediately, because of "send event".
@@ -1126,82 +1146,65 @@ GenerateXEvent(
 
 	switch (message) {
 	case WM_MOUSEWHEEL: {
+	    
 	    /*
-	     * Support for high resolution wheels (vertical).
-	     */
-
-	    DWORD wheelTick = GetTickCount();
-	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
-	    int intDelta;
-
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (timeout) {
-		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	    }
-	    tsdPtr->vWheelAcc += (short) HIWORD(wParam);
-	    if (!tsdPtr->vWheelAcc || (!timeout && abs(tsdPtr->vWheelAcc) < WHEEL_DELTA * 6 / 10)) {
-		return;
-	    }
-
-	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
+	     * Send an Xevent using a KeyPress struct, but with the type field
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events. The Y delta
+	     * is stored in the low order 16 bits of the keycode field.  Set
+	     * nbytes to 0 to prevent conversion of the keycode to a keysym in
 	     * TkpGetString. [Bug 1118340].
 	     */
 
-	    intDelta = (abs(tsdPtr->vWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
-	    if (intDelta == 0) {
-		intDelta = (tsdPtr->vWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
-	    } else if (tsdPtr->vWheelAcc < 0) {
-		intDelta = -intDelta;
+	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
+	    if ( mod != 0 || lastMod != 0) {
+		/* High resolution. */
+		event.x.type = TouchpadScroll;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state = state;
+		event.x.xany.serial = scrollCounter++;
+		event.x.xkey.keycode = (unsigned int) delta;
+	    } else {
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.keycode = (unsigned int) delta;
 	    }
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.keycode = intDelta;
-	    tsdPtr->vWheelAcc -= intDelta;
+	    lastMod = mod;
 	    break;
 	}
 	case WM_MOUSEHWHEEL: {
-	    /*
-	     * Support for high resolution wheels (horizontal).
-	     */
-
-	    DWORD wheelTick = GetTickCount();
-	    BOOL timeout = wheelTick - tsdPtr->wheelTickPrev >= 300;
-	    int intDelta;
-
-	    tsdPtr->wheelTickPrev = wheelTick;
-	    if (timeout) {
-		tsdPtr->vWheelAcc = tsdPtr->hWheelAcc = 0;
-	    }
-	    tsdPtr->hWheelAcc -= (short) HIWORD(wParam);
-	    if (!tsdPtr->hWheelAcc || (!timeout && abs(tsdPtr->hWheelAcc) < WHEEL_DELTA * 6 / 10)) {
-		return;
-	    }
 
 	    /*
-	     * We have invented a new X event type to handle this event. It
-	     * still uses the KeyPress struct. However, the keycode field has
-	     * been overloaded to hold the zDelta of the wheel. Set nbytes to
-	     * 0 to prevent conversion of the keycode to a keysym in
-	     * TkpGetString. [Bug 1118340].
+	     * Send an Xevent using a KeyPress struct, but with the type field
+	     * set to MouseWheelEvent for low resolution scrolls and to
+	     * TouchpadScroll for high resolution scroll events.  For low
+	     * resolution scrolls the X delta is stored in the keycode field
+	     * and For high resolution scrolls the X delta is in the high word
+	     * of the keycode.  Set nbytes to 0 to prevent conversion of the
+	     * keycode to a keysym in TkpGetString. [Bug 1118340].
 	     */
 
-	    intDelta =  (abs(tsdPtr->hWheelAcc) + WHEEL_DELTA/2) / WHEEL_DELTA * WHEEL_DELTA;
-	    if (intDelta == 0) {
-		intDelta = (tsdPtr->hWheelAcc < 0) ? -WHEEL_DELTA : WHEEL_DELTA;
-	    } else if (tsdPtr->hWheelAcc < 0) {
-		intDelta = -intDelta;
+	    int delta = (short) HIWORD(wParam);
+	    int mod = delta % WHEELDELTA;
+	    if ( mod != 0 || lastMod != 0) {
+		/* High resolution. */
+		event.x.type = TouchpadScroll;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state = state;
+		event.x.xany.serial = scrollCounter++;
+		event.x.xkey.keycode = (unsigned int)(-(delta << 16));
+	    } else {
+		event.x.type = MouseWheelEvent;
+		event.x.xany.send_event = -1;
+		event.key.nbytes = 0;
+		event.x.xkey.state |= ShiftMask;
+		event.x.xkey.keycode = delta;
 	    }
-	    event.x.type = MouseWheelEvent;
-	    event.x.xany.send_event = -1;
-	    event.key.nbytes = 0;
-	    event.x.xkey.state |= ShiftMask;
-	    event.x.xkey.keycode = intDelta;
-	    tsdPtr->hWheelAcc -= intDelta;
+	    lastMod = mod;
 	    break;
 	}
 	case WM_SYSKEYDOWN:
