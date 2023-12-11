@@ -68,7 +68,7 @@ declare 12 {
 }
 declare 13 {
     int TkCreateFrame(void *clientData, Tcl_Interp *interp,
-	    int argc, const char *const *argv, int toplevel, const char *appName)
+	    Tcl_Size objc, Tcl_Obj *const objv[], int type, const char *appName)
 }
 declare 14 {
     Tk_Window TkCreateMainWindow(Tcl_Interp *interp,
