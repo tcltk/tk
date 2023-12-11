@@ -2083,12 +2083,15 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
 	toplevel $w -width 200 -height 200 -bg green
 	tkwait visibility $w
 	wm geometry $w +100+100
+	update
     }
     raise .t .t2
     restackDelay
+    update
     set result [list [winfo containing 200 200]]
     lower .t3
     restackDelay
+    sleep 10
     lappend result [winfo containing 200 200]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
