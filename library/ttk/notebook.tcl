@@ -33,7 +33,7 @@ bind TNotebook <Shift-Option-MouseWheel> {
 }
 bind TNotebook <TouchpadScroll> {
     # TouchpadScroll events fire about 60 times per second.
-    if {[expr {%# %% 30}] == 0} {
+    if {%# %% 15 == 0} {
 	ttk::notebook::CondCycleTab2 %W %D
     }
 }
