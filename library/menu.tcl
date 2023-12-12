@@ -825,7 +825,7 @@ proc ::tk::MenuNextEntry {menu count} {
     if {$last < 0} {
 	return
     }
-    set length [expr {[$menu index last]+1}]
+    set length [expr {$last+1}]
     set quitAfter $length
     set active [$menu index active]
     if {$active < 0} {
@@ -1336,14 +1336,12 @@ proc ::tk_menuSetFocus {menu} {
 proc ::tk::GenerateMenuSelect {menu} {
     variable ::tk::Priv
 
-    if {$Priv(activeMenu) eq $menu \
-	    && $Priv(activeItem) eq [$menu index active]} {
-	return
+    if {$Priv(activeMenu) ne $menu \
+	    || $Priv(activeItem) ne [$menu index active]} {
+	set Priv(activeMenu) $menu
+	set Priv(activeItem) [$menu index active]
+	event generate $menu <<MenuSelect>>
     }
-
-    set Priv(activeMenu) $menu
-    set Priv(activeItem) [$menu index active]
-    event generate $menu <<MenuSelect>>
 }
 
 # ::tk_popup --
