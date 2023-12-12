@@ -129,7 +129,7 @@ nobreakspace                       160     0xA0
 \(ad (diaeresis)                      168     0xA8
 \(co (copyright)                      169     0xA9
 \(Of (ordfeminine)                    170     0xAA
-\(Fo (guillemotleft)                  171     0xAB
+\(Fo (guillemetleft)                  171     0xAB
 \(no (notsign)                        172     0xAC
 hyphen                             173     0xAD
 \(rg (registered)                     174     0xAE
@@ -144,8 +144,8 @@ hyphen                             173     0xAD
 \(pc (periodcentered)                 183     0xB7
 \(ac (cedilla)                        184     0xB8
 \(S1 (onesuperior)                    185     0xB9
-\(Om (masculine)                      186     0xBA
-\(Fc (guillemotright)                 187     0xBB
+\(Om (ordmasculine)                   186     0xBA
+\(Fc (guillemetright)                 187     0xBB
 \(14 (onequarter)                     188     0xBC
 \(12 (onehalf)                        189     0xBD
 \(34 (threequarters)                  190     0xBE
@@ -1093,8 +1093,8 @@ dead_o                           65158     0xFE86
 dead_O                           65159     0xFE87
 dead_u                           65160     0xFE88
 dead_U                           65161     0xFE89
-dead_small_schwa                 65162     0xFE8A
-dead_capital_schwa               65163     0xFE8B
+dead_schwa                       65162     0xFE8A
+dead_SCHWA                       65163     0xFE8B
 dead_greek                       65164     0xFE8C
 dead_lowline                     65168     0xFE90
 dead_aboveverticalline           65169     0xFE91
