@@ -188,7 +188,7 @@ bind Listbox <Shift-Option-MouseWheel> {
     tk::MouseWheel %W x %D -12.0 units
 }
 bind Listbox <TouchpadScroll> {
-    if {[expr {%# %% 15}] != 0} {
+    if {%# %% 5 != 0} {
 	return
     }
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY

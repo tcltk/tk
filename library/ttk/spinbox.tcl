@@ -30,7 +30,7 @@ bind TSpinbox <Shift-MouseWheel> {
 bind TSpinbox <TouchpadScroll> {
     lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
     # TouchpadScroll events fire about 60 times per second.
-    if {$deltaY != 0 && [expr {%# %% 12}] == 0} {
+    if {$deltaY != 0 && %# %% 12 == 0} {
 	ttk::spinbox::Spin %W [expr {$deltaY > 0 ? -1 : 1}]
     }
 }
