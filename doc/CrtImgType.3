@@ -9,7 +9,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_CreateImageType, Tk_GetImageModelData, Tk_InitImageArgs \- define new kind of image
+Tk_CreateImageType, Tk_GetImageModelData \- define new kind of image
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -18,8 +18,6 @@ Tk_CreateImageType, Tk_GetImageModelData, Tk_InitImageArgs \- define new kind of
 .sp
 ClientData
 \fBTk_GetImageModelData\fR(\fIinterp, name, typePtrPtr\fR)
-.sp
-\fBTk_InitImageArgs\fR(\fIinterp, argc, argvPtr\fR)
 .SH ARGUMENTS
 .AS "const Tk_ImageType" *typePtrPtr
 .AP "const Tk_ImageType" *typePtr in
@@ -34,8 +32,6 @@ Name of existing image.
 .AP Tk_ImageType **typePtrPtr out
 Points to word in which to store a pointer to type information for
 the given image, if it exists.
-.AP int argc in
-Number of arguments
 .AP char ***argvPtr in/out
 Pointer to argument list
 .BE
@@ -241,20 +237,6 @@ and the return value is the ClientData value returned by the
 \fIcreateProc\fR when the image was created (this is typically a
 pointer to the image model data structure).  If no such image exists
 then NULL is returned and NULL is stored at \fI*typePtrPtr\fR.
-.SH "LEGACY INTERFACE SUPPORT"
-.PP
-In Tk 8.2 and earlier, the definition of \fBTk_ImageCreateProc\fR
-was incompatibly different, with the following prototype:
-.CS
-typedef int \fBTk_ImageCreateProc\fR(
-        Tcl_Interp *\fIinterp\fR,
-        char *\fIname\fR,
-        int \fIargc\fR,
-        char **\fIargv\fR,
-        Tk_ImageType *\fItypePtr\fR,
-        Tk_ImageModel \fImodel\fR,
-        ClientData *\fImodelDataPtr\fR);
-.CE
 .SH "SEE ALSO"
 Tk_ImageChanged, Tk_GetImage, Tk_FreeImage, Tk_RedrawImage, Tk_SizeOfImage
 .SH KEYWORDS

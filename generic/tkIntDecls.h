@@ -80,8 +80,8 @@ EXTERN TkCursor *	TkCreateCursorFromData(Tk_Window tkwin,
 				XColor fg, XColor bg);
 /* 13 */
 EXTERN int		TkCreateFrame(void *clientData, Tcl_Interp *interp,
-				int argc, const char *const *argv,
-				int toplevel, const char *appName);
+				Tcl_Size objc, Tcl_Obj *const objv[],
+				int type, const char *appName);
 /* 14 */
 EXTERN Tk_Window	TkCreateMainWindow(Tcl_Interp *interp,
 				const char *screenName, const char *baseName);
@@ -561,7 +561,7 @@ typedef struct TkIntStubs {
     void (*reserved10)(void);
     void (*reserved11)(void);
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
-    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
+    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int type, const char *appName); /* 13 */
     Tk_Window (*tkCreateMainWindow) (Tcl_Interp *interp, const char *screenName, const char *baseName); /* 14 */
     Time (*tkCurrentTime) (TkDisplay *dispPtr); /* 15 */
     void (*tkDeleteAllImages) (TkMainInfo *mainPtr); /* 16 */
