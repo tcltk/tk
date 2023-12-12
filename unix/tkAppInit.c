@@ -12,6 +12,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#undef USE_TCL_STUBS
 #undef BUILD_tk
 #undef STATIC_BUILD
 #include "tk.h"
