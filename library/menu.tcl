@@ -906,13 +906,12 @@ proc ::tk::MenuFind {w char} {
 	    }
 	    set last [$child index last]
 	    for {set i [$child cget -tearoff]} {$i <= $last} {incr i} {
-		if {[$child type $i] eq "separator"} {
+		if {([$child type $i] eq "separator") || ([$child entrycget $i -state] eq "disabled")} {
 		    continue
 		}
-		set char2 [string index [$child entrycget $i -label] \
-			[$child entrycget $i -underline]]
-		if {$char eq [string tolower $char2] || $char eq ""} {
-		    if {[$child entrycget $i -state] ne "disabled"} {
+		set underline [$child entrycget $i -underline]
+		if {$underline >= 0} {
+		    if {$char eq [string tolower [string index [$child entrycget $i -label] $underline]]} {
 			return $child
 		    }
 		}

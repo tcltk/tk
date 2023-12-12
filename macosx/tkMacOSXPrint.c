@@ -29,10 +29,9 @@ NSString * fileName = nil;
 CFStringRef urlFile = NULL;
 
 /*Forward declaration of functions.*/
-int			StartPrint(void *clientData, Tcl_Interp * interp,
-			    int objc, Tcl_Obj * const objv[]);
-OSStatus	FinishPrint(NSString *file, int buttonValue);
-int   		MakePDF(void *clientData, Tcl_Interp *ip,
+static Tcl_ObjCmdProc StartPrint;
+static OSStatus	FinishPrint(NSString *file, int buttonValue);
+static int   		MakePDF(void *clientData, Tcl_Interp *ip,
 				int objc,  Tcl_Obj *const objv[]);
 int			MacPrint_Init(Tcl_Interp * interp);
 
@@ -80,12 +79,11 @@ int			MacPrint_Init(Tcl_Interp * interp);
 
 int
 StartPrint(
-    void *clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp * interp,
     int objc,
     Tcl_Obj *const objv[])
 {
-    (void) clientData;
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
     NSPrintPanel * printPanel = [NSPrintPanel printPanel];
     int accepted;
@@ -345,8 +343,8 @@ FinishPrint(
  *----------------------------------------------------------------------
  */
 
-int MakePDF
-(TCL_UNUSED(ClientData),
+int MakePDF(
+ TCL_UNUSED(void *),
  Tcl_Interp *ip,
  int objc,
  Tcl_Obj *const objv[])
