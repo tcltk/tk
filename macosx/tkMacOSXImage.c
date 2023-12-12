@@ -1284,7 +1284,7 @@ TkMacOSXNSImageConfigureModel(
 
     modelPtr->width = 0;
     modelPtr->height = 0;
-    if (Tk_SetOptions(interp, (char *) modelPtr, optionTable, objc, objv,
+    if (Tk_SetOptions(interp, modelPtr, optionTable, objc, objv,
 		      NULL, NULL, NULL) != TCL_OK){
 	goto errorExit;
     }
