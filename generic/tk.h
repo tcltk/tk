@@ -997,18 +997,6 @@ typedef struct Tk_Item {
  * lines, circles, etc.) that can form part of a canvas widget.
  */
 
-#if defined(USE_OLD_CANVAS) && TCL_MAJOR_VERSION < 9
-typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Size argc, char **argv);
-typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Size argc, char **argv, int flags);
-typedef int	(Tk_ItemCoordProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, Tcl_Size argc, char **argv);
-typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
-		    int beforeThis, char *string);
-typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
-		    Tk_Item *itemPtr, char *indexString, int *indexPtr);
-#else
 typedef int	(Tk_ItemCreateProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 typedef int	(Tk_ItemConfigureProc)(Tcl_Interp *interp, Tk_Canvas canvas,
@@ -1020,7 +1008,6 @@ typedef void	(Tk_ItemInsertProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Tcl_Size beforeThis, Tcl_Obj *string);
 typedef int	(Tk_ItemIndexProc)(Tcl_Interp *interp, Tk_Canvas canvas,
 		    Tk_Item *itemPtr, Tcl_Obj *indexString, Tcl_Size *indexPtr);
-#endif /* USE_OLD_CANVAS */
 typedef void	(Tk_ItemDeleteProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
 		    Display *display);
 typedef void	(Tk_ItemDisplayProc)(Tk_Canvas canvas, Tk_Item *itemPtr,
