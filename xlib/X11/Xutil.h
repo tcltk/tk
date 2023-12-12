@@ -408,11 +408,11 @@ extern int XDestroyRegion(
     Region		/* r */
 );
 
-extern int XEmptyRegion(
+extern Bool XEmptyRegion(
     Region		/* r */
 );
 
-extern int XEqualRegion(
+extern Bool XEqualRegion(
     Region		/* r1 */,
     Region		/* r2 */
 );
@@ -470,6 +470,13 @@ extern Status XGetTextProperty(
     Window		/* window */,
     XTextProperty*	/* text_prop_return */,
     Atom		/* property */
+);
+
+extern XVisualInfo *XGetVisualInfo(
+    Display*		/* display */,
+    long		/* vinfo_mask */,
+    XVisualInfo*	/* vinfo_template */,
+    int*		/* nitems_return */
 );
 
 extern Status XGetWMClientMachine(
@@ -629,6 +636,12 @@ extern void XSetTextProperty(
     Atom		/* property */
 );
 
+extern void XSetWMClientMachine(
+    Display*		/* display */,
+    Window		/* w */,
+    XTextProperty*	/* text_prop */
+);
+
 extern int XSetWMHints(
     Display*		/* display */,
     Window		/* w */,
@@ -719,6 +732,12 @@ extern int XShrinkRegion(
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
+);
+
+extern Status XStringListToTextProperty(
+    char**		/* list */,
+    int			/* count */,
+    XTextProperty*	/* text_prop_return */
 );
 
 extern int XSubtractRegion(
