@@ -12,6 +12,7 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+#undef USE_TCL_STUBS
 #include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
