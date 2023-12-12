@@ -543,7 +543,7 @@ enum {
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
-	static int scrollCounter = 0;
+	static unsigned long scrollCounter = 0;
 	int delta;
 	CGFloat Delta;
 	Bool deltaIsPrecise = [theEvent hasPreciseScrollingDeltas];
