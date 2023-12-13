@@ -120,7 +120,7 @@ declare 22 {
 	    XSetWindowAttributes *attsPtr)
 }
 declare 23 {
-    int Tk_CharBbox(Tk_TextLayout layout, int index, int *xPtr,
+    int Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index, int *xPtr,
 	    int *yPtr, int *widthPtr, int *heightPtr)
 }
 declare 24 {
@@ -272,7 +272,7 @@ declare 60 {
 declare 61 {
     void Tk_DrawTextLayout(Display *display,
 	    Drawable drawable, GC gc, Tk_TextLayout layout,
-	    int x, int y, int firstChar, int lastChar)
+	    int x, int y, Tcl_Size firstChar, Tcl_Size lastChar)
 }
 declare 62 {
     void Tk_Fill3DPolygon(Tk_Window tkwin,

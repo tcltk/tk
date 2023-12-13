@@ -520,7 +520,8 @@ EXTERN const char *	TkSmoothPrintProc(void *clientData, Tk_Window tkwin,
 EXTERN void		TkDrawAngledTextLayout(Display *display,
 				Drawable drawable, GC gc,
 				Tk_TextLayout layout, int x, int y,
-				double angle, int firstChar, int lastChar);
+				double angle, Tcl_Size firstChar,
+				Tcl_Size lastChar);
 /* 182 */
 EXTERN void		TkUnderlineAngledTextLayout(Display *display,
 				Drawable drawable, GC gc,
@@ -729,7 +730,7 @@ typedef struct TkIntStubs {
     const char * (*tkOrientPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 178 */
     int (*tkSmoothParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 179 */
     const char * (*tkSmoothPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 180 */
-    void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int lastChar); /* 181 */
+    void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, Tcl_Size firstChar, Tcl_Size lastChar); /* 181 */
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x, double y, double angle); /* 184 */

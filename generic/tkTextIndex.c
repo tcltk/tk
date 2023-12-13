@@ -1109,7 +1109,7 @@ TkTextPrintIndex(
 {
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
-    int numBytes, charIndex;
+    Tcl_Size numBytes, charIndex;
 
     numBytes = indexPtr->byteIndex;
     charIndex = 0;

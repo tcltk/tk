@@ -1417,7 +1417,8 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
-	    int lineNum, byteIndex;
+	    int lineNum;
+	    Tcl_Size byteIndex;
 	    TkTextIndex index;
 
 	    /*
@@ -3229,7 +3230,7 @@ DeleteIndexRange(
     }
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
 	int line = 0;
-	int byteIndex = 0;
+	Tcl_Size byteIndex = 0;
 	int resetView = 0;
 
 	if (TkTextIndexCmp(&index2, &tPtr->topIndex) >= 0) {
@@ -3314,10 +3315,10 @@ DeleteIndexRange(
 
     resetViewCount = 0;
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
-	int line = lineAndByteIndex[resetViewCount];
+	Tcl_Size line = lineAndByteIndex[resetViewCount];
 
 	if (line != -1) {
-	    int byteIndex = lineAndByteIndex[resetViewCount+1];
+	    Tcl_Size byteIndex = lineAndByteIndex[resetViewCount+1];
 	    TkTextIndex indexTmp;
 
 	    if (tPtr == textPtr) {
