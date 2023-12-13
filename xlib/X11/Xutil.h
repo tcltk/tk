@@ -472,13 +472,6 @@ extern Status XGetTextProperty(
     Atom		/* property */
 );
 
-extern XVisualInfo *XGetVisualInfo(
-    Display*		/* display */,
-    long		/* vinfo_mask */,
-    XVisualInfo*	/* vinfo_template */,
-    int*		/* nitems_return */
-);
-
 extern Status XGetWMClientMachine(
     Display*		/* display */,
     Window		/* w */,
@@ -636,12 +629,6 @@ extern void XSetTextProperty(
     Atom		/* property */
 );
 
-extern void XSetWMClientMachine(
-    Display*		/* display */,
-    Window		/* w */,
-    XTextProperty*	/* text_prop */
-);
-
 extern int XSetWMHints(
     Display*		/* display */,
     Window		/* w */,
@@ -732,12 +719,6 @@ extern int XShrinkRegion(
     Region		/* r */,
     int			/* dx */,
     int			/* dy */
-);
-
-extern Status XStringListToTextProperty(
-    char**		/* list */,
-    int			/* count */,
-    XTextProperty*	/* text_prop_return */
 );
 
 extern int XSubtractRegion(
