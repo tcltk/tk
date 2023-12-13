@@ -545,13 +545,13 @@ typedef int \fBTk_OptionParseProc\fR(
         Tk_Window \fItkwin\fR,
         char *\fIvalue\fR,
         char *\fIwidgRec\fR,
-        Tcl_Size \fIoffset\fR);
+        int \fIoffset\fR);
 
 typedef const char *\fBTk_OptionPrintProc\fR(
         void *\fIclientData\fR,
         Tk_Window \fItkwin\fR,
         char *\fIwidgRec\fR,
-        Tcl_Size \fIoffset\fR,
+        int \fIoffset\fR,
         Tcl_FreeProc **\fIfreeProcPtr\fR);
 .CE
 The Tk_CustomOption structure contains three fields, which are pointers
