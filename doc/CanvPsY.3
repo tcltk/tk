@@ -30,7 +30,7 @@ int
 int
 \fBTk_CanvasPsStipple\fR(\fIinterp, canvas, bitmap\fR)
 .SH ARGUMENTS
-.AS Tcl_Size "numPoints"
+.AS int "numPoints"
 .AP Tk_Canvas canvas in
 A token that identifies a canvas widget for which Postscript is
 being generated.
@@ -58,7 +58,7 @@ Pointer to an array of coordinates for one or more
 points specified in canvas coordinates.
 The order of values in \fIcoordPtr\fR is x1, y1, x2, y2, x3, y3,
 and so on.
-.AP Tcl_Size numPoints in
+.AP int numPoints in
 Number of points at \fIcoordPtr\fR.
 .BE
 .SH DESCRIPTION
