@@ -1172,6 +1172,18 @@ test select-14.1 {Bug [73ba07efcd]: Use correct property type when handling MULT
 } -cleanup {
     rename get_clip {}
 } -result {abcd}
+test select-14.2 {Bug [af31a84c91]: Replacing selection handler is ineffective.} -setup {
+    proc strhandler {str offset count} {
+	return [string range $str $offset [expr {$offset + $count -1}]]
+    }
+} -body {
+    selection own .
+    selection handle . {strhandler "Original"}
+    selection handle . {strhandler "Replaced"}
+    list [selection get -type STRING] [selection get -type UTF8_STRING]
+} -cleanup {
+    rename strhandler {}
+} -result {Replaced Replaced}
 
 
 # cleanup
