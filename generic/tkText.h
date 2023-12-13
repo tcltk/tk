@@ -190,7 +190,7 @@ typedef struct TkTextIndex {
     TkTextBTree tree;		/* Tree containing desired position. */
     TkTextLine *linePtr;	/* Pointer to line containing position of
 				 * interest. */
-    int byteIndex;		/* Index within line of desired character (0
+    Tcl_Size byteIndex;		/* Index within line of desired character (0
 				 * means first one). */
     struct TkText *textPtr;	/* May be NULL, but otherwise the text widget
 				 * with which this index is associated. If not
@@ -255,7 +255,7 @@ struct TkTextDispChunk {
 				 * x-location. */
     Tk_ChunkBboxProc *bboxProc;	/* Procedure to find bounding box of character
 				 * in chunk. */
-    int numBytes;		/* Number of bytes that will be displayed in
+    Tcl_Size numBytes;		/* Number of bytes that will be displayed in
 				 * the chunk. */
     int minAscent;		/* Minimum space above the baseline needed by
 				 * this chunk. */
@@ -267,7 +267,7 @@ struct TkTextDispChunk {
 				 * set by chunk-specific code, but may be
 				 * increased to include tab or extra space at
 				 * end of line. */
-    int breakIndex;		/* Index within chunk of last acceptable
+    Tcl_Size breakIndex;		/* Index within chunk of last acceptable
 				 * position for a line (break just before this
 				 * byte index). <= 0 means don't break during
 				 * or immediately after this chunk. */
