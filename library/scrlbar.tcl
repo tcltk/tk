@@ -334,13 +334,11 @@ proc ::tk::ScrollbarScrollByPixels {w orient amount} {
 	if {$xyview eq "xview"} {
 	    return
 	}
-	set size [winfo height $w]
     }
     if {$orient eq "h"} {
 	if {$xyview eq "yview"} {
 	    return
 	}
-	set size [winfo width $w]
     }
 
     # The code below works with both the current and old syntax for
