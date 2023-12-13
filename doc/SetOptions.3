@@ -550,11 +550,11 @@ typedef struct Tk_ObjCustomOption {
     Tk_CustomOptionGetProc *\fIgetProc\fR;
     Tk_CustomOptionRestoreProc *\fIrestoreProc\fR;
     Tk_CustomOptionFreeProc *\fIfreeProc\fR;
-    ClientData \fIclientData\fR;
+    void *\fIclientData\fR;
 } \fBTk_ObjCustomOption\fR;
 
 typedef int \fBTk_CustomOptionSetProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tcl_Interp *\fIinterp\fR,
     Tk_Window \fItkwin\fR,
     Tcl_Obj **\fIvaluePtr\fR,
@@ -564,19 +564,19 @@ typedef int \fBTk_CustomOptionSetProc\fR(
     int \fIflags\fR);
 
 typedef Tcl_Obj *\fBTk_CustomOptionGetProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIrecordPtr\fR,
     int \fIinternalOffset\fR);
 
 typedef void \fBTk_CustomOptionRestoreProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIinternalPtr\fR,
     char *\fIsaveInternalPtr\fR);
 
 typedef void \fBTk_CustomOptionFreeProc\fR(
-    ClientData \fIclientData\fR,
+    void *\fIclientData\fR,
     Tk_Window \fItkwin\fR,
     char *\fIinternalPtr\fR);
 .CE
