@@ -6975,7 +6975,7 @@ TkpTesttextCmd(
 
     TkTextSetMark(textPtr, "insert", &index);
     TkTextPrintIndex(textPtr, &index, buf);
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %d", buf, index.byteIndex));
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %" TCL_SIZE_MODIFIER "d", buf, index.byteIndex));
     return TCL_OK;
 }
 
