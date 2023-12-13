@@ -118,7 +118,7 @@ EXTERN void		Tk_ChangeWindowAttributes(Tk_Window tkwin,
 				unsigned long valueMask,
 				XSetWindowAttributes *attsPtr);
 /* 23 */
-EXTERN int		Tk_CharBbox(Tk_TextLayout layout, int index,
+EXTERN int		Tk_CharBbox(Tk_TextLayout layout, Tcl_Size index,
 				int *xPtr, int *yPtr, int *widthPtr,
 				int *heightPtr);
 /* 24 */
@@ -248,7 +248,7 @@ EXTERN void		Tk_DrawFocusHighlight(Tk_Window tkwin, GC gc,
 EXTERN void		Tk_DrawTextLayout(Display *display,
 				Drawable drawable, GC gc,
 				Tk_TextLayout layout, int x, int y,
-				int firstChar, int lastChar);
+				Tcl_Size firstChar, Tcl_Size lastChar);
 /* 62 */
 EXTERN void		Tk_Fill3DPolygon(Tk_Window tkwin, Drawable drawable,
 				Tk_3DBorder border, XPoint *pointPtr,
@@ -960,7 +960,7 @@ typedef struct TkStubs {
     Tk_Window (*tk_CanvasTkwin) (Tk_Canvas canvas); /* 20 */
     void (*tk_CanvasWindowCoords) (Tk_Canvas canvas, double x, double y, short *screenXPtr, short *screenYPtr); /* 21 */
     void (*tk_ChangeWindowAttributes) (Tk_Window tkwin, unsigned long valueMask, XSetWindowAttributes *attsPtr); /* 22 */
-    int (*tk_CharBbox) (Tk_TextLayout layout, int index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 23 */
+    int (*tk_CharBbox) (Tk_TextLayout layout, Tcl_Size index, int *xPtr, int *yPtr, int *widthPtr, int *heightPtr); /* 23 */
     void (*tk_ClearSelection) (Tk_Window tkwin, Atom selection); /* 24 */
     int (*tk_ClipboardAppend) (Tcl_Interp *interp, Tk_Window tkwin, Atom target, Atom format, const char *buffer); /* 25 */
     int (*tk_ClipboardClear) (Tcl_Interp *interp, Tk_Window tkwin); /* 26 */
@@ -998,7 +998,7 @@ typedef struct TkStubs {
     void (*tk_Draw3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 58 */
     void (*tk_DrawChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, int x, int y); /* 59 */
     void (*tk_DrawFocusHighlight) (Tk_Window tkwin, GC gc, int width, Drawable drawable); /* 60 */
-    void (*tk_DrawTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, int firstChar, int lastChar); /* 61 */
+    void (*tk_DrawTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, Tcl_Size firstChar, Tcl_Size lastChar); /* 61 */
     void (*tk_Fill3DPolygon) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, XPoint *pointPtr, Tcl_Size numPoints, int borderWidth, int leftRelief); /* 62 */
     void (*tk_Fill3DRectangle) (Tk_Window tkwin, Drawable drawable, Tk_3DBorder border, int x, int y, int width, int height, int borderWidth, int relief); /* 63 */
     Tk_PhotoHandle (*tk_FindPhoto) (Tcl_Interp *interp, const char *imageName); /* 64 */

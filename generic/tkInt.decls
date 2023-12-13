@@ -617,8 +617,8 @@ declare 180 {
 # Angled text API, exposed for Emiliano Gavilán's RBC work.
 declare 181 {
     void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc,
-	    Tk_TextLayout layout, int x, int y, double angle, int firstChar,
-	    int lastChar)
+	    Tk_TextLayout layout, int x, int y, double angle, Tcl_Size firstChar,
+	    Tcl_Size lastChar)
 }
 declare 182 {
     void TkUnderlineAngledTextLayout(Display *display, Drawable drawable,
