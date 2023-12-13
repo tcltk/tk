@@ -1142,7 +1142,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return snprintf(string, TK_POS_CHARS, "%d.%d",
+    return snprintf(string, TK_POS_CHARS, "%d.%" TCL_SIZE_MODIFIER "d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 
