@@ -122,13 +122,12 @@ static void ReleaseData(
 static CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
-    uint32_t alphaInfo)
+    uint32_t bitmapInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
     size_t len = image->bytes_per_line * image->height;
     const CGFloat *decode = NULL;
-    CGBitmapInfo bitmapInfo;
     CGDataProviderRef provider = NULL;
     char *data = NULL;
     CGDataProviderReleaseDataCallback releaseData = ReleaseData;
@@ -184,7 +183,6 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
-	bitmapInfo = kCGBitmapByteOrder32Big | alphaInfo;
 	data = (char *)ckalloc(len);
 	if (data) {
 	    memcpy(data, image->data + image->xoffset, len);
@@ -483,8 +481,8 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-#define USE_ALPHA kCGImageAlphaLast
-#define IGNORE_ALPHA kCGImageAlphaNoneSkipLast
+#define USE_ALPHA (kCGImageAlphaLast | kCGBitmapByteOrder32Big)
+#define IGNORE_ALPHA (kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little)
 
 static int
 TkMacOSXPutImage(

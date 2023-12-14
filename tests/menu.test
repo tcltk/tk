@@ -4116,7 +4116,7 @@ test menu-40.1 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
 } -constraints {pressbutton} -body {
     set done false
     event generate {} <Motion> -x 100 -y 100
-    toplevel .t 
+    toplevel .t
     menu .t.m
     .t.m add command -command {puts Marco} -label Marco
     .t.m add command -command {puts Polo} -label Polo
@@ -4131,7 +4131,7 @@ test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
 } -constraints {movemouse} -body {
     set done false
     event generate {} <Motion> -x 100 -y 100
-    toplevel .t 
+    toplevel .t
     menu .t.m
     .t.m add command -command {puts Marco} -label Marco
     .t.m add command -command {puts Polo} -label Polo

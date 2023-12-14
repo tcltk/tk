@@ -128,7 +128,7 @@ XDestroyWindow(
  *      Tk_WmMapWindow.
  *
  * Results:
- *	Returns Success or BadWindow.
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	The subwindow or toplevel may appear on the screen.  VisibilityNotify
