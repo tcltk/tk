@@ -165,7 +165,10 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 /* TtkSelectImage --
  * 	Return a state-specific image from an ImageSpec
  */
-Tk_Image TtkSelectImage(Ttk_ImageSpec *imageSpec, Ttk_State state)
+Tk_Image TtkSelectImage(
+    Ttk_ImageSpec *imageSpec,
+    TCL_UNUSED(Tk_Window),
+    Ttk_State state)
 {
     int i;
     for (i = 0; i < imageSpec->mapCount; ++i) {
@@ -320,10 +323,10 @@ static void ImageElementDraw(
 	}
     }
     if (!image) {
-	image = TtkSelectImage(imageData->imageSpec, state);
+	image = TtkSelectImage(imageData->imageSpec, tkwin, state);
     }
 #else
-    image = TtkSelectImage(imageData->imageSpec, state);
+    image = TtkSelectImage(imageData->imageSpec, tkwin, state);
 #endif
 
     if (!image) {
