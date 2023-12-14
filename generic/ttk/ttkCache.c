@@ -57,8 +57,8 @@ struct Ttk_ResourceCache_ {
     Tcl_Interp	  *interp;	/* Interpreter for error reporting */
     Tk_Window	  tkwin;	/* Cache window. */
     Tcl_HashTable fontTable;	/* Entries: Tcl_Obj* holding FontObjs */
-    Tcl_HashTable borderTable;	/* Entries: Tcl_Obj* holding BorderObjs */
     Tcl_HashTable colorTable;	/* Entries: Tcl_Obj* holding ColorObjs */
+    Tcl_HashTable borderTable;	/* Entries: Tcl_Obj* holding BorderObjs */
     Tcl_HashTable imageTable;	/* Entries: Tk_Images */
 
     Tcl_HashTable namedColors;	/* Entries: RGB values as Tcl_StringObjs */
@@ -75,8 +75,8 @@ Ttk_ResourceCache Ttk_CreateResourceCache(Tcl_Interp *interp)
     cache->tkwin = NULL;	/* initialized later */
     cache->interp = interp;
     Tcl_InitHashTable(&cache->fontTable, TCL_STRING_KEYS);
-    Tcl_InitHashTable(&cache->borderTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&cache->colorTable, TCL_STRING_KEYS);
+    Tcl_InitHashTable(&cache->borderTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&cache->imageTable, TCL_STRING_KEYS);
     Tcl_InitHashTable(&cache->namedColors, TCL_STRING_KEYS);
 

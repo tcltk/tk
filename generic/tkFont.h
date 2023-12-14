@@ -104,10 +104,6 @@ typedef struct TkFont {
 				 * tkfont was based on, or NULL if the tkfont
 				 * was not based on a named font. */
     Screen *screen;		/* The screen where this font is valid. */
-#ifdef HAVE_XFT
-    Colormap colormap;
-    Visual* visual;
-#endif
     int tabWidth;		/* Width of tabs in this font (pixels). */
     int	underlinePos;		/* Offset from baseline to origin of underline
 				 * bar (used for drawing underlines on a
@@ -136,6 +132,10 @@ typedef struct TkFont {
 				 * (but different displays) are chained
 				 * together off a single entry in a hash
 				 * table. */
+#ifdef HAVE_XFT
+    Colormap colormap;
+    Visual* visual;
+#endif
 } TkFont;
 
 /*
