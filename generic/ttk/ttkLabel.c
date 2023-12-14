@@ -332,7 +332,7 @@ static int ImageSetup(
     if (!image->imageSpec) {
 	return 0;
     }
-    image->tkimg = TtkSelectImage(image->imageSpec, state);
+    image->tkimg = TtkSelectImage(image->imageSpec, tkwin, state);
     if (!image->tkimg) {
 	TtkFreeImageSpec(image->imageSpec);
 	return 0;
@@ -406,7 +406,7 @@ static void ImageDraw(
 
 
     if (state & TTK_STATE_DISABLED) {
-	if (TtkSelectImage(image->imageSpec, 0ul) == image->tkimg) {
+	if (TtkSelectImage(image->imageSpec, tkwin, 0ul) == image->tkimg) {
 #ifndef MAC_OSX_TK
 	    StippleOver(image, tkwin, d, b.x,b.y);
 #endif
