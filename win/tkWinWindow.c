@@ -340,7 +340,7 @@ XDestroyWindow(
  *	Cause the given window to become visible.
  *
  * Results:
- *	None
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	Causes the window state to change, and generates a MapNotify event.
@@ -355,8 +355,12 @@ XMapWindow(
 {
     XEvent event;
     TkWindow *parentPtr;
-    TkWindow *winPtr = TkWinGetWinPtr(w);
+    TkWindow *winPtr;
 
+    if (!w) {
+	return BadWindow;
+    }
+    winPtr = TkWinGetWinPtr(w);
     LastKnownRequestProcessed(display)++;
 
     ShowWindow(Tk_GetHWND(w), SW_SHOWNORMAL);
@@ -449,7 +453,7 @@ NotifyVisibility(
  *	Cause the given window to become invisible.
  *
  * Results:
- *	None
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	Causes the window state to change, and generates an UnmapNotify event.
@@ -463,8 +467,12 @@ XUnmapWindow(
     Window w)
 {
     XEvent event;
-    TkWindow *winPtr = TkWinGetWinPtr(w);
+    TkWindow *winPtr;
 
+    if (!w) {
+	return BadWindow;
+    }
+    winPtr = TkWinGetWinPtr(w);
     LastKnownRequestProcessed(display)++;
 
     /*

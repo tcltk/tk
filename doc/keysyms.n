@@ -129,7 +129,7 @@ section                            167     0xA7
 diaeresis                          168     0xA8
 copyright                          169     0xA9
 ordfeminine                        170     0xAA
-guillemotleft                      171     0xAB
+guillemetleft                      171     0xAB
 notsign                            172     0xAC
 hyphen                             173     0xAD
 registered                         174     0xAE
@@ -144,8 +144,8 @@ paragraph                          182     0xB6
 periodcentered                     183     0xB7
 cedilla                            184     0xB8
 onesuperior                        185     0xB9
-masculine                          186     0xBA
-guillemotright                     187     0xBB
+ordmasculine                       186     0xBA
+guillemetright                     187     0xBB
 onequarter                         188     0xBC
 onehalf                            189     0xBD
 threequarters                      190     0xBE
@@ -1092,8 +1092,8 @@ dead_o                           65158     0xFE86
 dead_O                           65159     0xFE87
 dead_u                           65160     0xFE88
 dead_U                           65161     0xFE89
-dead_small_schwa                 65162     0xFE8A
-dead_capital_schwa               65163     0xFE8B
+dead_schwa                       65162     0xFE8A
+dead_SCHWA                       65163     0xFE8B
 dead_greek                       65164     0xFE8C
 dead_lowline                     65168     0xFE90
 dead_aboveverticalline           65169     0xFE91
