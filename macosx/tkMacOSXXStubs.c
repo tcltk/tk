@@ -867,12 +867,9 @@ XSetIconName(
 
 Bool
 XFilterEvent(
-    XEvent *event,
-    Window window)
+    TCL_UNUSED(XEvent *),
+    TCL_UNUSED(Window))
 {
-    (void)event;
-    (void)window;
-
     return 0;
 }
 
