@@ -336,14 +336,11 @@ colorcmp(
 
 Status
 XParseColor(
-    Display *display,
-    Colormap map,
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Colormap),
     const char *spec,
     XColor *colorPtr)
 {
-    (void)display;
-    (void)map;
-
     if (spec[0] == '#') {
 	char *p;
 	Tcl_WideInt value = parseHex64bit(++spec, &p);
