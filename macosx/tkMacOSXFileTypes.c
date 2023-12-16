@@ -24,41 +24,33 @@ without generating deprecation warnings.
 */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXFileTypes.h"
 
 #define CHARS_TO_OSTYPE(string) (OSType) string[0] << 24 | \
                                 (OSType) string[1] << 16 | \
                                 (OSType) string[2] <<  8 | \
                                 (OSType) string[3]
 
-static BOOL initialized = false;
-static Tcl_HashTable ostype2identifier;
-static void initOSTypeTable(void) {
-    int newPtr;
-    Tcl_HashEntry *hPtr;
-    const IdentifierForOSType *entry;
-    Tcl_InitHashTable(&ostype2identifier, TCL_ONE_WORD_KEYS);
-    for (entry = OSTypeDB; entry->ostype != NULL; entry++) {
-	const char *key = INT2PTR(CHARS_TO_OSTYPE(entry->ostype));
-        hPtr = Tcl_CreateHashEntry(&ostype2identifier, key, &newPtr);
-	if (newPtr) {
-	    Tcl_SetHashValue(hPtr, entry->identifier);
-	}
-    }
-    initialized = true;
-}
-
 MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
-    if (!initialized) {
-	initOSTypeTable();
+    char string[5];
+    string[4] = '\0';
+    string[3] = ostype;
+    string[2] = ostype >> 8;
+    string[1] = ostype >> 16;
+    string[0] = ostype >> 24;
+    NSString *tag = [NSString stringWithCString:string encoding:NSMacOSRomanStringEncoding];
+    if (tag == nil) {
+	return nil;
     }
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&ostype2identifier, INT2PTR(ostype));
-    if (hPtr) {
-	char *UTI = (char *)Tcl_GetHashValue(hPtr);
-	return [[NSString alloc] initWithCString:UTI
-					encoding:NSASCIIStringEncoding];
+    NSString *result = nil;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+    if (@available(macOS 11.0, *)) {
+	return [UTType typeWithTag:tag tagClass:@"com.apple.ostype" conformingToType:nil].identifier;
     }
-    return nil;
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+    result = (NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassOSType, (CFStringRef)tag, NULL);
+#endif
+    return result;
 }
 
 /*
@@ -67,9 +59,6 @@ MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
  * or a Uniform Type Idenfier.  This function can serve as a replacement.
  */
 MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
-    if (!initialized) {
-	initOSTypeTable();
-    }
 #if MAC_OS_X_VERSION_MAX_ALLOWED < 110000
 // We don't have UTType but iconForFileType is not deprecated, so use it.
     return [[NSWorkspace sharedWorkspace] iconForFileType:filetype];
@@ -77,6 +66,13 @@ MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
 // We might have UTType but iconForFileType might be deprecated.
     if (@available(macOS 11.0, *)) {
 	/* Yes, we do have UTType */
+	if (filetype == nil) {
+	    /*
+	     * Bug 9be830f61b: match the behavior of
+	     * [NSWorkspace.sharedWorkspace iconForFileType:nil]
+	     */
+	     filetype = @"public.data";
+	}
 	UTType *uttype = [UTType typeWithIdentifier: filetype];
 	if (uttype == nil || !uttype.isDeclared) {
 	    uttype = [UTType typeWithFilenameExtension: filetype];
