@@ -6,26 +6,48 @@
 
 # ::tk::ScalingPct --
 #
-# Returns the display's current scaling percentage (100, 125, 150, 175, 200, or
-# a greater integer value).
-
-namespace eval ::tk {
-    namespace export ScalingPct ScaleNum
-}
+# Returns the display's "scaling percentage" (the display resolution expressed
+# as a percentage of 96dpi), rounded to the nearest multiple of 25 that is at
+# least 100.
+#
+# On X11 systems (but not on SDL systems that claim to be X11), the first call
+# of the command also sets [tk scaling] and ::tk::fontScalingFactor to values
+# extracted from the X11 configuration.
+#
+# The command is called during Tk initialization, from icons.tcl, when the
+# latter is sourced by tk.tcl.
 
 proc ::tk::ScalingPct {} {
-    variable scalingPct
-    if {[info exists scalingPct]} {
-	return $scalingPct
+    set pct [expr {[tk scaling] * 75}]
+
+    variable doneScalingInitX11
+    if {![info exists doneScalingInitX11]} {
+	set pct [::tk::ScalingInitX11 $pct]
+	set doneScalingInitX11 1
     }
 
-    set pct [expr {[tk scaling] * 75}]
-    set origPct $pct
+    #
+    # Save the value of pct rounded to the nearest multiple
+    # of 25 that is at least 100, in the variable scalingPct.
+    # See "man n tk_scalingPct" for use of ::tk::scalingPct.
+    #
+    variable scalingPct
+    for {set scalingPct 100} {1} {incr scalingPct 25} {
+	if {$pct < $scalingPct + 12.5} {
+	    break
+	}
+    }
 
+    return $scalingPct
+}
+
+proc ::tk::ScalingInitX11 {pct} {
     set onX11 [expr {[tk windowingsystem] eq "x11"}]
     set usingSDL [expr {[info exists ::tk::sdltk] && $::tk::sdltk}]
 
     if {$onX11 && !$usingSDL} {
+	set origPct $pct
+
 	#
 	# Try to get the window scaling factor (1 or 2), partly
 	# based on https://wiki.archlinux.org/title/HiDPI
@@ -90,7 +112,7 @@ proc ::tk::ScalingPct {} {
 	    # Derive the value of pct from that of the font DPI
 	    #
 	    set dpi [lindex $result 1]
-	    set pct [expr {100 * $dpi / 96}]
+	    set pct [expr {100.0 * $dpi / 96}]
 	} elseif {[catch {exec ps -e | grep gnome-session}] == 0 &&
 		  ![info exists ::env(WAYLAND_DISPLAY)] &&
 		  [catch {exec xrandr | grep " connected"} result] == 0 &&
@@ -100,46 +122,39 @@ proc ::tk::ScalingPct {} {
 	    #
 	    ScanMonitorsFile $result $chan pct
 	}
-    }
 
-    #
-    # Set pct to a multiple of 25
-    #
-    for {set pct2 100} {1} {incr pct2 25} {
-	if {$pct < $pct2 + 12.5} {
-	    set pct $pct2
-	    break
+	if {($pct != 100) && ($pct != $origPct) && (![interp issafe])} {
+	    #
+	    # Set Tk's scaling factor according to $pct
+	    #
+	    tk scaling [expr {$pct / 75.0}]
 	}
     }
-
-    if {$onX11 && $pct != 100 && $pct != $origPct} {
-	#
-	# Set Tk's scaling factor according to $pct
-	#
-	tk scaling [expr {$pct / 75.0}]
-    }
-
-    set scalingPct $pct
     return $pct
 }
 
 # ::tk::ScaleNum --
 #
-# Scales a nonnegative integer according to the display's current scaling
-# percentage.
+# Scales an integer according to the display's current scaling percentage.
 #
 # Arguments:
-#   num - A nonnegative integer.
+#   num - An integer.
 
 proc ::tk::ScaleNum num {
-    set pct [::tk::ScalingPct]
-    set factor [expr {$num * $pct}]
-    set result [expr {$factor / 100}]
-    if {$factor % 100 >= 50} {
-	incr result
-    }
+    return [expr {round($num * [tk scaling] * 0.75)}]
+}
 
-    return $result
+# ::tk::FontScalingFactor --
+#
+# Accessor command for variable ::tk::fontScalingFactor.
+
+proc ::tk::FontScalingFactor {} {
+    variable fontScalingFactor
+    if {[info exists fontScalingFactor]} {
+	return $fontScalingFactor
+    } else {
+	return 1
+    }
 }
 
 # ::tk::ScanMonitorsFile --

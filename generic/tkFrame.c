@@ -43,7 +43,7 @@ typedef struct {
 				 * available for this widget. */
     char *className;		/* Class name for widget (from configuration
 				 * option). Malloc-ed. */
-    enum FrameType type;	/* Type of widget, such as TYPE_FRAME. */
+    int type;			/* Type of widget, such as TYPE_FRAME. */
     char *screenName;		/* Screen on which widget is created. Non-null
 				 * only for top-levels. Malloc-ed, may be
 				 * NULL. */
@@ -329,10 +329,7 @@ static const Tk_OptionSpec *const optionSpecs[] = {
 static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-static int		CreateFrame(void *clientData, Tcl_Interp *interp,
-			    Tcl_Size objc, Tcl_Obj *const objv[],
-			    enum FrameType type, const char *appName);
-static void		DestroyFrame(void *memPtr);
+static Tcl_FreeProc	DestroyFrame;
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(void *clientData);
 static void		DrawFrameBackground(Tk_Window tkwin, Pixmap pixmap,
@@ -405,7 +402,7 @@ Tk_FrameObjCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    return CreateFrame(clientData, interp, objc, objv, TYPE_FRAME, NULL);
+    return TkCreateFrame(clientData, interp, objc, objv, TYPE_FRAME, NULL);
 }
 
 int
@@ -415,7 +412,7 @@ Tk_ToplevelObjCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    return CreateFrame(clientData, interp, objc, objv, TYPE_TOPLEVEL, NULL);
+    return TkCreateFrame(clientData, interp, objc, objv, TYPE_TOPLEVEL, NULL);
 }
 
 int
@@ -425,7 +422,7 @@ Tk_LabelframeObjCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    return CreateFrame(clientData, interp, objc, objv, TYPE_LABELFRAME, NULL);
+    return TkCreateFrame(clientData, interp, objc, objv, TYPE_LABELFRAME, NULL);
 }
 
 /*
@@ -446,67 +443,13 @@ Tk_LabelframeObjCmd(
  *
  *--------------------------------------------------------------
  */
-
 int
 TkCreateFrame(
-    void *clientData,	/* Either NULL or pointer to option table. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
-    const char *const *argv,	/* Argument strings. */
-    int toplevel,		/* Non-zero means create a toplevel window,
-				 * zero means create a frame. */
-    const char *appName)	/* Should only be non-NULL if there is no main
-				 * window associated with the interpreter.
-				 * Gives the base name to use for the new
-				 * application. */
-{
-    int result, i;
-    Tcl_Obj **objv = (Tcl_Obj **)ckalloc((argc+1) * sizeof(Tcl_Obj **));
-
-    for (i=0; i<argc; i++) {
-	objv[i] = Tcl_NewStringObj(argv[i], TCL_INDEX_NONE);
-	Tcl_IncrRefCount(objv[i]);
-    }
-    objv[argc] = NULL;
-    result = CreateFrame(clientData, interp, argc, objv,
-	    toplevel ? TYPE_TOPLEVEL : TYPE_FRAME, appName);
-    for (i=0; i<argc; i++) {
-	Tcl_DecrRefCount(objv[i]);
-    }
-    ckfree(objv);
-    return result;
-}
-
-int
-TkListCreateFrame(
-    void *clientData,	/* Either NULL or pointer to option table. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Obj *listObj,		/* List of arguments. */
-    int toplevel,		/* Non-zero means create a toplevel window,
-				 * zero means create a frame. */
-    Tcl_Obj *nameObj)		/* Should only be non-NULL if there is no main
-				 * window associated with the interpreter.
-				 * Gives the base name to use for the new
-				 * application. */
-{
-    Tcl_Size objc;
-    Tcl_Obj **objv;
-
-    if (TCL_OK != Tcl_ListObjGetElements(interp, listObj, &objc, &objv)) {
-	return TCL_ERROR;
-    }
-    return CreateFrame(clientData, interp, objc, objv,
-	    toplevel ? TYPE_TOPLEVEL : TYPE_FRAME,
-	    nameObj ? Tcl_GetString(nameObj) : NULL);
-}
-
-static int
-CreateFrame(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
-    enum FrameType type,	/* What widget type to create. */
+    int type,	/* What widget type to create. */
     const char *appName)	/* Should only be non-NULL if there are no
 				 * Main window associated with the
 				 * interpreter. Gives the base name to use for
@@ -889,7 +832,11 @@ FrameWidgetObjCmd(
 
 static void
 DestroyFrame(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about frame widget. */
+#else
+    char *memPtr)
+#endif
 {
     Frame *framePtr = (Frame *)memPtr;
     Labelframe *labelframePtr = (Labelframe *)memPtr;
@@ -1480,7 +1427,7 @@ DisplayFrame(
     Tk_Window tkwin = framePtr->tkwin;
     int bdX1, bdY1, bdX2, bdY2, hlWidth;
     Pixmap pixmap;
-    TkRegion clipRegion = NULL;
+    Bool useClipping = False;
 
     framePtr->flags &= ~REDRAW_PENDING;
     if ((framePtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
@@ -1619,11 +1566,9 @@ DisplayFrame(
 	    if ((labelframePtr->labelBox.width < labelframePtr->labelReqWidth)
 		    || (labelframePtr->labelBox.height <
 			    labelframePtr->labelReqHeight)) {
-		clipRegion = TkCreateRegion();
-		TkUnionRectWithRegion(&labelframePtr->labelBox, clipRegion,
-			clipRegion);
-		TkSetRegion(framePtr->display, labelframePtr->textGC,
-			clipRegion);
+		useClipping = True;
+		XSetClipRectangles(framePtr->display, labelframePtr->textGC, 0, 0,
+			&labelframePtr->labelBox, 1, Unsorted);
 	    }
 
 	    Tk_DrawTextLayout(framePtr->display, pixmap,
@@ -1631,9 +1576,8 @@ DisplayFrame(
 		    labelframePtr->labelTextX + LABELSPACING,
 		    labelframePtr->labelTextY + LABELSPACING, 0, -1);
 
-	    if (clipRegion != NULL) {
+	    if (useClipping) {
 		XSetClipMask(framePtr->display, labelframePtr->textGC, None);
-		TkDestroyRegion(clipRegion);
 	    }
 	} else {
 	    /*
@@ -1779,7 +1723,7 @@ FrameEventProc(
 	    Tcl_CancelIdleCall(DisplayFrame, framePtr);
 	}
 	Tcl_CancelIdleCall(MapFrame, framePtr);
-	Tcl_EventuallyFree(framePtr, (Tcl_FreeProc *) DestroyFrame);
+	Tcl_EventuallyFree(framePtr, DestroyFrame);
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    framePtr->flags |= GOT_FOCUS;

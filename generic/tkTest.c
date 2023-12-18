@@ -240,7 +240,7 @@ Tktest_Init(
 {
     static int initialized = 0;
 
-    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
 	return TCL_ERROR;
     }
     if (Tk_InitStubs(interp, TK_VERSION, 0) == NULL) {
@@ -302,14 +302,6 @@ Tktest_Init(
     if (!initialized) {
 	initialized = 1;
 	Tk_CreateImageType(&imageType);
-    }
-
-    /*
-     *	Enable testing of legacy interfaces.
-     */
-
-    if (TkOldTestInit(interp) != TCL_OK) {
-	return TCL_ERROR;
     }
 
     /*

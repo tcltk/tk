@@ -81,13 +81,17 @@ static void EndDrawing(Tk_Window tkwin, Drawable d)
 #else
 /* No double-buffering: draw directly into the window. */
 static Drawable BeginDrawing(Tk_Window tkwin) { return Tk_WindowId(tkwin); }
-static void EndDrawing(Tk_Window tkwin, Drawable d) { (void)tkwin; (void)d;}
+static void EndDrawing(
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Drawable))
+{
+}
 #endif
 
 /* DrawWidget --
  *	Redraw a widget.  Called as an idle handler.
  */
-static void DrawWidget(ClientData recordPtr)
+static void DrawWidget(void *recordPtr)
 {
     WidgetCore *corePtr = (WidgetCore *)recordPtr;
 
@@ -121,7 +125,7 @@ void TtkRedisplayWidget(WidgetCore *corePtr)
  * 	Invoked whenever fonts or other system resources are changed;
  * 	recomputes geometry.
  */
-static void WidgetWorldChanged(ClientData clientData)
+static void WidgetWorldChanged(void *clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     (void)UpdateLayout(corePtr->interp, corePtr);
@@ -159,7 +163,7 @@ void TtkWidgetChangeState(WidgetCore *corePtr,
  */
 static int
 WidgetInstanceObjCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     const Ttk_Ensemble *commands = corePtr->widgetSpec->commands;
@@ -194,21 +198,12 @@ WidgetInstanceObjCmd(
  * 	Widget instance command	deletion callback.
  */
 static void
-WidgetInstanceObjCmdDeleted(ClientData clientData)
+WidgetInstanceObjCmdDeleted(void *clientData)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     corePtr->widgetCmd = NULL;
     if (corePtr->tkwin != NULL)
 	Tk_DestroyWindow(corePtr->tkwin);
-}
-
-/* FreeWidget --
- *	 Final cleanup for widget; called via Tcl_EventuallyFree().
- */
-static void
-FreeWidget(void *memPtr)
-{
-    ckfree(memPtr);
 }
 
 /* DestroyWidget --
@@ -239,7 +234,7 @@ DestroyWidget(WidgetCore *corePtr)
 	/* NB: this can reenter the interpreter via a command traces */
 	Tcl_DeleteCommandFromToken(corePtr->interp, cmd);
     }
-    Tcl_EventuallyFree(corePtr, (Tcl_FreeProc *) FreeWidget);
+    Tcl_EventuallyFree(corePtr, TCL_DYNAMIC);
 }
 
 /*
@@ -269,7 +264,7 @@ static const unsigned CoreEventMask
     | LeaveWindowMask
     ;
 
-static void CoreEventProc(ClientData clientData, XEvent *eventPtr)
+static void CoreEventProc(void *clientData, XEvent *eventPtr)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
 
@@ -344,7 +339,7 @@ static const Tk_ClassProcs widgetClassProcs = {
  *	ClientData is a WidgetSpec *.
  */
 int TtkWidgetConstructorObjCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     WidgetSpec *widgetSpec = (WidgetSpec *)clientData;
     const char *className = widgetSpec->className;
@@ -489,7 +484,7 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
 
     /* Prefix:
      */
-    TtkGetOrientFromObj(NULL, orientObj, &orient);
+    Ttk_GetOrientFromObj(NULL, orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL)
 	Tcl_DStringAppend(&styleName, "Horizontal.", -1);
     else
@@ -517,21 +512,20 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
 /* TtkNullInitialize --
  * 	Default widget initializeProc (no-op)
  */
-void TtkNullInitialize(Tcl_Interp *interp, void *recordPtr)
+void TtkNullInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(void *))
 {
-    (void)interp;
-    (void)recordPtr;
 }
 
 /* TtkNullPostConfigure --
  * 	Default widget postConfigureProc (no-op)
  */
-int TtkNullPostConfigure(Tcl_Interp *interp, void *clientData, int mask)
+int TtkNullPostConfigure(
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int))
 {
-    (void)interp;
-    (void)clientData;
-    (void)mask;
-
     return TCL_OK;
 }
 
@@ -554,9 +548,9 @@ int TtkCoreConfigure(Tcl_Interp *interp, void *clientData, int mask)
 /* TtkNullCleanup --
  * 	Default widget cleanupProc (no-op)
  */
-void TtkNullCleanup(void *recordPtr)
+void TtkNullCleanup(
+    TCL_UNUSED(void *))
 {
-    (void)recordPtr;
     return;
 }
 

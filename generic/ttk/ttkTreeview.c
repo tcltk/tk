@@ -1922,8 +1922,9 @@ static Ttk_Layout TreeviewGetLayout(
 
     if ((objPtr = Ttk_QueryOption(treeLayout, "-rowheight", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.rowHeight);
-	tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
     }
+    tv->tree.rowHeight = MAX(tv->tree.rowHeight, 1);
+
     if ((objPtr = Ttk_QueryOption(treeLayout, "-columnseparatorwidth", 0))) {
 	(void)Tk_GetPixelsFromObj(NULL, tv->core.tkwin, objPtr, &tv->tree.colSeparatorWidth);
     }
@@ -2751,7 +2752,10 @@ static int TreeviewBBoxCommand(
  * 	row itemid
  */
 static int TreeviewHorribleIdentify(
-    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], Treeview *tv)
+    Tcl_Interp *interp,
+    TCL_UNUSED(Tcl_Size), /* objc */
+    Tcl_Obj *const objv[],
+    Treeview *tv)
 {
     const char *what = "nothing", *detail = NULL;
     TreeItem *item = 0;
@@ -2759,7 +2763,6 @@ static int TreeviewHorribleIdentify(
     Tcl_Size dColumnNumber;
     char dcolbuf[32];
     int x, y, x1;
-    (void)objc;
 
     /* ASSERT: objc == 4 */
 
@@ -3244,6 +3247,50 @@ static int TreeviewDetachCommand(
     return TCL_OK;
 }
 
+/* Is an item detached? The root is never detached. */
+static int IsDetached(Treeview *tv, TreeItem *item)
+{
+	return item->next == NULL && item->prev == NULL &&
+			item->parent == NULL && item != tv->tree.root;
+}
+
+/* + $tv detached ?$item? --
+ * 	List detached items (in arbitrary order) or query the detached state of
+ * 	$item.
+ */
+static int TreeviewDetachedCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item;
+
+    if (objc == 2) {
+	/* List detached items */
+	Tcl_HashSearch search;
+	Tcl_HashEntry *entryPtr = Tcl_FirstHashEntry(&tv->tree.items, &search);
+	Tcl_Obj *objPtr = Tcl_NewObj();
+
+	while (entryPtr != NULL) {
+	    item = (TreeItem *)Tcl_GetHashValue(entryPtr);
+	    entryPtr = Tcl_NextHashEntry(&search);
+	    if (IsDetached(tv, item)) {
+		Tcl_ListObjAppendElement(NULL, objPtr, ItemID(tv, item));
+	    }
+	}
+	Tcl_SetObjResult(interp, objPtr);
+	return TCL_OK;
+    } else if (objc == 3) {
+	/* Query; the root is never reported as detached */
+	if (!(item = FindItem(interp, tv, objv[2]))) {
+	    return TCL_ERROR;
+	}
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(IsDetached(tv, item)));
+	return TCL_OK;
+    } else {
+	Tcl_WrongNumArgs(interp, 2, objv, "?item?");
+	return TCL_ERROR;
+    }
+}
 /* + $tv delete $items --
  * 	Delete each item in $items.
  *
@@ -3638,7 +3685,9 @@ static int TreeviewSelectionCommand(
  */
 static int SelObjChangeElement(
     Treeview *tv, Tcl_Obj *listPtr, Tcl_Obj *elemPtr,
-    int add, TCL_UNUSED(int) /*remove*/, int toggle)
+    int add,
+    TCL_UNUSED(int) /*remove*/,
+    int toggle)
 {
     Tcl_Size i, nElements;
     int anyChange = 0;
@@ -4352,6 +4401,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "delete", 	TreeviewDeleteCommand,0 },
     { "detach", 	TreeviewDetachCommand,0 },
+    { "detached", 	TreeviewDetachedCommand,0 },
     { "drag",   	TreeviewDragCommand,0 },
     { "drop",   	TreeviewDropCommand,0 },
     { "exists", 	TreeviewExistsCommand,0 },
@@ -4454,14 +4504,16 @@ static const Ttk_ElementOptionSpec TreeitemIndicatorOptions[] = {
 };
 
 static void TreeitemIndicatorSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     Ttk_Padding margins;
     int size = 0;
-    (void)dummy;
-    (void)paddingPtr;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
@@ -4471,8 +4523,12 @@ static void TreeitemIndicatorSize(
 }
 
 static void TreeitemIndicatorDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     TreeitemIndicator *indicator = (TreeitemIndicator *)elementRecord;
     ArrowDirection direction =
@@ -4480,7 +4536,6 @@ static void TreeitemIndicatorDraw(
     Ttk_Padding margins;
     XColor *borderColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     XGCValues gcvalues; GC gc; unsigned mask;
-    (void)dummy;
 
     if (state & TTK_STATE_LEAF) /* don't draw anything */
 	return;
@@ -4524,14 +4579,16 @@ static const Ttk_ElementOptionSpec RowElementOptions[] = {
 };
 
 static void RowElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     RowElement *row = (RowElement *)elementRecord;
     XColor *color = Tk_GetColorFromObj(tkwin, row->backgroundObj);
     GC gc = Tk_GCForColor(color, d);
-    (void)dummy;
-    (void)state;
 
     XFillRectangle(Tk_Display(tkwin), d, gc,
 	    b.x, b.y, b.width, b.height);

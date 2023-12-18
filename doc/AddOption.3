@@ -14,7 +14,7 @@ Tk_AddOption \- Add an option to the option database
 void
 \fBTk_AddOption\fR(\fItkwin, name, value, priority\fR)
 .sp
-void
+Tcl_Obj *
 \fBTk_GetSystemDefault\fR(\fItkwin, dbName, className\fR)
 .SH ARGUMENTS
 .AP Tk_Window tkwin in
@@ -40,20 +40,22 @@ classes separated by asterisks or dots, in the usual X format.
 this value will be returned in calls to \fBTk_GetOption\fR.
 \fIPriority\fR specifies the priority of the value; when options are
 queried using \fBTk_GetOption\fR, the value with the highest priority
-is returned.  \fIPriority\fR must be between 0 and \fBTK_MAX_PRIO\fR.  Some
-common priority values are:
-.IP 20
+is returned.  \fIPriority\fR must be between 0 and \fBTK_MAX_PRIO\fR (100).
+Some common priority values are:
+.IP \fBTK_WIDGET_DEFAULT_PRIO\fR (20)
 Used for default values hard-coded into widgets.
-.IP 40
+.IP \fBTK_STARTUP_FILE_PRIO\fR (40)
 Used for options specified in application-specific startup files.
-.IP 60
+.IP \fBTK_USER_DEFAULT_PRIO\fR (60)
 Used for options specified in user-specific defaults files, such as
 \fB.Xdefaults\fR, resource databases loaded into the X server, or
 user-specific startup files.
-.IP 80
+.IP \fBTK_INTERACTIVE_PRIO\fR (80)
 Used for options specified interactively after the application starts
 running.
-\fBTk_GetSystemDefault\fR return a Tk_Uid string representation of the given \fIdbname\fR and \fIclassName\fR of a configuration option.
+.PP
+\fBTk_GetSystemDefault\fR returns a Tcl_Obj* with the string identifying
+a configuration option matching the given \fIdbname\fR and \fIclassName\fR.
 Returns NULL if there are no system defaults that match this pair.
 .SH KEYWORDS
 class, name, option, add

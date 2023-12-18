@@ -93,11 +93,11 @@ AC_DEFUN([SC_PATH_TCLCONFIG], [
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/pkg/lib 2>/dev/null` \
-			`ls -d /usr/lib/tcl8.7 2>/dev/null` \
+			`ls -d /usr/lib/tcl9.0 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl8.7 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl/tcl8.7 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tcl9.0 2>/dev/null` \
 			; do
 		    if test -f "$i/tclConfig.sh" ; then
 			ac_cv_c_tclconfig="`(cd $i; pwd)`"
@@ -226,11 +226,11 @@ AC_DEFUN([SC_PATH_TKCONFIG], [
 			`ls -d /usr/local/lib 2>/dev/null` \
 			`ls -d /usr/contrib/lib 2>/dev/null` \
 			`ls -d /usr/pkg/lib 2>/dev/null` \
-			`ls -d /usr/lib/tk8.7 2>/dev/null` \
+			`ls -d /usr/lib/tk9.0 2>/dev/null` \
 			`ls -d /usr/lib 2>/dev/null` \
 			`ls -d /usr/lib64 2>/dev/null` \
-			`ls -d /usr/local/lib/tk8.7 2>/dev/null` \
-			`ls -d /usr/local/lib/tcl/tk8.7 2>/dev/null` \
+			`ls -d /usr/local/lib/tk9.0 2>/dev/null` \
+			`ls -d /usr/local/lib/tcl/tk9.0 2>/dev/null` \
 			; do
 		    if test -f "$i/tkConfig.sh" ; then
 			ac_cv_c_tkconfig="`(cd $i; pwd)`"
@@ -1087,9 +1087,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 	    DL_LIBS="-ldl"
 	    CC_SEARCH_FLAGS=""
 	    LD_SEARCH_FLAGS=""
-	    TCL_NEEDS_EXP_FILE=1
-	    TCL_EXPORT_FILE_SUFFIX='${VERSION}.dll.a'
-	    SHLIB_LD_LIBS="${SHLIB_LD_LIBS} -Wl,--out-implib,\$[@].a"
 	    AC_CACHE_CHECK(for Cygwin version of gcc,
 		ac_cv_cygwin,
 		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
@@ -1805,7 +1802,7 @@ dnl # preprocessing tests use only CPPFLAGS.
         LIB_SUFFIX=${SHARED_LIB_SUFFIX}
         MAKE_LIB='${SHLIB_LD} -o [$]@ ${OBJS} ${LDFLAGS} ${SHLIB_LD_LIBS} ${TCL_SHLIB_LD_EXTRAS} ${TK_SHLIB_LD_EXTRAS} ${LD_SEARCH_FLAGS}'
         AS_IF([test "${SHLIB_SUFFIX}" = ".dll"], [
-            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)";if test -f $(LIB_FILE).a; then $(INSTALL_DATA) $(LIB_FILE).a "$(LIB_INSTALL_DIR)"; fi;'
+            INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(BIN_INSTALL_DIR)/$(LIB_FILE)"'
             DLL_INSTALL_DIR="\$(BIN_INSTALL_DIR)"
         ], [
             INSTALL_LIB='$(INSTALL_LIBRARY) $(LIB_FILE) "$(LIB_INSTALL_DIR)/$(LIB_FILE)"'
@@ -1877,6 +1874,9 @@ dnl # preprocessing tests use only CPPFLAGS.
 
     AC_CHECK_HEADER(stdbool.h, [AC_DEFINE(HAVE_STDBOOL_H, 1, [Do we have <stdbool.h>?])],)
 
+    # Check for vfork, posix_spawnp() and friends unconditionally
+    AC_CHECK_FUNCS(vfork posix_spawnp posix_spawn_file_actions_adddup2 posix_spawnattr_setflags)
+
     # FIXME: This subst was left in only because the TCL_DL_LIBS
     # entry in tclConfig.sh uses it. It is not clear why someone
     # would use TCL_DL_LIBS instead of TCL_LIBS.
@@ -1932,8 +1932,6 @@ dnl # preprocessing tests use only CPPFLAGS.
 # Results:
 #
 #	Defines some of the following vars:
-#		NO_DIRENT_H
-#		NO_STDLIB_H
 #		NO_STRING_H
 #		NO_SYS_WAIT_H
 #		NO_DLFCN_H
@@ -1943,38 +1941,6 @@ dnl # preprocessing tests use only CPPFLAGS.
 #--------------------------------------------------------------------
 
 AC_DEFUN([SC_MISSING_POSIX_HEADERS], [
-    AC_CACHE_CHECK([dirent.h], tcl_cv_dirent_h, [
-    AC_LINK_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
-#include <dirent.h>]], [[
-#ifndef _POSIX_SOURCE
-#   ifdef __Lynx__
-	/*
-	 * Generate compilation error to make the test fail:  Lynx headers
-	 * are only valid if really in the POSIX environment.
-	 */
-
-	missing_procedure();
-#   endif
-#endif
-DIR *d;
-struct dirent *entryPtr;
-char *p;
-d = opendir("foobar");
-entryPtr = readdir(d);
-p = entryPtr->d_name;
-closedir(d);
-]])],[tcl_cv_dirent_h=yes],[tcl_cv_dirent_h=no])])
-
-    if test $tcl_cv_dirent_h = no; then
-	AC_DEFINE(NO_DIRENT_H, 1, [Do we have <dirent.h>?])
-    fi
-
-    AC_CHECK_HEADER(stdlib.h, tcl_ok=1, tcl_ok=0)
-    AC_EGREP_HEADER(strtol, stdlib.h, , tcl_ok=0)
-    AC_EGREP_HEADER(strtoul, stdlib.h, , tcl_ok=0)
-    if test $tcl_ok = 0; then
-	AC_DEFINE(NO_STDLIB_H, 1, [Do we have <stdlib.h>?])
-    fi
     AC_CHECK_HEADER(string.h, tcl_ok=1, tcl_ok=0)
     AC_EGREP_HEADER(strstr, string.h, , tcl_ok=0)
     AC_EGREP_HEADER(strerror, string.h, , tcl_ok=0)
@@ -2328,6 +2294,7 @@ AC_DEFUN([SC_TCL_LINK_LIBS], [
 #
 #	Might define the following vars:
 #		_ISOC99_SOURCE
+#		_FILE_OFFSET_BITS
 #		_LARGEFILE64_SOURCE
 #
 #--------------------------------------------------------------------
@@ -2335,12 +2302,12 @@ AC_DEFUN([SC_TCL_LINK_LIBS], [
 AC_DEFUN([SC_TCL_EARLY_FLAG],[
     AC_CACHE_VAL([tcl_cv_flag_]translit($1,[A-Z],[a-z]),
 	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[$2]], [[$3]])],
-	    [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[[#define ]$1[ 1
+	    [tcl_cv_flag_]translit($1,[A-Z],[a-z])=no,[AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[[#define ]$1[ ]m4_default([$4],[1])[
 ]$2]], [[$3]])],
 	[tcl_cv_flag_]translit($1,[A-Z],[a-z])=yes,
 	[tcl_cv_flag_]translit($1,[A-Z],[a-z])=no)]))
     if test ["x${tcl_cv_flag_]translit($1,[A-Z],[a-z])[}" = "xyes"] ; then
-	AC_DEFINE($1, 1, [Add the ]$1[ flag when building])
+	AC_DEFINE($1, m4_default([$4],[1]), [Add the ]$1[ flag when building])
 	tcl_flags="$tcl_flags $1"
     fi
 ])
@@ -2350,6 +2317,8 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
     tcl_flags=""
     SC_TCL_EARLY_FLAG(_ISOC99_SOURCE,[#include <stdlib.h>],
 	[char *p = (char *)strtoll; char *q = (char *)strtoull;])
+    SC_TCL_EARLY_FLAG(_FILE_OFFSET_BITS,[#include <sys/stat.h>],
+	[switch (0) { case 0: case (sizeof(off_t)==sizeof(long long)): ; }],64)
     SC_TCL_EARLY_FLAG(_LARGEFILE64_SOURCE,[#include <sys/stat.h>],
 	[struct stat64 buf; int i = stat64("/", &buf);])
     if test "x${tcl_flags}" = "x" ; then
@@ -2372,8 +2341,8 @@ AC_DEFUN([SC_TCL_EARLY_FLAGS],[
 #	Might define the following vars:
 #		TCL_WIDE_INT_IS_LONG
 #		HAVE_STRUCT_DIRENT64, HAVE_DIR64
-#		HAVE_STRUCT_STAT64
 #		HAVE_TYPE_OFF64_T
+#		_TIME_BITS
 #
 #--------------------------------------------------------------------
 
@@ -2388,11 +2357,28 @@ AC_DEFUN([SC_TCL_64BIT_FLAGS], [
             case 1: case (sizeof(long long)==sizeof(long)): ;
         }]])],[tcl_cv_type_64bit="long long"],[])])
     if test "${tcl_cv_type_64bit}" = none ; then
-	AC_DEFINE(TCL_WIDE_INT_IS_LONG, 1, ['long' and 'long long' have the same size])
+	AC_DEFINE(TCL_WIDE_INT_IS_LONG, 1, [Do 'long' and 'long long' have the same size (64-bit)?])
 	AC_MSG_RESULT([yes])
     else
 	AC_MSG_RESULT([no])
 	# Now check for auxiliary declarations
+	AC_CACHE_CHECK([for 64-bit time_t], tcl_cv_time_t_64,[
+	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>]],
+		[[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		[tcl_cv_time_t_64=yes],[tcl_cv_time_t_64=no])])
+	if test "x${tcl_cv_time_t_64}" = "xno" ; then
+	    # Note that _TIME_BITS=64 requires _FILE_OFFSET_BITS=64
+	    # which SC_TCL_EARLY_FLAGS has defined if necessary.
+	    AC_CACHE_CHECK([if _TIME_BITS=64 enables 64-bit time_t], tcl_cv__time_bits,[
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#define _TIME_BITS 64
+#include <sys/types.h>]],
+		    [[switch (0) {case 0: case (sizeof(time_t)==sizeof(long long)): ;}]])],
+		    [tcl_cv__time_bits=yes],[tcl_cv__time_bits=no])])
+	    if test "x${tcl_cv__time_bits}" = "xyes" ; then
+		AC_DEFINE(_TIME_BITS, 64, [_TIME_BITS=64 enables 64-bit time_t.])
+	    fi
+	fi
+
 	AC_CACHE_CHECK([for struct dirent64], tcl_cv_struct_dirent64,[
 	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/types.h>
 #include <dirent.h>]], [[struct dirent64 p;]])],
@@ -2408,14 +2394,6 @@ AC_DEFUN([SC_TCL_64BIT_FLAGS], [
 		[tcl_cv_DIR64=yes], [tcl_cv_DIR64=no])])
 	if test "x${tcl_cv_DIR64}" = "xyes" ; then
 	    AC_DEFINE(HAVE_DIR64, 1, [Is 'DIR64' in <sys/types.h>?])
-	fi
-
-	AC_CACHE_CHECK([for struct stat64], tcl_cv_struct_stat64,[
-	    AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[#include <sys/stat.h>]], [[struct stat64 p;
-]])],
-		[tcl_cv_struct_stat64=yes], [tcl_cv_struct_stat64=no])])
-	if test "x${tcl_cv_struct_stat64}" = "xyes" ; then
-	    AC_DEFINE(HAVE_STRUCT_STAT64, 1, [Is 'struct stat64' in <sys/stat.h>?])
 	fi
 
 	AC_CHECK_FUNCS(open64 lseek64)

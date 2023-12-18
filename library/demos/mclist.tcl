@@ -11,7 +11,7 @@ package require Tk
 
 set w .mclist
 catch {destroy $w}
-toplevel $w
+toplevel $w -class MCList
 wm title $w "Multi-Column List"
 wm iconname $w "mclist"
 positionWindow $w
@@ -37,13 +37,47 @@ grid $w.hsb         -in $w.container -sticky nsew
 grid column $w.container 0 -weight 1
 grid row    $w.container 0 -weight 1
 
-image create photo upArrow -data {
-    R0lGODlhDgAOAJEAANnZ2YCAgPz8/P///yH5BAEAAAAALAAAAAAOAA4AAAImhI+
-    py+1LIsJHiBAh+BgmiEAJQITgW6DgUQIAECH4JN8IPqYuNxUAOw==}
-image create photo downArrow -data {
-    R0lGODlhDgAOAJEAANnZ2YCAgPz8/P///yH5BAEAAAAALAAAAAAOAA4AAAInhI+
-    py+1I4ocQ/IgDEYIPgYJICUCE4F+YIBolEoKPEJKZmVJK6ZACADs=}
-image create photo noArrow -height 14 -width 14
+set upArrowData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="m4 4 4-4 4 4z" fill="#000000"/>
+    </svg>
+}
+
+set downArrowData {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
+     <path d="m4 0 4 4 4-4z" fill="#000000"/>
+    </svg>
+}
+
+proc createArrowImages {} {
+    set fgColor [ttk::style lookup . -foreground {} black]
+    lassign [winfo rgb . $fgColor] r g b
+    set fgColor [format "#%02x%02x%02x" \
+	    [expr {$r >> 8}] [expr {$g >> 8}] [expr {$b >> 8}]]
+
+    foreach dir {up down} {
+	upvar ${dir}ArrowData imgData
+	set idx1 [string first "#000000" $imgData]
+	set idx2 [expr {$idx1 + 6}]
+	set data [string replace $imgData $idx1 $idx2 $fgColor]
+
+	image create photo ${dir}Arrow -format $::tk::svgFmt -data $data]
+    }
+}
+
+createArrowImages
+foreach event {<<ThemeChanged>> <<LightAqua>> <<DarkAqua>>} {
+    bind MCList $event { createArrowImages }
+}
+unset event
+
+image create photo noArrow -format $tk::svgFmt -data {
+    <?xml version="1.0" encoding="UTF-8"?>
+    <svg width="16" height="4" version="1.1" xmlns="http://www.w3.org/2000/svg">
+    </svg>
+}
 
 ## The data we're going to insert
 set data {
@@ -65,15 +99,14 @@ set data {
 }
 
 ## Code to insert the data nicely
-set font [ttk::style lookup Heading -font]
+set font [ttk::style lookup Heading -font {} TkDefaultFont]
+set morePx [expr {[image width noArrow] + round(4 * $tk::scalingPct / 100.0)}]
 foreach col {country capital currency} name {Country Capital Currency} {
     $w.tree heading $col -text $name -image noArrow -anchor w \
 	-command [list SortBy $w.tree $col 0]
-    $w.tree column $col -width [expr {
-	[font measure $font $name] + [image width noArrow] + 5
-    }]
+    $w.tree column $col -width [expr {[font measure $font $name] + $morePx}]
 }
-set font [ttk::style lookup Treeview -font]
+set font [ttk::style lookup Treeview -font {} TkDefaultFont]
 foreach {country capital currency} $data {
     $w.tree insert {} end -values [list $country $capital $currency]
     foreach col {country capital currency} {

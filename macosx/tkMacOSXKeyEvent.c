@@ -417,6 +417,9 @@ static NSUInteger textInputModifiers;
      replacementRange: (NSRange)repRange
 {
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
+    if (!winPtr) {
+	return;
+    }
     Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
     NSString *temp;
     NSString *str;
@@ -670,9 +673,12 @@ setXEventPoint(
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
 	} else {
-	    TkWindow *topPtr = TkMacOSXGetHostToplevel(winPtr)->winPtr;
-	    local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
-	    local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    MacDrawable *topMacWin = TkMacOSXGetHostToplevel(winPtr);
+	    if (topMacWin) {
+		TkWindow *topPtr = topMacWin->winPtr;
+		local.x -= (topPtr->wmInfoPtr->xInParent + contPtr->changes.x);
+		local.y -= (topPtr->wmInfoPtr->yInParent + contPtr->changes.y);
+	    }
 	}
     } else if (winPtr->wmInfoPtr != NULL) {
 	local.x -= winPtr->wmInfoPtr->xInParent;
@@ -710,17 +716,13 @@ int
 XGrabKeyboard(
     Display* display,
     Window grab_window,
-    Bool owner_events,
-    int pointer_mode,
-    int keyboard_mode,
-    Time time)
+    TCL_UNUSED(Bool),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Time))
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
-    (void)owner_events;
-    (void)pointer_mode;
-    (void)keyboard_mode;
-    (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
@@ -760,12 +762,9 @@ XGrabKeyboard(
 
 int
 XUngrabKeyboard(
-    Display* display,
-    Time time)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Time))
 {
-    (void)display;
-    (void)time;
-
     if (modalSession) {
 	[NSApp endModalSession:modalSession];
 	modalSession = nil;

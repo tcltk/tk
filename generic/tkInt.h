@@ -31,6 +31,8 @@
 #ifdef HAVE_SYS_PARAM_H
 #    include <sys/param.h>
 #endif
+#include <stdint.h>
+#include <stdlib.h>
 #ifdef BYTE_ORDER
 #    ifdef BIG_ENDIAN
 #	 if BYTE_ORDER == BIG_ENDIAN
@@ -74,29 +76,12 @@
 #endif
 
 
-#if TCL_MAJOR_VERSION < 9
-#   define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
-#   undef Tcl_CreateObjCommand2
-#   define Tcl_CreateObjCommand2 Tcl_CreateObjCommand
-#endif
-
-#if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
-# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
-# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
-# define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
-# define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
-#endif
-
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #   define TKFLEXARRAY
 #elif defined(__GNUC__) && (__GNUC__ > 2)
 #   define TKFLEXARRAY 0
 #else
 #   define TKFLEXARRAY 1
-#endif
-
-#if !defined(Tcl_GetParent) && (TCL_MAJOR_VERSION < 9) && (TCL_MINOR_VERSION < 7)
-#   define Tcl_GetParent Tcl_GetMaster
 #endif
 
 /*
@@ -561,21 +546,6 @@ typedef struct TkDisplay {
 				 * the display when we no longer have any Tk
 				 * applications using it. */
 
-    /*
-     * The following field were all added for Tk8.3
-     */
-
-#if TCL_MAJOR_VERSION < 9
-#if !defined(TK_NO_DEPRECATED)
-    int mouseButtonState;	/* Current mouse button state for this
-				 * display. NOT USED as of 8.6.10 */
-    Window mouseButtonWindow;	/* Window the button state was set in, added
-				 * in Tk 8.4. */
-#else
-    int notused1;
-    XID notused2;
-#endif /* !TK_NO_DEPRECATED */
-#endif
     Tk_Window warpWindow;
     Tk_Window warpMainwin;	/* For finding the root window for warping
 				 * purposes. */
@@ -728,7 +698,8 @@ typedef struct TkMainInfo {
 				 * Tcl's version of [update] after Tk is shut
 				 * down, in case it's a Tcl_ObjCmdProc2 */
 #endif
-
+    unsigned int ttkNbTabsStickBit;
+    				/* Information used by ttk::notebook. */
 } TkMainInfo;
 
 /*
@@ -1200,143 +1171,52 @@ MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
  * world:
  */
 
-MODULE_SCOPE int	Tk_BellObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BindObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BindtagsObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BusyObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ButtonObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_CanvasObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_CheckbuttonObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ClipboardObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseColorObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseDirectoryObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_DestroyObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_EntryObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_EventObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FrameObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FocusObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FontObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GetOpenFileObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GetSaveFileObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GrabObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GridObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ImageObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LabelObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LabelframeObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ListboxObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LowerObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MenuObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MenubuttonObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MessageBoxObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MessageObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PanedWindowObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_OptionObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PackObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PlaceObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_RadiobuttonObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_RaiseObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScaleObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScrollbarObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SelectionObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendObjCmd(void *clientData,
-			    Tcl_Interp *interp,Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SpinboxObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_TextObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_TkwaitObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ToplevelObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_UpdateObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_WinfoObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_WmObjCmd(void *clientData, Tcl_Interp *interp,
-			    Tcl_Size objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BellObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BindObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BindtagsObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ButtonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_CanvasObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_CheckbuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ClipboardObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ChooseColorObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ChooseDirectoryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_DestroyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_EntryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_EventObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_FrameObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_FocusObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_FontObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GetOpenFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GetSaveFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GrabObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GridObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ImageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LabelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LabelframeObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ListboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LowerObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MenuObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MenubuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MessageBoxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MessageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_PanedWindowObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_OptionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_PackObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_PlaceObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_RadiobuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_RaiseObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ScaleObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ScrollbarObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SelectionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SendObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SpinboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_TextObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_TkwaitObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ToplevelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_UpdateObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_WinfoObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_WmObjCmd;
 
 MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
@@ -1345,8 +1225,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
-MODULE_SCOPE int	TkDeadAppObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
@@ -1407,6 +1286,7 @@ MODULE_SCOPE int	TkBackgroundEvalObjv(Tcl_Interp *interp,
 MODULE_SCOPE Tcl_Command TkMakeEnsemble(Tcl_Interp *interp,
 			    const char *nsname, const char *name,
 			    void *clientData, const TkEnsemble *map);
+MODULE_SCOPE double	TkScalingLevel(Tk_Window tkwin);
 MODULE_SCOPE int	TkInitTkCmd(Tcl_Interp *interp,
 			    void *clientData);
 MODULE_SCOPE int	TkInitFontchooser(Tcl_Interp *interp,
@@ -1415,21 +1295,13 @@ MODULE_SCOPE void	TkInitEmbeddedConfigurationInformation(
 			    Tcl_Interp *interp);
 MODULE_SCOPE void	TkDoWarpWrtWin(TkDisplay *dispPtr);
 MODULE_SCOPE void	TkpWarpPointer(TkDisplay *dispPtr);
-MODULE_SCOPE int	TkListCreateFrame(void *clientData,
-			    Tcl_Interp *interp, Tcl_Obj *listObj,
-			    int toplevel, Tcl_Obj *nameObj);
 MODULE_SCOPE void	TkRotatePoint(double originX, double originY,
 			    double sine, double cosine, double *xPtr,
 			    double *yPtr);
 MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
 
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
-#   define TkNewIndexObj(value) Tcl_NewWideIntObj((Tcl_WideInt)(value + 1) - 1)
-#   define TK_OPTION_UNDERLINE_DEF(type, field) "-1", TCL_INDEX_NONE, offsetof(type, field), 0, NULL
-#else
-#   define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
-#   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
-#endif
+#define TkNewIndexObj(value) (((Tcl_Size)(value) == TCL_INDEX_NONE) ? Tcl_NewObj() : Tcl_NewWideIntObj((Tcl_WideInt)(value)))
+#define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 
 
 #ifdef _WIN32
@@ -1465,17 +1337,10 @@ MODULE_SCOPE Status TkParseColor (Display * display,
 MODULE_SCOPE void	TkUnixSetXftClipRegion(Region clipRegion);
 #endif
 
+MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
+
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
-#endif
-
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
-#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
-#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
-#else
-    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
 
 #if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
@@ -1488,17 +1353,12 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
  * Unsupported commands.
  */
 
-MODULE_SCOPE int	TkUnsupported1ObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc2 TkUnsupported1ObjCmd;
 
 /*
  * For Tktest.
  */
-MODULE_SCOPE int SquareObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj * const objv[]);
-MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
+MODULE_SCOPE Tcl_ObjCmdProc2 SquareObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #else

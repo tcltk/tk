@@ -1181,6 +1181,38 @@ TkMakeEnsemble(
 /*
  *----------------------------------------------------------------------
  *
+ * TkScalingLevel --
+ *
+ *	Returns the display's DPI scaling level as 1.0, 1.25, 1.5, ....
+ *
+ * Results:
+ *      The scaling level.
+ *
+ * Side effects:
+ *      None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+double
+TkScalingLevel(
+    Tk_Window tkwin)
+{
+    Tcl_Interp *interp = Tk_Interp(tkwin);
+    Tcl_Obj *scalingPctPtr = Tcl_GetVar2Ex(interp, "::tk::scalingPct", NULL,
+	    TCL_GLOBAL_ONLY);
+    if (scalingPctPtr == NULL) {
+	return 1.0;
+    } else {
+	int scalingPct;
+	Tcl_GetIntFromObj(interp, scalingPctPtr, &scalingPct);
+	return scalingPct / 100.0;
+    }
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
  * Tk_SendVirtualEvent --
  *
  * 	Send a virtual event notification to the specified target window.
@@ -1214,80 +1246,6 @@ Tk_SendVirtualEvent(
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
-/*
- *---------------------------------------------------------------------------
- *
- * TkUtfToUniChar --
- *
- *	Almost the same as Tcl_UtfToUniChar but using int instead of Tcl_UniChar.
- *	This function is capable of collapsing a upper/lower surrogate pair to a
- *	single unicode character. So, up to 6 bytes might be consumed.
- *
- * Results:
- *	*chPtr is filled with the Tcl_UniChar, and the return value is the
- *	number of bytes from the UTF-8 string that were consumed.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-size_t
-TkUtfToUniChar(
-    const char *src,	/* The UTF-8 string. */
-    int *chPtr)		/* Filled with the Unicode value represented by
-			 * the UTF-8 string. */
-{
-    Tcl_UniChar uniChar = 0;
-
-    size_t len = Tcl_UtfToUniChar(src, &uniChar);
-    if ((uniChar & 0xFC00) == 0xD800) {
-	Tcl_UniChar low = uniChar;
-	/* This can only happen if sizeof(Tcl_UniChar)== 2 and src points
-	 * to a character > U+FFFF  */
-	size_t len2 = Tcl_UtfToUniChar(src+len, &low);
-	if ((low & 0xFC00) == 0xDC00) {
-	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
-	    return len + len2;
-	}
-    }
-    *chPtr = uniChar;
-    return len;
-}
-
-/*
- *---------------------------------------------------------------------------
- *
- * TkUniCharToUtf --
- *
- *	Almost the same as Tcl_UniCharToUtf but producing 2 x 3-byte UTF-8
- *	sequences for out-of-bmp characters when TCL_UTF_MAX==3.
- *	So, up to 6 bytes might be produced.
- *
- * Results:
- *	*buf is filled with the UTF-8 string, and the return value is the
- *	number of bytes produced.
- *
- * Side effects:
- *	None.
- *
- *---------------------------------------------------------------------------
- */
-
-size_t TkUniCharToUtf(int ch, char *buf)
-{
-    if ((unsigned)(ch - 0x10000) <= 0xFFFFF) {
-	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
-	 * version and/or TCL_UTF_MAX build value */
-	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
-	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
-    }
-    return Tcl_UniCharToUtf(ch, buf);
-}
-#endif
 /*
  * Local Variables:
  * mode: c

@@ -321,35 +321,43 @@ Tk_SetAppName(
 
 int
 Tk_SendObjCmd(
-    void *dummy,	/* Not used */
+    TCL_UNUSED(void *),	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
     Tcl_Size objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
 {
-    const char *const sendOptions[] = {"-async", "-displayof", "--", NULL};
-    char *stringRep, *destName;
+    enum {
+	SEND_ASYNC, SEND_DISPLAYOF, SEND_LAST
+    };
+    static const char *const sendOptions[] = {
+	"-async",   "-displayof",   "--",  NULL
+    };
+    const char *stringRep, *destName;
     /*int async = 0;*/
     Tcl_Size i, firstArg;
     int index;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
-    (void)dummy;
 
-    for (i = 1; i < (objc - 1); ) {
+    /*
+     * Process the command options.
+     */
+
+    for (i = 1; i < (objc - 1); i++) {
 	stringRep = Tcl_GetString(objv[i]);
 	if (stringRep[0] == '-') {
 	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
 		    sizeof(char *), "option", 0, &index) != TCL_OK) {
 		return TCL_ERROR;
 	    }
-	    if (index == 0) {
+	    if (index == SEND_ASYNC) {
 		/*async = 1;*/
+	    } else if (index == SEND_DISPLAYOF) {
 		i++;
-	    } else if (index == 1) {
-		i += 2;
-	    } else {
+	    } else /* if (index == SEND_LAST) */ {
 		i++;
+		break;
 	    }
 	} else {
 	    break;
@@ -464,12 +472,11 @@ Tk_SendObjCmd(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
+    TCL_UNUSED(Tk_Window))		/* Window whose display is to be used for the
 				 * lookup. */
 {
     Tcl_Obj *listObjPtr;
     RegisteredInterp *riPtr;
-    (void)tkwin;
 
     listObjPtr = Tcl_NewListObj(0, NULL);
     riPtr = interpListPtr;
@@ -502,9 +509,8 @@ TkGetInterpNames(
 
 static int
 SendInit(
-    Tcl_Interp *dummy)		/* Not used */
+    TCL_UNUSED(Tcl_Interp *))		/* Not used */
 {
-    (void)dummy;
     return TCL_OK;
 }
 

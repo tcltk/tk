@@ -69,7 +69,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TMenubutton -relief raised \
 	    -indicatormargin {3.75p 0} -padding {3m 1m}
 
-	ttk::style configure TEntry -relief sunken -padding 1 -font TkTextFont
+	ttk::style configure TEntry -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
@@ -86,15 +86,15 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
 	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 11.25p -width 11.25p
+	    -arrowsize 11.25p -width 11.25p -troughborderwidth 2
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \
-	    -sliderlength 22.5p -sliderthickness 11.25p
+	    -sliderlength 22.5p -sliderthickness 11.25p -troughborderwidth 2
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
 
 	ttk::style configure TProgressbar -background SteelBlue \
-	    -barsize 22.5p -thickness 11.25p
+	    -barsize 22.5p -thickness 11.25p -troughborderwidth 2
 
 	ttk::style configure TNotebook.Tab \
 	    -padding {3m 1m} \

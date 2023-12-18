@@ -25,6 +25,7 @@
 static Tcl_ObjCmdProc2 DebuggerObjCmd;
 #endif
 static Tcl_ObjCmdProc2 PressButtonObjCmd;
+static Tcl_ObjCmdProc2 MoveMouseObjCmd;
 static Tcl_ObjCmdProc2 InjectKeyEventObjCmd;
 static Tcl_ObjCmdProc2 MenuBarHeightObjCmd;
 
@@ -58,6 +59,7 @@ TkplatformtestInit(
     Tcl_CreateObjCommand2(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
     Tcl_CreateObjCommand2(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "movemouse", MoveMouseObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "injectkeyevent", InjectKeyEventObjCmd, NULL, NULL);
     Tcl_CreateObjCommand2(interp, "menubarheight", MenuBarHeightObjCmd, NULL, NULL);
     return TCL_OK;
@@ -264,6 +266,86 @@ PressButtonObjCmd(
 	clickCount:1
 	pressure:0];
     [NSApp postEvent:release atStart:NO];
+    return TCL_OK;
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MoveMouseObjCmd --
+ *
+ *	This Tcl command simulates a mouse motion to a specific screen
+ *      location.  It injects an NSEvent into the NSApplication event queue,
+ *      as opposed to adding events to the Tcl queue as event generate would
+ *      do.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+MoveMouseObjCmd(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
+{
+    int x = 0, y = 0, value;
+    Tcl_Size i;
+    CGPoint pt;
+    NSPoint loc;
+    NSEvent *motion;
+    NSArray *screens = [NSScreen screens];
+    CGFloat ScreenHeight = 0;
+    enum {X=1, Y};
+
+    if (screens && [screens count]) {
+	ScreenHeight = [[screens objectAtIndex:0] frame].size.height;
+    }
+
+    if (objc != 3) {
+        Tcl_WrongNumArgs(interp, 1, objv, "x y");
+        return TCL_ERROR;
+    }
+    for (i = 1; i < objc; i++) {
+	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch (i) {
+	case X:
+	    x = value;
+	    break;
+	case Y:
+	    y = value;
+	    break;
+	default:
+	    break;
+	}
+    }
+    pt.x = loc.x = x;
+    pt.y = y;
+    loc.y = ScreenHeight - y;
+
+    /*
+     *  We set the timestamp to 0 as a signal to tkProcessMouseEvent.
+     */
+
+    CGWarpMouseCursorPosition(pt);
+    motion = [NSEvent mouseEventWithType:NSMouseMoved
+	location:loc
+	modifierFlags:0
+	timestamp:0
+	windowNumber:0
+	context:nil
+	eventNumber:0
+	clickCount:1
+	pressure:0];
+    [NSApp postEvent:motion atStart:NO];
     return TCL_OK;
 }
 

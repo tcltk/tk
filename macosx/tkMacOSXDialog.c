@@ -233,11 +233,13 @@ getFileURL(
 }
 
 - (void)panel:(id)sender didChangeToDirectoryURL:(NSURL *)url {
-    (void)sender; (void)url;
+    (void)sender;
+    (void)url;
 }
 
 - (BOOL)panel:(id)sender validateURL:(NSURL *)url error:(NSError **)outError {
-    (void)sender; (void)url;
+    (void)sender;
+    (void)url;
     *outError = nil;
     return YES;
 }

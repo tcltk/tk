@@ -1086,9 +1086,9 @@ ParseOFNOptions(
 	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
 		goto error_return;
 	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
-                              Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0, NULL,
-                              (char *) &optsPtr->file[0], sizeof(optsPtr->file),
-                              NULL, NULL, NULL);
+                              Tcl_DStringValue(&ds), Tcl_DStringLength(&ds),
+                              TCL_ENCODING_PROFILE_TCL8, NULL, (char *)&optsPtr->file[0],
+                              sizeof(optsPtr->file), NULL, NULL, NULL);
 	    Tcl_DStringFree(&ds);
 	    break;
 	case FILE_PARENT:

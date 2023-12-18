@@ -90,7 +90,7 @@ static const TkEnsemble tkCmdMap[] = {
 
 int
 Tk_BellObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -159,7 +159,7 @@ Tk_BellObjCmd(
 
 int
 Tk_BindObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -343,7 +343,7 @@ TkBindEventProc(
 
 int
 Tk_BindtagsObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -483,7 +483,7 @@ TkFreeBindingTags(
 
 int
 Tk_DestroyObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -530,7 +530,7 @@ Tk_DestroyObjCmd(
 
 int
 Tk_LowerObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -589,7 +589,7 @@ Tk_LowerObjCmd(
 
 int
 Tk_RaiseObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -681,9 +681,9 @@ TkInitTkCmd(
 
 int
 AppnameCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -712,9 +712,9 @@ AppnameCmd(
 
 int
 CaretCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -805,16 +805,16 @@ CaretCmd(
 
 int
 ScalingCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     Screen *screenPtr;
     Tcl_Size skip;
-    int width, height;
-    double d;
+    int width, height, intPct;
+    double d, dblPct;
 
     skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
     if (skip < 0) {
@@ -835,6 +835,7 @@ ScalingCmd(
 	if (Tcl_GetDoubleFromObj(interp, objv[1+skip], &d) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+	dblPct = d * 75;
 	d = (25.4 / 72) / d;
 	width = (int) (d * WidthOfScreen(screenPtr) + 0.5);
 	if (width <= 0) {
@@ -846,6 +847,28 @@ ScalingCmd(
 	}
 	WidthMMOfScreen(screenPtr) = width;
 	HeightMMOfScreen(screenPtr) = height;
+
+	/*
+	 * Keep the variables ::tk::scalingPct and ::tk::svgFmt
+	 * in sync with the new value of the scaling factor
+	 */
+
+	for (intPct = 100; 1; intPct += 25) {
+	    if (dblPct < intPct + 12.5) {
+		break;
+	    }
+	}
+	Tcl_SetVar2Ex(interp, "::tk::scalingPct", NULL, Tcl_NewIntObj(intPct),
+		TCL_GLOBAL_ONLY);
+
+	Tcl_SetVar2Ex(interp, "::tk::svgFmt", NULL,
+		Tcl_NewStringObj("svg", TCL_INDEX_NONE), TCL_GLOBAL_ONLY);
+	Tcl_SetVar2Ex(interp, "::tk::svgFmt", NULL,
+		Tcl_NewStringObj("-scale", TCL_INDEX_NONE),
+		TCL_GLOBAL_ONLY | TCL_APPEND_VALUE | TCL_LIST_ELEMENT);
+	Tcl_SetVar2Ex(interp, "::tk::svgFmt", NULL,
+		Tcl_NewDoubleObj(intPct / 100.0),
+		TCL_GLOBAL_ONLY | TCL_APPEND_VALUE | TCL_LIST_ELEMENT);
     } else {
 	Tcl_WrongNumArgs(interp, 1, objv, "?-displayof window? ?factor?");
 	return TCL_ERROR;
@@ -855,9 +878,9 @@ ScalingCmd(
 
 int
 UseinputmethodsCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -901,9 +924,9 @@ UseinputmethodsCmd(
 
 int
 WindowingsystemCmd(
-    TCL_UNUSED(void *),	/* Main window associated with interpreter. */
+    TCL_UNUSED(void *),		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     const char *windowingsystem;
@@ -925,9 +948,9 @@ WindowingsystemCmd(
 
 int
 InactiveCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -988,7 +1011,7 @@ InactiveCmd(
 
 int
 Tk_TkwaitObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1116,11 +1139,11 @@ Tk_TkwaitObjCmd(
 
 static char *
 WaitVariableProc(
-    void *clientData,	/* Pointer to integer to set to 1. */
+    void *clientData,		/* Pointer to integer to set to 1. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
     const char *name1,		/* Name of variable. */
-    TCL_UNUSED(const char *),		/* Second part of variable name. */
-    TCL_UNUSED(int))			/* Information about what happened. */
+    TCL_UNUSED(const char *),	/* Second part of variable name. */
+    TCL_UNUSED(int))		/* Information about what happened. */
 {
     int *donePtr = (int *)clientData;
 
@@ -1132,7 +1155,7 @@ WaitVariableProc(
 
 static void
 WaitVisibilityProc(
-    void *clientData,	/* Pointer to integer to set to 1. */
+    void *clientData,		/* Pointer to integer to set to 1. */
     XEvent *eventPtr)		/* Information about event (not used). */
 {
     int *donePtr = (int *)clientData;
@@ -1146,7 +1169,7 @@ WaitVisibilityProc(
 
 static void
 WaitWindowProc(
-    void *clientData,	/* Pointer to integer to set to 1. */
+    void *clientData,		/* Pointer to integer to set to 1. */
     XEvent *eventPtr)		/* Information about event. */
 {
     int *donePtr = (int *)clientData;
@@ -1175,7 +1198,7 @@ WaitWindowProc(
 
 int
 Tk_UpdateObjCmd(
-    TCL_UNUSED(void *),	/* Main window associated with interpreter. */
+    TCL_UNUSED(void *),		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1273,7 +1296,7 @@ Tk_UpdateObjCmd(
 
 int
 Tk_WinfoObjCmd(
-    void *clientData,	/* Main window associated with interpreter. */
+    void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1852,7 +1875,7 @@ Tk_WinfoObjCmd(
 Tcl_Size
 TkGetDisplayOf(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
-    Tcl_Size objc,			/* Number of arguments. */
+    Tcl_Size objc,		/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. If it is present,
 				 * "-displayof" should be in objv[0] and
 				 * objv[1] the name of a window. */
@@ -1909,8 +1932,8 @@ int
 TkDeadAppObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    TCL_UNUSED(Tcl_Size),			/* Number of arguments. */
-    Tcl_Obj *const objv[])		/* Argument strings. */
+    TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
+    Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "can't invoke \"%s\" command: application has been destroyed",
@@ -1939,7 +1962,7 @@ TkDeadAppObjCmd(
 static TkWindow *
 GetTopHierarchy(
     Tk_Window tkwin)		/* Window for which the top-of-hierarchy
-				 * ancestor should be deterined. */
+				 * ancestor should be determined. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
 

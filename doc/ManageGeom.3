@@ -25,7 +25,7 @@ geometry manager, or NULL to indicate that \fItkwin\fR's geometry
 should not be managed anymore.
 The data structure pointed to by \fImgrPtr\fR must be static:
 Tk keeps a reference to it as long as the window is managed.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to geometry manager callbacks.
 .BE
 .SH DESCRIPTION
@@ -58,7 +58,7 @@ content window to change its desired geometry.
 type \fBTk_GeomRequestProc\fR:
 .CS
 typedef void \fBTk_GeomRequestProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         Tk_Window \fItkwin\fR);
 .CE
 The parameters to \fIrequestProc\fR will be identical to the
@@ -81,7 +81,7 @@ is the same as the window's current geometry manager.
 arguments and results that match the following prototype:
 .CS
 typedef void \fBTk_GeomLostContentProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         Tk_Window \fItkwin\fR);
 .CE
 The parameters to \fIlostContentProc\fR will be identical to the

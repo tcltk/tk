@@ -26,7 +26,7 @@ foreach c {Left Center Right} {
         -relief flat -value $lower -anchor w \
         -command "$w.frame.list configure -justify \$just" \
         -tristatevalue "multi"
-    pack $w.justif.$lower -side left -pady 2 -fill x
+    pack $w.justif.$lower -side left -pady 1.5p -fill x
 }
 pack $w.justif
 

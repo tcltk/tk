@@ -64,8 +64,6 @@ static Tcl_ThreadDataKey dataKey;
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void		CmdDeleteProc(void *clientData);
-static void		InterpDeleteProc(void *clientData,
-			    Tcl_Interp *interp);
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
 static HRESULT		BuildMoniker(const char *name, LPMONIKER *pmk);
@@ -212,12 +210,11 @@ Tk_SetAppName(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
+    TCL_UNUSED(Tk_Window))	/* Window whose display is to be used for the
 				 * lookup. */
 {
 #ifndef TK_SEND_ENABLED_ON_WINDOWS
     (void)interp;
-    (void)tkwin;
     /*
      * Temporarily disabled for bug #858822
      */
@@ -335,25 +332,31 @@ Tk_SendObjCmd(
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
-    int result = TCL_OK, optind, async = 0;
+    const char *stringRep;
+    int result = TCL_OK;
+    int async = 0, index;
     Tcl_Size i;
-    Tcl_Obj *displayPtr = NULL;
 
     /*
      * Process the command options.
      */
 
-    for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
-		sizeof(char *), "option", 0, &optind) != TCL_OK) {
-	    break;
-	}
-	if (optind == SEND_ASYNC) {
-	    ++async;
-	} else if (optind == SEND_DISPLAYOF) {
-	    displayPtr = objv[++i];
-	} else if (optind == SEND_LAST) {
-	    i++;
+    for (i = 1; i < (objc - 1); i++) {
+	stringRep = Tcl_GetString(objv[i]);
+	if (stringRep[0] == '-') {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
+		break;
+	    }
+	    if (index == SEND_ASYNC) {
+		async = 1;
+	    } else if (index == SEND_DISPLAYOF) {
+		i++;
+	    } else /* if (index == SEND_LAST) */ {
+		i++;
+		break;
+	    }
+	} else {
 	    break;
 	}
     }
@@ -362,21 +365,9 @@ Tk_SendObjCmd(
      * Ensure we still have a valid command.
      */
 
-    if ((objc - i) < 2) {
+    if (objc < (i + 2)) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-async? ?-displayof? ?--? interpName arg ?arg ...?");
-	result = TCL_ERROR;
-    }
-
-    /*
-     * We don't support displayPtr. See TIP #150.
-     */
-
-    if (displayPtr) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"option not implemented: \"displayof\" is not available"
-		" for this platform.", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
 	result = TCL_ERROR;
     }
 
@@ -565,33 +556,6 @@ RevokeObjectRegistration(
 	free(riPtr->name);
 	riPtr->name = NULL;
     }
-}
-#endif /* TK_SEND_ENABLED_ON_WINDOWS */
-
-/*
- * ----------------------------------------------------------------------
- *
- * InterpDeleteProc --
- *
- *	This is called when the interpreter is deleted and used to unregister
- *	the COM libraries.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- * ----------------------------------------------------------------------
- */
-
-#ifdef TK_SEND_ENABLED_ON_WINDOWS
-static void
-InterpDeleteProc(
-    void *clientData,
-    Tcl_Interp *interp)
-{
-    CoUninitialize();
 }
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
 

@@ -391,22 +391,11 @@ GetMenuAccelGeometry(
     int *widthPtr,		/* The width of the acclerator area */
     int *heightPtr)		/* The height of the accelerator area */
 {
-    Tcl_Interp *interp = Tk_Interp(menuPtr->tkwin);
-    const char *scalingPctPtr;
-    double scalingFactor = 1.0;
+    double scalingLevel = TkScalingLevel(menuPtr->tkwin);
 
     *heightPtr = fmPtr->linespace;
     if (mePtr->type == CASCADE_ENTRY) {
-	/*
-	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-	 */
-
-	scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-	if (scalingPctPtr != NULL) {
-	    scalingFactor = atof(scalingPctPtr) / 100;
-	}
-
-    	*widthPtr = 2 * CASCADE_ARROW_WIDTH * scalingFactor;
+    	*widthPtr = 2 * CASCADE_ARROW_WIDTH * scalingLevel;
     } else if ((menuPtr->menuType != MENUBAR) && (mePtr->accelPtr != NULL)) {
 	const char *accel = Tcl_GetString(mePtr->accelPtr);
 
@@ -502,9 +491,7 @@ DrawMenuEntryAccelerator(
     XPoint points[3];
     int borderWidth, activeBorderWidth;
     int arrowWidth = CASCADE_ARROW_WIDTH, arrowHeight = CASCADE_ARROW_HEIGHT;
-    Tcl_Interp *interp = Tk_Interp(menuPtr->tkwin);
-    const char *scalingPctPtr;
-    double scalingFactor = 1.0;
+    double scalingLevel = TkScalingLevel(menuPtr->tkwin);
 
     /*
      * Draw accelerator or cascade arrow.
@@ -519,17 +506,8 @@ DrawMenuEntryAccelerator(
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->activeBorderWidthPtr,
 	    &activeBorderWidth);
     if ((mePtr->type == CASCADE_ENTRY) && drawArrow) {
-	/*
-	 * Retrieve the scaling factor (1.0, 1.25, 1.5, ...)
-	 * and multiply the cascade arrow's dimensions by it
-	 */
-
-	scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-	if (scalingPctPtr != NULL) {
-	    scalingFactor = atof(scalingPctPtr) / 100;
-	}
-	arrowWidth *= scalingFactor;
-	arrowHeight *= scalingFactor;
+	arrowWidth *= scalingLevel;
+	arrowHeight *= scalingLevel;
 
     	points[0].x = x + width - borderWidth - activeBorderWidth - arrowWidth;
     	points[0].y = y + (height - arrowHeight)/2;
@@ -889,7 +867,7 @@ DrawMenuUnderline(
 
 	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, (mePtr->underline < 0) ? mePtr->underline + len : mePtr->underline);
-	    end = start + TkUtfToUniChar(start, &ch);
+	    end = start + Tcl_UtfToUniChar(start, &ch);
 
 	    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);

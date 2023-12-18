@@ -139,11 +139,6 @@ typedef struct {
     Tk_PhotoImageFormat *formatList;
 				/* Pointer to the first in the list of known
 				 * photo image formats.*/
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    Tk_PhotoImageFormat *oldFormatList;
-				/* Pointer to the first in the list of known
-				 * photo image formats.*/
-#endif
     Tk_PhotoImageFormatVersion3 *formatListVersion3;
 				/* Pointer to the first in the list of known
 				 * photo image formats in Version3 format.*/
@@ -247,13 +242,6 @@ PhotoFormatThreadExitProc(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    while (tsdPtr->oldFormatList != NULL) {
-	freePtr = tsdPtr->oldFormatList;
-	tsdPtr->oldFormatList = tsdPtr->oldFormatList->nextPtr;
-	ckfree(freePtr);
-    }
-#endif
     while (tsdPtr->formatList != NULL) {
 	freePtr = tsdPtr->formatList;
 	tsdPtr->formatList = tsdPtr->formatList->nextPtr;
@@ -271,7 +259,7 @@ PhotoFormatThreadExitProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_CreateOldPhotoImageFormat, Tk_CreatePhotoImageFormat,
+ * Tk_CreatePhotoImageFormat,
  * Tk_CreatePhotoImageFormatVersion3 --
  *
  *	This function is invoked by an image file handler to register a new
@@ -287,29 +275,6 @@ PhotoFormatThreadExitProc(
  *
  *----------------------------------------------------------------------
  */
-
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-void
-Tk_CreateOldPhotoImageFormat(
-    const Tk_PhotoImageFormat *formatPtr)
-				/* Structure describing the format. All of the
-				 * fields except "nextPtr" must be filled in
-				 * by caller. */
-{
-    Tk_PhotoImageFormat *copyPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
-	Tcl_CreateThreadExitHandler(PhotoFormatThreadExitProc, NULL);
-    }
-    copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
-    *copyPtr = *formatPtr;
-    copyPtr->nextPtr = tsdPtr->oldFormatList;
-    tsdPtr->oldFormatList = copyPtr;
-}
-#endif
 
 void
 Tk_CreatePhotoImageFormat(
@@ -328,12 +293,6 @@ Tk_CreatePhotoImageFormat(
     }
     copyPtr = (Tk_PhotoImageFormat *)ckalloc(sizeof(Tk_PhotoImageFormat));
     *copyPtr = *formatPtr;
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    if (isupper((unsigned char) *formatPtr->name)) {
-	copyPtr->nextPtr = tsdPtr->oldFormatList;
-	tsdPtr->oldFormatList = copyPtr;
-    } else
-#endif
     {
 	/* for compatibility with aMSN: make a copy of formatPtr->name */
 	char *name = (char *)ckalloc(strlen(formatPtr->name) + 1);
@@ -527,7 +486,7 @@ ImgPhotoCmd(
 	    }
 	} else {
 	    Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
-		    (char *) modelPtr, Tcl_GetString(objv[2]), 0);
+		    modelPtr, Tcl_GetString(objv[2]), 0);
 	}
 	return TCL_OK;
     }
@@ -541,7 +500,7 @@ ImgPhotoCmd(
 	    Tcl_Obj *obj, *subobj;
 
 	    result = Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) modelPtr, NULL, 0);
+		    configSpecs, modelPtr, NULL, 0);
 	    if (result != TCL_OK) {
 		return result;
 	    }
@@ -560,7 +519,7 @@ ImgPhotoCmd(
 		Tcl_AppendStringsToObj(subobj, " {}", NULL);
 	    }
 	    Tcl_ListObjAppendElement(interp, obj, subobj);
-	    subobj = Tcl_NewStringObj("-metadata {} {} {}", 16);
+	    subobj = Tcl_NewStringObj("-metadata {} {} {}", 18);
 	    if (modelPtr->metadata) {
 		Tcl_ListObjAppendElement(NULL, subobj, modelPtr->metadata);
 	    } else {
@@ -617,7 +576,7 @@ ImgPhotoCmd(
 		return TCL_OK;
 	    } else {
 		return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-			configSpecs, (char *) modelPtr, arg, 0);
+			configSpecs, modelPtr, arg, 0);
 	    }
 	} else {
 	    return ImgPhotoConfigureModel(interp, modelPtr, objc-2, objv+2,
@@ -836,23 +795,6 @@ ImgPhotoCmd(
                 }
 	    }
 	}
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	if (stringWriteProc == NULL) {
-	    oldformat = 1;
-	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
-                    imageFormat = imageFormat->nextPtr) {
-                if ((strncasecmp(Tcl_GetString(options.format),
-                        imageFormat->name,
-                        strlen(imageFormat->name)) == 0)) {
-                    matched = 1;
-                    if (imageFormat->stringWriteProc != NULL) {
-                        stringWriteProc = imageFormat->stringWriteProc;
-                        break;
-                    }
-                }
-	    }
-	}
-#endif
 	if (stringWriteProc == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -905,11 +847,10 @@ ImgPhotoCmd(
 	    }
 	} else {
 	    typedef int (*NewStringWriteProc)(Tcl_Interp *interp,
-		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr,
-		    void *dummy);
+		    Tcl_Obj *formatString, Tk_PhotoImageBlock *blockPtr);
 
 	    result = ((NewStringWriteProc)(void *)stringWriteProc)(interp,
-		    options.format, &block, NULL);
+		    options.format, &block);
 	}
 	if (options.background) {
 	    Tk_FreeColor(options.background);
@@ -1297,7 +1238,7 @@ readCleanup:
 	     */
 	    pixelPtr = modelPtr->pix32 + (y * modelPtr->width + x) * 4;
 	    if (boolMode) {
-		Tcl_SetObjResult(interp, Tcl_NewBooleanObj( ! pixelPtr[3]));
+		Tcl_SetObjResult(interp, Tcl_NewBooleanObj(pixelPtr[3] == 0));
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_NewWideIntObj(pixelPtr[3]));
 	    }
@@ -1514,22 +1455,6 @@ readCleanup:
 		}
 	    }
 	}
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	if (imageFormat == NULL) {
-	    oldformat = 1;
-	    for (imageFormat = tsdPtr->oldFormatList; imageFormat != NULL;
-		    imageFormat = imageFormat->nextPtr) {
-		if ((fmtString == NULL)
-			|| (strncasecmp(fmtString, imageFormat->name,
-				strlen(imageFormat->name)) == 0)) {
-		    matched = 1;
-		    if (imageFormat->fileWriteProc != NULL) {
-			break;
-		    }
-		}
-	    }
-	}
-#endif
 	if (imageFormat == NULL) {
 	    oldformat = 0;
 	    for (imageFormatVersion3 = tsdPtr->formatListVersion3;
@@ -2049,7 +1974,7 @@ ImgPhotoConfigureModel(
      */
 
     if (Tk_ConfigureWidget(interp, Tk_MainWindow(interp), configSpecs,
-	    objc, (const char **)objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    objc, objv, modelPtr, flags) != TCL_OK) {
 	goto errorExit;
     }
 
@@ -2464,7 +2389,7 @@ ImgPhotoDelete(
     if (modelPtr->metadata != NULL) {
 	Tcl_DecrRefCount(modelPtr->metadata);
     }
-    Tk_FreeOptions(configSpecs, (char *) modelPtr, NULL, 0);
+    Tk_FreeOptions(configSpecs, modelPtr, NULL, 0);
     ckfree(modelPtr);
 }
 
@@ -2780,42 +2705,6 @@ MatchFileFormat(
 	    }
 	}
     }
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-if (formatPtr == NULL) {
-	useoldformat = 1;
-	for (formatPtr = tsdPtr->oldFormatList; formatPtr != NULL;
-		formatPtr = formatPtr->nextPtr) {
-	    if (formatString != NULL) {
-		if (strncasecmp(formatString,
-			formatPtr->name, strlen(formatPtr->name)) != 0) {
-		    continue;
-		}
-		matched = 1;
-		if (formatPtr->fileMatchProc == NULL) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "-file option isn't supported for %s images",
-			    formatString));
-		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			    "NOT_FILE_FORMAT", NULL);
-		    return TCL_ERROR;
-		}
-	    }
-	    if (formatPtr->fileMatchProc != NULL) {
-		(void) Tcl_Seek(chan, Tcl_LongAsWide(0L), SEEK_SET);
-		if (formatPtr->fileMatchProc(chan, fileName, (Tcl_Obj *)
-			formatString, widthPtr, heightPtr, interp)) {
-		    if (*widthPtr < 1) {
-			*widthPtr = 1;
-		    }
-		    if (*heightPtr < 1) {
-			*heightPtr = 1;
-		    }
-		    break;
-		}
-	    }
-	}
-    }
-#endif
 
     /*
      * For old and not version 3 format, exit now with success
@@ -3012,38 +2901,6 @@ MatchStringFormat(
 	    break;
 	}
     }
-
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-    if (formatPtr == NULL) {
-	useoldformat = 1;
-	for (formatPtr = tsdPtr->oldFormatList; formatPtr != NULL;
-		formatPtr = formatPtr->nextPtr) {
-	    if (formatObj != NULL) {
-		if (strncasecmp(formatString,
-			formatPtr->name, strlen(formatPtr->name)) != 0) {
-		    continue;
-		}
-		matched = 1;
-		if (formatPtr->stringMatchProc == NULL) {
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "-data option isn't supported for %s images",
-			    formatString));
-		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
-			    "NOT_DATA_FORMAT", NULL);
-		    return TCL_ERROR;
-		}
-	    }
-	    if ((formatPtr->stringMatchProc != NULL)
-		    && (formatPtr->stringReadProc != NULL)
-		    && formatPtr->stringMatchProc(
-			    (Tcl_Obj *) Tcl_GetString(data),
-			    (Tcl_Obj *) formatString,
-			    widthPtr, heightPtr, interp)) {
-		break;
-	    }
-	}
-    }
-#endif
 
     if (formatPtr == NULL) {
 	useoldformat = 0;
@@ -4531,107 +4388,6 @@ ImgPhotoPostscript(
 
     return Tk_PostscriptPhoto(interp, &block, psInfo, width, height);
 }
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoPutBlock_NoComposite, Tk_PhotoPutZoomedBlock_NoComposite --
- *
- * These backward-compatibility functions just exist to fill slots in stubs
- * table. For the behaviour of *_NoComposite, refer to the corresponding
- * function without the extra suffix, except that the compositing rule is
- * always "overlay" and the function always panics on memory-allocation
- * failure.
- *
- *----------------------------------------------------------------------
- */
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-void
-Tk_PhotoPutBlock_NoComposite(
-    Tk_PhotoHandle handle,
-    Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height)
-{
-    if (Tk_PhotoPutBlock(NULL, handle, blockPtr, x, y, width, height,
-	    TK_PHOTO_COMPOSITE_OVERLAY) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoPutZoomedBlock_NoComposite(
-    Tk_PhotoHandle handle,
-    Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height,
-    int zoomX, int zoomY, int subsampleX, int subsampleY)
-{
-    if (Tk_PhotoPutZoomedBlock(NULL, handle, blockPtr, x, y, width, height,
-	    zoomX, zoomY, subsampleX, subsampleY,
-	    TK_PHOTO_COMPOSITE_OVERLAY) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * Tk_PhotoExpand_Panic, Tk_PhotoPutBlock_Panic,
- * Tk_PhotoPutZoomedBlock_Panic, Tk_PhotoSetSize_Panic
- *
- * Backward compatibility functions for preserving the old behaviour (i.e.
- * panic on memory allocation failure) so that extensions do not need to be
- * significantly updated to take account of TIP #116. These call the new
- * interface (i.e. the interface without the extra suffix), but panic if an
- * error condition is returned.
- *
- *----------------------------------------------------------------------
- */
-
-void
-Tk_PhotoExpand_Panic(
-    Tk_PhotoHandle handle,
-    int width, int height)
-{
-    if (Tk_PhotoExpand(NULL, handle, width, height) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoPutBlock_Panic(
-    Tk_PhotoHandle handle,
-    Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height, int compRule)
-{
-    if (Tk_PhotoPutBlock(NULL, handle, blockPtr, x, y, width, height,
-	    compRule) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoPutZoomedBlock_Panic(
-    Tk_PhotoHandle handle, Tk_PhotoImageBlock *blockPtr,
-    int x, int y, int width, int height,
-    int zoomX, int zoomY, int subsampleX, int subsampleY,
-    int compRule)
-{
-    if (Tk_PhotoPutZoomedBlock(NULL, handle, blockPtr, x, y, width, height,
-	    zoomX, zoomY, subsampleX, subsampleY, compRule) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-
-void
-Tk_PhotoSetSize_Panic(
-    Tk_PhotoHandle handle,
-    int width, int height)
-{
-    if (Tk_PhotoSetSize(NULL, handle, width, height) != TCL_OK) {
-	Tcl_Panic(TK_PHOTO_ALLOC_FAILURE_MESSAGE);
-    }
-}
-#endif /* TK_NO_DEPRECATED */
 
 /*
  * Local Variables:

@@ -31,7 +31,7 @@ typedef struct {			/* Manager hooks */
 
     int  (*RequestedSize)(void *managerData, int *widthPtr, int *heightPtr);
     void (*PlaceContent)(void *managerData);
-    int  (*ContentRequest)(void *managerData, Tcl_Size index, int w, int h);
+    int  (*ContentRequest)(void *managerData, Tcl_Size index, int width, int height);
     void (*ContentRemoved)(void *managerData, Tcl_Size index);
 } Ttk_ManagerSpec;
 
@@ -46,7 +46,7 @@ MODULE_SCOPE void Ttk_LostContentProc(void *, Tk_Window window);
  * Public API:
  */
 MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
-	Ttk_ManagerSpec *, void *managerData, Tk_Window window);
+	const Ttk_ManagerSpec *, void *managerData, Tk_Window window);
 MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
 #define  Ttk_InsertSlave Ttk_InsertContent

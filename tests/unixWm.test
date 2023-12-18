@@ -21,7 +21,8 @@ testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowi
 
 if {[tk windowingsystem] eq "aqua"} {
     proc restackDelay {} {
-	after 100;
+	after 200;
+	update idletasks
     }
 } else {
     proc restackDelay {} {}
@@ -121,11 +122,11 @@ set i 1
 foreach geom "+$X+80 +$X+40 +$X+$Y0" {
     test unixWm-4.$i {moving window while withdrawn} unix {
 	wm withdraw .t
-	update idletasks
+	sleep 10
 	wm geom .t $geom
 	update idletasks
 	wm deiconify .t
-	update idletasks
+	sleep 10
 	wm geom .t
     } 100x150$geom
     incr i
@@ -245,10 +246,6 @@ test unixWm-6.4 {size changes} {unix nonPortable userInteraction} {
     update
     list $width $height $w2 $h2 [wm geom .t]
 } {0 0 230 110 114x261+10+10}
-
-# I don't know why the wait below is needed, but without it the test
-# fails under twm.
-sleep 200
 
 test unixWm-6.5 {window initially iconic} {unix nonPortable} {
     destroy .t
@@ -1567,9 +1564,9 @@ test unixWm-44.6 {UpdateGeometryInfo procedure, negative height} unix {
 } {100 1}
 destroy .t
 toplevel .t -width 80 -height 60
-test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix failsOnXQuarz} {
-    tkwait visibility .t
+test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix} {
     wm overrideredirect .t 1
+    tkwait visibility .t
     update
     wm geometry .t +5-10
     update
@@ -1577,9 +1574,9 @@ test unixWm-44.7 {UpdateGeometryInfo procedure, computing position} {unix failsO
 } [list 5 [expr [winfo screenheight .t] - 70]]
 destroy .t
 toplevel .t -width 80 -height 60
-test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} {unix failsOnXQuarz} {
-    tkwait visibility .t
+test unixWm-44.8 {UpdateGeometryInfo procedure, computing position} {unix} {
     wm overrideredirect .t 1
+    tkwait visibility .t
     update
     wm geometry .t -30+$Y2
     update
@@ -1627,7 +1624,7 @@ test unixWm-45.1 {UpdateSizeHints procedure, grid information} {unix testwrapper
 	    [expr [lindex $property 7]] [expr [lindex $property 8]] \
 	    [expr [lindex $property 9]] [expr [lindex $property 10]]
 } {40 30 320 210 10 5}
-test unixWm-45.2 {UpdateSizeHints procedure} {unix testwrapper failsOnUbuntu failsOnXQuarz} {
+test unixWm-45.2 {UpdateSizeHints procedure} {unix testwrapper} {
     destroy .t
     toplevel .t -width 80 -height 60
     wm minsize .t 30 40
@@ -1655,7 +1652,7 @@ test unixWm-45.3 {UpdateSizeHints procedure, grid with menu} {testmenubar testwr
 	    [expr [lindex $property 7]] [expr [lindex $property 8]] \
 	    [expr [lindex $property 9]] [expr [lindex $property 10]]
 } {60 40 53 320 233 10 5}
-test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenubar testwrapper failsOnUbuntu failsOnXQuarz} {
+test unixWm-45.4 {UpdateSizeHints procedure, not resizable with menu} {testmenubar testwrapper} {
     destroy .t
     toplevel .t -width 80 -height 60
     frame .t.menu -height 23 -width 50
@@ -1839,8 +1836,8 @@ test unixWm-50.2 {Tk_CoordsToWindow procedure, finding a toplevel, y-coords and 
     update
     restackDelay
     toplevel .t2 -width 200 -height 100 -bg blue
-    tkwait visibility .t2
     wm overrideredirect .t2 1
+    tkwait visibility .t2
     wm geom .t2 +200+200
     update
     raise .t2
@@ -2084,16 +2081,18 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
     foreach w {.t .t2 .t3} {
 	destroy $w
 	toplevel $w -width 200 -height 200 -bg green
-	wm geometry $w +0+0
+	tkwait visibility $w
+	wm geometry $w +100+100
 	update
     }
     raise .t .t2
     restackDelay
     update
-    set result [list [winfo containing 100 100]]
+    set result [list [winfo containing 200 200]]
     lower .t3
     restackDelay
-    lappend result [winfo containing 100 100]
+    sleep 10
+    lappend result [winfo containing 200 200]
 } {.t3 .t}
 test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix {
     destroy .t

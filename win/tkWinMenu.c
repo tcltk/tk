@@ -2111,7 +2111,7 @@ DrawMenuUnderline(
 
 	    label = Tcl_GetString(mePtr->labelPtr);
 	    start = Tcl_UtfAtIndex(label, mePtr->underline);
-	    end = start + TkUtfToUniChar(start, &ch);
+	    end = start + Tcl_UtfToUniChar(start, &ch);
 	    Tk_UnderlineChars(menuPtr->display, d,
 		    gc, tkfont, label, x + mePtr->indicatorSpace,
 		    y + (height + fmPtr->ascent - fmPtr->descent) / 2,

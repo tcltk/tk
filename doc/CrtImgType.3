@@ -9,17 +9,15 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_CreateImageType, Tk_GetImageModelData, Tk_InitImageArgs \- define new kind of image
+Tk_CreateImageType, Tk_GetImageModelData \- define new kind of image
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
 .sp
 \fBTk_CreateImageType\fR(\fItypePtr\fR)
 .sp
-ClientData
+void *
 \fBTk_GetImageModelData\fR(\fIinterp, name, typePtrPtr\fR)
-.sp
-\fBTk_InitImageArgs\fR(\fIinterp, argc, argvPtr\fR)
 .SH ARGUMENTS
 .AS "const Tk_ImageType" *typePtrPtr
 .AP "const Tk_ImageType" *typePtr in
@@ -34,8 +32,6 @@ Name of existing image.
 .AP Tk_ImageType **typePtrPtr out
 Points to word in which to store a pointer to type information for
 the given image, if it exists.
-.AP int argc in
-Number of arguments
 .AP char ***argvPtr in/out
 Pointer to argument list
 .BE
@@ -114,7 +110,7 @@ typedef int \fBTk_ImageCreateProc\fR(
         Tcl_Obj *const \fIobjv\fR[],
         const Tk_ImageType *\fItypePtr\fR,
         Tk_ImageModel \fImodel\fR,
-        ClientData *\fImodelDataPtr\fR);
+        void **\fImodelDataPtr\fR);
 .CE
 The \fIinterp\fR argument is the interpreter in which the \fBimage\fR
 command was invoked, and \fIname\fR is the name for the new image,
@@ -146,9 +142,9 @@ size of the image and request an initial redisplay.
 calls \fBTk_GetImage\fR to use a particular image.
 This procedure must match the following prototype:
 .CS
-typedef ClientData \fBTk_ImageGetProc\fR(
+typedef void *\fBTk_ImageGetProc\fR(
         Tk_Window \fItkwin\fR,
-        ClientData \fImodelData\fR);
+        void *\fImodelData\fR);
 .CE
 The \fItkwin\fR argument identifies the window in which the
 image will be used and \fImodelData\fR is the value
@@ -167,7 +163,7 @@ to be displayed (i.e., whenever a widget calls \fBTk_RedrawImage\fR).
 \fIdisplayProc\fR must match the following prototype:
 .CS
 typedef void \fBTk_ImageDisplayProc\fR(
-        ClientData \fIinstanceData\fR,
+        void *\fIinstanceData\fR,
         Display *\fIdisplay\fR,
         Drawable \fIdrawable\fR,
         int \fIimageX\fR,
@@ -203,7 +199,7 @@ canvas item is changed.
 \fIfreeProc\fR must match the following prototype:
 .CS
 typedef void \fBTk_ImageFreeProc\fR(
-        ClientData \fIinstanceData\fR,
+        void *\fIinstanceData\fR,
         Display *\fIdisplay\fR);
 .CE
 The \fIinstanceData\fR will be the same as the value returned by
@@ -221,7 +217,7 @@ each of the image's instances.
 \fIdeleteProc\fR must match the following prototype:
 .CS
 typedef void \fBTk_ImageDeleteProc\fR(
-        ClientData \fImodelData\fR);
+        void *\fImodelData\fR);
 .CE
 The \fImodelData\fR argument will be the same as the value
 stored in \fI*modelDataPtr\fR by \fIcreateProc\fR when the
@@ -237,46 +233,10 @@ If there exists an image named \fIname\fR
 in the interpreter given by \fIinterp\fR, then \fI*typePtrPtr\fR is
 filled in with type information for the image (the \fItypePtr\fR value
 passed to \fBTk_CreateImageType\fR when the image type was registered)
-and the return value is the ClientData value returned by the
+and the return value is the clientData value returned by the
 \fIcreateProc\fR when the image was created (this is typically a
 pointer to the image model data structure).  If no such image exists
 then NULL is returned and NULL is stored at \fI*typePtrPtr\fR.
-.SH "LEGACY INTERFACE SUPPORT"
-.PP
-In Tk 8.2 and earlier, the definition of \fBTk_ImageCreateProc\fR
-was incompatibly different, with the following prototype:
-.CS
-typedef int \fBTk_ImageCreateProc\fR(
-        Tcl_Interp *\fIinterp\fR,
-        char *\fIname\fR,
-        int \fIargc\fR,
-        char **\fIargv\fR,
-        Tk_ImageType *\fItypePtr\fR,
-        Tk_ImageModel \fImodel\fR,
-        ClientData *\fImodelDataPtr\fR);
-.CE
-Legacy programs and libraries dating from those days may still
-contain code that defines extended Tk image types using the old
-interface.  The Tk header file will still support this legacy
-interface if the code is compiled with the macro \fBUSE_OLD_IMAGE\fR
-defined.
-.PP
-When the \fBUSE_OLD_IMAGE\fR legacy support is enabled, you may
-see the routine \fBTk_InitImageArgs\fR in use.  This was a migration
-tool used to create stub-enabled extensions that could be loaded
-into interps containing all versions of Tk 8.1 and later.  Tk 8.5 no longer
-provides this routine, but uses a macro to convert any attempted
-calls of this routine into an empty comment.  Any stub-enabled
-extension providing an extended image type via the legacy interface
-that is compiled against Tk 8.5 headers and linked against the
-Tk 8.5 stub library will produce a file that can be loaded only
-into interps with Tk 8.5 or later; that is, the normal stub-compatibility
-rules.  If a developer needs to generate from such code a file
-that is loadable into interps with Tk 8.4 or earlier, they must
-use Tk 8.4 headers and stub libraries to do so.
-.PP
-Any new code written today should not make use of the legacy
-interfaces.  Expect their support to go away in Tk 9.
 .SH "SEE ALSO"
 Tk_ImageChanged, Tk_GetImage, Tk_FreeImage, Tk_RedrawImage, Tk_SizeOfImage
 .SH KEYWORDS

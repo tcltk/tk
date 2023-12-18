@@ -23,6 +23,7 @@ extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
  */
 
 static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
+static const char ENCODING_ERROR[] = "\n\t(encoding error in stderr)";
 
 /*
  * This file can be compiled on Windows in UNICODE mode, as well as on all
@@ -186,7 +187,7 @@ Tk_MainEx(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
 	if (Tcl_InitStubs(interp, "8.1", 0) == NULL) {
 	    abort();
 	} else {
@@ -246,9 +247,6 @@ Tk_MainEx(
      */
 
     if (NULL == Tcl_GetStartupScript(NULL)) {
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	size_t length;
-#endif
 
 	/*
 	 * Check whether first 3 args (argv[1] - argv[3]) look like
@@ -272,14 +270,6 @@ Tk_MainEx(
 	    Tcl_SetStartupScript(NewNativeObj(argv[1]), NULL);
 	    argc--;
 	    i++;
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	} else if ((argc >= 2) && (length = _tcslen(argv[1]))
-		&& (length > 1) && (0 == _tcsncmp(TEXT("-file"), argv[1], length))
-		&& ('-' != argv[2][0])) {
-	    Tcl_SetStartupScript(NewNativeObj(argv[2]), NULL);
-	    argc -= 2;
-	    i += 2;
-#endif
 	}
     }
 
@@ -466,7 +456,9 @@ StdinProc(
 	chan = Tcl_GetStdChannel(TCL_STDERR);
 
 	if (chan != NULL) {
-	    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+	    if (Tcl_WriteObj(chan, Tcl_GetObjResult(interp)) < 0) {
+		Tcl_WriteChars(chan, ENCODING_ERROR, -1);
+	    }
 	    Tcl_WriteChars(chan, "\n", 1);
 	}
     } else if (isPtr->tty) {
@@ -476,7 +468,9 @@ StdinProc(
 	Tcl_IncrRefCount(resultPtr);
 	(void)Tcl_GetStringFromObj(resultPtr, &length);
 	if ((length > 0) && (chan != NULL)) {
-	    Tcl_WriteObj(chan, resultPtr);
+	    if (Tcl_WriteObj(chan, resultPtr) < 0) {
+		Tcl_WriteChars(chan, "\n\t(encoding error in stdout)", -1);
+	    }
 	    Tcl_WriteChars(chan, "\n", 1);
 	}
 	Tcl_DecrRefCount(resultPtr);
@@ -537,7 +531,9 @@ Prompt(
 		    "\n    (script that generates prompt)");
 	    chan = Tcl_GetStdChannel(TCL_STDERR);
 	    if (chan != NULL) {
-		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
+	    if (Tcl_WriteObj(chan, Tcl_GetObjResult(interp)) < 0) {
+		Tcl_WriteChars(chan, ENCODING_ERROR, -1);
+	    }
 		Tcl_WriteChars(chan, "\n", 1);
 	    }
 	    goto defaultPrompt;

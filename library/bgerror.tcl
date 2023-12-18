@@ -123,24 +123,34 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
 
     set ok [mc OK]
     # Truncate the message if it is too wide (>maxLine characters) or
-    # too tall (>4 lines).  Truncation occurs at the first point at
-    # which one of those conditions is met.
+    # too tall (>maxRows lines).  Truncation occurs at the first point at
+    # which one of those conditions is met. No trailing newline.
     set displayedErr ""
     set lines 0
     set maxLine 45
+    set maxRows 5
     foreach line [split $err \n] {
+	if {$lines > $maxRows - 1} {
+            # No more lines.  Append to previous line.
+	    append displayedErr { ...}
+	    break
+	}
 	if {[string length $line] > $maxLine} {
 	    append displayedErr "[string range $line 0 $maxLine-3]..."
 	    break
 	}
-	if {$lines > 4} {
-	    append displayedErr "..."
+	if {$lines > $maxRows - 2 && [string length $line] > $maxLine-4} {
+	    append displayedErr "[string range $line 0 $maxLine-3]..."
 	    break
+	} elseif {$lines > $maxRows - 2} {
+            # Last line, but no break or newline.  Room to add 4 chars.
+	    append displayedErr "${line}"
 	} else {
 	    append displayedErr "${line}\n"
 	}
 	incr lines
     }
+    set displayedErr [string trim $displayedErr]
 
     set title [mc "Application Error"]
     set text [mc "Error: %1\$s" $displayedErr]
@@ -171,7 +181,7 @@ proc ::tk::dialog::error::bgerror {err {flag 1}} {
     pack $dlg.top -side top -fill both -expand 1
 
     set W [ttk::frame $dlg.top.info]
-    text $W.text -setgrid true -height 10 -wrap char \
+    text $W.text -setgrid false -height 10 -wrap char \
 	-yscrollcommand [list $W.scroll set]
     if {$windowingsystem ne "aqua"} {
 	$W.text configure -width 40

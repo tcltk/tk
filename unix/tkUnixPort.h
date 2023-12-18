@@ -26,7 +26,6 @@
 #include <math.h>
 #include <string.h>
 #include <limits.h>
-#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/file.h>
 #ifdef HAVE_SYS_SELECT_H
@@ -40,9 +39,7 @@
 #	include <sys/time.h>
 #endif
 #include <time.h>
-#ifdef HAVE_INTTYPES_H
-#    include <inttypes.h>
-#endif
+#include <inttypes.h>
 #include <unistd.h>
 #if defined(__GNUC__) && !defined(__cplusplus)
 #   pragma GCC diagnostic ignored "-Wc++-compat"
@@ -147,15 +144,6 @@
 #ifndef __CYGWIN__
 #define TkSetPixmapColormap(p,c) {}
 #endif
-
-/*
- * These calls implement native bitmaps which are not supported under
- * UNIX.  The macros eliminate the calls.
- */
-
-#define TkpDefineNativeBitmaps()
-#define TkpCreateNativeBitmap(display, source) None
-#define TkpGetNativeAppBitmap(display, name, w, h) None
 
 /*
  * This macro stores a representation of the window handle in a string.

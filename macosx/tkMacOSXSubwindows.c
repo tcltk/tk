@@ -87,6 +87,7 @@ XDestroyWindow(
 	if (macWin->toplevel->referenceCount == 0) {
 	    ckfree(macWin->toplevel);
 	}
+	macWin->winPtr->privatePtr = NULL;
 	ckfree(macWin);
 	return Success;
     }
@@ -103,6 +104,7 @@ XDestroyWindow(
         macWin->drawRgn = NULL;
     }
     macWin->view = nil;
+    macWin->winPtr->privatePtr = NULL;
 
     /*
      * Delay deletion of a toplevel data structure until all children have
@@ -126,7 +128,7 @@ XDestroyWindow(
  *      Tk_WmMapWindow.
  *
  * Results:
- *	Returns Success or BadWindow.
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	The subwindow or toplevel may appear on the screen.  VisibilityNotify
@@ -853,7 +855,7 @@ TkMacOSXUpdateClipRgn(
 	     */
 
 	    TkMacOSXWinCGBounds(winPtr, &bounds);
-	    rgn = TkMacOSXHIShapeCreateMutableWithRect(&bounds);
+	    rgn = HIShapeCreateMutableWithRect(&bounds);
 
 	    /*
 	     * Clip away the area of any windows that may obscure this window.
@@ -953,7 +955,7 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
 	    }
-	    macWin->aboveVisRgn = TkMacOSXHIShapeCreateEmpty();
+	    macWin->aboveVisRgn = HIShapeCreateEmpty();
 	}
 	if (!macWin->visRgn) {
 	    macWin->visRgn = HIShapeCreateCopy(macWin->aboveVisRgn);
@@ -1476,16 +1478,7 @@ Tk_FreePixmap(
 
     LastKnownRequestProcessed(display)++;
     if (macPix->context) {
-	char *data = (char *)CGBitmapContextGetData(macPix->context);
-
-	if (data) {
-	    ckfree(data);
-	}
-	/*
-	 * Releasing the context here causes a crash in the 8.7 regression
-	 * tests, but not in 8.6.
-	 *	CFRelease(macPix->context);
-	 */
+	CFRelease(macPix->context);
     }
     ckfree(macPix);
 }

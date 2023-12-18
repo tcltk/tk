@@ -61,7 +61,7 @@ static void	EmbedWindowDeleted(TkWindow *winPtr);
 /*
  *----------------------------------------------------------------------
  *
- * TkpMakeWindow --
+ * Tk_MakeWindow --
  *
  *	Creates an X Window (Mac subwindow).
  *
@@ -77,11 +77,10 @@ static void	EmbedWindowDeleted(TkWindow *winPtr);
 Window
 Tk_MakeWindow(
     Tk_Window tkwin,
-    Window parent)
+    TCL_UNUSED(Window))
 {
     MacDrawable *macWin;
     TkWindow *winPtr = (TkWindow *)tkwin;
-    (void)parent;
 
     /*
      * If this window is marked as embedded then the window structure should
@@ -437,6 +436,10 @@ TkMacOSXGetHostToplevel(
 {
     TkWindow *contWinPtr, *topWinPtr;
 
+    if (!(winPtr && winPtr->privatePtr)) {
+	return NULL;
+    }
+
     topWinPtr = winPtr->privatePtr->toplevel->winPtr;
     if (!Tk_IsEmbedded(topWinPtr)) {
 	return winPtr->privatePtr->toplevel;
@@ -447,9 +450,6 @@ TkMacOSXGetHostToplevel(
      * TODO: Here we should handle out of process embedding.
      */
 
-    if (!contWinPtr) {
-	return NULL;
-    }
     return TkMacOSXGetHostToplevel(contWinPtr);
 }
 
@@ -520,7 +520,7 @@ TkpClaimFocus(
 
 int
 TkpTestembedCmd(
-    void *dummy,	/* Main window for application. */
+    TCL_UNUSED(void *),	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -530,7 +530,6 @@ TkpTestembedCmd(
     Tcl_DString dString;
     char buffer[50];
     Tcl_Interp *embeddedInterp = NULL, *parentInterp = NULL;
-    (void)dummy;
 
     if ((objc > 1) && (strcmp(Tcl_GetString(objv[1]), "all") == 0)) {
 	all = 1;
@@ -624,14 +623,11 @@ TkpTestembedCmd(
 
 void
 TkpRedirectKeyEvent(
-    TkWindow *winPtr,		/* Window to which the event was originally
+    TCL_UNUSED(TkWindow *),		/* Window to which the event was originally
 				 * reported. */
-    XEvent *eventPtr)		/* X event to redirect (should be KeyPress or
+    TCL_UNUSED(XEvent *))		/* X event to redirect (should be KeyPress or
 				 * KeyRelease). */
 {
-    (void)winPtr;
-    (void)eventPtr;
-
     /* TODO: Implement this or decide it definitely needs no implementation */
 }
 
@@ -666,7 +662,7 @@ Tk_GetOtherWindow(
      * process...
      */
 
-    if (!(((TkWindow *)tkwin)->flags & TK_BOTH_HALVES)) {
+    if (!(tkwin && (((TkWindow*)tkwin)->flags & TK_BOTH_HALVES))) {
 	return NULL;
     }
 
@@ -1045,9 +1041,8 @@ EmbedGeometryRequest(
 
 static void
 EmbedSendConfigure(
-    Container *containerPtr)	/* Information about the embedding. */
+    TCL_UNUSED(Container *))	/* Information about the embedding. */
 {
-    (void)containerPtr;
 }
 
 /*
@@ -1156,40 +1151,31 @@ EmbedWindowDeleted(
 
 void
 TkpShowBusyWindow(
-    TkBusy busy)
+    TCL_UNUSED(TkBusy))
 {
-    (void)busy;
 }
 
 void
 TkpHideBusyWindow(
-    TkBusy busy)
+    TCL_UNUSED(TkBusy))
 {
-    (void)busy;
 }
 
 void
 TkpMakeTransparentWindowExist(
-    Tk_Window tkwin,		/* Token for window. */
-    Window parent)		/* Parent window. */
+    TCL_UNUSED(Tk_Window),		/* Token for window. */
+    TCL_UNUSED(Window))		/* Parent window. */
 {
-    (void)tkwin;
-    (void)parent;
 }
 
 void
 TkpCreateBusy(
-    Tk_FakeWin *winPtr,
-    Tk_Window tkRef,
-    Window* parentPtr,
-    Tk_Window tkParent,
-    TkBusy busy)
+    TCL_UNUSED(Tk_FakeWin *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Window *),
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(TkBusy))
 {
-    (void)winPtr;
-    (void)tkRef;
-    (void)parentPtr;
-    (void)tkParent;
-    (void)busy;
 }
 
 /*

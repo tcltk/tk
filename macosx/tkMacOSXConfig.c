@@ -23,7 +23,7 @@
  *	return a string representation of the option.
  *
  * Results:
- *	Returns a Tk_Uid that is the string identifier that identifies
+ *	Returns a Tcl_Obj* with the string identifier that identifies
  *	this option. Returns NULL if there are no system defaults
  *	that match this pair.
  *
@@ -35,14 +35,10 @@
 
 Tcl_Obj *
 Tk_GetSystemDefault(
-    Tk_Window tkwin,			/* A window to use. */
-    const char *dbName,			/* The option database name. */
-    const char *className)		/* The name of the option class. */
+    TCL_UNUSED(Tk_Window),			/* A window to use. */
+    TCL_UNUSED(const char *),			/* The option database name. */
+    TCL_UNUSED(const char *))		/* The name of the option class. */
 {
-    (void)tkwin;
-    (void)dbName;
-    (void)className;
-
     return NULL;
 }
 

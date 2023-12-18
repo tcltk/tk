@@ -4,9 +4,6 @@
     #ifndef _TKCONFIG
     #define _TKCONFIG
 
-/* Define if building universal (internal helper macro) */
-#undef AC_APPLE_UNIVERSAL_BUILD
-
 /* Define to 1 if you have the <AvailabilityMacros.h> header file. */
 #undef HAVE_AVAILABILITYMACROS_H
 
@@ -37,6 +34,15 @@
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
 
+/* Define to 1 if you have the `posix_spawnattr_setflags' function. */
+#undef HAVE_POSIX_SPAWNATTR_SETFLAGS
+
+/* Define to 1 if you have the `posix_spawnp' function. */
+#undef HAVE_POSIX_SPAWNP
+
+/* Define to 1 if you have the `posix_spawn_file_actions_adddup2' function. */
+#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2
+
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
 
@@ -61,9 +67,6 @@
 /* Is 'struct dirent64' in <sys/types.h>? */
 #undef HAVE_STRUCT_DIRENT64
 
-/* Is 'struct stat64' in <sys/stat.h>? */
-#undef HAVE_STRUCT_STAT64
-
 /* Should we include <sys/select.h>? */
 #undef HAVE_SYS_SELECT_H
 
@@ -84,6 +87,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vfork' function. */
+#undef HAVE_VFORK
 
 /* Is weak import available? */
 #undef HAVE_WEAK_IMPORT
@@ -186,6 +192,9 @@
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
 
+/* Add the _FILE_OFFSET_BITS flag when building */
+#undef _FILE_OFFSET_BITS
+
 /* Add the _ISOC99_SOURCE flag when building */
 #undef _ISOC99_SOURCE
 
@@ -200,6 +209,9 @@
 
 /* Do we want the reentrant OS API? */
 #undef _REENTRANT
+
+/* _TIME_BITS=64 enables 64-bit time_t. */
+#undef _TIME_BITS
 
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE

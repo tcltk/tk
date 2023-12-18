@@ -187,7 +187,6 @@ TkpOpenDisplay(
     const char *display_name)
 {
     Display *display;
-    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     if (gMacDisplay != NULL) {
 	if (strcmp(DisplayString(gMacDisplay->display), display_name) == 0) {
@@ -196,6 +195,8 @@ TkpOpenDisplay(
 	    return NULL;
 	}
     }
+
+    NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
     display = XkbOpenDisplay((char *)display_name, NULL, NULL, NULL, NULL, NULL);
 
@@ -864,6 +865,14 @@ XSetIconName(
     return Success;
 }
 
+Bool
+XFilterEvent(
+    TCL_UNUSED(XEvent *),
+    TCL_UNUSED(Window))
+{
+    return 0;
+}
+
 int
 XForceScreenSaver(
     Display* display,
@@ -879,30 +888,6 @@ XForceScreenSaver(
     return Success;
 }
 
-int
-XSetClipRectangles(
-    Display *d,
-    GC gc,
-    int clip_x_origin,
-    int clip_y_origin,
-    XRectangle* rectangles,
-    int n,
-    TCL_UNUSED(int))
-{
-    TkRegion clipRgn = TkCreateRegion();
-
-    while (n--) {
-    	XRectangle rect = *rectangles;
-
-    	rect.x += clip_x_origin;
-    	rect.y += clip_y_origin;
-    	TkUnionRectWithRegion(&rect, clipRgn, clipRgn);
-    	rectangles++;
-    }
-    TkSetRegion(d, gc, clipRgn);
-    TkDestroyRegion(clipRgn);
-    return 1;
-}
 /*
  *----------------------------------------------------------------------
  *
