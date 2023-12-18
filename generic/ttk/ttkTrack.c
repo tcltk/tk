@@ -116,7 +116,7 @@ static const unsigned ElementStateMask =
     ;
 
 static void
-ElementStateEventProc(ClientData clientData, XEvent *ev)
+ElementStateEventProc(void *clientData, XEvent *ev)
 {
     ElementStateTracker *es = (ElementStateTracker *)clientData;
     Ttk_Layout layout = es->corePtr->layout;

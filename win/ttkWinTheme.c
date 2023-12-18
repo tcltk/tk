@@ -181,7 +181,7 @@ static void FrameControlElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     FrameControlElementData *elementData = (FrameControlElementData *)clientData;
     RECT rc = BoxToRect(Ttk_PadBox(b, elementData->margins));
@@ -233,7 +233,7 @@ static void BorderElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     BorderElement *border = (BorderElement *)elementRecord;
     RECT rc = BoxToRect(b);
@@ -292,7 +292,7 @@ static void FieldElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder bg = Tk_Get3DBorderFromObj(tkwin, field->backgroundObj);
@@ -375,7 +375,7 @@ static void ButtonBorderElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
     int relief = TK_RELIEF_FLAT;
@@ -444,7 +444,7 @@ static void FocusElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     if (state & TTK_STATE_FOCUS) {
 	RECT rc = BoxToRect(b);
@@ -484,7 +484,7 @@ static void FillFocusElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     FillFocusElement *focus = (FillFocusElement *)elementRecord;
 
@@ -508,7 +508,7 @@ static void FillFocusElementDraw(
  */
 static void ComboboxFocusElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     if (state & TTK_STATE_READONLY) {
     	FillFocusElementDraw(clientData, elementRecord, tkwin, d, b, state);
@@ -563,7 +563,7 @@ static void TroughElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     TroughClientData *cd = (TroughClientData *)clientData;
     TkWinDCState dcState;
@@ -637,7 +637,7 @@ static void ThumbElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     RECT rc = BoxToRect(b);
     TkWinDCState dcState;
@@ -702,7 +702,7 @@ static void SliderElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     RECT rc = BoxToRect(b);
     TkWinDCState dcState;
@@ -781,7 +781,7 @@ static void TabElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
@@ -913,7 +913,7 @@ static void ClientElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     RECT rc = BoxToRect(b);
     TkWinDCState dcState;

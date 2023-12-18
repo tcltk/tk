@@ -32,10 +32,11 @@ typedef struct
 /* CursorManagerDeleteProc --
  * 	InterpDeleteProc for cursor manager.
  */
-static void CursorManagerDeleteProc(ClientData clientData, Tcl_Interp *dummy)
+static void CursorManagerDeleteProc(
+    void *clientData,
+    TCL_UNUSED(Tcl_Interp *))
 {
     CursorManager *cm = (CursorManager*)clientData;
-    (void)dummy;
 
     if (cm->timer) {
 	Tcl_DeleteTimerHandler(cm->timer);
@@ -90,7 +91,7 @@ static CursorManager *GetCursorManager(Tcl_Interp *interp)
  *	Timer handler to blink the insert cursor on and off.
  */
 static void
-CursorBlinkProc(ClientData clientData)
+CursorBlinkProc(void *clientData)
 {
     CursorManager *cm = (CursorManager *)clientData;
     int blinkTime;
@@ -153,7 +154,7 @@ static void ClaimCursor(CursorManager *cm, WidgetCore *corePtr)
     (d == NotifyInferior || d == NotifyAncestor || d == NotifyNonlinear)
 
 static void
-CursorEventProc(ClientData clientData, XEvent *eventPtr)
+CursorEventProc(void *clientData, XEvent *eventPtr)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     CursorManager *cm = GetCursorManager(corePtr->interp);

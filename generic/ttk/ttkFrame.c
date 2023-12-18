@@ -495,10 +495,10 @@ static void LabelframePlaceContent(void *recordPtr)
 }
 
 static int LabelRequest(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    TCL_UNUSED(void *), /* managerData */
+    TCL_UNUSED(Tcl_Size), /* index */
+    TCL_UNUSED(int), /* width */
+    TCL_UNUSED(int)) /* height */
 {
     return 1;
 }
@@ -512,7 +512,7 @@ static int LabelRequest(
  */
 static void LabelRemoved(
     void *managerData,
-    TCL_UNUSED(Tcl_Size))
+    TCL_UNUSED(Tcl_Size)) /* index */
 {
     Labelframe *lframe = (Labelframe *)managerData;
 
