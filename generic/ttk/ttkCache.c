@@ -170,7 +170,7 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
  * CacheWinEventHandler --
  * 	Detect when the cache window is destroyed, clear cache.
  */
-static void CacheWinEventHandler(ClientData clientData, XEvent *eventPtr)
+static void CacheWinEventHandler(void *clientData, XEvent *eventPtr)
 {
     Ttk_ResourceCache cache = (Ttk_ResourceCache)clientData;
 
@@ -328,16 +328,15 @@ Tcl_Obj *Ttk_UseBorder(
  * 	Tk_ImageChangedProc for Ttk_UseImage
  */
 
-static void NullImageChanged(ClientData dummy,
-    int x, int y, int width, int height, int imageWidth, int imageHeight)
+static void NullImageChanged(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 { /* No-op */
-    (void)dummy;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imageWidth;
-    (void)imageHeight;
 }
 
 /*

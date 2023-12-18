@@ -480,7 +480,7 @@ static Ttk_ManagerSpec PanedManagerSpec = {
  */
 
 static const unsigned PanedEventMask = LeaveWindowMask;
-static void PanedEventProc(ClientData clientData, XEvent *eventPtr)
+static void PanedEventProc(void *clientData, XEvent *eventPtr)
 {
     WidgetCore *corePtr = (WidgetCore *)clientData;
     if (   eventPtr->type == LeaveNotify
@@ -933,7 +933,7 @@ static const Ttk_ElementOptionSpec SashElementOptions[] = {
 };
 
 static void SashElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
     int *widthPtr,

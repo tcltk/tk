@@ -24,7 +24,7 @@ struct TtkTraceHandle_
  */
 static char *
 VarTraceProc(
-    ClientData clientData,	/* Widget record pointer */
+    void *clientData,	/* Widget record pointer */
     Tcl_Interp *interp, 	/* Interpreter containing variable. */
     TCL_UNUSED(const char *),	/* name1 */
     TCL_UNUSED(const char *),	/* name2 */
@@ -114,7 +114,7 @@ Ttk_TraceHandle *Ttk_TraceVariable(
 void Ttk_UntraceVariable(Ttk_TraceHandle *h)
 {
     if (h) {
-	ClientData cd = NULL;
+	void *cd = NULL;
 
 	/*
 	 * Workaround for Tcl Bug 3062331.  The trace design problem is
