@@ -31,7 +31,7 @@ typedef struct {			/* Manager hooks */
 
     int  (*RequestedSize)(void *managerData, int *widthPtr, int *heightPtr);
     void (*PlaceContent)(void *managerData);
-    int  (*ContentRequest)(void *managerData, Tcl_Size index, int w, int h);
+    int  (*ContentRequest)(void *managerData, Tcl_Size index, int width, int height);
     void (*ContentRemoved)(void *managerData, Tcl_Size index);
 } Ttk_ManagerSpec;
 

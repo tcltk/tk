@@ -113,7 +113,7 @@ static void RecomputeLayout(Ttk_Manager *mgr)
 /* ++ ManagerIdleProc --
  * 	DoWhenIdle procedure for deferred updates.
  */
-static void ManagerIdleProc(ClientData clientData)
+static void ManagerIdleProc(void *clientData)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     mgr->flags &= ~MGR_UPDATE_PENDING;
@@ -139,7 +139,7 @@ static void ManagerIdleProc(ClientData clientData)
  * 	Keep the content's map state in sync with the container's.
  */
 static const int ManagerEventMask = StructureNotifyMask;
-static void ManagerEventHandler(ClientData clientData, XEvent *eventPtr)
+static void ManagerEventHandler(void *clientData, XEvent *eventPtr)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     Tcl_Size i;
@@ -310,7 +310,7 @@ static void RemoveContent(Ttk_Manager *mgr, Tcl_Size index)
  * +++ Tk_GeomMgr hooks.
  */
 
-void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
+void Ttk_GeometryRequestProc(void *clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     Tcl_Size index = Ttk_ContentIndex(mgr, window);
@@ -325,7 +325,7 @@ void Ttk_GeometryRequestProc(ClientData clientData, Tk_Window window)
     }
 }
 
-void Ttk_LostContentProc(ClientData clientData, Tk_Window window)
+void Ttk_LostContentProc(void *clientData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)clientData;
     Tcl_Size index = Ttk_ContentIndex(mgr, window);
