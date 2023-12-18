@@ -31,8 +31,7 @@ CFStringRef urlFile = NULL;
 /*Forward declaration of functions.*/
 static Tcl_ObjCmdProc StartPrint;
 static OSStatus	FinishPrint(NSString *file, int buttonValue);
-static int   		MakePDF(void *clientData, Tcl_Interp *ip,
-				int objc,  Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc MakePDF;
 int			MacPrint_Init(Tcl_Interp * interp);
 
 /* Delegate class for print dialogs. */

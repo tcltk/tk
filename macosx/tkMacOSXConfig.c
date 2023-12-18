@@ -35,14 +35,10 @@
 
 Tcl_Obj *
 Tk_GetSystemDefault(
-    Tk_Window tkwin,			/* A window to use. */
-    const char *dbName,			/* The option database name. */
-    const char *className)		/* The name of the option class. */
+    TCL_UNUSED(Tk_Window),			/* A window to use. */
+    TCL_UNUSED(const char *),			/* The option database name. */
+    TCL_UNUSED(const char *))		/* The name of the option class. */
 {
-    (void)tkwin;
-    (void)dbName;
-    (void)className;
-
     return NULL;
 }
 

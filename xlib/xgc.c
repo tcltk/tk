@@ -649,16 +649,16 @@ XSetICFocus(
 Window
 XCreateWindow(
     TCL_UNUSED(Display *),
-	TCL_UNUSED(Window),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int),
+    TCL_UNUSED(Window),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
     TCL_UNUSED(unsigned int),
-	TCL_UNUSED(unsigned int),
     TCL_UNUSED(unsigned int),
-	TCL_UNUSED(int),
-	TCL_UNUSED(unsigned int),
+    TCL_UNUSED(unsigned int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(unsigned int),
     TCL_UNUSED(Visual *),
-	TCL_UNUSED(unsigned long),
+    TCL_UNUSED(unsigned long),
     TCL_UNUSED(XSetWindowAttributes *))
 {
 	return 0;
@@ -667,8 +667,8 @@ XCreateWindow(
 int
 XPointInRegion(
     TCL_UNUSED(Region),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int))
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
 	return 0;
 }
@@ -676,8 +676,8 @@ XPointInRegion(
 int
 XUnionRegion(
     TCL_UNUSED(Region),
-	TCL_UNUSED(Region),
-	TCL_UNUSED(Region))
+    TCL_UNUSED(Region),
+    TCL_UNUSED(Region))
 {
 	return 0;
 }
@@ -685,8 +685,8 @@ XUnionRegion(
 Region
 XPolygonRegion(
     TCL_UNUSED(XPoint *),
-	TCL_UNUSED(int),
-	TCL_UNUSED(int))
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     return 0;
 }

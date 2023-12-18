@@ -33,10 +33,8 @@ static char scriptPath[PATH_MAX + 1] = "";
  * Forward declarations...
  */
 
-static int		TkMacOSXGetAppPathObjCmd(TCL_UNUSED(void *), Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
-static int		TkMacOSVersionObjCmd(void *cd, Tcl_Interp *ip,
-			    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc TkMacOSXGetAppPathObjCmd;
+static Tcl_ObjCmdProc TkMacOSVersionObjCmd;
 
 #pragma mark TKApplication(TKInit)
 
@@ -910,11 +908,10 @@ TkMacOSXDefaultStartupScript(void)
 
 MODULE_SCOPE void*
 TkMacOSXGetNamedSymbol(
-    const char* module,
-    const char* symbol)
+    TCL_UNUSED(const char *),
+    const char *symbol)
 {
     void *addr = dlsym(RTLD_NEXT, symbol);
-    (void)module;
 
     if (!addr) {
 	(void) dlerror(); /* Clear dlfcn error state */
