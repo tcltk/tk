@@ -293,9 +293,8 @@ Tk_MacOSXSetupTkNotifier(void)
 
 static void
 TkMacOSXNotifyExitHandler(
-    void *dummy)	/* Not used. */
+    TCL_UNUSED(void *))	/* Not used. */
 {
-    (void)dummy;
     TSD_INIT();
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
@@ -425,11 +424,10 @@ static const Tcl_Time zeroBlockTime = { 0, 0 };
 
 static void
 TkMacOSXEventsSetupProc(
-    void *dummy,
+    TCL_UNUSED(void *),
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    (void)dummy;
 
     /*
      * runloopMode will be nil if we are in a Tcl event loop.
