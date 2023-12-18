@@ -46,7 +46,7 @@ MODULE_SCOPE void Ttk_LostContentProc(void *, Tk_Window window);
  * Public API:
  */
 MODULE_SCOPE Ttk_Manager *Ttk_CreateManager(
-	Ttk_ManagerSpec *, void *managerData, Tk_Window window);
+	const Ttk_ManagerSpec *, void *managerData, Tk_Window window);
 MODULE_SCOPE void Ttk_DeleteManager(Ttk_Manager *);
 
 #define  Ttk_InsertSlave Ttk_InsertContent

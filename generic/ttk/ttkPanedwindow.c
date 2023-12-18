@@ -458,7 +458,7 @@ static int PaneRequest(void *managerData, Tcl_Size index, int width, int height)
     return 1;
 }
 
-static Ttk_ManagerSpec PanedManagerSpec = {
+static const Ttk_ManagerSpec PanedManagerSpec = {
     { "panedwindow", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     PanedSize,
     PanedPlaceContent,
