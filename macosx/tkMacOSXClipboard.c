@@ -174,7 +174,6 @@ XSetSelectionOwner(
     TCL_UNUSED(Time))			/* The current time? */
 {
     TkDisplay *dispPtr = TkGetDisplayList();
-    (void)time;
 
     if (dispPtr && selection == dispPtr->clipboardAtom) {
 	clipboardOwner = owner ? Tk_IdToWindow(display, owner) : NULL;
