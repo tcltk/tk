@@ -209,7 +209,7 @@ static inline CGRect BoxToRect(
 
 static GrayPalette LookupGrayPalette(
     const ButtonDesign *design,
-    unsigned int state,
+    Ttk_State state,
     int isDark)
 {
     const PaletteStateTable *entry = design->palettes;
@@ -489,7 +489,7 @@ static void DrawGrayButton(
     CGContextRef context,
     CGRect bounds,
     const ButtonDesign *design,
-    unsigned int state,
+    Ttk_State state,
     Tk_Window tkwin)
 {
     int isDark = TkMacOSXInDarkMode(tkwin);
@@ -583,7 +583,7 @@ static void DrawAccentedSegment(
     CGContextRef context,
     CGRect bounds,
     const ButtonDesign *design,
-    unsigned int state,
+    Ttk_State state,
     Tk_Window tkwin)
 {
     /*
@@ -2936,7 +2936,7 @@ static void SeparatorElementDraw(
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
     const HIThemeSeparatorDrawInfo info = {
@@ -2999,7 +2999,7 @@ static void SizegripElementDraw(
     TCL_UNUSED(Tk_Window), /* tkwin */
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     CGRect bounds = BoxToRect(d, b);
     HIThemeGrowBoxDrawInfo info = {
@@ -3104,7 +3104,7 @@ static void BackgroundElementDraw(
     Tk_Window tkwin,
     Drawable d,
     TCL_UNUSED(Ttk_Box),
-    unsigned int state)
+    Ttk_State state)
 {
     FillElementDraw(clientData, elementRecord, tkwin, d, Ttk_WinBox(tkwin),
 	state);

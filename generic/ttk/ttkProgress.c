@@ -120,7 +120,7 @@ static int AnimationEnabled(Progressbar *pb)
  * 	Increments the -phase option, redisplays the widget,
  * 	and reschedules itself if animation still enabled.
  */
-static void AnimateProgressProc(ClientData clientData)
+static void AnimateProgressProc(void *clientData)
 {
     Progressbar *pb = (Progressbar *)clientData;
 

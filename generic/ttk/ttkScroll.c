@@ -123,7 +123,7 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 /* UpdateScrollbarBG --
  * 	Idle handler to update the scrollbar.
  */
-static void UpdateScrollbarBG(ClientData clientData)
+static void UpdateScrollbarBG(void *clientData)
 {
     ScrollHandle h = (ScrollHandle)clientData;
     Tcl_Interp *interp = h->corePtr->interp;

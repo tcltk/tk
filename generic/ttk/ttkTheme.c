@@ -407,7 +407,7 @@ typedef struct
  *	Cleanup procedure for StylePackageData.
  */
 static void Ttk_StylePkgFree(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(Tcl_Interp *))
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
@@ -475,7 +475,7 @@ static StylePackageData *GetStylePackageData(Tcl_Interp *interp)
  *
  */
 void Ttk_RegisterCleanup(
-    Tcl_Interp *interp, ClientData clientData, Ttk_CleanupProc *cleanupProc)
+    Tcl_Interp *interp, void *clientData, Ttk_CleanupProc *cleanupProc)
 {
     StylePackageData *pkgPtr = GetStylePackageData(interp);
     Cleanup *cleanup = (Cleanup *)ckalloc(sizeof(*cleanup));
@@ -498,7 +498,7 @@ void Ttk_RegisterCleanup(
  * 	the widget hierarchy, so this is done by evaluating a Tcl script.
  */
 
-static void ThemeChangedProc(ClientData clientData)
+static void ThemeChangedProc(void *clientData)
 {
     static char ThemeChangedScript[] = "ttk::ThemeChanged";
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
@@ -1190,7 +1190,7 @@ static Tcl_Obj* HashTableToDict(Tcl_HashTable *ht)
  */
 static int
 StyleMapCmd(
-    ClientData clientData,		/* StylePackageData pointer */
+    void *clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     Tcl_Size objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1257,7 +1257,7 @@ usage:
 /* + style configure $style -option ?value...
  */
 static int StyleConfigureCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
@@ -1312,7 +1312,7 @@ usage:
 /* + style lookup $style -option ?statespec? ?defaultValue?
  */
 static int StyleLookupCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
@@ -1352,7 +1352,7 @@ static int StyleLookupCmd(
 }
 
 static int StyleThemeCurrentCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj * const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj * const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Tcl_HashSearch search;
@@ -1388,7 +1388,7 @@ static int StyleThemeCurrentCmd(
 /* + style theme create name ?-parent $theme? ?-settings { script }?
  */
 static int StyleThemeCreateCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     static const char *const optStrings[] =
@@ -1452,10 +1452,10 @@ static int StyleThemeCreateCmd(
  * 	Return list of registered themes.
  */
 static int StyleThemeNamesCmd(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(Tcl_Obj *const *))
+    TCL_UNUSED(Tcl_Size), /* objc */
+    TCL_UNUSED(Tcl_Obj *const *)) /* objv */
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
 
@@ -1469,7 +1469,7 @@ static int StyleThemeNamesCmd(
  */
 static int
 StyleThemeSettingsCmd(
-    ClientData clientData,		/* StylePackageData pointer */
+    void *clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     Tcl_Size objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1498,7 +1498,7 @@ StyleThemeSettingsCmd(
 /* + style element create name type ? ...args ?
  */
 static int StyleElementCreateCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
@@ -1533,7 +1533,7 @@ static int StyleElementCreateCmd(
  * 	Return a list of elements defined in the current theme.
  */
 static int StyleElementNamesCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
@@ -1549,7 +1549,7 @@ static int StyleElementNamesCmd(
  * 	Return list of element options for specified element
  */
 static int StyleElementOptionsCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
@@ -1587,7 +1587,7 @@ static int StyleElementOptionsCmd(
 /* + style layout name ?spec?
  */
 static int StyleLayoutCmd(
-    ClientData clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     StylePackageData *pkgPtr = (StylePackageData *)clientData;
     Ttk_Theme theme = pkgPtr->currentTheme;
@@ -1627,7 +1627,10 @@ static int StyleLayoutCmd(
  *      Use the current theme if $theme is omitted.
  */
 static int StyleThemeStylesCmd(
-    TCL_UNUSED(void *), Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tcl_Size objc,
+    Tcl_Obj *const objv[])
 {
     Ttk_Theme themePtr;
 
@@ -1652,7 +1655,7 @@ static int StyleThemeStylesCmd(
  */
 static int
 StyleThemeUseCmd(
-    ClientData clientData,		/* StylePackageData pointer */
+    void *clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     Tcl_Size objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
@@ -1710,7 +1713,7 @@ static const Ttk_Ensemble StyleEnsemble[] = {
 
 static int
 StyleObjCmd(
-    ClientData clientData,		/* StylePackageData pointer */
+    void *clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
     int objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */

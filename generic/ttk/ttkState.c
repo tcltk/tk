@@ -262,7 +262,7 @@ Ttk_StateMap Ttk_GetStateMapFromObj(
  * Ttk_StateTableLooup --
  * 	Look up an index from a statically allocated state table.
  */
-int Ttk_StateTableLookup(const Ttk_StateTable *map, unsigned int state)
+int Ttk_StateTableLookup(const Ttk_StateTable *map, Ttk_State state)
 {
     while ((state & map->onBits) != map->onBits
 	    || (~state & map->offBits) != map->offBits)
