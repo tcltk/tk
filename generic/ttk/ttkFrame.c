@@ -519,7 +519,7 @@ static void LabelRemoved(
     lframe->label.labelWidget = 0;
 }
 
-static Ttk_ManagerSpec LabelframeManagerSpec = {
+static const Ttk_ManagerSpec LabelframeManagerSpec = {
     { "labelframe", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     LabelframeSize,
     LabelframePlaceContent,
