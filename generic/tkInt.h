@@ -1197,143 +1197,52 @@ MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
  * world:
  */
 
-MODULE_SCOPE int	Tk_BellObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BindObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BindtagsObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_BusyObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ButtonObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_CanvasObjCmd(void *clientData,
-			    Tcl_Interp *interp, int argc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_CheckbuttonObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ClipboardObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseColorObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ChooseDirectoryObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_DestroyObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_EntryObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_EventObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FrameObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FocusObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_FontObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GetOpenFileObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GetSaveFileObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GrabObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_GridObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ImageObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LabelObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LabelframeObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ListboxObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_LowerObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MenuObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MenubuttonObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MessageBoxObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_MessageObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PanedWindowObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_OptionObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PackObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_PlaceObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_RadiobuttonObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_RaiseObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScaleObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ScrollbarObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SelectionObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SendObjCmd(void *clientData,
-			    Tcl_Interp *interp,int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_SpinboxObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_TextObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_TkwaitObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_ToplevelObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_UpdateObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_WinfoObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-MODULE_SCOPE int	Tk_WmObjCmd(void *clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc Tk_BellObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_BindObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_BindtagsObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ButtonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_CanvasObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_CheckbuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ClipboardObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ChooseColorObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ChooseDirectoryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_DestroyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_EntryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_EventObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_FrameObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_FocusObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_FontObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GetOpenFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GetSaveFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GrabObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_GridObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ImageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelframeObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ListboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_LowerObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MenuObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MenubuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageBoxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_PanedWindowObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_OptionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_PackObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_PlaceObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_RadiobuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_RaiseObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ScaleObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ScrollbarObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_SelectionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_SendObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_SpinboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_TextObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_TkwaitObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_ToplevelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_UpdateObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_WinfoObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc Tk_WmObjCmd;
 
 MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
@@ -1342,8 +1251,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
-MODULE_SCOPE int	TkDeadAppObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
@@ -1488,16 +1396,12 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
  * Unsupported commands.
  */
 
-MODULE_SCOPE int	TkUnsupported1ObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc TkUnsupported1ObjCmd;
 
 /*
  * For Tktest.
  */
-MODULE_SCOPE int SquareObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+MODULE_SCOPE Tcl_ObjCmdProc SquareObjCmd;
 MODULE_SCOPE int	TkOldTestInit(Tcl_Interp *interp);
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
