@@ -86,7 +86,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static void		ImageTypeThreadExitProc(void *clientData);
-static void		DeleteImage(ImageModel *modelPtr);
+static Tcl_FreeProc	DeleteImage;
 static void		EventuallyDeleteImage(ImageModel *modelPtr,
 			    int forgetImageHashNow);
 
@@ -129,7 +129,7 @@ ImageTypeThreadExitProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_CreateOldImageType, Tk_CreateImageType --
+ * Tk_CreateImageType --
  *
  *	This function is invoked by an image manager to tell Tk about a new
  *	kind of image and the functions that manage the new type. The function
@@ -144,27 +144,6 @@ ImageTypeThreadExitProc(
  *
  *----------------------------------------------------------------------
  */
-
-void
-Tk_CreateOldImageType(
-    const Tk_ImageType *typePtr)
-				/* Structure describing the type. All of the
-				 * fields except "nextPtr" must be filled in
-				 * by caller. */
-{
-    Tk_ImageType *copyPtr;
-    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
-    if (!tsdPtr->initialized) {
-	tsdPtr->initialized = 1;
-	Tcl_CreateThreadExitHandler(ImageTypeThreadExitProc, NULL);
-    }
-    copyPtr = (Tk_ImageType *)ckalloc(sizeof(Tk_ImageType));
-    *copyPtr = *typePtr;
-    copyPtr->nextPtr = tsdPtr->oldImageTypeList;
-    tsdPtr->oldImageTypeList = copyPtr;
-}
 
 void
 Tk_CreateImageType(
@@ -373,8 +352,17 @@ Tk_ImageObjCmd(
 	    args[objc] = NULL;
 	}
 	Tcl_Preserve(modelPtr);
-	if (typePtr->createProc(interp, name, objc, args, typePtr,
-		(Tk_ImageModel)modelPtr, &modelPtr->modelData) != TCL_OK){
+	if (oldimage) {
+	    typedef int (OldCreateProc)(Tcl_Interp*, char*, Tcl_Size, char**,
+		Tk_ImageType*, Tk_ImageModel, ClientData*);
+	    i = ((OldCreateProc*)typePtr->createProc)(interp,
+		(char*)name, objc, (char**)args, typePtr,
+		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
+	} else {
+	    i = typePtr->createProc(interp, name, objc, args, typePtr,
+		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
+	}
+	if (i != TCL_OK){
 	    EventuallyDeleteImage(modelPtr, 0);
 	    Tcl_Release(modelPtr);
 	    if (oldimage) {
@@ -407,7 +395,7 @@ Tk_ImageObjCmd(
 	    if (modelPtr->deleted) {
 		goto alreadyDeleted;
 	    }
-	    DeleteImage(modelPtr);
+	    DeleteImage((char *)modelPtr);
 	}
 	break;
     case IMAGE_NAMES:
@@ -936,7 +924,7 @@ Tk_DeleteImage(
     if (hPtr == NULL) {
 	return;
     }
-    DeleteImage((ImageModel *)Tcl_GetHashValue(hPtr));
+    DeleteImage(Tcl_GetHashValue(hPtr));
 }
 
 /*
@@ -959,10 +947,15 @@ Tk_DeleteImage(
 
 static void
 DeleteImage(
-    ImageModel *modelPtr)	/* Pointer to main data structure for image. */
+#if TCL_MAJOR_VERSION > 8
+    void *blockPtr)	/* Pointer to main data structure for image. */
+#else
+    char *blockPtr)
+#endif
 {
     Image *imagePtr;
     Tk_ImageType *typePtr;
+    ImageModel *modelPtr = (ImageModel *)blockPtr;
 
     typePtr = modelPtr->typePtr;
     modelPtr->typePtr = NULL;
@@ -1016,7 +1009,7 @@ EventuallyDeleteImage(
     }
     if (!modelPtr->deleted) {
 	modelPtr->deleted = 1;
-	Tcl_EventuallyFree(modelPtr, (Tcl_FreeProc *) DeleteImage);
+	Tcl_EventuallyFree(modelPtr, DeleteImage);
     }
 }
 

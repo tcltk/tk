@@ -120,12 +120,8 @@ static const Tk_GeomMgr packerType = {
 static void		ArrangePacking(void *clientData);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-static void		DestroyPacker(void *memPtr);
+static Tcl_FreeProc	DestroyPacker;
 static Packer *		GetPacker(Tk_Window tkwin);
-#ifndef TK_NO_DEPRECATED
-static int		PackAfter(Tcl_Interp *interp, Packer *prevPtr,
-			    Packer *containerPtr, Tcl_Size objc,Tcl_Obj *const objv[]);
-#endif /* !TK_NO_DEPRECATED */
 static void		PackStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static void		Unlink(Packer *packPtr);
@@ -199,16 +195,10 @@ Tk_PackObjCmd(
     Tk_Window tkwin = (Tk_Window)clientData;
     const char *argv2;
     static const char *const optionStrings[] = {
-#ifndef TK_NO_DEPRECATED
-	"after", "append", "before", "unpack",
-#endif /* !TK_NO_DEPRECATED */
 	"configure", "content", "forget", "info", "propagate", "slaves", NULL };
     static const char *const optionStringsNoDep[] = {
 	"configure", "content", "forget", "info", "propagate", NULL };
     enum options {
-#ifndef TK_NO_DEPRECATED
-	PACK_AFTER, PACK_APPEND, PACK_BEFORE, PACK_UNPACK,
-#endif /* !TK_NO_DEPRECATED */
 	PACK_CONFIGURE, PACK_CONTENT, PACK_FORGET, PACK_INFO, PACK_PROPAGATE, PACK_SLAVES };
     int index;
 
@@ -239,72 +229,6 @@ Tk_PackObjCmd(
 
     argv2 = Tcl_GetString(objv[2]);
     switch ((enum options) index) {
-#ifndef TK_NO_DEPRECATED
-    case PACK_AFTER: {
-	Packer *prevPtr;
-	Tk_Window tkwin2;
-
-	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	prevPtr = GetPacker(tkwin2);
-	if (prevPtr->containerPtr == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window \"%s\" isn't packed", argv2));
-	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
-	    return TCL_ERROR;
-	}
-	return PackAfter(interp, prevPtr, prevPtr->containerPtr, objc-3, objv+3);
-    }
-    case PACK_APPEND: {
-	Packer *containerPtr;
-	Packer *prevPtr;
-	Tk_Window tkwin2;
-
-	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	containerPtr = GetPacker(tkwin2);
-	prevPtr = containerPtr->contentPtr;
-	if (prevPtr != NULL) {
-	    while (prevPtr->nextPtr != NULL) {
-		prevPtr = prevPtr->nextPtr;
-	    }
-	}
-	return PackAfter(interp, prevPtr, containerPtr, objc-3, objv+3);
-    }
-    case PACK_BEFORE: {
-	Packer *packPtr, *containerPtr;
-	Packer *prevPtr;
-	Tk_Window tkwin2;
-
-	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	packPtr = GetPacker(tkwin2);
-	if (packPtr->containerPtr == NULL) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window \"%s\" isn't packed", argv2));
-	    Tcl_SetErrorCode(interp, "TK", "PACK", "NOT_PACKED", NULL);
-	    return TCL_ERROR;
-	}
-	containerPtr = packPtr->containerPtr;
-	prevPtr = containerPtr->contentPtr;
-	if (prevPtr == packPtr) {
-	    prevPtr = NULL;
-	} else {
-	    for ( ; ; prevPtr = prevPtr->nextPtr) {
-		if (prevPtr == NULL) {
-		    Tcl_Panic("\"pack before\" couldn't find predecessor");
-		}
-		if (prevPtr->nextPtr == packPtr) {
-		    break;
-		}
-	    }
-	}
-	return PackAfter(interp, prevPtr, containerPtr, objc-3, objv+3);
-    }
-#endif /* !TK_NO_DEPRECATED */
     case PACK_CONFIGURE:
 	if (argv2[0] != '.') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -467,31 +391,6 @@ Tk_PackObjCmd(
 	Tcl_SetObjResult(interp, resultObj);
 	break;
     }
-#ifndef TK_NO_DEPRECATED
-    case PACK_UNPACK: {
-	Tk_Window tkwin2;
-	Packer *packPtr;
-
-	if (objc != 3) {
-	    Tcl_WrongNumArgs(interp, 2, objv, "window");
-	    return TCL_ERROR;
-	}
-	if (TkGetWindowFromObj(interp, tkwin, objv[2], &tkwin2) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	packPtr = GetPacker(tkwin2);
-	if ((packPtr != NULL) && (packPtr->containerPtr != NULL)) {
-	    Tk_ManageGeometry(tkwin2, NULL, NULL);
-	    if (packPtr->containerPtr->tkwin != Tk_Parent(packPtr->tkwin)) {
-		Tk_UnmaintainGeometry(packPtr->tkwin,
-			packPtr->containerPtr->tkwin);
-	    }
-	    Unlink(packPtr);
-	    Tk_UnmapWindow(packPtr->tkwin);
-	}
-	break;
-    }
-#endif /* !TK_NO_DEPRECATED */
     }
 
     return TCL_OK;
@@ -1078,248 +977,6 @@ GetPacker(
 }
 
 /*
- *------------------------------------------------------------------------
- *
- * PackAfter --
- *
- *	This function does most of the real work of adding one or more windows
- *	into the packing order for its container.
- *
- * Results:
- *	A standard Tcl return value.
- *
- * Side effects:
- *	The geometry of the specified windows may change, both now and again
- *	in the future.
- *
- *------------------------------------------------------------------------
- */
-
-#ifndef TK_NO_DEPRECATED
-static int
-PackAfter(
-    Tcl_Interp *interp,		/* Interpreter for error reporting. */
-    Packer *prevPtr,		/* Pack windows in argv just after this
-				 * window; NULL means pack as first child of
-				 * containerPtr. */
-    Packer *containerPtr,		/* Container in which to pack windows. */
-    Tcl_Size objc,			/* Number of elements in objv. */
-    Tcl_Obj *const objv[])	/* Array of lists, each containing 2 elements:
-				 * window name and side against which to
-				 * pack. */
-{
-    Packer *packPtr;
-    Tk_Window tkwin, ancestor, parent;
-    Tcl_Obj **options;
-    int c;
-    Tcl_Size index, optionCount;
-
-    /*
-     * Iterate over all of the window specifiers, each consisting of two
-     * arguments. The first argument contains the window name and the
-     * additional arguments contain options such as "top" or "padx 20".
-     */
-
-    for ( ; objc > 0; objc -= 2, objv += 2, prevPtr = packPtr) {
-	if (objc < 2) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "wrong # args: window \"%s\" should be followed by options",
-		    Tcl_GetString(objv[0])));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
-	    return TCL_ERROR;
-	}
-
-	/*
-	 * Find the packer for the window to be packed, and make sure that the
-	 * window in which it will be packed is either its or a descendant of
-	 * its parent.
-	 */
-
-	if (TkGetWindowFromObj(interp, containerPtr->tkwin, objv[0], &tkwin)
-		!= TCL_OK) {
-	    return TCL_ERROR;
-	}
-
-	parent = Tk_Parent(tkwin);
-	for (ancestor = containerPtr->tkwin; ; ancestor = Tk_Parent(ancestor)) {
-	    if (ancestor == parent) {
-		break;
-	    }
-	    if (((Tk_FakeWin *) (ancestor))->flags & TK_TOP_HIERARCHY) {
-	    badWindow:
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't pack \"%s\" inside \"%s\"", Tcl_GetString(objv[0]),
-			Tk_PathName(containerPtr->tkwin)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
-		return TCL_ERROR;
-	    }
-	}
-	if (((Tk_FakeWin *) (tkwin))->flags & TK_TOP_HIERARCHY) {
-	    goto badWindow;
-	}
-	if (tkwin == containerPtr->tkwin) {
-	    goto badWindow;
-	}
-	packPtr = GetPacker(tkwin);
-
-	/*
-	 * Process options for this window.
-	 */
-
-	if (Tcl_ListObjGetElements(interp, objv[1], &optionCount, &options)
-		!= TCL_OK) {
-	    return TCL_ERROR;
-	}
-	packPtr->side = TOP;
-	packPtr->anchor = TK_ANCHOR_CENTER;
-	packPtr->padX = packPtr->padY = 0;
-	packPtr->padLeft = packPtr->padTop = 0;
-	packPtr->iPadX = packPtr->iPadY = 0;
-	packPtr->flags &= ~(FILLX|FILLY|EXPAND);
-	packPtr->flags |= OLD_STYLE;
-	for (index = 0 ; index < optionCount; index++) {
-	    Tcl_Obj *curOptPtr = options[index];
-	    Tcl_Size length;
-	    const char *curOpt = Tcl_GetStringFromObj(curOptPtr, &length);
-
-	    c = curOpt[0];
-
-	    if ((c == 't')
-		    && (strncmp(curOpt, "top", length)) == 0) {
-		packPtr->side = TOP;
-	    } else if ((c == 'b')
-		    && (strncmp(curOpt, "bottom", length)) == 0) {
-		packPtr->side = BOTTOM;
-	    } else if ((c == 'l')
-		    && (strncmp(curOpt, "left", length)) == 0) {
-		packPtr->side = LEFT;
-	    } else if ((c == 'r')
-		    && (strncmp(curOpt, "right", length)) == 0) {
-		packPtr->side = RIGHT;
-	    } else if ((c == 'e')
-		    && (strncmp(curOpt, "expand", length)) == 0) {
-		packPtr->flags |= EXPAND;
-	    } else if ((c == 'f')
-		    && (strcmp(curOpt, "fill")) == 0) {
-		packPtr->flags |= FILLX|FILLY;
-	    } else if ((length == 5) && (strcmp(curOpt, "fillx")) == 0) {
-		packPtr->flags |= FILLX;
-	    } else if ((length == 5) && (strcmp(curOpt, "filly")) == 0) {
-		packPtr->flags |= FILLY;
-	    } else if ((c == 'p') && (strcmp(curOpt, "padx")) == 0) {
-		if (optionCount <= (index+1)) {
-		missingPad:
-		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "wrong # args: \"%s\" option must be"
-			    " followed by screen distance", curOpt));
-		    Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
-			    NULL);
-		    return TCL_ERROR;
-		}
-		if (TkParsePadAmount(interp, tkwin, options[index+1],
-			&packPtr->padLeft, &packPtr->padX) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		packPtr->padX /= 2;
-		packPtr->padLeft /= 2;
-		packPtr->iPadX = 0;
-		index++;
-	    } else if ((c == 'p') && (strcmp(curOpt, "pady")) == 0) {
-		if (optionCount <= (index+1)) {
-		    goto missingPad;
-		}
-		if (TkParsePadAmount(interp, tkwin, options[index+1],
-			&packPtr->padTop, &packPtr->padY) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		packPtr->padY /= 2;
-		packPtr->padTop /= 2;
-		packPtr->iPadY = 0;
-		index++;
-	    } else if ((c == 'f') && (length > 1)
-		    && (strncmp(curOpt, "frame", length) == 0)) {
-		if (optionCount <= (index+1)) {
-		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "wrong # args: \"frame\""
-			    " option must be followed by anchor point", TCL_INDEX_NONE));
-		    Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
-			    NULL);
-		    return TCL_ERROR;
-		}
-		if (Tk_GetAnchorFromObj(interp, options[index+1],
-			&packPtr->anchor) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		index++;
-	    } else {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"bad option \"%s\": should be top, bottom, left,"
-			" right, expand, fill, fillx, filly, padx, pady, or"
-			" frame", curOpt));
-		Tcl_SetErrorCode(interp, "TK", "OLDPACK", "BAD_PARAMETER",
-			NULL);
-		return TCL_ERROR;
-	    }
-	}
-
-	if (packPtr != prevPtr) {
-	    /*
-	     * Unpack this window if it's currently packed.
-	     */
-
-	    if (packPtr->containerPtr != NULL) {
-		if ((packPtr->containerPtr != containerPtr) &&
-			(packPtr->containerPtr->tkwin
-			!= Tk_Parent(packPtr->tkwin))) {
-		    Tk_UnmaintainGeometry(packPtr->tkwin,
-			    packPtr->containerPtr->tkwin);
-		}
-		Unlink(packPtr);
-	    }
-
-	    /*
-	     * Add the window in the correct place in its container's packing
-	     * order, then make sure that the window is managed by us.
-	     */
-
-	    packPtr->containerPtr = containerPtr;
-	    if (prevPtr == NULL) {
-		packPtr->nextPtr = containerPtr->contentPtr;
-		containerPtr->contentPtr = packPtr;
-	    } else {
-		packPtr->nextPtr = prevPtr->nextPtr;
-		prevPtr->nextPtr = packPtr;
-	    }
-	    Tk_ManageGeometry(tkwin, &packerType, packPtr);
-
-	    if (!(containerPtr->flags & DONT_PROPAGATE)) {
-		if (TkSetGeometryContainer(interp, containerPtr->tkwin, "pack")
-			!= TCL_OK) {
-		    Tk_ManageGeometry(tkwin, NULL, NULL);
-		    Unlink(packPtr);
-		    return TCL_ERROR;
-		}
-		containerPtr->flags |= ALLOCED_CONTAINER;
-	    }
-	}
-    }
-
-    /*
-     * Arrange for the container to be re-packed at the first idle moment.
-     */
-
-    if (containerPtr->abortPtr != NULL) {
-	*containerPtr->abortPtr = 1;
-    }
-    if (!(containerPtr->flags & REQUESTED_REPACK)) {
-	containerPtr->flags |= REQUESTED_REPACK;
-	Tcl_DoWhenIdle(ArrangePacking, containerPtr);
-    }
-    return TCL_OK;
-}
-#endif /* !TK_NO_DEPRECATED */
-
-/*
  *----------------------------------------------------------------------
  *
  * Unlink --
@@ -1404,8 +1061,11 @@ Unlink(
 
 static void
 DestroyPacker(
-    void *memPtr)		/* Info about packed window that is now
-				 * dead. */
+#if TCL_MAJOR_VERSION > 8
+    void *memPtr)		/* Info about packed window that is now dead. */
+#else
+    char *memPtr)
+#endif
 {
     Packer *packPtr = (Packer *)memPtr;
 
@@ -1481,7 +1141,7 @@ PackStructureProc(
 	    Tcl_CancelIdleCall(ArrangePacking, packPtr);
 	}
 	packPtr->tkwin = NULL;
-	Tcl_EventuallyFree(packPtr, (Tcl_FreeProc *) DestroyPacker);
+	Tcl_EventuallyFree(packPtr, DestroyPacker);
     } else if (eventPtr->type == MapNotify) {
 	/*
 	 * When a container gets mapped, must redo the geometry computation so

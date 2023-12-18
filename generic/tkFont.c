@@ -73,9 +73,9 @@ typedef struct LayoutChunk {
     const char *start;		/* Pointer to simple string to be displayed.
 				 * This is a pointer into the TkTextLayout's
 				 * string. */
-    int numBytes;		/* The number of bytes in this chunk. */
-    int numChars;		/* The number of characters in this chunk. */
-    int numDisplayChars;	/* The number of characters to display when
+    Tcl_Size numBytes;		/* The number of bytes in this chunk. */
+    Tcl_Size numChars;		/* The number of characters in this chunk. */
+    Tcl_Size numDisplayChars;	/* The number of characters to display when
 				 * this chunk is displayed. Can be less than
 				 * numChars if extra space characters were
 				 * absorbed by the end of the chunk. This will
@@ -98,7 +98,7 @@ typedef struct TextLayout {
     const char *string;		/* The string that was layed out. */
     int width;			/* The maximum width of all lines in the text
 				 * layout. */
-    int numChunks;		/* Number of chunks actually used in following
+    Tcl_Size numChunks;		/* Number of chunks actually used in following
 				 * array. */
     LayoutChunk chunks[TKFLEXARRAY];/* Array of chunks. The actual size will be
 				 * maxChunks. THIS FIELD MUST BE THE LAST IN
@@ -337,7 +337,7 @@ static void		FreeFontObjProc(Tcl_Obj *objPtr);
 static int		GetAttributeInfoObj(Tcl_Interp *interp,
 			    const TkFontAttributes *faPtr, Tcl_Obj *objPtr);
 static LayoutChunk *	NewChunk(TextLayout **layoutPtrPtr, int *maxPtr,
-			    const char *start, int numChars, int curX,
+			    const char *start, Tcl_Size numChars, int curX,
 			    int newX, int y);
 static int		ParseFontNameObj(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Obj *objPtr, TkFontAttributes *faPtr);
@@ -422,12 +422,16 @@ TkFontPkgFree(
     TkFontInfo *fiPtr = mainPtr->fontInfoPtr;
     Tcl_HashEntry *hPtr, *searchPtr;
     Tcl_HashSearch search;
+#ifdef PURIFY
     int fontsLeft = 0;
+#endif
 
     for (searchPtr = Tcl_FirstHashEntry(&fiPtr->fontCache, &search);
 	    searchPtr != NULL;
 	    searchPtr = Tcl_NextHashEntry(&search)) {
+#ifdef PURIFY
 	fontsLeft++;
+#endif
 #ifdef DEBUG_FONTS
 	fprintf(stderr, "Font %s still in cache.\n",
 		(char *) Tcl_GetHashKey(&fiPtr->fontCache, searchPtr));
@@ -573,7 +577,7 @@ Tk_FontObjCmd(
 
 	if (charPtr != NULL) {
 	    const char *string = Tcl_GetString(charPtr);
-	    size_t len = TkUtfToUniChar(string, &uniChar);
+	    size_t len = Tcl_UtfToUniChar(string, &uniChar);
 
 	    if (len != (size_t)charPtr->length) {
 		resultPtr = Tcl_NewStringObj(
@@ -1743,14 +1747,14 @@ Tk_PostscriptFontName(
 		src++;
 		upper = 1;
 	    }
-	    src += TkUtfToUniChar(src, &ch);
+	    src += Tcl_UtfToUniChar(src, &ch);
 	    if (upper) {
 		ch = Tcl_UniCharToUpper(ch);
 		upper = 0;
 	    } else {
 		ch = Tcl_UniCharToLower(ch);
 	    }
-	    dest += TkUniCharToUtf(ch, dest);
+	    dest += Tcl_UniCharToUtf(ch, dest);
 	}
 	*dest = '\0';
 	Tcl_DStringSetLength(dsPtr, dest - Tcl_DStringValue(dsPtr));
@@ -1986,7 +1990,8 @@ Tk_ComputeTextLayout(
 {
     TkFont *fontPtr = (TkFont *) tkfont;
     const char *start, *endp, *special;
-    int n, y, bytesThisChunk, maxChunks, curLine, layoutHeight;
+    Tcl_Size n;
+    int y, bytesThisChunk, maxChunks, curLine, layoutHeight;
     int baseline, height, curX, newX, maxWidth, *lineLengths;
     TextLayout *layoutPtr;
     LayoutChunk *chunkPtr;
@@ -2309,10 +2314,10 @@ Tk_DrawTextLayout(
 				 * Tk_ComputeTextLayout(). */
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
-    int firstChar,		/* The index of the first character to draw
+    Tcl_Size firstChar,		/* The index of the first character to draw
 				 * from the given text item. 0 specifies the
 				 * beginning. */
-    int lastChar)		/* The index just after the last character to
+    Tcl_Size lastChar)		/* The index just after the last character to
 				 * draw from the given text item. A number < 0
 				 * means to draw all characters. */
 {
@@ -2321,7 +2326,8 @@ Tk_DrawTextLayout(
     TkDrawAngledTextLayout(display, drawable, gc, layout, x, y, 0.0, firstChar, lastChar);
 #else
     TextLayout *layoutPtr = (TextLayout *) layout;
-    int i, numDisplayChars, drawX;
+    int i, drawX;
+    Tcl_Size numDisplayChars;
     const char *firstByte, *lastByte;
     LayoutChunk *chunkPtr;
 
@@ -2380,10 +2386,10 @@ TkDrawAngledTextLayout(
     int x, int y,		/* Upper-left hand corner of rectangle in
 				 * which to draw (pixels). */
     double angle,
-    int firstChar,		/* The index of the first character to draw
+    Tcl_Size firstChar,		/* The index of the first character to draw
 				 * from the given text item. 0 specifies the
 				 * beginning. */
-    int lastChar)		/* The index just after the last character to
+    Tcl_Size lastChar)		/* The index just after the last character to
 				 * draw from the given text item. A number < 0
 				 * means to draw all characters. */
 {
@@ -2742,7 +2748,7 @@ int
 Tk_CharBbox(
     Tk_TextLayout layout,	/* Layout information, from a previous call to
 				 * Tk_ComputeTextLayout(). */
-    int index,			/* The index of the character whose bbox is
+    Tcl_Size index,			/* The index of the character whose bbox is
 				 * desired. Negative means count backwards. */
     int *xPtr, int *yPtr,	/* Filled with the upper-left hand corner, in
 				 * pixels, of the bounding box for the
@@ -2788,7 +2794,7 @@ Tk_CharBbox(
 	    }
 	    if (widthPtr != NULL) {
 		int ch;
-		Tk_MeasureChars(tkfont, end, TkUtfToUniChar(end, &ch), -1, 0, &w);
+		Tk_MeasureChars(tkfont, end, Tcl_UtfToUniChar(end, &ch), -1, 0, &w);
 	    }
 	    goto check;
 	}
@@ -3334,7 +3340,7 @@ Tk_TextLayoutToPostscript(
 	     * international postscript fonts.
 	     */
 
-	    p += TkUtfToUniChar(p, &ch);
+	    p += Tcl_UtfToUniChar(p, &ch);
 	    if ((ch == '(') || (ch == ')') || (ch == '\\') || (ch < 0x20)) {
 		/*
 		 * Tricky point: the "03" is necessary in the snprintf below,
@@ -3835,7 +3841,7 @@ NewChunk(
     TextLayout **layoutPtrPtr,
     int *maxPtr,
     const char *start,
-    int numBytes,
+    Tcl_Size numBytes,
     int curX,
     int newX,
     int y)
@@ -4357,7 +4363,7 @@ TkFontGetFirstTextLayout(
 {
     TextLayout *layoutPtr = (TextLayout *) layout;
     LayoutChunk *chunkPtr;
-    int numBytesInChunk;
+    Tcl_Size numBytesInChunk;
 
     if ((layoutPtr == NULL) || (layoutPtr->numChunks == 0)
 	    || (layoutPtr->chunks->numDisplayChars <= 0)) {

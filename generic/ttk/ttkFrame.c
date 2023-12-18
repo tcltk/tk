@@ -298,7 +298,8 @@ static void LabelframeStyleOptions(Labelframe *lf, LabelframeStyle *style)
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &style->labelAnchor);
     }
     if ((objPtr = Ttk_QueryOption(layout,"-labelmargins", 0)) != NULL) {
-	Ttk_GetBorderFromObj(NULL, objPtr, &style->labelMargins);
+	Ttk_GetPaddingFromObj(NULL, lf->core.tkwin, objPtr,
+	    &style->labelMargins);
     } else {
 	if (style->labelAnchor & (TTK_PACK_TOP|TTK_PACK_BOTTOM)) {
 	    style->labelMargins =
@@ -494,10 +495,10 @@ static void LabelframePlaceContent(void *recordPtr)
 }
 
 static int LabelRequest(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    TCL_UNUSED(void *), /* managerData */
+    TCL_UNUSED(Tcl_Size), /* index */
+    TCL_UNUSED(int), /* width */
+    TCL_UNUSED(int)) /* height */
 {
     return 1;
 }
@@ -511,14 +512,14 @@ static int LabelRequest(
  */
 static void LabelRemoved(
     void *managerData,
-    TCL_UNUSED(Tcl_Size))
+    TCL_UNUSED(Tcl_Size)) /* index */
 {
     Labelframe *lframe = (Labelframe *)managerData;
 
     lframe->label.labelWidget = 0;
 }
 
-static Ttk_ManagerSpec LabelframeManagerSpec = {
+static const Ttk_ManagerSpec LabelframeManagerSpec = {
     { "labelframe", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     LabelframeSize,
     LabelframePlaceContent,

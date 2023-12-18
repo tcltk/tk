@@ -3,7 +3,7 @@
 # generate the file "configure", which is run during Tk installation
 # to configure the system for the local environment.
 
-AC_INIT([tk],[8.7])
+AC_INIT([tk],[9.0])
 AC_CONFIG_SRCDIR([../generic/tk.h])
 AC_PREREQ([2.69])
 
@@ -12,10 +12,10 @@ AC_PREREQ([2.69])
 # /bin/sh. The bash shell seems to suffer from some strange failures.
 SHELL=/bin/sh
 
-TK_VERSION=8.7
-TK_MAJOR_VERSION=8
-TK_MINOR_VERSION=7
-TK_PATCH_LEVEL="a6"
+TK_VERSION=9.0
+TK_MAJOR_VERSION=9
+TK_MINOR_VERSION=0
+TK_PATCH_LEVEL="b1"
 VER=$TK_MAJOR_VERSION$TK_MINOR_VERSION
 
 #------------------------------------------------------------------------
@@ -77,15 +77,10 @@ SC_PATH_TCLCONFIG($TK_PATCH_LEVEL)
 SC_LOAD_TCLCONFIG
 
 if test "${TCL_MAJOR_VERSION}" -lt 9 ; then
-if test "${TCL_MAJOR_VERSION}" != "${TK_MAJOR_VERSION}"; then
+if test "${TCL_MINOR_VERSION}" -lt 7; then
     AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
-fi
-if test "${TCL_MINOR_VERSION}" -lt 6; then
-    AC_MSG_ERROR([${TCL_BIN_DIR}/tclConfig.sh is for Tcl ${TCL_VERSION}.
-Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.6+.
-Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.6 or better.])
+Tk ${TK_VERSION}${TK_PATCH_LEVEL} needs Tcl 8.7+.
+Use --with-tcl= option to indicate location of tclConfig.sh file for Tcl 8.7 or better.])
 fi
 fi
 
@@ -150,17 +145,6 @@ AC_CHECK_TYPE([uintptr_t], [
 	   type wide enough to hold a pointer.])
     fi
 ])
-
-#--------------------------------------------------------------------
-# Windows XP theme engine header for Ttk
-#--------------------------------------------------------------------
-
-AC_CHECK_HEADER([uxtheme.h], [AC_DEFINE(HAVE_UXTHEME_H)],
-	[AC_MSG_NOTICE([xpnative theme will be unavailable])],
-	[#include <windows.h>])
-AC_CHECK_HEADER([vssym32.h], [AC_DEFINE(HAVE_VSSYM32_H)], [],
-	[#include <windows.h>
-#include <uxtheme.h>])
 
 #--------------------------------------------------------------------
 # Set the default compiler switches based on the --enable-symbols
@@ -237,7 +221,6 @@ TK_SHARED_BUILD=${SHARED_BUILD}
 
 TK_SHARED_LIB_SUFFIX="\${NODOT_VERSION}${DLLSUFFIX}"
 TK_UNSHARED_LIB_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
-TK_EXPORT_FILE_SUFFIX="\${NODOT_VERSION}${LIBSUFFIX}"
 
 eval "TK_SRC_DIR=\"`cd $srcdir/..; $CYGPATH $(pwd)`\""
 
@@ -259,11 +242,7 @@ else
 fi
 fi
 
-if test "${TCL_MAJOR_VERSION}" -gt 8 ; then
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
-else
-    eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${VER}${LIBSUFFIX}" ;
-fi
+eval "TK_STUB_LIB_FILE=${LIBPREFIX}tkstub${LIBSUFFIX}" ;
 # FIXME: All of this var junk needs to be done in tcl.m4 !!!!
 # I left out the other vars that also need to get defined here.
 # we also need to double check about spaces in path names
@@ -293,14 +272,13 @@ eval "EXESUFFIX=${EXESUFFIX}"
 
 CFG_TK_SHARED_LIB_SUFFIX=${TK_SHARED_LIB_SUFFIX}
 CFG_TK_UNSHARED_LIB_SUFFIX=${TK_UNSHARED_LIB_SUFFIX}
-CFG_TK_EXPORT_FILE_SUFFIX=${TK_EXPORT_FILE_SUFFIX}
 
 #--------------------------------------------------------------------
 # Adjust the defines for how the resources are built depending
 # on symbols and static vs. shared.
 #--------------------------------------------------------------------
 
-if test ${SHARED_BUILD} = 0 -o "$TCL_NEEDS_EXP_FILE" = 0; then
+if test ${SHARED_BUILD} = 0; then
     RC_DEFINES="${RC_DEFINE} STATIC_BUILD"
     TK_RES=""
 else
@@ -344,7 +322,6 @@ AC_SUBST(TCL_SRC_DIR)
 AC_SUBST(TCL_BIN_DIR)
 AC_SUBST(CFG_TK_SHARED_LIB_SUFFIX)
 AC_SUBST(CFG_TK_UNSHARED_LIB_SUFFIX)
-AC_SUBST(CFG_TK_EXPORT_FILE_SUFFIX)
 
 AC_SUBST(CFLAGS_DEFAULT)
 AC_SUBST(EXTRA_CFLAGS)

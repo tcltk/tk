@@ -11,7 +11,7 @@
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact tk  8.7a6
+package require -exact tk  9.0b1
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -186,10 +186,13 @@ proc ::tk::RestoreFocusGrab {grab focus {destroy destroy}} {
 	}
     }
     if {[winfo exists $oldGrab] && [winfo ismapped $oldGrab]} {
+	# The "grab" command will fail if another application
+	# already holds the grab on a window with the same name.
+	# So catch it. See [7447ed20ec] for an example.
 	if {$oldStatus eq "global"} {
-	    grab -global $oldGrab
+	    catch {grab -global $oldGrab}
 	} else {
-	    grab $oldGrab
+	    catch {grab $oldGrab}
 	}
     }
 }
@@ -546,6 +549,28 @@ proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
     $w ${dir}view scroll [expr {$amount/$factor}] $units
 }
 
+## ::tk::PreciseScrollDeltas $dxdy
+
+proc ::tk::PreciseScrollDeltas {dxdy} {
+    set deltaX [expr {$dxdy >> 16}]
+    set low [expr {$dxdy & 0xffff}]
+    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}]
+    return [list $deltaX $deltaY]
+}
+
+# Helper for smooth scrolling of widgets that support xview moveto,
+# yview moveto, height and width.
+
+proc ::tk::ScrollByPixels {w deltaX deltaY} {
+    set width [expr {1.0 * [$w cget -width]}]
+    set height [expr {1.0 * [$w cget -height]}]
+    set X [lindex [$w xview] 0]
+    set Y [lindex [$w yview] 0]
+    set x [expr {$X - $deltaX / $width}]
+    set y [expr {$Y - $deltaY / $height}]
+    $w xview moveto $x
+    $w yview moveto $y
+}
 
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
@@ -834,6 +859,7 @@ if {[tk windowingsystem] eq "x11"} {
 if {$::ttk::library ne ""} {
     uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
 }
+
 
 # Local Variables:
 # mode: tcl

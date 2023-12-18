@@ -317,26 +317,23 @@ static const Tk_OptionSpec optionSpecs[] = {
  */
 
 static const Tk_OptionSpec itemAttrOptionSpecs[] = {
-    {TK_OPTION_BORDER, "-background", "background", "Background",
+    {TK_OPTION_BORDER, "-background", NULL, NULL,
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, border),
-     TK_OPTION_NULL_OK,
-     DEF_LISTBOX_BG_MONO, 0},
+     TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
      NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
      NULL, 0, TCL_INDEX_NONE, 0, "-foreground", 0},
-    {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
+    {TK_OPTION_COLOR, "-foreground", NULL, NULL,
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, fgColor),
-     TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, selBorder),
-     TK_OPTION_NULL_OK,
-     DEF_LISTBOX_SELECT_MONO, 0},
-    {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
      NULL, TCL_INDEX_NONE, offsetof(ItemAttr, selFgColor),
-     TK_OPTION_NULL_OK,
-     DEF_LISTBOX_SELECT_FG_MONO, 0},
-    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
+     TK_OPTION_NULL_OK, NULL, 0},
+    {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, NULL, 0}
 };
 
 /*
@@ -392,7 +389,7 @@ static int		ConfigureListboxItem(Tcl_Interp *interp,
 			    Tcl_Obj *const objv[], int index);
 static int		ListboxDeleteSubCmd(Listbox *listPtr,
 			    int first, int last);
-static void		DestroyListbox(void *memPtr);
+static Tcl_FreeProc	DestroyListbox;
 static void		DestroyListboxOptionTables(void *clientData,
 			    Tcl_Interp *interp);
 static void		DisplayListbox(void *clientData);
@@ -1441,7 +1438,11 @@ ListboxGetItemAttributes(
 
 static void
 DestroyListbox(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about listbox widget. */
+#else
+    char *memPtr)
+#endif
 {
     Listbox *listPtr = (Listbox *)memPtr;
     Tcl_HashEntry *entry;
@@ -2628,7 +2629,7 @@ ListboxEventProc(
 	    if (listPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayListbox, clientData);
 	    }
-	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *) DestroyListbox);
+	    Tcl_EventuallyFree(clientData, DestroyListbox);
 	}
     } else if (eventPtr->type == ConfigureNotify) {
 	int vertSpace;
@@ -2731,7 +2732,7 @@ GetListboxIndex(
 {
     int result, index;
     Tcl_Size idx;
-    const char *stringRep;
+    char *stringRep;
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
@@ -2773,17 +2774,22 @@ GetListboxIndex(
          */
 
 	int y;
-	const char *start;
-	char *end;
+	char *start;
+	char *rest;
 
 	start = stringRep + 1;
-	y = strtol(start, &end, 0);
-	if ((start == end) || (*end != ',')) {
+	rest = strchr(start, ',');
+	if (!rest) {
 	    goto badIndex;
 	}
-	start = end+1;
-	y = strtol(start, &end, 0);
-	if ((start == end) || (*end != '\0')) {
+	*rest = '\0';
+	if (Tcl_GetInt(NULL, start, &y) != TCL_OK) {
+	    *rest = ',';
+	    goto badIndex;
+	}
+	*rest = ',';
+	start = rest+1;
+	if (Tcl_GetInt(NULL, start, &y) != TCL_OK) {
 	    goto badIndex;
 	}
 	*indexPtr = NearestListboxElement(listPtr, y);

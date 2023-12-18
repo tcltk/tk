@@ -1029,7 +1029,7 @@ TkCreateMainWindow(
 #ifdef STATIC_BUILD
 		".static"
 #endif
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+#if TCL_UTF_MAX < 4
 		".utf-16"
 #endif
 #if defined(_WIN32)
@@ -3152,6 +3152,7 @@ Initialize(
     Tcl_Obj *cmd;
 
     Tcl_Obj *nameObj = NULL;
+    Tcl_Obj* appNameObj = NULL;
     Tcl_Obj *classObj = NULL;
     Tcl_Obj *displayObj = NULL;
     Tcl_Obj *colorMapObj = NULL;
@@ -3183,7 +3184,7 @@ Initialize(
      * Ensure that we are getting a compatible version of Tcl.
      */
 
-    if (Tcl_InitStubs(interp, "8.6-", 0) == NULL) {
+    if (Tcl_InitStubs(interp, "8.7-", 0) == NULL) {
 	return TCL_ERROR;
     }
 
@@ -3323,6 +3324,8 @@ Initialize(
 	TkpGetAppName(interp, &nameDS);
 	nameObj = Tcl_NewStringObj(Tcl_DStringValue(&nameDS),
 		Tcl_DStringLength(&nameDS));
+	appNameObj = nameObj;
+	Tcl_IncrRefCount(appNameObj);
 	Tcl_DStringFree(&nameDS);
     }
 
@@ -3381,7 +3384,14 @@ Initialize(
 	visualObj = NULL;
     }
 
-    code = TkListCreateFrame(NULL, interp, cmd, 1, nameObj);
+    Tcl_Size objc;
+    Tcl_Obj **objv;
+
+    if (TCL_OK != Tcl_ListObjGetElements(interp, cmd, &objc, &objv)) {
+	return TCL_ERROR;
+    }
+    code = TkCreateFrame(NULL, interp, objc, objv,
+	    1, nameObj ? Tcl_GetString(nameObj) : NULL);
 
     Tcl_DecrRefCount(cmd);
 
@@ -3487,6 +3497,10 @@ tkInit", TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (value) {
 	Tcl_DecrRefCount(value);
 	value = NULL;
+    }
+    if (appNameObj) {
+	Tcl_DecrRefCount(appNameObj);
+	appNameObj = NULL;
     }
     return code;
 }

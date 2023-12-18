@@ -120,13 +120,11 @@ UnderlineParseProc(
     obj.bytes = (char *)value;
     obj.length = strlen(value);
     obj.typePtr = NULL;
-    code = TkGetIntForIndex(&obj, TCL_INDEX_END, 0, &underline);
+    code = TkGetIntForIndex(&obj, TCL_INDEX_NONE, 0, &underline);
     if (code == TCL_OK) {
-	if (underline < 0) {
-	    underline = (Tcl_Size)INT_MIN;
-	} else if ((size_t)underline > (size_t)TCL_INDEX_END>>1) {
-		underline++;
-	} else if (underline >= INT_MAX) {
+	if (underline < INT_MIN) {
+	    underline = INT_MIN;
+	} else if (underline > INT_MAX) {
 	    underline = INT_MAX;
 	}
 	*underlinePtr = (int)underline;
@@ -152,11 +150,7 @@ UnderlinePrintProc(
     char *p;
 
     if (underline == INT_MIN) {
-#if !defined(TK_NO_DEPRECATED) && TCL_MAJOR_VERSION < 9
-	p = (char *)"-1";
-#else
 	p = (char *)"";
-#endif
 	*freeProcPtr = TCL_STATIC;
 	return p;
     } else if (underline == INT_MAX) {
@@ -170,7 +164,7 @@ UnderlinePrintProc(
     }
     p = (char *)ckalloc(32);
     if (underline < 0) {
-	snprintf(p, 32, "end%d", underline);
+	snprintf(p, 32, "end%d", 1 + underline);
     } else {
 	snprintf(p, 32, "%d", underline);
     }
@@ -278,7 +272,7 @@ Tk_ItemType tkTextType = {
     TextCoords,			/* coordProc */
     DeleteText,			/* deleteProc */
     DisplayCanvText,		/* displayProc */
-    TK_CONFIG_OBJS,		/* flags */
+    0,				/* flags */
     TextToPoint,		/* pointProc */
     TextToArea,			/* areaProc */
     TextToPostscript,		/* postscriptProc */
@@ -500,7 +494,7 @@ ConfigureText(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) textPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, textPtr, flags)) {
 	return TCL_ERROR;
     }
 
@@ -1504,18 +1498,23 @@ GetTextIndex(
     } else if (c == '@') {
 	int x, y;
 	double tmp, cs = textPtr->cosine, s = textPtr->sine;
-	char *end;
+	char *rest;
 	const char *p;
 
 	p = string+1;
-	tmp = strtod(p, &end);
-	if ((end == p) || (*end != ',')) {
+	rest = strchr((char *)p, ',');
+	if (!rest) {
 	    goto badIndex;
 	}
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, p, &tmp) != TCL_OK) {
+	    *rest = ',';
+	    goto badIndex;
+	}
+	*rest = ',';
 	x = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);
-	p = end+1;
-	tmp = strtod(p, &end);
-	if ((end == p) || (*end != 0)) {
+	p = rest+1;
+	if (Tcl_GetDouble(NULL, p, &tmp) != TCL_OK) {
 	    goto badIndex;
 	}
 	y = (int) ((tmp < 0) ? tmp - 0.5 : tmp + 0.5);

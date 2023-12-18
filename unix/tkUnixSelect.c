@@ -377,7 +377,7 @@ TkSelPropProc(
 		 * this is the first and/or last chunk.
 		 */
 
-		encodingCvtFlags = 0;
+		encodingCvtFlags = TCL_ENCODING_PROFILE_TCL8;
 		if (incrPtr->converts[i].offset == 0) {
 		    encodingCvtFlags |= TCL_ENCODING_START;
 		}
@@ -1226,8 +1226,8 @@ SelRcvIncrProc(
 
 	while (1) {
 	    result = Tcl_ExternalToUtf(NULL, encoding, src, srcLen,
-		    retrPtr->encFlags, &retrPtr->encState,
-		    dst, dstLen, &srcRead, &dstWrote, NULL);
+		    TCL_ENCODING_PROFILE_TCL8|retrPtr->encFlags,
+		    &retrPtr->encState, dst, dstLen, &srcRead, &dstWrote, NULL);
 	    soFar = dst + dstWrote - Tcl_DStringValue(dstPtr);
 	    retrPtr->encFlags &= ~TCL_ENCODING_START;
 	    src += srcRead;

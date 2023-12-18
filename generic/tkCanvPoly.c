@@ -199,7 +199,7 @@ Tk_ItemType tkPolygonType = {
     PolygonCoords,			/* coordProc */
     DeletePolygon,			/* deleteProc */
     DisplayPolygon,			/* displayProc */
-    TK_CONFIG_OBJS | TK_MOVABLE_POINTS,	/* flags */
+    TK_MOVABLE_POINTS,		/* flags */
     PolygonToPoint,			/* pointProc */
     PolygonToArea,			/* areaProc */
     PolygonToPostscript,		/* postscriptProc */
@@ -446,7 +446,7 @@ ConfigurePolygon(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) polyPtr, flags|TK_CONFIG_OBJS)) {
+	    objv, polyPtr, flags)) {
 	return TCL_ERROR;
     }
 
@@ -1737,17 +1737,19 @@ GetPolygonIndex(
     if (string[0] == '@') {
 	int i;
 	double x, y, bestDist, dist, *coordPtr;
-	char *end;
+	char *rest;
 	const char *p;
 
 	p = string+1;
-	x = strtod(p, &end);
-	if ((end == p) || (*end != ',')) {
+	rest = strchr((char *)p, ',');
+	*rest = '\0';
+	if (Tcl_GetDouble(NULL, p, &x) != TCL_OK) {
+	    *rest = ',';
 	    goto badIndex;
 	}
-	p = end+1;
-	y = strtod(p, &end);
-	if ((end == p) || (*end != 0)) {
+	*rest = ',';
+	p = rest+1;
+	if (Tcl_GetDouble(NULL, p, &y) != TCL_OK) {
 	    goto badIndex;
 	}
 	bestDist = 1.0e36;

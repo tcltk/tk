@@ -451,7 +451,7 @@ TkTextMakeByteIndex(
 
 		start = segPtr->body.chars + (byteIndex - index);
 		p = Tcl_UtfPrev(start, segPtr->body.chars);
-		p += TkUtfToUniChar(p, &ch);
+		p += Tcl_UtfToUniChar(p, &ch);
 		indexPtr->byteIndex += p - start;
 	    }
 	    break;
@@ -1109,7 +1109,7 @@ TkTextPrintIndex(
 {
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
-    int numBytes, charIndex;
+    Tcl_Size numBytes, charIndex;
 
     numBytes = indexPtr->byteIndex;
     charIndex = 0;
@@ -1142,7 +1142,7 @@ TkTextPrintIndex(
 	charIndex += numBytes;
     }
 
-    return snprintf(string, TK_POS_CHARS, "%d.%d",
+    return snprintf(string, TK_POS_CHARS, "%d.%" TCL_SIZE_MODIFIER "d",
 	    TkBTreeLinesTo(textPtr, indexPtr->linePtr) + 1, charIndex);
 }
 
@@ -1665,7 +1665,7 @@ TkTextIndexForwChars(
 		if (segPtr->typePtr == &tkTextCharType) {
 		    start = segPtr->body.chars + byteOffset;
 		    end = segPtr->body.chars + segPtr->size;
-		    for (p = start; p < end; p += TkUtfToUniChar(p, &ch)) {
+		    for (p = start; p < end; p += Tcl_UtfToUniChar(p, &ch)) {
 			if (charCount == 0) {
 			    dstPtr->byteIndex += (p - start);
 			    goto forwardCharDone;
@@ -2397,7 +2397,7 @@ StartEnd(
 	    if (segPtr->typePtr == &tkTextCharType) {
 		int ch;
 
-		chSize = TkUtfToUniChar(segPtr->body.chars + offset, &ch);
+		chSize = Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}
@@ -2442,7 +2442,7 @@ StartEnd(
 	    if (segPtr->typePtr == &tkTextCharType) {
 
 		int ch;
-		TkUtfToUniChar(segPtr->body.chars + offset, &ch);
+		Tcl_UtfToUniChar(segPtr->body.chars + offset, &ch);
 		if (!Tcl_UniCharIsWordChar(ch)) {
 		    break;
 		}

@@ -22,13 +22,16 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
+#include <tkMacOSXImage.h>
+#include "tkMacOSXPrivate.h"
 
-/* Forward declarations of functions and variables. */
 NSString * fileName = nil;
 CFStringRef urlFile = NULL;
-int			StartPrint(void *clientData, Tcl_Interp * interp,
-			    Tcl_Size objc, Tcl_Obj * const objv[]);
-OSStatus		FinishPrint(NSString *file, int buttonValue);
+
+/*Forward declaration of functions.*/
+static Tcl_ObjCmdProc2 StartPrint;
+static OSStatus	FinishPrint(NSString *file, int buttonValue);
+static Tcl_ObjCmdProc2 MakePDF;
 int			MacPrint_Init(Tcl_Interp * interp);
 
 /* Delegate class for print dialogs. */
@@ -75,12 +78,11 @@ int			MacPrint_Init(Tcl_Interp * interp);
 
 int
 StartPrint(
-    void *clientData,
+    TCL_UNUSED(void *),
     Tcl_Interp * interp,
     Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
-    (void) clientData;
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
     NSPrintPanel * printPanel = [NSPrintPanel printPanel];
     int accepted;
@@ -237,7 +239,7 @@ FinishPrint(
                 NSFileManager * fileManager = [NSFileManager defaultManager];
 		NSError * error = nil;
 
-                /*
+        /*
 		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
 		 */
@@ -326,6 +328,57 @@ FinishPrint(
     return status;
 }
 
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * MakePDF--
+ *
+ * 	Converts a Tk canvas to PDF data.
+ *
+ * Results:
+ *	Outputs PDF file.
+ *
+ *----------------------------------------------------------------------
+ */
+
+int MakePDF(
+ TCL_UNUSED(void *),
+ Tcl_Interp *ip,
+ Tcl_Size objc,
+ Tcl_Obj *const objv[])
+{
+    Tk_Window path;
+    Drawable d;
+    unsigned int width, height;
+    CFDataRef pdfData;
+
+    if (objc != 2) {
+	Tcl_WrongNumArgs(ip, 1, objv, "path?");
+	return TCL_ERROR;
+    }
+
+    /*Get window and render to PDF.*/
+
+    path = Tk_NameToWindow(ip, Tcl_GetString(objv[1]), Tk_MainWindow(ip));
+    if (path == NULL) {
+	return TCL_ERROR;
+    }
+
+    Tk_MakeWindowExist(path);
+    Tk_MapWindow(path);
+    d = Tk_WindowId(path);
+    width = Tk_Width(path);
+    height = Tk_Height(path);
+
+    pdfData = CreatePDFFromDrawableRect(d, 0, 0, width, height);
+
+    NSData *viewData = (NSData*)pdfData;
+    [viewData writeToFile:@"/tmp/tk_canvas.pdf" atomically:YES];
+    return TCL_OK;
+
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -342,6 +395,7 @@ FinishPrint(
 int MacPrint_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
     Tcl_CreateObjCommand2(interp, "::tk::print::_print", StartPrint, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::print::_printcanvas", MakePDF, NULL, NULL);
     [pool release];
     return TCL_OK;
 }

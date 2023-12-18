@@ -15,12 +15,9 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXConstants.h"
+#include "tkMacOSXImage.h"
 #include "tkColor.h"
 #include "xbytes.h"
-
-static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
-	   int x, int y, unsigned int width, unsigned int height);
 
 /* Pixel formats
  *
@@ -121,16 +118,15 @@ static void ReleaseData(
     ckfree(info);
 }
 
-CGImageRef
+static CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
-    uint32_t alphaInfo)
+    uint32_t bitmapInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
     size_t len = image->bytes_per_line * image->height;
     const CGFloat *decode = NULL;
-    CGBitmapInfo bitmapInfo;
     CGDataProviderRef provider = NULL;
     char *data = NULL;
     CGDataProviderReleaseDataCallback releaseData = ReleaseData;
@@ -186,7 +182,6 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
-	bitmapInfo = kCGBitmapByteOrder32Big | alphaInfo;
 	data = (char *)ckalloc(len);
 	if (data) {
 	    memcpy(data, image->data + image->xoffset, len);
@@ -486,8 +481,8 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-#define USE_ALPHA kCGImageAlphaLast
-#define IGNORE_ALPHA kCGImageAlphaNoneSkipLast
+#define USE_ALPHA (kCGImageAlphaLast | kCGBitmapByteOrder32Big)
+#define IGNORE_ALPHA (kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little)
 
 static int
 TkMacOSXPutImage(
@@ -628,7 +623,7 @@ int TkpPutRGBAImage(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
     int x,
@@ -673,6 +668,57 @@ CreateCGImageFromDrawableRect(
     }
     return result;
 }
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * CreatePDFFromDrawableRect
+ *
+ *	Extract PDF data from a MacOSX drawable.
+ *
+ * Results:
+ *	Returns a CFDataRef that can be written to a file.
+ *
+ *      NOTE: The x,y coordinates should be relative to a coordinate system
+ *      with origin at the bottom left as used by NSView,  not top left
+ *      as used by XImage and CGImage.
+ *
+ * Side effects:
+ *     None
+ *
+ *----------------------------------------------------------------------
+ */
+
+CFDataRef
+CreatePDFFromDrawableRect(
+			  Drawable drawable,
+			  int x,
+			  int y,
+			  unsigned int width,
+			  unsigned int height)
+{
+    MacDrawable *mac_drawable = (MacDrawable *)drawable;
+    NSView *view = TkMacOSXGetNSViewForDrawable(mac_drawable);
+    if (view == nil) {
+	TkMacOSXDbgMsg("Invalid source drawable");
+	return NULL;
+    }
+    NSRect bounds, viewSrcRect;
+
+    /*
+     * Get the child window area in NSView coordinates
+     * (origin at bottom left).
+     */
+
+    bounds = [view bounds];
+    viewSrcRect = NSMakeRect(mac_drawable->xOff + x,
+			     bounds.size.height - height - (mac_drawable->yOff + y),
+			     width, height);
+    NSData *viewData = [view dataWithPDFInsideRect:viewSrcRect];
+    CFDataRef result = (CFDataRef)viewData;
+    return result;
+}
+
 
 /*
  *----------------------------------------------------------------------
@@ -690,7 +736,7 @@ CreateCGImageFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-static CGImageRef
+CGImageRef
 CreateCGImageFromPixmap(
     Drawable pixmap)
 {
@@ -762,7 +808,6 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
-	bitmap = (char *)ckalloc(size);
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
 	    || [bitmapRep samplesPerPixel] != 4
 	    || [bitmapRep isPlanar] != 0
@@ -772,6 +817,7 @@ XGetImage(
 	    [bitmapRep release];
 	    return NULL;
 	}
+	bitmap = (char *)ckalloc(size);
 	memcpy(bitmap, (char *)[bitmapRep bitmapData], size);
 	[bitmapRep release];
 
@@ -1051,7 +1097,7 @@ struct TkMacOSXNSImageModel {
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
     bool pressed;                     /* Image is for use in a pressed button.*/
-    bool template;                    /* Image is for use as a template.*/
+    bool templ;                       /* Image is for use as a template.*/
     char *imageName ;                 /* Malloc'ed image name. */
     char *source;       	      /* Malloc'ed string describing the image. */
     char *as;                         /* Malloc'ed interpretation of source */
@@ -1130,7 +1176,7 @@ static const Tk_OptionSpec systemImageOptions[] = {
     {TK_OPTION_BOOLEAN, "-pressed", NULL, NULL, DEF_PRESSED,
      -1, offsetof(TkMacOSXNSImageModel, pressed), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_BOOLEAN, "-template", NULL, NULL, DEF_TEMPLATE,
-     -1, offsetof(TkMacOSXNSImageModel, template), TK_OPTION_VAR(bool), NULL, 0},
+     -1, offsetof(TkMacOSXNSImageModel, templ), TK_OPTION_VAR(bool), NULL, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, -1, 0, NULL, 0}
 };
 
@@ -1238,7 +1284,7 @@ TkMacOSXNSImageConfigureModel(
 
     modelPtr->width = 0;
     modelPtr->height = 0;
-    if (Tk_SetOptions(interp, (char *) modelPtr, optionTable, objc, objv,
+    if (Tk_SetOptions(interp, modelPtr, optionTable, objc, objv,
 		      NULL, NULL, NULL) != TCL_OK){
 	goto errorExit;
     }
@@ -1290,7 +1336,7 @@ TkMacOSXNSImageConfigureModel(
 	[modelPtr->darkModeImage release];
 	newImage.size = size;
 	modelPtr->image = [newImage retain];
-	if (modelPtr->template) {
+	if (modelPtr->templ) {
 	    newImage.template = YES;
 	}
 	modelPtr->darkModeImage = [[newImage copy] retain];

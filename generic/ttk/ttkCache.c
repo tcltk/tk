@@ -170,7 +170,7 @@ void Ttk_FreeResourceCache(Ttk_ResourceCache cache)
  * CacheWinEventHandler --
  * 	Detect when the cache window is destroyed, clear cache.
  */
-static void CacheWinEventHandler(ClientData clientData, XEvent *eventPtr)
+static void CacheWinEventHandler(void *clientData, XEvent *eventPtr)
 {
     Ttk_ResourceCache cache = (Ttk_ResourceCache)clientData;
 
@@ -248,6 +248,16 @@ static Tcl_Obj *CheckNamedColor(Ttk_ResourceCache cache, Tcl_Obj *objPtr)
  */
 typedef void *(*Allocator)(Tcl_Interp *, Tk_Window, Tcl_Obj *);
 
+static void *AllocFont(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr) {
+	return Tk_AllocFontFromObj(interp, tkwin, objPtr);
+}
+static void *AllocColor(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr) {
+	return Tk_AllocColorFromObj(interp, tkwin, objPtr);
+}
+static void *AllocBorder(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr) {
+	return Tk_Alloc3DBorderFromObj(interp, tkwin, objPtr);
+}
+
 static Tcl_Obj *Ttk_Use(
     Tcl_Interp *interp,
     Tcl_HashTable *table,
@@ -286,7 +296,7 @@ Tcl_Obj *Ttk_UseFont(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
 {
     InitCacheWindow(cache, tkwin);
     return Ttk_Use(cache->interp,
-	&cache->fontTable,(Allocator)Tk_AllocFontFromObj, tkwin, objPtr);
+	&cache->fontTable, AllocFont, tkwin, objPtr);
 }
 
 /*
@@ -298,7 +308,7 @@ Tcl_Obj *Ttk_UseColor(Ttk_ResourceCache cache, Tk_Window tkwin, Tcl_Obj *objPtr)
     objPtr = CheckNamedColor(cache, objPtr);
     InitCacheWindow(cache, tkwin);
     return Ttk_Use(cache->interp,
-	&cache->colorTable,(Allocator)Tk_AllocColorFromObj, tkwin, objPtr);
+	&cache->colorTable, AllocColor, tkwin, objPtr);
 }
 
 /*
@@ -311,23 +321,22 @@ Tcl_Obj *Ttk_UseBorder(
     objPtr = CheckNamedColor(cache, objPtr);
     InitCacheWindow(cache, tkwin);
     return Ttk_Use(cache->interp,
-	&cache->borderTable,(Allocator)Tk_Alloc3DBorderFromObj, tkwin, objPtr);
+	&cache->borderTable, AllocBorder, tkwin, objPtr);
 }
 
 /* NullImageChanged --
  * 	Tk_ImageChangedProc for Ttk_UseImage
  */
 
-static void NullImageChanged(ClientData dummy,
-    int x, int y, int width, int height, int imageWidth, int imageHeight)
+static void NullImageChanged(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 { /* No-op */
-    (void)dummy;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imageWidth;
-    (void)imageHeight;
 }
 
 /*

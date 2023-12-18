@@ -40,8 +40,8 @@ namespace eval ttk::theme::clam {
 	    -background [list disabled $colors(-frame) \
 			     active $colors(-lighter)] \
 	    -foreground [list disabled $colors(-disabledfg)] \
-	    -selectbackground [list  !focus $colors(-darkest)] \
-	    -selectforeground [list  !focus white]
+	    -selectbackground [list !focus $colors(-darkest)] \
+	    -selectforeground [list !focus white]
 
 	# -selectbackground [list  !focus "#847d73"]
 
@@ -91,14 +91,14 @@ namespace eval ttk::theme::clam {
 			disabled $colors(-frame)]
 
 	ttk::style configure TMenubutton \
-	    -width -11 -arrowsize 3.75p -padding 3.75p -relief raised
+	    -width -11 -arrowsize 3.75p -arrowpadding 2.25p -padding 3.75p \
+	    -relief raised
 
 	ttk::style configure TEntry -padding 1 -insertwidth 1
 	ttk::style map TEntry \
-	    -background [list  readonly $colors(-frame)] \
-	    -bordercolor [list  focus $colors(-selectbg)] \
-	    -lightcolor {focus #6f9dc6} \
-	    -darkcolor {focus #6f9dc6}
+	    -background [list readonly $colors(-frame)] \
+	    -bordercolor [list focus $colors(-selectbg)] \
+	    -lightcolor [list focus #6f9dc6]
 
 	ttk::style configure TCombobox -padding 1 -insertwidth 1 \
 	    -arrowsize 10.5p
@@ -108,14 +108,16 @@ namespace eval ttk::theme::clam {
 	    -fieldbackground [list {readonly focus} $colors(-selectbg) \
 				  readonly $colors(-frame)] \
 	    -foreground [list {readonly focus} $colors(-selectfg)] \
-	    -arrowcolor [list disabled $colors(-disabledfg)]
+	    -arrowcolor [list disabled $colors(-disabledfg)] \
+	    -bordercolor [list focus $colors(-selectbg)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox \
-	    -background [list  readonly $colors(-frame)] \
-            -arrowcolor [list disabled $colors(-disabledfg)]
+	    -background [list readonly $colors(-frame)] \
+            -arrowcolor [list disabled $colors(-disabledfg)] \
+	    -bordercolor [list focus $colors(-selectbg)]
 
 	ttk::style configure TNotebook.Tab -padding {4.5p 1.5p 4.5p 1.5p}
 	ttk::style map TNotebook.Tab \
@@ -143,15 +145,15 @@ namespace eval ttk::theme::clam {
 	    -labeloutside true -labelmargins {0 0 0 3p} \
 	    -borderwidth 2 -relief raised
 
-	ttk::style configure TScrollbar -gripcount 3.75p \
+	ttk::style configure TScrollbar -gripsize 7.5p \
 	    -arrowsize 10.5p -width 10.5p
 
-	ttk::style configure TScale -gripcount 3.75p \
+	ttk::style configure TScale -gripsize 7.5p \
 	    -arrowsize 10.5p -sliderlength 22.5p
 
 	ttk::style configure TProgressbar -background $colors(-frame) \
 	    -arrowsize 10.5p -sliderlength 22.5p
 
-	ttk::style configure Sash -sashthickness 4.5p -gripcount 7.5p
+	ttk::style configure Sash -sashthickness 4.5p -gripsize 15p
     }
 }

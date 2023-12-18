@@ -191,10 +191,11 @@ test treeview-3.5 "index - exhaustive test" -body {
 } -result [list 0 1 2 3 4 5 6]
 
 test treeview-3.6 "detach" -body {
+    set before [.tv detached newnode]
     .tv detach newnode
     consistencyCheck .tv
-    .tv children {}
-} -result [list newfirstone firstnode anotherone onemore lastnode newlastone]
+    list [.tv children {}] [.tv detached] $before [.tv detached newnode]
+} -result {{newfirstone firstnode anotherone onemore lastnode newlastone} newnode 0 1}
 # XREF: treeview-2.13
 
 test treeview-3.7 "detach didn't screw up internal links" -body {
@@ -229,17 +230,19 @@ test treeview-3.11 "Can't detach root item" -body {
 } -returnCodes error -result "Cannot detach root item"
 
 test treeview-3.12 "Reattach" -body {
+    set before [.tv detached newnode]
     .tv move newnode {} end
     consistencyCheck .tv
-    .tv children {}
-} -result [list newfirstone firstnode anotherone onemore lastnode newlastone newnode]
+    list [.tv children {}] $before [.tv detached newnode] [.tv detached]
+} -result {{newfirstone firstnode anotherone onemore lastnode newlastone newnode} 1 0 {}}
 
 # Bug # ?????
 test treeview-3.13 "Re-reattach" -body {
+    set before [.tv detached newnode]
     .tv move newnode {} end
     consistencyCheck .tv
-    .tv children {}
-} -result [list newfirstone firstnode anotherone onemore lastnode newlastone newnode]
+    list [.tv children {}] $before [.tv detached newnode]
+} -result {{newfirstone firstnode anotherone onemore lastnode newlastone newnode} 0 0}
 
 catch {
     .tv insert newfirstone end -id x1
@@ -1368,6 +1371,13 @@ test treeview-bc602049ab "treeview with custom background does not change size w
     destroy .tv
     image delete tvbg
 } -result {1}
+
+test treeview-6ee162c3d9 "style configure Treeview -rowheight 0" -setup {
+    tvSetupWithItems
+} -body {
+    ttk::style configure Treeview -rowheight 0  ; # shall not crash
+    update
+} -result {}
 
 test treeview-column0-leak "Test for leak in tree column" -setup {
     destroy .ttt

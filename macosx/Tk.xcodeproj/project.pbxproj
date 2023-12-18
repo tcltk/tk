@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		F9067BCD0BFBA2900074F726 /* tkOldTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAFE08F27A39005CB29B /* tkOldTest.c */; };
 		F9152B090EAF8A5000CD5C7B /* tkBusy.c in Sources */ = {isa = PBXBuildFile; fileRef = F9152B080EAF8A5000CD5C7B /* tkBusy.c */; };
 		F9152B0A0EAF8A5700CD5C7B /* tkBusy.c in Sources */ = {isa = PBXBuildFile; fileRef = F9152B080EAF8A5000CD5C7B /* tkBusy.c */; };
 		F92EE8BF0E62F846001A6E80 /* tkImgPhInstance.c in Sources */ = {isa = PBXBuildFile; fileRef = F92EE8BE0E62F846001A6E80 /* tkImgPhInstance.c */; };
@@ -520,7 +519,6 @@
 		F9FD317C0CC1AD070073837D /* tkMessage.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAEC08F27A39005CB29B /* tkMessage.c */; };
 		F9FD317D0CC1AD070073837D /* tkObj.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAED08F27A39005CB29B /* tkObj.c */; };
 		F9FD317E0CC1AD070073837D /* tkOldConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAEE08F27A39005CB29B /* tkOldConfig.c */; };
-		F9FD317F0CC1AD070073837D /* tkOldTest.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAFE08F27A39005CB29B /* tkOldTest.c */; };
 		F9FD31800CC1AD070073837D /* tkOption.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAEF08F27A39005CB29B /* tkOption.c */; };
 		F9FD31810CC1AD070073837D /* tkPack.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAF008F27A39005CB29B /* tkPack.c */; };
 		F9FD31820CC1AD070073837D /* tkPanedWindow.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BAF108F27A39005CB29B /* tkPanedWindow.c */; };
@@ -781,7 +779,6 @@
 		F966BA6E08F27A38005CB29B /* MapWindow.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = MapWindow.3; sourceTree = "<group>"; };
 		F966BA6F08F27A38005CB29B /* MeasureChar.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = MeasureChar.3; sourceTree = "<group>"; };
 		F966BA7008F27A38005CB29B /* menu.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menu.n; sourceTree = "<group>"; };
-		F966BA7108F27A38005CB29B /* menubar.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menubar.n; sourceTree = "<group>"; };
 		F966BA7208F27A38005CB29B /* menubutton.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = menubutton.n; sourceTree = "<group>"; };
 		F966BA7308F27A38005CB29B /* message.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = message.n; sourceTree = "<group>"; };
 		F966BA7408F27A38005CB29B /* messageBox.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = messageBox.n; sourceTree = "<group>"; };
@@ -792,7 +789,6 @@
 		F966BA7908F27A38005CB29B /* optionMenu.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = optionMenu.n; sourceTree = "<group>"; };
 		F966BA7A08F27A38005CB29B /* options.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = options.n; sourceTree = "<group>"; };
 		F966BA7B08F27A38005CB29B /* OwnSelect.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = OwnSelect.3; sourceTree = "<group>"; };
-		F966BA7C08F27A38005CB29B /* pack-old.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = "pack-old.n"; sourceTree = "<group>"; };
 		F966BA7D08F27A38005CB29B /* pack.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = pack.n; sourceTree = "<group>"; };
 		F966BA7E08F27A38005CB29B /* palette.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = palette.n; sourceTree = "<group>"; };
 		F966BA7F08F27A38005CB29B /* panedwindow.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = panedwindow.n; sourceTree = "<group>"; };
@@ -916,7 +912,6 @@
 		F966BAFB08F27A39005CB29B /* tkSelect.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkSelect.c; sourceTree = "<group>"; };
 		F966BAFC08F27A39005CB29B /* tkSelect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkSelect.h; sourceTree = "<group>"; };
 		F966BAFD08F27A39005CB29B /* tkSquare.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkSquare.c; sourceTree = "<group>"; };
-		F966BAFE08F27A39005CB29B /* tkOldTest.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkOldTest.c; sourceTree = "<group>"; };
 		F966BAFF08F27A39005CB29B /* tkStubInit.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStubInit.c; sourceTree = "<group>"; };
 		F966BB0008F27A39005CB29B /* tkStubLib.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStubLib.c; sourceTree = "<group>"; };
 		F966BB0108F27A39005CB29B /* tkStyle.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkStyle.c; sourceTree = "<group>"; };
@@ -1006,7 +1001,6 @@
 		F966BB7408F27A3A005CB29B /* menu.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = menu.tcl; sourceTree = "<group>"; };
 		F966BB7508F27A3A005CB29B /* mkpsenc.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = mkpsenc.tcl; sourceTree = "<group>"; };
 		F966BB7608F27A3A005CB29B /* msgbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = msgbox.tcl; sourceTree = "<group>"; };
-		F966BB8608F27A3A005CB29B /* obsolete.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = obsolete.tcl; sourceTree = "<group>"; };
 		F966BB8708F27A3A005CB29B /* optMenu.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = optMenu.tcl; sourceTree = "<group>"; };
 		F966BB8808F27A3A005CB29B /* palette.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = palette.tcl; sourceTree = "<group>"; };
 		F966BB8908F27A3B005CB29B /* panedwindow.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = panedwindow.tcl; sourceTree = "<group>"; };
@@ -1019,7 +1013,6 @@
 		F966BB9108F27A3B005CB29B /* text.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = text.tcl; sourceTree = "<group>"; };
 		F966BB9208F27A3B005CB29B /* tk.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tk.tcl; sourceTree = "<group>"; };
 		F966BB9308F27A3B005CB29B /* tkfbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = tkfbox.tcl; sourceTree = "<group>"; };
-		F966BB9408F27A3B005CB29B /* unsupported.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = unsupported.tcl; sourceTree = "<group>"; };
 		F966BB9508F27A3B005CB29B /* xmfbox.tcl */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = xmfbox.tcl; sourceTree = "<group>"; };
 		F966BB9608F27A3B005CB29B /* license.terms */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = license.terms; sourceTree = "<group>"; };
 		F966BBBA08F27A3B005CB29B /* configure.ac */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = configure.ac; sourceTree = "<group>"; };
@@ -1124,7 +1117,6 @@
 		F966BC3C08F27A3C005CB29B /* message.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = message.test; sourceTree = "<group>"; };
 		F966BC3D08F27A3C005CB29B /* msgbox.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = msgbox.test; sourceTree = "<group>"; };
 		F966BC3E08F27A3C005CB29B /* obj.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = obj.test; sourceTree = "<group>"; };
-		F966BC3F08F27A3C005CB29B /* oldpack.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = oldpack.test; sourceTree = "<group>"; };
 		F966BC4008F27A3C005CB29B /* option.file1 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = option.file1; sourceTree = "<group>"; };
 		F966BC4108F27A3C005CB29B /* option.file2 */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = option.file2; sourceTree = "<group>"; };
 		F966BC4208F27A3C005CB29B /* option.test */ = {isa = PBXFileReference; explicitFileType = text.script; fileEncoding = 4; path = option.test; sourceTree = "<group>"; };
@@ -2250,7 +2242,6 @@
 				F966BA6E08F27A38005CB29B /* MapWindow.3 */,
 				F966BA6F08F27A38005CB29B /* MeasureChar.3 */,
 				F966BA7008F27A38005CB29B /* menu.n */,
-				F966BA7108F27A38005CB29B /* menubar.n */,
 				F966BA7208F27A38005CB29B /* menubutton.n */,
 				F966BA7308F27A38005CB29B /* message.n */,
 				F966BA7408F27A38005CB29B /* messageBox.n */,
@@ -2261,7 +2252,6 @@
 				F966BA7908F27A38005CB29B /* optionMenu.n */,
 				F966BA7A08F27A38005CB29B /* options.n */,
 				F966BA7B08F27A38005CB29B /* OwnSelect.3 */,
-				F966BA7C08F27A38005CB29B /* pack-old.n */,
 				F966BA7D08F27A38005CB29B /* pack.n */,
 				F966BA7E08F27A38005CB29B /* palette.n */,
 				F966BA7F08F27A38005CB29B /* panedwindow.n */,
@@ -2417,7 +2407,6 @@
 				F966BAFB08F27A39005CB29B /* tkSelect.c */,
 				F966BAFC08F27A39005CB29B /* tkSelect.h */,
 				F966BAFD08F27A39005CB29B /* tkSquare.c */,
-				F966BAFE08F27A39005CB29B /* tkOldTest.c */,
 				F966BAFF08F27A39005CB29B /* tkStubInit.c */,
 				F966BB0008F27A39005CB29B /* tkStubLib.c */,
 				F966BB0108F27A39005CB29B /* tkStyle.c */,
@@ -2462,7 +2451,6 @@
 				F966BB7408F27A3A005CB29B /* menu.tcl */,
 				F966BB7508F27A3A005CB29B /* mkpsenc.tcl */,
 				F966BB7608F27A3A005CB29B /* msgbox.tcl */,
-				F966BB8608F27A3A005CB29B /* obsolete.tcl */,
 				F966BB8708F27A3A005CB29B /* optMenu.tcl */,
 				F966BB8808F27A3A005CB29B /* palette.tcl */,
 				F966BB8908F27A3B005CB29B /* panedwindow.tcl */,
@@ -2476,7 +2464,6 @@
 				F966BB9208F27A3B005CB29B /* tk.tcl */,
 				F966BB9308F27A3B005CB29B /* tkfbox.tcl */,
 				F96888360AF787B3000797B5 /* ttk */,
-				F966BB9408F27A3B005CB29B /* unsupported.tcl */,
 				F966BB9508F27A3B005CB29B /* xmfbox.tcl */,
 			);
 			path = library;
@@ -2680,7 +2667,6 @@
 				F966BC3C08F27A3C005CB29B /* message.test */,
 				F966BC3D08F27A3C005CB29B /* msgbox.test */,
 				F966BC3E08F27A3C005CB29B /* obj.test */,
-				F966BC3F08F27A3C005CB29B /* oldpack.test */,
 				F966BC4008F27A3C005CB29B /* option.file1 */,
 				F966BC4108F27A3C005CB29B /* option.file2 */,
 				F966BC4208F27A3C005CB29B /* option.test */,
@@ -4258,7 +4244,6 @@
 				F966BE0F08F27A3F005CB29B /* tkMessage.c in Sources */,
 				F966BE1008F27A3F005CB29B /* tkObj.c in Sources */,
 				F966BE1108F27A3F005CB29B /* tkOldConfig.c in Sources */,
-				F9067BCD0BFBA2900074F726 /* tkOldTest.c in Sources */,
 				F966BE1208F27A3F005CB29B /* tkOption.c in Sources */,
 				F966BE1308F27A3F005CB29B /* tkPack.c in Sources */,
 				F966BE1408F27A3F005CB29B /* tkPanedWindow.c in Sources */,
@@ -4572,7 +4557,6 @@
 				F9FD317C0CC1AD070073837D /* tkMessage.c in Sources */,
 				F9FD317D0CC1AD070073837D /* tkObj.c in Sources */,
 				F9FD317E0CC1AD070073837D /* tkOldConfig.c in Sources */,
-				F9FD317F0CC1AD070073837D /* tkOldTest.c in Sources */,
 				F9FD31800CC1AD070073837D /* tkOption.c in Sources */,
 				F9FD31810CC1AD070073837D /* tkPack.c in Sources */,
 				F9FD31820CC1AD070073837D /* tkPanedWindow.c in Sources */,

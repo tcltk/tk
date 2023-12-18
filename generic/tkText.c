@@ -27,16 +27,6 @@
 #include "tkWinInt.h"
 #endif
 
-/*
- * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
- * mis-specified with non-increasing values. These are converted into tabs
- * which are the equivalent of at least a character width apart.
- */
-
-#if (TK_MAJOR_VERSION < 9)
-#define _TK_ALLOW_DECREASING_TABS
-#endif
-
 #include "tkText.h"
 
 /*
@@ -1429,7 +1419,8 @@ TextWidgetObjCmd(
 	    goto done;
 	}
 	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
-	    int lineNum, byteIndex;
+	    int lineNum;
+	    Tcl_Size byteIndex;
 	    TkTextIndex index;
 
 	    /*
@@ -3242,7 +3233,7 @@ DeleteIndexRange(
     }
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
 	int line = 0;
-	int byteIndex = 0;
+	Tcl_Size byteIndex = 0;
 	int resetView = 0;
 
 	if (TkTextIndexCmp(&index2, &tPtr->topIndex) >= 0) {
@@ -3327,10 +3318,10 @@ DeleteIndexRange(
 
     resetViewCount = 0;
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
-	int line = lineAndByteIndex[resetViewCount];
+	Tcl_Size line = lineAndByteIndex[resetViewCount];
 
 	if (line != -1) {
-	    int byteIndex = lineAndByteIndex[resetViewCount+1];
+	    Tcl_Size byteIndex = lineAndByteIndex[resetViewCount+1];
 	    TkTextIndex indexTmp;
 
 	    if (tPtr == textPtr) {
@@ -4572,27 +4563,12 @@ TkTextGetTabs(
 	     * illegal.
 	     */
 
-#ifdef _TK_ALLOW_DECREASING_TABS
-	    /*
-	     * Force the tab to be a typical character width to the right of
-	     * the previous one, and update the 'lastStop' with the changed
-	     * position.
-	     */
-
-	    if (textPtr->charWidth > 0) {
-		tabPtr->location = (tabPtr-1)->location + textPtr->charWidth;
-	    } else {
-		tabPtr->location = (tabPtr-1)->location + 8;
-	    }
-	    lastStop = tabPtr->location;
-#else
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "tabs must be monotonically increasing, but \"%s\" is "
 		    "smaller than or equal to the previous tab",
 		    Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
 	    goto error;
-#endif /* _TK_ALLOW_DECREASING_TABS */
 	}
 
 	tabArrayPtr->numTabs++;
@@ -4611,7 +4587,7 @@ TkTextGetTabs(
 	 * There may be a more efficient way of getting this.
 	 */
 
-	TkUtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
+	Tcl_UtfToUniChar(Tcl_GetString(objv[i+1]), &ch);
 	if (!Tcl_UniCharIsAlpha(ch)) {
 	    continue;
 	}
@@ -6190,7 +6166,7 @@ SearchCore(
 			}
 		    } else {
 			firstOffset = p - startOfLine +
-				TkUtfToUniChar(startOfLine+matchOffset,&ch);
+				Tcl_UtfToUniChar(startOfLine+matchOffset,&ch);
 		    }
 		}
 	    } while (searchSpecPtr->all);
@@ -6983,7 +6959,7 @@ TkpTesttextCmd(
 
     TkTextSetMark(textPtr, "insert", &index);
     TkTextPrintIndex(textPtr, &index, buf);
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %d", buf, index.byteIndex));
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %" TCL_SIZE_MODIFIER "d", buf, index.byteIndex));
     return TCL_OK;
 }
 

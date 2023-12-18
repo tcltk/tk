@@ -14,6 +14,8 @@ imageInit
 # find the earth.gif file for use in these tests (tests 2.*)
 set earthPhotoFile [file join [file dirname [info script]] earth.gif]
 testConstraint hasEarthPhoto [file exists $earthPhotoFile]
+testConstraint pressbutton [llength [info commands pressbutton]]
+testConstraint movemouse [llength [info commands movemouse]]
 
 test menu-1.1 {Tk_MenuCmd procedure} -body {
     menu
@@ -1310,7 +1312,7 @@ test menu-3.10 {MenuWidgetCmd procedure, "add" option} -setup {
     .m1 add separator
 } -cleanup {
     destroy .m1
-} -result {}
+} -result {e001}
 test menu-3.11 {MenuWidgetCmd procedure, "cget" option} -setup {
     destroy .m1
 } -body {
@@ -1819,7 +1821,7 @@ test menu-3.67 {MenuWidgetCmd procedure, bad option} -setup {
     .m1 foo
 } -cleanup {
     destroy .m1
-} -returnCodes error -result {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, index, insert, invoke, post, postcascade, type, unpost, xposition, or yposition}
+} -returnCodes error -result {bad option "foo": must be activate, add, cget, clone, configure, delete, entrycget, entryconfigure, id, index, insert, invoke, post, postcascade, type, unpost, xposition, or yposition}
 test menu-3.68 {MenuWidgetCmd procedure, fix for bug#508988} -setup {
     deleteWindows
 } -body {
@@ -2245,6 +2247,14 @@ test menu-6.16 {TkDestroyMenu} -setup {
     .t3 configure -menu .m1
     list [destroy .m1] [destroy .t2] [destroy .t3] [. configure -menu ""]
 } -result {{} {} {} {}}
+test menu-6.17 {TkDestroyMenu - bug 14a9b62e1d} -setup {
+    deleteWindows
+} -body {
+    menu .m1
+    .m1 add command -command {destroy .m1}
+    .m1 invoke end
+    winfo exists .m1
+} -result {0}
 
 test menu-7.1 {UnhookCascadeEntry} -setup {
     deleteWindows
@@ -2647,7 +2657,7 @@ test menu-11.15 {ConfigureMenuEntry} -setup {
     list [.m1 add checkbutton -label "test"] [.m1 entrycget 1 -variable]
 } -cleanup {
     deleteWindows
-} -result {{} test}
+} -result {e001 test}
 test menu-11.16 {ConfigureMenuEntry} -setup {
     deleteWindows
 } -body {
@@ -2655,7 +2665,7 @@ test menu-11.16 {ConfigureMenuEntry} -setup {
     .m1 add radiobutton -label "test"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-11.17 {ConfigureMenuEntry} -setup {
     deleteWindows
 } -body {
@@ -2818,7 +2828,7 @@ test menu-13.4 {TkGetMenuIndex} -setup {
     list [.m1 insert last command -label "test2"] [.m1 entrycget last -label]
 } -cleanup {
     deleteWindows
-} -result {{} test2}
+} -result {e002 test2}
 test menu-13.5 {TkGetMenuIndex} -setup {
     deleteWindows
 } -body {
@@ -2827,7 +2837,7 @@ test menu-13.5 {TkGetMenuIndex} -setup {
     list [.m1 insert end command -label "test2"] [.m1 entrycget end -label]
 } -cleanup {
     deleteWindows
-} -result {{} test2}
+} -result {e002 test2}
 test menu-13.6 {TkGetMenuIndex} -setup {
     deleteWindows
 } -body {
@@ -2924,7 +2934,7 @@ test menu-15.1 {MenuNewEntry} -setup {
     .m1 add command -label "test"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-15.2 {MenuNewEntry} -setup {
     deleteWindows
 } -body {
@@ -2934,7 +2944,7 @@ test menu-15.2 {MenuNewEntry} -setup {
     .m1 insert 2 command -label "test2"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e003}
 test menu-15.3 {MenuNewEntry} -setup {
     deleteWindows
 } -body {
@@ -2943,7 +2953,7 @@ test menu-15.3 {MenuNewEntry} -setup {
     .m1 add command -label "test2"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e002}
 test menu-15.4 {MenuNewEntry} -setup {
     deleteWindows
 } -body {
@@ -2951,7 +2961,7 @@ test menu-15.4 {MenuNewEntry} -setup {
     .m1 add command -label "test"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 
 test menu-16.1 {MenuAddOrInsert} -setup {
     deleteWindows
@@ -2967,7 +2977,7 @@ test menu-16.2 {MenuAddOrInsert} -setup {
     .m1 insert test command -label "foo"
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e002}
 test menu-16.3 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -2991,7 +3001,7 @@ test menu-16.5 {MenuAddOrInsert} -setup {
     .m1 add cascade
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-16.6 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -2999,7 +3009,7 @@ test menu-16.6 {MenuAddOrInsert} -setup {
     .m1 add checkbutton
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-16.7 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3007,7 +3017,7 @@ test menu-16.7 {MenuAddOrInsert} -setup {
     .m1 add command
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-16.8 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3015,7 +3025,7 @@ test menu-16.8 {MenuAddOrInsert} -setup {
     .m1 add radiobutton
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-16.9 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3023,7 +3033,7 @@ test menu-16.9 {MenuAddOrInsert} -setup {
     .m1 add separator
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-16.10 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3037,7 +3047,7 @@ test menu-16.11 {MenuAddOrInsert} -setup {
     .m1 add command
 } -cleanup {
     deleteWindows
-} -result {}
+} -result {e001}
 test menu-16.12 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3047,7 +3057,7 @@ test menu-16.12 {MenuAddOrInsert} -setup {
     list [.m2 add command -label "test"] [.m1 entrycget 1 -label] [.m3 entrycget 1 -label]
 } -cleanup {
     deleteWindows
-} -result {{} test test}
+} -result {e001 test test}
 test menu-16.13 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3057,12 +3067,12 @@ test menu-16.13 {MenuAddOrInsert} -setup {
     list [.m3 add command -label "test"] [.m1 entrycget 1 -label] [.m2 entrycget 1 -label]
 } -cleanup {
     deleteWindows
-} -result {{} test test}
+} -result {e001 test test}
 test menu-16.14 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
     menu .m1
-    .m1 add command -blork
+    .m1 add command -blork fish
 } -returnCodes error -result {unknown option "-blork"}
 test menu-16.15 {MenuAddOrInsert} -setup {
     deleteWindows
@@ -3074,7 +3084,7 @@ test menu-16.15 {MenuAddOrInsert} -setup {
     list [.container add cascade -label "File" -menu .m1] [. configure -menu ""]
 } -cleanup {
     deleteWindows
-} -result {{} {}}
+} -result {e001 {}}
 test menu-16.16 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3084,7 +3094,7 @@ test menu-16.16 {MenuAddOrInsert} -setup {
     list [.m2 add cascade -menu .m1] [$tearoff unpost]
 } -cleanup {
     deleteWindows
-} -result {{} {}}
+} -result {e001 {}}
 test menu-16.17 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3095,7 +3105,7 @@ test menu-16.17 {MenuAddOrInsert} -setup {
     list [.container add cascade -label "File" -menu .m1] [. configure -menu ""]
 } -cleanup {
     deleteWindows
-} -result {{} {}}
+} -result {e001 {}}
 test menu-16.18 {MenuAddOrInsert} -setup {
     deleteWindows
 } -body {
@@ -3106,7 +3116,7 @@ test menu-16.18 {MenuAddOrInsert} -setup {
     list [.container add cascade -label "File" -menu .m1] [. configure -menu ""]
 } -cleanup {
     deleteWindows
-} -result {{} {}}
+} -result {e002 {}}
 test menu-16.19 {MenuAddOrInsert - Insert a cascade deep into the tree} -setup {
     deleteWindows
 } -body {
@@ -3135,7 +3145,7 @@ test menu-17.1 {MenuVarProc} -setup {
             [unset foo]
 } -cleanup {
     deleteWindows
-} -result {{} {}}
+} -result {e001 {}}
 # menu-17.2 - Don't know how to generate the flags in the if
 test menu-17.2 {MenuVarProc} -setup {
     deleteWindows
@@ -3146,7 +3156,7 @@ test menu-17.2 {MenuVarProc} -setup {
             [set foo ""]
 } -cleanup {
     deleteWindows
-} -result {{} {}}
+} -result {e001 {}}
 test menu-17.3 {MenuVarProc} -setup {
     deleteWindows
 } -body {
@@ -3157,7 +3167,7 @@ test menu-17.3 {MenuVarProc} -setup {
             [set foo "hello"] [unset foo]
 } -cleanup {
     deleteWindows
-} -result {{} hello {}}
+} -result {e001 hello {}}
 test menu-17.4 {MenuVarProc} -setup {
     deleteWindows
 } -body {
@@ -3167,7 +3177,7 @@ test menu-17.4 {MenuVarProc} -setup {
             [set foo "hello"] [unset foo]
 } -cleanup {
     deleteWindows
-} -result {{} hello {}}
+} -result {e001 hello {}}
 test menu-17.5 {MenuVarProc} -setup {
     deleteWindows
 } -body {
@@ -3177,7 +3187,7 @@ test menu-17.5 {MenuVarProc} -setup {
             [set foo "goodbye"] [unset foo]
 } -cleanup {
     deleteWindows
-} -result {{} goodbye {}}
+} -result {e001 goodbye {}}
 test menu-17.6 {MenuVarProc [5d991b822e]} -setup {
     deleteWindows
 } -body {
@@ -3487,8 +3497,52 @@ test menu-22.5 {GetIndexFromCoords: mapped wide window} -setup {
 } -cleanup {
     deleteWindows
 } -result 0
+test menu-22.6 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @4bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@4bogus"}
+test menu-22.7 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @10,4bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@10,4bogus"}
+test menu-22.8 {GetIndexFromCoords: syntax error in @x,y indices} -setup {
+    deleteWindows
+} -body {
+    menu .m
+    .m add command -label "First entry"
+    .m add command -label "Second entry"
+    .m add command -label "Last entry"
+    .m index @10,bogus
+} -cleanup {
+    deleteWindows
+}  -returnCodes error -result {bad menu entry index "@10,bogus"}
+test menu-22.9 {GetIndexFromCoords: index type pecedence} -setup {
+    deleteWindows
+} -body {
+    menu .m -tearoff 0
+    .m add command -label "First entry"
+    .m add command -label "@42nd street"
+    .m add command -label "Last entry"
+    .m index "@42nd*"  ; # shall be interpreted as a pattern, not as @42
+} -cleanup {
+    deleteWindows
+} -result {1}
 
-test menu-22.6 {tk_popup on separator entry} -setup {
+test menu-22.10 {tk_popup on separator entry} -setup {
     deleteWindows
 } -constraints {x11} -body {
     menu .m1
@@ -3559,7 +3613,7 @@ test menu-24.3 {TkNewMenuName} -setup {
 } -result {0 {} {} {} {}}
 
 
-test menu-25.1 {TkSetWindowMenuBar} -setup {
+test menu-25.1 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3567,7 +3621,7 @@ test menu-25.1 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.2 {TkSetWindowMenuBar} -setup {
+test menu-25.2 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3575,7 +3629,7 @@ test menu-25.2 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.3 {TkSetWindowMenuBar} -setup {
+test menu-25.3 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3585,7 +3639,7 @@ test menu-25.3 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.4 {TkSetWindowMenuBar} -setup {
+test menu-25.4 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3596,7 +3650,7 @@ test menu-25.4 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.5 {TkSetWindowMenuBar} -setup {
+test menu-25.5 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3608,7 +3662,7 @@ test menu-25.5 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.6 {TkSetWindowMenuBar} -setup {
+test menu-25.6 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3620,7 +3674,7 @@ test menu-25.6 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.7 {TkSetWindowMenuBar} -setup {
+test menu-25.7 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3633,7 +3687,7 @@ test menu-25.7 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.8 {TkSetWindowMenuBar} -setup {
+test menu-25.8 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3647,7 +3701,7 @@ test menu-25.8 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.9 {TkSetWindowMenuBar} -setup {
+test menu-25.9 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3662,7 +3716,7 @@ test menu-25.9 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.10 {TkSetWindowMenuBar} -setup {
+test menu-25.10 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3677,7 +3731,7 @@ test menu-25.10 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.11 {TkSetWindowMenuBar} -setup {
+test menu-25.11 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3692,7 +3746,7 @@ test menu-25.11 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.12 {TkSetWindowMenuBar} -setup {
+test menu-25.12 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3701,7 +3755,7 @@ test menu-25.12 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.13 {TkSetWindowMenuBar} -setup {
+test menu-25.13 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3709,7 +3763,7 @@ test menu-25.13 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.14 {TkSetWindowMenuBar} -setup {
+test menu-25.14 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3718,7 +3772,7 @@ test menu-25.14 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.15 {TkSetWindowMenuBar} -setup {
+test menu-25.15 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -3726,7 +3780,7 @@ test menu-25.15 {TkSetWindowMenuBar} -setup {
 } -cleanup {
     deleteWindows
 } -result {{} {}}
-test menu-25.16 {TkSetWindowMenuBar} -setup {
+test menu-25.16 {Tk_SetWindowMenubar} -setup {
     deleteWindows
 } -body {
     . configure -menu ""
@@ -4056,6 +4110,208 @@ test menu-39.1 {empty -type - bug be8f5b9fc2} -setup {
     destroy .m
 } -returnCodes error -result {ambiguous type "": must be menubar, normal, or tearoff}
 
+test menu-39.2 {use-after-free fix - bug 1797555fff} -setup {
+    toplevel .t
+    menu .t.menubar -type menubar
+    menu .t.menubar.select -title Select
+    menu .t.menubar.select.chain -title Chain
+    .t.menubar.select insert 1 cascade -menu .t.menubar.select.chain -label Chain
+    .t.menubar add cascade -menu .t.menubar.select -label Select
+    .t configure -menu .t.menubar
+    .t.menubar.select.chain insert 1 command
+    update idletasks
+} -body {
+    # The following two lines caused Tk to read from and write to freed memory
+    destroy .t.menubar.select.chain
+    .t.menubar.select delete 1
+} -cleanup {
+    destroy .t
+} -result {}
+
+test menu-40.1 {identifiers - auto generated} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command -label 1] [.m add command -label 2] [.m add command -label 3]
+} -cleanup {
+    destroy .m
+} -result {e001 e002 e003}
+test menu-40.2 {identifiers - out of sequence} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 0
+    .m add command -label 1
+    .m insert 0 command -label 2
+    .m add command -label 3
+    list [.m index e001] [.m index e002] [.m index e003]
+} -cleanup {
+    destroy .m
+} -result {1 0 2}
+test menu-40.3 {identifiers - out of sequence with tearoff} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 1
+    .m add command -label 1
+    .m insert 0 command -label 2
+    .m add command -label 3
+    list [.m index e001] [.m index e002] [.m index e003]
+} -cleanup {
+    destroy .m
+} -result {2 1 3}
+test menu-40.4 {identifiers - entry id} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 1
+    .m add command -label 1
+    .m insert 0 command -label 2
+    .m add command -label 3
+    list [.m id 0] [.m id 1] [.m id 2] [.m id 3]
+} -cleanup {
+    destroy .m
+} -result {{} e002 e001 e003}
+test menu-40.5 {identifiers - assigned} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command cmd1 -label 1] [.m insert 0 command cmd2 -label 2] [.m add command cmd3 -label 3]
+} -cleanup {
+    destroy .m
+} -result {cmd1 cmd2 cmd3}
+test menu-40.6 {identifiers - mixed} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command -label 1] [.m insert 0 command cmd2 -label 2] [.m add command -label 3]
+} -cleanup {
+    destroy .m
+} -result {e001 cmd2 e002}
+test menu-40.7 {identifiers - conflict} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command e002 -label 1] [.m add command -label 2] [.m add command -label 3]
+} -cleanup {
+    destroy .m
+} -result {e002 e001 e003}
+test menu-40.8 {identifiers - clone of complete menu} -setup {
+    destroy .m1 .m2
+} -body {
+    menu .m1 -tearoff 0
+    .m1 add command -label 1
+    .m1 insert 0 command -label 2
+    .m1 add command cmd3 -label 3
+    .m1 clone .m2
+    list [.m2 index e001] [.m2 index e002] [.m2 index cmd3]
+} -cleanup {
+    destroy .m1 .m2
+} -result {1 0 2}
+test menu-40.9 {identifiers - modify after cloning} -setup {
+    destroy .m1 .m2
+} -body {
+    menu .m1 -tearoff 0
+    .m1 clone .m2
+    .m1 add command -label 1
+    .m1 insert 0 command -label 2
+    .m1 add command cmd3 -label 3
+    list [.m2 index e001] [.m2 index e002] [.m2 index cmd3]
+} -cleanup {
+    destroy .m1 .m2
+} -result {1 0 2}
+test menu-40.10 {identifiers - modify clone} -setup {
+    destroy .m1 .m2
+} -body {
+    menu .m1 -tearoff 0
+    .m1 clone .m2
+    .m2 add command -label 1
+    .m2 insert 0 command -label 2
+    .m2 add command cmd3 -label 3
+    list [.m1 index e001] [.m1 index e002] [.m1 index cmd3]
+} -cleanup {
+    destroy .m1 .m2
+} -result {1 0 2}
+test menu-40.11 {identifiers - entrycget by id} -setup {
+    destroy .m
+} -body {
+    menu .m
+    .m add command -label 1
+    .m add command -label 2
+    .m add command cmd3 -label 3
+    list [.m entrycget e001 -label] [.m entrycget e002 -label] [.m entrycget cmd3 -label]
+} -cleanup {
+    destroy .m
+} -result {1 2 3}
+test menu-40.12 {identifiers - delete by id} -setup {
+    destroy .m
+} -body {
+    menu .m
+    .m add command -label 1
+    .m add command -label 2
+    .m add command -label 3
+    .m add command -label 4
+    .m add command -label 5
+    .m add command -label 6
+    .m add command -label 7
+    .m add command cmd8 -label 8
+    .m add command cmd9 -label 9
+    .m delete e003 cmd8
+    list [.m id 0] [.m id 1] [.m id 2]
+} -cleanup {
+    destroy .m
+} -result {e001 e002 cmd9}
+test menu-40.13 {identifiers - duplicate} -setup {
+    destroy .m
+} -body {
+    menu .m
+    .m add command foo -label 1
+    .m add command bar -label 2
+    .m add command foo -label 3
+} -cleanup {
+    destroy .m
+} -returnCodes error -result {entry "foo" already exists}
+test menu-40.14 {identifiers - reserved word} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 0
+    .m add command last -label 1
+    .m add command -label 2
+    .m add command -label 3
+    .m index last
+} -cleanup {
+    destroy .m
+} -result {2}
+
+test menu-40.1 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f} -setup {
+} -constraints {pressbutton} -body {
+    set done false
+    event generate {} <Motion> -x 100 -y 100
+    toplevel .t
+    menu .t.m
+    .t.m add command -command {puts Marco} -label Marco
+    .t.m add command -command {puts Polo} -label Polo
+    after 1000 {.t.m post 500 500}
+    after 2000 {destroy .t}
+    after 2500 {pressbutton 530 510}
+    after 3000 {set done true}
+    tkwait variable done
+}
+
+test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f} -setup {
+} -constraints {movemouse} -body {
+    set done false
+    event generate {} <Motion> -x 100 -y 100
+    toplevel .t
+    menu .t.m
+    .t.m add command -command {puts Marco} -label Marco
+    .t.m add command -command {puts Polo} -label Polo
+    after 1000 {.t.m post 500 500}
+    after 2000 {movemouse 530 510}
+    after 3000 {destroy .t}
+    after 3500 {movemouse 530 530}
+    after 4000 pressbutton 530 530
+    after 4500 {set done true}
+    tkwait variable done
+    pressbutton 530 510
+}
 
 # cleanup
 imageFinish

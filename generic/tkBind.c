@@ -528,6 +528,7 @@ static const EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
+    {"TouchpadScroll",  TouchpadScroll,         TouchpadScrollMask},
     {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
     {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
     {"Create",		CreateNotify,		SubstructureNotifyMask},
@@ -632,7 +633,8 @@ static const int flagArray[TK_LASTEVENT] = {
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,
    /* Deactivate */		ACTIVATE,
-   /* MouseWheel */		WHEEL
+   /* MouseWheel */		WHEEL,
+   /* TouchpadScroll */		WHEEL
 };
 
 /*
@@ -5017,7 +5019,6 @@ ParseEventDescription(
 	    eventFlags = 0;
 	    if ((hPtr = Tcl_FindHashEntry(&eventTable, field))) {
 		const EventInfo *eiPtr = (const EventInfo *)Tcl_GetHashValue(hPtr);
-
 		patPtr->eventType = eiPtr->type;
 		eventFlags = flagArray[eiPtr->type];
 		eventMask = eiPtr->eventMask;
@@ -5092,7 +5093,6 @@ ParseEventDescription(
 	    } else if (patPtr->eventType == MotionNotify) {
 		patPtr->info = ButtonNumberFromState(patPtr->modMask);
 	    }
-
 	    p = SkipFieldDelims(p);
 
 	    if (*p != '>') {
@@ -5301,7 +5301,7 @@ TkStringToKeysym(
 #endif /* REDO_KEYSYM_LOOKUP */
     int keysym;
 
-    size_t len = TkUtfToUniChar(name, &keysym);
+    size_t len = Tcl_UtfToUniChar(name, &keysym);
     if (name[len] == '\0') {
         if (!Tcl_UniCharIsPrint(keysym)) {
     	/* This form not supported */
@@ -5385,7 +5385,7 @@ TkKeysymToString(
 	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
 	char buf[10];
 	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
-	    buf[TkUniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	    buf[Tcl_UniCharToUtf(keysym - 0x1000000, buf)] = '\0';
 	} else if (keysym >= 0x1010000) {
 	    snprintf(buf, sizeof(buf), "U%08X", (int)(keysym - 0x1000000));
 	} else {

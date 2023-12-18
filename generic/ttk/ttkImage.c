@@ -31,22 +31,22 @@ struct TtkImageSpec {
 /* NullImageChanged --
  * 	Do-nothing Tk_ImageChangedProc.
  */
-static void NullImageChanged(ClientData dummy,
-    int x, int y, int width, int height, int imageWidth, int imageHeight)
-{ /* No-op */
-    (void)dummy;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imageWidth;
-    (void)imageHeight;
+static void NullImageChanged(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
+{
+    /* No-op */
 }
 
 /* ImageSpecImageChanged --
  *     Image changes should trigger a repaint.
  */
-static void ImageSpecImageChanged(ClientData clientData,
+static void ImageSpecImageChanged(void *clientData,
     int x, int y, int width, int height, int imageWidth, int imageHeight)
 {
     Ttk_ImageSpec *imageSpec = (Ttk_ImageSpec *)clientData;
@@ -76,7 +76,7 @@ TtkGetImageSpec(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr)
  */
 Ttk_ImageSpec *
 TtkGetImageSpecEx(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr,
-    Tk_ImageChangedProc *imageChangedProc, ClientData imageChangedClientData)
+    Tk_ImageChangedProc *imageChangedProc, void *imageChangedClientData)
 {
     Ttk_ImageSpec *imageSpec = 0;
     int i = 0, n = 0;
@@ -165,7 +165,10 @@ void TtkFreeImageSpec(Ttk_ImageSpec *imageSpec)
 /* TtkSelectImage --
  * 	Return a state-specific image from an ImageSpec
  */
-Tk_Image TtkSelectImage(Ttk_ImageSpec *imageSpec, Ttk_State state)
+Tk_Image TtkSelectImage(
+    Ttk_ImageSpec *imageSpec,
+    TCL_UNUSED(Tk_Window),
+    Ttk_State state)
 {
     int i;
     for (i = 0; i < imageSpec->mapCount; ++i) {
@@ -209,12 +212,15 @@ static Ttk_Box BPadding(Ttk_Box b, Ttk_Padding p)
  *	the source area of the image.
  */
 static void Ttk_Fill(
-    Tk_Window tkwin, Drawable d, Tk_Image image, Ttk_Box src, Ttk_Box dst)
+    TCL_UNUSED(Tk_Window),
+    Drawable d,
+    Tk_Image image,
+    Ttk_Box src,
+    Ttk_Box dst)
 {
     int dr = dst.x + dst.width;
     int db = dst.y + dst.height;
     int x,y;
-    (void)tkwin;
 
     if (!(src.width && src.height && dst.width && dst.height))
 	return;
@@ -281,13 +287,15 @@ static void FreeImageData(void *clientData)
 }
 
 static void ImageElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData,
+    TCL_UNUSED(void *), /* elementRecord */
+    TCL_UNUSED(Tk_Window),
+    int *widthPtr,
+    int *heightPtr,
+    Ttk_Padding *paddingPtr)
 {
     ImageData *imageData = (ImageData *)clientData;
     Tk_Image image = imageData->imageSpec->baseImage;
-    (void)elementRecord;
-    (void)tkwin;
 
     if (image) {
 	Tk_SizeOfImage(image, widthPtr, heightPtr);
@@ -303,14 +311,17 @@ static void ImageElementSize(
 }
 
 static void ImageElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    void *clientData,
+    TCL_UNUSED(void *), /* elementRecord */
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
     ImageData *imageData = (ImageData *)clientData;
     Tk_Image image = 0;
     int imgWidth, imgHeight;
     Ttk_Box src, dst;
-    (void)elementRecord;
 
 #ifdef TILE_07_COMPAT
     if (imageData->imageMap) {
@@ -320,10 +331,10 @@ static void ImageElementDraw(
 	}
     }
     if (!image) {
-	image = TtkSelectImage(imageData->imageSpec, state);
+	image = TtkSelectImage(imageData->imageSpec, tkwin, state);
     }
 #else
-    image = TtkSelectImage(imageData->imageSpec, state);
+    image = TtkSelectImage(imageData->imageSpec, tkwin, state);
 #endif
 
     if (!image) {
@@ -352,7 +363,7 @@ static const Ttk_ElementSpec ImageElementSpec =
 static int
 Ttk_CreateImageElement(
     Tcl_Interp *interp,
-    void *dummy,
+    TCL_UNUSED(void *),
     Ttk_Theme theme,
     const char *elementName,
     Tcl_Size objc, Tcl_Obj *const objv[])
@@ -365,7 +376,6 @@ Ttk_CreateImageElement(
     ImageData *imageData = 0;
     int padding_specified = 0;
     Tcl_Size i;
-    (void)dummy;
 
     if (objc + 1 < 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(

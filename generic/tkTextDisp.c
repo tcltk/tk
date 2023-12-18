@@ -440,7 +440,7 @@ typedef struct TextDInfo {
 #ifndef TK_LAYOUT_WITH_BASE_CHUNKS
 
 typedef struct CharInfo {
-    int numBytes;		/* Number of bytes to display. */
+    Tcl_Size numBytes;		/* Number of bytes to display. */
     char chars[TKFLEXARRAY];		/* UTF characters to display.
 				 * Allocated as large as necessary. THIS MUST BE THE LAST
 				 * FIELD IN THE STRUCTURE. */
@@ -452,7 +452,7 @@ typedef struct CharInfo {
     TkTextDispChunk *baseChunkPtr;
     int baseOffset;		/* Starting offset in base chunk
 				 * baseChars. */
-    int numBytes;		/* Number of bytes that belong to this
+    Tcl_Size numBytes;		/* Number of bytes that belong to this
 				 * chunk. */
     const char *chars;		/* UTF characters to display. Actually points
 				 * into the baseChars of the base chunk. Only
@@ -7703,7 +7703,7 @@ TkTextCharLayoutProc(
     if (bytesThatFit + 1 <= maxBytes) {
 	if ((bytesThatFit == 0) && noCharsYet) {
 	    int ch;
-	    int chLen = TkUtfToUniChar(p, &ch);
+	    int chLen = Tcl_UtfToUniChar(p, &ch);
 
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
 	    bytesThatFit = CharChunkMeasureChars(chunkPtr, line,
@@ -7989,7 +7989,8 @@ CharDisplayProc(
     const char *string;
     TextStyle *stylePtr;
     StyleValues *sValuePtr;
-    int numBytes, offsetBytes, offsetX;
+    Tcl_Size numBytes, offsetBytes;
+    int offsetX;
 #ifdef TK_DRAW_IN_CONTEXT
     BaseCharInfo *bciPtr;
 #endif /* TK_DRAW_IN_CONTEXT */

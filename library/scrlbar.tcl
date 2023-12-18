@@ -129,11 +129,29 @@ bind Scrollbar <<LineEnd>> {
 }
 }
 
+bind Scrollbar <Enter> {+
+    set tk::Priv(xEvents) 0; set tk::Priv(yEvents) 0
+}
 bind Scrollbar <MouseWheel> {
-    tk::ScrollByUnits %W hv %D -40.0
+    tk::ScrollByUnits %W vh %D -40.0
 }
 bind Scrollbar <Option-MouseWheel> {
+    tk::ScrollByUnits %W vh %D -12.0
+}
+bind Scrollbar <Shift-MouseWheel> {
+    tk::ScrollByUnits %W hv %D -40.0
+}
+bind Scrollbar <Shift-Option-MouseWheel> {
     tk::ScrollByUnits %W hv %D -12.0
+}
+bind Scrollbar <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    if {$deltaX != 0 && [%W cget -orient] eq "horizontal"} {
+	tk::ScrollbarScrollByPixels %W h $deltaX
+    }
+    if {$deltaY != 0 && [%W cget -orient] eq "vertical"} {
+	tk::ScrollbarScrollByPixels %W v $deltaY
+    }
 }
 
 # tk::ScrollButtonDown --
@@ -295,6 +313,47 @@ proc ::tk::ScrollEndDrag {w x y} {
     set Priv(initPos) ""
 }
 
+# ::tk::ScrollbarScrollByPixels --
+# This procedure tells the scrollbar's associated widget to scroll up
+# or down by a given number of pixels.  It only works with scrollbars
+# because it uses the delta command.
+#
+# Arguments:
+# w -		The scrollbar widget.
+# orient -	Which kind of scrollbar this applies to: "h" for
+#		horizontal, "v" for vertical.
+# amount -	How many pixels to scroll.
+
+proc ::tk::ScrollbarScrollByPixels {w orient amount} {
+    set cmd [$w cget -command]
+    if {$cmd eq ""} {
+	return
+    }
+    set xyview [lindex [split $cmd] end]
+    if {$orient eq "v"} {
+	if {$xyview eq "xview"} {
+	    return
+	}
+    }
+    if {$orient eq "h"} {
+	if {$xyview eq "yview"} {
+	    return
+	}
+    }
+
+    # The code below works with both the current and old syntax for
+    # the scrollbar get command.
+
+    set info [$w get]
+    if {[llength $info] == 2} {
+	set first [lindex $info 0]
+    } else {
+	set first [lindex $info 2]
+    }
+    set pixels [expr {-$amount}]
+    uplevel #0 $cmd moveto [expr $first + [$w delta $pixels $pixels]]
+}
+
 # ::tk::ScrollByUnits --
 # This procedure tells the scrollbar's associated widget to scroll up
 # or down by a given number of units.  It notifies the associated widget
@@ -303,7 +362,7 @@ proc ::tk::ScrollEndDrag {w x y} {
 # Arguments:
 # w -		The scrollbar widget.
 # orient -	Which kinds of scrollbars this applies to:  "h" for
-#		horizontal, "v" for vertical, "hv" for both.
+#		horizontal, "v" for vertical, "hv" or "vh" for both.
 # amount -	How many units to scroll:  typically 1 or -1.
 
 proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
@@ -312,6 +371,21 @@ proc ::tk::ScrollByUnits {w orient amount {factor 1.0}} {
 	    [string index [$w cget -orient] 0] $orient] < 0)} {
 	return
     }
+
+    if {[string length $orient] == 2 && $factor != 1.0} {
+	# Count both the <MouseWheel> and <Shift-MouseWheel>
+	# events, and ignore the non-dominant ones
+
+	variable ::tk::Priv
+	set axis [expr {[string index $orient 0] eq "h" ? "x" : "y"}]
+	incr Priv(${axis}Events)
+	if {($Priv(xEvents) + $Priv(yEvents) > 10) &&
+		($axis eq "x" && $Priv(xEvents) < $Priv(yEvents) ||
+		 $axis eq "y" && $Priv(yEvents) < $Priv(xEvents))} {
+	    return
+	}
+    }
+
     set info [$w get]
     if {[llength $info] == 2} {
 	uplevel #0 $cmd scroll [expr {$amount/$factor}] units

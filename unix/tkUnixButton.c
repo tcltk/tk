@@ -172,20 +172,19 @@ TkpDrawCheckIndicator(
 {
     const char *svgDataPtr;
     int hasBorder, hasInterior, dim;
+    double scalingLevel = TkScalingLevel(tkwin);
     TkBorder *bg_brdr = (TkBorder*)bgBorder;
     char darkColorStr[7], lightColorStr[7], interiorColorStr[7], indicatorColorStr[7];
+    Tcl_Interp *interp = Tk_Interp(tkwin);
     char imgName[60];
     Tk_Image img;
     size_t svgDataLen;
     char *svgDataCopy;
     char *darkColorPtr, *lightColorPtr, *interiorColorPtr, *indicatorColorPtr;
-    Tcl_Interp *interp = Tk_Interp(tkwin);
     const char *cmdFmt;
     size_t scriptSize;
     char *script;
     int code;
-    const char *scalingPctPtr;
-    double scalingFactor;
 
     /*
      * Sanity check
@@ -235,6 +234,7 @@ TkpDrawCheckIndicator(
 	dim = RADIO_MENU_DIM;
 	break;
     }
+    dim = (int)(dim * scalingLevel);
 
     /*
      * Construct the color strings darkColorStr, lightColorStr,
@@ -268,12 +268,13 @@ TkpDrawCheckIndicator(
     }
 
     /*
-     * Check whether there is an SVG image for
-     * the value of mode and these color strings
+     * Check whether there is an SVG image of this size
+     * for the value of mode and these color strings
      */
 
-    snprintf(imgName, sizeof(imgName), "::tk::icons::indicator%d_%s_%s_%s_%s",
-	     mode,
+    snprintf(imgName, sizeof(imgName),
+	     "::tk::icons::indicator%d_%d_%s_%s_%s_%s",
+	     dim, mode,
 	     hasBorder ? darkColorStr : "XXXXXX",
 	     hasBorder ? lightColorStr : "XXXXXX",
 	     hasInterior ? interiorColorStr : "XXXXXX",
@@ -281,8 +282,8 @@ TkpDrawCheckIndicator(
     img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     if (img == NULL) {
 	/*
-	 * Copy the string pointed to by svgDataPtr to a newly allocated memory
-	 * area svgDataCopy and assign the latter's address to svgDataPtr
+	 * Copy the string pointed to by svgDataPtr to
+	 * a newly allocated memory area svgDataCopy
 	 */
 
 	svgDataLen = strlen(svgDataPtr);
@@ -292,16 +293,15 @@ TkpDrawCheckIndicator(
 	}
 	memcpy(svgDataCopy, svgDataPtr, svgDataLen);
 	svgDataCopy[svgDataLen] = '\0';
-	svgDataPtr = svgDataCopy;
 
 	/*
 	 * Update the colors within svgDataCopy
 	 */
 
-	darkColorPtr =      strstr(svgDataPtr, "DARKKK");
-	lightColorPtr =     strstr(svgDataPtr, "LIGHTT");
-	interiorColorPtr =  strstr(svgDataPtr, "INTROR");
-	indicatorColorPtr = strstr(svgDataPtr, "INDCTR");
+	darkColorPtr =      strstr(svgDataCopy, "DARKKK");
+	lightColorPtr =     strstr(svgDataCopy, "LIGHTT");
+	interiorColorPtr =  strstr(svgDataCopy, "INTROR");
+	indicatorColorPtr = strstr(svgDataCopy, "INDCTR");
 
 	if (darkColorPtr != NULL) {
 	    memcpy(darkColorPtr, darkColorStr, 6);
@@ -337,14 +337,6 @@ TkpDrawCheckIndicator(
 	}
 	img = Tk_GetImage(interp, tkwin, imgName, ImageChanged, NULL);
     }
-
-    /*
-     * Retrieve the scaling factor (1.0, 1.25, 1.5, ...) and multiply dim by it
-     */
-
-    scalingPctPtr = Tcl_GetVar(interp, "::tk::scalingPct", TCL_GLOBAL_ONLY);
-    scalingFactor = (scalingPctPtr == NULL ? 1.0 : atof(scalingPctPtr) / 100);
-    dim = (int)(dim * scalingFactor);
 
     /*
      * Adjust the image's coordinates in the drawable and display the image

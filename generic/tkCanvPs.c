@@ -236,8 +236,8 @@ TkCanvPostscriptObjCmd(
     psInfo.prolog = 1;
     psInfo.tkwin = tkwin;
     Tcl_InitHashTable(&psInfo.fontTable, TCL_STRING_KEYS);
-    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, (const char **)objv+2,
-	    (char *) &psInfo, TK_CONFIG_ARGV_ONLY|TK_CONFIG_OBJS);
+    result = Tk_ConfigureWidget(interp, tkwin, configSpecs, objc-2, objv+2,
+	    &psInfo, TK_CONFIG_ARGV_ONLY);
     if (result != TCL_OK) {
 	goto cleanup;
     }
@@ -1104,50 +1104,54 @@ GetPostscriptPoints(
     char *string,		/* String describing a screen distance. */
     double *doublePtr)		/* Place to store converted result. */
 {
-    char *end;
+    const char *rest;
     double d;
+    Tcl_DString ds;
 
-    d = strtod(string, &end);
-    if (end == string) {
+    if (Tcl_GetDouble(NULL, string, &d) == TCL_OK) {
+	*doublePtr = d;
+	return TCL_OK;
+    }
+    rest = string + strlen(string);
+    while ((rest > string) && isspace(UCHAR(rest[-1]))) {
+	--rest; /* skip all spaces at the end */
+    }
+    if (rest > string) {
+	--rest; /* point to the character just before the last space */
+    }
+	if (rest == string) {
+	error:
+	    if (interp != NULL) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"bad distance \"%s\"", string));
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", NULL);
+	    }
+	    return TCL_ERROR;
+	}
+	Tcl_DStringInit(&ds);
+	Tcl_DStringAppend(&ds, string, rest-string);
+    if (Tcl_GetDouble(NULL, Tcl_DStringValue(&ds), &d) != TCL_OK) {
+	Tcl_DStringFree(&ds);
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    switch (*end) {
+    Tcl_DStringFree(&ds);
+    switch (*rest) {
     case 'c':
 	d *= 72.0/2.54;
-	end++;
 	break;
     case 'i':
 	d *= 72.0;
-	end++;
 	break;
     case 'm':
 	d *= 72.0/25.4;
-	end++;
-	break;
-    case 0:
 	break;
     case 'p':
-	end++;
 	break;
     default:
 	goto error;
     }
-    while ((*end != '\0') && isspace(UCHAR(*end))) {
-	end++;
-    }
-    if (*end != 0) {
-	goto error;
-    }
     *doublePtr = d;
     return TCL_OK;
-
-  error:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad distance \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", NULL);
-    return TCL_ERROR;
 }
 
 /*

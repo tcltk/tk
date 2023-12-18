@@ -17,7 +17,7 @@ proc scroll args {
         global scrollInfo
         set scrollInfo $args
 }
-# For trace variable
+# For trace add variable
 proc override args {
         global x
         set x 12345
@@ -1952,13 +1952,13 @@ test spinbox-5.4 {ConfigureSpinbox procedure, -textvariable} -setup {
     unset -nocomplain x
     spinbox .e
 } -body {
-    trace variable x w override
+    trace add variable x write override
     .e insert 0 "Some text"
     .e configure -textvariable x
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
 } -result {12345 12345}
 
 test spinbox-5.5 {ConfigureSpinbox procedure} -setup {
@@ -2643,13 +2643,13 @@ test spinbox-8.18 {DeleteChars procedure} -setup {
 test spinbox-9.1 {SpinboxValueChanged procedure} -setup {
     unset -nocomplain x
 } -body {
-    trace variable x w override
+    trace add variable x write override
     spinbox .e -textvariable x -width 0
     .e insert 0 foo
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
 } -result {12345 12345}
 
 
@@ -3865,7 +3865,7 @@ test spinbox-23.1 {selection present while disabled, bug 637828} -body {
 test spinbox-24.1 {error in trace proc attached to the textvariable} -setup {
     destroy .s
 } -body {
-    trace variable myvar w traceit
+    trace add variable myvar write traceit
     proc traceit args {error "Intentional error here!"}
     spinbox .s -textvariable myvar -from 1 -to 10
     catch {.s set mystring} result1

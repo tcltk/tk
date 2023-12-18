@@ -300,8 +300,8 @@ static char *EntryDisplayString(const char *showChar, int numChars)
     int ch;
     char buf[6];
 
-    TkUtfToUniChar(showChar, &ch);
-    size = TkUniCharToUtf(ch, buf);
+    Tcl_UtfToUniChar(showChar, &ch);
+    size = Tcl_UniCharToUtf(ch, buf);
     p = displayString = (char *)ckalloc(numChars * size + 1);
 
     while (numChars--) {
@@ -356,7 +356,7 @@ EntryEditable(Entry *entryPtr)
  */
 static Tcl_Size
 EntryFetchSelection(
-    ClientData clientData, Tcl_Size offset, char *buffer, Tcl_Size maxBytes)
+    void *clientData, Tcl_Size offset, char *buffer, Tcl_Size maxBytes)
 {
     Entry *entryPtr = (Entry *)clientData;
     Tcl_Size byteCount;
@@ -389,7 +389,7 @@ EntryFetchSelection(
  *	Tk_LostSelProc for Entry widgets; called when an entry
  *	loses ownership of the selection.
  */
-static void EntryLostSelection(ClientData clientData)
+static void EntryLostSelection(void *clientData)
 {
     Entry *entryPtr = (Entry *)clientData;
     entryPtr->core.flags &= ~GOT_SELECTION;
@@ -458,7 +458,7 @@ ExpandPercents(
 	 */
 	++templ; /* skip over % */
 	if (*templ != '\0') {
-	    templ += TkUtfToUniChar(templ, &ch);
+	    templ += Tcl_UtfToUniChar(templ, &ch);
 	} else {
 	    ch = '%';
 	}
@@ -512,7 +512,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->core.tkwin);
 		break;
 	    default:
-		length = TkUniCharToUtf(ch, numStorage);
+		length = Tcl_UniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
@@ -664,11 +664,13 @@ done:
  * Returns:
  * 	TCL_OK if valid, TCL_BREAK if invalid, TCL_ERROR on error.
  */
-static int EntryRevalidate(Tcl_Interp *dummy, Entry *entryPtr, VREASON reason)
+static int EntryRevalidate(
+    TCL_UNUSED(Tcl_Interp *),
+    Entry *entryPtr,
+    VREASON reason)
 {
     int code = EntryValidateChange(
 		    entryPtr, entryPtr->entry.string, -1,0, reason);
-    (void)dummy;
 
     if (code == TCL_BREAK) {
 	TtkWidgetChangeState(&entryPtr->core, TTK_STATE_INVALID, 0);
@@ -933,7 +935,7 @@ DeleteChars(
  */
 #define EntryEventMask (FocusChangeMask)
 static void
-EntryEventProc(ClientData clientData, XEvent *eventPtr)
+EntryEventProc(void *clientData, XEvent *eventPtr)
 {
     Entry *entryPtr = (Entry *)clientData;
 
@@ -958,10 +960,11 @@ EntryEventProc(ClientData clientData, XEvent *eventPtr)
  */
 
 static void
-EntryInitialize(Tcl_Interp *dummy, void *recordPtr)
+EntryInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Entry *entryPtr = (Entry *)recordPtr;
-    (void)dummy;
 
     Tk_CreateEventHandler(
 	entryPtr->core.tkwin, EntryEventMask, EntryEventProc, entryPtr);
@@ -1074,11 +1077,13 @@ static int EntryConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
 /* EntryPostConfigure --
  * 	Post-configuration hook for entry widgets.
  */
-static int EntryPostConfigure(Tcl_Interp *dummy, void *recordPtr, int mask)
+static int EntryPostConfigure(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr,
+    int mask)
 {
     Entry *entryPtr = (Entry *)recordPtr;
     int status = TCL_OK;
-    (void)dummy;
 
     if ((mask & TEXTVAR_CHANGED) && entryPtr->entry.textVariableTrace != NULL) {
 	status = Ttk_FireTrace(entryPtr->entry.textVariableTrace);
@@ -2081,16 +2086,18 @@ static const Ttk_ElementOptionSpec TextareaElementOptions[] = {
 };
 
 static void TextareaElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     TextareaElement *textarea = (TextareaElement *)elementRecord;
     Tk_Font font = Tk_GetFontFromObj(tkwin, textarea->fontObj);
     int avgWidth = Tk_TextWidth(font, "0", 1);
     Tk_FontMetrics fm;
     int prefWidth = 1;
-    (void)dummy;
-    (void)paddingPtr;
 
     Tk_GetFontMetrics(font, &fm);
     Tcl_GetIntFromObj(NULL, textarea->widthObj, &prefWidth);
@@ -2127,12 +2134,12 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(SpinboxLayout)
-     TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
-	 TTK_GROUP("null", TTK_PACK_RIGHT,
-	     TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
-	     TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
-	 TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
-	     TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))
+    TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
+	TTK_GROUP("null", TTK_PACK_RIGHT,
+	    TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
+	    TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
+	TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------

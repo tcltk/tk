@@ -80,8 +80,8 @@ EXTERN TkCursor *	TkCreateCursorFromData(Tk_Window tkwin,
 				XColor fg, XColor bg);
 /* 13 */
 EXTERN int		TkCreateFrame(void *clientData, Tcl_Interp *interp,
-				int argc, const char *const *argv,
-				int toplevel, const char *appName);
+				Tcl_Size objc, Tcl_Obj *const objv[],
+				int type, const char *appName);
 /* 14 */
 EXTERN Tk_Window	TkCreateMainWindow(Tcl_Interp *interp,
 				const char *screenName, const char *baseName);
@@ -202,9 +202,7 @@ EXTERN void		TkpClaimFocus(TkWindow *topLevelPtr, int force);
 EXTERN void		TkpDisplayWarning(const char *msg, const char *title);
 /* 59 */
 EXTERN void		TkpGetAppName(Tcl_Interp *interp, Tcl_DString *name);
-/* 60 */
-TK_DEPRECATED("renamed to Tk_GetOtherWindow")
-TkWindow *		TkpGetOtherWindow(TkWindow *winPtr);
+/* Slot 60 is reserved */
 /* 61 */
 EXTERN TkWindow *	TkpGetWrapperWindow(TkWindow *winPtr);
 /* 62 */
@@ -212,14 +210,10 @@ EXTERN int		TkpInit(Tcl_Interp *interp);
 /* 63 */
 EXTERN void		TkpInitializeMenuBindings(Tcl_Interp *interp,
 				Tk_BindingTable bindingTable);
-/* 64 */
-TK_DEPRECATED("renamed to Tk_MakeContainer")
-void			TkpMakeContainer(Tk_Window tkwin);
+/* Slot 64 is reserved */
 /* 65 */
 EXTERN void		TkpMakeMenuWindow(Tk_Window tkwin, int transient);
-/* 66 */
-TK_DEPRECATED("renamed to Tk_MakeWindow")
-Window			TkpMakeWindow(TkWindow *winPtr, Window parent);
+/* Slot 66 is reserved */
 /* 67 */
 EXTERN void		TkpMenuNotifyToplevelCreate(Tcl_Interp *interp,
 				const char *menuName);
@@ -238,14 +232,8 @@ EXTERN int		TkPositionInTree(TkWindow *winPtr, TkWindow *treePtr);
 /* 73 */
 EXTERN void		TkpRedirectKeyEvent(TkWindow *winPtr,
 				XEvent *eventPtr);
-/* 74 */
-TK_DEPRECATED("renamed to Tk_SetMainMenubar")
-void			TkpSetMainMenubar(Tcl_Interp *interp,
-				Tk_Window tkwin, const char *menuName);
-/* 75 */
-TK_DEPRECATED("renamed to Tk_UseWindow")
-int			TkpUseWindow(Tcl_Interp *interp, Tk_Window tkwin,
-				const char *string);
+/* Slot 74 is reserved */
+/* Slot 75 is reserved */
 /* Slot 76 is reserved */
 /* 77 */
 EXTERN void		TkQueueEventForAllChildren(TkWindow *winPtr,
@@ -270,11 +258,7 @@ EXTERN void		TkSelInit(Tk_Window tkwin);
 /* 83 */
 EXTERN void		TkSelPropProc(XEvent *eventPtr);
 /* Slot 84 is reserved */
-/* 85 */
-TK_DEPRECATED("renamed to Tk_SetWindowMenubar")
-void			TkSetWindowMenuBar(Tcl_Interp *interp,
-				Tk_Window tkwin, const char *oldMenuName,
-				const char *menuName);
+/* Slot 85 is reserved */
 /* 86 */
 EXTERN KeySym		TkStringToKeysym(const char *name);
 /* 87 */
@@ -335,10 +319,7 @@ EXTERN const char *	TkpGetString(TkWindow *winPtr, XEvent *eventPtr,
 				Tcl_DString *dsPtr);
 /* 110 */
 EXTERN void		TkpGetSubFonts(Tcl_Interp *interp, Tk_Font tkfont);
-/* 111 */
-TK_DEPRECATED("renamed to Tk_GetSystemDefault")
-Tcl_Obj *		TkpGetSystemDefault(Tk_Window tkwin,
-				const char *dbName, const char *className);
+/* Slot 111 is reserved */
 /* 112 */
 EXTERN void		TkpMenuThreadInit(void);
 /* 113 */
@@ -359,21 +340,15 @@ EXTERN int		XSetRegion(Display *display, GC gc, Region rgn);
 EXTERN int		XUnionRectWithRegion(XRectangle *rect, Region src,
 				Region dr_return);
 /* Slot 120 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 /* 121 */
 EXTERN Pixmap		TkpCreateNativeBitmap(Display *display,
 				const void *source);
-#endif /* AQUA */
-#ifdef MAC_OSX_TK /* AQUA */
 /* 122 */
 EXTERN void		TkpDefineNativeBitmaps(void);
-#endif /* AQUA */
 /* Slot 123 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 /* 124 */
 EXTERN Pixmap		TkpGetNativeAppBitmap(Display *display,
 				const char *name, int *width, int *height);
-#endif /* AQUA */
 /* Slot 125 is reserved */
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
@@ -384,11 +359,7 @@ EXTERN Pixmap		TkpGetNativeAppBitmap(Display *display,
 /* Slot 132 is reserved */
 /* Slot 133 is reserved */
 /* Slot 134 is reserved */
-/* 135 */
-TK_DEPRECATED("renamed to Tk_DrawHighlightBorder")
-void			TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC,
-				GC bgGC, int highlightWidth,
-				Drawable drawable);
+/* Slot 135 is reserved */
 /* 136 */
 EXTERN void		TkSetFocusWin(TkWindow *winPtr, int force);
 /* 137 */
@@ -549,7 +520,8 @@ EXTERN const char *	TkSmoothPrintProc(void *clientData, Tk_Window tkwin,
 EXTERN void		TkDrawAngledTextLayout(Display *display,
 				Drawable drawable, GC gc,
 				Tk_TextLayout layout, int x, int y,
-				double angle, int firstChar, int lastChar);
+				double angle, Tcl_Size firstChar,
+				Tcl_Size lastChar);
 /* 182 */
 EXTERN void		TkUnderlineAngledTextLayout(Display *display,
 				Drawable drawable, GC gc,
@@ -590,7 +562,7 @@ typedef struct TkIntStubs {
     void (*reserved10)(void);
     void (*reserved11)(void);
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
-    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
+    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int type, const char *appName); /* 13 */
     Tk_Window (*tkCreateMainWindow) (Tcl_Interp *interp, const char *screenName, const char *baseName); /* 14 */
     Time (*tkCurrentTime) (TkDisplay *dispPtr); /* 15 */
     void (*tkDeleteAllImages) (TkMainInfo *mainPtr); /* 16 */
@@ -637,13 +609,13 @@ typedef struct TkIntStubs {
     void (*tkpClaimFocus) (TkWindow *topLevelPtr, int force); /* 57 */
     void (*tkpDisplayWarning) (const char *msg, const char *title); /* 58 */
     void (*tkpGetAppName) (Tcl_Interp *interp, Tcl_DString *name); /* 59 */
-    TCL_DEPRECATED_API("renamed to Tk_GetOtherWindow") TkWindow * (*tkpGetOtherWindow) (TkWindow *winPtr); /* 60 */
+    void (*reserved60)(void);
     TkWindow * (*tkpGetWrapperWindow) (TkWindow *winPtr); /* 61 */
     int (*tkpInit) (Tcl_Interp *interp); /* 62 */
     void (*tkpInitializeMenuBindings) (Tcl_Interp *interp, Tk_BindingTable bindingTable); /* 63 */
-    TCL_DEPRECATED_API("renamed to Tk_MakeContainer") void (*tkpMakeContainer) (Tk_Window tkwin); /* 64 */
+    void (*reserved64)(void);
     void (*tkpMakeMenuWindow) (Tk_Window tkwin, int transient); /* 65 */
-    TCL_DEPRECATED_API("renamed to Tk_MakeWindow") Window (*tkpMakeWindow) (TkWindow *winPtr, Window parent); /* 66 */
+    void (*reserved66)(void);
     void (*tkpMenuNotifyToplevelCreate) (Tcl_Interp *interp, const char *menuName); /* 67 */
     TkDisplay * (*tkpOpenDisplay) (const char *display_name); /* 68 */
     int (*tkPointerEvent) (XEvent *eventPtr, TkWindow *winPtr); /* 69 */
@@ -651,8 +623,8 @@ typedef struct TkIntStubs {
     double (*tkPolygonToPoint) (double *polyPtr, int numPoints, double *pointPtr); /* 71 */
     int (*tkPositionInTree) (TkWindow *winPtr, TkWindow *treePtr); /* 72 */
     void (*tkpRedirectKeyEvent) (TkWindow *winPtr, XEvent *eventPtr); /* 73 */
-    TCL_DEPRECATED_API("renamed to Tk_SetMainMenubar") void (*tkpSetMainMenubar) (Tcl_Interp *interp, Tk_Window tkwin, const char *menuName); /* 74 */
-    TCL_DEPRECATED_API("renamed to Tk_UseWindow") int (*tkpUseWindow) (Tcl_Interp *interp, Tk_Window tkwin, const char *string); /* 75 */
+    void (*reserved74)(void);
+    void (*reserved75)(void);
     void (*reserved76)(void);
     void (*tkQueueEventForAllChildren) (TkWindow *winPtr, XEvent *eventPtr); /* 77 */
     int (*tkReadBitmapFile) (Display *display, Drawable d, const char *filename, unsigned int *width_return, unsigned int *height_return, Pixmap *bitmap_return, int *x_hot_return, int *y_hot_return); /* 78 */
@@ -662,7 +634,7 @@ typedef struct TkIntStubs {
     void (*tkSelInit) (Tk_Window tkwin); /* 82 */
     void (*tkSelPropProc) (XEvent *eventPtr); /* 83 */
     void (*reserved84)(void);
-    TCL_DEPRECATED_API("renamed to Tk_SetWindowMenubar") void (*tkSetWindowMenuBar) (Tcl_Interp *interp, Tk_Window tkwin, const char *oldMenuName, const char *menuName); /* 85 */
+    void (*reserved85)(void);
     KeySym (*tkStringToKeysym) (const char *name); /* 86 */
     int (*tkThickPolyLineToArea) (double *coordPtr, int numPoints, double width, int capStyle, int joinStyle, double *rectPtr); /* 87 */
     void (*tkWmAddToColormapWindows) (TkWindow *winPtr); /* 88 */
@@ -688,7 +660,7 @@ typedef struct TkIntStubs {
     int (*tkGetWindowFromObj) (Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *objPtr, Tk_Window *windowPtr); /* 108 */
     const char * (*tkpGetString) (TkWindow *winPtr, XEvent *eventPtr, Tcl_DString *dsPtr); /* 109 */
     void (*tkpGetSubFonts) (Tcl_Interp *interp, Tk_Font tkfont); /* 110 */
-    TCL_DEPRECATED_API("renamed to Tk_GetSystemDefault") Tcl_Obj * (*tkpGetSystemDefault) (Tk_Window tkwin, const char *dbName, const char *className); /* 111 */
+    void (*reserved111)(void);
     void (*tkpMenuThreadInit) (void); /* 112 */
     int (*xClipBox) (Region rgn, XRectangle *rect_return); /* 113 */
     Region (*xCreateRegion) (void); /* 114 */
@@ -698,37 +670,10 @@ typedef struct TkIntStubs {
     int (*xSetRegion) (Display *display, GC gc, Region rgn); /* 118 */
     int (*xUnionRectWithRegion) (XRectangle *rect, Region src, Region dr_return); /* 119 */
     void (*reserved120)(void);
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    void (*reserved121)(void);
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    void (*reserved121)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    void (*reserved121)(void); /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpCreateNativeBitmap) (Display *display, const void *source); /* 121 */
-#endif /* AQUA */
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    void (*reserved122)(void);
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    void (*reserved122)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    void (*reserved122)(void); /* Dummy entry for stubs table backwards compatibility */
     void (*tkpDefineNativeBitmaps) (void); /* 122 */
-#endif /* AQUA */
     void (*reserved123)(void);
-#if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
-    void (*reserved124)(void);
-#endif /* X11 */
-#if defined(_WIN32) /* WIN */
-    void (*reserved124)(void);
-#endif /* WIN */
-#ifdef MAC_OSX_TK /* AQUA */
-    void (*reserved124)(void); /* Dummy entry for stubs table backwards compatibility */
     Pixmap (*tkpGetNativeAppBitmap) (Display *display, const char *name, int *width, int *height); /* 124 */
-#endif /* AQUA */
     void (*reserved125)(void);
     void (*reserved126)(void);
     void (*reserved127)(void);
@@ -739,7 +684,7 @@ typedef struct TkIntStubs {
     void (*reserved132)(void);
     void (*reserved133)(void);
     void (*reserved134)(void);
-    TCL_DEPRECATED_API("renamed to Tk_DrawHighlightBorder") void (*tkpDrawHighlightBorder) (Tk_Window tkwin, GC fgGC, GC bgGC, int highlightWidth, Drawable drawable); /* 135 */
+    void (*reserved135)(void);
     void (*tkSetFocusWin) (TkWindow *winPtr, int force); /* 136 */
     void (*tkpSetKeycodeAndState) (Tk_Window tkwin, KeySym keySym, XEvent *eventPtr); /* 137 */
     KeySym (*tkpGetKeySym) (TkDisplay *dispPtr, XEvent *eventPtr); /* 138 */
@@ -785,7 +730,7 @@ typedef struct TkIntStubs {
     const char * (*tkOrientPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 178 */
     int (*tkSmoothParseProc) (void *clientData, Tcl_Interp *interp, Tk_Window tkwin, const char *value, char *widgRec, Tcl_Size offset); /* 179 */
     const char * (*tkSmoothPrintProc) (void *clientData, Tk_Window tkwin, char *widgRec, Tcl_Size offset, Tcl_FreeProc **freeProcPtr); /* 180 */
-    void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int firstChar, int lastChar); /* 181 */
+    void (*tkDrawAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, Tcl_Size firstChar, Tcl_Size lastChar); /* 181 */
     void (*tkUnderlineAngledTextLayout) (Display *display, Drawable drawable, GC gc, Tk_TextLayout layout, int x, int y, double angle, int underline); /* 182 */
     int (*tkIntersectAngledTextLayout) (Tk_TextLayout layout, int x, int y, int width, int height, double angle); /* 183 */
     void (*tkDrawAngledChars) (Display *display, Drawable drawable, GC gc, Tk_Font tkfont, const char *source, Tcl_Size numBytes, double x, double y, double angle); /* 184 */
@@ -923,20 +868,17 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpDisplayWarning) /* 58 */
 #define TkpGetAppName \
 	(tkIntStubsPtr->tkpGetAppName) /* 59 */
-#define TkpGetOtherWindow \
-	(tkIntStubsPtr->tkpGetOtherWindow) /* 60 */
+/* Slot 60 is reserved */
 #define TkpGetWrapperWindow \
 	(tkIntStubsPtr->tkpGetWrapperWindow) /* 61 */
 #define TkpInit \
 	(tkIntStubsPtr->tkpInit) /* 62 */
 #define TkpInitializeMenuBindings \
 	(tkIntStubsPtr->tkpInitializeMenuBindings) /* 63 */
-#define TkpMakeContainer \
-	(tkIntStubsPtr->tkpMakeContainer) /* 64 */
+/* Slot 64 is reserved */
 #define TkpMakeMenuWindow \
 	(tkIntStubsPtr->tkpMakeMenuWindow) /* 65 */
-#define TkpMakeWindow \
-	(tkIntStubsPtr->tkpMakeWindow) /* 66 */
+/* Slot 66 is reserved */
 #define TkpMenuNotifyToplevelCreate \
 	(tkIntStubsPtr->tkpMenuNotifyToplevelCreate) /* 67 */
 #define TkpOpenDisplay \
@@ -951,10 +893,8 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkPositionInTree) /* 72 */
 #define TkpRedirectKeyEvent \
 	(tkIntStubsPtr->tkpRedirectKeyEvent) /* 73 */
-#define TkpSetMainMenubar \
-	(tkIntStubsPtr->tkpSetMainMenubar) /* 74 */
-#define TkpUseWindow \
-	(tkIntStubsPtr->tkpUseWindow) /* 75 */
+/* Slot 74 is reserved */
+/* Slot 75 is reserved */
 /* Slot 76 is reserved */
 #define TkQueueEventForAllChildren \
 	(tkIntStubsPtr->tkQueueEventForAllChildren) /* 77 */
@@ -971,8 +911,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define TkSelPropProc \
 	(tkIntStubsPtr->tkSelPropProc) /* 83 */
 /* Slot 84 is reserved */
-#define TkSetWindowMenuBar \
-	(tkIntStubsPtr->tkSetWindowMenuBar) /* 85 */
+/* Slot 85 is reserved */
 #define TkStringToKeysym \
 	(tkIntStubsPtr->tkStringToKeysym) /* 86 */
 #define TkThickPolyLineToArea \
@@ -1023,8 +962,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 	(tkIntStubsPtr->tkpGetString) /* 109 */
 #define TkpGetSubFonts \
 	(tkIntStubsPtr->tkpGetSubFonts) /* 110 */
-#define TkpGetSystemDefault \
-	(tkIntStubsPtr->tkpGetSystemDefault) /* 111 */
+/* Slot 111 is reserved */
 #define TkpMenuThreadInit \
 	(tkIntStubsPtr->tkpMenuThreadInit) /* 112 */
 #define XClipBox \
@@ -1042,19 +980,13 @@ extern const TkIntStubs *tkIntStubsPtr;
 #define XUnionRectWithRegion \
 	(tkIntStubsPtr->xUnionRectWithRegion) /* 119 */
 /* Slot 120 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 #define TkpCreateNativeBitmap \
 	(tkIntStubsPtr->tkpCreateNativeBitmap) /* 121 */
-#endif /* AQUA */
-#ifdef MAC_OSX_TK /* AQUA */
 #define TkpDefineNativeBitmaps \
 	(tkIntStubsPtr->tkpDefineNativeBitmaps) /* 122 */
-#endif /* AQUA */
 /* Slot 123 is reserved */
-#ifdef MAC_OSX_TK /* AQUA */
 #define TkpGetNativeAppBitmap \
 	(tkIntStubsPtr->tkpGetNativeAppBitmap) /* 124 */
-#endif /* AQUA */
 /* Slot 125 is reserved */
 /* Slot 126 is reserved */
 /* Slot 127 is reserved */
@@ -1065,8 +997,7 @@ extern const TkIntStubs *tkIntStubsPtr;
 /* Slot 132 is reserved */
 /* Slot 133 is reserved */
 /* Slot 134 is reserved */
-#define TkpDrawHighlightBorder \
-	(tkIntStubsPtr->tkpDrawHighlightBorder) /* 135 */
+/* Slot 135 is reserved */
 #define TkSetFocusWin \
 	(tkIntStubsPtr->tkSetFocusWin) /* 136 */
 #define TkpSetKeycodeAndState \
@@ -1178,39 +1109,17 @@ extern const TkIntStubs *tkIntStubsPtr;
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT
 
-#undef TkpCmapStressed_
-#undef TkpSync_
-#undef TkUnixContainerId_
-#undef TkUnixDoOneXEvent_
-#undef TkUnixSetMenubar_
-#undef TkWmCleanup_
-#undef TkSendCleanup_
-#undef TkpTestsendCmd_
-#undef TkSetWindowMenuBar
-#undef TkpDrawHighlightBorder
-#undef TkpUseWindow
-#undef TkpSetMainMenubar
-#undef TkpGetOtherWindow
-#undef TkpGetSystemDefault
-#undef TkpMakeContainer
-#undef TkpMakeWindow
-
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION == 8)
-#   define TkSetWindowMenuBar Tk_SetWindowMenubar
-#   define TkpDrawHighlightBorder Tk_DrawHighlightBorder
-#   define TkpUseWindow Tk_UseWindow
-#   define TkpSetMainMenubar Tk_SetMainMenubar
-#   define TkpGetOtherWindow ((TkWindow *(*)(TkWindow *))(void *)Tk_GetOtherWindow)
-#   define TkpGetSystemDefault Tk_GetSystemDefault
-#   define TkpMakeContainer Tk_MakeContainer
-#   define TkpMakeWindow ((Window (*)(TkWindow *, Window))(void *)Tk_MakeWindow)
-#endif
-
 #if !defined(MAC_OSX_TK) && !defined(USE_TK_STUBS)
 #   undef TkpWillDrawWidget
 #   undef TkpRedrawWidget
+#   undef TkpDefineNativeBitmaps
+#   undef TkpCreateNativeBitmap
+#   undef TkpGetNativeAppBitmap
 #   define TkpWillDrawWidget(w) 0
 #   define TkpRedrawWidget(w)
+#   define TkpDefineNativeBitmaps()
+#   define TkpCreateNativeBitmap(display, source) None
+#   define TkpGetNativeAppBitmap(display, name, w, h) None
 #endif
 
 #endif /* _TKINTDECLS */

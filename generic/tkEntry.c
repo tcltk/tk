@@ -408,7 +408,7 @@ static const char *const selElementNames[] = {
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		DeleteChars(Entry *entryPtr, Tcl_Size index, Tcl_Size count);
-static void		DestroyEntry(void *memPtr);
+static Tcl_FreeProc	DestroyEntry;
 static void		DisplayEntry(void *clientData);
 static void		EntryBlinkProc(void *clientData);
 static void		EntryCmdDeletedProc(void *clientData);
@@ -1038,7 +1038,11 @@ EntryWidgetObjCmd(
 
 static void
 DestroyEntry(
+#if TCL_MAJOR_VERSION > 8
     void *memPtr)		/* Info about entry widget. */
+#else
+    char *memPtr)
+#endif
 {
     Entry *entryPtr = (Entry *)memPtr;
 
@@ -1998,8 +2002,8 @@ EntryComputeGeometry(
 	 * resulting string.
 	 */
 
-	TkUtfToUniChar(entryPtr->showChar, &ch);
-	size = TkUniCharToUtf(ch, buf);
+	Tcl_UtfToUniChar(entryPtr->showChar, &ch);
+	size = Tcl_UniCharToUtf(ch, buf);
 
 	entryPtr->numDisplayBytes = entryPtr->numChars * size;
 	p = (char *)ckalloc(entryPtr->numDisplayBytes + 1);
@@ -2591,7 +2595,7 @@ EntryEventProc(
 	    if (entryPtr->flags & REDRAW_PENDING) {
 		Tcl_CancelIdleCall(DisplayEntry, clientData);
 	    }
-	    Tcl_EventuallyFree(clientData, (Tcl_FreeProc *) DestroyEntry);
+	    Tcl_EventuallyFree(clientData, DestroyEntry);
 	}
 	break;
     case ConfigureNotify:
@@ -3580,7 +3584,7 @@ ExpandPercents(
 
 	before++; /* skip over % */
 	if (*before != '\0') {
-	    before += TkUtfToUniChar(before, &ch);
+	    before += Tcl_UtfToUniChar(before, &ch);
 	} else {
 	    ch = '%';
 	}
@@ -3600,7 +3604,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = TkUniCharToUtf(ch, numStorage);
+		length = Tcl_UniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;
@@ -3660,7 +3664,7 @@ ExpandPercents(
 		string = Tk_PathName(entryPtr->tkwin);
 		break;
 	    default:
-		length = TkUniCharToUtf(ch, numStorage);
+		length = Tcl_UniCharToUtf(ch, numStorage);
 		numStorage[length] = '\0';
 		string = numStorage;
 		break;

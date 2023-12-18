@@ -101,6 +101,10 @@ The literal string
 which returns the number of tabs
 (only valid for
 .QW "\fIpathname \fBindex\fR" ).
+.PP
+Indexes support the same simple interpretation as
+for the command \fBstring index\fR, with simple integer index
+arithmetic and indexing relative to \fBend\fR.
 .SH "WIDGET COMMAND"
 .PP
 In addition to the standard
@@ -226,7 +230,15 @@ are:
 .br
 \fB\-tabmargins\fP \fIpadding\fP
 .br
-\fB\-tabposition\fP \fIside\fP
+\fB\-tabposition\fP \fIposition\fP
+.RS
+Specifies the position of the tab row or column as a string of length
+1 or 2.  The first character indicates the side as \fBn\fP, \fBs\fP,
+\fBw\fP, or \fBe\fP, while the second character (if present) is the
+sticky bit (specified as \fBw\fP, \fBe\fP, \fBn\fP, or \fBs\fP) within
+the tab position.  The default position is \fBn\fP for the \fBaqua\fP
+theme and \fBnw\fP for all the other built-in themes.
+.RE
 .br
 .PP
 \fBTNotebook.Tab\fP styling options configurable with \fBttk::style\fP
@@ -243,12 +255,43 @@ are:
 Defines how much the tab grows in size.  Usually used with the
 \fBselected\fP dynamic state.  \fB\-tabmargins\fP should be
 set appropriately so that there is room for the tab growth.
+For example, the Ttk library file \fBvistaTheme.tcl\fP contains
+the lines
+.CS
+ttk::style configure TNotebook -tabmargins {2 2 2 0}
+ttk::style map TNotebook.Tab -expand {selected {2 2 2 2}}
+.CE
+which are valid for the default value \fBnw\fP of the \fB\-tabposition\fP
+style option.  For a \fBttk::notebook\fP style \fBnbStyle\fP defined by
+.CS
+set nbStyle SW.TNotebook
+ttk::style configure $nbStyle -tabposition sw
+.CE
+you will have to adapt the above settings as follows:
+.CS
+ttk::style configure $nbStyle -tabmargins {2 0 2 2}
+ttk::style map $nbStyle.Tab -expand {selected {2 2 2 2}}
+.CE
 .RE
 \fB\-font\fP \fIfont\fP
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.RS
+Some themes (e.g., \fBclam\fP) use a different \fIpadding\fP for the
+selected tab.  For example, the Ttk library file \fBclamTheme.tcl\fP
+contains the lines
+.CS
+ttk::style configure TNotebook.Tab \\
+    -padding {4.5p 1.5p 4.5p 1.5p}
+ttk::style map TNotebook.Tab \\
+    -padding {selected {4.5p 3p 4.5p 1.5p}}
+.CE
+which are valid for the default value \fBnw\fP of the \fB\-tabposition\fP
+style option.  Again, for a different tab position you will have to adapt
+the above settings accordingly.
+.RE
 .PP
 Some options are only available for specific themes.
 .PP

@@ -17,7 +17,7 @@ proc scroll args {
         global scrollInfo
         set scrollInfo $args
 }
-# For trace variable
+# For trace add variable
 proc override args {
         global x
         set x 12345
@@ -1626,13 +1626,13 @@ test entry-5.4 {ConfigureEntry procedure, -textvariable} -setup {
     unset -nocomplain x
     entry .e
 } -body {
-    trace variable x w override
+    trace add variable x write override
     .e insert 0 "Some text"
     .e configure -textvariable x
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
     unset x;
 } -result {12345 12345}
 
@@ -2353,13 +2353,13 @@ test entry-8.18 {DeleteChars procedure} -setup {
 test entry-9.1 {EntryValueChanged procedure} -setup {
     unset -nocomplain x
 } -body {
-    trace variable x w override
+    trace add variable x write override
     entry .e -textvariable x -width 0
     .e insert 0 foo
     list $x [.e get]
 } -cleanup {
     destroy .e
-    trace vdelete x w override
+    trace remove variable x write override
     unset x
 } -result {12345 12345}
 
@@ -3551,7 +3551,7 @@ test entry-22.2 {lost namespaced textvar} -body {
 test entry-23.1 {error in trace proc attached to the textvariable} -setup {
     destroy .e
 } -body {
-    trace variable myvar w traceit
+    trace add variable myvar write traceit
     proc traceit args {error "Intentional error here!"}
     entry .e -textvariable myvar
     catch {.e insert end mystring} result1
@@ -3597,6 +3597,25 @@ test entry-25.2 {Bug [5d991b822e]} {
     destroy .b
     unset new
 } {}
+test entry-25.3 {Bug [2a32225cd1] - Navigation in a password made of several words} -setup {
+    destroy .e
+    pack [entry .e -show *]
+    update
+    set res {}
+} -body {
+    .e insert end "A sample password made of several words"
+    .e icursor end
+    event generate .e <<PrevWord>>  ; # shall move insert to index 0
+    .e delete insert end
+    lappend res [.e get]
+    .e insert end "A sample password made of several words"
+    .e icursor 2
+    event generate .e <<NextWord>>  ; # shall move insert to index end
+    .e delete 0 insert
+    lappend res [.e get]
+} -cleanup {
+    destroy .e
+} -result {{} {}}
 
 
 # Gathered comments about lacks

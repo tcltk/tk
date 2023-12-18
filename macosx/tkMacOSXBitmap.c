@@ -50,9 +50,6 @@ static BuiltInIcon builtInIcons[] = {
 
 #define builtInIconSize 32
 
-#define OSTYPE_TO_UTI(x) ((NSString *)UTTypeCreatePreferredIdentifierForTag( \
-     kUTTagClassOSType, UTCreateStringForOSType(x), nil))
-
 static Tcl_HashTable iconBitmapTable = {};
 typedef struct {
     int kind, width, height;
@@ -175,7 +172,7 @@ TkpCreateNativeBitmap(
     Display *display,
     const void *source)		/* Info about the icon to build. */
 {
-    NSString *filetype = [NSString stringWithUTF8String:(char *)source];
+    NSString *filetype = TkMacOSXOSTypeToUTI(PTR2UINT(source));
     NSImage *iconImage = TkMacOSXIconForFileType(filetype);
     CGSize size = CGSizeMake(builtInIconSize, builtInIconSize);
     Pixmap pixmap = PixmapFromImage(display, iconImage, size);
@@ -307,8 +304,6 @@ TkpGetNativeAppBitmap(
 	}
     }
     if (image) {
-	*width = (int)size.width;
-	*height = (int)size.height;
 	pixmap = PixmapFromImage(display, image, NSSizeToCGSize(size));
     } else if (name) {
 	/*
@@ -323,6 +318,8 @@ TkpGetNativeAppBitmap(
 	    pixmap = PixmapFromImage(display, iconImage, NSSizeToCGSize(size));
 	}
     }
+    *width = (int)size.width;
+    *height = (int)size.height;
     return pixmap;
 }
 

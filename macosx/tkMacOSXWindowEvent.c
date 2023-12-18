@@ -239,8 +239,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     if (winPtr) {
 	TKContentView *view = [window contentView];
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
-	if (@available(macOS 10.15, *)) {
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
+	if (@available(macOS 10.14, *)) {
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
@@ -1237,29 +1237,8 @@ static const char *const accentNames[] = {
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
 	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
-    if ([NSApp macOSVersion] < 101500) {
-
-	/*
-	 * Mojave cannot handle the KVO shenanigans that we need for the
-	 * highlight and accent color notifications.
-	 */
-
-	return;
-    }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
-	preferences = [[NSUserDefaults standardUserDefaults] retain];
-
-	/*
-	 * AppKit calls this method when the user changes the Accent Color
-	 * but not when the user changes the Highlight Color.  So we register
-	 * to receive KVO notifications for Highlight Color as well.
-	 */
-
-	[preferences addObserver:self
-		      forKeyPath:@"AppleHighlightColor"
-			 options:NSKeyValueObservingOptionNew
-			 context:NULL];
     }
     NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
     NSArray *words = [[preferences stringForKey:@"AppleHighlightColor"]

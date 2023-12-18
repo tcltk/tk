@@ -304,9 +304,9 @@ typedef struct TkWmInfo {
  * management of top-level and menubar windows.
  */
 
-static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
+static void		TopLevelReqProc(void *dummy, Tk_Window tkwin);
 static void		RemapWindows(TkWindow *winPtr, TkWindow *parentPtr);
-static void		MenubarReqProc(ClientData clientData,
+static void		MenubarReqProc(void *clientData,
 			    Tk_Window tkwin);
 
 static const Tk_GeomMgr wmMgrType = {
@@ -344,7 +344,7 @@ static void		ConfigureEvent(WmInfo *wmPtr,
 static void		CreateWrapper(WmInfo *wmPtr);
 static void		GetMaxSize(WmInfo *wmPtr, int *maxWidthPtr,
 			    int *maxHeightPtr);
-static void		MenubarDestroyProc(ClientData clientData,
+static void		MenubarDestroyProc(void *clientData,
 			    XEvent *eventPtr);
 static int		ParseGeometry(Tcl_Interp *interp, const char *string,
 			    TkWindow *winPtr);
@@ -352,10 +352,10 @@ static void		ReparentEvent(WmInfo *wmPtr, XReparentEvent *eventPtr);
 static void		PropertyEvent(WmInfo *wmPtr, XPropertyEvent *eventPtr);
 static void		TkWmStackorderToplevelWrapperMap(TkWindow *winPtr,
 			    Display *display, Tcl_HashTable *reparentTable);
-static void		TopLevelReqProc(ClientData dummy, Tk_Window tkwin);
+static void		TopLevelReqProc(void *dummy, Tk_Window tkwin);
 static void		RemapWindows(TkWindow *winPtr, TkWindow *parentPtr);
 static void		UpdateCommand(TkWindow *winPtr);
-static void		UpdateGeometryInfo(ClientData clientData);
+static void		UpdateGeometryInfo(void *clientData);
 static void		UpdateHints(TkWindow *winPtr);
 static void		UpdateSizeHints(TkWindow *winPtr,
 			    int newWidth, int newHeight);
@@ -374,9 +374,9 @@ static int		WaitForEvent(Display *display,
 			    WmInfo *wmInfoPtr, int type, XEvent *eventPtr);
 static void		WaitForMapNotify(TkWindow *winPtr, int mapped);
 static Tk_RestrictProc WaitRestrictProc;
-static void		WrapperEventProc(ClientData clientData,
+static void		WrapperEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		WmWaitMapProc(ClientData clientData,
+static void		WmWaitMapProc(void *clientData,
 			    XEvent *eventPtr);
 static int		WmAspectCmd(Tk_Window tkwin, TkWindow *winPtr,
 			    Tcl_Interp *interp, Tcl_Size objc,
@@ -1010,7 +1010,7 @@ TkWmSetClass(
 
 int
 Tk_WmObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2000,7 +2000,7 @@ WmGridCmd(
 	 * ungridded numbers.
 	 */
 
-	wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+	wmPtr->sizeHintsFlags &= ~PBaseSize;
 	if (wmPtr->width != -1) {
 	    wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		    - wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -3769,7 +3769,7 @@ WmUpdateGeom(
 
 static void
 WmWaitMapProc(
-    ClientData clientData,	/* Pointer to window. */
+    void *clientData,	/* Pointer to window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -3864,8 +3864,7 @@ Tk_SetGrid(
 	    && (wmPtr->reqGridHeight == reqHeight)
 	    && (wmPtr->widthInc == widthInc)
 	    && (wmPtr->heightInc == heightInc)
-	    && ((wmPtr->sizeHintsFlags & (PBaseSize|PResizeInc))
-		    == (PBaseSize|PResizeInc))) {
+	    && ((wmPtr->sizeHintsFlags & PBaseSize) == PBaseSize)) {
 	return;
     }
 
@@ -3896,7 +3895,7 @@ Tk_SetGrid(
     wmPtr->reqGridHeight = reqHeight;
     wmPtr->widthInc = widthInc;
     wmPtr->heightInc = heightInc;
-    wmPtr->sizeHintsFlags |= PBaseSize|PResizeInc;
+    wmPtr->sizeHintsFlags |= PBaseSize;
     wmPtr->flags |= WM_UPDATE_SIZE_HINTS;
     if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
 	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
@@ -3955,7 +3954,7 @@ Tk_UnsetGrid(
     }
 
     wmPtr->gridWin = NULL;
-    wmPtr->sizeHintsFlags &= ~(PBaseSize|PResizeInc);
+    wmPtr->sizeHintsFlags &= ~PBaseSize;
     if (wmPtr->width != -1) {
 	wmPtr->width = winPtr->reqWidth + (wmPtr->width
 		- wmPtr->reqGridWidth)*wmPtr->widthInc;
@@ -4458,7 +4457,7 @@ static const unsigned WrapperEventMask =
 
 static void
 WrapperEventProc(
-    ClientData clientData,	/* Information about toplevel window. */
+    void *clientData,	/* Information about toplevel window. */
     XEvent *eventPtr)		/* Event that just happened. */
 {
     WmInfo *wmPtr = (WmInfo *)clientData;
@@ -4608,7 +4607,7 @@ TopLevelReqProc(
 
 static void
 UpdateGeometryInfo(
-    ClientData clientData)	/* Pointer to the window's record. */
+    void *clientData)	/* Pointer to the window's record. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
     WmInfo *wmPtr = winPtr->wmInfoPtr;
@@ -4923,7 +4922,7 @@ UpdateSizeHints(
     hintsPtr->max_aspect.x = wmPtr->maxAspect.x;
     hintsPtr->max_aspect.y = wmPtr->maxAspect.y;
     hintsPtr->win_gravity = wmPtr->gravity;
-    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize;
+    hintsPtr->flags = wmPtr->sizeHintsFlags | PMinSize | PResizeInc;
 
     /*
      * If the window isn't supposed to be resizable, then set the minimum and
@@ -5292,7 +5291,7 @@ WaitForEvent(
 {
     WaitRestrictInfo info;
     Tk_RestrictProc *prevProc;
-    ClientData prevArg;
+    void *prevArg;
     Tcl_Time timeout;
 
     /*
@@ -5346,7 +5345,7 @@ WaitForEvent(
 
 static Tk_RestrictAction
 WaitRestrictProc(
-    ClientData clientData,	/* Pointer to WaitRestrictInfo structure. */
+    void *clientData,	/* Pointer to WaitRestrictInfo structure. */
     XEvent *eventPtr)		/* Event that is about to be handled. */
 {
     WaitRestrictInfo *infoPtr = (WaitRestrictInfo *)clientData;
@@ -6994,7 +6993,9 @@ TkpMakeMenuWindow(
 	    typeObj = Tcl_NewStringObj("popup_menu", TCL_INDEX_NONE);
 	}
     }
+    Tcl_IncrRefCount(typeObj);
     SetNetWmType((TkWindow *)tkwin, typeObj);
+    Tcl_DecrRefCount(typeObj);
 
     /*
      * The override-redirect and save-under bits must be set on the wrapper
@@ -7261,7 +7262,7 @@ TkUnixSetMenubar(
 
 static void
 MenubarDestroyProc(
-    ClientData clientData,	/* TkWindow pointer for menubar. */
+    void *clientData,	/* TkWindow pointer for menubar. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
     WmInfo *wmPtr;
@@ -7298,7 +7299,7 @@ MenubarDestroyProc(
 
 static void
 MenubarReqProc(
-    ClientData clientData,	/* Pointer to the window manager information
+    void *clientData,	/* Pointer to the window manager information
 				 * for tkwin's toplevel. */
     Tk_Window tkwin)		/* Handle for menubar window. */
 {

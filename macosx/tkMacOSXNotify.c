@@ -16,34 +16,6 @@
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
-#if TCL_MAJOR_VERSION < 9
-#undef Tcl_MacOSXNotifierAddRunLoopMode
-#ifdef USE_TCL_STUBS
-#ifdef __cplusplus
-extern "C" {
-#endif
-/*  Little hack to eliminate the need for "tclInt.h" here:
-    Just copy a small portion of TclIntPlatStubs, just
-    enough to make it work. See [600b72bfbc] */
-typedef struct TclIntPlatStubs {
-    int magic;
-    void *hooks;
-    void (*dummy[19]) (void); /* dummy entries 0-18, not used */
-    void (*tclMacOSXNotifierAddRunLoopMode) (const void *runLoopMode); /* 19 */
-} TclIntPlatStubs;
-extern const TclIntPlatStubs *tclIntPlatStubsPtr;
-#ifdef __cplusplus
-}
-#endif
-#define Tcl_MacOSXNotifierAddRunLoopMode \
-	(tclIntPlatStubsPtr->tclMacOSXNotifierAddRunLoopMode) /* 19 */
-#elif TCL_MINOR_VERSION < 7
-    extern void TclMacOSXNotifierAddRunLoopMode(const void *runLoopMode);
-#   define Tcl_MacOSXNotifierAddRunLoopMode TclMacOSXNotifierAddRunLoopMode
-#else
-    extern void Tcl_MacOSXNotifierAddRunLoopMode(const void *runLoopMode);
-#endif
-#endif
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */
@@ -321,9 +293,8 @@ Tk_MacOSXSetupTkNotifier(void)
 
 static void
 TkMacOSXNotifyExitHandler(
-    void *dummy)	/* Not used. */
+    TCL_UNUSED(void *))	/* Not used. */
 {
-    (void)dummy;
     TSD_INIT();
 
     Tcl_DeleteEventSource(TkMacOSXEventsSetupProc,
@@ -453,11 +424,10 @@ static const Tcl_Time zeroBlockTime = { 0, 0 };
 
 static void
 TkMacOSXEventsSetupProc(
-    void *dummy,
+    TCL_UNUSED(void *),
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    (void)dummy;
 
     /*
      * runloopMode will be nil if we are in a Tcl event loop.
@@ -524,7 +494,6 @@ TkMacOSXEventsCheckProc(
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
-    int eventsFound = 0;
 
     /*
      * runloopMode will be nil if we are in a Tcl event loop.
@@ -570,7 +539,6 @@ TkMacOSXEventsCheckProc(
 
 		NSEvent *processedEvent = [NSApp tkProcessEvent:currentEvent];
 		if (processedEvent) {
-		    eventsFound++;
 
 #ifdef TK_MAC_DEBUG_EVENTS
 		    TKLog(@"   event: %@", currentEvent);

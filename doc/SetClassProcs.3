@@ -22,7 +22,7 @@ Token for window to modify.
 Pointer to data structure containing widget specific procedures.
 The data structure pointed to by \fIprocs\fR must be static:
 Tk keeps a reference to it as long as the window exists.
-.AP ClientData instanceData in
+.AP void *instanceData in
 Arbitrary one-word value to pass to widget callbacks.
 .BE
 .SH DESCRIPTION
@@ -50,7 +50,7 @@ accordingly.  \fIworldChangedProc\fR should have arguments and results
 that match the type \fBTk_ClassWorldChangedProc\fR:
 .CS
 typedef void \fBTk_ClassWorldChangedProc\fR(
-        ClientData \fIinstanceData\fR);
+        void *\fIinstanceData\fR);
 .CE
 The \fIinstanceData\fR parameter passed to the \fIworldChangedProc\fR
 will be identical to the \fIinstanceData\fR parameter passed to
@@ -63,7 +63,7 @@ arguments and results that match the type \fBTk_ClassCreateProc\fR:
 typedef Window \fBTk_ClassCreateProc\fR(
         Tk_Window \fItkwin\fR,
         Window \fIparent\fR,
-        ClientData \fIinstanceData\fR);
+        void *\fIinstanceData\fR);
 .CE
 The \fItkwin\fR and \fIinstanceData\fR parameters will be identical to
 the \fItkwin\fR and \fIinstanceData\fR parameters passed to
