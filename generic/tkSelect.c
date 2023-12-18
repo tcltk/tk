@@ -166,7 +166,7 @@ Tk_CreateSelHandler(
     selPtr->format = format;
     selPtr->proc = proc;
     selPtr->clientData = clientData;
-    if (format == XA_STRING) {
+    if (format == XA_STRING || format == winPtr->dispPtr->utf8Atom) {
 	selPtr->size = 8;
     } else {
 	selPtr->size = 32;
@@ -178,41 +178,24 @@ Tk_CreateSelHandler(
 	 * UTF8_STRING, we implicitly create a UTF8_STRING handler for them.
 	 */
 
-	target = winPtr->dispPtr->utf8Atom;
-	for (selPtr = winPtr->selHandlerList; ; selPtr = selPtr->nextPtr) {
-	    if (selPtr == NULL) {
-		selPtr = (TkSelHandler *)ckalloc(sizeof(TkSelHandler));
-		selPtr->nextPtr = winPtr->selHandlerList;
-		winPtr->selHandlerList = selPtr;
-		selPtr->selection = selection;
-		selPtr->target = target;
-		selPtr->format = target; /* We want UTF8_STRING format */
-		selPtr->proc = proc;
-		if (selPtr->proc == HandleTclCommand) {
-		    /*
-		     * The clientData is selection controlled memory, so we
-		     * should make a copy for this selPtr.
-		     */
+	void *cmdInfoPtr;
+	if (proc == HandleTclCommand) {
+	    /*
+	     * The clientData is selection controlled memory, so we
+	     * should make a copy for the UTF8_STRING handler.
+	     */
 
-		    size_t cmdInfoLen = offsetof(CommandInfo, command) + 1 +
-			    ((CommandInfo *)clientData)->cmdLength;
+	    size_t cmdInfoLen = offsetof(CommandInfo, command) + 1 +
+		    ((CommandInfo *)clientData)->cmdLength;
 
-		    selPtr->clientData = ckalloc(cmdInfoLen);
-		    memcpy(selPtr->clientData, clientData, cmdInfoLen);
-		} else {
-		    selPtr->clientData = clientData;
-		}
-		selPtr->size = 8;
-		break;
-	    }
-	    if (selPtr->selection==selection && selPtr->target==target) {
-		/*
-		 * Looks like we had a utf-8 target already. Leave it alone.
-		 */
-
-		break;
-	    }
+	    cmdInfoPtr = ckalloc(cmdInfoLen);
+	    memcpy(cmdInfoPtr, clientData, cmdInfoLen);
+	} else {
+	    cmdInfoPtr = clientData;
 	}
+
+	Tk_CreateSelHandler(tkwin, selection, winPtr->dispPtr->utf8Atom,
+	  proc, cmdInfoPtr, winPtr->dispPtr->utf8Atom);
     }
 }
 
