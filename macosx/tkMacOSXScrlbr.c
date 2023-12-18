@@ -484,9 +484,8 @@ TkpDestroyScrollbar(
 
 void
 TkpConfigureScrollbar(
-    TkScrollbar *scrollPtr)
+    TCL_UNUSED(TkScrollbar *))
 {
-    (void)scrollPtr;
     /* empty */
 }
 

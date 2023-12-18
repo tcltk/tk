@@ -471,12 +471,11 @@ Tk_SendObjCmd(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
+    TCL_UNUSED(Tk_Window))		/* Window whose display is to be used for the
 				 * lookup. */
 {
     Tcl_Obj *listObjPtr;
     RegisteredInterp *riPtr;
-    (void)tkwin;
 
     listObjPtr = Tcl_NewListObj(0, NULL);
     riPtr = interpListPtr;
@@ -509,9 +508,8 @@ TkGetInterpNames(
 
 static int
 SendInit(
-    Tcl_Interp *dummy)		/* Not used */
+    TCL_UNUSED(Tcl_Interp *))		/* Not used */
 {
-    (void)dummy;
     return TCL_OK;
 }
 
