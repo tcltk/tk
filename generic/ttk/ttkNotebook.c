@@ -784,7 +784,7 @@ static int AddTab(
     return TCL_OK;
 }
 
-static Ttk_ManagerSpec NotebookManagerSpec = {
+static const Ttk_ManagerSpec NotebookManagerSpec = {
     { "notebook", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     NotebookSize,
     NotebookPlaceContents,

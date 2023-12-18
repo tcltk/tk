@@ -57,7 +57,7 @@ typedef struct
 
 struct TtkManager_
 {
-    Ttk_ManagerSpec	*managerSpec;
+    const Ttk_ManagerSpec	*managerSpec;
     void 		*managerData;
     Tk_Window   	window;
     unsigned		flags;
@@ -206,7 +206,7 @@ static void DeleteContent(Ttk_Content *content)
  */
 
 Ttk_Manager *Ttk_CreateManager(
-    Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window window)
+    const Ttk_ManagerSpec *managerSpec, void *managerData, Tk_Window window)
 {
     Ttk_Manager *mgr = (Ttk_Manager *)ckalloc(sizeof(*mgr));
 
