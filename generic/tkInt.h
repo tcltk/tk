@@ -1200,7 +1200,11 @@ MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
 MODULE_SCOPE Tcl_ObjCmdProc Tk_BellObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_BindObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_BindtagsObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
+#if TCL_MAJOR_VERSION > 8
+    MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
+#else
+    MODULE_SCOPE Tcl_ObjCmdProc Tk_BusyObjCmd;
+#endif
 MODULE_SCOPE Tcl_ObjCmdProc Tk_ButtonObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_CanvasObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_CheckbuttonObjCmd;
