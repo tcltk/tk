@@ -490,7 +490,7 @@ FreeElementData(ElementData *elementData)
 
 static void GenericElementSize(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
@@ -530,7 +530,7 @@ static void GenericElementSize(
 
 static void GenericElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -644,7 +644,7 @@ static const Ttk_ElementSpec SpinboxArrowElementSpec = {
 
 static void ThumbElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
@@ -764,7 +764,7 @@ static void TabElementSize(
 
 static void TabElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,

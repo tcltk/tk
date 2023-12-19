@@ -91,8 +91,8 @@ static Ttk_Padding FrameMargins(Frame *framePtr)
  */
 static int FrameSize(
     void *recordPtr,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *))
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *)) /* heightPtr */
 {
     Frame *framePtr = (Frame *)recordPtr;
     Ttk_SetMargins(framePtr->core.tkwin, FrameMargins(framePtr));
@@ -343,8 +343,8 @@ LabelframeLabelSize(Labelframe *lframePtr, int *widthPtr, int *heightPtr)
  */
 static int LabelframeSize(
     void *recordPtr,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *))
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *)) /* heightPtr */
 {
     Labelframe *lframePtr = (Labelframe *)recordPtr;
     WidgetCore *corePtr = &lframePtr->core;
