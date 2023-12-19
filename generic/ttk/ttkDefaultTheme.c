@@ -260,8 +260,8 @@ static void BorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     BorderElement *bd = (BorderElement *)elementRecord;
@@ -348,8 +348,8 @@ static void FieldElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_UniformPadding(2);
