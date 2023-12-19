@@ -33,8 +33,8 @@ static void HighlightElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     HighlightElement *hl = (HighlightElement *)elementRecord;
@@ -106,8 +106,8 @@ static void ButtonBorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;

@@ -32,8 +32,8 @@ TtkNullElementSize(
     TCL_UNUSED(void *), /* clientData */
     TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     TCL_UNUSED(Ttk_Padding *))
 {
 }
@@ -143,8 +143,8 @@ static void BorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     BorderElement *bd = (BorderElement *)elementRecord;
@@ -212,8 +212,8 @@ static void FieldElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     FieldElement *field = (FieldElement *)elementRecord;
@@ -329,8 +329,8 @@ static void PaddingElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     PaddingElement *padding = (PaddingElement *)elementRecord;
@@ -397,8 +397,8 @@ static void FocusElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     FocusElement *focus = (FocusElement *)elementRecord;
@@ -1185,8 +1185,8 @@ static void TroughElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     TroughElement *troughPtr = (TroughElement *)elementRecord;
@@ -1619,8 +1619,8 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
 static void TabElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord, Tk_Window tkwin,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     TabElement *tab = (TabElement *)elementRecord;
@@ -1824,8 +1824,8 @@ typedef TabElement ClientElement;
 static void ClientElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord, Tk_Window tkwin,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     ClientElement *ce = (ClientElement *)elementRecord;
