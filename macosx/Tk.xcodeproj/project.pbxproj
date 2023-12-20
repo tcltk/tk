@@ -594,7 +594,6 @@
 		F9FD32030CC1ADB70073837D /* tkUnixMenu.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC8808F27A3D005CB29B /* tkUnixMenu.c */; };
 		F9FD32040CC1ADB70073837D /* tkUnixConfig.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC7C08F27A3D005CB29B /* tkUnixConfig.c */; };
 		F9FD32050CC1ADB70073837D /* tkUnixDraw.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC8008F27A3D005CB29B /* tkUnixDraw.c */; };
-		F9FD32060CC1ADB70073837D /* tkUnixDialog.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC7F08F27A3D005CB29B /* tkUnixDialog.c */; };
 		F9FD32070CC1ADB70073837D /* tkUnixSelect.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC8E08F27A3D005CB29B /* tkUnixSelect.c */; };
 		F9FD32080CC1ADB70073837D /* tkUnixEvent.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC8208F27A3D005CB29B /* tkUnixEvent.c */; };
 		F9FD32090CC1ADB70073837D /* tkUnixColor.c in Sources */ = {isa = PBXBuildFile; fileRef = F966BC7B08F27A3D005CB29B /* tkUnixColor.c */; };
@@ -1181,7 +1180,6 @@
 		F966BC7C08F27A3D005CB29B /* tkUnixConfig.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkUnixConfig.c; sourceTree = "<group>"; };
 		F966BC7D08F27A3D005CB29B /* tkUnixCursor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkUnixCursor.c; sourceTree = "<group>"; };
 		F966BC7E08F27A3D005CB29B /* tkUnixDefault.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = tkUnixDefault.h; sourceTree = "<group>"; };
-		F966BC7F08F27A3D005CB29B /* tkUnixDialog.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkUnixDialog.c; sourceTree = "<group>"; };
 		F966BC8008F27A3D005CB29B /* tkUnixDraw.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkUnixDraw.c; sourceTree = "<group>"; };
 		F966BC8108F27A3D005CB29B /* tkUnixEmbed.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkUnixEmbed.c; sourceTree = "<group>"; };
 		F966BC8208F27A3D005CB29B /* tkUnixEvent.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = tkUnixEvent.c; sourceTree = "<group>"; };
@@ -2742,7 +2740,6 @@
 				F966BC7C08F27A3D005CB29B /* tkUnixConfig.c */,
 				F966BC7D08F27A3D005CB29B /* tkUnixCursor.c */,
 				F966BC7E08F27A3D005CB29B /* tkUnixDefault.h */,
-				F966BC7F08F27A3D005CB29B /* tkUnixDialog.c */,
 				F966BC8008F27A3D005CB29B /* tkUnixDraw.c */,
 				F966BC8108F27A3D005CB29B /* tkUnixEmbed.c */,
 				F966BC8208F27A3D005CB29B /* tkUnixEvent.c */,
@@ -4625,7 +4622,6 @@
 				F9FD32090CC1ADB70073837D /* tkUnixColor.c in Sources */,
 				F9FD32040CC1ADB70073837D /* tkUnixConfig.c in Sources */,
 				F9FD31F80CC1ADB70073837D /* tkUnixCursor.c in Sources */,
-				F9FD32060CC1ADB70073837D /* tkUnixDialog.c in Sources */,
 				F9FD32050CC1ADB70073837D /* tkUnixDraw.c in Sources */,
 				F9FD31FD0CC1ADB70073837D /* tkUnixEmbed.c in Sources */,
 				F9FD32080CC1ADB70073837D /* tkUnixEvent.c in Sources */,
