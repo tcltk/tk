@@ -172,7 +172,7 @@ Tk_SetAppName(
 	hr = TkWinSendCom_CreateInstance(interp, &IID_IUnknown,
 		(void **) objPtr);
 
-	Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr,
+	Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr,
 		CmdDeleteProc);
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_HideCommand(interp, "send", "send");
@@ -323,7 +323,7 @@ Tk_SendObjCmd(
     void *clientData,	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     enum {
@@ -334,7 +334,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep;
     int result = TCL_OK;
-    int i, async = 0, index;
+    int async = 0, index;
+    Tcl_Size i;
 
     /*
      * Process the command options.

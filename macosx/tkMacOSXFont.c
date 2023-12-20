@@ -466,13 +466,13 @@ static int
 startOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
+    Tcl_Size objc,                   /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
 {
     TKNSString *S;
     const char *stringArg;
     Tcl_Size numBytes, index;
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
@@ -521,14 +521,14 @@ static int
 endOfClusterObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,         /* Current interpreter. */
-    int objc,                   /* Number of arguments. */
+    Tcl_Size objc,                   /* Number of arguments. */
     Tcl_Obj *const objv[])      /* Argument objects. */
 {
     TKNSString *S;
     char *stringArg;
     Tcl_Size index, numBytes;
 
-    if ((unsigned)(objc - 3) > 1) {
+    if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
@@ -669,8 +669,8 @@ TkpFontPkgInit(
 	[cs release];
     }
     [pool drain];
-    Tcl_CreateObjCommand(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::startOfCluster", startOfClusterObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::endOfCluster", endOfClusterObjCmd, NULL, NULL);
 }
 
 /*

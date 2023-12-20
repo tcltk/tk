@@ -1199,7 +1199,7 @@ StyleMapCmd(
     Ttk_Theme theme = pkgPtr->currentTheme;
     const char *styleName;
     Style *stylePtr;
-    int i;
+    Tcl_Size i;
 
     if (objc < 3) {
 usage:
@@ -1263,7 +1263,7 @@ static int StyleConfigureCmd(
     Ttk_Theme theme = pkgPtr->currentTheme;
     const char *styleName;
     Style *stylePtr;
-    int i;
+    Tcl_Size i;
 
     if (objc < 3) {
 usage:
@@ -1397,7 +1397,7 @@ static int StyleThemeCreateCmd(
     Ttk_Theme parentTheme = pkgPtr->defaultTheme, newTheme;
     Tcl_Obj *settingsScript = NULL;
     const char *themeName;
-    int i;
+    Tcl_Size i;
 
     if (objc < 4 || objc % 2 != 0) {
 	Tcl_WrongNumArgs(interp, 3, objv, "name ?-option value ...?");
@@ -1715,7 +1715,7 @@ static int
 StyleObjCmd(
     void *clientData,		/* StylePackageData pointer */
     Tcl_Interp *interp,			/* Current interpreter */
-    int objc,				/* Number of arguments */
+    Tcl_Size objc,				/* Number of arguments */
     Tcl_Obj *const objv[])		/* Argument objects */
 {
     return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
@@ -1786,7 +1786,7 @@ void Ttk_StylePkgInit(Tcl_Interp *interp)
     /*
      * Register commands:
      */
-    Tcl_CreateObjCommand(interp, "::ttk::style", StyleObjCmd, pkgPtr, 0);
+    Tcl_CreateObjCommand2(interp, "::ttk::style", StyleObjCmd, pkgPtr, 0);
 
     nsPtr = Tcl_FindNamespace(interp, "::ttk", NULL, TCL_LEAVE_ERR_MSG);
     Tcl_Export(interp, nsPtr, "style", 0 /* dontResetList */);

@@ -151,7 +151,7 @@ enum command {
 static void		ComputeFormat(TkScale *scalePtr, int forTicks);
 static void		ComputeScaleGeometry(TkScale *scalePtr);
 static int		ConfigureScale(Tcl_Interp *interp, TkScale *scalePtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DestroyScale(void *memPtr);
 static double		MaxTickRoundingError(TkScale *scalePtr,
 			    double tickResolution);
@@ -162,7 +162,7 @@ static char *		ScaleVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		ScaleWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		ScaleWorldChanged(void *instanceData);
 static void		ScaleSetVariable(TkScale *scalePtr);
@@ -241,7 +241,7 @@ int
 Tk_ScaleObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     TkScale *scalePtr;
@@ -278,7 +278,7 @@ Tk_ScaleObjCmd(
     scalePtr->tkwin		= tkwin;
     scalePtr->display		= Tk_Display(tkwin);
     scalePtr->interp		= interp;
-    scalePtr->widgetCmd		= Tcl_CreateObjCommand(interp,
+    scalePtr->widgetCmd		= Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(scalePtr->tkwin), ScaleWidgetObjCmd,
 	    scalePtr, ScaleCmdDeletedProc);
     scalePtr->optionTable	= optionTable;
@@ -373,7 +373,7 @@ static int
 ScaleWidgetObjCmd(
     void *clientData,	/* Information about scale widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
@@ -592,7 +592,7 @@ ConfigureScale(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkScale *scalePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in objv. */
+    Tcl_Size objc,			/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;

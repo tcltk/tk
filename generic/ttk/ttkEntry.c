@@ -170,7 +170,7 @@ static const Tk_OptionSpec EntryOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	"left", TCL_INDEX_NONE, offsetof(Entry, entry.justify),
-	0, 0, GEOMETRY_CHANGED},
+	TK_OPTION_ENUM_VAR, 0, GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-placeholder", "placeHolder", "PlaceHolder",
 	NULL, offsetof(Entry, entry.placeholderObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -477,7 +477,11 @@ ExpandPercents(
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
-		snprintf(numStorage, sizeof(numStorage), "%d", (int)index);
+		if (index == TCL_INDEX_NONE) {
+		    snprintf(numStorage, sizeof(numStorage), "-1");
+		} else {
+		    snprintf(numStorage, sizeof(numStorage), "%" TCL_SIZE_MODIFIER "u", index);
+		}
 		string = numStorage;
 		break;
 	    case 'P': /* 'Peeked' new value of the string */
