@@ -29,9 +29,9 @@ NSString * fileName = nil;
 CFStringRef urlFile = NULL;
 
 /*Forward declaration of functions.*/
-static Tcl_ObjCmdProc StartPrint;
+static Tcl_ObjCmdProc2 StartPrint;
 static OSStatus	FinishPrint(NSString *file, int buttonValue);
-static Tcl_ObjCmdProc MakePDF;
+static Tcl_ObjCmdProc2 MakePDF;
 int			MacPrint_Init(Tcl_Interp * interp);
 
 /* Delegate class for print dialogs. */
@@ -80,7 +80,7 @@ int
 StartPrint(
     TCL_UNUSED(void *),
     Tcl_Interp * interp,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     NSPrintInfo * printInfo = [NSPrintInfo sharedPrintInfo];
@@ -345,7 +345,7 @@ FinishPrint(
 int MakePDF(
  TCL_UNUSED(void *),
  Tcl_Interp *ip,
- int objc,
+ Tcl_Size objc,
  Tcl_Obj *const objv[])
 {
     Tk_Window path;
@@ -394,8 +394,8 @@ int MakePDF(
 
 int MacPrint_Init(Tcl_Interp * interp) {
     NSAutoreleasePool * pool = [[NSAutoreleasePool alloc] init];
-    Tcl_CreateObjCommand(interp, "::tk::print::_print", StartPrint, NULL, NULL);
-    Tcl_CreateObjCommand(interp, "::tk::print::_printcanvas", MakePDF, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::print::_print", StartPrint, NULL, NULL);
+    Tcl_CreateObjCommand2(interp, "::tk::print::_printcanvas", MakePDF, NULL, NULL);
     [pool release];
     return TCL_OK;
 }

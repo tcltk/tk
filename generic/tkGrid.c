@@ -261,31 +261,31 @@ static void		ArrangeGrid(void *clientData);
 static int		CheckSlotData(Gridder *containerPtr, int slot,
 			    int slotType, int checkOnly);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static Tcl_FreeProc	DestroyGrid;
 static Gridder *	GetGrid(Tk_Window tkwin);
 static int		GridAnchorCommand(Tk_Window tkwin, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		GridBboxCommand(Tk_Window tkwin, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		GridForgetRemoveCommand(Tk_Window tkwin,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		GridInfoCommand(Tk_Window tkwin, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		GridLocationCommand(Tk_Window tkwin,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		GridPropagateCommand(Tk_Window tkwin,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		GridRowColumnConfigureCommand(Tk_Window tkwin,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static int		GridSizeCommand(Tk_Window tkwin, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		GridContentCommand(Tk_Window tkwin, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		GridStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static void		GridLostContentProc(void *clientData,
@@ -332,7 +332,7 @@ int
 Tk_GridObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -442,7 +442,7 @@ static int
 GridAnchorCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
@@ -511,7 +511,7 @@ static int
 GridBboxCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
@@ -641,12 +641,12 @@ static int
 GridForgetRemoveCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window content;
     Gridder *contentPtr;
-    int i;
+    Tcl_Size i;
     const char *string = Tcl_GetString(objv[1]);
     char c = string[0];
 
@@ -731,7 +731,7 @@ static int
 GridInfoCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Gridder *contentPtr;
@@ -793,7 +793,7 @@ static int
 GridLocationCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
@@ -886,7 +886,7 @@ static int
 GridPropagateCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
@@ -974,7 +974,7 @@ static int
 GridRowColumnConfigureCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container, content;
@@ -986,8 +986,7 @@ GridRowColumnConfigureCommand(
     Tcl_Size lObjc;		/* Number of items in index list */
     Tcl_Obj **lObjv;		/* array of indices */
     int ok;			/* temporary TCL result code */
-    int i, first, last;
-    Tcl_Size j;
+    Tcl_Size i, j, first, last;
     const char *string;
     static const char *const optionStrings[] = {
 	"-minsize", "-pad", "-uniform", "-weight", NULL
@@ -1169,7 +1168,7 @@ GridRowColumnConfigureCommand(
 			contentPtr->numCols : contentPtr->numRows);
 	    }
 
-	    for (slot = first; slot <= last; slot++) {
+	    for (slot = first; (Tcl_Size)slot <= last; slot++) {
 		ok = CheckSlotData(containerPtr, slot, slotType, /*checkOnly*/ 0);
 		if (ok != TCL_OK) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1308,7 +1307,7 @@ static int
 GridSizeCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
@@ -1359,14 +1358,14 @@ static int
 GridContentCommand(
     Tk_Window tkwin,		/* Main window of the application. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window container;
     Gridder *containerPtr;		/* container grid record */
     Gridder *contentPtr;
-    int i, value, index;
-    int row = -1, column = -1;
+    Tcl_Size i;
+    int row = -1, column = -1, value, index;
     static const char *const optionStrings[] = {
 	"-column", "-row", NULL
     };
@@ -2954,7 +2953,7 @@ ConfigureContent(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Any window in application containing
 				 * content. Used to look up content names. */
-    int objc,			/* Number of elements in argv. */
+    Tcl_Size objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[])	/* Argument objects: contains one or more
 				 * window names followed by any number of
 				 * "option value" pairs. Caller must make sure
@@ -2964,9 +2963,8 @@ ConfigureContent(
     Gridder *contentPtr;
     Tk_Window other, content, parent, ancestor;
     TkWindow *container;
-    int i, j, tmp;
-    int numWindows;
-    int width;
+    Tcl_Size i, j, numWindows;
+    int width, tmp;
     int defaultRow = -1;
     int defaultColumn = 0;	/* Default column number */
     int defaultColumnSpan = 1;	/* Default number of columns */

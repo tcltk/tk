@@ -92,7 +92,7 @@ int
 Tk_BellObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const bellOptions[] = {
@@ -100,7 +100,7 @@ Tk_BellObjCmd(
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    Tcl_Size i;
     int index, nice = 0;
     Tk_ErrorHandler handler;
 
@@ -161,7 +161,7 @@ int
 Tk_BindObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -345,7 +345,7 @@ int
 Tk_BindtagsObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -485,12 +485,12 @@ int
 Tk_DestroyObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window window;
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    Tcl_Size i;
 
     for (i = 1; i < objc; i++) {
 	window = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), tkwin);
@@ -532,7 +532,7 @@ int
 Tk_LowerObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window mainwin = (Tk_Window)clientData;
@@ -591,7 +591,7 @@ int
 Tk_RaiseObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window mainwin = (Tk_Window)clientData;
@@ -1013,7 +1013,7 @@ int
 Tk_TkwaitObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1200,7 +1200,7 @@ int
 Tk_UpdateObjCmd(
     TCL_UNUSED(void *),		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const updateOptions[] = {"idletasks", NULL};
@@ -1298,11 +1298,11 @@ int
 Tk_WinfoObjCmd(
     void *clientData,		/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class;
-    int skip;
+    Tcl_Size skip;
     const char *string;
     TkWindow *winPtr;
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -1586,7 +1586,7 @@ Tk_WinfoObjCmd(
 
     case WIN_ATOM:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 3 + skip) {
@@ -1603,7 +1603,7 @@ Tk_WinfoObjCmd(
 	Tcl_WideInt id;
 
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 3 + skip) {
@@ -1627,7 +1627,7 @@ Tk_WinfoObjCmd(
     }
     case WIN_CONTAINING:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 4 + skip) {
@@ -1651,7 +1651,7 @@ Tk_WinfoObjCmd(
 	break;
     case WIN_INTERPS:
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 2 + skip) {
@@ -1663,7 +1663,7 @@ Tk_WinfoObjCmd(
 	Window id;
 
 	skip = TkGetDisplayOf(interp, objc - 2, objv + 2, &tkwin);
-	if (skip < 0) {
+	if (skip == TCL_INDEX_NONE) {
 	    return TCL_ERROR;
 	}
 	if (objc != 3 + skip) {
@@ -1932,7 +1932,7 @@ int
 TkDeadAppObjCmd(
     TCL_UNUSED(void *),
     Tcl_Interp *interp,		/* Current interpreter. */
-    TCL_UNUSED(int),		/* Number of arguments. */
+    TCL_UNUSED(Tcl_Size),		/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(

@@ -328,7 +328,7 @@ static const Tk_OptionSpec *const optionSpecs[] = {
 
 static void		ComputeFrameGeometry(Frame *framePtr);
 static int		ConfigureFrame(Tcl_Interp *interp, Frame *framePtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static Tcl_FreeProc	DestroyFrame;
 static void		DestroyFramePartly(Frame *framePtr);
 static void		DisplayFrame(void *clientData);
@@ -348,7 +348,7 @@ static void		FrameRequestProc(void *clientData,
 static void		FrameStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static int		FrameWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		FrameWorldChanged(void *instanceData);
 static void		MapFrame(void *clientData);
@@ -399,7 +399,7 @@ int
 Tk_FrameObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return TkCreateFrame(clientData, interp, objc, objv, TYPE_FRAME, NULL);
@@ -409,7 +409,7 @@ int
 Tk_ToplevelObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return TkCreateFrame(clientData, interp, objc, objv, TYPE_TOPLEVEL, NULL);
@@ -419,7 +419,7 @@ int
 Tk_LabelframeObjCmd(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     return TkCreateFrame(clientData, interp, objc, objv, TYPE_LABELFRAME, NULL);
@@ -630,7 +630,7 @@ TkCreateFrame(
     framePtr->tkwin = newWin;
     framePtr->display = Tk_Display(newWin);
     framePtr->interp = interp;
-    framePtr->widgetCmd	= Tcl_CreateObjCommand(interp, Tk_PathName(newWin),
+    framePtr->widgetCmd	= Tcl_CreateObjCommand2(interp, Tk_PathName(newWin),
 	    FrameWidgetObjCmd, framePtr, FrameCmdDeletedProc);
     framePtr->optionTable = optionTable;
     framePtr->type = type;
@@ -706,7 +706,7 @@ static int
 FrameWidgetObjCmd(
     void *clientData,	/* Information about frame widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     static const char *const frameOptions[] = {
@@ -717,8 +717,8 @@ FrameWidgetObjCmd(
     };
     Frame *framePtr = (Frame *)clientData;
     int result = TCL_OK, index;
-    int c, i;
-    Tcl_Size length;
+    int c;
+    Tcl_Size i, length;
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
@@ -925,7 +925,7 @@ ConfigureFrame(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Frame *framePtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in objv. */
+    Tcl_Size objc,			/* Number of valid entries in objv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     Tk_SavedOptions savedOptions;
@@ -2063,10 +2063,19 @@ TkToplevelWindowForCommand(
     if (Tcl_GetCommandInfo(interp, cmdName, &cmdInfo) == 0) {
 	return NULL;
     }
-    if (cmdInfo.objProc != FrameWidgetObjCmd) {
+#if TCL_MAJOR_VERSION > 8
+    if (cmdInfo.isNativeObjectProc == 2) {
+	if (cmdInfo.objProc2 != FrameWidgetObjCmd) {
+	    return NULL;
+	}
+	framePtr = (Frame *)cmdInfo.objClientData2;
+    } else
+#endif
+    if (cmdInfo.objProc != (Tcl_ObjCmdProc *)FrameWidgetObjCmd) {
 	return NULL;
+    } else {
+	framePtr = (Frame *)cmdInfo.objClientData;
     }
-    framePtr = (Frame *)cmdInfo.objClientData;
     if (framePtr->type != TYPE_TOPLEVEL) {
 	return NULL;
     }

@@ -293,7 +293,7 @@ Tk_SetAppName(
      * TODO: DeleteProc
      */
 
-    Tcl_CreateObjCommand(interp, "send", Tk_SendObjCmd, riPtr, NULL);
+    Tcl_CreateObjCommand2(interp, "send", Tk_SendObjCmd, riPtr, NULL);
     if (Tcl_IsSafe(interp)) {
 	Tcl_HideCommand(interp, "send", "send");
     }
@@ -323,7 +323,7 @@ int
 Tk_SendObjCmd(
     TCL_UNUSED(void *),	/* Not used */
     Tcl_Interp *interp,		/* The interp we are sending from */
-    int objc,			/* Number of arguments */
+    Tcl_Size objc,			/* Number of arguments */
     Tcl_Obj *const objv[])	/* The arguments */
 {
     enum {
@@ -334,7 +334,8 @@ Tk_SendObjCmd(
     };
     const char *stringRep, *destName;
     /*int async = 0;*/
-    int i, firstArg, index;
+    Tcl_Size i, firstArg;
+    int index;
     RegisteredInterp *riPtr;
     Tcl_Obj *listObjPtr;
     int result = TCL_OK;
@@ -397,7 +398,7 @@ Tk_SendObjCmd(
 	Tcl_Preserve(riPtr);
 	localInterp = riPtr->interp;
 	Tcl_Preserve(localInterp);
-	if (firstArg == (objc - 1)) {
+	if (firstArg + 1 == objc) {
 	    /*
 	     * This might be one of those cases where the new parser is
 	     * faster.

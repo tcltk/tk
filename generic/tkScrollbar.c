@@ -97,11 +97,11 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		ConfigureScrollbar(Tcl_Interp *interp,
-			    TkScrollbar *scrollPtr, int objc,
+			    TkScrollbar *scrollPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static void		ScrollbarCmdDeletedProc(void *clientData);
 static int		ScrollbarWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj *const objv[]);
+			    Tcl_Interp *, Tcl_Size objc, Tcl_Obj *const objv[]);
 
 /*
  *--------------------------------------------------------------
@@ -124,7 +124,7 @@ int
 Tk_ScrollbarObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -155,7 +155,7 @@ Tk_ScrollbarObjCmd(
     scrollPtr->tkwin = newWin;
     scrollPtr->display = Tk_Display(newWin);
     scrollPtr->interp = interp;
-    scrollPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    scrollPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(scrollPtr->tkwin), ScrollbarWidgetObjCmd,
 	    scrollPtr, ScrollbarCmdDeletedProc);
     scrollPtr->vertical = 0;
@@ -216,7 +216,7 @@ static int
 ScrollbarWidgetObjCmd(
     void *clientData,	/* Information about scrollbar widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
@@ -469,7 +469,7 @@ ConfigureScrollbar(
     TkScrollbar *scrollPtr,
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],		/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {

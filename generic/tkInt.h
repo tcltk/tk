@@ -75,6 +75,7 @@
 #   endif
 #endif
 
+
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #   define TKFLEXARRAY
 #elif defined(__GNUC__) && (__GNUC__ > 2)
@@ -687,7 +688,7 @@ typedef struct TkMainInfo {
     struct TkMainInfo *nextPtr;	/* Next in list of all main windows managed by
 				 * this process. */
     Tcl_HashTable busyTable;	/* Information used by [tk busy] command. */
-    Tcl_ObjCmdProc *tclUpdateObjProc;
+    Tcl_ObjCmdProc2 *tclUpdateObjProc;
 				/* Saved Tcl [update] command, used to restore
 				 * Tcl's version of [update] after Tk is shut
 				 * down */
@@ -1170,52 +1171,52 @@ MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
  * world:
  */
 
-MODULE_SCOPE Tcl_ObjCmdProc Tk_BellObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_BindObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_BindtagsObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BellObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BindObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BindtagsObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ButtonObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_CanvasObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_CheckbuttonObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ClipboardObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ChooseColorObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ChooseDirectoryObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_DestroyObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_EntryObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_EventObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_FrameObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_FocusObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_FontObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_GetOpenFileObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_GetSaveFileObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_GrabObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_GridObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ImageObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_LabelframeObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ListboxObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_LowerObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_MenuObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_MenubuttonObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageBoxObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_MessageObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_PanedWindowObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_OptionObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_PackObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_PlaceObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_RadiobuttonObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_RaiseObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ScaleObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ScrollbarObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_SelectionObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_SendObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_SpinboxObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_TextObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_TkwaitObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_ToplevelObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_UpdateObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_WinfoObjCmd;
-MODULE_SCOPE Tcl_ObjCmdProc Tk_WmObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ButtonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_CanvasObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_CheckbuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ClipboardObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ChooseColorObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ChooseDirectoryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_DestroyObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_EntryObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_EventObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_FrameObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_FocusObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_FontObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GetOpenFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GetSaveFileObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GrabObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_GridObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ImageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LabelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LabelframeObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ListboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_LowerObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MenuObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MenubuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MessageBoxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_MessageObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_PanedWindowObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_OptionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_PackObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_PlaceObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_RadiobuttonObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_RaiseObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ScaleObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ScrollbarObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SelectionObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SendObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_SpinboxObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_TextObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_TkwaitObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_ToplevelObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_UpdateObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_WinfoObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_WmObjCmd;
 
 MODULE_SCOPE int	TkSetGeometryContainer(Tcl_Interp *interp,
 			    Tk_Window tkwin, const char *name);
@@ -1224,7 +1225,7 @@ MODULE_SCOPE void	TkFreeGeometryContainer(Tk_Window tkwin,
 
 MODULE_SCOPE void	TkEventInit(void);
 MODULE_SCOPE void	TkRegisterObjTypes(void);
-MODULE_SCOPE Tcl_ObjCmdProc TkDeadAppObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkDeadAppObjCmd;
 MODULE_SCOPE int	TkCanvasGetCoordObj(Tcl_Interp *interp,
 			    Tk_Canvas canvas, Tcl_Obj *obj,
 			    double *doublePtr);
@@ -1352,12 +1353,12 @@ MODULE_SCOPE  void       Icu_Init(Tcl_Interp* interp);
  * Unsupported commands.
  */
 
-MODULE_SCOPE Tcl_ObjCmdProc TkUnsupported1ObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 TkUnsupported1ObjCmd;
 
 /*
  * For Tktest.
  */
-MODULE_SCOPE Tcl_ObjCmdProc SquareObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc2 SquareObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK))
 #define TkplatformtestInit(x) TCL_OK
 #else

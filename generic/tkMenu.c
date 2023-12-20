@@ -323,11 +323,11 @@ enum options {
 static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
 static int		ConfigureMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureMenuCloneEntries(TkMenu *menuPtr, int index,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureMenuEntry(TkMenuEntry *mePtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteMenuCloneEntries(TkMenu *menuPtr,
 			    int first, int last);
 static void		DestroyMenuHashTable(void *clientData,
@@ -342,7 +342,7 @@ static int		MenuDoYPosition(Tcl_Interp *interp,
 static int		MenuDoXPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuAddOrInsert(Tcl_Interp *interp,
-			    TkMenu *menuPtr, Tcl_Obj *indexPtr, int objc,
+			    TkMenu *menuPtr, Tcl_Obj *indexPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuCmdDeletedProc(void *clientData);
 static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, Tcl_Size index, int type);
@@ -350,7 +350,7 @@ static char *		MenuVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static int		MenuWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuWorldChanged(void *instanceData);
 static int		PostProcessEntry(TkMenuEntry *mePtr);
@@ -394,14 +394,15 @@ int
 Tk_MenuObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     Tk_Window newWin;
     TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
-    int i, index, toplevel;
+    Tcl_Size i;
+    int index, toplevel;
     const char *windowName;
     static const char *const typeStringList[] = {"-type", NULL};
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -444,7 +445,7 @@ Tk_MenuObjCmd(
     menuPtr->tkwin = newWin;
     menuPtr->display = Tk_Display(newWin);
     menuPtr->interp = interp;
-    menuPtr->widgetCmd = Tcl_CreateObjCommand(interp,
+    menuPtr->widgetCmd = Tcl_CreateObjCommand2(interp,
 	    Tk_PathName(menuPtr->tkwin), MenuWidgetObjCmd, menuPtr,
 	    MenuCmdDeletedProc);
     menuPtr->active = TCL_INDEX_NONE;
@@ -609,7 +610,7 @@ static int
 MenuWidgetObjCmd(
     void *clientData,	/* Information about menu widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     TkMenu *menuPtr = (TkMenu *)clientData;
@@ -1563,7 +1564,7 @@ ConfigureMenu(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkMenu *menuPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     int i;
@@ -1944,7 +1945,7 @@ static int
 ConfigureMenuEntry(
     TkMenuEntry *mePtr,/* Information about menu entry; may or may
 				 * not already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2007,7 +2008,7 @@ static int
 ConfigureMenuCloneEntries(
     TkMenu *menuPtr,		/* Information about whole menu. */
     int index,			/* Index of mePtr within menuPtr's entries. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     TkMenuEntry *mePtr;
@@ -2379,7 +2380,7 @@ MenuAddOrInsert(
     TkMenu *menuPtr,		/* Widget in which to create new entry. */
     Tcl_Obj *indexPtr,		/* Object describing index at which to insert.
 				 * NULL means insert at end. */
-    int objc,			/* Number of elements in objv. */
+    Tcl_Size objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[])	/* Arguments to command: first arg is type of
 				 * entry, others are config options. */
 {

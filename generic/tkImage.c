@@ -187,7 +187,7 @@ int
 Tk_ImageObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     static const char *const imageOptions[] = {
@@ -199,7 +199,8 @@ Tk_ImageObjCmd(
 	IMAGE_TYPE, IMAGE_TYPES, IMAGE_WIDTH
     };
     TkWindow *winPtr = (TkWindow *)clientData;
-    int i, isNew, firstOption, index;
+    Tcl_Size i, firstOption;
+    int isNew, index;
     Tk_ImageType *typePtr;
     ImageModel *modelPtr;
     Image *imagePtr;

@@ -119,7 +119,7 @@ static const Tk_GeomMgr packerType = {
 
 static void		ArrangePacking(void *clientData);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static Tcl_FreeProc	DestroyPacker;
 static Packer *		GetPacker(Tk_Window tkwin);
 static void		PackStructureProc(void *clientData,
@@ -189,7 +189,7 @@ int
 Tk_PackObjCmd(
     void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = (Tk_Window)clientData;
@@ -240,7 +240,7 @@ Tk_PackObjCmd(
     case PACK_FORGET: {
 	Tk_Window content;
 	Packer *contentPtr;
-	int i;
+	Tcl_Size i;
 
 	for (i = 2; i < objc; i++) {
 	    if (TkGetWindowFromObj(interp, tkwin, objv[i], &content) != TCL_OK) {
@@ -1192,7 +1192,7 @@ ConfigureContent(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Any window in application containing
 				 * content. Used to look up content names. */
-    int objc,			/* Number of elements in argv. */
+    Tcl_Size objc,			/* Number of elements in argv. */
     Tcl_Obj *const objv[])	/* Argument objects: contains one or more
 				 * window names followed by any number of
 				 * "option value" pairs. Caller must make sure
@@ -1201,7 +1201,8 @@ ConfigureContent(
     Packer *containerPtr, *contentPtr, *prevPtr, *otherPtr;
     Tk_Window other, content, parent, ancestor;
     TkWindow *container;
-    int i, j, numWindows, tmp, positionGiven;
+    int tmp, positionGiven;
+    Tcl_Size i, j, numWindows;
     const char *string;
     static const char *const optionStrings[] = {
 	"-after", "-anchor", "-before", "-expand", "-fill",
