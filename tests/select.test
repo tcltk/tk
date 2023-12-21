@@ -1195,6 +1195,7 @@ test select-14.2.2 {Bug [af31a84c91]: Replacing selection handler is ineffective
     selection handle . {strhandler "Replaced"}
     list [selection get -type STRING] [selection get -type UTF8_STRING]
 } -cleanup {
+    selection handle -type UTF8_STRING . {}
     selection handle . {}
     rename strhandler {}
 } -result {Replaced Original}
@@ -1208,6 +1209,7 @@ test select-14.2.3 {Bug [af31a84c91]: Replacing selection handler is ineffective
     selection handle -type UTF8_STRING . {strhandler "Replaced"}
     list [selection get -type STRING] [selection get -type UTF8_STRING]
 } -cleanup {
+    selection handle -type UTF8_STRING . {}
     selection handle . {}
     rename strhandler {}
 } -result {Original Replaced}
