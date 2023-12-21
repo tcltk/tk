@@ -1185,7 +1185,7 @@ test select-14.2.1 {Bug [af31a84c91]: Replacing selection handler is ineffective
     selection handle . {}
     rename strhandler {}
 } -result {Replaced Replaced}
-test select-14.2.2 {Bug [af31a84c91]: Replacing selection handler is ineffective.} -constraints unix -setup {
+test select-14.2.2 {Bug [af31a84c91]: Replacing selection handler is ineffective.} -constraints unix -setup {
     proc strhandler {str offset count} {
 	return [string range $str $offset [expr {$offset + $count -1}]]
     }
@@ -1198,7 +1198,7 @@ test select-14.2.1 {Bug [af31a84c91]: Replacing selection handler is ineffective
     selection handle . {}
     rename strhandler {}
 } -result {Replaced Original}
-test select-14.2.3 {Bug [af31a84c91]: Replacing selection handler is ineffective.} -constraints unix -setup {
+test select-14.2.3 {Bug [af31a84c91]: Replacing selection handler is ineffective.} -constraints unix -setup {
     proc strhandler {str offset count} {
 	return [string range $str $offset [expr {$offset + $count -1}]]
     }
