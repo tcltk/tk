@@ -1204,6 +1204,19 @@ test select-14.2.3 {Bug [af31a84c91]: Replacing selection handler is ineffective
     }
 } -body {
     selection own .
+    selection handle . {strhandler "Original"}
+    selection handle -type UTF8_STRING . {strhandler "Replaced"}
+    list [selection get -type STRING] [selection get -type UTF8_STRING]
+} -cleanup {
+    selection handle . {}
+    rename strhandler {}
+} -result {Original Replaced}
+test select-14.2.4 {Bug [af31a84c91]: Replacing selection handler is ineffective.} -constraints unix -setup {
+    proc strhandler {str offset count} {
+	return [string range $str $offset [expr {$offset + $count -1}]]
+    }
+} -body {
+    selection own .
     selection handle . {strhandler "myHandler"}
     list [selection get -type STRING] [selection get -type UTF8_STRING]
 } -cleanup {
