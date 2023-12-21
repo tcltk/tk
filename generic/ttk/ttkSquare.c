@@ -199,7 +199,7 @@ static const Ttk_ElementOptionSpec SquareElementOptions[] =
  */
 
 static void SquareElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     int *widthPtr,
@@ -220,12 +220,12 @@ static void SquareElementSize(
  */
 
 static void SquareElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     SquareElement *square = (SquareElement *)elementRecord;
     Tk_3DBorder foreground = NULL;

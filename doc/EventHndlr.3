@@ -37,7 +37,7 @@ for which \fIproc\fR should be called.
 .AP Tk_EventProc *proc in
 Procedure to invoke whenever an event in \fImask\fR occurs
 in the window given by \fItkwin\fR.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .BE
 .SH DESCRIPTION
@@ -55,7 +55,7 @@ call \fBTk_HandleEvent\fR, such as \fBTcl_DoOneEvent\fR or
 type \fBTk_EventProc\fR:
 .CS
 typedef void \fBTk_EventProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         XEvent *\fIeventPtr\fR);
 .CE
 The \fIclientData\fR parameter to \fIproc\fR is a copy of the \fIclientData\fR

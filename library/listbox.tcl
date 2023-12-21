@@ -175,18 +175,29 @@ bind Listbox <Button-2> {
 bind Listbox <B2-Motion> {
     %W scan dragto %x %y
 }
-
 bind Listbox <MouseWheel> {
-    tk::MouseWheel %W y %D -40.0
+    tk::MouseWheel %W y %D -40.0 units
 }
 bind Listbox <Option-MouseWheel> {
-    tk::MouseWheel %W y %D -12.0
+    tk::MouseWheel %W y %D -12.0 units
 }
 bind Listbox <Shift-MouseWheel> {
-    tk::MouseWheel %W x %D -40.0
+    tk::MouseWheel %W x %D -40.0 units
 }
 bind Listbox <Shift-Option-MouseWheel> {
-    tk::MouseWheel %W x %D -12.0
+    tk::MouseWheel %W x %D -12.0 units
+}
+bind Listbox <TouchpadScroll> {
+    if {%# %% 5 != 0} {
+	return
+    }
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    if {$deltaX != 0} {
+ 	%W xview scroll [expr {-$deltaX}] units
+    }
+    if {$deltaY != 0} {
+	%W yview scroll [expr {-$deltaY}] units
+    }
 }
 
 # ::tk::ListboxBeginSelect --

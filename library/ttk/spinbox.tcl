@@ -27,6 +27,13 @@ ttk::bindMouseWheel TSpinbox 		{ ttk::spinbox::Spin %W }
 bind TSpinbox <Shift-MouseWheel> {
     # Ignore the event
 }
+bind TSpinbox <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    # TouchpadScroll events fire about 60 times per second.
+    if {$deltaY != 0 && %# %% 12 == 0} {
+	ttk::spinbox::Spin %W [expr {$deltaY > 0 ? -1 : 1}]
+    }
+}
 
 ## Motion --
 #	Sets cursor.

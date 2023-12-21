@@ -68,7 +68,7 @@ declare 12 {
 }
 declare 13 {
     int TkCreateFrame(void *clientData, Tcl_Interp *interp,
-	    int argc, const char *const *argv, int toplevel, const char *appName)
+	    Tcl_Size objc, Tcl_Obj *const objv[], int type, const char *appName)
 }
 declare 14 {
     Tk_Window TkCreateMainWindow(Tcl_Interp *interp,
@@ -581,8 +581,8 @@ declare 180 {
 # Angled text API, exposed for Emiliano Gavilán's RBC work.
 declare 181 {
     void TkDrawAngledTextLayout(Display *display, Drawable drawable, GC gc,
-	    Tk_TextLayout layout, int x, int y, double angle, int firstChar,
-	    int lastChar)
+	    Tk_TextLayout layout, int x, int y, double angle, Tcl_Size firstChar,
+	    Tcl_Size lastChar)
 }
 declare 182 {
     void TkUnderlineAngledTextLayout(Display *display, Drawable drawable,

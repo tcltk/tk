@@ -12,6 +12,25 @@
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/*
+ * Explanation on following undef USE_TCL_STUBS by JN 2023-12-19 on the core list:
+ * What's going on is related to TIP #596:
+ *  Stubs support for Embedding Tcl in other applications
+ *
+ * If an application using Tcl_Main() is compiled with USE_TCL_STUBS,
+ * Tcl_Main() will be replaced by a stub function, which loads
+ * libtcl9.0.so/tcl90.dll and then calls its Tcl_MainEx(). If
+ * libtcl9.0.so/tcl90.dll is not present (at runtime), a crash is what happens.
+ *
+ * So ... tkAppInit.c should not be compiled with USE_TCL_STUBS
+ * (unless you want to use the TIP #596 functionality)
+ * 
+ * The proper solution is to make sure that Makefile.in doesn't use
+ * TCL_USE_STUBS when compiling tkAppInit.c. But that's a
+ * quite big re-organization just before a b1 release. Simpler
+ * is just to #undef'ine USE_TCL_STUBS, it has the same effect.
+ */
+#undef USE_TCL_STUBS
 #include "tk.h"
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>

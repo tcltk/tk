@@ -34,6 +34,15 @@
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
 
+/* Define to 1 if you have the `posix_spawnattr_setflags' function. */
+#undef HAVE_POSIX_SPAWNATTR_SETFLAGS
+
+/* Define to 1 if you have the `posix_spawnp' function. */
+#undef HAVE_POSIX_SPAWNP
+
+/* Define to 1 if you have the `posix_spawn_file_actions_adddup2' function. */
+#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2
+
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
 
@@ -58,9 +67,6 @@
 /* Is 'struct dirent64' in <sys/types.h>? */
 #undef HAVE_STRUCT_DIRENT64
 
-/* Is 'struct stat64' in <sys/stat.h>? */
-#undef HAVE_STRUCT_STAT64
-
 /* Should we include <sys/select.h>? */
 #undef HAVE_SYS_SELECT_H
 
@@ -81,6 +87,9 @@
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vfork' function. */
+#undef HAVE_VFORK
 
 /* Is weak import available? */
 #undef HAVE_WEAK_IMPORT
@@ -188,6 +197,9 @@
 
 /* Add the _ISOC99_SOURCE flag when building */
 #undef _ISOC99_SOURCE
+
+/* Add the _LARGEFILE64_SOURCE flag when building */
+#undef _LARGEFILE64_SOURCE
 
 /* # needed in sys/socket.h Should OS/390 do the right thing with sockets? */
 #undef _OE_SOCKETS

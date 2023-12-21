@@ -431,8 +431,10 @@ SOFTWARE.
 #define XK_dead_O                        0xfe87
 #define XK_dead_u                        0xfe88
 #define XK_dead_U                        0xfe89
-#define XK_dead_small_schwa              0xfe8a
-#define XK_dead_capital_schwa            0xfe8b
+#define XK_dead_schwa                    0xfe8a
+#define XK_dead_SCHWA                    0xfe8b
+#define XK_dead_small_schwa              0xfe8a  /* deprecated, remove in 2025 */
+#define XK_dead_capital_schwa            0xfe8b  /* deprecated, remove in 2025 */
 
 #define XK_dead_greek                    0xfe8c
 
@@ -650,7 +652,8 @@ SOFTWARE.
 #define XK_diaeresis                     0x00a8  /* U+00A8 DIAERESIS */
 #define XK_copyright                     0x00a9  /* U+00A9 COPYRIGHT SIGN */
 #define XK_ordfeminine                   0x00aa  /* U+00AA FEMININE ORDINAL INDICATOR */
-#define XK_guillemotleft                 0x00ab  /* U+00AB LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */
+#define XK_guillemetleft                 0x00ab  /* U+00AB LEFT-POINTING DOUBLE ANGLE QUOTATION MARK */
+#define XK_guillemotleft                 0x00ab  /* deprecated misspelling */
 #define XK_notsign                       0x00ac  /* U+00AC NOT SIGN */
 #define XK_hyphen                        0x00ad  /* U+00AD SOFT HYPHEN */
 #define XK_registered                    0x00ae  /* U+00AE REGISTERED SIGN */
@@ -665,8 +668,10 @@ SOFTWARE.
 #define XK_periodcentered                0x00b7  /* U+00B7 MIDDLE DOT */
 #define XK_cedilla                       0x00b8  /* U+00B8 CEDILLA */
 #define XK_onesuperior                   0x00b9  /* U+00B9 SUPERSCRIPT ONE */
-#define XK_masculine                     0x00ba  /* U+00BA MASCULINE ORDINAL INDICATOR */
-#define XK_guillemotright                0x00bb  /* U+00BB RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */
+#define XK_ordmasculine                  0x00ba  /* U+00BA MASCULINE ORDINAL INDICATOR */
+#define XK_masculine                     0x00ba  /* deprecated inconsistent name */
+#define XK_guillemetright                0x00bb  /* U+00BB RIGHT-POINTING DOUBLE ANGLE QUOTATION MARK */
+#define XK_guillemotright                0x00bb  /* deprecated misspelling */
 #define XK_onequarter                    0x00bc  /* U+00BC VULGAR FRACTION ONE QUARTER */
 #define XK_onehalf                       0x00bd  /* U+00BD VULGAR FRACTION ONE HALF */
 #define XK_threequarters                 0x00be  /* U+00BE VULGAR FRACTION THREE QUARTERS */

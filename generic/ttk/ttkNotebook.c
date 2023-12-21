@@ -731,10 +731,10 @@ static void TabRemoved(void *managerData, Tcl_Size index)
 }
 
 static int TabRequest(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    TCL_UNUSED(void *), /* managerData */
+    TCL_UNUSED(Tcl_Size), /* index */
+    TCL_UNUSED(int), /* width */
+    TCL_UNUSED(int)) /* height */
 {
     return 1;
 }
@@ -784,7 +784,7 @@ static int AddTab(
     return TCL_OK;
 }
 
-static Ttk_ManagerSpec NotebookManagerSpec = {
+static const Ttk_ManagerSpec NotebookManagerSpec = {
     { "notebook", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     NotebookSize,
     NotebookPlaceContents,
@@ -804,7 +804,7 @@ static const int NotebookEventMask
     | PointerMotionMask
     | LeaveWindowMask
     ;
-static void NotebookEventHandler(ClientData clientData, XEvent *eventPtr)
+static void NotebookEventHandler(void *clientData, XEvent *eventPtr)
 {
     Notebook *nb = (Notebook *)clientData;
 

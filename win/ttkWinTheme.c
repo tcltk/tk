@@ -146,7 +146,7 @@ static FrameControlElementData FrameControlElements[] = {
 
 static void FrameControlElementSize(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
@@ -177,11 +177,11 @@ static void FrameControlElementSize(
 
 static void FrameControlElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     FrameControlElementData *elementData = (FrameControlElementData *)clientData;
     RECT rc = BoxToRect(Ttk_PadBox(b, elementData->margins));
@@ -216,11 +216,11 @@ static const Ttk_ElementOptionSpec BorderElementOptions[] = {
 };
 
 static void BorderElementSize(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     paddingPtr->left = paddingPtr->right = GetSystemMetrics(SM_CXEDGE);
@@ -228,12 +228,12 @@ static void BorderElementSize(
 }
 
 static void BorderElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     BorderElement *border = (BorderElement *)elementRecord;
     RECT rc = BoxToRect(b);
@@ -275,11 +275,11 @@ static const Ttk_ElementOptionSpec FieldElementOptions[] = {
 };
 
 static void FieldElementSize(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     paddingPtr->left = paddingPtr->right = GetSystemMetrics(SM_CXEDGE);
@@ -287,12 +287,12 @@ static void FieldElementSize(
 }
 
 static void FieldElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder bg = Tk_Get3DBorderFromObj(tkwin, field->backgroundObj);
@@ -338,11 +338,11 @@ static const Ttk_ElementOptionSpec ButtonBorderElementOptions[] = {
 };
 
 static void ButtonBorderElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
@@ -370,12 +370,12 @@ static void ButtonBorderElementSize(
 }
 
 static void ButtonBorderElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
     int relief = TK_RELIEF_FLAT;
@@ -428,23 +428,23 @@ static const Ttk_ElementSpec ButtonBorderElementSpec = {
  */
 
 static void FocusElementSize(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     *paddingPtr = Ttk_UniformPadding(1);
 }
 
 static void FocusElementDraw(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     if (state & TTK_STATE_FOCUS) {
 	RECT rc = BoxToRect(b);
@@ -479,12 +479,12 @@ static const Ttk_ElementOptionSpec FillFocusElementOptions[] = {
 
 	/* @@@ FIX THIS */
 static void FillFocusElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     FillFocusElement *focus = (FillFocusElement *)elementRecord;
 
@@ -508,7 +508,7 @@ static void FillFocusElementDraw(
  */
 static void ComboboxFocusElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     if (state & TTK_STATE_READONLY) {
     	FillFocusElementDraw(clientData, elementRecord, tkwin, d, b, state);
@@ -559,11 +559,11 @@ static TroughClientData *TroughClientDataInit(Tcl_Interp *interp)
 
 static void TroughElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     TroughClientData *cd = (TroughClientData *)clientData;
     TkWinDCState dcState;
@@ -611,7 +611,7 @@ static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
 };
 
 static void ThumbElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
     int *widthPtr,
@@ -632,12 +632,12 @@ static void ThumbElementSize(
 }
 
 static void ThumbElementDraw(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     RECT rc = BoxToRect(b);
     TkWinDCState dcState;
@@ -676,7 +676,7 @@ static const Ttk_ElementOptionSpec SliderElementOptions[] = {
 };
 
 static void SliderElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     TCL_UNUSED(Tk_Window),
     int *widthPtr,
@@ -697,12 +697,12 @@ static void SliderElementSize(
 }
 
 static void SliderElementDraw(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     RECT rc = BoxToRect(b);
     TkWinDCState dcState;
@@ -739,11 +739,11 @@ static const Ttk_ElementOptionSpec TabElementOptions[] = {
 };
 
 static void TabElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     TabElement *tab = (TabElement *)elementRecord;
@@ -776,12 +776,12 @@ static void TabElementSize(
 }
 
 static void TabElementDraw(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
@@ -896,11 +896,11 @@ static const Ttk_ElementSpec TabElementSpec = {
 };
 
 static void ClientElementSize(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     TCL_UNUSED(Tk_Window),
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
 {
     paddingPtr->left = paddingPtr->right = GetSystemMetrics(SM_CXEDGE);
@@ -908,12 +908,12 @@ static void ClientElementSize(
 }
 
 static void ClientElementDraw(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    TCL_UNUSED(unsigned int))
+    TCL_UNUSED(Ttk_State))
 {
     RECT rc = BoxToRect(b);
     TkWinDCState dcState;
