@@ -56,7 +56,13 @@ ttk::bindMouseWheel TCombobox		{ ttk::combobox::Scroll %W }
 bind TCombobox <Shift-MouseWheel> {
     # Ignore the event
 }
-
+bind TCombobox <TouchpadScroll> {
+    lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+    # TouchpadScroll events fire about 60 times per second.
+    if {$deltaY != 0 && %# %% 15 == 0} {
+	ttk::combobox::Scroll %W [expr {$deltaY > 0 ? -1 : 1}]
+    }
+}
 bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
 
 ### Combobox listbox bindings.

@@ -3382,7 +3382,14 @@ Initialize(
 	visualObj = NULL;
     }
 
-    code = TkListCreateFrame(NULL, interp, cmd, 1, nameObj);
+    Tcl_Size objc;
+    Tcl_Obj **objv;
+
+    if (TCL_OK != Tcl_ListObjGetElements(interp, cmd, &objc, &objv)) {
+	return TCL_ERROR;
+    }
+    code = TkCreateFrame(NULL, interp, objc, objv,
+	    1, nameObj ? Tcl_GetString(nameObj) : NULL);
 
     Tcl_DecrRefCount(cmd);
 

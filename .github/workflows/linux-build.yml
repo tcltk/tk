@@ -113,7 +113,7 @@ jobs:
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
@@ -121,7 +121,7 @@ jobs:
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
         if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html

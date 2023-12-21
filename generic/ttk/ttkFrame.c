@@ -91,8 +91,8 @@ static Ttk_Padding FrameMargins(Frame *framePtr)
  */
 static int FrameSize(
     void *recordPtr,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *))
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *)) /* heightPtr */
 {
     Frame *framePtr = (Frame *)recordPtr;
     Ttk_SetMargins(framePtr->core.tkwin, FrameMargins(framePtr));
@@ -343,8 +343,8 @@ LabelframeLabelSize(Labelframe *lframePtr, int *widthPtr, int *heightPtr)
  */
 static int LabelframeSize(
     void *recordPtr,
-    TCL_UNUSED(int *),
-    TCL_UNUSED(int *))
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *)) /* heightPtr */
 {
     Labelframe *lframePtr = (Labelframe *)recordPtr;
     WidgetCore *corePtr = &lframePtr->core;
@@ -495,10 +495,10 @@ static void LabelframePlaceContent(void *recordPtr)
 }
 
 static int LabelRequest(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tcl_Size),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    TCL_UNUSED(void *), /* managerData */
+    TCL_UNUSED(Tcl_Size), /* index */
+    TCL_UNUSED(int), /* width */
+    TCL_UNUSED(int)) /* height */
 {
     return 1;
 }
@@ -512,14 +512,14 @@ static int LabelRequest(
  */
 static void LabelRemoved(
     void *managerData,
-    TCL_UNUSED(Tcl_Size))
+    TCL_UNUSED(Tcl_Size)) /* index */
 {
     Labelframe *lframe = (Labelframe *)managerData;
 
     lframe->label.labelWidget = 0;
 }
 
-static Ttk_ManagerSpec LabelframeManagerSpec = {
+static const Ttk_ManagerSpec LabelframeManagerSpec = {
     { "labelframe", Ttk_GeometryRequestProc, Ttk_LostContentProc },
     LabelframeSize,
     LabelframePlaceContent,

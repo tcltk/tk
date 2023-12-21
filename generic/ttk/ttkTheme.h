@@ -234,10 +234,8 @@ typedef struct {
     Tcl_Obj	*unused;
 } NullElement;
 
-MODULE_SCOPE void TtkNullElementSize
-	(void *, void *, Tk_Window, int *, int *, Ttk_Padding *);
-MODULE_SCOPE void TtkNullElementDraw
-	(void *, void *, Tk_Window, Drawable, Ttk_Box, Ttk_State);
+MODULE_SCOPE Ttk_ElementSizeProc TtkNullElementSize;
+MODULE_SCOPE Ttk_ElementDrawProc TtkNullElementDraw;
 MODULE_SCOPE const Ttk_ElementOptionSpec TtkNullElementOptions[];
 MODULE_SCOPE Ttk_ElementSpec ttkNullElementSpec;
 
@@ -335,7 +333,7 @@ TTKAPI Ttk_ImageSpec *TtkGetImageSpec(Tcl_Interp *, Tk_Window, Tcl_Obj *);
 TTKAPI Ttk_ImageSpec *TtkGetImageSpecEx(Tcl_Interp *, Tk_Window, Tcl_Obj *,
 					Tk_ImageChangedProc *, void *);
 TTKAPI void TtkFreeImageSpec(Ttk_ImageSpec *);
-TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Ttk_State);
+TTKAPI Tk_Image TtkSelectImage(Ttk_ImageSpec *, Tk_Window, Ttk_State);
 
 /*------------------------------------------------------------------------
  * +++ Miscellaneous enumerations.

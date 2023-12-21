@@ -490,7 +490,7 @@ FreeElementData(ElementData *elementData)
 
 static void GenericElementSize(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
@@ -530,11 +530,11 @@ static void GenericElementSize(
 
 static void GenericElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
     RECT rc;
@@ -644,11 +644,11 @@ static const Ttk_ElementSpec SpinboxArrowElementSpec = {
 
 static void ThumbElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     ElementData *elementData = (ElementData *)clientData;
     unsigned stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
@@ -764,11 +764,11 @@ static void TabElementSize(
 
 static void TabElementDraw(
     void *clientData,
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* elementRecord */
     Tk_Window tkwin,
     Drawable d,
     Ttk_Box b,
-    unsigned int state)
+    Ttk_State state)
 {
     Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
@@ -892,7 +892,7 @@ static const Ttk_StateTable tvpglyph_statemap[] =
 
 static void TreeIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     if (!(state & TTK_STATE_LEAF)) {
         GenericElementDraw(clientData,elementRecord,tkwin,d,b,state);
@@ -977,7 +977,7 @@ static void TextElementSize(
 
 static void TextElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     TextElement *element = elementRecord;
     ElementData *elementData = clientData;

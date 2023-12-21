@@ -825,7 +825,7 @@ proc ::tk::MenuNextEntry {menu count} {
     if {$last < 0} {
 	return
     }
-    set length [expr {[$menu index last]+1}]
+    set length [expr {$last+1}]
     set quitAfter $length
     set active [$menu index active]
     if {$active < 0} {
@@ -906,13 +906,12 @@ proc ::tk::MenuFind {w char} {
 	    }
 	    set last [$child index last]
 	    for {set i [$child cget -tearoff]} {$i <= $last} {incr i} {
-		if {[$child type $i] eq "separator"} {
+		if {([$child type $i] eq "separator") || ([$child entrycget $i -state] eq "disabled")} {
 		    continue
 		}
-		set char2 [string index [$child entrycget $i -label] \
-			[$child entrycget $i -underline]]
-		if {$char eq [string tolower $char2] || $char eq ""} {
-		    if {[$child entrycget $i -state] ne "disabled"} {
+		set underline [$child entrycget $i -underline]
+		if {$underline >= 0} {
+		    if {$char eq [string tolower [string index [$child entrycget $i -label] $underline]]} {
 			return $child
 		    }
 		}
@@ -1337,14 +1336,12 @@ proc ::tk_menuSetFocus {menu} {
 proc ::tk::GenerateMenuSelect {menu} {
     variable ::tk::Priv
 
-    if {$Priv(activeMenu) eq $menu \
-	    && $Priv(activeItem) eq [$menu index active]} {
-	return
+    if {$Priv(activeMenu) ne $menu \
+	    || $Priv(activeItem) ne [$menu index active]} {
+	set Priv(activeMenu) $menu
+	set Priv(activeItem) [$menu index active]
+	event generate $menu <<MenuSelect>>
     }
-
-    set Priv(activeMenu) $menu
-    set Priv(activeItem) [$menu index active]
-    event generate $menu <<MenuSelect>>
 }
 
 # ::tk_popup --
