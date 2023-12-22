@@ -133,12 +133,12 @@ test canvas-1.32 {configuration options: bad value for "insertwidth"} -body {
     .c configure -insertwidth 6x
 } -returnCodes error -result {bad screen distance "6x"}
 test canvas-1.33 {configuration options: good value for "relief"} -body {
-    .c configure -relief groove
+    .c configure -relief g
     .c cget -relief
 } -result {groove}
 test canvas-1.34 {configuration options: bad value for "relief"} -body {
-    .c configure -relief 1.5
-} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+    .c configure -relief r
+} -returnCodes error -result {bad relief "r": must be flat, groove, raised, ridge, solid, or sunken}
 test canvas-1.35 {configuration options: good value for "selectbackground"} -body {
     .c configure -selectbackground #110022
     .c cget -selectbackground
