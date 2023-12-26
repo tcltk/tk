@@ -338,11 +338,6 @@ the \fBactivate\fR option to deactivate all the entries in the
 menu.  In most cases the specification of \fB{}\fR causes
 nothing to happen in the widget command.
 .TP 12
-\fBnone\fR
-.
-Same as \fB{}\fR
-This form may not be abbreviated.
-.TP 12
 \fB@\fIx\fB,\fIy\fR
 .
 Indicates the entry that covers the point in the menu's window specified
@@ -382,7 +377,7 @@ The following widget commands are possible for menu widgets:
 Change the state of the entry indicated by \fIindex\fR to \fBactive\fR
 and redisplay it using its active colors.
 Any previously-active entry is deactivated.  If \fIindex\fR
-is specified as \fB{}\fR or \fBnone\fR, or if the specified entry is
+is specified as \fB{}\fR, or if the specified entry is
 disabled, then the menu ends up with no active entry.
 Returns an empty string.
 .TP
@@ -469,7 +464,7 @@ equivalent to \fB{}\fR.
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the numerical index corresponding to \fIindex\fR, or
-\fB{}\fR if \fIindex\fR was specified as \fB{}\fR or \fBnone\fR.
+\fB{}\fR if \fIindex\fR was specified as \fB{}\fR.
 .TP
 \fIpathName \fBinsert \fIindex type \fR?\fIid\fR? ?\fIoption value option value ...\fR?
 .
