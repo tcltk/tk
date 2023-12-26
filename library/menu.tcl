@@ -501,7 +501,7 @@ proc ::tk::MenuMotion {menu x y state} {
 		} else {
 		    set Priv(menuDeactivatedTimer) \
 			[after $delay [list catch [list
-			    $menu postcascade {}]]]
+			    $menu postcascade none]]]
 		}
 	    }
 	}
