@@ -341,7 +341,7 @@ nothing to happen in the widget command.
 \fBnone\fR
 .
 Same as \fB{}\fR
-This form may not be abbreviated.
+This form is deprecated and may not be abbreviated.
 .TP 12
 \fB@\fIx\fB,\fIy\fR
 .
