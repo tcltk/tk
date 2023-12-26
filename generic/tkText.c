@@ -2841,7 +2841,7 @@ TextPushUndoAction(
 	    Tcl_NewStringObj("set", 3));
     markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
     textPtr->sharedTextPtr->undoMarkId++;
-    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TCL_SIZE_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
+    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TCL_SIZE_MODIFIER "d", textPtr->sharedTextPtr->undoMarkId);
     strcat(lMarkName, stringUndoMarkId);
     strcat(rMarkName, stringUndoMarkId);
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,

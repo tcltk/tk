@@ -2775,7 +2775,7 @@ static int TreeviewHorribleIdentify(
     if (dColumnNumber < 0) {
 	goto done;
     }
-    snprintf(dcolbuf, sizeof(dcolbuf), "#%" TCL_SIZE_MODIFIER "u", dColumnNumber);
+    snprintf(dcolbuf, sizeof(dcolbuf), "#%" TCL_SIZE_MODIFIER "d", dColumnNumber);
 
     if (Ttk_BoxContains(tv->tree.headingArea,x,y)) {
 	if (-HALO <= x1 - x  && x1 - x <= HALO) {
@@ -2882,7 +2882,7 @@ static int TreeviewIdentifyCommand(
 
 	case I_COLUMN :
 	    if (colno >= 0) {
-		Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "u", colno));
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "d", colno));
 	    }
 	    break;
 
@@ -2890,7 +2890,7 @@ static int TreeviewIdentifyCommand(
 	    if (item && colno >= 0) {
 		Tcl_Obj *elem[2];
 		elem[0] = ItemID(tv, item);
-		elem[1] = Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "u", colno);
+		elem[1] = Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "d", colno);
 		Tcl_SetObjResult(interp, Tcl_NewListObj(2, elem));
 	    }
 	    break;
