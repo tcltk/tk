@@ -2186,7 +2186,7 @@ GetMenuIndex(
 	*indexPtr = TCL_INDEX_NONE;
 	return TCL_OK;
     }
-#if !defined(TK_NO_DEPRECATED) && TK_MAJOR_VERSION < 9
+#if !defined(TK_NO_DEPRECATED)
     if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
 	*indexPtr = TCL_INDEX_NONE;
 	return TCL_OK;
