@@ -431,7 +431,7 @@ TextCoords(
 	return TCL_OK;
     } else if (objc > 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "u", objc));
+		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "d", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
 	return TCL_ERROR;
     }
@@ -442,7 +442,7 @@ TextCoords(
 	    return TCL_ERROR;
 	} else if (objc != 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "u", objc));
+		    "wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "d", objc));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
 	    return TCL_ERROR;
 	}
