@@ -279,7 +279,7 @@ test unixfont-8.4 {InitFont procedure: classify characters} {x11 failsOnUbuntu f
 test unixfont-8.5 {InitFont procedure: setup widths of normal chars} x11 {
     font metrics $courier -fixed
 } 1
-test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 failsOnUbuntu} {
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
     incr x [font measure $courier "\002"]   ;# 4
@@ -307,7 +307,7 @@ test unixfont-8.11 {InitFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbuntu} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -316,7 +316,7 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbu
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 failsOnUbuntu} {
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
