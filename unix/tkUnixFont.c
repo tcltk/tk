@@ -2021,14 +2021,14 @@ FindSubFontForChar(
 	ch = 0xFFFD;
     }
 
+    if (FontMapLookup(&fontPtr->controlSubFont, ch)) {
+	return &fontPtr->controlSubFont;
+    }
+
     for (i = 0; i < fontPtr->numSubFonts; i++) {
 	if (FontMapLookup(&fontPtr->subFontArray[i], ch)) {
 	    return &fontPtr->subFontArray[i];
 	}
-    }
-
-    if (FontMapLookup(&fontPtr->controlSubFont, ch)) {
-	return &fontPtr->controlSubFont;
     }
 
     /*
