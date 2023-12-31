@@ -312,7 +312,7 @@ test unixfont-8.11 {InitFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 withoutXft} {
+test unixfont-9.1 {2 chars substituted in inserted text} {x11 withoutXft} {
 # Constrained by withoutXft because with Xft the width of \a (aka \007 the
 # bell character) depends on which fonts are installed and get substituted
 # by Tk.
@@ -324,7 +324,7 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 withoutXft
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 withoutXft} {
+test unixfont-9.2 {4 chars substituted in inserted text} {x11 withoutXft} {
 # Constrained by withoutXft because with Xft the width of \001 depends
 # on which fonts are installed and get substituted by Tk.
     .b.c dchars $t 0 end
