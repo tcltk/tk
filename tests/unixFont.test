@@ -16,9 +16,6 @@ package require tcltest 2.2
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
-testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 if {[tk windowingsystem] eq "x11"} {
     set withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
     if {$withXft} {
@@ -268,7 +265,13 @@ test unixfont-8.3 {InitFont procedure: can't parse info from name} x11 {
     catch {unset fontArray}
     set result
 } {-family -overstrike -size -slant -underline -weight}
-test unixfont-8.4 {InitFont procedure: classify characters} {x11 failsOnUbuntu failsOnXQuarz} {
+test unixfont-8.4 {InitFont procedure: classify characters} {x11 nonPortable} {
+# Constrained by nonPortable because this test highly relies on fonts availability.
+# - without Xft, I couldn't find any font featuring a glyph of 6 charwidths
+#   for character \u4000. The 'unifont' package provides this glyph but the
+#   width of \u4000 is only 2 character widths (which seems visually fine).
+# - with Xft the problem is identical for \u4000, and moreover the width
+#   of, say, \002 depends on which fonts are installed.
     set x 0
     incr x [font measure $courier "\u4000"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
@@ -279,7 +282,9 @@ test unixfont-8.4 {InitFont procedure: classify characters} {x11 failsOnUbuntu f
 test unixfont-8.5 {InitFont procedure: setup widths of normal chars} x11 {
     font metrics $courier -fixed
 } 1
-test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 failsOnUbuntu} {
+test unixfont-8.6 {InitFont procedure: setup widths of special chars} {x11 withoutXft} {
+# Constrained by withoutXft because with Xft the width of, say, \002 depends
+# on which fonts are installed and get substituted by Tk.
     set x 0
     incr x [font measure $courier "\001"]   ;# 4
     incr x [font measure $courier "\002"]   ;# 4
@@ -307,7 +312,10 @@ test unixfont-8.11 {InitFont procedure: XA_UNDERLINE_POSITION was 0} x11 {
     set x {}
 } {}
 
-test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbuntu} {
+test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 withoutXft} {
+# Constrained by withoutXft because with Xft the width of \a (aka \007 the
+# bell character) depends on which fonts are installed and get substituted
+# by Tk.
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\a0"
     set x {}
@@ -316,7 +324,9 @@ test unixfont-9.1 {GetControlCharSubst procedure: 2 chars subst} {x11 failsOnUbu
     lappend x [.b.c index $t @[expr $ax*2],0]
     lappend x [.b.c index $t @[expr $ax*3],0]
 } {0 1 1 2}
-test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 failsOnUbuntu} {
+test unixfont-9.2 {GetControlCharSubst procedure: 4 chars subst} {x11 withoutXft} {
+# Constrained by withoutXft because with Xft the width of \001 depends
+# on which fonts are installed and get substituted by Tk.
     .b.c dchars $t 0 end
     .b.c insert $t 0 "0\0010"
     set x {}
