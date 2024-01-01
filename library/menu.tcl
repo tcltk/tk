@@ -658,7 +658,7 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	}
     } else {
 	set activeindex [$w index active]
-	if {$Priv(popup) eq "" || (($activeindex ne "none") && ($activeindex >= 0)} {
+	if {($Priv(popup) eq "") || (($activeindex ne "none") && ($activeindex >= 0))} {
 	    MenuUnpost $w
 	}
 	uplevel #0 [list $w invoke active]
