@@ -770,6 +770,7 @@ static void TabElementDraw(
     int partId = elementData->info->partId;
     int isSelected = (state & TTK_STATE_SELECTED);
     int stateId = Ttk_StateTableLookup(elementData->info->statemap, state);
+    RECT rc = BoxToRect(b);
 
     if (mainInfoPtr != NULL) {
 	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
@@ -793,7 +794,7 @@ static void TabElementDraw(
 	    break;
     }
 
-    RECT rc = BoxToRect(b);
+    rc = BoxToRect(b);
 
     if (!InitElementData(elementData, tkwin, d))
 	return;
