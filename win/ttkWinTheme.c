@@ -798,7 +798,7 @@ static void TabElementDraw(
     }
 }
 
-static const Ttk_ElementSpec TabElementSpec = {
+static Ttk_ElementSpec TabElementSpec = {
     TK_STYLE_VERSION_2,
     sizeof(TabElement),
     TabElementOptions,
