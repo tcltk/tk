@@ -31,11 +31,11 @@ jobs:
           - "--disable-xft"
           - "--disable-xss"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.6
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -121,7 +121,7 @@ jobs:
           - "no"
           - "mem"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
