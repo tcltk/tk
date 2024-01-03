@@ -24,6 +24,7 @@ jobs:
         config:
           - "OPTS=none"
           - "OPTS=symbols"
+          - "OPTS=static,staticpkg"
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v4
