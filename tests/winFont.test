@@ -354,7 +354,7 @@ test winfont-6.1 {Tk_DrawChars procedure: loop test} -constraints win -setup {
 } -result {}
 
 
-test winfont-7.1 {AllocFont procedure: use old font} -constraints win -setup {
+test winfont-7.1 {InitFont procedure: use old font} -constraints win -setup {
     destroy .c
 } -setup {
     catch {font delete xyz}
@@ -366,17 +366,17 @@ test winfont-7.1 {AllocFont procedure: use old font} -constraints win -setup {
     destroy .c
     font delete xyz
 } -result {}
-test winfont-7.2 {AllocFont procedure: extract info from logfont} -constraints {
+test winfont-7.2 {InitFont procedure: extract info from logfont} -constraints {
     win
 } -body {
     font actual {arial 10 bold italic underline overstrike}
 } -result {-family Arial -size 10 -weight bold -slant italic -underline 1 -overstrike 1}
-test winfont-7.3 {AllocFont procedure: extract info from textmetric} -constraints {
+test winfont-7.3 {InitFont procedure: extract info from textmetric} -constraints {
     win
 } -body {
     font metric {arial 10 bold italic underline overstrike} -fixed
 } -result 0
-test winfont-7.4 {AllocFont procedure: extract info from textmetric} -constraints {
+test winfont-7.4 {InitFont procedure: extract info from textmetric} -constraints {
     win
 } -body {
     font metric systemfixed -fixed
