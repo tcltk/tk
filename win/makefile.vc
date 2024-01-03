@@ -649,7 +649,8 @@ $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
-$(TMP_DIR)\tktest.res: $(TMP_DIR)\tktest.exe.manifest
+$(TMP_DIR)\tktest.res: $(TMP_DIR)\tktest.exe.manifest $(RCDIR)\wish.rc
+	$(RESCMD) $(RCDIR)\wish.rc
 
 .SUFFIXES:
 .SUFFIXES:.c .rc
