@@ -632,8 +632,8 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	MenuUnpost $w
     } elseif {[$w cget -type] eq "menubar"} {
 	$w postcascade {}
-	set active [$w index active]
-	set isCascade [string equal [$w type $active] "cascade"]
+	set activeindex [$w index active]
+	set isCascade [string equal [$w type $activeindex] "cascade"]
 
 	# Only de-activate the active item if it's a cascade; this prevents
 	# the annoying "activation flicker" you otherwise get with
@@ -651,11 +651,10 @@ proc ::tk::MenuInvoke {w buttonRelease} {
 	# but not recommended)
 
 	if { !$isCascade } {
-	    uplevel #0 [list $w invoke $active]
+	    uplevel #0 [list $w invoke $activeindex]
 	}
     } else {
-	set active [$w index active]
-	if {$Priv(popup) eq "" || $active >= 0} {
+	if {$Priv(popup) eq "" || [$w index active] >= 0} {
 	    MenuUnpost $w
 	}
 	uplevel #0 [list $w invoke active]
@@ -827,11 +826,11 @@ proc ::tk::MenuNextEntry {menu count} {
     }
     set length [expr {$last+1}]
     set quitAfter $length
-    set active [$menu index active]
-    if {$active < 0} {
+    set activeindex [$menu index active]
+    if {$actactiveindexive < 0} {
 	set i 0
     } else {
-	set i [expr {$active + $count}]
+	set i [expr {$activeindex + $count}]
     }
     while {1} {
 	if {$quitAfter <= 0} {
@@ -853,7 +852,7 @@ proc ::tk::MenuNextEntry {menu count} {
 		break
 	    }
 	}
-	if {$i == $active} {
+	if {$i == $activeindex} {
 	    return
 	}
 	incr i $count
