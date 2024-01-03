@@ -138,7 +138,7 @@ proc ::tk::MenuDup {src dst type} {
     # Copy the meny entries, if any
 
     set last [$src index last]
-    if {$last ne "none" && $last >= 0} {
+    if {$last ne "none"} {
 	for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
 	    set cmd [list $dst add [$src type $i]]
 	    foreach option [$src entryconfigure $i]  {
