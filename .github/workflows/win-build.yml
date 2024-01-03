@@ -23,7 +23,6 @@ jobs:
       matrix:
         config:
           - "OPTS=none"
-          - "OPTS=static"
           - "OPTS=symbols"
     steps:
       - name: Checkout Tk
