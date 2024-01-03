@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     - "less_tests_constraints"
     tags:
@@ -21,15 +22,15 @@ jobs:
     # Using powershell means we need to explicitly stop on failure
     strategy:
       matrix:
-        symbols:
-          - "none"
-          - "symbols"
+        config:
+          - "OPTS=none"
+          - "OPTS=symbols"
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.6
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -45,32 +46,32 @@ jobs:
           mkdir install
           cd install
           echo "INSTALLDIR=`pwd`" >> $GITHUB_ENV
-      - name: Build Tcl (OPTS=${{ matrix.symbols }})
+      - name: Build Tcl (${{ matrix.config }})
         run: |
-          &nmake -f makefile.vc release install OPTS=${{ matrix.symbols }}
+          &nmake -f makefile.vc release install ${{ matrix.config }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
         working-directory: tcl/win
-      - name: Build Tk (OPTS=${{ matrix.symbols }})
+      - name: Build Tk (${{ matrix.config }})
         run: |
-          &nmake -f makefile.vc all OPTS=${{ matrix.symbols }}
+          &nmake -f makefile.vc all ${{ matrix.config }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-      - name: Build Test Harness (OPTS=${{ matrix.symbols }})
+      - name: Build Test Harness (${{ matrix.config }})
         run: |
-          &nmake -f makefile.vc tktest OPTS=${{ matrix.symbols }}
+          &nmake -f makefile.vc tktest ${{ matrix.config }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-      - name: Run Tk Tests (OPTS=${{ matrix.symbols }})
+      - name: Run Tk Tests (${{ matrix.config }})
         run: |
-          nmake -f makefile.vc test-classic OPTS=${{ matrix.symbols }} | tee out-classic.txt || {
+          nmake -f makefile.vc test-classic ${{ matrix.config }} | tee out-classic.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
-          nmake -f makefile.vc test-ttk OPTS=${{ matrix.symbols }} | tee out-ttk.txt || {
+          nmake -f makefile.vc test-ttk ${{ matrix.config }} | tee out-ttk.txt || {
             echo "::error::Failure during Test"
             exit 1
           }
@@ -86,15 +87,15 @@ jobs:
           CI_BUILD_WITH_MSVC: 1
         shell: bash
         timeout-minutes: 15
-      - name: Build Help (OPTS=${{ matrix.symbols }})
+      - name: Build Help (${{ matrix.config }})
         run: |
-          &nmake -f makefile.vc htmlhelp OPTS=${{ matrix.symbols }}
+          &nmake -f makefile.vc htmlhelp ${{ matrix.config }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
-      - name: Install (OPTS=${{ matrix.symbols }})
+      - name: Install (${{ matrix.config }})
         run: |
-          &nmake -f makefile.vc install OPTS=${{ matrix.symbols }}
+          &nmake -f makefile.vc install ${{ matrix.config }}
           if ($lastexitcode -ne 0) {
              throw "nmake exit code: $lastexitcode"
           }
@@ -106,10 +107,11 @@ jobs:
         working-directory: win
     strategy:
       matrix:
-        symbols:
-          - "no"
-          - "mem"
-          - "all"
+        config:
+          - ""
+          - "--enable-config=mem"
+          - "--enable-config=all"
+          - "--disable-shared"
     steps:
       - name: Install MSYS2
         uses: msys2/setup-msys2@v2
@@ -118,7 +120,7 @@ jobs:
           install: git mingw-w64-x86_64-toolchain make
       - name: Checkout Tk
         uses: actions/checkout@v4
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.6
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -131,9 +133,9 @@ jobs:
           mkdir "${HOME}/install_dir"
           echo "INSTALL_DIR=${HOME}/install_dir" >> $GITHUB_ENV
         working-directory: generic
-      - name: Configure and Build Tcl
+      - name: Configure and Build Tcl (${{ matrix.config }})
         run: |
-          ./configure ${CFGOPT} "--prefix=$INSTALL_DIR" || {
+          ./configure $CFGOPT "--prefix=$INSTALL_DIR" || {
             cat config.log
             echo "::warning::Failure during Tcl Configure"
             exit 1
@@ -144,17 +146,17 @@ jobs:
           }
           echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
         env:
-          CFGOPT: --enable-64bit --enable-symbols=${{ matrix.symbols }}
+          CFGOPT: --enable-64bit ${{ matrix.config }}
         working-directory: tcl/win
-      - name: Configure Tk (symbols=${{ matrix.symbols }})
+      - name: Configure Tk (${{ matrix.config }})
         run: |
-          ./configure ${CFGOPT} "--prefix=$HOME/INSTALL_DIR" "--with-tcl=$TCL_CONFIG_PATH" || {
+          ./configure $CFGOPT "--prefix=$HOME/INSTALL_DIR" "--with-tcl=$TCL_CONFIG_PATH" || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
           }
         env:
-          CFGOPT: --enable-64bit --enable-symbols=${{ matrix.symbols }}
+          CFGOPT: --enable-64bit ${{ matrix.config }}
       - name: Build Tk
         run: |
           make all tktest || {
