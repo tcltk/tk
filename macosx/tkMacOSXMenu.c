@@ -935,7 +935,7 @@ TkpPostMenu(
     int x, int y,		/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
 				 * entry, will be located. */
-    int index)
+    Tcl_Size index)
 {
     int result;
     Tk_Window realWin = menuPtr->tkwin;
@@ -1029,7 +1029,7 @@ int
 TkpPostTearoffMenu(
     TCL_UNUSED(Tcl_Interp *),	/* The interpreter this menu lives in */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x, int y, int index)	/* The screen coordinates where the top left
+    int x, int y, Tcl_Size index)	/* The screen coordinates where the top left
 				 * corner of the menu, or of the specified
 				 * entry, will be located. */
 {
@@ -1057,7 +1057,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index < 0 || (Tcl_Size)index >= menuPtr->numEntries) {
+    if (index < 0 || index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1402,8 +1402,8 @@ TkpComputeStandardMenuGeometry(
     Tk_FontMetrics menuMetrics, entryMetrics;
     int modifierCharWidth, menuModifierCharWidth;
     int x, y, modifierWidth, labelWidth, indicatorSpace;
-    int windowWidth, windowHeight, accelWidth;
-    int i, maxWidth;
+    int windowWidth, maxWidth, windowHeight, accelWidth;
+    Tcl_Size i;
     int entryWidth, maxIndicatorSpace, borderWidth, activeBorderWidth;
     TkMenuEntry *mePtr;
     int haveAccel = 0;
@@ -1439,7 +1439,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetFontMetrics(menuFont, &menuMetrics);
     menuModifierCharWidth = ModifierCharWidth(menuFont);
 
-    for (i = 0; i < (int) menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == CASCADE_ENTRY || mePtr->accelLength > 0) {
 	    haveAccel = 1;
@@ -1447,7 +1447,7 @@ TkpComputeStandardMenuGeometry(
 	}
     }
 
-    for (i = 0; i < (int) menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->type == TEAROFF_ENTRY) {
 	    continue;
@@ -1671,10 +1671,10 @@ void
 RecursivelyClearActiveMenu(
     TkMenu *menuPtr)		/* The menu to reset. */
 {
-    int i;
+    Tcl_Size i;
 
     TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
-    for (i = 0; i < (int) menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	TkMenuEntry *mePtr = menuPtr->entries[i];
 
 	if (mePtr->type == CASCADE_ENTRY

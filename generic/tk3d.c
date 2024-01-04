@@ -639,8 +639,7 @@ Tk_GetReliefFromObj(
  *
  * Results:
  *	A standard Tcl return value. If all goes well then *reliefPtr is
- *	filled in with one of the values TK_RELIEF_RAISED, TK_RELIEF_FLAT, or
- *	TK_RELIEF_SUNKEN.
+ *	filled in with one of the values TK_RELIEF_*
  *
  * Side effects:
  *	None.
@@ -656,29 +655,37 @@ Tk_GetRelief(
 {
     char c;
     size_t length;
+    int relief;
 
     c = name[0];
     length = strlen(name);
     if ((c == 'f') && (strncmp(name, "flat", length) == 0)) {
-	*reliefPtr = TK_RELIEF_FLAT;
-    } else if ((c == 'g') && (strncmp(name, "groove", length) == 0)
-	    && (length >= 2)) {
-	*reliefPtr = TK_RELIEF_GROOVE;
+	relief = TK_RELIEF_FLAT;
+    } else if ((c == 'g') && (strncmp(name, "groove", length) == 0)) {
+	relief = TK_RELIEF_GROOVE;
     } else if ((c == 'r') && (strncmp(name, "raised", length) == 0)
 	    && (length >= 2)) {
-	*reliefPtr = TK_RELIEF_RAISED;
-    } else if ((c == 'r') && (strncmp(name, "ridge", length) == 0)) {
-	*reliefPtr = TK_RELIEF_RIDGE;
-    } else if ((c == 's') && (strncmp(name, "solid", length) == 0)) {
-	*reliefPtr = TK_RELIEF_SOLID;
-    } else if ((c == 's') && (strncmp(name, "sunken", length) == 0)) {
-	*reliefPtr = TK_RELIEF_SUNKEN;
+	relief = TK_RELIEF_RAISED;
+    } else if ((c == 'r') && (strncmp(name, "ridge", length) == 0)
+	    && (length >= 2)) {
+	relief = TK_RELIEF_RIDGE;
+    } else if ((c == 's') && (strncmp(name, "solid", length) == 0)
+	    && (length >= 2)) {
+	relief = TK_RELIEF_SOLID;
+    } else if ((c == 's') && (strncmp(name, "sunken", length) == 0)
+	    && (length >= 2)) {
+	relief = TK_RELIEF_SUNKEN;
     } else {
-	Tcl_SetObjResult(interp,
-		Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
-		name, "flat, groove, raised, ridge, solid, or sunken"));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", NULL);
+	if (interp) {
+	    Tcl_SetObjResult(interp,
+		    Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
+		    name, "flat, groove, raised, ridge, solid, or sunken"));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", NULL);
+	}
 	return TCL_ERROR;
+    }
+    if (reliefPtr) {
+	*reliefPtr = relief;
     }
     return TCL_OK;
 }

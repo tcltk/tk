@@ -108,7 +108,7 @@ USING_PRE87_TCL = 1
 # Extra makefile options processing for non-standard OPTS values ...
 !if "$(OPTS)" == "" || [nmakehlp -f "$(OPTS)" "none"]
 TTK_SQUARE_WIDGET = 0
-TK_EMBED_SCRIPTS  = $(STATIC_BUILD)
+TK_EMBED_SCRIPTS  = 1
 !else
 !if [nmakehlp -f "$(OPTS)" "square"]
 !message *** Include ttk square demo widget
@@ -121,7 +121,7 @@ TTK_SQUARE_WIDGET   = 0
 TK_EMBED_SCRIPTS = 0
 !else
 !message *** Tk script library will be appended to the binary.
-TK_EMBED_SCRIPTS = $(STATIC_BUILD)
+TK_EMBED_SCRIPTS = 1
 !endif
 !endif
 
@@ -138,7 +138,7 @@ TK_NO_DEPRECATED = 1
 
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
-TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
+TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
 
 WISHOBJS = \
@@ -153,7 +153,8 @@ TKTESTOBJS = \
 	$(TMP_DIR)\testMain.obj \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\tkTest.obj \
-	$(TMP_DIR)\tkWinTest.obj
+	$(TMP_DIR)\tkWinTest.obj \
+	$(TMP_DIR)\tktest.res
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
@@ -380,9 +381,6 @@ libtkzip: setup $(TKSCRIPTZIP)
 embed:    setup $(WISH) $(WISHSCRIPTZIP)
 	@copy /y /b "$(WISH)"+"$(WISHSCRIPTZIP)" "$(WISH)"
 !else
-# Note this is currently dead code as TK_EMBED_SCRIPTS is always 0
-# for non-static builds as the C code does not currently setup up
-# a VFS for a non-static wish.
 embed:    setup $(TKLIB) $(TKSCRIPTZIP)
 	@copy /y /b "$(TKLIB)"+"$(TKSCRIPTZIP)" "$(TKLIB)"
 !endif
@@ -727,6 +725,7 @@ $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
+$(TMP_DIR)\tktest.res: $(TMP_DIR)\wish.exe.manifest
 
 .SUFFIXES:
 .SUFFIXES:.c .rc

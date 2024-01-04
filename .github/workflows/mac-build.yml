@@ -20,7 +20,7 @@ jobs:
         shell: bash
         working-directory: tk/macosx
     steps:
-      - name: Check out Tk
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
@@ -72,7 +72,7 @@ jobs:
         shell: bash
         working-directory: tk/unix
     steps:
-      - name: Check out Tk
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
