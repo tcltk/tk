@@ -119,7 +119,7 @@ TTK_SQUARE_WIDGET   = 0
 
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
-TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
+TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
 
 WISHOBJS = \
@@ -582,12 +582,6 @@ $(TMP_DIR)\wish.exe.manifest: $(WIN_DIR)\wish.exe.manifest.in
 @TK_WIN_VERSION@  $(DOTVERSION).0.0
 <<
 
-$(TMP_DIR)\tktest.exe.manifest: $(WIN_DIR)\tktest.exe.manifest.in
-	@nmakehlp -s << $** >$@
-@MACHINE@	  $(MACHINE:IX86=X86)
-@TK_WIN_VERSION@  $(DOTVERSION).0.0
-<<
-
 #---------------------------------------------------------------------
 # Generate the source dependencies.  Having dependency rules will
 # improve incremental build accuracy without having to resort to a
@@ -649,7 +643,7 @@ $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
-$(TMP_DIR)\tktest.res: $(TMP_DIR)\tktest.exe.manifest
+$(TMP_DIR)\tktest.res: $(TMP_DIR)\wish.exe.manifest
 
 .SUFFIXES:
 .SUFFIXES:.c .rc
