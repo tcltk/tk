@@ -138,7 +138,7 @@ TK_NO_DEPRECATED = 1
 
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
-TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
+TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
 
 WISHOBJS = \
@@ -153,7 +153,8 @@ TKTESTOBJS = \
 	$(TMP_DIR)\testMain.obj \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\tkTest.obj \
-	$(TMP_DIR)\tkWinTest.obj
+	$(TMP_DIR)\tkWinTest.obj \
+	$(TMP_DIR)\tktest.res
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
@@ -719,6 +720,7 @@ $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
+$(TMP_DIR)\tktest.res: $(TMP_DIR)\wish.exe.manifest
 
 .SUFFIXES:
 .SUFFIXES:.c .rc
