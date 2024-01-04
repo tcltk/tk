@@ -23,7 +23,7 @@ jobs:
         compiler:
           - "gcc"
           - "clang"
-        cfgopt:
+        config:
           - ""
           - "CFLAGS=-DTK_NO_DEPRECATED=1"
           - "--disable-shared"
@@ -31,11 +31,11 @@ jobs:
           - "--disable-xss"
           - "--enable-symbols"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
+      - name: Checkout Tcl 8.6
         uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
@@ -52,9 +52,9 @@ jobs:
           echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: ${{ matrix.cfgopt }}
+          CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
-          OPTS: ${{ matrix.compiler }}${{ matrix.cfgopt }}
+          OPTS: ${{ matrix.compiler }}${{ matrix.config }}
       - name: Configure and Build Tcl
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
@@ -68,7 +68,7 @@ jobs:
           }
           echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
         working-directory: tcl/unix
-      - name: Configure (opts=${{ matrix.cfgopt }})
+      - name: Configure (opts=${{ matrix.config }})
         run: |
           ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
@@ -130,12 +130,12 @@ jobs:
       matrix:
         compiler:
           - "gcc"
-        cfgopt:
+        config:
           - ""
           - "--disable-xft"
           - "--enable-symbols"
     steps:
-      - name: Checkout
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
@@ -154,7 +154,7 @@ jobs:
           echo "CC=$COMPILER" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: ${{ matrix.cfgopt }}
+          CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
       - name: Configure and Build Tcl
         run: |
@@ -169,7 +169,7 @@ jobs:
           }
           echo "TCL_CONFIG_PATH=`pwd`" >> $GITHUB_ENV
         working-directory: tcl/unix
-      - name: Configure ${{ matrix.cfgopt }}
+      - name: Configure ${{ matrix.config }}
         run: |
           ./configure $CFGOPT --with-tcl=$TCL_CONFIG_PATH "--prefix=$HOME/install dir" || {
             cat config.log
