@@ -323,11 +323,11 @@ enum options {
 static int		CloneMenu(TkMenu *menuPtr, Tcl_Obj *newMenuName,
 			    Tcl_Obj *newMenuTypeString);
 static int		ConfigureMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureMenuCloneEntries(TkMenu *menuPtr, int index,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureMenuEntry(TkMenuEntry *mePtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DeleteMenuCloneEntries(TkMenu *menuPtr,
 			    int first, int last);
 static void		DestroyMenuHashTable(void *clientData,
@@ -342,7 +342,7 @@ static int		MenuDoYPosition(Tcl_Interp *interp,
 static int		MenuDoXPosition(Tcl_Interp *interp,
 			    TkMenu *menuPtr, Tcl_Obj *objPtr);
 static int		MenuAddOrInsert(Tcl_Interp *interp,
-			    TkMenu *menuPtr, Tcl_Obj *indexPtr, int objc,
+			    TkMenu *menuPtr, Tcl_Obj *indexPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		MenuCmdDeletedProc(void *clientData);
 static TkMenuEntry *	MenuNewEntry(TkMenu *menuPtr, Tcl_Size index, int type);
@@ -401,7 +401,8 @@ Tk_MenuObjCmd(
     Tk_Window newWin;
     TkMenu *menuPtr;
     TkMenuReferences *menuRefPtr;
-    int i, index, toplevel;
+    Tcl_Size i;
+    int index, toplevel;
     const char *windowName;
     static const char *const typeStringList[] = {"-type", NULL};
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
@@ -1563,7 +1564,7 @@ ConfigureMenu(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkMenu *menuPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     int i;
@@ -1668,7 +1669,7 @@ ConfigureMenu(
 
 	    Tcl_EventuallyFree(menuListPtr->entries[0], DestroyMenuEntry);
 
-	    for (i = 0; i < (int)menuListPtr->numEntries - 1; i++) {
+	    for (i = 0; i < menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
 		menuListPtr->entries[i]->index = i;
 	    }
@@ -1687,7 +1688,7 @@ ConfigureMenu(
 	 * parent.
 	 */
 
-	for (i = 0; i < (int)menuListPtr->numEntries; i++) {
+	for (i = 0; i < menuListPtr->numEntries; i++) {
 	    TkMenuEntry *mePtr;
 
 	    mePtr = menuListPtr->entries[i];
@@ -1944,7 +1945,7 @@ static int
 ConfigureMenuEntry(
     TkMenuEntry *mePtr,/* Information about menu entry; may or may
 				 * not already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     TkMenu *menuPtr = mePtr->menuPtr;
@@ -2007,7 +2008,7 @@ static int
 ConfigureMenuCloneEntries(
     TkMenu *menuPtr,		/* Information about whole menu. */
     int index,			/* Index of mePtr within menuPtr's entries. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Arguments. */
 {
     TkMenuEntry *mePtr;
@@ -2154,7 +2155,7 @@ GetMenuIndex(
 				 * *after* last entry. */
     Tcl_Size *indexPtr)		/* Where to store converted index. */
 {
-    int i;
+    Tcl_Size i;
     const char *string;
     Tcl_HashEntry *entryPtr;
 
@@ -2184,6 +2185,12 @@ GetMenuIndex(
 	*indexPtr = TCL_INDEX_NONE;
 	return TCL_OK;
     }
+#if !defined(TK_NO_DEPRECATED)
+    if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
+	*indexPtr = TCL_INDEX_NONE;
+	return TCL_OK;
+    }
+#endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
@@ -2199,7 +2206,7 @@ GetMenuIndex(
         return TCL_OK;
     }
 
-    for (i = 0; i < (int)menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	Tcl_Obj *labelPtr = menuPtr->entries[i]->labelPtr;
 	const char *label = (labelPtr == NULL) ? NULL : Tcl_GetString(labelPtr);
 
@@ -2379,7 +2386,7 @@ MenuAddOrInsert(
     TkMenu *menuPtr,		/* Widget in which to create new entry. */
     Tcl_Obj *indexPtr,		/* Object describing index at which to insert.
 				 * NULL means insert at end. */
-    int objc,			/* Number of elements in objv. */
+    Tcl_Size objc,			/* Number of elements in objv. */
     Tcl_Obj *const objv[])	/* Arguments to command: first arg is type of
 				 * entry, others are config options. */
 {
@@ -3025,7 +3032,8 @@ GetIndexFromCoords(
     const char *string,		/* The @string we are parsing. */
     Tcl_Size *indexPtr)		/* The index of the item that matches. */
 {
-    int x, y, i;
+    int x, y;
+    Tcl_Size i;
     const char *p;
     const char *rest;
     int x2, borderwidth, max;
@@ -3061,7 +3069,7 @@ GetIndexFromCoords(
       ? Tk_Width(menuPtr->tkwin) : Tk_ReqWidth(menuPtr->tkwin);
     max -= borderwidth;
 
-    for (i = 0; i < (int)menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	if (menuPtr->entries[i]->entryFlags & ENTRY_LAST_COLUMN) {
 	    x2 = max;
 	} else {
@@ -3600,7 +3608,7 @@ DeleteMenuCloneEntries(
     int last)			/* The zero-based last entry. */
 {
     TkMenu *menuListPtr;
-    int numDeleted, i, j;
+    Tcl_Size numDeleted, i, j;
 
     numDeleted = last + 1 - first;
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
@@ -3608,7 +3616,7 @@ DeleteMenuCloneEntries(
 	for (i = last; i >= first; i--) {
 	    Tcl_EventuallyFree(menuListPtr->entries[i], DestroyMenuEntry);
 	}
-	for (i = last + 1; i < (int)menuListPtr->numEntries; i++) {
+	for (i = last + 1; i < menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;
 	    menuListPtr->entries[j] = menuListPtr->entries[i];
 	    menuListPtr->entries[j]->index = j;
