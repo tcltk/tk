@@ -685,7 +685,6 @@ $(TKOBJS)
 #---------------------------------------------------------------------
 
 $(TMP_DIR)\tk.res: \
-    $(RCDIR)\buttons.bmp \
     $(RCDIR)\cursor*.cur \
     $(RCDIR)\tk.ico
 
