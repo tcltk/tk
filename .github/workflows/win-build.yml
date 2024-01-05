@@ -24,6 +24,7 @@ jobs:
         config:
           - ""
           - "OPTS=symbols"
+          - "OPTS=symbols STATS=compdbg,memdbg"
           - "OPTS=static"
     steps:
       - name: Checkout Tk
