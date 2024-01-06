@@ -687,7 +687,6 @@ Tk_FreeImage(
 {
     Image *imagePtr = (Image *) image;
     ImageModel *modelPtr = imagePtr->modelPtr;
-    Image *prevPtr;
 
     /*
      * Clean up the particular instance.
@@ -697,24 +696,21 @@ Tk_FreeImage(
 	modelPtr->typePtr->freeProc(imagePtr->instanceData,
 		imagePtr->display);
     }
-    prevPtr = modelPtr->instancePtr;
-    if (prevPtr == imagePtr) {
+    if (imagePtr->prevPtr) {
+	imagePtr->prevPtr->nextPtr = imagePtr->nextPtr;
+	if (imagePtr->nextPtr) {
+	    imagePtr->nextPtr->prevPtr = NULL;
+	}
+    } else {
 	modelPtr->instancePtr = imagePtr->nextPtr;
 	if (modelPtr->instancePtr) {
 	    modelPtr->instancePtr->prevPtr = NULL;
 	}
-    } else {
+    }
+    if (imagePtr->nextPtr) {
+	imagePtr->nextPtr->prevPtr = imagePtr->prevPtr;
 	if (imagePtr->prevPtr) {
-	    imagePtr->prevPtr->nextPtr = imagePtr->nextPtr;
-	    if (imagePtr->nextPtr) {
-		imagePtr->nextPtr->prevPtr = NULL;
-	    }
-	}
-	if (imagePtr->nextPtr) {
-	    imagePtr->nextPtr->prevPtr = imagePtr->prevPtr;
-	    if (imagePtr->prevPtr) {
-		imagePtr->prevPtr->nextPtr = NULL;
-	    }
+	    imagePtr->prevPtr->nextPtr = NULL;
 	}
     }
     ckfree(imagePtr);
