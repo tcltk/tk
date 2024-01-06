@@ -18,7 +18,7 @@
 #   nmake [-nologo] -f makefile.vc [TARGET|MACRODEF [TARGET|MACRODEF] [...]]
 #
 # For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/trunk/tip/477.md)
-# or examine Sections 6-8 in rules.vc. This makefile has the following
+# or examine Sections 7-9 in rules.vc. This makefile has the following
 # values for the OPTS macro in addition to the ones described there.
 #       noembed  = Embeds Tcl scripts into the wish executable. Currently only
 #                  applicable for static builds. Non-static builds currently
