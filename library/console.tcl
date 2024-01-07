@@ -595,7 +595,7 @@ proc ::tk::ConsoleBind {w} {
 	tk::ConsoleInsert %W %A
     }
     bind Console <F9> {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	source -encoding utf-8 [file join $tk_library console.tcl]
     }
     if {[tk windowingsystem] eq "aqua"} {

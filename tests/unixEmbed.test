@@ -140,7 +140,7 @@ test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constra
     pack .f1 .f2
     dobg "set w [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t -use $w
 	list [testembed] [expr [lindex [lindex [testembed all] 0] 0] - $w]
     }
@@ -179,7 +179,7 @@ test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constra
     dobg "set w1 [winfo id .f1]"
     dobg "set w2 [winfo id .f2]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	toplevel .t2 -use $w2
 	testembed
@@ -238,7 +238,7 @@ test unixEmbed-2.1 {EmbeddedEventProc procedure} -constraints {
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	testembed
     }
@@ -283,7 +283,7 @@ test unixEmbed-2.2 {EmbeddedEventProc procedure} -constraints {
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	testembed
 	destroy .t1
@@ -351,7 +351,7 @@ test unixEmbed-3.1 {ContainerEventProc procedure, detect creation} -constraints 
     dobg "set w1 [winfo id .f1]"
     set x [testembed]
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	wm withdraw .t1
     }
@@ -403,7 +403,7 @@ test unixEmbed-3.3 {ContainerEventProc procedure, disallow position changes} -co
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1 -bd 2 -relief raised
 	update
 	wm geometry .t1 +30+40
@@ -447,7 +447,7 @@ test unixEmbed-3.4 {ContainerEventProc procedure, disallow position changes} -co
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	update
 	wm geometry .t1 300x100+30+40
@@ -491,7 +491,7 @@ test unixEmbed-3.5 {ContainerEventProc procedure, geometry requests} -constraint
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
@@ -534,7 +534,7 @@ test unixEmbed-3.6 {ContainerEventProc procedure, map requests} -constraints {
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	set x unmapped
 	bind .t1 <Map> {set x mapped}
@@ -584,7 +584,7 @@ test unixEmbed-3.7 {ContainerEventProc procedure, destroy events} -constraints {
     bind .f1 <Destroy> {set x dead}
     set x alive
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
@@ -631,7 +631,7 @@ test unixEmbed-4.1 {EmbedStructureProc procedure, configure events} -constraints
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
@@ -677,7 +677,7 @@ test unixEmbed-4.2 {EmbedStructureProc procedure, destroy events} -constraints {
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
@@ -723,7 +723,7 @@ test unixEmbed-5.1 {EmbedFocusProc procedure, FocusIn events} -constraints {
     update
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	bind .t1 <FocusIn> {lappend x "focus in %W"}
 	bind .t1 <FocusOut> {lappend x "focus out %W"}
@@ -772,7 +772,7 @@ test unixEmbed-5.2 {EmbedFocusProc procedure, focusing on dead window} -constrai
     update
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
@@ -820,7 +820,7 @@ test unixEmbed-5.3 {EmbedFocusProc procedure, FocusOut events} -constraints {
     update
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	bind .t1 <FocusIn> {lappend x "focus in %W"}
 	bind .t1 <FocusOut> {lappend x "focus out %W"}
@@ -876,7 +876,7 @@ test unixEmbed-6.1 {EmbedGeometryRequest procedure, window changes size} -constr
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	update
 	bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
@@ -922,7 +922,7 @@ test unixEmbed-6.2 {EmbedGeometryRequest procedure, window changes size} -constr
     place .f1 -width 200 -height 200
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
 	update
 	bind .t1 <Configure> {lappend x {configure .t1 %w %h}}
@@ -973,7 +973,7 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     focus -force .
@@ -1036,7 +1036,7 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     pack .f1
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1
     }
     update
@@ -1102,7 +1102,7 @@ test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {
     pack .f1 .f2
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1 -highlightthickness 2 -bd 2 -relief sunken
     }
     focus -force .f2
@@ -1204,7 +1204,7 @@ test unixEmbed-9.2 {EmbedWindowDeleted procedure, check embeddedPtr} -constraint
     update
     dobg "set w1 [winfo id .f1]"
     dobg {
-	eval destroy [winfo child .]
+	destroy {*}[winfo children .]
 	toplevel .t1 -use $w1 -highlightthickness 2 -bd 2 -relief sunken
 	set x {}
 	lappend x [testembed]
