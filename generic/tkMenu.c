@@ -856,12 +856,15 @@ MenuWidgetObjCmd(
 	if (GetMenuIndex(interp, menuPtr, objv[2], 0, &index) != TCL_OK) {
 	    goto error;
 	}
-#if !defined(TK_NO_DEPRECATED) && (TCL_MAJOR_VERSION < 9)
 	if (index < 0) {
+#if defined(TK_NO_DEPRECATED)
 	    Tcl_SetObjResult(interp, Tcl_NewObj());
-	} else
+#else
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj("none", TCL_INDEX_NONE));
 #endif
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	} else {
+	    Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	}
 	break;
     }
     case MENU_INSERT:
