@@ -558,7 +558,7 @@ test menuDraw-15.2 {TkPostTearoffMenu - Deactivation} -setup {
     menu .m1
     .m1 add command -label "foo" -state active
     set tearoff [tk::TearOffMenu .m1 40 40]
-    expr {[$tearoff index active]<0}
+    expr {[$tearoff index active] in [list {} none]}
 } -cleanup {
     deleteWindows
 } -result 1
