@@ -699,18 +699,12 @@ Tk_FreeImage(
     if (imagePtr->prevPtr) {
 	imagePtr->prevPtr->nextPtr = imagePtr->nextPtr;
 	if (imagePtr->nextPtr) {
-	    imagePtr->nextPtr->prevPtr = NULL;
+	    imagePtr->nextPtr->prevPtr = imagePtr->prevPtr;
 	}
     } else {
 	modelPtr->instancePtr = imagePtr->nextPtr;
 	if (modelPtr->instancePtr) {
 	    modelPtr->instancePtr->prevPtr = NULL;
-	}
-    }
-    if (imagePtr->nextPtr) {
-	imagePtr->nextPtr->prevPtr = imagePtr->prevPtr;
-	if (imagePtr->prevPtr) {
-	    imagePtr->prevPtr->nextPtr = NULL;
 	}
     }
     ckfree(imagePtr);
