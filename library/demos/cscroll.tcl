@@ -56,7 +56,7 @@ for {set i 0} {$i < 20} {incr i} {
 $c bind all <Enter> "scrollEnter $c"
 $c bind all <Leave> "scrollLeave $c"
 $c bind all <Button-1> "scrollButton $c"
-if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide tk] 8.7-]} {
     bind $c <Button-3> "$c scan mark %x %y"
     bind $c <B3-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
@@ -116,7 +116,7 @@ if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk
     }
 }
 
-if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide tk] 8.7-]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:
