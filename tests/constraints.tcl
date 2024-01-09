@@ -238,7 +238,7 @@ namespace eval tk {
 	# to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
 	# the whole screen.
 	#
-	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
+	variable idle_pointer_warping [expr {![package vsatisfies [package provide tk] 8.7-]}]
 	proc controlPointerWarpTiming {{duration 50}} {
 		variable idle_pointer_warping
 		if {$idle_pointer_warping} {
