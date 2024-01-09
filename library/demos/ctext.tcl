@@ -50,7 +50,7 @@ $c bind text <Return> "textInsert $c \\n"
 $c bind text <Control-h> "textBs $c"
 $c bind text <BackSpace> "textBs $c"
 $c bind text <Delete> "textDel $c"
-if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide tk] 8.7-]} {
     $c bind text <Button-3> "textPaste $c @%x,%y"
 } else {
     $c bind text <Button-2> "textPaste $c @%x,%y"
