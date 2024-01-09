@@ -435,7 +435,8 @@ way through the listbox, and so on.
 .
 This command adjusts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
-\fINumber\fR must be an integer.
+\fINumber\fR must be an integer or a float, but if it is a float then
+it is converted to an integer, rounded away from 0.
 \fIWhat\fR must be either \fBpages\fR or \fBunits\fR.
 If \fIwhat\fR is \fBpages\fR then
 the view adjusts by \fInumber\fR screenfuls.
