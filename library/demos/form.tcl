@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .form
 catch {destroy $w}
