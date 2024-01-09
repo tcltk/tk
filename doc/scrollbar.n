@@ -203,7 +203,7 @@ generated from the scrollbar's \fB\-command\fR option.
 The command may take any of the following forms.
 In each case, \fIprefix\fR is the contents of the
 \fB\-command\fR option, which usually has a form like
-.QW \fB.t yview\fR .
+.QW "\fB.t yview\fR" .
 .TP
 \fIprefix \fBmoveto \fIfraction\fR
 .
