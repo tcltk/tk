@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 # Make an Aqua button's fill color match its parent's background
 proc blend {bt} {

@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 # floorDisplay --
 # Recreate the floorplan display in the canvas given by "w".  The

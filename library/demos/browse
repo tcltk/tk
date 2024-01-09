@@ -7,7 +7,7 @@ exec wish "$0" ${1+"$@"}
 # directory and allows you to open files or subdirectories by
 # double-clicking.
 
-package require Tk
+package require tk
 
 # Create a scrollbar on the right side of the main window and a listbox
 # on the left side.
