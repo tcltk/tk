@@ -567,6 +567,7 @@ typedef struct TkSharedText {
 				 * start/end limits change, and means that any
 				 * cached TkTextIndex objects are no longer
 				 * valid. */
+    int imageCount;		/* Used for creating unique image names. */
 
     /*
      * Information related to the undo/redo functionality.

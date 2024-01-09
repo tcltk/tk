@@ -336,9 +336,6 @@ EmbImageConfigure(
     Tcl_HashSearch search;
     char *name;
     int dummy;
-    int count = 0;		/* The counter for picking a unique name */
-    int conflict = 0;		/* True if we have a name conflict */
-    size_t len;			/* length of image name */
 
     if (Tk_SetOptions(textPtr->interp, (char *)&eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
@@ -389,34 +386,23 @@ EmbImageConfigure(
 		NULL);
 	return TCL_ERROR;
     }
-    len = strlen(name);
+
+    Tcl_DStringInit(&newName);
+    Tcl_DStringAppend(&newName, name, -1);
     for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
 	    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	char *haveName = (char *)
 		Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
 
-	if (strncmp(name, haveName, len) == 0) {
-	    int newVal = 0;
+	if (strcmp(name, haveName) == 0) {
+	    char buf[4 + TCL_INTEGER_SPACE];
 
-	    sscanf(haveName+len, "#%d", &newVal);
-	    if (newVal > count) {
-		count = newVal;
-	    }
-	    if (len == strlen(haveName)) {
-	    	conflict = 1;
-	    }
+	    snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
+	    Tcl_DStringAppend(&newName, buf, -1);
+	    break;
 	}
     }
 
-    Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, -1);
-
-    if (conflict) {
-    	char buf[4 + TCL_INTEGER_SPACE];
-
-	snprintf(buf, sizeof(buf), "#%d", count+1);
-	Tcl_DStringAppend(&newName, buf, -1);
-    }
     name = Tcl_DStringValue(&newName);
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
