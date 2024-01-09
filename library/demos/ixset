@@ -9,7 +9,7 @@ exec wish8.7 "$0" ${1+"$@"}
 #   91/11/23 : pda@masi.ibp.fr, jt@ratp.fr : design
 #   92/08/01 : pda@masi.ibp.fr : cleaning
 
-package require Tk
+package require tk
 
 #
 # Button actions
