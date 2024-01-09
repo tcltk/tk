@@ -6038,7 +6038,7 @@ test bind-28.11 {keysym names, gcedilla} -body {
 } -cleanup {
     destroy .t.f
 } -result <Key-gcedilla>
-test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -constraints deprecated -body {
+test bind-28.12 {keysym names, Greek_IOTAdiaeresis -> Greek_IOTAdieresis} -constraints {deprecated needsTcl87} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <Greek_IOTAdiaeresis> foo
     bind .t.f
