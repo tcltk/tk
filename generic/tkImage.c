@@ -41,6 +41,8 @@ typedef struct Image {
     void *widgetClientData;/* Argument to pass to changeProc. */
     struct Image *nextPtr;	/* Next in list of all image instances
 				 * associated with the same name. */
+    struct Image *prevPtr;	/* Previous in list of all image instances
+				 * associated with the same name. */
 } Image;
 
 /*
@@ -623,6 +625,10 @@ Tk_GetImage(
     imagePtr->changeProc = changeProc;
     imagePtr->widgetClientData = clientData;
     imagePtr->nextPtr = modelPtr->instancePtr;
+    if (imagePtr->nextPtr) {
+	imagePtr->nextPtr->prevPtr = imagePtr;
+    }
+    imagePtr->prevPtr = NULL;
     modelPtr->instancePtr = imagePtr;
     return (Tk_Image) imagePtr;
 
@@ -660,7 +666,6 @@ Tk_FreeImage(
 {
     Image *imagePtr = (Image *) image;
     ImageModel *modelPtr = imagePtr->modelPtr;
-    Image *prevPtr;
 
     /*
      * Clean up the particular instance.
@@ -670,14 +675,16 @@ Tk_FreeImage(
 	modelPtr->typePtr->freeProc(imagePtr->instanceData,
 		imagePtr->display);
     }
-    prevPtr = modelPtr->instancePtr;
-    if (prevPtr == imagePtr) {
-	modelPtr->instancePtr = imagePtr->nextPtr;
-    } else {
-	while (prevPtr->nextPtr != imagePtr) {
-	    prevPtr = prevPtr->nextPtr;
+    if (imagePtr->prevPtr) {
+	imagePtr->prevPtr->nextPtr = imagePtr->nextPtr;
+	if (imagePtr->nextPtr) {
+	    imagePtr->nextPtr->prevPtr = imagePtr->prevPtr;
 	}
-	prevPtr->nextPtr = imagePtr->nextPtr;
+    } else {
+	modelPtr->instancePtr = imagePtr->nextPtr;
+	if (modelPtr->instancePtr) {
+	    modelPtr->instancePtr->prevPtr = NULL;
+	}
     }
     ckfree(imagePtr);
 
