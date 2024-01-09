@@ -2225,7 +2225,7 @@ test bind-16.46 {ExpandPercents procedure} -setup {
     bind all <Key> $savedBind(All)
     unset savedBind
 } -result {0 1 2}
-test bind-16.47 {ExpandPercents procedure} -constraints {aquaOrWin32 needsTcl87} -setup {
+test bind-16.47 {ExpandPercents procedure} -constraints aquaOrWin32 -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
@@ -6059,7 +6059,7 @@ test bind-28.14 {keysym names, Emoji} -body {
 } -cleanup {
     destroy .t.f
 } -result "<Key-\U1F44D>"
-test bind-28.15 {keysym names, Emoji} -constraints needsTcl87 -body {
+test bind-28.15 {keysym names, Emoji} -body {
     frame .t.f -class Test -width 150 -height 100
     bind .t.f <👍> foo
     bind .t.f

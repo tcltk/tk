@@ -458,14 +458,14 @@ test config-4.28 {DoObjConfig - string table} -constraints testobjconfig -body {
     killTables
 } -returnCodes ok
 test config-4.29 {DoObjConfig - invalid string table} -constraints {
-    testobjconfig needsTcl87
+    testobjconfig
 } -body {
     testobjconfig alltypes .foo -stringtable foo
 } -cleanup {
     killTables
 } -returnCodes error -result {bad stringtable "foo": must be one, two, three, four, or ""}
 test config-4.29a {DoObjConfig - invalid string table} -constraints {
-    testobjconfig needsTcl87
+    testobjconfig
 } -body {
     testobjconfig alltypes .foo -stringtable2 foo
 } -cleanup {
@@ -780,7 +780,7 @@ test config-4.70 {DoObjConfig - relief} -constraints testobjconfig -body {
     killTables
 } -returnCodes ok -result flat
 test config-4.71 {DoObjConfig - invalid relief} -constraints {
-    testobjconfig needsTcl87
+    testobjconfig
 } -body {
     testobjconfig alltypes .foo -relief foo
 } -cleanup {
@@ -874,7 +874,7 @@ test config-4.84 {DoObjConfig - justify} -constraints testobjconfig -body {
 } -cleanup {
     killTables
 } -returnCodes ok -result center
-test config-4.85 {DoObjConfig - invalid justify} -constraints {testobjconfig needsTcl87} -body {
+test config-4.85 {DoObjConfig - invalid justify} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -justify foo
 } -cleanup {
     killTables
@@ -916,7 +916,7 @@ test config-4.90 {DoObjConfig - anchor} -constraints testobjconfig -body {
 } -returnCodes ok -result center
 test config-4.91 {DoObjConfig - invalid anchor} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -anchor foo
-} -constraints needsTcl87 -cleanup {
+} -cleanup {
     killTables
 } -returnCodes error -result {bad anchor "foo": must be n, ne, e, se, s, sw, w, nw, center, or ""}
 test config-4.92 {DoObjConfig - new anchor} -constraints testobjconfig -body {
