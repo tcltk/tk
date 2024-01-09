@@ -203,7 +203,7 @@ generated from the scrollbar's \fB\-command\fR option.
 The command may take any of the following forms.
 In each case, \fIprefix\fR is the contents of the
 \fB\-command\fR option, which usually has a form like
-.QW \fB.t yview\fR .
+.QW "\fB.t yview\fR" .
 .TP
 \fIprefix \fBmoveto \fIfraction\fR
 .
@@ -223,7 +223,7 @@ it is slightly less than what fits in the window, so that there
 is a slight overlap between the old and new views.
 \fINumber\fR is either 1, which means the next page should
 become visible, or \-1, which means that the previous page should
-become visible. Fractional number are rounded away from 0, so
+become visible. Fractional numbers are rounded away from 0, so
 scrolling 0.001 pages has the same effect as scrolling 1 page.
 .TP
 \fIprefix \fBscroll \fInumber \fBunits\fR
