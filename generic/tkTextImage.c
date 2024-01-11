@@ -402,7 +402,8 @@ EmbImageConfigure(
     Tcl_SetHashValue(hPtr, eiPtr);
     eiPtr->body.ei.name = (char *)ckalloc(length + 1);
     memcpy(eiPtr->body.ei.name, name, length + 1);
-    Tcl_DStringResult(textPtr->interp, &newName);
+    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
+    Tcl_DStringFree(&newName);
 
     return TCL_OK;
 }
