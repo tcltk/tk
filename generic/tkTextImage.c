@@ -333,9 +333,8 @@ EmbImageConfigure(
     Tk_Image image;
     Tcl_DString newName;
     Tcl_HashEntry *hPtr;
-    Tcl_HashSearch search;
     char *name;
-    int dummy;
+    int dummy, length;
 
     if (Tk_SetOptions(textPtr->interp, (char *)&eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
@@ -388,29 +387,22 @@ EmbImageConfigure(
     }
 
     Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, -1);
-    for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
-	    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	char *haveName = (char *)
-		Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
-
-	if (strcmp(name, haveName) == 0) {
-	    char buf[4 + TCL_INTEGER_SPACE];
-
-	    snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
-	    Tcl_DStringAppend(&newName, buf, -1);
-	    break;
-	}
+    while (Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name)) {
+	char buf[4 + TCL_INTEGER_SPACE];
+	snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
+	Tcl_DStringSetLength(&newName, 0);
+	Tcl_DStringAppend(&newName, name, -1);
+	Tcl_DStringAppend(&newName, buf, -1);
+	name = Tcl_DStringValue(&newName);
     }
+    length = strlen(name);
 
-    name = Tcl_DStringValue(&newName);
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
-    Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
-    eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
-    strcpy(eiPtr->body.ei.name, name);
-    Tcl_DStringFree(&newName);
+    eiPtr->body.ei.name = (char *)ckalloc(length + 1);
+    memcpy(eiPtr->body.ei.name, name, length + 1);
+    Tcl_DStringResult(textPtr->interp, &newName);
 
     return TCL_OK;
 }
