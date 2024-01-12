@@ -536,6 +536,7 @@ CreateWidget(
 	sharedPtr->autoSeparators = 1;
 	sharedPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 	sharedPtr->stateEpoch = 0;
+	sharedPtr->imageCount = 0;
     }
 
     /*
