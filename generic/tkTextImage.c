@@ -333,12 +333,8 @@ EmbImageConfigure(
     Tk_Image image;
     Tcl_DString newName;
     Tcl_HashEntry *hPtr;
-    Tcl_HashSearch search;
     char *name;
-    int dummy;
-    int count = 0;		/* The counter for picking a unique name */
-    int conflict = 0;		/* True if we have a name conflict */
-    size_t len;			/* length of image name */
+    int dummy, length;
 
     if (Tk_SetOptions(textPtr->interp, (char *)&eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
@@ -389,41 +385,24 @@ EmbImageConfigure(
 		NULL);
 	return TCL_ERROR;
     }
-    len = strlen(name);
-    for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
-	    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	char *haveName = (char *)
-		Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
-
-	if (strncmp(name, haveName, len) == 0) {
-	    int newVal = 0;
-
-	    sscanf(haveName+len, "#%d", &newVal);
-	    if (newVal > count) {
-		count = newVal;
-	    }
-	    if (len == strlen(haveName)) {
-	    	conflict = 1;
-	    }
-	}
-    }
 
     Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, -1);
-
-    if (conflict) {
-    	char buf[4 + TCL_INTEGER_SPACE];
-
-	snprintf(buf, sizeof(buf), "#%d", count+1);
+    while (Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name)) {
+	char buf[4 + TCL_INTEGER_SPACE];
+	snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
+	Tcl_DStringSetLength(&newName, 0);
+	Tcl_DStringAppend(&newName, name, -1);
 	Tcl_DStringAppend(&newName, buf, -1);
+	name = Tcl_DStringValue(&newName);
     }
-    name = Tcl_DStringValue(&newName);
+    length = strlen(name);
+
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
+    eiPtr->body.ei.name = (char *)ckalloc(length + 1);
+    memcpy(eiPtr->body.ei.name, name, length + 1);
     Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, -1));
-    eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
-    strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
 
     return TCL_OK;
