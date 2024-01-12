@@ -8,12 +8,11 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .mac_wm
 catch {destroy $w}
 toplevel $w
-package require Tk
 wm title $w "Tk Aqua Window Styles"
 wm iconname $w "mac_wm"
 positionWindow $w

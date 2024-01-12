@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 # floorDisplay --
 # Recreate the floorplan display in the canvas given by "w".  The
@@ -1372,7 +1372,7 @@ $c bind floor2 <Button-1> "floorDisplay $c 2"
 $c bind floor3 <Button-1> "floorDisplay $c 3"
 $c bind room <Enter> "newRoom $c"
 $c bind room <Leave> {set currentRoom ""}
-if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide tk] 8.7-]} {
     bind $c <Button-3> "$c scan mark %x %y"
     bind $c <B3-Motion> "$c scan dragto %x %y"
 } else {

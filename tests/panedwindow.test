@@ -122,7 +122,7 @@ test panedwindow-1.23 {configuration options: -proxyrelief (good)} -body {
 } -cleanup {
     .p configure -proxyrelief [lindex [.p configure -proxyrelief] 3]
 } -result {groove groove}
-test panedwindow-1.24 {configuration options: -proxyrelief (bad)} -constraints needsTcl87 -body {
+test panedwindow-1.24 {configuration options: -proxyrelief (bad)} -body {
     .p configure -proxyrelief 1.5
 } -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test panedwindow-1.25 {configuration options: -relief (good)} -body {
