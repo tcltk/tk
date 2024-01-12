@@ -1976,6 +1976,15 @@ static void TreeviewDoLayout(void *clientData)
     first = tv->tree.yscroll.first;
     last = tv->tree.yscroll.first + visibleRows - tv->tree.titleRows;
     total = tv->tree.totalRows - tv->tree.titleRows;
+    if (tv->tree.treeArea.height % tv->tree.rowHeight) {
+        /* When the treeview height doesn't correspond to an exact number
+         * of rows, the last row count must be incremented to draw a
+         * partial row at the bottom. The total row count must also be
+         * incremented to be able to scroll all the way to the bottom.
+         */
+        last++;
+        total++;
+    }
     TtkScrolled(tv->tree.yscrollHandle, first, last, total);
 }
 

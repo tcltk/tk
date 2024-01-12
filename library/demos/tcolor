@@ -7,7 +7,7 @@ exec wish "$0" ${1+"$@"}
 # create colors using either the RGB, HSB, or CYM color spaces
 # and apply the color to existing applications.
 
-package require Tk
+package require tk
 wm title . "Color Editor"
 
 # Global variables that control the program:

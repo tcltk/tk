@@ -28,7 +28,7 @@ test bell-1.4 {bell command} -body {
 
 test bell-1.5 {bell command} -body {
     bell -nice -nice -nice
-} -returnCodes {ok} -result {}  ;#keep -result {} and -retutnCodes {ok} for clarity?
+} -returnCodes {ok} -result {}  ;#keep -result {} and -returnCodes {ok} for clarity?
 
 test bell-1.6 {bell command} -body {
     bell -displayof . -nice

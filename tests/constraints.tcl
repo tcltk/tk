@@ -189,13 +189,8 @@ namespace eval tk {
 	# It takes care of the following timing details of pointer warping:
 	#
 	# a. Allow pointer warping to happen if it was scheduled for execution at
-	#    idle time.
-	#    - In Tk releases 8.6 and older, pointer warping is scheduled for
-	#      execution at idle time
-	#    - In release 8.7 and newer this happens synchronously if $w refers to the
-	#      whole screen or if the -when option to [event generate] is "now".
-	#    The namespace variable idle_pointer_warping records which of these is
-	#    the case.
+	#    idle time. This happens synchronously if $w refers to the
+	#    whole screen or if the -when option to [event generate] is "now".
 	#
 	# b. Work around a race condition associated with OS notification of
 	#    mouse motion on Windows.
@@ -238,12 +233,8 @@ namespace eval tk {
 	# to [event generate $w] is not "now", and $w refers to a Tk window, i.e. not
 	# the whole screen.
 	#
-	variable idle_pointer_warping [expr {![package vsatisfies [package provide Tk] 8.7-]}]
 	proc controlPointerWarpTiming {{duration 50}} {
-		variable idle_pointer_warping
-		if {$idle_pointer_warping} {
-			update idletasks ;# see a. above
-		}
+		update idletasks ;# see a. above
 		if {[tk windowingsystem] eq "win32"} {
 			after $duration ;# see b. above
 		}
@@ -273,8 +264,7 @@ testConstraint altDisplay  [info exists env(TK_ALT_DISPLAY)]
 testConstraint noExceed [expr {
     ![testConstraint unix] || [catch {font actual "\{xyz"}]
 }]
-testConstraint deprecated [expr {![package vsatisfies [package provide Tcl] 8.7-] || ![::tk::build-info no-deprecate]}]
-testConstraint needsTcl87 [package vsatisfies [package provide Tcl] 8.7-]
+testConstraint deprecated [expr {![::tk::build-info no-deprecate]}]
 
 # constraint for running a test on all windowing system except aqua
 # where the test fails due to a known bug

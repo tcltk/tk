@@ -622,7 +622,7 @@ proc ::tk::ConsoleBind {w} {
     ##
     ## Bindings for doing special things based on certain keys
     ##
-    bind PostConsole <parenright> {
+    bind PostConsole <)> {
 	if {"\\" ne [%W get insert-2c]} {
 	    ::tk::console::MatchPair %W \( \) promptEnd
 	}

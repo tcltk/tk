@@ -8,12 +8,11 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 catch {font create giant -family {Times New Roman} -size 64}
 set w .mac_tabs
 catch {destroy $w}
 toplevel $w
-package require Tk
 wm title $w "Tabbed Windows in Aqua"
 wm iconname $w "mac_tabs"
 positionWindow $w
