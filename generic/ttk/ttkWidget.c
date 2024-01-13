@@ -486,9 +486,9 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
      */
     TtkGetOrientFromObj(NULL, orientObj, &orient);
     if (orient == TTK_ORIENT_HORIZONTAL)
-	Tcl_DStringAppend(&styleName, "Horizontal.", -1);
+	Tcl_DStringAppend(&styleName, "Horizontal.", TCL_INDEX_NONE);
     else
-	Tcl_DStringAppend(&styleName, "Vertical.", -1);
+	Tcl_DStringAppend(&styleName, "Vertical.", TCL_INDEX_NONE);
 
     /* Add base style name:
      */
@@ -497,7 +497,7 @@ Ttk_Layout TtkWidgetGetOrientedLayout(
     if (!baseStyleName || *baseStyleName == '\0')
     	baseStyleName = corePtr->widgetSpec->className;
 
-    Tcl_DStringAppend(&styleName, baseStyleName, -1);
+    Tcl_DStringAppend(&styleName, baseStyleName, TCL_INDEX_NONE);
 
     /* Create layout:
      */

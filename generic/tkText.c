@@ -5073,10 +5073,10 @@ DumpSegment(
 	int code;
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, Tcl_GetString(command), -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, Tcl_GetString(command), TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
