@@ -446,7 +446,7 @@ ExpandPercents(
 	    /* No more %-sequences to expand.
 	     * Copy the rest of the template.
 	     */
-	    Tcl_DStringAppend(dsPtr, templ, -1);
+	    Tcl_DStringAppend(dsPtr, templ, TCL_INDEX_NONE);
 	    return;
 	}
 	if (string != templ) {
