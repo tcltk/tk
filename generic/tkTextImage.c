@@ -396,7 +396,7 @@ EmbImageConfigure(
 	char buf[4 + TCL_INTEGER_SPACE];
 	snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
 	Tcl_DStringSetLength(&newName, 0);
-	Tcl_DStringAppend(&newName, name, -1);
+	Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&newName, buf, TCL_INDEX_NONE);
 	name = Tcl_DStringValue(&newName);
     }
