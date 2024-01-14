@@ -872,7 +872,7 @@ GetStyle(
 	    styleValues.borderWidth = tagPtr->borderWidth;
 	    borderWidthPrio = tagPtr->priority;
 	}
-	if ((tagPtr->reliefString != NULL)
+	if ((tagPtr->relief != TK_RELIEF_NULL)
 		&& (tagPtr->priority > reliefPrio)) {
 	    if (styleValues.border == NULL) {
 		styleValues.border = textPtr->border;
@@ -898,7 +898,7 @@ GetStyle(
 	    styleValues.fgStipple = tagPtr->fgStipple;
 	    fgStipplePrio = tagPtr->priority;
 	}
-	if ((tagPtr->justifyString != NULL)
+	if ((tagPtr->justify != TK_JUSTIFY_NULL)
 		&& (tagPtr->priority > justifyPrio)) {
 	    styleValues.justify = tagPtr->justify;
 	    justifyPrio = tagPtr->priority;
