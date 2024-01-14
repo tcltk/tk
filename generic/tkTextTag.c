@@ -392,12 +392,16 @@ TkTextTagCmd(
 	    if (tagPtr->reliefString != NULL) {
 		if (Tk_GetRelief(interp, tagPtr->reliefString,
 			&tagPtr->relief) != TCL_OK) {
+		    ckfree(tagPtr->reliefString);
+		    tagPtr->reliefString = NULL;
 		    return TCL_ERROR;
 		}
 	    }
 	    if (tagPtr->justifyString != NULL) {
 		if (Tk_GetJustify(interp, tagPtr->justifyString,
 			&tagPtr->justify) != TCL_OK) {
+		    ckfree(tagPtr->justifyString);
+		    tagPtr->justifyString = NULL;
 		    return TCL_ERROR;
 		}
 	    }
