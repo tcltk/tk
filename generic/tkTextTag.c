@@ -981,11 +981,17 @@ TkTextCreateTag(
     tagPtr->border = NULL;
     tagPtr->borderWidth = 0;
     tagPtr->borderWidthPtr = NULL;
+#if TCL_MAJOR_VERSION < 9
+    tagPtr->reliefString = NULL;
+#endif
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
     tagPtr->fgStipple = None;
+#if TCL_MAJOR_VERSION < 9
+    tagPtr->justifyString = NULL;
+#endif
     tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->lMargin1String = NULL;
     tagPtr->lMargin1 = 0;

@@ -113,11 +113,11 @@ test textTag-1.12 {tag configuration options} -body {
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
 } -result {left}
-test textTag-1.13 {configuration options} -body {
+test textTag-1.13 {configuration options} -constraint needsTcl87 -body {
     .t tag configure x -justify middle
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
-} -returnCodes error -result {bad justification "middle": must be left, right, or center}
+} -returnCodes error -result {bad justification "middle": must be left, right, center, or ""}
 test textTag-1.14 {tag configuration options} -body {
     .t tag configure x -lmargin1 10
     .t tag cget x -lmargin1
@@ -190,11 +190,11 @@ test textTag-1.22 {tag configuration options} -body {
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
 } -result {raised}
-test textTag-1.23 {configuration options} -body {
+test textTag-1.23 {configuration options} -constraint needsTcl87 -body {
     .t tag configure x -relief stupid
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
-} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test textTag-1.24 {tag configuration options} -body {
     .t tag configure x -rmargin 10
     .t tag cget x -rmargin
@@ -538,18 +538,18 @@ test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -result {-justify {} {} {} left}
-test textTag-5.9 {TkTextTagCmd - "configure" option} -body {
+test textTag-5.9 {TkTextTagCmd - "configure" option} -constraint needsTcl87 -body {
     .t tag delete x
     .t tag configure x -justify bogus
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
-test textTag-5.10 {TkTextTagCmd - "configure" option} -body {
+} -returnCodes error -result {bad justification "bogus": must be left, right, center, or ""}
+test textTag-5.10 {TkTextTagCmd - "configure" option} -constraint needsTcl87 -body {
     .t tag delete x
     .t tag configure x -justify fill
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad justification "fill": must be left, right, or center}
+} -returnCodes error -result {bad justification "fill": must be left, right, center, or ""}
 test textTag-5.11 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -offset 2

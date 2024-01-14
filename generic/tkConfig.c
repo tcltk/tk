@@ -2114,7 +2114,9 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_RELIEF:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *)internalPtr)), TCL_INDEX_NONE);
+	    if (*((int *)internalPtr) != TK_RELIEF_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *)internalPtr)), TCL_INDEX_NONE);
+	    }
 	    break;
 	case TK_OPTION_CURSOR: {
 	    Tk_Cursor cursor = *((Tk_Cursor *)internalPtr);
@@ -2126,12 +2128,16 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_JUSTIFY:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
-		    *((Tk_Justify *)internalPtr)), TCL_INDEX_NONE);
+	    if (*((Tk_Justify *)internalPtr) != TK_JUSTIFY_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
+			*((Tk_Justify *)internalPtr)), TCL_INDEX_NONE);
+	    }
 	    break;
 	case TK_OPTION_ANCHOR:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
-		    *((Tk_Anchor *)internalPtr)), TCL_INDEX_NONE);
+	    if (*((Tk_Anchor *)internalPtr) != TK_ANCHOR_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
+			*((Tk_Anchor *)internalPtr)), TCL_INDEX_NONE);
+	    }
 	    break;
 	case TK_OPTION_PIXELS:
 	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {

@@ -322,7 +322,7 @@ typedef struct TkTextTag {
 				 * value specified here. */
     int borderWidth;		/* Width of 3-D border for background. */
     Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
-#if TK_MAJOR_VERSION < 9
+#if TCL_MAJOR_VERSION < 9
     char *reliefString;		/* Not used any more */
 #endif
     int relief;			/* 3-D relief for background. */
@@ -335,7 +335,7 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-#if TK_MAJOR_VERSION < 9
+#if TCL_MAJOR_VERSION < 9
     char *justifyString;	/* Not used any more */
 #endif
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT,
