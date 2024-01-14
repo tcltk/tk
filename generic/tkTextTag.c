@@ -33,8 +33,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tkfont), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-foreground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, fgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-justify", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0,0},
+    {TK_OPTION_JUSTIFY, "-justify", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_STRING, "-lmargin1", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMargin1String), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_STRING, "-lmargin2", NULL, NULL,
@@ -49,8 +49,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-relief", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_RELIEF, "-relief", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-rmargin", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
@@ -368,18 +368,6 @@ TkTextTagCmd(
 	    if (tagPtr->borderWidth < 0) {
 		tagPtr->borderWidth = 0;
 	    }
-	    if (tagPtr->reliefString != NULL) {
-		if (Tk_GetRelief(interp, tagPtr->reliefString,
-			&tagPtr->relief) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->justifyString != NULL) {
-		if (Tk_GetJustify(interp, tagPtr->justifyString,
-			&tagPtr->justify) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
 	    if (tagPtr->lMargin1String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
@@ -479,7 +467,7 @@ TkTextTagCmd(
 	    tagPtr->affectsDisplayGeometry = 0;
 	    if ((tagPtr->elide >= 0)
 		    || (tagPtr->tkfont != NULL)
-		    || (tagPtr->justifyString != NULL)
+		    || (tagPtr->justify != TK_JUSTIFY_NULL)
 		    || (tagPtr->lMargin1String != NULL)
 		    || (tagPtr->lMargin2String != NULL)
 		    || (tagPtr->offsetString != NULL)
@@ -498,7 +486,7 @@ TkTextTagCmd(
 	    }
 	    if ((tagPtr->border != NULL)
 		    || (tagPtr->selBorder != NULL)
-		    || (tagPtr->reliefString != NULL)
+		    || (tagPtr->relief != TK_RELIEF_NULL)
 		    || (tagPtr->bgStipple != None)
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
@@ -993,13 +981,17 @@ TkTextCreateTag(
     tagPtr->border = NULL;
     tagPtr->borderWidth = 0;
     tagPtr->borderWidthPtr = NULL;
+#if TCL_MAJOR_VERSION < 9
     tagPtr->reliefString = NULL;
-    tagPtr->relief = TK_RELIEF_FLAT;
+#endif
+    tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
     tagPtr->fgStipple = None;
+#if TCL_MAJOR_VERSION < 9
     tagPtr->justifyString = NULL;
+#endif
     tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->lMargin1String = NULL;
     tagPtr->lMargin1 = 0;
