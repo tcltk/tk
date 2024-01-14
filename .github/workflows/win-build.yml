@@ -23,8 +23,10 @@ jobs:
     strategy:
       matrix:
         config:
-          - "OPTS=none"
+          - ""
           - "OPTS=symbols"
+          - "OPTS=static"
+          - "OPTS=static,staticpkg"
     steps:
       - name: Checkout Tk
         uses: actions/checkout@v4
