@@ -322,8 +322,6 @@ typedef struct TkTextTag {
 				 * value specified here. */
     int borderWidth;		/* Width of 3-D border for background. */
     Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
-    char *reliefString;		/* -relief option string (malloc-ed). NULL
-				 * means option not specified. */
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
@@ -334,11 +332,8 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-    char *justifyString;	/* -justify option string (malloc-ed). NULL
-				 * means option not specified. */
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT,
-				 * TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER, or TK_JUSTIFY_NULL.
-				 * Only valid if justifyString is non-NULL. */
+				 * TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER, or TK_JUSTIFY_NULL. */
     char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
