@@ -48,14 +48,6 @@ static int              IndexCountBytesOrdered(const TkText *textPtr,
                             const TkTextIndex *indexPtr1,
                             const TkTextIndex *indexPtr2);
 
-#if defined(USE_TCL_STUBS) && (TCL_MAJOR_VERSION < 9)
-#   undef Tcl_UtfPrev
-#   define Tcl_UtfPrev (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
-		((const char * (*)(const char *, const char *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[656])) \
-		: ((const char * (*)(const char *, const char *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[331])))
-#endif
-
-
 /*
  * The "textindex" Tcl_Obj definition:
  */
