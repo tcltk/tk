@@ -617,9 +617,6 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
-    textPtr->selTagPtr->reliefString = (char *)
-	    ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
-    strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
     Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
@@ -2261,7 +2258,7 @@ ConfigureText(
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
     if ((textPtr->selTagPtr->elide >= 0)
 	    || (textPtr->selTagPtr->tkfont != NULL)
-	    || (textPtr->selTagPtr->justifyString != NULL)
+	    || (textPtr->selTagPtr->justify != TK_JUSTIFY_NULL)
 	    || (textPtr->selTagPtr->lMargin1String != NULL)
 	    || (textPtr->selTagPtr->lMargin2String != NULL)
 	    || (textPtr->selTagPtr->offsetString != NULL)
@@ -2280,7 +2277,7 @@ ConfigureText(
     }
     if ((textPtr->selTagPtr->border != NULL)
 	    || (textPtr->selTagPtr->selBorder != NULL)
-	    || (textPtr->selTagPtr->reliefString != NULL)
+	    || (textPtr->selTagPtr->relief != TK_RELIEF_NULL)
 	    || (textPtr->selTagPtr->bgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
