@@ -17,8 +17,8 @@
 # General usage:
 #   nmake [-nologo] -f makefile.vc [TARGET|MACRODEF [TARGET|MACRODEF] [...]]
 #
-# For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/trunk/tip/477.md)
-# or examine Sections 6-8 in rules.vc. This makefile has the following
+# For MACRODEF, see TIP 477 (https://core.tcl-lang.org/tips/doc/main/tip/477.md)
+# or examine Sections 7-9 in rules.vc. This makefile has the following
 # values for the OPTS macro in addition to the ones described there.
 #	noxp     = If you do not have the uxtheme.h header then you
 #                  cannot include support for XP themeing.
@@ -31,7 +31,7 @@
 #	core     -- Only builds the core [tkXX.(dll|lib)].
 #	all      -- Builds everything.
 #	test     -- Builds and runs the test suite.
-#	tktest   -- Just builds the binaries for the test suite.
+#	tktest   -- Just builds the test shell.
 #	install  -- Installs the built binaries and libraries to $(INSTALLDIR)
 #		    as the root of the install tree.
 #	cwish    -- Builds a console version of wish.
@@ -84,8 +84,6 @@ DEFAULT_BUILD_TARGET = release
 # We have a custom resource file
 RCFILE = tk.rc
 
-USE_WIDECHAR_API  = 0
-
 # The rules.vc file does much of the hard work in terms of defining
 # the build configuration, macros, output directories etc.
 !include "rules-ext.vc"
@@ -119,7 +117,7 @@ TTK_SQUARE_WIDGET   = 0
 
 WISHC 		= "$(OUT_DIR)\$(WISHNAMEPREFIX)c$(VERSION)$(SUFX).exe"
 
-TKTEST		= "$(OUT_DIR)\$(PROJECT)test.exe"
+TKTEST		= "$(OUT_DIR)\$(PROJECT)test$(VERSION)$(SUFX).exe"
 CAT32		= "$(OUT_DIR)\cat32.exe"
 
 WISHOBJS = \
@@ -135,7 +133,8 @@ TKTESTOBJS = \
 	$(TMP_DIR)\tkSquare.obj \
 	$(TMP_DIR)\tkTest.obj \
 	$(TMP_DIR)\tkOldTest.obj \
-	$(TMP_DIR)\tkWinTest.obj
+	$(TMP_DIR)\tkWinTest.obj \
+	$(TMP_DIR)\tktest.res
 
 XLIBOBJS = \
 	$(TMP_DIR)\xcolors.obj \
@@ -642,6 +641,7 @@ $<
 
 $(TMP_DIR)\tk.res: $(TMP_DIR)\wish.exe.manifest
 $(TMP_DIR)\wish.res: $(TMP_DIR)\wish.exe.manifest
+$(TMP_DIR)\tktest.res: $(TMP_DIR)\wish.exe.manifest
 
 .SUFFIXES:
 .SUFFIXES:.c .rc
