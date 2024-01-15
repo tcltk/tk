@@ -472,6 +472,7 @@ Tk_NameOfJustify(
     case TK_JUSTIFY_LEFT: return "left";
     case TK_JUSTIFY_RIGHT: return "right";
     case TK_JUSTIFY_CENTER: return "center";
+    case TK_JUSTIFY_FULL: return "full";
     case TK_JUSTIFY_NULL: return "";
     }
     return "unknown justification style";
