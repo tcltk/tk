@@ -69,7 +69,7 @@ the last element of the list, moreover the same simple interpretation as
 for the command \fBstring index\fR is supported, with simple integer index
 arithmetic and indexing relative to \fBend\fR).
 Otherwise, returns the index of the current value in the list of
-\fB\-values\fR or \fB\{}\fR if the current value does not appear in the list.
+\fB\-values\fR or \fB{}\fR if the current value does not appear in the list.
 .TP
 \fIpathName \fBget\fR
 Returns the current value of the combobox.
