@@ -278,7 +278,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_POST_COMMAND,
 	offsetof(TkMenu, postCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_MENU_RELIEF, offsetof(TkMenu, reliefPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	DEF_MENU_RELIEF, TCL_INDEX_NONE, offsetof(TkMenu, relief), 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "Background",
 	DEF_MENU_SELECT_COLOR, offsetof(TkMenu, indicatorFgPtr), TCL_INDEX_NONE, 0,
 	DEF_MENU_SELECT_MONO, 0},
