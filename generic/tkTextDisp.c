@@ -1970,7 +1970,7 @@ FillStyle(
     if (tagPtr->indentBg >= 0)          { stylePtr->indentBg = tagPtr->indentBg; }
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
-    if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
+    if (tagPtr->justify != TK_JUSTIFY_NULL) { stylePtr->justify = tagPtr->justify; }
     if (tagPtr->lMargin1Ptr)            { stylePtr->lMargin1 = tagPtr->lMargin1; }
     if (tagPtr->lMargin2Ptr)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
