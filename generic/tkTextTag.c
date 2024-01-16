@@ -32,14 +32,6 @@
 # define DEBUG(expr) expr
 #endif
 
-/*
- * The Text widget 'Tk_Justify' enum has an additional possible value: TK_JUSTIFY_FULL.
- */
-
-static const char *const justifyStrings[] = {
-    "left", "right", "center", "full", NULL
-};
-
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, attrs.border), TK_OPTION_NULL_OK, 0, 0},
@@ -74,8 +66,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL,
 	NULL, offsetof(TkTextTag, indentBgPtr), offsetof(TkTextTag, indentBg),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING_TABLE, "-justify", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_ENUM_VAR|TK_OPTION_NULL_OK, justifyStrings, TK_TEXT_LINE_GEOMETRY},
+    {TK_OPTION_STRING, "-justify", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-lang", NULL, NULL,
 	NULL, offsetof(TkTextTag, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
@@ -94,8 +86,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_SYNONYM, "-overstrikefg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, TK_OPTION_NULL_OK, "-overstrikecolor", TK_TEXT_DEPRECATED_OVERSTRIKE_FG},
 #endif /* SUPPORT_DEPRECATED_TAG_OPTIONS */
-    {TK_OPTION_RELIEF, "-relief", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_STRING, "-relief", NULL, NULL,
+	NULL, offsetof(TkTextTag, reliefPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
 	NULL, offsetof(TkTextTag, rMarginPtr), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
@@ -1010,7 +1002,7 @@ TkTextUpdateTagDisplayFlags(
 
     if (tagPtr->elidePtr
 	    || tagPtr->tkfont
-	    || tagPtr->justify != TK_JUSTIFY_NULL
+	    || tagPtr->justifyString
 	    || tagPtr->lMargin1Ptr
 	    || tagPtr->lMargin2Ptr
 	    || tagPtr->offsetPtr
@@ -1031,7 +1023,7 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->attrs.inactiveBorder
 	    || tagPtr->selBorder
 	    || tagPtr->inactiveSelBorder
-	    || tagPtr->relief != TK_RELIEF_NULL
+	    || tagPtr->reliefPtr
 	    || tagPtr->bgStipple != None
 	    || tagPtr->indentBg >= 0
 	    || tagPtr->attrs.fgColor
@@ -1076,6 +1068,9 @@ SetupDefaultRelief(
 {
     if (tagPtr->isSelTag) {
 	Tk_GetRelief(textPtr->interp, DEF_TEXT_SELECT_RELIEF, &tagPtr->relief);
+	assert(strcmp(Tk_NameOfRelief(tagPtr->relief), DEF_TEXT_SELECT_RELIEF) == 0);
+	if (tagPtr->reliefPtr) { Tcl_GuardedDecrRefCount(tagPtr->reliefPtr); }
+	Tcl_IncrRefCount(tagPtr->reliefPtr = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, TCL_INDEX_NONE));
     } else {
 	tagPtr->relief = TK_RELIEF_FLAT;
     }
@@ -1094,7 +1089,7 @@ TkConfigureTag(
     int mask = 0;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
-    int relief = tagPtr->relief;
+    Tcl_Obj *reliefPtr = tagPtr->reliefPtr;
     Tcl_Obj *elidePtr = tagPtr->elidePtr;
     int elide = tagPtr->elide;
     int undo = tagPtr->undo;
@@ -1165,8 +1160,36 @@ TkConfigureTag(
     } else {
 	memset(tagPtr->lang, 0, 3);
     }
-    if ((tagPtr->relief == TK_RELIEF_NULL) && (relief != TK_RELIEF_NULL)) {
+    if (tagPtr->reliefPtr) {
+	if (Tk_GetReliefFromObj(interp, tagPtr->reliefPtr, &tagPtr->relief) != TCL_OK) {
+	    rc = TCL_ERROR;
+	}
+    } else if (reliefPtr) {
 	SetupDefaultRelief(textPtr, tagPtr);
+    }
+    if (tagPtr->justifyString) {
+	const char *identifier = NULL;
+        int j = -1;
+
+	/*
+	 * Tk_Justify only knows "left", "right", and "center", so we have to parse by ourself.
+	 */
+
+        switch (*tagPtr->justifyString) {
+	case 'l': identifier = "left";   j = TK_TEXT_JUSTIFY_LEFT;   break;
+	case 'r': identifier = "right";  j = TK_TEXT_JUSTIFY_RIGHT;  break;
+	case 'f': identifier = "full";   j = TK_TEXT_JUSTIFY_FULL;   break;
+	case 'c': identifier = "center"; j = TK_TEXT_JUSTIFY_CENTER; break;
+        }
+        if (j == -1 || strcmp(tagPtr->justifyString, identifier) != 0) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "bad justify \"%s\": must be left, right, center, full, or \"\"",
+                    tagPtr->justifyString));
+            Tcl_SetErrorCode(interp, "TK", "VALUE", "JUSTIFY", NULL);
+	    rc = TCL_ERROR;
+	} else {
+	    tagPtr->justify = (TkTextJustify)j;
+	}
     }
     if (tagPtr->spacing1Ptr) {
 	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
@@ -1921,7 +1944,7 @@ TkTextCreateTag(
     tagPtr->isSelTag = isSelTag;
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
-    tagPtr->justify = TK_JUSTIFY_LEFT;
+    tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;
@@ -1929,10 +1952,10 @@ TkTextCreateTag(
     tagPtr->undoTagListIndex = -1;
     tagPtr->refCount = 1;
     tagPtr->tagEpoch = ++sharedTextPtr->tagEpoch;
-    tagPtr->relief = TK_RELIEF_NULL;
     DEBUG_ALLOC(tkTextCountNewTag++);
 
     tagPtr->optionTable = Tk_CreateOptionTable(textPtr->interp, tagOptionSpecs);
+    assert(!tagPtr->reliefPtr);
 
     sharedTextPtr->numTags += 1;
     sharedTextPtr->numEnabledTags += 1;

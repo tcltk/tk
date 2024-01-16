@@ -90,7 +90,8 @@ static const char *const taggingStrings[] = {
 };
 
 /*
- * The Text widget 'Tk_Justify' enum has an additional possible value: TK_JUSTIFY_FULL.
+ * The 'TkTextJustify' enum in tkText.h is used to define a type for the -justify option of
+ * the Text widget. These values are used as indices into the string table below.
  */
 
 static const char *const justifyStrings[] = {
