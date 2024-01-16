@@ -3,7 +3,7 @@
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -113,11 +113,13 @@ test textTag-1.12 {tag configuration options} -body {
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
 } -result {left}
-test textTag-1.13 {configuration options} -body {
-    .t tag configure x -justify middle
+test textTag-1.13 {configuration options, bug [026e2bb685]} -body {
+    .t tag configure x -justify right
+    catch {.t tag configure x -justify middle} msg
+    list $msg [.t tag configure x -justify]
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
-} -returnCodes error -result {bad justification "middle": must be left, right, or center}
+} -result {{bad justification "middle": must be left, right, or center} {-justify {} {} {} right}}
 test textTag-1.14 {tag configuration options} -body {
     .t tag configure x -lmargin1 10
     .t tag cget x -lmargin1
@@ -538,12 +540,13 @@ test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -result {-justify {} {} {} left}
-test textTag-5.9 {TkTextTagCmd - "configure" option} -body {
+test textTag-5.9 {TkTextTagCmd - "configure" option, bug [026e2bb685]} -body {
     .t tag delete x
-    .t tag configure x -justify bogus
+    catch {.t tag configure x -justify bogus} msg
+    list $msg [.t tag configure x -justify]
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
+} -result {{bad justification "bogus": must be left, right, or center} {-justify {} {} {} {}}}
 test textTag-5.10 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify fill
