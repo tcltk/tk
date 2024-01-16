@@ -750,6 +750,19 @@ typedef enum {
 } TkTextSpaceMode;
 
 /*
+ * The justification modes:
+ */
+
+typedef enum {
+    TK_TEXT_JUSTIFY_LEFT,	/* The text is aligned along the left margin. This is the default. */
+    TK_TEXT_JUSTIFY_RIGHT,	/* The text is aligned along the right margin. */
+    TK_TEXT_JUSTIFY_CENTER,	/* The text is aligned to neither the left nor the right margin,
+    				 * there is an even gap on each side of each line. */
+    TK_TEXT_JUSTIFY_FULL	/* The text is aligned along the left margin, and word-spacing is
+    				 * adjusted so that the text flush with both margins. */
+} TkTextJustify;
+
+/*
  * If the soft hyphen is the right neighbor of character "c", and the right neighbor is character
  * "k", then the ck hyphenation rule will be applied.
  */
@@ -867,6 +880,7 @@ typedef struct TkTextTag {
     TkTextSharedAttrs attrs;	/* Contains the following attributes: border, inactiveBorder,
 				 * fgColor, inactiveFgColor, and borderWidth. These attributes will
 				 * be shared with attributes from "sel" tag. */
+    Tcl_Obj *reliefPtr;		/* -relief option object. NULL means option not specified. */
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
@@ -880,8 +894,11 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-    Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
-    				 * TK_JUSTIFY_CENTER, TK_JUSTIFY_FULL, or TK_JUSTIFY_NULL. */
+    char *justifyString;	/* -justify option string (malloc-ed). NULL
+				 * means option not specified. */
+    TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
+    				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. Only valid if
+				 * justifyString is non-NULL. */
     Tcl_Obj *lMargin1Ptr;	/* -lmargin1 option. NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
@@ -1374,8 +1391,8 @@ typedef struct TkText {
 				 * NULL means perform default tabbing
 				 * behavior. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
-    Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
-    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. */
+    TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
+    				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
     Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */

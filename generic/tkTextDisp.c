@@ -580,7 +580,7 @@ typedef struct LayoutData {
     				 * numeric tabs, starting with shiftToNextLinePos. */
     unsigned lengthOfFractional;/* Length of fractional part in numerical tabs, including decimal
     				 * point. */
-    Tk_Justify justify;	/* How to justify line: taken from style for the first character
+    TkTextJustify justify;	/* How to justify line: taken from style for the first character
     				 * in this display line. */
     TkWrapMode wrapMode;	/* Wrap mode to use for this chunk. */
     int maxX;			/* Maximal x coord in current line. */
@@ -1965,12 +1965,12 @@ FillStyle(
 
     if (border)                         { stylePtr->border = border; }
     if (fgColor != NULL)                { stylePtr->fgColor = fgColor; }
-    if (tagPtr->relief != TK_RELIEF_NULL) { stylePtr->relief = tagPtr->relief; }
+    if (tagPtr->reliefPtr)              { stylePtr->relief = tagPtr->relief; }
     if (tagPtr->bgStipple != None)      { stylePtr->bgStipple = tagPtr->bgStipple; }
     if (tagPtr->indentBg >= 0)          { stylePtr->indentBg = tagPtr->indentBg; }
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
-    if (tagPtr->justify != TK_JUSTIFY_NULL) { stylePtr->justify = tagPtr->justify; }
+    if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
     if (tagPtr->lMargin1Ptr)            { stylePtr->lMargin1 = tagPtr->lMargin1; }
     if (tagPtr->lMargin2Ptr)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
@@ -3270,7 +3270,7 @@ LayoutSetupChunk(
 
 	data->tabArrayPtr = sValuePtr->tabArrayPtr;
 	data->tabStyle = sValuePtr->tabStyle;
-	data->justify = sValuePtr->justify;
+	data->justify = (TkTextJustify)sValuePtr->justify;
 	data->rMargin = sValuePtr->rMargin;
 	data->wrapMode = (TkWrapMode)sValuePtr->wrapMode;
 	data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
@@ -3470,7 +3470,7 @@ LayoutChars(
 	 * characters up to (and including) the tab.
 	 */
 
-	if (data->justify == TK_JUSTIFY_FULL) {
+	if (data->justify == TK_TEXT_JUSTIFY_FULL) {
 	    const char *p = base;
 	    const char *e = p + maxBytes;
 
@@ -4610,18 +4610,18 @@ LayoutDLine(
     jIndent = 0;
 
     switch (data.justify) {
-    default:
+    case TK_TEXT_JUSTIFY_LEFT:
     	/* no action */
 	break;
-    case TK_JUSTIFY_RIGHT:
+    case TK_TEXT_JUSTIFY_RIGHT:
 	jIndent = data.maxX - length;
 	break;
-    case TK_JUSTIFY_FULL:
+    case TK_TEXT_JUSTIFY_FULL:
 	if (!endOfLogicalLine) {
 	    LayoutFullJustification(&data, dlPtr);
 	}
 	break;
-    case TK_JUSTIFY_CENTER:
+    case TK_TEXT_JUSTIFY_CENTER:
 	jIndent = (data.maxX - length)/2;
 	break;
     }
