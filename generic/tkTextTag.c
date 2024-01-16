@@ -394,16 +394,30 @@ TkTextTagCmd(
 			&tagPtr->relief) != TCL_OK) {
 		    ckfree(tagPtr->reliefString);
 		    tagPtr->reliefString = NULL;
+		    if ((unsigned)tagPtr->relief <= TK_RELIEF_SUNKEN) {
+		    	const char *reliefString = Tk_NameOfRelief(tagPtr->relief);
+		    	tagPtr->reliefString = ckalloc(strlen(reliefString)+1);
+		    	strcpy(tagPtr->reliefString, reliefString);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->relief = TK_RELIEF_NULL;
 	    }
 	    if (tagPtr->justifyString != NULL) {
 		if (Tk_GetJustify(interp, tagPtr->justifyString,
 			&tagPtr->justify) != TCL_OK) {
 		    ckfree(tagPtr->justifyString);
 		    tagPtr->justifyString = NULL;
+		    if ((unsigned)tagPtr->justify <= (unsigned)TK_JUSTIFY_CENTER) {
+		    	const char *justifyString = Tk_NameOfJustify(tagPtr->justify);
+		    	tagPtr->justifyString = ckalloc(strlen(justifyString)+1);
+		    	strcpy(tagPtr->justifyString, justifyString);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->justify = (Tk_Justify)-1;
 	    }
 	    if (tagPtr->lMargin1String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
@@ -1036,13 +1050,13 @@ TkTextCreateTag(
     tagPtr->borderWidth = 0;
     tagPtr->borderWidthPtr = NULL;
     tagPtr->reliefString = NULL;
-    tagPtr->relief = TK_RELIEF_FLAT;
+    tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
     tagPtr->fgStipple = None;
     tagPtr->justifyString = NULL;
-    tagPtr->justify = TK_JUSTIFY_LEFT;
+    tagPtr->justify = (Tk_Justify)-1;
     tagPtr->lMargin1String = NULL;
     tagPtr->lMargin1 = 0;
     tagPtr->lMargin2String = NULL;
