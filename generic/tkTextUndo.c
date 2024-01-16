@@ -143,7 +143,7 @@ ResetCurrent(
     if (force || !current || current->capacity > InitialCapacity) {
 	static unsigned Size = ATOM_SIZE(InitialCapacity);
 	current = stack->current = (TkTextUndoMyAtom *)ckrealloc(current, Size);
-	memset(current, 0, Size);
+	memset((void *)current, 0, Size);
 	current->capacity = InitialCapacity;
     }
 

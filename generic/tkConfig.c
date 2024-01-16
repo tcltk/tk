@@ -562,6 +562,14 @@ Tk_InitOptions(
  *--------------------------------------------------------------
  */
 
+static const char *const justifyFullStrings[] = {
+    "left", "right", "center", "full", NULL
+};
+
+static const char *const justifyNumericStrings[] = {
+    "left", "right", "center", "numeric", NULL
+};
+
 static int
 DoObjConfig(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
@@ -918,11 +926,17 @@ DoObjConfig(
     }
     case TK_OPTION_JUSTIFY: {
 	int newJustify;
+	const char *const *justifyTable = tkJustifyStrings;
+	if (optionPtr->specPtr->flags & TK_OPTION_JUSTIFY_FULL) {
+	    justifyTable = justifyFullStrings;
+	} else if (optionPtr->specPtr->flags & TK_OPTION_JUSTIFY_NUMERIC) {
+	    justifyTable = justifyNumericStrings;
+	}
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newJustify = -1;
-	} else if (Tcl_GetIndexFromObj(interp, valuePtr, tkJustifyStrings,
+	} else if (Tcl_GetIndexFromObj(interp, valuePtr, justifyTable,
 		"justification", (nullOK ? TCL_NULL_OK : 0), &newJustify) != TCL_OK) {
 	    return TCL_ERROR;
 	}
@@ -2114,7 +2128,9 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_RELIEF:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *)internalPtr)), TCL_INDEX_NONE);
+	    if (*((int *)internalPtr) != TK_RELIEF_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfRelief(*((int *)internalPtr)), TCL_INDEX_NONE);
+	    }
 	    break;
 	case TK_OPTION_CURSOR: {
 	    Tk_Cursor cursor = *((Tk_Cursor *)internalPtr);
@@ -2126,12 +2142,16 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_JUSTIFY:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
-		    *((Tk_Justify *)internalPtr)), TCL_INDEX_NONE);
+	    if (*((Tk_Justify *)internalPtr) != TK_JUSTIFY_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfJustify(
+			*((Tk_Justify *)internalPtr)), TCL_INDEX_NONE);
+	    }
 	    break;
 	case TK_OPTION_ANCHOR:
-	    objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
-		    *((Tk_Anchor *)internalPtr)), TCL_INDEX_NONE);
+	    if (*((Tk_Anchor *)internalPtr) != TK_ANCHOR_NULL) {
+		objPtr = Tcl_NewStringObj(Tk_NameOfAnchor(
+			*((Tk_Anchor *)internalPtr)), TCL_INDEX_NONE);
+	    }
 	    break;
 	case TK_OPTION_PIXELS:
 	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
