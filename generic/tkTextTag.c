@@ -1176,10 +1176,10 @@ TkConfigureTag(
 	 */
 
         switch (*tagPtr->justifyString) {
-	case 'l': identifier = "left";   j = TK_TEXT_JUSTIFY_LEFT;   break;
-	case 'r': identifier = "right";  j = TK_TEXT_JUSTIFY_RIGHT;  break;
-	case 'f': identifier = "full";   j = TK_TEXT_JUSTIFY_FULL;   break;
-	case 'c': identifier = "center"; j = TK_TEXT_JUSTIFY_CENTER; break;
+	case 'l': identifier = "left";   j = TK_JUSTIFY_LEFT;   break;
+	case 'r': identifier = "right";  j = TK_JUSTIFY_RIGHT;  break;
+	case 'f': identifier = "full";   j = TK_JUSTIFY_FULL;   break;
+	case 'c': identifier = "center"; j = TK_JUSTIFY_CENTER; break;
         }
         if (j == -1 || strcmp(tagPtr->justifyString, identifier) != 0) {
             Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -1188,7 +1188,7 @@ TkConfigureTag(
             Tcl_SetErrorCode(interp, "TK", "VALUE", "JUSTIFY", NULL);
 	    rc = TCL_ERROR;
 	} else {
-	    tagPtr->justify = (TkTextJustify)j;
+	    tagPtr->justify = (Tk_Justify)j;
 	}
     }
     if (tagPtr->spacing1Ptr) {
@@ -1944,7 +1944,8 @@ TkTextCreateTag(
     tagPtr->isSelTag = isSelTag;
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
-    tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
+    tagPtr->justifyString = NULL;
+    tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;

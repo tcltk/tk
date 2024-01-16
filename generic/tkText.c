@@ -90,7 +90,7 @@ static const char *const taggingStrings[] = {
 };
 
 /*
- * The 'TkTextJustify' enum in tkText.h is used to define a type for the -justify option of
+ * The 'Tk_Justify' enum in tk.h is used to define a type for the -justify option of
  * the Text widget. These values are used as indices into the string table below.
  */
 
