@@ -7079,7 +7079,7 @@ TkTextGetTabs(
     TkTextTab *tabPtr;
     double prevStop, lastStop;
     /*
-     * Map these strings to TkTextTabAlign values.
+     * Map these strings to Tk_Justify values.
      */
     static const char *const tabOptionStrings[] = {
 	"left", "right", "center", "numeric", NULL
@@ -7167,7 +7167,7 @@ TkTextGetTabs(
 	 * Otherwise just use "left".
 	 */
 
-	tabPtr->alignment = LEFT;
+	tabPtr->alignment = TK_JUSTIFY_LEFT;
 	if (i + 1 == objc) {
 	    continue;
 	}
@@ -7205,7 +7205,7 @@ TkTextGetTabs(
 		sizeof(char *), "tab alignment", 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	tabPtr->alignment = (TkTextTabAlign) index;
+	tabPtr->alignment = (Tk_Justify)index;
     }
 
     /*

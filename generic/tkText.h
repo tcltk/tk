@@ -1036,13 +1036,6 @@ typedef struct TkTextSearch {
 } TkTextSearch;
 
 /*
- * The following data structure describes a single tab stop. It must be kept
- * in sync with the 'tabOptionStrings' array in the function 'TkTextGetTabs'
- */
-
-typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
-
-/*
  * The following are the supported styles of tabbing, used for the -tabstyle
  * option of the text widget. The first element is only used for tag options.
  */
@@ -1058,7 +1051,7 @@ MODULE_SCOPE const char *const tkTextTabStyleStrings[];
 typedef struct TkTextTab {
     int location;		/* Offset in pixels of this tab stop from the
 				 * left margin (lmargin2) of the text. */
-    TkTextTabAlign alignment;	/* Where the tab stop appears relative to the
+    Tk_Justify alignment;	/* Where the tab stop appears relative to the
 				 * text. */
 } TkTextTab;
 
