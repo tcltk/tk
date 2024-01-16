@@ -100,7 +100,7 @@ typedef struct TkTextDispLineEntry {
 
 typedef struct TkTextDispLineInfo {
     uint32_t numDispLines;	/* Number of display lines (so far). */
-    TkTextDispLineEntry entry[1];
+    TkTextDispLineEntry entry[TKFLEXARRAY];
 				/* Cached information about the display line, this is required for
 				 * long lines to avoid repeated display line height calculations
 				 * when scrolling. If numDispLines <= 1 then this information is
@@ -881,11 +881,8 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-    char *justifyString;	/* -justify option string (malloc-ed). NULL
-				 * means option not specified. */
     Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
-    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. Only valid if
-				 * justifyString is non-NULL. */
+    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. */
     Tcl_Obj *lMargin1Ptr;	/* -lmargin1 option. NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
@@ -1049,7 +1046,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[1];/* Array of tabs. The actual size will be
+    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;

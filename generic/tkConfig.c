@@ -566,10 +566,6 @@ static const char *const justifyFullStrings[] = {
     "left", "right", "center", "full", NULL
 };
 
-static const char *const justifyNumericStrings[] = {
-    "left", "right", "center", "numeric", NULL
-};
-
 static int
 DoObjConfig(
     Tcl_Interp *interp,		/* Interpreter for error reporting. If NULL,
@@ -929,8 +925,6 @@ DoObjConfig(
 	const char *const *justifyTable = tkJustifyStrings;
 	if (optionPtr->specPtr->flags & TK_OPTION_JUSTIFY_FULL) {
 	    justifyTable = justifyFullStrings;
-	} else if (optionPtr->specPtr->flags & TK_OPTION_JUSTIFY_NUMERIC) {
-	    justifyTable = justifyNumericStrings;
 	}
 
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
