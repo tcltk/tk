@@ -903,12 +903,12 @@ GetStyle(
 	    styleValues.justify = tagPtr->justify;
 	    justifyPrio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin1String != NULL)
+	if ((tagPtr->lMargin1 != INT_MIN)
 		&& (tagPtr->priority > lMargin1Prio)) {
 	    styleValues.lMargin1 = tagPtr->lMargin1;
 	    lMargin1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin2String != NULL)
+	if ((tagPtr->lMargin2 != INT_MIN)
 		&& (tagPtr->priority > lMargin2Prio)) {
 	    styleValues.lMargin2 = tagPtr->lMargin2;
 	    lMargin2Prio = tagPtr->priority;
@@ -918,7 +918,7 @@ GetStyle(
 	    styleValues.lMarginColor = tagPtr->lMarginColor;
 	    lMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->offsetString != NULL)
+	if ((tagPtr->offset != INT_MIN)
 		&& (tagPtr->priority > offsetPrio)) {
 	    styleValues.offset = tagPtr->offset;
 	    offsetPrio = tagPtr->priority;
@@ -933,7 +933,7 @@ GetStyle(
                  styleValues.overstrikeColor = fgColor;
             }
 	}
-	if ((tagPtr->rMarginString != NULL)
+	if ((tagPtr->rMargin != INT_MIN)
 		&& (tagPtr->priority > rMarginPrio)) {
 	    styleValues.rMargin = tagPtr->rMargin;
 	    rMarginPrio = tagPtr->priority;
@@ -943,17 +943,17 @@ GetStyle(
 	    styleValues.rMarginColor = tagPtr->rMarginColor;
 	    rMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing1String != NULL)
+	if ((tagPtr->spacing1 != INT_MIN)
 		&& (tagPtr->priority > spacing1Prio)) {
 	    styleValues.spacing1 = tagPtr->spacing1;
 	    spacing1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing2String != NULL)
+	if ((tagPtr->spacing2 != INT_MIN)
 		&& (tagPtr->priority > spacing2Prio)) {
 	    styleValues.spacing2 = tagPtr->spacing2;
 	    spacing2Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing3String != NULL)
+	if ((tagPtr->spacing3 != INT_MIN)
 		&& (tagPtr->priority > spacing3Prio)) {
 	    styleValues.spacing3 = tagPtr->spacing3;
 	    spacing3Prio = tagPtr->priority;
