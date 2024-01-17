@@ -100,7 +100,7 @@ typedef struct TkTextDispLineEntry {
 
 typedef struct TkTextDispLineInfo {
     uint32_t numDispLines;	/* Number of display lines (so far). */
-    TkTextDispLineEntry entry[TKFLEXARRAY];
+    TkTextDispLineEntry entry[1];
 				/* Cached information about the display line, this is required for
 				 * long lines to avoid repeated display line height calculations
 				 * when scrolling. If numDispLines <= 1 then this information is
@@ -750,6 +750,19 @@ typedef enum {
 } TkTextSpaceMode;
 
 /*
+ * The justification modes:
+ */
+
+typedef enum {
+    TK_TEXT_JUSTIFY_LEFT,	/* The text is aligned along the left margin. This is the default. */
+    TK_TEXT_JUSTIFY_RIGHT,	/* The text is aligned along the right margin. */
+    TK_TEXT_JUSTIFY_FULL,	/* The text is aligned along the left margin, and word-spacing is
+    				 * adjusted so that the text flush with both margins. */
+    TK_TEXT_JUSTIFY_CENTER	/* The text is aligned to neither the left nor the right margin,
+    				 * there is an even gap on each side of each line. */
+} TkTextJustify;
+
+/*
  * If the soft hyphen is the right neighbor of character "c", and the right neighbor is character
  * "k", then the ck hyphenation rule will be applied.
  */
@@ -881,8 +894,11 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-    Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
-    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. */
+    char *justifyString;	/* -justify option string (malloc-ed). NULL
+				 * means option not specified. */
+    TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
+    				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. Only valid if
+				 * justifyString is non-NULL. */
     Tcl_Obj *lMargin1Ptr;	/* -lmargin1 option. NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
@@ -1020,6 +1036,13 @@ typedef struct TkTextSearch {
 } TkTextSearch;
 
 /*
+ * The following data structure describes a single tab stop. It must be kept
+ * in sync with the 'tabOptionStrings' array in the function 'TkTextGetTabs'
+ */
+
+typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
+
+/*
  * The following are the supported styles of tabbing, used for the -tabstyle
  * option of the text widget. The first element is only used for tag options.
  */
@@ -1035,7 +1058,7 @@ MODULE_SCOPE const char *const tkTextTabStyleStrings[];
 typedef struct TkTextTab {
     int location;		/* Offset in pixels of this tab stop from the
 				 * left margin (lmargin2) of the text. */
-    Tk_Justify alignment;	/* Where the tab stop appears relative to the
+    TkTextTabAlign alignment;	/* Where the tab stop appears relative to the
 				 * text. */
 } TkTextTab;
 
@@ -1046,7 +1069,7 @@ typedef struct TkTextTabArray {
     double tabIncrement;	/* The accurate fractional pixel increment
 				 * between interpolated tabs we have to create
 				 * when we exceed numTabs. */
-    TkTextTab tabs[TKFLEXARRAY];/* Array of tabs. The actual size will be
+    TkTextTab tabs[1];/* Array of tabs. The actual size will be
 				 * numTabs. THIS FIELD MUST BE THE LAST IN THE
 				 * STRUCTURE. */
 } TkTextTabArray;
@@ -1368,8 +1391,8 @@ typedef struct TkText {
 				 * NULL means perform default tabbing
 				 * behavior. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
-    Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
-    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. */
+    TkTextJustify justify;	/* How to justify text: TK_TEXT_JUSTIFY_LEFT, TK_TEXT_JUSTIFY_RIGHT,
+    				 * TK_TEXT_JUSTIFY_CENTER, or TK_TEXT_JUSTIFY_FULL. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
     Tcl_Obj *langPtr;		/* -lang option string. NULL means option not specified. */

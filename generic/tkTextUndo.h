@@ -71,7 +71,7 @@ typedef struct TkTextUndoAtom {
     uint32_t arraySize;		/* Number of elements in this array. */
     uint32_t size:31;		/* Total size of all items. */
     uint32_t redo:1;		/* Is redo atom? */
-    const TkTextUndoSubAtom array[TKFLEXARRAY];
+    const TkTextUndoSubAtom array[1];
 				/* Array of undo/redo actions. */
 } TkTextUndoAtom;
 
