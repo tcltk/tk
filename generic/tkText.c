@@ -618,6 +618,8 @@ CreateWidget(
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
     Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
+    textPtr->selTagPtr->reliefObj = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, -1);
+    Tcl_IncrRefCount(textPtr->selTagPtr->reliefObj);
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
 
@@ -2259,13 +2261,13 @@ ConfigureText(
     if ((textPtr->selTagPtr->elide >= 0)
 	    || (textPtr->selTagPtr->tkfont != NULL)
 	    || (textPtr->selTagPtr->justify != TK_JUSTIFY_NULL)
-	    || (textPtr->selTagPtr->lMargin1String != NULL)
-	    || (textPtr->selTagPtr->lMargin2String != NULL)
-	    || (textPtr->selTagPtr->offsetString != NULL)
-	    || (textPtr->selTagPtr->rMarginString != NULL)
-	    || (textPtr->selTagPtr->spacing1String != NULL)
-	    || (textPtr->selTagPtr->spacing2String != NULL)
-	    || (textPtr->selTagPtr->spacing3String != NULL)
+	    || (textPtr->selTagPtr->lMargin1 != INT_MIN)
+	    || (textPtr->selTagPtr->lMargin2 != INT_MIN)
+	    || (textPtr->selTagPtr->offset != INT_MIN)
+	    || (textPtr->selTagPtr->rMargin != INT_MIN)
+	    || (textPtr->selTagPtr->spacing1 != INT_MIN)
+	    || (textPtr->selTagPtr->spacing2 != INT_MIN)
+	    || (textPtr->selTagPtr->spacing3 != INT_MIN)
 	    || (textPtr->selTagPtr->tabStringPtr != NULL)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)

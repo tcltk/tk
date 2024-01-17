@@ -113,11 +113,13 @@ test textTag-1.12 {tag configuration options} -body {
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
 } -result {left}
-test textTag-1.13 {configuration options} -body {
-    .t tag configure x -justify middle
+test textTag-1.13 {configuration options, bug [026e2bb685]} -body {
+    .t tag configure x -justify right
+    catch {.t tag configure x -justify middle} msg
+    list $msg [.t tag configure x -justify]
 } -cleanup {
     .t tag configure x -justify [lindex [.t tag configure x -justify] 3]
-} -returnCodes error -result {bad justification "middle": must be left, right, center, or ""}
+} -result {{bad justification "middle": must be left, right, center, or ""} {-justify {} {} {} right}}
 test textTag-1.14 {tag configuration options} -body {
     .t tag configure x -lmargin1 10
     .t tag cget x -lmargin1
@@ -538,12 +540,13 @@ test textTag-5.8 {TkTextTagCmd - "configure" option} -body {
 } -cleanup {
     .t tag delete x
 } -result {-justify {} {} {} left}
-test textTag-5.9 {TkTextTagCmd - "configure" option} -body {
-    .t tag delete x
-    .t tag configure x -justify bogus
+test textTag-5.9 {TkTextTagCmd - "configure" option, bug [026e2bb685]} -body {
+   .t tag delete x
+    catch {.t tag configure x -justify bogus} msg
+    list $msg [.t tag configure x -justify]
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad justification "bogus": must be left, right, center, or ""}
+} -result {{bad justification "bogus": must be left, right, center, or ""} {-justify {} {} {} {}}}
 test textTag-5.10 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -justify fill
@@ -1203,6 +1206,7 @@ test textTag-14.4 {SortTags} -setup {
 } -cleanup {
     .t tag delete {*}[.t tag names]
 } -result {x0 x1 x2 x3 x4 x5 x6 x7 x8 x9 x10 x11 x12 x13 x14 x15 x16 x17 x18 x19 x20 x21 x22 x23 x24 x25 x26 x27 x28 x29}
+
 set c [.t bbox 2.1]
 set x1 [expr {[lindex $c 0] + [lindex $c 2]/2}]
 set y1 [expr {[lindex $c 1] + [lindex $c 3]/2}]
