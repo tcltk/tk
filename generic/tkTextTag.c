@@ -372,8 +372,6 @@ TkTextTagCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
 	} else {
-	    int result = TCL_OK;
-
 	    if (Tk_SetOptions(interp, (char *)tagPtr, tagPtr->optionTable,
 		    objc-4, objv+4, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 		return TCL_ERROR;
@@ -394,73 +392,152 @@ TkTextTagCmd(
 			&tagPtr->relief) != TCL_OK) {
 		    ckfree(tagPtr->reliefString);
 		    tagPtr->reliefString = NULL;
+		    if ((unsigned)tagPtr->relief <= TK_RELIEF_SUNKEN) {
+		    	const char *reliefString = Tk_NameOfRelief(tagPtr->relief);
+		    	tagPtr->reliefString = ckalloc(strlen(reliefString)+1);
+		    	strcpy(tagPtr->reliefString, reliefString);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->relief = TK_RELIEF_NULL;
 	    }
 	    if (tagPtr->justifyString != NULL) {
 		if (Tk_GetJustify(interp, tagPtr->justifyString,
 			&tagPtr->justify) != TCL_OK) {
 		    ckfree(tagPtr->justifyString);
 		    tagPtr->justifyString = NULL;
+		    if ((unsigned)tagPtr->justify <= (unsigned)TK_JUSTIFY_CENTER) {
+		    	const char *justifyString = Tk_NameOfJustify(tagPtr->justify);
+		    	tagPtr->justifyString = ckalloc(strlen(justifyString)+1);
+		    	strcpy(tagPtr->justifyString, justifyString);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->justify = (Tk_Justify)-1;
 	    }
 	    if (tagPtr->lMargin1String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
+		    ckfree(tagPtr->lMargin1String);
+		    tagPtr->lMargin1String = NULL;
+		    if (tagPtr->lMargin1 != INT_MIN) {
+		    	tagPtr->lMargin1String = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->lMargin1String, TCL_INTEGER_SPACE, "%d", tagPtr->lMargin1);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->lMargin1 = INT_MIN;
 	    }
 	    if (tagPtr->lMargin2String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
+		    ckfree(tagPtr->lMargin2String);
+		    tagPtr->lMargin2String = NULL;
+		    if (tagPtr->lMargin2 != INT_MIN) {
+		    	tagPtr->lMargin2String = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->lMargin2String, TCL_INTEGER_SPACE, "%d", tagPtr->lMargin2);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->lMargin2 = INT_MIN;
 	    }
 	    if (tagPtr->offsetString != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
 			&tagPtr->offset) != TCL_OK) {
+		    ckfree(tagPtr->offsetString);
+		    tagPtr->offsetString = NULL;
+		    if (tagPtr->offset != INT_MIN) {
+		    	tagPtr->offsetString = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->offsetString, TCL_INTEGER_SPACE, "%d", tagPtr->offset);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->offset = INT_MIN;
 	    }
 	    if (tagPtr->overstrikeString != NULL) {
 		if (Tcl_GetBoolean(interp, tagPtr->overstrikeString,
 			&tagPtr->overstrike) != TCL_OK) {
+		    ckfree(tagPtr->overstrikeString);
+		    tagPtr->overstrikeString = NULL;
+		    if ((unsigned)tagPtr->overstrike <= 1) {
+			tagPtr->overstrikeString = ckalloc(2);
+			tagPtr->overstrikeString[0] = '0' + tagPtr->overstrike;
+			tagPtr->overstrikeString[1] = 0;
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->overstrike = -1;
 	    }
 	    if (tagPtr->rMarginString != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
+		    ckfree(tagPtr->rMarginString);
+		    tagPtr->rMarginString = NULL;
+		    if (tagPtr->rMargin != INT_MIN) {
+		    	tagPtr->rMarginString = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->rMarginString, TCL_INTEGER_SPACE, "%d", tagPtr->rMargin);
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->rMargin = INT_MIN;
 	    }
 	    if (tagPtr->spacing1String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
+		    ckfree(tagPtr->spacing1String);
+		    tagPtr->spacing1String = NULL;
+		    if (tagPtr->spacing1 != INT_MIN) {
+		    	tagPtr->spacing1String = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->spacing1String, TCL_INTEGER_SPACE, "%d", tagPtr->spacing1);
+		    }
 		    return TCL_ERROR;
 		}
 		if (tagPtr->spacing1 < 0) {
 		    tagPtr->spacing1 = 0;
 		}
+	    } else {
+		tagPtr->spacing1 = INT_MIN;
 	    }
 	    if (tagPtr->spacing2String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
+		    ckfree(tagPtr->spacing2String);
+		    tagPtr->spacing2String = NULL;
+		    if (tagPtr->spacing2 != INT_MIN) {
+		    	tagPtr->spacing2String = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->spacing2String, TCL_INTEGER_SPACE, "%d", tagPtr->spacing2);
+		    }
 		    return TCL_ERROR;
 		}
 		if (tagPtr->spacing2 < 0) {
 		    tagPtr->spacing2 = 0;
 		}
+	    } else {
+		tagPtr->spacing2 = INT_MIN;
 	    }
 	    if (tagPtr->spacing3String != NULL) {
 		if (Tk_GetPixels(interp, textPtr->tkwin,
 			tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
+		    ckfree(tagPtr->spacing3String);
+		    tagPtr->spacing3String = NULL;
+		    if (tagPtr->spacing3 != INT_MIN) {
+		    	tagPtr->spacing3String = ckalloc(TCL_INTEGER_SPACE);
+		    	snprintf(tagPtr->spacing3String, TCL_INTEGER_SPACE, "%d", tagPtr->spacing3);
+		    }
 		    return TCL_ERROR;
 		}
 		if (tagPtr->spacing3 < 0) {
 		    tagPtr->spacing3 = 0;
 		}
+	    } else {
+		tagPtr->spacing3 = INT_MIN;
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
 		ckfree(tagPtr->tabArrayPtr);
@@ -476,12 +553,28 @@ TkTextTagCmd(
 	    if (tagPtr->underlineString != NULL) {
 		if (Tcl_GetBoolean(interp, tagPtr->underlineString,
 			&tagPtr->underline) != TCL_OK) {
+		    ckfree(tagPtr->underlineString);
+		    tagPtr->underlineString = NULL;
+		    if ((unsigned)tagPtr->underline <= 1) {
+			tagPtr->underlineString = ckalloc(2);
+			tagPtr->underlineString[0] = '0' + tagPtr->underline;
+			tagPtr->underlineString[1] = 0;
+		    }
 		    return TCL_ERROR;
 		}
+	    } else {
+		tagPtr->underline = -1;
 	    }
 	    if (tagPtr->elideString != NULL) {
 		if (Tcl_GetBoolean(interp, tagPtr->elideString,
 			&tagPtr->elide) != TCL_OK) {
+		    ckfree(tagPtr->elideString);
+		    tagPtr->elideString = NULL;
+		    if ((unsigned)tagPtr->elide <= 1) {
+			tagPtr->elideString = ckalloc(2);
+			tagPtr->elideString[0] = '0' + tagPtr->elide;
+			tagPtr->elideString[1] = 0;
+		    }
 		    return TCL_ERROR;
 		}
 
@@ -492,6 +585,8 @@ TkTextTagCmd(
 		 */
 
 		textPtr->sharedTextPtr->stateEpoch++;
+	    } else {
+		tagPtr->elide = -1;
 	    }
 
 	    /*
@@ -568,7 +663,7 @@ TkTextTagCmd(
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
 			NULL, NULL, tagPtr, 1);
 	    }
-	    return result;
+	    return TCL_OK;
 	}
 	break;
     }
@@ -1036,42 +1131,42 @@ TkTextCreateTag(
     tagPtr->borderWidth = 0;
     tagPtr->borderWidthPtr = NULL;
     tagPtr->reliefString = NULL;
-    tagPtr->relief = TK_RELIEF_FLAT;
+    tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
     tagPtr->fgStipple = None;
     tagPtr->justifyString = NULL;
-    tagPtr->justify = TK_JUSTIFY_LEFT;
+    tagPtr->justify = (Tk_Justify)-1;
     tagPtr->lMargin1String = NULL;
-    tagPtr->lMargin1 = 0;
+    tagPtr->lMargin1 = INT_MIN;
     tagPtr->lMargin2String = NULL;
-    tagPtr->lMargin2 = 0;
+    tagPtr->lMargin2 = INT_MIN;
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetString = NULL;
-    tagPtr->offset = 0;
+    tagPtr->offset = INT_MIN;
     tagPtr->overstrikeString = NULL;
-    tagPtr->overstrike = 0;
+    tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
-    tagPtr->rMargin = 0;
+    tagPtr->rMargin = INT_MIN;
     tagPtr->rMarginColor = NULL;
     tagPtr->selBorder = NULL;
     tagPtr->selFgColor = NULL;
     tagPtr->spacing1String = NULL;
-    tagPtr->spacing1 = 0;
+    tagPtr->spacing1 = INT_MIN;
     tagPtr->spacing2String = NULL;
-    tagPtr->spacing2 = 0;
+    tagPtr->spacing2 = INT_MIN;
     tagPtr->spacing3String = NULL;
-    tagPtr->spacing3 = 0;
+    tagPtr->spacing3 = INT_MIN;
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->underlineString = NULL;
-    tagPtr->underline = 0;
+    tagPtr->underline = -1;
     tagPtr->underlineColor = NULL;
     tagPtr->elideString = NULL;
-    tagPtr->elide = 0;
+    tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
