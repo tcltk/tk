@@ -174,9 +174,9 @@ static int TkpDrawingIsDisabled(Tk_Window tkwin) { return 0; }
  */
 
 typedef struct TkTextBreakInfo {
-    size_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
+    uint32_t refCount;	/* Reference counter, destroy if this counter is going to zero. */
 #ifndef NDEBUG
-    size_t brksSize;	/* Size of break info array, only needed for debugging. */
+    uint32_t brksSize;	/* Size of break info array, only needed for debugging. */
 #endif
     char *brks;		/* Array of break info, has exactly the char length of the logical line,
     			 * each cell is one of LINEBREAK_NOBREAK, LINEBREAK_ALLOWBREAK,
@@ -248,25 +248,25 @@ typedef struct StyleValues {
     XColor *underlineColor;	/* Foreground color for underline underneath text. */
     char const *lang;		/* Language support (may be NULL). */
     int hyphenRules;		/* Hyphenation rules for spelling changes. */
-    int borderWidth;	/* Width of 3-D border for background. */
-    int lMargin1;		/* Left margin, in pixels, for first display line of each text line. */
-    int lMargin2;		/* Left margin, in pixels, for second and later display lines of
+    int32_t borderWidth;	/* Width of 3-D border for background. */
+    int32_t lMargin1;		/* Left margin, in pixels, for first display line of each text line. */
+    int32_t lMargin2;		/* Left margin, in pixels, for second and later display lines of
     				 * each text line. */
-    int offset;		/* Offset in pixels of baseline, relative to baseline of line. */
-    int rMargin;		/* Right margin, in pixels. */
-    int spacing1;		/* Spacing above first dline in text line. */
-    int spacing2;		/* Spacing between lines of dline. */
-    int spacing3;		/* Spacing below last dline in text line. */
-    int wrapMode:4;	/* How to handle wrap-around for this tag. One of TEXT_WRAPMODE_CHAR,
+    int32_t offset;		/* Offset in pixels of baseline, relative to baseline of line. */
+    int32_t rMargin;		/* Right margin, in pixels. */
+    int32_t spacing1;		/* Spacing above first dline in text line. */
+    int32_t spacing2;		/* Spacing between lines of dline. */
+    int32_t spacing3;		/* Spacing below last dline in text line. */
+    uint32_t wrapMode:3;	/* How to handle wrap-around for this tag. One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_CODEPOINT.*/
-    int tabStyle:4;	/* One of TABULAR or WORDPROCESSOR. */
-    int justify:4;		/* Justification style for text. */
-    int relief:4;		/* 3-D relief for background. */
-    int indentBg:2;	/* Background will be indented accordingly to the -lmargin1,
+    uint32_t tabStyle:3;	/* One of TABULAR or WORDPROCESSOR. */
+    uint32_t justify:3;		/* Justification style for text. */
+    uint32_t relief:3;		/* 3-D relief for background. */
+    uint32_t indentBg:1;	/* Background will be indented accordingly to the -lmargin1,
     				 * and -lmargin2 options. */
-    int overstrike:2;	/* Non-zero means draw overstrike through text. */
-    int underline:2;	/* Non-zero means draw underline underneath text. */
-    int elide:2;		/* Zero means draw text, otherwise not. */
+    uint32_t overstrike:1;	/* Non-zero means draw overstrike through text. */
+    uint32_t underline:1;	/* Non-zero means draw underline underneath text. */
+    uint32_t elide:1;		/* Zero means draw text, otherwise not. */
 } StyleValues;
 
 /*
@@ -285,7 +285,7 @@ typedef struct TextStyle {
     GC eolGC;			/* Graphics context for end of line symbol. */
     GC eotGC;			/* Graphics context for end of text symbol. */
     GC hyphenGC;		/* Graphics context for soft hyphen character. */
-    size_t refCount;		/* Number of times this structure is referenced in Chunks. */
+    uint32_t refCount;		/* Number of times this structure is referenced in Chunks. */
 } TextStyle;
 
 /*
@@ -306,8 +306,8 @@ typedef struct CharInfo {
 } CharInfo;
 
 typedef struct PixelPos {
-    int xFirst, xLast; 	/* Horizontal pixel position. */
-    int yFirst, yLast;	/* Vertical pixel position. */
+    int32_t xFirst, xLast; 	/* Horizontal pixel position. */
+    int32_t yFirst, yLast;	/* Vertical pixel position. */
 } PixelPos;
 
 typedef struct DRegion {
@@ -573,14 +573,14 @@ typedef struct LayoutData {
     				 * zero otherwise. */
     int tabIndex;		/* Index of the current tab stop. */
     int tabOverhang;		/* Overhang from computed line break. */
-    Tk_Justify tabAlignment;/* Alignment of current active tab. */
+    TkTextTabAlign tabAlignment;/* Alignment of current active tab. */
     unsigned tabWidth;		/* Default tab width of this widget. */
     unsigned numSpaces;		/* Number of expandable space (needed for full justification). */
     unsigned shiftToNextLine;	/* Shift this number of characters to next line for adjustment of
     				 * numeric tabs, starting with shiftToNextLinePos. */
     unsigned lengthOfFractional;/* Length of fractional part in numerical tabs, including decimal
     				 * point. */
-    Tk_Justify justify;	/* How to justify line: taken from style for the first character
+    TkTextJustify justify;	/* How to justify line: taken from style for the first character
     				 * in this display line. */
     TkWrapMode wrapMode;	/* Wrap mode to use for this chunk. */
     int maxX;			/* Maximal x coord in current line. */
@@ -1970,7 +1970,7 @@ FillStyle(
     if (tagPtr->indentBg >= 0)          { stylePtr->indentBg = tagPtr->indentBg; }
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
     if (tagPtr->fgStipple != None)      { stylePtr->fgStipple = tagPtr->fgStipple; }
-    if (tagPtr->justify != TK_JUSTIFY_NULL) { stylePtr->justify = tagPtr->justify; }
+    if (tagPtr->justifyString)          { stylePtr->justify = tagPtr->justify; }
     if (tagPtr->lMargin1Ptr)            { stylePtr->lMargin1 = tagPtr->lMargin1; }
     if (tagPtr->lMargin2Ptr)            { stylePtr->lMargin2 = tagPtr->lMargin2; }
     if (tagPtr->lMarginColor)           { stylePtr->lMarginColor = tagPtr->lMarginColor; }
@@ -3270,7 +3270,7 @@ LayoutSetupChunk(
 
 	data->tabArrayPtr = sValuePtr->tabArrayPtr;
 	data->tabStyle = sValuePtr->tabStyle;
-	data->justify = (Tk_Justify)sValuePtr->justify;
+	data->justify = (TkTextJustify)sValuePtr->justify;
 	data->rMargin = sValuePtr->rMargin;
 	data->wrapMode = (TkWrapMode)sValuePtr->wrapMode;
 	data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
@@ -3470,7 +3470,7 @@ LayoutChars(
 	 * characters up to (and including) the tab.
 	 */
 
-	if (data->justify == TK_JUSTIFY_FULL) {
+	if (data->justify == TK_TEXT_JUSTIFY_FULL) {
 	    const char *p = base;
 	    const char *e = p + maxBytes;
 
@@ -3698,12 +3698,13 @@ LayoutChars(
 
 	if (data->maxX >= 0) {
 	    switch (data->tabAlignment) {
-	    default:
+	    case LEFT:
+	    case CENTER:
 		if (data->tabSize >= data->maxX - data->x) {
 		    return 0; /* end of display line reached */
 		}
 		break;
-	    case TK_JUSTIFY_RIGHT:
+	    case RIGHT:
 		if (data->tabSize > data->maxX - data->x) {
 		    return 0; /* end of display line reached */
 		}
@@ -3714,7 +3715,7 @@ LayoutChars(
 		    ComputeShiftForRightTab(data, segPtr, chunkPtr->numBytes + byteOffset);
 		}
 	    	break;
-	    case TK_JUSTIFY_NUMERIC:
+	    case NUMERIC:
 		if (data->tabSize - data->maxX + data->x >= data->maxX) {
 		    return 0; /* end of display line reached */
 		}
@@ -3871,22 +3872,22 @@ LayoutLogicalLine(
 	    data->tabApplied = dispLineEntry->tabApplied;
 
 	    switch (data->tabAlignment) {
-	    default:
+	    case LEFT:
 		data->tabSize = 0;
 		data->tabApplied = 1;
 		break;
-	    case TK_JUSTIFY_CENTER:
+	    case CENTER:
 		if (data->tabApplied) {
 		    data->tabSize = 0;
 		}
 		break;
-	    case TK_JUSTIFY_RIGHT:
+	    case RIGHT:
 		data->tabSize = 0;
 		if (data->tabApplied) {
 		    data->adjustFirstChunk = 0;
 		}
 		break;
-	    case TK_JUSTIFY_NUMERIC:
+	    case NUMERIC:
 		if (!data->tabApplied) {
 		    if (IsDecimalPointPos(data, segPtr, byteOffset1)) {
 			data->tabSize = 0;
@@ -4609,18 +4610,18 @@ LayoutDLine(
     jIndent = 0;
 
     switch (data.justify) {
-    default:
+    case TK_TEXT_JUSTIFY_LEFT:
     	/* no action */
 	break;
-    case TK_JUSTIFY_RIGHT:
+    case TK_TEXT_JUSTIFY_RIGHT:
 	jIndent = data.maxX - length;
 	break;
-    case TK_JUSTIFY_FULL:
+    case TK_TEXT_JUSTIFY_FULL:
 	if (!endOfLogicalLine) {
 	    LayoutFullJustification(&data, dlPtr);
 	}
 	break;
-    case TK_JUSTIFY_CENTER:
+    case TK_TEXT_JUSTIFY_CENTER:
 	jIndent = (data.maxX - length)/2;
 	break;
     }
@@ -12888,11 +12889,11 @@ AdjustForTab(
 	desired %= data->maxX;
     } else {
 	switch (data->tabAlignment) {
-	default:
+	case LEFT:
 	    desired = tabX;
 	    break;
 
-	case TK_JUSTIFY_CENTER:
+	case CENTER:
 	    /*
 	     * Compute the width of all the information in the tab group, then use
 	     * it to pick a desired location.
@@ -12909,7 +12910,7 @@ AdjustForTab(
 	    }
 	    break;
 
-	case TK_JUSTIFY_RIGHT:
+	case RIGHT:
 	    /*
 	     * Compute the width of all the information in the tab group, then use
 	     * it to pick a desired location.
@@ -12926,7 +12927,7 @@ AdjustForTab(
 	    }
 	    break;
 
-	case TK_JUSTIFY_NUMERIC:
+	case NUMERIC:
 	    /*
 	     * Right justify before decimal point.
 	     */
@@ -13405,7 +13406,7 @@ ComputeSizeOfTab(
 	     */
 
 	    data->tabX = tabWidth*(data->tabIndex + 1);
-	    data->tabAlignment = TK_JUSTIFY_LEFT;
+	    data->tabAlignment = LEFT;
 	} else if (data->tabIndex < tabArrayPtr->numTabs) {
 	    data->tabX = tabArrayPtr->tabs[data->tabIndex].location;
 	    data->tabAlignment = tabArrayPtr->tabs[data->tabIndex].alignment;
@@ -13434,7 +13435,7 @@ ComputeSizeOfTab(
     if (data->displayLineNo > 0 && data->tabStyle != TK_TEXT_TABSTYLE_WORDPROCESSOR) {
 	int tabX = data->tabX - ((int) data->displayLineNo)*data->maxX;
 
-	if (data->tabAlignment == TK_JUSTIFY_LEFT && data->x == 0) {
+	if (data->tabAlignment == LEFT && data->x == 0) {
 	    data->tabShift = tabX;
 	}
 
@@ -13446,7 +13447,7 @@ ComputeSizeOfTab(
      */
 
     switch (data->tabAlignment) {
-    case TK_JUSTIFY_CENTER:
+    case CENTER:
 	if (data->displayLineNo > 0 && data->x == 0) {
 	    data->tabSize = 0;
 	    return;
@@ -13463,13 +13464,13 @@ ComputeSizeOfTab(
 	}
 	break;
 
-    case TK_JUSTIFY_RIGHT:
+    case RIGHT:
 	data->isRightTab = 0; /* will only be set when wrapping line */
 	data->tabSize = data->maxX - data->tabX - data->x;
 	min = (data->x == 0) ? 0 : textPtr->spaceWidth;
 	break;
 
-    case TK_JUSTIFY_NUMERIC:
+    case NUMERIC:
     	/*
 	 * We have to pre-compute the position of the last decimal point, and
 	 * the position of the first non-numerical character.
@@ -13487,7 +13488,7 @@ ComputeSizeOfTab(
 	min = 0;
 	/* fallthru */
 
-    default:
+    case LEFT:
 	data->tabSize = data->tabX - data->x;
 	assert(textPtr->spaceWidth > 0); /* ensure positive size */
 	min = (data->x == 0) ? 0 : textPtr->spaceWidth;

@@ -66,8 +66,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-indentbackground", NULL, NULL,
 	NULL, offsetof(TkTextTag, indentBgPtr), offsetof(TkTextTag, indentBg),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_JUSTIFY, "-justify", NULL, NULL,
-	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK|TK_OPTION_JUSTIFY_FULL, 0, 0},
+    {TK_OPTION_STRING, "-justify", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-lang", NULL, NULL,
 	NULL, offsetof(TkTextTag, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
@@ -1002,7 +1002,7 @@ TkTextUpdateTagDisplayFlags(
 
     if (tagPtr->elidePtr
 	    || tagPtr->tkfont
-	    || tagPtr->justify != TK_JUSTIFY_NULL
+	    || tagPtr->justifyString
 	    || tagPtr->lMargin1Ptr
 	    || tagPtr->lMargin2Ptr
 	    || tagPtr->offsetPtr
@@ -1166,6 +1166,30 @@ TkConfigureTag(
 	}
     } else if (reliefPtr) {
 	SetupDefaultRelief(textPtr, tagPtr);
+    }
+    if (tagPtr->justifyString) {
+	const char *identifier = NULL;
+        int j = -1;
+
+	/*
+	 * Tk_Justify only knows "left", "right", and "center", so we have to parse by ourself.
+	 */
+
+        switch (*tagPtr->justifyString) {
+	case 'l': identifier = "left";   j = TK_TEXT_JUSTIFY_LEFT;   break;
+	case 'r': identifier = "right";  j = TK_TEXT_JUSTIFY_RIGHT;  break;
+	case 'f': identifier = "full";   j = TK_TEXT_JUSTIFY_FULL;   break;
+	case 'c': identifier = "center"; j = TK_TEXT_JUSTIFY_CENTER; break;
+        }
+        if (j == -1 || strcmp(tagPtr->justifyString, identifier) != 0) {
+            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+                    "bad justification \"%s\": must be left, right, center, full, or \"\"",
+                    tagPtr->justifyString));
+            Tcl_SetErrorCode(interp, "TK", "VALUE", "JUSTIFY", NULL);
+	    rc = TCL_ERROR;
+	} else {
+	    tagPtr->justify = (TkTextJustify)j;
+	}
     }
     if (tagPtr->spacing1Ptr) {
 	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
@@ -1920,7 +1944,7 @@ TkTextCreateTag(
     tagPtr->isSelTag = isSelTag;
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
-    tagPtr->justify = TK_JUSTIFY_NULL;
+    tagPtr->justify = TK_TEXT_JUSTIFY_LEFT;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;

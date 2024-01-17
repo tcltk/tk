@@ -90,12 +90,12 @@ static const char *const taggingStrings[] = {
 };
 
 /*
- * The 'Tk_Justify' enum in tk.h is used to define a type for the -justify option of
+ * The 'TkTextJustify' enum in tkText.h is used to define a type for the -justify option of
  * the Text widget. These values are used as indices into the string table below.
  */
 
 static const char *const justifyStrings[] = {
-    "left", "right", "center", "full", NULL
+    "left", "right", "full", "center", NULL
 };
 
 /*
@@ -7079,7 +7079,7 @@ TkTextGetTabs(
     TkTextTab *tabPtr;
     double prevStop, lastStop;
     /*
-     * Map these strings to Tk_Justify values.
+     * Map these strings to TkTextTabAlign values.
      */
     static const char *const tabOptionStrings[] = {
 	"left", "right", "center", "numeric", NULL
@@ -7167,7 +7167,7 @@ TkTextGetTabs(
 	 * Otherwise just use "left".
 	 */
 
-	tabPtr->alignment = TK_JUSTIFY_LEFT;
+	tabPtr->alignment = LEFT;
 	if (i + 1 == objc) {
 	    continue;
 	}
@@ -7205,7 +7205,7 @@ TkTextGetTabs(
 		sizeof(char *), "tab alignment", 0, &index) != TCL_OK) {
 	    goto error;
 	}
-	tabPtr->alignment = (Tk_Justify)index;
+	tabPtr->alignment = (TkTextTabAlign) index;
     }
 
     /*
