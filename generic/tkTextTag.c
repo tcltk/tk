@@ -38,7 +38,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BITMAP, "-bgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
-	NULL, offsetof(TkTextTag, attrs.borderWidthPtr), offsetof(TkTextTag, attrs.borderWidth),
+	NULL, offsetof(TkTextTag, attrs.borderWidthObj), offsetof(TkTextTag, attrs.borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
 	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elide),
@@ -71,13 +71,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-lang", NULL, NULL,
 	NULL, offsetof(TkTextTag, langPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin1Ptr), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, lMargin1Obj), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
-	NULL, offsetof(TkTextTag, lMargin2Ptr), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, lMargin2Obj), offsetof(TkTextTag, lMargin2), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetPtr), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, offsetof(TkTextTag, overstrikePtr), offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
@@ -89,7 +89,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING, "-relief", NULL, NULL,
 	NULL, offsetof(TkTextTag, reliefPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
-	NULL, offsetof(TkTextTag, rMarginPtr), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, rMarginObj), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
@@ -97,11 +97,11 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing1Ptr), offsetof(TkTextTag, spacing1), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, spacing1Obj), offsetof(TkTextTag, spacing1), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing2", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing2Ptr), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, spacing2Obj), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
-	NULL, offsetof(TkTextTag, spacing3Ptr), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, spacing3Obj), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
@@ -1003,13 +1003,13 @@ TkTextUpdateTagDisplayFlags(
     if (tagPtr->elidePtr
 	    || tagPtr->tkfont
 	    || tagPtr->justifyString
-	    || tagPtr->lMargin1Ptr
-	    || tagPtr->lMargin2Ptr
-	    || tagPtr->offsetPtr
-	    || tagPtr->rMarginPtr
-	    || tagPtr->spacing1Ptr
-	    || tagPtr->spacing2Ptr
-	    || tagPtr->spacing3Ptr
+	    || tagPtr->lMargin1Obj
+	    || tagPtr->lMargin2Obj
+	    || tagPtr->offsetObj
+	    || tagPtr->rMarginObj
+	    || tagPtr->spacing1Obj
+	    || tagPtr->spacing2Obj
+	    || tagPtr->spacing3Obj
 	    || tagPtr->tabStringPtr
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR
 	    || tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR
@@ -1191,13 +1191,13 @@ TkConfigureTag(
 	    tagPtr->justify = (TkTextJustify)j;
 	}
     }
-    if (tagPtr->spacing1Ptr) {
+    if (tagPtr->spacing1Obj) {
 	tagPtr->spacing1 = MAX(0, tagPtr->spacing1);
     }
-    if (tagPtr->spacing2Ptr) {
+    if (tagPtr->spacing2Obj) {
 	tagPtr->spacing2 = MAX(0, tagPtr->spacing2);
     }
-    if (tagPtr->spacing3Ptr) {
+    if (tagPtr->spacing3Obj) {
 	tagPtr->spacing3 = MAX(0, tagPtr->spacing3);
     }
     if (tagPtr->tabArrayPtr) {
@@ -1274,8 +1274,8 @@ TkConfigureTag(
 	if (tagPtr->attrs.inactiveFgColor != textPtr->selTagConfigAttrs.inactiveFgColor) {
 	    textPtr->selAttrs.inactiveFgColor = tagPtr->attrs.inactiveFgColor;
 	}
-	if (tagPtr->attrs.borderWidthPtr != textPtr->selTagConfigAttrs.borderWidthPtr) {
-	    textPtr->selAttrs.borderWidthPtr = tagPtr->attrs.borderWidthPtr;
+	if (tagPtr->attrs.borderWidthObj != textPtr->selTagConfigAttrs.borderWidthObj) {
+	    textPtr->selAttrs.borderWidthObj = tagPtr->attrs.borderWidthObj;
 	    textPtr->selAttrs.borderWidth = tagPtr->attrs.borderWidth;
 	}
 	textPtr->selTagConfigAttrs = tagPtr->attrs;

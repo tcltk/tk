@@ -309,7 +309,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_SELECT_COLOR, TCL_INDEX_NONE, offsetof(TkText, selAttrs.border),
 	0, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth", "BorderWidth",
-	DEF_TEXT_SELECT_BD_COLOR, offsetof(TkText, selAttrs.borderWidthPtr),
+	DEF_TEXT_SELECT_BD_COLOR, offsetof(TkText, selAttrs.borderWidthObj),
 	offsetof(TkText, selAttrs.borderWidth), TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selAttrs.fgColor),
@@ -4327,8 +4327,8 @@ TkConfigureText(
     if (textPtr->selAttrs.inactiveFgColor != textPtr->textConfigAttrs.inactiveFgColor) {
 	textPtr->selTagPtr->attrs.inactiveFgColor = textPtr->selAttrs.inactiveFgColor;
     }
-    if (textPtr->selAttrs.borderWidthPtr != textPtr->textConfigAttrs.borderWidthPtr) {
-	textPtr->selTagPtr->attrs.borderWidthPtr = textPtr->selAttrs.borderWidthPtr;
+    if (textPtr->selAttrs.borderWidthObj != textPtr->textConfigAttrs.borderWidthObj) {
+	textPtr->selTagPtr->attrs.borderWidthObj = textPtr->selAttrs.borderWidthObj;
 	textPtr->selTagPtr->attrs.borderWidth = textPtr->selAttrs.borderWidth;
     }
     textPtr->textConfigAttrs = textPtr->selAttrs;
