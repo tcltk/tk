@@ -818,7 +818,7 @@ typedef struct
  * Option specifications:
  */
 static const char *const directionStrings[] = {
-    "above", "below", "left", "right", "flush", NULL
+    "above", "below", "flush", "left", "right", NULL
 };
 static const Tk_OptionSpec MenubuttonOptionSpecs[] =
 {
