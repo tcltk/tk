@@ -100,7 +100,7 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align),
-	0, alignStrings, 0},
+	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,

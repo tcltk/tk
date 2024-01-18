@@ -69,7 +69,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle),
-	TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
+	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, 0},
     {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
 	NULL, offsetof(TkTextTag, underlinePtr), offsetof(TkTextTag, underline),
 	TK_OPTION_NULL_OK, 0, 0},
