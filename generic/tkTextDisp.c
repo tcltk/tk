@@ -605,7 +605,7 @@ static void		TextRedrawTag(TkText *textPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    TkTextTag *tagPtr, int withTag);
 static void		TextInvalidateLineMetrics(TkText *textPtr,
-			    TkTextLine *linePtr, int lineCount, int action);
+			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
 static int		CalculateDisplayLineHeight(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *byteCountPtr,
 			    int *mergedLinePtr);
@@ -2505,7 +2505,7 @@ DisplayDLine(
      * will obscure the character to its left.
      */
 
-    if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+    if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 		chunkPtr = chunkPtr->nextPtr) {
 	    if (chunkPtr->displayProc == TkTextInsertDisplayProc) {
@@ -3433,8 +3433,8 @@ TkTextInvalidateLineMetrics(
     TkText *textPtr,		/* Widget record for text widget. */
     TkTextLine *linePtr,	/* Invalidation starts from this line. */
     int lineCount,		/* And includes this many following lines. */
-    int action)			/* Indicates what type of invalidation
-				 * occurred (insert, delete, or simple). */
+    TkTextInvalidateAction action)			/* Indicates what type of invalidation
+				 * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     if (sharedTextPtr == NULL) {
 	TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action);
@@ -3452,7 +3452,7 @@ TextInvalidateLineMetrics(
     TkText *textPtr,		/* Widget record for text widget. */
     TkTextLine *linePtr,	/* Invalidation starts from this line. */
     int lineCount,		/* And includes this many following lines. */
-    int action)			/* Indicates what type of invalidation
+    TkTextInvalidateAction action)			/* Indicates what type of invalidation
 				 * occurred (insert, delete, or simple). */
 {
     int fromLine;

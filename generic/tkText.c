@@ -214,7 +214,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_TEXT_STATE, TCL_INDEX_NONE, offsetof(TkText, state),
-	0, &tkStateStrings[1], 0},
+	TK_OPTION_ENUM_VAR, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, offsetof(TkText, tabOptionPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
@@ -1065,7 +1065,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    if (objc < 5) {
 		/*
 		 * Simple case requires no predetermination of indices.
@@ -1367,7 +1367,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    result = TextInsertCmd(NULL, textPtr, interp, objc-3, objv+3,
 		    indexPtr, 1);
 	}
@@ -1416,7 +1416,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    int lineNum;
 	    Tcl_Size byteIndex;
 	    TkTextIndex index;
