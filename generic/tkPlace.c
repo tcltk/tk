@@ -80,7 +80,7 @@ typedef struct Content {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", TCL_INDEX_NONE,
-	 offsetof(Content, anchor), 0, 0, 0},
+	 offsetof(Content, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
 	 offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Content, heightPtr),

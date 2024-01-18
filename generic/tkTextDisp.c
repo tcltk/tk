@@ -580,7 +580,7 @@ typedef struct LayoutData {
     				 * numeric tabs, starting with shiftToNextLinePos. */
     unsigned lengthOfFractional;/* Length of fractional part in numerical tabs, including decimal
     				 * point. */
-    TkTextJustify justify;	/* How to justify line: taken from style for the first character
+    Tk_Justify justify;	/* How to justify line: taken from style for the first character
     				 * in this display line. */
     TkWrapMode wrapMode;	/* Wrap mode to use for this chunk. */
     int maxX;			/* Maximal x coord in current line. */
@@ -3270,7 +3270,7 @@ LayoutSetupChunk(
 
 	data->tabArrayPtr = sValuePtr->tabArrayPtr;
 	data->tabStyle = sValuePtr->tabStyle;
-	data->justify = (TkTextJustify)sValuePtr->justify;
+	data->justify = (Tk_Justify)sValuePtr->justify;
 	data->rMargin = sValuePtr->rMargin;
 	data->wrapMode = (TkWrapMode)sValuePtr->wrapMode;
 	data->x = data->paragraphStart ? sValuePtr->lMargin1 : sValuePtr->lMargin2;
@@ -3470,7 +3470,7 @@ LayoutChars(
 	 * characters up to (and including) the tab.
 	 */
 
-	if (data->justify == TK_TEXT_JUSTIFY_FULL) {
+	if (data->justify == TK_JUSTIFY_FULL) {
 	    const char *p = base;
 	    const char *e = p + maxBytes;
 
@@ -4610,18 +4610,18 @@ LayoutDLine(
     jIndent = 0;
 
     switch (data.justify) {
-    case TK_TEXT_JUSTIFY_LEFT:
+    default:
     	/* no action */
 	break;
-    case TK_TEXT_JUSTIFY_RIGHT:
+    case TK_JUSTIFY_RIGHT:
 	jIndent = data.maxX - length;
 	break;
-    case TK_TEXT_JUSTIFY_FULL:
+    case TK_JUSTIFY_FULL:
 	if (!endOfLogicalLine) {
 	    LayoutFullJustification(&data, dlPtr);
 	}
 	break;
-    case TK_TEXT_JUSTIFY_CENTER:
+    case TK_JUSTIFY_CENTER:
 	jIndent = (data.maxX - length)/2;
 	break;
     }
