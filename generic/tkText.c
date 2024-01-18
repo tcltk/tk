@@ -230,7 +230,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle),
-	0, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
+	TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
