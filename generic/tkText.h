@@ -283,7 +283,9 @@ struct TkTextDispChunk {
 
 typedef enum {
     TEXT_WRAPMODE_NULL = -1,
-    TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD
+    TEXT_WRAPMODE_CHAR,
+    TEXT_WRAPMODE_NONE,
+    TEXT_WRAPMODE_WORD
 } TkWrapMode;
 
 MODULE_SCOPE const char *const tkTextWrapStrings[];
@@ -347,8 +349,7 @@ typedef struct TkTextTag {
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
                                  * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
-    Tcl_Obj *offsetObj;		/* -offset option object. NULL
-				 * means option not specified. */
+    Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
 				 * subscripts. INT_MIN means option not specified. */
@@ -393,10 +394,9 @@ typedef struct TkTextTag {
     XColor *underlineColor;     /* Color for the underline. NULL means same
                                  * color as foreground. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
-				 * Must be TEXT_WRAPMODE_CHAR,
-				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
-				 * TEXT_WRAPMODE_NULL to use wrapmode for
-				 * whole widget. */
+				 * Must be TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD,
+				 * TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_NULL to
+				 * use wrapmode for whole widget. */
     Tcl_Obj *elideObj;	/* -elide option. NULL
 				 * means option not specified. */
     int elide;			/* > 0 means that data under this tag
@@ -641,7 +641,7 @@ typedef struct TkText {
     Tcl_Interp *interp;		/* Interpreter associated with widget. Used to
 				 * delete widget command. */
     Tcl_Command widgetCmd;	/* Token for text's widget command. */
-    int state;			/* Either STATE_NORMAL or STATE_DISABLED. A
+    TkTextState state;		/* Either TK_TEXT_STATE_NORMAL or TK_TEXT_STATE_DISABLED. A
 				 * text widget is read-only when disabled. */
 
     /*
@@ -689,7 +689,8 @@ typedef struct TkText {
 
     TkWrapMode wrapMode;	/* How to handle wrap-around. Must be
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or
-				 * TEXT_WRAPMODE_WORD. */
+				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_NULL to
+				 * use wrapmode for whole widget. */
     int width, height;		/* Desired dimensions for window, measured in
 				 * characters. */
     int setGrid;		/* Non-zero means pass gridding information to
@@ -933,22 +934,24 @@ typedef struct TkTextElideInfo {
  * of individual lines displayed in the widget.
  */
 
-#define TK_TEXT_LINE_GEOMETRY	1
+#define TK_TEXT_LINE_GEOMETRY		(1 << 0)
 
 /*
- * Mask used for those options which may impact the start and end lines used
- * in the widget.
+ * Mask used for those options which may impact the start and end lines
+ * used in the widget.
  */
 
-#define TK_TEXT_LINE_RANGE	2
+#define TK_TEXT_LINE_RANGE		(1 << 1)
 
 /*
  * Used as 'action' values in calls to TkTextInvalidateLineMetrics
  */
 
-#define TK_TEXT_INVALIDATE_ONLY		0
-#define TK_TEXT_INVALIDATE_INSERT	1
-#define TK_TEXT_INVALIDATE_DELETE	2
+typedef enum {
+    TK_TEXT_INVALIDATE_ONLY,
+    TK_TEXT_INVALIDATE_INSERT,
+    TK_TEXT_INVALIDATE_DELETE
+} TkTextInvalidateAction;
 
 /*
  * Used as special 'pickPlace' values in calls to TkTextSetYView. Zero or
@@ -1107,7 +1110,7 @@ MODULE_SCOPE int	TkTextMakePixelIndex(TkText *textPtr,
 			    int pixelIndex, TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextInvalidateLineMetrics(
 			    TkSharedText *sharedTextPtr, TkText *textPtr,
-			    TkTextLine *linePtr, int lineCount, int action);
+			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
 MODULE_SCOPE int	TkTextUpdateLineMetrics(TkText *textPtr, int lineNum,
 			    int endLine, int doThisMuch);
 MODULE_SCOPE int	TkTextUpdateOneLine(TkText *textPtr,
