@@ -77,10 +77,6 @@ static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
-typedef enum {
-    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
-} alignMode;
-
 /*
  * Information used for parsing image configuration options:
  */
@@ -88,7 +84,7 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
-	0, alignStrings, 0},
+	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
 	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
@@ -255,7 +251,7 @@ TkTextImageCmd(
 	eiPtr->body.ei.imageString = NULL;
 	eiPtr->body.ei.name = NULL;
 	eiPtr->body.ei.image = NULL;
-	eiPtr->body.ei.align = ALIGN_CENTER;
+	eiPtr->body.ei.align = TK_ALIGN_CENTER;
 	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
 	eiPtr->body.ei.chunkCount = 0;
 	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -566,7 +562,7 @@ EmbImageLayoutProc(
     chunkPtr->measureProc = NULL;
     chunkPtr->bboxProc = EmbImageBboxProc;
     chunkPtr->numBytes = 1;
-    if (eiPtr->body.ei.align == ALIGN_BASELINE) {
+    if (eiPtr->body.ei.align == TK_ALIGN_BASELINE) {
 	chunkPtr->minAscent = height - eiPtr->body.ei.padY;
 	chunkPtr->minDescent = eiPtr->body.ei.padY;
 	chunkPtr->minHeight = 0;
@@ -728,16 +724,16 @@ EmbImageBboxProc(
     *xPtr = chunkPtr->x + eiPtr->body.ei.padX;
 
     switch (eiPtr->body.ei.align) {
-    case ALIGN_BOTTOM:
+    case TK_ALIGN_BOTTOM:
 	*yPtr = y + (lineHeight - *heightPtr - eiPtr->body.ei.padY);
 	break;
-    case ALIGN_CENTER:
+    case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
-    case ALIGN_TOP:
+    case TK_ALIGN_TOP:
 	*yPtr = y + eiPtr->body.ei.padY;
 	break;
-    case ALIGN_BASELINE:
+    case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
 	break;
     }
