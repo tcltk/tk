@@ -165,7 +165,7 @@ typedef struct {
     				 * "right", and "flush". "flush" means that
     				 * the upper left corner of the menubutton is
     				 * where the menu pops up. "above" and "below"
-    				 * will attempt to pop the menu compleletly
+    				 * will attempt to pop the menu completely
     				 * above or below the menu respectively.
     				 * "left" and "right" will pop the menu left
     				 * or right, and the active item will be next
