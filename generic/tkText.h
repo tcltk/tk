@@ -99,6 +99,10 @@ typedef struct TkTextEmbWindowClient {
     struct TkTextEmbWindowClient *next;
 } TkTextEmbWindowClient;
 
+typedef enum {
+    TK_ALIGN_BASELINE, TK_ALIGN_BOTTOM, TK_ALIGN_CENTER, TK_ALIGN_TOP
+} TkAlignMode;
+
 typedef struct TkTextEmbWindow {
     struct TkSharedText *sharedTextPtr;
 				/* Information about the shared portion of the
@@ -112,7 +116,7 @@ typedef struct TkTextEmbWindow {
 				 * window. */
     char *create;		/* Script to create window on-demand. NULL
 				 * means no such script. Malloc-ed. */
-    int align;			/* How to align window in vertical space. See
+    TkAlignMode align;			/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
     int padX, padY;		/* Padding to leave around each side of
 				 * window, in pixels. */
@@ -144,7 +148,7 @@ typedef struct TkTextEmbImage {
 				 * the image. */
     Tk_Image image;		/* Image for this segment. NULL means that the
 				 * image hasn't been created yet. */
-    int align;			/* How to align image in vertical space. See
+    TkAlignMode align;			/* How to align image in vertical space. See
 				 * definitions in tkTextImage.c. */
     int padX, padY;		/* Padding to leave around each side of image,
 				 * in pixels. */
