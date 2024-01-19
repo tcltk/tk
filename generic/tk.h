@@ -1552,8 +1552,7 @@ typedef struct Tk_ElementSpec {
  *----------------------------------------------------------------------
  *
  * The definitions below provide backward compatibility for functions and
- * types related to event handling that used to be in Tk but have moved to
- * Tcl.
+ * types that used to be in Tk but have moved to Tcl.
  *
  *----------------------------------------------------------------------
  */
@@ -1592,6 +1591,10 @@ typedef struct Tk_ElementSpec {
 #define Tk_FreeProc		Tcl_FreeProc
 #define Tk_Preserve		Tcl_Preserve
 #define Tk_Release		Tcl_Release
+
+/* Related to USE_OLD_IMAGE: */
+
+#define Tk_InitImageArgs(interp, argc, argv) /**/
 #endif
 
 /* Removed Tk_Main, use macro instead */
@@ -1611,8 +1614,6 @@ EXTERN const char *	Tk_PkgInitStubsCheck(Tcl_Interp *interp,
 #define Tk_InitStubs(interp, version, exact) \
     Tk_PkgInitStubsCheck(interp, version, exact)
 #endif /* USE_TK_STUBS */
-
-#define Tk_InitImageArgs(interp, argc, argv) /**/
 
 /*
  *----------------------------------------------------------------------

@@ -89,10 +89,6 @@ static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
-typedef enum {
-    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
-} alignMode;
-
 /*
  * Information used for parsing window configuration options:
  */
@@ -295,7 +291,7 @@ TkTextWindowCmd(
 	ewPtr->body.ew.linePtr = NULL;
 	ewPtr->body.ew.tkwin = NULL;
 	ewPtr->body.ew.create = NULL;
-	ewPtr->body.ew.align = ALIGN_CENTER;
+	ewPtr->body.ew.align = TK_ALIGN_CENTER;
 	ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
 	ewPtr->body.ew.stretch = 0;
 	ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -1009,7 +1005,7 @@ EmbWinLayoutProc(
     chunkPtr->measureProc = NULL;
     chunkPtr->bboxProc = EmbWinBboxProc;
     chunkPtr->numBytes = 1;
-    if (ewPtr->body.ew.align == ALIGN_BASELINE) {
+    if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
 	chunkPtr->minAscent = height - ewPtr->body.ew.padY;
 	chunkPtr->minDescent = ewPtr->body.ew.padY;
 	chunkPtr->minHeight = 0;
@@ -1257,23 +1253,23 @@ EmbWinBboxProc(
     }
     *xPtr = chunkPtr->x + ewPtr->body.ew.padX;
     if (ewPtr->body.ew.stretch) {
-	if (ewPtr->body.ew.align == ALIGN_BASELINE) {
+	if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
 	    *heightPtr = baseline - ewPtr->body.ew.padY;
 	} else {
 	    *heightPtr = lineHeight - 2*ewPtr->body.ew.padY;
 	}
     }
     switch (ewPtr->body.ew.align) {
-    case ALIGN_BOTTOM:
+    case TK_ALIGN_BOTTOM:
 	*yPtr = y + (lineHeight - *heightPtr - ewPtr->body.ew.padY);
 	break;
-    case ALIGN_CENTER:
+    case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
-    case ALIGN_TOP:
+    case TK_ALIGN_TOP:
 	*yPtr = y + ewPtr->body.ew.padY;
 	break;
-    case ALIGN_BASELINE:
+    case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
 	break;
     }
