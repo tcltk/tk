@@ -99,6 +99,10 @@ typedef struct TkTextEmbWindowClient {
     struct TkTextEmbWindowClient *next;
 } TkTextEmbWindowClient;
 
+typedef enum {
+    TK_ALIGN_BASELINE, TK_ALIGN_BOTTOM, TK_ALIGN_CENTER, TK_ALIGN_TOP
+} TkAlignMode;
+
 typedef struct TkTextEmbWindow {
     struct TkSharedText *sharedTextPtr;
 				/* Information about the shared portion of the
@@ -112,7 +116,7 @@ typedef struct TkTextEmbWindow {
 				 * window. */
     char *create;		/* Script to create window on-demand. NULL
 				 * means no such script. Malloc-ed. */
-    int align;			/* How to align window in vertical space. See
+    TkAlignMode align;			/* How to align window in vertical space. See
 				 * definitions in tkTextWind.c. */
     int padX, padY;		/* Padding to leave around each side of
 				 * window, in pixels. */
@@ -144,7 +148,7 @@ typedef struct TkTextEmbImage {
 				 * the image. */
     Tk_Image image;		/* Image for this segment. NULL means that the
 				 * image hasn't been created yet. */
-    int align;			/* How to align image in vertical space. See
+    TkAlignMode align;			/* How to align image in vertical space. See
 				 * definitions in tkTextImage.c. */
     int padX, padY;		/* Padding to leave around each side of image,
 				 * in pixels. */
@@ -288,6 +292,20 @@ typedef enum {
     TEXT_WRAPMODE_WORD
 } TkWrapMode;
 
+/*
+ * The following are the supported styles of tabbing, used for the -tabstyle
+ * option of the text widget. The first element is only used for tag options.
+ */
+
+typedef enum {
+    TK_TEXT_TABSTYLE_NULL = -1,
+    TK_TEXT_TABSTYLE_TABULAR,
+    TK_TEXT_TABSTYLE_WORDPROCESSOR
+} TkTextTabStyle;
+
+MODULE_SCOPE const char *const tkTextTabStyleStrings[];
+
+
 MODULE_SCOPE const char *const tkTextWrapStrings[];
 
 typedef struct TkTextTag {
@@ -385,7 +403,7 @@ typedef struct TkTextTag {
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
 				 * NULL. Corresponds to tabString. */
-    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
+    TkTextTabStyle tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
     Tcl_Obj *underlinePtr;	/* -underline option. NULL
 				 * means option not specified. */
@@ -453,19 +471,6 @@ typedef struct TkTextSearch {
  */
 
 typedef enum {LEFT, RIGHT, CENTER, NUMERIC} TkTextTabAlign;
-
-/*
- * The following are the supported styles of tabbing, used for the -tabstyle
- * option of the text widget. The first element is only used for tag options.
- */
-
-typedef enum {
-    TK_TEXT_TABSTYLE_NULL = -1,
-    TK_TEXT_TABSTYLE_TABULAR,
-    TK_TEXT_TABSTYLE_WORDPROCESSOR
-} TkTextTabStyle;
-
-MODULE_SCOPE const char *const tkTextTabStyleStrings[];
 
 typedef struct TkTextTab {
     int location;		/* Offset in pixels of this tab stop from the
@@ -641,7 +646,7 @@ typedef struct TkText {
     Tcl_Interp *interp;		/* Interpreter associated with widget. Used to
 				 * delete widget command. */
     Tcl_Command widgetCmd;	/* Token for text's widget command. */
-    TkTextState state;		/* Either TK_TEXT_STATE_NORMAL or TK_TEXT_STATE_DISABLED. A
+    TkTextState state;		/* Either TK_TEXT_STATE_DISABLED or TK_TEXT_STATE_NORMAL. A
 				 * text widget is read-only when disabled. */
 
     /*
@@ -681,7 +686,7 @@ typedef struct TkText {
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
 				 * behavior. */
-    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    TkTextTabStyle tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
 
     /*
      * Additional information used for displaying:
