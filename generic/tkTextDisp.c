@@ -3428,13 +3428,13 @@ TkTextUpdateLineMetrics(
 
 void
 TkTextInvalidateLineMetrics(
-    TkSharedText *sharedTextPtr,/* Shared widget section for all peers, or
-				 * NULL. */
-    TkText *textPtr,		/* Widget record for text widget. */
-    TkTextLine *linePtr,	/* Invalidation starts from this line. */
-    int lineCount,		/* And includes this many following lines. */
-    TkTextInvalidateAction action)			/* Indicates what type of invalidation
-				 * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
+    TkSharedText *sharedTextPtr,    /* Shared widget section for all peers, or
+				     * NULL. */
+    TkText *textPtr,		    /* Widget record for text widget. */
+    TkTextLine *linePtr,	    /* Invalidation starts from this line. */
+    int lineCount,		    /* And includes this many following lines. */
+    TkTextInvalidateAction action)  /* Indicates what type of invalidation
+				     * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     if (sharedTextPtr == NULL) {
 	TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action);
@@ -3449,11 +3449,11 @@ TkTextInvalidateLineMetrics(
 
 static void
 TextInvalidateLineMetrics(
-    TkText *textPtr,		/* Widget record for text widget. */
-    TkTextLine *linePtr,	/* Invalidation starts from this line. */
-    int lineCount,		/* And includes this many following lines. */
-    TkTextInvalidateAction action)			/* Indicates what type of invalidation
-				 * occurred (insert, delete, or simple). */
+    TkText *textPtr,		    /* Widget record for text widget. */
+    TkTextLine *linePtr,	    /* Invalidation starts from this line. */
+    int lineCount,		    /* And includes this many following lines. */
+    TkTextInvalidateAction action)  /* Indicates what type of invalidation
+				     * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     int fromLine;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
