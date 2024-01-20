@@ -580,7 +580,7 @@ typedef struct LayoutData {
     				 * numeric tabs, starting with shiftToNextLinePos. */
     unsigned lengthOfFractional;/* Length of fractional part in numerical tabs, including decimal
     				 * point. */
-    Tk_Justify justify;	/* How to justify line: taken from style for the first character
+    Tk_Justify justify;		/* How to justify line: taken from style for the first character
     				 * in this display line. */
     TkWrapMode wrapMode;	/* Wrap mode to use for this chunk. */
     int maxX;			/* Maximal x coord in current line. */
