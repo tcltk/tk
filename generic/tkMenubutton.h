@@ -161,12 +161,12 @@ typedef struct {
 				 * whether the menubutton should show both an
 				 * image and text, and, if so, how. */
     enum direction direction;	/* Direction for where to pop the menu. Valid
-    				 * directions are "above", "below", "left",
-    				 * "right", and "flush". "flush" means that
-    				 * the upper left corner of the menubutton is
-    				 * where the menu pops up. "above" and "below"
+    				 * directions are "above", "below", "flush",
+    				 * "left", and "right". "above" and "below"
     				 * will attempt to pop the menu completely
     				 * above or below the menu respectively.
+    				 * "flush" means that the upper left corner
+    				 * of the menubutton is where the menu pops up.
     				 * "left" and "right" will pop the menu left
     				 * or right, and the active item will be next
     				 * to the button. */
