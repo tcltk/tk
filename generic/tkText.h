@@ -403,7 +403,7 @@ typedef struct TkTextTag {
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
 				 * NULL. Corresponds to tabString. */
-    TkTextTabStyle tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
     Tcl_Obj *underlinePtr;	/* -underline option. NULL
 				 * means option not specified. */
@@ -686,7 +686,7 @@ typedef struct TkText {
 				/* Information about tab stops (malloc'ed).
 				 * NULL means perform default tabbing
 				 * behavior. */
-    TkTextTabStyle tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
 
     /*
      * Additional information used for displaying:
