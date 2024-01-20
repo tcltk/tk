@@ -883,7 +883,7 @@ typedef struct TkTextTag {
 				 * specified here.*/
     char *justifyString;	/* -justify option string (malloc-ed). NULL
 				 * means option not specified. */
-    Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
+    Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
     				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. Only valid if
 				 * justifyString is non-NULL. */
     Tcl_Obj *lMargin1Obj;	/* -lmargin1 option. NULL
@@ -1378,7 +1378,7 @@ typedef struct TkText {
 				 * NULL means perform default tabbing
 				 * behavior. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
-    Tk_Justify justify;	/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
+    Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
     				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. */
     Tcl_Obj *hyphenRulesPtr;	/* The hyphen rules string. */
     int hyphenRules;		/* The hyphen rules, only useful for soft hyphen segments. */
