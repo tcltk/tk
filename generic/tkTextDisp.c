@@ -150,7 +150,7 @@ typedef struct StyleValues {
     int spacing3;		/* Spacing below last dline in text line. */
     TkTextTabArray *tabArrayPtr;/* Locations and types of tab stops (may be
 				 * NULL). */
-    TkTextTabStyle tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
     XColor *underlineColor;	/* Foreground color for underline underneath
@@ -1171,7 +1171,7 @@ LayoutDLine(
 				 * chunk. */
     TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
 				 * the first character on line. */
-    TkTextTabStyle tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int tabSize;		/* Number of pixels consumed by current tab
 				 * stop. */
     TkTextDispChunk *lastCharChunkPtr;
@@ -3428,13 +3428,13 @@ TkTextUpdateLineMetrics(
 
 void
 TkTextInvalidateLineMetrics(
-    TkSharedText *sharedTextPtr,/* Shared widget section for all peers, or
-				 * NULL. */
-    TkText *textPtr,		/* Widget record for text widget. */
-    TkTextLine *linePtr,	/* Invalidation starts from this line. */
-    int lineCount,		/* And includes this many following lines. */
-    TkTextInvalidateAction action)			/* Indicates what type of invalidation
-				 * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
+    TkSharedText *sharedTextPtr,    /* Shared widget section for all peers, or
+				     * NULL. */
+    TkText *textPtr,		    /* Widget record for text widget. */
+    TkTextLine *linePtr,	    /* Invalidation starts from this line. */
+    int lineCount,		    /* And includes this many following lines. */
+    TkTextInvalidateAction action)  /* Indicates what type of invalidation
+				     * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     if (sharedTextPtr == NULL) {
 	TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action);
@@ -3449,11 +3449,11 @@ TkTextInvalidateLineMetrics(
 
 static void
 TextInvalidateLineMetrics(
-    TkText *textPtr,		/* Widget record for text widget. */
-    TkTextLine *linePtr,	/* Invalidation starts from this line. */
-    int lineCount,		/* And includes this many following lines. */
-    TkTextInvalidateAction action)			/* Indicates what type of invalidation
-				 * occurred (insert, delete, or simple). */
+    TkText *textPtr,		    /* Widget record for text widget. */
+    TkTextLine *linePtr,	    /* Invalidation starts from this line. */
+    int lineCount,		    /* And includes this many following lines. */
+    TkTextInvalidateAction action)  /* Indicates what type of invalidation
+				     * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     int fromLine;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -8489,7 +8489,7 @@ static int
 SizeOfTab(
     TkText *textPtr,		/* Information about the text widget as a
 				 * whole. */
-    TkTextTabStyle tabStyle,		/* One of TK_TEXT_TABSTYLE_TABULAR
+    TkTextTabStyle tabStyle,	/* One of TK_TEXT_TABSTYLE_TABULAR
 				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     TkTextTabArray *tabArrayPtr,/* Information about the tab stops that apply
 				 * to this line. NULL means use default
