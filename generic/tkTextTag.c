@@ -106,7 +106,7 @@ SetBoolean(void *clientData,
     char *oldInternalPtr,
     int flags)
 {
-    IntStruct booleanVal = {NULL, INT_MIN};
+    IntStruct booleanVal = {NULL, -1};
     IntStruct *internalPtr;
 
     if (internalOffset >= 0) {
@@ -140,7 +140,7 @@ SetRelief(void *clientData,
     char *oldInternalPtr,
     int flags)
 {
-    IntStruct pixel = {NULL, INT_MIN};
+    IntStruct pixel = {NULL, TK_RELIEF_NULL};
     IntStruct *internalPtr;
 
     if (internalOffset >= 0) {
@@ -174,7 +174,7 @@ SetJustify(void *clientData,
     char *oldInternalPtr,
     int flags)
 {
-    JustifyStruct pixel = {NULL, INT_MIN};
+    JustifyStruct pixel = {NULL, (Tk_Justify)-1};
     JustifyStruct *internalPtr;
 
     if (internalOffset >= 0) {
