@@ -38,10 +38,16 @@ static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", "", NULL
 };
 
+/* This struct can be used for booleans, relief and pixels */
 typedef struct {
 	char *string;
 	int value;
-} PixelStruct;
+} IntStruct;
+
+typedef struct {
+	char *string;
+	Tk_Justify value;
+} JustifyStruct;
 
 static int
 ObjectIsEmpty(
@@ -66,11 +72,11 @@ SetPixels(void *clientData,
     char *oldInternalPtr,
     int flags)
 {
-    PixelStruct pixel = {NULL, INT_MIN};
-    PixelStruct *internalPtr;
+    IntStruct pixel = {NULL, INT_MIN};
+    IntStruct *internalPtr;
 
     if (internalOffset >= 0) {
-	internalPtr = (PixelStruct *)(recordPtr + internalOffset);
+	internalPtr = (IntStruct *)(recordPtr + internalOffset);
     } else {
 	internalPtr = NULL;
     }
@@ -84,51 +90,181 @@ SetPixels(void *clientData,
     }
 
     if (internalPtr != NULL) {
-	*((PixelStruct *)oldInternalPtr) = *((PixelStruct *)internalPtr);
-	*((PixelStruct *)internalPtr) = pixel;
+	*((IntStruct *)oldInternalPtr) = *((IntStruct *)internalPtr);
+	*((IntStruct *)internalPtr) = pixel;
     }
     return TCL_OK;
 };
 
-static Tcl_Obj *GetPixels(
+static int
+SetBoolean(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    IntStruct booleanVal = {NULL, INT_MIN};
+    IntStruct *internalPtr;
+
+    if (internalOffset >= 0) {
+	internalPtr = (IntStruct *)(recordPtr + internalOffset);
+    } else {
+	internalPtr = NULL;
+    }
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tcl_GetBooleanFromObj(interp, *value, &booleanVal.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	booleanVal.string = ckalloc((*value)->length + 1);
+	strcpy(booleanVal.string, (*value)->bytes);
+    }
+
+    if (internalPtr != NULL) {
+	*((IntStruct *)oldInternalPtr) = *((IntStruct *)internalPtr);
+	*((IntStruct *)internalPtr) = booleanVal;
+    }
+    return TCL_OK;
+};
+
+static int
+SetRelief(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    IntStruct pixel = {NULL, INT_MIN};
+    IntStruct *internalPtr;
+
+    if (internalOffset >= 0) {
+	internalPtr = (IntStruct *)(recordPtr + internalOffset);
+    } else {
+	internalPtr = NULL;
+    }
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tk_GetReliefFromObj(interp, *value, &pixel.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	pixel.string = ckalloc((*value)->length + 1);
+	strcpy(pixel.string, (*value)->bytes);
+    }
+
+    if (internalPtr != NULL) {
+	*((IntStruct *)oldInternalPtr) = *((IntStruct *)internalPtr);
+	*((IntStruct *)internalPtr) = pixel;
+    }
+    return TCL_OK;
+};
+
+static int
+SetJustify(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    JustifyStruct pixel = {NULL, INT_MIN};
+    JustifyStruct *internalPtr;
+
+    if (internalOffset >= 0) {
+	internalPtr = (JustifyStruct *)(recordPtr + internalOffset);
+    } else {
+	internalPtr = NULL;
+    }
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tk_GetJustifyFromObj(interp, *value, &pixel.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	pixel.string = ckalloc((*value)->length + 1);
+	strcpy(pixel.string, (*value)->bytes);
+    }
+
+    if (internalPtr != NULL) {
+	*((JustifyStruct *)oldInternalPtr) = *((JustifyStruct *)internalPtr);
+	*((JustifyStruct *)internalPtr) = pixel;
+    }
+    return TCL_OK;
+};
+
+static Tcl_Obj *GetStruct(
     void *clientData,
     Tk_Window tkwin,
     char *recordPtr,
     int internalOffset)
 {
-    PixelStruct *pixelPtr = (PixelStruct *)(recordPtr + internalOffset);
+    char **structPtr = (char **)(recordPtr + internalOffset);
 
-    if (pixelPtr->string == NULL || *(pixelPtr->string) == '\0') {
+    if (*structPtr == NULL || **structPtr == '\0') {
 	return Tcl_NewObj();
     }
-    return Tcl_NewStringObj(pixelPtr->string, -1);
+    return Tcl_NewStringObj(*structPtr, -1);
 };
 
+
 static void
-RestorePixels(void *clientData,
+RestoreStruct(void *clientData,
     Tk_Window tkwin,
     char *internalPtr,
     char *oldInternalPtr)
 {
-    *(PixelStruct *)internalPtr = *(PixelStruct *)oldInternalPtr;
-    ((PixelStruct *)internalPtr)->string = (char *)ckalloc(strlen(((PixelStruct *)oldInternalPtr)->string));
-    strcpy(((PixelStruct *)internalPtr)->string, ((PixelStruct *)oldInternalPtr)->string);
+    *(IntStruct *)internalPtr = *(IntStruct *)oldInternalPtr;
+    ((IntStruct *)internalPtr)->string = (char *)ckalloc(strlen(((IntStruct *)oldInternalPtr)->string));
+    strcpy(((IntStruct *)internalPtr)->string, ((IntStruct *)oldInternalPtr)->string);
 };
 
 static void
-FreePixels(void *clientData,
+FreeStruct(void *clientData,
     Tk_Window tkwin,
     char *internalPtr)
 {
-    ckfree(((PixelStruct *)internalPtr)->string);
+    ckfree(((IntStruct *)internalPtr)->string);
 };
 
 static const Tk_ObjCustomOption pixelsOption = {
     "pixels",			/* name */
     SetPixels,		/* setProc */
-    GetPixels,		/* getProc */
-    RestorePixels,	/* restoreProc */
-    FreePixels,			/* freeProc */
+    GetStruct,		/* getProc */
+    RestoreStruct,	/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
+static const Tk_ObjCustomOption booleanOption = {
+    "boolean",			/* name */
+    SetBoolean,		/* setProc */
+    GetStruct,		/* getProc */
+    RestoreStruct,	/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
+static const Tk_ObjCustomOption justifyOption = {
+    "justify",			/* name */
+    SetJustify,		/* setProc */
+    GetStruct,		/* getProc */
+    RestoreStruct,	/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
+static const Tk_ObjCustomOption reliefOption = {
+    "relief",			/* name */
+    SetRelief,		/* setProc */
+    GetStruct,		/* getProc */
+    RestoreStruct,	/* restoreProc */
+    FreeStruct,			/* freeProc */
     0
 };
 
@@ -140,17 +276,17 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
 	NULL, Tk_Offset(TkTextTag, borderWidthPtr), Tk_Offset(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-elide", NULL, NULL,
+    {TK_OPTION_CUSTOM, "-elide", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, elideString),
-	TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, &booleanOption, 0},
     {TK_OPTION_BITMAP, "-fgstipple", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, fgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, tkfont), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-foreground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, fgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-justify", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0,0},
+    {TK_OPTION_CUSTOM, "-justify", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, justifyString), TK_OPTION_NULL_OK, &justifyOption,0},
     {TK_OPTION_CUSTOM, "-lmargin1", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, lMargin1String), TK_OPTION_NULL_OK,&pixelsOption,0},
     {TK_OPTION_CUSTOM, "-lmargin2", NULL, NULL,
@@ -159,14 +295,14 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, -1, Tk_Offset(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CUSTOM, "-offset", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, offsetString), TK_OPTION_NULL_OK, &pixelsOption, 0},
-    {TK_OPTION_STRING, "-overstrike", NULL, NULL,
+    {TK_OPTION_CUSTOM, "-overstrike", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeString),
-	TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, &booleanOption, 0},
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeColor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-relief", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_CUSTOM, "-relief", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, &reliefOption, 0},
     {TK_OPTION_CUSTOM, "-rmargin", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, &pixelsOption,0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
@@ -186,9 +322,9 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, tabStyle),
 	TK_OPTION_NULL_OK, tabStyleStrings, 0},
-    {TK_OPTION_STRING, "-underline", NULL, NULL,
+    {TK_OPTION_CUSTOM, "-underline", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineString),
-	TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, &booleanOption, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineColor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -481,51 +617,6 @@ TkTextTagCmd(
 	    if (tagPtr->borderWidth < 0) {
 		tagPtr->borderWidth = 0;
 	    }
-	    if (tagPtr->reliefString != NULL) {
-		if (Tk_GetRelief(interp, tagPtr->reliefString,
-			&tagPtr->relief) != TCL_OK) {
-		    ckfree(tagPtr->reliefString);
-		    tagPtr->reliefString = NULL;
-		    if ((unsigned)tagPtr->relief <= TK_RELIEF_SUNKEN) {
-		    	const char *reliefString = Tk_NameOfRelief(tagPtr->relief);
-		    	tagPtr->reliefString = ckalloc(strlen(reliefString)+1);
-		    	strcpy(tagPtr->reliefString, reliefString);
-		    }
-		    return TCL_ERROR;
-		}
-	    } else {
-		tagPtr->relief = TK_RELIEF_NULL;
-	    }
-	    if (tagPtr->justifyString != NULL) {
-		if (Tk_GetJustify(interp, tagPtr->justifyString,
-			&tagPtr->justify) != TCL_OK) {
-		    ckfree(tagPtr->justifyString);
-		    tagPtr->justifyString = NULL;
-		    if ((unsigned)tagPtr->justify <= (unsigned)TK_JUSTIFY_CENTER) {
-		    	const char *justifyString = Tk_NameOfJustify(tagPtr->justify);
-		    	tagPtr->justifyString = ckalloc(strlen(justifyString)+1);
-		    	strcpy(tagPtr->justifyString, justifyString);
-		    }
-		    return TCL_ERROR;
-		}
-	    } else {
-		tagPtr->justify = (Tk_Justify)-1;
-	    }
-	    if (tagPtr->overstrikeString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->overstrikeString,
-			&tagPtr->overstrike) != TCL_OK) {
-		    ckfree(tagPtr->overstrikeString);
-		    tagPtr->overstrikeString = NULL;
-		    if ((unsigned)tagPtr->overstrike <= 1) {
-			tagPtr->overstrikeString = ckalloc(2);
-			tagPtr->overstrikeString[0] = '0' + tagPtr->overstrike;
-			tagPtr->overstrikeString[1] = 0;
-		    }
-		    return TCL_ERROR;
-		}
-	    } else {
-		tagPtr->overstrike = -1;
-	    }
 	    if (tagPtr->spacing1String != NULL) {
 		if (tagPtr->spacing1 < 0) {
 		    tagPtr->spacing1 = 0;
@@ -552,34 +643,7 @@ TkTextTagCmd(
 		    return TCL_ERROR;
 		}
 	    }
-	    if (tagPtr->underlineString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->underlineString,
-			&tagPtr->underline) != TCL_OK) {
-		    ckfree(tagPtr->underlineString);
-		    tagPtr->underlineString = NULL;
-		    if ((unsigned)tagPtr->underline <= 1) {
-			tagPtr->underlineString = ckalloc(2);
-			tagPtr->underlineString[0] = '0' + tagPtr->underline;
-			tagPtr->underlineString[1] = 0;
-		    }
-		    return TCL_ERROR;
-		}
-	    } else {
-		tagPtr->underline = -1;
-	    }
 	    if (tagPtr->elideString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->elideString,
-			&tagPtr->elide) != TCL_OK) {
-		    ckfree(tagPtr->elideString);
-		    tagPtr->elideString = NULL;
-		    if ((unsigned)tagPtr->elide <= 1) {
-			tagPtr->elideString = ckalloc(2);
-			tagPtr->elideString[0] = '0' + tagPtr->elide;
-			tagPtr->elideString[1] = 0;
-		    }
-		    return TCL_ERROR;
-		}
-
 		/*
 		 * Indices are potentially obsolete after changing -elide,
 		 * especially those computed with "display" or "any"
@@ -587,8 +651,6 @@ TkTextTagCmd(
 		 */
 
 		textPtr->sharedTextPtr->stateEpoch++;
-	    } else {
-		tagPtr->elide = -1;
 	    }
 
 	    /*
