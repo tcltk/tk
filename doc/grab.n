@@ -84,20 +84,26 @@ The \fBgrab\fR command can take any of the following forms:
 .TP
 \fBgrab \fR?\fB\-global\fR? \fIwindow\fR
 Same as \fBgrab set\fR, described below.
+.\" METHOD: current
 .TP
 \fBgrab current \fR?\fIwindow\fR?
+.
 If \fIwindow\fR is specified, returns the name of the current grab
 window in this application for \fIwindow\fR's display, or an empty
 string if there is no such window.
 If \fIwindow\fR is omitted, the command returns a list whose elements
 are all of the windows grabbed by this application for all displays,
 or an empty string if the application has no grabs.
+.\" METHOD: release
 .TP
 \fBgrab release \fIwindow\fR
+.
 Releases the grab on \fIwindow\fR if there is one, otherwise does
 nothing.  Returns an empty string.
+.\" METHOD: set
 .TP
 \fBgrab set \fR?\fB\-global\fR? \fIwindow\fR
+.
 Sets a grab on \fIwindow\fR.  If \fB\-global\fR is specified then the
 grab is global, otherwise it is local.
 If a grab was already in effect for this application on
@@ -105,8 +111,10 @@ If a grab was already in effect for this application on
 If there is already a grab on \fIwindow\fR and it has the same
 global/local form as the requested grab, then the command
 does nothing.  Returns an empty string.
+.\" METHOD: status
 .TP
 \fBgrab status \fIwindow\fR
+.
 Returns \fBnone\fR if no grab is currently set on \fIwindow\fR,
 \fBlocal\fR if a local grab is set on \fIwindow\fR, and
 \fBglobal\fR if a global grab is set.

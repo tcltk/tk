@@ -27,8 +27,10 @@ If the first argument to \fBpack\fR is a window name (any value
 starting with
 .QW . ),
 then the command is processed in the same way as \fBpack configure\fR.
+.\" METHOD: configure
 .TP
 \fBpack configure \fIwindow \fR?\fIwindow ...\fR? ?\fIoptions\fR?
+.
 The arguments consist of the names of one or more content windows
 followed by pairs of arguments that specify how
 to manage the content.
@@ -124,6 +126,15 @@ If any of the content are already managed by the geometry manager
 then any unspecified options for them retain their previous values rather
 than receiving default values.
 .RE
+.\" METHOD: content
+.TP
+\fBpack content \fIwindow\fR
+.
+Returns a list of all of the content windows in the packing order for \fIwindow\fR.
+The order of the content windows in the list is the same as their order in
+the packing order.
+If \fIwindow\fR has no content then an empty string is returned.
+.\" METHOD: forget
 .TP
 \fBpack forget \fIwindow \fR?\fIwindow ...\fR?
 Removes each of the \fIwindow\fRs from the packing order for its
@@ -137,6 +148,7 @@ the virtual event \fB<<NoManagedChild>>\fR to the container; the container
 may choose to resize itself (or otherwise respond) to such a change.
 .VE "TIP 518"
 .RE
+.\" METHOD: info
 .TP
 \fBpack info \fIwindow\fR
 Returns a list whose elements are the current configuration state of
@@ -145,8 +157,10 @@ might be specified to \fBpack configure\fR.
 The first two elements of the list are
 .QW "\fB\-in \fIcontainer\fR"
 where \fIcontainer\fR is the window's container.
+.\" METHOD: propagate
 .TP
 \fBpack propagate \fIcontainer\fR ?\fIboolean\fR?
+.
 If \fIboolean\fR has a true boolean value such as \fB1\fR or \fBon\fR
 then propagation is enabled for \fIcontainer\fR, which must be a window
 name (see \fBGEOMETRY PROPAGATION\fR below).
@@ -157,12 +171,7 @@ If \fIboolean\fR is omitted then the command returns \fB0\fR or
 \fB1\fR to indicate whether propagation is currently enabled
 for \fIcontainer\fR.
 Propagation is enabled by default.
-.TP
-\fBpack content \fIwindow\fR
-Returns a list of all of the content windows in the packing order for \fIwindow\fR.
-The order of the content windows in the list is the same as their order in
-the packing order.
-If \fIwindow\fR has no content then an empty string is returned.
+.\" METHOD: slaves
 .TP
 \fBpack slaves \fIwindow\fR
 .

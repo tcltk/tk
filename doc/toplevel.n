@@ -12,7 +12,7 @@
 .SH NAME
 toplevel \- Create and manipulate 'toplevel' main and popup window widgets
 .SH SYNOPSIS
-\fBtoplevel\fR \fIpathName \fR?\fIoptions\fR?
+\fBtoplevel\fI pathName \fR?\fIoptions\fR?
 .SO
 \-borderwidth	\-highlightcolor	\-pady
 \-cursor	\-highlightthickness	\-relief
@@ -148,6 +148,7 @@ operations on the widget.  It has the following general form:
 the toplevel widget's path name.  \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for toplevel widgets:
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -155,6 +156,7 @@ Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBtoplevel\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

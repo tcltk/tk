@@ -39,7 +39,7 @@ and errors in the sent command will be ignored.
 If the target application is in the same process as the sending
 application then the \fB\-async\fR option is ignored.
 .TP
-\fB\-displayof\fR \fIpathName\fR
+\fB\-displayof\fI pathName\fR
 Specifies that the target application's main window is on the display
 of the window given by \fIpathName\fR, instead of the display containing
 the application's main window.

@@ -12,7 +12,7 @@
 .SH NAME
 ttk::entry \- Editable text field widget
 .SH SYNOPSIS
-\fBttk::entry\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::entry\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -147,8 +147,10 @@ In addition to the standard
 \fBstate\fR, \fBstyle\fR and \fBxview\fR
 commands (see \fBttk::widget\fR),
 entry widgets support the following additional commands:
+.\" METHOD: bbox
 .TP
 \fIpathName \fBbbox \fIindex\fR
+.
 Returns a list of four numbers describing the bounding box of the
 character given by \fIindex\fR.
 The first two elements of the list give the x and y coordinates of
@@ -157,8 +159,10 @@ the upper-left corner of the screen area covered by the character
 the width and height of the character, in pixels.
 The bounding box may refer to a region outside the visible area
 of the window.
+.\" METHOD: delete
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
+.
 Delete one or more elements of the entry.
 \fIFirst\fR is the index of the first character to delete, and
 \fIlast\fR is the index of the character just after the last
@@ -166,44 +170,59 @@ one to delete.
 If \fIlast\fR is not specified it defaults to \fIfirst\fR+1,
 i.e. a single character is deleted.
 This command returns the empty string.
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the entry's string.
+.\" METHOD: icursor
 .TP
 \fIpathName \fBicursor \fIindex\fR
+.
 Arrange for the insert cursor to be displayed just before the character
 given by \fIindex\fR.  Returns the empty string.
+.\" METHOD: index
 .TP
 \fIpathName \fBindex\fI index\fR
+.
 Returns the numerical index corresponding to \fIindex\fR.
+.\" METHOD: insert
 .TP
 \fIpathName \fBinsert \fIindex string\fR
+.
 Insert \fIstring\fR just before the character
 indicated by \fIindex\fR.  Returns the empty string.
+.\" METHOD: selection
 .TP
 \fIpathName \fBselection \fIoption arg\fR
+.
 This command is used to adjust the selection within an entry.  It
 has several forms, depending on \fIoption\fR:
 .RS
 .TP
 \fIpathName \fBselection clear\fR
+.
 Clear the selection if it is currently in this widget.
 If the selection is not in this widget then the command has no effect.
 Returns the empty string.
 .TP
 \fIpathName \fBselection present\fR
+.
 Returns 1 if there is are characters selected in the entry,
 0 if nothing is selected.
 .TP
-\fIpathName \fBselection range \fIstart\fR \fIend\fR
+\fIpathName \fBselection range \fIstart end\fR
+.
 Sets the selection to include the characters starting with
 the one indexed by \fIstart\fR and ending with the one just
 before \fIend\fR.
 If \fIend\fR refers to the same character as \fIstart\fR or an
 earlier one, then the entry's selection is cleared.
 .RE
+.\" METHOD: validate
 .TP
 \fIpathName \fBvalidate\fR
+.
 Force revalidation, independent of the conditions specified
 by the \fB\-validate\fR option.
 Returns 0 if validation fails, 1 if it succeeds.

@@ -649,9 +649,9 @@ then that script terminates and no other scripts will be invoked
 for the event.
 .PP
 Within a script called from the binding script, \fBreturn\fR
-\fB-code ok\fR may be used to continue processing (including
+\fB\-code ok\fR may be used to continue processing (including
 .QW +
-appended scripts), or \fBreturn\fR \fB-code break\fR may be used to
+appended scripts), or \fBreturn\fR \fB\-code break\fR may be used to
 stop processing all other binding scripts.
 .PP
 If more than one binding matches a particular event and they
