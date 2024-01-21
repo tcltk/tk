@@ -10,7 +10,7 @@
 .SH NAME
 ttk::frame \- Simple container widget
 .SH SYNOPSIS
-\fBttk::frame\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::frame\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP

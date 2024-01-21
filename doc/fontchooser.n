@@ -30,16 +30,19 @@ difference, all user interaction with the dialog will be communicated to the
 caller via callbacks or virtual events.
 .PP
 The \fBtk fontchooser\fR command can have one of the following forms:
+.\" METHOD: configure
 .TP
 \fBtk fontchooser\fR \fBconfigure \fR?\fI\-option value ...\fR?
 .
 Set or query one or more of the configurations options below (analogous to Tk
 widget configuration).
+.\" METHOD: show
 .TP
 \fBtk fontchooser\fR \fBshow\fR
 .
 Show the font selection dialog. Depending on the platform, may return
 immediately or only once the dialog has been withdrawn.
+.\" METHOD: hide
 .TP
 \fBtk fontchooser\fR \fBhide\fR
 .

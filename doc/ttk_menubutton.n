@@ -10,7 +10,7 @@
 .SH NAME
 ttk::menubutton \- Widget that pops down a menu when pressed
 .SH SYNOPSIS
-\fBttk::menubutton\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::menubutton\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP

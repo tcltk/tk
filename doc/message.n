@@ -12,7 +12,7 @@
 .SH NAME
 message \- Create and manipulate 'message' non-interactive text widgets
 .SH SYNOPSIS
-\fBmessage\fR \fIpathName \fR?\fIoptions\fR?
+\fBmessage\fI pathName \fR?\fIoptions\fR?
 .SO
 \-anchor	\-background	\-borderwidth
 \-cursor	\-font	\-foreground
@@ -111,6 +111,7 @@ operations on the widget.  It has the following general form:
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for message widgets:
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -118,6 +119,7 @@ Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBmessage\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

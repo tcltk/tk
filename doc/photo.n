@@ -43,7 +43,11 @@ procedural interface.  At present, only
 .VS 8.6
 PNG,
 .VE 8.6
-GIF and PPM/PGM formats are supported, but an interface exists to
+GIF, PPM/PGM,
+.VS 8.7
+and (read-only) SVG
+.VE 8.7
+formats are supported, but an interface exists to
 allow additional image file formats to be added easily.  A photo image
 is (semi)transparent if the image data it was obtained from had
 transparency informaton. In regions where no image data has been
@@ -151,19 +155,22 @@ case the width and/or height, respectively, of the image will not be
 changed.
 .PP
 The following commands are possible for photo images:
+.\" METHOD: blank
 .TP
 \fIimageName \fBblank\fR
 .
 Blank the image; that is, set the entire image to have no data, so it
 will be displayed as transparent, and the background of whatever
 window it is displayed in will show through. The metadata dict of the image is not changed.
+.\" METHOD: cget
 .TP
-\fIimageName \fBcget\fR \fIoption\fR
+\fIimageName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the
 \fBimage create\fR \fBphoto\fR command.
+.\" METHOD: configure
 .TP
 \fIimageName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -183,8 +190,9 @@ this case the command returns an empty string.
 Note: setting the \fB\-metadata\fR option without any other option
 will not invoke the image format driver to recreate the bitmap.
 .VE 8.7
+.\" METHOD: copy
 .TP
-\fIimageName \fBcopy\fR \fIsourceImage\fR ?\fIoption value(s) ...\fR?
+\fIimageName \fBcopy\fI sourceImage\fR ?\fIoption value(s) ...\fR?
 .
 Copies a region from the image called \fIsourceImage\fR (which must
 be a photo image) to the image called \fIimageName\fR, possibly with
@@ -250,6 +258,7 @@ is set, the old contents of the destination image are discarded and
 the source image is used as-is.  The default compositing rule is
 \fIoverlay\fR.
 .RE
+.\" METHOD: data
 .TP
 \fIimageName \fBdata\fR ?\fIoption value(s) ...\fR?
 .
@@ -257,7 +266,7 @@ Returns image data in the form of a string.
 .VS 8.7
 The format of the string depends on the format handler. By default, a
 human readable format as a list of lists of pixel data is used, other
-formats can be chosen with the \fB-format\fR option.
+formats can be chosen with the \fB\-format\fR option.
 See \fBIMAGE FORMATS\fR below for details.
 .VE 8.7
 The following options may be specified:
@@ -303,7 +312,7 @@ If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fImetadata\fR
+\fB\-metadata\fI metadata\fR
 .
 Image format handler may use metadata to be included in the returned
 data string.
@@ -313,17 +322,19 @@ If no \fB\-metadata\fR option is given, the current metadata of the
 image is used.
 .VE 8.7
 .RE
-\fIimageName \fBget\fR \fIx y\fR ?\fB-withalpha\fR?
+.\" METHOD: get
+.TP
+\fIimageName \fBget\fI x y\fR ?\fB\-withalpha\fR?
 .
 Returns the color of the pixel at coordinates (\fIx\fR,\fIy\fR) in the
 image as a list of three integers between 0 and 255, representing the
-red, green and blue components respectively. If the \fB-withalpha\fR
+red, green and blue components respectively. If the \fB\-withalpha\fR
 option is specified, the returned list will have a fourth element
 representing the alpha value of the pixel as an integer between 0 and
 255.
-.VE 8.7
+.\" METHOD: put
 .TP
-\fIimageName \fBput\fR \fIdata\fR ?\fIoption value(s) ...\fR?
+\fIimageName \fBput\fI data\fR ?\fIoption value(s) ...\fR?
 .
 Sets pixels in \fI imageName\fR to the data specified in \fIdata\fR.
 .VS 8.7
@@ -347,7 +358,7 @@ This means that the braces may be omitted if the argument has only one
 word. Also, instead of braces, double quotes may be used for quoting.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fImetadata\fR
+\fB\-metadata\fI metadata\fR
 .
 A specified \fImetadata\fR is passed to the image format driver when interpreting
 the data.
@@ -368,8 +379,9 @@ discarded. Note that if \fIdata\fR specifies a
 single color value, then a region extending to the bottom-right corner
 represented by (\fIx2\fR,\fIy2\fR) will be filled with that color.
 .RE
+.\" METHOD: read
 .TP
-\fIimageName \fBread\fR \fIfilename\fR ?\fIoption value(s) ...\fR?
+\fIimageName \fBread\fI filename\fR ?\fIoption value(s) ...\fR?
 .
 Reads image data from the file named \fIfilename\fR into the image.
 This command first searches the list of
@@ -401,7 +413,7 @@ The default, if this option is not specified, is the whole of the
 image in the image file.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fImetadata\fR
+\fB\-metadata\fI metadata\fR
 .
 A specified \fImetadata\fR is passed to the image format driver when interpreting
 the data.
@@ -424,6 +436,7 @@ Specifies the coordinates of the top-left corner of the region of
 \fIimageName\fR into which data from \fIfilename\fR are to be read.
 The default is (0,0).
 .RE
+.\" METHOD: redither
 .TP
 \fIimageName \fBredither\fR
 .
@@ -434,33 +447,32 @@ dithered image may not be exactly correct.  Normally the difference is
 not noticeable, but if it is a problem, this command can be used to
 recalculate the dithered image in each window where the image is
 displayed.
+.\" METHOD: transparency
 .TP
 \fIimageName \fBtransparency \fIsubcommand \fR?\fIarg ...\fR?
 .
 Allows examination and manipulation of the transparency information in
 the photo image.  Several subcommands are available:
 .RS
-.VS 8.7
 .TP
-\fIimageName \fBtransparency get \fIx y\fR ?\fB-alpha\fR?
-.
+\fIimageName \fBtransparency get \fIx y\fR ?\fB\-alpha\fR?
+.VS 8.7
 Returns true if the pixel at (\fIx\fR,\fIy\fR) is fully transparent,
-false otherwise.  If the option \fB-alpha\fR is passed, returns the
+false otherwise.  If the option \fB\-alpha\fR is passed, returns the
 alpha value of the pixel instead, as an integer in the range 0 to 255.
 .VE 8.7
-
-.VS 8.7
 .TP
-\fIimageName \fBtransparency set \fIx y\fR \fInewVal\fR ?\fB-alpha\fR?
-.
+\fIimageName \fBtransparency set \fIx y newVal\fR ?\fB\-alpha\fR?
+.VS 8.7
 Change the transparency of the pixel at (\fIx\fR,\fIy\fR) to
 \fInewVal.\fR If no additional option is passed, \fInewVal\fR is
 interpreted as a boolean and the pixel is made fully transparent if
-that value is true, fully opaque otherwise.  If the \fB-alpha\fR
+that value is true, fully opaque otherwise.  If the \fB\-alpha\fR
 option is passed, \fInewVal\fR is interpreted as an integral alpha
 value for the pixel, which must be in the range 0 to 255.
 .VE 8.7
 .RE
+.\" METHOD: write
 .TP
 \fIimageName \fBwrite \fIfilename\fR ?\fIoption value(s) ...\fR?
 .
@@ -503,7 +515,7 @@ If this options is specified, the data will not contain color
 information. All pixel data will be transformed into grayscale.
 .VS 8.7
 .TP
-\fB\-metadata\fR \fBmetadata\fR
+\fB\-metadata\fI metadata\fR
 .
 Image format handler may use metadata to be included in the written file.
 The specified \fImetadata\fR is passed to the driver for inclusion in the
@@ -518,8 +530,8 @@ The photo image code is structured to allow handlers for additional
 image file formats to be added easily.  The photo image code maintains
 a list of these handlers.  Handlers are added to the list by
 registering them with a call to \fBTk_CreatePhotoImageFormat\fR.  The
-standard Tk distribution comes with handlers for PPM/PGM, PNG and GIF
-formats,
+standard Tk distribution comes with handlers for PPM/PGM, PNG, GIF and
+(read-only) SVG formats,
 .VS 8.7
 as well as the \fBdefault\fR handler to encode/decode image
 data in a human readable form.
@@ -555,7 +567,7 @@ from/to a file. Its sole purpose is to encode and decode image data in
 string form in a clear text, human readable, form. The \fIimageName\fR
 \fBdata\fR subcommand uses this handler when no other format is
 specified. When reading image data from a string with \fIimageName\fR
-\fBput\fR or the \fB-data\fR option, the default handler is treated
+\fBput\fR or the \fB\-data\fR option, the default handler is treated
 as the other handlers.
 .PP
 Image data in the \fBdefault\fR string format is a (top-to-bottom)
@@ -579,7 +591,7 @@ The built-in handlers support these suboptions:
 \fBdefault \-colorformat\fI formatType\fR
 .
 The option is allowed when writing image data to a string with
-\fIimageName\fR \fBdata\fR. Specifies the format to use for the color
+\fIimageName \fBdata\fR. Specifies the format to use for the color
 string of each pixel. \fIformatType\fR may be one of: \fBrgb\fR to
 encode pixel data in the form \fB#\fIRRGGBB\fR, \fBrgba\fR to encode
 pixel data in the form \fB#\fIRRGGBBAA\fR or \fBlist\fR to encode
@@ -603,11 +615,13 @@ background on which the image is displayed to show through.  This
 usually also has the effect of desaturating the image.  The
 \fIalphaValue\fR must be between 0.0 and 1.0.
 .TP
-\fBsvg \-dpi\fI dpiValue\fB \-scale\fI scaleValue\fB \-scaletowidth \fI width\fB \-scaletoheight\fI height\fR
+\fBsvg \-dpi\fI dpiValue \fB\-scale\fI scaleValue \fB\-scaletowidth\fI width \fB\-scaletoheight\fI height\fR
 .
 \fIdpiValue\fR is used in conversion between given coordinates and
 screen resolution. The value must be greater than 0 and the default
 value is 96.
+.RS
+.PP
 \fIscaleValue\fR is used to scale the resulting image. The value must
 be greater than 0 and the default value is 1.
 \fIwidth\fR and \fIheight\fR are the width or height that the image
@@ -618,32 +632,51 @@ The svg format supports a wide range of SVG features, but the
 full SVG standard is not available, for instance the 'text' feature
 is missing and silently ignored when reading the SVG data.
 The supported SVG features are:
+.TP
+\fBelements:\fR
 .
-.RS
-\fB elements:\fR g, path, rect, circle, ellipse, line, polyline, polygon,
+g, path, rect, circle, ellipse, line, polyline, polygon,
 linearGradient, radialGradient, stop, defs, svg, style
-.PP
-\fB attributes:\fR width, height, viewBox,
+.TP
+\fBattributes:\fR
+.
+width, height, viewBox,
 preserveAspectRatio with none, xMin, xMid, xMax, yMin, yMid, yMax, slice
-.PP
-\fB gradient attributes:\fR gradientUnits with objectBoundingBox,
+.TP
+\fBgradient attributes:\fR
+.
+gradientUnits with objectBoundingBox,
 gradientTransform, cx, cy, r fx, fy x1, y1, x2, y2
 spreadMethod with pad, reflect or repeat,
 xlink:href
-.PP
-\fB poly attributes: \fR points
-.PP
-\fB line attributes: \fR x1, y1, x2, y2
-.PP
-\fB ellipse attributes: \fR cx, cy, rx, ry
-.PP
-\fB circle attributes: \fR cx, cy, r
-.PP
-\fB rectangle attributes: \fR x, y, width, height, rx, ry
-.PP
-\fB path attributes: \fR d with m, M, l, L, h, H, v, V, c, C, s, S, q, Q, t, T, a, A, z, Z
-.PP
-\fB style attributes: \fR display with none, visibility, hidden, visible,
+.TP
+\fBpoly attributes:\fR
+.
+points
+.TP
+\fBline attributes:\fR
+.
+x1, y1, x2, y2
+.TP
+\fBellipse attributes:\fR
+.
+cx, cy, rx, ry
+.TP
+\fBcircle attributes:\fR
+.
+cx, cy, r
+.TP
+\fBrectangle attributes:\fR
+.
+x, y, width, height, rx, ry
+.TP
+\fBpath attributes:\fR
+.
+d with m, M, l, L, h, H, v, V, c, C, s, S, q, Q, t, T, a, A, z, Z
+.TP
+\fBstyle attributes:\fR
+.
+display with none, visibility, hidden, visible,
 fill with nonzero and evenodd, opacity, fill-opacity,
 stroke, stroke-width, stroke-dasharray, stroke-dashoffset, stroke-opacity,
 stroke-linecap with butt, round and square,
@@ -652,10 +685,11 @@ fill-rule, font-size,
 transform with matrix, translate, scale, rotate, skewX and  skewY,
 stop-color, stop-opacity, offset, id, class
 .RE
-.
+.PP
 Currently only SVG images reading and conversion into (pixel-based
 format) photos is supported: Tk does not (yet) support bundling photo
 images in SVG vector graphics.
+.RE
 .VE 8.6
 .VS 8.7
 .SH "COLOR FORMATS"
@@ -747,45 +781,46 @@ parsed, or may use metadata to be included in image files or formats.
 Each image format driver supports an individual set of metadata dictionary
 keys. Predefined keys are:
 .TP
-DPI
+\fBDPI\fR
 .
 Horizontal image resolution in DPI as a double value.
 Supported by format \fBpng\fR.
 .TP
-aspect
+\fBaspect\fR
 .
 Aspect ratio horizontal divided by vertical as double value.
 Supported by formats \fBgif\fR and \fBpng\fR.
 .TP
-comment
+\fBcomment\fR
 .
 Image text comment.
 Supported by formats \fBgif\fR and \fBpng\fR.
 .PP
 It is valid to set any key in the metadata dict.
-A format driver will ignore keys it does not handle.
+A format driver will ignore keys that it does not handle.
 .SS "METADATA KEYS FOR ANIMATED GIF INFORMATION"
 .PP
 The following metadata keys are reported when reading a \fBgif\fR format file.
-They are typically used in conjunction with the \fI-index\fR option of an
+They are typically used in conjunction with the \fB\-index\fR option of an
 animated \fBgif\fR file to properly display the subimage sequence.
-The options are linked to each subimage selected by \fI-index\fR.
+The options are linked to each subimage selected by \fB\-index\fR.
 .TP
-\fBdelay time\fR \fItime\fR
+\fBdelay time\fI time\fR
 .
-Update delay time in 10ms unit. This key is only present, if delay time is not 0.
+Update delay time in 10ms units. This key is only present if the delay time is not 0.
 .TP
-\fBdisposal method\fR \fImethod\fR
+\fBdisposal method\fI method\fR
 .
 Disposal method of the preceeding image, if given for the current image.
-Possible values are: \fIdo not dispose\fR, \fIrestore to background color\fR, \fIrestore to previous\fR.
+Possible values are: \fBdo not dispose\fR, \fBrestore to background color\fR,
+\fBrestore to previous\fR.
 .TP
-\fBuser interaction\fR \fIbool\fR
+\fBuser interaction\fI bool\fR
 .
 The key is present with a value of 1, if user interaction is specified.
 Otherwise, the key is not present.
 .TP
-\fBupdate region\fR \fIX0\fR, \fIY0\fR, \fIwidth\fR, \fIheight\fR
+\fBupdate region\fI X0\fR, \fIY0\fR, \fIwidth\fR, \fIheight\fR
 .
 Update region of the current subimage, if subimage has not the same size as
 the full image. The pixel outside of this box are all fully transparent.

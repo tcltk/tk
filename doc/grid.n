@@ -28,12 +28,14 @@ argument to \fBgrid configure\fR, either a window name (any value
 starting with \fB.\fR) or one of the characters \fBx\fR or \fB^\fR
 (see the \fBRELATIVE PLACEMENT\fR section below), then the command is
 processed in the same way as \fBgrid configure\fR.
+.\" METHOD: anchor
 .TP
 \fBgrid anchor \fIwindow\fR ?\fIanchor\fR?
 .
 The anchor value controls how to place the grid within the container window
 when no row/column has any weight.  See \fBTHE GRID ALGORITHM\fR below
 for further details.  The default \fIanchor\fR is \fInw\fR.
+.\" METHOD: bbox
 .TP
 \fBgrid bbox \fIwindow\fR ?\fIcolumn row\fR? ?\fIcolumn2 row2\fR?
 .
@@ -47,6 +49,7 @@ the command line, then the bounding box for that cell is returned, where the
 top left cell is numbered from zero.  If both \fIcolumn\fR and \fIrow\fR
 arguments are specified, then the bounding box spanning the rows and columns
 indicated is returned.
+.\" METHOD: columnconfigure
 .TP
 \fBgrid columnconfigure \fIwindow index \fR?\fI\-option value...\fR?
 .
@@ -84,6 +87,7 @@ If only the container window and index is specified, all the current settings
 are returned in a list of
 .QW "\-option value"
 pairs.
+.\" METHOD: configure
 .TP
 \fBgrid configure \fIwindow \fR?\fIwindow ...\fR? ?\fIoptions\fR?
 .
@@ -193,6 +197,16 @@ If any of the content is already managed by the geometry manager
 then any unspecified options for them retain their previous values rather
 than receiving default values.
 .RE
+.\" METHOD: content
+.TP
+\fBgrid content \fIwindow\fR ?\fI\-option value\fR?
+.
+If no options are supplied, a list of all of the content in \fIwindow\fR
+is returned, most recently managed first.
+\fIOption\fR can be either \fB\-row\fR or \fB\-column\fR which
+causes only the content in the row (or column) specified by \fIvalue\fR
+to be returned.
+.\" METHOD: forget
 .TP
 \fBgrid forget \fIwindow \fR?\fIwindow ...\fR?
 .
@@ -210,6 +224,7 @@ the virtual event \fB<<NoManagedChild>>\fR to the container; the container
 may choose to resize itself (or otherwise respond) to such a change.
 .VE "TIP 518"
 .RE
+.\" METHOD: info
 .TP
 \fBgrid info \fIwindow\fR
 .
@@ -219,6 +234,7 @@ might be specified to \fBgrid configure\fR.
 The first two elements of the list are
 .QW "\fB\-in \fIcontainer\fR"
 where \fIcontainer\fR is the windows's container window.
+.\" METHOD: location
 .TP
 \fBgrid location \fIwindow x y\fR
 .
@@ -226,6 +242,7 @@ Given  \fIx\fR and \fIy\fR values in screen units relative to the container wind
 the column and row number at that \fIx\fR and \fIy\fR location is returned.
 For locations that are above or to the left of the grid, \fB\-1\fR is
 returned.
+.\" METHOD: propagate
 .TP
 \fBgrid propagate \fIwindow\fR ?\fIboolean\fR?
 .
@@ -239,6 +256,7 @@ If \fIboolean\fR is omitted then the command returns \fB0\fR or
 \fB1\fR to indicate whether propagation is currently enabled
 for \fIwindow\fR.
 Propagation is enabled by default.
+.\" METHOD: rowconfigure
 .TP
 \fBgrid rowconfigure \fIwindow index \fR?\fI\-option value...\fR?
 .
@@ -276,6 +294,7 @@ If only the container window and index is specified, all the current settings
 are returned in a list of
 .QW "-option value"
 pairs.
+.\" METHOD: remove
 .TP
 \fBgrid remove \fIwindow \fR?\fIwindow ...\fR?
 .
@@ -293,6 +312,7 @@ the virtual event \fB<<NoManagedChild>>\fR to the container; the container
 may choose to resize itself (or otherwise respond) to such a change.
 .VE "TIP 518"
 .RE
+.\" METHOD: size
 .TP
 \fBgrid size \fIcontainer\fR
 .
@@ -300,14 +320,7 @@ Returns the size of the grid (in columns then rows) for \fIcontainer\fR.
 The size is determined either by the \fIcontent\fR occupying the largest
 row or column, or the largest column or row with a \fB\-minsize\fR,
 \fB\-weight\fR, or \fB\-pad\fR that is non-zero.
-.TP
-\fBgrid content \fIwindow\fR ?\fI\-option value\fR?
-.
-If no options are supplied, a list of all of the content in \fIwindow\fR
-is returned, most recently managed first.
-\fIOption\fR can be either \fB\-row\fR or \fB\-column\fR which
-causes only the content in the row (or column) specified by \fIvalue\fR
-to be returned.
+.\" METHOD: slaves
 .TP
 \fBgrid slaves \fIwindow\fR ?\fI\-option value\fR?
 .

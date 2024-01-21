@@ -35,7 +35,6 @@ tk::mac \- Access Mac-Specific Functionality on OS X from Tk
 \fB::tk::mac::antialiasedtext \fInumber\fR
 \fB::tk::mac::useThemedToplevel \fIboolean\fR
 
-
 \fB::tk::mac::iconBitmap \fIname width height \-kind value\fR
 .fi
 .BE
@@ -209,8 +208,6 @@ scheme the developer wants to support.
 .
 Returns the current applications's file path.
 .TP
-
-
 .SH "ADDITIONAL DIALOGS"
 .PP
 The Aqua/Mac OS X defines additional dialogs that applications should

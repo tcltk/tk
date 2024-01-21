@@ -10,7 +10,7 @@
 .SH NAME
 ttk_vsapi \- Define a Microsoft Visual Styles element
 .SH SYNOPSIS
-\fBttk::style element create \fIname\fR \fBvsapi\fR \fIclassName\fR \fIpartId\fR ?\fIstateMap\fR? ?\fIoptions\fR?
+\fBttk::style element create \fIname \fBvsapi\fI className partId\fR ?\fIstateMap\fR? ?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -21,7 +21,7 @@ on Windows XP and Vista. This factory permits any of the Visual
 Styles parts to be declared as Ttk elements that can then be
 included in a style layout to modify the appearance of Ttk widgets.
 .PP
-\fIclassName\fR and \fIpartId\fR are required parameters and specify
+The \fIclassName\fR and \fIpartId\fR are required parameters and specify
 the Visual Styles class and part as given in the Microsoft
 documentation. The \fIstateMap\fR may be provided to map Ttk states to
 Visual Styles API states (see \fBSTATE MAP\fR).

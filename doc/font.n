@@ -20,6 +20,7 @@ The \fBfont\fR command provides several facilities for dealing with
 fonts, such as defining named fonts and inspecting the actual attributes of
 a font.  The command has several different forms, determined by the
 first argument.  The following forms are currently supported:
+.\" METHOD: actual
 .TP
 \fBfont actual \fIfont\fR ?\fB\-displayof \fIwindow\fR? ?\fIoption\fR? ?\fB\-\|\-\fR? ?\fIchar\fR?
 .
@@ -38,6 +39,7 @@ that character, which will be different from the base font if the base
 font does not contain the given character.  If \fIchar\fR may be a hyphen, it
 should be preceded by \fB\-\|\-\fR to distinguish it from a misspelled
 \fIoption\fR.
+.\" METHOD: configure
 .TP
 \fBfont configure \fIfontname\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -58,6 +60,7 @@ are implemented by the system theme. To achieve the effect of modification,
 use \fBfont actual\fR to get their configuration and \fBfont create\fR to
 synthesize a copy of the font which can be modified.
 .RE
+.\" METHOD: create
 .TP
 \fBfont create\fR ?\fIfontname\fR? ?\fIoption value ...\fR?
 .
@@ -67,8 +70,9 @@ form \fBfont\fIx\fR, where \fIx\fR is an integer.  There may be any number
 of \fIoption\fR\-\fIvalue\fR pairs, which provide the desired attributes for
 the new named font.  See \fBFONT OPTIONS\fR below for a list of the possible
 attributes.
+.\" METHOD: delete
 .TP
-\fBfont delete\fR \fIfontname\fR ?\fIfontname ...\fR?
+\fBfont delete\fI fontname\fR ?\fIfontname ...\fR?
 .
 Delete the specified named fonts.  If there are widgets using the named font,
 the named font will not actually be deleted until all the instances are
@@ -76,12 +80,14 @@ released.  Those widgets will continue to display using the last known values
 for the named font.  If a deleted named font is subsequently recreated with
 another call to \fBfont create\fR, the widgets will use the new named font
 and redisplay themselves using the new attributes of that font.
+.\" METHOD: families
 .TP
 \fBfont families\fR ?\fB\-displayof \fIwindow\fR?
 .
 The return value is a list of the case-insensitive names of all font families
 that exist on \fIwindow\fR's display.  If the \fIwindow\fR argument is
 omitted, it defaults to the main window.
+.\" METHOD: measure
 .TP
 \fBfont measure \fIfont\fR ?\fB\-displayof \fIwindow\fR? \fItext\fR
 .
@@ -96,6 +102,7 @@ characters such as cursive
 If the string contains newlines or tabs,
 those characters are not expanded or treated specially when measuring the
 string.
+.\" METHOD: metrics
 .TP
 \fBfont metrics \fIfont\fR ?\fB\-displayof \fIwindow\fR? ?\fIoption\fR?
 .
@@ -107,8 +114,10 @@ omitted, it defaults to the main window.  If \fIoption\fR is specified,
 returns the value of that metric; if it is omitted, the return value is a
 list of all the metrics and their values.  See \fBFONT METRICS\fR
 below for a list of the possible metrics.
+.\" METHOD: names
 .TP
 \fBfont names\fR
+.
 The return value is a list of all the named fonts that are currently defined.
 .SH "FONT DESCRIPTIONS"
 .PP

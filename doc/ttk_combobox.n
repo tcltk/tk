@@ -10,7 +10,7 @@
 .SH NAME
 ttk::combobox \- text field with popdown selection list
 .SH SYNOPSIS
-\fBttk::combobox\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::combobox\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -60,8 +60,10 @@ In addition to the standard
 \fBstate\fR and \fBstyle\fR
 commands (see \fBttk::widget\fR),
 combobox widgets support the following additional commands:
+.\" METHOD: current
 .TP
 \fIpathName \fBcurrent\fR ?\fInewIndex\fR?
+.
 If \fInewIndex\fR is supplied, sets the combobox value
 to the element at position \fInewIndex\fR in the list of \fB\-values\fR
 (in addition to integers, the \fBend\fR index is supported and indicates
@@ -70,11 +72,15 @@ for the command \fBstring index\fR is supported, with simple integer index
 arithmetic and indexing relative to \fBend\fR).
 Otherwise, returns the index of the current value in the list of
 \fB\-values\fR or \fB{}\fR if the current value does not appear in the list.
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the current value of the combobox.
+.\" METHOD: set
 .TP
-\fIpathName \fBset\fR \fIvalue\fR
+\fIpathName \fBset\fI value\fR
+.
 Sets the value of the combobox to \fIvalue\fR.
 .PP
 The combobox widget also supports the following \fBttk::entry\fR

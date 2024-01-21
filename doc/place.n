@@ -30,13 +30,16 @@ centered inside the container.
 .PP
 .TP
 \fBplace \fIwindow option value \fR?\fIoption value ...\fR?
+.
 Arrange for the placer to manage the geometry of a content whose
 pathName is \fIwindow\fR.  The remaining arguments consist of one or
 more \fIoption\-value\fR pairs that specify the way in which
 \fIwindow\fR's geometry is managed.  \fIOption\fR may have any of the
 values accepted by the \fBplace configure\fR command.
+.\" METHOD: configure
 .TP
 \fBplace configure \fIwindow \fR?\fIoption\fR? ?\fIvalue option value ...\fR?
+.
 Query or modify the geometry options of the content given by
 \fIwindow\fR.  If no \fIoption\fR is specified, this command returns a
 list describing the available options (see \fBTk_ConfigureInfo\fR for
@@ -177,23 +180,30 @@ If the same value is specified separately with
 two different options, such as \fB\-x\fR and \fB\-relx\fR, then
 the most recent option is used and the older one is ignored.
 .RE
+.\" METHOD: content
+.TP
+\fBplace content \fIwindow\fR
+.
+Returns a list of all the content windows for which \fIwindow\fR is the container.
+If there is no content for \fIwindow\fR then an empty string is returned.
+.\" METHOD: forget
 .TP
 \fBplace forget \fIwindow\fR
+.
 Causes the placer to stop managing the geometry of \fIwindow\fR.  As a
 side effect of this command \fIwindow\fR will be unmapped so that it
 does not appear on the screen.  If \fIwindow\fR is not currently managed
 by the placer then the command has no effect.  This command returns an
 empty string.
+.\" METHOD: info
 .TP
 \fBplace info \fIwindow\fR
+.
 Returns a list giving the current configuration of \fIwindow\fR.
 The list consists of \fIoption\-value\fR pairs in exactly the
 same form as might be specified to the \fBplace configure\fR
 command.
-.TP
-\fBplace content \fIwindow\fR
-Returns a list of all the content windows for which \fIwindow\fR is the container.
-If there is no content for \fIwindow\fR then an empty string is returned.
+.\" METHOD: slaves
 .TP
 \fBplace slaves \fIwindow\fR
 .

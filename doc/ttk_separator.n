@@ -10,7 +10,7 @@
 .SH NAME
 ttk::separator \- Separator bar
 .SH SYNOPSIS
-\fBttk::separator\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::separator\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP

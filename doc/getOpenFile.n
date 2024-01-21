@@ -35,20 +35,20 @@ whether the existing file should be overwritten or not.
 The following \fIoption\-value\fR pairs are possible as command line
 arguments to these two commands:
 .TP
-\fB\-command\fR \fIstring\fR
+\fB\-command\fI string\fR
 Specifies the prefix of a Tcl command to invoke when the user closes the
 dialog after having selected an item. This callback is not called if the
 user cancelled the dialog. The actual command consists of \fIstring\fR
 followed by a space and the value selected by the user in the dialog. This
 is only available on Mac OS X.
 .TP
-\fB\-confirmoverwrite\fR \fIboolean\fR
+\fB\-confirmoverwrite\fI boolean\fR
 Configures how the Save dialog reacts when the selected file already
 exists, and saving would overwrite it.  A true value requests a
 confirmation dialog be presented to the user.  A false value requests
 that the overwrite take place without confirmation.  Default value is true.
 .TP
-\fB\-defaultextension\fR \fIextension\fR
+\fB\-defaultextension\fI extension\fR
 .
 Specifies a string that will be appended to the filename if the user
 enters a filename without an extension. The default value is the empty
@@ -58,7 +58,7 @@ does not require extensions to filenames,
 and the UNIX implementation guesses reasonable values for this from
 the \fB\-filetypes\fR option when this is not supplied.
 .TP
-\fB\-filetypes\fR \fIfilePatternList\fR
+\fB\-filetypes\fI filePatternList\fR
 .
 If a \fBFile types\fR listbox exists in the file dialog on the particular
 platform, this option gives the \fIfiletype\fRs in this listbox. When
@@ -69,7 +69,7 @@ particular platform then all files are listed regardless of their
 types. See the section \fBSPECIFYING FILE PATTERNS\fR below for a
 discussion on the contents of \fIfilePatternList\fR.
 .TP
-\fB\-initialdir\fR \fIdirectory\fR
+\fB\-initialdir\fI directory\fR
 .
 Specifies that the files in \fIdirectory\fR should be displayed
 when the dialog pops up. If this parameter is not specified,
@@ -80,31 +80,31 @@ user-selected directory for the application. If the
 parameter specifies a relative path, the return value will convert the
 relative path to an absolute path.
 .TP
-\fB\-initialfile\fR \fIfilename\fR
+\fB\-initialfile\fI filename\fR
 .
 Specifies a filename to be displayed in the dialog when it pops up.
 .TP
-\fB\-message\fR \fIstring\fR
+\fB\-message\fI string\fR
 .
 Specifies a message to include in the client area of the dialog.
 This is only available on Mac OS X.
 .TP
-\fB\-multiple\fR \fIboolean\fR
+\fB\-multiple\fI boolean\fR
 .
 Allows the user to choose multiple files from the Open dialog.
 .TP
-\fB\-parent\fR \fIwindow\fR
+\fB\-parent\fI window\fR
 .
 Makes \fIwindow\fR the logical parent of the file dialog. The file
 dialog is displayed on top of its parent window. On Mac OS X, this
 turns the file dialog into a sheet attached to the parent window.
 .TP
-\fB\-title\fR \fItitleString\fR
+\fB\-title\fI titleString\fR
 .
 Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title is displayed.
 .TP
-\fB\-typevariable\fR \fIvariableName\fR
+\fB\-typevariable\fI variableName\fR
 .
 The global variable \fIvariableName\fR is used to preselect which filter is
 used from \fIfilterList\fR when the dialog box is opened and is

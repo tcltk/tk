@@ -10,7 +10,7 @@
 .SH NAME
 ttk::sizegrip \- Bottom-right corner resize widget
 .SH SYNOPSIS
-\fBttk::sizegrip\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::sizegrip\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP

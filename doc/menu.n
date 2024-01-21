@@ -13,8 +13,8 @@
 menu, tk_menuSetFocus \- Create and manipulate 'menu' widgets and menubars
 .SH SYNOPSIS
 .nf
-\fBmenu\fR \fIpathName \fR?\fIoptions\fR?
-\fBtk_menuSetFocus\fR \fIpathName\fR
+\fBmenu\fI pathName \fR?\fIoptions\fR?
+\fBtk_menuSetFocus\fI pathName\fR
 .SO
 \-activebackground	\-borderwidth	\-foreground
 \-activeborderwidth	\-cursor	\-relief
@@ -371,6 +371,7 @@ for the command \fBstring index\fR, with simple integer index
 arithmetic and indexing relative to \fBend\fR.
 .PP
 The following widget commands are possible for menu widgets:
+.\" METHOD: activate
 .TP
 \fIpathName \fBactivate \fIindex\fR
 .
@@ -380,6 +381,7 @@ Any previously-active entry is deactivated.  If \fIindex\fR
 is specified as \fB{}\fR, or if the specified entry is
 disabled, then the menu ends up with no active entry.
 Returns an empty string.
+.\" METHOD: add
 .TP
 \fIpathName \fBadd \fItype \fR?\fIid\fR? ?\fIoption value option value ...\fR?
 .
@@ -393,6 +395,7 @@ identifier is generated.
 If additional arguments are present, they specify the options listed in the
 \fBMENU ENTRY OPTIONS\fR section below.
 The \fBadd\fR widget command returns the id of the new entry.
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -400,6 +403,7 @@ Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBmenu\fR
 command.
+.\" METHOD: clone
 .TP
 \fIpathName \fBclone \fInewPathname\fR ?\fIcloneType\fR?
 .
@@ -409,6 +413,7 @@ propagated to the original menu and vice versa. \fIcloneType\fR can be
 \fBnormal\fR, \fBmenubar\fR, or \fBtearoff\fR. Should not normally be
 called outside of the Tk library. See the \fBCLONES\fR section for
 more information.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -424,6 +429,7 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBmenu\fR
 command.
+.\" METHOD: delete
 .TP
 \fIpathName \fBdelete \fIindex1\fR ?\fIindex2\fR?
 .
@@ -432,6 +438,7 @@ Delete all of the menu entries between \fIindex1\fR and
 If \fIindex2\fR is omitted then it defaults to \fIindex1\fR.
 Attempts to delete a tear-off menu entry are ignored (instead, you
 should change the \fB\-tearoff\fR option to remove the tear-off entry).
+.\" METHOD: entrycget
 .TP
 \fIpathName \fBentrycget \fIindex option\fR
 .
@@ -439,6 +446,7 @@ Returns the current value of a configuration option for
 the entry given by \fIindex\fR.
 \fIOption\fR may have any of the names described in the
 \fBMENU ENTRY OPTIONS\fR section below.
+.\" METHOD: entryconfigure
 .TP
 \fIpathName \fBentryconfigure \fIindex \fR?\fIoptions...\fR?
 .
@@ -452,6 +460,7 @@ modified as indicated in the command and the command returns an empty string.
 If no \fIoptions\fR are specified, returns a list describing
 the current options for entry \fIindex\fR (see \fBTk_ConfigureInfo\fR for
 information on the format of this list).
+.\" METHOD: id
 .TP
 \fIpathName \fBid \fIindex\fR
 .
@@ -460,11 +469,13 @@ This is the identifier that was assigned to the entry when it was created
 using the \fBadd\fR or \fBinsert\fR widget command.
 Returns an empty string for the tear-off entry, or if \fIindex\fR is
 equivalent to \fB{}\fR.
+.\" METHOD: index
 .TP
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the numerical index corresponding to \fIindex\fR, or
 \fB{}\fR if \fIindex\fR was specified as \fB{}\fR.
+.\" METHOD: insert
 .TP
 \fIpathName \fBinsert \fIindex type \fR?\fIid\fR? ?\fIoption value option value ...\fR?
 .
@@ -475,6 +486,7 @@ to the end of the menu.  The \fItype\fR, \fIid\fR, \fIoption\fR, and
 widget command.  It is not possible to insert new menu entries before the
 tear-off entry, if the menu has one.
 The \fBinsert\fR widget command returns the id of the new entry.
+.\" METHOD: invoke
 .TP
 \fIpathName \fBinvoke \fIindex\fR
 .
@@ -487,6 +499,7 @@ command.  Otherwise the result is an empty string.  Note:  invoking
 a menu entry does not automatically unpost the menu;  the default
 bindings normally take care of this before invoking the \fBinvoke\fR
 widget command.
+.\" METHOD: post
 .TP
 \fIpathName \fBpost \fIx y\fR ?\fIindex\fR?
 .
@@ -501,6 +514,7 @@ posting the menu and the result of that script is returned as the
 result of the \fBpost\fR widget command.  If an error returns while
 executing the command, then the error is returned without posting the
 menu.
+.\" METHOD: postcascade
 .TP
 \fIpathName \fBpostcascade \fIindex\fR
 .
@@ -510,6 +524,7 @@ If \fIindex\fR does not correspond to a cascade entry,
 or if \fIpathName\fR is not posted,
 the command has no effect except to unpost any currently posted
 submenu.
+.\" METHOD: type
 .TP
 \fIpathName \fBtype \fIindex\fR
 .
@@ -517,6 +532,7 @@ Returns the type of the menu entry given by \fIindex\fR.
 This is the \fItype\fR argument passed to the \fBadd\fR or \fBinsert\fR widget
 command when the entry was created, such as \fBcommand\fR
 or \fBseparator\fR, or \fBtearoff\fR for a tear-off entry.
+.\" METHOD: unpost
 .TP
 \fIpathName \fBunpost\fR
 .
@@ -524,11 +540,13 @@ Unmap the window so that it is no longer displayed.  If a
 lower-level cascaded menu is posted, unpost that menu.  Returns an
 empty string. This subcommand does not work on Windows and the
 Macintosh, as those platforms have their own way of unposting menus.
+.\" METHOD: xposition
 .TP
 \fIpathName \fBxposition \fIindex\fR
 .
 Returns a decimal string giving the x-coordinate within the menu
 window of the leftmost pixel in the entry specified by \fIindex\fR.
+.\" METHOD: yposition
 .TP
 \fIpathName \fByposition \fIindex\fR
 .
