@@ -258,11 +258,12 @@ test textTag-1.28 {tag configuration options} -body {
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
 } -result {10}
-test textTag-1.29 {configuration options} -body {
-    .t tag configure x -spacing2 bad
+test textTag-1.29 {configuration options, bug [026e2bb685]} -constraints knownBug -body {
+    catch {.t tag configure x -spacing3 5 -spacing2 bad -spacing1 morebad} msg
+    list $msg [.t tag configure x -spacing1] [.t tag configure x -spacing2] [.t tag configure x -spacing3]
 } -cleanup {
-    .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+    .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3] -spacing2 [lindex [.t tag configure x -spacing2] 3] -spacing3 [lindex [.t tag configure x -spacing3] 3]
+} -result {{bad screen distance "bad"} {-spacing1 {} {} {} {}} {-spacing2 {} {} {} {}} {-spacing3 {} {} {} 5}}
 test textTag-1.30 {tag configuration options} -body {
     .t tag configure x -spacing3 10
     .t tag cget x -spacing3
