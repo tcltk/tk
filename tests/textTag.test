@@ -258,7 +258,7 @@ test textTag-1.28 {tag configuration options} -body {
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
 } -result {10}
-test textTag-1.29 {configuration options, bug [026e2bb685]} -constraints knownBug -body {
+test textTag-1.29 {configuration options, bug [026e2bb685]} -body {
     catch {.t tag configure x -spacing3 5 -spacing2 bad -spacing1 morebad} msg
     list $msg [.t tag configure x -spacing1] [.t tag configure x -spacing2] [.t tag configure x -spacing3]
 } -cleanup {
