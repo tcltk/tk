@@ -173,12 +173,16 @@ setting it changes the widget state,
 but the \fBstate\fR widget command
 does not affect the \fB\-state\fR option.
 .SH COMMANDS
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
+.
 Returns the current value of the configuration option given
 by \fIoption\fR.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+.
 Query or modify the configuration options of the widget.
 If one or more \fIoption\-value\fR pairs are specified,
 then the command modifies the given widget option(s)
@@ -192,16 +196,20 @@ and current value.
 .\" Note: Ttk widgets don't use TK_OPTION_SYNONYM.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR.
+.\" METHOD: identify
 .TP
 \fIpathName \fBidentify element \fIx y\fR
+.
 Returns the name of the element under the point given
 by \fIx\fR and \fIy\fR, or an empty string if the point does
 not lie within any element.
 \fIx\fR and \fIy\fR are pixel coordinates relative to the widget.
 Some widgets accept other \fBidentify\fR subcommands described
 in these widgets documentation.
+.\" METHOD: instate
 .TP
 \fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
+.
 Test the widget's state.
 If \fIscript\fR is not specified, returns 1 if
 the widget state matches \fIstatespec\fR and 0 otherwise.
@@ -209,8 +217,10 @@ If \fIscript\fR is specified, equivalent to
 .CS
 if {[\fIpathName\fR instate \fIstateSpec\fR]} \fIscript\fR
 .CE
+.\" METHOD: state
 .TP
 \fIpathName \fBstate\fR ?\fIstateSpec\fR?
+.
 Modify or inquire widget state.
 If \fIstateSpec\fR is present, sets the widget state:
 for each flag in \fIstateSpec\fR, sets the corresponding flag
@@ -225,17 +235,22 @@ will restore \fIpathName\fR to the original state.
 If \fIstateSpec\fR is not specified,
 returns a list of the currently-enabled state flags.
 .RE
+.\" METHOD: style
 .TP
 \fIpathName \fBstyle\fR
+.
 Return the style used by the widget.
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview \fIargs\fR
+.
 This command is used to query and change the horizontal position of the
 content in the widget's window.  It can take any of the following
 forms:
 .RS
 .TP
 \fIpathName \fBxview\fR
+.
 Returns a list containing two elements.
 Each element is a real fraction between 0 and 1; together they describe
 the horizontal span that is visible in the window.
@@ -245,16 +260,19 @@ in the window, and 40% of the content is off-screen to the right.
 These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
 .TP
-\fIpathName \fBxview\fR \fIindex\fR
+\fIpathName \fBxview\fI index\fR
+.
 Adjusts the view in the window so that the content given by \fIindex\fR
 is displayed at the left edge of the window.
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
+.
 Adjusts the view in the window so that the character \fIfraction\fR of the
 way through the content appears at the left edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
+.
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer or a float, but if it is a float then
@@ -269,14 +287,17 @@ become visible.
 If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
 \fInumber\fR average-width characters on the display.
 .RE
+.\" METHOD: yview
 .TP
 \fIpathName \fByview \fIargs\fR
+.
 This command is used to query and change the vertical position of the
 content in the widget's window.  It can take any of the following
 forms:
 .RS
 .TP
 \fIpathName \fByview\fR
+.
 Returns a list containing two elements.
 Each element is a real fraction between 0 and 1; together they describe
 the vertical span that is visible in the window.
@@ -286,16 +307,19 @@ in the window, and 40% of the content is off-screen to the bottom.
 These are the same values passed to scrollbars via the \fB\-yscrollcommand\fR
 option.
 .TP
-\fIpathName \fByview\fR \fIindex\fR
+\fIpathName \fByview\fI index\fR
+.
 Adjusts the view in the window so that the content given by \fIindex\fR
 is displayed at the top edge of the window.
 .TP
 \fIpathName \fByview moveto\fI fraction\fR
+.
 Adjusts the view in the window so that the item \fIfraction\fR of the
 way through the content appears at the top edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
 .TP
 \fIpathName \fByview scroll \fInumber what\fR
+.
 This command shifts the view in the window up or down according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer or a float, but if it is a float then

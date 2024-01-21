@@ -13,7 +13,7 @@
 .SH NAME
 entry \- Create and manipulate 'entry' one-line text entry widgets
 .SH SYNOPSIS
-\fBentry\fR \fIpathName \fR?\fIoptions\fR?
+\fBentry\fI pathName \fR?\fIoptions\fR?
 .SO
 \-background	\-highlightthickness	\-selectbackground
 \-borderwidth	\-insertbackground	\-selectborderwidth
@@ -245,8 +245,10 @@ arithmetic and indexing relative to \fBend\fR.
 .SS SUBCOMMANDS
 .PP
 The following commands are possible for entry widgets:
+.\" METHOD: bbox
 .TP
 \fIpathName \fBbbox \fIindex\fR
+.
 Returns a list of four numbers describing the bounding box of the
 character given by \fIindex\fR.
 The first two elements of the list give the x and y coordinates of
@@ -255,14 +257,18 @@ the upper-left corner of the screen area covered by the character
 the width and height of the character, in pixels.
 The bounding box may refer to a region outside the visible area
 of the window.
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
+.
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBentry\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+.
 Query or modify the configuration options of the widget.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR (see \fBTk_ConfigureInfo\fR for
@@ -275,8 +281,10 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBentry\fR
 command.
+.\" METHOD: delete
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
+.
 Delete one or more elements of the entry.
 \fIFirst\fR is the index of the first character to delete, and
 \fIlast\fR is the index of the character just after the last
@@ -284,22 +292,32 @@ one to delete.
 If \fIlast\fR is not specified it defaults to \fIfirst\fR+1,
 i.e. a single character is deleted.
 This command returns an empty string.
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the entry's string.
+.\" METHOD: icursor
 .TP
 \fIpathName \fBicursor \fIindex\fR
+.
 Arrange for the insertion cursor to be displayed just before the character
 given by \fIindex\fR.  Returns an empty string.
+.\" METHOD: index
 .TP
 \fIpathName \fBindex\fI index\fR
+.
 Returns the numerical index corresponding to \fIindex\fR.
+.\" METHOD: insert
 .TP
 \fIpathName \fBinsert \fIindex string\fR
+.
 Insert the characters of \fIstring\fR just before the character
 indicated by \fIindex\fR.  Returns an empty string.
+.\" METHOD: scan
 .TP
-\fIpathName \fBscan\fR \fIoption args\fR
+\fIpathName \fBscan\fI option args\fR
+.
 This command is used to implement scanning on entries.  It has
 two forms, depending on \fIoption\fR:
 .RS
@@ -319,6 +337,7 @@ with mouse motion events in the widget, to produce the effect of
 dragging the entry at high speed through the window.  The return
 value is an empty string.
 .RE
+.\" METHOD: selection
 .TP
 \fIpathName \fBselection \fIoption arg\fR
 This command is used to adjust the selection within an entry.  It
@@ -350,7 +369,7 @@ Returns an empty string.
 Returns 1 if there is are characters selected in the entry,
 0 if nothing is selected.
 .TP
-\fIpathName \fBselection range \fIstart\fR \fIend\fR
+\fIpathName \fBselection range \fIstart end\fR
 Sets the selection to include the characters starting with
 the one indexed by \fIstart\fR and ending with the one just
 before \fIend\fR.
@@ -371,20 +390,25 @@ If the selection is not in this widget then a new selection is
 created using the most recent anchor point specified for the widget.
 Returns an empty string.
 .RE
+.\" METHOD: validate
 .TP
 \fIpathName \fBvalidate\fR
+.
 This command is used to force an evaluation of the \fB\-validatecommand\fR
 independent of the conditions specified by the \fB\-validate\fR option.
 This is done by temporarily setting the \fB\-validate\fR option to \fBall\fR.
 It returns 0 or 1.
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview \fIargs\fR
+.
 This command is used to query and change the horizontal position of the
 text in the widget's window.  It can take any of the following
 forms:
 .RS
 .TP
 \fIpathName \fBxview\fR
+.
 Returns a list containing two elements.
 Each element is a real fraction between 0 and 1;  together they describe
 the horizontal span that is visible in the window.
@@ -394,16 +418,19 @@ in the window, and 40% of the text is off-screen to the right.
 These are the same values passed to scrollbars via the \fB\-xscrollcommand\fR
 option.
 .TP
-\fIpathName \fBxview\fR \fIindex\fR
+\fIpathName \fBxview\fI index\fR
+.
 Adjusts the view in the window so that the character given by \fIindex\fR
 is displayed at the left edge of the window.
 .TP
 \fIpathName \fBxview moveto\fI fraction\fR
+.
 Adjusts the view in the window so that the character \fIfraction\fR of the
 way through the text appears at the left edge of the window.
 \fIFraction\fR must be a fraction between 0 and 1.
 .TP
 \fIpathName \fBxview scroll \fInumber what\fR
+.
 This command shifts the view in the window left or right according to
 \fInumber\fR and \fIwhat\fR.
 \fINumber\fR must be an integer or a float, but if it is a float then

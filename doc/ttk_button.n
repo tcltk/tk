@@ -10,7 +10,7 @@
 .SH NAME
 ttk::button \- Widget that issues a command when pressed
 .SH SYNOPSIS
-\fBttk::button\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::button\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 A \fBttk::button\fR widget displays a textual label and/or image,
@@ -52,8 +52,10 @@ In addition to the standard
 \fBstate\fR and \fBstyle\fR
 commands (see \fBttk::widget\fR),
 button widgets support the following additional commands:
+.\" METHOD: invoke
 .TP
 \fIpathName \fBinvoke\fR
+.
 Invokes the command associated with the button.
 .SH "STANDARD STYLES"
 .PP

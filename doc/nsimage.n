@@ -37,14 +37,15 @@ This option is required.
 .TP
 \fB\-as\fR
 .PP
-There are four possible values for the \fB-as\fR option which specify
+There are four possible values for the \fB\-as\fR option which specify
 how the source string should be interpreted.  The allowed values and
 their meanings are:
 .IP
 \fBname\fR
 .IP
 The source should be interpreted as the name of a named NSImage
-provided by the system.  This is the default if the -as option is not specified.
+provided by the system.
+This is the default if the \fB\-as\fR option is not specified.
 .IP
 \fBfile\fR
 .IP
@@ -101,7 +102,7 @@ change slightly.
 The value of the \fIalpha\fR option should be a floating point number
 between 0.0 and 1.0.  This alpha value will be applied to each pixel
 of the nsimage, producing a partially transparent image.  The default value
-is 1,0, which makes the image opaque.
+is 1.0, which makes the image opaque.
 .TP
 \fB\-pressed\fR
 .PP
