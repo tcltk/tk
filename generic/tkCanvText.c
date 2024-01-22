@@ -1523,11 +1523,6 @@ GetTextIndex(
 	*indexPtr = Tk_PointToChar(textPtr->textLayout,
 		(int) (x*cs - y*s), (int) (y*cs + x*s));
     } else {
-	/*
-	 * Some of the paths here leave messages in the interp's result, so we
-	 * have to clear it out before storing our own message.
-	 */
-
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "TEXT", NULL);
