@@ -342,7 +342,10 @@ typedef struct TkTextTag {
 				 * value specified here. */
     int borderWidth;		/* Width of 3-D border for background. */
     Tcl_Obj *borderWidthPtr;	/* Width of 3-D border for background. */
-    Tcl_Obj *reliefObj;
+#if TK_MAJOR_VERSION < 9
+    char *reliefString;		/* -relief option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */
@@ -353,32 +356,57 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-    Tcl_Obj *justifyObj;
-    Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT,
-				 * TK_JUSTIFY_RIGHT, TK_JUSTIFY_CENTER, or TK_JUSTIFY_NULL. */
+#if TK_MAJOR_VERSION < 9
+    char *justifyString;	/* -justify option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
+    Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
+				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *lMargin1Obj;	/* -lmargin1 option object. NULL
 				 * means option not specified. */
+#else
+    char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int lMargin1;		/* Left margin for first display line of each
 				 * text line, in pixels. INT_MIN means option not specified. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *lMargin2Obj;	/* -lmargin2 option object. NULL
 				 * means option not specified. */
+#else
+    char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int lMargin2;		/* Left margin for second and later display lines
-				 * of each text line, in pixels. */
+				 * of each text line, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
                                  * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
+#else
+    char *offsetString;		/* -offset option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
 				 * subscripts. INT_MIN means option not specified. */
-    Tcl_Obj *overstrikePtr;	/* -overstrike option. NULL
+#if TK_MAJOR_VERSION < 9
+    char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
 				 * means option not specified. */
+#endif
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *rMarginObj;	/* -rmargin option object. NULL
 				 * means option not specified. */
+#else
+    char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int rMargin;		/* Right margin for text, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
@@ -386,16 +414,31 @@ typedef struct TkTextTag {
 				 * NULL means no value specified here. */
     XColor *selFgColor;		/* Foreground color for selected text. NULL means
 				 * no value specified here. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing1Obj;	/* -spacing1 option object. NULL
 				 * means option not specified. */
+#else
+    char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int spacing1;		/* Extra spacing above first display line for
 				 * text line. INT_MIN means option not specified. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing2Obj;	/* -spacing2 option object. NULL
 				 * means option not specified. */
+#else
+    char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int spacing2;		/* Extra spacing between display lines for the
 				 * same text line. INT_MIN means option not specified. */
+#if TK_MAJOR_VERSION > 8
     Tcl_Obj *spacing3Obj;	/* -spacing3 option object. NULL
 				 * means option not specified. */
+#else
+    char *spacing3String;	/* -spacing3 option string (malloc-ed). NULL
+				 * means option not specified. */
+#endif
     int spacing3;		/* Extra spacing below last display line for
 				 * text line. INT_MIN means option not specified. */
     Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
@@ -403,10 +446,15 @@ typedef struct TkTextTag {
     struct TkTextTabArray *tabArrayPtr;
 				/* Info about tabs for tag (malloc-ed) or
 				 * NULL. Corresponds to tabString. */
+#if TK_MAJOR_VERSION > 8
     TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-    Tcl_Obj *underlinePtr;	/* -underline option. NULL
+#else
+    int tabStyle;		/* One of TABULAR or WORDPROCESSOR or NONE (if
+				 * not specified). */
+    char *underlineString;	/* -underline option string (malloc-ed). NULL
 				 * means option not specified. */
+#endif
     int underline;		/* > 0 means draw underline underneath
 				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
@@ -415,8 +463,10 @@ typedef struct TkTextTag {
 				 * Must be TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD,
 				 * TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_NULL to
 				 * use wrapmode for whole widget. */
-    Tcl_Obj *elideObj;	/* -elide option. NULL
+#if TK_MAJOR_VERSION < 9
+    char *elideString;		/* -elide option string (malloc-ed). NULL
 				 * means option not specified. */
+#endif
     int elide;			/* > 0 means that data under this tag
 				 * should not be displayed. -1 means not specified. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
