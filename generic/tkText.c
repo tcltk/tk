@@ -2269,9 +2269,7 @@ ConfigureText(
 	    || (textPtr->selTagPtr->tabStringPtr != NULL)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
-	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
-	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_NONE)
-	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
+	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
     }
