@@ -984,9 +984,7 @@ GetStyle(
 	    styleValues.elide = tagPtr->elide > 0;
 	    elidePrio = tagPtr->priority;
 	}
-	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
-		|| (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
-		|| (tagPtr->wrapMode == TEXT_WRAPMODE_WORD))
+	if ((tagPtr->wrapMode != TEXT_WRAPMODE_NULL)
 		&& (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
