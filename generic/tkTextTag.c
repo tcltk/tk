@@ -379,7 +379,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
-	if (tagPtr->elide) {
+	if (tagPtr->elide > 0) {
 		/*
 		* Indices are potentially obsolete after adding or removing
 		* elided character ranges, especially indices having "display"
@@ -594,7 +594,7 @@ TkTextTagCmd(
 		    return TCL_ERROR;
 		}
 	    }
-	    if (tagPtr->elideString != NULL) {
+	    if (tagPtr->elide != -1) {
 		/*
 		 * Indices are potentially obsolete after changing -elide,
 		 * especially those computed with "display" or "any"
@@ -629,7 +629,7 @@ TkTextTagCmd(
 
 	    tagPtr->affectsDisplay = 0;
 	    tagPtr->affectsDisplayGeometry = 0;
-	    if ((tagPtr->elideString != NULL)
+	    if ((tagPtr->elide != -1)
 		    || (tagPtr->tkfont != NULL)
 		    || (tagPtr->justifyString != NULL)
 		    || (tagPtr->lMargin1String != NULL)
@@ -655,9 +655,9 @@ TkTextTagCmd(
 		    || (tagPtr->fgColor != NULL)
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
-		    || (tagPtr->overstrikeString != NULL)
+		    || (tagPtr->overstrike != -1)
                     || (tagPtr->overstrikeColor != NULL)
-		    || (tagPtr->underlineString != NULL)
+		    || (tagPtr->underline != -1)
                     || (tagPtr->underlineColor != NULL)
                     || (tagPtr->lMarginColor != NULL)
                     || (tagPtr->rMarginColor != NULL)) {
