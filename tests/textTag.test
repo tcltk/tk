@@ -169,7 +169,7 @@ test textTag-1.20 {tag configuration options} -body {
     .t tag cget x -overstrike
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -result {on}
+} -result 1
 test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
@@ -291,7 +291,7 @@ test textTag-1.34 {tag configuration options} -body {
     .t tag cget x -underline
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -result {no}
+} -result 0
 test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
@@ -501,7 +501,7 @@ test textTag-5.4 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -underline
 } -cleanup {
     .t tag delete x
-} -result {-underline {} {} {} yes}
+} -result {-underline {} {} {} 1}
 test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underlinefg lightgreen
@@ -515,7 +515,7 @@ test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
     .t tag cget x -overstrike
 } -cleanup {
     .t tag delete x
-} -result {on}
+} -result 1
 test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -overstrikefg lightgreen
