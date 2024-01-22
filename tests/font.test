@@ -836,7 +836,7 @@ test font-18.1 {FreeFontObjProc} -constraints testfont -setup {
     destroy .b1
     set result {}
 } -body {
-    set f [font create font-18.1_font1 -family Courier -size 12]
+    set f [font create font-18.1_font -family Courier -size 12]
     set x [join [list $f 50] { }]
     button .b1 -font $x
     set y [join [list $f 50] { }]
@@ -853,7 +853,7 @@ test font-18.1 {FreeFontObjProc} -constraints testfont -setup {
     set y bogus
     return $result
 } -cleanup {
-    font delete font-18.1_font1
+    font delete font-18.1_font
 } -result {{{1 3}} {{1 2}} {{1 1}} {}}
 
 
