@@ -282,7 +282,9 @@ struct TkTextDispChunk {
  */
 
 typedef enum {
-    TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD,
+    TEXT_WRAPMODE_CHAR,
+    TEXT_WRAPMODE_NONE,
+    TEXT_WRAPMODE_WORD,
     TEXT_WRAPMODE_NULL
 } TkWrapMode;
 
@@ -334,19 +336,17 @@ typedef struct TkTextTag {
 				 * specified here.*/
     char *justifyString;	/* -justify option string (malloc-ed). NULL
 				 * means option not specified. */
-    Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT,
-				 * TK_JUSTIFY_RIGHT, or TK_JUSTIFY_CENTER.
+    Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_CENTER,
+				 * TK_JUSTIFY_LEFT, or TK_JUSTIFY_RIGHT.
 				 * Only valid if justifyString is non-NULL. */
     char *lMargin1String;	/* -lmargin1 option string (malloc-ed). NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
-				 * text line, in pixels. Only valid if
-				 * lMargin1String is non-NULL. */
+				 * text line, in pixels. INT_MIN means option not specified. */
     char *lMargin2String;	/* -lmargin2 option string (malloc-ed). NULL
 				 * means option not specified. */
-    int lMargin2;		/* Left margin for second and later display
-				 * lines of each text line, in pixels. Only
-				 * valid if lMargin2String is non-NULL. */
+    int lMargin2;		/* Left margin for second and later display lines
+				 * of each text line, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
                                  * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
@@ -354,19 +354,16 @@ typedef struct TkTextTag {
 				 * means option not specified. */
     int offset;			/* Vertical offset of text's baseline from
 				 * baseline of line. Used for superscripts and
-				 * subscripts. Only valid if offsetString is
-				 * non-NULL. */
+				 * subscripts. INT_MIN means option not specified. */
     char *overstrikeString;	/* -overstrike option string (malloc-ed). NULL
 				 * means option not specified. */
-    int overstrike;		/* Non-zero means draw horizontal line through
-				 * middle of text. Only valid if
-				 * overstrikeString is non-NULL. */
+    int overstrike;		/* > 0 means draw horizontal line through
+				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
                                  * color as foreground. */
     char *rMarginString;	/* -rmargin option string (malloc-ed). NULL
 				 * means option not specified. */
-    int rMargin;		/* Right margin for text, in pixels. Only
-				 * valid if rMarginString is non-NULL. */
+    int rMargin;		/* Right margin for text, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder rMarginColor;	/* Used for drawing background in right margin.
 				 * NULL means no value specified here. */
     Tk_3DBorder selBorder;	/* Used for drawing background for selected text.
@@ -376,18 +373,15 @@ typedef struct TkTextTag {
     char *spacing1String;	/* -spacing1 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing1;		/* Extra spacing above first display line for
-				 * text line. Only valid if spacing1String is
-				 * non-NULL. */
+				 * text line. INT_MIN means option not specified. */
     char *spacing2String;	/* -spacing2 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing2;		/* Extra spacing between display lines for the
-				 * same text line. Only valid if
-				 * spacing2String is non-NULL. */
-    char *spacing3String;	/* -spacing2 option string (malloc-ed). NULL
+				 * same text line. INT_MIN means option not specified. */
+    char *spacing3String;	/* -spacing3 option string (malloc-ed). NULL
 				 * means option not specified. */
     int spacing3;		/* Extra spacing below last display line for
-				 * text line. Only valid if spacing3String is
-				 * non-NULL. */
+				 * text line. INT_MIN means option not specified. */
     Tcl_Obj *tabStringPtr;	/* -tabs option string. NULL means option not
 				 * specified. */
     struct TkTextTabArray *tabArrayPtr;
@@ -397,20 +391,18 @@ typedef struct TkTextTag {
 				 * not specified). */
     char *underlineString;	/* -underline option string (malloc-ed). NULL
 				 * means option not specified. */
-    int underline;		/* Non-zero means draw underline underneath
-				 * text. Only valid if underlineString is
-				 * non-NULL. */
+    int underline;		/* > 0 means draw underline underneath
+				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
                                  * color as foreground. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
-				 * Must be TEXT_WRAPMODE_CHAR,
-				 * TEXT_WRAPMODE_NONE, TEXT_WRAPMODE_WORD, or
-				 * TEXT_WRAPMODE_NULL to use wrapmode for
-				 * whole widget. */
+				 * Must be TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD,
+				 * TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_NULL to
+				 * use wrapmode for whole widget. */
     char *elideString;		/* -elide option string (malloc-ed). NULL
 				 * means option not specified. */
-    int elide;			/* Non-zero means that data under this tag
-				 * should not be displayed. */
+    int elide;			/* > 0 means that data under this tag
+				 * should not be displayed. -1 means not specified. */
     int affectsDisplay;		/* Non-zero means that this tag affects the
 				 * way information is displayed on the screen
 				 * (so need to redisplay if tag changes). */
@@ -938,14 +930,14 @@ typedef struct TkTextElideInfo {
  * of individual lines displayed in the widget.
  */
 
-#define TK_TEXT_LINE_GEOMETRY	1
+#define TK_TEXT_LINE_GEOMETRY		(1 << 0)
 
 /*
- * Mask used for those options which may impact the start and end lines used
- * in the widget.
+ * Mask used for those options which may impact the start and end lines
+ * used in the widget.
  */
 
-#define TK_TEXT_LINE_RANGE	2
+#define TK_TEXT_LINE_RANGE		(1 << 1)
 
 /*
  * Used as 'action' values in calls to TkTextInvalidateLineMetrics
