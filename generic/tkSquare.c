@@ -23,6 +23,7 @@
 #   define USE_TK_STUBS
 #endif
 #include "tkInt.h"
+#include <stdbool.h>
 
 /*
  * A data structure of the following type is kept for each square widget
@@ -53,10 +54,10 @@ typedef struct {
     Tcl_Obj *reliefPtr;
     GC gc;			/* Graphics context for copying from
 				 * off-screen pixmap onto screen. */
-    int doubleBuffer;	/* Non-zero means double-buffer redisplay with
-				 * pixmap; zero means draw straight onto the
+    bool doubleBuffer;	/* true means double-buffer redisplay with
+				 * pixmap; false means draw straight onto the
 				 * display. */
-    int updatePending;		/* Non-zero means a call to SquareDisplay has
+    bool updatePending;		/* true means a call to SquareDisplay has
 				 * already been scheduled. */
 } Square;
 
@@ -75,7 +76,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	    "2", offsetof(Square, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_BOOLEAN, "-dbl", "doubleBuffer", "DoubleBuffer",
-	    "1", TCL_INDEX_NONE, offsetof(Square, doubleBuffer), 0 , NULL, 0},
+	    "1", TCL_INDEX_NONE, offsetof(Square, doubleBuffer), TK_OPTION_VAR(bool) , NULL, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0,
 	    "-foreground", 0},
     {TK_OPTION_BORDER, "-foreground", "foreground", "Foreground",
@@ -280,7 +281,7 @@ SquareWidgetObjCmd(
 	    }
 	    if (!squarePtr->updatePending) {
 		Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-		squarePtr->updatePending = 1;
+		squarePtr->updatePending = true;
 	    }
 	}
 	if (resultObjPtr != NULL) {
@@ -351,7 +352,7 @@ SquareConfigure(
     Tk_SetInternalBorder(squarePtr->tkwin, borderWidth);
     if (!squarePtr->updatePending) {
 	Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-	squarePtr->updatePending = 1;
+	squarePtr->updatePending = true;
     }
     KeepInWindow(squarePtr);
     return TCL_OK;
@@ -385,13 +386,13 @@ SquareObjEventProc(
     if (eventPtr->type == Expose) {
 	if (!squarePtr->updatePending) {
 	    Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-	    squarePtr->updatePending = 1;
+	    squarePtr->updatePending = true;
 	}
     } else if (eventPtr->type == ConfigureNotify) {
 	KeepInWindow(squarePtr);
 	if (!squarePtr->updatePending) {
 	    Tcl_DoWhenIdle(SquareDisplay, squarePtr);
-	    squarePtr->updatePending = 1;
+	    squarePtr->updatePending = true;
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	if (squarePtr->tkwin != NULL) {
@@ -477,7 +478,7 @@ SquareDisplay(
     int borderWidth, size, relief;
     Tk_3DBorder bgBorder, fgBorder;
 
-    squarePtr->updatePending = 0;
+    squarePtr->updatePending = false;
     if (!Tk_IsMapped(tkwin)) {
 	return;
     }
