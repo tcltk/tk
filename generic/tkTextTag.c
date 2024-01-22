@@ -25,7 +25,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
-	NULL, offsetof(TkTextTag, elideObj), offsetof(TkTextTag, elide),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elide),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BITMAP, "-fgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, fgStipple), TK_OPTION_NULL_OK, 0, 0},
@@ -34,7 +34,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_COLOR, "-foreground", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, fgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", NULL, NULL,
-	NULL, offsetof(TkTextTag, justifyObj), offsetof(TkTextTag, justify), TK_OPTION_NULL_OK, 0,0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justify), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_PIXELS, "-lmargin1", NULL, NULL,
 	NULL, offsetof(TkTextTag, lMargin1Obj), offsetof(TkTextTag, lMargin1), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_PIXELS, "-lmargin2", NULL, NULL,
@@ -44,13 +44,13 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
 	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
-	NULL, offsetof(TkTextTag, overstrikePtr), offsetof(TkTextTag, overstrike),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", NULL, NULL,
-	NULL, offsetof(TkTextTag, reliefObj), offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
 	NULL, offsetof(TkTextTag, rMarginObj), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0,0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
@@ -71,7 +71,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle),
 	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, 0},
     {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
-	NULL, offsetof(TkTextTag, underlinePtr), offsetof(TkTextTag, underline),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underline),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor),
@@ -945,13 +945,11 @@ TkTextCreateTag(
     tagPtr->border = NULL;
     tagPtr->borderWidth = 0;
     tagPtr->borderWidthPtr = NULL;
-    tagPtr->reliefObj = NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
     tagPtr->fgStipple = None;
-    tagPtr->justifyObj = NULL;
     tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->lMargin1Obj = NULL;
     tagPtr->lMargin1 = INT_MIN;
@@ -960,7 +958,6 @@ TkTextCreateTag(
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetObj = NULL;
     tagPtr->offset = INT_MIN;
-    tagPtr->overstrikePtr = NULL;
     tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginObj = NULL;
@@ -977,10 +974,8 @@ TkTextCreateTag(
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
-    tagPtr->underlinePtr = NULL;
     tagPtr->underline = -1;
     tagPtr->underlineColor = NULL;
-    tagPtr->elideObj = NULL;
     tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;
