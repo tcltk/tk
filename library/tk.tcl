@@ -659,7 +659,7 @@ proc ::tk::FindAltKeyTarget {path char} {
     if {$class in {
 	Button Checkbutton Label Radiobutton
 	TButton TCheckbutton TLabel TRadiobutton
-    } && [string equal -nocase $char \
+    } && ([$path cget -underline] >= 0) && [string equal -nocase $char \
 	    [string index [$path cget -text] [$path cget -underline]]]} {
 	return $path
     }
