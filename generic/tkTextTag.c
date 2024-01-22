@@ -75,13 +75,7 @@ SetPixels(void *clientData,
     int flags)
 {
     IntStruct pixel = {NULL, INT_MIN};
-    IntStruct *internalPtr;
-
-    if (internalOffset >= 0) {
-	internalPtr = (IntStruct *)(recordPtr + internalOffset);
-    } else {
-	internalPtr = NULL;
-    }
+    IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
 
     if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
 	if (Tk_GetPixelsFromObj(interp, tkwin, *value, &pixel.value) != TCL_OK) {
@@ -94,10 +88,8 @@ SetPixels(void *clientData,
 	strcpy(pixel.string, (*value)->bytes);
     }
 
-    if (internalPtr != NULL) {
-	*((IntStruct *)oldInternalPtr) = *((IntStruct *)internalPtr);
-	*((IntStruct *)internalPtr) = pixel;
-    }
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = pixel;
     return TCL_OK;
 };
 
@@ -112,13 +104,7 @@ SetBoolean(void *clientData,
     int flags)
 {
     IntStruct booleanVal = {NULL, -1};
-    IntStruct *internalPtr;
-
-    if (internalOffset >= 0) {
-	internalPtr = (IntStruct *)(recordPtr + internalOffset);
-    } else {
-	internalPtr = NULL;
-    }
+    IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
 
     if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
 	if (Tcl_GetBooleanFromObj(interp, *value, &booleanVal.value) != TCL_OK) {
@@ -128,10 +114,8 @@ SetBoolean(void *clientData,
 	strcpy(booleanVal.string, (*value)->bytes);
     }
 
-    if (internalPtr != NULL) {
-	*((IntStruct *)oldInternalPtr) = *((IntStruct *)internalPtr);
-	*((IntStruct *)internalPtr) = booleanVal;
-    }
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = booleanVal;
     return TCL_OK;
 };
 
@@ -146,13 +130,7 @@ SetRelief(void *clientData,
     int flags)
 {
     IntStruct relief = {NULL, TK_RELIEF_NULL};
-    IntStruct *internalPtr;
-
-    if (internalOffset >= 0) {
-	internalPtr = (IntStruct *)(recordPtr + internalOffset);
-    } else {
-	internalPtr = NULL;
-    }
+    IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
 
     if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
 	if (Tk_GetReliefFromObj(interp, *value, &relief.value) != TCL_OK) {
@@ -162,10 +140,8 @@ SetRelief(void *clientData,
 	strcpy(relief.string, (*value)->bytes);
     }
 
-    if (internalPtr != NULL) {
-	*((IntStruct *)oldInternalPtr) = *((IntStruct *)internalPtr);
-	*((IntStruct *)internalPtr) = relief;
-    }
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = relief;
     return TCL_OK;
 };
 
@@ -180,13 +156,7 @@ SetJustify(void *clientData,
     int flags)
 {
     JustifyStruct justify = {NULL, (Tk_Justify)-1};
-    JustifyStruct *internalPtr;
-
-    if (internalOffset >= 0) {
-	internalPtr = (JustifyStruct *)(recordPtr + internalOffset);
-    } else {
-	internalPtr = NULL;
-    }
+    JustifyStruct *internalPtr = (JustifyStruct *)(recordPtr + internalOffset);
 
     if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
 	if (Tk_GetJustifyFromObj(interp, *value, &justify.value) != TCL_OK) {
@@ -196,10 +166,8 @@ SetJustify(void *clientData,
 	strcpy(justify.string, (*value)->bytes);
     }
 
-    if (internalPtr != NULL) {
-	*((JustifyStruct *)oldInternalPtr) = *((JustifyStruct *)internalPtr);
-	*((JustifyStruct *)internalPtr) = justify;
-    }
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = justify;
     return TCL_OK;
 };
 
@@ -219,29 +187,22 @@ static Tcl_Obj *GetStruct(
 
 
 static void
-RestoreStruct(void *clientData,
-    Tk_Window tkwin,
-    char *internalPtr,
-    char *oldInternalPtr)
-{
-    *(IntStruct *)internalPtr = *(IntStruct *)oldInternalPtr;
-    ((IntStruct *)internalPtr)->string = (char *)ckalloc(strlen(((IntStruct *)oldInternalPtr)->string));
-    strcpy(((IntStruct *)internalPtr)->string, ((IntStruct *)oldInternalPtr)->string);
-};
-
-static void
 FreeStruct(void *clientData,
     Tk_Window tkwin,
     char *internalPtr)
 {
-    ckfree(((IntStruct *)internalPtr)->string);
+    char **structPtr = (char **)internalPtr;
+    if (*structPtr) {
+	ckfree(*structPtr);
+	*structPtr = NULL;
+    }
 };
 
 static const Tk_ObjCustomOption pixelsOption = {
     "pixels",			/* name */
     SetPixels,		/* setProc */
     GetStruct,		/* getProc */
-    RestoreStruct,	/* restoreProc */
+    NULL,		/* restoreProc */
     FreeStruct,			/* freeProc */
     0
 };
@@ -250,7 +211,7 @@ static const Tk_ObjCustomOption booleanOption = {
     "boolean",			/* name */
     SetBoolean,		/* setProc */
     GetStruct,		/* getProc */
-    RestoreStruct,	/* restoreProc */
+    NULL,		/* restoreProc */
     FreeStruct,			/* freeProc */
     0
 };
@@ -259,7 +220,7 @@ static const Tk_ObjCustomOption justifyOption = {
     "justify",			/* name */
     SetJustify,		/* setProc */
     GetStruct,		/* getProc */
-    RestoreStruct,	/* restoreProc */
+    NULL,		/* restoreProc */
     FreeStruct,			/* freeProc */
     0
 };
@@ -268,7 +229,7 @@ static const Tk_ObjCustomOption reliefOption = {
     "relief",			/* name */
     SetRelief,		/* setProc */
     GetStruct,		/* getProc */
-    RestoreStruct,	/* restoreProc */
+    NULL,		/* restoreProc */
     FreeStruct,			/* freeProc */
     0
 };
