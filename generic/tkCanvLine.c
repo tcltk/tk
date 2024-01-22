@@ -1924,12 +1924,6 @@ GetLineIndex(
 	    coordPtr += 2;
 	}
     } else {
-
-	/*
-	 * Some of the paths here leave messages in interp->result, so we have to
-	 * clear it out before storing our own message.
-	 */
-
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
