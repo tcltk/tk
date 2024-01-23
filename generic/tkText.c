@@ -627,9 +627,10 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
+    textPtr->selTagPtr->reliefString = (char *)
+	    ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
+    strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
     Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
-    textPtr->selTagPtr->reliefObj = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, -1);
-    Tcl_IncrRefCount(textPtr->selTagPtr->reliefObj);
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
 
