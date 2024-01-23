@@ -167,7 +167,7 @@ test menu-2.3 {configuration options -activeborderwidth 1.3} -body {
 } -result {1.3}
 test menu-2.4 {configuration options -activeborderwidth badValue} -body {
     .m1 configure -activeborderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test menu-2.5 {configuration options -activeforeground #ff0000} -body {
     .m1 configure -activeforeground #ff0000
@@ -207,7 +207,7 @@ test menu-2.11 {configuration options -borderwidth 1.3} -body {
 } -result {1.3}
 test menu-2.12 {configuration options -borderwidth badValue} -body {
     .m1 configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test menu-2.13 {configuration options -cursor arrow} -body {
     .m1 configure -cursor arrow
