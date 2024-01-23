@@ -650,7 +650,7 @@ typedef struct {
     Tcl_Obj *backgroundObj;
 } TabElement;
 
-static const Ttk_ElementOptionSpec TabElementOptions[] = {
+static Ttk_ElementOptionSpec TabElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
 	offsetof(TabElement,borderWidthObj), "1" },
     { "-background", TK_OPTION_BORDER,
