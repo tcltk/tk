@@ -49,7 +49,7 @@ test scale-1.5 {configuration options} -body {
 } -result 4
 test scale-1.6 {configuration options} -body {
         .s configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.7 {configuration options} -body {
     .s configure -bigincrement 12.5
     .s cget -bigincrement
@@ -76,7 +76,7 @@ test scale-1.11 {configuration options} -body {
 } -result 1
 test scale-1.12 {configuration options} -body {
         .s configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.13 {configuration options} -body {
     .s configure -command {set x}
     .s cget -command
@@ -160,7 +160,7 @@ test scale-1.31 {configuration options} -body {
 } -result 2
 test scale-1.32 {configuration options} -body {
         .s configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.33 {configuration options} -body {
     .s configure -label {Some text}
     .s cget -label
@@ -175,7 +175,7 @@ test scale-1.35 {configuration options} -body {
 } -result 130
 test scale-1.36 {configuration options} -body {
         .s configure -length badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.37 {configuration options} -body {
     .s configure -orient horizontal
     .s cget -orient
@@ -244,7 +244,7 @@ test scale-1.51 {configuration options} -body {
 } -result 86
 test scale-1.52 {configuration options} -body {
         .s configure -sliderlength badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.53 {configuration options} -body {
     .s configure -sliderrelief raised
     .s cget -sliderrelief
@@ -316,7 +316,7 @@ test scale-1.69 {configuration options} -body {
 } -result 32
 test scale-1.70 {configuration options} -body {
         .s configure -width badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 destroy .s
 
 

@@ -79,12 +79,12 @@ test canvImg-2.4 {CreateImage procedure} -body {
     .c create image xyz 40
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test canvImg-2.5 {CreateImage procedure} -body {
     .c create image 50 qrs
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad screen distance "qrs"}
+} -returnCodes {error} -result {expected screen distance but got "qrs"}
 test canvImg-2.6 {CreateImage procedure} -constraints testImageType -body {
     .c create image 50 50 -gorp foo
 } -cleanup {
@@ -109,7 +109,7 @@ test canvImg-3.2 {ImageCoords procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -returnCodes {error} -result {bad screen distance "dumb"}
+} -returnCodes {error} -result {expected screen distance but got "dumb"}
 test canvImg-3.3 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {
@@ -119,7 +119,7 @@ test canvImg-3.3 {ImageCoords procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo
-} -returnCodes {error} -result {bad screen distance "dumb0"}
+} -returnCodes {error} -result {expected screen distance but got "dumb0"}
 test canvImg-3.4 {ImageCoords procedure} -constraints testImageType -setup {
 	image create test foo
 } -body {

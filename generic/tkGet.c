@@ -601,7 +601,7 @@ Tk_GetScreenMM(
 	error:
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"bad screen distance \"%s\"", string));
+			"expected screen distance but got \"%s\"", string));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "SCREEN_DISTANCE", NULL);
 	    }
 	    return TCL_ERROR;
@@ -713,8 +713,9 @@ TkGetDoublePixels(
     }
     if (!tkwin) {
 	if (interp != NULL) {
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj("bad screen", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "expected screen distance but got \"%s\"", string));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	}
 	return TCL_ERROR;
     }
@@ -729,7 +730,7 @@ TkGetDoublePixels(
 	error:
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"bad screen distance \"%s\"", string));
+			"expected screen distance but got \"%s\"", string));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
 	    }
 	    return TCL_ERROR;

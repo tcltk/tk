@@ -75,16 +75,16 @@ foreach test {
 	    {bad relief "non-existent": must be flat, groove, raised, ridge, solid, or sunken}}
     {-background #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
-    {-bd 4 4 badValue {bad screen distance "badValue"}}
+    {-bd 4 4 badValue {expected screen distance but got "badValue"}}
     {-bg #ff0000 #ff0000 non-existent
 	    {unknown color name "non-existent"}}
-    {-borderwidth 1.3 1 badValue {bad screen distance "badValue"}}
+    {-borderwidth 1.3 1 badValue {expected screen distance but got "badValue"}}
     {-command "set x" {set x} {} {}}
-    {-elementborderwidth 4 4 badValue {bad screen distance "badValue"}}
+    {-elementborderwidth 4 4 badValue {expected screen distance but got "badValue"}}
     {-cursor arrow arrow badValue {bad cursor spec "badValue"}}
     {-highlightbackground #112233 #112233 ugly {unknown color name "ugly"}}
     {-highlightcolor #123456 #123456 bogus {unknown color name "bogus"}}
-    {-highlightthickness 6 6 bogus {bad screen distance "bogus"}}
+    {-highlightthickness 6 6 bogus {expected screen distance but got "bogus"}}
     {-highlightthickness -2 0 {} {}}
     {-jump true 1 silly {expected boolean value but got "silly"}}
     {-orient horizontal horizontal badValue
@@ -95,7 +95,7 @@ foreach test {
     {-repeatinterval 140 140 129.3 {expected integer but got "129.3"}}
     {-takefocus "any string" "any string" {} {}}
     {-troughcolor #432 #432 lousy {unknown color name "lousy"}}
-    {-width 32 32 badValue {bad screen distance "badValue"}}
+    {-width 32 32 badValue {expected screen distance but got "badValue"}}
 } {
     lassign $test name value okResult badValue badResult
     # Assume $name is plain; true of all our in-use options!

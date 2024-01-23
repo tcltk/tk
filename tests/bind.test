@@ -2988,7 +2988,7 @@ test bind-22.24 {HandleEventGenerate: options <Configure> -borderwidth xyz} -set
     return $x
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.25 {HandleEventGenerate: options <Configure> -borderwidth 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3230,7 +3230,7 @@ test bind-22.41 {HandleEventGenerate: options <Expose> -height xyz} -setup {
     event generate .t.f <Expose> -height xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.42 {HandleEventGenerate: options <Expose> -height 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3662,7 +3662,7 @@ test bind-22.73 {HandleEventGenerate: options <Key> -rootx xyz} -setup {
     event generate .t.f <Key> -rootx xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.74 {HandleEventGenerate: options <Key> -rootx 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3772,7 +3772,7 @@ test bind-22.81 {HandleEventGenerate: options <Key> -rooty xyz} -setup {
     event generate .t.f <Key> -rooty xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.82 {HandleEventGenerate: options <Key> -rooty 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4362,7 +4362,7 @@ test bind-22.124 {HandleEventGenerate: options <Expose> -width xyz} -setup {
     event generate .t.f <Expose> -width xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.125 {HandleEventGenerate: options <Expose> -width 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4567,7 +4567,7 @@ test bind-22.139 {HandleEventGenerate: options <Key> -x xyz} -setup {
     event generate .t.f <Key> -x xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.140 {HandleEventGenerate: options <Key> -x 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4733,7 +4733,7 @@ test bind-22.151 {HandleEventGenerate: options <Key> -y xyz} -setup {
     event generate .t.f <Key> -y xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 
 test bind-22.152 {HandleEventGenerate: options <Key> -y 2i} -setup {
     frame .t.f -class Test -width 150 -height 100
