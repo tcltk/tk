@@ -517,7 +517,7 @@ SetPixelFromAny(
 	error:
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"bad screen distance \"%.50s\"", string));
+			"expected screen distance but got \"%s\"", string));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	    }
 	    return TCL_ERROR;
@@ -801,8 +801,8 @@ SetMMFromAny(
 	if (rest == string) {
 	error:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "bad screen distance \"%s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DISTANCE", NULL);
+		    "expected screen distance but got \"%s\"", string));
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	    return TCL_ERROR;
 	}
 	switch (*rest) {
