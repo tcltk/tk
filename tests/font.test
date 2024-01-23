@@ -596,12 +596,13 @@ test font-15.1 {Tk_AllocFontFromObj - converting internal reps} -constraints {
 } -setup {
     destroy .b1 .b2
 } -body {
-    set x {Times 16}
+    set x [font create font-15.1_font -family Times -size 16]
     lindex $x 0
     button .b1 -font $x
     lindex $x 0
-    testfont counts {Times 16}
+    testfont counts $x
 } -cleanup {
+    font delete font-15.1_font
     destroy .b1 .b2
 } -result {{1 0}}
 test font-15.2 {Tk_AllocFontFromObj - discard stale font} -constraints {
@@ -610,13 +611,14 @@ test font-15.2 {Tk_AllocFontFromObj - discard stale font} -constraints {
     destroy .b1 .b2
     set result {}
 } -body {
-    set x {Times 16}
+    set x [font create font-15.2_font -family Times -size 16]
     button .b1 -font $x
     destroy .b1
-    lappend result [testfont counts {Times 16}]
+    lappend result [testfont counts $x]
     button .b2 -font $x
-    lappend result [testfont counts {Times 16}]
+    lappend result [testfont counts $x]
 } -cleanup {
+    font delete font-15.2_font
     destroy .b2
 } -result {{} {{1 1}}}
 test font-15.3 {Tk_AllocFontFromObj - reuse existing font} -constraints {
@@ -625,13 +627,14 @@ test font-15.3 {Tk_AllocFontFromObj - reuse existing font} -constraints {
     destroy .b1 .b2
     set result {}
 } -body {
-    set x {Times 16}
+    set x [font create font-15.3_font -family Times -size 16]
     button .b1 -font $x
-    lappend result [testfont counts {Times 16}]
+    lappend result [testfont counts $x]
     button .b2 -font $x
     pack .b1 .b2 -side top
-    lappend result [testfont counts {Times 16}]
+    lappend result [testfont counts $x]
 } -cleanup {
+    font delete font-15.3_font
     destroy .b1 .b2
 } -result {{{1 1}} {{2 1}}}
 test font-15.4 {Tk_AllocFontFromObj procedure: bump ref count} -setup {
