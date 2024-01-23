@@ -58,7 +58,7 @@ test place-1.3 {Tk_PlaceCmd procedure, "info" option} -setup {
 
 test place-2.1 {ConfigureContent procedure, -height option} -body {
     place .t.f2 -height abcd
-} -returnCodes error -result {bad screen distance "abcd"}
+} -returnCodes error -result {expected screen distance or "" but got "abcd"}
 test place-2.2 {ConfigureContent procedure, -height option} -setup {
     place forget .t.f2
 } -body {
@@ -164,7 +164,7 @@ test place-5.3 {ConfigureContent procedure, -relwidth option} -setup {
 
 test place-6.1 {ConfigureContent procedure, -width option} -body {
     place .t.f2 -width abcd
-} -returnCodes error -result {bad screen distance "abcd"}
+} -returnCodes error -result {expected screen distance or "" but got "abcd"}
 test place-6.2 {ConfigureContent procedure, -width option} -setup {
     place forget .t.f2
 } -body {

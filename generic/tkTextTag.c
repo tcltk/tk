@@ -49,15 +49,21 @@ SetPixels(
     Tk_Window tkwin,
     Tcl_Obj **value,
     char *recordPtr,
-    int internalOffset,
+    Tcl_Size internalOffset,
     char *oldInternalPtr,
     int flags)
 {
     IntStruct pixel = {NULL, INT_MIN};
     IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
+    int nullOK = (flags & TK_OPTION_NULL_OK);
 
-    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
-	if (Tk_GetPixelsFromObj(interp, tkwin, *value, &pixel.value) != TCL_OK) {
+    if (!nullOK || !ObjectIsEmpty(*value)) {
+	if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, *value, &pixel.value) != TCL_OK) {
+	    if (nullOK) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected screen distance or \"\" but got \"%.50s\"", Tcl_GetString(*value)));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	    }
 	    return TCL_ERROR;
 	}
 	if ((flags & OPTION_NONNEG) && pixel.value < 0) {
@@ -79,7 +85,7 @@ SetBoolean(
     TCL_UNUSED(Tk_Window),
     Tcl_Obj **value,
     char *recordPtr,
-    int internalOffset,
+    Tcl_Size internalOffset,
     char *oldInternalPtr,
     int flags)
 {
@@ -111,7 +117,7 @@ SetRelief(
     TCL_UNUSED(Tk_Window),
     Tcl_Obj **value,
     char *recordPtr,
-    int internalOffset,
+    Tcl_Size internalOffset,
     char *oldInternalPtr,
     int flags)
 {
@@ -143,7 +149,7 @@ SetJustify(
     TCL_UNUSED(Tk_Window),
     Tcl_Obj **value,
     char *recordPtr,
-    int internalOffset,
+    Tcl_Size internalOffset,
     char *oldInternalPtr,
     int flags)
 {
@@ -172,7 +178,7 @@ static Tcl_Obj *GetStruct(
     TCL_UNUSED(void *),
     TCL_UNUSED(Tk_Window),
     char *recordPtr,
-    int internalOffset)
+    Tcl_Size internalOffset)
 {
     char **structPtr = (char **)(recordPtr + internalOffset);
 

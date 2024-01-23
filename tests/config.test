@@ -957,7 +957,7 @@ test config-4.97 {DoObjConfig - invalid pixel} -constraints testobjconfig -body 
     testobjconfig alltypes .foo -pixel foo
 } -cleanup {
     killTables
-} -returnCodes error -result {bad screen distance "foo"}
+} -returnCodes error -result {expected screen distance or "" but got "foo"}
 test config-4.98 {DoObjConfig - new pixel} -constraints testobjconfig -body {
     testobjconfig alltypes .foo -pixel 42m
     .foo configure -pixel 3c
