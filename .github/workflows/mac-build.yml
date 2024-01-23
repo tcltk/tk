@@ -3,6 +3,7 @@ on:
   push:
     branches:
     - "main"
+    - "core-8-branch"
     - "core-8-6-branch"
     - "less_tests_constraints"
     tags:
@@ -97,7 +98,7 @@ jobs:
       - name: Build Tcl
         # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" || {
+          ./configure --enable-64bit $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
             echo "::error::Failure during Tcl Configure"
             exit 1
@@ -116,7 +117,7 @@ jobs:
       - name: Configure (symbols=${{ matrix.symbols }} ${{matrix.options }})
         # Note that macOS is always a 64 bit platform
         run: |
-          ./configure --enable-64bit ${CFGOPT} "--prefix=$HOME/install dir" --disable-xft || {
+          ./configure --enable-64bit $CFGOPT "--prefix=$HOME/install dir" --disable-xft || {
             cat config.log
             echo "::error::Failure during Configure"
             exit 1
@@ -162,7 +163,7 @@ jobs:
             echo "::error::Failure in ttk test results"
             exit 1
           }
-        timeout-minutes: 15
+        timeout-minutes: 20
       - name: Carry out trial installation
         run: |
           make install || {
