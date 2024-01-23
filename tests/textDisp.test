@@ -2483,7 +2483,7 @@ test textDisp-16.37 {TkTextYviewCmd procedure} {
 } {0 {}}
 test textDisp-16.38 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 1.3blah pixels} msg] $msg
-} {1 {bad screen distance "1.3blah"}}
+} {1 {expected screen distance but got "1.3blah"}}
 test textDisp-16.39 {TkTextYviewCmd procedure} {
     list [catch {.t yview scroll 1.3i pixels} msg] $msg
 } {0 {}}

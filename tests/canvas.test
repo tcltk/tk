@@ -40,14 +40,14 @@ test canvas-1.5 {configuration options: good value for "bd"} -body {
 } -result 4
 test canvas-1.6 {configuration options: bad value for "bd"} -body {
     .c configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.7 {configuration options: good value for "borderwidth"} -body {
     .c configure -borderwidth 1.3
     .c cget -borderwidth
 } -result 1
 test canvas-1.8 {configuration options: bad value for "borderwidth"} -body {
     .c configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.9 {configuration options: good value for "closeenough"} -body {
     .c configure -closeenough 24
     .c cget -closeenough
@@ -75,7 +75,7 @@ test canvas-1.15 {configuration options: good value for "height"} -body {
 } -result 2
 test canvas-1.16 {configuration options: bad value for "height"} -body {
     .c configure -height x42
-} -returnCodes error -result {bad screen distance "x42"}
+} -returnCodes error -result {expected screen distance but got "x42"}
 test canvas-1.17 {configuration options: good value for "highlightbackground"} -body {
     .c configure -highlightbackground #112233
     .c cget -highlightbackground
@@ -96,7 +96,7 @@ test canvas-1.21 {configuration options: good value for "highlightthickness"} -b
 } -result 18
 test canvas-1.22 {configuration options: bad value for "highlightthickness"} -body {
     .c configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.23 {configuration options: good value for "insertbackground"} -body {
     .c configure -insertbackground #110022
     .c cget -insertbackground
@@ -110,7 +110,7 @@ test canvas-1.25 {configuration options: good value for "insertborderwidth"} -bo
 } -result 1
 test canvas-1.26 {configuration options: bad value for "insertborderwidth"} -body {
     .c configure -insertborderwidth 2.6x
-} -returnCodes error -result {bad screen distance "2.6x"}
+} -returnCodes error -result {expected screen distance but got "2.6x"}
 test canvas-1.27 {configuration options: good value for "insertofftime"} -body {
     .c configure -insertofftime 100
     .c cget -insertofftime
@@ -131,7 +131,7 @@ test canvas-1.31 {configuration options: good value for "insertwidth"} -body {
 } -result 1
 test canvas-1.32 {configuration options: bad value for "insertwidth"} -body {
     .c configure -insertwidth 6x
-} -returnCodes error -result {bad screen distance "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 test canvas-1.33 {configuration options: good value for "relief"} -body {
     .c configure -relief g
     .c cget -relief
@@ -152,7 +152,7 @@ test canvas-1.37 {configuration options: good value for "selectborderwidth"} -bo
 } -result 1
 test canvas-1.38 {configuration options: bad value for "selectborderwidth"} -body {
     .c configure -selectborderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test canvas-1.39 {configuration options: good value for "selectforeground"} -body {
     .c configure -selectforeground #654321
     .c cget -selectforeground
@@ -170,7 +170,7 @@ test canvas-1.42 {configuration options: good value for "width"} -body {
 } -result 402
 test canvas-1.43 {configuration options: bad value for "width"} -body {
     .c configure -width xyz
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvas-1.44 {configuration options: good value for "xscrollcommand"} -body {
     .c configure -xscrollcommand {Some command}
     .c cget -xscrollcommand
@@ -884,7 +884,7 @@ test canvas-18.10 {imove method - errors} -setup {
     .c imove $id 0 foobar 4
 } -cleanup {
     destroy .c
-} -returnCodes error -result {bad screen distance "foobar"}
+} -returnCodes error -result {expected screen distance but got "foobar"}
 test canvas-18.11 {imove method - errors} -setup {
     canvas .c
 } -body {
@@ -892,7 +892,7 @@ test canvas-18.11 {imove method - errors} -setup {
     .c imove $id 0 4 foobar
 } -cleanup {
     destroy .c
-} -returnCodes error -result {bad screen distance "foobar"}
+} -returnCodes error -result {expected screen distance but got "foobar"}
 
 test canvas-19.1 {rchars method - lines} -setup {
     canvas .c
@@ -1080,14 +1080,14 @@ test canvas-21.6 {canvas rotate: syntax} -setup {
     .c rotate all x 1 1
 } -returnCodes error -cleanup {
     destroy .c
-} -result {bad screen distance "x"}
+} -result {expected screen distance but got "x"}
 test canvas-21.7 {canvas rotate: syntax} -setup {
     pack [canvas .c]
 } -body {
     .c rotate all 1 x 1
 } -returnCodes error -cleanup {
     destroy .c
-} -result {bad screen distance "x"}
+} -result {expected screen distance but got "x"}
 test canvas-21.8 {canvas rotate: syntax} -setup {
     pack [canvas .c]
 } -body {
