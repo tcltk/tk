@@ -301,16 +301,20 @@ typedef struct Tk_SavedOption {
     Tcl_Obj *valuePtr;		/* The old value of the option, in the form of
 				 * a Tcl object; may be NULL if the value was
 				 * not saved as an object. */
+#if TCL_MAJOR_VERSION < 9
     double internalForm;	/* The old value of the option, in some
 				 * internal representation such as an int or
 				 * (XColor *). Valid only if the field
 				 * optionPtr->specPtr->objOffset is -1. The
 				 * space must be large enough to accommodate a
-				 * double, a long, or a pointer; right now it
-				 * looks like a double (i.e., 8 bytes) is big
-				 * enough. Also, using a double guarantees
-				 * that the field is properly aligned for
-				 * storing large values. */
+				 * long double, a double, a long, or a pointer;
+				 * right now it looks like a long double (i.e., 16
+				 * bytes) is big enough. Also, using a long double
+				 * guarantees that the field is properly aligned
+				 * for storing large values. */
+#else
+    long double internalForm;
+#endif
 } Tk_SavedOption;
 
 #ifdef TCL_MEM_DEBUG
