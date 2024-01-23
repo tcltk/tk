@@ -1109,10 +1109,10 @@ test wm-maxsize-1.3 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm maxsize window ?width height?"}
 test wm-maxsize-1.4 {usage} -returnCodes error -body {
     wm maxsize . x 100
-} -result {bad screen distance "x"}
+} -result {expected screen distance but got "x"}
 test wm-maxsize-1.5 {usage} -returnCodes error -body {
     wm maxsize . 100 bogus
-} -result {bad screen distance "bogus"}
+} -result {expected screen distance but got "bogus"}
 test wm-maxsize-1.6 {usage} -setup {
     destroy .t2
 } -body {
@@ -1209,10 +1209,10 @@ test wm-minsize-1.3 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm minsize window ?width height?"}
 test wm-minsize-1.4 {usage} -returnCodes error -body {
     wm minsize . x 100
-} -result {bad screen distance "x"}
+} -result {expected screen distance but got "x"}
 test wm-minsize-1.5 {usage} -returnCodes error -body {
     wm minsize . 100 bogus
-} -result {bad screen distance "bogus"}
+} -result {expected screen distance but got "bogus"}
 test wm-minsize-1.6 {usage} -setup {
     destroy .t2
 } -body {

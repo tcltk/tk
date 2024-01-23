@@ -962,8 +962,13 @@ DoObjConfig(
 	if (nullOK && ObjectIsEmpty(valuePtr)) {
 	    valuePtr = NULL;
 	    newPixels = INT_MIN;
-	} else if (Tk_GetPixelsFromObj(interp, tkwin, valuePtr,
+	} else if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, valuePtr,
 		&newPixels) != TCL_OK) {
+	    if (nullOK && interp) {
+		Tcl_AppendResult(interp, "expected screen distance or \"\" but got \"",
+			Tcl_GetString(valuePtr), "\"", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	    }
 	    return TCL_ERROR;
 	}
 	if (internalPtr != NULL) {

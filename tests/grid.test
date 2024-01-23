@@ -299,10 +299,10 @@ test grid-6.2 {location: basic argument checking} -body {
 } -returnCodes error -result {bad window path name ".bad"}
 test grid-6.3 {location: basic argument checking} -body {
     grid location . x y
-} -returnCodes error -result {bad screen distance "x"}
+} -returnCodes error -result {expected screen distance but got "x"}
 test grid-6.4 {location: basic argument checking} -body {
     grid location . 1c y
-} -returnCodes error -result {bad screen distance "y"}
+} -returnCodes error -result {expected screen distance but got "y"}
 test grid-6.5 {location: basic argument checking} -body {
     frame .f
     grid location .f 10 10
@@ -609,12 +609,12 @@ test grid-10.8 {column/row configure} -body {
     grid columnconfigure . 0 -minsize foo
 } -cleanup {
     grid_reset 10.8
-} -returnCodes error -result {bad screen distance "foo"}
+} -returnCodes error -result {expected screen distance but got "foo"}
 test grid-10.9 {column/row configure} -body {
     grid columnconfigure . 0 -minsize foo
 } -cleanup {
     grid_reset 10.9
-} -returnCodes error -result {bad screen distance "foo"}
+} -returnCodes error -result {expected screen distance but got "foo"}
 test grid-10.10 {column/row configure} -body {
     grid columnconfigure . 0 -minsize 10
     grid columnconfigure . 0 -minsize
@@ -641,7 +641,7 @@ test grid-10.14 {column/row configure} -body {
     grid columnconfigure . 0 -pad foo
 } -cleanup {
     grid_reset 10.14
-} -returnCodes error -result {bad screen distance "foo"}
+} -returnCodes error -result {expected screen distance but got "foo"}
 test grid-10.15 {column/row configure} -body {
     grid columnconfigure . 0 -pad -3
 } -cleanup {
