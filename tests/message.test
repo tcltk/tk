@@ -121,7 +121,7 @@ test message-1.11 {configuration option: "borderwidth"} -setup {
     .m cget -borderwidth
 } -cleanup {
     destroy .m
-} -result 1
+} -result 1.3
 test message-1.12 {configuration option: "borderwidth"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
