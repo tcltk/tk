@@ -665,11 +665,8 @@ DoObjConfig(
 	    newInt = INT_MIN;
 	} else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
 		if (nullOK && interp) {
-		    Tcl_Obj *msg = Tcl_NewStringObj("expected integer or \"\" but got \"", TCL_INDEX_NONE);
-
-		    Tcl_AppendLimitedToObj(msg, Tcl_GetString(valuePtr), TCL_INDEX_NONE, 50, "");
-		    Tcl_AppendToObj(msg, "\"", TCL_INDEX_NONE);
-		    Tcl_SetObjResult(interp, msg);
+		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			    "expected integer or \"\" but got \"%.50s\"", Tcl_GetString(valuePtr)));
 		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
 		}
 	    return TCL_ERROR;
@@ -965,8 +962,8 @@ DoObjConfig(
 	} else if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, valuePtr,
 		&newPixels) != TCL_OK) {
 	    if (nullOK && interp) {
-		Tcl_AppendResult(interp, "expected screen distance or \"\" but got \"",
-			Tcl_GetString(valuePtr), "\"", NULL);
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		    "expected screen distance or \"\" but got \"%.50s\"", Tcl_GetString(valuePtr)));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	    }
 	    return TCL_ERROR;
