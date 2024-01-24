@@ -96,8 +96,8 @@ SetBoolean(
     if (!nullOK || !ObjectIsEmpty(*value)) {
 	if (Tcl_GetBooleanFromObj(nullOK ? NULL : interp, *value, &booleanVal.value) != TCL_OK) {
 	    if (nullOK) {
-		Tcl_AppendResult(interp, "expected boolean value or \"\" but got \"",
-			Tcl_GetString(*value), "\"", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected boolean value or \"\" but got \"%s\"", Tcl_GetString(*value)));
 	    }
 	    return TCL_ERROR;
 	}
