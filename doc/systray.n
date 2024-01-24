@@ -10,7 +10,7 @@
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBtk systray create \fB\-image \fIimage\fR ?\fB\-text \fItext\fR? ?\fB\-button1 \fIcallback\fR? ?\fB\-button3 \fIcallback\fR?
+\fBtk systray create \fI\-image image\fR \fI?\-text text\fR? \fI?\-button1 callback?\fR \fI?\-button3 callback?\fR
 .sp
 \fBtk systray configure \fI?option? ?value option value ...?\fR
 .sp
@@ -50,7 +50,6 @@ running instance of Wish will allow additional icons to be displayed.
 .SH EXAMPLE
 .PP
 Here is an example of the \fBtk systray\fR code:
-.RS
 .CS
 image create photo book -data \e
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -58,10 +57,8 @@ tk systray create -image book -text "tk systray sample" \e
         -button1 {puts "Here is the tk systray output"} \e
         -button3 {puts "here is alternate output"}
 .CE
-.RE
 .PP
 Here is an example of modifying the \fBtk systray\fR icon:
-.RS
 .CS
 image create photo book_page -data \e
         R0lGODlhCwAPAKIAAP//////AMDAwICAgAAA/wAAAAAAAAAAACwAAAAACwAPAAADMzi6CzAugiAgDGE68aB0RXgRJBFVX0SNpQlUWfahQOvSsgrX7eZJMlQMWBEYj8iQchlKAAA7
@@ -69,7 +66,6 @@ tk systray configure -image book_page -text "Updated sample" \e
         -button1 {puts "Different output from the tk systray"} \e
         -button3 {puts "and more different output from the tk systray"}
 .CE
-.RE
 .SH PLATFORM NOTES
 .PP
 The X11 implementation is supported on a "best efforts" basis because it is
