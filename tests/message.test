@@ -310,7 +310,7 @@ test message-1.30 {configuration option: "padx"} -setup {
     .m configure -padx 420x
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes {error} -result {expected screen distance or "" but got "420x"}
 
 test message-1.31 {configuration option: "pady"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -330,7 +330,7 @@ test message-1.32 {configuration option: "pady"} -setup {
     .m configure -pady 420x
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {expected screen distance but got "420x"}
+} -returnCodes {error} -result {expected screen distance or "" but got "420x"}
 
 test message-1.33 {configuration option: "relief"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
