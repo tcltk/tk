@@ -494,7 +494,7 @@ TkPixelParseProc(
 
     if ((result == TCL_OK) && (clientData == NULL) && (*doublePtr < 0.0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"expected screen distance but got \"%s\"", value));
+		"expected screen distance but got \"%.50s\"", value));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	return TCL_ERROR;
     }
