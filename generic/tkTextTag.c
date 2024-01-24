@@ -38,6 +38,202 @@ static const char *const tabStyleStrings[] = {
     "tabular", "wordprocessor", "", NULL
 };
 
+/* This struct can be used for booleans, relief and pixels */
+typedef struct {
+	char *string;
+	int value;
+} IntStruct;
+
+typedef struct {
+	char *string;
+	Tk_Justify value;
+} JustifyStruct;
+
+static int
+ObjectIsEmpty(
+    Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
+{
+    if (objPtr == NULL) {
+	return 1;
+    }
+    if (objPtr->bytes == NULL) {
+	Tcl_GetString(objPtr);
+    }
+    return (objPtr->length == 0);
+}
+
+#define OPTION_NONNEG		(1 << 10)
+
+static int
+SetPixels(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    IntStruct pixel = {NULL, INT_MIN};
+    IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tk_GetPixelsFromObj(interp, tkwin, *value, &pixel.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	if ((flags & OPTION_NONNEG) && pixel.value < 0) {
+	    pixel.value = 0;
+	}
+	pixel.string = ckalloc((*value)->length + 1);
+	strcpy(pixel.string, (*value)->bytes);
+    }
+
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = pixel;
+    return TCL_OK;
+};
+
+static int
+SetBoolean(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    IntStruct booleanVal = {NULL, -1};
+    IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tcl_GetBooleanFromObj(interp, *value, &booleanVal.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	booleanVal.string = ckalloc((*value)->length + 1);
+	strcpy(booleanVal.string, (*value)->bytes);
+    }
+
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = booleanVal;
+    return TCL_OK;
+};
+
+static int
+SetRelief(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    IntStruct relief = {NULL, TK_RELIEF_NULL};
+    IntStruct *internalPtr = (IntStruct *)(recordPtr + internalOffset);
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tk_GetReliefFromObj(interp, *value, &relief.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	relief.string = ckalloc((*value)->length + 1);
+	strcpy(relief.string, (*value)->bytes);
+    }
+
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = relief;
+    return TCL_OK;
+};
+
+static int
+SetJustify(void *clientData,
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    int internalOffset,
+    char *oldInternalPtr,
+    int flags)
+{
+    JustifyStruct justify = {NULL, (Tk_Justify)-1};
+    JustifyStruct *internalPtr = (JustifyStruct *)(recordPtr + internalOffset);
+
+    if (!(flags & TK_OPTION_NULL_OK) || !ObjectIsEmpty(*value)) {
+	if (Tk_GetJustifyFromObj(interp, *value, &justify.value) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	justify.string = ckalloc((*value)->length + 1);
+	strcpy(justify.string, (*value)->bytes);
+    }
+
+    *((char **)oldInternalPtr) = NULL;
+    *internalPtr = justify;
+    return TCL_OK;
+};
+
+static Tcl_Obj *GetStruct(
+    void *clientData,
+    Tk_Window tkwin,
+    char *recordPtr,
+    int internalOffset)
+{
+    char **structPtr = (char **)(recordPtr + internalOffset);
+
+    if (*structPtr == NULL || **structPtr == '\0') {
+	return Tcl_NewObj();
+    }
+    return Tcl_NewStringObj(*structPtr, -1);
+};
+
+
+static void
+FreeStruct(void *clientData,
+    Tk_Window tkwin,
+    char *internalPtr)
+{
+    char **structPtr = (char **)internalPtr;
+    if (*structPtr) {
+	ckfree(*structPtr);
+	*structPtr = NULL;
+    }
+};
+
+static const Tk_ObjCustomOption pixelsOption = {
+    "pixels",			/* name */
+    SetPixels,		/* setProc */
+    GetStruct,		/* getProc */
+    NULL,		/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
+static const Tk_ObjCustomOption booleanOption = {
+    "boolean",			/* name */
+    SetBoolean,		/* setProc */
+    GetStruct,		/* getProc */
+    NULL,		/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
+static const Tk_ObjCustomOption justifyOption = {
+    "justify",			/* name */
+    SetJustify,		/* setProc */
+    GetStruct,		/* getProc */
+    NULL,		/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
+static const Tk_ObjCustomOption reliefOption = {
+    "relief",			/* name */
+    SetRelief,		/* setProc */
+    GetStruct,		/* getProc */
+    NULL,		/* restoreProc */
+    FreeStruct,			/* freeProc */
+    0
+};
+
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
@@ -46,55 +242,55 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
 	NULL, Tk_Offset(TkTextTag, borderWidthPtr), Tk_Offset(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-elide", NULL, NULL,
+    {TK_OPTION_CUSTOM, "-elide", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, elideString),
-	TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, &booleanOption, 0},
     {TK_OPTION_BITMAP, "-fgstipple", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, fgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_FONT, "-font", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, tkfont), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-foreground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, fgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-justify", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, justifyString), TK_OPTION_NULL_OK, 0,0},
-    {TK_OPTION_STRING, "-lmargin1", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, lMargin1String), TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_STRING, "-lmargin2", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, lMargin2String), TK_OPTION_NULL_OK,0,0},
+    {TK_OPTION_CUSTOM, "-justify", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, justifyString), TK_OPTION_NULL_OK, &justifyOption, 0},
+    {TK_OPTION_CUSTOM, "-lmargin1", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, lMargin1String), TK_OPTION_NULL_OK, &pixelsOption, 0},
+    {TK_OPTION_CUSTOM, "-lmargin2", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, lMargin2String), TK_OPTION_NULL_OK, &pixelsOption, 0},
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-offset", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, offsetString), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-overstrike", NULL, NULL,
+    {TK_OPTION_CUSTOM, "-offset", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, offsetString), TK_OPTION_NULL_OK, &pixelsOption, 0},
+    {TK_OPTION_CUSTOM, "-overstrike", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeString),
-	TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, &booleanOption, 0},
     {TK_OPTION_COLOR, "-overstrikefg", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, overstrikeColor),
 	TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-relief", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-rmargin", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, 0,0},
+    {TK_OPTION_CUSTOM, "-relief", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, reliefString), TK_OPTION_NULL_OK, &reliefOption, 0},
+    {TK_OPTION_CUSTOM, "-rmargin", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, rMarginString), TK_OPTION_NULL_OK, &pixelsOption, 0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, rMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selBorder), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, selFgColor), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_STRING, "-spacing1", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, spacing1String), TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_STRING, "-spacing2", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, spacing2String), TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_STRING, "-spacing3", NULL, NULL,
-	NULL, -1, Tk_Offset(TkTextTag, spacing3String), TK_OPTION_NULL_OK,0,0},
+    {TK_OPTION_CUSTOM, "-spacing1", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, spacing1String), TK_OPTION_NULL_OK|OPTION_NONNEG, &pixelsOption, 0},
+    {TK_OPTION_CUSTOM, "-spacing2", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, spacing2String), TK_OPTION_NULL_OK|OPTION_NONNEG, &pixelsOption, 0},
+    {TK_OPTION_CUSTOM, "-spacing3", NULL, NULL,
+	NULL, -1, Tk_Offset(TkTextTag, spacing3String), TK_OPTION_NULL_OK|OPTION_NONNEG, &pixelsOption, 0},
     {TK_OPTION_STRING, "-tabs", NULL, NULL,
 	NULL, Tk_Offset(TkTextTag, tabStringPtr), -1, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, tabStyle),
 	TK_OPTION_NULL_OK, tabStyleStrings, 0},
-    {TK_OPTION_STRING, "-underline", NULL, NULL,
+    {TK_OPTION_CUSTOM, "-underline", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineString),
-	TK_OPTION_NULL_OK, 0, 0},
+	TK_OPTION_NULL_OK, &booleanOption, 0},
     {TK_OPTION_COLOR, "-underlinefg", NULL, NULL,
 	NULL, -1, Tk_Offset(TkTextTag, underlineColor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -183,7 +379,7 @@ TkTextTagCmd(
 	    return TCL_ERROR;
 	}
 	tagPtr = TkTextCreateTag(textPtr, Tcl_GetString(objv[3]), NULL);
-	if (tagPtr->elide) {
+	if (tagPtr->elide > 0) {
 		/*
 		* Indices are potentially obsolete after adding or removing
 		* elided character ranges, especially indices having "display"
@@ -372,8 +568,6 @@ TkTextTagCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
 	} else {
-	    int result = TCL_OK;
-
 	    if (Tk_SetOptions(interp, (char *)tagPtr, tagPtr->optionTable,
 		    objc-4, objv+4, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 		return TCL_ERROR;
@@ -389,79 +583,6 @@ TkTextTagCmd(
 	    if (tagPtr->borderWidth < 0) {
 		tagPtr->borderWidth = 0;
 	    }
-	    if (tagPtr->reliefString != NULL) {
-		if (Tk_GetRelief(interp, tagPtr->reliefString,
-			&tagPtr->relief) != TCL_OK) {
-		    ckfree(tagPtr->reliefString);
-		    tagPtr->reliefString = NULL;
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->justifyString != NULL) {
-		if (Tk_GetJustify(interp, tagPtr->justifyString,
-			&tagPtr->justify) != TCL_OK) {
-		    ckfree(tagPtr->justifyString);
-		    tagPtr->justifyString = NULL;
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->lMargin1String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->lMargin1String, &tagPtr->lMargin1) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->lMargin2String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->lMargin2String, &tagPtr->lMargin2) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->offsetString != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin, tagPtr->offsetString,
-			&tagPtr->offset) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->overstrikeString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->overstrikeString,
-			&tagPtr->overstrike) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->rMarginString != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->rMarginString, &tagPtr->rMargin) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
-	    if (tagPtr->spacing1String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->spacing1String, &tagPtr->spacing1) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		if (tagPtr->spacing1 < 0) {
-		    tagPtr->spacing1 = 0;
-		}
-	    }
-	    if (tagPtr->spacing2String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->spacing2String, &tagPtr->spacing2) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		if (tagPtr->spacing2 < 0) {
-		    tagPtr->spacing2 = 0;
-		}
-	    }
-	    if (tagPtr->spacing3String != NULL) {
-		if (Tk_GetPixels(interp, textPtr->tkwin,
-			tagPtr->spacing3String, &tagPtr->spacing3) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-		if (tagPtr->spacing3 < 0) {
-		    tagPtr->spacing3 = 0;
-		}
-	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
 		ckfree(tagPtr->tabArrayPtr);
 		tagPtr->tabArrayPtr = NULL;
@@ -473,18 +594,7 @@ TkTextTagCmd(
 		    return TCL_ERROR;
 		}
 	    }
-	    if (tagPtr->underlineString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->underlineString,
-			&tagPtr->underline) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-	    }
 	    if (tagPtr->elideString != NULL) {
-		if (Tcl_GetBoolean(interp, tagPtr->elideString,
-			&tagPtr->elide) != TCL_OK) {
-		    return TCL_ERROR;
-		}
-
 		/*
 		 * Indices are potentially obsolete after changing -elide,
 		 * especially those computed with "display" or "any"
@@ -568,7 +678,7 @@ TkTextTagCmd(
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
 			NULL, NULL, tagPtr, 1);
 	    }
-	    return result;
+	    return TCL_OK;
 	}
 	break;
     }
@@ -1036,42 +1146,42 @@ TkTextCreateTag(
     tagPtr->borderWidth = 0;
     tagPtr->borderWidthPtr = NULL;
     tagPtr->reliefString = NULL;
-    tagPtr->relief = TK_RELIEF_FLAT;
+    tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;
     tagPtr->tkfont = NULL;
     tagPtr->fgStipple = None;
     tagPtr->justifyString = NULL;
-    tagPtr->justify = TK_JUSTIFY_LEFT;
+    tagPtr->justify = (Tk_Justify)-1;
     tagPtr->lMargin1String = NULL;
-    tagPtr->lMargin1 = 0;
+    tagPtr->lMargin1 = INT_MIN;
     tagPtr->lMargin2String = NULL;
-    tagPtr->lMargin2 = 0;
+    tagPtr->lMargin2 = INT_MIN;
     tagPtr->lMarginColor = NULL;
     tagPtr->offsetString = NULL;
-    tagPtr->offset = 0;
+    tagPtr->offset = INT_MIN;
     tagPtr->overstrikeString = NULL;
-    tagPtr->overstrike = 0;
+    tagPtr->overstrike = -1;
     tagPtr->overstrikeColor = NULL;
     tagPtr->rMarginString = NULL;
-    tagPtr->rMargin = 0;
+    tagPtr->rMargin = INT_MIN;
     tagPtr->rMarginColor = NULL;
     tagPtr->selBorder = NULL;
     tagPtr->selFgColor = NULL;
     tagPtr->spacing1String = NULL;
-    tagPtr->spacing1 = 0;
+    tagPtr->spacing1 = INT_MIN;
     tagPtr->spacing2String = NULL;
-    tagPtr->spacing2 = 0;
+    tagPtr->spacing2 = INT_MIN;
     tagPtr->spacing3String = NULL;
-    tagPtr->spacing3 = 0;
+    tagPtr->spacing3 = INT_MIN;
     tagPtr->tabStringPtr = NULL;
     tagPtr->tabArrayPtr = NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NONE;
     tagPtr->underlineString = NULL;
-    tagPtr->underline = 0;
+    tagPtr->underline = -1;
     tagPtr->underlineColor = NULL;
     tagPtr->elideString = NULL;
-    tagPtr->elide = 0;
+    tagPtr->elide = -1;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
