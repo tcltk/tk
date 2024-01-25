@@ -99,21 +99,15 @@ page for the particular image type for details.
 The following image types are defined by Tk so they will be available
 in any Tk application.
 Individual applications or extensions may define additional types.
-.TP
-\fBbitmap\fR
-.
+.IP \fBbitmap\fR
 Each pixel in the image displays a foreground color, a background
 color, or nothing.
 See the \fBbitmap\fR manual entry for more information.
-.TP
-\fBphoto\fR
-.
+.IP \fBphoto\fR
 Displays a variety of full-color images, using dithering to
 approximate colors on displays with limited color capabilities.
 See the \fBphoto\fR manual entry for more information.
-.TP
-\fBnsimage\fR
-.
+.IP \fBnsimage\fR
 This type is only available in the Aqua platform.  It is a full-color
 image which may be created from a named system image.  It has options
 designed to facilitate the use of these images in buttons.  An

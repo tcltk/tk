@@ -105,7 +105,7 @@ are:
 .RS
 \fB\-shiftrelief\fP specifies how far the button contents are
 shifted down and right in the \fIpressed\fP state.
-This action provides additional skeumorphic feedback.
+This action provides additional skeuomorphic feedback.
 .RE
 \fB\-width\fP \fIamount\fP
 .PP

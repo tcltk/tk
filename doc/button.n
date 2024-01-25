@@ -196,17 +196,17 @@ This is the classic Tk
 demonstration:
 .PP
 .CS
-\fBbutton\fR .b \-text "Hello, World!" \-command exit
+\fBbutton\fR .b -text "Hello, World!" -command exit
 pack .b
 .CE
 .PP
 This example demonstrates how to handle button accelerators:
 .PP
 .CS
-\fBbutton\fR .b1 \-text Hello \-underline 0
-\fBbutton\fR .b2 \-text World \-underline 0
-bind . <Key\-h> {.b1 flash; .b1 invoke}
-bind . <Key\-w> {.b2 flash; .b2 invoke}
+\fBbutton\fR .b1 -text Hello -underline 0
+\fBbutton\fR .b2 -text World -underline 0
+bind . <Key-h> {.b1 flash; .b1 invoke}
+bind . <Key-w> {.b2 flash; .b2 invoke}
 pack .b1 .b2
 .CE
 .SH "SEE ALSO"

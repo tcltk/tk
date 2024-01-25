@@ -114,12 +114,13 @@ you use C code to query the X server directly.
 To make a window that only participates in the focus traversal ring
 when a variable is set, add the following bindings to the widgets
 \fIbefore\fR and \fIafter\fR it in that focus ring:
+.PP
 .CS
-button .before \-text "Before"
-button .middle \-text "Middle"
-button .after  \-text "After"
-checkbutton .flag \-variable traverseToMiddle \-takefocus 0
-pack .flag \-side left
+button .before -text "Before"
+button .middle -text "Middle"
+button .after  -text "After"
+checkbutton .flag -variable traverseToMiddle -takefocus 0
+pack .flag -side left
 pack .before .middle .after
 bind .before <Tab> {
    if {!$traverseToMiddle} {
@@ -127,7 +128,7 @@ bind .before <Tab> {
       break
    }
 }
-bind .after <Shift\-Tab> {
+bind .after <Shift-Tab> {
    if {!$traverseToMiddle} {
       \fBfocus\fR .before
       break

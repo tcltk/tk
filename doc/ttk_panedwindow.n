@@ -77,9 +77,11 @@ The following subcommands are supported:
 .RS
 .TP
 \fIpathname \fBidentify element \fIx y\fR
+.
 Returns the name of the element at the specified location.
 .TP
 \fIpathname \fBidentify sash \fIx y\fR
+.
 Returns the index of the sash at the specified location.
 .RE
 .\" METHOD: insert

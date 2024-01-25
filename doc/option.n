@@ -71,20 +71,16 @@ This cannot be changed, setting the [encoding system] has no effect.
 .PP
 The \fIpriority\fR arguments to the \fBoption\fR command are
 normally specified symbolically using one of the following values:
-.TP
-\fBwidgetDefault\fR
+.IP \fBwidgetDefault\fR3
 Level 20.  Used for default values hard-coded into widgets.
-.TP
-\fBstartupFile\fR
+.IP \fBstartupFile\fR
 Level 40.  Used for options specified in application-specific
 startup files.
-.TP
-\fBuserDefault\fR
+.IP \fBuserDefault\fR
 Level 60.  Used for options specified in user-specific defaults
 files, such as \fB.Xdefaults\fR, resource databases loaded into
 the X server, or user-specific startup files.
-.TP
-\fBinteractive\fR
+.IP \fBinteractive\fR
 Level 80.  Used for options specified interactively after the application
 starts running.  If \fIpriority\fR is not specified, it defaults to
 this level.

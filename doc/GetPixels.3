@@ -15,19 +15,20 @@ Tk_GetPixelsFromObj, Tk_GetPixels, Tk_GetMMFromObj, Tk_GetScreenMM, Tk_GetDouble
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_GetPixelsFromObj(\fIinterp, tkwin, objPtr, intPtr\fB)\fR
+\fBTk_GetPixelsFromObj\fR(\fIinterp, tkwin, objPtr, intPtr\fR)
 .sp
 int
-\fBTk_GetDoublePixelsFromObj(\fIinterp, tkwin, objPtr, doublePtr\fB)\fR
+\fBTk_GetDoublePixelsFromObj\fR(\fIinterp, tkwin, objPtr, doublePtr\fR)
 .sp
 int
-\fBTk_GetPixels(\fIinterp, tkwin, string, intPtr\fB)\fR
+\fBTk_GetPixels\fR(\fIinterp, tkwin, string, intPtr\fR)
 .sp
 int
-\fBTk_GetMMFromObj(\fIinterp, tkwin, objPtr, doublePtr\fB)\fR
+\fBTk_GetMMFromObj\fR(\fIinterp, tkwin, objPtr, doublePtr\fR)
 .sp
 int
-\fBTk_GetScreenMM(\fIinterp, tkwin, string, doublePtr\fB)\fR
+\fBTk_GetScreenMM\fR(\fIinterp, tkwin, string, doublePtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tcl_Interp" *joinPtr
 .AP Tcl_Interp *interp in
@@ -56,20 +57,15 @@ In either case,
 specifies a screen distance as a
 floating-point number followed by one of the following characters
 that indicates units:
-.TP
-<none>
+.IP <none>
 The number specifies a distance in pixels.
-.TP
-\fBc\fR
+.IP \fBc\fR
 The number specifies a distance in centimeters on the screen.
-.TP
-\fBi\fR
+.IP \fBi\fR
 The number specifies a distance in inches on the screen.
-.TP
-\fBm\fR
+.IP \fBm\fR
 The number specifies a distance in millimeters on the screen.
-.TP
-\fBp\fR
+.IP \fBp\fR
 The number specifies a distance in printer's points (1/72 inch)
 on the screen.
 .PP

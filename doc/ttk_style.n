@@ -148,17 +148,24 @@ Valid options are:
 .\" -border should remain undocumented for now (dubious usefulness)
 .\" .TP
 .\" \fB\-border\fI boolean\fR
+.\" .
 .\" Specifies whether the element is drawn after its children. Defaults to 0.
+.\" OPTION: -children
 .TP
 \fB\-children { \fIsublayout...\fB }\fR
+.
 Specifies a list of elements to place inside the element.
+.\" OPTION: -expand
 .TP
 \fB\-expand\fI boolean\fR
+.
 Specifies whether the allocated parcel is the entire cavity. If so,
 simultaneous specification of \fB\-side\fR is ignored.
 Defaults to 0.
+.\" OPTION: -side
 .TP
 \fB\-side \fIside\fR
+.
 Specifies which side of the cavity to place the element;
 one of \fBleft\fR, \fBright\fR, \fBtop\fR, or \fBbottom\fR.
 For instance, \fB\-side top\fR allocates the parcel along the top of
@@ -166,24 +173,27 @@ the cavity having width and height respectively the width of the cavity
 and the height of the element.
 If omitted, the allocated parcel is the entire cavity (same effect
 as \fB\-expand\fR 1).
+.\" OPTION: -sticky
 .TP
 \fB\-sticky\fR \fB[\fInswe\fB]\fR
+.
 Specifies the actual parcel position and size inside the allocated parcel.
 If specified as an empty string then the actual parcel is centered in
 the allocated parcel. Default is \fBnswe\fR.
 .\" -unit should remain undocumented for now (dubious usefulness)
 .\" .TP
 .\" \fB\-unit\fI boolean\fR
+.\" .
 .\" Specifies whether the element propagates its state to its children.
 .\" Defaults to 0.
 .PP
 For example:
 .CS
 ttk::style layout Horizontal.TScrollbar {
-    Scrollbar.trough \-children {
-        Scrollbar.leftarrow \-side left
-        Scrollbar.rightarrow \-side right
-        Horizontal.Scrollbar.thumb \-side left \-sticky ew
+    Scrollbar.trough -children {
+        Scrollbar.leftarrow -side left
+        Scrollbar.rightarrow -side right
+        Horizontal.Scrollbar.thumb -side left -sticky ew
     }
 }
 .CE

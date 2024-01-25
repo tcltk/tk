@@ -30,7 +30,8 @@ and stdin is \fB/dev/null\fR (as is the case e.g. when a bundled application
 embedding Tk is started by the macOS Launcher).  To enable the command
 in that case, define the environment variable \fBTK_CONSOLE\fR.  This can be
 done by modifying the Info.plist file by adding the LSEnvironment key
-to the main dict and setting its value to be a dict with the key \fBTK_CONSOLE\fR.
+to the main dict and setting its value to be a dict with the key
+\fBTK_CONSOLE\fR.
 .PP
 .\" METHOD: eval
 .TP

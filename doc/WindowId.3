@@ -103,6 +103,7 @@ Tcl_Interp *
 .sp
 Tcl_Obj *
 \fBTk_NewWindowObj\fR(\fItkwin\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_Window tkwin
 .AP Tk_Window tkwin in
@@ -147,7 +148,7 @@ information plus a few other fields.  \fBTk_Attributes\fR
 returns a pointer to an XSetWindowAttributes structure describing
 all of the attributes of the \fItkwin\fR's window, such as background
 pixmap, event mask, and so on (Tk keeps track of all this information
-as it is changed by the application).  Note: it is essential that
+as it is changed by the application).  Note that it is essential that
 applications use Tk procedures like \fBTk_ResizeWindow\fR instead
 of X procedures like \fBXResizeWindow\fR, so that Tk can keep its
 data structures up-to-date.

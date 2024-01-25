@@ -22,6 +22,7 @@ depending on the \fIoption\fR argument.  The legal forms are:
 .\" METHOD: atom
 .TP
 \fBwinfo atom \fR?\fB\-displayof \fIwindow\fR? \fIname\fR
+.
 Returns a decimal string giving the integer identifier for the
 atom whose name is \fIname\fR.  If no atom exists with the name
 \fIname\fR then a new one is created.
@@ -31,6 +32,7 @@ the display of the application's main window.
 .\" METHOD: atomname
 .TP
 \fBwinfo atomname \fR?\fB\-displayof \fIwindow\fR? \fIid\fR
+.
 Returns the textual name for the atom whose integer identifier is
 \fIid\fR.
 If the \fB\-displayof\fR option is given then the identifier is looked
@@ -41,11 +43,13 @@ It generates an error if no such atom exists.
 .\" METHOD: cells
 .TP
 \fBwinfo cells \fIwindow\fR
+.
 Returns a decimal string giving the number of cells in the
 color map for \fIwindow\fR.
 .\" METHOD: children
 .TP
 \fBwinfo children \fIwindow\fR
+.
 Returns a list containing the path names of all the children
 of \fIwindow\fR. Top-level windows are returned as children
 of their logical parents. The list is in stacking order, with
@@ -55,10 +59,12 @@ command to query the stacking order of Top-level windows.
 .\" METHOD: class
 .TP
 \fBwinfo class \fIwindow\fR
+.
 Returns the class name for \fIwindow\fR.
 .\" METHOD: colormapfull
 .TP
 \fBwinfo colormapfull \fIwindow\fR
+.
 Returns 1 if the colormap for \fIwindow\fR is known to be full, 0
 otherwise.  The colormap for a window is
 .QW known
@@ -69,6 +75,7 @@ failed allocation.
 .\" METHOD: containing
 .TP
 \fBwinfo containing \fR?\fB\-displayof \fIwindow\fR? \fIrootX rootY\fR
+.
 Returns the path name for the window containing the point given
 by \fIrootX\fR and \fIrootY\fR.
 \fIRootX\fR and \fIrootY\fR are specified in screen units (i.e.
@@ -89,16 +96,19 @@ chosen.
 .\" METHOD: depth
 .TP
 \fBwinfo depth \fIwindow\fR
+.
 Returns a decimal string giving the depth of \fIwindow\fR (number
 of bits per pixel).
 .\" METHOD: exists
 .TP
 \fBwinfo exists \fIwindow\fR
+.
 Returns 1 if there exists a window named \fIwindow\fR, 0 if no such
 window exists.
 .\" METHOD: fpixels
 .TP
 \fBwinfo fpixels \fIwindow number\fR
+.
 Returns a floating-point value giving the number of pixels
 in \fIwindow\fR corresponding to the distance given by \fInumber\fR.
 \fINumber\fR may be specified in any of the forms acceptable
@@ -111,12 +121,14 @@ The return value may be fractional;  for an integer value, use
 .\" METHOD: geometry
 .TP
 \fBwinfo geometry \fIwindow\fR
+.
 Returns the geometry for \fIwindow\fR, in the form
 \fIwidth\fBx\fIheight\fB+\fIx\fB+\fIy\fR.  All dimensions are
 in pixels.
 .\" METHOD: height
 .TP
 \fBwinfo height \fIwindow\fR
+.
 Returns a decimal string giving \fIwindow\fR's height in pixels.
 When a window is first created its height will be 1 pixel;  the
 height will eventually be changed by a geometry manager to fulfil
@@ -128,6 +140,7 @@ instead of its actual height.
 .\" METHOD: id
 .TP
 \fBwinfo id \fIwindow\fR
+.
 Returns a hexadecimal string giving a low-level platform-specific
 identifier for \fIwindow\fR.  On Unix platforms, this is the X
 window identifier.  Under Windows, this is the Windows
@@ -135,6 +148,7 @@ HWND.  On the Macintosh the value has no meaning outside Tk.
 .\" METHOD: interps
 .TP
 \fBwinfo interps \fR?\fB\-displayof \fIwindow\fR?
+.
 Returns a list whose members are the names of all Tcl interpreters
 (e.g. all Tk-based applications) currently registered for a particular display.
 If the \fB\-displayof\fR option is given then the return value refers
@@ -143,6 +157,7 @@ the display of the application's main window.
 .\" METHOD: ismapped
 .TP
 \fBwinfo ismapped \fIwindow\fR
+.
 Returns \fB1\fR if \fIwindow\fR is currently mapped, \fB0\fR otherwise.
 .\" METHOD: manager
 .TP
@@ -158,17 +173,20 @@ name is the widget's class command, such as \fBcanvas\fR.
 .\" METHOD: name
 .TP
 \fBwinfo name \fIwindow\fR
+.
 Returns \fIwindow\fR's name (i.e. its name within its parent, as opposed
 to its full path name).
 The command \fBwinfo name .\fR will return the name of the application.
 .\" METHOD: parent
 .TP
 \fBwinfo parent \fIwindow\fR
+.
 Returns the path name of \fIwindow\fR's parent, or an empty string
 if \fIwindow\fR is the main window of the application.
 .\" METHOD: pathname
 .TP
 \fBwinfo pathname \fR?\fB\-displayof \fIwindow\fR? \fIid\fR
+.
 Returns the path name of the window whose X identifier is \fIid\fR.
 \fIId\fR must be a decimal, hexadecimal, or octal integer and must
 correspond to a window in the invoking application.
@@ -178,6 +196,7 @@ the display of the application's main window.
 .\" METHOD: pixels
 .TP
 \fBwinfo pixels \fIwindow number\fR
+.
 Returns the number of pixels in \fIwindow\fR corresponding
 to the distance given by \fInumber\fR.
 \fINumber\fR may be specified in any of the forms acceptable
@@ -190,6 +209,7 @@ fractional result, use \fBwinfo fpixels\fR.
 .\" METHOD: pointerx
 .TP
 \fBwinfo pointerx \fIwindow\fR
+.
 If the mouse pointer is on the same screen as \fIwindow\fR, returns the
 pointer's x coordinate, measured in pixels in the screen's root window.
 If a virtual root window is in use on the screen, the position is
@@ -199,6 +219,7 @@ If the mouse pointer is not on the same screen as \fIwindow\fR then
 .\" METHOD: pointerxy
 .TP
 \fBwinfo pointerxy \fIwindow\fR
+.
 If the mouse pointer is on the same screen as \fIwindow\fR, returns a list
 with two elements, which are the pointer's x and y coordinates measured
 in pixels in the screen's root window.
@@ -209,6 +230,7 @@ both of the returned coordinates are \-1.
 .\" METHOD: pointery
 .TP
 \fBwinfo pointery \fIwindow\fR
+.
 If the mouse pointer is on the same screen as \fIwindow\fR, returns the
 pointer's y coordinate, measured in pixels in the screen's root window.
 If a virtual root window is in use on the screen, the position
@@ -218,18 +240,21 @@ If the mouse pointer is not on the same screen as \fIwindow\fR then
 .\" METHOD: reqheight
 .TP
 \fBwinfo reqheight \fIwindow\fR
+.
 Returns a decimal string giving \fIwindow\fR's requested height,
 in pixels.  This is the value used by \fIwindow\fR's geometry
 manager to compute its geometry.
 .\" METHOD: reqwidth
 .TP
 \fBwinfo reqwidth \fIwindow\fR
+.
 Returns a decimal string giving \fIwindow\fR's requested width,
 in pixels.  This is the value used by \fIwindow\fR's geometry
 manager to compute its geometry.
 .\" METHOD: rgb
 .TP
 \fBwinfo rgb \fIwindow color\fR
+.
 Returns a list containing three decimal values in the range 0 to
 65535, which are the
 red, green, and blue intensities that correspond to \fIcolor\fR in
@@ -239,6 +264,7 @@ option.
 .\" METHOD: rootx
 .TP
 \fBwinfo rootx \fIwindow\fR
+.
 Returns a decimal string giving the x-coordinate, in the root
 window of the screen, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
@@ -246,6 +272,7 @@ has no border).
 .\" METHOD: rooty
 .TP
 \fBwinfo rooty \fIwindow\fR
+.
 Returns a decimal string giving the y-coordinate, in the root
 window of the screen, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
@@ -253,36 +280,43 @@ has no border).
 .\" METHOD: screen
 .TP
 \fBwinfo screen \fIwindow\fR
+.
 Returns the name of the screen associated with \fIwindow\fR, in
 the form \fIdisplayName\fR.\fIscreenIndex\fR.
 .\" METHOD: screencells
 .TP
 \fBwinfo screencells \fIwindow\fR
+.
 Returns a decimal string giving the number of cells in the default
 color map for \fIwindow\fR's screen.
 .\" METHOD: screendepth
 .TP
 \fBwinfo screendepth \fIwindow\fR
+.
 Returns a decimal string giving the depth of the root window
 of \fIwindow\fR's screen (number of bits per pixel).
 .\" METHOD: screenheight
 .TP
 \fBwinfo screenheight \fIwindow\fR
+.
 Returns a decimal string giving the height of \fIwindow\fR's screen,
 in pixels.
 .\" METHOD: screenmmheight
 .TP
 \fBwinfo screenmmheight \fIwindow\fR
+.
 Returns a decimal string giving the height of \fIwindow\fR's screen,
 in millimeters.
 .\" METHOD: screenmmwidth
 .TP
 \fBwinfo screenmmwidth \fIwindow\fR
+.
 Returns a decimal string giving the width of \fIwindow\fR's screen,
 in millimeters.
 .\" METHOD: screenvisual
 .TP
 \fBwinfo screenvisual \fIwindow\fR
+.
 Returns one of the following strings to indicate the default visual
 class for \fIwindow\fR's screen: \fBdirectcolor\fR, \fBgrayscale\fR,
 \fBpseudocolor\fR, \fBstaticcolor\fR, \fBstaticgray\fR, or
@@ -290,11 +324,13 @@ class for \fIwindow\fR's screen: \fBdirectcolor\fR, \fBgrayscale\fR,
 .\" METHOD: screenwidth
 .TP
 \fBwinfo screenwidth \fIwindow\fR
+.
 Returns a decimal string giving the width of \fIwindow\fR's screen,
 in pixels.
 .\" METHOD: server
 .TP
 \fBwinfo server \fIwindow\fR
+.
 Returns a string containing information about the server for
 \fIwindow\fR's display.  The exact format of this string may vary
 from platform to platform.  For X servers the string
@@ -307,18 +343,21 @@ is an integer release number provided by the server.
 .\" METHOD: toplevel
 .TP
 \fBwinfo toplevel \fIwindow\fR
+.
 Returns the path name of the top-of-hierarchy window containing \fIwindow\fR.
 In standard Tk this will always be a \fBtoplevel\fR widget, but extensions may
 create other kinds of top-of-hierarchy widgets.
 .\" METHOD: viewable
 .TP
 \fBwinfo viewable \fIwindow\fR
+.
 Returns 1 if \fIwindow\fR and all of its ancestors up through the
 nearest toplevel window are mapped.  Returns 0 if any of these
 windows are not mapped.
 .\" METHOD: visual
 .TP
 \fBwinfo visual \fIwindow\fR
+.
 Returns one of the following strings to indicate the visual
 class for \fIwindow\fR: \fBdirectcolor\fR, \fBgrayscale\fR,
 \fBpseudocolor\fR, \fBstaticcolor\fR, \fBstaticgray\fR, or
@@ -326,10 +365,12 @@ class for \fIwindow\fR: \fBdirectcolor\fR, \fBgrayscale\fR,
 .\" METHOD: visualid
 .TP
 \fBwinfo visualid \fIwindow\fR
+.
 Returns the X identifier for the visual for \fIwindow\fR.
 .\" METHOD: visualsavailable
 .TP
 \fBwinfo visualsavailable \fIwindow\fR ?\fBincludeids\fR?
+.
 Returns a list whose elements describe the visuals available for
 \fIwindow\fR's screen.
 Each element consists of a visual class followed by an integer depth.
@@ -340,16 +381,19 @@ depth is followed by the X identifier for the visual.
 .\" METHOD: vrootheight
 .TP
 \fBwinfo vrootheight \fIwindow\fR
+.
 Returns the height of the virtual root window associated with \fIwindow\fR
 if there is one;  otherwise returns the height of \fIwindow\fR's screen.
 .\" METHOD: vrootwidth
 .TP
 \fBwinfo vrootwidth \fIwindow\fR
+.
 Returns the width of the virtual root window associated with \fIwindow\fR
 if there is one;  otherwise returns the width of \fIwindow\fR's screen.
 .\" METHOD: vrootx
 .TP
 \fBwinfo vrootx \fIwindow\fR
+.
 Returns the x-offset of the virtual root window associated with \fIwindow\fR,
 relative to the root window of its screen.
 This is normally either zero or negative.
@@ -357,6 +401,7 @@ Returns 0 if there is no virtual root window for \fIwindow\fR.
 .\" METHOD: vrooty
 .TP
 \fBwinfo vrooty \fIwindow\fR
+.
 Returns the y-offset of the virtual root window associated with \fIwindow\fR,
 relative to the root window of its screen.
 This is normally either zero or negative.
@@ -364,6 +409,7 @@ Returns 0 if there is no virtual root window for \fIwindow\fR.
 .\" METHOD: width
 .TP
 \fBwinfo width \fIwindow\fR
+.
 Returns a decimal string giving \fIwindow\fR's width in pixels.
 When a window is first created its width will be 1 pixel;  the
 width will eventually be changed by a geometry manager to fulfil
@@ -375,6 +421,7 @@ instead of its actual width.
 .\" METHOD: x
 .TP
 \fBwinfo x \fIwindow\fR
+.
 Returns a decimal string giving the x-coordinate, in \fIwindow\fR's
 parent, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
@@ -382,6 +429,7 @@ has no border).
 .\" METHOD: y
 .TP
 \fBwinfo y \fIwindow\fR
+.
 Returns a decimal string giving the y-coordinate, in \fIwindow\fR's
 parent, of the
 upper-left corner of \fIwindow\fR's border (or \fIwindow\fR if it
@@ -391,7 +439,7 @@ has no border).
 Print where the mouse pointer is and what window it is currently over:
 .CS
 lassign [\fBwinfo pointerxy\fR .] x y
-puts \-nonewline "Mouse pointer at ($x,$y) which is "
+puts -nonewline "Mouse pointer at ($x,$y) which is "
 set win [\fBwinfo containing\fR $x $y]
 if {$win eq ""} {
     puts "over no window"

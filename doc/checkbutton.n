@@ -291,11 +291,11 @@ individual widgets or by redefining the class bindings.
 This example shows a group of uncoupled checkbuttons.
 .PP
 .CS
-labelframe .lbl \-text "Steps:"
-\fBcheckbutton\fR .c1 \-text Lights  \-variable lights
-\fBcheckbutton\fR .c2 \-text Cameras \-variable cameras
-\fBcheckbutton\fR .c3 \-text Action! \-variable action
-pack .c1 .c2 .c3 \-in .lbl
+labelframe .lbl -text "Steps:"
+\fBcheckbutton\fR .c1 -text Lights  -variable lights
+\fBcheckbutton\fR .c2 -text Cameras -variable cameras
+\fBcheckbutton\fR .c3 -text Action! -variable action
+pack .c1 .c2 .c3 -in .lbl
 pack .lbl
 .CE
 .SH "SEE ALSO"

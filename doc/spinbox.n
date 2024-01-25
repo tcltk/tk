@@ -168,8 +168,8 @@ The \fB\-validatecommand\fR will be called when the spinbox is edited.
 The \fB\-validatecommand\fR will be called for all above conditions.
 .PP
 It is possible to perform percent substitutions on the \fB\-validatecommand\fR
-and \fB\-invalidcommand\fR scripts, just as you would in a \fBbind\fR script.  The
-following substitutions are recognized:
+and \fB\-invalidcommand\fR scripts, just as you would in a \fBbind\fR script.
+The following substitutions are recognized:
 .PP
 .IP \fB%d\fR 5
 Type of action: 1 for \fBinsert\fR, 0 for \fBdelete\fR,
@@ -213,7 +213,7 @@ validated.  If you wish to edit the value of the widget
 during validation and still have the \fB\-validate\fR option set, you should
 include the command
 .CS
-     \fI%W config \-validate %v\fR
+     \fI%W config -validate %v\fR
 .CE
 in the \fB\-validatecommand\fR or \fB\-invalidcommand\fR (whichever one you
 were editing the spinbox widget from).  It is also recommended to not set an
@@ -224,7 +224,7 @@ Also, the \fB\-validate\fR option will set itself to \fBnone\fR when the
 spinbox value gets changed because of adjustment of \fB\-from\fR or \fB\-to\fR
 and the \fB\-validatecommand\fR returns false. For instance
 .CS
-     \fIspinbox pathName \-from 1 \-to 10 \-validate all \-validatecommand {return 0}\fR
+     \fIspinbox pathName -from 1 -to 10 -validate all -validatecommand {return 0}\fR
 .CE
 will in fact set the \fB\-validate\fR option to \fBnone\fR because the default
 value for the spinbox gets changed (due to the \fB\-from\fR and \fB\-to\fR
@@ -250,32 +250,39 @@ arguments.  An index specifies a particular character in the spinbox's
 string, in any of the following ways:
 .TP 12
 \fInumber\fR
+.
 Specifies the character as a numerical index, where 0 corresponds
 to the first character in the string.
 .TP 12
 \fBanchor\fR
+.
 Indicates the anchor point for the selection, which is set with the
 \fBselect from\fR and \fBselect adjust\fR widget commands.
 .TP 12
 \fBend\fR
+.
 Indicates the character just after the last one in the spinbox's string.
 This is equivalent to specifying a numerical index equal to the length
 of the spinbox's string.
 .TP 12
 \fBinsert\fR
+.
 Indicates the character adjacent to and immediately following the
 insertion cursor.
 .TP 12
 \fBsel.first\fR
+.
 Indicates the first character in the selection.  It is an error to
 use this form if the selection is not in the spinbox window.
 .TP 12
 \fBsel.last\fR
+.
 Indicates the character just after the last one in the selection.
 It is an error to use this form if the selection is not in the
 spinbox window.
 .TP 12
 \fB@\fInumber\fR
+.
 In this form, \fInumber\fR is treated as an x-coordinate in the
 spinbox's window;  the character spanning that x-coordinate is used.
 For example,
@@ -385,12 +392,14 @@ two forms, depending on \fIoption\fR:
 .RS
 .TP
 \fIpathName \fBscan mark \fIx\fR
+.
 Records \fIx\fR and the current view in the spinbox window;  used in
 conjunction with later \fBscan dragto\fR commands.  Typically this
 command is associated with a mouse button press in the widget.  It
 returns an empty string.
 .TP
 \fIpathName \fBscan dragto \fIx\fR
+.
 This command computes the difference between its \fIx\fR argument
 and the \fIx\fR argument to the last \fBscan mark\fR command for
 the widget.  It then adjusts the view left or right by 10 times the

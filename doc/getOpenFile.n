@@ -34,19 +34,24 @@ whether the existing file should be overwritten or not.
 .PP
 The following \fIoption\-value\fR pairs are possible as command line
 arguments to these two commands:
+.\" OPTION: -command
 .TP
 \fB\-command\fI string\fR
+.
 Specifies the prefix of a Tcl command to invoke when the user closes the
 dialog after having selected an item. This callback is not called if the
 user cancelled the dialog. The actual command consists of \fIstring\fR
 followed by a space and the value selected by the user in the dialog. This
 is only available on Mac OS X.
+.\" OPTION: -confirmoverwrite
 .TP
 \fB\-confirmoverwrite\fI boolean\fR
+.
 Configures how the Save dialog reacts when the selected file already
 exists, and saving would overwrite it.  A true value requests a
 confirmation dialog be presented to the user.  A false value requests
 that the overwrite take place without confirmation.  Default value is true.
+.\" OPTION: -defaultextension
 .TP
 \fB\-defaultextension\fI extension\fR
 .
@@ -57,6 +62,7 @@ any case. This option is ignored on Mac OS X, which
 does not require extensions to filenames,
 and the UNIX implementation guesses reasonable values for this from
 the \fB\-filetypes\fR option when this is not supplied.
+.\" OPTION: -filetypes
 .TP
 \fB\-filetypes\fI filePatternList\fR
 .
@@ -68,6 +74,7 @@ empty list, or if the \fBFile types\fR listbox is not supported by the
 particular platform then all files are listed regardless of their
 types. See the section \fBSPECIFYING FILE PATTERNS\fR below for a
 discussion on the contents of \fIfilePatternList\fR.
+.\" OPTION: -initialdir
 .TP
 \fB\-initialdir\fI directory\fR
 .
@@ -79,30 +86,36 @@ On Vista and later systems, the initial directory defaults to the last
 user-selected directory for the application. If the
 parameter specifies a relative path, the return value will convert the
 relative path to an absolute path.
+.\" OPTION: -initialfile
 .TP
 \fB\-initialfile\fI filename\fR
 .
 Specifies a filename to be displayed in the dialog when it pops up.
+.\" OPTION: -message
 .TP
 \fB\-message\fI string\fR
 .
 Specifies a message to include in the client area of the dialog.
 This is only available on Mac OS X.
+.\" OPTION: -multiple
 .TP
 \fB\-multiple\fI boolean\fR
 .
 Allows the user to choose multiple files from the Open dialog.
+.\" OPTION: -parent
 .TP
 \fB\-parent\fI window\fR
 .
 Makes \fIwindow\fR the logical parent of the file dialog. The file
 dialog is displayed on top of its parent window. On Mac OS X, this
 turns the file dialog into a sheet attached to the parent window.
+.\" OPTION: -title
 .TP
 \fB\-title\fI titleString\fR
 .
 Specifies a string to display as the title of the dialog box. If this
 option is not specified, then a default title is displayed.
+.\" OPTION: -typevariable
 .TP
 \fB\-typevariable\fI variableName\fR
 .
@@ -192,7 +205,7 @@ set types {
     {{GIF Files}        {}        GIFF}
     {{All Files}        *             }
 }
-set filename [\fBtk_getOpenFile\fR \-filetypes $types]
+set filename [\fBtk_getOpenFile\fR -filetypes $types]
 
 if {$filename ne ""} {
     # Open the file ...
