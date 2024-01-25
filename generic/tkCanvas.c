@@ -574,7 +574,7 @@ ItemSelection(
 	return TCL_INDEX_NONE;
     }
 
-    return (Tcl_Size)itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
+    return itemPtr->typePtr->selectionProc((Tk_Canvas) canvasPtr, itemPtr,
 	    offset, buffer, (int)maxBytes);
 }
 

@@ -8249,7 +8249,7 @@ CharBboxProc(
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 	    chunkPtr->x, -1, 0, xPtr);
 
-    if (byteIndex == (Tcl_Size)ciPtr->numBytes) {
+    if (byteIndex == ciPtr->numBytes) {
 	/*
 	 * This situation only happens if the last character in a line is a
 	 * space character, in which case it absorbs all of the extra space in
@@ -8258,7 +8258,7 @@ CharBboxProc(
 
 	*widthPtr = maxX - *xPtr;
     } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == (Tcl_Size)ciPtr->numBytes - 1)) {
+	    && (byteIndex == ciPtr->numBytes - 1)) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
