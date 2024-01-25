@@ -2736,7 +2736,7 @@ GetListboxIndex(
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
     if (result == TCL_OK) {
-    	if ((idx != TCL_INDEX_NONE) && (idx > (Tcl_Size)listPtr->nElements)) {
+    	if ((idx != TCL_INDEX_NONE) && (idx > listPtr->nElements)) {
     	    idx = listPtr->nElements;
     	}
     	*indexPtr = (int)idx;

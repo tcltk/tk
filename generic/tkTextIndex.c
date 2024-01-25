@@ -1125,7 +1125,7 @@ TkTextPrintIndex(
 	    linePtr = TkBTreeNextLine(NULL, linePtr);
 	    segPtr = linePtr->segPtr;
 	}
-	if (numBytes <= (int)segPtr->size) {
+	if (numBytes <= segPtr->size) {
 	    break;
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
