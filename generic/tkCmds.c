@@ -100,7 +100,7 @@ Tk_BellObjCmd(
     };
     enum options { TK_BELL_DISPLAYOF, TK_BELL_NICE };
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    Tcl_Size i;
     int index, nice = 0;
     Tk_ErrorHandler handler;
 
@@ -401,7 +401,7 @@ Tk_BindtagsObjCmd(
 
     winPtr->numTags = length;
     winPtr->tagPtr = (void **)ckalloc(length * sizeof(void *));
-    for (i = 0; i < (Tcl_Size)length; i++) {
+    for (i = 0; i < length; i++) {
 	p = Tcl_GetString(tags[i]);
 	if (p[0] == '.') {
 	    char *copy;
@@ -490,7 +490,7 @@ Tk_DestroyObjCmd(
 {
     Tk_Window window;
     Tk_Window tkwin = (Tk_Window)clientData;
-    int i;
+    Tcl_Size i;
 
     for (i = 1; i < objc; i++) {
 	window = Tk_NameToWindow(interp, Tcl_GetString(objv[i]), tkwin);
@@ -1302,7 +1302,7 @@ Tk_WinfoObjCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, x, y, width, height, useX, useY, c_class;
-    int skip;
+    Tcl_Size skip;
     const char *string;
     TkWindow *winPtr;
     Tk_Window tkwin = (Tk_Window)clientData;
