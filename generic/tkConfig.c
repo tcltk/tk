@@ -33,9 +33,10 @@
 /*
  * The following encoding is used in TK_OPTION_VAR:
  *
- * if sizeof(type) == sizeof(int)     =>    TK_OPTION_VAR(type) = 0
- * if sizeof(type) == 1               =>    TK_OPTION_VAR(type) = 64
- * if sizeof(type) == 2               =>    TK_OPTION_VAR(type) = 128
+ * if sizeof(type) == sizeof(int)        =>    TK_OPTION_VAR(type) = 0
+ * if sizeof(type) == 1                  =>    TK_OPTION_VAR(type) = 64
+ * if sizeof(type) == 2                  =>    TK_OPTION_VAR(type) = 128
+ * if sizeof(type) == sizeof(long long)  =>    TK_OPTION_VAR(type) = 192
  */
 #define TYPE_MASK        (((((int)sizeof(int)-1))|3)<<6)
 
@@ -660,20 +661,42 @@ DoObjConfig(
     case TK_OPTION_INT: {
 	int newInt;
 
-	if (nullOK && ObjectIsEmpty(valuePtr)) {
-	    valuePtr = NULL;
-	    newInt = INT_MIN;
-	} else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
+	if ((optionPtr->specPtr->flags & TYPE_MASK) == 0) {
+	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		newInt = INT_MIN;
+	    } else if (Tcl_GetIntFromObj(nullOK ? NULL : interp, valuePtr, &newInt) != TCL_OK) {
+	    invalidIntValue:
 		if (nullOK && interp) {
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "expected integer or \"\" but got \"%.50s\"", Tcl_GetString(valuePtr)));
 		    Tcl_SetErrorCode(interp, "TCL", "VALUE", "NUMBER", NULL);
 		}
-	    return TCL_ERROR;
-	}
-	if (internalPtr != NULL) {
-	    *((int *) oldInternalPtr) = *((int *) internalPtr);
-	    *((int *) internalPtr) = newInt;
+		return TCL_ERROR;
+	    }
+	    if (internalPtr != NULL) {
+		*((int *) oldInternalPtr) = *((int *) internalPtr);
+		*((int *) internalPtr) = newInt;
+	    }
+	} else if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
+	    Tcl_WideInt newWideInt;
+	    if (nullOK && ObjectIsEmpty(valuePtr)) {
+		valuePtr = NULL;
+		newWideInt = (sizeof(long) > sizeof(int)) ? LONG_MIN : LLONG_MIN;
+	    } else if (Tcl_GetWideIntFromObj(nullOK ? NULL : interp, valuePtr, &newWideInt) != TCL_OK) {
+		goto invalidIntValue;
+	    }
+		if (internalPtr != NULL) {
+			if (sizeof(long) > sizeof(int)) {
+			    *((long *) oldInternalPtr) = *((long *) internalPtr);
+			    *((long *) internalPtr) = (long)newWideInt;
+			} else {
+			    *((long long *) oldInternalPtr) = *((long long *) internalPtr);
+			    *((long long *) internalPtr) = (long long)newWideInt;
+			}
+		}
+	} else {
+	    Tcl_Panic("Invalid flags for %s", "TK_OPTION_INT");
 	}
 	break;
     }
@@ -1565,6 +1588,20 @@ Tk_RestoreSavedOptions(
 		}
 		break;
 	    case TK_OPTION_INT:
+		if (optionPtr->specPtr->flags & TYPE_MASK) {
+		    if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
+			if (sizeof(long) > sizeof(int)) {
+			    *((long *) internalPtr) = *((long *) ptr);
+			} else {
+			    *((long long *) internalPtr) = *((long long *) ptr);
+			}
+		    } else {
+			Tcl_Panic("Invalid flags for %s", "TK_OPTION_INT");
+		    }
+		} else {
+		    *((int *) internalPtr) = *((int *) ptr);
+		}
+		break;
 	    case TK_OPTION_INDEX:
 		*((int *) internalPtr) = *((int *) ptr);
 		break;
@@ -2091,11 +2128,28 @@ GetObjectForOption(
 	    }
 	    break;
 	}
-	case TK_OPTION_INT:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
-		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
+	case TK_OPTION_INT: {
+	    Tcl_WideInt value;
+	    int nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK));
+	    if (optionPtr->specPtr->flags & TYPE_MASK) {
+		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
+		    if (sizeof(long) > sizeof(int)) {
+			value = *((long *)internalPtr);
+			if (nullOK && (value == LONG_MIN)) {break;}
+		    } else {
+			value = *((long long *)internalPtr);
+			if (nullOK && (value == LLONG_MIN)) {break;}
+		    }
+		} else {
+		    Tcl_Panic("Invalid flags for %s", "TK_OPTION_INT");
+		}
+	    } else {
+		value = *((int *)internalPtr);
+		if (nullOK && (value == INT_MIN)) {break;}
 	    }
+		objPtr = Tcl_NewWideIntObj(value);
 	    break;
+	}
 	case TK_OPTION_INDEX:
 	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
 		if (*((int *) internalPtr) == INT_MIN) {

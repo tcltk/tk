@@ -229,7 +229,7 @@ typedef struct Tk_OptionSpec {
 
 #define TK_OPTION_NULL_OK		(1 << 0)
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
-#define TK_OPTION_VAR(type)		((int)(sizeof(type)&(sizeof(int)-1))<<6)
+#define TK_OPTION_VAR(type)		((sizeof(type) < 2 * sizeof(int)) ? ((int)(sizeof(type)&(sizeof(int)-1))<<6) : (3<<6))
 #define TK_OPTION_ENUM_VAR		TK_OPTION_VAR(Tk_OptionType)
 
 /*
