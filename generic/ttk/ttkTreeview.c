@@ -475,8 +475,8 @@ typedef struct {
 
     Tcl_Obj *heightObj;		/* height (rows) */
     Tcl_Obj *paddingObj;	/* internal padding */
-    int nTitleColumns;	/* -titlecolumns */
-    int nTitleItems;		/* -titleitems */
+    Tcl_Size nTitleColumns;	/* -titlecolumns */
+    Tcl_Size nTitleItems;		/* -titleitems */
     int striped;		/* -striped option */
 
     Tcl_Obj *showObj;		/* -show list */
@@ -521,13 +521,13 @@ static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
 static const Tk_OptionSpec TreeviewOptionSpecs[] = {
     {TK_OPTION_STRING, "-columns", "columns", "Columns",
 	"", offsetof(Treeview,tree.columnsObj), TCL_INDEX_NONE,
-	0, 0,COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
+	0, 0, COLUMNS_CHANGED | GEOMETRY_CHANGED /*| READONLY_OPTION*/ },
     {TK_OPTION_STRING, "-displaycolumns","displayColumns","DisplayColumns",
 	"#all", offsetof(Treeview,tree.displayColumnsObj), TCL_INDEX_NONE,
-	0, 0,DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
+	0, 0, DCOLUMNS_CHANGED | GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-show", "show", "Show",
 	DEFAULT_SHOW, offsetof(Treeview,tree.showObj), TCL_INDEX_NONE,
-	0, 0,SHOW_CHANGED | GEOMETRY_CHANGED },
+	0, 0, SHOW_CHANGED | GEOMETRY_CHANGED },
 
     {TK_OPTION_STRING_TABLE, "-selectmode", "selectMode", "SelectMode",
 	"extended", offsetof(Treeview,tree.selectModeObj), TCL_INDEX_NONE,
@@ -538,19 +538,19 @@ static const Tk_OptionSpec TreeviewOptionSpecs[] = {
 
     {TK_OPTION_PIXELS, "-height", "height", "Height",
 	DEF_TREE_ROWS, offsetof(Treeview,tree.heightObj), TCL_INDEX_NONE,
-	0, 0,GEOMETRY_CHANGED},
+	0, 0, GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-padding", "padding", "Pad",
 	NULL, offsetof(Treeview,tree.paddingObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-titlecolumns", "titlecolumns", "Titlecolumns",
 	DEF_TITLECOLUMNS, TCL_INDEX_NONE, offsetof(Treeview,tree.nTitleColumns),
-	0,0,GEOMETRY_CHANGED},
+	TK_OPTION_VAR(Tcl_Size), 0, GEOMETRY_CHANGED},
     {TK_OPTION_INT, "-titleitems", "titleitems", "Titleitems",
 	DEF_TITLEITEMS, TCL_INDEX_NONE, offsetof(Treeview,tree.nTitleItems),
-	0,0,GEOMETRY_CHANGED},
+	TK_OPTION_VAR(Tcl_Size), 0, GEOMETRY_CHANGED},
     {TK_OPTION_BOOLEAN, "-striped", "striped", "Striped",
 	DEF_STRIPED, TCL_INDEX_NONE, offsetof(Treeview,tree.striped),
-	0,0,GEOMETRY_CHANGED},
+	0, 0, GEOMETRY_CHANGED},
 
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
 	NULL, TCL_INDEX_NONE, offsetof(Treeview, tree.xscroll.scrollCmd),
@@ -689,11 +689,11 @@ static TreeColumn *GetColumn(
 static TreeColumn *FindColumn(
     Tcl_Interp *interp, Treeview *tv, Tcl_Obj *columnIDObj)
 {
-    Tcl_Size colno;
+    Tcl_WideInt colno;
 
-    if (sscanf(Tcl_GetString(columnIDObj), "#%" TCL_SIZE_MODIFIER "d", &colno) == 1)
+    if (sscanf(Tcl_GetString(columnIDObj), "#%" TCL_LL_MODIFIER "d", &colno) == 1)
     {	/* Display column specification, #n */
-	if (colno >= 0 && (Tcl_Size)colno < tv->tree.nDisplayColumns) {
+	if (colno >= 0 && colno < tv->tree.nDisplayColumns) {
 	    return tv->tree.displayColumns[colno];
 	}
 	/* else */
@@ -904,12 +904,12 @@ static int TreeWidth(Treeview *tv)
 
     tv->tree.titleWidth = 0;
     while (i < tv->tree.nDisplayColumns) {
-	if (i == (Tcl_Size)tv->tree.nTitleColumns) {
+	if (i == tv->tree.nTitleColumns) {
 	    tv->tree.titleWidth = width;
 	}
 	width += tv->tree.displayColumns[i++]->width;
     }
-    if ((Tcl_Size)tv->tree.nTitleColumns >= tv->tree.nDisplayColumns) {
+    if (tv->tree.nTitleColumns >= tv->tree.nDisplayColumns) {
 	tv->tree.titleWidth = width;
     }
     return width;
@@ -967,9 +967,9 @@ static int Stretch(TreeColumn *c, int n)
  * 	Adjust width of (stretchable) columns to the left by N pixels.
  * 	Returns: leftover slack.
  */
-static int ShoveLeft(Treeview *tv, int i, int n)
+static int ShoveLeft(Treeview *tv, Tcl_Size i, int n)
 {
-    int first = FirstColumn(tv);
+    Tcl_Size first = FirstColumn(tv);
     while (n != 0 && i >= first) {
 	TreeColumn *c = tv->tree.displayColumns[i];
 	if (c->stretch) {
@@ -984,9 +984,9 @@ static int ShoveLeft(Treeview *tv, int i, int n)
  * 	Adjust width of (stretchable) columns to the right by N pixels.
  * 	Returns: leftover slack.
  */
-static int ShoveRight(Treeview *tv, int i, int n)
+static int ShoveRight(Treeview *tv, Tcl_Size i, int n)
 {
-    while (n != 0 && (Tcl_Size)i < tv->tree.nDisplayColumns) {
+    while (n != 0 && i < tv->tree.nDisplayColumns) {
 	TreeColumn *c = tv->tree.displayColumns[i];
 	if (c->stretch) {
 	    n -= Stretch(c, n);
@@ -1050,7 +1050,7 @@ static void ResizeColumns(Treeview *tv, int newWidth)
  * 	Move the separator to the right of specified column,
  * 	adjusting other column widths as necessary.
  */
-static void DragColumn(Treeview *tv, int i, int delta)
+static void DragColumn(Treeview *tv, Tcl_Size i, int delta)
 {
     TreeColumn *c = tv->tree.displayColumns[i];
     int dl = delta - ShoveLeft(tv, i-1, delta - Stretch(c, delta));
@@ -1386,14 +1386,14 @@ TreeviewConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
     }
     if (tv->tree.nTitleColumns < 0) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "\"#%d\" is out of range",
+                "\"#%" TCL_SIZE_MODIFIER "d\" is out of range",
                 tv->tree.nTitleColumns));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "TITLECOLUMNS", NULL);
 	return TCL_ERROR;
     }
     if (tv->tree.nTitleItems < 0) {
         Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "\"%d\" is out of range",
+                "\"%" TCL_SIZE_MODIFIER "d\" is out of range",
                 tv->tree.nTitleItems));
 	Tcl_SetErrorCode(interp, "TTK", "TREE", "TITLEITEMS", NULL);
 	return TCL_ERROR;
@@ -1689,7 +1689,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
     Tcl_Size colno = FirstColumn(tv);
     int xpos = tv->tree.treeArea.x;
 
-    if ((Tcl_Size)tv->tree.nTitleColumns <= colno) {
+    if (tv->tree.nTitleColumns <= colno) {
 	xpos -= tv->tree.xscroll.first;
     }
 
@@ -1702,7 +1702,7 @@ static Tcl_Size IdentifyDisplayColumn(Treeview *tv, int x, int *x1)
 	}
 	++colno;
 	xpos = next_xpos;
-	if ((Tcl_Size)tv->tree.nTitleColumns == colno) {
+	if (tv->tree.nTitleColumns == colno) {
 	    xpos -= tv->tree.xscroll.first;
 	}
     }
@@ -1788,7 +1788,7 @@ static int BoundingBox(
 	bbox.x += xpos;
 	bbox.width = column->width;
 
-	if (i < (Tcl_Size)tv->tree.nTitleColumns) {
+	if (i < tv->tree.nTitleColumns) {
 	    /* Unscrollable column, remove scroll shift */
 	    bbox.x += tv->tree.xscroll.first;
 	}
@@ -2035,7 +2035,7 @@ static void DrawHeadings(Treeview *tv, Drawable d)
     Tcl_Size i = FirstColumn(tv);
     int x = 0;
 
-    if ((Tcl_Size)tv->tree.nTitleColumns > i) {
+    if (tv->tree.nTitleColumns > i) {
 	x = tv->tree.titleWidth;
 	i = tv->tree.nTitleColumns;
     }
@@ -2054,7 +2054,7 @@ static void DrawHeadings(Treeview *tv, Drawable d)
     x0 = tv->tree.headingArea.x;
     i = FirstColumn(tv);
     x = 0;
-    while ((i < (Tcl_Size)tv->tree.nTitleColumns) && (i < tv->tree.nDisplayColumns)) {
+    while ((i < tv->tree.nTitleColumns) && (i < tv->tree.nDisplayColumns)) {
 	TreeColumn *column = tv->tree.displayColumns[i];
 	Ttk_Box parcel = Ttk_MakeBox(x0+x, y0, column->width, h0);
 	DisplayLayout(tv->tree.headingLayout,
@@ -2086,7 +2086,7 @@ static void DrawSeparators(Treeview *tv, Drawable d)
 
 	if (!column->separator) continue;
 
-	if (i >= (Tcl_Size)tv->tree.nTitleColumns) {
+	if (i >= tv->tree.nTitleColumns) {
 	    xDraw -= tv->tree.xscroll.first;
 	    if (xDraw < tv->tree.titleWidth) continue;
 	}
@@ -2216,8 +2216,8 @@ static void DrawCells(
 	xPad = column->separator ? tv->tree.colSeparatorWidth/2 : 0;
 
 	x += column->width;
-	if (title  && i >= (Tcl_Size)tv->tree.nTitleColumns) break;
-	if (!title && i <  (Tcl_Size)tv->tree.nTitleColumns) continue;
+	if (title  && i >= tv->tree.nTitleColumns) break;
+	if (!title && i <  tv->tree.nTitleColumns) continue;
 	if (!title && x <  tv->tree.titleWidth) continue;
 
 	if (column->selected) {
@@ -2299,7 +2299,7 @@ static void DrawItem(
 
     /* Draw row background for non-scrolled area:
      */
-    if ((Tcl_Size)tv->tree.nTitleColumns >= 1) {
+    if (tv->tree.nTitleColumns >= 1) {
 	Ttk_Box rowBox = Ttk_MakeBox(tv->tree.treeArea.x, y,
 		tv->tree.titleWidth, rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
@@ -2363,7 +2363,7 @@ static void DrawItem(
 
     /* Draw non-scrolled data cells:
      */
-    if ((Tcl_Size)tv->tree.nTitleColumns > 1) {
+    if (tv->tree.nTitleColumns > 1) {
 	DrawCells(tv, item, &displayItem, &displayItemSel, d, xTitle, y, 1);
     }
 }
@@ -3496,9 +3496,9 @@ static int TreeviewDragCommand(
 	TreeColumn *c = tv->tree.displayColumns[i];
 	int right = left + c->width;
 	if (c == column) {
-	    if (i < (Tcl_Size)tv->tree.nTitleColumns) {
-	        /* Unscrollable column, remove scroll shift */
-                right += tv->tree.xscroll.first;
+	    if (i < tv->tree.nTitleColumns) {
+		/* Unscrollable column, remove scroll shift */
+		right += tv->tree.xscroll.first;
 	    }
 	    DragColumn(tv, i, newx - right);
 	    TtkRedisplayWidget(&tv->core);
