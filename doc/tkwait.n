@@ -12,11 +12,11 @@
 .SH NAME
 tkwait \- Wait for variable to change or window to be destroyed
 .SH SYNOPSIS
+.nf
 \fBtkwait variable \fIname\fR
-.sp
 \fBtkwait visibility \fIname\fR
-.sp
 \fBtkwait window \fIname\fR
+.fi
 .BE
 .SH DESCRIPTION
 .PP

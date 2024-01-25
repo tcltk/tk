@@ -442,7 +442,8 @@ value is specified for \fB\-fieldbackground\fP. Otherwise it is ignored.
 .br
 \fB\-fieldbackground\fP \fIcolor\fP
 .RS
-Some themes use a graphical background and their field background colors cannot be changed.
+Some themes use a graphical background and their field background colors
+cannot be changed.
 .RE
 \fB\-foreground\fP \fIcolor\fP
 .br

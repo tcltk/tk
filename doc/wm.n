@@ -60,6 +60,7 @@ values are as follows:
 .PP
 All platforms support the following attributes (though X11 users
 should see the notes below):
+.\" OPTION: -alpha
 .TP
 \fB\-alpha\fR
 .
@@ -67,26 +68,31 @@ Specifies the alpha transparency level of the toplevel. It accepts a value
 from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values outside that
 range will be constrained.  Where not supported, the \fB\-alpha\fR value
 remains at \fB1.0\fR.
+.\" OPTION: -fullscreen
 .TP
 \fB\-fullscreen\fR
 .
 Places the window in a mode that takes up the entire screen, has no
 borders, and covers the general use area (i.e. Start menu and taskbar on
 Windows, dock and menubar on OSX, general window decorations on X11).
+.\" OPTION: -topmost
 .TP
 \fB\-topmost\fR
 .
 Specifies whether this is a topmost window (displays above all other windows).
 .PP
 On Windows, the following attributes may be set.
+.\" OPTION: -disabled
 .TP
 \fB\-disabled\fR
 .
 Specifies whether the window is in a disabled state.
+.\" OPTION: -toolwindow
 .TP
 \fB\-toolwindow\fR
 .
 Specifies a toolwindow style window (as defined in the MSDN).
+.\" OPTION: -transparentcolor
 .TP
 \fB\-transparentcolor\fR
 .
@@ -97,6 +103,7 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 at \fB{}\fR.
 .PP
 On MacOS, the following attributes may be set.
+.\" OPTION: -appearance
 .TP
 \fB\-appearance\fR
 .
@@ -104,6 +111,7 @@ Specifies whether the window is rendered in "dark mode".  Allowed
 values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
 is auto then the appearance of the window is controlled by the
 System Settings.
+.\" OPTION: -class
 .TP
 \fB\-class\fR
 .
@@ -117,21 +125,25 @@ does not correspond to an existing window.  Doing that causes the
 class name to be cached for later use.  When a toplevel with that
 pathname is eventually created, the cached class name will determine which
 class is used for the underlying Aqua window.
+.\" OPTION: -isdark
 .TP
 \fB\-isdark\fR
 .
 Returns a boolean value which is true if the window is currently in
 dark mode.
+.\" OPTION: -modified
 .TP
 \fB\-modified\fR
 .
 Specifies the modification state of the window (determines whether the
 window close widget contains the modification indicator and whether the
 proxy icon is draggable).
+.\" OPTION: -notify
 .TP
 \fB\-notify\fR
 .
 Specifies process notification state (bouncing of the application dock icon).
+.\" OPTION: -stylemask
 .TP
 \fB\-stylemask\fR
 .
@@ -145,6 +157,7 @@ bits will be set to 0.  The allowed bitnames are: \fBtitled\fR,
 \fBnonactivatingpanel\fR, and \fBHUDwindow\fR.  Note that a side
 effect of setting the fullsizecontentview bit is that the window title
 bar becomes transparent.
+.\" OPTION: -tabbingid
 .TP
 \fB\-tabbingid\fR
 .
@@ -158,6 +171,7 @@ a normal non-tabbed toplevel.   It is allowed to set the tabbingid before the
 toplevel is created.  If the pathname provided in the command does not
 correspond to a toplevel, the value will be cached and used later when
 the toplevel is actually created.
+.\" OPTION: -tabbingmode
 .TP
 \fB\-tabbingmode\fR
 .
@@ -171,11 +185,13 @@ Settings application.  It is allowed to set the tabbingmode before the
 toplevel is created.  If the pathname provided in the command does not
 correspond to a toplevel, the value will be cached and used later when
 the toplevel is actually created.
+.\" OPTION: -titlepath
 .TP
 \fB\-titlepath\fR
 .
 Specifies the path of the file referenced as the window proxy icon
 (which can be dragged and dropped in lieu of the file's finder icon).
+.\" OPTION: -transparent
 .TP
 \fB\-transparent\fR
 .
@@ -187,6 +203,7 @@ color with some alpha, e.g.
 On X11, the following attributes may be set. These are not supported by all
 window managers, and will have no effect under older WMs.
 .\" See https://www.freedesktop.org/wiki/Specifications/wm-spec/
+.\" OPTION: -type
 .TP
 \fB\-type\fR
 .VS 8.6
@@ -197,76 +214,49 @@ entirely up to the window manager. A list of types may be used, in order of
 preference. The following values are mapped to constants defined in the EWMH
 specification (using others is possible, but not advised):
 .RS
-.TP
-\fBdesktop\fR
-.
+.IP \fBdesktop\fR
 indicates a desktop feature,
-.TP
-\fBdock\fR
-.
+.IP \fBdock\fR
 indicates a dock/panel feature,
-.TP
-\fBtoolbar\fR
-.
+.IP \fBtoolbar\fR
 indicates a toolbar window that should be acting on behalf of another window,
 as indicated with \fBwm transient\fR,
-.TP
-\fBmenu\fR
-.
+.IP \fBmenu\fR
 indicates a torn-off menu that should be acting on behalf of another window,
 as indicated with \fBwm transient\fR,
-.TP
-\fButility\fR
-.
+.IP \fButility\fR
 indicates a utility window (e.g., palette or toolbox) that should be acting on
 behalf of another window, as indicated with \fBwm transient\fR,
-.TP
-\fBsplash\fR
-.
+.IP \fBsplash\fR
 indicates a splash screen, displayed during application start up,
-.TP
-\fBdialog\fR
-.
+.IP \fBdialog\fR
 indicates a general dialog window, that should be acting on behalf of another
 window, as indicated with \fBwm transient\fR,
-.TP
-\fBdropdown_menu\fR
-.
+.IP \fBdropdown_menu\fR
 indicates a menu summoned from a menu bar, which should usually also be set to
 be override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBpopup_menu\fR
-.
+.IP \fBpopup_menu\fR
 indicates a popup menu, which should usually also be set to be
 override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBtooltip\fR
-.
+.IP \fBtooltip\fR
 indicates a tooltip window, which should usually also be set to be
 override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBnotification\fR
-.
+.IP \fBnotification\fR
 indicates a window that provides a background notification of some event,
 which should usually also be set to be override-redirected (with \fBwm
 overrideredirect\fR),
-.TP
-\fBcombo\fR
-.
+.IP \fBcombo\fR
 indicates the drop-down list of a combobox widget, which should usually also
 be set to be override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBdnd\fR
-.
+.IP \fBdnd\fR
 indicates a window that represents something being dragged, which should
 usually also be set to be override-redirected (with
 \fBwm overrideredirect\fR),
-.TP
-\fBnormal\fR
-.
+.IP \fBnormal\fR
 indicates a window that has no special interpretation.
 .RE
 .VE 8.6
+.\" OPTION: -zoomed
 .TP
 \fB\-zoomed\fR
 .
@@ -466,7 +456,7 @@ four elements corresponding to the current \fIbaseWidth\fR,
 \fIwindow\fR is not currently gridded, then an empty string
 is returned.
 .PP
-Note: this command should not be needed very often, since the
+Note that this command should not be needed very often, since the
 \fBTk_SetGrid\fR library procedure and the \fBsetGrid\fR option
 provide easier access to the same functionality.
 .RE
@@ -495,9 +485,9 @@ of the developer.
 .RS
 .PP
 On X11, for this command to work,
-the variable \fB::tk::icons::base_icon($window)\fR must be set to the image that is
-being used for the window icon of $window. On Windows and X11, the iconphoto
-images work best at 32x32 or a similar dimension, as
+the variable \fB::tk::icons::base_icon($window)\fR must be set to the image
+that is being used for the window icon of $window. On Windows and X11, the
+iconphoto images work best at 32x32 or a similar dimension, as
 the badge images are provided by Tk and drawn to overlay the icon images
 using native (Windows) API's or Tk rendering. On macOS, the icon badge is
 rendered by a system API and is not provided by Tk. The icon image itself
@@ -508,7 +498,7 @@ The icon badge is intended for display in the Dock (macOS), taskbar
 displayed in the Dock, regardless of how many different icon badges may be
 assigned to different windows. On Windows, the taskbar display depends on
 whether the taskbar buttons are combined or not (this is an OS setting
-available to the user): if combined the behavior is the same as on macOS,
+available to the user): if combined, the behavior is the same as on macOS,
 otherwise each button in the taskbar shows the badge it was assigned.
 Badge display on macOS is configured in the system preferences. App
 panel display behavior on X11 will depend on the window manager and/or
@@ -639,7 +629,8 @@ Button press events are disabled for \fIwindow\fR as long as it is
 an icon window;  this is needed in order to allow window managers to
 .QW own
 those events.
-Note: not all window managers support the notion of an icon window.
+Note that not all window managers support the notion of an icon window, and
+the concept is entirely meaningless on non-X11 platforms.
 .\" METHOD: manage
 .TP
 \fBwm manage \fIwidget\fR
@@ -877,7 +868,7 @@ has never been mapped, then this command
 causes the window to be mapped in the withdrawn state.  Not all
 window managers appear to know how to handle windows that are
 mapped in the withdrawn state.
-Note: it sometimes seems to be necessary to withdraw a
+Note that it sometimes seems to be necessary to withdraw a
 window and then re-map it (e.g. with \fBwm deiconify\fR) to get some
 window managers to pay attention to changes in window attributes
 such as group.
@@ -975,10 +966,10 @@ A simple dialog-like window, centred on the screen:
 .CS
 # Create and arrange the dialog contents.
 toplevel .msg
-label  .msg.l  \-text "This is a very simple dialog demo."
-button .msg.ok \-text OK \-default active \-command {destroy .msg}
-pack .msg.ok \-side bottom \-fill x
-pack .msg.l  \-expand 1    \-fill both
+label  .msg.l  -text "This is a very simple dialog demo."
+button .msg.ok -text OK -default active -command {destroy .msg}
+pack .msg.ok -side bottom -fill x
+pack .msg.l  -expand 1    -fill both
 
 # Now set the widget up as a centred dialog.
 
@@ -987,8 +978,8 @@ pack .msg.l  \-expand 1    \-fill both
 # event loop with the widget hidden completely...
 \fBwm withdraw\fR .msg
 update
-set x [expr {([winfo screenwidth .]\-[winfo width .msg])/2}]
-set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
+set x [expr {([winfo screenwidth .] - [winfo width .msg]) / 2}]
+set y [expr {([winfo screenheight .] - [winfo height .msg]) / 2}]
 \fBwm geometry\fR  .msg +$x+$y
 \fBwm transient\fR .msg .
 \fBwm title\fR     .msg "Dialog demo"
@@ -997,7 +988,8 @@ set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
 .SH "SEE ALSO"
 toplevel(n), winfo(n)
 .SH KEYWORDS
-aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager
+aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify,
+increments, position, size, title, top-level window, units, window manager
 '\" Local Variables:
 '\" mode: nroff
 '\" End:

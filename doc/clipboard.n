@@ -125,7 +125,7 @@ proc getItemConfig {canvas tag} {
       append script {$canvas create } [$canvas type $item]
       append script { } [$canvas coords $item] { }
       foreach config [$canvas itemconf $item] {
-         lassign $config name \- \- \- value
+         lassign $config name - - - value
          append script [list $name $value] { }
       }
       append script \en
@@ -136,10 +136,10 @@ proc getItemConfig {canvas tag} {
 # Set up a binding on a canvas to cut and paste an item
 set c [canvas .c]
 pack $c
-$c create text 150 30 \-text "cut and paste me"
+$c create text 150 30 -text "cut and paste me"
 bind $c <<Cut>> {
    \fBclipboard clear\fR
-   \fBclipboard append \-type\fR TkCanvasItem \e
+   \fBclipboard append -type\fR TkCanvasItem \e
          [getItemConfig %W current]
    # Delete because this is cut, not copy.
    %W delete current
@@ -147,7 +147,7 @@ bind $c <<Cut>> {
 bind $c <<Paste>> {
    catch {
       set canvas %W
-      eval [\fBclipboard get \-type\fR TkCanvasItem]
+      eval [\fBclipboard get -type\fR TkCanvasItem]
    }
 }
 .CE

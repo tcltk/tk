@@ -81,20 +81,15 @@ below for details.
 .PP
 A scrollbar displays five elements, which are referred to in the
 widget commands for the scrollbar:
-.TP 10
-\fBarrow1\fR
+.IP \fBarrow1\fR 10
 The top or left arrow in the scrollbar.
-.TP 10
-\fBtrough1\fR
+.IP \fBtrough1\fR 10
 The region between the slider and \fBarrow1\fR.
-.TP 10
-\fBslider\fR
+.IP \fBslider\fR 10
 The rectangle that indicates what is visible in the associated widget.
-.TP 10
-\fBtrough2\fR
+.IP \fBtrough2\fR 10
 The region between the slider and \fBarrow2\fR.
-.TP 10
-\fBarrow2\fR
+.IP \fBarrow2\fR 10
 The bottom or right arrow in the scrollbar.
 .SH "WIDGET COMMAND"
 .PP
@@ -212,6 +207,7 @@ The command may take any of the following forms.
 In each case, \fIprefix\fR is the contents of the
 \fB\-command\fR option, which usually has a form like
 .QW "\fB.t yview\fR" .
+.\" METHOD: moveto
 .TP
 \fIprefix \fBmoveto \fIfraction\fR
 .
@@ -222,6 +218,7 @@ If \fIfraction\fR is 0 it refers to the beginning of the
 document.  1.0 refers to the end of the document, 0.333
 refers to a point one-third of the way through the document,
 and so on.
+.\" METHOD: scroll
 .TP
 \fIprefix \fBscroll \fInumber \fBpages\fR
 .
@@ -316,11 +313,11 @@ The End key adjusts the view to the bottom (right edge) of the document.
 Create a window with a scrollable \fBtext\fR widget:
 .CS
 toplevel .tl
-text .tl.t \-yscrollcommand {.tl.s set}
-\fBscrollbar\fR .tl.s \-command {.tl.t yview}
-grid .tl.t .tl.s \-sticky nsew
-grid columnconfigure .tl 0 \-weight 1
-grid rowconfigure .tl 0 \-weight 1
+text .tl.t -yscrollcommand {.tl.s set}
+\fBscrollbar\fR .tl.s -command {.tl.t yview}
+grid .tl.t .tl.s -sticky nsew
+grid columnconfigure .tl 0 -weight 1
+grid rowconfigure .tl 0 -weight 1
 .CE
 .SH "SEE ALSO"
 ttk:scrollbar(n)

@@ -190,14 +190,14 @@ On X11 platforms, one of the standard selections available is the
 it using Tk:
 .PP
 .CS
-set selContents [\fBselection get\fR \-selection SECONDARY]
+set selContents [\fBselection get\fR -selection SECONDARY]
 .CE
 .PP
 Many different types of data may be available for a selection; the
 special type \fBTARGETS\fR allows you to get a list of available types:
 .PP
 .CS
-foreach type [\fBselection get\fR \-type TARGETS] {
+foreach type [\fBselection get\fR -type TARGETS] {
    puts "Selection PRIMARY supports type $type"
 }
 .CE
@@ -207,7 +207,7 @@ data for the selection. Then you have to claim the selection...
 .CS
 # Set up the data handler ready for incoming requests
 set foo "This is a string with some data in it... blah blah"
-\fBselection handle\fR \-selection SECONDARY . getData
+\fBselection handle\fR -selection SECONDARY . getData
 proc getData {offset maxChars} {
    puts "Retrieving selection starting at $offset"
    return [string range $::foo $offset [expr {$offset+$maxChars-1}]]
@@ -215,7 +215,7 @@ proc getData {offset maxChars} {
 
 # Now we grab the selection itself
 puts "Claiming selection"
-\fBselection own\fR \-command lost \-selection SECONDARY .
+\fBselection own\fR -command lost -selection SECONDARY .
 proc lost {} {
    puts "Lost selection"
 }

@@ -17,6 +17,7 @@ text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hype
 \fBtk_textCopy\fI pathName\fR
 \fBtk_textCut\fI pathName\fR
 \fBtk_textPaste\fI pathName\fR
+.fi
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
@@ -415,11 +416,13 @@ individual tags using the
 widget command. If a character has been tagged, then the display options
 associated with the tag override the default display style. The following
 options are currently supported for tags:
+.\" OPTION: -background
 .TP
 \fB\-background \fIcolor\fR
 .
 \fIColor\fR specifies the background color to use for characters associated
 with the tag. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.\" OPTION: -bgstipple
 .TP
 \fB\-bgstipple \fIbitmap\fR
 .
@@ -427,18 +430,21 @@ with the tag. It may have any of the forms accepted by \fBTk_GetColor\fR.
 background. It may have any of the forms accepted by \fBTk_GetBitmap\fR. If
 \fIbitmap\fR has not been specified, or if it is specified as an empty string,
 then a solid fill will be used for the background.
+.\" OPTION: -borderwidth
 .TP
 \fB\-borderwidth \fIpixels\fR
 .
 \fIPixels\fR specifies the width of a border to draw around the tag using any
 of the forms accepted by \fBTk_GetPixels\fR. This option should be used in
 conjunction with the \fB\-relief\fR option to provide the desired border.
+.\" OPTION: -elide
 .TP
 \fB\-elide \fIboolean\fR
 .
 \fIElide\fR specifies whether the data should be elided. Elided data
 (characters, images, embedded windows, etc.) is not displayed and takes no
 space on screen, but further on behaves just as normal data.
+.\" OPTION: -fgstipple
 .TP
 \fB\-fgstipple \fIbitmap\fR
 .
@@ -447,17 +453,20 @@ text and other foreground information such as underlines. It may have any of
 the forms accepted by \fBTk_GetBitmap\fR. If \fIbitmap\fR has not been
 specified, or if it is specified as an empty string, then a solid fill will be
 used.
+.\" OPTION: -font
 .TP
 \fB\-font \fIfontName\fR
 .
 \fIFontName\fR is the name of a font to use for drawing characters. It may
 have any of the forms accepted by \fBTk_GetFont\fR.
+.\" OPTION: -foreground
 .TP
 \fB\-foreground \fIcolor\fR
 .
 \fIColor\fR specifies the color to use when drawing text and other foreground
 information such as underlines. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
+.\" OPTION: -justify
 .TP
 \fB\-justify \fIjustify\fR
 .
@@ -466,6 +475,7 @@ option has been specified, then \fIjustify\fR determines how to justify the
 line. It must be one of \fBleft\fR, \fBright\fR, or \fBcenter\fR. If a line
 wraps, then the justification for each line on the display is determined by
 the first non-elided character of that display line.
+.\" OPTION: -lmargin1
 .TP
 \fB\-lmargin1 \fIpixels\fR
 .
@@ -475,6 +485,7 @@ should be indented from the left edge of the window. \fIPixels\fR may have any
 of the standard forms for screen distances. If a line of text wraps, this
 option only applies to the first line on the display; the \fB\-lmargin2\fR
 option controls the indentation for subsequent lines.
+.\" OPTION: -lmargin2
 .TP
 \fB\-lmargin2 \fIpixels\fR
 .
@@ -485,6 +496,7 @@ much the line should be indented from the left edge of the window.
 \fIPixels\fR may have any of the standard forms for screen distances. This
 option is only used when wrapping is enabled, and it only applies to the
 second and later display lines for a text line.
+.\" OPTION: -lmargincolor
 .TP
 \fB\-lmargincolor \fIcolor\fR
 .
@@ -495,6 +507,7 @@ contain characters because they are indented by \fB\-lmargin1\fR or
 specified as an empty string, then the color used is specified by the
 \fB\-background\fR tag option (or, if this is also unspecified, by the
 \fB\-background\fR widget option).
+.\" OPTION: -offset
 .TP
 \fB\-offset \fIpixels\fR
 .
@@ -503,12 +516,14 @@ vertically from the baseline of the overall line, in pixels. For example, a
 positive offset can be used for superscripts and a negative offset can be used
 for subscripts. \fIPixels\fR may have any of the standard forms for screen
 distances.
+.\" OPTION: -overstrike
 .TP
 \fB\-overstrike \fIboolean\fR
 .
 Specifies whether or not to draw a horizontal rule through the middle of
 characters. \fIBoolean\fR may have any of the forms accepted by
 \fBTcl_GetBoolean\fR.
+.\" OPTION: -overstrikefg
 .TP
 \fB\-overstrikefg \fIcolor\fR
 .
@@ -516,6 +531,7 @@ characters. \fIBoolean\fR may have any of the forms accepted by
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
 specified by the \fB\-foreground\fR tag option is used.
+.\" OPTION: -relief
 .TP
 \fB\-relief \fIrelief\fR
 .
@@ -523,6 +539,7 @@ specified by the \fB\-foreground\fR tag option is used.
 of the forms accepted by \fBTk_GetRelief\fR. This option is used in
 conjunction with the \fB\-borderwidth\fR option to enable to the desired
 border appearance.
+.\" OPTION: -rmargin
 .TP
 \fB\-rmargin \fIpixels\fR
 .
@@ -533,6 +550,7 @@ leave between the end of the line and the right edge of the window.
 option is only used when wrapping is enabled. If a text line wraps, the right
 margin for each line on the display is determined by the first non-elided
 character of that display line.
+.\" OPTION: -rmargincolor
 .TP
 \fB\-rmargincolor \fIcolor\fR
 .
@@ -542,38 +560,46 @@ have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
 used is specified by the \fB\-background\fR tag option (or, if this is also
 unspecified, by the \fB\-background\fR widget option).
+.\" OPTION: -selectbackground
 .TP
 \fB\-selectbackground \fIcolor\fR
+.
 \fIColor\fR specifies the background color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
 string, then the color specified by the \fB\-background\fR tag option is
 used.
+.\" OPTION: -selectforeground
 .TP
 \fB\-selectforeground \fIcolor\fR
+.
 \fIColor\fR specifies the foreground color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
 string, then the color specified by the \fB\-foreground\fR tag option is
 used.
+.\" OPTION: -spacing1
 .TP
 \fB\-spacing1 \fIpixels\fR
 .
 \fIPixels\fR specifies how much additional space should be left above each
 text line, using any of the standard forms for screen distances. If a line
 wraps, this option only applies to the first line on the display.
+.\" OPTION: -spacing2
 .TP
 \fB\-spacing2 \fIpixels\fR
 .
 For lines that wrap, this option specifies how much additional space to leave
 between the display lines for a single text line. \fIPixels\fR may have any of
 the standard forms for screen distances.
+.\" OPTION: -spacing3
 .TP
 \fB\-spacing3 \fIpixels\fR
 .
 \fIPixels\fR specifies how much additional space should be left below each
 text line, using any of the standard forms for screen distances. If a line
 wraps, this option only applies to the last line on the display.
+.\" OPTION: -tabs
 .TP
 \fB\-tabs \fItabList\fR
 .
@@ -585,6 +611,7 @@ unspecified for the tag (the default). If the option is specified as a
 non-empty string that is an empty list, such as \fB\-tags\0{\0}\fR, then it
 requests default 8-character tabs as described for the \fB\-tags\fR widget
 option.
+.\" OPTION: -tabstyle
 .TP
 \fB\-tabstyle \fIstyle\fR
 .
@@ -593,11 +620,13 @@ tabbing to use for the text widget. This option only applies to a display line
 if it applies to the first non-elided character on that display line. If this
 option is specified as an empty string, it cancels the option, leaving it
 unspecified for the tag (the default).
+.\" OPTION: -underline
 .TP
 \fB\-underline \fIboolean\fR
 .
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
+.\" OPTION: -underlinefg
 .TP
 \fB\-underlinefg \fIcolor\fR
 .
@@ -605,6 +634,7 @@ characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
 specified by the \fB\-foreground\fR tag option is used.
+.\" OPTION: -wrap
 .TP
 \fB\-wrap \fImode\fR
 .
@@ -706,6 +736,7 @@ When an embedded window is added to a text widget with the \fIpathName
 associated with it. These options may be modified later with the \fIpathName
 \fBwindow configure\fR widget command. The following options are currently
 supported:
+.\" OPTION: -align
 .TP
 \fB\-align \fIwhere\fR
 .
@@ -716,6 +747,7 @@ line), \fBcenter\fR (center the window within the range of the line),
 \fBbottom\fR (align the bottom of the window with the bottom of the line's
 area), or \fBbaseline\fR (align the bottom of the window with the baseline of
 the line).
+.\" OPTION: -create
 .TP
 \fB\-create \fIscript\fR
 .
@@ -728,18 +760,21 @@ the name of that window as its result. Two substitutions will be performed in
 the parent text widget, and \fI%%\fR will be substituted by a single \fI%\fR.
 If the annotation's window should ever be deleted, \fIscript\fR will be
 evaluated again the next time the annotation is displayed.
+.\" OPTION: -padx
 .TP
 \fB\-padx \fIpixels\fR
 .
 \fIPixels\fR specifies the amount of extra space to leave on each side of the
 embedded window. It may have any of the usual forms defined for a screen
 distance.
+.\" OPTION: -pady
 .TP
 \fB\-pady \fIpixels\fR
 .
 \fIPixels\fR specifies the amount of extra space to leave on the top and on
 the bottom of the embedded window. It may have any of the usual forms defined
 for a screen distance.
+.\" OPTION: -stretch
 .TP
 \fB\-stretch \fIboolean\fR
 .
@@ -748,6 +783,7 @@ line in which it is displayed, this option can be used to specify whether the
 window should be stretched vertically to fill its line. If the \fB\-pady\fR
 option has been specified as well, then the requested padding will be retained
 even if the window is stretched.
+.\" OPTION: -window
 .TP
 \fB\-window \fIpathName\fR
 .
@@ -796,6 +832,7 @@ When an embedded image is added to a text widget with the \fIpathName \fBimage
 create\fR widget command, several configuration options may be associated with
 it. These options may be modified later with the \fIpathName \fBimage
 configure\fR widget command. The following options are currently supported:
+.\" OPTION: -align
 .TP
 \fB\-align \fIwhere\fR
 .
@@ -805,11 +842,13 @@ of the values \fBtop\fR (align the top of the image with the top of the line),
 \fBcenter\fR (center the image within the range of the line), \fBbottom\fR
 (align the bottom of the image with the bottom of the line's area), or
 \fBbaseline\fR (align the bottom of the image with the baseline of the line).
+.\" OPTION: -image
 .TP
 \fB\-image \fIimage\fR
 .
 Specifies the name of the Tk image to display in the annotation. If
 \fIimage\fR is not a valid Tk image, then an error is returned.
+.\" OPTION: -name
 .TP
 \fB\-name \fIImageName\fR
 .
@@ -817,12 +856,14 @@ Specifies the name by which this image instance may be referenced in the text
 widget. If \fIImageName\fR is not supplied, then the name of the Tk image is
 used instead. If the \fIimageName\fR is already in use, \fI#nn\fR is appended
 to the end of the name as described above.
+.\" OPTION: -padx
 .TP
 \fB\-padx \fIpixels\fR
 .
 \fIPixels\fR specifies the amount of extra space to leave on each side of the
 embedded image. It may have any of the usual forms defined for a screen
 distance.
+.\" OPTION: -pady
 .TP
 \fB\-pady \fIpixels\fR
 .
@@ -1250,11 +1291,13 @@ the text, mark name, tag name, image name, or window name. The \fIindex\fR
 information is the index of the start of the text, mark, tag transition, image
 or window. One or more of the following switches (or abbreviations thereof)
 may be specified to control the dump:
+.\" OPTION: -all
 .TP
 \fB\-all\fR
 .
 Return information about all elements: text, marks, tags, images and windows.
 This is the default.
+.\" OPTION: -command
 .TP
 \fB\-command \fIcommand\fR
 .
@@ -1262,20 +1305,24 @@ Instead of returning the information as the result of the dump operation,
 invoke the \fIcommand\fR on each element of the text widget within the range.
 The command has three arguments appended to it before it is evaluated: the
 \fIkey\fR, \fIvalue\fR, and \fIindex\fR.
+.\" OPTION: -image
 .TP
 \fB\-image\fR
 .
 Include information about images in the dump results.
+.\" OPTION: -mark
 .TP
 \fB\-mark\fR
 .
 Include information about marks in the dump results.
+.\" OPTION: -tag
 .TP
 \fB\-tag\fR
 .
 Include information about tag transitions in the dump results. Tag information
 is returned as \fBtagon\fR and \fBtagoff\fR elements that indicate the begin
 and end of each range of each tag, respectively.
+.\" OPTION: -text
 .TP
 \fB\-text\fR
 .
@@ -1284,6 +1331,7 @@ to the next element or the end of range indicated by \fIindex2\fR. A text
 element does not span newlines. A multi-line block of text that contains no
 marks or tag transitions will still be dumped as a set of text segments that
 each end with a newline. The newline is part of the value.
+.\" OPTION: -window
 .TP
 \fB\-window\fR
 .
@@ -1570,12 +1618,14 @@ first character in the match is returned as result; otherwise an empty string
 is returned. One or more of the following switches (or abbreviations thereof)
 may be specified to control the search:
 .RS
+.\" OPTION: -forwards
 .TP
 \fB\-forwards\fR
 .
 The search will proceed forward through the text, finding the first matching
 range starting at or after the position given by \fIindex\fR. This is the
 default.
+.\" OPTION: -backwards
 .TP
 \fB\-backwards\fR
 .
@@ -1585,11 +1635,13 @@ allowed to be at \fIindex\fR). Note that, for a variety of reasons, backwards
 searches can be substantially slower than forwards searches (particularly when
 using \fB\-regexp\fR), so it is recommended that performance-critical code use
 forward searches.
+.\" OPTION: -exact
 .TP
 \fB\-exact\fR
 .
 Use exact matching: the characters in the matching range must be identical to
 those in \fIpattern\fR. This is the default.
+.\" OPTION: -regexp
 .TP
 \fB\-regexp\fR
 .
@@ -1601,6 +1653,7 @@ details). The default matching automatically passes both the
 \fB\-nolinestop\fR is used), so that \fI^$\fR match beginning and end of line,
 and \fI.\fR, \fI[^\fR sequences will never match the newline character
 \fI\en\fR.
+.\" OPTION: -nolinestop
 .TP
 \fB\-nolinestop\fR
 .
@@ -1609,10 +1662,12 @@ This allows \fI.\fR and \fI[^\fR sequences to match the newline character
 details). This option is only meaningful if \fB\-regexp\fR is also given, and
 an error will be thrown otherwise. For example, to match the entire text, use
 .QW "\fIpathName \fBsearch \-nolinestop \-regexp\fR \N'34'.*\N'34' 1.0" .
+.\" OPTION: -nocase
 .TP
 \fB\-nocase\fR
 .
 Ignore case differences between the pattern and the text.
+.\" OPTION: -count
 .TP
 \fB\-count\fI varName\fR
 .
@@ -1623,6 +1678,7 @@ or windows in the matching range (and there are no elided characters if
 \fB\-elide\fR is not given), this is equivalent to the number of characters
 matched. In either case, the range \fImatchIdx\fR to \fImatchIdx + $count
 chars\fR will return the entire matched text.
+.\" OPTION: -all
 .TP
 \fB\-all\fR
 .
@@ -1642,6 +1698,7 @@ will just match twice, once for each word, and matching
 against
 .QW ZooZooZoo
 will just match once.
+.\" OPTION: -overlap
 .TP
 \fB\-overlap\fR
 .
@@ -1659,6 +1716,7 @@ against
 .QW ZooZooZoo
 will now match twice. An error will be thrown if this switch is used without
 \fB\-all\fR.
+.\" OPTION: -strictlimits
 .TP
 \fB\-strictlimits\fR
 .
@@ -1666,10 +1724,12 @@ When performing any search, the normal behaviour is that the start and stop
 limits are checked with respect to the start of the matching text. With the
 \fB\-strictlimits\fR flag, the entire matching range must lie inside the start
 and stop limits specified for the match to be valid.
+.\" OPTION: -elide
 .TP
 \fB\-elide\fR
 .
 Find elided (hidden) text as well. By default only displayed text is searched.
+.\" OPTION: --
 .TP
 \fB\-\|\-\fR
 .
@@ -2285,7 +2345,7 @@ practice this is a rare problem, but it can occur, for example:
 .CS
 pack [\fBtext\fR .t]
 \&.t insert 1.0 "aaaa\enbbbb\encccc\enbbbb\enaaaa\en"
-\&.t search \-regexp \-\- {(a+|b+\enc+\enb+)+\ena+} 1.0
+\&.t search -regexp -- {(a+|b+\enc+\enb+)+\ena+} 1.0
 .CE
 will not find a match when one exists of 19 characters starting from the first
 .QW b .
@@ -2301,7 +2361,7 @@ portions of the widget. For example:
 .CS
 pack [\fBtext\fR .t]
 \&.t insert 1.0 "aaaa\enbbbb\enbbbb\enbbbb\enbbbb\\n"
-\&.t search \-regexp \-backward \-\- {b+\en|a+\en(b+\en)+} end
+\&.t search -regexp -backward -- {b+\en|a+\en(b+\en)+} end
 .CE
 matches at
 .QW 5.0
