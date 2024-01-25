@@ -371,7 +371,7 @@ LineCoords(
     double *coordPtr;
 
     if (objc == 0) {
-	int numCoords;
+	Tcl_Size numCoords;
 	Tcl_Obj *subobj, *obj = Tcl_NewObj();
 
 	numCoords = 2*linePtr->numPoints;
@@ -380,11 +380,11 @@ LineCoords(
 	} else {
 	    coordPtr = linePtr->coordPtr;
 	}
-	for (i = 0; i < (Tcl_Size)numCoords; i++, coordPtr++) {
+	for (i = 0; i < numCoords; i++, coordPtr++) {
 	    if (i == 2) {
 		coordPtr = linePtr->coordPtr+2;
 	    }
-	    if ((linePtr->lastArrowPtr != NULL) && (i == ((Tcl_Size)numCoords-2))) {
+	    if ((linePtr->lastArrowPtr != NULL) && (i == (numCoords-2))) {
 		coordPtr = linePtr->lastArrowPtr;
 	    }
 	    subobj = Tcl_NewDoubleObj(*coordPtr);

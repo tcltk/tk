@@ -838,19 +838,19 @@ static int PanedSashposCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Paned *pw = (Paned *)recordPtr;
-    int sashIndex, position = -1;
+    Tcl_WideInt sashIndex, position = -1;
     Pane *pane;
 
     if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2,objv, "index ?newpos?");
 	return TCL_ERROR;
     }
-    if (Tcl_GetIntFromObj(interp, objv[2], &sashIndex) != TCL_OK) {
+    if (Tcl_GetWideIntFromObj(interp, objv[2], &sashIndex) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (sashIndex < 0 || (Tcl_Size)sashIndex + 1 >= Ttk_NumberContent(pw->paned.mgr)) {
+    if (sashIndex < 0 || sashIndex >= Ttk_NumberContent(pw->paned.mgr) - 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "sash index %d out of range", sashIndex));
+	    "sash index %" TCL_SIZE_MODIFIER "d out of range", sashIndex));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);
 	return TCL_ERROR;
     }
@@ -863,7 +863,7 @@ static int PanedSashposCommand(
     }
     /* else -- set new sash position */
 
-    if (Tcl_GetIntFromObj(interp, objv[3], &position) != TCL_OK) {
+    if (Tcl_GetWideIntFromObj(interp, objv[3], &position) != TCL_OK) {
 	return TCL_ERROR;
     }
 
