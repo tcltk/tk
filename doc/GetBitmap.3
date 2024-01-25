@@ -15,25 +15,26 @@ Tk_AllocBitmapFromObj, Tk_GetBitmap, Tk_GetBitmapFromObj, Tk_DefineBitmap, Tk_Na
 \fB#include <tk.h>\fR
 .sp
 Pixmap
-\fBTk_AllocBitmapFromObj(\fIinterp, tkwin, objPtr\fB)\fR
+\fBTk_AllocBitmapFromObj\fR(\fIinterp, tkwin, objPtr\fR)
 .sp
 Pixmap
-\fBTk_GetBitmap(\fIinterp, tkwin, info\fB)\fR
+\fBTk_GetBitmap\fR(\fIinterp, tkwin, info\fR)
 .sp
 Pixmap
-\fBTk_GetBitmapFromObj(\fItkwin, objPtr\fB)\fR
+\fBTk_GetBitmapFromObj\fR(\fItkwin, objPtr\fR)
 .sp
 int
-\fBTk_DefineBitmap(\fIinterp, name, source, width, height\fB)\fR
+\fBTk_DefineBitmap\fR(\fIinterp, name, source, width, height\fR)
 .sp
 const char *
-\fBTk_NameOfBitmap(\fIdisplay, bitmap\fB)\fR
+\fBTk_NameOfBitmap\fR(\fIdisplay, bitmap\fR)
 .sp
-\fBTk_SizeOfBitmap(\fIdisplay, bitmap, widthPtr, heightPtr\fB)\fR
+\fBTk_SizeOfBitmap\fR(\fIdisplay, bitmap, widthPtr, heightPtr\fR)
 .sp
-\fBTk_FreeBitmapFromObj(\fItkwin, objPtr\fB)\fR
+\fBTk_FreeBitmapFromObj\fR(\fItkwin, objPtr\fR)
 .sp
-\fBTk_FreeBitmap(\fIdisplay, bitmap\fB)\fR
+\fBTk_FreeBitmap\fR(\fIdisplay, bitmap\fR)
+.fi
 .SH ARGUMENTS
 .AS "unsigned long" *pixelPtr
 .AP Tcl_Interp *interp in
@@ -80,98 +81,74 @@ creates a new one otherwise.  \fIObjPtr\fR's value must have one
 of the following forms:
 .TP 20
 \fB@\fIfileName\fR
+.
 \fIFileName\fR must be the name of a file containing a bitmap
 description in the standard X11 format.
 .TP 20
 \fIname\fR
+.
 \fIName\fR must be the name of a bitmap defined previously with
 a call to \fBTk_DefineBitmap\fR.  The following names are pre-defined
 by Tk:
 .RS
-.TP 12
-\fBerror\fR
+.IP \fBerror\fR 12
 The international
 .QW don't
 symbol:  a circle with a diagonal line across it.
-.TP 12
-\fBgray75\fR
+.IP \fBgray75\fR 12
 75% gray: a checkerboard pattern where three out of four bits are on.
-.TP 12
-\fBgray50\fR
+.IP \fBgray50\fR 12
 50% gray: a checkerboard pattern where every other bit is on.
-.TP 12
-\fBgray25\fR
+.IP \fBgray25\fR 12
 25% gray: a checkerboard pattern where one out of every four bits is on.
-.TP 12
-\fBgray12\fR
+.IP \fBgray12\fR 12
 12.5% gray: a pattern where one-eighth of the bits are on, consisting of
 every fourth pixel in every other row.
-.TP 12
-\fBhourglass\fR
+.IP \fBhourglass\fR 12
 An hourglass symbol.
-.TP 12
-\fBinfo\fR
+.IP \fBinfo\fR 12
 A large letter
 .QW i .
-.TP 12
-\fBquesthead\fR
+.IP \fBquesthead\fR 12
 The silhouette of a human head, with a question mark in it.
-.TP 12
-\fBquestion\fR
+.IP \fBquestion\fR 12
 A large question-mark.
-.TP 12
-\fBwarning\fR
+.IP \fBwarning\fR 12
 A large exclamation point.
 .PP
 In addition, the following pre-defined names are available only on the
 \fBMacintosh\fR platform:
-.TP 12
-\fBdocument\fR
+.IP \fBdocument\fR 12
 A generic document.
-.TP 12
-\fBstationery\fR
+.IP \fBstationery\fR 12
 Document stationery.
-.TP 12
-\fBedition\fR
+.IP \fBedition\fR 12
 The \fIedition\fR symbol.
-.TP 12
-\fBapplication\fR
+.IP \fBapplication\fR 12
 Generic application icon.
-.TP 12
-\fBaccessory\fR
+.IP \fBaccessory\fR 12
 A desk accessory.
-.TP 12
-\fBfolder\fR
+.IP \fBfolder\fR 12
 Generic folder icon.
-.TP 12
-\fBpfolder\fR
+.IP \fBpfolder\fR 12
 A locked folder.
-.TP 12
-\fBtrash\fR
+.IP \fBtrash\fR 12
 A trash can.
-.TP 12
-\fBfloppy\fR
+.IP \fBfloppy\fR 12
 A floppy disk.
-.TP 12
-\fBramdisk\fR
+.IP \fBramdisk\fR 12
 A floppy disk with chip.
-.TP 12
-\fBcdrom\fR
+.IP \fBcdrom\fR 12
 A cd disk icon.
-.TP 12
-\fBpreferences\fR
+.IP \fBpreferences\fR 12
 A folder with prefs symbol.
-.TP 12
-\fBquerydoc\fR
+.IP \fBquerydoc\fR 12
 A database document icon.
-.TP 12
-\fBstop\fR
+.IP \fBstop\fR 12
 A stop sign.
-.TP 12
-\fBnote\fR
+.IP \fBnote\fR 12
 A face with balloon words.
-.TP 12
-\fBcaution\fR
+.IP \fBcaution\fR 12
 A triangle with an exclamation point.
 .RE
 .LP
@@ -210,7 +187,7 @@ describe the bitmap.
 (e.g. a bitmap named \fInameId\fR has already been defined) then
 \fBTCL_ERROR\fR is returned and an error message is left in
 interpreter \fIinterp\fR's result.
-Note:  \fBTk_DefineBitmap\fR expects the memory pointed to by
+Note that \fBTk_DefineBitmap\fR expects the memory pointed to by
 \fIsource\fR to be static:  \fBTk_DefineBitmap\fR does not make
 a private copy of this memory, but uses the bytes pointed to
 by \fIsource\fR later in calls to \fBTk_AllocBitmapFromObj\fR or

@@ -17,10 +17,12 @@ Tk_CreateItemType, Tk_GetItemTypes \- define new kind of canvas item
 .sp
 Tk_ItemType *
 \fBTk_GetItemTypes\fR()
+.fi
 .SH ARGUMENTS
 .AS Tk_ItemType *typePtr
 .AP Tk_ItemType *typePtr in
 Structure that defines the new type of canvas item.
+Note that this is not \fIconst\fR; Tk may write to these structures.
 .BE
 .SH INTRODUCTION
 .PP
@@ -82,7 +84,7 @@ typedef struct Tk_ItemType {
     Tk_ItemSelectionProc *\fIselectionProc\fR;
     Tk_ItemInsertProc *\fIinsertProc\fR;
     Tk_ItemDCharsProc *\fIdCharsProc\fR;
-    Tk_ItemType *\fInextPtr\fR;
+    struct Tk_ItemType *\fInextPtr\fR;
 .VS "8.7, TIP164"
     Tk_ItemRotateProc *\fIrotateProc\fR;
 .VE "8.7, TIP164"
@@ -113,7 +115,7 @@ the first field.
 For example, the item record for bitmap items is defined as follows:
 .PP
 .CS
-typedef struct BitmapItem {
+typedef struct {
     Tk_Item \fIheader\fR;
     double \fIx\fR, \fIy\fR;
     Tk_Anchor \fIanchor\fR;
@@ -250,7 +252,8 @@ to retrieve option information in the \fBitemcget\fR and
 \fBitemconfigure\fR widget commands.
 \fItypePtr\->configSpecs\fR must point to the configuration table
 for this type.
-Note: Tk provides a custom option type \fBtk_CanvasTagsOption\fR
+.PP
+Note that Tk provides a custom option type \fBtk_CanvasTagsOption\fR
 for implementing the \fB\-tags\fR option; see an existing type
 manager for an example of how to use it in \fIconfigSpecs\fR.
 .SS CONFIGPROC
@@ -560,8 +563,8 @@ they used to have coordinates \fIx\fR and \fIy\fR, they will have new
 coordinates \fIx\(fm\fR and \fIy\(fm\fR, where
 .PP
 .CS
-\fIrelX\fR = \fIx\fR - \fIoriginX\fR
-\fIrelY\fR = \fIy\fR - \fIoriginY\fR
+\fIrelX\fR = \fIx\fR \(mi \fIoriginX\fR
+\fIrelY\fR = \fIy\fR \(mi \fIoriginY\fR
 \fIx\(fm\fR = \fIoriginX\fR + \fIrelX\fR \(mu cos(\fIangleRad\fR) + \fIrelY\fR \(mu sin(\fIangleRad\fR)
 \fIy\(fm\fR = \fIoriginY\fR \(mi \fIrelX\fR \(mu sin(\fIangleRad\fR) + \fIrelY\fR \(mu cos(\fIangleRad\fR)
 .CE

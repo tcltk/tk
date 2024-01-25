@@ -11,11 +11,11 @@
 .SH NAME
 tk_setPalette, tk_bisque \- Modify the Tk color palette
 .SH SYNOPSIS
+.nf
 \fBtk_setPalette \fIbackground\fR
-.sp
 \fBtk_setPalette \fIname value \fR?\fIname value ...\fR?
-.sp
 \fBtk_bisque\fR
+.fi
 .BE
 .SH DESCRIPTION
 .PP

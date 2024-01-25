@@ -136,10 +136,10 @@ This shows how to build part of a GUI for a hamburger vendor. The
 the kinds of things that the choices are being made over.
 .PP
 .CS
-grid [\fBlabelframe\fR .burger \-text "Burger"] \e
-     [\fBlabelframe\fR .bun    \-text "Bun"] \-sticky news
-grid [\fBlabelframe\fR .cheese \-text "Cheese Option"] \e
-     [\fBlabelframe\fR .pickle \-text "Pickle Option"] \-sticky news
+grid [\fBlabelframe\fR .burger -text "Burger"] \e
+     [\fBlabelframe\fR .bun    -text "Bun"] -sticky news
+grid [\fBlabelframe\fR .cheese -text "Cheese Option"] \e
+     [\fBlabelframe\fR .pickle -text "Pickle Option"] -sticky news
 foreach {type name val} {
     burger Beef    beef
     burger Lamb    lamb
@@ -161,9 +161,9 @@ foreach {type name val} {
     pickle Onions  onion
     pickle Chili   chili
 } {
-    set w [radiobutton .$type.$val \-text $name \-anchor w \e
-            \-variable $type \-value $val]
-    pack $w \-side top \-fill x
+    set w [radiobutton .$type.$val -text $name -anchor w \e
+            -variable $type -value $val]
+    pack $w -side top -fill x
 }
 set burger beef
 set bun    white

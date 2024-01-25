@@ -95,37 +95,28 @@ Many of the widget commands for listboxes take one or more indices
 as arguments.
 An index specifies a particular element of the listbox, in any of
 the following ways:
-.TP 12
-\fInumber\fR
-.
+.IP \fInumber\fR 12
 Specifies the element as a numerical index, where 0 corresponds
 to the first element in the listbox.
-.TP 12
-\fBactive\fR
-.
+.IP \fBactive\fR 12
 Indicates the element that has the location cursor.  This element
 will be displayed as specified by \fB\-activestyle\fR when the listbox
 has the keyboard focus, and it is specified with the \fBactivate\fR
 widget command.
-.TP 12
-\fBanchor\fR
-.
+.IP \fBanchor\fR 12
 Indicates the anchor point for the selection, which is set with the
 \fBselection anchor\fR widget command.
-.TP 12
-\fBend\fR
-.
+.IP \fBend\fR 12
 Indicates the end of the listbox.
 For most commands this refers to the last element in the listbox,
 but for a few commands such as \fBindex\fR and \fBinsert\fR
 it refers to the element just after the last one.
-.TP 12
-\fB@\fIx\fB,\fIy\fR
+.IP \fB@\fIx\fB,\fIy\fR 12
 Indicates the element that covers the point in the listbox window
 specified by \fIx\fR and \fIy\fR (in pixel coordinates).  If no
 element covers that point, then the closest element to that
 point is used.
-.LP
+.PP
 Indexes support the same simple interpretation as
 for the command \fBstring index\fR, with simple integer index
 arithmetic and indexing relative to \fBend\fR.
@@ -260,22 +251,26 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string. The following options
 are currently supported for items:
 .RS
+.\" OPTION: -background
 .TP
 \fB\-background \fIcolor\fR
 .
 \fIColor\fR specifies the background color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.\" OPTION: -foreground
 .TP
 \fB\-foreground \fIcolor\fR
 .
 \fIColor\fR specifies the foreground color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.\" OPTION: -selectbackground
 .TP
 \fB\-selectbackground \fIcolor\fR
 .
 \fIcolor\fR specifies the background color to use when displaying the
 item while it is selected. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
+.\" OPTION: -selectforeground
 .TP
 \fB\-selectforeground \fIcolor\fR
 .
@@ -426,6 +421,7 @@ It can take any of the following forms:
 .RS
 .TP
 \fIpathName \fByview\fR
+.
 Returns a list containing two elements, both of which are real fractions
 between 0 and 1.
 The first element gives the position of the listbox element at the

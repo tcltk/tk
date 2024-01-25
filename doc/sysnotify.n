@@ -7,6 +7,7 @@
 '\"
 .TH tk sysnotify n "" Tk "Tk Built-In Commands"
 .so man.macros
+.BS
 .SH NAME
 sysnotify \- Creates a notification window with a title and message.
 .SH SYNOPSIS

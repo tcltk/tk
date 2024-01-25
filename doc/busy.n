@@ -30,19 +30,15 @@
 .SH NAME
 busy \- Make Tk widgets busy, temporarily blocking user interactions
 .SH SYNOPSIS
+.nf
 \fBtk busy\fI window \fR?\fIoptions\fR?
-.sp
 \fBtk busy busywindow \fIwindow\fR
-.sp
 \fBtk busy hold\fI window \fR?\fIoptions\fR?
-.sp
 \fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
-.sp
 \fBtk busy forget\fI window \fR?\fIwindow \fR?...
-.sp
 \fBtk busy current\fR ?\fIpattern\fR?
-.sp
 \fBtk busy status \fIwindow\fR
+.fi
 .BE
 .SH DESCRIPTION
 .PP
@@ -116,7 +112,7 @@ The busy window has a configurable cursor. You can change the busy cursor
 using the \fBconfigure\fR operation.
 .PP
 .CS
-\fBtk busy\fR configure .top \-cursor "watch"
+\fBtk busy\fR configure .top -cursor "watch"
 .CE
 .PP
 Destroying the widget will also clean up any resources allocated by the \fBtk
@@ -203,6 +199,7 @@ command returns the pathname of the busy window that was created (i.e. the
 transparent window shielding the window appearing busy). The following
 configuration options are valid:
 .RS
+.\" OPTION: -cursor
 .TP
 \fB\-cursor \fIcursorName\fR
 .

@@ -41,8 +41,8 @@ If fewer than four elements are specified,
 \fIbottom\fR defaults to \fItop\fR,
 \fIright\fR defaults to \fIleft\fR, and
 \fItop\fR defaults to \fIleft\fR.
-In other words, a list of three numbers specify the left, vertical, and right padding;
-a list of two numbers specify the horizontal and the vertical padding;
+In other words, a list of three numbers specify the left, vertical, and right
+padding; a list of two numbers specify the horizontal and the vertical padding;
 a single number specifies the same padding all the way around the widget.
 .OP \-width width Width
 If present and greater than zero,
@@ -144,9 +144,11 @@ The following subcommands are supported:
 .RS
 .TP
 \fIpathname \fBidentify element\fI x y\fR
+.
 Returns the name of the element at the specified location.
 .TP
 \fIpathname \fBidentify tab\fI x y\fR
+.
 Returns the index of the tab at the specified location.
 .RE
 .\" METHOD: index
@@ -219,8 +221,8 @@ virtual event after a new tab is selected.
 .SH "EXAMPLE"
 .CS
 pack [\fBttk::notebook\fR .nb]
-\&.nb add [frame .nb.f1] \-text "First tab"
-\&.nb add [frame .nb.f2] \-text "Second tab"
+\&.nb add [frame .nb.f1] -text "First tab"
+\&.nb add [frame .nb.f2] -text "Second tab"
 \&.nb select .nb.f2
 ttk::notebook::enableTraversal .nb
 .CE

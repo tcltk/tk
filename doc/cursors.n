@@ -101,6 +101,7 @@ The \fBnone\fR cursor can be specified to eliminate the cursor.
 .SH "PORTABILITY ISSUES"
 .TP
 \fBWindows\fR
+.
 On Windows systems, the following cursors are mapped to native cursors:
 .RS
 .CS
@@ -131,6 +132,7 @@ wait
 .RE
 .TP
 \fBMac OS X\fR
+.
 On Mac OS X systems, the following cursors are mapped to native cursors:
 .RS
 .CS
