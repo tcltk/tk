@@ -160,6 +160,7 @@ typedef struct StyleValues {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE or TEXT_WRAPMODE_WORD.*/
+    char locale[6];
 } StyleValues;
 
 /*
@@ -788,7 +789,7 @@ GetStyle(
     int fgPrio, fontPrio, fgStipplePrio;
     int underlinePrio, elidePrio, justifyPrio, offsetPrio;
     int lMargin1Prio, lMargin2Prio, rMarginPrio;
-    int lMarginColorPrio, rMarginColorPrio;
+    int lMarginColorPrio, rMarginColorPrio, localePrio;
     int spacing1Prio, spacing2Prio, spacing3Prio;
     int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
@@ -803,7 +804,7 @@ GetStyle(
     fgPrio = fontPrio = fgStipplePrio = -1;
     underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
-    lMarginColorPrio = rMarginColorPrio = -1;
+    lMarginColorPrio = rMarginColorPrio = -1; localePrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
     overstrikePrio = tabPrio = tabStylePrio = wrapPrio = -1;
     memset(&styleValues, 0, sizeof(StyleValues));
@@ -820,6 +821,10 @@ GetStyle(
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.elide = 0;
+    if (textPtr->locale) {
+	strncpy(styleValues.locale, Tcl_GetString(textPtr->locale), sizeof(styleValues.locale)-1);
+	styleValues.locale[sizeof(styleValues.locale)-1] = '\0';
+    }
     isSelected = 0;
 
     for (i = 0 ; i < numTags; i++) {
@@ -991,6 +996,12 @@ GetStyle(
 		&& (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
+	}
+	if ((tagPtr->locale)
+		&& (tagPtr->priority > localePrio)) {
+	    strncpy(styleValues.locale, Tcl_GetString(tagPtr->locale), sizeof(styleValues.locale) - 1);
+	    styleValues.locale[sizeof(styleValues.locale) - 1] = '\0';
+	    localePrio = tagPtr->priority;
 	}
     }
     if (tagPtrs != NULL) {
