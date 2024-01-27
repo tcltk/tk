@@ -2353,12 +2353,8 @@ test font-44.1 {TkFontGetPixels: size < 0} -setup {
 test font-44.2 {TkFontGetPoints: size >= 0} -setup {
     set oldscale [tk scaling]
 } -body {
-puts $oldscale
-puts [font actual {times 12}]
     set oldSize [font actual {times 12} -size]
-puts $oldSize
     tk scaling 0.5
-puts "[font actual {times 12}]"
     expr {[font actual {times 12} -size] == $oldSize}
 } -cleanup {
     tk scaling $oldscale
