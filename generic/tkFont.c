@@ -1329,6 +1329,7 @@ Tk_GetFontFromObj(
 	    FreeFontObj(objPtr);
 	    fontPtr = NULL;
 	} else if (Tk_Screen(tkwin) == fontPtr->screen) {
+	    fontPtr->resourceRefCount++;
 	    return (Tk_Font) fontPtr;
 	}
     }

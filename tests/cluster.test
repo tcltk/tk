@@ -122,7 +122,7 @@ test cluster-4.7 {::tk::startOfPreviousWord} -body {
 test cluster-4.8 {::tk::startOfPreviousWord} -body {
     ::tk::startOfPreviousWord "ab cd" {}
 } -result {}
-test cluster-4.9 {::tk::startOfPreviousWord} -body {
+test cluster-4.9 {::tk::startOfPreviousWord} -constraints needsTcl87 -body {
     ::tk::startOfPreviousWord "ab cd" end-1
 } -result 0
 
