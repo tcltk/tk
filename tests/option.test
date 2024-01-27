@@ -404,7 +404,7 @@ option read $option3
 test option-15.11 {database files} {option get . {x 4} color} brówn
 
 test option-16.1 {ReadOptionFile} -body {
-    set option4 [makeFile {} option.file3]
+    set option4 [makeFile {} option.file4]
     set file [open $option4 w]
     fconfigure $file -translation crlf
     puts $file "*x7: true\n*x8: false"
@@ -422,7 +422,7 @@ set opt162val {label {
 set opt162list [split $opt162val \n]
 
 test option-16.2 {ticket 766ef52f3} -body {
-    set option5 [makeFile {} option.file4]
+    set option5 [makeFile {} option.file5]
     set file [open $option5 w]
     fconfigure $file -translation crlf
     puts $file "*notok: $opt162list"
