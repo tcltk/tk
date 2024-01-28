@@ -3873,6 +3873,26 @@ test spinbox-25.1 {textvariable lives in a non-existing namespace} -setup {
 } -cleanup {
     destroy .s
 } -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
+    destroy .s
+    pack [spinbox .s]
+    update
+    set res {}
+} -body {
+    .s insert end "A sample text"
+    .s icursor end
+    event generate .s <<PrevWord>>  ; # shall move insert to index 9
+    .s delete insert end
+    lappend res [.s get]
+    .s delete 0 end
+    .s insert end "A sample text"
+    .s icursor 2
+    event generate .s <<NextWord>>  ; # shall move insert to index 9
+    .s delete 0 insert
+    lappend res [.s get]
+} -cleanup {
+    destroy .s
+} -result {{A sample } text}
 
 # Collected comments about lacks from the test
 # XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,
