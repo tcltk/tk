@@ -599,7 +599,8 @@ proc ::tk::EntryTranspose w {
 
 if {[tk windowingsystem] eq "win32"}  {
     proc ::tk::EntryNextWord {w start} {
-	if {[$w cget -show] ne ""} {
+        # the check on [winfo class] is because the spinbox also uses this proc
+        if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	    return end
 	}
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
@@ -613,7 +614,8 @@ if {[tk windowingsystem] eq "win32"}  {
     }
 } else {
     proc ::tk::EntryNextWord {w start} {
-	if {[$w cget -show] ne ""} {
+        # the check on [winfo class] is because the spinbox also uses this proc
+        if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	    return end
 	}
 	set pos [tcl_endOfWord [$w get] [$w index $start]]
@@ -634,7 +636,8 @@ if {[tk windowingsystem] eq "win32"}  {
 # start -	Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
-    if {[$w cget -show] ne ""} {
+    # the check on [winfo class] is because the spinbox also uses this proc
+    if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return 0
     }
     set pos [tcl_startOfPreviousWord [$w get] [$w index $start]]
