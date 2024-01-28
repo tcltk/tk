@@ -596,7 +596,8 @@ proc ::tk::EntryTranspose w {
 # start -	Position at which to start search.
 
 proc ::tk::EntryNextWord {w start} {
-    if {[$w cget -show] ne ""} {
+    # the check on [winfo class] is because the spinbox also uses this proc
+    if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return end
     }
     set pos [tk::endOfWord [$w get] [$w index $start]]
@@ -618,7 +619,8 @@ proc ::tk::EntryNextWord {w start} {
 # start -	Position at which to start search.
 
 proc ::tk::EntrySelectNextWord {w start} {
-    if {[$w cget -show] ne ""} {
+    # the check on [winfo class] is because the spinbox also uses this proc
+    if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return end
     }
     set pos [tk::endOfWord [$w get] [$w index $start]]
@@ -638,7 +640,8 @@ proc ::tk::EntrySelectNextWord {w start} {
 # start -	Position at which to start search.
 
 proc ::tk::EntryPreviousWord {w start} {
-    if {[$w cget -show] ne ""} {
+    # the check on [winfo class] is because the spinbox also uses this proc
+    if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return 0
     }
     set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
