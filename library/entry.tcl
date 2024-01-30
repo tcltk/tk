@@ -610,7 +610,7 @@ proc ::tk::EntryNextWord {w start} {
     return $pos
 }
 
-# ::tk::EntryNextWord --
+# ::tk::EntrySelectNextWord --
 # Returns the index of the next end-of-word position after a given
 # position in the text.
 #
