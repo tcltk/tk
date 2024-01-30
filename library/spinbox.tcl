@@ -175,8 +175,8 @@ bind Spinbox <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
-		[tk::endOfGlyphCluster [%W get] [%W index insert]]
+	%W delete [tk::startOfCluster [%W get] [%W index insert] [$w cget -locale]] \
+		[tk::endOfCluster [%W get] [%W index insert] [$w cget -locale]]
     }
 }
 bind Spinbox <BackSpace> {
