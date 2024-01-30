@@ -426,7 +426,6 @@ static const TkIntStubs tkIntStubs = {
     0, /* 121 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    0, /* 121 */ /* Dummy entry for stubs table backwards compatibility */
     TkpCreateNativeBitmap, /* 121 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
@@ -436,7 +435,6 @@ static const TkIntStubs tkIntStubs = {
     0, /* 122 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    0, /* 122 */ /* Dummy entry for stubs table backwards compatibility */
     TkpDefineNativeBitmaps, /* 122 */
 #endif /* AQUA */
     0, /* 123 */
@@ -447,7 +445,6 @@ static const TkIntStubs tkIntStubs = {
     0, /* 124 */
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
-    0, /* 124 */ /* Dummy entry for stubs table backwards compatibility */
     TkpGetNativeAppBitmap, /* 124 */
 #endif /* AQUA */
     0, /* 125 */
