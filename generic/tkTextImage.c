@@ -77,10 +77,6 @@ static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
-typedef enum {
-    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
-} alignMode;
-
 /*
  * Information used for parsing image configuration options:
  */
@@ -88,7 +84,7 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
-	0, alignStrings, 0},
+	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
 	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
@@ -255,7 +251,7 @@ TkTextImageCmd(
 	eiPtr->body.ei.imageString = NULL;
 	eiPtr->body.ei.name = NULL;
 	eiPtr->body.ei.image = NULL;
-	eiPtr->body.ei.align = ALIGN_CENTER;
+	eiPtr->body.ei.align = TK_ALIGN_CENTER;
 	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
 	eiPtr->body.ei.chunkCount = 0;
 	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -338,12 +334,8 @@ EmbImageConfigure(
     Tk_Image image;
     Tcl_DString newName;
     Tcl_HashEntry *hPtr;
-    Tcl_HashSearch search;
     char *name;
-    int dummy;
-    int count = 0;		/* The counter for picking a unique name */
-    int conflict = 0;		/* True if we have a name conflict */
-    size_t len;			/* length of image name */
+    int dummy, length;
 
     if (Tk_SetOptions(textPtr->interp, &eiPtr->body.ei,
 	    eiPtr->body.ei.optionTable,
@@ -394,41 +386,24 @@ EmbImageConfigure(
 		NULL);
 	return TCL_ERROR;
     }
-    len = strlen(name);
-    for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->imageTable,
-	    &search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
-	char *haveName = (char *)
-		Tcl_GetHashKey(&textPtr->sharedTextPtr->imageTable, hPtr);
-
-	if (strncmp(name, haveName, len) == 0) {
-	    int newVal = 0;
-
-	    sscanf(haveName+len, "#%d", &newVal);
-	    if (newVal > count) {
-		count = newVal;
-	    }
-	    if (len == strlen(haveName)) {
-	    	conflict = 1;
-	    }
-	}
-    }
 
     Tcl_DStringInit(&newName);
-    Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
-
-    if (conflict) {
-    	char buf[4 + TCL_INTEGER_SPACE];
-
-	snprintf(buf, sizeof(buf), "#%d", count+1);
+    while (Tcl_FindHashEntry(&textPtr->sharedTextPtr->imageTable, name)) {
+	char buf[4 + TCL_INTEGER_SPACE];
+	snprintf(buf, sizeof(buf), "#%d", ++textPtr->sharedTextPtr->imageCount);
+	Tcl_DStringSetLength(&newName, 0);
+	Tcl_DStringAppend(&newName, name, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&newName, buf, TCL_INDEX_NONE);
+	name = Tcl_DStringValue(&newName);
     }
-    name = Tcl_DStringValue(&newName);
+    length = strlen(name);
+
     hPtr = Tcl_CreateHashEntry(&textPtr->sharedTextPtr->imageTable, name,
 	    &dummy);
     Tcl_SetHashValue(hPtr, eiPtr);
+    eiPtr->body.ei.name = (char *)ckalloc(length + 1);
+    memcpy(eiPtr->body.ei.name, name, length + 1);
     Tcl_SetObjResult(textPtr->interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
-    eiPtr->body.ei.name = (char *)ckalloc(Tcl_DStringLength(&newName) + 1);
-    strcpy(eiPtr->body.ei.name, name);
     Tcl_DStringFree(&newName);
 
     return TCL_OK;
@@ -587,7 +562,7 @@ EmbImageLayoutProc(
     chunkPtr->measureProc = NULL;
     chunkPtr->bboxProc = EmbImageBboxProc;
     chunkPtr->numBytes = 1;
-    if (eiPtr->body.ei.align == ALIGN_BASELINE) {
+    if (eiPtr->body.ei.align == TK_ALIGN_BASELINE) {
 	chunkPtr->minAscent = height - eiPtr->body.ei.padY;
 	chunkPtr->minDescent = eiPtr->body.ei.padY;
 	chunkPtr->minHeight = 0;
@@ -749,16 +724,16 @@ EmbImageBboxProc(
     *xPtr = chunkPtr->x + eiPtr->body.ei.padX;
 
     switch (eiPtr->body.ei.align) {
-    case ALIGN_BOTTOM:
+    case TK_ALIGN_BOTTOM:
 	*yPtr = y + (lineHeight - *heightPtr - eiPtr->body.ei.padY);
 	break;
-    case ALIGN_CENTER:
+    case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
-    case ALIGN_TOP:
+    case TK_ALIGN_TOP:
 	*yPtr = y + eiPtr->body.ei.padY;
 	break;
-    case ALIGN_BASELINE:
+    case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
 	break;
     }

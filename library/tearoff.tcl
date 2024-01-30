@@ -79,11 +79,11 @@ proc ::tk::TearOffMenu {w {x 0} {y 0}} {
     }
 
     if {[tk windowingsystem] eq "win32"} {
-        # [Bug 3181181]: Find the toplevel window for the menu
-        set parent [winfo toplevel $parent]
-        while {[winfo class $parent] eq "Menu"} {
-            set parent [winfo toplevel [winfo parent $parent]]
-        }
+	# [Bug 3181181]: Find the toplevel window for the menu
+	set parent [winfo toplevel $parent]
+	while {[winfo class $parent] eq "Menu"} {
+	    set parent [winfo toplevel [winfo parent $parent]]
+	}
 	wm transient $menu [winfo toplevel $parent]
 	wm attributes $menu -toolwindow 1
     }
@@ -138,14 +138,12 @@ proc ::tk::MenuDup {src dst type} {
     # Copy the meny entries, if any
 
     set last [$src index last]
-    if {$last >= 0} {
-	for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
-	    set cmd [list $dst add [$src type $i] [$src id $i]]
-	    foreach option [$src entryconfigure $i]  {
-		lappend cmd [lindex $option 0] [lindex $option 4]
-	    }
-	    eval $cmd
+    for {set i [$src cget -tearoff]} {$i <= $last} {incr i} {
+	set cmd [list $dst add [$src type $i] [$src id $i]]
+	foreach option [$src entryconfigure $i]  {
+	    lappend cmd [lindex $option 0] [lindex $option 4]
 	}
+	eval $cmd
     }
 
     # Duplicate the binding tags from the source menu, replacing src with dst

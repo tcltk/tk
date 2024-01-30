@@ -257,7 +257,8 @@ set ::ttk::entry::State(startNext) \
 	[string equal [tk windowingsystem] "win32"]
 
 proc ttk::entry::NextWord {w start} {
-    if {[$w cget -show] ne ""} {
+    # the check on [winfo class] is because the spinbox and combobox also use this proc
+    if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return end
     }
     variable State
@@ -274,7 +275,8 @@ proc ttk::entry::NextWord {w start} {
 ## PrevWord -- Find the previous word position.
 #
 proc ttk::entry::PrevWord {w start} {
-    if {[$w cget -show] ne ""} {
+    # the check on [winfo class] is because the spinbox and combobox also use this proc
+    if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return 0
     }
     set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
@@ -535,12 +537,12 @@ proc ttk::entry::WordSelect {w from to} {
 
 ## WordBack, WordForward -- helper routines for WordSelect.
 #
-proc ttk::entry::WordBack {text index} {
-    if {[set pos [tk::wordBreakBefore $text $index]] < 0} { return 0 }
+proc ttk::entry::WordBack {text index {locale {}}} {
+    if {[set pos [tk::wordBreakBefore $text $index $locale]] < 0} { return 0 }
     return $pos
 }
-proc ttk::entry::WordForward {text index} {
-    if {[set pos [tk::wordBreakAfter $text $index]] < 0} { return end }
+proc ttk::entry::WordForward {text index {locale {}}} {
+    if {[set pos [tk::wordBreakAfter $text $index $locale]] < 0} { return end }
     return $pos
 }
 

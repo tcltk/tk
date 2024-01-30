@@ -150,7 +150,8 @@ typedef struct StyleValues {
     int spacing3;		/* Spacing below last dline in text line. */
     TkTextTabArray *tabArrayPtr;/* Locations and types of tab stops (may be
 				 * NULL). */
-    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR
+				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int underline;		/* Non-zero means draw underline underneath
 				 * text. */
     XColor *underlineColor;	/* Foreground color for underline underneath
@@ -594,7 +595,7 @@ static int		NextTabStop(Tk_Font tkfont, int x, int tabOrigin);
 static void		UpdateDisplayInfo(TkText *textPtr);
 static void		YScrollByLines(TkText *textPtr, int offset);
 static void		YScrollByPixels(TkText *textPtr, int offset);
-static int		SizeOfTab(TkText *textPtr, int tabStyle,
+static int		SizeOfTab(TkText *textPtr, TkTextTabStyle tabStyle,
 			    TkTextTabArray *tabArrayPtr, int *indexPtr, int x,
 			    int maxX);
 static void		TextChanged(TkText *textPtr,
@@ -605,7 +606,7 @@ static void		TextRedrawTag(TkText *textPtr,
 			    TkTextIndex *index1Ptr, TkTextIndex *index2Ptr,
 			    TkTextTag *tagPtr, int withTag);
 static void		TextInvalidateLineMetrics(TkText *textPtr,
-			    TkTextLine *linePtr, int lineCount, int action);
+			    TkTextLine *linePtr, int lineCount, TkTextInvalidateAction action);
 static int		CalculateDisplayLineHeight(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *byteCountPtr,
 			    int *mergedLinePtr);
@@ -872,7 +873,7 @@ GetStyle(
 	    styleValues.borderWidth = tagPtr->borderWidth;
 	    borderWidthPrio = tagPtr->priority;
 	}
-	if ((tagPtr->reliefString != NULL)
+	if ((tagPtr->relief != TK_RELIEF_NULL)
 		&& (tagPtr->priority > reliefPrio)) {
 	    if (styleValues.border == NULL) {
 		styleValues.border = textPtr->border;
@@ -898,17 +899,17 @@ GetStyle(
 	    styleValues.fgStipple = tagPtr->fgStipple;
 	    fgStipplePrio = tagPtr->priority;
 	}
-	if ((tagPtr->justifyString != NULL)
+	if ((tagPtr->justify != TK_JUSTIFY_NULL)
 		&& (tagPtr->priority > justifyPrio)) {
 	    styleValues.justify = tagPtr->justify;
 	    justifyPrio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin1String != NULL)
+	if ((tagPtr->lMargin1 != INT_MIN)
 		&& (tagPtr->priority > lMargin1Prio)) {
 	    styleValues.lMargin1 = tagPtr->lMargin1;
 	    lMargin1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->lMargin2String != NULL)
+	if ((tagPtr->lMargin2 != INT_MIN)
 		&& (tagPtr->priority > lMargin2Prio)) {
 	    styleValues.lMargin2 = tagPtr->lMargin2;
 	    lMargin2Prio = tagPtr->priority;
@@ -918,7 +919,7 @@ GetStyle(
 	    styleValues.lMarginColor = tagPtr->lMarginColor;
 	    lMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->offsetString != NULL)
+	if ((tagPtr->offset != INT_MIN)
 		&& (tagPtr->priority > offsetPrio)) {
 	    styleValues.offset = tagPtr->offset;
 	    offsetPrio = tagPtr->priority;
@@ -933,7 +934,7 @@ GetStyle(
                  styleValues.overstrikeColor = fgColor;
             }
 	}
-	if ((tagPtr->rMarginString != NULL)
+	if ((tagPtr->rMargin != INT_MIN)
 		&& (tagPtr->priority > rMarginPrio)) {
 	    styleValues.rMargin = tagPtr->rMargin;
 	    rMarginPrio = tagPtr->priority;
@@ -943,17 +944,17 @@ GetStyle(
 	    styleValues.rMarginColor = tagPtr->rMarginColor;
 	    rMarginColorPrio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing1String != NULL)
+	if ((tagPtr->spacing1 != INT_MIN)
 		&& (tagPtr->priority > spacing1Prio)) {
 	    styleValues.spacing1 = tagPtr->spacing1;
 	    spacing1Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing2String != NULL)
+	if ((tagPtr->spacing2 != INT_MIN)
 		&& (tagPtr->priority > spacing2Prio)) {
 	    styleValues.spacing2 = tagPtr->spacing2;
 	    spacing2Prio = tagPtr->priority;
 	}
-	if ((tagPtr->spacing3String != NULL)
+	if ((tagPtr->spacing3 != INT_MIN)
 		&& (tagPtr->priority > spacing3Prio)) {
 	    styleValues.spacing3 = tagPtr->spacing3;
 	    spacing3Prio = tagPtr->priority;
@@ -984,9 +985,7 @@ GetStyle(
 	    styleValues.elide = tagPtr->elide > 0;
 	    elidePrio = tagPtr->priority;
 	}
-	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
-		|| (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
-		|| (tagPtr->wrapMode == TEXT_WRAPMODE_WORD))
+	if ((tagPtr->wrapMode != TEXT_WRAPMODE_NULL)
 		&& (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
@@ -1171,7 +1170,8 @@ LayoutDLine(
 				 * chunk. */
     TkTextTabArray *tabArrayPtr;/* Tab stops for line; taken from style for
 				 * the first character on line. */
-    int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
+    TkTextTabStyle tabStyle;	/* One of TK_TEXT_TABSTYLE_TABULAR
+				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     int tabSize;		/* Number of pixels consumed by current tab
 				 * stop. */
     TkTextDispChunk *lastCharChunkPtr;
@@ -2505,7 +2505,7 @@ DisplayDLine(
      * will obscure the character to its left.
      */
 
-    if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+    if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	for (chunkPtr = dlPtr->chunkPtr; (chunkPtr != NULL);
 		chunkPtr = chunkPtr->nextPtr) {
 	    if (chunkPtr->displayProc == TkTextInsertDisplayProc) {
@@ -3428,13 +3428,13 @@ TkTextUpdateLineMetrics(
 
 void
 TkTextInvalidateLineMetrics(
-    TkSharedText *sharedTextPtr,/* Shared widget section for all peers, or
-				 * NULL. */
-    TkText *textPtr,		/* Widget record for text widget. */
-    TkTextLine *linePtr,	/* Invalidation starts from this line. */
-    int lineCount,		/* And includes this many following lines. */
-    int action)			/* Indicates what type of invalidation
-				 * occurred (insert, delete, or simple). */
+    TkSharedText *sharedTextPtr,    /* Shared widget section for all peers, or
+				     * NULL. */
+    TkText *textPtr,		    /* Widget record for text widget. */
+    TkTextLine *linePtr,	    /* Invalidation starts from this line. */
+    int lineCount,		    /* And includes this many following lines. */
+    TkTextInvalidateAction action)  /* Indicates what type of invalidation
+				     * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     if (sharedTextPtr == NULL) {
 	TextInvalidateLineMetrics(textPtr, linePtr, lineCount, action);
@@ -3449,11 +3449,11 @@ TkTextInvalidateLineMetrics(
 
 static void
 TextInvalidateLineMetrics(
-    TkText *textPtr,		/* Widget record for text widget. */
-    TkTextLine *linePtr,	/* Invalidation starts from this line. */
-    int lineCount,		/* And includes this many following lines. */
-    int action)			/* Indicates what type of invalidation
-				 * occurred (insert, delete, or simple). */
+    TkText *textPtr,		    /* Widget record for text widget. */
+    TkTextLine *linePtr,	    /* Invalidation starts from this line. */
+    int lineCount,		    /* And includes this many following lines. */
+    TkTextInvalidateAction action)  /* Indicates what type of invalidation
+				     * occurred, TK_TEXT_INVALIDATE_(ONLY|INSERT|DELETE). */
 {
     int fromLine;
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -8247,7 +8247,7 @@ CharBboxProc(
     CharChunkMeasureChars(chunkPtr, NULL, 0, 0, byteIndex,
 	    chunkPtr->x, -1, 0, xPtr);
 
-    if (byteIndex == (Tcl_Size)ciPtr->numBytes) {
+    if (byteIndex == ciPtr->numBytes) {
 	/*
 	 * This situation only happens if the last character in a line is a
 	 * space character, in which case it absorbs all of the extra space in
@@ -8256,7 +8256,7 @@ CharBboxProc(
 
 	*widthPtr = maxX - *xPtr;
     } else if ((ciPtr->chars[byteIndex] == '\t')
-	    && (byteIndex == (Tcl_Size)ciPtr->numBytes - 1)) {
+	    && (byteIndex == ciPtr->numBytes - 1)) {
 	/*
 	 * The desired character is a tab character that terminates a chunk;
 	 * give it all the space left in the chunk.
@@ -8489,7 +8489,7 @@ static int
 SizeOfTab(
     TkText *textPtr,		/* Information about the text widget as a
 				 * whole. */
-    int tabStyle,		/* One of TK_TEXT_TABSTYLE_TABULAR
+    TkTextTabStyle tabStyle,	/* One of TK_TEXT_TABSTYLE_TABULAR
 				 * or TK_TEXT_TABSTYLE_WORDPROCESSOR. */
     TkTextTabArray *tabArrayPtr,/* Information about the tab stops that apply
 				 * to this line. NULL means use default

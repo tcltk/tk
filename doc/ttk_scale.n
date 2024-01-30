@@ -56,21 +56,27 @@ In addition to the standard
 \fBstate\fR and \fBstyle\fR
 commands (see \fBttk::widget\fR),
 scale widgets support the following additional commands:
+.\" METHOD: get
 .TP
 \fIpathName \fBget \fR?\fIx y\fR?
+.
 Get the current value of the \fB\-value\fR option, or the value corresponding
 to the coordinates \fIx,y\fR if they are specified. \fIX\fR and \fIy\fR are
 pixel coordinates relative to the scale widget origin.
+.\" METHOD: see
 .TP
 \fIpathName \fBset \fIvalue\fR
+.
 Set the value of the widget (i.e. the \fB\-value\fR option) to \fIvalue\fR.
 The value will be clipped to the range given by the \fB\-from\fR and
 \fB\-to\fR options. Note that setting the linked variable (i.e. the variable
 named in the \fB\-variable\fR option) does not cause such clipping.
 .SH "INTERNAL COMMANDS"
 .PP
+.\" METHOD: coords
 .TP
 \fIpathName \fBcoords \fR?\fIvalue\fR?
+.
 Get the coordinates corresponding to \fIvalue\fR, or the coordinates
 corresponding to the current value of the \fB\-value\fR option if \fIvalue\fR
 is omitted.

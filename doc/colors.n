@@ -896,7 +896,7 @@ systemTextColor
 .
 The numbered systemWindowBackgroundColors below
 are used in the \fBttk::notebook\fR and \fBttk::labelframe\fR widgets
-to provide a contrasting background.  Each numbered color constrasts
+to provide a contrasting background.  Each numbered color contrasts
 with its predecessor.
 .RS
 .DS
@@ -911,7 +911,6 @@ systemWindowBackgroundColor7
 .DE
 .RE
 .TP
-
 \fBWindows\fR
 .
 On Windows, the following additional system colors are available

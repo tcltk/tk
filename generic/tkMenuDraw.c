@@ -626,7 +626,6 @@ DisplayMenu(
     int width;
     int borderWidth;
     Tk_3DBorder border;
-    int relief;
 
 
     menuPtr->menuFlags &= ~REDRAW_PENDING;
@@ -732,10 +731,9 @@ DisplayMenu(
 		width, height, 0, TK_RELIEF_FLAT);
     }
 
-    Tk_GetReliefFromObj(NULL, menuPtr->reliefPtr, &relief);
     Tk_Draw3DRectangle(menuPtr->tkwin, Tk_WindowId(tkwin),
 	    border, 0, 0, Tk_Width(tkwin), Tk_Height(tkwin), borderWidth,
-	    relief);
+	    menuPtr->relief);
 }
 
 /*

@@ -14,6 +14,7 @@ Tk_SetClassProcs \- register widget specific procedures
 \fB#include <tk.h>\fR
 .sp
 \fBTk_SetClassProcs\fR(\fItkwin, procs, instanceData\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_ClassProc instanceData
 .AP Tk_Window tkwin in
@@ -32,7 +33,7 @@ are used as callbacks in different places.
 .PP
 The structure pointed to by \fIprocs\fR contains the following:
 .CS
-typedef struct Tk_ClassProcs {
+typedef struct {
     size_t \fIsize\fR;
     Tk_ClassWorldChangedProc *\fIworldChangedProc\fR;
     Tk_ClassCreateProc *\fIcreateProc\fR;

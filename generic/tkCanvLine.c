@@ -379,11 +379,11 @@ LineCoords(
 	} else {
 	    coordPtr = linePtr->coordPtr;
 	}
-	for (i = 0; i < (Tcl_Size)numCoords; i++, coordPtr++) {
+	for (i = 0; i < numCoords; i++, coordPtr++) {
 	    if (i == 2) {
 		coordPtr = linePtr->coordPtr+2;
 	    }
-	    if ((linePtr->lastArrowPtr != NULL) && (i == ((Tcl_Size)numCoords-2))) {
+	    if ((linePtr->lastArrowPtr != NULL) && (i == (numCoords-2))) {
 		coordPtr = linePtr->lastArrowPtr;
 	    }
 	    subobj = Tcl_NewDoubleObj(*coordPtr);
@@ -400,13 +400,13 @@ LineCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "u",
+		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "d",
 		objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected at least 4, got %" TCL_SIZE_MODIFIER "u", objc));
+		"wrong # coordinates: expected at least 4, got %" TCL_SIZE_MODIFIER "d", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
 	return TCL_ERROR;
     }
@@ -1924,12 +1924,6 @@ GetLineIndex(
 	    coordPtr += 2;
 	}
     } else {
-
-	/*
-	 * Some of the paths here leave messages in interp->result, so we have to
-	 * clear it out before storing our own message.
-	 */
-
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);

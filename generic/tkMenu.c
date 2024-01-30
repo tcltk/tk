@@ -278,7 +278,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	DEF_MENU_POST_COMMAND,
 	offsetof(TkMenu, postCommandPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
-	DEF_MENU_RELIEF, offsetof(TkMenu, reliefPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	DEF_MENU_RELIEF, TCL_INDEX_NONE, offsetof(TkMenu, relief), 0, NULL, 0},
     {TK_OPTION_COLOR, "-selectcolor", "selectColor", "Background",
 	DEF_MENU_SELECT_COLOR, offsetof(TkMenu, indicatorFgPtr), TCL_INDEX_NONE, 0,
 	DEF_MENU_SELECT_MONO, 0},
@@ -1669,7 +1669,7 @@ ConfigureMenu(
 
 	    Tcl_EventuallyFree(menuListPtr->entries[0], DestroyMenuEntry);
 
-	    for (i = 0; i < (int)menuListPtr->numEntries - 1; i++) {
+	    for (i = 0; i < menuListPtr->numEntries - 1; i++) {
 		menuListPtr->entries[i] = menuListPtr->entries[i + 1];
 		menuListPtr->entries[i]->index = i;
 	    }
@@ -1688,7 +1688,7 @@ ConfigureMenu(
 	 * parent.
 	 */
 
-	for (i = 0; i < (int)menuListPtr->numEntries; i++) {
+	for (i = 0; i < menuListPtr->numEntries; i++) {
 	    TkMenuEntry *mePtr;
 
 	    mePtr = menuListPtr->entries[i];
@@ -2155,7 +2155,7 @@ GetMenuIndex(
 				 * *after* last entry. */
     Tcl_Size *indexPtr)		/* Where to store converted index. */
 {
-    int i;
+    Tcl_Size i;
     const char *string;
     Tcl_HashEntry *entryPtr;
 
@@ -2185,6 +2185,12 @@ GetMenuIndex(
 	*indexPtr = TCL_INDEX_NONE;
 	return TCL_OK;
     }
+#if !defined(TK_NO_DEPRECATED)
+    if ((string[0] == 'n') && (strcmp(string, "none") == 0)) {
+	*indexPtr = TCL_INDEX_NONE;
+	return TCL_OK;
+    }
+#endif
 
     if (string[0] == '@') {
 	if (GetIndexFromCoords(interp, menuPtr, string, indexPtr)
@@ -2200,7 +2206,7 @@ GetMenuIndex(
         return TCL_OK;
     }
 
-    for (i = 0; i < (int)menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	Tcl_Obj *labelPtr = menuPtr->entries[i]->labelPtr;
 	const char *label = (labelPtr == NULL) ? NULL : Tcl_GetString(labelPtr);
 
@@ -3026,7 +3032,8 @@ GetIndexFromCoords(
     const char *string,		/* The @string we are parsing. */
     Tcl_Size *indexPtr)		/* The index of the item that matches. */
 {
-    int x, y, i;
+    int x, y;
+    Tcl_Size i;
     const char *p;
     const char *rest;
     int x2, borderwidth, max;
@@ -3062,7 +3069,7 @@ GetIndexFromCoords(
       ? Tk_Width(menuPtr->tkwin) : Tk_ReqWidth(menuPtr->tkwin);
     max -= borderwidth;
 
-    for (i = 0; i < (int)menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	if (menuPtr->entries[i]->entryFlags & ENTRY_LAST_COLUMN) {
 	    x2 = max;
 	} else {
@@ -3601,7 +3608,7 @@ DeleteMenuCloneEntries(
     int last)			/* The zero-based last entry. */
 {
     TkMenu *menuListPtr;
-    int numDeleted, i, j;
+    Tcl_Size numDeleted, i, j;
 
     numDeleted = last + 1 - first;
     for (menuListPtr = menuPtr->mainMenuPtr; menuListPtr != NULL;
@@ -3609,7 +3616,7 @@ DeleteMenuCloneEntries(
 	for (i = last; i >= first; i--) {
 	    Tcl_EventuallyFree(menuListPtr->entries[i], DestroyMenuEntry);
 	}
-	for (i = last + 1; i < (int)menuListPtr->numEntries; i++) {
+	for (i = last + 1; i < menuListPtr->numEntries; i++) {
 	    j = i - numDeleted;
 	    menuListPtr->entries[j] = menuListPtr->entries[i];
 	    menuListPtr->entries[j]->index = j;

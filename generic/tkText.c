@@ -214,13 +214,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 &lineOption, TK_TEXT_LINE_RANGE},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
 	DEF_TEXT_STATE, TCL_INDEX_NONE, offsetof(TkText, state),
-	0, &tkStateStrings[1], 0},
+	TK_OPTION_ENUM_VAR, &tkStateStrings[1], 0},
     {TK_OPTION_STRING, "-tabs", "tabs", "Tabs",
 	DEF_TEXT_TABS, offsetof(TkText, tabOptionPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING_TABLE, "-tabstyle", "tabStyle", "TabStyle",
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle),
-	0, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
+	TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -536,6 +536,7 @@ CreateWidget(
 	sharedPtr->autoSeparators = 1;
 	sharedPtr->lastEditMode = TK_TEXT_EDIT_OTHER;
 	sharedPtr->stateEpoch = 0;
+	sharedPtr->imageCount = 0;
     }
 
     /*
@@ -616,9 +617,6 @@ CreateWidget(
      */
 
     textPtr->selTagPtr = TkTextCreateTag(textPtr, "sel", NULL);
-    textPtr->selTagPtr->reliefString = (char *)
-	    ckalloc(sizeof(DEF_TEXT_SELECT_RELIEF));
-    strcpy(textPtr->selTagPtr->reliefString, DEF_TEXT_SELECT_RELIEF);
     Tk_GetRelief(interp, DEF_TEXT_SELECT_RELIEF, &textPtr->selTagPtr->relief);
     textPtr->currentMarkPtr = TkTextSetMark(textPtr, "current", &startIndex);
     textPtr->insertMarkPtr = TkTextSetMark(textPtr, "insert", &startIndex);
@@ -1066,7 +1064,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    if (objc < 5) {
 		/*
 		 * Simple case requires no predetermination of indices.
@@ -1369,7 +1367,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    result = TextInsertCmd(NULL, textPtr, interp, objc-3, objv+3,
 		    indexPtr, 1);
 	}
@@ -1418,7 +1416,7 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	if (textPtr->state == TK_TEXT_STATE_NORMAL) {
+	if (textPtr->state != TK_TEXT_STATE_DISABLED) {
 	    int lineNum;
 	    Tcl_Size byteIndex;
 	    TkTextIndex index;
@@ -2263,26 +2261,24 @@ ConfigureText(
     textPtr->selTagPtr->affectsDisplayGeometry = 0;
     if ((textPtr->selTagPtr->elide >= 0)
 	    || (textPtr->selTagPtr->tkfont != NULL)
-	    || (textPtr->selTagPtr->justifyString != NULL)
-	    || (textPtr->selTagPtr->lMargin1String != NULL)
-	    || (textPtr->selTagPtr->lMargin2String != NULL)
-	    || (textPtr->selTagPtr->offsetString != NULL)
-	    || (textPtr->selTagPtr->rMarginString != NULL)
-	    || (textPtr->selTagPtr->spacing1String != NULL)
-	    || (textPtr->selTagPtr->spacing2String != NULL)
-	    || (textPtr->selTagPtr->spacing3String != NULL)
+	    || (textPtr->selTagPtr->justify != TK_JUSTIFY_NULL)
+	    || (textPtr->selTagPtr->lMargin1 != INT_MIN)
+	    || (textPtr->selTagPtr->lMargin2 != INT_MIN)
+	    || (textPtr->selTagPtr->offset != INT_MIN)
+	    || (textPtr->selTagPtr->rMargin != INT_MIN)
+	    || (textPtr->selTagPtr->spacing1 != INT_MIN)
+	    || (textPtr->selTagPtr->spacing2 != INT_MIN)
+	    || (textPtr->selTagPtr->spacing3 != INT_MIN)
 	    || (textPtr->selTagPtr->tabStringPtr != NULL)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 	    || (textPtr->selTagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
-	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
-	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_NONE)
-	    || (textPtr->selTagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
+	    || (textPtr->selTagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 	textPtr->selTagPtr->affectsDisplay = 1;
 	textPtr->selTagPtr->affectsDisplayGeometry = 1;
     }
     if ((textPtr->selTagPtr->border != NULL)
 	    || (textPtr->selTagPtr->selBorder != NULL)
-	    || (textPtr->selTagPtr->reliefString != NULL)
+	    || (textPtr->selTagPtr->relief != TK_RELIEF_NULL)
 	    || (textPtr->selTagPtr->bgStipple != None)
 	    || (textPtr->selTagPtr->fgColor != NULL)
 	    || (textPtr->selTagPtr->selFgColor != NULL)
@@ -2844,7 +2840,7 @@ TextPushUndoAction(
 	    Tcl_NewStringObj("set", 3));
     markSetRUndoMarkCmdObj = Tcl_DuplicateObj(markSetLUndoMarkCmdObj);
     textPtr->sharedTextPtr->undoMarkId++;
-    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TCL_SIZE_MODIFIER "u", textPtr->sharedTextPtr->undoMarkId);
+    snprintf(stringUndoMarkId, TCL_INTEGER_SPACE, "%" TCL_SIZE_MODIFIER "d", textPtr->sharedTextPtr->undoMarkId);
     strcat(lMarkName, stringUndoMarkId);
     strcat(rMarkName, stringUndoMarkId);
     Tcl_ListObjAppendElement(NULL, markSetLUndoMarkCmdObj,
@@ -5051,10 +5047,10 @@ DumpSegment(
 	int code;
 
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, Tcl_GetString(command), -1);
-	Tcl_DStringAppend(&buf, " ", -1);
-	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), -1);
-	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
+	Tcl_DStringAppend(&buf, Tcl_GetString(command), TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(tuple), TCL_INDEX_NONE);
+	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	Tcl_DStringFree(&buf);
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,

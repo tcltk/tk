@@ -104,7 +104,7 @@ test spinbox-1.6 {configuration option: "bd" for spinbox} -setup {
     .e configure -bd badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test spinbox-1.7 {configuration option: "bg"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -148,7 +148,7 @@ test spinbox-1.10 {configuration option: "borderwidth" for spinbox} -setup {
     .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test spinbox-1.11 {configuration option: "buttonbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -468,7 +468,7 @@ test spinbox-1.39 {configuration option: "highlightthickness" for spinbox} -setu
     .e configure -highlightthickness bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "bogus"}
+} -returnCodes {error} -result {expected screen distance but got "bogus"}
 
 test spinbox-1.40 {configuration option: "highlightthickness"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -546,7 +546,7 @@ test spinbox-1.46 {configuration option: "insertborderwidth" for spinbox} -setup
     .e configure -insertborderwidth 2.6x
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "2.6x"}
+} -returnCodes {error} -result {expected screen distance but got "2.6x"}
 
 test spinbox-1.47 {configuration option: "insertofftime"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -768,7 +768,7 @@ test spinbox-1.66 {configuration option: "selectborderwidth" for spinbox} -setup
     .e configure -selectborderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test spinbox-1.67 {configuration option: "selectforeground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -3888,6 +3888,19 @@ test spinbox-25.1 {textvariable lives in a non-existing namespace} -setup {
 } -cleanup {
     destroy .s
 } -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
+    destroy .s
+    pack [spinbox .s]
+    update
+} -body {
+    .s insert end "A sample text"
+    .s icursor end
+    event generate .s <<PrevWord>>  ; # shall move insert to index 9
+    .s delete insert end
+    .s get
+} -cleanup {
+    destroy .s
+} -result {A sample }
 
 # Collected comments about lacks from the test
 # XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,

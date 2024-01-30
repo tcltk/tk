@@ -39,7 +39,7 @@ typedef struct {
      */
 
     char *string;		/* String displayed in message. */
-    int numChars;		/* Number of characters in string, not
+    Tcl_Size numChars;		/* Number of characters in string, not
 				 * including terminating NULL. */
     char *textVarName;		/* Name of variable (malloc'ed) or NULL.
 				 * If non-NULL, message displays the contents
@@ -86,6 +86,11 @@ typedef struct {
 				 * scripts. Malloc'ed, but may be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
+    Tcl_Obj *borderWidthObj;		/* Width of border. */
+    Tcl_Obj *highlightWidthObj;		/* Width in pixels of highlight to draw
+	     * around widget when it has the focus. <= 0 means don't draw a highlight. */
+    Tcl_Obj *widthObj;			/* User-requested width, in pixels. 0 means
+				 * compute width using aspect ratio. */
 } Message;
 
 /*
@@ -120,7 +125,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
 	 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_MESSAGE_BORDER_WIDTH, TCL_INDEX_NONE,
+	 DEF_MESSAGE_BORDER_WIDTH, offsetof(Message, borderWidthObj),
 	 offsetof(Message, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
@@ -138,16 +143,16 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_MESSAGE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Message, highlightColorPtr),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, offsetof(Message, highlightWidthObj),
 	 offsetof(Message, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	 DEF_MESSAGE_PADX, offsetof(Message, padXPtr),
-	 offsetof(Message, padX), 0, 0, 0},
+	 offsetof(Message, padX), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	 DEF_MESSAGE_PADY, offsetof(Message, padYPtr),
-	 offsetof(Message, padY), 0, 0, 0},
+	 offsetof(Message, padY), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MESSAGE_RELIEF, TCL_INDEX_NONE, offsetof(Message, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
@@ -159,7 +164,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MESSAGE_TEXT_VARIABLE, TCL_INDEX_NONE, offsetof(Message, textVarName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_MESSAGE_WIDTH, TCL_INDEX_NONE, offsetof(Message, width), 0, 0 ,0},
+	DEF_MESSAGE_WIDTH, offsetof(Message, widthObj), offsetof(Message, width), 0, 0 ,0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -544,9 +549,17 @@ MessageWorldChanged(
     Tk_GetFontMetrics(msgPtr->tkfont, &fm);
     if (msgPtr->padX < 0) {
 	msgPtr->padX = fm.ascent / 2;
+	if (msgPtr->padXPtr) {
+	    Tcl_DecrRefCount(msgPtr->padXPtr);
+	    msgPtr->padXPtr = NULL;
+	}
     }
     if (msgPtr->padY == -1) {
 	msgPtr->padY = fm.ascent / 4;
+	if (msgPtr->padYPtr) {
+	    Tcl_DecrRefCount(msgPtr->padYPtr);
+	    msgPtr->padYPtr = NULL;
+	}
     }
 
     /*

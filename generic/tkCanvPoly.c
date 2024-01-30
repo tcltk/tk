@@ -362,7 +362,7 @@ PolygonCoords(
     }
     if (objc & 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "u",
+		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "d",
 		objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", NULL);
 	return TCL_ERROR;
@@ -1764,11 +1764,6 @@ GetPolygonIndex(
 	    coordPtr += 2;
 	}
     } else {
-	/*
-	 * Some of the paths here leave messages in interp->result, so we have to
-	 * clear it out before storing our own message.
-	 */
-
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);

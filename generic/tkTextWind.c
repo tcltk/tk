@@ -89,10 +89,6 @@ static const char *const alignStrings[] = {
     "baseline", "bottom", "center", "top", NULL
 };
 
-typedef enum {
-    ALIGN_BASELINE, ALIGN_BOTTOM, ALIGN_CENTER, ALIGN_TOP
-} alignMode;
-
 /*
  * Information used for parsing window configuration options:
  */
@@ -100,7 +96,7 @@ typedef enum {
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-align", NULL, NULL,
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbWindow, align),
-	0, alignStrings, 0},
+	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_STRING, "-create", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbWindow, create), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
@@ -295,7 +291,7 @@ TkTextWindowCmd(
 	ewPtr->body.ew.linePtr = NULL;
 	ewPtr->body.ew.tkwin = NULL;
 	ewPtr->body.ew.create = NULL;
-	ewPtr->body.ew.align = ALIGN_CENTER;
+	ewPtr->body.ew.align = TK_ALIGN_CENTER;
 	ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
 	ewPtr->body.ew.stretch = 0;
 	ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
@@ -872,7 +868,7 @@ EmbWinLayoutProc(
 		    dsPtr = &buf;
 		}
 		if (string != before) {
-		    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
+		    Tcl_DStringAppend(dsPtr, before, string-before);
 		    before = string;
 		}
 		if (string[1] == '%') {
@@ -907,7 +903,7 @@ EmbWinLayoutProc(
 	 */
 
 	if (dsPtr != NULL) {
-	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
+	    Tcl_DStringAppend(dsPtr, before, string-before);
 	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
@@ -1009,7 +1005,7 @@ EmbWinLayoutProc(
     chunkPtr->measureProc = NULL;
     chunkPtr->bboxProc = EmbWinBboxProc;
     chunkPtr->numBytes = 1;
-    if (ewPtr->body.ew.align == ALIGN_BASELINE) {
+    if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
 	chunkPtr->minAscent = height - ewPtr->body.ew.padY;
 	chunkPtr->minDescent = ewPtr->body.ew.padY;
 	chunkPtr->minHeight = 0;
@@ -1055,7 +1051,7 @@ EmbWinCheckProc(
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", (int)ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %" TCL_SIZE_MODIFIER "d", ewPtr->size);
     }
 }
 
@@ -1257,23 +1253,23 @@ EmbWinBboxProc(
     }
     *xPtr = chunkPtr->x + ewPtr->body.ew.padX;
     if (ewPtr->body.ew.stretch) {
-	if (ewPtr->body.ew.align == ALIGN_BASELINE) {
+	if (ewPtr->body.ew.align == TK_ALIGN_BASELINE) {
 	    *heightPtr = baseline - ewPtr->body.ew.padY;
 	} else {
 	    *heightPtr = lineHeight - 2*ewPtr->body.ew.padY;
 	}
     }
     switch (ewPtr->body.ew.align) {
-    case ALIGN_BOTTOM:
+    case TK_ALIGN_BOTTOM:
 	*yPtr = y + (lineHeight - *heightPtr - ewPtr->body.ew.padY);
 	break;
-    case ALIGN_CENTER:
+    case TK_ALIGN_CENTER:
 	*yPtr = y + (lineHeight - *heightPtr)/2;
 	break;
-    case ALIGN_TOP:
+    case TK_ALIGN_TOP:
 	*yPtr = y + ewPtr->body.ew.padY;
 	break;
-    case ALIGN_BASELINE:
+    case TK_ALIGN_BASELINE:
 	*yPtr = y + (baseline - *heightPtr);
 	break;
     }

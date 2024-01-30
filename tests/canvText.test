@@ -70,7 +70,7 @@ test canvText-1.14 {configuration options: good value for "width"} -body {
 } -result {6 6}
 test canvasText-1.15 {configuration options: bad value for "width"} -body {
     .c itemconfigure test -width xyz
-} -returnCodes error -result {bad screen distance "xyz"}
+} -returnCodes error -result {expected screen distance but got "xyz"}
 test canvText-1.16 {configuration options: good value for "tags"} -body {
     .c itemconfigure test -tags {test a b c}
     list [lindex [.c itemconfigure test -tags] 4] [.c itemcget test -tags]
@@ -100,12 +100,12 @@ test canvText-2.2 {CreateText procedure: args} -body {
     .c create text xyz 0
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test canvText-2.3 {CreateText procedure: args} -body {
     .c create text 0 xyz
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test canvText-2.4 {CreateText procedure: args} -body {
     .c create text 0 0 -xyz xyz
 } -cleanup {
@@ -133,14 +133,14 @@ test canvText-3.2 {TextCoords procedure} -setup {
     .c coords test xyz 0
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test canvText-3.3 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
     .c coords test 0 xyz
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test canvText-3.4 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {

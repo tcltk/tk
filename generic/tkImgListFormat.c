@@ -398,7 +398,7 @@ StringMatchDef(
             colCount = curColCount;
         } else if (curColCount != colCount) {
             if (interp != NULL) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %" TCL_SIZE_MODIFIER "u: "
+                Tcl_SetObjResult(interp, Tcl_ObjPrintf("invalid row # %" TCL_SIZE_MODIFIER "d: "
                         "all rows must have the same number of elements", y));
                 Tcl_SetErrorCode(interp, "TK", "IMAGE", "PHOTO",
                         "INVALID_DATA", NULL);
