@@ -535,7 +535,7 @@ declare 161 {
 declare 162 {
     struct TkTextIndex *TkTextMakeByteIndex(TkTextBTree tree,
 	    const struct TkText *textPtr, int lineIndex,
-	    int byteIndex, struct TkTextIndex *indexPtr)
+	    Tcl_Size byteIndex, struct TkTextIndex *indexPtr)
 }
 declare 163 {
     Tcl_Size TkTextPrintIndex(const struct TkText *textPtr,
