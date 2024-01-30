@@ -390,17 +390,17 @@ proc ::tk::EntryMouseSelect {w x} {
 	}
 	word {
 	    if {$cur < $anchor} {
-		set before [tk::wordBreakBefore [$w get] $cur]
-		set after [tk::wordBreakAfter [$w get] $anchor-1]
+		set before [tk::wordBreakBefore [$w get] $cur [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $anchor-1 [$w cget -locale]]
 	    } elseif {$cur > $anchor} {
-		set before [tk::wordBreakBefore [$w get] $anchor]
-		set after [tk::wordBreakAfter [$w get] $cur-1]
+		set before [tk::wordBreakBefore [$w get] $anchor [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $cur-1 [$w cget -locale]]
 	    } else {
 		if {[$w index @$Priv(pressX)] < $anchor} {
 		      incr anchor -1
 		}
-		set before [tk::wordBreakBefore [$w get] $anchor]
-		set after [tk::wordBreakAfter [$w get] $anchor]
+		set before [tk::wordBreakBefore [$w get] $anchor [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $anchor [$w cget -locale]]
 	    }
 	    if {$before < 0} {
 		set before 0
