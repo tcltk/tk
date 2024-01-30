@@ -850,7 +850,7 @@ static int PanedSashposCommand(
     }
     if (sashIndex < 0 || sashIndex >= Ttk_NumberContent(pw->paned.mgr) - 1) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "sash index %" TCL_SIZE_MODIFIER "d out of range", sashIndex));
+	    "sash index %" TCL_LL_MODIFIER "d out of range", sashIndex));
 	Tcl_SetErrorCode(interp, "TTK", "PANE", "SASH_INDEX", NULL);
 	return TCL_ERROR;
     }
