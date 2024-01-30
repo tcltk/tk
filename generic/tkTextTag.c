@@ -69,7 +69,7 @@ SetPixels(
 	if ((flags & OPTION_NONNEG) && pixel.value < 0) {
 	    pixel.value = 0;
 	}
-	pixel.string = ckalloc((*value)->length + 1);
+	pixel.string = (char *)ckalloc((*value)->length + 1);
 	strcpy(pixel.string, (*value)->bytes);
     }
 
@@ -101,7 +101,7 @@ SetBoolean(
 	    }
 	    return TCL_ERROR;
 	}
-	booleanVal.string = ckalloc((*value)->length + 1);
+	booleanVal.string = (char *)ckalloc((*value)->length + 1);
 	strcpy(booleanVal.string, (*value)->bytes);
     }
 
@@ -133,7 +133,7 @@ SetRelief(
 	    }
 	    return TCL_ERROR;
 	}
-	relief.string = ckalloc((*value)->length + 1);
+	relief.string = (char *)ckalloc((*value)->length + 1);
 	strcpy(relief.string, (*value)->bytes);
     }
 
@@ -165,7 +165,7 @@ SetJustify(
 	    }
 	    return TCL_ERROR;
 	}
-	justify.string = ckalloc((*value)->length + 1);
+	justify.string = (char *)ckalloc((*value)->length + 1);
 	strcpy(justify.string, (*value)->bytes);
     }
 
