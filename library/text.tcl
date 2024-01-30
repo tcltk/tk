@@ -1125,7 +1125,7 @@ proc ::tk::TextNextPos {w start op} {
     set cur $start
     while {[$w compare $cur < end]} {
 	set text $text[$w get -displaychars $cur "$cur lineend + 1c"]
-	set pos [$op $text 0]
+	set pos [$op $text 0 [$w cget -locale]]
 	if {$pos >= 0} {
 	    return [$w index "$start + $pos display chars"]
 	}
@@ -1148,7 +1148,7 @@ proc ::tk::TextPrevPos {w start op} {
     set cur $start
     while {[$w compare $cur > 0.0]} {
 	set text [$w get -displaychars "$cur linestart - 1c" $cur]$text
-	set pos [$op $text end]
+	set pos [$op $text end [$w cget -locale]]
 	if {$pos >= 0} {
 	    return [$w index "$cur linestart - 1c + $pos display chars"]
 	}
