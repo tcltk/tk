@@ -51,7 +51,7 @@ static void		EmbWinBboxProc(TkText *textPtr,
 			    int lineHeight, int baseline, int *xPtr,int *yPtr,
 			    int *widthPtr, int *heightPtr);
 static int		EmbWinConfigure(TkText *textPtr, TkTextSegment *ewPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		EmbWinDelayedUnmap(void *clientData);
 static int		EmbWinDeleteProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr, int treeGone);
@@ -378,7 +378,7 @@ EmbWinConfigure(
     TkText *textPtr,		/* Information about text widget that contains
 				 * embedded window. */
     TkTextSegment *ewPtr,	/* Embedded window to be configured. */
-    int objc,			/* Number of strings in objv. */
+    Tcl_Size objc,			/* Number of strings in objv. */
     Tcl_Obj *const objv[])	/* Array of objects describing configuration
 				 * options. */
 {
@@ -868,7 +868,7 @@ EmbWinLayoutProc(
 		    dsPtr = &buf;
 		}
 		if (string != before) {
-		    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
+		    Tcl_DStringAppend(dsPtr, before, string-before);
 		    before = string;
 		}
 		if (string[1] == '%') {
@@ -903,7 +903,7 @@ EmbWinLayoutProc(
 	 */
 
 	if (dsPtr != NULL) {
-	    Tcl_DStringAppend(dsPtr, before, (int) (string-before));
+	    Tcl_DStringAppend(dsPtr, before, string-before);
 	    code = Tcl_EvalEx(textPtr->interp, Tcl_DStringValue(dsPtr), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    Tcl_DStringFree(dsPtr);
 	} else {
@@ -1051,7 +1051,7 @@ EmbWinCheckProc(
 	Tcl_Panic("EmbWinCheckProc: embedded window is last segment in line");
     }
     if (ewPtr->size != 1) {
-	Tcl_Panic("EmbWinCheckProc: embedded window has size %d", (int)ewPtr->size);
+	Tcl_Panic("EmbWinCheckProc: embedded window has size %" TCL_SIZE_MODIFIER "d", ewPtr->size);
     }
 }
 
