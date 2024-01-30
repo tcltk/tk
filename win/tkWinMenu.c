@@ -764,7 +764,7 @@ int
 TkpPostMenu(
     TCL_UNUSED(Tcl_Interp *),
     TkMenu *menuPtr,
-    int x, int y, int index)
+    int x, int y, Tcl_Size index)
 {
     HMENU winMenuHdl = (HMENU) menuPtr->platformData;
     int result, flags;
@@ -784,7 +784,7 @@ TkpPostMenu(
 	return result;
     }
 
-    if (index >= (int)menuPtr->numEntries) {
+    if (index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -874,7 +874,7 @@ int
 TkpPostTearoffMenu(
     TCL_UNUSED(Tcl_Interp *),		/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x, int y, int index)	/* The root X,Y coordinates where we are
+    int x, int y, Tcl_Size index)	/* The root X,Y coordinates where we are
 				 * posting */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
@@ -901,7 +901,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index >= (int)menuPtr->numEntries) {
+    if (index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1406,21 +1406,21 @@ TkWinHandleMenuEvent(
 	    }
 
 	    if (menuPtr != NULL) {
-		long entryIndex = LOWORD(*pwParam);
+		Tcl_Size entryIndex = LOWORD(*pwParam);
 
-                if ((menuPtr->menuType == MENUBAR) && menuPtr->tearoff) {
-                    /*
-                     * Windows passes the entry index starting at 0 for
-                     * the first menu entry. However this entry #0 is the
-                     * tearoff entry for Tk (the menu has -tearoff 1),
-                     * which is ignored for MENUBAR menues on Windows.
-                     */
+		if ((menuPtr->menuType == MENUBAR) && menuPtr->tearoff) {
+		    /*
+		     * Windows passes the entry index starting at 0 for
+		     * the first menu entry. However this entry #0 is the
+		     * tearoff entry for Tk (the menu has -tearoff 1),
+		     * which is ignored for MENUBAR menues on Windows.
+		     */
 
-                    entryIndex++;
-                }
-                mePtr = NULL;
+			entryIndex++;
+		}
+		mePtr = NULL;
 		if (flags != 0xFFFF) {
-		    if ((flags&MF_POPUP) && (entryIndex < (int)menuPtr->numEntries)) {
+		    if ((flags&MF_POPUP) && (entryIndex < menuPtr->numEntries)) {
 			mePtr = menuPtr->entries[entryIndex];
 		    } else {
 			hashEntryPtr = Tcl_FindHashEntry(&tsdPtr->commandTable,
@@ -2982,7 +2982,7 @@ TkpComputeStandardMenuGeometry(
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
     int x, y, height, width, indicatorSpace, labelWidth, accelWidth;
     int windowWidth, windowHeight, accelSpace;
-    int i, j, lastColumnBreak = 0;
+    Tcl_Size i, j, lastColumnBreak = 0;
     int activeBorderWidth, borderWidth;
 
     if (menuPtr->tkwin == NULL) {

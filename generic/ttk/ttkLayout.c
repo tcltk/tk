@@ -920,8 +920,8 @@ Ttk_CreateSublayout(
     Ttk_LayoutTemplate layoutTemplate;
 
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, Ttk_StyleName(parentLayout->style), -1);
-    Tcl_DStringAppend(&buf, baseName, -1);
+    Tcl_DStringAppend(&buf, Ttk_StyleName(parentLayout->style), TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, baseName, TCL_INDEX_NONE);
     styleName = Tcl_DStringValue(&buf);
 
     style = Ttk_GetStyle(themePtr, styleName);

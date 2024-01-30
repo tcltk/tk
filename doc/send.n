@@ -30,21 +30,27 @@ command to be executed, just as for the \fBeval\fR command.
 If the initial arguments of the command begin with
 .QW \-
 they are treated as options.  The following options are currently defined:
+.\" OPTION: -async
 .TP
 \fB\-async\fR
+.
 Requests asynchronous invocation.  In this case the \fBsend\fR
 command will complete immediately without waiting for \fIcmd\fR
 to complete in the target application;  no result will be available
 and errors in the sent command will be ignored.
 If the target application is in the same process as the sending
 application then the \fB\-async\fR option is ignored.
+.\" OPTION: -displayof
 .TP
-\fB\-displayof\fR \fIpathName\fR
+\fB\-displayof\fI pathName\fR
+.
 Specifies that the target application's main window is on the display
 of the window given by \fIpathName\fR, instead of the display containing
 the application's main window.
+.\" OPTION: --
 .TP
 \fB\-\|\-\fR
+.
 Serves no purpose except to terminate the list of options.  This
 option is needed only if \fIapp\fR could contain a leading
 .QW \-
@@ -90,7 +96,7 @@ This script fragment can be used to make an application that only runs
 once on a particular display.
 .CS
 if {[tk appname FoobarApp] ne "FoobarApp"} {
-    \fBsend\fR \-async FoobarApp RemoteStart $argv
+    \fBsend\fR -async FoobarApp RemoteStart $argv
     exit
 }
 # The command that will be called remotely, which raises

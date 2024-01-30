@@ -19,7 +19,7 @@ jobs:
         shell: bash
         working-directory: tk/macosx
     steps:
-      - name: Check out Tk
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
@@ -71,7 +71,7 @@ jobs:
         shell: bash
         working-directory: tk/unix
     steps:
-      - name: Check out Tk
+      - name: Checkout Tk
         uses: actions/checkout@v4
         with:
           path: tk
@@ -161,7 +161,7 @@ jobs:
             echo "::error::Failure in ttk test results"
             exit 1
           }
-        timeout-minutes: 15
+        timeout-minutes: 20
       - name: Carry out trial installation
         run: |
           make install || {

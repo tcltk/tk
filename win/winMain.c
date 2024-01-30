@@ -24,7 +24,7 @@
  *
  * So ... tkAppInit.c should not be compiled with USE_TCL_STUBS
  * (unless you want to use the TIP #596 functionality)
- * 
+ *
  * The proper solution is to make sure that Makefile.in doesn't use
  * TCL_USE_STUBS when compiling tkAppInit.c. But that's a
  * quite big re-organization just before a b1 release. Simpler

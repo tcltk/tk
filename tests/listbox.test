@@ -92,7 +92,7 @@ test listbox-1.5 {configuration options} -body {
 } -result {4 4}
 test listbox-1.6 {configuration options} -body {
     .l configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test listbox-1.7 {configuration options} -body {
     .l configure -bg #ff0000
     list [lindex [.l configure -bg] 4] [.l cget -bg]
@@ -110,7 +110,7 @@ test listbox-1.9 {configuration options} -body {
 } -result {1 1}
 test listbox-1.10 {configuration options} -body {
     .l configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test listbox-1.11 {configuration options} -body {
     .l configure -cursor arrow
     list [lindex [.l configure -cursor] 4] [.l cget -cursor]
@@ -197,7 +197,7 @@ test listbox-1.29 {configuration options} -body {
 } -result {6 6}
 test listbox-1.30 {configuration options} -body {
     .l configure -highlightthickness bogus
-} -returnCodes error -result {bad screen distance "bogus"}
+} -returnCodes error -result {expected screen distance but got "bogus"}
 test listbox-1.31 {configuration options} -body {
     .l configure -highlightthickness -2
     list [lindex [.l configure -highlightthickness] 4] [.l cget -highlightthickness]
@@ -245,7 +245,7 @@ test listbox-1.37 {configuration options} -body {
 } -result {1 1}
 test listbox-1.38 {configuration options} -body {
     .l configure -selectborderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test listbox-1.39 {configuration options} -body {
     .l configure -selectforeground #654321
     list [lindex [.l configure -selectforeground] 4] [.l cget -selectforeground]

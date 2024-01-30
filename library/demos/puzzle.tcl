@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 # puzzleSwitch --
 # This procedure is invoked when the user clicks on a particular button;

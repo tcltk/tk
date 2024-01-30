@@ -60,7 +60,7 @@ Specifies foreground color to use when drawing active elements.
 See above for definition of active elements.
 .OP \-activerelief activeRelief Relief
 Specifies the 3-D effect desired for the active item of the widget.
-See the \fB-relief\fR option for details.
+See the \fB\-relief\fR option for details.
 .OP \-anchor anchor Anchor
 Specifies how the information in a widget (e.g. text or a bitmap)
 is to be displayed in the widget.
@@ -292,7 +292,7 @@ The script must return \fB0\fR, \fB1\fR, or an empty string:  a
 \fB0\fR or \fB1\fR value specifies whether the window will receive
 the input focus, and an empty string results in the default decision
 described above.
-Note: this interpretation of the option is defined entirely by
+Note that this interpretation of the option is defined entirely by
 the Tcl scripts that implement traversal:  the widget implementations
 ignore the option entirely, so you can change its meaning if you
 redefine the keyboard traversal scripts.

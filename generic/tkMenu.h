@@ -284,7 +284,7 @@ typedef struct TkMenu {
 				 * active element (if any). */
     Tcl_Obj *activeBorderWidthPtr;
 				/* Width of border around active element. */
-    Tcl_Obj *reliefPtr;		/* 3-d effect: TK_RELIEF_RAISED, etc. */
+    int relief;		/* 3-d effect: TK_RELIEF_RAISED, etc. */
     Tcl_Obj *fontPtr;		/* Text font for menu entries. */
     Tcl_Obj *fgPtr;		/* Foreground color for entries. */
     Tcl_Obj *disabledFgPtr;	/* Foreground color when disabled. NULL means
@@ -541,9 +541,9 @@ MODULE_SCOPE void	TkpMenuInit(void);
 MODULE_SCOPE int	TkpMenuNewEntry(TkMenuEntry *mePtr);
 MODULE_SCOPE int	TkpNewMenu(TkMenu *menuPtr);
 MODULE_SCOPE int	TkpPostMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y, int index);
+			    int x, int y, Tcl_Size index);
 MODULE_SCOPE int	TkpPostTearoffMenu(Tcl_Interp *interp, TkMenu *menuPtr,
-			    int x, int y, int index);
+			    int x, int y, Tcl_Size index);
 MODULE_SCOPE void	TkpSetWindowMenuBar(Tk_Window tkwin, TkMenu *menuPtr);
 
 #endif /* _TKMENU */

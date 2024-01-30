@@ -446,7 +446,7 @@ ExpandPercents(
 	    /* No more %-sequences to expand.
 	     * Copy the rest of the template.
 	     */
-	    Tcl_DStringAppend(dsPtr, templ, -1);
+	    Tcl_DStringAppend(dsPtr, templ, TCL_INDEX_NONE);
 	    return;
 	}
 	if (string != templ) {
@@ -477,11 +477,7 @@ ExpandPercents(
 		string = numStorage;
 		break;
 	    case 'i': /* index of insert/delete */
-		if (index == TCL_INDEX_NONE) {
-		    snprintf(numStorage, sizeof(numStorage), "-1");
-		} else {
-		    snprintf(numStorage, sizeof(numStorage), "%" TCL_SIZE_MODIFIER "u", index);
-		}
+		snprintf(numStorage, sizeof(numStorage), "%" TCL_SIZE_MODIFIER "d", index);
 		string = numStorage;
 		break;
 	    case 'P': /* 'Peeked' new value of the string */
@@ -591,7 +587,7 @@ static int EntryNeedsValidation(VMODE vmode, VREASON reason)
  * Returns:
  *	TCL_OK if the change is accepted
  *	TCL_BREAK if the change is rejected
- *      TCL_ERROR if any errors occurred
+ *	TCL_ERROR if any errors occurred
  *
  * The change will be rejected if -validatecommand returns 0,
  * or if -validatecommand or -invalidcommand modifies the value.

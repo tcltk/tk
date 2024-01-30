@@ -90,9 +90,9 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     Tcl_PrintDouble(interp, (double)s->first / s->total, arg1+1);
     Tcl_PrintDouble(interp, (double)s->last / s->total, arg2+1);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, s->scrollCmd, -1);
-    Tcl_DStringAppend(&buf, arg1, -1);
-    Tcl_DStringAppend(&buf, arg2, -1);
+    Tcl_DStringAppend(&buf, s->scrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, arg1, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, arg2, TCL_INDEX_NONE);
 
     Tcl_Preserve(corePtr);
     code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);

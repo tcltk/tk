@@ -13,58 +13,49 @@ Tk_Alloc3DBorderFromObj, Tk_ClipDrawableToRect, Tk_DrawHighlightBorder, Tk_Get3D
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
+
+Tk_3DBorder
+\fBTk_Alloc3DBorderFromObj\fR(\fIinterp, tkwin, objPtr\fR)
+.sp
+\fBTk_ClipDrawableToRect\fR(\fIdisplay, drawable, x, y, width, height\fR)
+.sp
+\fBTk_DrawHighlightBorder\fR(\fItkwin, fgGC, bgGC, highlightWidth, drawable\fR)
 .sp
 Tk_3DBorder
-\fBTk_Alloc3DBorderFromObj(\fIinterp, tkwin, objPtr\fB)\fR
+\fBTk_Get3DBorder\fR(\fIinterp, tkwin, colorName\fR)
 .sp
-void
-\fBTk_ClipDrawableToRect(\fIdisplay, drawable, x, y, width, height\fB)\fR
-.sp
-void
-\fBTk_DrawHighlightBorder(\fItkwin, fgGC, bgGC, highlightWidth, drawable\fB)\fR
+\fBTk_Get3DBorderColors\fR(\fIborder, bgColorPtr, darkColorPtr, lightColorPtr\fR)
 .sp
 Tk_3DBorder
-\fBTk_Get3DBorder(\fIinterp, tkwin, colorName\fB)\fR
+\fBTk_Get3DBorderFromObj\fR(\fItkwin, objPtr\fR)
 .sp
-void
-\fBTk_Get3DBorderColors(\fIborder, bgColorPtr, darkColorPtr, lightColorPtr\fB)\fR
+\fBTk_Draw3DRectangle\fR(\fItkwin, drawable, border, x, y, width, height, borderWidth, relief\fR)
 .sp
-Tk_3DBorder
-\fBTk_Get3DBorderFromObj(\fItkwin, objPtr\fB)\fR
+\fBTk_Fill3DRectangle\fR(\fItkwin, drawable, border, x, y, width, height, borderWidth, relief\fR)
 .sp
-void
-\fBTk_Draw3DRectangle(\fItkwin, drawable, border, x, y, width, height, borderWidth, relief\fB)\fR
+\fBTk_Draw3DPolygon\fR(\fItkwin, drawable, border, pointPtr, numPoints, polyBorderWidth, leftRelief\fR)
 .sp
-void
-\fBTk_Fill3DRectangle(\fItkwin, drawable, border, x, y, width, height, borderWidth, relief\fB)\fR
+\fBTk_Fill3DPolygon\fR(\fItkwin, drawable, border, pointPtr, numPoints, polyBorderWidth, leftRelief\fR)
 .sp
-void
-\fBTk_Draw3DPolygon(\fItkwin, drawable, border, pointPtr, numPoints, polyBorderWidth, leftRelief\fB)\fR
+\fBTk_3DVerticalBevel\fR(\fItkwin, drawable, border, x, y, width, height, leftBevel, relief\fR)
 .sp
-void
-\fBTk_Fill3DPolygon(\fItkwin, drawable, border, pointPtr, numPoints, polyBorderWidth, leftRelief\fB)\fR
+\fBTk_3DHorizontalBevel\fR(\fItkwin, drawable, border, x, y, width, height, leftIn, rightIn, topBevel, relief\fR)
 .sp
-void
-\fBTk_3DVerticalBevel\fR(\fItkwin, drawable, border, x, y, width, height, leftBevel, relief\fB)\fR
-.sp
-void
-\fBTk_3DHorizontalBevel\fR(\fItkwin, drawable, border, x, y, width, height, leftIn, rightIn, topBevel, relief\fB)\fR
-.sp
-void
-\fBTk_SetBackgroundFromBorder(\fItkwin, border\fB)\fR
+\fBTk_SetBackgroundFromBorder\fR(\fItkwin, border\fR)
 .sp
 const char *
-\fBTk_NameOf3DBorder(\fIborder\fB)\fR
+\fBTk_NameOf3DBorder\fR(\fIborder\fR)
 .sp
 XColor *
-\fBTk_3DBorderColor(\fIborder\fB)\fR
+\fBTk_3DBorderColor\fR(\fIborder\fR)
 .sp
 GC *
-\fBTk_3DBorderGC(\fItkwin, border, which\fB)\fR
+\fBTk_3DBorderGC\fR(\fItkwin, border, which\fR)
 .sp
-\fBTk_Free3DBorderFromObj(\fItkwin, objPtr\fB)\fR
+\fBTk_Free3DBorderFromObj\fR(\fItkwin, objPtr\fR)
 .sp
-\fBTk_Free3DBorder(\fIborder\fB)\fR
+\fBTk_Free3DBorder\fR(\fIborder\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tk_3DBorder" borderWidth
 .AP Tcl_Interp *interp in
@@ -100,7 +91,8 @@ Width of border in pixels. Positive means border is inside rectangle
 given by \fIx\fR, \fIy\fR, \fIwidth\fR, \fIheight\fR, negative means
 border is outside rectangle.
 .AP int highlightWidth in
-Width of ring around the outside of the widget if the widget has received the input focus.
+Width of ring around the outside of the widget if the widget has received the
+input focus.
 .AP int relief in
 Indicates 3-D position of interior of value relative to exterior;
 should be \fBTK_RELIEF_RAISED\fR, \fBTK_RELIEF_SUNKEN\fR, \fBTK_RELIEF_GROOVE\fR,
@@ -147,9 +139,11 @@ Must be \fBTK_3D_FLAT_GC\fR, \fBTK_3D_LIGHT_GC\fR, or \fBTK_3D_DARK_GC\fR.
 .AP XColor *bgColorPtr out
 Pointer to location in which to store the background color of the given border.
 .AP XColor *darkColorPtr out
-Pointer to location in which to store the color for darker areas of the given border.
+Pointer to location in which to store the color for darker areas of the
+given border.
 .AP XColor *lightColorPtr out
-Pointer to location in which to store the color for lighter areas of the given border.
+Pointer to location in which to store the color for lighter areas of the
+given border.
 .AP GC fgGC in
 Foreground X graphics context.
 .AP GC fgGC in
@@ -180,12 +174,15 @@ information about the return value in \fIobjPtr\fR, which speeds up
 future calls to \fBTk_Alloc3DBorderFromObj\fR with the same \fIobjPtr\fR
 and \fItkwin\fR.
 .PP
-\fBTk_ClipDrawableToRect\fR will clip all drawing into the drawable d to the given rectangle. If width or height are negative, reset to no clipping.
-Subsequent drawing into d is offset and clipped as specified.
-The function is only used when \fBTK_NO_DOUBLE_BUFFERING\fR is specified at compile time.
+\fBTk_ClipDrawableToRect\fR will clip all drawing into the drawable \fId\fR
+to the given rectangle. If \fIwidth\fR or \fIheight\fR are negative, reset
+to no clipping.
+Subsequent drawing into \fId\fR is offset and clipped as specified.
+The function is only used when \fBTK_NO_DOUBLE_BUFFERING\fR is specified at
+compile time.
 .PP
-\fBTk_DrawHighlightBorder\fR draws a rectangular ring around the outside of a widget
-to indicate that it has received the input focus.
+\fBTk_DrawHighlightBorder\fR draws a rectangular ring around the outside of
+a widget to indicate that it has received the input focus.
 On the Macintosh, this puts a 1 pixel border in the bgGC color between
 the widget and the focus ring, except in the case where highlightWidth
 is 1, in which case the border is left out.
@@ -226,8 +223,8 @@ which of several three-dimensional effects is desired:
 \fBTK_RELIEF_RAISED\fR means that the interior of the rectangle should
 appear raised relative to the exterior of the rectangle, and
 \fBTK_RELIEF_SUNKEN\fR means that the interior should appear depressed.
-\fBTK_RELIEF_GROOVE\fR and \fBTK_RELIEF_RIDGE\fR mean that there should appear to be
-a groove or ridge around the exterior of the rectangle.
+\fBTK_RELIEF_GROOVE\fR and \fBTK_RELIEF_RIDGE\fR mean that there should
+appear to be a groove or ridge around the exterior of the rectangle.
 .PP
 \fBTk_Fill3DRectangle\fR is somewhat like \fBTk_Draw3DRectangle\fR except
 that it first fills the rectangular area with the background color
@@ -325,4 +322,5 @@ There should be exactly one call to \fBTk_Free3DBorderFromObj\fR or
 \fBTk_Free3DBorder\fR for each call to \fBTk_Alloc3DBorderFromObj\fR
 or \fBTk_Get3DBorder\fR.
 .SH KEYWORDS
-3D, background, border, color, depressed, illumination, value, polygon, raised, shadow, three-dimensional effect
+3D, background, border, color, depressed, illumination, value, polygon,
+raised, shadow, three-dimensional effect

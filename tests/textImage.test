@@ -268,7 +268,7 @@ test textImage-1.19 {basic image naming} -setup {
 } -cleanup {
     destroy .t
     image delete small
-} -result {small small#1 small#6342 small#6343}
+} -result {small small#1 small#2 small#6342}
 
 test textImage-2.1 {debug} -setup {
     destroy .t

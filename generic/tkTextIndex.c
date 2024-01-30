@@ -48,14 +48,6 @@ static int              IndexCountBytesOrdered(const TkText *textPtr,
                             const TkTextIndex *indexPtr1,
                             const TkTextIndex *indexPtr2);
 
-#if defined(USE_TCL_STUBS) && (TCL_MAJOR_VERSION < 9)
-#   undef Tcl_UtfPrev
-#   define Tcl_UtfPrev (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
-		((const char * (*)(const char *, const char *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[656])) \
-		: ((const char * (*)(const char *, const char *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[331])))
-#endif
-
-
 /*
  * The "textindex" Tcl_Obj definition:
  */
@@ -395,7 +387,7 @@ TkTextMakeByteIndex(
     const TkText *textPtr,
     int lineIndex,		/* Index of desired line (0 means first line
 				 * of text). */
-    int byteIndex,		/* Byte index of desired character. */
+    Tcl_Size byteIndex,		/* Byte index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
     TkTextSegment *segPtr;
@@ -1125,7 +1117,7 @@ TkTextPrintIndex(
 	    linePtr = TkBTreeNextLine(NULL, linePtr);
 	    segPtr = linePtr->segPtr;
 	}
-	if (numBytes <= (int)segPtr->size) {
+	if (numBytes <= segPtr->size) {
 	    break;
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
@@ -2465,7 +2457,7 @@ StartEnd(
 		indexPtr->byteIndex -= chSize;
 	    }
 	    offset -= chSize;
-	    if ((int)offset < 0) {
+	    if (offset < 0) {
 		if (indexPtr->byteIndex == 0) {
 		    goto done;
 		}

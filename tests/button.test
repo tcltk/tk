@@ -343,7 +343,7 @@ test button-1.34 {configuration option: "bd" for label} -setup {
     .l configure -bd badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.35 {configuration option: "bd" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -362,7 +362,7 @@ test button-1.36 {configuration option: "bd" for button} -setup {
     .b configure -bd badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.37 {configuration option: "bd" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -381,7 +381,7 @@ test button-1.38 {configuration option: "bd" for checkbutton} -setup {
     .c configure -bd badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.39 {configuration option: "bd" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -400,7 +400,7 @@ test button-1.40 {configuration option: "bd" for radiobutton} -setup {
     .r configure -bd badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test button-1.41 {configuration option: "bg" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -574,7 +574,7 @@ test button-1.58 {configuration option: "borderwidth" for label} -setup {
     .l configure -borderwidth badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.59 {configuration option: "borderwidth" for button} -setup {
     button .b -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -593,7 +593,7 @@ test button-1.60 {configuration option: "borderwidth" for button} -setup {
     .b configure -borderwidth badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.61 {configuration option: "borderwidth" for checkbutton} -setup {
     checkbutton .c -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -612,7 +612,7 @@ test button-1.62 {configuration option: "borderwidth" for checkbutton} -setup {
     .c configure -borderwidth badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.63 {configuration option: "borderwidth" for radiobutton} -setup {
     radiobutton .r -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -631,7 +631,7 @@ test button-1.64 {configuration option: "borderwidth" for radiobutton} -setup {
     .r configure -borderwidth badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test button-1.65 {configuration option: "command" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1405,7 +1405,7 @@ test button-1.144 {configuration option: "highlightthickness" for label} -setup 
     .l configure -highlightthickness badValue
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.145 {configuration option: "highlightthickness" for button} -setup {
     button .b -borderwidth 2 -font {Helvetica -12 bold}
     pack .b
@@ -1424,7 +1424,7 @@ test button-1.146 {configuration option: "highlightthickness" for button} -setup
     .b configure -highlightthickness badValue
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.147 {configuration option: "highlightthickness" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -font {Helvetica -12 bold}
     pack .c
@@ -1443,7 +1443,7 @@ test button-1.148 {configuration option: "highlightthickness" for checkbutton} -
     .c configure -highlightthickness badValue
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 test button-1.149 {configuration option: "highlightthickness" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -font {Helvetica -12 bold}
     pack .r
@@ -1462,7 +1462,7 @@ test button-1.150 {configuration option: "highlightthickness" for radiobutton} -
     .r configure -highlightthickness badValue
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test button-1.151 {configuration option: "image" for label} -constraints {
     testImageType
@@ -1744,7 +1744,7 @@ test button-1.177 {configuration option: "overrelief" for button} -setup {
 } -cleanup {
     destroy .b
 } -result {}
-test button-1.178 {configuration option: "overrelief" for button} -constraints needsTcl87 -setup {
+test button-1.178 {configuration option: "overrelief" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
     update
@@ -1763,7 +1763,7 @@ test button-1.179 {configuration option: "overrelief" for checkbutton} -setup {
 } -cleanup {
     destroy .c
 } -result {}
-test button-1.180 {configuration option: "overrelief" for checkbutton} -constraints needsTcl87 -setup {
+test button-1.180 {configuration option: "overrelief" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
     update
@@ -1782,7 +1782,7 @@ test button-1.181 {configuration option: "overrelief" for radiobutton} -setup {
 } -cleanup {
     destroy .r
 } -result {}
-test button-1.182 {configuration option: "overrelief" for radiobutton} -constraints needsTcl87 -setup {
+test button-1.182 {configuration option: "overrelief" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
     update
@@ -1810,7 +1810,7 @@ test button-1.184 {configuration option: "padx" for label} -setup {
     .l configure -padx 420x
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 test button-1.185 {configuration option: "padx" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1829,7 +1829,7 @@ test button-1.186 {configuration option: "padx" for button} -setup {
     .b configure -padx 420x
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 test button-1.187 {configuration option: "padx" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1848,7 +1848,7 @@ test button-1.188 {configuration option: "padx" for checkbutton} -setup {
     .c configure -padx 420x
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 test button-1.189 {configuration option: "padx" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1867,7 +1867,7 @@ test button-1.190 {configuration option: "padx" for radiobutton} -setup {
     .r configure -padx 420x
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 
 test button-1.191 {configuration option: "pady" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1887,7 +1887,7 @@ test button-1.192 {configuration option: "pady" for label} -setup {
     .l configure -pady 420x
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 test button-1.193 {configuration option: "pady" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -1906,7 +1906,7 @@ test button-1.194 {configuration option: "pady" for button} -setup {
     .b configure -pady 420x
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 test button-1.195 {configuration option: "pady" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -1925,7 +1925,7 @@ test button-1.196 {configuration option: "pady" for checkbutton} -setup {
     .c configure -pady 420x
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 test button-1.197 {configuration option: "pady" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -1944,7 +1944,7 @@ test button-1.198 {configuration option: "pady" for radiobutton} -setup {
     .r configure -pady 420x
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance but got "420x"}
 
 test button-1.199 {configuration option: "repeatdelay" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2600,7 +2600,7 @@ test button-1.263 {configuration option: "wraplength" for label} -setup {
     .l configure -wraplength 6x
 } -cleanup {
     destroy .l
-} -returnCodes {error} -result {bad screen distance "6x"}
+} -returnCodes {error} -result {expected screen distance but got "6x"}
 test button-1.264 {configuration option: "wraplength" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .b
@@ -2619,7 +2619,7 @@ test button-1.265 {configuration option: "wraplength" for button} -setup {
     .b configure -wraplength 6x
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result {bad screen distance "6x"}
+} -returnCodes {error} -result {expected screen distance but got "6x"}
 test button-1.266 {configuration option: "wraplength" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .c
@@ -2638,7 +2638,7 @@ test button-1.267 {configuration option: "wraplength" for checkbutton} -setup {
     .c configure -wraplength 6x
 } -cleanup {
     destroy .c
-} -returnCodes {error} -result {bad screen distance "6x"}
+} -returnCodes {error} -result {expected screen distance but got "6x"}
 test button-1.268 {configuration option: "wraplength" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .r
@@ -2657,7 +2657,7 @@ test button-1.269 {configuration option: "wraplength" for radiobutton} -setup {
     .r configure -wraplength 6x
 } -cleanup {
     destroy .r
-} -returnCodes {error} -result {bad screen distance "6x"}
+} -returnCodes {error} -result {expected screen distance but got "6x"}
 
 test button-1.270 {configuration options} -body {
 # Additional check to make sure that -selectcolor may be empty in
@@ -3393,14 +3393,14 @@ test button-5.20 {ConfigureButton - -width option} -body {
     .b configure -width abc
 } -cleanup {
     destroy .b
-} -returnCodes {error} -result  {bad screen distance "abc"}
+} -returnCodes {error} -result  {expected screen distance but got "abc"}
 test button-5.21 {ConfigureButton - -width option} -body {
     button .b -bitmap questhead
     catch {.b configure -width abc}
     return $errorInfo
 } -cleanup {
     destroy .b
-} -result {bad screen distance "abc"
+} -result {expected screen distance but got "abc"
     (processing -width option)
     invoked from within
 ".b configure -width abc"}
@@ -3414,7 +3414,7 @@ test button-5.22 {ConfigureButton - -height option} -constraints {
 } -cleanup {
     destroy .b
     image delete image1
-} -returnCodes {error} -result {bad screen distance "0.5x"}
+} -returnCodes {error} -result {expected screen distance but got "0.5x"}
 test button-5.23 {ConfigureButton - -height option} -constraints {
     testImageType
 } -setup {
@@ -3427,7 +3427,7 @@ test button-5.23 {ConfigureButton - -height option} -constraints {
 } -cleanup {
     destroy .b
     image delete image1
-} -result  {bad screen distance "0.5x"
+} -result  {expected screen distance but got "0.5x"
     (processing -height option)
     invoked from within
 ".b configure -height 0.5x"}

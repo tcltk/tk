@@ -138,7 +138,7 @@ static void StateSpecUpdateString(Tcl_Obj *objPtr)
 	if (mask & (1<<i)) {
 	    if (offbits & (1<<i))
 		Tcl_DStringAppend(&result, "!", 1);
-	    Tcl_DStringAppend(&result, stateNames[i], -1);
+	    Tcl_DStringAppend(&result, stateNames[i], TCL_INDEX_NONE);
 	    Tcl_DStringAppend(&result, " ", 1);
 	}
     }

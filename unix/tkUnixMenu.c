@@ -906,7 +906,7 @@ int
 TkpPostMenu(
     Tcl_Interp *interp,
     TkMenu *menuPtr,
-    int x, int y, int index)
+    int x, int y, Tcl_Size index)
 {
     return TkpPostTearoffMenu(interp, menuPtr, x, y, index);
 }
@@ -936,7 +936,7 @@ int
 TkpPostTearoffMenu(
     TCL_UNUSED(Tcl_Interp *),	/* The interpreter of the menu */
     TkMenu *menuPtr,		/* The menu we are posting */
-    int x, int y, int index)	/* The root X,Y coordinates where the
+    int x, int y, Tcl_Size index)	/* The root X,Y coordinates where the
 				 * specified entry will be posted */
 {
     int vRootX, vRootY, vRootWidth, vRootHeight;
@@ -963,7 +963,7 @@ TkpPostTearoffMenu(
      * at the given coordinates.
      */
 
-    if (index >= (int)menuPtr->numEntries) {
+    if (index >= menuPtr->numEntries) {
 	index = menuPtr->numEntries - 1;
     }
     if (index >= 0) {
@@ -1098,8 +1098,9 @@ TkpComputeMenubarGeometry(
 {
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
-    int width, height, i, j, x, y, currentRowHeight, maxWidth;
-    int maxWindowWidth, lastRowBreak, lastEntry;
+    int width, height, x, y, currentRowHeight, maxWidth;
+    Tcl_Size i, j, lastRowBreak;
+    int maxWindowWidth, lastEntry;
     int activeBorderWidth, helpMenuIndex = -1;
     TkMenuEntry *mePtr;
 
@@ -1137,7 +1138,7 @@ TkpComputeMenubarGeometry(
 	menuFont = Tk_GetFontFromObj(menuPtr->tkwin, menuPtr->fontPtr);
 	Tk_GetFontMetrics(menuFont, &menuMetrics);
 
-	for (i = 0; i < (int)menuPtr->numEntries; i++) {
+	for (i = 0; i < menuPtr->numEntries; i++) {
 	    mePtr = menuPtr->entries[i];
 	    mePtr->entryFlags &= ~ENTRY_LAST_COLUMN;
 	    if (mePtr->fontPtr != NULL) {
@@ -1214,7 +1215,7 @@ TkpComputeMenubarGeometry(
 	    maxWidth = x + menuPtr->entries[lastEntry]->width + borderWidth;
 	}
 	x = borderWidth;
-	for (j = lastRowBreak; j < (int)menuPtr->numEntries; j++) {
+	for (j = lastRowBreak; j < menuPtr->numEntries; j++) {
 	    if (j == helpMenuIndex) {
 		continue;
 	    }
@@ -1685,7 +1686,8 @@ TkpComputeStandardMenuGeometry(
     Tk_Font tkfont, menuFont;
     Tk_FontMetrics menuMetrics, entryMetrics, *fmPtr;
     int x, y, height, width, indicatorSpace, labelWidth, accelWidth;
-    int windowWidth, windowHeight, accelSpace, i, j, lastColumnBreak = 0;
+    int windowWidth, windowHeight, accelSpace;
+    Tcl_Size i, j, lastColumnBreak = 0;
     TkMenuEntry *mePtr;
     int borderWidth, activeBorderWidth;
 
@@ -1715,7 +1717,7 @@ TkpComputeStandardMenuGeometry(
     Tk_GetFontMetrics(menuFont, &menuMetrics);
     accelSpace = Tk_TextWidth(menuFont, "M", 1);
 
-    for (i = 0; i < (int)menuPtr->numEntries; i++) {
+    for (i = 0; i < menuPtr->numEntries; i++) {
 	mePtr = menuPtr->entries[i];
 	if (mePtr->fontPtr == NULL) {
 	    tkfont = menuFont;
@@ -1810,7 +1812,7 @@ TkpComputeStandardMenuGeometry(
     if (accelWidth != 0) {
 	labelWidth += accelSpace;
     }
-    for (j = lastColumnBreak; j < (int)menuPtr->numEntries; j++) {
+    for (j = lastColumnBreak; j < menuPtr->numEntries; j++) {
 	menuPtr->entries[j]->indicatorSpace = indicatorSpace;
 	menuPtr->entries[j]->labelWidth = labelWidth;
 	menuPtr->entries[j]->width = indicatorSpace + labelWidth

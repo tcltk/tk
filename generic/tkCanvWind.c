@@ -176,7 +176,7 @@ CreateWinItem(
     Tcl_Obj *const objv[])	/* Arguments describing window. */
 {
     WindowItem *winItemPtr = (WindowItem *) itemPtr;
-    int i;
+    Tcl_Size i;
 
     if (objc == 0) {
 	Tcl_Panic("canvas did not pass any coords");
@@ -207,10 +207,10 @@ CreateWinItem(
 	    i = 1;
 	}
     }
-    if (WinItemCoords(interp, canvas, itemPtr, (Tcl_Size)i, objv) != TCL_OK) {
+    if (WinItemCoords(interp, canvas, itemPtr, i, objv) != TCL_OK) {
 	goto error;
     }
-    if (ConfigureWinItem(interp, canvas, itemPtr, objc-(Tcl_Size)i, objv+i, 0)
+    if (ConfigureWinItem(interp, canvas, itemPtr, objc - i, objv + i, 0)
 	    == TCL_OK) {
 	return TCL_OK;
     }
@@ -261,7 +261,7 @@ WinItemCoords(
 		return TCL_ERROR;
 	    } else if (objc != 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "u", objc));
+			"wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "d", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW",
 			NULL);
 		return TCL_ERROR;
@@ -275,7 +275,7 @@ WinItemCoords(
 	ComputeWindowBbox(canvas, winItemPtr);
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "u", objc));
+		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "d", objc));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "WINDOW", NULL);
 	return TCL_ERROR;
     }

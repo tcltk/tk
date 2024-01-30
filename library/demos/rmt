@@ -7,7 +7,7 @@ exec wish "$0" ${1+"$@"}
 # Tk applications.  It allows you to select an application and
 # then type commands to that application.
 
-package require Tk
+package require tk
 
 wm title . "Tk Remote Controller"
 wm iconname . "Tk Remote"

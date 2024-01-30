@@ -14,25 +14,32 @@ wish \- Simple windowing shell
 .SH SYNOPSIS
 \fBwish\fR ?\fB\-encoding \fIname\fR? ?\fIfileName arg ...\fR?
 .SH OPTIONS
+.\" OPTION: -encoding
 .IP "\fB\-encoding \fIname\fR" 20
 Specifies the encoding of the text stored in \fIfileName\fR.
 This option is only recognized prior to the \fIfileName\fR argument.
+.\" OPTION: -colormap
 .IP "\fB\-colormap \fInew\fR" 20
 Specifies that the window should have a new private colormap instead of
 using the default colormap for the screen.
+.\" OPTION: -display
 .IP "\fB\-display \fIdisplay\fR" 20
 Display (and screen) on which to display window.
+.\" OPTION: -geometry
 .IP "\fB\-geometry \fIgeometry\fR" 20
 Initial geometry to use for window.  If this option is specified, its
 value is stored in the \fBgeometry\fR global variable of the application's
 Tcl interpreter.
+.\" OPTION: -name
 .IP "\fB\-name \fIname\fR" 20
 Use \fIname\fR as the title to be displayed in the window, and
 as the name of the interpreter for \fBsend\fR commands.
+.\" OPTION: -sync
 .IP "\fB\-sync\fR" 20
 Execute all X server commands synchronously, so that errors
 are reported immediately.  This will result in much slower
 execution, but it is useful for debugging.
+.\" OPTION: -use
 .IP "\fB\-use\fR \fIid\fR" 20
 Specifies that the main window for the application is to be embedded in
 the window whose identifier is \fIid\fR, instead of being created as an
@@ -44,10 +51,12 @@ Note that on some platforms this will only work correctly if \fIid\fR
 refers to a Tk \fBframe\fR or \fBtoplevel\fR that has its
 \fB\-container\fR option enabled.
 .RE
+.\" OPTION: -visual
 .IP "\fB\-visual \fIvisual\fR" 20
 Specifies the visual to use for the window.
 \fIVisual\fR may have any of the forms supported by the \fBTk_GetVisual\fR
 procedure.
+.\" OPTION: --
 .IP "\fB\-\|\-\fR" 20
 Pass all remaining arguments through to the script's \fBargv\fR
 variable without interpreting them.
@@ -117,30 +126,40 @@ file, is the same as its name except that the first letter is
 capitalized.
 .SH "VARIABLES"
 .PP
-\fBWish\fR sets the following Tcl variables:
+\fBWish\fR sets the following global Tcl variables:
+.\" VARIABLE: argc
 .TP 15
 \fBargc\fR
+.
 Contains a count of the number of \fIarg\fR arguments (0 if none),
 not including the options described above.
+.\" VARIABLE: argv
 .TP 15
 \fBargv\fR
+.
 Contains a Tcl list whose elements are the \fIarg\fR arguments
 that follow a \fB\-\|\-\fR option or do not match any of the
 options described in \fBOPTIONS\fR above, in order, or an empty string
 if there are no such arguments.
+.\" VARIABLE: argv0
 .TP 15
 \fBargv0\fR
+.
 Contains \fIfileName\fR if it was specified.
 Otherwise, contains the name by which \fBwish\fR was invoked.
+.\" VARIABLE: geometry
 .TP 15
 \fBgeometry\fR
+.
 If the \fB\-geometry\fR option is specified, \fBwish\fR copies its
 value into this variable.  If the variable still exists after
 \fIfileName\fR has been evaluated, \fBwish\fR uses the value of
 the variable in a \fBwm geometry\fR command to set the main
 window's geometry.
+.\" VARIABLE: tcl_interactive
 .TP 15
 \fBtcl_interactive\fR
+.
 Contains 1 if \fBwish\fR is reading commands interactively (\fIfileName\fR
 was not specified and standard input is a terminal-like
 device), 0 otherwise.
