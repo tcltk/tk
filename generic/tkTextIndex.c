@@ -395,7 +395,7 @@ TkTextMakeByteIndex(
     const TkText *textPtr,
     int lineIndex,		/* Index of desired line (0 means first line
 				 * of text). */
-    int byteIndex,		/* Byte index of desired character. */
+    Tcl_Size byteIndex,		/* Byte index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
     TkTextSegment *segPtr;
@@ -2465,7 +2465,7 @@ StartEnd(
 		indexPtr->byteIndex -= chSize;
 	    }
 	    offset -= chSize;
-	    if ((int)offset < 0) {
+	    if (offset < 0) {
 		if (indexPtr->byteIndex == 0) {
 		    goto done;
 		}

@@ -465,7 +465,8 @@ EXTERN int		TkTextIndexForwBytes(const struct TkText *textPtr,
 /* 162 */
 EXTERN struct TkTextIndex * TkTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
-				int byteIndex, struct TkTextIndex *indexPtr);
+				Tcl_Size byteIndex,
+				struct TkTextIndex *indexPtr);
 /* 163 */
 EXTERN Tcl_Size		TkTextPrintIndex(const struct TkText *textPtr,
 				const struct TkTextIndex *indexPtr,
@@ -767,7 +768,7 @@ typedef struct TkIntStubs {
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
     int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
     int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 161 */
-    struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, int byteIndex, struct TkTextIndex *indexPtr); /* 162 */
+    struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, Tcl_Size byteIndex, struct TkTextIndex *indexPtr); /* 162 */
     Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
     int (*tkTextXviewCmd) (struct TkText *textPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 165 */
