@@ -258,9 +258,9 @@ proc ttk::entry::NextWord {w start} {
 	return end
     }
     variable State
-    set pos [tk::endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos >= 0} {
-	set pos [tk::startOfNextWord [$w get] $pos]
+	set pos [tk::startOfNextWord [$w get] $pos [$w cget -locale]]
     }
     if {$pos < 0} {
 	return end
@@ -278,7 +278,7 @@ proc ttk::entry::SelectNextWord {w start} {
 	return end
     }
     variable State
-    set pos [tk::endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return end
     }
@@ -292,7 +292,7 @@ proc ttk::entry::PrevWord {w start} {
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return 0
     }
-    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return 0
     }
@@ -538,12 +538,12 @@ proc ttk::entry::CharSelect {w from to} {
 #
 proc ttk::entry::WordSelect {w from to} {
     if {$to < $from} {
-	set first [WordBack [$w get] $to]
-	set last [WordForward [$w get] $from]
+	set first [WordBack [$w get] $to [$w cget -locale]]
+	set last [WordForward [$w get] $from [$w cget -locale]]
 	$w icursor $first
     } else {
-	set first [WordBack [$w get] $from]
-	set last [WordForward [$w get] $to]
+	set first [WordBack [$w get] $from [$w cget -locale]]
+	set last [WordForward [$w get] $to [$w cget -locale]]
 	$w icursor $last
     }
     $w selection range $first $last
@@ -551,12 +551,12 @@ proc ttk::entry::WordSelect {w from to} {
 
 ## WordBack, WordForward -- helper routines for WordSelect.
 #
-proc ttk::entry::WordBack {text index} {
-    if {[set pos [tk::wordBreakBefore $text $index]] < 0} { return 0 }
+proc ttk::entry::WordBack {text index {locale {}}} {
+    if {[set pos [tk::wordBreakBefore $text $index $locale]] < 0} { return 0 }
     return $pos
 }
-proc ttk::entry::WordForward {text index} {
-    if {[set pos [tk::wordBreakAfter $text $index]] < 0} { return end }
+proc ttk::entry::WordForward {text index {locale {}}} {
+    if {[set pos [tk::wordBreakAfter $text $index $locale]] < 0} { return end }
     return $pos
 }
 
