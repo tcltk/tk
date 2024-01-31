@@ -96,8 +96,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_SYNONYM, "-overstrikefg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, TK_OPTION_NULL_OK, "-overstrikecolor", TK_TEXT_DEPRECATED_OVERSTRIKE_FG},
 #endif /* SUPPORT_DEPRECATED_TAG_OPTIONS */
-    {TK_OPTION_STRING, "-relief", NULL, NULL,
-	NULL, offsetof(TkTextTag, reliefPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_RELIEF, "-relief", NULL, NULL,
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, relief), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-rmargin", NULL, NULL,
 	NULL, offsetof(TkTextTag, rMarginObj), offsetof(TkTextTag, rMargin), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BORDER, "-rmargincolor", NULL, NULL,
@@ -151,27 +151,6 @@ static TkTextTag *	FindTag(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *t
 static int		EnumerateTags(Tcl_Interp *interp, TkText *textPtr, int objc,
 			    Tcl_Obj *const *objv);
 static void		GrabSelection(TkText *textPtr, const TkTextTag *tagPtr, int add, int changed);
-
-/*
- * Helper for guarded release of objects.
- */
-
-static void
-Tcl_GuardedDecrRefCount(Tcl_Obj *objPtr)
-{
-#ifndef NDEBUG
-    /*
-     * Tcl does not provide any function for querying the reference count.
-     * So we need a work-around. Why does Tcl not provide a guarded version
-     * for such a dangerous function?
-     */
-    assert(objPtr);
-    Tcl_IncrRefCount(objPtr);
-    assert(Tcl_IsShared(objPtr));
-    Tcl_DecrRefCount(objPtr);
-#endif
-    Tcl_DecrRefCount(objPtr);
-}
 
 /*
  * We need some private undo/redo stuff.
@@ -1033,7 +1012,7 @@ TkTextUpdateTagDisplayFlags(
 	    || tagPtr->attrs.inactiveBorder
 	    || tagPtr->selBorder
 	    || tagPtr->inactiveSelBorder
-	    || tagPtr->reliefPtr
+	    || tagPtr->relief != TK_RELIEF_NULL
 	    || tagPtr->bgStipple != None
 	    || tagPtr->indentBg >= 0
 	    || tagPtr->attrs.fgColor
@@ -1078,9 +1057,6 @@ SetupDefaultRelief(
 {
     if (tagPtr->isSelTag) {
 	Tk_GetRelief(textPtr->interp, DEF_TEXT_SELECT_RELIEF, &tagPtr->relief);
-	assert(strcmp(Tk_NameOfRelief(tagPtr->relief), DEF_TEXT_SELECT_RELIEF) == 0);
-	if (tagPtr->reliefPtr) { Tcl_GuardedDecrRefCount(tagPtr->reliefPtr); }
-	Tcl_IncrRefCount(tagPtr->reliefPtr = Tcl_NewStringObj(DEF_TEXT_SELECT_RELIEF, TCL_INDEX_NONE));
     } else {
 	tagPtr->relief = TK_RELIEF_FLAT;
     }
@@ -1099,7 +1075,7 @@ TkConfigureTag(
     int mask = 0;
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
-    Tcl_Obj *reliefPtr = tagPtr->reliefPtr;
+    int relief = tagPtr->relief;
     Tcl_Obj *elidePtr = tagPtr->elidePtr;
     int elide = tagPtr->elide;
     int undo = tagPtr->undo;
@@ -1170,11 +1146,8 @@ TkConfigureTag(
     } else {
 	memset(tagPtr->lang, 0, 3);
     }
-    if (tagPtr->reliefPtr) {
-	if (Tk_GetReliefFromObj(interp, tagPtr->reliefPtr, &tagPtr->relief) != TCL_OK) {
-	    rc = TCL_ERROR;
-	}
-    } else if (reliefPtr) {
+    if (tagPtr->relief != TK_RELIEF_NULL) {
+    } else if (relief != TK_RELIEF_NULL) {
 	SetupDefaultRelief(textPtr, tagPtr);
     }
     if (tagPtr->spacing1Obj) {
@@ -1931,6 +1904,7 @@ TkTextCreateTag(
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
     tagPtr->justify = TK_JUSTIFY_NULL;
+    tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
     tagPtr->wrapMode = TEXT_WRAPMODE_NULL;
     tagPtr->undo = sharedTextPtr->undoTagging && !isSelTag;
@@ -1941,7 +1915,6 @@ TkTextCreateTag(
     DEBUG_ALLOC(tkTextCountNewTag++);
 
     tagPtr->optionTable = Tk_CreateOptionTable(textPtr->interp, tagOptionSpecs);
-    assert(!tagPtr->reliefPtr);
 
     sharedTextPtr->numTags += 1;
     sharedTextPtr->numEnabledTags += 1;

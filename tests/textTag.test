@@ -194,7 +194,7 @@ test textTag-1.23 {configuration options} -body {
     .t tag configure x -relief stupid
 } -cleanup {
     .t tag configure x -relief [lindex [.t tag configure x -relief] 3]
-} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "stupid": must be flat, groove, raised, ridge, solid, sunken, or ""}
 test textTag-1.24 {tag configuration options} -body {
     .t tag configure x -rmargin 10
     .t tag cget x -rmargin
