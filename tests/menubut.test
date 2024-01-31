@@ -74,7 +74,7 @@ test menubutton-1.9 {configuration options} -body {
 } -result 4
 test menubutton-1.10 {configuration options} -body {
     .mb configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test menubutton-1.11 {configuration options} -body {
     .mb configure -bg #ff0000
     .mb cget -bg
@@ -101,7 +101,7 @@ test menubutton-1.15 {configuration options} -body {
 } -result 1
 test menubutton-1.16 {configuration options} -body {
     .mb configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test menubutton-1.17 {configuration options} -body {
     .mb configure -cursor arrow
     .mb cget -cursor
@@ -188,7 +188,7 @@ test menubutton-1.34 {configuration options} -body {
 } -result 18
 test menubutton-1.35 {configuration options} -body {
     .mb configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test menubutton-1.36 {configuration options} -constraints {
     testImageType
 } -setup {
@@ -240,7 +240,7 @@ test menubutton-1.43 {configuration options} -body {
 } -result 12
 test menubutton-1.44 {configuration options} -body {
     .mb configure -padx 420x
-} -returnCodes error -result {bad screen distance "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test menubutton-1.45 {configuration options} -body {
     .mb configure -pady 12
     .mb cget -pady
@@ -249,7 +249,7 @@ test menubutton-1.45 {configuration options} -body {
 } -result 12
 test menubutton-1.46 {configuration options} -body {
     .mb configure -pady 420x
-} -returnCodes error -result {bad screen distance "420x"}
+} -returnCodes error -result {expected screen distance but got "420x"}
 test menubutton-1.47 {configuration options} -body {
     .mb configure -relief groove
     .mb cget -relief
@@ -312,7 +312,7 @@ test menubutton-1.58 {configuration options} -body {
 } -result 100
 test menubutton-1.59 {configuration options} -body {
     .mb configure -wraplength 6x
-} -returnCodes error -result {bad screen distance "6x"}
+} -returnCodes error -result {expected screen distance but got "6x"}
 
 
 deleteWindows
@@ -436,7 +436,7 @@ test menubutton-4.5 {ConfigureMenuButton procedure} -setup {
     .mb1 configure -width abc
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {bad screen distance "abc"}
+} -returnCodes error -result {expected screen distance but got "abc"}
 test menubutton-4.6 {ConfigureMenuButton procedure} -setup {
     deleteWindows
 } -body {
@@ -445,7 +445,7 @@ test menubutton-4.6 {ConfigureMenuButton procedure} -setup {
     return $errorInfo
 } -cleanup {
     deleteWindows
-} -result {bad screen distance "abc"
+} -result {expected screen distance but got "abc"
     (processing -width option)
     invoked from within
 ".mb1 configure -width abc"}
@@ -462,7 +462,7 @@ test menubutton-4.7 {ConfigureMenuButton procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -returnCodes error -result {bad screen distance "0.5x"}
+} -returnCodes error -result {expected screen distance but got "0.5x"}
 test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
     testImageType
 } -setup {
@@ -476,7 +476,7 @@ test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
 } -cleanup {
     deleteWindows
     imageCleanup
-} -result {bad screen distance "0.5x"
+} -result {expected screen distance but got "0.5x"
     (processing -height option)
     invoked from within
 ".mb1 configure -height 0.5x"}

@@ -90,7 +90,7 @@ test message-1.8 {configuration option: "bd"} -setup {
     .m configure -bd badValue
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test message-1.9 {configuration option: "bg"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -121,7 +121,7 @@ test message-1.11 {configuration option: "borderwidth"} -setup {
     .m cget -borderwidth
 } -cleanup {
     destroy .m
-} -result 1
+} -result 1.3
 test message-1.12 {configuration option: "borderwidth"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .m
@@ -130,7 +130,7 @@ test message-1.12 {configuration option: "borderwidth"} -setup {
     .m configure -borderwidth badValue
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test message-1.13 {configuration option: "cursor"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -270,7 +270,7 @@ test message-1.26 {configuration option: "highlightthickness"} -setup {
     .m configure -highlightthickness  badValue
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test message-1.27 {configuration option: "justify"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -310,7 +310,7 @@ test message-1.30 {configuration option: "padx"} -setup {
     .m configure -padx 420x
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance or "" but got "420x"}
 
 test message-1.31 {configuration option: "pady"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -330,7 +330,7 @@ test message-1.32 {configuration option: "pady"} -setup {
     .m configure -pady 420x
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {bad screen distance "420x"}
+} -returnCodes {error} -result {expected screen distance or "" but got "420x"}
 
 test message-1.33 {configuration option: "relief"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -392,7 +392,7 @@ test message-1.38 {configuration option: "width"} -setup {
     .m configure -width badValue
 } -cleanup {
     destroy .m
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 
 test message-2.1 {Tk_MessageObjCmd procedure} -body {

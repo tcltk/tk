@@ -12,7 +12,7 @@
 .SH NAME
 menubutton \- Create and manipulate 'menubutton' pop-up menu indicator widgets
 .SH SYNOPSIS
-\fBmenubutton\fR \fIpathName \fR?\fIoptions\fR?
+\fBmenubutton\fI pathName \fR?\fIoptions\fR?
 .SO
 \-activebackground	\-disabledforeground	\-padx
 \-activeforeground	\-font	\-pady
@@ -122,6 +122,7 @@ operations on the widget.  It has the following general form:
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for menubutton widgets:
+.\" METHOD: cget
 .TP
 \fIpathName \fBcget \fIoption\fR
 .
@@ -129,6 +130,7 @@ Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBmenubutton\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

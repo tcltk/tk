@@ -27,8 +27,9 @@ appends should be completed before returning to the event loop.
 The first argument to \fBclipboard\fR determines the format of the
 rest of the arguments and the behavior of the command.  The following
 forms are currently supported:
+.\" METHOD: append
 .TP
-\fBclipboard append\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-format\fR \fIformat\fR? ?\fB\-type\fR \fItype\fR? ?\fB\-\|\-\fR? \fIdata\fR
+\fBclipboard append\fR ?\fB\-displayof\fI window\fR? ?\fB\-format\fI format\fR? ?\fB\-type\fI type\fR? ?\fB\-\|\-\fR? \fIdata\fR
 .
 Appends \fIdata\fR to the clipboard on \fIwindow\fR's
 display in the form given by \fItype\fR with the representation given
@@ -71,15 +72,17 @@ next argument will always be used as \fIdata\fR.
 This feature may be convenient if, for example, \fIdata\fR starts
 with a \fB\-\fR.
 .RE
+.\" METHOD: clear
 .TP
-\fBclipboard clear\fR ?\fB\-displayof\fR \fIwindow\fR?
+\fBclipboard clear\fR ?\fB\-displayof\fI window\fR?
 .
 Claims ownership of the clipboard on \fIwindow\fR's display and removes
 any previous contents.  \fIWindow\fR defaults to
 .QW . .
 Returns an empty string.
+.\" METHOD: get
 .TP
-\fBclipboard get\fR ?\fB\-displayof\fR \fIwindow\fR? ?\fB\-type\fR \fItype\fR?
+\fBclipboard get\fR ?\fB\-displayof\fI window\fR? ?\fB\-type\fI type\fR?
 .
 Retrieve data from the clipboard on \fIwindow\fR's display.
 \fIWindow\fR defaults to
@@ -122,7 +125,7 @@ proc getItemConfig {canvas tag} {
       append script {$canvas create } [$canvas type $item]
       append script { } [$canvas coords $item] { }
       foreach config [$canvas itemconf $item] {
-         lassign $config name \- \- \- value
+         lassign $config name - - - value
          append script [list $name $value] { }
       }
       append script \en
@@ -133,10 +136,10 @@ proc getItemConfig {canvas tag} {
 # Set up a binding on a canvas to cut and paste an item
 set c [canvas .c]
 pack $c
-$c create text 150 30 \-text "cut and paste me"
+$c create text 150 30 -text "cut and paste me"
 bind $c <<Cut>> {
    \fBclipboard clear\fR
-   \fBclipboard append \-type\fR TkCanvasItem \e
+   \fBclipboard append -type\fR TkCanvasItem \e
          [getItemConfig %W current]
    # Delete because this is cut, not copy.
    %W delete current
@@ -144,7 +147,7 @@ bind $c <<Cut>> {
 bind $c <<Paste>> {
    catch {
       set canvas %W
-      eval [\fBclipboard get \-type\fR TkCanvasItem]
+      eval [\fBclipboard get -type\fR TkCanvasItem]
    }
 }
 .CE

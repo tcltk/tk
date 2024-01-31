@@ -79,7 +79,7 @@ test entry-1.4 {configuration option: "bd" for entry} -setup {
     .e configure -bd badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.5 {configuration option: "bg" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -119,7 +119,7 @@ test entry-1.8 {configuration option: "borderwidth" for entry} -setup {
     .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.9 {configuration option: "cursor" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -329,7 +329,7 @@ test entry-1.29 {configuration option: "highlightthickness" for entry} -setup {
     .e configure -highlightthickness badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.30 {configuration option: "insertbackground" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -369,7 +369,7 @@ test entry-1.33 {configuration option: "insertborderwidth" for entry} -setup {
     .e configure -insertborderwidth 2.6x
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "2.6x"}
+} -returnCodes {error} -result {expected screen distance but got "2.6x"}
 
 test entry-1.34 {configuration option: "insertofftime" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -522,7 +522,7 @@ test entry-1.48 {configuration option: "selectborderwidth" for entry} -setup {
     .e configure -selectborderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.49 {configuration option: "selectforeground" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
