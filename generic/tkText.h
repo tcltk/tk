@@ -867,7 +867,6 @@ typedef struct TkTextTag {
     TkTextSharedAttrs attrs;	/* Contains the following attributes: border, inactiveBorder,
 				 * fgColor, inactiveFgColor, and borderWidth. These attributes will
 				 * be shared with attributes from "sel" tag. */
-    Tcl_Obj *reliefPtr;		/* -relief option object. NULL means option not specified. */
     int relief;			/* 3-D relief for background. */
     Pixmap bgStipple;		/* Stipple bitmap for background. None means
 				 * no value specified here. */

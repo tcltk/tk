@@ -1965,7 +1965,7 @@ FillStyle(
 
     if (border)                         { stylePtr->border = border; }
     if (fgColor != NULL)                { stylePtr->fgColor = fgColor; }
-    if (tagPtr->reliefPtr)              { stylePtr->relief = tagPtr->relief; }
+    if (tagPtr->relief != TK_RELIEF_NULL) { stylePtr->relief = tagPtr->relief; }
     if (tagPtr->bgStipple != None)      { stylePtr->bgStipple = tagPtr->bgStipple; }
     if (tagPtr->indentBg >= 0)          { stylePtr->indentBg = tagPtr->indentBg; }
     if (tagPtr->tkfont != NULL)         { stylePtr->tkfont = tagPtr->tkfont; }
