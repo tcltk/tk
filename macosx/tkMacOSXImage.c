@@ -1096,12 +1096,12 @@ struct TkMacOSXNSImageModel {
     int radius;                       /* Radius for rounded corners. */
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
-    bool pressed;                     /* Image is for use in a pressed button.*/
-    bool templ;                       /* Image is for use as a template.*/
     char *imageName ;                 /* Malloc'ed image name. */
     char *source;       	      /* Malloc'ed string describing the image. */
     char *as;                         /* Malloc'ed interpretation of source */
     int	flags;			      /* Sundry flags, defined below. */
+    bool pressed;                     /* Image is for use in a pressed button.*/
+    bool templ;                       /* Image is for use as a template.*/
     TkMacOSXNSImageInstance *instancePtr;   /* Start of list of instances associated
 				       * with this model. */
     NSImage *image;                   /* The underlying NSImage object. */

@@ -162,7 +162,7 @@ jobs:
             echo "::error::Failure in ttk test results"
             exit 1
           }
-        timeout-minutes: 15
+        timeout-minutes: 20
       - name: Carry out trial installation
         run: |
           make install || {

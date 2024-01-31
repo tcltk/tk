@@ -903,8 +903,6 @@ typedef struct TkTextTag {
 				 * baseline of line. Used for superscripts and
 				 * subscripts. Only valid if offsetObj is
 				 * non-NULL. */
-    Tcl_Obj *overstrikePtr;	/* -overstrike option. NULL
-				 * means option not specified. */
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
@@ -941,8 +939,6 @@ typedef struct TkTextTag {
 				 * NULL. Corresponds to tabString. */
     int tabStyle;		/* One of TK_TEXT_TABSTYLE_TABULAR or TK_TEXT_TABSTYLE_WORDPROCESSOR
 				 * or TK_TEXT_TABSTYLE_NULL (if not specified). */
-    Tcl_Obj *underlinePtr;	/* -underline option. NULL
-				 * means option not specified. */
     int underline;		/* > 0 means draw underline underneath
 				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same

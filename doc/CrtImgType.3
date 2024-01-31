@@ -18,6 +18,7 @@ Tk_CreateImageType, Tk_GetImageModelData \- define new kind of image
 .sp
 void *
 \fBTk_GetImageModelData\fR(\fIinterp, name, typePtrPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "const Tk_ImageType" *typePtrPtr
 .AP "const Tk_ImageType" *typePtr in
@@ -54,7 +55,7 @@ The first data structure is a Tk_ImageType structure, which contains
 the name of the image type and pointers to five procedures provided
 by the image manager to deal with images of this type:
 .CS
-typedef struct Tk_ImageType {
+typedef struct {
     const char *\fIname\fR;
     Tk_ImageCreateProc *\fIcreateProc\fR;
     Tk_ImageGetProc *\fIgetProc\fR;

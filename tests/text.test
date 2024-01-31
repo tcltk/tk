@@ -3705,7 +3705,7 @@ test text-14.11 {ConfigureText procedure} -setup {
     .t configure -selectborderwidth foo
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad screen distance "foo"}
+} -returnCodes {error} -result {expected screen distance or "" but got "foo"}
 test text-14.12 {ConfigureText procedure} -body {
     text .t
     entry .t.e
@@ -6450,7 +6450,7 @@ test text-23.2 {TkTextGetTabs procedure} -setup {
     .t configure -tabs xyz
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test text-23.3 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
@@ -6507,7 +6507,7 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
     .t configure -tabs {100 !44 200 lork}
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad screen distance "!44"}
+} -returnCodes {error} -result {expected screen distance but got "!44"}
 
 
 test text-24.1 {TextDumpCmd procedure, bad args} -body {

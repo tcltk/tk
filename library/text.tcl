@@ -446,7 +446,7 @@ proc ::tk::TextEndIMEMarkedText {w} {
 	return
     }
     $w tag add IMEmarkedtext $mark insert
-    $w tag configure IMEmarkedtext -underline on
+    $w tag configure IMEmarkedtext -underline 1
 }
 
 # Macintosh only bindings:

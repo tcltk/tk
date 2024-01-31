@@ -10,7 +10,7 @@
 .SH NAME
 ttk::label \- Display a text string and/or image
 .SH SYNOPSIS
-\fBttk::label\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::label\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP

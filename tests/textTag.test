@@ -78,7 +78,7 @@ test textTag-1.6 {configuration options} -body {
     .t tag configure x -borderwidth 46q
 } -cleanup {
     .t tag configure x -borderwidth [lindex [.t tag configure x -borderwidth] 3]
-} -returnCodes error -result {bad screen distance "46q"}
+} -returnCodes error -result {expected screen distance or "" but got "46q"}
 test textTag-1.7 {tag configuration options} -body {
     .t tag configure x -fgstipple gray25
     .t tag cget x -fgstipple
@@ -128,7 +128,7 @@ test textTag-1.15 {configuration options} -body {
     .t tag configure x -lmargin1 bad
 } -cleanup {
     .t tag configure x -lmargin1 [lindex [.t tag configure x -lmargin1] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.16 {tag configuration options} -body {
     .t tag configure x -lmargin2 10
     .t tag cget x -lmargin2
@@ -139,7 +139,7 @@ test textTag-1.17 {configuration options} -body {
     .t tag configure x -lmargin2 bad
 } -cleanup {
     .t tag configure x -lmargin2 [lindex [.t tag configure x -lmargin2] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.17a {tag configuration options} -body {
     .t tag configure x -lmargincolor lightgreen
     .t tag cget x -lmargincolor
@@ -161,13 +161,13 @@ test textTag-1.19 {configuration options} -body {
     .t tag configure x -offset 100xyz
 } -cleanup {
     .t tag configure x -offset [lindex [.t tag configure x -offset] 3]
-} -returnCodes error -result {bad screen distance "100xyz"}
+} -returnCodes error -result {expected screen distance or "" but got "100xyz"}
 test textTag-1.20 {tag configuration options} -body {
     .t tag configure x -overstrike on
     .t tag cget x -overstrike
 } -cleanup {
     .t tag configure x -overstrike [lindex [.t tag configure x -overstrike] 3]
-} -result {on}
+} -result 1
 test textTag-1.21 {configuration options} -body {
     .t tag configure x -overstrike stupid
 } -cleanup {
@@ -205,7 +205,7 @@ test textTag-1.25 {configuration options} -body {
     .t tag configure x -rmargin bad
 } -cleanup {
     .t tag configure x -rmargin [lindex [.t tag configure x -rmargin] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.25a {tag configuration options} -body {
     .t tag configure x -rmargincolor darkblue
     .t tag cget x -rmargincolor
@@ -249,18 +249,19 @@ test textTag-1.27 {configuration options} -body {
     .t tag configure x -spacing1 bad
 } -cleanup {
     .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.28 {tag configuration options} -body {
     .t tag configure x -spacing2 10
     .t tag cget x -spacing2
 } -cleanup {
     .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
 } -result {10}
-test textTag-1.29 {configuration options} -body {
-    .t tag configure x -spacing2 bad
+test textTag-1.29 {configuration options, bug [026e2bb685]} -body {
+    catch {.t tag configure x -spacing3 5 -spacing2 bad -spacing1 morebad} msg
+    list $msg [.t tag configure x -spacing1] [.t tag configure x -spacing2] [.t tag configure x -spacing3]
 } -cleanup {
-    .t tag configure x -spacing2 [lindex [.t tag configure x -spacing2] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+    .t tag configure x -spacing1 [lindex [.t tag configure x -spacing1] 3] -spacing2 [lindex [.t tag configure x -spacing2] 3] -spacing3 [lindex [.t tag configure x -spacing3] 3]
+} -result {{expected screen distance or "" but got "bad"} {-spacing1 {} {} {} {}} {-spacing2 {} {} {} {}} {-spacing3 {} {} {} 5}}
 test textTag-1.30 {tag configuration options} -body {
     .t tag configure x -spacing3 10
     .t tag cget x -spacing3
@@ -271,7 +272,7 @@ test textTag-1.31 {configuration options} -body {
     .t tag configure x -spacing3 bad
 } -cleanup {
     .t tag configure x -spacing3 [lindex [.t tag configure x -spacing3] 3]
-} -returnCodes error -result {bad screen distance "bad"}
+} -returnCodes error -result {expected screen distance or "" but got "bad"}
 test textTag-1.32 {tag configuration options} -body {
     .t tag configure x -tabs {10 20 30}
     .t tag cget x -tabs
@@ -288,7 +289,7 @@ test textTag-1.34 {tag configuration options} -body {
     .t tag cget x -underline
 } -cleanup {
     .t tag configure x -underline [lindex [.t tag configure x -underline] 3]
-} -result {no}
+} -result 0
 test textTag-1.35 {configuration options} -body {
     .t tag configure x -underline stupid
 } -cleanup {
@@ -517,7 +518,7 @@ test textTag-5.4 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -underline
 } -cleanup {
     .t tag delete x
-} -result {-underline {} {} {} yes}
+} -result {-underline {} {} {} 1}
 test textTag-5.4a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -underlinecolor lightgreen
@@ -531,7 +532,7 @@ test textTag-5.5 {TkTextTagCmd - "configure" option} -body {
     .t tag cget x -overstrike
 } -cleanup {
     .t tag delete x
-} -result {on}
+} -result 1
 test textTag-5.5a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -overstrikecolor lightgreen
@@ -581,7 +582,7 @@ test textTag-5.12 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -offset 1.0q
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "1.0q"}
+} -returnCodes error -result {expected screen distance or "" but got "1.0q"}
 test textTag-5.13 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin1 2 -lmargin2 4 -rmargin 5 \
@@ -600,13 +601,13 @@ test textTag-5.14 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -lmargin1 2.0x
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "2.0x"}
+} -returnCodes error -result {expected screen distance or "" but got "2.0x"}
 test textTag-5.15 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargin2 gorp
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "gorp"}
+} -returnCodes error -result {expected screen distance or "" but got "gorp"}
 test textTag-5.15a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -lmargincolor rainbow
@@ -618,7 +619,7 @@ test textTag-5.16 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -rmargin 140.1.1
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "140.1.1"}
+} -returnCodes error -result {expected screen distance or "" but got "140.1.1"}
 test textTag-5.16a {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -rmargincolor rainbow
@@ -639,19 +640,19 @@ test textTag-5.18 {TkTextTagCmd - "configure" option} -body {
     .t tag configure x -spacing1 2.0x
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "2.0x"}
+} -returnCodes error -result {expected screen distance or "" but got "2.0x"}
 test textTag-5.19 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 lousy
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "lousy"}
+} -returnCodes error -result {expected screen distance or "" but got "lousy"}
 test textTag-5.20 {TkTextTagCmd - "configure" option} -body {
     .t tag delete x
     .t tag configure x -spacing1 4.2.3
 } -cleanup {
     .t tag delete x
-} -returnCodes error -result {bad screen distance "4.2.3"}
+} -returnCodes error -result {expected screen distance or "" but got "4.2.3"}
 test textTag-5.21 {TkTextTagCmd - "configure" option} -body {
     .t configure -selectborderwidth 2 -selectforeground blue \
         -selectbackground black

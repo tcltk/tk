@@ -462,6 +462,13 @@ CreateNamedSystemFont(
  *----------------------------------------------------------------------
  */
 
+#if defined(USE_TCL_STUBS)
+#   undef Tcl_GetCharLength
+#   define Tcl_GetCharLength (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+		((Tcl_Size (*)(Tcl_Obj *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[670])) \
+		: ((Tcl_Size (*)(Tcl_Obj *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[380])))
+#endif
+
 static int
 startOfClusterObjCmd(
     TCL_UNUSED(void *),

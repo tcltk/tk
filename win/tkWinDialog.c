@@ -2145,7 +2145,7 @@ MakeFilter(
 	*p = '\0';
     }
 
-    Tcl_DStringAppend(dsPtr, filterStr, (Tcl_Size) (p - filterStr));
+    Tcl_DStringAppend(dsPtr, filterStr, p - filterStr);
     ckfree(filterStr);
 
     TkFreeFileFilters(&flist);

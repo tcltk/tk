@@ -12,7 +12,7 @@
 .SH NAME
 frame \- Create and manipulate 'frame' simple container widgets
 .SH SYNOPSIS
-\fBframe\fR \fIpathName\fR ?\fIoptions\fR?
+\fBframe\fI pathName\fR ?\fIoptions\fR?
 .SO
 \-borderwidth	\-highlightcolor	\-pady
 \-cursor	\-highlightthickness	\-relief
@@ -127,13 +127,15 @@ operations on the widget.  It has the following general form:
 the frame widget's path name.  \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for frame widgets:
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBframe\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

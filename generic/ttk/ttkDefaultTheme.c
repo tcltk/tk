@@ -931,9 +931,9 @@ typedef struct {
 } MenubuttonArrowElement;
 
 static const char *const directionStrings[] = {	/* See also: button.c */
-    "above", "below", "left", "right", "flush", NULL
+    "above", "below", "flush", "left", "right", NULL
 };
-enum { POST_ABOVE, POST_BELOW, POST_LEFT, POST_RIGHT, POST_FLUSH };
+enum { POST_ABOVE, POST_BELOW, POST_FLUSH, POST_LEFT, POST_RIGHT };
 
 static const Ttk_ElementOptionSpec MenubuttonArrowElementOptions[] = {
     { "-direction", TK_OPTION_STRING,

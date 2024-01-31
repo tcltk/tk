@@ -167,7 +167,7 @@ test menu-2.3 {configuration options -activeborderwidth 1.3} -body {
 } -result {1.3}
 test menu-2.4 {configuration options -activeborderwidth badValue} -body {
     .m1 configure -activeborderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test menu-2.5 {configuration options -activeforeground #ff0000} -body {
     .m1 configure -activeforeground #ff0000
@@ -207,7 +207,7 @@ test menu-2.11 {configuration options -borderwidth 1.3} -body {
 } -result {1.3}
 test menu-2.12 {configuration options -borderwidth badValue} -body {
     .m1 configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 
 test menu-2.13 {configuration options -cursor arrow} -body {
     .m1 configure -cursor arrow
@@ -4128,158 +4128,6 @@ test menu-39.2 {use-after-free fix - bug 1797555fff} -setup {
     destroy .t
 } -result {}
 
-test menu-40.1 {identifiers - auto generated} -setup {
-    destroy .m
-} -body {
-    menu .m
-    list [.m add command -label 1] [.m add command -label 2] [.m add command -label 3]
-} -cleanup {
-    destroy .m
-} -result {e001 e002 e003}
-test menu-40.2 {identifiers - out of sequence} -setup {
-    destroy .m
-} -body {
-    menu .m -tearoff 0
-    .m add command -label 1
-    .m insert 0 command -label 2
-    .m add command -label 3
-    list [.m index e001] [.m index e002] [.m index e003]
-} -cleanup {
-    destroy .m
-} -result {1 0 2}
-test menu-40.3 {identifiers - out of sequence with tearoff} -setup {
-    destroy .m
-} -body {
-    menu .m -tearoff 1
-    .m add command -label 1
-    .m insert 0 command -label 2
-    .m add command -label 3
-    list [.m index e001] [.m index e002] [.m index e003]
-} -cleanup {
-    destroy .m
-} -result {2 1 3}
-test menu-40.4 {identifiers - entry id} -setup {
-    destroy .m
-} -body {
-    menu .m -tearoff 1
-    .m add command -label 1
-    .m insert 0 command -label 2
-    .m add command -label 3
-    list [.m id 0] [.m id 1] [.m id 2] [.m id 3]
-} -cleanup {
-    destroy .m
-} -result {{} e002 e001 e003}
-test menu-40.5 {identifiers - assigned} -setup {
-    destroy .m
-} -body {
-    menu .m
-    list [.m add command cmd1 -label 1] [.m insert 0 command cmd2 -label 2] [.m add command cmd3 -label 3]
-} -cleanup {
-    destroy .m
-} -result {cmd1 cmd2 cmd3}
-test menu-40.6 {identifiers - mixed} -setup {
-    destroy .m
-} -body {
-    menu .m
-    list [.m add command -label 1] [.m insert 0 command cmd2 -label 2] [.m add command -label 3]
-} -cleanup {
-    destroy .m
-} -result {e001 cmd2 e002}
-test menu-40.7 {identifiers - conflict} -setup {
-    destroy .m
-} -body {
-    menu .m
-    list [.m add command e002 -label 1] [.m add command -label 2] [.m add command -label 3]
-} -cleanup {
-    destroy .m
-} -result {e002 e001 e003}
-test menu-40.8 {identifiers - clone of complete menu} -setup {
-    destroy .m1 .m2
-} -body {
-    menu .m1 -tearoff 0
-    .m1 add command -label 1
-    .m1 insert 0 command -label 2
-    .m1 add command cmd3 -label 3
-    .m1 clone .m2
-    list [.m2 index e001] [.m2 index e002] [.m2 index cmd3]
-} -cleanup {
-    destroy .m1 .m2
-} -result {1 0 2}
-test menu-40.9 {identifiers - modify after cloning} -setup {
-    destroy .m1 .m2
-} -body {
-    menu .m1 -tearoff 0
-    .m1 clone .m2
-    .m1 add command -label 1
-    .m1 insert 0 command -label 2
-    .m1 add command cmd3 -label 3
-    list [.m2 index e001] [.m2 index e002] [.m2 index cmd3]
-} -cleanup {
-    destroy .m1 .m2
-} -result {1 0 2}
-test menu-40.10 {identifiers - modify clone} -setup {
-    destroy .m1 .m2
-} -body {
-    menu .m1 -tearoff 0
-    .m1 clone .m2
-    .m2 add command -label 1
-    .m2 insert 0 command -label 2
-    .m2 add command cmd3 -label 3
-    list [.m1 index e001] [.m1 index e002] [.m1 index cmd3]
-} -cleanup {
-    destroy .m1 .m2
-} -result {1 0 2}
-test menu-40.11 {identifiers - entrycget by id} -setup {
-    destroy .m
-} -body {
-    menu .m
-    .m add command -label 1
-    .m add command -label 2
-    .m add command cmd3 -label 3
-    list [.m entrycget e001 -label] [.m entrycget e002 -label] [.m entrycget cmd3 -label]
-} -cleanup {
-    destroy .m
-} -result {1 2 3}
-test menu-40.12 {identifiers - delete by id} -setup {
-    destroy .m
-} -body {
-    menu .m
-    .m add command -label 1
-    .m add command -label 2
-    .m add command -label 3
-    .m add command -label 4
-    .m add command -label 5
-    .m add command -label 6
-    .m add command -label 7
-    .m add command cmd8 -label 8
-    .m add command cmd9 -label 9
-    .m delete e003 cmd8
-    list [.m id 0] [.m id 1] [.m id 2]
-} -cleanup {
-    destroy .m
-} -result {e001 e002 cmd9}
-test menu-40.13 {identifiers - duplicate} -setup {
-    destroy .m
-} -body {
-    menu .m
-    .m add command foo -label 1
-    .m add command bar -label 2
-    .m add command foo -label 3
-} -cleanup {
-    destroy .m
-} -returnCodes error -result {entry "foo" already exists}
-test menu-40.14 {identifiers - reserved word} -setup {
-    destroy .m
-} -body {
-    menu .m -tearoff 0
-    .m add command last -label 1
-    .m add command -label 2
-    .m add command -label 3
-    .m index last
-} -cleanup {
-    destroy .m
-} -result {2}
-
 test menu-40.1 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f} -setup {
 } -constraints {pressbutton} -body {
     set done false
@@ -4312,6 +4160,158 @@ test menu-40.2 {Use-after-free if menu destroyed while posted - bug 09a11fb1228f
     tkwait variable done
     pressbutton 530 510
 }
+
+test menu-41.1 {identifiers - auto generated} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command -label 1] [.m add command -label 2] [.m add command -label 3]
+} -cleanup {
+    destroy .m
+} -result {e001 e002 e003}
+test menu-41.2 {identifiers - out of sequence} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 0
+    .m add command -label 1
+    .m insert 0 command -label 2
+    .m add command -label 3
+    list [.m index e001] [.m index e002] [.m index e003]
+} -cleanup {
+    destroy .m
+} -result {1 0 2}
+test menu-41.3 {identifiers - out of sequence with tearoff} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 1
+    .m add command -label 1
+    .m insert 0 command -label 2
+    .m add command -label 3
+    list [.m index e001] [.m index e002] [.m index e003]
+} -cleanup {
+    destroy .m
+} -result {2 1 3}
+test menu-41.4 {identifiers - entry id} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 1
+    .m add command -label 1
+    .m insert 0 command -label 2
+    .m add command -label 3
+    list [.m id 0] [.m id 1] [.m id 2] [.m id 3]
+} -cleanup {
+    destroy .m
+} -result {{} e002 e001 e003}
+test menu-41.5 {identifiers - assigned} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command cmd1 -label 1] [.m insert 0 command cmd2 -label 2] [.m add command cmd3 -label 3]
+} -cleanup {
+    destroy .m
+} -result {cmd1 cmd2 cmd3}
+test menu-41.6 {identifiers - mixed} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command -label 1] [.m insert 0 command cmd2 -label 2] [.m add command -label 3]
+} -cleanup {
+    destroy .m
+} -result {e001 cmd2 e002}
+test menu-41.7 {identifiers - conflict} -setup {
+    destroy .m
+} -body {
+    menu .m
+    list [.m add command e002 -label 1] [.m add command -label 2] [.m add command -label 3]
+} -cleanup {
+    destroy .m
+} -result {e002 e001 e003}
+test menu-41.8 {identifiers - clone of complete menu} -setup {
+    destroy .m1 .m2
+} -body {
+    menu .m1 -tearoff 0
+    .m1 add command -label 1
+    .m1 insert 0 command -label 2
+    .m1 add command cmd3 -label 3
+    .m1 clone .m2
+    list [.m2 index e001] [.m2 index e002] [.m2 index cmd3]
+} -cleanup {
+    destroy .m1 .m2
+} -result {1 0 2}
+test menu-41.9 {identifiers - modify after cloning} -setup {
+    destroy .m1 .m2
+} -body {
+    menu .m1 -tearoff 0
+    .m1 clone .m2
+    .m1 add command -label 1
+    .m1 insert 0 command -label 2
+    .m1 add command cmd3 -label 3
+    list [.m2 index e001] [.m2 index e002] [.m2 index cmd3]
+} -cleanup {
+    destroy .m1 .m2
+} -result {1 0 2}
+test menu-41.10 {identifiers - modify clone} -setup {
+    destroy .m1 .m2
+} -body {
+    menu .m1 -tearoff 0
+    .m1 clone .m2
+    .m2 add command -label 1
+    .m2 insert 0 command -label 2
+    .m2 add command cmd3 -label 3
+    list [.m1 index e001] [.m1 index e002] [.m1 index cmd3]
+} -cleanup {
+    destroy .m1 .m2
+} -result {1 0 2}
+test menu-41.11 {identifiers - entrycget by id} -setup {
+    destroy .m
+} -body {
+    menu .m
+    .m add command -label 1
+    .m add command -label 2
+    .m add command cmd3 -label 3
+    list [.m entrycget e001 -label] [.m entrycget e002 -label] [.m entrycget cmd3 -label]
+} -cleanup {
+    destroy .m
+} -result {1 2 3}
+test menu-41.12 {identifiers - delete by id} -setup {
+    destroy .m
+} -body {
+    menu .m
+    .m add command -label 1
+    .m add command -label 2
+    .m add command -label 3
+    .m add command -label 4
+    .m add command -label 5
+    .m add command -label 6
+    .m add command -label 7
+    .m add command cmd8 -label 8
+    .m add command cmd9 -label 9
+    .m delete e003 cmd8
+    list [.m id 0] [.m id 1] [.m id 2]
+} -cleanup {
+    destroy .m
+} -result {e001 e002 cmd9}
+test menu-41.13 {identifiers - duplicate} -setup {
+    destroy .m
+} -body {
+    menu .m
+    .m add command foo -label 1
+    .m add command bar -label 2
+    .m add command foo -label 3
+} -cleanup {
+    destroy .m
+} -returnCodes error -result {entry "foo" already exists}
+test menu-41.14 {identifiers - reserved word} -setup {
+    destroy .m
+} -body {
+    menu .m -tearoff 0
+    .m add command last -label 1
+    .m add command -label 2
+    .m add command -label 3
+    .m index last
+} -cleanup {
+    destroy .m
+} -result {2}
 
 # cleanup
 imageFinish

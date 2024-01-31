@@ -230,7 +230,7 @@ typedef struct Tk_OptionSpec {
 #define TK_OPTION_NULL_OK		(1 << 0)
 #define TK_OPTION_JUSTIFY_FULL		(1 << 1)
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
-#define TK_OPTION_VAR(type)		((int)(sizeof(type)&(sizeof(int)-1))<<6)
+#define TK_OPTION_VAR(type)		((sizeof(type) < 2 * sizeof(int)) ? ((int)(sizeof(type)&(sizeof(int)-1))<<6) : (3<<6))
 #define TK_OPTION_ENUM_VAR		TK_OPTION_VAR(Tk_OptionType)
 
 /*
@@ -283,16 +283,20 @@ typedef struct Tk_SavedOption {
     Tcl_Obj *valuePtr;		/* The old value of the option, in the form of
 				 * a Tcl object; may be NULL if the value was
 				 * not saved as an object. */
-    double internalForm;	/* The old value of the option, in some
+#if TCL_MAJOR_VERSION > 8
+    long double internalForm;	/* The old value of the option, in some
 				 * internal representation such as an int or
 				 * (XColor *). Valid only if the field
 				 * optionPtr->specPtr->objOffset is -1. The
 				 * space must be large enough to accommodate a
-				 * double, a long, or a pointer; right now it
-				 * looks like a double (i.e., 8 bytes) is big
-				 * enough. Also, using a double guarantees
-				 * that the field is properly aligned for
-				 * storing large values. */
+				 * long double, a double, a long, or a pointer;
+				 * right now it looks like a long double (i.e., 16
+				 * bytes) is big enough. Also, using a long double
+				 * guarantees that the field is properly aligned
+				 * for storing large values. */
+#else
+    double internalForm;
+#endif
 } Tk_SavedOption;
 
 #ifdef TCL_MEM_DEBUG

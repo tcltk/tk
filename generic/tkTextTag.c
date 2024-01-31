@@ -79,7 +79,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
 	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
-	NULL, offsetof(TkTextTag, overstrikePtr), offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-overstrikecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrikeColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
@@ -107,7 +107,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle), TK_OPTION_NULL_OK, tkTextTabStyleStrings, 0},
     {TK_OPTION_BOOLEAN, "-underline", NULL, NULL,
-	NULL, offsetof(TkTextTag, underlinePtr), offsetof(TkTextTag, underline), TK_OPTION_NULL_OK, 0, 0},
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underline), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-underlinecolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, underlineColor), TK_OPTION_NULL_OK, 0, 0},
 #if SUPPORT_DEPRECATED_TAG_OPTIONS
