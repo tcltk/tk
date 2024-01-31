@@ -881,11 +881,8 @@ typedef struct TkTextTag {
     Pixmap fgStipple;		/* Stipple bitmap for text and other
 				 * foreground stuff. None means no value
 				 * specified here.*/
-    char *justifyString;	/* -justify option string (malloc-ed). NULL
-				 * means option not specified. */
     Tk_Justify justify;		/* How to justify text: TK_JUSTIFY_LEFT, TK_JUSTIFY_RIGHT,
-    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL. Only valid if
-				 * justifyString is non-NULL. */
+    				 * TK_JUSTIFY_CENTER, or TK_JUSTIFY_FULL, or TK_JUSTIFY_NULL. */
     Tcl_Obj *lMargin1Obj;	/* -lmargin1 option. NULL
 				 * means option not specified. */
     int lMargin1;		/* Left margin for first display line of each
