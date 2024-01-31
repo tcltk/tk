@@ -257,9 +257,6 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, fgColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CUSTOM, "-justify", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, justifyString), TK_OPTION_NULL_OK, &justifyOption,0},
-    {TK_OPTION_STRING, "-locale", NULL, NULL,
-	NULL, offsetof(TkTextTag, localeObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_CUSTOM, "-lmargin1", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMargin1String), TK_OPTION_NULL_OK,&pixelsOption,0},
     {TK_OPTION_CUSTOM, "-lmargin2", NULL, NULL,
@@ -1166,7 +1163,6 @@ TkTextCreateTag(
     tagPtr->lMargin2String = NULL;
     tagPtr->lMargin2 = INT_MIN;
     tagPtr->lMarginColor = NULL;
-    tagPtr->localeObj = NULL;
     tagPtr->offsetString = NULL;
     tagPtr->offset = INT_MIN;
     tagPtr->overstrikeString = NULL;
