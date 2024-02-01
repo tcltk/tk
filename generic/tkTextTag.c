@@ -51,7 +51,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, attrs.borderWidthObj), offsetof(TkTextTag, attrs.borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
-	NULL, offsetof(TkTextTag, elidePtr), offsetof(TkTextTag, elide),
+	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elide),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-eolcolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, eolColor), TK_OPTION_NULL_OK, 0, 0},
@@ -989,7 +989,7 @@ TkTextUpdateTagDisplayFlags(
     tagPtr->affectsDisplay = 0;
     tagPtr->affectsDisplayGeometry = 0;
 
-    if (tagPtr->elidePtr
+    if ((tagPtr->elide >= 0)
 	    || tagPtr->tkfont
 	    || tagPtr->justify != TK_JUSTIFY_NULL
 	    || tagPtr->lMargin1Obj
@@ -1076,7 +1076,6 @@ TkConfigureTag(
     TkSharedText *sharedTextPtr = textPtr->sharedTextPtr;
     TkTextTag *tagPtr = TkTextCreateTag(textPtr, tagName, &newTag);
     int relief = tagPtr->relief;
-    Tcl_Obj *elidePtr = tagPtr->elidePtr;
     int elide = tagPtr->elide;
     int undo = tagPtr->undo;
     int affectsDisplay = tagPtr->affectsDisplay;
@@ -1178,8 +1177,8 @@ TkConfigureTag(
 	    affectsDisplay = 1;
 	}
     }
-    if (tagPtr->elidePtr) {
-	if (!elidePtr) {
+    if (tagPtr->elide >= 0) {
+	if (elide < 0) {
 	    sharedTextPtr->numElisionTags += 1;
 	}
 
@@ -1189,8 +1188,6 @@ TkConfigureTag(
 	     * to 'true' (this would cause errors, because this case is not implemented).
 	     */
 
-	    Tcl_DecrRefCount(tagPtr->elidePtr);
-	    tagPtr->elidePtr = NULL;
 	    tagPtr->elide = -1;
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
@@ -1206,10 +1203,10 @@ TkConfigureTag(
 
 	TkBTreeIncrEpoch(sharedTextPtr->tree);
     } else {
-	if (elidePtr) {
+	if (elide >= 0) {
 	    sharedTextPtr->numElisionTags -= 1;
 	}
-	tagPtr->elide = 0;
+	tagPtr->elide = -1;
     }
     if (tagPtr->undo != undo) {
 	TkBitPut(sharedTextPtr->dontUndoTags, tagPtr->index, !tagPtr->undo);
@@ -1254,7 +1251,7 @@ TkConfigureTag(
 	}
     }
 
-    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, !!tagPtr->elidePtr);
+    TkBitPut(sharedTextPtr->elisionTags, tagPtr->index, tagPtr->elide >= 0);
     TkBitPut(sharedTextPtr->affectDisplayTags, tagPtr->index, tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->notAffectDisplayTags, tagPtr->index, !tagPtr->affectsDisplay);
     TkBitPut(sharedTextPtr->affectGeometryTags, tagPtr->index, tagPtr->affectsDisplayGeometry);
@@ -1266,7 +1263,7 @@ TkConfigureTag(
 		tagPtr->affectsDisplayGeometry);
     }
 
-    if (!tagPtr->elidePtr != !elidePtr || (tagPtr->elidePtr && elide != tagPtr->elide)) {
+    if ((tagPtr->elide >= 0)!= (elide >= 0) || ((tagPtr->elide >= 0) && elide != tagPtr->elide)) {
 	/*
 	 * Eventually we have to insert/remove branches and links according to
 	 * the elide information of this tag.
@@ -1903,6 +1900,7 @@ TkTextCreateTag(
     tagPtr->isSelTag = isSelTag;
     tagPtr->bgStipple = None;
     tagPtr->fgStipple = None;
+    tagPtr->elide = -1;
     tagPtr->justify = TK_JUSTIFY_NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->tabStyle = TK_TEXT_TABSTYLE_NULL;
