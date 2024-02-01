@@ -140,14 +140,14 @@ CheckLine(
 }
 #endif /* NDEBUG */
 
-static int
+static Tcl_Size
 FindStartByteIndex(
     const TkTextIndex *indexPtr)
 {
     const TkText *textPtr = indexPtr->textPtr;
     const TkTextSegment *segPtr;
     const TkTextSection *sectionPtr;
-    int byteIndex;
+    Tcl_Size byteIndex;
 
     if (!textPtr) {
 	return 0;
@@ -1712,7 +1712,7 @@ TkrTextMakeByteIndex(
     TkTextBTree tree,		/* Tree that lineIndex and byteIndex refer TkTextBTree tree, to. */
     const TkText *textPtr,	/* Client that lineIndex and byteIndex refer to, can be NULL. */
     int lineIndex,		/* Index of desired line (0 means first line of text). */
-    int byteIndex,		/* Byte index of desired character. */
+    Tcl_Size byteIndex,		/* Byte index of desired character. */
     TkTextIndex *indexPtr)	/* Structure to fill in. */
 {
     TkTextSegment *segPtr;
@@ -1739,7 +1739,7 @@ TkrTextMakeByteIndex(
     if (textPtr) {
 	if (textPtr->startMarker != textPtr->sharedTextPtr->startMarker
 		&& textPtr->startMarker->sectionPtr->linePtr == linePtr) {
-	    int startByteIndex;
+	    Tcl_Size startByteIndex;
 
 	    TkTextIndexSetSegment(indexPtr, textPtr->startMarker);
 	    startByteIndex = FindStartByteIndex(indexPtr);

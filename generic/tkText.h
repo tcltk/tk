@@ -2210,7 +2210,7 @@ MODULE_SCOPE int		TkrTextIndexForwBytes(const struct TkText *textPtr,
 				struct TkTextIndex *dstPtr);
 MODULE_SCOPE struct TkTextIndex * TkrTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
-				int byteIndex, struct TkTextIndex *indexPtr);
+				Tcl_Size byteIndex, struct TkTextIndex *indexPtr);
 MODULE_SCOPE Tcl_Size		TkrTextPrintIndex(const struct TkText *textPtr,
 				const struct TkTextIndex *indexPtr,
 				char *string);
