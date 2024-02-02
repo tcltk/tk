@@ -618,18 +618,18 @@ TkTextTagCmd(
 	     */
 
 	    if (tagPtr == textPtr->selTagPtr) {
-                if (tagPtr->selBorder == NULL) {
-                    textPtr->selBorder = tagPtr->border;
-                } else {
-                    textPtr->selBorder = tagPtr->selBorder;
-                }
+		if (tagPtr->selBorder == NULL) {
+		    textPtr->selBorder = tagPtr->border;
+		} else {
+		    textPtr->selBorder = tagPtr->selBorder;
+		}
 		textPtr->selBorderWidth = tagPtr->borderWidth;
 		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
-                if (tagPtr->selFgColor == NULL) {
-                    textPtr->selFgColorPtr = tagPtr->fgColor;
-                } else {
-                    textPtr->selFgColorPtr = tagPtr->selFgColor;
-                }
+		if (tagPtr->selFgColor == NULL) {
+		    textPtr->selFgColorPtr = tagPtr->fgColor;
+		} else {
+		    textPtr->selFgColorPtr = tagPtr->selFgColor;
+		}
 	    }
 
 	    tagPtr->affectsDisplay = 0;
@@ -647,9 +647,7 @@ TkTextTagCmd(
 		    || (tagPtr->tabStringPtr != NULL)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
-		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
-		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
-		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
+		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
 		tagPtr->affectsDisplay = 1;
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
@@ -661,11 +659,11 @@ TkTextTagCmd(
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrike >= 0)
-                    || (tagPtr->overstrikeColor != NULL)
+		    || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underline >= 0)
-                    || (tagPtr->underlineColor != NULL)
-                    || (tagPtr->lMarginColor != NULL)
-                    || (tagPtr->rMarginColor != NULL)) {
+		    || (tagPtr->underlineColor != NULL)
+		    || (tagPtr->lMarginColor != NULL)
+		    || (tagPtr->rMarginColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
