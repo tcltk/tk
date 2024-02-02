@@ -577,8 +577,8 @@ static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr,
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
 			    DLine *lastPtr, int action);
 static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
-static TextStyle *	GetStyle(TkText *textPtr, const TkTextIndex *indexPtr);
-static void		GetXView(Tcl_Interp *interp, TkText *textPtr,
+static TextStyle *	GetStyle(const TkText *textPtr, const TkTextIndex *indexPtr);
+static void		GetXView(Tcl_Interp *interp, const TkText *textPtr,
 			    int report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr,
 			    int report);
@@ -621,7 +621,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
-static int              IsStartOfNotMergedLine(TkText *textPtr,
+static int              IsStartOfNotMergedLine(const TkText *textPtr,
                             const TkTextIndex *indexPtr);
 
 /*
@@ -766,7 +766,7 @@ TkTextFreeDInfo(
 
 static TextStyle *
 GetStyle(
-    TkText *textPtr,		/* Overall information about text widget. */
+    const TkText *textPtr,		/* Overall information about text widget. */
     const TkTextIndex *indexPtr)/* The character in the text for which display
 				 * information is wanted. */
 {
@@ -6496,7 +6496,7 @@ GetXView(
     Tcl_Interp *interp,		/* If "report" is FALSE, string describing
 				 * visible range gets stored in the interp's
 				 * result. */
-    TkText *textPtr,		/* Information about text widget. */
+    const TkText *textPtr,		/* Information about text widget. */
     int report)			/* Non-zero means report info to scrollbar if
 				 * it has changed. */
 {
@@ -7005,7 +7005,7 @@ FindDLine(
 
 static int
 IsStartOfNotMergedLine(
-      TkText *textPtr,              /* Widget record for text widget. */
+      const TkText *textPtr,              /* Widget record for text widget. */
       const TkTextIndex *indexPtr)  /* Index to check. */
 {
     TkTextIndex indexPtr2;

@@ -1081,7 +1081,7 @@ MODULE_SCOPE int	TkTextSharedGetObjIndex(Tcl_Interp *interp,
 MODULE_SCOPE const	TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *objPtr);
 MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
-			    TkText *textPtr, Tcl_Obj *stringPtr);
+			    const TkText *textPtr, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextFindDisplayLineEnd(TkText *textPtr,
 			    TkTextIndex *indexPtr, int end, int *xOffset);
 MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,
