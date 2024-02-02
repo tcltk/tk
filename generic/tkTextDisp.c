@@ -4649,7 +4649,7 @@ DisplayText(
   doScrollbars:
     if (textPtr->flags & UPDATE_SCROLLBARS) {
 	textPtr->flags &= ~UPDATE_SCROLLBARS;
-	if (textPtr->yScrollCmd != NULL) {
+	if (textPtr->yScrollCmdObj != NULL) {
 	    GetYView(textPtr->interp, textPtr, 1);
 	}
 
@@ -4665,7 +4665,7 @@ DisplayText(
 	 * Update the horizontal scrollbar, if any.
 	 */
 
-	if (textPtr->xScrollCmd != NULL) {
+	if (textPtr->xScrollCmdObj != NULL) {
 	    GetXView(textPtr->interp, textPtr, 1);
 	}
     }
@@ -6530,7 +6530,7 @@ GetXView(
     }
     dInfoPtr->xScrollFirst = first;
     dInfoPtr->xScrollLast = last;
-    if (textPtr->xScrollCmd != NULL) {
+    if (textPtr->xScrollCmdObj != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
 	Tcl_DString buf;
@@ -6540,7 +6540,7 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->xScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -6815,7 +6815,7 @@ GetYView(
 
     dInfoPtr->yScrollFirst = first;
     dInfoPtr->yScrollLast = last;
-    if (textPtr->yScrollCmd != NULL) {
+    if (textPtr->yScrollCmdObj != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
 	Tcl_DString buf;
@@ -6825,7 +6825,7 @@ GetYView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->yScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
