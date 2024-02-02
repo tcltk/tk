@@ -222,7 +222,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_TABSTYLE, TCL_INDEX_NONE, offsetof(TkText, tabStyle),
 	TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus),
+	DEF_TEXT_TAKE_FOCUS, offsetof(TkText, takeFocusObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
 	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo),
@@ -234,10 +234,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode),
 	TK_OPTION_ENUM_VAR, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd),
+	DEF_TEXT_XSCROLL_COMMAND, offsetof(TkText, xScrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	DEF_TEXT_YSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, yScrollCmd),
+	DEF_TEXT_YSCROLL_COMMAND, offsetof(TkText, yScrollCmdObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0}
 };
@@ -256,7 +256,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 
 struct SearchSpec;	/* Forward declaration. */
 
-typedef ClientData	SearchAddLineProc(int lineNum,
+typedef void *SearchAddLineProc(int lineNum,
 			    struct SearchSpec *searchSpecPtr,
 			    Tcl_Obj *theLine, int *lenPtr,
 			    int *extraLinesPtr);
@@ -330,7 +330,7 @@ int tkTextDebug = 0;
  */
 
 static int		ConfigureText(Tcl_Interp *interp,
-			    TkText *textPtr, int objc, Tcl_Obj *const objv[]);
+			    TkText *textPtr, Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		DeleteIndexRange(TkSharedText *sharedPtr,
 			    TkText *textPtr, const TkTextIndex *indexPtr1,
 			    const TkTextIndex *indexPtr2, int viewUpdate);
@@ -346,7 +346,7 @@ static void		TextBlinkProc(void *clientData);
 static void		TextCmdDeletedProc(void *clientData);
 static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
 			    Tcl_Interp *interp, const TkText *parent,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		TextEventProc(void *clientData,
 			    XEvent *eventPtr);
 static Tcl_Size	TextFetchSelection(void *clientData, Tcl_Size offset,
@@ -355,26 +355,26 @@ static int		TextIndexSortProc(const void *first,
 			    const void *second);
 static int		TextInsertCmd(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[],
+			    Tcl_Size objc, Tcl_Obj *const objv[],
 			    const TkTextIndex *indexPtr, int viewUpdate);
 static int		TextReplaceCmd(TkText *textPtr, Tcl_Interp *interp,
 			    const TkTextIndex *indexFromPtr,
 			    const TkTextIndex *indexToPtr,
-			    int objc, Tcl_Obj *const objv[], int viewUpdate);
+			    Tcl_Size objc, Tcl_Obj *const objv[], int viewUpdate);
 static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
 static int		SharedTextObjCmd(void *clientData,
 			    Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		TextWorldChangedCallback(void *instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
 static int		TextDumpCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		DumpLine(Tcl_Interp *interp, TkText *textPtr,
 			    int what, TkTextLine *linePtr, int start, int end,
 			    int lineno, Tcl_Obj *command);
@@ -397,7 +397,7 @@ static void		TextPushUndoAction(TkText *textPtr,
 static Tcl_Size		TextSearchIndexInLine(const SearchSpec *searchSpecPtr,
 			    TkTextLine *linePtr, Tcl_Size byteIndex);
 static int		TextPeerCmd(TkText *textPtr, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static TkUndoProc	TextUndoRedoCallback;
 
 /*
@@ -483,7 +483,7 @@ CreateWidget(
     Tcl_Interp *interp,		/* Current interpreter. */
     const TkText *parent,	/* If non-NULL then take default start, end
 				 * from this parent. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkText *textPtr;
@@ -823,7 +823,8 @@ TextWidgetObjCmd(
 	break;
     case TEXT_COUNT: {
 	const TkTextIndex *indexFromPtr, *indexToPtr;
-	int i, found = 0, update = 0;
+	Tcl_Size i;
+	int found = 0, update = 0;
 	Tcl_Obj *objPtr = NULL;
 
 	if (objc < 4) {
@@ -1103,7 +1104,7 @@ TextWidgetObjCmd(
 
 		TkTextIndex *indices, *ixStart, *ixEnd, *lastStart;
 		char *useIdx;
-		int i;
+		Tcl_Size i;
 
 		objc -= 2;
 		objv += 2;
@@ -1239,7 +1240,8 @@ TextWidgetObjCmd(
 	break;
     case TEXT_GET: {
 	Tcl_Obj *objPtr = NULL;
-	int i, found = 0, visible = 0;
+	Tcl_Size i;
+	int found = 0, visible = 0;
 	const char *name;
 	Tcl_Size length;
 
@@ -1445,7 +1447,8 @@ TextWidgetObjCmd(
 		 * unnecessarily.
 		 */
 
-		int deleteInsertOffset, insertLength, j, indexFromLine, indexFromByteOffset;
+		int deleteInsertOffset, insertLength, indexFromLine, indexFromByteOffset;
+		Tcl_Size j;
 
 		insertLength = 0;
 		for (j = 4; j < objc; j += 2) {
@@ -1587,7 +1590,7 @@ static int
 SharedTextObjCmd(
     void *clientData,	/* Information about shared test B-tree. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     TkSharedText *sharedPtr = (TkSharedText *)clientData;
@@ -1693,7 +1696,7 @@ static int
 TextPeerCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_Window tkwin = textPtr->tkwin;
@@ -1776,7 +1779,7 @@ TextReplaceCmd(
 				/* Index from which to replace. */
     const TkTextIndex *indexToPtr,
 				/* Index to which to replace. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     int viewUpdate)		/* Update vertical view if set. */
 {
@@ -2060,7 +2063,7 @@ ConfigureText(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkText *textPtr,	/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
@@ -3694,13 +3697,13 @@ TextInsertCmd(
     TkSharedText *sharedTextPtr,/* Shared portion of peer widgets. */
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
     const TkTextIndex *indexPtr,/* Index at which to insert. */
     int viewUpdate)		/* Update the view if set. */
 {
     TkTextIndex index1, index2;
-    int j;
+    Tcl_Size j;
 
     if (sharedTextPtr == NULL) {
 	sharedTextPtr = textPtr->sharedTextPtr;
@@ -3773,10 +3776,11 @@ static int
 TextSearchCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int i, argsLeft, code;
+    Tcl_Size i, argsLeft;
+    int code;
     SearchSpec searchSpec;
 
     static const char *const switchStrings[] = {
@@ -3848,7 +3852,7 @@ TextSearchCmd(
 	    searchSpec.backwards = 1;
 	    break;
 	case TK_TEXT_SEARCH_COUNT:
-	    if (i >= objc-1) {
+	    if (i + 1 >= objc) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"no value given for \"-count\" option", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "TEXT", "VALUE", NULL);
@@ -4120,7 +4124,7 @@ TextSearchIndexInLine(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 TextSearchAddNextLine(
     int lineNum,		/* Line we must add. */
     SearchSpec *searchSpecPtr,	/* Search parameters. */
@@ -4631,13 +4635,13 @@ static int
 TextDumpCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "dump". */
 {
     TkTextIndex index1, index2;
-    int arg;
+    Tcl_Size arg;
     int lineno;			/* Current line number. */
     int what = 0;		/* bitfield to select segment types. */
     int atEnd;			/* True if dumping up to logical end. */
@@ -5212,7 +5216,7 @@ static int
 TextEditCmd(
     TkText *textPtr,		/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     int index, setModified, oldModified;
