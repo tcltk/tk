@@ -452,11 +452,11 @@ TkTextTagCmd(
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrike >= 0)
-			|| (tagPtr->overstrikeColor != NULL)
+		    || (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underline >= 0)
-			|| (tagPtr->underlineColor != NULL)
-			|| (tagPtr->lMarginColor != NULL)
-			|| (tagPtr->rMarginColor != NULL)) {
+		    || (tagPtr->underlineColor != NULL)
+		    || (tagPtr->lMarginColor != NULL)
+		    || (tagPtr->rMarginColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
