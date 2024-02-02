@@ -351,8 +351,6 @@ TkTextTagCmd(
 	    Tcl_SetObjResult(interp, objPtr);
 	    return TCL_OK;
 	} else {
-	    int result = TCL_OK;
-
 	    if (Tk_SetOptions(interp, tagPtr, tagPtr->optionTable,
 		    objc-4, objv+4, textPtr->tkwin, NULL, NULL) != TCL_OK) {
 		return TCL_ERROR;
@@ -413,18 +411,18 @@ TkTextTagCmd(
 	     */
 
 	    if (tagPtr == textPtr->selTagPtr) {
-                if (tagPtr->selBorder == NULL) {
-                    textPtr->selBorder = tagPtr->border;
-                } else {
-                    textPtr->selBorder = tagPtr->selBorder;
-                }
+		if (tagPtr->selBorder == NULL) {
+		    textPtr->selBorder = tagPtr->border;
+		} else {
+		    textPtr->selBorder = tagPtr->selBorder;
+		}
 		textPtr->selBorderWidth = tagPtr->borderWidth;
 		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
-                if (tagPtr->selFgColor == NULL) {
-                    textPtr->selFgColorPtr = tagPtr->fgColor;
-                } else {
-                    textPtr->selFgColorPtr = tagPtr->selFgColor;
-                }
+		if (tagPtr->selFgColor == NULL) {
+		    textPtr->selFgColorPtr = tagPtr->fgColor;
+		} else {
+		    textPtr->selFgColorPtr = tagPtr->selFgColor;
+		}
 	    }
 
 	    tagPtr->affectsDisplay = 0;
@@ -454,11 +452,11 @@ TkTextTagCmd(
 		    || (tagPtr->selFgColor != NULL)
 		    || (tagPtr->fgStipple != None)
 		    || (tagPtr->overstrike >= 0)
-                    || (tagPtr->overstrikeColor != NULL)
+			|| (tagPtr->overstrikeColor != NULL)
 		    || (tagPtr->underline >= 0)
-                    || (tagPtr->underlineColor != NULL)
-                    || (tagPtr->lMarginColor != NULL)
-                    || (tagPtr->rMarginColor != NULL)) {
+			|| (tagPtr->underlineColor != NULL)
+			|| (tagPtr->lMarginColor != NULL)
+			|| (tagPtr->rMarginColor != NULL)) {
 		tagPtr->affectsDisplay = 1;
 	    }
 	    if (!newTag) {
@@ -476,7 +474,7 @@ TkTextTagCmd(
 		TkTextRedrawTag(textPtr->sharedTextPtr, NULL,
 			NULL, NULL, tagPtr, 1);
 	    }
-	    return result;
+	    return TCL_OK;
 	}
 	break;
     }
