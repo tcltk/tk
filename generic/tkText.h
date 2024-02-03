@@ -1496,12 +1496,12 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-    char *takeFocus;		/* Value of -takeFocus option; not used in the
+    Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
-    char *xScrollCmd;		/* Prefix of command to issue to update
+    Tcl_Obj *xScrollCmdObj;		/* Prefix of command to issue to update
 				 * horizontal scrollbar when view changes. */
-    char *yScrollCmd;		/* Prefix of command to issue to update
+    Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
 				 * vertical scrollbar when view changes. */
     unsigned flags;		/* Miscellaneous flags; see below for definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration specifications. */
@@ -2023,7 +2023,7 @@ MODULE_SCOPE int	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
 inline int		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
-MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *stringPtr);
+MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
 			    Tk_OptionTable optionTable, Tcl_DString *result, int flags);
 MODULE_SCOPE void	TkTextFindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, int end);
