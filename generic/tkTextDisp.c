@@ -757,7 +757,7 @@ static void		UpdateDefaultStyle(TkText *textPtr);
 static int		GetBbox(TkText *textPtr, const DLine *dlPtr, const TkTextIndex *indexPtr,
 			    int *xPtr, int *yPtr, int *widthPtr, int *heightPtr, int *isLastCharInLine,
 			    Tcl_UniChar *thisChar);
-static void		GetXView(Tcl_Interp *interp, TkText *textPtr, int report);
+static void		GetXView(Tcl_Interp *interp, const TkText *textPtr, int report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr, int report);
 static unsigned		GetYPixelCount(TkText *textPtr, DLine *dlPtr);
 static DLine *		LayoutDLine(const TkTextIndex *indexPtr, unsigned displayLineNo);
@@ -2021,7 +2021,7 @@ FillStyle(
 
 static TextStyle *
 MakeStyle(
-    TkText *textPtr,
+    const TkText *textPtr,
     TkTextTag *tagPtr,
     int containsSelection)
 {
@@ -9042,7 +9042,7 @@ DisplayText(
 	 */
 
 	textPtr->flags &= ~UPDATE_SCROLLBARS;
-	if (textPtr->yScrollCmd || textPtr->watchCmd) {
+	if (textPtr->yScrollCmdObj || textPtr->watchCmd) {
 	    GetYView(textPtr->interp, textPtr, 1);
 	}
 
@@ -9050,7 +9050,7 @@ DisplayText(
 	 * Update the horizontal scrollbar, if any.
 	 */
 
-	if (textPtr->xScrollCmd || textPtr->watchCmd) {
+	if (textPtr->xScrollCmdObj || textPtr->watchCmd) {
 	    GetXView(textPtr->interp, textPtr, 1);
 	}
 
@@ -11398,7 +11398,7 @@ static void
 GetXView(
     Tcl_Interp *interp,		/* If "report" is FALSE, string describing visible range gets stored
     				 * in the interp's result. */
-    TkText *textPtr,		/* Information about text widget. */
+    const TkText *textPtr,		/* Information about text widget. */
     int report)		/* 'true' means report info to scrollbar if it has changed. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
@@ -11437,7 +11437,7 @@ GetXView(
     dInfoPtr->curPixelPos.xFirst = xMin;
     dInfoPtr->curPixelPos.xLast = xMax;
 
-    if (textPtr->xScrollCmd) {
+    if (textPtr->xScrollCmdObj) {
 	char buf1[TCL_DOUBLE_SPACE + 1];
 	char buf2[TCL_DOUBLE_SPACE + 1];
 	Tcl_DString buf;
@@ -11447,7 +11447,7 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1 + 1);
 	Tcl_PrintDouble(NULL, last, buf2 + 1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->xScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);
@@ -11647,7 +11647,7 @@ GetYView(
 	    dInfoPtr->yScrollFirst = first;
 	    dInfoPtr->yScrollLast = last;
 
-	    if (textPtr->yScrollCmd) {
+	    if (textPtr->yScrollCmdObj) {
 		char buf1[TCL_DOUBLE_SPACE + 1];
 		char buf2[TCL_DOUBLE_SPACE + 1];
 		Tcl_DString buf;
@@ -11657,7 +11657,7 @@ GetYView(
 		Tcl_PrintDouble(NULL, first, buf1 + 1);
 		Tcl_PrintDouble(NULL, last, buf2 + 1);
 		Tcl_DStringInit(&buf);
-		Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+		Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->yScrollCmdObj), TCL_INDEX_NONE);
 		Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 		Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 		code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, 0);

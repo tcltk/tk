@@ -349,7 +349,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-tagging", "tagging", "Tagging",
 	"within", TCL_INDEX_NONE, offsetof(TkText, tagging), TK_OPTION_ENUM_VAR, taggingStrings, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
-	DEF_TEXT_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(TkText, takeFocus), TK_OPTION_NULL_OK, 0, 0},
+	DEF_TEXT_TAKE_FOCUS, offsetof(TkText, takeFocusObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-undo", "undo", "Undo",
 	DEF_TEXT_UNDO, TCL_INDEX_NONE, offsetof(TkText, undo), TK_OPTION_DONT_SET_DEFAULT, 0 ,0},
     {TK_OPTION_BOOLEAN, "-undotagging", "undoTagging", "UndoTagging",
@@ -361,9 +361,9 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_STRING_TABLE, "-wrap", "wrap", "Wrap",
 	DEF_TEXT_WRAP, TCL_INDEX_NONE, offsetof(TkText, wrapMode), TK_OPTION_ENUM_VAR, tkTextWrapStrings, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_STRING, "-xscrollcommand", "xScrollCommand", "ScrollCommand",
-	DEF_TEXT_XSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, xScrollCmd), TK_OPTION_NULL_OK, 0, 0},
+	DEF_TEXT_XSCROLL_COMMAND, offsetof(TkText, xScrollCmdObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_STRING, "-yscrollcommand", "yScrollCommand", "ScrollCommand",
-	DEF_TEXT_YSCROLL_COMMAND, TCL_INDEX_NONE, offsetof(TkText, yScrollCmd), TK_OPTION_NULL_OK, 0, 0},
+	DEF_TEXT_YSCROLL_COMMAND, offsetof(TkText, yScrollCmdObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, 0, 0, 0, 0, 0, 0}
 };
 
@@ -7069,7 +7069,7 @@ TextSearchFoundMatch(
 TkTextTabArray *
 TkTextGetTabs(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    TkText *textPtr,		/* Information about the text widget. */
+    const TkText *textPtr,		/* Information about the text widget. */
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
