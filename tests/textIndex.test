@@ -944,12 +944,13 @@ test textIndex-22.15 {text index display wordstart} {
 test textIndex-22.16 {text index wordstart, bug [57b821d2db]} {
     catch {destroy .t}
     text .t
-    .t insert 1.0 " 123 5 789012  LINE-1\n\n 123 5 789000 Line-3"
-    .t mark set insert end
-    set res [.t index "1.1 wordstart"]
+    .t insert 1.0 " 123 5 789012  LINE-1\n\n 123 5 789000 LINE-3\n\n0123 5 789012  LINE-5"
+    pack .t
+    update
+    set res [.t index "5.0 wordstart"]
     .t mark set insert 1.1
-    lappend res [.t index "1.1 wordstart"]
-} {2.1 2.1}
+    lappend res [.t index "insert wordstart"]
+} {5.0 1.1}
 
 test textIndex-23.1 {text paragraph start} {
     pack [text .t2]
