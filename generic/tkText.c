@@ -54,16 +54,6 @@
 #endif
 
 /*
- * For compatibility with Tk 4.0 through 8.4.x, we allow tabs to be
- * mis-specified with non-increasing values. These are converted into tabs
- * which are the equivalent of at least a character width apart.
- */
-
-#if TK_MAJOR_VERSION < 9
-# define _TK_ALLOW_DECREASING_TABS
-#endif
-
-/*
  * Used to avoid having to allocate and deallocate arrays on the fly for
  * commonly used functions. Must be > 0.
  */
@@ -1552,15 +1542,7 @@ TextWidgetObjCmd(
 		goto done;
 	    }
 	    if (!TkTextComputeBreakLocations(interp, "", 0, "en", buf)) {
-#if 0 && TCL_UTF_MAX > 4
-# ifdef __unix__
-#  error "The use of external libraries with a proprietary pseudo UTF-8 encoding is safety-endagering and may result in invalid computationial results. This means: TCL_UTF_MAX > 4 cannot be supported here."
-#endif
-		ErrorNotAllowed(interp, "external library libunibreak/liblinebreak cannot "
-			"be used with non-standard encodings");
-#else
 		ErrorNotAllowed(interp, "external library libunibreak/liblinebreak is not available");
-#endif
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -4123,7 +4105,7 @@ TkConfigureText(
 	textPtr->tabArrayPtr = NULL;
     }
     if (textPtr->tabOptionPtr) {
-	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr, textPtr->tabOptionPtr);
+	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin, textPtr->tabOptionPtr);
 	if (!textPtr->tabArrayPtr) {
 	    Tcl_AddErrorInfo(interp, "\n    (while processing -tabs option)");
 	    goto error;
@@ -4929,10 +4911,6 @@ ParseHyphens(
     const char *end,
     char *buffer)
 {
-#if 0 && TCL_UTF_MAX > 4
-# error "The text widget is designed for UTF-8, this applies also to the legacy code. Undocumented pseudo UTF-8 strings cannot be processed with this function, because it relies on the UTF-8 specification."
-#endif
-
     assert(TK_TEXT_HYPHEN_MASK < 256); /* otherwise does not fit into char */
 
     /*
@@ -7069,7 +7047,7 @@ TextSearchFoundMatch(
 TkTextTabArray *
 TkTextGetTabs(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    const TkText *textPtr,		/* Information about the text widget. */
+    Tk_Window tkwin,		/* Information about the text widget. */
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
@@ -7118,7 +7096,7 @@ TkTextGetTabs(
 	 * downwards, to find the right integer pixel position.
 	 */
 
-	if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[i], &tabPtr->location) != TCL_OK) {
+	if (Tk_GetPixelsFromObj(interp, tkwin, objv[i], &tabPtr->location) != TCL_OK) {
 	    goto error;
 	}
 
@@ -7130,7 +7108,7 @@ TkTextGetTabs(
 	}
 
 	prevStop = lastStop;
-	if (Tk_GetDoublePixelsFromObj(interp, textPtr->tkwin, objv[i], &lastStop) != TCL_OK) {
+	if (Tk_GetDoublePixelsFromObj(interp, tkwin, objv[i], &lastStop) != TCL_OK) {
 	    goto error;
 	}
 
@@ -7140,24 +7118,12 @@ TkTextGetTabs(
 	     * illegal.
 	     */
 
-#ifdef _TK_ALLOW_DECREASING_TABS
-	    /*
-	     * Force the tab to be a typical character width to the right of
-	     * the previous one, and update the 'lastStop' with the changed
-	     * position.
-	     */
-
-	    tabPtr->location = (tabPtr - 1)->location;
-	    tabPtr->location += (textPtr->charWidth > 0 ? textPtr->charWidth : 8);
-	    lastStop = tabPtr->location;
-#else
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "tabs must be monotonically increasing, but \"%s\" is "
 		    "smaller than or equal to the previous tab",
 		    Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
 	    goto error;
-#endif /* _TK_ALLOW_DECREASING_TABS */
 	}
 
 	tabArrayPtr->numTabs += 1;
@@ -7177,24 +7143,12 @@ TkTextGetTabs(
 	 */
 
 	{ /* local scope */
-#if 0 && TCL_UTF_MAX > 4
-	    /*
-	     * HACK: Support of pseudo UTF-8 strings. Needed because of this
-	     * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
-	     * (See function GetLineBreakFunc() about the very severe problems
-	     * with TCL_UTF_MAX > 4).
-	     */
-
-	    int ch;
-	    TkUtfToUniChar(Tcl_GetString(objv[i + 1]), &ch);
-#else
 	    /*
 	     * Proper implementation for UTF-8 strings:
 	     */
 
 	    Tcl_UniChar ch;
 	    Tcl_UtfToUniChar(Tcl_GetString(objv[i + 1]), &ch);
-#endif
 	    if (!Tcl_UniCharIsAlpha(ch)) {
 		continue;
 	    }
@@ -10755,24 +10709,12 @@ SearchCore(
 			int len;
 			const char *s = startOfLine + matchOffset;
 
-#if 0 && TCL_UTF_MAX > 4
-			/*
-			 * HACK: Support of pseudo UTF-8 strings. Needed because of this
-			 * bad hack with TCL_UTF_MAX > 4, the whole thing is amateurish.
-			 * (See function GetLineBreakFunc() about the very severe problems
-			 * with TCL_UTF_MAX > 4).
-			 */
-
-			int ch;
-			len = TkUtfToUniChar(s, &ch);
-#else
 			/*
 			 * Proper implementation for UTF-8 strings:
 			 */
 
 			Tcl_UniChar ch;
 			len = Tcl_UtfToUniChar(s, &ch);
-#endif
 			firstOffset = (p - startOfLine) + len;
 		    }
 		}

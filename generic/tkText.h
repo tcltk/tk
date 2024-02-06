@@ -2023,7 +2023,7 @@ MODULE_SCOPE int	TkTextDecrRefCountAndTestIfDestroyed(TkText *textPtr);
 MODULE_SCOPE void	TkTextFreeAllTags(TkText *textPtr);
 inline int		TkTextGetIndexFromObj(Tcl_Interp *interp, TkText *textPtr, Tcl_Obj *objPtr,
 			    TkTextIndex *indexPtr);
-MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, const TkText *textPtr, Tcl_Obj *stringPtr);
+MODULE_SCOPE TkTextTabArray * TkTextGetTabs(Tcl_Interp *interp, Tk_Window tkwin, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextInspectOptions(TkText *textPtr, const void *recordPtr,
 			    Tk_OptionTable optionTable, Tcl_DString *result, int flags);
 MODULE_SCOPE void	TkTextFindDisplayLineStartEnd(TkText *textPtr, TkTextIndex *indexPtr, int end);

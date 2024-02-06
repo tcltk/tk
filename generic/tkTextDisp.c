@@ -7999,10 +7999,6 @@ FindDisplayLineStartEnd(
 	 * of the current character.
 	 */
 
-#if 0 && TCL_UTF_MAX > 4
-# error "The text widget is designed for UTF-8, this applies also to the legacy code. Undocumented pseudo UTF-8 strings cannot be processed with this function, because it relies on the UTF-8 specification."
-#endif
-
 	while (p > segPtr->body.chars && (*p & 0xc0) == 0x80) {
 	    p -= 1;
 	    skipBack += 1;
