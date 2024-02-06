@@ -4483,7 +4483,7 @@ TextSearchFoundMatch(
 TkTextTabArray *
 TkTextGetTabs(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    Tk_Window tkwin,
+    Tk_Window tkwin,		/* Information about the window. */
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
