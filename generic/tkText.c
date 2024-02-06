@@ -2227,7 +2227,7 @@ ConfigureText(
 	textPtr->tabArrayPtr = NULL;
     }
     if (textPtr->tabOptionPtr != NULL) {
-	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr,
+	textPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin,
 		textPtr->tabOptionPtr);
 	if (textPtr->tabArrayPtr == NULL) {
 	    Tcl_AddErrorInfo(interp,"\n    (while processing -tabs option)");
@@ -4483,7 +4483,7 @@ TextSearchFoundMatch(
 TkTextTabArray *
 TkTextGetTabs(
     Tcl_Interp *interp,		/* Used for error reporting. */
-    const TkText *textPtr,		/* Information about the text widget. */
+    Tk_Window tkwin,
     Tcl_Obj *stringPtr)		/* Description of the tab stops. See the text
 				 * manual entry for details. */
 {
@@ -4534,7 +4534,7 @@ TkTextGetTabs(
 	 * downwards, to find the right integer pixel position.
 	 */
 
-	if (Tk_GetPixelsFromObj(interp, textPtr->tkwin, objv[i],
+	if (Tk_GetPixelsFromObj(interp, tkwin, objv[i],
 		&tabPtr->location) != TCL_OK) {
 	    goto error;
 	}
@@ -4548,7 +4548,7 @@ TkTextGetTabs(
 	}
 
 	prevStop = lastStop;
-	if (Tk_GetDoublePixelsFromObj(interp, textPtr->tkwin, objv[i],
+	if (Tk_GetDoublePixelsFromObj(interp, tkwin, objv[i],
 		&lastStop) != TCL_OK) {
 	    goto error;
 	}
