@@ -40,8 +40,8 @@ SetTabArray(
     char *oldInternalPtr,
     TCL_UNUSED(int))
 {
-    struct TkTextTabArray **internalPtr = (struct TkTextTabArray **)(recordPtr + internalOffset);
-    struct TkTextTabArray *tabArrayPtr = NULL;
+    void **internalPtr = (void **)(recordPtr + internalOffset);
+    void *tabArrayPtr = NULL;
 
     if (!ObjectIsEmpty(*value)) {
 	tabArrayPtr = TkTextGetTabs(interp, tkwin, *value);
@@ -49,7 +49,7 @@ SetTabArray(
 	    return TCL_ERROR;
 	}
     }
-    *((struct TkTextTabArray **)oldInternalPtr) = *internalPtr;
+    *((void **)oldInternalPtr) = *internalPtr;
     *internalPtr = tabArrayPtr;
     return TCL_OK;
 };
