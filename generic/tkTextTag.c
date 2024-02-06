@@ -38,50 +38,20 @@ SetTabArray(
     char *recordPtr,
     Tcl_Size internalOffset,
     char *oldInternalPtr,
-    int flags)
+    TCL_UNUSED(int))
 {
     struct TkTextTabArray **internalPtr = (struct TkTextTabArray **)(recordPtr + internalOffset);
-    int nullOK = (flags & TK_OPTION_NULL_OK);
     struct TkTextTabArray *tabArrayPtr = NULL;
-    const struct TkTextTag *textTag = (const struct TkTextTag *)recordPtr;
 
-    if (!nullOK || !ObjectIsEmpty(*value)) {
-	if (!*value) {
-	    Tcl_AppendResult(interp, "xxxx", NULL);
-	    return TCL_ERROR;
-	}
-    Tcl_Panic("%s\n", Tcl_GetString(*value));
-	tabArrayPtr = TkTextGetTabs(interp, textTag->textPtr, *value);
-
+    if (!ObjectIsEmpty(*value)) {
+	tabArrayPtr = TkTextGetTabs(interp, tkwin, *value);
 	if (tabArrayPtr == NULL) {
 	    return TCL_ERROR;
 	}
     }
-
     *((struct TkTextTabArray **)oldInternalPtr) = *internalPtr;
     *internalPtr = tabArrayPtr;
     return TCL_OK;
-};
-
-static Tcl_Obj *
-GetTabArray(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tk_Window),
-    char *recordPtr,
-    Tcl_Size internalOffset)
-{
-    return Tcl_NewObj();
-}
-
-static void
-RestoreTabArray(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(Tk_Window),
-    char *internalPtr,
-    char *saveInternalPtr)
-{
-    *(char **)internalPtr = *(char **)saveInternalPtr;
-    return;
 };
 
 static void
@@ -98,9 +68,9 @@ FreeTabArray(
 static const Tk_ObjCustomOption tabArrayOption = {
     "pixels",			/* name */
     SetTabArray,		/* setProc */
-    GetTabArray,		/* getProc */
-    RestoreTabArray,		/* restoreProc */
-    FreeTabArray,			/* freeProc */
+    NULL,			/* getProc */
+    NULL,			/* restoreProc */
+    FreeTabArray,		/* freeProc */
     0
 };
 
