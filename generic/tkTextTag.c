@@ -1163,7 +1163,7 @@ TkConfigureTag(
 	tagPtr->tabArrayPtr = NULL;
     }
     if (tagPtr->tabStringPtr) {
-	if (!(tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr, tagPtr->tabStringPtr))) {
+	if (!(tagPtr->tabArrayPtr = TkTextGetTabs(interp, textPtr->tkwin, tagPtr->tabStringPtr))) {
 	    rc = TCL_ERROR;
 	}
     }
