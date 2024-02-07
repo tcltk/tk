@@ -1496,7 +1496,7 @@ DestroyListbox(
 	Tk_FreeBitmap(Tk_Display(listPtr->tkwin), listPtr->gray);
     }
 
-    Tk_FreeConfigOptions((char *) listPtr, listPtr->optionTable,
+    Tk_FreeConfigOptions(listPtr, listPtr->optionTable,
 	    listPtr->tkwin);
     Tcl_Release(listPtr->tkwin);
     listPtr->tkwin = NULL;

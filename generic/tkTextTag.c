@@ -1344,7 +1344,7 @@ TkTextFreeTag(
      * Let Tk do most of the hard work for us.
      */
 
-    Tk_FreeConfigOptions((char *) tagPtr, tagPtr->optionTable,
+    Tk_FreeConfigOptions(tagPtr, tagPtr->optionTable,
 	    textPtr->tkwin);
 
     /*

@@ -317,9 +317,8 @@ TkpDisplayMenuButton(
 
 void
 TkpDestroyMenuButton(
-    TkMenuButton *mbPtr)
+    TCL_UNUSED(TkMenuButton *))
 {
-    (void)mbPtr;
 }
 
 /*

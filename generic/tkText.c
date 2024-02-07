@@ -2507,7 +2507,7 @@ TextEventProc(
 	    textPtr->setGrid = 0;
 	}
 	if (!(textPtr->flags & OPTIONS_FREED)) {
-	    Tk_FreeConfigOptions((char *) textPtr, textPtr->optionTable,
+	    Tk_FreeConfigOptions(textPtr, textPtr->optionTable,
 		    textPtr->tkwin);
 	    textPtr->flags |= OPTIONS_FREED;
 	}
