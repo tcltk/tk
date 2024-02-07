@@ -550,7 +550,7 @@ TkpOpenDisplay(
 	}
     }
 
-    display = XkbOpenDisplay((char *)display_name, NULL, NULL, NULL, NULL, NULL);
+    display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
     TkWinDisplayChanged(display);
 
     tsdPtr->winDisplay =(TkDisplay *) ckalloc(sizeof(TkDisplay));

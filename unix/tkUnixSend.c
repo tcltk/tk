@@ -760,7 +760,7 @@ ServerSecure(
 #endif /* FamilyServerInterpreted */
     }
     if (addrPtr != NULL) {
-	XFree((char *) addrPtr);
+	XFree(addrPtr);
     }
     return secure;
 #endif /* TK_NO_SECURITY */

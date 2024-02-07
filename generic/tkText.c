@@ -4599,7 +4599,7 @@ ProcessDestroyNotify(
     if (!(textPtr->flags & OPTIONS_FREED)) {
 	/* Restore the original attributes. */
 	textPtr->selAttrs = textPtr->textConfigAttrs;
-	Tk_FreeConfigOptions((char *) textPtr, textPtr->optionTable, textPtr->tkwin);
+	Tk_FreeConfigOptions(textPtr, textPtr->optionTable, textPtr->tkwin);
 	textPtr->flags |= OPTIONS_FREED;
     }
     textPtr->flags |= DESTROYED;

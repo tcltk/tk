@@ -52,7 +52,7 @@ static int		CountBits(unsigned mask);
 static void		GetColorTable(PhotoInstance *instancePtr);
 static void		FreeColorTable(ColorTable *colorPtr, int force);
 static void		AllocateColors(ColorTable *colorPtr);
-static void		DisposeColorTable(ClientData clientData);
+static void		DisposeColorTable(void *clientData);
 static int		ReclaimColors(ColorTableId *id, int numColors);
 
 /*
@@ -218,7 +218,7 @@ ClientData
 TkImgPhotoGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData modelData)	/* Pointer to our model structure for the
+    void *modelData)	/* Pointer to our model structure for the
 				 * image. */
 {
     PhotoModel *modelPtr = (PhotoModel *)modelData;
@@ -366,7 +366,7 @@ TkImgPhotoGet(
 	nRed = 1 << visInfoPtr->depth;
 	break;
     }
-    XFree((char *) visInfoPtr);
+    XFree(visInfoPtr);
 
     if (mono) {
 	snprintf(buf, sizeof(buf), "%d", nRed);
@@ -630,7 +630,7 @@ BlendComplexAlpha(
 
 void
 TkImgPhotoDisplay(
-    ClientData clientData,	/* Pointer to PhotoInstance structure for
+    void *clientData,	/* Pointer to PhotoInstance structure for
 				 * instance to be displayed. */
     Display *display,		/* Display on which to draw image. */
     Drawable drawable,		/* Pixmap or window in which to draw image. */
@@ -756,14 +756,13 @@ TkImgPhotoDisplay(
 
 void
 TkImgPhotoFree(
-    ClientData clientData,	/* Pointer to PhotoInstance structure for
+    void *clientData,	/* Pointer to PhotoInstance structure for
 				 * instance to be displayed. */
-    Display *display)		/* Display containing window that used
+    TCL_UNUSED(Display *))	/* Display containing window that used
 				 * image. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;
     ColorTable *colorPtr;
-    (void)display;
 
     if (instancePtr->refCount-- > 1) {
 	return;
@@ -1479,7 +1478,7 @@ AllocateColors(
 
 static void
 DisposeColorTable(
-    ClientData clientData)	/* Pointer to the ColorTable whose
+    void *clientData)	/* Pointer to the ColorTable whose
 				 * colors are to be released. */
 {
     ColorTable *colorPtr = (ColorTable *)clientData;
@@ -1613,7 +1612,7 @@ ReclaimColors(
 
 void
 TkImgDisposeInstance(
-    ClientData clientData)	/* Pointer to the instance whose resources are
+    void *clientData)	/* Pointer to the instance whose resources are
 				 * to be released. */
 {
     PhotoInstance *instancePtr = (PhotoInstance *)clientData;

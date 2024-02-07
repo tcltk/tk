@@ -879,7 +879,7 @@ ConvertSelection(
 	if ((result != Success) || (bytesAfter != 0) || (format != 32)
 		|| (type == None)) {
 	    if (incr.multAtoms != NULL) {
-		XFree((char *) incr.multAtoms);
+		XFree(incr.multAtoms);
 	    }
 	    goto refuse;
 	}
@@ -1087,7 +1087,7 @@ ConvertSelection(
 
     ckfree(incr.converts);
     if (multiple) {
-	XFree((char *) incr.multAtoms);
+	XFree(incr.multAtoms);
     }
     return;
 
