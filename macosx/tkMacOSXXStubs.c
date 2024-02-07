@@ -198,7 +198,7 @@ TkpOpenDisplay(
 
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
 
-    display = XkbOpenDisplay((char *)display_name, NULL, NULL, NULL, NULL, NULL);
+    display = XkbOpenDisplay(display_name, NULL, NULL, NULL, NULL, NULL);
 
     /*
      * Initialize screen bits that may change
