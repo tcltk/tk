@@ -397,7 +397,7 @@ SquareObjEventProc(
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	if (squarePtr->tkwin != NULL) {
-	    Tk_FreeConfigOptions((char *) squarePtr, squarePtr->optionTable,
+	    Tk_FreeConfigOptions(squarePtr, squarePtr->optionTable,
 		    squarePtr->tkwin);
 	    if (squarePtr->gc != NULL) {
 		Tk_FreeGC(squarePtr->display, squarePtr->gc);

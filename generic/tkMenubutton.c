@@ -155,22 +155,22 @@ enum command {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		MenuButtonCmdDeletedProc(ClientData clientData);
-static void		MenuButtonEventProc(ClientData clientData,
+static void		MenuButtonCmdDeletedProc(void *clientData);
+static void		MenuButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		MenuButtonImageProc(ClientData clientData,
+static void		MenuButtonImageProc(void *clientData,
 			    int x, int y, int width, int height, int imgWidth,
 			    int imgHeight);
-static char *		MenuButtonTextVarProc(ClientData clientData,
+static char *		MenuButtonTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		MenuButtonWidgetObjCmd(ClientData clientData,
+static int		MenuButtonWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		ConfigureMenuButton(Tcl_Interp *interp,
 			    TkMenuButton *mbPtr, int objc,
 			    Tcl_Obj *const objv[]);
-static void		DestroyMenuButton(char *memPtr);
+static void		DestroyMenuButton(void *memPtr);
 
 /*
  *--------------------------------------------------------------
@@ -192,7 +192,7 @@ static void		DestroyMenuButton(char *memPtr);
 
 int
 Tk_MenubuttonObjCmd(
-    ClientData dummy,	/* NULL. */
+    void *dummy,	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -323,7 +323,7 @@ Tk_MenubuttonObjCmd(
 
 static int
 MenuButtonWidgetObjCmd(
-    ClientData clientData,	/* Information about button widget. */
+    void *clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -401,9 +401,9 @@ MenuButtonWidgetObjCmd(
 
 static void
 DestroyMenuButton(
-    char *memPtr)		/* Info about button widget. */
+    void *memPtr)		/* Info about button widget. */
 {
-    TkMenuButton *mbPtr = (TkMenuButton *) memPtr;
+    TkMenuButton *mbPtr = (TkMenuButton *)memPtr;
     TkpDestroyMenuButton(mbPtr);
 
     if (mbPtr->flags & REDRAW_PENDING) {
@@ -442,7 +442,7 @@ DestroyMenuButton(
     if (mbPtr->textLayout != NULL) {
 	Tk_FreeTextLayout(mbPtr->textLayout);
     }
-    Tk_FreeConfigOptions((char *) mbPtr, mbPtr->optionTable, mbPtr->tkwin);
+    Tk_FreeConfigOptions(mbPtr, mbPtr->optionTable, mbPtr->tkwin);
     mbPtr->tkwin = NULL;
     Tcl_EventuallyFree(mbPtr, TCL_DYNAMIC);
 }
@@ -651,7 +651,7 @@ ConfigureMenuButton(
 
 void
 TkMenuButtonWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC gc;
@@ -754,7 +754,7 @@ TkMenuButtonWorldChanged(
 
 static void
 MenuButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
@@ -769,7 +769,7 @@ MenuButtonEventProc(
 
 	goto redraw;
     } else if (eventPtr->type == DestroyNotify) {
-	DestroyMenuButton((char *) mbPtr);
+	DestroyMenuButton(mbPtr);
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    mbPtr->flags |= GOT_FOCUS;
@@ -814,7 +814,7 @@ MenuButtonEventProc(
 
 static void
 MenuButtonCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     Tk_Window tkwin = mbPtr->tkwin;
@@ -851,7 +851,7 @@ MenuButtonCmdDeletedProc(
 
 static char *
 MenuButtonTextVarProc(
-    ClientData clientData,	/* Information about button. */
+    void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
     const char *name1,		/* Name of variable. */
     const char *name2,		/* Second part of variable name. */
@@ -939,7 +939,7 @@ MenuButtonTextVarProc(
 
 static void
 MenuButtonImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     int x, int y,		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     int width, int height,	/* Dimensions of area to redisplay (may be <=

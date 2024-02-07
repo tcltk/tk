@@ -70,7 +70,7 @@ static const Tk_ConfigSpec configSpecs[] = {
  * Prototypes for functions defined in this file:
  */
 
-static void		ImageChangedProc(ClientData clientData,
+static void		ImageChangedProc(void *clientData,
 			    int x, int y, int width, int height, int imgWidth,
 			    int imgHeight);
 static int		ImageCoords(Tcl_Interp *interp,
@@ -380,13 +380,11 @@ ConfigureImage(
 
 static void
 DeleteImage(
-    Tk_Canvas canvas,		/* Info about overall canvas widget. */
+    TCL_UNUSED(Tk_Canvas),	/* Info about overall canvas widget. */
     Tk_Item *itemPtr,		/* Item that is being deleted. */
-    Display *display)		/* Display containing window for canvas. */
+    TCL_UNUSED(Display *))	/* Display containing window for canvas. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
-    (void)canvas;
-    (void)display;
 
     if (imgPtr->imageString != NULL) {
 	ckfree(imgPtr->imageString);
@@ -591,13 +589,12 @@ DisplayImage(
 
 static double
 ImageToPoint(
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),	/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item to check against point. */
     double *coordPtr)		/* Pointer to x and y coordinates. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
     double x1, x2, y1, y2, xDiff, yDiff;
-    (void)canvas;
 
     x1 = imgPtr->header.x1;
     y1 = imgPtr->header.y1;
@@ -648,14 +645,13 @@ ImageToPoint(
 
 static int
 ImageToArea(
-    Tk_Canvas canvas,		/* Canvas containing item. */
+    TCL_UNUSED(Tk_Canvas),	/* Canvas containing item. */
     Tk_Item *itemPtr,		/* Item to check against rectangle. */
     double *rectPtr)		/* Pointer to array of four coordinates
 				 * (x1,y1,x2,y2) describing rectangular
 				 * area. */
 {
     ImageItem *imgPtr = (ImageItem *) itemPtr;
-    (void)canvas;
 
     if ((rectPtr[2] <= imgPtr->header.x1)
 	    || (rectPtr[0] >= imgPtr->header.x2)
@@ -885,7 +881,7 @@ TranslateImage(
 
 static void
 ImageChangedProc(
-    ClientData clientData,	/* Pointer to canvas item for image. */
+    void *clientData,	/* Pointer to canvas item for image. */
     int x, int y,		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     int width, int height,	/* Dimensions of area to redisplay (may be <=

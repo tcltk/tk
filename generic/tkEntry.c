@@ -1080,7 +1080,7 @@ DestroyEntry(
 	}
     }
     Tk_FreeTextLayout(entryPtr->textLayout);
-    Tk_FreeConfigOptions((char *) entryPtr, entryPtr->optionTable,
+    Tk_FreeConfigOptions(entryPtr, entryPtr->optionTable,
 	    entryPtr->tkwin);
     Tcl_Release(entryPtr->tkwin);
     entryPtr->tkwin = NULL;
