@@ -512,28 +512,28 @@ static const enum command map[][8] = {
  * Forward declarations for functions defined later in this file:
  */
 
-static void		ButtonCmdDeletedProc(ClientData clientData);
-static int		ButtonCreate(ClientData clientData,
+static void		ButtonCmdDeletedProc(void *clientData);
+static int		ButtonCreate(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[], int type);
-static void		ButtonEventProc(ClientData clientData,
+static void		ButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		ButtonImageProc(ClientData clientData,
+static void		ButtonImageProc(void *clientData,
 			    int x, int y, int width, int height,
 			    int imgWidth, int imgHeight);
-static void		ButtonSelectImageProc(ClientData clientData,
+static void		ButtonSelectImageProc(void *clientData,
 			    int x, int y, int width, int height,
 			    int imgWidth, int imgHeight);
-static void		ButtonTristateImageProc(ClientData clientData,
+static void		ButtonTristateImageProc(void *clientData,
 			    int x, int y, int width, int height,
 			    int imgWidth, int imgHeight);
-static char *		ButtonTextVarProc(ClientData clientData,
+static char *		ButtonTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static char *		ButtonVarProc(ClientData clientData,
+static char *		ButtonVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		ButtonWidgetObjCmd(ClientData clientData,
+static int		ButtonWidgetObjCmd(void *clientData,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj *const objv[]);
 static int		ConfigureButton(Tcl_Interp *interp, TkButton *butPtr,
@@ -561,7 +561,7 @@ static void		DestroyButton(TkButton *butPtr);
 
 int
 Tk_ButtonObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -571,7 +571,7 @@ Tk_ButtonObjCmd(
 
 int
 Tk_CheckbuttonObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -581,7 +581,7 @@ Tk_CheckbuttonObjCmd(
 
 int
 Tk_LabelObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -591,7 +591,7 @@ Tk_LabelObjCmd(
 
 int
 Tk_RadiobuttonObjCmd(
-    ClientData clientData,	/* Either NULL or pointer to option table. */
+    void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -619,7 +619,7 @@ Tk_RadiobuttonObjCmd(
 
 static int
 ButtonCreate(
-    ClientData dummy,	/* NULL. */
+    TCL_UNUSED(void *),	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument values. */
@@ -632,7 +632,6 @@ ButtonCreate(
     Tk_Window tkwin;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-    (void)dummy;
 
     if (!tsdPtr->defaultsInitialized) {
 	TkpButtonSetDefaults();
@@ -775,7 +774,7 @@ ButtonCreate(
 
 static int
 ButtonWidgetObjCmd(
-    ClientData clientData,	/* Information about button widget. */
+    void *clientData,	/* Information about button widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
@@ -999,7 +998,7 @@ DestroyButton(
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		ButtonVarProc, butPtr);
     }
-    Tk_FreeConfigOptions((char *) butPtr, butPtr->optionTable,
+    Tk_FreeConfigOptions(butPtr, butPtr->optionTable,
 	    butPtr->tkwin);
     butPtr->tkwin = NULL;
     Tcl_EventuallyFree(butPtr, TCL_DYNAMIC);
@@ -1335,7 +1334,7 @@ ConfigureButton(
 
 void
 TkButtonWorldChanged(
-    ClientData instanceData)	/* Information about widget. */
+    void *instanceData)	/* Information about widget. */
 {
     XGCValues gcValues;
     GC newGC;
@@ -1448,7 +1447,7 @@ TkButtonWorldChanged(
 
 static void
 ButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkButton *butPtr = (TkButton *)clientData;
@@ -1507,7 +1506,7 @@ ButtonEventProc(
 
 static void
 ButtonCmdDeletedProc(
-    ClientData clientData)	/* Pointer to widget record for widget. */
+    void *clientData)	/* Pointer to widget record for widget. */
 {
     TkButton *butPtr = (TkButton *)clientData;
 
@@ -1597,17 +1596,15 @@ TkInvokeButton(
 
 static char *
 ButtonVarProc(
-    ClientData clientData,	/* Information about button. */
+    void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
-    const char *name1,		/* Name of variable. */
-    const char *name2,		/* Second part of variable name. */
+    TCL_UNUSED(const char *),	/* Name of variable. */
+    TCL_UNUSED(const char *),	/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
     TkButton *butPtr = (TkButton *)clientData;
     const char *value;
     Tcl_Obj *valuePtr;
-    (void)name1;
-    (void)name2;
 
     /*
      * If the variable is being unset, then just re-establish the trace unless
@@ -1708,7 +1705,7 @@ ButtonVarProc(
 
 static char *
 ButtonTextVarProc(
-    ClientData clientData,	/* Information about button. */
+    void *clientData,	/* Information about button. */
     Tcl_Interp *interp,		/* Interpreter containing variable. */
     const char *name1,		/* Not used. */
     const char *name2,		/* Not used. */
@@ -1804,7 +1801,7 @@ ButtonTextVarProc(
 
 static void
 ButtonImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     int x, int y,		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     int width, int height,	/* Dimensions of area to redisplay (might be
@@ -1848,7 +1845,7 @@ ButtonImageProc(
 
 static void
 ButtonSelectImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     int x, int y,		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     int width, int height,	/* Dimensions of area to redisplay (might be
@@ -1901,7 +1898,7 @@ ButtonSelectImageProc(
 
 static void
 ButtonTristateImageProc(
-    ClientData clientData,	/* Pointer to widget record. */
+    void *clientData,	/* Pointer to widget record. */
     int x, int y,		/* Upper left pixel (within image) that must
 				 * be redisplayed. */
     int width, int height,	/* Dimensions of area to redisplay (might be

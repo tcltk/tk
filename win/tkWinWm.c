@@ -3249,7 +3249,7 @@ WmClientCmd(
 		!= 0) {
 	    XSetWMClientMachine(winPtr->display, winPtr->window,
 		    &textProp);
-	    XFree((char *) textProp.value);
+	    XFree(textProp.value);
 	}
     }
     return TCL_OK;
