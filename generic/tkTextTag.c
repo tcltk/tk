@@ -2089,7 +2089,7 @@ TkTextReleaseTag(
 	/* Restore the original values. */
 	tagPtr->attrs = tagPtr->textPtr->selTagConfigAttrs;
     }
-    Tk_FreeConfigOptions((char *) tagPtr, tagPtr->optionTable, sharedTextPtr->peers->tkwin);
+    Tk_FreeConfigOptions(tagPtr, tagPtr->optionTable, sharedTextPtr->peers->tkwin);
 
     /*
      * This associated information is managed by us.
@@ -2281,7 +2281,7 @@ TkTextFreeAllTags(
 	    assert(tagPtr->textPtr);
 	    tagPtr->attrs = tagPtr->textPtr->selTagConfigAttrs;
 	}
-	Tk_FreeConfigOptions((char *) tagPtr, tagPtr->optionTable, textPtr->tkwin);
+	Tk_FreeConfigOptions(tagPtr, tagPtr->optionTable, textPtr->tkwin);
 
 	/*
 	 * This associated information is managed by us.

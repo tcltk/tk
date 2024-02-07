@@ -1221,7 +1221,7 @@ ReleaseEmbeddedWindow(
 	client = next;
     }
     ewPtr->body.ew.clients = NULL;
-    Tk_FreeConfigOptions((char *) &ewPtr->body.ew, ewPtr->body.ew.optionTable, NULL);
+    Tk_FreeConfigOptions(&ewPtr->body.ew, ewPtr->body.ew.optionTable, NULL);
     TkBTreeFreeSegment(ewPtr);
 }
 

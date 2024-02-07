@@ -831,7 +831,7 @@ ReleaseImage(
      * No need to supply a tkwin argument, since we have no window-specific options.
      */
 
-    Tk_FreeConfigOptions((char *) img, img->optionTable, NULL);
+    Tk_FreeConfigOptions(img, img->optionTable, NULL);
     if (img->name) {
 	ckfree(img->name);
     }
