@@ -66,7 +66,7 @@ FreeTabArray(
 };
 
 static const Tk_ObjCustomOption tabArrayOption = {
-    "pixels",			/* name */
+    "tabarray",			/* name */
     SetTabArray,		/* setProc */
     NULL,			/* getProc */
     NULL,			/* restoreProc */
