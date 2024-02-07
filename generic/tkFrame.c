@@ -896,7 +896,7 @@ DestroyFramePartly(
 	labelframePtr->labelWin = NULL;
     }
 
-    Tk_FreeConfigOptions((char *) framePtr, framePtr->optionTable,
+    Tk_FreeConfigOptions(framePtr, framePtr->optionTable,
 	    framePtr->tkwin);
 }
 
