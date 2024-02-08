@@ -2454,6 +2454,9 @@ StartEnd(
 		firstChar = 0;
 	    }
 	    if (offset == 0) {
+		if (indexPtr->byteIndex == 0) {
+		    goto done;
+		}
 		if (modifier == TKINDEX_DISPLAY) {
 		    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr,
 			    COUNT_DISPLAY_INDICES);
@@ -2466,9 +2469,6 @@ StartEnd(
 	    }
 	    offset -= chSize;
 	    if (offset < 0) {
-		if (indexPtr->byteIndex == 0) {
-		    goto done;
-		}
 		segPtr = TkTextIndexToSeg(indexPtr, &offset);
 	    }
 	}
