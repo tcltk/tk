@@ -230,7 +230,8 @@ Indicates the end of the text (the character just after the last newline).
 .TP 12
 \fImark\fR
 .
-Indicates the character just after the mark whose name is \fImark\fR.
+Indicates the character just after the mark whose name is \fImark\fR (see
+\fBMARKS\fR for details).
 .TP 12
 \fItag\fB.first\fR
 .
