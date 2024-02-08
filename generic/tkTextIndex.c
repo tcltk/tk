@@ -4023,21 +4023,17 @@ StartEnd(
 			    firstChar = 0;
 			}
 			if (offset == 0) {
-			    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, (TkTextCountType)mode);
-			    segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
-			    if (offset < chSize && indexPtr->priv.byteIndex == 0) {
+			    if (indexPtr->priv.byteIndex == 0) {
+				indexPtr->priv.segPtr = segPtr;
+				indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
 				return p;
 			    }
-			} else if ((indexPtr->priv.byteIndex -= chSize) == 0) {
-			    indexPtr->priv.segPtr = segPtr;
-			    indexPtr->priv.isCharSegment = segPtr->typePtr == &tkTextCharType;
-			    return p;
-			} else if ((offset -= chSize) < 0) {
-			    do {
-				segPtr = segPtr->prevPtr;
-				assert(segPtr);
-			    } while (segPtr->size == 0);
-			    offset = 0;
+			    TkTextIndexBackChars(textPtr, indexPtr, 1, indexPtr, (TkTextCountType)mode);
+			} else {
+			    indexPtr->priv.byteIndex -= chSize;
+			}
+			if ((offset -= chSize) < 0) {
+			    segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
 			}
 		    }
 
