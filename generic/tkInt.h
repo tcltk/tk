@@ -83,6 +83,28 @@
 # define TCL_COMBINE		0
 #endif
 
+#undef Tcl_NumUtfChars
+#undef Tcl_GetCharLength
+#undef Tcl_UtfAtIndex
+#if TCL_MAJOR_VERSION > 8
+#define Tcl_NumUtfChars \
+	(tclStubsPtr->tcl_NumUtfChars) /* 669 */
+#define Tcl_GetCharLength \
+	(tclStubsPtr->tcl_GetCharLength) /* 670 */
+#define Tcl_UtfAtIndex \
+	(tclStubsPtr->tcl_UtfAtIndex) /* 671 */
+#else
+#   define Tcl_NumUtfChars (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+	    ((Tcl_Size (*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[669])) \
+	    : (tclStubsPtr->tcl_NumUtfChars) /* 312 */)
+#   define Tcl_GetCharLength (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+	    ((Tcl_Size (*)(Tcl_Obj *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[670])) \
+	    : (tclStubsPtr->tcl_GetCharLength) /* 380 */)
+#   define Tcl_UtfAtIndex (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+	    ((const char *(*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[671])) \
+	    : (tclStubsPtr->tcl_UtfAtIndex) /* 325 */)
+#endif
+
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
 #   define TKFLEXARRAY
 #elif defined(__GNUC__) && (__GNUC__ > 2)
