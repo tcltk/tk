@@ -287,6 +287,20 @@ test spinbox-4.2 "Increment with duplicates in -values, no wrap" -setup {
     unset -nocomplain ::spinbox_test max
 } -result {one two three 4 5 two six six six two 5 4 three two one one one one}
 
+test spinbox-11.2 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
+    destroy .s
+    pack [ttk::spinbox .s]
+    update
+} -body {
+    .s insert end "A sample text"
+    .s icursor end
+    event generate .s <<PrevWord>>  ; # shall move insert to index 9
+    .s delete insert end
+    .s get
+} -cleanup {
+    destroy .s
+} -result {A sample }
+
 
 # nostomp: NB intentional difference between ttk::spinbox and tk::spinbox;
 # see also #1439266
