@@ -13,7 +13,7 @@ exec wish "$0" ${1+"$@"}
 package require tk
 package require msgcat
 
-eval destroy [winfo child .]
+destroy {*}[winfo children .]
 set tk_demoDirectory [file join [pwd] [file dirname [info script]]]
 ::msgcat::mcload $tk_demoDirectory
 namespace import ::msgcat::mc
