@@ -404,7 +404,7 @@ test message-2.2 {Tk_MessageObjCmd procedure} -body {
 } -returnCodes {error} -result {bad window path name "foo"}
 test message-2.3 {Tk_MessageObjCmd procedure} -body {
     catch {message foo}
-    winfo child .
+    winfo children .
 } -result {}
 
 test message-2.4 {Tk_MessageObjCmd procedure} -body {
@@ -412,7 +412,7 @@ test message-2.4 {Tk_MessageObjCmd procedure} -body {
 } -returnCodes {error} -result {unknown option "-gorp"}
 test message-2.5 {Tk_MessageObjCmd procedure} -body {
     catch {message .s -gorp dump}
-    winfo child .
+    winfo children .
 } -result {}
 
 
