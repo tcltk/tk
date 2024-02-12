@@ -1556,7 +1556,7 @@ test pack-17.2 {PackLostContentProc procedure} -setup {
 test pack-18.1.1 {unmap content when container unmapped} -constraints {
     macOrUnix failsOnUbuntu failsOnXQuarz
 } -setup {
-    destroy {*}[winfo child .pack]
+    destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1579,7 +1579,7 @@ test pack-18.1.1 {unmap content when container unmapped} -constraints {
 test pack-18.1.2 {unmap content when container unmapped} -constraints {
     win
 } -setup {
-    destroy {*}[winfo child .pack]
+    destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
@@ -1600,7 +1600,7 @@ test pack-18.1.2 {unmap content when container unmapped} -constraints {
 } -result {1 0 200 75 1}
 
 test pack-18.2 {unmap content when container unmapped} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
-    destroy {*}[winfo child .pack]
+    destroy {*}[winfo children .pack]
     # adjust the position of .pack before test to avoid a screen switch
     # that occurs with window managers that have desktops four times as big
     # as the screen (screen switch causes scale and other tests to fail).
