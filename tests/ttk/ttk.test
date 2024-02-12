@@ -664,7 +664,7 @@ test ttk-ensemble-5 "style element create: valid" -body {
      ttk::style element create plain.background from default
 } -returnCodes 0 -result ""
 
-eval destroy [winfo children .]
+destroy {*}[winfo children .]
 
 tcltest::cleanupTests
 
