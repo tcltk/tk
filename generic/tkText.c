@@ -1377,7 +1377,7 @@ TextWidgetObjCmd(
 	break;
     }
     case TEXT_LOCALE: {
-	char locale[24];
+	Tcl_Obj *localeObj;
 	const TkTextIndex *indexPtr;
 
 	if (objc != 3) {
@@ -1390,8 +1390,10 @@ TextWidgetObjCmd(
 	    result = TCL_ERROR;
 	    goto done;
 	}
-	TkTextIndexLocale(textPtr, indexPtr, locale);
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(locale, TCL_INDEX_NONE));
+	localeObj = TkTextIndexLocale(textPtr, indexPtr);
+	if (localeObj) {
+	    Tcl_SetObjResult(interp, localeObj);
+	}
 	break;
     }
     case TEXT_MARK:
