@@ -858,6 +858,7 @@ typedef struct TkText {
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
                                  * date */
+    Tcl_Obj *localeObj;	/* locale */
 } TkText;
 
 /*

@@ -258,9 +258,9 @@ proc ttk::entry::NextWord {w start} {
 	return end
     }
     variable State
-    set pos [tk::endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos >= 0} {
-	set pos [tk::startOfNextWord [$w get] $pos]
+	set pos [tk::startOfNextWord [$w get] $pos [$w cget -locale]]
     }
     if {$pos < 0} {
 	return end
@@ -278,7 +278,7 @@ proc ttk::entry::SelectNextWord {w start} {
 	return end
     }
     variable State
-    set pos [tk::endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return end
     }
@@ -292,7 +292,7 @@ proc ttk::entry::PrevWord {w start} {
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return 0
     }
-    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return 0
     }
@@ -303,7 +303,7 @@ proc ttk::entry::PrevWord {w start} {
 #
 proc ttk::entry::NextChar {w start} {
     variable State
-    set pos [tk::endOfCluster [$w get] [$w index $start]]
+    set pos [tk::endOfCluster [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return end
     }
@@ -313,7 +313,7 @@ proc ttk::entry::NextChar {w start} {
 ## PrevChar -- Find the previous char position.
 #
 proc ttk::entry::PrevChar {w start} {
-    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}] [$w cget -locale]]
     if {$pos < 0} {
 	return 0
     }
@@ -538,12 +538,12 @@ proc ttk::entry::CharSelect {w from to} {
 #
 proc ttk::entry::WordSelect {w from to} {
     if {$to < $from} {
-	set first [WordBack [$w get] $to]
-	set last [WordForward [$w get] $from]
+	set first [WordBack [$w get] $to [$w cget -locale]]
+	set last [WordForward [$w get] $from [$w cget -locale]]
 	$w icursor $first
     } else {
-	set first [WordBack [$w get] $from]
-	set last [WordForward [$w get] $to]
+	set first [WordBack [$w get] $from [$w cget -locale]]
+	set last [WordForward [$w get] $to [$w cget -locale]]
 	$w icursor $last
     }
     $w selection range $first $last
@@ -657,7 +657,7 @@ proc ttk::entry::Backspace {w} {
     set x [expr {[$w index insert] - 1}]
     if {$x < 0} { return }
 
-    $w delete [tk::startOfCluster [$w get] $x] [tk::endOfCluster [$w get] $x]
+    $w delete [tk::startOfCluster [$w get] $x [$w cget -locale]] [tk::endOfCluster [$w get] $x [$w cget -locale]]
 
     if {[$w index @0] >= [$w index insert]} {
 	set range [$w xview]
@@ -672,8 +672,8 @@ proc ttk::entry::Backspace {w} {
 #
 proc ttk::entry::Delete {w} {
     if {![PendingDelete $w]} {
-	$w delete [tk::startOfCluster [$w get] [$w index insert]] \
-		[tk::endOfCluster [$w get] [$w index insert]]
+	$w delete [tk::startOfCluster [$w get] [$w index insert] [$w cget -locale]] \
+		[tk::endOfCluster [$w get] [$w index insert] [$w cget -locale]]
     }
 }
 
