@@ -1479,6 +1479,11 @@ of the tags present around the insertion point. If multiple
 effect as if a separate \fIpathName \fBinsert\fR widget command had been
 issued for each pair, in order. The last \fItagList\fR argument may be
 omitted.
+.\" METHOD: locale
+.TP
+\fIpathName \fBlocale \fIindex\fR
+.
+Returns the locale belonging to this \fIindex\fR.
 .\" METHOD: mark
 .TP
 \fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?
