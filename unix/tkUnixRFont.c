@@ -498,8 +498,7 @@ TkpGetFontFromAttributes(
 
 #ifdef DEBUG_FONTSEL
     printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
-	    (int) faPtr->size,
-	    faPtr->weight, faPtr->slant);
+	    (int)faPtr->size, faPtr->weight, faPtr->slant);
 #endif /* DEBUG_FONTSEL */
     pattern = XftPatternCreate();
     if (faPtr->family) {
