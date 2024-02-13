@@ -7502,11 +7502,10 @@ TkTextIndexBbox(
  *----------------------------------------------------------------------
  */
 
-void
+Tcl_Obj *
 TkTextIndexLocale(
     TkText *textPtr,		/* Widget record for text widget. */
-    const TkTextIndex *indexPtr,/* Index whose bounding box is desired. */
-    char *locale)
+    const TkTextIndex *indexPtr)/* Index whose locale is desired. */
 {
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
@@ -7536,8 +7535,7 @@ TkTextIndexLocale(
      */
 
     if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
-	*locale = 0;
-	return;
+	return textPtr->localeObj;
     }
 
     /*
@@ -7551,8 +7549,7 @@ TkTextIndexLocale(
     byteCount = TkTextIndexCountBytes(textPtr, &dlPtr->index, indexPtr);
     for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
 	if (chunkPtr == NULL) {
-	    *locale = 0;
-	    return;
+	    return textPtr->localeObj;
 	}
 	if (byteCount < chunkPtr->numBytes) {
 	    break;
@@ -7560,8 +7557,10 @@ TkTextIndexLocale(
 	byteCount -= chunkPtr->numBytes;
     }
 
-	strcpy(locale, chunkPtr->stylePtr->sValuePtr->locale);
-    return;
+    if (!chunkPtr->stylePtr->sValuePtr->locale[0]) {
+	return NULL;
+    }
+    return Tcl_NewStringObj(chunkPtr->stylePtr->sValuePtr->locale, TCL_INDEX_NONE);
 }
 
 /*

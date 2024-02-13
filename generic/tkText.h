@@ -1110,8 +1110,8 @@ MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
-MODULE_SCOPE void	TkTextIndexLocale(TkText *textPtr,
-			    const TkTextIndex *indexPtr, char *locale);
+MODULE_SCOPE Tcl_Obj *TkTextIndexLocale(TkText *textPtr,
+			    const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noBreakYet,
