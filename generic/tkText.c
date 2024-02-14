@@ -5575,7 +5575,7 @@ TkTextRunAfterSyncCmd(
 	*/
 
 	if (textPtr->refCount-- <= 1) {
-	    ckfree((char *) textPtr);
+	    ckfree(textPtr);
 	}
 	return;
     }

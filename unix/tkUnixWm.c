@@ -2490,7 +2490,7 @@ WmIconphotoCmd(
     for (i = 3 + isDefault; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
-	    ckfree((char *) iconPropertyData);
+	    ckfree(iconPropertyData);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	        "failed to create an iconphoto with image \"%s\"",
 		Tcl_GetString(objv[i])));
