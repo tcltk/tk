@@ -328,14 +328,14 @@ test scale-2.2 {Tk_ScaleCmd procedure} -body {
 } -returnCodes error -result {bad window path name "foo"}
 test scale-2.3 {Tk_ScaleCmd procedure} -body {
     catch {scale foo}
-    winfo child .
+    winfo children .
 } -result {}
 test scale-2.4 {Tk_ScaleCmd procedure} -body {
     scale .s -gorp dumb
 } -returnCodes error -result {unknown option "-gorp"}
 test scale-2.5 {Tk_ScaleCmd procedure} -body {
     catch {scale .s -gorp dumb}
-    winfo child .
+    winfo children .
 } -result {}
 
 

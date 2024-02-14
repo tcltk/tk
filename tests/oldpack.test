@@ -402,7 +402,7 @@ test oldpack-7.2 {multiple expanded windows} -body {
         [winfo geometry .pack.red]
 } -result {70x20+30+77 40x40+45+30 10x20+60+3}
 test oldpack-7.3 {multiple expanded windows} -body {
-    foreach i [winfo child .pack] {
+    foreach i [winfo children .pack] {
     pack unpack $i
     }
     pack append .pack .pack.green {left e fill} .pack.red {left expand fill} \
@@ -412,7 +412,7 @@ test oldpack-7.3 {multiple expanded windows} -body {
         [winfo geometry .pack.blue]
 } -result {40x100+0+0 20x100+40+0 40x40+60+0}
 test oldpack-7.4 {multiple expanded windows} -body {
-    foreach i [winfo child .pack] {
+    foreach i [winfo children .pack] {
     pack unpack $i
     }
     pack append .pack .pack.red {top expand} .pack.violet {top expand} \
@@ -422,7 +422,7 @@ test oldpack-7.4 {multiple expanded windows} -body {
         [winfo geometry .pack.blue]
 } -result {10x20+45+5 80x20+10+35 40x40+60+60}
 test oldpack-7.5 {multiple expanded windows} -body {
-    foreach i [winfo child .pack] {
+    foreach i [winfo children .pack] {
     pack unpack $i
     }
     pack append .pack .pack.green {right frame s} .pack.red {top expand}
@@ -430,7 +430,7 @@ test oldpack-7.5 {multiple expanded windows} -body {
     list [winfo geometry .pack.green] [winfo geometry .pack.red]
 } -result {30x40+70+60 10x20+30+40}
 test oldpack-7.6 {multiple expanded windows} -body {
-    foreach i [winfo child .pack] {
+    foreach i [winfo children .pack] {
     pack unpack $i
     }
     pack append .pack .pack.violet {bottom frame e} .pack.red {right expand}
