@@ -191,7 +191,7 @@ DrawANDMask(
             lpIcon->lpAND, lpbi, DIB_RGB_COLORS);
 
     /* clean up */
-    ckfree((char *) lpbi);
+    ckfree(lpbi);
 
     return TRUE;
 }
@@ -851,7 +851,7 @@ CreateTaskbarHandlerWindow(void) {
 
 static void
 WinIcoDestroy(
-    ClientData clientData,
+    void *clientData,
     XEvent *eventPtr)
 {
     IcoInterpInfo *icoInterpPtr = (IcoInterpInfo*) clientData;
@@ -878,7 +878,7 @@ WinIcoDestroy(
             nextPtr = icoPtr->nextPtr;
         FreeIcoPtr(icoInterpPtr, icoPtr);
     }
-    ckfree((char *) icoInterpPtr);
+    ckfree(icoInterpPtr);
 }
 
 /*
@@ -899,7 +899,7 @@ WinIcoDestroy(
 
 static int
 WinSystrayCmd(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -1060,7 +1060,7 @@ WinSystrayCmd(
 
 static int
 WinSysNotifyCmd(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -1159,12 +1159,12 @@ WinIcoInit(
     icoInterpPtr->nextPtr = firstIcoInterpPtr;
     firstIcoInterpPtr = icoInterpPtr;
     Tcl_CreateObjCommand(interp, "::tk::systray::_systray", WinSystrayCmd,
-            (ClientData) icoInterpPtr, NULL);
+            icoInterpPtr, NULL);
     Tcl_CreateObjCommand(interp, "::tk::sysnotify::_sysnotify", WinSysNotifyCmd,
-            (ClientData) icoInterpPtr, NULL);
+            icoInterpPtr, NULL);
 
     Tk_CreateEventHandler(mainWindow, StructureNotifyMask,
-            WinIcoDestroy, (ClientData) icoInterpPtr);
+            WinIcoDestroy, icoInterpPtr);
 
     return TCL_OK;
 }
