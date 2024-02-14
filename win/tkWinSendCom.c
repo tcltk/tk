@@ -144,7 +144,7 @@ static void
 TkWinSendCom_Destroy(
     LPDISPATCH pdisp)
 {
-    CoTaskMemFree((void *) pdisp);
+    CoTaskMemFree(pdisp);
 }
 
 /*
