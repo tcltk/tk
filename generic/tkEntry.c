@@ -1051,7 +1051,7 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    ckfree((char *)entryPtr->string);
+    ckfree(entryPtr->string);
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar2(entryPtr->interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,

@@ -426,10 +426,10 @@ static void DestroyElementData(void *clientData)
 {
     ElementData *elementData = (ElementData *)clientData;
     if (elementData->info->flags & HEAP_ELEMENT) {
-	ckfree((char *)elementData->info->statemap);
-	ckfree((char *)elementData->info->className);
-	ckfree((char *)elementData->info->elementName);
-	ckfree((char *)elementData->info);
+	ckfree(elementData->info->statemap);
+	ckfree(elementData->info->className);
+	ckfree(elementData->info->elementName);
+	ckfree(elementData->info);
     }
     ckfree(clientData);
 }
