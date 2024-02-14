@@ -257,7 +257,6 @@ proc ttk::entry::NextWord {w start} {
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return end
     }
-    variable State
     set pos [tk::endOfWord [$w get] [$w index $start]]
     if {$pos >= 0} {
 	set pos [tk::startOfNextWord [$w get] $pos]
@@ -277,7 +276,6 @@ proc ttk::entry::SelectNextWord {w start} {
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return end
     }
-    variable State
     set pos [tk::endOfWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return end
