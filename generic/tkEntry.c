@@ -1051,7 +1051,7 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    ckfree(entryPtr->string);
+    ckfree((char *)entryPtr->string);
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar2(entryPtr->interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -3273,7 +3273,7 @@ EntryTextVarProc(
                         entryPtr->textVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         EntryTextVarProc, probe);
-                if (probe == (void *)entryPtr) {
+                if (probe == entryPtr) {
                     break;
                 }
             } while (probe);
