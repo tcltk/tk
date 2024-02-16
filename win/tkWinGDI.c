@@ -597,26 +597,26 @@ static int Bezierize(
     outPointList = (double *)attemptckalloc(2 * sizeof(double) * nbpoints);
     if (outPointList == 0) {
 	/* TODO: unreachable */
-        ckfree((void *) inPointList);
+        ckfree((char *)inPointList);
         return 0;
     }
 
     nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep,
 	    NULL, outPointList);
 
-    ckfree((void *) inPointList);
+    ckfree((char *)inPointList);
     bpoints = (POINT *)attemptckalloc(sizeof(POINT)*nbpoints);
     if (bpoints == 0) {
 	/* TODO: unreachable */
-        ckfree((void *) outPointList);
+        ckfree((char *)outPointList);
         return 0;
     }
 
     for (n=0; n<nbpoints; n++) {
-        bpoints[n].x = (long) outPointList[2*n];
-        bpoints[n].y = (long) outPointList[2*n + 1];
+        bpoints[n].x = (long)outPointList[2*n];
+        bpoints[n].y = (long)outPointList[2*n + 1];
     }
-    ckfree((void *) outPointList);
+    ckfree((char *)outPointList);
     *bpointptr = *bpoints;
     return nbpoints;
 }
@@ -712,7 +712,7 @@ static int GdiLine(
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
-		ckfree((void *)polypoints);
+		ckfree((char *)polypoints);
 		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }
@@ -826,7 +826,7 @@ static int GdiLine(
 	    Polyline(hDC, polypoints, npoly); /* Out of memory? Just draw a regular line. */
 	}
 	if (bpoints != 0) {
-	    ckfree((void *)bpoints);
+	    ckfree((char *)bpoints);
 	}
     } else {
 	Polyline(hDC, polypoints, npoly);
@@ -918,7 +918,7 @@ static int GdiLine(
 	GdiFreeBrush(interp, hDC, hBrush);
     }
 
-    ckfree((void *)polypoints);
+    ckfree((char *)polypoints);
     return TCL_OK;
 }
 
@@ -1122,7 +1122,7 @@ static int GdiPolygon(
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
-		ckfree((void *) polypoints);
+		ckfree((char *)polypoints);
 		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }
@@ -1198,7 +1198,7 @@ static int GdiPolygon(
 	    Polygon(hDC, polypoints, npoly);
 	}
 	if (bpoints != 0) {
-	    ckfree((void *)bpoints);
+	    ckfree((char *)bpoints);
 	}
     } else {
 	Polygon(hDC, polypoints, npoly);
@@ -1213,7 +1213,7 @@ static int GdiPolygon(
 	SelectObject(hDC, oldobj);
     }
 
-    ckfree((void *)polypoints);
+    ckfree((char *)polypoints);
     return TCL_OK;
 }
 
