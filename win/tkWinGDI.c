@@ -597,26 +597,26 @@ static int Bezierize(
     outPointList = (double *)attemptckalloc(2 * sizeof(double) * nbpoints);
     if (outPointList == 0) {
 	/* TODO: unreachable */
-        ckfree((void *) inPointList);
+        ckfree((void *)inPointList);
         return 0;
     }
 
     nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep,
 	    NULL, outPointList);
 
-    ckfree((void *) inPointList);
+    ckfree((void *)inPointList);
     bpoints = (POINT *)attemptckalloc(sizeof(POINT)*nbpoints);
     if (bpoints == 0) {
 	/* TODO: unreachable */
-        ckfree((void *) outPointList);
+        ckfree((void *)outPointList);
         return 0;
     }
 
     for (n=0; n<nbpoints; n++) {
-        bpoints[n].x = (long) outPointList[2*n];
-        bpoints[n].y = (long) outPointList[2*n + 1];
+        bpoints[n].x = (long)outPointList[2*n];
+        bpoints[n].y = (long)outPointList[2*n + 1];
     }
-    ckfree((void *) outPointList);
+    ckfree((void *)outPointList);
     *bpointptr = *bpoints;
     return nbpoints;
 }
@@ -1122,7 +1122,7 @@ static int GdiPolygon(
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
-		ckfree((void *) polypoints);
+		ckfree((void *)polypoints);
 		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }

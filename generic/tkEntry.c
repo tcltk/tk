@@ -1051,7 +1051,7 @@ DestroyEntry(
      * Tk_FreeOptions handle all the standard option-related stuff.
      */
 
-    ckfree(entryPtr->string);
+    ckfree((void *)entryPtr->string);
     if (entryPtr->textVarName != NULL) {
 	Tcl_UntraceVar2(entryPtr->interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
@@ -1066,7 +1066,7 @@ DestroyEntry(
     }
     Tcl_DeleteTimerHandler(entryPtr->insertBlinkHandler);
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree((char *)entryPtr->displayString);
+	ckfree((void *)entryPtr->displayString);
     }
     if (entryPtr->type == TK_SPINBOX) {
 	Spinbox *sbPtr = (Spinbox *) entryPtr;
@@ -1980,7 +1980,7 @@ EntryComputeGeometry(
     char *p;
 
     if (entryPtr->displayString != entryPtr->string) {
-	ckfree((char *)entryPtr->displayString);
+	ckfree((void *)entryPtr->displayString);
 	entryPtr->displayString = entryPtr->string;
 	entryPtr->numDisplayBytes = entryPtr->numBytes;
     }
@@ -2188,7 +2188,7 @@ InsertChars(
 	return TCL_OK;
     }
 
-    ckfree((char *)string);
+    ckfree((void *)string);
     entryPtr->string = newStr;
 
     /*
@@ -2294,7 +2294,7 @@ DeleteChars(
     }
 
     ckfree(toDelete);
-    ckfree((char *)entryPtr->string);
+    ckfree((void *)entryPtr->string);
     entryPtr->string = newStr;
     entryPtr->numChars -= count;
     entryPtr->numBytes -= byteCount;
@@ -2484,13 +2484,13 @@ EntrySetValue(
 
 	if (entryPtr->flags & VALIDATE_ABORT) {
 	    entryPtr->flags &= ~VALIDATE_ABORT;
-	    ckfree((char *)value);
+	    ckfree((void *)value);
 	    return;
 	}
     }
 
     oldSource = entryPtr->string;
-    ckfree((char *)entryPtr->string);
+    ckfree((void *)entryPtr->string);
 
     if (malloced) {
 	entryPtr->string = value;
@@ -3273,7 +3273,7 @@ EntryTextVarProc(
                         entryPtr->textVarName,
                         TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
                         EntryTextVarProc, probe);
-                if (probe == (void *)entryPtr) {
+                if (probe == entryPtr) {
                     break;
                 }
             } while (probe);
