@@ -488,7 +488,7 @@ XCopyPlane(
  *
  * TkPutImage, XPutImage --
  *
- *	Copies a subimage from an in-memory image to a rectangle of of the
+ *	Copies a subimage from an in-memory image to a rectangle of the
  *	specified drawable.
  *
  * Results:
