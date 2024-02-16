@@ -641,7 +641,7 @@ platforms, and the fix ultimately required changes in the generic Tk
 implementation (documented in the comments in the DisplayText
 function).
 
-The Text widget attempts to improve perfomance when scrolling by
+The Text widget attempts to improve performance when scrolling by
 minimizing the number of text lines which need to be redisplayed.  It
 does this by calling the platform-specific TkScrollWindow function
 which uses a low-level routine to map one rectangle of the window to
@@ -650,7 +650,7 @@ then used by the Text widget's DisplayText function to determine which
 text lines need to be redrawn.  On the unix and win platforms, this
 damage region includes bounding rectangles for all embedded windows
 inside the Text widget.  The way that this works is system dependent.
-On unix, the low level scrolling is done by XCopyRegion, which
+On unix, the low level scrolling is done by XCopyArea, which
 generates a GraphicsExpose event for each embedded window.  These
 GraphicsExposed events are processsed within TkScrollWindow, using a
 special handler which adds the bounding rectangle of each subwindow to

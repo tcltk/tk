@@ -8592,7 +8592,7 @@ TkpWinToplevelOverrideRedirect(
  *
  * TkpWinToplevelDetachWindow --
  *
- *	This function is to be usd for changing a toplevel's wrapper or
+ *	This function is to be used for changing a toplevel's wrapper or
  *	container.
  *
  * Results:

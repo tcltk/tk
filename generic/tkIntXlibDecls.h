@@ -24,7 +24,7 @@
 #endif
 
 /* Some (older) versions of X11/Xutil.h have a wrong signature of those
-   two functions, so move them out of the way temporarly. */
+   two functions, so move them out of the way temporarily. */
 #define XOffsetRegion _XOffsetRegion
 #define XUnionRegion _XUnionRegion
 #include "X11/Xutil.h"
