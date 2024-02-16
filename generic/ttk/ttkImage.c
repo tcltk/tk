@@ -25,7 +25,7 @@ struct TtkImageSpec {
     Ttk_StateSpec	*states;	/* array[mapCount] of states ... */
     Tk_Image		*images;	/* ... per-state images to use */
     Tk_ImageChangedProc *imageChanged;
-    ClientData		imageChangedClientData;
+    void		*imageChangedClientData;
 };
 
 /* NullImageChanged --
