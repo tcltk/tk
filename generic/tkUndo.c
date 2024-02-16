@@ -287,7 +287,7 @@ TkUndoSubAtom *
 TkUndoMakeSubAtom(
     TkUndoProc *funcPtr,	/* Callback function to perform the
 				 * undo/redo. */
-    ClientData clientData,	/* Data to pass to the callback function. */
+    void *clientData,	/* Data to pass to the callback function. */
     Tcl_Obj *actionScript,	/* Additional Tcl data to pass to the callback
 				 * function (may be NULL). */
     TkUndoSubAtom *subAtomList)	/* Add to the end of this list of actions if

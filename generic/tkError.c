@@ -80,7 +80,7 @@ Tk_CreateErrorHandler(
     Tk_ErrorProc *errorProc,	/* Procedure to invoke when a matching error
 				 * occurs. NULL means just ignore matching
 				 * errors. */
-    ClientData clientData)	/* Arbitrary value to pass to errorProc. */
+    void *clientData)	/* Arbitrary value to pass to errorProc. */
 {
     TkErrorHandler *errorPtr;
     TkDisplay *dispPtr;

@@ -2166,9 +2166,9 @@ static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
         DWORD dw;
         for (dw = 0; dw < count; ++dw) {
             if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree((char *)dlgFilterPtr[dw].pszName);
+                ckfree((void *)dlgFilterPtr[dw].pszName);
             if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree((char *)dlgFilterPtr[dw].pszSpec);
+                ckfree((void *)dlgFilterPtr[dw].pszSpec);
         }
         ckfree(dlgFilterPtr);
     }
