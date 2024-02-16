@@ -9993,7 +9993,7 @@ static void
 RunAfterSyncCmd(
     void *clientData)	/* Information about text widget. */
 {
-    TkText *textPtr = (TkText *) clientData;
+    TkText *textPtr = (TkText *)clientData;
 
     if (!(textPtr->flags & DESTROYED)) {
 	if (TkTextPendingSync(textPtr)) {

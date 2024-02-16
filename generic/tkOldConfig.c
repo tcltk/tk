@@ -719,9 +719,9 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((char *) argv[4]);
+	    ckfree((void *)argv[4]);
 	} else {
-	    freeProc((char *) argv[4]);
+	    freeProc((void *)argv[4]);
 	}
     }
     return result;
@@ -942,9 +942,9 @@ Tk_ConfigureValue(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((char *) result);
+	    ckfree((void *)result);
 	} else {
-	    freeProc((char *) result);
+	    freeProc((void *)result);
 	}
     }
     return TCL_OK;
