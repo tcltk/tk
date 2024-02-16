@@ -289,7 +289,7 @@ typedef struct DLine {
  * TOP_LINE -			Non-zero means that this was the top line in
  *				in the window the last time that the window
  *				was laid out. This is important because a line
- *				may be displayed differently if its at the top
+ *				may be displayed differently if it's at the top
  *				or bottom than if it's in the middle
  *				(e.g. beveled edges aren't displayed for
  *				middle lines if the adjacent line has a

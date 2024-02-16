@@ -716,7 +716,7 @@ TkImgPhotoDisplay(
 	Tk_DeleteErrorHandler(handler);
     } else {
 	/*
-	 * modelPtr->region describes which parts of the image contain valid
+	 * modelPtr->validRegion describes which parts of the image contain valid
 	 * data. We set this region as the clip mask for the gc, setting its
 	 * origin appropriately, and use it when drawing the image.
 	 */

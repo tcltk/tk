@@ -614,7 +614,7 @@ static void
 AdjustStartEndRefs(
     BTree *treePtr,		/* The entire B-tree. */
     TkText *textPtr,		/* The text widget for which we want to adjust
-				 * it's start and end cache. */
+				 * its start and end cache. */
     int action)			/* Action to perform. */
 {
     if (action & TEXT_REMOVE_REFS) {
