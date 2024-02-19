@@ -24,22 +24,12 @@ HWND tkWinCurrentDialog;
  * Forward declarations of functions defined later in this file:
  */
 
-static int		TestclipboardObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		TestwineventObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		TestfindwindowObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		TestgetwindowinfoObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		TestwinlocaleObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static Tk_GetSelProc		SetSelectionResult;
+static Tcl_ObjCmdProc TestclipboardObjCmd;
+static Tcl_ObjCmdProc TestwineventObjCmd;
+static Tcl_ObjCmdProc TestfindwindowObjCmd;
+static Tcl_ObjCmdProc TestgetwindowinfoObjCmd;
+static Tcl_ObjCmdProc TestwinlocaleObjCmd;
+static Tk_GetSelProc SetSelectionResult;
 
 /*
  *----------------------------------------------------------------------

@@ -353,7 +353,7 @@ static int		InsertChars(TkSharedText *sharedTextPtr,
 			    TkText *textPtr, TkTextIndex *indexPtr,
 			    Tcl_Obj *stringPtr, int viewUpdate);
 static void		TextBlinkProc(void *clientData);
-static void		TextCmdDeletedProc(void *clientData);
+static Tcl_CmdDeleteProc TextCmdDeletedProc;
 static int		CreateWidget(TkSharedText *sharedPtr, Tk_Window tkwin,
 			    Tcl_Interp *interp, const TkText *parent,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
@@ -375,12 +375,8 @@ static int		TextSearchCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		TextEditCmd(TkText *textPtr, Tcl_Interp *interp,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
-static int		TextWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		SharedTextObjCmd(void *clientData,
-			    Tcl_Interp *interp,
-			    Tcl_Size objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc TextWidgetObjCmd;
+static Tcl_ObjCmdProc2 SharedTextObjCmd;
 static void		TextWorldChangedCallback(void *instanceData);
 static void		TextWorldChanged(TkText *textPtr, int mask);
 static int		TextDumpCmd(TkText *textPtr, Tcl_Interp *interp,
