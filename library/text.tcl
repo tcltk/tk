@@ -148,7 +148,7 @@ bind Text <<SelectPrevWord>> {
     tk::TextKeySelect %W [tk::TextPrevPos %W insert tk::startOfPreviousWord]
 }
 bind Text <<SelectNextWord>> {
-    tk::TextKeySelect %W [tk::TextNextWord %W insert]
+    tk::TextKeySelect %W [tk::TextSelectNextWord %W insert]
 }
 bind Text <<SelectPrevPara>> {
     tk::TextKeySelect %W [tk::TextPrevPara %W insert]
@@ -1161,25 +1161,30 @@ proc ::tk_textPaste w {
 }
 
 # ::tk::TextNextWord --
-# Returns the index of the next word position after a given position in the
-# text.  The next word is platform dependent and may be either the next
-# end-of-word position or the next start-of-word position after the next
-# end-of-word position.
+# Returns the index of the next start-of-word position after the next
+# end-of-word position after a given position in the text.
 #
 # Arguments:
 # w -		The text window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {[tk windowingsystem] eq "win32"}  {
-    proc ::tk::TextNextWord {w start} {
-	TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
-		tk::startOfNextWord
-    }
-} else {
-    proc ::tk::TextNextWord {w start} {
-	TextNextPos $w $start tk::endOfWord
-    }
+proc ::tk::TextNextWord {w start} {
+    TextNextPos $w [TextNextPos $w $start tk::endOfWord] \
+	    tk::startOfNextWord
 }
+
+# ::tk::TextSelectNextWord --
+# Returns the index of the next end-of-word position after a given
+# position in the text.
+#
+# Arguments:
+# w -		The text window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::TextSelectNextWord {w start} {
+    TextNextPos $w $start tk::endOfWord
+}
+
 
 # ::tk::TextNextPos --
 # Returns the index of the next position after the given starting
