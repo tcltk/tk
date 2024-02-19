@@ -373,11 +373,7 @@ typedef enum { 		/* -orient option values */
 
 typedef struct TtkEnsemble {
     const char *name;			/* subcommand name */
-#if TCL_MAJOR_VERSION > 8
     Tcl_ObjCmdProc2 *command; 		/* subcommand implementation, OR: */
-#else
-    Tcl_ObjCmdProc *command;
-#endif
     const struct TtkEnsemble *ensemble;	/* subcommand ensemble */
 } Ttk_Ensemble;
 
