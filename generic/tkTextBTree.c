@@ -3520,10 +3520,10 @@ TkTextIsElided(
     TkTextLine *siblingLinePtr;
     TkTextSegment *segPtr;
     TkTextTag *tagPtr = NULL;
-    int i, index;
+    Tcl_Size i;
     TkTextElideInfo *infoPtr;
     TkTextLine *linePtr;
-    int elide;
+    int elide, index;
 
     if (elideInfo == NULL) {
 	infoPtr = (TkTextElideInfo *)ckalloc(sizeof(TkTextElideInfo));

@@ -784,13 +784,13 @@ GetStyle(
      * The variables below keep track of the highest-priority specification
      * that has occurred for each of the various fields of the StyleValues.
      */
-    int borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
-    int fgPrio, fontPrio, fgStipplePrio;
-    int underlinePrio, elidePrio, justifyPrio, offsetPrio;
-    int lMargin1Prio, lMargin2Prio, rMarginPrio;
-    int lMarginColorPrio, rMarginColorPrio;
-    int spacing1Prio, spacing2Prio, spacing3Prio;
-    int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
+    Tcl_Size borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
+    Tcl_Size fgPrio, fontPrio, fgStipplePrio;
+    Tcl_Size underlinePrio, elidePrio, justifyPrio, offsetPrio;
+    Tcl_Size lMargin1Prio, lMargin2Prio, rMarginPrio;
+    Tcl_Size lMarginColorPrio, rMarginColorPrio;
+    Tcl_Size spacing1Prio, spacing2Prio, spacing3Prio;
+    Tcl_Size overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
     /*
      * Find out what tags are present for the character, then compute a
