@@ -143,7 +143,7 @@ bind Entry <<SelectPrevWord>> {
     tk::EntrySeeInsert %W
 }
 bind Entry <<SelectNextWord>> {
-    tk::EntryKeySelect %W [tk::EntryNextWord %W insert]
+    tk::EntryKeySelect %W [tk::EntrySelectNextWord %W insert]
     tk::EntrySeeInsert %W
 }
 bind Entry <<LineStart>> {
@@ -588,42 +588,46 @@ proc ::tk::EntryTranspose w {
 }
 
 # ::tk::EntryNextWord --
-# Returns the index of the next word position after a given position in the
-# entry.  The next word is platform dependent and may be either the next
-# end-of-word position or the next start-of-word position after the next
-# end-of-word position.
+# Returns the index of the next start-of-word position after the next
+# end-of-word position after a given position in the text.
 #
 # Arguments:
 # w -		The entry window in which the cursor is to move.
 # start -	Position at which to start search.
 
-if {[tk windowingsystem] eq "win32"}  {
-    proc ::tk::EntryNextWord {w start} {
-        # the check on [winfo class] is because the spinbox also uses this proc
-        if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
-	    return end
-	}
-	set pos [tk::endOfWord [$w get] [$w index $start]]
-	if {$pos >= 0} {
-	    set pos [tk::startOfNextWord [$w get] $pos]
-	}
-	if {$pos < 0} {
-	    return end
-	}
-	return $pos
+proc ::tk::EntryNextWord {w start} {
+    # the check on [winfo class] is because the spinbox also uses this proc
+    if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
+	return end
     }
-} else {
-    proc ::tk::EntryNextWord {w start} {
-        # the check on [winfo class] is because the spinbox also uses this proc
-        if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
-	    return end
-	}
-	set pos [tk::endOfWord [$w get] [$w index $start]]
-	if {$pos < 0} {
-	    return end
-	}
-	return $pos
+    set pos [tk::endOfWord [$w get] [$w index $start]]
+    if {$pos >= 0} {
+	set pos [tk::startOfNextWord [$w get] $pos]
     }
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+# ::tk::EntrySelectNextWord --
+# Returns the index of the next end-of-word position after a given
+# position in the text.
+#
+# Arguments:
+# w -		The entry window in which the cursor is to move.
+# start -	Position at which to start search.
+
+proc ::tk::EntrySelectNextWord {w start} {
+    # the check on [winfo class] is because the spinbox also uses this proc
+    if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
+	return end
+    }
+    set pos [tk::endOfWord [$w get] [$w index $start]]
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
 }
 
 # ::tk::EntryPreviousWord --
