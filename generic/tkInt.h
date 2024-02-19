@@ -944,13 +944,13 @@ typedef struct {
  * commands and optionally to create sub-ensembles.
  */
 
+#if (TCL_MAJOR_VERSION < 9) && !defined(Tcl_ObjCmdProc2)
+#define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
+#endif
+
 typedef struct TkEnsemble {
     const char *name;
-#if TCL_MAJOR_VERSION > 8
     Tcl_ObjCmdProc2 *proc;
-#else
-    Tcl_ObjCmdProc *proc;
-#endif
     const struct TkEnsemble *subensemble;
 } TkEnsemble;
 
