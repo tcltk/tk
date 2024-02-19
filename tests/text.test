@@ -952,7 +952,7 @@ test text-3.2 {TextWidgetCmd procedure} -setup {
     .t gorp 1.0 z 1.2
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
+} -returnCodes {error} -result {bad option "gorp": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, locale, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 
 test text-4.1 {TextWidgetCmd procedure, "bbox" option} -setup {
     text .t
@@ -1174,7 +1174,7 @@ Line 7"
     .t co 1.0 z 1.2
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
+} -returnCodes {error} -result {ambiguous option "co": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, locale, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 # "configure" option is already covered above
 
 test text-7.1 {TextWidgetCmd procedure, "debug" option} -setup {
@@ -1190,7 +1190,7 @@ test text-7.2 {TextWidgetCmd procedure, "debug" option} -setup {
     .t de 0 1
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
+} -returnCodes {error} -result {ambiguous option "de": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, locale, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 test text-7.3 {TextWidgetCmd procedure, "debug" option} -setup {
     text .t
 } -body {
@@ -3162,7 +3162,7 @@ test text-12.3 {TextWidgetCmd procedure, "index" option} -setup {
     .t in a b
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
+} -returnCodes {error} -result {ambiguous option "in": must be bbox, cget, compare, configure, count, debug, delete, dlineinfo, dump, edit, get, image, index, insert, locale, mark, peer, pendingsync, replace, scan, search, see, sync, tag, window, xview, or yview}
 test text-12.4 {TextWidgetCmd procedure, "index" option} -setup {
     text .t
 } -body {

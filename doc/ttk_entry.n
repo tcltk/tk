@@ -47,6 +47,8 @@ One of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
 .\" MAYBE: .OP \-selectbackground selectBackground Foreground
 .\" MAYBE: .OP \-selectborderwidth selectBorderWidth BorderWidth
 .\" MAYBE: .OP \-selectforeground selectForeground Background
+.OP \-locale locale Locale
+Specifies which locale is used for determining character or word boundaries.
 .OP \-show show Show
 If this option is specified, then the true contents of the entry
 are not displayed in the window.

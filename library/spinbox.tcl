@@ -175,8 +175,8 @@ bind Spinbox <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
-		[tk::endOfCluster [%W get] [%W index insert]]
+	%W delete [tk::startOfCluster [%W get] [%W index insert] [$w cget -locale]] \
+		[tk::endOfCluster [%W get] [%W index insert] [$w cget -locale]]
     }
 }
 bind Spinbox <BackSpace> {
@@ -469,11 +469,11 @@ proc ::tk::spinbox::MouseSelect {w x {cursor {}}} {
 	}
 	word {
 	    if {$cur < [$w index anchor]} {
-		set before [tk::wordBreakBefore [$w get] $cur]
-		set after [tk::wordBreakAfter [$w get] $anchor-1]
+		set before [tk::wordBreakBefore [$w get] $cur [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $anchor-1 [$w cget -locale]]
 	    } else {
-		set before [tk::wordBreakBefore [$w get] $anchor]
-		set after [tk::wordBreakAfter [$w get] $cur-1]
+		set before [tk::wordBreakBefore [$w get] $anchor [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $cur-1 [$w cget -locale]]
 	    }
 	    if {$before < 0} {
 		set before 0

@@ -160,6 +160,7 @@ typedef struct StyleValues {
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * One of TEXT_WRAPMODE_CHAR,
 				 * TEXT_WRAPMODE_NONE or TEXT_WRAPMODE_WORD.*/
+    char locale[24];
 } StyleValues;
 
 /*
@@ -788,7 +789,7 @@ GetStyle(
     Tcl_Size fgPrio, fontPrio, fgStipplePrio;
     Tcl_Size underlinePrio, elidePrio, justifyPrio, offsetPrio;
     Tcl_Size lMargin1Prio, lMargin2Prio, rMarginPrio;
-    Tcl_Size lMarginColorPrio, rMarginColorPrio;
+    Tcl_Size lMarginColorPrio, rMarginColorPrio, localePrio;
     Tcl_Size spacing1Prio, spacing2Prio, spacing3Prio;
     Tcl_Size overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
@@ -803,7 +804,7 @@ GetStyle(
     fgPrio = fontPrio = fgStipplePrio = -1;
     underlinePrio = elidePrio = justifyPrio = offsetPrio = -1;
     lMargin1Prio = lMargin2Prio = rMarginPrio = -1;
-    lMarginColorPrio = rMarginColorPrio = -1;
+    lMarginColorPrio = rMarginColorPrio = localePrio = -1;
     spacing1Prio = spacing2Prio = spacing3Prio = -1;
     overstrikePrio = tabPrio = tabStylePrio = wrapPrio = -1;
     memset(&styleValues, 0, sizeof(StyleValues));
@@ -820,6 +821,9 @@ GetStyle(
     styleValues.tabStyle = textPtr->tabStyle;
     styleValues.wrapMode = textPtr->wrapMode;
     styleValues.elide = 0;
+    if (textPtr->localeObj) {
+	strncpy(styleValues.locale, Tcl_GetString(textPtr->localeObj), sizeof(styleValues.locale)-1);
+    }
     isSelected = 0;
 
     for (i = 0 ; i < numTags; i++) {
@@ -989,6 +993,11 @@ GetStyle(
 		&& (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
+	}
+	if ((tagPtr->localeObj != NULL)
+		&& (tagPtr->priority > localePrio)) {
+	    strncpy(styleValues.locale, Tcl_GetString(tagPtr->localeObj), sizeof(styleValues.locale)-1);
+	    localePrio = tagPtr->priority;
 	}
     }
     if (tagPtrs != NULL) {
@@ -7476,6 +7485,84 @@ TkTextIndexBbox(
     return 0;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkTextIndexLocale --
+ *
+ *	Given an index, find the locale of the screen area occupied by
+ *	the entity (character, window, image) at that index.
+ *
+ * Results:
+ *	*locale will be filled with the locale.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+Tcl_Obj *
+TkTextIndexLocale(
+    TkText *textPtr,		/* Widget record for text widget. */
+    const TkTextIndex *indexPtr)/* Index whose locale is desired. */
+{
+    TextDInfo *dInfoPtr = textPtr->dInfoPtr;
+    DLine *dlPtr;
+    TkTextDispChunk *chunkPtr;
+    int byteCount;
+
+    /*
+     * Make sure that all of the screen layout information is up to date.
+     */
+
+    if (dInfoPtr->flags & DINFO_OUT_OF_DATE) {
+	UpdateDisplayInfo(textPtr);
+    }
+
+    /*
+     * Find the display line containing the desired index.
+     */
+
+    dlPtr = FindDLine(textPtr, dInfoPtr->dLinePtr, indexPtr);
+
+    /*
+     * Two cases shall be trapped here because the logic later really
+     * needs dlPtr to be the display line containing indexPtr:
+     *   1. if no display line contains the desired index (NULL dlPtr)
+     *   2. if indexPtr is before the first display line, in which case
+     *      dlPtr currently points to the first display line
+     */
+
+    if ((dlPtr == NULL) || (TkTextIndexCmp(&dlPtr->index, indexPtr) > 0)) {
+	return textPtr->localeObj;
+    }
+
+    /*
+     * Find the chunk within the display line that contains the desired
+     * index. The chunks making the display line are skipped up to but not
+     * including the one crossing indexPtr. Skipping is done based on
+     * a byteCount offset possibly spanning several logical lines in case
+     * they are elided.
+     */
+
+    byteCount = TkTextIndexCountBytes(textPtr, &dlPtr->index, indexPtr);
+    for (chunkPtr = dlPtr->chunkPtr; ; chunkPtr = chunkPtr->nextPtr) {
+	if (chunkPtr == NULL) {
+	    return textPtr->localeObj;
+	}
+	if (byteCount < chunkPtr->numBytes) {
+	    break;
+	}
+	byteCount -= chunkPtr->numBytes;
+    }
+
+    if (!chunkPtr->stylePtr->sValuePtr->locale[0]) {
+	return NULL;
+    }
+    return Tcl_NewStringObj(chunkPtr->stylePtr->sValuePtr->locale, TCL_INDEX_NONE);
+}
+
 /*
  *----------------------------------------------------------------------
  *
