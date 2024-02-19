@@ -85,24 +85,13 @@ static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    const char *str[], int numargs);
-static int		PrintSelectPrinter(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		PrintOpenPrinter(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		PrintClosePrinter(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		PrintOpenDoc(void *clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		PrintCloseDoc(void *clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		PrintOpenPage(void *clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		PrintClosePage(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc PrintSelectPrinter;
+static Tcl_ObjCmdProc PrintOpenPrinter;
+static Tcl_ObjCmdProc PrintClosePrinter;
+static Tcl_ObjCmdProc PrintOpenDoc;
+static Tcl_ObjCmdProc PrintCloseDoc;
+static Tcl_ObjCmdProc PrintOpenPage;
+static Tcl_ObjCmdProc PrintClosePage;
 
 /*
  * Global state.
