@@ -104,7 +104,7 @@ bind TEntry <<LineEnd>>			{ ttk::entry::Move %W end }
 bind TEntry <<SelectPrevChar>> 		{ ttk::entry::Extend %W prevchar }
 bind TEntry <<SelectNextChar>>		{ ttk::entry::Extend %W nextchar }
 bind TEntry <<SelectPrevWord>>		{ ttk::entry::Extend %W prevword }
-bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W nextword }
+bind TEntry <<SelectNextWord>>		{ ttk::entry::Extend %W selectnextword }
 bind TEntry <<SelectLineStart>>		{ ttk::entry::Extend %W home }
 bind TEntry <<SelectLineEnd>>		{ ttk::entry::Extend %W end }
 
@@ -248,24 +248,35 @@ proc ttk::entry::See {w {index insert}} {
     }
 }
 
-## NextWord -- Find the next word position.
-#	Note: The "next word position" follows platform conventions:
-#	either the next end-of-word position, or the start-of-word
-#	position following the next end-of-word position.
+## NextWord --
+# Returns the index of the next start-of-word position after the next
+# end-of-word position after a given position in the text.
 #
-set ::ttk::entry::State(startNext) \
-	[string equal [tk windowingsystem] "win32"]
-
 proc ttk::entry::NextWord {w start} {
     # the check on [winfo class] is because the spinbox and combobox also use this proc
     if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
 	return end
     }
-    variable State
     set pos [tk::endOfWord [$w get] [$w index $start]]
-    if {$pos >= 0 && $State(startNext)} {
+    if {$pos >= 0} {
 	set pos [tk::startOfNextWord [$w get] $pos]
     }
+    if {$pos < 0} {
+	return end
+    }
+    return $pos
+}
+
+## SelectNextWord --
+# Returns the index of the next end-of-word position after a given
+# position in the text.
+#
+proc ttk::entry::SelectNextWord {w start} {
+    # the check on [winfo class] is because the spinbox and combobox also use this proc
+    if {[winfo class $w] eq "TEntry" && [$w cget -show] ne ""} {
+	return end
+    }
+    set pos [tk::endOfWord [$w get] [$w index $start]]
     if {$pos < 0} {
 	return end
     }
@@ -315,6 +326,7 @@ proc ttk::entry::RelIndex {w where {index insert}} {
     	nextchar	{ NextChar $w $index }
 	prevword	{ PrevWord $w $index }
 	nextword	{ NextWord $w $index }
+	selectnextword	{ SelectNextWord $w $index }
 	home		{ return 0 }
 	end		{ $w index end }
 	default		{ error "Bad relative index $index" }
