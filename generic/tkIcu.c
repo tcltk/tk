@@ -61,6 +61,25 @@ static struct {
 
 TCL_DECLARE_MUTEX(icu_mutex);
 
+const char *compatFunctions[] = {
+    NULL,
+    "tcl_startOfPreviousWord",
+    NULL,
+    NULL,
+    NULL,
+    "tcl_startOfNextWord",
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    NULL,
+    "tcl_endOfWord",
+    NULL,
+    NULL,
+};
+
 static int
 startEndOfCmd(
     void *clientData,
@@ -85,6 +104,15 @@ startEndOfCmd(
     if (objc > 3) {
 	locale = Tcl_GetString(objv[3]);
 	if (!*locale) {
+	    locale = NULL;
+	} else if (!strcmp(locale, "regexp")) {
+	    if (compatFunctions[flags]) {
+		Tcl_Obj *args[3];
+		args[0] = Tcl_NewStringObj(compatFunctions[flags], -1);
+		args[1] = objv[1];
+		args[2] = objv[2];
+		return Tcl_EvalObjv(interp, 3, args, TCL_EVAL_GLOBAL|TCL_EVAL_DIRECT);
+	    }
 	    locale = NULL;
 	}
     }
