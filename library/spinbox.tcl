@@ -153,7 +153,7 @@ bind Spinbox <<SelectPrevWord>> {
     ::tk::EntrySeeInsert %W
 }
 bind Spinbox <<SelectNextWord>> {
-    ::tk::EntryKeySelect %W [::tk::EntryNextWord %W insert]
+    ::tk::EntryKeySelect %W [::tk::EntrySelectNextWord %W insert]
     ::tk::EntrySeeInsert %W
 }
 bind Spinbox <<LineStart>> {
