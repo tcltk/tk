@@ -63,7 +63,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
-static CmdDeleteProc CmdDeleteProc;
+static Tcl_CmdDeleteProc CmdDeleteProc;
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
 static HRESULT		BuildMoniker(const char *name, LPMONIKER *pmk);
