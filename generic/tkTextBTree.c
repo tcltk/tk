@@ -44,7 +44,7 @@
 
 typedef struct Summary {
     TkTextTag *tagPtr;		/* Handle for tag. */
-    int toggleCount;		/* Number of transitions into or out of this
+    Tcl_Size toggleCount;		/* Number of transitions into or out of this
 				 * tag that occur in the subtree rooted at
 				 * this node. */
     struct Summary *nextPtr;	/* Next in list of all tags for same node, or
@@ -63,7 +63,7 @@ typedef struct Node {
     Summary *summaryPtr;	/* First in malloc-ed list of info about tags
 				 * in this subtree (NULL if no tag info in the
 				 * subtree). */
-    int level;			/* Level of this node in the B-tree. 0 refers
+    Tcl_Size level;		/* Level of this node in the B-tree. 0 refers
 				 * to the bottom of the tree (children are
 				 * lines, not nodes). */
     union {			/* First in linked list of children. */
@@ -154,7 +154,7 @@ static int		AdjustPixelClient(BTree *treePtr, int defaultHeight,
 			    int useReference, int newPixelReferences,
 			    int *counting);
 static void		ChangeNodeToggleCount(Node *nodePtr,
-			    TkTextTag *tagPtr, int delta);
+			    TkTextTag *tagPtr, Tcl_Size delta);
 static void		CharCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static int		CharDeleteProc(TkTextSegment *segPtr,
@@ -2314,12 +2314,12 @@ ChangeNodeToggleCount(
     Node *nodePtr,	/* Node whose toggle count for a tag must be
 				 * changed. */
     TkTextTag *tagPtr,		/* Information about tag. */
-    int delta)			/* Amount to add to current toggle count for
+    Tcl_Size delta)			/* Amount to add to current toggle count for
 				 * tag (may be negative). */
 {
     Summary *summaryPtr, *prevPtr;
     Node *node2Ptr;
-    int rootLevel;		/* Level of original tag root. */
+    Tcl_Size rootLevel;	/* Level of original tag root. */
 
     tagPtr->toggleCount += delta;
     if (tagPtr->tagRootPtr == NULL) {
@@ -2366,7 +2366,7 @@ ChangeNodeToggleCount(
 		 * first place).
 		 */
 
-		Tcl_Panic("ChangeNodeToggleCount: bad toggle count (%d) max (%d)",
+		Tcl_Panic("ChangeNodeToggleCount: bad toggle count (%" TCL_SIZE_MODIFIER "d) max (%" TCL_SIZE_MODIFIER "d)",
 		    summaryPtr->toggleCount, tagPtr->toggleCount);
 	    }
 
@@ -3790,7 +3790,7 @@ TkBTreeCheck(
     TkTextTag *tagPtr;
     Tcl_HashEntry *entryPtr;
     Tcl_HashSearch search;
-    int count;
+    Tcl_Size count;
 
     /*
      * Make sure that the tag toggle counts and the tag root pointers are OK.
@@ -3802,7 +3802,7 @@ TkBTreeCheck(
 	nodePtr = tagPtr->tagRootPtr;
 	if (nodePtr == NULL) {
 	    if (tagPtr->toggleCount != 0) {
-		Tcl_Panic("TkBTreeCheck found \"%s\" with toggles (%d) but no root",
+		Tcl_Panic("TkBTreeCheck found \"%s\" with toggles (%" TCL_SIZE_MODIFIER "d) but no root",
 			tagPtr->name, tagPtr->toggleCount);
 	    }
 	    continue;		/* No ranges for the tag. */
@@ -3810,7 +3810,7 @@ TkBTreeCheck(
 	    Tcl_Panic("TkBTreeCheck found root for \"%s\" with no toggles",
 		    tagPtr->name);
 	} else if (tagPtr->toggleCount & 1) {
-	    Tcl_Panic("TkBTreeCheck found odd toggle count for \"%s\" (%d)",
+	    Tcl_Panic("TkBTreeCheck found odd toggle count for \"%s\" (%" TCL_SIZE_MODIFIER "d)",
 		    tagPtr->name, tagPtr->toggleCount);
 	}
 	for (summaryPtr = nodePtr->summaryPtr; summaryPtr != NULL;
@@ -3844,7 +3844,7 @@ TkBTreeCheck(
 	    }
 	}
 	if (count != tagPtr->toggleCount) {
-	    Tcl_Panic("TkBTreeCheck toggleCount (%d) wrong for \"%s\" should be (%d)",
+	    Tcl_Panic("TkBTreeCheck toggleCount (%" TCL_SIZE_MODIFIER "d) wrong for \"%s\" should be (%" TCL_SIZE_MODIFIER "d)",
 		    tagPtr->toggleCount, tagPtr->name, count);
 	}
     }
@@ -3930,8 +3930,9 @@ CheckNodeConsistency(
     Summary *summaryPtr, *summaryPtr2;
     TkTextLine *linePtr;
     TkTextSegment *segPtr;
-    int numChildren, numLines, toggleCount, minChildren, i;
+    int numChildren, numLines, minChildren, i;
     int *numPixels;
+    Tcl_Size toggleCount;
     int pixels[PIXEL_CLIENTS];
 
     if (nodePtr->parentPtr != NULL) {
@@ -3996,7 +3997,7 @@ CheckNodeConsistency(
 		Tcl_Panic("CheckNodeConsistency: node doesn't point to parent");
 	    }
 	    if (childNodePtr->level != (nodePtr->level-1)) {
-		Tcl_Panic("CheckNodeConsistency: level mismatch (%d %d)",
+		Tcl_Panic("CheckNodeConsistency: level mismatch (%" TCL_SIZE_MODIFIER "d %" TCL_SIZE_MODIFIER "d)",
 			nodePtr->level, childNodePtr->level);
 	    }
 	    CheckNodeConsistency(childNodePtr, references);
@@ -4077,7 +4078,7 @@ CheckNodeConsistency(
 	    }
 	}
 	if (toggleCount != summaryPtr->toggleCount) {
-	    Tcl_Panic("CheckNodeConsistency: mismatch in toggleCount (%d %d)",
+	    Tcl_Panic("CheckNodeConsistency: mismatch in toggleCount (%" TCL_SIZE_MODIFIER "d %" TCL_SIZE_MODIFIER "d)",
 		    toggleCount, summaryPtr->toggleCount);
 	}
 	for (summaryPtr2 = summaryPtr->nextPtr; summaryPtr2 != NULL;
