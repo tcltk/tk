@@ -8157,12 +8157,27 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-11-28 (bug)[900f23] PNG encoder missed 0xFF entry (obermeier)
 
+2023-12-03 Aqua: Update handling of Apple FourCC creator codes (chavez)
 
+2023-12-03 (bug)[fe9423] Aqua: XPutImage() swap red and blue (chavez)
+        *** POTENTIAL INCOMPATIBILITY ***
 
+2023-12-09 (bug)[1d8b71] X: Photo color drawing for 32-bit visuals (warnholz)
 
+2023-12-12 Update to latest X11 headers
 
+2023-12-22 (bug)[9c5742] Fix handling of abbreviated -relief args (nijtmans)
 
+2024-01-03 (bug)[52df66] nonXft: [font measure] results inconsistent (vogel)
+
+2024-01-05 (bug)[a9e637] treeview display partial final line (bron)
+
+2024-01-09 (bug)[b7abf0] treeview destruction from O(N^2) to O(N) (emiliano)
+
+2024-01-12 (bug)[737abf] text image insertion from O(N^2) to O(N)
+
+2024-01-27 (bug)[8da7af] font caching performance issues (thraen,vogel)
+
+2024-02-08 (bug)[57b821] see test textIndex-22.16 (vogel)
 
 - Released 8.6.14, Feb 28, 2024 - https://core.tcl-lang.org/tk/ for details
-
-
