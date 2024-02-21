@@ -420,7 +420,7 @@ XCreateImage(
 	ximage->bitmap_pad = bitmap_pad;
     } else {
 	/*
-	 * Use 16 byte alignment for best Quartz perfomance.
+	 * Use 16 byte alignment for best Quartz performance.
 	 */
 
 	ximage->bitmap_pad = 128;

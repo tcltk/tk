@@ -987,7 +987,7 @@ test textIndex-25.1 {IndexCountBytesOrdered, bug [3f1f79abcf]} {
     destroy .t2
 } {}
 
-test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline in peers, bug [34db75c0ac]} {
+test textIndex-26.1 {GetIndex restricts the returned index to -startline/-endline in peers, bug [34db75c0ac]} {
     set res {}
     pack [text .t2]
     .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
@@ -998,7 +998,7 @@ test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline
     destroy .t2 .p2
     set res
 } {2.0 2.0 2.0}
-test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outside peer -starline/-endline, bug [34db75c0ac]} {
+test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outside peer -startline/-endline, bug [34db75c0ac]} {
     set res {}
     pack [text .t2]
     .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
