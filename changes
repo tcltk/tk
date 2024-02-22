@@ -8151,6 +8151,9 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-11-07 (bug)[09a11f] crash menu-40.[12] (chavez,culler)
 
+2023-11-13 (bug)[eedd2e] ttk::notebook looks bad when tabs are positioned on
+	edges other than the top (nemethi,werner)
+
 2023-11-15 (bug)[61550f] font-44.1 with Xft (vogel)
 
 2023-11-22 (bug)[22a4ad] Aqua: CoreGraphics manages memory for pixmaps (chavez)
