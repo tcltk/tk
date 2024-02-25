@@ -33,6 +33,10 @@ typedef struct {
 				 * reported. */
     TkWindow *cursorWinPtr;	/* Window that is currently controlling the
 				 * global cursor. */
+    int pwIsDead;		/* 1 if destroyed, 0 if not */
+    TkWindow deadWin;		/* Replacement for a destroyed pointer
+    				 * window, used as the source window for
+    				 * generating crossing events. */
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
@@ -131,7 +135,27 @@ GenerateEnterLeave(
     TkWindow *restrictWinPtr = tsdPtr->restrictWinPtr;
     TkWindow *lastWinPtr = tsdPtr->lastWinPtr;
 
-    if (winPtr != tsdPtr->lastWinPtr) {
+    if (tsdPtr->pwIsDead) {
+	XEvent event;
+	TkWindow * deadWinPtr = &tsdPtr->deadWin;
+	TkWindow * targetPtr = deadWinPtr->parentPtr;
+
+	if (targetPtr && (targetPtr->window != None)) {
+
+	    /*
+	     * Only generate Enter events. We can't deliver Leave events
+	     * since the windows to receive them don't exist anymore.
+	     */
+
+	    InitializeEvent(&event, targetPtr, EnterNotify, x, y, state,
+		    NotifyInferior);
+	    TkInOutEvents(&event, deadWinPtr, winPtr, 0,
+		    EnterNotify, TCL_QUEUE_TAIL);
+	}
+	tsdPtr->lastWinPtr = winPtr;
+	tsdPtr->pwIsDead = 0;
+	crossed = 1;
+    } else if (winPtr != lastWinPtr) {
 	if (restrictWinPtr) {
 	    int newPos, oldPos;
 
@@ -178,7 +202,8 @@ GenerateEnterLeave(
 		XEvent event;
 
 		/*
-		 * Generate appropriate Enter/Leave events.
+		 * Generate Enter/Leave events for the old and new pointer
+		 * window and their intermediates.
 		 */
 
 		InitializeEvent(&event, targetPtr, LeaveNotify, x, y, state,
@@ -189,6 +214,7 @@ GenerateEnterLeave(
 		crossed = 1;
 	    }
 	}
+
 	tsdPtr->lastWinPtr = winPtr;
     }
 
@@ -495,7 +521,18 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
+	TkWindow * deadWinPtr = &tsdPtr->deadWin;
+	tsdPtr->pwIsDead = 1;
+
+	/*
+	 * Save the pointer window information that GenerateEnterLeave()
+	 * needs for generating crossing events.
+	 */
+
+	deadWinPtr->parentPtr = winPtr->parentPtr;
+	deadWinPtr->flags = winPtr->flags;
+
+	tsdPtr->lastWinPtr = winPtr->parentPtr;
     }
     if (winPtr == tsdPtr->grabWinPtr) {
 	tsdPtr->grabWinPtr = NULL;
