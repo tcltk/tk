@@ -6,7 +6,7 @@ on:
     - "core-8-branch"
     - "core-8-6-branch"
     - "bug-47d4f29159"
-   tags:
+    tags:
     - "core-**"
 permissions:
   contents: read
