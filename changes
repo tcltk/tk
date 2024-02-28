@@ -8084,7 +8084,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-05-03 (bug)[310c74] No theme change attempts after Tk finalize (chavez)
 
-2023-05-13 (bug)[341469] Dialogs robust against parent destruction (vogel)
+2023-05-13 (bug)[3414695] Dialogs robust against parent destruction (vogel)
 
 2023-05-23 (bug)[ab9581] Guard against use-after-free crashes (chavez)
 
@@ -8100,7 +8100,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-06-13 (bug)[228476] link wish to correct libtk (root)
 
-2023-07-09 (bug)[578441] Aqua: memleak in TkpOpenDisplay (chavez)
+2023-07-09 (bug)[a526d4] Aqua: memleak in TkpOpenDisplay (chavez)
 
 2023-07-10 (bug)[fa4694,0502c1] Aqua: memleaks in TkpConfigureMenuEntry (chavez)
 
@@ -8114,7 +8114,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-07-20 (bug)[deca94] memleak in TkpMakeMenuWindow (chavez)
 
-2023-07-23 (bug)[f24735] Aqua: crash in [label .l -bitmap floppy] (chavez)
+2023-07-23 (bug)[f24725] crash using Aqua pre-defined bitmap names (chavez)
 
 2023-07-24 (feature) better solve Y2038 on most systems (chavez,nijtmans)
 
@@ -8126,7 +8126,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-08-29 (bug)[e42eef] memory issues interfacing with XIM (goodward)
 
-2023-08-30 (bug)[ef5d3e] Aqua: crash on repeated display of dialog (chavez)
+2023-08-30 (bug)[ef5d3e] Aqua: crash after first toplevel destroyed (chavez)
 
 2023-09-01 (bug)[6cc800] Harmonize number parsing with Tcl (nijtmans)
         *** POTENTIAL INCOMPATIBILITY ***
