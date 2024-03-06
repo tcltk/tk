@@ -8257,7 +8257,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2023-07-26 (bug)[ed9b28] Aqua: memleak in GetWidgetDemoPath (chavez)
 
-2023-08-02 (bug)[2a3222] navigation exposed clues about masked entry 
+2023-08-02 (bug)[2a3222] navigation exposed clues about masked entry
 
 2023-08-04 Update [trace] subcommands for Tcl 9 compat
 
@@ -8280,7 +8280,7 @@ in this changeset (new minor version) rather than bug fixes:
 
 2023-10-16 (bug)[22eefb] unixWm-45.[24] (vogel)
 
-2023-10-18 (bug)[10b38a] Silence macOS 14 warning about secure restorable state 
+2023-10-18 (bug)[10b38a] Silence macOS 14 warning about secure restorable state
 
 2023-10-28 (bug)[198376] move notebook tabs to position s (rozenberg,vogel)
 
