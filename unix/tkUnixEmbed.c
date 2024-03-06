@@ -53,18 +53,18 @@ static Tcl_ThreadDataKey dataKey;
  * Prototypes for static functions defined in this file:
  */
 
-static void		ContainerEventProc(ClientData clientData,
+static void		ContainerEventProc(void *clientData,
 			    XEvent *eventPtr);
-static void		EmbeddedEventProc(ClientData clientData,
+static void		EmbeddedEventProc(void *clientData,
 			    XEvent *eventPtr);
-static int		EmbedErrorProc(ClientData clientData,
+static int		EmbedErrorProc(void *clientData,
 			    XErrorEvent *errEventPtr);
-static void		EmbedFocusProc(ClientData clientData,
+static void		EmbedFocusProc(void *clientData,
 			    XEvent *eventPtr);
 static void		EmbedGeometryRequest(Container *containerPtr,
 			    int width, int height);
 static void		EmbedSendConfigure(Container *containerPtr);
-static void		EmbedStructureProc(ClientData clientData,
+static void		EmbedStructureProc(void *clientData,
 			    XEvent *eventPtr);
 static void		EmbedWindowDeleted(TkWindow *winPtr);
 
@@ -329,7 +329,7 @@ Tk_MakeContainer(
 
 static int
 EmbedErrorProc(
-    ClientData clientData,	/* Points to integer to set. */
+    void *clientData,	/* Points to integer to set. */
     XErrorEvent *errEventPtr)	/* Points to information about error (not
 				 * used). */
 {
@@ -361,7 +361,7 @@ EmbedErrorProc(
 
 static void
 EmbeddedEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -393,7 +393,7 @@ EmbeddedEventProc(
 
 static void
 ContainerEventProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
@@ -498,7 +498,7 @@ ContainerEventProc(
 
 static void
 EmbedStructureProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
@@ -553,7 +553,7 @@ EmbedStructureProc(
 
 static void
 EmbedFocusProc(
-    ClientData clientData,	/* Token for container window. */
+    void *clientData,	/* Token for container window. */
     XEvent *eventPtr)		/* ResizeRequest event. */
 {
     Container *containerPtr = (Container *)clientData;
