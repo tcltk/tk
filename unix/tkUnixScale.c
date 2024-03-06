@@ -544,7 +544,7 @@ DisplayHorizontalValue(
 
 void
 TkpDisplayScale(
-    ClientData clientData)	/* Widget record for scale. */
+    void *clientData)	/* Widget record for scale. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
     Tk_Window tkwin = scalePtr->tkwin;
