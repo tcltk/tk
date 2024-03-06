@@ -203,12 +203,12 @@ static struct {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		AppendErrorProc(ClientData clientData,
+static int		AppendErrorProc(void *clientData,
 			    XErrorEvent *errorPtr);
 static void		AppendPropCarefully(Display *display,
 			    Window window, Atom property, char *value,
 			    int length, PendingCommand *pendingPtr);
-static void		DeleteProc(ClientData clientData);
+static Tcl_CmdDeleteProc DeleteProc;
 static void		RegAddName(NameRegistry *regPtr,
 			    const char *name, Window commWindow);
 static void		RegClose(NameRegistry *regPtr);
@@ -216,7 +216,7 @@ static void		RegDeleteName(NameRegistry *regPtr, const char *name);
 static Window		RegFindName(NameRegistry *regPtr, const char *name);
 static NameRegistry *	RegOpen(Tcl_Interp *interp,
 			    TkDisplay *dispPtr, int lock);
-static void		SendEventProc(ClientData clientData, XEvent *eventPtr);
+static void		SendEventProc(void *clientData, XEvent *eventPtr);
 static int		SendInit(Tcl_Interp *interp, TkDisplay *dispPtr);
 static Tk_RestrictProc SendRestrictProc;
 static int		ServerSecure(TkDisplay *dispPtr);
@@ -963,7 +963,7 @@ Tk_SendObjCmd(
     RegisteredInterp *riPtr;
     int result, async, i, firstArg, index;
     Tk_RestrictProc *prevProc;
-    ClientData prevArg;
+    void *prevArg;
     TkDisplay *dispPtr;
     Tcl_Time timeout;
     NameRegistry *regPtr;
@@ -1427,7 +1427,7 @@ SendInit(
 
 static void
 SendEventProc(
-    ClientData clientData,	/* Display information. */
+    void *clientData,	/* Display information. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;
@@ -1787,7 +1787,7 @@ AppendPropCarefully(
 
 static int
 AppendErrorProc(
-    ClientData clientData,	/* Command to mark complete, or NULL. */
+    void *clientData,	/* Command to mark complete, or NULL. */
     TCL_UNUSED(XErrorEvent *))	/* Information about error. */
 {
     PendingCommand *pendingPtr = (PendingCommand *)clientData;
@@ -1836,8 +1836,7 @@ AppendErrorProc(
 
 static void
 DeleteProc(
-    ClientData clientData)	/* Info about registration, passed as
-				 * ClientData. */
+    void *clientData)	/* Info about registration */
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
     RegisteredInterp *riPtr2;
@@ -1965,7 +1964,7 @@ UpdateCommWindow(
 
 int
 TkpTestsendCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
