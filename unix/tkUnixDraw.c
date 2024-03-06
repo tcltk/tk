@@ -64,7 +64,7 @@ TkScrollWindow(
     Region damageRgn)		/* Region to accumulate damage in. */
 {
     Tk_RestrictProc *prevProc;
-    ClientData prevArg;
+    void *prevArg;
     ScrollInfo info;
 
     XCopyArea(Tk_Display(tkwin), Tk_WindowId(tkwin), Tk_WindowId(tkwin), gc,
@@ -119,7 +119,7 @@ TkScrollWindow(
 
 static Tk_RestrictAction
 ScrollRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     ScrollInfo *info = (ScrollInfo *) arg;

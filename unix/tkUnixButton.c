@@ -147,7 +147,7 @@ ColorToStr(
 
 static void
 ImageChanged(			/* to be passed to Tk_GetImage() */
-    ClientData clientData,
+    void *clientData,
     int x, int y, int width, int height,
     int imageWidth, int imageHeight)
 {
@@ -432,7 +432,7 @@ ShiftByOffset(
 
 void
 TkpDisplayButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkButton *butPtr = (TkButton *)clientData;
     GC gc;
