@@ -56,7 +56,7 @@ TkpCreateMenuButton(
 
 void
 TkpDisplayMenuButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     GC gc;
