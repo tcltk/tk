@@ -198,10 +198,8 @@ typedef struct {
  * Forward declarations for procedures defined in this file.
  */
 
-static int TrayIconCreateCmd(void *cd, Tcl_Interp *interp,
-			     int objc,  Tcl_Obj *const objv[]);
-static int TrayIconObjectCmd(void *cd, Tcl_Interp *interp,
-			     int objc,  Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc TrayIconCreateCmd;
+static Tcl_ObjCmdProc TrayIconObjectCmd;
 static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
 				   int objc,  Tcl_Obj *const objv[],
 				   int addflags);
@@ -210,7 +208,7 @@ static int PostBalloon(DockIcon* icon, const char * utf8msg,
 static void CancelBalloon(DockIcon* icon, int msgid);
 static int QueryTrayOrientation(DockIcon* icon);
 
-static void TrayIconDeleteProc(void *cd );
+static Tcl_CmdDeleteProc TrayIconDeleteProc;
 static Atom DockSelectionAtomFor(Tk_Window tkwin);
 static void DockToManager(DockIcon *icon);
 static void CreateTrayIconWindow(DockIcon *icon);
