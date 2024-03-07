@@ -1228,7 +1228,7 @@ DestroyMenuInstance(
     }
     Tcl_DeleteHashTable(&menuPtr->items);
     TkMenuFreeDrawOptions(menuPtr);
-    Tk_FreeConfigOptions((char *) menuPtr,
+    Tk_FreeConfigOptions(menuPtr,
 	    tsdPtr->menuOptionTable, menuPtr->tkwin);
     if (menuPtr->tkwin != NULL) {
 	Tk_Window tkwin = menuPtr->tkwin;
@@ -1502,7 +1502,7 @@ DestroyMenuEntry(
     }
     TkpDestroyMenuEntry(mePtr);
     TkMenuEntryFreeDrawOptions(mePtr);
-    Tk_FreeConfigOptions((char *) mePtr, mePtr->optionTable, menuPtr->tkwin);
+    Tk_FreeConfigOptions(mePtr, mePtr->optionTable, menuPtr->tkwin);
     ckfree(mePtr);
 }
 
@@ -2354,7 +2354,7 @@ MenuNewEntry(
     mePtr->entryPtr = NULL;
     TkMenuInitializeEntryDrawingFields(mePtr);
     if (TkpMenuNewEntry(mePtr) != TCL_OK) {
-	Tk_FreeConfigOptions((char *) mePtr, mePtr->optionTable,
+	Tk_FreeConfigOptions(mePtr, mePtr->optionTable,
 		menuPtr->tkwin);
     	ckfree(mePtr);
     	return NULL;

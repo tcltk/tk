@@ -274,7 +274,7 @@ FinishedWithFont(
 
 static int
 InitFontErrorProc(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(XErrorEvent *))
 {
     int *errorFlagPtr = (int *)clientData;
@@ -349,7 +349,7 @@ InitFont(
 
     errorFlag = 0;
     handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-		    -1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
+		    -1, -1, -1, InitFontErrorProc, (void *) &errorFlag);
     ftFont = GetFont(fontPtr, 0, 0.0);
     if ((ftFont == NULL) || errorFlag) {
 	Tk_DeleteErrorHandler(handler);
@@ -391,7 +391,7 @@ InitFont(
 
 	fPtr->underlinePos = fPtr->fm.descent / 2;
 	handler = Tk_CreateErrorHandler(Tk_Display(tkwin),
-			-1, -1, -1, InitFontErrorProc, (ClientData) &errorFlag);
+			-1, -1, -1, InitFontErrorProc, (void *) &errorFlag);
 	errorFlag = 0;
 	Tk_MeasureChars((Tk_Font) fPtr, "I", 1, -1, 0, &iWidth);
 	Tk_DeleteErrorHandler(handler);
@@ -505,7 +505,7 @@ TkpGetFontFromAttributes(
 
 #ifdef DEBUG_FONTSEL
     printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
-	    faPtr->size, faPtr->weight, faPtr->slant);
+	    (int)faPtr->size, faPtr->weight, faPtr->slant);
 #endif /* DEBUG_FONTSEL */
     pattern = XftPatternCreate();
     if (faPtr->family) {
@@ -949,7 +949,7 @@ Tk_DrawChars(
 
     if (fontPtr->ftDraw == 0) {
 #ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%x\n", drawable);
+	printf("Switch to drawable 0x%lx\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
@@ -1209,7 +1209,7 @@ TkDrawAngledChars(
 
     if (fontPtr->ftDraw == 0) {
 #ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%x\n", drawable);
+	printf("Switch to drawable 0x%lx\n", drawable);
 #endif /* DEBUG_FONTSEL */
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),

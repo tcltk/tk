@@ -889,7 +889,7 @@ ConfigurePanes(
 		"window \"%s\" is not managed by %s",
 		Tk_PathName(tkwin), Tk_PathName(pwPtr->tkwin)));
 	Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED", NULL);
-	Tk_FreeConfigOptions((char *) &options, pwPtr->paneOpts,
+	Tk_FreeConfigOptions(&options, pwPtr->paneOpts,
 		pwPtr->tkwin);
 	return TCL_ERROR;
     }
@@ -1064,7 +1064,7 @@ ConfigurePanes(
 
     pwPtr->numPanes += numNewPanes;
 
-    Tk_FreeConfigOptions((char *) &options, pwPtr->paneOpts, pwPtr->tkwin);
+    Tk_FreeConfigOptions(&options, pwPtr->paneOpts, pwPtr->tkwin);
 
     ComputeGeometry(pwPtr);
     return TCL_OK;
@@ -1580,7 +1580,7 @@ DestroyPanedWindow(
 	Tk_DeleteEventHandler(pwPtr->panes[i]->tkwin, StructureNotifyMask,
 		PaneStructureProc, pwPtr->panes[i]);
 	Tk_ManageGeometry(pwPtr->panes[i]->tkwin, NULL, NULL);
-	Tk_FreeConfigOptions((char *) pwPtr->panes[i], pwPtr->paneOpts,
+	Tk_FreeConfigOptions(pwPtr->panes[i], pwPtr->paneOpts,
 		pwPtr->tkwin);
 	ckfree(pwPtr->panes[i]);
 	pwPtr->panes[i] = NULL;
@@ -1599,7 +1599,7 @@ DestroyPanedWindow(
      * Let Tk_FreeConfigOptions clean up the rest.
      */
 
-    Tk_FreeConfigOptions((char *) pwPtr, pwPtr->optionTable, pwPtr->tkwin);
+    Tk_FreeConfigOptions(pwPtr, pwPtr->optionTable, pwPtr->tkwin);
     Tcl_Release(pwPtr->tkwin);
     pwPtr->tkwin = NULL;
 

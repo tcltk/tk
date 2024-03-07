@@ -428,7 +428,7 @@ FreeContent(
     if (contentPtr->containerPtr && (contentPtr->containerPtr->flags & PARENT_RECONFIG_PENDING)) {
 	Tcl_CancelIdleCall(RecomputePlacement, contentPtr->containerPtr);
     }
-    Tk_FreeConfigOptions((char *) contentPtr, contentPtr->optionTable,
+    Tk_FreeConfigOptions(contentPtr, contentPtr->optionTable,
 	    contentPtr->tkwin);
     ckfree(contentPtr);
 }

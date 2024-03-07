@@ -94,7 +94,7 @@ static int		ImageCreate(Tcl_Interp *interp,
 			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
 			    void **clientDataPtr);
-static ClientData	ImageGet(Tk_Window tkwin, void *clientData);
+static void	*ImageGet(Tk_Window tkwin, void *clientData);
 static void		ImageDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width,
@@ -774,7 +774,7 @@ TestobjconfigObjCmd(
 	    result = Tk_SetOptions(interp, recordPtr, optionTable,
 		    objc-3, objv+3, tkwin, NULL, NULL);
 	    if (result != TCL_OK) {
-		Tk_FreeConfigOptions((char *) recordPtr, optionTable, tkwin);
+		Tk_FreeConfigOptions(recordPtr, optionTable, tkwin);
 	    }
 	}
 	if (result == TCL_OK) {
@@ -1496,7 +1496,7 @@ ImageObjCmd(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 ImageGet(
     Tk_Window tkwin,		/* Token for window in which image will be
 				 * used. */

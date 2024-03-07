@@ -883,7 +883,7 @@ ColorDlgHookProc(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetOpenFileCmd --
+ * Tk_GetOpenFileObjCmd --
  *
  *	This function implements the "open file" dialog box for the Windows
  *	platform. See the user documentation for details on what it does.
@@ -910,16 +910,16 @@ Tk_GetOpenFileObjCmd(
 /*
  *----------------------------------------------------------------------
  *
- * Tk_GetSaveFileCmd --
+ * Tk_GetSaveFileObjCmd --
  *
- *	Same as Tk_GetOpenFileCmd but opens a "save file" dialog box
+ *	Same as Tk_GetOpenFileObjCmd but opens a "save file" dialog box
  *	instead
  *
  * Results:
- *	Same as Tk_GetOpenFileCmd.
+ *	Same as Tk_GetOpenFileObjCmd.
  *
  * Side effects:
- *	Same as Tk_GetOpenFileCmd.
+ *	Same as Tk_GetOpenFileObjCmd.
  *
  *----------------------------------------------------------------------
  */
@@ -2167,9 +2167,9 @@ static void FreeFilterVista(DWORD count, TCLCOMDLG_FILTERSPEC *dlgFilterPtr)
         DWORD dw;
         for (dw = 0; dw < count; ++dw) {
             if (dlgFilterPtr[dw].pszName != NULL)
-                ckfree((char *)dlgFilterPtr[dw].pszName);
+                ckfree((void *)dlgFilterPtr[dw].pszName);
             if (dlgFilterPtr[dw].pszSpec != NULL)
-                ckfree((char *)dlgFilterPtr[dw].pszSpec);
+                ckfree((void *)dlgFilterPtr[dw].pszSpec);
         }
         ckfree(dlgFilterPtr);
     }

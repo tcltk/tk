@@ -289,7 +289,7 @@ typedef struct DLine {
  * TOP_LINE -			Non-zero means that this was the top line in
  *				in the window the last time that the window
  *				was laid out. This is important because a line
- *				may be displayed differently if its at the top
+ *				may be displayed differently if it's at the top
  *				or bottom than if it's in the middle
  *				(e.g. beveled edges aren't displayed for
  *				middle lines if the adjacent line has a
@@ -577,8 +577,8 @@ static DLine *		FindDLine(TkText *textPtr, DLine *dlPtr,
 static void		FreeDLines(TkText *textPtr, DLine *firstPtr,
 			    DLine *lastPtr, int action);
 static void		FreeStyle(TkText *textPtr, TextStyle *stylePtr);
-static TextStyle *	GetStyle(TkText *textPtr, const TkTextIndex *indexPtr);
-static void		GetXView(Tcl_Interp *interp, TkText *textPtr,
+static TextStyle *	GetStyle(const TkText *textPtr, const TkTextIndex *indexPtr);
+static void		GetXView(Tcl_Interp *interp, const TkText *textPtr,
 			    int report);
 static void		GetYView(Tcl_Interp *interp, TkText *textPtr,
 			    int report);
@@ -621,7 +621,7 @@ static int		TextGetScrollInfoObj(Tcl_Interp *interp,
 static void		AsyncUpdateLineMetrics(void *clientData);
 static void		GenerateWidgetViewSyncEvent(TkText *textPtr, Bool InSync);
 static void		AsyncUpdateYScrollbar(void *clientData);
-static int              IsStartOfNotMergedLine(TkText *textPtr,
+static int              IsStartOfNotMergedLine(const TkText *textPtr,
                             const TkTextIndex *indexPtr);
 
 /*
@@ -766,7 +766,7 @@ TkTextFreeDInfo(
 
 static TextStyle *
 GetStyle(
-    TkText *textPtr,		/* Overall information about text widget. */
+    const TkText *textPtr,		/* Overall information about text widget. */
     const TkTextIndex *indexPtr)/* The character in the text for which display
 				 * information is wanted. */
 {
@@ -784,13 +784,13 @@ GetStyle(
      * The variables below keep track of the highest-priority specification
      * that has occurred for each of the various fields of the StyleValues.
      */
-    int borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
-    int fgPrio, fontPrio, fgStipplePrio;
-    int underlinePrio, elidePrio, justifyPrio, offsetPrio;
-    int lMargin1Prio, lMargin2Prio, rMarginPrio;
-    int lMarginColorPrio, rMarginColorPrio;
-    int spacing1Prio, spacing2Prio, spacing3Prio;
-    int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
+    Tcl_Size borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
+    Tcl_Size fgPrio, fontPrio, fgStipplePrio;
+    Tcl_Size underlinePrio, elidePrio, justifyPrio, offsetPrio;
+    Tcl_Size lMargin1Prio, lMargin2Prio, rMarginPrio;
+    Tcl_Size lMarginColorPrio, rMarginColorPrio;
+    Tcl_Size spacing1Prio, spacing2Prio, spacing3Prio;
+    Tcl_Size overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
     /*
      * Find out what tags are present for the character, then compute a
@@ -4649,7 +4649,7 @@ DisplayText(
   doScrollbars:
     if (textPtr->flags & UPDATE_SCROLLBARS) {
 	textPtr->flags &= ~UPDATE_SCROLLBARS;
-	if (textPtr->yScrollCmd != NULL) {
+	if (textPtr->yScrollCmdObj != NULL) {
 	    GetYView(textPtr->interp, textPtr, 1);
 	}
 
@@ -4665,7 +4665,7 @@ DisplayText(
 	 * Update the horizontal scrollbar, if any.
 	 */
 
-	if (textPtr->xScrollCmd != NULL) {
+	if (textPtr->xScrollCmdObj != NULL) {
 	    GetXView(textPtr->interp, textPtr, 1);
 	}
     }
@@ -6496,7 +6496,7 @@ GetXView(
     Tcl_Interp *interp,		/* If "report" is FALSE, string describing
 				 * visible range gets stored in the interp's
 				 * result. */
-    TkText *textPtr,		/* Information about text widget. */
+    const TkText *textPtr,		/* Information about text widget. */
     int report)			/* Non-zero means report info to scrollbar if
 				 * it has changed. */
 {
@@ -6530,7 +6530,7 @@ GetXView(
     }
     dInfoPtr->xScrollFirst = first;
     dInfoPtr->xScrollLast = last;
-    if (textPtr->xScrollCmd != NULL) {
+    if (textPtr->xScrollCmdObj != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
 	Tcl_DString buf;
@@ -6540,7 +6540,7 @@ GetXView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->xScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->xScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -6815,7 +6815,7 @@ GetYView(
 
     dInfoPtr->yScrollFirst = first;
     dInfoPtr->yScrollLast = last;
-    if (textPtr->yScrollCmd != NULL) {
+    if (textPtr->yScrollCmdObj != NULL) {
 	char buf1[TCL_DOUBLE_SPACE+1];
 	char buf2[TCL_DOUBLE_SPACE+1];
 	Tcl_DString buf;
@@ -6825,7 +6825,7 @@ GetYView(
 	Tcl_PrintDouble(NULL, first, buf1+1);
 	Tcl_PrintDouble(NULL, last, buf2+1);
 	Tcl_DStringInit(&buf);
-	Tcl_DStringAppend(&buf, textPtr->yScrollCmd, TCL_INDEX_NONE);
+	Tcl_DStringAppend(&buf, Tcl_GetString(textPtr->yScrollCmdObj), TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf1, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, buf2, TCL_INDEX_NONE);
 	code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
@@ -7005,7 +7005,7 @@ FindDLine(
 
 static int
 IsStartOfNotMergedLine(
-      TkText *textPtr,              /* Widget record for text widget. */
+      const TkText *textPtr,              /* Widget record for text widget. */
       const TkTextIndex *indexPtr)  /* Index to check. */
 {
     TkTextIndex indexPtr2;
