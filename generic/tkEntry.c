@@ -406,7 +406,7 @@ static const char *const selElementNames[] = {
  */
 
 static int		ConfigureEntry(Tcl_Interp *interp, Entry *entryPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		DeleteChars(Entry *entryPtr, Tcl_Size index, Tcl_Size count);
 static Tcl_FreeProc	DestroyEntry;
 static void		DisplayEntry(void *clientData);
@@ -437,9 +437,7 @@ static int		EntryValueChanged(Entry *entryPtr,
 			    const char *newValue);
 static void		EntryVisibleRange(Entry *entryPtr,
 			    double *firstPtr, double *lastPtr);
-static int		EntryWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc EntryWidgetObjCmd;
 static void		EntryWorldChanged(void *instanceData);
 static int		GetEntryIndex(Tcl_Interp *interp, Entry *entryPtr,
 			    Tcl_Obj *indexObj, Tcl_Size *indexPtr);
@@ -449,9 +447,7 @@ static int		InsertChars(Entry *entryPtr, Tcl_Size index, const char *string);
  * These forward declarations are the spinbox specific ones:
  */
 
-static int		SpinboxWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc SpinboxWidgetObjCmd;
 static int		GetSpinboxElement(Spinbox *sbPtr, int x, int y);
 static int		SpinboxInvoke(Tcl_Interp *interp, Spinbox *sbPtr,
 			    int element);
@@ -1113,7 +1109,7 @@ ConfigureEntry(
     Tcl_Interp *interp,		/* Used for error reporting. */
     Entry *entryPtr,		/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     Tk_SavedOptions savedOptions;
@@ -1400,7 +1396,7 @@ ConfigureEntry(
 	    }
 	    snprintf(sbPtr->formatBuf, formatSpace, sbPtr->valueFormat, dvalue);
 
-            /*
+	    /*
 	     * No check for error return here as well, because any possible
 	     * error will be trapped below when attempting tracing.
 	     */

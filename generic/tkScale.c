@@ -161,9 +161,7 @@ static void		ScaleEventProc(void *clientData,
 static char *		ScaleVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		ScaleWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ScaleWidgetObjCmd;
 static void		ScaleWorldChanged(void *instanceData);
 static void		ScaleSetVariable(TkScale *scalePtr);
 
