@@ -97,11 +97,10 @@ static const Tk_ConfigSpec configSpecs[] = {
  */
 
 static int		ConfigureScrollbar(Tcl_Interp *interp,
-			    TkScrollbar *scrollPtr, int objc,
+			    TkScrollbar *scrollPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static void		ScrollbarCmdDeletedProc(void *clientData);
-static int		ScrollbarWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ScrollbarWidgetObjCmd;
 
 /*
  *--------------------------------------------------------------
@@ -469,7 +468,7 @@ ConfigureScrollbar(
     TkScrollbar *scrollPtr,
 				/* Information about widget; may or may not
 				 * already have values for some fields. */
-    int objc,			/* Number of valid entries in argv. */
+    Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],		/* Arguments. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget. */
 {
