@@ -60,15 +60,15 @@ typedef struct TImageInstance {
 static int		ImageCreate(Tcl_Interp *interp,
 			    char *name, Tcl_Size argc, char **argv,
 			    Tk_ImageType *typePtr, Tk_ImageModel model,
-			    ClientData *clientDataPtr);
-static ClientData	ImageGet(Tk_Window tkwin, ClientData clientData);
-static void		ImageDisplay(ClientData clientData,
+			    void **clientDataPtr);
+static void *ImageGet(Tk_Window tkwin, void *clientData);
+static void		ImageDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width,
 			    int height, int drawableX,
 			    int drawableY);
-static void		ImageFree(ClientData clientData, Display *display);
-static void		ImageDelete(ClientData clientData);
+static void		ImageFree(void *clientData, Display *display);
+static void		ImageDelete(void *clientData);
 
 static Tk_ImageType imageType = {
     "oldtest",			/* name */
@@ -86,9 +86,7 @@ static Tk_ImageType imageType = {
  * Forward declarations for functions defined later in this file:
  */
 
-static int              ImageObjCmd(ClientData dummy,
-                            Tcl_Interp *interp, int objc,
-            			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc ImageObjCmd;
 #endif
 
 /*
@@ -152,7 +150,7 @@ ImageCreate(
     Tk_ImageType *typePtr,	/* Pointer to our type record (not used). */
     Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
-    ClientData *clientDataPtr)	/* Store manager's token for image here; it
+    void **clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
     TImageModel *timPtr;
@@ -209,7 +207,7 @@ ImageCreate(
 
 static int
 ImageObjCmd(
-    ClientData clientData,	/* Main window for application. */
+    void *clientData,	/* Main window for application. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])		/* Argument strings. */
@@ -263,11 +261,11 @@ ImageObjCmd(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 ImageGet(
     Tk_Window tkwin,		/* Token for window in which image will be
 				 * used. */
-    ClientData clientData)	/* Pointer to TImageModel for image. */
+    void *clientData)	/* Pointer to TImageModel for image. */
 {
     TImageModel *timPtr = (TImageModel *)clientData;
     TImageInstance *instPtr;
@@ -306,7 +304,7 @@ ImageGet(
 
 static void
 ImageDisplay(
-    ClientData clientData,	/* Pointer to TImageInstance for image. */
+    void *clientData,	/* Pointer to TImageInstance for image. */
     Display *display,		/* Display to use for drawing. */
     Drawable drawable,		/* Where to redraw image. */
     int imageX, int imageY,	/* Origin of area to redraw, relative to
@@ -358,7 +356,7 @@ ImageDisplay(
 
 static void
 ImageFree(
-    ClientData clientData,	/* Pointer to TImageInstance for instance. */
+    void *clientData,	/* Pointer to TImageInstance for instance. */
     Display *display)		/* Display where image was to be drawn. */
 {
     TImageInstance *instPtr = (TImageInstance *)clientData;
@@ -391,7 +389,7 @@ ImageFree(
 
 static void
 ImageDelete(
-    ClientData clientData)	/* Pointer to TImageModel for image. When
+    void *clientData)	/* Pointer to TImageModel for image. When
 				 * this function is called, no more instances
 				 * exist. */
 {

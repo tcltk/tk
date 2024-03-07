@@ -183,9 +183,6 @@ typedef struct PanedWindow {
  * Forward declarations for functions defined later in this file:
  */
 
-int			Tk_PanedWindowObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
 static void		PanedWindowCmdDeletedProc(void *clientData);
 static int		ConfigurePanedWindow(Tcl_Interp *interp,
 			    PanedWindow *pwPtr, int objc,

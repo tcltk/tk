@@ -514,7 +514,7 @@ static const enum command map[][8] = {
 
 static void		ButtonCmdDeletedProc(void *clientData);
 static int		ButtonCreate(void *clientData,
-			    Tcl_Interp *interp, int objc,
+			    Tcl_Interp *interp, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int type);
 static void		ButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
@@ -533,11 +533,9 @@ static char *		ButtonTextVarProc(void *clientData,
 static char *		ButtonVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		ButtonWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ButtonWidgetObjCmd;
 static int		ConfigureButton(Tcl_Interp *interp, TkButton *butPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DestroyButton(TkButton *butPtr);
 
 /*
@@ -621,7 +619,7 @@ static int
 ButtonCreate(
     TCL_UNUSED(void *),	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument values. */
     int type)			/* Type of button to create: TYPE_LABEL,
 				 * TYPE_BUTTON, TYPE_CHECK_BUTTON, or
@@ -1029,7 +1027,7 @@ ConfigureButton(
     Tcl_Interp *interp,		/* Used for error reporting. */
     TkButton *butPtr,	/* Information about widget;  may or may
 				 * not already have values for some fields. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
     Tk_SavedOptions savedOptions;

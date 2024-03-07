@@ -164,9 +164,7 @@ static void		MenuButtonImageProc(void *clientData,
 static char *		MenuButtonTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		MenuButtonWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc MenuButtonWidgetObjCmd;
 static int		ConfigureMenuButton(Tcl_Interp *interp,
 			    TkMenuButton *mbPtr, int objc,
 			    Tcl_Obj *const objv[]);
