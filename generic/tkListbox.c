@@ -386,7 +386,7 @@ static int		ConfigureListbox(Tcl_Interp *interp, Listbox *listPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static int		ConfigureListboxItem(Tcl_Interp *interp,
 			    Listbox *listPtr, ItemAttr *attrs, Tcl_Size objc,
-			    Tcl_Obj *const objv[], int index);
+			    Tcl_Obj *const objv[], Tcl_Size index);
 static int		ListboxDeleteSubCmd(Listbox *listPtr,
 			    int first, int last);
 static Tcl_FreeProc	DestroyListbox;
@@ -394,9 +394,9 @@ static void		DestroyListboxOptionTables(void *clientData,
 			    Tcl_Interp *interp);
 static void		DisplayListbox(void *clientData);
 static int		GetListboxIndex(Tcl_Interp *interp, Listbox *listPtr,
-			    Tcl_Obj *index, int endIsSize, int *indexPtr);
+			    Tcl_Obj *index, int endIsSize, Tcl_Size *indexPtr);
 static int		ListboxInsertSubCmd(Listbox *listPtr,
-			    int index, Tcl_Size objc, Tcl_Obj *const objv[]);
+			    Tcl_Size index, Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		ListboxCmdDeletedProc(void *clientData);
 static void		ListboxComputeGeometry(Listbox *listPtr,
 			    int fontChanged, int maxIsStale, int updateGrid);
@@ -413,9 +413,7 @@ static int		ListboxSelect(Listbox *listPtr,
 			    int first, int last, int select);
 static void		ListboxUpdateHScrollbar(Listbox *listPtr);
 static void		ListboxUpdateVScrollbar(Listbox *listPtr);
-static int		ListboxWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ListboxWidgetObjCmd;
 static int		ListboxBboxSubCmd(Tcl_Interp *interp,
 			    Listbox *listPtr, int index);
 static int		ListboxSelectionSubCmd(Tcl_Interp *interp,
@@ -432,7 +430,7 @@ static char *		ListboxListVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
 static void		MigrateHashEntries(Tcl_HashTable *table,
-			    int first, int last, int offset);
+			    Tcl_Size first, Tcl_Size last, Tcl_Size offset);
 static int		GetMaxOffset(Listbox *listPtr);
 
 /*
@@ -601,7 +599,8 @@ ListboxWidgetObjCmd(
     Tcl_Obj *const objv[])	/* Arguments as Tcl_Obj's. */
 {
     Listbox *listPtr = (Listbox *)clientData;
-    int cmdIndex, index;
+    int cmdIndex;
+    Tcl_Size index;
     int result = TCL_OK;
     Tcl_Obj *objPtr;
 
@@ -643,7 +642,7 @@ ListboxWidgetObjCmd(
 	    break;
 	}
 
-	if (index >= (int)listPtr->nElements) {
+	if (index >= listPtr->nElements) {
 	    index = listPtr->nElements-1;
 	}
 	if (index < 0) {
@@ -730,7 +729,7 @@ ListboxWidgetObjCmd(
     }
 
     case COMMAND_DELETE: {
-	int first, last;
+	Tcl_Size first, last;
 
 	if ((objc < 3) || (objc > 4)) {
 	    Tcl_WrongNumArgs(interp, 2, objv, "firstIndex ?lastIndex?");
@@ -772,8 +771,7 @@ ListboxWidgetObjCmd(
     }
 
     case COMMAND_GET: {
-	int first, last;
-	Tcl_Size listLen;
+	Tcl_Size listLen, first, last;
 	Tcl_Obj **elemPtrs;
 
 	if (objc != 3 && objc != 4) {
@@ -1157,7 +1155,8 @@ ListboxSelectionSubCmd(
     Tcl_Size objc,			/* Number of arguments in the objv array */
     Tcl_Obj *const objv[])	/* Array of arguments to the procedure */
 {
-    int selCmdIndex, first, last;
+    int selCmdIndex;
+    Tcl_Size first, last;
     int result = TCL_OK;
 
     if (objc != 4 && objc != 5) {
@@ -1325,7 +1324,8 @@ ListboxYviewSubCmd(
     Tcl_Size objc,			/* Number of arguments in the objv array */
     Tcl_Obj *const objv[])	/* Array of arguments to the procedure */
 {
-    int index, count;
+    Tcl_Size index;
+    int count;
     double fraction;
 
     if (objc == 2) {
@@ -1354,7 +1354,7 @@ ListboxYviewSubCmd(
     } else {
 	switch (Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count)) {
 	case TK_SCROLL_MOVETO:
-	    index = (int) (listPtr->nElements*fraction + 0.5);
+	    index = (Tcl_Size)(listPtr->nElements*fraction + 0.5);
 	    break;
 	case TK_SCROLL_PAGES:
 	    if (listPtr->fullLines > 2) {
@@ -1718,7 +1718,7 @@ ConfigureListboxItem(
     ItemAttr *attrs,		/* Information about the item to configure */
     Tcl_Size objc,			/* Number of valid entries in argv. */
     Tcl_Obj *const objv[],	/* Arguments. */
-    int index)			/* Index of the listbox item being configure */
+    Tcl_Size index)			/* Index of the listbox item being configure */
 {
     Tk_SavedOptions savedOptions;
 
@@ -2318,7 +2318,7 @@ ListboxComputeGeometry(
 static int
 ListboxInsertSubCmd(
     Listbox *listPtr,	/* Listbox that is to get the new elements. */
-    int index,			/* Add the new elements before this
+    Tcl_Size index,		/* Add the new elements before this
 				 * element. */
     Tcl_Size objc,			/* Number of new elements to add. */
     Tcl_Obj *const objv[])	/* New elements (one per entry). */
@@ -2728,10 +2728,10 @@ GetListboxIndex(
     int lastOK,		/* If 1, "end" refers to the number of entries
 				 * in the listbox. If 0, "end" refers to 1
 				 * less than the number of entries. */
-    int *indexPtr)		/* Where to store converted index. */
+    Tcl_Size *indexPtr)		/* Where to store converted index. */
 {
-    int result, index;
-    Tcl_Size idx;
+    int result;
+    Tcl_Size idx, index;
     char *stringRep;
 
     result = TkGetIntForIndex(indexObj, listPtr->nElements - 1, lastOK, &idx);
@@ -2739,7 +2739,7 @@ GetListboxIndex(
     	if ((idx != TCL_INDEX_NONE) && (idx > listPtr->nElements)) {
     	    idx = listPtr->nElements;
     	}
-    	*indexPtr = (int)idx;
+    	*indexPtr = idx;
     	return TCL_OK;
     }
 
@@ -3585,11 +3585,12 @@ ListboxListVarProc(
 static void
 MigrateHashEntries(
     Tcl_HashTable *table,
-    int first,
-    int last,
-    int offset)
+    Tcl_Size first,
+    Tcl_Size last,
+    Tcl_Size offset)
 {
-    int i, isNew;
+    Tcl_Size i;
+    int isNew;
     Tcl_HashEntry *entry;
     void *clientData;
 

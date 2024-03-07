@@ -51,15 +51,13 @@ static int	ConsoleHandle(void *instanceData, int direction,
 		    void **handlePtr);
 static int	ConsoleInput(void *instanceData, char *buf, int toRead,
 		    int *errorCode);
-static int	ConsoleObjCmd(void *clientData, Tcl_Interp *interp,
-		    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ConsoleObjCmd;
 static int	ConsoleOutput(void *instanceData, const char *buf,
 		    int toWrite, int *errorCode);
 static void	ConsoleWatch(void *instanceData, int mask);
 static void	DeleteConsoleInterp(void *clientData);
 static void	InterpDeleteProc(void *clientData, Tcl_Interp *interp);
-static int	InterpreterObjCmd(void *clientData, Tcl_Interp *interp,
-		    int objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc InterpreterObjCmd;
 
 /*
  * This structure describes the channel type structure for file based IO:
