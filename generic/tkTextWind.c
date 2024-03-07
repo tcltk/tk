@@ -756,7 +756,7 @@ EmbWinDeleteProc(
     }
     ewPtr->body.ew.clients = NULL;
 
-    Tk_FreeConfigOptions((char *) &ewPtr->body.ew, ewPtr->body.ew.optionTable,
+    Tk_FreeConfigOptions(&ewPtr->body.ew, ewPtr->body.ew.optionTable,
 	    NULL);
 
     /*

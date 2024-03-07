@@ -1592,15 +1592,9 @@ enum FontchooserEvent {
 static void		FontchooserEvent(int kind);
 static Tcl_Obj *	FontchooserCget(FontchooserData *fcdPtr,
 			    int optionIndex);
-static int		FontchooserConfigureCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-static int		FontchooserShowCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
-static int		FontchooserHideCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 FontchooserConfigureCmd;
+static Tcl_ObjCmdProc2 FontchooserShowCmd;
+static Tcl_ObjCmdProc2 FontchooserHideCmd;
 static void		FontchooserParentEventHandler(void *clientData,
 			    XEvent *eventPtr);
 static void		DeleteFontchooserData(void *clientData,

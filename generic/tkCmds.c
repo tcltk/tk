@@ -383,7 +383,7 @@ Tk_BindtagsObjCmd(
 	} else {
 	    for (i = 0; i < winPtr->numTags; i++) {
 		Tcl_ListObjAppendElement(NULL, listPtr,
-			Tcl_NewStringObj((char *) winPtr->tagPtr[i], TCL_INDEX_NONE));
+			Tcl_NewStringObj((const char *)winPtr->tagPtr[i], TCL_INDEX_NONE));
 	    }
 	}
 	Tcl_SetObjResult(interp, listPtr);
@@ -456,7 +456,7 @@ TkFreeBindingTags(
 	     * have to be freed.
 	     */
 
-	    ckfree((char *)p);
+	    ckfree((void *)p);
 	}
     }
     ckfree(winPtr->tagPtr);
@@ -1838,7 +1838,7 @@ Tk_WinfoObjCmd(
 	    Tcl_ListObjAppendElement(NULL, resultPtr, strPtr);
 	}
 	Tcl_SetObjResult(interp, resultPtr);
-	XFree((char *) visInfoPtr);
+	XFree(visInfoPtr);
 	break;
     }
     }

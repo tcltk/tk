@@ -46,8 +46,8 @@ TCL_DECLARE_MUTEX(ln_mutex);
  * Forward declarations for procedures defined in this file.
  */
 
-static void	SysNotifyDeleteCmd(void *);
-static int	SysNotifyCmd(void *, Tcl_Interp *, Tcl_Size, Tcl_Obj * const*);
+static Tcl_CmdDeleteProc SysNotifyDeleteCmd;
+static Tcl_ObjCmdProc2 SysNotifyCmd;
 
 /*
  *----------------------------------------------------------------------

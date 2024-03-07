@@ -1049,7 +1049,7 @@ FindDisplayFocusInfo(
  *	None.
  *
  * Side effects:
- *	This mainPtr should no long access focus information.
+ *	This mainPtr should no longer access focus information.
  *
  *----------------------------------------------------------------------
  */

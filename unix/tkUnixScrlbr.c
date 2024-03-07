@@ -95,7 +95,7 @@ TkpCreateScrollbar(
 
 void
 TkpDisplayScrollbar(
-    ClientData clientData)	/* Information about window. */
+    void *clientData)	/* Information about window. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->tkwin;

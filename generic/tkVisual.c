@@ -306,7 +306,7 @@ Tk_GetVisual(
     CLANG_ASSERT(bestPtr);
     *depthPtr = bestPtr->depth;
     visual = bestPtr->visual;
-    XFree((char *) visInfoList);
+    XFree(visInfoList);
 
     /*
      * If we need to find a colormap for this visual, do it now. If the visual

@@ -675,7 +675,7 @@ test ttk-16.2 {ttk::style theme styles - theme exists} -body {
 } -result 1
 
 
-eval destroy [winfo children .]
+destroy {*}[winfo children .]
 
 tcltest::cleanupTests
 

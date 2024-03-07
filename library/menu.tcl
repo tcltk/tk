@@ -827,7 +827,7 @@ proc ::tk::MenuNextEntry {menu count} {
     set length [expr {$last+1}]
     set quitAfter $length
     set activeindex [$menu index active]
-    if {$actactiveindexive < 0} {
+    if {$activeindex < 0} {
 	set i 0
     } else {
 	set i [expr {$activeindex + $count}]

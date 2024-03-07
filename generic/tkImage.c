@@ -931,7 +931,7 @@ Tk_DeleteImage(
     if (hPtr == NULL) {
 	return;
     }
-    DeleteImage(Tcl_GetHashValue(hPtr));
+    DeleteImage((char *)Tcl_GetHashValue(hPtr));
 }
 
 /*

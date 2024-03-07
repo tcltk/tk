@@ -720,7 +720,7 @@ TkWmMapWindow(
 
 		XSetWMClientMachine(winPtr->display,
 			wmPtr->wrapperPtr->window, &textProp);
-		XFree((char *) textProp.value);
+		XFree(textProp.value);
 
 		/*
 		 * Inform the server (and more particularly any session
@@ -992,7 +992,7 @@ TkWmSetClass(
 	classPtr->res_class = Tcl_DStringValue(&ds);
 	XSetClassHint(winPtr->display, winPtr->wmInfoPtr->wrapperPtr->window,
 		classPtr);
-	XFree((char *) classPtr);
+	XFree(classPtr);
 	Tcl_DStringFree(&name);
 	Tcl_DStringFree(&ds);
     }
@@ -1501,7 +1501,7 @@ WmClientCmd(
 
 	    XSetWMClientMachine(winPtr->display, wmPtr->wrapperPtr->window,
 		    &textProp);
-	    XFree((char *) textProp.value);
+	    XFree(textProp.value);
 
 	    /*
 	     * Inform the server (and more particularly any session manager)
@@ -1579,7 +1579,7 @@ WmColormapwindowsCmd(
 			Tcl_NewStringObj(winPtr2->pathName, TCL_INDEX_NONE));
 	    }
 	}
-	XFree((char *) cmapList);
+	XFree(cmapList);
 	Tcl_SetObjResult(interp, resultObj);
 	return TCL_OK;
     }
@@ -2490,7 +2490,7 @@ WmIconphotoCmd(
     for (i = 3 + isDefault; i < objc; i++) {
 	photo = Tk_FindPhoto(interp, Tcl_GetString(objv[i]));
 	if (photo == NULL) {
-	    ckfree((char *) iconPropertyData);
+	    ckfree(iconPropertyData);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	        "failed to create an iconphoto with image \"%s\"",
 		Tcl_GetString(objv[i])));
@@ -4222,7 +4222,7 @@ ReparentEvent(
 		    "ReparentEvent got bogus VROOT property:", actualFormat,
 		    numItems);
 	}
-	XFree((char *) virtualRootPtr);
+	XFree(virtualRootPtr);
     }
     Tk_DeleteErrorHandler(handler);
 
@@ -4273,7 +4273,7 @@ ReparentEvent(
 	    Tk_DeleteErrorHandler(handler);
 	    goto noReparent;
 	}
-	XFree((char *) children);
+	XFree(children);
 	if ((ancestor == vRoot) ||
 		(ancestor == RootWindow(wrapperPtr->display,
 		wrapperPtr->screenNum))) {
@@ -4941,7 +4941,7 @@ UpdateSizeHints(
 
     XSetWMNormalHints(winPtr->display, wmPtr->wrapperPtr->window, hintsPtr);
 
-    XFree((char *) hintsPtr);
+    XFree(hintsPtr);
 }
 
 /*
@@ -6524,7 +6524,7 @@ TkWmStackorderToplevel(
 
 	*window_ptr = NULL;
 	if (numChildren) {
-	    XFree((char *) children);
+	    XFree(children);
 	}
     }
 
@@ -6698,7 +6698,7 @@ TkWmAddToColormapWindows(
 	    count+1);
     ckfree(newPtr);
     if (oldPtr != NULL) {
-	XFree((char *) oldPtr);
+	XFree(oldPtr);
     }
 }
 
@@ -6794,7 +6794,7 @@ TkWmRemoveFromColormapWindows(
 	    break;
 	}
     }
-    XFree((char *) oldPtr);
+    XFree(oldPtr);
 }
 
 /*

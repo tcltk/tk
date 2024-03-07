@@ -319,7 +319,7 @@ typedef struct TkTextTag {
 				/* If non-NULL, then this tag only applies to
 				 * the given text widget (when there are peer
 				 * widgets). */
-    int priority;		/* Priority of this tag within widget. 0 means
+    Tcl_Size priority;	/* Priority of this tag within widget. 0 means
 				 * lowest priority. Exactly one tag has each
 				 * integer value between 0 and numTags-1. */
     struct Node *tagRootPtr;	/* Pointer into the B-Tree at the lowest node
@@ -328,7 +328,7 @@ typedef struct TkTextTag {
 				 * there is no information about the tag. One
 				 * or more children of the node do contain
 				 * information about the tag. */
-    int toggleCount;		/* Total number of tag toggles. */
+    Tcl_Size toggleCount;	/* Total number of tag toggles. */
 
     /*
      * Information for displaying text with this tag. The information belows
@@ -587,7 +587,7 @@ typedef struct TkSharedText {
 				 * pointers to TkTextTag structures. The "sel"
 				 * tag does not feature in this table, since
 				 * there's one of those for each text peer. */
-    int numTags;		/* Number of tags currently defined for
+    Tcl_Size numTags;		/* Number of tags currently defined for
 				 * widget; needed to keep track of
 				 * priorities. */
     Tcl_HashTable markTable;	/* Hash table that maps from mark names to
@@ -822,13 +822,19 @@ typedef struct TkText {
      * Miscellaneous additional information:
      */
 
-    char *takeFocus;		/* Value of -takeFocus option; not used in the
+#if TK_MAJOR_VERSION > 8
+    Tcl_Obj *takeFocusObj;		/* Value of -takeFocus option; not used in the
 				 * C code, but used by keyboard traversal
 				 * scripts. Malloc'ed, but may be NULL. */
-    char *xScrollCmd;		/* Prefix of command to issue to update
+    Tcl_Obj *xScrollCmdObj;		/* Prefix of command to issue to update
 				 * horizontal scrollbar when view changes. */
-    char *yScrollCmd;		/* Prefix of command to issue to update
+    Tcl_Obj *yScrollCmdObj;		/* Prefix of command to issue to update
 				 * vertical scrollbar when view changes. */
+#else
+    char *takeFocus;
+    char *xScrollCmd;
+    char *yScrollCmd;
+#endif
     int flags;			/* Miscellaneous flags; see below for
 				 * definitions. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
@@ -957,9 +963,9 @@ typedef int TkTextCountType;
 
 #define LOTSA_TAGS 1000
 typedef struct TkTextElideInfo {
-    int numTags;		/* Total tags in widget. */
+    Tcl_Size numTags;		/* Total tags in widget. */
     int elide;			/* Is the state currently elided. */
-    int elidePriority;		/* Tag priority controlling elide state. */
+    Tcl_Size elidePriority;			/* Tag priority controlling elide state. */
     TkTextSegment *segPtr;	/* Segment to look at next. */
     int segOffset;		/* Offset of segment within line. */
     int deftagCnts[LOTSA_TAGS];
@@ -1127,7 +1133,7 @@ MODULE_SCOPE int	TkTextSharedGetObjIndex(Tcl_Interp *interp,
 MODULE_SCOPE const	TkTextIndex *TkTextGetIndexFromObj(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *objPtr);
 MODULE_SCOPE TkTextTabArray *TkTextGetTabs(Tcl_Interp *interp,
-			    TkText *textPtr, Tcl_Obj *stringPtr);
+			    Tk_Window tkwin, Tcl_Obj *stringPtr);
 MODULE_SCOPE void	TkTextFindDisplayLineEnd(TkText *textPtr,
 			    TkTextIndex *indexPtr, int end, int *xOffset);
 MODULE_SCOPE void	TkTextIndexBackChars(const TkText *textPtr,

@@ -561,7 +561,7 @@ DestroyScale(
     if (scalePtr->textGC != NULL) {
 	Tk_FreeGC(scalePtr->display, scalePtr->textGC);
     }
-    Tk_FreeConfigOptions((char *) scalePtr, scalePtr->optionTable,
+    Tk_FreeConfigOptions(scalePtr, scalePtr->optionTable,
 	    scalePtr->tkwin);
     scalePtr->tkwin = NULL;
     TkpDestroyScale(scalePtr);

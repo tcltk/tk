@@ -317,7 +317,6 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
-    NSThread *_backgoundLoop;
 }
 @property int poolLock;
 @property int macOSVersion;

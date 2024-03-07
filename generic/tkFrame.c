@@ -896,7 +896,7 @@ DestroyFramePartly(
 	labelframePtr->labelWin = NULL;
     }
 
-    Tk_FreeConfigOptions((char *) framePtr, framePtr->optionTable,
+    Tk_FreeConfigOptions(framePtr, framePtr->optionTable,
 	    framePtr->tkwin);
 }
 
@@ -2063,16 +2063,11 @@ TkToplevelWindowForCommand(
     if (Tcl_GetCommandInfo(interp, cmdName, &cmdInfo) == 0) {
 	return NULL;
     }
-#if TCL_MAJOR_VERSION > 8
     if (cmdInfo.isNativeObjectProc == 2) {
 	if (cmdInfo.objProc2 != FrameWidgetObjCmd) {
 	    return NULL;
 	}
 	framePtr = (Frame *)cmdInfo.objClientData2;
-    } else
-#endif
-    if (cmdInfo.objProc != (Tcl_ObjCmdProc *)FrameWidgetObjCmd) {
-	return NULL;
     } else {
 	framePtr = (Frame *)cmdInfo.objClientData;
     }
