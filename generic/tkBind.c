@@ -734,7 +734,7 @@ static int		GetVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp, char *virtString);
 static int		HandleEventGenerate(Tcl_Interp *interp, Tk_Window main,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
@@ -3896,7 +3896,7 @@ static int
 HandleEventGenerate(
     Tcl_Interp *interp,		/* Interp for errors return and name lookup. */
     Tk_Window mainWin,		/* Main window associated with interp. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     union { XEvent general; XVirtualEvent virt; } event;
@@ -3916,7 +3916,7 @@ HandleEventGenerate(
     unsigned count;
     unsigned flags;
     int number;
-    unsigned i;
+    Tcl_Size i;
 
     static const char *const fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
@@ -4026,7 +4026,7 @@ HandleEventGenerate(
     warp = 0;
     pos = TCL_QUEUE_TAIL;
 
-    for (i = 2; i < (unsigned) objc; i += 2) {
+    for (i = 2; i < objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
 #if defined(_MSC_VER)
         /* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
