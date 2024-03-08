@@ -916,7 +916,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
-
 proc create_and_pack_frames {} {
 	frame .f1 -bg blue -width 100 -height 100
 	pack propagate .f1 0
@@ -938,6 +937,7 @@ proc init_pos {} {
 	pack propagate . 0
 	wm geometry . 200x200+100+100
 	raise .; # above any other windows on the screen
+wm iconify .
 	wm deiconify .
 	tkwait visibility .
 	update; # service remaining screen drawing events (e.g. <Expose>)
@@ -948,45 +948,6 @@ proc init_pos {} {
 	} else {
 		update
 	}
-}
-
-# tkWithNotifyInferior --
-#
-#	Determines how the current Tk version handles binding scripts for
-#	crossing events with detail field "NotifyInferior".
-#
-# Arguments: none
-#
-# Results: 0: Tk ignores the script
-#          1: Tk invokes the script
-#
-# Side effects: sets a global variable ::tkWithNotifyInferior
-#
-proc tkWithNotifyInferior {} {
-	if {! [info exists ::tkWithNotifyInferior]} {
-
-		# create a private window and make it as inconspicuous as possible.
-		set t [toplevel ._test_ntfyinf -bg {}]
-		wm overrideredirect $t 1
-		wm geometry $t 1x1-1-1
-		bindtags $t $t
-
-		wm deiconify $t
-		set ::tkWithNotifyInferior 0
-		bind $t <Leave> {set ::tkWithNotifyInferior 1}
-		update; # enforce completion of display server - Tk interaction.
-
-		set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
-		event generate $t <Leave> -mode NotifyNormal -detail NotifyInferior; # *A*
-		destroy $t
-
-		if {$pointerWin ne ""} {
-			# The [event generate] at *A* above compromises the grab mechanism.
-			# The following line restores sanity.
-			event generate $pointerWin <Enter>
-		}
-	}
-	return $::tkWithNotifyInferior
 }
 
 #
@@ -1065,7 +1026,7 @@ test event-9.11 {pw container = parent} -setup {
 	destroy .f1
 	update
 	unset result
-} -result [expr {[tkWithNotifyInferior]?"|<Enter> NotifyInferior .f1|":"|"}]
+} -result {|<Enter> NotifyInferior .f1|}
 
 test event-9.12 {pw container != parent} -setup {
 	wm withdraw .
@@ -1088,10 +1049,10 @@ test event-9.12 {pw container != parent} -setup {
 	destroy .f1
 	update
 	unset result
-} -result "|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|"
+} -result {|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|}
 
 #
-# This test corresponds to tests event-9.1 and event-9.2 in the Tk test suite,
+# This test corresponds to tests event-9.1 and event-9.2,
 # but it additionally tests for the correct detail field of the event.
 #
 test event-9.13 {pw is a toplevel, toplevel destination} -setup {
@@ -1112,7 +1073,7 @@ test event-9.13 {pw is a toplevel, toplevel destination} -setup {
 	bind all <Leave> {}
 	bind all <Enter> {}
 	unset result
-} -result "|<Enter> NotifyNonlinear .|"
+} -result {|<Enter> NotifyNonlinear .|}
 
 test event-9.14 {pw is a toplevel, tk internal destination} -setup {
 	wm withdraw .
@@ -1135,7 +1096,7 @@ test event-9.14 {pw is a toplevel, tk internal destination} -setup {
 	destroy .f1
 	update
 	unset result
-} -result "|<Enter> NotifyNonlinearVirtual .|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|"
+} -result {|<Enter> NotifyNonlinearVirtual .|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|}
 
 test event-9.15 {pw is toplevel, destination is screen root} -setup {
 	toplevel .two
@@ -1174,7 +1135,7 @@ test event-9.15 {pw is toplevel, destination is screen root} -setup {
 	unset result
 	event generate . <Motion> -warp 1 -x 175 -y 175 -when tail
 	waitForWindowEvent . <Enter>
-} -result "|"
+} -result {|}
 
 test event-9.16 {Successive destructions (pw + parent), single generation of crossing events} -setup {
 	# Tests correctness of overwriting the dead window struct in
@@ -1195,7 +1156,7 @@ test event-9.16 {Successive destructions (pw + parent), single generation of cro
 	bind all <Leave> {}
 	bind all <Enter> {}
 	unset result
-} -result [expr {[tkWithNotifyInferior]?"|<Enter> NotifyInferior .|":"|"}]
+} -result {|<Enter> NotifyInferior .|}
 
 test event-9.17 {Successive destructions (pw + parent), separate crossing events} -setup {
 	# Tests correctness of overwriting the dead window struct in
@@ -1218,7 +1179,7 @@ test event-9.17 {Successive destructions (pw + parent), separate crossing events
 	bind all <Leave> {}
 	bind all <Enter> {}
 	unset result
-} -result [expr {[tkWithNotifyInferior]?"|<Enter> NotifyInferior .f1|<Enter> NotifyInferior .|":"|"}]
+} -result {|<Enter> NotifyInferior .f1|<Enter> NotifyInferior .|}
 
 test event-9.18 {Successive destructions (pw + ancestors including its toplevel), destination is non-root toplevel} -setup {
 	toplevel .two
@@ -1241,7 +1202,7 @@ test event-9.18 {Successive destructions (pw + ancestors including its toplevel)
 	bind all <Leave> {}
 	bind all <Enter> {}
 	unset result
-} -result "|<Enter> NotifyNonlinear .|"
+} -result {|<Enter> NotifyNonlinear .|}
 
 test event-9.19 {Successive destructions (pw + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
 	toplevel .two
@@ -1275,7 +1236,7 @@ test event-9.19 {Successive destructions (pw + ancestors including its toplevel)
 	destroy .two
 	waitForWindowEvent . <Enter>
 	unset result
-} -result "|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|"
+} -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pw + ancestors including its toplevel), destination is screen root} -setup {
 	wm withdraw .
@@ -1299,11 +1260,12 @@ test event-9.20 {Successive destructions (pw + ancestors including its toplevel)
 	bind all <Leave> {}
 	bind all <Enter> {}
 	unset result
-} -result "|"
+} -result {|}
 
 # cleanup
 update
 unset -nocomplain keypress_lookup
+rename create_and_pack_frames {}
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}
 rename _keypress {}
