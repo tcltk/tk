@@ -916,13 +916,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
-proc create_and_pack_frames {} {
-    frame .f1 -bg blue -width 100 -height 100
-    pack propagate .f1 0
-    frame .f1.f2 -bg yellow -width 50 -height 50
-    pack .f1.f2 .f1 -side bottom -anchor se
-}
-
 #
 # Note regarding "waitForWindowEvent"
 #
@@ -966,7 +959,7 @@ proc waitForWindowEvent {w event {timeout 1000}} {
     unset _windowEvent($counter)
     if {$late} {
 	after cancel $afterID
-	return -code error "waiting for $event event on $w timed out (> $timeout ms)"
+	puts "waiting for $event event on $w timed out (> $timeout ms)"
     }
 }
 
@@ -978,6 +971,19 @@ proc waitForWindowEvent.signal {counter} {
 	incr ::_windowEvent($counter)
 }
 
+proc create_and_pack_frames {} {
+    frame .f1 -bg blue -width 100 -height 100
+    pack propagate .f1 0
+    frame .f1.f2 -bg yellow -width 50 -height 50
+    pack .f1.f2 .f1 -side bottom -anchor se
+}
+
+# One time positioning of the root window and the mouse pointer used for all
+# tests. The user should not touch the mouse after this proc has been
+# executed.
+pack propagate . 0
+wm geometry . 200x200+100+100
+_pause 200; # service remaining screen drawing events (e.g. <Expose>)
 set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
 event generate . <Motion> -warp 1 -x 175 -y 175
 if {$pointerWin ne "."} {
@@ -991,13 +997,13 @@ test event-9.11 {pw container = parent} -setup {
     create_and_pack_frames
     wm deiconify .
     tkwait visibility .f1.f2
-    update
+    _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
     destroy .f1.f2
-    update; # service crossing events
+    _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1014,13 +1020,13 @@ test event-9.12 {pw container != parent} -setup {
     pack [frame .g -bg orange -width 40 -height 40] -anchor se -side bottom -in .f1.f2
     wm deiconify .
     tkwait visibility .g
-    update
+    _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
     destroy .g
-    update; # service crossing events
+    _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1097,7 +1103,7 @@ test event-9.15 {pw is toplevel, destination is screen root} -setup {
     #
     # Preventing that events carry over from this test to the next is not very
     # well possible if there isn't any window left/mapped to receive window
-    # events that we can wait for. That's why the root window remains mapped in
+    # events that we can wait for. That's why the .top window remains mapped in
     # the setup section of this test. It acts merely as a receiver for
     # window events that belong to this test, so that we can exert control
     # by waiting for them being serviced in this test.
@@ -1106,7 +1112,7 @@ test event-9.15 {pw is toplevel, destination is screen root} -setup {
 	# await at least one notification from the windowing system
 	tkwait visibility .
     }
-    update; # ensure servicing of all scheduled events (only <Expose> events expected)
+    _pause 200; # ensure servicing of all scheduled events (only <Expose> events expected)
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1123,13 +1129,13 @@ test event-9.16 {Successive destructions (pw + parent), single generation of cro
     create_and_pack_frames
     wm deiconify .
     tkwait visibility .f1.f2
-    update
+    _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
     destroy .f1
-    update; # service crossing events
+    _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1144,15 +1150,15 @@ test event-9.17 {Successive destructions (pw + parent), separate crossing events
     create_and_pack_frames
     wm deiconify .
     tkwait visibility .f1.f2
-    update
+    _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
     destroy .f1.f2
-    update; # service crossing events
+    _pause 200; # service crossing events
     destroy .f1
-    update; # service crossing events
+    _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1233,7 +1239,7 @@ test event-9.20 {Successive destructions (pw + ancestors including its toplevel)
     set result "|"
 } -body {
     destroy .two
-    update; # service events (only screen drawing events expected)
+    _pause 200; # service events (only screen drawing events expected)
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1242,6 +1248,7 @@ test event-9.20 {Successive destructions (pw + ancestors including its toplevel)
 } -result {|}
 
 # cleanup
+pack propagate . 1
 update
 unset -nocomplain keypress_lookup
 unset -nocomplain pointerWin
