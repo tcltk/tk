@@ -100,8 +100,7 @@ static int		ConfigureScrollbar(Tcl_Interp *interp,
 			    TkScrollbar *scrollPtr, Tcl_Size objc,
 			    Tcl_Obj *const objv[], int flags);
 static void		ScrollbarCmdDeletedProc(void *clientData);
-static int		ScrollbarWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, Tcl_Size objc, Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 ScrollbarWidgetObjCmd;
 
 /*
  *--------------------------------------------------------------

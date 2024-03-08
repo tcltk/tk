@@ -533,9 +533,7 @@ static char *		ButtonTextVarProc(void *clientData,
 static char *		ButtonVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		ButtonWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 ButtonWidgetObjCmd;
 static int		ConfigureButton(Tcl_Interp *interp, TkButton *butPtr,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		DestroyButton(TkButton *butPtr);

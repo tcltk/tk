@@ -255,10 +255,10 @@ typedef struct UniformGroup {
 
 static void		AdjustForSticky(Gridder *contentPtr, int *xPtr,
 			    int *yPtr, int *widthPtr, int *heightPtr);
-static int		AdjustOffsets(int width, int elements,
+static int		AdjustOffsets(int width, Tcl_Size elements,
 			    SlotInfo *slotPtr);
 static void		ArrangeGrid(void *clientData);
-static int		CheckSlotData(Gridder *containerPtr, int slot,
+static int		CheckSlotData(Gridder *containerPtr, Tcl_Size slot,
 			    int slotType, int checkOnly);
 static int		ConfigureContent(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tcl_Size objc, Tcl_Obj *const objv[]);
@@ -1509,10 +1509,10 @@ GridLostContentProc(
 static int
 AdjustOffsets(
     int size,			/* The total layout size (in pixels). */
-    int slots,			/* Number of slots. */
+    Tcl_Size slots,			/* Number of slots. */
     SlotInfo *slotPtr)	/* Pointer to slot array. */
 {
-    int slot;		/* Current slot. */
+    Tcl_Size slot;		/* Current slot. */
     int diff;			/* Extra pixels needed to add to the layout. */
     int totalWeight;		/* Sum of the weights for all the slots. */
     int weight;			/* Sum of the weights so far. */
@@ -2627,11 +2627,11 @@ SetContentRow(
 static int
 CheckSlotData(
     Gridder *containerPtr,		/* The geometry container for this grid. */
-    int slot,			/* Which slot to look at. */
+    Tcl_Size slot,			/* Which slot to look at. */
     int slotType,		/* ROW or COLUMN. */
     int checkOnly)		/* Don't allocate new space if true. */
 {
-    int numSlot;		/* Number of slots already allocated (Space) */
+    Tcl_Size numSlot;		/* Number of slots already allocated (Space) */
     int end;			/* Last used constraint. */
 
     /*

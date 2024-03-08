@@ -1276,11 +1276,6 @@ AC_DEFUN([SC_CONFIG_CFLAGS], [
 
 	    case $system in
 	    DragonFly-*|FreeBSD-*)
-		AS_IF([test "${TCL_THREADS}" = "1"], [
-		    # The -pthread needs to go in the LDFLAGS, not LIBS
-		    LIBS=`echo $LIBS | sed s/-pthread//`
-		    CFLAGS="$CFLAGS $PTHREAD_CFLAGS"
-		    LDFLAGS="$LDFLAGS $PTHREAD_LIBS"])
 	    ;;
             esac
 
