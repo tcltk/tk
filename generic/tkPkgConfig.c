@@ -14,20 +14,9 @@
 /* Note, the definitions in this module are influenced by the following C
  * preprocessor macros:
  *
- * OSCMa  = shortcut for "old style configuration macro activates"
- * NSCMdt = shortcut for "new style configuration macro declares that"
- *
- * - TCL_THREADS		OSCMa compilation as threaded.
- * - TCL_MEM_DEBUG		OSCMa memory debugging.
- *
- * - TCL_CFG_DO64BIT		NSCMdt tk is compiled for a 64bit system.
- * - NDEBUG			NSCMdt tk is compiled with symbol info off.
- * - TCL_CFG_OPTIMIZED		NSCMdt tk is compiled with cc optimizations on
- * - TCL_CFG_PROFILED		NSCMdt tk is compiled with profiling info.
- *
  * - _WIN32 || __CYGWIN__	The value for the fontsytem key will be
  *   MAC_OSX_TK			chosen based on these macros/defines.
- *   HAVE_XFT			NSCMdt xft font support was requested.
+ *   HAVE_XFT			declares that xft font support was requested.
  *
  * - CFG_RUNTIME_*		Paths to various stuff at runtime.
  * - CFG_INSTALL_*		Paths to various stuff at installation time.
@@ -47,42 +36,6 @@
  * Use C preprocessor statements to define the various values for the embedded
  * configuration information.
  */
-
-#ifdef TCL_THREADS
-#  define  CFG_THREADED		"1"
-#else
-#  define  CFG_THREADED		"0"
-#endif
-
-#ifdef TCL_MEM_DEBUG
-#  define CFG_MEMDEBUG		"1"
-#else
-#  define CFG_MEMDEBUG		"0"
-#endif
-
-#ifdef TCL_CFG_DO64BIT
-#  define CFG_64		"1"
-#else
-#  define CFG_64		"0"
-#endif
-
-#ifndef NDEBUG
-#  define CFG_DEBUG		"1"
-#else
-#  define CFG_DEBUG		"0"
-#endif
-
-#ifdef TCL_CFG_OPTIMIZED
-#  define CFG_OPTIMIZED		"1"
-#else
-#  define CFG_OPTIMIZED		"0"
-#endif
-
-#ifdef TCL_CFG_PROFILED
-#  define CFG_PROFILED		"1"
-#else
-#  define CFG_PROFILED		"0"
-#endif
 
 #if defined(_WIN32)
 #  define CFG_FONTSYSTEM	"gdi"

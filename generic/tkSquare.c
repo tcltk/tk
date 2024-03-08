@@ -103,8 +103,7 @@ static void		SquareDisplay(void *clientData);
 static void		KeepInWindow(Square *squarePtr);
 static void		SquareObjEventProc(void *clientData,
 			    XEvent *eventPtr);
-static int		SquareWidgetObjCmd(void *clientData,
-			    Tcl_Interp *, Tcl_Size objc, Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc2 SquareWidgetObjCmd;
 
 /*
  *--------------------------------------------------------------

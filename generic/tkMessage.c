@@ -178,9 +178,7 @@ static void		MessageEventProc(void *clientData,
 static char *		MessageTextVarProc(void *clientData,
 			    Tcl_Interp *interp, const char *name1,
 			    const char *name2, int flags);
-static int		MessageWidgetObjCmd(void *clientData,
-			    Tcl_Interp *interp, Tcl_Size objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc2 MessageWidgetObjCmd;
 static void		MessageWorldChanged(void *instanceData);
 static void		ComputeMessageGeometry(Message *msgPtr);
 static int		ConfigureMessage(Tcl_Interp *interp, Message *msgPtr,

@@ -200,11 +200,10 @@ typedef struct {
 
 static Tcl_ObjCmdProc2 TrayIconCreateCmd;
 static Tcl_ObjCmdProc2 TrayIconObjectCmd;
-static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp* interp,
-				   Tcl_Size objc,  Tcl_Obj *const objv[],
-				   int addflags);
-static int PostBalloon(DockIcon* icon, const char * utf8msg,
-		       long timeout);
+static int TrayIconConfigureMethod(DockIcon *icon, Tcl_Interp *interp,
+	Tcl_Size objc, Tcl_Obj *const objv[], int addflags);
+static int PostBalloon(DockIcon* icon, const char *utf8msg,
+	long timeout);
 static void CancelBalloon(DockIcon* icon, int msgid);
 static int QueryTrayOrientation(DockIcon* icon);
 
