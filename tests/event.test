@@ -916,6 +916,391 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
+
+proc create_and_pack_frames {} {
+	frame .f1 -bg blue -width 100 -height 100
+	pack propagate .f1 0
+	frame .f1.f2 -bg yellow -width 50 -height 50
+	pack .f1.f2 .f1 -side bottom -anchor se
+}
+
+# init_pos --
+#
+#	One time positioning of the root window and the mouse pointer for all
+#	tests. The user should not touch the mouse after this proc has been
+#	executed.
+#
+proc init_pos {} {
+	# Prevent the twm window manager from requiring user-interaction for
+	# the initial placement of the root window.
+	wm positionfrom . user
+
+	pack propagate . 0
+	wm geometry . 200x200+100+100
+	raise .; # above any other windows on the screen
+	wm deiconify .
+	tkwait visibility .
+	update; # service remaining screen drawing events (e.g. <Expose>)
+	set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
+	event generate . <Motion> -warp 1 -x 175 -y 175
+	if {$pointerWin ne "."} {
+		waitForWindowEvent . <Enter>
+	} else {
+		update
+	}
+}
+
+# tkWithNotifyInferior --
+#
+#	Determines how the current Tk version handles binding scripts for
+#	crossing events with detail field "NotifyInferior".
+#
+# Arguments: none
+#
+# Results: 0: Tk ignores the script
+#          1: Tk invokes the script
+#
+# Side effects: sets a global variable ::tkWithNotifyInferior
+#
+proc tkWithNotifyInferior {} {
+	if {! [info exists ::tkWithNotifyInferior]} {
+
+		# create a private window and make it as inconspicuous as possible.
+		set t [toplevel ._test_ntfyinf -bg {}]
+		wm overrideredirect $t 1
+		wm geometry $t 1x1-1-1
+		bindtags $t $t
+
+		wm deiconify $t
+		set ::tkWithNotifyInferior 0
+		bind $t <Leave> {set ::tkWithNotifyInferior 1}
+		update; # enforce completion of display server - Tk interaction.
+
+		set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
+		event generate $t <Leave> -mode NotifyNormal -detail NotifyInferior; # *A*
+		destroy $t
+
+		if {$pointerWin ne ""} {
+			# The [event generate] at *A* above compromises the grab mechanism.
+			# The following line restores sanity.
+			event generate $pointerWin <Enter>
+		}
+	}
+	return $::tkWithNotifyInferior
+}
+
+#
+# Note regarding "waitForWindowEvent"
+#
+# This proc is intended mainly to overcome latency of windowing system
+# notifications when toplevel windows are involved. These latencies vary
+# considerably with the window manager in use, with the system load,
+# with configured scheduling priorities for processes, etc ...
+#
+# Waiting for the corresponding window events evades the trouble that is
+# associated with the alternative: waiting or halting the Tk process for a
+# fixed amount of time (using "after ms"). With the latter strategy it's
+# always a gamble how much waiting time is enough on an end user's system.
+# It also leads to long fixed waiting times in order to be on the safe side.
+#
+
+# waitForWindowEvent --
+#
+# Wait until a specific window event has been serviced.
+#
+# Arguments:
+#
+# w       : the window
+# event   : the type of event
+# timeout : the timeout duration for waiting
+#
+proc waitForWindowEvent {w event {timeout 1000}} {
+	variable _windowEvent
+
+	#
+	# Use counter as a unique ID to prevent subsequent waits
+	# from interfering with each other.
+	#
+	set counter [incr _windowEvent(counter)]
+	set _windowEvent($counter) 1
+	set savedBinding [bind $w $event]
+	bind $w $event [list +waitForWindowEvent.signal $counter]
+	set afterID [after $timeout [list set _windowEvent($counter) -1]]
+	vwait _windowEvent($counter)
+	set late [expr {$_windowEvent($counter) == -1}]
+	bind $w $event $savedBinding
+	unset _windowEvent($counter)
+	if {$late} {
+		after cancel $afterID
+		return -code error "waiting for $event event on $w timed out (> $timeout ms)"
+	}
+}
+
+# waitForWindowEvent.signal --
+#
+#	Helper proc that records the triggering of a window event.
+#
+proc waitForWindowEvent.signal {counter} {
+	incr ::_windowEvent($counter)
+}
+
+init_pos
+
+test event-9.11 {pw container = parent} -setup {
+	wm withdraw .
+	create_and_pack_frames
+	wm deiconify .
+	tkwait visibility .f1.f2
+	update
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .f1.f2
+	update; # service crossing events
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	destroy .f1
+	update
+	unset result
+} -result [expr {[tkWithNotifyInferior]?"|<Enter> NotifyInferior .f1|":"|"}]
+
+test event-9.12 {pw container != parent} -setup {
+	wm withdraw .
+	create_and_pack_frames
+	pack propagate .f1.f2 0
+	pack [frame .g -bg orange -width 40 -height 40] -anchor se -side bottom -in .f1.f2
+	wm deiconify .
+	tkwait visibility .g
+	update
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .g
+	update; # service crossing events
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	destroy .f1
+	update
+	unset result
+} -result "|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|"
+
+#
+# This test corresponds to tests event-9.1 and event-9.2 in the Tk test suite,
+# but it additionally tests for the correct detail field of the event.
+#
+test event-9.13 {pw is a toplevel, toplevel destination} -setup {
+	wm withdraw .
+	toplevel .two
+	wm geometry .two 200x200+150+150
+	wm deiconify .
+	wm deiconify .two
+	waitForWindowEvent .two <Enter>
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .two
+	waitForWindowEvent . <Enter>
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	unset result
+} -result "|<Enter> NotifyNonlinear .|"
+
+test event-9.14 {pw is a toplevel, tk internal destination} -setup {
+	wm withdraw .
+	create_and_pack_frames
+	toplevel .two
+	wm geometry .two 200x200+150+150
+	wm deiconify .
+	wm deiconify .two
+	waitForWindowEvent .two <Enter>
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .two
+	waitForWindowEvent .f1.f2 <Enter>
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	destroy .f1
+	update
+	unset result
+} -result "|<Enter> NotifyNonlinearVirtual .|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|"
+
+test event-9.15 {pw is toplevel, destination is screen root} -setup {
+	toplevel .two
+	wm geometry .two 200x200+150+150
+	wm deiconify .two
+	waitForWindowEvent .two <Enter>
+	event generate .two <Motion> -warp 1 -x 175 -y 175
+	controlPointerWarpTiming
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .two
+	#
+	# On x11, screen drawing events that correspond to the destruction of
+	# toplevel .two may be late to the extent that window events belonging
+	# to this test are being serviced in the next test, thus compromising
+	# the result of the next test.
+	#
+	# Preventing that events carry over from this test to the next is not very
+	# well possible if there isn't any window left/mapped to receive window
+	# events that we can wait for. That's why the root window remains mapped in
+	# the setup section of this test. It acts merely as a receiver for
+	# window events that belong to this test, so that we can exert control
+	# by waiting for them being serviced in this test.
+	#
+	if {[tk windowingsystem] eq "x11"} {
+		# await at least one notification from the windowing system
+		tkwait visibility .
+	}
+	update; # ensure servicing of all scheduled events (only <Expose> events expected)
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	unset result
+	event generate . <Motion> -warp 1 -x 175 -y 175 -when tail
+	waitForWindowEvent . <Enter>
+} -result "|"
+
+test event-9.16 {Successive destructions (pw + parent), single generation of crossing events} -setup {
+	# Tests correctness of overwriting the dead window struct in
+	# TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
+	wm withdraw .
+	create_and_pack_frames
+	wm deiconify .
+	tkwait visibility .f1.f2
+	update
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .f1
+	update; # service crossing events
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	unset result
+} -result [expr {[tkWithNotifyInferior]?"|<Enter> NotifyInferior .|":"|"}]
+
+test event-9.17 {Successive destructions (pw + parent), separate crossing events} -setup {
+	# Tests correctness of overwriting the dead window struct in
+	# TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
+	wm withdraw .
+	create_and_pack_frames
+	wm deiconify .
+	tkwait visibility .f1.f2
+	update
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .f1.f2
+	update; # service crossing events
+	destroy .f1
+	update; # service crossing events
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	unset result
+} -result [expr {[tkWithNotifyInferior]?"|<Enter> NotifyInferior .f1|<Enter> NotifyInferior .|":"|"}]
+
+test event-9.18 {Successive destructions (pw + ancestors including its toplevel), destination is non-root toplevel} -setup {
+	toplevel .two
+	pack propagate .two 0
+	wm geometry .two 200x200+100+100
+	frame .two.f1 -bg blue -width 100 -height 100
+	pack propagate .two.f1 0
+	frame .two.f1.f2 -bg yellow -width 50 -height 50
+	pack .two.f1.f2 .two.f1 -side bottom -anchor se
+	wm deiconify .two
+	waitForWindowEvent .two.f1.f2 <Enter>
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .two
+	waitForWindowEvent . <Enter>
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	unset result
+} -result "|<Enter> NotifyNonlinear .|"
+
+test event-9.19 {Successive destructions (pw + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
+	toplevel .two
+	pack propagate .two 0
+	wm geometry .two 200x200+100+100
+	frame .two.f1 -bg blue -width 100 -height 100
+	pack propagate .two.f1 0
+	frame .two.f1.f2 -bg yellow -width 50 -height 50
+	pack .two.f1.f2 .two.f1 -side bottom -anchor se
+	wm deiconify .two
+	waitForWindowEvent .two.f1.f2 <Enter>
+	toplevel .three
+	pack propagate .three 0
+	wm geometry .three 200x200+110+110
+	frame .three.f1 -bg purple -width 100 -height 100
+	pack propagate .three.f1 0
+	frame .three.f1.f2 -bg grey -width 50 -height 50
+	pack .three.f1.f2 .three.f1 -side bottom -anchor se
+	wm deiconify .three
+	waitForWindowEvent .three.f1.f2 <Enter>
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .three
+	waitForWindowEvent .two.f1.f2 <Enter>
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	destroy .two
+	waitForWindowEvent . <Enter>
+	unset result
+} -result "|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|"
+
+test event-9.20 {Successive destructions (pw + ancestors including its toplevel), destination is screen root} -setup {
+	wm withdraw .
+	toplevel .two
+	pack propagate .two 0
+	wm geometry .two 200x200+100+100
+	frame .two.f1 -bg blue -width 100 -height 100
+	pack propagate .two.f1 0
+	frame .two.f1.f2 -bg yellow -width 50 -height 50
+	pack .two.f1.f2 .two.f1 -side bottom -anchor se
+	wm deiconify .two
+	waitForWindowEvent .two.f1.f2 <Enter>
+	bind all <Leave> {append result "<Leave> %d %W|"}
+	bind all <Enter> {append result "<Enter> %d %W|"}
+	set result "|"
+} -body {
+	destroy .two
+	update; # service events (only screen drawing events expected)
+	set result
+} -cleanup {
+	bind all <Leave> {}
+	bind all <Enter> {}
+	unset result
+} -result "|"
+
 # cleanup
 update
 unset -nocomplain keypress_lookup
