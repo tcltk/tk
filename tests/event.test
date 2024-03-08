@@ -923,33 +923,6 @@ proc create_and_pack_frames {} {
 	pack .f1.f2 .f1 -side bottom -anchor se
 }
 
-# init_pos --
-#
-#	One time positioning of the root window and the mouse pointer for all
-#	tests. The user should not touch the mouse after this proc has been
-#	executed.
-#
-proc init_pos {} {
-	# Prevent the twm window manager from requiring user-interaction for
-	# the initial placement of the root window.
-	wm positionfrom . user
-
-	pack propagate . 0
-	wm geometry . 200x200+100+100
-	raise .; # above any other windows on the screen
-wm iconify .
-	wm deiconify .
-	tkwait visibility .
-	update; # service remaining screen drawing events (e.g. <Expose>)
-	set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
-	event generate . <Motion> -warp 1 -x 175 -y 175
-	if {$pointerWin ne "."} {
-		waitForWindowEvent . <Enter>
-	} else {
-		update
-	}
-}
-
 #
 # Note regarding "waitForWindowEvent"
 #
@@ -1005,7 +978,13 @@ proc waitForWindowEvent.signal {counter} {
 	incr ::_windowEvent($counter)
 }
 
-init_pos
+set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
+event generate . <Motion> -warp 1 -x 175 -y 175
+if {$pointerWin ne "."} {
+    waitForWindowEvent . <Enter>
+} else {
+    controlPointerWarpTiming
+}
 
 test event-9.11 {pw container = parent} -setup {
     wm withdraw .
@@ -1265,6 +1244,7 @@ test event-9.20 {Successive destructions (pw + ancestors including its toplevel)
 # cleanup
 update
 unset -nocomplain keypress_lookup
+unset -nocomplain pointerWin
 rename create_and_pack_frames {}
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}
