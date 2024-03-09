@@ -861,61 +861,6 @@ test event-8 {event generate with keysyms corresponding to
     deleteWindows
 } -result {OK}
 
-test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
-    set EnterBind [bind . <Enter>]
-} -body {
-    wm geometry . 200x200+300+300
-    wm deiconify .
-    _pause 200
-    toplevel .top2 -width 200 -height 200
-    wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
-    wm deiconify .top2
-    raise .top2
-    _pause 400
-    event generate .top2 <Motion> -warp 1 -x 50 -y 50
-    _pause 100
-    bind . <Enter> {lappend res %W}
-    set res [list ]
-    destroy .top2
-    _pause 200
-    set res
-} -cleanup {
-    deleteWindows
-    bind . <Enter> $EnterBind
-} -result {.}
-test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
-    set iconified false
-    if {[winfo ismapped .]} {
-        wm iconify .
-        update
-        set iconified true
-    }
-} -body {
-    toplevel .top1
-    wm geometry .top1 200x200+300+300
-    wm deiconify .top1
-    _pause 200
-    toplevel .top2 -width 200 -height 200
-    wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
-    _pause 200
-    wm deiconify .top2
-    raise .top2
-    _pause 400
-    event generate .top2 <Motion> -warp 1 -x 50 -y 50
-    _pause 100
-    bind .top1 <Enter> {lappend res %W}
-    set res [list ]
-    destroy .top2
-    _pause 200
-    set res
-} -cleanup {
-    deleteWindows ; # destroy all children of ".", this already includes .top1
-    if {$iconified} {
-        wm deiconify .
-        update
-    }
-} -result {.top1}
-
 proc waitForWindowEvent {w event {timeout 1000}} {
 # This proc is intended to overcome latency of windowing system
 # notifications when toplevel windows are involved. These latencies vary
@@ -1018,8 +963,6 @@ test event-9.12 {pointer window container != parent} -setup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
-# This test corresponds to tests event-9.1 and event-9.2,
-# but it additionally tests for the correct detail field of the event.
 test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     setup_win_mousepointer .one
     wm withdraw .one
