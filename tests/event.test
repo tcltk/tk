@@ -975,72 +975,75 @@ proc create_and_pack_frames {{w {}}} {
     pack $w.f1.f2 $w.f1 -side bottom -anchor se
 }
 
-# One time positioning of the root window and the mouse pointer used for all
-# tests. The user should not touch the mouse after this proc has been
-# executed.
-# The so-called "pointer window" is the window containing the mouse pointer.
-pack propagate . 0
-wm geometry . 200x200+100+100
-_pause 200; # service remaining screen drawing events (e.g. <Expose>)
-set pointerWin [winfo containing [winfo pointerx .] [winfo pointery .]]
-event generate . <Motion> -warp 1 -x 175 -y 175
-if {$pointerWin ne "."} {
-    waitForWindowEvent . <Enter>
-} else {
-    controlPointerWarpTiming
+proc setup_win_mousepointer {w} {
+# Position the window and the mouse pointer as an initial state for some tests.
+# The so-called "pointer window" is the $w window that will now contain the mouse pointer.
+    wm geometry . +700+700; # root window out of our way - must not cover windows from event-9.1*
+    toplevel $w
+    pack propagate $w 0
+    wm geometry $w 200x200+100+100
+    _pause 200; # service remaining screen drawing events (e.g. <Expose>)
+    set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
+    event generate $w <Motion> -warp 1 -x 175 -y 175
+    if {$pointerWin ne $w} {
+        waitForWindowEvent $w <Enter>
+    } else {
+        controlPointerWarpTiming
+    }
 }
 
 test event-9.11 {pointer window container = parent} -setup {
-    wm withdraw .
-    create_and_pack_frames
-    wm deiconify .
-    tkwait visibility .f1.f2
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    wm deiconify .one
+    tkwait visibility .one.f1.f2
     _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
-    destroy .f1.f2
+    destroy .one.f1.f2
     _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
-    destroy .f1
-    update
+    destroy .one
     unset result
-} -result {|<Enter> NotifyInferior .f1|}
+} -result {|<Enter> NotifyInferior .one.f1|}
 
 test event-9.12 {pointer window container != parent} -setup {
-    wm withdraw .
-    create_and_pack_frames
-    pack propagate .f1.f2 0
-    pack [frame .g -bg orange -width 40 -height 40] -anchor se -side bottom -in .f1.f2
-    wm deiconify .
-    tkwait visibility .g
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    pack propagate .one.f1.f2 0
+    pack [frame .one.g -bg orange -width 40 -height 40] -anchor se -side bottom -in .one.f1.f2
+    wm deiconify .one
+    tkwait visibility .one.g
     _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
-    destroy .g
+    destroy .one.g
     _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
-    destroy .f1
-    update
+    destroy .one
     unset result
-} -result {|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|}
+} -result {|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 # This test corresponds to tests event-9.1 and event-9.2,
 # but it additionally tests for the correct detail field of the event.
 test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
-    wm withdraw .
+    setup_win_mousepointer .one
+    wm withdraw .one
     toplevel .two
     wm geometry .two 200x200+150+150
-    wm deiconify .
+    wm deiconify .one
     wm deiconify .two
     waitForWindowEvent .two <Enter>
     bind all <Leave> {append result "<Leave> %d %W|"}
@@ -1048,20 +1051,22 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     set result "|"
 } -body {
     destroy .two
-    waitForWindowEvent . <Enter>
+    waitForWindowEvent .one <Enter>
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     unset result
-} -result {|<Enter> NotifyNonlinear .|}
+} -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
-    wm withdraw .
-    create_and_pack_frames
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
     toplevel .two
     wm geometry .two 200x200+150+150
-    wm deiconify .
+    wm deiconify .one
     wm deiconify .two
     waitForWindowEvent .two <Enter>
     bind all <Leave> {append result "<Leave> %d %W|"}
@@ -1069,17 +1074,17 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     set result "|"
 } -body {
     destroy .two
-    waitForWindowEvent .f1.f2 <Enter>
+    waitForWindowEvent .one.f1.f2 <Enter>
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
-    destroy .f1
-    update
+    destroy .one
     unset result
-} -result {|<Enter> NotifyNonlinearVirtual .|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|}
+} -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.15 {pointer window is a toplevel, destination is screen root} -setup {
+    setup_win_mousepointer .one
     toplevel .two
     wm geometry .two 200x200+150+150
     wm deiconify .two
@@ -1098,69 +1103,73 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     #
     # Preventing that events carry over from this test to the next is not very
     # well possible if there isn't any window left/mapped to receive window
-    # events that we can wait for. That's why the .top window remains mapped in
+    # events that we can wait for. That's why the .one window remains mapped in
     # the setup section of this test. It acts merely as a receiver for
     # window events that belong to this test, so that we can exert control
     # by waiting for them being serviced in this test.
     if {[tk windowingsystem] eq "x11"} {
 	# await at least one notification from the windowing system
-	tkwait visibility .
+	tkwait visibility .one
     }
     _pause 200; # ensure servicing of all scheduled events (only <Expose> events expected)
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     unset result
-    event generate . <Motion> -warp 1 -x 175 -y 175 -when tail
-    waitForWindowEvent . <Enter>
 } -result {|}
 
 test event-9.16 {Successive destructions (pointer window + parent), single generation of crossing events} -setup {
     # Tests correctness of overwriting the dead window struct in
     # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
-    wm withdraw .
-    create_and_pack_frames
-    wm deiconify .
-    tkwait visibility .f1.f2
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    wm deiconify .one
+    tkwait visibility .one.f1.f2
     _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
-    destroy .f1
+    destroy .one.f1
     _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     unset result
-} -result {|<Enter> NotifyInferior .|}
+} -result {|<Enter> NotifyInferior .one|}
 
 test event-9.17 {Successive destructions (pointer window + parent), separate crossing events} -setup {
     # Tests correctness of overwriting the dead window struct in
     # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
-    wm withdraw .
-    create_and_pack_frames
-    wm deiconify .
-    tkwait visibility .f1.f2
+    setup_win_mousepointer .one
+    wm withdraw .one
+    create_and_pack_frames .one
+    wm deiconify .one
+    tkwait visibility .one.f1.f2
     _pause 200
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
-    destroy .f1.f2
+    destroy .one.f1.f2
     _pause 200; # service crossing events
-    destroy .f1
+    destroy .one.f1
     _pause 200; # service crossing events
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     unset result
-} -result {|<Enter> NotifyInferior .f1|<Enter> NotifyInferior .|}
+} -result {|<Enter> NotifyInferior .one.f1|<Enter> NotifyInferior .one|}
 
 test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
+    setup_win_mousepointer .one
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
@@ -1172,15 +1181,17 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     set result "|"
 } -body {
     destroy .two
-    waitForWindowEvent . <Enter>
+    waitForWindowEvent .one <Enter>
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     unset result
-} -result {|<Enter> NotifyNonlinear .|}
+} -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
+    setup_win_mousepointer .one
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
@@ -1207,12 +1218,13 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .two
-    waitForWindowEvent . <Enter>
+    destroy .one
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -setup {
-    wm withdraw .
+    setup_win_mousepointer .one; # ensure the mouse is where we want it to be (the .one toplevel is not itself used in this test)
+    wm withdraw .one
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
@@ -1229,21 +1241,21 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     unset result
 } -result {|}
 
 # cleanup
-pack propagate . 1
 update
 unset -nocomplain keypress_lookup
-unset -nocomplain pointerWin
-rename create_and_pack_frames {}
 rename _init_keypress_lookup {}
 rename _keypress_lookup {}
 rename _keypress {}
 rename _pause {}
 rename _text_ind_to_x_y {}
 rename _get_selection {}
+rename create_and_pack_frames {}
+rename setup_win_mousepointer {}
 
 cleanupTests
 return
