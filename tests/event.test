@@ -916,7 +916,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
-#
 # Note regarding "waitForWindowEvent"
 #
 # This proc is intended mainly to overcome latency of windowing system
@@ -930,7 +929,6 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
 # always a gamble how much waiting time is enough on an end user's system.
 # It also leads to long fixed waiting times in order to be on the safe side.
 #
-
 # waitForWindowEvent --
 #
 # Wait until a specific window event has been serviced.
@@ -962,7 +960,6 @@ proc waitForWindowEvent {w event {timeout 1000}} {
 	puts "waiting for $event event on $w timed out (> $timeout ms)"
     }
 }
-
 # waitForWindowEvent.signal --
 #
 #	Helper proc that records the triggering of a window event.
@@ -981,6 +978,7 @@ proc create_and_pack_frames {} {
 # One time positioning of the root window and the mouse pointer used for all
 # tests. The user should not touch the mouse after this proc has been
 # executed.
+# The so-called "pointer window" is the window containing the mouse pointer.
 pack propagate . 0
 wm geometry . 200x200+100+100
 _pause 200; # service remaining screen drawing events (e.g. <Expose>)
@@ -992,7 +990,7 @@ if {$pointerWin ne "."} {
     controlPointerWarpTiming
 }
 
-test event-9.11 {pw container = parent} -setup {
+test event-9.11 {pointer window container = parent} -setup {
     wm withdraw .
     create_and_pack_frames
     wm deiconify .
@@ -1013,7 +1011,7 @@ test event-9.11 {pw container = parent} -setup {
     unset result
 } -result {|<Enter> NotifyInferior .f1|}
 
-test event-9.12 {pw container != parent} -setup {
+test event-9.12 {pointer window container != parent} -setup {
     wm withdraw .
     create_and_pack_frames
     pack propagate .f1.f2 0
@@ -1036,11 +1034,9 @@ test event-9.12 {pw container != parent} -setup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|}
 
-#
 # This test corresponds to tests event-9.1 and event-9.2,
 # but it additionally tests for the correct detail field of the event.
-#
-test event-9.13 {pw is a toplevel, toplevel destination} -setup {
+test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     wm withdraw .
     toplevel .two
     wm geometry .two 200x200+150+150
@@ -1060,7 +1056,7 @@ test event-9.13 {pw is a toplevel, toplevel destination} -setup {
     unset result
 } -result {|<Enter> NotifyNonlinear .|}
 
-test event-9.14 {pw is a toplevel, tk internal destination} -setup {
+test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     wm withdraw .
     create_and_pack_frames
     toplevel .two
@@ -1083,7 +1079,7 @@ test event-9.14 {pw is a toplevel, tk internal destination} -setup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .|<Enter> NotifyNonlinearVirtual .f1|<Enter> NotifyNonlinear .f1.f2|}
 
-test event-9.15 {pw is toplevel, destination is screen root} -setup {
+test event-9.15 {pointer window is a toplevel, destination is screen root} -setup {
     toplevel .two
     wm geometry .two 200x200+150+150
     wm deiconify .two
@@ -1095,7 +1091,6 @@ test event-9.15 {pw is toplevel, destination is screen root} -setup {
     set result "|"
 } -body {
     destroy .two
-    #
     # On x11, screen drawing events that correspond to the destruction of
     # toplevel .two may be late to the extent that window events belonging
     # to this test are being serviced in the next test, thus compromising
@@ -1107,7 +1102,6 @@ test event-9.15 {pw is toplevel, destination is screen root} -setup {
     # the setup section of this test. It acts merely as a receiver for
     # window events that belong to this test, so that we can exert control
     # by waiting for them being serviced in this test.
-    #
     if {[tk windowingsystem] eq "x11"} {
 	# await at least one notification from the windowing system
 	tkwait visibility .
@@ -1122,7 +1116,7 @@ test event-9.15 {pw is toplevel, destination is screen root} -setup {
     waitForWindowEvent . <Enter>
 } -result {|}
 
-test event-9.16 {Successive destructions (pw + parent), single generation of crossing events} -setup {
+test event-9.16 {Successive destructions (pointer window + parent), single generation of crossing events} -setup {
     # Tests correctness of overwriting the dead window struct in
     # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
     wm withdraw .
@@ -1143,7 +1137,7 @@ test event-9.16 {Successive destructions (pw + parent), single generation of cro
     unset result
 } -result {|<Enter> NotifyInferior .|}
 
-test event-9.17 {Successive destructions (pw + parent), separate crossing events} -setup {
+test event-9.17 {Successive destructions (pointer window + parent), separate crossing events} -setup {
     # Tests correctness of overwriting the dead window struct in
     # TkPointerDeadWindow() and subsequent reading in GenerateEnterLeave().
     wm withdraw .
@@ -1166,7 +1160,7 @@ test event-9.17 {Successive destructions (pw + parent), separate crossing events
     unset result
 } -result {|<Enter> NotifyInferior .f1|<Enter> NotifyInferior .|}
 
-test event-9.18 {Successive destructions (pw + ancestors including its toplevel), destination is non-root toplevel} -setup {
+test event-9.18 {Successive destructions (pointer window + ancestors including its toplevel), destination is non-root toplevel} -setup {
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
@@ -1189,7 +1183,7 @@ test event-9.18 {Successive destructions (pw + ancestors including its toplevel)
     unset result
 } -result {|<Enter> NotifyNonlinear .|}
 
-test event-9.19 {Successive destructions (pw + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
+test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
@@ -1223,7 +1217,7 @@ test event-9.19 {Successive destructions (pw + ancestors including its toplevel)
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
-test event-9.20 {Successive destructions (pw + ancestors including its toplevel), destination is screen root} -setup {
+test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -setup {
     wm withdraw .
     toplevel .two
     pack propagate .two 0
