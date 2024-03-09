@@ -1084,7 +1084,7 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.15 {pointer window is a toplevel, destination is screen root} -setup {
-    setup_win_mousepointer .one
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     toplevel .two
     wm geometry .two 200x200+150+150
     wm deiconify .two
@@ -1176,7 +1176,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
 } -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
-    setup_win_mousepointer .one
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
@@ -1208,7 +1208,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
 test event-9.20 {Successive destructions (pointer window + ancestors including its toplevel), destination is screen root} -setup {
-    setup_win_mousepointer .one; # ensure the mouse is where we want it to be (the .one toplevel is not itself used in this test)
+    setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
     wm withdraw .one
     toplevel .two
     pack propagate .two 0
