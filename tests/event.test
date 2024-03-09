@@ -916,36 +916,21 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     }
 } -result {.top1}
 
-# Note regarding "waitForWindowEvent"
-#
-# This proc is intended mainly to overcome latency of windowing system
+proc waitForWindowEvent {w event {timeout 1000}} {
+# This proc is intended to overcome latency of windowing system
 # notifications when toplevel windows are involved. These latencies vary
 # considerably with the window manager in use, with the system load,
 # with configured scheduling priorities for processes, etc ...
-#
 # Waiting for the corresponding window events evades the trouble that is
 # associated with the alternative: waiting or halting the Tk process for a
 # fixed amount of time (using "after ms"). With the latter strategy it's
 # always a gamble how much waiting time is enough on an end user's system.
 # It also leads to long fixed waiting times in order to be on the safe side.
-#
-# waitForWindowEvent --
-#
-# Wait until a specific window event has been serviced.
-#
-# Arguments:
-#
-# w       : the window
-# event   : the type of event
-# timeout : the timeout duration for waiting
-#
-proc waitForWindowEvent {w event {timeout 1000}} {
+
     variable _windowEvent
 
-    #
     # Use counter as a unique ID to prevent subsequent waits
     # from interfering with each other.
-    #
     set counter [incr _windowEvent(counter)]
     set _windowEvent($counter) 1
     set savedBinding [bind $w $event]
@@ -960,12 +945,9 @@ proc waitForWindowEvent {w event {timeout 1000}} {
 	puts "waiting for $event event on $w timed out (> $timeout ms)"
     }
 }
-# waitForWindowEvent.signal --
-#
-#	Helper proc that records the triggering of a window event.
-#
 proc waitForWindowEvent.signal {counter} {
-	incr ::_windowEvent($counter)
+# Helper proc that records the triggering of a window event.
+    incr ::_windowEvent($counter)
 }
 
 proc create_and_pack_frames {{w {}}} {
