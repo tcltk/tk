@@ -968,11 +968,11 @@ proc waitForWindowEvent.signal {counter} {
 	incr ::_windowEvent($counter)
 }
 
-proc create_and_pack_frames {} {
-    frame .f1 -bg blue -width 100 -height 100
-    pack propagate .f1 0
-    frame .f1.f2 -bg yellow -width 50 -height 50
-    pack .f1.f2 .f1 -side bottom -anchor se
+proc create_and_pack_frames {{w {}}} {
+    frame $w.f1 -bg blue -width 100 -height 100
+    pack propagate $w.f1 0
+    frame $w.f1.f2 -bg yellow -width 50 -height 50
+    pack $w.f1.f2 $w.f1 -side bottom -anchor se
 }
 
 # One time positioning of the root window and the mouse pointer used for all
@@ -1164,10 +1164,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
-    frame .two.f1 -bg blue -width 100 -height 100
-    pack propagate .two.f1 0
-    frame .two.f1.f2 -bg yellow -width 50 -height 50
-    pack .two.f1.f2 .two.f1 -side bottom -anchor se
+    create_and_pack_frames .two
     wm deiconify .two
     waitForWindowEvent .two.f1.f2 <Enter>
     bind all <Leave> {append result "<Leave> %d %W|"}
@@ -1187,10 +1184,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
-    frame .two.f1 -bg blue -width 100 -height 100
-    pack propagate .two.f1 0
-    frame .two.f1.f2 -bg yellow -width 50 -height 50
-    pack .two.f1.f2 .two.f1 -side bottom -anchor se
+    create_and_pack_frames .two
     wm deiconify .two
     waitForWindowEvent .two.f1.f2 <Enter>
     toplevel .three
@@ -1222,10 +1216,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     toplevel .two
     pack propagate .two 0
     wm geometry .two 200x200+100+100
-    frame .two.f1 -bg blue -width 100 -height 100
-    pack propagate .two.f1 0
-    frame .two.f1.f2 -bg yellow -width 50 -height 50
-    pack .two.f1.f2 .two.f1 -side bottom -anchor se
+    create_and_pack_frames .two
     wm deiconify .two
     waitForWindowEvent .two.f1.f2 <Enter>
     bind all <Leave> {append result "<Leave> %d %W|"}
