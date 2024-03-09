@@ -880,13 +880,12 @@ proc waitForWindowEvent {w event {timeout 1000}} {
     set _windowEvent($counter) 1
     set savedBinding [bind $w $event]
     bind $w $event [list +waitForWindowEvent.signal $counter]
-    set afterID [after $timeout [list set _windowEvent($counter) -1]]
+    after $timeout [list set _windowEvent($counter) -1]
     vwait _windowEvent($counter)
     set late [expr {$_windowEvent($counter) == -1}]
     bind $w $event $savedBinding
     unset _windowEvent($counter)
     if {$late} {
-	after cancel $afterID
 	puts "waiting for $event event on $w timed out (> $timeout ms)"
     }
 }
