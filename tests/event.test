@@ -1096,21 +1096,6 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     set result "|"
 } -body {
     destroy .two
-    # On x11, screen drawing events that correspond to the destruction of
-    # toplevel .two may be late to the extent that window events belonging
-    # to this test are being serviced in the next test, thus compromising
-    # the result of the next test.
-    #
-    # Preventing that events carry over from this test to the next is not very
-    # well possible if there isn't any window left/mapped to receive window
-    # events that we can wait for. That's why the .one window remains mapped in
-    # the setup section of this test. It acts merely as a receiver for
-    # window events that belong to this test, so that we can exert control
-    # by waiting for them being serviced in this test.
-    if {[tk windowingsystem] eq "x11"} {
-	# await at least one notification from the windowing system
-	tkwait visibility .one
-    }
     _pause 200; # ensure servicing of all scheduled events (only <Expose> events expected)
     set result
 } -cleanup {
