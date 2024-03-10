@@ -137,8 +137,8 @@ GenerateEnterLeave(
 
     if (tsdPtr->pwIsDead) {
 	XEvent event;
-	TkWindow * deadWinPtr = &tsdPtr->deadWin;
-	TkWindow * targetPtr = deadWinPtr->parentPtr;
+	TkWindow *deadWinPtr = &tsdPtr->deadWin;
+	TkWindow *targetPtr = deadWinPtr->parentPtr;
 
 	if (targetPtr && (targetPtr->window != None)) {
 
@@ -214,7 +214,6 @@ GenerateEnterLeave(
 		crossed = 1;
 	    }
 	}
-
 	tsdPtr->lastWinPtr = winPtr;
     }
 
@@ -521,7 +520,7 @@ TkPointerDeadWindow(
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (winPtr == tsdPtr->lastWinPtr) {
-	TkWindow * deadWinPtr = &tsdPtr->deadWin;
+	TkWindow *deadWinPtr = &tsdPtr->deadWin;
 	tsdPtr->pwIsDead = 1;
 
 	/*
