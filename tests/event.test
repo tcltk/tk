@@ -1110,10 +1110,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     toplevel .three
     pack propagate .three 0
     wm geometry .three 300x300+110+110
-    frame .three.f1 -bg purple -width 200 -height 200
-    pack propagate .three.f1 0
-    frame .three.f1.f2 -bg grey -width 100 -height 100
-    pack .three.f1.f2 .three.f1 -side bottom -anchor se
+    create_and_pack_frames .three
     wm deiconify .three
     waitForWindowEvent .three.f1.f2 <Enter>
     bind all <Leave> {append result "<Leave> %d %W|"}
