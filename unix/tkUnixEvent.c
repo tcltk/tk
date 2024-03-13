@@ -31,10 +31,10 @@ static Tcl_ThreadDataKey dataKey;
  * Prototypes for functions that are referenced only in this file:
  */
 
-static void		DisplayCheckProc(ClientData clientData, int flags);
-static void		DisplayExitHandler(ClientData clientData);
-static void		DisplayFileProc(ClientData clientData, int flags);
-static void		DisplaySetupProc(ClientData clientData, int flags);
+static void		DisplayCheckProc(void *clientData, int flags);
+static void		DisplayExitHandler(void *clientData);
+static void		DisplayFileProc(void *clientData, int flags);
+static void		DisplaySetupProc(void *clientData, int flags);
 static void		TransferXEventsToTcl(Display *display);
 #ifdef TK_USE_INPUT_METHODS
 static void		InstantiateIMCallback(Display *, XPointer client_data, XPointer call_data);
@@ -91,7 +91,7 @@ TkCreateXEventSource(void)
 
 static void
 DisplayExitHandler(
-    ClientData dummy)	/* Not used. */
+    void *dummy)	/* Not used. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -299,7 +299,7 @@ TkClipCleanup(
 
 static void
 DisplaySetupProc(
-    ClientData dummy,	/* Not used. */
+    void *dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
@@ -434,7 +434,7 @@ TransferXEventsToTcl(
 
 static void
 DisplayCheckProc(
-    ClientData dummy,	/* Not used. */
+    void *dummy,	/* Not used. */
     int flags)
 {
     TkDisplay *dispPtr;
@@ -470,7 +470,7 @@ DisplayCheckProc(
 
 static void
 DisplayFileProc(
-    ClientData clientData,	/* The display pointer. */
+    void *clientData,	/* The display pointer. */
     int flags)			/* Should be TCL_READABLE. */
 {
     TkDisplay *dispPtr = (TkDisplay *)clientData;

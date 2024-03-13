@@ -104,8 +104,7 @@ MODULE_SCOPE int TtkWidgetStyleCommand(
 
 /* Widget constructor:
  */
-MODULE_SCOPE int TtkWidgetConstructorObjCmd(
-	void *, Tcl_Interp*, Tcl_Size, Tcl_Obj*const[]);
+MODULE_SCOPE Tcl_ObjCmdProc2 TtkWidgetConstructorObjCmd;
 
 #if TCL_MAJOR_VERSION > 8
 #define RegisterWidget(interp, name, specPtr) \

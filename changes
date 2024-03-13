@@ -8193,3 +8193,131 @@ in this changeset (new minor version) rather than bug fixes:
 	(xolodho,vogel)
 
 - Released 8.6.13, Nov 22, 2022 - https://core.tcl-lang.org/tk/ for details
+
+2022-12-12 Windows binaries licence metadata changed to  University of
+        California to match licence (nadkarni)
+
+2022-12-12 (bug)[6ee162] crash in [ttk::style configure] (vogel)
+
+2022-12-14 Permit [tk scaling] to return scale factor in safe interp (nijtmans)
+
+2023-01-05 Correct rounding of [nsFont pointSize] (nijtmans)
+
+2023-01-08 (bug)[cee095] X error handler management in Tk_MeasureChars (kechel)
+
+2023-01-18 macOS 13 SDK deprecates sprintf() (vogel)
+
+2023-02-12 (bug)[170551] crash in [tk busy forget]
+
+2023-02-27 (bug)[6cd476] crash using [tk busy hold] (vogel)
+
+2023-03-04 (bug)[93fe36] Fix <<MenuSelect>> with -tearoff (mcdonald)
+
+2023-03-30 (bug)[15c685] menu clones, tests menu-20.1[2-6] (bron)
+
+2023-04-10 (bug)[f4d9d7] canvas items ignored -disabledwidth (chavez,vogel)
+
+2023-04-30 (bug)[a9cf21] Text selection omits first character (moosems)
+
+2023-05-03 (bug)[310c74] No theme change attempts after Tk finalize (chavez)
+
+2023-05-13 (bug)[3414695] Dialogs robust against parent destruction (vogel)
+
+2023-05-23 (bug)[ab9581] Guard against use-after-free crashes (chavez)
+
+2023-05-23 (bug)[f40d9d] Aqua: FourCC bitmaps (chavez)
+
+2023-05-25 (bug)[7447ed] [tk_chooseColor] handle grab fail (leunissen)
+
+2023-05-31 (bug)[4666f2] Protect aganst NULL windows (nab,vogel)
+
+2023-06-06 (bug)[a418aa] bogus @x,y menu entry indices, menu-22.[6-9] (vogel)
+
+2023-06-11 (bug)[578441] memleak in TkScrollWindow (chavez)
+
+2023-06-13 (bug)[228476] link wish to correct libtk (root)
+
+2023-07-09 (bug)[a526d4] Aqua: memleak in TkpOpenDisplay (chavez)
+
+2023-07-10 (bug)[fa4694,0502c1] Aqua: memleaks in TkpConfigureMenuEntry (chavez)
+
+2023-07-17 (bug)[f9eddb] region clip & copy better OS implementations (chavez)
+
+2023-07-18 (bug)[2cb602] Aqua: memleak in TkCreateRegion (chavez)
+
+2023-07-19 (bug)[edb769] Aqua: memleak in XGetImage (chavez)
+
+2023-07-19 (bug)[c35c34] memleak in Initialize (chavez)
+
+2023-07-20 (bug)[deca94] memleak in TkpMakeMenuWindow (chavez)
+
+2023-07-23 (bug)[f24725] crash using Aqua pre-defined bitmap names (chavez)
+
+2023-07-24 (feature) better solve Y2038 on most systems (chavez,nijtmans)
+
+2023-07-26 (bug)[ed9b28] Aqua: memleak in GetWidgetDemoPath (chavez)
+
+2023-08-02 (bug)[2a3222] navigation exposed clues about masked entry
+
+2023-08-04 Update [trace] subcommands for Tcl 9 compat
+
+2023-08-29 (bug)[e42eef] memory issues interfacing with XIM (goodward)
+
+2023-08-30 (bug)[ef5d3e] Aqua: crash after first toplevel destroyed (chavez)
+
+2023-09-01 (bug)[6cc800] Harmonize number parsing with Tcl (nijtmans)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2023-09-03 (bug)[4468ed] Iconlist no fg text color from options db (chavez)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2023-09-04 (bug)[d2396a] error reporting from [send -option] (emanuele,nijtmans)
+
+2023-10-11 (bug)[9675dd] wrong free() call from Tk_ConfigureValue (nijtmans)
+
+2023-10 (bug) Many revisions to satisfy -fsanitize=function (chavez)
+	[d96974,04d3e5,84fe25,bb8041]
+
+2023-10-16 (bug)[22eefb] unixWm-45.[24] (vogel)
+
+2023-10-18 (bug)[10b38a] Silence macOS 14 warning about secure restorable state
+
+2023-10-28 (bug)[198376] move notebook tabs to position s (rozenberg,vogel)
+
+2023-11-06 (bug)[499f8e] eliminate undefined realloc() calls (chavez)
+
+2023-11-07 (bug)[09a11f] crash menu-40.[12] (chavez,culler)
+
+2023-11-13 (bug)[eedd2e] ttk::notebook looks bad when tabs are positioned on
+	edges other than the top (nemethi,werner)
+
+2023-11-15 (bug)[61550f] font-44.1 with Xft (vogel)
+
+2023-11-22 (bug)[22a4ad] Aqua: CoreGraphics manages memory for pixmaps (chavez)
+
+2023-11-28 (bug)[900f23] PNG encoder missed 0xFF entry (obermeier)
+
+2023-12-03 Aqua: Update handling of Apple FourCC creator codes (chavez)
+
+2023-12-03 (bug)[fe9423] Aqua: XPutImage() swap red and blue (chavez)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2023-12-09 (bug)[1d8b71] X: Photo color drawing for 32-bit visuals (warnholz)
+
+2023-12-12 Update to latest X11 headers
+
+2023-12-22 (bug)[9c5742] Fix handling of abbreviated -relief args (nijtmans)
+
+2024-01-03 (bug)[52df66] nonXft: [font measure] results inconsistent (vogel)
+
+2024-01-05 (bug)[a9e637] treeview display partial final line (bron)
+
+2024-01-09 (bug)[b7abf0] treeview destruction from O(N^2) to O(N) (emiliano)
+
+2024-01-12 (bug)[737abf] text image insertion from O(N^2) to O(N)
+
+2024-01-27 (bug)[8da7af] font caching performance issues (thraen,vogel)
+
+2024-02-08 (bug)[57b821] see test textIndex-22.16 (vogel)
+
+- Released 8.6.14, Feb 28, 2024 - https://core.tcl-lang.org/tk/ for details

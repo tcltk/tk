@@ -291,15 +291,22 @@ test spinbox-11.2 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
     pack [ttk::spinbox .s]
     update
+    set res {}
 } -body {
     .s insert end "A sample text"
     .s icursor end
     event generate .s <<PrevWord>>  ; # shall move insert to index 9
     .s delete insert end
-    .s get
+    lappend res [.s get]
+    .s delete 0 end
+    .s insert end "A sample text"
+    .s icursor 2
+    event generate .s <<NextWord>>  ; # shall move insert to index 9
+    .s delete 0 insert
+    lappend res [.s get]
 } -cleanup {
     destroy .s
-} -result {A sample }
+} -result {{A sample } text}
 
 
 # nostomp: NB intentional difference between ttk::spinbox and tk::spinbox;
