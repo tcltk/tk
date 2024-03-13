@@ -1556,7 +1556,7 @@ TkMacOSXUseAntialiasedText(
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
-		(char *) &antialiasedTextEnabled,
+		&antialiasedTextEnabled,
 		TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}

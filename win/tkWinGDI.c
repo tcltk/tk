@@ -3648,17 +3648,17 @@ static int PrintSelectPrinter(
         *varlink2 = varlink1;
         WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
 
-        Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
+        Tcl_LinkVar(interp, "::tk::print::printer_name", varlink2,
             TCL_LINK_STRING | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::copies", (char*)&copies,
+        Tcl_LinkVar(interp, "::tk::print::copies", &copies,
             TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::dpi_x", (char*)&dpi_x,
+        Tcl_LinkVar(interp, "::tk::print::dpi_x", &dpi_x,
             TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::dpi_y", (char*)&dpi_y,
+        Tcl_LinkVar(interp, "::tk::print::dpi_y", &dpi_y,
             TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::paper_width", (char*)&paper_width,
+        Tcl_LinkVar(interp, "::tk::print::paper_width", &paper_width,
             TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::paper_height", (char*)&paper_height,
+        Tcl_LinkVar(interp, "::tk::print::paper_height", &paper_height,
             TCL_LINK_INT | TCL_LINK_READ_ONLY);
     }
 
