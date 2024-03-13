@@ -85,24 +85,13 @@ static void		GetDisplaySize(LONG *width, LONG *height);
 static int		GdiWordToWeight(const char *str);
 static int		GdiParseFontWords(Tcl_Interp *interp, LOGFONTW *lf,
 			    const char *str[], int numargs);
-static int		PrintSelectPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		PrintOpenPrinter(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		PrintClosePrinter(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		PrintOpenDoc(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		PrintCloseDoc(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		PrintOpenPage(ClientData clientData, Tcl_Interp *interp,
-			    int objc, Tcl_Obj *const objv[]);
-static int		PrintClosePage(ClientData clientData,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc PrintSelectPrinter;
+static Tcl_ObjCmdProc PrintOpenPrinter;
+static Tcl_ObjCmdProc PrintClosePrinter;
+static Tcl_ObjCmdProc PrintOpenDoc;
+static Tcl_ObjCmdProc PrintCloseDoc;
+static Tcl_ObjCmdProc PrintOpenPage;
+static Tcl_ObjCmdProc PrintClosePage;
 
 /*
  * Global state.
@@ -481,7 +470,7 @@ static int GdiPhoto(
      * recoverable.
      */
 
-    pbuf = (char *) Tcl_AttemptAlloc(sll * ny * sizeof(char));
+    pbuf = (char *)attemptckalloc(sll * ny * sizeof(char));
     if (pbuf == 0) { /* Memory allocation failure. */
 	Tcl_AppendResult(interp,
 		"::tk::print::_gdi photo failed--out of memory", NULL);
@@ -546,7 +535,7 @@ static int GdiPhoto(
 	SetBrushOrgEx(dst, pt.x, pt.y, &pt);
     }
 
-    Tcl_Free(pbuf);
+    ckfree(pbuf);
 
     if (retval == TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -582,7 +571,7 @@ static int Bezierize(
     int nbpoints = 0;
     POINT* bpoints;
 
-    inPointList = (double *) Tcl_AttemptAlloc(2 * sizeof(double) * npoly);
+    inPointList = (double *)attemptckalloc(2 * sizeof(double) * npoly);
     if (inPointList == 0) {
 	/* TODO: unreachable */
         return nbpoints; /* 0. */
@@ -594,29 +583,29 @@ static int Bezierize(
     }
 
     nbpoints = 1 + npoly * nStep; /* this is the upper limit. */
-    outPointList = (double *) Tcl_AttemptAlloc(2 * sizeof(double) * nbpoints);
+    outPointList = (double *)attemptckalloc(2 * sizeof(double) * nbpoints);
     if (outPointList == 0) {
 	/* TODO: unreachable */
-        Tcl_Free((void *) inPointList);
+        ckfree((char *)inPointList);
         return 0;
     }
 
     nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep,
 	    NULL, outPointList);
 
-    Tcl_Free((void *) inPointList);
-    bpoints = (POINT *) Tcl_AttemptAlloc(sizeof(POINT)*nbpoints);
+    ckfree((char *)inPointList);
+    bpoints = (POINT *)attemptckalloc(sizeof(POINT)*nbpoints);
     if (bpoints == 0) {
 	/* TODO: unreachable */
-        Tcl_Free((void *) outPointList);
+        ckfree((char *)outPointList);
         return 0;
     }
 
     for (n=0; n<nbpoints; n++) {
-        bpoints[n].x = (long) outPointList[2*n];
-        bpoints[n].y = (long) outPointList[2*n + 1];
+        bpoints[n].x = (long)outPointList[2*n];
+        bpoints[n].y = (long)outPointList[2*n + 1];
     }
-    Tcl_Free((void *) outPointList);
+    ckfree((char *)outPointList);
     *bpointptr = *bpoints;
     return nbpoints;
 }
@@ -681,7 +670,7 @@ static int GdiLine(
 
     hDC = printDC;
 
-    polypoints = (POINT *) Tcl_AttemptAlloc((argc - 1) * sizeof(POINT));
+    polypoints = (POINT *)attemptckalloc((argc - 1) * sizeof(POINT));
     if (polypoints == 0) {
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", NULL);
 	return TCL_ERROR;
@@ -712,7 +701,7 @@ static int GdiLine(
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
-		Tcl_Free((void *)polypoints);
+		ckfree((char *)polypoints);
 		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }
@@ -826,7 +815,7 @@ static int GdiLine(
 	    Polyline(hDC, polypoints, npoly); /* Out of memory? Just draw a regular line. */
 	}
 	if (bpoints != 0) {
-	    Tcl_Free((void *)bpoints);
+	    ckfree((char *)bpoints);
 	}
     } else {
 	Polyline(hDC, polypoints, npoly);
@@ -918,7 +907,7 @@ static int GdiLine(
 	GdiFreeBrush(interp, hDC, hBrush);
     }
 
-    Tcl_Free((void *)polypoints);
+    ckfree((char *)polypoints);
     return TCL_OK;
 }
 
@@ -1091,7 +1080,7 @@ static int GdiPolygon(
 
     hDC = printDC;
 
-    polypoints = (POINT *) Tcl_AttemptAlloc((argc - 1) * sizeof(POINT));
+    polypoints = (POINT *)attemptckalloc((argc - 1) * sizeof(POINT));
     if (polypoints == 0) {
 	/* TODO: unreachable */
 	Tcl_AppendResult(interp, "Out of memory in GdiLine", NULL);
@@ -1122,7 +1111,7 @@ static int GdiPolygon(
 		objv += 2;
 	    } else {
 		/* Only one number... Assume a usage error. */
-		Tcl_Free((void *) polypoints);
+		ckfree((char *)polypoints);
 		Tcl_AppendResult(interp, usage_message, NULL);
 		return TCL_ERROR;
 	    }
@@ -1198,7 +1187,7 @@ static int GdiPolygon(
 	    Polygon(hDC, polypoints, npoly);
 	}
 	if (bpoints != 0) {
-	    Tcl_Free((void *)bpoints);
+	    ckfree((char *)bpoints);
 	}
     } else {
 	Polygon(hDC, polypoints, npoly);
@@ -1213,7 +1202,7 @@ static int GdiPolygon(
 	SelectObject(hDC, oldobj);
     }
 
-    Tcl_Free((void *)polypoints);
+    ckfree((char *)polypoints);
     return TCL_OK;
 }
 
@@ -2642,7 +2631,7 @@ static int GdiMakeLogFont(
 	GdiParseFontWords(interp, lf, list+2, count-2);
     }
 
-    Tcl_Free((char *)list);
+    ckfree(list);
     return 1;
 }
 
@@ -2706,7 +2695,7 @@ static int GdiMakePen(
     if (dashstyle != 0 && dashstyledata != 0) {
 	const char *cp;
 	size_t i;
-	char *dup = (char *) Tcl_Alloc(strlen(dashstyledata) + 1);
+	char *dup = (char *) ckalloc(strlen(dashstyledata) + 1);
 	strcpy(dup, dashstyledata);
 	/* DEBUG. */
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -2749,7 +2738,7 @@ static int GdiMakePen(
 	    dashstyle = 0;
 	}
 	if (dup) {
-	    Tcl_Free(dup);
+	    ckfree(dup);
 	}
     }
 
@@ -3654,8 +3643,8 @@ static int PrintSelectPrinter(
      * script level.
      */
     if (localPrinterName != NULL) {
-        char* varlink1 = (char*)Tcl_Alloc(100 * sizeof(char));
-        char** varlink2 = (char**)Tcl_Alloc(sizeof(char*));
+        char* varlink1 = (char*)ckalloc(100 * sizeof(char));
+        char** varlink2 = (char**)ckalloc(sizeof(char*));
         *varlink2 = varlink1;
         WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
 

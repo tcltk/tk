@@ -1005,13 +1005,13 @@ typedef struct {
  * commands and optionally to create sub-ensembles.
  */
 
+#if (TCL_MAJOR_VERSION < 9) && !defined(Tcl_ObjCmdProc2)
+#define Tcl_ObjCmdProc2 Tcl_ObjCmdProc
+#endif
+
 typedef struct TkEnsemble {
     const char *name;
-#if TCL_MAJOR_VERSION > 8
     Tcl_ObjCmdProc2 *proc;
-#else
-    Tcl_ObjCmdProc *proc;
-#endif
     const struct TkEnsemble *subensemble;
 } TkEnsemble;
 
@@ -1222,11 +1222,7 @@ MODULE_SCOPE void	Ttk_TkDestroyedHandler(Tcl_Interp *interp);
 MODULE_SCOPE Tcl_ObjCmdProc Tk_BellObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_BindObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_BindtagsObjCmd;
-#if TCL_MAJOR_VERSION > 8
-    MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
-#else
-    MODULE_SCOPE Tcl_ObjCmdProc Tk_BusyObjCmd;
-#endif
+MODULE_SCOPE Tcl_ObjCmdProc2 Tk_BusyObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_ButtonObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_CanvasObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc Tk_CheckbuttonObjCmd;

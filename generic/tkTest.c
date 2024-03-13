@@ -155,67 +155,35 @@ typedef struct TrivialCommandHeader {
  * Forward declarations for functions defined later in this file:
  */
 
-static int		ImageObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestbitmapObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestborderObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestcolorObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestcursorObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestdeleteappsObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestfontObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
-static int		TestmakeexistObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc ImageObjCmd;
+static Tcl_ObjCmdProc TestbitmapObjCmd;
+static Tcl_ObjCmdProc TestborderObjCmd;
+static Tcl_ObjCmdProc TestcolorObjCmd;
+static Tcl_ObjCmdProc TestcursorObjCmd;
+static Tcl_ObjCmdProc TestdeleteappsObjCmd;
+static Tcl_ObjCmdProc TestfontObjCmd;
+static Tcl_ObjCmdProc TestmakeexistObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestmenubarObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj *const objv[]);
+static Tcl_ObjCmdProc TestmenubarObjCmd;
 #endif
 #if defined(_WIN32)
-static int		TestmetricsObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestmetricsObjCmd;
 #endif
-static int		TestobjconfigObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestobjconfigObjCmd;
 static Tk_CustomOptionSetProc CustomOptionSet;
 static Tk_CustomOptionGetProc CustomOptionGet;
 static Tk_CustomOptionRestoreProc CustomOptionRestore;
 static Tk_CustomOptionFreeProc CustomOptionFree;
-static int		TestpropObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
-static int		TestprintfObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestpropObjCmd;
+static Tcl_ObjCmdProc TestprintfObjCmd;
 #if !(defined(_WIN32) || defined(MAC_OSX_TK) || defined(__CYGWIN__))
-static int		TestwrapperObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestwrapperObjCmd;
 #endif
 static void		TrivialCmdDeletedProc(void *clientData);
-static int		TrivialConfigObjCmd(void *dummy,
-			    Tcl_Interp *interp, int objc,
-			    Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TrivialConfigObjCmd;
 static void		TrivialEventProc(void *clientData,
 			    XEvent *eventPtr);
-static int              TestPhotoStringMatchCmd(void *dummy,
-                            Tcl_Interp *interp, int objc,
-                            Tcl_Obj * const objv[]);
+static Tcl_ObjCmdProc TestPhotoStringMatchCmd;
 
 /*
  *----------------------------------------------------------------------

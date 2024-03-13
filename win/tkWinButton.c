@@ -113,7 +113,7 @@ static Window		CreateProc(Tk_Window tkwin, Window parent,
 			    void *instanceData);
 static void		InitBoxes(Tk_Window tkwin);
 static void		ColorToStr(COLORREF color, char *colorStr);
-static void		ImageChanged(ClientData clientData,
+static void		ImageChanged(void *clientData,
 			    int x, int y, int width, int height,
 			    int imageWidth, int imageHeight);
 static void		TkpDrawIndicator(TkButton *butPtr, Drawable d,
@@ -333,7 +333,7 @@ ColorToStr(
 
 static void
 ImageChanged(
-    ClientData clientData,
+    void *clientData,
     int x, int y, int width, int height,
     int imageWidth, int imageHeight)
 {

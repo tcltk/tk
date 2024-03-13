@@ -958,9 +958,9 @@ Tk_ConfigureValue(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((char *) result);
+	    ckfree((char *)result);
 	} else {
-	    freeProc((char *) result);
+	    freeProc((char *)result);
 	}
     }
     return TCL_OK;

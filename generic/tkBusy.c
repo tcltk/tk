@@ -43,7 +43,7 @@ static void		BusyGeometryProc(void *clientData,
 static void		BusyCustodyProc(void *clientData,
 			    Tk_Window tkwin);
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
 static Tcl_FreeProc	DestroyBusy;
 static void		DoConfigureNotify(Tk_FakeWin *winPtr);
@@ -53,7 +53,7 @@ static Busy *		GetBusy(Tcl_Interp *interp,
 			    Tcl_Obj *const windowObj);
 static int		HoldBusy(Tcl_HashTable *busyTablePtr,
 			    Tcl_Interp *interp, Tcl_Obj *const windowObj,
-			    int configObjc, Tcl_Obj *const configObjv[]);
+			    Tcl_Size configObjc, Tcl_Obj *const configObjv[]);
 static void		MakeTransparentWindowExist(Tk_Window tkwin,
 			    Window parent);
 static inline Tk_Window	NextChild(Tk_Window tkwin);
@@ -640,7 +640,7 @@ static int
 ConfigureBusy(
     Tcl_Interp *interp,
     Busy *busyPtr,
-    int objc,
+    Tcl_Size objc,
     Tcl_Obj *const objv[])
 {
     Tk_Cursor oldCursor = busyPtr->cursor;
@@ -731,7 +731,7 @@ HoldBusy(
     Tcl_HashTable *busyTablePtr,/* Busy hash table. */
     Tcl_Interp *interp,		/* Interpreter to report errors to. */
     Tcl_Obj *const windowObj,	/* Window name. */
-    int configObjc,		/* Option pairs. */
+    Tcl_Size configObjc,		/* Option pairs. */
     Tcl_Obj *const configObjv[])
 {
     Tk_Window tkwin;

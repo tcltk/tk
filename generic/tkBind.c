@@ -734,7 +734,7 @@ static int		GetVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp, char *virtString);
 static int		HandleEventGenerate(Tcl_Interp *interp, Tk_Window main,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
@@ -2231,14 +2231,8 @@ Tk_BindEvent(
     curEvent = bindPtr->eventInfo + eventPtr->type;
 
     /*
-     * Ignore the event completely if it is an Enter, Leave, FocusIn, or
-     * FocusOut event with detail NotifyInferior. The reason for ignoring
-     * these events is that we don't want transitions between a window and its
-     * children to be visible to bindings on the parent: this would cause
-     * problems for mega-widgets, since the internal structure of a
-     * mega-widget isn't supposed to be visible to people watching the parent.
-     *
-     * Furthermore we have to compute current time, needed for "event generate".
+     * Compute current time needed for "event generate",
+     * and reset counters for Key and Button events.
      */
 
     switch (eventPtr->type) {
@@ -2247,15 +2241,6 @@ Tk_BindEvent(
 	if (eventPtr->xcrossing.time) {
 	    bindInfoPtr->lastCurrentTime = CurrentTimeInMilliSecs();
 	    bindInfoPtr->lastEventTime = eventPtr->xcrossing.time;
-	}
-	if (eventPtr->xcrossing.detail == NotifyInferior) {
-	    return;
-	}
-	break;
-    case FocusIn:
-    case FocusOut:
-	if (eventPtr->xfocus.detail == NotifyInferior) {
-	    return;
 	}
 	break;
     case KeyPress:
@@ -3896,7 +3881,7 @@ static int
 HandleEventGenerate(
     Tcl_Interp *interp,		/* Interp for errors return and name lookup. */
     Tk_Window mainWin,		/* Main window associated with interp. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     union { XEvent general; XVirtualEvent virt; } event;
@@ -3916,7 +3901,7 @@ HandleEventGenerate(
     unsigned count;
     unsigned flags;
     int number;
-    unsigned i;
+    Tcl_Size i;
 
     static const char *const fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
@@ -4026,7 +4011,7 @@ HandleEventGenerate(
     warp = 0;
     pos = TCL_QUEUE_TAIL;
 
-    for (i = 2; i < (unsigned) objc; i += 2) {
+    for (i = 2; i < objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
 #if defined(_MSC_VER)
         /* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
