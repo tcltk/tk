@@ -289,7 +289,7 @@ typedef struct DLine {
  * TOP_LINE -			Non-zero means that this was the top line in
  *				in the window the last time that the window
  *				was laid out. This is important because a line
- *				may be displayed differently if its at the top
+ *				may be displayed differently if it's at the top
  *				or bottom than if it's in the middle
  *				(e.g. beveled edges aren't displayed for
  *				middle lines if the adjacent line has a
@@ -784,13 +784,13 @@ GetStyle(
      * The variables below keep track of the highest-priority specification
      * that has occurred for each of the various fields of the StyleValues.
      */
-    int borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
-    int fgPrio, fontPrio, fgStipplePrio;
-    int underlinePrio, elidePrio, justifyPrio, offsetPrio;
-    int lMargin1Prio, lMargin2Prio, rMarginPrio;
-    int lMarginColorPrio, rMarginColorPrio;
-    int spacing1Prio, spacing2Prio, spacing3Prio;
-    int overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
+    Tcl_Size borderPrio, borderWidthPrio, reliefPrio, bgStipplePrio;
+    Tcl_Size fgPrio, fontPrio, fgStipplePrio;
+    Tcl_Size underlinePrio, elidePrio, justifyPrio, offsetPrio;
+    Tcl_Size lMargin1Prio, lMargin2Prio, rMarginPrio;
+    Tcl_Size lMarginColorPrio, rMarginColorPrio;
+    Tcl_Size spacing1Prio, spacing2Prio, spacing3Prio;
+    Tcl_Size overstrikePrio, tabPrio, tabStylePrio, wrapPrio;
 
     /*
      * Find out what tags are present for the character, then compute a
