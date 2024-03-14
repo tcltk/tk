@@ -92,7 +92,7 @@ startEndOfCmd(
     str = Tcl_GetStringFromObj(objv[1], &len);
     Tcl_UtfToChar16DString(str, len, &ds);
     len = Tcl_DStringLength(&ds)/2;
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    Tcl_Size ulen = TkGetCharLength(objv[1]);
     if (TkGetIntForIndex(objv[2], ulen-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
