@@ -76,8 +76,8 @@
 #endif
 
 #if (TCL_MAJOR_VERSION == 8) && (TCL_MINOR_VERSION < 7)
-# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int len, Tcl_DString *))Tcl_UniCharToUtfDString)
-# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int len, Tcl_DString *))Tcl_UtfToUniCharDString)
+# define Tcl_WCharToUtfDString ((char * (*)(const WCHAR *, int, Tcl_DString *))Tcl_UniCharToUtfDString)
+# define Tcl_UtfToWCharDString ((WCHAR * (*)(const char *, int, Tcl_DString *))Tcl_UtfToUniCharDString)
 # define Tcl_Char16ToUtfDString Tcl_UniCharToUtfDString
 # define Tcl_UtfToChar16DString Tcl_UtfToUniCharDString
 # define TCL_COMBINE		0
@@ -85,10 +85,14 @@
 
 /* Make available UTF-32 versions of the API, even though we compile with TCL_UTF_MAX=3 */
 #if TCL_MAJOR_VERSION > 8
+#   define TkUtfToUniChar (tclStubsPtr->tcl_UtfToUniChar) /* 646 */
+#   define TkUniCharToUtf (tclStubsPtr->tcl_UniCharToUtf) /* 324 (without TCL_COMBINE) */
 #   define TkNumUtfChars (tclStubsPtr->tcl_NumUtfChars) /* 669 */
 #   define TkGetCharLength (tclStubsPtr->tcl_GetCharLength) /* 670 */
 #   define TkUtfAtIndex (tclStubsPtr->tcl_UtfAtIndex) /* 671 */
 #else
+    MODULE_SCOPE Tcl_Size TkUtfToUniChar(const char *, int *);
+    MODULE_SCOPE Tcl_Size TkUniCharToUtf(int, char *);
 #   define TkNumUtfChars (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
 	    ((Tcl_Size (*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[669])) \
 	    : (tclStubsPtr->tcl_NumUtfChars) /* 312 */)
@@ -1392,15 +1396,6 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 
 #if !defined(__cplusplus) && !defined(c_plusplus)
 # define c_class class
-#endif
-
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX > (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
-#   define TkUtfToUniChar(src, ch) (size_t)(((int (*)(const char *, int *))Tcl_UtfToUniChar)(src, ch))
-#   define TkUniCharToUtf(ch, src) (size_t)(((int (*)(int, char *))Tcl_UniCharToUtf)(ch, src))
-#else
-    MODULE_SCOPE size_t TkUtfToUniChar(const char *, int *);
-    MODULE_SCOPE size_t TkUniCharToUtf(int, char *);
 #endif
 
 #if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
