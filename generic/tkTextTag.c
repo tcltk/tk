@@ -1812,7 +1812,7 @@ TkTextPickCurrent(
 	     *   The binding mechanism doesn't discard events with detail field
 	     *   NotifyInferior anymore. It would be best to base the detail
 	     *   field on the ancestry relationship between the old and new
-	     *   canvas items. For the time being, retain the choice from before
+	     *   tags. For the time being, retain the choice from before
 	     *   ticket #47d4f29159, which doesn't harm.
 	     */
 
