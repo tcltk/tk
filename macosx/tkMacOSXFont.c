@@ -460,7 +460,7 @@ startOfClusterObjCmd(
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    Tcl_Size ulen = TkGetCharLength(objv[1]);
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
     len = [S length];
     if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
@@ -517,7 +517,7 @@ endOfClusterObjCmd(
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
-    Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
+    Tcl_Size ulen = TkGetCharLength(objv[1]);
     S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
     len = [S length];
     if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
@@ -1066,8 +1066,8 @@ TkpMeasureCharsInContext(
 	    attributes:fontPtr->nsAttributes];
     typesetter = CTTypesetterCreateWithAttributedString(
 	    (CFAttributedStringRef)attributedString);
-    start = TclNumUtfChars(source, rangeStart);
-    len = TclNumUtfChars(source + rangeStart, rangeLength);
+    start = Tcl_NumUtfChars(source, rangeStart);
+    len = Tcl_NumUtfChars(source + rangeStart, rangeLength);
     if (start > 0) {
 	range.length = start;
 	line = CTTypesetterCreateLine(typesetter, range);
@@ -1168,7 +1168,7 @@ TkpMeasureCharsInContext(
     [attributedString release];
     [string release];
     length = ceil(width - offset);
-    fit = (TclUtfAtIndex(source, index) - source) - rangeStart;
+    fit = (Tcl_UtfAtIndex(source, index) - source) - rangeStart;
 done:
 #ifdef TK_MAC_DEBUG_FONTS
     TkMacOSXDbgMsg("measure: source=\"%s\" range=\"%.*s\" maxLength=%d "
@@ -1367,8 +1367,8 @@ TkpDrawAngledCharsInContext(
              -textX, -textY);
     }
     CGContextConcatCTM(context, t);
-    start = TclNumUtfChars(source, rangeStart);
-    length = TclNumUtfChars(source, rangeStart + rangeLength) - start;
+    start = Tcl_NumUtfChars(source, rangeStart);
+    length = Tcl_NumUtfChars(source, rangeStart + rangeLength) - start;
     line = CTTypesetterCreateLine(typesetter, CFRangeMake(start, length));
     if (start > 0) {
 

@@ -83,34 +83,19 @@
 # define TCL_COMBINE		0
 #endif
 
-#undef TclNumUtfChars
-#undef TclUtfAtIndex
-#undef Tcl_NumUtfChars
-#undef Tcl_GetCharLength
-#undef Tcl_UtfAtIndex
+/* Make available UTF-32 versions of the API, even though we compile with TCL_UTF_MAX=3 */
 #if TCL_MAJOR_VERSION > 8
-#   define TclNumUtfChars \
-	    (tclStubsPtr->tclNumUtfChars) /* 312 */
-#   define TclUtfAtIndex \
-	    (tclStubsPtr->tclUtfAtIndex) /* 325 */
-#   define Tcl_NumUtfChars \
-	    (tclStubsPtr->tcl_NumUtfChars) /* 669 */
-#   define Tcl_GetCharLength \
-	    (tclStubsPtr->tcl_GetCharLength) /* 670 */
-#   define Tcl_UtfAtIndex \
-	    (tclStubsPtr->tcl_UtfAtIndex) /* 671 */
+#   define TkNumUtfChars (tclStubsPtr->tcl_NumUtfChars) /* 669 */
+#   define TkGetCharLength (tclStubsPtr->tcl_GetCharLength) /* 670 */
+#   define TkUtfAtIndex (tclStubsPtr->tcl_UtfAtIndex) /* 671 */
 #else
-#   define TclNumUtfChars \
-	    (tclStubsPtr->tcl_NumUtfChars) /* 312 */
-#   define TclUtfAtIndex \
-	    (tclStubsPtr->tcl_UtfAtIndex) /* 325 */
-#   define Tcl_NumUtfChars (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+#   define TkNumUtfChars (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
 	    ((Tcl_Size (*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[669])) \
 	    : (tclStubsPtr->tcl_NumUtfChars) /* 312 */)
-#   define Tcl_GetCharLength (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+#   define TkGetCharLength (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
 	    ((Tcl_Size (*)(Tcl_Obj *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[670])) \
 	    : (tclStubsPtr->tcl_GetCharLength) /* 380 */)
-#   define Tcl_UtfAtIndex (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+#   define TkUtfAtIndex (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
 	    ((const char *(*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[671])) \
 	    : (tclStubsPtr->tcl_UtfAtIndex) /* 325 */)
 #endif
