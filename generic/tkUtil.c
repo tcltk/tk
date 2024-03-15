@@ -1246,8 +1246,7 @@ Tk_SendVirtualEvent(
     Tk_QueueWindowEvent(&event.general, TCL_QUEUE_TAIL);
 }
 
-/* Tcl 8.6 has a different definition of Tcl_UniChar than other Tcl versions for TCL_UTF_MAX > 3 */
-#if TCL_UTF_MAX <= (3 + (TCL_MAJOR_VERSION == 8 && TCL_MINOR_VERSION == 6))
+#if TCL_MAJOR_VERSION < 9
 /*
  *---------------------------------------------------------------------------
  *
@@ -1267,7 +1266,7 @@ Tk_SendVirtualEvent(
  *---------------------------------------------------------------------------
  */
 
-size_t
+Tcl_Size
 TkUtfToUniChar(
     const char *src,	/* The UTF-8 string. */
     int *chPtr)		/* Filled with the Unicode value represented by
@@ -1275,12 +1274,11 @@ TkUtfToUniChar(
 {
     Tcl_UniChar uniChar = 0;
 
-    size_t len = Tcl_UtfToUniChar(src, &uniChar);
+    Tcl_Size len = Tcl_UtfToUniChar(src, &uniChar);
     if ((uniChar & 0xFC00) == 0xD800) {
 	Tcl_UniChar low = uniChar;
-	/* This can only happen if sizeof(Tcl_UniChar)== 2 and src points
-	 * to a character > U+FFFF  */
-	size_t len2 = Tcl_UtfToUniChar(src+len, &low);
+	/* This can only happen if src points to a character > U+FFFF  */
+	Tcl_Size len2 = Tcl_UtfToUniChar(src+len, &low);
 	if ((low & 0xFC00) == 0xDC00) {
 	    *chPtr = (((uniChar & 0x3FF) << 10) | (low & 0x3FF)) + 0x10000;
 	    return len + len2;
@@ -1309,12 +1307,12 @@ TkUtfToUniChar(
  *---------------------------------------------------------------------------
  */
 
-size_t TkUniCharToUtf(int ch, char *buf)
+Tcl_Size TkUniCharToUtf(int ch, char *buf)
 {
     if ((unsigned)(ch - 0x10000) <= 0xFFFFF) {
-	/* Spit out a 4-byte UTF-8 character or 2 x 3-byte UTF-8 characters, depending on Tcl
-	 * version and/or TCL_UTF_MAX build value */
-	int len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
+	/* Spit out a 4-byte UTF-8 character (Tcl 8.7+) or
+	 * 2 x 3-byte UTF-8 characters (Tcl 8.6) */
+	Tcl_Size len = Tcl_UniCharToUtf(0xD800 | ((ch - 0x10000) >> 10), buf);
 	return len + Tcl_UniCharToUtf(0xDC00 | (ch & 0x7FF), buf + len);
     }
     return Tcl_UniCharToUtf(ch, buf);
