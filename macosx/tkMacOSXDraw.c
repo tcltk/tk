@@ -86,7 +86,7 @@ TkMacOSXInitCGDrawing(
 	}
 
 	if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
-		(char *)&cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
+		&cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	cgAntiAliasLimit = limit;
@@ -96,11 +96,11 @@ TkMacOSXInitCGDrawing(
 	 */
 
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
-		(char *)&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+		&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
-		(char *)&useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+		&useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	transparentColor = TkMacOSXClearPixel();

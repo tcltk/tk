@@ -888,7 +888,7 @@ TkCreateMainWindow(
 #if TCL_MAJOR_VERSION > 8
     mainPtr->tclUpdateObjProc2 = NULL;
 #endif
-    if (Tcl_LinkVar(interp, "tk_strictMotif", (char *) &mainPtr->strictMotif,
+    if (Tcl_LinkVar(interp, "tk_strictMotif", &mainPtr->strictMotif,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
     }
@@ -896,7 +896,7 @@ TkCreateMainWindow(
 	Tcl_ResetResult(interp);
     }
     if (Tcl_LinkVar(interp, "::tk::AlwaysShowSelection",
-	    (char *) &mainPtr->alwaysShowSelection,
+	    &mainPtr->alwaysShowSelection,
 	    TCL_LINK_BOOLEAN) != TCL_OK) {
 	Tcl_ResetResult(interp);
     }

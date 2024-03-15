@@ -478,48 +478,49 @@ startOfClusterObjCmd(
 {
     TKNSString *S;
     const char *stringArg;
-    Tcl_Size numBytes, index;
+    Tcl_Size len, idx;
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
-    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    stringArg = Tcl_GetStringFromObj(objv[1], &len);
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
     Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &index) != TCL_OK) {
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
+    len = [S length];
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
+    if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < index; i++) {
-	    newIdx += 1 + (((newIdx < (Tcl_Size)[S length]-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
-	index = newIdx;
+	idx = newIdx;
     }
-    if (index >= 0) {
-	if (index >= (Tcl_Size)[S length]) {
-	    index = (Tcl_Size)[S length];
+    if (idx >= 0) {
+	if (idx >= len) {
+	    idx = len;
 	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
-	    index = range.location;
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
+	    idx = range.location;
 	}
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < index; i++) {
+	if (idx > 0 && len != ulen) {
+	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+	    Tcl_Size newIdx = 1;
+	    for (Tcl_Size i = 1; i < idx; i++) {
 		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+	    }
+	    idx = newIdx;
 	}
-	index = newIdx;
-    }
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
     return TCL_OK;
 }
@@ -533,49 +534,50 @@ endOfClusterObjCmd(
 {
     TKNSString *S;
     char *stringArg;
-    Tcl_Size index, numBytes;
+    Tcl_Size idx, len;
 
     if ((unsigned)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
-    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    stringArg = Tcl_GetStringFromObj(objv[1], &len);
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
     Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &index) != TCL_OK) {
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
+    len = [S length];
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
+    if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < index; i++) {
-	    newIdx += 1 + (((newIdx < (Tcl_Size)[S length]-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
-	index = newIdx;
+	idx = newIdx;
     }
-    if ((size_t)index + 1 <= [S length]) {
-	if (index < 0) {
-	    index = 0;
+    if (idx + 1 <= len) {
+	if (idx < 0) {
+	    idx = 0;
 	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
-	    index = range.location + range.length;
-	}
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < index; i++) {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
+	    idx = range.location + range.length;
+	    if (idx > 0 && len != ulen) {
+		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+		Tcl_Size newIdx = 1;
+		for (Tcl_Size i = 1; i < idx; i++) {
 		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+		}
+		idx = newIdx;
+	    }
 	}
-	index = newIdx;
-    }
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
     return TCL_OK;
 }
@@ -1561,7 +1563,7 @@ TkMacOSXUseAntialiasedText(
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
-		(char *) &antialiasedTextEnabled,
+		&antialiasedTextEnabled,
 		TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
