@@ -4963,9 +4963,17 @@ PickCurrentItem(
 	event.type = LeaveNotify;
 
 	/*
-	 * If the event's detail happens to be NotifyInferior the binding
-	 * mechanism will discard the event. To be consistent, always use
-	 * NotifyAncestor.
+	 * Behaviour before ticket #47d4f29159:
+	 *    If the event's detail happens to be NotifyInferior the binding
+	 *    mechanism will discard the event. To be consistent, always use
+	 *    NotifyAncestor.
+	 *
+	 * Behaviour after ticket #47d4f29159:
+	 *    The binding mechanism doesn't discard events with detail field
+	 *    NotifyInferior anymore. It would be best to base the detail
+	 *    field on the ancestry relationship between the old and new
+	 *    canvas items. For the time being, retain the choice from before
+	 *    ticket #47d4f29159, which doesn't harm.
 	 */
 
 	event.xcrossing.detail = NotifyAncestor;

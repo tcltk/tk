@@ -1803,9 +1803,17 @@ TkTextPickCurrent(
 	    event.type = LeaveNotify;
 
 	    /*
-	     * Always use a detail of NotifyAncestor. Besides being
-	     * consistent, this avoids problems where the binding code will
-	     * discard NotifyInferior events.
+	     * Behaviour before ticket #47d4f29159:
+	     *   Always use a detail of NotifyAncestor. Besides being
+	     *   consistent, this avoids problems where the binding code will
+	     *   discard NotifyInferior events.
+	     *
+	     * Behaviour after ticket #47d4f29159:
+	     *   The binding mechanism doesn't discard events with detail field
+	     *   NotifyInferior anymore. It would be best to base the detail
+	     *   field on the ancestry relationship between the old and new
+	     *   tags. For the time being, retain the choice from before
+	     *   ticket #47d4f29159, which doesn't harm.
 	     */
 
 	    event.xcrossing.detail = NotifyAncestor;

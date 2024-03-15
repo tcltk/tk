@@ -242,8 +242,6 @@ DestroyWidget(WidgetCore *corePtr)
  *	For Destroy events, handle the cleanup process.
  *
  *	For Focus events, set/clear the focus bit in the state field.
- *	It turns out this is impossible to do correctly in a binding script,
- *	because Tk filters out focus events with detail == NotifyInferior.
  *
  *	For Deactivate/Activate pseudo-events, set/clear the background state
  *	flag.
