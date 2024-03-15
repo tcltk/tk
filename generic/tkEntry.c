@@ -2164,7 +2164,7 @@ InsertChars(
     char *newStr;
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
+    byteIndex = TkUtfAtIndex(string, index) - string;
     byteCount = strlen(value);
     if (byteCount == 0) {
 	return TCL_OK;
@@ -2197,7 +2197,7 @@ InsertChars(
      */
 
     oldChars = entryPtr->numChars;
-    entryPtr->numChars = Tcl_NumUtfChars(newStr, TCL_INDEX_NONE);
+    entryPtr->numChars = TkNumUtfChars(newStr, TCL_INDEX_NONE);
     charsAdded = entryPtr->numChars - oldChars;
     entryPtr->numBytes += byteCount;
 
@@ -2268,8 +2268,8 @@ DeleteChars(
     }
 
     string = entryPtr->string;
-    byteIndex = Tcl_UtfAtIndex(string, index) - string;
-    byteCount = Tcl_UtfAtIndex(string + byteIndex, count) - (string+byteIndex);
+    byteIndex = TkUtfAtIndex(string, index) - string;
+    byteCount = TkUtfAtIndex(string + byteIndex, count) - (string+byteIndex);
 
     newByteCount = entryPtr->numBytes + 1 - byteCount;
     newStr = (char *)ckalloc(newByteCount);
@@ -2497,7 +2497,7 @@ EntrySetValue(
 	entryPtr->string = tmp;
     }
     entryPtr->numBytes = valueLen;
-    entryPtr->numChars = Tcl_NumUtfChars(value, valueLen);
+    entryPtr->numChars = TkNumUtfChars(value, valueLen);
 
     if (entryPtr->displayString == oldSource) {
 	entryPtr->displayString = entryPtr->string;
@@ -2927,8 +2927,8 @@ EntryFetchSelection(
 	return -1;
     }
     string = entryPtr->displayString;
-    selStart = Tcl_UtfAtIndex(string, entryPtr->selectFirst);
-    selEnd = Tcl_UtfAtIndex(selStart,
+    selStart = TkUtfAtIndex(string, entryPtr->selectFirst);
+    selEnd = TkUtfAtIndex(selStart,
 	    entryPtr->selectLast - entryPtr->selectFirst);
     if (selEnd <= selStart + offset) {
 	return 0;

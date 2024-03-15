@@ -92,7 +92,8 @@ startEndOfCmd(
     str = Tcl_GetStringFromObj(objv[1], &len);
     Tcl_UtfToChar16DString(str, len, &ds);
     len = Tcl_DStringLength(&ds)/2;
-    if (TkGetIntForIndex(objv[2], len-1, 0, &idx) != TCL_OK) {
+    Tcl_Size ulen = TkGetCharLength(objv[1]);
+    if (TkGetIntForIndex(objv[2], ulen-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
@@ -110,6 +111,14 @@ startEndOfCmd(
     	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
     	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", NULL);
     	return TCL_ERROR;
+    }
+    if (idx > 0 && len != ulen) {
+	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
+	Tcl_Size newIdx = 0;
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < (Tcl_Size)len-1) && (ustr[newIdx]&0xFC00) == 0xD800) && ((ustr[newIdx+1]&0xFC00) == 0xDC00));
+	}
+	idx = newIdx;
     }
     if (flags & FLAG_FOLLOWING) {
 	if ((idx < 0) && (flags & FLAG_WORD)) {
@@ -145,6 +154,14 @@ startEndOfCmd(
     icu_close(it);
     Tcl_DStringFree(&ds);
     if (idx != TCL_INDEX_NONE) {
+	if (idx > 0 && len != ulen) {
+	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+	    Tcl_Size newIdx = 1;
+	    for (Tcl_Size i = 1; i < idx; i++) {
+    	if (((ustr[i-1]&0xFC00) != 0xD800) || ((ustr[i]&0xFC00) != 0xDC00)) newIdx++;
+	    }
+	    idx = newIdx;
+	}
 	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
     return TCL_OK;

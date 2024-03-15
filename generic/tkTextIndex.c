@@ -494,7 +494,7 @@ TkTextMakeCharIndex(
     TkTextSegment *segPtr;
     char *p, *start, *end;
     int index, offset;
-    Tcl_UniChar ch = 0;
+    int ch = 0;
 
     indexPtr->tree = tree;
     if (lineIndex < 0) {
@@ -541,7 +541,7 @@ TkTextMakeCharIndex(
 		    return indexPtr;
 		}
 		charIndex--;
-		offset = Tcl_UtfToUniChar(p, &ch);
+		offset = TkUtfToUniChar(p, &ch);
 		index += offset;
 	    }
 	} else {
@@ -1129,7 +1129,7 @@ TkTextPrintIndex(
 	    break;
 	}
 	if (segPtr->typePtr == &tkTextCharType) {
-	    charIndex += Tcl_NumUtfChars(segPtr->body.chars, segPtr->size);
+	    charIndex += TkNumUtfChars(segPtr->body.chars, segPtr->size);
 	} else {
 	    charIndex += segPtr->size;
 	}
@@ -1137,7 +1137,7 @@ TkTextPrintIndex(
     }
 
     if (segPtr->typePtr == &tkTextCharType) {
-	charIndex += Tcl_NumUtfChars(segPtr->body.chars, numBytes);
+	charIndex += TkNumUtfChars(segPtr->body.chars, numBytes);
     } else {
 	charIndex += numBytes;
     }
@@ -1948,7 +1948,7 @@ TkTextIndexCount(
 		}
 		count += byteLen - i;
 		if (i) {
-		    count += Tcl_NumUtfChars(segPtr->body.chars + byteOffset
+		    count += TkNumUtfChars(segPtr->body.chars + byteOffset
 			    + (byteLen - i), i);
 		}
 	    } else {
@@ -2209,9 +2209,6 @@ TkTextIndexBackChars(
 		    }
 		    if (p == start) {
 			break;
-		    }
-		    if ((sizeof(Tcl_UniChar) == 2) &&  (unsigned)(UCHAR(*p) - 0xF0) <= 5) {
-			charCount--; /* Characters > U+FFFF count as 2 here */
 		    }
 		    if (charCount != 0) {
 			charCount--;

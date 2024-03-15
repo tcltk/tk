@@ -509,7 +509,7 @@ GetEntryText(
 		: Tcl_GetString(mePtr->accelPtr);
 	const char *p, *next;
 	Tcl_DString itemString;
-	Tcl_UniChar ch = 0;
+	int ch = 0;
 
 	/*
 	 * We have to construct the string with an ampersand preceeding the
@@ -526,7 +526,7 @@ GetEntryText(
 	    if (*p == '&') {
 		Tcl_DStringAppend(&itemString, "&", 1);
 	    }
-	    next = p + Tcl_UtfToUniChar(p, &ch);
+	    next = p + TkUtfToUniChar(p, &ch);
 	    Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	}
 	ch = 0;
@@ -536,7 +536,7 @@ GetEntryText(
 		if (*p == '&') {
 		    Tcl_DStringAppend(&itemString, "&", 1);
 		}
-		next = p + Tcl_UtfToUniChar(p, &ch);
+		next = p + TkUtfToUniChar(p, &ch);
 		Tcl_DStringAppend(&itemString, p, (int) (next - p));
 	    }
 	}
@@ -2102,13 +2102,13 @@ DrawMenuUnderline(
     if ((mePtr->underline >= 0) && (mePtr->labelPtr != NULL)) {
 	int len;
 
-	len = Tcl_GetCharLength(mePtr->labelPtr);
+	len = TkGetCharLength(mePtr->labelPtr);
 	if (mePtr->underline < len) {
 	    const char *label, *start, *end;
 	    int ch;
 
 	    label = Tcl_GetString(mePtr->labelPtr);
-	    start = Tcl_UtfAtIndex(label, mePtr->underline);
+	    start = TkUtfAtIndex(label, mePtr->underline);
 	    end = start + TkUtfToUniChar(start, &ch);
 	    Tk_UnderlineChars(menuPtr->display, d,
 		    gc, tkfont, label, x + mePtr->indicatorSpace,
