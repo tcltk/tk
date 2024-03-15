@@ -128,9 +128,7 @@ Returns the new position of sash number \fIindex\fR.
 .SH "VIRTUAL EVENTS"
 .PP
 The panedwindow widget generates an \fB<<EnteredChild>>\fR virtual event on
-LeaveNotify/NotifyInferior events, because Tk does not execute binding scripts
-for <Leave> events when the pointer crosses from a parent to a child. The
-panedwindow widget needs to know when that happens.
+LeaveNotify/NotifyInferior events.
 .SH "STYLING OPTIONS"
 .PP
 The class name for a \fBttk::panedwindow\fP is \fBTPanedwindow\fP.  The

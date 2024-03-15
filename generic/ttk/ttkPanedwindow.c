@@ -469,14 +469,16 @@ static const Ttk_ManagerSpec PanedManagerSpec = {
 /*------------------------------------------------------------------------
  * +++ Event handler.
  *
- * <<NOTE-PW-LEAVE-NOTIFYINFERIOR>>
- * Tk does not execute binding scripts for <Leave> events when
- * the pointer crosses from a parent to a child.  This widget
- * needs to know when that happens, though, so it can reset
- * the cursor.
- *
  * This event handler generates an <<EnteredChild>> virtual event
  * on LeaveNotify/NotifyInferior.
+ * This was originally introduced because Tk used to discard events with
+ * detail field NotifyInferior. The <<EnteredChild>> event was then used
+ * to reset the cursor when the pointer crosses from a parent to a child.
+ * Since ticket #47d4f29159, LeaveNotify/NotifyInferior are no longer
+ * discarded: the <Leave> event will trigger even with NotifyInferior
+ * detail field. The generated <<EnteredChild>> is nevertheless kept for
+ * backwards compatibility purpose since it is publicly documented,
+ * meaning that someone could bind to it.
  */
 
 static const unsigned PanedEventMask = LeaveWindowMask;
