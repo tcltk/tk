@@ -93,15 +93,21 @@
 #else
     MODULE_SCOPE Tcl_Size TkUtfToUniChar(const char *, int *);
     MODULE_SCOPE Tcl_Size TkUniCharToUtf(int, char *);
-#   define TkNumUtfChars (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
-	    ((Tcl_Size (*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[669])) \
-	    : (tclStubsPtr->tcl_NumUtfChars) /* 312 */)
-#   define TkGetCharLength (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
-	    ((Tcl_Size (*)(Tcl_Obj *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[670])) \
-	    : (tclStubsPtr->tcl_GetCharLength) /* 380 */)
-#   define TkUtfAtIndex (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
-	    ((const char *(*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[671])) \
-	    : (tclStubsPtr->tcl_UtfAtIndex) /* 325 */)
+#   ifdef USE_TCL_STUBS
+#	define TkNumUtfChars (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+		((Tcl_Size (*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[669])) \
+		: (tclStubsPtr->tcl_NumUtfChars) /* 312 */)
+#	define TkGetCharLength (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+		((Tcl_Size (*)(Tcl_Obj *))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[670])) \
+		: (tclStubsPtr->tcl_GetCharLength) /* 380 */)
+#	define TkUtfAtIndex (((&tclStubsPtr->tcl_PkgProvideEx)[631]) ? \
+		((const char *(*)(const char *, Tcl_Size))(void *)((&tclStubsPtr->tcl_PkgProvideEx)[671])) \
+		: (tclStubsPtr->tcl_UtfAtIndex) /* 325 */)
+#   else
+#	define TkNumUtfChars TclNumUtfChars
+#	define TkGetCharLength TclGetCharLength
+#	define TkUtfAtIndex TclUtfAtIndex
+#   endif
 #endif
 
 #if defined(__STDC_VERSION__) && (__STDC_VERSION__ >= 199901L)
