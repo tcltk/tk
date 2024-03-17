@@ -507,6 +507,7 @@ TkFocusFilterEvent(
 		    CurrentTime);
 	    displayFocusPtr->focusWinPtr = NULL;
 	    dispPtr->implicitWinPtr = NULL;
+//	    dispPtr->focusPtr = NULL;
 	}
     }
     return retValue;
