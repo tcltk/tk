@@ -73,7 +73,7 @@ typedef struct TkDisplayFocusInfo {
 
 #define DEBUG(dispPtr, arguments) \
     if ((dispPtr)->focusDebug) { \
-	printf arguments; \
+	printf arguments; fflush(stdout); \
     }
 
 /*
@@ -501,7 +501,7 @@ TkFocusFilterEvent(
 
 	if ((dispPtr->implicitWinPtr != NULL)
 		&& !(winPtr->flags & TK_EMBEDDED)) {
-	    DEBUG(dispPtr, ("Defocussed implicit Async\n"));
+	    DEBUG(dispPtr, ("Defocussed implicit Async from %s\n", displayFocusPtr->focusWinPtr->pathName));
 	    GenerateFocusEvents(displayFocusPtr->focusWinPtr, NULL);
 	    XSetInputFocus(dispPtr->display, PointerRoot, RevertToPointerRoot,
 		    CurrentTime);
