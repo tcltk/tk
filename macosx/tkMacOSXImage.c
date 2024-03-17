@@ -4,10 +4,10 @@
  *	The code in this file provides an interface for XImages, and
  *      implements the nsimage image type.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017-2021 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017-2021 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -502,6 +502,9 @@ TkMacOSXPutImage(
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
 
+    if (width <= 0 || height <= 0) {
+	return Success; /* Is OK. Nothing to see here, literally. */
+    }
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
@@ -623,7 +626,7 @@ int TkpPutRGBAImage(
  *----------------------------------------------------------------------
  */
 
-CGImageRef
+static CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
     int x,
@@ -736,7 +739,7 @@ CreatePDFFromDrawableRect(
  *----------------------------------------------------------------------
  */
 
-CGImageRef
+static CGImageRef
 CreateCGImageFromPixmap(
     Drawable pixmap)
 {
@@ -1096,12 +1099,12 @@ struct TkMacOSXNSImageModel {
     int radius;                       /* Radius for rounded corners. */
     int ring;                         /* Thickness of the focus ring. */
     double alpha;                     /* Transparency, between 0.0 and 1.0*/
-    bool pressed;                     /* Image is for use in a pressed button.*/
-    bool templ;                       /* Image is for use as a template.*/
     char *imageName ;                 /* Malloc'ed image name. */
     char *source;       	      /* Malloc'ed string describing the image. */
     char *as;                         /* Malloc'ed interpretation of source */
     int	flags;			      /* Sundry flags, defined below. */
+    bool pressed;                     /* Image is for use in a pressed button.*/
+    bool templ;                       /* Image is for use as a template.*/
     TkMacOSXNSImageInstance *instancePtr;   /* Start of list of instances associated
 				       * with this model. */
     NSImage *image;                   /* The underlying NSImage object. */
