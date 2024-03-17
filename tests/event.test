@@ -1013,7 +1013,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     wm geometry .two 300x300+150+150
     wm deiconify .two
     waitForWindowEvent .two <Enter>
-    event generate .two <Motion> -warp 1 -x 250 -y 250
+    event generate .two <Motion> -warp 1 -x 275 -y 275
     controlPointerWarpTiming
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
