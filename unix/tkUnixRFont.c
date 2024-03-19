@@ -77,7 +77,7 @@ TCL_DECLARE_MUTEX(xftMutex);
  *-------------------------------------------------------------------------
  */
 
-static int utf8ToUcs4(const char *source, FcChar32 *c, int numBytes)
+static Tcl_Size utf8ToUcs4(const char *source, FcChar32 *c, Tcl_Size numBytes)
 {
     if (numBytes >= 6) {
     	return Tcl_UtfToUniChar(source, (int *)c);
@@ -705,7 +705,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    Tcl_Size numBytes1,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
@@ -723,12 +723,12 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-    int numBytes = numBytes1;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
     XftFont *ftFont;
     FcChar32 c;
     XGlyphInfo extents;
-    int clen, curX, newX, curByte, newByte, sawNonSpace;
+    Tcl_Size clen;
+    int curX, newX, curByte, newByte, sawNonSpace;
     int termByte = 0, termX = 0, errorFlag = 0;
     Tk_ErrorHandler handler;
 #ifdef DEBUG_FONTSEL
@@ -1068,12 +1068,11 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    Tcl_Size numBytes1,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,		/* Coordinates at which to place origin of
 				 * string when drawing. */
     double angle)		/* What angle to put text at, in degrees. */
 {
-    int numBytes = numBytes1;
     const int maxCoord = 0x7FFF;/* Xft coordinates are 16 bit values */
     const int minCoord = -maxCoord-1;
     UnixFtFont *fontPtr = (UnixFtFont *) tkfont;
@@ -1202,7 +1201,8 @@ TkDrawAngledChars(
 	}
     }
 #else /* !XFT_HAS_FIXED_ROTATED_PLACEMENT */
-    int clen, nspec;
+    Tcl_Size clen;
+    int nspec;
     XftGlyphFontSpec specs[NUM_SPEC];
     XGlyphInfo metrics;
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
