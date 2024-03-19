@@ -755,6 +755,29 @@ test focus-7.1 {TkSetFocusWin procedure, unmapped windows} -setup {
     destroy .top
 } -result {.top.s3}
 
+test focus-8.1 {fdc0ed342d - segfault on focus -force} -body {
+    pack [button .b0]
+    toplevel .one
+    update
+    event generate .one <Motion> -warp 1 -x 175 -y 175
+    update idletasks
+    destroy {*}[winfo children .]
+    toplevel .t
+    pack [canvas .t.c]
+    update
+    destroy .t.c
+    pack [label .t.l]
+    update
+    destroy .t.l
+    destroy {*}[winfo children .]
+    proc crashit {} {
+	pack [listbox .l]
+	update
+	focus -force .l;  # This line segfaulted *with xvfb*
+	set res Reached
+    }
+    crashit
+} -result {Reached}
 
 deleteWindows
 
