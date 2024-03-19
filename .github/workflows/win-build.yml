@@ -110,8 +110,8 @@ jobs:
       matrix:
         config:
           - ""
-          - "--enable-config=mem"
-          - "--enable-config=all"
+          - "--enable-symbols=mem"
+          - "--enable-symbols=all"
           - "--disable-shared"
     steps:
       - name: Install MSYS2
