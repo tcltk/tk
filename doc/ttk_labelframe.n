@@ -18,8 +18,8 @@ A \fBttk::labelframe\fR widget is a container used to group other widgets
 together.  It has an optional label, which may be a plain text string or
 another widget.
 .SO ttk_widget
-\-class	\-cursor	\-padding	\-style
-\-takefocus
+\-class	\-cursor	\-padding
+\-style	\-takefocus
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .\" XXX: Currently included, but may go away:
