@@ -265,7 +265,7 @@ BitmapCoords(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "d", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -279,7 +279,7 @@ BitmapCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "BITMAP", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -984,7 +984,7 @@ BitmapToPostscript(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't generate Postscript for bitmaps more than 60000"
 		    " pixels wide", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	    goto error;
 	}
 

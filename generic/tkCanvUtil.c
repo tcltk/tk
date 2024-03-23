@@ -777,7 +777,7 @@ TkSmoothParseProc(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"ambiguous smooth method \"%s\"", value));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "SMOOTH", value,
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    smooth = &methods->smooth;
@@ -912,7 +912,7 @@ Tk_GetDash(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "expected integer in the range 1..255 but got \"%s\"",
 		    *largv));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", (char *)NULL);
 	    goto syntaxError;
 	}
 	*pt++ = i;
@@ -933,7 +933,7 @@ Tk_GetDash(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad dash list \"%s\": must be a list of integers or a format like \"-..\"",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "DASH", (char *)NULL);
   syntaxError:
     if (argv != NULL) {
 	ckfree(argv);
