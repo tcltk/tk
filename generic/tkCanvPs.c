@@ -324,7 +324,7 @@ TkCanvPostscriptObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad color mode \"%s\": must be monochrome, gray, or color",
 		    psInfo.colorMode));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "COLORMODE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "COLORMODE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -338,7 +338,7 @@ TkCanvPostscriptObjCmd(
 	if (psInfo.channelName != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't specify both -file and -channel", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -351,7 +351,7 @@ TkCanvPostscriptObjCmd(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't specify -file in a safe interpreter", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -384,7 +384,7 @@ TkCanvPostscriptObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel \"%s\" wasn't opened for writing",
 		    psInfo.channelName));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "UNWRITABLE",NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "UNWRITABLE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
 	}
@@ -798,7 +798,7 @@ Tk_PostscriptFont(
 			"bad font map entry for \"%s\": \"%s\"",
 			name, Tcl_GetString(list)));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "FONTMAP",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -1124,7 +1124,7 @@ GetPostscriptPoints(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad distance \"%s\"", string));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "POINTS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -1363,7 +1363,7 @@ TkPostscriptImage(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't generate Postscript for images more than %d pixels wide",
 		maxWidth));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	ckfree(cdata.colors);
 	return TCL_ERROR;
     }
@@ -1549,7 +1549,7 @@ Tk_PostscriptPhoto(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't generate Postscript for images more than %d pixels wide",
 		maxWidth));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	return TCL_ERROR;
     }
 

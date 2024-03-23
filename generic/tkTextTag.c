@@ -129,7 +129,7 @@ SetRelief(
 	if (Tk_GetReliefFromObj(nullOK ? NULL : interp, *value, &relief.value) != TCL_OK) {
 	    if (nullOK) {
 		Tcl_AppendResult(interp, "bad relief \"",
-			Tcl_GetString(*value), "\": must be flat, groove, raised, ridge, solid, sunken, or \"\"", NULL);
+			Tcl_GetString(*value), "\": must be flat, groove, raised, ridge, solid, sunken, or \"\"", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -161,7 +161,7 @@ SetJustify(
 	if (Tk_GetJustifyFromObj(nullOK ? NULL : interp, *value, &justify.value) != TCL_OK) {
 	    if (nullOK) {
 		Tcl_AppendResult(interp, "bad justification \"",
-			Tcl_GetString(*value), "\": must be left, right, center, or \"\"", NULL);
+			Tcl_GetString(*value), "\": must be left, right, center, or \"\"", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}

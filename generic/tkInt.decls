@@ -68,7 +68,7 @@ declare 12 {
 }
 declare 13 {
     int TkCreateFrame(void *clientData, Tcl_Interp *interp,
-	    int argc, const char *const *argv, int toplevel, const char *appName)
+	    Tcl_Size argc, const char *const *argv, int toplevel, const char *appName)
 }
 declare 14 {
     Tk_Window TkCreateMainWindow(Tcl_Interp *interp,
@@ -524,12 +524,12 @@ declare 159 {
 }
 declare 160 {
     int TkTextIndexBackBytes(const struct TkText *textPtr,
-	    const struct TkTextIndex *srcPtr, int count,
+	    const struct TkTextIndex *srcPtr, Tcl_Size count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 161 {
     int TkTextIndexForwBytes(const struct TkText *textPtr,
-	    const struct TkTextIndex *srcPtr, int count,
+	    const struct TkTextIndex *srcPtr, Tcl_Size count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 162 {
