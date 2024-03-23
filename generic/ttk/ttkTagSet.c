@@ -21,7 +21,7 @@ struct TtkTagTable {
     Tk_Window		tkwin;		/* owner window */
     const Tk_OptionSpec	*optionSpecs;	/* ... */
     Tk_OptionTable	optionTable;	/* ... */
-    Tcl_Size         	recordSize;	/* size of tag record */
+    size_t         	recordSize;	/* size of tag record */
     Tcl_Size 		nTags;		/* #tags defined so far */
     Tcl_HashTable	tags;		/* defined tags */
 };
@@ -53,7 +53,7 @@ static void DeleteTag(Ttk_TagTable tagTable, Ttk_Tag tag)
 
 Ttk_TagTable Ttk_CreateTagTable(
     Tcl_Interp *interp, Tk_Window tkwin,
-    const Tk_OptionSpec *optionSpecs, int recordSize)
+    const Tk_OptionSpec *optionSpecs, size_t recordSize)
 {
     Ttk_TagTable tagTable = (Ttk_TagTable)ckalloc(sizeof(*tagTable));
     tagTable->tkwin = tkwin;
