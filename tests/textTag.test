@@ -308,6 +308,20 @@ test textTag-1.37 {configuration options} -body {
 } -cleanup {
     .t tag configure x -underlinefg [lindex [.t tag configure x -underlinefg] 3]
 } -returnCodes error -result {unknown color name "stupid"}
+test textTag-1.38 {configuration options, -locale} -body {
+    .t tag configure x -locale regexp
+    .t tag add x 1.0 1.3
+    list [.t locale 1.0] [.t locale 1.2] [.t locale 1.3]
+} -cleanup {
+    .t tag configure x -locale {}
+} -result {regexp regexp {}}
+test textTag-1.39 {configuration options, -locale} -body {
+    .t configure -locale regexp
+    .t tag configure x -locale abc
+    list [.t locale 1.0] [.t locale 1.2] [.t locale 1.3]
+} -cleanup {
+    .t tag configure x -locale {}
+} -result {abc abc regexp}
 
 
 test textTag-2.1 {TkTextTagCmd - "add" option} -body {
