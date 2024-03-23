@@ -496,7 +496,7 @@ static void		InspectUndoStack(const TkSharedText *sharedTextPtr,
 static void		InspectRetainedUndoItems(const TkSharedText *sharedTextPtr, Tcl_Obj *objPtr);
 static Tcl_Obj *	TextGetText(TkText *textPtr, const TkTextIndex *index1,
 			    const TkTextIndex *index2, TkTextIndex *lastIndexPtr, Tcl_Obj *resultPtr,
-			    unsigned maxBytes, int visibleOnly, int includeHyphens);
+			    Tcl_Size maxBytes, int visibleOnly, int includeHyphens);
 static void		GenerateEvent(TkSharedText *sharedTextPtr, const char *type);
 static void		RunAfterSyncCmd(void *clientData);
 static void		UpdateModifiedFlag(TkSharedText *sharedTextPtr, int flag);
@@ -5934,7 +5934,7 @@ TextFetchSelection(
     TkText *textPtr = (TkText *)clientData;
     TkTextSearch *searchPtr;
     Tcl_Obj *selTextPtr;
-    int numBytes;
+    Tcl_Size numBytes;
 
     if ((!textPtr->exportSelection) || Tcl_IsSafe(textPtr->interp)) {
 	return TCL_INDEX_NONE;
@@ -9360,13 +9360,13 @@ TextGetText(
 				/* ...to this index. */
     TkTextIndex *lastIndexPtr,	/* Position before last character of the result, can be NULL. */
     Tcl_Obj *resultPtr,		/* Append text to this object, can be NULL. */
-    unsigned maxBytes,		/* Maximal number of bytes. */
+    Tcl_Size maxBytes,		/* Maximal number of bytes. */
     int visibleOnly,		/* If true, then only return non-elided characters. */
     int includeHyphens)	/* If true, then also include soft hyphens. */
 {
     TkTextSegment *segPtr, *lastPtr;
     TkTextIndex index;
-    int offset1, offset2;
+    Tcl_Size offset1, offset2;
 
     assert(textPtr);
     assert(TkTextIndexCompare(indexPtr1, indexPtr2) <= 0);
@@ -9438,7 +9438,7 @@ TextGetText(
 	}
 	while (segPtr != lastPtr) {
 	    if (segPtr->typePtr == &tkTextCharType) {
-		unsigned nbytes = MIN(maxBytes, (unsigned) segPtr->size);
+		Tcl_Size nbytes = MIN(maxBytes, (unsigned) segPtr->size);
 		Tcl_AppendToObj(resultPtr, segPtr->body.chars, nbytes);
 		if ((maxBytes -= nbytes) == 0) {
 		    if (lastIndexPtr) {
@@ -11633,7 +11633,7 @@ TkrTesttextCmd(
     textPtr->watchCmd = watchCmd;
 
     TkrTextPrintIndex(textPtr, &index, buf);
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %d", buf, TkTextIndexGetByteIndex(&index)));
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("%s %" TCL_SIZE_MODIFIER "d", buf, TkTextIndexGetByteIndex(&index)));
     return TCL_OK;
 }
 

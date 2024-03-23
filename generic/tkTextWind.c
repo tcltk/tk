@@ -56,7 +56,7 @@ static void		EmbWinDelayedUnmap(void *clientData);
 static int		EmbWinDeleteProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr, int flags);
 static int		EmbWinRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static int		EmbWinLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, int noCharsYet,
+			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 static void		EmbWinStructureProc(void *clientData, XEvent *eventPtr);
 static void	        EmbWinDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr,
@@ -1375,9 +1375,9 @@ static int
 EmbWinLayoutProc(
     const TkTextIndex *indexPtr,/* Identifies first character in chunk. */
     TkTextSegment *ewPtr,	/* Segment corresponding to indexPtr. */
-    TCL_UNUSED(int),			/* Offset within segPtr corresponding to indexPtr (always 0). */
+    TCL_UNUSED(Tcl_Size),			/* Offset within segPtr corresponding to indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this position or higher. */
-    TCL_UNUSED(int),		/* Chunk must not include more than this many characters. */
+    TCL_UNUSED(Tcl_Size),		/* Chunk must not include more than this many characters. */
     int noCharsYet,		/* 'true' means no characters have been assigned to this line yet. */
     TkWrapMode wrapMode,	/* Wrap mode to use for line: TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE,
     				 * TEXT_WRAPMODE_WORD, or TEXT_WRAPMODE_CODEPOINT. */

@@ -44,7 +44,7 @@ enum { TKINDEX_NONE, TKINDEX_DISPLAY, TKINDEX_CHAR };
 static const char *	ForwBack(TkText *textPtr, const char *string, TkTextIndex *indexPtr,
 			    int charCount);
 static const char *	StartEnd(TkText *textPtr, const char *string, TkTextIndex *indexPtr);
-static TkTextSegment *	IndexToSeg(const TkTextIndex *indexPtr, int *offsetPtr);
+static TkTextSegment *	IndexToSeg(const TkTextIndex *indexPtr, Tcl_Size *offsetPtr);
 static int		SegToIndex(const TkTextLine *linePtr, const TkTextSegment *segPtr);
 
 /*
@@ -236,7 +236,7 @@ static int
 CheckByteIndex(
     const TkTextIndex *indexPtr,
     const TkTextLine *linePtr,
-    int byteIndex)
+    Tcl_Size byteIndex)
 {
     const TkText *textPtr = indexPtr->textPtr;
 
@@ -328,7 +328,7 @@ DontNeedSpecialEndLineTreatment(
 	    || indexPtr->priv.linePtr != textPtr->endMarker->sectionPtr->linePtr;
 }
 
-static int
+static Tcl_Size
 FindEndByteIndex(
     const TkTextIndex *indexPtr)
 {
@@ -348,7 +348,7 @@ FindEndByteIndex(
 void
 TkTextIndexSetByteIndex(
     TkTextIndex *indexPtr,	/* Pointer to index. */
-    int byteIndex)		/* New byte index. */
+    Tcl_Size byteIndex)		/* New byte index. */
 {
     assert(indexPtr->tree);
     assert(indexPtr->priv.linePtr);
@@ -397,7 +397,7 @@ void
 TkTextIndexSetByteIndex2(
     TkTextIndex *indexPtr,	/* Pointer to index. */
     TkTextLine *linePtr,	/* Pointer to line. */
-    int byteIndex)		/* New byte index. */
+    Tcl_Size byteIndex)		/* New byte index. */
 {
     assert(indexPtr->tree);
     assert(linePtr);
@@ -695,7 +695,7 @@ TkTextIndexSetupToEndOfText(
  *----------------------------------------------------------------------
  */
 
-int
+Tcl_Size
 TkTextIndexGetByteIndex(
     const TkTextIndex *indexPtr)	/* Pointer to index. */
 {
@@ -1142,7 +1142,7 @@ TkTextIndexEnsureBeforeLastChar(
 TkTextSegment *
 TkTextIndexGetContentSegment(
     const TkTextIndex *indexPtr,/* Pointer to index. */
-    int *offset)		/* Get offset in segment, can be NULL. */
+    Tcl_Size *offset)		/* Get offset in segment, can be NULL. */
 {
     TkTextSegment *segPtr;
 
@@ -1169,7 +1169,7 @@ TkTextIndexGetContentSegment(
 	    assert(*offset < segPtr->size);
 	}
     } else {
-	int myOffset;
+	Tcl_Size myOffset;
 
 	assert(indexPtr->priv.byteIndex >= 0);
 	segPtr = IndexToSeg(indexPtr, &myOffset);
@@ -1205,11 +1205,11 @@ TkTextIndexGetContentSegment(
 TkTextSegment *
 TkTextIndexGetFirstSegment(
     const TkTextIndex *indexPtr,/* Pointer to index. */
-    int *offset)		/* Get offset in segment, can be NULL. */
+    Tcl_Size *offset)		/* Get offset in segment, can be NULL. */
 {
     TkTextSegment *segPtr;
     TkTextSegment *prevPtr;
-    int myOffset;
+    Tcl_Size myOffset;
 
     assert(indexPtr->tree);
     assert(indexPtr->priv.linePtr);
@@ -1581,7 +1581,7 @@ TkTextIndexCompare(
 int
 TkTextIndexAddToByteIndex(
     TkTextIndex *indexPtr,	/* Pointer to index. */
-    int byteOffset)		/* Add this offset. */
+    Tcl_Size byteOffset)		/* Add this offset. */
 {
     int rc = 1;
 
@@ -1999,13 +1999,13 @@ TkTextMakeCharIndex(
 static TkTextSegment *
 IndexToSeg(
     const TkTextIndex *indexPtr,/* Text index. */
-    int *offsetPtr)		/* Where to store offset within segment, or NULL if offset isn't
+    Tcl_Size *offsetPtr)		/* Where to store offset within segment, or NULL if offset isn't
     				 * wanted. */
 {
     TkTextSection *sectionPtr;
     TkTextSegment *segPtr;
     TkTextLine *linePtr;
-    int index;
+    Tcl_Size index;
 
     assert(indexPtr->priv.byteIndex >= 0);
     assert(indexPtr->priv.byteIndex < indexPtr->priv.linePtr->size);
@@ -2704,7 +2704,7 @@ TkTextIndexPrint(
 	    assert(segPtr->nextPtr);
 	}
     } else {
-	int numBytes = TkTextIndexGetByteIndex(indexPtr);
+	Tcl_Size numBytes = TkTextIndexGetByteIndex(indexPtr);
 
 	if (segPtr == startMarker && startMarker != sharedTextPtr->startMarker) {
 	    numBytes -= TkTextSegToIndex(startMarker);
@@ -3012,11 +3012,11 @@ int
 TkrTextIndexForwBytes(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
-    int byteCount,		/* How many bytes forward to move. May be negative. */
+    Tcl_Size byteCount,		/* How many bytes forward to move. May be negative. */
     TkTextIndex *dstPtr)	/* Destination index: gets modified. */
 {
     TkTextLine *linePtr;
-    int byteIndex;
+    Tcl_Size byteIndex;
 
     if (byteCount == 0) {
 	if (dstPtr != srcPtr) {
@@ -3107,7 +3107,7 @@ int
 TkTextIndexForwChars(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
-    int charCount,		/* How many characters forward to move. May be negative. */
+    Tcl_Size charCount,		/* How many characters forward to move. May be negative. */
     TkTextIndex *dstPtr,	/* Destination index: gets modified. */
     TkTextCountType type)	/* The type of item to count */
 {
@@ -3115,7 +3115,7 @@ TkTextIndexForwChars(
     TkTextSegment *segPtr;
     TkTextSegment *endPtr;
     TkSharedText *sharedTextPtr;
-    int byteOffset;
+    Tcl_Size byteOffset;
     int checkElided;
     int trimmed;
     int skipSpaces;
@@ -3359,7 +3359,7 @@ TkTextIndexGetChar(
     const TkTextIndex *indexPtr)/* Index describing location of character. */
 {
     TkTextSegment *segPtr;
-    int byteOffset;
+    Tcl_Size byteOffset;
     const char *s;
 
     segPtr = TkTextIndexGetContentSegment(indexPtr, &byteOffset);
@@ -3417,7 +3417,7 @@ TkTextIndexCount(
     TkTextLine *linePtr;
     TkTextIndex index;
     TkTextSegment *segPtr, *lastPtr;
-    int byteOffset, maxBytes;
+    Tcl_Size byteOffset, maxBytes;
     unsigned count;
     int checkElided;
 
@@ -3555,11 +3555,11 @@ int
 TkrTextIndexBackBytes(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
-    int byteCount,		/* How many bytes backward to move. May be negative. */
+    Tcl_Size byteCount,		/* How many bytes backward to move. May be negative. */
     TkTextIndex *dstPtr)	/* Destination index: gets modified. */
 {
     TkTextLine *linePtr;
-    int byteIndex;
+    Tcl_Size byteIndex;
 
     if (byteCount == 0) {
 	if (dstPtr != srcPtr) {
@@ -3652,7 +3652,7 @@ int
 TkTextIndexBackChars(
     const TkText *textPtr,	/* Overall information about text widget, can be NULL. */
     const TkTextIndex *srcPtr,	/* Source index. */
-    int charCount,		/* How many characters backward to move. May be negative. */
+    Tcl_Size charCount,		/* How many characters backward to move. May be negative. */
     TkTextIndex *dstPtr,	/* Destination index: gets modified. */
     TkTextCountType type)	/* The type of item to count */
 {
@@ -3660,11 +3660,11 @@ TkTextIndexBackChars(
     TkTextSegment *segPtr;
     TkTextSegment *startPtr;
     TkTextLine *linePtr;
-    int segSize;
+    Tcl_Size segSize;
     int checkElided;
     int trimmed;
     int skipSpaces;
-    int byteIndex;
+    Tcl_Size byteIndex;
 
     assert(textPtr || !(type & COUNT_DISPLAY));
 
@@ -3929,8 +3929,8 @@ StartEnd(
 	    switch (string[4]) {
 	    case 'e':
 		if (strncmp(string, "wordend", length) == 0) {
-		    int firstChar = 1;
-		    int offset;
+		    Tcl_Size firstChar = 1;
+		    Tcl_Size offset;
 
 		    /*
 		     * If the current character isn't part of a word then just move
@@ -3980,8 +3980,8 @@ StartEnd(
 		break;
 	    case 's':
 		if (strncmp(string, "wordstart", length) == 0) {
-		    int firstChar = 1;
-		    int offset;
+		    Tcl_Size firstChar = 1;
+		    Tcl_Size offset;
 
 		    if (modifier == TKINDEX_DISPLAY) {
 			/*

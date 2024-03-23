@@ -42,7 +42,7 @@ static int		EmbImageRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segP
 static void		EmbImageDisplayProc(TkText *textPtr, TkTextDispChunk *chunkPtr, int x, int y,
 			    int lineHeight, int baseline, Display *display, Drawable dst, int screenY);
 static int		EmbImageLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int offset, int maxX, int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 static void		EmbImageProc(void *clientData, int x, int y, int width, int height,
 			    int imageWidth, int imageHeight);
@@ -944,9 +944,9 @@ static int
 EmbImageLayoutProc(
     const TkTextIndex *indexPtr,/* Identifies first character in chunk. */
     TkTextSegment *eiPtr,	/* Segment corresponding to indexPtr. */
-    TCL_UNUSED(int),			/* Offset within segPtr corresponding to indexPtr (always 0). */
+    TCL_UNUSED(Tcl_Size),			/* Offset within segPtr corresponding to indexPtr (always 0). */
     int maxX,			/* Chunk must not occupy pixels at this position or higher. */
-    TCL_UNUSED(int),		/* Chunk must not include more than this many characters. */
+    TCL_UNUSED(Tcl_Size),		/* Chunk must not include more than this many characters. */
     int noCharsYet,		/* 'true' means no characters have been assigned to this line yet. */
     TkWrapMode wrapMode,	/* Wrap mode to use for line:
 				 * TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_WORD. */

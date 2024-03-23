@@ -818,8 +818,8 @@ static Tcl_Size	CharMeasureProc(TkTextDispChunk *chunkPtr, int x);
 static void		CharBboxProc(TkText *textPtr, TkTextDispChunk *chunkPtr, Tcl_Size index, int y,
 			    int lineHeight, int baseline, int *xPtr, int *yPtr, int *widthPtr,
 			    int *heightPtr);
-static int		MeasureChars(Tk_Font tkfont, const char *source, int maxBytes, int rangeStart,
-			    int rangeLength, int startX, int maxX, int flags, int *nextXPtr);
+static int		MeasureChars(Tk_Font tkfont, const char *source, Tcl_Size maxBytes, Tcl_Size rangeStart,
+			    Tcl_Size rangeLength, int startX, int maxX, int flags, int *nextXPtr);
 static CharInfo *	AllocCharInfo(TkText *textPtr);
 static void		FreeCharInfo(TkText *textPtr, CharInfo *ciPtr);
 #ifdef TK_LAYOUT_WITH_BASE_CHUNKS
@@ -3833,7 +3833,7 @@ LayoutLogicalLine(
 {
     const TkTextDispLineInfo *dispLineInfo = NULL;
     TkTextSegment *segPtr, *endPtr;
-    int byteIndex, byteOffset;
+    Tcl_Size byteIndex, byteOffset;
 
     assert(!TkTextIsElided(&data->index));
 
@@ -3856,7 +3856,7 @@ LayoutLogicalLine(
 	    const TextDInfo *dInfoPtr = data->textPtr->dInfoPtr;
 	    const StyleValues *sValuePtr;
 	    TextStyle *stylePtr;
-	    int byteOffset1;
+	    Tcl_Size byteOffset1;
 
 	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset1);
 	    stylePtr = GetStyle(data->textPtr, segPtr);
@@ -3906,7 +3906,7 @@ LayoutLogicalLine(
 	}
 
 	if (data->textPtr->hyphenate) {
-	    int byteOffset1;
+	    Tcl_Size byteOffset1;
 	    int hyphenRule;
 
 	    segPtr = TkTextIndexGetContentSegment(&data->index, &byteOffset1);
@@ -3916,7 +3916,7 @@ LayoutLogicalLine(
 	    case TK_TEXT_HYPHEN_REPEAT:
 	    case TK_TEXT_HYPHEN_TREMA:
 	    case TK_TEXT_HYPHEN_DOUBLE_DIGRAPH: {
-		int numBytes = 0; /* prevents compiler warning */
+		Tcl_Size numBytes = 0; /* prevents compiler warning */
 		TkTextSegment *nextCharSegPtr;
 		char buf[1];
 		int cont;
@@ -4442,7 +4442,8 @@ LayoutDLine(
     int ascent, descent, leading, jIndent;
     unsigned countChunks;
     unsigned chunksPerSection;
-    int length, offset;
+    int length;
+    Tcl_Size offset;
 
     assert((displayLineNo == 0) ==
 	    (IsStartOfNotMergedLine(indexPtr) || TkTextIndexIsStartOfText(indexPtr)));
@@ -7989,7 +7990,7 @@ FindDisplayLineStartEnd(
     TkrTextIndexBackBytes(textPtr, indexPtr, byteCount, indexPtr);
 
     if (end) {
-	int offset;
+	Tcl_Size offset;
 	int skipBack = 0;
 	TkTextSegment *segPtr = TkTextIndexGetContentSegment(indexPtr, &offset);
 	char const *p = segPtr->body.chars + offset;
@@ -13567,7 +13568,7 @@ static int
 TkpMeasureChars(
     Tk_Font tkfont,
     const char *source,
-    int numBytes,
+    Tcl_Size numBytes,
     int rangeStart,
     int rangeLength,
     int maxLength,
@@ -13584,9 +13585,9 @@ static int
 TkpMeasureChars(
     Tk_Font tkfont,
     const char *source,
-    TCL_UNUSED(int),
-    int rangeStart,
-    int rangeLength,
+    TCL_UNUSED(Tcl_Size),
+    Tcl_Size rangeStart,
+    Tcl_Size rangeLength,
     int maxLength,
     int flags,
     int *lengthPtr)
@@ -13600,8 +13601,8 @@ static int
 MeasureChars(
     Tk_Font tkfont,		/* Font in which to draw characters. */
     const char *source,		/* Characters to be displayed. Need not be NUL-terminated. */
-    int maxBytes,		/* Maximum # of bytes to consider from source. */
-    int rangeStart, int rangeLength,
+    Tcl_Size maxBytes,		/* Maximum # of bytes to consider from source. */
+    Tcl_Size rangeStart, Tcl_Size rangeLength,
 				/* Range of bytes to consider in source.*/
     int startX,			/* X-position at which first character will be drawn. */
     int maxX,			/* Don't consider any character that would cross this x-position. */
@@ -14422,9 +14423,9 @@ TkTextCharLayoutProc(
     const TkTextIndex *indexPtr,/* Index of first character to lay out (corresponds to segPtr and
     				 * offset). */
     TkTextSegment *segPtr,	/* Segment being layed out. */
-    int byteOffset,		/* Byte offset within segment of first character to consider. */
+    Tcl_Size byteOffset,		/* Byte offset within segment of first character to consider. */
     int maxX,			/* Chunk must not occupy pixels at this position or higher. */
-    int maxBytes,		/* Chunk must not include more than this many characters. */
+    Tcl_Size maxBytes,		/* Chunk must not include more than this many characters. */
     int noCharsYet,		/* 'true' means no characters have been assigned to this display
     				 * line yet. */
     TkWrapMode wrapMode,	/* How to handle line wrapping: TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_NONE,
@@ -14747,9 +14748,9 @@ DrawCharsInContext(
     			 * meta-characters (tabs, control characters, and newlines) should be
 			 * stripped out of the string that is passed to this function. If they are
 			 * not stripped out, they will be displayed as regular printing characters. */
-    int numBytes,	/* Number of bytes in string. */
-    int rangeStart,	/* Index of first byte to draw. */
-    int rangeLength,	/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,	/* Number of bytes in string. */
+    Tcl_Size rangeStart,	/* Index of first byte to draw. */
+    Tcl_Size rangeLength,	/* Length of range to draw in bytes. */
     int x, int y,	/* Coordinates at which to place origin of the whole (not just the range)
     			 * string when drawing. */
     int xOffset)	/* Offset to x-coordinate, required for emulation of context drawing. */
@@ -14770,9 +14771,9 @@ DrawCharsInContext(
     			 * meta-characters (tabs, control characters, and newlines) should be
 			 * stripped out of the string that is passed to this function. If they are
 			 * not stripped out, they will be displayed as regular printing characters. */
-    int numBytes,	/* Number of bytes in string. */
-    int rangeStart,	/* Index of first byte to draw. */
-    int rangeLength,	/* Length of range to draw in bytes. */
+    Tcl_Size numBytes,	/* Number of bytes in string. */
+    Tcl_Size rangeStart,	/* Index of first byte to draw. */
+    Tcl_Size rangeLength,	/* Length of range to draw in bytes. */
     int x, int y,	/* Coordinates at which to place origin of the whole (not just the range)
     			 * string when drawing. */
     TCL_UNUSED(int))	/* Offset to x-coordinate, not needed here. */
@@ -14795,7 +14796,7 @@ DrawChars(
     Drawable dst)		/* Pixmap or window in which to draw chunk. */
 {
     const TkTextDispChunk *baseChunkPtr;
-    int numBytes;
+    Tcl_Size numBytes;
 
     assert(chunkPtr->baseChunkPtr);
 
@@ -14866,7 +14867,7 @@ DrawChars(
     Drawable dst)		/* Pixmap or window in which to draw chunk. */
 {
     const CharInfo *ciPtr;
-    int numBytes;
+    Tcl_Size numBytes;
 
     ciPtr = (const CharInfo *)chunkPtr->clientData;
     numBytes = ciPtr->numBytes;

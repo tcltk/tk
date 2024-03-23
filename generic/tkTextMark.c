@@ -42,8 +42,8 @@ static Tcl_Obj *	MarkInspectProc(const TkSharedText *sharedTextPtr, const TkText
 static int		MarkRestoreProc(TkSharedText *sharedTextPtr, TkTextSegment *segPtr);
 static void		MarkCheckProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 static int		MarkLayoutProc(const TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, Tcl_Size offset, int maxX,
+			    Tcl_Size maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 static int		MarkFindNext(Tcl_Interp *interp, TkText *textPtr, int discardSpecial,
 			    Tcl_Obj* indexObj, const char *pattern, int forward);
@@ -2472,9 +2472,9 @@ static int
 MarkLayoutProc(
     const TkTextIndex *indexPtr,/* Identifies first character in chunk. */
     TkTextSegment *segPtr,	/* Segment corresponding to indexPtr. */
-    TCL_UNUSED(int),			/* Offset within segPtr corresponding to indexPtr (always 0). */
+    TCL_UNUSED(Tcl_Size),			/* Offset within segPtr corresponding to indexPtr (always 0). */
     TCL_UNUSED(int),			/* Chunk must not occupy pixels at this position or higher. */
-    TCL_UNUSED(int),		/* Chunk must not include more than this many characters. */
+    TCL_UNUSED(Tcl_Size),		/* Chunk must not include more than this many characters. */
     TCL_UNUSED(int),		/* 'true' means no characters have been assigned to this line yet. */
     TCL_UNUSED(TkWrapMode),	/* Not used. */
     TCL_UNUSED(TkTextSpaceMode),	/* Not used. */

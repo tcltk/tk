@@ -427,12 +427,12 @@ EXTERN int		TkTextGetIndex(Tcl_Interp *interp,
 				struct TkTextIndex *indexPtr);
 /* 160 */
 EXTERN int		TkTextIndexBackBytes(const struct TkText *textPtr,
-				const struct TkTextIndex *srcPtr, int count,
-				struct TkTextIndex *dstPtr);
+				const struct TkTextIndex *srcPtr,
+				Tcl_Size count, struct TkTextIndex *dstPtr);
 /* 161 */
 EXTERN int		TkTextIndexForwBytes(const struct TkText *textPtr,
-				const struct TkTextIndex *srcPtr, int count,
-				struct TkTextIndex *dstPtr);
+				const struct TkTextIndex *srcPtr,
+				Tcl_Size count, struct TkTextIndex *dstPtr);
 /* 162 */
 EXTERN struct TkTextIndex * TkTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
@@ -710,8 +710,8 @@ typedef struct TkIntStubs {
     int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
-    int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
-    int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 161 */
+    int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 160 */
+    int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 161 */
     struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, Tcl_Size byteIndex, struct TkTextIndex *indexPtr); /* 162 */
     Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */
