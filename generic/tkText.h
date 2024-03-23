@@ -1602,7 +1602,7 @@ typedef enum {
 typedef int Tk_SegDeleteProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr, int flags);
 typedef int Tk_SegReuseProc(TkSharedText *sharedTextPtr, struct TkTextSegment *segPtr);
 typedef int Tk_SegLayoutProc(const struct TkTextIndex *indexPtr, TkTextSegment *segPtr,
-		    int offset, int maxX, int maxChars, int noCharsYet, TkWrapMode wrapMode,
+		    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noCharsYet, TkWrapMode wrapMode,
 		    TkTextSpaceMode spaceMode, struct TkTextDispChunk *chunkPtr);
 typedef void Tk_SegCheckProc(const struct TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
 typedef Tcl_Obj *Tk_SegInspectProc(const TkSharedText *sharedTextPtr, const TkTextSegment *segPtr);
@@ -1961,7 +1961,7 @@ MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int extents, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr, Tcl_UniChar *thisChar);
 MODULE_SCOPE int	TkTextCharLayoutProc(const TkTextIndex *indexPtr, TkTextSegment *segPtr,
-			    int byteOffset, int maxX, int maxBytes, int noCharsYet,
+			    Tcl_Size byteOffset, int maxX, Tcl_Size maxBytes, int noCharsYet,
 			    TkWrapMode wrapMode, TkTextSpaceMode spaceMode, TkTextDispChunk *chunkPtr);
 MODULE_SCOPE void	TkTextCreateDInfo(TkText *textPtr);
 MODULE_SCOPE int	TkTextGetDLineInfo(TkText *textPtr, const TkTextIndex *indexPtr,
@@ -2032,7 +2032,7 @@ MODULE_SCOPE unsigned	TkTextCountDisplayLines(TkText *textPtr, const TkTextIndex
 MODULE_SCOPE void	TkTextFindDisplayIndex(TkText *textPtr, TkTextIndex *indexPtr,
 			    int displayLineOffset, int *xOffset);
 MODULE_SCOPE int	TkTextIndexBackChars(const TkText *textPtr, const TkTextIndex *srcPtr,
-			    int count, TkTextIndex *dstPtr, TkTextCountType type);
+			    Tcl_Size count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE Tcl_UniChar TkTextIndexGetChar(const TkTextIndex *indexPtr);
 MODULE_SCOPE unsigned	TkTextIndexCountBytes(const TkTextIndex *index1Ptr,
 			    const TkTextIndex *index2Ptr);
@@ -2040,7 +2040,7 @@ MODULE_SCOPE unsigned	TkTextIndexCount(const TkText *textPtr,
 			    const TkTextIndex *index1Ptr, const TkTextIndex *index2Ptr,
 			    TkTextCountType type);
 MODULE_SCOPE int	TkTextIndexForwChars(const TkText *textPtr, const TkTextIndex *srcPtr,
-			    int count, TkTextIndex *dstPtr, TkTextCountType type);
+			    Tcl_Size count, TkTextIndex *dstPtr, TkTextCountType type);
 MODULE_SCOPE void	TkTextIndexOfX(TkText *textPtr, int x, TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexYPixels(TkText *textPtr, const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextComputeBreakLocations(Tcl_Interp *interp, const char *text, unsigned len,
@@ -2151,9 +2151,9 @@ MODULE_SCOPE int	TkTextIndexGetFromString(Tcl_Interp *interp, struct TkText *tex
 			    const char *string, unsigned lengthOfString, struct TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextIndexPrint(const TkSharedText *sharedTextPtr, const TkText *textPtr,
 				const struct TkTextIndex *indexPtr, char *string);
-MODULE_SCOPE void	TkTextIndexSetByteIndex(TkTextIndex *indexPtr, int byteIndex);
+MODULE_SCOPE void	TkTextIndexSetByteIndex(TkTextIndex *indexPtr, Tcl_Size byteIndex);
 MODULE_SCOPE void	TkTextIndexSetByteIndex2(TkTextIndex *indexPtr,
-			    TkTextLine *linePtr, int byteIndex);
+			    TkTextLine *linePtr, Tcl_Size byteIndex);
 inline void		TkTextIndexSetEpoch(TkTextIndex *indexPtr, size_t epoch);
 MODULE_SCOPE void	TkTextIndexSetSegment(TkTextIndex *indexPtr, TkTextSegment *segPtr);
 inline void		TkTextIndexSetPeer(TkTextIndex *indexPtr, TkText *textPtr);
@@ -2168,13 +2168,13 @@ MODULE_SCOPE void	TkTextIndexSetupToStartOfText(TkTextIndex *indexPtr, TkText *t
 			    TkTextBTree tree);
 MODULE_SCOPE void	TkTextIndexSetupToEndOfText(TkTextIndex *indexPtr, TkText *textPtr,
 			    TkTextBTree tree);
-MODULE_SCOPE int	TkTextIndexAddToByteIndex(TkTextIndex *indexPtr, int numBytes);
+MODULE_SCOPE int	TkTextIndexAddToByteIndex(TkTextIndex *indexPtr, Tcl_Size numBytes);
 inline TkTextLine *	TkTextIndexGetLine(const TkTextIndex *indexPtr);
-MODULE_SCOPE int	TkTextIndexGetByteIndex(const TkTextIndex *indexPtr);
+MODULE_SCOPE Tcl_Size	TkTextIndexGetByteIndex(const TkTextIndex *indexPtr);
 MODULE_SCOPE unsigned	TkTextIndexGetLineNumber(const TkTextIndex *indexPtr, const TkText *textPtr);
 inline TkTextSegment *	TkTextIndexGetSegment(const TkTextIndex *indexPtr);
-MODULE_SCOPE TkTextSegment * TkTextIndexGetContentSegment(const TkTextIndex *indexPtr, int *offset);
-MODULE_SCOPE TkTextSegment * TkTextIndexGetFirstSegment(const TkTextIndex *indexPtr, int *offset);
+MODULE_SCOPE TkTextSegment * TkTextIndexGetContentSegment(const TkTextIndex *indexPtr, Tcl_Size *offset);
+MODULE_SCOPE TkTextSegment * TkTextIndexGetFirstSegment(const TkTextIndex *indexPtr, Tcl_Size *offset);
 inline TkSharedText *	TkTextIndexGetShared(const TkTextIndex *indexPtr);
 MODULE_SCOPE void	TkTextIndexClear(TkTextIndex *indexPtr, TkText *textPtr);
 MODULE_SCOPE void	TkTextIndexClear2(TkTextIndex *indexPtr, TkText *textPtr, TkTextBTree tree);
@@ -2202,10 +2202,10 @@ MODULE_SCOPE int		TkrTextGetIndex(Tcl_Interp *interp,
 				struct TkText *textPtr, const char *string,
 				struct TkTextIndex *indexPtr);
 MODULE_SCOPE int		TkrTextIndexBackBytes(const struct TkText *textPtr,
-				const struct TkTextIndex *srcPtr, int count,
+				const struct TkTextIndex *srcPtr, Tcl_Size count,
 				struct TkTextIndex *dstPtr);
 MODULE_SCOPE int		TkrTextIndexForwBytes(const struct TkText *textPtr,
-				const struct TkTextIndex *srcPtr, int count,
+				const struct TkTextIndex *srcPtr, Tcl_Size count,
 				struct TkTextIndex *dstPtr);
 MODULE_SCOPE struct TkTextIndex * TkrTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,

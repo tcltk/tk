@@ -6503,7 +6503,7 @@ SplitSeg(
     SplitInfo *splitInfo)	/* Additional arguments for split, only given when inserting chars. */
 {
     TkTextSegment *segPtr;
-    int count;
+    Tcl_Size count;
 
     if (splitInfo) {
 	/*
@@ -11341,7 +11341,8 @@ TkBTreeStartSearch(
     TkTextSearchMode mode)	/* The search mode, see definition of TkTextSearchMode. */
 {
     TkTextSegment *segPtr;
-    int offset, nlines, lineNo;
+    Tcl_Size offset;
+    int nlines, lineNo;
 
     assert(tagPtr);
 
@@ -11482,7 +11483,7 @@ TkBTreeStartSearchBack(
 {
     TkTextSegment *segPtr;
     TkTextSegment *lastPtr;
-    int offset;
+    Tcl_Size offset;
     int lineNo;
 
     assert(tagPtr);
