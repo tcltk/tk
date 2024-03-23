@@ -165,8 +165,8 @@ bind Entry <Delete> {
     if {[%W selection present]} {
 	%W delete sel.first sel.last
     } else {
-	%W delete [tk::startOfCluster [%W get] [%W index insert]] \
-		[tk::endOfCluster [%W get] [%W index insert]]
+	%W delete [tk::startOfCluster [%W get] [%W index insert] [$w cget -locale]] \
+		[tk::endOfCluster [%W get] [%W index insert] [$w cget -locale]]
     }
 }
 bind Entry <BackSpace> {
@@ -390,17 +390,17 @@ proc ::tk::EntryMouseSelect {w x} {
 	}
 	word {
 	    if {$cur < $anchor} {
-		set before [tk::wordBreakBefore [$w get] $cur]
-		set after [tk::wordBreakAfter [$w get] $anchor-1]
+		set before [tk::wordBreakBefore [$w get] $cur [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $anchor-1 [$w cget -locale]]
 	    } elseif {$cur > $anchor} {
-		set before [tk::wordBreakBefore [$w get] $anchor]
-		set after [tk::wordBreakAfter [$w get] $cur-1]
+		set before [tk::wordBreakBefore [$w get] $anchor [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $cur-1 [$w cget -locale]]
 	    } else {
 		if {[$w index @$Priv(pressX)] < $anchor} {
 		      incr anchor -1
 		}
-		set before [tk::wordBreakBefore [$w get] $anchor]
-		set after [tk::wordBreakAfter [$w get] $anchor]
+		set before [tk::wordBreakBefore [$w get] $anchor [$w cget -locale]]
+		set after [tk::wordBreakAfter [$w get] $anchor [$w cget -locale]]
 	    }
 	    if {$before < 0} {
 		set before 0
@@ -520,8 +520,8 @@ proc ::tk::EntryBackspace w {
     } else {
 	set x [expr {[$w index insert] - 1}]
 	if {$x >= 0} {
-	    $w delete [tk::startOfCluster [$w get] $x] \
-		      [tk::endOfCluster [$w get] $x]
+	    $w delete [tk::startOfCluster [$w get] $x [$w cget -locale]] \
+		      [tk::endOfCluster [$w get] $x [$w cget -locale]]
 	}
 	if {[$w index @0] >= [$w index insert]} {
 	    set range [$w xview]
@@ -600,9 +600,9 @@ proc ::tk::EntryNextWord {w start} {
     if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return end
     }
-    set pos [tk::endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos >= 0} {
-	set pos [tk::startOfNextWord [$w get] $pos]
+	set pos [tk::startOfNextWord [$w get] $pos [$w cget -locale]]
     }
     if {$pos < 0} {
 	return end
@@ -623,7 +623,7 @@ proc ::tk::EntrySelectNextWord {w start} {
     if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return end
     }
-    set pos [tk::endOfWord [$w get] [$w index $start]]
+    set pos [tk::endOfWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return end
     }
@@ -644,7 +644,7 @@ proc ::tk::EntryPreviousWord {w start} {
     if {[winfo class $w] eq "Entry" && [$w cget -show] ne ""} {
 	return 0
     }
-    set pos [tk::startOfPreviousWord [$w get] [$w index $start]]
+    set pos [tk::startOfPreviousWord [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return 0
     }
@@ -652,7 +652,7 @@ proc ::tk::EntryPreviousWord {w start} {
 }
 
 proc ::tk::EntryNextChar {w start} {
-    set pos [tk::endOfCluster [$w get] [$w index $start]]
+    set pos [tk::endOfCluster [$w get] [$w index $start] [$w cget -locale]]
     if {$pos < 0} {
 	return end
     }
@@ -660,7 +660,7 @@ proc ::tk::EntryNextChar {w start} {
 }
 
 proc ::tk::EntryPreviousChar {w start} {
-    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}]]
+    set pos [tk::startOfCluster [$w get] [expr {[$w index $start]-1}] [$w cget -locale]]
     if {$pos < 0} {
 	return 0
     }

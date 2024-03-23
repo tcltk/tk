@@ -29,6 +29,8 @@ If set, the widget selection is linked to the X selection.
 .OP \-justify justify Justify
 Specifies how the text is aligned within the widget.
 Must be one of \fBleft\fR, \fBcenter\fR, or \fBright\fR.
+.OP \-locale locale Locale
+Specifies which locale is used for determining character or word boundaries.
 .OP \-height height Height
 Specifies the height of the pop-down listbox, in rows.
 .OP \-postcommand postCommand PostCommand

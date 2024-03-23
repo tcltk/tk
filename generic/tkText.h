@@ -478,6 +478,7 @@ typedef struct TkTextTag {
 				 * size with which information is displayed on
 				 * the screen (so need to recalculate line
 				 * dimensions if tag changes). */
+    Tcl_Obj *localeObj; /* locale */
 } TkTextTag;
 
 #define TK_TAG_AFFECTS_DISPLAY	0x1
@@ -858,6 +859,7 @@ typedef struct TkText {
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
                                  * date */
+    Tcl_Obj *localeObj;		/* locale */
 } TkText;
 
 /*
@@ -1108,6 +1110,8 @@ MODULE_SCOPE void	TkTextSelectionEvent(TkText *textPtr);
 MODULE_SCOPE int	TkTextIndexBbox(TkText *textPtr,
 			    const TkTextIndex *indexPtr, int *xPtr, int *yPtr,
 			    int *widthPtr, int *heightPtr, int *charWidthPtr);
+MODULE_SCOPE Tcl_Obj *TkTextIndexLocale(TkText *textPtr,
+			    const TkTextIndex *indexPtr);
 MODULE_SCOPE int	TkTextCharLayoutProc(TkText *textPtr,
 			    TkTextIndex *indexPtr, TkTextSegment *segPtr,
 			    Tcl_Size offset, int maxX, Tcl_Size maxChars, int noBreakYet,
