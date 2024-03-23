@@ -210,7 +210,7 @@ typedef struct TtkTag *Ttk_Tag;
 typedef struct TtkTagTable *Ttk_TagTable;
 typedef struct TtkTagSet {	/* TODO: make opaque */
     Ttk_Tag	*tags;
-    int 	nTags;
+    Tcl_Size 	nTags;
 } *Ttk_TagSet;
 
 MODULE_SCOPE Ttk_TagTable Ttk_CreateTagTable(

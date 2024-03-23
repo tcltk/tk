@@ -12,7 +12,7 @@
  * +++ Internal data structures.
  */
 struct TtkTag {
-    int 	priority;		/* 1=>highest */
+    Tcl_Size 	priority;		/* 1=>highest */
     const char	*tagName;		/* Back-pointer to hash table entry */
     void	*tagRecord;		/* User data */
 };
@@ -21,8 +21,8 @@ struct TtkTagTable {
     Tk_Window		tkwin;		/* owner window */
     const Tk_OptionSpec	*optionSpecs;	/* ... */
     Tk_OptionTable	optionTable;	/* ... */
-    int         	recordSize;	/* size of tag record */
-    int 		nTags;		/* #tags defined so far */
+    Tcl_Size         	recordSize;	/* size of tag record */
+    Tcl_Size 		nTags;		/* #tags defined so far */
     Tcl_HashTable	tags;		/* defined tags */
 };
 
@@ -155,7 +155,7 @@ Ttk_TagSet Ttk_GetTagSetFromObj(
 Tcl_Obj *Ttk_NewTagSetObj(Ttk_TagSet tagset)
 {
     Tcl_Obj *result = Tcl_NewListObj(0,0);
-    int i;
+    Tcl_Size i;
 
     for (i = 0; i < tagset->nTags; ++i) {
 	Tcl_ListObjAppendElement(
@@ -174,7 +174,7 @@ void Ttk_FreeTagSet(Ttk_TagSet tagset)
  */
 int Ttk_TagSetContains(Ttk_TagSet tagset, Ttk_Tag tag)
 {
-    int i;
+    Tcl_Size i;
     for (i = 0; i < tagset->nTags; ++i) {
 	if (tagset->tags[i] == tag) {
 	    return 1;
@@ -190,7 +190,7 @@ int Ttk_TagSetContains(Ttk_TagSet tagset, Ttk_Tag tag)
  */
 int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
 {
-    int i;
+    Tcl_Size i;
     for (i = 0; i < tagset->nTags; ++i) {
 	if (tagset->tags[i] == tag) {
 	    return 0;
@@ -209,7 +209,8 @@ int Ttk_TagSetAdd(Ttk_TagSet tagset, Ttk_Tag tag)
  */
 int Ttk_TagSetAddSet(Ttk_TagSet tagset, Ttk_TagSet tagsetFrom)
 {
-    int i, j, result = 0, found, total, nTags = tagset->nTags;
+    Tcl_Size i, j, total, nTags = tagset->nTags;
+    int result = 0, found;
     Ttk_Tag tag;
 
     total = tagsetFrom->nTags + tagset->nTags;
@@ -238,7 +239,7 @@ int Ttk_TagSetAddSet(Ttk_TagSet tagset, Ttk_TagSet tagsetFrom)
  */
 int Ttk_TagSetRemove(Ttk_TagSet tagset, Ttk_Tag tag)
 {
-    int i = 0, j = 0;
+    Tcl_Size i = 0, j = 0;
     while (i < tagset->nTags) {
 	if ((tagset->tags[j] = tagset->tags[i]) != tag) {
 	    ++j;
@@ -317,7 +318,7 @@ void Ttk_TagSetDefaults(Ttk_TagTable tagTable, Ttk_Style style, void *record)
 void Ttk_TagSetValues(Ttk_TagTable tagTable, Ttk_TagSet tagSet, void *record)
 {
     const int LOWEST_PRIORITY = 0x7FFFFFFF;
-    int i, j;
+    Tcl_Size i, j;
 
     for (i = 0; tagTable->optionSpecs[i].type != TK_OPTION_END; ++i) {
 	const Tk_OptionSpec *optionSpec = tagTable->optionSpecs + i;
