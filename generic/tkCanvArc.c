@@ -376,7 +376,7 @@ ArcCoords(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 4, got %" TCL_SIZE_MODIFIER "d", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -405,7 +405,7 @@ ArcCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 4, got %" TCL_SIZE_MODIFIER "d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "ARC", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -2228,7 +2228,7 @@ StyleParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad -style option \"%s\": must be arc, chord, or pieslice",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARC_STYLE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARC_STYLE", (char *)NULL);
     *stylePtr = PIESLICE_STYLE;
     return TCL_ERROR;
 }
