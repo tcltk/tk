@@ -18,9 +18,10 @@ A \fBttk::label\fR widget displays a textual label and/or image.
 The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
-\-anchor	\-class	\-compound	\-cursor
-\-font	\-foreground
-\-image	\-justify	\-padding	\-state	\-style	\-takefocus
+\-anchor	\-class	\-compound
+\-cursor	\-font	\-foreground
+\-image	\-justify	\-padding
+\-state	\-style	\-takefocus
 \-text	\-textvariable	\-underline
 \-width	\-wraplength
 .SE
