@@ -80,7 +80,7 @@ EXTERN TkCursor *	TkCreateCursorFromData(Tk_Window tkwin,
 				XColor fg, XColor bg);
 /* 13 */
 EXTERN int		TkCreateFrame(void *clientData, Tcl_Interp *interp,
-				int argc, const char *const *argv,
+				Tcl_Size argc, const char *const *argv,
 				int toplevel, const char *appName);
 /* 14 */
 EXTERN Tk_Window	TkCreateMainWindow(Tcl_Interp *interp,
@@ -456,12 +456,12 @@ EXTERN int		TkTextGetIndex(Tcl_Interp *interp,
 				struct TkTextIndex *indexPtr);
 /* 160 */
 EXTERN int		TkTextIndexBackBytes(const struct TkText *textPtr,
-				const struct TkTextIndex *srcPtr, int count,
-				struct TkTextIndex *dstPtr);
+				const struct TkTextIndex *srcPtr,
+				Tcl_Size count, struct TkTextIndex *dstPtr);
 /* 161 */
 EXTERN int		TkTextIndexForwBytes(const struct TkText *textPtr,
-				const struct TkTextIndex *srcPtr, int count,
-				struct TkTextIndex *dstPtr);
+				const struct TkTextIndex *srcPtr,
+				Tcl_Size count, struct TkTextIndex *dstPtr);
 /* 162 */
 EXTERN struct TkTextIndex * TkTextMakeByteIndex(TkTextBTree tree,
 				const struct TkText *textPtr, int lineIndex,
@@ -592,7 +592,7 @@ typedef struct TkIntStubs {
     void (*reserved10)(void);
     void (*reserved11)(void);
     TkCursor * (*tkCreateCursorFromData) (Tk_Window tkwin, const char *source, const char *mask, int width, int height, int xHot, int yHot, XColor fg, XColor bg); /* 12 */
-    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, int argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
+    int (*tkCreateFrame) (void *clientData, Tcl_Interp *interp, Tcl_Size argc, const char *const *argv, int toplevel, const char *appName); /* 13 */
     Tk_Window (*tkCreateMainWindow) (Tcl_Interp *interp, const char *screenName, const char *baseName); /* 14 */
     Time (*tkCurrentTime) (TkDisplay *dispPtr); /* 15 */
     void (*tkDeleteAllImages) (TkMainInfo *mainPtr); /* 16 */
@@ -707,7 +707,9 @@ typedef struct TkIntStubs {
     void (*reserved121)(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
     void (*reserved121)(void); /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
     Pixmap (*tkpCreateNativeBitmap) (Display *display, const void *source); /* 121 */
 #endif /* AQUA */
 #if !(defined(_WIN32) || defined(MAC_OSX_TK)) /* X11 */
@@ -717,7 +719,9 @@ typedef struct TkIntStubs {
     void (*reserved122)(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
     void (*reserved122)(void); /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
     void (*tkpDefineNativeBitmaps) (void); /* 122 */
 #endif /* AQUA */
     void (*reserved123)(void);
@@ -728,7 +732,9 @@ typedef struct TkIntStubs {
     void (*reserved124)(void);
 #endif /* WIN */
 #ifdef MAC_OSX_TK /* AQUA */
+# if TCL_MAJOR_VERSION < 9
     void (*reserved124)(void); /* Dummy entry for stubs table backwards compatibility */
+# endif /* TCL_MAJOR_VERSION < 9 */
     Pixmap (*tkpGetNativeAppBitmap) (Display *display, const char *name, int *width, int *height); /* 124 */
 #endif /* AQUA */
     void (*reserved125)(void);
@@ -766,8 +772,8 @@ typedef struct TkIntStubs {
     int (*tkpTesttextCmd) (void *dummy, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[]); /* 157 */
     int (*tkSelGetSelection) (Tcl_Interp *interp, Tk_Window tkwin, Atom selection, Atom target, Tk_GetSelProc *proc, void *clientData); /* 158 */
     int (*tkTextGetIndex) (Tcl_Interp *interp, struct TkText *textPtr, const char *string, struct TkTextIndex *indexPtr); /* 159 */
-    int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 160 */
-    int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, int count, struct TkTextIndex *dstPtr); /* 161 */
+    int (*tkTextIndexBackBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 160 */
+    int (*tkTextIndexForwBytes) (const struct TkText *textPtr, const struct TkTextIndex *srcPtr, Tcl_Size count, struct TkTextIndex *dstPtr); /* 161 */
     struct TkTextIndex * (*tkTextMakeByteIndex) (TkTextBTree tree, const struct TkText *textPtr, int lineIndex, Tcl_Size byteIndex, struct TkTextIndex *indexPtr); /* 162 */
     Tcl_Size (*tkTextPrintIndex) (const struct TkText *textPtr, const struct TkTextIndex *indexPtr, char *string); /* 163 */
     struct TkTextSegment * (*tkTextSetMark) (struct TkText *textPtr, const char *name, struct TkTextIndex *indexPtr); /* 164 */

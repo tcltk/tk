@@ -449,7 +449,7 @@ int
 TkCreateFrame(
     void *clientData,	/* Either NULL or pointer to option table. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int argc,			/* Number of arguments. */
+    Tcl_Size argc,			/* Number of arguments. */
     const char *const *argv,	/* Argument strings. */
     int toplevel,		/* Non-zero means create a toplevel window,
 				 * zero means create a frame. */
@@ -458,7 +458,8 @@ TkCreateFrame(
 				 * Gives the base name to use for the new
 				 * application. */
 {
-    int result, i;
+    int result;
+    Tcl_Size i;
     Tcl_Obj **objv = (Tcl_Obj **)ckalloc((argc+1) * sizeof(Tcl_Obj **));
 
     for (i=0; i<argc; i++) {

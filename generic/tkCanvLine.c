@@ -33,7 +33,7 @@ typedef struct LineItem {
     Tk_Outline outline;		/* Outline structure */
     Tk_Canvas canvas;		/* Canvas containing item. Needed for parsing
 				 * arrow shapes. */
-    int numPoints;		/* Number of points in line (always >= 0). */
+    Tcl_Size numPoints;		/* Number of points in line (always >= 0). */
     double *coordPtr;		/* Pointer to malloc-ed array containing x-
 				 * and y-coords of all points in line.
 				 * X-coords are even-valued indices, y-coords
@@ -366,8 +366,7 @@ LineCoords(
     Tcl_Obj *const objv[])	/* Array of coordinates: x1, y1, x2, y2, ... */
 {
     LineItem *linePtr = (LineItem *) itemPtr;
-    Tcl_Size i;
-    int numPoints;
+    Tcl_Size i, numPoints;
     double *coordPtr;
 
     if (objc == 0) {
@@ -403,12 +402,12 @@ LineCoords(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "d",
 		objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", (char *)NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected at least 4, got %" TCL_SIZE_MODIFIER "d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -654,7 +653,8 @@ ComputeLineBbox(
     LineItem *linePtr)		/* Item whose bbos is to be recomputed. */
 {
     double *coordPtr;
-    int i, intWidth;
+    Tcl_Size i;
+    int intWidth;
     double width;
     Tk_State state = linePtr->header.state;
     Tk_TSOffset *tsoffset;
@@ -1002,7 +1002,7 @@ LineInsert(
 	linePtr->coordPtr[length-1] = linePtr->lastArrowPtr[1];
     }
     newCoordPtr = (double *)ckalloc(sizeof(double) * (length + objc));
-    for (i=0; i<(int)beforeThis; i++) {
+    for (i=0; i<beforeThis; i++) {
 	newCoordPtr[i] = linePtr->coordPtr[i];
     }
     for (i=0; i<objc; i++) {
@@ -1061,10 +1061,10 @@ LineInsert(
 		 * of the line, include a third point.
 		 */
 
-		if ((int)beforeThis == -4) {
+		if (beforeThis == (Tcl_Size)-4) {
 		    objc += 2;
 		}
-		if ((int)beforeThis + 4 == length - (objc - 8)) {
+		if (beforeThis + 4 == length - (objc - 8)) {
 		    beforeThis -= 2;
 		    objc += 2;
 		}
@@ -1811,7 +1811,7 @@ ScaleLine(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     double *coordPtr;
-    int i;
+    Tcl_Size i;
 
     /*
      * Delete any arrowheads before scaling all the points (so that the
@@ -1890,7 +1890,7 @@ GetLineIndex(
     string = Tcl_GetStringFromObj(obj, &length);
 
     if (string[0] == '@') {
-	int i;
+	Tcl_Size i;
 	double x, y, bestDist, dist, *coordPtr;
 	char savechar;
 	char *p, *sep;
@@ -1926,7 +1926,7 @@ GetLineIndex(
     } else {
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -1958,7 +1958,7 @@ TranslateLine(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     double *coordPtr;
-    int i;
+    Tcl_Size i;
 
     for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
 	    i++, coordPtr += 2) {
@@ -2010,7 +2010,7 @@ RotateLine(
 {
     LineItem *linePtr = (LineItem *) itemPtr;
     double *coordPtr;
-    int i;
+    Tcl_Size i;
     double s = sin(angleRad), c = cos(angleRad);
 
     for (i = 0, coordPtr = linePtr->coordPtr; i < linePtr->numPoints;
@@ -2095,7 +2095,7 @@ ParseArrowShape(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad arrow shape \"%s\": must be list with three numbers",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW_SHAPE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW_SHAPE", (char *)NULL);
     if (argv != NULL) {
 	ckfree(argv);
     }
@@ -2197,7 +2197,7 @@ ArrowParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad arrow spec \"%s\": must be none, first, last, or both",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW", (char *)NULL);
     *arrowPtr = ARROWS_NONE;
     return TCL_ERROR;
 }
