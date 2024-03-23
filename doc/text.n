@@ -508,6 +508,14 @@ contain characters because they are indented by \fB\-lmargin1\fR or
 specified as an empty string, then the color used is specified by the
 \fB\-background\fR tag option (or, if this is also unspecified, by the
 \fB\-background\fR widget option).
+.\" OPTION: -locale
+.TP
+\fB\-locale \fIlocale\fR
+.
+The locale which is used for determining word and character
+boundaries within the text. The special value \fIregexp\fR can
+be used to select a locale-independent algorithm, based on the
+presence of (Unicode) word characters only.
 .\" OPTION: -offset
 .TP
 \fB\-offset \fIpixels\fR
@@ -1479,6 +1487,11 @@ of the tags present around the insertion point. If multiple
 effect as if a separate \fIpathName \fBinsert\fR widget command had been
 issued for each pair, in order. The last \fItagList\fR argument may be
 omitted.
+.\" METHOD: locale
+.TP
+\fIpathName \fBlocale \fIindex\fR
+.
+Returns the locale belonging to this \fIindex\fR.
 .\" METHOD: mark
 .TP
 \fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?
