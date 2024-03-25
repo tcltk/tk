@@ -131,7 +131,7 @@ UnderlineParseProc(
 
     } else {
 	Tcl_AppendResult(interp, "bad index \"", value,
-		"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", NULL);
+		"\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", (char *)NULL);
     }
 	return code;
 }
@@ -428,7 +428,7 @@ TextCoords(
     } else if (objc > 2) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -439,7 +439,7 @@ TextCoords(
 	} else if (objc != 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "d", objc));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "TEXT", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -1482,7 +1482,7 @@ GetTextIndex(
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectFirst;
@@ -1491,7 +1491,7 @@ GetTextIndex(
 	if (textInfoPtr->selItemPtr != itemPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "selection isn't in item", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "UNSELECTED", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	*indexPtr = textInfoPtr->selectLast;
@@ -1525,7 +1525,7 @@ GetTextIndex(
     } else {
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "TEXT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "TEXT", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

@@ -402,12 +402,12 @@ LineCoords(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "d",
 		objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", (char *)NULL);
 	return TCL_ERROR;
     } else if (objc < 4) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected at least 4, got %" TCL_SIZE_MODIFIER "d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "LINE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1926,7 +1926,7 @@ GetLineIndex(
     } else {
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "LINE", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -2095,7 +2095,7 @@ ParseArrowShape(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad arrow shape \"%s\": must be list with three numbers",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW_SHAPE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW_SHAPE", (char *)NULL);
     if (argv != NULL) {
 	ckfree(argv);
     }
@@ -2197,7 +2197,7 @@ ArrowParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad arrow spec \"%s\": must be none, first, last, or both",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "ARROW", (char *)NULL);
     *arrowPtr = ARROWS_NONE;
     return TCL_ERROR;
 }

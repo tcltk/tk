@@ -488,12 +488,12 @@ declare 159 {
 }
 declare 160 {
     int TkTextIndexBackBytes(const struct TkText *textPtr,
-	    const struct TkTextIndex *srcPtr, int count,
+	    const struct TkTextIndex *srcPtr, Tcl_Size count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 161 {
     int TkTextIndexForwBytes(const struct TkText *textPtr,
-	    const struct TkTextIndex *srcPtr, int count,
+	    const struct TkTextIndex *srcPtr, Tcl_Size count,
 	    struct TkTextIndex *dstPtr)
 }
 declare 162 {

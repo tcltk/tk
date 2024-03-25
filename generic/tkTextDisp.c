@@ -3671,7 +3671,7 @@ TkTextFindDisplayLineEnd(
 
     while (1) {
 	DLine *dlPtr;
-	int byteCount;
+	Tcl_Size byteCount;
 	TkTextIndex nextLineStart;
 
 	dlPtr = LayoutDLine(textPtr, &index);
@@ -6390,7 +6390,7 @@ TkTextScanCmd(
     if ((objc != 5) && (objc != 6)) {
 	Tcl_WrongNumArgs(interp, 2, objv, "mark x y");
 	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]),
-		" scan dragto x y ?gain?\"", NULL);
+		" scan dragto x y ?gain?\"", (char *)NULL);
 	/*
 	 * Ought to be:
 	 * Tcl_WrongNumArgs(interp, 2, objc, "dragto x y ?gain?");
@@ -6460,7 +6460,7 @@ TkTextScanCmd(
 		"bad scan option \"%s\": must be dragto or mark",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option",
-		Tcl_GetString(objv[2]), NULL);
+		Tcl_GetString(objv[2]), (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -7366,7 +7366,7 @@ TkTextIndexBbox(
     TextDInfo *dInfoPtr = textPtr->dInfoPtr;
     DLine *dlPtr;
     TkTextDispChunk *chunkPtr;
-    int byteCount;
+    Tcl_Size byteCount;
 
     /*
      * Make sure that all of the screen layout information is up to date.

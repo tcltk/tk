@@ -789,7 +789,7 @@ Tk_MeasureChars(
     Tk_Font tkfont,		/* Font in which characters will be drawn. */
     const char *source,		/* UTF-8 string to be displayed. Need not be
 				 * '\0' terminated. */
-    Tcl_Size numBytes1,		/* Maximum number of bytes to consider from
+    Tcl_Size numBytes,		/* Maximum number of bytes to consider from
 				 * source string. */
     int maxLength,		/* If >= 0, maxLength specifies the longest
 				 * permissible line length in pixels; don't
@@ -807,10 +807,10 @@ Tk_MeasureChars(
     int *lengthPtr)		/* Filled with x-location just after the
 				 * terminating character. */
 {
-    int numBytes = numBytes1;
     UnixFont *fontPtr;
     SubFont *lastSubFontPtr;
-    int curX, curByte, ch;
+    Tcl_Size curByte;
+    int curX, ch;
 
     /*
      * Unix does not use kerning or fractional character widths when
@@ -2888,7 +2888,7 @@ GetImageOfText(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    int numBytes,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     int *realWidthPtr, int *realHeightPtr)
 {
     int width, height;
@@ -2970,11 +2970,10 @@ TkDrawAngledChars(
 				 * is passed to this function. If they are not
 				 * stripped out, they will be displayed as
 				 * regular printing characters. */
-    Tcl_Size numBytes1,		/* Number of bytes in string. */
+    Tcl_Size numBytes,		/* Number of bytes in string. */
     double x, double y,
     double angle)
 {
-    int numBytes = numBytes1;
     if (angle == 0.0) {
 	Tk_DrawChars(display, drawable, gc, tkfont, source, numBytes, x, y);
     } else {

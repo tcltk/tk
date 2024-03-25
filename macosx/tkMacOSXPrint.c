@@ -22,7 +22,7 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <fcntl.h>
-#include <tkMacOSXImage.h>
+#include "tkMacOSXImage.h"
 #include "tkMacOSXPrivate.h"
 
 NSString * fileName = nil;

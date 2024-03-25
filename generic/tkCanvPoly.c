@@ -364,7 +364,7 @@ PolygonCoords(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected an even number, got %" TCL_SIZE_MODIFIER "d",
 		objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "POLYGON", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1766,7 +1766,7 @@ GetPolygonIndex(
     } else {
     badIndex:
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\"", string));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "ITEM_INDEX", "POLY", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
