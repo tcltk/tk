@@ -940,7 +940,7 @@ ImgPhotoCmd(
 	 */
 
 	Tcl_Obj *channels[4];
-	int channelCount = 3;
+	int i, channelCount = 3;
 
 	index = 3;
 	memset(&options, 0, sizeof(options));
@@ -976,10 +976,9 @@ ImgPhotoCmd(
 	 */
 
 	pixelPtr = modelPtr->pix32 + (y * modelPtr->width + x) * 4;
-	channels[0] = Tcl_NewWideIntObj(pixelPtr[0]);
-	channels[1] = Tcl_NewWideIntObj(pixelPtr[1]);
-	channels[2] = Tcl_NewWideIntObj(pixelPtr[2]);
-	channels[3] = Tcl_NewWideIntObj(pixelPtr[3]);
+	for (i = 0; i < channelCount; i++) {
+	    channels[i] = Tcl_NewWideIntObj(pixelPtr[i]);
+	}
 	Tcl_SetObjResult(interp, Tcl_NewListObj(channelCount, channels));
 	return TCL_OK;
     }
