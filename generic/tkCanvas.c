@@ -932,7 +932,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
-			Tcl_GetString(objv[2]), NULL);
+			Tcl_GetString(objv[2]), (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1008,7 +1008,7 @@ CanvasWidgetCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"requested illegal events; only key, button, motion,"
 			" enter, leave, and virtual events may be used", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_EVENTS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_EVENTS", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -1251,7 +1251,7 @@ CanvasWidgetCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "unknown or ambiguous item type \"%s\"", arg));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM_TYPE", arg,
-		    NULL);
+		    (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1540,7 +1540,7 @@ CanvasWidgetCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't find an indexable item \"%s\"",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "INDEXABLE_ITEM", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "INDEXABLE_ITEM", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1860,7 +1860,7 @@ CanvasWidgetCmd(
 	if ((xScale == 0.0) || (yScale == 0.0)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "scale factor cannot be zero", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_SCALE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "BAD_SCALE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -1943,7 +1943,7 @@ CanvasWidgetCmd(
 			"can't find an indexable and selectable item \"%s\"",
 			Tcl_GetString(objv[3])));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SELECTABLE_ITEM",
-			NULL);
+			(char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2344,7 +2344,7 @@ ConfigureCanvas(
 	if (argc2 != 4) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad scrollRegion \"%s\"", canvasPtr->regionString));
-	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLL_REGION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SCROLL_REGION", (char *)NULL);
 	badRegion:
 	    ckfree(canvasPtr->regionString);
 	    ckfree(argv2);
@@ -2555,7 +2555,7 @@ DrawCanvas(
 #endif
 
     if ((tkwin = canvasPtr->tkwin) == NULL) {
-        Tcl_AppendResult(interp, "canvas tkwin is NULL!", NULL);
+        Tcl_AppendResult(interp, "canvas tkwin is NULL!", (char *)NULL);
         result = TCL_ERROR;
         goto done;
     }
@@ -2569,7 +2569,7 @@ DrawCanvas(
     do {
 
         if ((displayPtr = Tk_Display(tkwin)) == NULL) {
-            Tcl_AppendResult(interp, "canvas (or parent) display is NULL!", NULL);
+            Tcl_AppendResult(interp, "canvas (or parent) display is NULL!", (char *)NULL);
             result = TCL_ERROR;
             goto done;
         }
@@ -2579,7 +2579,7 @@ DrawCanvas(
         }
 
         if ((tkwin = Tk_Parent(tkwin)) == NULL) {
-            Tcl_AppendResult(interp, "canvas has no parent with a valid window id! Is the toplevel window mapped?", NULL);
+            Tcl_AppendResult(interp, "canvas has no parent with a valid window id! Is the toplevel window mapped?", (char *)NULL);
             result = TCL_ERROR;
             goto done;
         }
@@ -2590,7 +2590,7 @@ DrawCanvas(
     visualPtr = Tk_Visual(tkwin);
 
     if (subsample == 0) {
-        Tcl_AppendResult(interp, "subsample cannot be zero", NULL);
+        Tcl_AppendResult(interp, "subsample cannot be zero", (char *)NULL);
         result = TCL_ERROR;
         goto done;
     }
@@ -2651,7 +2651,7 @@ DrawCanvas(
     pmHeight = pixmapY2 - pixmapY1 + 1;
     if ((pixmap = Tk_GetPixmap(displayPtr, Tk_WindowId(tkwin), pmWidth, pmHeight,
             bitsPerPixel)) == 0) {
-        Tcl_AppendResult(interp, "failed to create drawing Pixmap", NULL);
+        Tcl_AppendResult(interp, "failed to create drawing Pixmap", (char *)NULL);
         result = TCL_ERROR;
         goto done;
     }
@@ -2698,56 +2698,56 @@ DrawCanvas(
 
     if ((ximagePtr = XGetImage(displayPtr, pixmap, -pixmapX1, -pixmapY1, cWidth,
             cHeight, AllPlanes, ZPixmap)) == NULL) {
-        Tcl_AppendResult(interp, "failed to copy Pixmap to XImage", NULL);
+        Tcl_AppendResult(interp, "failed to copy Pixmap to XImage", (char *)NULL);
         result = TCL_ERROR;
         goto done;
     }
 
 #ifdef DEBUG_DRAWCANVAS
-    Tcl_AppendResult(interp, "ximagePtr {", NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->width);   Tcl_AppendResult(interp, " width ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->height);  Tcl_AppendResult(interp, " height ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->xoffset); Tcl_AppendResult(interp, " xoffset ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->format);  Tcl_AppendResult(interp, " format ", buffer, NULL);
-                                             Tcl_AppendResult(interp, " ximagePtr->data", NULL);
+    Tcl_AppendResult(interp, "ximagePtr {", (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->width);   Tcl_AppendResult(interp, " width ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->height);  Tcl_AppendResult(interp, " height ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->xoffset); Tcl_AppendResult(interp, " xoffset ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->format);  Tcl_AppendResult(interp, " format ", buffer, (char *)NULL);
+    Tcl_AppendResult(interp, " ximagePtr->data", (char *)NULL);
     if (ximagePtr->data != NULL) {
 	int ix, iy;
 
-        Tcl_AppendResult(interp, " {", NULL);
+        Tcl_AppendResult(interp, " {", (char *)NULL);
 	for (iy = 0; iy < ximagePtr->height; ++ iy) {
-	    Tcl_AppendResult(interp, " {", NULL);
+	    Tcl_AppendResult(interp, " {", (char *)NULL);
 	    for (ix = 0; ix < ximagePtr->bytes_per_line; ++ ix) {
 	        if (ix > 0) {
                     if (ix % 4 == 0)
-                        Tcl_AppendResult(interp, "-", NULL);
+                        Tcl_AppendResult(interp, "-", (char *)NULL);
                     else
-                        Tcl_AppendResult(interp, " ", NULL);
+                        Tcl_AppendResult(interp, " ", (char *)NULL);
                 }
 	        snprintf(buffer,sizeof(buffer),"%2.2x",ximagePtr->data[ximagePtr->bytes_per_line * iy + ix]&0xFF);
-	        Tcl_AppendResult(interp, buffer, NULL);
+	        Tcl_AppendResult(interp, buffer, (char *)NULL);
 	    }
-	    Tcl_AppendResult(interp, " }", NULL);
+	    Tcl_AppendResult(interp, " }", (char *)NULL);
 	}
-	Tcl_AppendResult(interp, " }", NULL);
+	Tcl_AppendResult(interp, " }", (char *)NULL);
     } else
 	snprintf(buffer,sizeof(buffer)," NULL");
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->byte_order);       Tcl_AppendResult(interp, " byte_order ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_unit);      Tcl_AppendResult(interp, " bitmap_unit ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_bit_order); Tcl_AppendResult(interp, " bitmap_bit_order ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_pad);       Tcl_AppendResult(interp, " bitmap_pad ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->depth);            Tcl_AppendResult(interp, " depth ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bytes_per_line);   Tcl_AppendResult(interp, " bytes_per_line ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bits_per_pixel);   Tcl_AppendResult(interp, " bits_per_pixel ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
-    Tcl_AppendResult(interp, " }", NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->byte_order);       Tcl_AppendResult(interp, " byte_order ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_unit);      Tcl_AppendResult(interp, " bitmap_unit ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_bit_order); Tcl_AppendResult(interp, " bitmap_bit_order ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bitmap_pad);       Tcl_AppendResult(interp, " bitmap_pad ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->depth);            Tcl_AppendResult(interp, " depth ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bytes_per_line);   Tcl_AppendResult(interp, " bytes_per_line ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",ximagePtr->bits_per_pixel);   Tcl_AppendResult(interp, " bits_per_pixel ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",ximagePtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, (char *)NULL);
+    Tcl_AppendResult(interp, " }", (char *)NULL);
 
-    Tcl_AppendResult(interp, "\nvisualPtr {", NULL);
-    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, NULL);
-    Tcl_AppendResult(interp, " }", NULL);
+    Tcl_AppendResult(interp, "\nvisualPtr {", (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->red_mask);   Tcl_AppendResult(interp, " red_mask ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->green_mask); Tcl_AppendResult(interp, " green_mask ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"0x%8.8lx",visualPtr->blue_mask);  Tcl_AppendResult(interp, " blue_mask ", buffer, (char *)NULL);
+    Tcl_AppendResult(interp, " }", (char *)NULL);
 
 #endif
 
@@ -2787,13 +2787,13 @@ DrawCanvas(
     DecomposeMaskToShiftAndBits(visualPtr->blue_mask,&bshift,&bbits);
 
 #ifdef DEBUG_DRAWCANVAS
-    snprintf(buffer,sizeof(buffer),"%d",rshift); Tcl_AppendResult(interp, "\nbits { rshift ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",gshift); Tcl_AppendResult(interp, " gshift ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",bshift); Tcl_AppendResult(interp, " bshift ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",rbits);  Tcl_AppendResult(interp, " rbits ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",gbits);  Tcl_AppendResult(interp, " gbits ", buffer, NULL);
-    snprintf(buffer,sizeof(buffer),"%d",bbits);  Tcl_AppendResult(interp, " bbits ", buffer, " }", NULL);
-    Tcl_AppendResult(interp, "\nConverted_image {", NULL);
+    snprintf(buffer,sizeof(buffer),"%d",rshift); Tcl_AppendResult(interp, "\nbits { rshift ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",gshift); Tcl_AppendResult(interp, " gshift ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",bshift); Tcl_AppendResult(interp, " bshift ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",rbits);  Tcl_AppendResult(interp, " rbits ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",gbits);  Tcl_AppendResult(interp, " gbits ", buffer, (char *)NULL);
+    snprintf(buffer,sizeof(buffer),"%d",bbits);  Tcl_AppendResult(interp, " bbits ", buffer, " }", (char *)NULL);
+    Tcl_AppendResult(interp, "\nConverted_image {", (char *)NULL);
 #endif
 
     /* Ok, had to use ximagePtr->bits_per_pixel here and in the switch (...)
@@ -2806,7 +2806,7 @@ DrawCanvas(
     for (y = 0; y < blockPtr.height; ++y) {
 
 #ifdef DEBUG_DRAWCANVAS
-        Tcl_AppendResult(interp, " {", NULL);
+        Tcl_AppendResult(interp, " {", (char *)NULL);
 #endif
 
         for(x = 0; x < blockPtr.width; ++x) {
@@ -2906,14 +2906,14 @@ DrawCanvas(
             {
 		int ix;
                 if (x > 0)
-                    Tcl_AppendResult(interp, "-", NULL);
+                    Tcl_AppendResult(interp, "-", (char *)NULL);
 	        for (ix = 0; ix < 4; ++ix) {
                     if (ix > 0)
-                        Tcl_AppendResult(interp, " ", NULL);
+                        Tcl_AppendResult(interp, " ", (char *)NULL);
 		    snprintf(buffer,sizeof(buffer),"%2.2x",
 		            blockPtr.pixelPtr[blockPtr.pitch * y
                             + blockPtr.pixelSize * x + ix]&0xFF);
-                    Tcl_AppendResult(interp, buffer, NULL);
+                    Tcl_AppendResult(interp, buffer, (char *)NULL);
                 }
             }
 #endif
@@ -2921,13 +2921,13 @@ DrawCanvas(
         }
 
 #ifdef DEBUG_DRAWCANVAS
-        Tcl_AppendResult(interp, " }", NULL);
+        Tcl_AppendResult(interp, " }", (char *)NULL);
 #endif
 
     }
 
 #ifdef DEBUG_DRAWCANVAS
-    Tcl_AppendResult(interp, " }", NULL);
+    Tcl_AppendResult(interp, " }", (char *)NULL);
 #endif
 
     /*
@@ -3973,7 +3973,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "too many '!' in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "COMPLEXITY", NULL);
+			    "COMPLEXITY", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		looking_for_tag++;
@@ -4023,7 +4023,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "missing endquote in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "ENDQUOTE", NULL);
+			    "ENDQUOTE", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		if (!(tag - searchPtr->rewritebuffer)) {
@@ -4031,7 +4031,7 @@ TagSearchScanExpr(
 			    "null quoted tag string in tag search expression",
 			    TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "EMPTY", NULL);
+			    "EMPTY", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		*tag++ = '\0';
@@ -4048,7 +4048,7 @@ TagSearchScanExpr(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"unexpected operator in tag search expression", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			"UNEXPECTED", NULL);
+			"UNEXPECTED", (char *)NULL);
 		return TCL_ERROR;
 
 	    default:		/* Unquoted tag string */
@@ -4112,7 +4112,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "singleton '&' in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "INCOMPLETE_OP", NULL);
+			    "INCOMPLETE_OP", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		expr->uids[expr->index++] = searchUids->andUid;
@@ -4125,7 +4125,7 @@ TagSearchScanExpr(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "singleton '|' in tag search expression", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH",
-			    "INCOMPLETE_OP", NULL);
+			    "INCOMPLETE_OP", (char *)NULL);
 		    return TCL_ERROR;
 		}
 		expr->uids[expr->index++] = searchUids->orUid;
@@ -4146,7 +4146,7 @@ TagSearchScanExpr(
 			"invalid boolean operator in tag search expression",
 			TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "BAD_OP",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -4158,7 +4158,7 @@ TagSearchScanExpr(
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "missing tag in tag search expression", TCL_INDEX_NONE));
-    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "NO_TAG", NULL);
+    Tcl_SetErrorCode(interp, "TK", "CANVAS", "SEARCH", "NO_TAG", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -5275,9 +5275,17 @@ PickCurrentItem(
 	event.type = LeaveNotify;
 
 	/*
-	 * If the event's detail happens to be NotifyInferior the binding
-	 * mechanism will discard the event. To be consistent, always use
-	 * NotifyAncestor.
+	 * Behaviour before ticket #47d4f29159:
+	 *    If the event's detail happens to be NotifyInferior the binding
+	 *    mechanism will discard the event. To be consistent, always use
+	 *    NotifyAncestor.
+	 *
+	 * Behaviour after ticket #47d4f29159:
+	 *    The binding mechanism doesn't discard events with detail field
+	 *    NotifyInferior anymore. It would be best to base the detail
+	 *    field on the ancestry relationship between the old and new
+	 *    canvas items. For the time being, retain the choice from before
+	 *    ticket #47d4f29159, which doesn't harm.
 	 */
 
 	event.xcrossing.detail = NotifyAncestor;

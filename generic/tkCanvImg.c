@@ -249,7 +249,7 @@ ImageCoords(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"wrong # coordinates: expected 2, got %" TCL_SIZE_MODIFIER "d", objc));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE",
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -263,7 +263,7 @@ ImageCoords(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"wrong # coordinates: expected 0 or 2, got %" TCL_SIZE_MODIFIER "d", objc));
-	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CANVAS", "COORDS", "IMAGE", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

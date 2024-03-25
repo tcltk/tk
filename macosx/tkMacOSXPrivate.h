@@ -522,18 +522,11 @@ VISIBILITY_HIDDEN
  *
  * TKNSString --
  *
- * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
- * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
- * encoding requires 4 bytes. Instead, when using these versions of Tcl, Tk
- * uses the CESU-8 encoding internally.  This encoding is similar to UTF-8
- * except that it allows encoding surrogate characters as 3-byte sequences
- * using the same algorithm which UTF-8 uses for non-surrogates.  This means
- * that a non-BMP character is encoded as a string of length 6.  Apple's
- * NSString class does not provide a constructor which accepts a CESU-8 encoded
+ * Tcl uses modified UTF-8 as internal encoding.  Apple's NSString class
+ * does not provide a constructor which accepts a modified UTF-8 encoded
  * byte sequence as initial data.  So we add a new class which does provide
  * such a constructor.  It also has a DString property which is a DString whose
- * string pointer is a byte sequence encoding the NSString with the current Tk
- * encoding, namely UTF-8 if TCL_UTF_MAX >= 4 or CESU-8 if TCL_UTF_MAX = 3.
+ * string pointer is a byte sequence encoding the NSString with modified UTF-8.
  *
  *---------------------------------------------------------------------------
  */

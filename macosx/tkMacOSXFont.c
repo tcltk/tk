@@ -191,10 +191,8 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     return _ds;
 }
 
-#ifndef __clang__
 @synthesize UTF8String = _UTF8String;
 @synthesize DString = _ds;
-#endif
 @end
 
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
@@ -471,48 +469,49 @@ startOfClusterObjCmd(
 {
     TKNSString *S;
     const char *stringArg;
-    Tcl_Size numBytes, index;
+    Tcl_Size len, idx;
     if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
-    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    stringArg = Tcl_GetStringFromObj(objv[1], &len);
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
     Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &index) != TCL_OK) {
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
+    len = [S length];
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
+    if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < index; i++) {
-	    newIdx += 1 + (((newIdx < (Tcl_Size)[S length]-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
-	index = newIdx;
+	idx = newIdx;
     }
-    if (index >= 0) {
-	if (index >= (Tcl_Size)[S length]) {
-	    index = (Tcl_Size)[S length];
+    if (idx >= 0) {
+	if (idx >= len) {
+	    idx = len;
 	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
-	    index = range.location;
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
+	    idx = range.location;
 	}
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < index; i++) {
+	if (idx > 0 && len != ulen) {
+	    /* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+	    Tcl_Size newIdx = 1;
+	    for (Tcl_Size i = 1; i < idx; i++) {
 		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+	    }
+	    idx = newIdx;
 	}
-	index = newIdx;
-    }
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
     return TCL_OK;
 }
@@ -526,49 +525,50 @@ endOfClusterObjCmd(
 {
     TKNSString *S;
     char *stringArg;
-    Tcl_Size index, numBytes;
+    Tcl_Size idx, len;
 
     if ((size_t)(objc - 3) > 1) {
 	Tcl_WrongNumArgs(interp, 1 , objv, "str start ?locale?");
 	return TCL_ERROR;
     }
-    stringArg = Tcl_GetStringFromObj(objv[1], &numBytes);
+    stringArg = Tcl_GetStringFromObj(objv[1], &len);
     if (stringArg == NULL) {
 	return TCL_ERROR;
     }
     Tcl_Size ulen = Tcl_GetCharLength(objv[1]);
-    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:numBytes];
-    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &index) != TCL_OK) {
+    S = [[TKNSString alloc] initWithTclUtfBytes:stringArg length:len];
+    len = [S length];
+    if (TkGetIntForIndex(objv[2], ulen - 1, 0, &idx) != TCL_OK) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"",
 		Tcl_GetString(objv[2])));
 	Tcl_SetErrorCode(interp, "TK", "VALUE", "INDEX", NULL);
 	return TCL_ERROR;
     }
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
+    if (idx > 0 && len != ulen) {
 	/* The string contains codepoints > \uFFFF. Determine UTF-16 index */
 	Tcl_Size newIdx = 0;
-	for (Tcl_Size i = 0; i < index; i++) {
-	    newIdx += 1 + (((newIdx < (Tcl_Size)[S length]-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
+	for (Tcl_Size i = 0; i < idx; i++) {
+	    newIdx += 1 + (((newIdx < len-1) && ([S characterAtIndex:newIdx]&0xFC00) == 0xD800) && (([S characterAtIndex:newIdx+1]&0xFC00) == 0xDC00));
 	}
-	index = newIdx;
+	idx = newIdx;
     }
-    if ((size_t)index + 1 <= [S length]) {
-	if (index < 0) {
-	    index = 0;
+    if (idx + 1 <= len) {
+	if (idx < 0) {
+	    idx = 0;
 	} else {
-	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:index];
-	    index = range.location + range.length;
-	}
-    if (index > 0 && (Tcl_Size)[S length] != ulen) {
-	/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
-	Tcl_Size newIdx = 1;
-	for (Tcl_Size i = 1; i < index; i++) {
+	    NSRange range = [S rangeOfComposedCharacterSequenceAtIndex:idx];
+	    idx = range.location + range.length;
+	    if (idx > 0 && len != ulen) {
+		/* The string contains codepoints > \uFFFF. Determine UTF-32 index */
+		Tcl_Size newIdx = 1;
+		for (Tcl_Size i = 1; i < idx; i++) {
 		if ((([S characterAtIndex:i-1]&0xFC00) != 0xD800) || (([S characterAtIndex:i]&0xFC00) != 0xDC00)) newIdx++;
+		}
+		idx = newIdx;
+	    }
 	}
-	index = newIdx;
-    }
-	Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	Tcl_SetObjResult(interp, TkNewIndexObj(idx));
     }
     return TCL_OK;
 }
@@ -925,7 +925,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,	 		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -1102,9 +1102,9 @@ TkpMeasureCharsInContext(
 	double maxWidth = maxLength + offset;
 	NSCharacterSet *cs;
 
-        /*
-         * Get a line breakpoint in the source string.
-         */
+	/*
+	 * Get a line breakpoint in the source string.
+	 */
 
 	index = start;
 	if (flags & TK_WHOLE_WORDS) {
@@ -1117,9 +1117,9 @@ TkpMeasureCharsInContext(
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
 
-        /*
-         * Trim right whitespace/lineending characters.
-         */
+	/*
+	 * Trim right whitespace/lineending characters.
+	 */
 
 	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
@@ -1128,29 +1128,29 @@ TkpMeasureCharsInContext(
 	    index--;
 	}
 
-        /*
-         * If there is no line breakpoint in the source string between its
-         * start and the index position that fits in maxWidth, then
-         * CTTypesetterSuggestLineBreak() returns that very last index.
-         * However if the TK_WHOLE_WORDS flag is set, we want to break at a
-         * word boundary. In this situation, unless TK_AT_LEAST_ONE is set, we
-         * must report that zero chars actually fit (in other words the
-         * smallest word of the source string is still larger than maxWidth).
-         */
+	/*
+	 * If there is no line breakpoint in the source string between its
+	 * start and the index position that fits in maxWidth, then
+	 * CTTypesetterSuggestLineBreak() returns that very last index.
+	 * However if the TK_WHOLE_WORDS flag is set, we want to break at a
+	 * word boundary. In this situation, unless TK_AT_LEAST_ONE is set, we
+	 * must report that zero chars actually fit (in other words the
+	 * smallest word of the source string is still larger than maxWidth).
+	 */
 
-        if ((index >= start) && (index < len) &&
-                (flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
-                ![cs characterIsMember:[string characterAtIndex:index]]) {
-            index = start;
-        }
+	if ((index >= start) && (index < len) &&
+		(flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
+		![cs characterIsMember:[string characterAtIndex:index]]) {
+	    index = start;
+	}
 
 	if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 	    index = start + 1;
 	}
 
-        /*
-         * Now measure the string width in pixels.
-         */
+	/*
+	 * Now measure the string width in pixels.
+	 */
 
 	if (index > 0) {
 	    range.length = index;
@@ -1167,7 +1167,7 @@ TkpMeasureCharsInContext(
 	    CFRelease(line);
 	}
 
-        /*
+	/*
 	 * The call to CTTypesetterSuggestClusterBreak above will always return
 	 * at least one character regardless of whether it exceeded it or not.
 	 * Clean that up now.
@@ -1348,9 +1348,9 @@ TkpDrawAngledCharsInContext(
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
-    if (rangeStart < 0 || rangeLength <= 0 ||
-	rangeStart + rangeLength > numBytes ||
-	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
+    if (rangeStart < 0 || rangeLength <= 0
+	    || rangeStart + rangeLength > numBytes
+	    || !TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
@@ -1380,9 +1380,9 @@ TkpDrawAngledCharsInContext(
     t = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
     if (angle != 0.0) {
 	t = CGAffineTransformTranslate(
-             CGAffineTransformRotate(
-                 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
-             -textX, -textY);
+	     CGAffineTransformRotate(
+		 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
+	     -textX, -textY);
     }
     CGContextConcatCTM(context, t);
     start = TclNumUtfChars(source, rangeStart);
@@ -1554,7 +1554,7 @@ TkMacOSXUseAntialiasedText(
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::antialiasedtext",
-		(char *) &antialiasedTextEnabled,
+		&antialiasedTextEnabled,
 		TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}

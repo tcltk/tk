@@ -144,7 +144,7 @@ TkTextMarkCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"there is no mark named \"%s\"", str));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_MARK", str,
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
@@ -170,7 +170,7 @@ TkTextMarkCmd(
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad mark gravity \"%s\": must be left or right", str));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	TkTextMarkSegToIndex(textPtr, markPtr, &index);

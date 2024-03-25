@@ -844,7 +844,7 @@ GetIndex(
 		    "text doesn't contain any characters tagged with \"%s\"",
 		    tagName));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName,
-		    NULL);
+		    (char *)NULL);
 	    Tcl_DStringFree(&copy);
 	    return TCL_ERROR;
 	}
@@ -1009,7 +1009,7 @@ GetIndex(
   error:
     Tcl_DStringFree(&copy);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -1476,7 +1476,7 @@ int
 TkTextIndexForwBytes(
     const TkText *textPtr,
     const TkTextIndex *srcPtr,	/* Source index. */
-    int byteCount,		/* How many bytes forward to move. May be
+    Tcl_Size byteCount,		/* How many bytes forward to move. May be
 				 * negative. */
     TkTextIndex *dstPtr)	/* Destination index: gets modified. */
 {
@@ -2007,7 +2007,7 @@ int
 TkTextIndexBackBytes(
     const TkText *textPtr,
     const TkTextIndex *srcPtr,	/* Source index. */
-    int byteCount,		/* How many bytes backward to move. May be
+    Tcl_Size byteCount,		/* How many bytes backward to move. May be
 				 * negative. */
     TkTextIndex *dstPtr)	/* Destination index: gets modified. */
 {

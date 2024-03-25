@@ -1365,12 +1365,12 @@ ImageCreate(
     for (i = 0; i < objc; i += 2) {
 	if (strcmp(Tcl_GetString(objv[i]), "-variable") != 0) {
 	    Tcl_AppendResult(interp, "bad option name \"",
-		    Tcl_GetString(objv[i]), "\"", NULL);
+		    Tcl_GetString(objv[i]), "\"", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if ((i+1) == objc) {
 	    Tcl_AppendResult(interp, "no value given for \"",
-		    Tcl_GetString(objv[i]), "\" option", NULL);
+		    Tcl_GetString(objv[i]), "\" option", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	varName = Tcl_GetString(objv[i+1]);
