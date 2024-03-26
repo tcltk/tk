@@ -11297,7 +11297,7 @@ TkTextScanCmd(
 
     if (objc != 5 && objc != 6) {
 	Tcl_WrongNumArgs(interp, 2, objv, "mark x y");
-	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]), " scan dragto x y ?gain?\"", NULL);
+	Tcl_AppendResult(interp, " or \"", Tcl_GetString(objv[0]), " scan dragto x y ?gain?\"", (char *)NULL);
 	/*
 	 * Ought to be: Tcl_WrongNumArgs(interp, 2, objc, "dragto x y ?gain?");
 	 */
@@ -11360,7 +11360,7 @@ TkTextScanCmd(
     } else {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad scan option \"%s\": must be dragto or mark", Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option", Tcl_GetString(objv[2]), NULL);
+	Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "scan option", Tcl_GetString(objv[2]), (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;

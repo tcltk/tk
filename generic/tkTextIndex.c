@@ -2427,7 +2427,7 @@ TkpTextGetIndex(
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "character near current position isn't tagged with \"%s\"", tagName));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName, (char *)NULL);
 	    Tcl_DStringFree(&copy);
 	    return 0;
 	}
@@ -2449,7 +2449,7 @@ TkpTextGetIndex(
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "text doesn't contain any characters tagged with \"%s\"", tagName));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName, (char *)NULL);
 	    Tcl_DStringFree(&copy);
 	    return 0;
 	}
@@ -2598,7 +2598,7 @@ TkpTextGetIndex(
     Tcl_DStringFree(&copy);
     Tcl_ResetResult(interp);
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad text index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_INDEX", (char *)NULL);
     return 0;
 
     /*

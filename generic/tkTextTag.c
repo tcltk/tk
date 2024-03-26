@@ -391,7 +391,7 @@ TkTextTagCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardselection", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -497,7 +497,7 @@ TkTextTagCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardselection", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -530,7 +530,7 @@ TkTextTagCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardselection", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -1191,7 +1191,7 @@ TkConfigureTag(
 	    tagPtr->elide = -1;
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "not allowed to set elide option of selection tag \"%s\"", tagPtr->name));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "ELIDE", (char *)NULL);
 	    rc = TCL_ERROR;
 	}
 
@@ -1749,7 +1749,7 @@ TkTextBindEvent(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "requested illegal events; only key, button, motion,"
 		    " enter, leave, and virtual events may be used", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT",NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "TAG_BIND_EVENT", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (mask & motionMask) {
@@ -2000,7 +2000,7 @@ FindTag(
     if (!tagPtr && interp) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"tag \"%s\" isn't defined in text widget", name));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG", name, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_TAG", name, (char *)NULL);
     }
 
     return tagPtr;
