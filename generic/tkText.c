@@ -1202,7 +1202,7 @@ ErrorNotAllowed(
     const char *text)
 {
     Tcl_SetObjResult(interp, Tcl_NewStringObj(text, TCL_INDEX_NONE));
-    Tcl_SetErrorCode(interp, "TK", "TEXT", "NOT_ALLOWED", NULL);
+    Tcl_SetErrorCode(interp, "TK", "TEXT", "NOT_ALLOWED", (char *)NULL);
 }
 
 int
@@ -1848,7 +1848,7 @@ TextWidgetObjCmd(
 		"bad option \"%s\": must be -chars, -displaychars, -displayhyphens, "
 		"-displayindices, -displaylines, -displaytext, -hyphens, -indices, "
 		"-lines, -text, -update, -xpixels, or -ypixels", Tcl_GetString(objv[i])));
-	Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", (char *)NULL);
 	result = TCL_ERROR;
 	goto done;
     }
@@ -1887,7 +1887,7 @@ TextWidgetObjCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -marks, or -inclusive", Tcl_GetString(objv[i])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2167,7 +2167,7 @@ TextWidgetObjCmd(
 	    if (badOption) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": "
 			"must be -chars, -displaychars, -displaytext, or -text", option));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2297,7 +2297,7 @@ TextWidgetObjCmd(
 		discardSelection = 1;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -overall", opt));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2320,7 +2320,7 @@ TextWidgetObjCmd(
 		overall = 1;
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad option \"%s\": must be -overall", opt));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2361,7 +2361,7 @@ TextWidgetObjCmd(
 	    if (strcmp(opt, "-validconfig") != 0) {
 		Tcl_SetObjResult(interp,
 			Tcl_ObjPrintf("bad option \"%s\": must be -validconfig", opt));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2417,7 +2417,7 @@ TextWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "index \"%s\" before \"%s\" in the text",
 		    Tcl_GetString(objv[3]), Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto done;
 	}
@@ -2525,7 +2525,7 @@ TextWidgetObjCmd(
 		wrongNumberOfArgs = 1;
 	    } else if (strncmp(option, "-command", objv[2]->length) != 0) {
 		Tcl_AppendResult(interp, "wrong option \"", option,
-			"\": should be \"-command\"", NULL);
+			"\": should be \"-command\"", (char *)NULL);
 		result = TCL_ERROR;
 		goto done;
 	    }
@@ -2804,7 +2804,7 @@ BadComparisonOperator(
 {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad comparison operator \"%s\": must be <, <=, ==, >=, >, or !=", op));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "COMPARISON", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "COMPARISON", (char *)NULL);
     return -1;
 }
 
@@ -2903,7 +2903,7 @@ TextWatchCmd(
 	    if (strcmp(Tcl_GetString(objv[2]), "-always") != 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -always", Tcl_GetString(objv[2])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "WATCH_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "WATCH_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    textPtr->triggerAlways = 1;
@@ -3750,7 +3750,7 @@ TkTextTestLangCode(
 	    || lang[2] != '\0') {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad lang \"%s\": "
 		"must have the form of an ISO 639-1 language code, or empty", lang));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "LANG", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "LANG", (char *)NULL);
 	return 0;
     }
     return 1;
@@ -3929,7 +3929,7 @@ TkConfigureText(
 	if (TkTextIndexCompare(&start, &end) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "-startline must be less than or equal to -endline", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", (char *)NULL);
 	    goto error;
 	}
 
@@ -4158,7 +4158,7 @@ TkConfigureText(
 	if (TkTextIndexCompare(&start, &end) > 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "-startindex must be less than or equal to -endindex", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_ORDER", (char *)NULL);
 	    goto error;
 	}
 
@@ -4446,7 +4446,7 @@ TkTextParseHyphenRules(
 	}
 	if (r == rules) {
 	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf("unknown hyphen rule \"%s\"", rule));
-	    Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "VALUE", NULL);
+	    Tcl_SetErrorCode(textPtr->interp, "TK", "TEXT", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -6224,7 +6224,7 @@ TextInsertCmd(
 	if (strcmp(Tcl_GetString(objv[0]), "-hyphentags") != 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad option \"%s\": must be -hyphentags", Tcl_GetString(objv[0])));
-	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_ListObjGetElements(interp, objv[1], &argc, &argv) != TCL_OK) {
@@ -6424,7 +6424,7 @@ TextSearchCmd(
 	case TK_TEXT_SEARCH_COUNT:
 	    if (i >= objc - 1) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj("no value given for \"-count\" option", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    i += 1;
@@ -6479,14 +6479,14 @@ TextSearchCmd(
     if (searchSpec.noLineStop && searchSpec.exact) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"the \"-nolinestop\" option requires the \"-regexp\" option to be present", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "TEXT", "SEARCH_USAGE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "TEXT", "SEARCH_USAGE", (char *)NULL);
 	return TCL_ERROR;
     }
 
     if (searchSpec.overlap && !searchSpec.all) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"the \"-overlap\" option requires the \"-all\" option to be present", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "TEXT", "SEARCH_USAGE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "TEXT", "SEARCH_USAGE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -7103,7 +7103,7 @@ TkTextGetTabs(
 	if (tabPtr->location <= 0) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "tab stop \"%s\" is not at a positive distance", Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", (char *)NULL);
 	    goto error;
 	}
 
@@ -7122,7 +7122,7 @@ TkTextGetTabs(
 		    "tabs must be monotonically increasing, but \"%s\" is "
 		    "smaller than or equal to the previous tab",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "TAB_STOP", (char *)NULL);
 	    goto error;
 	}
 
@@ -7388,7 +7388,7 @@ wrongArgs:
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("Usage: %s %s %s",
 		Tcl_GetString(objv[0]), Tcl_GetString(objv[1]), result));
-	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
     }
     return TCL_ERROR;
 }
@@ -8881,7 +8881,7 @@ TextEditCmd(
 	    if (stack && strcmp(stack, "undo") != 0 && strcmp(stack, "redo") != 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad stack argument \"%s\": must be \"undo\" or \"redo\"", stack));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "STACK_VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "STACK_VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (sharedTextPtr->undoStack) {
@@ -9005,7 +9005,7 @@ TextEditCmd(
 
 	    if (TkTextUndoGetCurrentRedoStackDepth(sharedTextPtr->undoStack) == 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to redo", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_REDO", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -9040,7 +9040,7 @@ TextEditCmd(
 	    if (strcmp(stack, "undo") != 0 && strcmp(stack, "redo") != 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad stack argument \"%s\": must be \"undo\" or \"redo\"", stack));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "STACK_VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "STACK_VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (sharedTextPtr->undoStack) {
@@ -9068,7 +9068,7 @@ TextEditCmd(
 	    if (strcmp(Tcl_GetString(objv[3]), "-immediately")) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -immediately", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "INDEX_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    immediately = 1;
@@ -9110,7 +9110,7 @@ TextEditCmd(
 
 	    if (TkTextUndoGetCurrentUndoStackDepth(sharedTextPtr->undoStack) == 0) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj("nothing to undo", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "NO_UNDO", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -9399,7 +9399,7 @@ TextGetText(
     if (segPtr == lastPtr) {
 	if (segPtr->typePtr == &tkTextCharType) {
 	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1,
-		    MIN(maxBytes, (unsigned) (offset2 - offset1)));
+		    MIN(maxBytes, (offset2 - offset1)));
 	}
     } else {
 	TkTextLine *linePtr = segPtr->sectionPtr->linePtr;
@@ -9407,7 +9407,7 @@ TextGetText(
 	TkTextIndexClear(&index, textPtr);
 
 	if (segPtr->typePtr == &tkTextCharType) {
-	    unsigned nbytes = MIN(maxBytes, (unsigned) segPtr->size - offset1);
+	    unsigned nbytes = MIN(maxBytes, segPtr->size - offset1);
 	    Tcl_AppendToObj(resultPtr, segPtr->body.chars + offset1, nbytes);
 	    if ((maxBytes -= nbytes) == 0) {
 		return resultPtr;
@@ -9438,7 +9438,7 @@ TextGetText(
 	}
 	while (segPtr != lastPtr) {
 	    if (segPtr->typePtr == &tkTextCharType) {
-		Tcl_Size nbytes = MIN(maxBytes, (unsigned) segPtr->size);
+		Tcl_Size nbytes = MIN(maxBytes, segPtr->size);
 		Tcl_AppendToObj(resultPtr, segPtr->body.chars, nbytes);
 		if ((maxBytes -= nbytes) == 0) {
 		    if (lastIndexPtr) {
@@ -9473,7 +9473,7 @@ TextGetText(
 	    }
 	}
 	if (offset2 > 0) {
-	    Tcl_AppendToObj(resultPtr, segPtr->body.chars, MIN(maxBytes, (unsigned) offset2));
+	    Tcl_AppendToObj(resultPtr, segPtr->body.chars, MIN(maxBytes, offset2));
 	}
     }
 

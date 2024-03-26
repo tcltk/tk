@@ -534,7 +534,7 @@ RedoMoveMarkGetRange(
 static int
 SetResultNoMarkNamed(Tcl_Interp *interp, const char *name) {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("there is no mark named \"%s\"", name));
-    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_MARK", name, NULL);
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_MARK", name, (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -583,13 +583,13 @@ TkTextMarkCmd(
 	if (!(markPtr1 = TkTextFindMark(textPtr, Tcl_GetString(objv[2])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
 		    "must be an existing mark", Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (!(markPtr2 = TkTextFindMark(textPtr, Tcl_GetString(objv[4])))) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad comparison operand \"%s\": "
 		    "must be an existing mark", Tcl_GetString(objv[4])));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_COMPARISON", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -688,7 +688,7 @@ TkTextMarkCmd(
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad mark gravity \"%s\": must be left or right", str));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	/*
@@ -721,7 +721,7 @@ TkTextMarkCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardspecial", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -770,7 +770,7 @@ TkTextMarkCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardspecial", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -795,7 +795,7 @@ TkTextMarkCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad option \"%s\": must be -discardspecial", Tcl_GetString(objv[3])));
-		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", NULL);
+		Tcl_SetErrorCode(interp, "TK", "TEXT", "BAD_OPTION", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -829,7 +829,7 @@ TkTextMarkCmd(
 	    } else {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"bad mark gravity \"%s\": must be left or right", direction));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -870,7 +870,7 @@ TkTextMarkCmd(
 	    }
 	    msgPtr = Tcl_ObjPrintf("\"%s\" is an expired generated mark", name);
 	    Tcl_SetObjResult(interp, msgPtr);
-	    Tcl_SetErrorCode(interp, "TK", "SET", "TEXT_MARK", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SET", "TEXT_MARK", name, (char *)NULL);
 	    return TCL_ERROR;
 	}
 	break;

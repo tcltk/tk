@@ -3663,7 +3663,7 @@ LoadError(
 	}
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("error while loading%s: %s", buf, msg));
-    Tcl_SetErrorCode(interp, "TK", "TEXT", "LOAD", NULL);
+    Tcl_SetErrorCode(interp, "TK", "TEXT", "LOAD", (char *)NULL);
     if (errObjPtr) {
 	Tcl_GuardedDecrRefCount(errObjPtr);
     }
