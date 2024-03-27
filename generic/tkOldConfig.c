@@ -99,7 +99,7 @@ Tk_ConfigureWidget(
 	 */
 
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -141,7 +141,7 @@ Tk_ConfigureWidget(
 	if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", arg));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	arg = Tcl_GetString(objv[1]);
@@ -267,7 +267,7 @@ FindConfigSpec(
 	if (matchPtr != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "ambiguous option \"%s\"", argvName));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, (char *)NULL);
 	    return NULL;
 	}
 	matchPtr = specPtr;
@@ -276,7 +276,7 @@ FindConfigSpec(
     if (matchPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"unknown option \"%s\"", argvName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, (char *)NULL);
 	return NULL;
     }
 
@@ -294,7 +294,7 @@ FindConfigSpec(
 			"couldn't find synonym for option \"%s\"",
 			argvName));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,
-			NULL);
+			(char *)NULL);
 		return NULL;
 	    }
 	    if ((specPtr->dbName == matchPtr->dbName)
@@ -551,7 +551,7 @@ DoConfig(
 	default:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad config table: unknown type %d", specPtr->type));
-	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	specPtr++;
@@ -654,7 +654,7 @@ Tk_ConfigureInfo(
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_AppendResult(interp, leader, list, "}", NULL);
+	Tcl_AppendResult(interp, leader, list, "}", (char *)NULL);
 	ckfree(list);
 	leader = " {";
     }
@@ -719,9 +719,9 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((void *)argv[4]);
+	    ckfree(argv[4]);
 	} else {
-	    freeProc((void *)argv[4]);
+	    freeProc((char *)argv[4]);
 	}
     }
     return result;
@@ -942,9 +942,9 @@ Tk_ConfigureValue(
     Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((void *)result);
+	    ckfree(result);
 	} else {
-	    freeProc((void *)result);
+	    freeProc((char *)result);
 	}
     }
     return TCL_OK;
