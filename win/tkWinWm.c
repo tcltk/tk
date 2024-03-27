@@ -2914,7 +2914,7 @@ WmAttributesCmd(
     WmInfo *wmPtr = winPtr->wmInfoPtr;
     LONG style, exStyle, styleBit, *stylePtr = NULL;
     const char *string;
-    int boolean;
+    Bool boolValue;
     Tcl_Size i, length;
     int config_fullscreen = 0, updatewrapper = 0;
     int fullscreen_attr_changed = 0, fullscreen_attr = 0;
@@ -3090,7 +3090,7 @@ WmAttributesCmd(
 	    }
 	} else {
 	    if ((i < objc-1)
-		    && Tcl_GetBooleanFromObj(interp, objv[i+1], &boolean)
+		    && Tcl_GetBooleanFromObj(interp, objv[i+1], &boolValue)
 			    != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -3100,13 +3100,13 @@ WmAttributesCmd(
 			    (wmPtr->flags & WM_FULLSCREEN) != 0));
 		} else {
 		    fullscreen_attr_changed = 1;
-		    fullscreen_attr = boolean;
+		    fullscreen_attr = boolValue;
 		}
 		config_fullscreen = 0;
 	    } else if (objc == 4) {
 		Tcl_SetObjResult(interp,
 			Tcl_NewWideIntObj((*stylePtr & styleBit) != 0));
-	    } else if (boolean) {
+	    } else if (boolValue) {
 		*stylePtr |= styleBit;
 	    } else {
 		*stylePtr &= ~styleBit;
@@ -4733,7 +4733,7 @@ WmOverrideredirectCmd(
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int boolean, curValue;
+    Bool boolValue, curValue;
     XSetWindowAttributes atts;
 
     if ((objc != 3) && (objc != 4)) {
@@ -4755,19 +4755,19 @@ WmOverrideredirectCmd(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(curValue != 0));
 	return TCL_OK;
     }
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolValue) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (curValue != boolean) {
+    if (curValue != boolValue) {
 	if (winPtr->flags & TK_EMBEDDED) {
-	    SendMessageW(wmPtr->wrapper, TK_OVERRIDEREDIRECT, boolean, 0);
+	    SendMessageW(wmPtr->wrapper, TK_OVERRIDEREDIRECT, boolValue, 0);
 	} else {
 	    /*
 	     * Only do this if we are really changing value, because it causes
 	     * some funky stuff to occur.
 	     */
 
-	    atts.override_redirect = (boolean) ? True : False;
+	    atts.override_redirect = boolValue;
 	    Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
 		    &atts);
 	    if (!(wmPtr->flags & (WM_NEVER_MAPPED))

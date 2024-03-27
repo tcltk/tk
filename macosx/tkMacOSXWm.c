@@ -1624,7 +1624,7 @@ WmSetAttribute(
     Tcl_Obj *value)		/* New value */
 {
     WmInfo *wmPtr = winPtr->wmInfoPtr;
-    int boolean;
+    int boolValue;
     NSString *identifier;
 
     switch (attribute) {
@@ -1700,10 +1700,10 @@ WmSetAttribute(
 	break;
     }
     case WMATT_FULLSCREEN:
-	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
+	if (boolValue != (([macWindow styleMask] & NSFullScreenWindowMask) != 0)) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 	    [macWindow toggleFullScreen:macWindow];
 #else
@@ -1712,28 +1712,28 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_MODIFIED:
-	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean != [macWindow isDocumentEdited]) {
-	    [macWindow setDocumentEdited:(BOOL)boolean];
+	if (boolValue != [macWindow isDocumentEdited]) {
+	    [macWindow setDocumentEdited:(BOOL)boolValue];
 	}
 	break;
     case WMATT_NOTIFY:
-	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean == !tkMacOSXWmAttrNotifyVal) {
+	if (boolValue == !tkMacOSXWmAttrNotifyVal) {
 	    static NSInteger request = -1;
 
 	    if (request >= 0) {
 		[NSApp cancelUserAttentionRequest:request];
 		request = -1;
 	    }
-	    if (boolean) {
+	    if (boolValue) {
 		request = [NSApp requestUserAttention:NSCriticalRequest];
 	    }
-	    tkMacOSXWmAttrNotifyVal = boolean;
+	    tkMacOSXWmAttrNotifyVal = boolValue;
 	}
 	break;
     case WMATT_STYLEMASK: {
@@ -1862,13 +1862,13 @@ WmSetAttribute(
 	break;
     }
     case WMATT_TOPMOST:
-	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean != ((wmPtr->flags & WM_TOPMOST) != 0)) {
+	if (boolValue != ((wmPtr->flags & WM_TOPMOST) != 0)) {
 	    int oldFlags = wmPtr->flags;
 
-	    if (boolean) {
+	    if (boolValue) {
 		wmPtr->flags |= WM_TOPMOST;
 	    } else {
 		wmPtr->flags &= ~WM_TOPMOST;
@@ -1878,14 +1878,14 @@ WmSetAttribute(
 	}
 	break;
     case WMATT_TRANSPARENT:
-	if (Tcl_GetBooleanFromObj(interp, value, &boolean) != TCL_OK) {
+	if (Tcl_GetBooleanFromObj(interp, value, &boolValue) != TCL_OK) {
 	    return TCL_ERROR;
 	}
-	if (boolean != ((wmPtr->flags & WM_TRANSPARENT) != 0)) {
+	if (boolValue != ((wmPtr->flags & WM_TRANSPARENT) != 0)) {
 	    UInt64 oldAttributes = wmPtr->attributes;
 	    int oldFlags = wmPtr->flags;
 
-	    if (boolean) {
+	    if (boolValue) {
 		wmPtr->flags |= WM_TRANSPARENT;
 		wmPtr->attributes |= kWindowNoShadowAttribute;
 	    } else {
@@ -1894,8 +1894,8 @@ WmSetAttribute(
 	    }
 	    ApplyWindowAttributeFlagChanges(winPtr, macWindow, oldAttributes,
 		    oldFlags, 1, 0);
-	    [macWindow setBackgroundColor:boolean ? [NSColor clearColor] : nil];
-	    [macWindow setOpaque:!boolean];
+	    [macWindow setBackgroundColor:boolValue ? [NSColor clearColor] : nil];
+	    [macWindow setOpaque:!boolValue];
 	    TkMacOSXInvalidateWindow((MacDrawable *)winPtr->window,
 		    TK_PARENT_WINDOW);
 	    }
@@ -3624,7 +3624,7 @@ WmOverrideredirectCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int flag;
+    Bool boolValue;
     XSetWindowAttributes atts;
     TKWindow *win = (TKWindow *)TkMacOSXGetNSWindowForDrawable(winPtr->window);
 
@@ -3639,13 +3639,13 @@ WmOverrideredirectCmd(
 	return TCL_OK;
     }
 
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &flag) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolValue) != TCL_OK) {
 	return TCL_ERROR;
     }
-    atts.override_redirect = flag ? True : False;
+    atts.override_redirect = boolValue;
     Tk_ChangeWindowAttributes((Tk_Window)winPtr, CWOverrideRedirect, &atts);
     if ([NSApp macOSVersion] >= 101300) {
-	if (flag) {
+	if (boolValue) {
 	    win.styleMask |= NSWindowStyleMaskDocModalWindow;
 	} else {
 	    win.styleMask &= ~NSWindowStyleMaskDocModalWindow;
