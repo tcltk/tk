@@ -1680,7 +1680,7 @@ handleErrors:
 	    /* Resources will be freed by DestroyNotify handler */
 	    Tk_DestroyWindow(icon->tkwin);
 	}
-	ckfree((char*)icon);
+	ckfree(icon);
     }
     return TCL_ERROR;
 }

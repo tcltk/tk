@@ -2929,7 +2929,7 @@ WmOverrideredirectCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int boolean, curValue;
+    Bool boolValue, curValue;
     XSetWindowAttributes atts;
 
     if ((objc != 3) && (objc != 4)) {
@@ -2941,16 +2941,16 @@ WmOverrideredirectCmd(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(curValue != 0));
 	return TCL_OK;
     }
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolValue) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (curValue != boolean) {
+    if (curValue != boolValue) {
 	/*
 	 * Only do this if we are really changing value, because it causes
 	 * some funky stuff to occur
 	 */
 
-	atts.override_redirect = (boolean) ? True : False;
+	atts.override_redirect = boolValue;
 	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
 		&atts);
 	if (winPtr->wmInfoPtr->wrapperPtr != NULL) {
