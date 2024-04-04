@@ -813,7 +813,7 @@ TestobjconfigObjCmd(
 
 	typedef struct {
 	    TrivialCommandHeader header;
-	    int boolean;
+	    int boolValue;
 	    int integer;
 	    double doubleValue;
 	    char *string;
@@ -837,7 +837,7 @@ TestobjconfigObjCmd(
 	};
 	static const Tk_OptionSpec internalSpecs[] = {
 	    {TK_OPTION_BOOLEAN, "-boolean", "boolean", "Boolean", "1",
-		TCL_INDEX_NONE, offsetof(InternalRecord, boolean), TK_CONFIG_NULL_OK, 0, 0x1},
+		TCL_INDEX_NONE, offsetof(InternalRecord, boolValue), TK_CONFIG_NULL_OK, 0, 0x1},
 	    {TK_OPTION_INT, "-integer", "integer", "Integer", "148962237",
 		TCL_INDEX_NONE, offsetof(InternalRecord, integer), 0, 0, 0x2},
 	    {TK_OPTION_DOUBLE, "-double", "double", "Double", "3.14159",
@@ -901,7 +901,7 @@ TestobjconfigObjCmd(
 	recordPtr->header.interp = interp;
 	recordPtr->header.optionTable = optionTable;
 	recordPtr->header.tkwin = tkwin;
-	recordPtr->boolean = 0;
+	recordPtr->boolValue = 0;
 	recordPtr->integer = 0;
 	recordPtr->doubleValue = 0.0;
 	recordPtr->string = NULL;
