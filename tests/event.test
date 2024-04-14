@@ -910,7 +910,8 @@ proc setup_win_mousepointer {w} {
     toplevel $w
     pack propagate $w 0
     wm geometry $w 300x300+100+100
-    _pause 200; # service remaining screen drawing events (e.g. <Expose>)
+    tkwait visibility $w
+    update; # service remaining screen drawing events (e.g. <Expose>)
     set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
     event generate $w <Motion> -warp 1 -x 250 -y 250
     if {[tk windowingsystem] eq "aqua"} {
