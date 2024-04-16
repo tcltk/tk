@@ -498,7 +498,7 @@ switch -exact -- [tk windowingsystem] {
 
 if {$::tk_library ne ""} {
     proc ::tk::SourceLibFile {file} {
-        namespace eval :: [list source -encoding utf-8 [file join $::tk_library $file.tcl]]
+        namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
 	SourceLibFile icons
@@ -715,7 +715,7 @@ if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-	source -encoding utf-8 $file
+	source $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
@@ -843,7 +843,7 @@ if {[tk windowingsystem] eq "x11"} {
 
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
-    uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
+    uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
 
 
