@@ -441,7 +441,7 @@ Tk_CreateConsoleWindow(
     }
 
     Tcl_Preserve(consoleInterp);
-    result = Tcl_EvalEx(consoleInterp, "source $tk_library/console.tcl",
+    result = Tcl_EvalEx(consoleInterp, "source -encoding utf-8 $tk_library/console.tcl",
 	    TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
     if (result == TCL_ERROR) {
 	Tcl_SetReturnOptions(interp,
