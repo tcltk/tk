@@ -609,9 +609,9 @@ DefaultRotateImplementation(
 	    for (i=0 ; i<objc ; i++) {
 		Tcl_DecrRefCount(newObjv[i]);
 	    }
-	    ckfree((void *)newObjv);
+	    ckfree(newObjv);
 	}
-	ckfree((void *)coordv);
+	ckfree(coordv);
     }
 
     /*
