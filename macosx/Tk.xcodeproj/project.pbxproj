@@ -682,7 +682,7 @@
 		F966BA0B08F27A37005CB29B /* questhead.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = questhead.xbm; sourceTree = "<group>"; };
 		F966BA0C08F27A37005CB29B /* question.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = question.xbm; sourceTree = "<group>"; };
 		F966BA0D08F27A37005CB29B /* warning.xbm */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; path = warning.xbm; sourceTree = "<group>"; };
-		F966BA0F08F27A37005CB29B /* changes */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = changes; sourceTree = "<group>"; };
+		F966BA0F08F27A37005CB29B /* changes.md */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = changes.md; sourceTree = "<group>"; };
 		F966BA1108F27A37005CB29B /* 3DBorder.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = 3DBorder.3; sourceTree = "<group>"; };
 		F966BA1208F27A37005CB29B /* AddOption.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = AddOption.3; sourceTree = "<group>"; };
 		F966BA1308F27A37005CB29B /* bell.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = bell.n; sourceTree = "<group>"; };
@@ -1360,7 +1360,7 @@
 		F96888860AF78953000797B5 /* ttkWinMonitor.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWinMonitor.c; sourceTree = "<group>"; };
 		F96888870AF78953000797B5 /* ttkWinTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWinTheme.c; sourceTree = "<group>"; };
 		F96888880AF78953000797B5 /* ttkWinXPTheme.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = ttkWinXPTheme.c; sourceTree = "<group>"; };
-		F96D3DFB08F272A4004A47F5 /* changes */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = changes; sourceTree = "<group>"; };
+		F96D3DFB08F272A4004A47F5 /* changes.md */ = {isa = PBXFileReference; explicitFileType = text; fileEncoding = 4; path = changes.md; sourceTree = "<group>"; };
 		F96D3DFD08F272A4004A47F5 /* Access.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = Access.3; sourceTree = "<group>"; };
 		F96D3DFE08F272A4004A47F5 /* AddErrInfo.3 */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = AddErrInfo.3; sourceTree = "<group>"; };
 		F96D3DFF08F272A4004A47F5 /* after.n */ = {isa = PBXFileReference; explicitFileType = text.man; fileEncoding = 4; path = after.n; sourceTree = "<group>"; };
@@ -2985,7 +2985,7 @@
 				F96D3DFC08F272A4004A47F5 /* doc */,
 				F96D43D008F272B8004A47F5 /* tools */,
 				F9183E690EFC81560030B814 /* pkgs */,
-				F96D3DFB08F272A4004A47F5 /* changes */,
+				F96D3DFB08F272A4004A47F5 /* changes.md */,
 				F96D434308F272B5004A47F5 /* README */,
 				F96D432B08F272B4004A47F5 /* license.terms */,
 			);
@@ -3004,7 +3004,7 @@
 				F966BB1308F27A39005CB29B /* library */,
 				F966BC0408F27A3C005CB29B /* tests */,
 				F966BA1008F27A37005CB29B /* doc */,
-				F966BA0F08F27A37005CB29B /* changes */,
+				F966BA0F08F27A37005CB29B /* changes.md */,
 				F966BC0308F27A3C005CB29B /* README */,
 				F966BB9608F27A3B005CB29B /* license.terms */,
 			);
