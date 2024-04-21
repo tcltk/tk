@@ -333,7 +333,7 @@ same menu.
 4/12/92 (bug fix) Fixed core dump that occurred in tkError.c when
 removing the first error record from the error list.
 
-4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <KeyPress-1>
+4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <Key-1>
 event specifications from being processed correctly:  the "1" was
 treated as a button name rather than a keysym.
 
@@ -3998,7 +3998,7 @@ into account the "-displayof" option.  This problem also existed for the
 command to the Mac.  Also fixed "resource write" when the resource
 was specified by id and already existed. (JI)
 
-9/16/97 (bug fix) Added null bindings to <Command-KeyPress> for the
+9/16/97 (bug fix) Added null bindings to <Command-Key> for the
 text and entry widget on the Macintosh.  This prevents unbound command
 key sequences from having the character echoed to the widget. Also
 fixed Cut & Copy bindings.  (JI) (RJ)
@@ -5099,7 +5099,7 @@ correctly. (hobbs)
 2001-08-28 (bug fix) removed 2 second 'raise' delay seen by some Unix
 window managers. (hobbs, baker)
 
-2001-09-14 (bug fix) fixed memory leaks that occured if errors were
+2001-09-14 (bug fix) fixed memory leaks that occurred if errors were
 thrown while initializing the channel for an image. (darley)
 
 2001-09-20 (new feature) --enable-64bit support was added for HP 11 when
@@ -7504,7 +7504,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-01-07 (bug)[fa8de7] Crash [ttk::checkbutton .x -variable {}] (werner)
 
-2018-01-16 (bug)[382712] Crash in [event generate . <KeyPress>] (werner)
+2018-01-16 (bug)[382712] Crash in [event generate . <Key>] (werner)
 
 2018-01-19 (bug)[657c38] Crash in menu destroy with checkbutton entry (werner)
 
@@ -7540,7 +7540,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-07-17 (bug)[1088825] fix frame-2.17,3.9,3.10 on Mac (vogel)
 
-2018-07-27 (bug)[fabed1] GIF photo support for "deferred clear code" (vogel)
+2018-07-27 (bug)[fbaed1] GIF photo support for "deferred clear code" (vogel)
 
 2018-08-08 (feature) Modern full-screen support on Mac OSX (walzer)
 
@@ -7783,7 +7783,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2020-07-02 (bug)[2d2459] default style for combobox (bll)
 
-2020-07-06 (bug)[40c4bf] double free, entry-19.21 (vogel)
+2020-07-06 (bug)[40e4bf] double free, entry-19.21 (vogel)
 
 2020-07-06 (bug)[e3888d] grab & warp, bind-36.1 (vogel)
 
@@ -8120,7 +8120,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-07-26 (bug)[ed9b28] Aqua: memleak in GetWidgetDemoPath (chavez)
 
-2023-08-02 (bug)[2a3222] navigation exposed clues about masked entry 
+2023-08-02 (bug)[2a3222] navigation exposed clues about masked entry
 
 2023-08-04 Update [trace] subcommands for Tcl 9 compat
 
@@ -8143,7 +8143,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2023-10-16 (bug)[22eefb] unixWm-45.[24] (vogel)
 
-2023-10-18 (bug)[10b38a] Silence macOS 14 warning about secure restorable state 
+2023-10-18 (bug)[10b38a] Silence macOS 14 warning about secure restorable state
 
 2023-10-28 (bug)[198376] move notebook tabs to position s (rozenberg,vogel)
 
