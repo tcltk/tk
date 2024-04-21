@@ -7396,7 +7396,21 @@ test text-27.31 {"edit info" works w/o arguments} -body {
 } -cleanup {
     destroy .t
 } -result {0}
-
+test text-27.29 {bug ab839efc5f - .text edit undo inserts separators} -setup {
+    destroy .t
+} -body {
+    text .t -undo 1
+    .t insert 1.0 "1. 123 5 789012  LINE-1\n2.\n3. 123 5 789012  LINE-3\n"
+    .t tag add sel 3.0 3.end
+    .t delete sel.first sel.last
+    .t edit undo
+    .t tag add sel 3.0 3.end
+    .t delete sel.first sel.last
+    .t edit undo
+    .t get 3.0 3.end
+} -cleanup {
+    destroy .t
+} -result {3. 123 5 789012  LINE-3}
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     pack [text .t -wrap none]
