@@ -502,6 +502,9 @@ TkMacOSXPutImage(
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
 
+    if (width <= 0 || height <= 0) {
+	return Success; /* Is OK. Nothing to see here, literally. */
+    }
     LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
