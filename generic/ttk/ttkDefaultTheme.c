@@ -253,7 +253,7 @@ static const Ttk_ElementOptionSpec BorderElementOptions[] = {
     	STRINGIFY(BORDERWIDTH) },
     { "-relief", TK_OPTION_RELIEF, offsetof(BorderElement,reliefObj),
     	"flat" },
-        { NULL, TK_OPTION_BOOLEAN, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void BorderElementSize(
@@ -1135,12 +1135,12 @@ static const Ttk_ElementOptionSpec SliderElementOptions[] = {
 	"15" },
     { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),
 	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SliderElement,borderWidthObj),
-	STRINGIFY(BORDERWIDTH) },
     { "-background", TK_OPTION_BORDER, offsetof(SliderElement,borderObj),
 	DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR, offsetof(SliderElement,borderColorObj),
 	"black" },
+    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SliderElement,borderWidthObj),
+	STRINGIFY(BORDERWIDTH) },
     { "-orient", TK_OPTION_ANY, offsetof(SliderElement,orientObj),
 	"horizontal" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -1159,8 +1159,8 @@ static void SliderElementSize(
     int thickness, borderWidth;
 
     TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
-    Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
 
     switch (orient) {
 	case TTK_ORIENT_VERTICAL:
@@ -1239,8 +1239,8 @@ static void TreeitemIndicatorSize(
     int diameter = 0;
     Ttk_Padding margins;
 
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &diameter);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = diameter + Ttk_PaddingWidth(margins);
     *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
