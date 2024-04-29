@@ -670,7 +670,7 @@ EXTERN int		Tk_GetScrollInfoObj(Tcl_Interp *interp, int objc,
 EXTERN int		Tk_InitOptions(Tcl_Interp *interp, char *recordPtr,
 				Tk_OptionTable optionToken, Tk_Window tkwin);
 /* 212 */
-EXTERN void		Tk_MainEx(int argc, char **argv,
+EXTERN TCL_NORETURN1 void Tk_MainEx(int argc, char **argv,
 				Tcl_AppInitProc *appInitProc,
 				Tcl_Interp *interp);
 /* 213 */
@@ -1106,7 +1106,7 @@ typedef struct TkStubs {
     int (*tk_GetReliefFromObj) (Tcl_Interp *interp, Tcl_Obj *objPtr, int *resultPtr); /* 209 */
     int (*tk_GetScrollInfoObj) (Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], double *dblPtr, int *intPtr); /* 210 */
     int (*tk_InitOptions) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionToken, Tk_Window tkwin); /* 211 */
-    void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
+    TCL_NORETURN1 void (*tk_MainEx) (int argc, char **argv, Tcl_AppInitProc *appInitProc, Tcl_Interp *interp); /* 212 */
     void (*tk_RestoreSavedOptions) (Tk_SavedOptions *savePtr); /* 213 */
     int (*tk_SetOptions) (Tcl_Interp *interp, char *recordPtr, Tk_OptionTable optionTable, int objc, Tcl_Obj *const objv[], Tk_Window tkwin, Tk_SavedOptions *savePtr, int *maskPtr); /* 214 */
     void (*tk_InitConsoleChannels) (Tcl_Interp *interp); /* 215 */
