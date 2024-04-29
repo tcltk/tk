@@ -16,7 +16,9 @@
 
 #include "tkInt.h"
 
-extern int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
+MODULE_SCOPE int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+#endif
 
 /*
  * The default prompt used when the user has not overridden it.
@@ -158,7 +160,7 @@ static void		StdinProc(ClientData clientData, int mask);
  *----------------------------------------------------------------------
  */
 
-void
+TCL_NORETURN1 void
 Tk_MainEx(
     int argc,			/* Number of arguments. */
     TCHAR **argv,		/* Array of argument strings. */

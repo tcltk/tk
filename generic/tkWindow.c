@@ -2928,7 +2928,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2940,7 +2940,7 @@ static HMODULE tkcygwindll = NULL;
  * encoding conversions.
  */
 
-int
+MODULE_SCOPE int
 TkCygwinMainEx(
     int argc,			/* Number of arguments. */
     char **argv,		/* Array of argument strings. */
