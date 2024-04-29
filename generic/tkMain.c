@@ -16,7 +16,9 @@
 
 #include "tkInt.h"
 
-extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
+#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
+MODULE_SCOPE void TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
+#endif
 
 /*
  * The default prompt used when the user has not overridden it.
@@ -161,7 +163,7 @@ static void		StdinProc(void *clientData, int mask);
  *----------------------------------------------------------------------
  */
 
-void
+TCL_NORETURN1 void
 Tk_MainEx(
     Tcl_Size argc,			/* Number of arguments. */
     TCHAR **argv,		/* Array of argument strings. */
@@ -204,10 +206,8 @@ Tk_MainEx(
 	 * Tk_MainEx function of libtk8.?.dll, not this one. */
 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
-	    if (TkCygwinMainEx(argc, argv, appInitProc, interp)) {
-		/* Should never reach here. */
-		return;
-	    }
+	    TkCygwinMainEx(argc, argv, appInitProc, interp);
+	    /* Only returns when Tk_MainEx() was not found */
 	} else {
 	    Tcl_Size j;
 

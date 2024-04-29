@@ -2943,7 +2943,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2954,9 +2954,8 @@ static HMODULE tkcygwindll = NULL;
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
-extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-int
+MODULE_SCOPE void
 TkCygwinMainEx(
     Tcl_Size argc,			/* Number of arguments. */
     char **argv,		/* Array of argument strings. */
@@ -2975,20 +2974,20 @@ TkCygwinMainEx(
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
+#if TCL_MAJOR_VERSION > 8
+    memcpy(name+len-12, L"libtcl9tk8", 10 * sizeof(WCHAR));
+#else
     memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
+#endif
 
     tkcygwindll = LoadLibraryW(name);
-    if (!tkcygwindll) {
-	/* dll is not present */
-	return 0;
+    if (tkcygwindll) {
+	tkmainex = (void (*)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *))
+		(void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
+	if (tkmainex) {
+	    tkmainex(argc, argv, appInitProc, interp);
+	}
     }
-    tkmainex = (void (*)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *))
-	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
-    if (!tkmainex) {
-	return 0;
-    }
-    tkmainex(argc, argv, appInitProc, interp);
-    return 1;
 }
 #endif /* _WIN32 */
 

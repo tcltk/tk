@@ -806,7 +806,7 @@ declare 211 {
 	    Tk_OptionTable optionToken, Tk_Window tkwin)
 }
 declare 212 {nostub {Don't use this function in a stub-enabled extension}} {
-    void  Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
+    TCL_NORETURN1 void  Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 declare 213 {
@@ -1216,11 +1216,11 @@ export {
 	    int exact)
 }
 export {
-    void Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
+    TCL_NORETURN1 void Tk_MainEx(Tcl_Size argc, char **argv, Tcl_AppInitProc *appInitProc,
 	    Tcl_Interp *interp)
 }
 export {
-    void Tk_MainExW(Tcl_Size argc, wchar_t **argv,
+    TCL_NORETURN1 void Tk_MainExW(Tcl_Size argc, wchar_t **argv,
 	    Tcl_AppInitProc *appInitProc, Tcl_Interp *interp);
 }
 
