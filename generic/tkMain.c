@@ -17,7 +17,7 @@
 #include "tkInt.h"
 
 #if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
-MODULE_SCOPE int TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
+MODULE_SCOPE void TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
 #endif
 
 /*
@@ -197,10 +197,7 @@ Tk_MainEx(
 	 * Tk_MainEx function of libtk8.?.dll, not this one. */
 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
-	    if (TkCygwinMainEx(argc, argv, appInitProc, interp)) {
-		/* Should never reach here. */
-		return;
-	    }
+	    TkCygwinMainEx(argc, argv, appInitProc, interp);
 	} else {
 	    int i;
 
