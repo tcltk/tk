@@ -590,7 +590,8 @@ static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 static void		SetTkDialog(void *clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
-
+static Tcl_Obj	*ConvertExternalFilenameObj(LPCWSTR);
+
 /*
  *-------------------------------------------------------------------------
  *
@@ -1404,15 +1405,12 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                         hr = itemIf->lpVtbl->GetDisplayName(itemIf,
                                         SIGDN_FILESYSPATH, &wstr);
                         if (SUCCEEDED(hr)) {
-                            Tcl_DString fnds;
+                            Tcl_Obj *fnds;
 
-                            ConvertExternalFilename(wstr, &fnds);
+                            fnds = ConvertExternalFilenameObj(wstr);
                             CoTaskMemFree(wstr);
                             Tcl_ListObjAppendElement(
-                                interp, multiObj,
-                                Tcl_NewStringObj(Tcl_DStringValue(&fnds),
-                                                 Tcl_DStringLength(&fnds)));
-                            Tcl_DStringFree(&fnds);
+                                interp, multiObj, fnds);
                         }
                         itemIf->lpVtbl->Release(itemIf);
                         if (FAILED(hr))
@@ -1432,13 +1430,8 @@ static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                 hr = resultIf->lpVtbl->GetDisplayName(resultIf, SIGDN_FILESYSPATH,
                                                       &wstr);
                 if (SUCCEEDED(hr)) {
-                    Tcl_DString fnds;
-
-                    ConvertExternalFilename(wstr, &fnds);
-                    resultObj = Tcl_NewStringObj(Tcl_DStringValue(&fnds),
-                                                 Tcl_DStringLength(&fnds));
+                    resultObj = ConvertExternalFilenameObj(wstr);
                     CoTaskMemFree(wstr);
-                    Tcl_DStringFree(&fnds);
                 }
                 resultIf->lpVtbl->Release(resultIf);
             }
@@ -1689,18 +1682,17 @@ static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr, enum OFNOper oper
 		files++;
 		if (*files != '\0') {
 		    Tcl_Obj *fullnameObj;
-		    Tcl_DString filenameBuf;
+		    Tcl_Obj *filenameObj;
 
 		    count++;
-		    ConvertExternalFilename(files, &filenameBuf);
+		    filenameObj = ConvertExternalFilenameObj(files);
 
 		    fullnameObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 			    Tcl_DStringLength(&ds));
 		    Tcl_AppendToObj(fullnameObj, "/", TCL_INDEX_NONE);
-		    Tcl_AppendToObj(fullnameObj, Tcl_DStringValue(&filenameBuf),
-			    Tcl_DStringLength(&filenameBuf));
+		    Tcl_AppendObjToObj(fullnameObj, filenameObj);
 		    gotFilename = 1;
-		    Tcl_DStringFree(&filenameBuf);
+		    Tcl_DecrRefCount(filenameObj);
 		    Tcl_ListObjAppendElement(NULL, returnList, fullnameObj);
 		}
 	    }
@@ -1949,10 +1941,9 @@ OFNHookProc(
 		     * but only if not an absolute path.
 		     */
 
-		    Tcl_DString tmpfile;
-		    ConvertExternalFilename(buffer, &tmpfile);
+		    Tcl_Obj *tmpfile = ConvertExternalFilenameObj(buffer);
 		    if (TCL_PATH_ABSOLUTE ==
-			    Tcl_GetPathType(Tcl_DStringValue(&tmpfile))) {
+			    Tcl_FSGetPathType(tmpfile)) {
 			/* re-get the full path to the start of the buffer */
 			buffer = ofnData->dynFileBuffer;
 			SendMessageW(hdlg, CDM_GETSPEC, selsize, (LPARAM) buffer);
@@ -1960,7 +1951,7 @@ OFNHookProc(
 			*(buffer-1) = '\\';
 		    }
 		    buffer[selsize] = '\0'; /* Second NULL terminator. */
-		    Tcl_DStringFree(&tmpfile);
+		    Tcl_DecrRefCount(tmpfile);
 		}
 	    } else {
 		/*
@@ -2528,11 +2519,7 @@ Tk_ChooseDirectoryObjCmd(
 
     Tcl_ResetResult(interp);
     if (*path) {
-	Tcl_DString ds;
-
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		ConvertExternalFilename(path, &ds), TCL_INDEX_NONE));
-	Tcl_DStringFree(&ds);
+	Tcl_SetObjResult(interp, ConvertExternalFilenameObj(path));
     }
 
     CleanupOFNOptions(&ofnOpts);
@@ -2994,6 +2981,34 @@ ConvertExternalFilename(
     }
     return Tcl_DStringValue(dsPtr);
 }
+
+static Tcl_Obj *
+ConvertExternalFilenameObj(
+    LPCWSTR  filename)
+{
+    char *p;
+    int len = wcslen(filename) * 3;
+    Tcl_Obj *r = Tcl_NewObj();
+
+    Tcl_SetObjLength(r, len);
+    p = Tcl_GetString(r);
+
+    len = WideCharToMultiByte(CP_UTF8, 0, filename, -1, p, len, NULL, NULL);
+
+    for (; *p != '\0'; p++) {
+	/*
+	 * Change the pathname to the Tcl "normalized" pathname, where back
+	 * slashes are used instead of forward slashes
+	 */
+
+	if (*p == '\\') {
+	    *p = '/';
+	}
+    }
+    Tcl_SetObjLength(r, len);
+    return r;
+}
+
 
 /*
  * ----------------------------------------------------------------------
