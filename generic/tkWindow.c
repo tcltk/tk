@@ -3018,7 +3018,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
@@ -3091,7 +3091,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
     if (tkcygwindll) {
 	int (*tksafeinit)(Tcl_Interp *);
 
