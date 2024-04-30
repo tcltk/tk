@@ -25,6 +25,7 @@ MODULE_SCOPE void TkCygwinMainEx(int, char **, Tcl_AppInitProc *, Tcl_Interp *);
  */
 
 static const char DEFAULT_PRIMARY_PROMPT[] = "% ";
+static const char ENCODING_ERROR[] = "\n\t(encoding error in stderr)";
 
 /*
  * This file can be compiled on Windows in UNICODE mode, as well as on all
@@ -84,7 +85,7 @@ NewNativeObj(
 
 /*
  * Declarations for various library functions and variables (don't want to
- * include tkInt.h or tkPort.h here, because people might copy this file out
+ * include tclInt.h or tclPort.h here, because people might copy this file out
  * of the Tk source directory to make their own modified versions). Note: do
  * not declare "exit" here even though a declaration is really needed, because
  * it will conflict with a declaration elsewhere on some systems.
@@ -458,14 +459,28 @@ StdinProc(
 	Tcl_CreateChannelHandler(chan, TCL_READABLE, StdinProc, isPtr);
     }
     Tcl_DStringFree(&isPtr->command);
-    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
-	if ((code != TCL_OK) || (isPtr->tty)) {
-	    chan = Tcl_GetStdChannel((code != TCL_OK) ? TCL_STDERR : TCL_STDOUT);
-	    if (chan) {
-		Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
-		Tcl_WriteChars(chan, "\n", 1);
+    if (code != TCL_OK) {
+	chan = Tcl_GetStdChannel(TCL_STDERR);
+
+	if (chan != NULL) {
+	    if (Tcl_WriteObj(chan, Tcl_GetObjResult(interp)) < 0) {
+		Tcl_WriteChars(chan, ENCODING_ERROR, -1);
 	    }
+	    Tcl_WriteChars(chan, "\n", 1);
 	}
+    } else if (isPtr->tty) {
+	Tcl_Obj *resultPtr = Tcl_GetObjResult(interp);
+	chan = Tcl_GetStdChannel(TCL_STDOUT);
+
+	Tcl_IncrRefCount(resultPtr);
+	(void)Tcl_GetStringFromObj(resultPtr, &length);
+	if ((length > 0) && (chan != NULL)) {
+	    if (Tcl_WriteObj(chan, resultPtr) < 0) {
+		Tcl_WriteChars(chan, "\n\t(encoding error in stdout)", -1);
+	    }
+	    Tcl_WriteChars(chan, "\n", 1);
+	}
+	Tcl_DecrRefCount(resultPtr);
     }
 
     /*
@@ -521,12 +536,12 @@ Prompt(
 	if (code != TCL_OK) {
 	    Tcl_AddErrorInfo(interp,
 		    "\n    (script that generates prompt)");
-	    if (Tcl_GetString(Tcl_GetObjResult(interp))[0] != '\0') {
-		chan = Tcl_GetStdChannel(TCL_STDERR);
-		if (chan != NULL) {
-		    Tcl_WriteObj(chan, Tcl_GetObjResult(interp));
-		    Tcl_WriteChars(chan, "\n", 1);
-		}
+	    chan = Tcl_GetStdChannel(TCL_STDERR);
+	    if (chan != NULL) {
+	    if (Tcl_WriteObj(chan, Tcl_GetObjResult(interp)) < 0) {
+		Tcl_WriteChars(chan, ENCODING_ERROR, -1);
+	    }
+		Tcl_WriteChars(chan, "\n", 1);
 	    }
 	    goto defaultPrompt;
 	}
