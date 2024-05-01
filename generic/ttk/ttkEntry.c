@@ -1645,7 +1645,7 @@ static int EntrySelectionPresentCommand(
 	return TCL_ERROR;
     }
     Tcl_SetObjResult(interp,
-	    Tcl_NewWideIntObj(entryPtr->entry.selectFirst >= 0));
+	    Tcl_NewBooleanObj(entryPtr->entry.selectFirst >= 0));
     return TCL_OK;
 }
 
