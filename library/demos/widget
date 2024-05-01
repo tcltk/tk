@@ -342,6 +342,7 @@ addFormattedText {
     @@demo entry2	Entries with scrollbars
     @@demo entry3	Validated entries and password fields
     @@demo spin		Spin-boxes
+    @@demo ttkspin	Themed spin-boxes
     @@demo combo	Combo-boxes
     @@demo form		Simple Rolodex-like form
 
