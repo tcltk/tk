@@ -10,7 +10,7 @@
 .SH NAME
 ttk::spinbox \- Selecting text field widget
 .SH SYNOPSIS
-\fBttk::spinbox\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::spinbox\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
