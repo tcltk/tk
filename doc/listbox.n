@@ -12,7 +12,7 @@
 .SH NAME
 listbox \- Create and manipulate 'listbox' item list widgets
 .SH SYNOPSIS
-\fBlistbox\fR \fIpathName \fR?\fIoptions\fR?
+\fBlistbox\fI pathName \fR?\fIoptions\fR?
 .SO
 \-background	\-borderwidth	\-cursor
 \-disabledforeground	\-exportselection	\-font
@@ -95,37 +95,28 @@ Many of the widget commands for listboxes take one or more indices
 as arguments.
 An index specifies a particular element of the listbox, in any of
 the following ways:
-.TP 12
-\fInumber\fR
-.
+.IP \fInumber\fR 12
 Specifies the element as a numerical index, where 0 corresponds
 to the first element in the listbox.
-.TP 12
-\fBactive\fR
-.
+.IP \fBactive\fR 12
 Indicates the element that has the location cursor.  This element
 will be displayed as specified by \fB\-activestyle\fR when the listbox
 has the keyboard focus, and it is specified with the \fBactivate\fR
 widget command.
-.TP 12
-\fBanchor\fR
-.
+.IP \fBanchor\fR 12
 Indicates the anchor point for the selection, which is set with the
 \fBselection anchor\fR widget command.
-.TP 12
-\fBend\fR
-.
+.IP \fBend\fR 12
 Indicates the end of the listbox.
 For most commands this refers to the last element in the listbox,
 but for a few commands such as \fBindex\fR and \fBinsert\fR
 it refers to the element just after the last one.
-.TP 12
-\fB@\fIx\fB,\fIy\fR
+.IP \fB@\fIx\fB,\fIy\fR 12
 Indicates the element that covers the point in the listbox window
 specified by \fIx\fR and \fIy\fR (in pixel coordinates).  If no
 element covers that point, then the closest element to that
 point is used.
-.LP
+.PP
 Indexes support the same simple interpretation as
 for the command \fBstring index\fR, with simple integer index
 arithmetic and indexing relative to \fBend\fR.
@@ -144,8 +135,9 @@ operations on the widget.  It has the following general form:
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for listbox widgets:
+.\" METHOD: activate
 .TP
-\fIpathName \fBactivate\fR \fIindex\fR
+\fIpathName \fBactivate\fI index\fR
 .
 Sets the active element to the one indicated by \fIindex\fR.
 If \fIindex\fR is outside the range of elements in the listbox
@@ -153,8 +145,9 @@ then the closest element is activated.
 The active element is drawn as specified by \fB\-activestyle\fR when the
 widget has the input focus, and its index may be retrieved with the
 index \fBactive\fR.
+.\" METHOD: bbox
 .TP
-\fIpathName \fBbbox\fR \fIindex\fR
+\fIpathName \fBbbox\fI index\fR
 .
 Returns a list of four numbers describing the bounding box of
 the text in the element given by \fIindex\fR.
@@ -168,13 +161,15 @@ or if \fIindex\fR refers to a non-existent element,
 then the result is an empty string;  if the element is
 partially visible, the result gives the full area of the element,
 including any parts that are not visible.
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBlistbox\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -190,6 +185,7 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBlistbox\fR
 command.
+.\" METHOD: curselection
 .TP
 \fIpathName \fBcurselection\fR
 .
@@ -197,6 +193,7 @@ Returns a list containing the numerical indices of
 all of the elements in the listbox that are currently selected.
 If there are no elements selected in the listbox then an empty
 string is returned.
+.\" METHOD: delete
 .TP
 \fIpathName \fBdelete \fIfirst \fR?\fIlast\fR?
 .
@@ -204,6 +201,7 @@ Deletes one or more elements of the listbox.  \fIFirst\fR and \fIlast\fR
 are indices specifying the first and last elements in the range
 to delete.  If \fIlast\fR is not specified it defaults to
 \fIfirst\fR, i.e. a single element is deleted.
+.\" METHOD: get
 .TP
 \fIpathName \fBget \fIfirst\fR ?\fIlast\fR?
 .
@@ -215,12 +213,14 @@ are all of the listbox elements between \fIfirst\fR and \fIlast\fR,
 inclusive.
 Both \fIfirst\fR and \fIlast\fR may have any of the standard
 forms for indices.
+.\" METHOD: index
 .TP
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the integer index value that corresponds to \fIindex\fR.
 If \fIindex\fR is \fBend\fR the return value is a count of the number
 of elements in the listbox (not the index of the last element).
+.\" METHOD: insert
 .TP
 \fIpathName \fBinsert \fIindex \fR?\fIelement element ...\fR?
 .
@@ -228,12 +228,14 @@ Inserts zero or more new elements in the list just before the
 element given by \fIindex\fR.  If \fIindex\fR is specified as
 \fBend\fR then the new elements are added to the end of the
 list.  Returns an empty string.
+.\" METHOD: itemcget
 .TP
 \fIpathName \fBitemcget \fIindex option\fR
 .
 Returns the current value of the item configuration option given
 by \fIoption\fR. \fIOption\fR may have any of the values accepted
 by the \fBitemconfigure\fR command.
+.\" METHOD: itemconfigure
 .TP
 \fIpathName \fBitemconfigure \fIindex\fR ?\fIoption\fR? ?\fIvalue\fR? ?\fIoption value ...\fR?
 .
@@ -249,22 +251,26 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string. The following options
 are currently supported for items:
 .RS
+.\" OPTION: -background
 .TP
 \fB\-background \fIcolor\fR
 .
 \fIColor\fR specifies the background color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.\" OPTION: -foreground
 .TP
 \fB\-foreground \fIcolor\fR
 .
 \fIColor\fR specifies the foreground color to use when displaying the
 item. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.\" OPTION: -selectbackground
 .TP
 \fB\-selectbackground \fIcolor\fR
 .
 \fIcolor\fR specifies the background color to use when displaying the
 item while it is selected. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
+.\" OPTION: -selectforeground
 .TP
 \fB\-selectforeground \fIcolor\fR
 .
@@ -272,13 +278,15 @@ item while it is selected. It may have any of the forms accepted by
 item while it is selected. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
 .RE
+.\" METHOD: nearest
 .TP
 \fIpathName \fBnearest \fIy\fR
 .
 Given a y-coordinate within the listbox window, this command returns
 the index of the (visible) listbox element nearest to that y-coordinate.
+.\" METHOD: scan
 .TP
-\fIpathName \fBscan\fR \fIoption args\fR
+\fIpathName \fBscan\fI option args\fR
 .
 This command is used to implement scanning on listboxes.  It has
 two forms, depending on \fIoption\fR:
@@ -302,6 +310,7 @@ with mouse motion events in the widget, to produce the effect of
 dragging the list at high speed through the window.  The return
 value is an empty string.
 .RE
+.\" METHOD: see
 .TP
 \fIpathName \fBsee \fIindex\fR
 .
@@ -311,6 +320,7 @@ If the element is already visible then the command has no effect;
 if the element is near one edge of the window then the listbox
 scrolls to bring the element into view at the edge;  otherwise
 the listbox scrolls to center the element.
+.\" METHOD: selection
 .TP
 \fIpathName \fBselection \fIoption arg\fR
 .
@@ -346,11 +356,13 @@ Selects all of the elements in the range between
 \fIfirst\fR and \fIlast\fR, inclusive, without affecting
 the selection state of elements outside that range.
 .RE
+.\" METHOD: size
 .TP
 \fIpathName \fBsize\fR
 .
 Returns a decimal string indicating the total number of elements
 in the listbox.
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview \fR?\fIargs\fR
 .
@@ -399,6 +411,7 @@ If \fIwhat\fR is \fBunits\fR, the view adjusts left or right by
 \fInumber\fR character units (the width of the \fB0\fR character)
 on the display.
 .RE
+.\" METHOD: yview
 .TP
 \fIpathName \fByview \fR?\fIargs\fR?
 .
@@ -408,6 +421,7 @@ It can take any of the following forms:
 .RS
 .TP
 \fIpathName \fByview\fR
+.
 Returns a list containing two elements, both of which are real fractions
 between 0 and 1.
 The first element gives the position of the listbox element at the

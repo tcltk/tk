@@ -15,15 +15,16 @@ Tk_ConfigureWidget, Tk_ConfigureInfo, Tk_ConfigureValue, Tk_FreeOptions \- proce
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_ConfigureWidget(\fIinterp, tkwin, specs, argc, argv, widgRec, flags\fB)\fR
+\fBTk_ConfigureWidget\fR(\fIinterp, tkwin, specs, argc, argv, widgRec, flags\fR)
 .sp
 int
-\fBTk_ConfigureInfo(\fIinterp, tkwin, specs, widgRec, argvName, flags\fB)\fR
+\fBTk_ConfigureInfo\fR(\fIinterp, tkwin, specs, widgRec, argvName, flags\fR)
 .sp
 int
-\fBTk_ConfigureValue(\fIinterp, tkwin, specs, widgRec, argvName, flags\fB)\fR
+\fBTk_ConfigureValue\fR(\fIinterp, tkwin, specs, widgRec, argvName, flags\fR)
 .sp
-\fBTk_FreeOptions(\fIspecs, widgRec, display, flags\fB)\fR
+\fBTk_FreeOptions\fR(\fIspecs, widgRec, display, flags\fR)
+.fi
 .SH ARGUMENTS
 .AS void *widgRec in/out
 .AP Tcl_Interp *interp in
@@ -62,8 +63,8 @@ order to free up resources.
 .BE
 .SH DESCRIPTION
 .PP
-Note: \fBTk_ConfigureWidget\fR should be replaced with the new
-\fBTcl_Obj\fR based API \fBTk_SetOptions\fR.  The old interface is
+Note that \fBTk_ConfigureWidget\fR should be replaced with the new
+\fBTcl_Obj\fR based API, \fBTk_SetOptions\fR.  The old interface is
 retained for backward compatibility.
 .PP
 \fBTk_ConfigureWidget\fR is called to configure various aspects of a
@@ -171,6 +172,7 @@ to do with the string value of that configuration option.  The
 legal values for \fItype\fR, and the corresponding actions, are:
 .TP
 \fBTK_CONFIG_ACTIVE_CURSOR\fR
+.
 The value
 must be an ASCII string identifying a cursor in a form
 suitable for passing to \fBTk_GetCursor\fR.
@@ -185,12 +187,14 @@ If the previous value of the target
 was not \fBNone\fR, then it is freed by passing it to \fBTk_FreeCursor\fR.
 .TP
 \fBTK_CONFIG_ANCHOR\fR
+.
 The value must be an ASCII string identifying an anchor point in one of the ways
 accepted by \fBTk_GetAnchor\fR.
 The string is converted to a \fBTk_Anchor\fR by calling
 \fBTk_GetAnchor\fR and the result is stored in the target.
 .TP
 \fBTK_CONFIG_BITMAP\fR
+.
 The value must be an ASCII string identifying a bitmap in a form
 suitable for passing to \fBTk_GetBitmap\fR.  The value is converted
 to a \fBPixmap\fR by calling \fBTk_GetBitmap\fR and the result
@@ -201,6 +205,7 @@ If the previous value of the target
 was not \fBNone\fR, then it is freed by passing it to \fBTk_FreeBitmap\fR.
 .TP
 \fBTK_CONFIG_BOOLEAN\fR
+.
 The value must be an ASCII string specifying a boolean value.  Any
 of the values
 .QW true ,
@@ -220,6 +225,7 @@ The target is expected to be an integer;  for true values it will
 be set to 1 and for false values it will be set to 0.
 .TP
 \fBTK_CONFIG_BORDER\fR
+.
 The value must be an ASCII string identifying a border color in a form
 suitable for passing to \fBTk_Get3DBorder\fR.  The value is converted
 to a (\fBTk_3DBorder *\fR) by calling \fBTk_Get3DBorder\fR and the result
@@ -230,6 +236,7 @@ If the previous value of the target
 was not NULL, then it is freed by passing it to \fBTk_Free3DBorder\fR.
 .TP
 \fBTK_CONFIG_CAP_STYLE\fR
+.
 The value must be
 an ASCII string identifying a cap style in one of the ways
 accepted by \fBTk_GetCapStyle\fR.
@@ -238,6 +245,7 @@ to the cap style by calling
 \fBTk_GetCapStyle\fR and the result is stored in the target.
 .TP
 \fBTK_CONFIG_COLOR\fR
+.
 The value must be an ASCII string identifying a color in a form
 suitable for passing to \fBTk_GetColor\fR.  The value is converted
 to an (\fBXColor *\fR) by calling \fBTk_GetColor\fR and the result
@@ -248,27 +256,32 @@ If the previous value of the target
 was not NULL, then it is freed by passing it to \fBTk_FreeColor\fR.
 .TP
 \fBTK_CONFIG_CURSOR\fR
+.
 This option is identical to \fBTK_CONFIG_ACTIVE_CURSOR\fR except
 that the new cursor is not made the active one for \fItkwin\fR.
 .TP
 \fBTK_CONFIG_CUSTOM\fR
+.
 This option allows applications to define new option types.
 The \fIcustomPtr\fR field of the entry points to a structure
 defining the new option type.
 See the section \fBCUSTOM OPTION TYPES\fR below for details.
 .TP
 \fBTK_CONFIG_DOUBLE\fR
+.
 The value must be an ASCII floating-point number in
 the format accepted by \fBstrtol\fR.  The string is converted
 to a \fBdouble\fR value, and the value is stored in the
 target.
 .TP
 \fBTK_CONFIG_END\fR
+.
 Marks the end of the table.  The last entry in \fIspecs\fR
 must have this type;  all of its other fields are ignored and it
 will never match any arguments.
 .TP
 \fBTK_CONFIG_FONT\fR
+.
 The value must be an ASCII string identifying a font in a form
 suitable for passing to \fBTk_GetFont\fR.  The value is converted
 to a \fBTk_Font\fR by calling \fBTk_GetFont\fR and the result
@@ -279,6 +292,7 @@ If the previous value of the target
 was not NULL, then it is freed by passing it to \fBTk_FreeFont\fR.
 .TP
 \fBTK_CONFIG_INT\fR
+.
 The value must be an ASCII integer string
 in the format accepted by \fBstrtol\fR (e.g.
 .QW 0
@@ -289,6 +303,7 @@ numbers, respectively).  The string is converted to an integer
 value and the integer is stored in the target.
 .TP
 \fBTK_CONFIG_JOIN_STYLE\fR
+.
 The value must be
 an ASCII string identifying a join style in one of the ways
 accepted by \fBTk_GetJoinStyle\fR.
@@ -297,6 +312,7 @@ to the join style by calling
 \fBTk_GetJoinStyle\fR and the result is stored in the target.
 .TP
 \fBTK_CONFIG_JUSTIFY\fR
+.
 The value must be
 an ASCII string identifying a justification method in one of the
 ways accepted by \fBTk_GetJustify\fR.
@@ -304,26 +320,29 @@ The string is converted to a \fBTk_Justify\fR by calling
 \fBTk_GetJustify\fR and the result is stored in the target.
 .TP
 \fBTK_CONFIG_MM\fR
+.
 The value must specify a screen distance in one of the forms acceptable
 to \fBTk_GetScreenMM\fR.
 The string is converted to double-precision floating-point distance
 in millimeters and the value is stored in the target.
 .TP
 \fBTK_CONFIG_PIXELS\fR
+.
 The value must specify screen units in one of the forms acceptable
 to \fBTk_GetPixels\fR.
 The string is converted to an integer distance in pixels and the
 value is stored in the target.
 .TP
 \fBTK_CONFIG_RELIEF\fR
+.
 The value must be an ASCII string identifying a relief in a form
 suitable for passing to \fBTk_GetRelief\fR.  The value is converted
 to an integer relief value by calling \fBTk_GetRelief\fR and the result
 is stored in the target.
 .TP
 \fBTK_CONFIG_STRING\fR
-A copy
-of the value is made by allocating memory space with
+.
+A copy of the value is made by allocating memory space with
 \fBTcl_Alloc\fR and copying the value into the dynamically-allocated
 space.  A pointer to the new string is stored in the target.
 If \fBTK_CONFIG_NULL_OK\fR is specified in \fIspecFlags\fR then the value
@@ -332,6 +351,7 @@ If the previous value of the target was not NULL, then it is
 freed by passing it to \fBTcl_Free\fR.
 .TP
 \fBTK_CONFIG_SYNONYM\fR
+.
 This \fItype\fR value identifies special entries in \fIspecs\fR that
 are synonyms for other entries.  If an \fIargv\fR value matches the
 \fIargvName\fR of a \fBTK_CONFIG_SYNONYM\fR entry, the entry is not used
@@ -346,6 +366,7 @@ and
 .QW \-bg .
 .TP
 \fBTK_CONFIG_UID\fR
+.
 The value is translated to a \fBTk_Uid\fR
 (by passing it to \fBTk_GetUid\fR).  The resulting value
 is stored in the target.
@@ -353,6 +374,7 @@ If \fBTK_CONFIG_NULL_OK\fR is specified in \fIspecFlags\fR and the value
 is an empty string then the target will be set to NULL.
 .TP
 \fBTK_CONFIG_WINDOW\fR
+.
 The value must be a window path name.  It is translated to a
 \fBTk_Window\fR token and the token is stored in the target.
 .SH "GROUPED ENTRIES"
@@ -381,7 +403,8 @@ options.  These values are used in three different ways as
 described below.
 .PP
 First, if the \fIflags\fR argument to \fBTk_ConfigureWidget\fR has
-the \fBTK_CONFIG_ARGV_ONLY\fR bit set (i.e., \fIflags\fR | \fBTK_CONFIG_ARGV_ONLY\fR != 0),
+the \fBTK_CONFIG_ARGV_ONLY\fR bit set
+(i.e., \fIflags\fR | \fBTK_CONFIG_ARGV_ONLY\fR != 0),
 then the option database and
 \fIdefValue\fR fields are not used.  In this case, if an entry in
 \fIspecs\fR does not match a field in \fIargv\fR then nothing happens:
@@ -395,16 +418,19 @@ to control the processing of that entry.  Each \fIspecFlags\fR
 field may consists of an OR-ed combination of the following values:
 .TP
 \fBTK_CONFIG_COLOR_ONLY\fR
+.
 If this bit is set then the entry will only be considered if the
 display for \fItkwin\fR has more than one bit plane.  If the display
 is monochromatic then this \fIspecs\fR entry will be ignored.
 .TP
 \fBTK_CONFIG_MONO_ONLY\fR
+.
 If this bit is set then the entry will only be considered if the
 display for \fItkwin\fR has exactly one bit plane.  If the display
 is not monochromatic then this \fIspecs\fR entry will be ignored.
 .TP
 \fBTK_CONFIG_NULL_OK\fR
+.
 This bit is only relevant for some types of entries (see the
 descriptions of the various entry types above).
 If this bit is set, it indicates that an empty string value
@@ -418,6 +444,7 @@ If this bit is not set then empty strings are processed as strings,
 which generally results in an error.
 .TP
 \fBTK_CONFIG_DONT_SET_DEFAULT\fR
+.
 If this bit is one, it means that the \fIdefValue\fR field of the
 entry should only be used for returning the default value in
 \fBTk_ConfigureInfo\fR.
@@ -428,14 +455,6 @@ This flag provides a performance optimization where it is expensive
 to process the default string:  the client can compute the default
 once, save the value, and provide it before calling
 \fBTk_ConfigureWidget\fR.
-.TP
-\fBTK_CONFIG_OPTION_SPECIFIED\fR
-This bit is
-deprecated. It used to be set and cleared by \fBTk_ConfigureWidget\fR
-so that callers could detect what entries were specified in
-\fIargv\fR, but it was removed because it was inherently
-thread-unsafe. Code that wishes to detect what options were specified
-should use \fBTk_SetOptions\fR instead.
 .PP
 The \fBTK_CONFIG_MONO_ONLY\fR and \fBTK_CONFIG_COLOR_ONLY\fR flags are typically
 used to specify different default values for
@@ -533,7 +552,7 @@ Applications can extend the built-in configuration types with additional
 configuration types by writing procedures to parse and print options
 of the a type and creating a structure pointing to those procedures:
 .CS
-typedef struct Tk_CustomOption {
+typedef struct {
     Tk_OptionParseProc *\fIparseProc\fR;
     Tk_OptionPrintProc *\fIprintProc\fR;
     void *\fIclientData\fR;

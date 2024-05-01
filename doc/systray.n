@@ -7,17 +7,16 @@
 '\"
 .TH tk systray n "" Tk "Tk Built-In Commands"
 .so man.macros
+.BS
 .SH NAME
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
-\fBtk systray create \fI\-image image\fR \fI?\-text text\fR? \fI?\-button1 callback?\fR \fI?\-button3 callback?\fR
-.sp
+.nf
+\fBtk systray create \-image \fIimage\fR ?\fB\-text \fItext\fR? ?\fB\-button1 \fIcallback\fR? ?\fB\-button3 \fIcallback\fR?
 \fBtk systray configure \fI?option? ?value option value ...?\fR
-.sp
 \fBtk systray exists\fR
-.sp
 \fBtk systray destroy\fR
-.BE
+.fi
 .BE
 .SH DESCRIPTION
 .PP

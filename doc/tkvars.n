@@ -16,6 +16,7 @@ geometry, tk_library, tk_patchLevel, tk::scalingPct, tk_strictMotif, tk::svgFmt,
 .PP
 The following Tcl variables are either set or used by Tk at various times
 in its execution:
+.\" VARIABLE: tk_library
 .TP 15
 \fBtk_library\fR
 .
@@ -40,6 +41,7 @@ working directory.
 The variable can be modified by an application to switch to a different
 library.
 .RE
+.\" VARIABLE: tk_patchLevel
 .TP
 \fBtk_patchLevel\fR
 .
@@ -52,6 +54,7 @@ it uniquely identifies an official version of Tk.
 This value is normally the same as the result of
 .QW "\fBpackage require\fR \fBtk\fR" .
 .RE
+.\" VARIABLE: scalingPct
 .TP
 \fBtk::scalingPct\fR
 .
@@ -87,6 +90,7 @@ additional step, Tk synchronizes the scaling factor used to convert
 between physical units and pixels with the scaling percentage, with the
 aid of the \fBtk scaling\fR command.
 .RE
+.\" VARIABLE: tk_strictMotif
 .TP
 \fBtk_strictMotif\fR
 .
@@ -96,6 +100,7 @@ closely as possible to Motif look-and-feel standards.
 For example, active elements such as buttons and scrollbar
 sliders will not change color when the pointer passes over them.
 Modern applications should not normally set this variable.
+.\" VARIABLE: svgFmt
 .TP
 \fBtk::svgFmt\fR
 .
@@ -119,6 +124,7 @@ read-only!  Note also that whenever the scaling factor used to convert
 between physical units and pixels is changed via \fBtk scaling\fR, the
 value of the variable \fBtk::svgFmt\fR is automatically updated.
 .RE
+.\" VARIABLE: tk_version
 .TP
 \fBtk_version\fR
 .
@@ -134,6 +140,7 @@ major version number changes.
 .SS "INTERNAL AND DEBUGGING VARIABLES"
 .PP
 These variables should not normally be set by user code.
+.\" VARIABLE: Priv
 .TP
 \fBtk::Priv\fR
 .
@@ -141,6 +148,8 @@ This variable is an array containing several pieces of information
 that are private to Tk.  The elements of \fBtk::Priv\fR are used by
 Tk library procedures and default bindings.
 They should not be accessed by any code outside Tk.
+.\" VARIABLE: tk_textRedraw
+.\" VARIABLE: tk_textRelayout
 .TP
 \fBtk_textRedraw\fR
 .TP
@@ -154,6 +163,7 @@ used by Tk's test suite.
 The following variables are only guaranteed to exist in \fBwish\fR
 executables; the Tk library does not define them itself but many Tk
 environments do.
+.\" VARIABLE: geometry
 .TP
 \fBgeometry\fR
 .

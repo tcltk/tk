@@ -9,7 +9,7 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_CreateImageType, Tk_GetImageModelData, Tk_InitImageArgs \- define new kind of image
+Tk_CreateImageType, Tk_GetImageModelData \- define new kind of image
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
@@ -18,8 +18,7 @@ Tk_CreateImageType, Tk_GetImageModelData, Tk_InitImageArgs \- define new kind of
 .sp
 void *
 \fBTk_GetImageModelData\fR(\fIinterp, name, typePtrPtr\fR)
-.sp
-\fBTk_InitImageArgs\fR(\fIinterp, argc, argvPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "const Tk_ImageType" *typePtrPtr
 .AP "const Tk_ImageType" *typePtr in
@@ -34,8 +33,6 @@ Name of existing image.
 .AP Tk_ImageType **typePtrPtr out
 Points to word in which to store a pointer to type information for
 the given image, if it exists.
-.AP int argc in
-Number of arguments
 .AP char ***argvPtr in/out
 Pointer to argument list
 .BE
@@ -58,7 +55,7 @@ The first data structure is a Tk_ImageType structure, which contains
 the name of the image type and pointers to five procedures provided
 by the image manager to deal with images of this type:
 .CS
-typedef struct Tk_ImageType {
+typedef struct {
     const char *\fIname\fR;
     Tk_ImageCreateProc *\fIcreateProc\fR;
     Tk_ImageGetProc *\fIgetProc\fR;
@@ -241,42 +238,6 @@ and the return value is the clientData value returned by the
 \fIcreateProc\fR when the image was created (this is typically a
 pointer to the image model data structure).  If no such image exists
 then NULL is returned and NULL is stored at \fI*typePtrPtr\fR.
-.SH "LEGACY INTERFACE SUPPORT"
-.PP
-In Tk 8.2 and earlier, the definition of \fBTk_ImageCreateProc\fR
-was incompatibly different, with the following prototype:
-.CS
-typedef int \fBTk_ImageCreateProc\fR(
-        Tcl_Interp *\fIinterp\fR,
-        char *\fIname\fR,
-        int \fIargc\fR,
-        char **\fIargv\fR,
-        Tk_ImageType *\fItypePtr\fR,
-        Tk_ImageModel \fImodel\fR,
-        void **\fImodelDataPtr\fR);
-.CE
-Legacy programs and libraries dating from those days may still
-contain code that defines extended Tk image types using the old
-interface.  The Tk header file will still support this legacy
-interface if the code is compiled with the macro \fBUSE_OLD_IMAGE\fR
-defined.
-.PP
-When the \fBUSE_OLD_IMAGE\fR legacy support is enabled, you may
-see the routine \fBTk_InitImageArgs\fR in use.  This was a migration
-tool used to create stub-enabled extensions that could be loaded
-into interps containing all versions of Tk 8.1 and later.  Tk 8.5 no longer
-provides this routine, but uses a macro to convert any attempted
-calls of this routine into an empty comment.  Any stub-enabled
-extension providing an extended image type via the legacy interface
-that is compiled against Tk 8.5 headers and linked against the
-Tk 8.5 stub library will produce a file that can be loaded only
-into interps with Tk 8.5 or later; that is, the normal stub-compatibility
-rules.  If a developer needs to generate from such code a file
-that is loadable into interps with Tk 8.4 or earlier, they must
-use Tk 8.4 headers and stub libraries to do so.
-.PP
-Any new code written today should not make use of the legacy
-interfaces.  Expect their support to go away in Tk 9.
 .SH "SEE ALSO"
 Tk_ImageChanged, Tk_GetImage, Tk_FreeImage, Tk_RedrawImage, Tk_SizeOfImage
 .SH KEYWORDS

@@ -58,7 +58,7 @@ by the handler to deal with files and strings in this format.  The
 Tk_PhotoImageFormatVersion3 structure contains the following fields:
 .VS 8.7
 .CS
-typedef struct Tk_PhotoImageFormatVersion3 {
+typedef struct {
     const char *\fIname\fR;
     Tk_ImageFileMatchProcVersion3 *\fIfileMatchProc\fR;
     Tk_ImageStringMatchProcVersion3 *\fIstringMatchProc\fR;
@@ -151,7 +151,7 @@ return 0.
 Tk to call to read data from an image file into a photo image.
 \fIformatPtr->fileReadProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageFileReadProc\fR(
+typedef int \fBTk_ImageFileReadProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         Tcl_Channel \fIchan\fR,
         const char *\fIfileName\fR,
@@ -184,7 +184,7 @@ The return value is a standard Tcl return value.
 for Tk to call to read data from a string into a photo image.
 \fIformatPtr->stringReadProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageStringReadProc\fR(
+typedef int \fBTk_ImageStringReadProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         Tcl_Obj *\fIdata\fR,
         Tcl_Obj *\fIformat\fR,
@@ -216,7 +216,7 @@ The return value is a standard Tcl return value.
 Tk to call to write data from a photo image to a file.
 \fIformatPtr->fileWriteProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageFileWriteProc\fR(
+typedef int \fBTk_ImageFileWriteProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         const char *\fIfileName\fR,
         Tcl_Obj *\fIformat\fR,
@@ -245,7 +245,7 @@ for Tk to call to translate image data from a photo image into a
 string.
 \fIformatPtr->stringWriteProc\fR must match the following prototype:
 .CS
-typedef int \fBTk_ImageStringWriteProc\fR(
+typedef int \fBTk_ImageStringWriteProcVersion3\fR(
         Tcl_Interp *\fIinterp\fR,
         Tcl_Obj *\fIformat\fR,
         Tcl_Obj *\fImetadataIn\fR,
@@ -276,7 +276,6 @@ level by including dictionary keys into the metadata property of the
 image. Image metadata may be written to image data on file write or
 image data output.
 .PP
-.PP
 .SS "METADATA KEYS"
 .PP
 The metadata may contain any key.
@@ -285,16 +284,13 @@ documentation. See the photo image manual page for currently defined
 keys for the system drivers.
 .PP
 The following rules may give guidance to name metadata keys:
-.RS
-Abreviation are in upper case
-.RE
-.RS
+.IP \(bu
+Abbreviations are in upper case.
+.IP \(bu
 Words are in US English in small case (except proper nouns)
-.RE
-.RS
+.IP \(bu
 Vertical DPI is expressed as DPI/aspect. The reason is, that some
 image formats may feature aspect and no resolution value.
-.RE
 .SS "METADATA INPUT"
 .PP
 Each driver function gets a Tcl object pointer \fBmetadataIn\fR as
@@ -306,17 +302,20 @@ A typical driver code snipped to check for a metadata key is:
 .CS
 if (NULL != metadataIn) {
     Tcl_Obj *itemData;
-    Tcl_DictObjGet(interp, metadataIn, Tcl_NewStringObj("Comment",-1), &itemData));
+    Tcl_DictObjGet(interp, metadataIn, Tcl_NewStringObj("Comment",-1),
+            &itemData));
+    // use value reference in itemData
+}
 .CE
 .PP
-The \-metadata command option data of the following commands is passed
+The \fB\-metadata\fR command option data of the following commands is passed
 to the driver: \fBimage create\fR, \fBconfigure\fR, \fBput\fR,
 \fBread\fR, \fBdata\fR and \fBwrite\fR.
-If no \-metadata command option available or not given, the metadata
+If no \fB\-metadata\fR command option available or not given, the metadata
 property of the image is passed to the driver using the following
 commands: \fBcget\fR, \fBconfigure\fR, \fBdata\fR and \fBwrite\fR.
 .PP
-Note that setting the \-metadata property of an image using
+Note that setting the \fB\-metadata\fR property of an image using
 \fBconfigure\fR without any other option does not invoke any driver
 function.
 .PP
@@ -328,12 +327,12 @@ this purpose.
 .SS "METADATA OUTPUT"
 .PP
 The image match and read driver functions may set keys in a prepared
-matadata dict to return them.
-Those functions get a Tcl object pointer \fBmetadataOut\fR as
+metadata dict to return them.
+Those functions get a Tcl object pointer \fImetadataOut\fR as
 parameter.
-metadataOut may be NULL to indicate, that no metadata return is
-attended(\fBput\fR, \fBread\fR subcommands).
-\fBmetadataOut\fR is initialized to an empty unshared dict object if
+\fImetadataOut\fR may be NULL to indicate, that no metadata return is
+required (\fBput\fR, \fBread\fR subcommands). The variable pointed to
+by \fImetadataOut\fR is initialized to an empty unshared dict object if
 metadata return is attended (\fBimage create\fR command, \fBconfigure\fR
 subcommand). The driver may set dict keys in this object to return
 metadata.
@@ -343,7 +342,9 @@ corresponding read function.
 A sample driver code snippet is:
 .CS
 if (NULL != metadataOut) {
-    Tcl_DictObjPut(NULL, metadataOut, Tcl_NewStringObj("XMP",-1), Tcl_NewStringObj(xmpMetadata);
+    Tcl_DictObjPut(NULL, metadataOut, Tcl_NewStringObj("XMP",-1),
+            Tcl_NewStringObj(xmpMetadata));
+}
 .CE
 .PP
 The metadata keys returned by the driver are merged into the present
@@ -376,7 +377,7 @@ A driver using the version 2 interface invokes \fBTk_CreatePhotoImageFormat\fR
 for driver registration. The Tk_PhotoImageFormat structure
 contains the following fields:
 .CS
-typedef struct Tk_PhotoImageFormat {
+typedef struct {
     const char *\fIname\fR;
     Tk_ImageFileMatchProc *\fIfileMatchProc\fR;
     Tk_ImageStringMatchProc *\fIstringMatchProc\fR;
@@ -457,45 +458,6 @@ typedef int \fBTk_ImageStringWriteProc\fR(
         Tcl_Obj *\fIformat\fR,
         Tk_PhotoImageBlock *\fIblockPtr\fR);
 .CE
-.PP
-.SH "LEGACY INTERFACE SUPPORT"
-.PP
-In Tk 8.2 and earlier, the definition of all the function pointer
-types stored in fields of a \fBTk_PhotoImageFormat\fR struct were
-incompatibly different.  Legacy programs and libraries dating from
-those days may still contain code that defines extended Tk photo image
-formats using the old interface.  The Tk header file will still support
-this legacy interface if the code is compiled with the
-macro \fBUSE_OLD_IMAGE\fR defined.  Alternatively, the legacy interfaces
-are used if the first character of \fIformatPtr->name\fR is an
-uppercase ASCII character (\fBA\fR-\fBZ\fR), and explicit casts
-are used to forgive the type mismatch.  For example,
-.CS
-static Tk_PhotoImageFormat myFormat = {
-    "MyFormat",
-    (Tk_ImageFileMatchProc *) FileMatch,
-    NULL,
-    (Tk_ImageFileReadProc *) FileRead,
-    NULL,
-    NULL,
-    NULL
-};
-.CE
-would define a minimal \fBTk_PhotoImageFormat\fR that operates provide
-only file reading capability, where \fBFileMatch\fR and \fBFileRead\fR
-are written according to the legacy interfaces of Tk 8.2 or earlier.
-.PP
-Any stub-enabled extension providing an extended photo image format
-via the legacy interface enabled by the \fBUSE_OLD_IMAGE\fR macro
-that is compiled against Tk 8.5 headers and linked against the
-Tk 8.5 stub library will produce a file that can be loaded only
-into interps with Tk 8.5 or later; that is, the normal stub-compatibility
-rules.  If a developer needs to generate from such code a file
-that is loadable into interps with Tk 8.4 or earlier, they must
-use Tk 8.4 headers and stub libraries to do so.
-.PP
-Any new code written today should not make use of the legacy
-interfaces.  Expect their support to go away in Tk 9.
 .SH "SEE ALSO"
 Tk_FindPhoto, Tk_PhotoPutBlock
 .SH KEYWORDS

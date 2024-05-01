@@ -15,7 +15,7 @@ bitmap \- Images that display two colors
 .nf
 \fBimage create bitmap \fR?\fIname\fR? ?\fIoptions\fR?
 
-\fIimageName \fBcget\fR \fIoption\fR
+\fIimageName \fBcget\fI option\fR
 \fIimageName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .fi
 .BE
@@ -39,6 +39,7 @@ data is zero.
 Like all images, bitmaps are created using the \fBimage create\fR
 command.
 Bitmaps support the following \fIoptions\fR:
+.\" OPTION: -background
 .TP
 \fB\-background \fIcolor\fR
 .
@@ -47,6 +48,7 @@ ways accepted by Tk.  If this option is set to an empty string
 then the background pixels will be transparent.  This effect
 is achieved by using the source bitmap as the mask bitmap, ignoring
 any \fB\-maskdata\fR or \fB\-maskfile\fR options.
+.\" OPTION: -data
 .TP
 \fB\-data \fIstring\fR
 .
@@ -55,6 +57,7 @@ The string must adhere to X11 bitmap format (e.g., as generated
 by the \fBbitmap\fR program).
 If both the \fB\-data\fR and \fB\-file\fR options are specified,
 the \fB\-data\fR option takes precedence.
+.\" OPTION: -file
 .TP
 \fB\-file \fIname\fR
 .
@@ -62,11 +65,13 @@ the \fB\-data\fR option takes precedence.
 source bitmap.
 The file must adhere to X11 bitmap format (e.g., as generated
 by the \fBbitmap\fR program).
+.\" OPTION: -foreground
 .TP
 \fB\-foreground \fIcolor\fR
 .
 Specifies a foreground color for the image in any of the standard
 ways accepted by Tk.
+.\" OPTION: -maskdata
 .TP
 \fB\-maskdata \fIstring\fR
 .
@@ -75,6 +80,7 @@ The string must adhere to X11 bitmap format (e.g., as generated
 by the \fBbitmap\fR program).
 If both the \fB\-maskdata\fR and \fB\-maskfile\fR options are specified,
 the \fB\-maskdata\fR option takes precedence.
+.\" OPTION: -maskfile
 .TP
 \fB\-maskfile \fIname\fR
 .
@@ -95,13 +101,15 @@ It has the following general form:
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for bitmap images:
+.\" METHOD: cget
 .TP
-\fIimageName \fBcget\fR \fIoption\fR
+\fIimageName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the
 \fBimage create\fR \fBbitmap\fR command.
+.\" METHOD: configure
 .TP
 \fIimageName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .

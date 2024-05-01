@@ -11,7 +11,7 @@
 .SH NAME
 safe::loadTk \- Load Tk into a safe interpreter.
 .SH SYNOPSIS
-\fBsafe::loadTk \fIchild\fR ?\fB\-use\fR \fIwindowId\fR? ?\fB\-display\fR \fIdisplayName\fR?
+\fBsafe::loadTk \fIchild\fR ?\fB\-use\fI windowId\fR? ?\fB\-display\fI displayName\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -32,7 +32,7 @@ a window belonging to another application. As a convenience, if the window you
 plan to use is a Tk Window of the application you can use the window name
 (e.g.,
 .QW \fB.x.y\fR )
-instead of its window Id (e.g., from \fBwinfo id\fR \fB.x.y\fR).
+instead of its window Id (e.g., from \fBwinfo id\fI .x.y\fR).
 When \fB\-use\fR is not specified, a new toplevel window is created for the
 .QW .
 window of the safe interpreter. On X11 if you want the embedded window to use
@@ -51,7 +51,7 @@ Tk initialization is now safe with respect to not trusting the child's state
 for startup. \fBsafe::loadTk\fR registers the child's name so when the Tk
 initialization (\fBTk_SafeInit\fR) is called and in turn calls the parent's
 \fBsafe::InitTk\fR it will return the desired \fBargv\fR equivalent
-(\fB\-use\fR \fIwindowId\fR, correct \fB\-display\fR, etc.)
+(\fB\-use\fI windowId\fR, correct \fB\-display\fR, etc.)
 .PP
 When \fB\-use\fR is not used, the new toplevel created is specially decorated
 so the user is always aware that the user interface presented comes from a
