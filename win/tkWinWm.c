@@ -2706,8 +2706,8 @@ Tk_WmObjCmd(
 	    return TCL_ERROR;
 	}
 	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(
-		    (dispPtr->flags & TK_DISPLAY_WM_TRACING) != 0));
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
+		    dispPtr->flags & TK_DISPLAY_WM_TRACING));
 	    return TCL_OK;
 	}
 	if (Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing) != TCL_OK) {
@@ -2945,19 +2945,19 @@ WmAttributesCmd(
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-disabled", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewWideIntObj((style & WS_DISABLED) != 0));
+		Tcl_NewBooleanObj(style & WS_DISABLED));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-fullscreen", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewWideIntObj((wmPtr->flags & WM_FULLSCREEN) != 0));
+		Tcl_NewBooleanObj(wmPtr->flags & WM_FULLSCREEN));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-toolwindow", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewWideIntObj((exStyle & WS_EX_TOOLWINDOW) != 0));
+		Tcl_NewBooleanObj(exStyle & WS_EX_TOOLWINDOW));
 	Tcl_ListObjAppendElement(NULL, objPtr,
 		Tcl_NewStringObj("-topmost", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, objPtr,
-		Tcl_NewWideIntObj((exStyle & WS_EX_TOPMOST) != 0));
+		Tcl_NewBooleanObj(exStyle & WS_EX_TOPMOST));
 	Tcl_SetObjResult(interp, objPtr);
 	return TCL_OK;
     }
@@ -3105,7 +3105,7 @@ WmAttributesCmd(
 		config_fullscreen = 0;
 	    } else if (objc == 4) {
 		Tcl_SetObjResult(interp,
-			Tcl_NewWideIntObj((*stylePtr & styleBit) != 0));
+			Tcl_NewBooleanObj(*stylePtr & styleBit));
 	    } else if (boolValue) {
 		*stylePtr |= styleBit;
 	    } else {
@@ -4752,7 +4752,7 @@ WmOverrideredirectCmd(
 	curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
     }
     if (objc == 3) {
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(curValue != 0));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(curValue));
 	return TCL_OK;
     }
     if (Tcl_GetBooleanFromObj(interp, objv[3], &boolValue) != TCL_OK) {
@@ -4978,8 +4978,8 @@ WmResizableCmd(
     if (objc == 3) {
 	Tcl_Obj *results[2];
 
-	results[0] = Tcl_NewWideIntObj(!(wmPtr->flags&WM_WIDTH_NOT_RESIZABLE));
-	results[1] = Tcl_NewWideIntObj(!(wmPtr->flags&WM_HEIGHT_NOT_RESIZABLE));
+	results[0] = Tcl_NewBooleanObj(!(wmPtr->flags&WM_WIDTH_NOT_RESIZABLE));
+	results[1] = Tcl_NewBooleanObj(!(wmPtr->flags&WM_HEIGHT_NOT_RESIZABLE));
 	Tcl_SetObjResult(interp, Tcl_NewListObj(2, results));
 	return TCL_OK;
     }
