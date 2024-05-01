@@ -198,7 +198,6 @@ static Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj 	*borderColorObj;
     Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*darkColorObj;
     Tcl_Obj 	*backgroundObj;
 } FieldElement;
 
@@ -207,8 +206,6 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
 	Tk_Offset(FieldElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
 	Tk_Offset(FieldElement,lightColorObj), LIGHT_COLOR },
-    { "-darkcolor", TK_OPTION_COLOR,
-	Tk_Offset(FieldElement,darkColorObj), DARK_COLOR },
     { "-fieldbackground", TK_OPTION_BORDER,
 	Tk_Offset(FieldElement,backgroundObj), "white" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -778,27 +775,37 @@ static Ttk_ElementSpec PbarElementSpec = {
 static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
 
 static void ArrowElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
+    void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = *(ArrowDirection*)clientData;
+    Ttk_Padding padding = Ttk_UniformPadding(3);
     int size = SCROLLBAR_THICKNESS;
-    (void)dummy;
     (void)tkwin;
     (void)paddingPtr;
 
     Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
-    *widthPtr = *heightPtr = size;
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned state)
 {
-    ArrowDirection direction = *(ArrowDirection*)clientData;
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    GC gc = Ttk_GCForColor(tkwin,sb->arrowColorObj, d);
-    int h, cx, cy;
+    ArrowDirection direction = *(ArrowDirection*)clientData;
+    Ttk_Padding padding = Ttk_UniformPadding(3);
+    int cx, cy;
+    GC gc = Ttk_GCForColor(tkwin, sb->arrowColorObj, d);
 
     DrawSmoothBorder(tkwin, d, b,
 	sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
@@ -807,9 +814,25 @@ static void ArrowElementDraw(
 	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
 	b.x+2, b.y+2, b.width-4, b.height-4);
 
-    b = Ttk_PadBox(b, Ttk_UniformPadding(3));
-    h = b.width < b.height ? b.width : b.height;
-    TtkArrowSize(h/2, direction, &cx, &cy);
+    b = Ttk_PadBox(b, padding);
+
+    switch (direction) {
+	case ARROW_UP:
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
+	    break;
+	case ARROW_LEFT:
+	case ARROW_RIGHT:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
+	    break;
+    }
+
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -823,6 +846,36 @@ static Ttk_ElementSpec ArrowElementSpec = {
     ArrowElementDraw
 };
 
+/*
+ * Modified arrow element for spinboxes:
+ *	The width and height are different.
+ */
+
+static void SpinboxArrowElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = *(ArrowDirection*)clientData;
+    Ttk_Padding padding = Ttk_UniformPadding(3);
+    int size = 10;
+    (void)tkwin;
+    (void)paddingPtr;
+
+    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+}
+
+static Ttk_ElementSpec SpinboxArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
+    SpinboxArrowElementSize,
+    ArrowElementDraw
+};
 
 /*------------------------------------------------------------------------
  * +++ Notebook elements.
@@ -1083,31 +1136,37 @@ TtkClamTheme_Init(Tcl_Interp *interp)
         return TCL_ERROR;
     }
 
-    Ttk_RegisterElement(interp,
-	theme, "border", &BorderElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "field", &FieldElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Combobox.field", &ComboboxFieldElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "trough", &TroughElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "thumb", &ThumbElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "uparrow", &ArrowElementSpec, &ArrowElements[0]);
-    Ttk_RegisterElement(interp,
-	theme, "downarrow", &ArrowElementSpec, &ArrowElements[1]);
-    Ttk_RegisterElement(interp,
-	theme, "leftarrow", &ArrowElementSpec, &ArrowElements[2]);
-    Ttk_RegisterElement(interp,
-	theme, "rightarrow", &ArrowElementSpec, &ArrowElements[3]);
+    Ttk_RegisterElement(interp, theme, "border",
+	    &BorderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "field",
+	    &FieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Combobox.field",
+	    &ComboboxFieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "trough",
+	    &TroughElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "thumb",
+	    &ThumbElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "uparrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
+    Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
+	    &SpinboxArrowElementSpec, &ArrowElements[0]);
+    Ttk_RegisterElement(interp, theme, "downarrow",
+	    &ArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
+	    &SpinboxArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "leftarrow",
+	    &ArrowElementSpec, &ArrowElements[2]);
+    Ttk_RegisterElement(interp, theme, "rightarrow",
+	    &ArrowElementSpec, &ArrowElements[3]);
+    Ttk_RegisterElement(interp, theme, "arrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
 
-    Ttk_RegisterElement(interp,
-	theme, "Radiobutton.indicator", &RadioIndicatorElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Checkbutton.indicator", &CheckIndicatorElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Menubutton.indicator", &MenuIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
+	    &CheckIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
+	    &RadioIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
+	    &MenuIndicatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);
