@@ -15,12 +15,13 @@ fonts
 \fB#include <tk.h>\fR
 .sp
 Font
-\fBTk_FontId(\fItkfont\fB)\fR
+\fBTk_FontId\fR(\fItkfont\fR)
 .sp
-\fBTk_GetFontMetrics(\fItkfont, fmPtr\fB)\fR
+\fBTk_GetFontMetrics\fR(\fItkfont, fmPtr\fR)
 .sp
 int
-\fBTk_PostscriptFontName(\fItkfont, dsPtr\fB)\fR
+\fBTk_PostscriptFontName\fR(\fItkfont, dsPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_FontMetrics *dsPtr
 .AP Tk_Font tkfont in
@@ -69,7 +70,7 @@ Postscript font name may be incorrect or not exist on the printer.
 The \fBTk_FontMetrics\fR data structure is used by \fBTk_GetFontMetrics\fR to
 return information about a font and is defined as follows:
 .CS
-typedef struct Tk_FontMetrics {
+typedef struct {
     int \fIascent\fR;
     int \fIdescent\fR;
     int \fIlinespace\fR;

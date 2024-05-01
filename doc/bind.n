@@ -149,8 +149,9 @@ substantial mouse motion in between.  For example, \fB<Double\-Button\-1>\fR
 is equivalent to \fB<Button\-1><Button\-1>\fR with the extra time and space
 requirement.
 .PP
-The \fBCommand\fR, \fBOption\fR, \fBNum\fR and \fBFn\fRmodifiers are equivalents
-of \fBMod1\fR up to \fBMod4\fR, they correspond to Macintosh-specific modifier keys.
+The \fBCommand\fR, \fBOption\fR, \fBNum\fR and \fBFn\fRmodifiers are
+equivalents of \fBMod1\fR up to \fBMod4\fR; they correspond to
+Macintosh-specific modifier keys.
 .PP
 The \fBExtended\fR modifier is, at present, specific to Windows.  It
 appears on events that are associated with the keys on the
@@ -649,9 +650,9 @@ then that script terminates and no other scripts will be invoked
 for the event.
 .PP
 Within a script called from the binding script, \fBreturn\fR
-\fB-code ok\fR may be used to continue processing (including
+\fB\-code ok\fR may be used to continue processing (including
 .QW +
-appended scripts), or \fBreturn\fR \fB-code break\fR may be used to
+appended scripts), or \fBreturn\fR \fB\-code break\fR may be used to
 stop processing all other binding scripts.
 .PP
 If more than one binding matches a particular event and they
@@ -739,7 +740,7 @@ The \fBbgerror\fR command will be executed at global level
 Arrange for a string describing the motion of the mouse to be printed
 out when the mouse is double-clicked:
 .CS
-\fBbind\fR . <Double\-1> {
+\fBbind\fR . <Double-1> {
     puts "hi from (%x,%y)"
 }
 .CE
@@ -748,7 +749,7 @@ A little GUI that displays what the keysym name of the last key
 pressed is:
 .CS
 set keysym "Press any key"
-pack [label .l \-textvariable keysym \-padx 2m \-pady 1m]
+pack [label .l -textvariable keysym -padx 2m -pady 1m]
 \fBbind\fR . <Key> {
     set keysym "You pressed %K"
 }

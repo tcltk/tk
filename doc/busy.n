@@ -30,19 +30,15 @@
 .SH NAME
 busy \- Make Tk widgets busy, temporarily blocking user interactions
 .SH SYNOPSIS
-\fBtk busy\fR \fIwindow \fR?\fIoptions\fR?
-.sp
+.nf
+\fBtk busy\fI window \fR?\fIoptions\fR?
 \fBtk busy busywindow \fIwindow\fR
-.sp
-\fBtk busy hold\fR \fIwindow \fR?\fIoptions\fR?
-.sp
+\fBtk busy hold\fI window \fR?\fIoptions\fR?
 \fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
-.sp
-\fBtk busy forget\fR \fIwindow \fR?\fIwindow \fR?...
-.sp
+\fBtk busy forget\fI window \fR?\fIwindow \fR?...
 \fBtk busy current\fR ?\fIpattern\fR?
-.sp
 \fBtk busy status \fIwindow\fR
+.fi
 .BE
 .SH DESCRIPTION
 .PP
@@ -116,7 +112,7 @@ The busy window has a configurable cursor. You can change the busy cursor
 using the \fBconfigure\fR operation.
 .PP
 .CS
-\fBtk busy\fR configure .top \-cursor "watch"
+\fBtk busy\fR configure .top -cursor "watch"
 .CE
 .PP
 Destroying the widget will also clean up any resources allocated by the \fBtk
@@ -129,20 +125,23 @@ The following operations are available for the \fBtk busy\fR command:
 \fBtk busy \fIwindow\fR ?\fIoption value\fR?...
 .
 Shortcut for \fBtk busy hold\fR command.
+.\" METHOD: busywindow
 .TP
 \fBtk busy busywindow \fIwindow\fR
 .
 Returns the pathname of the busy window (i.e. the transparent window
 shielding the window appearing busy) created by the \fBtk busy hold\fR
 command for \fIwindow\fR, or the empty string if \fIwindow\fR is not busy.
+.\" METHOD: cget
 .TP
-\fBtk busy cget \fIwindow\fR \fIoption\fR
+\fBtk busy cget \fIwindow option\fR
 .
 Queries the \fBtk busy\fR command configuration options for \fIwindow\fR.
 \fIWindow\fR must be the path name of a widget previously made busy by the
 \fBhold\fR operation. The command returns the present value of the specified
 \fIoption\fR. \fIOption\fR may have any of the values accepted by the
 \fBhold\fR operation.
+.\" METHOD: configure
 .TP
 \fBtk busy configure \fIwindow\fR ?\fIoption value\fR?...
 .
@@ -169,12 +168,14 @@ option add *frame.busyCursor gumby
 option add *Frame.BusyCursor gumby
 .CE
 .RE
+.\" METHOD: current
 .TP
 \fBtk busy current \fR?\fIpattern\fR?
 .
 Returns the pathnames of all widgets that are currently busy. If a
 \fIpattern\fR is given, only the path names of busy widgets matching
 \fIpattern\fR are returned.
+.\" METHOD: forget
 .TP
 \fBtk busy forget \fIwindow\fR ?\fIwindow\fR?...
 .
@@ -183,6 +184,7 @@ including the transparent window. User events will again be received by
 \fIwindow\fR. Resources are also released when \fIwindow\fR is destroyed.
 \fIWindow\fR must be the name of a widget specified in the \fBhold\fR
 operation, otherwise an error is reported.
+.\" METHOD: hold
 .TP
 \fBtk busy hold \fIwindow\fR ?\fIoption value\fR?...
 .
@@ -197,6 +199,7 @@ command returns the pathname of the busy window that was created (i.e. the
 transparent window shielding the window appearing busy). The following
 configuration options are valid:
 .RS
+.\" OPTION: -cursor
 .TP
 \fB\-cursor \fIcursorName\fR
 .
@@ -204,6 +207,7 @@ Specifies the cursor to be displayed when the widget is made busy.
 \fICursorName\fR can be in any form accepted by \fBTk_GetCursor\fR. The
 default cursor is \fBwait\fR on Windows and \fBwatch\fR on other platforms.
 .RE
+.\" METHOD: status
 .TP
 \fBtk busy status \fIwindow\fR
 .

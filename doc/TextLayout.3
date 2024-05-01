@@ -14,31 +14,28 @@ Tk_ComputeTextLayout, Tk_FreeTextLayout, Tk_DrawTextLayout, Tk_UnderlineTextLayo
 \fB#include <tk.h>\fR
 .sp
 Tk_TextLayout
-\fBTk_ComputeTextLayout(\fItkfont, string, numChars, wrapLength, justify, flags, widthPtr, heightPtr\fB)\fR
+\fBTk_ComputeTextLayout\fR(\fItkfont, string, numChars, wrapLength, justify, flags, widthPtr, heightPtr\fR)
 .sp
-void
-\fBTk_FreeTextLayout(\fIlayout\fB)\fR
+\fBTk_FreeTextLayout\fR(\fIlayout\fR)
 .sp
-void
-\fBTk_DrawTextLayout(\fIdisplay, drawable, gc, layout, x, y, firstChar, lastChar\fB)\fR
+\fBTk_DrawTextLayout\fR(\fIdisplay, drawable, gc, layout, x, y, firstChar, lastChar\fR)
 .sp
-void
-\fBTk_UnderlineTextLayout(\fIdisplay, drawable, gc, layout, x, y, underline\fB)\fR
+\fBTk_UnderlineTextLayout\fR(\fIdisplay, drawable, gc, layout, x, y, underline\fR)
 .sp
 int
-\fBTk_PointToChar(\fIlayout, x, y\fB)\fR
+\fBTk_PointToChar\fR(\fIlayout, x, y\fR)
 .sp
 int
-\fBTk_CharBbox(\fIlayout, index, xPtr, yPtr, widthPtr, heightPtr\fB)\fR
+\fBTk_CharBbox\fR(\fIlayout, index, xPtr, yPtr, widthPtr, heightPtr\fR)
 .sp
 int
-\fBTk_DistanceToTextLayout(\fIlayout, x, y\fB)\fR
+\fBTk_DistanceToTextLayout\fR(\fIlayout, x, y\fR)
 .sp
 int
-\fBTk_IntersectTextLayout(\fIlayout, x, y, width, height\fB)\fR
+\fBTk_IntersectTextLayout\fR(\fIlayout, x, y, width, height\fR)
 .sp
-void
-\fBTk_TextLayoutToPostscript(\fIinterp, layout\fB)\fR
+\fBTk_TextLayoutToPostscript\fR(\fIinterp, layout\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_TextLayout "*xPtr, *yPtr"
 .AP Tk_Font tkfont in

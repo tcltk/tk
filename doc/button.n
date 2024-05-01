@@ -12,7 +12,7 @@
 .SH NAME
 button \- Create and manipulate 'button' action widgets
 .SH SYNOPSIS
-\fBbutton\fR \fIpathName \fR?\fIoptions\fR?
+\fBbutton\fI pathName \fR?\fIoptions\fR?
 .SO
 \-activebackground	\-font	\-relief
 \-activeforeground	\-foreground	\-repeatdelay
@@ -114,14 +114,18 @@ operations on the widget.  It has the following general form:
 \fIOption\fR and the \fIarg\fRs
 determine the exact behavior of the command.  The following
 commands are possible for button widgets:
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
+.
 Returns the current value of the configuration option given
 by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBbutton\fR
 command.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
+.
 Query or modify the configuration options of the widget.
 If no \fIoption\fR is specified, returns a list describing all of
 the available options for \fIpathName\fR (see \fBTk_ConfigureInfo\fR for
@@ -134,15 +138,19 @@ modifies the given widget option(s) to have the given value(s);  in
 this case the command returns an empty string.
 \fIOption\fR may have any of the values accepted by the \fBbutton\fR
 command.
+.\" METHOD: flash
 .TP
 \fIpathName \fBflash\fR
+.
 Flash the button.  This is accomplished by redisplaying the button
 several times, alternating between the configured activebackground
 and background colors.  At the end of the flash the button is left
 in the same normal/active state as when the command was invoked.
 This command is ignored if the button's state is \fBdisabled\fR.
+.\" METHOD: invoke
 .TP
 \fIpathName \fBinvoke\fR
+.
 Invoke the Tcl command associated with the button, if there is one.
 The return value is the return value from the Tcl command, or an
 empty string if there is no command associated with the button.
@@ -188,17 +196,17 @@ This is the classic Tk
 demonstration:
 .PP
 .CS
-\fBbutton\fR .b \-text "Hello, World!" \-command exit
+\fBbutton\fR .b -text "Hello, World!" -command exit
 pack .b
 .CE
 .PP
 This example demonstrates how to handle button accelerators:
 .PP
 .CS
-\fBbutton\fR .b1 \-text Hello \-underline 0
-\fBbutton\fR .b2 \-text World \-underline 0
-bind . <Key\-h> {.b1 flash; .b1 invoke}
-bind . <Key\-w> {.b2 flash; .b2 invoke}
+\fBbutton\fR .b1 -text Hello -underline 0
+\fBbutton\fR .b2 -text World -underline 0
+bind . <Key-h> {.b1 flash; .b1 invoke}
+bind . <Key-w> {.b2 flash; .b2 invoke}
 pack .b1 .b2
 .CE
 .SH "SEE ALSO"

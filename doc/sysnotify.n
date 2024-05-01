@@ -7,14 +7,17 @@
 '\"
 .TH tk sysnotify n "" Tk "Tk Built-In Commands"
 .so man.macros
+.BS
 .SH NAME
 sysnotify \- Creates a notification window with a title and message.
 .SH SYNOPSIS
-\fBtk sysnotify\fR \fItitle\fR \fImessage\fR
+\fBtk sysnotify\fI title message\fR
 .BE
 .SH DESCRIPTION
 .PP
-The \fBtk sysnotify\fR command creates a platform-specific system notification alert. Its intent is to provide a brief, unobtrusive notification to the user by popping up a window that briefly appears in a corner of the screen.
+The \fBtk sysnotify\fR command creates a platform-specific system notification
+alert. Its intent is to provide a brief, unobtrusive notification to the user
+by popping up a window that briefly appears in a corner of the screen.
 .SH EXAMPLE
 .PP
 Here is an example of the \fBtk sysnotify\fR code:

@@ -12,15 +12,17 @@
 .SH NAME
 image \- Create and manipulate images
 .SH SYNOPSIS
-\fBimage\fR \fIoption \fR?\fIarg ...\fR?
+\fBimage\fI option \fR?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP
 The \fBimage\fR command is used to create, delete, and query images.
 It can take several different forms, depending on the
 \fIoption\fR argument.  The legal forms are:
+.\" METHOD: create
 .TP
 \fBimage create \fItype \fR?\fIname\fR? ?\fIoption value ...\fR?
+.
 Creates a new image and a command with the same name and returns its name.
 \fItype\fR specifies the type of the image, which must be one of
 the types currently defined (e.g., \fBbitmap\fR).
@@ -38,8 +40,10 @@ It is important to note that the image command will silently overwrite any
 procedure that may currently be defined by the given name, so choose the
 name wisely.  It is recommended to use a separate namespace for image names
 (e.g., \fB::img::logo\fR, \fB::img::large\fR).
+.\" METHOD: delete
 .TP
 \fBimage delete \fR?\fIname name\fR ...?
+.
 Deletes each of the named images and returns an empty string.
 If there are instances of the images displayed in widgets,
 the images will not actually be deleted until all of the instances
@@ -50,28 +54,40 @@ Existing instances will retain their sizes but redisplay as
 empty areas.
 If a deleted image is recreated with another call to \fBimage create\fR,
 the existing instances will use the new image.
+.\" METHOD: height
 .TP
 \fBimage height \fIname\fR
+.
 Returns a decimal string giving the height of image \fIname\fR
 in pixels.
+.\" METHOD: inuse
 .TP
 \fBimage inuse \fIname\fR
+.
 Returns a boolean value indicating whether or not the image given by
 \fIname\fR is in use by any widgets.
+.\" METHOD: names
 .TP
 \fBimage names\fR
+.
 Returns a list containing the names of all existing images.
+.\" METHOD: type
 .TP
 \fBimage type \fIname\fR
+.
 Returns the type of image \fIname\fR (the value of the \fItype\fR
 argument to \fBimage create\fR when the image was created).
+.\" METHOD: types
 .TP
 \fBimage types\fR
+.
 Returns a list whose elements are all of the valid image types
 (i.e., all of the values that may be supplied for the \fItype\fR
 argument to \fBimage create\fR).
+.\" METHOD: width
 .TP
 \fBimage width \fIname\fR
+.
 Returns a decimal string giving the width of image \fIname\fR
 in pixels.
 .PP
@@ -83,18 +99,15 @@ page for the particular image type for details.
 The following image types are defined by Tk so they will be available
 in any Tk application.
 Individual applications or extensions may define additional types.
-.TP
-\fBbitmap\fR
+.IP \fBbitmap\fR
 Each pixel in the image displays a foreground color, a background
 color, or nothing.
 See the \fBbitmap\fR manual entry for more information.
-.TP
-\fBphoto\fR
+.IP \fBphoto\fR
 Displays a variety of full-color images, using dithering to
 approximate colors on displays with limited color capabilities.
 See the \fBphoto\fR manual entry for more information.
-.TP
-\fBnsimage\fR
+.IP \fBnsimage\fR
 This type is only available in the Aqua platform.  It is a full-color
 image which may be created from a named system image.  It has options
 designed to facilitate the use of these images in buttons.  An
