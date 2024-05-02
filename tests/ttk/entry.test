@@ -77,13 +77,13 @@ test entry-2.1 "Create entry before scrollbar" -body {
 
 test entry-2.1.1 "Create entry before scrollbar - scrollbar catches up" -body {
     pack [ttk::entry .te -xscrollcommand [list .tsb set]] \
-	-expand true -fill both
+	    -expand true -fill both
     .te insert end [string repeat "abc" 50]
     catch {update} ; # error triggers because the -xscrollcommand callback
                      # errors out: invalid command name ".tsb"
     focus .te      ; # needed on some systems such as Ubuntu (see ticket [3c2a3a988f])
     pack [ttk::scrollbar .tsb -orient horizontal -command [list .te xview]] \
-	-expand false -fill x
+	    -expand false -fill x
     update ; # no error
     set res [expr [lindex [.tsb get] 1] < 1] ; # scrollbar did update
 } -result 1 -cleanup {destroy .te .tsb}
