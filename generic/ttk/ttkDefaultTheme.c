@@ -255,7 +255,7 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
     	STRINGIFY(BORDERWIDTH) },
     { "-relief", TK_OPTION_RELIEF, Tk_Offset(BorderElement,reliefObj),
     	"flat" },
-        { NULL, 0, 0, NULL }
+    { NULL, 0, 0, NULL }
 };
 
 static void BorderElementSize(
@@ -480,7 +480,7 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	    Tk_Offset(IndicatorElement,borderColorObj), "black" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
-	    { NULL, 0, 0, NULL }
+    { NULL, 0, 0, NULL }
 };
 
 static void IndicatorElementSize(
@@ -644,25 +644,26 @@ static Ttk_ElementSpec IndicatorElementSpec = {
  */
 
 static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
+
 typedef struct {
     Tcl_Obj *sizeObj;
+    Tcl_Obj *colorObj;		/* Arrow color */
     Tcl_Obj *borderObj;
     Tcl_Obj *borderColorObj;	/* Extra color for borders */
     Tcl_Obj *reliefObj;
-    Tcl_Obj *colorObj;		/* Arrow color */
 } ArrowElement;
 
 static Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,sizeObj), STRINGIFY(SCROLLBAR_WIDTH) },
+    { "-arrowcolor", TK_OPTION_COLOR,
+	Tk_Offset(ArrowElement,colorObj),"black"},
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR,
 	Tk_Offset(ArrowElement,borderColorObj), "black" },
     { "-relief", TK_OPTION_RELIEF,
 	Tk_Offset(ArrowElement,reliefObj),"raised"},
-    { "-arrowcolor", TK_OPTION_COLOR,
-	Tk_Offset(ArrowElement,colorObj),"black"},
     { NULL, 0, 0, NULL }
 };
 
@@ -679,35 +680,61 @@ static void ArrowElementSize(
 {
     ArrowElement *arrow = elementRecord;
     int direction = *(int *)clientData;
-    int width = SCROLLBAR_WIDTH;
+    int size = SCROLLBAR_WIDTH;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &width);
-    width -= Ttk_PaddingWidth(ArrowPadding);
-    TtkArrowSize(width/2, direction, widthPtr, heightPtr);
+    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
+    size -= Ttk_PaddingWidth(ArrowPadding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
     *widthPtr += Ttk_PaddingWidth(ArrowPadding);
     *heightPtr += Ttk_PaddingHeight(ArrowPadding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned int state)
 {
-    int direction = *(int *)clientData;
     ArrowElement *arrow = elementRecord;
+    int direction = *(int *)clientData;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
+    int borderWidth = 2, relief = TK_RELIEF_RAISED;
+    int cx = 0, cy = 0;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
-    int relief = TK_RELIEF_RAISED;
-    int borderWidth = 2;
+    GC gc = Tk_GCForColor(arrowColor, d);
 
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
     Tk_Fill3DRectangle(
 	tkwin, d, border, b.x, b.y, b.width, b.height, 0, TK_RELIEF_FLAT);
-    DrawBorder(tkwin,d,border,borderColor,b,borderWidth,relief);
+    DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 
-    TtkFillArrow(Tk_Display(tkwin), d, Tk_GCForColor(arrowColor, d),
-	Ttk_PadBox(b, ArrowPadding), direction);
+    b = Ttk_PadBox(b, ArrowPadding);
+
+    switch (direction) {
+	case ARROW_UP:
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
+	    break;
+	case ARROW_LEFT:
+	case ARROW_RIGHT:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
+	    break;
+    }
+
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+
+    TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
 }
 
 static Ttk_ElementSpec ArrowElementSpec = {
@@ -716,6 +743,69 @@ static Ttk_ElementSpec ArrowElementSpec = {
     ArrowElementOptions,
     ArrowElementSize,
     ArrowElementDraw
+};
+
+/*
+ * Modified arrow element for comboboxes and spinboxes:
+ *	The width and height are different, and the left edge is drawn in the
+ *	same color as the inner part of the right one.
+ */
+
+static void BoxArrowElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+{
+    ArrowElement *arrow = elementRecord;
+    int direction = *(int *)clientData;
+    int size = SCROLLBAR_WIDTH;
+
+    Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
+    size -= Ttk_PaddingWidth(ArrowPadding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(ArrowPadding);
+    *heightPtr += Ttk_PaddingHeight(ArrowPadding);
+}
+
+static void BoxArrowElementDraw(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, unsigned int state)
+{
+    ArrowElement *arrow = elementRecord;
+    int direction = *(int *)clientData;
+    Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
+    XColor *borderColor = Tk_GetColorFromObj(tkwin, arrow->borderColorObj);
+    int borderWidth = 2, relief = TK_RELIEF_RAISED;
+    Display *disp = Tk_Display(tkwin);
+    GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
+    int w = WIN32_XDRAWLINE_HACK;
+    int cx = 0, cy = 0;
+    XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
+    GC arrowGC = Tk_GCForColor(arrowColor, d);
+
+    Tk_Fill3DRectangle(
+	tkwin, d, border, b.x, b.y, b.width, b.height, 0, TK_RELIEF_FLAT);
+    DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
+
+    XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-2+w);
+
+    b = Ttk_PadBox(b, ArrowPadding);
+
+    TtkArrowSize(b.width/2, direction, &cx, &cy);
+    if ((b.height - cy) % 2 == 1) {
+	++cy;
+    }
+
+    b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
+
+    TtkFillArrow(disp, d, arrowGC, b, direction);
+}
+
+static Ttk_ElementSpec BoxArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ArrowElement),
+    ArrowElementOptions,
+    BoxArrowElementSize,
+    BoxArrowElementDraw
 };
 
 /*----------------------------------------------------------------------
@@ -974,7 +1064,6 @@ static Ttk_ElementSpec ThumbElementSpec = {
  */
 
 typedef struct {
-    Tcl_Obj *lengthObj;		/* Long axis dimension */
     Tcl_Obj *thicknessObj;	/* Short axis dimension */
     Tcl_Obj *reliefObj;		/* Relief for this object */
     Tcl_Obj *borderObj;		/* Border / background color */
@@ -984,18 +1073,16 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
-	"15" },
     { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
 	"15" },
     { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
 	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
-	STRINGIFY(BORDERWIDTH) },
     { "-background", TK_OPTION_BORDER, Tk_Offset(SliderElement,borderObj),
 	DEFAULT_BACKGROUND },
-    { "-bordercolor", TK_OPTION_COLOR, Tk_Offset(ThumbElement,borderColorObj),
+    { "-bordercolor", TK_OPTION_COLOR, Tk_Offset(SliderElement,borderColorObj),
 	"black" },
+    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
+	STRINGIFY(BORDERWIDTH) },
     { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
 	"horizontal" },
     { NULL, 0, 0, NULL }
@@ -1006,12 +1093,11 @@ static void SliderElementSize(
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
     SliderElement *slider = elementRecord;
-    int orient, length, thickness, borderWidth;
+    int orient, thickness, borderWidth;
 
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
-    Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, slider->lengthObj, &length);
     Tk_GetPixelsFromObj(NULL, tkwin, slider->thicknessObj, &thickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
 
     switch (orient) {
 	case TTK_ORIENT_VERTICAL:
@@ -1083,8 +1169,8 @@ static void TreeitemIndicatorSize(
     int diameter = 0;
     Ttk_Padding margins;
 
-    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->diameterObj, &diameter);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     *widthPtr = diameter + Ttk_PaddingWidth(margins);
     *heightPtr = diameter + Ttk_PaddingHeight(margins);
 }
@@ -1158,15 +1244,18 @@ MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, &ArrowElements[0]);
+    Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
+	    &BoxArrowElementSpec, &ArrowElements[0]);
     Ttk_RegisterElement(interp, theme, "downarrow",
 	    &ArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
+	    &BoxArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "Combobox.downarrow",
+	    &BoxArrowElementSpec, &ArrowElements[1]);
     Ttk_RegisterElement(interp, theme, "leftarrow",
 	    &ArrowElementSpec, &ArrowElements[2]);
     Ttk_RegisterElement(interp, theme, "rightarrow",
 	    &ArrowElementSpec, &ArrowElements[3]);
-    Ttk_RegisterElement(interp, theme, "arrow",
-	    &ArrowElementSpec, &ArrowElements[0]);
-
     Ttk_RegisterElement(interp, theme, "arrow",
 	    &ArrowElementSpec, &ArrowElements[0]);
 

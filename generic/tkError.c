@@ -110,7 +110,7 @@ Tk_CreateErrorHandler(
     errorPtr = (TkErrorHandler *)ckalloc(sizeof(TkErrorHandler));
     errorPtr->dispPtr = dispPtr;
     errorPtr->firstRequest = NextRequest(display);
-    errorPtr->lastRequest = (unsigned) -1;
+    errorPtr->lastRequest = (unsigned long) -1;
     errorPtr->error = error;
     errorPtr->request = request;
     errorPtr->minorCode = minorCode;
