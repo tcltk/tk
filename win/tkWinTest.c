@@ -17,6 +17,8 @@
 #undef USE_TK_STUBS
 #define USE_TK_STUBS
 #include "tkWinInt.h"
+#undef TCLBOOLWARNING
+#define TCLBOOLWARNING(boolPtr) /* needed here because we compile with -Wc++-compat */
 
 HWND tkWinCurrentDialog;
 

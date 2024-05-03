@@ -880,7 +880,7 @@ EntryWidgetObjCmd(
 		goto error;
 	    }
 	    Tcl_SetObjResult(interp,
-		    Tcl_NewWideIntObj(entryPtr->selectFirst != TCL_INDEX_NONE));
+		    Tcl_NewBooleanObj(entryPtr->selectFirst != TCL_INDEX_NONE));
 	    goto done;
 
 	case SELECTION_RANGE:

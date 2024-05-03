@@ -5087,6 +5087,10 @@ TextEditUndo(
 	return TCL_OK;
     }
 
+    if (textPtr->sharedTextPtr->autoSeparators) {
+	TkUndoInsertUndoSeparator(textPtr->sharedTextPtr->undoStack);
+    }
+
     /*
      * Turn off the undo feature while we revert a compound action, setting
      * the dirty handling mode to undo for the duration (unless it is
@@ -5104,6 +5108,10 @@ TextEditUndo(
 	textPtr->sharedTextPtr->dirtyMode = TK_TEXT_DIRTY_NORMAL;
     }
     textPtr->sharedTextPtr->undo = 1;
+
+    if (textPtr->sharedTextPtr->autoSeparators) {
+	TkUndoInsertUndoSeparator(textPtr->sharedTextPtr->undoStack);
+    }
 
     /*
      * Convert undo/redo temporary marks set by TkUndoRevert() into

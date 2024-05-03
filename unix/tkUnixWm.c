@@ -1349,11 +1349,11 @@ WmGetAttribute(
     case WMATT_ALPHA:
 	return Tcl_NewDoubleObj(wmPtr->attributes.alpha);
     case WMATT_TOPMOST:
-	return Tcl_NewWideIntObj(wmPtr->attributes.topmost != 0);
+	return Tcl_NewBooleanObj(wmPtr->attributes.topmost);
     case WMATT_ZOOMED:
-	return Tcl_NewWideIntObj(wmPtr->attributes.zoomed != 0);
+	return Tcl_NewBooleanObj(wmPtr->attributes.zoomed);
     case WMATT_FULLSCREEN:
-	return Tcl_NewWideIntObj(wmPtr->attributes.fullscreen != 0);
+	return Tcl_NewBooleanObj(wmPtr->attributes.fullscreen);
     case WMATT_TYPE:
 	return GetNetWmType(winPtr);
     case _WMATT_LAST_ATTRIBUTE:
@@ -2929,7 +2929,7 @@ WmOverrideredirectCmd(
     Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
-    int boolean, curValue;
+    Bool boolValue, curValue;
     XSetWindowAttributes atts;
 
     if ((objc != 3) && (objc != 4)) {
@@ -2938,19 +2938,19 @@ WmOverrideredirectCmd(
     }
     curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
     if (objc == 3) {
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(curValue != 0));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(curValue));
 	return TCL_OK;
     }
-    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolean) != TCL_OK) {
+    if (Tcl_GetBooleanFromObj(interp, objv[3], &boolValue) != TCL_OK) {
 	return TCL_ERROR;
     }
-    if (curValue != boolean) {
+    if (curValue != boolValue) {
 	/*
 	 * Only do this if we are really changing value, because it causes
 	 * some funky stuff to occur
 	 */
 
-	atts.override_redirect = (boolean) ? True : False;
+	atts.override_redirect = boolValue;
 	Tk_ChangeWindowAttributes((Tk_Window) winPtr, CWOverrideRedirect,
 		&atts);
 	if (winPtr->wmInfoPtr->wrapperPtr != NULL) {
