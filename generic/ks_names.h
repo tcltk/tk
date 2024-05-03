@@ -79,13 +79,11 @@
 { "Help", 0xFF6A },
 { "Break", 0xFF6B },
 { "Mode_switch", 0xFF7E },
-#ifndef TK_NO_DEPRECATED
 { "script_switch", 0xFF7E },
 { "kana_switch", 0xFF7E },
 { "Arabic_switch", 0xFF7E },
 { "Greek_switch", 0xFF7E },
 { "Hebrew_switch", 0xFF7E },
-#endif
 { "Num_Lock", 0xFF7F },
 { "KP_Space", 0xFF80 },
 { "KP_Tab", 0xFF89 },
@@ -220,6 +218,7 @@
 { "ISO_Level3_Shift", 0xFE03 },
 { "ISO_Level3_Latch", 0xFE04 },
 { "ISO_Level3_Lock", 0xFE05 },
+{ "ISO_Group_Shift", 0xFF7E },
 { "ISO_Group_Latch", 0xFE06 },
 { "ISO_Group_Lock", 0xFE07 },
 { "ISO_Next_Group", 0xFE08 },
@@ -311,10 +310,15 @@
 { "dead_u", 0xFE88 },
 { "dead_U", 0xFE89 },
 { "dead_schwa", 0xFE8A },
+#ifndef TK_NO_DEPRECATED
 { "dead_small_schwa", 0xFE8A },
+#endif
 { "dead_SCHWA", 0xFE8B },
+#ifndef TK_NO_DEPRECATED
 { "dead_capital_schwa", 0xFE8B },
+#endif
 { "dead_greek", 0xFE8C },
+{ "dead_hamza", 0xFE8D },
 { "dead_lowline", 0xFE90 },
 { "dead_aboveverticalline", 0xFE91 },
 { "dead_belowverticalline", 0xFE92 },
@@ -535,7 +539,9 @@
 { "Odiaeresis", 0xD6 },
 { "multiply", 0xD7 },
 { "Oslash", 0xD8 },
+#ifndef TK_NO_DEPRECATED
 { "Ooblique", 0xD8 },
+#endif
 { "Ugrave", 0xD9 },
 { "Uacute", 0xDA },
 { "Ucircumflex", 0xDB },
@@ -569,7 +575,9 @@
 { "odiaeresis", 0xF6 },
 { "division", 0xF7 },
 { "oslash", 0xF8 },
+#ifndef TK_NO_DEPRECATED
 { "ooblique", 0xF8 },
+#endif
 { "ugrave", 0xF9 },
 { "uacute", 0xFA },
 { "ucircumflex", 0xFB },
@@ -577,7 +585,7 @@
 { "yacute", 0xFD },
 { "thorn", 0xFE },
 { "ydiaeresis", 0xFF },
-#endif /* TK_NO_DEPRECATED */
+#endif
 { "Aogonek", 0x1A1 },
 { "breve", 0x1A2 },
 { "Lstroke", 0x1A3 },
