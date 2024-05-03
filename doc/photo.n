@@ -660,8 +660,8 @@ usually also has the effect of desaturating the image.  The
 \fIdpiValue\fR is used in conversion between given coordinates and
 screen resolution. The value must be greater than 0 and the default
 value is 96.
-.RS
 .PP
+.RS
 \fIscaleValue\fR is used to scale the resulting image. The value must
 be greater than 0 and the default value is 1.
 \fIwidth\fR and \fIheight\fR are the width or height that the image
@@ -726,6 +726,7 @@ transform with matrix, translate, scale, rotate, skewX and  skewY,
 stop-color, stop-opacity, offset, id, class
 .RE
 .PP
+.RS
 Currently only SVG images reading and conversion into (pixel-based
 format) photos is supported: Tk does not (yet) support bundling photo
 images in SVG vector graphics.

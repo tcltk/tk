@@ -734,7 +734,7 @@ int TtkWidgetInstateCommand(
 
     if (objc == 3) {
 	Tcl_SetObjResult(interp,
-	    Tcl_NewWideIntObj(Ttk_StateMatches(state,&spec)));
+	    Tcl_NewBooleanObj(Ttk_StateMatches(state,&spec)));
     } else if (objc == 4) {
 	if (Ttk_StateMatches(state,&spec)) {
 	    status = Tcl_EvalObjEx(interp, objv[3], 0);

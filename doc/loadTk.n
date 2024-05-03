@@ -32,7 +32,7 @@ a window belonging to another application. As a convenience, if the window you
 plan to use is a Tk Window of the application you can use the window name
 (e.g.,
 .QW \fB.x.y\fR )
-instead of its window Id (e.g., from \fBwinfo id\fB .x.y\fR).
+instead of its window Id (e.g., from \fBwinfo id\fI .x.y\fR).
 When \fB\-use\fR is not specified, a new toplevel window is created for the
 .QW .
 window of the safe interpreter. On X11 if you want the embedded window to use

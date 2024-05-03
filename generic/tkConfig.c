@@ -2184,7 +2184,7 @@ GetObjectForOption(
 	    objPtr = Tcl_NewStringObj(*((char **)internalPtr), TCL_INDEX_NONE);
 	    break;
 	case TK_OPTION_STRING_TABLE: {
-	    int value;
+	    int value = 0;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);

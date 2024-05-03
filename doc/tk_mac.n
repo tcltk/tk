@@ -220,7 +220,7 @@ customized for the specific URL scheme the developer wants to support.
 \fB::tk::mac::GetAppPath\fR
 .
 Returns the current applications's file path.
-.TP
+.PP
 .SH "ADDITIONAL DIALOGS"
 .PP
 The Aqua/Mac OS X defines additional dialogs that applications should
