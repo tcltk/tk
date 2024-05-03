@@ -6,7 +6,7 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
+ * Copyright (c) 2001-2009 Apple Inc.
  * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright (c) 2020 Marc Culler
  *
@@ -85,17 +85,17 @@ static const KeyInfo keyArray[] = {
     {106,	XK_F16,		NSF16FunctionKey},
     {107,	XK_F14,		NSF14FunctionKey},
     {109,	XK_F10,		NSF10FunctionKey},
-    {110,       XK_Menu,	UNKNOWN_KEYCHAR},
+    {110,	XK_Menu,	UNKNOWN_KEYCHAR},
     {111,	XK_F12,		NSF12FunctionKey},
     {113,	XK_F15,		NSF15FunctionKey},
     {114,	XK_Help,	NSHelpFunctionKey},
     {115,	XK_Home,	NSHomeFunctionKey},     /* Fn Left */
-    {116,	XK_Page_Up,	NSPageUpFunctionKey},   /* Fn Up */
+    {116,	XK_Prior,	NSPageUpFunctionKey},   /* Fn Up */
     {117,	XK_Delete,	NSDeleteFunctionKey},   /* Fn Delete */
     {118,	XK_F4,		NSF4FunctionKey},
     {119,	XK_End,		NSEndFunctionKey},      /* Fn Right */
     {120,	XK_F2,		NSF2FunctionKey},
-    {121,	XK_Page_Down,	NSPageDownFunctionKey}, /* Fn Down */
+    {121,	XK_Next,	NSPageDownFunctionKey}, /* Fn Down */
     {122,	XK_F1,		NSF1FunctionKey},
     {123,	XK_Left,	NSLeftArrowFunctionKey},
     {124,	XK_Right,	NSRightArrowFunctionKey},
@@ -141,7 +141,7 @@ typedef struct KeysymInfo {
     KeyCode keycode;
 } KeysymInfo;
 
-const KeysymInfo keysymTable[] = {
+static const KeysymInfo keysymTable[] = {
     {0x0020, 0x0020}, /* space */
     {0x0021, 0x0021}, /* exclam */
     {0x0022, 0x0022}, /* quotedbl */
