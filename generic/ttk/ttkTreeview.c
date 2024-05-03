@@ -2716,7 +2716,7 @@ static int TreeviewExistsCommand(
     }
 
     entryPtr = Tcl_FindHashEntry(&tv->tree.items, Tcl_GetString(objv[2]));
-    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(entryPtr != 0));
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(entryPtr != 0));
     return TCL_OK;
 }
 
@@ -4080,7 +4080,7 @@ static int TreeviewTagHasCommand(
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp,
-	    Tcl_NewWideIntObj(Ttk_TagSetContains(item->tagset, tag)));
+	    Tcl_NewBooleanObj(Ttk_TagSetContains(item->tagset, tag)));
 	return TCL_OK;
     } else {
     	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
