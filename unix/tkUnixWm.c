@@ -1349,11 +1349,11 @@ WmGetAttribute(
     case WMATT_ALPHA:
 	return Tcl_NewDoubleObj(wmPtr->attributes.alpha);
     case WMATT_TOPMOST:
-	return Tcl_NewWideIntObj(wmPtr->attributes.topmost != 0);
+	return Tcl_NewBooleanObj(wmPtr->attributes.topmost);
     case WMATT_ZOOMED:
-	return Tcl_NewWideIntObj(wmPtr->attributes.zoomed != 0);
+	return Tcl_NewBooleanObj(wmPtr->attributes.zoomed);
     case WMATT_FULLSCREEN:
-	return Tcl_NewWideIntObj(wmPtr->attributes.fullscreen != 0);
+	return Tcl_NewBooleanObj(wmPtr->attributes.fullscreen);
     case WMATT_TYPE:
 	return GetNetWmType(winPtr);
     case _WMATT_LAST_ATTRIBUTE:
@@ -2938,7 +2938,7 @@ WmOverrideredirectCmd(
     }
     curValue = Tk_Attributes((Tk_Window) winPtr)->override_redirect;
     if (objc == 3) {
-	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(curValue != 0));
+	Tcl_SetObjResult(interp, Tcl_NewBooleanObj(curValue));
 	return TCL_OK;
     }
     if (Tcl_GetBooleanFromObj(interp, objv[3], &boolValue) != TCL_OK) {

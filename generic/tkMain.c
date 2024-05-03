@@ -16,7 +16,9 @@
 
 #include "tkInt.h"
 
-extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
+#if defined(_WIN32) && !defined(UNICODE) && !defined(STATIC_BUILD)
+MODULE_SCOPE void TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
+#endif
 
 /*
  * The default prompt used when the user has not overridden it.
@@ -201,13 +203,11 @@ Tk_MainEx(
 	/* We are running win32 Tk under Cygwin, so let's check
 	 * whether the env("DISPLAY") variable or the -display
 	 * argument is set. If so, we really want to run the
-	 * Tk_MainEx function of libtk8.?.dll, not this one. */
+	 * Tk_MainEx function of libtcl9tk9.?.dll, not this one. */
 	if (Tcl_GetVar2(interp, "env", "DISPLAY", TCL_GLOBAL_ONLY)) {
 	loadCygwinTk:
-	    if (TkCygwinMainEx(argc, argv, appInitProc, interp)) {
-		/* Should never reach here. */
-		return;
-	    }
+	    TkCygwinMainEx(argc, argv, appInitProc, interp);
+	    /* Only returns when Tk_MainEx() was not found */
 	} else {
 	    Tcl_Size j;
 

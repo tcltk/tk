@@ -1029,9 +1029,6 @@ TkCreateMainWindow(
 #ifdef STATIC_BUILD
 		".static"
 #endif
-#if TCL_UTF_MAX < 4
-		".utf-16"
-#endif
 #if defined(_WIN32)
 		".win32"
 #endif
@@ -2947,20 +2944,19 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
 
 static HMODULE tkcygwindll = NULL;
 
 /*
- * Run Tk_MainEx from libtk8.?.dll
+ * Run Tk_MainEx from libtcl9tk9.?.dll
  *
- * This function is only ever called from wish8.?.exe, the cygwin port of Tcl.
+ * This function is only ever called from wish9.?.exe, the cygwin port of Tcl.
  * This means that the system encoding is utf-8, so we don't have to do any
  * encoding conversions.
  */
-extern int TkCygwinMainEx(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-int
+MODULE_SCOPE void
 TkCygwinMainEx(
     Tcl_Size argc,			/* Number of arguments. */
     char **argv,		/* Array of argument strings. */
@@ -2974,25 +2970,25 @@ TkCygwinMainEx(
     size_t len;
     void (*tkmainex)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *);
 
-    /* construct "<path>/libtk8.?.dll", from "<path>/tk8?.dll" */
+    /* construct "<path>/libtcl9tk9.?.dll", from "<path>/tcl9tk9?.dll" */
     len = GetModuleFileNameW((HINSTANCE)Tk_GetHINSTANCE(), name, MAX_PATH);
     name[len-2] = '.';
     name[len-1] = name[len-5];
     wcscpy(name+len, L".dll");
-    memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
+#if TCL_MAJOR_VERSION > 8
+    memcpy(name+len-12, L"libtcl9tk9", 10 * sizeof(WCHAR));
+#else
+    memcpy(name+len-8, L"libtk9", 6 * sizeof(WCHAR));
+#endif
 
     tkcygwindll = LoadLibraryW(name);
-    if (!tkcygwindll) {
-	/* dll is not present */
-	return 0;
+    if (tkcygwindll) {
+	tkmainex = (void (*)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *))
+		(void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
+	if (tkmainex) {
+	    tkmainex(argc, argv, appInitProc, interp);
+	}
     }
-    tkmainex = (void (*)(Tcl_Size, char **, Tcl_AppInitProc *, Tcl_Interp *))
-	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
-    if (!tkmainex) {
-	return 0;
-    }
-    tkmainex(argc, argv, appInitProc, interp);
-    return 1;
 }
 #endif /* _WIN32 */
 
@@ -3023,7 +3019,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
@@ -3096,7 +3092,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
     if (tkcygwindll) {
 	int (*tksafeinit)(Tcl_Interp *);
 
@@ -3298,7 +3294,7 @@ Initialize(
 	    Tcl_SetVar2Ex(interp, "argv", NULL,
 		    Tcl_NewListObj(objc-1, rest+1), TCL_GLOBAL_ONLY);
 	    Tcl_SetVar2Ex(interp, "argc", NULL,
-		    Tcl_NewWideIntObj((Tcl_WideInt)objc-1), TCL_GLOBAL_ONLY);
+		    Tcl_NewWideIntObj(objc-1), TCL_GLOBAL_ONLY);
 	    ckfree(rest);
 	}
 	Tcl_DecrRefCount(parseList);
