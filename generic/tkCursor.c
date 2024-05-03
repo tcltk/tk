@@ -868,9 +868,9 @@ TkDebugCursor(
 	for ( ; (cursorPtr != NULL); cursorPtr = cursorPtr->nextPtr) {
 	    objPtr = Tcl_NewObj();
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj((Tcl_WideInt)cursorPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj((Tcl_WideInt)cursorPtr->objRefCount));
+		    Tcl_NewWideIntObj(cursorPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

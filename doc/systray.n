@@ -12,7 +12,7 @@
 systray \- Creates an icon display in the platform-specific system tray.
 .SH SYNOPSIS
 .nf
-\fBtk systray create \fB\-image \fIimage\fR ?\fB\-text \fItext\fR? ?\fB\-button1 \fIcallback\fR? ?\fB\-button3 \fIcallback\fR?
+\fBtk systray create \-image \fIimage\fR ?\fB\-text \fItext\fR? ?\fB\-button1 \fIcallback\fR? ?\fB\-button3 \fIcallback\fR?
 \fBtk systray configure \fI?option? ?value option value ...?\fR
 \fBtk systray exists\fR
 \fBtk systray destroy\fR
