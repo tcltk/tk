@@ -59,9 +59,13 @@
 { "Right", 0xFF53 },
 { "Down", 0xFF54 },
 { "Prior", 0xFF55 },
+#ifndef TK_NO_DEPRECATED
 { "Page_Up", 0xFF55 },
+#endif
 { "Next", 0xFF56 },
+#ifndef TK_NO_DEPRECATED
 { "Page_Down", 0xFF56 },
+#endif
 { "End", 0xFF57 },
 { "Begin", 0xFF58 },
 { "Select", 0xFF60 },
@@ -133,55 +137,105 @@
 { "F9", 0xFFC6 },
 { "F10", 0xFFC7 },
 { "F11", 0xFFC8 },
+#ifndef TK_NO_DEPRECATED
 { "L1", 0xFFC8 },
+#endif
 { "F12", 0xFFC9 },
+#ifndef TK_NO_DEPRECATED
 { "L2", 0xFFC9 },
+#endif
 { "F13", 0xFFCA },
+#ifndef TK_NO_DEPRECATED
 { "L3", 0xFFCA },
+#endif
 { "F14", 0xFFCB },
+#ifndef TK_NO_DEPRECATED
 { "L4", 0xFFCB },
+#endif
 { "F15", 0xFFCC },
+#ifndef TK_NO_DEPRECATED
 { "L5", 0xFFCC },
+#endif
 { "F16", 0xFFCD },
+#ifndef TK_NO_DEPRECATED
 { "L6", 0xFFCD },
+#endif
 { "F17", 0xFFCE },
+#ifndef TK_NO_DEPRECATED
 { "L7", 0xFFCE },
+#endif
 { "F18", 0xFFCF },
+#ifndef TK_NO_DEPRECATED
 { "L8", 0xFFCF },
+#endif
 { "F19", 0xFFD0 },
+#ifndef TK_NO_DEPRECATED
 { "L9", 0xFFD0 },
+#endif
 { "F20", 0xFFD1 },
+#ifndef TK_NO_DEPRECATED
 { "L10", 0xFFD1 },
+#endif
 { "F21", 0xFFD2 },
+#ifndef TK_NO_DEPRECATED
 { "R1", 0xFFD2 },
+#endif
 { "F22", 0xFFD3 },
+#ifndef TK_NO_DEPRECATED
 { "R2", 0xFFD3 },
+#endif
 { "F23", 0xFFD4 },
+#ifndef TK_NO_DEPRECATED
 { "R3", 0xFFD4 },
+#endif
 { "F24", 0xFFD5 },
+#ifndef TK_NO_DEPRECATED
 { "R4", 0xFFD5 },
+#endif
 { "F25", 0xFFD6 },
+#ifndef TK_NO_DEPRECATED
 { "R5", 0xFFD6 },
+#endif
 { "F26", 0xFFD7 },
+#ifndef TK_NO_DEPRECATED
 { "R6", 0xFFD7 },
+#endif
 { "F27", 0xFFD8 },
+#ifndef TK_NO_DEPRECATED
 { "R7", 0xFFD8 },
+#endif
 { "F28", 0xFFD9 },
+#ifndef TK_NO_DEPRECATED
 { "R8", 0xFFD9 },
+#endif
 { "F29", 0xFFDA },
+#ifndef TK_NO_DEPRECATED
 { "R9", 0xFFDA },
+#endif
 { "F30", 0xFFDB },
+#ifndef TK_NO_DEPRECATED
 { "R10", 0xFFDB },
+#endif
 { "F31", 0xFFDC },
+#ifndef TK_NO_DEPRECATED
 { "R11", 0xFFDC },
+#endif
 { "F32", 0xFFDD },
+#ifndef TK_NO_DEPRECATED
 { "R12", 0xFFDD },
+#endif
 { "F33", 0xFFDE },
+#ifndef TK_NO_DEPRECATED
 { "R13", 0xFFDE },
+#endif
 { "F34", 0xFFDF },
+#ifndef TK_NO_DEPRECATED
 { "R14", 0xFFDF },
+#endif
 { "F35", 0xFFE0 },
+#ifndef TK_NO_DEPRECATED
 { "R15", 0xFFE0 },
+#endif
 { "Shift_L", 0xFFE1 },
 { "Shift_R", 0xFFE2 },
 { "Control_L", 0xFFE3 },
