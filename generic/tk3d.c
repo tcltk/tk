@@ -1389,9 +1389,9 @@ TkDebugBorder(
 	    Tcl_Obj *objPtr = Tcl_NewObj();
 
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj((Tcl_WideInt)borderPtr->resourceRefCount));
+		    Tcl_NewWideIntObj(borderPtr->resourceRefCount));
 	    Tcl_ListObjAppendElement(NULL, objPtr,
-		    Tcl_NewWideIntObj((Tcl_WideInt)borderPtr->objRefCount));
+		    Tcl_NewWideIntObj(borderPtr->objRefCount));
 	    Tcl_ListObjAppendElement(NULL, resultPtr, objPtr);
 	}
     }

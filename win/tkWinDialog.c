@@ -3203,7 +3203,7 @@ FontchooserCget(
 	}
 	break;
     case FontchooserVisible:
-	resObj = Tcl_NewWideIntObj((hdPtr->hwnd != NULL) && IsWindow(hdPtr->hwnd));
+	resObj = Tcl_NewBooleanObj((hdPtr->hwnd != NULL) && IsWindow(hdPtr->hwnd));
 	break;
     default:
 	resObj = Tcl_NewStringObj("", 0);
