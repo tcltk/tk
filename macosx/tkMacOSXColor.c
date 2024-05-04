@@ -37,7 +37,7 @@ static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
-void initColorTable()
+static void initColorTable()
 {
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     Tcl_InitHashTable(&systemColors, TCL_STRING_KEYS);
@@ -244,7 +244,7 @@ unsigned long TkMacOSXClearPixel(
  *----------------------------------------------------------------------
  */
 
-SystemColorDatum*
+static SystemColorDatum*
 GetEntryFromPixel(
     unsigned long pixel)
 {
