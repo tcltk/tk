@@ -38,6 +38,10 @@ enum colorType {
     rgbColor,      /* The 24 bit value is an rgb color. */
     clearColor,    /* The unique rgba color with all channels 0. */
     HIBrush,       /* A HITheme brush color.*/
+#if TCL_MAJOR_VERSION < 9
+    HIText,        /* A HITheme text color (32-bit only). */
+    HIBackground,  /* A HITheme background color (32-bit only). */
+#endif
     ttkBackground, /* A background color which indicates nesting level.*/
     semantic,      /* A semantic NSColor.*/
 };
