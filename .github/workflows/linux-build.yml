@@ -5,6 +5,7 @@ on:
     - "main"
     - "core-8-branch"
     - "core-8-6-branch"
+    - "bug-bb52855781"
     tags:
     - "core-**"
 permissions:
