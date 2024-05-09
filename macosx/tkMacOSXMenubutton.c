@@ -4,11 +4,11 @@
  *	This file implements the Macintosh specific portion of the menubutton
  *	widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2007 Revar Desmera.
- * Copyright 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 2001 Apple Computer, Inc.
+ * Copyright © 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2007 Revar Desmera.
+ * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
