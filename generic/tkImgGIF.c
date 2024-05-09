@@ -1277,7 +1277,7 @@ GetDataBlock(
  *	transparency, etc.
  *
  *	This code is based on the code found in the ImageMagick GIF decoder,
- *	which is (c) 2000 ImageMagick Studio.
+ *	which is © 2000 ImageMagick Studio.
  *
  *	Some thoughts on our implementation:
  *	It sure would be nice if ReadImage didn't take 11 parameters! I think
