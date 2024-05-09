@@ -4,8 +4,8 @@
  *	This file contains the routines used to map from X color names to RGB
  *	and pixel values.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
- * Copyright (c) 2012 Jan Nijtmans
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 2012 Jan Nijtmans
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
