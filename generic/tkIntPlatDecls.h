@@ -6,7 +6,7 @@
  *	interfaces are not guaranteed to remain the same between
  *	versions.  Use at your own risk.
  *
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright © 1998-1999 Scriptics Corporation.
  * All rights reserved.
  */
 
