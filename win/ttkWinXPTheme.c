@@ -2,9 +2,9 @@
  * Tk theme engine which uses the Windows XP "Visual Styles" API
  * Adapted from Georgios Petasis' XP theme patch.
  *
- * Copyright (c) 2003 by Georgios Petasis, petasis@iit.demokritos.gr.
- * Copyright (c) 2003 by Joe English
- * Copyright (c) 2003 by Pat Thoyts
+ * Copyright (c) 2003 Georgios Petasis, petasis@iit.demokritos.gr.
+ * Copyright (c) 2003 Joe English
+ * Copyright (c) 2003 Pat Thoyts
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.

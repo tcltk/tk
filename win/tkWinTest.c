@@ -5,8 +5,8 @@
  *	platform.
  *
  * Copyright (c) 1997 Sun Microsystems, Inc.
- * Copyright (c) 2000 by Scriptics Corporation.
- * Copyright (c) 2001 by ActiveState Corporation.
+ * Copyright (c) 2000 Scriptics Corporation.
+ * Copyright (c) 2001 ActiveState Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

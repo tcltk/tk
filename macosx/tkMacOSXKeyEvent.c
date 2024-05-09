@@ -4,7 +4,7 @@
  *	This file implements functions that decode & handle keyboard events on
  *	MacOS X.
  *
- * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2012 Adrian Robert.
  * Copyright © 2015-2020 Marc Culler.
