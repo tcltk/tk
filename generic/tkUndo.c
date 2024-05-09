@@ -3,8 +3,8 @@
  *
  *	This module provides the implementation of an undo stack.
  *
- * Copyright (c) 2002 by Ludwig Callewaert.
- * Copyright (c) 2003-2004 by Vincent Darley.
+ * Copyright (c) 2002 Ludwig Callewaert.
+ * Copyright (c) 2003-2004 Vincent Darley.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
