@@ -626,8 +626,6 @@ static void SliderElementDraw(
     Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
 #if 0
-#endif
-#if 0
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
 #endif
 
