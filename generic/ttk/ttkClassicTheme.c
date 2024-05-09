@@ -114,7 +114,7 @@ static const Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
 static void ButtonBorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -123,7 +123,7 @@ static void ButtonBorderElementSize(
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int borderWidth = 0;
 
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
@@ -155,7 +155,7 @@ static void ButtonBorderElementDraw(
      * Get option values.
      */
     border = Tk_Get3DBorderFromObj(tkwin, bd->borderObj);
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
@@ -279,7 +279,7 @@ static void SquareIndicatorElementDraw(
 
     interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
     border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->borderWidthObj,&borderWidth);
     Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
     Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
 
@@ -331,7 +331,7 @@ static void DiamondIndicatorElementDraw(
 
     interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
     border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
     Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
 
