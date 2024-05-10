@@ -1290,9 +1290,9 @@ static const Ttk_ElementSpec TreeitemIndicatorElementSpec = {
  * TtkAltTheme_Init --
  * 	Install alternate theme.
  */
-MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp);
 
-MODULE_SCOPE int TtkAltTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int
+TtkAltTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "alt", NULL);
 

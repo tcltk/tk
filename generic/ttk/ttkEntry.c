@@ -2141,11 +2141,9 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Initialization.
  */
-MODULE_SCOPE
-void TtkEntry_Init(Tcl_Interp *interp);
 
-MODULE_SCOPE
-void TtkEntry_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkEntry_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr =  Ttk_GetDefaultTheme(interp);
 
