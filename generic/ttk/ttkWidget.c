@@ -758,9 +758,8 @@ int TtkWidgetIdentifyCommand(
 	}
     }
 
-    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
-    ) {
+    if (Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK) {
 	return TCL_ERROR;
     }
 

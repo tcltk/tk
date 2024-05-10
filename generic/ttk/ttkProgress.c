@@ -96,7 +96,7 @@ static int AnimationEnabled(Progressbar *pb)
  * 	Increments the -phase option, redisplays the widget,
  * 	and reschedules itself if animation still enabled.
  */
-static void AnimateProgressProc(ClientData clientData)
+static void AnimateProgressProc(void *clientData)
 {
     Progressbar *pb = (Progressbar *)clientData;
 
@@ -185,10 +185,11 @@ static void VariableChanged(void *recordPtr, const char *value)
  * +++ Widget class methods:
  */
 
-static void ProgressbarInitialize(Tcl_Interp *dummy, void *recordPtr)
+static void ProgressbarInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Progressbar *pb = (Progressbar *)recordPtr;
-    (void)dummy;
 
     pb->progress.variableTrace = 0;
     pb->progress.timer = 0;
@@ -236,12 +237,12 @@ static int ProgressbarConfigure(Tcl_Interp *interp, void *recordPtr, int mask)
  * Post-configuration hook:
  */
 static int ProgressbarPostConfigure(
-    Tcl_Interp *dummy, void *recordPtr, int mask)
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr,
+    TCL_UNUSED(int))
 {
     Progressbar *pb = (Progressbar *)recordPtr;
     int status = TCL_OK;
-    (void)dummy;
-    (void)mask;
 
     if (pb->progress.variableTrace) {
 	status = Ttk_FireTrace(pb->progress.variableTrace);
@@ -464,7 +465,7 @@ static int ProgressbarStartStopCommand(
 
     prefix[0] = Tcl_NewStringObj(cmdName, -1);
     prefix[1] = objv[0];
-    Tcl_ListObjReplace(interp, cmd, 0,2, 2,prefix);
+    Tcl_ListObjReplace(interp, cmd, 0, 2, 2,prefix);
 
     Tcl_IncrRefCount(cmd);
     status = Tcl_EvalObjEx(interp, cmd, 0);
@@ -474,21 +475,23 @@ static int ProgressbarStartStopCommand(
 }
 
 static int ProgressbarStartCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
-    (void)recordPtr;
-
     return ProgressbarStartStopCommand(
-	interp, "::ttk::progressbar::start", objc, objv);
+	    interp, "::ttk::progressbar::start", objc, objv);
 }
 
 static int ProgressbarStopCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj *const objv[])
 {
-    (void)recordPtr;
-
     return ProgressbarStartStopCommand(
-	interp, "::ttk::progressbar::stop", objc, objv);
+	    interp, "::ttk::progressbar::stop", objc, objv);
 }
 
 static const Ttk_Ensemble ProgressbarCommands[] = {
