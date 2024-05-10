@@ -91,8 +91,8 @@ static Tk_OptionSpec BaseOptionSpecs[] =
      * Compatibility/legacy options
      */
     {TK_OPTION_STRING, "-state", "state", "State",
-	 "normal", Tk_Offset(Base,base.stateObj), -1,
-	 0,0,STATE_CHANGED },
+	"normal", Tk_Offset(Base,base.stateObj), -1,
+	0,0,STATE_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
 };
@@ -119,10 +119,11 @@ static void TextVariableChanged(void *clientData, const char *value)
 }
 
 static void
-BaseInitialize(Tcl_Interp *dummy, void *recordPtr)
+BaseInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Base *basePtr = (Base *)recordPtr;
-    (void)dummy;
 
     basePtr->base.textVariableTrace = 0;
     basePtr->base.imageSpec = NULL;
@@ -140,16 +141,15 @@ BaseCleanup(void *recordPtr)
 
 static void
 BaseImageChanged(
-	ClientData clientData, int x, int y, int width, int height,
-	int imageWidth, int imageHeight)
+    void *clientData,
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int))
 {
     Base *basePtr = (Base *)clientData;
-    (void)x;
-    (void)y;
-    (void)width;
-    (void)height;
-    (void)imageWidth;
-    (void)imageHeight;
 
     TtkResizeWidget(&basePtr->core);
 }
@@ -199,12 +199,13 @@ error:
 }
 
 static int
-BasePostConfigure(Tcl_Interp *dummy, void *recordPtr, int mask)
+BasePostConfigure(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr,
+    TCL_UNUSED(int))
 {
     Base *basePtr = (Base *)recordPtr;
     int status = TCL_OK;
-    (void)dummy;
-    (void)mask;
 
     if (basePtr->base.textVariableTrace) {
 	status = Ttk_FireTrace(basePtr->base.textVariableTrace);
