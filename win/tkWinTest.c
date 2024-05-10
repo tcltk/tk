@@ -383,7 +383,7 @@ TestwineventObjCmd(
 		    Tcl_ObjPrintf("Could not find control with id %d", id));
 	    return TCL_ERROR;
 	}
-	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), -1, &ds);
+	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
 	result = SendMessageA(control, WM_SETTEXT, 0, (LPARAM)Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
