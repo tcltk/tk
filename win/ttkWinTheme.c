@@ -732,7 +732,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec TabElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
-	offsetof(TabElement,borderWidthObj), "1" },
+	ofsetof(TabElement,borderWidthObj), "1" },
     { "-background", TK_OPTION_BORDER,
 	offsetof(TabElement,backgroundObj), DEFAULT_BACKGROUND },
     {0,TK_OPTION_BOOLEAN,0,0}
@@ -953,13 +953,8 @@ TTK_END_LAYOUT_TABLE
 
 /* ---------------------------------------------------------------------- */
 
-MODULE_SCOPE
-int TtkWinTheme_Init(
-    Tcl_Interp *interp,
-    TCL_UNUSED(HWND));
-
-MODULE_SCOPE
-int TtkWinTheme_Init(
+MODULE_SCOPE int
+TtkWinTheme_Init(
     Tcl_Interp *interp,
     TCL_UNUSED(HWND))
 {
