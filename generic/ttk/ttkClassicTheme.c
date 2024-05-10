@@ -35,7 +35,7 @@ static const Ttk_ElementOptionSpec HighlightElementOptions[] = {
 static void HighlightElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -43,7 +43,7 @@ static void HighlightElementSize(
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
 
-    Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     *paddingPtr = Ttk_UniformPadding((short)highlightThickness);
 }
 
@@ -60,7 +60,7 @@ static void HighlightElementDraw(
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     XColor *highlightColor = Tk_GetColorFromObj(tkwin, hl->highlightColorObj);
 
-    Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     if (highlightColor && highlightThickness > 0) {
 	Ttk_GetButtonDefaultStateFromObj(NULL, hl->defaultStateObj, &defaultState);
 	GC gc = Tk_GCForColor(highlightColor, d);
@@ -880,9 +880,8 @@ TTK_END_LAYOUT_TABLE
  * 	Install classic theme.
  */
 
-MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int
+TtkClassicTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "classic", NULL);
 

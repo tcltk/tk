@@ -383,9 +383,8 @@ TestwineventObjCmd(
 		    Tcl_ObjPrintf("Could not find control with id %d", id));
 	    return TCL_ERROR;
 	}
-	Tcl_DStringInit(&ds);
-	LPARAM lparam = (LPARAM)Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
-	result = SendMessageA(control, WM_SETTEXT, 0, lparam);
+	Tcl_UtfToExternalDString(NULL, Tcl_GetString(objv[4]), TCL_INDEX_NONE, &ds);
+	result = SendMessageA(control, WM_SETTEXT, 0, (LPARAM)Tcl_DStringValue(&ds));
 	Tcl_DStringFree(&ds);
 	if (result == 0) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("failed to send text to dialog: ", TCL_INDEX_NONE));
@@ -536,7 +535,7 @@ TestgetwindowinfoObjCmd(
     dictObj = Tcl_NewDictObj();
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("class", 5), classObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("id", 2),
-	Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
+	    Tcl_NewWideIntObj(GetWindowLongPtr((HWND)(size_t)hwnd, GWL_ID)));
 
     cch = GetWindowTextW((HWND)INT2PTR(hwnd), buf, cchBuf);
 	Tcl_DStringInit(&ds);
@@ -546,7 +545,7 @@ TestgetwindowinfoObjCmd(
 
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("text", 4), textObj);
     Tcl_DictObjPut(interp, dictObj, Tcl_NewStringObj("parent", 6),
-	Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)(size_t)hwnd))));
+	    Tcl_NewWideIntObj(PTR2INT(GetParent((HWND)(size_t)hwnd))));
 
     childrenObj = Tcl_NewListObj(0, NULL);
     EnumChildWindows((HWND)(size_t)hwnd, EnumChildrenProc, (LPARAM)childrenObj);
