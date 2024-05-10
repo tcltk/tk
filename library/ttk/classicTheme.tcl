@@ -6,11 +6,12 @@
 
 namespace eval ttk::theme::classic {
 
-    variable colors; array set colors {
+    variable colors
+    array set colors {
 	-frame		"#d9d9d9"
 	-window		"#ffffff"
 	-activebg	"#ececec"
-	-troughbg	"#c3c3c3"
+	-troughbg	"#b3b3b3"
 	-selectbg	"#c3c3c3"
 	-selectfg	"#000000"
 	-disabledfg	"#a3a3a3"
@@ -31,7 +32,7 @@ namespace eval ttk::theme::classic {
 	    -highlightthickness	1 \
 	    -selectborderwidth	1 \
 	    -insertwidth	2 \
-	    ;
+	    -borderwidth	1
 
 	# To match pre-Xft X11 appearance, use:
 	#	ttk::style configure . -font {Helvetica 12 bold}
@@ -53,8 +54,7 @@ namespace eval ttk::theme::classic {
 		    pressed $colors(-frame) \
 		    alternate $colors(-altindicator) \
 		    selected $colors(-indicator)] \
-	    -indicatorrelief {alternate raised  selected sunken  pressed sunken} \
-	    ;
+	    -indicatorrelief {alternate raised  selected sunken  pressed sunken}
 
 	ttk::style configure TRadiobutton -indicatorrelief raised
 	ttk::style map TRadiobutton \
@@ -62,27 +62,30 @@ namespace eval ttk::theme::classic {
 		    pressed $colors(-frame) \
 		    alternate $colors(-altindicator) \
 		    selected $colors(-indicator)] \
-	    -indicatorrelief {alternate raised  selected sunken  pressed sunken} \
-	    ;
+	    -indicatorrelief {alternate raised  selected sunken  pressed sunken}
 
 	ttk::style configure TMenubutton -relief raised -padding "3m 1m"
 
 	ttk::style configure TEntry -relief sunken -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
-	ttk::style configure TCombobox -padding 1
+
+	ttk::style element create Combobox.downarrow from default
+	ttk::style configure TCombobox -padding 1 -arrowsize 12
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
+	ttk::style element create Spinbox.uparrow from default
+	ttk::style element create Spinbox.downarrow from default
 	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure TScrollbar -relief raised
+	ttk::style configure TScrollbar -relief raised -arrowsize 12 -width 12
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised
@@ -91,7 +94,8 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TProgressbar -background SteelBlue
 	ttk::style configure TNotebook.Tab \
 	    -padding {3m 1m} \
-	    -background $colors(-troughbg)
+	    -background $colors(-troughbg) \
+	    -focussolid 1
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
 	# Treeview:

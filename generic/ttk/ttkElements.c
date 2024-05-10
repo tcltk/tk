@@ -274,6 +274,7 @@ static Ttk_ElementSpec PaddingElementSpec = {
 typedef struct {
     Tcl_Obj	*focusColorObj;
     Tcl_Obj	*focusThicknessObj;
+    Tcl_Obj	*focusSolidObj;
 } FocusElement;
 
 /*
@@ -281,7 +282,8 @@ typedef struct {
  * 	Draw a dotted rectangle to indicate focus.
  */
 static void DrawFocusRing(
-    Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, Ttk_Box b)
+    Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, int thickness, int solid,
+    Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, colorObj);
     unsigned long mask = 0UL;
@@ -289,11 +291,16 @@ static void DrawFocusRing(
     GC gc;
 
     gcvalues.foreground = color->pixel;
-    gcvalues.line_style = LineOnOffDash;
-    gcvalues.line_width = 1;
-    gcvalues.dashes = 1;
-    gcvalues.dash_offset = 1;
-    mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    gcvalues.line_width = thickness < 1 ? 1 : thickness;
+    if (solid) {
+	gcvalues.line_style = LineSolid;
+	mask = GCForeground | GCLineStyle | GCLineWidth;
+    } else {
+	gcvalues.line_style = LineOnOffDash;
+	gcvalues.dashes = 1;
+	gcvalues.dash_offset = 1;
+	mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    }
 
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
     XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
@@ -305,6 +312,8 @@ static Ttk_ElementOptionSpec FocusElementOptions[] = {
 	Tk_Offset(FocusElement,focusColorObj), "black" },
     { "-focusthickness",TK_OPTION_PIXELS,
 	Tk_Offset(FocusElement,focusThicknessObj), "1" },
+    { "-focussolid",TK_OPTION_BOOLEAN,
+	offsetof(FocusElement,focusSolidObj), "0" },
     { NULL, 0, 0, NULL }
 };
 
@@ -325,10 +334,13 @@ static void FocusElementDraw(
 {
     FocusElement *focus = elementRecord;
     int focusThickness = 0;
+    int focusSolid = 0;
 
     if (state & TTK_STATE_FOCUS) {
 	Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
-	DrawFocusRing(tkwin, d, focus->focusColorObj, b);
+	Tcl_GetBooleanFromObj(NULL, focus->focusSolidObj, &focusSolid);
+	DrawFocusRing(tkwin, d, focus->focusColorObj, focusThickness,
+	    focusSolid, b);
     }
 }
 

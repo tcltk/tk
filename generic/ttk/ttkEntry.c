@@ -2123,12 +2123,12 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(SpinboxLayout)
-     TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
-	 TTK_GROUP("null", TTK_PACK_RIGHT,
-	     TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
-	     TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
-	 TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
-	     TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))
+    TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
+	TTK_GROUP("null", TTK_PACK_RIGHT,
+	    TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
+	    TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
+	TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------
