@@ -30,32 +30,33 @@ static Ttk_ElementOptionSpec HighlightElementOptions[] = {
 };
 
 static void HighlightElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
-    (void)dummy;
-    (void)tkwin;
-    (void)widthPtr;
-    (void)heightPtr;
 
-    Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     *paddingPtr = Ttk_UniformPadding((short)highlightThickness);
 }
 
 static void HighlightElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    TCL_UNUSED(Ttk_Box),
+    TCL_UNUSED(Ttk_State))
 {
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
     XColor *highlightColor = Tk_GetColorFromObj(tkwin, hl->highlightColorObj);
-    (void)dummy;
-    (void)b;
-    (void)state;
 
-    Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     if (highlightColor && highlightThickness > 0) {
 	GC gc = Tk_GCForColor(highlightColor, d);
 	Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
@@ -102,18 +103,18 @@ static Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
 };
 
 static void ButtonBorderElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
     int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int borderWidth = 0;
-    (void)dummy;
-    (void)tkwin;
-    (void)widthPtr;
-    (void)heightPtr;
 
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
@@ -128,22 +129,24 @@ static void ButtonBorderElementSize(
  * when the button is active.)
  */
 static void ButtonBorderElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     ButtonBorderElement *bd = (ButtonBorderElement *)elementRecord;
     Tk_3DBorder border = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
     int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int inset = 0;
-    (void)dummy;
-    (void)state;
 
     /*
      * Get option values.
      */
     border = Tk_Get3DBorderFromObj(tkwin, bd->borderObj);
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
@@ -221,13 +224,15 @@ static Ttk_ElementOptionSpec ArrowElementOptions[] =
 };
 
 static void ArrowElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     ArrowElement *arrow = (ArrowElement *)elementRecord;
     int size = 12;
-    (void)dummy;
-    (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->sizeObj, &size);
     *widthPtr = *heightPtr = size;
@@ -235,7 +240,8 @@ static void ArrowElementSize(
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     int direction = *(int *)clientData;
     ArrowElement *arrow = (ArrowElement *)elementRecord;
@@ -244,11 +250,9 @@ static void ArrowElementDraw(
     int relief = TK_RELIEF_RAISED;
     int size = b.width < b.height ? b.width : b.height;
     XPoint points[3];
-    (void)state;
 
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
-
 
     /*
      * @@@ There are off-by-one pixel errors in the way these are drawn;
@@ -337,12 +341,12 @@ static Ttk_ElementOptionSpec SashOptions[] = {
 
 static void SashElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     SashElement *sash = (SashElement *)elementRecord;
     int sashPad = 2, sashThickness = 6, handleSize = 8;
     int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
-    (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sash->sashThicknessObj, &sashThickness);
     Tk_GetPixelsFromObj(NULL, tkwin, sash->handleSizeObj, &handleSize);
@@ -359,7 +363,8 @@ static void SashElementSize(
 
 static void SashElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     SashElement *sash = (SashElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, sash->borderObj);
@@ -368,7 +373,6 @@ static void SashElementDraw(
     int handleSize = 8, handlePad = 8;
     int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
     Ttk_Box hb;
-    (void)state;
 
     Tk_GetPixelsFromObj(NULL, tkwin, sash->handleSizeObj, &handleSize);
     Tk_GetPixelsFromObj(NULL, tkwin, sash->handlePadObj, &handlePad);

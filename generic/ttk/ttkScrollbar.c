@@ -34,7 +34,7 @@ typedef struct
 static Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0,0,0},
+	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0, 0, 0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
 	Tk_Offset(Scrollbar,scrollbar.orientObj),
@@ -50,10 +50,11 @@ static Tk_OptionSpec ScrollbarOptionSpecs[] =
  */
 
 static void
-ScrollbarInitialize(Tcl_Interp *dummy, void *recordPtr)
+ScrollbarInitialize(
+    TCL_UNUSED(Tcl_Interp *),
+    void *recordPtr)
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
-    (void)dummy;
 
     sb->scrollbar.first = 0.0;
     sb->scrollbar.last = 1.0;
