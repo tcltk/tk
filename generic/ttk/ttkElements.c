@@ -405,7 +405,7 @@ static const Ttk_ElementOptionSpec FocusElementOptions[] = {
 static void FocusElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -413,7 +413,7 @@ static void FocusElementSize(
     FocusElement *focus = (FocusElement *)elementRecord;
     int focusThickness = 0;
 
-    Tcl_GetIntFromObj(NULL, focus->focusThicknessObj, &focusThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
     *paddingPtr = Ttk_UniformPadding((short)focusThickness);
 }
 
@@ -430,8 +430,8 @@ static void FocusElementDraw(
     int focusSolid = 0;
 
     if (state & TTK_STATE_FOCUS) {
-	Tcl_GetIntFromObj(NULL,focus->focusThicknessObj,&focusThickness);
-	Tcl_GetBooleanFromObj(NULL,focus->focusSolidObj,&focusSolid);
+	Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
+	Tcl_GetBooleanFromObj(NULL, focus->focusSolidObj, &focusSolid);
 	DrawFocusRing(tkwin, d, focus->focusColorObj, focusThickness,
 	    focusSolid, b);
     }

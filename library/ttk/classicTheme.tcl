@@ -51,7 +51,7 @@ namespace eval ttk::theme::classic {
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
 
 	ttk::style configure TCheckbutton -indicatorrelief raised \
-	    -indicatormargin {0 1.5p 3p 1.5p} -borderwidth 1
+	    -indicatormargin {0 1.5p 3p 1.5p}
 	ttk::style map TCheckbutton \
 	    -indicatorcolor [list \
 		    pressed $colors(-frame) \
@@ -60,7 +60,7 @@ namespace eval ttk::theme::classic {
 	    -indicatorrelief {alternate raised  selected sunken  pressed sunken}
 
 	ttk::style configure TRadiobutton -indicatorrelief raised \
-	    -indicatormargin {0 1.5p 3p 1.5p} -borderwidth 1
+	    -indicatormargin {0 1.5p 3p 1.5p}
 	ttk::style map TRadiobutton \
 	    -indicatorcolor [list \
 		    pressed $colors(-frame) \
