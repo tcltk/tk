@@ -57,12 +57,13 @@ static void HighlightElementDraw(
 {
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
-    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     XColor *highlightColor = Tk_GetColorFromObj(tkwin, hl->highlightColorObj);
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
     Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     if (highlightColor && highlightThickness > 0) {
-	Ttk_GetButtonDefaultStateFromObj(NULL, hl->defaultStateObj, &defaultState);
+	Ttk_GetButtonDefaultStateFromObj(NULL, hl->defaultStateObj,
+	    &defaultState);
 	GC gc = Tk_GCForColor(highlightColor, d);
 	if (defaultState == TTK_BUTTON_DEFAULT_NORMAL) {
 	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d, 5);
@@ -437,7 +438,9 @@ static void MenuIndicatorElementDraw(
 
     Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj,&margins);
     b = Ttk_PadBox(b, margins);
+#if 0
     Tk_GetPixelsFromObj(NULL, tkwin, mi->borderWidthObj, &borderWidth);
+#endif
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, TK_RELIEF_RAISED);
 }
