@@ -32,7 +32,8 @@ namespace eval ttk::theme::classic {
 	    -highlightthickness	1 \
 	    -selectborderwidth	1 \
 	    -insertwidth	2 \
-	    -borderwidth	1
+	    -borderwidth	1 \
+	    -focuswidth		0
 
 	# To match pre-Xft X11 appearance, use:
 	#	ttk::style configure . -font {Helvetica 12 bold}
