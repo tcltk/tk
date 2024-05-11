@@ -28,7 +28,7 @@ namespace eval ttk::theme::default {
 	    -foreground 	$colors(-foreground) \
 	    -troughcolor 	$colors(-darker) \
 	    -font 		TkDefaultFont \
-	    -selectborderwidth	1 \
+	    -selectborderwidth	0 \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
@@ -71,16 +71,23 @@ namespace eval ttk::theme::default {
 	    -relief raised -padding "10 3"
 
 	ttk::style configure TEntry \
-	    -relief sunken -fieldbackground white -padding 1
+	    -fieldbackground white -padding 1 \
+	    -focuswidth 2 -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -arrowsize 12 -padding 1
+	ttk::style configure TCombobox \
+	    -arrowsize 12 -arrowcolor black \
+	    -fieldbackground white -padding 1 \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
-	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
+	ttk::style configure TSpinbox \
+	    -arrowsize 10 -arrowcolor black \
+	    -fieldbackground white -padding {2 0 10 0} \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -101,7 +108,9 @@ namespace eval ttk::theme::default {
 	ttk::style configure TNotebook.Tab \
 	    -padding {4 2} -background $colors(-darker)
 	ttk::style map TNotebook.Tab \
-	    -background [list selected $colors(-frame)]
+	    -background [list selected $colors(-frame)] \
+	    -highlight [list selected 1] \
+	    -highlightcolor [list selected $colors(-selectbg)]
 
 	# Treeview.
 	#

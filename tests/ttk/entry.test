@@ -107,7 +107,7 @@ test entry-3.0 "Series 3 setup" -body {
     variable fixed TkFixedFont
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
-    variable bd 2	;# border + padding
+    variable bd 3	;# border + padding + extra space for focus ring
     variable ux [font measure $fixed \u4e4e]
 
     pack [ttk::entry .e -font $fixed -width 20]

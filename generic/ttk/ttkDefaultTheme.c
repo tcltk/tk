@@ -330,6 +330,8 @@ static Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj	*borderObj;
     Tcl_Obj	*borderColorObj;	/* Extra border color */
+    Tcl_Obj	*focusWidthObj;
+    Tcl_Obj	*focusColorObj;
 } FieldElement;
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
@@ -337,6 +339,10 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
     	"white" },
     { "-bordercolor",TK_OPTION_COLOR, Tk_Offset(FieldElement,borderColorObj),
 	"black" },
+    { "-focuswidth", TK_OPTION_PIXELS, offsetof(FieldElement,focusWidthObj),
+	"2" },
+    { "-focuscolor", TK_OPTION_COLOR, offsetof(FieldElement,focusColorObj),
+	"#4a6984" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -359,10 +365,57 @@ static void FieldElementDraw(
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, field->borderObj);
     XColor *borderColor = Tk_GetColorFromObj(tkwin, field->borderColorObj);
+    int focusWidth = 2;
 
-    Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, 0, TK_RELIEF_SUNKEN);
-    DrawFieldBorder(tkwin, d, border, borderColor, b);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
+
+    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
+	Display *disp = Tk_Display(tkwin);
+	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
+	GC focusGC = Tk_GCForColor(focusColor, d);
+
+	if (focusWidth > 1) {
+	    int x1 = b.x, x2 = b.x + b.width - 1;
+	    int y1 = b.y, y2 = b.y + b.height - 1;
+	    int w = WIN32_XDRAWLINE_HACK;
+
+	    /*
+	     * Draw the outer rounded rectangle
+	     */
+	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
+	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
+	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
+	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
+
+	    /*
+	     * Draw the inner rectangle
+	     */
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Fill the inner rectangle
+	     */
+	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
+	} else {
+	    /*
+	     * Draw the field element as usual
+	     */
+	    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		0, TK_RELIEF_SUNKEN);
+	    DrawFieldBorder(tkwin, d, border, borderColor, b);
+
+	    /*
+	     * Change the color of the border's outermost pixels
+	     */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	}
+    } else {
+	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    0, TK_RELIEF_SUNKEN);
+	DrawFieldBorder(tkwin, d, border, borderColor, b);
+    }
 }
 
 static Ttk_ElementSpec FieldElementSpec = {
