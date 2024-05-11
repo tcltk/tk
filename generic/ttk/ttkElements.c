@@ -299,7 +299,7 @@ static Ttk_ElementOptionSpec PaddingElementOptions[] = {
 	Tk_Offset(PaddingElement,paddingObj), "0" },
     { "-relief", TK_OPTION_RELIEF,
 	Tk_Offset(PaddingElement,reliefObj), "flat" },
-    { "-shiftrelief", TK_OPTION_INT,
+    { "-shiftrelief", TK_OPTION_PIXELS,
 	Tk_Offset(PaddingElement,shiftreliefObj), "0" },
     { NULL, 0, 0, NULL }
 };
@@ -314,7 +314,7 @@ static void PaddingElementSize(
     Ttk_Padding pad;
 
     Tk_GetReliefFromObj(NULL, padding->reliefObj, &relief);
-    Tcl_GetIntFromObj(NULL, padding->shiftreliefObj, &shiftRelief);
+    Tk_GetPixelsFromObj(NULL, tkwin, padding->shiftreliefObj, &shiftRelief);
     Ttk_GetPaddingFromObj(NULL,tkwin,padding->paddingObj,&pad);
     *paddingPtr = Ttk_RelievePadding(pad, relief, shiftRelief);
 }
@@ -1529,8 +1529,8 @@ static Ttk_ElementSpec ClientElementSpec = {
  *	Register default element implementations.
  */
 
-MODULE_SCOPE
-void TtkElements_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkElements_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
