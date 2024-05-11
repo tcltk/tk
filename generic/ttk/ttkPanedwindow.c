@@ -925,7 +925,7 @@ typedef struct {
 } SashElement;
 
 static Ttk_ElementOptionSpec SashElementOptions[] = {
-    { "-sashthickness", TK_OPTION_INT,
+    { "-sashthickness", TK_OPTION_PIXELS,
 	    Tk_Offset(SashElement,thicknessObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -933,7 +933,7 @@ static Ttk_ElementOptionSpec SashElementOptions[] = {
 static void SashElementSize(
     TCL_UNUSED(void *),
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -941,7 +941,7 @@ static void SashElementSize(
     SashElement *sash = (SashElement *)elementRecord;
     int thickness = DEFAULT_SASH_THICKNESS;
 
-    Tcl_GetIntFromObj(NULL, sash->thicknessObj, &thickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, sash->thicknessObj, &thickness);
     *widthPtr = *heightPtr = thickness;
 }
 
@@ -968,8 +968,9 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-MODULE_SCOPE
-void TtkPanedwindow_Init(Tcl_Interp *interp)
+
+MODULE_SCOPE void
+TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
     RegisterWidget(interp, "ttk::panedwindow", &PanedWidgetSpec);

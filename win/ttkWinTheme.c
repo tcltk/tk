@@ -940,8 +940,8 @@ TTK_END_LAYOUT_TABLE
 
 /* ---------------------------------------------------------------------- */
 
-MODULE_SCOPE
-int TtkWinTheme_Init(
+MODULE_SCOPE int
+TtkWinTheme_Init(
     Tcl_Interp *interp,
     TCL_UNUSED(HWND))
 {
