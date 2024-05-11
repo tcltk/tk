@@ -3333,8 +3333,8 @@ static int AquaTheme_Init(
     return TCL_OK;
 }
 
-MODULE_SCOPE
-int Ttk_MacOSXPlatformInit(
+MODULE_SCOPE int
+Ttk_MacOSXPlatformInit(
     Tcl_Interp *interp)
 {
     return AquaTheme_Init(interp);
