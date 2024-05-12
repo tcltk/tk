@@ -64,7 +64,7 @@ SOFTWARE.
 #  ifndef _XTYPEDEF_XID
 #    define _XTYPEDEF_XID
 #    ifdef _WIN64
-typedef unsigned __int64 XID;
+typedef unsigned long long XID;
 #    else
 typedef unsigned long XID;
 #    endif
