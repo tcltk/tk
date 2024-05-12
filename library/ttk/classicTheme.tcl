@@ -30,9 +30,9 @@ namespace eval ttk::theme::classic {
 	    -indicatorcolor	$colors(-frame) \
 	    -highlightcolor	$colors(-frame) \
 	    -highlightthickness	1 \
-	    -selectborderwidth	1 \
-	    -insertwidth	2 \
+	    -selectborderwidth	0 \
 	    -borderwidth	1 \
+	    -insertwidth	2 \
 	    -focuswidth		0
 
 	# To match pre-Xft X11 appearance, use:
