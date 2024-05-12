@@ -1,7 +1,7 @@
 /*
  * Theme engine: private definitions.
  *
- * Copyright (c) 2004 Joe English.  Freely redistributable.
+ * Copyright © 2004 Joe English.  Freely redistributable.
  */
 
 #ifndef _TTKTHEMEINT
