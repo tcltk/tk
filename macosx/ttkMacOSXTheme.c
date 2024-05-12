@@ -3545,9 +3545,8 @@ TTK_END_LAYOUT_TABLE
  *    [NSApp applicationDidFinishLaunching].
  */
 
-MODULE_SCOPE
-void Ttk_MacOSXInit(
-    void)
+MODULE_SCOPE void
+Ttk_MacOSXInit(void)
 {
     if ([NSApp macOSVersion] < 101400) {
 	entryElementPadding = Ttk_MakePadding(7, 6, 7, 5);
@@ -3688,8 +3687,8 @@ static int AquaTheme_Init(
     return TCL_OK;
 }
 
-MODULE_SCOPE
-int Ttk_MacOSXPlatformInit(
+MODULE_SCOPE int
+Ttk_MacOSXPlatformInit(
     Tcl_Interp *interp)
 {
     return AquaTheme_Init(interp);
