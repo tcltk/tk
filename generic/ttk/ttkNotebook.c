@@ -189,7 +189,7 @@ static void NotebookStyleOptions(
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-mintabwidth", 0)) != 0) {
-	Tcl_GetIntFromObj(NULL, objPtr, &nbstyle->minTabWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, objPtr, &nbstyle->minTabWidth);
     }
 }
 
