@@ -65,7 +65,8 @@ namespace eval ttk::theme::classic {
 		    selected $colors(-indicator)] \
 	    -indicatorrelief {alternate raised  selected sunken  pressed sunken}
 
-	ttk::style configure TMenubutton -relief raised -padding "3m 1m"
+	ttk::style configure TMenubutton -relief raised \
+	    -indicatorborderwidth 2 -padding "3m 1m"
 
 	ttk::style configure TEntry -relief sunken -padding 1 -font TkTextFont
 	ttk::style map TEntry -fieldbackground \
@@ -89,7 +90,7 @@ namespace eval ttk::theme::classic {
 	ttk::style configure TScrollbar -relief raised -arrowsize 12 -width 12
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
-	ttk::style configure TScale -sliderrelief raised
+	ttk::style configure TScale -sliderrelief raised -sliderborderwidth 2
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
 
 	ttk::style configure TProgressbar -background SteelBlue

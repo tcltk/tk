@@ -730,10 +730,10 @@ static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
 	Tk_Offset(MenuIndicatorElement,widthObj), "4.0m" },
     { "-indicatorheight", TK_OPTION_PIXELS,
 	Tk_Offset(MenuIndicatorElement,heightObj), "1.7m" },
-    { "-borderwidth", TK_OPTION_PIXELS,
+    { "-indicatorborderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-indicatorrelief", TK_OPTION_RELIEF,
-	Tk_Offset(MenuIndicatorElement,reliefObj),"raised" },
+	Tk_Offset(MenuIndicatorElement,reliefObj), "raised" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    Tk_Offset(MenuIndicatorElement,marginObj), "5 0" },
     { NULL, 0, 0, NULL }
@@ -1085,18 +1085,18 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
-	"30" },
-    { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
-	"15" },
-    { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
-	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
-	DEFAULT_BORDERWIDTH },
-    { "-background", TK_OPTION_BORDER, Tk_Offset(SliderElement,borderObj),
-	DEFAULT_BACKGROUND },
-    { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
-	"horizontal" },
+    { "-sliderlength", TK_OPTION_PIXELS,
+	Tk_Offset(SliderElement,lengthObj), "30" },
+    { "-sliderthickness", TK_OPTION_PIXELS,
+	Tk_Offset(SliderElement,thicknessObj), "15" },
+    { "-sliderrelief", TK_OPTION_RELIEF,
+	Tk_Offset(SliderElement,reliefObj), "raised" },
+    { "-sliderborderwidth", TK_OPTION_PIXELS,
+	Tk_Offset(SliderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+    { "-background", TK_OPTION_BORDER,
+	Tk_Offset(SliderElement,borderObj), DEFAULT_BACKGROUND },
+    { "-orient", TK_OPTION_ANY,
+	Tk_Offset(SliderElement,orientObj), "horizontal" },
     { NULL, 0, 0, NULL }
 };
 
