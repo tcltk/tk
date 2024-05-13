@@ -68,7 +68,7 @@ namespace eval ttk::theme::default {
 	    [list alternate raised]
 
 	ttk::style configure TMenubutton \
-	    -relief raised -padding "10 3"
+	    -relief raised -indicatorborderwidth 1 -padding "10 3"
 
 	ttk::style configure TEntry \
 	    -fieldbackground white -padding 1 \
@@ -101,7 +101,7 @@ namespace eval ttk::theme::default {
 	    -arrowcolor [list disabled $colors(-disabledfg)]
 
 	ttk::style configure TScale \
-	    -sliderrelief raised
+	    -sliderrelief raised -sliderborderwidth 1
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg)
 
