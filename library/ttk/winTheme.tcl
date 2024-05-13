@@ -29,7 +29,7 @@ namespace eval ttk::theme::winnative {
 	ttk::style map TButton -relief {{!disabled pressed} sunken}
 
 	ttk::style configure TEntry \
-	    -padding 2 -selectborderwidth 0 -insertwidth 1
+	    -padding 2 -insertwidth 1
 	ttk::style map TEntry \
 	    -fieldbackground \
 	    	[list readonly SystemButtonFace disabled SystemButtonFace] \
