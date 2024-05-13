@@ -33,7 +33,6 @@ namespace eval ttk::theme::clam {
 	    -troughcolor $colors(-darker) \
 	    -selectbackground $colors(-selectbg) \
 	    -selectforeground $colors(-selectfg) \
-	    -selectborderwidth 0 \
 	    -font TkDefaultFont
 
 	ttk::style map "." \

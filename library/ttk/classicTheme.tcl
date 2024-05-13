@@ -31,7 +31,6 @@ namespace eval ttk::theme::classic {
 	    -indicatorcolor	$colors(-frame) \
 	    -highlightcolor	$colors(-frame) \
 	    -highlightthickness	1 \
-	    -selectborderwidth	0 \
 	    -borderwidth	1 \
 	    -insertwidth	2 \
 	    -focuswidth		0
