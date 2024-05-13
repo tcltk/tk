@@ -3,7 +3,6 @@
  */
 
 #include "tkInt.h"
-
 #include "ttkThemeInt.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
@@ -54,31 +53,31 @@ typedef struct
  * relevant to the tab.
  *
  * PaneOptionSpecs includes additional options for child window placement
- * and is used to configure the content window.
+ * and is used to configure the pane.
  */
 static Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
-	"normal", -1,Tk_Offset(Tab,state),
+	"normal", -1, Tk_Offset(Tab,state),
 	TK_OPTION_ENUM_VAR, TabStateStrings, 0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	Tk_Offset(Tab,textObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,textObj), -1, 0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
-	Tk_Offset(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,imageObj), -1, TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, Tk_Offset(Tab,compoundObj), -1,
 	TK_OPTION_NULL_OK, ttkCompoundStrings, GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
-	Tk_Offset(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,underlineObj), -1, 0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
 static Tk_OptionSpec PaneOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-padding", "padding", "Padding", "0",
-	Tk_Offset(Tab,paddingObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,paddingObj), -1, 0, 0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-sticky", "sticky", "Sticky", "nsew",
-	Tk_Offset(Tab,stickyObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,stickyObj), -1, 0, 0,GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(TabOptionSpecs)
 };
@@ -110,10 +109,10 @@ typedef struct
 
 static Tk_OptionSpec NotebookOptionSpecs[] =
 {
-    {TK_OPTION_INT, "-width", "width", "Width", "0",
+    {TK_OPTION_PIXELS, "-width", "width", "Width", "0",
 	Tk_Offset(Notebook,notebook.widthObj),-1,
 	0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-height", "height", "Height", "0",
+    {TK_OPTION_PIXELS, "-height", "height", "Height", "0",
 	Tk_Offset(Notebook,notebook.heightObj),-1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Padding", NULL,
@@ -179,17 +178,17 @@ static void NotebookStyleOptions(
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabmargins", 0)) != 0) {
-	Ttk_GetBorderFromObj(NULL, objPtr, &nbstyle->tabMargins);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->tabMargins);
     }
 
     nbstyle->padding = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-padding", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL,nb->core.tkwin,objPtr,&nbstyle->padding);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->padding);
     }
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-mintabwidth", 0)) != 0) {
-	Tcl_GetIntFromObj(NULL, objPtr, &nbstyle->minTabWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, objPtr, &nbstyle->minTabWidth);
     }
 }
 
@@ -422,8 +421,8 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     /* Client width/height overridable by widget options:
      */
-    Tcl_GetIntFromObj(NULL, nb->notebook.widthObj,&reqWidth);
-    Tcl_GetIntFromObj(NULL, nb->notebook.heightObj,&reqHeight);
+    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.widthObj, &reqWidth);
+    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.heightObj, &reqHeight);
     if (reqWidth > 0)
 	clientWidth = reqWidth;
     if (reqHeight > 0)
@@ -508,7 +507,7 @@ static void PlaceTabs(
 	    Tcl_Obj *expandObj = Ttk_QueryOption(tabLayout,"-expand",tabState);
 
 	    if (expandObj) {
-		Ttk_GetBorderFromObj(NULL, expandObj, &expand);
+		Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, expandObj, &expand);
 	    }
 
 	    tab->parcel =
@@ -731,10 +730,10 @@ static void TabRemoved(void *managerData, int index)
 }
 
 static int TabRequest(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    TCL_UNUSED(void *), /* managerData */
+    TCL_UNUSED(int), /* index */
+    TCL_UNUSED(int), /* width */
+    TCL_UNUSED(int)) /* height */
 {
     return 1;
 }
@@ -804,7 +803,7 @@ static const int NotebookEventMask
     | PointerMotionMask
     | LeaveWindowMask
     ;
-static void NotebookEventHandler(ClientData clientData, XEvent *eventPtr)
+static void NotebookEventHandler(void *clientData, XEvent *eventPtr)
 {
     Notebook *nb = (Notebook *)clientData;
 
@@ -1170,7 +1169,8 @@ static int NotebookSelectCommand(
 	}
 	return TCL_OK;
     } else if (objc == 3) {
-	int index, status = GetTabIndex(interp, nb, objv[2], &index);
+	int index;
+	int status = GetTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
 	    SelectTab(nb, index);
 	}
