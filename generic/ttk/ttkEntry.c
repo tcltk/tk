@@ -1252,9 +1252,9 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_3DBorder selBorder = Tk_Get3DBorderFromObj(tkwin, es.selBorderObj);
 	int selStartX = EntryCharPosition(entryPtr, selFirst);
 	int selEndX = EntryCharPosition(entryPtr, selLast);
-	int borderWidth = 1;
+	int borderWidth = 0;
 
-	Tcl_GetIntFromObj(NULL, es.selBorderWidthObj, &borderWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, es.selBorderWidthObj, &borderWidth);
 
 	if (selBorder) {
 	    Tk_Fill3DRectangle(tkwin, d, selBorder,
@@ -1288,7 +1288,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	    cursorHeight = entryPtr->entry.layoutHeight,
 	    cursorWidth = 1;
 
-	Tcl_GetIntFromObj(NULL,es.insertWidthObj,&cursorWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, es.insertWidthObj, &cursorWidth);
 	if (cursorWidth <= 0) {
 	    cursorWidth = 1;
 	}
