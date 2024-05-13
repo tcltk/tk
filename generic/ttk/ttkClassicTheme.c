@@ -396,10 +396,10 @@ static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
 	offsetof(MenuIndicatorElement,widthObj), "4.0m" },
     { "-indicatorheight", TK_OPTION_PIXELS,
 	offsetof(MenuIndicatorElement,heightObj), "1.7m" },
-    { "-borderwidth", TK_OPTION_PIXELS,
+    { "-indicatorborderwidth", TK_OPTION_PIXELS,
 	offsetof(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-indicatorrelief", TK_OPTION_RELIEF,
-	offsetof(MenuIndicatorElement,reliefObj),"raised" },
+	offsetof(MenuIndicatorElement,reliefObj), "raised" },
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(MenuIndicatorElement,marginObj), "5 0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -418,7 +418,7 @@ static void MenuIndicatorElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, mi->widthObj, widthPtr);
     Tk_GetPixelsFromObj(NULL, tkwin, mi->heightObj, heightPtr);
-    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj, &margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, mi->marginObj, &margins);
     *widthPtr += Ttk_PaddingWidth(margins);
     *heightPtr += Ttk_PaddingHeight(margins);
 }
@@ -438,9 +438,7 @@ static void MenuIndicatorElementDraw(
 
     Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj,&margins);
     b = Ttk_PadBox(b, margins);
-#if 0
     Tk_GetPixelsFromObj(NULL, tkwin, mi->borderWidthObj, &borderWidth);
-#endif
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
 	    borderWidth, TK_RELIEF_RAISED);
 }
@@ -568,18 +566,18 @@ typedef struct {
 } SliderElement;
 
 static const Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
-	"30" },
-    { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
-	"15" },
-    { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),
-	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SliderElement,borderWidthObj),
-	DEFAULT_BORDERWIDTH },
-    { "-background", TK_OPTION_BORDER, offsetof(SliderElement,borderObj),
-	DEFAULT_BACKGROUND },
-    { "-orient", TK_OPTION_ANY, offsetof(SliderElement,orientObj),
-	"horizontal" },
+    { "-sliderlength", TK_OPTION_PIXELS,
+	offsetof(SliderElement,lengthObj), "30" },
+    { "-sliderthickness",TK_OPTION_PIXELS,
+	offsetof(SliderElement,thicknessObj), "15" },
+    { "-sliderrelief", TK_OPTION_RELIEF,
+	offsetof(SliderElement,reliefObj), "raised" },
+    { "-sliderborderwidth", TK_OPTION_PIXELS,
+	offsetof(SliderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+    { "-background", TK_OPTION_BORDER,
+	offsetof(SliderElement,borderObj), DEFAULT_BACKGROUND },
+    { "-orient", TK_OPTION_ANY,
+	offsetof(SliderElement,orientObj), "horizontal" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -626,11 +624,9 @@ static void SliderElementDraw(
     Ttk_Orient orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
-    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
-#if 0
     Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
-#endif
+    TtkGetOrientFromObj(NULL, slider->orientObj, &orient);
 
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height,
