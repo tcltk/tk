@@ -6,7 +6,7 @@
  *	NOTE: the current implementation is for TkTextTagSet, so in general these
  *	functions are not modifying the arguments, except if this is expected.
  *
- * Copyright (c) 2015-2017 Gregor Cramer
+ * Copyright © 2015-2017 Gregor Cramer
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
