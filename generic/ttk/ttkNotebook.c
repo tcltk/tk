@@ -66,7 +66,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
 	offsetof(Tab,imageObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,ttkCompoundStrings,GEOMETRY_CHANGED },
+	TK_OPTION_NULL_OK, ttkCompoundStrings, GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
 	TTK_OPTION_UNDERLINE_DEF(Tab, underlineObj), GEOMETRY_CHANGED},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
@@ -178,18 +178,17 @@ static void NotebookStyleOptions(
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabmargins", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr,
-	    &nbstyle->tabMargins);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->tabMargins);
     }
 
     nbstyle->padding = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-padding", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr, &nbstyle->padding);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->padding);
     }
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-mintabwidth", 0)) != 0) {
-	Tcl_GetIntFromObj(NULL, objPtr, &nbstyle->minTabWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, objPtr, &nbstyle->minTabWidth);
     }
 }
 
@@ -422,8 +421,8 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     /* Client width/height overridable by widget options:
      */
-    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.widthObj,&reqWidth);
-    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.heightObj,&reqHeight);
+    Tk_GetPixelsFromObj(NULL, nbwin, nb->notebook.widthObj, &reqWidth);
+    Tk_GetPixelsFromObj(NULL, nbwin, nb->notebook.heightObj, &reqHeight);
     if (reqWidth > 0)
 	clientWidth = reqWidth;
     if (reqHeight > 0)
@@ -1432,11 +1431,8 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
-MODULE_SCOPE
-void TtkNotebook_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE
-void TtkNotebook_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkNotebook_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 

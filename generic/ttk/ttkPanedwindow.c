@@ -733,11 +733,10 @@ static int PanedIdentifyCommand(
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
-	|| (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
-	    sizeof(char *), "option", 0, &what) != TCL_OK)
-    ) {
+    if (Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
+	    || (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
+	    sizeof(char *), "option", 0, &what) != TCL_OK)) {
 	return TCL_ERROR;
     }
 
@@ -929,7 +928,7 @@ typedef struct {
 } SashElement;
 
 static const Ttk_ElementOptionSpec SashElementOptions[] = {
-    { "-sashthickness", TK_OPTION_INT,
+    { "-sashthickness", TK_OPTION_PIXELS,
 	    offsetof(SashElement,thicknessObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -937,7 +936,7 @@ static const Ttk_ElementOptionSpec SashElementOptions[] = {
 static void SashElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -945,7 +944,7 @@ static void SashElementSize(
     SashElement *sash = (SashElement *)elementRecord;
     int thickness = DEFAULT_SASH_THICKNESS;
 
-    Tcl_GetIntFromObj(NULL, sash->thicknessObj, &thickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, sash->thicknessObj, &thickness);
     *widthPtr = *heightPtr = thickness;
 }
 
@@ -972,11 +971,9 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-MODULE_SCOPE
-void TtkPanedwindow_Init(Tcl_Interp *interp);
 
-MODULE_SCOPE
-void TtkPanedwindow_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
     RegisterWidget(interp, "ttk::panedwindow", &PanedWidgetSpec);

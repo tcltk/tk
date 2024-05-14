@@ -90,7 +90,6 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -foreground 	$colors(-foreground) \
 	    -troughcolor 	$colors(-darker) \
 	    -font 		TkDefaultFont \
-	    -selectborderwidth	0 \
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
