@@ -323,6 +323,8 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 Returns a description of the specified \fIcomponent\fR
 under the point given by \fIx\fR and \fIy\fR,
 or the empty string if no such \fIcomponent\fR is present at that position.
+The values \fIx\fR and \fIy\fR may have any of the forms acceptable to
+\fBTk_GetPixels\fR.
 The following subcommands are supported:
 .RS
 .TP
@@ -715,14 +717,20 @@ are:
 .br
 \fB\-indent\fP \fIamount\fP
 .RS
-Specifies how many pixels items are indented from their parents. Defaults to 20.
+Specifies how far items are indented from their parents. Defaults to 20 pixels.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .br
-\fB\-columnseparatorwidth\fP \fIpixels\fP
-.br
-\fB\-rowheight\fP \fIpixels\fP
+\fB\-columnseparatorwidth\fP \fIamount\fP
 .RS
-This is the standard height for an item.
+Specifies the width of column separators. Defaults to 1 pixel.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
+.RE
+.br
+\fB\-rowheight\fP \fIamount\fP
+.RS
+This is the standard height for an item. Defaults to 20 pixels.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 If \fB\-rowheight\fP is not set by the style, it is set by measuring an
 item and a cell layout with the style's settings.
 This thus picks up the font and

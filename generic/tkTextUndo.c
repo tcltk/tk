@@ -3,7 +3,7 @@
  *
  *	This module provides the implementation of an undo stack.
  *
- * Copyright (c) 2015-2017 Gregor Cramer.
+ * Copyright © 2015-2017 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

@@ -466,11 +466,8 @@ error:
     return TCL_ERROR;
 }
 
-MODULE_SCOPE
-void TtkImage_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE
-void TtkImage_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkImage_Init(Tcl_Interp *interp)
 {
     Ttk_RegisterElementFactory(interp, "image", Ttk_CreateImageElement, NULL);
 }

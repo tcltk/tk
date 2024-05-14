@@ -21,7 +21,7 @@
  *
  * 4. Moreover our stack supports to limit the size, not only the depth.
  *
- * Copyright (c) 2015-2017 Gregor Cramer.
+ * Copyright © 2015-2017 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

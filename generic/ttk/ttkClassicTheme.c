@@ -19,6 +19,7 @@
 typedef struct {
     Tcl_Obj	*highlightColorObj;
     Tcl_Obj	*highlightThicknessObj;
+    Tcl_Obj	*defaultStateObj;
 } HighlightElement;
 
 static const Ttk_ElementOptionSpec HighlightElementOptions[] = {
@@ -26,13 +27,15 @@ static const Ttk_ElementOptionSpec HighlightElementOptions[] = {
 	offsetof(HighlightElement,highlightColorObj), DEFAULT_BACKGROUND },
     { "-highlightthickness",TK_OPTION_PIXELS,
 	offsetof(HighlightElement,highlightThicknessObj), "0" },
+    { "-default", TK_OPTION_ANY,
+	offsetof(HighlightElement,defaultStateObj), "disabled" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void HighlightElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -40,7 +43,7 @@ static void HighlightElementSize(
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
 
-    Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     *paddingPtr = Ttk_UniformPadding((short)highlightThickness);
 }
 
@@ -55,11 +58,18 @@ static void HighlightElementDraw(
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
     XColor *highlightColor = Tk_GetColorFromObj(tkwin, hl->highlightColorObj);
+    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
-    Tcl_GetIntFromObj(NULL,hl->highlightThicknessObj,&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     if (highlightColor && highlightThickness > 0) {
+	Ttk_GetButtonDefaultStateFromObj(NULL, hl->defaultStateObj,
+	    &defaultState);
 	GC gc = Tk_GCForColor(highlightColor, d);
-	Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
+	if (defaultState == TTK_BUTTON_DEFAULT_NORMAL) {
+	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d, 5);
+	} else {
+	    Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
+	}
     }
 }
 
@@ -105,7 +115,7 @@ static const Ttk_ElementOptionSpec ButtonBorderElementOptions[] =
 static void ButtonBorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -114,7 +124,7 @@ static void ButtonBorderElementSize(
     Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
     int borderWidth = 0;
 
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
@@ -146,7 +156,7 @@ static void ButtonBorderElementDraw(
      * Get option values.
      */
     border = Tk_Get3DBorderFromObj(tkwin, bd->borderObj);
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
@@ -270,7 +280,7 @@ static void SquareIndicatorElementDraw(
 
     interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
     border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->borderWidthObj,&borderWidth);
     Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
     Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
 
@@ -322,7 +332,7 @@ static void DiamondIndicatorElementDraw(
 
     interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
     border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
     Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
 
@@ -386,10 +396,10 @@ static const Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
 	offsetof(MenuIndicatorElement,widthObj), "4.0m" },
     { "-indicatorheight", TK_OPTION_PIXELS,
 	offsetof(MenuIndicatorElement,heightObj), "1.7m" },
-    { "-borderwidth", TK_OPTION_PIXELS,
+    { "-indicatorborderwidth", TK_OPTION_PIXELS,
 	offsetof(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-indicatorrelief", TK_OPTION_RELIEF,
-	offsetof(MenuIndicatorElement,reliefObj),"raised" },
+	offsetof(MenuIndicatorElement,reliefObj), "raised" },
     { "-indicatormargin", TK_OPTION_STRING,
 	offsetof(MenuIndicatorElement,marginObj), "5 0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -408,7 +418,7 @@ static void MenuIndicatorElementSize(
 
     Tk_GetPixelsFromObj(NULL, tkwin, mi->widthObj, widthPtr);
     Tk_GetPixelsFromObj(NULL, tkwin, mi->heightObj, heightPtr);
-    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj, &margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, mi->marginObj, &margins);
     *widthPtr += Ttk_PaddingWidth(margins);
     *heightPtr += Ttk_PaddingHeight(margins);
 }
@@ -556,18 +566,18 @@ typedef struct {
 } SliderElement;
 
 static const Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-sliderlength", TK_OPTION_PIXELS, offsetof(SliderElement,lengthObj),
-	"30" },
-    { "-sliderthickness",TK_OPTION_PIXELS, offsetof(SliderElement,thicknessObj),
-	"15" },
-    { "-sliderrelief", TK_OPTION_RELIEF, offsetof(SliderElement,reliefObj),
-	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, offsetof(SliderElement,borderWidthObj),
-	DEFAULT_BORDERWIDTH },
-    { "-background", TK_OPTION_BORDER, offsetof(SliderElement,borderObj),
-	DEFAULT_BACKGROUND },
-    { "-orient", TK_OPTION_ANY, offsetof(SliderElement,orientObj),
-	"horizontal" },
+    { "-sliderlength", TK_OPTION_PIXELS,
+	offsetof(SliderElement,lengthObj), "30" },
+    { "-sliderthickness",TK_OPTION_PIXELS,
+	offsetof(SliderElement,thicknessObj), "15" },
+    { "-sliderrelief", TK_OPTION_RELIEF,
+	offsetof(SliderElement,reliefObj), "raised" },
+    { "-sliderborderwidth", TK_OPTION_PIXELS,
+	offsetof(SliderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+    { "-background", TK_OPTION_BORDER,
+	offsetof(SliderElement,borderObj), DEFAULT_BACKGROUND },
+    { "-orient", TK_OPTION_ANY,
+	offsetof(SliderElement,orientObj), "horizontal" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -614,9 +624,9 @@ static void SliderElementDraw(
     Ttk_Orient orient;
 
     border = Tk_Get3DBorderFromObj(tkwin, slider->borderObj);
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
-    Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, slider->reliefObj, &relief);
+    Tk_GetPixelsFromObj(NULL, tkwin, slider->borderWidthObj, &borderWidth);
+    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
 
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height,
@@ -826,25 +836,51 @@ TTK_LAYOUT("TEntry",
 	    TTK_GROUP("Entry.padding", TTK_FILL_BOTH,
 	        TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
 
-/* Notebook tabs -- omit focus ring */
-TTK_LAYOUT("Tab",
-    TTK_GROUP("Notebook.tab", TTK_FILL_BOTH,
-	TTK_GROUP("Notebook.padding", TTK_FILL_BOTH,
-	    TTK_NODE("Notebook.label", TTK_FILL_BOTH))))
+/* "classic" combobox, includes highlight border */
+TTK_LAYOUT("TCombobox",
+    TTK_GROUP("Combobox.highlight", TTK_FILL_BOTH,
+        TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
+	    TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
+	    TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
+	        TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
+
+/* "classic" spinbox, includes highlight border */
+TTK_LAYOUT("TSpinbox",
+    TTK_GROUP("Spinbox.highlight", TTK_FILL_BOTH,
+        TTK_GROUP("Spinbox.field", TTK_FILL_BOTH|TTK_FILL_X,
+	    TTK_GROUP("null", TTK_PACK_RIGHT,
+		TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
+		TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
+	    TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
+		TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))))
+
+/* "classic" scale, includes highlight border */
+TTK_LAYOUT("Vertical.TScale",
+    TTK_GROUP("Vertical.Scale.highlight", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
+	    TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
+
+TTK_LAYOUT("Horizontal.TScale",
+    TTK_GROUP("Horizontal.Scale.highlight", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+	    TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
+
+/* put highlight border around treeview */
+TTK_LAYOUT("Treeview",
+    TTK_GROUP("Treeview.highlight", TTK_FILL_BOTH,
+	TTK_GROUP("Treeview.field", TTK_FILL_BOTH|TTK_BORDER,
+	    TTK_GROUP("Treeview.padding", TTK_FILL_BOTH,
+		TTK_NODE("Treeview.treearea", TTK_FILL_BOTH)))))
 
 TTK_END_LAYOUT_TABLE
-
-/* POSSIBLY: include Scale layouts w/focus border
- */
 
 /*------------------------------------------------------------------------
  * TtkClassicTheme_Init --
  * 	Install classic theme.
  */
 
-MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int
+TtkClassicTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "classic", NULL);
 
