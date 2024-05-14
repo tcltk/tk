@@ -209,7 +209,7 @@ static void SquareElementSize(
     SquareElement *square = (SquareElement *)elementRecord;
     int borderWidth = 0;
 
-    Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, square->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, square->widthObj, widthPtr);
     Tk_GetPixelsFromObj(NULL, tkwin, square->heightObj, heightPtr);
@@ -232,7 +232,7 @@ static void SquareElementDraw(
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
 
     foreground = Tk_Get3DBorderFromObj(tkwin, square->foregroundObj);
-    Tcl_GetIntFromObj(NULL, square->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, square->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, square->reliefObj, &relief);
 
     Tk_Fill3DRectangle(tkwin, d, foreground,
@@ -288,9 +288,6 @@ TTK_END_LAYOUT
  * code, no reference is made to any particular elements. The programmer is
  * free to specify a new style using completely different elements.
  */
-
-MODULE_SCOPE int
-TtkSquareWidget_Init(Tcl_Interp *interp);
 
 /* public */ MODULE_SCOPE int
 TtkSquareWidget_Init(Tcl_Interp *interp)

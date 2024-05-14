@@ -2775,8 +2775,8 @@ static int TreeviewHorribleIdentify(
 
     /* ASSERT: objc == 4 */
 
-    if (Tcl_GetIntFromObj(interp, objv[2], &x) != TCL_OK
-	    || Tcl_GetIntFromObj(interp, objv[3], &y) != TCL_OK) {
+    if (Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[2], &x) != TCL_OK
+	    || Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[3], &y) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -2865,8 +2865,8 @@ static int TreeviewIdentifyCommand(
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], submethodStrings,
 		sizeof(char *), "command", TCL_EXACT, &submethod) != TCL_OK
-        || Tcl_GetIntFromObj(interp, objv[3], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[4], &y) != TCL_OK
+        || Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[3], &x) != TCL_OK
+	|| Tk_GetPixelsFromObj(interp, tv->core.tkwin, objv[4], &y) != TCL_OK
     ) {
 	return TCL_ERROR;
     }
@@ -4615,11 +4615,8 @@ static const Ttk_ElementSpec RowElementSpec = {
  * +++ Initialisation.
  */
 
-MODULE_SCOPE
-void TtkTreeview_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE
-void TtkTreeview_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkTreeview_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme = Ttk_GetDefaultTheme(interp);
 
