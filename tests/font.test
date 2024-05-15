@@ -2364,6 +2364,13 @@ test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Fo
 } -cleanup {
     tk scaling $oldscale
 } -result 12
+test font-44.3 {font create with display scaling not 100% - bug 8162e9b7a9} -body {
+    set font1 TkDefaultFont
+    set font2 [font create Font2 {*}[font actual $font1]]
+    expr {[font actual $font1 -size] == [font actual $font2 -size]}
+} -cleanup {
+    font delete $font2
+} -result 1
 
 
 test font-45.1 {TkFontGetAliasList: no match} -body {
