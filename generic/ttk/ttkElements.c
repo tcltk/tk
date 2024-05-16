@@ -247,6 +247,7 @@ static void FieldElementDraw(
 	    int x1 = b.x, x2 = b.x + b.width - 1;
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
+	    GC bgGC;
 
 	    /*
 	     * Draw the outer rounded rectangle
@@ -265,7 +266,7 @@ static void FieldElementDraw(
 	    /*
 	     * Fill the inner rectangle
 	     */
-	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
 	} else {
 	    /*
@@ -459,7 +460,7 @@ typedef struct {
 
 static Ttk_ElementOptionSpec SeparatorElementOptions[] = {
     { "-orient", TK_OPTION_ANY,
-	Tk_Offset(SeparatorElement,orientObj), "horizontal" },
+	Tk_Offset(SeparatorElement, orientObj), "horizontal" },
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(SeparatorElement,borderObj), DEFAULT_BACKGROUND },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
@@ -516,6 +517,7 @@ static void GeneralSeparatorElementDraw(
 {
     SeparatorElement *separator = (SeparatorElement *)elementRecord;
     int orient;
+
     Ttk_GetOrientFromObj(NULL, separator->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
@@ -695,7 +697,7 @@ static void DiamondIndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    IndicatorElement *indicator = elementRecord;
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
     int diameter = 0;
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
