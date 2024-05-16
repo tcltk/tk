@@ -704,6 +704,8 @@ typedef struct TkMainInfo {
 #endif
     unsigned int ttkNbTabsStickBit;
     				/* Information used by ttk::notebook. */
+    int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
+    				/* Information used by ttk::scale. */
 } TkMainInfo;
 
 /*

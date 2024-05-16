@@ -66,7 +66,8 @@ static void HighlightElementDraw(
 	    &defaultState);
 	GC gc = Tk_GCForColor(highlightColor, d);
 	if (defaultState == TTK_BUTTON_DEFAULT_NORMAL) {
-	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d, 5);
+	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d,
+		round(5 * TkScalingLevel(tkwin)));
 	} else {
 	    Tk_DrawFocusHighlight(tkwin, gc, highlightThickness, d);
 	}
@@ -128,7 +129,7 @@ static void ButtonBorderElementSize(
     Ttk_GetButtonDefaultStateFromObj(NULL, bd->defaultStateObj, &defaultState);
 
     if (defaultState != TTK_BUTTON_DEFAULT_DISABLED) {
-	borderWidth += 5;
+	borderWidth += round(5 * TkScalingLevel(tkwin));
     }
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
@@ -168,7 +169,7 @@ static void ButtonBorderElementDraw(
 	case TTK_BUTTON_DEFAULT_DISABLED :
 	    break;
 	case TTK_BUTTON_DEFAULT_NORMAL :
-	    inset += 5;
+	    inset += round(5 * TkScalingLevel(tkwin));
 	    break;
 	case TTK_BUTTON_DEFAULT_ACTIVE :
             Tk_Draw3DRectangle(tkwin, d, border,
