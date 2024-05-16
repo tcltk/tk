@@ -189,8 +189,8 @@ GetTkFontAttributes(
 
     (void) XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
     if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
-	    &ptsize) == XftResultMatch) {
-	size = -ptsize;
+	    &pxsize) == XftResultMatch) {
+	size = -pxsize;
     } else if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
 	    &ptsize) == XftResultMatch) {
 	size = ptsize;
