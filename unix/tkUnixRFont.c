@@ -184,8 +184,8 @@ GetTkFontAttributes(
 {
     const char *family = "Unknown";
     const char *const *familyPtr = &family;
-    int weight, slant, pxsize;
-    double size, ptsize;
+    int weight, slant;
+    double size, ptsize, pxsize;
 
     (void) XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
     if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
@@ -194,9 +194,9 @@ GetTkFontAttributes(
     } else if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
 	    &ptsize) == XftResultMatch) {
 	size = ptsize;
-    } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+    } else if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
 	    &pxsize) == XftResultMatch) {
-	size = (double)-pxsize;
+	size = -pxsize;
     } else {
 	size = 12.0;
     }
