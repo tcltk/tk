@@ -4359,7 +4359,7 @@ static const Ttk_Ensemble TreeviewTagCommands[] = {
  */
 static const Ttk_Ensemble TreeviewCommands[] = {
     { "bbox",  		TreeviewBBoxCommand,0 },
-    { "cellselection" ,	TreeviewCellSelectionCommand,0 },
+    { "cellselection",	TreeviewCellSelectionCommand,0 },
     { "children",	TreeviewChildrenCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
     { "column", 	TreeviewColumnCommand,0 },
@@ -4381,7 +4381,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "parent", 	TreeviewParentCommand,0 },
     { "prev", 		TreeviewPrevCommand,0 },
     { "see", 		TreeviewSeeCommand,0 },
-    { "selection" ,	TreeviewSelectionCommand,0 },
+    { "selection",	TreeviewSelectionCommand,0 },
     { "set",  		TreeviewSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
