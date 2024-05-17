@@ -31,8 +31,7 @@ namespace eval ttk::theme::default {
 	    -selectbackground	$colors(-selectbg) \
 	    -selectforeground	$colors(-selectfg) \
 	    -insertwidth 	1 \
-	    -indicatordiameter	10 \
-	    ;
+	    -indicatordiameter	10
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)]
@@ -116,7 +115,7 @@ namespace eval ttk::theme::default {
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
-	    -foreground $colors(-text) ;
+	    -foreground $colors(-text)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
 				selected $colors(-selectbg)] \
