@@ -387,6 +387,8 @@ it is used in some themes for widgets that
 provide distinct visual feedback for
 the active widget in addition to the active element
 within the widget.
+.IP \fBuser1\fR-\fBuser6\fR
+Freely usable for other purposes
 .PP
 A \fIstate specification\fR or \fIstateSpec\fR is a list
 of state names, optionally prefixed with an exclamation point (!)
