@@ -184,19 +184,19 @@ GetTkFontAttributes(
 {
     const char *family = "Unknown";
     const char *const *familyPtr = &family;
-    int weight, slant, pxsize;
-    double size, ptsize;
+    double ptSize, dblPxSize, size;
+    int intPxSize, weight, slant;
 
     (void) XftPatternGetString(ftFont->pattern, XFT_FAMILY, 0, familyPtr);
-    if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
-	    &ptsize) == XftResultMatch) {
-	size = -ptsize;
-    } else if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
-	    &ptsize) == XftResultMatch) {
-	size = ptsize;
+    if (XftPatternGetDouble(ftFont->pattern, XFT_SIZE, 0,
+	    &ptSize) == XftResultMatch) {
+	size = ptSize;
+    } else if (XftPatternGetDouble(ftFont->pattern, XFT_PIXEL_SIZE, 0,
+	    &dblPxSize) == XftResultMatch) {
+	size = -dblPxSize;
     } else if (XftPatternGetInteger(ftFont->pattern, XFT_PIXEL_SIZE, 0,
-	    &pxsize) == XftResultMatch) {
-	size = (double)-pxsize;
+	    &intPxSize) == XftResultMatch) {
+	size = (double)-intPxSize;
     } else {
 	size = 12.0;
     }
@@ -215,7 +215,7 @@ GetTkFontAttributes(
 #endif /* DEBUG_FONTSEL */
 
     faPtr->family = Tk_GetUid(family);
-    faPtr->size = TkFontGetPoints(tkwin, size);
+    faPtr->size = size;
     faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant = (slant > XFT_SLANT_ROMAN) ? TK_FS_ITALIC : TK_FS_ROMAN;
     faPtr->underline = 0;
