@@ -13,11 +13,10 @@ namespace eval ttk::theme::winnative {
 	    -fieldbackground SystemWindow \
 	    -insertcolor SystemWindowText \
 	    -troughcolor SystemScrollbar \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
-	ttk::style map "." -foreground [list disabled SystemGrayText] ;
-        ttk::style map "." -embossed [list disabled 1] ;
+	ttk::style map "." -foreground [list disabled SystemGrayText]
+        ttk::style map "." -embossed [list disabled 1]
 
 	ttk::style configure TButton \
 	    -anchor center -width -11 -relief raised -shiftrelief 1
@@ -34,8 +33,7 @@ namespace eval ttk::theme::winnative {
 	    -fieldbackground \
 	    	[list readonly SystemButtonFace disabled SystemButtonFace] \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 
 	ttk::style configure TCombobox -padding 2
 	ttk::style map TCombobox \
@@ -48,8 +46,7 @@ namespace eval ttk::theme::winnative {
 		disabled		SystemGrayText \
 	    	{readonly focus}	SystemHighlightText \
 	    ] \
-	    -focusfill	[list {readonly focus} SystemHighlight] \
-	    ;
+	    -focusfill	[list {readonly focus} SystemHighlight]
 
 	ttk::style element create ComboboxPopdownFrame.border from default
 	ttk::style configure ComboboxPopdownFrame \
@@ -79,6 +76,6 @@ namespace eval ttk::theme::winnative {
 				selected SystemHighlightText]
 
         ttk::style configure TProgressbar \
-	    -background SystemHighlight -borderwidth 0 ;
+	    -background SystemHighlight -borderwidth 0
     }
 }
