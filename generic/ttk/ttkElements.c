@@ -1212,8 +1212,6 @@ static void TroughElementSize(
     }
 }
 
-static Ttk_Box troughInnerBox;
-
 static void TroughElementDraw(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord, Tk_Window tkwin,
@@ -1224,6 +1222,7 @@ static void TroughElementDraw(
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
     int borderWidth = 1, grooveWidth = -1, relief = TK_RELIEF_SUNKEN;
     Ttk_Orient orient;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->grooveWidthObj, &grooveWidth);
@@ -1239,10 +1238,15 @@ static void TroughElementDraw(
 	    b.width = grooveWidth;
         }
 
-	troughInnerBox.x = b.x + borderWidth;
-	troughInnerBox.y = b.y + borderWidth;
-	troughInnerBox.width =  b.width -  2*borderWidth;
-	troughInnerBox.height = b.height - 2*borderWidth;
+	/*
+	 * Save the data of the trough's inner box for later
+	 */
+	if (mainInfoPtr != NULL) {
+	    mainInfoPtr->troughInnerX = b.x + borderWidth;
+	    mainInfoPtr->troughInnerY = b.y + borderWidth;
+	    mainInfoPtr->troughInnerWidth =  b.width -  2*borderWidth;
+	    mainInfoPtr->troughInnerHeight = b.height - 2*borderWidth;
+	}
     }
 
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -1385,6 +1389,7 @@ static void SliderElementDraw(
 {
     double scalingLevel = TkScalingLevel(tkwin);
     int dim = SLIDER_DIM * scalingLevel;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     SliderElement *slider = (SliderElement *)elementRecord;
     Ttk_Orient orient;
@@ -1426,16 +1431,20 @@ static void SliderElementDraw(
      * Fill the thin trough area preceding the
      * slider's center with the inner color
      */
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
-    switch (orient) {
-	case TTK_ORIENT_HORIZONTAL:
-	    XFillRectangle(disp, d, gc, troughInnerBox.x, troughInnerBox.y,
-		    b.x + dim/2 - 1, troughInnerBox.height);
-	    break;
-	case TTK_ORIENT_VERTICAL:
-	    XFillRectangle(disp, d, gc, troughInnerBox.x, troughInnerBox.y,
-		    troughInnerBox.width, b.y + dim/2 - 1);
-	    break;
+    if (mainInfoPtr != NULL) {
+	Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
+	switch (orient) {
+	    case TTK_ORIENT_HORIZONTAL:
+		XFillRectangle(disp, d, gc,
+			mainInfoPtr->troughInnerX, mainInfoPtr->troughInnerY,
+			b.x + dim/2 - 1, mainInfoPtr->troughInnerHeight);
+		break;
+	    case TTK_ORIENT_VERTICAL:
+		XFillRectangle(disp, d, gc,
+			mainInfoPtr->troughInnerX, mainInfoPtr->troughInnerY,
+			mainInfoPtr->troughInnerWidth, b.y + dim/2 - 1);
+		break;
+	}
     }
 
     /*
