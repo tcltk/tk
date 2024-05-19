@@ -897,12 +897,15 @@ TkWmUnmapWindow(
  *
  *	This procedure is invoked when a top-level window is about to be
  *	deleted. It cleans up the wm-related data structures for the window.
+ *      If the dead window contains the pointer, TkUpdatePointer is called
+ *      to tell Tk which window will be the new pointer window. 
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The WmInfo structure for winPtr gets freed up.
+ *	The WmInfo structure for winPtr gets freed.  Tk's cached pointer
+ *      window may change.
  *
  *----------------------------------------------------------------------
  */
@@ -913,9 +916,6 @@ TkWmDeadWindow(
 {
     TkWindow *winPtr2;
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
-    if (wmPtr == NULL) {
-	return;
-    }
     TKWindow *deadNSWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
 	Tk_WindowId(winPtr));
     if (deadNSWindow == NULL) {
@@ -2037,7 +2037,7 @@ WmForgetCmd(
 	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
 
-	TkWmDeadWindow(winPtr);
+	//TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
 
         /*

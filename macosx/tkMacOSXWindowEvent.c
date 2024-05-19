@@ -74,8 +74,6 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	NSView *view = [w contentView];
 	NSPoint viewLocation = [view convertPoint:location fromView:nil];
 	if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
-	    fprintf(stderr, "windowActivation calling TkUpdatePointer\n");
-	    fflush(stderr);
 	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
 	}
     }
@@ -252,15 +250,15 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     }
 }
 
-- (void) windowMapped: (NSNotification *) notification
-{
-    NSWindow *w = [notification object];
-    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+//- (void) windowMapped: (NSNotification *) notification
+//{
+//    NSWindow *w = [notification object];
+//    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-    if (winPtr) {
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-    }
-}
+//    if (winPtr) {
+//    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+//    }
+//}
 
 - (void) windowLiveResize: (NSNotification *) notification
 {
@@ -306,7 +304,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     observe(NSWindowDidResizeNotification, windowBoundsChanged:);
     observe(NSWindowDidDeminiaturizeNotification, windowExpanded:);
     observe(NSWindowDidMiniaturizeNotification, windowCollapsed:);
-    observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
+    //observe(NSWindowWillOrderOnScreenNotification, windowMapped:);
     observe(NSWindowDidOrderOnScreenNotification, windowBecameVisible:);
     observe(NSWindowWillStartLiveResizeNotification, windowLiveResize:);
     observe(NSWindowDidEndLiveResizeNotification, windowLiveResize:);
