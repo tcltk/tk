@@ -30,7 +30,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "ttk/ttkTheme.h"
+#include "ttk/ttkThemeInt.h"
 #include "ttkMacOSXTheme.h"
 #include "tkColor.h"
 #include <math.h>
@@ -1488,11 +1488,11 @@ DrawTab(
 
     CGContextClipToRect(context, bounds);
     if (OSVersion < 110000 || !(state & TTK_STATE_SELECTED)) {
-	if (!(state & TTK_STATE_FIRST_TAB)) {
+	if (!(state & TTK_STATE_FIRST)) {
 	    bounds.origin.x -= 10;
 	    bounds.size.width += 10;
 	}
-	if (!(state & TTK_STATE_LAST_TAB)) {
+	if (!(state & TTK_STATE_LAST)) {
 	    bounds.size.width += 10;
 	}
     }
@@ -1510,7 +1510,7 @@ DrawTab(
          * not first.
          */
 
-	if (!(state & TTK_STATE_FIRST_TAB)) {
+	if (!(state & TTK_STATE_FIRST)) {
 	    CGContextSaveGState(context);
 	    strokeColor = CGColorFromGray(darkTabSeparator);
 	    CGContextSetStrokeColorWithColor(context, strokeColor);
@@ -1530,7 +1530,7 @@ DrawTab(
 	 * (The selected tab is always drawn last.)
 	 */
 
-	if ((state & TTK_STATE_FIRST_TAB) && !(state & TTK_STATE_LAST_TAB)) {
+	if ((state & TTK_STATE_FIRST) && !(state & TTK_STATE_LAST)) {
 	    bounds.size.width += 1;
 	}
 	if (!(state & TTK_STATE_BACKGROUND)) {
@@ -1559,12 +1559,12 @@ DrawTab11(
 	 * rounded rectangle behind the entire tab bar.
 	 */
 
-	if (!(state & TTK_STATE_FIRST_TAB)) {
+	if (!(state & TTK_STATE_FIRST)) {
 	    clipRect.origin.x -= 5;
 	    bounds.origin.x -= 5;
 	    bounds.size.width += 5;
 	}
-	if (!(state & TTK_STATE_LAST_TAB)) {
+	if (!(state & TTK_STATE_LAST)) {
 	    clipRect.size.width += 5;
 	    bounds.size.width += 5;
 	}
@@ -1874,15 +1874,15 @@ static const Ttk_StateTable TabStyleTable[] = {
     {kThemeTabNonFront, 0, 0}
 };
 static const Ttk_StateTable TabAdornmentTable[] = {
-    {kHIThemeTabAdornmentNone, TTK_STATE_FIRST_TAB | TTK_STATE_LAST_TAB, 0},
-    {kHIThemeTabAdornmentTrailingSeparator, TTK_STATE_FIRST_TAB, 0},
-    {kHIThemeTabAdornmentNone, TTK_STATE_LAST_TAB, 0},
+    {kHIThemeTabAdornmentNone, TTK_STATE_FIRST | TTK_STATE_LAST, 0},
+    {kHIThemeTabAdornmentTrailingSeparator, TTK_STATE_FIRST, 0},
+    {kHIThemeTabAdornmentNone, TTK_STATE_LAST, 0},
     {kHIThemeTabAdornmentTrailingSeparator, 0, 0},
 };
 static const Ttk_StateTable TabPositionTable[] = {
-    {kHIThemeTabPositionOnly, TTK_STATE_FIRST_TAB | TTK_STATE_LAST_TAB, 0},
-    {kHIThemeTabPositionFirst, TTK_STATE_FIRST_TAB, 0},
-    {kHIThemeTabPositionLast, TTK_STATE_LAST_TAB, 0},
+    {kHIThemeTabPositionOnly, TTK_STATE_FIRST | TTK_STATE_LAST, 0},
+    {kHIThemeTabPositionFirst, TTK_STATE_FIRST, 0},
+    {kHIThemeTabPositionLast, TTK_STATE_LAST, 0},
     {kHIThemeTabPositionMiddle, 0, 0},
 };
 
@@ -3321,10 +3321,8 @@ static Ttk_ElementSpec TreeHeaderElementSpec = {
  * +++ Disclosure triangles --
  */
 
-#define TTK_TREEVIEW_STATE_OPEN         TTK_STATE_USER1
-#define TTK_TREEVIEW_STATE_LEAF         TTK_STATE_USER2
 static const Ttk_StateTable DisclosureValueTable[] = {
-    {kThemeDisclosureDown, TTK_TREEVIEW_STATE_OPEN, 0},
+    {kThemeDisclosureDown, TTK_STATE_OPEN, 0},
     {kThemeDisclosureRight, 0, 0},
 };
 static void DisclosureElementSize(
@@ -3351,7 +3349,7 @@ static void DisclosureElementDraw(
     Ttk_Box b,
     Ttk_State state)
 {
-    if (!(state & TTK_TREEVIEW_STATE_LEAF)) {
+    if (!(state & TTK_STATE_LEAF)) {
 	int triangleState = TkMacOSXInDarkMode(tkwin) ?
 	    kThemeStateInactive : kThemeStateActive;
 	CGRect bounds = BoxToRect(d, b);
@@ -3370,7 +3368,7 @@ static void DisclosureElementDraw(
 	    NSColor *stroke = [[NSColor textColor]
 		colorUsingColorSpace: deviceRGB];
 	    [stroke getComponents: rgba];
-	    if (state & TTK_TREEVIEW_STATE_OPEN) {
+	    if (state & TTK_STATE_OPEN) {
 		DrawOpenDisclosure(dc.context, bounds, 2, 8, rgba);
 	    } else {
 		DrawClosedDisclosure(dc.context, bounds, 2, 12, rgba);
