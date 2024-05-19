@@ -918,7 +918,6 @@ TkWmDeadWindow(
     }
     TKWindow *deadNSWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
 	Tk_WindowId(winPtr));
-    //fprintf(stderr, "TkWmDeadWindow: will destroy %s\n", Tk_PathName(winPtr));
     if (deadNSWindow == NULL) {
 	return;
     }
@@ -998,7 +997,6 @@ TkWmDeadWindow(
     NSPoint mouse = [NSEvent mouseLocation];
     NSWindow *w;
     [NSApp setTkPointerWindow:nil];
-    //fprintf(stderr, "    Looking for new pointer window\n");
     winPtr2 = NULL;
     
     for (w in [NSApp orderedWindows]) {
@@ -1027,11 +1025,8 @@ TkWmDeadWindow(
 	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 	int win_x, win_y;
 	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) winPtr2, top_x, top_y, &win_x, &win_y);
-	//fprintf(stderr, "    new mouseWindow is %s\n",
-	//		target ? Tk_PathName(target) : "NULL");
 	Tk_UpdatePointer((Tk_Window) target, root_x, root_y, [NSApp tkButtonState]);
     }
-//    fflush(stderr);
 
     /*
      * Unregister the NSWindow and remove all references to it from the Tk

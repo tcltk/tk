@@ -998,10 +998,6 @@ TkInOutEvents(
 {
     TkWindow *winPtr;
     int upLevels, downLevels, i, j, focus;
-    //fprintf(stderr, "TkInOutEvents: source is %s, destination is %s, leaveType is %d, enterType is %d\n",
-    //	   sourcePtr ? Tk_PathName(sourcePtr)  : "NULL",
-    //	    destPtr ? Tk_PathName(destPtr)  : "NULL",
-    //           leaveType, enterType);
 
     /*
      * There are four possible cases to deal with:
@@ -1029,7 +1025,6 @@ TkInOutEvents(
 	focus = 0;
     }
     FindCommonAncestor(sourcePtr, destPtr, &upLevels, &downLevels);
-    //fprintf(stderr, "upLevels = %d, downLevels = %d\n", upLevels, downLevels);
 
     /*
      * Generate enter/leave events and add them to the grab event queue.
@@ -1088,15 +1083,10 @@ TkInOutEvents(
 	 * Non-linear: neither window is an inferior of the other.
 	 */
 
-	//fprintf(stderr, "    Nonlinear path\n");
 	if (leaveType != 0) {
-	    //fprintf(stderr, "    Queueing leave event for %s\n",
-	    //		    Tk_PathName(sourcePtr));
 	    QUEUE(sourcePtr, leaveType, NotifyNonlinear);
 	    for (winPtr = sourcePtr->parentPtr, i = upLevels-1; i > 0;
 		    winPtr = winPtr->parentPtr, i--) {
-		//fprintf(stderr, "    Queueing Virtual leave event for %s\n",
-		//			Tk_PathName(winPtr));
 		QUEUE(winPtr, leaveType, NotifyNonlinearVirtual);
 	    }
 	}
@@ -1105,18 +1095,13 @@ TkInOutEvents(
 		for (winPtr = destPtr->parentPtr, j = 1; j < i;
 			winPtr = winPtr->parentPtr, j++) {
 		}
-		//fprintf(stderr, "    Queueing Virtual enter event for %s\n",
-		//			Tk_PathName(winPtr));
 		QUEUE(winPtr, enterType, NotifyNonlinearVirtual);
 	    }
 	    if (destPtr != NULL) {
-		//fprintf(stderr, "    Queueing enter event for %s\n",
-		//			Tk_PathName(destPtr));
 		QUEUE(destPtr, enterType, NotifyNonlinear);
 	    }
 	}
     }
-    fflush(stderr);
 }
 
 /*
