@@ -199,6 +199,7 @@ enum {
 	    int fakeState = [NSApp tkButtonState] & ~TkGetButtonMask(Button1);
 	    int x = location.x;
 	    int y = floor(TkMacOSXZeroScreenHeight() - location.y);
+	    //fprintf(stderr, "(1) calling Tk_UpdatePointer)\n"); fflush(stderr);
 	    Tk_UpdatePointer((Tk_Window) [NSApp tkEventTarget], x, y, fakeState);
 	}
 
@@ -500,18 +501,31 @@ enum {
 	    state |= TkGetButtonMask(Button1);
 	}
 	if (eventType == NSMouseEntered) {
-	    Tk_UpdatePointer((Tk_Window) [NSApp tkPointerWindow],
-				 global.x, global.y, state);
+	    //fprintf(stderr, "handling NSMouseEntered for %s\n",
+            //Tk_PathName([NSApp tkPointerWindow]));
+	    //fflush(stderr);
+	    Tk_Window new_win = Tk_CoordsToWindow(global.x, global.y,
+		 (Tk_Window) [NSApp tkPointerWindow]);
+	    //  WHEN SHOULD THIS CALL HAPPEN?
+	    //  It only happens for toplevels, but can happen when a window is
+	    //  deiconified, in which case the highest Tk window containing the
+	    //  mouse should be the target.
+	    //fprintf(stderr, "(2) calling Tk_UpdatePointer)\n"); fflush(stderr);
+	    Tk_UpdatePointer(new_win, global.x, global.y, state);
 	} else if (eventType == NSMouseExited) {
+	    //fprintf(stderr, "handling NSMouseExited\n"); fflush(stderr);
 	    if ([NSApp tkDragTarget]) {
+		//fprintf(stderr, "(3) calling Tk_UpdatePointer)\n"); fflush(stderr);
 	    	Tk_UpdatePointer((Tk_Window) [NSApp tkDragTarget],
 	    			 global.x, global.y, state);
 	    } else {
+		//fprintf(stderr, "(4) calling Tk_UpdatePointer)\n"); fflush(stderr);
 	    Tk_UpdatePointer(NULL, global.x, global.y, state);
 	    }
 	} else if (eventType == NSMouseMoved ||
 		   eventType == NSLeftMouseDragged) {
 	    if ([NSApp tkPointerWindow]) {
+		//fprintf(stderr, "(5) calling Tk_UpdatePointer)\n"); fflush(stderr);
 		Tk_UpdatePointer(target, global.x, global.y, state);
 	    } else {
 		XEvent xEvent = {0};
@@ -536,6 +550,7 @@ enum {
 
 	    }
 	} else {
+	    //fprintf(stderr, "(6) calling Tk_UpdatePointer)\n"); fflush(stderr);
 	    Tk_UpdatePointer(target, global.x, global.y, state);
 	}
     } else {
@@ -825,6 +840,7 @@ GenerateButtonEvent(
 	tkwin = Tk_TopCoordsToWindow(tkwin, medPtr->local.h, medPtr->local.v,
 		&dummy, &dummy);
     }
+    //fprintf(stderr, "(7) calling Tk_UpdatePointer)\n"); fflush(stderr);
     Tk_UpdatePointer(tkwin, medPtr->global.h, medPtr->global.v, medPtr->state);
     return true;
 }

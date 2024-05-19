@@ -183,7 +183,6 @@ GenerateEnterLeave(
 
 		InitializeEvent(&event, targetPtr, LeaveNotify, x, y, state,
 			NotifyNormal);
-
 		TkInOutEvents(&event, lastWinPtr, winPtr, LeaveNotify,
 			EnterNotify, TCL_QUEUE_TAIL);
 		crossed = 1;
@@ -228,6 +227,10 @@ Tk_UpdatePointer(
     unsigned changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
     int type, b;
     unsigned mask;
+    //fprintf(stderr, "    Tk_UpdatePointer: %s %d %d %x --> %s %d %d %x\n",
+    //	    tsdPtr->lastWinPtr ? Tk_PathName(tsdPtr->lastWinPtr): "NULL",
+    //	    tsdPtr->lastPos.x, tsdPtr->lastPos.y, tsdPtr->lastState,
+    //	    tkwin ? Tk_PathName(tkwin) : "NULL", x, y, state);
 
     pos.x = x;
     pos.y = y;

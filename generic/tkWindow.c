@@ -1322,6 +1322,33 @@ Tk_CreateWindowFromPath(
  *--------------------------------------------------------------
  */
 
+
+static void SendEnterLeaveForDestroy(
+    Tk_Window tkwin)
+{
+    int x, y;
+    unsigned int state;
+    Tk_Window pointerWin;
+    TkWindow *containerPtr;
+    
+    XQueryPointer(NULL, None, NULL, NULL, &x, &y, NULL, NULL, &state);
+    pointerWin = Tk_CoordsToWindow(x, y, tkwin);
+    if (pointerWin == tkwin) {
+	//fprintf(stderr, "    Pointer window is being destroyed\n");
+	if (!Tk_IsTopLevel(tkwin)) {
+	    containerPtr = TkGetContainer((TkWindow *)pointerWin);
+	    //fprintf(stderr, "    Moving pointer from topmost %s to container %s\n",
+	    //		    pointerWin ? Tk_PathName(pointerWin) : "NULL",
+	    //		    containerPtr ? Tk_PathName(containerPtr) : "NULL");
+	    Tk_UpdatePointer((Tk_Window) containerPtr, x, y, state);
+	}
+	//	else {
+	    //fprintf(stderr, "    Pointer window is a toplevel\n");
+	//	}
+    }
+    //    fflush(stderr);
+}
+
 void
 Tk_DestroyWindow(
     Tk_Window tkwin)		/* Window to destroy. */
@@ -1341,6 +1368,10 @@ Tk_DestroyWindow(
 
 	return;
     }
+    //fprintf(stderr, "Tk_DestroyWindow: destroying %s\n", Tk_PathName(tkwin));
+    //fflush(stderr);
+    SendEnterLeaveForDestroy(tkwin);
+    
     winPtr->flags |= TK_ALREADY_DEAD;
 
     /*
@@ -1711,6 +1742,22 @@ Tk_DestroyWindow(
  *--------------------------------------------------------------
  */
 
+static void SendEnterLeaveForMap(
+    Tk_Window tkwin)
+{
+    int x, y;
+    unsigned int state;
+    Tk_Window pointerWin;
+    
+    XQueryPointer(NULL, None, NULL, NULL, &x, &y, NULL, NULL, &state);
+    pointerWin = Tk_CoordsToWindow(x, y, tkwin);
+    if (pointerWin == tkwin) {
+	//fprintf(stderr, "    New window contains pointer.\n");
+	//fflush(stderr);
+	Tk_UpdatePointer(tkwin, x, y, state);
+    }
+}
+
 void
 Tk_MapWindow(
     Tk_Window tkwin)		/* Token for window to map. */
@@ -1740,6 +1787,7 @@ Tk_MapWindow(
 	TkWmMapWindow(winPtr);
 	return;
     }
+
     winPtr->flags |= TK_MAPPED;
     XMapWindow(winPtr->display, winPtr->window);
     event.type = MapNotify;
@@ -1750,6 +1798,9 @@ Tk_MapWindow(
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
     Tk_HandleEvent(&event);
+    //fprintf(stderr, "Tk_MapWindow: mapped %s\n", Tk_PathName(tkwin));
+    //fflush(stderr);
+    SendEnterLeaveForMap(tkwin);
 }
 
 /*

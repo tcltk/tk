@@ -74,6 +74,8 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	NSView *view = [w contentView];
 	NSPoint viewLocation = [view convertPoint:location fromView:nil];
 	if (NSPointInRect(viewLocation, NSInsetRect([view bounds], 2, 2))) {
+	    fprintf(stderr, "windowActivation calling TkUpdatePointer\n");
+	    fflush(stderr);
 	    Tk_UpdatePointer((Tk_Window) winPtr, x, y, [NSApp tkButtonState]);
 	}
     }
