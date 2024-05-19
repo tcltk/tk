@@ -62,7 +62,6 @@ XDestroyWindow(
      * deleting is being tracked by the grab code.
      */
 
-    TkPointerDeadWindow(macWin->winPtr);
     TkMacOSXSelDeadWindow(macWin->winPtr);
     macWin->toplevel->referenceCount--;
 
