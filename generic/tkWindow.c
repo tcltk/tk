@@ -215,6 +215,7 @@ static int		Initialize(Tcl_Interp *interp);
 static int		NameWindow(Tcl_Interp *interp, TkWindow *winPtr,
 			    TkWindow *parentPtr, const char *name);
 static void		UnlinkWindow(TkWindow *winPtr);
+
 
 /*
  *----------------------------------------------------------------------
@@ -1322,15 +1323,15 @@ Tk_CreateWindowFromPath(
  *--------------------------------------------------------------
  */
 
-
 static void SendEnterLeaveForDestroy(
     Tk_Window tkwin)
 {
+#if defined(MAC_OSX_TK) || defined(_WIN32)
     int x, y;
     unsigned int state;
     Tk_Window pointerWin;
     TkWindow *containerPtr;
-    
+
     XQueryPointer(NULL, None, NULL, NULL, &x, &y, NULL, NULL, &state);
     pointerWin = Tk_CoordsToWindow(x, y, tkwin);
     if (pointerWin == tkwin) {
@@ -1338,7 +1339,15 @@ static void SendEnterLeaveForDestroy(
 	    containerPtr = TkGetContainer((TkWindow *)pointerWin);
 	    Tk_UpdatePointer((Tk_Window) containerPtr, x, y, state);
 	}
+	else if (pointerWin) {
+	    TkWmDeadWindow((TkWindow *) pointerWin);
+	}
     }
+    
+    if (pointerWin && (tkwin == Tk_Parent(pointerWin))) {
+	Tk_UpdatePointer(Tk_Parent(tkwin), x, y, state);
+    }
+#endif
 }
 
 void
@@ -1360,7 +1369,9 @@ Tk_DestroyWindow(
 
 	return;
     }
-    SendEnterLeaveForDestroy(tkwin);
+    if ((winPtr->flags & TK_DONT_DESTROY_WINDOW) == 0) {
+	SendEnterLeaveForDestroy(tkwin);
+    }
     
     winPtr->flags |= TK_ALREADY_DEAD;
 
@@ -1532,7 +1543,7 @@ Tk_DestroyWindow(
      * Cleanup the data structures associated with this window.
      */
 
-    if (winPtr->flags & TK_WIN_MANAGED) {
+    if (winPtr->wmInfoPtr && (winPtr->flags & TK_WIN_MANAGED)) {
 	TkWmDeadWindow(winPtr);
     } else if (winPtr->flags & TK_WM_COLORMAP_WINDOW) {
 	TkWmRemoveFromColormapWindows(winPtr);
@@ -1735,6 +1746,7 @@ Tk_DestroyWindow(
 static void SendEnterLeaveForMap(
     Tk_Window tkwin)
 {
+#if defined(MAC_OSX_TK) || defined(_WIN32)
     int x, y;
     unsigned int state;
     Tk_Window pointerWin;
@@ -1744,6 +1756,7 @@ static void SendEnterLeaveForMap(
     if (pointerWin == tkwin) {
 	Tk_UpdatePointer(tkwin, x, y, state);
     }
+#endif
 }
 
 void
@@ -2634,7 +2647,7 @@ Tk_RestackWindow(
     TkWindow *otherPtr = (TkWindow *) other;
 
     /*
-     * Special case: if winPtr is a top-level window then just find the
+     * Special case: if winPtr is a toplevel window then just find the
      * top-level ancestor of otherPtr and restack winPtr above otherPtr
      * without changing any of Tk's childLists.
      */
