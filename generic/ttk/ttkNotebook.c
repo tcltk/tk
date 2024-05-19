@@ -317,7 +317,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_USER1;
+	    state |= TTK_STATE_FIRST;
 	}
 	break;
     }
@@ -327,7 +327,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_USER2;
+	    state |= TTK_STATE_LAST;
 	}
 	break;
     }

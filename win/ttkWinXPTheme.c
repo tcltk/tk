@@ -866,9 +866,6 @@ static const Ttk_ElementSpec TabElementSpec =
  *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
  */
 
-#define TTK_STATE_OPEN TTK_STATE_USER1
-#define TTK_STATE_LEAF TTK_STATE_USER2
-
 static const Ttk_StateTable header_statemap[] =
 {
     { HIS_PRESSED, 	TTK_STATE_PRESSED, 0 },
