@@ -45,6 +45,7 @@ static int		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
 static void		InitializeEvent(XEvent *eventPtr, TkWindow *winPtr,
 			    int type, int x, int y, int state, int detail);
 static void		UpdateCursor(TkWindow *winPtr);
+
 
 /*
  *----------------------------------------------------------------------
