@@ -425,6 +425,18 @@ TCL_NORETURN void TkpExitProc(
     }
 
     /*
+     * At this point it is too late to be looking up the Tk window associated
+     * to any NSWindows, but it can happen.  This makes sure the answer is None
+     * if such a query is attempted. 
+     */
+    
+    for (TKWindow *w in [NSApp orderedWindows]) {
+	if ([w respondsToSelector: @selector (tkWindow)]) {
+	    [w setTkWindow: None];
+	}
+    }
+
+    /*
      * Tcl_Exit does not call Tcl_Finalize if there is an exit proc installed.
      */
 
