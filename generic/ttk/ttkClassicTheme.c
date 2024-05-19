@@ -28,7 +28,7 @@ static Ttk_ElementOptionSpec HighlightElementOptions[] = {
     { "-highlightthickness",TK_OPTION_PIXELS,
 	Tk_Offset(HighlightElement,highlightThicknessObj), "0" },
     { "-default", TK_OPTION_ANY,
-	offsetof(HighlightElement,defaultStateObj), "disabled" },
+	Tk_Offset(HighlightElement,defaultStateObj), "disabled" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
@@ -43,8 +43,7 @@ static void HighlightElementSize(
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj,
-	&highlightThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj, &highlightThickness);
     *paddingPtr = Ttk_UniformPadding((short)highlightThickness);
 }
 
@@ -59,14 +58,15 @@ static void HighlightElementDraw(
     HighlightElement *hl = (HighlightElement *)elementRecord;
     int highlightThickness = 0;
     XColor *highlightColor = Tk_GetColorFromObj(tkwin, hl->highlightColorObj);
-    Ttk_ButtonDefaultState defaultState = TTK_BUTTON_DEFAULT_DISABLED;
+    int defaultState = TTK_BUTTON_DEFAULT_DISABLED;
 
     Tk_GetPixelsFromObj(NULL, tkwin, hl->highlightThicknessObj,
 	&highlightThickness);
     if (highlightColor && highlightThickness > 0) {
+	GC gc;
 	Ttk_GetButtonDefaultStateFromObj(NULL, hl->defaultStateObj,
-	    (int *)&defaultState);
-	GC gc = Tk_GCForColor(highlightColor, d);
+	    &defaultState);
+	gc = Tk_GCForColor(highlightColor, d);
 	if (defaultState == TTK_BUTTON_DEFAULT_NORMAL) {
 	    TkDrawInsetFocusHighlight(tkwin, gc, highlightThickness, d, 5);
 	} else {
@@ -173,15 +173,15 @@ static void ButtonBorderElementDraw(
 	    inset += 5;
 	    break;
 	case TTK_BUTTON_DEFAULT_ACTIVE :
-            Tk_Draw3DRectangle(tkwin, d, border,
+	    Tk_Draw3DRectangle(tkwin, d, border,
 		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
 		2, TK_RELIEF_FLAT);
-            inset += 2;
-            Tk_Draw3DRectangle(tkwin, d, border,
+	    inset += 2;
+	    Tk_Draw3DRectangle(tkwin, d, border,
 		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
 		1, TK_RELIEF_SUNKEN);
 	    ++inset;
-            Tk_Draw3DRectangle(tkwin, d, border,
+	    Tk_Draw3DRectangle(tkwin, d, border,
 		b.x+inset, b.y+inset, b.width - 2*inset, b.height - 2*inset,
 		2, TK_RELIEF_FLAT);
 	    inset += 2;
@@ -451,37 +451,37 @@ TTK_BEGIN_LAYOUT_TABLE(LayoutTable)
 
 TTK_LAYOUT("TButton",
     TTK_GROUP("Button.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
+	TTK_GROUP("Button.border", TTK_FILL_BOTH|TTK_BORDER,
 	    TTK_GROUP("Button.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Button.label", TTK_FILL_BOTH)))))
+		TTK_NODE("Button.label", TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TCheckbutton",
     TTK_GROUP("Checkbutton.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Checkbutton.border", TTK_FILL_BOTH,
+	TTK_GROUP("Checkbutton.border", TTK_FILL_BOTH,
 	    TTK_GROUP("Checkbutton.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
-	        TTK_NODE("Checkbutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
+		TTK_NODE("Checkbutton.indicator", TTK_PACK_LEFT)
+		TTK_NODE("Checkbutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TRadiobutton",
     TTK_GROUP("Radiobutton.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Radiobutton.border", TTK_FILL_BOTH,
+	TTK_GROUP("Radiobutton.border", TTK_FILL_BOTH,
 	    TTK_GROUP("Radiobutton.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
-	        TTK_NODE("Radiobutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
+		TTK_NODE("Radiobutton.indicator", TTK_PACK_LEFT)
+		TTK_NODE("Radiobutton.label", TTK_PACK_LEFT|TTK_FILL_BOTH)))))
 
 TTK_LAYOUT("TMenubutton",
     TTK_GROUP("Menubutton.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
+	TTK_GROUP("Menubutton.border", TTK_FILL_BOTH,
 	    TTK_NODE("Menubutton.indicator", TTK_PACK_RIGHT)
 	    TTK_GROUP("Menubutton.padding", TTK_FILL_X,
-	        TTK_NODE("Menubutton.label", 0)))))
+		TTK_NODE("Menubutton.label", 0)))))
 
 /* "classic" entry, includes highlight border */
 TTK_LAYOUT("TEntry",
     TTK_GROUP("Entry.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
+	TTK_GROUP("Entry.field", TTK_FILL_BOTH|TTK_BORDER,
 	    TTK_GROUP("Entry.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
+		TTK_NODE("Entry.textarea", TTK_FILL_BOTH)))))
 
 /* "classic" combobox, includes highlight border */
 TTK_LAYOUT("TCombobox",
@@ -494,7 +494,7 @@ TTK_LAYOUT("TCombobox",
 /* "classic" spinbox, includes highlight border */
 TTK_LAYOUT("TSpinbox",
     TTK_GROUP("Spinbox.highlight", TTK_FILL_BOTH,
-       	TTK_GROUP("Spinbox.field", TTK_FILL_BOTH|TTK_FILL_X,
+	TTK_GROUP("Spinbox.field", TTK_FILL_BOTH|TTK_FILL_X,
 	    TTK_GROUP("null", TTK_PACK_RIGHT,
 		TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
 		TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
@@ -526,7 +526,8 @@ TTK_END_LAYOUT_TABLE
  * 	Install classic theme.
  */
 
-MODULE_SCOPE int TtkClassicTheme_Init(Tcl_Interp *interp)
+MODULE_SCOPE int
+TtkClassicTheme_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_CreateTheme(interp, "classic", NULL);
 

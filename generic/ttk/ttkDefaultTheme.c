@@ -339,9 +339,9 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
     	"white" },
     { "-bordercolor",TK_OPTION_COLOR, Tk_Offset(FieldElement,borderColorObj),
 	"black" },
-    { "-focuswidth", TK_OPTION_PIXELS, offsetof(FieldElement,focusWidthObj),
+    { "-focuswidth", TK_OPTION_PIXELS, Tk_Offset(FieldElement,focusWidthObj),
 	"2" },
-    { "-focuscolor", TK_OPTION_COLOR, offsetof(FieldElement,focusColorObj),
+    { "-focuscolor", TK_OPTION_COLOR, Tk_Offset(FieldElement,focusColorObj),
 	"#4a6984" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -378,6 +378,7 @@ static void FieldElementDraw(
 	    int x1 = b.x, x2 = b.x + b.width - 1;
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
+	    GC bgGC;
 
 	    /*
 	     * Draw the outer rounded rectangle
@@ -396,7 +397,7 @@ static void FieldElementDraw(
 	    /*
 	     * Fill the inner rectangle
 	     */
-	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
 	} else {
 	    /*
@@ -581,12 +582,15 @@ static void IndicatorElementDraw(
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
 
+    /*
+     * Sanity check
+     */
     if (   b.x < 0
 	|| b.y < 0
 	|| Tk_Width(tkwin) < b.x + spec->width
 	|| Tk_Height(tkwin) < b.y + spec->height)
     {
-	/* Oops!  not enough room to display the image.
+	/* Oops!  Not enough room to display the image.
 	 * Don't draw anything.
 	 */
 	return;
@@ -778,8 +782,8 @@ static void ArrowElementDraw(
 
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, 0, TK_RELIEF_FLAT);
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    0, TK_RELIEF_FLAT);
     DrawBorder(tkwin, d, border, borderColor, b, borderWidth, relief);
 
     b = Ttk_PadBox(b, ArrowPadding);
