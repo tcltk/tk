@@ -982,11 +982,9 @@ test event-9.12 {pointer window container != parent} -setup {
 
 test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     setup_win_mousepointer .one
-    wm withdraw .one
     toplevel .two
     wm geometry .two 300x300+150+150
     wm withdraw .two
-    wm deiconify .one
     wm deiconify .two
     waitForWindowEvent .two <Enter>
     bind all <Leave> {append result "<Leave> %d %W|"}
