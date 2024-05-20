@@ -1332,7 +1332,8 @@ static void SendEnterLeaveForDestroy(
     Tk_Window pointerWin;
     TkWindow *containerPtr;
 
-    XQueryPointer(NULL, None, NULL, NULL, &x, &y, NULL, NULL, &state);
+    XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
+		  NULL, NULL, &state);
     pointerWin = Tk_CoordsToWindow(x, y, tkwin);
     if (pointerWin == tkwin) {
 	if (!Tk_IsTopLevel(tkwin)) {
@@ -1751,7 +1752,8 @@ static void SendEnterLeaveForMap(
     unsigned int state;
     Tk_Window pointerWin;
     
-    XQueryPointer(NULL, None, NULL, NULL, &x, &y, NULL, NULL, &state);
+    XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
+		  NULL, NULL, &state);
     pointerWin = Tk_CoordsToWindow(x, y, tkwin);
     if (pointerWin == tkwin) {
 	Tk_UpdatePointer(tkwin, x, y, state);
