@@ -1208,9 +1208,6 @@ static const Ttk_ElementSpec SliderElementSpec = {
  * +++ Tree indicator element.
  */
 
-#define TTK_STATE_OPEN TTK_STATE_USER1		/* XREF: treeview.c */
-#define TTK_STATE_LEAF TTK_STATE_USER2
-
 typedef struct {
     Tcl_Obj *colorObj;
     Tcl_Obj *marginObj;
