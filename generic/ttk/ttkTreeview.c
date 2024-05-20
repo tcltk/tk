@@ -23,9 +23,6 @@ static const Tk_Anchor DEFAULT_IMAGEANCHOR = TK_ANCHOR_W;
 static const int DEFAULT_INDENT 	= 20;
 static const int HALO   		= 4;	/* heading separator */
 
-#define TTK_STATE_OPEN TTK_STATE_USER1
-#define TTK_STATE_LEAF TTK_STATE_USER2
-
 #define STATE_CHANGED	 	(0x100)	/* item state option changed */
 
 #define MAX(a,b) (((a) > (b)) ? (a) : (b))

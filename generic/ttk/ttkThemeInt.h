@@ -9,6 +9,15 @@
 
 #include "ttkTheme.h"
 
+/*------------------------------------------------------------------------
+ * +++ Widget states (internal).
+ */
+
+#define TTK_STATE_OPEN		(1<<16)
+#define TTK_STATE_LEAF		(1<<17)
+#define TTK_STATE_FIRST		(1<<18)
+#define TTK_STATE_LAST		(1<<19)
+
 typedef struct Ttk_TemplateNode_ Ttk_TemplateNode, *Ttk_LayoutTemplate;
 
 MODULE_SCOPE Ttk_ElementClass *Ttk_GetElement(Ttk_Theme, const char *name);
