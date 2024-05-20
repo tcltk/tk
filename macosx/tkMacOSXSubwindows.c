@@ -63,6 +63,7 @@ XDestroyWindow(
      */
 
     TkMacOSXSelDeadWindow(macWin->winPtr);
+    TkPointerDeadWindow(macWin->winPtr);
     macWin->toplevel->referenceCount--;
 
     if (!Tk_IsTopLevel(macWin->winPtr)) {
