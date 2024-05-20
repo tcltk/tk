@@ -5,7 +5,7 @@
  */
 
 #include "tkInt.h"
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 
 /*
  * Under windows, the Tk-provided XDrawLine and XDrawArc have an
@@ -1032,7 +1032,7 @@ static void TabElementDraw(
     switch (nbTabsStickBit) {
 	default:
 	case TTK_STICK_S:
-	    if (state & TTK_STATE_USER2) {		/* rightmost tab */
+	    if (state & TTK_STATE_LAST) {		/* rightmost tab */
 		--b.width;
 	    }
 
@@ -1054,7 +1054,7 @@ static void TabElementDraw(
 	    break;
 
 	case TTK_STICK_N:
-	    if (state & TTK_STATE_USER2) {		/* rightmost tab */
+	    if (state & TTK_STATE_LAST) {		/* rightmost tab */
 		--b.width;
 	    }
 
@@ -1076,7 +1076,7 @@ static void TabElementDraw(
 	    break;
 
 	case TTK_STICK_E:
-	    if (state & TTK_STATE_USER2) {		/* bottommost tab */
+	    if (state & TTK_STATE_LAST) {		/* bottommost tab */
 		--b.height;
 	    }
 
@@ -1098,7 +1098,7 @@ static void TabElementDraw(
 	    break;
 
 	case TTK_STICK_W:
-	    if (state & TTK_STATE_USER2) {		/* bottommost tab */
+	    if (state & TTK_STATE_LAST) {		/* bottommost tab */
 		--b.height;
 	    }
 
