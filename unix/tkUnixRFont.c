@@ -15,6 +15,16 @@
 
 #define MAX_CACHED_COLORS 16
 
+/*
+ * Debugging support...
+ */
+
+#define DEBUG_FONTSEL 1
+#define DEBUG(arguments) \
+    if (DEBUG_FONTSEL) { \
+	printf arguments; fflush(stdout); \
+    }
+
 typedef struct {
     XftFont *ftFont;
     XftFont *ft0Font;
@@ -208,10 +218,8 @@ GetTkFontAttributes(
 	slant = XFT_SLANT_ROMAN;
     }
 
-#ifdef DEBUG_FONTSEL
-    printf("family %s size %d weight %d slant %d\n",
-	    family, (int)size, weight, slant);
-#endif /* DEBUG_FONTSEL */
+    DEBUG(("GetTkFontAttributes: family %s size %d weight %d slant %d\n",
+	    family, (int)size, weight, slant));
 
     faPtr->family = Tk_GetUid(family);
     faPtr->size = size;
@@ -457,9 +465,8 @@ TkpGetNativeFont(
 {
     UnixFtFont *fontPtr;
     FcPattern *pattern;
-#ifdef DEBUG_FONTSEL
-    printf("TkpGetNativeFont %s\n", name);
-#endif /* DEBUG_FONTSEL */
+
+    DEBUG(("TkpGetNativeFont: %s\n", name));
 
     pattern = XftXlfdParse(name, FcFalse, FcFalse);
     if (!pattern) {
@@ -495,10 +502,9 @@ TkpGetFontFromAttributes(
     int weight, slant;
     UnixFtFont *fontPtr;
 
-#ifdef DEBUG_FONTSEL
-    printf("TkpGetFontFromAttributes %s-%d %d %d\n", faPtr->family,
-	    (int)faPtr->size, faPtr->weight, faPtr->slant);
-#endif /* DEBUG_FONTSEL */
+    DEBUG(("TkpGetFontFromAttributes: %s %d %d %d\n", faPtr->family,
+	    (int)faPtr->size, faPtr->weight, faPtr->slant));
+
     pattern = XftPatternCreate();
     if (faPtr->family) {
 	XftPatternAddString(pattern, XFT_FAMILY, faPtr->family);
@@ -803,7 +809,7 @@ measureCharsEnd:
     Tk_DeleteErrorHandler(handler);
 #ifdef DEBUG_FONTSEL
     string[len] = '\0';
-    printf("MeasureChars %s length %d bytes %d\n", string, curX, curByte);
+    DEBUG(("MeasureChars: %s length %d bytes %d\n", string, curX, curByte));
 #endif /* DEBUG_FONTSEL */
     *lengthPtr = curX;
     return curByte;
@@ -939,9 +945,7 @@ Tk_DrawChars(
             Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (fontPtr->ftDraw == 0) {
-#ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%lx\n", drawable);
-#endif /* DEBUG_FONTSEL */
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
 		DefaultColormap(display, fontPtr->screen));
@@ -1080,9 +1084,7 @@ TkDrawAngledChars(
     int originX, originY;
 
     if (fontPtr->ftDraw == 0) {
-#ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%x\n", drawable);
-#endif /* DEBUG_FONTSEL */
+	DEBUG(("Switch to drawable 0x%x\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
 		DefaultColormap(display, fontPtr->screen));
@@ -1198,9 +1200,7 @@ TkDrawAngledChars(
     double sinA = sin(angle * PI/180.0), cosA = cos(angle * PI/180.0);
 
     if (fontPtr->ftDraw == 0) {
-#ifdef DEBUG_FONTSEL
-	printf("Switch to drawable 0x%lx\n", drawable);
-#endif /* DEBUG_FONTSEL */
+	DEBUG(("Switch to drawable 0x%lx\n", drawable));
 	fontPtr->ftDraw = XftDrawCreate(display, drawable,
 		DefaultVisual(display, fontPtr->screen),
 		DefaultColormap(display, fontPtr->screen));
