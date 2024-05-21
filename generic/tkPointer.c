@@ -228,7 +228,10 @@ Tk_UpdatePointer(
     unsigned changes = (state ^ tsdPtr->lastState) & ALL_BUTTONS;
     int type, b;
     unsigned mask;
-
+    fprintf(stderr, "TkUpdatePointer: %s -> %s\n",
+	    tsdPtr->lastWinPtr ? Tk_PathName(tsdPtr->lastWinPtr) : "NULL",
+	    tkwin ? Tk_PathName(tkwin) : "NULL");
+    fflush(stderr);
     pos.x = x;
     pos.y = y;
 
@@ -493,8 +496,11 @@ TkPointerDeadWindow(
 {
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
-
+    fprintf(stderr, "TkPointerDeadWindow: %s\n", winPtr ? Tk_PathName(winPtr) : "NULL");
     if (winPtr == tsdPtr->lastWinPtr) {
+	//This fails on Windows because the windows version of TkWnDeadWindow
+	//does not (yet)  call TkUpdatePointer when a dead toplevel contains the
+	//pointer.
 	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
     }
     if (winPtr == tsdPtr->grabWinPtr) {
@@ -514,6 +520,7 @@ TkPointerDeadWindow(
 	    TkpSetCapture(NULL);
         }
     }
+    fflush(stderr);
 }
 
 /*
