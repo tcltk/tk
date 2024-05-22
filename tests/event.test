@@ -987,8 +987,8 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     wm withdraw .two
     wm deiconify .two
     waitForWindowEvent .two <Enter>
-    bind all <Leave> {append result "<Leave> %d %W|" ; puts stderr "=leave=" }
-    bind all <Enter> {append result "<Enter> %d %W|" ; puts stderr "-enter=" }
+    bind all <Leave> {append result "<Leave> %d %W|"}
+    bind all <Enter> {append result "<Enter> %d %W|"}
     set result |
 } -body {
     destroy .two
