@@ -873,7 +873,6 @@ proc waitForWindowEvent {w event {timeout 1000}} {
 # always a gamble how much waiting time is enough on an end user's system.
 # It also leads to long fixed waiting times in order to be on the safe side.
 
-    puts stderr "Waiting for $event on $w"
     variable _windowEvent
 
     # Use counter as a unique ID to prevent subsequent waits
@@ -891,7 +890,6 @@ proc waitForWindowEvent {w event {timeout 1000}} {
 	puts stderr "wait for $event event on $w timed out (> $timeout ms)"
     } else {
         after cancel $afterID
-	puts stderr "Event received"
     }
 }
 proc waitForWindowEvent.signal {counter} {
@@ -983,32 +981,28 @@ test event-9.12 {pointer window container != parent} -setup {
 } -result {|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 
 test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
-    puts stderr "9.13 setup started"
     setup_win_mousepointer .one
     toplevel .two
     wm geometry .two 300x300+150+150
     wm withdraw .two
     wm deiconify .two
     waitForWindowEvent .two <Enter>
-    bind all <Leave> {append result "<Leave> %d %W|"}
-    bind all <Enter> {append result "<Enter> %d %W|"}
+    bind all <Leave> {append result "<Leave> %d %W|" ; puts stderr "=leave=" }
+    bind all <Enter> {append result "<Enter> %d %W|" ; puts stderr "-enter=" }
     set result |
-    puts stderr "9.13 setup done"
 } -body {
-    puts stderr "9.13 body started - destroying .two"
     destroy .two
     waitForWindowEvent .one <Enter>
+    # destroying .one here instead of in cleanup makes the test pass
+    destroy .one
     set result
-    puts stderr "9.13 body finished"
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
-    destroy .one
     unset result
 } -result {|<Enter> NotifyNonlinear .one|}
 
 test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
-    puts stderr "9.14 setup"
     setup_win_mousepointer .one
     wm withdraw .one
     create_and_pack_frames .one
@@ -1022,15 +1016,13 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
-    puts stderr "9.14 body"
     destroy .two
     waitForWindowEvent .one.f1.f2 <Enter>
-    set result
-    puts stderr "9.14 body finished"
-} -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .one
+    set result
+} -cleanup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .one|<Enter> NotifyNonlinearVirtual .one.f1|<Enter> NotifyNonlinear .one.f1.f2|}
 

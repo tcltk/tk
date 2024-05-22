@@ -2585,20 +2585,18 @@ static void CheckForPointer(TkWindow *winPtr)
     TkWindow **windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
     TkWindow **w;
     TkGetPointerCoords(NULL, &mouse.x, &mouse.y);
-    fprintf(stderr, "CheckForPointer: %s with mouse @(%d, %d)\n",
-	    Tk_PathName(winPtr), mouse.x, mouse.y);
     if (windows != NULL) {
 	for (w = windows; *w ; w++) {
 	    RECT windowRect;
 	    HWND hwnd = Tk_GetHWND(Tk_WindowId((Tk_Window) *w));
-	    fprintf(stderr, "    Checking %s\n", Tk_PathName(*w));
 	    if (GetWindowRect(hwnd, &windowRect) == 0) {
 		continue;
 	    }
 	    if (winPtr != *w && PtInRect(&windowRect, mouse)) {
-	    	fprintf(stderr, "Pointer is in %s. Calling Tk_UpdatePointer\n",
-	    		Tk_PathName(*w));
-		Tk_UpdatePointer((Tk_Window) *w, mouse.x, mouse.y, state);
+		Tk_Window target = Tk_CoordsToWindow(mouse.x, mouse.y,
+		    (Tk_Window) *w);
+		Tk_UpdatePointer((Tk_Window) target,
+		      mouse.x, mouse.y, state);
 		break;
 	    }
 	}
@@ -6709,8 +6707,6 @@ TkWmStackorderToplevelEnumProc(
 
     TkWmStackorderToplevelPair *pair =
 	    (TkWmStackorderToplevelPair *) lParam;
-
-    /*fprintf(stderr, "Looking up HWND %d\n", hwnd);*/
 
     hPtr = Tcl_FindHashEntry(pair->table, (char *) hwnd);
     if (hPtr != NULL) {
