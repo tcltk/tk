@@ -998,10 +998,6 @@ TkInOutEvents(
 {
     TkWindow *winPtr;
     int upLevels, downLevels, i, j, focus;
-#define NAME(w) (w ? Tk_PathName(w) : "NULL")
-    
-    fprintf(stderr, "TkInOutEvents: %s -> %s\n",
-	    NAME(sourcePtr), NAME(destPtr));
 
     /*
      * There are four possible cases to deal with:
@@ -1047,24 +1043,19 @@ TkInOutEvents(
 	Tk_QueueWindowEvent(eventPtr, position);	\
     }
 
-#define DBGEV(w, t, d) fprintf(stderr, "    Queueing %s %s for %s\n", t, d, NAME(w))
-
     if (downLevels == 0) {
 	/*
 	 * SourcePtr is an inferior of destPtr.
 	 */
 
 	if (leaveType != 0) {
-	    DBGEV(sourcePtr, "<Leave>", "NotifyAncestor");
 	    QUEUE(sourcePtr, leaveType, NotifyAncestor);
 	    for (winPtr = sourcePtr->parentPtr, i = upLevels-1; i > 0;
 		    winPtr = winPtr->parentPtr, i--) {
-		DBGEV(winPtr, "<Leave>", "NotifyVirtual");
 		QUEUE(winPtr, leaveType, NotifyVirtual);
 	    }
 	}
 	if ((enterType != 0) && (destPtr != NULL)) {
-	    DBGEV(destPtr, "<Enter>", "NotifyVirtual");
 	    QUEUE(destPtr, enterType, NotifyInferior);
 	}
     } else if (upLevels == 0) {
@@ -1073,7 +1064,6 @@ TkInOutEvents(
 	 */
 
 	if ((leaveType != 0) && (sourcePtr != NULL)) {
-	    DBGEV(sourcePtr, "<Leave>", "NotifyInferior");
 	    QUEUE(sourcePtr, leaveType, NotifyInferior);
 	}
 	if (enterType != 0) {
@@ -1082,11 +1072,9 @@ TkInOutEvents(
 			winPtr = winPtr->parentPtr, j++) {
 		    /* empty */
 		}
-		DBGEV(winPtr, "<Enter>", "NotifyVirtual");
 		QUEUE(winPtr, enterType, NotifyVirtual);
 	    }
 	    if (destPtr != NULL) {
-		DBGEV(winPtr, "<Enter>", "NotifyVirtual");
 		QUEUE(destPtr, enterType, NotifyAncestor);
 	    }
 	}
@@ -1096,11 +1084,9 @@ TkInOutEvents(
 	 */
 
 	if (leaveType != 0) {
-	    DBGEV(sourcePtr, "<Leave>", "NotifyNonlinear");
 	    QUEUE(sourcePtr, leaveType, NotifyNonlinear);
 	    for (winPtr = sourcePtr->parentPtr, i = upLevels-1; i > 0;
 		    winPtr = winPtr->parentPtr, i--) {
-	    DBGEV(winPtr, "<Leave>", "NotifyNonlinearVirtual");
 	    QUEUE(winPtr, leaveType, NotifyNonlinearVirtual);
 	    }
 	}
@@ -1109,11 +1095,9 @@ TkInOutEvents(
 		for (winPtr = destPtr->parentPtr, j = 1; j < i;
 			winPtr = winPtr->parentPtr, j++) {
 		}
-		DBGEV(winPtr, "<Enter>", "NotifyNonlinearVirtual");
 		QUEUE(winPtr, enterType, NotifyNonlinearVirtual);
 	    }
 	    if (destPtr != NULL) {
-		DBGEV(destPtr, "<Enter>", "NotifyNonlinear");
 		QUEUE(destPtr, enterType, NotifyNonlinear);
 	    }
 	}
