@@ -1328,11 +1328,12 @@ static void SendEnterLeaveForDestroy(
 {
 #if defined(MAC_OSX_TK) || defined(_WIN32)
     int x, y;
-    unsigned int state = TkWinGetModifierState();
+    unsigned int state;
     Tk_Window pointerWin;
     TkWindow *containerPtr;
 
-    TkGetPointerCoords(NULL, &x, &y);
+    XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
+		  NULL, NULL, &state);
     pointerWin = Tk_CoordsToWindow(x, y, tkwin);
     if (pointerWin == tkwin) {
 	if (!Tk_IsTopLevel(tkwin)) {
