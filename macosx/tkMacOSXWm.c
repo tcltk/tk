@@ -1034,7 +1034,7 @@ TkWmDeadWindow(
      * the parent.  Then close and release the NSWindow.
      */
 
-    if (0 && deadNSWindow && winPtr && !Tk_IsEmbedded(winPtr)) {
+    if (deadNSWindow && !Tk_IsEmbedded(winPtr)) {
 	NSWindow *parent = [deadNSWindow parentWindow];
 	[deadNSWindow setTkWindow:None];
         if (winPtr->window) {
@@ -2037,7 +2037,6 @@ WmForgetCmd(
 	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
 
-	//TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
 
         /*
