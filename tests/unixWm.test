@@ -641,6 +641,8 @@ test unixWm-16.1 {Tk_WmCmd procedure, "deiconify" option} unix {
 test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg red
+    # calling update here prevents a crash in 16.3 on macOS
+    update
     wm iconwindow .t .icon
     set result [list [catch {wm deiconify .icon} msg] $msg]
     destroy .icon
@@ -1352,8 +1354,12 @@ test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} unix {
 test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
     set result {}
     wm withdraw .t
+    #added to avoid a crash on macOS
+    update idletasks
     lappend result [wm state .t] [winfo ismapped .t]
     wm deiconify .t
+    #added to avoid a crash on macOS
+    update idletasks
     lappend result [wm state .t] [winfo ismapped .t]
 } {withdrawn 0 normal 1}
 
@@ -1373,7 +1379,9 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
     wm geometry .t
 } {30x10+0+0}
 test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} unix {
+    update
     destroy .t
+    update
     toplevel .t
     wm geometry .t 200x100+100+$Y0
     listbox .t.l -height 20 -width 20
