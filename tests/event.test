@@ -916,12 +916,6 @@ proc setup_win_mousepointer {w} {
     update; # service remaining screen drawing events (e.g. <Expose>)
     set pointerWin [winfo containing [winfo pointerx $w] [winfo pointery $w]]
     event generate $w <Motion> -warp 1 -x 250 -y 250
-#    if {[tk windowingsystem] eq "aqua"} {
-#        # Generate a NSMouseMoved NSevent with no mouse pointer position change.
-#        # This is to let event-9.1? tests pass on macOS aqua and is only a workaround
-#        # since macOS aqua should send the adequate NSevent by itself.
-#        movemouse [expr {[winfo rootx $w] + 250}] [expr {[winfo rooty $w] + 250}]
-#    }
     if {($pointerWin ne $w) && ([tk windowingsystem] ne "aqua")} {
         waitForWindowEvent $w <Enter>
     } else {
@@ -1038,8 +1032,8 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     bind all <Enter> {append result "<Enter> %d %W|"}
     set result "|"
 } -body {
-    destroy .two
     _pause 200; # ensure servicing of all scheduled events (only <Expose> events expected)
+    destroy .two
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1138,12 +1132,12 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
 } -body {
     destroy .three
     waitForWindowEvent .two.f1.f2 <Enter>
-    set result
-} -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
     destroy .two
     destroy .one
+    set result
+} -cleanup {
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
 
