@@ -1102,7 +1102,6 @@ TkInOutEvents(
 	    }
 	}
     }
-    fflush(stderr);
 }
 
 /*
