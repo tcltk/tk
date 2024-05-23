@@ -45,7 +45,6 @@ static int		GenerateEnterLeave(TkWindow *winPtr, int x, int y,
 static void		InitializeEvent(XEvent *eventPtr, TkWindow *winPtr,
 			    int type, int x, int y, int state, int detail);
 static void		UpdateCursor(TkWindow *winPtr);
-
 
 /*
  *----------------------------------------------------------------------
@@ -184,6 +183,7 @@ GenerateEnterLeave(
 
 		InitializeEvent(&event, targetPtr, LeaveNotify, x, y, state,
 			NotifyNormal);
+
 		TkInOutEvents(&event, lastWinPtr, winPtr, LeaveNotify,
 			EnterNotify, TCL_QUEUE_TAIL);
 		crossed = 1;
@@ -493,6 +493,7 @@ TkPointerDeadWindow(
 {
     ThreadSpecificData *tsdPtr =
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+
     if (winPtr == tsdPtr->lastWinPtr) {
 	tsdPtr->lastWinPtr = TkGetContainer(winPtr);
     }

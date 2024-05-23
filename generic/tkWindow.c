@@ -1807,7 +1807,6 @@ Tk_MapWindow(
 	TkWmMapWindow(winPtr);
 	return;
     }
-
     winPtr->flags |= TK_MAPPED;
     XMapWindow(winPtr->display, winPtr->window);
     event.type = MapNotify;
