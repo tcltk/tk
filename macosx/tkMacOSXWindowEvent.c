@@ -252,12 +252,12 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 - (void) windowMapped: (NSNotification *) notification
 {
-   NSWindow *w = [notification object];
-   TkWindow *winPtr = TkMacOSXGetTkWindow(w);
+    NSWindow *w = [notification object];
+    TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
-   if (winPtr) {
+    if (winPtr) {
    	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
-   }
+    }
 }
 
 - (void) windowLiveResize: (NSNotification *) notification
