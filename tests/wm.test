@@ -945,10 +945,11 @@ test wm-iconwindow-1.5 {usage} -setup {
 
 test wm-iconwindow-2.1 {setting and reading values} -setup {
     destroy .icon
+    # Destroying and creating .t prevents a segfault on macOS
+    destroy .t
+    toplevel .t
     set result {}
 } -body {
-    #added to avoid a crash on macOS
-    deiconify .t; update
     lappend result [wm iconwindow .t]
     toplevel .icon -width 50 -height 50 -bg green
     wm iconwindow .t .icon
