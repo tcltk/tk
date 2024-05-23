@@ -1029,7 +1029,7 @@ TkInOutEvents(
     /*
      * Generate enter/leave events and add them to the grab event queue.
      */
-    
+
 #define QUEUE(w, t, d)					\
     if (w->window != None) {				\
 	eventPtr->type = t;				\
@@ -1087,7 +1087,7 @@ TkInOutEvents(
 	    QUEUE(sourcePtr, leaveType, NotifyNonlinear);
 	    for (winPtr = sourcePtr->parentPtr, i = upLevels-1; i > 0;
 		    winPtr = winPtr->parentPtr, i--) {
-	    QUEUE(winPtr, leaveType, NotifyNonlinearVirtual);
+		QUEUE(winPtr, leaveType, NotifyNonlinearVirtual);
 	    }
 	}
 	if (enterType != 0) {
@@ -1167,7 +1167,6 @@ MovePointer2(
     TkInOutEvents(&event, sourcePtr, destPtr, (leaveEvents) ? LeaveNotify : 0,
 	    (enterEvents) ? EnterNotify : 0, TCL_QUEUE_MARK);
 }
-
 
 /*
  *----------------------------------------------------------------------
