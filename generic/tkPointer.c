@@ -513,7 +513,6 @@ TkPointerDeadWindow(
 	    TkpSetCapture(NULL);
         }
     }
-    fflush(stderr);
 }
 
 /*

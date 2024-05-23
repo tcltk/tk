@@ -2750,8 +2750,6 @@ TkWmDeadWindow(
      */
 
     CheckForPointer(winPtr);
-    //TkPointerDeadWindow(winPtr);
-    
     ckfree(wmPtr);
     winPtr->wmInfoPtr = NULL;
 }
