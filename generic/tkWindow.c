@@ -215,9 +215,6 @@ static int		Initialize(Tcl_Interp *interp);
 static int		NameWindow(Tcl_Interp *interp, TkWindow *winPtr,
 			    TkWindow *parentPtr, const char *name);
 static void		UnlinkWindow(TkWindow *winPtr);
-#if 0
-static Bool		HasValidDisplay(Tk_Window tkwin);
-#endif
 
 /*
  * This static variable only makes sense for macOS and Windows, which never
@@ -523,40 +520,7 @@ GetScreen(
     *screenPtr = screenId;
     return dispPtr;
 }
-#if 0
-/*
- *--------------------------------------------------------------
- *
- * HasValidDisplay --
- *
- *	Given a Tk window, returns True if the window's display is still on
- *	the display list.
- *
- * Results:
- *
- *	True if the display is on the display list, False otherwise/
- *
- * Side effects:
- *      None
- *
- *--------------------------------------------------------------
- */
-
-static Bool HasValidDisplay(
-    Tk_Window tkwin)
-{
-    TkWindow *winPtr = (TkWindow *) tkwin;
-    TkDisplay *dispPtr = (TkDisplay *) winPtr->display, *dispPtr2;
-
-    for (dispPtr2 = TkGetDisplayList(); dispPtr2; dispPtr2 = dispPtr2->nextPtr) {
-	if (dispPtr2 == dispPtr) {
-	    return True;
-	}
-    }
-    return False;
-}
 
-#endif
 /*
  *----------------------------------------------------------------------
  *
@@ -1382,10 +1346,6 @@ static void SendEnterLeaveForDestroy(
     if (displayBeingClosed) {
 	return;
     }
-    //    if (!HasValidDisplay(tkwin)) {
-    //	return;
-    //    }
-    
     XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
 		  NULL, NULL, &state);
     pointerWin = Tk_CoordsToWindow(x, y, tkwin);
@@ -1809,10 +1769,6 @@ static void SendEnterLeaveForMap(
     if (displayBeingClosed) {
 	return;
     }
-    //    if (!HasValidDisplay(tkwin)) {
-    //    	return;
-    //    }
-
     XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
 		  NULL, NULL, &state);
     pointerWin = Tk_CoordsToWindow(x, y, tkwin);
