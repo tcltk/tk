@@ -680,7 +680,7 @@ Tk_GetRelief(
 	    Tcl_SetObjResult(interp,
 		    Tcl_ObjPrintf("bad relief \"%.50s\": must be %s",
 		    name, "flat, groove, raised, ridge, solid, or sunken"));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "RELIEF", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
