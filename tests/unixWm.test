@@ -1806,6 +1806,8 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 } {52 7 12 62}
 
 deleteWindows
+# Make sure that the root window is out of the way!
+wm geom . +700+700
 wm withdraw .
 if {[tk windowingsystem] eq "aqua"} {
     # Modern mac windows have no border.
