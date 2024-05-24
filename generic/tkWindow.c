@@ -436,7 +436,7 @@ GetScreen(
     if (screenName == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"no display name and no $DISPLAY environment variable", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "NO_DISPLAY", NULL);
+	Tcl_SetErrorCode(interp, "TK", "NO_DISPLAY", (char *)NULL);
 	return NULL;
     }
     length = strlen(screenName);
@@ -466,7 +466,7 @@ GetScreen(
 	    if (dispPtr == NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"couldn't connect to display \"%s\"", screenName));
-		Tcl_SetErrorCode(interp, "TK", "DISPLAY", "CONNECT", NULL);
+		Tcl_SetErrorCode(interp, "TK", "DISPLAY", "CONNECT", (char *)NULL);
 		return NULL;
 	    }
 	    dispPtr->nextPtr = tsdPtr->displayList; /* TkGetDisplayList(); */
@@ -500,7 +500,7 @@ GetScreen(
     if (screenId >= ScreenCount(dispPtr->display)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad screen number \"%d\"", screenId));
-	Tcl_SetErrorCode(interp, "TK", "DISPLAY", "SCREEN_NUMBER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "DISPLAY", "SCREEN_NUMBER", (char *)NULL);
 	return NULL;
     }
     *screenPtr = screenId;
@@ -748,7 +748,7 @@ NameWindow(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window name starts with an upper-case letter: \"%s\"",
 		name));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "NOTCLASS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "NOTCLASS", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -787,7 +787,7 @@ NameWindow(
     if (!isNew) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window name \"%s\" already exists in parent", name));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW", "EXISTS", (char *)NULL);
 	return TCL_ERROR;
     }
     Tcl_SetHashValue(hPtr, winPtr);
@@ -1104,13 +1104,13 @@ Tk_CreateWindow(
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: its parent has -container = yes",
 		    TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	    return NULL;
 	} else if (screenName == NULL) {
 	    TkWindow *winPtr = TkAllocWindow(parentPtr->dispPtr,
@@ -1168,13 +1168,13 @@ Tk_CreateAnonymousWindow(
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't create window: its parent has -container = yes",
 		    TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	    return NULL;
 	} else if (screenName == NULL) {
 	    TkWindow *winPtr = TkAllocWindow(parentPtr->dispPtr,
@@ -1252,7 +1252,7 @@ Tk_CreateWindowFromPath(
     if (p == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad window path name \"%s\"", pathName));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "WINDOW_PATH", (char *)NULL);
 	return NULL;
     }
     numChars = (size_t)(p - pathName);
@@ -1283,12 +1283,12 @@ Tk_CreateWindowFromPath(
     if (((TkWindow *) parent)->flags & TK_ALREADY_DEAD) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't create window: parent has been destroyed", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	return NULL;
     } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't create window: its parent has -container = yes", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	return NULL;
     }
 
@@ -2420,7 +2420,7 @@ Tk_NameToWindow(
 
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window",TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
 	}
 	return NULL;
     }
@@ -2432,7 +2432,7 @@ Tk_NameToWindow(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad window path name \"%s\"", pathName));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", pathName,
-		    NULL);
+		    (char *)NULL);
 	}
 	return NULL;
     }
@@ -2750,7 +2750,7 @@ Tk_MainWindow(
     }
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
 	    "this isn't a Tk application", TCL_INDEX_NONE));
-    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+    Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
     return NULL;
 }
 
@@ -2910,8 +2910,8 @@ DeleteWindowsExitProc(
      */
 
     for (dispPtr = tsdPtr->displayList; dispPtr != NULL;
-           dispPtr = dispPtr->nextPtr) {
-       XSync(dispPtr->display, False);
+	    dispPtr = dispPtr->nextPtr) {
+	XSync(dispPtr->display, False);
     }
 
     /*
@@ -3221,7 +3221,7 @@ Initialize(
 	    if (parent == NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"no controlling parent interpreter", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_PARENT", NULL);
+		Tcl_SetErrorCode(interp, "TK", "SAFE", "NO_PARENT", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
