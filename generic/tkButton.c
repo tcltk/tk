@@ -646,7 +646,7 @@ ButtonCreate(
      */
 
     tkwin = Tk_CreateWindowFromPath(interp, Tk_MainWindow(interp),
-	    Tcl_GetString(objv[1]), NULL);
+	    Tcl_GetString(objv[1]), (char *)NULL);
     if (tkwin == NULL) {
 	return TCL_ERROR;
     }

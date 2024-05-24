@@ -214,7 +214,7 @@ TkImgPhotoConfigureInstance(
  *----------------------------------------------------------------------
  */
 
-ClientData
+void *
 TkImgPhotoGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
