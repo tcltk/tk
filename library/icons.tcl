@@ -12,6 +12,8 @@
 
 namespace eval ::tk::icons {}
 
+::tk::ScalingPct ; # Only done to mimic Tk 8.7 in [tk scaling] initialization
+
 image create photo ::tk::icons::warning -data {
     iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAABHNCSVQICAgIfAhkiAAABSZJREFU
     WIXll1toVEcYgL+Zc87u2Yu7MYmrWRuTJuvdiMuqiJd4yYKXgMQKVkSjFR80kFIVJfWCWlvpg4h9
