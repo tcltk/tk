@@ -78,7 +78,7 @@ typedef struct Style {
     const char *name;		/* Name of style. Points to a hash key. */
     StyleEngine *enginePtr;	/* Style engine of which the style is an
 				 * instance. */
-    ClientData clientData;	/* Data provided during registration. */
+    void *clientData;	/* Data provided during registration. */
 } Style;
 
 /*
@@ -135,7 +135,7 @@ static StyledWidgetSpec*GetWidgetSpec(StyledElement *elementPtr,
 static void		InitElement(Element *elementPtr, const char *name,
 			    int id, int genericId, int created);
 static void		InitStyle(Style *stylePtr, const char *name,
-			    StyleEngine *enginePtr, ClientData clientData);
+			    StyleEngine *enginePtr, void *clientData);
 static void		InitStyledElement(StyledElement *elementPtr);
 static void		InitStyleEngine(StyleEngine *enginePtr,
 			    const char *name, StyleEngine *parentPtr);
@@ -1229,7 +1229,7 @@ Tk_CreateStyle(
     const char *name,		/* Name of the style to create. NULL or empty
 				 * means the default system style. */
     Tk_StyleEngine engine,	/* The style engine. */
-    ClientData clientData)	/* Private data passed as is to engine code. */
+    void *clientData)	/* Private data passed as is to engine code. */
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -1315,7 +1315,7 @@ InitStyle(
 				 * means the default system style. Usually
 				 * points to the hash key. */
     StyleEngine *enginePtr,	/* The style engine. */
-    ClientData clientData)	/* Private data passed as is to engine code. */
+    void *clientData)	/* Private data passed as is to engine code. */
 {
     stylePtr->name = name;
     stylePtr->enginePtr = enginePtr;
@@ -1359,7 +1359,7 @@ Tk_GetStyle(
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "style \"%s\" doesn't exist", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "STYLE", name, (char *)NULL);
 	}
 	return NULL;
     }

@@ -244,7 +244,7 @@ TkUndoMakeCmdSubAtom(
     atom->next = NULL;
     atom->action = actionScript;
     if (atom->action != NULL) {
-        Tcl_IncrRefCount(atom->action);
+	Tcl_IncrRefCount(atom->action);
     }
 
     if (subAtomList != NULL) {
@@ -287,7 +287,7 @@ TkUndoSubAtom *
 TkUndoMakeSubAtom(
     TkUndoProc *funcPtr,	/* Callback function to perform the
 				 * undo/redo. */
-    ClientData clientData,	/* Data to pass to the callback function. */
+    void *clientData,	/* Data to pass to the callback function. */
     Tcl_Obj *actionScript,	/* Additional Tcl data to pass to the callback
 				 * function (may be NULL). */
     TkUndoSubAtom *subAtomList)	/* Add to the end of this list of actions if
@@ -306,7 +306,7 @@ TkUndoMakeSubAtom(
     atom->next = NULL;
     atom->action = actionScript;
     if (atom->action != NULL) {
-        Tcl_IncrRefCount(atom->action);
+	Tcl_IncrRefCount(atom->action);
     }
 
     if (subAtomList != NULL) {
@@ -712,7 +712,7 @@ EvaluateActionList(
 	    Tcl_GetCommandFullName(interp, action->command, cmdNameObj);
 	    Tcl_ListObjAppendElement(NULL, evalObj, cmdNameObj);
 	    if (action->action != NULL) {
-	        Tcl_ListObjAppendList(NULL, evalObj, action->action);
+		Tcl_ListObjAppendList(NULL, evalObj, action->action);
 	    }
 	    result = Tcl_EvalObjEx(interp, evalObj, TCL_EVAL_GLOBAL);
 	    Tcl_DecrRefCount(evalObj);
