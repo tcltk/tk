@@ -2602,7 +2602,6 @@ static void CheckForPointer(TkWindow *winPtr)
 	}
 	ckfree(windows);
     }
-    fflush(stderr);
 }
 
 void
