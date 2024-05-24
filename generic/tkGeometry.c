@@ -53,10 +53,10 @@ typedef struct MaintainContainer {
  * Prototypes for static procedures in this file:
  */
 
-static void		MaintainCheckProc(ClientData clientData);
-static void		MaintainContainerProc(ClientData clientData,
+static void		MaintainCheckProc(void *clientData);
+static void		MaintainContainerProc(void *clientData,
 			    XEvent *eventPtr);
-static void		MaintainContentProc(ClientData clientData,
+static void		MaintainContentProc(void *clientData,
 			    XEvent *eventPtr);
 
 /*
@@ -87,7 +87,7 @@ Tk_ManageGeometry(
     const Tk_GeomMgr *mgrPtr,	/* Static structure describing the geometry
 				 * manager. This structure must never go
 				 * away. */
-    ClientData clientData)	/* Arbitrary one-word argument to pass to
+    void *clientData)	/* Arbitrary one-word argument to pass to
 				 * geometry manager procedures. */
 {
     TkWindow *winPtr = (TkWindow *) tkwin;
@@ -336,7 +336,7 @@ TkSetGeometryContainer(
 		    "cannot use geometry manager %s inside %s because"
 		    " %s is already managing it's content windows",
 		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
-	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -654,7 +654,7 @@ Tk_UnmaintainGeometry(
 
 static void
 MaintainContainerProc(
-    ClientData clientData,	/* Pointer to MaintainContainer structure for the
+    void *clientData,	/* Pointer to MaintainContainer structure for the
 				 * container window. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
@@ -708,7 +708,7 @@ MaintainContainerProc(
 
 static void
 MaintainContentProc(
-    ClientData clientData,	/* Pointer to MaintainContent structure for
+    void *clientData,	/* Pointer to MaintainContent structure for
 				 * container-window pair. */
     XEvent *eventPtr)		/* Describes what just happened. */
 {
@@ -741,7 +741,7 @@ MaintainContentProc(
 
 static void
 MaintainCheckProc(
-    ClientData clientData)	/* Pointer to MaintainContainer structure for the
+    void *clientData)	/* Pointer to MaintainContainer structure for the
 				 * container window. */
 {
     MaintainContainer *containerPtr = (MaintainContainer *)clientData;
