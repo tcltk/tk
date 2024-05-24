@@ -2579,12 +2579,14 @@ TkpWmGetState(
 
 static void CheckForPointer(TkWindow *winPtr)
 {
-    Display *display = Tk_Display(winPtr);
     POINT mouse;
+    int x, y;
     unsigned int state = TkWinGetModifierState();
     TkWindow **windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
     TkWindow **w;
-    TkGetPointerCoords(NULL, &mouse.x, &mouse.y);
+    x = (int) mouse.x;
+    y = (int) mouse.y;
+    TkGetPointerCoords(NULL, &x, &y);
     if (windows != NULL) {
 	for (w = windows; *w ; w++) {
 	    RECT windowRect;
@@ -2593,10 +2595,8 @@ static void CheckForPointer(TkWindow *winPtr)
 		continue;
 	    }
 	    if (winPtr != *w && PtInRect(&windowRect, mouse)) {
-		Tk_Window target = Tk_CoordsToWindow(mouse.x, mouse.y,
-		    (Tk_Window) *w);
-		Tk_UpdatePointer((Tk_Window) target,
-		      mouse.x, mouse.y, state);
+		Tk_Window target = Tk_CoordsToWindow(x, y, (Tk_Window) *w);
+		Tk_UpdatePointer((Tk_Window) target, x, y, state);
 		break;
 	    }
 	}
