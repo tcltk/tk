@@ -623,17 +623,26 @@ FrontWindowAtPoint(
     for (NSWindow *w in windows) {
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
+	    //	    WmInfo *wmPtr = winPtr->wmInfoPtr;
 	    NSRect windowFrame = [w frame];
-	    NSRect contentFrame = windowFrame;
+	    NSRect contentFrame = [w frame];
+
+	    contentFrame.size.height = [[w contentView] frame].size.height;
 	    /*
 	     * For consistency with other platforms, points in the
 	     * title bar are not considered to be contained in the
 	     * window.
 	     */
 
-	    contentFrame.size.height = [[w contentView] frame].size.height;
 	    if (NSMouseInRect(p, contentFrame, NO)) {
 		return winPtr;
+	    } else if (NSMouseInRect(p, windowFrame, NO)) {
+		/*
+		 * The pointer is in the title bar of the highest NSWindow
+		 * containing it, and therefore is should not be considered
+		 * to be contained in any Tk window.
+		 */
+		return NULL;
 	    }
 	}
     }
