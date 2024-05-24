@@ -528,7 +528,7 @@ static const EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
-    {"TouchpadScroll",  TouchpadScroll,         TouchpadScrollMask},
+    {"TouchpadScroll",  TouchpadScroll,	 TouchpadScrollMask},
     {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
     {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
     {"Create",		CreateNotify,		SubstructureNotifyMask},
@@ -2780,7 +2780,9 @@ IsPSInPSList(
     PSEntry *psEntry;
 
     TK_DLIST_FOREACH(psEntry, psList) {
-        if (psEntry->psPtr == psPtr) { return 1; }
+	if (psEntry->psPtr == psPtr) {
+	    return 1;
+	}
     }
     return 0;
 }
@@ -2833,12 +2835,12 @@ MatchPatterns(
      * it from the keyboard. See bug [16ef161925].
      */
     if (IsKeyEventType(curEvent->xev.type)) {
-        for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
-            if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
-                isModKeyOnly = 1;
-                break;
-            }
-        }
+	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+	    if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
+		isModKeyOnly = 1;
+		break;
+	    }
+	}
     }
 
     for (psEntry = PSList_First(psList); psEntry; psEntry = PSList_Next(psEntry)) {
@@ -2855,11 +2857,11 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
-                /* Ignore modifier key events, and KeyRelease events if the current event
-                 * is of a different type (e.g. a Button event)
-                 */
-                psEntry->keepIt = isModKeyOnly || \
-                        ((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
+		/* Ignore modifier key events, and KeyRelease events if the current event
+		 * is of a different type (e.g. a Button event)
+		 */
+		psEntry->keepIt = isModKeyOnly || \
+			((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
 
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
@@ -2875,7 +2877,7 @@ MatchPatterns(
 		    unsigned curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = 1; /* Remove it from promotion list. */
-                    psEntry->keepIt = 0;  /* Don't keep matching patterns. */
+		    psEntry->keepIt = 0;  /* Don't keep matching patterns. */
 
 		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2942,7 +2944,7 @@ MatchPatterns(
 				    psEntry->keepIt = 1; /* Don't remove it from promotion list. */
 				}
 			    } else {
-			        /*
+				/*
 				 * Pattern sequence is already present in the success list.
 				 */
 
@@ -3938,7 +3940,7 @@ HandleEventGenerate(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window id \"%s\" doesn't exist in this application",
 		Tcl_GetString(objv[0])));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -3952,12 +3954,12 @@ HandleEventGenerate(
     if (count != 1u) {
 	Tcl_SetObjResult(interp,
 		Tcl_NewStringObj("Double, Triple, or Quadruple modifier not allowed", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", (char *)NULL);
 	return TCL_ERROR;
     }
     if (*p) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("only one event specification allowed", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -4014,7 +4016,7 @@ HandleEventGenerate(
     for (i = 2; i < objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
 #if defined(_MSC_VER)
-        /* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
+	/* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
 	volatile int badOpt = 0;
 #else
 	int badOpt = 0;
@@ -4038,7 +4040,7 @@ HandleEventGenerate(
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -4176,14 +4178,14 @@ HandleEventGenerate(
 	    keysym = TkStringToKeysym(value);
 	    if (keysym == NoSymbol) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, (char *)NULL);
 		return TCL_ERROR;
 	    }
 
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("no keycode for keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY)) {
@@ -4418,7 +4420,7 @@ HandleEventGenerate(
     	if (badOpt) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s event doesn't accept \"%s\" option", name, Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4461,19 +4463,19 @@ HandleEventGenerate(
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
 
-            /*
-             * Warping with respect to a window will be done when Tk_handleEvent
-             * below will run the event handlers and in particular TkPointerEvent.
-             * This allows to make grabs and warping work together robustly, that
-             * is without depending on a precise sequence of events.
-             * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
-             * is NULL) is run directly here.
-             */
+	    /*
+	     * Warping with respect to a window will be done when Tk_handleEvent
+	     * below will run the event handlers and in particular TkPointerEvent.
+	     * This allows to make grabs and warping work together robustly, that
+	     * is without depending on a precise sequence of events.
+	     * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+	     * is NULL) is run directly here.
+	     */
 
-            if (!dispPtr->warpWindow) {
-                TkpWarpPointer(dispPtr);
-                XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-            }
+	    if (!dispPtr->warpWindow) {
+		TkpWarpPointer(dispPtr);
+		XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+	    }
 	}
 
 	/*
@@ -4544,7 +4546,7 @@ NameToWindow(
 
 	if (!tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad window name/identifier \"%s\"", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, (char *)NULL);
 	    return 0;
 	}
     }
@@ -4583,20 +4585,20 @@ TkDoWarpWrtWin(
 
     if (dispPtr->warpWindow) {
 
-        /*
-         * Warping with respect to a window can only be done if the window is
-         * mapped. This was checked in HandleEvent. The window needs to be
-         * still mapped at the time the present code is executed. Also
-         * one needs to guard against window destruction in the meantime,
-         * which could have happened as a side effect of an event handler.
-         */
+	/*
+	 * Warping with respect to a window can only be done if the window is
+	 * mapped. This was checked in HandleEvent. The window needs to be
+	 * still mapped at the time the present code is executed. Also
+	 * one needs to guard against window destruction in the meantime,
+	 * which could have happened as a side effect of an event handler.
+	 */
 
-        if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
-            TkpWarpPointer(dispPtr);
-            XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-        }
-        Tcl_Release(dispPtr->warpWindow);
-        dispPtr->warpWindow = NULL;
+	if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
+	    TkpWarpPointer(dispPtr);
+	    XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+	}
+	Tcl_Release(dispPtr->warpWindow);
+	dispPtr->warpWindow = NULL;
     }
 }
 
@@ -4638,7 +4640,7 @@ GetVirtualEventUid(
 	    || virtString[length - 2] != '>'
 	    || virtString[length - 1] != '>') {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("virtual event \"%s\" is badly formed", virtString));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", (char *)NULL);
 	return NULL;
     }
     virtString[length - 2] = '\0';
@@ -4731,7 +4733,7 @@ FindSequence(
 	    if (!allowVirtual) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"virtual event not allowed in definition of another virtual event", TCL_INDEX_NONE));
-		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", NULL);
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", (char *)NULL);
 		ckfree(psPtr);
 		return NULL;
 	    }
@@ -4755,13 +4757,13 @@ FindSequence(
 
     if (numPats == 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("no events specified in binding", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", (char *)NULL);
 	ckfree(psPtr);
 	return NULL;
     }
     if (numPats > 1u && virtualFound) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("virtual events may not be composed", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", (char *)NULL);
 	ckfree(psPtr);
 	return NULL;
     }
@@ -4861,7 +4863,7 @@ FinalizeParseEventDescription(
 
     if (errorObj) {
 	Tcl_SetObjResult(interp, errorObj);
-	Tcl_SetErrorCode(interp, "TK", "EVENT", errCode, NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", errCode, (char *)NULL);
     }
     patPtr->count = count;
     return count;
@@ -5287,9 +5289,9 @@ TkStringToKeysym(
 
     size_t len = Tcl_UtfToUniChar(name, &keysym);
     if (name[len] == '\0') {
-        if (!Tcl_UniCharIsPrint(keysym)) {
+	if (!Tcl_UniCharIsPrint(keysym)) {
     	/* This form not supported */
-        } else if ((unsigned)(keysym - 0x21) <= 0x5D) {
+	} else if ((unsigned)(keysym - 0x21) <= 0x5D) {
 		return (KeySym)keysym;
 	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
 		return (KeySym)keysym;
