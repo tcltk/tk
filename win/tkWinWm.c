@@ -2584,9 +2584,9 @@ static void CheckForPointer(TkWindow *winPtr)
     unsigned int state = TkWinGetModifierState();
     TkWindow **windows = TkWmStackorderToplevel(winPtr->mainPtr->winPtr);
     TkWindow **w;
-    x = (int) mouse.x;
-    y = (int) mouse.y;
     TkGetPointerCoords(NULL, &x, &y);
+    mouse.x = x;
+    mouse.y = y;
     if (windows != NULL) {
 	for (w = windows; *w ; w++) {
 	    RECT windowRect;
