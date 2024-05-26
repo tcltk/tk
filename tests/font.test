@@ -2347,15 +2347,11 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -setup {
-    set oldscale [tk scaling]
-} -body {
-    set oldsize [expr {-(-12.0 / $oldscale)}]
+test font-44.1 {TkFontGetPixels: size < 0} -body {
+    # if this test failed, start the investigations by reading ticket [8162e9b7a9]
     tk scaling 0.5
-    expr {round([font actual {times -12} -size] / $oldscale * 0.5) - round($oldsize) == 0}
-} -cleanup {
-    tk scaling $oldscale
-} -result 1
+    font actual {times -11} -size
+} -result 22
 test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Font} -setup {
     set oldscale [tk scaling]
 } -body {
