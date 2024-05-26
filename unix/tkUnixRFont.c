@@ -188,6 +188,7 @@ GetFont(
 
 static void
 GetTkFontAttributes(
+    Tk_Window tkwin,
     XftFont *ftFont,
     TkFontAttributes *faPtr)
 {
@@ -218,11 +219,15 @@ GetTkFontAttributes(
 	slant = XFT_SLANT_ROMAN;
     }
 
-    DEBUG(("GetTkFontAttributes: family %s size %d weight %d slant %d\n",
-	    family, (int)size, weight, slant));
+    DEBUG(("GetTkFontAttributes: family %s size %ld weight %d slant %d\n",
+	    family, lround(size), weight, slant));
 
     faPtr->family = Tk_GetUid(family);
-    faPtr->size = size;
+    /*
+     * Make sure that faPtr->size will be > 0 even
+     * in the very unprobable case that size < 0
+     */
+    faPtr->size = TkFontGetPoints(tkwin, size);
     faPtr->weight = (weight > XFT_WEIGHT_MEDIUM) ? TK_FW_BOLD : TK_FW_NORMAL;
     faPtr->slant = (slant > XFT_SLANT_ROMAN) ? TK_FS_ITALIC : TK_FS_ROMAN;
     faPtr->underline = 0;
@@ -358,7 +363,7 @@ InitFont(
 	return NULL;
     }
     fontPtr->font.fid = XLoadFont(Tk_Display(tkwin), "fixed");
-    GetTkFontAttributes(ftFont, &fontPtr->font.fa);
+    GetTkFontAttributes(tkwin, ftFont, &fontPtr->font.fa);
     GetTkFontMetrics(ftFont, &fontPtr->font.fm);
     Tk_DeleteErrorHandler(handler);
     if (errorFlag) {
@@ -502,8 +507,8 @@ TkpGetFontFromAttributes(
     int weight, slant;
     UnixFtFont *fontPtr;
 
-    DEBUG(("TkpGetFontFromAttributes: %s %d %d %d\n", faPtr->family,
-	    (int)faPtr->size, faPtr->weight, faPtr->slant));
+    DEBUG(("TkpGetFontFromAttributes: %s %ld %d %d\n", faPtr->family,
+	    lround(faPtr->size), faPtr->weight, faPtr->slant));
 
     pattern = XftPatternCreate();
     if (faPtr->family) {
@@ -681,7 +686,7 @@ TkpGetSubFonts(
 
 void
 TkpGetFontAttrsForChar(
-    TCL_UNUSED(Tk_Window),		/* Window on the font's display */
+    Tk_Window tkwin,		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
     int c,         		/* Character of interest */
     TkFontAttributes *faPtr)	/* Output: Font attributes */
@@ -693,7 +698,7 @@ TkpGetFontAttrsForChar(
     XftFont *ftFont = GetFont(fontPtr, ucs4, 0.0);
 				/* Actual font used to render the character */
 
-    GetTkFontAttributes(ftFont, faPtr);
+    GetTkFontAttributes(tkwin, ftFont, faPtr);
     faPtr->underline = fontPtr->font.fa.underline;
     faPtr->overstrike = fontPtr->font.fa.overstrike;
 }
