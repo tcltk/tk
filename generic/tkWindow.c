@@ -1354,9 +1354,6 @@ static void SendEnterLeaveForDestroy(
 	    containerPtr = TkGetContainer((TkWindow *)pointerWin);
 	    Tk_UpdatePointer((Tk_Window) containerPtr, x, y, state);
 	}
-	else if (pointerWin) {
-	    TkWmDeadWindow((TkWindow *) pointerWin);
-	}
     }
     
     if (pointerWin && (tkwin == Tk_Parent(pointerWin))) {
