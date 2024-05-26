@@ -935,12 +935,6 @@ test event-9.11 {pointer window container = parent} -setup {
     set result "|"
 } -body {
     destroy .one.f1.f2
-#    if {[tk windowingsystem] eq "aqua"} {
-#        # Generate a NSMouseMoved NSevent with no mouse pointer position change.
-#        # This is to let event-9.1? tests pass on macOS aqua and is only a workaround
-#        # since macOS aqua should send the adequate NSevent by itself.
-#        movemouse [expr {[winfo rootx .one] + 250}] [expr {[winfo rooty .one] + 250}]
-#    }
     _pause 200; # service crossing events
     set result
 } -cleanup {
