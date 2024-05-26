@@ -19,7 +19,7 @@
  * Debugging support...
  */
 
-#define DEBUG_FONTSEL 1
+#define DEBUG_FONTSEL 0
 #define DEBUG(arguments) \
     if (DEBUG_FONTSEL) { \
 	printf arguments; fflush(stdout); \
