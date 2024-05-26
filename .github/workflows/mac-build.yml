@@ -14,7 +14,7 @@ env:
   ERROR_ON_FAILURES: 1
 jobs:
   xcode:
-    runs-on: macos-11
+    runs-on: macos-12
     defaults:
       run:
         shell: bash
@@ -49,7 +49,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make test | tee out.txt
+          make TESTFLAGS="-verbose bpest" test | tee out.txt
           nmatches=$( grep -c "Failed	0" out.txt )
           if [ $nmatches -lt 4 ]
           then
@@ -58,7 +58,7 @@ jobs:
           fi
         timeout-minutes: 30
   clang:
-    runs-on: macos-11
+    runs-on: macos-12
     strategy:
       matrix:
         symbols:
