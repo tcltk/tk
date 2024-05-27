@@ -1027,7 +1027,9 @@ TkWmDeadWindow(
 	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 	int win_x, win_y;
 	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) winPtr2, top_x, top_y, &win_x, &win_y);
-	Tk_UpdatePointer((Tk_Window) target, root_x, root_y, [NSApp tkButtonState]);
+	if (target != (Tk_Window) winPtr) {
+	    Tk_UpdatePointer((Tk_Window) target, root_x, root_y, [NSApp tkButtonState]);
+	}
     }
 
     /*
