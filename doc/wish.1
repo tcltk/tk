@@ -230,8 +230,24 @@ The variable \fBtcl_prompt2\fR is used in a similar way when
 a newline is typed but the current command is not yet complete;
 if \fBtcl_prompt2\fR is not set then no prompt is output for
 incomplete commands.
+.SH ZIPVFS
+.PP
+When a zipfile is concatenated to the end of \fBwish\fR, on startup
+the contents of the zip archive will be mounted under the virtual file
+system \fB//zipfs:/\fR. If a top level directory \fBtk_library\fR is
+present in the zip archive, it will become the directory loaded as
+env(TK_LIBRARY). If a file named \fBmain.tcl\fR is present in the top
+level directory of the zip archive, it will be sourced instead of the
+shell's normal command line handing.
+.PP
+Only one zipfile can be concatenated to the end of executable image
+(tclsh, or wish). However, if multiple zipfiles are
+concatenated, only the last one is used.
+
+This filesystem is read-only. Files cannot be added or modified within
+this mounted file system.  See zipfs(n) for complete details.
 .SH "SEE ALSO"
-tclsh(1), toplevel(n), Tk_Main(3), Tk_MainLoop(3), Tk_MainWindow(3)
+tclsh(1), toplevel(n), zipfs(n), Tk_Main(3), Tk_MainLoop(3), Tk_MainWindow(3)
 .SH KEYWORDS
 application, argument, interpreter, prompt, script file, shell,
 toolkit, toplevel
