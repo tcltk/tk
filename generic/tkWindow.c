@@ -1755,26 +1755,6 @@ Tk_DestroyWindow(
  *--------------------------------------------------------------
  */
 
-static void SendEnterLeaveForMap(
-    Tk_Window tkwin)
-{
-#if defined(MAC_OSX_TK) || defined(_WIN32)
-    int x, y;
-    unsigned int state;
-    Tk_Window pointerWin;
-    
-    if (displayBeingClosed) {
-	return;
-    }
-    XQueryPointer(Tk_Display(tkwin), None, NULL, NULL, &x, &y,
-		  NULL, NULL, &state);
-    pointerWin = Tk_CoordsToWindow(x, y, tkwin);
-    if (pointerWin == tkwin) {
-	Tk_UpdatePointer(tkwin, x, y, state);
-    }
-#endif
-}
-
 void
 Tk_MapWindow(
     Tk_Window tkwin)		/* Token for window to map. */
@@ -1814,7 +1794,6 @@ Tk_MapWindow(
     event.xmap.window = winPtr->window;
     event.xmap.override_redirect = winPtr->atts.override_redirect;
     Tk_HandleEvent(&event);
-    SendEnterLeaveForMap(tkwin);
 }
 
 /*
