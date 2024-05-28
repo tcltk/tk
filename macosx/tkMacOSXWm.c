@@ -2922,6 +2922,7 @@ WmManageCmd(
     } else if (Tk_IsTopLevel(frameWin)) {
 	/* Already managed by wm - ignore it */
     }
+    winPtr->geomMgrPtr = &wmMgrType;
     return TCL_OK;
 }
 
