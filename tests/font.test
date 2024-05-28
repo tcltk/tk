@@ -2427,15 +2427,15 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
     set twidth [font measure MyFont $text]
     set theight [font metrics MyFont -linespace]
     set circid [$c create polygon \
-		    15                    15 \
-		    [expr {15 + $twidth}] 15 \
-		    [expr {15 + $twidth}] [expr {15 + $theight}] \
-		    15                    [expr {15 + $theight}] \
-		    -width 1 -joinstyle round -smooth true -fill {} -outline blue]
+        15                    15 \
+        [expr {15 + $twidth}] 15 \
+        [expr {15 + $twidth}] [expr {15 + $theight}] \
+        15                    [expr {15 + $theight}] \
+            -width 1 -joinstyle round -smooth true -fill {} -outline blue]
     pack $c -fill both -expand 1 -side top
     update
 
-    # Lamda test functions
+    # Lambda test functions
     set circle_text {{w user_data text circ} {
 	if {[winfo class $w] ne "Canvas"} {
 	    puts "Wrong widget type: $w"
@@ -2461,6 +2461,7 @@ test font-47.2 {Bug 3049518 - Canvas} -body {
     apply $circle_text $c FontChanged $textid $circid
     update
     bind $c <<TkWorldChanged>> [list apply $circle_text %W %d $textid $circid]
+    update idletasks
 
     # Begin test:
     set results {}
