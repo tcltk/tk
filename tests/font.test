@@ -2352,10 +2352,10 @@ test font-44.1 {TkFontGetPixels: size < 0}  -setup {
 } -body {
     # if this test failed, start the investigations by reading ticket [8162e9b7a9]
     tk scaling 0.5
-    font actual {times -11} -size
+    font actual {times -13} -size
 } -cleanup {
     tk scaling $oldscale
-} -result 22
+} -result 26
 test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Font} -setup {
     set oldscale [tk scaling]
 } -body {
