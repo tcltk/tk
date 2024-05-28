@@ -1027,8 +1027,11 @@ TkWmDeadWindow(
 	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
 	int win_x, win_y;
 	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) winPtr2, top_x, top_y, &win_x, &win_y);
-	if (target != (Tk_Window) winPtr) {
-	    Tk_UpdatePointer((Tk_Window) target, root_x, root_y, [NSApp tkButtonState]);
+	/* A non-toplevel window can have a NULL parent while it is in the process of
+	 * being destroyed.  We should not call Tk_UpdatePointer in that case.
+	 */
+	if (Tk_Parent(target) != NULL || Tk_IsTopLevel(target)) {
+	    Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
 	}
     }
 
