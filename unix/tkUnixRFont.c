@@ -733,7 +733,7 @@ Tk_MeasureChars(
     int clen, curX, newX, curByte, newByte, sawNonSpace;
     int termByte = 0, termX = 0, errorFlag = 0;
     Tk_ErrorHandler handler;
-#ifdef DEBUG_FONTSEL
+#if DEBUG_FONTSEL
     char string[256];
     int len = 0;
 #endif /* DEBUG_FONTSEL */
@@ -769,7 +769,7 @@ Tk_MeasureChars(
 	    sawNonSpace = 1;
 	}
 
-#ifdef DEBUG_FONTSEL
+#if DEBUG_FONTSEL
 	string[len++] = (char) c;
 #endif /* DEBUG_FONTSEL */
 	ftFont = GetFont(fontPtr, c, 0.0);
@@ -812,7 +812,7 @@ Tk_MeasureChars(
     }
 measureCharsEnd:
     Tk_DeleteErrorHandler(handler);
-#ifdef DEBUG_FONTSEL
+#if DEBUG_FONTSEL
     string[len] = '\0';
     DEBUG(("MeasureChars: %s length %d bytes %d\n", string, curX, curByte));
 #endif /* DEBUG_FONTSEL */
