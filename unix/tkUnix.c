@@ -135,6 +135,8 @@ Tk_UpdatePointer(
  *----------------------------------------------------------------------
  */
 
+extern int XUnionRegion(Region srca, Region srcb, Region dr_return);
+
 void
 TkpCopyRegion(
     TkRegion dst,
