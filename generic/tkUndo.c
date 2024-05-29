@@ -244,7 +244,7 @@ TkUndoMakeCmdSubAtom(
     atom->next = NULL;
     atom->action = actionScript;
     if (atom->action != NULL) {
-        Tcl_IncrRefCount(atom->action);
+	Tcl_IncrRefCount(atom->action);
     }
 
     if (subAtomList != NULL) {
@@ -306,7 +306,7 @@ TkUndoMakeSubAtom(
     atom->next = NULL;
     atom->action = actionScript;
     if (atom->action != NULL) {
-        Tcl_IncrRefCount(atom->action);
+	Tcl_IncrRefCount(atom->action);
     }
 
     if (subAtomList != NULL) {
@@ -712,7 +712,7 @@ EvaluateActionList(
 	    Tcl_GetCommandFullName(interp, action->command, cmdNameObj);
 	    Tcl_ListObjAppendElement(NULL, evalObj, cmdNameObj);
 	    if (action->action != NULL) {
-	        Tcl_ListObjAppendList(NULL, evalObj, action->action);
+		Tcl_ListObjAppendList(NULL, evalObj, action->action);
 	    }
 	    result = Tcl_EvalObjEx(interp, evalObj, TCL_EVAL_GLOBAL);
 	    Tcl_DecrRefCount(evalObj);

@@ -37,9 +37,10 @@ namespace eval ::tk::systray {
 	}
 
 	set top $w._balloon
-	catch {destroy $top}
+	::destroy $top
 	toplevel $top -bg black -bd 1
 	wm overrideredirect $top 1
+	wm state $top withdrawn
 	if {[tk windowingsystem] eq "aqua"}  {
 	    ::tk::unsupported::MacWindowStyle style $top help none
 	}

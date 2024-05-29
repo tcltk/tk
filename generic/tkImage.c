@@ -212,7 +212,7 @@ Tk_ImageObjCmd(
     const char *arg, *name;
     Tcl_Obj *resultObj;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (objc < 2) {
 	Tcl_WrongNumArgs(interp, 1, objv, "option ?args?");
@@ -259,7 +259,7 @@ Tk_ImageObjCmd(
 	if (typePtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "image type \"%s\" doesn't exist", arg));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE_TYPE", arg, (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -292,7 +292,7 @@ Tk_ImageObjCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"images may not be named the same as the main window",
 			-1));
-		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SMASH_MAIN", NULL);
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "SMASH_MAIN", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -355,7 +355,7 @@ Tk_ImageObjCmd(
 	Tcl_Preserve(modelPtr);
 	if (oldimage) {
 	    typedef int (OldCreateProc)(Tcl_Interp*, char*, Tcl_Size, char**,
-		Tk_ImageType*, Tk_ImageModel, ClientData*);
+		Tk_ImageType*, Tk_ImageModel, void **);
 	    i = ((OldCreateProc*)typePtr->createProc)(interp,
 		(char*)name, objc, (char**)args, typePtr,
 		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
@@ -490,7 +490,7 @@ Tk_ImageObjCmd(
 
   alreadyDeleted:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf("image \"%s\" doesn't exist",arg));
-    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", arg, NULL);
+    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", arg, (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -636,7 +636,7 @@ Tk_GetImage(
     if (interp) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"image \"%s\" doesn't exist", name));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "IMAGE", name, (char *)NULL);
     }
     return NULL;
 }

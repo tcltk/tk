@@ -351,7 +351,7 @@ GetBitmap(
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't specify bitmap with '@' in a safe interpreter",
 		    TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", (char *)NULL);
 	    goto error;
 	}
 
@@ -373,7 +373,7 @@ GetBitmap(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"error reading bitmap file \"%s\"", string));
-		Tcl_SetErrorCode(interp, "TK", "BITMAP", "FILE_ERROR", NULL);
+		Tcl_SetErrorCode(interp, "TK", "BITMAP", "FILE_ERROR", (char *)NULL);
 	    }
 	    Tcl_DStringFree(&buffer);
 	    goto error;
@@ -396,7 +396,7 @@ GetBitmap(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "bitmap \"%s\" not defined", string));
 		    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "BITMAP", string,
-			    NULL);
+			    (char *)NULL);
 		}
 		goto error;
 	    }
@@ -500,7 +500,7 @@ Tk_DefineBitmap(
     if (!isNew) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bitmap \"%s\" is already defined", name));
-	Tcl_SetErrorCode(interp, "TK", "BITMAP", "EXISTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "BITMAP", "EXISTS", (char *)NULL);
 	return TCL_ERROR;
     }
     predefPtr = (TkPredefBitmap *)ckalloc(sizeof(TkPredefBitmap));

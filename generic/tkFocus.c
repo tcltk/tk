@@ -82,7 +82,7 @@ typedef struct TkDisplayFocusInfo {
 
 static DisplayFocusInfo*FindDisplayFocusInfo(TkMainInfo *mainPtr,
 			    TkDisplay *dispPtr);
-static void		FocusMapProc(ClientData clientData, XEvent *eventPtr);
+static void		FocusMapProc(void *clientData, XEvent *eventPtr);
 static void		GenerateFocusEvents(TkWindow *sourcePtr,
 			    TkWindow *destPtr);
 
@@ -105,7 +105,7 @@ static void		GenerateFocusEvents(TkWindow *sourcePtr,
 
 int
 Tk_FocusObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -630,8 +630,8 @@ TkSetFocusWin(
     }
     tlFocusPtr->focusWinPtr = winPtr;
 
-    if (topLevelPtr->flags & TK_EMBEDDED &&
-        (displayFocusPtr->focusWinPtr == NULL)) {
+    if ((topLevelPtr->flags & TK_EMBEDDED) &&
+	    (displayFocusPtr->focusWinPtr == NULL)) {
 
 	/*
 	 * We are assigning focus to an embedded toplevel.  The platform
@@ -971,7 +971,7 @@ GenerateFocusEvents(
 
 static void
 FocusMapProc(
-    ClientData clientData,	/* Toplevel window. */
+    void *clientData,	/* Toplevel window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkWindow *winPtr = (TkWindow *)clientData;
