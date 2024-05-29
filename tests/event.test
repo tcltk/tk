@@ -933,11 +933,11 @@ test event-9.11 {pointer window container = parent} -setup {
     update; # finish display of window
     set result "|"
 } -body {
-    processevents
+    processevents enter leave
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.f1.f2
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -962,7 +962,7 @@ test event-9.12 {pointer window container != parent} -setup {
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.g
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -985,7 +985,7 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
     waitForWindowEvent .one <Enter>
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1010,7 +1010,7 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
     waitForWindowEvent .one.f1.f2 <Enter>
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1032,7 +1032,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1056,7 +1056,7 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.f1
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1083,7 +1083,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     update; # make sure window is gone
     destroy .one.f1
     update; # make sure window is gone
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1106,7 +1106,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
     waitForWindowEvent .one <Enter>
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1136,7 +1136,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .three
     waitForWindowEvent .two.f1.f2 <Enter>
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1159,7 +1159,7 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
-    processevents
+    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
