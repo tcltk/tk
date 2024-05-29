@@ -147,6 +147,9 @@ typedef struct TrivialCommandHeader {
 static int		ImageObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
+static int		ProcessEventsObjCmd(ClientData dummy,
+			    Tcl_Interp *interp, int objc,
+			    Tcl_Obj * const objv[]);
 static int		TestbitmapObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
@@ -247,6 +250,7 @@ Tktest_Init(
 	return TCL_ERROR;
     }
 
+    Tcl_CreateObjCommand(interp, "processevents", ProcessEventsObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testbitmap", TestbitmapObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
@@ -1677,6 +1681,48 @@ ImageDelete(
     ckfree(timPtr->imageName);
     ckfree(timPtr->varName);
     ckfree(timPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * ProcessEventsObjCmd --
+ *
+ *	This function implements the "processevents" command. Currently
+ *      It processes all <Enter> or <Leave> events on the queue.
+ *
+ * Results:
+ *	A standard Tcl result.
+ *
+ * Side effects:
+ *	Events are processed
+ *
+ *----------------------------------------------------------------------
+ */
+
+static Tk_RestrictAction
+CrossingRestrictProc(
+    ClientData arg,
+    XEvent *eventPtr)
+{
+    if (eventPtr->type == EnterNotify || eventPtr->type == LeaveNotify) {
+	return TK_PROCESS_EVENT;
+    }
+    return TK_DEFER_EVENT;	
+}
+
+static int ProcessEventsObjCmd(ClientData dummy,
+    Tcl_Interp *interp,
+    int objc,
+    Tcl_Obj * const objv[])
+{
+    ClientData oldArg;
+    Tk_RestrictProc *oldProc;
+    int count = 0;
+    oldProc = Tk_RestrictEvents(CrossingRestrictProc, NULL, &oldArg);
+    while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
+    Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+    return TCL_OK;
 }
 
 /*
