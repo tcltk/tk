@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright (c) 2003 Joe English
  *
  * Default implementation for themed elements.
  *
@@ -25,19 +25,27 @@
  * and may be used in other engines.
  */
 
-/* public */ Ttk_ElementOptionSpec TtkNullElementOptions[] = { { NULL, 0, 0, NULL } };
+/* public */ Ttk_ElementOptionSpec TtkNullElementOptions[] = { { NULL, TK_OPTION_BOOLEAN, 0, NULL } };
 
 /* public */ void
 TtkNullElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    TCL_UNUSED(Ttk_Padding *))
 {
 }
 
 /* public */ void
 TtkNullElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(Drawable),
+    TCL_UNUSED(Ttk_Box),
+    TCL_UNUSED(Ttk_State))
 {
 }
 
@@ -65,15 +73,19 @@ typedef struct {
 static Ttk_ElementOptionSpec BackgroundElementOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	    Tk_Offset(BackgroundElement,backgroundObj), DEFAULT_BACKGROUND },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void FillElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    BackgroundElement *bg = elementRecord;
-    Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin,bg->backgroundObj);
+    BackgroundElement *bg = (BackgroundElement *)elementRecord;
+    Tk_3DBorder backgroundPtr = Tk_Get3DBorderFromObj(tkwin, bg->backgroundObj);
 
     XFillRectangle(Tk_Display(tkwin), d,
 	Tk_3DBorderGC(tkwin, backgroundPtr, TK_3D_FLAT_GC),
@@ -82,7 +94,9 @@ static void FillElementDraw(
 
 static void BackgroundElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d,
+    TCL_UNUSED(Ttk_Box),
+    Ttk_State state)
 {
     FillElementDraw(
 	clientData, elementRecord, tkwin,
@@ -122,34 +136,43 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
 	Tk_Offset(BorderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-relief", TK_OPTION_RELIEF,
 	Tk_Offset(BorderElement,reliefObj), "flat" },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void BorderElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
-    BorderElement *bd = elementRecord;
+    BorderElement *bd = (BorderElement *)elementRecord;
     int borderWidth = 0;
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
 static void BorderElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    BorderElement *bd = elementRecord;
+    BorderElement *bd = (BorderElement *)elementRecord;
     Tk_3DBorder border = NULL;
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
 
     border = Tk_Get3DBorderFromObj(tkwin, bd->borderObj);
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
 
     if (border && borderWidth > 0 && relief != TK_RELIEF_FLAT) {
 	Tk_Draw3DRectangle(tkwin, d, border,
-	    b.x, b.y, b.width, b.height, borderWidth,relief);
+	    b.x, b.y, b.width, b.height, borderWidth, relief);
     }
 }
 
@@ -168,6 +191,8 @@ static Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj	*borderObj;
     Tcl_Obj	*borderWidthObj;
+    Tcl_Obj	*focusWidthObj;
+    Tcl_Obj	*focusColorObj;
 } FieldElement;
 
 static Ttk_ElementOptionSpec FieldElementOptions[] = {
@@ -175,30 +200,95 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
 	Tk_Offset(FieldElement,borderObj), "white" },
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(FieldElement,borderWidthObj), "2" },
-    { NULL, 0, 0, NULL }
+    { "-focuswidth", TK_OPTION_PIXELS,
+	Tk_Offset(FieldElement,focusWidthObj), "2" },
+    { "-focuscolor", TK_OPTION_COLOR,
+	Tk_Offset(FieldElement,focusColorObj), "#4a6984" },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
+
 static void FieldElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
-    FieldElement *field = elementRecord;
-    int borderWidth = 2;
+    FieldElement *field = (FieldElement *)elementRecord;
+    int borderWidth = 2, focusWidth = 2;
+
     Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
+    if (focusWidth > 0 && borderWidth < 2) {
+	borderWidth += (focusWidth - borderWidth);
+    }
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
 static void FieldElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
-    FieldElement *field = elementRecord;
+    FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, field->borderObj);
-    int borderWidth = 2;
+    int focusWidth = 2;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
-    Tk_Fill3DRectangle(tkwin, d, border,
-	    b.x, b.y, b.width, b.height, borderWidth, TK_RELIEF_SUNKEN);
+    Tk_GetPixelsFromObj(NULL, tkwin, field->focusWidthObj, &focusWidth);
+
+    if (focusWidth > 0 && (state & TTK_STATE_FOCUS)) {
+	Display *disp = Tk_Display(tkwin);
+	XColor *focusColor = Tk_GetColorFromObj(tkwin, field->focusColorObj);
+	GC focusGC = Tk_GCForColor(focusColor, d);
+
+	if (focusWidth > 1) {
+	    int x1 = b.x, x2 = b.x + b.width - 1;
+	    int y1 = b.y, y2 = b.y + b.height - 1;
+	    int w = WIN32_XDRAWLINE_HACK;
+	    GC bgGC;
+
+	    /*
+	     * Draw the outer rounded rectangle
+	     */
+	    XDrawLine(disp, d, focusGC, x1+1, y1, x2-1+w, y1);	/* N */
+	    XDrawLine(disp, d, focusGC, x1+1, y2, x2-1+w, y2);	/* S */
+	    XDrawLine(disp, d, focusGC, x1, y1+1, x1, y2-1+w);	/* W */
+	    XDrawLine(disp, d, focusGC, x2, y1+1, x2, y2-1+w);	/* E */
+
+	    /*
+	     * Draw the inner rectangle
+	     */
+	    b.x += 1; b.y += 1; b.width -= 2; b.height -= 2;
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+
+	    /*
+	     * Fill the inner rectangle
+	     */
+	    bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
+	} else {
+	    /*
+	     * Draw the field element as usual
+	     */
+	    int borderWidth = 2;
+	    Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj,
+		    &borderWidth);
+	    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		    borderWidth, TK_RELIEF_SUNKEN);
+
+	    /*
+	     * Change the color of the border's outermost pixels
+	     */
+	    XDrawRectangle(disp, d, focusGC, b.x, b.y, b.width-1, b.height-1);
+	}
+    } else {
+	int borderWidth = 2;
+	Tk_GetPixelsFromObj(NULL, tkwin, field->borderWidthObj, &borderWidth);
+	Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+		borderWidth, TK_RELIEF_SUNKEN);
+    }
 }
 
 static Ttk_ElementSpec FieldElementSpec = {
@@ -231,23 +321,27 @@ static Ttk_ElementOptionSpec PaddingElementOptions[] = {
 	Tk_Offset(PaddingElement,paddingObj), "0" },
     { "-relief", TK_OPTION_RELIEF,
 	Tk_Offset(PaddingElement,reliefObj), "flat" },
-    { "-shiftrelief", TK_OPTION_INT,
+    { "-shiftrelief", TK_OPTION_PIXELS,
 	Tk_Offset(PaddingElement,shiftreliefObj), "0" },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void PaddingElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
-    PaddingElement *padding = elementRecord;
+    PaddingElement *padding = (PaddingElement *)elementRecord;
     int shiftRelief = 0;
     int relief = TK_RELIEF_FLAT;
     Ttk_Padding pad;
 
     Tk_GetReliefFromObj(NULL, padding->reliefObj, &relief);
-    Tcl_GetIntFromObj(NULL, padding->shiftreliefObj, &shiftRelief);
-    Ttk_GetPaddingFromObj(NULL,tkwin,padding->paddingObj,&pad);
+    Tk_GetPixelsFromObj(NULL, tkwin, padding->shiftreliefObj, &shiftRelief);
+    Ttk_GetPaddingFromObj(NULL, tkwin, padding->paddingObj, &pad);
     *paddingPtr = Ttk_RelievePadding(pad, relief, shiftRelief);
 }
 
@@ -266,6 +360,7 @@ static Ttk_ElementSpec PaddingElementSpec = {
 typedef struct {
     Tcl_Obj	*focusColorObj;
     Tcl_Obj	*focusThicknessObj;
+    Tcl_Obj	*focusSolidObj;
 } FocusElement;
 
 /*
@@ -273,7 +368,8 @@ typedef struct {
  * 	Draw a dotted rectangle to indicate focus.
  */
 static void DrawFocusRing(
-    Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, Ttk_Box b)
+    Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, int thickness, int solid,
+    Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, colorObj);
     unsigned long mask = 0UL;
@@ -281,11 +377,16 @@ static void DrawFocusRing(
     GC gc;
 
     gcvalues.foreground = color->pixel;
-    gcvalues.line_style = LineOnOffDash;
-    gcvalues.line_width = 1;
-    gcvalues.dashes = 1;
-    gcvalues.dash_offset = 1;
-    mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    gcvalues.line_width = thickness < 1 ? 1 : thickness;
+    if (solid) {
+	gcvalues.line_style = LineSolid;
+	mask = GCForeground | GCLineStyle | GCLineWidth;
+    } else {
+	gcvalues.line_style = LineOnOffDash;
+	gcvalues.dashes = 1;
+	gcvalues.dash_offset = 1;
+	mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    }
 
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
     XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
@@ -293,34 +394,47 @@ static void DrawFocusRing(
 }
 
 static Ttk_ElementOptionSpec FocusElementOptions[] = {
-    { "-focuscolor",TK_OPTION_COLOR,
+    { "-focuscolor", TK_OPTION_COLOR,
 	Tk_Offset(FocusElement,focusColorObj), "black" },
-    { "-focusthickness",TK_OPTION_PIXELS,
+    { "-focusthickness", TK_OPTION_PIXELS,
 	Tk_Offset(FocusElement,focusThicknessObj), "1" },
-    { NULL, 0, 0, NULL }
+    { "-focussolid", TK_OPTION_BOOLEAN,
+	Tk_Offset(FocusElement,focusSolidObj), "0" },
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void FocusElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
-    FocusElement *focus = elementRecord;
+    FocusElement *focus = (FocusElement *)elementRecord;
     int focusThickness = 0;
 
-    Tcl_GetIntFromObj(NULL, focus->focusThicknessObj, &focusThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
     *paddingPtr = Ttk_UniformPadding((short)focusThickness);
 }
 
 static void FocusElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
-    FocusElement *focus = elementRecord;
+    FocusElement *focus = (FocusElement *)elementRecord;
     int focusThickness = 0;
+    int focusSolid = 0;
 
     if (state & TTK_STATE_FOCUS) {
-	Tcl_GetIntFromObj(NULL,focus->focusThicknessObj,&focusThickness);
-	DrawFocusRing(tkwin, d, focus->focusColorObj, b);
+	Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
+	Tcl_GetBooleanFromObj(NULL, focus->focusSolidObj, &focusSolid);
+	DrawFocusRing(tkwin, d, focus->focusColorObj, focusThickness,
+	    focusSolid, b);
     }
 }
 
@@ -349,21 +463,29 @@ static Ttk_ElementOptionSpec SeparatorElementOptions[] = {
 	Tk_Offset(SeparatorElement, orientObj), "horizontal" },
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(SeparatorElement,borderObj), DEFAULT_BACKGROUND },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void SeparatorElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    TCL_UNUSED(Tk_Window),
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     *widthPtr = *heightPtr = 2;
 }
 
 static void HorizontalSeparatorElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    SeparatorElement *separator = elementRecord;
+    SeparatorElement *separator = (SeparatorElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, separator->borderObj);
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
@@ -373,10 +495,14 @@ static void HorizontalSeparatorElementDraw(
 }
 
 static void VerticalSeparatorElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    SeparatorElement *separator = elementRecord;
+    SeparatorElement *separator = (SeparatorElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, separator->borderObj);
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
     GC darkGC = Tk_3DBorderGC(tkwin, border, TK_3D_DARK_GC);
@@ -387,10 +513,11 @@ static void VerticalSeparatorElementDraw(
 
 static void GeneralSeparatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
-    SeparatorElement *separator = elementRecord;
+    SeparatorElement *separator = (SeparatorElement *)elementRecord;
     int orient;
+
     Ttk_GetOrientFromObj(NULL, separator->orientObj, &orient);
     switch (orient) {
 	case TTK_ORIENT_HORIZONTAL:
@@ -439,22 +566,30 @@ typedef struct {
 static Ttk_ElementOptionSpec SizegripOptions[] = {
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(SizegripElement,backgroundObj), DEFAULT_BACKGROUND },
-    {0,0,0,0}
+    {0, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void SizegripSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     int gripCount = 3, gripSpace = 2, gripThickness = 3;
     *widthPtr = *heightPtr = gripCount * (gripSpace + gripThickness);
 }
 
 static void SizegripDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    SizegripElement *grip = elementRecord;
+    SizegripElement *grip = (SizegripElement *)elementRecord;
     int gripCount = 3, gripSpace = 2;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, grip->backgroundObj);
     GC lightGC = Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC);
@@ -463,9 +598,9 @@ static void SizegripDraw(
 
     while (gripCount--) {
 	x1 -= gripSpace; y2 -= gripSpace;
-	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
-	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1,y1, x2,y2); --x1; --y2;
-	XDrawLine(Tk_Display(tkwin), d, lightGC, x1,y1, x2,y2); --x1; --y2;
+	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1, y1, x2, y2); --x1; --y2;
+	XDrawLine(Tk_Display(tkwin), d, darkGC,  x1, y1, x2, y2); --x1; --y2;
+	XDrawLine(Tk_Display(tkwin), d, lightGC, x1, y1, x2, y2); --x1; --y2;
     }
 }
 
@@ -510,7 +645,7 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 	Tk_Offset(IndicatorElement,marginObj), "0 2 4 2" },
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(IndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 /*
@@ -542,15 +677,15 @@ static void SquareIndicatorElementDraw(
 
     interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
     border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
-    Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->borderWidthObj, &borderWidth);
+    Tk_GetReliefFromObj(NULL, indicator->reliefObj, &relief);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
 
     b = Ttk_PadBox(b, padding);
 
     diameter = b.width < b.height ? b.width : b.height;
     Tk_Fill3DRectangle(tkwin, d, interior, b.x, b.y,
-	    diameter, diameter,borderWidth, TK_RELIEF_FLAT);
+	    diameter, diameter, borderWidth, TK_RELIEF_FLAT);
     Tk_Draw3DRectangle(tkwin, d, border, b.x, b.y,
 	    diameter, diameter, borderWidth, relief);
 }
@@ -562,7 +697,7 @@ static void DiamondIndicatorElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
     int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
 {
-    IndicatorElement *indicator = elementRecord;
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
     int diameter = 0;
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
@@ -573,9 +708,9 @@ static void DiamondIndicatorElementSize(
 
 static void DiamondIndicatorElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
-    IndicatorElement *indicator = elementRecord;
+    IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Tk_3DBorder border = 0, interior = 0;
     int borderWidth = 2;
     int relief = TK_RELIEF_RAISED;
@@ -585,9 +720,9 @@ static void DiamondIndicatorElementDraw(
 
     interior = Tk_Get3DBorderFromObj(tkwin, indicator->colorObj);
     border = Tk_Get3DBorderFromObj(tkwin, indicator->backgroundObj);
-    Tcl_GetIntFromObj(NULL,indicator->borderWidthObj,&borderWidth);
-    Tk_GetReliefFromObj(NULL,indicator->reliefObj,&relief);
-    Ttk_GetPaddingFromObj(NULL,tkwin,indicator->marginObj,&padding);
+    Tk_GetPixelsFromObj(NULL, tkwin, indicator->borderWidthObj, &borderWidth);
+    Tk_GetReliefFromObj(NULL, indicator->reliefObj, &relief);
+    Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
 
     b = Ttk_PadBox(b, padding);
 
@@ -603,8 +738,8 @@ static void DiamondIndicatorElementDraw(
     points[3].x = b.x + radius;
     points[3].y = b.y;
 
-    Tk_Fill3DPolygon(tkwin,d,interior,points,4,borderWidth,TK_RELIEF_FLAT);
-    Tk_Draw3DPolygon(tkwin,d,border,points,4,borderWidth,relief);
+    Tk_Fill3DPolygon(tkwin, d, interior, points, 4, borderWidth, TK_RELIEF_FLAT);
+    Tk_Draw3DPolygon(tkwin, d, border, points, 4, borderWidth, relief);
 }
 
 static Ttk_ElementSpec CheckbuttonIndicatorElementSpec = {
@@ -650,10 +785,10 @@ static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] = {
 	Tk_Offset(MenuIndicatorElement,widthObj), "4.0m" },
     { "-indicatorheight", TK_OPTION_PIXELS,
 	Tk_Offset(MenuIndicatorElement,heightObj), "1.7m" },
-    { "-borderwidth", TK_OPTION_PIXELS,
+    { "-indicatorborderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(MenuIndicatorElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-indicatorrelief", TK_OPTION_RELIEF,
-	Tk_Offset(MenuIndicatorElement,reliefObj),"raised" },
+	Tk_Offset(MenuIndicatorElement,reliefObj), "raised" },
     { "-indicatormargin", TK_OPTION_STRING,
 	    Tk_Offset(MenuIndicatorElement,marginObj), "5 0" },
     { NULL, 0, 0, NULL }
@@ -667,7 +802,7 @@ static void MenuIndicatorElementSize(
     Ttk_Padding margins;
     Tk_GetPixelsFromObj(NULL, tkwin, mi->widthObj, widthPtr);
     Tk_GetPixelsFromObj(NULL, tkwin, mi->heightObj, heightPtr);
-    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj, &margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, mi->marginObj, &margins);
     *widthPtr += Ttk_PaddingWidth(margins);
     *heightPtr += Ttk_PaddingHeight(margins);
 }
@@ -681,7 +816,7 @@ static void MenuIndicatorElementDraw(
     Ttk_Padding margins;
     int borderWidth = 2;
 
-    Ttk_GetPaddingFromObj(NULL,tkwin,mi->marginObj,&margins);
+    Ttk_GetPaddingFromObj(NULL, tkwin, mi->marginObj, &margins);
     b = Ttk_PadBox(b, margins);
     Tk_GetPixelsFromObj(NULL, tkwin, mi->borderWidthObj, &borderWidth);
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -716,24 +851,25 @@ typedef struct {
 static Ttk_ElementOptionSpec ArrowElementOptions[] = {
     { "-arrowsize", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,sizeObj), "14" },
-    { "-arrowcolor",TK_OPTION_COLOR,
-	Tk_Offset(ArrowElement,colorObj),"black"},
+    { "-arrowcolor", TK_OPTION_COLOR,
+	Tk_Offset(ArrowElement,colorObj), "black"},
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(ArrowElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(ArrowElement,borderWidthObj), "1" },
-    { "-relief",TK_OPTION_RELIEF,
-	Tk_Offset(ArrowElement,reliefObj),"raised"},
-    { NULL, 0, 0, NULL }
+    { "-relief", TK_OPTION_RELIEF,
+	Tk_Offset(ArrowElement,reliefObj), "raised"},
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
-static Ttk_Padding ArrowPadding = { 3,3,3,3 };
+static Ttk_Padding ArrowPadding = { 3, 3, 3, 3 };
 
 static void ArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
-    ArrowElement *arrow = elementRecord;
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
     int direction = *(int *)clientData;
     int size = 14;
 
@@ -751,9 +887,10 @@ static void ArrowElementSize(
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    ArrowElement *arrow = elementRecord;
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
     int direction = *(int *)clientData;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 1, relief = TK_RELIEF_RAISED;
@@ -764,8 +901,8 @@ static void ArrowElementDraw(
     Tk_GetPixelsFromObj(NULL, tkwin, arrow->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, arrow->reliefObj, &relief);
 
-    Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    borderWidth, relief);
 
     b = Ttk_PadBox(b, ArrowPadding);
 
@@ -807,9 +944,10 @@ static Ttk_ElementSpec ArrowElementSpec = {
 
 static void BoxArrowElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
-    ArrowElement *arrow = elementRecord;
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
     int direction = *(int *)clientData;
     int size = 14;
 
@@ -822,9 +960,10 @@ static void BoxArrowElementSize(
 
 static void BoxArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    ArrowElement *arrow = elementRecord;
+    ArrowElement *arrow = (ArrowElement *)elementRecord;
     int direction = *(int *)clientData;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, arrow->borderObj);
     int borderWidth = 1, relief = TK_RELIEF_RAISED;
@@ -835,8 +974,8 @@ static void BoxArrowElementDraw(
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, arrow->colorObj);
     GC arrowGC = Tk_GCForColor(arrowColor, d);
 
-    Tk_Fill3DRectangle(
-	tkwin, d, border, b.x, b.y, b.width, b.height, borderWidth, relief);
+    Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
+	    borderWidth, relief);
 
     XDrawLine(disp, d, darkGC, b.x, b.y+1, b.x, b.y+b.height-1+w);
 
@@ -861,7 +1000,8 @@ static Ttk_ElementSpec BoxArrowElementSpec = {
 };
 
 
-/*----------------------------------------------------------------------
+/*
+ *----------------------------------------------------------------------
  * +++ Trough element.
  *
  * Used in scrollbars and scales in place of "border".
@@ -878,14 +1018,18 @@ static Ttk_ElementOptionSpec TroughElementOptions[] = {
 	Tk_Offset(TroughElement,borderWidthObj), DEFAULT_BORDERWIDTH },
     { "-troughcolor", TK_OPTION_BORDER,
 	Tk_Offset(TroughElement,colorObj), DEFAULT_BACKGROUND },
-    { "-troughrelief",TK_OPTION_RELIEF,
+    { "-troughrelief", TK_OPTION_RELIEF,
 	Tk_Offset(TroughElement,reliefObj), "sunken" },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void TroughElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
     TroughElement *troughPtr = elementRecord;
     int borderWidth = 2;
@@ -895,10 +1039,12 @@ static void TroughElementSize(
 }
 
 static void TroughElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    TroughElement *troughPtr = elementRecord;
+    TroughElement *troughPtr = (TroughElement *)elementRecord;
     Tk_3DBorder border = NULL;
     int borderWidth = 2, relief = TK_RELIEF_SUNKEN;
 
@@ -944,15 +1090,18 @@ static Ttk_ElementOptionSpec ThumbElementOptions[] = {
 	Tk_Offset(ThumbElement,borderObj), DEFAULT_BACKGROUND },
     { "-borderwidth", TK_OPTION_PIXELS,
 	Tk_Offset(ThumbElement,borderWidthObj), DEFAULT_BORDERWIDTH },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void ThumbElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
-    ThumbElement *thumb = elementRecord;
-    int orient, thickness;
+    ThumbElement *thumb = (ThumbElement *)elementRecord;
+    int orient;
+    int thickness;
 
     Tk_GetPixelsFromObj(NULL, tkwin, thumb->thicknessObj, &thickness);
     Ttk_GetOrientFromObj(NULL, thumb->orientObj, &orient);
@@ -967,10 +1116,12 @@ static void ThumbElementSize(
 }
 
 static void ThumbElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    ThumbElement *thumb = elementRecord;
+    ThumbElement *thumb = (ThumbElement *)elementRecord;
     Tk_3DBorder  border = Tk_Get3DBorderFromObj(tkwin, thumb->borderObj);
     int borderWidth = 2, relief = TK_RELIEF_RAISED;
 
@@ -1005,18 +1156,18 @@ typedef struct {
 } SliderElement;
 
 static Ttk_ElementOptionSpec SliderElementOptions[] = {
-    { "-sliderlength", TK_OPTION_PIXELS, Tk_Offset(SliderElement,lengthObj),
-	"30" },
-    { "-sliderthickness",TK_OPTION_PIXELS,Tk_Offset(SliderElement,thicknessObj),
-	"15" },
-    { "-sliderrelief", TK_OPTION_RELIEF, Tk_Offset(SliderElement,reliefObj),
-	"raised" },
-    { "-borderwidth", TK_OPTION_PIXELS, Tk_Offset(SliderElement,borderWidthObj),
-	DEFAULT_BORDERWIDTH },
-    { "-background", TK_OPTION_BORDER, Tk_Offset(SliderElement,borderObj),
-	DEFAULT_BACKGROUND },
-    { "-orient", TK_OPTION_ANY, Tk_Offset(SliderElement,orientObj),
-	"horizontal" },
+    { "-sliderlength", TK_OPTION_PIXELS,
+	Tk_Offset(SliderElement,lengthObj), "30" },
+    { "-sliderthickness", TK_OPTION_PIXELS,
+	Tk_Offset(SliderElement,thicknessObj), "15" },
+    { "-sliderrelief", TK_OPTION_RELIEF,
+	Tk_Offset(SliderElement,reliefObj), "raised" },
+    { "-sliderborderwidth", TK_OPTION_PIXELS,
+	Tk_Offset(SliderElement,borderWidthObj), DEFAULT_BORDERWIDTH },
+    { "-background", TK_OPTION_BORDER,
+	Tk_Offset(SliderElement,borderObj), DEFAULT_BACKGROUND },
+    { "-orient", TK_OPTION_ANY,
+	Tk_Offset(SliderElement,orientObj), "horizontal" },
     { NULL, 0, 0, NULL }
 };
 
@@ -1128,15 +1279,18 @@ static Ttk_ElementOptionSpec PbarElementOptions[] = {
 	DEFAULT_BORDERWIDTH },
     { "-background", TK_OPTION_BORDER, Tk_Offset(PbarElement,borderObj),
 	DEFAULT_BACKGROUND },
-    { NULL, 0, 0, NULL }
+    { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void PbarElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
-    PbarElement *pbar = elementRecord;
-    int orient, thickness = 15, length = 30, borderWidth = 2;
+    PbarElement *pbar = (PbarElement *)elementRecord;
+    int orient;
+    int thickness = 15, length = 30, borderWidth = 2;
 
     Ttk_GetOrientFromObj(NULL, pbar->orientObj, &orient);
     Tk_GetPixelsFromObj(NULL, tkwin, pbar->thicknessObj, &thickness);
@@ -1156,10 +1310,12 @@ static void PbarElementSize(
 }
 
 static void PbarElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, Ttk_State state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    PbarElement *pbar = elementRecord;
+    PbarElement *pbar = (PbarElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, pbar->borderObj);
     int relief = TK_RELIEF_RAISED, borderWidth = 2;
 
@@ -1186,19 +1342,28 @@ static Ttk_ElementSpec PbarElementSpec = {
 typedef struct {
     Tcl_Obj *borderWidthObj;
     Tcl_Obj *backgroundObj;
+    Tcl_Obj *highlightObj;
+    Tcl_Obj *highlightColorObj;
 } TabElement;
 
 static Ttk_ElementOptionSpec TabElementOptions[] = {
     { "-borderwidth", TK_OPTION_PIXELS,
-	Tk_Offset(TabElement,borderWidthObj),"1" },
+	Tk_Offset(TabElement,borderWidthObj), "1" },
     { "-background", TK_OPTION_BORDER,
 	Tk_Offset(TabElement,backgroundObj), DEFAULT_BACKGROUND },
-    {0,0,0,0}
+    { "-highlight", TK_OPTION_BOOLEAN,
+	Tk_Offset(TabElement,highlightObj), "0" },
+    { "-highlightcolor", TK_OPTION_COLOR,
+	Tk_Offset(TabElement,highlightColorObj), "#4a6984" },
+    {0, TK_OPTION_BOOLEAN, 0, 0}
 };
 
 static void TabElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
     TabElement *tab = (TabElement *)elementRecord;
     int borderWidth = 1;
@@ -1230,13 +1395,16 @@ static void TabElementSize(
 }
 
 static void TabElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
     TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     TabElement *tab = (TabElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
+    int highlight = 0;
+    XColor *hlColor = NULL;
     XPoint pts[6];
     int cut = 2;
     Display *disp = Tk_Display(tkwin);
@@ -1265,6 +1433,11 @@ static void TabElementDraw(
 	    case TTK_STICK_W:
 		b.width += 1; b.x -= 1;
 		break;
+	}
+
+	Tcl_GetBooleanFromObj(NULL, tab->highlightObj, &highlight);
+	if (highlight) {
+	    hlColor = Tk_GetColorFromObj(tkwin, tab->highlightColorObj);
 	}
     }
 
@@ -1323,7 +1496,7 @@ static void TabElementDraw(
 	    break;
     }
 
-    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
@@ -1350,6 +1523,28 @@ static void TabElementDraw(
 		break;
 	}
     }
+
+    if (highlight) {
+	switch (nbTabsStickBit) {
+	    default:
+	    case TTK_STICK_S:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + cut, b.y, b.width - 2*cut, cut);
+		break;
+	    case TTK_STICK_N:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + cut, b.y + b.height - cut, b.width - 2*cut, cut);
+		break;
+	    case TTK_STICK_E:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x, b.y + cut, cut, b.height - 2*cut);
+		break;
+	    case TTK_STICK_W:
+		XFillRectangle(disp, d, Tk_GCForColor(hlColor, d),
+			b.x + b.width - cut, b.y + cut, cut, b.height - 2*cut);
+		break;
+	}
+    }
 }
 
 static Ttk_ElementSpec TabElementSpec = {
@@ -1367,28 +1562,34 @@ static Ttk_ElementSpec TabElementSpec = {
 typedef TabElement ClientElement;
 #define ClientElementOptions TabElementOptions
 
-static void ClientElementDraw(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+static void ClientElementSize(
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
-    ClientElement *ce = elementRecord;
+    ClientElement *ce = (ClientElement *)elementRecord;
+    int borderWidth = 1;
+
+    Tk_GetPixelsFromObj(0, tkwin, ce->borderWidthObj, &borderWidth);
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+}
+
+static void ClientElementDraw(
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
+{
+    ClientElement *ce = (ClientElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, ce->backgroundObj);
     int borderWidth = 1;
 
-    Tcl_GetIntFromObj(NULL, ce->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, ce->borderWidthObj, &borderWidth);
 
     Tk_Fill3DRectangle(tkwin, d, border,
-	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
-}
-
-static void ClientElementSize(
-    void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
-{
-    ClientElement *ce = elementRecord;
-    int borderWidth = 1;
-    Tk_GetPixelsFromObj(0, tkwin, ce->borderWidthObj, &borderWidth);
-    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+	b.x, b.y, b.width, b.height, borderWidth, TK_RELIEF_RAISED);
 }
 
 static Ttk_ElementSpec ClientElementSpec = {
@@ -1404,8 +1605,8 @@ static Ttk_ElementSpec ClientElementSpec = {
  *	Register default element implementations.
  */
 
-MODULE_SCOPE
-void TtkElements_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkElements_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 
@@ -1413,7 +1614,7 @@ void TtkElements_Init(Tcl_Interp *interp)
      * Elements:
      */
     Ttk_RegisterElement(interp, theme, "background",
-	    &BackgroundElementSpec,NULL);
+	    &BackgroundElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "fill", &FillElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "border", &BorderElementSpec, NULL);
@@ -1429,7 +1630,7 @@ void TtkElements_Init(Tcl_Interp *interp)
     Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
 	    &MenuIndicatorElementSpec, NULL);
 
-    Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec,NULL);
+    Ttk_RegisterElement(interp, theme, "indicator", &ttkNullElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "uparrow",
 	    &ArrowElementSpec, &ArrowElements[0]);

@@ -211,6 +211,8 @@ Use \fIpathname heading #0\fR to configure the tree column heading.
 Returns a description of the specified \fIcomponent\fR
 under the point given by \fIx\fR and \fIy\fR,
 or the empty string if no such \fIcomponent\fR is present at that position.
+The values \fIx\fR and \fIy\fR may have any of the forms acceptable to
+\fBTk_GetPixels\fR.
 The following subcommands are supported:
 .RS
 .TP
@@ -507,14 +509,20 @@ are:
 .br
 \fB\-indent\fP \fIamount\fP
 .RS
-Specifies how many pixels items are indented from their parents. Defaults to 20.
+Specifies how far items are indented from their parents. Defaults to 20 pixels.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 .RE
 .br
 \fB\-rowheight\fP \fIamount\fP
 .RS
-The \fB\-rowheight\fP value is not corrected by the \fBtk scaling\fP
-value or by the configured font size. It defaults to 20 pixels. Make
-sure that the \fB\-rowheight\fP is large enough to contain any images.
+This is the standard height for an item. Defaults to 20 pixels.
+The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
+If \fB\-rowheight\fP is not set by the style, it is set by measuring an
+item and a cell layout with the style's settings.
+This thus picks up the font and
+any focus ring or padding from the theme's layout.
+The \fB\-rowheight\fP may need to be set to make sure that a row
+is large enough to contain any images.
 .PP
 To adjust the \fB\-rowheight\fP for the Treeview style, use the following code
 after \fBtk scaling\fP has been applied.

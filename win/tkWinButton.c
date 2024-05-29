@@ -4,7 +4,7 @@
  *	This file implements the Windows specific portion of the button
  *	widgets.
  *
- * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
+ * Copyright (c) 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
