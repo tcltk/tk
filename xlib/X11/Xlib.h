@@ -54,12 +54,8 @@ in this Software without prior written authorization from The Open Group.
 #ifndef X_WCHAR
 #include <stddef.h>
 #else
-#ifdef __UNIXOS2__
-#include <stdlib.h>
-#else
 /* replace this with #include or typedef appropriate for your system */
 typedef unsigned long wchar_t;
-#endif
 #endif
 /* API mentioning "UTF8" or "utf8" is an XFree86 extension, introduced in
    November 2000. Its presence is indicated through the following macro. */

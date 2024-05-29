@@ -330,7 +330,7 @@ EntryEditable(Entry *entryPtr)
  */
 static int
 EntryFetchSelection(
-    ClientData clientData, int offset, char *buffer, int maxBytes)
+    void *clientData, int offset, char *buffer, int maxBytes)
 {
     Entry *entryPtr = (Entry *)clientData;
     int byteCount;
@@ -363,7 +363,7 @@ EntryFetchSelection(
  *	Tk_LostSelProc for Entry widgets; called when an entry
  *	loses ownership of the selection.
  */
-static void EntryLostSelection(ClientData clientData)
+static void EntryLostSelection(void *clientData)
 {
     Entry *entryPtr = (Entry *)clientData;
     entryPtr->core.flags &= ~GOT_SELECTION;
@@ -905,7 +905,7 @@ DeleteChars(
  */
 #define EntryEventMask (FocusChangeMask)
 static void
-EntryEventProc(ClientData clientData, XEvent *eventPtr)
+EntryEventProc(void *clientData, XEvent *eventPtr)
 {
     Entry *entryPtr = (Entry *)clientData;
 
@@ -1202,10 +1202,9 @@ static void EntryDisplay(void *clientData, Drawable d)
 	;
     showSelection =
 	   !(entryPtr->core.state & TTK_STATE_DISABLED)
-	&& selFirst > -1
+	&& selFirst >= 0
 	&& selLast > leftIndex
-	&& selFirst <= rightIndex
-	;
+	&& selFirst <= rightIndex;
 
     /* Adjust selection range to keep in display bounds.
      */
@@ -1226,9 +1225,9 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_3DBorder selBorder = Tk_Get3DBorderFromObj(tkwin, es.selBorderObj);
 	int selStartX = EntryCharPosition(entryPtr, selFirst);
 	int selEndX = EntryCharPosition(entryPtr, selLast);
-	int borderWidth = 1;
+	int borderWidth = 0;
 
-	Tcl_GetIntFromObj(NULL, es.selBorderWidthObj, &borderWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, es.selBorderWidthObj, &borderWidth);
 
 	if (selBorder) {
 	    Tk_Fill3DRectangle(tkwin, d, selBorder,
@@ -1262,7 +1261,7 @@ static void EntryDisplay(void *clientData, Drawable d)
 	    cursorHeight = entryPtr->entry.layoutHeight,
 	    cursorWidth = 1;
 
-	Tcl_GetIntFromObj(NULL,es.insertWidthObj,&cursorWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, es.insertWidthObj, &cursorWidth);
 	if (cursorWidth <= 0) {
 	    cursorWidth = 1;
 	}
@@ -1827,7 +1826,7 @@ static int ComboboxCurrentCommand(
     if (objc == 2) {
 	/* Check if currentIndex still valid:
 	 */
-	if (    currentIndex < 0
+	if (currentIndex < 0
 	     || currentIndex >= nValues
 	     || strcmp(currentValue,Tcl_GetString(values[currentIndex]))
 	   )
@@ -1892,11 +1891,11 @@ static int ComboboxCurrentCommand(
 	        Tcl_SetErrorCode(interp, "TTK", "COMBOBOX", "IDX_RANGE", NULL);
 	        return TCL_ERROR;
 	    }
-        }
+	}
 
 	cbPtr->combobox.currentIndex = currentIndex;
 
-	return EntrySetValue(recordPtr, Tcl_GetString(values[currentIndex]));
+	return EntrySetValue((Entry *)recordPtr, Tcl_GetString(values[currentIndex]));
     } else {
 	Tcl_WrongNumArgs(interp, 2, objv, "?newIndex?");
 	return TCL_ERROR;
@@ -2075,7 +2074,7 @@ static Ttk_ElementOptionSpec TextareaElementOptions[] = {
 };
 
 static void TextareaElementSize(
-    TCL_UNUSED(void *),
+    TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
     Tk_Window tkwin,
     int *widthPtr,
@@ -2123,19 +2122,20 @@ TTK_BEGIN_LAYOUT(ComboboxLayout)
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(SpinboxLayout)
-     TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
-	 TTK_GROUP("null", TTK_PACK_RIGHT,
-	     TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
-	     TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
-	 TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
-	     TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))
+    TTK_GROUP("Spinbox.field", TTK_PACK_TOP|TTK_FILL_X,
+	TTK_GROUP("null", TTK_PACK_RIGHT,
+	    TTK_NODE("Spinbox.uparrow", TTK_PACK_TOP|TTK_STICK_E)
+	    TTK_NODE("Spinbox.downarrow", TTK_PACK_BOTTOM|TTK_STICK_E))
+	TTK_GROUP("Spinbox.padding", TTK_FILL_BOTH,
+	    TTK_NODE("Spinbox.textarea", TTK_FILL_BOTH)))
 TTK_END_LAYOUT
 
 /*------------------------------------------------------------------------
  * +++ Initialization.
  */
-MODULE_SCOPE
-void TtkEntry_Init(Tcl_Interp *interp)
+
+MODULE_SCOPE void
+TtkEntry_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr =  Ttk_GetDefaultTheme(interp);
 
