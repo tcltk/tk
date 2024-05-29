@@ -1718,7 +1718,6 @@ static int ProcessEventsObjCmd(ClientData dummy,
 {
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
-    int count = 0;
     oldProc = Tk_RestrictEvents(CrossingRestrictProc, NULL, &oldArg);
     while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
     Tk_RestrictEvents(oldProc, oldArg, &oldArg);
