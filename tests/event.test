@@ -929,9 +929,11 @@ test event-9.11 {pointer window container = parent} -setup {
     create_and_pack_frames .one
     wm deiconify .one
     tkwait visibility .one.f1.f2
+    _pause 200; # needed for Windows
     update; # finish display of window
     set result "|"
 } -body {
+    processevents
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.f1.f2
@@ -954,6 +956,7 @@ test event-9.12 {pointer window container != parent} -setup {
     tkwait visibility .one.g
     event generate .one <Motion> -warp 1 -x 250 -y 250
     update; # finish mouse warp
+    _pause 200; # needed for Windows
     set result "|"
 } -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
@@ -1046,7 +1049,8 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     create_and_pack_frames .one
     wm deiconify .one
     tkwait visibility .one.f1.f2
-    update; # finish displaying window 
+    update; # finish displaying window
+    _pause 200; # needed for Windows
     set result "|"
 } -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
@@ -1070,6 +1074,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     wm deiconify .one
     tkwait visibility .one.f1.f2
     update; # finish displaying window
+    _pause 200; # needed for Windows
     set result "|"
 } -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
