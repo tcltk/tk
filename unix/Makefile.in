@@ -299,6 +299,10 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
 
+# support for libcups
+CUPS_CFLAGS		= @CUPS_CFLAGS@
+CUPS_LIBS 		= @CUPS_LIBS@
+
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
 # Makefile is generated from Makefile.in.  You shouldn't normally
@@ -1331,6 +1335,9 @@ tkUnixMenu.o: $(UNIX_DIR)/tkUnixMenu.c
 
 tkUnixMenubu.o: $(UNIX_DIR)/tkUnixMenubu.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixMenubu.c
+
+tkUnixPrint.o: $(UNIX_DIR)/tkUnixPrint.c
+	$(CC) -c $(CC_SWITCHES) $(CUPS_CFLAGS) $(UNIX_DIR)/tkUnixPrint.c
 
 tkUnixScale.o: $(UNIX_DIR)/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixScale.c
