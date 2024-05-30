@@ -1726,9 +1726,9 @@ static int ProcessEventsObjCmd(
     Tk_RestrictProc *oldProc;
     int index;
     static const char *const eventTypeNames[] = {
-	"leave", "enter", "motion", NULL};
+	"leave", "enter", "motion", "expose", NULL};
     static const int eventTypes[] = {
-	LeaveNotify, EnterNotify, MotionNotify};
+	LeaveNotify, EnterNotify, MotionNotify, Expose};
     int whichEvents[100];
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "eventtype ?eventtype ...?");
