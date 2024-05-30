@@ -31,7 +31,7 @@ static cups_dest_t *
 GetPrinterFromObj(Tcl_Obj *nameObj)
 {
     cups_dest_t *printer;
-    int len;
+    Tcl_Size len;
     const char *nameStr = Tcl_GetStringFromObj(nameObj, &len);
     char *p;
     char *name, *instance = NULL;
@@ -224,7 +224,7 @@ PrintOp(
      * USE [encoding convertto] with a proper encoding when passing
      * text data to print.
      */
-    const unsigned char *buffer; int buflen;
+    const unsigned char *buffer; Tcl_Size buflen;
 
     const Tcl_ArgvInfo argTable[] = {
 	{TCL_ARGV_GENFUNC,  "-colormode",   ParseEnumOptions, &color,
@@ -315,7 +315,7 @@ PrintOp(
 	    num_options, &options);
     }
     if (marginsObj) {
-	int n;
+	Tcl_Size n;
 	Tcl_Obj **listArr;
 
 	Tcl_ListObjGetElements(interp, marginsObj, &n, &listArr);

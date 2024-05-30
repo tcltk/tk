@@ -481,17 +481,17 @@ if test $tk_aqua = no; then
     if test "$enable_cups" = "no" ; then
 	AC_MSG_RESULT([$enable_cups])
     else
-	found_cups="yes"
-	dnl make sure package configurator (cups-config or pkg-config
+	found_cups=`cups-config 2>/dev/null`
+	dnl make sure package configurator (cups-config) 
 	dnl says that libcups is present.
-	CUPS_CFLAGS=`cups-config --cflags 2>/dev/null` || found_cups="no"
-	CUPS_LIBS=`cups-config --libs 2>/dev/null` || found_cups="no"
-	if test "$found_cups" = "no" ; then
+        if test "$found_cups" = ""; then
+	    found_cups=no
+        else
 	    found_cups=yes
-	    CUPS_CFLAGS=`pkg-config --cflags cups 2>/dev/null` || found_cups="no"
-	    XFT_LIBS=`pkg-config --libs cups 2>/dev/null` || found_cups="no"
+	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_LIBS="-lcups"
 	fi
-	AC_MSG_RESULT([$found_xft])
+	AC_MSG_RESULT([$found_cups])
 	dnl make sure that compiling against CUPS header file doesn't bomb
 	if test "$found_cups" = "yes" ; then
 	    tk_oldCFlags=$CFLAGS
@@ -504,10 +504,11 @@ if test $tk_aqua = no; then
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
 	fi
-fi
+    fi
     AC_SUBST(CUPS_CFLAGS)
-    AC_SUBST(CUPS_LIBS)
+    AC_SUBST(CUPS_LIBS)   
 fi
+
 
 #--------------------------------------------------------------------
 # XXX Do this last.
