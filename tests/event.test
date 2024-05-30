@@ -930,10 +930,9 @@ test event-9.11 {pointer window container = parent} -setup {
     wm deiconify .one
     tkwait visibility .one.f1.f2
     _pause 200; # needed for Windows
-    update; # finish display of window
+    update idletasks; # finish display of window
     set result "|"
 } -body {
-    processevents enter leave
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.f1.f2
@@ -955,7 +954,6 @@ test event-9.12 {pointer window container != parent} -setup {
     wm deiconify .one
     tkwait visibility .one.g
     event generate .one <Motion> -warp 1 -x 250 -y 250
-    update; # finish mouse warp
     _pause 200; # needed for Windows
     set result "|"
 } -body {
@@ -978,7 +976,7 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     wm withdraw .two
     wm deiconify .two
     waitForWindowEvent .two <Enter>
-    update; # finish displaying windows
+    update idletasks; # finish displaying windows
     set result |
 } -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
@@ -1021,10 +1019,12 @@ test event-9.14 {pointer window is a toplevel, tk internal destination} -setup {
 
 test event-9.15 {pointer window is a toplevel, destination is screen root} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
+#    destroy .one
     toplevel .two
     wm geometry .two 300x300+150+150
     wm deiconify .two
     waitForWindowEvent .two <Enter>
+    update idletasks; # finish displaying .two
     event generate .two <Motion> -warp 1 -x 275 -y 275
     controlPointerWarpTiming
     set result "|"
@@ -1032,7 +1032,7 @@ test event-9.15 {pointer window is a toplevel, destination is screen root} -setu
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
-    processevents enter leave
+#    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1049,7 +1049,7 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     create_and_pack_frames .one
     wm deiconify .one
     tkwait visibility .one.f1.f2
-    update; # finish displaying window
+    update idletasks; # finish displaying window
     _pause 200; # needed for Windows
     set result "|"
 } -body {
@@ -1073,7 +1073,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     create_and_pack_frames .one
     wm deiconify .one
     tkwait visibility .one.f1.f2
-    update; # finish displaying window
+    update idletasks; # finish displaying window
     _pause 200; # needed for Windows
     set result "|"
 } -body {
@@ -1117,7 +1117,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
 
 test event-9.19 {Successive destructions (pointer window + ancestors including its toplevel), destination is internal window, bypass root win} -setup {
     setup_win_mousepointer .one; # ensure the mouse pointer is where we want it to be (the .one toplevel is not itself used in this test)
-    destroy .one
+#    destroy .one
     toplevel .two
     pack propagate .two 0
     wm geometry .two 300x300+100+100
@@ -1129,18 +1129,20 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     create_and_pack_frames .three
     wm deiconify .three
     waitForWindowEvent .three.f1.f2 <Enter>
-    update; # finish displaying windows
+    update idletasks; # finish displaying windows
     set result "|"
 } -body {
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .three
     waitForWindowEvent .two.f1.f2 <Enter>
+    update idletasks; #finish destroying .two
     processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
     bind all <Enter> {}
+    destroy .one
     destroy .two
     unset result
 } -result {|<Enter> NotifyNonlinearVirtual .two|<Enter> NotifyNonlinearVirtual .two.f1|<Enter> NotifyNonlinear .two.f1.f2|}
@@ -1159,7 +1161,8 @@ test event-9.20 {Successive destructions (pointer window + ancestors including i
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
-    processevents enter leave
+    update idletasks; #finish destroying .two
+#    processevents enter leave
     set result
 } -cleanup {
     bind all <Leave> {}
