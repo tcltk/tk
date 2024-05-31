@@ -23,7 +23,7 @@ proc runTest {file} {
     global testNum
 
     test "2.$testNum" "testing $file" {userInteraction} {
-    uplevel \#0 source [file join [testsDirectory] $file]
+    uplevel \#0 source -encoding utf-8 [file join [testsDirectory] $file]
     concat ""
     } {}
     incr testNum

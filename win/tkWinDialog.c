@@ -568,14 +568,14 @@ static UINT APIENTRY	ChooseDirectoryValidateProc(HWND hdlg, UINT uMsg,
 static UINT CALLBACK	ColorDlgHookProc(HWND hDlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static void             CleanupOFNOptions(OFNOpts *optsPtr);
-static int              ParseOFNOptions(ClientData clientData,
+static int              ParseOFNOptions(void *clientData,
                             Tcl_Interp *interp, int objc,
                             Tcl_Obj *const objv[], enum OFNOper oper, OFNOpts *optsPtr);
 static int GetFileNameXP(Tcl_Interp *interp, OFNOpts *optsPtr,
                          enum OFNOper oper);
 static int GetFileNameVista(Tcl_Interp *interp, OFNOpts *optsPtr,
                             enum OFNOper oper);
-static int 		GetFileName(ClientData clientData,
+static int 		GetFileName(void *clientData,
                                     Tcl_Interp *interp, int objc,
                                     Tcl_Obj *const objv[], enum OFNOper oper);
 static int MakeFilterVista(Tcl_Interp *interp, OFNOpts *optsPtr,
@@ -588,7 +588,7 @@ static int 		MakeFilter(Tcl_Interp *interp, Tcl_Obj *valuePtr,
 static UINT APIENTRY	OFNHookProc(HWND hdlg, UINT uMsg, WPARAM wParam,
 			    LPARAM lParam);
 static LRESULT CALLBACK MsgBoxCBTProc(int nCode, WPARAM wParam, LPARAM lParam);
-static void		SetTkDialog(ClientData clientData);
+static void		SetTkDialog(void *clientData);
 static const char *ConvertExternalFilename(LPCWSTR, Tcl_DString *);
 static void             LoadShellProcs(void);
 
@@ -746,7 +746,7 @@ TkWinDialogDebug(
 
 int
 Tk_ChooseColorObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -954,7 +954,7 @@ ColorDlgHookProc(
 
 int
 Tk_GetOpenFileObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -981,7 +981,7 @@ Tk_GetOpenFileObjCmd(
 
 int
 Tk_GetSaveFileObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -1028,7 +1028,7 @@ static void CleanupOFNOptions(OFNOpts *optsPtr)
 
 static int
 ParseOFNOptions(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
@@ -1141,9 +1141,8 @@ ParseOFNOptions(
 	    if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
 		goto error_return;
 	    Tcl_UtfToExternal(NULL, TkWinGetUnicodeEncoding(),
-                              Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0, NULL,
-                              (char *) &optsPtr->file[0], sizeof(optsPtr->file),
-                              NULL, NULL, NULL);
+		    Tcl_DStringValue(&ds), Tcl_DStringLength(&ds), 0,
+		    NULL, (char *)&optsPtr->file[0], sizeof(optsPtr->file), NULL, NULL, NULL);
 	    Tcl_DStringFree(&ds);
 	    break;
 	case FILE_PARENT:
@@ -1869,7 +1868,7 @@ end:
 
 static int
 GetFileName(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects. */
@@ -2038,7 +2037,7 @@ OFNHookProc(
 	 * information every time it gets a WM_WINDOWPOSCHANGED message.
 	 */
 
-	ofnPtr = (OPENFILENAME *) TkWinGetUserData(hdlg);
+	ofnPtr = (OPENFILENAME *)TkWinGetUserData(hdlg);
 	if (ofnPtr != NULL) {
 	    ofnData = (OFNData *) ofnPtr->lCustData;
 	    if (ofnData->interp != NULL) {
@@ -2204,7 +2203,7 @@ MakeFilter(
 	*p = '\0';
     }
 
-    Tcl_DStringAppend(dsPtr, filterStr, (int) (p - filterStr));
+    Tcl_DStringAppend(dsPtr, filterStr, p - filterStr);
     ckfree(filterStr);
 
     TkFreeFileFilters(&flist);
@@ -2426,7 +2425,7 @@ static int MakeFilterVista(
 
 int
 Tk_ChooseDirectoryObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -2784,7 +2783,7 @@ ChooseDirectoryValidateProc(
 
 int
 Tk_MessageBoxObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
+    void *clientData,	/* Main window associated with interpreter. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -3018,7 +3017,7 @@ MsgBoxCBTProc(
 
 static void
 SetTkDialog(
-    ClientData clientData)
+    void *clientData)
 {
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
@@ -3289,14 +3288,15 @@ FontchooserCget(
 
 static int
 FontchooserConfigureCmd(
-    ClientData clientData,	/* Main window */
+    void *clientData,	/* Main window */
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
 {
     Tk_Window tkwin = (Tk_Window)clientData;
     HookData *hdPtr = NULL;
-    int i, r = TCL_OK;
+    int i;
+    int r = TCL_OK;
     static const char *const optionStrings[] = {
 	"-parent", "-title", "-font", "-command", "-visible", NULL
     };
@@ -3432,7 +3432,7 @@ FontchooserConfigureCmd(
 
 static int
 FontchooserShowCmd(
-    ClientData clientData,	/* Main window */
+    void *clientData,	/* Main window */
     Tcl_Interp *interp,
     TCL_UNUSED(int),
     TCL_UNUSED(Tcl_Obj *const *))

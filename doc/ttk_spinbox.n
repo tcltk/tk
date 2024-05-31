@@ -21,8 +21,8 @@ of the \fBttk::entry\fR widget including support of the
 \fB\-textvariable\fR option to link the value displayed by the widget
 to a Tcl variable.
 .SO ttk_widget
-\-class	\-cursor	\-state	\-style
-\-takefocus	\-xscrollcommand
+\-class	\-cursor	\-state
+\-style	\-takefocus	\-xscrollcommand
 .SE
 .SO ttk_entry
 \-validate	\-validatecommand
