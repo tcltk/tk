@@ -908,7 +908,7 @@ proc create_and_pack_frames {{w {}}} {
 proc setup_win_mousepointer {w} {
 # Position the window and the mouse pointer as an initial state for some tests.
 # The so-called "pointer window" is the $w window that will now contain the mouse pointer.
-    wm geometry . +700+700; # root window out of our way - must not cover windows from event-9.1*
+    wm geometry . +700+400; # root window out of our way - must not cover windows from event-9.1*
     toplevel $w
     pack propagate $w 0
     wm geometry $w 300x300+100+100
