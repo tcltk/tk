@@ -69,7 +69,11 @@ SOFTWARE.
 #  ifndef _XTYPEDEF_XID
 #    define _XTYPEDEF_XID
 #    ifdef _WIN64
+#      ifdef _MSC_VER
 typedef unsigned __int64 XID;
+#      else
+typedef unsigned long long XID;
+#      endif
 #    else
 typedef unsigned long XID;
 #    endif
@@ -117,8 +121,8 @@ typedef XID KeySym;
 typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
 				 * to pack 3 bytes into the keyCode field in
 				 * the XEvent.  In the real X.h, a KeyCode is
-				 * defined as a short, which wouldn't be big
-				 * enough. */
+				 * defined as an unsigned char, which wouldn't
+				 * be big enough. */
 
 /*****************************************************************
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
@@ -127,7 +131,7 @@ typedef unsigned long KeyCode;	/* In order to use IME, the Macintosh needs
 #ifndef _WIN32
 #   define None              0L      /* See bug [9e31fd9449] and below */
 #else
-/* Pert-Tk expects None to be a macro. See ticket [593eb0227c] */
+/* Perl-Tk expects None to be a macro. See ticket [593eb0227c] */
 #   define None              None    /* uses the enum below */
 #endif
 
@@ -238,7 +242,7 @@ are reserved in the protocol for errors and replies. */
 #ifndef _WIN32
 #   define ControlMask		(1<<2) /* See bug [9e31fd9449] and below */
 #else
-/* Pert-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
+/* Perl-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
 #   define ControlMask		ControlMask /* uses the enum below */
 #endif
 #define Mod1Mask		(1<<3)
