@@ -2347,15 +2347,15 @@ test font-43.1 {FieldSpecified procedure: specified vs. non-specified} -body {
 } -result [font actual {times 0} -family]
 
 
-test font-44.1 {TkFontGetPixels: size < 0} -setup {
+test font-44.1 {TkFontGetPixels: size < 0}  -setup {
     set oldscale [tk scaling]
 } -body {
-    set oldsize [expr {-(-12.0 / $oldscale)}]
+    # if this test failed, start the investigations by reading ticket [8162e9b7a9]
     tk scaling 0.5
-    expr {round([font actual {times -12} -size] / $oldscale * 0.5) - round($oldsize) == 0}
+    font actual {times -13} -size
 } -cleanup {
     tk scaling $oldscale
-} -result 1
+} -result 26
 test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Font} -setup {
     set oldscale [tk scaling]
 } -body {
@@ -2364,6 +2364,13 @@ test font-44.2 {TkFontGetPoints: size >= 0} -constraints {noExceed haveTimes12Fo
 } -cleanup {
     tk scaling $oldscale
 } -result 12
+test font-44.3 {font create with display scaling not 100% - bug 8162e9b7a9} -body {
+    set font1 TkDefaultFont
+    set font2 [font create Font2 {*}[font actual $font1]]
+    expr {[font actual $font1 -size] == [font actual $font2 -size]}
+} -cleanup {
+    font delete $font2
+} -result 1
 
 
 test font-45.1 {TkFontGetAliasList: no match} -body {
