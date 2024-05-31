@@ -936,7 +936,7 @@ test event-9.11 {pointer window container = parent} -setup {
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.f1.f2
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -960,7 +960,7 @@ test event-9.12 {pointer window container != parent} -setup {
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.g
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -983,7 +983,7 @@ test event-9.13 {pointer window is a toplevel, toplevel destination} -setup {
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
     waitForWindowEvent .one <Enter>
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1055,7 +1055,7 @@ test event-9.16 {Successive destructions (pointer window + parent), single gener
     bind all <Leave> {append result "<Leave> %d %W|"}
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .one.f1
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1082,7 +1082,7 @@ test event-9.17 {Successive destructions (pointer window + parent), separate cro
     update; # make sure window is gone
     destroy .one.f1
     update; # make sure window is gone
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1105,7 +1105,7 @@ test event-9.18 {Successive destructions (pointer window + ancestors including i
     bind all <Enter> {append result "<Enter> %d %W|"}
     destroy .two
     waitForWindowEvent .one <Enter>
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}
@@ -1136,7 +1136,7 @@ test event-9.19 {Successive destructions (pointer window + ancestors including i
     destroy .three
     waitForWindowEvent .two.f1.f2 <Enter>
     update idletasks; #finish destroying .two
-    if {[tk windowingsystem] ne "x11" }]} {processevents enter leave}
+    if {[tk windowingsystem] ne "x11"} {processevents enter leave}
     set result
 } -cleanup {
     bind all <Leave> {}

@@ -1729,11 +1729,17 @@ static int ProcessEventsObjCmd(
 	"leave", "enter", "motion", "expose", NULL};
     static const int eventTypes[] = {
 	LeaveNotify, EnterNotify, MotionNotify, Expose};
-    int whichEvents[100];
+#define NUM_TYPES (sizeof(eventTypes)/sizeof(int))
+    int whichEvents[1 + NUM_TYPES];
     if (objc < 2) {
         Tcl_WrongNumArgs(interp, 1, objv, "eventtype ?eventtype ...?");
         return TCL_ERROR;
     }
+    if (objc > NUM_TYPES + 1) {
+        Tcl_WrongNumArgs(interp, 1, objv, "too many event types");
+        return TCL_ERROR;
+    }
+#undef NUM_TYPES
     for (int n = 1; n < objc; n++) {
 	if (Tcl_GetIndexFromObj(interp, objv[n], eventTypeNames, "eventtype", 0,
 				&index) != TCL_OK) {
