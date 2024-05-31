@@ -623,7 +623,6 @@ FrontWindowAtPoint(
     for (NSWindow *w in windows) {
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
-	    //	    WmInfo *wmPtr = winPtr->wmInfoPtr;
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = [w frame];
 
