@@ -9,22 +9,26 @@
 .so man.macros
 .BS
 .SH NAME
-Tk_GetPixelsFromObj, Tk_GetPixels, Tk_GetMMFromObj, Tk_GetScreenMM \- translate between strings and screen units
+Tk_GetPixelsFromObj, Tk_GetPixels, Tk_GetMMFromObj, Tk_GetScreenMM, Tk_GetDoublePixelsFromObj \- translate between strings and screen units
 .SH SYNOPSIS
 .nf
 \fB#include <tk.h>\fR
 .sp
 int
-\fBTk_GetPixelsFromObj(\fIinterp, tkwin, objPtr, intPtr\fB)\fR
+\fBTk_GetPixelsFromObj\fR(\fIinterp, tkwin, objPtr, intPtr\fR)
 .sp
 int
-\fBTk_GetPixels(\fIinterp, tkwin, string, intPtr\fB)\fR
+\fBTk_GetDoublePixelsFromObj\fR(\fIinterp, tkwin, objPtr, doublePtr\fR)
 .sp
 int
-\fBTk_GetMMFromObj(\fIinterp, tkwin, objPtr, doublePtr\fB)\fR
+\fBTk_GetPixels\fR(\fIinterp, tkwin, string, intPtr\fR)
 .sp
 int
-\fBTk_GetScreenMM(\fIinterp, tkwin, string, doublePtr\fB)\fR
+\fBTk_GetMMFromObj\fR(\fIinterp, tkwin, objPtr, doublePtr\fR)
+.sp
+int
+\fBTk_GetScreenMM\fR(\fIinterp, tkwin, string, doublePtr\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tcl_Interp" *joinPtr
 .AP Tcl_Interp *interp in
@@ -53,20 +57,15 @@ In either case,
 specifies a screen distance as a
 floating-point number followed by one of the following characters
 that indicates units:
-.TP
-<none>
+.IP <none>
 The number specifies a distance in pixels.
-.TP
-\fBc\fR
+.IP \fBc\fR
 The number specifies a distance in centimeters on the screen.
-.TP
-\fBi\fR
+.IP \fBi\fR
 The number specifies a distance in inches on the screen.
-.TP
-\fBm\fR
+.IP \fBm\fR
 The number specifies a distance in millimeters on the screen.
-.TP
-\fBp\fR
+.IP \fBp\fR
 The number specifies a distance in printer's points (1/72 inch)
 on the screen.
 .PP
@@ -80,6 +79,9 @@ in \fIinterp\fR's result if \fIinterp\fR is not NULL.
 \fBTk_GetPixelsFromObj\fR caches information about the return
 value in \fIobjPtr\fR, which speeds up future calls to
 \fBTk_GetPixelsFromObj\fR with the same \fIobjPtr\fR.
+.PP
+\fBTk_GetDoublePixelsFromObj\fR is identical to \fBTk_GetPixelsFromObj\fR
+except it returns a double not rounded to the nearest integer.
 .PP
 \fBTk_GetPixels\fR is identical to \fBTk_GetPixelsFromObj\fR except
 that the screen distance is specified with a string instead

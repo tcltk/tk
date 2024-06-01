@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .hscale
 catch {destroy $w}
@@ -22,15 +22,15 @@ pack $w.msg -side top -padx .5c
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-frame $w.frame -borderwidth 10
+frame $w.frame -borderwidth 7.5p
 pack $w.frame -side top -fill x
 
-canvas $w.frame.canvas -width 50 -height 50 -bd 0 -highlightthickness 0
+canvas $w.frame.canvas -width 37.5p -height 37.5p -bd 0 -highlightthickness 0
 $w.frame.canvas create polygon 0 0 1 1 2 2 -fill DeepSkyBlue3 -tags poly
 $w.frame.canvas create line 0 0 1 1 2 2 0 0 -fill black -tags line
-scale $w.frame.scale -orient horizontal -length 284 -from 0 -to 250 \
+scale $w.frame.scale -orient horizontal -length 213p -from 0 -to 250 \
 	-command "setWidth $w.frame.canvas" -tickinterval 50
-pack $w.frame.canvas -side top -expand yes -anchor s -fill x  -padx 15
+pack $w.frame.canvas -side top -expand yes -anchor s -fill x -padx 12p
 pack $w.frame.scale -side bottom -expand yes -anchor n
 $w.frame.scale set 75
 
@@ -42,4 +42,8 @@ proc setWidth {w width} {
     }
     $w coords poly 20 15 20 35 $x2 35 $x2 45 $width 25 $x2 5 $x2 15 20 15
     $w coords line 20 15 20 35 $x2 35 $x2 45 $width 25 $x2 5 $x2 15 20 15
+
+    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    $w scale poly 0 0 $scaleFactor $scaleFactor
+    $w scale line 0 0 $scaleFactor $scaleFactor
 }

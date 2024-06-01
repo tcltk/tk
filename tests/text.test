@@ -1,9 +1,9 @@
 # This file is a Tcl script to test the code in the file tkText.c.
 # This file is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -1485,7 +1485,19 @@ Line 7"
     rename .t {}
     rename test.t .t
     destroy .t
-} -result {{edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} {insert 2.1 ef} {mark set insert 2.3} {see insert}}
+} -result [list {edit undo} {delete 2.1 2.4} {mark set insert 2.1} {see insert} \
+                {mark set tk::undoMarkL2 2.1} {mark set tk::undoMarkR2 2.4} \
+                {mark gravity tk::undoMarkL2 left} {mark gravity tk::undoMarkR2 right} \
+                {insert 2.1 ef} {mark set insert 2.3} {see insert} \
+                {mark set tk::undoMarkL1 2.1} {mark set tk::undoMarkR1 2.3} \
+                {mark gravity tk::undoMarkL1 left} {mark gravity tk::undoMarkR1 right} \
+                {mark names} \
+                {index tk::undoMarkL1} {index tk::undoMarkR1} \
+                {mark unset tk::undoMarkL1 tk::undoMarkR1} \
+                {index tk::undoMarkL2} {index tk::undoMarkR2} \
+                {mark unset tk::undoMarkL2 tk::undoMarkR2} \
+                {compare 2.1 > 2.3} {compare 2.6 > 2.3} ]
+
 test text-8.23 {TextWidgetCmd procedure, "replace" option with undo} -setup {
     text .t
 } -body {
@@ -2056,7 +2068,7 @@ test text-10.2 {TextWidgetCmd procedure, "count" option} -setup {
     .t count blah 1.0 2.0
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad option "blah" must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
+} -returnCodes {error} -result {bad option "blah": must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
 test text-10.3 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -2596,7 +2608,7 @@ test text-10.32 {TextWidgetCmd procedure, "count" option} -setup {
     .t count -lines 1.0 2.0 3.0
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad option "1.0" must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
+} -returnCodes {error} -result {bad option "1.0": must be -chars, -displaychars, -displayindices, -displaylines, -indices, -lines, -update, -xpixels, or -ypixels}
 test text-10.33 {TextWidgetCmd procedure, "count" option} -setup {
     text .t
 } -body {
@@ -3110,7 +3122,7 @@ test text-11a.41 {"sync" "pendingsync" and <<WidgetViewSync>>} -setup {
     destroy .top.yt .top
 } -result {Sync:0 Pending:1 Sync:1 Pending:0}
 
-test text-11a.51 {<<WidgetViewSync>> calls TkSendVirtualEvent(),
+test text-11a.51 {<<WidgetViewSync>> calls Tk_SendVirtualEvent(),
                   NOT Tk_HandleEvent().
                   Bug [b362182e45704dd7bbd6aed91e48122035ea3d16]} -setup {
     destroy .top.t .top
@@ -3377,7 +3389,7 @@ test text-14.11 {ConfigureText procedure} -setup {
     .t configure -selectborderwidth foo
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad screen distance "foo"}
+} -returnCodes {error} -result {expected screen distance or "" but got "foo"}
 test text-14.12 {ConfigureText procedure} -body {
     text .t
     entry .t.e
@@ -4569,25 +4581,25 @@ test text-22.68 {TextSearchCmd, freeing copy of pattern} -body {
 } -result {}
 test text-22.69 {TextSearchCmd, unicode} -body {
     text .t
-    .t insert end "foo\u30c9\u30cabar"
-    .t search \u30c9\u30ca 1.0
+    .t insert end "fooドナbar"
+    .t search ドナ 1.0
 } -cleanup {
     destroy .t
 } -result {1.3}
 test text-22.70 {TextSearchCmd, unicode} -body {
     text .t
-    .t insert end "foo\u30c9\u30cabar"
-    list [.t search -count n \u30c9\u30ca 1.0] $n
+    .t insert end "fooドナbar"
+    list [.t search -count n ドナ 1.0] $n
 } -cleanup {
     destroy .t
 } -result {1.3 2}
 test text-22.71 {TextSearchCmd, unicode with non-text segments} -body {
     text .t
     button .b1 -text baz
-    .t insert end "foo\u30c9"
+    .t insert end "fooド"
     .t window create end -window .b1
-    .t insert end "\u30cabar"
-    list [.t search -count n \u30c9\u30ca 1.0] $n
+    .t insert end "ナbar"
+    list [.t search -count n ドナ 1.0] $n
 } -cleanup {
     destroy .t .b1
 } -result {1.3 3}
@@ -5812,7 +5824,7 @@ test text-22.217.1 {elide up to match, with UTF-8 chars before the match} -setup
 } -body {
     .t tag configure e -elide 0
     .t insert end A {} xyz e bb\n
-    .t insert end \u00c4 {} xyz e bb
+    .t insert end Ä {} xyz e bb
     set res {}
     lappend res [.t search bb 1.0 "1.0 lineend"]
     lappend res [.t search bb 2.0 "2.0 lineend"]
@@ -6114,7 +6126,7 @@ test text-23.2 {TkTextGetTabs procedure} -setup {
     .t configure -tabs xyz
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes {error} -result {expected screen distance but got "xyz"}
 test text-23.3 {TkTextGetTabs procedure} -setup {
     text .t -highlightthickness 0 -bd 0 -relief flat -padx 0 -width 150
     pack .t
@@ -6171,7 +6183,7 @@ test text-23.7 {TkTextGetTabs procedure} -setup {
     .t configure -tabs {100 !44 200 lork}
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {bad screen distance "!44"}
+} -returnCodes {error} -result {expected screen distance but got "!44"}
 
 
 test text-24.1 {TextDumpCmd procedure, bad args} -body {
@@ -6419,19 +6431,19 @@ test text-24.24 {TextDumpCmd procedure, command script} -setup {
 } -result {mark 1.0 current mark 1.0 insert mark 2.4 m}
 test text-24.25 {TextDumpCmd procedure, unicode characters} -body {
     text .t
-    .t insert 1.0 \xb1\xb1\xb1
+    .t insert 1.0 ±±±
     .t dump -all 1.0 2.0
 } -cleanup {
     destroy .t
-} -result "text \xb1\xb1\xb1 1.0 mark insert 1.3 mark current 1.3 text {\n} 1.3"
+} -result "text ±±± 1.0 mark insert 1.3 mark current 1.3 text {\n} 1.3"
 test text-24.26 {TextDumpCmd procedure, unicode characters} -body {
     text .t
     .t delete 1.0 end
-    .t insert 1.0 abc\xb1\xb1\xb1
+    .t insert 1.0 abc±±±
     .t dump -all 1.0 2.0
 } -cleanup {
     destroy .t
-} -result "text abc\xb1\xb1\xb1 1.0 mark insert 1.6 mark current 1.6 text {\n} 1.6"
+} -result "text abc±±± 1.0 mark insert 1.6 mark current 1.6 text {\n} 1.6"
 test text-24.27 {TextDumpCmd procedure, peer present} -body {
     text .t
     .t peer create .t.t
@@ -6810,14 +6822,14 @@ test text-27.18 {patch 1469210 - inserting after undo} -setup {
 } -cleanup {
     destroy .t
 } -result 1
-test text-27.19 {patch 1669632 (i) - undo after <Control-1>} -setup {
+test text-27.19 {patch 1669632 (i) - undo after <Control-Button-1>} -setup {
     destroy .t
 } -body {
     text .t -undo 1
     .t insert end foo\nbar
     .t edit reset
     .t insert 2.2 WORLD
-    event generate .t <Control-1> -x 1 -y 1
+    event generate .t <Control-Button-1> -x 1 -y 1
     .t insert insert HELLO
     .t edit undo
     .t get 2.2 2.7
@@ -6850,7 +6862,7 @@ test text-27.21 {patch 1669632 (vii) - <<Undo>> shall not remove separators} -se
     .t insert end "This is an example text"
     .t edit reset
     .t insert 1.5 "WORLD "
-    event generate .t <Control-1> -x 1 -y 1
+    event generate .t <Control-Button-1> -x 1 -y 1
     .t insert insert HELLO
     event generate .t <<Undo>>
     .t insert insert E
@@ -6967,7 +6979,67 @@ test text-27.25 {<<UndoStack>> virtual event} -setup {
 } -cleanup {
     destroy .t
 } -result {0 0 1 2 3 4 4 5 6 6 7 8 8 9}
-test text-27.26 {bug ab839efc5f - .text edit undo inserts separators} -setup {
+test text-27.26 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    .t insert end "Hello "
+    .t edit separator
+    .t insert end "World!\n"
+    .t insert 1.6 "GREAT "
+    .t insert end "Another edit here!!"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t edit separator
+    .t delete 1.6
+    .t delete 1.9 1.10
+    .t insert 1.9 L
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+    .t replace 1.6 1.10 Tcl/Tk
+    .t replace 2.8 2.12 "one bites the dust"
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.6 2.0}           \
+                {1.6 2.19}          \
+                {1.6 1.7 1.10 1.12} \
+                {1.6 1.7 1.9 1.11}  \
+                {1.6 1.16 2.8 2.19} \
+                {1.6 1.16 2.8 2.30} ]
+test text-27.27 {edit undo and edit redo return ranges} -setup {
+    destroy .t
+    set res {}
+} -body {
+    text .t -undo true -autoseparators false
+    for {set i 3} {$i >= 1} {incr i -1} {
+        .t insert 1.0 "Line $i\n"
+    }
+    lappend res [.t edit undo]
+    lappend res [.t edit redo]
+} -cleanup {
+    destroy .t
+} -result [list {1.0 2.0} \
+                {1.0 4.0} ]
+test text-27.28 {edit undo and edit redo do not leave \
+                 spurious temporary marks behind them} -setup {
+    destroy .t
+    set res {}
+} -body {
+    pack [text .t -undo true -autoseparators false]
+    .t insert end "Hello World.\n"
+    .t edit separator
+    .t insert end "Again hello.\n"
+    .t edit undo
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
+    .t edit redo
+    lappend res [expr {[lsearch [.t mark names] tk::undoMark*]<0}]
+} -cleanup {
+    destroy .t
+} -result {1 1}
+test text-27.29 {bug ab839efc5f - .text edit undo inserts separators} -setup {
     destroy .t
 } -body {
     text .t -undo 1
@@ -6982,7 +7054,6 @@ test text-27.26 {bug ab839efc5f - .text edit undo inserts separators} -setup {
 } -cleanup {
     destroy .t
 } -result {3. 123 5 789012  LINE-3}
-
 
 test text-28.1 {bug fix - 624372, ControlUtfProc long lines} -body {
     pack [text .t -wrap none]
@@ -7663,8 +7734,8 @@ test text-36.1 "bug #1777362: event handling with hyphenated windows" -setup {
     pack [set w [text .t-1]]
 } -body {
     tkwait visibility $w
-    event generate $w <1>
-    event generate $w <1>
+    event generate $w <Button-1>
+    event generate $w <Button-1>
     update
     set ::my_error
 } -cleanup {
@@ -7681,8 +7752,8 @@ test text-36.2 "bug #1777362: event handling with hyphenated windows" -setup {
     pack [set w [text .t+1]]
 } -body {
     tkwait visibility $w
-    event generate $w <1>
-    event generate $w <1>
+    event generate $w <Button-1>
+    event generate $w <Button-1>
     update
     set ::my_error
 } -cleanup {
@@ -7699,8 +7770,8 @@ test text-36.3 "bug #1777362: event handling with hyphenated windows" -setup {
     pack [set w [text .t*1]]
 } -body {
     tkwait visibility $w
-    event generate $w <1>
-    event generate $w <1>
+    event generate $w <Button-1>
+    event generate $w <Button-1>
     update
     set ::my_error
 } -cleanup {

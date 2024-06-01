@@ -13,10 +13,11 @@
 text, tk_textCopy, tk_textCut, tk_textPaste \- Create and manipulate 'text' hypertext editing widgets
 .SH SYNOPSIS
 .nf
-\fBtext\fR \fIpathName \fR?\fIoptions\fR?
-\fBtk_textCopy\fR \fIpathName\fR
-\fBtk_textCut\fR \fIpathName\fR
-\fBtk_textPaste\fR \fIpathName\fR
+\fBtext\fI pathName \fR?\fIoptions\fR?
+\fBtk_textCopy\fI pathName\fR
+\fBtk_textCut\fI pathName\fR
+\fBtk_textPaste\fI pathName\fR
+.fi
 .SO
 \-background	\-highlightthickness	\-relief
 \-borderwidth	\-insertbackground	\-selectbackground
@@ -416,11 +417,13 @@ individual tags using the
 widget command. If a character has been tagged, then the display options
 associated with the tag override the default display style. The following
 options are currently supported for tags:
+.\" OPTION: -background
 .TP
 \fB\-background \fIcolor\fR
 .
 \fIColor\fR specifies the background color to use for characters associated
 with the tag. It may have any of the forms accepted by \fBTk_GetColor\fR.
+.\" OPTION: -bgstipple
 .TP
 \fB\-bgstipple \fIbitmap\fR
 .
@@ -428,18 +431,21 @@ with the tag. It may have any of the forms accepted by \fBTk_GetColor\fR.
 background. It may have any of the forms accepted by \fBTk_GetBitmap\fR. If
 \fIbitmap\fR has not been specified, or if it is specified as an empty string,
 then a solid fill will be used for the background.
+.\" OPTION: -borderwidth
 .TP
 \fB\-borderwidth \fIpixels\fR
 .
 \fIPixels\fR specifies the width of a border to draw around the tag using any
 of the forms accepted by \fBTk_GetPixels\fR. This option should be used in
 conjunction with the \fB\-relief\fR option to provide the desired border.
+.\" OPTION: -elide
 .TP
 \fB\-elide \fIboolean\fR
 .
 \fIElide\fR specifies whether the data should be elided. Elided data
 (characters, images, embedded windows, etc.) is not displayed and takes no
 space on screen, but further on behaves just as normal data.
+.\" OPTION: -fgstipple
 .TP
 \fB\-fgstipple \fIbitmap\fR
 .
@@ -448,17 +454,20 @@ text and other foreground information such as underlines. It may have any of
 the forms accepted by \fBTk_GetBitmap\fR. If \fIbitmap\fR has not been
 specified, or if it is specified as an empty string, then a solid fill will be
 used.
+.\" OPTION: -font
 .TP
 \fB\-font \fIfontName\fR
 .
 \fIFontName\fR is the name of a font to use for drawing characters. It may
 have any of the forms accepted by \fBTk_GetFont\fR.
+.\" OPTION: -foreground
 .TP
 \fB\-foreground \fIcolor\fR
 .
 \fIColor\fR specifies the color to use when drawing text and other foreground
 information such as underlines. It may have any of the forms accepted by
 \fBTk_GetColor\fR.
+.\" OPTION: -justify
 .TP
 \fB\-justify \fIjustify\fR
 .
@@ -467,6 +476,7 @@ option has been specified, then \fIjustify\fR determines how to justify the
 line. It must be one of \fBleft\fR, \fBright\fR, or \fBcenter\fR. If a line
 wraps, then the justification for each line on the display is determined by
 the first non-elided character of that display line.
+.\" OPTION: -lmargin1
 .TP
 \fB\-lmargin1 \fIpixels\fR
 .
@@ -476,6 +486,7 @@ should be indented from the left edge of the window. \fIPixels\fR may have any
 of the standard forms for screen distances. If a line of text wraps, this
 option only applies to the first line on the display; the \fB\-lmargin2\fR
 option controls the indentation for subsequent lines.
+.\" OPTION: -lmargin2
 .TP
 \fB\-lmargin2 \fIpixels\fR
 .
@@ -486,6 +497,7 @@ much the line should be indented from the left edge of the window.
 \fIPixels\fR may have any of the standard forms for screen distances. This
 option is only used when wrapping is enabled, and it only applies to the
 second and later display lines for a text line.
+.\" OPTION: -lmargincolor
 .TP
 \fB\-lmargincolor \fIcolor\fR
 .
@@ -494,8 +506,9 @@ contain characters because they are indented by \fB\-lmargin1\fR or
 \fB\-lmargin2\fR. It may have any of the forms accepted by
 \fBTk_GetColor\fR. If \fIcolor\fR has not been specified, or if it is
 specified as an empty string, then the color used is specified by the
-\fB-background\fR tag option (or, if this is also unspecified, by the
-\fB-background\fR widget option).
+\fB\-background\fR tag option (or, if this is also unspecified, by the
+\fB\-background\fR widget option).
+.\" OPTION: -offset
 .TP
 \fB\-offset \fIpixels\fR
 .
@@ -504,12 +517,14 @@ vertically from the baseline of the overall line, in pixels. For example, a
 positive offset can be used for superscripts and a negative offset can be used
 for subscripts. \fIPixels\fR may have any of the standard forms for screen
 distances.
+.\" OPTION: -overstrike
 .TP
 \fB\-overstrike \fIboolean\fR
 .
 Specifies whether or not to draw a horizontal rule through the middle of
 characters. \fIBoolean\fR may have any of the forms accepted by
 \fBTcl_GetBoolean\fR.
+.\" OPTION: -overstrikefg
 .TP
 \fB\-overstrikefg \fIcolor\fR
 .
@@ -517,6 +532,7 @@ characters. \fIBoolean\fR may have any of the forms accepted by
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
 specified by the \fB\-foreground\fR tag option is used.
+.\" OPTION: -relief
 .TP
 \fB\-relief \fIrelief\fR
 .
@@ -524,6 +540,7 @@ specified by the \fB\-foreground\fR tag option is used.
 of the forms accepted by \fBTk_GetRelief\fR. This option is used in
 conjunction with the \fB\-borderwidth\fR option to enable to the desired
 border appearance.
+.\" OPTION: -rmargin
 .TP
 \fB\-rmargin \fIpixels\fR
 .
@@ -534,6 +551,7 @@ leave between the end of the line and the right edge of the window.
 option is only used when wrapping is enabled. If a text line wraps, the right
 margin for each line on the display is determined by the first non-elided
 character of that display line.
+.\" OPTION: -rmargincolor
 .TP
 \fB\-rmargincolor \fIcolor\fR
 .
@@ -541,40 +559,48 @@ character of that display line.
 contain characters because they are indented by \fB\-rmargin\fR. It may
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
-used is specified by the \fB-background\fR tag option (or, if this is also
-unspecified, by the \fB-background\fR widget option).
+used is specified by the \fB\-background\fR tag option (or, if this is also
+unspecified, by the \fB\-background\fR widget option).
+.\" OPTION: -selectbackground
 .TP
 \fB\-selectbackground \fIcolor\fR
+.
 \fIColor\fR specifies the background color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
 string, then the color specified by the \fB\-background\fR tag option is
 used.
+.\" OPTION: -selectforeground
 .TP
 \fB\-selectforeground \fIcolor\fR
+.
 \fIColor\fR specifies the foreground color to use when displaying selected
 items. It may have any of the forms accepted by \fBTk_GetColor\fR. If
 \fIcolor\fR has not been specified, or if it is specified as an empty
 string, then the color specified by the \fB\-foreground\fR tag option is
 used.
+.\" OPTION: -spacing1
 .TP
 \fB\-spacing1 \fIpixels\fR
 .
 \fIPixels\fR specifies how much additional space should be left above each
 text line, using any of the standard forms for screen distances. If a line
 wraps, this option only applies to the first line on the display.
+.\" OPTION: -spacing2
 .TP
 \fB\-spacing2 \fIpixels\fR
 .
 For lines that wrap, this option specifies how much additional space to leave
 between the display lines for a single text line. \fIPixels\fR may have any of
 the standard forms for screen distances.
+.\" OPTION: -spacing3
 .TP
 \fB\-spacing3 \fIpixels\fR
 .
 \fIPixels\fR specifies how much additional space should be left below each
 text line, using any of the standard forms for screen distances. If a line
 wraps, this option only applies to the last line on the display.
+.\" OPTION: -tabs
 .TP
 \fB\-tabs \fItabList\fR
 .
@@ -586,6 +612,7 @@ unspecified for the tag (the default). If the option is specified as a
 non-empty string that is an empty list, such as \fB\-tags\0{\0}\fR, then it
 requests default 8-character tabs as described for the \fB\-tags\fR widget
 option.
+.\" OPTION: -tabstyle
 .TP
 \fB\-tabstyle \fIstyle\fR
 .
@@ -594,11 +621,13 @@ tabbing to use for the text widget. This option only applies to a display line
 if it applies to the first non-elided character on that display line. If this
 option is specified as an empty string, it cancels the option, leaving it
 unspecified for the tag (the default).
+.\" OPTION: -underline
 .TP
 \fB\-underline \fIboolean\fR
 .
 \fIBoolean\fR specifies whether or not to draw an underline underneath
 characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
+.\" OPTION: -underlinefg
 .TP
 \fB\-underlinefg \fIcolor\fR
 .
@@ -606,6 +635,7 @@ characters. It may have any of the forms accepted by \fBTcl_GetBoolean\fR.
 have any of the forms accepted by \fBTk_GetColor\fR. If \fIcolor\fR has not
 been specified, or if it is specified as an empty string, then the color
 specified by the \fB\-foreground\fR tag option is used.
+.\" OPTION: -wrap
 .TP
 \fB\-wrap \fImode\fR
 .
@@ -696,9 +726,9 @@ then the window is destroyed. Similarly if the text widget as a whole is
 deleted, then the window is destroyed.
 .PP
 Eliding an embedded window immediately after scheduling it for creation via
-\fIpathName \fBwindow create \fIindex \fB-create\fR will prevent it from being
+\fIpathName \fBwindow create \fIindex \fB\-create\fR will prevent it from being
 effectively created. Uneliding an elided embedded window scheduled for creation
-via \fIpathName \fBwindow create \fIindex \fB-create\fR will automatically
+via \fIpathName \fBwindow create \fIindex \fB\-create\fR will automatically
 trigger the associated creation script. After destroying an elided embedded
 window, the latter won't get automatically recreated.
 .PP
@@ -707,6 +737,7 @@ When an embedded window is added to a text widget with the \fIpathName
 associated with it. These options may be modified later with the \fIpathName
 \fBwindow configure\fR widget command. The following options are currently
 supported:
+.\" OPTION: -align
 .TP
 \fB\-align \fIwhere\fR
 .
@@ -717,6 +748,7 @@ line), \fBcenter\fR (center the window within the range of the line),
 \fBbottom\fR (align the bottom of the window with the bottom of the line's
 area), or \fBbaseline\fR (align the bottom of the window with the baseline of
 the line).
+.\" OPTION: -create
 .TP
 \fB\-create \fIscript\fR
 .
@@ -729,18 +761,21 @@ the name of that window as its result. Two substitutions will be performed in
 the parent text widget, and \fI%%\fR will be substituted by a single \fI%\fR.
 If the annotation's window should ever be deleted, \fIscript\fR will be
 evaluated again the next time the annotation is displayed.
+.\" OPTION: -padx
 .TP
 \fB\-padx \fIpixels\fR
 .
 \fIPixels\fR specifies the amount of extra space to leave on each side of the
 embedded window. It may have any of the usual forms defined for a screen
 distance.
+.\" OPTION: -pady
 .TP
 \fB\-pady \fIpixels\fR
 .
 \fIPixels\fR specifies the amount of extra space to leave on the top and on
 the bottom of the embedded window. It may have any of the usual forms defined
 for a screen distance.
+.\" OPTION: -stretch
 .TP
 \fB\-stretch \fIboolean\fR
 .
@@ -749,6 +784,7 @@ line in which it is displayed, this option can be used to specify whether the
 window should be stretched vertically to fill its line. If the \fB\-pady\fR
 option has been specified as well, then the requested padding will be retained
 even if the window is stretched.
+.\" OPTION: -window
 .TP
 \fB\-window \fIpathName\fR
 .
@@ -775,9 +811,9 @@ containing the embedded image is deleted then that copy of the image is removed
 from the screen.
 .PP
 Eliding an embedded image immediately after scheduling it for creation via
-\fIpathName \fBimage create \fIindex \fB-create\fR will prevent it from being
+\fIpathName \fBimage create \fIindex \fB\-create\fR will prevent it from being
 effectively created. Uneliding an elided embedded image scheduled for creation
-via \fIpathName \fBimage create \fIindex \fB-create\fR will automatically
+via \fIpathName \fBimage create \fIindex \fB\-create\fR will automatically
 trigger the associated creation script. After destroying an elided embedded
 image, the latter won't get automatically recreated.
 .PP
@@ -797,6 +833,7 @@ When an embedded image is added to a text widget with the \fIpathName \fBimage
 create\fR widget command, several configuration options may be associated with
 it. These options may be modified later with the \fIpathName \fBimage
 configure\fR widget command. The following options are currently supported:
+.\" OPTION: -align
 .TP
 \fB\-align \fIwhere\fR
 .
@@ -806,11 +843,13 @@ of the values \fBtop\fR (align the top of the image with the top of the line),
 \fBcenter\fR (center the image within the range of the line), \fBbottom\fR
 (align the bottom of the image with the bottom of the line's area), or
 \fBbaseline\fR (align the bottom of the image with the baseline of the line).
+.\" OPTION: -image
 .TP
 \fB\-image \fIimage\fR
 .
 Specifies the name of the Tk image to display in the annotation. If
 \fIimage\fR is not a valid Tk image, then an error is returned.
+.\" OPTION: -name
 .TP
 \fB\-name \fIImageName\fR
 .
@@ -818,12 +857,14 @@ Specifies the name by which this image instance may be referenced in the text
 widget. If \fIImageName\fR is not supplied, then the name of the Tk image is
 used instead. If the \fIimageName\fR is already in use, \fI#nn\fR is appended
 to the end of the name as described above.
+.\" OPTION: -padx
 .TP
 \fB\-padx \fIpixels\fR
 .
 \fIPixels\fR specifies the amount of extra space to leave on each side of the
 embedded image. It may have any of the usual forms defined for a screen
 distance.
+.\" OPTION: -pady
 .TP
 \fB\-pady \fIpixels\fR
 .
@@ -979,7 +1020,7 @@ In order to maintain a responsive user-experience, the text widget calculates
 lines metrics (line heights in pixels) asynchronously. Because of this, some
 commands of the text widget may return wrong results if the asynchronous
 calculations are not finished at the time of calling. This applies to
-\fIpathName \fBcount -ypixels\fR and \fIpathName \fByview\fR.
+\fIpathName \fBcount \-ypixels\fR and \fIpathName \fByview\fR.
 .PP
 Again for performance reasons, it would not be appropriate to let these
 commands always wait for the end of the update calculation each time they are
@@ -1056,11 +1097,12 @@ The \fBtext\fR command creates a new Tcl command whose name is the same as the
 path name of the text's window. This command may be used to invoke various
 operations on the widget. It has the following general form:
 .CS
-\fIpathName option \fR?\fIarg arg ...\fR?
+\fIpathName option \fR?\fIarg ...\fR?
 .CE
 \fIPathName\fR is the name of the command, which is the same as the text
 widget's path name. \fIOption\fR and the \fIarg\fRs determine the exact
 behavior of the command. The following commands are possible for text widgets:
+.\" METHOD: bbox
 .TP
 \fIpathName \fBbbox \fIindex\fR
 .
@@ -1071,13 +1113,15 @@ and the last two elements give the width and height of the area. If the
 character is only partially visible on the screen, then the return value
 reflects just the visible part. If the character is not visible on the screen
 then the return value is an empty list.
+.\" METHOD: cget
 .TP
-\fIpathName \fBcget\fR \fIoption\fR
+\fIpathName \fBcget\fI option\fR
 .
 Returns the current value of the configuration option given by \fIoption\fR.
 \fIOption\fR may have any of the values accepted by the \fBtext\fR command.
+.\" METHOD: compare
 .TP
-\fIpathName \fBcompare\fR \fIindex1 op index2\fR
+\fIpathName \fBcompare\fI index1 op index2\fR
 .
 Compares the indices given by \fIindex1\fR and \fIindex2\fR according to the
 relational operator given by \fIop\fR, and returns 1 if the relationship is
@@ -1085,6 +1129,7 @@ satisfied and 0 if it is not. \fIOp\fR must be one of the operators <, <=, ==,
 >=, >, or !=. If \fIop\fR is == then 1 is returned if the two indices refer to
 the same character, if \fIop\fR is < then 1 is returned if \fIindex1\fR refers
 to an earlier character in the text than \fIindex2\fR, and so on.
+.\" METHOD: configure
 .TP
 \fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
 .
@@ -1098,6 +1143,7 @@ specified). If one or more \fIoption\-value\fR pairs are specified, then the
 command modifies the given widget option(s) to have the given value(s); in
 this case the command returns an empty string. \fIOption\fR may have any of
 the values accepted by the \fBtext\fR command.
+.\" METHOD: count
 .TP
 \fIpathName \fBcount\fR ?\fIoptions\fR? \fIindex1 index2\fR
 .
@@ -1161,6 +1207,7 @@ supplied. For example
 .QW ".text count \-xpixels \-ypixels 1.3 4.5"
 is perfectly valid and will return a list of two elements.
 .RE
+.\" METHOD: debug
 .TP
 \fIpathName \fBdebug \fR?\fIboolean\fR?
 .
@@ -1181,6 +1228,7 @@ global variables \fBtk_textRedraw\fR and \fBtk_textRelayout\fR to the lists of
 indices that are redrawn. The values of these variables are tested by Tk's
 test suite.
 .RE
+.\" METHOD: delete
 .TP
 \fIpathName \fBdelete \fIindex1 \fR?\fIindex2 ...\fR?
 .
@@ -1208,6 +1256,7 @@ side-effects.  If multiple ranges with the same start index are given,
 then the longest range is used.  If overlapping ranges are given, then
 they will be merged into spans that do not cause deletion of text
 outside the given ranges due to text shifted during deletion.
+.\" METHOD: dlineinfo
 .TP
 \fIpathName \fBdlineinfo \fIindex\fR
 .
@@ -1224,6 +1273,7 @@ width of the window then the area returned reflects just the portion of the
 line that is occupied by characters and embedded windows. If the display line
 containing \fIindex\fR is not visible on the screen then the return value is
 an empty list.
+.\" METHOD: dump
 .TP
 \fIpathName \fBdump \fR?\fIswitches\fR? \fIindex1 \fR?\fIindex2\fR?
 .
@@ -1242,11 +1292,13 @@ the text, mark name, tag name, image name, or window name. The \fIindex\fR
 information is the index of the start of the text, mark, tag transition, image
 or window. One or more of the following switches (or abbreviations thereof)
 may be specified to control the dump:
+.\" OPTION: -all
 .TP
 \fB\-all\fR
 .
 Return information about all elements: text, marks, tags, images and windows.
 This is the default.
+.\" OPTION: -command
 .TP
 \fB\-command \fIcommand\fR
 .
@@ -1254,20 +1306,24 @@ Instead of returning the information as the result of the dump operation,
 invoke the \fIcommand\fR on each element of the text widget within the range.
 The command has three arguments appended to it before it is evaluated: the
 \fIkey\fR, \fIvalue\fR, and \fIindex\fR.
+.\" OPTION: -image
 .TP
 \fB\-image\fR
 .
 Include information about images in the dump results.
+.\" OPTION: -mark
 .TP
 \fB\-mark\fR
 .
 Include information about marks in the dump results.
+.\" OPTION: -tag
 .TP
 \fB\-tag\fR
 .
 Include information about tag transitions in the dump results. Tag information
 is returned as \fBtagon\fR and \fBtagoff\fR elements that indicate the begin
 and end of each range of each tag, respectively.
+.\" OPTION: -text
 .TP
 \fB\-text\fR
 .
@@ -1276,6 +1332,7 @@ to the next element or the end of range indicated by \fIindex2\fR. A text
 element does not span newlines. A multi-line block of text that contains no
 marks or tag transitions will still be dumped as a set of text segments that
 each end with a newline. The newline is part of the value.
+.\" OPTION: -window
 .TP
 \fB\-window\fR
 .
@@ -1284,8 +1341,9 @@ window is its Tk pathname, unless the window has not been created yet. (It
 must have a create script.) In this case an empty string is returned, and you
 must query the window by its index position to get more information.
 .RE
+.\" METHOD: edit
 .TP
-\fIpathName \fBedit \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBedit \fIoption \fR?\fIarg ...\fR?
 .
 This command controls the undo mechanism and the modified flag. The exact
 behavior of the command depends on the \fIoption\fR argument that follows the
@@ -1313,8 +1371,9 @@ of the widget to \fIboolean\fR.
 \fIpathName \fBedit redo\fR
 .
 When the \fB\-undo\fR option is true, reapplies the last undone edits provided
-no other edits were done since then. Generates an error when the redo stack is
-empty. Does nothing when the \fB\-undo\fR option is false.
+no other edits were done since then, and returns a list of indices indicating
+what ranges were changed by the redo operation. Generates an error when the
+redo stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .TP
 \fIpathName \fBedit reset\fR
 .
@@ -1327,11 +1386,13 @@ Inserts a separator (boundary) on the undo stack. Does nothing when the
 .TP
 \fIpathName \fBedit undo\fR
 .
-Undoes the last edit action when the \fB\-undo\fR option is true. An edit
-action is defined as all the insert and delete commands that are recorded on
-the undo stack in between two separators. Generates an error when the undo
+Undoes the last edit action when the \fB\-undo\fR option is true, and returns a
+list of indices indicating what ranges were changed by the undo operation. An
+edit action is defined as all the insert and delete commands that are recorded
+on the undo stack in between two separators. Generates an error when the undo
 stack is empty. Does nothing when the \fB\-undo\fR option is false.
 .RE
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR ?\fB\-displaychars\fR? ?\fB\-\-\fR? \fIindex1\fR ?\fIindex2 ...\fR?
 .
@@ -1350,8 +1411,9 @@ order passed to \fIpathName \fBget\fR. If the \fB\-displaychars\fR option is
 given, then, within each range, only those characters which are not elided
 will be returned. This may have the effect that some of the returned ranges
 are empty strings.
+.\" METHOD: image
 .TP
-\fIpathName \fBimage \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBimage \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded images. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBimage\fR
@@ -1392,12 +1454,14 @@ identifier returned.
 Returns a list whose elements are the names of all image instances currently
 embedded in \fIwindow\fR.
 .RE
+.\" METHOD: index
 .TP
 \fIpathName \fBindex \fIindex\fR
 .
 Returns the position corresponding to \fIindex\fR in the form \fIline.char\fR
 where \fIline\fR is the line number and \fIchar\fR is the character number.
 \fIIndex\fR may have any of the forms described under \fBINDICES\fR above.
+.\" METHOD: insert
 .TP
 \fIpathName \fBinsert \fIindex chars \fR?\fItagList chars tagList ...\fR?
 .
@@ -1415,8 +1479,9 @@ of the tags present around the insertion point. If multiple
 effect as if a separate \fIpathName \fBinsert\fR widget command had been
 issued for each pair, in order. The last \fItagList\fR argument may be
 omitted.
+.\" METHOD: mark
 .TP
-\fIpathName \fBmark \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBmark \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate marks. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBmark\fR argument. The
@@ -1445,7 +1510,7 @@ position if there are multiple marks at the same index. These semantics mean
 that the \fBmark next\fR operation can be used to step through all the marks
 in a text widget in the same order as the mark information returned by the
 \fIpathName \fBdump\fR operation. If a mark has been set to the special
-\fBend\fR index, then it appears to be \fIafter\fR \fBend\fR with respect to
+\fBend\fR index, then it appears to be \fIafter \fBend\fR with respect to
 the \fIpathName \fBmark next\fR operation. An empty string is returned if
 there are no marks after \fIindex\fR.
 .TP
@@ -1477,6 +1542,7 @@ calls to
 .QW "\fIpathName \fBmark names\fR" .
 This command returns an empty string.
 .RE
+.\" METHOD: peer
 .TP
 \fIpathName \fBpeer \fIoption args\fR
 .
@@ -1496,11 +1562,15 @@ be overridden with the standard configuration options.
 Returns a list of peers of this widget (this does not include the widget
 itself). The order within this list is undefined.
 .RE
+.\" METHOD: pendingsync
 .TP
 \fIpathName \fBpendingsync\fR
+.
 Returns 1 if the line heights calculations are not up-to-date, 0 otherwise.
+.\" METHOD: replace
 .TP
-\fIpathName \fBreplace\fR \fIindex1 index2 chars\fR ?\fItagList chars tagList ...\fR?
+\fIpathName \fBreplace\fI index1 index2 chars\fR ?\fItagList chars tagList ...\fR?
+.
 Replaces the range of characters between \fIindex1\fR and \fIindex2\fR
 with the given characters and tags.  See the section on \fIpathName
 \fBinsert\fR for an explanation of the handling of the \fItagList...\fR
@@ -1515,6 +1585,7 @@ the window or movement of insertion cursor occurs. In addition the undo/redo
 stack are correctly modified, if undo operations are active in the text
 widget. The command returns an empty string.
 .RE
+.\" METHOD: scan
 .TP
 \fIpathName \fBscan \fIoption args\fR
 .
@@ -1538,6 +1609,7 @@ coordinates. This command is typically associated with mouse motion events in
 the widget, to produce the effect of dragging the text at high speed through
 the window. The return value is an empty string.
 .RE
+.\" METHOD: search
 .TP
 \fIpathName \fBsearch \fR?\fIswitches\fR? \fIpattern index \fR?\fIstopIndex\fR?
 .
@@ -1547,12 +1619,14 @@ first character in the match is returned as result; otherwise an empty string
 is returned. One or more of the following switches (or abbreviations thereof)
 may be specified to control the search:
 .RS
+.\" OPTION: -forwards
 .TP
 \fB\-forwards\fR
 .
 The search will proceed forward through the text, finding the first matching
 range starting at or after the position given by \fIindex\fR. This is the
 default.
+.\" OPTION: -backwards
 .TP
 \fB\-backwards\fR
 .
@@ -1562,11 +1636,13 @@ allowed to be at \fIindex\fR). Note that, for a variety of reasons, backwards
 searches can be substantially slower than forwards searches (particularly when
 using \fB\-regexp\fR), so it is recommended that performance-critical code use
 forward searches.
+.\" OPTION: -exact
 .TP
 \fB\-exact\fR
 .
 Use exact matching: the characters in the matching range must be identical to
 those in \fIpattern\fR. This is the default.
+.\" OPTION: -regexp
 .TP
 \fB\-regexp\fR
 .
@@ -1578,6 +1654,7 @@ details). The default matching automatically passes both the
 \fB\-nolinestop\fR is used), so that \fI^$\fR match beginning and end of line,
 and \fI.\fR, \fI[^\fR sequences will never match the newline character
 \fI\en\fR.
+.\" OPTION: -nolinestop
 .TP
 \fB\-nolinestop\fR
 .
@@ -1586,10 +1663,12 @@ This allows \fI.\fR and \fI[^\fR sequences to match the newline character
 details). This option is only meaningful if \fB\-regexp\fR is also given, and
 an error will be thrown otherwise. For example, to match the entire text, use
 .QW "\fIpathName \fBsearch \-nolinestop \-regexp\fR \N'34'.*\N'34' 1.0" .
+.\" OPTION: -nocase
 .TP
 \fB\-nocase\fR
 .
 Ignore case differences between the pattern and the text.
+.\" OPTION: -count
 .TP
 \fB\-count\fI varName\fR
 .
@@ -1600,6 +1679,7 @@ or windows in the matching range (and there are no elided characters if
 \fB\-elide\fR is not given), this is equivalent to the number of characters
 matched. In either case, the range \fImatchIdx\fR to \fImatchIdx + $count
 chars\fR will return the entire matched text.
+.\" OPTION: -all
 .TP
 \fB\-all\fR
 .
@@ -1619,6 +1699,7 @@ will just match twice, once for each word, and matching
 against
 .QW ZooZooZoo
 will just match once.
+.\" OPTION: -overlap
 .TP
 \fB\-overlap\fR
 .
@@ -1636,6 +1717,7 @@ against
 .QW ZooZooZoo
 will now match twice. An error will be thrown if this switch is used without
 \fB\-all\fR.
+.\" OPTION: -strictlimits
 .TP
 \fB\-strictlimits\fR
 .
@@ -1643,10 +1725,12 @@ When performing any search, the normal behaviour is that the start and stop
 limits are checked with respect to the start of the matching text. With the
 \fB\-strictlimits\fR flag, the entire matching range must lie inside the start
 and stop limits specified for the match to be valid.
+.\" OPTION: -elide
 .TP
 \fB\-elide\fR
 .
 Find elided (hidden) text as well. By default only displayed text is searched.
+.\" OPTION: --
 .TP
 \fB\-\|\-\fR
 .
@@ -1669,6 +1753,7 @@ no wrap-around will occur. This means that, for example, if the search is
 \fIstartIndex\fR, nothing will ever be found. See \fBKNOWN BUGS\fR below for a
 number of minor limitations of the \fIpathName \fBsearch\fR command.
 .RE
+.\" METHOD: see
 .TP
 \fIpathName \fBsee \fIindex\fR
 .
@@ -1678,25 +1763,30 @@ nothing. If \fIindex\fR is a short distance out of view, the command adjusts
 the view just enough to make \fIindex\fR visible at the edge of the window.
 If \fIindex\fR is far out of view, then the command centers \fIindex\fR in the
 window.
+.\" METHOD: sync
 .TP
-\fIpathName \fBsync\fR ?\fB-command \fIcommand\fR?
+\fIpathName \fBsync\fR ?\fB\-command \fIcommand\fR?
+.
 Controls the synchronization of the view of the text widget.
 .RS
 .TP
 \fIpathName \fBsync\fR
+.
 Immediately brings the line metrics up-to-date by forcing computation of any
 outdated line heights. The command returns immediately if there is no such
 outdated line heights, otherwise it returns only at the end of the computation.
 The command returns an empty string.
 .TP
-\fIpathName \fBsync -command \fIcommand\fR
+\fIpathName \fBsync \-command \fIcommand\fR
+.
 Schedules \fIcommand\fR to be executed (by the event loop) exactly once as soon
 as all line heights are up-to-date. If there are no pending line metrics
 calculations, the scheduling is immediate. The command returns the empty
 string. \fBbgerror\fR is called on \fIcommand\fR failure.
 .RE
+.\" METHOD: tag
 .TP
-\fIpathName \fBtag \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBtag \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate tags. The exact behavior of the command
 depends on the \fIoption\fR argument that follows the \fBtag\fR argument. The
@@ -1735,8 +1825,8 @@ all the sequences for which bindings have been defined for \fItagName\fR.
 .RS
 .PP
 The only events for which bindings may be specified are those related to the
-mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, \fBButtonPress\fR,
-\fBMotion\fR, and \fBKeyPress\fR) or virtual events. Mouse and keyboard event
+mouse and keyboard (such as \fBEnter\fR, \fBLeave\fR, \fBButton\fR,
+\fBMotion\fR, and \fBKey\fR) or virtual events. Mouse and keyboard event
 bindings for a text widget respectively use the \fBcurrent\fR and \fBinsert\fR
 marks described under \fBMARKS\fR above. An
 \fBEnter\fR event triggers for a tag when the tag first becomes present on the
@@ -1836,7 +1926,7 @@ of the range and the index of the character just after the last one in the
 range. If no matching range is found then the return value is an empty string.
 If \fIindex2\fR is not given then it defaults to the beginning of the text.
 .TP
-\fIpathName\fB tag raise \fItagName \fR?\fIaboveThis\fR?
+\fIpathName \fBtag raise \fItagName \fR?\fIaboveThis\fR?
 .
 Changes the priority of tag \fItagName\fR so that it is just higher in
 priority than the tag whose name is \fIaboveThis\fR. If \fIaboveThis\fR is
@@ -1864,8 +1954,9 @@ characters in the specified range (e.g. \fIindex1\fR is past the end of the
 file or \fIindex2\fR is less than or equal to \fIindex1\fR) then the command
 has no effect. This command returns an empty string.
 .RE
+.\" METHOD: window
 .TP
-\fIpathName \fBwindow \fIoption \fR?\fIarg arg ...\fR?
+\fIpathName \fBwindow \fIoption \fR?\fIarg ...\fR?
 .
 This command is used to manipulate embedded windows. The behavior of the
 command depends on the \fIoption\fR argument that follows the \fBwindow\fR
@@ -1904,6 +1995,7 @@ information on the options that are supported. Returns an empty string.
 Returns a list whose elements are the names of all windows currently embedded
 in \fIwindow\fR.
 .RE
+.\" METHOD: xview
 .TP
 \fIpathName \fBxview \fIoption args\fR
 .
@@ -1934,21 +2026,22 @@ and 1.
 \fIpathName \fBxview scroll \fInumber what\fR
 .
 This command shifts the view in the window left or right according to
-\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBunits\fR, \fBpages\fR or
-\fBpixels\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR
-must be an integer, otherwise number may be specified in any of the forms
-acceptable to \fBTk_GetPixels\fR, such as
+\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBpages\fR,
+\fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBpages\fR or
+\fBunits\fR then \fInumber\fR must be an integer, otherwise number may be
+specified in any of the forms acceptable to \fBTk_GetPixels\fR, such as
 .QW 2.0c
 or
 .QW 1i
 (the result is rounded to the nearest integer value. If no units are given,
-pixels are assumed). If \fIwhat\fR is \fBunits\fR, the view adjusts left or
-right by \fInumber\fR average-width characters on the display; if it is
-\fBpages\fR then the view adjusts by \fInumber\fR screenfuls; if it is
-\fBpixels\fR then the view adjusts by \fInumber\fR pixels. If \fInumber\fR is
+pixels are assumed). If \fIwhat\fR is \fBpages\fR then the view adjusts by
+\fInumber\fR screenfuls; if it is \fBpixels\fR then the view adjusts by
+\fInumber\fR pixels; if it is \fBunits\fR, the view adjusts left or
+right by \fInumber\fR average-width characters on the display. If \fInumber\fR is
 negative then characters farther to the left become visible; if it is positive
 then characters farther to the right become visible.
 .RE
+.\" METHOD: yview
 .TP
 \fIpathName \fByview \fR?\fIargs\fR?
 .
@@ -1982,10 +2075,10 @@ the bottom of the window, and some other pixel is at the top.
 \fIpathName \fByview scroll \fInumber what\fR
 .
 This command adjust the view in the window up or down according to
-\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBunits\fR, \fBpages\fR or
-\fBpixels\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then \fInumber\fR
-must be an integer, otherwise number may be specified in any of the forms
-acceptable to \fBTk_GetPixels\fR, such as
+\fInumber\fR and \fIwhat\fR. \fIWhat\fR must be \fBpages\fR,
+\fBpixels\fR, or \fBunits\fR. If \fIwhat\fR is \fBunits\fR or \fBpages\fR then
+\fInumber\fR must be an integer, otherwise number may be specified in any of
+the forms acceptable to \fBTk_GetPixels\fR, such as
 .QW 2.0c
 or
 .QW 1i
@@ -2163,11 +2256,11 @@ insertion cursor without moving the insertion cursor.
 Meta-backspace and Meta-Delete delete the word to the left of the insertion
 cursor.
 .IP [30]
-Control-x deletes whatever is selected in the text widget after copying it to
-the clipboard.
-.IP [31]
 Control-t reverses the order of the two characters to the right of the
 insertion cursor.
+.IP [31]
+Control-x deletes whatever is selected in the text widget after copying it to
+the clipboard.
 .IP [32]
 Control-z undoes the last edit action if the \fB\-undo\fR option is true.
 Does nothing otherwise.
@@ -2253,7 +2346,7 @@ practice this is a rare problem, but it can occur, for example:
 .CS
 pack [\fBtext\fR .t]
 \&.t insert 1.0 "aaaa\enbbbb\encccc\enbbbb\enaaaa\en"
-\&.t search \-regexp \-\- {(a+|b+\enc+\enb+)+\ena+} 1.0
+\&.t search -regexp -- {(a+|b+\enc+\enb+)+\ena+} 1.0
 .CE
 will not find a match when one exists of 19 characters starting from the first
 .QW b .
@@ -2269,7 +2362,7 @@ portions of the widget. For example:
 .CS
 pack [\fBtext\fR .t]
 \&.t insert 1.0 "aaaa\enbbbb\enbbbb\enbbbb\enbbbb\\n"
-\&.t search \-regexp \-backward \-\- {b+\en|a+\en(b+\en)+} end
+\&.t search -regexp -backward -- {b+\en|a+\en(b+\en)+} end
 .CE
 matches at
 .QW 5.0

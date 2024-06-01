@@ -1,8 +1,8 @@
 # This file is a Tcl script to test out Tk's "tk_messageBox" command.
 # It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -94,7 +94,7 @@ proc ChooseMsgByKey {parent btn} {
 
 proc PressButton {btn} {
     event generate $btn <Enter>
-    event generate $btn <ButtonPress-1> -x 5 -y 5
+    event generate $btn <Button-1> -x 5 -y 5
     event generate $btn <ButtonRelease-1> -x 5 -y 5
 }
 
@@ -113,7 +113,7 @@ proc SendEventToMsg {parent btn type} {
 	event generate $w <Enter>
 	focus $w
 	event generate $w.$btn <Enter>
-	event generate $w <KeyPress> -keysym Return
+	event generate $w <Key> -keysym Return
     }
 }
 #

@@ -12,7 +12,7 @@
 .SH NAME
 wm \- Communicate with window manager
 .SH SYNOPSIS
-\fBwm\fR \fIoption window \fR?\fIargs\fR?
+\fBwm\fI option window \fR?\fIargs\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -25,6 +25,7 @@ additional argument, \fIwindow\fR, which must be the path name of a
 top-level window.
 .PP
 The legal forms for the \fBwm\fR command are:
+.\" METHOD: aspect
 .TP
 \fBwm aspect \fIwindow\fR ?\fIminNumer minDenom maxNumer maxDenom\fR?
 .
@@ -42,6 +43,7 @@ a Tcl list containing four elements, which are the current values
 of \fIminNumer\fR, \fIminDenom\fR, \fImaxNumer\fR, and \fImaxDenom\fR
 (if no aspect restrictions are in effect, then an empty string is
 returned).
+.\" METHOD: attributes
 .TP
 \fBwm attributes \fIwindow\fR
 .TP
@@ -58,6 +60,7 @@ values are as follows:
 .PP
 All platforms support the following attributes (though X11 users
 should see the notes below):
+.\" OPTION: -alpha
 .TP
 \fB\-alpha\fR
 .
@@ -65,26 +68,31 @@ Specifies the alpha transparency level of the toplevel. It accepts a value
 from \fB0.0\fR (fully transparent) to \fB1.0\fR (opaque).  Values outside that
 range will be constrained.  Where not supported, the \fB\-alpha\fR value
 remains at \fB1.0\fR.
+.\" OPTION: -fullscreen
 .TP
 \fB\-fullscreen\fR
 .
 Places the window in a mode that takes up the entire screen, has no
 borders, and covers the general use area (i.e. Start menu and taskbar on
 Windows, dock and menubar on OSX, general window decorations on X11).
+.\" OPTION: -topmost
 .TP
 \fB\-topmost\fR
 .
 Specifies whether this is a topmost window (displays above all other windows).
 .PP
 On Windows, the following attributes may be set.
+.\" OPTION: -disabled
 .TP
 \fB\-disabled\fR
 .
 Specifies whether the window is in a disabled state.
+.\" OPTION: -toolwindow
 .TP
 \fB\-toolwindow\fR
 .
 Specifies a toolwindow style window (as defined in the MSDN).
+.\" OPTION: -transparentcolor
 .TP
 \fB\-transparentcolor\fR
 .
@@ -94,22 +102,96 @@ value accepted by \fBTk_GetColor\fR.  If the empty string is specified
 2000/XP+.  Where not supported, the \fB\-transparentcolor\fR value remains
 at \fB{}\fR.
 .PP
-On Mac OS X, the following attributes may be set.
+On MacOS, the following attributes may be set.
+.\" OPTION: -appearance
+.TP
+\fB\-appearance\fR
+.
+Specifies whether the window is rendered in "dark mode".  Allowed
+values are \fBauto\fR, \fBaqua\fR and \fBdarkaqua\fR.  If the setting
+is auto then the appearance of the window is controlled by the
+System Settings.
+.\" OPTION: -class
+.TP
+\fB\-class\fR
+.
+Specifies whether the underlying Aqua window for a toplevel is an
+object of the NSWindow class or the NSPanel class.  The two allowed
+values for this option are \fBnswindow\fR and \fBnspanel\fR.  It is
+not possible to change the class of the underlying Aqua window once
+that window has been instantiated, and attempting to do that is an
+error.  However it is allowed to set this option for a pathname that
+does not correspond to an existing window.  Doing that causes the
+class name to be cached for later use.  When a toplevel with that
+pathname is eventually created, the cached class name will determine which
+class is used for the underlying Aqua window.
+.\" OPTION: -isdark
+.TP
+\fB\-isdark\fR
+.
+Returns a boolean value which is true if the window is currently in
+dark mode.
+.\" OPTION: -modified
 .TP
 \fB\-modified\fR
 .
 Specifies the modification state of the window (determines whether the
 window close widget contains the modification indicator and whether the
 proxy icon is draggable).
+.\" OPTION: -notify
 .TP
 \fB\-notify\fR
 .
 Specifies process notification state (bouncing of the application dock icon).
+.\" OPTION: -stylemask
+.TP
+\fB\-stylemask\fR
+.
+Specifies an integer to be assigned as the styleMask of the underlying
+Aqua window.  (See the Apple documentation for styleMask property of
+the NSWindow class.) The value of this option should be a list of
+bitnames.  Each bit named in the list will be set to 1, and all other
+bits will be set to 0.  The allowed bitnames are: \fBtitled\fR,
+\fBclosable\fR, \fBminiaturizable\fR, \fBresizable\fR,
+\fBfullsizecontentview\fR, \fBdocmodal\fR, \fButility\fR,
+\fBnonactivatingpanel\fR, and \fBHUDwindow\fR.  Note that a side
+effect of setting the fullsizecontentview bit is that the window title
+bar becomes transparent.
+.\" OPTION: -tabbingid
+.TP
+\fB\-tabbingid\fR
+.
+Controls how tabbed toplevel windows are grouped together.  Two tabs
+in the same group must correspond to toplevels with the same
+tabbingid, which can be an arbitrary UTF8 string.  In the Tk
+implementation, changing the tabbingid of a toplevel in a tab group
+will cause it to be moved into a different group, in which all tabs
+have the new tabbingid or, if the new tabbingid is unique, to become
+a normal non-tabbed toplevel.   It is allowed to set the tabbingid before the
+toplevel is created.  If the pathname provided in the command does not
+correspond to a toplevel, the value will be cached and used later when
+the toplevel is actually created.
+.\" OPTION: -tabbingmode
+.TP
+\fB\-tabbingmode\fR
+.
+Controls whether a toplevel can be opened as a tab within a tab group.
+The allowed values are \fBauto\fR, \fBpreferred\fR or
+\fBdisallowed\fR.  A toplevel can be opened as a tab in exactly two
+situations: if its tabbingmode is \fBpreferred\fR; or if its
+tabbingmode is \fBauto\fR and the user has selected "prefer tabs when
+opening documents" in the Desktop and Dock panel of the System
+Settings application.  It is allowed to set the tabbingmode before the
+toplevel is created.  If the pathname provided in the command does not
+correspond to a toplevel, the value will be cached and used later when
+the toplevel is actually created.
+.\" OPTION: -titlepath
 .TP
 \fB\-titlepath\fR
 .
-Specifies the path of the file referenced as the window proxy icon (which
-can be dragged and dropped in lieu of the file's finder icon).
+Specifies the path of the file referenced as the window proxy icon
+(which can be dragged and dropped in lieu of the file's finder icon).
+.\" OPTION: -transparent
 .TP
 \fB\-transparent\fR
 .
@@ -121,6 +203,7 @@ color with some alpha, e.g.
 On X11, the following attributes may be set. These are not supported by all
 window managers, and will have no effect under older WMs.
 .\" See https://www.freedesktop.org/wiki/Specifications/wm-spec/
+.\" OPTION: -type
 .TP
 \fB\-type\fR
 .VS 8.6
@@ -131,76 +214,49 @@ entirely up to the window manager. A list of types may be used, in order of
 preference. The following values are mapped to constants defined in the EWMH
 specification (using others is possible, but not advised):
 .RS
-.TP
-\fBdesktop\fR
-.
+.IP \fBdesktop\fR
 indicates a desktop feature,
-.TP
-\fBdock\fR
-.
+.IP \fBdock\fR
 indicates a dock/panel feature,
-.TP
-\fBtoolbar\fR
-.
+.IP \fBtoolbar\fR
 indicates a toolbar window that should be acting on behalf of another window,
 as indicated with \fBwm transient\fR,
-.TP
-\fBmenu\fR
-.
+.IP \fBmenu\fR
 indicates a torn-off menu that should be acting on behalf of another window,
 as indicated with \fBwm transient\fR,
-.TP
-\fButility\fR
-.
+.IP \fButility\fR
 indicates a utility window (e.g., palette or toolbox) that should be acting on
 behalf of another window, as indicated with \fBwm transient\fR,
-.TP
-\fBsplash\fR
-.
+.IP \fBsplash\fR
 indicates a splash screen, displayed during application start up,
-.TP
-\fBdialog\fR
-.
+.IP \fBdialog\fR
 indicates a general dialog window, that should be acting on behalf of another
 window, as indicated with \fBwm transient\fR,
-.TP
-\fBdropdown_menu\fR
-.
+.IP \fBdropdown_menu\fR
 indicates a menu summoned from a menu bar, which should usually also be set to
 be override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBpopup_menu\fR
-.
+.IP \fBpopup_menu\fR
 indicates a popup menu, which should usually also be set to be
 override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBtooltip\fR
-.
+.IP \fBtooltip\fR
 indicates a tooltip window, which should usually also be set to be
 override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBnotification\fR
-.
+.IP \fBnotification\fR
 indicates a window that provides a background notification of some event,
 which should usually also be set to be override-redirected (with \fBwm
 overrideredirect\fR),
-.TP
-\fBcombo\fR
-.
+.IP \fBcombo\fR
 indicates the drop-down list of a combobox widget, which should usually also
 be set to be override-redirected (with \fBwm overrideredirect\fR),
-.TP
-\fBdnd\fR
-.
+.IP \fBdnd\fR
 indicates a window that represents something being dragged, which should
 usually also be set to be override-redirected (with
 \fBwm overrideredirect\fR),
-.TP
-\fBnormal\fR
-.
+.IP \fBnormal\fR
 indicates a window that has no special interpretation.
 .RE
 .VE 8.6
+.\" OPTION: -zoomed
 .TP
 \fB\-zoomed\fR
 .
@@ -212,6 +268,7 @@ the value of an attribute returns the current state, which will not be the
 same as the value most recently set if the window manager has not yet
 processed the request or if it does not support the attribute.
 .RE
+.\" METHOD: client
 .TP
 \fBwm client \fIwindow\fR ?\fIname\fR?
 .
@@ -225,6 +282,7 @@ If \fIname\fR is not specified, the command returns the last name
 set in a \fBwm client\fR command for \fIwindow\fR.
 If \fIname\fR is specified as an empty string, the command deletes the
 \fBWM_CLIENT_MACHINE\fR property from \fIwindow\fR.
+.\" METHOD: colormapwindows
 .TP
 \fBwm colormapwindows \fIwindow\fR ?\fIwindowList\fR?
 .
@@ -256,6 +314,7 @@ itself;  the order of the internal windows is undefined.
 See the ICCCM documentation for more information on the
 \fBWM_COLORMAP_WINDOWS\fR property.
 .RE
+.\" METHOD: command
 .TP
 \fBwm command \fIwindow\fR ?\fIvalue\fR?
 .
@@ -268,6 +327,7 @@ If \fIvalue\fR is not specified then the command returns the last value
 set in a \fBwm command\fR command for \fIwindow\fR.
 If \fIvalue\fR is specified as an empty string, the command
 deletes the \fBWM_COMMAND\fR property from \fIwindow\fR.
+.\" METHOD: deiconify
 .TP
 \fBwm deiconify \fIwindow\fR
 .
@@ -278,6 +338,7 @@ that when the window is first mapped it will be displayed
 in de-iconified form.  On Windows, a deiconified window will also be
 raised and be given the focus (made the active window).
 Returns an empty string.
+.\" METHOD: focusmodel
 .TP
 \fBwm focusmodel \fIwindow\fR ?\fBactive\fR|\fBpassive\fR?
 .
@@ -298,6 +359,7 @@ the application may re-assign the focus among \fIwindow\fR's descendants.
 The focus model defaults to \fBpassive\fR, and Tk's \fBfocus\fR command
 assumes a passive model of focusing.
 .RE
+.\" METHOD: forget
 .TP
 \fBwm forget \fIwindow\fR
 .
@@ -306,6 +368,7 @@ be managed by \fBwm\fR.  Windows created with the \fBtoplevel\fR
 command will be treated like \fBframe\fR windows once they are no
 longer managed by \fBwm\fR, however, the \fB\-menu\fR configuration will be
 remembered and the menus will return once the widget is managed again.
+.\" METHOD: frame
 .TP
 \fBwm frame \fIwindow\fR
 .
@@ -315,6 +378,7 @@ identifier for the outermost frame that contains \fIwindow\fR (the
 window whose parent is the root or virtual root).  If \fIwindow\fR
 has not been reparented by the window manager then the command returns
 the platform specific window identifier for \fIwindow\fR.
+.\" METHOD: geometry
 .TP
 \fBwm geometry \fIwindow\fR ?\fInewGeometry\fR?
 .
@@ -359,6 +423,7 @@ reflect the addition of decorative elements to \fIwindow\fR such as title
 bars, and window managers are not required to precisely follow the requests
 made through this command.
 .RE
+.\" METHOD: grid
 .TP
 \fBwm grid \fIwindow\fR ?\fIbaseWidth baseHeight widthInc heightInc\fR?
 .
@@ -391,10 +456,11 @@ four elements corresponding to the current \fIbaseWidth\fR,
 \fIwindow\fR is not currently gridded, then an empty string
 is returned.
 .PP
-Note: this command should not be needed very often, since the
+Note that this command should not be needed very often, since the
 \fBTk_SetGrid\fR library procedure and the \fBsetGrid\fR option
 provide easier access to the same functionality.
 .RE
+.\" METHOD: group
 .TP
 \fBwm group \fIwindow\fR ?\fIpathName\fR?
 .
@@ -406,6 +472,39 @@ remove \fIwindow\fR from any group association.  If \fIpathName\fR is
 specified then the command returns an empty string;  otherwise it
 returns the path name of \fIwindow\fR's current group leader, or an empty
 string if \fIwindow\fR is not part of any group.
+.\" METHOD: iconbadge
+.TP
+\fBwm iconbadge \fIwindow badge\fR
+.
+Sets a badge for the icon of the \fIwindow\fR. The badge can be a positive
+integer number, for instance the number of new or unread messages, or
+an exclamation point denoting attention needed. If the badge is an empty
+string, the badge image is removed from the application icon. Managing
+these changes through bindings, such as <FocusIn>, is the responsibility
+of the developer.
+.RS
+.PP
+On X11, for this command to work,
+the variable \fB::tk::icons::base_icon($window)\fR must be set to the image
+that is being used for the window icon of $window. On Windows and X11, the
+iconphoto images work best at 32x32 or a similar dimension, as
+the badge images are provided by Tk and drawn to overlay the icon images
+using native (Windows) API's or Tk rendering. On macOS, the icon badge is
+rendered by a system API and is not provided by Tk. The icon image itself
+should be higher-resolution, preferably 512 pixels, to avoid being blurry.
+.PP
+The icon badge is intended for display in the Dock (macOS), taskbar
+(Windows) or app panel (X11). On macOS, the last badge called will be
+displayed in the Dock, regardless of how many different icon badges may be
+assigned to different windows. On Windows, the taskbar display depends on
+whether the taskbar buttons are combined or not (this is an OS setting
+available to the user): if combined, the behavior is the same as on macOS,
+otherwise each button in the taskbar shows the badge it was assigned.
+Badge display on macOS is configured in the system preferences. App
+panel display behavior on X11 will depend on the window manager and/or
+desktop environment.
+.RE
+.\" METHOD: iconbitmap
 .TP
 \fBwm iconbitmap \fIwindow\fR ?\fIbitmap\fR?
 .
@@ -435,12 +534,14 @@ first test if the file contains an icon, then if it has an assigned
 icon, and finally, if that fails, test for
 a bitmap.
 .RE
+.\" METHOD: iconify
 .TP
 \fBwm iconify \fIwindow\fR
 .
 Arrange for \fIwindow\fR to be iconified.  It \fIwindow\fR has not
 yet been mapped for the first time, this command will arrange for
 it to appear in the iconified state when it is eventually mapped.
+.\" METHOD: iconmask
 .TP
 \fBwm iconmask \fIwindow\fR ?\fIbitmap\fR?
 .
@@ -456,6 +557,7 @@ a bitmap of all ones).  If \fIbitmap\fR is specified
 then the command returns an empty string.  Otherwise it
 returns the name of the current icon mask associated with
 \fIwindow\fR, or an empty string if no mask is in effect.
+.\" METHOD: iconname
 .TP
 \fBwm iconname \fIwindow\fR ?\fInewName\fR?
 .
@@ -467,6 +569,7 @@ then the command returns the current icon name for \fIwindow\fR,
 or an empty string if no icon name has been specified (in this
 case the window manager will normally display the window's title,
 as specified with the \fBwm title\fR command).
+.\" METHOD: iconphoto
 .TP
 \fBwm iconphoto \fIwindow\fR ?\fB\-default\fR? \fIimage1\fR ?\fIimage2 ...\fR?
 .
@@ -481,12 +584,13 @@ manager may scale provided icons to an appropriate size.
 .PP
 On Windows, the images are packed into a Windows icon structure.
 This will override an ico specified to \fBwm iconbitmap\fR, and
-vice versa.
+vice versa. This command sets the taskbar icon for the window.
 .PP
 On X, the images are arranged into the _NET_WM_ICON X property, which
 most modern window managers support.  A \fBwm iconbitmap\fR may exist
 simultaneously.  It is recommended to use not more than 2 icons, placing
-the larger icon first.
+the larger icon first. This command also sets the panel icon for the
+application if the window manager or desktop environment supports it.
 .PP
 On Macintosh, the first image called is loaded into an OSX-native icon
 format, and becomes the application icon in dialogs, the Dock, and
@@ -496,6 +600,7 @@ parameters as support for multiple sizes/resolutions on macOS is outside Tk's
 scope. Developers should use the largest icon they can support
 (preferably 512 pixels) to ensure smooth rendering on the Mac.
 .RE
+.\" METHOD: iconposition
 .TP
 \fBwm iconposition \fIwindow\fR ?\fIx y\fR?
 .
@@ -506,6 +611,7 @@ specified as empty strings then any existing icon position hint is cancelled.
 If neither \fIx\fR nor \fIy\fR is specified, then the command returns
 a Tcl list containing two values, which are the current icon position
 hints (if no hints are in effect then an empty string is returned).
+.\" METHOD: iconwindow
 .TP
 \fBwm iconwindow \fIwindow\fR ?\fIpathName\fR?
 .
@@ -523,7 +629,9 @@ Button press events are disabled for \fIwindow\fR as long as it is
 an icon window;  this is needed in order to allow window managers to
 .QW own
 those events.
-Note: not all window managers support the notion of an icon window.
+Note that not all window managers support the notion of an icon window, and
+the concept is entirely meaningless on non-X11 platforms.
+.\" METHOD: manage
 .TP
 \fBwm manage \fIwidget\fR
 .
@@ -533,6 +641,7 @@ window will be decorated with the window managers title bar, etc. Only
 with this command. Attempting to pass any other widget type will raise
 an error. Attempting to manage a \fItoplevel\fR widget is benign and
 achieves nothing. See also \fBGEOMETRY MANAGEMENT\fR.
+.\" METHOD: maxsize
 .TP
 \fBwm maxsize \fIwindow\fR ?\fIwidth height\fR?
 .
@@ -548,6 +657,7 @@ it returns a Tcl list with two elements, which are the
 maximum width and height currently in effect.
 The maximum size defaults to the size of the screen.
 See the sections on geometry management below for more information.
+.\" METHOD: minsize
 .TP
 \fBwm minsize \fIwindow\fR ?\fIwidth height\fR?
 .
@@ -563,6 +673,7 @@ it returns a Tcl list with two elements, which are the
 minimum width and height currently in effect.
 The minimum size defaults to one pixel in each dimension.
 See the sections on geometry management below for more information.
+.\" METHOD: overrideredirect
 .TP
 \fBwm overrideredirect \fIwindow\fR ?\fIboolean\fR?
 .
@@ -583,6 +694,7 @@ when the window is first mapped or when mapped after the state is changed from
 withdrawn to normal. Some, but not all, platforms will take notice at
 additional times.
 .RE
+.\" METHOD: positionfrom
 .TP
 \fBwm positionfrom \fIwindow\fR ?\fIwho\fR?
 .
@@ -604,6 +716,7 @@ as equivalent to \fBprogram\fR.
 Tk will automatically set the position source to \fBuser\fR
 when a \fBwm geometry\fR command is invoked, unless the source has
 been set explicitly to \fBprogram\fR.
+.\" METHOD: protocol
 .TP
 \fBwm protocol \fIwindow\fR ?\fIname\fR? ?\fIcommand\fR?
 .
@@ -651,6 +764,7 @@ Lastly, if neither \fIname\fR nor \fIcommand\fR is specified, the
 \fBwm protocol\fR command returns a list of all of the protocols for which
 handlers are currently defined for \fIwindow\fR.
 .RE
+.\" METHOD: resizable
 .TP
 \fBwm resizable \fIwindow\fR ?\fIwidth height\fR?
 .
@@ -667,6 +781,7 @@ If resizing is disabled, then the window's size will be the size
 from the most recent interactive resize or \fBwm geometry\fR
 command.  If there has been no such operation then
 the window's natural size will be used.
+.\" METHOD: sizefrom
 .TP
 \fBwm sizefrom \fIwindow\fR ?\fIwho\fR?
 .
@@ -685,6 +800,7 @@ source of the window's current size, or an empty string if
 no source has been specified yet.  Most window managers interpret
 .QW "no source"
 as equivalent to \fBprogram\fR.
+.\" METHOD: stackorder
 .TP
 \fBwm stackorder \fIwindow\fR ?\fBisabove\fR|\fBisbelow \fIwindow\fR?
 .
@@ -699,6 +815,7 @@ When two window arguments separated by either \fBisabove\fR or
 \fBisbelow\fR are passed, a boolean result indicates whether
 or not the first window is currently above or below the second
 window in the stacking order.
+.\" METHOD: state
 .TP
 \fBwm state \fIwindow\fR ?newstate?
 .
@@ -711,6 +828,7 @@ The difference between \fBiconic\fR and \fBicon\fR is that
 \fBwm iconify\fR command) while \fBicon\fR refers to a window whose only
 purpose is to serve as the icon for some other window (via the \fBwm
 iconwindow\fR command).  The \fBicon\fR state cannot be set.
+.\" METHOD: title
 .TP
 \fBwm title \fIwindow\fR ?\fIstring\fR?
 .
@@ -720,6 +838,7 @@ should display this string in \fIwindow\fR's title bar).  In this
 case the command returns an empty string.  If \fIstring\fR is not
 specified then the command returns the current title for the
 \fIwindow\fR.  The title for a window defaults to its name.
+.\" METHOD: transient
 .TP
 \fBwm transient \fIwindow\fR ?\fIcontainer\fR?
 .
@@ -738,6 +857,7 @@ transient of itself.  The window manager may also decorate a transient
 window differently, removing some features normally present (e.g.,
 minimize and maximize buttons) though this is entirely at the
 discretion of the window manager.
+.\" METHOD: widthdraw
 .TP
 \fBwm withdraw \fIwindow\fR
 .
@@ -748,7 +868,7 @@ has never been mapped, then this command
 causes the window to be mapped in the withdrawn state.  Not all
 window managers appear to know how to handle windows that are
 mapped in the withdrawn state.
-Note: it sometimes seems to be necessary to withdraw a
+Note that it sometimes seems to be necessary to withdraw a
 window and then re-map it (e.g. with \fBwm deiconify\fR) to get some
 window managers to pay attention to changes in window attributes
 such as group.
@@ -775,7 +895,8 @@ However, you can use the \fBwm minsize\fR and \fBwm maxsize\fR commands
 to limit the range of allowable sizes.
 The range set by \fBwm minsize\fR and \fBwm maxsize\fR applies to
 all forms of resizing, including the window's natural size as
-well as manual resizes and the \fBwm geometry\fR command.
+well as manual resizes and the \fBwm geometry\fR command.  You
+can use any value accepted by \fBTk_GetPixels\fR.
 You can also use the command \fBwm resizable\fR to completely
 disable interactive resizing in one or both dimensions.
 .PP
@@ -845,10 +966,10 @@ A simple dialog-like window, centred on the screen:
 .CS
 # Create and arrange the dialog contents.
 toplevel .msg
-label  .msg.l  \-text "This is a very simple dialog demo."
-button .msg.ok \-text OK \-default active \-command {destroy .msg}
-pack .msg.ok \-side bottom \-fill x
-pack .msg.l  \-expand 1    \-fill both
+label  .msg.l  -text "This is a very simple dialog demo."
+button .msg.ok -text OK -default active -command {destroy .msg}
+pack .msg.ok -side bottom -fill x
+pack .msg.l  -expand 1    -fill both
 
 # Now set the widget up as a centred dialog.
 
@@ -857,8 +978,8 @@ pack .msg.l  \-expand 1    \-fill both
 # event loop with the widget hidden completely...
 \fBwm withdraw\fR .msg
 update
-set x [expr {([winfo screenwidth .]\-[winfo width .msg])/2}]
-set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
+set x [expr {([winfo screenwidth .] - [winfo width .msg]) / 2}]
+set y [expr {([winfo screenheight .] - [winfo height .msg]) / 2}]
 \fBwm geometry\fR  .msg +$x+$y
 \fBwm transient\fR .msg .
 \fBwm title\fR     .msg "Dialog demo"
@@ -867,7 +988,8 @@ set y [expr {([winfo screenheight .]\-[winfo height .msg])/2}]
 .SH "SEE ALSO"
 toplevel(n), winfo(n)
 .SH KEYWORDS
-aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify, increments, position, size, title, top-level window, units, window manager
+aspect ratio, deiconify, focus model, geometry, grid, group, icon, iconify,
+increments, position, size, title, top-level window, units, window manager
 '\" Local Variables:
 '\" mode: nroff
 '\" End:

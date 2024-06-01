@@ -3,9 +3,9 @@
  *
  *	This procedure implements images of type "bitmap" for Tk.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1999 Scriptics Corporation.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -18,7 +18,7 @@
  * image:
  */
 
-typedef struct BitmapModel {
+typedef struct {
     Tk_ImageModel tkModel;	/* Tk's token for image model. NULL means the
 				 * image is being deleted. */
     Tcl_Interp *interp;		/* Interpreter for application that is using
@@ -49,7 +49,7 @@ typedef struct BitmapModel {
  */
 
 typedef struct BitmapInstance {
-    int refCount;		/* Number of instances that share this data
+    size_t refCount;		/* Number of instances that share this data
 				 * structure. */
     BitmapModel *modelPtr;	/* Pointer to model for image. */
     Tk_Window tkwin;		/* Window in which the instances will be
@@ -75,17 +75,17 @@ typedef struct BitmapInstance {
 
 static int		GetByte(Tcl_Channel chan);
 static int		ImgBmapCreate(Tcl_Interp *interp,
-			    const char *name, int objc, Tcl_Obj *const objv[],
+			    const char *name, Tcl_Size objc, Tcl_Obj *const objv[],
 			    const Tk_ImageType *typePtr, Tk_ImageModel model,
-			    ClientData *clientDataPtr);
-static ClientData	ImgBmapGet(Tk_Window tkwin, ClientData clientData);
-static void		ImgBmapDisplay(ClientData clientData,
+			    void **clientDataPtr);
+static void	*ImgBmapGet(Tk_Window tkwin, void *clientData);
+static void		ImgBmapDisplay(void *clientData,
 			    Display *display, Drawable drawable,
 			    int imageX, int imageY, int width, int height,
 			    int drawableX, int drawableY);
-static void		ImgBmapFree(ClientData clientData, Display *display);
-static void		ImgBmapDelete(ClientData clientData);
-static int		ImgBmapPostscript(ClientData clientData,
+static void		ImgBmapFree(void *clientData, Display *display);
+static void		ImgBmapDelete(void *clientData);
+static int		ImgBmapPostscript(void *clientData,
 			    Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_PostscriptInfo psinfo, int x, int y,
 			    int width, int height, int prepass);
@@ -108,17 +108,17 @@ Tk_ImageType tkBitmapImageType = {
 
 static const Tk_ConfigSpec configSpecs[] = {
     {TK_CONFIG_UID, "-background", NULL, NULL,
-	"", Tk_Offset(BitmapModel, bgUid), 0, NULL},
+	"", offsetof(BitmapModel, bgUid), 0, NULL},
     {TK_CONFIG_STRING, "-data", NULL, NULL,
-	NULL, Tk_Offset(BitmapModel, dataString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, dataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-file", NULL, NULL,
-	NULL, Tk_Offset(BitmapModel, fileString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, fileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_UID, "-foreground", NULL, NULL,
-	"#000000", Tk_Offset(BitmapModel, fgUid), 0, NULL},
+	"#000000", offsetof(BitmapModel, fgUid), 0, NULL},
     {TK_CONFIG_STRING, "-maskdata", NULL, NULL,
-	NULL, Tk_Offset(BitmapModel, maskDataString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, maskDataString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_STRING, "-maskfile", NULL, NULL,
-	NULL, Tk_Offset(BitmapModel, maskFileString), TK_CONFIG_NULL_OK, NULL},
+	NULL, offsetof(BitmapModel, maskFileString), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_END, NULL, NULL, NULL, NULL, 0, 0, NULL}
 };
 
@@ -145,12 +145,12 @@ typedef struct ParseInfo {
  * Prototypes for procedures used only locally in this file:
  */
 
-static int		ImgBmapCmd(ClientData clientData, Tcl_Interp *interp,
+static int		ImgBmapCmd(void *clientData, Tcl_Interp *interp,
 			    int objc, Tcl_Obj *const objv[]);
-static void		ImgBmapCmdDeletedProc(ClientData clientData);
+static void		ImgBmapCmdDeletedProc(void *clientData);
 static void		ImgBmapConfigureInstance(BitmapInstance *instancePtr);
 static int		ImgBmapConfigureModel(BitmapModel *modelPtr,
-			    int objc, Tcl_Obj *const objv[], int flags);
+			    Tcl_Size objc, Tcl_Obj *const objv[], int flags);
 static int		NextBitmapWord(ParseInfo *parseInfoPtr);
 
 /*
@@ -174,13 +174,13 @@ ImgBmapCreate(
     Tcl_Interp *interp,		/* Interpreter for application containing
 				 * image. */
     const char *name,			/* Name to use for image. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument objects for options (doesn't
 				 * include image name or type). */
     TCL_UNUSED(const Tk_ImageType *),/* Pointer to our type record (not used). */
     Tk_ImageModel model,	/* Token for image, to be used by us in later
 				 * callbacks. */
-    ClientData *clientDataPtr)	/* Store manager's token for image here; it
+    void **clientDataPtr)	/* Store manager's token for image here; it
 				 * will be returned in later callbacks. */
 {
     BitmapModel *modelPtr = (BitmapModel *)ckalloc(sizeof(BitmapModel));
@@ -231,7 +231,7 @@ static int
 ImgBmapConfigureModel(
     BitmapModel *modelPtr,	/* Pointer to data structure describing
 				 * overall bitmap image to (reconfigure). */
-    int objc,			/* Number of entries in objv. */
+    Tcl_Size objc,			/* Number of entries in objv. */
     Tcl_Obj *const objv[],	/* Pairs of configuration options for image. */
     int flags)			/* Flags to pass to Tk_ConfigureWidget, such
 				 * as TK_CONFIG_ARGV_ONLY. */
@@ -240,7 +240,7 @@ ImgBmapConfigureModel(
     int maskWidth, maskHeight, dummy1, dummy2;
 
     if (Tk_ConfigureWidget(modelPtr->interp, Tk_MainWindow(modelPtr->interp),
-	    configSpecs, objc, (const char **) objv, (char *) modelPtr, flags|TK_CONFIG_OBJS) != TCL_OK) {
+	    configSpecs, objc, objv, modelPtr, flags) != TCL_OK) {
 	return TCL_ERROR;
     }
 
@@ -269,7 +269,7 @@ ImgBmapConfigureModel(
 	    || (modelPtr->maskDataString != NULL)) {
 	if (modelPtr->data == NULL) {
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "can't have mask without bitmap", -1));
+		    "can't have mask without bitmap", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "NO_BITMAP", NULL);
 	    return TCL_ERROR;
@@ -285,7 +285,7 @@ ImgBmapConfigureModel(
 	    ckfree(modelPtr->maskData);
 	    modelPtr->maskData = NULL;
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "bitmap and mask have different sizes", -1));
+		    "bitmap and mask have different sizes", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "MASK_SIZE", NULL);
 	    return TCL_ERROR;
@@ -595,7 +595,7 @@ TkGetBitmapData(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"format error in bitmap data; looks like it's an"
-			" obsolete X10 bitmap file", -1));
+			" obsolete X10 bitmap file", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "OBSOLETE",
 			NULL);
 	    }
@@ -640,7 +640,7 @@ TkGetBitmapData(
   error:
     if (interp != NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"format error in bitmap data", -1));
+		"format error in bitmap data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "BITMAP", "FORMAT", NULL);
     }
 
@@ -744,7 +744,7 @@ NextBitmapWord(
 
 static int
 ImgBmapCmd(
-    ClientData clientData,	/* Information about the image model. */
+    void *clientData,	/* Information about the image model. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
@@ -768,14 +768,14 @@ ImgBmapCmd(
 	    return TCL_ERROR;
 	}
 	return Tk_ConfigureValue(interp, Tk_MainWindow(interp), configSpecs,
-		(char *) modelPtr, Tcl_GetString(objv[2]), 0);
+		modelPtr, Tcl_GetString(objv[2]), 0);
     case 1: /* configure */
 	if (objc == 2) {
 	    return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) modelPtr, NULL, 0);
+		    configSpecs, modelPtr, NULL, 0);
 	} else if (objc == 3) {
 	    return Tk_ConfigureInfo(interp, Tk_MainWindow(interp),
-		    configSpecs, (char *) modelPtr,
+		    configSpecs, modelPtr,
 		    Tcl_GetString(objv[2]), 0);
 	} else {
 	    return ImgBmapConfigureModel(modelPtr, objc-2, objv+2,
@@ -805,11 +805,11 @@ ImgBmapCmd(
  *----------------------------------------------------------------------
  */
 
-static ClientData
+static void *
 ImgBmapGet(
     Tk_Window tkwin,		/* Window in which the instance will be
 				 * used. */
-    ClientData modelData)	/* Pointer to our model structure for the
+    void *modelData)	/* Pointer to our model structure for the
 				 * image. */
 {
     BitmapModel *modelPtr = (BitmapModel *)modelData;
@@ -876,7 +876,7 @@ ImgBmapGet(
 
 static void
 ImgBmapDisplay(
-    ClientData clientData,	/* Pointer to BitmapInstance structure for
+    void *clientData,	/* Pointer to BitmapInstance structure for
 				 * instance to be displayed. */
     Display *display,		/* Display on which to draw image. */
     Drawable drawable,		/* Pixmap or window in which to draw image. */
@@ -937,7 +937,7 @@ ImgBmapDisplay(
 
 static void
 ImgBmapFree(
-    ClientData clientData,	/* Pointer to BitmapInstance structure for
+    void *clientData,	/* Pointer to BitmapInstance structure for
 				 * instance to be displayed. */
     Display *display)		/* Display containing window that used image. */
 {
@@ -999,7 +999,7 @@ ImgBmapFree(
 
 static void
 ImgBmapDelete(
-    ClientData modelData)	/* Pointer to BitmapModel structure for
+    void *modelData)	/* Pointer to BitmapModel structure for
 				 * image. Must not have any more instances. */
 {
     BitmapModel *modelPtr = (BitmapModel *)modelData;
@@ -1017,7 +1017,7 @@ ImgBmapDelete(
     if (modelPtr->maskData != NULL) {
 	ckfree(modelPtr->maskData);
     }
-    Tk_FreeOptions(configSpecs, (char *) modelPtr, NULL, 0);
+    Tk_FreeOptions(configSpecs, modelPtr, NULL, 0);
     ckfree(modelPtr);
 }
 
@@ -1040,7 +1040,7 @@ ImgBmapDelete(
 
 static void
 ImgBmapCmdDeletedProc(
-    ClientData clientData)	/* Pointer to BitmapModel structure for
+    void *clientData)	/* Pointer to BitmapModel structure for
 				 * image. */
 {
     BitmapModel *modelPtr = (BitmapModel *)clientData;
@@ -1155,10 +1155,10 @@ ImgBmapPsImagemask(
 	    Tcl_AppendPrintfToObj(psObj, " %02x",
 		    bit_reverse[0xff & data[i*nBytePerRow + j]]);
 	}
-	Tcl_AppendToObj(psObj, "\n", -1);
+	Tcl_AppendToObj(psObj, "\n", TCL_INDEX_NONE);
     }
 
-    Tcl_AppendToObj(psObj, ">} imagemask \n", -1);
+    Tcl_AppendToObj(psObj, ">} imagemask \n", TCL_INDEX_NONE);
 }
 
 /*
@@ -1181,7 +1181,7 @@ ImgBmapPsImagemask(
 
 static int
 ImgBmapPostscript(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
     Tk_Window tkwin,
     Tk_PostscriptInfo psinfo,
@@ -1213,7 +1213,7 @@ ImgBmapPostscript(
     if (modelPtr->width*modelPtr->height > 60000) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"unable to generate postscript for bitmaps larger than 60000"
-		" pixels", -1));
+		" pixels", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", NULL);
 	return TCL_ERROR;
     }
@@ -1263,7 +1263,7 @@ ImgBmapPostscript(
 	if (modelPtr->maskData == NULL) {
 	    Tcl_AppendToObj(psObj,
 		    "0 0 moveto 1 0 rlineto 0 1 rlineto -1 0 rlineto "
-		    "closepath fill\n", -1);
+		    "closepath fill\n", TCL_INDEX_NONE);
 	} else {
 	    ImgBmapPsImagemask(psObj, modelPtr->width, modelPtr->height,
 		    modelPtr->maskData);

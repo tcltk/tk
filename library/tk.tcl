@@ -3,15 +3,15 @@
 # Initialization script normally executed in the interpreter for each Tk-based
 # application.  Arranges class bindings for widgets.
 #
-# Copyright (c) 1992-1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-2000 Ajuba Solutions.
+# Copyright © 1992-1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-2000 Ajuba Solutions.
 #
 # See the file "license.terms" for information on usage and redistribution of
 # this file, and for a DISCLAIMER OF ALL WARRANTIES.
 
 # Verify that we have Tk binary and script components from the same release
-package require -exact Tk  8.6.14
+package require -exact tk  9.0b3
 
 # Create a ::tk namespace
 namespace eval ::tk {
@@ -311,21 +311,21 @@ proc ::tk::EventMotifBindings {n1 dummy dummy} {
 	set op add
     }
 
-    event $op <<Cut>> <Control-Key-w> <Control-Lock-Key-W> <Shift-Key-Delete>
-    event $op <<Copy>> <Meta-Key-w> <Meta-Lock-Key-W> <Control-Key-Insert>
-    event $op <<Paste>> <Control-Key-y> <Control-Lock-Key-Y> <Shift-Key-Insert>
-    event $op <<PrevChar>> <Control-Key-b> <Control-Lock-Key-B>
-    event $op <<NextChar>> <Control-Key-f> <Control-Lock-Key-F>
-    event $op <<PrevLine>> <Control-Key-p> <Control-Lock-Key-P>
-    event $op <<NextLine>> <Control-Key-n> <Control-Lock-Key-N>
-    event $op <<LineStart>> <Control-Key-a> <Control-Lock-Key-A>
-    event $op <<LineEnd>> <Control-Key-e> <Control-Lock-Key-E>
-    event $op <<SelectPrevChar>> <Control-Key-B> <Control-Lock-Key-b>
-    event $op <<SelectNextChar>> <Control-Key-F> <Control-Lock-Key-f>
-    event $op <<SelectPrevLine>> <Control-Key-P> <Control-Lock-Key-p>
-    event $op <<SelectNextLine>> <Control-Key-N> <Control-Lock-Key-n>
-    event $op <<SelectLineStart>> <Control-Key-A> <Control-Lock-Key-a>
-    event $op <<SelectLineEnd>> <Control-Key-E> <Control-Lock-Key-e>
+    event $op <<Cut>> <Control-w> <Control-Lock-W> <Shift-Delete>
+    event $op <<Copy>> <Meta-w> <Meta-Lock-W> <Control-Insert>
+    event $op <<Paste>> <Control-y> <Control-Lock-Y> <Shift-Insert>
+    event $op <<PrevChar>> <Control-b> <Control-Lock-B>
+    event $op <<NextChar>> <Control-f> <Control-Lock-F>
+    event $op <<PrevLine>> <Control-p> <Control-Lock-P>
+    event $op <<NextLine>> <Control-n> <Control-Lock-N>
+    event $op <<LineStart>> <Control-a> <Control-Lock-A>
+    event $op <<LineEnd>> <Control-e> <Control-Lock-E>
+    event $op <<SelectPrevChar>> <Control-B> <Control-Lock-b>
+    event $op <<SelectNextChar>> <Control-F> <Control-Lock-f>
+    event $op <<SelectPrevLine>> <Control-P> <Control-Lock-p>
+    event $op <<SelectNextLine>> <Control-N> <Control-Lock-n>
+    event $op <<SelectLineStart>> <Control-A> <Control-Lock-a>
+    event $op <<SelectLineEnd>> <Control-E> <Control-Lock-e>
 }
 
 #----------------------------------------------------------------------
@@ -371,20 +371,21 @@ if {![llength [info command tk_chooseDirectory]]} {
 # Define the set of common virtual events.
 #----------------------------------------------------------------------
 
+event add <<ContextMenu>>	<Button-3>
+event add <<PasteSelection>>	<ButtonRelease-2>
+
 switch -exact -- [tk windowingsystem] {
     "x11" {
-	event add <<Cut>>		<Control-Key-x> <Key-F20> <Control-Lock-Key-X>
-	event add <<Copy>>		<Control-Key-c> <Key-F16> <Control-Lock-Key-C>
-	event add <<Paste>>		<Control-Key-v> <Key-F18> <Control-Lock-Key-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
-	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Control-Key-Z> <Control-Lock-Key-z>
-	event add <<ContextMenu>>	<Button-3>
+	event add <<Cut>>		<Control-x> <F20> <Control-Lock-X>
+	event add <<Copy>>		<Control-c> <F16> <Control-Lock-C>
+	event add <<Paste>>		<Control-v> <F18> <Control-Lock-V>
+	event add <<Undo>>		<Control-z> <Control-Lock-Z>
+	event add <<Redo>>		<Control-Z> <Control-Lock-z>
 	# On Darwin/Aqua, buttons from left to right are 1,3,2.  On Darwin/X11 with recent
 	# XQuartz as the X server, they are 1,2,3; other X servers may differ.
 
-	event add <<SelectAll>>		<Control-Key-slash>
-	event add <<SelectNone>>	<Control-Key-backslash>
+	event add <<SelectAll>>		<Control-/>
+	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>
@@ -424,16 +425,14 @@ switch -exact -- [tk windowingsystem] {
 	set ::tk::AlwaysShowSelection 1
     }
     "win32" {
-	event add <<Cut>>		<Control-Key-x> <Shift-Key-Delete> <Control-Lock-Key-X>
-	event add <<Copy>>		<Control-Key-c> <Control-Key-Insert> <Control-Lock-Key-C>
-	event add <<Paste>>		<Control-Key-v> <Shift-Key-Insert> <Control-Lock-Key-V>
-	event add <<PasteSelection>>	<ButtonRelease-2>
-  	event add <<Undo>>		<Control-Key-z> <Control-Lock-Key-Z>
-	event add <<Redo>>		<Control-Key-y> <Control-Lock-Key-Y>
-	event add <<ContextMenu>>	<Button-3>
+	event add <<Cut>>		<Control-x> <Shift-Delete> <Control-Lock-X>
+	event add <<Copy>>		<Control-c> <Control-Insert> <Control-Lock-C>
+	event add <<Paste>>		<Control-v> <Shift-Insert> <Control-Lock-V>
+  	event add <<Undo>>		<Control-z> <Control-Lock-Z>
+	event add <<Redo>>		<Control-y> <Control-Lock-Y>
 
-	event add <<SelectAll>>		<Control-Key-slash> <Control-Key-a> <Control-Lock-Key-A>
-	event add <<SelectNone>>	<Control-Key-backslash>
+	event add <<SelectAll>>		<Control-/> <Control-a> <Control-Lock-A>
+	event add <<SelectNone>>	<Control-backslash>
 	event add <<NextChar>>		<Right>
 	event add <<SelectNextChar>>	<Shift-Right>
 	event add <<PrevChar>>		<Left>
@@ -457,16 +456,14 @@ switch -exact -- [tk windowingsystem] {
 	event add <<ToggleSelection>>	<Control-Button-1>
     }
     "aqua" {
-	event add <<Cut>>		<Command-Key-x> <Key-F2> <Command-Lock-Key-X>
-	event add <<Copy>>		<Command-Key-c> <Key-F3> <Command-Lock-Key-C>
-	event add <<Paste>>		<Command-Key-v> <Key-F4> <Command-Lock-Key-V>
-	event add <<PasteSelection>>	<ButtonRelease-3>
+	event add <<Cut>>		<Command-x> <F2> <Command-Lock-X>
+	event add <<Copy>>		<Command-c> <F3> <Command-Lock-C>
+	event add <<Paste>>		<Command-v> <F4> <Command-Lock-V>
 	event add <<Clear>>		<Clear>
-	event add <<ContextMenu>>	<Button-2>
 
 	# Official bindings
 	# See https://support.apple.com/en-us/HT201236
-	event add <<SelectAll>>		<Command-Key-a>
+	event add <<SelectAll>>		<Command-a>
 	event add <<Undo>>		<Command-Key-z> <Command-Lock-Key-Z>
 	event add <<Redo>>		<Shift-Command-Key-z> <Shift-Command-Lock-Key-z>
 	event add <<NextChar>>		<Right> <Control-Key-f> <Control-Lock-Key-F>
@@ -477,14 +474,14 @@ switch -exact -- [tk windowingsystem] {
 	event add <<SelectNextWord>>	<Shift-Option-Right>
 	event add <<PrevWord>>		<Option-Left>
 	event add <<SelectPrevWord>>	<Shift-Option-Left>
-	event add <<LineStart>>		<Home> <Command-Left> <Control-Key-a> <Control-Lock-Key-A>
-	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Shift-Control-Key-A> <Shift-Control-Lock-Key-A>
-	event add <<LineEnd>>		<End> <Command-Right> <Control-Key-e> <Control-Lock-Key-E>
-	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Shift-Control-Key-E> <Shift-Control-Lock-Key-E>
-	event add <<PrevLine>>		<Up> <Control-Key-p> <Control-Lock-Key-P>
-	event add <<SelectPrevLine>>	<Shift-Up> <Shift-Control-Key-P> <Shift-Control-Lock-Key-P>
-	event add <<NextLine>>		<Down> <Control-Key-n> <Control-Lock-Key-N>
-	event add <<SelectNextLine>>	<Shift-Down> <Shift-Control-Key-N> <Shift-Control-Lock-Key-N>
+	event add <<LineStart>>		<Home> <Command-Left> <Control-a> <Control-Lock-A>
+	event add <<SelectLineStart>>	<Shift-Home> <Shift-Command-Left> <Shift-Control-A> <Shift-Control-Lock-A>
+	event add <<LineEnd>>		<End> <Command-Right> <Control-e> <Control-Lock-E>
+	event add <<SelectLineEnd>>	<Shift-End> <Shift-Command-Right> <Shift-Control-E> <Shift-Control-Lock-E>
+	event add <<PrevLine>>		<Up> <Control-p> <Control-Lock-P>
+	event add <<SelectPrevLine>>	<Shift-Up> <Shift-Control-P> <Shift-Control-Lock-P>
+	event add <<NextLine>>		<Down> <Control-n> <Control-Lock-N>
+	event add <<SelectNextLine>>	<Shift-Down> <Shift-Control-N> <Shift-Control-Lock-N>
 	# Not official, but logical extensions of above. Also derived from
 	# bindings present in MS Word on OSX.
 	event add <<PrevPara>>		<Option-Up>
@@ -501,18 +498,23 @@ switch -exact -- [tk windowingsystem] {
 
 if {$::tk_library ne ""} {
     proc ::tk::SourceLibFile {file} {
-        namespace eval :: [list source -encoding utf-8 [file join $::tk_library $file.tcl]]
+        namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
 	SourceLibFile icons
+	SourceLibFile iconbadges
 	SourceLibFile button
 	SourceLibFile entry
 	SourceLibFile listbox
 	SourceLibFile menu
 	SourceLibFile panedwindow
+	SourceLibFile print
 	SourceLibFile scale
 	SourceLibFile scrlbar
 	SourceLibFile spinbox
+	if {![interp issafe]} {
+	    SourceLibFile systray
+	}
 	SourceLibFile text
     }
 }
@@ -541,6 +543,35 @@ proc ::tk::CancelRepeat {} {
     set Priv(afterId) {}
 }
 
+## ::tk::MouseWheel $w $dir $amount $factor $units
+
+proc ::tk::MouseWheel {w dir amount {factor -120.0} {units units}} {
+    $w ${dir}view scroll [expr {$amount/$factor}] $units
+}
+
+## ::tk::PreciseScrollDeltas $dxdy
+
+proc ::tk::PreciseScrollDeltas {dxdy} {
+    set deltaX [expr {$dxdy >> 16}]
+    set low [expr {$dxdy & 0xffff}]
+    set deltaY [expr {$low < 0x8000 ? $low : $low - 0x10000}]
+    return [list $deltaX $deltaY]
+}
+
+# Helper for smooth scrolling of widgets that support xview moveto,
+# yview moveto, height and width.
+
+proc ::tk::ScrollByPixels {w deltaX deltaY} {
+    set width [expr {1.0 * [$w cget -width]}]
+    set height [expr {1.0 * [$w cget -height]}]
+    set X [lindex [$w xview] 0]
+    set Y [lindex [$w yview] 0]
+    set x [expr {$X - $deltaX / $width}]
+    set y [expr {$Y - $deltaY / $height}]
+    $w xview moveto $x
+    $w yview moveto $y
+}
+
 # ::tk::TabToWindow --
 # This procedure moves the focus to the given widget.
 # It sends a <<TraverseOut>> virtual event to the previous focus window,
@@ -628,12 +659,12 @@ proc ::tk::FindAltKeyTarget {path char} {
     if {$class in {
 	Button Checkbutton Label Radiobutton
 	TButton TCheckbutton TLabel TRadiobutton
-    } && [string equal -nocase $char \
+    } && ([$path cget -underline] >= 0) && [string equal -nocase $char \
 	    [string index [$path cget -text] [$path cget -underline]]]} {
 	return $path
     }
-    set subwins [concat [grid slaves $path] [pack slaves $path] \
-	    [place slaves $path]]
+    set subwins [concat [grid content $path] [pack content $path] \
+	    [place content $path]]
     if {$class eq "Canvas"} {
 	foreach item [$path find all] {
 	    if {[$path type $item] eq "window"} {
@@ -684,11 +715,109 @@ if {[tk windowingsystem] eq "aqua"} {
     #stub procedures to respond to "do script" Apple Events
     proc ::tk::mac::DoScriptFile {file} {
 	uplevel #0 $file
-    	source -encoding utf-8 $file
+	source $file
     }
     proc ::tk::mac::DoScriptText {script} {
 	uplevel #0 $script
-    	eval $script
+	eval $script
+    }
+    #This procedure is required to silence warnings generated
+    #by inline AppleScript execution.
+    proc ::tk::mac::GetDynamicSdef {} {
+         puts ""
+     }
+}
+
+if {[info commands ::tk::endOfWord] eq ""} {
+    proc ::tk::endOfWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_endOfWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::startOfNextWord] eq ""} {
+    proc ::tk::startOfNextWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_startOfNextWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::startOfPreviousWord] eq ""} {
+    proc ::tk::startOfPreviousWord {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_startOfPreviousWord $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakBefore] eq ""} {
+    proc ::tk::wordBreakBefore {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_wordBreakBefore $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::wordBreakAfter] eq ""} {
+    proc ::tk::wordBreakAfter {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	}
+	set start [tcl_wordBreakAfter $str $start]
+	if {$start < 0} {
+	    set start ""
+	}
+	return $start
+    }
+}
+if {[info commands ::tk::endOfCluster] eq ""} {
+    proc ::tk::endOfCluster {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	} elseif {$start >= [string length $str]} {
+	    return ""
+	}
+	incr start
+	return $start
+    }
+}
+if {[info commands ::tk::startOfCluster] eq ""} {
+    proc ::tk::startOfCluster {str start {locale {}}} {
+	if {$start < 0} {
+	    set start -1
+	} elseif {$start eq "end"} {
+	    set start [expr {[string length $str]-1}]
+	} elseif {[string match end-* $start]} {
+	    set start [expr {[string length $str]-1-[string range $start 4 end]}]
+	} elseif {$start >= [string length $str]} {
+	    return [string length $str]
+	}
+	if {$start < 0} {
+	    return ""
+	}
+	return $start
     }
 }
 
@@ -697,10 +826,26 @@ if {[tk windowingsystem] eq "aqua"} {
 
 set ::tk::Priv(IMETextMark) [dict create]
 
+# Scale the default parameters of the panedwindow sash
+option add *Panedwindow.handlePad	6p widgetDefault
+option add *Panedwindow.handleSize	6p widgetDefault
+option add *Panedwindow.sashWidth	2.25p widgetDefault
+
+# Scale the default size of the scale widget and its slider
+option add *Scale.length		75p widgetDefault
+option add *Scale.sliderLength		22.5p widgetDefault
+option add *Scale.width			11.25p widgetDefault
+
+# Scale the default scrollbar width on X11
+if {[tk windowingsystem] eq "x11"} {
+    option add *Scrollbar.width		8.25p widgetDefault
+}
+
 # Run the Ttk themed widget set initialization
 if {$::ttk::library ne ""} {
-    uplevel \#0 [list source -encoding utf-8 $::ttk::library/ttk.tcl]
+    uplevel \#0 [list source $::ttk::library/ttk.tcl]
 }
+
 
 # Local Variables:
 # mode: tcl

@@ -8,7 +8,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .aniwave
 catch {destroy $w}
@@ -26,7 +26,7 @@ pack $btns -side bottom -fill x
 
 # Create a canvas large enough to hold the wave. In fact, the wave
 # sticks off both sides of the canvas to prevent visual glitches.
-pack [canvas $w.c -width 300 -height 200 -background black] -padx 10 -pady 10 -expand yes
+pack [canvas $w.c -width 225p -height 150p -background black] -padx 7.5p -pady 7.5p -expand yes
 
 # Ensure that this this is an array
 array set animationCallbacks {}
@@ -41,12 +41,15 @@ lappend waveCoords $x 0 [incr x 5] 200
 
 # Create a smoothed line and arrange for its coordinates to be the
 # contents of the variable waveCoords.
-$w.c create line $waveCoords -tags wave -width 1 -fill green -smooth 1
+$w.c create line $waveCoords -tags wave -width 0.75p -fill green -smooth 1
 proc waveCoordsTracer {w args} {
     global waveCoords
     # Actual visual update will wait until we have finished
     # processing; Tk does that for us automatically.
     $w.c coords wave $waveCoords
+
+    set scaleFactor [expr {$tk::scalingPct / 100.0}]
+    $w.c scale wave 0 0 $scaleFactor $scaleFactor
 }
 trace add variable waveCoords write [list waveCoordsTracer $w]
 

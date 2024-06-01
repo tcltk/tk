@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .spin
 catch {destroy $w}
@@ -42,4 +42,4 @@ spinbox $w.s1 -from 1 -to 10 -width 10 -validate key \
 spinbox $w.s2 -from 0 -to 3 -increment .5 -format %05.2f -width 10
 spinbox $w.s3 -values $australianCities -width 10
 
-pack $w.s1 $w.s2 $w.s3 -side top -pady 5 -padx 10
+pack $w.s1 $w.s2 $w.s3 -side top -pady 3p -padx 7.5p

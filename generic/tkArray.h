@@ -5,7 +5,7 @@
  * Random access to any item is very fast. New items can be either appended
  * or prepended. An array may be traversed in the forward or backward direction.
  *
- * Copyright (c) 2018-2019 Gregor Cramer.
+ * Copyright © 2018-2019 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

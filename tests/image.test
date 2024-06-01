@@ -2,9 +2,9 @@
 # other procedures in the file tkImage.c.  It is organized in the
 # standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -308,7 +308,9 @@ test image-5.7 {Tk_ImageCmd procedure, "type" option} -constraints {
 } -returnCodes error -result {image "myimage" doesn't exist}
 
 
-test image-6.1 {Tk_ImageCmd procedure, "types" option} -body {
+test image-6.1 {Tk_ImageCmd procedure, "types" option} -constraints {
+    testImageType
+} -body {
     image types x
 } -returnCodes error -result {wrong # args: should be "image types"}
 test image-6.2 {Tk_ImageCmd procedure, "types" option} -body {

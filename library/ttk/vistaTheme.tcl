@@ -24,13 +24,12 @@ namespace eval ttk::theme::vista {
 	    -insertcolor SystemWindowText \
 	    -font TkDefaultFont
 
-	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText]
+	ttk::style map "." -foreground {disabled SystemGrayText}
 
-	ttk::style configure TButton -anchor center -padding {1 1} -width -11
-	ttk::style configure TRadiobutton -padding 2
-	ttk::style configure TCheckbutton -padding 2
-	ttk::style configure TMenubutton -padding {8 4}
+	ttk::style configure TButton -anchor center -padding 0.75p -width -11
+	ttk::style configure TRadiobutton -padding 1.5p
+	ttk::style configure TCheckbutton -padding 1.5p
+	ttk::style configure TMenubutton -padding {6p 3p}
 
 	ttk::style element create Menubutton.dropdown vsapi \
 	    TOOLBAR 4 {{selected active} 6 {selected !active} 5
@@ -38,12 +37,14 @@ namespace eval ttk::theme::vista {
 	    -syssize {SM_CXVSCROLL SM_CYVSCROLL}
 
 	ttk::style configure TNotebook -tabmargins {2 2 2 0}
-	ttk::style map TNotebook.Tab \
-	    -expand [list selected {2 2 2 2}]
+	ttk::style map TNotebook.Tab -expand {selected {2 2 2 2}}
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont
-	ttk::style configure Treeview -background SystemWindow
+	ttk::style configure Treeview -background SystemWindow \
+                -stripedbackground System3dLight
+	ttk::style configure Treeview.Separator \
+                -background System3dLight
 	ttk::style map Treeview \
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
@@ -53,10 +54,10 @@ namespace eval ttk::theme::vista {
         # Label and Toolbutton
 	ttk::style configure TLabelframe.Label -foreground SystemButtonText
 
-	ttk::style configure Toolbutton -padding {4 4}
+	ttk::style configure Toolbutton -padding 3p
 
         # Combobox
-	ttk::style configure TCombobox -padding 2
+	ttk::style configure TCombobox -padding 1.5p
         ttk::style element create Combobox.border vsapi \
             COMBOBOX 4 {disabled 4 focus 3 active 2 hover 2 {} 1}
         ttk::style element create Combobox.background vsapi \
@@ -89,7 +90,7 @@ namespace eval ttk::theme::vista {
 	    -selectforeground [list !focus SystemWindowText] \
 	    -foreground	[list \
 		disabled		SystemGrayText \
-	    	{readonly focus}	SystemHighlightText \
+		{readonly focus}	SystemHighlightText \
 	    ] \
 	    -focusfill	[list {readonly focus} SystemHighlight]
 
@@ -182,6 +183,7 @@ namespace eval ttk::theme::vista {
         ttk::style layout Horizontal.TProgressbar {
             Horizontal.Progressbar.trough -sticky nswe -children {
                 Horizontal.Progressbar.pbar -side left -sticky ns
+                Horizontal.Progressbar.ctext -sticky nesw
             }
         }
         ttk::style element create Vertical.Progressbar.pbar vsapi \
@@ -217,7 +219,9 @@ namespace eval ttk::theme::vista {
         }
 
         # Treeview
-        ttk::style configure Item -padding {4 0 0 0}
+        ttk::style configure Item -padding {3p 0 0 0}
+	ttk::style configure Treeview -indent 15p
+	ttk::setTreeviewRowHeight
 
         package provide ttk::theme::vista 1.0
     }

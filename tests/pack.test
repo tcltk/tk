@@ -1,9 +1,9 @@
-# This file is a Tcl script to test out the "pack" command
-# of Tk.  It is organized in the standard fashion for Tcl tests.
+# This file is a Tcl script to test out the "pack" command of Tk.  It is
+# organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1993 The Regents of the University of California.
-# Copyright (c) 1994 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1993 The Regents of the University of California.
+# Copyright © 1994 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -966,7 +966,7 @@ test pack-10.4 {bad -in window does not change container window} -setup {
 } -body {
     winfo manager .pack.a
     pack .pack.a -in .pack.a
-} -returnCodes error -result {can't pack .pack.a inside itself}
+} -returnCodes error -result {can't pack ".pack.a" inside itself}
 test pack-10.5 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -975,7 +975,7 @@ test pack-10.5 {prevent management loops} -body {
 } -cleanup {
     destroy .f1
     destroy .f2
-} -returnCodes error -result {can't put .f2 inside .f1, would cause management loop}
+} -returnCodes error -result {can't put ".f2" inside ".f1": would cause management loop}
 test pack-10.6 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -987,8 +987,7 @@ test pack-10.6 {prevent management loops} -body {
     destroy .f1
     destroy .f2
     destroy .f3
-} -returnCodes error -result {can't put .f3 inside .f1, would cause management loop}
-
+} -returnCodes error -result {can't put ".f3" inside ".f1": would cause management loop}
 
 test pack-11.1 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -1264,7 +1263,7 @@ test pack-12.29 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -side bac
-} -returnCodes error -result {bad side "bac": must be top, bottom, left, or right}
+} -returnCodes error -result {bad side "bac": must be bottom, left, right, or top}
 test pack-12.30 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1284,18 +1283,18 @@ test pack-12.33 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -in .
-} -returnCodes error -result {can't pack .pack.a inside .}
+} -returnCodes error -result {can't pack ".pack.a" inside "."}
 test pack-12.34 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     frame .pack.a.a
     pack .pack.a.a -in .pack.b
-} -returnCodes error -result {can't pack .pack.a.a inside .pack.b}
+} -returnCodes error -result {can't pack ".pack.a.a" inside ".pack.b"}
 test pack-12.35 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -in .pack.a
-} -returnCodes error -result {can't pack .pack.a inside itself}
+} -returnCodes error -result {can't pack ".pack.a" inside itself}
 test pack-12.36 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1363,7 +1362,7 @@ test pack-12.46 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack lousy .pack
-} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, propagate, or slaves}
+} -returnCodes error -result {bad option "lousy": must be configure, content, forget, info, or propagate}
 
 test pack-13.1 {window deletion} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d .pack.right .pack.bottom
@@ -1661,7 +1660,94 @@ test pack-19.2 {test support for minreqsize} -setup {
     destroy .pack.l .pack.lf
 } -result {162x127+0+0 172x112+0+0}
 
-
+test pack-20.1 {<<NoManagedChild>> fires on last pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result 1
+test pack-20.2 {<<NoManagedChild>> fires on last packed child destruction} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    update
+    bind . <<NoManagedChild>> {incr A}
+    destroy .1
+    update
+    set A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result 1
+test pack-20.3 {<Configure> does not fire on last pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    update
+    bind . <Configure> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    destroy .1
+} -result 0
+test pack-20.4 {<<NoManagedChild>> does not fire on forelast pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    pack [frame .2]
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1 .2
+} -result 0
+test pack-20.5 {<Configure> does not fire on last pack forget} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    pack [frame .2]
+    update
+    bind . <Configure> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <Configure> {}
+    destroy .1 .2
+} -result 1
+test pack-20.6 {<<NoManagedChild>> does not fire on last pack forget if propagation is off} -setup {
+    global A
+    unset -nocomplain A
+} -body {
+    pack [frame .1]
+    pack propagate . 0
+    update
+    bind . <<NoManagedChild>> {set A 1}
+    pack forget .1
+    update
+    info exists A
+} -cleanup {
+    bind . <<NoManagedChild>> {}
+    destroy .1
+} -result 0
+
 # cleanup
 cleanupTests
 return

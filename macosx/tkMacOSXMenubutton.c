@@ -49,7 +49,7 @@ typedef struct MacMenuButton {
  * Forward declarations for static functions defined later in this file:
  */
 
-static void		MenuButtonEventProc(ClientData clientData,
+static void		MenuButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		MenuButtonBackgroundDrawCB(MacMenuButton *ptr,
 			    SInt16 depth, Boolean isColorDev);
@@ -57,7 +57,7 @@ static void		MenuButtonContentDrawCB(ThemeButtonKind kind,
 			    const HIThemeButtonDrawInfo *info,
 			    MacMenuButton *ptr, SInt16 depth,
 			    Boolean isColorDev);
-static void		MenuButtonEventProc(ClientData clientData,
+static void		MenuButtonEventProc(void *clientData,
 			    XEvent *eventPtr);
 static void		TkMacOSXComputeMenuButtonParams(TkMenuButton *butPtr,
 			    ThemeButtonKind *btnkind,
@@ -163,7 +163,7 @@ TkpCreateMenuButton(
 
 void
 TkpDisplayMenuButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     MacMenuButton *mbPtr = (MacMenuButton *)clientData;
     TkMenuButton *butPtr = (TkMenuButton *)clientData;
@@ -270,7 +270,7 @@ TkpComputeMenuButtonGeometry(
 	haveText = 1;
         Tk_FreeTextLayout(butPtr->textLayout);
         butPtr->textLayout = Tk_ComputeTextLayout(butPtr->tkfont,
-                butPtr->text, -1, butPtr->wrapLength,
+                butPtr->text, TCL_INDEX_NONE, butPtr->wrapLength,
                 butPtr->justify, 0, &butPtr->textWidth, &butPtr->textHeight);
         txtWidth = butPtr->textWidth;
         txtHeight = butPtr->textHeight;
@@ -682,7 +682,7 @@ MenuButtonContentDrawCB (
 
 static void
 MenuButtonEventProc(
-    ClientData clientData,	/* Information about window. */
+    void *clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
     TkMenuButton *buttonPtr = (TkMenuButton *)clientData;

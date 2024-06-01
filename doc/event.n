@@ -12,7 +12,7 @@
 .SH NAME
 event \- Miscellaneous event facilities: define virtual events and generate events
 .SH SYNOPSIS
-\fBevent\fI option \fR?\fIarg arg ...\fR?
+\fBevent\fI option \fR?\fIarg ...\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -20,8 +20,10 @@ The \fBevent\fR command provides several facilities for dealing with
 window system events, such as defining virtual events and synthesizing
 events.  The command has several different forms, determined by the
 first argument.  The following forms are currently supported:
+.\" METHOD: add
 .TP
 \fBevent add <<\fIvirtual\fB>>\fI sequence \fR?\fIsequence ...\fR?
+.
 Associates the virtual event \fIvirtual\fR with the physical
 event sequence(s) given by the \fIsequence\fR arguments, so that
 the virtual event will trigger whenever any one of the \fIsequence\fRs
@@ -31,8 +33,10 @@ any of the values allowed for the \fIsequence\fR argument to the
 \fBbind\fR command.
 If \fIvirtual\fR is already defined, the new physical event sequences
 add to the existing sequences for the event.
+.\" METHOD: delete
 .TP
-\fBevent delete <<\fIvirtual\fB>> \fR?\fIsequence\fR \fIsequence ...\fR?
+\fBevent delete <<\fIvirtual\fB>> \fR?\fIsequence sequence ...\fR?
+.
 Deletes each of the \fIsequence\fRs from those associated with
 the virtual event given by \fIvirtual\fR.
 \fIVirtual\fR may be any string value and \fIsequence\fR may have
@@ -43,8 +47,10 @@ are ignored.
 If no \fIsequence\fR argument is provided, all physical event sequences
 are removed for \fIvirtual\fR, so that the virtual event will not
 trigger anymore.
+.\" METHOD: generate
 .TP
 \fBevent generate \fIwindow event \fR?\fIoption value option value ...\fR?
+.
 Generates a window event and arranges for it to be processed just as if
 it had come from the window system.
 \fIWindow\fR gives the path name of the window for which the event
@@ -65,8 +71,10 @@ will complete before the \fBevent generate\fR command returns.
 If the \fB\-when\fR option is specified then it determines when the
 event is processed.  Certain events, such as key events, require
 that the window has focus to receive the event properly.
+.\" METHOD: info
 .TP
 \fBevent info \fR?\fB<<\fIvirtual\fB>>\fR?
+.
 Returns information about virtual events.
 If the \fB<<\fIvirtual\fB>>\fR argument is omitted, the return value
 is a list of all the virtual events that are currently defined.
@@ -85,36 +93,48 @@ The following options are supported for the \fBevent generate\fR
 command.  These correspond to the
 .QW %
 expansions allowed in binding scripts for the \fBbind\fR command.
+.\" OPTION: -above
 .TP
 \fB\-above\fI window\fR
+.
 \fIWindow\fR specifies the \fIabove\fR field for the event,
 either as a window path name or as an integer window id.
 Valid for \fBConfigure\fR events.
 Corresponds to the \fB%a\fR substitution for binding scripts.
+.\" OPTION: -borderwidth
 .TP
 \fB\-borderwidth\fI size\fR
+.
 \fISize\fR must be a screen distance;  it specifies the
 \fIborder_width\fR field for the event.
 Valid for \fBConfigure\fR events.
 Corresponds to the \fB%B\fR substitution for binding scripts.
+.\" OPTION: -button
 .TP
 \fB\-button\fI number\fR
+.
 \fINumber\fR must be an integer;  it specifies the \fIdetail\fR field
-for a \fBButtonPress\fR or \fBButtonRelease\fR event, overriding
+for a \fBButton\fR or \fBButtonRelease\fR event, overriding
 any button  number provided in the base \fIevent\fR argument.
 Corresponds to the \fB%b\fR substitution for binding scripts.
+.\" OPTION: -count
 .TP
 \fB\-count\fI number\fR
+.
 \fINumber\fR must be an integer;  it specifies the \fIcount\fR field
 for the event.  Valid for \fBExpose\fR events.
 Corresponds to the \fB%c\fR substitution for binding scripts.
+.\" OPTION: -data
 .TP
 \fB\-data\fI string\fR
+.
 \fIString\fR may be any value; it specifies the \fIuser_data\fR field
 for the event.  Only valid for virtual events.  Corresponds to the
 \fB%d\fR substitution for virtual events in binding scripts.
+.\" OPTION: -delta
 .TP
 \fB\-delta\fI number\fR
+.
 \fINumber\fR must be an integer;  it specifies the \fIdelta\fR field
 for the \fBMouseWheel\fR event.  The \fIdelta\fR refers to the
 direction and magnitude the mouse wheel was rotated.  Note the value
@@ -124,8 +144,10 @@ scroll the text widget up 4 lines and \-240 would scroll the text
 widget down 8 lines.  Of course, other widgets may define different
 behaviors for mouse wheel motion.  This field corresponds to the
 \fB%D\fR substitution for binding scripts.
+.\" OPTION: -detail
 .TP
 \fB\-detail\fI detail\fR
+.
 \fIDetail\fR specifies the \fIdetail\fR field for the event
 and must be one of the following:
 .RS
@@ -140,88 +162,114 @@ Valid for \fBEnter\fR, \fBLeave\fR, \fBFocusIn\fR and
 \fBFocusOut\fR events.
 Corresponds to the \fB%d\fR substitution for binding scripts.
 .RE
+.\" OPTION: -focus
 .TP
 \fB\-focus\fI boolean\fR
+.
 \fIBoolean\fR must be a boolean value;  it specifies the \fIfocus\fR
 field for the event.
 Valid for \fBEnter\fR and \fBLeave\fR events.
 Corresponds to the \fB%f\fR substitution for binding scripts.
+.\" OPTION: -height
 .TP
 \fB\-height\fI size\fR
+.
 \fISize\fR must be a screen distance;  it specifies the \fIheight\fR
 field for the event.  Valid for \fBConfigure\fR events.
 Corresponds to the \fB%h\fR substitution for binding scripts.
+.\" OPTION: -keycode
 .TP
 \fB\-keycode\fI number\fR
+.
 \fINumber\fR  must be an integer;  it specifies the \fIkeycode\fR
 field for the event.
-Valid for \fBKeyPress\fR and \fBKeyRelease\fR events.
+Valid for \fBKey\fR and \fBKeyRelease\fR events.
 Corresponds to the \fB%k\fR substitution for binding scripts.
+.\" OPTION: -keysym
 .TP
 \fB\-keysym\fI name\fR
+.
 \fIName\fR must be the name of a valid keysym, such as \fBg\fR,
 \fBspace\fR, or \fBReturn\fR;  its corresponding
 keycode value is used as the \fIkeycode\fR field for event, overriding
 any detail specified in the base \fIevent\fR argument.
-Valid for \fBKeyPress\fR and \fBKeyRelease\fR events.
+Valid for \fBKey\fR and \fBKeyRelease\fR events.
 Corresponds to the \fB%K\fR substitution for binding scripts.
+.\" OPTION: -mode
 .TP
 \fB\-mode\fI notify\fR
+.
 \fINotify\fR specifies the \fImode\fR field for the event and must be
 one of \fBNotifyNormal\fR, \fBNotifyGrab\fR, \fBNotifyUngrab\fR, or
 \fBNotifyWhileGrabbed\fR.
 Valid for \fBEnter\fR, \fBLeave\fR, \fBFocusIn\fR, and
 \fBFocusOut\fR events.
 Corresponds to the \fB%m\fR substitution for binding scripts.
+.\" OPTION: -override
 .TP
 \fB\-override\fI boolean\fR
+.
 \fIBoolean\fR must be a boolean value;  it specifies the
 \fIoverride_redirect\fR field for the event.
 Valid for \fBMap\fR, \fBReparent\fR, and \fBConfigure\fR events.
 Corresponds to the \fB%o\fR substitution for binding scripts.
+.\" OPTION: -place
 .TP
 \fB\-place\fI where\fR
+.
 \fIWhere\fR specifies the \fIplace\fR field for the event;  it must be
 either \fBPlaceOnTop\fR or \fBPlaceOnBottom\fR.
 Valid for \fBCirculate\fR events.
 Corresponds to the \fB%p\fR substitution for binding scripts.
+.\" OPTION: -root
 .TP
 \fB\-root\fI window\fR
+.
 \fIWindow\fR must be either a window path name or an integer window
 identifier;  it specifies the \fIroot\fR field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
 events.
 Corresponds to the \fB%R\fR substitution for binding scripts.
+.\" OPTION: -rootx
 .TP
 \fB\-rootx\fI coord\fR
+.
 \fICoord\fR must be a screen distance;  it specifies the \fIx_root\fR
 field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
 events.  Corresponds to the \fB%X\fR substitution for binding scripts.
+.\" OPTION: -rooty
 .TP
 \fB\-rooty\fI coord\fR
+.
 \fICoord\fR must be a screen distance;  it specifies the \fIy_root\fR
 field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR
 events.
 Corresponds to the \fB%Y\fR substitution for binding scripts.
+.\" OPTION: -sendevent
 .TP
 \fB\-sendevent\fI boolean\fR
+.
 \fIBoolean\fR must be a boolean value;  it specifies the \fIsend_event\fR
 field for the event.  Valid for all events.  Corresponds to the
 \fB%E\fR substitution for binding scripts.
+.\" OPTION: -serial
 .TP
 \fB\-serial\fI number\fR
+.
 \fINumber\fR must be an integer;  it specifies the \fIserial\fR field
 for the event.  Valid for all events.
 Corresponds to the \fB%#\fR substitution for binding scripts.
+.\" OPTION: -state
 .TP
 \fB\-state\fI state\fR
+.
 \fIState\fR specifies the \fIstate\fR field for the event.
-For \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+For \fBKey\fR, \fBKeyRelease\fR, \fBButtons\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR events
 it must be an integer value.
 For \fBVisibility\fR events it must be one of \fBVisibilityUnobscured\fR,
@@ -229,37 +277,47 @@ For \fBVisibility\fR events it must be one of \fBVisibilityUnobscured\fR,
 This option overrides any modifiers such as \fBMeta\fR or \fBControl\fR
 specified in the base \fIevent\fR.
 Corresponds to the \fB%s\fR substitution for binding scripts.
+.\" OPTION: -subwindow
 .TP
 \fB\-subwindow\fI window\fR
+.
 \fIWindow\fR specifies the \fIsubwindow\fR field for the event, either
 as a path name for a Tk widget or as an integer window identifier.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, and \fBMotion\fR events.
 Similar to \fB%S\fR substitution for binding scripts.
+.\" OPTION: -time
 .TP
 \fB\-time\fI integer\fR
+.
 \fIInteger\fR must be an integer value;  it specifies the \fItime\fR field
-for the event. Additonally the special value \fBcurrent\fR is allowed,
+for the event. Additionally, the special value \fBcurrent\fR is allowed;
 this value will be substituted by the current event time.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBEnter\fR, \fBLeave\fR, \fBMotion\fR,
 and \fBProperty\fR events.
 Corresponds to the \fB%t\fR substitution for binding scripts.
+.\" OPTION: -warp
 .TP
 \fB\-warp\fI boolean\fR
+.
 \fIboolean\fR must be a boolean value;  it specifies whether
 the screen pointer should be warped as well.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, and \fBMotion\fR events.  The pointer will
 only warp to a window if it is mapped.
+.\" OPTION: -width
 .TP
 \fB\-width\fI size\fR
+.
 \fISize\fR must be a screen distance;  it specifies the \fIwidth\fR field
 for the event.
 Valid for \fBConfigure\fR events.
 Corresponds to the \fB%w\fR substitution for binding scripts.
+.\" OPTION: -when
 .TP
 \fB\-when\fI when\fR
+.
 \fIWhen\fR determines when the event will be processed;  it must have one
 of the following values:
 .RS
@@ -278,11 +336,13 @@ other events already queued with \fB\-when mark\fR.
 This option is useful when generating a series of events that should
 be processed in order but at the front of the queue.
 .RE
+.\" OPTION: -x
 .TP
 \fB\-x\fI coord\fR
+.
 \fICoord\fR must be a screen distance;  it specifies the \fIx\fR field
 for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
@@ -290,11 +350,13 @@ Corresponds to the \fB%x\fR substitution for binding scripts.
 If \fIWindow\fR is empty the coordinate is relative to the
 screen, and this option corresponds to the \fB%X\fR substitution
 for binding scripts.
+.\" OPTION: -y
 .TP
 \fB\-y\fI coord\fR
+.
 \fICoord\fR must be a screen distance;  it specifies the \fIy\fR
 field for the event.
-Valid for \fBKeyPress\fR, \fBKeyRelease\fR, \fBButtonPress\fR,
+Valid for \fBKey\fR, \fBKeyRelease\fR, \fBButton\fR,
 \fBButtonRelease\fR, \fBMotion\fR, \fBEnter\fR, \fBLeave\fR,
 \fBExpose\fR, \fBConfigure\fR, \fBGravity\fR, and \fBReparent\fR
 events.
@@ -312,6 +374,7 @@ Tk defines the following virtual events for the purposes of
 notification:
 .TP
 \fB<<AltUnderlined>>\fR
+.
 This is sent to widget to notify it that the letter it has underlined
 (as an accelerator indicator) with the \fB\-underline\fR option has
 been pressed in combination with the Alt key. The usual response to
@@ -319,26 +382,32 @@ this is to either focus into the widget (or some related widget) or to
 invoke the widget.
 .TP
 \fB<<Invoke>>\fR
+.
 This can be sent to some widgets (e.g. button, listbox, menu) as an
 alternative to <space>.
 .TP
 \fB<<ListboxSelect>>\fR
+.
 This is sent to a listbox when the set of selected item(s) in the
 listbox is updated.
 .TP
 \fB<<MenuSelect>>\fR
+.
 This is sent to a menu when the currently selected item in the menu
 changes. It is intended for use with context-sensitive help systems.
 .TP
 \fB<<Modified>>\fR
+.
 This is sent to a text widget when the contents of the widget are
 changed.
 .TP
 \fB<<Selection>>\fR
+.
 This is sent to a text widget when the selection in the widget is
 changed.
 .TP
 \fB<<ThemeChanged>>\fR
+.
 This is sent to all widgets when the ttk theme changed. The ttk
 widgets listen to this event and redisplay themselves when it fires.
 The legacy widgets ignore this event.
@@ -353,22 +422,26 @@ cause of the change.  NOTE: all tk and ttk widgets already handle this
 event internally.
 .TP
 \fB<<TraverseIn>>\fR
+.
 This is sent to a widget when the focus enters the widget because of a
 user-driven
 .QW "tab to widget"
 action.
 .TP
 \fB<<TraverseOut>>\fR
+.
 This is sent to a widget when the focus leaves the widget because of a
 user-driven
 .QW "tab to widget"
 action.
 .TP
 \fB<<UndoStack>>\fR
+.
 This is sent to a text widget when its undo stack or redo stack becomes
 empty or unempty.
 .TP
 \fB<<WidgetViewSync>>\fR
+.
 This is sent to a text widget when its internal data become obsolete,
 and again when these internal data are back in sync with the widget
 view. The detail field (%d substitution) is either true (when the
@@ -379,12 +452,15 @@ bindings across multiple platforms. Users expect them to behave in the
 following way:
 .TP
 \fB<<Clear>>\fR
+.
 Delete the currently selected widget contents.
 .TP
 \fB<<Copy>>\fR
+.
 Copy the currently selected widget contents to the clipboard.
 .TP
 \fB<<Cut>>\fR
+.
 Move the currently selected widget contents to the clipboard.
 .TP
 \fB<<LineEnd>>\fR
@@ -418,10 +494,12 @@ Move to the next group of items (i.e., visible word) in the current widget
 while deselecting any selected contents.
 .TP
 \fB<<Paste>>\fR
+.
 Replace the currently selected widget contents with the contents of
 the clipboard.
 .TP
 \fB<<PasteSelection>>\fR
+.
 Insert the contents of the selection at the mouse location. (This
 event has meaningful \fB%x\fR and \fB%y\fR substitutions).
 .TP
@@ -441,6 +519,7 @@ Move to the previous paragraph in the current widget while deselecting any
 selected contents.
 .TP
 \fB<<PrevWindow>>\fR
+.
 Traverse to the previous window.
 .TP
 \fB<<PrevWord>>\fR
@@ -449,6 +528,7 @@ Move to the previous group of items (i.e., visible word) in the current widget
 while deselecting any selected contents.
 .TP
 \fB<<Redo>>\fR
+.
 Redo one undone action.
 .TP
 \fB<<SelectAll>>\fR
@@ -577,7 +657,7 @@ Starting from the preceding example, if the following code is executed:
 .PP
 .CS
 bind Entry <Control-y> {}
-\fBevent add\fR <<Paste>> <Key-F6>
+\fBevent add\fR <<Paste>> <F6>
 .CE
 .PP
 the behavior will change such in two ways.  First, the shadowed

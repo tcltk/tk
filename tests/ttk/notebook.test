@@ -1,4 +1,4 @@
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -67,10 +67,11 @@ test notebook-2.4 "tab - set value" -body {
 } -result "Changed Foo"
 
 test notebook-2.5 "tab - get all options" -body {
+    .nb tab .nb.foo -underline 0
     .nb tab .nb.foo
 } -result [list \
     -padding 0 -sticky nsew \
-    -state normal -text "Changed Foo" -image "" -compound {} -underline -1]
+    -state normal -text "Changed Foo" -image "" -compound {} -underline 0]
 
 test notebook-4.1 "Test .nb index end" -body {
     .nb index end
@@ -537,5 +538,19 @@ test notebook-198376af5a {moving tab position to a different edge} -body {
     update
     expr {[winfo y .nb.f1] < 10}
 } -result 1
+
+test notebook-8.1 "style command" -body {
+    ttk::notebook .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TNotebook TNotebook}
+test notebook-8.2 "style command" -body {
+    ttk::style configure customStyle.TNotebook
+    ttk::notebook .w -style customStyle.TNotebook
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TNotebook customStyle.TNotebook TNotebook}
 
 tcltest::cleanupTests

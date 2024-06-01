@@ -13,7 +13,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
 #include "tkMacOSXKeysyms.h"
 
@@ -464,7 +464,7 @@ XkbKeycodeToKeysym(
 KeySym
 XKeycodeToKeysym(
     TCL_UNUSED(Display *),
-    KeyCode keycode,
+    unsigned int keycode,
     int index)
 {
     return XkbKeycodeToKeysym(NULL, keycode, 0, index);
@@ -501,7 +501,7 @@ TkpGetString(
 
     macKC.uint = eventPtr->xkey.keycode;
     if (IS_PRINTABLE(macKC.v.keychar)) {
-	length = TkUniCharToUtf(macKC.v.keychar, utfChars);
+	length = Tcl_UniCharToUtf(macKC.v.keychar, utfChars);
     }
     utfChars[length] = 0;
 

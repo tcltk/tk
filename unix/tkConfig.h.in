@@ -19,7 +19,7 @@
 /* Compiler support for module scope symbols */
 #undef HAVE_HIDDEN
 
-/* Do we have the intptr_t type? */
+/* Define to 1 if the system has the type `intptr_t'. */
 #undef HAVE_INTPTR_T
 
 /* Define to 1 if you have the <inttypes.h> header file. */
@@ -31,23 +31,29 @@
 /* Define to 1 if you have the `lseek64' function. */
 #undef HAVE_LSEEK64
 
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
-
 /* Define to 1 if you have the `open64' function. */
 #undef HAVE_OPEN64
 
-/* Define to 1 if you have the `pthread_atfork' function. */
-#undef HAVE_PTHREAD_ATFORK
+/* Define to 1 if you have the `posix_spawnattr_setflags' function. */
+#undef HAVE_POSIX_SPAWNATTR_SETFLAGS
 
-/* Define to 1 if you have the `pthread_attr_setstacksize' function. */
-#undef HAVE_PTHREAD_ATTR_SETSTACKSIZE
+/* Define to 1 if you have the `posix_spawnp' function. */
+#undef HAVE_POSIX_SPAWNP
+
+/* Define to 1 if you have the `posix_spawn_file_actions_adddup2' function. */
+#undef HAVE_POSIX_SPAWN_FILE_ACTIONS_ADDDUP2
 
 /* Does struct password have a pw_gecos field? */
 #undef HAVE_PW_GECOS
 
+/* Do we have <stdbool.h>? */
+#undef HAVE_STDBOOL_H
+
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -60,9 +66,6 @@
 
 /* Is 'struct dirent64' in <sys/types.h>? */
 #undef HAVE_STRUCT_DIRENT64
-
-/* Is 'struct stat64' in <sys/stat.h>? */
-#undef HAVE_STRUCT_STAT64
 
 /* Should we include <sys/select.h>? */
 #undef HAVE_SYS_SELECT_H
@@ -79,20 +82,20 @@
 /* Is off64_t in <sys/types.h>? */
 #undef HAVE_TYPE_OFF64_T
 
-/* Do we have the uintptr_t type? */
+/* Define to 1 if the system has the type `uintptr_t'. */
 #undef HAVE_UINTPTR_T
 
 /* Define to 1 if you have the <unistd.h> header file. */
 #undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the `vfork' function. */
+#undef HAVE_VFORK
 
 /* Is weak import available? */
 #undef HAVE_WEAK_IMPORT
 
 /* Have we turned on XFT (antialiased fonts)? */
 #undef HAVE_XFT
-
-/* Do we have XkbKeycodeToKeysym? */
-#undef HAVE_XKBKEYCODETOKEYSYM
 
 /* Is XScreenSaver available? */
 #undef HAVE_XSS
@@ -115,9 +118,6 @@
 /* Do we have fd_set? */
 #undef NO_FD_SET
 
-/* Do we have <stdlib.h>? */
-#undef NO_STDLIB_H
-
 /* Define to the address where bug reports for this package should be sent. */
 #undef PACKAGE_BUGREPORT
 
@@ -130,14 +130,22 @@
 /* Define to the one symbol short name of this package. */
 #undef PACKAGE_TARNAME
 
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
 /* Define to the version of this package. */
 #undef PACKAGE_VERSION
 
 /* Is this a static build? */
 #undef STATIC_BUILD
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C90 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
+
+/* What encoding should be used for embedded configuration info? */
+#undef TCL_CFGVAL_ENCODING
 
 /* Is this a 64-bit build? */
 #undef TCL_CFG_DO64BIT
@@ -157,17 +165,8 @@
 /* What is the default extension for shared libraries? */
 #undef TCL_SHLIB_EXT
 
-/* Are we building with threads enabled? */
-#undef TCL_THREADS
-
-/* Are wide integers to be implemented with C 'long's? */
+/* Do 'long' and 'long long' have the same size (64-bit)? */
 #undef TCL_WIDE_INT_IS_LONG
-
-/* What type should be used to define wide integers? */
-#undef TCL_WIDE_INT_TYPE
-
-/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
-#undef TIME_WITH_SYS_TIME
 
 /* Is Tk built as a framework? */
 #undef TK_FRAMEWORK
@@ -175,15 +174,20 @@
 /* Are TkAqua debug messages enabled? */
 #undef TK_MAC_DEBUG
 
-/* Do we want to use the threaded memory allocator? */
-#undef USE_THREAD_ALLOC
+/* Define WORDS_BIGENDIAN to 1 if your processor stores words with the most
+   significant byte first (like Motorola and SPARC, unlike Intel). */
+#if defined AC_APPLE_UNIVERSAL_BUILD
+# if defined __BIG_ENDIAN__
+#  define WORDS_BIGENDIAN 1
+# endif
+#else
+# ifndef WORDS_BIGENDIAN
+#  undef WORDS_BIGENDIAN
+# endif
+#endif
 
-/* Define to 1 if your processor stores words with the most significant byte
-   first (like Motorola and SPARC, unlike Intel and VAX). */
-#undef WORDS_BIGENDIAN
-
-/* Is XKeycodeToKeysym deprecated? */
-#undef XKEYCODETOKEYSYM_IS_DEPRECATED
+/* Are we building with zipfs enabled? */
+#undef ZIPFS_BUILD
 
 /* Are Darwin SUSv3 extensions available? */
 #undef _DARWIN_C_SOURCE
@@ -194,6 +198,9 @@
 /* Add the _ISOC99_SOURCE flag when building */
 #undef _ISOC99_SOURCE
 
+/* Add the _LARGEFILE64_SOURCE flag when building */
+#undef _LARGEFILE64_SOURCE
+
 /* # needed in sys/socket.h Should OS/390 do the right thing with sockets? */
 #undef _OE_SOCKETS
 
@@ -202,9 +209,6 @@
 
 /* Do we want the reentrant OS API? */
 #undef _REENTRANT
-
-/* Do we want the thread-safe OS API? */
-#undef _THREAD_SAFE
 
 /* _TIME_BITS=64 enables 64-bit time_t. */
 #undef _TIME_BITS
@@ -215,13 +219,11 @@
 /* Do we want to use the XOPEN network library? */
 #undef _XOPEN_SOURCE_EXTENDED
 
-/* Define to 1 if type `char' is unsigned and you are not using gcc.  */
+/* Define to 1 if type `char' is unsigned and your compiler does not
+   predefine this macro.  */
 #ifndef __CHAR_UNSIGNED__
 # undef __CHAR_UNSIGNED__
 #endif
-
-/* Define to `int' if <sys/types.h> doesn't define. */
-#undef gid_t
 
 /* Define to `__inline__' or `__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
@@ -229,23 +231,14 @@
 #undef inline
 #endif
 
-/* Signed integer type wide enough to hold a pointer. */
-#undef intptr_t
-
 /* Define to `int' if <sys/types.h> does not define. */
 #undef mode_t
 
-/* Define to `int' if <sys/types.h> does not define. */
+/* Define as a signed integer type capable of holding a process identifier. */
 #undef pid_t
 
-/* Define to `unsigned' if <sys/types.h> does not define. */
+/* Define to `unsigned int' if <sys/types.h> does not define. */
 #undef size_t
-
-/* Define to `int' if <sys/types.h> doesn't define. */
-#undef uid_t
-
-/* Unsigned integer type wide enough to hold a pointer. */
-#undef uintptr_t
 
 
     /* Undef unused package specific autoheader defines so that we can

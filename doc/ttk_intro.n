@@ -83,10 +83,10 @@ For example, the layout for a horizontal scrollbar is:
 .PP
 .CS
 ttk::\fBstyle layout\fR Horizontal.TScrollbar {
-    Scrollbar.trough \-children {
-	Scrollbar.leftarrow \-side left \-sticky w
-	Scrollbar.rightarrow \-side right \-sticky e
-	Scrollbar.thumb \-sticky ew
+    Scrollbar.trough -children {
+	Scrollbar.leftarrow  -side left  -sticky w
+	Scrollbar.rightarrow -side right -sticky e
+	Scrollbar.thumb -sticky ew
     }
 }
 .CE
@@ -121,7 +121,7 @@ widget are:
 .CS
 bind TButton <Enter>		{ %W state active }
 bind TButton <Leave>		{ %W state !active }
-bind TButton <ButtonPress-1>	{ %W state pressed }
+bind TButton <Button-1>		{ %W state pressed }
 bind TButton <Button1-Leave>	{ %W state !pressed }
 bind TButton <Button1-Enter>	{ %W state pressed }
 bind TButton <ButtonRelease-1>	\e
@@ -151,9 +151,9 @@ For example:
 .PP
 .CS
 ttk::\fBstyle configure\fR TButton \e
-	\-background #d9d9d9 \e
-	\-foreground black \e
-	\-relief raised \e
+	-background #d9d9d9 \e
+	-foreground black \e
+	-relief raised \e
 	;
 .CE
 .PP
@@ -165,9 +165,9 @@ for a particular style:
 .PP
 .CS
 ttk::\fBstyle map\fR TButton \e
-	\-background [list disabled #d9d9d9  active #ececec] \e
-	\-foreground [list disabled #a3a3a3] \e
-	\-relief [list {pressed !disabled} sunken] \e
+	-background [list disabled #d9d9d9  active #ececec] \e
+	-foreground [list disabled #a3a3a3] \e
+	-relief [list {pressed !disabled} sunken] \e
 	;
 .CE
 .SH "SEE ALSO"

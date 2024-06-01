@@ -86,7 +86,7 @@ TkMacOSXInitCGDrawing(
 	}
 
 	if (Tcl_LinkVar(interp, "::tk::mac::CGAntialiasLimit",
-		(char *)&cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
+		&cgAntiAliasLimit, TCL_LINK_INT) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	cgAntiAliasLimit = limit;
@@ -96,11 +96,11 @@ TkMacOSXInitCGDrawing(
 	 */
 
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedToplevel",
-		(char *)&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
+		&useThemedToplevel, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	if (Tcl_LinkVar(interp, "::tk::mac::useThemedFrame",
-		(char *)&useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
+		&useThemedFrame, TCL_LINK_BOOLEAN) != TCL_OK) {
 	    Tcl_ResetResult(interp);
 	}
 	transparentColor = TkMacOSXClearPixel();
@@ -227,7 +227,7 @@ CreateNSImageFromPixmap(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXGetCGContextForDrawable --
+ * Tk_MacOSXGetCGContextForDrawable --
  *
  *	Get CGContext for given Drawable, creating one if necessary.
  *
@@ -240,8 +240,8 @@ CreateNSImageFromPixmap(
  *----------------------------------------------------------------------
  */
 
-CGContextRef
-TkMacOSXGetCGContextForDrawable(
+void *
+Tk_MacOSXGetCGContextForDrawable(
     Drawable drawable)
 {
     MacDrawable *macDraw = (MacDrawable *)drawable;
@@ -596,7 +596,6 @@ XDrawRectangle(
     return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -656,7 +655,6 @@ XDrawRectangles(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -827,7 +825,6 @@ XDrawArc(
     return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -908,7 +905,6 @@ XDrawArcs(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -989,7 +985,6 @@ XFillArc(
     return Success;
 }
 
-#ifdef TK_MACOSXDRAW_UNUSED
 /*
  *----------------------------------------------------------------------
  *
@@ -1071,24 +1066,6 @@ XFillArcs(
     TkMacOSXRestoreDrawingContext(&dc);
     return Success;
 }
-#endif
-
-#ifdef TK_MACOSXDRAW_UNUSED
-/*
- *----------------------------------------------------------------------
- *
- * XMaxRequestSize --
- *
- *----------------------------------------------------------------------
- */
-
-long
-XMaxRequestSize(
-    Display *display)
-{
-    return (SHRT_MAX / 4);
-}
-#endif
 
 /*
  *----------------------------------------------------------------------
@@ -1119,7 +1096,7 @@ TkScrollWindow(
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
-    TkRegion damageRgn)		/* Region to accumulate damage in. */
+    Region damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
     HIShapeRef srcRgn, dstRgn;
@@ -1484,7 +1461,7 @@ TkMacOSXSetupDrawingContext(
 	CGContextSetShouldAntialias(dc.context, shouldAntialias);
 	CGContextSetLineWidth(dc.context, w);
 	if (gc->line_style != LineSolid) {
-	    int num = 0;
+	    size_t num = 0;
 	    char *p = &gc->dashes;
 	    CGFloat dashOffset = gc->dash_offset;
 	    dashOffset -= (gc->line_width % 2) ? 0.5 : 0.0;
@@ -1623,30 +1600,7 @@ TkMacOSXGetClipRgn(
 /*
  *----------------------------------------------------------------------
  *
- * TkMacOSXSetUpClippingRgn --
- *
- *	Set up the clipping region so that drawing only occurs on the specified
- *	X subwindow.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkMacOSXSetUpClippingRgn(
-    Drawable drawable)		/* Drawable to update. */
-{
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpClipDrawableToRect --
+ * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
  *	or height are negative, reset to no clipping.
@@ -1661,7 +1615,7 @@ TkMacOSXSetUpClippingRgn(
  */
 
 void
-TkpClipDrawableToRect(
+Tk_ClipDrawableToRect(
     TCL_UNUSED(Display *),
     Drawable d,
     int x, int y,
@@ -1715,7 +1669,7 @@ ClipToGC(
 {
     if (gc && gc->clip_mask &&
 	    ((TkpClipMask *)gc->clip_mask)->type == TKP_CLIP_REGION) {
-	TkRegion gcClip = ((TkpClipMask *)gc->clip_mask)->value.region;
+	Region gcClip = ((TkpClipMask *)gc->clip_mask)->value.region;
 	int xOffset = ((MacDrawable *)d)->xOff + gc->clip_x_origin;
 	int yOffset = ((MacDrawable *)d)->yOff + gc->clip_y_origin;
 	HIShapeRef clipRgn = *clipRgnPtr, gcClipRgn;
@@ -1762,7 +1716,7 @@ TkMacOSXMakeStippleMap(
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawHighlightBorder --
+ * Tk_DrawHighlightBorder --
  *
  *	This procedure draws a rectangular ring around the outside of a widget
  *	to indicate that it has received the input focus.
@@ -1784,7 +1738,7 @@ TkMacOSXMakeStippleMap(
  */
 
 void
-TkpDrawHighlightBorder (
+Tk_DrawHighlightBorder (
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,
@@ -1805,7 +1759,7 @@ TkpDrawHighlightBorder (
 /*
  *----------------------------------------------------------------------
  *
- * TkpDrawFrame --
+ * TkpDrawFrameEx --
  *
  *	This procedure draws the rectangular frame area. If the user has
  *	requested themeing, it draws with the background theme.
@@ -1820,8 +1774,9 @@ TkpDrawHighlightBorder (
  */
 
 void
-TkpDrawFrame(
+TkpDrawFrameEx(
     Tk_Window tkwin,
+    Drawable drawable,
     Tk_3DBorder border,
     int highlightWidth,
     int borderWidth,
@@ -1839,11 +1794,9 @@ TkpDrawFrame(
 	}
     }
 
-    Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin),
-	    border, highlightWidth, highlightWidth,
-	    Tk_Width(tkwin) - 2 * highlightWidth,
-	    Tk_Height(tkwin) - 2 * highlightWidth,
-	    borderWidth, relief);
+    Tk_Fill3DRectangle(tkwin, drawable, border, highlightWidth,
+	    highlightWidth, Tk_Width(tkwin) - 2 * highlightWidth,
+	    Tk_Height(tkwin) - 2 * highlightWidth, borderWidth, relief);
 }
 
 /*

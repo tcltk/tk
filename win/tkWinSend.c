@@ -4,8 +4,8 @@
  *	This file provides functions that implement the "send" command,
  *	allowing commands to be passed from interpreter to interpreter.
  *
- * Copyright (c) 1997 Sun Microsystems, Inc.
- * Copyright (c) 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
+ * Copyright © 1997 Sun Microsystems, Inc.
+ * Copyright © 2003 Pat Thoyts <patthoyts@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -63,9 +63,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
-static void		CmdDeleteProc(ClientData clientData);
-static void		InterpDeleteProc(ClientData clientData,
-			    Tcl_Interp *interp);
+static Tcl_CmdDeleteProc CmdDeleteProc;
 static void		RevokeObjectRegistration(RegisteredInterp *riPtr);
 #endif /* TK_SEND_ENABLED_ON_WINDOWS */
 static HRESULT		BuildMoniker(const char *name, LPMONIKER *pmk);
@@ -76,7 +74,7 @@ static HRESULT		RegisterInterp(const char *name,
 static int		FindInterpreterObject(Tcl_Interp *interp,
 			    const char *name, LPDISPATCH *ppdisp);
 static int		Send(LPDISPATCH pdispInterp, Tcl_Interp *interp,
-			    int async, ClientData clientData, int objc,
+			    int async, void *clientData, Tcl_Size objc,
 			    Tcl_Obj *const objv[]);
 static void		SendTrace(const char *format, ...);
 static Tcl_EventProc	SendEventProc;
@@ -148,7 +146,7 @@ Tk_SetAppName(
 	hr = CoInitialize(0);
 	if (FAILED(hr)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "failed to initialize the COM library", -1));
+		    "failed to initialize the COM library", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SEND", "COM", NULL);
 	    return "";
 	}
@@ -212,12 +210,11 @@ Tk_SetAppName(
 int
 TkGetInterpNames(
     Tcl_Interp *interp,		/* Interpreter for returning a result. */
-    Tk_Window tkwin)		/* Window whose display is to be used for the
+    TCL_UNUSED(Tk_Window))	/* Window whose display is to be used for the
 				 * lookup. */
 {
 #ifndef TK_SEND_ENABLED_ON_WINDOWS
     (void)interp;
-    (void)tkwin;
     /*
      * Temporarily disabled for bug #858822
      */
@@ -323,7 +320,7 @@ TkGetInterpNames(
 
 int
 Tk_SendObjCmd(
-    ClientData clientData,	/* Information about sender (only dispPtr
+    void *clientData,	/* Information about sender (only dispPtr
 				 * field is used). */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
@@ -335,25 +332,30 @@ Tk_SendObjCmd(
     static const char *const sendOptions[] = {
 	"-async",   "-displayof",   "--",  NULL
     };
+    const char *stringRep;
     int result = TCL_OK;
-    int i, optind, async = 0;
-    Tcl_Obj *displayPtr = NULL;
+    int i, async = 0, index;
 
     /*
      * Process the command options.
      */
 
-    for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], sendOptions,
-		sizeof(char *), "option", 0, &optind) != TCL_OK) {
-	    break;
-	}
-	if (optind == SEND_ASYNC) {
-	    ++async;
-	} else if (optind == SEND_DISPLAYOF) {
-	    displayPtr = objv[++i];
-	} else if (optind == SEND_LAST) {
-	    i++;
+    for (i = 1; i < (objc - 1); i++) {
+	stringRep = Tcl_GetString(objv[i]);
+	if (stringRep[0] == '-') {
+	    if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+		    sizeof(char *), "option", 0, &index) != TCL_OK) {
+		break;
+	    }
+	    if (index == SEND_ASYNC) {
+		async = 1;
+	    } else if (index == SEND_DISPLAYOF) {
+		i++;
+	    } else /* if (index == SEND_LAST) */ {
+		i++;
+		break;
+	    }
+	} else {
 	    break;
 	}
     }
@@ -362,21 +364,9 @@ Tk_SendObjCmd(
      * Ensure we still have a valid command.
      */
 
-    if ((objc - i) < 2) {
+    if (objc < (i + 2)) {
 	Tcl_WrongNumArgs(interp, 1, objv,
 		"?-async? ?-displayof? ?--? interpName arg ?arg ...?");
-	result = TCL_ERROR;
-    }
-
-    /*
-     * We don't support displayPtr. See TIP #150.
-     */
-
-    if (displayPtr) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"option not implemented: \"displayof\" is not available"
-		" for this platform.", -1));
-	Tcl_SetErrorCode(interp, "TK", "SEND", "DISPLAYOF_WIN", NULL);
 	result = TCL_ERROR;
     }
 
@@ -489,7 +479,7 @@ FindInterpreterObject(
 #ifdef TK_SEND_ENABLED_ON_WINDOWS
 static void
 CmdDeleteProc(
-    ClientData clientData)
+    void *clientData)
 {
     RegisteredInterp *riPtr = (RegisteredInterp *)clientData;
 
@@ -571,33 +561,6 @@ RevokeObjectRegistration(
 /*
  * ----------------------------------------------------------------------
  *
- * InterpDeleteProc --
- *
- *	This is called when the interpreter is deleted and used to unregister
- *	the COM libraries.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- * ----------------------------------------------------------------------
- */
-
-#ifdef TK_SEND_ENABLED_ON_WINDOWS
-static void
-InterpDeleteProc(
-    ClientData clientData,
-    Tcl_Interp *interp)
-{
-    CoUninitialize();
-}
-#endif /* TK_SEND_ENABLED_ON_WINDOWS */
-
-/*
- * ----------------------------------------------------------------------
- *
  * BuildMoniker --
  *
  *	Construct a moniker from the given name. This ensures that all our
@@ -626,7 +589,7 @@ BuildMoniker(
 	Tcl_DString dString;
 
 	Tcl_DStringInit(&dString);
-	Tcl_UtfToWCharDString(name, -1, &dString);
+	Tcl_UtfToWCharDString(name, TCL_INDEX_NONE, &dString);
 	hr = CreateFileMoniker((LPOLESTR)Tcl_DStringValue(&dString), &pmkItem);
 	Tcl_DStringFree(&dString);
 	if (SUCCEEDED(hr)) {
@@ -678,7 +641,7 @@ RegisterInterp(
 	    if (i > 1) {
 		if (i == 2) {
 		    Tcl_DStringInit(&dString);
-		    Tcl_DStringAppend(&dString, name, -1);
+		    Tcl_DStringAppend(&dString, name, TCL_INDEX_NONE);
 		    Tcl_DStringAppend(&dString, " #", 2);
 		    offset = Tcl_DStringLength(&dString);
 		    Tcl_DStringSetLength(&dString, offset + TCL_INTEGER_SPACE);
@@ -741,7 +704,7 @@ Send(
     Tcl_Interp *interp,		/* The local interpreter. */
     int async,			/* Flag for the calling style. */
     TCL_UNUSED(void *),
-    int objc,			/* Number of arguments to be sent. */
+    Tcl_Size objc,			/* Number of arguments to be sent. */
     Tcl_Obj *const objv[])	/* The arguments to be sent. */
 {
     VARIANT vCmd, vResult;

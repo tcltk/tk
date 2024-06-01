@@ -55,7 +55,7 @@ struct ScrollHandleRec
  */
 ScrollHandle TtkCreateScrollHandle(WidgetCore *corePtr, Scrollable *scrollPtr)
 {
-    ScrollHandle h = ckalloc(sizeof(*h));
+    ScrollHandle h = (ScrollHandle)ckalloc(sizeof(*h));
 
     h->flags = 0;
     h->corePtr = corePtr;
@@ -90,9 +90,9 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
     Tcl_PrintDouble(interp, (double)s->first / s->total, arg1+1);
     Tcl_PrintDouble(interp, (double)s->last / s->total, arg2+1);
     Tcl_DStringInit(&buf);
-    Tcl_DStringAppend(&buf, s->scrollCmd, -1);
-    Tcl_DStringAppend(&buf, arg1, -1);
-    Tcl_DStringAppend(&buf, arg2, -1);
+    Tcl_DStringAppend(&buf, s->scrollCmd, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, arg1, TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, arg2, TCL_INDEX_NONE);
 
     Tcl_Preserve(corePtr);
     code = Tcl_EvalEx(interp, Tcl_DStringValue(&buf), -1, TCL_EVAL_GLOBAL);
@@ -123,19 +123,19 @@ static int UpdateScrollbar(Tcl_Interp *interp, ScrollHandle h)
 /* UpdateScrollbarBG --
  * 	Idle handler to update the scrollbar.
  */
-static void UpdateScrollbarBG(ClientData clientData)
+static void UpdateScrollbarBG(void *clientData)
 {
     ScrollHandle h = (ScrollHandle)clientData;
     Tcl_Interp *interp = h->corePtr->interp;
     int code;
 
     h->flags &= ~SCROLL_UPDATE_PENDING;
-    Tcl_Preserve((ClientData) interp);
+    Tcl_Preserve(interp);
     code = UpdateScrollbar(interp, h);
     if (code == TCL_ERROR && !Tcl_InterpDeleted(interp)) {
 	Tcl_BackgroundException(interp, code);
     }
-    Tcl_Release((ClientData) interp);
+    Tcl_Release(interp);
 }
 
 /* TtkScrolled --
@@ -167,7 +167,7 @@ void TtkScrolled(ScrollHandle h, int first, int last, int total)
 	s->total = total;
 
 	if (!(h->flags & SCROLL_UPDATE_PENDING)) {
-	    Tcl_DoWhenIdle(UpdateScrollbarBG, (ClientData)h);
+	    Tcl_DoWhenIdle(UpdateScrollbarBG, h);
 	    h->flags |= SCROLL_UPDATE_PENDING;
 	}
     }
@@ -206,7 +206,7 @@ void TtkUpdateScrollInfo(ScrollHandle h)
  *  $w [xy]view scroll $number $what -- scrollbar interface
  */
 int TtkScrollviewCommand(
-    Tcl_Interp *interp, int objc, Tcl_Obj *const objv[], ScrollHandle h)
+    Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], ScrollHandle h)
 {
     Scrollable *s = h->scrollPtr;
     int newFirst;
@@ -274,7 +274,7 @@ void TtkScrollTo(ScrollHandle h, int newFirst, int updateScrollInfo)
 void TtkFreeScrollHandle(ScrollHandle h)
 {
     if (h->flags & SCROLL_UPDATE_PENDING) {
-	Tcl_CancelIdleCall(UpdateScrollbarBG, (ClientData)h);
+	Tcl_CancelIdleCall(UpdateScrollbarBG, h);
     }
     ckfree(h);
 }

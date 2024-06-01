@@ -2,7 +2,7 @@
 # Tile package: entry widget tests
 #
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -64,6 +64,12 @@ test entry-1.7 "Deletion - insert cursor in the middle " -body {
     .e index insert
 } -result 0
 
+test entry-1.8 "Index is between 0 and end" -body {
+    .e delete 0 end
+    .e insert end abcde
+    set res [list [.e index -1] [.e index -4] [.e index 999]]
+} -result {0 0 5}
+
 test entry-1.done "Cleanup" -body { destroy .e }
 
 # Scrollbar tests.
@@ -108,7 +114,7 @@ test entry-3.0 "Series 3 setup" -body {
     variable cw [font measure $fixed a]
     variable ch [font metrics $fixed -linespace]
     variable bd 3	;# border + padding + extra space for focus ring
-    variable ux [font measure $fixed \u4e4e]
+    variable ux [font measure $fixed 乎]
 
     pack [ttk::entry .e -font $fixed -width 20]
     update
@@ -326,6 +332,36 @@ test entry-9.1 "Index range invariants" -setup {
     destroy .e
 }
 
+test entry-10.1 {configuration option: "-placeholder"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    .e configure -placeholder {Some text}
+    .e cget -placeholder
+} -cleanup {
+    destroy .e
+} -result {Some text}
+
+test entry-10.2 {configuration option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    .e configure -placeholder {Some text} -placeholderforeground red
+    .e cget -placeholderforeground
+} -cleanup {
+    destroy .e
+} -result {red}
+
+test entry-10.3 {styling option: "-placeholderforeground"} -setup {
+    pack [ttk::entry .e]
+} -body {
+    set current [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground blue
+    set res [ttk::style configure TEntry -placeholderforeground]
+    ttk::style configure TEntry -placeholderforeground $current
+    set res
+} -cleanup {
+    destroy .e
+} -result {blue}
+
 test entry-11.1 {Bug [2830360fff] - Don't loose invalid at focus events} -setup {
     pack [ttk::entry .e]
     update
@@ -356,5 +392,19 @@ test entry-11.2 {Bug [2a32225cd1] - Navigation in a password made of several wor
 } -cleanup {
     destroy .e
 } -result {{} {}}
+
+test entry-12.1 "style command" -body {
+    ttk::entry .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TEntry TEntry}
+test entry-12.2 "style command" -body {
+    ttk::style configure customStyle.TEntry
+    ttk::entry .w -style customStyle.TEntry
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TEntry customStyle.TEntry TEntry}
 
 tcltest::cleanupTests

@@ -15,24 +15,25 @@ Tk_CreateBindingTable, Tk_DeleteBindingTable, Tk_CreateBinding, Tk_DeleteBinding
 \fB#include <tk.h>\fR
 .sp
 Tk_BindingTable
-\fBTk_CreateBindingTable(\fIinterp\fB)\fR
+\fBTk_CreateBindingTable\fR(\fIinterp\fR)
 .sp
-\fBTk_DeleteBindingTable(\fIbindingTable\fB)\fR
+\fBTk_DeleteBindingTable\fR(\fIbindingTable\fR)
 .sp
 unsigned long
-\fBTk_CreateBinding(\fIinterp, bindingTable, object, eventString, script, append\fB)\fR
+\fBTk_CreateBinding\fR(\fIinterp, bindingTable, object, eventString, script, append\fR)
 .sp
 int
-\fBTk_DeleteBinding(\fIinterp, bindingTable, object, eventString\fB)\fR
+\fBTk_DeleteBinding\fR(\fIinterp, bindingTable, object, eventString\fR)
 .sp
 const char *
-\fBTk_GetBinding(\fIinterp, bindingTable, object, eventString\fB)\fR
+\fBTk_GetBinding\fR(\fIinterp, bindingTable, object, eventString\fR)
 .sp
-\fBTk_GetAllBindings(\fIinterp, bindingTable, object\fB)\fR
+\fBTk_GetAllBindings\fR(\fIinterp, bindingTable, object\fR)
 .sp
-\fBTk_DeleteAllBindings(\fIbindingTable, object\fB)\fR
+\fBTk_DeleteAllBindings\fR(\fIbindingTable, object\fR)
 .sp
-\fBTk_BindEvent(\fIbindingTable, eventPtr, tkwin, numObjects, objectPtr\fB)\fR
+\fBTk_BindEvent\fR(\fIbindingTable, eventPtr, tkwin, numObjects, objectPtr\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_BindingTable bindingTable
 .AP Tcl_Interp *interp in
@@ -41,7 +42,7 @@ used for returning results and errors from binding procedures.
 .AP Tk_BindingTable bindingTable in
 Token for binding table;  must have been returned by some previous
 call to \fBTk_CreateBindingTable\fR.
-.AP ClientData object in
+.AP "void *" object in
 Identifies object with which binding is associated.
 .AP "const char" *eventString in
 String describing event sequence.
@@ -55,9 +56,9 @@ X event to match against bindings in \fIbindingTable\fR.
 .AP Tk_Window tkwin in
 Identifier for any window on the display where the event occurred.
 Used to find display-related information such as key maps.
-.AP int numObjects in
+.AP Tcl_Size numObjects in
 Number of object identifiers pointed to by \fIobjectPtr\fR.
-.AP ClientData *objectPtr in
+.AP "void **" objectPtr in
 Points to an array of object identifiers:  bindings will be considered
 for each of these objects in order from first to last.
 .BE

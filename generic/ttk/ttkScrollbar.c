@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2003, Joe English
+ * Copyright © 2003 Joe English
  *
  * ttk::scrollbar widget.
  */
@@ -31,14 +31,14 @@ typedef struct
     ScrollbarPart scrollbar;
 } Scrollbar;
 
-static Tk_OptionSpec ScrollbarOptionSpecs[] =
+static const Tk_OptionSpec ScrollbarOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-command", "command", "Command", "",
-	Tk_Offset(Scrollbar,scrollbar.commandObj), -1, 0, 0, 0},
+	offsetof(Scrollbar, scrollbar.commandObj), TCL_INDEX_NONE, 0, 0, 0},
 
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient", "vertical",
-	Tk_Offset(Scrollbar,scrollbar.orientObj),
-	Tk_Offset(Scrollbar,scrollbar.orient),
+	offsetof(Scrollbar, scrollbar.orientObj),
+	offsetof(Scrollbar, scrollbar.orient),
 	0, ttkOrientStrings, STYLE_CHANGED },
 
     WIDGET_TAKEFOCUS_FALSE,
@@ -133,7 +133,7 @@ static void ScrollbarDoLayout(void *recordPtr)
  */
 static int
 ScrollbarSetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *firstObj, *lastObj;
@@ -184,7 +184,7 @@ ScrollbarSetCommand(
  */
 static int
 ScrollbarGetCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *scrollbar = (Scrollbar *)recordPtr;
     Tcl_Obj *result[2];
@@ -207,7 +207,7 @@ ScrollbarGetCommand(
  */
 static int
 ScrollbarDeltaCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
     double dx, dy;
@@ -247,7 +247,7 @@ ScrollbarDeltaCommand(
  */
 static int
 ScrollbarFractionCommand(
-    void *recordPtr, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Scrollbar *sb = (Scrollbar *)recordPtr;
     Ttk_Box b = sb->scrollbar.troughBox;
@@ -282,8 +282,8 @@ ScrollbarFractionCommand(
 }
 
 static const Ttk_Ensemble ScrollbarCommands[] = {
-    { "configure",	TtkWidgetConfigureCommand,0 },
     { "cget",		TtkWidgetCgetCommand,0 },
+    { "configure",	TtkWidgetConfigureCommand,0 },
     { "delta",    	ScrollbarDeltaCommand,0 },
     { "fraction",    	ScrollbarFractionCommand,0 },
     { "get",    	ScrollbarGetCommand,0 },
@@ -291,13 +291,14 @@ static const Ttk_Ensemble ScrollbarCommands[] = {
     { "instate",	TtkWidgetInstateCommand,0 },
     { "set",  		ScrollbarSetCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
+    { "style",		TtkWidgetStyleCommand,0 },
     { 0,0,0 }
 };
 
 /*------------------------------------------------------------------------
  * +++ Widget specification.
  */
-static WidgetSpec ScrollbarWidgetSpec =
+static const WidgetSpec ScrollbarWidgetSpec =
 {
     "TScrollbar",		/* className */
     sizeof(Scrollbar),		/* recordSize */

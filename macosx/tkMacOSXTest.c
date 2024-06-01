@@ -21,7 +21,7 @@
  * Forward declarations of procedures defined later in this file:
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static Tcl_ObjCmdProc DebuggerObjCmd;
 #endif
 static Tcl_ObjCmdProc PressButtonObjCmd;
@@ -55,7 +55,7 @@ TkplatformtestInit(
      * Add commands for platform specific tests on MacOS here.
      */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
     Tcl_CreateObjCommand(interp, "debugger", DebuggerObjCmd, NULL, NULL);
 #endif
     Tcl_CreateObjCommand(interp, "pressbutton", PressButtonObjCmd, NULL, NULL);
@@ -82,13 +82,13 @@ TkplatformtestInit(
  *----------------------------------------------------------------------
  */
 
-#if MAC_OS_X_VERSION_MAX_ALLOWED < 1080
+#if !defined(NDEBUG) && MAC_OS_X_VERSION_MAX_ALLOWED < 1080
 static int
 DebuggerObjCmd(
-    TCL_UNUSED(void *),		/* Not used. */
-    TCL_UNUSED(Tcl_Interp *),			/* Not used. */
-    TCL_UNUSED(int),				/* Not used. */
-    TCL_UNUSED(Tcl_Obj *const *)			/* Not used. */
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tcl_Interp *),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Obj *const *))
 {
     Debugger();
     return TCL_OK;
@@ -124,7 +124,7 @@ MenuBarHeightObjCmd(
     if (height == 0) {
 	height = (int) [[NSApp mainMenu] menuBarHeight];
     }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(height));
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(height));
     return TCL_OK;
 }
 
@@ -357,12 +357,12 @@ InjectKeyEventObjCmd(
     Tcl_Obj *const objv[])
 {
     static const char *const optionStrings[] = {
-	"press", "release", "flagschanged", NULL};
-    NSUInteger types[3] = {NSKeyDown, NSKeyUp, NSFlagsChanged};
+	"flagschanged", "press", "release", NULL};
+    NSUInteger types[3] = {NSFlagsChanged, NSKeyDown, NSKeyUp};
     static const char *const argStrings[] = {
-	"-shift", "-control", "-option", "-command", "-function", "-x", "-y", NULL};
-    enum args {KEYEVENT_SHIFT, KEYEVENT_CONTROL, KEYEVENT_OPTION, KEYEVENT_COMMAND,
-	       KEYEVENT_FUNCTION, KEYEVENT_X, KEYEVENT_Y};
+	"-command", "-control", "-function", "-option", "-shift", "-x", "-y", NULL};
+    enum args {KEYEVENT_COMMAND, KEYEVENT_CONTROL, KEYEVENT_FUNCTION, KEYEVENT_OPTION,
+	       KEYEVENT_SHIFT, KEYEVENT_X, KEYEVENT_Y};
     int i, index, keysym, mods = 0, x = 0, y = 0;
     NSString *chars = nil, *unmod = nil, *upper, *lower;
     NSEvent *keyEvent;

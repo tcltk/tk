@@ -2,8 +2,8 @@
 # plus the procedures in tkFont.c.  It is organized in the
 # standard white-box fashion for Tcl tests.
 #
-# Copyright (c) 1996-1998 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996-1998 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -13,7 +13,7 @@ tcltest::loadTestedCommands
 
 # Some tests require support for 4-byte UTF-8 sequences
 testConstraint fullutf [expr {[format %c 0x010000] != "\uFFFD"}]
-
+testConstraint utfcompat [expr {([string length "\U10000"] == 2) && [package vsatisfies [package provide Tcl] 8]}]
 testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 
 set defaultfontlist [font names]
@@ -115,11 +115,11 @@ test font-4.1 {font command: actual: arguments} -body {
 test font-4.2 {font command: actual: arguments} -body {
     # (objc < 3)
     font actual
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.3 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 0
     font actual xyz abc def
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.4 {font command: actual: displayof specified, so skip to next} -body {
     catch {font actual xyz -displayof . -size}
 } -result 0
@@ -129,7 +129,7 @@ test font-4.5 {font command: actual: displayof specified, so skip to next} -body
 test font-4.6 {font command: actual: arguments} -body {
     # (objc - skip > 4) when skip == 2
     font actual xyz -displayof . abc def
-} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?option? ?--? ?char?"}
+} -returnCodes error -result {wrong # args: should be "font actual font ?-displayof window? ?-option? ?--? ?char?"}
 test font-4.7 {font command: actual: arguments} -constraints noExceed -body {
     # (tkfont == NULL)
     font actual "\{xyz"
@@ -145,25 +145,25 @@ test font-4.9 {font command: actual} -constraints {unix noExceed failsOnUbuntu} 
 test font-4.10 {font command: actual} -constraints win -body {
     # (objc > 3) so objPtr = objv[3 + skip]
     font actual {-family times} -family
-} -result {Times New Roman}
+} -result {times}
 test font-4.11 {font command: bad option} -body {
     font actual xyz -style
 } -returnCodes error -result {bad option "-style": must be -family, -size, -weight, -slant, -underline, or -overstrike}
 test font-4.12 {font command: actual} -body {
-    font actual {-family times} -- \ud800
+    font actual {-family times} -- \uD800
 } -match glob -result {*}
 test font-4.13 {font command: actual} -body {
-    font actual {-family times} -- \udc00
+    font actual {-family times} -- \uDC00
 } -match glob -result {*}
-test font-4.14 {font command: actual} -constraints win -body {
+test font-4.14 {font command: actual} -constraints {utfcompat win knownBug} -body {
     font actual {-family times} -family -- \uD800\uDC00
-} -result {Times New Roman}
+} -result {times}
 test font-4.15 {font command: actual} -body {
-    font actual {-family times} -- \udc00\ud800
+    font actual {-family times} -- \uDC00\uD800
 } -returnCodes 1 -match glob -result {expected a single character but got "*"}
-test font-4.16 {font command: actual} -constraints {fullutf win} -body {
+test font-4.16 {font command: actual} -constraints {fullutf win knownBug} -body {
     font actual {-family times} -family -- \U10000
-} -result {Times New Roman}
+} -result {times}
 
 
 test font-5.1 {font command: configure} -body {
@@ -431,15 +431,15 @@ test font-10.2 {font command: metrics: arguments} -body {
 test font-10.3 {font command: metrics: arguments} -body {
     # (objc < 3)
     font metrics
-} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?option?"}
+} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?-option?"}
 test font-10.4 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 0
     font metrics xyz abc def
-} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?option?"}
+} -returnCodes error -result {wrong # args: should be "font metrics font ?-displayof window? ?-option?"}
 test font-10.5 {font command: metrics: arguments} -body {
     # (objc - skip) > 4) when skip == 2
     font metrics xyz -displayof . abc
-} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "abc": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.6 {font command: metrics: bad font} -constraints noExceed -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
@@ -456,7 +456,7 @@ test font-10.7 {font command: metrics: get all metrics} -setup {
 test font-10.8 {font command: metrics: bad metric} -body {
     # (Tcl_GetIndexFromObj() != TCL_OK)
     font metrics $fixed -xyz
-} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -linespace, or -fixed}
+} -returnCodes error -result {bad metric "-xyz": must be -ascent, -descent, -fixed, or -linespace}
 test font-10.9 {font command: metrics: get individual metrics} -body {
     font metrics $fixed -ascent
     font metrics $fixed -descent
@@ -1690,14 +1690,14 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-27.1 {Tk_UnderlineTextLayout procedure: no underline chosen} -body {
-    .t.f config -text "foo" -underline -1
+    .t.f config -text "foo" -underline {}
 } -result {}
 test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 10
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -underline -1
+    .t.f config -wrap -1 -underline {}
 } -result {}
 destroy .t.f
 
@@ -1772,7 +1772,7 @@ destroy .t.f
 pack [label .t.f]
 update
 test font-29.1 {Tk_CharBBox procedure: index < 0} -body {
-    .t.f config -text "000" -underline -1
+    .t.f config -text "000" -underline {}
 } -result {}
 test font-29.2 {Tk_CharBBox procedure: loop} -body {
     .t.f config -text "000\t000\t000\t000" -underline 9
@@ -2378,7 +2378,7 @@ test font-45.1 {TkFontGetAliasList: no match} -body {
 } -result [font actual {-size 10} -family]
 test font-45.2 {TkFontGetAliasList: match} -constraints win -body {
     font actual {times 10} -family
-} -result {Times New Roman}
+} -result {times}
 test font-45.3 {TkFontGetAliasList: match} -constraints {noExceed failsOnUbuntu} -body {
     if {[font actual {{times new roman} 10} -family] eq "Times New Roman"} {
         # avoid test failure on systems that have a real "times new roman" font

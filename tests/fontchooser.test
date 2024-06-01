@@ -1,6 +1,6 @@
 # Test the "tk::fontchooser" command
 #
-# Copyright (c) 2008 Pat Thoyts
+# Copyright © 2008 Pat Thoyts
 
 package require tcltest 2.2
 eval tcltest::configure $argv
@@ -109,7 +109,7 @@ test fontchooser-2.0 {fontchooser -title} -constraints scriptImpl -body {
 test fontchooser-2.1 {fontchooser -title (cyrillic)} -constraints scriptImpl -body {
     start {
         tk::fontchooser::Configure \
-            -title "\u041f\u0440\u0438\u0432\u0435\u0442"
+            -title "Привет"
         tk::fontchooser::Show
     }
     then {
@@ -117,7 +117,7 @@ test fontchooser-2.1 {fontchooser -title (cyrillic)} -constraints scriptImpl -bo
         Click cancel
     }
     set x
-} -result "\u041f\u0440\u0438\u0432\u0435\u0442"
+} -result "Привет"
 
 test fontchooser-3.0 {fontchooser -parent} -constraints scriptImpl -body {
     start {

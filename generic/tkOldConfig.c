@@ -5,14 +5,24 @@
  *	FOR BACKWARD COMPATIBILITY; THE NEW CONFIGURATION PACKAGE SHOULD BE
  *	USED FOR NEW PROJECTS.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
 #include "tkInt.h"
+
+/*
+ * Values for "flags" field of Tk_ConfigSpec structures. Be sure to coordinate
+ * these values with those defined in tk.h (TK_CONFIG_COLOR_ONLY, etc.) There
+ * must not be overlap!
+ */
+
+#ifndef TK_CONFIG_OPTION_SPECIFIED
+#  define TK_CONFIG_OPTION_SPECIFIED      (1 << 4)
+#endif
 
 #ifdef _WIN32
 #include "tkWinInt.h"
@@ -24,18 +34,18 @@
 
 static int		DoConfig(Tcl_Interp *interp, Tk_Window tkwin,
 			    Tk_ConfigSpec *specPtr, Tk_Uid value,
-			    int valueIsUid, char *widgRec);
+			    int valueIsUid, void *widgRec);
 static Tk_ConfigSpec *	FindConfigSpec(Tcl_Interp *interp,
 			    Tk_ConfigSpec *specs, const char *argvName,
 			    int needFlags, int hateFlags);
 static char *		FormatConfigInfo(Tcl_Interp *interp, Tk_Window tkwin,
-			    const Tk_ConfigSpec *specPtr, char *widgRec);
+			    const Tk_ConfigSpec *specPtr, void *widgRec);
 static const char *	FormatConfigValue(Tcl_Interp *interp, Tk_Window tkwin,
-			    const Tk_ConfigSpec *specPtr, char *widgRec,
+			    const Tk_ConfigSpec *specPtr, void *widgRec,
 			    char *buffer, Tcl_FreeProc **freeProcPtr);
 static Tk_ConfigSpec *	GetCachedSpecs(Tcl_Interp *interp,
 			    const Tk_ConfigSpec *staticSpecs);
-static void		DeleteSpecCacheTable(ClientData clientData,
+static void		DeleteSpecCacheTable(void *clientData,
 			    Tcl_Interp *interp);
 
 /*
@@ -51,7 +61,7 @@ static void		DeleteSpecCacheTable(ClientData clientData,
  *	will hold an error message.
  *
  * Side effects:
- *	The fields of widgRec get filled in with information from argc/argv
+ *	The fields of widgRec get filled in with information from objc/objv
  *	and the option database. Old information in widgRec's fields gets
  *	recycled. A copy of the spec-table is taken with (some of) the char*
  *	fields converted into Tk_Uid fields; this copy will be released when
@@ -66,9 +76,9 @@ Tk_ConfigureWidget(
     Tk_Window tkwin,		/* Window containing widget (needed to set up
 				 * X resources). */
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    int argc,			/* Number of elements in argv. */
-    const char **argv,		/* Command-line options. */
-    char *widgRec,		/* Record whose fields are to be modified.
+    Tcl_Size objc,			/* Number of elements in objv. */
+    Tcl_Obj *const *objv,		/* Command-line options. */
+    void *widgRec,		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
     int flags)			/* Used to specify additional flags that must
 				 * be present in config specs for them to be
@@ -88,8 +98,8 @@ Tk_ConfigureWidget(
 	 * we're on our way out of the application
 	 */
 
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", -1));
-	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("NULL main window", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "NO_MAIN_WINDOW", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -115,14 +125,10 @@ Tk_ConfigureWidget(
      * match entries in the specs.
      */
 
-    for ( ; argc > 0; argc -= 2, argv += 2) {
+    for ( ; objc > 0; objc -= 2, objv += 2) {
 	const char *arg;
 
-	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetString((Tcl_Obj *) *argv);
-	} else {
-	    arg = *argv;
-	}
+	arg = Tcl_GetString(*objv);
 	specPtr = FindConfigSpec(interp, staticSpecs, arg, needFlags, hateFlags);
 	if (specPtr == NULL) {
 	    return TCL_ERROR;
@@ -132,17 +138,13 @@ Tk_ConfigureWidget(
 	 * Process the entry.
 	 */
 
-	if (argc < 2) {
+	if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", arg));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE_MISSING", (char *)NULL);
 	    return TCL_ERROR;
 	}
-	if (flags & TK_CONFIG_OBJS) {
-	    arg = Tcl_GetString((Tcl_Obj *) argv[1]);
-	} else {
-	    arg = argv[1];
-	}
+	arg = Tcl_GetString(objv[1]);
 	if (DoConfig(interp, tkwin, specPtr, arg, 0, widgRec) != TCL_OK) {
 	    Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 		    "\n    (processing \"%.40s\" option)",specPtr->argvName));
@@ -265,7 +267,7 @@ FindConfigSpec(
 	if (matchPtr != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "ambiguous option \"%s\"", argvName));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, (char *)NULL);
 	    return NULL;
 	}
 	matchPtr = specPtr;
@@ -274,7 +276,7 @@ FindConfigSpec(
     if (matchPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"unknown option \"%s\"", argvName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName, (char *)NULL);
 	return NULL;
     }
 
@@ -292,7 +294,7 @@ FindConfigSpec(
 			"couldn't find synonym for option \"%s\"",
 			argvName));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "OPTION", argvName,
-			NULL);
+			(char *)NULL);
 		return NULL;
 	    }
 	    if ((specPtr->dbName == matchPtr->dbName)
@@ -333,15 +335,15 @@ DoConfig(
     Tk_Uid value,		/* Value to use to fill in widgRec. */
     int valueIsUid,		/* Non-zero means value is a Tk_Uid; zero
 				 * means it's an ordinary string. */
-    char *widgRec)		/* Record whose fields are to be modified.
+    void *widgRec)		/* Record whose fields are to be modified.
 				 * Values must be properly initialized. */
 {
-    char *ptr;
+    void *ptr;
     Tk_Uid uid;
     int nullValue;
 
     nullValue = 0;
-    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|32 /* TCL_NULL_OK */))) {
+    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK))) {
 	nullValue = 1;
     }
 
@@ -349,7 +351,7 @@ DoConfig(
 	if (specPtr->offset < 0) {
 	    break;
 	}
-	ptr = widgRec + specPtr->offset;
+	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
 	    if (Tcl_GetBoolean(interp, value, (int *) ptr) != TCL_OK) {
@@ -542,14 +544,14 @@ DoConfig(
 	}
 	case TK_CONFIG_CUSTOM:
 	    if (specPtr->customPtr->parseProc(specPtr->customPtr->clientData,
-		    interp, tkwin, value, widgRec, specPtr->offset)!=TCL_OK) {
+		    interp, tkwin, value, (char *)widgRec, specPtr->offset)!=TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	default:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad config table: unknown type %d", specPtr->type));
-	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "BAD_CONFIG", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	specPtr++;
@@ -590,7 +592,7 @@ Tk_ConfigureInfo(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
     const Tk_ConfigSpec *specs, /* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* If non-NULL, indicates a single option
 				 * whose info is to be returned. Otherwise
@@ -630,7 +632,7 @@ Tk_ConfigureInfo(
 	    return TCL_ERROR;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(list, TCL_INDEX_NONE));
 	ckfree(list);
 	return TCL_OK;
     }
@@ -652,7 +654,7 @@ Tk_ConfigureInfo(
 	    continue;
 	}
 	list = FormatConfigInfo(interp, tkwin, specPtr, widgRec);
-	Tcl_AppendResult(interp, leader, list, "}", NULL);
+	Tcl_AppendResult(interp, leader, list, "}", (char *)NULL);
 	ckfree(list);
 	leader = " {";
     }
@@ -685,7 +687,7 @@ FormatConfigInfo(
     const Tk_ConfigSpec *specPtr,
 				/* Pointer to information describing
 				 * option. */
-    char *widgRec)		/* Pointer to record holding current values of
+    void *widgRec)		/* Pointer to record holding current values of
 				 * info for widget. */
 {
     const char *argv[6];
@@ -717,9 +719,9 @@ FormatConfigInfo(
     result = Tcl_Merge(5, argv);
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((char *) argv[4]);
+	    ckfree((char *)argv[4]);
 	} else {
-	    freeProc((char *) argv[4]);
+	    freeProc((char *)argv[4]);
 	}
     }
     return result;
@@ -751,7 +753,7 @@ FormatConfigValue(
     Tk_Window tkwin,		/* Window corresponding to widget. */
     const Tk_ConfigSpec *specPtr, /* Pointer to information describing option.
 				 * Must not point to a synonym option. */
-    char *widgRec,		/* Pointer to record holding current values of
+    void *widgRec,		/* Pointer to record holding current values of
 				 * info for widget. */
     char *buffer,		/* Static buffer to use for small values.
 				 * Must have at least 200 bytes of storage. */
@@ -766,7 +768,7 @@ FormatConfigValue(
     if (specPtr->offset < 0) {
 	return NULL;
     }
-    ptr = widgRec + specPtr->offset;
+    ptr = (char *)widgRec + specPtr->offset;
     result = "";
     switch (specPtr->type) {
     case TK_CONFIG_BOOLEAN:
@@ -871,7 +873,7 @@ FormatConfigValue(
     }
     case TK_CONFIG_CUSTOM:
 	result = specPtr->customPtr->printProc(specPtr->customPtr->clientData,
-		tkwin, widgRec, specPtr->offset, freeProcPtr);
+		tkwin, (char *)widgRec, specPtr->offset, freeProcPtr);
 	break;
     default:
 	result = "?? unknown type ??";
@@ -904,7 +906,7 @@ Tk_ConfigureValue(
     Tcl_Interp *interp,		/* Interpreter for error reporting. */
     Tk_Window tkwin,		/* Window corresponding to widgRec. */
     const Tk_ConfigSpec *specs, /* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     const char *argvName,	/* Gives the command-line name for the option
 				 * whose value is to be returned. */
@@ -937,12 +939,12 @@ Tk_ConfigureValue(
     }
     result = FormatConfigValue(interp, tkwin, specPtr, widgRec, buffer,
 	    &freeProc);
-    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, -1));
+    Tcl_SetObjResult(interp, Tcl_NewStringObj(result, TCL_INDEX_NONE));
     if (freeProc != NULL) {
 	if (freeProc == TCL_DYNAMIC) {
-	    ckfree((char *) result);
+	    ckfree((char *)result);
 	} else {
-	    freeProc((char *) result);
+	    freeProc((char *)result);
 	}
     }
     return TCL_OK;
@@ -972,7 +974,7 @@ Tk_ConfigureValue(
 void
 Tk_FreeOptions(
     const Tk_ConfigSpec *specs,	/* Describes legal options. */
-    char *widgRec,		/* Record whose fields contain current values
+    void *widgRec,		/* Record whose fields contain current values
 				 * for options. */
     Display *display,		/* X display; needed for freeing some
 				 * resources. */
@@ -990,7 +992,7 @@ Tk_FreeOptions(
 	if (specPtr->offset < 0) {
 	    continue;
 	}
-	ptr = widgRec + specPtr->offset;
+	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_STRING:
 	    if (*((char **) ptr) != NULL) {
@@ -1156,7 +1158,7 @@ GetCachedSpecs(
 
 static void
 DeleteSpecCacheTable(
-    ClientData clientData,
+    void *clientData,
     TCL_UNUSED(Tcl_Interp *))
 {
     Tcl_HashTable *tablePtr = (Tcl_HashTable *)clientData;

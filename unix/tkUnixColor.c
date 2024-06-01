@@ -4,7 +4,7 @@
  *	This file contains the platform specific color routines needed for X
  *	support.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -185,7 +185,7 @@ TkpGetColor(
 	}
     }
 
-    tkColPtr = ckalloc(sizeof(TkColor));
+    tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
     tkColPtr->color = color;
 
     return tkColPtr;
@@ -220,7 +220,7 @@ TkpGetColorByValue(
 {
     Display *display = Tk_Display(tkwin);
     Colormap colormap = Tk_Colormap(tkwin);
-    TkColor *tkColPtr = ckalloc(sizeof(TkColor));
+    TkColor *tkColPtr = (TkColor *)ckalloc(sizeof(TkColor));
 
     tkColPtr->color.red = colorPtr->red;
     tkColPtr->color.green = colorPtr->green;
@@ -269,7 +269,7 @@ FindClosestColor(
     XColor *colorPtr;
     TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
     Colormap colormap = Tk_Colormap(tkwin);
-    XVisualInfo template, *visInfoPtr;
+    XVisualInfo templ, *visInfoPtr;
 
     /*
      * Find the TkStressedCmap structure for this colormap, or create a new
@@ -278,20 +278,20 @@ FindClosestColor(
 
     for (stressPtr = dispPtr->stressPtr; ; stressPtr = stressPtr->nextPtr) {
 	if (stressPtr == NULL) {
-	    stressPtr = ckalloc(sizeof(TkStressedCmap));
+	    stressPtr = (TkStressedCmap *)ckalloc(sizeof(TkStressedCmap));
 	    stressPtr->colormap = colormap;
-	    template.visualid = XVisualIDFromVisual(Tk_Visual(tkwin));
+	    templ.visualid = XVisualIDFromVisual(Tk_Visual(tkwin));
 
 	    visInfoPtr = XGetVisualInfo(Tk_Display(tkwin),
-		    VisualIDMask, &template, &numFound);
+		    VisualIDMask, &templ, &numFound);
 	    if (numFound < 1) {
 		Tcl_Panic("FindClosestColor couldn't lookup visual");
 	    }
 
 	    stressPtr->numColors = visInfoPtr->colormap_size;
-	    XFree((char *) visInfoPtr);
-	    stressPtr->colorPtr =
-		    ckalloc(stressPtr->numColors * sizeof(XColor));
+	    XFree(visInfoPtr);
+	    stressPtr->colorPtr = (XColor *)
+		    ckalloc((size_t)stressPtr->numColors * sizeof(XColor));
 	    for (i = 0; i < stressPtr->numColors; i++) {
 		stressPtr->colorPtr[i].pixel = (unsigned long) i;
 	    }
@@ -423,6 +423,7 @@ DeleteStressedCmap(
  *----------------------------------------------------------------------
  */
 
+#undef TkpCmapStressed
 int
 TkpCmapStressed(
     Tk_Window tkwin,		/* Window that identifies the display

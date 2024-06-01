@@ -15,9 +15,10 @@ Tk_ImageChanged \- notify widgets that image needs to be redrawn
 \fB#include <tk.h>\fR
 .sp
 \fBTk_ImageChanged\fR(\fImodel, x, y, width, height, imageWidth, imageHeight\fR)
+.fi
 .SH ARGUMENTS
-.AS Tk_ImageMaster imageHeight
-.AP Tk_ImageMaster model in
+.AS Tk_ImageModel imageHeight
+.AP Tk_ImageModel model in
 Token for image, which was passed to image's \fIcreateProc\fR when
 the image was created.
 .AP int x in
@@ -47,10 +48,6 @@ The \fImodel\fR argument identifies the image, and
 specify a rectangular region within the image that needs to
 be redrawn.
 \fIimageWidth\fR and \fIimageHeight\fR specify the image's (new) size.
-.PP
-.VS "TIP 581"
-\fITk_ImageModel\fR is synonym for \fITk_ImageMaster\fR
-.VE "TIP 581"
 .PP
 An image manager should call \fBTk_ImageChanged\fR during
 its \fIcreateProc\fR to specify the image's initial size and to

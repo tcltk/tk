@@ -1,0 +1,65 @@
+'\"
+'\" Copyright (c) 1990-1993 The Regents of the University of California.
+'\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
+'\"
+'\" See the file "license.terms" for information on usage and redistribution
+'\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
+'\"
+.TH Tk_ConfigureWindow 3 4.0 Tk "Tk Library Procedures"
+.so man.macros
+.BS
+.SH NAME
+Tk_GetOtherWindow, Tk_MakeContainer, Tk_MakeWindow, Tk_UseWindow \- window utility functions
+.SH SYNOPSIS
+.nf
+\fB#include <tk.h>\fR
+.sp
+Tk_Window
+\fBTk_GetOtherWindow\fR(\fItkwin\fR)
+.sp
+\fBTk_MakeContainer\fR(\fItkwin\fR)
+.sp
+\fBTk_MakeWindow\fR(\fItkwin, parent\fR)
+.sp
+int
+\fBTk_UseWindow\fR(\fIinterp, tkwin, string\fR)
+.fi
+.SH ARGUMENTS
+.AS XSetWindowAttributes borderWidth
+.AP Tcl_Interp * interp in
+Interpreter associated with the application.
+.AP Tk_Window tkwin in
+Token for window.
+.AP Window parent in
+Parent window.
+.AP "const char" *string in
+String identifying an X window to use for \fItkwin\fR; must be an integer value.
+.BE
+.SH DESCRIPTION
+.PP
+If both the container and embedded window are in the same process,
+\fBTk_GetOtherWindow\fR will return either one, given the other.
+If winPtr is a container, the return value is the token for the
+embedded window, and vice versa. If the "other" window isn't in this
+process, NULL is returned.
+.PP
+\fBTk_MakeContainer\fR is called to indicate that a particular window will be a
+container for an embedded application. This changes certain aspects of
+the window's behavior, such as whether it will receive events anymore.
+.PP
+\fBTk_MakeWindow\fR creates an actual window system window object based on the
+current attributes of the specified TkWindow. It returns the handle to the new
+window, or None on failure.
+.PP
+\fBTk_UseWindow\fR causes a Tk window to use a given X window as its
+parent window, rather than the root window for the screen. It is
+invoked by an embedded application to specify the window in which it
+is embedded.
+.PP
+The return value is normally TCL_OK. If an error occurs (such as
+string not being a valid window spec), then the return value is
+TCL_ERROR and an error message is left in the interp's result if
+interp is non-NULL.
+.PP
+.SH KEYWORDS
+parent, window

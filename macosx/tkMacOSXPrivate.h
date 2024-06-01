@@ -25,7 +25,9 @@
 #endif
 
 #define TextStyle MacTextStyle
+#define Cursor QDCursor
 #import <ApplicationServices/ApplicationServices.h>
+#undef Cursor
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
@@ -214,8 +216,8 @@ typedef struct TkMacOSXDrawingContext {
  * Prototypes for TkMacOSXRegion.c.
  */
 
-MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(TkRegion r);
-MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(TkRegion r,
+MODULE_SCOPE HIShapeRef	TkMacOSXGetNativeRegion(Region r);
+MODULE_SCOPE void	TkMacOSXSetWithNativeRegion(Region r,
 			    HIShapeRef rgn);
 MODULE_SCOPE OSStatus	TkMacOSHIShapeDifferenceWithRect(
 			    HIMutableShapeRef inShape, const CGRect *inRect);
@@ -246,9 +248,9 @@ MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
-#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)TkMacOSXDrawable(drawable))
+#define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
-MODULE_SCOPE CGContextRef TkMacOSXGetCGContextForDrawable(Drawable drawable);
+#define TkMacOSXGetCGContextForDrawable(drawable) ((CGContextRef)Tk_MacOSXGetCGContextForDrawable(drawable))
 MODULE_SCOPE void	TkMacOSXWinCGBounds(TkWindow *winPtr, CGRect *bounds);
 MODULE_SCOPE HIShapeRef	TkMacOSXGetClipRgn(Drawable drawable);
 MODULE_SCOPE void	TkMacOSXInvalidateViewRegion(NSView *view,
@@ -266,16 +268,22 @@ MODULE_SCOPE void	TkMacOSXApplyWindowAttributes(TkWindow *winPtr,
 			    NSWindow *macWindow);
 MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXStandardAboutPanelObjCmd;
 MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXIconBitmapObjCmd;
+MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXNSImageObjCmd;
 MODULE_SCOPE void       TkMacOSXDrawSolidBorder(Tk_Window tkwin, GC gc,
 			    int inset, int thickness);
 MODULE_SCOPE int 	TkMacOSXServices_Init(Tcl_Interp *interp);
 MODULE_SCOPE Tcl_ObjCmdProc TkMacOSXRegisterServiceWidgetObjCmd;
 MODULE_SCOPE unsigned   TkMacOSXAddVirtual(unsigned int keycode);
+MODULE_SCOPE int 	TkMacOSXNSImage_Init(Tcl_Interp *interp);
 MODULE_SCOPE void       TkMacOSXWinNSBounds(TkWindow *winPtr, NSView *view,
 					    NSRect *bounds);
 MODULE_SCOPE Bool       TkMacOSXInDarkMode(Tk_Window tkwin);
 MODULE_SCOPE void	TkMacOSXDrawAllViews(void *clientData);
+MODULE_SCOPE NSColor*   controlAccentColor(void);
+MODULE_SCOPE void       Ttk_MacOSXInit(void);
 MODULE_SCOPE unsigned long TkMacOSXClearPixel(void);
+MODULE_SCOPE int MacSystrayInit(Tcl_Interp *);
+MODULE_SCOPE int MacPrint_Init(Tcl_Interp *);
 MODULE_SCOPE NSString*  TkMacOSXOSTypeToUTI(OSType ostype);
 MODULE_SCOPE NSImage*   TkMacOSXIconForFileType(NSString *filetype);
 
@@ -308,26 +316,9 @@ VISIBILITY_HIDDEN
     NSArray *_defaultApplicationMenuItems, *_defaultWindowsMenuItems;
     NSArray *_defaultHelpMenuItems, *_defaultFileMenuItems;
     NSAutoreleasePool *_mainPool;
-    NSThread *_backgoundLoop;
-
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    int _poolLock;
-    int _macOSVersion;  /* 10000 * major + 100*minor */
-    Bool _isDrawing;
-    Bool _needsToDraw;
-    Bool _tkLiveResizeEnded;
-    TkWindow *_tkPointerWindow;
-    TkWindow *_tkEventTarget;
-    TkWindow *_tkDragTarget;
-    unsigned int _tkButtonState;
-#endif
-
 }
 @property int poolLock;
 @property int macOSVersion;
-@property Bool isDrawing;
-@property Bool needsToDraw;
 @property Bool tkLiveResizeEnded;
 
 /*
@@ -444,10 +435,6 @@ VISIBILITY_HIDDEN
 VISIBILITY_HIDDEN
 @interface TKWindow : NSWindow
 {
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end
@@ -459,24 +446,19 @@ VISIBILITY_HIDDEN
 @interface TKDrawerWindow : NSWindow
 {
     id _i1, _i2;
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end
 
 @interface TKPanel : NSPanel
 {
-#ifdef __i386__
-    /* The Objective C runtime used on i386 requires this. */
-    Window _tkWindow;
-#endif
 }
 @property Window tkWindow;
 @end
 
+@interface TKPanel(TKWm)
+- (void)    tkLayoutChanged;
+@end
 #pragma mark NSMenu & NSMenuItem Utilities
 
 @interface NSMenu(TKUtils)
@@ -550,18 +532,11 @@ VISIBILITY_HIDDEN
  *
  * TKNSString --
  *
- * When Tcl is compiled with TCL_UTF_MAX = 3 (the default for 8.6) it cannot
- * deal directly with UTF-8 encoded non-BMP characters, since their UTF-8
- * encoding requires 4 bytes. Instead, when using these versions of Tcl, Tk
- * uses the CESU-8 encoding internally.  This encoding is similar to UTF-8
- * except that it allows encoding surrogate characters as 3-byte sequences
- * using the same algorithm which UTF-8 uses for non-surrogates.  This means
- * that a non-BMP character is encoded as a string of length 6.  Apple's
- * NSString class does not provide a constructor which accepts a CESU-8 encoded
+ * Tcl uses modified UTF-8 as internal encoding.  Apple's NSString class
+ * does not provide a constructor which accepts a modified UTF-8 encoded
  * byte sequence as initial data.  So we add a new class which does provide
  * such a constructor.  It also has a DString property which is a DString whose
- * string pointer is a byte sequence encoding the NSString with the current Tk
- * encoding, namely UTF-8 if TCL_UTF_MAX >= 4 or CESU-8 if TCL_UTF_MAX = 3.
+ * string pointer is a byte sequence encoding the NSString with modified UTF-8.
  *
  *---------------------------------------------------------------------------
  */

@@ -4,7 +4,7 @@
  *	Declarations of types and functions used to implement the scrollbar
  *	widget.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -93,21 +93,9 @@ typedef struct TkScrollbar {
      * form (totalUnits, windowUnits, firstUnit, and lastUnit), or the "new"
      * form (firstFraction and lastFraction). FirstFraction and lastFraction
      * will always be valid, but the old-style information is only valid if
-     * the NEW_STYLE_COMMANDS flag is 0.
+     * the OLD_STYLE_COMMANDS flag is 1.
      */
 
-    int totalUnits;		/* Total dimension of application, in units.
-				 * Valid only if the NEW_STYLE_COMMANDS flag
-				 * isn't set. */
-    int windowUnits;		/* Maximum number of units that can be
-				 * displayed in the window at once. Valid only
-				 * if the NEW_STYLE_COMMANDS flag isn't set. */
-    int firstUnit;		/* Number of last unit visible in
-				 * application's window. Valid only if the
-				 * NEW_STYLE_COMMANDS flag isn't set. */
-    int lastUnit;		/* Index of last unit visible in window.
-				 * Valid only if the NEW_STYLE_COMMANDS flag
-				 * isn't set. */
     double firstFraction;	/* Position of first visible thing in window,
 				 * specified as a fraction between 0 and
 				 * 1.0. */
@@ -144,16 +132,15 @@ typedef struct TkScrollbar {
  *
  * REDRAW_PENDING:		Non-zero means a DoWhenIdle handler has
  *				already been queued to redraw this window.
- * NEW_STYLE_COMMANDS:		Non-zero means the new style of commands
+ * OLD_STYLE_COMMANDS:		Non-zero means the old style of commands
  *				should be used to communicate with the widget:
- *				".t yview scroll 2 lines", instead of
- *				".t yview 40", for example.
+ *				".t yview 40", instead of
+ *				".t yview scroll 2 lines", for example.
  * GOT_FOCUS:			Non-zero means this window has the input
  *				focus.
  */
 
 #define REDRAW_PENDING		1
-#define NEW_STYLE_COMMANDS	2
 #define GOT_FOCUS		4
 
 /*
@@ -169,13 +156,13 @@ MODULE_SCOPE char tkDefScrollbarWidth[TCL_INTEGER_SPACE];
  * widget.
  */
 
-MODULE_SCOPE void	TkScrollbarEventProc(ClientData clientData,
+MODULE_SCOPE void	TkScrollbarEventProc(void *clientData,
 			    XEvent *eventPtr);
 MODULE_SCOPE void	TkScrollbarEventuallyRedraw(TkScrollbar *scrollPtr);
 MODULE_SCOPE void	TkpComputeScrollbarGeometry(TkScrollbar *scrollPtr);
 MODULE_SCOPE TkScrollbar *TkpCreateScrollbar(Tk_Window tkwin);
 MODULE_SCOPE void 	TkpDestroyScrollbar(TkScrollbar *scrollPtr);
-MODULE_SCOPE void	TkpDisplayScrollbar(ClientData clientData);
+MODULE_SCOPE void	TkpDisplayScrollbar(void *clientData);
 MODULE_SCOPE void	TkpConfigureScrollbar(TkScrollbar *scrollPtr);
 MODULE_SCOPE int	TkpScrollbarPosition(TkScrollbar *scrollPtr,
 			    int x, int y);
