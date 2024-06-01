@@ -28,7 +28,7 @@ test scrollbar-swapout-2 "... regardless of whether -style ..." \
     coreScrollbar
 } -body {
     ttk::style layout Vertical.Custom.TScrollbar \
-    	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
+	[ttk::style layout Vertical.TScrollbar] ; # See #1833339
     ttk::scrollbar .sb -command "yadda" -style Custom.TScrollbar
     list [winfo class .sb] [.sb cget -command] [.sb cget -style]
 } -result [list TScrollbar yadda Custom.TScrollbar] -cleanup {
@@ -76,7 +76,7 @@ test scrollbar-1.3 "Change orientation" -body {
 #
 
 test scale-1.0 "Self-destruction" -body {
-    trace variable v w { destroy .s ;# }
+    trace add variable v write { destroy .s ;# }
     ttk::scale .s -variable v
     pack .s ; update
     .s set 1 ; update

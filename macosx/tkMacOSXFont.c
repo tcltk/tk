@@ -4,9 +4,9 @@
  *	Contains the Macintosh implementation of the platform-independent font
  *	package interface.
  *
- * Copyright (c) 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2008-2009 Apple Inc.
+ * Copyright © 2002-2004 Benjamin Riefenstahl, Benjamin.Riefenstahl@epost.de
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -47,7 +47,7 @@ typedef struct {
 #define MENUITEMFONT_NAME	"menu"
 
 struct SystemFontMapEntry {
-    const ThemeFontID id;
+    ThemeFontID id;
     const char *systemName;
     const char *tkName;
     const char *tkName1;
@@ -74,7 +74,7 @@ static const struct SystemFontMapEntry systemFontMap[] = {
     ThemeFont(MiniSystem, NULL, NULL),
     { kThemeSystemFontDetail,		"systemDetailSystemFont", NULL, NULL },
     { kThemeSystemFontDetailEmphasized,	"systemDetailEmphasizedSystemFont", NULL, NULL },
-    { -1, NULL, NULL, NULL }
+    { (ThemeFontID)-1, NULL, NULL, NULL }
 };
 #undef ThemeFont
 
@@ -171,10 +171,8 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     return _ds;
 }
 
-#ifndef __clang__
 @synthesize UTF8String = _UTF8String;
 @synthesize DString = _ds;
-#endif
 @end
 
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
@@ -349,9 +347,9 @@ InitFont(
     nsFont = [nsFont screenFontWithRenderingMode:renderingMode];
     GetTkFontAttributesForNSFont(nsFont, faPtr);
     fmPtr = &fontPtr->font.fm;
-    fmPtr->ascent = floor([nsFont ascender] + [nsFont leading] + 0.5);
-    fmPtr->descent = floor(-[nsFont descender] + 0.5);
-    fmPtr->maxWidth = [nsFont maximumAdvancement].width;
+    fmPtr->ascent = (int)floor([nsFont ascender] + [nsFont leading] + 0.5);
+    fmPtr->descent = (int)floor(-[nsFont descender] + 0.5);
+    fmPtr->maxWidth = (int)[nsFont maximumAdvancement].width;
     fmPtr->fixed = [nsFont isFixedPitch];   /* Does not work for all fonts */
 
     /*
@@ -369,8 +367,8 @@ InitFont(
 	kern = [nsFont advancementForGlyph:glyphs[2]].width -
 		[fontPtr->nsFont advancementForGlyph:glyphs[2]].width;
     }
-    descent = floor(-bounds.origin.y + 0.5);
-    ascent = floor(bounds.size.height + bounds.origin.y + 0.5);
+    descent = (int)floor(-bounds.origin.y + 0.5);
+    ascent = (int)floor(bounds.size.height + bounds.origin.y + 0.5);
     if (ascent > fmPtr->ascent) {
 	fmPtr->ascent = ascent;
     }
@@ -614,7 +612,7 @@ TkpGetFontFromAttributes(
 				/* Set of attributes to match. */
 {
     MacFont *fontPtr;
-    int points = (int) (TkFontGetPoints(tkwin, faPtr->size) + 0.5);
+    CGFloat points = floor(TkFontGetPoints(tkwin, faPtr->size) + 0.5);
     NSFontTraitMask traits = GetNSFontTraitsFromTkFontAttributes(faPtr);
     NSInteger weight = (faPtr->weight == TK_FW_BOLD ? 9 : 5);
     NSFont *nsFont;
@@ -636,7 +634,7 @@ TkpGetFontFromAttributes(
     if (tkFontPtr == NULL) {
 	fontPtr = (MacFont *)ckalloc(sizeof(MacFont));
     } else {
-	fontPtr = (MacFont *) tkFontPtr;
+	fontPtr = (MacFont *)tkFontPtr;
 	TkpDeleteFont(tkFontPtr);
     }
     CFRetain(nsFont); /* Always needed to allow unconditional CFRelease below */
@@ -771,7 +769,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,	 		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -948,9 +946,9 @@ TkpMeasureCharsInContext(
 	double maxWidth = maxLength + offset;
 	NSCharacterSet *cs;
 
-        /*
-         * Get a line breakpoint in the source string.
-         */
+	/*
+	 * Get a line breakpoint in the source string.
+	 */
 
 	index = start;
 	if (flags & TK_WHOLE_WORDS) {
@@ -963,9 +961,9 @@ TkpMeasureCharsInContext(
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
 
-        /*
-         * Trim right whitespace/lineending characters.
-         */
+	/*
+	 * Trim right whitespace/lineending characters.
+	 */
 
 	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
@@ -974,29 +972,29 @@ TkpMeasureCharsInContext(
 	    index--;
 	}
 
-        /*
-         * If there is no line breakpoint in the source string between its
-         * start and the index position that fits in maxWidth, then
-         * CTTypesetterSuggestLineBreak() returns that very last index.
-         * However if the TK_WHOLE_WORDS flag is set, we want to break at a
-         * word boundary. In this situation, unless TK_AT_LEAST_ONE is set, we
-         * must report that zero chars actually fit (in other words the
-         * smallest word of the source string is still larger than maxWidth).
-         */
+	/*
+	 * If there is no line breakpoint in the source string between its
+	 * start and the index position that fits in maxWidth, then
+	 * CTTypesetterSuggestLineBreak() returns that very last index.
+	 * However if the TK_WHOLE_WORDS flag is set, we want to break at a
+	 * word boundary. In this situation, unless TK_AT_LEAST_ONE is set, we
+	 * must report that zero chars actually fit (in other words the
+	 * smallest word of the source string is still larger than maxWidth).
+	 */
 
-        if ((index >= start) && (index < len) &&
-                (flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
-                ![cs characterIsMember:[string characterAtIndex:index]]) {
-            index = start;
-        }
+	if ((index >= start) && (index < len) &&
+		(flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
+		![cs characterIsMember:[string characterAtIndex:index]]) {
+	    index = start;
+	}
 
 	if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 	    index = start + 1;
 	}
 
-        /*
-         * Now measure the string width in pixels.
-         */
+	/*
+	 * Now measure the string width in pixels.
+	 */
 
 	if (index > 0) {
 	    range.length = index;
@@ -1013,7 +1011,7 @@ TkpMeasureCharsInContext(
 	    CFRelease(line);
 	}
 
-        /*
+	/*
 	 * The call to CTTypesetterSuggestClusterBreak above will always return
 	 * at least one character regardless of whether it exceeded it or not.
 	 * Clean that up now.
@@ -1189,14 +1187,14 @@ TkpDrawAngledCharsInContext(
     MacDrawable *macWin = (MacDrawable *)drawable;
     TkMacOSXDrawingContext drawingContext;
     CGContextRef context;
-    CGColorRef fg;
+    CGColorRef fg = NULL;
     NSFont *nsFont;
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
-    if (rangeStart < 0 || rangeLength <= 0  ||
-	rangeStart + rangeLength > numBytes ||
-	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
+    if (rangeStart < 0 || rangeLength <= 0
+	    || rangeStart + rangeLength > numBytes
+	    || !TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
@@ -1207,8 +1205,10 @@ TkpDrawAngledCharsInContext(
     context = drawingContext.context;
     TkSetMacColor(gc->foreground, &fg);
     attributes = [fontPtr->nsAttributes mutableCopy];
-    [attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
-    CFRelease(fg);
+    if (fg) {
+	[attributes setObject:(id)fg forKey:(id)kCTForegroundColorAttributeName];
+	CGColorRelease(fg);
+    }
     nsFont = [attributes objectForKey:NSFontAttributeName];
     [nsFont setInContext:GET_NSCONTEXT(context, NO)];
     CGContextSetTextMatrix(context, CGAffineTransformIdentity);
@@ -1224,9 +1224,9 @@ TkpDrawAngledCharsInContext(
     t = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
     if (angle != 0.0) {
 	t = CGAffineTransformTranslate(
-             CGAffineTransformRotate(
-                 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
-             -textX, -textY);
+	     CGAffineTransformRotate(
+		 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
+	     -textX, -textY);
     }
     CGContextConcatCTM(context, t);
     start = Tcl_NumUtfChars(source, rangeStart);
@@ -1321,6 +1321,7 @@ TkMacOSXNSFontAttributesForFont(
  *---------------------------------------------------------------------------
  */
 
+#undef TkMacOSXIsCharacterMissing
 int
 TkMacOSXIsCharacterMissing(
     TCL_UNUSED(Tk_Font),		/* The font we are looking in. */
@@ -1363,7 +1364,7 @@ TkMacOSXFontDescriptionForNSFontAndNSFontAttributes(
 		NSStrikethroughStyleAttributeName];
 
 	objv[i++] = Tcl_NewStringObj(familyName, -1);
-	objv[i++] = Tcl_NewWideIntObj([nsFont pointSize]);
+	objv[i++] = Tcl_NewWideIntObj((Tcl_WideInt)floor([nsFont pointSize] + 0.5));
 #define S(s)    Tcl_NewStringObj(STRINGIFY(s), (sizeof(STRINGIFY(s))-1))
 	objv[i++] = (traits & NSBoldFontMask)	? S(bold)   : S(normal);
 	objv[i++] = (traits & NSItalicFontMask)	? S(italic) : S(roman);

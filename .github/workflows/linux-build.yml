@@ -1,5 +1,12 @@
 name: Linux
-on: [push]
+on:
+  push:
+    branches:
+    - "main"
+    - "core-8-branch"
+    - "core-8-6-branch"
+    tags:
+    - "core-**"
 permissions:
   contents: read
 defaults:
@@ -16,28 +23,26 @@ jobs:
         compiler:
           - "gcc"
           - "clang"
-        symbols:
-          - "no"
-          - "mem"
-        disables:
+        config:
           - ""
           - "--disable-shared"
           - "--disable-xft"
           - "--disable-xss"
+          - "--enable-symbols"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout Tk
+        uses: actions/checkout@v4
         with:
           path: tk
-      - name: Checkout Tcl
-        uses: actions/checkout@v3
+      - name: Checkout Tcl 8.6
+        uses: actions/checkout@v4
         with:
           repository: tcltk/tcl
           ref: core-8-6-branch
           path: tcl
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.6-dev libxss-dev
+          sudo apt-get install tcl8.6-dev libxss-dev libxft-dev
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
@@ -46,10 +51,10 @@ jobs:
           echo "BUILD_CONFIG_ID=$OPTS" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: --enable-symbols=${{ matrix.symbols }} ${{ matrix.disables }}
+          CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
-          OPTS: ${{ matrix.compiler }}-${{ matrix.symbols }}${{ matrix.disables }}
-      - name: Configure (symbols=${{ matrix.symbols }} opts=${{ matrix.disables }})
+          OPTS: ${{ matrix.compiler }}${{ matrix.config }}
+      - name: Configure (opts=${{ matrix.config }})
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
@@ -87,21 +92,21 @@ jobs:
             exit 1
           }
       - name: Discover Version ID
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
         run: |
           cd /tmp/dist
           echo "VERSION=`ls -d tk* | sed 's/tk//'`" >> $GITHUB_ENV
       - name: Upload Source Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
-        uses: actions/upload-artifact@v2
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
+        uses: actions/upload-artifact@v4
         with:
           name: Tk ${{ env.VERSION }} Source distribution (snapshot)
           path: |
             /tmp/dist/tk*
             !/tmp/dist/tk*/html/**
       - name: Upload Documentation Distribution
-        if: ${{ env.BUILD_CONFIG_ID == 'gcc-no' }}
-        uses: actions/upload-artifact@v2
+        if: ${{ env.BUILD_CONFIG_ID == 'gcc' }}
+        uses: actions/upload-artifact@v4
         with:
           name: Tk ${{ env.VERSION }} HTML documentation (snapshot)
           path: /tmp/dist/tk*/html
@@ -111,26 +116,27 @@ jobs:
       matrix:
         compiler:
           - "gcc"
-        symbols:
-          - "no"
-          - "mem"
+        config:
+          - ""
+          - "--disable-xft"
+          - "--enable-symbols"
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Checkout Tk
+        uses: actions/checkout@v4
         with:
           path: tk
       - name: Setup Environment (compiler=${{ matrix.compiler }})
         run: |
-          sudo apt-get install tcl8.6-dev libxss-dev xvfb
+          sudo apt-get install tcl8.6-dev libxss-dev libxft-dev xvfb
           mkdir "$HOME/install dir"
           touch tk/doc/man.macros tk/generic/tkStubInit.c
           echo "CFGOPT=$CFGOPT --with-tcl=/usr/lib/tcl8.6" >> $GITHUB_ENV
           echo "CC=$COMPILER" >> $GITHUB_ENV
         working-directory: "."
         env:
-          CFGOPT: --enable-symbols=${{ matrix.symbols }}
+          CFGOPT: ${{ matrix.config }}
           COMPILER: ${{ matrix.compiler }}
-      - name: Configure (symbols=${{ matrix.symbols }})
+      - name: Configure ${{ matrix.config }}
         run: |
           ./configure $CFGOPT "--prefix=$HOME/install dir" || {
             cat config.log
@@ -155,3 +161,4 @@ jobs:
             echo "::error::Failure during Test"
             exit 1
           }
+        timeout-minutes: 10

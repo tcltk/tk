@@ -168,7 +168,7 @@ typedef struct TkTextSegment {
     int size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[TKFLEXARRAY];		/* Characters that make up character info.
+	char chars[TCL_UTF_MAX];	/* Characters that make up character info.
 				 * Actual length varies to hold as many
 				 * characters as needed.*/
 	TkTextToggle toggle;	/* Information about tag toggle. */
@@ -567,6 +567,7 @@ typedef struct TkSharedText {
 				 * start/end limits change, and means that any
 				 * cached TkTextIndex objects are no longer
 				 * valid. */
+    int imageCount;		/* Used for creating unique image names. */
 
     /*
      * Information related to the undo/redo functionality.

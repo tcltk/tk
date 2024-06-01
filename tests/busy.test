@@ -342,14 +342,14 @@ test busy-6.1 {tk busy status} -returnCodes error -body {
 } -result {wrong # args: should be "tk busy status window"}
 test busy-6.2 {tk busy status non existing window} -body {
     tk busy status .f
-} -result {0}
+} -result 0
 test busy-6.3 {tk busy status non busy window} -setup {
     pack [frame .f]
 } -body {
     tk busy status .f
 } -cleanup {
     destroy .f
-} -result {0}
+} -result 0
 test busy-6.4 {tk busy status busy window} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -359,7 +359,7 @@ test busy-6.4 {tk busy status busy window} -setup {
 } -cleanup {
     tk busy forget .f
     destroy .f
-} -result {1}
+} -result 1
 test busy-6.5 {tk busy status forgotten busy window} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -369,7 +369,7 @@ test busy-6.5 {tk busy status forgotten busy window} -setup {
     tk busy status .f
 } -cleanup {
     destroy .f
-} -result {0}
+} -result 0
 
 test busy-7.1 {tk busy current no busy} -body {
     tk busy current

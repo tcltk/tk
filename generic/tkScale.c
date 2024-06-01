@@ -11,7 +11,7 @@
  *
  * Copyright (c) 1990-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -21,8 +21,8 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#if defined(_WIN32)
-#define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
 
 /*
@@ -974,15 +974,15 @@ ComputeFormat(
 
     if (forTicks) {
 	if (fDigits <= eDigits) {
-	    sprintf(scalePtr->tickFormat, "%%.%df", afterDecimal);
+	    snprintf(scalePtr->tickFormat, sizeof(scalePtr->tickFormat), "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->tickFormat, "%%.%de", numDigits - 1);
+	    snprintf(scalePtr->tickFormat, sizeof(scalePtr->tickFormat), "%%.%de", numDigits - 1);
 	}
     } else {
 	if (fDigits <= eDigits) {
-	    sprintf(scalePtr->valueFormat, "%%.%df", afterDecimal);
+	    snprintf(scalePtr->valueFormat, sizeof(scalePtr->valueFormat), "%%.%df", afterDecimal);
 	} else {
-	    sprintf(scalePtr->valueFormat, "%%.%de", numDigits - 1);
+	    snprintf(scalePtr->valueFormat, sizeof(scalePtr->valueFormat), "%%.%de", numDigits - 1);
 	}
     }
 }

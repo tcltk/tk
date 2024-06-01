@@ -3,7 +3,7 @@
  *
  *	This module implements the UNIX platform-specific features of menus.
  *
- * Copyright (c) 1996-1998 by Sun Microsystems, Inc.
+ * Copyright (c) 1996-1998 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

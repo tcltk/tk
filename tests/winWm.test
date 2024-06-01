@@ -14,6 +14,7 @@ namespace import ::tcltest::*
 tcltest::configure {*}$argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnUbuntu [expr {![info exists ::env(CI)] || ![string match Linux $::tcl_platform(os)]}]
 testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
 
 test winWm-1.1 {TkWmMapWindow} -constraints win -setup {
@@ -246,7 +247,7 @@ test winWm-5.2 {UpdateGeometryInfo: menu resizing} -constraints win -setup {
     update
     set y [winfo rooty .t]
     lappend result [winfo height .t]
-    menu .t.m
+    menu .t.m -tearoff 1
     .t configure -menu .t.m
     .t.m add command -label foo
     .t.m add command -label "thisisreallylong"
@@ -275,7 +276,7 @@ test winWm-6.2 {wm attributes} -constraints win -setup {
     wm attributes .t -disabled
 } -cleanup {
     destroy .t
-} -result {0}
+} -result 0
 test winWm-6.3 {wm attributes} -constraints win -setup {
     destroy .t
 } -body {

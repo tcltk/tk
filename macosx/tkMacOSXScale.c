@@ -4,10 +4,10 @@
  *	This file implements the Macintosh specific portion of the
  *	scale widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2008-2009, Apple Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Scriptics Corporation.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2008-2009 Apple Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -287,6 +287,7 @@ TkpDisplayScale(
     SetControlVisibility(macScalePtr->scaleHandle, true, true);
     HiliteControl(macScalePtr->scaleHandle, 0);
     Draw1Control(macScalePtr->scaleHandle);
+
 done:
     scalePtr->flags &= ~REDRAW_ALL;
 }

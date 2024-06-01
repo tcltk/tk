@@ -32,12 +32,12 @@
 Atom
 XInternAtom(
     Display *display,
-    _Xconst char *atom_name,
-    Bool only_if_exists)
+    TCL_UNUSED(_Xconst char *),
+    TCL_UNUSED(Bool))
 {
     static Atom atom = XA_LAST_PREDEFINED;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     return ++atom;
 }
 
@@ -64,7 +64,7 @@ XGetVisualInfo(
     XVisualInfo *vinfo_template,
     int *nitems_return)
 {
-    XVisualInfo *info = ckalloc(sizeof(XVisualInfo));
+    XVisualInfo *info = (XVisualInfo *)ckalloc(sizeof(XVisualInfo));
 
     info->visual = DefaultVisual(display, 0);
     info->visualid = info->visual->visualid;

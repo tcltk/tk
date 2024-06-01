@@ -3,8 +3,7 @@
  */
 
 #include "tkInt.h"
-
-#include "ttkTheme.h"
+#include "ttkThemeInt.h"
 #include "ttkWidget.h"
 #include "ttkManager.h"
 
@@ -54,31 +53,31 @@ typedef struct
  * relevant to the tab.
  *
  * PaneOptionSpecs includes additional options for child window placement
- * and is used to configure the content window.
+ * and is used to configure the pane.
  */
 static Tk_OptionSpec TabOptionSpecs[] =
 {
     {TK_OPTION_STRING_TABLE, "-state", "", "",
-	"normal", -1,Tk_Offset(Tab,state),
+	"normal", -1, Tk_Offset(Tab,state),
 	TK_OPTION_ENUM_VAR, TabStateStrings, 0 },
     {TK_OPTION_STRING, "-text", "text", "Text", "",
-	Tk_Offset(Tab,textObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,textObj), -1, 0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-image", "image", "Image", NULL/*default*/,
-	Tk_Offset(Tab,imageObj), -1, TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,imageObj), -1, TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, Tk_Offset(Tab,compoundObj), -1,
 	TK_OPTION_NULL_OK, ttkCompoundStrings, GEOMETRY_CHANGED },
     {TK_OPTION_INT, "-underline", "underline", "Underline", "-1",
-	Tk_Offset(Tab,underlineObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,underlineObj), -1, 0, 0, GEOMETRY_CHANGED },
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
 };
 
 static Tk_OptionSpec PaneOptionSpecs[] =
 {
     {TK_OPTION_STRING, "-padding", "padding", "Padding", "0",
-	Tk_Offset(Tab,paddingObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,paddingObj), -1, 0, 0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-sticky", "sticky", "Sticky", "nsew",
-	Tk_Offset(Tab,stickyObj), -1, 0,0,GEOMETRY_CHANGED },
+	Tk_Offset(Tab,stickyObj), -1, 0, 0,GEOMETRY_CHANGED },
 
     WIDGET_INHERIT_OPTIONS(TabOptionSpecs)
 };
@@ -110,10 +109,10 @@ typedef struct
 
 static Tk_OptionSpec NotebookOptionSpecs[] =
 {
-    {TK_OPTION_INT, "-width", "width", "Width", "0",
+    {TK_OPTION_PIXELS, "-width", "width", "Width", "0",
 	Tk_Offset(Notebook,notebook.widthObj),-1,
 	0,0,GEOMETRY_CHANGED },
-    {TK_OPTION_INT, "-height", "height", "Height", "0",
+    {TK_OPTION_PIXELS, "-height", "height", "Height", "0",
 	Tk_Offset(Notebook,notebook.heightObj),-1,
 	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_STRING, "-padding", "padding", "Padding", NULL,
@@ -136,9 +135,11 @@ typedef struct
     Ttk_Padding 	padding;	/* External padding */
 } NotebookStyle;
 
-static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
+static void NotebookStyleOptions(
+    Notebook *nb, NotebookStyle *nbstyle, Tk_Window tkwin)
 {
     Tcl_Obj *objPtr;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     nbstyle->tabPosition = TTK_PACK_TOP | TTK_STICK_W;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabposition", 0)) != 0) {
@@ -160,6 +161,13 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 	TtkGetLabelAnchorFromObj(NULL, objPtr, &nbstyle->tabPlacement);
     }
 
+    /* Save the stick bit for later.  One of the values
+     * TTK_STICK_S, TTK_STICK_N, TTK_STICK_E, or TTK_STICK_W:
+     */
+    if (mainInfoPtr != NULL) {
+	mainInfoPtr->ttkNbTabsStickBit = (nbstyle->tabPlacement & 0x0f);
+    }
+
     /* Compute tabOrient as function of tabPlacement:
      */
     if (nbstyle->tabPlacement & (TTK_PACK_LEFT|TTK_PACK_RIGHT)) {
@@ -170,17 +178,17 @@ static void NotebookStyleOptions(Notebook *nb, NotebookStyle *nbstyle)
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabmargins", 0)) != 0) {
-	Ttk_GetBorderFromObj(NULL, objPtr, &nbstyle->tabMargins);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->tabMargins);
     }
 
     nbstyle->padding = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-padding", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL,nb->core.tkwin,objPtr,&nbstyle->padding);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->padding);
     }
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-mintabwidth", 0)) != 0) {
-	Tcl_GetIntFromObj(NULL, objPtr, &nbstyle->minTabWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, objPtr, &nbstyle->minTabWidth);
     }
 }
 
@@ -386,6 +394,7 @@ static void TabrowSize(
 static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 {
     Notebook *nb = (Notebook *)clientData;
+    Tk_Window nbwin = nb->core.tkwin;
     NotebookStyle nbstyle;
     Ttk_Padding padding;
     Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
@@ -394,7 +403,7 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 	tabrowWidth = 0, tabrowHeight = 0;
     int i;
 
-    NotebookStyleOptions(nb, &nbstyle);
+    NotebookStyleOptions(nb, &nbstyle, nbwin);
 
     /* Compute max requested size of all content windows:
      */
@@ -412,8 +421,8 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     /* Client width/height overridable by widget options:
      */
-    Tcl_GetIntFromObj(NULL, nb->notebook.widthObj,&reqWidth);
-    Tcl_GetIntFromObj(NULL, nb->notebook.heightObj,&reqHeight);
+    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.widthObj, &reqWidth);
+    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.heightObj, &reqHeight);
     if (reqWidth > 0)
 	clientWidth = reqWidth;
     if (reqHeight > 0)
@@ -498,7 +507,7 @@ static void PlaceTabs(
 	    Tcl_Obj *expandObj = Ttk_QueryOption(tabLayout,"-expand",tabState);
 
 	    if (expandObj) {
-		Ttk_GetBorderFromObj(NULL, expandObj, &expand);
+		Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, expandObj, &expand);
 	    }
 
 	    tab->parcel =
@@ -508,6 +517,23 @@ static void PlaceTabs(
 		    expand);
 	}
     }
+}
+
+/*
+ * NotebookPlaceContent --
+ * 	Set the position and size of a child widget
+ * 	based on the current client area and content window options:
+ */
+static void NotebookPlaceContent(Notebook* nb, int index)
+{
+    Tab* tab = (Tab*)Ttk_ContentData(nb->notebook.mgr, index);
+    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
+    Ttk_Box box =
+	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
+	    Tk_ReqWidth(window), Tk_ReqHeight(window), tab->sticky);
+
+    Ttk_PlaceContent(nb->notebook.mgr, index,
+	box.x, box.y, box.width, box.height);
 }
 
 /* NotebookDoLayout --
@@ -525,8 +551,9 @@ static void NotebookDoLayout(void *recordPtr)
     Ttk_Element clientNode = Ttk_FindElement(nb->core.layout, "client");
     Ttk_Box tabrowBox;
     NotebookStyle nbstyle;
+    int currentIndex = nb->notebook.currentIndex;
 
-    NotebookStyleOptions(nb, &nbstyle);
+    NotebookStyleOptions(nb, &nbstyle, nbwin);
 
     /* Notebook internal padding:
      */
@@ -564,24 +591,12 @@ static void NotebookDoLayout(void *recordPtr)
     if (cavity.height <= 0) cavity.height = 1;
     if (cavity.width <= 0) cavity.width = 1;
 
-    nb->notebook.clientArea = cavity;
-}
-
-/*
- * NotebookPlaceContent --
- * 	Set the position and size of a child widget
- * 	based on the current client area and content window options:
- */
-static void NotebookPlaceContent(Notebook *nb, int index)
-{
-    Tab *tab = (Tab *)Ttk_ContentData(nb->notebook.mgr, index);
-    Tk_Window window = Ttk_ContentWindow(nb->notebook.mgr, index);
-    Ttk_Box box =
-	Ttk_StickBox(Ttk_PadBox(nb->notebook.clientArea, tab->padding),
-	    Tk_ReqWidth(window), Tk_ReqHeight(window),tab->sticky);
-
-    Ttk_PlaceContent(nb->notebook.mgr, index,
-	box.x, box.y, box.width, box.height);
+    if (!TtkBoxEqual(nb->notebook.clientArea, cavity)) {
+	nb->notebook.clientArea = cavity;
+	if (currentIndex >= 0) {
+	    NotebookPlaceContent(nb, currentIndex);
+	}
+    }
 }
 
 /* NotebookPlaceContents --
@@ -715,10 +730,10 @@ static void TabRemoved(void *managerData, int index)
 }
 
 static int TabRequest(
-    TCL_UNUSED(void *),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int),
-    TCL_UNUSED(int))
+    TCL_UNUSED(void *), /* managerData */
+    TCL_UNUSED(int), /* index */
+    TCL_UNUSED(int), /* width */
+    TCL_UNUSED(int)) /* height */
 {
     return 1;
 }
@@ -788,7 +803,7 @@ static const int NotebookEventMask
     | PointerMotionMask
     | LeaveWindowMask
     ;
-static void NotebookEventHandler(ClientData clientData, XEvent *eventPtr)
+static void NotebookEventHandler(void *clientData, XEvent *eventPtr)
 {
     Notebook *nb = (Notebook *)clientData;
 
@@ -1154,7 +1169,8 @@ static int NotebookSelectCommand(
 	}
 	return TCL_OK;
     } else if (objc == 3) {
-	int index, status = GetTabIndex(interp, nb, objv[2], &index);
+	int index;
+	int status = GetTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
 	    SelectTab(nb, index);
 	}
@@ -1409,8 +1425,8 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
-MODULE_SCOPE
-void TtkNotebook_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkNotebook_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 

@@ -26,8 +26,7 @@ namespace eval ttk::theme::alt {
 	    -bordercolor	$colors(-border) \
 	    -selectbackground 	$colors(-selectbg) \
 	    -selectforeground 	$colors(-selectfg) \
-	    -font 		TkDefaultFont \
-	    ;
+	    -font 		TkDefaultFont
 
 	ttk::style map "." -background \
 	    [list disabled $colors(-frame)  active $colors(-activebg)] ;
@@ -38,7 +37,6 @@ namespace eval ttk::theme::alt {
 	    -anchor center -width -11 -padding "1 1" \
 	    -relief raised -shiftrelief 1 \
 	    -highlightthickness 1 -highlightcolor $colors(-frame)
-
 	ttk::style map TButton -relief {
 	    {pressed !disabled} 	sunken
 	    {active !disabled} 	raised
@@ -58,17 +56,20 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TMenubutton \
 	    -width -11 -padding "3 3" -relief raised
 
-	ttk::style configure TEntry -padding 1
+	ttk::style configure TEntry -padding 1 \
+	    -focuswidth 2 -focuscolor $colors(-selectbg)
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
-	ttk::style configure TCombobox -padding 1
+
+	ttk::style configure TCombobox -padding 1 \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)] \
 		-arrowcolor [list disabled $colors(-disabledfg)]
-	ttk::style configure ComboboxPopdownFrame \
-	    -relief solid -borderwidth 1
+	ttk::style configure ComboboxPopdownFrame -relief solid -borderwidth 1
 
-	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0}
+	ttk::style configure TSpinbox -arrowsize 10 -padding {2 0 10 0} \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)] \
 	    -arrowcolor [list disabled $colors(-disabledfg)]
@@ -84,12 +85,11 @@ namespace eval ttk::theme::alt {
 	ttk::style configure TLabelframe -relief groove -borderwidth 2
 
 	ttk::style configure TNotebook -tabmargins {2 2 1 0}
-	ttk::style configure TNotebook.Tab \
-	    -padding {4 2} -background $colors(-darker)
+	ttk::style configure TNotebook.Tab -background $colors(-darker) \
+	    -padding {4 2}
 	ttk::style map TNotebook.Tab \
 	    -background [list selected $colors(-frame)] \
 	    -expand [list selected {2 2 1 0}] \
-	    ;
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
@@ -101,8 +101,8 @@ namespace eval ttk::theme::alt {
 				selected $colors(-selectfg)]
 
 	ttk::style configure TScale \
-	    -groovewidth 4 -troughrelief sunken \
-	    -sliderwidth raised -borderwidth 2
+	    -groovewidth 4 -troughrelief sunken -borderwidth 2
+
 	ttk::style configure TProgressbar \
 	    -background $colors(-selectbg) -borderwidth 0
     }

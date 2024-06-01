@@ -3,9 +3,9 @@
  *
  *	These calls set up the default menus for Tk.
  *
- * Copyright (c) 1995-1996 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1996 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -330,7 +330,11 @@ GetWidgetDemoPath(
 				Tcl_NewStringObj("widget", 6) };
 
 	Tcl_IncrRefCount(libpath);
+	Tcl_IncrRefCount(demo[0]);
+	Tcl_IncrRefCount(demo[1]);
 	result = Tcl_FSJoinToPath(libpath, 2, demo);
+	Tcl_DecrRefCount(demo[1]);
+	Tcl_DecrRefCount(demo[0]);
 	Tcl_DecrRefCount(libpath);
     } else {
 	Tcl_ResetResult(interp);

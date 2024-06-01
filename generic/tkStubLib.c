@@ -4,7 +4,7 @@
  *	Stub object that will be statically linked into extensions that want
  *	to access Tk.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  * Copyright (c) 1998 Paul Duffin.
  *
  * See the file "license.terms" for information on usage and redistribution of

@@ -6,7 +6,7 @@
  *	interfaces are not guaranteed to remain the same between
  *	versions.  Use at your own risk.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  * All rights reserved.
  */
 
@@ -24,7 +24,7 @@
 #endif
 
 /* Some (older) versions of X11/Xutil.h have a wrong signature of those
-   two functions, so move them out of the way temporarly. */
+   two functions, so move them out of the way temporarily. */
 #define XOffsetRegion _XOffsetRegion
 #define XUnionRegion _XUnionRegion
 #include "X11/Xutil.h"
@@ -275,7 +275,10 @@ EXTERN int		TkPutImage(unsigned long *colors, int ncolors,
 				XImage *image, int src_x, int src_y,
 				int dest_x, int dest_y, unsigned int width,
 				unsigned int height);
-/* Slot 81 is reserved */
+/* 81 */
+EXTERN int		XSetClipRectangles(Display *display, GC gc,
+				int clip_x_origin, int clip_y_origin,
+				XRectangle rectangles[], int n, int ordering);
 /* 82 */
 EXTERN Status		XParseColor(Display *display, Colormap map,
 				_Xconst char *spec, XColor *colorPtr);
@@ -879,7 +882,7 @@ typedef struct TkIntXlibStubs {
     Bool (*xFilterEvent) (XEvent *x, Window w); /* 78 */
     int (*xmbLookupString) (XIC xi, XKeyPressedEvent *xk, char *c, int i, KeySym *k, Status *s); /* 79 */
     int (*tkPutImage) (unsigned long *colors, int ncolors, Display *display, Drawable d, GC gc, XImage *image, int src_x, int src_y, int dest_x, int dest_y, unsigned int width, unsigned int height); /* 80 */
-    void (*reserved81)(void);
+    int (*xSetClipRectangles) (Display *display, GC gc, int clip_x_origin, int clip_y_origin, XRectangle rectangles[], int n, int ordering); /* 81 */
     Status (*xParseColor) (Display *display, Colormap map, _Xconst char *spec, XColor *colorPtr); /* 82 */
     GC (*xCreateGC) (Display *display, Drawable d, unsigned long valuemask, XGCValues *values); /* 83 */
     int (*xFreeGC) (Display *display, GC gc); /* 84 */
@@ -1296,7 +1299,8 @@ extern const TkIntXlibStubs *tkIntXlibStubsPtr;
 	(tkIntXlibStubsPtr->xmbLookupString) /* 79 */
 #define TkPutImage \
 	(tkIntXlibStubsPtr->tkPutImage) /* 80 */
-/* Slot 81 is reserved */
+#define XSetClipRectangles \
+	(tkIntXlibStubsPtr->xSetClipRectangles) /* 81 */
 #define XParseColor \
 	(tkIntXlibStubsPtr->xParseColor) /* 82 */
 #define XCreateGC \
