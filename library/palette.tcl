@@ -3,7 +3,7 @@
 # This file contains procedures that change the color palette used
 # by Tk.
 #
-# Copyright (c) 1995-1997 Sun Microsystems, Inc.
+# Copyright © 1995-1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -70,6 +70,20 @@ proc ::tk_setPalette {args} {
     }
     if {![info exists new(highlightBackground)]} {
 	set new(highlightBackground) $new(background)
+    }
+    # 'buttonBackground' is the background color of the buttons in
+    # the spinbox widget.
+    if {![info exists new(buttonBackground)]} {
+	set new(buttonBackground) $new(background)
+    }
+    # 'selectColor' is the background of check & radio buttons.
+    if {![info exists new(selectColor)]} {
+	foreach {r g b} $bg {break}
+	if {$r+1.5*$g+0.5*$b > 100000} {
+	    set new(selectColor) white
+	} else {
+	    set new(selectColor) black
+	}
     }
     if {![info exists new(activeBackground)]} {
 	# Pick a default active background that islighter than the
@@ -139,6 +153,26 @@ proc ::tk_setPalette {args} {
     # next time we change the options.
 
     array set ::tk::Palette [array get new]
+
+    if {[tk windowingsystem] ne "x11" || [ttk::style theme use] ne "default"} {
+	return
+    }
+
+    # Update the 'default' ttk theme with the new palette,
+    # and then set 'default' as the current ttk theme,
+    # in order to apply the new palette to the ttk widgets.
+
+    foreach option [array names new] {
+	if {[info exists ttk::theme::default::colorOptionLookup($option)]} {
+	    foreach colorName $ttk::theme::default::colorOptionLookup($option) {
+		set ttk::theme::default::colors($colorName) $new($option)
+	    }
+	}
+    }
+    ttk::theme::default::reconfigureDefaultTheme
+    ttk::setTheme default
+
+    return
 }
 
 # ::tk::RecolorTree --

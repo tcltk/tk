@@ -1,9 +1,9 @@
 # This file is a Tcl script to test spinbox widgets in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -104,7 +104,7 @@ test spinbox-1.6 {configuration option: "bd" for spinbox} -setup {
     .e configure -bd badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test spinbox-1.7 {configuration option: "bg"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -148,7 +148,7 @@ test spinbox-1.10 {configuration option: "borderwidth" for spinbox} -setup {
     .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test spinbox-1.11 {configuration option: "buttonbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -468,7 +468,7 @@ test spinbox-1.39 {configuration option: "highlightthickness" for spinbox} -setu
     .e configure -highlightthickness bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "bogus"}
+} -returnCodes {error} -result {expected screen distance but got "bogus"}
 
 test spinbox-1.40 {configuration option: "highlightthickness"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -546,7 +546,7 @@ test spinbox-1.46 {configuration option: "insertborderwidth" for spinbox} -setup
     .e configure -insertborderwidth 2.6x
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "2.6x"}
+} -returnCodes {error} -result {expected screen distance but got "2.6x"}
 
 test spinbox-1.47 {configuration option: "insertofftime"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -768,7 +768,7 @@ test spinbox-1.66 {configuration option: "selectborderwidth" for spinbox} -setup
     .e configure -selectborderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test spinbox-1.67 {configuration option: "selectforeground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -1087,7 +1087,7 @@ test spinbox-3.7 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraint
     update
 } -body {
 # Tcl_UtfAtIndex(): utf at end
-    .e insert 0 "ab\u4e4e"
+    .e insert 0 "ab乎"
     .e bbox end
 } -cleanup {
     destroy .e
@@ -1100,7 +1100,7 @@ test spinbox-3.8 {SpinboxWidgetCmd procedure, "bbox" widget command} -constraint
     update
 } -body {
 # Tcl_UtfAtIndex(): utf before index
-    .e insert 0 "ab\u4e4ec"
+    .e insert 0 "ab乎c"
     .e bbox 3
 } -cleanup {
     destroy .e
@@ -1122,7 +1122,7 @@ test spinbox-3.10 {SpinboxWidgetCmd procedure, "bbox" widget command} -constrain
     pack .e
     update
 } -body {
-    .e insert 0 "abcdefghij\u4e4eklmnop"
+    .e insert 0 "abcdefghij乎klmnop"
     list [.e bbox 0] [.e bbox 1] [.e bbox 10] [.e bbox end]
 } -cleanup {
     destroy .e
@@ -1164,7 +1164,7 @@ test spinbox-3.15 {SpinboxWidgetCmd procedure, "configure" widget command} -setu
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result 49
+} -result 51
 test spinbox-3.16 {SpinboxWidgetCmd procedure, "configure" widget command} -setup {
     spinbox .e
 } -body {
@@ -1236,20 +1236,20 @@ test spinbox-3.24 {SpinboxWidgetCmd procedure, "delete" widget command} -setup {
     set x {}
 } -body {
 # UTF
-    .e insert end "01234\u4e4e67890"
+    .e insert end "01234乎67890"
     .e delete 6
     lappend x [.e get]
     .e delete 0 end
-    .e insert end "012345\u4e4e7890"
+    .e insert end "012345乎7890"
     .e delete 6
     lappend x [.e get]
     .e delete 0 end
-    .e insert end "0123456\u4e4e890"
+    .e insert end "0123456乎890"
     .e delete 6
     lappend x [.e get]
 } -cleanup {
     destroy .e
-} -result [list "01234\u4e4e7890" "0123457890" "012345\u4e4e890"]
+} -result [list "01234乎7890" "0123457890" "012345乎890"]
 test spinbox-3.25 {SpinboxWidgetCmd procedure, "delete" widget command} -setup {
     spinbox .e
     pack .e
@@ -1353,7 +1353,7 @@ test spinbox-3.35 {SpinboxWidgetCmd procedure, "index" widget command} -setup {
     update
 } -body {
 # UTF
-    .e insert 0 abc\u4e4e\u0153def
+    .e insert 0 abc乎œdef
     list [.e index 3] [.e index 4] [.e index end]
 } -cleanup {
     destroy .e
@@ -1449,7 +1449,7 @@ test spinbox-3.44 {SpinboxWidgetCmd procedure, "scan" widget command} -setup {
     .e scan foobar 20
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad scan option "foobar": must be mark or dragto}
+} -returnCodes error -result {bad scan option "foobar": must be dragto or mark}
 test spinbox-3.45 {SpinboxWidgetCmd procedure, "scan" widget command} -setup {
     spinbox .e
     pack .e
@@ -1774,7 +1774,7 @@ test spinbox-3.71 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll 24
 } -cleanup {
     destroy .e
-} -returnCodes error -result {wrong # args: should be ".e xview scroll number units|pages"}
+} -returnCodes error -result {wrong # args: should be ".e xview scroll number pages|units"}
 test spinbox-3.72 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1785,7 +1785,7 @@ test spinbox-3.72 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll gorp units
 } -cleanup {
     destroy .e
-} -returnCodes error -result {expected integer but got "gorp"}
+} -returnCodes error -result {expected floating-point number but got "gorp"}
 test spinbox-3.73 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1851,7 +1851,7 @@ test spinbox-3.77 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll 23 foobars
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad argument "foobars": must be units or pages}
+} -returnCodes error -result {bad argument "foobars": must be pages or units}
 test spinbox-3.78 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     spinbox .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e
@@ -1872,7 +1872,7 @@ test spinbox-3.79 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -1
+    .e xview {}
     .e index @0
 } -cleanup {
     destroy .e
@@ -1895,7 +1895,7 @@ test spinbox-3.81 {SpinboxWidgetCmd procedure, "xview" widget command} -setup {
 } -body {
     .e insert end "This is quite a long text string, so long that it "
     .e insert end "runs off the end of the window quite a bit."
-    .e insert 10 \u4e4e
+    .e insert 10 乎
     update
 # UTF
 # If Tcl_NumUtfChars wasn't used, wrong answer would be:
@@ -2075,6 +2075,21 @@ test spinbox-5.11 {ConfigureSpinbox procedure} -setup {
 } -cleanup {
     destroy .e
 } -result {}
+test spinbox-5.12 {ConfigureSpinbox procedure, -from and -to swapping} -setup {
+    spinbox .e
+} -body {
+    # this statement used to trigger error "-to value must be greater than -from value"
+    # because default value for -to is zero (bug [841280ffff])
+    set res [catch {.e configure -from 10}]
+    .e configure -from 1971 -to 2016  ; # standard case
+    lappend res [.e cget -from] [.e cget -to]
+    .e configure -from 2016 -to 1971  ; # auto-swapping happens
+    lappend res [.e cget -from] [.e cget -to]
+    .e configure -to 1971 -from 2016 ; # auto-swapping, order of options does not matter
+    lappend res [.e cget -from] [.e cget -to]
+} -cleanup {
+    destroy .e
+} -result {0 1971.0 2016.0 1971.0 2016.0 1971.0 2016.0}
 
 # No tests for DisplaySpinbox.
 
@@ -2374,7 +2389,7 @@ test spinbox-8.2 {DeleteChars procedure} -setup {
     .e insert 0 abcde
     update
     set scrollInfo wrong
-    .e delete -1 2
+    .e delete {} 2
     update
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -3101,7 +3116,7 @@ test spinbox-13.23 {GetSpinboxIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -1
+    .e index {}
 } -cleanup {
     destroy .e
 } -result 0
@@ -3877,15 +3892,22 @@ test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
     pack [spinbox .s]
     update
+    set res {}
 } -body {
     .s insert end "A sample text"
     .s icursor end
     event generate .s <<PrevWord>>  ; # shall move insert to index 9
     .s delete insert end
-    .s get
+    lappend res [.s get]
+    .s delete 0 end
+    .s insert end "A sample text"
+    .s icursor 2
+    event generate .s <<NextWord>>  ; # shall move insert to index 9
+    .s delete 0 insert
+    lappend res [.s get]
 } -cleanup {
     destroy .s
-} -result {A sample }
+} -result {{A sample } text}
 
 # Collected comments about lacks from the test
 # XXX Still need to write tests for SpinboxBlinkProc, SpinboxFocusProc,

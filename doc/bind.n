@@ -1,7 +1,7 @@
 '\"
 '\" Copyright (c) 1990 The Regents of the University of California.
 '\" Copyright (c) 1994-1996 Sun Microsystems, Inc.
-'\" Copyright (c) 1998 by Scriptics Corporation.
+'\" Copyright (c) 1998 Scriptics Corporation.
 '\"
 '\" See the file "license.terms" for information on usage and redistribution
 '\" of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -70,7 +70,7 @@ event pattern may
 take one of three forms.  In the simplest case it is a single
 printing ASCII character, such as \fBa\fR or \fB[\fR.  The character
 may not be a space character or the character \fB<\fR.  This form of
-pattern matches a \fBKeyPress\fR event for the particular
+pattern matches a \fBKey\fR event for the particular
 character.  The second form of pattern is longer but more general.
 It has the following syntax:
 .CS
@@ -106,8 +106,8 @@ Modifiers consist of any of the following values:
 .ta 6c
 \fBControl\fR	\fBMod1\fR, \fBM1\fR, \fBCommand\fR
 \fBAlt\fR	\fBMod2\fR, \fBM2\fR, \fBOption\fR
-\fBShift\fR	\fBMod3\fR, \fBM3\fR
-\fBLock\fR	\fBMod4\fR, \fBM4\fR
+\fBShift\fR	\fBMod3\fR, \fBM3\fR, \fBNum\fR
+\fBLock\fR	\fBMod4\fR, \fBM4\fR, \fBFn\fR
 \fBExtended\fR	\fBMod5\fR, \fBM5\fR
 \fBButton1\fR, \fBB1\fR	\fBMeta\fR, \fBM\fR
 \fBButton2\fR, \fBB2\fR	\fBDouble\fR
@@ -149,8 +149,9 @@ substantial mouse motion in between.  For example, \fB<Double\-Button\-1>\fR
 is equivalent to \fB<Button\-1><Button\-1>\fR with the extra time and space
 requirement.
 .PP
-The \fBCommand\fR and \fBOption\fR modifiers are equivalents of \fBMod1\fR
-resp. \fBMod2\fR, they correspond to Macintosh-specific modifier keys.
+The \fBCommand\fR, \fBOption\fR, \fBNum\fR and \fBFn\fRmodifiers are
+equivalents of \fBMod1\fR up to \fBMod4\fR; they correspond to
+Macintosh-specific modifier keys.
 .PP
 The \fBExtended\fR modifier is, at present, specific to Windows.  It
 appears on events that are associated with the keys on the
@@ -168,16 +169,16 @@ couple non-standard X event types that were added to better support
 the Macintosh and Windows platforms.  Below is a list of all the valid
 types; where two names appear together, they are synonyms.
 .DS
-.ta \w'\fBButtonPress, Button\0\0\0\fR'u +\w'\fBKeyPress, Key\0\0\0\fR'u
+.ta \w'\fBButton, ButtonPress\0\0\0\fR'u +\w'\fBKey, KeyPress\0\0\0\fR'u
 \fBActivate\fR	\fBDestroy\fR	\fBMap\fR
-\fBButtonPress\fR, \fBButton\fR	\fBEnter\fR	\fBMapRequest\fR
+\fBButton\fR, \fBButtonPress\fR	\fBEnter\fR	\fBMapRequest\fR
 \fBButtonRelease\fR	\fBExpose\fR	\fBMotion\fR
 \fBCirculate\fR	\fBFocusIn\fR	\fBMouseWheel\fR
-\fBCirculateRequest\fR	\fBFocusOut\fR	\fBProperty\fR
-\fBColormap\fR	\fBGravity\fR	\fBReparent\fR
-\fBConfigure\fR	\fBKeyPress\fR, \fBKey\fR	\fBResizeRequest\fR
-\fBConfigureRequest\fR	\fBKeyRelease\fR	\fBUnmap\fR
-\fBCreate\fR	\fBLeave\fR	\fBVisibility\fR
+\fBTouchpadScroll\fR	\fBCirculateRequest\fR	\fBFocusOut\fR
+\fBProperty\fR	\fBColormap\fR	\fBGravity\fR
+\fBReparent\fR	\fBConfigure\fR	\fBKey\fR, \fBKeyPress\fR
+\fBResizeRequest\fR	\fBConfigureRequest\fR	\fBKeyRelease\fR
+\fBUnmap\fR   \fBCreate\fR	\fBLeave\fR	\fBVisibility\fR
 \fBDeactivate\fR
 .DE
 Most of the above events have the same fields and behaviors as events
@@ -198,7 +199,7 @@ active.  Likewise, the \fBDeactive\fR event is sent when the window's
 state changes from active to deactive.  There are no useful percent
 substitutions you would make when binding to these events.
 .IP \fBMouseWheel\fR 5
-Many contemporary mice support a mouse wheel, which is used
+Many contemporary mice include a mouse wheel, which is used
 for scrolling documents without using the scrollbars.  By rolling the
 wheel, the system will generate \fBMouseWheel\fR events that the
 application can use to scroll.  The event is routed to the
@@ -212,31 +213,44 @@ values should scroll up and negative values should scroll down.
 .RS
 .PP
 Horizontal scrolling uses \fBShift-MouseWheel\fR events, with positive
-\fB%D\fR \fIdelta\fR substitution indicating left scrolling and negative
-right scrolling.
-Only Windows and macOS Aqua typically fire \fBMouseWheel\fR and
-\fBShift-MouseWheel\fR events.  On
-X11 vertical scrolling is rather supported through \fBButton-4\fR and
-\fBButton-5\fR events, and horizontal scrolling through \fBShift-Button-4\fR
-and \fBShift-Button-5\fR events.  Horizontal scrolling events may fire from
-many different hardware units such as tilt wheels or touchpads.  Horizontal
-scrolling can also be emulated by holding Shift and scrolling vertically.
+\fB%D\fR \fIdelta\fR substitution indicating left scrolling and
+negative right scrolling. Horizontal scrolling events are generated
+tilt wheels on some mice.  Horizontal scrolling can also be emulated
+by holding Shift and scrolling vertically.
 .RE
+.IP "\fBTouchpadScroll\fR" 5
+On some platforms (currently Windows and macOS) there is support for
+high-resolution scrolling devices, such as touchpads.  This is
+provided via \fBTouchpadScroll\fR events.  These events store two
+16 bit delta values in the integer provided by the \fB%D\fR
+substitution.  The \fIX\fR delta is in the high order 16 bits and the
+\fIY\fR delta is in the low order 16 bits.  These values can be
+unpacked by using the tk::PreciseScrollDeltas utility procedure.  For
+example:
+.CS
+lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+.CE
+The \fB$#\fR substitution is a counter for \fBTouchpadScroll\fR events
+which can be used by widgets that only support scrolling by units to
+ignore some portion of the events.
 .IP "\fBKeyPress\fR, \fBKeyRelease\fR" 5
 The \fBKeyPress\fR and \fBKeyRelease\fR events are generated
 whenever a key is pressed or released.  \fBKeyPress\fR and \fBKeyRelease\fR
+.IP "\fBKey\fR, \fBKeyRelease\fR" 5
+The \fBKey\fR and \fBKeyRelease\fR events are generated
+whenever a key is pressed or released.  \fBKey\fR and \fBKeyRelease\fR
 events are sent to the window which currently has the keyboard focus.
-.IP "\fBButtonPress\fR, \fBButtonRelease\fR, \fBMotion\fR" 5
-The \fBButtonPress\fR and \fBButtonRelease\fR events
+.IP "\fBButton\fR, \fBButtonRelease\fR, \fBMotion\fR" 5
+The \fBButton\fR and \fBButtonRelease\fR events
 are generated when the user presses or releases a mouse button.
 \fBMotion\fR events are generated whenever the pointer is moved.
-\fBButtonPress\fR, \fBButtonRelease\fR, and \fBMotion\fR events are
+\fBButton\fR, \fBButtonRelease\fR, and \fBMotion\fR events are
 normally sent to the window containing the pointer.
 .RS
 .PP
 When a mouse button is pressed, the window containing the pointer
 automatically obtains a temporary pointer grab.
-Subsequent \fBButtonPress\fR, \fBButtonRelease\fR, and \fBMotion\fR
+Subsequent \fBButton\fR, \fBButtonRelease\fR, and \fBMotion\fR
 events will be sent to that window,
 regardless of which window contains the pointer,
 until all buttons have been released.
@@ -365,8 +379,8 @@ position in the stacking order.
 .SS "EVENT DETAILS"
 .PP
 The last part of a long event specification is \fIdetail\fR.  In the
-case of a \fBButtonPress\fR or \fBButtonRelease\fR event, it is the
-number of a button (1\-5).  If a button number is given, then only an
+case of a \fBButton\fR or \fBButtonRelease\fR event, it is the
+number of a button (1\-9).  If a button number is given, then only an
 event on that particular button will match;  if no button number is
 given, then an event on any button will match.  Note:  giving a
 specific button number is different than specifying a button modifier;
@@ -374,10 +388,10 @@ in the first case, it refers to a button being pressed or released,
 while in the second it refers to some other button that is already
 depressed when the matching event occurs.  If a button
 number is given then \fItype\fR may be omitted:  if will default
-to \fBButtonPress\fR.  For example, the specifier \fB<1>\fR
-is equivalent to \fB<ButtonPress\-1>\fR.
+to \fBButton\fR.  For example, the specifier \fB<1>\fR
+is equivalent to \fB<Button\-1>\fR.
 .PP
-If the event type is \fBKeyPress\fR or \fBKeyRelease\fR, then
+If the event type is \fBKey\fR or \fBKeyRelease\fR, then
 \fIdetail\fR may be specified in the form of an X keysym.  Keysyms
 are textual specifications for particular keys on the keyboard;
 they include all the alphanumeric ASCII characters (e.g.
@@ -397,9 +411,9 @@ system.
 If necessary, you can use the \fB%K\fR notation described below
 to print out the keysym name for a particular key.
 If a keysym \fIdetail\fR is given, then the
-\fItype\fR field may be omitted;  it will default to \fBKeyPress\fR.
+\fItype\fR field may be omitted;  it will default to \fBKey\fR.
 For example, \fB<Control\-comma>\fR is equivalent to
-\fB<Control\-KeyPress\-comma>\fR.
+\fB<Control\-Key\-comma>\fR.
 .SH "BINDING SCRIPTS AND SUBSTITUTIONS"
 .PP
 The \fIscript\fR argument to \fBbind\fR is a Tcl script, called the
@@ -435,7 +449,7 @@ in the stacking order, or \fB0\fR if the receiving window is at the
 bottom.
 .IP \fB%b\fR 5
 The number of the button that was pressed or released.  Valid only
-for \fBButtonPress\fR and \fBButtonRelease\fR events.
+for \fBButton\fR and \fBButtonRelease\fR events.
 .IP \fB%c\fR 5
 The \fIcount\fR field from the event.  Valid only for \fBExpose\fR events.
 Indicates that there are \fIcount\fR pending \fBExpose\fR events which have not
@@ -482,7 +496,7 @@ Indicates the new or requested height of the window.
 The \fIwindow\fR field from the event, represented as a hexadecimal
 integer.  Valid for all event types.
 .IP \fB%k\fR 5
-The \fIkeycode\fR field from the event.  Valid only for \fBKeyPress\fR
+The \fIkeycode\fR field from the event.  Valid only for \fBKey\fR
 and \fBKeyRelease\fR events.
 .IP \fB%m\fR 5
 The \fImode\fR field from the event.  The substituted string is one of
@@ -497,8 +511,8 @@ The \fIplace\fR field from the event, substituted as one of the
 strings \fBPlaceOnTop\fR or \fBPlaceOnBottom\fR.  Valid only
 for \fBCirculate\fR and \fBCirculateRequest\fR events.
 .IP \fB%s\fR 5
-The \fIstate\fR field from the event.  For \fBButtonPress\fR,
-\fBButtonRelease\fR, \fBEnter\fR, \fBKeyPress\fR, \fBKeyRelease\fR,
+The \fIstate\fR field from the event.  For \fBButton\fR,
+\fBButtonRelease\fR, \fBEnter\fR, \fBKey\fR, \fBKeyRelease\fR,
 \fBLeave\fR, and \fBMotion\fR events, a decimal string
 is substituted.  For \fBVisibility\fR, one of the strings
 \fBVisibilityUnobscured\fR, \fBVisibilityPartiallyObscured\fR,
@@ -520,8 +534,8 @@ Valid only for
 \fBResizeRequest\fR, and \fBExpose\fR events.
 .IP "\fB%x\fR, \fB%y\fR" 5
 The \fIx\fR and \fIy\fR fields from the event.
-For \fBButtonPress\fR, \fBButtonRelease\fR, \fBMotion\fR,
-\fBKeyPress\fR, \fBKeyRelease\fR, and \fBMouseWheel\fR events,
+For \fBButton\fR, \fBButtonRelease\fR, \fBMotion\fR,
+\fBKey\fR, \fBKeyRelease\fR, and \fBMouseWheel\fR events,
 \fB%x\fR and \fB%y\fR indicate the position of the mouse pointer
 relative to the receiving window.
 For key events on the Macintosh these are the coordinates of the
@@ -537,8 +551,8 @@ the empty string if the event does not correspond to a UNICODE character
 (e.g. the shift key was pressed). On X11, \fBXmbLookupString\fR (or
 \fBXLookupString\fR when input method support is turned off) does all
 the work of translating from the event to a UNICODE character.
-On X11, valid only for \fBKeyPress\fR event. On Windows and macOS/aqua,
-valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
+On X11, valid only for \fBKey\fR event. On Windows and macOS/aqua,
+valid only for \fBKey\fR and \fBKeyRelease\fR events.
 .IP \fB%B\fR 5
 The \fIborder_width\fR field from the event.  Valid only for
 \fBConfigure\fR, \fBConfigureRequest\fR, and \fBCreate\fR events.
@@ -556,13 +570,13 @@ event, \fB1\fR indicates that it is a
 event generated by \fBSendEvent\fR.
 .IP \fB%K\fR 5
 The keysym corresponding to the event, substituted as a textual
-string.  Valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
+string.  Valid only for \fBKey\fR and \fBKeyRelease\fR events.
 .IP \fB%M\fR 5
 The number of script-based binding patterns matched so far for the
 event.  Valid for all event types.
 .IP \fB%N\fR 5
 The keysym corresponding to the event, substituted as a decimal
-number.  Valid only for \fBKeyPress\fR and \fBKeyRelease\fR events.
+number.  Valid only for \fBKey\fR and \fBKeyRelease\fR events.
 .IP \fB%P\fR 5
 The name of the property being updated or deleted (which
 may be converted to an XAtom using \fBwinfo atom\fR.) Valid
@@ -584,7 +598,7 @@ The \fIx_root\fR and  \fIy_root\fR fields from the event.
 If a virtual-root window manager is being used then the substituted
 values are the corresponding x-coordinate and y-coordinate in the virtual root.
 Valid only for
-\fBButtonPress\fR, \fBButtonRelease\fR, \fBEnter\fR, \fBKeyPress\fR,
+\fBButton\fR, \fBButtonRelease\fR, \fBEnter\fR, \fBKey\fR,
 \fBKeyRelease\fR, \fBLeave\fR and \fBMotion\fR events.
 Same meaning as \fB%x\fR and \fB%y\fR, except relative to the (virtual) root
 window.
@@ -636,9 +650,9 @@ then that script terminates and no other scripts will be invoked
 for the event.
 .PP
 Within a script called from the binding script, \fBreturn\fR
-\fB-code ok\fR may be used to continue processing (including
+\fB\-code ok\fR may be used to continue processing (including
 .QW +
-appended scripts), or \fBreturn\fR \fB-code break\fR may be used to
+appended scripts), or \fBreturn\fR \fB\-code break\fR may be used to
 stop processing all other binding scripts.
 .PP
 If more than one binding matches a particular event and they
@@ -651,8 +665,9 @@ several matching sequences is more specific:
 an event pattern that specifies a specific button or key is more specific
 than one that does not;
 .IP (b)
-a longer sequence (in terms of number
-of events matched) is more specific than a shorter sequence;
+a sequence with the most highest-ordered patterns (in term of highest
+repetition count) is more specific than a sequence with less
+highest-ordered patterns;
 .IP (c)
 if the modifiers specified in one pattern are a subset of the
 modifiers in another pattern, then the pattern with more modifiers
@@ -696,17 +711,17 @@ When a \fIsequence\fR specified in a \fBbind\fR command contains
 more than one event pattern, then its script is executed whenever
 the recent events (leading up to and including the current event)
 match the given sequence.  This means, for example, that if button 1 is
-clicked repeatedly the sequence \fB<Double\-ButtonPress\-1>\fR will match
+clicked repeatedly the sequence \fB<Double\-Button\-1>\fR will match
 each button press but the first.
 If extraneous events that would prevent a match occur in the middle
 of an event sequence then the extraneous events are
-ignored unless they are \fBKeyPress\fR or \fBButtonPress\fR events.
-For example, \fB<Double\-ButtonPress\-1>\fR will match a sequence of
+ignored unless they are \fBKey\fR or \fBButton\fR events.
+For example, \fB<Double\-Button\-1>\fR will match a sequence of
 presses of button 1, even though there will be \fBButtonRelease\fR
 events (and possibly \fBMotion\fR events) between the
-\fBButtonPress\fR events.
-Furthermore, a \fBKeyPress\fR event may be preceded by any number
-of other \fBKeyPress\fR events for modifier keys without the
+\fBButton\fR events.
+Furthermore, a \fBKey\fR event may be preceded by any number
+of other \fBKey\fR events for modifier keys without the
 modifier keys preventing a match.
 For example, the event sequence \fBaB\fR will match a press of the
 \fBa\fR key, a release of the \fBa\fR key, a press of the \fBShift\fR
@@ -725,7 +740,7 @@ The \fBbgerror\fR command will be executed at global level
 Arrange for a string describing the motion of the mouse to be printed
 out when the mouse is double-clicked:
 .CS
-\fBbind\fR . <Double\-1> {
+\fBbind\fR . <Double-1> {
     puts "hi from (%x,%y)"
 }
 .CE
@@ -734,7 +749,7 @@ A little GUI that displays what the keysym name of the last key
 pressed is:
 .CS
 set keysym "Press any key"
-pack [label .l \-textvariable keysym \-padx 2m \-pady 1m]
+pack [label .l -textvariable keysym -padx 2m -pady 1m]
 \fBbind\fR . <Key> {
     set keysym "You pressed %K"
 }

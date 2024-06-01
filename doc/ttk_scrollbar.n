@@ -11,7 +11,7 @@
 .SH NAME
 ttk::scrollbar \- Control the viewport of a scrollable widget
 .SH SYNOPSIS
-\fBttk::scrollbar\fR \fIpathName \fR?\fIoptions...\fR?
+\fBttk::scrollbar\fI pathName \fR?\fIoptions...\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -47,38 +47,33 @@ One of \fBhorizontal\fR or \fBvertical\fR.
 Specifies the orientation of the scrollbar.
 .SH "WIDGET COMMAND"
 .PP
-.TP
-\fIpathName \fBcget \fIoption\fR
-Returns the current value of the specified \fIoption\fR; see \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-Modify or query widget options; see \fIttk::widget(n)\fR.
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+scrollbar widgets support the following additional commands:
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the scrollbar settings in the form of a list whose
 elements are the arguments to the most recent \fBset\fR widget command.
-.TP
-\fIpathName \fBidentify \fIx y\fR
-Returns the name of the element at position \fIx\fR, \fIy\fR.
-See \fIttk::widget(n)\fR.
-.TP
-\fIpathName \fBinstate \fIstatespec\fR ?\fIscript\fR?
-Test the widget state; see \fIttk::widget(n)\fR.
+.\" METHOD: set
 .TP
 \fIpathName \fBset \fIfirst last\fR
+.
 This command is normally invoked by the scrollbar's associated widget
 from an \fB\-xscrollcommand\fR or \fB\-yscrollcommand\fR callback.
 Specifies the visible range to be displayed.
 \fIfirst\fR and \fIlast\fR are real fractions between 0 and 1.
-.TP
-\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-Modify or query the widget state; see \fIttk::widget(n)\fR.
 .SH "INTERNAL COMMANDS"
 .PP
 The following widget commands are used internally
 by the \fBTScrollbar\fP widget class bindings.
+.\" METHOD: delta
 .TP
 \fIpathName \fBdelta \fIdeltaX deltaY\fR
+.
 Returns a real number indicating the fractional change in
 the scrollbar setting that corresponds to a given change
 in thumb position.  For example, if the scrollbar is horizontal,
@@ -88,8 +83,10 @@ ignored in this case).
 If the scrollbar is vertical, the result indicates how much the
 scrollbar setting must change to move the thumb \fIdeltaY\fR pixels
 down.  The arguments and the result may be zero or negative.
+.\" METHOD: fraction
 .TP
 \fIpathName \fBfraction \fIx y\fR
+.
 Returns a real number between 0 and 1 indicating where the point
 given by \fIx\fR and \fIy\fR lies in the trough area of the scrollbar,
 where 0.0 corresponds to the top or left of the trough
@@ -110,6 +107,7 @@ In each case, \fIprefix\fR is the contents of the
 \fB\-command\fR option, which usually has a form like \fB.t yview\fR
 .TP
 \fIprefix \fBmoveto \fIfraction\fR
+.
 \fIFraction\fR is a real number between 0 and 1.
 The widget should adjust its view so that the point given
 by \fIfraction\fR appears at the beginning of the widget.
@@ -118,15 +116,8 @@ document.  1.0 refers to the end of the document, 0.333
 refers to a point one-third of the way through the document,
 and so on.
 .TP
-\fIprefix \fBscroll \fInumber \fBunits\fR
-The widget should adjust its view by \fInumber\fR units.
-The units are defined in whatever way makes sense for the widget,
-such as characters or lines in a text widget.
-\fINumber\fR is either 1, which means one unit should scroll off
-the top or left of the window, or \-1, which means that one unit
-should scroll off the bottom or right of the window.
-.TP
 \fIprefix \fBscroll \fInumber \fBpages\fR
+.
 The widget should adjust its view by \fInumber\fR pages.
 It is up to the widget to define the meaning of a page;  typically
 it is slightly less than what fits in the window, so that there
@@ -134,6 +125,15 @@ is a slight overlap between the old and new views.
 \fINumber\fR is either 1, which means the next page should
 become visible, or \-1, which means that the previous page should
 become visible.
+.TP
+\fIprefix \fBscroll \fInumber \fBunits\fR
+.
+The widget should adjust its view by \fInumber\fR units.
+The units are defined in whatever way makes sense for the widget,
+such as characters or lines in a text widget.
+\fINumber\fR is either 1, which means one unit should scroll off
+the top or left of the window, or \-1, which means that one unit
+should scroll off the bottom or right of the window.
 .SH "WIDGET STATES"
 .PP
 The scrollbar automatically sets the \fBdisabled\fR state bit.
@@ -145,14 +145,14 @@ of individual elements, based on the position and state of the mouse pointer.
 .PP
 .CS
 set f [frame .f]
-ttk::scrollbar $f.hsb \-orient horizontal \-command [list $f.t xview]
-ttk::scrollbar $f.vsb \-orient vertical \-command [list $f.t yview]
-text $f.t \-xscrollcommand [list $f.hsb set] \-yscrollcommand [list $f.vsb set]
-grid $f.t \-row 0 \-column 0 \-sticky nsew
-grid $f.vsb \-row 0 \-column 1 \-sticky nsew
-grid $f.hsb \-row 1 \-column 0 \-sticky nsew
-grid columnconfigure $f 0 \-weight 1
-grid rowconfigure $f 0 \-weight 1
+\fBttk::scrollbar\fR $f.hsb -orient horizontal -command [list $f.t xview]
+\fBttk::scrollbar\fR $f.vsb -orient vertical -command [list $f.t yview]
+text $f.t -xscrollcommand [list $f.hsb set] -yscrollcommand [list $f.vsb set]
+grid $f.t -row 0 -column 0 -sticky nsew
+grid $f.vsb -row 0 -column 1 -sticky nsew
+grid $f.hsb -row 1 -column 0 -sticky nsew
+grid columnconfigure $f 0 -weight 1
+grid rowconfigure $f 0 -weight 1
 pack $f
 .CE
 .SH "STYLING OPTIONS"
@@ -177,7 +177,7 @@ Dynamic states: \fBactive\fP, \fBdisabled\fP.
 .br
 \fB\-foreground\fP \fIcolor\fP
 .br
-\fB\-gripcount\fP \fIcount\fP (number of lines on the thumb)
+\fB\-gripsize\fP \fIsize\fP (number of screen units)
 .br
 \fB\-lightcolor\fP \fIcolor\fP (color of the light part of the 3D relief)
 .br

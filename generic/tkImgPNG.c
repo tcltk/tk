@@ -3,8 +3,8 @@
  *
  *	A Tk photo image file handler for PNG files.
  *
- * Copyright (c) 2006-2008 Muonics, Inc.
- * Copyright (c) 2008 Donal K. Fellows
+ * Copyright © 2006-2008 Muonics, Inc.
+ * Copyright © 2008 Donal K. Fellows
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -126,7 +126,7 @@ typedef struct {
     Tcl_Channel channel;	/* Channel for from-file reads. */
     Tcl_Obj *objDataPtr;
     unsigned char *strDataBuf;	/* Raw source data for from-string reads. */
-    int strDataLen;		/* Length of source data. */
+    Tcl_Size strDataLen;		/* Length of source data. */
     unsigned char *base64Data;	/* base64 encoded string data. */
     unsigned char base64Bits;	/* Remaining bits from last base64 read. */
     unsigned char base64State;	/* Current state of base64 decoder. */
@@ -175,6 +175,15 @@ typedef struct {
     Tcl_Obj *thisLineObj;	/* Current line of pixels to process. */
     int lineSize;		/* Number of bytes in a PNG line. */
     int phaseSize;		/* Number of bytes/line in current phase. */
+
+
+    /*
+     * Physical size: pHYS chunks.
+     */
+
+    double DPI;
+    double aspect;
+
 } PNGImage;
 
 /*
@@ -198,32 +207,36 @@ static int		DecodePNG(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tcl_Obj *fmtObj, Tk_PhotoHandle imageHandle,
 			    int destX, int destY);
 static int		EncodePNG(Tcl_Interp *interp,
-			    Tk_PhotoImageBlock *blockPtr, PNGImage *pngPtr);
-static int		FileMatchPNG(Tcl_Channel chan, const char *fileName,
-			    Tcl_Obj *fmtObj, int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp);
+			    Tk_PhotoImageBlock *blockPtr, PNGImage *pngPtr,
+			    Tcl_Obj *metadataInObj);
+static int		FileMatchPNG(Tcl_Interp *interp, Tcl_Channel chan,
+			    const char *fileName, Tcl_Obj *fmtObj,
+			    Tcl_Obj *metadataInObj, int *widthPtr,
+			    int *heightPtr, Tcl_Obj *metadataOut);
 static int		FileReadPNG(Tcl_Interp *interp, Tcl_Channel chan,
 			    const char *fileName, Tcl_Obj *fmtObj,
-			    Tk_PhotoHandle imageHandle, int destX, int destY,
-			    int width, int height, int srcX, int srcY);
+			    Tcl_Obj *metadataInObj, Tk_PhotoHandle imageHandle,
+			    int destX, int destY, int width, int height,
+			    int srcX, int srcY, Tcl_Obj *metadataOutPtr);
 static int		FileWritePNG(Tcl_Interp *interp, const char *filename,
-			    Tcl_Obj *fmtObj, Tk_PhotoImageBlock *blockPtr);
+			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
+			    Tk_PhotoImageBlock *blockPtr);
 static int		InitPNGImage(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tcl_Channel chan, Tcl_Obj *objPtr, int dir);
 static inline unsigned char Paeth(int a, int b, int c);
 static int		ParseFormat(Tcl_Interp *interp, Tcl_Obj *fmtObj,
 			    PNGImage *pngPtr);
 static int		ReadBase64(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, int destSz,
+			    unsigned char *destPtr, Tcl_Size destSz,
 			    unsigned long *crcPtr);
 static int		ReadByteArray(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, int destSz,
+			    unsigned char *destPtr, Tcl_Size destSz,
 			    unsigned long *crcPtr);
 static int		ReadData(Tcl_Interp *interp, PNGImage *pngPtr,
-			    unsigned char *destPtr, int destSz,
+			    unsigned char *destPtr, Tcl_Size destSz,
 			    unsigned long *crcPtr);
 static int		ReadChunkHeader(Tcl_Interp *interp, PNGImage *pngPtr,
-			    int *sizePtr, unsigned long *typePtr,
+			    Tcl_Size *sizePtr, unsigned long *typePtr,
 			    unsigned long *crcPtr);
 static int		ReadIDAT(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
@@ -236,26 +249,30 @@ static int		ReadTRNS(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
 static int		SkipChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 			    int chunkSz, unsigned long crc);
-static int		StringMatchPNG(Tcl_Obj *dataObj, Tcl_Obj *fmtObj,
+static int		StringMatchPNG(Tcl_Interp *interp, Tcl_Obj *pObjData,
+			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
 			    int *widthPtr, int *heightPtr,
-			    Tcl_Interp *interp);
-static int		StringReadPNG(Tcl_Interp *interp, Tcl_Obj *dataObj,
-			    Tcl_Obj *fmtObj, Tk_PhotoHandle imageHandle,
+			    Tcl_Obj *metadataOutObj);
+static int		StringReadPNG(Tcl_Interp *interp, Tcl_Obj *pObjData,
+			    Tcl_Obj *fmtObj, Tcl_Obj *metadataInObj,
+			    Tk_PhotoHandle imageHandle,
 			    int destX, int destY, int width, int height,
-			    int srcX, int srcY);
+			    int srcX, int srcY, Tcl_Obj *metadataOutObj);
+
 static int		StringWritePNG(Tcl_Interp *interp, Tcl_Obj *fmtObj,
+			    Tcl_Obj *metadataInObj,
 			    Tk_PhotoImageBlock *blockPtr);
 static int		UnfilterLine(Tcl_Interp *interp, PNGImage *pngPtr);
 static inline int	WriteByte(Tcl_Interp *interp, PNGImage *pngPtr,
 			    unsigned char c, unsigned long *crcPtr);
 static inline int	WriteChunk(Tcl_Interp *interp, PNGImage *pngPtr,
 			    unsigned long chunkType,
-			    const unsigned char *dataPtr, int dataSize);
+			    const unsigned char *dataPtr, Tcl_Size dataSize);
 static int		WriteData(Tcl_Interp *interp, PNGImage *pngPtr,
-			    const unsigned char *srcPtr, int srcSz,
+			    const unsigned char *srcPtr, Tcl_Size srcSz,
 			    unsigned long *crcPtr);
 static int		WriteExtraChunks(Tcl_Interp *interp,
-			    PNGImage *pngPtr);
+			    PNGImage *pngPtr, Tcl_Obj *metadataInObj);
 static int		WriteIHDR(Tcl_Interp *interp, PNGImage *pngPtr,
 			    Tk_PhotoImageBlock *blockPtr);
 static int		WriteIDAT(Tcl_Interp *interp, PNGImage *pngPtr,
@@ -267,7 +284,7 @@ static inline int	WriteInt32(Tcl_Interp *interp, PNGImage *pngPtr,
  * The format record for the PNG file format:
  */
 
-Tk_PhotoImageFormat tkImgFmtPNG = {
+Tk_PhotoImageFormatVersion3 tkImgFmtPNG = {
     "png",			/* name */
     FileMatchPNG,		/* fileMatchProc */
     StringMatchPNG,		/* stringMatchProc */
@@ -336,7 +353,7 @@ InitPNGImage(
 	    TCL_ZLIB_COMPRESS_DEFAULT, NULL, &pngPtr->stream) != TCL_OK) {
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "zlib initialization failed", -1));
+		    "zlib initialization failed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "ZLIB_INIT", NULL);
 	}
 	if (objPtr) {
@@ -344,6 +361,13 @@ InitPNGImage(
 	}
 	return TCL_ERROR;
     }
+
+    /*
+     * Initialize physical size pHYS values
+     */
+
+    pngPtr->DPI = -1;
+    pngPtr->aspect = -1;
 
     return TCL_OK;
 }
@@ -430,7 +454,7 @@ ReadBase64(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    int destSz,
+    Tcl_Size destSz,
     unsigned long *crcPtr)
 {
     static const unsigned char from64[] = {
@@ -520,7 +544,7 @@ ReadBase64(
 
     if (destSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"unexpected end of image data", -1));
+		"unexpected end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EARLY_END", NULL);
 	return TCL_ERROR;
     }
@@ -555,7 +579,7 @@ ReadByteArray(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    int destSz,
+    Tcl_Size destSz,
     unsigned long *crcPtr)
 {
     /*
@@ -564,13 +588,13 @@ ReadByteArray(
 
     if (pngPtr->strDataLen < destSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"unexpected end of image data", -1));
+		"unexpected end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EARLY_END", NULL);
 	return TCL_ERROR;
     }
 
     while (destSz) {
-	int blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	Tcl_Size blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
 	memcpy(destPtr, pngPtr->strDataBuf, blockSz);
 
@@ -613,7 +637,7 @@ ReadData(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     unsigned char *destPtr,
-    int destSz,
+    Tcl_Size destSz,
     unsigned long *crcPtr)
 {
     if (pngPtr->base64Data) {
@@ -623,10 +647,10 @@ ReadData(
     }
 
     while (destSz) {
-	int blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
+	Tcl_Size blockSz = PNG_MIN(destSz, PNG_BLOCK_SZ);
 
 	blockSz = Tcl_Read(pngPtr->channel, (char *)destPtr, blockSz);
-	if (blockSz == -1) {
+	if (blockSz == TCL_IO_FAILURE) {
 	    /* TODO: failure info... */
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "channel read failed: %s", Tcl_PosixError(interp)));
@@ -652,7 +676,7 @@ ReadData(
 
 	if (destSz && Tcl_Eof(pngPtr->channel)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "unexpected end of file", -1));
+		    "unexpected end of file", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EOF", NULL);
 	    return TCL_ERROR;
 	}
@@ -738,7 +762,7 @@ CheckCRC(
      */
 
     if (calculated != chunked) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("CRC check failed", -1));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("CRC check failed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "CRC", NULL);
 	return TCL_ERROR;
     }
@@ -858,7 +882,7 @@ static int
 ReadChunkHeader(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
-    int *sizePtr,
+    Tcl_Size *sizePtr,
     unsigned long *typePtr,
     unsigned long *crcPtr)
 {
@@ -933,6 +957,7 @@ ReadChunkHeader(
 	case CHUNK_IDAT:
 	case CHUNK_IEND:
 	case CHUNK_IHDR:
+	case CHUNK_pHYs:
 	case CHUNK_PLTE:
 	case CHUNK_tRNS:
 	    break;
@@ -951,7 +976,6 @@ ReadChunkHeader(
 	case CHUNK_iTXt:
 	case CHUNK_oFFs:
 	case CHUNK_pCAL:
-	case CHUNK_pHYs:
 	case CHUNK_sBIT:
 	case CHUNK_sCAL:
 	case CHUNK_sPLT:
@@ -1010,7 +1034,7 @@ ReadChunkHeader(
 		if ((pc[i] < 65) || (pc[i] > 122) ||
 			((pc[i] > 90) && (pc[i] < 97))) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "invalid chunk type", -1));
+			    "invalid chunk type", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG",
 			    "INVALID_CHUNK", NULL);
 		    return TCL_ERROR;
@@ -1111,7 +1135,7 @@ CheckColor(
 	if ((8 != pngPtr->bitDepth) && (16 != pngPtr->bitDepth)) {
 	unsupportedDepth:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "bit depth is not allowed for given color type", -1));
+		    "bit depth is not allowed for given color type", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_DEPTH", NULL);
 	    return TCL_ERROR;
 	}
@@ -1239,7 +1263,7 @@ ReadIHDR(
 {
     unsigned char sigBuf[PNG_SIG_SZ];
     unsigned long chunkType;
-    int chunkSz;
+    Tcl_Size chunkSz;
     unsigned long crc;
     unsigned long width, height;
     int mismatch;
@@ -1276,7 +1300,7 @@ ReadIHDR(
 
     if (mismatch) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"data stream does not have a PNG signature", -1));
+		"data stream does not have a PNG signature", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NO_SIG", NULL);
 	return TCL_ERROR;
     }
@@ -1294,14 +1318,14 @@ ReadIHDR(
 
     if (chunkType != CHUNK_IHDR) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"expected IHDR chunk type", -1));
+		"expected IHDR chunk type", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NO_IHDR", NULL);
 	return TCL_ERROR;
     }
 
     if (chunkSz != 13) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid IHDR chunk size", -1));
+		"invalid IHDR chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_IHDR", NULL);
 	return TCL_ERROR;
     }
@@ -1445,7 +1469,7 @@ ReadPLTE(
     case PNG_COLOR_GRAY:
     case PNG_COLOR_GRAYALPHA:
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"PLTE chunk type forbidden for grayscale", -1));
+		"PLTE chunk type forbidden for grayscale", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PLTE_UNEXPECTED",
 		NULL);
 	return TCL_ERROR;
@@ -1462,7 +1486,7 @@ ReadPLTE(
 
     if (!chunkSz || (chunkSz > PNG_PLTE_MAXSZ) || (chunkSz % 3)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid palette chunk size", -1));
+		"invalid palette chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PLTE", NULL);
 	return TCL_ERROR;
     }
@@ -1539,7 +1563,7 @@ ReadTRNS(
 
     if (chunkSz > PNG_TRNS_MAXSZ) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"invalid tRNS chunk size", -1));
+		"invalid tRNS chunk size", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_TRNS", NULL);
 	return TCL_ERROR;
     }
@@ -1570,7 +1594,7 @@ ReadTRNS(
 
 	if (chunkSz > pngPtr->paletteLen) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "size of tRNS chunk is too large for the palette", -1));
+		    "size of tRNS chunk is too large for the palette", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TRNS_SIZE", NULL);
 	    return TCL_ERROR;
 	}
@@ -1615,7 +1639,7 @@ ReadTRNS(
 
 	if (chunkSz != 6) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "invalid tRNS chunk size - must 6 bytes for RGB", -1));
+		    "invalid tRNS chunk size - must 6 bytes for RGB", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_TRNS", NULL);
 	    return TCL_ERROR;
 	}
@@ -1640,6 +1664,84 @@ ReadTRNS(
     return TCL_OK;
 }
 
+/*
+ *----------------------------------------------------------------------
+ *
+ * ReadPHYS --
+ *
+ *	This function reads the PHYS (physical size) chunk data from
+ *	the PNG file and populates the fields in the PNGImage
+ *	structure.
+ *
+ * Results:
+ *	TCL_OK, or TCL_ERROR if an I/O error occurs or the PHYS chunk is
+ *	invalid.
+ *
+ * Side effects:
+ *	The access position in f advances.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static int
+ReadPHYS(
+    Tcl_Interp *interp,
+    PNGImage *pngPtr,
+    int chunkSz,
+    unsigned long crc)
+{
+    unsigned long PPUx, PPUy;
+    char unitSpecifier;
+
+    /*
+     * Check chunk size equal 9 bytes
+     */
+
+    if (chunkSz != 9) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"invalid physical chunk size", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PHYS", NULL);
+	return TCL_ERROR;
+    }
+
+    /*
+     * Read the chunk data
+     * 4 bytes: Pixels per unit, x axis
+     * 4 bytes: Pixels per unit, y axis
+     * 1 byte: unit specifier
+     */
+
+    if (ReadInt32(interp, pngPtr, &PPUx, &crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    if (ReadInt32(interp, pngPtr, &PPUy, &crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+    if (ReadData(interp, pngPtr, (unsigned char *)&unitSpecifier, 1, &crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    if (CheckCRC(interp, pngPtr, crc) == TCL_ERROR) {
+	return TCL_ERROR;
+    }
+
+    if ( PPUx > 2147483647 || PPUy > 2147483647
+	    || unitSpecifier > 1 ) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"invalid physical size value", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_PHYS", NULL);
+	return TCL_ERROR;
+    }
+
+    if (PPUx > 0) {
+	pngPtr->aspect = ((double) PPUy) / ((double) PPUx);
+    }
+    if (1 == unitSpecifier) {
+	pngPtr->DPI = ((double) PPUx) * 0.0254;
+    }
+    return TCL_OK;
+}
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1708,9 +1810,9 @@ UnfilterLine(
     PNGImage *pngPtr)
 {
     unsigned char *thisLine =
-	    Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (int *)NULL);
+	    Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (Tcl_Size *)NULL);
     unsigned char *lastLine =
-	    Tcl_GetByteArrayFromObj(pngPtr->lastLineObj, (int *)NULL);
+	    Tcl_GetByteArrayFromObj(pngPtr->lastLineObj, (Tcl_Size *)NULL);
 
 #define	PNG_FILTER_NONE		0
 #define	PNG_FILTER_SUB		1
@@ -1840,7 +1942,7 @@ DecodeLine(
     int colStep = 1;		/* Column increment each pass */
     int pixStep = 0;		/* extra pixelPtr increment each pass */
     unsigned char lastPixel[6];
-    unsigned char *p = Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (int *)NULL);
+    unsigned char *p = Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, (Tcl_Size *)NULL);
 
     p++;
     if (UnfilterLine(interp, pngPtr) == TCL_ERROR) {
@@ -2097,7 +2199,7 @@ ReadIDAT(
      */
 
     while (chunkSz && !Tcl_ZlibStreamEof(pngPtr->stream)) {
-	int len1, len2;
+	Tcl_Size len1, len2;
 
 	/*
 	 * Read another block of input into the zlib stream if data remains.
@@ -2114,7 +2216,7 @@ ReadIDAT(
 
 	    if (Tcl_ZlibStreamEof(pngPtr->stream)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"extra data after end of zlib stream", -1));
+			"extra data after end of zlib stream", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA",
 			NULL);
 		return TCL_ERROR;
@@ -2153,7 +2255,7 @@ ReadIDAT(
 	}
 	Tcl_GetByteArrayFromObj(pngPtr->thisLineObj, &len2);
 
-	if (len2 == pngPtr->phaseSize) {
+	if (len2 == (Tcl_Size)pngPtr->phaseSize) {
 	    if (pngPtr->phase > 7) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"extra data after final scan line of final phase",
@@ -2206,7 +2308,7 @@ ReadIDAT(
 
     if (chunkSz != 0) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"compressed data after stream finalize in PNG data", -1));
+		"compressed data after stream finalize in PNG data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA", NULL);
 	return TCL_ERROR;
     }
@@ -2291,11 +2393,11 @@ ParseFormat(
     PNGImage *pngPtr)
 {
     Tcl_Obj **objv = NULL;
-    int objc = 0;
+    Tcl_Size objc = 0;
     static const char *const fmtOptions[] = {
 	"-alpha", NULL
     };
-    enum fmtOptions {
+    enum fmtOptionsEnum {
 	OPT_ALPHA
     };
 
@@ -2332,7 +2434,7 @@ ParseFormat(
 	objc--;
 	objv++;
 
-	switch ((enum fmtOptions) optIndex) {
+	switch ((enum fmtOptionsEnum) optIndex) {
 	case OPT_ALPHA:
 	    if (Tcl_GetDoubleFromObj(interp, objv[0],
 		    &pngPtr->alpha) == TCL_ERROR) {
@@ -2341,7 +2443,7 @@ ParseFormat(
 
 	    if ((pngPtr->alpha < 0.0) || (pngPtr->alpha > 1.0)) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"-alpha value must be between 0.0 and 1.0", -1));
+			"-alpha value must be between 0.0 and 1.0", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_ALPHA",
 			NULL);
 		return TCL_ERROR;
@@ -2382,7 +2484,7 @@ DecodePNG(
     int destY)
 {
     unsigned long chunkType;
-    int chunkSz;
+    Tcl_Size chunkSz;
     unsigned long crc;
 
     /*
@@ -2415,6 +2517,29 @@ DecodePNG(
 	return TCL_ERROR;
     }
 
+    /*
+     * Physical header may be present here so try to parse it
+     */
+
+    if (CHUNK_pHYs == chunkType) {
+	/*
+	 * Finish parsing the PHYS chunk.
+	 */
+
+	if (ReadPHYS(interp, pngPtr, chunkSz, crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Begin the next chunk.
+	 */
+
+	if (ReadChunkHeader(interp, pngPtr, &chunkSz, &chunkType,
+		&crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+    }
+
     if (CHUNK_PLTE == chunkType) {
 	/*
 	 * Finish parsing the PLTE chunk.
@@ -2434,7 +2559,7 @@ DecodePNG(
 	}
     } else if (PNG_COLOR_PLTE == pngPtr->colorType) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"PLTE chunk required for indexed color", -1));
+		"PLTE chunk required for indexed color", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NEED_PLTE", NULL);
 	return TCL_ERROR;
     }
@@ -2466,13 +2591,36 @@ DecodePNG(
     }
 
     /*
+     * Physical header may be present here so try to parse it
+     */
+
+    if (CHUNK_pHYs == chunkType) {
+	/*
+	 * Finish parsing the PHYS chunk.
+	 */
+
+	if (ReadPHYS(interp, pngPtr, chunkSz, crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+
+	/*
+	 * Begin the next chunk.
+	 */
+
+	if (ReadChunkHeader(interp, pngPtr, &chunkSz, &chunkType,
+		&crc) == TCL_ERROR) {
+	    return TCL_ERROR;
+	}
+    }
+
+    /*
      * Other ancillary chunk types could appear here, but for now we're only
      * interested in IDAT. The others should have been skipped.
      */
 
     if (chunkType != CHUNK_IDAT) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"at least one IDAT chunk is required", -1));
+		"at least one IDAT chunk is required", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "NEED_IDAT", NULL);
 	return TCL_ERROR;
     }
@@ -2520,10 +2668,10 @@ DecodePNG(
     pngPtr->thisLineObj = Tcl_NewObj();
     Tcl_IncrRefCount(pngPtr->thisLineObj);
 
-    pngPtr->block.pixelPtr = attemptckalloc(pngPtr->blockLen);
+    pngPtr->block.pixelPtr = (unsigned char *)attemptckalloc(pngPtr->blockLen);
     if (!pngPtr->block.pixelPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"memory allocation failed", -1));
+		"memory allocation failed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
 	return TCL_ERROR;
     }
@@ -2575,7 +2723,7 @@ DecodePNG(
 
     if (!Tcl_ZlibStreamEof(pngPtr->stream)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"unfinalized data stream in PNG data", -1));
+		"unfinalized data stream in PNG data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "EXTRA_DATA", NULL);
 	return TCL_ERROR;
     }
@@ -2601,7 +2749,7 @@ DecodePNG(
 
     if (chunkSz) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"IEND chunk contents must be empty", -1));
+		"IEND chunk contents must be empty", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_IEND", NULL);
 	return TCL_ERROR;
     }
@@ -2622,7 +2770,7 @@ DecodePNG(
 #if 0
     if (ReadData(interp, pngPtr, &c, 1, NULL) != TCL_ERROR) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"extra data following IEND chunk", -1));
+		"extra data following IEND chunk", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "BAD_IEND", NULL);
 	return TCL_ERROR;
     }
@@ -2667,12 +2815,15 @@ DecodePNG(
 
 static int
 FileMatchPNG(
-    Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *fmtObj,
-    int *widthPtr,
-    int *heightPtr,
-    Tcl_Interp *interp)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    TCL_UNUSED(Tcl_Obj *),	/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    int *widthPtr, int *heightPtr,
+				/* The dimensions of the image are returned
+				 * here if the file is a valid raw GIF file. */
+    TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int match = 0;
@@ -2711,17 +2862,21 @@ FileMatchPNG(
 
 static int
 FileReadPNG(
-    Tcl_Interp *interp,
-    Tcl_Channel chan,
-    const char *fileName,
-    Tcl_Obj *fmtObj,
-    Tk_PhotoHandle imageHandle,
-    int destX,
-    int destY,
-    int width,
-    int height,
-    int srcX,
-    int srcY)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Channel chan,		/* The image file, open for reading. */
+    TCL_UNUSED(const char *),	/* The name of the image file. */
+    Tcl_Obj *fmtObj,		/* User-specified format object, or NULL. */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    Tk_PhotoHandle imageHandle,	/* The photo image to write into. */
+    int destX, int destY,	/* Coordinates of top-left pixel in photo
+				 * image to be written to. */
+    TCL_UNUSED(int),		/* Dimensions of block of photo image to be
+				 * written to. */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),		/* Coordinates of top-left pixel to be used in
+				 * image being read. */
+    TCL_UNUSED(int),
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -2730,6 +2885,18 @@ FileReadPNG(
 
     if (TCL_OK == result) {
 	result = DecodePNG(interp, &png, fmtObj, imageHandle, destX, destY);
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.DPI != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("DPI",-1),
+		Tcl_NewDoubleObj(png.DPI));
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.aspect != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("aspect",-1),
+		Tcl_NewDoubleObj(png.aspect));
     }
 
     CleanupPNGImage(&png);
@@ -2756,11 +2923,13 @@ FileReadPNG(
 
 static int
 StringMatchPNG(
-    Tcl_Obj *pObjData,
-    Tcl_Obj *fmtObj,
-    int *widthPtr,
-    int *heightPtr,
-    Tcl_Interp *interp)
+    Tcl_Interp *interp,		/* Interpreter to use for reporting errors. */
+    Tcl_Obj *pObjData,		/* the object containing the image data */
+    TCL_UNUSED(Tcl_Obj *),	/* the image format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    int *widthPtr,		/* where to put the string width */
+    int *heightPtr,		/* where to put the string height */
+    TCL_UNUSED(Tcl_Obj *))	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int match = 0;
@@ -2799,16 +2968,17 @@ StringMatchPNG(
 
 static int
 StringReadPNG(
-    Tcl_Interp *interp,
-    Tcl_Obj *pObjData,
-    Tcl_Obj *fmtObj,
-    Tk_PhotoHandle imageHandle,
-    int destX,
-    int destY,
-    int width,
-    int height,
-    int srcX,
-    int srcY)
+    Tcl_Interp *interp,		/* interpreter for reporting errors in */
+    Tcl_Obj *pObjData,		/* object containing the image */
+    Tcl_Obj *fmtObj,		/* format object, or NULL */
+    TCL_UNUSED(Tcl_Obj *),	/* metadata input, may be NULL */
+    Tk_PhotoHandle imageHandle,	/* the image to write this data into */
+    int destX, int destY,	/* The rectangular region of the */
+    TCL_UNUSED(int),		/* image to copy */
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    Tcl_Obj *metadataOutObj)	/* metadata return dict, may be NULL */
 {
     PNGImage png;
     int result = TCL_ERROR;
@@ -2818,6 +2988,18 @@ StringReadPNG(
 
     if (TCL_OK == result) {
 	result = DecodePNG(interp, &png, fmtObj, imageHandle, destX, destY);
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.DPI != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("DPI",-1),
+		Tcl_NewDoubleObj(png.DPI));
+    }
+
+    if (TCL_OK == result && metadataOutObj != NULL && png.aspect != -1) {
+	result = Tcl_DictObjPut(NULL, metadataOutObj,
+		Tcl_NewStringObj("aspect",-1),
+		Tcl_NewDoubleObj(png.aspect));
     }
 
     CleanupPNGImage(&png);
@@ -2845,10 +3027,10 @@ WriteData(
     Tcl_Interp *interp,
     PNGImage *pngPtr,
     const unsigned char *srcPtr,
-    int srcSz,
+    Tcl_Size srcSz,
     unsigned long *crcPtr)
 {
-    if (!srcPtr || !srcSz) {
+    if (!srcPtr || srcSz <= 0) {
 	return TCL_OK;
     }
 
@@ -2862,14 +3044,14 @@ WriteData(
      */
 
     if (pngPtr->objDataPtr) {
-	int objSz;
+	Tcl_Size objSz;
 	unsigned char *destPtr;
 
 	Tcl_GetByteArrayFromObj(pngPtr->objDataPtr, &objSz);
 
-	if (objSz > INT_MAX - srcSz) {
+	if (objSz + srcSz > INT_MAX) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "image too large to store completely in byte array", -1));
+		    "image too large to store completely in byte array", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TOO_LARGE", NULL);
 	    return TCL_ERROR;
 	}
@@ -2878,13 +3060,13 @@ WriteData(
 
 	if (!destPtr) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "memory allocation failed", -1));
+		    "memory allocation failed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
 	    return TCL_ERROR;
 	}
 
 	memcpy(destPtr+objSz, srcPtr, srcSz);
-    } else if (Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) == -1) {
+    } else if (Tcl_Write(pngPtr->channel, (const char *) srcPtr, srcSz) == TCL_IO_FAILURE) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"write to channel failed: %s", Tcl_PosixError(interp)));
 	return TCL_ERROR;
@@ -2901,6 +3083,34 @@ WriteByte(
     unsigned long *crcPtr)
 {
     return WriteData(interp, pngPtr, &c, 1, crcPtr);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * LongToInt32 --
+ *
+ *	This function transforms to a 32-bit integer value as
+ *	four bytes in network byte order.
+ *
+ * Results:
+ *	None
+ *
+ * Side effects:
+ *	Buffer will be modified.
+ *
+ *----------------------------------------------------------------------
+ */
+
+static inline void
+LongToInt32(
+    unsigned long l,
+    unsigned char *pc)
+{
+    pc[0] = (unsigned char) ((l & 0xff000000) >> 24);
+    pc[1] = (unsigned char) ((l & 0x00ff0000) >> 16);
+    pc[2] = (unsigned char) ((l & 0x0000ff00) >> 8);
+    pc[3] = (unsigned char) ((l & 0x000000ff) >> 0);
 }
 
 /*
@@ -2928,12 +3138,7 @@ WriteInt32(
     unsigned long *crcPtr)
 {
     unsigned char pc[4];
-
-    pc[0] = (unsigned char) ((l & 0xff000000) >> 24);
-    pc[1] = (unsigned char) ((l & 0x00ff0000) >> 16);
-    pc[2] = (unsigned char) ((l & 0x0000ff00) >> 8);
-    pc[3] = (unsigned char) ((l & 0x000000ff) >> 0);
-
+    LongToInt32(l,pc);
     return WriteData(interp, pngPtr, pc, 4, crcPtr);
 }
 
@@ -2960,7 +3165,7 @@ WriteChunk(
     PNGImage *pngPtr,
     unsigned long chunkType,
     const unsigned char *dataPtr,
-    int dataSize)
+    Tcl_Size dataSize)
 {
     unsigned long crc = Tcl_ZlibCRC32(0, NULL, 0);
     int result = TCL_OK;
@@ -3131,9 +3336,10 @@ WriteIDAT(
     PNGImage *pngPtr,
     Tk_PhotoImageBlock *blockPtr)
 {
-    int rowNum, flush = TCL_ZLIB_NO_FLUSH, outputSize, result;
+    int rowNum, flush = TCL_ZLIB_NO_FLUSH, result;
     Tcl_Obj *outputObj;
     unsigned char *outputBytes;
+    Tcl_Size outputSize;
 
     /*
      * Filter and compress each row one at a time.
@@ -3202,7 +3408,7 @@ WriteIDAT(
 	if (Tcl_ZlibStreamPut(pngPtr->stream, pngPtr->thisLineObj,
 		flush) != TCL_OK) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "deflate() returned error", -1));
+		    "deflate() returned error", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "DEFLATE", NULL);
 	    return TCL_ERROR;
 	}
@@ -3224,7 +3430,7 @@ WriteIDAT(
      */
 
     outputObj = Tcl_NewObj();
-    (void) Tcl_ZlibStreamGet(pngPtr->stream, outputObj, -1);
+    (void) Tcl_ZlibStreamGet(pngPtr->stream, outputObj, TCL_INDEX_NONE);
     outputBytes = Tcl_GetByteArrayFromObj(outputObj, &outputSize);
     result = WriteChunk(interp, pngPtr, CHUNK_IDAT, outputBytes, outputSize);
     Tcl_DecrRefCount(outputObj);
@@ -3251,7 +3457,8 @@ WriteIDAT(
 static int
 WriteExtraChunks(
     Tcl_Interp *interp,
-    PNGImage *pngPtr)
+    PNGImage *pngPtr,
+    Tcl_Obj *metadataInObj)
 {
     static const unsigned char sBIT_contents[] = {
 	8, 8, 8, 8
@@ -3293,8 +3500,8 @@ WriteExtraChunks(
 
     Tcl_DStringInit(&buf);
     Tcl_DStringAppend(&buf, "Software", 9);
-    Tcl_DStringAppend(&buf, "Tk Toolkit v", -1);
-    Tcl_DStringAppend(&buf, TK_PATCH_LEVEL, -1);
+    Tcl_DStringAppend(&buf, "Tk Toolkit v", TCL_INDEX_NONE);
+    Tcl_DStringAppend(&buf, TK_PATCH_LEVEL, TCL_INDEX_NONE);
     if (WriteChunk(interp, pngPtr, CHUNK_tEXt,
 	    (unsigned char *) Tcl_DStringValue(&buf),
 	    Tcl_DStringLength(&buf)) != TCL_OK) {
@@ -3303,6 +3510,79 @@ WriteExtraChunks(
     }
     Tcl_DStringFree(&buf);
 
+    /*
+     * Add a pHYs chunk if there is metadata for DPI and/or aspect
+     * aspect = PPUy / PPUx
+     * DPI = PPUx * 0.0254
+     * The physical chunk consists of:
+     * - Points per meter in x direction (32 bit)
+     * - Points per meter in x direction (32 bit)
+     * - Unit specifier: 0: no unit (only aspect), 1: Points per meter
+     */
+
+    if (metadataInObj != NULL) {
+
+	Tcl_Obj *aspectObj, *DPIObj;
+	double aspectValue=-1, DPIValue=-1;
+	unsigned long PPUx = 65536, PPUy = 65536;
+	char unitSpecifier;
+
+	if (TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
+		Tcl_NewStringObj("aspect",-1),
+		&aspectObj) ||
+	    TCL_ERROR == Tcl_DictObjGet(interp, metadataInObj,
+		Tcl_NewStringObj("DPI",-1),
+		&DPIObj) ) {
+	    return TCL_ERROR;
+	}
+	if (DPIObj != NULL) {
+	    if (TCL_ERROR == Tcl_GetDoubleFromObj(interp, DPIObj, &DPIValue))
+	    {
+		return TCL_ERROR;
+	    }
+	    PPUx = (unsigned long)floor(DPIValue / 0.0254+0.5);
+	    if (aspectObj == NULL) {
+		PPUy = PPUx;
+	    }
+	    unitSpecifier = 1;
+	}
+	if (aspectObj != NULL) {
+	    if (TCL_ERROR == Tcl_GetDoubleFromObj(interp, aspectObj,
+		    &aspectValue)) {
+		return TCL_ERROR;
+	    }
+
+	    /*
+	     * aspect = PPUy / PPUx
+	     */
+
+	    if (DPIObj == NULL) {
+		unitSpecifier = 0;
+		PPUx = 65536;
+		PPUy = (unsigned long)floor(65536.0 * aspectValue+0.5);
+	    } else {
+		PPUy = (unsigned long)floor(DPIValue * aspectValue / 0.0254+0.5);
+	    }
+	}
+	if (DPIObj != NULL || aspectObj != NULL) {
+	    unsigned char buffer[9];
+
+	    if ( PPUx > 2147483647 || PPUy > 2147483647 ) {
+		Tcl_SetObjResult(interp, Tcl_NewStringObj(
+			"DPI or aspect out of range", TCL_INDEX_NONE));
+		Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "PHYS", NULL);
+		return TCL_ERROR;
+	    }
+
+	    LongToInt32(PPUx, buffer);
+	    LongToInt32(PPUy, buffer+4);
+	    buffer[8] = unitSpecifier;
+	    if (WriteChunk(interp, pngPtr, CHUNK_pHYs, buffer, 9)
+		    != TCL_OK) {
+		return TCL_ERROR;
+	    }
+	}
+    }
     return TCL_OK;
 }
 
@@ -3328,7 +3608,8 @@ static int
 EncodePNG(
     Tcl_Interp *interp,
     Tk_PhotoImageBlock *blockPtr,
-    PNGImage *pngPtr)
+    PNGImage *pngPtr,
+    Tcl_Obj *metadataInObj)
 {
     int greenOffset, blueOffset, alphaOffset;
 
@@ -3378,7 +3659,7 @@ EncodePNG(
     if ((blockPtr->width > (INT_MAX - 1) / (pngPtr->bytesPerPixel)) ||
 	    (blockPtr->height > INT_MAX / pngPtr->lineSize)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"image is too large to encode pixel data", -1));
+		"image is too large to encode pixel data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "PNG", "TOO_LARGE", NULL);
 	return TCL_ERROR;
     }
@@ -3411,7 +3692,7 @@ EncodePNG(
      * other programs more than us.
      */
 
-    if (WriteExtraChunks(interp, pngPtr) == TCL_ERROR) {
+    if (WriteExtraChunks(interp, pngPtr, metadataInObj) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
@@ -3452,7 +3733,8 @@ static int
 FileWritePNG(
     Tcl_Interp *interp,
     const char *filename,
-    Tcl_Obj *fmtObj,
+    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Channel chan;
@@ -3493,7 +3775,7 @@ FileWritePNG(
      * Write the raw PNG data out to the file.
      */
 
-    result = EncodePNG(interp, blockPtr, &png);
+    result = EncodePNG(interp, blockPtr, &png, metadataInObj);
 
   cleanup:
     Tcl_Close(interp, chan);
@@ -3522,7 +3804,8 @@ FileWritePNG(
 static int
 StringWritePNG(
     Tcl_Interp *interp,
-    Tcl_Obj *fmtObj,
+    TCL_UNUSED(Tcl_Obj *),
+    Tcl_Obj *metadataInObj,
     Tk_PhotoImageBlock *blockPtr)
 {
     Tcl_Obj *resultObj = Tcl_NewObj();
@@ -3543,7 +3826,7 @@ StringWritePNG(
      * back to the interpreter if successful.
      */
 
-    result = EncodePNG(interp, blockPtr, &png);
+    result = EncodePNG(interp, blockPtr, &png, metadataInObj);
 
     if (TCL_OK == result) {
 	Tcl_SetObjResult(interp, png.objDataPtr);

@@ -10,12 +10,13 @@
 .BS
 '\" Note:  do not modify the .SH NAME line immediately below!
 .SH NAME
-geometry, tk_library, tk_patchLevel, tk_strictMotif, tk_version \- Variables used or set by Tk
+geometry, tk_library, tk_patchLevel, tk::scalingPct, tk_strictMotif, tk::svgFmt, tk_version \- Variables used or set by Tk
 .BE
 .SH DESCRIPTION
 .PP
 The following Tcl variables are either set or used by Tk at various times
 in its execution:
+.\" VARIABLE: tk_library
 .TP 15
 \fBtk_library\fR
 .
@@ -40,6 +41,7 @@ working directory.
 The variable can be modified by an application to switch to a different
 library.
 .RE
+.\" VARIABLE: tk_patchLevel
 .TP
 \fBtk_patchLevel\fR
 .
@@ -50,8 +52,45 @@ it uniquely identifies an official version of Tk.
 .RS
 .PP
 This value is normally the same as the result of
-.QW "\fBpackage require\fR \fBTk\fR" .
+.QW "\fBpackage require\fR \fBtk\fR" .
 .RE
+.\" VARIABLE: scalingPct
+.TP
+\fBtk::scalingPct\fR
+.
+Tk sets this variable at initialization time to the scaling percentage
+corresponding to the display's DPI scaling level.  This value is at least
+100 and is restricted to multiples of 25 (100, 125, 150, 175, 200,
+225, ...).  The sizes and various attributes of the Tk core and Ttk
+widgets and their components, as well as the sizes of the images used by
+Tk are chosen according to the scaling percentage, and this is
+recommended for applications and library packages, too.
+.RS
+.PP
+Note that any access to this variable is supposed to be strictly
+read-only!  Note also that whenever the scaling factor used to convert
+between physical units and pixels is changed via \fBtk scaling\fR, the
+value of the variable \fBtk::scalingPct\fR is automatically updated.
+.PP
+On the windowing systems \fBwin32\fR and \fBaqua\fR the scaling
+percentage is computed by rounding [\fBtk scaling\fR] * 75 to the
+nearest multiple of 25 that is at least 100.  (On \fBaqua\fR the result
+is always 100, and the desktop engine automatically scales everything as
+needed.)  On \fBx11\fR, deriving the scaling percentage from
+[\fBtk scaling\fR] is done as fallback method only, because the
+implementation of display scaling is highly dependent on the desktop
+environment and it mostly manipulates system resources that are resident
+outside of Xlib, which Tk is based on.  Moreover, for technical reasons,
+the value assigned to the variable \fBtk::scalingPct\fR can be different
+from the one selected in the system settings (e.g., 200 rather than 125,
+150, or 175 when running GNOME on Xorg or the Cinnamon desktop).  On
+\fBx11\fR the scaling percentage is computed mostly (but not
+exclusively) from the value of the X resource Xft.dpi, and, as an
+additional step, Tk synchronizes the scaling factor used to convert
+between physical units and pixels with the scaling percentage, with the
+aid of the \fBtk scaling\fR command.
+.RE
+.\" VARIABLE: tk_strictMotif
 .TP
 \fBtk_strictMotif\fR
 .
@@ -61,7 +100,32 @@ closely as possible to Motif look-and-feel standards.
 For example, active elements such as buttons and scrollbar
 sliders will not change color when the pointer passes over them.
 Modern applications should not normally set this variable.
-.TP 15
+.\" VARIABLE: svgFmt
+.TP
+\fBtk::svgFmt\fR
+.
+This variable is set at Tk initialization time to
+.RS
+.RS 4
+.PP
+[\fBlist svg \-scale\fR [\fBexpr\fR {$\fBtk::scalingPct\fR / 100.0}]]
+.RE
+.PP
+Typical values are {\fBsvg \-scale\fR 1.0}, {\fBsvg \-scale\fR 1.25},
+{\fBsvg \-scale\fR 2.0}, etc.  It is recommended to pass the value of
+this variable to the commands \fBimage create photo\fR, \fIimageName\fB
+configure\fR, \fIimageName\fB put\fR, and \fIimageName\fB read\fR as the
+value of their \fB\-format\fR option when creating or manipulating SVG
+images, to make sure that their sizes will correspond to the display's
+DPI scaling level.
+.PP
+Note that any access to this variable is supposed to be strictly
+read-only!  Note also that whenever the scaling factor used to convert
+between physical units and pixels is changed via \fBtk scaling\fR, the
+value of the variable \fBtk::svgFmt\fR is automatically updated.
+.RE
+.\" VARIABLE: tk_version
+.TP
 \fBtk_version\fR
 .
 Tk sets this variable in the interpreter for each application.
@@ -76,6 +140,7 @@ major version number changes.
 .SS "INTERNAL AND DEBUGGING VARIABLES"
 .PP
 These variables should not normally be set by user code.
+.\" VARIABLE: Priv
 .TP
 \fBtk::Priv\fR
 .
@@ -83,6 +148,8 @@ This variable is an array containing several pieces of information
 that are private to Tk.  The elements of \fBtk::Priv\fR are used by
 Tk library procedures and default bindings.
 They should not be accessed by any code outside Tk.
+.\" VARIABLE: tk_textRedraw
+.\" VARIABLE: tk_textRelayout
 .TP
 \fBtk_textRedraw\fR
 .TP
@@ -96,7 +163,8 @@ used by Tk's test suite.
 The following variables are only guaranteed to exist in \fBwish\fR
 executables; the Tk library does not define them itself but many Tk
 environments do.
-.TP 6
+.\" VARIABLE: geometry
+.TP
 \fBgeometry\fR
 .
 If set, contains the user-supplied geometry specification to use for

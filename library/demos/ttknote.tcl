@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .ttknote
 catch {destroy $w}
@@ -25,7 +25,7 @@ set w $w.f
 
 ## Make the notebook and set up Ctrl+Tab traversal
 ttk::notebook $w.note
-pack $w.note -fill both -expand 1 -padx 2 -pady 3
+pack $w.note -fill both -expand 1 -padx 1.5p -pady 3p
 ttk::notebook::enableTraversal $w.note
 
 ## Popuplate the first pane
@@ -37,9 +37,9 @@ ttk::button $w.note.msg.b -text "Neat!" -underline 0 -command {
 }
 bind $w <Alt-n> "focus $w.note.msg.b; $w.note.msg.b invoke"
 ttk::label $w.note.msg.l -textvariable neat
-$w.note add $w.note.msg -text "Description" -underline 0 -padding 2
-grid $w.note.msg.m - -sticky new -pady 2
-grid $w.note.msg.b $w.note.msg.l -pady {2 4}
+$w.note add $w.note.msg -text "Description" -underline 0 -padding 1.5p
+grid $w.note.msg.m - -sticky new -pady 1.5p
+grid $w.note.msg.b $w.note.msg.l -pady {1.5p 3p}
 grid rowconfigure $w.note.msg 1 -weight 1
 grid columnconfigure $w.note.msg {0 1} -weight 1 -uniform 1
 
@@ -53,5 +53,5 @@ $w.note add $w.note.editor -text "Text Editor" -underline 0
 text $w.note.editor.t -width 40 -height 10 -wrap char \
 	-yscroll "$w.note.editor.s set"
 ttk::scrollbar $w.note.editor.s -orient vertical -command "$w.note.editor.t yview"
-pack $w.note.editor.s -side right -fill y -padx {0 2} -pady 2
-pack $w.note.editor.t -fill both -expand 1 -pady 2 -padx {2 0}
+pack $w.note.editor.s -side right -fill y -padx {0 1.5p} -pady 1.5p
+pack $w.note.editor.t -fill both -expand 1 -pady 1.5p -padx {1.5p 0}

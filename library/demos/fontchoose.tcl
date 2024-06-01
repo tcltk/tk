@@ -6,7 +6,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .fontchoose
 catch {destroy $w}
@@ -40,7 +40,7 @@ bind $w <<TkFontchooserVisibility>> {
 }
 
 
-set f [ttk::frame $w.f -relief sunken -padding 2]
+set f [ttk::frame $w.f -relief sunken -padding 1.5p]
 
 text $f.msg -font FontchooseDemoFont -width 40 -height 6 -borderwidth 0 \
     -yscrollcommand [list $f.vs set]

@@ -25,7 +25,7 @@ test dialog-2.1 {tk_dialog operation} -setup {
             update
         }
         event generate $btn <Enter>
-        event generate $btn <1> -x 5 -y 5
+        event generate $btn <Button-1> -x 5 -y 5
         event generate $btn <ButtonRelease-1> -x 5 -y 5
     }
 } -body {
@@ -41,7 +41,7 @@ test dialog-2.2 {tk_dialog operation} -setup {
     proc HitReturn {w} {
         event generate $w <Enter>
         focus -force $w
-        event generate $w <KeyPress> -keysym Return
+        event generate $w <Key> -keysym Return
     }
 } -body {
     set x [after 5000 [list set tk::Priv(button) "no response"]]

@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .radio
 catch {destroy $w}
@@ -22,13 +22,13 @@ grid $w.msg -row 0 -column 0 -columnspan 3 -sticky nsew
 set btns [addSeeDismiss $w.buttons $w [list size color align]]
 grid $btns -row 3 -column 0 -columnspan 3 -sticky ew
 
-labelframe $w.left -pady 2 -text "Point Size" -padx 2
-labelframe $w.mid -pady 2 -text "Color" -padx 2
-labelframe $w.right -pady 2 -text "Alignment" -padx 2
+labelframe $w.left -pady 1.5p -text "Point Size" -padx 1.5p
+labelframe $w.mid -pady 1.5p -text "Color" -padx 1.5p
+labelframe $w.right -pady 1.5p -text "Alignment" -padx 1.5p
 button $w.tristate -text Tristate -command "set size multi; set color multi" \
-    -pady 2 -padx 2
+    -pady 1.5p -padx 1.5p
 if {[tk windowingsystem] eq "aqua"} {
-    $w.tristate configure -padx 10
+    $w.tristate configure -padx 7.5p
 }
 grid $w.left     -column 0 -row 1 -pady .5c -padx .5c -rowspan 2
 grid $w.mid      -column 1 -row 1 -pady .5c -padx .5c -rowspan 2
@@ -38,7 +38,7 @@ grid $w.tristate -column 2 -row 2 -pady .5c -padx .5c
 foreach i {10 12 14 18 24} {
     radiobutton $w.left.b$i -text "Point Size $i" -variable size \
 	    -relief flat -value $i -tristatevalue "multi"
-    pack $w.left.b$i  -side top -pady 2 -anchor w -fill x
+    pack $w.left.b$i  -side top -pady 1.5p -anchor w -fill x
 }
 
 foreach c {Red Green Blue Yellow Orange Purple} {
@@ -47,7 +47,7 @@ foreach c {Red Green Blue Yellow Orange Purple} {
 	    -relief flat -value $lower -anchor w \
 	    -command "$w.mid configure -fg \$color" \
 	-tristatevalue "multi"
-    pack $w.mid.$lower -side top -pady 2 -fill x
+    pack $w.mid.$lower -side top -pady 1.5p -fill x
 }
 
 

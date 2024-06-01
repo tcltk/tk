@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .cscroll
 catch {destroy $w}
@@ -17,7 +17,7 @@ wm iconname $w "cscroll"
 positionWindow $w
 set c $w.c
 
-label $w.msg -font $font -wraplength 4i -justify left -text "This window displays a canvas widget that can be scrolled either using the scrollbars or by dragging with button 2 in the canvas.  If you click button 1 on one of the rectangles, its indices will be printed on stdout."
+label $w.msg -font $font -wraplength 4i -justify left -text "This window displays a canvas widget that can be scrolled by using the scrollbars, by dragging with button 2 in the canvas, by using a mouse wheel, or with the two-finger gesture on a touchpad.  If you click button 1 on one of the rectangles, its indices will be printed on stdout."
 pack $w.msg -side top
 
 ## See Code / Dismiss buttons
@@ -56,7 +56,7 @@ for {set i 0} {$i < 20} {incr i} {
 $c bind all <Enter> "scrollEnter $c"
 $c bind all <Leave> "scrollLeave $c"
 $c bind all <Button-1> "scrollButton $c"
-if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide tk] 8.7-]} {
     bind $c <Button-3> "$c scan mark %x %y"
     bind $c <B3-Motion> "$c scan dragto %x %y"
     bind $c <MouseWheel> {
@@ -108,9 +108,15 @@ if {([tk windowingsystem] eq "aqua") && ![package vsatisfies [package provide Tk
 	    %W xview scroll [expr {(%D-2)/-3}] units
 	}
     }
+    bind $c <TouchpadScroll> {
+	lassign [tk::PreciseScrollDeltas %D] deltaX deltaY
+	if {$deltaX != 0 || $deltaY != 0} {
+	    tk::ScrollByPixels %W $deltaX $deltaY
+	}
+    }
 }
 
-if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide Tk] 8.7-]} {
+if {[tk windowingsystem] eq "x11" && ![package vsatisfies [package provide tk] 8.7-]} {
     # Support for mousewheels on Linux/Unix commonly comes through mapping
     # the wheel to the extended buttons.  If you have a mousewheel, find
     # Linux configuration info at:

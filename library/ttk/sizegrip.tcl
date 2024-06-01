@@ -12,7 +12,7 @@ switch -- [tk windowingsystem] {
 	option add *TSizegrip.cursor [ttk::cursor seresize] widgetDefault
     }
     aqua {
-    	# Aqua sizegrips use default Arrow cursor.
+	# Aqua sizegrips use default Arrow cursor.
     }
 }
 
@@ -54,7 +54,7 @@ proc ttk::sizegrip::Press {W X Y} {
     #   just bail out -- there's no way to handle this cleanly.
     #
     if {[scan [wm geometry $top] "%dx%d+%d+%d" width height x y] != 4} {
-	return
+	return;
     }
 
     # Account for gridded geometry:

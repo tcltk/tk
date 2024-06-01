@@ -4,14 +4,33 @@
  *	Provides a default version of the main program and Tcl_AppInit
  *	procedure for wish and other Tk-based applications.
  *
- * Copyright (c) 1993 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 Scriptics Corporation.
+ * Copyright © 1993 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
  */
 
+/*
+ * Explanation on following undef USE_TCL_STUBS by JN 2023-12-19 on the core list:
+ * What's going on is related to TIP #596:
+ *  Stubs support for Embedding Tcl in other applications
+ *
+ * If an application using Tcl_Main() is compiled with USE_TCL_STUBS,
+ * Tcl_Main() will be replaced by a stub function, which loads
+ * libtcl9.0.so/tcl90.dll and then calls its Tcl_MainEx(). If
+ * libtcl9.0.so/tcl90.dll is not present (at runtime), a crash is what happens.
+ *
+ * So ... tkAppInit.c should not be compiled with USE_TCL_STUBS
+ * (unless you want to use the TIP #596 functionality)
+ *
+ * The proper solution is to make sure that Makefile.in doesn't use
+ * TCL_USE_STUBS when compiling tkAppInit.c. But that's a
+ * quite big re-organization just before a b1 release. Simpler
+ * is just to #undef'ine USE_TCL_STUBS, it has the same effect.
+ */
+#undef USE_TCL_STUBS
 #undef BUILD_tk
 #undef STATIC_BUILD
 #include "tk.h"
@@ -88,6 +107,9 @@ main(
 {
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
+#elif (TCL_MAJOR_VERSION > 8) || (TCL_MINOR_VERSION > 6)
+    /* This doesn't work with Tcl 8.6 */
+    TclZipfs_AppHook(&argc, &argv);
 #endif
 
     Tk_Main(argc, argv, TK_LOCAL_APPINIT);

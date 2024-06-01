@@ -12,7 +12,7 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXConstants.h"
 
@@ -106,6 +106,29 @@ enum {
 @end
 #pragma mark -
 
+int
+XSync(
+    Display *display,
+    TCL_UNUSED(Bool))
+{
+    /*
+     *  The main use of XSync is by the update command, which alternates
+     *  between running an event loop to process all events without waiting and
+     *  calling XSync on all displays until no events are left.  On X11 the
+     *  call to XSync might cause the window manager to generate more events
+     *  which would then get processed. Apparently this process stabilizes on
+     *  X11, leaving the window manager in a state where all events have been
+     *  generated and no additional events can be genereated by updating widgets.
+     *
+     *  It is not clear what the Aqua port should do when XSync is called, but
+     *  currently the best option seems to be to do nothing.  (See ticket
+     *  [da5f2266df].)
+     */
+
+    LastKnownRequestProcessed(display)++;
+    return 0;
+}
+
 /*
  * Local Variables:
  * mode: objc

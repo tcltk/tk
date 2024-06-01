@@ -15,7 +15,7 @@
 
 #include "tkMacOSXPrivate.h"
 #include "tkMacOSXWm.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXDebug.h"
 #include "tkMacOSXConstants.h"
 
@@ -422,7 +422,7 @@ static void RefocusGrabWindow(void *data) {
 	    "::tk::mac::OnShow" : "::tk::mac::OnHide");
 
     if (_eventInterp && Tcl_FindCommand(_eventInterp, cmd, NULL, 0)) {
-	int code = Tcl_EvalEx(_eventInterp, cmd, -1, TCL_EVAL_GLOBAL);
+	int code = Tcl_EvalEx(_eventInterp, cmd, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 
 	if (code != TCL_OK) {
 	    Tcl_BackgroundException(_eventInterp, code);
@@ -473,32 +473,11 @@ static void RefocusGrabWindow(void *data) {
  *
  *----------------------------------------------------------------------
  */
-
+//XXXXX This stub is not used with CGImage drawing.
 int
 TkpWillDrawWidget(Tk_Window tkwin) {
-    int result;
-    if (TK_MAC_SYNCHRONOUS_DRAWING) return 0; // not in drawRect
-    if (tkwin) {
-	TkWindow *winPtr = (TkWindow *)tkwin;
-	TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(
-	    (Drawable)winPtr->privatePtr);
-	result = ([NSApp isDrawing] && view == [NSView focusView]);
-#if 0
-	printf("TkpWillDrawWidget: %s %d  %d \n", Tk_PathName(tkwin),
-	       [NSApp isDrawing], (view == [NSView focusView]));
-	if (!result) {
-	    NSRect dirtyRect;
-	    TkMacOSXWinNSBounds(winPtr, view, &dirtyRect);
-	    printf("TkpAppCanDraw: dirtyRect for %s is %s\n",
-		   Tk_PathName(tkwin),
-		   NSStringFromRect(dirtyRect).UTF8String);
-	    [view addTkDirtyRect:dirtyRect];
-	}
-#endif
-    } else {
-	result = [NSApp isDrawing];
-    }
-    return result;
+    (void) tkwin;
+    return false;
 }
 
 /*
@@ -573,7 +552,7 @@ GenerateUpdates(
      */
 
     if (Tk_IsContainer(winPtr)) {
-	childPtr = TkpGetOtherWindow(winPtr);
+	childPtr = (TkWindow *)Tk_GetOtherWindow((Tk_Window)winPtr);
 	if (childPtr != NULL && Tk_IsMapped(childPtr)) {
 	    GenerateUpdates(updateBounds, childPtr);
 	}
@@ -872,7 +851,7 @@ TkWmProtocolEventProc(
 	    Tcl_Preserve(protPtr);
 	    interp = protPtr->interp;
 	    Tcl_Preserve(interp);
-	    result = Tcl_EvalEx(interp, protPtr->command, -1, TCL_EVAL_GLOBAL);
+	    result = Tcl_EvalEx(interp, protPtr->command, TCL_INDEX_NONE, TCL_EVAL_GLOBAL);
 	    if (result != TCL_OK) {
 		Tcl_AppendObjToErrorInfo(interp, Tcl_ObjPrintf(
 			"\n    (command for \"%s\" window manager protocol)",
@@ -946,7 +925,7 @@ Tk_MacOSXIsAppInFront(void)
 
 static Tk_RestrictAction
 ExposeRestrictProc(
-    ClientData arg,
+    void *arg,
     XEvent *eventPtr)
 {
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
@@ -1060,7 +1039,6 @@ ConfigureRestrictProc(
 {
     _tkNeedsDisplay = YES;
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
-    [NSApp setNeedsToDraw:YES];
     [self setNeedsDisplay:YES];
 #if TK_MAC_CGIMAGE_DRAWING
     // Layer-backed: want the NSView to control when to draw
@@ -1073,46 +1051,7 @@ ConfigureRestrictProc(
 {
     _tkNeedsDisplay = NO;
     _tkDirtyRect = NSZeroRect;
-    [NSApp setNeedsToDraw:NO];
 }
-
-#if TK_MAC_CGIMAGE_DRAWING
-// Remove drawRect: just to make sure it isn’t used
-#else
-- (void) drawRect: (NSRect) rect
-{
-    (void)rect;
-
-#ifdef TK_MAC_DEBUG_DRAWING
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    if (winPtr) {
-	fprintf(stderr, "drawRect: drawing %s in %s\n",
-	    Tk_PathName(winPtr), NSStringFromRect(rect).UTF8String);
-    }
-#endif
-
-    /*
-     * We do not allow recursive calls to drawRect, but we only log them on OSX
-     * > 10.13, where they should never happen.
-     */
-
-    if ([NSApp isDrawing]) {
-	if ([NSApp macOSVersion] > 101300) {
-	    TKLog(@"WARNING: a recursive call to drawRect was aborted.");
-	}
-	return;
-    }
-
-    [NSApp setIsDrawing: YES];
-    [self clearTkDirtyRect];
-    [self generateExposeEvents:rect];
-    [NSApp setIsDrawing:NO];
-
-#ifdef TK_MAC_DEBUG_DRAWING
-    fprintf(stderr, "drawRect: done.\n");
-#endif
-}
-#endif
 
 -(void) setFrameSize: (NSSize)newsize
 {
@@ -1132,7 +1071,7 @@ ConfigureRestrictProc(
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
-	ClientData oldArg;
+	void *oldArg;
     	Tk_RestrictProc *oldProc;
 
 	/*
@@ -1166,16 +1105,6 @@ ConfigureRestrictProc(
 	TkMacOSXInvalClipRgns(tkwin);
 	TkMacOSXUpdateClipRgn(winPtr);
 
-	 /*
-	  * Generate and process expose events to redraw the window.  To avoid
-	  * crashes, only do this if we are being called from drawRect.  See
-	  * ticket [1fa8c3ed8d].
-	  */
-
-	if ([NSApp isDrawing] || [self inLiveResize]) {
-	    [self generateExposeEvents: [self bounds]];
-	}
-
 	/*
 	 * Finally, unlock the main autoreleasePool.
 	 */
@@ -1197,7 +1126,7 @@ ConfigureRestrictProc(
     int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    ClientData oldArg;
+    void *oldArg;
     Tk_RestrictProc *oldProc;
     if (!winPtr) {
 	return;
@@ -1277,9 +1206,9 @@ static const char *const accentNames[] = {
     static const char *defaultColor = NULL;
 
     if (effectiveAppearanceName == NSAppearanceNameAqua) {
-	TkSendVirtualEvent(tkwin, "LightAqua", NULL);
+	Tk_SendVirtualEvent(tkwin, "LightAqua", NULL);
     } else if (effectiveAppearanceName == NSAppearanceNameDarkAqua) {
-	TkSendVirtualEvent(tkwin, "DarkAqua", NULL);
+	Tk_SendVirtualEvent(tkwin, "DarkAqua", NULL);
     }
     if (!defaultColor) {
 	defaultColor = [NSApp macOSVersion] < 110000 ? "Blue" : "Multicolor";
@@ -1294,7 +1223,7 @@ static const char *const accentNames[] = {
     snprintf(data, 256, "Appearance %s Accent %s Highlight %s",
 	     effectiveAppearanceName.UTF8String, accentName,
 	     highlightName);
-    TkSendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, -1));
+    Tk_SendVirtualEvent(tkwin, "AppearanceChanged", Tcl_NewStringObj(data, TCL_INDEX_NONE));
     [self generateExposeEvents:self.bounds];
 }
 

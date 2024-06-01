@@ -20,12 +20,12 @@
 #include "tkMacOSXColor.h"
 
 static Tcl_HashTable systemColors;
-static int numSystemColors;
-static int rgbColorIndex;
-static int controlAccentIndex;
-static int controlAlternatingRowIndex;
-static int selectedTabTextIndex;
-static int pressedButtonTextIndex;
+static size_t numSystemColors;
+static size_t rgbColorIndex;
+static size_t controlAccentIndex;
+static size_t controlAlternatingRowIndex;
+static size_t selectedTabTextIndex;
+static size_t pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
 static SystemColorDatum **systemColorIndex;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
@@ -45,7 +45,7 @@ static void initColorTable()
     Tcl_HashSearch search;
     Tcl_HashEntry *hPtr;
     int newPtr;
-    int index = 0;
+    size_t index = 0;
     NSColorList *systemColorList = [NSColorList colorListNamed:@"System"];
     NSString *key;
 
@@ -249,7 +249,7 @@ GetEntryFromPixel(
     unsigned long pixel)
 {
     MacPixel p = {0};
-    int index = rgbColorIndex;
+    size_t index = rgbColorIndex;
 
     p.ulong = pixel;
     if (p.pixel.colortype != rgbColor) {
@@ -363,28 +363,6 @@ GetRGBA(
 	}
 	[color getComponents: rgba];
 	break;
-    case HIText:
-#ifdef __LP64__
-	color = [[NSColor textColor] colorUsingColorSpace:sRGB];
-	[color getComponents: rgba];
-#else
-	{
-	    OSStatus err = noErr;
-	    RGBColor rgb;
-	    err = GetThemeTextColor(kThemeTextColorPushButtonActive, 32,
-                    true, &rgb);
-	    if (err == noErr) {
-		rgba[0] = (CGFloat) rgb.red / 65535;
-		rgba[1] = (CGFloat) rgb.green / 65535;
-		rgba[2] = (CGFloat) rgb.blue / 65535;
-	    }
-	}
-#endif
-	break;
-    case HIBackground:
-	color = [[NSColor windowBackgroundColor] colorUsingColorSpace:sRGB];
-	[color getComponents: rgba];
-	break;
     default:
 	break;
     }
@@ -400,12 +378,6 @@ GetRGBA(
  *      the color is of type rgbColor.  In that case the normalized XColor RGB
  *      values are copied into the CGColorRef.  Otherwise the components are
  *      computed from the SystemColorDatum.
- *
- *      In 64 bit macOS systems there are no HITheme functions which convert
- *      HIText or HIBackground colors to CGColors.  (GetThemeTextColor was
- *      removed, and it was never possible with backgrounds.)  On 64-bit systems
- *      we replace all HIText colors by systemTextColor and all HIBackground
- *      colors by systemWindowBackgroundColor.
  *
  * Results:
  *	True if the function succeeds, false otherwise.
@@ -579,8 +551,6 @@ TkMacOSXSetColorInContext(
     OSStatus err = noErr;
     CGColorRef cgColor = NULL;
     SystemColorDatum *entry = GetEntryFromPixel(pixel);
-    CGRect rect;
-    HIThemeBackgroundDrawInfo info = {0, kThemeStateActive, 0};
 
     if (entry) {
 	switch (entry->type) {
@@ -591,16 +561,6 @@ TkMacOSXSetColorInContext(
 		err = ChkErr(HIThemeSetStroke, entry->value, NULL, context,
 			kHIThemeOrientationNormal);
 	    }
-	    break;
-	case HIText:
-	    err = ChkErr(HIThemeSetTextFill, entry->value, NULL, context,
-		    kHIThemeOrientationNormal);
-	    break;
-	case HIBackground:
-	    info.kind = entry->value;
-	    rect = CGContextGetClipBoundingBox(context);
-	    err = ChkErr(HIThemeApplyBackground, &rect, &info,
-		    context, kHIThemeOrientationNormal);
 	    break;
 	default:
 	    SetCGColorComponents(entry, pixel, &cgColor);

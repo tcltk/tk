@@ -1,9 +1,9 @@
 # This file is a Tcl script to test entry widgets in Tk.  It is
 # organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -79,7 +79,7 @@ test entry-1.4 {configuration option: "bd" for entry} -setup {
     .e configure -bd badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.5 {configuration option: "bg" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -119,7 +119,7 @@ test entry-1.8 {configuration option: "borderwidth" for entry} -setup {
     .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.9 {configuration option: "cursor" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -329,7 +329,7 @@ test entry-1.29 {configuration option: "highlightthickness" for entry} -setup {
     .e configure -highlightthickness badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.30 {configuration option: "insertbackground" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -369,7 +369,7 @@ test entry-1.33 {configuration option: "insertborderwidth" for entry} -setup {
     .e configure -insertborderwidth 2.6x
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "2.6x"}
+} -returnCodes {error} -result {expected screen distance but got "2.6x"}
 
 test entry-1.34 {configuration option: "insertofftime" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -522,7 +522,7 @@ test entry-1.48 {configuration option: "selectborderwidth" for entry} -setup {
     .e configure -selectborderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes {error} -result {expected screen distance but got "badValue"}
 
 test entry-1.49 {configuration option: "selectforeground" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -628,6 +628,23 @@ test entry-1.58 {configuration option: "xscrollcommand" for entry} -setup {
     destroy .e
 } -result {Some command}
 
+test entry-1.59 {configuration option: "-placeholder"} -setup {
+    pack [entry .e]
+} -body {
+    .e configure -placeholder {Some text}
+    .e cget -placeholder
+} -cleanup {
+    destroy .e
+} -result {Some text}
+
+test entry-1.60 {configuration option: "-placeholderforeground"} -setup {
+    pack [entry .e]
+} -body {
+    .e configure -placeholder {Some text} -placeholderforeground red
+    .e cget -placeholderforeground
+} -cleanup {
+    destroy .e
+} -result {red}
 
 
 test entry-2.1 {Tk_EntryCmd procedure} -body {
@@ -732,7 +749,7 @@ test entry-3.7 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     update
 } -body {
 # Tcl_UtfAtIndex(): utf at end
-    .e insert 0 "ab\u4e4e"
+    .e insert 0 "ab乎"
     .e bbox end
 } -cleanup {
     destroy .e
@@ -745,7 +762,7 @@ test entry-3.8 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     update
 } -body {
 # Tcl_UtfAtIndex(): utf before index
-    .e insert 0 "ab\u4e4ec"
+    .e insert 0 "ab乎c"
     .e bbox 3
 } -cleanup {
     destroy .e
@@ -767,7 +784,7 @@ test entry-3.10 {EntryWidgetCmd procedure, "bbox" widget command} -constraints {
     pack .e ; update idletasks
     update
 } -body {
-    .e insert 0 "abcdefghij\u4e4eklmnop"
+    .e insert 0 "abcdefghij乎klmnop"
     list [.e bbox 0] [.e bbox 1] [.e bbox 10] [.e bbox end]
 } -cleanup {
     destroy .e
@@ -809,7 +826,7 @@ test entry-3.15 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     llength [.e configure]
 } -cleanup {
     destroy .e
-} -result 36
+} -result 38
 test entry-3.16 {EntryWidgetCmd procedure, "configure" widget command} -setup {
     entry .e
 } -body {
@@ -881,20 +898,20 @@ test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     set x {}
 } -body {
 # UTF
-    .e insert end "01234\u4e4e67890"
+    .e insert end "01234乎67890"
     .e delete 6
     lappend x [.e get]
     .e delete 0 end
-    .e insert end "012345\u4e4e7890"
+    .e insert end "012345乎7890"
     .e delete 6
     lappend x [.e get]
     .e delete 0 end
-    .e insert end "0123456\u4e4e890"
+    .e insert end "0123456乎890"
     .e delete 6
     lappend x [.e get]
 } -cleanup {
     destroy .e
-} -result [list "01234\u4e4e7890" "0123457890" "012345\u4e4e890"]
+} -result [list "01234乎7890" "0123457890" "012345乎890"]
 test entry-3.25 {EntryWidgetCmd procedure, "delete" widget command} -setup {
     entry .e
     pack .e ; update idletasks
@@ -998,7 +1015,7 @@ test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -setup {
     update
 } -body {
 # UTF
-    .e insert 0 abc\u4e4e\u0153def
+    .e insert 0 abc乎œdef
     list [.e index 3] [.e index 4] [.e index end]
 } -cleanup {
     destroy .e
@@ -1094,7 +1111,7 @@ test entry-3.44 {EntryWidgetCmd procedure, "scan" widget command} -setup {
     .e scan foobar 20
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad scan option "foobar": must be mark or dragto}
+} -returnCodes error -result {bad scan option "foobar": must be dragto or mark}
 test entry-3.45 {EntryWidgetCmd procedure, "scan" widget command} -setup {
     entry .e
     pack .e ; update idletasks
@@ -1419,7 +1436,7 @@ test entry-3.71 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll 24
 } -cleanup {
     destroy .e
-} -returnCodes error -result {wrong # args: should be ".e xview scroll number units|pages"}
+} -returnCodes error -result {wrong # args: should be ".e xview scroll number pages|units"}
 test entry-3.72 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -1430,7 +1447,7 @@ test entry-3.72 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll gorp units
 } -cleanup {
     destroy .e
-} -returnCodes error -result {expected integer but got "gorp"}
+} -returnCodes error -result {expected floating-point number but got "gorp"}
 test entry-3.73 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -1496,7 +1513,7 @@ test entry-3.77 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e xview scroll 23 foobars
 } -cleanup {
     destroy .e
-} -returnCodes error -result {bad argument "foobars": must be units or pages}
+} -returnCodes error -result {bad argument "foobars": must be pages or units}
 test entry-3.78 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     entry .e -font {Courier -12} -borderwidth 2 -highlightthickness 2
     pack .e ; update idletasks
@@ -1517,7 +1534,7 @@ test entry-3.79 {EntryWidgetCmd procedure, "xview" widget command} -setup {
     .e insert end "runs off the end of the window quite a bit."
     .e xview 0
     update
-    .e xview -1
+    .e xview {}
     .e index @0
 } -cleanup {
     destroy .e
@@ -1540,7 +1557,7 @@ test entry-3.86 {EntryWidgetCmd procedure, "xview" widget command} -setup {
 } -body {
     .e insert end "This is quite a long text string, so long that it "
     .e insert end "runs off the end of the window quite a bit."
-    .e insert 10 \u4e4e
+    .e insert 10 乎
     update
 # UTF
 # If Tcl_NumUtfChars wasn't used, wrong answer would be:
@@ -2087,7 +2104,7 @@ test entry-8.2 {DeleteChars procedure} -setup {
     update
     set scrollInfo wrong
     .e insert 0 abcde
-    .e delete -1 2
+    .e delete {} 2
     update
     list [.e get] $contents [format {%.6f %.6f} {*}$scrollInfo]
 } -cleanup {
@@ -2817,7 +2834,7 @@ test entry-13.23 {GetEntryIndex procedure} -body {
     .e insert 0 012345678901234567890
     .e xview 4
     update
-    .e index -1
+    .e index {}
 } -cleanup {
     destroy .e
 } -result 0

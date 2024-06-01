@@ -2,7 +2,7 @@
 #
 #	Choose directory dialog implementation for Unix/Mac.
 #
-# Copyright (c) 1998-2000 by Scriptics Corporation.
+# Copyright © 1998-2000 Scriptics Corporation.
 # All rights reserved.
 
 # Make sure the tk::dialog namespace, in which all dialogs should live, exists

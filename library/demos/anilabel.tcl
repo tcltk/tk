@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .anilabel
 catch {destroy $w}
@@ -66,10 +66,10 @@ proc animateLabelText {w text interval} {
 ## Next, a similar pair of procedures to animate a GIF loaded into a
 ## photo image.
 proc SelectNextImageFrame {w interval} {
-    global animationCallbacks
+    global animationCallbacks image zoomFactor
     set animationCallbacks($w) \
 	    [after $interval SelectNextImageFrame $w $interval]
-    set image [$w cget -image]
+    set image2 [$w cget -image]
 
     # The easy way to animate a GIF!
     set idx -1
@@ -80,15 +80,23 @@ proc SelectNextImageFrame {w interval} {
     }]} then {
 	$image configure -format "GIF -index 0"
     }
+    $image2 copy $image -zoom $zoomFactor
 }
 proc animateLabelImage {w imageData interval} {
-    global animationCallbacks
+    global animationCallbacks image zoomFactor
 
     # Create a multi-frame GIF from base-64-encoded data
     set image [image create photo -format GIF -data $imageData]
 
-    # Install the image into the widget
-    $w configure -image $image
+    # Create a copy of the image just created, magnified according to the
+    # display's DPI scaling level.  Since the zooom factor must be an integer,
+    # the copy will only be effectively magnified if $tk::scalingPct >= 200.
+    set image2 [image create photo]
+    set zoomFactor [expr {$tk::scalingPct / 100}]
+    $image2 copy $image -zoom $zoomFactor
+
+    # Install the image copy into the widget
+    $w configure -image $image2
 
     # Schedule the start of the animation loop
     set animationCallbacks($w) \
@@ -109,16 +117,16 @@ proc animateLabelImage {w imageData interval} {
 # Make some widgets to contain the animations
 labelframe $w.left -text "Scrolling Texts"
 labelframe $w.right -text "GIF Image"
-pack $w.left $w.right -side left -padx 10 -pady 10 -expand yes
+pack $w.left $w.right -side left -padx 7.5p -pady 7.5p -expand yes
 
 # This method of scrolling text looks far better with a fixed-width font
-label $w.left.l1 -bd 4 -relief ridge -font fixedFont
-label $w.left.l2 -bd 4 -relief groove -font fixedFont
-label $w.left.l3 -bd 4 -relief flat -font fixedFont -width 18
-pack $w.left.l1 $w.left.l2 $w.left.l3 -side top -expand yes -padx 10 -pady 10 -anchor w
+label $w.left.l1 -bd 3p -relief ridge -font fixedFont
+label $w.left.l2 -bd 3p -relief groove -font fixedFont
+label $w.left.l3 -bd 3p -relief flat -font fixedFont -width 18
+pack $w.left.l1 $w.left.l2 $w.left.l3 -side top -expand yes -padx 7.5p -pady 7.5p -anchor w
 # Don't need to do very much with this label except turn off the border
 label $w.right.l -bd 0
-pack $w.right.l -side top -expand yes -padx 10 -pady 10
+pack $w.right.l -side top -expand yes -padx 7.5p -pady 7.5p
 
 # This is a base-64-encoded animated GIF file.
 set tclPoweredData {

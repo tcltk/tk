@@ -11,10 +11,10 @@
 ttk::panedwindow \- Multi-pane container window
 .SH SYNOPSIS
 .nf
-\fBttk::panedwindow\fR \fIpathname \fR?\fIoptions\fR?
+\fBttk::panedwindow\fI pathname \fR?\fIoptions\fR?
 .br
-\fIpathname \fBadd\fR \fIwindow\fR ?\fIoptions...\fR?
-\fIpathname \fBinsert\fR \fIindex\fR \fIwindow\fR ?\fIoptions...\fR?
+\fIpathname \fBadd\fI window\fR ?\fIoptions...\fR?
+\fIpathname \fBinsert\fI index window\fR ?\fIoptions...\fR?
 .fi
 .BE
 .SH DESCRIPTION
@@ -48,19 +48,28 @@ An integer specifying the relative stretchability of the pane.
 When the paned window is resized, the extra space is added
 or subtracted to each pane proportionally to its \fB\-weight\fR.
 .SH "WIDGET COMMAND"
-Supports the standard \fBconfigure\fR, \fBcget\fR, \fBstate\fR,
-and \fBinstate\fR commands; see \fIttk::widget(n)\fR for details.
-Additional commands:
+.PP
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+panedwindow widgets support the following additional commands:
+.\" METHOD: add
 .TP
 \fIpathname \fBadd \fIsubwindow options...\fR
+.
 Adds a new pane to the window.
 See \fBPANE OPTIONS\fR for the list of available options.
+.\" METHOD: forget
 .TP
 \fIpathname \fBforget \fIpane\fR
+.
 Removes the specified subpane from the widget.
 \fIpane\fR is either an integer index or the name of a managed subwindow.
+.\" METHOD: identify
 .TP
 \fIpathname \fBidentify \fIcomponent x y\fR
+.
 Returns the name of the element under the point given by \fIx\fR and \fIy\fR,
 or the empty string if no component is present at that location.
 If \fIcomponent\fR is omitted, it defaults to \fBsash\fR.
@@ -68,33 +77,43 @@ The following subcommands are supported:
 .RS
 .TP
 \fIpathname \fBidentify element \fIx y\fR
+.
 Returns the name of the element at the specified location.
 .TP
 \fIpathname \fBidentify sash \fIx y\fR
+.
 Returns the index of the sash at the specified location.
 .RE
+.\" METHOD: insert
 .TP
 \fIpathname \fBinsert \fIpos subwindow options...\fR
+.
 Inserts a pane at the specified position.
 \fIpos\fR is either the string \fBend\fR, an integer index,
 or the name of a managed subwindow.
 If \fIsubwindow\fR is already managed by the paned window,
 moves it to the specified position.
 See \fBPANE OPTIONS\fR for the list of available options.
+.\" METHOD: pane
 .TP
 \fIpathname \fBpane \fIpane \-option \fR?\fIvalue \fR?\fI\-option value...\fR
+.
 Query or modify the options of the specified \fIpane\fR,
 where \fIpane\fR is either an integer index or the name of a managed subwindow.
 If no \fI\-option\fR is specified, returns a dictionary of the pane
 option values.
 If one \fI\-option\fR is specified, returns the value of that \fIoption\fR.
 Otherwise, sets the \fI\-option\fRs to the corresponding \fIvalue\fRs.
+.\" METHOD: panes
 .TP
 \fIpathname \fBpanes\fR
+.
 Returns the list of all windows managed by the widget, in the index order of
 their associated panes.
+.\" METHOD: sashpos
 .TP
 \fIpathname \fBsashpos \fIindex\fR ?\fInewpos\fR?
+.
 If \fInewpos\fR is specified, sets the position
 of sash number \fIindex\fR.
 May adjust the positions of adjacent sashes
@@ -106,14 +125,6 @@ and the total size of the widget.
 .\" depending on which changed most recently.
 Returns the new position of sash number \fIindex\fR.
 .\" Full story: new position may be different than the requested position.
-.PP
-The panedwindow widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBcget\fR	\fBconfigure\fR
-\fBinstate\fR	\fBstate\fR
-.DE
 .SH "VIRTUAL EVENTS"
 .PP
 The panedwindow widget generates an \fB<<EnteredChild>>\fR virtual event on
@@ -135,7 +146,7 @@ are:
 .br
 \fB\-bordercolor\fP \fIcolor\fP
 .br
-\fB\-gripcount\fP \fIcount\fP
+\fB\-gripsize\fP \fIsize\fP (number of screen units)
 .br
 \fB\-handlepad\fP \fIamount\fP
 .br

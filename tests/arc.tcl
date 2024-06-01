@@ -52,7 +52,7 @@ set outline black
 .t.c addtag arc withtag all
 .t.c addtag circle withtag [.t.c create oval 320 200 340 220 -fill MistyRose3]
 
-.t.c bind arc <Any-Enter> {
+.t.c bind arc <Enter> {
     set prevFill [lindex [.t.c itemconf current -fill] 4]
     set prevOutline [lindex [.t.c itemconf current -outline] 4]
     if {($prevFill != "") || ($prevOutline == "")} {
@@ -62,7 +62,7 @@ set outline black
 	.t.c itemconf current -outline $outline2
     }
 }
-.t.c bind arc <Any-Leave> {.t.c itemconf current -fill $prevFill -outline $prevOutline}
+.t.c bind arc <Leave> {.t.c itemconf current -fill $prevFill -outline $prevOutline}
 
 bind .t.c <Button-1> {markarea %x %y}
 bind .t.c <B1-Motion> {strokearea %x %y}
@@ -89,7 +89,7 @@ bind .t.c <Control-f> {
     puts stdout "Overlapping: [.t.c find overl $areaX1 $areaY1 $areaX2 $areaY2]"
 }
 
-bind .t.c <3> {puts stdout "%x %y"}
+bind .t.c <Button-3> {puts stdout "%x %y"}
 
 # The code below allows the circle to be move by shift-dragging.
 

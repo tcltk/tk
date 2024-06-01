@@ -30,13 +30,16 @@ centered inside the container.
 .PP
 .TP
 \fBplace \fIwindow option value \fR?\fIoption value ...\fR?
+.
 Arrange for the placer to manage the geometry of a content whose
 pathName is \fIwindow\fR.  The remaining arguments consist of one or
 more \fIoption\-value\fR pairs that specify the way in which
 \fIwindow\fR's geometry is managed.  \fIOption\fR may have any of the
 values accepted by the \fBplace configure\fR command.
+.\" METHOD: configure
 .TP
 \fBplace configure \fIwindow \fR?\fIoption\fR? ?\fIvalue option value ...\fR?
+.
 Query or modify the geometry options of the content given by
 \fIwindow\fR.  If no \fIoption\fR is specified, this command returns a
 list describing the available options (see \fBTk_ConfigureInfo\fR for
@@ -50,8 +53,10 @@ the command returns an empty string.
 .RS
 .PP
 The following \fIoption\-value\fR pairs are supported:
+.\" OPTION: -anchor
 .TP
 \fB\-anchor \fIwhere\fR
+.
 \fIWhere\fR specifies which point of \fIwindow\fR is to be positioned
 at the (x,y) location selected by the \fB\-x\fR, \fB\-y\fR,
 \fB\-relx\fR, and \fB\-rely\fR options.
@@ -61,8 +66,10 @@ Thus if \fIwhere\fR is \fBse\fR then the lower-right corner of
 \fIwindow\fR's border will appear at the given (x,y) location
 in the container.
 The anchor position defaults to \fBnw\fR.
+.\" OPTION: -bordermode
 .TP
 \fB\-bordermode \fImode\fR
+.
 \fIMode\fR determines the degree to which borders within the
 container are used in determining the placement of the content.
 The default and most common value is \fBinside\fR.
@@ -84,8 +91,10 @@ to be its official X area, which includes any internal border but
 no external border.  A bordermode of \fBignore\fR is probably
 not very useful.
 .RE
+.\" OPTION: -height
 .TP
 \fB\-height \fIsize\fR
+.
 \fISize\fR specifies the height for \fIwindow\fR in screen units
 (i.e. any of the forms accepted by \fBTk_GetPixels\fR).
 The height will be the outer dimension of \fIwindow\fR including its
@@ -93,8 +102,10 @@ border, if any.
 If \fIsize\fR is an empty string, or if no \fB\-height\fR or
 \fB\-relheight\fR option is specified, then the height requested
 internally by the window will be used.
+.\" OPTION: -in
 .TP
 \fB\-in \fIcontainer\fR
+.
 \fIContainer\fR specifies the path name of the window relative
 to which \fIwindow\fR is to be placed.
 \fIContainer\fR must either be \fIwindow\fR's parent or a descendant
@@ -105,8 +116,10 @@ These restrictions are necessary to guarantee
 that \fIwindow\fR is visible whenever \fIcontainer\fR is visible.
 If this option is not specified then the other window defaults to
 \fIwindow\fR's parent.
+.\" OPTION: -relheight
 .TP
 \fB\-relheight \fIsize\fR
+.
 \fISize\fR specifies the height for \fIwindow\fR.
 In this case the height is specified as a floating-point number
 relative to the height of the container: 0.5 means \fIwindow\fR will
@@ -115,8 +128,10 @@ the same height as the container, and so on.
 If both \fB\-height\fR and \fB\-relheight\fR are specified for a content,
 their values are summed.  For example, \fB\-relheight 1.0 \-height \-2\fR
 makes the content 2 pixels shorter than the container.
+.\" OPTION: -relwidth
 .TP
 \fB\-relwidth \fIsize\fR
+.
 \fISize\fR specifies the width for \fIwindow\fR.
 In this case the width is specified as a floating-point number
 relative to the width of the container: 0.5 means \fIwindow\fR will
@@ -125,8 +140,10 @@ the same width as the container, and so on.
 If both \fB\-width\fR and \fB\-relwidth\fR are specified for a content,
 their values are summed.  For example, \fB\-relwidth 1.0 \-width 5\fR
 makes the content 5 pixels wider than the container.
+.\" OPTION: -relx
 .TP
 \fB\-relx \fIlocation\fR
+.
 \fILocation\fR specifies the x-coordinate within the container window
 of the anchor point for \fIwindow\fR.
 In this case the location is specified in a relative fashion
@@ -137,8 +154,10 @@ If both \fB\-x\fR and \fB\-relx\fR are specified for a content
 then their values are summed.  For example, \fB\-relx 0.5 \-x \-2\fR
 positions the left edge of the content 2 pixels to the left of the
 center of its container.
+.\" OPTION: -rely
 .TP
 \fB\-rely \fIlocation\fR
+.
 \fILocation\fR specifies the y-coordinate within the container window
 of the anchor point for \fIwindow\fR.
 In this case the value is specified in a relative fashion
@@ -149,8 +168,10 @@ If both \fB\-y\fR and \fB\-rely\fR are specified for a content
 then their values are summed.  For example, \fB\-rely 0.5 \-x 3\fR
 positions the top edge of the content 3 pixels below the
 center of its container.
+.\" OPTION: -width
 .TP
 \fB\-width \fIsize\fR
+.
 \fISize\fR specifies the width for \fIwindow\fR in screen units
 (i.e. any of the forms accepted by \fBTk_GetPixels\fR).
 The width will be the outer width of \fIwindow\fR including its
@@ -158,15 +179,19 @@ border, if any.
 If \fIsize\fR is an empty string, or if no \fB\-width\fR
 or \fB\-relwidth\fR option is specified, then the width requested
 internally by the window will be used.
+.\" OPTION: -x
 .TP
 \fB\-x \fIlocation\fR
+.
 \fILocation\fR specifies the x-coordinate within the container window
 of the anchor point for \fIwindow\fR.
 The location is specified in screen units (i.e. any of the forms
 accepted by \fBTk_GetPixels\fR) and need not lie within the bounds
 of the container window.
+.\" OPTION: -y
 .TP
 \fB\-y \fIlocation\fR
+.
 \fILocation\fR specifies the y-coordinate within the container window
 of the anchor point for \fIwindow\fR.
 The location is specified in screen units (i.e. any of the forms
@@ -177,29 +202,35 @@ If the same value is specified separately with
 two different options, such as \fB\-x\fR and \fB\-relx\fR, then
 the most recent option is used and the older one is ignored.
 .RE
+.\" METHOD: content
+.TP
+\fBplace content \fIwindow\fR
+.
+Returns a list of all the content windows for which \fIwindow\fR is the
+container. If there is no content for \fIwindow\fR then an empty string
+is returned.
+.\" METHOD: forget
 .TP
 \fBplace forget \fIwindow\fR
+.
 Causes the placer to stop managing the geometry of \fIwindow\fR.  As a
 side effect of this command \fIwindow\fR will be unmapped so that it
 does not appear on the screen.  If \fIwindow\fR is not currently managed
 by the placer then the command has no effect.  This command returns an
 empty string.
+.\" METHOD: info
 .TP
 \fBplace info \fIwindow\fR
+.
 Returns a list giving the current configuration of \fIwindow\fR.
 The list consists of \fIoption\-value\fR pairs in exactly the
 same form as might be specified to the \fBplace configure\fR
 command.
+.\" METHOD: slaves
 .TP
 \fBplace slaves \fIwindow\fR
-Returns a list of all the content windows for which \fIwindow\fR is the container.
-If there is no content for \fIwindow\fR then an empty string is returned.
-.VS "TIP 581"
-.TP
-\fBplace content \fIwindow\fR
 .
-Synonym for \fBplace slaves \fIwindow\fR.
-.VE "TIP 581"
+Synonym for \fBplace content \fIwindow\fR.
 .PP
 If the configuration of a window has been retrieved with
 \fBplace info\fR, that configuration can be restored later by
@@ -249,13 +280,14 @@ frames and canvases that provide configuration options for this purpose.
 Make the label occupy the middle bit of the toplevel, no matter how it
 is resized:
 .CS
-label .l \-text "In the\enMiddle!" \-bg black \-fg white
-\fBplace\fR .l \-relwidth .3 \-relx .35 \-relheight .3 \-rely .35
+label .l -text "In the\enMiddle!" -bg black -fg white
+\fBplace\fR .l -relwidth .3 -relx .35 -relheight .3 -rely .35
 .CE
 .SH "SEE ALSO"
 grid(n), pack(n)
 .SH KEYWORDS
-geometry manager, height, location, container, place, rubber sheet, content, width
+geometry manager, height, location, container, place, rubber sheet,
+content, width
 '\" Local Variables:
 '\" mode: nroff
 '\" End:

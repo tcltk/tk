@@ -10,7 +10,7 @@
 .SH NAME
 ttk_vsapi \- Define a Microsoft Visual Styles element
 .SH SYNOPSIS
-\fBttk::style element create \fIname\fR \fBvsapi\fR \fIclassName\fR \fIpartId\fR ?\fIstateMap\fR? ?\fIoptions\fR?
+\fBttk::style element create \fIname \fBvsapi\fI className partId\fR ?\fIstateMap\fR? ?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -21,13 +21,14 @@ on Windows XP and Vista. This factory permits any of the Visual
 Styles parts to be declared as Ttk elements that can then be
 included in a style layout to modify the appearance of Ttk widgets.
 .PP
-\fIclassName\fR and \fIpartId\fR are required parameters and specify
+The \fIclassName\fR and \fIpartId\fR are required parameters and specify
 the Visual Styles class and part as given in the Microsoft
 documentation. The \fIstateMap\fR may be provided to map Ttk states to
 Visual Styles API states (see \fBSTATE MAP\fR).
 .SH "OPTIONS"
 .PP
 Valid \fIoptions\fR are:
+.\" OPTION: -padding
 .TP
 \fB\-padding \fIpadding\fR
 .
@@ -38,10 +39,11 @@ If fewer than four elements are specified,
 \fIbottom\fR defaults to \fItop\fR,
 \fIright\fR defaults to \fIleft\fR, and
 \fItop\fR defaults to \fIleft\fR.
-In other words, a list of three numbers specify the left, vertical, and right padding;
-a list of two numbers specify the horizontal and the vertical padding;
+In other words, a list of three numbers specify the left, vertical, and right
+padding; a list of two numbers specify the horizontal and the vertical padding;
 a single number specifies the same padding all the way around the widget.
 This option may not be mixed with any other options.
+.\" OPTION: -margins
 .TP
 \fB\-margins \fIpadding\fR
 .
@@ -49,6 +51,7 @@ Specifies the elements exterior padding.
 \fIpadding\fR is a list of up to four integers specifying
 the left, top, right and bottom padding quantities respectively.
 This option may not be mixed with any other options.
+.\" OPTION: -width
 .TP
 \fB\-width \fIwidth\fR
 .
@@ -57,6 +60,7 @@ the Visual Styles API will not be queried for the recommended
 size or the part. If this option is set then \fB\-height\fR should
 also be set. The \fB\-width\fR and \fB\-height\fR options cannot
 be mixed with the \fB\-padding\fR or \fB\-margins\fR options.
+.\" OPTION: -height
 .TP
 \fB\-height \fIheight\fR
 .

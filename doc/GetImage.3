@@ -22,6 +22,7 @@ Tk_Image
 \fBTk_SizeOfImage\fR(\fIimage, widthPtr, heightPtr\fR)
 .sp
 \fBTk_FreeImage\fR(\fIimage\fR)
+.fi
 .SH ARGUMENTS
 .AS Tk_ImageChangedProc *changeProc
 .AP Tcl_Interp *interp in
@@ -32,7 +33,7 @@ Window in which image will be used.
 Name of image.
 .AP Tk_ImageChangedProc *changeProc in
 Procedure for Tk to invoke whenever image content or size changes.
-.AP ClientData clientData in
+.AP void *clientData in
 One-word value for Tk to pass to \fIchangeProc\fR.
 .AP Tk_Image image in
 Token for image instance;  must have been returned by a previous
@@ -106,7 +107,7 @@ The \fIchangeProc\fR and \fIclientData\fR arguments to
 in the image;  it must match the following prototype:
 .CS
 typedef void \fBTk_ImageChangedProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         int \fIx\fR,
         int \fIy\fR,
         int \fIwidth\fR,
