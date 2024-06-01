@@ -754,7 +754,7 @@ set str [string repeat "hello " 20]
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
 .t insert end "$str one two three four five six seven height nine ten\n"
-updateText
+update
 
 test textIndex-19.1 {Display lines} {
     .t index "2.7 displaylinestart"
@@ -810,7 +810,7 @@ test textIndex-19.12.1 {Display lines} {
 
 test textIndex-19.12.2 {Display lines} {
     .t compare [.t index "2.50 + 100 displaylines"] == "end - 1 c"
-} {1}
+} 1
 
 test textIndex-19.13 {Display lines} {
     destroy {*}[pack content .]
@@ -941,6 +941,16 @@ test textIndex-22.15 {text index display wordstart} {
     text .t
     .t index "1.0 display wordstart"  ; # used to crash
 } 1.0
+test textIndex-22.16 {text index wordstart, bug [57b821d2db]} {
+    catch {destroy .t}
+    text .t
+    .t insert 1.0 " 123 5 789012  LINE-1\n\n 123 5 789000 LINE-3\n\n0123 5 789012  LINE-5"
+    set res [.t index "1.1 wordstart"]
+    lappend res [.t index "5.0 wordstart"]
+    .t mark set insert 1.1
+    lappend res [.t index "insert wordstart"]
+    lappend res [.t index "5.1 wordstart"]
+} {1.1 5.0 1.1 5.0}
 
 test textIndex-23.1 {text paragraph start} {
     pack [text .t2]
@@ -977,7 +987,7 @@ test textIndex-25.1 {IndexCountBytesOrdered, bug [3f1f79abcf]} {
     destroy .t2
 } {}
 
-test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline in peers, bug [34db75c0ac]} {
+test textIndex-26.1 {GetIndex restricts the returned index to -startline/-endline in peers, bug [34db75c0ac]} {
     set res {}
     pack [text .t2]
     .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"
@@ -988,7 +998,7 @@ test textIndex-26.1 {GetIndex restricts the returned index to -starline/-endline
     destroy .t2 .p2
     set res
 } {2.0 2.0 2.0}
-test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outside peer -starline/-endline, bug [34db75c0ac]} {
+test textIndex-26.2 {GetIndex errors out if mark, image, window, or tag is outside peer -startline/-endline, bug [34db75c0ac]} {
     set res {}
     pack [text .t2]
     .t2 insert end "line 1\nline 2\nline 3\nline 4\nline 5\nline 6\n"

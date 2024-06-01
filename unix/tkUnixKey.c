@@ -4,7 +4,7 @@
  *	This file contains routines for dealing with international keyboard
  *	input.
  *
- * Copyright (c) 1997 by Sun Microsystems, Inc.
+ * Copyright (c) 1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.

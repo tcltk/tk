@@ -13,9 +13,9 @@
  * theme. Defining this macro as true handles this case.
  */
 #if defined(_WIN32) && !defined(WIN32_XDRAWLINE_HACK)
-#	define WIN32_XDRAWLINE_HACK 1
+  #define WIN32_XDRAWLINE_HACK 1
 #else
-#	define WIN32_XDRAWLINE_HACK 0
+  #define WIN32_XDRAWLINE_HACK 0
 #endif
 
 #define STR(x) StR(x)
@@ -67,24 +67,24 @@ static void DrawSmoothBorder(
     if (   outerColorObj
 	&& (gc=Ttk_GCForColor(tkwin,outerColorObj,d)))
     {
-	XDrawLine(display,d,gc, x1+1,y1, x2-1+w,y1); /* N */
-	XDrawLine(display,d,gc, x1+1,y2, x2-1+w,y2); /* S */
-	XDrawLine(display,d,gc, x1,y1+1, x1,y2-1+w); /* E */
-	XDrawLine(display,d,gc, x2,y1+1, x2,y2-1+w); /* W */
+	XDrawLine(display,d,gc, x1+1,y1, x2-1+w,y1);		/* N */
+	XDrawLine(display,d,gc, x1+1,y2, x2-1+w,y2);		/* S */
+	XDrawLine(display,d,gc, x1,y1+1, x1,y2-1+w);		/* W */
+	XDrawLine(display,d,gc, x2,y1+1, x2,y2-1+w);		/* E */
     }
 
     if (   upperColorObj
 	&& (gc=Ttk_GCForColor(tkwin,upperColorObj,d)))
     {
-	XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1); /* N */
-	XDrawLine(display,d,gc, x1+1,y1+1, x1+1,y2-1);   /* E */
+	XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1);	/* N */
+	XDrawLine(display,d,gc, x1+1,y1+1, x1+1,y2-1);		/* W */
     }
 
     if (   lowerColorObj
 	&& (gc=Ttk_GCForColor(tkwin,lowerColorObj,d)))
     {
-	XDrawLine(display,d,gc, x2-1,y2-1, x1+1-w,y2-1); /* S */
-	XDrawLine(display,d,gc, x2-1,y2-1, x2-1,y1+1-w); /* W */
+	XDrawLine(display,d,gc, x2-1,y2-1, x1+1-w,y2-1);	/* S */
+	XDrawLine(display,d,gc, x2-1,y2-1, x2-1,y1+1-w);	/* E */
     }
 }
 
@@ -129,14 +129,15 @@ static Ttk_ElementOptionSpec BorderElementOptions[] = {
  */
 
 static void BorderElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
     BorderElement *border = (BorderElement*)elementRecord;
     int borderWidth = 2;
-    (void)dummy;
-    (void)widthPtr;
-    (void)heightPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, border->borderWidthObj, &borderWidth);
     if (borderWidth == 1) ++borderWidth;
@@ -144,15 +145,17 @@ static void BorderElementSize(
 }
 
 static void BorderElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     BorderElement *border = (BorderElement *)elementRecord;
     int relief = TK_RELIEF_FLAT;
     int borderWidth = 2;
     Tcl_Obj *outer = 0, *upper = 0, *lower = 0;
-    (void)dummy;
-    (void)state;
 
     Tk_GetReliefFromObj(NULL, border->reliefObj, &relief);
     Tk_GetPixelsFromObj(NULL, tkwin, border->borderWidthObj, &borderWidth);
@@ -198,7 +201,6 @@ static Ttk_ElementSpec BorderElementSpec = {
 typedef struct {
     Tcl_Obj 	*borderColorObj;
     Tcl_Obj 	*lightColorObj;
-    Tcl_Obj 	*darkColorObj;
     Tcl_Obj 	*backgroundObj;
 } FieldElement;
 
@@ -207,37 +209,35 @@ static Ttk_ElementOptionSpec FieldElementOptions[] = {
 	Tk_Offset(FieldElement,borderColorObj), DARKEST_COLOR },
     { "-lightcolor", TK_OPTION_COLOR,
 	Tk_Offset(FieldElement,lightColorObj), LIGHT_COLOR },
-    { "-darkcolor", TK_OPTION_COLOR,
-	Tk_Offset(FieldElement,darkColorObj), DARK_COLOR },
     { "-fieldbackground", TK_OPTION_BORDER,
 	Tk_Offset(FieldElement,backgroundObj), "white" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void FieldElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
-    (void)dummy;
-    (void)elementRecord;
-    (void)tkwin;
-    (void)widthPtr;
-    (void)heightPtr;
-
     *paddingPtr = Ttk_UniformPadding(2);
 }
 
 static void FieldElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     FieldElement *field = (FieldElement *)elementRecord;
     Tk_3DBorder bg = Tk_Get3DBorderFromObj(tkwin, field->backgroundObj);
     Ttk_Box f = Ttk_PadBox(b, Ttk_UniformPadding(2));
     Tcl_Obj *outer = field->borderColorObj,
 	    *inner = field->lightColorObj;
-    (void)dummy;
-    (void)state;
 
     DrawSmoothBorder(tkwin, d, b, outer, inner, inner);
     Tk_Fill3DRectangle(
@@ -258,7 +258,7 @@ static Ttk_ElementSpec FieldElementSpec = {
  */
 static void ComboboxFieldElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     FieldElement *field = (FieldElement *)elementRecord;
     GC gc = Ttk_GCForColor(tkwin,field->borderColorObj,d);
@@ -309,14 +309,13 @@ static Ttk_ElementOptionSpec IndicatorElementOptions[] = {
 };
 
 static void IndicatorElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
     Ttk_Padding margins;
     int size = 10;
-    (void)dummy;
-    (void)paddingPtr;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
@@ -325,7 +324,7 @@ static void IndicatorElementSize(
 }
 
 static void RadioIndicatorElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
+    TCL_UNUSED(void *), void *elementRecord, Tk_Window tkwin,
     Drawable d, Ttk_Box b, unsigned state)
 {
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
@@ -334,7 +333,6 @@ static void RadioIndicatorElementDraw(
     GC gcu=Ttk_GCForColor(tkwin,indicator->upperColorObj,d);
     GC gcl=Ttk_GCForColor(tkwin,indicator->lowerColorObj,d);
     Ttk_Padding padding;
-    (void)dummy;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
@@ -354,8 +352,8 @@ static void RadioIndicatorElementDraw(
 }
 
 static void CheckIndicatorElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    TCL_UNUSED(void *), void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b, Ttk_State state)
 {
     Display *display = Tk_Display(tkwin);
     IndicatorElement *indicator = (IndicatorElement *)elementRecord;
@@ -366,7 +364,6 @@ static void CheckIndicatorElementDraw(
     GC gcl=Ttk_GCForColor(tkwin,indicator->lowerColorObj,d);
     Ttk_Padding padding;
     const int w = WIN32_XDRAWLINE_HACK;
-    (void)dummy;
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginObj, &padding);
     b = Ttk_PadBox(b, padding);
@@ -434,14 +431,13 @@ static Ttk_ElementOptionSpec MenuIndicatorElementOptions[] =
 };
 
 static void MenuIndicatorElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     MenuIndicatorElement *indicator = (MenuIndicatorElement *)elementRecord;
     Ttk_Padding margins;
     int size = MENUBUTTON_ARROW_SIZE;
-    (void)dummy;
-    (void)paddingPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->paddingObj, &margins);
@@ -451,16 +447,15 @@ static void MenuIndicatorElementSize(
 }
 
 static void MenuIndicatorElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), void *elementRecord, Tk_Window tkwin,
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     MenuIndicatorElement *indicator = (MenuIndicatorElement *)elementRecord;
     XColor *arrowColor = Tk_GetColorFromObj(tkwin, indicator->colorObj);
     GC gc = Tk_GCForColor(arrowColor, d);
     int size = MENUBUTTON_ARROW_SIZE;
     int width, height;
-    (void)dummy;
-    (void)state;
 
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
 
@@ -499,22 +494,21 @@ static Ttk_ElementOptionSpec GripElementOptions[] = {
 	Tk_Offset(GripElement,lightColorObj), LIGHT_COLOR },
     { "-bordercolor", TK_OPTION_COLOR,
 	Tk_Offset(GripElement,borderColorObj), DARKEST_COLOR },
-    { "-gripcount", TK_OPTION_INT,
+    { "-gripcount", TK_OPTION_PIXELS,
 	Tk_Offset(GripElement,gripCountObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void GripElementSize(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
     GripElement *grip = (GripElement *)elementRecord;
     int gripCount = 0;
-    (void)tkwin;
-    (void)paddingPtr;
 
-    Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripCount);
     if (horizontal) {
 	*widthPtr = 2*gripCount;
     } else {
@@ -524,7 +518,8 @@ static void GripElementSize(
 
 static void GripElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     const int w = WIN32_XDRAWLINE_HACK;
     int horizontal = *((Ttk_Orient*)clientData) == TTK_ORIENT_HORIZONTAL;
@@ -534,7 +529,7 @@ static void GripElementDraw(
     int gripPad = 1, gripCount = 0;
     int i;
 
-    Tcl_GetIntFromObj(NULL, grip->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, grip->gripCountObj, &gripCount);
 
     if (horizontal) {
 	int x = b.x + b.width / 2 - gripCount;
@@ -598,22 +593,24 @@ static Ttk_ElementOptionSpec ScrollbarElementOptions[] = {
 	Tk_Offset(ScrollbarElement,arrowColorObj), "#000000" },
     { "-arrowsize", TK_OPTION_PIXELS,
 	Tk_Offset(ScrollbarElement,arrowSizeObj), STR(SCROLLBAR_THICKNESS) },
-    { "-gripcount", TK_OPTION_INT,
+    { "-gripcount", TK_OPTION_PIXELS,
 	Tk_Offset(ScrollbarElement,gripCountObj), "5" },
-    { "-sliderlength", TK_OPTION_INT,
+    { "-sliderlength", TK_OPTION_PIXELS,
 	Tk_Offset(ScrollbarElement,sliderlengthObj), "30" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void TroughElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     GC gcb = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
     GC gct = Ttk_GCForColor(tkwin,sb->troughColorObj,d);
-    (void)dummy;
-    (void)state;
 
     XFillRectangle(Tk_Display(tkwin), d, gct, b.x, b.y, b.width-1, b.height-1);
     XDrawRectangle(Tk_Display(tkwin), d, gcb, b.x, b.y, b.width-1, b.height-1);
@@ -628,22 +625,27 @@ static Ttk_ElementSpec TroughElementSpec = {
 };
 
 static void ThumbElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int size = SCROLLBAR_THICKNESS;
-    (void)dummy;
-    (void)tkwin;
-    (void)paddingPtr;
 
-    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
     *widthPtr = *heightPtr = size;
 }
 
 static void ThumbElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int gripCount = 0;
@@ -651,8 +653,6 @@ static void ThumbElementDraw(
     GC lightGC, darkGC;
     int x1, y1, x2, y2, dx, dy, i;
     const int w = WIN32_XDRAWLINE_HACK;
-    (void)dummy;
-    (void)state;
 
     DrawSmoothBorder(tkwin, d, b,
 	sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
@@ -664,7 +664,7 @@ static void ThumbElementDraw(
      * Draw grip:
      */
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
-    Tcl_GetIntFromObj(NULL, sb->gripCountObj, &gripCount);
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->gripCountObj, &gripCount);
     lightGC = Ttk_GCForColor(tkwin,sb->lightColorObj,d);
     darkGC = Ttk_GCForColor(tkwin,sb->borderColorObj,d);
 
@@ -700,18 +700,20 @@ static Ttk_ElementSpec ThumbElementSpec = {
  * +++ Slider element.
  */
 static void SliderElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    int *widthPtr,
+    int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
     int length, thickness;
     int orient;
-    (void)dummy;
-    (void)paddingPtr;
 
     length = thickness = SCROLLBAR_THICKNESS;
     Ttk_GetOrientFromObj(NULL, sb->orientObj, &orient);
-    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &thickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &thickness);
     Tk_GetPixelsFromObj(NULL, tkwin, sb->sliderlengthObj, &length);
     if (orient == TTK_ORIENT_VERTICAL) {
 	*heightPtr = length;
@@ -720,7 +722,6 @@ static void SliderElementSize(
 	*heightPtr = thickness;
 	*widthPtr = length;
     }
-
 }
 
 static Ttk_ElementSpec SliderElementSpec = {
@@ -746,12 +747,14 @@ static void PbarElementSize(
 }
 
 static void PbarElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    (void)dummy;
-    (void)state;
 
     b = Ttk_PadBox(b, Ttk_UniformPadding(2));
     if (b.width > 4 && b.height > 4) {
@@ -771,34 +774,43 @@ static Ttk_ElementSpec PbarElementSpec = {
     PbarElementDraw
 };
 
-
 /*------------------------------------------------------------------------
  * +++ Scrollbar arrows.
  */
 static int ArrowElements[] = { ARROW_UP, ARROW_DOWN, ARROW_LEFT, ARROW_RIGHT };
 
 static void ArrowElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
 {
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = *(ArrowDirection*)clientData;
+    Ttk_Padding padding = Ttk_UniformPadding(3);
     int size = SCROLLBAR_THICKNESS;
-    (void)dummy;
-    (void)tkwin;
-    (void)paddingPtr;
 
-    Tcl_GetIntFromObj(NULL, sb->arrowSizeObj, &size);
-    *widthPtr = *heightPtr = size;
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+    if (*widthPtr < *heightPtr) {
+	*widthPtr = *heightPtr;
+    } else {
+	*heightPtr = *widthPtr;
+    }
 }
 
 static void ArrowElementDraw(
     void *clientData, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned state)
+    Drawable d, Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
-    ArrowDirection direction = *(ArrowDirection*)clientData;
     ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
-    GC gc = Ttk_GCForColor(tkwin,sb->arrowColorObj, d);
-    int h, cx, cy;
+    ArrowDirection direction = *(ArrowDirection*)clientData;
+    Ttk_Padding padding = Ttk_UniformPadding(3);
+    int cx, cy;
+    GC gc = Ttk_GCForColor(tkwin, sb->arrowColorObj, d);
 
     DrawSmoothBorder(tkwin, d, b,
 	sb->borderColorObj, sb->lightColorObj, sb->darkColorObj);
@@ -807,9 +819,25 @@ static void ArrowElementDraw(
 	Tk_Display(tkwin), d, BackgroundGC(tkwin, sb->backgroundObj),
 	b.x+2, b.y+2, b.width-4, b.height-4);
 
-    b = Ttk_PadBox(b, Ttk_UniformPadding(3));
-    h = b.width < b.height ? b.width : b.height;
-    TtkArrowSize(h/2, direction, &cx, &cy);
+    b = Ttk_PadBox(b, padding);
+
+    switch (direction) {
+	case ARROW_UP:
+	case ARROW_DOWN:
+	    TtkArrowSize(b.width/2, direction, &cx, &cy);
+	    if ((b.height - cy) % 2 == 1) {
+		++cy;
+	    }
+	    break;
+	case ARROW_LEFT:
+	case ARROW_RIGHT:
+	    TtkArrowSize(b.height/2, direction, &cx, &cy);
+	    if ((b.width - cx) % 2 == 1) {
+		++cx;
+	    }
+	    break;
+    }
+
     b = Ttk_AnchorBox(b, cx, cy, TK_ANCHOR_CENTER);
 
     TtkFillArrow(Tk_Display(tkwin), d, gc, b, direction);
@@ -823,6 +851,34 @@ static Ttk_ElementSpec ArrowElementSpec = {
     ArrowElementDraw
 };
 
+/*
+ * Modified arrow element for spinboxes:
+ * 	The width and height are different.
+ */
+static void SpinboxArrowElementSize(
+    void *clientData, void *elementRecord, Tk_Window tkwin,
+    int *widthPtr, int *heightPtr,
+    TCL_UNUSED(Ttk_Padding *))
+{
+    ScrollbarElement *sb = (ScrollbarElement *)elementRecord;
+    ArrowDirection direction = *(ArrowDirection*)clientData;
+    Ttk_Padding padding = Ttk_UniformPadding(3);
+    int size = 10;
+
+    Tk_GetPixelsFromObj(NULL, tkwin, sb->arrowSizeObj, &size);
+    size -= Ttk_PaddingWidth(padding);
+    TtkArrowSize(size/2, direction, widthPtr, heightPtr);
+    *widthPtr += Ttk_PaddingWidth(padding);
+    *heightPtr += Ttk_PaddingHeight(padding);
+}
+
+static Ttk_ElementSpec SpinboxArrowElementSpec = {
+    TK_STYLE_VERSION_2,
+    sizeof(ScrollbarElement),
+    ScrollbarElementOptions,
+    SpinboxArrowElementSize,
+    ArrowElementDraw
+};
 
 /*------------------------------------------------------------------------
  * +++ Notebook elements.
@@ -851,56 +907,155 @@ static Ttk_ElementOptionSpec NotebookElementOptions[] = {
 };
 
 static void TabElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    Tk_Window tkwin,
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
     int borderWidth = 2;
-    (void)dummy;
-    (void)elementRecord;
-    (void)tkwin;
-    (void)widthPtr;
-    (void)heightPtr;
 
-    paddingPtr->top = paddingPtr->left = paddingPtr->right = borderWidth;
-    paddingPtr->bottom = 0;
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
+
+    *paddingPtr = Ttk_UniformPadding((short)borderWidth);
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    paddingPtr->bottom = 0;
+	    break;
+	case TTK_STICK_N:
+	    paddingPtr->top = 0;
+	    break;
+	case TTK_STICK_E:
+	    paddingPtr->right = 0;
+	    break;
+	case TTK_STICK_W:
+	    paddingPtr->left = 0;
+	    break;
+    }
 }
 
 static void TabElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    Ttk_State state)
 {
+    Ttk_PositionSpec nbTabsStickBit = TTK_STICK_S;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
+    int borderWidth = 2, delta = 0;
     NotebookElement *tab = (NotebookElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, tab->backgroundObj);
     Display *display = Tk_Display(tkwin);
-    int borderWidth = 2, dh = 0;
-    int x1,y1,x2,y2;
+    int x1, y1, x2, y2;
     GC gc;
     const int w = WIN32_XDRAWLINE_HACK;
-    (void)dummy;
+
+    if (mainInfoPtr != NULL) {
+	nbTabsStickBit = (Ttk_PositionSpec) mainInfoPtr->ttkNbTabsStickBit;
+    }
 
     if (state & TTK_STATE_SELECTED) {
-	dh = borderWidth;
+	delta = borderWidth;
     }
 
-    if (state & TTK_STATE_USER2) {	/* Rightmost tab */
-	--b.width;
+    switch (nbTabsStickBit) {
+	default:
+	case TTK_STICK_S:
+	    if (state & TTK_STATE_USER2) {		/* rightmost tab */
+		--b.width;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x+2, b.y+2, b.width-1, b.height-2+delta,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x;		y1 = b.y;		/* top left */
+	    x2 = b.x + b.width; y2 = b.y + b.height-1;	/* bottom right */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1+1, x1, y2+1+w);
+	    XDrawLine(display, d, gc, x2, y1+1, x2, y2+1+w);
+	    XDrawLine(display, d, gc, x1+1, y1, x2-1+w, y1);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2+delta+w);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x2-1+w, y1+1);
+	    break;
+
+	case TTK_STICK_N:
+	    if (state & TTK_STATE_USER2) {		/* rightmost tab */
+		--b.width;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x+2, b.y-delta, b.width-1, b.height-2+delta,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x;		y1 = b.y + b.height-1;	/* bottom left */
+	    x2 = b.x + b.width; y2 = b.y;		/* top right */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1-1, x1, y2-1-w);
+	    XDrawLine(display, d, gc, x2, y1-1, x2, y2-1-w);
+	    XDrawLine(display, d, gc, x1+1, y1, x2-1+w, y1);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1+1, y1-1, x1+1, y2-delta-w);
+	    XDrawLine(display, d, gc, x1+1, y1-1, x2-1+w, y1-1);
+	    break;
+
+	case TTK_STICK_E:
+	    if (state & TTK_STATE_USER2) {		/* bottommost tab */
+		--b.height;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x+2, b.y+2, b.width-2+delta, b.height-1,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x;		  y1 = b.y;		/* top left */
+	    x2 = b.x + b.width-1; y2 = b.y + b.height;	/* bottom right */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1+1, x1, y2-1+w);
+	    XDrawLine(display, d, gc, x1+1, y1, x2+1+w, y1);
+	    XDrawLine(display, d, gc, x1+1, y2, x2+1+w, y2);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x1+1, y2-1+w);
+	    XDrawLine(display, d, gc, x1+1, y1+1, x2+delta+w, y1+1);
+	    break;
+
+	case TTK_STICK_W:
+	    if (state & TTK_STATE_USER2) {		/* bottommost tab */
+		--b.height;
+	    }
+
+	    Tk_Fill3DRectangle(tkwin, d, border,
+		b.x-delta, b.y+2, b.width-2+delta, b.height-1,
+		borderWidth, TK_RELIEF_FLAT);
+
+	    x1 = b.x + b.width-1; y1 = b.y;		/* top right */
+	    x2 = b.x;		  y2 = b.y + b.height;	/* bottom left */
+
+	    gc = Ttk_GCForColor(tkwin, tab->borderColorObj, d);
+	    XDrawLine(display, d, gc, x1, y1+1, x1, y2-1+w);
+	    XDrawLine(display, d, gc, x1-1, y1, x2-1-w, y1);
+	    XDrawLine(display, d, gc, x1-1, y2, x2-1-w, y2);
+
+	    gc = Ttk_GCForColor(tkwin, tab->lightColorObj, d);
+	    XDrawLine(display, d, gc, x1-1, y1+1, x1-1, y2-1+w);
+	    XDrawLine(display, d, gc, x1-1, y1+1, x2-delta-w, y1+1);
+	    break;
     }
-
-    Tk_Fill3DRectangle(tkwin, d, border,
-	b.x+2, b.y+2, b.width-1, b.height-2+dh, borderWidth, TK_RELIEF_FLAT);
-
-    x1 = b.x, x2 = b.x + b.width;
-    y1 = b.y, y2 = b.y + b.height;
-
-
-    gc=Ttk_GCForColor(tkwin,tab->borderColorObj,d);
-    XDrawLine(display,d,gc, x1,y1+1, x1,y2+w);
-    XDrawLine(display,d,gc, x2,y1+1, x2,y2+w);
-    XDrawLine(display,d,gc, x1+1,y1, x2-1+w,y1);
-
-    gc=Ttk_GCForColor(tkwin,tab->lightColorObj,d);
-    XDrawLine(display,d,gc, x1+1,y1+1, x1+1,y2-1+dh+w);
-    XDrawLine(display,d,gc, x1+1,y1+1, x2-1+w,y1+1);
 }
 
 static Ttk_ElementSpec TabElementSpec =
@@ -913,28 +1068,29 @@ static Ttk_ElementSpec TabElementSpec =
 };
 
 static void ClientElementSize(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    int *widthPtr, int *heightPtr, Ttk_Padding *paddingPtr)
+    TCL_UNUSED(void *), /* clientData */
+    TCL_UNUSED(void *), /* elementRecord */
+    TCL_UNUSED(Tk_Window),
+    TCL_UNUSED(int *), /* widthPtr */
+    TCL_UNUSED(int *), /* heightPtr */
+    Ttk_Padding *paddingPtr)
 {
     int borderWidth = 2;
-    (void)dummy;
-    (void)elementRecord;
-    (void)tkwin;
-    (void)widthPtr;
-    (void)heightPtr;
 
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
 static void ClientElementDraw(
-    void *dummy, void *elementRecord, Tk_Window tkwin,
-    Drawable d, Ttk_Box b, unsigned int state)
+    TCL_UNUSED(void *), /* clientData */
+    void *elementRecord,
+    Tk_Window tkwin,
+    Drawable d,
+    Ttk_Box b,
+    TCL_UNUSED(Ttk_State))
 {
     NotebookElement *ce = (NotebookElement *)elementRecord;
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, ce->backgroundObj);
     int borderWidth = 2;
-    (void)dummy;
-    (void)state;
 
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_FLAT);
@@ -986,31 +1142,37 @@ TtkClamTheme_Init(Tcl_Interp *interp)
         return TCL_ERROR;
     }
 
-    Ttk_RegisterElement(interp,
-	theme, "border", &BorderElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "field", &FieldElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Combobox.field", &ComboboxFieldElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "trough", &TroughElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "thumb", &ThumbElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "uparrow", &ArrowElementSpec, &ArrowElements[0]);
-    Ttk_RegisterElement(interp,
-	theme, "downarrow", &ArrowElementSpec, &ArrowElements[1]);
-    Ttk_RegisterElement(interp,
-	theme, "leftarrow", &ArrowElementSpec, &ArrowElements[2]);
-    Ttk_RegisterElement(interp,
-	theme, "rightarrow", &ArrowElementSpec, &ArrowElements[3]);
+    Ttk_RegisterElement(interp, theme, "border",
+	    &BorderElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "field",
+	    &FieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Combobox.field",
+	    &ComboboxFieldElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "trough",
+	    &TroughElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "thumb",
+	    &ThumbElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "uparrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
+    Ttk_RegisterElement(interp, theme, "Spinbox.uparrow",
+	    &SpinboxArrowElementSpec, &ArrowElements[0]);
+    Ttk_RegisterElement(interp, theme, "downarrow",
+	    &ArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "Spinbox.downarrow",
+	    &SpinboxArrowElementSpec, &ArrowElements[1]);
+    Ttk_RegisterElement(interp, theme, "leftarrow",
+	    &ArrowElementSpec, &ArrowElements[2]);
+    Ttk_RegisterElement(interp, theme, "rightarrow",
+	    &ArrowElementSpec, &ArrowElements[3]);
+    Ttk_RegisterElement(interp, theme, "arrow",
+	    &ArrowElementSpec, &ArrowElements[0]);
 
-    Ttk_RegisterElement(interp,
-	theme, "Radiobutton.indicator", &RadioIndicatorElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Checkbutton.indicator", &CheckIndicatorElementSpec, NULL);
-    Ttk_RegisterElement(interp,
-	theme, "Menubutton.indicator", &MenuIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Checkbutton.indicator",
+	    &CheckIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Radiobutton.indicator",
+	    &RadioIndicatorElementSpec, NULL);
+    Ttk_RegisterElement(interp, theme, "Menubutton.indicator",
+	    &MenuIndicatorElementSpec, NULL);
 
     Ttk_RegisterElement(interp, theme, "tab", &TabElementSpec, NULL);
     Ttk_RegisterElement(interp, theme, "client", &ClientElementSpec, NULL);

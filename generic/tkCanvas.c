@@ -7,7 +7,7 @@
  *
  * Copyright (c) 1991-1994 The Regents of the University of California.
  * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -267,7 +267,7 @@ static void		CanvasWorldChanged(ClientData instanceData);
 static int		ConfigureCanvas(Tcl_Interp *interp,
 			    TkCanvas *canvasPtr, int objc,
 			    Tcl_Obj *const *objv, int flags);
-static void		DestroyCanvas(void *memPtr);
+static Tcl_FreeProc	DestroyCanvas;
 static void		DisplayCanvas(ClientData clientData);
 static void		DoItem(Tcl_Obj *accumObj,
 			    Tk_Item *itemPtr, Tk_Uid tag);
@@ -2064,14 +2064,11 @@ CanvasWidgetCmd(
 	}
 
 	args = TkGetStringsFromObjs(objc, objv);
-	type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
+	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	if (args != NULL) {
 	    ckfree(args);
 	}
 	switch (type) {
-	case TK_SCROLL_ERROR:
-	    result = TCL_ERROR;
-	    goto done;
 	case TK_SCROLL_MOVETO:
 	    newX = canvasPtr->scrollX1 - canvasPtr->inset
 		    + (int) (fraction * (canvasPtr->scrollX2
@@ -2089,6 +2086,9 @@ CanvasWidgetCmd(
 			* (Tk_Width(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    }
 	    break;
+	default:
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	CanvasSetOrigin(canvasPtr, newX, canvasPtr->yOrigin);
 	break;
@@ -2110,14 +2110,11 @@ CanvasWidgetCmd(
 	}
 
 	args = TkGetStringsFromObjs(objc, objv);
-	type = Tk_GetScrollInfo(interp, objc, args, &fraction, &count);
+	type = Tk_GetScrollInfoObj(interp, objc, objv, &fraction, &count);
 	if (args != NULL) {
 	    ckfree(args);
 	}
 	switch (type) {
-	case TK_SCROLL_ERROR:
-	    result = TCL_ERROR;
-	    goto done;
 	case TK_SCROLL_MOVETO:
 	    newY = canvasPtr->scrollY1 - canvasPtr->inset + (int) (
 		    fraction*(canvasPtr->scrollY2-canvasPtr->scrollY1) + 0.5);
@@ -2134,6 +2131,9 @@ CanvasWidgetCmd(
 			* (Tk_Height(canvasPtr->tkwin) - 2*canvasPtr->inset));
 	    }
 	    break;
+	default:
+	    result = TCL_ERROR;
+	    goto done;
 	}
 	CanvasSetOrigin(canvasPtr, canvasPtr->xOrigin, newY);
 	break;
@@ -2168,7 +2168,7 @@ CanvasWidgetCmd(
 
 static void
 DestroyCanvas(
-    void *memPtr)		/* Info about canvas widget. */
+    char *memPtr)		/* Info about canvas widget. */
 {
     TkCanvas *canvasPtr = (TkCanvas *)memPtr;
     Tk_Item *itemPtr;
@@ -2730,7 +2730,7 @@ CanvasEventProc(
 	if (canvasPtr->flags & REDRAW_PENDING) {
 	    Tcl_CancelIdleCall(DisplayCanvas, canvasPtr);
 	}
-	Tcl_EventuallyFree(canvasPtr, (Tcl_FreeProc *) DestroyCanvas);
+	Tcl_EventuallyFree(canvasPtr, DestroyCanvas);
     } else if (eventPtr->type == ConfigureNotify) {
 	canvasPtr->flags |= UPDATE_SCROLLBARS;
 
@@ -4963,9 +4963,17 @@ PickCurrentItem(
 	event.type = LeaveNotify;
 
 	/*
-	 * If the event's detail happens to be NotifyInferior the binding
-	 * mechanism will discard the event. To be consistent, always use
-	 * NotifyAncestor.
+	 * Behaviour before ticket #47d4f29159:
+	 *    If the event's detail happens to be NotifyInferior the binding
+	 *    mechanism will discard the event. To be consistent, always use
+	 *    NotifyAncestor.
+	 *
+	 * Behaviour after ticket #47d4f29159:
+	 *    The binding mechanism doesn't discard events with detail field
+	 *    NotifyInferior anymore. It would be best to base the detail
+	 *    field on the ancestry relationship between the old and new
+	 *    canvas items. For the time being, retain the choice from before
+	 *    ticket #47d4f29159, which doesn't harm.
 	 */
 
 	event.xcrossing.detail = NotifyAncestor;

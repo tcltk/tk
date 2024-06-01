@@ -333,7 +333,7 @@ same menu.
 4/12/92 (bug fix) Fixed core dump that occurred in tkError.c when
 removing the first error record from the error list.
 
-4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <KeyPress-1>
+4/15/92 (bug fix) Fixed bug in tkBind.c that prevented <Key-1>
 event specifications from being processed correctly:  the "1" was
 treated as a button name rather than a keysym.
 
@@ -3998,7 +3998,7 @@ into account the "-displayof" option.  This problem also existed for the
 command to the Mac.  Also fixed "resource write" when the resource
 was specified by id and already existed. (JI)
 
-9/16/97 (bug fix) Added null bindings to <Command-KeyPress> for the
+9/16/97 (bug fix) Added null bindings to <Command-Key> for the
 text and entry widget on the Macintosh.  This prevents unbound command
 key sequences from having the character echoed to the widget. Also
 fixed Cut & Copy bindings.  (JI) (RJ)
@@ -5099,7 +5099,7 @@ correctly. (hobbs)
 2001-08-28 (bug fix) removed 2 second 'raise' delay seen by some Unix
 window managers. (hobbs, baker)
 
-2001-09-14 (bug fix) fixed memory leaks that occured if errors were
+2001-09-14 (bug fix) fixed memory leaks that occurred if errors were
 thrown while initializing the channel for an image. (darley)
 
 2001-09-20 (new feature) --enable-64bit support was added for HP 11 when
@@ -7504,7 +7504,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-01-07 (bug)[fa8de7] Crash [ttk::checkbutton .x -variable {}] (werner)
 
-2018-01-16 (bug)[382712] Crash in [event generate . <KeyPress>] (werner)
+2018-01-16 (bug)[382712] Crash in [event generate . <Key>] (werner)
 
 2018-01-19 (bug)[657c38] Crash in menu destroy with checkbutton entry (werner)
 
@@ -7540,7 +7540,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2018-07-17 (bug)[1088825] fix frame-2.17,3.9,3.10 on Mac (vogel)
 
-2018-07-27 (bug)[fabed1] GIF photo support for "deferred clear code" (vogel)
+2018-07-27 (bug)[fbaed1] GIF photo support for "deferred clear code" (vogel)
 
 2018-08-08 (feature) Modern full-screen support on Mac OSX (walzer)
 
@@ -7783,7 +7783,7 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 
 2020-07-02 (bug)[2d2459] default style for combobox (bll)
 
-2020-07-06 (bug)[40c4bf] double free, entry-19.21 (vogel)
+2020-07-06 (bug)[40e4bf] double free, entry-19.21 (vogel)
 
 2020-07-06 (bug)[e3888d] grab & warp, bind-36.1 (vogel)
 
@@ -7903,3 +7903,284 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2021-10-30 (bug)[6ea0b3] Mac: grab from menu makes dead window (culler)
 
 - Released 8.6.12, Nov 5, 2021 - https://core.tcl-lang.org/tk/ for details
+
+2021-11-09 (bug)[e699a7] Fix build on macOS < 10.12 (culler)
+
+2021-11-10 (bug)[8aebca,ce5d98] Mac: fix minimize button details (culler)
+
+2021-11-24 (bug)[18682c,733dae] Mac: Enter/Leave events for toplevels (culler)
+
+2021-11-29 (bug)[4ac9d2] Mac: canvas screenshot with Img package position
+	correction (chavez)
+
+2021-11-30 (documentation cleanup) [bad305] improve wm protocol
+	WM_DELETE_WINDOW documentation (culler)
+
+2021-11-30 (new) Mac: new color index "SelectedMenuItemTextColor".
+
+2021-12-01 (new)[TIP 599] Extended build information (nijtmans)
+
+2021-12-04 (bug)[440c52] fix PPM/PGM read with graylevel > 255 (vogel)
+
+2021-12-04 (bug)[5fb814] canvas redraw region for lines/polygones (vogel)
+
+2021-12-04 (new)[631a0b] text widget: direct mouse events to insert mark, not
+	current (vogel)
+
+2021-12-06 (bug)[b164ef] fix mouse events for multiple toplevels (culler)
+
+2021-12-07 (bug)[be8f5b] crash setting -type empty for a menu (vogel)
+
+2021-12-10 (bug)[50fc02,50fc02,25894d,156e58] ImgPhoto pointer issues (chavez)
+
+2021-12-20 (bug)[617861] -justify/-anchor defaults for ttk::label (nijtmans)
+
+2021-12-20 (bug)[6be8b0] Mac: crash on drag and Cmd-w (culler)
+
+2021-12-22 (bug)[a132b5] Mac: esc on combobox menu influences click reopening
+	(culler)
+
+2021-12-24 (bug)[915316] Mac: drag events not to initial widget (culler)
+
+2021-12-27 (bug)[eb26d4] Mac: wrong beep when clicking outside a combobox
+	(culler)
+
+2021-12-30 (bug)[822450] Mac: crash on exit (culler)
+
+2022-01-06 (bug)[b7d851] Mac: crash on tkdnd drop and window close (culler)
+
+2022-01-09 (bug)[40bc81] embedding error test failure (vogel)
+
+2022-01-16 (bug)[b1d115] No <Enter> event on new toplevel on current toplevel
+	destruction (vogel)
+
+2022-02-03 (bug)[3fefb3] crash in empty ttk::combobox when end index requested
+	(vogel)
+
+2022-02-07 (new)[247d80] Chinese message file (NewbieXvwu)
+
+2022-02-07 (new) Support Windows ARM platform (nijtmans)
+
+2022-02-11 (bug)[e331bc] NULL to memset in photo blank (chavez)
+
+2022-02-12 (bug)[fc5073] Mac: crash on native file dialog and tooltip (walzer)
+
+2022-02-17 (bug)[864b06] PNG photo image color numeric issue (chavez)
+
+2022-02-24 (bug)[141a11] Mac: dialog box with global grab inresponsive on
+	click in other toplevel (walzer)
+
+2022-02-25 (bug)[f75190] tk_fontchooser: multiple font families, locale
+	change, button activation (holger,vogel)
+
+2022-02-25 (bug)[ce6b42] (in TCL bug tracker) ttk::spinbox increment event
+	endless invokation (vogel)
+
+2022-02-26 (bug)[c7052d] Win: middle mouse click blocks system clipbord
+	(vogel)
+
+2022-02-27 (bug)[292598,01acde,e02fc96,0c3dbe,ee49f3,d175bb] Mac: memory leaks
+	(images, focus ring) (chavez)
+
+2022-03-07 (bug)[2a6c62] Avoid invalid <<TreeviewSelect>> events
+	(vogel,spjuth)
+
+2022-03-16 (new)[f47920] Updates to Finnish message catalog (hippelainen)
+
+2022-03-16 (bug)[424773] crash in test canvPs-5.1 (chavez,vogel)
+
+2022-03-19 (bug)[5412c6] crash in test canvWind-2.1 (SVID,vogel,griffin)
+
+2022-03-19 (bug)[54fe7a] crash in test textWind-18.3 (akuli,vogel)
+
+2022-04-04 (bug)[29b5c2] error in tk_popup with separator entry selected
+	(griffin)
+
+2022-04-07 (bug)[415415] scale advances multiple steps on single click (vogel)
+
+2022-04-10 (bug)[dc4c55] tk_popup entry index (mcdonald)
+
+2022-04-15 (bug)[c0bf1b] XVirtualEvent buffer overflows (chavez)
+
+2022-04-19 (new)[8dd3d5] Mac : use Fn + e to access Emoji (nijtmans)
+
+2022-05-11 (bug)[88cfdc] Mac: dialog memory, avoid use after free (chavez)
+
+2022-04-21 (new)[bf0f48] Mac: Optimization for compilation is now -O2
+	(nijtmans)
+
+2022-05-08 (bug)[eedd79] potential crashes in option parsing when sizeof(enum)
+	not equal to int (nijtmans)
+
+2022-05-08 (bug)[0ce975] panedwindow calls memcpy with NULL pointer (chavez)
+
+2022-05-22 (bug)[bee96b] Win: cursor warp, [tk busy] (mcdonald)
+
+2022-06-07 (bug) GIF with multiple images may reuse transparent color (oehhar)
+
+2022-06-12 (bug)[e4a051] Mac: map embedded window immediately (vogel)
+
+2022-06-15 (bug)[b18434] cygwin path compiling issues (fassel)
+
+2022-06-27 [aefdb8,be29f7] Updates to Russian message catalog (pylypenko)
+
+2022-07-04 Updates to Esperanto message catalog (ender)
+
+2022-07-19 (bug)[91ca77] Mac: map event handling (rosenburger,culler,landers)
+
+2022-07-20 (bug)[40bc81,17f44d,150174,61e0bb] embedding error test failures
+	(vogel)
+
+2022-07-25 (bug)[a3b03f] Linux, Windows: improve (ttk) menubutton menu
+	position (danckaert,vogel)
+
+2022-07-29 Update keysym tables to latest X11R6 (nijtmans)
+
+2022-08-22 [f6e4d4] consistent cross-platform polygon fill (akuli,chavez)
+
+2022-09-04 (bug)[bc6020] test treeview-bc602049ab (bende,spjuth)
+
+2022-09-08 (bug)[e17b6f] Mac: crash in test unixW-50.4 (chavez)
+
+2022-09-20 [33de84] Mac: handle Apple deprecation of OSTypes (culler)
+
+2022-09-20 (bug)[412b80] Mac menu: arrow key and menu selection (nab,culler)
+
+2022-09-22 (bug)[1a46d8,1fa325] Mac: memleak, crash safety in color (chavez)
+
+2022-10-17 [d93c81] Workaround faulty compiler optimization in VS 2022 (vogel)
+
+2022-10-26 (bug)[435739] crash in test bind-37.1 (csok,vogel)
+
+2022-10-28 (bug)[5e4e44] ttk::panedwindow drag robust wrt orientation variants
+	(xolodho,vogel)
+
+- Released 8.6.13, Nov 22, 2022 - https://core.tcl-lang.org/tk/ for details
+
+2022-12-12 Windows binaries licence metadata changed to  University of
+        California to match licence (nadkarni)
+
+2022-12-12 (bug)[6ee162] crash in [ttk::style configure] (vogel)
+
+2022-12-14 Permit [tk scaling] to return scale factor in safe interp (nijtmans)
+
+2023-01-05 Correct rounding of [nsFont pointSize] (nijtmans)
+
+2023-01-08 (bug)[cee095] X error handler management in Tk_MeasureChars (kechel)
+
+2023-01-18 macOS 13 SDK deprecates sprintf() (vogel)
+
+2023-02-12 (bug)[170551] crash in [tk busy forget]
+
+2023-02-27 (bug)[6cd476] crash using [tk busy hold] (vogel)
+
+2023-03-04 (bug)[93fe36] Fix <<MenuSelect>> with -tearoff (mcdonald)
+
+2023-03-30 (bug)[15c685] menu clones, tests menu-20.1[2-6] (bron)
+
+2023-04-10 (bug)[f4d9d7] canvas items ignored -disabledwidth (chavez,vogel)
+
+2023-04-30 (bug)[a9cf21] Text selection omits first character (moosems)
+
+2023-05-03 (bug)[310c74] No theme change attempts after Tk finalize (chavez)
+
+2023-05-13 (bug)[3414695] Dialogs robust against parent destruction (vogel)
+
+2023-05-23 (bug)[ab9581] Guard against use-after-free crashes (chavez)
+
+2023-05-23 (bug)[f40d9d] Aqua: FourCC bitmaps (chavez)
+
+2023-05-25 (bug)[7447ed] [tk_chooseColor] handle grab fail (leunissen)
+
+2023-05-31 (bug)[4666f2] Protect aganst NULL windows (nab,vogel)
+
+2023-06-06 (bug)[a418aa] bogus @x,y menu entry indices, menu-22.[6-9] (vogel)
+
+2023-06-11 (bug)[578441] memleak in TkScrollWindow (chavez)
+
+2023-06-13 (bug)[228476] link wish to correct libtk (root)
+
+2023-07-09 (bug)[a526d4] Aqua: memleak in TkpOpenDisplay (chavez)
+
+2023-07-10 (bug)[fa4694,0502c1] Aqua: memleaks in TkpConfigureMenuEntry (chavez)
+
+2023-07-17 (bug)[f9eddb] region clip & copy better OS implementations (chavez)
+
+2023-07-18 (bug)[2cb602] Aqua: memleak in TkCreateRegion (chavez)
+
+2023-07-19 (bug)[edb769] Aqua: memleak in XGetImage (chavez)
+
+2023-07-19 (bug)[c35c34] memleak in Initialize (chavez)
+
+2023-07-20 (bug)[deca94] memleak in TkpMakeMenuWindow (chavez)
+
+2023-07-23 (bug)[f24725] crash using Aqua pre-defined bitmap names (chavez)
+
+2023-07-24 (feature) better solve Y2038 on most systems (chavez,nijtmans)
+
+2023-07-26 (bug)[ed9b28] Aqua: memleak in GetWidgetDemoPath (chavez)
+
+2023-08-02 (bug)[2a3222] navigation exposed clues about masked entry
+
+2023-08-04 Update [trace] subcommands for Tcl 9 compat
+
+2023-08-29 (bug)[e42eef] memory issues interfacing with XIM (goodward)
+
+2023-08-30 (bug)[ef5d3e] Aqua: crash after first toplevel destroyed (chavez)
+
+2023-09-01 (bug)[6cc800] Harmonize number parsing with Tcl (nijtmans)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2023-09-03 (bug)[4468ed] Iconlist no fg text color from options db (chavez)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2023-09-04 (bug)[d2396a] error reporting from [send -option] (emanuele,nijtmans)
+
+2023-10-11 (bug)[9675dd] wrong free() call from Tk_ConfigureValue (nijtmans)
+
+2023-10 (bug) Many revisions to satisfy -fsanitize=function (chavez)
+	[d96974,04d3e5,84fe25,bb8041]
+
+2023-10-16 (bug)[22eefb] unixWm-45.[24] (vogel)
+
+2023-10-18 (bug)[10b38a] Silence macOS 14 warning about secure restorable state
+
+2023-10-28 (bug)[198376] move notebook tabs to position s (rozenberg,vogel)
+
+2023-11-06 (bug)[499f8e] eliminate undefined realloc() calls (chavez)
+
+2023-11-07 (bug)[09a11f] crash menu-40.[12] (chavez,culler)
+
+2023-11-13 (bug)[eedd2e] ttk::notebook looks bad when tabs are positioned on
+	edges other than the top (nemethi,werner)
+
+2023-11-15 (bug)[61550f] font-44.1 with Xft (vogel)
+
+2023-11-22 (bug)[22a4ad] Aqua: CoreGraphics manages memory for pixmaps (chavez)
+
+2023-11-28 (bug)[900f23] PNG encoder missed 0xFF entry (obermeier)
+
+2023-12-03 Aqua: Update handling of Apple FourCC creator codes (chavez)
+
+2023-12-03 (bug)[fe9423] Aqua: XPutImage() swap red and blue (chavez)
+        *** POTENTIAL INCOMPATIBILITY ***
+
+2023-12-09 (bug)[1d8b71] X: Photo color drawing for 32-bit visuals (warnholz)
+
+2023-12-12 Update to latest X11 headers
+
+2023-12-22 (bug)[9c5742] Fix handling of abbreviated -relief args (nijtmans)
+
+2024-01-03 (bug)[52df66] nonXft: [font measure] results inconsistent (vogel)
+
+2024-01-05 (bug)[a9e637] treeview display partial final line (bron)
+
+2024-01-09 (bug)[b7abf0] treeview destruction from O(N^2) to O(N) (emiliano)
+
+2024-01-12 (bug)[737abf] text image insertion from O(N^2) to O(N)
+
+2024-01-27 (bug)[8da7af] font caching performance issues (thraen,vogel)
+
+2024-02-08 (bug)[57b821] see test textIndex-22.16 (vogel)
+
+- Released 8.6.14, Feb 28, 2024 - https://core.tcl-lang.org/tk/ for details

@@ -4,12 +4,12 @@
  *	This file implements the Macintosh specific portion of the button
  *	widgets.
  *
- * Copyright (c) 1996-1997 by Sun Microsystems, Inc.
- * Copyright 2001, Apple Computer, Inc.
- * Copyright (c) 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright 2007 Revar Desmera.
- * Copyright 2015 Kevin Walzer/WordTech Communications LLC.
- * Copyright 2015 Marc Culler.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 2001 Apple Computer, Inc.
+ * Copyright © 2006-2007 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2007 Revar Desmera.
+ * Copyright © 2015 Kevin Walzer/WordTech Communications LLC.
+ * Copyright © 2015 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -409,10 +409,10 @@ TkpComputeButtonGeometry(
 	tmpRect = CGRectMake(0, 0, width + 2*HI_PADX, height + 2*HI_PADY);
         HIThemeGetButtonContentBounds(&tmpRect, &mbPtr->drawinfo, &contBounds);
         if (height < contBounds.size.height) {
-	    height = contBounds.size.height;
+	    height = (int)contBounds.size.height;
         }
         if (width < contBounds.size.width) {
-	    width = contBounds.size.width;
+	    width = (int)contBounds.size.width;
         }
 	height += 2*HI_PADY;
 	width += 2*HI_PADX;

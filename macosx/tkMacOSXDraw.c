@@ -4,10 +4,10 @@
  *	This file contains functions that draw to windows. Many of thees
  *	functions emulate Xlib functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009 Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2014-2020 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2014-2020 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -133,7 +133,7 @@ TkMacOSXGetNSImageFromTkImage(
 {
     Pixmap pixmap;
     NSImage *nsImage;
-    if (width == 0 || height == 0) {
+    if (width <= 0 || height <= 0) {
 	return nsImage = [[NSImage alloc] initWithSize:NSMakeSize(0,0)];
     }
     pixmap = Tk_GetPixmap(display, None, width, height, 0);
@@ -175,7 +175,7 @@ TkMacOSXGetNSImageFromBitmap(
 
     gc->background = transparentColor;
     XSetClipOrigin(display, gc, 0, 0);
-    XCopyPlane(display, bitmap, pixmap, gc, 0, 0, width, height, 0, 0, 1);
+    XCopyPlane(display, bitmap, pixmap, gc, 0, 0, (unsigned)width, (unsigned)height, 0, 0, 1);
     gc->background = origBackground;
     nsImage = CreateNSImageFromPixmap(pixmap, width, height);
     Tk_FreePixmap(display, pixmap);
@@ -264,8 +264,9 @@ TkMacOSXGetCGContextForDrawable(
 	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
-	macDraw->context = CGBitmapContextCreate(NULL, macDraw->size.width,
-		macDraw->size.height, bitsPerComponent, 0,
+	macDraw->context = CGBitmapContextCreate(NULL,
+		(unsigned)macDraw->size.width,
+		(unsigned)macDraw->size.height, bitsPerComponent, 0,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
 	    CGContextClearRect(macDraw->context, bounds);
@@ -394,7 +395,7 @@ XDrawLines(
 	return BadValue;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -462,7 +463,7 @@ XDrawSegments(
     TkMacOSXDrawingContext dc;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -514,7 +515,7 @@ XFillPolygon(
     TkMacOSXDrawingContext dc;
     int i;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -578,7 +579,7 @@ XDrawRectangle(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -633,7 +634,7 @@ XDrawRectangles(
     XRectangle * rectPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -686,7 +687,7 @@ XFillRectangles(
     XRectangle * rectPtr;
     int i;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -791,7 +792,7 @@ XDrawArc(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -862,7 +863,7 @@ XDrawArcs(
     XArc *arcPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -944,7 +945,7 @@ XFillArc(
 	return BadDrawable;
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -1018,7 +1019,7 @@ XFillArcs(
     XArc * arcPtr;
     int i, lw = gc->line_width;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(d, gc, &dc)) {
 	return BadDrawable;
     }
@@ -1163,6 +1164,8 @@ TkScrollWindow(
 	srcRgn = HIShapeCreateWithRect(&srcRect);
 	dstRgn = HIShapeCreateWithRect(&dstRect);
 	ChkErr(HIShapeDifference, srcRgn, dstRgn, dmgRgn);
+	CFRelease(dstRgn);
+	CFRelease(srcRgn);
 	result = HIShapeIsEmpty(dmgRgn) ? 0 : 1;
 
     }
@@ -1172,10 +1175,6 @@ TkScrollWindow(
      */
 
     TkMacOSXSetWithNativeRegion(damageRgn, dmgRgn);
-
-    /*
-     * Mutable shapes are not reference counted, and must be released.
-     */
 
     CFRelease(dmgRgn);
     return result;
@@ -1386,15 +1385,6 @@ TkMacOSXSetupDrawingContext(
      * Finish configuring the drawing context.
      */
 
-    drawingHeight = view ? [view bounds].size.height :
-	CGContextGetClipBoundingBox(dc.context).size.height;
-    CGAffineTransform t = {
-	.a = 1, .b = 0,
-	.c = 0, .d = -1,
-	.tx = 0,
-	.ty = drawingHeight
-    };
-
 #ifdef TK_MAC_DEBUG_CG
     fprintf(stderr, "TkMacOSXSetupDrawingContext: pushing GState for %s\n",
 	    macDraw->winPtr ? Tk_PathName(macDraw->winPtr) : "None");
@@ -1402,7 +1392,17 @@ TkMacOSXSetupDrawingContext(
 
     CGContextSaveGState(dc.context);
     CGContextSetTextDrawingMode(dc.context, kCGTextFill);
-    CGContextConcatCTM(dc.context, t);
+    { /* Restricted scope for t needed for C++ */
+	drawingHeight = view ? [view bounds].size.height :
+	    CGContextGetClipBoundingBox(dc.context).size.height;
+	CGAffineTransform t = {
+	    .a = 1, .b = 0,
+	    .c = 0, .d = -1,
+	    .tx = 0,
+	    .ty = drawingHeight
+	};
+	CGContextConcatCTM(dc.context, t);
+    }
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING

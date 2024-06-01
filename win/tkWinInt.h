@@ -5,7 +5,7 @@
  *	Windows-specific parts of Tk, but aren't used by the rest of Tk.
  *
  * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright (c) 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -241,5 +241,13 @@ MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
 #define GWLP_USERDATA		GWL_USERDATA
 #define GWLP_ID			GWL_ID
 #endif /* !GWLP_WNDPROC */
+
+/*
+ * MSVC versions before 2015 don't know snprintf, but _snprintf is compatible.
+ * Note that sprintf is deprecated.
+ */
+#if defined(_MSC_VER) && _MSC_VER < 1900
+#    define snprintf _snprintf
+#endif
 
 #endif /* _TKWININT */

@@ -13,6 +13,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The structure below defines the implementation of the "statekey" Tcl
  * object, used for quickly finding a mapping in a TkStateMap.
@@ -423,7 +427,7 @@ TkOffsetPrintProc(
 	    return "end";
 	}
 	p = (char *)ckalloc(32);
-	sprintf(p, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
+	snprintf(p, 32, "%d", offsetPtr->flags & ~TK_OFFSET_INDEX);
 	*freeProcPtr = TCL_DYNAMIC;
 	return p;
     }
@@ -456,7 +460,7 @@ TkOffsetPrintProc(
     if (offsetPtr->flags & TK_OFFSET_RELATIVE) {
 	*q++ = '#';
     }
-    sprintf(q, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
+    snprintf(q, 32, "%d,%d", offsetPtr->xoffset, offsetPtr->yoffset);
     *freeProcPtr = TCL_DYNAMIC;
     return p;
 }

@@ -65,7 +65,7 @@ test place-2.2 {ConfigureContent procedure, -height option} -setup {
     place .t.f2 -in .t.f -height 40
     update
     winfo height .t.f2
-} -result {40}
+} -result 40
 test place-2.3 {ConfigureContent procedure, -height option} -setup {
     place forget .t.f2
 } -body {
@@ -74,7 +74,7 @@ test place-2.3 {ConfigureContent procedure, -height option} -setup {
     place .t.f2 -height {}
     update
     winfo height .t.f2
-} -result {60}
+} -result 60
 
 
 test place-3.1 {ConfigureContent procedure, -relheight option} -body {
@@ -86,7 +86,7 @@ test place-3.2 {ConfigureContent procedure, -relheight option} -setup {
     place .t.f2 -in .t.f -relheight .5
     update
     winfo height .t.f2
-} -result {40}
+} -result 40
 test place-3.3 {ConfigureContent procedure, -relheight option} -setup {
     place forget .t.f2
 } -body {
@@ -95,7 +95,7 @@ test place-3.3 {ConfigureContent procedure, -relheight option} -setup {
     place .t.f2 -relheight {}
     update
     winfo height .t.f2
-} -result {60}
+} -result 60
 
 
 test place-4.1 {ConfigureContent procedure, bad -in options} -setup {
@@ -151,7 +151,7 @@ test place-5.2 {ConfigureContent procedure, -relwidth option} -setup {
     place .t.f2 -in .t.f -relwidth .5
     update
     winfo width .t.f2
-} -result {75}
+} -result 75
 test place-5.3 {ConfigureContent procedure, -relwidth option} -setup {
     place forget .t.f2
 } -body {
@@ -160,7 +160,7 @@ test place-5.3 {ConfigureContent procedure, -relwidth option} -setup {
     place .t.f2 -relwidth {}
     update
     winfo width .t.f2
-} -result {30}
+} -result 30
 
 test place-6.1 {ConfigureContent procedure, -width option} -body {
     place .t.f2 -width abcd
@@ -171,7 +171,7 @@ test place-6.2 {ConfigureContent procedure, -width option} -setup {
     place .t.f2 -in .t.f -width 100
     update
     winfo width .t.f2
-} -result {100}
+} -result 100
 test place-6.3 {ConfigureContent procedure, -width option} -setup {
     place forget .t.f2
 } -body {
@@ -180,7 +180,7 @@ test place-6.3 {ConfigureContent procedure, -width option} -setup {
     place .t.f2 -width {}
     update
     winfo width .t.f2
-} -result {30}
+} -result 30
 
 
 test place-7.1 {ReconfigurePlacement procedure, computing position} -setup {
@@ -261,47 +261,47 @@ test place-7.10 {ReconfigurePlacement procedure, computing size} -setup {
     list [winfo width .t.f2] [winfo height .t.f2]
 } -result {30 60}
 
-if {[tk windowingsystem] ne "aqua"} {
-    proc placeUpdate {} {
-	update
-    }
-} else {
-    proc placeUpdate {} {
-    }
-}
+# Tests place-8.1 and place-8.2 are constrained with failsOnUbuntu
+# because they are failing in the GitHub CI environment, using Linux Ubuntu.
+# These tests are also constrained with failsOnXQuarz because they fail
+# on macOS when building with clang --disable-aqua (which uses XQuartz)
+# (this is the case both at GitHub CI and on a real Mac).
+# Analysis shows that, on both cases, WaitForMapNotify is giving up on
+# waiting for the MapNotify event that should show up when running
+# 'wm iconify'. The timeout delay (2s) is exceeded without the unmapping
+# having happened. The cause for this is unknown (see comments in WaitForMapNotify).
 
 test place-8.1 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
 } -body {
     place .t.f2 -relx 1.0 -rely 1.0 -anchor sw
-    update idletasks
+    update
     set result [winfo ismapped .t.f2]
     wm iconify .t
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
-    update idletasks
+    update
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    placeUpdate
+    update
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 40 30 0 1}
 test place-8.2 {PlaceStructureProc, mapping and unmapping content} -constraints {failsOnUbuntu failsOnXQuarz} -setup {
     place forget .t.f2
     place forget .t.f
-    update idletasks
 } -body {
     place .t.f -x 0 -y 0 -width 200 -height 100
     place .t.f2 -in .t.f -relx 1.0 -rely 1.0 -anchor sw -width 50 -height 20
-    update idletasks
+    update
     set result [winfo ismapped .t.f2]
     wm iconify .t
     lappend result [winfo ismapped .t.f2]
     place .t.f2 -x 40 -y 30 -relx 0 -rely 0 -anchor nw
-    update idletasks
+    update
     lappend result [winfo x .t.f2] [winfo y .t.f2] [winfo ismapped .t.f2]
     wm deiconify .t
-    placeUpdate
+    update
     lappend result [winfo ismapped .t.f2]
 } -result {1 0 42 32 0 1}
 destroy .t
@@ -507,16 +507,17 @@ test place-14.1 {memory leak testing} -constraints memory -setup {
     frame .f
     frame .f.f
     stress {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        place forget .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	place forget .f.f
     } {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        pack .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	pack .f.f
+	update; # Needed because of TIP #518, handle <<NoManagedChild>> event.
     } {
-        place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
-        destroy .f
-        frame .f
-        frame .f.f
+	place .f.f -x [expr {1 + 1}] -y [expr {2 + 2}]
+	destroy .f
+	frame .f
+	frame .f.f
     }
 } -cleanup {
     destroy .f

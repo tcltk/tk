@@ -217,11 +217,11 @@ typedef struct {
 				 * multiple of this value. */
     char *formatBuf;		/* string into which to format value.
 				 * Malloc'ed. */
-    char *reqFormat;		/* Sprintf conversion specifier used for the
+    char *reqFormat;		/* Snprintf conversion specifier used for the
 				 * value that the users requests. Malloc'ed */
-    char *valueFormat;		/* Sprintf conversion specifier used for the
+    char *valueFormat;		/* Snprintf conversion specifier used for the
 				 * value. */
-    char digitFormat[16];	/* Sprintf conversion specifier computed from
+    char digitFormat[16];	/* Snprintf conversion specifier computed from
 				 * digits and other information; used for the
 				 * value. */
 

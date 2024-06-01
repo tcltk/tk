@@ -19,9 +19,9 @@ The label may be linked to a Tcl variable
 to automatically change the displayed text.
 .SO ttk_widget
 \-class	\-compound	\-cursor
-\-image	\-padding	\-state	\-style	\-takefocus
-\-text	\-textvariable	\-underline
-\-width
+\-image	\-padding	\-state
+\-style	\-takefocus	\-text
+\-textvariable	\-underline	\-width
 .SE
 .SH "WIDGET-SPECIFIC OPTIONS"
 .OP \-anchor anchor Anchor

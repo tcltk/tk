@@ -403,14 +403,14 @@ test send-10.4 {SendEventProc procedure, leading nulls, bogus commands} {secures
     set a null
     update
     set a
-} {44}
+} 44
 test send-10.5 {SendEventProc procedure, extraneous command options} {secureserver testsend} {
     testsend prop comm Comm \
 	    "c\n-n tktest\n-x miscellanous\n-y who knows?\n-s set a new\n"
     set a null
     update
     set a
-} {new}
+} new
 test send-10.6 {SendEventProc procedure, unknown interpreter} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
@@ -442,23 +442,14 @@ test send-10.8 {SendEventProc procedure, exceptional return} {secureserver tests
 	    "c\n-n tktest\n-r $id 62\n-s break\n"
     update
     testsend prop [winfo id .f] Comm
-} {
-r
--s 62
--r 
--c 3
-}
+} "\nr\n-s 62\n-r \n-c 3\n"
 test send-10.9 {SendEventProc procedure, empty return} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \
 	    "c\n-n tktest\n-r $id 62\n-s concat\n"
     update
     testsend prop [winfo id .f] Comm
-} {
-r
--s 62
--r 
-}
+} "\nr\n-s 62\n-r \n"
 test send-10.10 {SendEventProc procedure, asynchronous calls} {secureserver testsend} {
     testsend prop [winfo id .f] Comm {}
     testsend prop comm Comm \

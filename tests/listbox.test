@@ -2132,7 +2132,7 @@ test listbox-10.19 {GetListboxIndex procedure} -setup {
     .l index -1
 } -cleanup {
     destroy .l
-} -result  -1
+} -result -1
 test listbox-10.20 {GetListboxIndex procedure} -setup {
     destroy .l
 } -body {
@@ -2830,12 +2830,12 @@ test listbox-23.2 {ConfigureListboxItem} -setup {
     .l itemconfigure 0
 } -cleanup {
     destroy .l
-} -result [list {-background background Background {} {}} \
+} -result [list {-background {} {} {} {}} \
 	{-bg -background} \
 	{-fg -foreground} \
-	{-foreground foreground Foreground {} {}} \
-	{-selectbackground selectBackground Foreground {} {}} \
-	{-selectforeground selectForeground Background {} {}}]
+	{-foreground {} {} {} {}} \
+	{-selectbackground {} {} {} {}} \
+	{-selectforeground {} {} {} {}}]
 test listbox-23.3 {ConfigureListboxItem, itemco shortcut} -setup {
     destroy .l
 } -body {
@@ -2844,7 +2844,7 @@ test listbox-23.3 {ConfigureListboxItem, itemco shortcut} -setup {
     .l itemco 0 -background
 } -cleanup {
     destroy .l
-} -result {-background background Background {} {}}
+} -result {-background {} {} {} {}}
 test listbox-23.4 {ConfigureListboxItem, wrong num args} -setup {
     destroy .l
 } -body {

@@ -4,8 +4,8 @@
  *	Declarations of types and functions used to implement the scale
  *	widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright (c) 1999-2000 by Scriptics Corporation.
+ * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright (c) 1999-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -73,9 +73,9 @@ typedef struct TkScale {
 				 * values. 0 means we get to choose the number
 				 * based on resolution and/or the range of the
 				 * scale. */
-    char valueFormat[16];	/* Sprintf conversion specifier computed from
+    char valueFormat[16];	/* Snprintf conversion specifier computed from
 				 * digits and other information. */
-    char tickFormat[16];	/* Sprintf conversion specifier computed from
+    char tickFormat[16];	/* Snprintf conversion specifier computed from
 				 * tick interval. */
     double bigIncrement;	/* Amount to use for large increments to scale
 				 * value. (0 means we pick a value). */

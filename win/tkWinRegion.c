@@ -285,6 +285,30 @@ TkSubtractRegion(
 }
 
 /*
+ *----------------------------------------------------------------------
+ *
+ * TkpCopyRegion --
+ *
+ *  Makes the destination region a copy of the source region.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	None.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkpCopyRegion(
+    TkRegion dst,
+    TkRegion src)
+{
+    CombineRgn((HRGN)dst, (HRGN)src, NULL, RGN_COPY);
+}
+
+/*
  * Local Variables:
  * mode: c
  * c-basic-offset: 4
