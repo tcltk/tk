@@ -863,7 +863,7 @@ static int FindTabIndex(
     /* ... or integer index or content window name:
      */
     if (Ttk_GetContentIndexFromObj(
-	    interp, nb->notebook.mgr, objPtr, index_rtn) == TCL_OK)
+	    interp, nb->notebook.mgr, objPtr, 1, index_rtn) == TCL_OK)
     {
 	return TCL_OK;
     }
@@ -963,7 +963,7 @@ static int NotebookInsertCommand(
     }
 
     if (TCL_OK != Ttk_GetContentIndexFromObj(
-		interp, nb->notebook.mgr, objv[2], &destIndex)) {
+		interp, nb->notebook.mgr, objv[2], 1, &destIndex)) {
 	return TCL_ERROR;
     }
 
@@ -982,7 +982,7 @@ static int NotebookInsertCommand(
 	    return AddTab(interp, nb, destIndex, window, objc-4,objv+4);
 	}
     } else if (Ttk_GetContentIndexFromObj(
-		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
+		interp, nb->notebook.mgr, objv[3], 0, &srcIndex) != TCL_OK)
     {
 	return TCL_ERROR;
     } else if (srcIndex  >= Ttk_NumberContent(nb->notebook.mgr)) {
