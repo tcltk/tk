@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .check
 catch {destroy $w}
@@ -30,8 +30,8 @@ checkbutton $w.b0 -text "Safety Check" -variable safety -relief flat \
 checkbutton $w.b1 -text "Wipers OK" -variable wipers -relief flat
 checkbutton $w.b2 -text "Brakes OK" -variable brakes -relief flat
 checkbutton $w.b3 -text "Driver Sober" -variable sober -relief flat
-pack $w.b0 -side top -pady 2 -anchor w
-pack $w.b1 $w.b2 $w.b3 -side top -pady 2 -anchor w -padx 15
+pack $w.b0 -side top -pady 1.5p -anchor w
+pack $w.b1 $w.b2 $w.b3 -side top -pady 1.5p -anchor w -padx 12p
 
 ## This code makes $w.b0 function as a tri-state button; it's not
 ## needed at all for just straight yes/no buttons.

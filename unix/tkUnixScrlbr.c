@@ -4,7 +4,7 @@
  *	This file implements the Unix specific portion of the scrollbar
  *	widget.
  *
- * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright © 1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -95,7 +95,7 @@ TkpCreateScrollbar(
 
 void
 TkpDisplayScrollbar(
-    ClientData clientData)	/* Information about window. */
+    void *clientData)	/* Information about window. */
 {
     TkScrollbar *scrollPtr = (TkScrollbar *)clientData;
     Tk_Window tkwin = scrollPtr->tkwin;

@@ -344,7 +344,7 @@ static NSUInteger textInputModifiers;
 
     if (repRange.location == 0) {
 	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 
     /*
@@ -456,12 +456,12 @@ static NSUInteger textInputModifiers;
      * Use our insertText method to display the marked text.
      */
 
-    TkSendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkStartIMEMarkedText", NULL);
     processingCompose = YES;
     temp = [str copy];
     [self insertText: temp replacementRange:repRange];
     privateWorkingText = temp;
-    TkSendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
+    Tk_SendVirtualEvent(focusWin, "TkEndIMEMarkedText", NULL);
 }
 
 - (BOOL)hasMarkedText
@@ -530,7 +530,7 @@ static NSUInteger textInputModifiers;
     if (aSelector == @selector (deleteBackward:)) {
 	TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
 	Tk_Window focusWin = (Tk_Window)winPtr->dispPtr->focusPtr;
-	TkSendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
+	Tk_SendVirtualEvent(focusWin, "TkAccentBackspace", NULL);
     }
 }
 
@@ -558,7 +558,6 @@ static NSUInteger textInputModifiers;
 - (NSUInteger)characterIndexForPoint: (NSPoint)thePoint
 {
     (void)thePoint;
-
     if (NS_KEYLOG) {
 	TKLog(@"characterIndexForPoint request");
     }
@@ -605,7 +604,7 @@ static NSUInteger textInputModifiers;
 	privateWorkingText = nil;
 	processingCompose = NO;
 	if (composeWin) {
-	    TkSendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
+	    Tk_SendVirtualEvent(composeWin, "TkClearIMEMarkedText", NULL);
 	}
     }
 }
@@ -669,7 +668,7 @@ setXEventPoint(
     int win_x, win_y;
 
     if (Tk_IsEmbedded(winPtr)) {
-	TkWindow *contPtr = TkpGetOtherWindow(winPtr);
+	TkWindow *contPtr = (TkWindow *)Tk_GetOtherWindow(tkwin);
 	if (Tk_IsTopLevel(contPtr)) {
 	    local.x -= contPtr->wmInfoPtr->xInParent;
 	    local.y -= contPtr->wmInfoPtr->yInParent;
@@ -717,17 +716,13 @@ int
 XGrabKeyboard(
     Display* display,
     Window grab_window,
-    Bool owner_events,
-    int pointer_mode,
-    int keyboard_mode,
-    Time time)
+    TCL_UNUSED(Bool),
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
+    TCL_UNUSED(Time))
 {
     keyboardGrabWinPtr = Tk_IdToWindow(display, grab_window);
     TkWindow *captureWinPtr = (TkWindow *) TkpGetCapture();
-    (void)owner_events;
-    (void)pointer_mode;
-    (void)keyboard_mode;
-    (void)time;
 
     if (keyboardGrabWinPtr && captureWinPtr) {
 	NSWindow *w = TkMacOSXGetNSWindowForDrawable(grab_window);
@@ -767,12 +762,9 @@ XGrabKeyboard(
 
 int
 XUngrabKeyboard(
-    Display* display,
-    Time time)
+    TCL_UNUSED(Display *),
+    TCL_UNUSED(Time))
 {
-    (void)display;
-    (void)time;
-
     if (modalSession) {
 	[NSApp endModalSession:modalSession];
 	modalSession = nil;

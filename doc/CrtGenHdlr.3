@@ -17,11 +17,12 @@ Tk_CreateGenericHandler, Tk_DeleteGenericHandler \- associate procedure callback
 \fBTk_CreateGenericHandler\fR(\fIproc, clientData\fR)
 .sp
 \fBTk_DeleteGenericHandler\fR(\fIproc, clientData\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tk_GenericProc" clientData
 .AP Tk_GenericProc *proc in
 Procedure to invoke whenever any X event occurs on any display.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .BE
 .SH DESCRIPTION
@@ -45,7 +46,7 @@ call \fBTk_HandleEvent\fR, such as \fBTcl_DoOneEvent\fR or
 type \fBTk_GenericProc\fR:
 .CS
 typedef int \fBTk_GenericProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         XEvent *\fIeventPtr\fR);
 .CE
 The \fIclientData\fR parameter to \fIproc\fR is a copy of the \fIclientData\fR

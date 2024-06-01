@@ -6,7 +6,7 @@ namespace eval ttk::panedwindow {
     variable State
     array set State {
 	pressed 0
-    	pressX	-
+	pressX	-
 	pressY	-
 	sash 	-
 	sashPos -
@@ -30,7 +30,7 @@ proc ttk::panedwindow::Press {w x y} {
 
     set sash [$w identify $x $y]
     if {$sash eq ""} {
-    	set State(pressed) 0
+	set State(pressed) 0
 	return
     }
     set State(pressed) 	1
@@ -77,7 +77,7 @@ proc ttk::panedwindow::SetCursor {w x y} {
 
     set cursor $State(userConfCursor)
     if {[llength [$w identify $x $y]]} {
-    	# Assume we're over a sash.
+	# Assume we're over a sash.
 	switch -glob -- [$w cget -orient] {
 	    h*  { set cursor hresize }
 	    v*  { set cursor vresize }

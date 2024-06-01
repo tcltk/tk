@@ -4,10 +4,10 @@
  *	This file provides functions that associate Tcl commands with X events
  *	or sequences of X events.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 Scriptics Corporation.
- * Copyright (c) 2018-2019 Gregor Cramer.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
+ * Copyright © 2018-2019 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -54,21 +54,21 @@
  * equivalent sequences. However it is logical to give <Double-1> higher precedence
  * since it is more specific. Indeed <Double-1> includes time and space requirements,
  * which is not the case for <1><1>.
- * This can be achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
+ * This is achieved by setting PREFER_MOST_SPECIALIZED_EVENT to 1.
  */
 
 #ifndef PREFER_MOST_SPECIALIZED_EVENT
-# define PREFER_MOST_SPECIALIZED_EVENT 0
+# define PREFER_MOST_SPECIALIZED_EVENT 1
 #endif
 
 /*
  * Traditionally motion events can be combined with buttons in this way: <B1-B2-Motion>.
- * However it should be allowed to express this as <Motion-1-2> in addition. This can be
- * achieved by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
+ * However it should be allowed to express this as <Motion-1-2> in addition. This is achieved
+ * by setting SUPPORT_ADDITIONAL_MOTION_SYNTAX to 1.
  */
 
 #ifndef SUPPORT_ADDITIONAL_MOTION_SYNTAX
-# define SUPPORT_ADDITIONAL_MOTION_SYNTAX 0 /* set to 1 if wanted */
+# define SUPPORT_ADDITIONAL_MOTION_SYNTAX 1
 #endif
 
 /*
@@ -424,7 +424,9 @@ static const ModInfo modArray[] = {
     {"Shift",		ShiftMask,	0},
     {"Lock",		LockMask,	0},
     {"Meta",		META_MASK,	0},
+#ifndef TK_NO_DEPRECATED
     {"M",		META_MASK,	0},
+#endif
     {"Alt",		ALT_MASK,	0},
     {"Extended",	EXTENDED_MASK,	0},
     {"B1",		Button1Mask,	0},
@@ -437,15 +439,35 @@ static const ModInfo modArray[] = {
     {"Button4",		Button4Mask,	0},
     {"B5",		Button5Mask,	0},
     {"Button5",		Button5Mask,	0},
+    {"B6",		Button6Mask,	0},
+    {"Button6",		Button6Mask,	0},
+    {"B7",		Button7Mask,	0},
+    {"Button7",		Button7Mask,	0},
+    {"B8",		Button8Mask,	0},
+    {"Button8",		Button8Mask,	0},
+    {"B9",		Button9Mask,	0},
+    {"Button9",		Button9Mask,	0},
     {"Mod1",		Mod1Mask,	0},
     {"M1",		Mod1Mask,	0},
+#ifdef MAC_OSX_TK
     {"Command",		Mod1Mask,	0},
+#elif defined (_WIN32)
+    {"Command",		ControlMask,	0},
+#else
+    {"Command",		META_MASK,	0},
+#endif
     {"Mod2",		Mod2Mask,	0},
     {"M2",		Mod2Mask,	0},
+#ifdef MAC_OSX_TK
     {"Option",		Mod2Mask,	0},
+#else
+    {"Option",		ALT_MASK,	0},
+#endif
     {"Mod3",		Mod3Mask,	0},
     {"M3",		Mod3Mask,	0},
+    {"Num",		Mod3Mask,	0},
     {"Mod4",		Mod4Mask,	0},
+    {"Fn",		Mod4Mask,	0},
     {"M4",		Mod4Mask,	0},
     {"Mod5",		Mod5Mask,	0},
     {"M5",		Mod5Mask,	0},
@@ -478,10 +500,14 @@ typedef struct {
 
 static const EventInfo eventArray[] = {
     {"Key",		KeyPress,		KeyPressMask},
+#ifndef TK_NO_DEPRECATED
     {"KeyPress",	KeyPress,		KeyPressMask},
+#endif
     {"KeyRelease",	KeyRelease,		KeyPressMask|KeyReleaseMask},
     {"Button",		ButtonPress,		ButtonPressMask},
+#ifndef TK_NO_DEPRECATED
     {"ButtonPress",	ButtonPress,		ButtonPressMask},
+#endif
     {"ButtonRelease",	ButtonRelease,		ButtonPressMask|ButtonReleaseMask},
     {"Motion",		MotionNotify,		ButtonPressMask|PointerMotionMask},
     {"Enter",		EnterNotify,		EnterWindowMask},
@@ -502,6 +528,7 @@ static const EventInfo eventArray[] = {
     {"Activate",	ActivateNotify,		ActivateMask},
     {"Deactivate",	DeactivateNotify,	ActivateMask},
     {"MouseWheel",	MouseWheelEvent,	MouseWheelMask},
+    {"TouchpadScroll",  TouchpadScroll,	 TouchpadScrollMask},
     {"CirculateRequest", CirculateRequest,	SubstructureRedirectMask},
     {"ConfigureRequest", ConfigureRequest,	SubstructureRedirectMask},
     {"Create",		CreateNotify,		SubstructureNotifyMask},
@@ -606,7 +633,8 @@ static const int flagArray[TK_LASTEVENT] = {
    /* VirtualEvent */		VIRTUAL,
    /* Activate */		ACTIVATE,
    /* Deactivate */		ACTIVATE,
-   /* MouseWheel */		WHEEL
+   /* MouseWheel */		WHEEL,
+   /* TouchpadScroll */		WHEEL
 };
 
 /*
@@ -706,7 +734,7 @@ static int		GetVirtualEvent(Tcl_Interp *interp, VirtualEventTable *vetPtr,
 			    Tcl_Obj *virtName);
 static Tk_Uid		GetVirtualEventUid(Tcl_Interp *interp, char *virtString);
 static int		HandleEventGenerate(Tcl_Interp *interp, Tk_Window main,
-			    int objc, Tcl_Obj *const objv[]);
+			    Tcl_Size objc, Tcl_Obj *const objv[]);
 static void		InitVirtualEventTable(VirtualEventTable *vetPtr);
 static PatSeq *		MatchPatterns(TkDisplay *dispPtr, Tk_BindingTable bindPtr, PSList *psList,
 			    PSList *psSuccList, unsigned patIndex, const Event *eventPtr,
@@ -715,7 +743,6 @@ static int		NameToWindow(Tcl_Interp *interp, Tk_Window main,
 			    Tcl_Obj *objPtr, Tk_Window *tkwinPtr);
 static unsigned		ParseEventDescription(Tcl_Interp *interp, const char **eventStringPtr,
 			    TkPattern *patPtr, unsigned *eventMaskPtr);
-static void		DoWarp(void *clientData);
 static PSList *		GetLookupForEvent(LookupTables* lookupPtr, const Event *eventPtr,
 			    Tcl_Obj *object, int onlyConsiderDetailedEvents);
 static void		ClearLookupTable(LookupTables *lookupTables, void *object);
@@ -737,7 +764,7 @@ void			TkpDumpPSList(const PSList *psList);
 static int BindCount = 0;  /* Can be set or queried from Tcl through 'event debug' subcommand. Otherwise not used. */
 #endif
 
-static unsigned Max(unsigned a, unsigned b) { return a < b ? b : a; }
+static Tcl_Size Max(Tcl_Size a, Tcl_Size b) { return a < b ? b : a; }
 static int Abs(int n) { return n < 0 ? -n : n; }
 static int IsOdd(int n) { return n & 1; }
 
@@ -777,8 +804,10 @@ static unsigned
 GetButtonNumber(
     const char *field)
 {
+    unsigned button;
     assert(field);
-    return (field[0] >= '1' && field[0] <= '5' && field[1] == '\0') ? field[0] - '0' : 0;
+    button = (field[0] >= '1' && field[0] <= '9' && field[1] == '\0') ? (unsigned)(field[0] - '0') : 0;
+    return (button > 3) ? (button + 4) : button;
 }
 
 static Time
@@ -977,7 +1006,11 @@ ButtonNumberFromState(
     if (state & Button2Mask) { return 2; }
     if (state & Button3Mask) { return 3; }
     if (state & Button4Mask) { return 4; }
-    return 5;
+    if (state & Button5Mask) { return 5; }
+    if (state & Button6Mask) { return 6; }
+    if (state & Button7Mask) { return 7; }
+    if (state & Button8Mask) { return 8; }
+    return 9;
 }
 
 static void
@@ -1265,49 +1298,49 @@ TkBindInit(
     assert(NoSymbol == 0L);
 
     /* This must be a union, not a struct, otherwise comparison with NULL will not work. */
-    assert(Tk_Offset(Detail, name) == Tk_Offset(Detail, info));
+    assert(offsetof(Detail, name) == offsetof(Detail, info));
 
     /* We use some constraints about X*Event. */
-    assert(Tk_Offset(XButtonEvent, time) == Tk_Offset(XMotionEvent, time));
-    assert(Tk_Offset(XButtonEvent, x_root) == Tk_Offset(XMotionEvent, x_root));
-    assert(Tk_Offset(XButtonEvent, y_root) == Tk_Offset(XMotionEvent, y_root));
-    assert(Tk_Offset(XCreateWindowEvent, border_width) == Tk_Offset(XConfigureEvent, border_width));
-    assert(Tk_Offset(XCreateWindowEvent, width) == Tk_Offset(XConfigureEvent, width));
-    assert(Tk_Offset(XCreateWindowEvent, window) == Tk_Offset(XCirculateRequestEvent, window));
-    assert(Tk_Offset(XCreateWindowEvent, window) == Tk_Offset(XConfigureEvent, window));
-    assert(Tk_Offset(XCreateWindowEvent, window) == Tk_Offset(XGravityEvent, window));
-    assert(Tk_Offset(XCreateWindowEvent, window) == Tk_Offset(XMapEvent, window));
-    assert(Tk_Offset(XCreateWindowEvent, window) == Tk_Offset(XReparentEvent, window));
-    assert(Tk_Offset(XCreateWindowEvent, window) == Tk_Offset(XUnmapEvent, window));
-    assert(Tk_Offset(XCreateWindowEvent, x) == Tk_Offset(XConfigureEvent, x));
-    assert(Tk_Offset(XCreateWindowEvent, x) == Tk_Offset(XGravityEvent, x));
-    assert(Tk_Offset(XCreateWindowEvent, y) == Tk_Offset(XConfigureEvent, y));
-    assert(Tk_Offset(XCreateWindowEvent, y) == Tk_Offset(XGravityEvent, y));
-    assert(Tk_Offset(XCrossingEvent, time) == Tk_Offset(XEnterWindowEvent, time));
-    assert(Tk_Offset(XCrossingEvent, time) == Tk_Offset(XLeaveWindowEvent, time));
-    assert(Tk_Offset(XCrossingEvent, time) == Tk_Offset(XKeyEvent, time));
-    assert(Tk_Offset(XKeyEvent, root) == Tk_Offset(XButtonEvent, root));
-    assert(Tk_Offset(XKeyEvent, root) == Tk_Offset(XCrossingEvent, root));
-    assert(Tk_Offset(XKeyEvent, root) == Tk_Offset(XMotionEvent, root));
-    assert(Tk_Offset(XKeyEvent, state) == Tk_Offset(XButtonEvent, state));
-    assert(Tk_Offset(XKeyEvent, state) == Tk_Offset(XMotionEvent, state));
-    assert(Tk_Offset(XKeyEvent, subwindow) == Tk_Offset(XButtonEvent, subwindow));
-    assert(Tk_Offset(XKeyEvent, subwindow) == Tk_Offset(XCrossingEvent, subwindow));
-    assert(Tk_Offset(XKeyEvent, subwindow) == Tk_Offset(XMotionEvent, subwindow));
-    assert(Tk_Offset(XKeyEvent, time) == Tk_Offset(XButtonEvent, time));
-    assert(Tk_Offset(XKeyEvent, time) == Tk_Offset(XMotionEvent, time));
-    assert(Tk_Offset(XKeyEvent, x) == Tk_Offset(XButtonEvent, x));
-    assert(Tk_Offset(XKeyEvent, x) == Tk_Offset(XCrossingEvent, x));
-    assert(Tk_Offset(XKeyEvent, x) == Tk_Offset(XMotionEvent, x));
-    assert(Tk_Offset(XKeyEvent, x_root) == Tk_Offset(XButtonEvent, x_root));
-    assert(Tk_Offset(XKeyEvent, x_root) == Tk_Offset(XCrossingEvent, x_root));
-    assert(Tk_Offset(XKeyEvent, x_root) == Tk_Offset(XMotionEvent, x_root));
-    assert(Tk_Offset(XKeyEvent, y) == Tk_Offset(XButtonEvent, y));
-    assert(Tk_Offset(XKeyEvent, y) == Tk_Offset(XCrossingEvent, y));
-    assert(Tk_Offset(XKeyEvent, y) == Tk_Offset(XMotionEvent, y));
-    assert(Tk_Offset(XKeyEvent, y_root) == Tk_Offset(XButtonEvent, y_root));
-    assert(Tk_Offset(XKeyEvent, y_root) == Tk_Offset(XCrossingEvent, y_root));
-    assert(Tk_Offset(XKeyEvent, y_root) == Tk_Offset(XMotionEvent, y_root));
+    assert(offsetof(XButtonEvent, time) == offsetof(XMotionEvent, time));
+    assert(offsetof(XButtonEvent, x_root) == offsetof(XMotionEvent, x_root));
+    assert(offsetof(XButtonEvent, y_root) == offsetof(XMotionEvent, y_root));
+    assert(offsetof(XCreateWindowEvent, border_width) == offsetof(XConfigureEvent, border_width));
+    assert(offsetof(XCreateWindowEvent, width) == offsetof(XConfigureEvent, width));
+    assert(offsetof(XCreateWindowEvent, window) == offsetof(XCirculateRequestEvent, window));
+    assert(offsetof(XCreateWindowEvent, window) == offsetof(XConfigureEvent, window));
+    assert(offsetof(XCreateWindowEvent, window) == offsetof(XGravityEvent, window));
+    assert(offsetof(XCreateWindowEvent, window) == offsetof(XMapEvent, window));
+    assert(offsetof(XCreateWindowEvent, window) == offsetof(XReparentEvent, window));
+    assert(offsetof(XCreateWindowEvent, window) == offsetof(XUnmapEvent, window));
+    assert(offsetof(XCreateWindowEvent, x) == offsetof(XConfigureEvent, x));
+    assert(offsetof(XCreateWindowEvent, x) == offsetof(XGravityEvent, x));
+    assert(offsetof(XCreateWindowEvent, y) == offsetof(XConfigureEvent, y));
+    assert(offsetof(XCreateWindowEvent, y) == offsetof(XGravityEvent, y));
+    assert(offsetof(XCrossingEvent, time) == offsetof(XEnterWindowEvent, time));
+    assert(offsetof(XCrossingEvent, time) == offsetof(XLeaveWindowEvent, time));
+    assert(offsetof(XCrossingEvent, time) == offsetof(XKeyEvent, time));
+    assert(offsetof(XKeyEvent, root) == offsetof(XButtonEvent, root));
+    assert(offsetof(XKeyEvent, root) == offsetof(XCrossingEvent, root));
+    assert(offsetof(XKeyEvent, root) == offsetof(XMotionEvent, root));
+    assert(offsetof(XKeyEvent, state) == offsetof(XButtonEvent, state));
+    assert(offsetof(XKeyEvent, state) == offsetof(XMotionEvent, state));
+    assert(offsetof(XKeyEvent, subwindow) == offsetof(XButtonEvent, subwindow));
+    assert(offsetof(XKeyEvent, subwindow) == offsetof(XCrossingEvent, subwindow));
+    assert(offsetof(XKeyEvent, subwindow) == offsetof(XMotionEvent, subwindow));
+    assert(offsetof(XKeyEvent, time) == offsetof(XButtonEvent, time));
+    assert(offsetof(XKeyEvent, time) == offsetof(XMotionEvent, time));
+    assert(offsetof(XKeyEvent, x) == offsetof(XButtonEvent, x));
+    assert(offsetof(XKeyEvent, x) == offsetof(XCrossingEvent, x));
+    assert(offsetof(XKeyEvent, x) == offsetof(XMotionEvent, x));
+    assert(offsetof(XKeyEvent, x_root) == offsetof(XButtonEvent, x_root));
+    assert(offsetof(XKeyEvent, x_root) == offsetof(XCrossingEvent, x_root));
+    assert(offsetof(XKeyEvent, x_root) == offsetof(XMotionEvent, x_root));
+    assert(offsetof(XKeyEvent, y) == offsetof(XButtonEvent, y));
+    assert(offsetof(XKeyEvent, y) == offsetof(XCrossingEvent, y));
+    assert(offsetof(XKeyEvent, y) == offsetof(XMotionEvent, y));
+    assert(offsetof(XKeyEvent, y_root) == offsetof(XButtonEvent, y_root));
+    assert(offsetof(XKeyEvent, y_root) == offsetof(XCrossingEvent, y_root));
+    assert(offsetof(XKeyEvent, y_root) == offsetof(XMotionEvent, y_root));
 
     /*
      * Initialize the static data structures used by the binding package. They
@@ -2137,7 +2170,7 @@ Tk_BindEvent(
     XEvent *eventPtr,		/* What actually happened. */
     Tk_Window tkwin,		/* Window on display where event occurred (needed in order to
     				 * locate display information). */
-    int numObjects,		/* Number of objects at *objArr. */
+    Tcl_Size numObjects,		/* Number of objects at *objArr. */
     void **objArr)		/* Array of one or more objects to check for a matching binding. */
 {
     Tcl_Interp *interp;
@@ -2159,9 +2192,9 @@ Tk_BindEvent(
     unsigned scriptCount;
     int oldScreen;
     unsigned flags;
-    unsigned arraySize;
+    Tcl_Size arraySize;
     unsigned newArraySize;
-    unsigned i, k;
+    Tcl_Size i, k;
 
     assert(bindPtr);
     assert(eventPtr);
@@ -2219,7 +2252,7 @@ Tk_BindEvent(
 	    bindInfoPtr->lastEventTime = eventPtr->xkey.time;
 	}
 	/* Modifier keys should not influence button events. */
-	for (i = 0; i < (unsigned) dispPtr->numModKeyCodes; ++i) {
+	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
 	    if (dispPtr->modKeyCodes[i] == eventPtr->xkey.keycode) {
 		reset = 0;
 	    }
@@ -2345,7 +2378,7 @@ Tk_BindEvent(
     memset(matchPtrArr, 0, numObjects*sizeof(matchPtrArr[0]));
 
     if (!PromArr_IsEmpty(bindPtr->promArr)) {
-	for (k = 0; k < (unsigned) numObjects; ++k) {
+	for (k = 0; k < numObjects; ++k) {
 	    psl[1] = PromArr_Last(bindPtr->promArr);
 	    psl[0] = psl[1] - 1;
 
@@ -2377,7 +2410,7 @@ Tk_BindEvent(
      * 2. Look for bindings without detail.
      */
 
-    for (k = 0; k < (unsigned) numObjects; ++k) {
+    for (k = 0; k < numObjects; ++k) {
 	PSList *psSuccList = PromArr_First(bindPtr->promArr);
 	PatSeq *bestPtr;
 
@@ -2391,7 +2424,7 @@ Tk_BindEvent(
 
 	if (!PSList_IsEmpty(psSuccList)) {
 	    /* We have promoted sequences, adjust array size. */
-	    arraySize = Max(1u, arraySize);
+	    arraySize = Max(1, arraySize);
 	}
 
 	bestPtr = psPtr[0] ? psPtr[0] : psPtr[1];
@@ -2462,7 +2495,7 @@ Tk_BindEvent(
 	for (psEntry = PSList_First(psList); psEntry; psEntry = psNext) {
 	    const TkPattern *patPtr;
 
-	    assert(i + 1 < psEntry->psPtr->numPats);
+	    assert(i + 1 < (Tcl_Size)psEntry->psPtr->numPats);
 
 	    psNext = PSList_Next(psEntry);
 	    patPtr = &psEntry->psPtr->pats[i + 1];
@@ -2567,7 +2600,7 @@ Tk_BindEvent(
     Tcl_Preserve(bindInfoPtr);
 
     for (p = Tcl_DStringValue(&scripts), end = p + Tcl_DStringLength(&scripts); p < end; ) {
-	size_t len = strlen(p);
+	Tcl_Size len = strlen(p);
 	int code;
 
 	if (!bindInfoPtr->deleted) {
@@ -2747,7 +2780,9 @@ IsPSInPSList(
     PSEntry *psEntry;
 
     TK_DLIST_FOREACH(psEntry, psList) {
-        if (psEntry->psPtr == psPtr) { return 1; }
+	if (psEntry->psPtr == psPtr) {
+	    return 1;
+	}
     }
     return 0;
 }
@@ -2772,7 +2807,8 @@ MatchPatterns(
     PatSeq *bestPhysPtr;
     unsigned bestModMask;
     const PSModMaskArr *bestModMaskArr = NULL;
-    int i, isModKeyOnly = 0;
+    int isModKeyOnly = 0;
+    Tcl_Size i;
 
     assert(dispPtr);
     assert(bindPtr);
@@ -2799,12 +2835,12 @@ MatchPatterns(
      * it from the keyboard. See bug [16ef161925].
      */
     if (IsKeyEventType(curEvent->xev.type)) {
-        for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
-            if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
-                isModKeyOnly = 1;
-                break;
-            }
-        }
+	for (i = 0; i < dispPtr->numModKeyCodes; ++i) {
+	    if (dispPtr->modKeyCodes[i] == curEvent->xev.xkey.keycode) {
+		isModKeyOnly = 1;
+		break;
+	    }
+	}
     }
 
     for (psEntry = PSList_First(psList); psEntry; psEntry = PSList_Next(psEntry)) {
@@ -2821,11 +2857,11 @@ MatchPatterns(
 		    : VirtPatIsBound(bindPtr, psPtr, object, physPtrPtr)) {
 		TkPattern *patPtr = psPtr->pats + patIndex;
 
-                /* Ignore modifier key events, and KeyRelease events if the current event
-                 * is of a different type (e.g. a Button event)
-                 */
-                psEntry->keepIt = isModKeyOnly || \
-                        ((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
+		/* Ignore modifier key events, and KeyRelease events if the current event
+		 * is of a different type (e.g. a Button event)
+		 */
+		psEntry->keepIt = isModKeyOnly || \
+			((patPtr->eventType != (unsigned) curEvent->xev.type) && curEvent->xev.type == KeyRelease);
 
 		if (patPtr->eventType == (unsigned) curEvent->xev.type
 			&& (curEvent->xev.type != CreateNotify
@@ -2841,7 +2877,7 @@ MatchPatterns(
 		    unsigned curModMask = ResolveModifiers(dispPtr, bindPtr->curModMask);
 
 		    psEntry->expired = 1; /* Remove it from promotion list. */
-                    psEntry->keepIt = 0;  /* Don't keep matching patterns. */
+		    psEntry->keepIt = 0;  /* Don't keep matching patterns. */
 
 		    if (IsSubsetOf(modMask, curModMask)) {
 			unsigned count = patPtr->info ? curEvent->countDetailed : curEvent->countAny;
@@ -2908,7 +2944,7 @@ MatchPatterns(
 				    psEntry->keepIt = 1; /* Don't remove it from promotion list. */
 				}
 			    } else {
-			        /*
+				/*
 				 * Pattern sequence is already present in the success list.
 				 */
 
@@ -2982,8 +3018,8 @@ ExpandPercents(
     while (1) {
 	char numStorage[TCL_INTEGER_SPACE];
 	const char *string;
-	Tcl_WideInt number;     /* signed */
-	Tcl_WideUInt unumber;   /* unsigned */
+	long long number;     /* signed */
+	unsigned long long unumber;   /* unsigned */
 
 	/*
 	 * Find everything up to the next % character and append it to the
@@ -2993,7 +3029,7 @@ ExpandPercents(
 	for (string = before; *string && *string != '%'; ++string)
 	    ;
 	if (string != before) {
-	    Tcl_DStringAppend(dsPtr, before, string - before);
+	    Tcl_DStringAppend(dsPtr, before, (Tcl_Size)(string - before));
 	    before = string;
 	}
 	if (!*before) {
@@ -3244,8 +3280,8 @@ ExpandPercents(
 	}
 	{   /* local scope */
 	    int cvtFlags;
-	    unsigned spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
-	    unsigned length = Tcl_DStringLength(dsPtr);
+	    Tcl_Size spaceNeeded = Tcl_ScanElement(string, &cvtFlags);
+	    Tcl_Size length = Tcl_DStringLength(dsPtr);
 
 	    Tcl_DStringSetLength(dsPtr, length + spaceNeeded);
 	    spaceNeeded = Tcl_ConvertElement(
@@ -3847,7 +3883,7 @@ static int
 HandleEventGenerate(
     Tcl_Interp *interp,		/* Interp for errors return and name lookup. */
     Tk_Window mainWin,		/* Main window associated with interp. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. */
 {
     union { XEvent general; XVirtualEvent virt; } event;
@@ -3867,7 +3903,7 @@ HandleEventGenerate(
     unsigned count;
     unsigned flags;
     int number;
-    unsigned i;
+    Tcl_Size i;
 
     static const char *const fieldStrings[] = {
 	"-when",	"-above",	"-borderwidth",	"-button",
@@ -3904,7 +3940,7 @@ HandleEventGenerate(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window id \"%s\" doesn't exist in this application",
 		Tcl_GetString(objv[0])));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -3917,13 +3953,13 @@ HandleEventGenerate(
     }
     if (count != 1u) {
 	Tcl_SetObjResult(interp,
-		Tcl_NewStringObj("Double, Triple, or Quadruple modifier not allowed", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", NULL);
+		Tcl_NewStringObj("Double, Triple, or Quadruple modifier not allowed", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_MODIFIER", (char *)NULL);
 	return TCL_ERROR;
     }
     if (*p) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("only one event specification allowed", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("only one event specification allowed", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "MULTIPLE", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -3977,10 +4013,10 @@ HandleEventGenerate(
     warp = 0;
     pos = TCL_QUEUE_TAIL;
 
-    for (i = 2; i < (unsigned) objc; i += 2) {
+    for (i = 2; i < objc; i += 2) {
 	Tcl_Obj *optionPtr, *valuePtr;
 #if defined(_MSC_VER)
-        /* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
+	/* Work around MSVC compiler optimization bug, see [d93c8175fd]. */
 	volatile int badOpt = 0;
 #else
 	int badOpt = 0;
@@ -4004,7 +4040,7 @@ HandleEventGenerate(
 
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "value for \"%s\" missing", Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "MISSING_VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -4049,6 +4085,9 @@ HandleEventGenerate(
 		return TCL_ERROR;
 	    }
 	    if (flags & BUTTON) {
+		if (number >= Button4) {
+		    number += (Button8 - Button4);
+		}
 		event.general.xbutton.button = number;
 	    } else {
 		badOpt = 1;
@@ -4139,14 +4178,14 @@ HandleEventGenerate(
 	    keysym = TkStringToKeysym(value);
 	    if (keysym == NoSymbol) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("unknown keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYSYM", value, (char *)NULL);
 		return TCL_ERROR;
 	    }
 
 	    TkpSetKeycodeAndState(tkwin, keysym, &event.general);
 	    if (event.general.xkey.keycode == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf("no keycode for keysym \"%s\"", value));
-		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, NULL);
+		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "KEYCODE", value, (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (!(flags & KEY)) {
@@ -4381,7 +4420,7 @@ HandleEventGenerate(
     	if (badOpt) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "%s event doesn't accept \"%s\" option", name, Tcl_GetString(optionPtr)));
-	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -4424,9 +4463,18 @@ HandleEventGenerate(
 	    dispPtr->warpX = event.general.xmotion.x;
 	    dispPtr->warpY = event.general.xmotion.y;
 
-	    if (!(dispPtr->flags & TK_DISPLAY_IN_WARP)) {
-		Tcl_DoWhenIdle(DoWarp, dispPtr);
-		dispPtr->flags |= TK_DISPLAY_IN_WARP;
+	    /*
+	     * Warping with respect to a window will be done when Tk_handleEvent
+	     * below will run the event handlers and in particular TkPointerEvent.
+	     * This allows to make grabs and warping work together robustly, that
+	     * is without depending on a precise sequence of events.
+	     * Warping with respect to the whole screen (i.e. dispPtr->warpWindow
+	     * is NULL) is run directly here.
+	     */
+
+	    if (!dispPtr->warpWindow) {
+		TkpWarpPointer(dispPtr);
+		XForceScreenSaver(dispPtr->display, ScreenSaverReset);
 	    }
 	}
 
@@ -4498,7 +4546,7 @@ NameToWindow(
 
 	if (!tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad window name/identifier \"%s\"", name));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW_ID", name, (char *)NULL);
 	    return 0;
 	}
     }
@@ -4511,9 +4559,9 @@ NameToWindow(
 /*
  *-------------------------------------------------------------------------
  *
- * DoWarp --
+ * TkDoWarpWrtWin --
  *
- *	Perform warping of mouse pointer. Executed as an idle handler only.
+ *	Perform warping of mouse pointer with respect to a window.
  *
  * Results:
  *	None
@@ -4524,33 +4572,34 @@ NameToWindow(
  *-------------------------------------------------------------------------
  */
 
-static void
-DoWarp(
-    void *clientData)
+void
+TkDoWarpWrtWin(
+    TkDisplay *dispPtr)
 {
-    TkDisplay *dispPtr = (TkDisplay *)clientData;
-
-    assert(clientData);
+    assert(dispPtr);
 
     /*
-     * DoWarp was scheduled only if the window was mapped. It needs to be
-     * still mapped at the time the present idle callback is executed. Also
-     * one needs to guard against window destruction in the meantime.
-     * Finally, the case warpWindow == NULL is special in that it means
-     * the whole screen.
+     * A NULL warpWindow means warping with respect to the whole screen.
+     * We want to warp here only if we're warping with respect to a window.
      */
 
-    if (!dispPtr->warpWindow ||
-            (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None)) {
-        TkpWarpPointer(dispPtr);
-        XForceScreenSaver(dispPtr->display, ScreenSaverReset);
-    }
-
     if (dispPtr->warpWindow) {
+
+	/*
+	 * Warping with respect to a window can only be done if the window is
+	 * mapped. This was checked in HandleEvent. The window needs to be
+	 * still mapped at the time the present code is executed. Also
+	 * one needs to guard against window destruction in the meantime,
+	 * which could have happened as a side effect of an event handler.
+	 */
+
+	if (Tk_IsMapped(dispPtr->warpWindow) && Tk_WindowId(dispPtr->warpWindow) != None) {
+	    TkpWarpPointer(dispPtr);
+	    XForceScreenSaver(dispPtr->display, ScreenSaverReset);
+	}
 	Tcl_Release(dispPtr->warpWindow);
 	dispPtr->warpWindow = NULL;
     }
-    dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
 }
 
 /*
@@ -4591,7 +4640,7 @@ GetVirtualEventUid(
 	    || virtString[length - 2] != '>'
 	    || virtString[length - 1] != '>') {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("virtual event \"%s\" is badly formed", virtString));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "MALFORMED", (char *)NULL);
 	return NULL;
     }
     virtString[length - 2] = '\0';
@@ -4683,8 +4732,8 @@ FindSequence(
 	if (eventMask & VirtualEventMask) {
 	    if (!allowVirtual) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			"virtual event not allowed in definition of another virtual event", -1));
-		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", NULL);
+			"virtual event not allowed in definition of another virtual event", TCL_INDEX_NONE));
+		Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "INNER", (char *)NULL);
 		ckfree(psPtr);
 		return NULL;
 	    }
@@ -4707,14 +4756,14 @@ FindSequence(
      */
 
     if (numPats == 0) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("no events specified in binding", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("no events specified in binding", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "NO_EVENTS", (char *)NULL);
 	ckfree(psPtr);
 	return NULL;
     }
     if (numPats > 1u && virtualFound) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj("virtual events may not be composed", -1));
-	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", NULL);
+	Tcl_SetObjResult(interp, Tcl_NewStringObj("virtual events may not be composed", TCL_INDEX_NONE));
+	Tcl_SetErrorCode(interp, "TK", "EVENT", "VIRTUAL", "COMPOSITION", (char *)NULL);
 	ckfree(psPtr);
 	return NULL;
     }
@@ -4814,7 +4863,7 @@ FinalizeParseEventDescription(
 
     if (errorObj) {
 	Tcl_SetObjResult(interp, errorObj);
-	Tcl_SetErrorCode(interp, "TK", "EVENT", errCode, NULL);
+	Tcl_SetErrorCode(interp, "TK", "EVENT", errCode, (char *)NULL);
     }
     patPtr->count = count;
     return count;
@@ -4897,13 +4946,13 @@ ParseEventDescription(
 		return FinalizeParseEventDescription(
 			interp,
 			patPtr, 0,
-			Tcl_NewStringObj("virtual event \"<<>>\" is badly formed", -1), "MALFORMED");
+			Tcl_NewStringObj("virtual event \"<<>>\" is badly formed", TCL_INDEX_NONE), "MALFORMED");
 	    }
 	    if (!p || p[1] != '>') {
 		return FinalizeParseEventDescription(
 			interp,
 			patPtr, 0,
-			Tcl_NewStringObj("missing \">\" in virtual binding", -1), "MALFORMED");
+			Tcl_NewStringObj("missing \">\" in virtual binding", TCL_INDEX_NONE), "MALFORMED");
 	    }
 
 	    size = p - field;
@@ -4956,7 +5005,6 @@ ParseEventDescription(
 	    eventFlags = 0;
 	    if ((hPtr = Tcl_FindHashEntry(&eventTable, field))) {
 		const EventInfo *eiPtr = (const EventInfo *)Tcl_GetHashValue(hPtr);
-
 		patPtr->eventType = eiPtr->type;
 		eventFlags = flagArray[eiPtr->type];
 		eventMask = eiPtr->eventMask;
@@ -5002,7 +5050,7 @@ ParseEventDescription(
 				"NON_BUTTON");
 		    }
 #if SUPPORT_ADDITIONAL_MOTION_SYNTAX
-		    patPtr->modMask |= TkGetButtonMask(button);
+		    patPtr->modMask |= Tk_GetButtonMask(button);
 		    p = SkipFieldDelims(p);
 		    while (*p && *p != '>') {
 			p = SkipFieldDelims(GetField(p, field, sizeof(field)));
@@ -5012,7 +5060,7 @@ ParseEventDescription(
 				    patPtr, 0,
 				    Tcl_ObjPrintf("bad button number \"%s\"", field), "BUTTON");
 			}
-			patPtr->modMask |= TkGetButtonMask(button);
+			patPtr->modMask |= Tk_GetButtonMask(button);
 		    }
 		    patPtr->info = ButtonNumberFromState(patPtr->modMask);
 #endif
@@ -5027,11 +5075,10 @@ ParseEventDescription(
 		return FinalizeParseEventDescription(
 			interp,
 			patPtr, 0,
-			Tcl_NewStringObj("no event type or button # or keysym", -1), "UNMODIFIABLE");
+			Tcl_NewStringObj("no event type or button # or keysym", TCL_INDEX_NONE), "UNMODIFIABLE");
 	    } else if (patPtr->eventType == MotionNotify) {
 		patPtr->info = ButtonNumberFromState(patPtr->modMask);
 	    }
-
 	    p = SkipFieldDelims(p);
 
 	    if (*p != '>') {
@@ -5041,14 +5088,14 @@ ParseEventDescription(
 			return FinalizeParseEventDescription(
 				interp,
 				patPtr, 0,
-				Tcl_NewStringObj("extra characters after detail in binding", -1),
+				Tcl_NewStringObj("extra characters after detail in binding", TCL_INDEX_NONE),
 				"PAST_DETAIL");
 		    }
 		}
 		return FinalizeParseEventDescription(
 			interp,
 			patPtr, 0,
-			Tcl_NewStringObj("missing \">\" in binding", -1), "MALFORMED");
+			Tcl_NewStringObj("missing \">\" in binding", TCL_INDEX_NONE), "MALFORMED");
 	    }
 	    ++p;
 	}
@@ -5175,7 +5222,7 @@ GetPatternObj(
 
 	    assert(patPtr->eventType < TK_LASTEVENT);
 	    assert(((size_t) eventArrayIndex[patPtr->eventType]) < SIZE_OF_ARRAY(eventArray));
-	    Tcl_AppendToObj(patternObj, eventArray[eventArrayIndex[patPtr->eventType]].name, -1);
+	    Tcl_AppendToObj(patternObj, eventArray[eventArrayIndex[patPtr->eventType]].name, TCL_INDEX_NONE);
 
 	    if (patPtr->info) {
 		switch (patPtr->eventType) {
@@ -5184,22 +5231,22 @@ GetPatternObj(
 		    const char *string = TkKeysymToString(patPtr->info);
 		    if (string) {
 			Tcl_AppendToObj(patternObj, "-", 1);
-			Tcl_AppendToObj(patternObj, string, -1);
+			Tcl_AppendToObj(patternObj, string, TCL_INDEX_NONE);
 		    }
 		    break;
 		}
 		case ButtonPress:
 		case ButtonRelease:
-		    assert(patPtr->info <= Button5);
-		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) patPtr->info);
+		    assert(patPtr->info <= 13);
+		    Tcl_AppendPrintfToObj(patternObj, "-%u", (unsigned) ((patPtr->info > 7) ? (patPtr->info - 4) : patPtr->info));
 		    break;
 #if PRINT_SHORT_MOTION_SYNTAX
 		case MotionNotify: {
 		    unsigned mask = patPtr->modMask;
 		    while (mask & ALL_BUTTONS) {
 			unsigned button = ButtonNumberFromState(mask);
-			Tcl_AppendPrintfToObj(patternObj, "-%u", button);
-			mask &= ~TkGetButtonMask(button);
+			Tcl_AppendPrintfToObj(patternObj, "-%u", (button > 7) ? (button - 4) : button);
+			mask &= ~Tk_GetButtonMask(button);
 		    }
 		    break;
 		}
@@ -5236,14 +5283,48 @@ TkStringToKeysym(
     const char *name)		/* Name of a keysym. */
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&keySymTable, name);
+    Tcl_HashEntry *hPtr;
+#endif /* REDO_KEYSYM_LOOKUP */
+    int keysym;
 
+    size_t len = Tcl_UtfToUniChar(name, &keysym);
+    if (name[len] == '\0') {
+	if (!Tcl_UniCharIsPrint(keysym)) {
+    	/* This form not supported */
+	} else if ((unsigned)(keysym - 0x21) <= 0x5D) {
+		return (KeySym)keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return (KeySym)keysym;
+	    } else if (keysym == 0x20AC) {
+		return 0x20AC;
+	    } else {
+		return (KeySym)keysym + 0x1000000;
+	    }
+    }
+#ifdef REDO_KEYSYM_LOOKUP
+    if ((name[0] == 'U') && ((unsigned)(name[1] - '0') <= 9)) {
+	char *p = (char *)name + 1;
+	keysym = strtol(p, &p, 16);
+	if ((p >= name + 5) && (p <= name + 9) && !*p && (keysym >= 0x20)
+		&& ((unsigned)(keysym - 0x7F) > 0x20)) {
+	    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+		return keysym;
+	    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+		return keysym;
+	    } else if (keysym == 0x20AC) {
+		return keysym;
+	    }
+	    return keysym + 0x1000000;
+	}
+    }
+#endif
+#ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&keySymTable, name);
     if (hPtr) {
 	return (KeySym) Tcl_GetHashValue(hPtr);
     }
-    assert(name);
-    if (strlen(name) == 1u) {
-	KeySym keysym = (KeySym) (unsigned char) name[0];
+    if (((unsigned)(name[0]-1) < 0x7F) && !name[1]) {
+	keysym = (unsigned char) name[0];
 
 	if (TkKeysymToString(keysym)) {
 	    return keysym;
@@ -5276,16 +5357,37 @@ TkKeysymToString(
     KeySym keysym)
 {
 #ifdef REDO_KEYSYM_LOOKUP
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&nameTable, (char *)keysym);
+    Tcl_HashEntry *hPtr;
+#endif
+
+    if ((unsigned)(keysym - 0x21) <= 0x5D) {
+	keysym += 0x1000000;
+    } else if ((unsigned)(keysym - 0xA1) <= 0x5E) {
+	keysym += 0x1000000;
+    } else if (keysym == 0x20AC) {
+	keysym += 0x1000000;
+    }
+    if ((keysym >= 0x1000020) && (keysym <= 0x110FFFF)
+	    && ((unsigned)(keysym - 0x100007F) > 0x20)) {
+	char buf[10];
+	if (Tcl_UniCharIsPrint(keysym-0x1000000)) {
+	    buf[Tcl_UniCharToUtf(keysym - 0x1000000, buf)] = '\0';
+	} else if (keysym >= 0x1010000) {
+	    snprintf(buf, sizeof(buf), "U%08X", (int)(keysym - 0x1000000));
+	} else {
+	    snprintf(buf, sizeof(buf), "U%04X", (int)(keysym - 0x1000000));
+	}
+	return Tk_GetUid(buf);
+    }
+
+#ifdef REDO_KEYSYM_LOOKUP
+    hPtr = Tcl_FindHashEntry(&nameTable, INT2PTR(keysym));
 
     if (hPtr) {
 	return (const char *)Tcl_GetHashValue(hPtr);
     }
 #endif /* REDO_KEYSYM_LOOKUP */
 
-    if (keysym > (KeySym)0x1008FFFF) {
-	return NULL;
-    }
     return XKeysymToString(keysym);
 }
 
@@ -5316,35 +5418,6 @@ TkpGetBindingXEvent(
     BindingTable *bindPtr = winPtr->mainPtr->bindingTable;
 
     return &bindPtr->curEvent->xev;
-}
-
-/*
- *----------------------------------------------------------------------
- *
- * TkpCancelWarp --
- *
- *	This function cancels an outstanding pointer warp and
- *	is called during tear down of the display.
- *
- * Results:
- *	None.
- *
- * Side effects:
- *	None.
- *
- *----------------------------------------------------------------------
- */
-
-void
-TkpCancelWarp(
-    TkDisplay *dispPtr)
-{
-    assert(dispPtr);
-
-    if (dispPtr->flags & TK_DISPLAY_IN_WARP) {
-	Tcl_CancelIdleCall(DoWarp, dispPtr);
-	dispPtr->flags &= ~TK_DISPLAY_IN_WARP;
-    }
 }
 
 /*

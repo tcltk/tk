@@ -2,7 +2,7 @@
 # ttk::radiobutton widget tests.
 #
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -45,5 +45,19 @@ test radiobutton-1.8 "Reset radiobutton variable" -body {
     set ::choice 2
     list [info exists ::choice] [.rb1 instate alternate] [.rb2 instate alternate]
 } -result {1 0 0}
+
+test radiobutton-2.1 "style command" -body {
+    ttk::radiobutton .w
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {{} TRadiobutton TRadiobutton}
+test radiobutton-2.2 "style command" -body {
+    ttk::style configure customStyle.TRadiobutton
+    ttk::radiobutton .w -style customStyle.TRadiobutton
+    list [.w cget -style] [.w style] [winfo class .w]
+} -cleanup {
+    destroy .w
+} -result {customStyle.TRadiobutton customStyle.TRadiobutton TRadiobutton}
 
 tcltest::cleanupTests

@@ -4,8 +4,8 @@
  *	This file contains the functions that implement marks for text
  *	widgets.
  *
- * Copyright (c) 1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -19,8 +19,8 @@
  * Macro that determines the size of a mark segment:
  */
 
-#define MSEG_SIZE ((unsigned)(Tk_Offset(TkTextSegment, body) \
-	+ sizeof(TkTextMark)))
+#define MSEG_SIZE (offsetof(TkTextSegment, body) \
+	+ sizeof(TkTextMark))
 
 /*
  * Forward references for functions defined in this file:
@@ -36,8 +36,8 @@ static TkTextSegment *	MarkCleanupProc(TkTextSegment *segPtr,
 static void		MarkCheckProc(TkTextSegment *segPtr,
 			    TkTextLine *linePtr);
 static int		MarkLayoutProc(TkText *textPtr, TkTextIndex *indexPtr,
-			    TkTextSegment *segPtr, int offset, int maxX,
-			    int maxChars, int noCharsYet, TkWrapMode wrapMode,
+			    TkTextSegment *segPtr, Tcl_Size offset, int maxX,
+			    Tcl_Size maxChars, int noCharsYet, TkWrapMode wrapMode,
 			    TkTextDispChunk *chunkPtr);
 static int		MarkFindNext(Tcl_Interp *interp,
 			    TkText *textPtr, Tcl_Obj *markName);
@@ -95,7 +95,7 @@ int
 TkTextMarkCmd(
     TkText *textPtr,	/* Information about text widget. */
     Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
+    Tcl_Size objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument objects. Someone else has already
 				 * parsed this command enough to know that
 				 * objv[1] is "mark". */
@@ -114,7 +114,7 @@ TkTextMarkCmd(
 	MARK_UNSET
     };
 
-    if (objc < 3) {
+    if (objc + 1 < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
@@ -126,7 +126,7 @@ TkTextMarkCmd(
     switch ((enum markOptions) optionIndex) {
     case MARK_GRAVITY: {
 	char c;
-	int length;
+	Tcl_Size length;
 	const char *str;
 
 	if (objc < 4 || objc > 5) {
@@ -144,7 +144,7 @@ TkTextMarkCmd(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"there is no mark named \"%s\"", str));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_MARK", str,
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    markPtr = (TkTextSegment *)Tcl_GetHashValue(hPtr);
@@ -157,7 +157,7 @@ TkTextMarkCmd(
 	    } else {
 		typeStr = "left";
 	    }
-	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, -1));
+	    Tcl_SetObjResult(interp, Tcl_NewStringObj(typeStr, TCL_INDEX_NONE));
 	    return TCL_OK;
 	}
 	str = Tcl_GetStringFromObj(objv[4],&length);
@@ -170,7 +170,7 @@ TkTextMarkCmd(
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad mark gravity \"%s\": must be left or right", str));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "MARK_GRAVITY", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	TkTextMarkSegToIndex(textPtr, markPtr, &index);
@@ -188,9 +188,9 @@ TkTextMarkCmd(
 	}
 	resultObj = Tcl_NewObj();
 	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		"insert", -1));
+		"insert", TCL_INDEX_NONE));
 	Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
-		"current", -1));
+		"current", TCL_INDEX_NONE));
 	for (hPtr = Tcl_FirstHashEntry(&textPtr->sharedTextPtr->markTable,
 		&search); hPtr != NULL; hPtr = Tcl_NextHashEntry(&search)) {
 	    Tcl_ListObjAppendElement(NULL, resultObj, Tcl_NewStringObj(
@@ -223,7 +223,7 @@ TkTextMarkCmd(
 	TkTextSetMark(textPtr, Tcl_GetString(objv[3]), &index);
 	return TCL_OK;
     case MARK_UNSET: {
-	int i;
+	Tcl_Size i;
 
 	for (i = 3; i < objc; i++) {
 	    hPtr = Tcl_FindHashEntry(&textPtr->sharedTextPtr->markTable,
@@ -547,11 +547,11 @@ MarkLayoutProc(
     TkText *textPtr,		/* Text widget being layed out. */
     TCL_UNUSED(TkTextIndex *),	/* Identifies first character in chunk. */
     TkTextSegment *segPtr,	/* Segment corresponding to indexPtr. */
-    TCL_UNUSED(int),			/* Offset within segPtr corresponding to
+    TCL_UNUSED(Tcl_Size),		/* Offset within segPtr corresponding to
 				 * indexPtr (always 0). */
     TCL_UNUSED(int),			/* Chunk must not occupy pixels at this
 				 * position or higher. */
-    TCL_UNUSED(int),		/* Chunk must not include more than this many
+    TCL_UNUSED(Tcl_Size),		/* Chunk must not include more than this many
 				 * characters. */
     TCL_UNUSED(int),		/* Non-zero means no characters have been
 				 * assigned to this line yet. */

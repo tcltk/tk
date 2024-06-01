@@ -5,8 +5,8 @@
 # built-in commands.  Sourcing this file into Tcl runs the tests and
 # generates output for errors.  No output means no errors were found.
 #
-# Copyright (c) 1996 by Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -284,7 +284,7 @@ test winWm-6.3 {wm attributes} -constraints win -setup {
     wm attributes .t -foo
 } -cleanup {
     destroy .t
-} -returnCodes error -result {bad attribute "-foo": must be -alpha, -transparentcolor, -disabled, -fullscreen, -toolwindow, or -topmost}
+} -returnCodes error -result {bad attribute "-foo": must be -alpha, -disabled, -fullscreen, -toolwindow, -topmost, or -transparentcolor}
 
 test winWm-6.4 {wm attributes -alpha} -constraints win -setup {
     destroy .t
@@ -449,7 +449,7 @@ test winWm-9.0 "Bug #2799589 - delayed activation of destroyed window" -constrai
         if {![winfo ismapped $w]} { update }
         event generate $w <Enter>
         focus -force $w
-        event generate $w <ButtonPress-1> -x 5 -y 5
+        event generate $w <Button-1> -x 5 -y 5
         event generate $w <ButtonRelease-1> -x 5 -y 5
     }
     proc winwm90proc3 {} {
@@ -493,7 +493,7 @@ test winWm-9.1 "delayed activation of grabbed destroyed window" -constraints win
         if {![winfo ismapped $w]} { update }
         event generate $w <Enter>
         focus -force $w
-        event generate $w <ButtonPress-1> -x 5 -y 5
+        event generate $w <Button-1> -x 5 -y 5
         event generate $w <ButtonRelease-1> -x 5 -y 5
     }
     proc winwm91proc3 {} {

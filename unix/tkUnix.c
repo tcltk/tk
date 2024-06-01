@@ -5,7 +5,7 @@
  *	probably have to be written differently for Windows or Macintosh
  *	platforms.
  *
- * Copyright (c) 1995 Sun Microsystems, Inc.
+ * Copyright © 1995 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -108,6 +108,11 @@ Tk_UpdatePointer(
     int x, int y,		/* Pointer location in root coords. */
     int state)			/* Modifier state mask. */
 {
+  (void)tkwin;
+  (void)x;
+  (void)y;
+  (void)state;
+
   /*
    * This function intentionally left blank
    */

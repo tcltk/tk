@@ -1,5 +1,5 @@
 
-package require Tk
+package require tk
 package require tcltest 2.2
 namespace import -force tcltest::*
 loadTestedCommands
@@ -135,8 +135,8 @@ test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
 #
 # Basic tests.
 #
-test ttk-1.1 "Create button" -body {
-    pack [ttk::button .t] -expand true -fill both
+test ttk-1.1 "Create multiline button showing justified text" -body {
+    pack [ttk::button .t -text "Hello\nWorld!!" -justify center] -expand true -fill both
     update
 }
 
@@ -209,8 +209,8 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
     pack [ttk::button .b -command {set ::ttk28 failed}]
     update
 } -body {
-    bind .b <ButtonPress-1> {after 0 {.b configure -state disabled}}
-    after 1 {event generate .b <ButtonPress-1>}
+    bind .b <Button-1> {after 0 {.b configure -state disabled}}
+    after 1 {event generate .b <Button-1>}
     after 50 {event generate .b <ButtonRelease-1>}
     set aid [after 100 {set ::ttk28 [.b instate {disabled !pressed}]}]
     vwait ::ttk28
@@ -663,6 +663,17 @@ test ttk-ensemble-4 "style element create: insufficient args" -body {
 test ttk-ensemble-5 "style element create: valid" -body {
      ttk::style element create plain.background from default
 } -returnCodes 0 -result ""
+
+test ttk-16.1 {ttk::style theme styles - no such theme} -body {
+    ttk::style theme styles noSuchTheme
+} -returnCodes 1 -result {theme "noSuchTheme" doesn't exist}
+test ttk-16.2 {ttk::style theme styles - theme exists} -body {
+    # simply check this produces a list with some style names,
+    # without checking exact content (not needed, and may vary
+    # depending on platform, versions, improvements...)
+    expr {[llength [ttk::style theme styles alt]] > 0}
+} -result 1
+
 
 destroy {*}[winfo children .]
 

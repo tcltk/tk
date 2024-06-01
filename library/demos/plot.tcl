@@ -7,7 +7,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 set w .plot
 catch {destroy $w}
@@ -24,33 +24,33 @@ pack $w.msg -side top
 set btns [addSeeDismiss $w.buttons $w]
 pack $btns -side bottom -fill x
 
-canvas $c -relief raised -width 450 -height 300
+canvas $c -relief raised -width 337.5p -height 225p
 pack $w.c -side top -fill x
 
-set plotFont {Helvetica 18}
+set plotFont {Helvetica 16}
 
-$c create line 100 250 400 250 -width 2
-$c create line 100 250 100 50 -width 2
-$c create text 225 20 -text "A Simple Plot" -font $plotFont -fill brown
+$c create line 75p 187.5p 300p 187.5p -width 1.5p
+$c create line 75p 187.5p 75p 37.5p -width 1.5p
+$c create text 168.75p 15p -text "A Simple Plot" -font $plotFont -fill brown
 
 for {set i 0} {$i <= 10} {incr i} {
-    set x [expr {100 + ($i*30)}]
-    $c create line $x 250 $x 245 -width 2
-    $c create text $x 254 -text [expr {10*$i}] -anchor n -font $plotFont
+    set x [expr {75 + ($i*22.5)}]			;# in points
+    $c create line ${x}p 187.5p ${x}p 183.75p -width 1.5p
+    $c create text ${x}p 190.5p -text [expr {10*$i}] -anchor n -font $plotFont
 }
 for {set i 0} {$i <= 5} {incr i} {
-    set y [expr {250 - ($i*40)}]
-    $c create line 100 $y 105 $y -width 2
-    $c create text 96 $y -text [expr {$i*50}].0 -anchor e -font $plotFont
+    set y [expr {187.5 - ($i*30)}]			;# in points
+    $c create line 75p ${y}p 78.75p ${y}p -width 1.5p
+    $c create text 72p ${y}p -text [expr {$i*50}].0 -anchor e -font $plotFont
 }
 
 foreach point {
-    {12 56} {20 94} {33 98} {32 120} {61 180} {75 160} {98 223}
+    {9 42} {15 70.5} {24.75 73.5} {24 90} {45.75 135} {56.25 120} {73.5 167.25}
 } {
-    set x [expr {100 + (3*[lindex $point 0])}]
-    set y [expr {250 - (4*[lindex $point 1])/5}]
-    set item [$c create oval [expr {$x-6}] [expr {$y-6}] \
-	    [expr {$x+6}] [expr {$y+6}] -width 1 -outline black \
+    set x [expr {75 + (2.25*[lindex $point 0])}]	;# in points
+    set y [expr {187.5 - (3*[lindex $point 1])/5}]	;# in points
+    set item [$c create oval [expr {$x-4.5}]p [expr {$y-4.5}]p \
+	    [expr {$x+4.5}]p [expr {$y+4.5}]p -width 0.75p -outline black \
 	    -fill SkyBlue2]
     $c addtag point withtag $item
 }

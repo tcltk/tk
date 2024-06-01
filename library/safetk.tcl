@@ -2,7 +2,7 @@
 #
 # Support procs to use Tk in safe interpreters.
 #
-# Copyright (c) 1997 Sun Microsystems, Inc.
+# Copyright © 1997 Sun Microsystems, Inc.
 #
 # See the file "license.terms" for information on usage and redistribution
 # of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -250,7 +250,7 @@ proc ::safe::tkTopLevel {child display} {
 	    -command [list ::safe::tkDelete $w $w $child]
     pack $wc.fb.b -side right -fill both
     pack $wc.fb -side right -fill both -expand 1
-    pack $wc.l -side left -fill both -expand 1 -ipady 2
+    pack $wc.l -side left -fill both -expand 1 -ipady 1.5p
     pack $wc -side bottom -fill x
 
     # Container frame

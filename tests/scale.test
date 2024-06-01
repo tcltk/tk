@@ -1,9 +1,9 @@
 # This file is a Tcl script to test out the "scale" command
 # of Tk.  It is organized in the standard fashion for Tcl tests.
 #
-# Copyright (c) 1994 The Regents of the University of California.
-# Copyright (c) 1994-1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1994 The Regents of the University of California.
+# Copyright © 1994-1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -49,7 +49,7 @@ test scale-1.5 {configuration options} -body {
 } -result 4
 test scale-1.6 {configuration options} -body {
         .s configure -bd badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.7 {configuration options} -body {
     .s configure -bigincrement 12.5
     .s cget -bigincrement
@@ -76,7 +76,7 @@ test scale-1.11 {configuration options} -body {
 } -result 1
 test scale-1.12 {configuration options} -body {
         .s configure -borderwidth badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.13 {configuration options} -body {
     .s configure -command {set x}
     .s cget -command
@@ -160,7 +160,7 @@ test scale-1.31 {configuration options} -body {
 } -result 2
 test scale-1.32 {configuration options} -body {
         .s configure -highlightthickness badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.33 {configuration options} -body {
     .s configure -label {Some text}
     .s cget -label
@@ -175,7 +175,7 @@ test scale-1.35 {configuration options} -body {
 } -result 130
 test scale-1.36 {configuration options} -body {
         .s configure -length badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.37 {configuration options} -body {
     .s configure -orient horizontal
     .s cget -orient
@@ -244,7 +244,7 @@ test scale-1.51 {configuration options} -body {
 } -result 86
 test scale-1.52 {configuration options} -body {
         .s configure -sliderlength badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 test scale-1.53 {configuration options} -body {
     .s configure -sliderrelief raised
     .s cget -sliderrelief
@@ -316,7 +316,7 @@ test scale-1.69 {configuration options} -body {
 } -result 32
 test scale-1.70 {configuration options} -body {
         .s configure -width badValue
-} -returnCodes error -result {bad screen distance "badValue"}
+} -returnCodes error -result {expected screen distance but got "badValue"}
 destroy .s
 
 
@@ -1364,7 +1364,7 @@ test scale-18.2 {Scale button 1 events [Bug 787065]} -setup {
     pack .s
     tkwait visibility .s
     list [catch {
-        event generate .s <1> -x 0 -y 0
+        event generate .s <Button-1> -x 0 -y 0
         event generate .s <ButtonRelease-1> -x 0 -y 0
         update
         set ::error
@@ -1385,7 +1385,7 @@ test scale-18.3 {Scale button 2 events [Bug 787065]} -setup {
     pack .s
     tkwait visibility .s
     list [catch {
-        event generate .s <2> -x 0 -y 0
+        event generate .s <Button-2> -x 0 -y 0
         event generate .s <ButtonRelease-2> -x 0 -y 0
         update
         set ::error
@@ -1430,16 +1430,16 @@ test scale-19 {Bug [3529885fff] - Click in through goes in wrong direction} \
     } \
     -body {
         foreach {x y} [.s1 coord 50] {}
-        event generate .s1 <1> -x $x -y $y
+        event generate .s1 <Button-1> -x $x -y $y
         event generate .s1 <ButtonRelease-1> -x $x -y $y
         foreach {x y} [.s2 coord 50] {}
-        event generate .s2 <1> -x $x -y $y
+        event generate .s2 <Button-1> -x $x -y $y
         event generate .s2 <ButtonRelease-1> -x $x -y $y
         foreach {x y} [.s3 coord 50] {}
-        event generate .s3 <1> -x $x -y $y
+        event generate .s3 <Button-1> -x $x -y $y
         event generate .s3 <ButtonRelease-1> -x $x -y $y
         foreach {x y} [.s4 coord 50] {}
-        event generate .s4 <1> -x $x -y $y
+        event generate .s4 <Button-1> -x $x -y $y
         event generate .s4 <ButtonRelease-1> -x $x -y $y
         update
         list $x1 $x2 $x3 $x4

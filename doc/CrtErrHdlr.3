@@ -18,6 +18,7 @@ Tk_ErrorHandler
 \fBTk_CreateErrorHandler\fR(\fIdisplay, error, request, minor, proc, clientData\fR)
 .sp
 \fBTk_DeleteErrorHandler\fR(\fIhandler\fR)
+.fi
 .SH ARGUMENTS
 .AS "Tk_ErrorHandler" clientData
 .AP Display *display in
@@ -35,7 +36,7 @@ field.  If \-1, then match any \fIminor_code\fR value.
 Procedure to invoke whenever an error event is received for
 \fIdisplay\fR and matches \fIerror\fR, \fIrequest\fR, and \fIminor\fR.
 NULL means ignore any matching errors.
-.AP ClientData clientData in
+.AP void *clientData in
 Arbitrary one-word value to pass to \fIproc\fR.
 .AP Tk_ErrorHandler handler in
 Token for error handler to delete (return value from a previous
@@ -73,7 +74,7 @@ made when the handler was active (see below for more information).
 following type:
 .CS
 typedef int \fBTk_ErrorProc\fR(
-        ClientData \fIclientData\fR,
+        void *\fIclientData\fR,
         XErrorEvent *\fIerrEventPtr\fR);
 .CE
 The \fIclientData\fR parameter to \fIproc\fR is a copy of the \fIclientData\fR

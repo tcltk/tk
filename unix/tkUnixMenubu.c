@@ -4,7 +4,7 @@
  *	This file implements the Unix specific portion of the menubutton
  *	widget.
  *
- * Copyright (c) 1996-1997 Sun Microsystems, Inc.
+ * Copyright © 1996-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -56,7 +56,7 @@ TkpCreateMenuButton(
 
 void
 TkpDisplayMenuButton(
-    ClientData clientData)	/* Information about widget. */
+    void *clientData)	/* Information about widget. */
 {
     TkMenuButton *mbPtr = (TkMenuButton *)clientData;
     GC gc;
@@ -317,7 +317,7 @@ TkpDisplayMenuButton(
 
 void
 TkpDestroyMenuButton(
-    TkMenuButton *mbPtr)
+    TCL_UNUSED(TkMenuButton *))
 {
 }
 
@@ -368,7 +368,7 @@ TkpComputeMenuButtonGeometry(
 	Tk_FreeTextLayout(mbPtr->textLayout);
 
 	mbPtr->textLayout = Tk_ComputeTextLayout(mbPtr->tkfont, mbPtr->text,
-		-1, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
+		TCL_INDEX_NONE, mbPtr->wrapLength, mbPtr->justify, 0, &mbPtr->textWidth,
 		&mbPtr->textHeight);
 	txtWidth = mbPtr->textWidth;
 	txtHeight = mbPtr->textHeight;

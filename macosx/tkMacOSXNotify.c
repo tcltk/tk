@@ -14,34 +14,8 @@
  */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXEvent.h"
+#include "tkMacOSXInt.h"
 #include "tkMacOSXConstants.h"
-
-#ifdef USE_TCL_STUBS
-#ifdef __cplusplus
-extern "C" {
-#endif
-/*  Little hack to eliminate the need for "tclInt.h" here:
-    Just copy a small portion of TclIntPlatStubs, just
-    enough to make it work. See [600b72bfbc] */
-typedef struct {
-    int magic;
-    void *hooks;
-    void (*dummy[19]) (void); /* dummy entries 0-18, not used */
-    void (*tclMacOSXNotifierAddRunLoopMode) (const void *runLoopMode); /* 19 */
-} TclIntPlatStubs;
-extern const TclIntPlatStubs *tclIntPlatStubsPtr;
-#ifdef __cplusplus
-}
-#endif
-#define TclMacOSXNotifierAddRunLoopMode \
-	(tclIntPlatStubsPtr->tclMacOSXNotifierAddRunLoopMode) /* 19 */
-#elif TCL_MINOR_VERSION < 7
-    extern void TclMacOSXNotifierAddRunLoopMode(const void *runLoopMode);
-#else
-    extern void Tcl_MacOSXNotifierAddRunLoopMode(const void *runLoopMode);
-#   define TclMacOSXNotifierAddRunLoopMode Tcl_MacOSXNotifierAddRunLoopMode
-#endif
 #import <objc/objc-auto.h>
 
 /* This is not used for anything at the moment. */
@@ -53,9 +27,9 @@ static Tcl_ThreadDataKey dataKey;
 #define TSD_INIT() ThreadSpecificData *tsdPtr = (ThreadSpecificData *) \
 	Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData))
 
-static void TkMacOSXNotifyExitHandler(ClientData clientData);
-static void TkMacOSXEventsSetupProc(ClientData clientData, int flags);
-static void TkMacOSXEventsCheckProc(ClientData clientData, int flags);
+static void TkMacOSXNotifyExitHandler(void *clientData);
+static void TkMacOSXEventsSetupProc(void *clientData, int flags);
+static void TkMacOSXEventsCheckProc(void *clientData, int flags);
 
 #ifdef TK_MAC_DEBUG_EVENTS
 static const char *Tk_EventName[39] = {
@@ -102,7 +76,7 @@ static const char *Tk_EventName[39] = {
 
 static Tk_RestrictAction
 InspectQueueRestrictProc(
-     ClientData arg,
+     void *arg,
      XEvent *eventPtr)
 {
     XVirtualEvent* ve = (XVirtualEvent*) eventPtr;
@@ -126,7 +100,7 @@ InspectQueueRestrictProc(
 
 void DebugPrintQueue(void)
 {
-    ClientData oldArg;
+    void *oldArg;
     Tk_RestrictProc *oldProc;
 
     oldProc = Tk_RestrictEvents(InspectQueueRestrictProc, NULL, &oldArg);
@@ -181,7 +155,7 @@ void DebugPrintQueue(void)
      * this block should be removed.
      */
 
-# if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101500
     if ([theEvent type] == NSAppKitDefined) {
 	static Bool aWindowIsMoving = NO;
 	switch([theEvent subtype]) {
@@ -294,8 +268,8 @@ Tk_MacOSXSetupTkNotifier(void)
 	    Tcl_CreateEventSource(TkMacOSXEventsSetupProc,
 		    TkMacOSXEventsCheckProc, NULL);
 	    TkCreateExitHandler(TkMacOSXNotifyExitHandler, NULL);
-	    TclMacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
-	    TclMacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
+	    Tcl_MacOSXNotifierAddRunLoopMode(NSEventTrackingRunLoopMode);
+	    Tcl_MacOSXNotifierAddRunLoopMode(NSModalPanelRunLoopMode);
 	}
     }
 }
@@ -319,7 +293,7 @@ Tk_MacOSXSetupTkNotifier(void)
 
 static void
 TkMacOSXNotifyExitHandler(
-    ClientData clientData)	/* Not used. */
+    TCL_UNUSED(void *))	/* Not used. */
 {
     TSD_INIT();
 
@@ -366,7 +340,7 @@ TkMacOSXNotifyExitHandler(
 
 void
 TkMacOSXDrawAllViews(
-    ClientData clientData)
+    void *clientData)
 {
        int count = 0, *dirtyCount = (int *)clientData;
 
@@ -381,7 +355,7 @@ TkMacOSXDrawAllViews(
 #if TK_MAC_CGIMAGE_DRAWING
 		// Layer-backed view: let NSView schedule updates
 #else
-		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
+		//[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
 #endif
 		[view setNeedsDisplay:YES];
 	    }
@@ -416,7 +390,6 @@ TkMacOSXDrawAllViews(
 	    }
 	}
     }
-    [NSApp setNeedsToDraw:NO];
 }
 
 /*
@@ -447,7 +420,7 @@ static Tcl_TimerToken ticker = NULL;
 
 static void
 Heartbeat(
-    ClientData clientData)
+    TCL_UNUSED(void *))
 {
 
     if (ticker) {
@@ -459,7 +432,7 @@ static const Tcl_Time zeroBlockTime = { 0, 0 };
 
 static void
 TkMacOSXEventsSetupProc(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];
@@ -487,7 +460,7 @@ TkMacOSXEventsSetupProc(
 			untilDate:[NSDate distantPast]
 			inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			dequeue:NO];
-	if ((currentEvent) || [NSApp needsToDraw] ) {
+	if ((currentEvent)) {
 	    Tcl_SetMaxBlockTime(&zeroBlockTime);
 	    Tcl_DeleteTimerHandler(ticker);
 	    ticker = NULL;
@@ -525,7 +498,7 @@ TkMacOSXEventsSetupProc(
  */
 static void
 TkMacOSXEventsCheckProc(
-    ClientData clientData,
+    TCL_UNUSED(void *),
     int flags)
 {
     NSString *runloopMode = [[NSRunLoop currentRunLoop] currentMode];

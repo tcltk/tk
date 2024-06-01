@@ -3,9 +3,9 @@
 # the common dialog boxes.  It is organized in the standard
 # fashion for Tcl tests.
 #
-# Copyright (c) 1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
-# Copyright (c) 1998-1999 ActiveState Corporation.
+# Copyright © 1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
+# Copyright © 1998-1999 ActiveState Corporation.
 
 package require tcltest 2.2
 namespace import ::tcltest::*
@@ -15,6 +15,8 @@ tcltest::loadTestedCommands
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 1}
 }
+
+testConstraint tcl8 [package vsatisfies [package provide Tcl] 8]
 
 # Locale identifier LANG_ENGLISH is 0x09
 testConstraint english [expr {
@@ -161,7 +163,7 @@ test winDialog-1.5 {Tk_ChooseColorObjCmd: -title} -constraints {
     set x {}
     start {
         set clr [tk_chooseColor -initialcolor "#ff9933" \
-                     -title "\u041f\u0440\u0438\u0432\u0435\u0442"]
+                     -title "Привет"]
     }
     then {
         if {[catch {
@@ -171,7 +173,7 @@ test winDialog-1.5 {Tk_ChooseColorObjCmd: -title} -constraints {
         lappend x [Click ok]
     }
     lappend x $clr
-} -result [list "\u041f\u0440\u0438\u0432\u0435\u0442" 0 "#ff9933"]
+} -result [list "Привет" 0 "#ff9933"]
 test winDialog-1.6 {Tk_ChooseColorObjCmd: -parent} -constraints {
     testwinevent
 } -setup {
@@ -481,15 +483,13 @@ test winDialog-5.11 {GetFileName: initial directory} -constraints {
 } -result [file join [initialdir] "12x 455"]
 
 test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -constraints {
-    nt
+    nt tcl8
 } -body {
-#        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
-
     tk_getOpenFile -initialdir ~12x/455
 } -returnCodes error -result {user "12x" doesn't exist}
 
 test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
-    nt testwinevent
+    nt testwinevent tcl8
 } -body {
     unset -nocomplain x
     start {set x [tk_getSaveFile \
@@ -502,7 +502,7 @@ test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
 } -result [file normalize [file join ~ "5 12 1"]]
 
 test winDialog-5.12.2 {tk_getSaveFile: initial directory: ~user} -constraints {
-    nt testwinevent
+    nt testwinevent tcl8
 } -body {
 
     # Note: this test will fail on Tcl versions 8.6.4 and earlier due
@@ -545,7 +545,7 @@ test winDialog-5.12.3 {tk_getSaveFile: initial directory: .} -constraints {
 test winDialog-5.12.4 {tk_getSaveFile: initial directory: unicode} -constraints {
     nt testwinevent
 } -body {
-    set dir [tcltest::makeDirectory "\u0167\u00e9\u015d\u0167"]
+    set dir [tcltest::makeDirectory "ŧéŝŧ"]
     unset -nocomplain x
     start {set x [tk_getSaveFile \
                       -initialdir $dir \
@@ -603,7 +603,7 @@ test winDialog-5.12.7 {tk_getOpenFile: initial directory: ~} -setup {
 	close [open $actualFilename w]
     }
 } -constraints {
-    nt testwinevent
+    nt testwinevent tcl8
 } -body {
     set fn [file tail [lindex [glob -types f ~/*] 0]]
     unset -nocomplain x
@@ -646,7 +646,7 @@ test winDialog-5.12.8 {tk_getOpenFile: initial directory: .} -constraints {
 test winDialog-5.12.9 {tk_getOpenFile: initial directory: unicode} -constraints {
     nt testwinevent
 } -body {
-    set dir [tcltest::makeDirectory "\u0167\u00e9\u015d\u0167"]
+    set dir [tcltest::makeDirectory "ŧéŝŧ"]
     set path [tcltest::makeFile "" testfile $dir]
     unset -nocomplain x
     start {set x [tk_getOpenFile \
@@ -707,7 +707,7 @@ test winDialog-5.13 {GetFileName: initial file} -constraints {
     file tail $x
 } -result "12x 456"
 test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constraints {
-    nt
+    nt tcl8
 } -body {
 #        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
     tk_getOpenFile -initialfile ~12x/455
@@ -862,7 +862,7 @@ test winDialog-5.25 {GetFileName: file types: MakeFilter() succeeds} -constraint
 } -body {
     # MacOS type that is correct, but has embedded high-bit chars.
 
-    start {set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {\u2022\u2022\u2022\u2022}}}}]}
+    start {set x [catch {tk_getSaveFile -filetypes {{"foo" .foo {••••}}}}]}
     then {
         Click cancel
     }
@@ -938,7 +938,7 @@ test winDialog-9.7 {Tk_ChooseDirectoryObjCmd: -initialdir} -constraints {
     string tolower [set x]
 } -result [string tolower [initialdir]]
 test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFilename()} -constraints {
-    nt
+    nt tcl8
 } -body {
 #        if (Tcl_TranslateFileName(interp, string,
 #            &utfDirString) == NULL)
@@ -1048,7 +1048,7 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
 } -body {
     start {
         tk fontchooser configure -command ApplyFont \
-            -title  "\u041f\u0440\u0438\u0432\u0435\u0442"
+            -title  "Привет"
         tk fontchooser show
     }
     then {
@@ -1056,7 +1056,7 @@ test winDialog-10.9 {Tk_FontchooserObjCmd: -title} -constraints {
         Click cancel
     }
     set a(text)
-} -result "\u041f\u0440\u0438\u0432\u0435\u0442"
+} -result "Привет"
 
 if {[testConstraint testwinevent]} {
     catch {testwinevent debug 0}

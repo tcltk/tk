@@ -2,8 +2,8 @@
 # tkUnixEmbed.c.  It is organized in the standard fashion for Tcl
 # tests.
 #
-# Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996-1997 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -90,21 +90,21 @@ proc colorsFree {w {red 31} {green 245} {blue 192}} {
 
 testConstraint pressbutton [llength [info commands pressbutton]]
 
-test unixEmbed-1.1 {TkpUseWindow procedure, bad window identifier} -constraints {
+test unixEmbed-1.1 {Tk_UseWindow procedure, bad window identifier} -constraints {
     unix
 } -setup {
     deleteWindows
 } -body {
     toplevel .t -use xyz
 } -returnCodes error -result {expected integer but got "xyz"}
-test unixEmbed-1.2 {TkpUseWindow procedure, bad window identifier} -constraints {
+test unixEmbed-1.2 {Tk_UseWindow procedure, bad window identifier} -constraints {
     unix
 } -setup {
     deleteWindows
 } -body {
     toplevel .t -use 47
 } -returnCodes error -result {couldn't create child of window "47"}
-test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} -constraints {
+test unixEmbed-1.3 {Tk_UseWindow procedure, inheriting colormap} -constraints {
     unix nonPortable
 } -setup {
     deleteWindows
@@ -118,7 +118,7 @@ test unixEmbed-1.3 {TkpUseWindow procedure, inheriting colormap} -constraints {
 } -cleanup {
     deleteWindows
 } -result 0
-test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} -constraints {
+test unixEmbed-1.4 {Tk_UseWindow procedure, inheriting colormap} -constraints {
     unix nonPortable
 } -setup {
     deleteWindows
@@ -132,7 +132,7 @@ test unixEmbed-1.4 {TkpUseWindow procedure, inheriting colormap} -constraints {
     deleteWindows
 } -result 1
 
-test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.5 {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed notAqua
 } -setup {
     deleteWindows
@@ -149,7 +149,7 @@ test unixEmbed-1.5 {TkpUseWindow procedure, creating Container records} -constra
 } -cleanup {
     deleteWindows
 } -result {{{XXX {} {} .t}} 0}
-test unixEmbed-1.5a {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.5a {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed
 } -setup {
     deleteWindows
@@ -170,7 +170,7 @@ test unixEmbed-1.5a {TkpUseWindow procedure, creating Container records} -constr
     interp delete child
     deleteWindows
 } -result {{{XXX {} {} .t}} 0}
-test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.6 {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed notAqua
 } -setup {
     deleteWindows
@@ -189,7 +189,7 @@ test unixEmbed-1.6 {TkpUseWindow procedure, creating Container records} -constra
 } -cleanup {
     deleteWindows
 } -result {{XXX {} {} .t2} {XXX {} {} .t1}}
-test unixEmbed-1.6a {TkpUseWindow procedure, creating Container records} -constraints {
+test unixEmbed-1.6a {Tk_UseWindow procedure, creating Container records} -constraints {
     unix testembed
 } -setup {
     deleteWindows
@@ -212,7 +212,7 @@ test unixEmbed-1.6a {TkpUseWindow procedure, creating Container records} -constr
     interp delete child
     deleteWindows
 } -result {{XXX {} {} .t2} {XXX {} {} .t1}}
-test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} -constraints {
+test unixEmbed-1.7 {Tk_UseWindow procedure, container and embedded in same app} -constraints {
     unix testembed
 } -setup {
     deleteWindows
@@ -227,8 +227,8 @@ test unixEmbed-1.7 {TkpUseWindow procedure, container and embedded in same app} 
     deleteWindows
 } -result {{XXX .f2 {} .t2} {XXX .f1 {} .t1}}
 
-# Can't think of any way to test the procedures TkpMakeWindow,
-# TkpMakeContainer, or EmbedErrorProc.
+# Can't think of any way to test the procedures Tk_MakeWindow,
+# Tk_MakeContainer, or EmbedErrorProc.
 
 
 test unixEmbed-2.1 {EmbeddedEventProc procedure} -constraints {
@@ -963,7 +963,7 @@ test unixEmbed-6.2a {EmbedGeometryRequest procedure, window changes size} -const
     deleteWindows
 } -result {{configure .t1 200 200} 200x200+0+0}
 
-# Can't think up any tests for TkpGetOtherWindow procedure.
+# Can't think up any tests for Tk_GetOtherWindow procedure.
 
 test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constraints {
     unix notAqua
@@ -979,20 +979,20 @@ test unixEmbed-7.1 {TkpRedirectKeyEvent procedure, forward keystroke} -constrain
 	toplevel .t1 -use $w1
     }
     focus -force .
-    bind . <KeyPress> {lappend x {key %A %E}}
+    bind . <Key> {lappend x {key %A %E}}
     set x {}
     set y [dobg {
 	update
-	bind .t1 <KeyPress> {lappend y {key %A}}
+	bind .t1 <Key> {lappend y {key %A}}
 	set y {}
-	event generate .t1 <KeyPress> -keysym a
+	event generate .t1 <Key> -keysym a
 	set y
     }]
     update
     list $x $y
 } -cleanup {
     deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{{key a 1}} {}}
 # TkpRedirectKeyEvent is not implemented in win or aqua.  If someone
 # implements it they should change the constraints for this test.
@@ -1013,13 +1013,13 @@ test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constrai
         toplevel .t1 -use [w1]
     }
     focus -force .
-    bind . <KeyPress> {lappend x {key %A %E}}
+    bind . <Key> {lappend x {key %A %E}}
     set x {}
     set y [child eval {
         update
-        bind .t1 <KeyPress> {lappend y {key %A}}
+        bind .t1 <Key> {lappend y {key %A}}
         set y {}
-        event generate .t1 <KeyPress> -keysym a
+        event generate .t1 <Key> -keysym a
         set y
     }]
     update
@@ -1027,7 +1027,7 @@ test unixEmbed-7.1a {TkpRedirectKeyEvent procedure, forward keystroke} -constrai
 } -cleanup {
     interp delete child
     deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{{key a 1}} {}}
 test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width} -constraints {
     unix notAqua
@@ -1044,20 +1044,20 @@ test unixEmbed-7.2 {TkpRedirectKeyEvent procedure, don't forward keystroke width
     update
     focus -force .f1
     update
-    bind . <KeyPress> {lappend x {key %A}}
+    bind . <Key> {lappend x {key %A}}
     set x {}
     set y [dobg {
 	update
-	bind .t1 <KeyPress> {lappend y {key %A}}
+	bind .t1 <Key> {lappend y {key %A}}
 	set y {}
-	event generate .t1 <KeyPress> -keysym b
+	event generate .t1 <Key> -keysym b
 	set y
     }]
     update
     list $x $y
 } -cleanup {
     deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{} {{key b}}}
 test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke width} -constraints {
     unix
@@ -1077,13 +1077,13 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
     update
     focus -force .f1
     update
-    bind . <KeyPress> {lappend x {key %A}}
+    bind . <Key> {lappend x {key %A}}
     set x {}
     set y [child eval {
         update
-        bind .t1 <KeyPress> {lappend y {key %A}}
+        bind .t1 <Key> {lappend y {key %A}}
         set y {}
-        event generate .t1 <KeyPress> -keysym b
+        event generate .t1 <Key> -keysym b
         set y
     }]
     update
@@ -1091,7 +1091,7 @@ test unixEmbed-7.2a {TkpRedirectKeyEvent procedure, don't forward keystroke widt
 } -cleanup {
     interp delete child
     deleteWindows
-    bind . <KeyPress> {}
+    bind . <Key> {}
 } -result {{} {{key b}}}
 
 test unixEmbed-8.1 {TkpClaimFocus procedure} -constraints {

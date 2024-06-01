@@ -8,7 +8,7 @@ if {![info exists widgetDemo]} {
     error "This script should be run from the \"widget\" demo."
 }
 
-package require Tk
+package require tk
 
 # textLoadFile --
 # This procedure below loads a file into a text widget, discarding
@@ -92,7 +92,7 @@ entry $w.file.entry -width 40 -textvariable fileName
 button $w.file.button -text "Load File" \
 	-command "textLoadFile $w.text \$fileName"
 pack $w.file.label $w.file.entry -side left
-pack $w.file.button -side left -pady 5 -padx 10
+pack $w.file.button -side left -pady 3p -padx 7.5p
 bind $w.file.entry <Return> "
     textLoadFile $w.text \$fileName
     focus $w.string.entry
@@ -105,7 +105,7 @@ entry $w.string.entry -width 40 -textvariable searchString
 button $w.string.button -text "Highlight" \
 	-command "textSearch $w.text \$searchString search"
 pack $w.string.label $w.string.entry -side left
-pack $w.string.button -side left -pady 5 -padx 10
+pack $w.string.button -side left -pady 3p -padx 7.5p
 bind $w.string.entry <Return> "textSearch $w.text \$searchString search"
 
 text $w.text -yscrollcommand "$w.scroll set" -setgrid true

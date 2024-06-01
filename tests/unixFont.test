@@ -8,8 +8,8 @@
 # fonts having or not having certain properties, which may not be valid
 # at all sites.
 #
-# Copyright (c) 1996 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright © 1996 Sun Microsystems, Inc.
+# Copyright © 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -258,7 +258,7 @@ test unixfont-8.3 {InitFont procedure: can't parse info from name} x11 {
 } {-family -overstrike -size -slant -underline -weight}
 test unixfont-8.4 {InitFont procedure: classify characters} {x11 failsOnUbuntu failsOnXQuarz} {
     set x 0
-    incr x [font measure $courier "\u4000"]   ;# 6
+    incr x [font measure $courier "䀀"]   ;# 6
     incr x [font measure $courier "\002"]   ;# 4
     incr x [font measure $courier "\012"]   ;# 2
     incr x [font measure $courier "\101"]   ;# 1

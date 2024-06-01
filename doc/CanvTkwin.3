@@ -30,6 +30,7 @@ int
 Tk_OptionParseProc *\fBTk_CanvasTagsParseProc\fR;
 .sp
 Tk_OptionPrintProc *\fBTk_CanvasTagsPrintProc\fR;
+.fi
 .SH ARGUMENTS
 .AS Tk_ItemType *drawableXPtr
 .AP Tk_Canvas canvas in
@@ -149,7 +150,7 @@ static const Tk_CustomOption tagsOption = {Tk_CanvasTagsParseProc,
 
 static const Tk_ConfigSpec configSpecs[] = {
     ...
-    {TK_CONFIG_CUSTOM, "\-tags", NULL, NULL,
+    {TK_CONFIG_CUSTOM, "-tags", NULL, NULL,
         NULL, 0, TK_CONFIG_NULL_OK, &tagsOption},
     ...
 };

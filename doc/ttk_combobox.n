@@ -10,7 +10,7 @@
 .SH NAME
 ttk::combobox \- text field with popdown selection list
 .SH SYNOPSIS
-\fBttk::combobox\fR \fIpathName \fR?\fIoptions\fR?
+\fBttk::combobox\fI pathName \fR?\fIoptions\fR?
 .BE
 .SH DESCRIPTION
 .PP
@@ -19,7 +19,7 @@ the user may select the value of the text field from among the
 values in the list.
 .SO ttk_widget
 \-class	\-cursor	\-takefocus
-\-style
+\-style	\-placeholder	\-placeholderforeground
 .SE
 .\" ALSO: Other entry widget options
 .SH "WIDGET-SPECIFIC OPTIONS"
@@ -55,56 +55,41 @@ Specifies an integer value indicating the desired width of the entry window,
 in average-size characters of the widget's font.
 .SH "WIDGET COMMAND"
 .PP
-The following subcommands are possible for combobox widgets:
-'\".TP
-'\"\fIpathName \fBcget\fR \fIoption\fR
-'\"Returns the current value of the specified \fIoption\fR.
-'\"See \fIttk::widget(n)\fR.
-'\".TP
-'\"\fIpathName \fBconfigure\fR ?\fIoption\fR? ?\fIvalue option value ...\fR?
-'\"Modify or query widget options.
-'\"See \fIttk::widget(n)\fR.
+In addition to the standard
+\fBcget\fR, \fBconfigure\fR, \fBidentify element\fR, \fBinstate\fR,
+\fBstate\fR and \fBstyle\fR
+commands (see \fBttk::widget\fR),
+combobox widgets support the following additional commands:
+.\" METHOD: current
 .TP
 \fIpathName \fBcurrent\fR ?\fInewIndex\fR?
+.
 If \fInewIndex\fR is supplied, sets the combobox value
 to the element at position \fInewIndex\fR in the list of \fB\-values\fR
 (in addition to integers, the \fBend\fR index is supported and indicates
-the last element of the list).
+the last element of the list, moreover the same simple interpretation as
+for the command \fBstring index\fR is supported, with simple integer index
+arithmetic and indexing relative to \fBend\fR).
 Otherwise, returns the index of the current value in the list of
-\fB\-values\fR or \fB\-1\fR if the current value does not appear in the list.
+\fB\-values\fR or \fB{}\fR if the current value does not appear in the list.
+.\" METHOD: get
 .TP
 \fIpathName \fBget\fR
+.
 Returns the current value of the combobox.
-'\".TP
-'\"\fIpathName \fBidentify \fIx y\fR
-'\"Returns the name of the element at position \fIx\fR, \fIy\fR.
-'\"See \fIttk::widget(n)\fR.
-'\".TP
-'\"\fIpathName \fBinstate \fIstateSpec\fR ?\fIscript\fR?
-'\"Test the widget state.
-'\"See \fIttk::widget(n)\fR.
+.\" METHOD: set
 .TP
-\fIpathName \fBset\fR \fIvalue\fR
+\fIpathName \fBset\fI value\fR
+.
 Sets the value of the combobox to \fIvalue\fR.
-'\".TP
-'\"\fIpathName \fBstate\fR ?\fIstateSpec\fR?
-'\"Modify or query the widget state.
-'\"See \fIttk::widget(n)\fR.
 .PP
 The combobox widget also supports the following \fBttk::entry\fR
-widget subcommands (see \fIttk::entry(n)\fR for details):
+widget commands:
 .DS
 .ta 5.5c 11c
 \fBbbox\fR	\fBdelete\fR	\fBicursor\fR
 \fBindex\fR	\fBinsert\fR	\fBselection\fR
 \fBxview\fR
-.DE
-The combobox widget also supports the following generic \fBttk::widget\fR
-widget subcommands (see \fIttk::widget(n)\fR for details):
-.DS
-.ta 5.5c 11c
-\fBcget\fR	\fBconfigure\fR	\fBidentify\fR
-\fBinstate\fR	\fBstate\fR
 .DE
 .SH "VIRTUAL EVENTS"
 .PP
@@ -149,6 +134,8 @@ Can only be changed when using non-native and non-graphical themes.
 \fB\-lightcolor\fP \fIcolor\fP
 .br
 \fB\-padding\fP \fIpadding\fP
+.br
+\fB\-placeholderforeground\fP \fIcolor\fP
 .br
 \fB\-postoffset\fP \fIpadding\fP
 .br

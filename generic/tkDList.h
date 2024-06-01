@@ -7,7 +7,7 @@
  * before or after an existing element or at the head/tail of the list.
  * A list may be traversed in the forward or backward direction.
  *
- * Copyright (c) 2018 Gregor Cramer.
+ * Copyright © 2018 Gregor Cramer.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -440,7 +440,7 @@ static void									\
 LT##_Free(struct ElemType *elem)						\
 {										\
     LT##_Remove(elem);								\
-    ckfree((void *) elem);							\
+    ckfree((void *)elem);							\
 }										\
 										\
 __TK_DLIST_UNUSED								\
@@ -508,7 +508,7 @@ LT##_Clear(LT *head)								\
     assert(head);								\
     for (p = head->first; p; p = next) {					\
 	next = LT##_Next(p);							\
-	ckfree((void *) p);							\
+	ckfree((void *)p);							\
     }										\
     LT##_Init(head);								\
 }										\
