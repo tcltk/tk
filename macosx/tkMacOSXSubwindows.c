@@ -3,9 +3,9 @@
  *
  *	Implements subwindows for the macintosh version of Tk.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright 2001-2009, Apple Inc.
- * Copyright (c) 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2006-2009 Daniel A. Steffen <das@users.sourceforge.net>
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -87,6 +87,7 @@ XDestroyWindow(
 	if (macWin->toplevel->referenceCount == 0) {
 	    ckfree(macWin->toplevel);
 	}
+	macWin->winPtr->privatePtr = NULL;
 	ckfree(macWin);
 	return Success;
     }
@@ -103,6 +104,7 @@ XDestroyWindow(
         macWin->drawRgn = NULL;
     }
     macWin->view = nil;
+    macWin->winPtr->privatePtr = NULL;
 
     /*
      * Delay deletion of a toplevel data structure until all children have
@@ -126,7 +128,7 @@ XDestroyWindow(
  *      Tk_WmMapWindow.
  *
  * Results:
- *	Returns Success or BadWindow.
+ *	Always returns Success or BadWindow.
  *
  * Side effects:
  *	The subwindow or toplevel may appear on the screen.  VisibilityNotify
@@ -163,7 +165,7 @@ XMapWindow(
 	TkMacOSXMakeRealWindowExist(macWin->toplevel->winPtr);
     }
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
 	    TKContentView *view = [win contentView];
@@ -319,14 +321,11 @@ XUnmapWindow(
     TkWindow *winPtr = macWin->winPtr;
     TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
-    NSPoint mouse = [NSEvent mouseLocation];
-    int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    int state = TkMacOSXButtonKeyState();
 
     if (!window) {
 	return BadWindow;
     }
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr) &&
 	    winPtr->wmInfoPtr->hints.initial_state!=IconicState) {
@@ -390,7 +389,6 @@ XUnmapWindow(
 	[view addTkDirtyRect:[view bounds]];
     }
 #endif
-    Tk_UpdatePointer(NULL, x, y, state);
     return Success;
 }
 
@@ -420,7 +418,7 @@ XResizeWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TKWindow *w = (TKWindow *)macWin->winPtr->wmInfoPtr->window;
 
@@ -469,7 +467,7 @@ XMoveResizeWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 
@@ -522,7 +520,7 @@ XMoveWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	NSWindow *w = macWin->winPtr->wmInfoPtr->window;
 
@@ -665,7 +663,7 @@ XRaiseWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Above, NULL);
     } else {
@@ -699,7 +697,7 @@ XLowerWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(macWin->winPtr) && !Tk_IsEmbedded(macWin->winPtr)) {
 	TkWmRestackToplevel(macWin->winPtr, Below, NULL);
     } else {
@@ -738,7 +736,7 @@ XConfigureWindow(
     MacDrawable *macWin = (MacDrawable *)w;
     TkWindow *winPtr = macWin->winPtr;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
 
     /*
      * Change the shape and/or position of the window.
@@ -876,7 +874,7 @@ TkMacOSXUpdateClipRgn(
 	     */
 
 	    TkMacOSXWinCGBounds(winPtr, &bounds);
-	    rgn = TkMacOSXHIShapeCreateMutableWithRect(&bounds);
+	    rgn = HIShapeCreateMutableWithRect(&bounds);
 
 	    /*
 	     * Clip away the area of any windows that may obscure this window.
@@ -985,7 +983,7 @@ TkMacOSXUpdateClipRgn(
 		    TkMacOSXUpdateClipRgn(win2Ptr);
 		}
 	    }
-	    macWin->aboveVisRgn = TkMacOSXHIShapeCreateEmpty();
+	    macWin->aboveVisRgn = HIShapeCreateEmpty();
 	}
 	if (!macWin->visRgn) {
 	    macWin->visRgn = HIShapeCreateCopy(macWin->aboveVisRgn);
@@ -1492,7 +1490,7 @@ Tk_GetPixmap(
     MacDrawable *macPix;
 
     if (display != NULL) {
-	display->request++;
+	LastKnownRequestProcessed(display)++;
     }
     macPix = (MacDrawable *)ckalloc(sizeof(MacDrawable));
     macPix->winPtr = NULL;
@@ -1534,7 +1532,7 @@ Tk_FreePixmap(
 {
     MacDrawable *macPix = (MacDrawable *)pixmap;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (macPix->context) {
 	CFRelease(macPix->context);
     }

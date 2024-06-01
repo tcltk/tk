@@ -3,10 +3,10 @@
  *
  *	The code in this file provides an interface for XImages,
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017-2021 Marc Culler.
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017-2021 Marc Culler.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -117,21 +117,20 @@ _XInitImageFuncPtrs(
 static void ReleaseData(
     void *info,
     TCL_UNUSED(const void *), /* data */
-    TCL_UNUSED(size_t))       /* size */
+    TCL_UNUSED(size_t))        /* size */
 {
     ckfree(info);
 }
 
-CGImageRef
+static CGImageRef
 TkMacOSXCreateCGImageWithXImage(
     XImage *image,
-    uint32_t alphaInfo)
+    uint32_t bitmapInfo)
 {
     CGImageRef img = NULL;
     size_t bitsPerComponent, bitsPerPixel;
     size_t len = image->bytes_per_line * image->height;
     const CGFloat *decode = NULL;
-    CGBitmapInfo bitmapInfo;
     CGDataProviderRef provider = NULL;
     char *data = NULL;
     CGDataProviderReleaseDataCallback releaseData = ReleaseData;
@@ -187,7 +186,6 @@ TkMacOSXCreateCGImageWithXImage(
 	CGColorSpaceRef colorspace = CGColorSpaceCreateDeviceRGB();
 	bitsPerComponent = 8;
 	bitsPerPixel = 32;
-	bitmapInfo = kCGBitmapByteOrder32Big | alphaInfo;
 	data = (char *)ckalloc(len);
 	if (data) {
 	    memcpy(data, image->data + image->xoffset, len);
@@ -391,7 +389,7 @@ ImagePutPixel(
 XImage *
 XCreateImage(
     Display* display,
-    TCL_UNUSED(Visual*),  /* visual */
+    TCL_UNUSED(Visual*), /* visual */
     unsigned int depth,
     int format,
     int offset,
@@ -403,7 +401,7 @@ XCreateImage(
 {
     XImage *ximage;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     ximage = (XImage *)ckalloc(sizeof(XImage));
 
     ximage->height = height;
@@ -425,7 +423,7 @@ XCreateImage(
 	ximage->bitmap_pad = bitmap_pad;
     } else {
 	/*
-	 * Use 16 byte alignment for best Quartz perfomance.
+	 * Use 16 byte alignment for best Quartz performance.
 	 */
 
 	ximage->bitmap_pad = 128;
@@ -486,8 +484,8 @@ XCreateImage(
  *----------------------------------------------------------------------
  */
 
-#define USE_ALPHA kCGImageAlphaLast
-#define IGNORE_ALPHA kCGImageAlphaNoneSkipLast
+#define USE_ALPHA (kCGImageAlphaLast | kCGBitmapByteOrder32Big)
+#define IGNORE_ALPHA (kCGImageAlphaNoneSkipFirst | kCGBitmapByteOrder32Little)
 
 static int
 TkMacOSXPutImage(
@@ -506,7 +504,11 @@ TkMacOSXPutImage(
     TkMacOSXDrawingContext dc;
     MacDrawable *macDraw = (MacDrawable *)drawable;
     int result = Success;
-    display->request++;
+
+    if (width <= 0 || height <= 0) {
+	return Success; /* Is OK. Nothing to see here, literally. */
+    }
+    LastKnownRequestProcessed(display)++;
     if (!TkMacOSXSetupDrawingContext(drawable, gc, &dc)) {
 	return BadDrawable;
     }
@@ -800,7 +802,7 @@ XGetImage(
     int y,
     unsigned int width,
     unsigned int height,
-    TCL_UNUSED(unsigned long), /* plane_mask */
+    TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
     NSBitmapImageRep* bitmapRep = nil;
@@ -911,7 +913,7 @@ XCopyArea(
     CGImageRef img = NULL;
     CGRect dstRect;
 
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	return BadDrawable;
     }
@@ -978,7 +980,7 @@ XCopyPlane(
     MacDrawable *srcDraw = (MacDrawable *)src;
     MacDrawable *dstDraw = (MacDrawable *)dst;
     CGRect srcRect, dstRect;
-    display->request++;
+    LastKnownRequestProcessed(display)++;
     if (!width || !height) {
 	/* TkMacOSXDbgMsg("Drawing of empty area requested"); */
 	return BadDrawable;

@@ -411,10 +411,10 @@ TkTextMarkSegToIndex(
  *
  * Results:
  *	The return value is TCL_OK if "name" exists as a mark in the text
- *	widget and is located within its -starline/-endline range. In this
+ *	widget and is located within its -startline/-endline range. In this
  *	case *indexPtr is filled in with the next segment who is after the
  *	mark whose size is non-zero. TCL_ERROR is returned if the mark
- *	doesn't exist in the text widget, or if it is out of its -starline/
+ *	doesn't exist in the text widget, or if it is out of its -startline/
  *	-endline range. In this latter case *indexPtr still contains valid
  *	information, in particular TkTextMarkNameToIndex called with the
  *	"insert" or "current" mark name may return TCL_ERROR, but *indexPtr

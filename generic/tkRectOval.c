@@ -94,7 +94,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_BITMAP, "-disabledstipple", NULL, NULL,
 	NULL, Tk_Offset(RectOvalItem, disabledFillStipple), TK_CONFIG_NULL_OK, NULL},
-    {TK_CONFIG_PIXELS, "-disabledwidth", NULL, NULL,
+    {TK_CONFIG_CUSTOM, "-disabledwidth", NULL, NULL,
 	"0.0", Tk_Offset(RectOvalItem, outline.disabledWidth),
 	TK_CONFIG_DONT_SET_DEFAULT, &pixelOption},
     {TK_CONFIG_COLOR, "-fill", NULL, NULL,

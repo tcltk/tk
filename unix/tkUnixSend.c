@@ -6,7 +6,7 @@
  *
  * Copyright (c) 1989-1994 The Regents of the University of California.
  * Copyright (c) 1994-1996 Sun Microsystems, Inc.
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -476,7 +476,7 @@ RegAddName(
     char id[30], *newProp;
     int idLength, newBytes;
 
-    sprintf(id, "%x ", (unsigned) commWindow);
+    snprintf(id, sizeof(id), "%x ", (unsigned) commWindow);
     idLength = strlen(id);
     newBytes = idLength + strlen(name) + 1;
     newProp = (char *)ckalloc(regPtr->propLength + newBytes);
@@ -875,7 +875,7 @@ Tk_SetAppName(
 		Tcl_DStringSetLength(&dString, offset+TCL_INTEGER_SPACE);
 		actualName = Tcl_DStringValue(&dString);
 	    }
-	    sprintf(Tcl_DStringValue(&dString) + offset, "%d", i);
+	    snprintf(Tcl_DStringValue(&dString) + offset, TCL_INTEGER_SPACE, "%d", i);
 	}
 	w = RegFindName(regPtr, actualName);
 	if (w == None) {
@@ -982,7 +982,7 @@ Tk_SendObjCmd(
 	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
-	if (Tcl_GetIndexFromObjStruct(interp, objv[i], sendOptions,
+	if (Tcl_GetIndexFromObjStruct(NULL, objv[i], sendOptions,
 		sizeof(char *), "option", 0, &index) != TCL_OK) {
 	    break;
 	}
@@ -1096,7 +1096,7 @@ Tk_SendObjCmd(
     if (!async) {
 	char buffer[TCL_INTEGER_SPACE * 2];
 
-	sprintf(buffer, "%x %d",
+	snprintf(buffer, sizeof(buffer), "%x %d",
 		(unsigned) Tk_WindowId(dispPtr->commTkwin),
 		localData.sendSerial);
 	Tcl_DStringAppend(&request, "\0-r ", 4);
@@ -1620,7 +1620,7 @@ SendEventProc(
 		if (result != TCL_OK) {
 		    char buffer[TCL_INTEGER_SPACE];
 
-		    sprintf(buffer, "%d", result);
+		    snprintf(buffer, sizeof(buffer), "%d", result);
 		    Tcl_DStringAppend(&reply, "\0-c ", 4);
 		    Tcl_DStringAppend(&reply, buffer, -1);
 		}
@@ -1796,7 +1796,7 @@ AppendErrorProc(
 	    pcPtr = pcPtr->nextPtr) {
 	if ((pcPtr == pendingPtr) && (pcPtr->result == NULL)) {
 	    pcPtr->result = (char *)ckalloc(strlen(pcPtr->target) + 50);
-	    sprintf(pcPtr->result, "no application named \"%s\"",
+	    snprintf(pcPtr->result, strlen(pcPtr->target) + 50, "no application named \"%s\"",
 		    pcPtr->target);
 	    pcPtr->code = TCL_ERROR;
 	    pcPtr->gotResponse = 1;

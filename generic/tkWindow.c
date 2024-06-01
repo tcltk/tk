@@ -1621,6 +1621,7 @@ Tk_DestroyWindow(
 	    TkFontPkgFree(winPtr->mainPtr);
 	    TkFocusFree(winPtr->mainPtr);
 	    TkStylePkgFree(winPtr->mainPtr);
+	    Ttk_TkDestroyedHandler(winPtr->mainPtr->interp);
 
 	    /*
 	     * When embedding Tk into other applications, make sure that all
@@ -2927,7 +2928,7 @@ DeleteWindowsExitProc(
     tsdPtr->initialized = 0;
 }
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
 
 static HMODULE tkcygwindll = NULL;
 
@@ -2939,7 +2940,7 @@ static HMODULE tkcygwindll = NULL;
  * encoding conversions.
  */
 
-int
+MODULE_SCOPE void
 TkCygwinMainEx(
     int argc,			/* Number of arguments. */
     char **argv,		/* Array of argument strings. */
@@ -2961,17 +2962,13 @@ TkCygwinMainEx(
     memcpy(name+len-8, L"libtk8", 6 * sizeof(WCHAR));
 
     tkcygwindll = LoadLibraryW(name);
-    if (!tkcygwindll) {
-	/* dll is not present */
-	return 0;
+    if (tkcygwindll) {
+	tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
+		(void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
+	if (tkmainex) {
+	    tkmainex(argc, argv, appInitProc, interp);
+	}
     }
-    tkmainex = (void (*)(int, char **, Tcl_AppInitProc *, Tcl_Interp *))
-	    (void *)GetProcAddress(tkcygwindll, "Tk_MainEx");
-    if (!tkmainex) {
-	return 0;
-    }
-    tkmainex(argc, argv, appInitProc, interp);
-    return 1;
 }
 #endif /* _WIN32 */
 
@@ -3002,7 +2999,7 @@ int
 Tk_Init(
     Tcl_Interp *interp)		/* Interpreter to initialize. */
 {
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
     if (tkcygwindll) {
 	int (*tkinit)(Tcl_Interp *);
 
@@ -3075,7 +3072,7 @@ Tk_SafeInit(
      * checked at several places to differentiate the two initialisations.
      */
 
-#if defined(_WIN32)
+#if defined(_WIN32) && !defined(STATIC_BUILD)
     if (tkcygwindll) {
 	int (*tksafeinit)(Tcl_Interp *);
 
@@ -3129,6 +3126,7 @@ Initialize(
     Tcl_Obj *cmd;
 
     Tcl_Obj *nameObj = NULL;
+    Tcl_Obj* appNameObj = NULL;
     Tcl_Obj *classObj = NULL;
     Tcl_Obj *displayObj = NULL;
     Tcl_Obj *colorMapObj = NULL;
@@ -3294,6 +3292,8 @@ Initialize(
 	TkpGetAppName(interp, &nameDS);
 	nameObj = Tcl_NewStringObj(Tcl_DStringValue(&nameDS),
 		Tcl_DStringLength(&nameDS));
+	appNameObj = nameObj;
+	Tcl_IncrRefCount(appNameObj);
 	Tcl_DStringFree(&nameDS);
     }
 
@@ -3454,6 +3454,10 @@ tkInit", -1, TCL_EVAL_GLOBAL);
     if (value) {
 	Tcl_DecrRefCount(value);
 	value = NULL;
+    }
+    if (appNameObj) {
+	Tcl_DecrRefCount(appNameObj);
+	appNameObj = NULL;
     }
     return code;
 }

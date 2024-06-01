@@ -282,7 +282,7 @@ test geometry-4.10 {Tk_MaintainGeometry and Tk_UnmaintainGeometry} -setup {
     winfo ismapped .t.quit
 } -cleanup {
     destroy .t
-} -result {1}
+} -result 1
 
 
 # cleanup

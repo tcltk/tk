@@ -4,10 +4,10 @@
  *	This file contains Mac OS X -specific interpreter initialization
  *	functions.
  *
- * Copyright (c) 1995-1997 Sun Microsystems, Inc.
- * Copyright (c) 2001-2009, Apple Inc.
- * Copyright (c) 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
- * Copyright (c) 2017 Marc Culler
+ * Copyright © 1995-1997 Sun Microsystems, Inc.
+ * Copyright © 2001-2009 Apple Inc.
+ * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
+ * Copyright © 2017 Marc Culler
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -57,8 +57,41 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 @synthesize needsToDraw = _needsToDraw;
 @synthesize tkLiveResizeEnded = _tkLiveResizeEnded;
 @synthesize tkPointerWindow = _tkPointerWindow;
+- (void) setTkPointerWindow: (TkWindow *)winPtr
+{
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    if (_tkPointerWindow) {
+	Tcl_Release(_tkPointerWindow);
+    }
+    _tkPointerWindow = winPtr;
+    return;
+}
 @synthesize tkEventTarget = _tkEventTarget;
+- (void) setTkEventTarget: (TkWindow *)winPtr
+{
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    if (_tkEventTarget) {
+	Tcl_Release(_tkEventTarget);
+    }
+    _tkEventTarget = winPtr;
+    return;
+}
 @synthesize tkDragTarget = _tkDragTarget;
+- (void) setTkDragTarget: (TkWindow *)winPtr
+{
+    if (winPtr) {
+	Tcl_Preserve(winPtr);
+    }
+    if (_tkDragTarget) {
+	Tcl_Release(_tkDragTarget);
+    }
+    _tkDragTarget = winPtr;
+    return;
+}
 @synthesize tkButtonState = _tkButtonState;
 @end
 
@@ -91,7 +124,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #ifdef TK_MAC_DEBUG_NOTIFICATIONS
 - (void) _postedNotification: (NSNotification *) notification
 {
-    TKLog(@"-[%@(%p) %s] %@", [self class], self, _cmd, notification);
+    TKLog(@"-[%@(%p) %s] %@", [self class], self, sel_getName(_cmd), notification);
 }
 #endif
 
@@ -107,6 +140,16 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     observe(NSApplicationDidChangeScreenParametersNotification, displayChanged:);
     observe(NSTextInputContextKeyboardSelectionDidChangeNotification, keyboardChanged:);
 #undef observe
+}
+
+
+/*
+ * Fix for 10b38a7a7c.
+ */
+
+- (BOOL)applicationSupportsSecureRestorableState:(NSApplication *)app
+{
+    return YES;
 }
 
 -(void)applicationWillFinishLaunching:(NSNotification *)aNotification
@@ -157,6 +200,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
     /*
      * Initialize the graphics context.
      */
+
     TkMacOSXUseAntialiasedText(_eventInterp, -1);
     TkMacOSXInitCGDrawing(_eventInterp, TRUE, 0);
 
@@ -228,8 +272,8 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 #else
     NSOperatingSystemVersion systemVersion;
     systemVersion = [[NSProcessInfo processInfo] operatingSystemVersion];
-    majorVersion = systemVersion.majorVersion;
-    minorVersion = systemVersion.minorVersion;
+    majorVersion = (int)systemVersion.majorVersion;
+    minorVersion = (int)systemVersion.minorVersion;
 #endif
 
     if (majorVersion == 10 && minorVersion == 16) {
@@ -245,7 +289,7 @@ static int		TkMacOSXGetAppPathCmd(ClientData cd, Tcl_Interp *ip,
 	struct utsname name;
 	char *endptr;
 	if (uname(&name) == 0) {
-	    majorVersion = strtol(name.release, &endptr, 10) - 9;
+	    majorVersion = (int)strtol(name.release, &endptr, 10) - 9;
 	    minorVersion = 0;
 	}
     }
@@ -400,7 +444,7 @@ TCL_NORETURN void TkpExitProc(
     if (doCleanup == YES) {
 	[(TKApplication *)NSApp superTerminate:nil]; /* Should not return. */
     }
-    exit((long)clientdata); /* Convince the compiler that we don't return. */
+    exit((int)PTR2INT(clientdata)); /* Convince the compiler that we don't return. */
 }
 #endif
 
@@ -624,12 +668,10 @@ TkpInit(
     if (tkLibPath[0] != '\0') {
 	Tcl_SetVar2(interp, "tk_library", NULL, tkLibPath, TCL_GLOBAL_ONLY);
     }
-
     if (scriptPath[0] != '\0') {
 	Tcl_SetVar2(interp, "auto_path", NULL, scriptPath,
 		TCL_GLOBAL_ONLY|TCL_LIST_ELEMENT|TCL_APPEND_VALUE);
     }
-
     Tcl_CreateObjCommand(interp, "::tk::mac::standardAboutPanel",
 	    TkMacOSXStandardAboutPanelObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::mac::iconBitmap",

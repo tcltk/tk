@@ -1,10 +1,10 @@
 /*
  * tkUnixScale.c --
  *
- *	This file implements the X specific portion of the scrollbar widget.
+ *	This file implements the X specific portion of the scale widget.
  *
- * Copyright (c) 1996 by Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 by Scriptics Corporation.
+ * Copyright (c) 1996 Sun Microsystems, Inc.
+ * Copyright (c) 1998-2000 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -13,8 +13,8 @@
 #include "tkInt.h"
 #include "tkScale.h"
 
-#if defined(_WIN32)
-#define snprintf _snprintf
+#ifdef _WIN32
+#include "tkWinInt.h"
 #endif
 
 /*

@@ -9,8 +9,8 @@
 #include "tkInt.h"
 #include "ttkThemeInt.h"
 
-#define MAX(a,b) (a > b ? a : b)
-#define MIN(a,b) (a < b ? a : b)
+#define MAX(a,b) ((a) > (b) ? (a) : (b))
+#define MIN(a,b) ((a) < (b) ? (a) : (b))
 
 /*------------------------------------------------------------------------
  * +++ Ttk_Box and Ttk_Padding utilities:
@@ -29,6 +29,13 @@ Ttk_BoxContains(Ttk_Box box, int x, int y)
 {
     return box.x <= x && x < box.x + box.width
 	&& box.y <= y && y < box.y + box.height;
+}
+
+int
+TtkBoxEqual(Ttk_Box box1, Ttk_Box box2)
+{
+    return box1.x == box2.x && box1.y == box2.y
+	&& box1.width == box2.width && box1.height == box2.height;
 }
 
 Tcl_Obj *
@@ -250,6 +257,7 @@ Ttk_Box Ttk_PlaceBox(
  * Ttk_PositionBox --
  * 	Pack and stick a box according to PositionSpec flags.
  */
+
 MODULE_SCOPE Ttk_Box
 Ttk_PositionBox(Ttk_Box *cavity, int width, int height, Ttk_PositionSpec flags)
 {

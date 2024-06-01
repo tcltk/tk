@@ -10,8 +10,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 namespace import -force tcltest::test
 
-testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
-
 if {[testConstraint defaultPseudocolor8]} {
     # let's soak up a bunch of colors...so that
     # machines with small color palettes still fail.
@@ -43,7 +41,7 @@ if {[testConstraint defaultPseudocolor8]} {
     }
     destroy .c
 } else {
-    testConstraint colorsLeftover 0
+    testConstraint colorsLeftover 1
 }
 
 test clrpick-1.1 {tk_chooseColor command} -body {
@@ -79,7 +77,7 @@ test clrpick-1.7 {tk_chooseColor command} -body {
 
 # tests 3.1 and 3.2 fail when individually run
 # if there is no catch {tk_chooseColor -foo 1} msg
-# before settin isNative
+# before setting isNative
 catch {tk_chooseColor -foo 1} msg
 set isNative [expr {[info commands tk::dialog::color::] eq ""}]
 
@@ -144,23 +142,10 @@ proc SendButtonPress {parent btn type} {
 }
 
 
-
 test clrpick-2.1 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover
 } -setup {
-    set verylongstring longstring:
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
-    # Interesting thing...when this is too long, the
-    # delay caused in processing it kills the automated testing,
-    # and makes a lot of the test cases fail.
-    #set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
-    #set verylongstring $verylongstring$verylongstring
+    set verylongstring [string repeat longstring: 100]
 } -body {
     ToPressButton . ok
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor #404040 \
@@ -174,7 +159,7 @@ test clrpick-2.2 {tk_chooseColor command} -constraints {
     tk_chooseColor -parent . -title "choose #808040"
 } -result {#808040}
 test clrpick-2.3 {tk_chooseColor command} -constraints {
-    nonUnixUserInteraction colorsLeftover failsOnXQuarz
+    nonUnixUserInteraction colorsLeftover
 } -body {
     ToPressButton . ok
     tk_chooseColor -parent . -title "Press OK"

@@ -16,6 +16,10 @@
 #include "tkBusy.h"
 #include "default.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Things about the busy system that may be configured. Note that on some
  * platforms this may or may not have an effect.
@@ -41,7 +45,7 @@ static void		BusyCustodyProc(ClientData clientData,
 static int		ConfigureBusy(Tcl_Interp *interp, Busy *busyPtr,
 			    int objc, Tcl_Obj *const objv[]);
 static Busy *		CreateBusy(Tcl_Interp *interp, Tk_Window tkRef);
-static void		DestroyBusy(void *dataPtr);
+static Tcl_FreeProc	DestroyBusy;
 static void		DoConfigureNotify(Tk_FakeWin *winPtr);
 static inline Tk_Window	FirstChild(Tk_Window parent);
 static Busy *		GetBusy(Tcl_Interp *interp,
@@ -133,7 +137,7 @@ BusyCustodyProc(
 	    busyPtr);
     TkpHideBusyWindow(busyPtr);
     busyPtr->tkBusy = NULL;
-    Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+    Tcl_EventuallyFree(busyPtr, DestroyBusy);
 }
 
 /*
@@ -258,7 +262,7 @@ RefWinEventProc(
 	 * Arrange for the busy structure to be removed at a proper time.
 	 */
 
-	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, DestroyBusy);
 	break;
 
     case ConfigureNotify:
@@ -329,7 +333,7 @@ RefWinEventProc(
 
 static void
 DestroyBusy(
-    void *data)			/* Busy window structure record */
+    char *data)			/* Busy window structure record */
 {
     Busy *busyPtr = (Busy *)data;
 
@@ -379,7 +383,7 @@ BusyEventProc(
 
     if (eventPtr->type == DestroyNotify) {
 	busyPtr->tkBusy = NULL;
-	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, DestroyBusy);
     }
 }
 
@@ -550,7 +554,7 @@ CreateBusy(
 	    tkChild = NextChild(tkChild)) {
 	Tk_MakeWindowExist(tkChild);
     }
-    sprintf(name, fmt, Tk_Name(tkRef));
+    snprintf(name, length + 6, fmt, Tk_Name(tkRef));
     tkBusy = Tk_CreateWindow(interp, tkParent, name, NULL);
     ckfree(name);
 
@@ -682,8 +686,8 @@ GetBusy(
     Tcl_HashEntry *hPtr;
     Tk_Window tkwin;
 
-    if (TkGetWindowFromObj(interp, Tk_MainWindow(interp), windowObj,
-	    &tkwin) != TCL_OK) {
+    tkwin = Tk_MainWindow(interp);
+    if (!tkwin || (TkGetWindowFromObj(interp, tkwin, windowObj, &tkwin) != TCL_OK)) {
 	return NULL;
     }
     hPtr = Tcl_FindHashEntry(busyTablePtr, (char *) tkwin);
@@ -739,6 +743,7 @@ HoldBusy(
     if (isNew) {
 	busyPtr = CreateBusy(interp, tkwin);
 	if (busyPtr == NULL) {
+	    Tcl_DeleteHashEntry(hPtr);
 	    return TCL_ERROR;
 	}
 	Tcl_SetHashValue(hPtr, busyPtr);
@@ -896,7 +901,7 @@ Tk_BusyObjCmd(
 	    return TCL_ERROR;
 	}
 	TkpHideBusyWindow(busyPtr);
-	Tcl_EventuallyFree(busyPtr, (Tcl_FreeProc *)DestroyBusy);
+	Tcl_EventuallyFree(busyPtr, DestroyBusy);
 	return TCL_OK;
 
     case BUSY_HOLD:

@@ -6,7 +6,7 @@
  *	interfaces are not guaranteed to remain the same between
  *	versions.  Use at your own risk.
  *
- * Copyright (c) 1998-1999 by Scriptics Corporation.
+ * Copyright (c) 1998-1999 Scriptics Corporation.
  * All rights reserved.
  */
 
@@ -795,6 +795,8 @@ extern const TkIntPlatStubs *tkIntPlatStubsPtr;
 #undef TkGenerateActivateEvents_
 
 #define TkMacOSXGetContainer TkGetTransientMaster
+#undef TkMacOSXIsCharacterMissing
+#define TkMacOSXIsCharacterMissing(tkfont) ((void)tkfont, 0)
 
 #undef TCL_STORAGE_CLASS
 #define TCL_STORAGE_CLASS DLLIMPORT

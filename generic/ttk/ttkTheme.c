@@ -403,8 +403,6 @@ typedef struct
     int themeChangePending;		/* scheduled ThemeChangedProc call? */
 } StylePackageData;
 
-static void ThemeChangedProc(void *);	/* Forward */
-
 /* Ttk_StylePkgFree --
  *	Cleanup procedure for StylePackageData.
  */
@@ -416,13 +414,6 @@ static void Ttk_StylePkgFree(
     Tcl_HashSearch search;
     Tcl_HashEntry *entryPtr;
     Cleanup *cleanup;
-
-    /*
-     * Cancel any pending ThemeChanged calls:
-     */
-    if (pkgPtr->themeChangePending) {
-	Tcl_CancelIdleCall(ThemeChangedProc, pkgPtr);
-    }
 
     /*
      * Free themes.
@@ -486,7 +477,7 @@ static StylePackageData *GetStylePackageData(Tcl_Interp *interp)
 void Ttk_RegisterCleanup(
     Tcl_Interp *interp, ClientData clientData, Ttk_CleanupProc *cleanupProc)
 {
-    StylePackageData *pkgPtr = (StylePackageData *)GetStylePackageData(interp);
+    StylePackageData *pkgPtr = GetStylePackageData(interp);
     Cleanup *cleanup = (Cleanup *)ckalloc(sizeof(*cleanup));
 
     cleanup->clientData = clientData;
@@ -528,6 +519,25 @@ static void ThemeChanged(StylePackageData *pkgPtr)
     if (!pkgPtr->themeChangePending) {
 	Tcl_DoWhenIdle(ThemeChangedProc, pkgPtr);
 	pkgPtr->themeChangePending = 1;
+    }
+}
+
+/* Ttk_TkDestroyedHandler --
+ *	See bug [310c74ecf440]: idle calls to ThemeChangedProc()
+ *	need to be canceled when Tk is destroyed, since the interp
+ *	may still be active afterward; canceling them from
+ *	Ttk_StylePkgFree() would be too late.
+ */
+void Ttk_TkDestroyedHandler(
+    Tcl_Interp* interp)
+{
+    StylePackageData* pkgPtr = GetStylePackageData(interp);
+
+    /*
+     * Cancel any pending ThemeChanged calls:
+     */
+    if (pkgPtr->themeChangePending) {
+	Tcl_CancelIdleCall(ThemeChangedProc, pkgPtr);
     }
 }
 
@@ -669,8 +679,8 @@ Ttk_GetResourceCache(Tcl_Interp *interp)
  * Register a new layout specification with a style.
  * @@@ TODO: Make sure layoutName is not ".", root style must not have a layout
  */
-MODULE_SCOPE
-void Ttk_RegisterLayoutTemplate(
+MODULE_SCOPE void
+Ttk_RegisterLayoutTemplate(
     Ttk_Theme theme,			/* Target theme */
     const char *layoutName,		/* Name of new layout */
     Ttk_LayoutTemplate layoutTemplate)	/* Template */
@@ -1133,8 +1143,8 @@ Ttk_DrawElement(
  * Side effects: Sets interp's result.
  */
 
-MODULE_SCOPE
-int TtkEnumerateHashTable(Tcl_Interp *interp, Tcl_HashTable *ht)
+MODULE_SCOPE int
+TtkEnumerateHashTable(Tcl_Interp *interp, Tcl_HashTable *ht)
 {
     Tcl_HashSearch search;
     Tcl_Obj *result = Tcl_NewListObj(0, NULL);
@@ -1682,8 +1692,8 @@ StyleObjCmd(
     return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
 }
 
-MODULE_SCOPE
-int Ttk_InvokeEnsemble(	/* Run an ensemble command */
+MODULE_SCOPE int
+Ttk_InvokeEnsemble(	/* Run an ensemble command */
     const Ttk_Ensemble *ensemble, int cmdIndex,
     void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {

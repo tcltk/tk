@@ -13,6 +13,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * Each call to Tk_GetImage returns a pointer to one of the following
  * structures, which is used as a token by clients (widgets) that display
@@ -36,6 +40,8 @@ typedef struct Image {
 				 * in a way that affects redisplay. */
     ClientData widgetClientData;/* Argument to pass to changeProc. */
     struct Image *nextPtr;	/* Next in list of all image instances
+				 * associated with the same name. */
+    struct Image *prevPtr;	/* Previous in list of all image instances
 				 * associated with the same name. */
 } Image;
 
@@ -82,7 +88,7 @@ static Tcl_ThreadDataKey dataKey;
  */
 
 static void		ImageTypeThreadExitProc(ClientData clientData);
-static void		DeleteImage(ImageModel *modelPtr);
+static Tcl_FreeProc	DeleteImage;
 static void		EventuallyDeleteImage(ImageModel *modelPtr,
 			    int forgetImageHashNow);
 
@@ -285,7 +291,7 @@ Tk_ImageObjCmd(
 	if ((objc == 3) || (*(arg = Tcl_GetString(objv[3])) == '-')) {
 	    do {
 		dispPtr->imageId++;
-		sprintf(idString, "image%d", dispPtr->imageId);
+		snprintf(idString, sizeof(idString), "image%d", dispPtr->imageId);
 		name = idString;
 	    } while (Tcl_FindCommand(interp, name, NULL, 0) != NULL);
 	    firstOption = 3;
@@ -368,8 +374,17 @@ Tk_ImageObjCmd(
 	    args[objc] = NULL;
 	}
 	Tcl_Preserve(modelPtr);
-	if (typePtr->createProc(interp, name, objc, args, typePtr,
-		(Tk_ImageModel)modelPtr, &modelPtr->modelData) != TCL_OK){
+	if (oldimage) {
+	    typedef int (OldCreateProc)(Tcl_Interp*, char*, int, char**,
+		Tk_ImageType*, Tk_ImageModel, ClientData*);
+	    i = ((OldCreateProc*)typePtr->createProc)(interp,
+		(char*)name, objc, (char**)args, typePtr,
+		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
+	} else {
+	    i = typePtr->createProc(interp, name, objc, args, typePtr,
+		(Tk_ImageModel)modelPtr, &modelPtr->modelData);
+	}
+	if (i != TCL_OK){
 	    EventuallyDeleteImage(modelPtr, 0);
 	    Tcl_Release(modelPtr);
 	    if (oldimage) {
@@ -402,7 +417,7 @@ Tk_ImageObjCmd(
 	    if (modelPtr->deleted) {
 		goto alreadyDeleted;
 	    }
-	    DeleteImage(modelPtr);
+	    DeleteImage((char *)modelPtr);
 	}
 	break;
     case IMAGE_NAMES:
@@ -631,6 +646,10 @@ Tk_GetImage(
     imagePtr->changeProc = changeProc;
     imagePtr->widgetClientData = clientData;
     imagePtr->nextPtr = modelPtr->instancePtr;
+    if (imagePtr->nextPtr) {
+	imagePtr->nextPtr->prevPtr = imagePtr;
+    }
+    imagePtr->prevPtr = NULL;
     modelPtr->instancePtr = imagePtr;
     return (Tk_Image) imagePtr;
 
@@ -668,7 +687,6 @@ Tk_FreeImage(
 {
     Image *imagePtr = (Image *) image;
     ImageModel *modelPtr = imagePtr->modelPtr;
-    Image *prevPtr;
 
     /*
      * Clean up the particular instance.
@@ -678,14 +696,16 @@ Tk_FreeImage(
 	modelPtr->typePtr->freeProc(imagePtr->instanceData,
 		imagePtr->display);
     }
-    prevPtr = modelPtr->instancePtr;
-    if (prevPtr == imagePtr) {
-	modelPtr->instancePtr = imagePtr->nextPtr;
-    } else {
-	while (prevPtr->nextPtr != imagePtr) {
-	    prevPtr = prevPtr->nextPtr;
+    if (imagePtr->prevPtr) {
+	imagePtr->prevPtr->nextPtr = imagePtr->nextPtr;
+	if (imagePtr->nextPtr) {
+	    imagePtr->nextPtr->prevPtr = imagePtr->prevPtr;
 	}
-	prevPtr->nextPtr = imagePtr->nextPtr;
+    } else {
+	modelPtr->instancePtr = imagePtr->nextPtr;
+	if (modelPtr->instancePtr) {
+	    modelPtr->instancePtr->prevPtr = NULL;
+	}
     }
     ckfree(imagePtr);
 
@@ -931,7 +951,7 @@ Tk_DeleteImage(
     if (hPtr == NULL) {
 	return;
     }
-    DeleteImage((ImageModel *)Tcl_GetHashValue(hPtr));
+    DeleteImage((char *)Tcl_GetHashValue(hPtr));
 }
 
 /*
@@ -954,10 +974,11 @@ Tk_DeleteImage(
 
 static void
 DeleteImage(
-    ImageModel *modelPtr)	/* Pointer to main data structure for image. */
+    char *blockPtr)	/* Pointer to main data structure for image. */
 {
     Image *imagePtr;
     Tk_ImageType *typePtr;
+    ImageModel *modelPtr = (ImageModel *)blockPtr;
 
     typePtr = modelPtr->typePtr;
     modelPtr->typePtr = NULL;
@@ -1011,7 +1032,7 @@ EventuallyDeleteImage(
     }
     if (!modelPtr->deleted) {
 	modelPtr->deleted = 1;
-	Tcl_EventuallyFree(modelPtr, (Tcl_FreeProc *) DeleteImage);
+	Tcl_EventuallyFree(modelPtr, DeleteImage);
     }
 }
 

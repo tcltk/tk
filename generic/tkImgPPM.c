@@ -16,6 +16,10 @@
 
 #include "tkInt.h"
 
+#ifdef _WIN32
+#include "tkWinInt.h"
+#endif
+
 /*
  * The maximum amount of memory to allocate for data read from the file. If we
  * need more than this, we do it in pieces.
@@ -305,7 +309,7 @@ FileWritePPM(
 	return TCL_ERROR;
     }
 
-    sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
+    snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
     Tcl_Write(chan, header, -1);
 
     pixLinePtr = blockPtr->pixelPtr + blockPtr->offset[0];
@@ -376,7 +380,7 @@ StringWritePPM(
     char header[16 + TCL_INTEGER_SPACE * 2];
     Tcl_Obj *byteArrayObj;
 
-    sprintf(header, "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
+    snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
 
     /*
      * Construct a byte array of the right size with the header and

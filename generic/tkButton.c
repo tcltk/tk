@@ -90,7 +90,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	-1, Tk_Offset(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -102,7 +102,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	-1, Tk_Offset(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, -1, Tk_Offset(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -181,7 +181,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	-1, Tk_Offset(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -193,7 +193,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	-1, Tk_Offset(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, -1, Tk_Offset(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -279,7 +279,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	-1, Tk_Offset(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -291,7 +291,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	-1, Tk_Offset(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, -1, Tk_Offset(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -392,7 +392,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_COLOR, "-disabledforeground", "disabledForeground",
 	"DisabledForeground", DEF_BUTTON_DISABLED_FG_COLOR,
 	-1, Tk_Offset(TkButton, disabledFg), TK_OPTION_NULL_OK,
-	(ClientData) DEF_BUTTON_DISABLED_FG_MONO, 0},
+	DEF_BUTTON_DISABLED_FG_MONO, 0},
     {TK_OPTION_SYNONYM, "-fg", "foreground", NULL,
 	NULL, 0, -1, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
@@ -404,7 +404,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_BORDER, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_BUTTON_HIGHLIGHT_BG_COLOR,
 	-1, Tk_Offset(TkButton, highlightBorder), 0,
-	(ClientData) DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
+	DEF_BUTTON_HIGHLIGHT_BG_MONO, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_BUTTON_HIGHLIGHT, -1, Tk_Offset(TkButton, highlightColorPtr),
 	0, 0, 0},
@@ -619,7 +619,7 @@ Tk_RadiobuttonObjCmd(
 
 static int
 ButtonCreate(
-    ClientData clientData,	/* NULL. */
+    TCL_UNUSED(void *),	/* NULL. */
     Tcl_Interp *interp,		/* Current interpreter. */
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[],	/* Argument values. */
@@ -630,7 +630,7 @@ ButtonCreate(
     TkButton *butPtr;
     Tk_OptionTable optionTable;
     Tk_Window tkwin;
-    ThreadSpecificData *tsdPtr =
+    ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
     if (!tsdPtr->defaultsInitialized) {
@@ -779,7 +779,7 @@ ButtonWidgetObjCmd(
     int objc,			/* Number of arguments. */
     Tcl_Obj *const objv[])	/* Argument values. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     int index;
     int result;
     Tcl_Obj *objPtr;
@@ -1339,7 +1339,7 @@ TkButtonWorldChanged(
     XGCValues gcValues;
     GC newGC;
     unsigned long mask;
-    TkButton *butPtr = instanceData;
+    TkButton *butPtr = (TkButton *)instanceData;
 
     /*
      * Recompute GCs.
@@ -1450,7 +1450,7 @@ ButtonEventProc(
     ClientData clientData,	/* Information about window. */
     XEvent *eventPtr)		/* Information about event. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	goto redraw;
     } else if (eventPtr->type == ConfigureNotify) {
@@ -1508,7 +1508,7 @@ static void
 ButtonCmdDeletedProc(
     ClientData clientData)	/* Pointer to widget record for widget. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
 
     /*
      * This function could be invoked either because the window was destroyed
@@ -1594,7 +1594,6 @@ TkInvokeButton(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 ButtonVarProc(
     ClientData clientData,	/* Information about button. */
@@ -1603,7 +1602,7 @@ ButtonVarProc(
     const char *name2,		/* Second part of variable name. */
     int flags)			/* Information about what happened. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     const char *value;
     Tcl_Obj *valuePtr;
 
@@ -1615,14 +1614,14 @@ ButtonVarProc(
     if (flags & TCL_TRACE_UNSETS) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
 	if (!Tcl_InterpDeleted(interp)) {
-	    ClientData probe = NULL;
+	    void *probe = NULL;
 
 	    do {
 		probe = Tcl_VarTraceInfo(interp,
 			Tcl_GetString(butPtr->selVarNamePtr),
 			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 			ButtonVarProc, probe);
-		if (probe == (ClientData)butPtr) {
+		if (probe == (void *)butPtr) {
 		    break;
 		}
 	    } while (probe);
@@ -1704,7 +1703,6 @@ ButtonVarProc(
  *--------------------------------------------------------------
  */
 
-	/* ARGSUSED */
 static char *
 ButtonTextVarProc(
     ClientData clientData,	/* Information about button. */
@@ -1713,7 +1711,7 @@ ButtonTextVarProc(
     const char *name2,		/* Not used. */
     int flags)			/* Information about what happened. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
     Tcl_Obj *valuePtr;
 
     if (butPtr->flags & BUTTON_DELETED) {
@@ -1733,14 +1731,14 @@ ButtonTextVarProc(
 	     * the variable we have stored in butPtr->textVarNamePtr ?
 	     */
 
-	    ClientData probe = NULL;
+	    void *probe = NULL;
 
 	    do {
 		probe = Tcl_VarTraceInfo(interp,
 			Tcl_GetString(butPtr->textVarNamePtr),
 			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 			ButtonTextVarProc, probe);
-		if (probe == (ClientData)butPtr) {
+		if (probe == (void *)butPtr) {
 		    break;
 		}
 	    } while (probe);
@@ -1808,7 +1806,7 @@ ButtonImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
 
     if (butPtr->tkwin != NULL) {
 	TkpComputeButtonGeometry(butPtr);
@@ -1846,7 +1844,7 @@ ButtonSelectImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {
@@ -1893,7 +1891,7 @@ ButtonTristateImageProc(
 				 * <= 0). */
     int imgWidth, int imgHeight)/* New dimensions of image. */
 {
-    TkButton *butPtr = clientData;
+    TkButton *butPtr = (TkButton *)clientData;
 
 #ifdef MAC_OSX_TK
     if (butPtr->tkwin != NULL) {

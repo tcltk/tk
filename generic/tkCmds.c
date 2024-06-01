@@ -774,7 +774,8 @@ CaretCmd(
 	}
 	Tcl_SetObjResult(interp, Tcl_NewIntObj(value));
     } else {
-	int i, value, x = 0, y = 0, height = -1;
+	int i;
+	int value, x = 0, y = 0, height = -1;
 
 	for (i = 2; i < objc; i += 2) {
 	    if ((Tcl_GetIndexFromObj(interp, objv[i], caretStrings,
@@ -810,13 +811,6 @@ ScalingCmd(
     int skip, width, height;
     double d;
 
-    if (Tcl_IsSafe(interp)) {
-	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"scaling not accessible in a safe interpreter", -1));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
-	return TCL_ERROR;
-    }
-
     skip = TkGetDisplayOf(interp, objc - 1, objv + 1, &tkwin);
     if (skip < 0) {
 	return TCL_ERROR;
@@ -827,6 +821,11 @@ ScalingCmd(
 	d *= WidthOfScreen(screenPtr);
 	d /= WidthMMOfScreen(screenPtr);
 	Tcl_SetObjResult(interp, Tcl_NewDoubleObj(d));
+    } else if (Tcl_IsSafe(interp)) {
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"setting the scaling not accessible in a safe interpreter", -1));
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
+	return TCL_ERROR;
     } else if (objc - skip == 2) {
 	if (Tcl_GetDoubleFromObj(interp, objv[1+skip], &d) != TCL_OK) {
 	    return TCL_ERROR;
@@ -940,11 +939,11 @@ InactiveCmd(
 	return TCL_ERROR;
     }
     if (objc - skip == 1) {
-	long inactive;
+	Tcl_WideInt inactive;
 
 	inactive = (Tcl_IsSafe(interp) ? -1 :
 		Tk_GetUserInactiveTime(Tk_Display(tkwin)));
-	Tcl_SetObjResult(interp, Tcl_NewLongObj(inactive));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(inactive));
     } else if (objc - skip == 2) {
 	const char *string;
 
@@ -1806,10 +1805,10 @@ Tk_WinfoObjCmd(
 	    if (string == NULL) {
 		strcpy(buf, "unknown");
 	    } else {
-		sprintf(buf, "%s %d", string, visInfoPtr[i].depth);
+		snprintf(buf, sizeof(buf), "%s %d", string, visInfoPtr[i].depth);
 	    }
 	    if (includeVisualId) {
-		sprintf(visualIdString, " 0x%lx",
+		snprintf(visualIdString, sizeof(visualIdString), " 0x%lx",
 			(unsigned long) visInfoPtr[i].visualid);
 		strcat(buf, visualIdString);
 	    }
@@ -1824,224 +1823,7 @@ Tk_WinfoObjCmd(
     return TCL_OK;
 }
 
-#if 0
-/*
- *----------------------------------------------------------------------
- *
- * Tk_WmObjCmd --
- *
- *	This function is invoked to process the "wm" Tcl command. See the user
- *	documentation for details on what it does.
- *
- * Results:
- *	A standard Tcl result.
- *
- * Side effects:
- *	See the user documentation.
- *
- *----------------------------------------------------------------------
- */
 
-	/* ARGSUSED */
-int
-Tk_WmObjCmd(
-    ClientData clientData,	/* Main window associated with interpreter. */
-    Tcl_Interp *interp,		/* Current interpreter. */
-    int objc,			/* Number of arguments. */
-    Tcl_Obj *const objv[])	/* Argument objects. */
-{
-    Tk_Window tkwin;
-    TkWindow *winPtr;
-
-    static const char *const optionStrings[] = {
-	"aspect",	"client",	"command",	"deiconify",
-	"focusmodel",	"frame",	"geometry",	"grid",
-	"group",	"iconbitmap",	"iconify",	"iconmask",
-	"iconname",	"iconposition",	"iconwindow",	"maxsize",
-	"minsize",	"overrideredirect",	"positionfrom",	"protocol",
-	"resizable",	"sizefrom",	"state",	"title",
-	"tracing",	"transient",	"withdraw",	NULL
-    };
-    enum options {
-	TKWM_ASPECT,	TKWM_CLIENT,	TKWM_COMMAND,	TKWM_DEICONIFY,
-	TKWM_FOCUSMOD,	TKWM_FRAME,	TKWM_GEOMETRY,	TKWM_GRID,
-	TKWM_GROUP,	TKWM_ICONBMP,	TKWM_ICONIFY,	TKWM_ICONMASK,
-	TKWM_ICONNAME,	TKWM_ICONPOS,	TKWM_ICONWIN,	TKWM_MAXSIZE,
-	TKWM_MINSIZE,	TKWM_OVERRIDE,	TKWM_POSFROM,	TKWM_PROTOCOL,
-	TKWM_RESIZABLE,	TKWM_SIZEFROM,	TKWM_STATE,	TKWM_TITLE,
-	TKWM_TRACING,	TKWM_TRANSIENT,	TKWM_WITHDRAW
-    };
-
-    tkwin = (Tk_Window) clientData;
-
-    if (objc < 2) {
-	Tcl_WrongNumArgs(interp, 1, objv, "option window ?arg?");
-	return TCL_ERROR;
-    }
-    if (Tcl_GetIndexFromObj(interp, objv[1], optionStrings, "option", 0,
-	    &index) != TCL_OK) {
-	return TCL_ERROR;
-    }
-
-    if (index == TKWM_TRACING) {
-	int wmTracing;
-	TkDisplay *dispPtr = ((TkWindow *) tkwin)->dispPtr;
-
-	if ((objc != 2) && (objc != 3)) {
-	    Tcl_WrongNumArgs(interp, 1, objv, "tracing ?boolean?");
-	    return TCL_ERROR;
-	}
-	if (objc == 2) {
-	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(
-		    dispPtr->flags & TK_DISPLAY_WM_TRACING));
-	    return TCL_OK;
-	}
-	if (Tcl_GetBooleanFromObj(interp, objv[2], &wmTracing) != TCL_OK) {
-	    return TCL_ERROR;
-	}
-	if (wmTracing) {
-	    dispPtr->flags |= TK_DISPLAY_WM_TRACING;
-	} else {
-	    dispPtr->flags &= ~TK_DISPLAY_WM_TRACING;
-	}
-	return TCL_OK;
-    }
-
-    if (objc < 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "window ?arg?");
-	return TCL_ERROR;
-    }
-
-    winPtr = (TkWindow *) Tk_NameToWindow(interp,
-	    Tcl_GetString(objv[2]), tkwin);
-    if (winPtr == NULL) {
-	return TCL_ERROR;
-    }
-    if (!(winPtr->flags & TK_TOP_LEVEL)) {
-	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"window \"%s\" isn't a top-level window", winPtr->pathName));
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TOPLEVEL", winPtr->pathName,
-		NULL);
-	return TCL_ERROR;
-    }
-
-    switch ((enum options) index) {
-    case TKWM_ASPECT:
-	TkpWmAspectCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_CLIENT:
-	TkpWmClientCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_COMMAND:
-	TkpWmCommandCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_DEICONIFY:
-	TkpWmDeiconifyCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_FOCUSMOD:
-	TkpWmFocusmodCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_FRAME:
-	TkpWmFrameCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_GEOMETRY:
-	TkpWmGeometryCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_GRID:
-	TkpWmGridCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_GROUP:
-	TkpWmGroupCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONBMP:
-	TkpWmIconbitmapCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONIFY:
-	TkpWmIconifyCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONMASK:
-	TkpWmIconmaskCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONNAME:
-	/*
-	 * Slight Unix variation.
-	 */
-	TkpWmIconnameCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONPOS:
-	/*
-	 * nearly same - 1 line more on Unix.
-	 */
-	TkpWmIconpositionCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_ICONWIN:
-	TkpWmIconwindowCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_MAXSIZE:
-	/*
-	 * Nearly same, win diffs.
-	 */
-	TkpWmMaxsizeCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_MINSIZE:
-	/*
-	 * Nearly same, win diffs
-	 */
-	TkpWmMinsizeCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_OVERRIDE:
-	/*
-	 * Almost same.
-	 */
-	TkpWmOverrideCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_POSFROM:
-	/*
-	 * Equal across platforms
-	 */
-	TkpWmPositionfromCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_PROTOCOL:
-	/*
-	 * Equal across platforms
-	 */
-	TkpWmProtocolCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_RESIZABLE:
-	/*
-	 * Almost same
-	 */
-	TkpWmResizableCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_SIZEFROM:
-	/*
-	 * Equal across platforms
-	 */
-	TkpWmSizefromCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_STATE:
-	TkpWmStateCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_TITLE:
-	TkpWmTitleCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_TRANSIENT:
-	TkpWmTransientCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    case TKWM_WITHDRAW:
-	TkpWmWithdrawCmd(interp, tkwin, winPtr, objc, objv);
-	break;
-    }
-
-  updateGeom:
-    if (!(wmPtr->flags & (WM_UPDATE_PENDING|WM_NEVER_MAPPED))) {
-	Tcl_DoWhenIdle(UpdateGeometryInfo, winPtr);
-	wmPtr->flags |= WM_UPDATE_PENDING;
-    }
-    return TCL_OK;
-}
-#endif
-
 /*
  *----------------------------------------------------------------------
  *

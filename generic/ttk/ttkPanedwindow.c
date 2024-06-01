@@ -469,14 +469,16 @@ static Ttk_ManagerSpec PanedManagerSpec = {
 /*------------------------------------------------------------------------
  * +++ Event handler.
  *
- * <<NOTE-PW-LEAVE-NOTIFYINFERIOR>>
- * Tk does not execute binding scripts for <Leave> events when
- * the pointer crosses from a parent to a child.  This widget
- * needs to know when that happens, though, so it can reset
- * the cursor.
- *
  * This event handler generates an <<EnteredChild>> virtual event
  * on LeaveNotify/NotifyInferior.
+ * This was originally introduced because Tk used to discard events with
+ * detail field NotifyInferior. The <<EnteredChild>> event was then used
+ * to reset the cursor when the pointer crosses from a parent to a child.
+ * Since ticket #47d4f29159, LeaveNotify/NotifyInferior are no longer
+ * discarded: the <Leave> event will trigger even with NotifyInferior
+ * detail field. The generated <<EnteredChild>> is nevertheless kept for
+ * backwards compatibility purpose since it is publicly documented,
+ * meaning that someone could bind to it.
  */
 
 static const unsigned PanedEventMask = LeaveWindowMask;
@@ -731,11 +733,10 @@ static int PanedIdentifyCommand(
 	return TCL_ERROR;
     }
 
-    if (   Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
-	|| Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
-	|| (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
-	    sizeof(char *), "option", 0, &what) != TCL_OK)
-    ) {
+    if (Tcl_GetIntFromObj(interp, objv[objc-2], &x) != TCL_OK
+	    || Tcl_GetIntFromObj(interp, objv[objc-1], &y) != TCL_OK
+	    || (objc == 5 && Tcl_GetIndexFromObjStruct(interp, objv[2], whatTable,
+	    sizeof(char *), "option", 0, &what) != TCL_OK)) {
 	return TCL_ERROR;
     }
 
@@ -924,7 +925,7 @@ typedef struct {
 } SashElement;
 
 static Ttk_ElementOptionSpec SashElementOptions[] = {
-    { "-sashthickness", TK_OPTION_INT,
+    { "-sashthickness", TK_OPTION_PIXELS,
 	    Tk_Offset(SashElement,thicknessObj), "5" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -932,7 +933,7 @@ static Ttk_ElementOptionSpec SashElementOptions[] = {
 static void SashElementSize(
     TCL_UNUSED(void *),
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     int *widthPtr,
     int *heightPtr,
     TCL_UNUSED(Ttk_Padding *))
@@ -940,7 +941,7 @@ static void SashElementSize(
     SashElement *sash = (SashElement *)elementRecord;
     int thickness = DEFAULT_SASH_THICKNESS;
 
-    Tcl_GetIntFromObj(NULL, sash->thicknessObj, &thickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, sash->thicknessObj, &thickness);
     *widthPtr = *heightPtr = thickness;
 }
 
@@ -967,8 +968,9 @@ TTK_END_LAYOUT
 /*------------------------------------------------------------------------
  * +++ Registration routine.
  */
-MODULE_SCOPE
-void TtkPanedwindow_Init(Tcl_Interp *interp)
+
+MODULE_SCOPE void
+TtkPanedwindow_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
     RegisterWidget(interp, "ttk::panedwindow", &PanedWidgetSpec);

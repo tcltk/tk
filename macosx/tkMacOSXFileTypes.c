@@ -24,44 +24,33 @@ without generating deprecation warnings.
 */
 
 #include "tkMacOSXPrivate.h"
-#include "tkMacOSXFileTypes.h"
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
-#import <UniformTypeIdentifiers/UniformTypeIdentifiers.h>
-#endif
 
 #define CHARS_TO_OSTYPE(string) (OSType) string[0] << 24 | \
                                 (OSType) string[1] << 16 | \
                                 (OSType) string[2] <<  8 | \
                                 (OSType) string[3]
 
-static BOOL initialized = false;
-static Tcl_HashTable ostype2identifier;
-static void initOSTypeTable(void) {
-    int newPtr;
-    Tcl_HashEntry *hPtr;
-    const IdentifierForOSType *entry;
-    Tcl_InitHashTable(&ostype2identifier, TCL_ONE_WORD_KEYS);
-    for (entry = OSTypeDB; entry->ostype != NULL; entry++) {
-	const char *key = INT2PTR(CHARS_TO_OSTYPE(entry->ostype));
-        hPtr = Tcl_CreateHashEntry(&ostype2identifier, key, &newPtr);
-	if (newPtr) {
-	    Tcl_SetHashValue(hPtr, entry->identifier);
-	}
-    }
-    initialized = true;
-}
-
 MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
-    if (!initialized) {
-	initOSTypeTable();
+    char string[5];
+    string[4] = '\0';
+    string[3] = ostype;
+    string[2] = ostype >> 8;
+    string[1] = ostype >> 16;
+    string[0] = ostype >> 24;
+    NSString *tag = [NSString stringWithCString:string encoding:NSMacOSRomanStringEncoding];
+    if (tag == nil) {
+	return nil;
     }
-    Tcl_HashEntry *hPtr = Tcl_FindHashEntry(&ostype2identifier, INT2PTR(ostype));
-    if (hPtr) {
-	char *UTI = Tcl_GetHashValue(hPtr);
-	return [[NSString alloc] initWithCString:UTI
-					encoding:NSASCIIStringEncoding];
+    NSString *result = nil;
+#if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
+    if (@available(macOS 11.0, *)) {
+	return [UTType typeWithTag:tag tagClass:@"com.apple.ostype" conformingToType:nil].identifier;
     }
-    return nil;
+#endif
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+    result = (NSString *)UTTypeCreatePreferredIdentifierForTag(kUTTagClassOSType, (CFStringRef)tag, NULL);
+#endif
+    return result;
 }
 
 /*
@@ -69,36 +58,50 @@ MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
  * accept an NSString which could be an encoding of an OSType, or a file extension,
  * or a Uniform Type Idenfier.  This function can serve as a replacement.
  */
-
 MODULE_SCOPE NSImage *TkMacOSXIconForFileType(NSString *filetype) {
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
-    if (!initialized) {
-	initOSTypeTable();
-    }
+#if MAC_OS_X_VERSION_MAX_ALLOWED < 110000
+// We don't have UTType but iconForFileType is not deprecated, so use it.
+    return [[NSWorkspace sharedWorkspace] iconForFileType:filetype];
+#else
+// We might have UTType but iconForFileType might be deprecated.
     if (@available(macOS 11.0, *)) {
+	/* Yes, we do have UTType */
+	if (filetype == nil) {
+	    /*
+	     * Bug 9be830f61b: match the behavior of
+	     * [NSWorkspace.sharedWorkspace iconForFileType:nil]
+	     */
+	     filetype = @"public.data";
+	}
 	UTType *uttype = [UTType typeWithIdentifier: filetype];
-	if (![uttype isDeclared]) {
+	if (uttype == nil || !uttype.isDeclared) {
 	    uttype = [UTType typeWithFilenameExtension: filetype];
 	}
-	if (![uttype isDeclared] && [filetype length] == 4) {
+	if (uttype == nil || (!uttype.isDeclared && filetype.length == 4)) {
 	    OSType ostype = CHARS_TO_OSTYPE(filetype.UTF8String);
 	    NSString *UTI = TkMacOSXOSTypeToUTI(ostype);
-	    uttype = [UTType typeWithIdentifier:UTI];
+	    if (UTI) {
+		uttype = [UTType typeWithIdentifier:UTI];
+	    }
 	}
-	if (![uttype isDeclared]) {
+	if (uttype == nil || !uttype.isDeclared) {
 	    return nil;
 	}
 	return [[NSWorkspace sharedWorkspace] iconForContentType:uttype];
     } else {
-/* Despite Apple's claims, @available does not prevent deprecation warnings. */ 
-# if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-	return [[NSWorkspace sharedWorkspace] iconForFileType:filetype];
-#else
-	return nil; /* Never executed. */
-#endif
-    }
-#else /* @available is not available. */
+	/* No, we don't have UTType. */
+ #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
+	/* but iconForFileType is not deprecated, so we can use it. */
     return [[NSWorkspace sharedWorkspace] iconForFileType:filetype];
+ #else
+    /*
+     * Cannot be reached: MIN_REQUIRED >= 110000 yet 11.0 is not available.
+     * But the compiler can't figure that out, so it will warn about an
+     * execution path with no return value unless we put a return here.
+     */
+    return nil;
+ #endif
+    }
 #endif
 }
 
