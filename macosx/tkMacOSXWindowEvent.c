@@ -508,7 +508,7 @@ GenerateUpdates(
     XEvent event;
     CGRect damageBounds;
     CGRect bounds;
-
+    NSView *view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
     TkMacOSXWinCGBounds(winPtr, &bounds);
 
 #if 0
@@ -527,8 +527,10 @@ GenerateUpdates(
      * Compute the bounding box of the area that the damage occurred in.
      */
 
-    // Maybe this inteersection is suspect too!
     damageBounds = CGRectIntersection(bounds, *updateBounds);
+    //    fprintf(stderr, "Generating updates for %s in %s\n", Tk_PathName(winPtr),
+    //	    NSStringFromRect(damageBounds).UTF8String);
+    //    fflush(stderr);
     event.xany.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     event.xany.send_event = false;
     event.xany.window = Tk_WindowId(winPtr);
@@ -539,8 +541,12 @@ GenerateUpdates(
     event.xexpose.width = damageBounds.size.width;
     event.xexpose.height = damageBounds.size.height;
     event.xexpose.count = 0;
-    Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
-
+    if ([view inLiveResize]) {
+	Tk_HandleEvent(&event);
+    } else {
+	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
+    }
+    
 #ifdef TK_MAC_DEBUG_DRAWING
     TKLog(@"Exposed %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
