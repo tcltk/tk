@@ -434,7 +434,7 @@ Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
     return -1;
 }
 
-/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, indexPtr) --
+/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, lastOK, indexPtr) --
  * 	Return the index of the content window specified by objPtr.
  * 	Content windows may be specified as an integer index or
  * 	as the name of the managed window.
