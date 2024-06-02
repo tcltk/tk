@@ -182,7 +182,7 @@ XMapWindow(
 	    [win setExcludedFromWindowsMenu:NO];
 	    [NSApp activateIgnoringOtherApps:initialized];
 	    // Not sure this does anything useful for TK_MAC_SYNCHRONOUS_DRAWING
-	    [view addTkDirtyRect: [view bounds]];
+	    //	    [view addTkDirtyRect: [view bounds]];
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
@@ -235,11 +235,12 @@ XMapWindow(
      * or if using generateExposeEvents: is the best way;
      * what does XMapWindow() do on other platforms?)
      */
-     [view generateExposeEvents:[view bounds]];
+    // Probably only needs to use the widget bounds.
+    [view generateExposeEvents:[view bounds]];
 #else
-    if (view != [NSView focusView]) {
-	[view addTkDirtyRect:[view bounds]];
-    }
+    //    if (view != [NSView focusView]) {
+    //	[view addTkDirtyRect:[view bounds]];
+    //    }
 #endif
 
     /*
@@ -384,10 +385,10 @@ XUnmapWindow(
      * i.e. why the existing approach uses addTkDirtyRect: here)
      */
 #else
-    TKContentView *view = [win contentView];
-    if (view != [NSView focusView]) {
-	[view addTkDirtyRect:[view bounds]];
-    }
+    //    TKContentView *view = [win contentView];
+    //    if (view != [NSView focusView]) {
+    //	[view addTkDirtyRect:[view bounds]];
+    //    }
 #endif
     return Success;
 }
@@ -1047,7 +1048,7 @@ InvalViewRect(
 	// Cannot rely on addTkDirtyRect: to force redrawing.
 	[view generateExposeEvents:dirtyRect];
 #else
-	[view addTkDirtyRect:dirtyRect];
+	//	[view addTkDirtyRect:dirtyRect];
 #endif
 	break;
     }
