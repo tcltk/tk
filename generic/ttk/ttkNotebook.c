@@ -962,11 +962,6 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (TCL_OK != Ttk_GetContentIndexFromObj(
-		interp, nb->notebook.mgr, objv[2], 1, &destIndex)) {
-	return TCL_ERROR;
-    }
-
     if (Tcl_GetString(objv[3])[0] == '.') {
 	/* Window name -- could be new or existing content window.
 	 */
@@ -979,6 +974,10 @@ static int NotebookInsertCommand(
 
 	srcIndex = Ttk_ContentIndex(nb->notebook.mgr, window);
 	if (srcIndex < 0) {	/* New content window */
+	    if (TCL_OK != Ttk_GetContentIndexFromObj(
+		interp, nb->notebook.mgr, objv[2], 1, &destIndex)) {
+		return TCL_ERROR;
+	    }
 	    return AddTab(interp, nb, destIndex, window, objc-4,objv+4);
 	}
     } else if (Ttk_GetContentIndexFromObj(
@@ -987,6 +986,11 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     } else if (srcIndex  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	srcIndex = Ttk_NumberContent(nb->notebook.mgr) - 1;
+    }
+
+    if (TCL_OK != Ttk_GetContentIndexFromObj(
+	interp, nb->notebook.mgr, objv[2], 0, &destIndex)) {
+	return TCL_ERROR;
     }
 
     /* Move existing content window:
