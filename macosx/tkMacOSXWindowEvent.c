@@ -1021,7 +1021,7 @@ ConfigureRestrictProc(
 	 * visible.
 	 */
 	CGImageRef newImg = CGBitmapContextCreateImage(ctx);
-	self.layer.contents = (__bridge id)newImg;
+	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
 	[self clearTkDirtyRect];
     }
@@ -1054,7 +1054,6 @@ ConfigureRestrictProc(
     // need to redraw
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     [self generateExposeEvents: [self bounds]];
-    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 #endif
 }
 #endif
@@ -1063,12 +1062,11 @@ ConfigureRestrictProc(
 {
     _tkNeedsDisplay = YES;
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
-    // This seems to not be needed.
-    //    [self setNeedsDisplay:YES];
+    //[self setNeedsDisplay:YES];
 ////#if TK_MAC_CGIMAGE_DRAWING
     // Layer-backed: want the NSView to control when to draw
 ////#else
-    [[self layer] setNeedsDisplay];
+//    [[self layer] setNeedsDisplay];
 ////#endif
 }
 
@@ -1132,6 +1130,7 @@ ConfigureRestrictProc(
 	
 	if ([self inLiveResize]) {
 	    [self viewDidChangeBackingProperties];
+	    [self setNeedsDisplay:YES];
 	} else {
 	    if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
 		[(TKWindow *)w tkLayoutChanged];
@@ -1364,19 +1363,11 @@ static const char *const accentNames[] = {
 
 #if TK_MAC_CGIMAGE_DRAWING
 -(void) resetTkLayerBitmapContext {
-    CGColorSpaceRef colorspace = NULL;
-
-    // Try using display colorspace to avoid performance hit due to colorspace conversion
-    // (allow disabling in case color accuracy is needed)
-    if (!getenv("TK_NODISPLAYCOLORSPACE")) {
-	colorspace = CGDisplayCopyColorSpace(CGMainDisplayID());
-    }
-
-    // fallback (uses sRGB on macOS 10.8 and later)
-    if (!colorspace) {
+    static CGColorSpaceRef colorspace = NULL;
+    if (colorspace == NULL) {
 	colorspace = CGColorSpaceCreateDeviceRGB();
+	CGColorSpaceRetain(colorspace);
     }
-
     CGContextRef newCtx = CGBitmapContextCreate(
 	    NULL, self.layer.contentsScale * self.frame.size.width,
 	    self.layer.contentsScale * self.frame.size.height, 8, 0, colorspace,
@@ -1384,13 +1375,15 @@ static const char *const accentNames[] = {
     );
     CGContextScaleCTM(newCtx, self.layer.contentsScale, self.layer.contentsScale);
 #if 0
-    if (0) fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n", (float)self.layer.contentsScale,
-	    NSStringFromSize(self.frame.size).UTF8String, colorspace, newCtx, self.tkLayerBitmapContext ? (long)CFGetRetainCount(self.tkLayerBitmapContext) : INT_MIN);
-    if (0) fprintf(stderr, "rTkLBC %p %ld\n", self.tkLayerBitmapContext, (long)(self.tkLayerBitmapContext ? CFGetRetainCount(self.tkLayerBitmapContext) : LONG_MIN));
+    fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n", (float)self.layer.contentsScale,
+	    NSStringFromSize(self.frame.size).UTF8String, colorspace, newCtx,
+	    self.tkLayerBitmapContext ? (long)CFGetRetainCount(self.tkLayerBitmapContext) : INT_MIN);
+    fprintf(stderr, "rTkLBC %p %ld\n", self.tkLayerBitmapContext,
+	    (long)(self.tkLayerBitmapContext ? CFGetRetainCount(self.tkLayerBitmapContext) : LONG_MIN));
+    fflush(stderr);
 #endif
     CGContextRelease(self.tkLayerBitmapContext); // will also need this in a destructor somewhere
     self.tkLayerBitmapContext = newCtx;
-    CGColorSpaceRelease(colorspace);
 }
 #endif
 
