@@ -512,7 +512,7 @@ GenerateUpdates(
     TkMacOSXWinCGBounds(winPtr, &bounds);
 
 #if 0
-    //This code is meant to increase efficiency but doesn't work.
+    //This code is meant to increase efficiency but it doesn't work.
     //The rectangles are reported as disjoint when they are not.
     if (!CGRectIntersectsRect(bounds, *updateBounds)) {
     	fprintf(stderr, "No intersection for %s\n", Tk_PathName(winPtr));
@@ -1006,11 +1006,6 @@ ConfigureRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef ctx = self.tkLayerBitmapContext;
-    if ([NSApp inLiveResize]) {
-	fprintf(stderr, "updateLayer called during liveResize: %s\n",
-		NSStringFromSize(self.frame.size).UTF8String);
-	fflush(stderr);
-    }
     if (ctx) {
 	/*
 	 * Make a copy, probably using copy-on-write, of the CGImage
@@ -1051,7 +1046,9 @@ ConfigureRestrictProc(
 #if TK_MAC_CGIMAGE_DRAWING
     [self resetTkLayerBitmapContext];
     // need to redraw
+    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     [self generateExposeEvents: [self bounds]];
+    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 #endif
 }
 #endif
@@ -1085,14 +1082,6 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
-    if (![self inLiveResize]) {
-	if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
-	    [(TKWindow *)w tkLayoutChanged];
-	}
-    } else {
-	[self viewDidChangeBackingProperties];
-    }
-
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
@@ -1123,12 +1112,25 @@ ConfigureRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
-	 * Now that Tk has configured all subwindows, create the clip regions.
+	 * Now that Tk has configured all subwindows, create the clip regions
+	 * and re-enable drawing.
 	 */
 
-	TkMacOSXSetDrawingEnabled(winPtr, 1);
 	TkMacOSXInvalClipRgns(tkwin);
 	TkMacOSXUpdateClipRgn(winPtr);
+	TkMacOSXSetDrawingEnabled(winPtr, 1);
+
+	/*
+	 * Redraw the entire content view.
+	 */
+	
+	if ([self inLiveResize]) {
+	    [self viewDidChangeBackingProperties];
+	} else {
+	    if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
+		[(TKWindow *)w tkLayoutChanged];
+	    }
+	}
 
 	/*
 	 * Finally, unlock the main autoreleasePool.
