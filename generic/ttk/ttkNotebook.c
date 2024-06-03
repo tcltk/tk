@@ -368,7 +368,7 @@ static void TabrowSize(
 
 	Ttk_RebindSublayout(tabLayout, tab);
 	Ttk_LayoutSize(tabLayout,tabState,&tab->width,&tab->height);
-        tab->width = MAX(tab->width, minTabWidth);
+	tab->width = MAX(tab->width, minTabWidth);
 
 	if (orient == TTK_ORIENT_HORIZONTAL) {
 	    tabrowHeight = MAX(tabrowHeight, tab->height);
@@ -890,14 +890,14 @@ static int GetTabIndex(
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
 	if (status == TCL_OK && *index_rtn  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"tab index %s out of bounds", Tcl_GetString(objPtr)));
+		"Tab index \"%s\" out of bounds", Tcl_GetString(objPtr)));
 	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
 
     if (status == TCL_OK && *index_rtn < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "tab '%s' not found", Tcl_GetString(objPtr)));
+	    "Tab '%s' not found", Tcl_GetString(objPtr)));
 	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", NULL);
 	status = TCL_ERROR;
     }
@@ -1072,7 +1072,7 @@ static int NotebookHideCommand(
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     } else {
-        TtkRedisplayWidget(&nb->core);
+	TtkRedisplayWidget(&nb->core);
     }
 
     return TCL_OK;
@@ -1153,9 +1153,9 @@ static int NotebookIndexCommand(
 
     status = FindTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
-	if (index >= 0) {
-	    Tcl_SetObjResult(interp, TkNewIndexObj(index));
-	}
+	    if (index >= 0) {
+		Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	    }
     }
 
     return status;

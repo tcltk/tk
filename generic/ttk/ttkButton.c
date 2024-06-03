@@ -229,7 +229,6 @@ typedef struct
     Tcl_Obj *borderWidthObj;
     Tcl_Obj *reliefObj;
     Tcl_Obj *anchorObj;
-    Tcl_Obj *justifyObj;
     Tcl_Obj *wrapLengthObj;
 } LabelPart;
 
