@@ -1257,10 +1257,15 @@ static void EntryDisplay(void *clientData, Drawable d)
 	Tk_GetPixelsFromObj(NULL, tkwin, es.selBorderWidthObj, &borderWidth);
 
 	if (selBorder) {
-	    Tk_Fill3DRectangle(tkwin, d, selBorder,
+	    int selWidth;
+	    int textareaEnd = textarea.x + textarea.width;
+	    if (selEndX > textareaEnd)
+		selEndX = textareaEnd;
+	    selWidth = selEndX - selStartX + 2 * borderWidth;
+	    if (selWidth > 0)
+		Tk_Fill3DRectangle(tkwin, d, selBorder,
 		selStartX - borderWidth, entryPtr->entry.layoutY - borderWidth,
-		selEndX - selStartX + 2*borderWidth,
-		entryPtr->entry.layoutHeight + 2*borderWidth,
+		selWidth, entryPtr->entry.layoutHeight + 2*borderWidth,
 		borderWidth, TK_RELIEF_RAISED);
 	}
     }
