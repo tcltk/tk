@@ -464,7 +464,7 @@ int Ttk_GetContentIndexFromObj(
 	 */
 	if (index < 0 || (index - !!lastOK) >= mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Managed window index %d out of bounds", (int)index));
+		    "Managed window index \"%s\" out of bounds", Tcl_GetString(objPtr)));
 	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
