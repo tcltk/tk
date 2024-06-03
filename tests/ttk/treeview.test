@@ -75,7 +75,7 @@ test treeview-1.2 "Bad columns" -body {
 
 test treeview-1.3 "bad displaycolumns" -body {
     .tv configure -displaycolumns {a b d}
-} -returnCodes error -result "Invalid column index d"
+} -returnCodes error -result {Invalid column index "d"}
 
 test treeview-1.4 "more bad displaycolumns" -body {
     .tv configure -displaycolumns {1 2 3}
@@ -860,7 +860,7 @@ test treeview-11.13 "Cellselection - error" -body {
 
 test treeview-11.14 "Cellselection - error" -body {
     .tv cellselection set [list "nn xx "]
-} -returnCodes 1 -match glob -result {Invalid column index xx}
+} -returnCodes 1 -match glob -result {Invalid column index "xx"}
 
 test treeview-11.15 "Cellselection - error" -body {
     .tv cellselection set "nn c" "nn d"
