@@ -229,7 +229,6 @@ typedef struct
     Tcl_Obj *borderWidthObj;
     Tcl_Obj *reliefObj;
     Tcl_Obj *anchorObj;
-    Tcl_Obj *justifyObj;
     Tcl_Obj *wrapLengthObj;
 } LabelPart;
 
@@ -260,9 +259,6 @@ static const Tk_OptionSpec LabelOptionSpecs[] =
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor",
 	"w", offsetof(Label,label.anchorObj), TCL_INDEX_NONE,
 	0, 0, GEOMETRY_CHANGED},
-    {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
-	"left", offsetof(Label, label.justifyObj), TCL_INDEX_NONE,
-	0,0,GEOMETRY_CHANGED },
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
 	NULL, offsetof(Label, label.wrapLengthObj), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK,0,GEOMETRY_CHANGED /*SB: SIZE_CHANGED*/ },
