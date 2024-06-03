@@ -506,20 +506,13 @@ GenerateUpdates(
 {
     TkWindow *childPtr;
     XEvent event;
-    CGRect damageBounds;
-    CGRect bounds;
+    CGRect bounds, damageBounds;
     NSView *view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
-    TkMacOSXWinCGBounds(winPtr, &bounds);
 
 #if 0
-    //This code is meant to increase efficiency but it doesn't work.
-    //The rectangles are reported as disjoint when they are not.
+    TkMacOSXWinCGBounds(winPtr, &bounds);
     if (!CGRectIntersectsRect(bounds, *updateBounds)) {
-    	fprintf(stderr, "No intersection for %s\n", Tk_PathName(winPtr));
-    	fprintf(stderr, "Received %s\n", NSStringFromRect(*updateBounds).UTF8String);
-    	fprintf(stderr, "Widget bounds %s\n", NSStringFromRect(bounds).UTF8String);
-    	fflush(stderr);
-    	return 0;
+	return 0;
     }
 #endif
 
@@ -528,9 +521,6 @@ GenerateUpdates(
      */
 
     damageBounds = CGRectIntersection(bounds, *updateBounds);
-    //    fprintf(stderr, "Generating updates for %s in %s\n", Tk_PathName(winPtr),
-    //	    NSStringFromRect(damageBounds).UTF8String);
-    //    fflush(stderr);
     event.xany.serial = LastKnownRequestProcessed(Tk_Display(winPtr));
     event.xany.send_event = false;
     event.xany.window = Tk_WindowId(winPtr);
@@ -546,7 +536,7 @@ GenerateUpdates(
     } else {
 	Tk_QueueWindowEvent(&event, TCL_QUEUE_TAIL);
     }
-    
+
 #ifdef TK_MAC_DEBUG_DRAWING
     TKLog(@"Exposed %p {{%d, %d}, {%d, %d}}", event.xany.window, event.xexpose.x,
 	event.xexpose.y, event.xexpose.width, event.xexpose.height);
@@ -1012,6 +1002,7 @@ ConfigureRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef ctx = self.tkLayerBitmapContext;
+
     if (ctx) {
 	/*
 	 * Make a copy, probably using copy-on-write, of the CGImage
@@ -1052,7 +1043,6 @@ ConfigureRestrictProc(
 #if TK_MAC_CGIMAGE_DRAWING
     [self resetTkLayerBitmapContext];
     // need to redraw
-    TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
     [self generateExposeEvents: [self bounds]];
 #endif
 }
@@ -1062,12 +1052,6 @@ ConfigureRestrictProc(
 {
     _tkNeedsDisplay = YES;
     _tkDirtyRect = NSUnionRect(_tkDirtyRect, rect);
-    //[self setNeedsDisplay:YES];
-////#if TK_MAC_CGIMAGE_DRAWING
-    // Layer-backed: want the NSView to control when to draw
-////#else
-//    [[self layer] setNeedsDisplay];
-////#endif
 }
 
 - (void) clearTkDirtyRect
@@ -1085,6 +1069,11 @@ ConfigureRestrictProc(
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
+
+    if (![self inLiveResize] &&
+	[w respondsToSelector: @selector (tkLayoutChanged)]) {
+	[(TKWindow *)w tkLayoutChanged];
+    }
 
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
@@ -1116,8 +1105,7 @@ ConfigureRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
-	 * Now that Tk has configured all subwindows, create the clip regions
-	 * and re-enable drawing.
+	 * Now that Tk has configured all subwindows, create the clip regions.
 	 */
 
 	TkMacOSXInvalClipRgns(tkwin);
@@ -1154,7 +1142,6 @@ ConfigureRestrictProc(
 
 - (void) generateExposeEvents: (NSRect) rect
 {
-    //    unsigned long serial;
     int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
@@ -1168,7 +1155,6 @@ ConfigureRestrictProc(
      * Generate Tk Expose events.  All of these events will share the same
      * serial number.
      */
-
     if ([self inLiveResize]) {
 	updateBounds = [self bounds];
     } else {
@@ -1177,18 +1163,7 @@ ConfigureRestrictProc(
     updateBounds.origin.y = ([self bounds].size.height - updateBounds.origin.y
 			     - updateBounds.size.height);
     updatesNeeded = GenerateUpdates(&updateBounds, winPtr);
-    //if (!TK_MAC_SYNCHRONOUS_DRAWING && updatesNeeded) {
-    if (updatesNeeded) {
-	//serial = LastKnownRequestProcessed(Tk_Display(winPtr));
-
-	/*
-	 * Use the ExposeRestrictProc to process only the expose events.  This
-	 * will create idle drawing tasks, which we handle before we return.
-	 */
-
-	//    	oldProc = Tk_RestrictEvents(ExposeRestrictProc, UINT2PTR(serial), &oldArg);
-	//    	while (Tcl_ServiceEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {};
-	//    	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
+    if ([self inLiveResize] && updatesNeeded) {
 
 	/*
 	 * Starting with OSX 10.14, which uses Core Animation to draw windows,
@@ -1377,10 +1352,11 @@ static const char *const accentNames[] = {
 #if 0
     fprintf(stderr, "rTkLBC %.1f %s %p %p %ld\n", (float)self.layer.contentsScale,
 	    NSStringFromSize(self.frame.size).UTF8String, colorspace, newCtx,
-	    self.tkLayerBitmapContext ? (long)CFGetRetainCount(self.tkLayerBitmapContext) : INT_MIN);
+	    self.tkLayerBitmapContext ?
+	    (long)CFGetRetainCount(self.tkLayerBitmapContext) : INT_MIN);
     fprintf(stderr, "rTkLBC %p %ld\n", self.tkLayerBitmapContext,
-	    (long)(self.tkLayerBitmapContext ? CFGetRetainCount(self.tkLayerBitmapContext) : LONG_MIN));
-    fflush(stderr);
+	    (long)(self.tkLayerBitmapContext ?
+	    CFGetRetainCount(self.tkLayerBitmapContext) : LONG_MIN));
 #endif
     CGContextRelease(self.tkLayerBitmapContext); // will also need this in a destructor somewhere
     self.tkLayerBitmapContext = newCtx;

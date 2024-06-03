@@ -383,7 +383,7 @@ TkMacOSXDrawAllViews(
 	    if ([view needsDisplay]) {
 #if TK_MAC_CGIMAGE_DRAWING
 		// Should no longer ever need to setNeedsDisplay:NO
-		if (1) fprintf(stderr, "nD still set %p\n", view);
+		if (0) fprintf(stderr, "nD still set %p\n", view);
 #else
 		[view setNeedsDisplay: NO];
 #endif
