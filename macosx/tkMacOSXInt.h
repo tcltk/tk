@@ -156,21 +156,6 @@ typedef struct TkWindowPrivate MacDrawable;
 #define TK_DRAW_IN_CONTEXT		1
 
 /*
-* Experimental CGBitmapContext → CGImage → layer-backed NSView drawing
-* (FIXME: should this go somewhere else?)
-*/
-#define TK_MAC_CGIMAGE_DRAWING	1
-
-/*
- * Using an approach to allow Tk drawing routines to draw "synchronously"
- * (rather than only when in drawRect:--although actually displaying results
- * of drawing may still be done asynchronously)
- */
-#if TK_MAC_CGIMAGE_DRAWING
-#define TK_MAC_SYNCHRONOUS_DRAWING	1
-#endif
-
-/*
  * Prototypes of internal procs not in the stubs table.
  */
 

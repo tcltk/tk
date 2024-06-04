@@ -352,11 +352,6 @@ TkMacOSXDrawAllViews(
 		if (dirtyCount) {
 		   continue;
 		}
-#if TK_MAC_CGIMAGE_DRAWING
-		// Layer-backed view: let NSView schedule updates
-#else
-		//[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
-#endif
 		[view setNeedsDisplay:YES];
 	    }
 	} else {
@@ -370,26 +365,6 @@ TkMacOSXDrawAllViews(
 		       untilDate:[NSDate distantPast]
 			  inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			 dequeue:NO];
-    for (NSWindow *window in [NSApp windows]) {
-	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
-	    TKContentView *view = [window contentView];
-
-	    /*
-	     * If we did not run drawRect, we set needsDisplay back to NO.
-	     * Note that if drawRect did run it may have added to Tk's dirty
-	     * rect, due to attempts to draw outside of drawRect's dirty rect.
-	     */
-
-	    if ([view needsDisplay]) {
-#if TK_MAC_CGIMAGE_DRAWING
-		// Should no longer ever need to setNeedsDisplay:NO
-		if (0) fprintf(stderr, "nD still set %p\n", view);
-#else
-		[view setNeedsDisplay: NO];
-#endif
-	    }
-	}
-    }
 }
 
 /*

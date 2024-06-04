@@ -151,22 +151,8 @@ MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *)drawable;
-    if (TK_MAC_SYNCHRONOUS_DRAWING) return True; // No checking focusView.
-    NSWindow *win = nil;
-    if (macWin->toplevel && macWin->toplevel->winPtr &&
-	macWin->toplevel->winPtr->wmInfoPtr &&
-	macWin->toplevel->winPtr->wmInfoPtr->window) {
-	win = macWin->toplevel->winPtr->wmInfoPtr->window;
-    } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
-	       macWin->winPtr->wmInfoPtr->window) {
-	win = macWin->winPtr->wmInfoPtr->window;
-    }
-    if (win) {
-	return ([win contentView] == [NSView focusView]);
-    } else {
-	return True;
-    }
+    (void) drawable;
+    return True;
 }
 
 /*
