@@ -340,7 +340,8 @@ PrintOp(
 		Tcl_GetString(value), num_options, &options);
 	}
     }
-    if (tzoom != 1.0) {
+    /* prettyprint mess with the default values if set, so we force it */
+    if (tzoom != 1.0 || pprint) {
 	char cpibuf[TCL_DOUBLE_SPACE + 1];
 	char lpibuf[TCL_DOUBLE_SPACE + 1];
 
@@ -410,7 +411,7 @@ cleanup:
     return result;
 }
 
-static int
+static Tcl_Size
 ParseEnumOptions(
     ClientData clientData,
     Tcl_Interp *interp,
@@ -431,7 +432,7 @@ ParseEnumOptions(
     return 1;
 }
 
-static int
+static Tcl_Size
 ParseOptions(
     TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
@@ -453,7 +454,7 @@ ParseOptions(
     return 1;
 }
 
-static int
+static Tcl_Size
 ParseMargins(
     TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
@@ -481,7 +482,7 @@ ParseMargins(
     return 1;
 }
 
-static int
+static Tcl_Size
 ParseNup(
     TCL_UNUSED(ClientData),
     Tcl_Interp *interp,
