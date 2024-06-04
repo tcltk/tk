@@ -16,6 +16,64 @@
 #include "tkText.h"
 #include "default.h"
 
+static int
+ObjectIsEmpty(
+    Tcl_Obj *objPtr)		/* Object to test. May be NULL. */
+{
+    if (objPtr == NULL) {
+	return 1;
+    }
+    if (objPtr->bytes == NULL) {
+	Tcl_GetString(objPtr);
+    }
+    return (objPtr->length == 0);
+}
+
+static int
+SetTabArray(
+    TCL_UNUSED(void *),
+    Tcl_Interp *interp,
+    Tk_Window tkwin,
+    Tcl_Obj **value,
+    char *recordPtr,
+    Tcl_Size internalOffset,
+    char *oldInternalPtr,
+    TCL_UNUSED(int))
+{
+    void **internalPtr = (void **)(recordPtr + internalOffset);
+    void *tabArrayPtr = NULL;
+
+    if (!ObjectIsEmpty(*value)) {
+	tabArrayPtr = TkTextGetTabs(interp, tkwin, *value);
+	if (tabArrayPtr == NULL) {
+	    return TCL_ERROR;
+	}
+    }
+    *((void **)oldInternalPtr) = *internalPtr;
+    *internalPtr = tabArrayPtr;
+    return TCL_OK;
+};
+
+static void
+FreeTabArray(
+    TCL_UNUSED(void *),
+    TCL_UNUSED(Tk_Window),
+    char *internalPtr)
+{
+    if (*(char **)internalPtr != NULL) {
+	ckfree(*(char **)internalPtr);
+    }
+};
+
+static const Tk_ObjCustomOption tabArrayOption = {
+    "tabarray",			/* name */
+    SetTabArray,		/* setProc */
+    NULL,			/* getProc */
+    NULL,			/* restoreProc */
+    FreeTabArray,		/* freeProc */
+    0
+};
+
 static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-background", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, border), TK_OPTION_NULL_OK, 0, 0},
@@ -65,8 +123,8 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
 	NULL, offsetof(TkTextTag, spacing2Obj), offsetof(TkTextTag, spacing2), TK_OPTION_NULL_OK,0,0},
     {TK_OPTION_PIXELS, "-spacing3", NULL, NULL,
 	NULL, offsetof(TkTextTag, spacing3Obj), offsetof(TkTextTag, spacing3), TK_OPTION_NULL_OK,0,0},
-    {TK_OPTION_STRING, "-tabs", NULL, NULL,
-	NULL, offsetof(TkTextTag, tabStringPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_CUSTOM, "-tabs", NULL, NULL,
+	NULL, offsetof(TkTextTag, tabStringPtr), offsetof(TkTextTag, tabArrayPtr), TK_OPTION_NULL_OK, &tabArrayOption, 0},
     {TK_OPTION_STRING_TABLE, "-tabstyle", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, tabStyle),
 	TK_OPTION_NULL_OK|TK_OPTION_ENUM_VAR, tkTextTabStyleStrings, 0},
@@ -379,17 +437,6 @@ TkTextTagCmd(
 	    if (tagPtr->spacing3 != INT_MIN) {
 		if (tagPtr->spacing3 < 0) {
 		    tagPtr->spacing3 = 0;
-		}
-	    }
-	    if (tagPtr->tabArrayPtr != NULL) {
-		ckfree(tagPtr->tabArrayPtr);
-		tagPtr->tabArrayPtr = NULL;
-	    }
-	    if (tagPtr->tabStringPtr != NULL) {
-		tagPtr->tabArrayPtr =
-			TkTextGetTabs(interp, textPtr->tkwin, tagPtr->tabStringPtr);
-		if (tagPtr->tabArrayPtr == NULL) {
-		    return TCL_ERROR;
 		}
 	    }
 	    if (tagPtr->elide >= 0) {
@@ -1134,14 +1181,6 @@ TkTextFreeTag(
 
     Tk_FreeConfigOptions(tagPtr, tagPtr->optionTable,
 	    textPtr->tkwin);
-
-    /*
-     * This associated information is managed by us.
-     */
-
-    if (tagPtr->tabArrayPtr != NULL) {
-	ckfree(tagPtr->tabArrayPtr);
-    }
 
     /*
      * Make sure this tag isn't referenced from the 'current' tag array.
