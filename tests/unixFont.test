@@ -17,8 +17,7 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
 if {[tk windowingsystem] eq "x11"} {
-    set withXft [expr {![catch {tk::pkgconfig get fontsystem} fs] && ($fs eq "xft")}]
-    if {$withXft} {
+    if {[testConstraint withXft]} {
         set fontsystemcmd [auto_execok fc-list]
     } else {
         set fontsystemcmd [auto_execok xlsfonts]
@@ -31,7 +30,7 @@ foreach {constraint font} {
 } {
     testConstraint $constraint 0
     if {([tk windowingsystem] eq "x11") && [llength $fontsystemcmd]} {
-	if {$withXft} {
+	if {[testConstraint withXft]} {
 	    if {[exec $fontsystemcmd $font family] ne ""} {
 		testConstraint $constraint 1
 	    }
@@ -50,7 +49,6 @@ foreach {constraint font} {
 	}
     }
 }
-unset -nocomplain withXft
 
 catch {destroy .b}
 toplevel .b
