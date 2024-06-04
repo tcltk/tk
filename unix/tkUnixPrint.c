@@ -413,9 +413,9 @@ cleanup:
 
 static Tcl_Size
 ParseEnumOptions(
-    ClientData clientData,
+    void *clientData,
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
@@ -434,9 +434,9 @@ ParseEnumOptions(
 
 static Tcl_Size
 ParseOptions(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
@@ -456,9 +456,9 @@ ParseOptions(
 
 static Tcl_Size
 ParseMargins(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
@@ -484,9 +484,9 @@ ParseMargins(
 
 static Tcl_Size
 ParseNup(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
-    TCL_UNUSED(int),
+    TCL_UNUSED(Tcl_Size),
     Tcl_Obj *const *objv,
     void *dstPtr)
 {
