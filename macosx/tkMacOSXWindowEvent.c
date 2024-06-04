@@ -509,8 +509,8 @@ GenerateUpdates(
     CGRect bounds, damageBounds;
     NSView *view = TkMacOSXGetNSViewForDrawable((Drawable)winPtr->privatePtr);
 
-#if 0
     TkMacOSXWinCGBounds(winPtr, &bounds);
+#if 0
     if (!CGRectIntersectsRect(bounds, *updateBounds)) {
 	return 0;
     }
