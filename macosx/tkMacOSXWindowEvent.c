@@ -1073,6 +1073,8 @@ ConfigureRestrictProc(
     if (![self inLiveResize] &&
 	[w respondsToSelector: @selector (tkLayoutChanged)]) {
 	[(TKWindow *)w tkLayoutChanged];
+	[self generateExposeEvents:[self bounds]];
+
     }
 
     if (winPtr) {
