@@ -1088,11 +1088,7 @@ XFillArcs(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-#if TK_MAC_SYNCHRONOUS_DRAWING
     GC gc,			/* GC for window to be scrolled. */
-#else
-    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
-#endif
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
@@ -1104,33 +1100,9 @@ TkScrollWindow(
     NSRect srcRect, dstRect;
     int result = 0;
 
-#if TK_MAC_SYNCHRONOUS_DRAWING
     // Should behave more like TkScrollWindow on other platforms
     if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
 	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
-#else
-    MacDrawable* macDraw = (MacDrawable*)drawable;
-    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
-    if (view) {
-#endif
-
-#if TK_MAC_SYNCHRONOUS_DRAWING
-	// Already scrolled using XCopyArea()
-#else
-  	/*
-	 * Get the scroll area in NSView coordinates (origin at bottom left).
-	 */
-
-  	NSRect bounds = [view bounds];
- 	NSRect viewSrcRect = NSMakeRect(macDraw->xOff + x,
-		bounds.size.height - height - (macDraw->yOff + y),
-		width, height);
-	/*
-	 * Scroll the rectangle.
-	 */
-
-	[view scrollRect:viewSrcRect by:NSMakeSize(dx, -dy)];
-#endif
 
 	/*
 	 * Compute the damage region, using Tk coordinates (origin at top left).
@@ -1252,11 +1224,7 @@ TkMacOSXSetupDrawingContext(
     if (!dc.context) {
 	NSRect drawingBounds;
 	dc.view = view;
-#if TK_MAC_CGIMAGE_DRAWING
 	dc.context = view.tkLayerBitmapContext;
-#else
-	dc.context = GET_CGCONTEXT;
-#endif
 	if (dc.clipRgn) {
 	    CGRect clipBounds;
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
@@ -1268,7 +1236,6 @@ TkMacOSXSetupDrawingContext(
 	    drawingBounds = [view bounds];
 	}
 
-#if TK_MAC_SYNCHRONOUS_DRAWING
 	// It seems this should be the only place to use addTkDirtyRect:
 	// and that it should not be used elsewhere as a proxy to generate
 	// Expose events, which will not work.
@@ -1320,42 +1287,6 @@ TkMacOSXSetupDrawingContext(
 	    NSAppearance.currentAppearance = view.effectiveAppearance;
 #endif
 	}
-#else
-	/*
-	 * We can only draw into the NSView which is the current focusView.
-	 * When the current [NSView focusView] is nil, the CGContext for
-	 * [NSGraphicsContext currentContext] is nil.  Otherwise the current
-	 * CGContext draws into the current focusView.  An NSView is guaranteed
-	 * to be the focusView when its drawRect or setFrame methods are
-	 * running.  Prior to OSX 10.14 it was also possible to call the
-	 * lockFocus method to force an NSView to become the current focusView.
-	 * But that method was deprecated in 10.14 and so is no longer used by
-	 * Tk.  Instead, if the view is not the current focusView then we add
-	 * the drawing bounds to its dirty rectangle and return false.  The
-	 * part of the view inside the drawing bounds will get redrawn during
-	 * the next call to its drawRect method.
-	 */
-
-	if (view != [NSView focusView]) {
-	    [view addTkDirtyRect:drawingBounds];
-	    canDraw = false;
-	    goto end;
-	}
-
-	/*
-	 * Drawing will also fail when the view is the current focusView but
-	 * the clipping rectangle set by drawRect does not contain the clipping
-	 * region of our drawing context.  (See bug [2a61eca3a8].)  If part of
-	 * the drawing bounds will be clipped then we draw whatever we can, but
-	 * we also add the drawing bounds to the view's dirty rectangle so it
-	 * will get redrawn in the next call to its drawRect method.
-	 */
-
-	currentBounds = NSRectFromCGRect(CGContextGetClipBoundingBox(dc.context));
-	if (!NSContainsRect(currentBounds, drawingBounds)) {
-	    [view addTkDirtyRect:drawingBounds];
-	}
-#endif
     }
 
     /*
@@ -1495,10 +1426,8 @@ end:
 	dc.clipRgn = NULL;
     }
     *dcPtr = dc;
-#if TK_MAC_SYNCHRONOUS_DRAWING
     // The goal is to allow immediate drawing; canDraw == 0 should happen far less often.
     if (0) fprintf(stderr, "tkmacosxsdc canDraw %d\n", canDraw);
-#endif
     return canDraw;
 }
 
