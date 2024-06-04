@@ -20,10 +20,7 @@
 #include "xbytes.h"
 
 static CGImageRef CreateCGImageFromPixmap(Drawable pixmap);
-static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable,
-#if TK_MAC_SYNCHRONOUS_DRAWING
-	   int force_1x_scale,
-#endif
+static CGImageRef CreateCGImageFromDrawableRect( Drawable drawable, int force_1x_scale,
 	   int x, int y, unsigned int width, unsigned int height);
 
 /* Pixel formats
@@ -646,9 +643,7 @@ int TkpPutRGBAImage(
 static CGImageRef
 CreateCGImageFromDrawableRect(
     Drawable drawable,
-#if TK_MAC_SYNCHRONOUS_DRAWING
     int force_1x_scale,
-#endif
     int x,
     int y,
     unsigned int width,
@@ -657,9 +652,7 @@ CreateCGImageFromDrawableRect(
     MacDrawable *mac_drawable = (MacDrawable *)drawable;
     CGContextRef cg_context = NULL;
     CGImageRef cg_image = NULL, result = NULL;
-#if TK_MAC_SYNCHRONOUS_DRAWING
     CGFloat scaleFactor = 1.0;
-#endif
     if (mac_drawable->flags & TK_IS_PIXMAP) {
 	cg_context = TkMacOSXGetCGContextForDrawable(drawable);
 	CGContextRetain(cg_context);
@@ -669,26 +662,9 @@ CreateCGImageFromDrawableRect(
 	    TkMacOSXDbgMsg("Invalid source drawable");
 	    return NULL;
 	}
-#if TK_MAC_SYNCHRONOUS_DRAWING
 	scaleFactor = view.layer.contentsScale;
-#endif
-#if TK_MAC_CGIMAGE_DRAWING
 	cg_context = ((TKContentView *)view).tkLayerBitmapContext;
 	CGContextRetain(cg_context);
-#else
-	NSSize size = view.frame.size;
-	NSUInteger view_width = size.width, view_height = size.height;
-        NSUInteger bytesPerPixel = 4,
-	    bytesPerRow = bytesPerPixel * view_width,
-	    bitsPerComponent = 8;
-	CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
-	cg_context = CGBitmapContextCreate(NULL, view_width, view_height,
-			 bitsPerComponent, bytesPerRow, colorSpace,
-			 kCGImageAlphaPremultipliedLast |
-			 kCGBitmapByteOrder32Big);
-	CFRelease(colorSpace);
-	[view.layer renderInContext:cg_context];
-#endif
     }
     if (cg_context) {
 	cg_image = CGBitmapContextCreateImage(cg_context);
@@ -697,12 +673,9 @@ CreateCGImageFromDrawableRect(
     if (cg_image) {
 	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
-#if TK_MAC_SYNCHRONOUS_DRAWING
 	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
-#endif
 	result = CGImageCreateWithImageInRect(cg_image, rect);
 	CGImageRelease(cg_image);
-#if TK_MAC_SYNCHRONOUS_DRAWING
 	if (force_1x_scale && (scaleFactor != 1.0)) {
 	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
 	    // create context, keeping original image properties
@@ -724,7 +697,6 @@ CreateCGImageFromDrawableRect(
 	    }
 	    CGImageRelease(cg_image);
 	}
-#endif
     }
     return result;
 }

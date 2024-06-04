@@ -957,30 +957,10 @@ ConfigureRestrictProc(
 {
     self = [super initWithFrame:frame];
     if (self) {
-#if TK_MAC_CGIMAGE_DRAWING
-	// Want layer-backed view, not layer-hosting
-#else
-	/*
-	 * The layer must exist before we set wantsLayer to YES.
-	 */
-
-	self.layer = [CALayer layer];
-#endif
 	self.wantsLayer = YES;
 	self.layerContentsRedrawPolicy = NSViewLayerContentsRedrawOnSetNeedsDisplay;
 	self.layer.contentsGravity = self.layer.contentsAreFlipped ?
 	    kCAGravityTopLeft : kCAGravityBottomLeft;
-
-#if TK_MAC_CGIMAGE_DRAWING
-	// Want layer-backed view, not layer-hosting
-#else
-	/*
-	 * Nothing gets drawn at all if the layer does not have a delegate.
-	 * Currently, we do not implement any methods of the delegate, however.
-	 */
-
-	self.layer.delegate = (id) self;
-#endif
 	trackingArea = [[NSTrackingArea alloc]
 			   initWithRect:[self bounds]
 				options:(NSTrackingMouseEnteredAndExited |
@@ -995,7 +975,6 @@ ConfigureRestrictProc(
     return self;
 }
 
-#if TK_MAC_CGIMAGE_DRAWING
 - (BOOL) wantsUpdateLayer
 {
     return YES;
@@ -1017,16 +996,6 @@ ConfigureRestrictProc(
 	[self clearTkDirtyRect];
     }
 }
-#else
-/*
- * We will just use drawRect.
- */
-
-- (BOOL) wantsUpdateLayer
-{
-    return NO;
-}
-#endif
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 1070
 - (void) viewDidChangeBackingProperties
@@ -1040,11 +1009,9 @@ ConfigureRestrictProc(
      */
 
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
-#if TK_MAC_CGIMAGE_DRAWING
     [self resetTkLayerBitmapContext];
     // need to redraw
     [self generateExposeEvents: [self bounds]];
-#endif
 }
 #endif
 
@@ -1063,9 +1030,7 @@ ConfigureRestrictProc(
 -(void) setFrameSize: (NSSize)newsize
 {
     [super setFrameSize: newsize];
-#if TK_MAC_CGIMAGE_DRAWING
     [self resetTkLayerBitmapContext];
-#endif
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
@@ -1338,7 +1303,6 @@ static const char *const accentNames[] = {
     return [super validRequestorForSendType:sendType returnType:returnType];
 }
 
-#if TK_MAC_CGIMAGE_DRAWING
 -(void) resetTkLayerBitmapContext {
     static CGColorSpaceRef colorspace = NULL;
     if (colorspace == NULL) {
@@ -1363,7 +1327,6 @@ static const char *const accentNames[] = {
     CGContextRelease(self.tkLayerBitmapContext); // will also need this in a destructor somewhere
     self.tkLayerBitmapContext = newCtx;
 }
-#endif
 
 @end
 
