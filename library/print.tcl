@@ -797,6 +797,13 @@ if {[tk windowingsystem] eq "x11"} {
 		    }
 		    -prettyprint {
 			lappend printargs -o prettyprint=true
+			# prettyprint mess with these default values if set
+			# so we force them.
+			# these will be overriden if set after this point
+			if {[lsearch $printargs {cpi=*}] == -1} {
+			    lappend printargs -o cpi=10.0
+			    lappend printargs -o lpi=6.0
+			}
 		    }
 		    -title {
 			set title [lpop args 0]
@@ -1164,10 +1171,12 @@ if {[tk windowingsystem] eq "x11"} {
 	# copy the values back from the dialog
 	array set option [array get dlg::option]
 
+	# get (back) name of media from the translated one
+	set media [dict get $mcmap(media) $option(media)]
 	set printargs {}
 	lappend printargs -title "[tk appname]: Tk window $w"
 	lappend printargs -copies $option(copies)
-	lappend printargs -media [dict get $mcmap(media) $option(media)]
+	lappend printargs -media $media
 
 	if {$class eq "Canvas"} {
 	    set colormode [dict get $mcmap(color) $option(color)]
@@ -1183,10 +1192,9 @@ if {[tk windowingsystem] eq "x11"} {
 	    set data [encoding convertto iso8859-1 [$w postscript \
 		-colormode $colormode -rotate $rotate -pagewidth $printwidth]]
 	} elseif {$class eq "Text"} {
-	    set data [encoding convertto utf-8 [$w get -displaychars 1.0 end]]
+	    set tzoom [expr {$option(tzoom) / 100.0}]
 	    if {$option(tzoom) != 100} {
-		set factor [expr {$option(tzoom) / 100.0}]
-		lappend printargs -tzoom $factor
+		lappend printargs -tzoom $tzoom
 	    }
 	    if {$option(pprint)} {
 		lappend printargs -prettyprint
@@ -1199,12 +1207,46 @@ if {[tk windowingsystem] eq "x11"} {
 	    lappend printargs -margins [list \
 		$option(margin-top)    $option(margin-left) \
 		$option(margin-bottom) $option(margin-right) ]
+	    # get the data in shape. Cupsfilter's text filter wraps lines
+	    # at character level, not words, so we do it by ourselves.
+	    # compute usable page width in inches
+	    set pw [dict get {a4 8.27 legal 8.5 letter 8.5} $media]
+	    set pw [expr {
+		$pw - ($option(margin-left) + $option(margin-right)) / 72.0
+	    }]
+	    # set the wrap length at 98% of computed page width in chars
+	    # the 9.8 constant is the product 10.0 (default cpi) * 0.95
+	    set wl [expr {int( 9.8 * $pw / $tzoom )}]
+	    set data [encoding convertto utf-8 [_wrapLines [$w get 1.0 end] $wl]]
 	}
 
 	# launch the job in the background
 	after idle [namespace code \
 	    [list cups print $option(printer) $data {*}$printargs]]
 	destroy $p
+    }
+
+    # _wrapLines -
+    #   wrap long lines into lines of at most length wl at word boundaries
+    # Arguments:
+    #   str   - string to be wrapped
+    #   wl    - wrap length
+    #
+    proc ::tk::print::_wrapLines {str wl} {
+	# This is a really simple algorithm: it breaks a line on space or tab
+	# character, collapsing them only at the breaking point.
+	# Leading space is left as-is.
+	# For a full fledged line breaking algorithm see
+	# Unicode® Standard Annex #14 "Unicode Line Breaking Algorithm"
+	set res {}
+	incr wl -1
+	set re [format {((?:^|[^[:blank:]]).{0,%d})(?:[[:blank:]]|$)} $wl]
+	foreach line [split $str \n] {
+	    lappend res {*}[lmap {_ l} [regexp -all -inline -- $re $line] {
+		set l
+	    }]
+	}
+	return [join $res \n]
     }
 }
 #end X11 procedures
