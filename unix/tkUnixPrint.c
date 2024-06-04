@@ -318,7 +318,7 @@ PrintOp(
 	Tcl_Size n;
 	Tcl_Obj **listArr;
 
-	Tcl_ListObjGetElements(interp, marginsObj, &n, &listArr);
+	Tcl_ListObjGetElements(NULL, marginsObj, &n, &listArr);
 	num_options = cupsAddOption("page-top",    Tcl_GetString(listArr[0]),
 	    num_options, &options);
 	num_options = cupsAddOption("page-left",   Tcl_GetString(listArr[1]),
@@ -464,14 +464,14 @@ ParseMargins(
 {
     Tcl_Obj **objPtr = (Tcl_Obj **) dstPtr;
     Tcl_Obj **listArr;
-    int n;
+    Tcl_Size n;
 
     if (Tcl_ListObjGetElements(NULL, objv[0], &n, &listArr) != TCL_OK ||
 	n != 4 ||
-	Tcl_GetIntFromObj(interp, listArr[0], &n) != TCL_OK ||
-	Tcl_GetIntFromObj(interp, listArr[1], &n) != TCL_OK ||
-	Tcl_GetIntFromObj(interp, listArr[2], &n) != TCL_OK ||
-	Tcl_GetIntFromObj(interp, listArr[3], &n) != TCL_OK
+	Tcl_GetIntFromObj(NULL, listArr[0], &n) != TCL_OK ||
+	Tcl_GetIntFromObj(NULL, listArr[1], &n) != TCL_OK ||
+	Tcl_GetIntFromObj(NULL, listArr[2], &n) != TCL_OK ||
+	Tcl_GetIntFromObj(NULL, listArr[3], &n) != TCL_OK
     ) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("margins must be a list "
 	    "of four integers: top left bottom right" , -1));
