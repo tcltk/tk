@@ -155,9 +155,9 @@ typedef struct TkTextEmbImage {
 				 * in pixels. */
     int chunkCount;		/* Number of display chunks that refer to this
 				 * image. */
+    Tcl_Obj *padXPtr, *padYPtr;
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
-    Tcl_Obj *padXPtr, *padYPtr;
 } TkTextEmbImage;
 
 /*
