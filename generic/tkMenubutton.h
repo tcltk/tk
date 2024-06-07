@@ -181,7 +181,6 @@ typedef struct {
     Tcl_Obj *padXPtr;
     Tcl_Obj *padYPtr;
     Tcl_Obj *wrapLengthPtr;
-    //Tcl_Obj *;
 } TkMenuButton;
 
 /*

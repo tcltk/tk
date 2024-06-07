@@ -282,6 +282,11 @@ Tk_MenubuttonObjCmd(
     mbPtr->cursor = NULL;
     mbPtr->takeFocus = NULL;
     mbPtr->flags = 0;
+    mbPtr->borderWidthPtr = NULL;
+    mbPtr->highlightWidthPtr = NULL;
+    mbPtr->padXPtr = NULL;
+    mbPtr->padYPtr = NULL;
+    mbPtr->wrapLengthPtr = NULL;
 
     Tk_CreateEventHandler(mbPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
