@@ -167,6 +167,9 @@ typedef struct {
     int flags;			/* Various flag bits: see below for
 				 * definitions. */
     Tk_Justify justify;         /* Justification. */
+    Tcl_Obj *borderWidthPtr;
+    Tcl_Obj *highlightWidthPtr;
+    Tcl_Obj *selBorderWidthPtr;
 } Listbox;
 
 /*
@@ -245,7 +248,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	 NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_LISTBOX_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Listbox, borderWidth),
+	 DEF_LISTBOX_BORDER_WIDTH, offsetof(Listbox, borderWidthPtr), offsetof(Listbox, borderWidth),
 	 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_LISTBOX_CURSOR, TCL_INDEX_NONE, offsetof(Listbox, cursor),
@@ -271,7 +274,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Listbox, highlightColorPtr),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH, offsetof(Listbox, highlightWidthPtr),
 	 offsetof(Listbox, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_LISTBOX_JUSTIFY, TCL_INDEX_NONE, offsetof(Listbox, justify), TK_OPTION_ENUM_VAR, 0, 0},
@@ -281,7 +284,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selBorder),
 	 0, DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	 "BorderWidth", DEF_LISTBOX_SELECT_BD, TCL_INDEX_NONE,
+	 "BorderWidth", DEF_LISTBOX_SELECT_BD, offsetof(Listbox, selBorderWidthPtr),
 	 offsetof(Listbox, selBorderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selFgColorPtr),

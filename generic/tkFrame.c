@@ -101,6 +101,10 @@ typedef struct {
 				 * Tk_GetImage, or NULL if bgimgPtr is
 				 * NULL. */
     int tile;			/* Whether to tile the bgimg. */
+    Tcl_Obj *heightPtr;
+    Tcl_Obj *widthPtr;
+    Tcl_Obj *highlightWidthPtr;
+    Tcl_Obj *borderWidthPtr;
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;			/* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
@@ -201,7 +205,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_CURSOR, TCL_INDEX_NONE, offsetof(Frame, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_FRAME_HEIGHT, TCL_INDEX_NONE, offsetof(Frame, height), 0, 0, 0},
+	DEF_FRAME_HEIGHT, offsetof(Frame, heightPtr), offsetof(Frame, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_FRAME_HIGHLIGHT_BG, TCL_INDEX_NONE,
 	offsetof(Frame, highlightBgColorPtr), 0, 0, 0},
@@ -209,7 +213,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Frame, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_FRAME_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	"HighlightThickness", DEF_FRAME_HIGHLIGHT_WIDTH, offsetof(Frame, highlightWidthPtr),
 	offsetof(Frame, highlightWidth), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	DEF_FRAME_PADX, offsetof(Frame, padXPtr),
@@ -224,7 +228,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_VISUAL, TCL_INDEX_NONE, offsetof(Frame, visualName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_FRAME_WIDTH, TCL_INDEX_NONE, offsetof(Frame, width), 0, 0, 0},
+	DEF_FRAME_WIDTH, offsetof(Frame, widthPtr), offsetof(Frame, width), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -237,7 +241,7 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_FRAME_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Frame, borderWidth), 0, 0, 0},
+	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthPtr), offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_FRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -257,7 +261,7 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_FRAME_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Frame, borderWidth), 0, 0, 0},
+	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthPtr), offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_TOPLEVEL_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
@@ -281,7 +285,7 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_LABELFRAME_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Frame, borderWidth),
+	DEF_LABELFRAME_BORDER_WIDTH, offsetof(Frame, borderWidthPtr), offsetof(Frame, borderWidth),
 	0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_LABELFRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},

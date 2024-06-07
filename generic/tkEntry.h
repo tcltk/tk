@@ -186,6 +186,11 @@ typedef struct {
 				 * commands. Malloc'ed. */
     char *invalidCmd;		/* Command called when a validation returns 0
 				 * (successfully fails), defaults to {}. */
+    Tcl_Obj *borderWidthPtr;
+    Tcl_Obj *highlightWidthPtr;
+    Tcl_Obj *insertBorderWidthPtr;
+    Tcl_Obj *insertWidthPtr;
+    Tcl_Obj *selBorderWidthPtr;
 } Entry;
 
 /*

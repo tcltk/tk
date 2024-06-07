@@ -159,6 +159,12 @@ typedef struct TkScale {
 				 * scripts. May be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
+    Tcl_Obj *borderWidthPtr;
+    Tcl_Obj *highlightWidthPtr;
+    Tcl_Obj *lengthPtr;
+    Tcl_Obj *sliderLengthPtr;
+    Tcl_Obj *widthPtr;
+
 } TkScale;
 
 /*
