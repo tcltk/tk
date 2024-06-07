@@ -253,6 +253,7 @@ TkTextImageCmd(
 	eiPtr->body.ei.image = NULL;
 	eiPtr->body.ei.align = TK_ALIGN_CENTER;
 	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
+	eiPtr->body.ei.padXPtr = eiPtr->body.ei.padYPtr = NULL;
 	eiPtr->body.ei.chunkCount = 0;
 	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 

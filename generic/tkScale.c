@@ -326,6 +326,12 @@ Tk_ScaleObjCmd(
     scalePtr->cursor		= NULL;
     scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
+    scalePtr->borderWidthPtr	= NULL;
+    scalePtr->highlightWidthPtr	= NULL;
+    scalePtr->lengthPtr	= NULL;
+    scalePtr->sliderLengthPtr	= NULL;
+    scalePtr->widthPtr	= NULL;
+
 
     Tk_SetClassProcs(scalePtr->tkwin, &scaleClass, scalePtr);
     Tk_CreateEventHandler(scalePtr->tkwin,
