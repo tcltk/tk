@@ -441,7 +441,7 @@ ParseOptions(
     void *dstPtr)
 {
     Tcl_Obj **objPtr = (Tcl_Obj **) dstPtr;
-    int n;
+    Tcl_Size n;
 
     /* check for a valid dictionary */
     if (Tcl_DictObjSize(NULL, objv[0], &n) != TCL_OK) {
@@ -465,13 +465,14 @@ ParseMargins(
     Tcl_Obj **objPtr = (Tcl_Obj **) dstPtr;
     Tcl_Obj **listArr;
     Tcl_Size n;
+    int i;
 
     if (Tcl_ListObjGetElements(NULL, objv[0], &n, &listArr) != TCL_OK ||
 	n != 4 ||
-	Tcl_GetIntFromObj(NULL, listArr[0], &n) != TCL_OK ||
-	Tcl_GetIntFromObj(NULL, listArr[1], &n) != TCL_OK ||
-	Tcl_GetIntFromObj(NULL, listArr[2], &n) != TCL_OK ||
-	Tcl_GetIntFromObj(NULL, listArr[3], &n) != TCL_OK
+	Tcl_GetIntFromObj(NULL, listArr[0], &i) != TCL_OK ||
+	Tcl_GetIntFromObj(NULL, listArr[1], &i) != TCL_OK ||
+	Tcl_GetIntFromObj(NULL, listArr[2], &i) != TCL_OK ||
+	Tcl_GetIntFromObj(NULL, listArr[3], &i) != TCL_OK
     ) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("margins must be a list "
 	    "of four integers: top left bottom right" , -1));
