@@ -122,6 +122,7 @@ typedef struct TkTextEmbWindow {
 				 * window, in pixels. */
     int stretch;		/* Should window stretch to fill vertical
 				 * space of line (except for pady)? 0 or 1. */
+    Tcl_Obj *padXPtr, *padYPtr;		/* Padding to leave around each side of window. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
     TkTextEmbWindowClient *clients;
@@ -156,6 +157,7 @@ typedef struct TkTextEmbImage {
 				 * image. */
     Tk_OptionTable optionTable;	/* Token representing the configuration
 				 * specifications. */
+    Tcl_Obj *padXPtr, *padYPtr;
 } TkTextEmbImage;
 
 /*
@@ -806,6 +808,16 @@ typedef struct TkText {
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
                                  * date */
+    Tcl_Obj *borderWidthPtr;
+    Tcl_Obj *heightPtr;
+    Tcl_Obj *highlightWidthPtr;
+    Tcl_Obj *insertBorderWidthPtr;
+    Tcl_Obj *insertWidthPtr;
+    Tcl_Obj *padXPtr;
+    Tcl_Obj *padYPtr;
+    Tcl_Obj *spacing1Ptr;
+    Tcl_Obj *spacing2Ptr;
+    Tcl_Obj *spacing3Ptr;
 } TkText;
 
 /*
