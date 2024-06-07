@@ -212,13 +212,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_SET_GRID, TCL_INDEX_NONE, offsetof(TkText, setGrid), 0, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
 	DEF_TEXT_SPACING1, offsetof(TkText, spacing1Ptr), offsetof(TkText, spacing1),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	TK_OPTION_NONNEG, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
 	DEF_TEXT_SPACING2, offsetof(TkText, spacing2Ptr), offsetof(TkText, spacing2),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	TK_OPTION_NONNEG, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_PIXELS, "-spacing3", "spacing3", "Spacing",
 	DEF_TEXT_SPACING3, offsetof(TkText, spacing3Ptr), offsetof(TkText, spacing3),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	TK_OPTION_NONNEG, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_CUSTOM, "-startline", NULL, NULL,
 	 NULL, TCL_INDEX_NONE, offsetof(TkText, start), TK_OPTION_NULL_OK,
 	 &lineOption, TK_TEXT_LINE_RANGE},
@@ -2213,19 +2213,36 @@ ConfigureText(
 	}
     }
 
+#ifndef TK_NO_DEPRECATED
     /*
      * Don't allow negative spacings.
      */
 
     if (textPtr->spacing1 < 0) {
 	textPtr->spacing1 = 0;
+	if (textPtr->spacing1Ptr) {
+	    Tcl_DecrRefCount(textPtr->spacing1Ptr);
+	}
+	textPtr->spacing1Ptr = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->spacing1Ptr);
     }
     if (textPtr->spacing2 < 0) {
 	textPtr->spacing2 = 0;
+	if (textPtr->spacing2Ptr) {
+	    Tcl_DecrRefCount(textPtr->spacing2Ptr);
+	}
+	textPtr->spacing2Ptr = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->spacing2Ptr);
     }
     if (textPtr->spacing3 < 0) {
 	textPtr->spacing3 = 0;
+	if (textPtr->spacing3Ptr) {
+	    Tcl_DecrRefCount(textPtr->spacing3Ptr);
+	}
+	textPtr->spacing3Ptr = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->spacing3Ptr);
     }
+#endif /* TK_NO_DEPRECATED */
 
     /*
      * Parse tab stops.

@@ -80,7 +80,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthPtr),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	offsetof(TkButton, borderWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	DEF_BUTTON_COMPOUND, TCL_INDEX_NONE, offsetof(TkButton, compound),
 	0, tkCompoundStrings, 0},
@@ -109,7 +109,7 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefLabelHighlightWidth,
 	offsetof(TkButton, highlightWidthPtr),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	offsetof(TkButton, highlightWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -117,10 +117,10 @@ static const Tk_OptionSpec labelOptionSpecs[] = {
 	DEF_BUTTON_JUSTIFY, TCL_INDEX_NONE, offsetof(TkButton, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXPtr),
-	offsetof(TkButton, padX), 0, 0, 0},
+	offsetof(TkButton, padX), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefLabelPady, offsetof(TkButton, padYPtr),
-	offsetof(TkButton, padY), 0, 0, 0},
+	offsetof(TkButton, padY), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief), 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-state", "state", "State",
@@ -165,7 +165,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthPtr),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	offsetof(TkButton, borderWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, offsetof(TkButton, commandPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -200,7 +200,7 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefButtonHighlightWidth,
 	offsetof(TkButton, highlightWidthPtr),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	offsetof(TkButton, highlightWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -211,10 +211,10 @@ static const Tk_OptionSpec buttonOptionSpecs[] = {
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefButtonPadx, offsetof(TkButton, padXPtr),
-	offsetof(TkButton, padX), 0, 0, 0},
+	offsetof(TkButton, padX), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefButtonPady, offsetof(TkButton, padYPtr),
-	offsetof(TkButton, padY), 0, 0, 0},
+	offsetof(TkButton, padY), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_BUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief),
 	 0, 0, 0},
@@ -266,7 +266,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthPtr),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	offsetof(TkButton, borderWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, offsetof(TkButton, commandPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -298,7 +298,7 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefButtonHighlightWidth,
 	offsetof(TkButton, highlightWidthPtr),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	offsetof(TkButton, highlightWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -317,10 +317,10 @@ static const Tk_OptionSpec checkbuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXPtr),
-	offsetof(TkButton, padX), 0, 0, 0},
+	offsetof(TkButton, padX), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefLabelPady, offsetof(TkButton, padYPtr),
-	offsetof(TkButton, padY), 0, 0, 0},
+	offsetof(TkButton, padY), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectcolor", "selectColor", "Background",
@@ -379,7 +379,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	tkDefButtonBorderWidth, offsetof(TkButton, borderWidthPtr),
-	offsetof(TkButton, borderWidth), 0, 0, 0},
+	offsetof(TkButton, borderWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_BUTTON_COMMAND, offsetof(TkButton, commandPtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -411,7 +411,7 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", tkDefButtonHighlightWidth,
 	offsetof(TkButton, highlightWidthPtr),
-	offsetof(TkButton, highlightWidth), 0, 0, 0},
+	offsetof(TkButton, highlightWidth), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_BUTTON_IMAGE, offsetof(TkButton, imagePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
@@ -427,10 +427,10 @@ static const Tk_OptionSpec radiobuttonOptionSpecs[] = {
 	 TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
 	tkDefLabelPadx, offsetof(TkButton, padXPtr),
-	offsetof(TkButton, padX), 0, 0, 0},
+	offsetof(TkButton, padX), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
 	tkDefLabelPady, offsetof(TkButton, padYPtr),
-	offsetof(TkButton, padY), 0, 0, 0},
+	offsetof(TkButton, padY), TK_OPTION_NONNEG, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_LABCHKRAD_RELIEF, TCL_INDEX_NONE, offsetof(TkButton, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectcolor", "selectColor", "Background",
@@ -1097,6 +1097,7 @@ ConfigureButton(
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
 	}
+#if 0
 	if (butPtr->borderWidth < 0) {
 	    butPtr->borderWidth = 0;
 	}
@@ -1109,6 +1110,7 @@ ConfigureButton(
 	if (butPtr->padY < 0) {
 	    butPtr->padY = 0;
 	}
+#endif
 
 	if (butPtr->type >= TYPE_CHECK_BUTTON) {
 	    Tcl_Obj *valuePtr, *namePtr;
