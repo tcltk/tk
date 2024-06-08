@@ -49,7 +49,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_SCALE_BORDER_WIDTH, offsetof(TkScale, borderWidthPtr), offsetof(TkScale, borderWidth),
+	DEF_SCALE_BORDER_WIDTH, offsetof(TkScale, borderWidthObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_STRING, "-command", "command", "Command",
 	DEF_SCALE_COMMAND, TCL_INDEX_NONE, offsetof(TkScale, command),
@@ -77,13 +77,13 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkScale, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_SCALE_HIGHLIGHT_WIDTH, offsetof(TkScale, highlightWidthPtr),
-	offsetof(TkScale, highlightWidth), 0, 0, 0},
+	"HighlightThickness", DEF_SCALE_HIGHLIGHT_WIDTH, offsetof(TkScale, highlightWidthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING, "-label", "label", "Label",
 	DEF_SCALE_LABEL, TCL_INDEX_NONE, offsetof(TkScale, label),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-length", "length", "Length",
-	DEF_SCALE_LENGTH, offsetof(TkScale, lengthPtr), offsetof(TkScale, length), 0, 0, 0},
+	DEF_SCALE_LENGTH, offsetof(TkScale, lengthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_STRING_TABLE, "-orient", "orient", "Orient",
 	DEF_SCALE_ORIENT, TCL_INDEX_NONE, offsetof(TkScale, orient),
 	TK_OPTION_ENUM_VAR, orientStrings, 0},
@@ -102,7 +102,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_SHOW_VALUE, TCL_INDEX_NONE, offsetof(TkScale, showValue),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-sliderlength", "sliderLength", "SliderLength",
-	DEF_SCALE_SLIDER_LENGTH, offsetof(TkScale, sliderLengthPtr), offsetof(TkScale, sliderLength),
+	DEF_SCALE_SLIDER_LENGTH, offsetof(TkScale, sliderLengthObj), TCL_INDEX_NONE,
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-sliderrelief", "sliderRelief", "SliderRelief",
 	DEF_SCALE_SLIDER_RELIEF, TCL_INDEX_NONE, offsetof(TkScale, sliderRelief),
@@ -125,7 +125,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_SCALE_VARIABLE, offsetof(TkScale, varNamePtr), TCL_INDEX_NONE,
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_SCALE_WIDTH, offsetof(TkScale, widthPtr), offsetof(TkScale, width), 0, 0, 0},
+	DEF_SCALE_WIDTH, offsetof(TkScale, widthObj), TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -281,8 +281,8 @@ Tk_ScaleObjCmd(
 	    scalePtr, ScaleCmdDeletedProc);
     scalePtr->optionTable	= optionTable;
     scalePtr->orient		= ORIENT_VERTICAL;
-    scalePtr->width		= 0;
-    scalePtr->length		= 0;
+    scalePtr->widthObj		= NULL;
+    scalePtr->lengthObj		= NULL;
     scalePtr->value		= 0.0;
     scalePtr->varNamePtr	= NULL;
     scalePtr->fromValue		= 0.0;
@@ -297,7 +297,7 @@ Tk_ScaleObjCmd(
     scalePtr->label		= NULL;
     scalePtr->labelLength	= 0;
     scalePtr->state		= STATE_NORMAL;
-    scalePtr->borderWidth	= 0;
+    scalePtr->borderWidthObj	= NULL;
     scalePtr->bgBorder		= NULL;
     scalePtr->activeBorder	= NULL;
     scalePtr->sliderRelief	= TK_RELIEF_RAISED;
@@ -308,11 +308,11 @@ Tk_ScaleObjCmd(
     scalePtr->textColorPtr	= NULL;
     scalePtr->textGC		= NULL;
     scalePtr->relief		= TK_RELIEF_FLAT;
-    scalePtr->highlightWidth	= 0;
+    scalePtr->highlightWidthObj	= NULL;
     scalePtr->highlightBorder	= NULL;
     scalePtr->highlightColorPtr	= NULL;
     scalePtr->inset		= 0;
-    scalePtr->sliderLength	= 0;
+    scalePtr->sliderLengthObj	= NULL;
     scalePtr->showValue		= 0;
     scalePtr->horizLabelY	= 0;
     scalePtr->horizValueY	= 0;
@@ -326,11 +326,7 @@ Tk_ScaleObjCmd(
     scalePtr->cursor		= NULL;
     scalePtr->takeFocusPtr	= NULL;
     scalePtr->flags		= NEVER_SET;
-    scalePtr->borderWidthPtr	= NULL;
-    scalePtr->highlightWidthPtr	= NULL;
-    scalePtr->lengthPtr	= NULL;
-    scalePtr->sliderLengthPtr	= NULL;
-    scalePtr->widthPtr	= NULL;
+
 
 
     Tk_SetClassProcs(scalePtr->tkwin, &scaleClass, scalePtr);
@@ -422,7 +418,7 @@ ScaleWidgetObjCmd(
 	}
 	break;
     case COMMAND_COORDS: {
-	int x, y;
+	int x, y, width, borderWidth;
 	double value;
 	Tcl_Obj *coords[2];
 
@@ -437,14 +433,16 @@ ScaleWidgetObjCmd(
 	} else {
 	    value = scalePtr->value;
 	}
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->widthObj, &width);
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
 	if (scalePtr->orient == ORIENT_VERTICAL) {
-	    x = scalePtr->vertTroughX + scalePtr->width/2
-		    + scalePtr->borderWidth;
+	    x = scalePtr->vertTroughX + width/2
+		    + borderWidth;
 	    y = TkScaleValueToPixel(scalePtr, value);
 	} else {
 	    x = TkScaleValueToPixel(scalePtr, value);
-	    y = scalePtr->horizTroughY + scalePtr->width/2
-		    + scalePtr->borderWidth;
+	    y = scalePtr->horizTroughY + width/2
+		    + borderWidth;
 	}
 	coords[0] = Tcl_NewWideIntObj(x);
 	coords[1] = Tcl_NewWideIntObj(y);
@@ -601,7 +599,7 @@ ConfigureScale(
 {
     Tk_SavedOptions savedOptions;
     Tcl_Obj *errorResult = NULL;
-    int error;
+    int error, highlightWidth, borderWidth;
     double varValue;
 
     /*
@@ -679,15 +677,17 @@ ConfigureScale(
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
-	if (scalePtr->highlightWidth < 0) {
-	    scalePtr->highlightWidth = 0;
-		if (scalePtr->highlightWidthPtr) {
-		    Tcl_DecrRefCount(scalePtr->highlightWidthPtr);
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->highlightWidthObj, &highlightWidth);
+	if (highlightWidth < 0) {
+	    highlightWidth = 0;
+		if (scalePtr->highlightWidthObj) {
+		    Tcl_DecrRefCount(scalePtr->highlightWidthObj);
 		}
-		scalePtr->highlightWidthPtr = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(scalePtr->highlightWidthPtr);
+		scalePtr->highlightWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(scalePtr->highlightWidthObj);
 	}
-	scalePtr->inset = scalePtr->highlightWidth + scalePtr->borderWidth;
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
+	scalePtr->inset = highlightWidth + borderWidth;
 	break;
     }
     if (!error) {
@@ -768,6 +768,7 @@ ScaleWorldChanged(
     XGCValues gcValues;
     GC gc;
     TkScale *scalePtr = (TkScale *)instanceData;
+    int highlightWidth, borderWidth;
 
     gcValues.foreground = scalePtr->troughColorPtr->pixel;
     gc = Tk_GetGC(scalePtr->tkwin, GCForeground, &gcValues);
@@ -789,7 +790,9 @@ ScaleWorldChanged(
 	scalePtr->copyGC = Tk_GetGC(scalePtr->tkwin, GCGraphicsExposures,
 		&gcValues);
     }
-    scalePtr->inset = scalePtr->highlightWidth + scalePtr->borderWidth;
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
+    scalePtr->inset = highlightWidth + borderWidth;
 
     /*
      * Recompute display-related information, and let the geometry manager
@@ -942,10 +945,12 @@ ComputeFormat(
 		 * value between adjacent pixels and use it for the least
 		 * significant digit.
 		 */
+		int length;
 
 		x = fabs(scalePtr->fromValue - scalePtr->toValue);
-		if (scalePtr->length > 0) {
-		    x /= scalePtr->length;
+	    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->lengthObj, &length);
+		if (length > 0) {
+		    x /= length;
 		}
 		if (x > 0) {
 		    leastSigDigit = ScaleDigit(x);
@@ -1022,6 +1027,7 @@ ComputeScaleGeometry(
     char valueString[TCL_DOUBLE_SPACE];
     int tmp, valuePixels, tickPixels, x, y, extraSpace;
     Tk_FontMetrics fm;
+    int length, width, borderWidth;
 
     Tk_GetFontMetrics(scalePtr->tkfont, &fm);
     scalePtr->fontHeight = fm.linespace + SPACING;
@@ -1049,13 +1055,16 @@ ComputeScaleGeometry(
 	}
 	y += extraSpace;
 	scalePtr->horizTroughY = y;
-	y += scalePtr->width + 2*scalePtr->borderWidth;
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->lengthObj, &length);
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->widthObj, &width);
+	Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
+	y += width + 2 * borderWidth;
 	if (scalePtr->tickInterval != 0) {
 	    scalePtr->horizTickY = y + SPACING;
 	    y += scalePtr->fontHeight + SPACING;
 	}
 	Tk_GeometryRequest(scalePtr->tkwin,
-		scalePtr->length + 2*scalePtr->inset, y + scalePtr->inset);
+		length + 2*scalePtr->inset, y + scalePtr->inset);
 	Tk_SetInternalBorder(scalePtr->tkwin, scalePtr->inset);
 	return;
     }
@@ -1124,7 +1133,9 @@ ComputeScaleGeometry(
 	scalePtr->vertValueRightX = x;
     }
     scalePtr->vertTroughX = x;
-    x += 2*scalePtr->borderWidth + scalePtr->width;
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->widthObj, &width);
+    x += 2 * borderWidth + width;
     if (scalePtr->labelLength == 0) {
 	scalePtr->vertLabelX = 0;
     } else {
@@ -1133,8 +1144,9 @@ ComputeScaleGeometry(
 	    + Tk_TextWidth(scalePtr->tkfont, scalePtr->label,
 		    scalePtr->labelLength);
     }
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->lengthObj, &length);
     Tk_GeometryRequest(scalePtr->tkwin, x + scalePtr->inset,
-	    scalePtr->length + 2*scalePtr->inset);
+	    length + 2*scalePtr->inset);
     Tk_SetInternalBorder(scalePtr->tkwin, scalePtr->inset);
 }
 
@@ -1162,6 +1174,7 @@ ScaleEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     TkScale *scalePtr = (TkScale *)clientData;
+    int highlightWidth;
 
     if ((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0)) {
 	TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
@@ -1173,14 +1186,16 @@ ScaleEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    scalePtr->flags |= GOT_FOCUS;
-	    if (scalePtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    scalePtr->flags &= ~GOT_FOCUS;
-	    if (scalePtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		TkEventuallyRedrawScale(scalePtr, REDRAW_ALL);
 	    }
 	}
@@ -1536,14 +1551,17 @@ TkScalePixelToValue(
     int x, int y)		/* Coordinates of point within window. */
 {
     double value, pixelRange;
+    int borderWidth, sliderLength;
 
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->sliderLengthObj, &sliderLength);
     if (scalePtr->orient == ORIENT_VERTICAL) {
-	pixelRange = Tk_Height(scalePtr->tkwin) - scalePtr->sliderLength
-		- 2*scalePtr->inset - 2*scalePtr->borderWidth;
+	pixelRange = Tk_Height(scalePtr->tkwin) - sliderLength
+		- 2 * scalePtr->inset - 2 * borderWidth;
 	value = y;
     } else {
-	pixelRange = Tk_Width(scalePtr->tkwin) - scalePtr->sliderLength
-		- 2*scalePtr->inset - 2*scalePtr->borderWidth;
+	pixelRange = Tk_Width(scalePtr->tkwin) - sliderLength
+		- 2 * scalePtr->inset - 2 * borderWidth;
 	value = x;
     }
 
@@ -1555,8 +1573,8 @@ TkScalePixelToValue(
 
 	return scalePtr->value;
     }
-    value -= scalePtr->sliderLength/2 + scalePtr->inset
-	    + scalePtr->borderWidth;
+    value -= sliderLength/2 + scalePtr->inset
+	    + borderWidth;
     value /= pixelRange;
     if (value < 0) {
 	value = 0;
@@ -1595,11 +1613,14 @@ TkScaleValueToPixel(
 {
     int y, pixelRange;
     double valueRange;
+    int borderWidth, sliderLength;
 
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, scalePtr->tkwin, scalePtr->sliderLengthObj, &sliderLength);
     valueRange = scalePtr->toValue - scalePtr->fromValue;
     pixelRange = ((scalePtr->orient == ORIENT_VERTICAL)
 	    ? Tk_Height(scalePtr->tkwin) : Tk_Width(scalePtr->tkwin))
-	- scalePtr->sliderLength - 2*scalePtr->inset - 2*scalePtr->borderWidth;
+	- sliderLength - 2 * scalePtr->inset - 2 * borderWidth;
     if (valueRange == 0) {
 	y = 0;
     } else {
@@ -1611,7 +1632,7 @@ TkScaleValueToPixel(
 	    y = pixelRange;
 	}
     }
-    y += scalePtr->sliderLength/2 + scalePtr->inset + scalePtr->borderWidth;
+    y += sliderLength / 2 + scalePtr->inset + borderWidth;
     return y;
 }
 
