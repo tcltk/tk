@@ -1425,6 +1425,22 @@ test imgPhoto-18.12 {Valid GIF (file)} -setup {
     catch {image delete gif1}
 } -result gif1
 
+test imgPhoto-19.1 {Read GIF file with -from option - Bug [1576528]} -constraints hasEarthPhoto -body {
+    image create photo gif1
+    gif1 read $earthPhotoFile -from 152 62 185 97
+    lindex [lindex [gif1 data] 0] 0
+} -cleanup {
+    catch {image delete gif1}
+} -result {#d8c8b8}
+test imgPhoto-19.2 {Read GIF file, copy with -from option} -constraints hasEarthPhoto -body {
+    image create photo gif1 -file $earthPhotoFile
+    image create photo gif2
+    gif2 copy gif1 -from 152 62 185 97
+    lindex [lindex [gif2 data] 0] 0
+} -cleanup {
+    catch {image delete gif1 ; image delete gif2}
+} -result {#d8c8b8}
+
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
 catch {rename checkImgTransLoop {}}
