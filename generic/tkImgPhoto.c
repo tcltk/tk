@@ -3173,7 +3173,7 @@ Tk_PhotoPutZoomedBlock(
      * Zero-sized blocks never cause any changes. [Bug 3078902]
      */
 
-    if (blockPtr->height == 0 || blockPtr->width == 0) {
+    if (blockPtr->height <= 0 || blockPtr->width <= 0) {
 	return TCL_OK;
     }
 
