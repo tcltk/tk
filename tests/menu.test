@@ -11,9 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
-# find the earth.gif file for use in these tests (tests 2.*)
-set earthPhotoFile [file join [file dirname [info script]] earth.gif]
-testConstraint hasEarthPhoto [file exists $earthPhotoFile]
 testConstraint pressbutton [llength [info commands pressbutton]]
 testConstraint movemouse [llength [info commands movemouse]]
 

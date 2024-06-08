@@ -296,6 +296,10 @@ testConstraint testtext      [llength [info commands testtext]]
 testConstraint testwinevent  [llength [info commands testwinevent]]
 testConstraint testwrapper   [llength [info commands testwrapper]]
 
+# the earth.gif file is used in some tests
+set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+testConstraint hasEarthPhoto [file exists $earthPhotoFile]
+
 # constraints about what sort of fonts are available
 testConstraint fonts 1
 destroy .e
