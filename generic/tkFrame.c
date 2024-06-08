@@ -1057,12 +1057,27 @@ ConfigureFrame(
 
     if (framePtr->highlightWidth < 0) {
 	framePtr->highlightWidth = 0;
+	if (framePtr->highlightWidthPtr) {
+	    Tcl_DecrRefCount(framePtr->highlightWidthPtr);
+	}
+	framePtr->highlightWidthPtr = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->highlightWidthPtr);
     }
     if (framePtr->padX < 0) {
 	framePtr->padX = 0;
+	if (framePtr->padXPtr) {
+	    Tcl_DecrRefCount(framePtr->padXPtr);
+	}
+	framePtr->padXPtr = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->padXPtr);
     }
     if (framePtr->padY < 0) {
 	framePtr->padY = 0;
+	if (framePtr->padYPtr) {
+	    Tcl_DecrRefCount(framePtr->padYPtr);
+	}
+	framePtr->padYPtr = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->padYPtr);
     }
 
     /*

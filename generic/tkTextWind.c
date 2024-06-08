@@ -293,9 +293,7 @@ TkTextWindowCmd(
 	ewPtr->body.ew.create = NULL;
 	ewPtr->body.ew.align = TK_ALIGN_CENTER;
 	ewPtr->body.ew.padX = ewPtr->body.ew.padY = 0;
-	ewPtr->body.ew.padXPtr = ewPtr->body.ew.padYPtr = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(ewPtr->body.ew.padXPtr);
-	Tcl_IncrRefCount(ewPtr->body.ew.padYPtr);
+	ewPtr->body.ew.padXPtr = ewPtr->body.ew.padYPtr = NULL;
 	ewPtr->body.ew.stretch = 0;
 	ewPtr->body.ew.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 

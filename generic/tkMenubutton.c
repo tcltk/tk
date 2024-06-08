@@ -538,13 +538,28 @@ ConfigureMenuButton(
 
 	if (mbPtr->highlightWidth < 0) {
 	    mbPtr->highlightWidth = 0;
+		if (mbPtr->highlightWidthPtr) {
+		    Tcl_DecrRefCount(mbPtr->highlightWidthPtr);
+		}
+		mbPtr->highlightWidthPtr = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->highlightWidthPtr);
 	}
 
 	if (mbPtr->padX < 0) {
 	    mbPtr->padX = 0;
+		if (mbPtr->padXPtr) {
+		    Tcl_DecrRefCount(mbPtr->padXPtr);
+		}
+		mbPtr->padXPtr = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->padXPtr);
 	}
 	if (mbPtr->padY < 0) {
 	    mbPtr->padY = 0;
+		if (mbPtr->padYPtr) {
+		    Tcl_DecrRefCount(mbPtr->padYPtr);
+		}
+		mbPtr->padYPtr = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->padYPtr);
 	}
 
 	/*
