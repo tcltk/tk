@@ -710,11 +710,14 @@ FileReadGIF(
 	    ckfree(block.pixelPtr);
 	    goto error;
 	}
+	block.pixelPtr += srcX * block.pixelSize + srcY * block.pitch;
 	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
 		width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
+	    block.pixelPtr -= srcX * block.pixelSize + srcY * block.pitch;
 	    ckfree(block.pixelPtr);
 	    goto error;
 	}
+	block.pixelPtr -= srcX * block.pixelSize + srcY * block.pitch;
 	ckfree(block.pixelPtr);
     }
 
