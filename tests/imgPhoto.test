@@ -1440,6 +1440,21 @@ test imgPhoto-19.2 {Read GIF file, copy with -from option} -constraints hasEarth
 } -cleanup {
     catch {image delete gif1 ; image delete gif2}
 } -result {#d8c8b8}
+test imgPhoto-19.3 {Read PNG file with -from option - Bug [1576528]} -constraints hasOusterPhoto -body {
+    image create photo png1
+    png1 read $ousterPhotoFile -from 102 62 135 97
+    lindex [lindex [png1 data] 0] 0
+} -cleanup {
+    catch {image delete png1}
+} -result {#c97962}
+test imgPhoto-19.4 {Read PNG file, copy with -from option} -constraints hasOusterPhoto -body {
+    image create photo png1 -file $ousterPhotoFile
+    image create photo png2
+    png2 copy png1 -from 102 62 135 97
+    lindex [lindex [png2 data] 0] 0
+} -cleanup {
+    catch {image delete png1 ; image delete png2}
+} -result {#c97962}
 
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
