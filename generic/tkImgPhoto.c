@@ -3171,6 +3171,8 @@ Tk_PhotoPutZoomedBlock(
 
     /*
      * Zero-sized blocks never cause any changes. [Bug 3078902]
+     * Negative-size blocks happen when trying to copy from an area outside
+     * the source image. [Bug a0241c0e25]
      */
 
     if (blockPtr->height <= 0 || blockPtr->width <= 0) {
