@@ -5256,8 +5256,13 @@ TkTextRelayoutWindow(
      * it.
      */
 
-    if (textPtr->highlightWidth < 0) {
-	textPtr->highlightWidth = 0;
+    if (textPtr->highlightWidthPtr) {
+	if (textPtr->highlightWidth < 0) {
+	    textPtr->highlightWidth = 0;
+	    Tcl_DecrRefCount(textPtr->highlightWidthPtr);
+	    textPtr->highlightWidthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(textPtr->highlightWidthPtr);
+	}
     }
     dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
 	    + textPtr->padX;

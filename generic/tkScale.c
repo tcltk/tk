@@ -681,6 +681,11 @@ ConfigureScale(
 
 	if (scalePtr->highlightWidth < 0) {
 	    scalePtr->highlightWidth = 0;
+		if (scalePtr->highlightWidthPtr) {
+		    Tcl_DecrRefCount(scalePtr->highlightWidthPtr);
+		}
+		scalePtr->highlightWidthPtr = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(scalePtr->highlightWidthPtr);
 	}
 	scalePtr->inset = scalePtr->highlightWidth + scalePtr->borderWidth;
 	break;

@@ -1603,6 +1603,11 @@ ConfigureListbox(
 
 	if (listPtr->highlightWidth < 0) {
 	    listPtr->highlightWidth = 0;
+		if (listPtr->highlightWidthPtr) {
+		    Tcl_DecrRefCount(listPtr->highlightWidthPtr);
+		}
+		listPtr->highlightWidthPtr = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(listPtr->highlightWidthPtr);
 	}
 	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
 

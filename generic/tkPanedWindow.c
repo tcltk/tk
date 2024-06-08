@@ -954,7 +954,7 @@ ConfigurePanes(
 	/*
 	 * Make sure this pane wasn't already put into the inserts array,
 	 * i.e., when the user specifies the same window multiple times in a
-	 * single add commaned.
+	 * single add command.
 	 */
 	for (j = 0; j < insertIndex; j++) {
 	    if (inserts[j]->tkwin == tkwin) {

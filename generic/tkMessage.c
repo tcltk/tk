@@ -505,6 +505,11 @@ ConfigureMessage(
 
     if (msgPtr->highlightWidth < 0) {
 	msgPtr->highlightWidth = 0;
+	if (msgPtr->highlightWidth) {
+	    Tcl_DecrRefCount(msgPtr->highlightWidthObj);
+	}
+	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(msgPtr->highlightWidthObj);
     }
 
     Tk_FreeSavedOptions(&savedOptions);
