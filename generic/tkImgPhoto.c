@@ -577,7 +577,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetImage(srcHandle, &block);
-	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
+	if ((options.fromX > block.width) || (options.fromY > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -3171,11 +3171,9 @@ Tk_PhotoPutZoomedBlock(
 
     /*
      * Zero-sized blocks never cause any changes. [Bug 3078902]
-     * Negative-size blocks happen when trying to copy from an area outside
-     * the source image. [Bug a0241c0e25]
      */
 
-    if (blockPtr->height <= 0 || blockPtr->width <= 0) {
+    if (blockPtr->height == 0 || blockPtr->width == 0) {
 	return TCL_OK;
     }
 
