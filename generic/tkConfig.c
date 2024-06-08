@@ -1026,17 +1026,6 @@ DoObjConfig(
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
 	    }
 	    return TCL_ERROR;
-	} else if ((newPixels < 0) && (optionPtr->specPtr->flags & (TK_OPTION_NONNEG))) {
-#ifdef TK_NO_DEPRECATED
-	    if (interp) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "expected nonnegative screen distance but got \"%.50s\"", Tcl_GetString(valuePtr)));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
-	    }
-	    return TCL_ERROR;
-#else
-	    newPixels = 0;
-#endif
 	}
 	if (internalPtr != NULL) {
 	    *((int *) oldInternalPtr) = *((int *) internalPtr);

@@ -1366,8 +1366,6 @@ MODULE_SCOPE int TkGetIntForIndex(Tcl_Obj *, Tcl_Size, int lastOK, Tcl_Size*);
 #   define TK_OPTION_UNDERLINE_DEF(type, field) NULL, TCL_INDEX_NONE, offsetof(type, field), TK_OPTION_NULL_OK, NULL
 #endif
 
-#define TK_OPTION_NONNEG		(1 << 4)
-
 #ifdef _WIN32
 #define TkParseColor XParseColor
 #else
