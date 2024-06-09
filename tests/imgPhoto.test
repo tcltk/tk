@@ -1425,6 +1425,7 @@ test imgPhoto-18.12 {Valid GIF (file)} -setup {
     catch {image delete gif1}
 } -result gif1
 
+set earthPhotoFile [file join [file dirname [info script]] earth.gif]
 test imgPhoto-19.1 {Read GIF file with -from option - Bug [1576528]} -body {
     set earthPhotoFile [file join [file dirname [info script]] earth.gif]
     image create photo gif1
@@ -1432,7 +1433,6 @@ test imgPhoto-19.1 {Read GIF file with -from option - Bug [1576528]} -body {
     list [lindex [lindex [gif1 data] 0] 0] [image width gif1] [image height gif1]
 } -cleanup {
     catch {image delete gif1}
-    unset earthPhotoFile
 } -result {{#d8c8b8} 33 35}
 test imgPhoto-19.2 {Read GIF file, copy with -from option} -body {
     set earthPhotoFile [file join [file dirname [info script]] earth.gif]
@@ -1442,27 +1442,55 @@ test imgPhoto-19.2 {Read GIF file, copy with -from option} -body {
     list [lindex [lindex [gif2 data] 0] 0] [image width gif2] [image height gif2]
 } -cleanup {
     catch {image delete gif1 ; image delete gif2}
-    unset earthPhotoFile
 } -result {{#d8c8b8} 33 35}
-test imgPhoto-19.3 {Read PNG file with -from option - Bug [1576528]} -body {
-    set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
+test imgPhoto-19.3 {Read GIF file with -to option} -body {
+    image create photo gif1
+    gif1 read $earthPhotoFile -to 100 200
+    list [lindex [lindex [gif1 data] 262] 252] [image width gif1] [image height gif1]
+} -cleanup {
+    catch {image delete gif1}
+} -result {{#d8c8b8} 420 400}
+test imgPhoto-19.4 {Read GIF file with -from and -to options} -body {
+    set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+    image create photo gif1
+    gif1 read $earthPhotoFile -from 152 62 185 97 -to 100 200
+    list [lindex [lindex [gif1 data] 200] 100] [image width gif1] [image height gif1]
+} -cleanup {
+    catch {image delete gif1}
+} -result {{#d8c8b8} 133 235}
+unset earthPhotoFile
+
+set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
+test imgPhoto-20.1 {Read PNG file with -from option - Bug [1576528]} -body {
     image create photo png1
     png1 read $ousterPhotoFile -from 102 62 135 97
     list [lindex [lindex [png1 data] 0] 0] [image width png1] [image height png1]
 } -cleanup {
     catch {image delete png1}
-    unset ousterPhotoFile
 } -result {{#c97962} 33 35}
-test imgPhoto-19.4 {Read PNG file, copy with -from option} -body {
-    set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
+test imgPhoto-20.2 {Read PNG file, copy with -from option} -body {
     image create photo png1 -file $ousterPhotoFile
     image create photo png2
     png2 copy png1 -from 102 62 135 97
     list [lindex [lindex [png2 data] 0] 0] [image width png2] [image height png2]
 } -cleanup {
     catch {image delete png1 ; image delete png2}
-    unset ousterPhotoFile
 } -result {{#c97962} 33 35}
+test imgPhoto-20.3 {Read PNG file with -to option} -body {
+    image create photo png1
+    png1 read $ousterPhotoFile -to 100 200
+    list [lindex [lindex [png1 data] 262] 202] [image width png1] [image height png1]
+} -cleanup {
+    catch {image delete png1}
+} -result {{#c97962} 242 381}
+test imgPhoto-20.4 {Read PNG file with -from and -to options} -body {
+    image create photo png1
+    png1 read $ousterPhotoFile -from 102 62 135 97 -to 100 200
+    list [lindex [lindex [png1 data] 200] 100] [image width png1] [image height png1]
+} -cleanup {
+    catch {image delete png1}
+} -result {{#c97962} 133 235}
+unset ousterPhotoFile
 
 catch {rename foreachPixel {}}
 catch {rename checkImgTrans {}}
