@@ -40,7 +40,7 @@ if {[package vsatisfies [package provide Tcl] 8.6.7-]} {
     lappend hidden_cmds tcl:encoding:dirs
 }
 if {[package vsatisfies [package provide Tcl] 8.7-]} {
-    lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir
+    lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir tcl:file:home tcl:file:tildeexpand
     foreach cmd {
 	cmdtype nameofexecutable
     } {lappend hidden_cmds tcl:info:$cmd}
