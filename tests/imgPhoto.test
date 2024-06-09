@@ -1410,6 +1410,14 @@ test imgPhoto-19.5 {Read GIF file with -from, -to and -shrink options} -body {
 } -cleanup {
     catch {image delete gif1}
 } -result {{#d8c8b8} 113 155}
+test imgPhoto-19.6 {Read GIF file with -from option, read large region from small file} -body {
+    set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+    image create photo gif1
+    catch {gif1 read $earthPhotoFile -from 152 62 2000 1000} msg
+    list $msg [image width gif1] [image height gif1]
+} -cleanup {
+    catch {image delete gif1}
+} -result {{coordinates for -from option extend outside source image} 0 0}
 unset earthPhotoFile
 
 set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
@@ -1449,6 +1457,13 @@ test imgPhoto-20.5 {Read PNG file with -from, -to and -shrink options} -body {
 } -cleanup {
     catch {image delete png1}
 } -result {{#c97962} 113 155}
+test imgPhoto-20.6 {Read PNG file with -from option, read large region from small file} -body {
+    image create photo png1
+    catch {png1 read $ousterPhotoFile -from 102 62 2000 1000} msg
+    list $msg [image width png1] [image height png1]
+} -cleanup {
+    catch {image delete png1}
+} -result {{coordinates for -from option extend outside source image} 0 0}
 unset ousterPhotoFile
 
 catch {rename foreachPixel {}}
