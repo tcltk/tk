@@ -1717,10 +1717,10 @@ CrossingRestrictProc(
 }
 
 static int TestProcessEventsObjCmd(
-    ClientData dummy,
-    Tcl_Interp *interp,
-    int objc,
-    Tcl_Obj * const objv[])
+    TCL_UNUSED(ClientData),	/* Main window for application. */
+    Tcl_Interp* interp,		/* Current interpreter. */
+    int objc,			/* Number of arguments. */
+    Tcl_Obj* const objv[])	/* Argument objects. */
 {
     ClientData oldArg;
     Tk_RestrictProc *oldProc;
