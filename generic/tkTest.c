@@ -147,7 +147,7 @@ typedef struct TrivialCommandHeader {
 static int		ImageObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
-static int		ProcessEventsObjCmd(ClientData dummy,
+static int		TestProcessEventsObjCmd(ClientData dummy,
 			    Tcl_Interp *interp, int objc,
 			    Tcl_Obj * const objv[]);
 static int		TestbitmapObjCmd(ClientData dummy,
@@ -250,7 +250,7 @@ Tktest_Init(
 	return TCL_ERROR;
     }
 
-    Tcl_CreateObjCommand(interp, "processevents", ProcessEventsObjCmd, NULL, NULL);
+    Tcl_CreateObjCommand(interp, "testprocessevents", TestProcessEventsObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "square", SquareObjCmd, NULL, NULL);
     Tcl_CreateObjCommand(interp, "testbitmap", TestbitmapObjCmd,
 	    (ClientData) Tk_MainWindow(interp), NULL);
@@ -1686,12 +1686,12 @@ ImageDelete(
 /*
  *----------------------------------------------------------------------
  *
- * ProcessEventsObjCmd --
+ * TestProcessEventsObjCmd --
  *
- *      This function implements the "processevents" command which processes
+ *      This function implements the "testprocessevents" command which processes
  *      all queued events of a type specified by one of the arguments to the
- *      command.  Currently the supported arguments are leave, enter, and
- *      motion.  Others could be added if needed.
+ *      command.  Currently the supported arguments are leave, enter, motion,
+ *      and expose.  Others could be added if needed.
  *
  * Results:
  *      A standard Tcl result.
@@ -1716,7 +1716,7 @@ CrossingRestrictProc(
     return TK_DEFER_EVENT;	
 }
 
-static int ProcessEventsObjCmd(
+static int TestProcessEventsObjCmd(
     ClientData dummy,
     Tcl_Interp *interp,
     int objc,
