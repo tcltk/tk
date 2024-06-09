@@ -2488,8 +2488,8 @@ DecodePNG(
      * to negative here: Tk will not shrink the image.
      */
 
-    if (Tk_PhotoExpand(interp, imageHandle, destX + pngPtr->block.width,
-	    destY + pngPtr->block.height) == TCL_ERROR) {
+    if (Tk_PhotoExpand(interp, imageHandle, destX + width,
+	    destY + height) == TCL_ERROR) {
 	return TCL_ERROR;
     }
 
