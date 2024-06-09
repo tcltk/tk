@@ -1334,10 +1334,10 @@ Tk_CreateWindowFromPath(
  *--------------------------------------------------------------
  */
 
+#if defined(MAC_OSX_TK) || defined(_WIN32)
 static void SendEnterLeaveForDestroy(
     Tk_Window tkwin)
 {
-#if defined(MAC_OSX_TK) || defined(_WIN32)
     int x, y;
     unsigned int state;
     Tk_Window pointerWin;
@@ -1359,8 +1359,13 @@ static void SendEnterLeaveForDestroy(
     if (pointerWin && (tkwin == Tk_Parent(pointerWin))) {
 	Tk_UpdatePointer(Tk_Parent(tkwin), x, y, state);
     }
-#endif
 }
+#else
+static void SendEnterLeaveForDestroy(
+    TCL_UNUSED(Tk_Window)
+{
+}
+#endif
 
 void
 Tk_DestroyWindow(
