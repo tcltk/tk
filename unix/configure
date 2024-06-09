@@ -8401,9 +8401,9 @@ fi
 
     CUPS_CFLAGS=""
     CUPS_LIBS=""
-    if test "$enable_cups" = "no" ; then
-	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_cups" >&5
-printf "%s\n" "$enable_cups" >&6; }
+    if test "$enable_libcups" = "no" ; then
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_libcups" >&5
+printf "%s\n" "$enable_libcups" >&6; }
     else
 	found_cups=`cups-config 2>/dev/null`
 		        if test "$found_cups" = ""; then
@@ -8411,7 +8411,7 @@ printf "%s\n" "$enable_cups" >&6; }
         else
 	    found_cups=yes
 	    CUPS_CFLAGS="-DHAVE_CUPS"
-	    CUPS_LIBS="-lcups"
+	    CUPS_LIBS=`cups-config --libs`
 	fi
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $found_cups" >&5
 printf "%s\n" "$found_cups" >&6; }
@@ -8428,6 +8428,8 @@ then :
 else $as_nop
 
 		found_cups=no
+		CUPS_CFLAGS=""
+		CUPS_LIBS=""
 
 fi
 
