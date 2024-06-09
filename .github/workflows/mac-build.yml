@@ -49,7 +49,7 @@ jobs:
           }
       - name: Run Tests
         run: |
-          make TESTFLAGS="-verbose bpest" test | tee out.txt
+          make | tee out.txt
           nmatches=$( grep -c "Failed	0" out.txt )
           if [ $nmatches -lt 4 ]
           then
