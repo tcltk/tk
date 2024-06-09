@@ -508,15 +508,19 @@ ParseNup(
 #endif /*HAVE_CUPS*/
 
 int
+#ifdef HAVE_CUPS
 Cups_Init(Tcl_Interp *interp)
 {
-#ifdef HAVE_CUPS
     Tcl_Namespace *ns;
     ns = Tcl_FindNamespace(interp, "::tk::print", NULL, TCL_GLOBAL_ONLY);
     if (!ns)
 	ns = Tcl_CreateNamespace(interp, "::tk::print", NULL, NULL);
     Tcl_CreateObjCommand(interp, "::tk::print::cups", Cups_Cmd, NULL, NULL);
     Tcl_Export(interp, ns, "cups", 0);
+#else
+Cups_Init(TCL_UNUSED(Tcl_Interp *))
+{
+    /* Do nothing */
 #endif
     return TCL_OK;
 }
