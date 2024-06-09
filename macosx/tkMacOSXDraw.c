@@ -1207,14 +1207,14 @@ TkMacOSXSetupDrawingContext(
      * Intersect the drawable's clipping region with the region stored in the
      * X GC.  If the resulting region is empty, don't do any drawing.
      */
-
+//#if 0 // disable clipping (almost works, but windows can open up blank)
     dc.clipRgn = TkMacOSXGetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
 	canDraw = false;
 	goto end;
     }
-
+//#endif //disable clipping
     /*
      * If the drawable already has a CGContext, use it.  Otherwise, we must be
      * drawing to a window and we use the current context of its ContentView.
@@ -1311,6 +1311,7 @@ TkMacOSXSetupDrawingContext(
 	};
 	CGContextConcatCTM(dc.context, t);
     }
+//#if 0    // disable clipping 
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
@@ -1356,6 +1357,7 @@ TkMacOSXSetupDrawingContext(
 	    CGContextClipToRect(dc.context, r);
 	}
     }
+//#endif //disable clipping
 
     if (gc) {
 	static const CGLineCap cgCap[] = {
