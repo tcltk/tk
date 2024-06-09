@@ -478,8 +478,8 @@ if test $tk_aqua = no; then
 	[enable_libcups=$enableval], [enable_libcups="default"])
     CUPS_CFLAGS=""
     CUPS_LIBS=""
-    if test "$enable_cups" = "no" ; then
-	AC_MSG_RESULT([$enable_cups])
+    if test "$enable_libcups" = "no" ; then
+	AC_MSG_RESULT([$enable_libcups])
     else
 	found_cups=`cups-config 2>/dev/null`
 	dnl make sure package configurator (cups-config) 
@@ -489,7 +489,7 @@ if test $tk_aqua = no; then
         else
 	    found_cups=yes
 	    CUPS_CFLAGS="-DHAVE_CUPS"
-	    CUPS_LIBS="-lcups"
+	    CUPS_LIBS=`cups-config --libs`
 	fi
 	AC_MSG_RESULT([$found_cups])
 	dnl make sure that compiling against CUPS header file doesn't bomb
@@ -500,6 +500,8 @@ if test $tk_aqua = no; then
 	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
 	    AC_CHECK_HEADER(cups/cups.h, [], [
 		found_cups=no
+		CUPS_CFLAGS=""
+		CUPS_LIBS=""
 	    ],[#include <cups/cups.h>])
 	    CFLAGS=$tk_oldCFlags
 	    LIBS=$tk_oldLibs
