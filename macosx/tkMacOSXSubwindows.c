@@ -317,7 +317,6 @@ XUnmapWindow(
 {
     MacDrawable *macWin = (MacDrawable *)window;
     TkWindow *winPtr = macWin->winPtr;
-    TkWindow *parentPtr = winPtr->parentPtr;
     NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
 
     if (!window) {
@@ -1087,9 +1086,12 @@ TkMacOSXInvalidateWindow(
     TkMacOSXDbgMsg("%s", macWin->winPtr->pathName);
 #endif
     TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
-    TkMacOSXInvalClipRgns(macWin->winPtr);
-    if (flag == TK_PARENT_WINDOW){
-     	TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
+    TkWindow *winPtr = macWin->winPtr;
+    Tk_Window tkwin = (Tk_Window) winPtr;
+    Tk_Window parent = (Tk_Window) winPtr->parentPtr;
+    TkMacOSXInvalClipRgns(tkwin);
+    if ((flag == TK_PARENT_WINDOW) && parent){
+     	TkMacOSXInvalClipRgns(parent);
     }
     // Here we should probably be using the damage region.
     [view generateExposeEvents:[view bounds]];
