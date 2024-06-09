@@ -1402,6 +1402,14 @@ test imgPhoto-19.4 {Read GIF file with -from and -to options} -body {
 } -cleanup {
     catch {image delete gif1}
 } -result {{#d8c8b8} 133 235}
+test imgPhoto-19.5 {Read GIF file with -from, -to and -shrink options} -body {
+    set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+    image create photo gif1 -file $teapotPhotoFile
+    gif1 read $earthPhotoFile -from 152 62 185 97 -to 80 120 -shrink
+    list [lindex [lindex [gif1 data] 120] 80] [image width gif1] [image height gif1]
+} -cleanup {
+    catch {image delete gif1}
+} -result {{#d8c8b8} 113 155}
 unset earthPhotoFile
 
 set ousterPhotoFile [file join [file dirname [info script]] ouster.png]
@@ -1434,6 +1442,13 @@ test imgPhoto-20.4 {Read PNG file with -from and -to options} -body {
 } -cleanup {
     catch {image delete png1}
 } -result {{#c97962} 133 235}
+test imgPhoto-20.5 {Read PNG file with -from, -to and -shrink options} -body {
+    image create photo png1 -file $teapotPhotoFile
+    png1 read $ousterPhotoFile -from 102 62 135 97 -to 80 120 -shrink
+    list [lindex [lindex [png1 data] 120] 80] [image width png1] [image height png1]
+} -cleanup {
+    catch {image delete png1}
+} -result {{#c97962} 113 155}
 unset ousterPhotoFile
 
 catch {rename foreachPixel {}}
