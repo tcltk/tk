@@ -1362,7 +1362,7 @@ static void SendEnterLeaveForDestroy(
 }
 #else
 static void SendEnterLeaveForDestroy(
-    TCL_UNUSED(Tk_Window)
+    TCL_UNUSED(Tk_Window))
 {
 }
 #endif
