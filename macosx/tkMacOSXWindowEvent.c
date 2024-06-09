@@ -1061,7 +1061,7 @@ ConfigureRestrictProc(
 	 * Disable Tk drawing until the window has been completely configured.
 	 */
 
-	TkMacOSXSetDrawingEnabled(winPtr, 0);
+	//TkMacOSXSetDrawingEnabled(winPtr, 0);
 
 	 /*
 	  * Generate and handle a ConfigureNotify event for the new size.
@@ -1073,17 +1073,24 @@ ConfigureRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
+	 * To make the reconfiguration actually happen we need to process
+	 * idle tasks generated when processing the ConfigureNotify events.
+	 */
+
+	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+
+	/*
 	 * Now that Tk has configured all subwindows, create the clip regions.
 	 */
 
 	TkMacOSXInvalClipRgns(tkwin);
 	TkMacOSXUpdateClipRgn(winPtr);
-	TkMacOSXSetDrawingEnabled(winPtr, 1);
+	//TkMacOSXSetDrawingEnabled(winPtr, 1);
 
 	/*
 	 * Redraw the entire content view.
 	 */
-	
+
 	if ([self inLiveResize]) {
 	    [self viewDidChangeBackingProperties];
 	    [self setNeedsDisplay:YES];
@@ -1098,6 +1105,7 @@ ConfigureRestrictProc(
 	 */
 
 	[NSApp _unlockAutoreleasePool];
+
     }
 }
 
@@ -1116,7 +1124,7 @@ ConfigureRestrictProc(
     void *oldArg;
     Tk_RestrictProc *oldProc;
     static int reentered = 0;
-    
+
     if (!winPtr) {
 	return;
     }
@@ -1129,11 +1137,11 @@ ConfigureRestrictProc(
 	 * crashes or very poor performance.  The reentered flag is
 	 * used to detect this.
 	 */
-	//fprintf(stderr, "Recursive call to generateExposeEvents\n");
+	// fprintf(stderr, "Recursive call to generateExposeEvents\n");
 	return;
     }
     reentered = 1;
-    
+
     /*
      * Generate Tk Expose events.  All of these events will share the same
      * serial number.

@@ -56,6 +56,9 @@ XDestroyWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *)window;
+    // fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
+    // 	    Tk_PathName(macWin->winPtr),
+    // 	    Tk_PathName(macWin->winPtr->parentPtr));
 
     /*
      * Remove any dangling pointers that may exist if the window we are
@@ -67,9 +70,8 @@ XDestroyWindow(
     macWin->toplevel->referenceCount--;
 
     if (!Tk_IsTopLevel(macWin->winPtr)) {
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	if (macWin->winPtr->parentPtr != NULL) {
-	    TkMacOSXInvalClipRgns((Tk_Window)macWin->winPtr->parentPtr);
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
@@ -206,6 +208,8 @@ XMapWindow(
 	     * the window.
 	     */
 
+	    // We could add a TK_CONTAINER_WINDOW flag and have
+	    // TkMacOSXInvalidateWindow invalidate the clip regions.
 	    TkMacOSXInvalClipRgns(contWinPtr);
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
@@ -358,18 +362,19 @@ XUnmapWindow(
     } else {
 
 	/*
-	 * Rebuild the visRgn clip region for the parent so it will be allowed
+	 * Rebuild the clip regions for the parent so it will be allowed
 	 * to draw in the space from which this subwindow was removed and then
 	 * redraw the window.
 	 */
 
-	if (parentPtr && parentPtr->privatePtr->visRgn) {
-	    TkMacOSXInvalidateViewRegion(
-		    TkMacOSXGetNSViewForDrawable(parentPtr->window),
-		    parentPtr->privatePtr->visRgn);
-	}
-	TkMacOSXInvalClipRgns((Tk_Window)parentPtr);
-	TkMacOSXUpdateClipRgn(parentPtr);
+	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	// if (parentPtr && parentPtr->privatePtr->visRgn) {
+	//     TkMacOSXInvalidateViewRegion(
+	// 	    TkMacOSXGetNSViewForDrawable(parentPtr->window),
+	// 	    parentPtr->privatePtr->visRgn);
+	// }
+	//TkMacOSXInvalClipRgns((Tk_Window)parentPtr);
+	//TkMacOSXUpdateClipRgn(parentPtr);
     }
     return Success;
 }
@@ -739,8 +744,9 @@ XConfigureWindow(
 	NSView *view = TkMacOSXGetNSViewForDrawable(macWin);
 
 	if (view) {
-	    TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
-	    TkpRedrawWidget((Tk_Window)winPtr);
+	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	    //TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
+	    //TkpRedrawWidget((Tk_Window)winPtr);
 	}
     }
 
@@ -988,6 +994,11 @@ TkMacOSXVisableClipRgn(
     return (Region) HIShapeCreateMutableCopy(winPtr->privatePtr->visRgn);
 }
 
+#if 0
+//This code is not currently used.  But it shows how to iterate over the
+//rectangles in a region described by an HIShape.  Probably we want to
+//replace the current dirtyRect by such a region.
+
 /*
  *----------------------------------------------------------------------
  *
@@ -1026,9 +1037,12 @@ InvalViewRect(
     case kHIShapeEnumerateRect:
 	dirtyRect = NSRectFromCGRect(CGRectApplyAffineTransform(*rect, t));
 	// Cannot rely on addTkDirtyRect: to force redrawing.
-	[view generateExposeEvents:dirtyRect];
+	//MC This is the only place where the rect is not the view bounds.
+	//And it kills liveResize.
+	//[view generateExposeEvents:dirtyRect];
 	break;
     }
+    [view generateExposeEvents:[view bounds]];
     return noErr;
 }
 
@@ -1043,19 +1057,22 @@ TkMacOSXInvalidateViewRegion(
 		InvalViewRect, view);
     }
 }
+#endif
 
 /*
  *----------------------------------------------------------------------
  *
  * TkMacOSXInvalidateWindow --
  *
- *	This function invalidates a window and (optionally) its children.
+ *	This stub function redraws the part of the toplevel window
+ *      covered by a given Tk window.  (Except currently it redraws
+ *      the entire toplevel.)
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	Damage is created.
+ *	The window is redrawn.
  *
  *----------------------------------------------------------------------
  */
@@ -1069,11 +1086,13 @@ TkMacOSXInvalidateWindow(
 #ifdef TK_MAC_DEBUG_CLIP_REGIONS
     TkMacOSXDbgMsg("%s", macWin->winPtr->pathName);
 #endif
-    if (macWin->flags & TK_CLIP_INVALID) {
-	TkMacOSXUpdateClipRgn(macWin->winPtr);
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
+    TkMacOSXInvalClipRgns(macWin->winPtr);
+    if (flag == TK_PARENT_WINDOW){
+     	TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
     }
-    TkMacOSXInvalidateViewRegion(TkMacOSXGetNSViewForDrawable(macWin),
-	    (flag == TK_WINDOW_ONLY) ? macWin->visRgn : macWin->aboveVisRgn);
+    // Here we should probably be using the damage region.
+    [view generateExposeEvents:[view bounds]];
 }
 
 /*
