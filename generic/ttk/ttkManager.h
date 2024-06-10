@@ -81,7 +81,7 @@ MODULE_SCOPE Tcl_Size Ttk_ContentIndex(Ttk_Manager *, Tk_Window);
 
 #define Ttk_GetSlaveIndexFromObj Ttk_GetContentIndexFromObj
 MODULE_SCOPE int Ttk_GetContentIndexFromObj(
-    Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, Tcl_Size *indexPtr);
+    Tcl_Interp *, Ttk_Manager *, Tcl_Obj *, int lastOK, Tcl_Size *indexPtr);
 
 /* Accessor functions:
  */

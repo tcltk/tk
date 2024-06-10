@@ -667,7 +667,7 @@ static int PanedInsertCommand(
     }
 
     if (TCL_OK != Ttk_GetContentIndexFromObj(
-		interp,pw->paned.mgr, objv[2], &destIndex))
+		interp,pw->paned.mgr, objv[2], 1, &destIndex))
     {
 	return TCL_ERROR;
     }
@@ -702,7 +702,7 @@ static int PanedForgetCommand(
     }
 
     if (TCL_OK != Ttk_GetContentIndexFromObj(
-		    interp, pw->paned.mgr, objv[2], &paneIndex))
+		    interp, pw->paned.mgr, objv[2], 0, &paneIndex))
     {
 	return TCL_ERROR;
     } else if (paneIndex >= Ttk_NumberContent(pw->paned.mgr)) {
@@ -783,7 +783,7 @@ static int PanedPaneCommand(
     }
 
     if (TCL_OK != Ttk_GetContentIndexFromObj(
-		    interp,pw->paned.mgr, objv[2], &paneIndex))
+		    interp,pw->paned.mgr, objv[2], 0, &paneIndex))
     {
 	return TCL_ERROR;
     } else if (paneIndex >= Ttk_NumberContent(pw->paned.mgr)) {

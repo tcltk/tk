@@ -547,17 +547,9 @@ MessageWorldChanged(
     Tk_GetFontMetrics(msgPtr->tkfont, &fm);
     if (msgPtr->padX < 0) {
 	msgPtr->padX = fm.ascent / 2;
-	if (msgPtr->padXPtr) {
-	    Tcl_DecrRefCount(msgPtr->padXPtr);
-	    msgPtr->padXPtr = NULL;
-	}
     }
-    if (msgPtr->padY == -1) {
+    if (msgPtr->padY < 0) {
 	msgPtr->padY = fm.ascent / 4;
-	if (msgPtr->padYPtr) {
-	    Tcl_DecrRefCount(msgPtr->padYPtr);
-	    msgPtr->padYPtr = NULL;
-	}
     }
 
     /*
