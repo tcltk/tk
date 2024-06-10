@@ -557,6 +557,10 @@ MessageWorldChanged(
     msgPtr->textGC = gc;
 
     Tk_GetFontMetrics(msgPtr->tkfont, &fm);
+    if (!msgPtr->padXPtr) {
+	msgPtr->padXPtr = Tcl_NewIntObj(-1);
+	Tcl_IncrRefCount(msgPtr->padXPtr);
+    }
     Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXPtr, &msgPtr->padX);
     if (msgPtr->padX < 0) {
 	if (strcmp(Tcl_GetString(msgPtr->padXPtr), "-1")) {
@@ -565,6 +569,10 @@ MessageWorldChanged(
 	    Tcl_IncrRefCount(msgPtr->padXPtr);
 	}
 	msgPtr->padX = fm.ascent / 2;
+    }
+    if (!msgPtr->padYPtr) {
+	msgPtr->padYPtr = Tcl_NewIntObj(-1);
+	Tcl_IncrRefCount(msgPtr->padYPtr);
     }
     Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYPtr, &msgPtr->padY);
     if (msgPtr->padY < 0) {
