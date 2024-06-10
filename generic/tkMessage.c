@@ -505,6 +505,11 @@ ConfigureMessage(
 
     if (msgPtr->highlightWidth < 0) {
 	msgPtr->highlightWidth = 0;
+	if (msgPtr->highlightWidth) {
+	    Tcl_DecrRefCount(msgPtr->highlightWidthObj);
+	}
+	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(msgPtr->highlightWidthObj);
     }
 
     Tk_FreeSavedOptions(&savedOptions);
@@ -552,10 +557,22 @@ MessageWorldChanged(
     msgPtr->textGC = gc;
 
     Tk_GetFontMetrics(msgPtr->tkfont, &fm);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXPtr, &msgPtr->padX);
     if (msgPtr->padX < 0) {
+	if (strcmp(Tcl_GetString(msgPtr->padXPtr), "-1")) {
+	    Tcl_DecrRefCount(msgPtr->padXPtr);
+	    msgPtr->padXPtr = Tcl_NewIntObj(-1);
+	    Tcl_IncrRefCount(msgPtr->padXPtr);
+	}
 	msgPtr->padX = fm.ascent / 2;
     }
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYPtr, &msgPtr->padY);
     if (msgPtr->padY < 0) {
+	if (strcmp(Tcl_GetString(msgPtr->padYPtr), "-1")) {
+	    Tcl_DecrRefCount(msgPtr->padYPtr);
+	    msgPtr->padYPtr = Tcl_NewIntObj(-1);
+	    Tcl_IncrRefCount(msgPtr->padYPtr);
+	}
 	msgPtr->padY = fm.ascent / 4;
     }
 
@@ -599,6 +616,9 @@ ComputeMessageGeometry(
     int aspect, lowerBound, upperBound, inset;
 
     Tk_FreeTextLayout(msgPtr->textLayout);
+
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &msgPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
 
     inset = msgPtr->borderWidth + msgPtr->highlightWidth;
 
@@ -679,8 +699,12 @@ DisplayMessage(
     Message *msgPtr = (Message *)clientData;
     Tk_Window tkwin = msgPtr->tkwin;
     int x, y;
-    int borderWidth = msgPtr->highlightWidth;
+    int borderWidth;
 
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &msgPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
+
+    borderWidth = msgPtr->highlightWidth;
     msgPtr->flags &= ~REDRAW_PENDING;
     if ((msgPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
@@ -762,6 +786,7 @@ MessageEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    msgPtr->flags |= GOT_FOCUS;
+	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
 	    if (msgPtr->highlightWidth > 0) {
 		goto redraw;
 	    }
@@ -769,6 +794,7 @@ MessageEventProc(
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    msgPtr->flags &= ~GOT_FOCUS;
+	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
 	    if (msgPtr->highlightWidth > 0) {
 		goto redraw;
 	    }
