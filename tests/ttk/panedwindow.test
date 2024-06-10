@@ -11,6 +11,22 @@ test panedwindow-1.0 "Setup" -body {
     ttk::panedwindow .pw
 } -result .pw
 
+test panedwindow-1.0.1 "Make sure pane 0 command doesn't crash on empty pane - bug e6140f3404" -body {
+    .pw pane 0
+} -result {Managed window index "0" out of bounds} -returnCodes error
+
+test panedwindow-1.0.2 "Make sure pane end command doesn't crash on empty pane - bug e6140f3404" -body {
+    .pw pane end
+} -result {Managed window index "end" out of bounds} -returnCodes error
+
+test panedwindow-1.0.3 "Make sure forget 0 command doesn't crash on empty pane - bug e6140f3404" -body {
+    .pw forget 0
+} -result {Managed window index "0" out of bounds} -returnCodes error
+
+test panedwindow-1.0.4 "Make sure forget end command doesn't crash on empty pane - bug e6140f3404" -body {
+    .pw forget end
+} -result {Managed window index "end" out of bounds} -returnCodes error
+
 test panedwindow-1.1 "Make sure empty panedwindow doesn't crash" -body {
     pack .pw -expand true -fill both
     update

@@ -553,4 +553,27 @@ test notebook-8.2 "style command" -body {
     destroy .w
 } -result {customStyle.TNotebook customStyle.TNotebook TNotebook}
 
+test notebook-9.1 "move last tab by numerical index" -body {
+    ::ttk::notebook .n
+    foreach tabs {TabA TabB TabC} {
+	::ttk::entry .n.[string tolower $tabs]
+	.n add .n.[string tolower $tabs] -text $tabs
+    }
+   .n insert 0 2  ; # allowed: TabC moves to first tab position
+   .n insert 0 3  ; # not allowed: position 3 is after last tab
+} -cleanup {
+    destroy .n
+} -result {Managed window index "3" out of bounds} -returnCodes error
+test notebook-9.2 "move first tab to last position by numerical index" -body {
+    ::ttk::notebook .n
+    foreach tabs {TabA TabB TabC} {
+	::ttk::entry .n.[string tolower $tabs]
+	.n add .n.[string tolower $tabs] -text $tabs
+    }
+   .n insert 2 0  ; # allowed: TabA moves to last tab position
+   .n insert 3 0  ; # not allowed: position 3 is after last tab
+} -cleanup {
+    destroy .n
+} -result {Managed window index "3" out of bounds} -returnCodes error
+
 tcltest::cleanupTests

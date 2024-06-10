@@ -1598,6 +1598,17 @@ test imgPhoto-12.4 {Tk_ImgPhotoPutZoomedBlock, empty image} -setup {
 } -cleanup {
     imageCleanup
 } -result {0 0}
+test imgPhoto-12.5 {Tk_ImgPhotoPutZoomedBlock, copy from area outside the image, bug [a0241c0e25]} -setup {
+    imageCleanup
+} -body {
+    image create photo photo1 -width 20 -height 20
+    image create photo photo2 -width 9 -height 10
+    # next line used to loop for a very long time; if the bug is present
+    # the CI runner will time out, leading to test suite failure
+    photo2 copy photo1 -to 0 5 3 8 -from 21 0
+} -cleanup {
+    imageCleanup
+} -returnCodes error -result {coordinates for -from option extend outside source image}
 
 test imgPhoto-13.1 {check separation of images in different interpreters} -setup {
     imageCleanup
