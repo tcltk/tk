@@ -140,6 +140,8 @@ MenuBarHeightObjCmd(
  *      Returns true if and only if the NSView of the drawable is the
  *      current focusView, which on 10.14 and newer systems can only be the
  *      case when within [NSView drawRect].
+ *      NOTE: This is no longer needed when we use updateLayer instead
+ *      of drawRect.  Now it always returns True.
  *
  * Side effects:
  *	None

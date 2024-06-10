@@ -105,6 +105,7 @@ foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
 set i 1
 foreach geom "+20+80 +80+$Y0 +0+$Y0 -0-0 +0-0 -0+$Y0 -10-5 -10+$Y5 +10-5" {
     test unixWm-3.$i {moving window while iconified} unix {
+        update
 	wm iconify .t
 	update idletasks
 	wm geom .t $geom
@@ -641,6 +642,8 @@ test unixWm-16.1 {Tk_WmCmd procedure, "deiconify" option} unix {
 test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg red
+    # calling update here prevents a crash in 16.3 on macOS
+    update
     wm iconwindow .t .icon
     set result [list [catch {wm deiconify .icon} msg] $msg]
     destroy .icon
@@ -1352,8 +1355,12 @@ test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} unix {
 test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
     set result {}
     wm withdraw .t
+    #added to avoid a crash on macOS
+    update
     lappend result [wm state .t] [winfo ismapped .t]
     wm deiconify .t
+    #added to avoid a crash on macOS
+    update
     lappend result [wm state .t] [winfo ismapped .t]
 } {withdrawn 0 normal 1}
 
@@ -1373,7 +1380,9 @@ test unixWm-40.1 {Tk_SetGrid procedure, set grid dimensions before turning on gr
     wm geometry .t
 } {30x10+0+0}
 test unixWm-40.2 {Tk_SetGrid procedure, turning on grid when dimensions already set} unix {
+    update
     destroy .t
+    update
     toplevel .t
     wm geometry .t 200x100+100+$Y0
     listbox .t.l -height 20 -width 20
@@ -1798,6 +1807,8 @@ test unixWm-49.2 {Tk_GetRootCoords procedure, menubars} {unix testmenubar} {
 } {52 7 12 62}
 
 deleteWindows
+# Make sure that the root window is out of the way!
+wm geom . +700+700
 wm withdraw .
 if {[tk windowingsystem] eq "aqua"} {
     # Modern mac windows have no border.

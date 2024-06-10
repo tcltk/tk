@@ -136,6 +136,8 @@ test ttk-selfdestruct-ok-1 "Intentional self-destruction" -body {
 # Basic tests.
 #
 test ttk-1.1 "Create multiline button showing justified text" -body {
+    wm geometry . +100+100
+    event generate . <Motion> -warp 1 -x 600 -y 600
     pack [ttk::button .t -text "Hello\nWorld!!" -justify center] -expand true -fill both
     update
 }
@@ -152,6 +154,8 @@ test ttk-1.4 "Original style preserved" -body {
     .t cget -style
 } -result ""
 
+# Tests using this will fail if the top-level window contains the cursor
+
 proc checkstate {w} {
     foreach statespec {
 	{!active !disabled}
@@ -166,7 +170,6 @@ proc checkstate {w} {
     set result
 }
 
-# NB: this will fail if the top-level window pops up underneath the cursor
 test ttk-2.0 "Check state" -body {
     checkstate .t
 } -result [list 1 0 0 0 0 0]
