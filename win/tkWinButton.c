@@ -628,7 +628,7 @@ TkpDisplayButton(
 
     if (butPtr->type == TYPE_LABEL) {
 	defaultWidth = butPtr->highlightWidth;
-        offset = 0;
+	offset = 0;
     } else if (butPtr->type == TYPE_BUTTON) {
 	defaultWidth = ((butPtr->defaultState == DEFAULT_ACTIVE)
 		? butPtr->highlightWidth : 0);
@@ -934,14 +934,14 @@ TkpDisplayButton(
 		butPtr->borderWidth, relief);
     }
     if (defaultWidth != 0) {
-        int highlightColor;
+	int highlightColor;
 
 	dc = TkWinGetDrawableDC(butPtr->display, pixmap, &state);
-        if (butPtr->type == TYPE_LABEL) {
-            highlightColor = (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
-        } else {
-            highlightColor = (int) butPtr->highlightColorPtr->pixel;
-        }
+	if (butPtr->type == TYPE_LABEL) {
+	    highlightColor = (int) Tk_3DBorderColor(butPtr->highlightBorder)->pixel;
+	} else {
+	    highlightColor = (int) butPtr->highlightColorPtr->pixel;
+	}
 	TkWinFillRect(dc, 0, 0, Tk_Width(tkwin), defaultWidth,
 		highlightColor);
 	TkWinFillRect(dc, 0, 0, defaultWidth, Tk_Height(tkwin),
@@ -1457,7 +1457,7 @@ ButtonProc(
 	 * causes all buttons to fire once a second, so we need to make sure
 	 * that we are not dealing with the chromium life check.
 	*/
-        if (wParam != 0 || lParam != 0) {
+	if (wParam != 0 || lParam != 0) {
 	    int code;
 	    Tcl_Interp *interp = butPtr->info.interp;
 
