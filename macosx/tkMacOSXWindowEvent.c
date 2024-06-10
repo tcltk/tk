@@ -256,7 +256,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
     if (winPtr) {
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+   	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
     }
 }
 
@@ -284,9 +284,11 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
     NSWindow *w = [notification object];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
 
+#if 0
     if (winPtr) {
-	//Tk_UnmapWindow((Tk_Window)winPtr);
+        Tk_UnmapWindow((Tk_Window)winPtr);
     }
+#endif
 }
 
 #endif /* TK_MAC_DEBUG_NOTIFICATIONS */

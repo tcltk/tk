@@ -826,7 +826,6 @@ FrontWindowAtPoint(
     for (NSWindow *w in windows) {
 	winPtr = TkMacOSXGetTkWindow(w);
 	if (winPtr) {
-	    WmInfo *wmPtr = winPtr->wmInfoPtr;
 	    NSRect windowFrame = [w frame];
 	    NSRect contentFrame = [w frame];
 
@@ -837,13 +836,15 @@ FrontWindowAtPoint(
 	     * window.
 	     */
 
-	    if ((wmPtr->hints.initial_state == NormalState ||
-		    wmPtr->hints.initial_state == ZoomState)) {
-		if (NSMouseInRect(p, contentFrame, NO)) {
-		    return winPtr;
-		} else if (NSMouseInRect(p, windowFrame, NO)) {
-		    return NULL;
-		}
+	    if (NSMouseInRect(p, contentFrame, NO)) {
+		return winPtr;
+	    } else if (NSMouseInRect(p, windowFrame, NO)) {
+		/*
+		 * The pointer is in the title bar of the highest NSWindow
+		 * containing it, and therefore is should not be considered
+		 * to be contained in any Tk window.
+		 */
+		return NULL;
 	    }
 	}
     }
@@ -1102,12 +1103,15 @@ TkWmUnmapWindow(
  *
  *	This procedure is invoked when a top-level window is about to be
  *	deleted. It cleans up the wm-related data structures for the window.
+ *      If the dead window contains the pointer, TkUpdatePointer is called
+ *      to tell Tk which window will be the new pointer window. 
  *
  * Results:
  *	None.
  *
  * Side effects:
- *	The WmInfo structure for winPtr gets freed up.
+ *	The WmInfo structure for winPtr gets freed.  Tk's cached pointer
+ *      window may change.
  *
  *----------------------------------------------------------------------
  */
@@ -1116,13 +1120,14 @@ void
 TkWmDeadWindow(
     TkWindow *winPtr)		/* Top-level window that's being deleted. */
 {
+    TkWindow *winPtr2;
+    NSWindow *w;
     WmInfo *wmPtr = winPtr->wmInfoPtr, *wmPtr2;
-    TKWindow *deadNSWindow;
-
-    if (wmPtr == NULL) {
+    TKWindow *deadNSWindow = (TKWindow *)TkMacOSXGetNSWindowForDrawable(
+	Tk_WindowId(winPtr));
+    if (deadNSWindow == NULL) {
 	return;
     }
-
     /*
      *If the dead window is a transient, remove it from the container's list.
      */
@@ -1174,11 +1179,10 @@ TkWmDeadWindow(
 
     for (Transient *transientPtr = wmPtr->transientPtr;
 	    transientPtr != NULL; transientPtr = transientPtr->nextPtr) {
-    	TkWindow *winPtr2 = transientPtr->winPtr;
-    	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(winPtr2);
-
+    	TkWindow *containerPtr = (TkWindow *)TkMacOSXGetContainer(
+	    transientPtr->winPtr);
     	if (containerPtr == winPtr) {
-    	    wmPtr2 = winPtr2->wmInfoPtr;
+    	    wmPtr2 = transientPtr->winPtr->wmInfoPtr;
     	    wmPtr2->container = NULL;
     	}
     }
@@ -1190,29 +1194,48 @@ TkWmDeadWindow(
 	ckfree(transientPtr);
     }
 
-    deadNSWindow = (TKWindow *)wmPtr->window;
-
     /*
      * Remove references to the Tk window from the mouse event processing
-     * state which is recorded in the NSApplication object.
+     * state which is recorded in the NSApplication object and notify Tk
+     * of the new pointer window.
      */
 
-    if (winPtr == [NSApp tkPointerWindow]) {
-	NSWindow *w;
-	NSPoint mouse = [NSEvent mouseLocation];
-	[NSApp setTkPointerWindow:nil];
-	for (w in [NSApp orderedWindows]) {
-	    if (w == deadNSWindow) {
-		continue;
-	    }
-	    if (NSPointInRect(mouse, [w frame])) {
-		TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
-		int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-		[NSApp setTkPointerWindow:winPtr2];
-		Tk_UpdatePointer((Tk_Window) winPtr2, x, y,
-				 [NSApp tkButtonState]);
-		break;
-	    }
+    NSPoint mouse = [NSEvent mouseLocation];
+    [NSApp setTkPointerWindow:nil];
+    winPtr2 = NULL;
+    
+    for (w in [NSApp orderedWindows]) {
+	if (w == deadNSWindow || w == NULL) {
+	    continue;
+	}
+	winPtr2 = TkMacOSXGetTkWindow(w);
+	if (winPtr2 == NULL) {
+	    continue;
+	}
+	if (NSPointInRect(mouse, [w frame])) {
+	    [NSApp setTkPointerWindow: winPtr2];
+	    break;
+	}
+    }
+    if (winPtr2) {
+	/*
+	 * We now know which toplevel will contain the pointer when the window
+	 * is destroyed.  We need to know which Tk window within the
+	 * toplevel will contain the pointer.
+	 */
+	NSPoint local = [w tkConvertPointFromScreen: mouse];
+	int top_x = floor(local.x),
+	    top_y = floor(w.frame.size.height - local.y);
+	int root_x = floor(mouse.x),
+	    root_y = floor(TkMacOSXZeroScreenHeight() - mouse.y);
+	int win_x, win_y;
+	Tk_Window target = Tk_TopCoordsToWindow((Tk_Window) winPtr2, top_x, top_y, &win_x, &win_y);
+	/*
+	 * A non-toplevel window can have a NULL parent while it is in the process of
+	 * being destroyed.  We should not call Tk_UpdatePointer in that case.
+	 */
+	if (Tk_Parent(target) != NULL || Tk_IsTopLevel(target)) {
+	    Tk_UpdatePointer(target, root_x, root_y, [NSApp tkButtonState]);
 	}
     }
 
@@ -1264,9 +1287,10 @@ TkWmDeadWindow(
 	 * set tkEventTarget to NULL when there is no window to send Tk events to.
 	 */
 	TkWindow *newTkEventTarget = NULL;
+	winPtr2 = NULL;
 
-	for (NSWindow *w in [NSApp orderedWindows]) {
-	    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);
+	for (w in [NSApp orderedWindows]) {
+	    winPtr2 = TkMacOSXGetTkWindow(w);
 	    BOOL isOnScreen;
 
 	    if (!winPtr2 || !winPtr2->wmInfoPtr) {
@@ -2543,7 +2567,6 @@ WmForgetCmd(
 	macWin->toplevel->referenceCount++;
 	macWin->flags &= ~TK_HOST_EXISTS;
 
-	TkWmDeadWindow(winPtr);
 	RemapWindows(winPtr, (MacDrawable *)winPtr->parentPtr->window);
 
         /*
@@ -3490,6 +3513,7 @@ WmManageCmd(
     } else if (Tk_IsTopLevel(frameWin)) {
 	/* Already managed by wm - ignore it */
     }
+    Tk_ManageGeometry((Tk_Window)winPtr, &wmMgrType, NULL);
     return TCL_OK;
 }
 
@@ -6029,7 +6053,7 @@ Tk_Window
 TkMacOSXGetContainer(
     TkWindow *winPtr)
 {
-    if (winPtr->wmInfoPtr != NULL) {
+    if (Tk_PathName(winPtr)) {
 	return (Tk_Window)winPtr->wmInfoPtr->container;
     }
     return NULL;
