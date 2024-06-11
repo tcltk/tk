@@ -2,18 +2,14 @@ name: macOS
 on:
   push:
     branches:
-    - "main"
-    - "core-8-branch"
-    - "core-8-6-branch"
-    tags:
-    - "core-**"
+    - "cgimage_with_crossing"
 permissions:
   contents: read
 env:
   ERROR_ON_FAILURES: 1
 jobs:
   xcode:
-    runs-on: macos-11
+    runs-on: macos-14
     defaults:
       run:
         shell: bash
@@ -57,7 +53,7 @@ jobs:
           fi
         timeout-minutes: 30
   clang:
-    runs-on: macos-11
+    runs-on: macos-14
     strategy:
       matrix:
         symbols:
