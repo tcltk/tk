@@ -370,10 +370,6 @@ test image-9.1 {Tk_ImageChanged procedure} -constraints testImageType -setup {
     foo changed 5 6 7 8 30 15
     update idletasks
     update
-    # On MacOS we need to wait for the test image display procedure to run.
-    while {"timed out" ni $x && [lindex $x end 1] ne "display"} {
-        vwait x
-    }
     after cancel $timer
     return $x
 } -cleanup {
