@@ -932,6 +932,7 @@ Tk_MacOSXIsAppInFront(void)
  * Restrict event processing to Expose events.
  */
 
+#if 0
 static Tk_RestrictAction
 ExposeRestrictProc(
     void *arg,
@@ -940,6 +941,7 @@ ExposeRestrictProc(
     return (eventPtr->type==Expose && eventPtr->xany.serial==PTR2UINT(arg)
 	    ? TK_PROCESS_EVENT : TK_DEFER_EVENT);
 }
+#endif
 
 /*
  * Restrict event processing to ConfigureNotify events.
@@ -1123,8 +1125,8 @@ ConfigureRestrictProc(
     int updatesNeeded;
     CGRect updateBounds;
     TkWindow *winPtr = TkMacOSXGetTkWindow([self window]);
-    void *oldArg;
-    Tk_RestrictProc *oldProc;
+    //void *oldArg;
+    //Tk_RestrictProc *oldProc;
     static int reentered = 0;
 
     if (!winPtr) {
