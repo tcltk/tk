@@ -642,8 +642,6 @@ test unixWm-16.1 {Tk_WmCmd procedure, "deiconify" option} unix {
 test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg red
-    # calling update here prevents a crash in 16.3 on macOS
-    update
     wm iconwindow .t .icon
     set result [list [catch {wm deiconify .icon} msg] $msg]
     destroy .icon
@@ -1355,12 +1353,8 @@ test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} unix {
 test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
     set result {}
     wm withdraw .t
-    #added to avoid a crash on macOS
-    update
     lappend result [wm state .t] [winfo ismapped .t]
     wm deiconify .t
-    #added to avoid a crash on macOS
-    update
     lappend result [wm state .t] [winfo ismapped .t]
 } {withdrawn 0 normal 1}
 
@@ -2091,11 +2085,13 @@ test unixWm-51.6 {TkWmRestackToplevel procedure, window to be stacked isn't mapp
 test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {unix failsOnXQuarz} {
     foreach w {.t .t2 .t3} {
 	destroy $w
+	update
 	toplevel $w -width 200 -height 200 -bg green
 	tkwait visibility $w
 	wm geometry $w +100+100
 	update
     }
+    update
     raise .t .t2
     restackDelay
     update

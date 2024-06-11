@@ -1123,6 +1123,7 @@ test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua}
     .t window create end -create {
 	button %W.button_three -text "Button 3"}
     update
+    set tk_textEmbWinDisplay {}
     .t delete 2.0 3.0
     update
     list $tk_textEmbWinDisplay
