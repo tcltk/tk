@@ -14,12 +14,8 @@ tcltest::loadTestedCommands
 
 imageInit
 
-# find the teapot.ppm file for use in these tests
 set teapotPhotoFile [file join [file dirname [info script]] teapot.ppm]
-testConstraint hasTeapotPhoto [file exists $teapotPhotoFile]
-# let's see if we have the semi-transparent one as well
 set transpTeapotPhotoFile [file join [file dirname [info script]] teapotTransparent.png]
-testConstraint hasTranspTeapotPhoto [file exists $transpTeapotPhotoFile]
 
 # ---------------------------------------------------------------------
 
@@ -175,9 +171,7 @@ test imgListFormat-4.3 {StringReadDef: erroneous non-option argument} -setup {
 } -body {
     photo1 put orange -format {default bogus}
 } -returnCodes error -result {bad format option "bogus": no options allowed}
-test imgListFormat-4.4 {StringReadDef: normal use case} -constraints {
-    hasTeapotPhoto
-} -setup {
+test imgListFormat-4.4 {StringReadDef: normal use case} -setup {
     image create photo photo1 -file $teapotPhotoFile
     image create photo photo2
 } -body {
@@ -188,9 +182,7 @@ test imgListFormat-4.4 {StringReadDef: normal use case} -constraints {
     imageCleanup
     unset imgData
 } -result 1
-test imgListFormat-4.5 {StringReadDef: correct compositing rule} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-4.5 {StringReadDef: correct compositing rule} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
     image create photo photo2
 } -body {
@@ -241,9 +233,7 @@ test imgListFormat-5.5 {StirngWriteDef: size of data} -setup {
     unset imgData
     imageCleanup
 } -result {35 64}
-test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -constraints {
-    hasTeapotPhoto
-} -setup {
+test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -setup {
     set result {}
     image create photo photo1 -file $teapotPhotoFile
 } -body {
@@ -260,9 +250,7 @@ test imgListFormat-5.6 {StringWriteDef: test some pixels #1} -constraints {
     unset imgData
     imageCleanup
 } -result {{#135cc0} #135cc0 #a06d52 #e1c8ba #135cc0}
-test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
-    hasTeapotPhoto
-} -setup {
+test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -setup {
     set result {}
     image create photo photo1 -file $teapotPhotoFile
 } -body {
@@ -279,9 +267,7 @@ test imgListFormat-5.7 {StringWriteDef: test some pixels #2} -constraints {
     unset imgData
     imageCleanup
 } -result {{#135cc0ff} #135cc0ff #a06d52ff #e1c8baff #135cc0ff}
-test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
     set imgData [photo1 data -format {default -colorformat rgb}]
@@ -295,9 +281,7 @@ test imgListFormat-5.8 {StringWriteDef: test some pixels #3} -constraints {
     unset imgData
     imageCleanup
 } -result {{#004eb9} #a14100 #ffca9f}
-test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
     set imgData [photo1 data -format {default -colorformat rgba}]
@@ -310,9 +294,7 @@ test imgListFormat-5.9 {StringWriteDef: test some pixels #4} -constraints {
     unset imgData
     imageCleanup
 } -result {{#004eb9e1} #a14100aa #ffca9faf}
-test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -constraints {
-    hasTranspTeapotPhoto
-} -setup {
+test imgListFormat-5.10 {StringWriteDef: test some pixels #5} -setup {
     image create photo photo1 -file $transpTeapotPhotoFile
 } -body {
     set imgData [photo1 data -format {default -colorformat list}]
