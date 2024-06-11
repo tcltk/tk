@@ -67,10 +67,11 @@ test notebook-2.4 "tab - set value" -body {
 } -result "Changed Foo"
 
 test notebook-2.5 "tab - get all options" -body {
+    .nb tab .nb.foo -underline 0
     .nb tab .nb.foo
 } -result [list \
     -padding 0 -sticky nsew \
-    -state normal -text "Changed Foo" -image "" -compound {} -underline -1]
+    -state normal -text "Changed Foo" -image "" -compound {} -underline 0]
 
 test notebook-4.1 "Test .nb index end" -body {
     .nb index end
@@ -537,5 +538,28 @@ test notebook-198376af5a {moving tab position to a different edge} -body {
     update
     expr {[winfo y .nb.f1] < 10}
 } -result 1
+
+test notebook-9.1 "move last tab by numerical index" -body {
+    ::ttk::notebook .n
+    foreach tabs {TabA TabB TabC} {
+	::ttk::entry .n.[string tolower $tabs]
+	.n add .n.[string tolower $tabs] -text $tabs
+    }
+   .n insert 0 2  ; # allowed: TabC moves to first tab position
+   .n insert 0 3  ; # not allowed: position 3 is after last tab
+} -cleanup {
+    destroy .n
+} -result {Slave index 3 out of bounds} -returnCodes error
+test notebook-9.2 "move first tab to last position by numerical index" -body {
+    ::ttk::notebook .n
+    foreach tabs {TabA TabB TabC} {
+	::ttk::entry .n.[string tolower $tabs]
+	.n add .n.[string tolower $tabs] -text $tabs
+    }
+   .n insert 2 0  ; # allowed: TabA moves to last tab position
+   .n insert 3 0  ; # not allowed: position 3 is after last tab
+} -cleanup {
+    destroy .n
+} -result {Slave index 3 out of bounds} -returnCodes error
 
 tcltest::cleanupTests
