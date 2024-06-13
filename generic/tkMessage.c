@@ -54,21 +54,20 @@ typedef struct {
     Tk_3DBorder border;		/* Structure used to draw 3-D border and
 				 * background. NULL means a border hasn't been
 				 * created yet. */
-    int borderWidth;		/* Width of border. */
+    Tcl_Obj *borderWidthObj;	/* Width of border. */
     int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw
 				 * around widget when it has the focus.
-				 * <= 0 means don't draw a highlight. */
+				 * 0 means don't draw a highlight. */
     XColor *highlightBgColorPtr;
 				/* Color for drawing traversal highlight
 				 * area when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
     Tk_Font tkfont;		/* Information about text font, or NULL. */
     XColor *fgColorPtr;		/* Foreground color in normal mode. */
-    Tcl_Obj *padXPtr, *padYPtr;	/* Tcl_Obj rep's of padX, padY values. */
-    int padX, padY;		/* User-requested extra space around text. */
-    int width;			/* User-requested width, in pixels. 0 means
-				 * compute width using aspect ratio below. */
+    Tcl_Obj *padXObj, *padYObj;	/* Tcl_Obj rep's of padX, padY values. */
+    Tcl_Obj *widthObj;			/* User-requested width, in pixels. 0 means
+				 * compute width using aspect ratio. */
     int aspect;			/* Desired aspect ratio for window
 				 * (100*width/height). */
     int msgWidth;		/* Width in pixels needed to display
@@ -93,11 +92,6 @@ typedef struct {
 				 * scripts. Malloc'ed, but may be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    Tcl_Obj *borderWidthObj;		/* Width of border. */
-    Tcl_Obj *highlightWidthObj;		/* Width in pixels of highlight to draw
-	     * around widget when it has the focus. <= 0 means don't draw a highlight. */
-    Tcl_Obj *widthObj;			/* User-requested width, in pixels. 0 means
-				 * compute width using aspect ratio. */
 } Message;
 
 /*
@@ -121,45 +115,45 @@ typedef struct {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", "anchor", "Anchor", DEF_MESSAGE_ANCHOR,
-	 TCL_INDEX_NONE, offsetof(Message, anchor), TK_OPTION_ENUM_VAR, 0, 0},
+	TCL_INDEX_NONE, offsetof(Message, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_INT, "-aspect", "aspect", "Aspect", DEF_MESSAGE_ASPECT,
-	 TCL_INDEX_NONE, offsetof(Message, aspect), 0, 0, 0},
+	TCL_INDEX_NONE, offsetof(Message, aspect), 0, 0, 0},
     {TK_OPTION_BORDER, "-background", "background", "Background",
-	 DEF_MESSAGE_BG_COLOR, TCL_INDEX_NONE, offsetof(Message, border), 0,
-	 DEF_MESSAGE_BG_MONO, 0},
+	DEF_MESSAGE_BG_COLOR, TCL_INDEX_NONE, offsetof(Message, border), 0,
+	DEF_MESSAGE_BG_MONO, 0},
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL, NULL,
-	 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
+	0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL, NULL,
-	 0, TCL_INDEX_NONE, 0, "-background", 0},
+	0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_MESSAGE_BORDER_WIDTH, offsetof(Message, borderWidthObj),
-	 offsetof(Message, borderWidth), 0, 0, 0},
+	DEF_MESSAGE_BORDER_WIDTH, offsetof(Message, borderWidthObj),
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
-	 DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
-	 TK_OPTION_NULL_OK, 0, 0},
+	DEF_MESSAGE_CURSOR, TCL_INDEX_NONE, offsetof(Message, cursor),
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_SYNONYM, "-fg", NULL, NULL, NULL,
-	 0, TCL_INDEX_NONE, 0, "-foreground", 0},
+	0, TCL_INDEX_NONE, 0, "-foreground", 0},
     {TK_OPTION_FONT, "-font", "font", "Font",
 	DEF_MESSAGE_FONT, TCL_INDEX_NONE, offsetof(Message, tkfont), 0, 0, 0},
     {TK_OPTION_COLOR, "-foreground", "foreground", "Foreground",
 	DEF_MESSAGE_FG, TCL_INDEX_NONE, offsetof(Message, fgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
-	 "HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, TCL_INDEX_NONE,
-	 offsetof(Message, highlightBgColorPtr), 0, 0, 0},
+	"HighlightBackground", DEF_MESSAGE_HIGHLIGHT_BG, TCL_INDEX_NONE,
+	offsetof(Message, highlightBgColorPtr), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
-	 DEF_MESSAGE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Message, highlightColorPtr),
-	 0, 0, 0},
+	DEF_MESSAGE_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Message, highlightColorPtr),
+	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_MESSAGE_HIGHLIGHT_WIDTH, offsetof(Message, highlightWidthObj),
-	 offsetof(Message, highlightWidth), 0, 0, 0},
+	TCL_INDEX_NONE, 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_MESSAGE_JUSTIFY, TCL_INDEX_NONE, offsetof(Message, justify), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	 DEF_MESSAGE_PADX, offsetof(Message, padXPtr),
-	 offsetof(Message, padX), TK_OPTION_NULL_OK, 0, 0},
+	DEF_MESSAGE_PADX, offsetof(Message, padXObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	 DEF_MESSAGE_PADY, offsetof(Message, padYPtr),
-	 offsetof(Message, padY), TK_OPTION_NULL_OK, 0, 0},
+	DEF_MESSAGE_PADY, offsetof(Message, padYObj),
+	TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MESSAGE_RELIEF, TCL_INDEX_NONE, offsetof(Message, relief), 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
@@ -171,7 +165,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MESSAGE_TEXT_VARIABLE, TCL_INDEX_NONE, offsetof(Message, textVarName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_MESSAGE_WIDTH, offsetof(Message, widthObj), offsetof(Message, width), 0, 0 ,0},
+	DEF_MESSAGE_WIDTH, offsetof(Message, widthObj), TCL_INDEX_NONE, 0, 0 ,0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -454,6 +448,7 @@ ConfigureMessage(
     TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
+    int highlightWidth;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
@@ -503,9 +498,9 @@ ConfigureMessage(
 
     msgPtr->numChars = TkNumUtfChars(msgPtr->string, TCL_INDEX_NONE);
 
-    if (msgPtr->highlightWidth < 0) {
-	msgPtr->highlightWidth = 0;
-	if (msgPtr->highlightWidth) {
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+    if (highlightWidth < 0) {
+	if (msgPtr->highlightWidthObj) {
 	    Tcl_DecrRefCount(msgPtr->highlightWidthObj);
 	}
 	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
@@ -543,6 +538,7 @@ MessageWorldChanged(
     GC gc = NULL;
     Tk_FontMetrics fm;
     Message *msgPtr = (Message *)instanceData;
+    int padX, padY;
 
     if (msgPtr->border != NULL) {
 	Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);
@@ -557,31 +553,29 @@ MessageWorldChanged(
     msgPtr->textGC = gc;
 
     Tk_GetFontMetrics(msgPtr->tkfont, &fm);
-    if (!msgPtr->padXPtr) {
-	msgPtr->padXPtr = Tcl_NewIntObj(-1);
-	Tcl_IncrRefCount(msgPtr->padXPtr);
+    if (!msgPtr->padXObj) {
+	msgPtr->padXObj = Tcl_NewIntObj(-1);
+	Tcl_IncrRefCount(msgPtr->padXObj);
     }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXPtr, &msgPtr->padX);
-    if (msgPtr->padX < 0) {
-	if (strcmp(Tcl_GetString(msgPtr->padXPtr), "-1")) {
-	    Tcl_DecrRefCount(msgPtr->padXPtr);
-	    msgPtr->padXPtr = Tcl_NewIntObj(-1);
-	    Tcl_IncrRefCount(msgPtr->padXPtr);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
+    if (padX < 0) {
+	if (strcmp(Tcl_GetString(msgPtr->padXObj), "-1")) {
+	    Tcl_DecrRefCount(msgPtr->padXObj);
+	    msgPtr->padXObj = Tcl_NewIntObj(-1);
+	    Tcl_IncrRefCount(msgPtr->padXObj);
 	}
-	msgPtr->padX = fm.ascent / 2;
     }
-    if (!msgPtr->padYPtr) {
-	msgPtr->padYPtr = Tcl_NewIntObj(-1);
-	Tcl_IncrRefCount(msgPtr->padYPtr);
+    if (!msgPtr->padYObj) {
+	msgPtr->padYObj = Tcl_NewIntObj(-1);
+	Tcl_IncrRefCount(msgPtr->padYObj);
     }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYPtr, &msgPtr->padY);
-    if (msgPtr->padY < 0) {
-	if (strcmp(Tcl_GetString(msgPtr->padYPtr), "-1")) {
-	    Tcl_DecrRefCount(msgPtr->padYPtr);
-	    msgPtr->padYPtr = Tcl_NewIntObj(-1);
-	    Tcl_IncrRefCount(msgPtr->padYPtr);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
+    if (padY < 0) {
+	if (strcmp(Tcl_GetString(msgPtr->padYObj), "-1")) {
+	    Tcl_DecrRefCount(msgPtr->padYObj);
+	    msgPtr->padYObj = Tcl_NewIntObj(-1);
+	    Tcl_IncrRefCount(msgPtr->padYObj);
 	}
-	msgPtr->padY = fm.ascent / 4;
     }
 
     /*
@@ -622,13 +616,24 @@ ComputeMessageGeometry(
     int width, inc, height;
     int thisWidth, thisHeight, maxWidth;
     int aspect, lowerBound, upperBound, inset;
+    int borderWidth, highlightWidth, padX, padY;
+    Tk_FontMetrics fm;
 
     Tk_FreeTextLayout(msgPtr->textLayout);
 
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &msgPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
+    Tk_GetFontMetrics(msgPtr->tkfont, &fm);
+    if (padX < 0) {
+	padX = fm.ascent / 2;
+    }
+    if (padY < 0) {
+	padY = fm.ascent / 4;
+    }
 
-    inset = msgPtr->borderWidth + msgPtr->highlightWidth;
+    inset = borderWidth + highlightWidth;
 
     /*
      * Compute acceptable bounds for the final aspect ratio.
@@ -649,8 +654,8 @@ ComputeMessageGeometry(
      * explicit width then just use that.
      */
 
-    if (msgPtr->width > 0) {
-	width = msgPtr->width;
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
+    if (width > 0) {
 	inc = 0;
     } else {
 	width = WidthOfScreen(Tk_Screen(msgPtr->tkwin))/2;
@@ -661,8 +666,8 @@ ComputeMessageGeometry(
 	msgPtr->textLayout = Tk_ComputeTextLayout(msgPtr->tkfont,
 		msgPtr->string, msgPtr->numChars, width, msgPtr->justify,
 		0, &thisWidth, &thisHeight);
-	maxWidth = thisWidth + 2 * (inset + msgPtr->padX);
-	height = thisHeight + 2 * (inset + msgPtr->padY);
+	maxWidth = thisWidth + 2 * (inset + padX);
+	height = thisHeight + 2 * (inset + padY);
 
 	if (inc <= 2) {
 	    break;
@@ -707,26 +712,36 @@ DisplayMessage(
     Message *msgPtr = (Message *)clientData;
     Tk_Window tkwin = msgPtr->tkwin;
     int x, y;
-    int borderWidth;
+    int width, borderWidth, highlightWidth, padX, padY;
+    Tk_FontMetrics fm;
 
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &msgPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
+    Tk_GetFontMetrics(msgPtr->tkfont, &fm);
+    if (padX < 0) {
+	padX = fm.ascent / 2;
+    }
+    if (padY < 0) {
+	padY = fm.ascent / 4;
+    }
 
-    borderWidth = msgPtr->highlightWidth;
+    width = highlightWidth;
     msgPtr->flags &= ~REDRAW_PENDING;
     if ((msgPtr->tkwin == NULL) || !Tk_IsMapped(tkwin)) {
 	return;
     }
     if (msgPtr->border != NULL) {
-	borderWidth += msgPtr->borderWidth;
+	width += borderWidth;
     }
     if (msgPtr->relief == TK_RELIEF_FLAT) {
-	borderWidth = msgPtr->highlightWidth;
+	width = highlightWidth;
     }
     Tk_Fill3DRectangle(tkwin, Tk_WindowId(tkwin), msgPtr->border,
-	    borderWidth, borderWidth,
-	    Tk_Width(tkwin) - 2 * borderWidth,
-	    Tk_Height(tkwin) - 2 * borderWidth,
+	    width, width,
+	    Tk_Width(tkwin) - 2 * width,
+	    Tk_Height(tkwin) - 2 * width,
 	    0, TK_RELIEF_FLAT);
 
     /*
@@ -734,28 +749,28 @@ DisplayMessage(
      * anchor option.
      */
 
-    TkComputeAnchor(msgPtr->anchor, tkwin, msgPtr->padX, msgPtr->padY,
+    TkComputeAnchor(msgPtr->anchor, tkwin, padX, padY,
 	    msgPtr->msgWidth, msgPtr->msgHeight, &x, &y);
     Tk_DrawTextLayout(Tk_Display(tkwin), Tk_WindowId(tkwin), msgPtr->textGC,
 	    msgPtr->textLayout, x, y, 0, -1);
 
-    if (borderWidth > msgPtr->highlightWidth) {
+    if (width > highlightWidth) {
 	Tk_Draw3DRectangle(tkwin, Tk_WindowId(tkwin), msgPtr->border,
-		msgPtr->highlightWidth, msgPtr->highlightWidth,
-		Tk_Width(tkwin) - 2*msgPtr->highlightWidth,
-		Tk_Height(tkwin) - 2*msgPtr->highlightWidth,
-		msgPtr->borderWidth, msgPtr->relief);
+		highlightWidth, highlightWidth,
+		Tk_Width(tkwin) - 2 * highlightWidth,
+		Tk_Height(tkwin) - 2 * highlightWidth,
+		borderWidth, msgPtr->relief);
     }
-    if (msgPtr->highlightWidth != 0) {
+    if (highlightWidth > 0) {
 	GC fgGC, bgGC;
 
 	bgGC = Tk_GCForColor(msgPtr->highlightBgColorPtr, Tk_WindowId(tkwin));
 	if (msgPtr->flags & GOT_FOCUS) {
 	    fgGC = Tk_GCForColor(msgPtr->highlightColorPtr,Tk_WindowId(tkwin));
-	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, msgPtr->highlightWidth,
+	    Tk_DrawHighlightBorder(tkwin, fgGC, bgGC, highlightWidth,
 		    Tk_WindowId(tkwin));
 	} else {
-	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, msgPtr->highlightWidth,
+	    Tk_DrawHighlightBorder(tkwin, bgGC, bgGC, highlightWidth,
 		    Tk_WindowId(tkwin));
 	}
     }
@@ -785,6 +800,7 @@ MessageEventProc(
     XEvent *eventPtr)		/* Information about event. */
 {
     Message *msgPtr = (Message *)clientData;
+    int highlightWidth;
 
     if (((eventPtr->type == Expose) && (eventPtr->xexpose.count == 0))
 	    || (eventPtr->type == ConfigureNotify)) {
@@ -794,16 +810,16 @@ MessageEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    msgPtr->flags |= GOT_FOCUS;
-	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
-	    if (msgPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    msgPtr->flags &= ~GOT_FOCUS;
-	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &msgPtr->highlightWidth);
-	    if (msgPtr->highlightWidth > 0) {
+	    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
+	    if (highlightWidth > 0) {
 		goto redraw;
 	    }
 	}
