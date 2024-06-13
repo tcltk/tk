@@ -1175,7 +1175,6 @@ ConfigureRestrictProc(
 	    while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
 	}
     }
-	
     reentered = 0;
 }
 

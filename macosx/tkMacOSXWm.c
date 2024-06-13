@@ -7225,7 +7225,10 @@ TkpChangeFocus(
 				 * didn't originally belong to topLevelPtr's
 				 * application. */
 {
-    if (winPtr->atts.override_redirect) {
+    if (!winPtr ||
+	(winPtr->flags & TK_ALREADY_DEAD) ||
+	!Tk_IsMapped(winPtr) ||
+	winPtr->atts.override_redirect) {
 	return 0;
     }
 
