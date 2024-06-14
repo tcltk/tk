@@ -128,9 +128,9 @@ foreach i {1 2 3} {
 
 font configure TkFixedFont -size 20
 .t.t tag configure sol100 -relief solid -borderwidth 100 \
-                          -foreground red -font TkFixedFont
+			  -foreground red -font TkFixedFont
 .t.t tag configure sol12 -relief solid -borderwidth 12 \
-                          -foreground red -font TkFixedFont
+			  -foreground red -font TkFixedFont
 .t.t tag configure big -font TkFixedFont
 set ind [.t.t index end]
 
