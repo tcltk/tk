@@ -1097,6 +1097,14 @@ ConfigureButton(
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
 	}
+	if (butPtr->wrapLength < 0) {
+	    butPtr->wrapLength = 0;
+	    if (butPtr->wrapLengthPtr) {
+		Tcl_DecrRefCount(butPtr->wrapLengthPtr);
+	    }
+	    butPtr->wrapLengthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->wrapLengthPtr);
+	}
 	if (butPtr->borderWidth < 0) {
 	    butPtr->borderWidth = 0;
 	    if (butPtr->borderWidthPtr) {
