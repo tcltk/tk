@@ -23,6 +23,7 @@ static Tcl_HashTable systemColors;
 static int numSystemColors;
 static int rgbColorIndex;
 static int controlAccentIndex;
+static int controlAlternatingRowIndex;
 static int selectedTabTextIndex;
 static int pressedButtonTextIndex;
 static Bool useFakeAccentColor = NO;
@@ -36,7 +37,7 @@ static NSColorSpace* sRGB = NULL;
 static const CGFloat WINDOWBACKGROUND[4] =
     {236.0 / 255, 236.0 / 255, 236.0 / 255, 1.0};
 
-void initColorTable()
+static void initColorTable()
 {
     NSAutoreleasePool *pool = [NSAutoreleasePool new];
     Tcl_InitHashTable(&systemColors, TCL_STRING_KEYS);
@@ -71,6 +72,7 @@ void initColorTable()
 		if ([colorName isEqualToString:@"controlAccentColor"]) {
 		    useFakeAccentColor = YES;
 		} else if (   ![colorName isEqualToString:@"selectedTabTextColor"]
+			   && ![colorName isEqualToString:@"controlAlternatingRowColor"]
 			   && ![colorName isEqualToString:@"pressedButtonTextColor"]) {
 		    /* Uncomment to print all unsupported colors:              */
 		    /* printf("Unsupported color %s\n", colorName.UTF8String); */
@@ -148,6 +150,9 @@ void initColorTable()
     hPtr = Tcl_FindHashEntry(&systemColors, "ControlAccentColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     controlAccentIndex = entry->index;
+    hPtr = Tcl_FindHashEntry(&systemColors, "ControlAlternatingRowColor");
+    entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
+    controlAlternatingRowIndex = entry->index;
     hPtr = Tcl_FindHashEntry(&systemColors, "SelectedTabTextColor");
     entry = (SystemColorDatum *) Tcl_GetHashValue(hPtr);
     selectedTabTextIndex = entry->index;
@@ -239,7 +244,7 @@ unsigned long TkMacOSXClearPixel(
  *----------------------------------------------------------------------
  */
 
-SystemColorDatum*
+static SystemColorDatum*
 GetEntryFromPixel(
     unsigned long pixel)
 {
@@ -332,6 +337,15 @@ GetRGBA(
 	    color = [[NSColor colorForControlTint: [NSColor currentControlTint]]
 			      colorUsingColorSpace:sRGB];
 #endif
+	} else if (entry->index == controlAlternatingRowIndex) {
+	    /*
+	     * Color which is now called alternatingContentBackgroundColor on 10.14.
+	     * Taken from NSColor.controlAlternatingRowBackgroundColors (which was
+	     * replaced by NSColor.alternatingContentBackgroundColors on 10.14).
+	     */
+	    color = [[NSColor colorWithCatalogName:@"System"
+					 colorName:@"controlAlternatingRowColor"]
+			colorUsingColorSpace:sRGB];
 	} else if (entry->index == selectedTabTextIndex) {
 	    if (OSVersion > 100600 && OSVersion < 110000) {
 		color = [[NSColor whiteColor] colorUsingColorSpace:sRGB];
