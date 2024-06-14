@@ -683,6 +683,7 @@ FileReadGIF(
     }
 
     if ((width > 0) && (height > 0)) {
+	unsigned char* pixelPtr;
 	Tk_PhotoImageBlock block;
 
 	/*
@@ -705,23 +706,25 @@ FileReadGIF(
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;
-	block.pixelPtr = ckalloc(nBytes);
-	if (block.pixelPtr) {
-	    memset(block.pixelPtr, 0, nBytes);
+	pixelPtr = ckalloc(nBytes);
+	if (pixelPtr) {
+	    memset(pixelPtr, 0, nBytes);
 	}
 
+	block.pixelPtr = pixelPtr;
 	if (ReadImage(gifConfPtr, interp, block.pixelPtr, chan, imageWidth,
 		imageHeight, colorMap, srcX, srcY, BitSet(buf[8], INTERLACE),
 		transparent) != TCL_OK) {
-	    ckfree(block.pixelPtr);
+	    ckfree(pixelPtr);
 	    goto error;
 	}
+	block.pixelPtr += srcX * block.pixelSize + srcY * block.pitch;
 	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
 		width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-	    ckfree(block.pixelPtr);
+	    ckfree(pixelPtr);
 	    goto error;
 	}
-	ckfree(block.pixelPtr);
+	ckfree(pixelPtr);
     }
 
     /*
