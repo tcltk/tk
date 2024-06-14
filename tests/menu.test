@@ -11,9 +11,6 @@ eval tcltest::configure $argv
 tcltest::loadTestedCommands
 imageInit
 
-# find the earth.gif file for use in these tests (tests 2.*)
-set earthPhotoFile [file join [file dirname [info script]] earth.gif]
-testConstraint hasEarthPhoto [file exists $earthPhotoFile]
 testConstraint pressbutton [llength [info commands pressbutton]]
 testConstraint movemouse [llength [info commands movemouse]]
 
@@ -298,9 +295,8 @@ menu .m2 -tearoff 1
 .m1 add checkbutton -label "checkbutton" -variable check -onvalue on -offvalue off
 .m1 add radiobutton -label "radiobutton" -variable radio
 
-if {[testConstraint hasEarthPhoto]} {
-    image create photo image1 -file $earthPhotoFile
-}
+set earthPhotoFile [file join [file dirname [info script]] earth.gif]
+image create photo image1 -file $earthPhotoFile
 
 test menu-2.31 {entry configuration options 0 -activebackground #012345 tearoff} -body {
     .m1 entryconfigure 0 -activebackground #012345
@@ -700,15 +696,11 @@ test menu-2.120 {entry configuration options 5 -foreground non-existent radiobut
     .m1 entryconfigure 5 -foreground non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.121 {entry configuration options 0 -image image1 tearoff} -constraints {
-    hasEarthPhoto
-} -body {
+test menu-2.121 {entry configuration options 0 -image image1 tearoff} -body {
     .m1 entryconfigure 0 -image image1
 } -returnCodes error -result {unknown option "-image"}
 
-test menu-2.122 {entry configuration options 1 -image image1 command} -constraints {
-    hasEarthPhoto
-} -setup {
+test menu-2.122 {entry configuration options 1 -image image1 command} -setup {
     .m1 entryconfigure 1 -image {}
 } -body {
     .m1 entryconfigure 1 -image image1
@@ -717,9 +709,7 @@ test menu-2.122 {entry configuration options 1 -image image1 command} -constrain
     .m1 entryconfigure 1 -image {}
 } -result {image1}
 
-test menu-2.123 {entry configuration options 2 -image image1 cascade} -constraints {
-    hasEarthPhoto
-} -setup {
+test menu-2.123 {entry configuration options 2 -image image1 cascade} -setup {
     .m1 entryconfigure 2 -image {}
 } -body {
     .m1 entryconfigure 2 -image image1
@@ -728,15 +718,11 @@ test menu-2.123 {entry configuration options 2 -image image1 cascade} -constrain
     .m1 entryconfigure 2 -image {}
 } -result {image1}
 
-test menu-2.124 {entry configuration options 3 -image image1 separator} -constraints {
-    hasEarthPhoto
-} -body {
+test menu-2.124 {entry configuration options 3 -image image1 separator} -body {
     .m1 entryconfigure 3 -image image1
 } -returnCodes error -result {unknown option "-image"}
 
-test menu-2.125 {entry configuration options 4 -image image1 checkbutton} -constraints {
-    hasEarthPhoto
-} -setup {
+test menu-2.125 {entry configuration options 4 -image image1 checkbutton} -setup {
     .m1 entryconfigure 4 -image {}
 } -body {
     .m1 entryconfigure 4 -image image1
@@ -745,9 +731,7 @@ test menu-2.125 {entry configuration options 4 -image image1 checkbutton} -const
     .m1 entryconfigure 4 -image {}
 } -result {image1}
 
-test menu-2.126 {entry configuration options 5 -image image1 radiobutton} -constraints {
-    hasEarthPhoto
-} -setup {
+test menu-2.126 {entry configuration options 5 -image image1 radiobutton} -setup {
     .m1 entryconfigure 5 -image {}
 } -body {
     .m1 entryconfigure 5 -image image1
@@ -991,33 +975,23 @@ test menu-2.180 {entry configuration options 5 -selectcolor non-existent radiobu
     .m1 entryconfigure 5 -selectcolor non-existent
 } -returnCodes error -result {unknown color name "non-existent"}
 
-test menu-2.181 {entry configuration options 0 -selectimage image1 tearoff} -constraints {
-    hasEarthPhoto
-} -body {
+test menu-2.181 {entry configuration options 0 -selectimage image1 tearoff} -body {
     .m1 entryconfigure 0 -selectimage image1
 } -returnCodes error -result {unknown option "-selectimage"}
 
-test menu-2.182 {entry configuration options 1 -selectimage image1 command} -constraints {
-    hasEarthPhoto
-} -body {
+test menu-2.182 {entry configuration options 1 -selectimage image1 command} -body {
     .m1 entryconfigure 1 -selectimage image1
 } -returnCodes error -result {unknown option "-selectimage"}
 
-test menu-2.183 {entry configuration options 2 -selectimage image1 cascade} -constraints {
-    hasEarthPhoto
-} -body {
+test menu-2.183 {entry configuration options 2 -selectimage image1 cascade} -body {
     .m1 entryconfigure 2 -selectimage image1
 } -returnCodes error -result {unknown option "-selectimage"}
 
-test menu-2.184 {entry configuration options 3 -selectimage image1 separator} -constraints {
-    hasEarthPhoto
-} -body {
+test menu-2.184 {entry configuration options 3 -selectimage image1 separator} -body {
     .m1 entryconfigure 3 -selectimage image1
 } -returnCodes error -result {unknown option "-selectimage"}
 
-test menu-2.185 {entry configuration options 4 -selectimage image1 checkbutton} -constraints {
-    hasEarthPhoto
-} -setup {
+test menu-2.185 {entry configuration options 4 -selectimage image1 checkbutton} -setup {
     .m1 entryconfigure 4 -selectimage {}
 } -body {
     .m1 entryconfigure 4 -selectimage image1
@@ -1026,9 +1000,7 @@ test menu-2.185 {entry configuration options 4 -selectimage image1 checkbutton} 
     .m1 entryconfigure 4 -selectimage {}
 } -result {image1}
 
-test menu-2.186 {entry configuration options 5 -selectimage image1 radiobutton} -constraints {
-    hasEarthPhoto
-} -setup {
+test menu-2.186 {entry configuration options 5 -selectimage image1 radiobutton} -setup {
     .m1 entryconfigure 5 -selectimage {}
 } -body {
     .m1 entryconfigure 5 -selectimage image1
@@ -1220,10 +1192,7 @@ test menu-2.228 {entry configuration options 5 -underline 3p radiobutton} -body 
 } -returnCodes error -result {bad index "3p": must be integer?[+-]integer?, end?[+-]integer?, or ""}
 
 deleteWindows
-if {[testConstraint hasEarthPhoto]} {
-    image delete image1
-}
-
+image delete image1
 
 
 test menu-3.1 {MenuWidgetCmd procedure} -setup {
@@ -2347,7 +2316,7 @@ test menu-8.1 {DestroyMenuEntry} -setup {
     .m1 add cascade -menu .m2
     list [.m1 delete 1] [destroy .m1 .m2]
 } -result {{} {}}
-test menu-8.2 {DestroyMenuEntry} -constraints hasEarthPhoto -setup {
+test menu-8.2 {DestroyMenuEntry} -setup {
     deleteWindows
     catch {image delete image1a}
 } -body {
@@ -2688,7 +2657,7 @@ test menu-11.18 {ConfigureMenuEntry} -constraints testImageType -setup {
     imageCleanup
 } -result {}
 test menu-11.19 {ConfigureMenuEntry} -constraints {
-    testImageType hasEarthPhoto
+    testImageType
 } -setup {
     deleteWindows
     imageCleanup
@@ -2703,7 +2672,7 @@ test menu-11.19 {ConfigureMenuEntry} -constraints {
     imageCleanup
 } -result {}
 test menu-11.20 {ConfigureMenuEntry} -constraints {
-    testImageType hasEarthPhoto
+    testImageType
 } -setup {
     deleteWindows
     imageCleanup
@@ -2718,7 +2687,7 @@ test menu-11.20 {ConfigureMenuEntry} -constraints {
     imageCleanup
 } -result {}
 test menu-11.21 {ConfigureMenuEntry} -constraints {
-    testImageType hasEarthPhoto
+    testImageType
 } -setup {
     deleteWindows
     imageCleanup
@@ -2733,6 +2702,8 @@ test menu-11.21 {ConfigureMenuEntry} -constraints {
     deleteWindows
     imageCleanup
 } -result {}
+
+unset earthPhotoFile
 
 
 test menu-12.1 {ConfigureMenuCloneEntries} -setup {
