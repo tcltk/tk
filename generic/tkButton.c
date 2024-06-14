@@ -783,7 +783,7 @@ ButtonWidgetObjCmd(
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     result = Tcl_GetIndexFromObjStruct(interp, objv[1], commandNames[butPtr->type],
@@ -1129,13 +1129,13 @@ ConfigureButton(
 
 	    valuePtr = Tcl_ObjGetVar2(interp, namePtr, NULL, TCL_GLOBAL_ONLY);
 	    butPtr->flags &= ~SELECTED;
-            butPtr->flags &= ~TRISTATED;
+	    butPtr->flags &= ~TRISTATED;
 	    if (valuePtr != NULL) {
 		const char *value = Tcl_GetString(valuePtr);
 		if (strcmp(value, Tcl_GetString(butPtr->onValuePtr)) == 0) {
 		    butPtr->flags |= SELECTED;
 		} else if (strcmp(value,
-                        Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
+			Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
 		    butPtr->flags |= TRISTATED;
 
 		    /*
@@ -1148,7 +1148,7 @@ ConfigureButton(
 			    Tcl_GetString(butPtr->offValuePtr)) == 0) {
 			butPtr->flags &= ~TRISTATED;
 		    }
-                }
+		}
 	    } else {
 		if (Tcl_ObjSetVar2(interp, namePtr, NULL,
 			(butPtr->type == TYPE_CHECK_BUTTON)
@@ -1258,13 +1258,13 @@ ConfigureButton(
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->widthPtr,
 		    &butPtr->width) != TCL_OK) {
 	    widthError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -width option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->heightPtr,
 		    &butPtr->height) != TCL_OK) {
 	    heightError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -height option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
 	    }
 	} else {
@@ -1656,7 +1656,7 @@ ButtonVarProc(
 	    return NULL;
 	}
 	butPtr->flags |= SELECTED;
-        butPtr->flags &= ~TRISTATED;
+	butPtr->flags &= ~TRISTATED;
     } else if (butPtr->offValuePtr
 	&& strcmp(value, Tcl_GetString(butPtr->offValuePtr)) == 0) {
 	if (!(butPtr->flags & (SELECTED | TRISTATED))) {
@@ -1664,11 +1664,11 @@ ButtonVarProc(
 	}
 	butPtr->flags &= ~(SELECTED | TRISTATED);
     } else if (strcmp(value, Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
-        if (butPtr->flags & TRISTATED) {
-            return NULL;
-        }
-        butPtr->flags |= TRISTATED;
-        butPtr->flags &= ~SELECTED;
+	if (butPtr->flags & TRISTATED) {
+	    return NULL;
+	}
+	butPtr->flags |= TRISTATED;
+	butPtr->flags &= ~SELECTED;
     } else if (butPtr->flags & (SELECTED | TRISTATED)) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
     } else {
