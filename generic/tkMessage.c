@@ -448,7 +448,7 @@ ConfigureMessage(
     TCL_UNUSED(int))			/* Flags to pass to Tk_ConfigureWidget. */
 {
     Tk_SavedOptions savedOptions;
-    int highlightWidth;
+    int width, borderWidth, highlightWidth, padX, padY;
 
     /*
      * Eliminate any existing trace on a variable monitored by the message.
@@ -498,6 +498,22 @@ ConfigureMessage(
 
     msgPtr->numChars = TkNumUtfChars(msgPtr->string, TCL_INDEX_NONE);
 
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->widthObj, &width);
+    if (width < 0) {
+	if (msgPtr->widthObj) {
+	    Tcl_DecrRefCount(msgPtr->widthObj);
+	}
+	msgPtr->widthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(msgPtr->widthObj);
+    }
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->borderWidthObj, &borderWidth);
+    if (borderWidth < 0) {
+	if (msgPtr->borderWidthObj) {
+	    Tcl_DecrRefCount(msgPtr->borderWidthObj);
+	}
+	msgPtr->borderWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(msgPtr->borderWidthObj);
+    }
     Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->highlightWidthObj, &highlightWidth);
     if (highlightWidth < 0) {
 	if (msgPtr->highlightWidthObj) {
@@ -505,6 +521,30 @@ ConfigureMessage(
 	}
 	msgPtr->highlightWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(msgPtr->highlightWidthObj);
+    }
+    if (!msgPtr->padXObj) {
+	msgPtr->padXObj = Tcl_NewIntObj(-1);
+	Tcl_IncrRefCount(msgPtr->padXObj);
+    }
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
+    if (padX < 0) {
+	if (strcmp(Tcl_GetString(msgPtr->padXObj), "-1")) {
+	    Tcl_DecrRefCount(msgPtr->padXObj);
+	    msgPtr->padXObj = Tcl_NewIntObj(-1);
+	    Tcl_IncrRefCount(msgPtr->padXObj);
+	}
+    }
+    if (!msgPtr->padYObj) {
+	msgPtr->padYObj = Tcl_NewIntObj(-1);
+	Tcl_IncrRefCount(msgPtr->padYObj);
+    }
+    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
+    if (padY < 0) {
+	if (strcmp(Tcl_GetString(msgPtr->padYObj), "-1")) {
+	    Tcl_DecrRefCount(msgPtr->padYObj);
+	    msgPtr->padYObj = Tcl_NewIntObj(-1);
+	    Tcl_IncrRefCount(msgPtr->padYObj);
+	}
     }
 
     Tk_FreeSavedOptions(&savedOptions);
@@ -536,9 +576,7 @@ MessageWorldChanged(
 {
     XGCValues gcValues;
     GC gc = NULL;
-    Tk_FontMetrics fm;
     Message *msgPtr = (Message *)instanceData;
-    int padX, padY;
 
     if (msgPtr->border != NULL) {
 	Tk_SetBackgroundFromBorder(msgPtr->tkwin, msgPtr->border);
@@ -551,32 +589,6 @@ MessageWorldChanged(
 	Tk_FreeGC(msgPtr->display, msgPtr->textGC);
     }
     msgPtr->textGC = gc;
-
-    Tk_GetFontMetrics(msgPtr->tkfont, &fm);
-    if (!msgPtr->padXObj) {
-	msgPtr->padXObj = Tcl_NewIntObj(-1);
-	Tcl_IncrRefCount(msgPtr->padXObj);
-    }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padXObj, &padX);
-    if (padX < 0) {
-	if (strcmp(Tcl_GetString(msgPtr->padXObj), "-1")) {
-	    Tcl_DecrRefCount(msgPtr->padXObj);
-	    msgPtr->padXObj = Tcl_NewIntObj(-1);
-	    Tcl_IncrRefCount(msgPtr->padXObj);
-	}
-    }
-    if (!msgPtr->padYObj) {
-	msgPtr->padYObj = Tcl_NewIntObj(-1);
-	Tcl_IncrRefCount(msgPtr->padYObj);
-    }
-    Tk_GetPixelsFromObj(NULL, msgPtr->tkwin, msgPtr->padYObj, &padY);
-    if (padY < 0) {
-	if (strcmp(Tcl_GetString(msgPtr->padYObj), "-1")) {
-	    Tcl_DecrRefCount(msgPtr->padYObj);
-	    msgPtr->padYObj = Tcl_NewIntObj(-1);
-	    Tcl_IncrRefCount(msgPtr->padYObj);
-	}
-    }
 
     /*
      * Recompute the desired geometry for the window, and arrange for the
