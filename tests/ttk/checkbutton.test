@@ -49,7 +49,7 @@ test checkbutton-1.6 "Checkbutton default variable" -body {
 # Bug [109865fa01]
 test checkbutton-1.7 "Button destroyed by click" -body {
     proc destroy_button {} {
-        destroy .top
+	destroy .top
     }
     toplevel .top
     ttk::menubutton .top.mb -text Button -style TLabel
