@@ -1078,6 +1078,23 @@ XFillArcs(
  * Results:
  *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
  *	the region that needs to be repainted after scrolling and returns 1.
+ *      When drawRect was in use, this function used the now deprecated
+ *      scrollRect method of NSView.  With the current updateLayer
+ *      implementation, using a CGImage as the view's backing layer, we are
+ *      able to use XCopyArea.  But both implementations are incomplete.
+ *      They return a damage area which is just the source rectangle minus
+ *      destination rectangle.  Other platforms, e.g. Windows, where
+ *      this function is essentially provided by the windowing system,
+ *      are able to add to the damage region the bounding rectangles of
+ *      all subwindows which meet the source rectangle, even if they are
+ *      contained in the destination rectangle.  The information needed
+ *      to do that is not available in this module, as far as I know.
+ *
+ *      In fact, the Text widget is the only one which calls this
+ *      function, and  textDisp.c compensates for this defect by using
+ *      macOS-specific code.  This is possible because access to the
+ *      list of all embedded windows in a Text widget is available in
+ *      that module.
  *
  * Side effects:
  *	Scrolls the bits in the window.
