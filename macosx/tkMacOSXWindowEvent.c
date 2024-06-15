@@ -1075,11 +1075,13 @@ ConfigureRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 	/*
-	 * To make the reconfiguration actually happen we need to process
-	 * idle tasks generated when processing the ConfigureNotify events.
-	 * We also process timer events - without that there were crashes
-	 * when embedded windows in a Text widget were mapped for the first
-	 * time during a live resize.  This is unexplained.
+	 * To make the reconfiguration actually happen we need to process idle
+	 * tasks generated when processing the ConfigureNotify events.  We also
+	 * process timer events because the Text widget updates line metrics
+	 * asynchronously using timer tasks. Skipping those updates can (but
+	 * shouldn't) cause crashes when resizing a complex Text widget with
+	 * embedded windows. The crash occurs if an embedded window is mapped
+	 * for the first time while the window is being resized.
 	 */
 
 	while (Tcl_DoOneEvent(TCL_TIMER_EVENTS|TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}

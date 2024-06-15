@@ -122,7 +122,7 @@ test scrollbar-11.1 "style command" -body {
     ttk::scrollbar .wv  ; # default is  -orient vertical
     ttk::scrollbar .wh -orient horizontal
     list [.wv cget -style] [.wv style] [winfo class .wv] \
-         [.wh cget -style] [.wh style] [winfo class .wh]
+	    [.wh cget -style] [.wh style] [winfo class .wh]
 } -cleanup {
     destroy .wv .wh
 } -result {{} Vertical.TScrollbar TScrollbar {} Horizontal.TScrollbar TScrollbar}
