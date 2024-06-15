@@ -320,7 +320,7 @@ test entry-1.28 {configuration option: "highlightthickness" for entry} -setup {
     .e cget -highlightthickness
 } -cleanup {
     destroy .e
-} -result 0
+} -returnCodes error -result {expected nonnegative screen distance but got "-2"}
 test entry-1.29 {configuration option: "highlightthickness" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e ; update idletasks
