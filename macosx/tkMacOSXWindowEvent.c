@@ -1077,9 +1077,12 @@ ConfigureRestrictProc(
 	/*
 	 * To make the reconfiguration actually happen we need to process
 	 * idle tasks generated when processing the ConfigureNotify events.
+	 * We also process timer events - without that there were crashes
+	 * when embedded windows in a Text widget were mapped for the first
+	 * time during a live resize.  This is unexplained.
 	 */
 
-	while (Tcl_DoOneEvent(TCL_IDLE_EVENTS)) {}
+	while (Tcl_DoOneEvent(TCL_TIMER_EVENTS|TCL_IDLE_EVENTS|TCL_DONT_WAIT)) {}
 
 	/*
 	 * Now that Tk has configured all subwindows, create the clip regions.
