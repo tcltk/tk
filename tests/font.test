@@ -1697,7 +1697,7 @@ test font-27.2 {Tk_UnderlineTextLayout procedure: underline not visible} -body {
 } -result {}
 test font-27.3 {Tk_UnderlineTextLayout procedure: underline is visible} -body {
     .t.f config -text "000          00000" -wrap [expr $ax*7] -under 5
-    .t.f config -wrap -1 -underline {}
+    .t.f config -wrap 0 -underline {}
 } -result {}
 destroy .t.f
 
