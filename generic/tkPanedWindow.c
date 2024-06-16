@@ -86,7 +86,7 @@ typedef struct Pane {
 				 * the x dimension. */
     int pady;			/* Additional padding requested for pane, in
 				 * the y dimension. */
-    Tcl_Obj *widthPtr, *heightPtr;
+    Tcl_Obj *widthObj, *heightObj;
 				/* Tcl_Obj rep's of pane width/height, to
 				 * allow for null values. */
     int width;			/* Pane width. */
@@ -125,8 +125,8 @@ typedef struct PanedWindow {
     Tk_3DBorder background;	/* Background color. */
     int borderWidth;		/* Value of -borderwidth option. */
     int relief;			/* 3D border effect (TK_RELIEF_RAISED, etc) */
-    Tcl_Obj *widthPtr;		/* Tcl_Obj rep for width. */
-    Tcl_Obj *heightPtr;		/* Tcl_Obj rep for height. */
+    Tcl_Obj *widthObj;		/* Tcl_Obj rep for width. */
+    Tcl_Obj *heightObj;		/* Tcl_Obj rep for height. */
     int width, height;		/* Width and height of the widget. */
     enum orient orient;		/* Orientation of the widget. */
     Tk_Cursor cursor;		/* Current cursor for window, or None. */
@@ -291,7 +291,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_PANEDWINDOW_HANDLESIZE, offsetof(PanedWindow, handleSizePtr),
 	offsetof(PanedWindow, handleSize), 0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_PANEDWINDOW_HEIGHT, offsetof(PanedWindow, heightPtr),
+	DEF_PANEDWINDOW_HEIGHT, offsetof(PanedWindow, heightObj),
 	offsetof(PanedWindow, height), TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_BOOLEAN, "-opaqueresize", "opaqueResize", "OpaqueResize",
 	DEF_PANEDWINDOW_OPAQUERESIZE, TCL_INDEX_NONE,
@@ -326,7 +326,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_PANEDWINDOW_SHOWHANDLE, TCL_INDEX_NONE, offsetof(PanedWindow, showHandle),
 	0, 0, GEOMETRY},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_PANEDWINDOW_WIDTH, offsetof(PanedWindow, widthPtr),
+	DEF_PANEDWINDOW_WIDTH, offsetof(PanedWindow, widthObj),
 	offsetof(PanedWindow, width), TK_OPTION_NULL_OK, 0, GEOMETRY},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
@@ -339,7 +339,7 @@ static const Tk_OptionSpec paneOptionSpecs[] = {
 	DEF_PANEDWINDOW_PANE_BEFORE, TCL_INDEX_NONE, offsetof(Pane, before),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-height", NULL, NULL,
-	DEF_PANEDWINDOW_PANE_HEIGHT, offsetof(Pane, heightPtr),
+	DEF_PANEDWINDOW_PANE_HEIGHT, offsetof(Pane, heightObj),
 	offsetof(Pane, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-hide", "hide", "Hide",
 	DEF_PANEDWINDOW_PANE_HIDE, TCL_INDEX_NONE, offsetof(Pane, hide), 0,0,GEOMETRY},
@@ -356,7 +356,7 @@ static const Tk_OptionSpec paneOptionSpecs[] = {
 	DEF_PANEDWINDOW_PANE_STRETCH, TCL_INDEX_NONE, offsetof(Pane, stretch),
 	TK_OPTION_ENUM_VAR, stretchStrings, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL,
-	DEF_PANEDWINDOW_PANE_WIDTH, offsetof(Pane, widthPtr),
+	DEF_PANEDWINDOW_PANE_WIDTH, offsetof(Pane, widthObj),
 	offsetof(Pane, width), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
