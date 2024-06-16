@@ -4414,7 +4414,7 @@ DisplayText(
 		Tk_Width(textPtr->tkwin) - 2*textPtr->highlightWidth,
 		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
 		textPtr->borderWidth, textPtr->relief);
-	if (textPtr->highlightWidth != 0) {
+	if (textPtr->highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr,
