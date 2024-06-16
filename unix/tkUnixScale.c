@@ -632,7 +632,7 @@ TkpDisplayScale(
 		    Tk_Height(tkwin) - 2*scalePtr->highlightWidth,
 		    scalePtr->borderWidth, scalePtr->relief);
 	}
-	if (scalePtr->highlightWidth != 0) {
+	if (scalePtr->highlightWidth > 0) {
 	    GC gc;
 
 	    if (scalePtr->flags & GOT_FOCUS) {
