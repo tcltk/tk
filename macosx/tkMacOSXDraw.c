@@ -1571,6 +1571,8 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
+    (void) d, x, y, width, height;
+    
 #if 0
     MacDrawable *macDraw = (MacDrawable *)d;
 
