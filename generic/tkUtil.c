@@ -366,7 +366,7 @@ TkOffsetParseProc(
     }
 
     *((char *) q) = 0;
-    result = Tk_GetPixels(interp, tkwin, (char *) p, &tsoffset.xoffset);
+    result = Tk_GetPixels(interp, tkwin, (char *)p, &tsoffset.xoffset);
     *((char *) q) = ',';
     if (result != TCL_OK) {
 	return TCL_ERROR;
