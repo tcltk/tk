@@ -520,7 +520,7 @@ DoConfig(
 	case TK_CONFIG_PIXELS:
 	    if (nullValue) {
 		*(int *)ptr = INT_MIN;
-	    } if (Tk_GetPixels(interp, tkwin, value, (int *)ptr)
+	    } else if (Tk_GetPixels(interp, tkwin, value, (int *)ptr)
 		!= TCL_OK) {
 		return TCL_ERROR;
 	    }
