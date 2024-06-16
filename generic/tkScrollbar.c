@@ -57,7 +57,7 @@ static const Tk_ConfigSpec configSpecs[] = {
 	DEF_SCROLLBAR_CURSOR, offsetof(TkScrollbar, cursor), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_PIXELS, "-elementborderwidth", "elementBorderWidth",
 	"BorderWidth", DEF_SCROLLBAR_EL_BORDER_WIDTH,
-	offsetof(TkScrollbar, elementBorderWidth), 0, NULL},
+	offsetof(TkScrollbar, elementBorderWidth), TK_CONFIG_NULL_OK, NULL},
     {TK_CONFIG_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_SCROLLBAR_HIGHLIGHT_BG,
 	offsetof(TkScrollbar, highlightBgColorPtr), 0, NULL},

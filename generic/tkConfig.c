@@ -625,7 +625,7 @@ DoObjConfig(
     } else {
 	oldInternalPtr = (char *) &internal.internalForm;
     }
-    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK));
+    nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
     switch (optionPtr->specPtr->type) {
     case TK_OPTION_BOOLEAN: {
 	int newBool;
@@ -2130,7 +2130,7 @@ GetObjectForOption(
 	}
 	case TK_OPTION_INT: {
 	    Tcl_WideInt value;
-	    int nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK));
+	    int nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
 		    if (sizeof(long) > sizeof(int)) {
@@ -2151,7 +2151,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_INDEX:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) || *((int *) internalPtr) != INT_MIN) {
 		if (*((int *) internalPtr) == INT_MIN) {
 		    objPtr = TkNewIndexObj(TCL_INDEX_NONE);
 		} else if (*((int *) internalPtr) == INT_MAX) {
@@ -2168,7 +2168,7 @@ GetObjectForOption(
 	    }
 	    break;
 	case TK_OPTION_DOUBLE:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || !isnan(*((double *) internalPtr))) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) || !isnan(*((double *) internalPtr))) {
 		objPtr = Tcl_NewDoubleObj(*((double *) internalPtr));
 	    }
 	    break;
@@ -2299,7 +2299,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_PIXELS:
-	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK)) || *((int *) internalPtr) != INT_MIN) {
+	    if (!(optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1)) || *((int *) internalPtr) != INT_MIN) {
 		objPtr = Tcl_NewWideIntObj(*((int *)internalPtr));
 	    }
 	    break;
