@@ -3261,7 +3261,7 @@ DisplayCanvas(
 		    Tk_Height(tkwin) - 2*canvasPtr->highlightWidth,
 		    canvasPtr->borderWidth, canvasPtr->relief);
 	}
-	if (canvasPtr->highlightWidth != 0) {
+	if (canvasPtr->highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(canvasPtr->highlightBgColorPtr,
