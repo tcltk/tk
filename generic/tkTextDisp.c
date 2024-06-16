@@ -2466,8 +2466,14 @@ DisplayDLine(
     }
 
 #ifdef TK_NO_DOUBLE_BUFFERING
+    /* This was only used by macOS and is not needed when drawRect is not
+     * being used.
+     *
+
     Tk_ClipDrawableToRect(display, pixmap, dInfoPtr->x, y + y_off,
-	    dInfoPtr->maxX - dInfoPtr->x, height);
+    	    dInfoPtr->maxX - dInfoPtr->x, height);
+
+    */
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
     /*

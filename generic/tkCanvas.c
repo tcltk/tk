@@ -3118,9 +3118,14 @@ DisplayCanvas(
 	canvasPtr->drawableXOrigin = canvasPtr->xOrigin;
 	canvasPtr->drawableYOrigin = canvasPtr->yOrigin;
 	pixmap = Tk_WindowId(tkwin);
+	/* This was only used by macOS and is not needed when drawRect is not
+	 * being used.
+	 *
+
 	Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap,
-		screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
-		width, height);
+			screenX1 - canvasPtr->xOrigin, screenY1 - canvasPtr->yOrigin,
+			width, height);
+	*/
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
 	/*

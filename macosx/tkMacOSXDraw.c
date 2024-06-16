@@ -1231,7 +1231,7 @@ TkMacOSXSetupDrawingContext(
 	canDraw = false;
 	goto end;
     }
-//#endif //disable clipping
+//#endif // disable clipping
     /*
      * If the drawable already has a CGContext, use it.  Otherwise, we must be
      * drawing to a window and we use the current context of its ContentView.
@@ -1374,7 +1374,7 @@ TkMacOSXSetupDrawingContext(
 	    CGContextClipToRect(dc.context, r);
 	}
     }
-//#endif //disable clipping
+//#endif // disable clipping
 
     if (gc) {
 	static const CGLineCap cgCap[] = {
@@ -1561,7 +1561,9 @@ TkMacOSXGetClipRgn(
  *
  *----------------------------------------------------------------------
  */
-
+// This is a stub which was called by TkCanvas.c and TkTextDisp.c when
+// drawRect was being used, but is no longer needed.  Since it is a stub,
+// we leave the function in place, but make it a no-op.
 void
 Tk_ClipDrawableToRect(
     TCL_UNUSED(Display *),
@@ -1569,6 +1571,7 @@ Tk_ClipDrawableToRect(
     int x, int y,
     int width, int height)
 {
+#if 0
     MacDrawable *macDraw = (MacDrawable *)d;
 
     if (macDraw->drawRgn) {
@@ -1591,6 +1594,7 @@ Tk_ClipDrawableToRect(
 	    macDraw->drawRgn = drawRgn;
 	}
     }
+#endif
 }
 
 /*
