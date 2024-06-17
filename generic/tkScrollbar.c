@@ -172,7 +172,7 @@ Tk_ScrollbarObjCmd(
     scrollPtr->highlightBgColorPtr = NULL;
     scrollPtr->highlightColorPtr = NULL;
     scrollPtr->inset = 0;
-    scrollPtr->elementBorderWidth = -1;
+    scrollPtr->elementBorderWidth = INT_MIN;
     scrollPtr->arrowLength = 0;
     scrollPtr->sliderFirst = 0;
     scrollPtr->sliderLast = 0;
@@ -486,6 +486,12 @@ ConfigureScrollbar(
         scrollPtr->commandSize = (int) strlen(scrollPtr->command);
     } else {
 	scrollPtr->commandSize = 0;
+    }
+    if (scrollPtr->highlightWidth < 0) {
+	scrollPtr->highlightWidth = 0;
+    }
+    if (scrollPtr->elementBorderWidth < 0) {
+	scrollPtr->elementBorderWidth = INT_MIN;
     }
 
     /*
