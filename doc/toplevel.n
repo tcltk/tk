@@ -68,7 +68,7 @@ widget command.
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
+If this option is negative or zero then the window will
 not request any size at all.
 .OP \-menu menu Menu
 Specifies a menu widget to be used as a menubar. On the Macintosh, the
@@ -113,7 +113,7 @@ widget command.
 .OP \-width width Width
 Specifies the desired width for the window in any of the forms
 acceptable to \fBTk_GetPixels\fR.
-If this option is less than or equal to zero then the window will
+If this option is negative or zero then the window will
 not request any size at all.
 .BE
 .SH DESCRIPTION

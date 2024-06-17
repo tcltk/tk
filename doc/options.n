@@ -325,7 +325,7 @@ Lines that would exceed this length are wrapped onto the next line,
 so that no line is longer than the specified length.
 The value may be specified in any of the standard forms for
 screen distances.
-If this value is less than or equal to 0 then no wrapping is done:  lines
+If this value is negative or zero then no wrapping is done:  lines
 will break only at newline characters in the text.
 .OP \-xscrollcommand xScrollCommand ScrollCommand
 Specifies the prefix for a command used to communicate with horizontal

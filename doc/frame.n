@@ -66,8 +66,8 @@ Note that \fB\-borderwidth\fR, \fB\-padx\fR and \fB\-pady\fR are ignored when
 configured as a container since a container has no border.
 .OP \-height height Height
 Specifies the desired height for the window in any of the forms
-acceptable to \fBTk_GetPixels\fR.  If this option is less than or equal
-to zero then the window will not request any size at all.  Note that this
+acceptable to \fBTk_GetPixels\fR.  If this option is negative or
+zero then the window will not request any size at all.  Note that this
 sets the total height of the frame, any \fB\-borderwidth\fR or similar is
 not added.  Normally \fB\-height\fR should not be used if a propagating
 geometry manager, such as \fBgrid\fR or \fBpack\fR, is used within the
@@ -90,8 +90,8 @@ The \fB\-visual\fR option may not be modified with the \fBconfigure\fR
 widget command.
 .OP \-width width Width
 Specifies the desired width for the window in any of the forms
-acceptable to \fBTk_GetPixels\fR.  If this option is less than or equal
-to zero then the window will not request any size at all.  Note that this
+acceptable to \fBTk_GetPixels\fR.  If this option is negative or
+zero then the window will not request any size at all.  Note that this
 sets the total width of the frame, any \fB\-borderwidth\fR or similar is
 not added.  Normally \fB\-width\fR should not be used if a propagating
 geometry manager, such as \fBgrid\fR or \fBpack\fR, is used within the
