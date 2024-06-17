@@ -203,7 +203,7 @@ test listbox-1.31 {configuration options} -body {
     list [lindex [.l configure -highlightthickness] 4] [.l cget -highlightthickness]
 } -cleanup {
     .l configure -highlightthickness [lindex [.l configure -highlightthickness] 3]
-} -returnCodes error -result {expected nonnegative screen distance but got "-2"}
+} -returnCodes error -result {expected screen distance but got "-2"}
 test listbox-1.32.1 {configuration options} -setup {
     set res {}
 } -body {
@@ -1242,7 +1242,7 @@ test listbox-4.2 {ConfigureListbox procedure} -setup {
     .l cget -highlightthickness
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {expected nonnegative screen distance but got "-3"}
+} -returnCodes error -result {expected screen distance but got "-3"}
 test listbox-4.3 {ConfigureListbox procedure} -setup {
     deleteWindows
     destroy .l

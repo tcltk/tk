@@ -1598,9 +1598,6 @@ ConfigureListbox(
 
 	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
 
-	if (listPtr->highlightWidth < 0) {
-	    listPtr->highlightWidth = 0;
-	}
 	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
 
 	/*

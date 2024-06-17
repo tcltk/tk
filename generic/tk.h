@@ -229,7 +229,7 @@ typedef struct Tk_OptionSpec {
 
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
 #if TCL_MAJOR_VERSION > 8
-#    define TK_OPTION_NULL_OK		(1 << 5)
+#    define TK_OPTION_NULL_OK		TCL_NULL_OK
 #else
 #    define TK_OPTION_NULL_OK		(1 << 0)
 #endif
@@ -417,12 +417,12 @@ typedef enum {
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
-#define TK_CONFIG_USER_BIT		0x100
 #if TCL_MAJOR_VERSION > 8
-#    define TK_CONFIG_NULL_OK		(1 << 5)
+#    define TK_CONFIG_NULL_OK		TCL_NULL_OK
 #else
 #    define TK_CONFIG_NULL_OK		(1 << 0)
 #endif
+#define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 
 /*

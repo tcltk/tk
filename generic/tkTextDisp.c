@@ -4414,7 +4414,7 @@ DisplayText(
 		Tk_Width(textPtr->tkwin) - 2*textPtr->highlightWidth,
 		Tk_Height(textPtr->tkwin) - 2*textPtr->highlightWidth,
 		textPtr->borderWidth, textPtr->relief);
-	if (textPtr->highlightWidth != 0) {
+	if (textPtr->highlightWidth > 0) {
 	    GC fgGC, bgGC;
 
 	    bgGC = Tk_GCForColor(textPtr->highlightBgColorPtr,
@@ -5256,9 +5256,6 @@ TkTextRelayoutWindow(
      * it.
      */
 
-    if (textPtr->highlightWidth < 0) {
-	textPtr->highlightWidth = 0;
-    }
     dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
 	    + textPtr->padX;
     dInfoPtr->y = textPtr->highlightWidth + textPtr->borderWidth

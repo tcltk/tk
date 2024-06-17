@@ -363,24 +363,6 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidth < 0) {
-		tagPtr->borderWidth = 0;
-	    }
-	    if (tagPtr->spacing1 != INT_MIN) {
-		if (tagPtr->spacing1 < 0) {
-		    tagPtr->spacing1 = 0;
-		}
-	    }
-	    if (tagPtr->spacing2 != INT_MIN) {
-		if (tagPtr->spacing2 < 0) {
-		    tagPtr->spacing2 = 0;
-		}
-	    }
-	    if (tagPtr->spacing3 != INT_MIN) {
-		if (tagPtr->spacing3 < 0) {
-		    tagPtr->spacing3 = 0;
-		}
-	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
 		ckfree(tagPtr->tabArrayPtr);
 		tagPtr->tabArrayPtr = NULL;

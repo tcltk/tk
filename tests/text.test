@@ -303,7 +303,7 @@ test text-1.29 {configuration option: "highlightthickness"} -setup {
     .t cget -highlightthickness
 } -cleanup {
     destroy .t
-} -returnCodes error -result {expected nonnegative screen distance but got "-2"}
+} -returnCodes error -result {expected screen distance but got "-2"}
 test text-1.30 {configuration option: "highlightthickness"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -597,7 +597,7 @@ test text-1.59 {configuration option: "spacing1"} -setup {
     .t cget -spacing1
 } -cleanup {
     destroy .t
-} -returnCodes error -result {expected nonnegative screen distance but got "-5"}
+} -returnCodes error -result {expected screen distance but got "-5"}
 test text-1.60 {configuration option: "spacing1"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -635,7 +635,7 @@ test text-1.63 {configuration option: "spacing2"} -setup {
     .t cget -spacing2
 } -cleanup {
     destroy .t
-} -returnCodes error -result {expected nonnegative screen distance but got "-1"}
+} -returnCodes error -result {expected screen distance but got "-1"}
 test text-1.64 {configuration option: "spacing2"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -673,7 +673,7 @@ test text-1.67 {configuration option: "spacing3"} -setup {
     .t cget -spacing3
 } -cleanup {
     destroy .t
-} -returnCodes error -result {expected nonnegative screen distance but got "-10"}
+} -returnCodes error -result {expected screen distance but got "-10"}
 test text-1.68 {configuration option: "spacing3"} -setup {
     text .t -borderwidth 2 -highlightthickness 2 -font {Courier -12 bold}
     pack .t
@@ -3312,7 +3312,7 @@ test text-14.2 {ConfigureText procedure} -setup {
     list [.t cget -spacing1] [.t cget -spacing2] [.t cget -spacing3]
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {expected nonnegative screen distance but got "-2"}
+} -returnCodes {error} -result {expected screen distance but got "-2"}
 test text-14.3 {ConfigureText procedure} -setup {
     text .t
 } -body {
@@ -3320,7 +3320,7 @@ test text-14.3 {ConfigureText procedure} -setup {
     list [.t cget -spacing1] [.t cget -spacing2] [.t cget -spacing3]
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {expected nonnegative screen distance but got "-1"}
+} -returnCodes {error} -result {expected screen distance but got "-1"}
 test text-14.4 {ConfigureText procedure} -setup {
     text .t
 } -body {
@@ -3328,7 +3328,7 @@ test text-14.4 {ConfigureText procedure} -setup {
     list [.t cget -spacing1] [.t cget -spacing2] [.t cget -spacing3]
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {expected nonnegative screen distance but got "-3"}
+} -returnCodes {error} -result {expected screen distance but got "-3"}
 test text-14.5 {ConfigureText procedure} -setup {
     text .t
 } -body {

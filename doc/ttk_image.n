@@ -44,7 +44,7 @@ See \fBIMAGE STRETCHING\fR, below.
 \fB\-height \fIheight\fR
 .
 Specifies a minimum height for the element.
-If less than zero, the base image's height is used as a default.
+If negative, the base image's height is used as a default.
 .\" OPTION: -padding
 .TP
 \fB\-padding\fI padding\fR
@@ -76,7 +76,7 @@ or
 \fB\-width \fIwidth\fR
 .
 Specifies a minimum width for the element.
-If less than zero, the base image's width is used as a default.
+If negative, the base image's width is used as a default.
 .SH "IMAGE STRETCHING"
 .PP
 If the element's allocated parcel is larger than the image,
