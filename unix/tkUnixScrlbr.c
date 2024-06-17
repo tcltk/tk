@@ -283,9 +283,6 @@ TkpComputeScrollbarGeometry(
 {
     int width, fieldLength;
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
     width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
 	    : Tk_Height(scrollPtr->tkwin);

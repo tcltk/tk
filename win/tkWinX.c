@@ -806,16 +806,16 @@ TkWinChildProc(
 	break;
 
     case WM_UNICHAR:
-        if (wParam == UNICODE_NOCHAR) {
+	if (wParam == UNICODE_NOCHAR) {
 	    /* If wParam is UNICODE_NOCHAR and the application processes
 	     * this message, then return TRUE. */
 	    result = 1;
 	} else {
 	    /* If the event was translated, we must return 0 */
-            if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
-                result = 0;
+	    if (TkTranslateWinEvent(hwnd, message, wParam, lParam, &result)) {
+		result = 0;
 	    } else {
-	        result = 1;
+		result = 1;
 	    }
 	}
 	break;
@@ -872,20 +872,20 @@ TkTranslateWinEvent(
     }
 
     case WM_RENDERALLFORMATS: {
-        TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
+	TkWindow *winPtr = (TkWindow *) Tk_HWNDToWindow(hwnd);
 
-        if (winPtr && OpenClipboard(hwnd)) {
-            /*
-             * Make sure that nobody had taken ownership of the clipboard
-             * before we opened it.
-             */
+	if (winPtr && OpenClipboard(hwnd)) {
+	    /*
+	     * Make sure that nobody had taken ownership of the clipboard
+	     * before we opened it.
+	     */
 
-            if (GetClipboardOwner() == hwnd) {
-                TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
-            }
-            CloseClipboard();
-        }
-        return 1;
+	    if (GetClipboardOwner() == hwnd) {
+		TkWinClipboardRender(winPtr->dispPtr, CF_TEXT);
+	    }
+	    CloseClipboard();
+	}
+	return 1;
     }
 
     case WM_COMMAND:
@@ -1221,7 +1221,7 @@ GenerateXEvent(
 	    event.x.xany.send_event = -1;
 	    event.x.xkey.keycode = wParam;
 	    GetTranslatedKey(&event.key, (message == WM_KEYDOWN) ? WM_CHAR :
-	            WM_SYSCHAR);
+		    WM_SYSCHAR);
 	    break;
 
 	case WM_SYSKEYUP:
@@ -1294,7 +1294,7 @@ GenerateXEvent(
 		    MSG msg;
 
 		    if ((PeekMessageW(&msg, NULL, WM_CHAR, WM_CHAR,
-		            PM_NOREMOVE) != 0)
+			    PM_NOREMOVE) != 0)
 			    && (msg.message == WM_CHAR)) {
 			GetMessageW(&msg, NULL, WM_CHAR, WM_CHAR);
 			event.key.nbytes = 2;
