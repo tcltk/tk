@@ -377,8 +377,8 @@ void TkSetCursorPos(
      * requested position is off the primary screen.
      */
     if ( x < 0 || x > xscreen || y < 0 || y > yscreen ) {
-        SetCursorPos(x, y);
-        return;
+	SetCursorPos(x, y);
+	return;
     }
 
     input.type = INPUT_MOUSE;
@@ -394,7 +394,7 @@ void TkSetCursorPos(
      * See ticket [69b48f427e].
      */
     if (input.mi.dx == 0 && input.mi.dy == 0) {
-        input.mi.dx = 1;
+	input.mi.dx = 1;
     }
 
     input.mi.mouseData = 0;

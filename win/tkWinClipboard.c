@@ -60,10 +60,10 @@ TkSelGetSelection(
 	goto error;
     }
     if (!OpenClipboard(NULL)) {
-        Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "clipboard cannot be opened, another application grabbed it"));
-        Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
-        return TCL_ERROR;
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+		"clipboard cannot be opened, another application grabbed it"));
+	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "BUSY", NULL);
+	return TCL_ERROR;
     }
 
     /*
