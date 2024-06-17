@@ -649,8 +649,8 @@ UpdateControlValues(
 	    || height <= metrics.minHeight) {
     	msPtr->info.enableState = kThemeTrackHideTrack;
     } else {
-        msPtr->info.enableState = kThemeTrackActive;
-    	msPtr->info.attributes =
+	msPtr->info.enableState = kThemeTrackActive;
+	msPtr->info.attributes =
 		kThemeTrackShowThumb | kThemeTrackThumbRgnIsNotGhost;
     }
 }

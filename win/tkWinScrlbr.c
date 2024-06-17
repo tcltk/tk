@@ -394,10 +394,6 @@ TkpComputeScrollbarGeometry(
      * basic sanity checks to appease backwards compatibility.
      */
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
-
     if (scrollPtr->vertical) {
 	scrollPtr->arrowLength = vArrowHeight;
 	fieldLength = Tk_Height(scrollPtr->tkwin);
