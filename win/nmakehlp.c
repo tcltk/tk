@@ -91,7 +91,7 @@ main(
 	case 'c':
 	    if (argc != 3) {
 		chars = snprintf(msg, sizeof(msg) - 1,
-		        "usage: %s -c <compiler option>\n"
+			"usage: %s -c <compiler option>\n"
 			"Tests for whether cl.exe supports an option\n"
 			"exitcodes: 0 == no, 1 == yes, 2 == error\n", argv[0]);
 		WriteFile(GetStdHandle(STD_ERROR_HANDLE), msg, chars,
@@ -319,11 +319,11 @@ CheckForCompilerFeature(
      */
 
     return !(strstr(Out.buffer, "D4002") != NULL
-             || strstr(Err.buffer, "D4002") != NULL
-             || strstr(Out.buffer, "D9002") != NULL
-             || strstr(Err.buffer, "D9002") != NULL
-             || strstr(Out.buffer, "D2021") != NULL
-             || strstr(Err.buffer, "D2021") != NULL);
+	    || strstr(Err.buffer, "D4002") != NULL
+	    || strstr(Out.buffer, "D9002") != NULL
+	    || strstr(Err.buffer, "D9002") != NULL
+	    || strstr(Out.buffer, "D2021") != NULL
+	    || strstr(Err.buffer, "D2021") != NULL);
 }
 
 static int
