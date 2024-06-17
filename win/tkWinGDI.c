@@ -574,20 +574,20 @@ static int Bezierize(
     inPointList = (double *)attemptckalloc(2 * sizeof(double) * npoly);
     if (inPointList == 0) {
 	/* TODO: unreachable */
-        return nbpoints; /* 0. */
+	return nbpoints; /* 0. */
     }
 
     for (n=0; n<npoly; n++) {
-        inPointList[2*n] = polypoints[n].x;
-        inPointList[2*n + 1] = polypoints[n].y;
+	inPointList[2*n] = polypoints[n].x;
+	inPointList[2*n + 1] = polypoints[n].y;
     }
 
     nbpoints = 1 + npoly * nStep; /* this is the upper limit. */
     outPointList = (double *)attemptckalloc(2 * sizeof(double) * nbpoints);
     if (outPointList == 0) {
 	/* TODO: unreachable */
-        ckfree(inPointList);
-        return 0;
+	ckfree(inPointList);
+	return 0;
     }
 
     nbpoints = TkMakeBezierCurve(NULL, inPointList, npoly, nStep,
@@ -597,13 +597,13 @@ static int Bezierize(
     bpoints = (POINT *)attemptckalloc(sizeof(POINT)*nbpoints);
     if (bpoints == 0) {
 	/* TODO: unreachable */
-        ckfree(outPointList);
-        return 0;
+	ckfree(outPointList);
+	return 0;
     }
 
     for (n=0; n<nbpoints; n++) {
-        bpoints[n].x = (long)outPointList[2*n];
-        bpoints[n].y = (long)outPointList[2*n + 1];
+	bpoints[n].x = (long)outPointList[2*n];
+	bpoints[n].y = (long)outPointList[2*n + 1];
     }
     ckfree(outPointList);
     *bpointptr = *bpoints;
@@ -1419,7 +1419,7 @@ static int GdiCharWidths(
 	DWORD val = GetLastError();
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-                "::tk::print::_gdi character failed with code %ld", val));
+		"::tk::print::_gdi character failed with code %ld", val));
 	if (made_font) {
 	    SelectObject(hDC, oldfont);
 	    DeleteObject(hfont);
@@ -2979,7 +2979,7 @@ static HANDLE CopyToDIB(
     /* Check for a valid window handle. */
 
     if (!hWnd) {
-        return NULL;
+	return NULL;
     }
 
     switch (type) {
@@ -3148,16 +3148,16 @@ static HBITMAP CopyScreenToBitmap(
     /* Make sure bitmap rectangle is visible. */
 
     if (nX < 0) {
-        nX = 0;
+	nX = 0;
     }
     if (nY < 0) {
-        nY = 0;
+	nY = 0;
     }
     if (nX2 > xScrn) {
-        nX2 = xScrn;
+	nX2 = xScrn;
     }
     if (nY2 > yScrn) {
-        nY2 = yScrn;
+	nY2 = yScrn;
     }
 
     nWidth = nX2 - nX;
@@ -3218,19 +3218,19 @@ static HANDLE BitmapToDIB(
     /* Check if bitmap handle is valid. */
 
     if (!hBitmap) {
-        return NULL;
+	return NULL;
     }
 
     /* Fill in BITMAP structure, return NULL if it didn't work. */
 
     if (!GetObjectW(hBitmap, sizeof(bm), (LPWSTR)&bm)) {
-        return NULL;
+	return NULL;
     }
 
     /* Ff no palette is specified, use default palette. */
 
     if (hPal == NULL) {
-        hPal = GetStockObject(DEFAULT_PALETTE);
+	hPal = GetStockObject(DEFAULT_PALETTE);
     }
 
     /* Calculate bits per pixel. */
@@ -3240,13 +3240,13 @@ static HANDLE BitmapToDIB(
     /* Make sure bits per pixel is valid. */
 
     if (biBits <= 1) {
-        biBits = 1;
+	biBits = 1;
     } else if (biBits <= 4) {
-        biBits = 4;
+	biBits = 4;
     } else if (biBits <= 8) {
-        biBits = 8;
+	biBits = 8;
     } else { /* If greater than 8-bit, force to 24-bit. */
-        biBits = 24;
+	biBits = 24;
     }
 
     /* Initialize BITMAPINFOHEADER. */
@@ -3313,7 +3313,7 @@ static HANDLE BitmapToDIB(
 
     /* If the driver did not fill in the biSizeImage field, make one up. */
     if (bi.biSizeImage == 0) {
-        bi.biSizeImage = (((((DWORD)bm.bmWidth * biBits) + 31) / 32) * 4)
+	bi.biSizeImage = (((((DWORD)bm.bmWidth * biBits) + 31) / 32) * 4)
 		* bm.bmHeight;
     }
 
@@ -3322,7 +3322,7 @@ static HANDLE BitmapToDIB(
     dwLen = bi.biSize + DIBNumColors(&bi) * sizeof(RGBQUAD) + bi.biSizeImage;
 
     if ((h = GlobalReAlloc(hDIB, dwLen, 0)) != 0) {
-        hDIB = h;
+	hDIB = h;
     } else {
 	/* Clean up and return NULL. */
 
@@ -3440,7 +3440,7 @@ static HPALETTE GetSystemPalette(void)
 
     hDC = GetDC(NULL);
     if (!hDC) {
-        return NULL;
+	return NULL;
     }
 
     nColors = PalEntriesOnDevice(hDC);   /* Number of palette entries. */
@@ -3452,7 +3452,7 @@ static HPALETTE GetSystemPalette(void)
     if (!hLogPal) {
 	/* If we didn't get a logical palette, return NULL. */
 
-        return NULL;
+	return NULL;
     }
 
     /* get a pointer to the logical palette. */
@@ -3643,23 +3643,23 @@ static int PrintSelectPrinter(
      * script level.
      */
     if (localPrinterName != NULL) {
-        char* varlink1 = (char*)ckalloc(100 * sizeof(char));
-        char** varlink2 = (char**)ckalloc(sizeof(char*));
-        *varlink2 = varlink1;
-        WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
+	char* varlink1 = (char*)ckalloc(100 * sizeof(char));
+	char** varlink2 = (char**)ckalloc(sizeof(char*));
+	*varlink2 = varlink1;
+	WideCharToMultiByte(CP_UTF8, 0, localPrinterName, -1, varlink1, 0, NULL, NULL);
 
-        Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
-            TCL_LINK_STRING | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::copies", (char*)&copies,
-            TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::dpi_x", (char*)&dpi_x,
-            TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::dpi_y", (char*)&dpi_y,
-            TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::paper_width", (char*)&paper_width,
-            TCL_LINK_INT | TCL_LINK_READ_ONLY);
-        Tcl_LinkVar(interp, "::tk::print::paper_height", (char*)&paper_height,
-            TCL_LINK_INT | TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(interp, "::tk::print::printer_name", (char*)varlink2,
+	    TCL_LINK_STRING | TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(interp, "::tk::print::copies", (char*)&copies,
+	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(interp, "::tk::print::dpi_x", (char*)&dpi_x,
+	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(interp, "::tk::print::dpi_y", (char*)&dpi_y,
+	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(interp, "::tk::print::paper_width", (char*)&paper_width,
+	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
+	Tcl_LinkVar(interp, "::tk::print::paper_height", (char*)&paper_height,
+	    TCL_LINK_INT | TCL_LINK_READ_ONLY);
     }
 
     return TCL_OK;
