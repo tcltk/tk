@@ -518,7 +518,7 @@ DoConfig(
 	    }
 	    break;
 	case TK_CONFIG_PIXELS: {
-		int pixel = INT_MIN;
+	    int pixel = INT_MIN;
 	    if (!nullValue && ((Tk_GetPixels(NULL, tkwin, value, &pixel)
 		    != TCL_OK) || ((pixel < 0) && !(specPtr->specFlags & TK_OPTION_NEG_OK)))) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
@@ -864,7 +864,7 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	if ((*(int *)ptr >= 0) || (specPtr->specFlags & TK_OPTION_NEG_OK)) {
+	if ((*(int *)ptr != INT_MIN) || !(specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
 	    snprintf(buffer, 200, "%d", *((int *)ptr));
 	    result = buffer;
 	}
