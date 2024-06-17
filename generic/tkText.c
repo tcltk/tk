@@ -2201,20 +2201,6 @@ ConfigureText(
     }
 
     /*
-     * Don't allow negative spacings.
-     */
-
-    if (textPtr->spacing1 < 0) {
-	textPtr->spacing1 = 0;
-    }
-    if (textPtr->spacing2 < 0) {
-	textPtr->spacing2 = 0;
-    }
-    if (textPtr->spacing3 < 0) {
-	textPtr->spacing3 = 0;
-    }
-
-    /*
      * Parse tab stops.
      */
 

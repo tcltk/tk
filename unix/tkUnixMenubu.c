@@ -279,7 +279,7 @@ TkpDisplayMenuButton(
 		Tk_Height(tkwin) - 2*mbPtr->highlightWidth,
 		mbPtr->borderWidth, mbPtr->relief);
     }
-    if (mbPtr->highlightWidth != 0) {
+    if (mbPtr->highlightWidth > 0) {
 	if (mbPtr->flags & GOT_FOCUS) {
 	    gc = Tk_GCForColor(mbPtr->highlightColorPtr, pixmap);
 	} else {

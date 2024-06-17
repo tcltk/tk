@@ -284,7 +284,7 @@ TkpDisplayScrollbar(
      * Draw a 3D rectangle to provide a base for the native scrollbar.
      */
 
-    if (scrollPtr->highlightWidth != 0) {
+    if (scrollPtr->highlightWidth > 0) {
     	GC fgGC, bgGC;
 
     	bgGC = Tk_GCForColor(scrollPtr->highlightBgColorPtr, (Pixmap) macWin);
@@ -373,9 +373,6 @@ TkpComputeScrollbarGeometry(
 
     int fieldLength;
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
     if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;
@@ -649,8 +646,8 @@ UpdateControlValues(
 	    || height <= metrics.minHeight) {
     	msPtr->info.enableState = kThemeTrackHideTrack;
     } else {
-        msPtr->info.enableState = kThemeTrackActive;
-    	msPtr->info.attributes =
+	msPtr->info.enableState = kThemeTrackActive;
+	msPtr->info.attributes =
 		kThemeTrackShowThumb | kThemeTrackThumbRgnIsNotGhost;
     }
 }

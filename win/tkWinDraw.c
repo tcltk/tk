@@ -761,7 +761,7 @@ MakeAndStrokePath(
     POINT *winPoints,
     int npoints,
     WinDrawFunc func)        /* Name of the Windows GDI drawing function:
-                                this is either Polyline or Polygon. */
+				this is either Polyline or Polygon. */
 {
     BeginPath(dc);
     func(dc, winPoints, (int)npoints);
@@ -772,15 +772,15 @@ MakeAndStrokePath(
      * path is closed.
      */
     if (func == Polyline) {
-        if ((winPoints[0].x == winPoints[npoints-1].x) &&
-                (winPoints[0].y == winPoints[npoints-1].y)) {
-            CloseFigure(dc);
-        }
-        EndPath(dc);
-        StrokePath(dc);
+	if ((winPoints[0].x == winPoints[npoints-1].x) &&
+		(winPoints[0].y == winPoints[npoints-1].y)) {
+	    CloseFigure(dc);
+	}
+	EndPath(dc);
+	StrokePath(dc);
     } else {
-        EndPath(dc);
-        StrokeAndFillPath(dc);
+	EndPath(dc);
+	StrokeAndFillPath(dc);
     }
 }
 
@@ -879,7 +879,7 @@ RenderObject(
 	SetPolyFillMode(dcMem, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
 	oldMemBrush = (HBRUSH)SelectObject(dcMem, CreateSolidBrush(gc->foreground));
-        MakeAndStrokePath(dcMem, winPoints, npoints, func);
+	MakeAndStrokePath(dcMem, winPoints, npoints, func);
 	BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0, COPYFG);
 
 	/*
@@ -891,7 +891,7 @@ RenderObject(
 	if (gc->fill_style == FillOpaqueStippled) {
 	    DeleteObject(SelectObject(dcMem,
 		    CreateSolidBrush(gc->background)));
-            MakeAndStrokePath(dcMem, winPoints, npoints, func);
+	    MakeAndStrokePath(dcMem, winPoints, npoints, func);
 	    BitBlt(dc, rect.left, rect.top, width, height, dcMem, 0, 0,
 		    COPYBG);
 	}
@@ -907,7 +907,7 @@ RenderObject(
 
 	SetPolyFillMode(dc, (gc->fill_rule == EvenOddRule) ? ALTERNATE
 		: WINDING);
-        MakeAndStrokePath(dc, winPoints, npoints, func);
+	MakeAndStrokePath(dc, winPoints, npoints, func);
 	SelectObject(dc, oldPen);
     }
     DeleteObject(SelectObject(dc, oldBrush));

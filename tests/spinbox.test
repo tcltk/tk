@@ -480,7 +480,7 @@ test spinbox-1.40 {configuration option: "highlightthickness"} -setup {
     .e cget -highlightthickness
 } -cleanup {
     destroy .e
-} -returnCodes error -result {expected nonnegative screen distance but got "-2"}
+} -returnCodes error -result {expected screen distance but got "-2"}
 
 test spinbox-1.41 {configuration option: "increment"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \

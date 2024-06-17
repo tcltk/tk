@@ -37,7 +37,7 @@ Valid values are
 and \fBsunken\fR.
 .OP \-wraplength wrapLength WrapLength
 Specifies the maximum line length (in pixels).
-If this option is less than or equal to zero,
+If this option is negative or zero,
 then automatic wrapping is not performed; otherwise
 the text is split into lines such that no line is longer
 than the specified value.
