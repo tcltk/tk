@@ -57,7 +57,7 @@ The value may have any of the forms acceptable to \fBTk_GetPixels\fR.
 If this option has a value greater than zero then the \fB\-aspect\fR
 option is ignored and the \fB\-width\fR option determines the line
 length.
-If this option has a value less than or equal to zero, then
+If this option value is negative or zero, then
 the \fB\-aspect\fR option determines the line length.
 .BE
 .SH DESCRIPTION
