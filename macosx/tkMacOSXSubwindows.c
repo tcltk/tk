@@ -367,7 +367,8 @@ XUnmapWindow(
 	 * redraw the window.
 	 */
 
-	TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
+	//TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	// if (parentPtr && parentPtr->privatePtr->visRgn) {
 	//     TkMacOSXInvalidateViewRegion(
 	// 	    TkMacOSXGetNSViewForDrawable(parentPtr->window),
@@ -966,6 +967,7 @@ TkMacOSXUpdateClipRgn(
     }
 }
 
+// Unused and misspelled stub function
 /*
  *----------------------------------------------------------------------
  *
