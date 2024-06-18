@@ -1538,10 +1538,13 @@ TkMacOSXGetClipRgn(
     }
 
     if (macDraw->drawRgn) {
+	// The drawRgn is the visRgn intersected with a rectangle which
+	// may be smaller than the widget bounds.
 	clipRgn = HIShapeCreateCopy(macDraw->drawRgn);
     } else if (macDraw->visRgn) {
 	clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
+    // A NULL clipRgn does not allow any drawing at all.
     return clipRgn;
 }
 
@@ -1551,7 +1554,9 @@ TkMacOSXGetClipRgn(
  * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
- *	or height are negative, reset to no clipping.
+ *	or height are negative, reset to no clipping.bThis is called by the
+ *      Text widget to display each DLine, and by the Canvas widget when it
+ *      is updating a sub rectangle in the canvas.
  *
  * Results:
  *	None.
@@ -1580,7 +1585,10 @@ Tk_ClipDrawableToRect(
 		width, height);
 	HIShapeRef drawRgn = HIShapeCreateWithRect(&clipRect);
 
-	if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
+	// When drawing a Text widget we can reuse the
+	// clipping region for different DLines, so we don't want to
+	// update unless necessary.
+	if (macDraw->winPtr && (macDraw->flags & TK_CLIP_INVALID)) {
 	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
 	}
 	if (macDraw->visRgn) {
