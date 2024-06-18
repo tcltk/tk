@@ -292,7 +292,6 @@ static void syncLayout(NSWindow *macWindow)
 	wmPtr->parentHeight = winPtr->changes.height + frameRect.size.height -
 	    contentRect.size.height;
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
-	TkMacOSXUpdateClipRgn(winPtr);
     }
 }
 #endif
