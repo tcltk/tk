@@ -1014,7 +1014,7 @@ ConfigureRestrictProc(
     self.layer.contentsScale = self.window.screen.backingScaleFactor;
     [self resetTkLayerBitmapContext];
     // need to redraw
-    [self generateExposeEvents: [self bounds]];
+    [self generateExposeEvents: self.bounds];
 }
 #endif
 
@@ -1068,16 +1068,24 @@ ConfigureRestrictProc(
 	while (Tcl_DoOneEvent(TCL_WINDOW_EVENTS|TCL_DONT_WAIT)) {}
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
-	/*
-	 * Redraw the entire content view.
-	 */
 
 	if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
 	    [(TKWindow *)w tkLayoutChanged];
-	    [self generateExposeEvents:[self bounds]];
 	}
+
+	/*
+	 * Reset the cgimage layer and redraw the entire content view.
+	 */
+
+	[self viewDidChangeBackingProperties];
+
+	/*
+	 * In live resize we seem to need to draw a second time to
+	 * avoid artifacts.
+	 */
+	
 	if ([self inLiveResize]) {
-	    [self viewDidChangeBackingProperties];
+	    [self generateExposeEvents:self.bounds];
 	}
 
 	/*
@@ -1087,6 +1095,7 @@ ConfigureRestrictProc(
 	[NSApp _unlockAutoreleasePool];
 
     }
+    // Schedule a redisplay of the view
     [self setNeedsDisplay:YES];
 
 }
