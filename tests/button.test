@@ -2668,6 +2668,17 @@ test button-1.270 {configuration options} -body {
     destroy .c
 } -result {}
 
+test button-1.271 {configuration options: fallback to default} -setup {
+    checkbutton .c -borderwidth -2 -highlightthickness -2 -font {Helvetica -12 bold}
+    pack .c
+    update
+} -body {
+    .c configure -padx -2 -pady -2 -wraplength -2
+    list [.c cget -padx] [.c cget -pady] [.c cget -borderwidth] [.c cget -highlightthickness] [.c cget -wraplength]
+} -cleanup {
+    destroy .c
+} -result {0 0 0 0 0}
+
 # ex-tests 3.*
 test button-2.1 {ButtonCreate - not enough arguments} -body {
     button
@@ -3368,7 +3379,7 @@ test button-5.17 {ConfigureButton - -width option} -body {
 } -cleanup {
     destroy .b
 } -result  {expected integer but got "1i"
-    (processing -width option)
+    (processing "-width" option)
     invoked from within
 ".b configure -width 1i"}
 test button-5.18 {ConfigureButton - -height option} -body {
@@ -3384,7 +3395,7 @@ test button-5.19 {ConfigureButton - -height option} -body {
 } -cleanup {
     destroy .b
 } -result {expected integer but got "0.5c"
-    (processing -height option)
+    (processing "-height" option)
     invoked from within
 ".b configure -height 0.5c"}
 #ex 6.16
@@ -3401,7 +3412,7 @@ test button-5.21 {ConfigureButton - -width option} -body {
 } -cleanup {
     destroy .b
 } -result {expected screen distance but got "abc"
-    (processing -width option)
+    (processing "-width" option)
     invoked from within
 ".b configure -width abc"}
 test button-5.22 {ConfigureButton - -height option} -constraints {
@@ -3428,7 +3439,7 @@ test button-5.23 {ConfigureButton - -height option} -constraints {
     destroy .b
     image delete image1
 } -result  {expected screen distance but got "0.5x"
-    (processing -height option)
+    (processing "-height" option)
     invoked from within
 ".b configure -height 0.5x"}
 #ex 6.18

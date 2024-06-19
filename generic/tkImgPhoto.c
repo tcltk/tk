@@ -620,7 +620,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetImage(srcHandle, &block);
-	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
+	if ((options.fromX > block.width) || (options.fromY > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(

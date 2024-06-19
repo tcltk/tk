@@ -37,7 +37,7 @@ test scale-3.1 "style command" -body {
     ttk::scale .wh  ; # default is  -orient horizontal
     ttk::scale .wv -orient vertical
     list [.wh cget -style] [.wh style] [winfo class .wh] \
-         [.wv cget -style] [.wv style] [winfo class .wv]
+	    [.wv cget -style] [.wv style] [winfo class .wv]
 } -cleanup {
     destroy .wh .wv
 } -result {{} Horizontal.TScale TScale {} Vertical.TScale TScale}

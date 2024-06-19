@@ -9,7 +9,7 @@ loadTestedCommands
 
 proc assert {expr {message ""}} {
     if {![uplevel 1 [list expr $expr]]} {
-        error "PANIC: $message ($expr failed)"
+	error "PANIC: $message ($expr failed)"
     }
 }
 
@@ -191,8 +191,8 @@ test treetags-3.2 "tag configure - enumerate" -body {
 } -cleanup {
     treeConstraints $tv
 } -result [list \
-    -image {} -imageanchor {} -background red -stripedbackground {} -foreground blue -font {} -padding {} \
-                  ]
+	-image {} -imageanchor {} -background red -stripedbackground {} -foreground blue \
+	-font {} -padding {} ]
 test treetags-4.1 "tag cell add" -body {
     $tv tag cell add _thetag
 } -returnCodes 1 -result {wrong # args: should be ".tv tag cell add tagName cells"}

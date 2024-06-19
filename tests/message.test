@@ -393,6 +393,16 @@ test message-1.38 {configuration option: "width"} -setup {
 } -cleanup {
     destroy .m
 } -returnCodes {error} -result {expected screen distance but got "badValue"}
+test message-1.39 {configuration options, fallback to default} -setup {
+    message .m -borderwidth -2 -highlightthickness -2 -font {Helvetica -12 bold}
+    pack .m
+    update
+} -body {
+    .m configure -padx -2 -pady -2 -width -2
+    list [.m cget -padx] [.m cget -pady] [.m cget -borderwidth] [.m cget -highlightthickness]  [.m cget -width]
+} -cleanup {
+    destroy .m
+} -result {{} {} 0 0 0}
 
 
 test message-2.1 {Tk_MessageObjCmd procedure} -body {

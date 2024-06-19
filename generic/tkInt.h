@@ -917,8 +917,7 @@ typedef struct {
 #   ifndef XMaxTransChars
 #	define XMaxTransChars 7
 #   endif
-    char trans_chars[XMaxTransChars];
-                            /* translated characters */
+    char trans_chars[XMaxTransChars]; /* translated characters */
     unsigned char nbytes;
 #elif !defined(MAC_OSX_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's

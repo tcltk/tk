@@ -48,7 +48,7 @@ stored in the text layout.  The \fIstring\fR must remain valid for the
 lifetime of the text layout.
 .AP int numChars in
 The number of characters to consider from \fIstring\fR.  If
-\fInumChars\fR is less than 0, then assumes \fIstring\fR is null
+\fInumChars\fR is negative, then assumes \fIstring\fR is null
 terminated and uses \fBTcl_NumUtfChars\fR to determine the length of
 \fIstring\fR.
 .AP int wrapLength in
@@ -176,7 +176,7 @@ located at (0, 0).  Any point whose \fIy\fR-value is less that 0 will be
 considered closest to the first character in the text layout; any point
 whose \fIy\fR-value is greater than the height of the text layout will be
 considered closest to the last character in the text layout.  Any point
-whose \fIx\fR-value is less than 0 will be considered closest to the first
+whose \fIx\fR-value is negative will be considered closest to the first
 character on that line; any point whose \fIx\fR-value is greater than the
 width of the text layout will be considered closest to the last character on
 that line.  The return value is the index of the character that was closest
