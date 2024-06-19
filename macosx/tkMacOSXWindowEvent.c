@@ -1033,7 +1033,6 @@ ConfigureRestrictProc(
 -(void) setFrameSize: (NSSize)newsize
 {
     [super setFrameSize: newsize];
-    [self resetTkLayerBitmapContext];
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
@@ -1045,18 +1044,11 @@ ConfigureRestrictProc(
     	Tk_RestrictProc *oldProc;
 
 	/*
-	 * This can be called from outside the Tk event loop.  Since it calls
-	 * Tcl_DoOneEvent, we need to make sure we don't clobber the
-	 * AutoreleasePool set up by the caller.
+	 * This function can be re-entered.  So we need to make sure we don't
+	 * clobber any AutoreleasePool set up by the caller.
 	 */
 
 	[NSApp _lockAutoreleasePool];
-
-	/*
-	 * Disable Tk drawing until the window has been completely configured.
-	 */
-
-	//TkMacOSXSetDrawingEnabled(winPtr, 0);
 
 	 /*
 	  * Generate and handle a ConfigureNotify event for the new size.
@@ -1069,6 +1061,10 @@ ConfigureRestrictProc(
     	Tk_RestrictEvents(oldProc, oldArg, &oldArg);
 
 
+	/*
+	 * Update Tk's window data for the new size.
+	 */
+	
 	if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
 	    [(TKWindow *)w tkLayoutChanged];
 	}
@@ -1095,7 +1091,11 @@ ConfigureRestrictProc(
 	[NSApp _unlockAutoreleasePool];
 
     }
-    // Schedule a redisplay of the view
+
+    /*
+     * Schedule a redisplay of the view.
+     */
+
     [self setNeedsDisplay:YES];
 
 }
