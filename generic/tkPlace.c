@@ -98,7 +98,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0.0", TCL_INDEX_NONE,
 	offsetof(Content, relY), 0, 0, 0},
     {TK_OPTION_PIXELS, "-width", NULL, NULL, NULL, offsetof(Content, widthObj),
-	offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, width), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xObj),
 	offsetof(Content, x), TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yObj),
