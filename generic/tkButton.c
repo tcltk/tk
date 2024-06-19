@@ -783,7 +783,7 @@ ButtonWidgetObjCmd(
     Tcl_Obj *objPtr;
 
     if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
+	Tcl_WrongNumArgs(interp, 1, objv, "option ?arg ...?");
 	return TCL_ERROR;
     }
     result = Tcl_GetIndexFromObjStruct(interp, objv[1], commandNames[butPtr->type],
@@ -1097,17 +1097,45 @@ ConfigureButton(
 	} else {
 	    Tk_SetBackgroundFromBorder(butPtr->tkwin, butPtr->normalBorder);
 	}
+	if (butPtr->wrapLength < 0) {
+	    butPtr->wrapLength = 0;
+	    if (butPtr->wrapLengthPtr) {
+		Tcl_DecrRefCount(butPtr->wrapLengthPtr);
+	    }
+	    butPtr->wrapLengthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->wrapLengthPtr);
+	}
 	if (butPtr->borderWidth < 0) {
 	    butPtr->borderWidth = 0;
+	    if (butPtr->borderWidthPtr) {
+		Tcl_DecrRefCount(butPtr->borderWidthPtr);
+	    }
+	    butPtr->borderWidthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->borderWidthPtr);
 	}
 	if (butPtr->highlightWidth < 0) {
 	    butPtr->highlightWidth = 0;
+	    if (butPtr->highlightWidthPtr) {
+		Tcl_DecrRefCount(butPtr->highlightWidthPtr);
+	    }
+	    butPtr->highlightWidthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->highlightWidthPtr);
 	}
 	if (butPtr->padX < 0) {
 	    butPtr->padX = 0;
+	    if (butPtr->padXPtr) {
+		Tcl_DecrRefCount(butPtr->padXPtr);
+	    }
+	    butPtr->padXPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->padXPtr);
 	}
 	if (butPtr->padY < 0) {
 	    butPtr->padY = 0;
+	    if (butPtr->padYPtr) {
+		Tcl_DecrRefCount(butPtr->padYPtr);
+	    }
+	    butPtr->padYPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->padYPtr);
 	}
 
 	if (butPtr->type >= TYPE_CHECK_BUTTON) {
@@ -1129,13 +1157,13 @@ ConfigureButton(
 
 	    valuePtr = Tcl_ObjGetVar2(interp, namePtr, NULL, TCL_GLOBAL_ONLY);
 	    butPtr->flags &= ~SELECTED;
-            butPtr->flags &= ~TRISTATED;
+	    butPtr->flags &= ~TRISTATED;
 	    if (valuePtr != NULL) {
 		const char *value = Tcl_GetString(valuePtr);
 		if (strcmp(value, Tcl_GetString(butPtr->onValuePtr)) == 0) {
 		    butPtr->flags |= SELECTED;
 		} else if (strcmp(value,
-                        Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
+			Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
 		    butPtr->flags |= TRISTATED;
 
 		    /*
@@ -1148,7 +1176,7 @@ ConfigureButton(
 			    Tcl_GetString(butPtr->offValuePtr)) == 0) {
 			butPtr->flags &= ~TRISTATED;
 		    }
-                }
+		}
 	    } else {
 		if (Tcl_ObjSetVar2(interp, namePtr, NULL,
 			(butPtr->type == TYPE_CHECK_BUTTON)
@@ -1258,13 +1286,13 @@ ConfigureButton(
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->widthPtr,
 		    &butPtr->width) != TCL_OK) {
 	    widthError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -width option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
 	    if (Tk_GetPixelsFromObj(interp, butPtr->tkwin, butPtr->heightPtr,
 		    &butPtr->height) != TCL_OK) {
 	    heightError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -height option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
 	    }
 	} else {
@@ -1463,6 +1491,7 @@ ButtonEventProc(
     } else if (eventPtr->type == FocusIn) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    butPtr->flags |= GOT_FOCUS;
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
 	    if (butPtr->highlightWidth > 0) {
 		goto redraw;
 	    }
@@ -1470,6 +1499,7 @@ ButtonEventProc(
     } else if (eventPtr->type == FocusOut) {
 	if (eventPtr->xfocus.detail != NotifyInferior) {
 	    butPtr->flags &= ~GOT_FOCUS;
+	    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
 	    if (butPtr->highlightWidth > 0) {
 		goto redraw;
 	    }
@@ -1656,7 +1686,7 @@ ButtonVarProc(
 	    return NULL;
 	}
 	butPtr->flags |= SELECTED;
-        butPtr->flags &= ~TRISTATED;
+	butPtr->flags &= ~TRISTATED;
     } else if (butPtr->offValuePtr
 	&& strcmp(value, Tcl_GetString(butPtr->offValuePtr)) == 0) {
 	if (!(butPtr->flags & (SELECTED | TRISTATED))) {
@@ -1664,11 +1694,11 @@ ButtonVarProc(
 	}
 	butPtr->flags &= ~(SELECTED | TRISTATED);
     } else if (strcmp(value, Tcl_GetString(butPtr->tristateValuePtr)) == 0) {
-        if (butPtr->flags & TRISTATED) {
-            return NULL;
-        }
-        butPtr->flags |= TRISTATED;
-        butPtr->flags &= ~SELECTED;
+	if (butPtr->flags & TRISTATED) {
+	    return NULL;
+	}
+	butPtr->flags |= TRISTATED;
+	butPtr->flags &= ~SELECTED;
     } else if (butPtr->flags & (SELECTED | TRISTATED)) {
 	butPtr->flags &= ~(SELECTED | TRISTATED);
     } else {

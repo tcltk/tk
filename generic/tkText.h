@@ -172,9 +172,12 @@ typedef struct TkTextSegment {
     Tcl_Size size;			/* Size of this segment (# of bytes of index
 				 * space it occupies). */
     union {
-	char chars[4];	/* Characters that make up character info.
-				 * Actual length varies to hold as many
-				 * characters as needed.*/
+	/* The TKFLEXARRAY macro - unfortunately - doesn't work inside a union. */
+#if defined(__GNUC__) && (__GNUC__ > 2)
+	char chars[0];		/* Characters that make up character info. */
+#else				/* Actual length varies to hold as many */
+	char chars[1];		/* characters as needed. See [dacd18294b] */
+#endif
 	TkTextToggle toggle;	/* Information about tag toggle. */
 	TkTextMark mark;	/* Information about mark. */
 	TkTextEmbWindow ew;	/* Information about embedded window. */
