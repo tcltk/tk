@@ -1038,13 +1038,6 @@ ConfigureRestrictProc(
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
-    if (![self inLiveResize] &&
-	[w respondsToSelector: @selector (tkLayoutChanged)]) {
-	[(TKWindow *)w tkLayoutChanged];
-	[self generateExposeEvents:[self bounds]];
-
-    }
-
     if (winPtr) {
 	unsigned int width = (unsigned int)newsize.width;
 	unsigned int height=(unsigned int)newsize.height;
@@ -1079,13 +1072,12 @@ ConfigureRestrictProc(
 	 * Redraw the entire content view.
 	 */
 
+	if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
+	    [(TKWindow *)w tkLayoutChanged];
+	    [self generateExposeEvents:[self bounds]];
+	}
 	if ([self inLiveResize]) {
 	    [self viewDidChangeBackingProperties];
-	    [self setNeedsDisplay:YES];
-	} else {
-	    if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
-		[(TKWindow *)w tkLayoutChanged];
-	    }
 	}
 
 	/*
@@ -1095,6 +1087,8 @@ ConfigureRestrictProc(
 	[NSApp _unlockAutoreleasePool];
 
     }
+    [self setNeedsDisplay:YES];
+
 }
 
 /*
