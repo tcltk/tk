@@ -533,6 +533,11 @@ TkpDisplayButton(
     imageWidth = width;
     imageHeight = height;
 
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
 
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
@@ -725,7 +730,7 @@ TkpDisplayButton(
 
     if ((butPtr->type == TYPE_CHECK_BUTTON || butPtr->type == TYPE_RADIO_BUTTON)
 	    && butPtr->indicatorOn
-	    && butPtr->indicatorDiameter > 2*butPtr->borderWidth) {
+	    && butPtr->indicatorDiameter > 2 * butPtr->borderWidth) {
 	TkBorder *selBorder = (TkBorder *) butPtr->selectBorder;
 	XColor *selColor = NULL;
 	int btype = (butPtr->type == TYPE_CHECK_BUTTON ?
@@ -799,16 +804,16 @@ TkpDisplayButton(
 	     */
 
 	    Tk_Draw3DRectangle(tkwin, pixmap, butPtr->highlightBorder, inset,
-		    inset, Tk_Width(tkwin) - 2*inset,
-		    Tk_Height(tkwin) - 2*inset, 2, TK_RELIEF_FLAT);
+		    inset, Tk_Width(tkwin) - 2 * inset,
+		    Tk_Height(tkwin) - 2 * inset, 2, TK_RELIEF_FLAT);
 	    inset += 2;
 	    Tk_Draw3DRectangle(tkwin, pixmap, butPtr->highlightBorder, inset,
-		    inset, Tk_Width(tkwin) - 2*inset,
-		    Tk_Height(tkwin) - 2*inset, 1, TK_RELIEF_SUNKEN);
+		    inset, Tk_Width(tkwin) - 2 * inset,
+		    Tk_Height(tkwin) - 2 * inset, 1, TK_RELIEF_SUNKEN);
 	    inset++;
 	    Tk_Draw3DRectangle(tkwin, pixmap, butPtr->highlightBorder, inset,
-		    inset, Tk_Width(tkwin) - 2*inset,
-		    Tk_Height(tkwin) - 2*inset, 2, TK_RELIEF_FLAT);
+		    inset, Tk_Width(tkwin) - 2 * inset,
+		    Tk_Height(tkwin) - 2 * inset, 2, TK_RELIEF_FLAT);
 
 	    inset += 2;
 	} else if (butPtr->defaultState == DEFAULT_NORMAL) {
@@ -827,7 +832,7 @@ TkpDisplayButton(
 	 */
 
 	Tk_Draw3DRectangle(tkwin, pixmap, border, inset, inset,
-		Tk_Width(tkwin) - 2*inset, Tk_Height(tkwin) - 2*inset,
+		Tk_Width(tkwin) - 2 * inset, Tk_Height(tkwin) - 2 * inset,
 		butPtr->borderWidth, relief);
     }
     if (butPtr->highlightWidth > 0) {
@@ -887,6 +892,11 @@ TkpComputeButtonGeometry(
     int width, height, avgWidth, txtWidth, txtHeight;
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
+
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
 
     butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
 
@@ -981,8 +991,8 @@ TkpComputeButtonGeometry(
 	    }
 	}
 
-	width += 2*butPtr->padX;
-	height += 2*butPtr->padY;
+	width += 2 * butPtr->padX;
+	height += 2 * butPtr->padY;
     } else {
 	if (haveImage) {
 	    if (butPtr->width > 0) {
@@ -1025,15 +1035,15 @@ TkpComputeButtonGeometry(
      */
 
     if ((butPtr->image == NULL) && (butPtr->bitmap == None)) {
-	width += 2*butPtr->padX;
-	height += 2*butPtr->padY;
+	width += 2 * butPtr->padX;
+	height += 2 * butPtr->padY;
     }
     if ((butPtr->type == TYPE_BUTTON) && !Tk_StrictMotif(butPtr->tkwin)) {
 	width += 2;
 	height += 2;
     }
     Tk_GeometryRequest(butPtr->tkwin, (int) (width + butPtr->indicatorSpace
-	    + 2*butPtr->inset), (int) (height + 2*butPtr->inset));
+	    + 2 * butPtr->inset), (int) (height + 2 * butPtr->inset));
     Tk_SetInternalBorder(butPtr->tkwin, butPtr->inset);
 }
 

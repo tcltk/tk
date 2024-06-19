@@ -197,7 +197,7 @@ TkpDisplayScale(
      * vertical scales: border and traversal highlight.
      */
 
-    if (scalePtr->highlightWidth != 0) {
+    if (scalePtr->highlightWidth > 0) {
 	GC gc = Tk_GCForColor(scalePtr->highlightColorPtr, Tk_WindowId(tkwin));
 
 	Tk_DrawFocusHighlight(tkwin, gc, scalePtr->highlightWidth,

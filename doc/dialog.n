@@ -35,7 +35,7 @@ If this is an empty string then no bitmap is displayed in the dialog.
 If this is an integer greater than or equal to zero, then it gives
 the index of the button that is to be the default button for the dialog
 (0 for the leftmost button, and so on).
-If less than zero or an empty string then there will not be any default
+If negative or an empty string then there will not be any default
 button.
 .IP \fIstring\fR
 There will be one button for each of these arguments.

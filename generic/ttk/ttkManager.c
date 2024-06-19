@@ -434,17 +434,21 @@ Tcl_Size Ttk_ContentIndex(Ttk_Manager *mgr, Tk_Window window)
     return -1;
 }
 
-/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, indexPtr) --
+/* ++ Ttk_GetContentIndexFromObj(interp, mgr, objPtr, lastOK, indexPtr) --
  * 	Return the index of the content window specified by objPtr.
  * 	Content windows may be specified as an integer index or
  * 	as the name of the managed window.
+ *
+ *  The parameter lastOK should be non-0 if the resolved index can be equal to
+ *  the current size (i.e. one more than the current highest index) and 0
+ *  otherwise.
  *
  * Returns:
  * 	Standard Tcl completion code.  Leaves an error message in case of error.
  */
 
 int Ttk_GetContentIndexFromObj(
-    Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, Tcl_Size *indexPtr)
+    Tcl_Interp *interp, Ttk_Manager *mgr, Tcl_Obj *objPtr, int lastOK, Tcl_Size *indexPtr)
 {
     const char *string = Tcl_GetString(objPtr);
     Tcl_Size index = 0;
@@ -452,10 +456,15 @@ int Ttk_GetContentIndexFromObj(
 
     /* Try interpreting as an integer first:
      */
-    if (TkGetIntForIndex(objPtr, mgr->nContent - 1, 1, &index) == TCL_OK) {
-	if (index < 0 || index > mgr->nContent) {
+    if (TkGetIntForIndex(objPtr, mgr->nContent - 1, lastOK, &index) == TCL_OK) {
+	/*
+	 * Note despite passing lastOK above, we still need to check here
+	 * as well as TkGetIntForIndex only uses lastOK for end-relative indices,
+	 * not integers.
+	 */
+	if (index < 0 || (index - !!lastOK) >= mgr->nContent) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"Managed window index %d out of bounds", (int)index));
+		    "Managed window index \"%s\" out of bounds", Tcl_GetString(objPtr)));
 	    Tcl_SetErrorCode(interp, "TTK", "MANAGED", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
