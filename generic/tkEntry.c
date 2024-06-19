@@ -1316,9 +1316,6 @@ ConfigureEntry(
 
 	Tk_SetInternalBorder(entryPtr->tkwin,
 		entryPtr->borderWidth + entryPtr->highlightWidth);
-	if (entryPtr->highlightWidth < 0) {
-	    entryPtr->highlightWidth = 0;
-	}
 	entryPtr->inset = entryPtr->highlightWidth
 		+ entryPtr->borderWidth + XPAD;
 	break;
