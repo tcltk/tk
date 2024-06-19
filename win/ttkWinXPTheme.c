@@ -805,7 +805,7 @@ static void TabElementDraw(
 	return;
 
     if (nbTabsStickBit == TTK_STICK_S) {
-	if (state & TTK_STATE_USER1) {
+	if (state & TTK_STATE_FIRST) {
 	    partId = TABP_TABITEMLEFTEDGE;
 	}
 
