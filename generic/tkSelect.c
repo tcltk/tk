@@ -715,7 +715,7 @@ Tk_SelectionObjCmd(
 	    if (count < 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -775,7 +775,7 @@ Tk_SelectionObjCmd(
 	    if (count < 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -853,7 +853,7 @@ Tk_SelectionObjCmd(
 	    if (count < 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 
@@ -940,7 +940,7 @@ Tk_SelectionObjCmd(
 	    if (count < 2) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "SELECTION", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 

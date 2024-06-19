@@ -626,7 +626,7 @@ ConfigureContent(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't use placer on top-level window \"%s\"; use "
 		"wm command instead", Tk_PathName(tkwin)));
-	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -666,7 +666,7 @@ ConfigureContent(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't place \"%s\" relative to \"%s\"",
 			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
 		goto error;
 	    }
 	}
@@ -674,7 +674,7 @@ ConfigureContent(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't place \"%s\" relative to itself",
 		    Tk_PathName(contentPtr->tkwin)));
-	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", (char *)NULL);
 	    goto error;
 	}
 
@@ -688,7 +688,7 @@ ConfigureContent(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't put \"%s\" inside \"%s\": would cause management loop",
 			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", (char *)NULL);
 		goto error;
 	    }
 	}
