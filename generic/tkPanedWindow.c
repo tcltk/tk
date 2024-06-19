@@ -674,7 +674,7 @@ PanedWindowWidgetObjCmd(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"not managed by this window", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED",
-			NULL);
+			(char *)NULL);
 	    }
 	    result = TCL_ERROR;
 	} else {
@@ -693,15 +693,15 @@ PanedWindowWidgetObjCmd(
 	if (objc <= 4) {
 	    tkwin = Tk_NameToWindow(interp, Tcl_GetString(objv[2]),
 		    pwPtr->tkwin);
-            if (tkwin == NULL) {
-                /*
-                 * Just a plain old bad window; Tk_NameToWindow filled in an
-                 * error message for us.
-                 */
+	    if (tkwin == NULL) {
+		/*
+		 * Just a plain old bad window; Tk_NameToWindow filled in an
+		 * error message for us.
+		 */
 
-                result = TCL_ERROR;
-                break;
-            }
+		result = TCL_ERROR;
+		break;
+	    }
 	    for (i = 0; i < pwPtr->numPanes; i++) {
 		if (pwPtr->panes[i]->tkwin == tkwin) {
 		    resultObj = Tk_GetOptionInfo(interp,
@@ -799,7 +799,7 @@ ConfigurePanes(
 
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't add %s to itself", arg));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", (char *)NULL);
 		return TCL_ERROR;
 	    } else if (Tk_IsTopLevel(tkwin)) {
 		/*
@@ -809,7 +809,7 @@ ConfigurePanes(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't add toplevel %s to %s", arg,
 			Tk_PathName(pwPtr->tkwin)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", (char *)NULL);
 		return TCL_ERROR;
 	    } else {
 		/*
@@ -827,7 +827,7 @@ ConfigurePanes(
 				"can't add %s to %s", arg,
 				Tk_PathName(pwPtr->tkwin)));
 			Tcl_SetErrorCode(interp, "TK", "GEOMETRY",
-				"HIERARCHY", NULL);
+				"HIERARCHY", (char *)NULL);
 			return TCL_ERROR;
 		    }
 		}
@@ -887,7 +887,7 @@ ConfigurePanes(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"window \"%s\" is not managed by %s",
 		Tk_PathName(tkwin), Tk_PathName(pwPtr->tkwin)));
-	Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "PANEDWINDOW", "UNMANAGED", (char *)NULL);
 	Tk_FreeConfigOptions(&options, pwPtr->paneOpts,
 		pwPtr->tkwin);
 	return TCL_ERROR;
@@ -1127,7 +1127,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	panePtr = pwPtr->panes[sash];
@@ -1150,7 +1150,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1186,7 +1186,7 @@ PanedWindowSashCommand(
 	if (!ValidSashIndex(pwPtr, sash)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "invalid sash index", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "SASH_INDEX", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1369,17 +1369,17 @@ PanedWindowEventProc(
     } else if (eventPtr->type == DestroyNotify) {
 	DestroyPanedWindow(pwPtr);
     } else if (eventPtr->type == UnmapNotify) {
-        for (i = 0; i < pwPtr->numPanes; i++) {
-            if (!pwPtr->panes[i]->hide) {
-                Tk_UnmapWindow(pwPtr->panes[i]->tkwin);
-            }
-        }
+	for (i = 0; i < pwPtr->numPanes; i++) {
+	    if (!pwPtr->panes[i]->hide) {
+		Tk_UnmapWindow(pwPtr->panes[i]->tkwin);
+	    }
+	}
     } else if (eventPtr->type == MapNotify) {
-        for (i = 0; i < pwPtr->numPanes; i++) {
-            if (!pwPtr->panes[i]->hide) {
-                Tk_MapWindow(pwPtr->panes[i]->tkwin);
-            }
-        }
+	for (i = 0; i < pwPtr->numPanes; i++) {
+	    if (!pwPtr->panes[i]->hide) {
+		Tk_MapWindow(pwPtr->panes[i]->tkwin);
+	    }
+	}
     }
 }
 
@@ -1789,18 +1789,18 @@ ArrangePanes(
 	 */
 
 	if (horizontal) {
-            if (panePtr->width > 0) {
-                paneSize = panePtr->width;
-            } else {
-                paneSize = panePtr->paneWidth;
-            }
+	    if (panePtr->width > 0) {
+		paneSize = panePtr->width;
+	    } else {
+		paneSize = panePtr->paneWidth;
+	    }
 	    stretchReserve -= paneSize + (2 * panePtr->padx);
 	} else {
-            if (panePtr->height > 0) {
-                paneSize = panePtr->height;
-            } else {
-                paneSize = panePtr->paneHeight;
-            }
+	    if (panePtr->height > 0) {
+		paneSize = panePtr->height;
+	    } else {
+		paneSize = panePtr->paneHeight;
+	    }
 	    stretchReserve -= paneSize + (2 * panePtr->pady);
 	}
 	if (IsStretchable(panePtr->stretch,i,first,last)
@@ -1850,18 +1850,18 @@ ArrangePanes(
 	 */
 
 	if (horizontal) {
-            if (panePtr->width > 0) {
-                paneSize = panePtr->width;
-            } else {
-                paneSize = panePtr->paneWidth;
-            }
+	    if (panePtr->width > 0) {
+		paneSize = panePtr->width;
+	    } else {
+		paneSize = panePtr->paneWidth;
+	    }
 	    pwSize = pwWidth;
 	} else {
-            if (panePtr->height > 0) {
-                paneSize = panePtr->height;
-            } else {
-                paneSize = panePtr->paneHeight;
-            }
+	    if (panePtr->height > 0) {
+		paneSize = panePtr->height;
+	    } else {
+		paneSize = panePtr->paneHeight;
+	    }
 	    pwSize = pwHeight;
 	}
 	if (IsStretchable(panePtr->stretch, i, first, last)) {
@@ -2491,7 +2491,7 @@ SetSticky(
 			"bad stickyness value \"%s\": must be a string"
 			" containing zero or more of n, e, s, and w",
 			Tcl_GetString(*value)));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "STICKY", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	}
@@ -2907,16 +2907,16 @@ PanedWindowProxyCommand(
 	    return TCL_ERROR;
 	}
 
-        internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
+	internalBW = Tk_InternalBorderLeft(pwPtr->tkwin);
 	if (pwPtr->orient == ORIENT_HORIZONTAL) {
 	    if (x < 0) {
 		x = 0;
 	    }
-            pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
-            if (x > pwWidth) {
-                x = pwWidth;
-            }
-            y = Tk_InternalBorderLeft(pwPtr->tkwin);
+	    pwWidth = Tk_Width(pwPtr->tkwin) - (2 * internalBW);
+	    if (x > pwWidth) {
+		x = pwWidth;
+	    }
+	    y = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashWidth = pwPtr->sashWidth;
 	    sashHeight = Tk_Height(pwPtr->tkwin) -
 		    (2 * Tk_InternalBorderLeft(pwPtr->tkwin));
@@ -2924,10 +2924,10 @@ PanedWindowProxyCommand(
 	    if (y < 0) {
 		y = 0;
 	    }
-            pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
-            if (y > pwHeight) {
-                y = pwHeight;
-            }
+	    pwHeight = Tk_Height(pwPtr->tkwin) - (2 * internalBW);
+	    if (y > pwHeight) {
+		y = pwHeight;
+	    }
 	    x = Tk_InternalBorderLeft(pwPtr->tkwin);
 	    sashHeight = pwPtr->sashWidth;
 	    sashWidth = Tk_Width(pwPtr->tkwin) -
