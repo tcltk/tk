@@ -5256,9 +5256,6 @@ TkTextRelayoutWindow(
      * it.
      */
 
-    if (textPtr->highlightWidth < 0) {
-	textPtr->highlightWidth = 0;
-    }
     dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
 	    + textPtr->padX;
     dInfoPtr->y = textPtr->highlightWidth + textPtr->borderWidth

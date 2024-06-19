@@ -517,14 +517,19 @@ DoConfig(
 		return TCL_ERROR;
 	    }
 	    break;
-	case TK_CONFIG_PIXELS:
-	    if (nullValue) {
-		*(int *)ptr = INT_MIN;
-	    } else if (Tk_GetPixels(interp, tkwin, value, (int *)ptr)
-		!= TCL_OK) {
+	case TK_CONFIG_PIXELS: {
+	    int pixel = INT_MIN;
+	    if (!nullValue && ((Tk_GetPixels(NULL, tkwin, value, &pixel)
+		    != TCL_OK) || ((pixel < 0) && !(specPtr->specFlags & TK_OPTION_NEG_OK)))) {
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected screen distance%s but got \"%.50s\"",
+			(specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1)) ? " or \"\"" : "", value));
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 		return TCL_ERROR;
 	    }
+	    *(int *)ptr = pixel;
 	    break;
+	}
 	case TK_CONFIG_MM:
 	    if (Tk_GetScreenMM(interp, tkwin, value, (double *)ptr) != TCL_OK) {
 		return TCL_ERROR;
