@@ -558,12 +558,12 @@ proc ::tk::PreciseScrollDeltas {dxdy} {
     return [list $deltaX $deltaY]
 }
 
-# Helper for smooth scrolling of widgets that support xview moveto,
-# yview moveto, height and width.
+## Helper for smooth scrolling of widgets that support xview moveto and
+## yview moveto.
 
 proc ::tk::ScrollByPixels {w deltaX deltaY} {
-    set width [expr {1.0 * [$w cget -width]}]
-    set height [expr {1.0 * [$w cget -height]}]
+    set width [expr {1.0 * [winfo width $w]}]
+    set height [expr {1.0 * [winfo height $w]}]
     set X [lindex [$w xview] 0]
     set Y [lindex [$w yview] 0]
     set x [expr {$X - $deltaX / $width}]
