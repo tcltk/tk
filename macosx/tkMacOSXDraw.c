@@ -1228,7 +1228,12 @@ TkMacOSXSetupDrawingContext(
     dc.clipRgn = TkMacOSXGetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
+	/*
+	 * Things are probably not set up for drawing yet.  Request a call to
+	 * updateLayer and return failure.
+	 */
 	canDraw = false;
+	[view setNeedsDisplay:YES];
 	goto end;
     }
 //#endif //disable clipping
