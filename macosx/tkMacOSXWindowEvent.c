@@ -983,7 +983,6 @@ ConfigureRestrictProc(
 }
 - (void) updateLayer {
     CGContextRef context = self.tkLayerBitmapContext;
-
     if (context) {
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
@@ -997,6 +996,12 @@ ConfigureRestrictProc(
 	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
+
+	/*
+	 * Run any pending widget display procs as part of the update.
+	 */
+	
+	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 	[self clearTkDirtyRect];
     }
 }
@@ -1035,8 +1040,8 @@ ConfigureRestrictProc(
 {
     NSSize oldsize = self.bounds.size;
     [super setFrameSize: newsize];
-    if (newsize.width == 1 && newsize.height == 1 ||
-	oldsize.width == 0 && oldsize.height == 0) {
+    if ((newsize.width == 1 && newsize.height == 1) ||
+	(oldsize.width == 0 && oldsize.height == 0)) {
 	return;
     }
     NSWindow *w = [self window];
