@@ -562,14 +562,12 @@ proc ::tk::PreciseScrollDeltas {dxdy} {
 ## yview moveto.
 
 proc ::tk::ScrollByPixels {w deltaX deltaY} {
+    set fracX [lindex [$w xview] 0]
+    set fracY [lindex [$w yview] 0]
     set width [expr {1.0 * [winfo width $w]}]
     set height [expr {1.0 * [winfo height $w]}]
-    set X [lindex [$w xview] 0]
-    set Y [lindex [$w yview] 0]
-    set x [expr {$X - $deltaX / $width}]
-    set y [expr {$Y - $deltaY / $height}]
-    $w xview moveto $x
-    $w yview moveto $y
+    $w xview moveto [expr {$fracX - $deltaX / $width}]
+    $w yview moveto [expr {$fracY - $deltaY / $height}]
 }
 
 # ::tk::TabToWindow --
