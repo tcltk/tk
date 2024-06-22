@@ -982,9 +982,9 @@ ConfigureRestrictProc(
     return YES;
 }
 - (void) updateLayer {
-    CGContextRef ctx = self.tkLayerBitmapContext;
+    CGContextRef context = self.tkLayerBitmapContext;
 
-    if (ctx) {
+    if (context) {
 	/*
 	 * Create a CGImage by copying (probably using copy-on-write) the
 	 * bitmap data of the CGBitmapContext that we have been using for
@@ -993,7 +993,8 @@ ConfigureRestrictProc(
 	 * layer. This will cause all drawing done since the last call to this
 	 * function to become visible.
 	 */
-	CGImageRef newImg = CGBitmapContextCreateImage(ctx);
+
+	CGImageRef newImg = CGBitmapContextCreateImage(context);
 	self.layer.contents = (__bridge id) newImg;
 	CGImageRelease(newImg); // will quickly leak memory if this is missing
 	[self clearTkDirtyRect];
@@ -1032,19 +1033,24 @@ ConfigureRestrictProc(
 
 -(void) setFrameSize: (NSSize)newsize
 {
+    NSSize oldsize = self.bounds.size;
     [super setFrameSize: newsize];
+    if (newsize.width == 1 && newsize.height == 1 ||
+	oldsize.width == 0 && oldsize.height == 0) {
+	return;
+    }
     NSWindow *w = [self window];
     TkWindow *winPtr = TkMacOSXGetTkWindow(w);
     Tk_Window tkwin = (Tk_Window)winPtr;
 
     if (winPtr) {
-	unsigned int width = (unsigned int)newsize.width;
-	unsigned int height=(unsigned int)newsize.height;
+	unsigned int width = (unsigned int) newsize.width;
+	unsigned int height= (unsigned int) newsize.height;
 	void *oldArg;
     	Tk_RestrictProc *oldProc;
 
 	/*
-	 * This function can be re-entered.  So we need to make sure we don't
+	 * This function can be re-entered, so we need to make sure we don't
 	 * clobber any AutoreleasePool set up by the caller.
 	 */
 
@@ -1064,7 +1070,7 @@ ConfigureRestrictProc(
 	/*
 	 * Update Tk's window data for the new size.
 	 */
-	
+
 	if ([w respondsToSelector: @selector (tkLayoutChanged)]) {
 	    [(TKWindow *)w tkLayoutChanged];
 	}
@@ -1079,7 +1085,7 @@ ConfigureRestrictProc(
 	 * In live resize we seem to need to draw a second time to
 	 * avoid artifacts.
 	 */
-	
+
 	if ([self inLiveResize]) {
 	    [self generateExposeEvents:self.bounds];
 	}
@@ -1093,11 +1099,10 @@ ConfigureRestrictProc(
     }
 
     /*
-     * Schedule a redisplay of the view.
+     * Request a call to updateLayer.
      */
 
     [self setNeedsDisplay:YES];
-
 }
 
 /*
