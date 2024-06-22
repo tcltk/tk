@@ -1977,13 +1977,9 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUb
     update
     wm geometry .t2 +20+20
     update
-#    set temp [winfo containing 120 120]
-#    unset temp
     set result [list [winfo containing 120 120]]
     destroy .t2
     update
-#    set temp [winfo containing 120 120]
-#    unset temp
     lappend result [winfo containing 120 120]
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
