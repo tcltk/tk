@@ -1998,6 +1998,7 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUb
     set result [list [winfo containing 100 100]]
     wm iconify .t2
     update
+    restackDelay
     lappend result [winfo containing 100 100]
 } {.t2 .t}
 test unixWm-50.10 {Tk_CoordsToWindow procedure, unmapped windows} unix {
