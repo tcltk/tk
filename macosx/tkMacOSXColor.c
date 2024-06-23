@@ -655,13 +655,13 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		if (@available(macOS 10.14, *)) {
-		    NSAppearance *appearance;
+		    NSAppearance *windowAppearance;
 		    if (view) {
-			appearance = [view effectiveAppearance];
+			windowAppearance = [view effectiveAppearance];
 		    } else {
-			appearance = [NSApp effectiveAppearance];
+			windowAppearance = [NSApp effectiveAppearance];
 		    }
-		    if ([appearance name] == NSAppearanceNameDarkAqua) {
+		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 			colormap = darkColormap;
 		    } else {
 			colormap = lightColormap;
@@ -669,17 +669,13 @@ TkpGetColor(
 		    if (@available(macOS 11.0, *)) {
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 110000
 			CGFloat *rgbaPtr = rgba;
-			[appearance performAsCurrentDrawingAppearance:^{
+			[windowAppearance performAsCurrentDrawingAppearance:^{
 				GetRGBA(entry, p.ulong, rgbaPtr);
 			    }];
 #endif
 		    } else {
 #if MAC_OS_X_VERSION_MIN_REQUIRED < 110000
-			if (@available(macOS 11.0, *)) {
-			    NSAppearance *savedAppearance = [NSAppearance currentDrawingAppearance];
-			} else {
-			    NSAppearance *savedAppearance = [NSAppearance currentAppearance];
-			}
+			NSAppearance *savedAppearance = [NSAppearance currentAppearance];
 			[NSAppearance setCurrentAppearance:windowAppearance];
 			GetRGBA(entry, p.ulong, rgba);
 			[NSAppearance setCurrentAppearance:savedAppearance];
