@@ -23,7 +23,7 @@ proc grid_reset {{test ?} {top .}} {
 	    gets stdin
 	}
     }
-    eval destroy [winfo children $top]
+    destroy {*}[winfo children $top]
     update
     foreach {cols rows} [grid size .] {}
     for {set i 0} {$i <= $cols} {incr i} {

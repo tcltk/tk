@@ -17,9 +17,7 @@ namespace import -force tcltest::test
 # make it easy to detect differences in order.
 
 proc raise_setup {} {
-    foreach i [winfo child .raise] {
-	        destroy $i
-        }
+    destroy {*}[winfo children .raise]
     update idletasks
     foreach i {a b c d e} {
 	    label .raise.$i -text $i -relief raised -bd 2

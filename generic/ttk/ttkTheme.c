@@ -679,8 +679,8 @@ Ttk_GetResourceCache(Tcl_Interp *interp)
  * Register a new layout specification with a style.
  * @@@ TODO: Make sure layoutName is not ".", root style must not have a layout
  */
-MODULE_SCOPE
-void Ttk_RegisterLayoutTemplate(
+MODULE_SCOPE void
+Ttk_RegisterLayoutTemplate(
     Ttk_Theme theme,			/* Target theme */
     const char *layoutName,		/* Name of new layout */
     Ttk_LayoutTemplate layoutTemplate)	/* Template */
@@ -1143,8 +1143,8 @@ Ttk_DrawElement(
  * Side effects: Sets interp's result.
  */
 
-MODULE_SCOPE
-int TtkEnumerateHashTable(Tcl_Interp *interp, Tcl_HashTable *ht)
+MODULE_SCOPE int
+TtkEnumerateHashTable(Tcl_Interp *interp, Tcl_HashTable *ht)
 {
     Tcl_HashSearch search;
     Tcl_Obj *result = Tcl_NewListObj(0, NULL);
@@ -1692,8 +1692,8 @@ StyleObjCmd(
     return Ttk_InvokeEnsemble(StyleEnsemble, 1, clientData,interp,objc,objv);
 }
 
-MODULE_SCOPE
-int Ttk_InvokeEnsemble(	/* Run an ensemble command */
+MODULE_SCOPE int
+Ttk_InvokeEnsemble(	/* Run an ensemble command */
     const Ttk_Ensemble *ensemble, int cmdIndex,
     void *clientData, Tcl_Interp *interp, int objc, Tcl_Obj *const objv[])
 {

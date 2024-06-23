@@ -12,12 +12,10 @@ namespace eval ttk::theme::xpnative {
 	    -selectforeground SystemHighlightText \
 	    -selectbackground SystemHighlight \
 	    -insertcolor SystemWindowText \
-	    -font TkDefaultFont \
-	    ;
+	    -font TkDefaultFont
 
 	ttk::style map "." \
-	    -foreground [list disabled SystemGrayText] \
-	    ;
+	    -foreground [list disabled SystemGrayText]
 
 	ttk::style configure TButton -anchor center -padding {1 1} -width -11
 	ttk::style configure TRadiobutton -padding 2
@@ -34,8 +32,7 @@ namespace eval ttk::theme::xpnative {
 	ttk::style configure TEntry -padding {2 2 2 4}
 	ttk::style map TEntry \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 	ttk::style configure TCombobox -padding 2
 	ttk::style map TCombobox \
 	    -selectbackground [list !focus SystemWindow] \
@@ -44,14 +41,12 @@ namespace eval ttk::theme::xpnative {
 		disabled		SystemGrayText \
 	    	{readonly focus}	SystemHighlightText \
 	    ] \
-	    -focusfill	[list {readonly focus} SystemHighlight] \
-	    ;
+	    -focusfill	[list {readonly focus} SystemHighlight]
 
 	ttk::style configure TSpinbox -padding {2 0 14 0}
 	ttk::style map TSpinbox \
 	    -selectbackground [list !focus SystemWindow] \
-	    -selectforeground [list !focus SystemWindowText] \
-	    ;
+	    -selectforeground [list !focus SystemWindowText]
 
 	ttk::style configure Toolbutton -padding {4 4}
 
@@ -62,6 +57,6 @@ namespace eval ttk::theme::xpnative {
 	    -background [list   disabled SystemButtonFace \
 				selected SystemHighlight] \
 	    -foreground [list   disabled SystemGrayText \
-				selected SystemHighlightText];
+				selected SystemHighlightText]
     }
 }
