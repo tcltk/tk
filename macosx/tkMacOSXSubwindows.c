@@ -746,8 +746,6 @@ XConfigureWindow(
 
 	if (view) {
 	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-	    //TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
-	    //TkpRedrawWidget((Tk_Window)winPtr);
 	}
     }
 
