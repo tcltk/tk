@@ -574,7 +574,7 @@ test bind-13.9 {Tk_BindEvent procedure} -setup {
 } -cleanup {
     destroy .t.f
 } -result {{.t.f z (.t.f <Button-1> binding)} {.t.f z (.t.f <Button> binding)}}
-test bind-13.10 {Tk_BindEvent procedure: ignore NotifyInferior} -setup {
+test bind-13.10 {Tk_BindEvent procedure: don't ignore NotifyInferior - bug 47d4f29159} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
     focus -force .t.f
@@ -590,7 +590,7 @@ test bind-13.10 {Tk_BindEvent procedure: ignore NotifyInferior} -setup {
     return $x
 } -cleanup {
     destroy .t.f
-} -result {Enter100 Leave102}
+} -result {Enter100 Enter101 Leave102 Leave103}
 test bind-13.11 {Tk_BindEvent procedure: collapse Motions} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f

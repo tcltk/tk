@@ -79,11 +79,11 @@ test treeview-1.3 "bad displaycolumns" -body {
 
 test treeview-1.4 "more bad displaycolumns" -body {
     .tv configure -displaycolumns {1 2 3}
-} -returnCodes error -result "Column index 3 out of bounds"
+} -returnCodes error -result {Column index 3 out of bounds}
 
 test treeview-1.5 "Don't forget to check negative numbers" -body {
     .tv configure -displaycolumns {1 -2 3}
-} -returnCodes error -result "Column index -2 out of bounds"
+} -returnCodes error -result {Column index -2 out of bounds}
 
 # Item creation.
 #
@@ -325,7 +325,7 @@ test treeview-5.6 "set illegal cell" -body {
 
 test treeview-5.7 "set illegal cell" -body {
     .tv set newnode 3 YY	;# 3 == current #columns
-} -returnCodes error -result "Column index 3 out of bounds"
+} -returnCodes error -result {Column index 3 out of bounds}
 
 test treeview-5.8 "set display columns" -body {
     .tv configure -displaycolumns [list 2 1 0]
@@ -706,64 +706,70 @@ proc columnids {tv dcols} {
 test treeview-identify-setup "identify series - setup" -body {
     destroy .tv
     ttk::setTheme default
+    ttk::style configure Treeview -rowheight 10m
+    ttk::style configure Treeview.Heading -font {Arial 10}
     ttk::treeview .tv -columns [list A B C]
     .tv insert {} end -id branch -text branch -open true
     .tv insert branch end -id item1 -text item1
     .tv insert branch end -id item2 -text item2
     .tv insert branch end -id item3 -text item3
 
-    .tv column #0 -width 50	;# 0-50
-    .tv column A -width 50	;# 50-100
-    .tv column B -width 50	;# 100-150
-    .tv column C -width 50	;# 150-200 (plus slop for margins)
+    .tv column #0 -width 200	;# 0-200
+    .tv column A -width 200	;# 200-400
+    .tv column B -width 200	;# 400-600
+    .tv column C -width 200	;# 600-800 (plus slop for margins)
 
     wm geometry . {} ; pack .tv ; update
 }
+# treeview-identify-setup sets heading row font to Arial with size 10 points,
+# so the heading line center y-coordinate is (in pixels):
+set yHLC [expr {([font metrics {Arial 10} -linespace] + 2) / 2.0}]
+# which makes the following in millimeters:
+set yHLC [expr {$yHLC / [winfo screenwidth .] * [winfo screenmmwidth .]}]
 
 test treeview-identify-1 "identify heading" -body {
     .tv configure -show {headings tree}
     update idletasks
-    identify* .tv {region column} 10 10
+    identify* .tv {region column} 10 ${yHLC}m
 } -result [list heading #0]
 
 test treeview-identify-2 "identify columns" -body {
     .tv configure -displaycolumns #all
     update idletasks
-    columnids .tv [identify* .tv column 25 10  75 10  125 10  175 10]
+    columnids .tv [identify* .tv column 100 ${yHLC}m  300 ${yHLC}m  500 ${yHLC}m  700 ${yHLC}m]
 } -result [list {} A B C]
 
 test treeview-identify-3 "reordered columns" -body {
     .tv configure -displaycolumns {B A C}
     update idletasks
-    columnids .tv [identify* .tv column 25 10  75 10  125 10  175 10]
+    columnids .tv [identify* .tv column 100 ${yHLC}m  300 ${yHLC}m  500 ${yHLC}m  700 ${yHLC}m]
 } -result [list {} B A C]
 
 test treeview-identify-4 "no tree column" -body {
     .tv configure -displaycolumns #all -show {headings}
     update idletasks
-    identify* .tv {region column} 25 10  75 10  125 10  175 10
+    identify* .tv {region column} 100 ${yHLC}m  300 ${yHLC}m  500 ${yHLC}m  700 ${yHLC}m
 } -result [list heading #1 heading #2 heading #3 nothing {}]
 
-# Item height in default theme is 20px
+# Item height (-rowheight) is 10 millimeters (set in treeview-identify-setup)
 test treeview-identify-5 "vertical scan - no headings" -body {
     .tv configure -displaycolumns #all -show {tree}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 70  25 90
-} -result [list tree branch tree item1 tree item2 tree item3 nothing {}]
+    identify* .tv {region item} 100 5m  100 15m  100 35m  100 45m  100 55m  100 65m
+} -result [list tree branch tree item1 tree item3 nothing {} nothing {} nothing {}]
 
 test treeview-identify-6 "vertical scan - with headings" -body {
     .tv configure -displaycolumns #all -show {tree headings}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 70  25 90
-} -result [list heading {} tree branch tree item1 tree item2 tree item3]
+    identify* .tv {region item} 100 ${yHLC}m  100 [expr {$yHLC+5}]m  100 [expr {$yHLC+15}]m  100 [expr {$yHLC+35}]m  100 [expr {$yHLC+45}]m
+} -result [list heading {} tree branch tree item1 tree item3 nothing {}]
 
 test treeview-identify-7 "vertical scan - headings, no tree" -body {
     .tv configure -displaycolumns #all -show {headings}
     update idletasks
-    identify* .tv {region item} 25 10  25 30  25 50  25 70  25 90
-} -result [list heading {} cell branch cell item1 cell item2 cell item3]
+    identify* .tv {region item} 100 ${yHLC}m  100 [expr {$yHLC+5}]m  100 [expr {$yHLC+15}]m  300 [expr {$yHLC+35}]m  100 [expr {$yHLC+45}]m
+} -result [list heading {} cell branch cell item1 cell item3 nothing {}]
 
-# In default theme, -indent and -itemheight both 20px
 # Disclosure element name is "Treeitem.indicator"
 set disclosure "*.indicator"
 test treeview-identify-8 "identify element" -body {
@@ -771,10 +777,13 @@ test treeview-identify-8 "identify element" -body {
     .tv insert branch  0 -id branch2 -open true
     .tv insert branch2 0 -id branch3 -open true
     .tv insert branch3 0 -id leaf3
-    update idletasks;
-    identify* .tv {item element} 10 10  30 30  50 50
+    ttk::style configure Treeview -indent 8m
+    update idletasks
+    identify* .tv {item element} 4m 5m  12m 15m  20m 25m
 } -match glob -result [list \
 	branch $disclosure branch2 $disclosure branch3 $disclosure]
+
+ttk::style configure Treeview -rowheight 20
 
 # See #2381555
 test treeview-identify-9 "identify works when horizontally scrolled" -setup {
@@ -816,9 +825,9 @@ test treeview-1541739 "Root node properly initialized (#1541739)" -setup {
 test treeview-3006842 "Null bindings" -setup {
     ttk::treeview .tv -show tree
 } -body {
-    .tv tag bind empty <ButtonPress-1> {}
+    .tv tag bind empty <Button-1> {}
     .tv insert {} end -text "Click me" -tags empty
-    event generate .tv <ButtonPress-1> -x 10 -y 10
+    event generate .tv <Button-1> -x 10 -y 10
     .tv tag bind empty
 } -result {} -cleanup {
     destroy .tv
@@ -853,7 +862,7 @@ test treeview-368fa4561e "indicators cannot be clicked on leafs" -setup {
     set res [.tv item foo -open]
     # using $h even for x computation is intentional here in order to simulate
     # a mouse click on the (invisible since we're on a leaf) indicator
-    event generate .tv <ButtonPress-1> \
+    event generate .tv <Button-1> \
             -x [expr {$x + $h / 2}] \
             -y [expr {$y + $h / 2}]
     lappend res [.tv item foo -open]

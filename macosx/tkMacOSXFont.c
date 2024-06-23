@@ -171,10 +171,8 @@ static int		CreateNamedSystemFont(Tcl_Interp *interp,
     return _ds;
 }
 
-#ifndef __clang__
 @synthesize UTF8String = _UTF8String;
 @synthesize DString = _ds;
-#endif
 @end
 
 #define GetNSFontTraitsFromTkFontAttributes(faPtr) \
@@ -771,7 +769,7 @@ void
 TkpGetFontAttrsForChar(
     TCL_UNUSED(Tk_Window),		/* Window on the font's display */
     Tk_Font tkfont,		/* Font to query */
-    int c,         		/* Character of interest */
+    int c,	 		/* Character of interest */
     TkFontAttributes* faPtr)	/* Output: Font attributes */
 {
     MacFont *fontPtr = (MacFont *) tkfont;
@@ -948,9 +946,9 @@ TkpMeasureCharsInContext(
 	double maxWidth = maxLength + offset;
 	NSCharacterSet *cs;
 
-        /*
-         * Get a line breakpoint in the source string.
-         */
+	/*
+	 * Get a line breakpoint in the source string.
+	 */
 
 	index = start;
 	if (flags & TK_WHOLE_WORDS) {
@@ -963,9 +961,9 @@ TkpMeasureCharsInContext(
 	    index = CTTypesetterSuggestClusterBreak(typesetter, start, maxWidth);
 	}
 
-        /*
-         * Trim right whitespace/lineending characters.
-         */
+	/*
+	 * Trim right whitespace/lineending characters.
+	 */
 
 	cs = (index <= len && (flags & TK_WHOLE_WORDS)) ?
 		whitespaceCharacterSet : lineendingCharacterSet;
@@ -974,29 +972,29 @@ TkpMeasureCharsInContext(
 	    index--;
 	}
 
-        /*
-         * If there is no line breakpoint in the source string between its
-         * start and the index position that fits in maxWidth, then
-         * CTTypesetterSuggestLineBreak() returns that very last index.
-         * However if the TK_WHOLE_WORDS flag is set, we want to break at a
-         * word boundary. In this situation, unless TK_AT_LEAST_ONE is set, we
-         * must report that zero chars actually fit (in other words the
-         * smallest word of the source string is still larger than maxWidth).
-         */
+	/*
+	 * If there is no line breakpoint in the source string between its
+	 * start and the index position that fits in maxWidth, then
+	 * CTTypesetterSuggestLineBreak() returns that very last index.
+	 * However if the TK_WHOLE_WORDS flag is set, we want to break at a
+	 * word boundary. In this situation, unless TK_AT_LEAST_ONE is set, we
+	 * must report that zero chars actually fit (in other words the
+	 * smallest word of the source string is still larger than maxWidth).
+	 */
 
-        if ((index >= start) && (index < len) &&
-                (flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
-                ![cs characterIsMember:[string characterAtIndex:index]]) {
-            index = start;
-        }
+	if ((index >= start) && (index < len) &&
+		(flags & TK_WHOLE_WORDS) && !(flags & TK_AT_LEAST_ONE) &&
+		![cs characterIsMember:[string characterAtIndex:index]]) {
+	    index = start;
+	}
 
 	if (index <= start && (flags & TK_AT_LEAST_ONE)) {
 	    index = start + 1;
 	}
 
-        /*
-         * Now measure the string width in pixels.
-         */
+	/*
+	 * Now measure the string width in pixels.
+	 */
 
 	if (index > 0) {
 	    range.length = index;
@@ -1013,7 +1011,7 @@ TkpMeasureCharsInContext(
 	    CFRelease(line);
 	}
 
-        /*
+	/*
 	 * The call to CTTypesetterSuggestClusterBreak above will always return
 	 * at least one character regardless of whether it exceeded it or not.
 	 * Clean that up now.
@@ -1194,9 +1192,9 @@ TkpDrawAngledCharsInContext(
     CGAffineTransform t;
     CGFloat width, height, textX = (CGFloat) x, textY = (CGFloat) y;
 
-    if (rangeStart < 0 || rangeLength <= 0  ||
-	rangeStart + rangeLength > numBytes ||
-	!TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
+    if (rangeStart < 0 || rangeLength <= 0
+	    || rangeStart + rangeLength > numBytes
+	    || !TkMacOSXSetupDrawingContext(drawable, gc, &drawingContext)) {
 	return;
     }
     string = [[TKNSString alloc] initWithTclUtfBytes:source length:numBytes];
@@ -1226,9 +1224,9 @@ TkpDrawAngledCharsInContext(
     t = CGAffineTransformMake(1.0, 0.0, 0.0, -1.0, 0.0, height);
     if (angle != 0.0) {
 	t = CGAffineTransformTranslate(
-             CGAffineTransformRotate(
-                 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
-             -textX, -textY);
+	     CGAffineTransformRotate(
+		 CGAffineTransformTranslate(t, textX, textY), angle*PI/180.0),
+	     -textX, -textY);
     }
     CGContextConcatCTM(context, t);
     start = Tcl_NumUtfChars(source, rangeStart);

@@ -209,7 +209,7 @@ test color-2.11 {Tk_GetColor, 6 hex digits, last one invalid} -body {
 } -returnCodes error -result {invalid color name "#12345g"}
 
 test color-3.1 {Tk_FreeColor procedure, reference counting} colorsFree {
-    eval destroy [winfo child .t]
+    destroy {*}[winfo children .t]
     mkColors .t.c 40 6 0 240 240 0 -6 0 0 0 -40
     pack .t.c
     mkColors .t.c2 20 1 250 0 0 -10 0 0 0 0 0
@@ -223,7 +223,7 @@ test color-3.1 {Tk_FreeColor procedure, reference counting} colorsFree {
     lappend result [colorsFree .t]
 } {0 1}
 test color-3.2 {Tk_FreeColor procedure, flushing stressed cmap information} colorsFree {
-    eval destroy [winfo child .t]
+    destroy {*}[winfo children .t]
     mkColors .t.c 40 6 0 240 240 0 -6 0 0 0 -40
     pack .t.c
     mkColors .t.c2 20 1 250 0 0 -10 0 0 0 0 0
