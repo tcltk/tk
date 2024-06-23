@@ -24,7 +24,7 @@ typedef struct {
 } BuiltInIcon;
 
 /*
- * This array mapps a string name to the supported builtin icons
+ * This array maps a string name to the supported builtin icons
  * on the Macintosh.
  */
 
