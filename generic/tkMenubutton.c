@@ -531,17 +531,6 @@ ConfigureMenuButton(
 	    Tk_SetBackgroundFromBorder(mbPtr->tkwin, mbPtr->normalBorder);
 	}
 
-	if (mbPtr->highlightWidth < 0) {
-	    mbPtr->highlightWidth = 0;
-	}
-
-	if (mbPtr->padX < 0) {
-	    mbPtr->padX = 0;
-	}
-	if (mbPtr->padY < 0) {
-	    mbPtr->padY = 0;
-	}
-
 	/*
 	 * Get the image for the widget, if there is one. Allocate the new
 	 * image before freeing the old one, so that the reference count
