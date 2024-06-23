@@ -1665,13 +1665,13 @@ test panedwindow-17.9 {MoveSash, move right respects minsize, exludes pad} -setu
 } -cleanup {
     deleteWindows
 } -result [list 50 0]
-test panedwindow-17.10 {MoveSash, move right, negative minsize becomes 0} -setup {
+test panedwindow-17.10 {MoveSash, move right, zero minsize} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue} {
         .p add [frame $w -height 20 -width 20 -bg $c] \
-                -sticky nsew -minsize -50
+                -sticky nsew -minsize 0
     }
 
     .p sash place 0 50 0
@@ -1800,13 +1800,13 @@ test panedwindow-17.17 {MoveSash, move left respects minsize, exludes pad} -setu
 } -cleanup {
     deleteWindows
 } -result [list 42 0]
-test panedwindow-17.18 {MoveSash, move left, negative minsize becomes 0} -setup {
+test panedwindow-17.18 {MoveSash, move left, zero minsize} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2
     foreach w {.f1 .f2 .f3} c {red blue green} {
         .p add [frame $w -height 20 -width 20 -bg $c] \
-                -sticky nsew -minsize -50
+                -sticky nsew -minsize 0
     }
 
     .p sash place 1 10 0
@@ -1987,14 +1987,14 @@ test panedwindow-18.9 {MoveSash, move down respects minsize, exludes pad} -setup
 } -cleanup {
     deleteWindows
 } -result [list 0 50]
-test panedwindow-18.10 {MoveSash, move right, negative minsize becomes 0} -setup {
+test panedwindow-18.10 {MoveSash, move right, zero minsize} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue} {
         .p add [frame $w -height 20 -width 20 -bg $c] \
-                -sticky nsew -minsize -50
+                -sticky nsew -minsize 0
     }
 
     .p sash place 0 0 50
@@ -2130,14 +2130,14 @@ test panedwindow-18.17 {MoveSash, move up respects minsize, exludes pad} -setup 
 } -cleanup {
     deleteWindows
 } -result [list 0 42]
-test panedwindow-18.18 {MoveSash, move up, negative minsize becomes 0} -setup {
+test panedwindow-18.18 {MoveSash, move up, zero minsize} -setup {
     deleteWindows
 } -body {
     panedwindow .p -showhandle false -borderwidth 0 -sashpad 0 -sashwidth 2 \
             -orient vertical
     foreach w {.f1 .f2 .f3} c {red blue green} {
         .p add [frame $w -height 20 -width 20 -bg $c] \
-                -sticky nsew -minsize -50
+                -sticky nsew -minsize 0
     }
 
     .p sash place 1 0 10
