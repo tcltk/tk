@@ -208,10 +208,7 @@ XMapWindow(
 	     * the window.
 	     */
 
-	    // We could add a TK_CONTAINER_WINDOW flag and have
-	    // TkMacOSXInvalidateWindow invalidate the clip regions.
 	    TkMacOSXInvalClipRgns(contWinPtr);
-	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
 	}
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
     } else {
