@@ -1244,7 +1244,6 @@ TkMacOSXSetupDrawingContext(
 
     dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (!dc.context) {
-	NSRect drawingBounds;
 	dc.view = view;
 	dc.context = view.tkLayerBitmapContext;
 	if (dc.clipRgn) {
@@ -1253,16 +1252,14 @@ TkMacOSXSetupDrawingContext(
 				    .ty = [view bounds].size.height};
 	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
 	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
-	    drawingBounds = NSRectFromCGRect(clipBounds);
-	} else {
-	    drawingBounds = [view bounds];
 	}
 
-	// It seems this should be the only place to use addTkDirtyRect:
-	// and that it should not be used elsewhere as a proxy to generate
-	// Expose events, which will not work.
+	/*
+	 * Mark the view as needing to be redisplayed, since we are drawing
+	 * to its backing layer.
+	 */
 
-	[view addTkDirtyRect:drawingBounds];
+	[view setTkNeedsDisplay:YES];
 
 	/*
 	 * Workaround for an Apple bug.
@@ -1488,11 +1485,6 @@ TkMacOSXRestoreDrawingContext(
 	CFRelease(dcPtr->clipRgn);
 	dcPtr->clipRgn = NULL;
     }
-#if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
-    if (@available(macOS 10.14, *)) {
-    	//NSAppearance.currentAppearance = [dcPtr->view effectiveAppearance];
-    }
-#endif
 
 #ifdef TK_MAC_DEBUG
     bzero(dcPtr, sizeof(TkMacOSXDrawingContext));
