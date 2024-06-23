@@ -244,7 +244,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 	    [view viewDidChangeEffectiveAppearance];
 	}
 #endif
-	[view addTkDirtyRect:[view bounds]];
+	[view setTkNeedsDisplay:YES];
 	Tcl_CancelIdleCall(TkMacOSXDrawAllViews, NULL);
 	Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
     }
@@ -1002,7 +1002,7 @@ ConfigureRestrictProc(
 	 */
 	
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
-	[self clearTkDirtyRect];
+	[self setTkNeedsDisplay:NO];
     }
 }
 

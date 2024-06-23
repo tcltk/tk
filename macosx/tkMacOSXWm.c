@@ -2442,7 +2442,7 @@ WmDeiconifyCmd(
 	[win setExcludedFromWindowsMenu:NO];
 	TkMacOSXApplyWindowAttributes(winPtr, win);
 	[win orderFront:NSApp];
-	[[win contentView] setNeedsDisplay:YES];
+	[[win contentView] setTkNeedsDisplay:YES];
     }
     if (wmPtr->icon) {
 	Tk_UnmapWindow((Tk_Window)wmPtr->icon);
@@ -6873,9 +6873,11 @@ TkMacOSXMakeRealWindowExist(
  *
  * TkpRedrawWidget --
  *
- *      Mark the bounding rectangle of this widget as needing display so the
- *      widget will be drawn by [NSView drawRect:].  If this is called within
- *      the drawRect method, do nothing.
+ *      This is a stub called only from tkTextDisp.c.  It was introduced
+ *      to deal with an issue in macOS 10.14 and is not needed
+ *      even for that OS with updateLayer in use.  It would add the widget bounds
+ *      to the dirtyRect, which is not currently used, and set the
+ *      TkNeedsDisplay flag.  Now it is a no-op.
  *
  * Results:
  *      None.
@@ -6888,6 +6890,8 @@ TkMacOSXMakeRealWindowExist(
 
 void
 TkpRedrawWidget(Tk_Window tkwin) {
+    (void) tkwin;
+#if 0
     TkWindow *winPtr = (TkWindow *)tkwin;
     NSWindow *w = nil;
     Rect tkBounds;
@@ -6904,7 +6908,9 @@ TkpRedrawWidget(Tk_Window tkwin) {
 			    tkBounds.right - tkBounds.left,
 			    tkBounds.bottom - tkBounds.top);
 	[view addTkDirtyRect:bounds];
+	[view setNeedsDisplay:YES];
     }
+#endif
 }
 
 
