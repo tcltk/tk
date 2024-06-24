@@ -36,7 +36,7 @@ new value of the scale.
 .OP \-digits digits Digits
 An integer specifying how many significant digits should be retained
 when converting the value of the scale to a string.
-If the number is less than or equal to zero, then the scale picks
+If the number is negative or zero, then the scale picks
 the smallest value that guarantees that every possible slider
 position prints as a different string.
 .OP \-from from From
@@ -56,7 +56,7 @@ it is the scale's width.
 A real value specifying the resolution for the scale.
 If this value is greater than zero then the scale's value will always be
 rounded to an even multiple of this value, as will
-the endpoints of the scale.  If the value is less than zero then no
+the endpoints of the scale.  If the value is negative then no
 rounding occurs.  Defaults to 1 (i.e., the value will be integral).
 .OP \-showvalue showValue ShowValue
 Specifies a boolean value indicating whether or not the current

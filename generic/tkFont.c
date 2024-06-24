@@ -1329,7 +1329,6 @@ Tk_GetFontFromObj(
 	    FreeFontObj(objPtr);
 	    fontPtr = NULL;
 	} else if (Tk_Screen(tkwin) == fontPtr->screen) {
-	    fontPtr->resourceRefCount++;
 	    return (Tk_Font) fontPtr;
 	}
     }
@@ -4307,7 +4306,7 @@ Tcl_Obj *
 TkDebugFont(
     Tk_Window tkwin,		/* The window in which the font will be used
 				 * (not currently used). */
-    const char *name)		/* Name of the desired color. */
+    const char *name)		/* Name of the desired font. */
 {
     TkFont *fontPtr;
     Tcl_HashEntry *hashPtr;

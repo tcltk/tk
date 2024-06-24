@@ -386,7 +386,7 @@ or the empty string \fB{}\fR
 to create a new top-level item.
 \fIindex\fR is an integer, or the value \fBend\fR, specifying where in the
 list of \fIparent\fR's children to insert the new item.
-If \fIindex\fR is less than or equal to zero,
+If \fIindex\fR is negative or zero,
 the new node is inserted at the beginning;
 if \fIindex\fR is greater than or equal to the current number of children,
 it is inserted at the end.
@@ -418,7 +418,7 @@ Moves \fIitem\fR to position \fIindex\fR in \fIparent\fR's list of children.
 It is illegal to move an item under one of its descendants.
 .RS
 .PP
-If \fIindex\fR is less than or equal to zero, \fIitem\fR is moved
+If \fIindex\fR is negative or zero, \fIitem\fR is moved
 to the beginning; if greater than or equal to the number of children,
 it is moved to the end.
 .RE

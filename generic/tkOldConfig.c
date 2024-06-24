@@ -343,7 +343,7 @@ DoConfig(
     int nullValue;
 
     nullValue = 0;
-    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK))) {
+    if ((*value == 0) && (specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
 	nullValue = 1;
     }
 
@@ -354,17 +354,17 @@ DoConfig(
 	ptr = (char *)widgRec + specPtr->offset;
 	switch (specPtr->type) {
 	case TK_CONFIG_BOOLEAN:
-	    if (Tcl_GetBoolean(interp, value, (int *) ptr) != TCL_OK) {
+	    if (Tcl_GetBoolean(interp, value, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_INT:
-	    if (Tcl_GetInt(interp, value, (int *) ptr) != TCL_OK) {
+	    if (Tcl_GetInt(interp, value, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_DOUBLE:
-	    if (Tcl_GetDouble(interp, value, (double *) ptr) != TCL_OK) {
+	    if (Tcl_GetDouble(interp, value, (double *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -466,7 +466,7 @@ DoConfig(
 	}
 	case TK_CONFIG_RELIEF:
 	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetRelief(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetRelief(interp, uid, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -507,24 +507,26 @@ DoConfig(
 	    break;
 	case TK_CONFIG_CAP_STYLE:
 	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetCapStyle(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetCapStyle(interp, uid, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_JOIN_STYLE:
 	    uid = valueIsUid ? (Tk_Uid) value : Tk_GetUid(value);
-	    if (Tk_GetJoinStyle(interp, uid, (int *) ptr) != TCL_OK) {
+	    if (Tk_GetJoinStyle(interp, uid, (int *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_PIXELS:
-	    if (Tk_GetPixels(interp, tkwin, value, (int *) ptr)
+	    if (nullValue) {
+		*(int *)ptr = INT_MIN;
+	    } else if (Tk_GetPixels(interp, tkwin, value, (int *)ptr)
 		!= TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case TK_CONFIG_MM:
-	    if (Tk_GetScreenMM(interp, tkwin, value, (double*)ptr) != TCL_OK) {
+	    if (Tk_GetScreenMM(interp, tkwin, value, (double *)ptr) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
@@ -857,8 +859,10 @@ FormatConfigValue(
 	result = Tk_NameOfJoinStyle(*((int *)ptr));
 	break;
     case TK_CONFIG_PIXELS:
-	snprintf(buffer, 200, "%d", *((int *)ptr));
-	result = buffer;
+	if ((*(int *)ptr != INT_MIN) || !(specPtr->specFlags & (TK_CONFIG_NULL_OK|TCL_NULL_OK|1))) {
+	    snprintf(buffer, 200, "%d", *((int *)ptr));
+	    result = buffer;
+	}
 	break;
     case TK_CONFIG_MM:
 	Tcl_PrintDouble(interp, *((double *)ptr), buffer);
