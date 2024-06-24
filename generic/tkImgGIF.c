@@ -1928,8 +1928,8 @@ FileWriteGIF(
     if (!chan) {
 	return TCL_ERROR;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-translation",
-	    "binary") != TCL_OK) {
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
