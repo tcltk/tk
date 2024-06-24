@@ -56,7 +56,8 @@ XDestroyWindow(
     Window window)		/* Window. */
 {
     MacDrawable *macWin = (MacDrawable *)window;
-    // fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
+    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macWin);
+    //fprintf(stderr, "XDestroyWindow: %s with parent %s\n",
     // 	    Tk_PathName(macWin->winPtr),
     // 	    Tk_PathName(macWin->winPtr->parentPtr));
 
@@ -71,7 +72,9 @@ XDestroyWindow(
 
     if (!Tk_IsTopLevel(macWin->winPtr)) {
 	if (macWin->winPtr->parentPtr != NULL) {
-	    TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
+	    TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
+	    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) view);
+	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, (void *) view);
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
@@ -149,11 +152,10 @@ XMapWindow(
 	return BadWindow;
     }
     MacDrawable *macWin = (MacDrawable *)window;
-    TkWindow *winPtr = macWin->winPtr;
-    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
     static Bool initialized = NO;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
+    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr)); 
 
     /*
      * Under certain situations it's possible for this function to be called
@@ -167,10 +169,12 @@ XMapWindow(
 	TkMacOSXMakeRealWindowExist(macWin->toplevel->winPtr);
     }
 
+    TkWindow *winPtr = macWin->winPtr;
+    NSWindow *win = TkMacOSXGetNSWindowForDrawable(window);
+    TKContentView *view = [win contentView];
     LastKnownRequestProcessed(display)++;
     if (Tk_IsTopLevel(winPtr)) {
 	if (!Tk_IsEmbedded(winPtr)) {
-	    TKContentView *view = [win contentView];
 
 	    /*
 	     * We want to activate Tk when a toplevel is mapped but we must not
@@ -210,7 +214,6 @@ XMapWindow(
 
 	    TkMacOSXInvalClipRgns(contWinPtr);
 	}
-	TkMacOSXInvalClipRgns((Tk_Window)winPtr);
     } else {
 
 	/*
@@ -222,20 +225,13 @@ XMapWindow(
     }
 
     /*
-     * Mark the toplevel as needing to be redrawn, unless the window is being
-     * mapped while drawing is taking place.
+     * If a geometry manager is mapping hundreds of windows we
+     * don't want to redraw the view hundreds of times, so do
+     * it in an idle task.
      */
 
-    TKContentView *view = [win contentView];
-
-    /*
-     * Do not rely on addTkDirtyRect: to generate Expose events
-     * (though I’m not sure if this is the place to generate events;
-     * or if using generateExposeEvents: is the best way;
-     * what does XMapWindow() do on other platforms?)
-     */
-    // Possibly this only needs to use the widget bounds.
-    [view generateExposeEvents:[view bounds]];
+    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) view);
+    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, (void *) view);
 
     /*
      * Generate VisibilityNotify events for window and all mapped children.
@@ -365,14 +361,6 @@ XUnmapWindow(
 	 */
 
 	TkMacOSXInvalClipRgns((Tk_Window)winPtr->parentPtr);
-	//TkMacOSXInvalidateWindow(macWin, TK_PARENT_WINDOW);
-	// if (parentPtr && parentPtr->privatePtr->visRgn) {
-	//     TkMacOSXInvalidateViewRegion(
-	// 	    TkMacOSXGetNSViewForDrawable(parentPtr->window),
-	// 	    parentPtr->privatePtr->visRgn);
-	// }
-	//TkMacOSXInvalClipRgns((Tk_Window)parentPtr);
-	//TkMacOSXUpdateClipRgn(parentPtr);
     }
     return Success;
 }
@@ -1073,6 +1061,15 @@ TkMacOSXInvalidateViewRegion(
  *
  *----------------------------------------------------------------------
  */
+void
+TkMacOSXRedrawViewIdleTask(
+    void *clientData)
+{
+    TKContentView *view = (TKContentView *) clientData;
+    //    fprintf(stderr, "idle redraw for %p\n", view);
+    [view generateExposeEvents:[view bounds]];
+    [view setTkNeedsDisplay:YES];
+}
 
 void
 TkMacOSXInvalidateWindow(
@@ -1091,8 +1088,8 @@ TkMacOSXInvalidateWindow(
     if ((flag == TK_PARENT_WINDOW) && parent){
      	TkMacOSXInvalClipRgns(parent);
     }
-    // Here we should probably be using the damage region.
     [view generateExposeEvents:[view bounds]];
+    [view setTkNeedsDisplay:YES];
 }
 
 /*
