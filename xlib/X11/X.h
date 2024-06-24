@@ -64,7 +64,7 @@ SOFTWARE.
 #  ifndef _XTYPEDEF_XID
 #    define _XTYPEDEF_XID
 #    ifdef _WIN64
-typedef unsigned __int64 XID;
+typedef unsigned long long XID;
 #    else
 typedef unsigned long XID;
 #    endif
@@ -112,15 +112,17 @@ typedef XID KeySym;
 typedef unsigned int KeyCode;	/* In order to use IME, the Macintosh needs
 				 * to pack 3 bytes into the keyCode field in
 				 * the XEvent.  In the real X.h, a KeyCode is
-				 * defined as a short, which wouldn't be big
-				 * enough. */
+				 * defined as an unsigned char, which wouldn't
+				 * be big enough. */
 
 /*****************************************************************
  * RESERVED RESOURCE AND CONSTANT DEFINITIONS
  *****************************************************************/
 
-/* Pert-Tk expects None to be a macro. See ticket [593eb0227c] */
+#ifndef None
+/* Perl-Tk expects None to be a macro. See ticket [593eb0227c] */
 #define None                 None /* See bug [9e31fd9449] and below */
+#endif
 
 #define ParentRelative       1L	/* background pixmap in CreateWindow
 				    and ChangeWindowAttributes */
@@ -227,7 +229,7 @@ are reserved in the protocol for errors and replies. */
 
 #define ShiftMask		(1<<0)
 #define LockMask		(1<<1)
-/* Pert-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
+/* Perl-Tk expects ControlMask to be a macro. See ticket [593eb0227c] */
 #define ControlMask		ControlMask /* See bug [9e31fd9449] and below */
 #define Mod1Mask		(1<<3)
 #define Mod2Mask		(1<<4)

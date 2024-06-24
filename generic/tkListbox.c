@@ -115,7 +115,7 @@ typedef struct {
 				 * is offset to the left by this many pixels
 				 * (0 means no offset, positive means there is
 				 * an offset). This is x scrolling information
-                                 * is not linked to justification. */
+				 * is not linked to justification. */
 
     /*
      * Information about what's selected or active, if any.
@@ -874,7 +874,7 @@ ListboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", (char *)NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -911,7 +911,7 @@ ListboxWidgetObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "item number \"%s\" out of range",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LISTBOX", "ITEM_INDEX", (char *)NULL);
 	    result = TCL_ERROR;
 	    break;
 	}
@@ -1111,15 +1111,15 @@ ListboxBboxSubCmd(
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	pixelWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
-        if (listPtr->justify == TK_JUSTIFY_LEFT) {
-            x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
-        } else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
-            x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
-                    - pixelWidth - listPtr->xOffset + GetMaxOffset(listPtr);
-        } else {
-            x = (Tk_Width(tkwin) - pixelWidth)/2
-                    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
-        }
+	if (listPtr->justify == TK_JUSTIFY_LEFT) {
+	    x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
+	} else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
+	    x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
+		    - pixelWidth - listPtr->xOffset + GetMaxOffset(listPtr);
+	} else {
+	    x = (Tk_Width(tkwin) - pixelWidth)/2
+		    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
+	}
 	y = ((index - listPtr->topIndex)*listPtr->lineHeight)
 		+ listPtr->inset + listPtr->selBorderWidth;
 	results[0] = Tcl_NewWideIntObj(x);
@@ -2072,24 +2072,24 @@ DisplayListbox(
 	 * Draw the actual text of this item.
 	 */
 
-        Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
-        stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
-        textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
+	Tcl_ListObjIndex(listPtr->interp, listPtr->listObj, i, &curElement);
+	stringRep = Tcl_GetStringFromObj(curElement, &stringLen);
+	textWidth = Tk_TextWidth(listPtr->tkfont, stringRep, stringLen);
 
 	Tk_GetFontMetrics(listPtr->tkfont, &fm);
 	y += fm.ascent + listPtr->selBorderWidth;
 
-        if (listPtr->justify == TK_JUSTIFY_LEFT) {
-            x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
-        } else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
-            x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
-                    - textWidth - listPtr->xOffset + GetMaxOffset(listPtr);
-        } else {
-            x = (Tk_Width(tkwin) - textWidth)/2
-                    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
-        }
+	if (listPtr->justify == TK_JUSTIFY_LEFT) {
+	    x = (listPtr->inset + listPtr->selBorderWidth) - listPtr->xOffset;
+	} else if (listPtr->justify == TK_JUSTIFY_RIGHT) {
+	    x = Tk_Width(tkwin) - (listPtr->inset + listPtr->selBorderWidth)
+		    - textWidth - listPtr->xOffset + GetMaxOffset(listPtr);
+	} else {
+	    x = (Tk_Width(tkwin) - textWidth)/2
+		    - listPtr->xOffset + GetMaxOffset(listPtr)/2;
+	}
 
-        Tk_DrawChars(listPtr->display, pixmap, gc, listPtr->tkfont,
+	Tk_DrawChars(listPtr->display, pixmap, gc, listPtr->tkfont,
 		stringRep, stringLen, x, y);
 
 	/*
@@ -2769,9 +2769,9 @@ GetListboxIndex(
     stringRep = Tcl_GetString(indexObj);
     if (stringRep[0] == '@') {
 
-        /*
-         * @x,y index
-         */
+	/*
+	 * @x,y index
+	 */
 
 	int y;
 	char *start;
@@ -2804,7 +2804,7 @@ GetListboxIndex(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad listbox index \"%s\": must be active, anchor, end, @x,y,"
 	    " or an index", Tcl_GetString(indexObj)));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "LISTBOX_INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "LISTBOX_INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -3203,7 +3203,7 @@ ListboxLostSelection(
     if ((listPtr->exportSelection) && (!Tcl_IsSafe(listPtr->interp))
 	    && (listPtr->nElements > 0)) {
 	ListboxSelect(listPtr, 0, listPtr->nElements-1, 0);
-        GenerateListboxSelectEvent(listPtr);
+	GenerateListboxSelectEvent(listPtr);
     }
 }
 
@@ -3448,27 +3448,27 @@ ListboxListVarProc(
 
     if (flags & TCL_TRACE_UNSETS) {
 
-        if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
-            void *probe = NULL;
+	if (!Tcl_InterpDeleted(interp) && listPtr->listVarName) {
+	    void *probe = NULL;
 
-            do {
-                probe = Tcl_VarTraceInfo(interp,
-                        listPtr->listVarName,
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        ListboxListVarProc, probe);
-                if (probe == (void *)listPtr) {
-                    break;
-                }
-            } while (probe);
-            if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * listVarName, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
-                return NULL;
-            }
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			listPtr->listVarName,
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			ListboxListVarProc, probe);
+		if (probe == (void *)listPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * listVarName, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
 	    Tcl_SetVar2Ex(interp, listPtr->listVarName, NULL,
 		    listPtr->listObj, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, listPtr->listVarName,
@@ -3650,15 +3650,15 @@ static int GetMaxOffset(
     int maxOffset;
 
     maxOffset = listPtr->maxWidth -
-            (Tk_Width(listPtr->tkwin) - 2*listPtr->inset -
-            2*listPtr->selBorderWidth) + listPtr->xScrollUnit - 1;
+	    (Tk_Width(listPtr->tkwin) - 2*listPtr->inset -
+	    2*listPtr->selBorderWidth) + listPtr->xScrollUnit - 1;
     if (maxOffset < 0) {
 
-        /*
-         * Listbox is larger in width than its largest width item.
-         */
+	/*
+	 * Listbox is larger in width than its largest width item.
+	 */
 
-        maxOffset = 0;
+	maxOffset = 0;
     }
     maxOffset -= maxOffset % listPtr->xScrollUnit;
 

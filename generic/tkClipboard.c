@@ -373,7 +373,7 @@ Tk_ClipboardAppend(
 		Tk_GetAtomName(tkwin, format),
 		Tk_GetAtomName(tkwin, targetPtr->format),
 		Tk_GetAtomName(tkwin, type)));
-	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "FORMAT_MISMATCH", NULL);
+	Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "FORMAT_MISMATCH", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -481,7 +481,7 @@ Tk_ClipboardObjCmd(
 	    if (i >= objc) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    switch ((enum appendOptions) subIndex) {
@@ -571,7 +571,7 @@ Tk_ClipboardObjCmd(
 	    if (i >= objc) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"value for \"%s\" missing", string));
-		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "CLIPBOARD", "VALUE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    switch ((enum getOptions) subIndex) {

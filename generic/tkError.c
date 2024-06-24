@@ -80,7 +80,7 @@ Tk_CreateErrorHandler(
     Tk_ErrorProc *errorProc,	/* Procedure to invoke when a matching error
 				 * occurs. NULL means just ignore matching
 				 * errors. */
-    ClientData clientData)	/* Arbitrary value to pass to errorProc. */
+    void *clientData)	/* Arbitrary value to pass to errorProc. */
 {
     TkErrorHandler *errorPtr;
     TkDisplay *dispPtr;
@@ -110,7 +110,7 @@ Tk_CreateErrorHandler(
     errorPtr = (TkErrorHandler *)ckalloc(sizeof(TkErrorHandler));
     errorPtr->dispPtr = dispPtr;
     errorPtr->firstRequest = NextRequest(display);
-    errorPtr->lastRequest = (unsigned) -1;
+    errorPtr->lastRequest = (unsigned long) -1;
     errorPtr->error = error;
     errorPtr->request = request;
     errorPtr->minorCode = minorCode;

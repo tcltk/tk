@@ -142,7 +142,7 @@ static const Ttk_ElementOptionSpec BorderElementOptions[] = {
 static void BorderElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -150,7 +150,7 @@ static void BorderElementSize(
     BorderElement *bd = (BorderElement *)elementRecord;
     int borderWidth = 0;
 
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     *paddingPtr = Ttk_UniformPadding((short)borderWidth);
 }
 
@@ -167,7 +167,7 @@ static void BorderElementDraw(
     int borderWidth = 1, relief = TK_RELIEF_FLAT;
 
     border = Tk_Get3DBorderFromObj(tkwin, bd->borderObj);
-    Tcl_GetIntFromObj(NULL, bd->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, bd->borderWidthObj, &borderWidth);
     Tk_GetReliefFromObj(NULL, bd->reliefObj, &relief);
 
     if (border && borderWidth > 0 && relief != TK_RELIEF_FLAT) {
@@ -320,7 +320,7 @@ static const Ttk_ElementOptionSpec PaddingElementOptions[] = {
 	offsetof(PaddingElement,paddingObj), "0" },
     { "-relief", TK_OPTION_RELIEF,
 	offsetof(PaddingElement,reliefObj), "flat" },
-    { "-shiftrelief", TK_OPTION_INT,
+    { "-shiftrelief", TK_OPTION_PIXELS,
 	offsetof(PaddingElement,shiftreliefObj), "0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -339,7 +339,7 @@ static void PaddingElementSize(
     Ttk_Padding pad;
 
     Tk_GetReliefFromObj(NULL, padding->reliefObj, &relief);
-    Tcl_GetIntFromObj(NULL, padding->shiftreliefObj, &shiftRelief);
+    Tk_GetPixelsFromObj(NULL, tkwin, padding->shiftreliefObj, &shiftRelief);
     Ttk_GetPaddingFromObj(NULL,tkwin,padding->paddingObj,&pad);
     *paddingPtr = Ttk_RelievePadding(pad, relief, shiftRelief);
 }
@@ -359,6 +359,7 @@ static const Ttk_ElementSpec PaddingElementSpec = {
 typedef struct {
     Tcl_Obj	*focusColorObj;
     Tcl_Obj	*focusThicknessObj;
+    Tcl_Obj	*focusSolidObj;
 } FocusElement;
 
 /*
@@ -366,7 +367,8 @@ typedef struct {
  * 	Draw a dotted rectangle to indicate focus.
  */
 static void DrawFocusRing(
-    Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, Ttk_Box b)
+    Tk_Window tkwin, Drawable d, Tcl_Obj *colorObj, int thickness, int solid,
+    Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, colorObj);
     unsigned long mask = 0UL;
@@ -374,11 +376,16 @@ static void DrawFocusRing(
     GC gc;
 
     gcvalues.foreground = color->pixel;
-    gcvalues.line_style = LineOnOffDash;
-    gcvalues.line_width = 1;
-    gcvalues.dashes = 1;
-    gcvalues.dash_offset = 1;
-    mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    gcvalues.line_width = thickness < 1 ? 1 : thickness;
+    if (solid) {
+	gcvalues.line_style = LineSolid;
+	mask = GCForeground | GCLineStyle | GCLineWidth;
+    } else {
+	gcvalues.line_style = LineOnOffDash;
+	gcvalues.dashes = 1;
+	gcvalues.dash_offset = 1;
+	mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    }
 
     gc = Tk_GetGC(tkwin, mask, &gcvalues);
     XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
@@ -390,13 +397,15 @@ static const Ttk_ElementOptionSpec FocusElementOptions[] = {
 	offsetof(FocusElement,focusColorObj), "black" },
     { "-focusthickness",TK_OPTION_PIXELS,
 	offsetof(FocusElement,focusThicknessObj), "1" },
+    { "-focussolid",TK_OPTION_BOOLEAN,
+	offsetof(FocusElement,focusSolidObj), "0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
 
 static void FocusElementSize(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord,
-    TCL_UNUSED(Tk_Window),
+    Tk_Window tkwin,
     TCL_UNUSED(int *), /* widthPtr */
     TCL_UNUSED(int *), /* heightPtr */
     Ttk_Padding *paddingPtr)
@@ -404,7 +413,7 @@ static void FocusElementSize(
     FocusElement *focus = (FocusElement *)elementRecord;
     int focusThickness = 0;
 
-    Tcl_GetIntFromObj(NULL, focus->focusThicknessObj, &focusThickness);
+    Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
     *paddingPtr = Ttk_UniformPadding((short)focusThickness);
 }
 
@@ -418,10 +427,13 @@ static void FocusElementDraw(
 {
     FocusElement *focus = (FocusElement *)elementRecord;
     int focusThickness = 0;
+    int focusSolid = 0;
 
     if (state & TTK_STATE_FOCUS) {
-	Tcl_GetIntFromObj(NULL,focus->focusThicknessObj,&focusThickness);
-	DrawFocusRing(tkwin, d, focus->focusColorObj, b);
+	Tk_GetPixelsFromObj(NULL, tkwin, focus->focusThicknessObj, &focusThickness);
+	Tcl_GetBooleanFromObj(NULL, focus->focusSolidObj, &focusSolid);
+	DrawFocusRing(tkwin, d, focus->focusColorObj, focusThickness,
+	    focusSolid, b);
     }
 }
 
@@ -1200,8 +1212,6 @@ static void TroughElementSize(
     }
 }
 
-static Ttk_Box troughInnerBox;
-
 static void TroughElementDraw(
     TCL_UNUSED(void *), /* clientData */
     void *elementRecord, Tk_Window tkwin,
@@ -1212,6 +1222,7 @@ static void TroughElementDraw(
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, troughPtr->colorObj);
     int borderWidth = 1, grooveWidth = -1, relief = TK_RELIEF_SUNKEN;
     Ttk_Orient orient;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->borderWidthObj, &borderWidth);
     Tk_GetPixelsFromObj(NULL, tkwin, troughPtr->grooveWidthObj, &grooveWidth);
@@ -1227,10 +1238,15 @@ static void TroughElementDraw(
 	    b.width = grooveWidth;
         }
 
-	troughInnerBox.x = b.x + borderWidth;
-	troughInnerBox.y = b.y + borderWidth;
-	troughInnerBox.width =  b.width -  2*borderWidth;
-	troughInnerBox.height = b.height - 2*borderWidth;
+	/*
+	 * Save the data of the trough's inner box for later
+	 */
+	if (mainInfoPtr != NULL) {
+	    mainInfoPtr->troughInnerX = b.x + borderWidth;
+	    mainInfoPtr->troughInnerY = b.y + borderWidth;
+	    mainInfoPtr->troughInnerWidth =  b.width -  2*borderWidth;
+	    mainInfoPtr->troughInnerHeight = b.height - 2*borderWidth;
+	}
     }
 
     Tk_Fill3DRectangle(tkwin, d, border, b.x, b.y, b.width, b.height,
@@ -1373,6 +1389,7 @@ static void SliderElementDraw(
 {
     double scalingLevel = TkScalingLevel(tkwin);
     int dim = SLIDER_DIM * scalingLevel;
+    TkMainInfo *mainInfoPtr = ((TkWindow *) tkwin)->mainPtr;
 
     SliderElement *slider = (SliderElement *)elementRecord;
     Ttk_Orient orient;
@@ -1414,16 +1431,20 @@ static void SliderElementDraw(
      * Fill the thin trough area preceding the
      * slider's center with the inner color
      */
-    Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
-    switch (orient) {
-	case TTK_ORIENT_HORIZONTAL:
-	    XFillRectangle(disp, d, gc, troughInnerBox.x, troughInnerBox.y,
-		    b.x + dim/2 - 1, troughInnerBox.height);
-	    break;
-	case TTK_ORIENT_VERTICAL:
-	    XFillRectangle(disp, d, gc, troughInnerBox.x, troughInnerBox.y,
-		    troughInnerBox.width, b.y + dim/2 - 1);
-	    break;
+    if (mainInfoPtr != NULL) {
+	Ttk_GetOrientFromObj(NULL, slider->orientObj, &orient);
+	switch (orient) {
+	    case TTK_ORIENT_HORIZONTAL:
+		XFillRectangle(disp, d, gc,
+			mainInfoPtr->troughInnerX, mainInfoPtr->troughInnerY,
+			b.x + dim/2 - 1, mainInfoPtr->troughInnerHeight);
+		break;
+	    case TTK_ORIENT_VERTICAL:
+		XFillRectangle(disp, d, gc,
+			mainInfoPtr->troughInnerX, mainInfoPtr->troughInnerY,
+			mainInfoPtr->troughInnerWidth, b.y + dim/2 - 1);
+		break;
+	}
     }
 
     /*
@@ -1755,7 +1776,7 @@ static void TabElementDraw(
 	    break;
     }
 
-    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
@@ -1845,7 +1866,7 @@ static void ClientElementDraw(
     Tk_3DBorder border = Tk_Get3DBorderFromObj(tkwin, ce->backgroundObj);
     int borderWidth = 1;
 
-    Tcl_GetIntFromObj(NULL, ce->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, ce->borderWidthObj, &borderWidth);
 
     Tk_Fill3DRectangle(tkwin, d, border,
 	b.x, b.y, b.width, b.height, borderWidth,TK_RELIEF_RAISED);
@@ -1864,11 +1885,8 @@ static const Ttk_ElementSpec ClientElementSpec = {
  *	Register default element implementations.
  */
 
-MODULE_SCOPE
-void TtkElements_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE
-void TtkElements_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkElements_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 

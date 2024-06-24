@@ -5,8 +5,8 @@
  *	information that may be configuration-dependent, such as
  *	#includes for system include files and a few other things.
  *
- * Copyright (c) 1991-1993 The Regents of the University of California.
- * Copyright (c) 1994-1996 Sun Microsystems, Inc.
+ * Copyright © 1991-1993 The Regents of the University of California.
+ * Copyright © 1994-1996 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.

@@ -4,10 +4,10 @@
  *	Declarations for Tk-related things that are visible outside of the Tk
  *	module itself.
  *
- * Copyright (c) 1989-1994 The Regents of the University of California.
- * Copyright (c) 1994 The Australian National University.
- * Copyright (c) 1994-1998 Sun Microsystems, Inc.
- * Copyright (c) 1998-2000 Ajuba Solutions.
+ * Copyright © 1989-1994 The Regents of the University of California.
+ * Copyright © 1994 The Australian National University.
+ * Copyright © 1994-1998 Sun Microsystems, Inc.
+ * Copyright © 1998-2000 Ajuba Solutions.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -71,10 +71,10 @@ extern "C" {
 #if TK_MAJOR_VERSION == 9
 #   define TK_MINOR_VERSION	0
 #   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
-#   define TK_RELEASE_SERIAL	2
+#   define TK_RELEASE_SERIAL	3
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0b2"
+#   define TK_PATCH_LEVEL		"9.0b3"
 #endif /* TK_MAJOR_VERSION */
 
 /*
@@ -227,8 +227,12 @@ typedef struct Tk_OptionSpec {
  * Tk_ConfigSpec structures, so be sure to coordinate any changes carefully.
  */
 
-#define TK_OPTION_NULL_OK		(1 << 0)
 #define TK_OPTION_DONT_SET_DEFAULT	(1 << 3)
+#if TCL_MAJOR_VERSION > 8
+#    define TK_OPTION_NULL_OK		TCL_NULL_OK
+#else
+#    define TK_OPTION_NULL_OK		(1 << 0)
+#endif
 #define TK_OPTION_VAR(type)		((sizeof(type) < 2 * sizeof(int)) ? ((int)(sizeof(type)&(sizeof(int)-1))<<6) : (3<<6))
 #define TK_OPTION_ENUM_VAR		TK_OPTION_VAR(Tk_OptionType)
 
@@ -409,10 +413,14 @@ typedef enum {
  * (internal-use-only flags are defined there).
  */
 
-#define TK_CONFIG_NULL_OK		(1 << 0)
 #define TK_CONFIG_COLOR_ONLY		(1 << 1)
 #define TK_CONFIG_MONO_ONLY		(1 << 2)
 #define TK_CONFIG_DONT_SET_DEFAULT	(1 << 3)
+#if TCL_MAJOR_VERSION > 8
+#    define TK_CONFIG_NULL_OK		TCL_NULL_OK
+#else
+#    define TK_CONFIG_NULL_OK		(1 << 0)
+#endif
 #define TK_CONFIG_USER_BIT		0x100
 #endif /* __NO_OLD_CONFIG */
 

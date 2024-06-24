@@ -620,7 +620,7 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	Tk_PhotoGetImage(srcHandle, &block);
-	if ((options.fromX2 > block.width) || (options.fromY2 > block.height)
+	if ((options.fromX > block.width) || (options.fromY > block.height)
 		|| (options.fromX2 > block.width)
 		|| (options.fromY2 > block.height)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
@@ -1049,11 +1049,6 @@ ImgPhotoCmd(
 	    return TCL_ERROR;
 	}
 	if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
-		!= TCL_OK) {
-	    Tcl_Close(NULL, chan);
-	    return TCL_ERROR;
-	}
-	if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
 		!= TCL_OK) {
 	    Tcl_Close(NULL, chan);
 	    return TCL_ERROR;
@@ -2092,12 +2087,8 @@ ImgPhotoConfigureModel(
 	metadataOutObj = Tcl_NewDictObj();
 	Tcl_IncrRefCount(metadataOutObj);
 
-	/*
-	 * -translation binary also sets -encoding binary
-	 */
-
-	if ((Tcl_SetChannelOption(interp, chan,
-		"-translation", "binary") != TCL_OK) ||
+	if ((Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+		!= TCL_OK) ||
 		(MatchFileFormat(interp, chan, modelPtr->fileString,
 			modelPtr->format, modelPtr->metadata, metadataOutObj,
 			&imageFormat, &imageFormatVersion3,

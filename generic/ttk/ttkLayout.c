@@ -256,6 +256,7 @@ Ttk_Box Ttk_PlaceBox(
  * Ttk_PositionBox --
  * 	Pack and stick a box according to PositionSpec flags.
  */
+
 MODULE_SCOPE Ttk_Box
 Ttk_PositionBox(Ttk_Box *cavity, int width, int height, Ttk_PositionSpec flags)
 {

@@ -30,7 +30,7 @@ namespace eval ttk::theme::winnative {
 	    -padding {6p 3p} -arrowsize 2.25p -relief raised
 
 	ttk::style configure TEntry \
-	    -padding 2 -selectborderwidth 0 -insertwidth 1
+	    -padding 2 -insertwidth 1
 	ttk::style map TEntry \
 	    -fieldbackground \
 		{readonly SystemButtonFace disabled SystemButtonFace} \

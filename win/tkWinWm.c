@@ -1436,11 +1436,6 @@ ReadIconOrCursorFromFile(
 	Tcl_Close(NULL, channel);
 	return NULL;
     }
-    if (Tcl_SetChannelOption(interp, channel, "-encoding", "binary")
-	    != TCL_OK) {
-	Tcl_Close(NULL, channel);
-	return NULL;
-    }
 
     /*
      * Allocate memory for the resource structure

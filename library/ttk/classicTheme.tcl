@@ -12,7 +12,7 @@ namespace eval ttk::theme::classic {
 	-window		"#ffffff"
 	-alternate	"#f0f0f0"
 	-activebg	"#ececec"
-	-troughbg	"#c3c3c3"
+	-troughbg	"#b3b3b3"
 	-selectbg	"#c3c3c3"
 	-selectfg	"#000000"
 	-disabledfg	"#a3a3a3"
@@ -31,8 +31,9 @@ namespace eval ttk::theme::classic {
 	    -indicatorcolor	$colors(-frame) \
 	    -highlightcolor	$colors(-frame) \
 	    -highlightthickness	1 \
-	    -selectborderwidth	1 \
-	    -insertwidth	2
+	    -borderwidth	1 \
+	    -insertwidth	2 \
+	    -focuswidth		0
 
 	# To match pre-Xft X11 appearance, use:
 	#	ttk::style configure . -font {Helvetica 12 bold}
@@ -73,32 +74,35 @@ namespace eval ttk::theme::classic {
 	ttk::style map TEntry -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 
-	ttk::style configure TCombobox -padding 1 -arrowsize 11.75p
+	ttk::style element create Combobox.downarrow from default
+	ttk::style configure TCombobox -padding 1 -arrowsize 9p
 	ttk::style map TCombobox -fieldbackground \
 		[list readonly $colors(-frame) disabled $colors(-frame)]
 	ttk::style configure ComboboxPopdownFrame \
 	    -relief solid -borderwidth 1
 
+	ttk::style element create Spinbox.uparrow from default
+	ttk::style element create Spinbox.downarrow from default
 	ttk::style configure TSpinbox -arrowsize 7.5p -padding {1.5p 0 7.5p 0}
 	ttk::style map TSpinbox -fieldbackground \
 	    [list readonly $colors(-frame) disabled $colors(-frame)]
 
 	ttk::style configure TLabelframe -borderwidth 2 -relief groove
 
-	ttk::style configure TScrollbar -relief raised \
-	    -arrowsize 11.25p -width 11.25p -troughborderwidth 2
+	ttk::style configure TScrollbar -relief raised -arrowsize 9p -width 9p
 	ttk::style map TScrollbar -relief {{pressed !disabled} sunken}
 
 	ttk::style configure TScale -sliderrelief raised \
-	    -sliderlength 22.5p -sliderthickness 11.25p -troughborderwidth 2
+	    -sliderlength 22.5p -sliderthickness 11.25p
 	ttk::style map TScale -sliderrelief {{pressed !disabled} sunken}
 
 	ttk::style configure TProgressbar -background SteelBlue \
-	    -barsize 22.5p -thickness 11.25p -troughborderwidth 2
+	    -barsize 22.5p -thickness 11.25p
 
 	ttk::style configure TNotebook.Tab \
 	    -padding {3m 1m} \
-	    -background $colors(-troughbg)
+	    -background $colors(-troughbg) \
+	    -focussolid 1
 	ttk::style map TNotebook.Tab -background [list selected $colors(-frame)]
 
 	# Treeview:

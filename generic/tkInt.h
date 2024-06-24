@@ -4,9 +4,9 @@
  *	Declarations for things used internally by the Tk functions but not
  *	exported outside the module.
  *
- * Copyright (c) 1990-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
- * Copyright (c) 1998 Scriptics Corporation.
+ * Copyright © 1990-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1998 Scriptics Corporation.
  *
  * See the file "license.terms" for information on usage and redistribution of
  * this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -700,6 +700,8 @@ typedef struct TkMainInfo {
 #endif
     unsigned int ttkNbTabsStickBit;
     				/* Information used by ttk::notebook. */
+    int troughInnerX, troughInnerY, troughInnerWidth, troughInnerHeight;
+    				/* Information used by ttk::scale. */
 } TkMainInfo;
 
 /*
@@ -916,8 +918,7 @@ typedef struct {
 #   ifndef XMaxTransChars
 #	define XMaxTransChars 7
 #   endif
-    char trans_chars[XMaxTransChars];
-                            /* translated characters */
+    char trans_chars[XMaxTransChars]; /* translated characters */
     unsigned char nbytes;
 #elif !defined(MAC_OSX_TK)
     char *charValuePtr;		/* A pointer to a string that holds the key's

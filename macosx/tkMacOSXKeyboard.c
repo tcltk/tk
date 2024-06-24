@@ -4,7 +4,7 @@
  *	Routines to support keyboard events on the Macintosh.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2020 Marc Culler
  *

@@ -570,13 +570,13 @@ ConfigureMenuButton(
 	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->widthString,
 		    &mbPtr->width) != TCL_OK) {
 	    widthError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -width option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-width\" option)");
 		continue;
 	    }
 	    if (Tk_GetPixels(interp, mbPtr->tkwin, mbPtr->heightString,
 		    &mbPtr->height) != TCL_OK) {
 	    heightError:
-		Tcl_AddErrorInfo(interp, "\n    (processing -height option)");
+		Tcl_AddErrorInfo(interp, "\n    (processing \"-height\" option)");
 		continue;
 	    }
 	} else {

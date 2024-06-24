@@ -564,7 +564,7 @@ Tk_LowerObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't lower \"%s\" to bottom", Tcl_GetString(objv[1])));
 	}
-	Tcl_SetErrorCode(interp, "TK", "RESTACK", "LOWER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "RESTACK", "LOWER", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -623,7 +623,7 @@ Tk_RaiseObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't raise \"%s\" to top", Tcl_GetString(objv[1])));
 	}
-	Tcl_SetErrorCode(interp, "TK", "RESTACK", "RAISE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "RESTACK", "RAISE", (char *)NULL);
 	return TCL_ERROR;
     }
     return TCL_OK;
@@ -693,7 +693,7 @@ AppnameCmd(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"appname not accessible in a safe interpreter", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "APPLICATION", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "APPLICATION", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -829,7 +829,7 @@ ScalingCmd(
     } else if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"setting the scaling not accessible in a safe interpreter", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "SCALING", (char *)NULL);
 	return TCL_ERROR;
     } else if (objc == 2 + skip) {
 	if (Tcl_GetDoubleFromObj(interp, objv[1+skip], &d) != TCL_OK) {
@@ -890,7 +890,7 @@ UseinputmethodsCmd(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"useinputmethods not accessible in a safe interpreter", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "INPUT_METHODS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "INPUT_METHODS", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -973,14 +973,14 @@ InactiveCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad option \"%s\": must be reset", string));
 	    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option",
-		    string, NULL);
+		    string, (char *)NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "resetting the user inactivity timer "
 		    "is not allowed in a safe interpreter", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "SAFE", "INACTIVITY_TIMER", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "SAFE", "INACTIVITY_TIMER", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tk_ResetUserInactiveTime(Tk_Display(tkwin));
@@ -1084,7 +1084,7 @@ Tk_TkwaitObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window \"%s\" was deleted before its visibility changed",
 		    Tcl_GetString(objv[2])));
-	    Tcl_SetErrorCode(interp, "TK", "WAIT", "PREMATURE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "WAIT", "PREMATURE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tk_DeleteEventHandler(window,
@@ -1619,7 +1619,7 @@ Tk_WinfoObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no atom exists with id \"%s\"", Tcl_GetString(objv[2])));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "ATOM",
-		    Tcl_GetString(objv[2]), NULL);
+		    Tcl_GetString(objv[2]), (char *)NULL);
 	    return TCL_ERROR;
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(name, TCL_INDEX_NONE));
@@ -1680,7 +1680,7 @@ Tk_WinfoObjCmd(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "window id \"%s\" doesn't exist in this application",
 		    string));
-	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", string, NULL);
+	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", string, (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1818,7 +1818,7 @@ Tk_WinfoObjCmd(
 	if (visInfoPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "can't find any visuals for screen", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	resultPtr = Tcl_NewObj();
@@ -1895,10 +1895,10 @@ TkGetDisplayOf(
     string = Tcl_GetStringFromObj(objv[0], &length);
     if ((length >= 2) &&
 	    (strncmp(string, "-displayof", length) == 0)) {
-        if (objc < 2) {
+	if (objc < 2) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "value for \"-displayof\" missing", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "NO_VALUE", "DISPLAYOF", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "NO_VALUE", "DISPLAYOF", (char *)NULL);
 	    return TCL_INDEX_NONE;
 	}
 	*tkwinPtr = Tk_NameToWindow(interp, Tcl_GetString(objv[1]), *tkwinPtr);

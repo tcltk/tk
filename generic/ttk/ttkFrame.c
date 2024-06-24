@@ -655,11 +655,8 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
-MODULE_SCOPE
-void TtkFrame_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE
-void TtkFrame_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkFrame_Init(Tcl_Interp *interp)
 {
     Ttk_Theme theme =  Ttk_GetDefaultTheme(interp);
 

@@ -858,7 +858,7 @@ static void TabElementDraw(
     XFillPolygon(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC),
 	    pts, 6, Convex, CoordModeOrigin);
 
-    Tcl_GetIntFromObj(NULL, tab->borderWidthObj, &borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, tab->borderWidthObj, &borderWidth);
     while (borderWidth--) {
 	XDrawLines(disp, d, Tk_3DBorderGC(tkwin, border, TK_3D_LIGHT_GC),
 		pts, 4, CoordModeOrigin);
@@ -953,13 +953,8 @@ TTK_END_LAYOUT_TABLE
 
 /* ---------------------------------------------------------------------- */
 
-MODULE_SCOPE
-int TtkWinTheme_Init(
-    Tcl_Interp *interp,
-    TCL_UNUSED(HWND));
-
-MODULE_SCOPE
-int TtkWinTheme_Init(
+MODULE_SCOPE int
+TtkWinTheme_Init(
     Tcl_Interp *interp,
     TCL_UNUSED(HWND))
 {

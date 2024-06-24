@@ -66,7 +66,7 @@ static const Tk_OptionSpec TabOptionSpecs[] =
 	offsetof(Tab,imageObj), TCL_INDEX_NONE, TK_OPTION_NULL_OK, 0, GEOMETRY_CHANGED },
     {TK_OPTION_STRING_TABLE, "-compound", "compound", "Compound",
 	NULL, offsetof(Tab,compoundObj), TCL_INDEX_NONE,
-	TK_OPTION_NULL_OK,ttkCompoundStrings,GEOMETRY_CHANGED },
+	TK_OPTION_NULL_OK, ttkCompoundStrings, GEOMETRY_CHANGED },
     {TK_OPTION_INDEX, "-underline", "underline", "Underline",
 	TTK_OPTION_UNDERLINE_DEF(Tab, underlineObj), GEOMETRY_CHANGED},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0 }
@@ -178,18 +178,17 @@ static void NotebookStyleOptions(
 
     nbstyle->tabMargins = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-tabmargins", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr,
-	    &nbstyle->tabMargins);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->tabMargins);
     }
 
     nbstyle->padding = Ttk_UniformPadding(0);
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-padding", 0)) != 0) {
-	Ttk_GetPaddingFromObj(NULL, nb->core.tkwin, objPtr, &nbstyle->padding);
+	Ttk_GetPaddingFromObj(NULL, tkwin, objPtr, &nbstyle->padding);
     }
 
     nbstyle->minTabWidth = DEFAULT_MIN_TAB_WIDTH;
     if ((objPtr = Ttk_QueryOption(nb->core.layout, "-mintabwidth", 0)) != 0) {
-	Tcl_GetIntFromObj(NULL, objPtr, &nbstyle->minTabWidth);
+	Tk_GetPixelsFromObj(NULL, tkwin, objPtr, &nbstyle->minTabWidth);
     }
 }
 
@@ -318,7 +317,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_USER1;
+	    state |= TTK_STATE_FIRST;
 	}
 	break;
     }
@@ -328,7 +327,7 @@ static Ttk_State TabState(Notebook *nb, Tcl_Size index)
 	    continue;
 	}
 	if (index == i) {
-	    state |= TTK_STATE_USER2;
+	    state |= TTK_STATE_LAST;
 	}
 	break;
     }
@@ -369,7 +368,7 @@ static void TabrowSize(
 
 	Ttk_RebindSublayout(tabLayout, tab);
 	Ttk_LayoutSize(tabLayout,tabState,&tab->width,&tab->height);
-        tab->width = MAX(tab->width, minTabWidth);
+	tab->width = MAX(tab->width, minTabWidth);
 
 	if (orient == TTK_ORIENT_HORIZONTAL) {
 	    tabrowHeight = MAX(tabrowHeight, tab->height);
@@ -422,8 +421,8 @@ static int NotebookSize(void *clientData, int *widthPtr, int *heightPtr)
 
     /* Client width/height overridable by widget options:
      */
-    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.widthObj,&reqWidth);
-    Tk_GetPixelsFromObj(NULL, nb->core.tkwin, nb->notebook.heightObj,&reqHeight);
+    Tk_GetPixelsFromObj(NULL, nbwin, nb->notebook.widthObj, &reqWidth);
+    Tk_GetPixelsFromObj(NULL, nbwin, nb->notebook.heightObj, &reqHeight);
     if (reqWidth > 0)
 	clientWidth = reqWidth;
     if (reqHeight > 0)
@@ -864,7 +863,7 @@ static int FindTabIndex(
     /* ... or integer index or content window name:
      */
     if (Ttk_GetContentIndexFromObj(
-	    interp, nb->notebook.mgr, objPtr, index_rtn) == TCL_OK)
+	    interp, nb->notebook.mgr, objPtr, 1, index_rtn) == TCL_OK)
     {
 	return TCL_OK;
     }
@@ -891,14 +890,14 @@ static int GetTabIndex(
     int status = FindTabIndex(interp, nb, objPtr, index_rtn);
 	if (status == TCL_OK && *index_rtn  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"tab index %s out of bounds", Tcl_GetString(objPtr)));
+		"Tab index \"%s\" out of bounds", Tcl_GetString(objPtr)));
 	    Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "INDEX", NULL);
 	    return TCL_ERROR;
 	}
 
     if (status == TCL_OK && *index_rtn < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "tab '%s' not found", Tcl_GetString(objPtr)));
+	    "Tab '%s' not found", Tcl_GetString(objPtr)));
 	Tcl_SetErrorCode(interp, "TTK", "NOTEBOOK", "TAB", NULL);
 	status = TCL_ERROR;
     }
@@ -963,11 +962,6 @@ static int NotebookInsertCommand(
 	return TCL_ERROR;
     }
 
-    if (TCL_OK != Ttk_GetContentIndexFromObj(
-		interp, nb->notebook.mgr, objv[2], &destIndex)) {
-	return TCL_ERROR;
-    }
-
     if (Tcl_GetString(objv[3])[0] == '.') {
 	/* Window name -- could be new or existing content window.
 	 */
@@ -980,14 +974,23 @@ static int NotebookInsertCommand(
 
 	srcIndex = Ttk_ContentIndex(nb->notebook.mgr, window);
 	if (srcIndex < 0) {	/* New content window */
+	    if (TCL_OK != Ttk_GetContentIndexFromObj(
+		interp, nb->notebook.mgr, objv[2], 1, &destIndex)) {
+		return TCL_ERROR;
+	    }
 	    return AddTab(interp, nb, destIndex, window, objc-4,objv+4);
 	}
     } else if (Ttk_GetContentIndexFromObj(
-		interp, nb->notebook.mgr, objv[3], &srcIndex) != TCL_OK)
+		interp, nb->notebook.mgr, objv[3], 0, &srcIndex) != TCL_OK)
     {
 	return TCL_ERROR;
     } else if (srcIndex  >= Ttk_NumberContent(nb->notebook.mgr)) {
 	srcIndex = Ttk_NumberContent(nb->notebook.mgr) - 1;
+    }
+
+    if (TCL_OK != Ttk_GetContentIndexFromObj(
+	interp, nb->notebook.mgr, objv[2], 0, &destIndex)) {
+	return TCL_ERROR;
     }
 
     /* Move existing content window:
@@ -1069,7 +1072,7 @@ static int NotebookHideCommand(
     if (index == nb->notebook.currentIndex) {
 	SelectNearestTab(nb);
     } else {
-        TtkRedisplayWidget(&nb->core);
+	TtkRedisplayWidget(&nb->core);
     }
 
     return TCL_OK;
@@ -1150,9 +1153,9 @@ static int NotebookIndexCommand(
 
     status = FindTabIndex(interp, nb, objv[2], &index);
 	if (status == TCL_OK) {
-	if (index >= 0) {
-	    Tcl_SetObjResult(interp, TkNewIndexObj(index));
-	}
+	    if (index >= 0) {
+		Tcl_SetObjResult(interp, TkNewIndexObj(index));
+	    }
     }
 
     return status;
@@ -1432,11 +1435,8 @@ TTK_END_LAYOUT
  * +++ Initialization.
  */
 
-MODULE_SCOPE
-void TtkNotebook_Init(Tcl_Interp *interp);
-
-MODULE_SCOPE
-void TtkNotebook_Init(Tcl_Interp *interp)
+MODULE_SCOPE void
+TtkNotebook_Init(Tcl_Interp *interp)
 {
     Ttk_Theme themePtr = Ttk_GetDefaultTheme(interp);
 

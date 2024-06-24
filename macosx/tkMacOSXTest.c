@@ -146,6 +146,7 @@ MenuBarHeightObjCmd(
  *
  *----------------------------------------------------------------------
  */
+
 MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
