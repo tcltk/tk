@@ -149,7 +149,7 @@ test clrpick-2.1 {tk_chooseColor command} -constraints {
 } -body {
     ToPressButton . ok
     tk_chooseColor -title "Press Ok $verylongstring" -initialcolor #404040 \
-        -parent .
+	    -parent .
 } -result {#404040}
 test clrpick-2.2 {tk_chooseColor command} -constraints {
     nonUnixUserInteraction colorsLeftover

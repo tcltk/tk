@@ -67,7 +67,7 @@ the canvas x coordinate at the left edge of the window is always an even
 multiple of \fBxScrollIncrement\fR; furthermore, the units for scrolling
 (e.g., the change in view when the left and right arrows of a scrollbar
 are selected) will also be \fBxScrollIncrement\fR. If the value of
-this option is less than or equal to zero, then horizontal scrolling
+this option is negative or zero, then horizontal scrolling
 is unconstrained.
 .OP \-yscrollincrement yScrollIncrement ScrollIncrement
 Specifies an increment for vertical scrolling, in any of the usual forms
@@ -77,7 +77,7 @@ the canvas y coordinate at the top edge of the window is always an even
 multiple of \fByScrollIncrement\fR; furthermore, the units for scrolling
 (e.g., the change in view when the top and bottom arrows of a scrollbar
 are selected) will also be \fByScrollIncrement\fR. If the value of
-this option is less than or equal to zero, then vertical scrolling
+this option is negative or zero, then vertical scrolling
 is unconstrained.
 .BE
 .SH INTRODUCTION
@@ -262,10 +262,10 @@ within the text item.
 0 refers to the first character, 1 to the next character, and
 so on. If indexes are odd for lines and polygons, they will be
 automatically decremented by one.
-A number less than 0 is treated as if it were zero, and a
+A negative number  is treated as if it were zero, and a
 number greater than the length of the text item is treated
 as if it were equal to the length of the text item. For
-polygons, numbers less than 0 or greater than the length
+polygons, negative numbers or numbers greater than the length
 of the coordinate list will be adjusted by adding or subtracting
 the length until the result is between zero and the length,
 inclusive.

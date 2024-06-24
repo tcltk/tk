@@ -18,28 +18,28 @@ namespace eval ::tk {
     # Set up the msgcat commands
     namespace eval msgcat {
 	namespace export mc mcmax
-        if {[interp issafe] || [catch {package require msgcat}]} {
-            # The msgcat package is not available.  Supply our own
-            # minimal replacement.
-            proc mc {src args} {
-                return [format $src {*}$args]
-            }
-            proc mcmax {args} {
-                set max 0
-                foreach string $args {
-                    set len [string length $string]
-                    if {$len>$max} {
-                        set max $len
-                    }
-                }
-                return $max
-            }
-        } else {
-            # Get the commands from the msgcat package that Tk uses.
-            namespace import ::msgcat::mc
-            namespace import ::msgcat::mcmax
-            ::msgcat::mcload [file join $::tk_library msgs]
-        }
+	if {[interp issafe] || [catch {package require msgcat}]} {
+	    # The msgcat package is not available.  Supply our own
+	    # minimal replacement.
+	    proc mc {src args} {
+		return [format $src {*}$args]
+	    }
+	    proc mcmax {args} {
+		set max 0
+		foreach string $args {
+		    set len [string length $string]
+		    if {$len>$max} {
+			set max $len
+		    }
+		}
+		return $max
+	    }
+	} else {
+	    # Get the commands from the msgcat package that Tk uses.
+	    namespace import ::msgcat::mc
+	    namespace import ::msgcat::mcmax
+	    ::msgcat::mcload [file join $::tk_library msgs]
+	}
     }
     namespace import ::tk::msgcat::*
 }
@@ -498,7 +498,7 @@ switch -exact -- [tk windowingsystem] {
 
 if {$::tk_library ne ""} {
     proc ::tk::SourceLibFile {file} {
-        namespace eval :: [list source [file join $::tk_library $file.tcl]]
+	namespace eval :: [list source [file join $::tk_library $file.tcl]]
     }
     namespace eval ::tk {
 	SourceLibFile icons
@@ -558,18 +558,16 @@ proc ::tk::PreciseScrollDeltas {dxdy} {
     return [list $deltaX $deltaY]
 }
 
-# Helper for smooth scrolling of widgets that support xview moveto,
-# yview moveto, height and width.
+## Helper for smooth scrolling of widgets that support xview moveto and
+## yview moveto.
 
 proc ::tk::ScrollByPixels {w deltaX deltaY} {
-    set width [expr {1.0 * [$w cget -width]}]
-    set height [expr {1.0 * [$w cget -height]}]
-    set X [lindex [$w xview] 0]
-    set Y [lindex [$w yview] 0]
-    set x [expr {$X - $deltaX / $width}]
-    set y [expr {$Y - $deltaY / $height}]
-    $w xview moveto $x
-    $w yview moveto $y
+    set fracX [lindex [$w xview] 0]
+    set fracY [lindex [$w yview] 0]
+    set width [expr {1.0 * [winfo width $w]}]
+    set height [expr {1.0 * [winfo height $w]}]
+    $w xview moveto [expr {$fracX - $deltaX / $width}]
+    $w yview moveto [expr {$fracY - $deltaY / $height}]
 }
 
 # ::tk::TabToWindow --
@@ -724,8 +722,8 @@ if {[tk windowingsystem] eq "aqua"} {
     #This procedure is required to silence warnings generated
     #by inline AppleScript execution.
     proc ::tk::mac::GetDynamicSdef {} {
-         puts ""
-     }
+	puts ""
+    }
 }
 
 if {[info commands ::tk::endOfWord] eq ""} {

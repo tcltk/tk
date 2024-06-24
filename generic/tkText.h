@@ -461,9 +461,12 @@ typedef struct TkTextSegment {
     uint32_t startEndMarkFlag:1;/* This segment is a start marker or an end marker? */
 
     union {
-	char chars[TCL_UTF_MAX];	/* Characters that make up character info.
-				 * Actual length varies to hold as many
-				 * characters as needed.*/
+	/* The TKFLEXARRAY macro - unfortunately - doesn't work inside a union. */
+#if defined(__GNUC__) && (__GNUC__ > 2)
+	char chars[0];		/* Characters that make up character info. */
+#else				/* Actual length varies to hold as many */
+	char chars[1];		/* characters as needed. See [dacd18294b] */
+#endif
 	TkTextHyphen hyphen;	/* Information about hyphen. */
 	TkTextEmbWindow ew;	/* Information about embedded window. */
 	TkTextEmbImage ei;	/* Information about embedded image. */

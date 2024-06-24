@@ -98,10 +98,10 @@ HWND TestFindControl(HWND root, int id)
 
     fcs.control = GetDlgItem(root, id);
     if (fcs.control == NULL) {
-        /* Control is not a direct child. Look in descendents */
-        fcs.id = id;
-        fcs.control = NULL;
-        EnumChildWindows(root, TestFindControlCallback, (LPARAM) &fcs);
+	/* Control is not a direct child. Look in descendents */
+	fcs.id = id;
+	fcs.control = NULL;
+	EnumChildWindows(root, TestFindControlCallback, (LPARAM) &fcs);
     }
     return fcs.control;
 }
@@ -360,15 +360,15 @@ TestwineventObjCmd(
 #if 0
 	GetDlgItemTextA(hwnd, id, buf, 256);
 #else
-        control = TestFindControl(hwnd, id);
-        if (control == NULL) {
-            Tcl_SetObjResult(interp,
-                             Tcl_ObjPrintf("Could not find control with id %d", id));
-            return TCL_ERROR;
-        }
-        buf[0] = 0;
-        SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
-                     (LPARAM) buf);
+	control = TestFindControl(hwnd, id);
+	if (control == NULL) {
+	    Tcl_SetObjResult(interp,
+			     Tcl_ObjPrintf("Could not find control with id %d", id));
+	    return TCL_ERROR;
+	}
+	buf[0] = 0;
+	SendMessageA(control, WM_GETTEXT, (WPARAM)sizeof(buf),
+		     (LPARAM) buf);
 #endif
 	Tcl_AppendResult(interp, Tcl_ExternalToUtfDString(NULL, buf, TCL_INDEX_NONE, &ds), NULL);
 	Tcl_DStringFree(&ds);
@@ -443,8 +443,8 @@ TestfindwindowObjCmd(
     Tcl_DStringInit(&titleString);
 
     if (objc < 2 || objc > 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "title ?class?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "title ?class?");
+	return TCL_ERROR;
     }
 
     Tcl_DStringInit(&titleString);
@@ -454,23 +454,23 @@ TestfindwindowObjCmd(
 	windowClass = Tcl_UtfToWCharDString(Tcl_GetString(objv[2]), TCL_INDEX_NONE, &classString);
     }
     if (title[0] == 0)
-        title = NULL;
+	title = NULL;
     /* We want find a window the belongs to us and not some other process */
     hwnd = NULL;
     myPid = GetCurrentProcessId();
     while (1) {
-        DWORD pid, tid;
-        hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
-        if (hwnd == NULL)
-            break;
-        tid = GetWindowThreadProcessId(hwnd, &pid);
-        if (tid == 0) {
-            /* Window has gone */
-            hwnd = NULL;
-            break;
-        }
-        if (pid == myPid)
-            break;              /* Found it */
+	DWORD pid, tid;
+	hwnd = FindWindowExW(NULL, hwnd, windowClass, title);
+	if (hwnd == NULL)
+	    break;
+	tid = GetWindowThreadProcessId(hwnd, &pid);
+	if (tid == 0) {
+	    /* Window has gone */
+	    hwnd = NULL;
+	    break;
+	}
+	if (pid == myPid)
+	    break;              /* Found it */
     }
 
     if (hwnd == NULL) {
@@ -478,7 +478,7 @@ TestfindwindowObjCmd(
 	AppendSystemError(interp, GetLastError());
 	r = TCL_ERROR;
     } else {
-        Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
+	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(PTR2INT(hwnd)));
     }
 
     Tcl_DStringFree(&titleString);
