@@ -28,7 +28,7 @@ typedef struct {
 } ThreadSpecificData;
 static Tcl_ThreadDataKey dataKey;
 
-static void		FreeUidThreadExitProc(ClientData clientData);
+static void		FreeUidThreadExitProc(void *clientData);
 
 /*
  * The following tables defines the string values for reliefs, which are
@@ -155,7 +155,7 @@ Tk_GetAnchor(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad anchor position \"%s\": must be"
 	    " n, ne, e, se, s, sw, w, nw, or center", string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "ANCHOR", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "ANCHOR", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -243,7 +243,7 @@ Tk_GetJoinStyle(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad join style \"%s\": must be bevel, miter, or round",
 	    string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "JOIN", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "JOIN", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -324,7 +324,7 @@ Tk_GetCapStyle(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad cap style \"%s\": must be butt, projecting, or round",
 	    string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "CAP", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "CAP", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -442,7 +442,7 @@ Tk_GetJustify(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad justification \"%s\": must be left, right, or center",
 	    string));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "JUSTIFY", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "JUSTIFY", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -532,7 +532,7 @@ Tk_GetUid(
 {
     int dummy;
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
-            Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
+	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
     Tcl_HashTable *tablePtr = &tsdPtr->uidTable;
 
     if (!tsdPtr->initialized) {
@@ -581,7 +581,7 @@ Tk_GetScreenMM(
 	if (!tkwin) {
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_NewStringObj("bad screen", -1));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "SCREEN_DISTANCE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "SCREEN_DISTANCE", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -602,7 +602,7 @@ Tk_GetScreenMM(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"expected screen distance or \"\" but got \"%.50s\"", string));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -714,7 +714,7 @@ TkGetDoublePixels(
     if (!tkwin) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("bad screen", -1));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "FRACTIONAL_PIXELS", (char *)NULL);
 	}
 	return TCL_ERROR;
     }
@@ -730,7 +730,7 @@ TkGetDoublePixels(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"expected screen distance but got \"%.50s\"", string));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}

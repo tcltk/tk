@@ -54,19 +54,19 @@ typedef struct Content {
      */
 
     int x, y;			/* X and Y pixel coordinates for tkwin. */
-    Tcl_Obj *xPtr, *yPtr;	/* Tcl_Obj rep's of x, y coords, to keep pixel
+    Tcl_Obj *xObj, *yObj;	/* Tcl_Obj rep's of x, y coords, to keep pixel
 				 * spec. information. */
     double relX, relY;		/* X and Y coordinates relative to size of
 				 * container. */
     int width, height;		/* Absolute dimensions for tkwin. */
-    Tcl_Obj *widthPtr;		/* Tcl_Obj rep of width, to keep pixel
+    Tcl_Obj *widthObj;		/* Tcl_Obj rep of width, to keep pixel
 				 * spec. */
-    Tcl_Obj *heightPtr;		/* Tcl_Obj rep of height, to keep pixel
+    Tcl_Obj *heightObj;		/* Tcl_Obj rep of height, to keep pixel
 				 * spec. */
     double relWidth, relHeight;	/* Dimensions for tkwin relative to size of
 				 * container. */
-    Tcl_Obj *relWidthPtr;
-    Tcl_Obj *relHeightPtr;
+    Tcl_Obj *relWidthObj;
+    Tcl_Obj *relHeightObj;
     Tk_Anchor anchor;		/* Which point on tkwin is placed at the given
 				 * position. */
     BorderMode borderMode;	/* How to treat borders of container window. */
@@ -80,29 +80,29 @@ typedef struct Content {
 
 static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_ANCHOR, "-anchor", NULL, NULL, "nw", TCL_INDEX_NONE,
-	 offsetof(Content, anchor), TK_OPTION_ENUM_VAR, 0, 0},
+	offsetof(Content, anchor), TK_OPTION_ENUM_VAR, 0, 0},
     {TK_OPTION_STRING_TABLE, "-bordermode", NULL, NULL, "inside", TCL_INDEX_NONE,
-	 offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
-    {TK_OPTION_PIXELS, "-height", NULL, NULL, "", offsetof(Content, heightPtr),
-	 offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, borderMode), TK_OPTION_ENUM_VAR, borderModeStrings, 0},
+    {TK_OPTION_PIXELS, "-height", NULL, NULL, NULL, offsetof(Content, heightObj),
+	offsetof(Content, height), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_WINDOW, "-in", NULL, NULL, "", TCL_INDEX_NONE, offsetof(Content, inTkwin),
-	 0, 0, IN_MASK},
-    {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, "",
-	 offsetof(Content, relHeightPtr), offsetof(Content, relHeight),
-	 TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_DOUBLE, "-relwidth", NULL, NULL, "",
-	 offsetof(Content, relWidthPtr), offsetof(Content, relWidth),
-	 TK_OPTION_NULL_OK, 0, 0},
+	0, 0, IN_MASK},
+    {TK_OPTION_DOUBLE, "-relheight", NULL, NULL, NULL,
+	offsetof(Content, relHeightObj), offsetof(Content, relHeight),
+	TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_DOUBLE, "-relwidth", NULL, NULL, NULL,
+	offsetof(Content, relWidthObj), offsetof(Content, relWidth),
+	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_DOUBLE, "-relx", NULL, NULL, "0.0", TCL_INDEX_NONE,
-	 offsetof(Content, relX), 0, 0, 0},
+	offsetof(Content, relX), 0, 0, 0},
     {TK_OPTION_DOUBLE, "-rely", NULL, NULL, "0.0", TCL_INDEX_NONE,
-	 offsetof(Content, relY), 0, 0, 0},
-    {TK_OPTION_PIXELS, "-width", NULL, NULL, "", offsetof(Content, widthPtr),
-	 offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xPtr),
-	 offsetof(Content, x), TK_OPTION_NULL_OK, 0, 0},
-    {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yPtr),
-	 offsetof(Content, y), TK_OPTION_NULL_OK, 0, 0},
+	offsetof(Content, relY), 0, 0, 0},
+    {TK_OPTION_PIXELS, "-width", NULL, NULL, NULL, offsetof(Content, widthObj),
+	offsetof(Content, width), TK_OPTION_NULL_OK, 0, 0},
+    {TK_OPTION_PIXELS, "-x", NULL, NULL, "0", offsetof(Content, xObj),
+	offsetof(Content, x), 0, 0, 0},
+    {TK_OPTION_PIXELS, "-y", NULL, NULL, "0", offsetof(Content, yObj),
+	offsetof(Content, y), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, TCL_INDEX_NONE, 0, 0, 0}
 };
 
@@ -626,7 +626,7 @@ ConfigureContent(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"can't use placer on top-level window \"%s\"; use "
 		"wm command instead", Tk_PathName(tkwin)));
-	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
+	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -666,7 +666,7 @@ ConfigureContent(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"can't place \"%s\" relative to \"%s\"",
 			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
 		goto error;
 	    }
 	}
@@ -674,7 +674,7 @@ ConfigureContent(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't place \"%s\" relative to itself",
 		    Tk_PathName(contentPtr->tkwin)));
-	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", (char *)NULL);
 	    goto error;
 	}
 
@@ -686,9 +686,9 @@ ConfigureContent(
 	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)contentPtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't put \"%s\" inside \"%s\": would cause management loop",
-	            Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
-		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
+			"can't put \"%s\" inside \"%s\": would cause management loop",
+			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
+		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", (char *)NULL);
 		goto error;
 	    }
 	}
@@ -794,23 +794,23 @@ PlaceInfoCommand(
     Tcl_AppendPrintfToObj(infoObj,
 	    "-x %d -relx %.4g -y %d -rely %.4g",
 	    contentPtr->x, contentPtr->relX, contentPtr->y, contentPtr->relY);
-    if (contentPtr->widthPtr) {
+    if (contentPtr->widthObj) {
 	Tcl_AppendPrintfToObj(infoObj, " -width %d", contentPtr->width);
     } else {
 	Tcl_AppendToObj(infoObj, " -width {}", TCL_INDEX_NONE);
     }
-    if (contentPtr->relWidthPtr) {
+    if (contentPtr->relWidthObj) {
 	Tcl_AppendPrintfToObj(infoObj,
 		" -relwidth %.4g", contentPtr->relWidth);
     } else {
 	Tcl_AppendToObj(infoObj, " -relwidth {}", TCL_INDEX_NONE);
     }
-    if (contentPtr->heightPtr) {
+    if (contentPtr->heightObj) {
 	Tcl_AppendPrintfToObj(infoObj, " -height %d", contentPtr->height);
     } else {
 	Tcl_AppendToObj(infoObj, " -height {}", TCL_INDEX_NONE);
     }
-    if (contentPtr->relHeightPtr) {
+    if (contentPtr->relHeightObj) {
 	Tcl_AppendPrintfToObj(infoObj,
 		" -relheight %.4g", contentPtr->relHeight);
     } else {
@@ -906,12 +906,12 @@ RecomputePlacement(
 	x = (int) (x1 + ((x1 > 0) ? 0.5 : -0.5));
 	y1 = contentPtr->y + containerY + (contentPtr->relY*containerHeight);
 	y = (int) (y1 + ((y1 > 0) ? 0.5 : -0.5));
-	if ((contentPtr->widthPtr) || contentPtr->relWidthPtr) {
+	if ((contentPtr->widthObj) || contentPtr->relWidthObj) {
 	    width = 0;
-	    if (contentPtr->widthPtr) {
+	    if (contentPtr->widthObj) {
 		width += contentPtr->width;
 	    }
-	    if (contentPtr->relWidthPtr) {
+	    if (contentPtr->relWidthObj) {
 		/*
 		 * The code below is a bit tricky. In order to round correctly
 		 * when both relX and relWidth are specified, compute the
@@ -928,12 +928,12 @@ RecomputePlacement(
 	    width = Tk_ReqWidth(contentPtr->tkwin)
 		    + 2*Tk_Changes(contentPtr->tkwin)->border_width;
 	}
-	if (contentPtr->heightPtr || contentPtr->relHeightPtr) {
+	if (contentPtr->heightObj || contentPtr->relHeightObj) {
 	    height = 0;
-	    if (contentPtr->heightPtr) {
+	    if (contentPtr->heightObj) {
 		height += contentPtr->height;
 	    }
-	    if (contentPtr->relHeightPtr) {
+	    if (contentPtr->relHeightObj) {
 		/*
 		 * See note above for rounding errors in width computation.
 		 */
@@ -1015,9 +1015,9 @@ RecomputePlacement(
 		    || (height != Tk_Height(contentPtr->tkwin))) {
 		Tk_MoveResizeWindow(contentPtr->tkwin, x, y, width, height);
 	    }
-            if (abort) {
-                break;
-            }
+	    if (abort) {
+		break;
+	    }
 
 	    /*
 	     * Don't map the content unless the container is mapped: the content will
@@ -1184,14 +1184,14 @@ PlaceRequestProc(
     Content *contentPtr = (Content *)clientData;
     Container *containerPtr;
 
-    if ((contentPtr->widthPtr || contentPtr->relWidthPtr)
-	    && (contentPtr->heightPtr || contentPtr->relHeightPtr)) {
-        /*
-         * Send a ConfigureNotify to indicate that the size change
-         * request was rejected.
-         */
+    if ((contentPtr->widthObj || contentPtr->relWidthObj)
+	    && (contentPtr->heightObj || contentPtr->relHeightObj)) {
+	/*
+	 * Send a ConfigureNotify to indicate that the size change
+	 * request was rejected.
+	 */
 
-        TkDoConfigureNotify((TkWindow *)(contentPtr->tkwin));
+	TkDoConfigureNotify((TkWindow *)(contentPtr->tkwin));
 	return;
     }
     containerPtr = contentPtr->containerPtr;

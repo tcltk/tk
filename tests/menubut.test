@@ -404,7 +404,7 @@ test menubutton-4.2 {ConfigureMenuButton procedure} -setup {
 } -cleanup {
     deleteWindows
 } -result {expected integer but got "1i"
-    (processing -width option)
+    (processing "-width" option)
     invoked from within
 ".mb1 configure -width 1i"}
 
@@ -425,7 +425,7 @@ test menubutton-4.4 {ConfigureMenuButton procedure} -setup {
 } -cleanup {
     deleteWindows
 } -result {expected integer but got "0.5c"
-    (processing -height option)
+    (processing "-height" option)
     invoked from within
 ".mb1 configure -height 0.5c"}
 
@@ -446,7 +446,7 @@ test menubutton-4.6 {ConfigureMenuButton procedure} -setup {
 } -cleanup {
     deleteWindows
 } -result {expected screen distance but got "abc"
-    (processing -width option)
+    (processing "-width" option)
     invoked from within
 ".mb1 configure -width abc"}
 
@@ -477,7 +477,7 @@ test menubutton-4.8 {ConfigureMenuButton procedure} -constraints {
     deleteWindows
     imageCleanup
 } -result {expected screen distance but got "0.5x"
-    (processing -height option)
+    (processing "-height" option)
     invoked from within
 ".mb1 configure -height 0.5x"}
 

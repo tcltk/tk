@@ -103,7 +103,7 @@ TkStateParseProc(
     }
     Tcl_AppendToObj(msgObj, " or disabled", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "STATE", (char *)NULL);
     *statePtr = TK_STATE_NORMAL;
     return TCL_ERROR;
 }
@@ -205,7 +205,7 @@ TkOrientParseProc(
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad orientation \"%s\": must be vertical or horizontal",
 	    value));
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "ORIENTATION", (char *)NULL);
     *orientPtr = 0;
     return TCL_ERROR;
 }
@@ -396,7 +396,7 @@ TkOffsetParseProc(
     }
     Tcl_AppendToObj(msgObj, ", n, ne, e, se, s, sw, w, nw, or center", TCL_INDEX_NONE);
     Tcl_SetObjResult(interp, msgObj);
-    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", NULL);
+    Tcl_SetErrorCode(interp, "TK", "VALUE", "OFFSET", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -495,7 +495,7 @@ TkPixelParseProc(
     if ((result == TCL_OK) && (clientData == NULL) && (*doublePtr < 0.0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"expected screen distance but got \"%.50s\"", value));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	return TCL_ERROR;
     }
     return result;
@@ -661,7 +661,7 @@ Tk_GetScrollInfo(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
 		    argv[0], argv[1], "moveto fraction"));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetDouble(interp, argv[3], dblPtr) != TCL_OK) {
@@ -675,7 +675,7 @@ Tk_GetScrollInfo(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "wrong # args: should be \"%s %s %s\"",
 		    argv[0], argv[1], "scroll number pages|units"));
-	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", NULL);
+	    Tcl_SetErrorCode(interp, "TCL", "WRONGARGS", (char *)NULL);
 	    return TK_SCROLL_ERROR;
 	}
 	if (Tcl_GetDouble(interp, argv[3], &d) != TCL_OK) {
@@ -692,13 +692,13 @@ Tk_GetScrollInfo(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad argument \"%s\": must be pages or units", argv[4]));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", (char *)NULL);
 	return TK_SCROLL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "unknown option \"%s\": must be moveto or scroll", argv[2]));
     Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", argv[2],
-	    NULL);
+	    (char *)NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -779,12 +779,12 @@ Tk_GetScrollInfoObj(
 
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad argument \"%s\": must be pages or units", arg));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "SCROLL_UNITS", (char *)NULL);
 	return TK_SCROLL_ERROR;
     }
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "unknown option \"%s\": must be moveto or scroll", arg));
-    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, NULL);
+    Tcl_SetErrorCode(interp, "TCL", "LOOKUP", "INDEX", "option", arg, (char *)NULL);
     return TK_SCROLL_ERROR;
 }
 
@@ -958,7 +958,7 @@ TkFindStateNum(
 		    ((mPtr[1].strKey != NULL) ? "" : "or "), mPtr->strKey);
 	}
 	Tcl_SetObjResult(interp, msgObj);
-	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, NULL);
+	Tcl_SetErrorCode(interp, "TK", "LOOKUP", option, strKey, (char *)NULL);
     }
     return mPtr->numKey;
 }
@@ -1019,7 +1019,7 @@ TkFindStateNumObj(
 	}
 	Tcl_SetObjResult(interp, msgObj);
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", Tcl_GetString(optionPtr),
-		key, NULL);
+		key, (char *)NULL);
     }
     return mPtr->numKey;
 }
@@ -1154,7 +1154,7 @@ TkMakeEnsemble(
 	nameObj = Tcl_NewStringObj(map[i].name, TCL_INDEX_NONE);
 	fqdnObj = Tcl_NewStringObj(Tcl_DStringValue(&ds),
 		Tcl_DStringLength(&ds));
-	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, NULL);
+	Tcl_AppendStringsToObj(fqdnObj, "::", map[i].name, (char *)NULL);
 	Tcl_DictObjPut(NULL, dictObj, nameObj, fqdnObj);
 	if (map[i].proc) {
 #if TCL_MAJOR_VERSION > 8

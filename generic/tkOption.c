@@ -881,7 +881,7 @@ ParsePriority(
 		    "bad priority level \"%s\": must be "
 		    "widgetDefault, startupFile, userDefault, "
 		    "interactive, or a number between 0 and 100", string));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PRIORITY", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PRIORITY", (char *)NULL);
 	    return -1;
 	}
     }
@@ -965,7 +965,7 @@ AddFromString(
 	    if ((*src == '\0') || (*src == '\n')) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"missing colon on line %d", lineNum));
-		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "COLON", NULL);
+		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "COLON", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if ((src[0] == '\\') && (src[1] == '\n')) {
@@ -1002,7 +1002,7 @@ AddFromString(
 	if (*src == '\0') {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "missing value on line %d", lineNum));
-	    Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "VALUE", (char *)NULL);
 	    return TCL_ERROR;
 	}
 
@@ -1016,7 +1016,7 @@ AddFromString(
 	    if (*src == '\0') {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"missing newline on line %d", lineNum));
-		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "NEWLINE", NULL);
+		Tcl_SetErrorCode(interp, "TK", "OPTIONDB", "NEWLINE", (char *)NULL);
 		return TCL_ERROR;
 	    }
 	    if (*src == '\\'){
@@ -1096,7 +1096,7 @@ ReadOptionFile(
     if (Tcl_IsSafe(interp)) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"can't read options from a file in a safe interpreter", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "SAFE", "OPTION_FILE", (char *)NULL);
 	return TCL_ERROR;
     }
 

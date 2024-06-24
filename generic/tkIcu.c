@@ -96,7 +96,7 @@ startEndOfCmd(
     if (TkGetIntForIndex(objv[2], ulen-1, 0, &idx) != TCL_OK) {
 	Tcl_DStringFree(&ds);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf("bad index \"%s\": must be integer?[+-]integer?, end?[+-]integer?, or \"\"", Tcl_GetString(objv[2])));
-	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TK", "ICU", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
     it = icu_open((UBreakIteratorTypex)(flags&3), locale,
@@ -109,7 +109,7 @@ startEndOfCmd(
     if (it == NULL || errorCode != U_ZERO_ERRORZ) {
     	Tcl_DStringFree(&ds);
     	Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot open ICU iterator, errorcode: %d", (int)errorCode));
-    	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", NULL);
+    	Tcl_SetErrorCode(interp, "TK", "ICU", "CANNOTOPEN", (char *)NULL);
     	return TCL_ERROR;
     }
     if (idx > 0 && len != ulen) {

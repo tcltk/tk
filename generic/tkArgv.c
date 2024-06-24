@@ -142,7 +142,7 @@ Tk_ParseArgv(
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			    "ambiguous option \"%s\"", curArg));
 		    Tcl_SetErrorCode(interp, "TK", "ARG", "AMBIGUOUS", curArg,
-			    NULL);
+			    (char *)NULL);
 		    return TCL_ERROR;
 		}
 		matchPtr = infoPtr;
@@ -158,7 +158,7 @@ Tk_ParseArgv(
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"unrecognized argument \"%s\"", curArg));
 		Tcl_SetErrorCode(interp, "TK", "ARG", "UNRECOGNIZED", curArg,
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    argv[dstIndex] = curArg;
@@ -239,7 +239,7 @@ Tk_ParseArgv(
 	}
 	case TK_ARGV_HELP:
 	    PrintUsage(interp, argTable, flags);
-	    Tcl_SetErrorCode(interp, "TK", "ARG", "HELP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "ARG", "HELP", (char *)NULL);
 	    return TCL_ERROR;
 	case TK_ARGV_CONST_OPTION:
 	    Tk_AddOption(tkwin, (char *)infoPtr->dst, (char *)infoPtr->src,
@@ -260,7 +260,7 @@ Tk_ParseArgv(
 			"\"%s\" option requires two following arguments",
 			curArg));
 		Tcl_SetErrorCode(interp, "TK", "ARG", "NAME_VALUE", curArg,
-			NULL);
+			(char *)NULL);
 		return TCL_ERROR;
 	    }
 	    Tk_AddOption(tkwin, argv[srcIndex], argv[srcIndex+1],
@@ -271,7 +271,7 @@ Tk_ParseArgv(
 	default:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad argument type %d in Tk_ArgvInfo", infoPtr->type));
-	    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "API_ABUSE", (char *)NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -295,7 +295,7 @@ Tk_ParseArgv(
   missingArg:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "\"%s\" option requires an additional argument", curArg));
-    Tcl_SetErrorCode(interp, "TK", "ARG", "MISSING", curArg, NULL);
+    Tcl_SetErrorCode(interp, "TK", "ARG", "MISSING", curArg, (char *)NULL);
     return TCL_ERROR;
 }
 

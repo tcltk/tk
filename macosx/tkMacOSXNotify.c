@@ -5,7 +5,7 @@
  *	for the AppKit event loop.
  *
  * Copyright © 1995-1997 Sun Microsystems, Inc.
- * Copyright © 2001-2009, Apple Inc.
+ * Copyright © 2001-2009 Apple Inc.
  * Copyright © 2005-2009 Daniel A. Steffen <das@users.sourceforge.net>
  * Copyright © 2015 Marc Culler.
  *

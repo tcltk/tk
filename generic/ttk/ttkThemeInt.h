@@ -1,13 +1,22 @@
 /*
  * Theme engine: private definitions.
  *
- * Copyright (c) 2004 Joe English.  Freely redistributable.
+ * Copyright © 2004 Joe English.  Freely redistributable.
  */
 
 #ifndef _TTKTHEMEINT
 #define _TTKTHEMEINT
 
 #include "ttkTheme.h"
+
+/*------------------------------------------------------------------------
+ * +++ Widget states (internal).
+ */
+
+#define TTK_STATE_OPEN		(1<<16)
+#define TTK_STATE_LEAF		(1<<17)
+#define TTK_STATE_FIRST		(1<<18)
+#define TTK_STATE_LAST		(1<<19)
 
 typedef struct Ttk_TemplateNode_ Ttk_TemplateNode, *Ttk_LayoutTemplate;
 

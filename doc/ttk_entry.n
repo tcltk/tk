@@ -82,7 +82,7 @@ See \fBVALIDATION\fR below.
 .OP \-width width Width
 Specifies an integer value indicating the desired width of the entry window,
 in average-size characters of the widget's font.
-.\" Not in ttk: If the value is less than or equal to zero, the widget picks a
+.\" Not in ttk: If the value is negative or zero, the widget picks a
 .\" Not in ttk: size just large enough to hold its current text.
 .SH NOTES
 .PP

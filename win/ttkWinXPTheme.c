@@ -19,7 +19,7 @@
 #include <windows.h>
 #include <uxtheme.h>
 #include <vssym32.h>
-#include "ttk/ttkTheme.h"
+#include "ttk/ttkThemeInt.h"
 
 typedef HTHEME  (STDAPICALLTYPE OpenThemeDataProc)(HWND hwnd,
 		 LPCWSTR pszClassList);
@@ -805,7 +805,7 @@ static void TabElementDraw(
 	return;
 
     if (nbTabsStickBit == TTK_STICK_S) {
-	if (state & TTK_STATE_USER1) {
+	if (state & TTK_STATE_FIRST) {
 	    partId = TABP_TABITEMLEFTEDGE;
 	}
 
@@ -865,9 +865,6 @@ static const Ttk_ElementSpec TabElementSpec =
  *
  *	Generic element, but don't display at all if TTK_STATE_LEAF (=USER2) set
  */
-
-#define TTK_STATE_OPEN TTK_STATE_USER1
-#define TTK_STATE_LEAF TTK_STATE_USER2
 
 static const Ttk_StateTable header_statemap[] =
 {
@@ -1391,9 +1388,8 @@ retErr:
  * +++ Initialization routine:
  */
 
-MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd);
-
-MODULE_SCOPE int TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
+MODULE_SCOPE int
+TtkXPTheme_Init(Tcl_Interp *interp, HWND hwnd)
 {
     XPThemeData *themeData;
     XPThemeProcs *procs;

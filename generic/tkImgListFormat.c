@@ -1002,7 +1002,7 @@ ParseColorAsStandard(
     const char *suffixString, *colorString;
     char colorBuffer[TK_PHOTO_MAX_COLOR_LENGTH + 1];
     double fracAlpha;
-    unsigned int suffixAlpha;
+    unsigned int suffixAlpha = 0;
     int i;
 
     /*

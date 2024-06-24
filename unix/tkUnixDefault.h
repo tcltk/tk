@@ -4,8 +4,8 @@
  *	This file defines the defaults for all options for all of
  *	the Tk widgets.
  *
- * Copyright (c) 1991-1994 The Regents of the University of California.
- * Copyright (c) 1994-1997 Sun Microsystems, Inc.
+ * Copyright © 1991-1994 The Regents of the University of California.
+ * Copyright © 1994-1997 Sun Microsystems, Inc.
  *
  * See the file "license.terms" for information on usage and redistribution
  * of this file, and for a DISCLAIMER OF ALL WARRANTIES.
@@ -448,7 +448,7 @@
 #define DEF_SCROLLBAR_BORDER_WIDTH	"1"
 #define DEF_SCROLLBAR_COMMAND		""
 #define DEF_SCROLLBAR_CURSOR		""
-#define DEF_SCROLLBAR_EL_BORDER_WIDTH	"-1"
+#define DEF_SCROLLBAR_EL_BORDER_WIDTH	NULL
 #define DEF_SCROLLBAR_HIGHLIGHT_BG	NORMAL_BG
 #define DEF_SCROLLBAR_HIGHLIGHT		BLACK
 #define DEF_SCROLLBAR_HIGHLIGHT_WIDTH	"0"

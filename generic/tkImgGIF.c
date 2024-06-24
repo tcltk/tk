@@ -498,7 +498,13 @@ FileReadGIF(
      */
 
     if (Fread(gifConfPtr, buf, 1, 3, chan) != 3) {
-	return TCL_OK;
+	/*
+	 * Bug [865af0148c]: 3 bytes should be there, but data ended before
+	 */
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"GIF file truncated", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "TRUNCATED", NULL);
+	return TCL_ERROR;
     }
     bitPixel = 2 << (buf[0] & 0x07);
 
@@ -704,6 +710,7 @@ FileReadGIF(
     }
 
     if ((width > 0) && (height > 0)) {
+	unsigned char* pixelPtr;
 	Tk_PhotoImageBlock block;
 	int transparent = -1;
 	if (gifGraphicControlExtensionBlock.blockPresent) {
@@ -729,23 +736,25 @@ FileReadGIF(
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;
-	block.pixelPtr = (unsigned char *)ckalloc(nBytes);
-	if (block.pixelPtr) {
-	    memset(block.pixelPtr, 0, nBytes);
+	pixelPtr = (unsigned char*)ckalloc(nBytes);
+	if (pixelPtr) {
+	    memset(pixelPtr, 0, nBytes);
 	}
 
+	block.pixelPtr = pixelPtr;
 	if (ReadImage(gifConfPtr, interp, block.pixelPtr, chan, imageWidth,
 		imageHeight, colorMap, srcX, srcY, BitSet(buf[8], INTERLACE),
 		transparent) != TCL_OK) {
-	    ckfree(block.pixelPtr);
+	    ckfree(pixelPtr);
 	    goto error;
 	}
+	block.pixelPtr += srcX * block.pixelSize + srcY * block.pitch;
 	if (Tk_PhotoPutBlock(interp, imageHandle, &block, destX, destY,
 		width, height, TK_PHOTO_COMPOSITE_SET) != TCL_OK) {
-	    ckfree(block.pixelPtr);
+	    ckfree(pixelPtr);
 	    goto error;
 	}
-	ckfree(block.pixelPtr);
+	ckfree(pixelPtr);
     }
 
     /*
@@ -1277,7 +1286,7 @@ GetDataBlock(
  *	transparency, etc.
  *
  *	This code is based on the code found in the ImageMagick GIF decoder,
- *	which is (c) 2000 ImageMagick Studio.
+ *	which is © 2000 ImageMagick Studio.
  *
  *	Some thoughts on our implementation:
  *	It sure would be nice if ReadImage didn't take 11 parameters! I think
@@ -1919,8 +1928,8 @@ FileWriteGIF(
     if (!chan) {
 	return TCL_ERROR;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-translation",
-	    "binary") != TCL_OK) {
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
