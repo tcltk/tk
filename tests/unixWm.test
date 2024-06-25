@@ -1974,9 +1974,9 @@ test unixWm-50.9 {Tk_CoordsToWindow procedure, unmapped windows} {unix failsOnUb
     update
     toplevel .t2 -width 200 -height 200 -bg red
     tkwait visibility .t2
-    update
     wm geometry .t2 +20+20
     update
+    after 300;# needed for macOS
     set result [list [winfo containing 120 120]]
     destroy .t2
     update
@@ -2069,6 +2069,7 @@ test unixWm-51.7 {TkWmRestackToplevel procedure, other window isn't mapped} {uni
 	update
 	toplevel $w -width 200 -height 200 -bg green
 	tkwait visibility $w
+	after 300;# needed for macOS
 	wm geometry $w +100+100
 	update
     }
