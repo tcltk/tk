@@ -2387,7 +2387,8 @@ DecodePNG(
 				 * image being read. */
 {
     unsigned long chunkType;
-    int result, chunkSz;
+    int result;
+    int chunkSz;
     unsigned long crc;
 
     /*
@@ -2525,11 +2526,11 @@ DecodePNG(
     pngPtr->thisLineObj = Tcl_NewObj();
     Tcl_IncrRefCount(pngPtr->thisLineObj);
 
-    pngPtr->block.pixelPtr = attemptckalloc(pngPtr->blockLen);
+    pngPtr->block.pixelPtr = (unsigned char *)attemptckalloc(pngPtr->blockLen);
     if (!pngPtr->block.pixelPtr) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"memory allocation failed", -1));
-	Tcl_SetErrorCode(interp, "TK", "MALLOC", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MALLOC", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -2852,7 +2853,7 @@ WriteData(
     int srcSz,
     unsigned long *crcPtr)
 {
-    if (!srcPtr || !srcSz) {
+    if (!srcPtr || srcSz <= 0) {
 	return TCL_OK;
     }
 
@@ -3135,9 +3136,10 @@ WriteIDAT(
     PNGImage *pngPtr,
     Tk_PhotoImageBlock *blockPtr)
 {
-    int rowNum, flush = TCL_ZLIB_NO_FLUSH, outputSize, result;
+    int rowNum, flush = TCL_ZLIB_NO_FLUSH, result;
     Tcl_Obj *outputObj;
     unsigned char *outputBytes;
+    int outputSize;
 
     /*
      * Filter and compress each row one at a time.
@@ -3483,13 +3485,8 @@ FileWritePNG(
 	goto cleanup;
     }
 
-    /*
-     * Set the translation mode to binary so that CR and LF are not to the
-     * platform's EOL sequence.
-     */
-
-    if (Tcl_SetChannelOption(interp, chan, "-translation",
-	    "binary") != TCL_OK) {
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
 	goto cleanup;
     }
 
