@@ -5665,6 +5665,15 @@ Tk_MoveToplevelWindow(
  *
  *----------------------------------------------------------------------
  */
+#define PRINT_STACK					\
+    for (NSWindow *w in [NSApp orderedWindows]) {		\
+    TkWindow *winPtr2 = TkMacOSXGetTkWindow(w);			\
+	if (winPtr2) {						\
+	    fprintf(stderr, "%s ", Tk_PathName(winPtr2));	\
+	}							\
+    }								\
+    fprintf(stderr, "\n");					\
+    fflush(stderr)
 
 void
 TkWmRestackToplevel(
@@ -5722,8 +5731,14 @@ TkWmRestackToplevel(
      * Just let the Mac window manager deal with all the subtleties of keeping
      * track of off-screen windows, etc.
      */
-
+#if 0
+    fprintf(stderr, "window order: "); PRINT_STACK;
+#endif
     [macWindow orderWindow:macAboveBelow relativeTo:otherNumber];
+#if 0
+    fprintf(stderr, "new window order: "); PRINT_STACK;
+#endif
+#undef PRINT_STACK
 }
 
 /*
