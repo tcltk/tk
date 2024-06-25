@@ -177,11 +177,11 @@ XMapWindow(
 	if (!Tk_IsEmbedded(winPtr)) {
 
 	    /*
-	     * We want to activate Tk when a toplevel is mapped but we must not
-	     * supply YES here.  This is because during Tk initialization the
-	     * root window is mapped before applicationDidFinishLaunching
-	     * returns. Forcing the app to activate too early can make the menu
-	     * bar unresponsive.
+	     * We want to activate Tk when a toplevel is mapped but we can't
+	     * always specify activateIgnoringOtherApps to be YES.  This is
+	     * because during Tk initialization the root window is mapped
+	     * before applicationDidFinishLaunching returns. Forcing the app to
+	     * activate too early can make the menu bar unresponsive.
 	     */
 
 	    TkMacOSXApplyWindowAttributes(winPtr, win);
@@ -190,8 +190,19 @@ XMapWindow(
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
-		} else {
-		    [win orderFrontRegardless];
+		}
+
+		/*
+		 * Delay for up to 20 milliseconds until the toplevel has actually become the
+		 * highest toplevel.  This is to ensure that the Visibility event occurs after
+		 * the toplevel is visible.
+		 */
+
+		for (int count = 0; count < 20; count++) {
+		    if ([[NSApp orderedWindows] firstObject] == win) {
+			break;
+		    }
+		    [NSThread sleepForTimeInterval:.001];
 		}
 	    }
 
