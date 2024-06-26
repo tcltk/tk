@@ -351,7 +351,7 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    TCL_UNUSED(Tcl_Interp *),	/* not used */
+    TCL_UNUSED(Tcl_Interp *))
 {
     GIFImageConfig gifConf;
 
@@ -1198,24 +1198,24 @@ ReadImage(
 		}
 		firstCode = append[code];
 
-	        /*
-	         * Push the head of the code onto the stack.
-	         */
+		/*
+		 * Push the head of the code onto the stack.
+		 */
 
-	        *top++ = firstCode;
+		*top++ = firstCode;
 
-                if (maxCode < (1 << MAX_LWZ_BITS)) {
+		if (maxCode < (1 << MAX_LWZ_BITS)) {
 		    /*
 		     * If there's still room in our codes table, add a new entry.
 		     * Otherwise don't, and keep using the current table.
-                     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
-                     * specification.
+		     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
+		     * specification.
 		     */
 
 		    prefix[maxCode] = oldCode;
 		    append[maxCode] = firstCode;
 		    maxCode++;
-                }
+		}
 
 		/*
 		 * maxCode tells us the maximum code value we can accept. If
@@ -1447,8 +1447,8 @@ Mread(
     size_t numChunks,		/* number of chunks */
     MFile *handle)		/* mmdecode "file" handle */
 {
-    int c;
-    int i, count = chunkSize * numChunks;
+    int i, c;
+    int count = chunkSize * numChunks;
 
     for (i=0; i<count && (c=Mgetc(handle)) != GIF_DONE; i++) {
 	*dst++ = c;
@@ -1603,7 +1603,7 @@ Fread(
     if (gifConfPtr->fromData == INLINE_DATA_BINARY) {
 	MFile *handle = (MFile *) chan;
 
-	if ((handle->length <= 0) || ((size_t)handle->length < hunk*count)) {
+	if ((handle->length <= 0) || ((size_t)handle->length < hunk * count)) {
 	    return -1;
 	}
 	memcpy(dst, handle->data, hunk * count);
