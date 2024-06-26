@@ -193,12 +193,13 @@ XMapWindow(
 		}
 
 		/*
-		 * Delay for up to 20 milliseconds until the toplevel has actually become the
-		 * highest toplevel.  This is to ensure that the Visibility event occurs after
-		 * the toplevel is visible.
+		 * Delay for up to 20 milliseconds until the toplevel has
+		 * actually become the highest toplevel.  This is to ensure
+		 * that the Visibility event occurs after the toplevel is
+		 * visible.
 		 */
 
-		for (int count = 0; count < 20; count++) {
+		for (int try = 0; try < 20; try++) {
 		    if ([[NSApp orderedWindows] firstObject] == win) {
 			break;
 		    }
