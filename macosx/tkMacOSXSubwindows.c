@@ -190,6 +190,8 @@ XMapWindow(
 	    if (initialized) {
 		if ([win canBecomeKeyWindow]) {
 		    [win makeKeyAndOrderFront:NSApp];
+		} else {
+		    [win orderFrontRegardless];
 		}
 
 		/*
