@@ -166,7 +166,7 @@ typedef union MacKeycode_t {
 
 #define ON_KEYPAD(virt) ((virt >= 0x41) && (virt <= 0x5C))
 #define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar != 0x7f) && \
-                               ((keychar < 0xF700) || keychar >= 0xF8FF))
+			       ((keychar < 0xF700) || keychar >= 0xF8FF))
 
 /*
  * An "index" is 2-bit bitfield showing the state of the Option and Shift
@@ -389,7 +389,7 @@ VISIBILITY_HIDDEN
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void)handleURLEvent:                (NSAppleEventDescriptor*)event
-	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
+		   withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN

@@ -116,18 +116,18 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	_defaultWindowsMenuItems = [_defaultWindowsMenuItems
 	     arrayByAddingObjectsFromArray:
 	     [NSArray arrayWithObjects:
-        	    [NSMenuItem separatorItem],
+		    [NSMenuItem separatorItem],
     	            [NSMenuItem itemWithTitle:@"Show Previous Tab"
-		           action:@selector(selectPreviousTab:)
-		           target:nil
+			   action:@selector(selectPreviousTab:)
+			   target:nil
 			   keyEquivalent:@"\t"
-		           keyEquivalentModifierMask:
+			   keyEquivalentModifierMask:
 		    	       NSControlKeyMask|NSShiftKeyMask],
-	            [NSMenuItem itemWithTitle:@"Show Next Tab"
-		           action:@selector(selectNextTab:)
-		           target:nil
+		    [NSMenuItem itemWithTitle:@"Show Next Tab"
+			   action:@selector(selectNextTab:)
+			   target:nil
 			   keyEquivalent:@"\t"
-		           keyEquivalentModifierMask:NSControlKeyMask],
+			   keyEquivalentModifierMask:NSControlKeyMask],
     	            [NSMenuItem itemWithTitle:@"Move Tab To New Window"
     	    	           action:@selector(moveTabToNewWindow:)
     	    	           target:nil],
@@ -135,7 +135,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
     	    	           action:@selector(mergeAllWindows:)
     	    	           target:nil],
     	            [NSMenuItem separatorItem],
-	            nil]];
+		    nil]];
     }
     _defaultWindowsMenuItems = [_defaultWindowsMenuItems arrayByAddingObject:
 	    [NSMenuItem itemWithTitle:@"Bring All to Front"
@@ -193,7 +193,7 @@ static Tcl_Obj *	GetWidgetDemoPath(Tcl_Interp *interp);
 	}
 	return haveDemo;
     } else {
-        return [super validateUserInterfaceItem:anItem];
+	return [super validateUserInterfaceItem:anItem];
     }
 }
 

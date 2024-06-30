@@ -498,7 +498,13 @@ FileReadGIF(
      */
 
     if (Fread(gifConfPtr, buf, 1, 3, chan) != 3) {
-	return TCL_OK;
+	/*
+	 * Bug [865af0148c]: 3 bytes should be there, but data ended before
+	 */
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"GIF file truncated", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "TRUNCATED", NULL);
+	return TCL_ERROR;
     }
     bitPixel = 2 << (buf[0] & 0x07);
 
@@ -1922,8 +1928,8 @@ FileWriteGIF(
     if (!chan) {
 	return TCL_ERROR;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-translation",
-	    "binary") != TCL_OK) {
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }

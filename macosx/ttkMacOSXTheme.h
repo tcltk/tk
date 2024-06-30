@@ -561,7 +561,7 @@ static ThemeFrameParams
 
 #define CHECK_RADIUS(radius, bounds)                                                 \
     if ((radius) > (bounds).size.width / 2 || (radius) > (bounds).size.height / 2) { \
-        return;                                                                      \
+	return;                                                                      \
     }
 
 /*

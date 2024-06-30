@@ -1012,7 +1012,7 @@ XCopyPlane(
 		TkpClipMask *clipPtr = (TkpClipMask *) gc->clip_mask;
 		unsigned long imageBackground  = gc->background;
 
-                if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP) {
+		if (clipPtr && clipPtr->type == TKP_CLIP_PIXMAP) {
 		    srcRect = CGRectMake(src_x, src_y, width, height);
 		    CGImageRef mask = CreateCGImageFromPixmap(
 			    clipPtr->value.pixmap);
@@ -1387,7 +1387,7 @@ TkMacOSXNSImageConfigureModel(
 	case NAME_SOURCE:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj("Unknown named NSImage.\n"
 		"Try omitting ImageName, "
-	        "e.g. use NSCaution for NSImageNameCaution.", TCL_INDEX_NONE));
+		"e.g. use NSCaution for NSImageNameCaution.", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "SYSTEM", "BAD_VALUE", NULL);
 	    goto errorExit;
 	case FILE_SOURCE:
@@ -1491,9 +1491,9 @@ TkMacOSXNSImageObjCmd(
 	objPtr = Tk_GetOptionValue(interp, (char *)modelPtr, optionTable,
 		objv[2], NULL);
 	if (objPtr == NULL) {
-            goto error;
-        }
-        Tcl_SetObjResult(interp, objPtr);
+	    goto error;
+	}
+	Tcl_SetObjResult(interp, objPtr);
 	break;
     case CONFIGURE:
 	if (objc == 2) {

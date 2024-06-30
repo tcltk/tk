@@ -1367,7 +1367,7 @@ static void SendEnterLeaveForDestroy(
 	    Tk_UpdatePointer((Tk_Window) containerPtr, x, y, state);
 	}
     }
-    
+
     if (pointerWin && (tkwin == Tk_Parent(pointerWin))) {
 	Tk_UpdatePointer(Tk_Parent(tkwin), x, y, state);
     }
@@ -1401,7 +1401,7 @@ Tk_DestroyWindow(
     if ((winPtr->flags & TK_DONT_DESTROY_WINDOW) == 0) {
 	SendEnterLeaveForDestroy(tkwin);
     }
-    
+
     winPtr->flags |= TK_ALREADY_DEAD;
 
     /*

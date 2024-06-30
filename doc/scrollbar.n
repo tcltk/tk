@@ -42,8 +42,8 @@ as described in \fBSCROLLING COMMANDS\fR below.
 Specifies the width of borders drawn around the internal elements
 of the scrollbar (the two arrows and the slider).  The value may
 have any of the forms acceptable to \fBTk_GetPixels\fR.
-If this value is less than zero, the value of the \fB\-borderwidth\fR
-option is used in its place.
+If this value is the empty string (the default), the value of
+the \fB\-borderwidth\fR option is used in its place.
 .OP \-width width Width
 Specifies the desired narrow dimension of the scrollbar window,
 not including 3-D border, if any.  For vertical

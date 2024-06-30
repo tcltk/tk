@@ -78,15 +78,15 @@ XDestroyWindow(
 	}
 	if (macWin->visRgn) {
 	    CFRelease(macWin->visRgn);
-            macWin->visRgn = NULL;
+	    macWin->visRgn = NULL;
 	}
 	if (macWin->aboveVisRgn) {
 	    CFRelease(macWin->aboveVisRgn);
-            macWin->aboveVisRgn = NULL;
+	    macWin->aboveVisRgn = NULL;
 	}
 	if (macWin->drawRgn) {
 	    CFRelease(macWin->drawRgn);
-            macWin->drawRgn = NULL;
+	    macWin->drawRgn = NULL;
 	}
 
 	if (macWin->toplevel->referenceCount == 0) {
@@ -98,15 +98,15 @@ XDestroyWindow(
     }
     if (macWin->visRgn) {
 	CFRelease(macWin->visRgn);
-        macWin->visRgn = NULL;
+	macWin->visRgn = NULL;
     }
     if (macWin->aboveVisRgn) {
 	CFRelease(macWin->aboveVisRgn);
-        macWin->aboveVisRgn = NULL;
+	macWin->aboveVisRgn = NULL;
     }
     if (macWin->drawRgn) {
 	CFRelease(macWin->drawRgn);
-        macWin->drawRgn = NULL;
+	macWin->drawRgn = NULL;
     }
     macWin->view = nil;
     macWin->winPtr->privatePtr = NULL;
@@ -155,7 +155,7 @@ XMapWindow(
     static Bool initialized = NO;
     NSPoint mouse = [NSEvent mouseLocation];
     int x = mouse.x, y = TkMacOSXZeroScreenHeight() - mouse.y;
-    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr)); 
+    //fprintf(stderr, "XMapWindow: %s\n", Tk_PathName(macWin->winPtr));
 
     /*
      * Under certain situations it's possible for this function to be called

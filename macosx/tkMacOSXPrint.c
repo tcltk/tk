@@ -92,8 +92,8 @@ StartPrint(
 
     /* Check for proper number of arguments. */
     if (objc < 2) {
-        Tcl_WrongNumArgs(interp, 1, objv, "file");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "file");
+	return TCL_ERROR;
     }
 
     fileName = [NSString stringWithUTF8String: Tcl_GetString(objv[1])];
@@ -105,20 +105,20 @@ StartPrint(
 
     status = PMCreateSession( & printSession);
     if (status != noErr) {
-        NSLog(@ "Error creating print session.");
-        return TCL_ERROR;
+	NSLog(@ "Error creating print session.");
+	return TCL_ERROR;
     }
 
     status = PMCreatePrintSettings( & printSettings);
     if (status != noErr) {
-        NSLog(@ "Error creating print settings.");
-        return TCL_ERROR;
+	NSLog(@ "Error creating print settings.");
+	return TCL_ERROR;
     }
 
     status = PMSessionDefaultPrintSettings(printSession, printSettings);
     if (status != noErr) {
-        NSLog(@ "Error creating default print settings.");
-        return TCL_ERROR;
+	NSLog(@ "Error creating default print settings.");
+	return TCL_ERROR;
     }
 
     printSession = (PMPrintSession)[printInfo PMPrintSession];
@@ -163,25 +163,25 @@ FinishPrint(
      * otherwise printing will occur regardless of value.
      */
     if (buttonValue == NSModalResponseCancel) {
-        return noErr;
+	return noErr;
     }
 
     status = PMCreateSession( & printSession);
     if (status != noErr) {
-        NSLog(@ "Error creating print session.");
-        return status;
+	NSLog(@ "Error creating print session.");
+	return status;
     }
 
     status = PMCreatePrintSettings( & printSettings);
     if (status != noErr) {
-        NSLog(@ "Error creating print settings.");
-        return status;
+	NSLog(@ "Error creating print settings.");
+	return status;
     }
 
     status = PMSessionDefaultPrintSettings(printSession, printSettings);
     if (status != noErr) {
-        NSLog(@ "Error creating default print settings.");
-        return status;
+	NSLog(@ "Error creating default print settings.");
+	return status;
     }
 
     printSession = (PMPrintSession)[printInfo PMPrintSession];
@@ -191,81 +191,81 @@ FinishPrint(
     /*Handle print operation.*/
     if (buttonValue == NSModalResponseOK) {
 
-        if (urlFile == NULL) {
-            NSLog(@ "Could not get file to print.");
-            return noErr;
-        }
+	if (urlFile == NULL) {
+	    NSLog(@ "Could not get file to print.");
+	    return noErr;
+	}
 
-        fileName = file;
+	fileName = file;
 
-        CFURLRef printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
+	CFURLRef printURL = CFURLCreateWithFileSystemPath(kCFAllocatorDefault, urlFile, kCFURLPOSIXPathStyle, false);
 
-        PMPrinter currentPrinter;
-        PMDestinationType printDestination;
+	PMPrinter currentPrinter;
+	PMDestinationType printDestination;
 
-        /*Get the intended destination.*/
-        status = PMSessionGetDestinationType(printSession, printSettings, & printDestination);
+	/*Get the intended destination.*/
+	status = PMSessionGetDestinationType(printSession, printSettings, & printDestination);
 
-        /*Destination is printer. Send file to printer.*/
-        if (status == noErr && printDestination == kPMDestinationPrinter) {
+	/*Destination is printer. Send file to printer.*/
+	if (status == noErr && printDestination == kPMDestinationPrinter) {
 
-            status = PMSessionGetCurrentPrinter(printSession, & currentPrinter);
-            if (status == noErr) {
-                CFArrayRef mimeTypes;
-                status = PMPrinterGetMimeTypes(currentPrinter, printSettings, & mimeTypes);
-                if (status == noErr && mimeTypes != NULL) {
-                    mimeType = CFSTR("application/pdf");
-                    if (CFArrayContainsValue(mimeTypes, CFRangeMake(0, CFArrayGetCount(mimeTypes)), mimeType)) {
-                        status = PMPrinterPrintWithFile(currentPrinter, printSettings, pageFormat, mimeType, printURL);
-                        CFRelease(urlFile);
-                        return status;
-                    }
-                }
-            }
-        }
+	    status = PMSessionGetCurrentPrinter(printSession, & currentPrinter);
+	    if (status == noErr) {
+		CFArrayRef mimeTypes;
+		status = PMPrinterGetMimeTypes(currentPrinter, printSettings, & mimeTypes);
+		if (status == noErr && mimeTypes != NULL) {
+		    mimeType = CFSTR("application/pdf");
+		    if (CFArrayContainsValue(mimeTypes, CFRangeMake(0, CFArrayGetCount(mimeTypes)), mimeType)) {
+			status = PMPrinterPrintWithFile(currentPrinter, printSettings, pageFormat, mimeType, printURL);
+			CFRelease(urlFile);
+			return status;
+		    }
+		}
+	    }
+	}
 
-        /* Destination is file. Determine how to handle. */
-        if (status == noErr && printDestination == kPMDestinationFile) {
-            CFURLRef outputLocation = NULL;
+	/* Destination is file. Determine how to handle. */
+	if (status == noErr && printDestination == kPMDestinationFile) {
+	    CFURLRef outputLocation = NULL;
 
-            status = PMSessionCopyDestinationLocation(printSession, printSettings, & outputLocation);
-            if (status == noErr) {
-                /*Get the source file and target destination, convert to strings.*/
-                CFStringRef sourceFile = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
-                CFStringRef savePath = CFURLCopyFileSystemPath(outputLocation, kCFURLPOSIXPathStyle);
-                NSString * sourcePath = (NSString * ) sourceFile;
-                NSString * finalPath = (NSString * ) savePath;
-                NSString * pathExtension = [finalPath pathExtension];
-                NSFileManager * fileManager = [NSFileManager defaultManager];
+	    status = PMSessionCopyDestinationLocation(printSession, printSettings, & outputLocation);
+	    if (status == noErr) {
+		/*Get the source file and target destination, convert to strings.*/
+		CFStringRef sourceFile = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
+		CFStringRef savePath = CFURLCopyFileSystemPath(outputLocation, kCFURLPOSIXPathStyle);
+		NSString * sourcePath = (NSString * ) sourceFile;
+		NSString * finalPath = (NSString * ) savePath;
+		NSString * pathExtension = [finalPath pathExtension];
+		NSFileManager * fileManager = [NSFileManager defaultManager];
 		NSError * error = nil;
 
-        /*
+	/*
 		 * Is the target file a PDF? If so, copy print file
 		 * to output location.
 		 */
-                if ([pathExtension isEqualToString: @ "pdf"]) {
+		if ([pathExtension isEqualToString: @ "pdf"]) {
 
 		    /*Make sure no file conflict exists.*/
 		    if ([fileManager fileExistsAtPath: finalPath]) {
 			[fileManager removeItemAtPath: finalPath error: &error];
 		    }
-                    if ([fileManager fileExistsAtPath: sourcePath]) {
-                        error = nil;
-                        [fileManager copyItemAtPath: sourcePath toPath: finalPath error: & error];
-                    }
+		    if ([fileManager fileExistsAtPath: sourcePath]) {
+			error = nil;
+			[fileManager copyItemAtPath: sourcePath toPath: finalPath error: & error];
+		    }
 		    return status;
-                }
+		}
 
-                /*
-                 * Is the target file PostScript? If so, run print file
-                 * through CUPS filter to convert back to PostScript.
-                 */
+		/*
+		 * Is the target file PostScript? If so, run print file
+		 * through CUPS filter to convert back to PostScript.
+		 */
 
-              if ([pathExtension isEqualToString: @ "ps"]) {
-                    char source[5012];
-                    char target[5012];
-                    [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
-                    [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
+	      if ([pathExtension isEqualToString: @ "ps"]) {
+		    char source[5012];
+		    char target[5012];
+		    [sourcePath getCString: source maxLength: (sizeof source) encoding: NSUTF8StringEncoding];
+		    [finalPath getCString: target maxLength: (sizeof target) encoding: NSUTF8StringEncoding];
 		    /*Make sure no file conflict exists.*/
 		    if ([fileManager fileExistsAtPath: finalPath]) {
 			[fileManager removeItemAtPath: finalPath error: &error];
@@ -290,39 +290,39 @@ FinishPrint(
 	    }
 	}
 
-        /* Destination is preview. Open file in default application for PDF. */
-        if ((status == noErr) && (printDestination == kPMDestinationPreview)) {
-            CFStringRef urlpath = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
-            NSString * path = (NSString * ) urlpath;
-            NSURL * url = [NSURL fileURLWithPath: path];
-            NSWorkspace * ws = [NSWorkspace sharedWorkspace];
-            [ws openURL: url];
-            status = noErr;
-            return status;
-        }
+	/* Destination is preview. Open file in default application for PDF. */
+	if ((status == noErr) && (printDestination == kPMDestinationPreview)) {
+	    CFStringRef urlpath = CFURLCopyFileSystemPath(printURL, kCFURLPOSIXPathStyle);
+	    NSString * path = (NSString * ) urlpath;
+	    NSURL * url = [NSURL fileURLWithPath: path];
+	    NSWorkspace * ws = [NSWorkspace sharedWorkspace];
+	    [ws openURL: url];
+	    status = noErr;
+	    return status;
+	}
 
-        /*
-         * If destination is not printer, file or preview,
-         * we do not support it. Display alert.
-         */
+	/*
+	 * If destination is not printer, file or preview,
+	 * we do not support it. Display alert.
+	 */
 
 	if (((status == noErr) && (printDestination != kPMDestinationPreview)) || ((status == noErr) && (printDestination != kPMDestinationFile)) || ((status == noErr) &&  (printDestination != kPMDestinationPrinter))) {
 
-            NSAlert * alert = [[[NSAlert alloc] init] autorelease];
-            [alert addButtonWithTitle: @ "OK"];
+	    NSAlert * alert = [[[NSAlert alloc] init] autorelease];
+	    [alert addButtonWithTitle: @ "OK"];
 
-            [alert setMessageText: @ "Unsupported Printing Operation"];
-            [alert setInformativeText: @ "This printing operation is not supported."];
-            [alert setAlertStyle: NSAlertStyleInformational];
-            [alert runModal];
-            return status;
-        }
+	    [alert setMessageText: @ "Unsupported Printing Operation"];
+	    [alert setInformativeText: @ "This printing operation is not supported."];
+	    [alert setAlertStyle: NSAlertStyleInformational];
+	    [alert runModal];
+	    return status;
+	}
     }
 
     /* Return because cancel button was clicked. */
     if (buttonValue == NSModalResponseCancel) {
-        PMRelease(printSession);
-        return status;
+	PMRelease(printSession);
+	return status;
     }
 
     return status;

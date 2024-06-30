@@ -171,9 +171,9 @@ CreateIcoFromPhoto(
     bmInfo.bmiHeader.biCompression = BI_RGB;
 
     iconInfo.hbmColor = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-            &bgraPixel.voidPtr, NULL, 0);
+	    &bgraPixel.voidPtr, NULL, 0);
     if (!iconInfo.hbmColor) {
-        return NULL;
+	return NULL;
     }
 
     /*
@@ -182,10 +182,10 @@ CreateIcoFromPhoto(
 
     bufferSize = height * width * 4;
     for (idx = 0 ; idx < bufferSize ; idx += 4) {
-        bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
-        bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
-        bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
-        bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
+	bgraPixel.ptr[idx] = block.pixelPtr[idx+2];
+	bgraPixel.ptr[idx+1] = block.pixelPtr[idx+1];
+	bgraPixel.ptr[idx+2] = block.pixelPtr[idx+0];
+	bgraPixel.ptr[idx+3] = block.pixelPtr[idx+3];
     }
 
     /*
@@ -197,10 +197,10 @@ CreateIcoFromPhoto(
     bmInfo.bmiHeader.biBitCount = 1;
 
     iconInfo.hbmMask = CreateDIBSection(NULL, &bmInfo, DIB_RGB_COLORS,
-            &bgraMask.voidPtr, NULL, 0);
+	    &bgraMask.voidPtr, NULL, 0);
     if (!iconInfo.hbmMask) {
-        DeleteObject(iconInfo.hbmColor);
-        return NULL;
+	DeleteObject(iconInfo.hbmColor);
+	return NULL;
     }
 
     memset(bgraMask.ptr, 0, width*height/8);
@@ -213,7 +213,7 @@ CreateIcoFromPhoto(
     DeleteObject(iconInfo.hbmColor);
     DeleteObject(iconInfo.hbmMask);
     if (hIcon == NULL) {
-        return NULL;
+	return NULL;
     }
 
     return hIcon;

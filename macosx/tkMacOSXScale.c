@@ -169,10 +169,10 @@ TkpDisplayScale(
     Tcl_Preserve(scalePtr);
     if ((scalePtr->flags & INVOKE_COMMAND) && (scalePtr->command != NULL)) {
 	Tcl_Preserve(interp);
-        if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
-                scalePtr->value) < 0) {
-            string[TCL_DOUBLE_SPACE - 1] = '\0';
-        }
+	if (snprintf(string, TCL_DOUBLE_SPACE, scalePtr->format,
+		scalePtr->value) < 0) {
+	    string[TCL_DOUBLE_SPACE - 1] = '\0';
+	}
 	Tcl_DStringInit(&buf);
 	Tcl_DStringAppend(&buf, scalePtr->command, TCL_INDEX_NONE);
 	Tcl_DStringAppend(&buf, " ", TCL_INDEX_NONE);
@@ -197,7 +197,7 @@ TkpDisplayScale(
      * vertical scales: border and traversal highlight.
      */
 
-    if (scalePtr->highlightWidth != 0) {
+    if (scalePtr->highlightWidth > 0) {
 	GC gc = Tk_GCForColor(scalePtr->highlightColorPtr, Tk_WindowId(tkwin));
 
 	Tk_DrawFocusHighlight(tkwin, gc, scalePtr->highlightWidth,

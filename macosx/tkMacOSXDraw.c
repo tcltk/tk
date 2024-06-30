@@ -419,16 +419,16 @@ XDrawLines(
 	    }
 	}
 
-        /*
-         * In the case of closed polylines, the first and last points are the
-         * same. We want miter or bevel join be rendered also at this point,
-         * this needs telling CoreGraphics that the path is closed.
-         */
+	/*
+	 * In the case of closed polylines, the first and last points are the
+	 * same. We want miter or bevel join be rendered also at this point,
+	 * this needs telling CoreGraphics that the path is closed.
+	 */
 
-        if ((points[0].x == points[npoints-1].x) &&
-                (points[0].y == points[npoints-1].y)) {
-            CGContextClosePath(dc.context);
-        }
+	if ((points[0].x == points[npoints-1].x) &&
+		(points[0].y == points[npoints-1].y)) {
+	    CGContextClosePath(dc.context);
+	}
 	CGContextStrokePath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
@@ -1330,7 +1330,7 @@ TkMacOSXSetupDrawingContext(
 	};
 	CGContextConcatCTM(dc.context, t);
     }
-//#if 0    // disable clipping 
+//#if 0    // disable clipping
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING

@@ -77,7 +77,7 @@ See \fBVALIDATION\fR below for more information.
 .OP \-width width Width
 Specifies an integer value indicating the desired width of the entry window,
 in average-size characters of the widget's font.
-If the value is less than or equal to zero, the widget picks a
+If the value is negative or zero, the widget picks a
 size just large enough to hold its current text.
 .BE
 .SH DESCRIPTION

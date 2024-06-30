@@ -1109,7 +1109,7 @@ test textDisp-6.9 {DisplayText, horizontal scrollbar updates} {
 test textDisp-6.10 {DisplayText, redisplay embedded windows after scroll} {aqua} {
     # For this test to pass line 8 must be out of the text widget.
     # With macOS 14 this requires making the buttons a little larger.
-    # So we set the pady option.  This may depend on the OS version.  
+    # So we set the pady option.  This may depend on the OS version.
     .t configure -wrap char
     update
     .t delete 1.0 end
