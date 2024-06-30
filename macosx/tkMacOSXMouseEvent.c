@@ -884,9 +884,9 @@ TkpWarpPointer(
     CGWarpMouseCursorPosition(pt);
 
     if (dispPtr->warpWindow) {
-        TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
+	TkGenerateButtonEventForXPointer(Tk_WindowId(dispPtr->warpWindow));
     } else {
-        TkGenerateButtonEventForXPointer(None);
+	TkGenerateButtonEventForXPointer(None);
     }
 }
 

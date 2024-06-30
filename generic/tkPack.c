@@ -1108,7 +1108,7 @@ PackStructureProc(
 	    Tcl_DoWhenIdle(ArrangePacking, packPtr);
 	}
 	if ((packPtr->containerPtr != NULL)
-	        && (packPtr->doubleBw != 2*Tk_Changes(packPtr->tkwin)->border_width)) {
+		&& (packPtr->doubleBw != 2*Tk_Changes(packPtr->tkwin)->border_width)) {
 	    if (!(packPtr->containerPtr->flags & REQUESTED_REPACK)) {
 		packPtr->doubleBw = 2*Tk_Changes(packPtr->tkwin)->border_width;
 		packPtr->containerPtr->flags |= REQUESTED_REPACK;
@@ -1133,7 +1133,7 @@ PackStructureProc(
 
 	if (packPtr->tkwin != NULL) {
 	    TkDisplay *dispPtr = ((TkWindow *) packPtr->tkwin)->dispPtr;
-            Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->packerHashTable,
+	    Tcl_DeleteHashEntry(Tcl_FindHashEntry(&dispPtr->packerHashTable,
 		    packPtr->tkwin));
 	}
 
@@ -1485,8 +1485,8 @@ ConfigureContent(
 	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't put \"%s\" inside \"%s\": would cause management loop",
-	            Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
+			"can't put \"%s\" inside \"%s\": would cause management loop",
+			Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		return TCL_ERROR;
 	    }

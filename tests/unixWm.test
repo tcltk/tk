@@ -2093,7 +2093,7 @@ test unixWm-51.8 {TkWmRestackToplevel procedure, overrideredirect windows} unix 
     wm overrideredirect .t2 1
     wm geometry .t2 +0+0
     tkwait visibility .t2
-    
+
     # Need to use vrootx and vrooty to make tests work correctly with
     # virtual root window measures managers: overrideredirect windows
     # come up at (0,0) in display coordinates, not virtual root

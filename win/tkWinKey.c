@@ -358,9 +358,9 @@ KeycodeToKeysym(
 	 */
 
     case VK_CONTROL:
-        if (state & EXTENDED_MASK) {
-            return XK_Control_R;
-        }
+	if (state & EXTENDED_MASK) {
+	    return XK_Control_R;
+	}
 	break;
     case VK_SHIFT:
 	if (GetKeyState(VK_RSHIFT) & 0x80) {
@@ -368,9 +368,9 @@ KeycodeToKeysym(
 	}
 	break;
     case VK_MENU:
-        if (state & EXTENDED_MASK) {
-            return XK_Alt_R;
-        }
+	if (state & EXTENDED_MASK) {
+	    return XK_Alt_R;
+	}
 	break;
     }
     return keymap[keycode];

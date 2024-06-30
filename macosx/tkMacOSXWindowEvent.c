@@ -150,7 +150,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 }
 
 - (NSRect)windowWillUseStandardFrame:(NSWindow *)window
-                        defaultFrame:(NSRect)newFrame
+			defaultFrame:(NSRect)newFrame
 {
     (void)window;
 
@@ -286,7 +286,7 @@ extern NSString *NSWindowDidOrderOffScreenNotification;
 
 #if 0
     if (winPtr) {
-        Tk_UnmapWindow((Tk_Window)winPtr);
+	Tk_UnmapWindow((Tk_Window)winPtr);
     }
 #endif
 }
@@ -398,7 +398,7 @@ static void RefocusGrabWindow(void *data) {
 }
 
 - (BOOL)applicationShouldHandleReopen:(NSApplication *)sender
-                    hasVisibleWindows:(BOOL)flag
+		    hasVisibleWindows:(BOOL)flag
 {
     (void)sender;
     (void)flag;
@@ -972,7 +972,7 @@ ConfigureRestrictProc(
 					 NSTrackingActiveAlways)
 				  owner:self
 			       userInfo:nil];
-        [self addTrackingArea:trackingArea];
+	[self addTrackingArea:trackingArea];
     }
     return self;
 }
@@ -1000,7 +1000,7 @@ ConfigureRestrictProc(
 	/*
 	 * Run any pending widget display procs as part of the update.
 	 */
-	
+
 	while(Tcl_DoOneEvent(TCL_IDLE_EVENTS)){}
 	[self setTkNeedsDisplay:NO];
     }
@@ -1220,7 +1220,7 @@ static const char *const accentNames[] = {
     }
     NSString *accent = [preferences stringForKey:@"AppleAccentColor"];
     NSArray *words = [[preferences stringForKey:@"AppleHighlightColor"]
-			        componentsSeparatedByString: @" "];
+				componentsSeparatedByString: @" "];
     NSString *highlight = [words count] > 3 ? [words objectAtIndex:3] : nil;
     const char *accentName = accent ? accentNames[1 + accent.intValue] : defaultColor;
     const char *highlightName = highlight ? highlight.UTF8String: defaultColor;

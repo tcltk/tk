@@ -128,7 +128,7 @@ TkpDisplayScrollbar(
     pixmap = Tk_GetPixmap(scrollPtr->display, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 
-    if (scrollPtr->highlightWidth != 0) {
+    if (scrollPtr->highlightWidth > 0) {
 	GC gc;
 
 	if (scrollPtr->flags & GOT_FOCUS) {
@@ -283,9 +283,6 @@ TkpComputeScrollbarGeometry(
 {
     int width, fieldLength;
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
     width = (scrollPtr->vertical) ? Tk_Width(scrollPtr->tkwin)
 	    : Tk_Height(scrollPtr->tkwin);

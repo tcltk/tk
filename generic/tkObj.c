@@ -518,7 +518,7 @@ SetPixelFromAny(
 	    if (interp != NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 			"expected screen distance but got \"%.50s\"", string));
-		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
 	}
@@ -802,7 +802,7 @@ SetMMFromAny(
 	error:
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "expected screen distance but got \"%.50s\"", string));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	switch (*rest) {
@@ -1103,7 +1103,7 @@ TkParsePadAmount(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "bad pad value \"%s\": must be positive screen distance",
 		    Tcl_GetString(specObj)));
-	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", (char *)NULL);
 	    return TCL_ERROR;
 	}
 	secondInt = firstInt;
@@ -1121,7 +1121,7 @@ TkParsePadAmount(
     if (objc != 1 && objc != 2) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"wrong number of parts to pad specification", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "PARTS", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "PARTS", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1134,7 +1134,7 @@ TkParsePadAmount(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad pad value \"%s\": must be positive screen distance",
 		Tcl_GetString(objv[0])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", (char *)NULL);
 	return TCL_ERROR;
     }
 
@@ -1150,7 +1150,7 @@ TkParsePadAmount(
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad 2nd pad value \"%s\": must be positive screen distance",
 		Tcl_GetString(objv[1])));
-	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", NULL);
+	Tcl_SetErrorCode(interp, "TK", "VALUE", "PADDING", "DIST", (char *)NULL);
 	return TCL_ERROR;
     }
 

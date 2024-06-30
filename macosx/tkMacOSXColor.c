@@ -52,7 +52,7 @@ static void initColorTable()
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
 	darkAqua = [NSAppearance appearanceNamed:NSAppearanceNameDarkAqua];
-        lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
+	lightAqua = [NSAppearance appearanceNamed:NSAppearanceNameAqua];
     }
 #endif
 
@@ -103,7 +103,7 @@ static void initColorTable()
 	name = (char *)ckalloc(length + 1);
 	strcpy(name, key.UTF8String);
 	name[0] = (char)toupper(UCHAR(name[0]));
-        if (!strcmp(name, "WindowBackgroundColor")) {
+	if (!strcmp(name, "WindowBackgroundColor")) {
 
 	    /*
 	     * Avoid black windows on old systems.
@@ -192,8 +192,8 @@ TkMacOSXRGBPixel(
     MacPixel p = {0};
     p.pixel.colortype = rgbColor;
     p.pixel.value = (unsigned int)(((red & 0xff) << 16)  |
-	            ((green & 0xff) << 8) |
-	            (blue & 0xff));
+		    ((green & 0xff) << 8) |
+		    (blue & 0xff));
     return p.ulong;
 }
 
@@ -436,7 +436,7 @@ TkMacOSXInDarkMode(Tk_Window tkwin)
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
     if (@available(macOS 10.14, *)) {
-        TkWindow *winPtr = (TkWindow*) tkwin;
+	TkWindow *winPtr = (TkWindow*) tkwin;
 	NSAppearanceName name;
 	NSView *view = nil;
 	if (winPtr && winPtr->privatePtr) {

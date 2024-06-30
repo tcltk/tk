@@ -900,9 +900,9 @@ MenuWidgetObjCmd(
 	    goto error;
 	}
 	if (objc == 5) {
-            if (GetMenuIndex(interp, menuPtr, objv[4], 0, &index) != TCL_OK) {
-                goto error;
-            }
+	    if (GetMenuIndex(interp, menuPtr, objv[4], 0, &index) != TCL_OK) {
+		goto error;
+	    }
 	}
 
 	/*
@@ -914,9 +914,9 @@ MenuWidgetObjCmd(
 	 */
 
 	if (menuPtr->menuType == MENUBAR) {
-            Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
-            return TCL_ERROR;
-        } else if (menuPtr->menuType != TEAROFF_MENU) {
+	    Tcl_AppendResult(interp, "a menubar menu cannot be posted", NULL);
+	    return TCL_ERROR;
+	} else if (menuPtr->menuType != TEAROFF_MENU) {
 	    result = TkpPostMenu(interp, menuPtr, x, y, index);
 	} else {
 	    result = TkpPostTearoffMenu(interp, menuPtr, x, y, index);
@@ -1197,16 +1197,16 @@ DestroyMenuInstance(
      */
 
     for (i = menuPtr->numEntries; --i >= 0; ) {
-        /*
-         * Clean up the hash entry for the menu item ID.
-         * This cannot be postponed until the entry is eventually freed,
-         * because the hash table may already have been deleted by then.
-         */
+	/*
+	 * Clean up the hash entry for the menu item ID.
+	 * This cannot be postponed until the entry is eventually freed,
+	 * because the hash table may already have been deleted by then.
+	 */
 
-        if (menuPtr->entries[i]->entryPtr) {
-            Tcl_DeleteHashEntry(menuPtr->entries[i]->entryPtr);
-            menuPtr->entries[i]->entryPtr = NULL;
-        }
+	if (menuPtr->entries[i]->entryPtr) {
+	    Tcl_DeleteHashEntry(menuPtr->entries[i]->entryPtr);
+	    menuPtr->entries[i]->entryPtr = NULL;
+	}
 
 	/*
 	 * As each menu entry is deleted from the end of the array of entries,
@@ -1495,8 +1495,8 @@ DestroyMenuEntry(
 		MenuVarProc, mePtr);
     }
     if (mePtr->entryPtr) {
-        Tcl_DeleteHashEntry(mePtr->entryPtr);
-        mePtr->entryPtr = NULL;
+	Tcl_DeleteHashEntry(mePtr->entryPtr);
+	mePtr->entryPtr = NULL;
     }
     TkpDestroyMenuEntry(mePtr);
     TkMenuEntryFreeDrawOptions(mePtr);
@@ -2199,9 +2199,9 @@ GetMenuIndex(
 
     entryPtr = Tcl_FindHashEntry(&menuPtr->items, string);
     if (entryPtr) {
-        TkMenuEntry *mePtr = (TkMenuEntry *)Tcl_GetHashValue(entryPtr);
-        *indexPtr = mePtr->index;
-        return TCL_OK;
+	TkMenuEntry *mePtr = (TkMenuEntry *)Tcl_GetHashValue(entryPtr);
+	*indexPtr = mePtr->index;
+	return TCL_OK;
     }
 
     for (i = 0; i < menuPtr->numEntries; i++) {
@@ -2216,7 +2216,7 @@ GetMenuIndex(
 
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 	    "bad menu entry index \"%s\"", string));
-    Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
+    Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", (char *)NULL);
     return TCL_ERROR;
 }
 
@@ -2407,7 +2407,7 @@ MenuAddOrInsert(
     if (index < 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"bad menu entry index \"%s\"", Tcl_GetString(indexPtr)));
-	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", NULL);
+	Tcl_SetErrorCode(interp, "TK", "MENU", "INDEX", (char *)NULL);
 	return TCL_ERROR;
     }
     if (menuPtr->tearoff && (index == 0)) {
@@ -2429,14 +2429,14 @@ MenuAddOrInsert(
      */
 
     if (objc % 2 == 0) {
-        idPtr = objv[offs];
-        if (Tcl_FindHashEntry(&menuPtr->items, Tcl_GetString(idPtr))) {
-            Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	idPtr = objv[offs];
+	if (Tcl_FindHashEntry(&menuPtr->items, Tcl_GetString(idPtr))) {
+	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "entry \"%s\" already exists", Tcl_GetString(idPtr)));
-            Tcl_SetErrorCode(interp, "TK", "MENU", "ENTRY_EXISTS", NULL);
-            return TCL_ERROR;
-        }
-        offs++;
+	    Tcl_SetErrorCode(interp, "TK", "MENU", "ENTRY_EXISTS", (char *)NULL);
+	    return TCL_ERROR;
+	}
+	offs++;
     }
 
     /*
@@ -2473,22 +2473,22 @@ MenuAddOrInsert(
     	    return TCL_ERROR;
     	}
 
-        if (idPtr == NULL) {
-            char idbuf[16];
-            /* Generate an id for the new entry on the main menu */
-            do {
-                snprintf(idbuf, sizeof(idbuf), "e%03X", ++menuPtr->serial);
-                entryPtr = Tcl_CreateHashEntry(
+	if (idPtr == NULL) {
+	    char idbuf[16];
+	    /* Generate an id for the new entry on the main menu */
+	    do {
+		snprintf(idbuf, sizeof(idbuf), "e%03X", ++menuPtr->serial);
+		entryPtr = Tcl_CreateHashEntry(
 			&menuListPtr->items, idbuf, &isNew);
-            } while (!isNew);
-            idPtr = Tcl_NewStringObj(idbuf, TCL_INDEX_NONE);
-        } else {
-            /* Reuse the specified or previously generated id on all clones */
-            entryPtr = Tcl_CreateHashEntry(
+	    } while (!isNew);
+	    idPtr = Tcl_NewStringObj(idbuf, TCL_INDEX_NONE);
+	} else {
+	    /* Reuse the specified or previously generated id on all clones */
+	    entryPtr = Tcl_CreateHashEntry(
 		    &menuListPtr->items, Tcl_GetString(idPtr), &isNew);
-        }
-        Tcl_SetHashValue(entryPtr, mePtr);
-        mePtr->entryPtr = entryPtr;
+	}
+	Tcl_SetHashValue(entryPtr, mePtr);
+	mePtr->entryPtr = entryPtr;
 
     	/*
 	 * If a menu has cascades, then every instance of the menu has to have
@@ -2593,26 +2593,26 @@ MenuVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        void *probe = NULL;
+	void *probe = NULL;
 	mePtr->entryFlags &= ~ENTRY_SELECTED;
 
-        do {
-                probe = Tcl_VarTraceInfo(interp, name,
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        MenuVarProc, probe);
-                if (probe == (void *)mePtr) {
-                    break;
-                }
-        } while (probe);
-        if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * namePtr, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
+	do {
+		probe = Tcl_VarTraceInfo(interp, name,
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			MenuVarProc, probe);
+		if (probe == (void *)mePtr) {
+		    break;
+		}
+	} while (probe);
+	if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * namePtr, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
 		return NULL;
-        }
+	}
 	Tcl_TraceVar2(interp, name, NULL,
 		TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		MenuVarProc, clientData);

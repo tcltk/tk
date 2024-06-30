@@ -26,9 +26,9 @@ without generating deprecation warnings.
 #include "tkMacOSXPrivate.h"
 
 #define CHARS_TO_OSTYPE(string) (OSType) string[0] << 24 | \
-                                (OSType) string[1] << 16 | \
-                                (OSType) string[2] <<  8 | \
-                                (OSType) string[3]
+				(OSType) string[1] << 16 | \
+				(OSType) string[2] <<  8 | \
+				(OSType) string[3]
 
 MODULE_SCOPE NSString *TkMacOSXOSTypeToUTI(OSType ostype) {
     char string[5];
