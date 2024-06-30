@@ -39,6 +39,7 @@ bind Treeview 	<Left>  		{ ttk::treeview::Keynav %W left }
 bind Treeview	<Prior>			{ %W yview scroll -1 pages }
 bind Treeview	<Next> 			{ %W yview scroll  1 pages }
 bind Treeview	<Return>		{ ttk::treeview::ToggleFocus %W }
+bind Treeview	<KP_Enter>		{ ttk::treeview::ToggleFocus %W }
 bind Treeview	<space>			{ ttk::treeview::ToggleFocus %W }
 
 bind Treeview	<Shift-Button-1> \
