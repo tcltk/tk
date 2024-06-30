@@ -185,17 +185,10 @@ $c create text 28.5c 17.4c -text Scale: -anchor s
 
 $c bind item <Enter> "itemEnter $c"
 $c bind item <Leave> "itemLeave $c"
-if {[tk windowingsystem] eq "aqua" && ![package vsatisfies [package provide tk] 8.7-]} {
-    bind $c <Button-2> "itemMark $c %x %y"
-    bind $c <B2-Motion> "itemStroke $c %x %y"
-    bind $c <Button-3> "$c scan mark %x %y"
-    bind $c <B3-Motion> "$c scan dragto %x %y"
-} else {
-    bind $c <Button-2> "$c scan mark %x %y"
-    bind $c <B2-Motion> "$c scan dragto %x %y"
-    bind $c <Button-3> "itemMark $c %x %y"
-    bind $c <B3-Motion> "itemStroke $c %x %y"
-}
+bind $c <Button-2> "$c scan mark %x %y"
+bind $c <B2-Motion> "$c scan dragto %x %y"
+bind $c <Button-3> "itemMark $c %x %y"
+bind $c <B3-Motion> "itemStroke $c %x %y"
 bind $c <<NextChar>> "itemsUnderArea $c"
 bind $c <Button-1> "itemStartDrag $c %x %y"
 bind $c <B1-Motion> "itemDrag $c %x %y"

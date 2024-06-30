@@ -1938,6 +1938,23 @@ test imgPhoto-20.6 {Reject truncated GIF (file)} -setup {
 } -cleanup {
     catch {image delete gif1}
 } -returnCodes error -result {error reading color map}
+test imgPhoto-20.6.1 {Reject truncated GIF in Colormap - ticket 865af0148c - file} -setup {
+    set fileName [file join [file dirname [info script]] corruptTruncatedColormap.gif]
+} -body {
+    image create photo gif1 -file $fileName
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {GIF file truncated}
+test imgPhoto-20.6.2 {Reject truncated GIF in Colormap - ticket 865af0148c - data} -setup {
+    set fileName [file join [file dirname [info script]] corruptTruncatedColormap.gif]
+    set h [open $fileName rb]
+    set d [read $h]
+    close $h
+} -body {
+    image create photo gif1 -data $d
+} -cleanup {
+    catch {image delete gif1}
+} -returnCodes error -result {GIF file truncated}
 test imgPhoto-20.7 {Reject corrupted GIF (> 4Gb) (binary string)} -constraints {
     nonPortable
 } -setup {

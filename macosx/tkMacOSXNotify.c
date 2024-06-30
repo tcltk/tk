@@ -361,7 +361,7 @@ TkMacOSXDrawAllViews(
     if (dirtyCount) {
     	*dirtyCount = count;
     }
-    
+
     /*
      * Trigger calls to updateLayer methods for the views flagged above.
      */
@@ -436,7 +436,7 @@ TkMacOSXEventsSetupProc(
   	 */
 
 	NSEvent *currentEvent =
-	        [NSApp nextEventMatchingMask:NSAnyEventMask
+		[NSApp nextEventMatchingMask:NSAnyEventMask
 			untilDate:[NSDate distantPast]
 			inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			dequeue:NO];
