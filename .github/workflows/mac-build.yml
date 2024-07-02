@@ -61,7 +61,7 @@ jobs:
           - 'mem'
         options:
           - '--enable-aqua'
-          - '--disable-aqua'
+#          - '--disable-aqua'
     defaults:
       run:
         shell: bash
