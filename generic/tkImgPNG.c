@@ -3765,13 +3765,8 @@ FileWritePNG(
 	goto cleanup;
     }
 
-    /*
-     * Set the translation mode to binary so that CR and LF are not to the
-     * platform's EOL sequence.
-     */
-
-    if (Tcl_SetChannelOption(interp, chan, "-translation",
-	    "binary") != TCL_OK) {
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
 	goto cleanup;
     }
 
