@@ -305,11 +305,6 @@ FileWritePPM(
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
-	    != TCL_OK) {
-	Tcl_Close(NULL, chan);
-	return TCL_ERROR;
-    }
 
     snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
     Tcl_Write(chan, header, TCL_INDEX_NONE);

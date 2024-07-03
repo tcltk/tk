@@ -11,6 +11,8 @@ namespace import ::tcltest::*
 eval tcltest::configure $argv
 tcltest::loadTestedCommands
 
+testConstraint failsOnXQuarz [expr {$tcl_platform(os) ne "Darwin" || [tk windowingsystem] ne "x11" }]
+
 # For xscrollcommand
 set scrollInfo {}
 proc scroll args {
@@ -891,7 +893,7 @@ test entry-3.23 {EntryWidgetCmd procedure, "delete" widget command} -setup {
 } -cleanup {
     destroy .e
 } -result 0123457890
-test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -setup {
+test entry-3.24 {EntryWidgetCmd procedure, "delete" widget command} -constraints failsOnXQuarz -setup {
     entry .e
     pack .e ; update idletasks
     update
