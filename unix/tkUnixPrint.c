@@ -53,7 +53,7 @@ GetPrinterFromObj(Tcl_Obj *nameObj)
 
 static int
 Cups_Cmd(
-    TCL_UNUSED(ClientData),
+    TCL_UNUSED(void *),
     Tcl_Interp *interp,
     int objc,
     Tcl_Obj *const objv[])
@@ -228,21 +228,21 @@ PrintOp(
 
     const Tcl_ArgvInfo argTable[] = {
 	{TCL_ARGV_GENFUNC,  "-colormode",   ParseEnumOptions, &color,
-	    "color mode", (ClientData) &parseData[PARSECOLORMODE]},
+	    "color mode", (void *)&parseData[PARSECOLORMODE]},
 	{TCL_ARGV_INT   ,   "-copies",                  NULL, &copies,
 	    "number of copies", NULL},
 	{TCL_ARGV_GENFUNC,  "-format",      ParseEnumOptions, &format,
-	    "data format", (ClientData) &parseData[PARSEFORMAT]},
+	    "data format", (void *)&parseData[PARSEFORMAT]},
 	{TCL_ARGV_GENFUNC,  "-margins",         ParseMargins, &marginsObj,
 	    "media page size", NULL},
 	{TCL_ARGV_GENFUNC,  "-media",       ParseEnumOptions, &media,
-	    "media page size", (ClientData) &parseData[PARSEMEDIA]},
+	    "media page size", (void *)&parseData[PARSEMEDIA]},
 	{TCL_ARGV_GENFUNC,  "-nup",                 ParseNup, &nup,
 	    "pages per sheet", NULL},
 	{TCL_ARGV_GENFUNC,  "-options",         ParseOptions, &optionsObj,
 	    "generic options", NULL},
 	{TCL_ARGV_GENFUNC,  "-orientation", ParseEnumOptions, &orient,
-	    "page orientation", (ClientData) &parseData[PARSEORIENTATION]},
+	    "page orientation", (void *)&parseData[PARSEORIENTATION]},
 	{TCL_ARGV_CONSTANT, "-prettyprint",        (void *)1, &pprint,
 	    "print header", NULL},
 	{TCL_ARGV_STRING,   "-title",                   NULL, &title,

@@ -482,7 +482,7 @@ if test $tk_aqua = no; then
 	AC_MSG_RESULT([$enable_libcups])
     else
 	found_cups=`cups-config 2>/dev/null`
-	dnl make sure package configurator (cups-config) 
+	dnl make sure package configurator (cups-config)
 	dnl says that libcups is present.
         if test "$found_cups" = ""; then
 	    found_cups=no
@@ -508,7 +508,7 @@ if test $tk_aqua = no; then
 	fi
     fi
     AC_SUBST(CUPS_CFLAGS)
-    AC_SUBST(CUPS_LIBS)   
+    AC_SUBST(CUPS_LIBS)
 fi
 
 
