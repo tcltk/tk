@@ -655,12 +655,6 @@ TkpGetColor(
 		CGFloat rgba[4];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 		if (@available(macOS 10.14, *)) {
-		    NSAppearance *windowAppearance;
-		    if (view) {
-			windowAppearance = [view effectiveAppearance];
-		    } else {
-			windowAppearance = [NSApp effectiveAppearance];
-		    }
 		    if ([windowAppearance name] == NSAppearanceNameDarkAqua) {
 			colormap = darkColormap;
 		    } else {
