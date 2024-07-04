@@ -467,6 +467,52 @@ if test $tk_aqua = no; then
 fi
 
 #--------------------------------------------------------------------
+#	Check for libcups support
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    AC_MSG_CHECKING([whether to use libcups])
+    AC_ARG_ENABLE(libcups,
+	AS_HELP_STRING([--enable-libcups],
+	    [use libcups (default: on)]),
+	[enable_libcups=$enableval], [enable_libcups="default"])
+    CUPS_CFLAGS=""
+    CUPS_LIBS=""
+    if test "$enable_libcups" = "no" ; then
+	AC_MSG_RESULT([$enable_libcups])
+    else
+	found_cups=`cups-config 2>/dev/null`
+	dnl make sure package configurator (cups-config)
+	dnl says that libcups is present.
+        if test "$found_cups" = ""; then
+	    found_cups=no
+        else
+	    found_cups=yes
+	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_LIBS=`cups-config --libs`
+	fi
+	AC_MSG_RESULT([$found_cups])
+	dnl make sure that compiling against CUPS header file doesn't bomb
+	if test "$found_cups" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    AC_CHECK_HEADER(cups/cups.h, [], [
+		found_cups=no
+		CUPS_CFLAGS=""
+		CUPS_LIBS=""
+	    ],[#include <cups/cups.h>])
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	fi
+    fi
+    AC_SUBST(CUPS_CFLAGS)
+    AC_SUBST(CUPS_LIBS)
+fi
+
+
+#--------------------------------------------------------------------
 # XXX Do this last.
 # It might modify XLIBSW which could affect other tests.
 #

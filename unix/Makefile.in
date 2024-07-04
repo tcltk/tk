@@ -266,8 +266,8 @@ TCL_STUB_FLAGS		= @TCL_STUB_FLAGS@
 
 # Libraries to use when linking.  This definition is determined by the
 # configure script.
-LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@
-WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @EXTRA_WISH_LIBS@
+LIBS = @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@
+WISH_LIBS = $(TCL_LIB_SPEC) @LIBS@ $(X11_LIB_SWITCHES) @TCL_LIBS@ @CUPS_LIBS@ @EXTRA_WISH_LIBS@
 
 # The symbols below provide support for dynamic loading and shared
 # libraries.  See configure.ac for a description of what the
@@ -298,6 +298,10 @@ REZ_SWITCHES = @REZ_FLAGS@ -i $(GENERIC_DIR) -i $(TCL_GENERIC_DIR)
 # support for Xft:
 XFT_CFLAGS		= @XFT_CFLAGS@
 XFT_LIBS		= @XFT_LIBS@
+
+# support for libcups
+CUPS_CFLAGS		= @CUPS_CFLAGS@
+CUPS_LIBS 		= @CUPS_LIBS@
 
 #----------------------------------------------------------------
 # The information below is modified by the configure script when
@@ -394,7 +398,8 @@ X11_OBJS = tkUnix.o tkUnix3d.o tkUnixButton.o tkUnixColor.o tkUnixConfig.o \
 	tkUnixCursor.o tkUnixDraw.o tkUnixEmbed.o tkUnixEvent.o tkIcu.o \
 	tkUnixFocus.o  $(FONT_OBJS) tkUnixInit.o tkUnixKey.o tkUnixMenu.o \
 	tkUnixMenubu.o tkUnixScale.o tkUnixScrlbr.o tkUnixSelect.o \
-	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o
+	tkUnixSend.o tkUnixSysNotify.o tkUnixSysTray.o tkUnixWm.o tkUnixXId.o \
+	tkUnixPrint.o
 
 AQUA_OBJS = tkMacOSXBitmap.o tkMacOSXButton.o tkMacOSXClipboard.o \
 	tkMacOSXColor.o tkMacOSXConfig.o tkMacOSXCursor.o tkMacOSXDebug.o \
@@ -516,7 +521,8 @@ X11_SRCS = \
 	$(UNIX_DIR)/tkUnixScale.c $(UNIX_DIR)/tkUnixScrlbr.c \
 	$(UNIX_DIR)/tkUnixSelect.c $(UNIX_DIR)/tkUnixSend.c \
 	$(UNIX_DIR)/tkUnixSysNotify $(UNIX_DIR)/tkUnixSysTray.c \
-	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c
+	$(UNIX_DIR)/tkUnixWm.c $(UNIX_DIR)/tkUnixXId.c \
+	$(UNIX_DIR)/tkUnixPrint.c
 
 AQUA_SRCS = \
 	$(MAC_OSX_DIR)/tkMacOSXBitmap.c $(MAC_OSX_DIR)/tkMacOSXButton.c \
@@ -1329,6 +1335,9 @@ tkUnixMenu.o: $(UNIX_DIR)/tkUnixMenu.c
 
 tkUnixMenubu.o: $(UNIX_DIR)/tkUnixMenubu.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixMenubu.c
+
+tkUnixPrint.o: $(UNIX_DIR)/tkUnixPrint.c
+	$(CC) -c $(CC_SWITCHES) $(CUPS_CFLAGS) $(UNIX_DIR)/tkUnixPrint.c
 
 tkUnixScale.o: $(UNIX_DIR)/tkUnixScale.c
 	$(CC) -c $(CC_SWITCHES) $(UNIX_DIR)/tkUnixScale.c
