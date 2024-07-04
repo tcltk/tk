@@ -72,7 +72,7 @@ XDestroyWindow(
 
     if (!Tk_IsTopLevel(macWin->winPtr)) {
 	if (macWin->winPtr->parentPtr != NULL) {
-	    TkMacOSXInvalClipRgns(macWin->winPtr->parentPtr);
+	    TkMacOSXInvalClipRgns((Tk_Window)macWin->winPtr->parentPtr);
 	    Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask, (void *) view);
 	    Tcl_DoWhenIdle(TkMacOSXRedrawViewIdleTask, (void *) view);
 	}
