@@ -20,57 +20,10 @@ namespace import -force tcltest::test
 proc _init_keypress_lookup {} {
     global keypress_lookup
 
-    scan A %c start
-    scan Z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan a %c start
-    scan z %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    scan 0 %c start
-    scan 9 %c finish
-
-    for {set i $start} {$i <= $finish} {incr i} {
-        set l [format %c $i]
-        set keypress_lookup($l) $l
-    }
-
-    # Most punctuation
-    array set keypress_lookup {
-        ! exclam
-        % percent
-        & ampersand
-        ( parenleft
-        ) parenright
-        * asterisk
-        + plus
-        , comma
-        - minus
-        . period
-        / slash
-        : colon
-        < less
-        = equal
-        > greater
-        ? question
-        @ at
-        ^ asciicircum
-        _ underscore
-        | bar
-        ~ asciitilde
-        ' apostrophe
-    }
     # Characters with meaning to Tcl...
     array set keypress_lookup [list \
+	    -    minus \
+	    >    greater \
 	    \"   quotedbl \
 	    \#   numbersign \
 	    \$   dollar \
@@ -81,6 +34,7 @@ proc _init_keypress_lookup {} {
 	    \{   braceleft \
 	    \}   braceright \
 	    " "  space \
+	    \xA0 nobreakspace \
 	    "\n" Return \
 	    "\t" Tab]
 }
@@ -861,6 +815,65 @@ test event-8 {event generate with keysyms corresponding to
 } -cleanup {
     deleteWindows
 } -result {OK}
+
+test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup {
+    set EnterBind [bind . <Enter>]
+} -body {
+    wm geometry . 200x200+300+300
+    wm deiconify .
+    _pause 200
+    toplevel .top2 -width 200 -height 200
+    wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
+    update idletasks
+    wm deiconify .top2
+    update idletasks
+    raise .top2
+    _pause 400
+    event generate .top2 <Motion> -warp 1 -x 50 -y 50
+    _pause 100
+    bind . <Enter> {lappend res %W}
+    set res [list ]
+    destroy .top2
+    update idletasks
+    _pause 200
+    set res
+} -cleanup {
+    deleteWindows
+    bind . <Enter> $EnterBind
+} -result {.}
+test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
+    set iconified false
+    if {[winfo ismapped .]} {
+	wm iconify .
+	update
+	set iconified true
+    }
+} -body {
+    toplevel .top1
+    wm geometry .top1 200x200+300+300
+    wm deiconify .top1
+    _pause 200
+    toplevel .top2 -width 200 -height 200
+    wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
+    _pause 200
+    wm deiconify .top2
+    update idletasks
+    raise .top2
+    _pause 400
+    event generate .top2 <Motion> -warp 1 -x 50 -y 50
+    _pause 100
+    bind .top1 <Enter> {lappend res %W}
+    set res [list ]
+    destroy .top2
+    _pause 200
+    set res
+} -cleanup {
+    deleteWindows ; # destroy all children of ".", this already includes .top1
+    if {$iconified} {
+	wm deiconify .
+	update
+    }
+} -result {.top1}
 
 proc waitForWindowEvent {w event {timeout 1000}} {
 # This proc is intended to overcome latency of windowing system
