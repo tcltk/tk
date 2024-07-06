@@ -696,6 +696,8 @@ ZIP_PROG
 MACHER_PROG
 EXEEXT_FOR_BUILD
 CC_FOR_BUILD
+CUPS_LIBS
+CUPS_CFLAGS
 UNIX_FONT_OBJS
 XFT_LIBS
 XFT_CFLAGS
@@ -811,6 +813,7 @@ enable_symbols
 enable_aqua
 with_x
 enable_xft
+enable_libcups
 enable_xss
 enable_framework
 enable_zipfs
@@ -1464,6 +1467,7 @@ Optional Features:
   --enable-symbols        build with debugging symbols (default: off)
   --enable-aqua=yes|no    use Aqua windowingsystem on Mac OS X (default: no)
   --enable-xft            use freetype/fontconfig/xft (default: on)
+  --enable-libcups        use libcups (default: on)
   --enable-xss            use XScreenSaver for activity timer (default: on)
   --enable-framework      package shared libraries in MacOSX frameworks
                           (default: off)
@@ -8628,6 +8632,66 @@ printf "%s\n" "#define HAVE_XFT 1" >>confdefs.h
 
 
 fi
+
+#--------------------------------------------------------------------
+#	Check for libcups support
+#--------------------------------------------------------------------
+
+if test $tk_aqua = no; then
+    { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking whether to use libcups" >&5
+printf %s "checking whether to use libcups... " >&6; }
+    # Check whether --enable-libcups was given.
+if test ${enable_libcups+y}
+then :
+  enableval=$enable_libcups; enable_libcups=$enableval
+else case e in #(
+  e) enable_libcups="default" ;;
+esac
+fi
+
+    CUPS_CFLAGS=""
+    CUPS_LIBS=""
+    if test "$enable_libcups" = "no" ; then
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $enable_libcups" >&5
+printf "%s\n" "$enable_libcups" >&6; }
+    else
+	found_cups=`cups-config 2>/dev/null`
+		        if test "$found_cups" = ""; then
+	    found_cups=no
+        else
+	    found_cups=yes
+	    CUPS_CFLAGS="-DHAVE_CUPS"
+	    CUPS_LIBS=`cups-config --libs`
+	fi
+	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: $found_cups" >&5
+printf "%s\n" "$found_cups" >&6; }
+		if test "$found_cups" = "yes" ; then
+	    tk_oldCFlags=$CFLAGS
+	    CFLAGS="$CFLAGS $XINCLUDES $CUPS_CFLAGS"
+	    tk_oldLibs=$LIBS
+	    LIBS="$tk_oldLIBS $CUPS_LIBS $XLIBSW"
+	    ac_fn_c_check_header_compile "$LINENO" "cups/cups.h" "ac_cv_header_cups_cups_h" "#include <cups/cups.h>
+"
+if test "x$ac_cv_header_cups_cups_h" = xyes
+then :
+
+else case e in #(
+  e)
+		found_cups=no
+		CUPS_CFLAGS=""
+		CUPS_LIBS=""
+	     ;;
+esac
+fi
+
+	    CFLAGS=$tk_oldCFlags
+	    LIBS=$tk_oldLibs
+	fi
+    fi
+
+
+fi
+
 
 #--------------------------------------------------------------------
 # XXX Do this last.
