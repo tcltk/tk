@@ -44,6 +44,7 @@ TkpInit(
     Tktray_Init(interp);
     (void)SysNotify_Init (interp);
     Icu_Init(interp);
+    Cups_Init(interp);
     return TCL_OK;
 }
 
