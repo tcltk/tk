@@ -704,10 +704,10 @@ ComputeLineBbox(
 	width = 1.0;
     }
     if (linePtr->arrow != ARROWS_NONE) {
-	if (linePtr->arrow != ARROWS_LAST) {
+	if (linePtr->arrow != ARROWS_LAST && linePtr->firstArrowPtr) {
 	    TkIncludePoint((Tk_Item *) linePtr, linePtr->firstArrowPtr);
 	}
-	if (linePtr->arrow != ARROWS_FIRST) {
+	if (linePtr->arrow != ARROWS_FIRST && linePtr->lastArrowPtr) {
 	    TkIncludePoint((Tk_Item *) linePtr, linePtr->lastArrowPtr);
 	}
     }
