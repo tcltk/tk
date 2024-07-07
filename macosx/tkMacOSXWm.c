@@ -588,6 +588,8 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
+    [[self contentView] setNeedsDisplay:YES];
+    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 @end
@@ -607,6 +609,8 @@ static void placeAsTab(TKWindow *macWindow) {
 - (void) tkLayoutChanged
 {
     syncLayout(self);
+    [[self contentView] setNeedsDisplay:YES];
+    Tcl_DoWhenIdle(TkMacOSXDrawAllViews, NULL);
 }
 
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101300
@@ -1832,8 +1836,8 @@ WmSetAttribute(
 	    newFrame.size.height - heightDiff;
 	[(TKWindow *)macWindow tkLayoutChanged];
 	if (heightDiff) {
-	    //Calling XMoveResizeWindow twice is a hack to force a relayout
-	    //of the window.
+	    // Calling XMoveResizeWindow twice is a hack to force a relayout
+	    // of the window.
 	    XMoveResizeWindow(winPtr->display, winPtr->window,
 	 		  winPtr->changes.x, winPtr->changes.y,
 			  newFrame.size.width, newHeight - 1);
