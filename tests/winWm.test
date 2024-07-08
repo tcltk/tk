@@ -41,7 +41,7 @@ test winWm-1.2 {TkWmMapWindow} -constraints win -setup {
     wm iconify .t
 } -cleanup {
     destroy .t
-} -returnCodes error -result {can't iconify ".t": it is a transient}
+} -returnCodes error -result {cannot iconify ".t": it is a transient}
 test winWm-1.3 {TkWmMapWindow} -constraints win -setup {
     destroy .t
 } -body {

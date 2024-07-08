@@ -26,7 +26,7 @@ test winClipboard-1.1 {TkSelGetSelection} -constraints win -setup {
     selection get -selection CLIPBOARD
 } -cleanup {
     clipboard clear
-} -returnCodes error -result {CLIPBOARD selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {CLIPBOARD selection does not exist or form "STRING" not defined}
 
 test winClipboard-1.2 {TkSelGetSelection} -constraints {
     win testclipboard

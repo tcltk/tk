@@ -251,7 +251,7 @@ test ttk-3.2 "Propagate errors from variable traces" -body {
     .cb invoke
 } -cleanup {
     unset ::A ; destroy .cb
-} -returnCodes error -result {can't set "A": failure}
+} -returnCodes error -match glob -result {can*t set "A": failure}
 
 test ttk-3.3 "Constructor failure with cursor" -body {
     ttk::button .b -cursor bottom_right_corner -style BadStyle
@@ -391,12 +391,12 @@ test ttk-8.4 "ImageChanged" -body {
 
 test ttk-9.1 "Traces on nonexistant namespaces" -body {
     ttk::checkbutton .tcb -variable foo::bar
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result "*parent namespace does*t exist*" -match glob
 
 test ttk-9.2 "Traces on nonexistant namespaces II" -body {
     ttk::checkbutton .tcb -variable X
     .tcb configure -variable foo::bar
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result "*parent namespace does*t exist*" -match glob
 
 test ttk-9.3 "Restore saved options on configure error" -body {
     .tcb cget -variable
@@ -585,17 +585,17 @@ test ttk-13.5 "Custom layouts -- missing element definition" -body {
 
 test ttk-14.1 "-variable in nonexistant namespace" -body {
     ttk::checkbutton .tw -variable ::nsn::foo
-} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
+} -returnCodes error -result {can*t trace *: parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-14.2 "-textvariable in nonexistant namespace" -body {
     ttk::label .tw -textvariable ::nsn::foo
-} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
+} -returnCodes error -result {can*t trace *: parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-14.3 "-textvariable in nonexistant namespace" -body {
     ttk::entry .tw -textvariable ::nsn::foo
-} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
+} -returnCodes error -result {can*t trace *: parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-15.1 {Bug 3062331} -setup {
@@ -669,7 +669,7 @@ test ttk-ensemble-5 "style element create: valid" -body {
 
 test ttk-16.1 {ttk::style theme styles - no such theme} -body {
     ttk::style theme styles noSuchTheme
-} -returnCodes 1 -result {theme "noSuchTheme" doesn't exist}
+} -returnCodes 1 -result {theme "noSuchTheme" does not exist}
 test ttk-16.2 {ttk::style theme styles - theme exists} -body {
     # simply check this produces a list with some style names,
     # without checking exact content (not needed, and may vary

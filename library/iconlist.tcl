@@ -451,6 +451,7 @@ package require tk
 	bind $canvas <<PrevChar>>	[namespace code {my LeftRight -1}]
 	bind $canvas <<NextChar>>	[namespace code {my LeftRight  1}]
 	bind $canvas <Return>		[namespace code {my ReturnKey}]
+	bind $canvas <KP_Enter>		[namespace code {my ReturnKey}]
 	bind $canvas <Key>		[namespace code {my KeyPress %A}]
 	bind $canvas <Alt-Key>		{# nothing}
 	bind $canvas <Meta-Key> 	{# nothing}

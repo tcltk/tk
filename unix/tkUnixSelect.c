@@ -560,7 +560,7 @@ TkSelEventProc(
 		}
 		if (eventPtr->xselection.property == None) {
 		    Tcl_SetObjResult(retrPtr->interp, Tcl_ObjPrintf(
-			    "%s selection doesn't exist or form \"%s\" not defined",
+			    "%s selection does not exist or form \"%s\" not defined",
 			    Tk_GetAtomName(tkwin, retrPtr->selection),
 			    Tk_GetAtomName(tkwin, retrPtr->target)));
 		    Tcl_SetErrorCode(retrPtr->interp, "TK", "SELECTION",

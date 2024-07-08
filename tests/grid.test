@@ -60,13 +60,13 @@ test grid-1.4 {basic argument checking} -body {
 } -returnCodes error -result {unexpected parameter "foo" in configure list: should be window name or option}
 test grid-1.5 {basic argument checking} -body {
     grid .
-} -returnCodes error -result {can't manage ".": it's a top-level window}
+} -returnCodes error -result {cannot manage ".": it's a top-level window}
 test grid-1.6 {basic argument checking} -body {
     grid x
-} -returnCodes error -result {can't determine container window}
+} -returnCodes error -result {cannot determine container window}
 test grid-1.7 {basic argument checking} -body {
     grid configure x
-} -returnCodes error -result {can't determine container window}
+} -returnCodes error -result {cannot determine container window}
 test grid-1.8 {basic argument checking} -body {
     button .b
     grid x .b
@@ -179,7 +179,7 @@ test grid-3.7 {configure: basic argument checking} -body {
     grid .f .f.b
 } -cleanup {
     grid_reset 3.7
-} -returnCodes error -result {can't put ".f.b" inside "."}
+} -returnCodes error -result {cannot put ".f.b" inside "."}
 test grid-3.8 {configure: basic argument checking} -body {
     button .b
     grid configure x .b
@@ -198,7 +198,7 @@ test grid-3.10 {ConfigureContent procedure, bad -in option} -body {
     grid .f -in .f
 } -cleanup {
     grid_reset 3.10
-} -returnCodes error -result {window can't be managed in itself}
+} -returnCodes error -result {window cannot be managed in itself}
 test grid-3.11 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -206,7 +206,7 @@ test grid-3.11 {prevent management loops} -body {
     grid .f2 -in .f1
 } -cleanup {
     grid_reset 3.11
-} -returnCodes error -result {can't put ".f2" inside ".f1": would cause management loop}
+} -returnCodes error -result {cannot put ".f2" inside ".f1": would cause management loop}
 test grid-3.12 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -216,7 +216,7 @@ test grid-3.12 {prevent management loops} -body {
     grid .f3 -in .f1
 } -cleanup {
     grid_reset 3.12
-} -returnCodes error -result {can't put ".f3" inside ".f1": would cause management loop}
+} -returnCodes error -result {cannot put ".f3" inside ".f1": would cause management loop}
 
 test grid-4.1 {forget: basic argument checking} -body {
     grid forget foo
@@ -854,13 +854,13 @@ test grid-11.1 {default widget placement} -body {
     grid ^
 } -cleanup {
     grid_reset 11.1
-} -returnCodes error -result {can't use '^', can't find container window}
+} -returnCodes error -result {cannot use '^', cannot find container window}
 test grid-11.2 {default widget placement} -body {
     button .b
     grid .b ^
 } -cleanup {
     grid_reset 11.2
-} -returnCodes error -result {can't find content to extend with "^"}
+} -returnCodes error -result {cannot find content to extend with "^"}
 test grid-11.3 {default widget placement} -body {
     button .b
     grid .b - - .c
@@ -915,7 +915,7 @@ test grid-11.9 {default widget placement} -body {
     grid .f x ^
 } -cleanup {
     grid_reset 11.9
-} -returnCodes error -result {can't find content to extend with "^"}
+} -returnCodes error -result {cannot find content to extend with "^"}
 test grid-11.10 {default widget placement} -body {
     foreach i {1 2 3} {
 	frame .f$i -width 100 -height 50 -highlightthickness 0 -bg red
@@ -1139,7 +1139,7 @@ test grid-13.1 {-in} -body {
     grid .f -in .f
 } -cleanup {
     grid_reset 13.1
-} -returnCodes error -result {window can't be managed in itself}
+} -returnCodes error -result {window cannot be managed in itself}
 test grid-13.2 {-in} -body {
     frame .f -bg red
     list [winfo manager .f] \
@@ -1147,7 +1147,7 @@ test grid-13.2 {-in} -body {
          [winfo manager .f]
 } -cleanup {
     grid_reset 13.1.1
-} -result {{} 1 {window can't be managed in itself} {}}
+} -result {{} 1 {window cannot be managed in itself} {}}
 test grid-13.3 {-in} -body {
     frame .f -bg red
     grid .f -in .bad
@@ -1160,7 +1160,7 @@ test grid-13.4 {-in} -body {
     grid .f -in .top
 } -cleanup {
     grid_reset 13.3
-} -returnCodes error -result {can't put ".f" inside ".top"}
+} -returnCodes error -result {cannot put ".f" inside ".top"}
 destroy .top
 test grid-13.5 {-ipadx} -body {
     frame .f -width 20 -height 20 -highlightthickness 0 -bg red

@@ -3165,7 +3165,7 @@ ConfigureContent(
 
 	if (Tk_TopWinHierarchy(content)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't manage \"%s\": it's a top-level window",
+		    "cannot manage \"%s\": it's a top-level window",
 		    Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
@@ -3224,7 +3224,7 @@ ConfigureContent(
 		}
 		if (other == content) {
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-			    "window can't be managed in itself", TCL_INDEX_NONE));
+			    "window cannot be managed in itself", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
 		    return TCL_ERROR;
 		}
@@ -3368,7 +3368,7 @@ ConfigureContent(
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't put \"%s\" inside \"%s\"", Tcl_GetString(objv[j]),
+			"cannot put \"%s\" inside \"%s\"", Tcl_GetString(objv[j]),
 			Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		Unlink(contentPtr);
@@ -3384,7 +3384,7 @@ ConfigureContent(
 	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't put \"%s\" inside \"%s\": would cause management loop",
+		    "cannot put \"%s\" inside \"%s\": would cause management loop",
 	            Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		Unlink(contentPtr);
@@ -3469,7 +3469,7 @@ ConfigureContent(
 
 	if (containerPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't use '^', can't find container window", TCL_INDEX_NONE));
+		    "cannot use '^', cannot find container window", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	    return TCL_ERROR;
 	}
@@ -3523,7 +3523,7 @@ ConfigureContent(
 	}
 	if (!match) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't find content to extend with \"^\"", TCL_INDEX_NONE));
+		    "cannot find content to extend with \"^\"", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	    return TCL_ERROR;
 	}
@@ -3531,7 +3531,7 @@ ConfigureContent(
 
     if (containerPtr == NULL) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't determine container window", TCL_INDEX_NONE));
+		"cannot determine container window", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "GRID", "SHORTCUT_USAGE", NULL);
 	return TCL_ERROR;
     }

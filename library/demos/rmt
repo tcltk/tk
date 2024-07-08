@@ -60,6 +60,12 @@ bind .t <Return> {
     invoke
     break
 }
+bind .t <KP_Enter> {
+    .t mark set insert {end - 1c}
+    .t insert insert \n
+    invoke
+    break
+}
 bind .t <Delete> {
     catch {.t tag remove sel sel.first promptEnd}
     if {[.t tag nextrange sel 1.0 end] eq ""} {

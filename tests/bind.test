@@ -2974,7 +2974,7 @@ test bind-22.23 {HandleEventGenerate: options <Key> -above .} -setup {
     return $x
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-above" option}
+} -returnCodes error -result {<Key> event does not accept "-above" option}
 
 test bind-22.24 {HandleEventGenerate: options <Configure> -borderwidth xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3015,7 +3015,7 @@ test bind-22.26 {HandleEventGenerate: options <Key> -borderwidth 2i} -setup {
     event generate .t.f <Key> -borderwidth 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-borderwidth" option}
+} -returnCodes error -result {<Key> event does not accept "-borderwidth" option}
 
 test bind-22.27 {HandleEventGenerate: options <Button> -button xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3069,7 +3069,7 @@ test bind-22.30 {HandleEventGenerate: options <Key> -button 1} -setup {
     event generate .t.f <Key> -button 1
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-button" option}
+} -returnCodes error -result {<Key> event does not accept "-button" option}
 
 test bind-22.31 {HandleEventGenerate: options <Expose> -count xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3109,7 +3109,7 @@ test bind-22.33 {HandleEventGenerate: options <Key> -count 20} -setup {
     event generate .t.f <Key> -count 20
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-count" option}
+} -returnCodes error -result {<Key> event does not accept "-count" option}
 
 test bind-22.34 {HandleEventGenerate: options <Enter> -detail xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3177,7 +3177,7 @@ test bind-22.37 {HandleEventGenerate: options <Key> -detail NotifyVirtual} -setu
     event generate .t.f <Key> -detail NotifyVirtual
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-detail" option}
+} -returnCodes error -result {<Key> event does not accept "-detail" option}
 
 test bind-22.38 {HandleEventGenerate: options <Enter> -focus xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3217,7 +3217,7 @@ test bind-22.40 {HandleEventGenerate: options <Key> -focus 1} -setup {
     event generate .t.f <Key> -focus 1
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-focus" option}
+} -returnCodes error -result {<Key> event does not accept "-focus" option}
 
 test bind-22.41 {HandleEventGenerate: options <Expose> -height xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3271,7 +3271,7 @@ test bind-22.44 {HandleEventGenerate: options <Key> -height 2i} -setup {
     event generate .t.f <Key> -height 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-height" option}
+} -returnCodes error -result {<Key> event does not accept "-height" option}
 
 test bind-22.45 {HandleEventGenerate: options <Key> -keycode xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3311,7 +3311,7 @@ test bind-22.47 {HandleEventGenerate: options <Button> -keycode 20} -setup {
     event generate .t.f <Button> -keycode 20
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Button> event doesn't accept "-keycode" option}
+} -returnCodes error -result {<Button> event does not accept "-keycode" option}
 
 test bind-22.48 {HandleEventGenerate: options <Key> -keysym xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3351,7 +3351,7 @@ test bind-22.50 {HandleEventGenerate: options <Button> -keysym space} -setup {
     event generate .t.f <Button> -keysym space
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Button> event doesn't accept "-keysym" option}
+} -returnCodes error -result {<Button> event does not accept "-keysym" option}
 
 test bind-22.51 {HandleEventGenerate: options <Enter> -mode xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3405,7 +3405,7 @@ test bind-22.54 {HandleEventGenerate: options <Key> -mode NotifyNormal} -setup {
     event generate .t.f <Key> -mode NotifyNormal
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-mode" option}
+} -returnCodes error -result {<Key> event does not accept "-mode" option}
 test bind-22.55 {HandleEventGenerate: options <Map> -override xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f
@@ -3472,7 +3472,7 @@ test bind-22.59 {HandleEventGenerate: options <Key> -override 1} -setup {
     event generate .t.f <Key> -override 1
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-override" option}
+} -returnCodes error -result {<Key> event does not accept "-override" option}
 
 test bind-22.60 {HandleEventGenerate: options <Circulate> -place xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3512,7 +3512,7 @@ test bind-22.62 {HandleEventGenerate: options <Key> -place PlaceOnTop} -setup {
     event generate .t.f <Key> -place PlaceOnTop
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-place" option}
+} -returnCodes error -result {<Key> event does not accept "-place" option}
 
 test bind-22.63 {HandleEventGenerate: options <Key> -root .xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3649,7 +3649,7 @@ test bind-22.72 {HandleEventGenerate: options <Configure> -root .t} -setup {
     event generate .t.f <Configure> -root .t
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Configure> event doesn't accept "-root" option}
+} -returnCodes error -result {<Configure> event does not accept "-root" option}
 
 test bind-22.73 {HandleEventGenerate: options <Key> -rootx xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3759,7 +3759,7 @@ test bind-22.80 {HandleEventGenerate: options <Configure> -rootx 2i} -setup {
     event generate .t.f <Configure> -rootx 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Configure> event doesn't accept "-rootx" option}
+} -returnCodes error -result {<Configure> event does not accept "-rootx" option}
 
 test bind-22.81 {HandleEventGenerate: options <Key> -rooty xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -3869,7 +3869,7 @@ test bind-22.88 {HandleEventGenerate: options <Configure> -rooty 2i} -setup {
     event generate .t.f <Configure> -rooty 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Configure> event doesn't accept "-rooty" option}
+} -returnCodes error -result {<Configure> event does not accept "-rooty" option}
 
 test bind-22.89 {HandleEventGenerate: options <Key> -sendevent xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4088,7 +4088,7 @@ test bind-22.104 {HandleEventGenerate: options <Configure> -state xyz} -setup {
     event generate .t.f <Configure> -state xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Configure> event doesn't accept "-state" option}
+} -returnCodes error -result {<Configure> event does not accept "-state" option}
 
 test bind-22.105 {HandleEventGenerate: options <Key> -subwindow .xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4225,7 +4225,7 @@ test bind-22.114 {HandleEventGenerate: options <Configure> -subwindow .t} -setup
     event generate .t.f <Configure> -subwindow .t
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Configure> event doesn't accept "-subwindow" option}
+} -returnCodes error -result {<Configure> event does not accept "-subwindow" option}
 
 test bind-22.115 {HandleEventGenerate: options <Key> -time xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4349,7 +4349,7 @@ test bind-22.123 {HandleEventGenerate: options <Configure> -time 100} -setup {
     event generate .t.f <Configure> -time 100
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Configure> event doesn't accept "-time" option}
+} -returnCodes error -result {<Configure> event does not accept "-time" option}
 
 test bind-22.124 {HandleEventGenerate: options <Expose> -width xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4403,7 +4403,7 @@ test bind-22.127 {HandleEventGenerate: options <Key> -width 2i} -setup {
     event generate .t.f <Key> -width 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-width" option}
+} -returnCodes error -result {<Key> event does not accept "-width" option}
 
 test bind-22.128 {HandleEventGenerate: options <Unmap> -window .xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4554,7 +4554,7 @@ test bind-22.138 {HandleEventGenerate: options <Key> -window .t.f} -setup {
     event generate .t.f <Key> -window .t.f
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Key> event doesn't accept "-window" option}
+} -returnCodes error -result {<Key> event does not accept "-window" option}
 
 test bind-22.139 {HandleEventGenerate: options <Key> -x xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4720,7 +4720,7 @@ test bind-22.150 {HandleEventGenerate: options <Map> -x 2i} -setup {
     event generate .t.f <Map> -x 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Map> event doesn't accept "-x" option}
+} -returnCodes error -result {<Map> event does not accept "-x" option}
 
 test bind-22.151 {HandleEventGenerate: options <Key> -y xyz} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -4886,7 +4886,7 @@ test bind-22.162 {HandleEventGenerate: options <Map> -y 2i} -setup {
     event generate .t.f <Map> -y 2i
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<Map> event doesn't accept "-y" option}
+} -returnCodes error -result {<Map> event does not accept "-y" option}
 
 test bind-22.163 {HandleEventGenerate: options <Key> -xyz 1} -setup {
     frame .t.f -class Test -width 150 -height 100
@@ -6172,7 +6172,7 @@ test bind-31.1 {virtual event user_data field - bad generation} -setup {
     event generate .t.f <FocusIn> -data foo
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {<FocusIn> event doesn't accept "-data" option}
+} -returnCodes error -result {<FocusIn> event does not accept "-data" option}
 test bind-31.2 {virtual event user_data field - NULL, synch} -setup {
     frame .t.f -class Test -width 150 -height 100
     pack .t.f

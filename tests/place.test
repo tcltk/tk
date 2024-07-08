@@ -102,7 +102,7 @@ test place-4.1 {ConfigureContent procedure, bad -in options} -setup {
     place forget .t.f2
 } -body {
     place .t.f2 -in .t.f2
-} -returnCodes error -result {can't place ".t.f2" relative to itself}
+} -returnCodes error -result {cannot place ".t.f2" relative to itself}
 test place-4.2 {ConfigureContent procedure, bad -in option} -setup {
     place forget .t.f2
 } -body {
@@ -115,23 +115,23 @@ test place-4.3 {ConfigureContent procedure, bad -in option} -setup {
 } -body {
     winfo manager .t.f2
     place .t.f2 -in .t.f2
-} -returnCodes error -result {can't place ".t.f2" relative to itself}
+} -returnCodes error -result {cannot place ".t.f2" relative to itself}
 test place-4.4 {ConfigureContent procedure, bad -in option} -setup {
     place forget .t.f2
 } -body {
     place .t.f2 -in .
-} -returnCodes error -result {can't place ".t.f2" relative to "."}
+} -returnCodes error -result {cannot place ".t.f2" relative to "."}
 test place-4.5 {ConfigureContent procedure, bad -in option} -setup {
 } -body {
     frame .t.f1
     place .t.f1 -in .t.f1
-} -returnCodes error -result {can't place ".t.f1" relative to itself}
+} -returnCodes error -result {cannot place ".t.f1" relative to itself}
 test place-4.6 {prevent management loops} -setup {
     place forget .t.f1
 } -body {
     place .t.f1 -in .t.f2
     place .t.f2 -in .t.f1
-} -returnCodes error -result {can't put ".t.f2" inside ".t.f1": would cause management loop}
+} -returnCodes error -result {cannot put ".t.f2" inside ".t.f1": would cause management loop}
 test place-4.7 {prevent management loops} -setup {
     place forget .t.f1
     place forget .t.f2
@@ -140,7 +140,7 @@ test place-4.7 {prevent management loops} -setup {
     place .t.f1 -in .t.f2
     place .t.f2 -in .t.f3
     place .t.f3 -in .t.f1
-} -returnCodes error -result {can't put ".t.f3" inside ".t.f1": would cause management loop}
+} -returnCodes error -result {cannot put ".t.f3" inside ".t.f1": would cause management loop}
 
 test place-5.1 {ConfigureContent procedure, -relwidth option} -body {
     place .t.f2 -relwidth abcd

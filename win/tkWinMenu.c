@@ -1433,7 +1433,7 @@ TkWinHandleMenuEvent(
 		    TkActivateMenuEntry(menuPtr, TCL_INDEX_NONE);
 		} else {
 		    if (mePtr->index >= (int)menuPtr->numEntries) {
-			Tcl_Panic("Trying to activate an entry which doesn't exist");
+			Tcl_Panic("Trying to activate an entry which does not exist");
 		    }
 		    TkActivateMenuEntry(menuPtr, mePtr->index);
 		}

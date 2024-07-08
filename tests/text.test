@@ -3454,7 +3454,7 @@ test text-14.16 {ConfigureText procedure} -body {
     selection get
 } -cleanup {
     destroy .t .t2
-} -returnCodes error -result {PRIMARY selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {PRIMARY selection does not exist or form "STRING" not defined}
 test text-14.17 {ConfigureText procedure} -body {
     text .t
     entry .t.e
@@ -4014,7 +4014,7 @@ test text-21.3 {TkTextLostSelection procedure} -body {
     selection get
 } -cleanup {
     destroy .t
-} -returnCodes error -result {PRIMARY selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {PRIMARY selection does not exist or form "STRING" not defined}
 test text-21.4 {TkTextLostSelection procedure} -body {
     text .t
     .t insert 1.0 "abcdef\nghijk\n1234"
@@ -4486,7 +4486,7 @@ test text-22.56 {TextSearchCmd procedure, error setting variable} -body {
     .t search -count a(2) xyz 1.0
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {can't set "a(2)": variable isn't array}
+} -returnCodes {error} -match glob -result {can*t set "a(2)": variable isn't array}
 test text-22.57 {TextSearchCmd procedure, wrap-around} -body {
     text .t
     .t insert end "xxyz xyz x. the\nfoo -forward bar xxxxx BaR foo\nxyz xxyzx"
@@ -7419,7 +7419,7 @@ test text-31.19 {peer widgets} -body {
     .t index sel.first
 } -cleanup {
     destroy .t
-} -returnCodes {error} -result {text doesn't contain any characters tagged with "sel"}
+} -returnCodes {error} -result {text does not contain any characters tagged with "sel"}
 
 
 test text-32.1 {line heights on creation} -setup {

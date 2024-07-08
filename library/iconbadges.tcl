@@ -216,13 +216,13 @@ if {[tk windowingsystem] eq "x11"} {
 	}
 
 	if {[lsearch -exact [image names] $::tk::icons::base_icon($win)] <= 0} {
-	    return -code error "can't use \"$::tk::icons::base_icon($win)\" as iconphoto: not a photo image"
+	    return -code error "cannot use \"$::tk::icons::base_icon($win)\" as iconphoto: not a photo image"
 	}
 
 	if {!([string is integer $badgenumber] && $badgenumber > 0)
 	        && [string match $badgenumber "!"] == 0
 	        && $badgenumber ne ""} {
-	    return -code error "can't use \"$badgenumber\" as icon badge"
+	    return -code error "cannot use \"$badgenumber\" as icon badge"
 	}
 
 	wm iconphoto $win $::tk::icons::base_icon($win)

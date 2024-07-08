@@ -841,7 +841,7 @@ GetIndex(
 		tagName = (const char *)Tcl_GetHashKey(&sharedPtr->tagTable, hPtr);
 	    }
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "text doesn't contain any characters tagged with \"%s\"",
+		    "text does not contain any characters tagged with \"%s\"",
 		    tagName));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "TEXT_INDEX", tagName,
 		    (char *)NULL);

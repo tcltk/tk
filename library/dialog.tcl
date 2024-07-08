@@ -129,6 +129,7 @@ proc ::tk_dialog {w title text bitmap default args} {
 
     if {$default >= 0} {
 	bind $w <Return> [list $w.button$default invoke]
+	bind $w <KP_Enter> [list $w.button$default invoke]
     }
     bind $w <<PrevWindow>> [list bind $w <Return> {[tk_focusPrev %W] invoke}]
     bind $w <<NextWindow>> [list bind $w <Return> {[tk_focusNext %W] invoke}]

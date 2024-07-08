@@ -399,8 +399,10 @@ proc ::tk::MotifFDialog_BuildUI {w} {
     bind $w <Alt-Key> [list ::tk::AltKeyInDialog $w %A]
 
     bind $data(fEnt) <Return> [list tk::MotifFDialog_ActivateFEnt $w]
+    bind $data(fEnt) <KP_Enter> [list tk::MotifFDialog_ActivateFEnt $w]
     bind $data(sEnt) <Return> [list tk::MotifFDialog_ActivateSEnt $w]
-    bind $w <Escape> [list tk::MotifFDialog_CancelCmd $w]
+    bind $data(sEnt) <KP_Enter> [list tk::MotifFDialog_ActivateSEnt $w]
+        bind $w <Escape> [list tk::MotifFDialog_CancelCmd $w]
     bind $w.bot <Destroy> {set ::tk::Priv(selectFilePath) {}}
 
     wm protocol $w WM_DELETE_WINDOW [list tk::MotifFDialog_CancelCmd $w]

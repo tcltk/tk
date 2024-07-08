@@ -792,7 +792,7 @@ FrameWidgetObjCmd(
 		    }
 #endif
 		    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			    "can't modify %s option after widget is created",
+			    "cannot modify %s option after widget is created",
 			    arg));
 		    Tcl_SetErrorCode(interp, "TK", "FRAME", "CREATE_ONLY",
 			    NULL);
@@ -1065,7 +1065,7 @@ ConfigureFrame(
 
   badLabelWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "can't use %s as label in this frame",
+	    "cannot use %s as label in this frame",
 	    Tk_PathName(labelframePtr->labelWin)));
     Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
     labelframePtr->labelWin = NULL;

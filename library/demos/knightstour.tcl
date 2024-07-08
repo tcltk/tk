@@ -256,6 +256,7 @@ proc CreateGUI {} {
 
     bind $dlg <Control-F2> {console show}
     bind $dlg <Return> [list $dlg.tf.b1 invoke]
+    bind $dlg <KP_Enter> [list $dlg.tf.b1 invoke]
     bind $dlg <Escape> [list $dlg.tf.b2 invoke]
     bind $dlg <Destroy> [namespace code [list Stop]]
     wm protocol $dlg WM_DELETE_WINDOW [namespace code [list Exit $dlg]]

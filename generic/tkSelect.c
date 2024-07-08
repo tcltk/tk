@@ -643,7 +643,7 @@ Tk_GetSelection(
 
   cantget:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "%s selection doesn't exist or form \"%s\" not defined",
+	    "%s selection does not exist or form \"%s\" not defined",
 	    Tk_GetAtomName(tkwin, selection),
 	    Tk_GetAtomName(tkwin, target)));
     return TCL_ERROR;

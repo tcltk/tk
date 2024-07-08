@@ -153,6 +153,9 @@ bind Menu <<Invoke>> {
 bind Menu <Return> {
     tk::MenuInvoke %W 0
 }
+bind Menu <KP_Enter> {
+    tk::MenuInvoke %W 0
+}
 bind Menu <Escape> {
     tk::MenuEscape %W
 }
@@ -262,7 +265,7 @@ proc ::tk::MbPost {w {x {}} {y {}}} {
 	    || [$menu cget -type] eq "tearoff"}]
     if {[string first $w $menu] != 0} {
 	return -code error -errorcode {TK MENUBUTTON POST_NONCHILD} \
-	    "can't post $menu: it isn't a descendant of $w"
+	    "cannot post $menu: it isn't a descendant of $w"
     }
     set cur $Priv(postedMb)
     if {$cur ne ""} {

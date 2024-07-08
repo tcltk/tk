@@ -482,6 +482,7 @@ proc ::tk::dialog::file::Create {w class} {
     #
     if {$class eq "TkFDialog"} {
 	bind $data(ent) <Return> [list ::tk::dialog::file::ActivateEnt $w]
+	bind $data(ent) <KP_Enter> [list ::tk::dialog::file::ActivateEnt $w]
 	$data(okBtn)     configure -command [list ::tk::dialog::file::OkCmd $w]
 	bind $w <Alt-t> [format {
 	    if {[%s cget -state] eq "normal"} {
@@ -491,7 +492,8 @@ proc ::tk::dialog::file::Create {w class} {
     } else {
 	set okCmd [list ::tk::dialog::file::chooseDir::OkCmd $w]
 	bind $data(ent) <Return> $okCmd
-	$data(okBtn) configure -command $okCmd
+	bind $data(ent) <KP_Enter> $okCmd
+		$data(okBtn) configure -command $okCmd
 	bind $w <Alt-s> [list focus $data(ent)]
 	bind $w <Alt-o> [list $data(okBtn) invoke]
     }

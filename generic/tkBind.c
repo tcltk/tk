@@ -3938,7 +3938,7 @@ HandleEventGenerate(
     mainPtr = (TkWindow *) mainWin;
     if (!tkwin || mainPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"window id \"%s\" doesn't exist in this application",
+		"window id \"%s\" does not exist in this application",
 		Tcl_GetString(objv[0])));
 	Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", Tcl_GetString(objv[0]), (char *)NULL);
 	return TCL_ERROR;
@@ -4419,7 +4419,7 @@ HandleEventGenerate(
 
     	if (badOpt) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "%s event doesn't accept \"%s\" option", name, Tcl_GetString(optionPtr)));
+		    "%s event does not accept \"%s\" option", name, Tcl_GetString(optionPtr)));
 	    Tcl_SetErrorCode(interp, "TK", "EVENT", "BAD_OPTION", (char *)NULL);
 	    return TCL_ERROR;
 	}

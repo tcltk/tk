@@ -178,7 +178,7 @@ test entry-4.1 "Selection test" -body {
 test entry-4.2 "Disable -exportselection" -body {
     .e configure -exportselection false
     selection get
-} -returnCodes error -result "PRIMARY selection doesn't exist*" -match glob
+} -returnCodes error -result "PRIMARY selection does not exist*" -match glob
 
 test entry-4.3 "Reenable -exportselection" -body {
     .e configure -exportselection true
@@ -302,7 +302,7 @@ test entry-8.2 "Unset linked variable by deleting namespace" -body {
     namespace delete ::test
     .e insert end "baz"		;# <== error here
     list [.e cget -textvariable] [.e get] [set foo]
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result "*parent namespace does*t exist*" -match glob
 # '-result [list ::test::foo "baz" "baz"]' would also be sensible,
 # but Tcl namespaces don't work that way.
 

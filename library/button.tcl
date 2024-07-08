@@ -79,7 +79,17 @@ if {"x11" eq [tk windowingsystem]} {
 	    tk::CheckInvoke %W
 	}
     }
+    bind Checkbutton <KP_Enter> {
+	if {!$tk_strictMotif} {
+	    tk::CheckInvoke %W
+	}
+    }
     bind Radiobutton <Return> {
+	if {!$tk_strictMotif} {
+	    tk::CheckRadioInvoke %W
+	}
+    }
+    bind Radiobutton <KP_Enter> {
 	if {!$tk_strictMotif} {
 	    tk::CheckRadioInvoke %W
 	}

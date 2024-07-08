@@ -238,6 +238,7 @@ proc ::tk::fontchooser::Create {} {
         wm minsize $S(W) $min [::tk::ScaleNum 260]
 
         bind $S(W) <Return> [namespace code [list Done 1]]
+	bind $S(W) <KP_Enter> [namespace code [list Done 1]]
         bind $S(W) <Escape> [namespace code [list Done 0]]
         bind $S(W) <Map> [namespace code [list Visibility %W 1]]
         bind $S(W) <Unmap> [namespace code [list Visibility %W 0]]

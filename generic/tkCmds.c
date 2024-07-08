@@ -558,11 +558,11 @@ Tk_LowerObjCmd(
     if (Tk_RestackWindow(tkwin, Below, other) != TCL_OK) {
 	if (other) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't lower \"%s\" below \"%s\"",
+		    "cannot lower \"%s\" below \"%s\"",
 		    Tcl_GetString(objv[1]), Tcl_GetString(objv[2])));
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't lower \"%s\" to bottom", Tcl_GetString(objv[1])));
+		    "cannot lower \"%s\" to bottom", Tcl_GetString(objv[1])));
 	}
 	Tcl_SetErrorCode(interp, "TK", "RESTACK", "LOWER", (char *)NULL);
 	return TCL_ERROR;
@@ -617,11 +617,11 @@ Tk_RaiseObjCmd(
     if (Tk_RestackWindow(tkwin, Above, other) != TCL_OK) {
 	if (other) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't raise \"%s\" above \"%s\"",
+		    "cannot raise \"%s\" above \"%s\"",
 		    Tcl_GetString(objv[1]), Tcl_GetString(objv[2])));
 	} else {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't raise \"%s\" to top", Tcl_GetString(objv[1])));
+		    "cannot raise \"%s\" to top", Tcl_GetString(objv[1])));
 	}
 	Tcl_SetErrorCode(interp, "TK", "RESTACK", "RAISE", (char *)NULL);
 	return TCL_ERROR;
@@ -1678,7 +1678,7 @@ Tk_WinfoObjCmd(
 	if ((winPtr == NULL) ||
 		(winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window id \"%s\" doesn't exist in this application",
+		    "window id \"%s\" does not exist in this application",
 		    string));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "WINDOW", string, (char *)NULL);
 	    return TCL_ERROR;
@@ -1817,7 +1817,7 @@ Tk_WinfoObjCmd(
 		&templ, &count);
 	if (visInfoPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't find any visuals for screen", TCL_INDEX_NONE));
+		    "cannot find any visuals for screen", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "VISUAL", "NONE", (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -1936,7 +1936,7 @@ TkDeadAppObjCmd(
     Tcl_Obj *const objv[])	/* Argument strings. */
 {
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "can't invoke \"%s\" command: application has been destroyed",
+	    "cannot invoke \"%s\" command: application has been destroyed",
 	    Tcl_GetString(objv[0])));
     return TCL_ERROR;
 }

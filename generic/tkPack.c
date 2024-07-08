@@ -1241,7 +1241,7 @@ ConfigureContent(
 	}
 	if (Tk_TopWinHierarchy(content)) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't pack \"%s\": it's a top-level window",
+		    "cannot pack \"%s\": it's a top-level window",
 		    Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", NULL);
 	    return TCL_ERROR;
@@ -1464,7 +1464,7 @@ ConfigureContent(
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't pack \"%s\" inside \"%s\"", Tcl_GetString(objv[j]),
+			"cannot pack \"%s\" inside \"%s\"", Tcl_GetString(objv[j]),
 			Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", NULL);
 		return TCL_ERROR;
@@ -1472,7 +1472,7 @@ ConfigureContent(
 	}
 	if (content == containerPtr->tkwin) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't pack \"%s\" inside itself", Tcl_GetString(objv[j])));
+		    "cannot pack \"%s\" inside itself", Tcl_GetString(objv[j])));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", NULL);
 	    return TCL_ERROR;
 	}
@@ -1485,7 +1485,7 @@ ConfigureContent(
 	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't put \"%s\" inside \"%s\": would cause management loop",
+			"cannot put \"%s\" inside \"%s\": would cause management loop",
 			Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		return TCL_ERROR;

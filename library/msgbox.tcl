@@ -415,6 +415,11 @@ proc ::tk::MessageBox {args} {
 	    %W invoke
 	}
     }
+    bind $w <KP_Enter> {
+	if {[winfo class %W] in "Button TButton"} {
+	    %W invoke
+	}
+    }
 
     # Invoke the designated cancelling operation
     bind $w <Escape> [list $w.$cancel invoke]

@@ -175,7 +175,7 @@ test raise-4.2 {raise relative to nephews} -setup {
     raise .raise.a .raise2
 } -cleanup {
     destroy .raise2
-} -returnCodes error -result {can't raise ".raise.a" above ".raise2"}
+} -returnCodes error -result {cannot raise ".raise.a" above ".raise2"}
 
 
 test raise-5.1 {lower internal windows} -body {
@@ -205,7 +205,7 @@ test raise-5.4 {lower internal windows} -setup {
     lower .raise.a .raise2
 } -cleanup {
     destroy .raise2
-} -returnCodes error -result {can't lower ".raise.a" below ".raise2"}
+} -returnCodes error -result {cannot lower ".raise.a" below ".raise2"}
 
 
 test raise-6.1 {raise/lower toplevel windows} -constraints {

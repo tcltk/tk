@@ -439,7 +439,7 @@ EmbWinConfigure(
 		if (Tk_TopWinHierarchy(ancestor)) {
 		badContainer:
 		    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
-			    "can't embed %s in %s",
+			    "cannot embed %s in %s",
 			    Tk_PathName(ewPtr->body.ew.tkwin),
 			    Tk_PathName(textPtr->tkwin)));
 		    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY",
@@ -936,7 +936,7 @@ EmbWinLayoutProc(
 		|| (textPtr->tkwin == ewPtr->body.ew.tkwin)) {
 	badContainer:
 	    Tcl_SetObjResult(textPtr->interp, Tcl_ObjPrintf(
-		    "can't embed %s relative to %s",
+		    "cannot embed %s relative to %s",
 		    Tk_PathName(ewPtr->body.ew.tkwin),
 		    Tk_PathName(textPtr->tkwin)));
 	    Tcl_SetErrorCode(textPtr->interp, "TK", "GEOMETRY", "HIERARCHY",

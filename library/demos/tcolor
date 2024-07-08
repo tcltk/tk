@@ -122,6 +122,7 @@ labelframe .name -text "Name:" -padx 1m -pady 1m
 entry .name.e -textvariable name -width 10
 pack .name.e -side right -expand 1 -fill x
 bind .name.e <Return> {tc_loadNamedColor $name}
+bind .name.e <KP_Enter> {tc_loadNamedColor $name}
 grid .name   -column 1 -row 1 -sticky nsew -padx .15c -pady .15c
 
 # Create the color display swatch on the right side of the window.

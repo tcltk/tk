@@ -423,7 +423,7 @@ test winDialog-5.7.8 {tk_getOpenFile: -defaultextension} -constraints {
     return $x
 } -result [file join [initialdir] "5 7 8.aaa"]
 
-test winDialog-5.8 {GetFileName: extension doesn't begin with .} -constraints {
+test winDialog-5.8 {GetFileName: extension does not begin with .} -constraints {
     nt testwinevent
 } -body {
     start {set x [tk_getSaveFile -defaultextension foo -title Save]}
@@ -486,7 +486,7 @@ test winDialog-5.12 {GetFileName: initial directory: Tcl_TranslateFilename()} -c
     nt tcl8
 } -body {
     tk_getOpenFile -initialdir ~12x/455
-} -returnCodes error -result {user "12x" doesn't exist}
+} -returnCodes error -result {user "12x" does not exist}
 
 test winDialog-5.12.1 {tk_getSaveFile: initial directory: ~} -constraints {
     nt testwinevent tcl8
@@ -711,7 +711,7 @@ test winDialog-5.14 {GetFileName: initial file: Tcl_TranslateFileName()} -constr
 } -body {
 #        if (Tcl_TranslateFileName(interp, string, &ds) == NULL)
     tk_getOpenFile -initialfile ~12x/455
-} -returnCodes error -result {user "12x" doesn't exist}
+} -returnCodes error -result {user "12x" does not exist}
 if {![vista?]} {
     # XXX - disabled for Vista because the new dialogs allow long file
     # names to be specified but force the user to change it.
@@ -944,7 +944,7 @@ test winDialog-9.8 {Tk_ChooseDirectoryObjCmd: initial directory: Tcl_TranslateFi
 #            &utfDirString) == NULL)
 
     tk_chooseDirectory -initialdir ~12x/455
-} -returnCodes error -result {user "12x" doesn't exist}
+} -returnCodes error -result {user "12x" does not exist}
 
 
 test winDialog-10.1 {Tk_FontchooserObjCmd: no arguments} -constraints {

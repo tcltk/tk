@@ -149,7 +149,7 @@ test clipboard-4.1 {ClipboardLostSel procedure} -setup {
     clipboard get
 } -cleanup {
     clipboard clear
-}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "STRING" not defined}
+}  -returnCodes error -result {CLIPBOARD selection does not exist or form "STRING" not defined}
 test clipboard-4.2 {ClipboardLostSel procedure} -setup {
     clipboard clear
 } -body {
@@ -159,7 +159,7 @@ test clipboard-4.2 {ClipboardLostSel procedure} -setup {
     clipboard get
 } -cleanup {
     clipboard clear
-}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "STRING" not defined}
+}  -returnCodes error -result {CLIPBOARD selection does not exist or form "STRING" not defined}
 test clipboard-4.3 {ClipboardLostSel procedure} -setup {
     clipboard clear
 } -body {
@@ -169,7 +169,7 @@ test clipboard-4.3 {ClipboardLostSel procedure} -setup {
     clipboard get -t TEST
 } -cleanup {
     clipboard clear
-}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "TEST" not defined}
+}  -returnCodes error -result {CLIPBOARD selection does not exist or form "TEST" not defined}
 test clipboard-4.4 {ClipboardLostSel procedure} -setup {
     clipboard clear
 } -body {
@@ -180,7 +180,7 @@ test clipboard-4.4 {ClipboardLostSel procedure} -setup {
     clipboard get
 } -cleanup {
     clipboard clear
-}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "STRING" not defined}
+}  -returnCodes error -result {CLIPBOARD selection does not exist or form "STRING" not defined}
 test clipboard-4.5 {ClipboardLostSel procedure} -setup {
     clipboard clear
 } -body {
@@ -191,7 +191,7 @@ test clipboard-4.5 {ClipboardLostSel procedure} -setup {
     clipboard get -t TEST
 } -cleanup {
     clipboard clear
-}  -returnCodes error -result {CLIPBOARD selection doesn't exist or form "TEST" not defined}
+}  -returnCodes error -result {CLIPBOARD selection does not exist or form "TEST" not defined}
 
 
 
