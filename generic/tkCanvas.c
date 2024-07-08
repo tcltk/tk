@@ -930,7 +930,7 @@ CanvasWidgetCmd(
 
 	    if (object == 0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"item \"%s\" doesn't exist", Tcl_GetString(objv[2])));
+			"item \"%s\" does not exist", Tcl_GetString(objv[2])));
 		Tcl_SetErrorCode(interp, "TK", "LOOKUP", "CANVAS_ITEM",
 			Tcl_GetString(objv[2]), (char *)NULL);
 		result = TCL_ERROR;
@@ -1538,7 +1538,7 @@ CanvasWidgetCmd(
 	}
 	if (itemPtr == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't find an indexable item \"%s\"",
+		    "cannot find an indexable item \"%s\"",
 		    Tcl_GetString(objv[2])));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "INDEXABLE_ITEM", (char *)NULL);
 	    result = TCL_ERROR;
@@ -1940,7 +1940,7 @@ CanvasWidgetCmd(
 	    }
 	    if (itemPtr == NULL) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't find an indexable and selectable item \"%s\"",
+			"cannot find an indexable and selectable item \"%s\"",
 			Tcl_GetString(objv[3])));
 		Tcl_SetErrorCode(interp, "TK", "CANVAS", "SELECTABLE_ITEM",
 			(char *)NULL);
@@ -4737,7 +4737,7 @@ FindItems(
 	    }
 	    if (halo < 0.0) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't have negative halo value \"%f\"", halo));
+			"cannot have negative halo value \"%f\"", halo));
 		return TCL_ERROR;
 	    }
 	} else {

@@ -272,6 +272,7 @@ proc ::tk::dialog::color::BuildDialog {w} {
 		[list tk::dialog::color::LeaveColorBar $w $color]
 
 	bind $box.entry <Return> [list tk::dialog::color::HandleRGBEntry $w]
+	bind $box.entry <KP_Enter> [list tk::dialog::color::HandleRGBEntry $w]
     }
 
     pack $stripsFrame -side left -fill both -padx 3p -pady 7.5p

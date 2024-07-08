@@ -624,7 +624,7 @@ ConfigureContent(
 
     if (Tk_TopWinHierarchy(tkwin)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't use placer on top-level window \"%s\"; use "
+		"cannot use placer on top-level window \"%s\"; use "
 		"wm command instead", Tk_PathName(tkwin)));
 	Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", (char *)NULL);
 	return TCL_ERROR;
@@ -664,7 +664,7 @@ ConfigureContent(
 	    }
 	    if (Tk_TopWinHierarchy(ancestor)) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't place \"%s\" relative to \"%s\"",
+			"cannot place \"%s\" relative to \"%s\"",
 			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
 		goto error;
@@ -672,7 +672,7 @@ ConfigureContent(
 	}
 	if (contentPtr->tkwin == win) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "can't place \"%s\" relative to itself",
+		    "cannot place \"%s\" relative to itself",
 		    Tk_PathName(contentPtr->tkwin)));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", (char *)NULL);
 	    goto error;
@@ -686,7 +686,7 @@ ConfigureContent(
 	     container = (TkWindow *)TkGetContainer(container)) {
 	    if (container == (TkWindow *)contentPtr->tkwin) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't put \"%s\" inside \"%s\": would cause management loop",
+			"cannot put \"%s\" inside \"%s\": would cause management loop",
 			Tk_PathName(contentPtr->tkwin), Tk_PathName(win)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", (char *)NULL);
 		goto error;

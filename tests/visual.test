@@ -520,7 +520,7 @@ test visual-7.6 {Tk_GetColormap, copy from other window} -constraints {
     toplevel .t2 -width 400 -height 50 -colormap .t1
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't use colormap for .t1: incompatible visuals}
+} -returnCodes error -result {cannot use colormap for .t1: incompatible visuals}
 
 
 test visual-8.1 {Tk_FreeColormap procedure} -setup {

@@ -279,7 +279,7 @@ test unixWm-8.1 {icon windows} unix {
     toplevel .icon -width 50 -height 50 -bg red
     wm iconwindow .t .icon
     list [catch {wm withdraw .icon} msg] $msg
-} {1 {can't withdraw .icon: it is an icon for .t}}
+} {1 {cannot withdraw .icon: it is an icon for .t}}
 test unixWm-8.2 {icon windows} unix {
     destroy .t
     toplevel .t -width 100 -height 30
@@ -318,7 +318,7 @@ test unixWm-8.6 {icon windows} unix {
     toplevel .t -width 100 -height 30
     frame .t.icon -width 50 -height 50 -bg red
     list [catch {wm iconwindow .t .t.icon} msg] $msg
-} {1 {can't use .t.icon as icon window: not at top level}}
+} {1 {cannot use .t.icon as icon window: not at top level}}
 test unixWm-8.7 {icon windows} unix {
     destroy .t
     destroy .icon
@@ -505,16 +505,16 @@ test unixWm-12.7 {Tk_WmCmd procedure, "aspect" option} unix {
 } {1 {expected integer but got "baz"}}
 test unixWm-12.8 {Tk_WmCmd procedure, "aspect" option} unix {
     list [catch {wm aspect .t 0 14 15 16} msg] $msg
-} {1 {aspect number can't be <= 0}}
+} {1 {aspect number cannot be <= 0}}
 test unixWm-12.9 {Tk_WmCmd procedure, "aspect" option} unix {
     list [catch {wm aspect .t 13 0 15 16} msg] $msg
-} {1 {aspect number can't be <= 0}}
+} {1 {aspect number cannot be <= 0}}
 test unixWm-12.10 {Tk_WmCmd procedure, "aspect" option} unix {
     list [catch {wm aspect .t 13 14 0 16} msg] $msg
-} {1 {aspect number can't be <= 0}}
+} {1 {aspect number cannot be <= 0}}
 test unixWm-12.11 {Tk_WmCmd procedure, "aspect" option} unix {
     list [catch {wm aspect .t 13 14 15 0} msg] $msg
-} {1 {aspect number can't be <= 0}}
+} {1 {aspect number cannot be <= 0}}
 
 test unixWm-13.1 {Tk_WmCmd procedure, "client" option} unix {
     list [catch {wm client .t x y} msg] $msg
@@ -634,7 +634,7 @@ test unixWm-16.2 {Tk_WmCmd procedure, "deiconify" option} unix {
     set result [list [catch {wm deiconify .icon} msg] $msg]
     destroy .icon
     set result
-} {1 {can't deiconify .icon: it is an icon for .t}}
+} {1 {cannot deiconify .icon: it is an icon for .t}}
 test unixWm-16.3 {Tk_WmCmd procedure, "deiconify" option} {unix failsOnUbuntu failsOnXQuarz} {
     wm iconify .t
     set result {}
@@ -732,25 +732,25 @@ test unixWm-20.4 {Tk_WmCmd procedure, "grid" option} unix {
 } {1 {expected integer but got "bad"}}
 test unixWm-20.5 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t -1 11 12 13} msg] $msg
-} {1 {baseWidth can't be < 0}}
+} {1 {baseWidth cannot be < 0}}
 test unixWm-20.6 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 foo 12 13} msg] $msg
 } {1 {expected integer but got "foo"}}
 test unixWm-20.7 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 -11 12 13} msg] $msg
-} {1 {baseHeight can't be < 0}}
+} {1 {baseHeight cannot be < 0}}
 test unixWm-20.8 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 bar 13} msg] $msg
 } {1 {expected integer but got "bar"}}
 test unixWm-20.9 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 -2 13} msg] $msg
-} {1 {widthInc can't be <= 0}}
+} {1 {widthInc cannot be <= 0}}
 test unixWm-20.10 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 12 bogus} msg] $msg
 } {1 {expected integer but got "bogus"}}
 test unixWm-20.11 {Tk_WmCmd procedure, "grid" option} unix {
     list [catch {wm grid .t 10 11 12 -1} msg] $msg
-} {1 {heightInc can't be <= 0}}
+} {1 {heightInc cannot be <= 0}}
 
 destroy .t
 destroy .icon
@@ -835,7 +835,7 @@ test unixWm-23.2 {Tk_WmCmd procedure, "iconify" option} unix {
     set result [list [catch {wm iconify .t2} msg] $msg]
     destroy .t2
     set result
-} {1 {can't iconify ".t2": override-redirect flag is set}}
+} {1 {cannot iconify ".t2": override-redirect flag is set}}
 test unixWm-23.3 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
@@ -844,7 +844,7 @@ test unixWm-23.3 {Tk_WmCmd procedure, "iconify" option} unix {
     set result [list [catch {wm iconify .t2} msg] $msg]
     destroy .t2
     set result
-} {1 {can't iconify ".t2": it is a transient}}
+} {1 {cannot iconify ".t2": it is a transient}}
 test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     destroy .t2
     toplevel .t2
@@ -853,7 +853,7 @@ test unixWm-23.4 {Tk_WmCmd procedure, "iconify" option} unix {
     set result [list [catch {wm iconify .t2} msg] $msg]
     destroy .t2
     set result
-} {1 {can't iconify ".t2": it is an icon for ".t"}}
+} {1 {cannot iconify ".t2": it is an icon for ".t"}}
 test unixWm-23.5 {Tk_WmCmd procedure, "iconify" option} {unix failsOnUbuntu failsOnXQuarz} {
     destroy .t2
     toplevel .t2
@@ -966,7 +966,7 @@ test unixWm-27.4 {Tk_WmCmd procedure, "iconwindow" option} unix {
     set result [list [catch {wm iconwindow .t .b} msg] $msg]
     destroy .b
     set result
-} {1 {can't use .b as icon window: not at top level}}
+} {1 {cannot use .b as icon window: not at top level}}
 test unixWm-27.5 {Tk_WmCmd procedure, "iconwindow" option} unix {
     destroy .icon
     toplevel .icon -width 50 -height 50 -bg green
@@ -1337,7 +1337,7 @@ test unixWm-38.2 {Tk_WmCmd procedure, "withdraw" option} unix {
     set result [list [catch {wm withdraw .t2} msg]  $msg]
     destroy .t2
     set result
-} {1 {can't withdraw .t2: it is an icon for .t}}
+} {1 {cannot withdraw .t2: it is an icon for .t}}
 test unixWm-38.3 {Tk_WmCmd procedure, "withdraw" option} unix {
     set result {}
     wm withdraw .t

@@ -336,7 +336,7 @@ test spinbox-1.27 {configuration option: "font" for spinbox} -setup {
     .e configure -font {}
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes {error} -result {font "" does not exist}
 
 test spinbox-1.28 {configuration option: "foreground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -1509,7 +1509,7 @@ test spinbox-3.50 {SpinboxWidgetCmd procedure, "select clear" widget command} -s
     selection get
 } -cleanup {
     destroy .e
-} -returnCodes error -result {PRIMARY selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {PRIMARY selection does not exist or form "STRING" not defined}
 test spinbox-3.50.1 {SpinboxWidgetCmd procedure, "select clear" widget command} -setup {
     spinbox .e
     pack .e
@@ -1993,7 +1993,7 @@ test spinbox-5.6 {ConfigureSpinbox procedure} -setup {
     selection get
 } -cleanup {
     destroy .e
-} -returnCodes error -result {PRIMARY selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {PRIMARY selection does not exist or form "STRING" not defined}
 test spinbox-5.6.1 {ConfigureSpinbox procedure} -setup {
     spinbox .e
     pack .e
@@ -3875,10 +3875,10 @@ test spinbox-24.1 {error in trace proc attached to the textvariable} -setup {
     list $result1 $result2 $result3 $result4
 } -cleanup {
     destroy .s
-} -result [list {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!}]
+} -match glob -result [list {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!}]
 
 test spinbox-25.1 {textvariable lives in a non-existing namespace} -setup {
     destroy .s
@@ -3887,7 +3887,7 @@ test spinbox-25.1 {textvariable lives in a non-existing namespace} -setup {
     set result1
 } -cleanup {
     destroy .s
-} -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+} -match glob -result {can*t trace "thisnsdoesntexist::myvar": parent namespace does*t exist}
 test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
     pack [spinbox .s]

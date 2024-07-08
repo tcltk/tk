@@ -248,7 +248,7 @@ Tk_UseWindow(
 /*
     if (winPtr->window != None) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't modify container after widget is created", TCL_INDEX_NONE));
+		"cannot modify container after widget is created", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "EMBED", "POST_CREATE", NULL);
 	return TCL_ERROR;
     }
@@ -281,7 +281,7 @@ Tk_UseWindow(
     if (!IsWindow(hwnd)) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "window \"%s\" doesn't exist", string));
+		    "window \"%s\" does not exist", string));
 	    Tcl_SetErrorCode(interp, "TK", "EMBED", "EXIST", NULL);
 	}
 	return TCL_ERROR;

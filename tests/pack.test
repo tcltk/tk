@@ -966,7 +966,7 @@ test pack-10.4 {bad -in window does not change container window} -setup {
 } -body {
     winfo manager .pack.a
     pack .pack.a -in .pack.a
-} -returnCodes error -result {can't pack ".pack.a" inside itself}
+} -returnCodes error -result {cannot pack ".pack.a" inside itself}
 test pack-10.5 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -975,7 +975,7 @@ test pack-10.5 {prevent management loops} -body {
 } -cleanup {
     destroy .f1
     destroy .f2
-} -returnCodes error -result {can't put ".f2" inside ".f1": would cause management loop}
+} -returnCodes error -result {cannot put ".f2" inside ".f1": would cause management loop}
 test pack-10.6 {prevent management loops} -body {
     frame .f1
     frame .f2
@@ -987,7 +987,7 @@ test pack-10.6 {prevent management loops} -body {
     destroy .f1
     destroy .f2
     destroy .f3
-} -returnCodes error -result {can't put ".f3" inside ".f1": would cause management loop}
+} -returnCodes error -result {cannot put ".f3" inside ".f1": would cause management loop}
 
 test pack-11.1 {info option} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
@@ -1147,7 +1147,7 @@ test pack-12.6 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack
-} -returnCodes error -result {can't pack ".pack": it's a top-level window}
+} -returnCodes error -result {cannot pack ".pack": it's a top-level window}
 test pack-12.7 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
@@ -1283,18 +1283,18 @@ test pack-12.33 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -in .
-} -returnCodes error -result {can't pack ".pack.a" inside "."}
+} -returnCodes error -result {cannot pack ".pack.a" inside "."}
 test pack-12.34 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     frame .pack.a.a
     pack .pack.a.a -in .pack.b
-} -returnCodes error -result {can't pack ".pack.a.a" inside ".pack.b"}
+} -returnCodes error -result {cannot pack ".pack.a.a" inside ".pack.b"}
 test pack-12.35 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {
     pack .pack.a -in .pack.a
-} -returnCodes error -result {can't pack ".pack.a" inside itself}
+} -returnCodes error -result {cannot pack ".pack.a" inside itself}
 test pack-12.36 {command options and errors} -setup {
     pack forget .pack.a .pack.b .pack.c .pack.d
 } -body {

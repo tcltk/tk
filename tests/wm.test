@@ -166,16 +166,16 @@ test wm-aspect-1.8 {usage} -returnCodes error -body {
 } -result {expected integer but got "baz"}
 test wm-aspect-1.9 {usage} -returnCodes error -body {
     wm aspect . 0 14 15 16
-} -result {aspect number can't be <= 0}
+} -result {aspect number cannot be <= 0}
 test wm-aspect-1.10 {usage} -returnCodes error -body {
     wm aspect . 13 0 15 16
-} -result {aspect number can't be <= 0}
+} -result {aspect number cannot be <= 0}
 test wm-aspect-1.11 {usage} -returnCodes error -body {
     wm aspect . 13 14 0 16
-} -result {aspect number can't be <= 0}
+} -result {aspect number cannot be <= 0}
 test wm-aspect-1.12 {usage} -returnCodes error -body {
     wm aspect . 13 14 15 0
-} -result {aspect number can't be <= 0}
+} -result {aspect number cannot be <= 0}
 
 test wm-aspect-2.1 {setting and reading values} -setup {
     set result {}
@@ -318,7 +318,7 @@ test wm-attributes-1.3.8 {override-redirect not compatible with fullscreen attri
     wm attributes .t -fullscreen 1
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't set fullscreen attribute for ".t": override-redirect flag is set}
+} -result {cannot set fullscreen attribute for ".t": override-redirect flag is set}
 test wm-attributes-1.3.9 {max height too small} -constraints win -body {
     toplevel .t
     update
@@ -326,7 +326,7 @@ test wm-attributes-1.3.9 {max height too small} -constraints win -body {
     wm attributes .t -fullscreen 1
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't set fullscreen attribute for ".t": max width/height is too small}
+} -result {cannot set fullscreen attribute for ".t": max width/height is too small}
 test wm-attributes-1.3.10 {max height too small} -constraints win -body {
     toplevel .t
     update
@@ -334,7 +334,7 @@ test wm-attributes-1.3.10 {max height too small} -constraints win -body {
     wm attributes .t -fullscreen 1
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't set fullscreen attribute for ".t": max width/height is too small}
+} -result {cannot set fullscreen attribute for ".t": max width/height is too small}
 test wm-attributes-1.3.11 {another attribute, then -fullscreen} -constraints win -body {
     toplevel .t
     update
@@ -596,7 +596,7 @@ test wm-deiconify-1.4 {usage} -setup {
     wm deiconify .icon
 } -returnCodes error -cleanup {
     destroy .icon
-} -result {can't deiconify .icon: it is an icon for .t}
+} -result {cannot deiconify .icon: it is an icon for .t}
 # test embedded window for Windows
 test wm-deiconify-1.5 {usage} -constraints win -setup {
     destroy .embed
@@ -606,7 +606,7 @@ test wm-deiconify-1.5 {usage} -constraints win -setup {
     wm deiconify .embed
 } -returnCodes error -cleanup {
     destroy .t.f .embed
-} -result {can't deiconify .embed: the container does not support the request}
+} -result {cannot deiconify .embed: the container does not support the request}
 # test embedded window for other platforms
 test wm-deiconify-1.6 {usage} -constraints !win -setup {
     destroy .embed
@@ -616,7 +616,7 @@ test wm-deiconify-1.6 {usage} -constraints !win -setup {
     wm deiconify .embed
 } -returnCodes error -cleanup {
     destroy .t.f .embed
-} -result {can't deiconify .embed: it is an embedded window}
+} -result {cannot deiconify .embed: it is an embedded window}
 
 deleteWindows
 test wm-deiconify-2.1 {a window that has never been mapped\
@@ -748,16 +748,16 @@ test wm-grid-1.8 {usage} -returnCodes error -body {
 } -result {expected integer but got "baz"}
 test wm-grid-1.9 {usage} -returnCodes error -body {
     wm grid . -1 14 15 16
-} -result {baseWidth can't be < 0}
+} -result {baseWidth cannot be < 0}
 test wm-grid-1.10 {usage} -returnCodes error -body {
     wm grid . 13 -1 15 16
-} -result {baseHeight can't be < 0}
+} -result {baseHeight cannot be < 0}
 test wm-grid-1.11 {usage} -returnCodes error -body {
     wm grid . 13 14 -1 16
-} -result {widthInc can't be <= 0}
+} -result {widthInc cannot be <= 0}
 test wm-grid-1.12 {usage} -returnCodes error -body {
     wm grid . 13 14 15 -1
-} -result {heightInc can't be <= 0}
+} -result {heightInc cannot be <= 0}
 
 test wm-grid-2.1 {setting and reading values} -setup {
     set result {}
@@ -818,7 +818,7 @@ test wm-iconbadge-1.4 {::tk::icons::base_icon($win) must be a Tk photo on X11} -
 } -body {
     set ::tk::icons::base_icon(.) book
     wm iconbadge . 27
-} -returnCodes error -result {can't use "book" as iconphoto: not a photo image}
+} -returnCodes error -result {cannot use "book" as iconphoto: not a photo image}
 test wm-iconbadge-1.5 {illegal badge number} -body {
     image create photo book -data {
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
@@ -830,7 +830,7 @@ test wm-iconbadge-1.5 {illegal badge number} -body {
     wm iconbadge . illegal
 } -cleanup {
     image delete book
-} -returnCodes error -result {can't use "illegal" as icon badge}
+} -returnCodes error -result {cannot use "illegal" as icon badge}
 test wm-iconbadge-1.6 {non-integer badge number} -body {
     image create photo book -data {
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
@@ -842,7 +842,7 @@ test wm-iconbadge-1.6 {non-integer badge number} -body {
     wm iconbadge . 3.2
 } -cleanup {
     image delete book
-} -returnCodes error -result {can't use "3.2" as icon badge}
+} -returnCodes error -result {cannot use "3.2" as icon badge}
 test wm-iconbadge-1.7 {negative or zero badge number} -body {
     image create photo book -data {
         R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAAC
@@ -854,7 +854,7 @@ test wm-iconbadge-1.7 {negative or zero badge number} -body {
     wm iconbadge . 0
 } -cleanup {
     image delete book
-} -returnCodes error -result {can't use "0" as icon badge}
+} -returnCodes error -result {cannot use "0" as icon badge}
 test wm-iconbadge-1.8 {usage, no need to call iconphoto on aqua or win32} -constraints {
     aquaOrWin32
 } -body {
@@ -908,7 +908,7 @@ test wm-iconify-2.1 {Misc errors} -body {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2
-} -result {can't iconify ".t2": override-redirect flag is set}
+} -result {cannot iconify ".t2": override-redirect flag is set}
 test wm-iconify-2.2 {Misc errors} -body {
     toplevel .t2
     wm geom .t2 +0+0
@@ -916,7 +916,7 @@ test wm-iconify-2.2 {Misc errors} -body {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2
-} -result {can't iconify ".t2": it is a transient}
+} -result {cannot iconify ".t2": it is a transient}
 test wm-iconify-2.3 {Misc errors} -body {
     toplevel .t2
     wm geom .t2 +0+0
@@ -924,7 +924,7 @@ test wm-iconify-2.3 {Misc errors} -body {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2
-} -result {can't iconify ".t2": it is an icon for ".t"}
+} -result {cannot iconify ".t2": it is an icon for ".t"}
 # test embedded window for Windows
 test wm-iconify-2.4.1 {Misc errors} -constraints win -setup {
     destroy .t2
@@ -934,7 +934,7 @@ test wm-iconify-2.4.1 {Misc errors} -constraints win -setup {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2 .r.f
-} -result {can't iconify ".t2": the container does not support the request}
+} -result {cannot iconify ".t2": the container does not support the request}
 # test embedded window for other platforms
 test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
     destroy .t2
@@ -944,7 +944,7 @@ test wm-iconify-2.4.2 {Misc errors} -constraints !win -setup {
     wm iconify .t2
 } -returnCodes error -cleanup {
     destroy .t2 .r.f
-} -result {can't iconify ".t2": it is an embedded window}
+} -result {cannot iconify ".t2": it is an embedded window}
 
 test wm-iconify-3.1 {iconify behavior} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t2
@@ -1009,7 +1009,7 @@ test wm-iconphoto-1.2 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
 test wm-iconphoto-1.3 {usage} -returnCodes error -body {
     wm iconphoto . notanimage
-} -result {can't use "notanimage" as iconphoto: not a photo image}
+} -result {cannot use "notanimage" as iconphoto: not a photo image}
 test wm-iconphoto-1.4 {usage} -returnCodes error -body {
     # we currently have no return info
     wm iconphoto . -default
@@ -1070,7 +1070,7 @@ test wm-iconwindow-1.4 {usage} -setup {
     wm iconwindow .t .b
 } -returnCodes error -cleanup {
     destroy .b
-} -result {can't use .b as icon window: not at top level}
+} -result {cannot use .b as icon window: not at top level}
 test wm-iconwindow-1.5 {usage} -setup {
     destroy .icon .t2
 } -body {
@@ -1677,7 +1677,7 @@ test wm-stackorder-5.1 {a menu is not a toplevel} -body {
 } -cleanup {
     destroy .t
 } -result {.t .}
-test wm-stackorder-5.2 {A normal toplevel can't be raised above an \
+test wm-stackorder-5.2 {A normal toplevel cannot be raised above an \
     overrideredirect toplevel on unix} -constraints {x11 failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t
     wm overrideredirect .t 1
@@ -1768,7 +1768,7 @@ test wm-transient-1.4 {usage} -returnCodes error -body {
     wm iconify .subject
 } -cleanup {
     deleteWindows
-} -result {can't iconify ".subject": it is a transient}
+} -result {cannot iconify ".subject": it is a transient}
 test wm-transient-1.5 {usage} -returnCodes error -body {
     toplevel .icon -bg blue
     toplevel .top
@@ -1777,7 +1777,7 @@ test wm-transient-1.5 {usage} -returnCodes error -body {
     wm transient .icon .dummy
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a transient: it is an icon for .top}
+} -result {cannot make ".icon" a transient: it is an icon for .top}
 test wm-transient-1.6 {usage} -returnCodes error -body {
     toplevel .icon -bg blue
     toplevel .top
@@ -1786,13 +1786,13 @@ test wm-transient-1.6 {usage} -returnCodes error -body {
     wm transient .dummy .icon
 } -cleanup {
     deleteWindows
-} -result {can't make ".icon" a container: it is an icon for .top}
+} -result {cannot make ".icon" a container: it is an icon for .top}
 test wm-transient-1.7 {usage} -returnCodes error -body {
     toplevel .top
     wm transient .top .top
 } -cleanup {
     deleteWindows
-} -result {can't set ".top" as container: would cause management loop}
+} -result {cannot set ".top" as container: would cause management loop}
 test wm-transient-1.8 {usage} -returnCodes error -body {
     toplevel .t1
     toplevel .t2
@@ -1802,14 +1802,14 @@ test wm-transient-1.8 {usage} -returnCodes error -body {
     wm transient .t1 .t3
 } -cleanup {
     deleteWindows
-} -result {can't set ".t3" as container: would cause management loop}
+} -result {cannot set ".t3" as container: would cause management loop}
 test wm-transient-1.9 {usage} -returnCodes error -body {
     toplevel .top
     frame .top.f
     wm transient .top .top.f
 } -cleanup {
     deleteWindows
-} -result {can't set ".top" as container: would cause management loop}
+} -result {cannot set ".top" as container: would cause management loop}
 
 test wm-transient-2.1 {basic get/set of toplevel} -setup {
     set results [list]
@@ -2267,7 +2267,7 @@ test wm-withdraw-2.1 {Misc errors} -body {
     wm withdraw .t2
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't withdraw .t2: it is an icon for .t}
+} -result {cannot withdraw .t2: it is an icon for .t}
 
 test wm-withdraw-3.1 {} -setup {
     set result {}

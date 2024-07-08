@@ -446,7 +446,7 @@ test textWind-3.7 {EmbWinConfigure procedure} -setup {
     .t window create 1.3 -window .f.f
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't embed .f.f in .t}
+} -returnCodes error -result {cannot embed .f.f in .t}
 
 test textWind-3.8 {EmbWinConfigure procedure} -setup {
     destroy .t2
@@ -457,7 +457,7 @@ test textWind-3.8 {EmbWinConfigure procedure} -setup {
     .t window configure 1.3 -window .t2
 } -cleanup {
     destroy .t2
-} -returnCodes error -result {can't embed .t2 in .t}
+} -returnCodes error -result {cannot embed .t2 in .t}
 
 test textWind-3.9 {EmbWinConfigure procedure} -setup {
     destroy .t2
@@ -477,7 +477,7 @@ test textWind-3.10 {EmbWinConfigure procedure} -setup {
     .t insert 1.0 "Some sample text"
     .t window create 1.3
     .t window configure 1.3 -window .t
-} -returnCodes error -result {can't embed .t in .t}
+} -returnCodes error -result {cannot embed .t in .t}
 
 test textWind-3.11 {EmbWinConfigure procedure} -setup {
     .t delete 1.0 end
@@ -769,7 +769,7 @@ test textWind-10.4 {EmbWinLayoutProc procedure, error in creating window} -setup
     destroy .t.f
     rename bgerror {}
 } -result [list \
-    {{can't embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} \
+    {{cannot embed .t.f.f relative to .t}} {{window name "f" already exists in parent}} \
     [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0] \
     1]
 
@@ -794,7 +794,7 @@ test textWind-10.5 {EmbWinLayoutProc procedure, error in creating window} -setup
 } -cleanup {
     destroy .t.f
     rename bgerror {}
-} -result {{{can't embed .t.f.f relative to .t}} 1}
+} -result {{{cannot embed .t.f.f relative to .t}} 1}
 
 test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup {
     .t delete 1.0 end
@@ -816,7 +816,7 @@ test textWind-10.6 {EmbWinLayoutProc procedure, error in creating window} -setup
 } -cleanup {
     rename bgerror {}
 } -result [list \
-    {{can't embed .t relative to .t}} \
+    {{cannot embed .t relative to .t}} \
     [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -setup {
@@ -839,7 +839,7 @@ test textWind-10.7 {EmbWinLayoutProc procedure, error in creating window} -setup
 } -cleanup {
     rename bgerror {}
 } -result [list \
-    {{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}} \
+    {{cannot embed .t2 relative to .t}} {{window name "t2" already exists in parent}} \
     [list [xchar 5] [expr {[yline 1]+$fixedHeight/2}] 0 0]]
 
 test textWind-10.8 {EmbWinLayoutProc procedure, error in creating window} -setup {
@@ -864,7 +864,7 @@ test textWind-10.8 {EmbWinLayoutProc procedure, error in creating window} -setup
 } -cleanup {
     destroy .t2
     rename bgerror {}
-} -result {{{can't embed .t2 relative to .t}} {{window name "t2" already exists in parent}}}
+} -result {{{cannot embed .t2 relative to .t}} {{window name "t2" already exists in parent}}}
 
 test textWind-10.9 {EmbWinLayoutProc procedure, steal window from self} -setup {
     .t delete 1.0 end

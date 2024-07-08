@@ -69,6 +69,7 @@ bind TCombobox <<TraverseIn>> 		{ ttk::combobox::TraverseIn %W }
 #
 bind ComboboxListbox <ButtonRelease-1>	{ ttk::combobox::LBSelected %W }
 bind ComboboxListbox <Return>		{ ttk::combobox::LBSelected %W }
+bind ComboboxListbox <KP_Enter>		{ ttk::combobox::LBSelected %W }
 bind ComboboxListbox <Escape>		{ ttk::combobox::LBCancel %W }
 bind ComboboxListbox <Tab>		{ ttk::combobox::LBTab %W next }
 bind ComboboxListbox <<PrevWindow>>	{ ttk::combobox::LBTab %W prev }
