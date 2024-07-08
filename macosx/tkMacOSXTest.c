@@ -140,6 +140,8 @@ MenuBarHeightObjCmd(
  *      Returns true if and only if the NSView of the drawable is the
  *      current focusView, which on 10.14 and newer systems can only be the
  *      case when within [NSView drawRect].
+ *      NOTE: This is no longer needed when we use updateLayer instead
+ *      of drawRect.  Now it always returns True.
  *
  * Side effects:
  *	None
@@ -151,21 +153,8 @@ MODULE_SCOPE Bool
 TkTestLogDisplay(
     Drawable drawable)
 {
-    MacDrawable *macWin = (MacDrawable *)drawable;
-    NSWindow *win = nil;
-    if (macWin->toplevel && macWin->toplevel->winPtr &&
-	macWin->toplevel->winPtr->wmInfoPtr &&
-	macWin->toplevel->winPtr->wmInfoPtr->window) {
-	win = macWin->toplevel->winPtr->wmInfoPtr->window;
-    } else if (macWin->winPtr && macWin->winPtr->wmInfoPtr &&
-	       macWin->winPtr->wmInfoPtr->window) {
-	win = macWin->winPtr->wmInfoPtr->window;
-    }
-    if (win) {
-	return ([win contentView] == [NSView focusView]);
-    } else {
-	return True;
-    }
+    (void) drawable;
+    return True;
 }
 
 /*
@@ -209,8 +198,8 @@ PressButtonObjCmd(
     }
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "x y");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "x y");
+	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
 	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
@@ -308,8 +297,8 @@ MoveMouseObjCmd(
     }
 
     if (objc != 3) {
-        Tcl_WrongNumArgs(interp, 1, objv, "x y");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "x y");
+	return TCL_ERROR;
     }
     for (i = 1; i < objc; i++) {
 	if (Tcl_GetIntFromObj(interp,objv[i],&value) != TCL_OK) {
@@ -370,12 +359,12 @@ InjectKeyEventObjCmd(
 
     if (objc < 3) {
     wrongArgs:
-        Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 1, objv, "option keysym ?arg?");
+	return TCL_ERROR;
     }
     if (Tcl_GetIndexFromObjStruct(interp, objv[1], optionStrings,
-            sizeof(char *), "option", 0, &index) != TCL_OK) {
-        return TCL_ERROR;
+	    sizeof(char *), "option", 0, &index) != TCL_OK) {
+	return TCL_ERROR;
     }
     type = types[index];
     if (Tcl_GetIntFromObj(interp, objv[2], &keysym) != TCL_OK) {
@@ -387,37 +376,37 @@ InjectKeyEventObjCmd(
     macKC.uint = XKeysymToKeycode(NULL, keysym);
     for (i = 3; i < objc; i++) {
 	if (Tcl_GetIndexFromObjStruct(interp, objv[i], argStrings,
-                sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
-            return TCL_ERROR;
-        }
-        switch ((enum args) index) {
+		sizeof(char *), "option", TCL_EXACT, &index) != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	switch ((enum args) index) {
 	case KEYEVENT_SHIFT:
 	    mods |= NSShiftKeyMask;
-            break;
+	    break;
 	case KEYEVENT_CONTROL:
 	    mods |= NSControlKeyMask;
-            break;
+	    break;
 	case KEYEVENT_OPTION:
 	    mods |= NSAlternateKeyMask;
-            break;
+	    break;
 	case KEYEVENT_COMMAND:
 	    mods |= NSCommandKeyMask;
-            break;
+	    break;
 	case KEYEVENT_FUNCTION:
 	    mods |= NSFunctionKeyMask;
-            break;
+	    break;
 	case KEYEVENT_X:
 	    if (++i >= objc) {
-                goto wrongArgs;
-            }
+		goto wrongArgs;
+	    }
 	    if (Tcl_GetIntFromObj(interp,objv[i], &x) != TCL_OK) {
 		return TCL_ERROR;
 	    }
 	    break;
 	case KEYEVENT_Y:
 	    if (++i >= objc) {
-                goto wrongArgs;
-            }
+		goto wrongArgs;
+	    }
 	    if (Tcl_GetIntFromObj(interp,objv[i], &y) != TCL_OK) {
 		return TCL_ERROR;
 	    }
@@ -445,7 +434,7 @@ InjectKeyEventObjCmd(
     }
     keyEvent = [NSEvent keyEventWithType:type
 	location:NSMakePoint(x, y)
-        modifierFlags:mods
+	modifierFlags:mods
 	timestamp:GetCurrentEventTime()
 	windowNumber:0
 	context:nil

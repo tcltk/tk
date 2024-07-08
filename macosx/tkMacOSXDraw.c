@@ -264,7 +264,8 @@ Tk_MacOSXGetCGContextForDrawable(
 	    colorspace = CGColorSpaceCreateDeviceRGB();
 	    bitmapInfo |= kCGImageAlphaPremultipliedFirst;
 	}
-	macDraw->context = CGBitmapContextCreate(NULL, (unsigned)macDraw->size.width,
+	macDraw->context = CGBitmapContextCreate(NULL,
+		(unsigned)macDraw->size.width,
 		(unsigned)macDraw->size.height, bitsPerComponent, 0,
 		colorspace, bitmapInfo);
 	if (macDraw->context) {
@@ -283,7 +284,8 @@ Tk_MacOSXGetCGContextForDrawable(
  *
  * TkMacOSXDrawCGImage --
  *
- *	Draw CG image into drawable.
+ *	Draw CG image into drawable. The entire image is used, and will
+ *	be rescaled if its dimensions do not equal dstBounds.size.
  *
  * Results:
  *	None.
@@ -302,25 +304,11 @@ TkMacOSXDrawCGImage(
     CGImageRef image,
     unsigned long imageForeground,
     unsigned long imageBackground,
-    CGRect imageBounds,
-    CGRect srcBounds,
     CGRect dstBounds)
 {
     MacDrawable *macDraw = (MacDrawable *)d;
 
     if (macDraw && context && image) {
-	CGImageRef subImage = NULL;
-
-	if (!CGRectEqualToRect(imageBounds, srcBounds)) {
-	    if (!CGRectContainsRect(imageBounds, srcBounds)) {
-		TkMacOSXDbgMsg("Mismatch of sub CGImage bounds");
-	    }
-	    subImage = CGImageCreateWithImageInRect(image, CGRectOffset(
-		    srcBounds, -imageBounds.origin.x, -imageBounds.origin.y));
-	    if (subImage) {
-		image = subImage;
-	    }
-	}
 	dstBounds = CGRectOffset(dstBounds, macDraw->xOff, macDraw->yOff);
 	if (CGImageIsMask(image)) {
 	    if (macDraw->flags & TK_IS_BW_PIXMAP) {
@@ -369,9 +357,6 @@ TkMacOSXDrawCGImage(
 	CGContextDrawImage(context, dstBounds, image);
 	CGContextRestoreGState(context);
 #endif /* TK_MAC_DEBUG_IMAGE_DRAWING */
-	if (subImage) {
-	    CFRelease(subImage);
-	}
     } else {
 	TkMacOSXDbgMsg("Drawing of empty CGImage requested");
     }
@@ -434,16 +419,16 @@ XDrawLines(
 	    }
 	}
 
-        /*
-         * In the case of closed polylines, the first and last points are the
-         * same. We want miter or bevel join be rendered also at this point,
-         * this needs telling CoreGraphics that the path is closed.
-         */
+	/*
+	 * In the case of closed polylines, the first and last points are the
+	 * same. We want miter or bevel join be rendered also at this point,
+	 * this needs telling CoreGraphics that the path is closed.
+	 */
 
-        if ((points[0].x == points[npoints-1].x) &&
-                (points[0].y == points[npoints-1].y)) {
-            CGContextClosePath(dc.context);
-        }
+	if ((points[0].x == points[npoints-1].x) &&
+		(points[0].y == points[npoints-1].y)) {
+	    CGContextClosePath(dc.context);
+	}
 	CGContextStrokePath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
@@ -1093,6 +1078,23 @@ XFillArcs(
  * Results:
  *	Returns 0 if the scroll generated no additional damage. Otherwise, sets
  *	the region that needs to be repainted after scrolling and returns 1.
+ *      When drawRect was in use, this function used the now deprecated
+ *      scrollRect method of NSView.  With the current updateLayer
+ *      implementation, using a CGImage as the view's backing layer, we are
+ *      able to use XCopyArea.  But both implementations are incomplete.
+ *      They return a damage area which is just the source rectangle minus
+ *      destination rectangle.  Other platforms, e.g. Windows, where
+ *      this function is essentially provided by the windowing system,
+ *      are able to add to the damage region the bounding rectangles of
+ *      all subwindows which meet the source rectangle, even if they are
+ *      contained in the destination rectangle.  The information needed
+ *      to do that is not available in this module, as far as I know.
+ *
+ *      In fact, the Text widget is the only one which calls this
+ *      function, and  textDisp.c compensates for this defect by using
+ *      macOS-specific code.  This is possible because access to the
+ *      list of all embedded windows in a Text widget is available in
+ *      that module.
  *
  * Side effects:
  *	Scrolls the bits in the window.
@@ -1103,36 +1105,21 @@ XFillArcs(
 int
 TkScrollWindow(
     Tk_Window tkwin,		/* The window to be scrolled. */
-    TCL_UNUSED(GC),			/* GC for window to be scrolled. */
+    GC gc,			/* GC for window to be scrolled. */
     int x, int y,		/* Position rectangle to be scrolled. */
     int width, int height,
     int dx, int dy,		/* Distance rectangle should be moved. */
     Region damageRgn)		/* Region to accumulate damage in. */
 {
     Drawable drawable = Tk_WindowId(tkwin);
-    MacDrawable *macDraw = (MacDrawable *)drawable;
-    TKContentView *view = (TKContentView *)TkMacOSXGetNSViewForDrawable(macDraw);
     HIShapeRef srcRgn, dstRgn;
     HIMutableShapeRef dmgRgn = HIShapeCreateMutable();
-    NSRect bounds, viewSrcRect, srcRect, dstRect;
+    NSRect srcRect, dstRect;
     int result = 0;
 
-    if (view) {
-
-  	/*
-	 * Get the scroll area in NSView coordinates (origin at bottom left).
-	 */
-
-  	bounds = [view bounds];
- 	viewSrcRect = NSMakeRect(macDraw->xOff + x,
-		bounds.size.height - height - (macDraw->yOff + y),
-		width, height);
-
-	/*
-	 * Scroll the rectangle.
-	 */
-
-	[view scrollRect:viewSrcRect by:NSMakeSize(dx, -dy)];
+    // Should behave more like TkScrollWindow on other platforms
+    if (XCopyArea(Tk_Display(tkwin), drawable, drawable, gc, x, y,
+	    (unsigned)width, (unsigned)height, x+dx, y+dy) == Success) {
 
 	/*
 	 * Compute the damage region, using Tk coordinates (origin at top left).
@@ -1237,14 +1224,19 @@ TkMacOSXSetupDrawingContext(
      * Intersect the drawable's clipping region with the region stored in the
      * X GC.  If the resulting region is empty, don't do any drawing.
      */
-
+//#if 0 // disable clipping (almost works, but windows can open up blank)
     dc.clipRgn = TkMacOSXGetClipRgn(d);
     ClipToGC(d, gc, &dc.clipRgn);
     if (dc.clipRgn && HIShapeIsEmpty(dc.clipRgn)) {
+	/*
+	 * Things are probably not set up for drawing yet.  Request a call to
+	 * updateLayer and return failure.
+	 */
 	canDraw = false;
+	[view setNeedsDisplay:YES];
 	goto end;
     }
-
+//#endif //disable clipping
     /*
      * If the drawable already has a CGContext, use it.  Otherwise, we must be
      * drawing to a window and we use the current context of its ContentView.
@@ -1252,53 +1244,67 @@ TkMacOSXSetupDrawingContext(
 
     dc.context = TkMacOSXGetCGContextForDrawable(d);
     if (!dc.context) {
-	NSRect drawingBounds, currentBounds;
 	dc.view = view;
-	dc.context = GET_CGCONTEXT;
+	dc.context = view.tkLayerBitmapContext;
 	if (dc.clipRgn) {
 	    CGRect clipBounds;
 	    CGAffineTransform t = { .a = 1, .b = 0, .c = 0, .d = -1, .tx = 0,
 				    .ty = [view bounds].size.height};
 	    HIShapeGetBounds(dc.clipRgn, &clipBounds);
 	    clipBounds = CGRectApplyAffineTransform(clipBounds, t);
-	    drawingBounds = NSRectFromCGRect(clipBounds);
+	}
+
+	/*
+	 * Mark the view as needing to be redisplayed, since we are drawing
+	 * to its backing layer.
+	 */
+
+	[view setTkNeedsDisplay:YES];
+
+	/*
+	 * Workaround for an Apple bug.
+	 *
+	 * Without the block below, ttk frames, labelframes and labels do not
+	 * get the correct background color on macOS 12.5 after the appearance
+	 * changes.  This function is only called when drawing, so we know that
+	 * our view is the focus view. Even though the effective appearance of
+	 * the view has been changed, the currentAppearance, i.e. the
+	 * appearance that will be used for drawing, may not have been changed
+	 * to match.
+	 *
+	 * Prior to macOS 12.0 the currentAppearance property of NSAppearance
+	 * was settable.  In macOS 12.0 currentAppearance was deprecated and
+	 * replaced by the read-only property currentDrawingAppearance.  The
+	 * ttk color issues are fixed by setting the currentAppearance to
+	 * the effectiveAppearance of the view.  So we are forced to use this
+	 * deprecated function until Apple fixes this.
+	 *
+	 * It is a mystery why this only affects the ttk widgets.  A possible
+	 * clue is that when drawing a ttk widget this function is called with
+	 * a NULL gc, whereas the gc is non-null when it is called for drawing
+	 * a Tk widget.  This means that the CGContext setup below is not done
+	 * for ttk widgets.  Perhaps that setup triggers an update of the
+	 * currentAppearance property, but that has not been verified.
+	 */
+
+	if (@available(macOS 12.0, *)) {
+	    NSAppearance *current = NSAppearance.currentDrawingAppearance;
+	    NSAppearance *effective = view.effectiveAppearance;
+	    if( current != effective) {
+		// printf("Appearances are out of sync!\n");
+		// Deprecations be damned!
+		NSAppearance.currentAppearance = effective;
+	    }
 	} else {
-	    drawingBounds = [view bounds];
-	}
+	    /*
+	     *It is not clear if this is a problem before macos 12.0, but
+	     * we might as well do the update anyway.
+	     */
 
-	/*
-	 * We can only draw into the NSView which is the current focusView.
-	 * When the current [NSView focusView] is nil, the CGContext for
-	 * [NSGraphicsContext currentContext] is nil.  Otherwise the current
-	 * CGContext draws into the current focusView.  An NSView is guaranteed
-	 * to be the focusView when its drawRect or setFrame methods are
-	 * running.  Prior to OSX 10.14 it was also possible to call the
-	 * lockFocus method to force an NSView to become the current focusView.
-	 * But that method was deprecated in 10.14 and so is no longer used by
-	 * Tk.  Instead, if the view is not the current focusView then we add
-	 * the drawing bounds to its dirty rectangle and return false.  The
-	 * part of the view inside the drawing bounds will get redrawn during
-	 * the next call to its drawRect method.
-	 */
-
-	if (view != [NSView focusView]) {
-	    [view addTkDirtyRect:drawingBounds];
-	    canDraw = false;
-	    goto end;
-	}
-
-	/*
-	 * Drawing will also fail when the view is the current focusView but
-	 * the clipping rectangle set by drawRect does not contain the clipping
-	 * region of our drawing context.  (See bug [2a61eca3a8].)  If part of
-	 * the drawing bounds will be clipped then we draw whatever we can, but
-	 * we also add the drawing bounds to the view's dirty rectangle so it
-	 * will get redrawn in the next call to its drawRect method.
-	 */
-
-	currentBounds = NSRectFromCGRect(CGContextGetClipBoundingBox(dc.context));
-	if (!NSContainsRect(currentBounds, drawingBounds)) {
-	    [view addTkDirtyRect:drawingBounds];
+#if MAC_OS_X_VERSION_MIN_REQUIRED < 120000
+/* currentAppearance is not deprecated. */
+	    NSAppearance.currentAppearance = view.effectiveAppearance;
+#endif
 	}
     }
 
@@ -1324,6 +1330,7 @@ TkMacOSXSetupDrawingContext(
 	};
 	CGContextConcatCTM(dc.context, t);
     }
+//#if 0    // disable clipping
     if (dc.clipRgn) {
 
 #ifdef TK_MAC_DEBUG_DRAWING
@@ -1369,6 +1376,8 @@ TkMacOSXSetupDrawingContext(
 	    CGContextClipToRect(dc.context, r);
 	}
     }
+//#endif //disable clipping
+
     if (gc) {
 	static const CGLineCap cgCap[] = {
 	    [CapNotLast] = kCGLineCapButt,
@@ -1438,6 +1447,8 @@ end:
 	dc.clipRgn = NULL;
     }
     *dcPtr = dc;
+    // The goal is to allow immediate drawing; canDraw == 0 should happen far less often.
+    if (0) fprintf(stderr, "tkmacosxsdc canDraw %d\n", canDraw);
     return canDraw;
 }
 
@@ -1524,10 +1535,13 @@ TkMacOSXGetClipRgn(
     }
 
     if (macDraw->drawRgn) {
+	// The drawRgn is the visRgn intersected with a rectangle which
+	// may be smaller than the widget bounds.
 	clipRgn = HIShapeCreateCopy(macDraw->drawRgn);
     } else if (macDraw->visRgn) {
 	clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
+    // A NULL clipRgn does not allow any drawing at all.
     return clipRgn;
 }
 
@@ -1537,7 +1551,9 @@ TkMacOSXGetClipRgn(
  * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
- *	or height are negative, reset to no clipping.
+ *	or height are negative, reset to no clipping.bThis is called by the
+ *      Text widget to display each DLine, and by the Canvas widget when it
+ *      is updating a sub rectangle in the canvas.
  *
  * Results:
  *	None.
@@ -1566,7 +1582,10 @@ Tk_ClipDrawableToRect(
 		width, height);
 	HIShapeRef drawRgn = HIShapeCreateWithRect(&clipRect);
 
-	if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
+	// When drawing a Text widget we can reuse the
+	// clipping region for different DLines, so we don't want to
+	// update unless necessary.
+	if (macDraw->winPtr && (macDraw->flags & TK_CLIP_INVALID)) {
 	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
 	}
 	if (macDraw->visRgn) {

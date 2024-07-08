@@ -54,6 +54,7 @@ proc cleanup {} {
     }
     catch {unset foo}
     destroy .foo
+    update
 }
 
 # ----------------------------------------------------------------------
@@ -76,6 +77,7 @@ test xmfbox-1.2 {tk::MotifFDialog_Create, -parent switch} -constraints {
 } -body {
     toplevel .bar
     wm geometry .bar +0+0
+    update
     set x [tk::MotifFDialog_Create foo open {-parent .bar}]
 } -cleanup {
     destroy $x
@@ -89,6 +91,7 @@ test xmfbox-2.1 {tk::MotifFDialog_InterpFilter, ~ in dir names} -constraints {
     cleanup
     file mkdir ./~nosuchuser1
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
     file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
@@ -100,6 +103,7 @@ test xmfbox-2.2 {tk::MotifFDialog_InterpFilter, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
     file normalize [file join {*}[tk::MotifFDialog_InterpFilter $x]]
@@ -111,6 +115,7 @@ test xmfbox-2.3 {tk::MotifFDialog_Update, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     $::tk::dialog::file::foo(fEnt) delete 0 end
     $::tk::dialog::file::foo(fEnt) insert 0 [pwd]/~nosuchuser1
     tk::MotifFDialog_InterpFilter $x
@@ -124,6 +129,7 @@ test xmfbox-2.4 {tk::MotifFDialog_LoadFile, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     expr {$i >= 0}
 } -result 1
@@ -134,6 +140,7 @@ test xmfbox-2.5 {tk::MotifFDialog_BrowseFList, ~ in file names} -constraints {
     cleanup
     close [open ./~nosuchuser1 {CREAT TRUNC WRONLY}]
     set x [tk::MotifFDialog_Create foo open {}]
+    update
     set i [lsearch [$::tk::dialog::file::foo(fList) get 0 end] ~nosuchuser1]
     $::tk::dialog::file::foo(fList) selection clear 0 end
     $::tk::dialog::file::foo(fList) selection set $i
