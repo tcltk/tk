@@ -477,9 +477,9 @@ https://developer.apple.com/library/mac/documentation/Cocoa/\
 Reference/ApplicationKit/Classes/NSApplication_Class)
 
     void NSApplicationMain(int argc, char *argv[]) {
-        [NSApplication sharedApplication];
-        [NSBundle loadNibNamed:@"myMain" owner:NSApp];
-        [NSApp run];
+	[NSApplication sharedApplication];
+	[NSBundle loadNibNamed:@"myMain" owner:NSApp];
+	[NSApp run];
     }
 Here NSApp is a standard global variable, initialized by the OS, which
 points to an object in a subclass of NSApplication (called

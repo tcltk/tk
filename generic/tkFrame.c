@@ -1478,6 +1478,8 @@ DisplayFrame(
 	Tk_Depth(tkwin));
 #else
     pixmap = Tk_WindowId(tkwin);
+    Tk_ClipDrawableToRect(Tk_Display(tkwin), pixmap, 0, 0,
+			  Tk_Width(tkwin), Tk_Height(tkwin));
 #endif /* TK_NO_DOUBLE_BUFFERING */
 
     if (framePtr->type != TYPE_LABELFRAME) {
