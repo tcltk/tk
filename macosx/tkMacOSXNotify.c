@@ -310,12 +310,12 @@ TkMacOSXNotifyExitHandler(
  *       This static function is meant to be run as an idle task.  It attempts
  *       to redraw all views which have the tkNeedsDisplay property set to YES.
  *       This relies on a feature of [NSApp nextEventMatchingMask: ...] which
- *       is undocumented, namely that it sometimes blocks and calls drawRect
+ *       is undocumented, namely that it sometimes blocks and calls updateLayer
  *       for all views that need display before it returns.  We call it with
  *       deQueue=NO so that it will not change anything on the AppKit event
  *       queue, because we only want the side effect that it runs drawRect. The
  *       only times when any NSViews have the needsDisplay property set to YES
- *       are during execution of this function or in the addTkDirtyRect method
+ *       are during execution of this function or in the setFrameSize method
  *       of TKContentView.
  *
  *       The reason for running this function as an idle task is to try to
@@ -342,7 +342,7 @@ void
 TkMacOSXDrawAllViews(
     void *clientData)
 {
-       int count = 0, *dirtyCount = (int *)clientData;
+    int count = 0, *dirtyCount = (int *)clientData;
 
     for (NSWindow *window in [NSApp windows]) {
 	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
@@ -352,7 +352,6 @@ TkMacOSXDrawAllViews(
 		if (dirtyCount) {
 		   continue;
 		}
-		[[view layer] setNeedsDisplayInRect:[view tkDirtyRect]];
 		[view setNeedsDisplay:YES];
 	    }
 	} else {
@@ -362,26 +361,15 @@ TkMacOSXDrawAllViews(
     if (dirtyCount) {
     	*dirtyCount = count;
     }
+
+    /*
+     * Trigger calls to updateLayer methods for the views flagged above.
+     */
+
     [NSApp nextEventMatchingMask:NSAnyEventMask
 		       untilDate:[NSDate distantPast]
 			  inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			 dequeue:NO];
-    for (NSWindow *window in [NSApp windows]) {
-	if ([[window contentView] isMemberOfClass:[TKContentView class]]) {
-	    TKContentView *view = [window contentView];
-
-	    /*
-	     * If we did not run drawRect, we set needsDisplay back to NO.
-	     * Note that if drawRect did run it may have added to Tk's dirty
-	     * rect, due to attempts to draw outside of drawRect's dirty rect.
-	     */
-
-	    if ([view needsDisplay]) {
-		[view setNeedsDisplay: NO];
-	    }
-	}
-    }
-    [NSApp setNeedsToDraw:NO];
 }
 
 /*
@@ -448,11 +436,11 @@ TkMacOSXEventsSetupProc(
   	 */
 
 	NSEvent *currentEvent =
-	        [NSApp nextEventMatchingMask:NSAnyEventMask
+		[NSApp nextEventMatchingMask:NSAnyEventMask
 			untilDate:[NSDate distantPast]
 			inMode:GetRunLoopMode(TkMacOSXGetModalSession())
 			dequeue:NO];
-	if ((currentEvent) || [NSApp needsToDraw] ) {
+	if ((currentEvent)) {
 	    Tcl_SetMaxBlockTime(&zeroBlockTime);
 	    Tcl_DeleteTimerHandler(ticker);
 	    ticker = NULL;

@@ -24,7 +24,7 @@
 #include "tkMacOSXInt.h"
 #endif
 
-#define OK_TO_LOG (!TkpWillDrawWidget(textPtr->tkwin))
+#define OK_TO_LOG 1
 
 /*
  * "Calculations of line pixel heights and the size of the vertical
