@@ -613,7 +613,7 @@ ImgPhotoCmd(
 	srcHandle = Tk_FindPhoto(interp, Tcl_GetString(options.name));
 	if (srcHandle == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "image \"%s\" doesn't exist or is not a photo image",
+		    "image \"%s\" does not exist or is not a photo image",
 		    Tcl_GetString(options.name)));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO",
 		    Tcl_GetString(options.name), (char *)NULL);
@@ -1034,7 +1034,7 @@ ImgPhotoCmd(
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't get image from a file in a safe interpreter", TCL_INDEX_NONE));
+		    "cannot get image from a file in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PHOTO_FILE", (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -1361,7 +1361,7 @@ readCleanup:
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't write image to a file in a safe interpreter", TCL_INDEX_NONE));
+		    "cannot write image to a file in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PHOTO_FILE", (char *)NULL);
 	    return TCL_ERROR;
 	}
@@ -2069,7 +2069,7 @@ ImgPhotoConfigureModel(
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_ResetResult(interp);
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't get image from a file in a safe interpreter",
+		    "cannot get image from a file in a safe interpreter",
 		    -1));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PHOTO_FILE", (char *)NULL);
 	    goto errorExit;

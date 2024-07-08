@@ -217,6 +217,12 @@ bind Text <Return> {
 	%W edit separator
     }
 }
+bind Text <KP_Enter> {
+    tk::TextInsert %W \n
+    if {[%W cget -autoseparators]} {
+	%W edit separator
+    }
+}
 bind Text <Delete> {
     if {[tk::TextCursorInSelection %W]} {
 	%W delete sel.first sel.last
@@ -307,7 +313,6 @@ bind Text <Alt-Key> {# nothing }
 bind Text <Meta-Key> {# nothing}
 bind Text <Control-Key> {# nothing}
 bind Text <Escape> {# nothing}
-bind Text <KP_Enter> {# nothing}
 bind Text <Command-Key> {# nothing}
 bind Text <Fn-Key> {# nothing}
 

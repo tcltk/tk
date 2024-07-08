@@ -376,7 +376,7 @@ ConfigureWinItem(
 
   badWindow:
     Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	    "can't use %s in a window item of this canvas",
+	    "cannot use %s in a window item of this canvas",
 	    Tk_PathName(winItemPtr->tkwin)));
     Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "HIERARCHY", (char *)NULL);
     winItemPtr->tkwin = NULL;

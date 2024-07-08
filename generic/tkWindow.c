@@ -1115,12 +1115,12 @@ Tk_CreateWindow(
     if (parentPtr) {
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
+		    "cannot create window: parent has been destroyed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: its parent has -container = yes",
+		    "cannot create window: its parent has -container = yes",
 		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	    return NULL;
@@ -1179,12 +1179,12 @@ Tk_CreateAnonymousWindow(
     if (parentPtr) {
 	if (parentPtr->flags & TK_ALREADY_DEAD) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: parent has been destroyed", TCL_INDEX_NONE));
+		    "cannot create window: parent has been destroyed", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	    return NULL;
 	} else if (parentPtr->flags & TK_CONTAINER) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't create window: its parent has -container = yes",
+		    "cannot create window: its parent has -container = yes",
 		    TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	    return NULL;
@@ -1294,12 +1294,12 @@ Tk_CreateWindowFromPath(
     }
     if (((TkWindow *) parent)->flags & TK_ALREADY_DEAD) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't create window: parent has been destroyed", TCL_INDEX_NONE));
+		"cannot create window: parent has been destroyed", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CREATE", "DEAD_PARENT", (char *)NULL);
 	return NULL;
     } else if (((TkWindow *) parent)->flags & TK_CONTAINER) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		"can't create window: its parent has -container = yes", TCL_INDEX_NONE));
+		"cannot create window: its parent has -container = yes", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "CREATE", "CONTAINER", (char *)NULL);
 	return NULL;
     }

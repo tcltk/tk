@@ -241,7 +241,7 @@ test entry-1.20 {configuration option: "font" for entry} -setup {
     .e configure -font {}
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes {error} -result {font "" does not exist}
 
 test entry-1.21 {configuration option: "foreground" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1173,7 +1173,7 @@ test entry-3.50 {EntryWidgetCmd procedure, "select clear" widget command} -setup
     selection get
 } -cleanup {
     destroy .e
-} -returnCodes error -result {PRIMARY selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {PRIMARY selection does not exist or form "STRING" not defined}
 test entry-3.50.1 {EntryWidgetCmd procedure, "select clear" widget command} -setup {
     entry .e
     pack .e ; update idletasks
@@ -1585,7 +1585,7 @@ test entry-3.82 {EntryWidgetCmd procedure} -setup {
     destroy .e
 } -returnCodes error -result {bad option "gorp": must be bbox, cget, configure, delete, get, icursor, index, insert, scan, selection, validate, or xview}
 
-# The test below doesn't actually check anything directly, but if run
+# The test below does not actually check anything directly, but if run
 # with Purify or some other memory-allocation-checking program it will
 # ensure that resources get properly freed.
 
@@ -1670,7 +1670,7 @@ test entry-5.6 {ConfigureEntry procedure} -setup {
     selection get
 } -cleanup {
     destroy .e
-} -returnCodes error -result {PRIMARY selection doesn't exist or form "STRING" not defined}
+} -returnCodes error -result {PRIMARY selection does not exist or form "STRING" not defined}
 test entry-5.6.1 {ConfigureEntry procedure} -setup {
     entry .e
     pack .e ; update idletasks
@@ -3534,7 +3534,7 @@ test entry-22.1 {lost namespaced textvar} -body {
     set ::test::foo
 } -cleanup {
     destroy .e
-} -returnCodes error -result {can't read "::test::foo": no such variable}
+} -match glob -returnCodes error -result {can*t read "::test::foo": no such variable}
 test entry-22.2 {lost namespaced textvar} -body {
     namespace eval test { variable foo {a b} }
     entry .e -textvariable ::test::foo
@@ -3545,10 +3545,10 @@ test entry-22.2 {lost namespaced textvar} -body {
     list [.e get] [.e cget -textvar] $result1 $result2 $result3
 } -cleanup {
     destroy .e
-} -result [list "a bmo" ::test::foo \
-	{can't set "::test::foo": parent namespace doesn't exist} \
-	{can't set "::test::foo": parent namespace doesn't exist} \
-	{can't read "::test::foo": no such variable}]
+} -match glob -result [list "a bmo" ::test::foo \
+	{can*t set "::test::foo": parent namespace does*t exist} \
+	{can*t set "::test::foo": parent namespace does*t exist} \
+	{can*t read "::test::foo": no such variable}]
 
 test entry-23.1 {error in trace proc attached to the textvariable} -setup {
     destroy .e
@@ -3561,8 +3561,8 @@ test entry-23.1 {error in trace proc attached to the textvariable} -setup {
     list $result1 $result2
 } -cleanup {
     destroy .e
-} -result [list {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!}]
+} -match glob -result [list {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!}]
 
 test entry-24.1 {textvariable lives in a non-existing namespace} -setup {
     destroy .e
@@ -3571,7 +3571,7 @@ test entry-24.1 {textvariable lives in a non-existing namespace} -setup {
     set result1
 } -cleanup {
   destroy .e
-} -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+} -match glob -result {can*t trace "thisnsdoesntexist::myvar": parent namespace does*t exist}
 
 test entry-25.1 {Bug [5d991b822e]} {
     # Want this not to segfault, or write to variable with empty name

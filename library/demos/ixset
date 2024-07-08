@@ -196,6 +196,7 @@ proc createwindows {} {
 	    -side left -expand yes -pady 3p
 
     bind . <Return> {.buttons.ok   flash; .buttons.ok   invoke}
+    bind . <KP_Enter> {.buttons.ok   flash; .buttons.ok   invoke}
     bind . <Escape> {.buttons.quit flash; .buttons.quit invoke}
     bind . <Button-1> {
 	if {![string match .buttons* %W]} {

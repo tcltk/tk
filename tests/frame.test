@@ -92,7 +92,7 @@ test frame-1.2 {frame configuration options} -setup {
     .f configure -class Different
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -class option after widget is created}
+} -result {cannot modify -class option after widget is created}
 test frame-1.3 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -108,7 +108,7 @@ test frame-1.4 {frame configuration options} -setup {
     .f configure -colormap .
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -colormap option after widget is created}
+} -result {cannot modify -colormap option after widget is created}
 test frame-1.5 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -124,7 +124,7 @@ test frame-1.6 {frame configuration options} -setup {
     .f configure -visual best
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -visual option after widget is created}
+} -result {cannot modify -visual option after widget is created}
 test frame-1.7 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -161,7 +161,7 @@ test frame-1.11 {frame configuration options} -setup {
     .f configure -container 1
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -container option after widget is created}
+} -result {cannot modify -container option after widget is created}
 test frame-1.12 {frame configuration options} -setup {
     deleteWindows
 } -body {
@@ -323,7 +323,7 @@ test frame-2.2 {toplevel configuration options} -setup {
     .t configure -class Another
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -class option after widget is created}
+} -result {cannot modify -class option after widget is created}
 test frame-2.3 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
@@ -341,7 +341,7 @@ test frame-2.4 {toplevel configuration options} -setup {
     .t configure -colormap .
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -colormap option after widget is created}
+} -result {cannot modify -colormap option after widget is created}
 test frame-2.5 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
@@ -350,7 +350,7 @@ test frame-2.5 {toplevel configuration options} -setup {
     .t configure -container 1
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -container option after widget is created}
+} -result {cannot modify -container option after widget is created}
 test frame-2.6 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
@@ -376,7 +376,7 @@ test frame-2.8 {toplevel configuration options} -constraints win -setup {
     .t configure -use 0x44022
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {window "0x44022" doesn't exist}
+} -returnCodes error -result {window "0x44022" does not exist}
 test frame-2.9 {toplevel configuration options} -constraints win -setup {
     deleteWindows
 } -body {
@@ -395,7 +395,7 @@ test frame-2.10 {toplevel configuration options} -constraints nonwin -setup {
     .t configure -use 0x44022
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't modify -use option after widget is created}
+} -returnCodes error -result {cannot modify -use option after widget is created}
 test frame-2.11 {toplevel configuration options} -constraints nonwin -setup {
     deleteWindows
 } -body {
@@ -423,7 +423,7 @@ test frame-2.13 {toplevel configuration options} -setup {
     .t configure -visual best
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -visual option after widget is created}
+} -result {cannot modify -visual option after widget is created}
 test frame-2.14 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
@@ -452,7 +452,7 @@ test frame-2.16 {toplevel configuration options} -constraints {x11 haveDISPLAY} 
     .t configure -screen another
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -screen option after widget is created}
+} -result {cannot modify -screen option after widget is created}
 test frame-2.17 {toplevel configuration options} -setup {
     deleteWindows
 } -body {
@@ -1162,7 +1162,7 @@ test frame-13.2 {labelframe configuration options} -setup {
     .f configure -class Different
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -class option after widget is created}
+} -result {cannot modify -class option after widget is created}
 test frame-13.3 {labelframe configuration options} -setup {
     deleteWindows
 } -body {
@@ -1213,7 +1213,7 @@ test frame-13.9 {labelframe configuration options} -setup {
     .f configure -container 1
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {can't modify -container option after widget is created}
+} -result {cannot modify -container option after widget is created}
 destroy .f
 labelframe .f
 test frame-13.10 {labelframe configuration options} -body {
@@ -1509,7 +1509,7 @@ test frame-15.2 {TIP 262: frame background images} -setup {
     .f configure -backgroundimage gorp
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {image "gorp" doesn't exist}
+} -result {image "gorp" does not exist}
 test frame-15.3 {TIP 262: frame background images} -setup {
     deleteWindows
     image create photo gorp -width 10 -height 10
@@ -1670,7 +1670,7 @@ test frame-15.8 {TIP 262: toplevel background images} -setup {
 } -body {
     toplevel .t -width 100 -height 100
     update
-    # Used to verify that setting a background image doesn't change the widget size
+    # Used to verify that setting a background image does not change the widget size
     set w [winfo width .t]
     set h [winfo height .t]
     list [image inuse gorp] [.t configure -backgroundimage gorp;update] \
@@ -1689,7 +1689,7 @@ test frame-15.9 {TIP 262: toplevel background images} -setup {
     .t configure -backgroundimage gorp
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {image "gorp" doesn't exist}
+} -result {image "gorp" does not exist}
 test frame-15.10 {TIP 262: toplevel background images} -setup {
     deleteWindows
     image create photo gorp -width 10 -height 10

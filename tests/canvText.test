@@ -42,7 +42,7 @@ test canvText-1.6 {configuration options: good value for "font"} -body {
 } -result {{Times 40} {Times 40}}
 test canvasText-1.7 {configuration options: bad value for "font"} -body {
     .c itemconfigure test -font {}
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test canvText-1.8 {configuration options: good value for "justify"} -body {
     .c itemconfigure test -justify left
     list [lindex [.c itemconfigure test -justify] 4] [.c itemcget test -justify]

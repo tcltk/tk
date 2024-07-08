@@ -337,7 +337,7 @@ TkCanvPostscriptObjCmd(
 
 	if (psInfo.channelName != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't specify both -file and -channel", TCL_INDEX_NONE));
+		    "cannot specify both -file and -channel", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "USAGE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
@@ -350,7 +350,7 @@ TkCanvPostscriptObjCmd(
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't specify -file in a safe interpreter", TCL_INDEX_NONE));
+		    "cannot specify -file in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "PS_FILE", (char *)NULL);
 	    result = TCL_ERROR;
 	    goto cleanup;
@@ -1361,7 +1361,7 @@ TkPostscriptImage(
     if (bytesPerLine > 60000) {
 	Tcl_ResetResult(interp);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't generate Postscript for images more than %d pixels wide",
+		"cannot generate Postscript for images more than %d pixels wide",
 		maxWidth));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	ckfree(cdata.colors);
@@ -1547,7 +1547,7 @@ Tk_PostscriptPhoto(
     if (bytesPerLine > 60000) {
 	Tcl_ResetResult(interp);
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"can't generate Postscript for images more than %d pixels wide",
+		"cannot generate Postscript for images more than %d pixels wide",
 		maxWidth));
 	Tcl_SetErrorCode(interp, "TK", "CANVAS", "PS", "MEMLIMIT", (char *)NULL);
 	return TCL_ERROR;

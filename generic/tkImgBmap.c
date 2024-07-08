@@ -269,7 +269,7 @@ ImgBmapConfigureModel(
 	    || (modelPtr->maskDataString != NULL)) {
 	if (modelPtr->data == NULL) {
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "can't have mask without bitmap", TCL_INDEX_NONE));
+		    "cannot have mask without bitmap", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "NO_BITMAP", NULL);
 	    return TCL_ERROR;
@@ -486,7 +486,7 @@ TkGetBitmapData(
     if (string == NULL) {
 	if ((interp != NULL) && Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't get bitmap data from a file in a safe interpreter",
+		    "cannot get bitmap data from a file in a safe interpreter",
 		    -1));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "BITMAP_FILE", NULL);
 	    return NULL;

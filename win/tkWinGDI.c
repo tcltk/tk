@@ -455,7 +455,7 @@ static int GdiPhoto(
     photo_handle = Tk_FindPhoto(interp, photoname);
     if (photo_handle == 0) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"::tk::print::_gdi photo: Photo name %s can't be located\n%s",
+		"::tk::print::_gdi photo: Photo name %s cannot be located\n%s",
 		photoname, usage_message));
 	return TCL_ERROR;
     }
