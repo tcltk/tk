@@ -1352,7 +1352,8 @@ static const char *const accentNames[] = {
 	    (long)(self.tkLayerBitmapContext ?
 	    CFGetRetainCount(self.tkLayerBitmapContext) : LONG_MIN));
 #endif
-    CGContextRelease(self.tkLayerBitmapContext); // will also need this in a destructor somewhere
+    // The context is also released in TkWmDeadWindow.
+    CGContextRelease(self.tkLayerBitmapContext);
     self.tkLayerBitmapContext = newCtx;
 }
 
