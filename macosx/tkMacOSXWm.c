@@ -1323,8 +1323,9 @@ TkWmDeadWindow(
 	 * Avoid redrawing the view after it is released.
 	 */
 
-	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask,
-			   (void *) [deadNSWindow contentView]);
+	TKContentView *deadView = [deadNSWindow contentView];
+	Tcl_CancelIdleCall(TkMacOSXRedrawViewIdleTask,(void *) deadView);
+	CGContextRelease(deadView.tkLayerBitmapContext);
 	[deadNSWindow close];
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= 101400
 	NSUserDefaults *preferences = [NSUserDefaults standardUserDefaults];
