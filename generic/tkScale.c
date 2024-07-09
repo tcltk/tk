@@ -673,9 +673,6 @@ ConfigureScale(
 
 	Tk_SetBackgroundFromBorder(scalePtr->tkwin, scalePtr->bgBorder);
 
-	if (scalePtr->highlightWidth < 0) {
-	    scalePtr->highlightWidth = 0;
-	}
 	scalePtr->inset = scalePtr->highlightWidth + scalePtr->borderWidth;
 	break;
     }

@@ -373,9 +373,6 @@ TkpComputeScrollbarGeometry(
 
     int fieldLength;
 
-    if (scrollPtr->highlightWidth < 0) {
-	scrollPtr->highlightWidth = 0;
-    }
     scrollPtr->inset = scrollPtr->highlightWidth + scrollPtr->borderWidth;
     if ([NSApp macOSVersion] == 100600) {
 	scrollPtr->arrowLength = scrollPtr->width;

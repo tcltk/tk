@@ -1021,11 +1021,15 @@ DoObjConfig(
 	} else if (Tk_GetPixelsFromObj(nullOK ? NULL : interp, tkwin, valuePtr,
 		&newPixels) != TCL_OK) {
 	    if (nullOK) {
-	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "expected screen distance or \"\" but got \"%.50s\"", Tcl_GetString(valuePtr)));
+	    wrongPixel:
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+			"expected screen distance%s but got \"%.50s\"",
+			(nullOK ? " or \"\"": ""), Tcl_GetString(valuePtr)));
 		Tcl_SetErrorCode(interp, "TK", "VALUE", "PIXELS", (char *)NULL);
 	    }
 	    return TCL_ERROR;
+	} else if (!(optionPtr->specPtr->flags & TK_OPTION_NEG_OK) && (newPixels < 0)) {
+	    goto wrongPixel;
 	}
 	if (internalPtr != NULL) {
 	    *((int *)oldInternalPtr) = *((int *)internalPtr);

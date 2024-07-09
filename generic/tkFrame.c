@@ -993,16 +993,6 @@ ConfigureFrame(
 	Tk_SetWindowBackgroundPixmap(framePtr->tkwin, None);
     }
 
-    if (framePtr->highlightWidth < 0) {
-	framePtr->highlightWidth = 0;
-    }
-    if (framePtr->padX < 0) {
-	framePtr->padX = 0;
-    }
-    if (framePtr->padY < 0) {
-	framePtr->padY = 0;
-    }
-
     /*
      * If a -labelwidget is specified, check that it is valid and set up
      * geometry management for it.
