@@ -176,6 +176,11 @@ typedef struct {
 				 * scripts. Malloc'ed, but may be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
+    Tcl_Obj *borderWidthPtr;
+    Tcl_Obj *highlightWidthPtr;
+    Tcl_Obj *padXPtr;
+    Tcl_Obj *padYPtr;
+    Tcl_Obj *wrapLengthPtr;
 } TkMenuButton;
 
 /*
