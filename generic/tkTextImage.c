@@ -86,9 +86,9 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"center", TCL_INDEX_NONE, offsetof(TkTextEmbImage, align),
 	TK_OPTION_ENUM_VAR, alignStrings, 0},
     {TK_OPTION_PIXELS, "-padx", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padX), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padXPtr), offsetof(TkTextEmbImage, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", NULL, NULL,
-	"0", TCL_INDEX_NONE, offsetof(TkTextEmbImage, padY), 0, 0, 0},
+	"0", offsetof(TkTextEmbImage, padYPtr), offsetof(TkTextEmbImage, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-image", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextEmbImage, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -253,6 +253,7 @@ TkTextImageCmd(
 	eiPtr->body.ei.image = NULL;
 	eiPtr->body.ei.align = TK_ALIGN_CENTER;
 	eiPtr->body.ei.padX = eiPtr->body.ei.padY = 0;
+	eiPtr->body.ei.padXPtr = eiPtr->body.ei.padYPtr = NULL;
 	eiPtr->body.ei.chunkCount = 0;
 	eiPtr->body.ei.optionTable = Tk_CreateOptionTable(interp, optionSpecs);
 
