@@ -1084,6 +1084,8 @@ test wm-iconwindow-1.5 {usage} -setup {
 } -result {.icon is already an icon for .t2}
 
 test wm-iconwindow-2.1 {setting and reading values} -setup {
+    # without this macOS crashes for unknown reasons
+    wm iconwindow .t {}
     destroy .icon
     set result {}
 } -body {

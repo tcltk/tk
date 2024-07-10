@@ -64,8 +64,8 @@ static NSUInteger textInputModifiers;
     static NSMutableArray *nsEvArray = nil;
 
     if (nsEvArray == nil) {
-        nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
-        processingCompose = NO;
+	nsEvArray = [[NSMutableArray alloc] initWithCapacity: 1];
+	processingCompose = NO;
     }
     if (!winPtr) {
 	return theEvent;
@@ -80,7 +80,7 @@ static NSUInteger textInputModifiers;
     if ([theEvent type] ==  NSKeyDown &&
 	[theEvent isARepeat] &&
 	[NSEvent keyRepeatDelay] < 0) {
-            return theEvent;
+	    return theEvent;
 	}
 
     /*
@@ -311,7 +311,7 @@ static NSUInteger textInputModifiers;
     Bool sendingIMEText = NO;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
-        [aString string] : aString;
+	[aString string] : aString;
     len = [str length];
 
     if (NS_KEYLOG) {
@@ -426,7 +426,7 @@ static NSUInteger textInputModifiers;
     (void)selRange;
 
     str = ([aString isKindOfClass: [NSAttributedString class]]) ?
-        [aString string] : aString;
+	[aString string] : aString;
     if (focusWin) {
 
 	/*
@@ -636,12 +636,12 @@ setupXEvent(XEvent *xEvent, Tk_Window tkwin, NSUInteger modifiers)
     display = Tk_Display(tkwin);
     if (modifiers) {
 	state = (modifiers & NSAlphaShiftKeyMask ? LockMask    : 0) |
-	        (modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
-	        (modifiers & NSControlKeyMask    ? ControlMask : 0) |
-	        (modifiers & NSCommandKeyMask    ? Mod1Mask    : 0) |
-	        (modifiers & NSAlternateKeyMask  ? Mod2Mask    : 0) |
-	        (modifiers & NSNumericPadKeyMask ? Mod3Mask    : 0) |
-	        (modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
+		(modifiers & NSShiftKeyMask      ? ShiftMask   : 0) |
+		(modifiers & NSControlKeyMask    ? ControlMask : 0) |
+		(modifiers & NSCommandKeyMask    ? Mod1Mask    : 0) |
+		(modifiers & NSAlternateKeyMask  ? Mod2Mask    : 0) |
+		(modifiers & NSNumericPadKeyMask ? Mod3Mask    : 0) |
+		(modifiers & NSFunctionKeyMask   ? Mod4Mask    : 0) ;
     }
     memset(xEvent, 0, sizeof(XEvent));
     xEvent->xany.serial = LastKnownRequestProcessed(display);

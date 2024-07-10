@@ -960,8 +960,6 @@ TkpPostMenu(
 	}
 	realWin = Tk_Parent(realWin);
     }
-    NSWindow *win = [realWinView window];
-    NSView *view = [win contentView];
     NSMenu *menu = (NSMenu *) menuPtr->platformData;
     NSInteger itemIndex = index;
     NSInteger numItems = [menu numberOfItems];
@@ -971,8 +969,8 @@ TkpPostMenu(
     inPostMenu = true;
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
-        inPostMenu = false;
-        return result;
+	inPostMenu = false;
+	return result;
     }
     if (itemIndex >= numItems) {
     	itemIndex = numItems - 1;
@@ -991,8 +989,9 @@ TkpPostMenu(
     }
 
     [menu popUpMenuPositioningItem:item
-			atLocation:[win tkConvertPointFromScreen:location]
-			    inView:view];
+			atLocation:location
+			    inView:nil
+			appearance:realWinView.effectiveAppearance];
     inPostMenu = false;
     return TCL_OK;
 }
