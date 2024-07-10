@@ -42,7 +42,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BORDER, "-lmargincolor", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, lMarginColor), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-offset", NULL, NULL,
-	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK, 0, 0},
+	NULL, offsetof(TkTextTag, offsetObj), offsetof(TkTextTag, offset), TK_OPTION_NULL_OK|TK_OPTION_NEG_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-overstrike", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, overstrike),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -363,22 +363,12 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidth < 0) {
-		tagPtr->borderWidth = 0;
-	    }
-	    if (tagPtr->spacing1 != INT_MIN) {
-		if (tagPtr->spacing1 < 0) {
-		    tagPtr->spacing1 = 0;
-		}
-	    }
-	    if (tagPtr->spacing2 != INT_MIN) {
-		if (tagPtr->spacing2 < 0) {
-		    tagPtr->spacing2 = 0;
-		}
-	    }
-	    if (tagPtr->spacing3 != INT_MIN) {
-		if (tagPtr->spacing3 < 0) {
-		    tagPtr->spacing3 = 0;
+	    if (tagPtr->borderWidthPtr) {
+		if (tagPtr->borderWidth < 0) {
+		    tagPtr->borderWidth = 0;
+		    Tcl_DecrRefCount(tagPtr->borderWidthPtr);
+		    tagPtr->borderWidthPtr = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->borderWidthPtr);
 		}
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {

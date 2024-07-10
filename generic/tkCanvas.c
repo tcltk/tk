@@ -2273,9 +2273,6 @@ ConfigureCanvas(
 
     Tk_SetBackgroundFromBorder(canvasPtr->tkwin, canvasPtr->bgBorder);
 
-    if (canvasPtr->highlightWidth < 0) {
-	canvasPtr->highlightWidth = 0;
-    }
     canvasPtr->inset = canvasPtr->borderWidth + canvasPtr->highlightWidth;
 
     gcValues.function = GXcopy;

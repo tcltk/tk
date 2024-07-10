@@ -233,6 +233,7 @@ typedef struct Tk_OptionSpec {
 #else
 #    define TK_OPTION_NULL_OK		(1 << 0)
 #endif
+#define TK_OPTION_NEG_OK		(1 << 6) /* For TK_OPTION_PIXELS only, so no conflict with TK_OPTION_VAR */
 #define TK_OPTION_VAR(type)		((sizeof(type) < 2 * sizeof(int)) ? ((int)(sizeof(type)&(sizeof(int)-1))<<6) : (3<<6))
 #define TK_OPTION_ENUM_VAR		TK_OPTION_VAR(Tk_OptionType)
 
