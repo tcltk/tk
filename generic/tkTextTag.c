@@ -363,6 +363,14 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
+	    if (tagPtr->borderWidthPtr) {
+		if (tagPtr->borderWidth < 0) {
+		    tagPtr->borderWidth = 0;
+		    Tcl_DecrRefCount(tagPtr->borderWidthPtr);
+		    tagPtr->borderWidthPtr = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->borderWidthPtr);
+		}
+	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
 		ckfree(tagPtr->tabArrayPtr);
 		tagPtr->tabArrayPtr = NULL;
