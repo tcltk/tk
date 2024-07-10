@@ -35,7 +35,7 @@ enum {
 
     switch ((NSInteger)type) {
     case NSAppKitDefined:
-        subtype = [theEvent subtype];
+	subtype = [theEvent subtype];
 
 	switch (subtype) {
 	    /* Ignored at the moment. */
@@ -49,11 +49,11 @@ enum {
 	    break;
 	case NSWindowMovedEventType:
 	    break;
-        case NSWindowWillMoveEventType:
-            break;
+	case NSWindowWillMoveEventType:
+	    break;
 
-        default:
-            break;
+	default:
+	    break;
 	}
 	break; /* AppkitEvent. Return theEvent */
     case NSKeyUp:
@@ -80,7 +80,7 @@ enum {
 	break; /* Mouse event.  Return the processed event. */
 #if 0
     case NSSystemDefined:
-        subtype = [theEvent subtype];
+	subtype = [theEvent subtype];
 	break;
     case NSApplicationDefined: {
 	id win;
@@ -88,14 +88,14 @@ enum {
 	break;
 	}
     case NSCursorUpdate:
-        break;
+	break;
     case NSEventTypeGesture:
     case NSEventTypeMagnify:
     case NSEventTypeRotate:
     case NSEventTypeSwipe:
     case NSEventTypeBeginGesture:
     case NSEventTypeEndGesture:
-        break;
+	break;
 #endif
 
     default:

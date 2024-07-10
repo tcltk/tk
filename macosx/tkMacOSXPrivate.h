@@ -166,7 +166,7 @@ typedef union MacKeycode_t {
 
 #define ON_KEYPAD(virt) ((virt >= 0x41) && (virt <= 0x5C))
 #define IS_PRINTABLE(keychar) ((keychar >= 0x20) && (keychar != 0x7f) && \
-                               ((keychar < 0xF700) || keychar >= 0xF8FF))
+			       ((keychar < 0xF700) || keychar >= 0xF8FF))
 
 /*
  * An "index" is 2-bit bitfield showing the state of the Option and Shift
@@ -240,14 +240,14 @@ MODULE_SCOPE int	TkMacOSXIsWindowZoomed(TkWindow *winPtr);
 MODULE_SCOPE int	TkGenerateButtonEventForXPointer(Window window);
 MODULE_SCOPE void       TkMacOSXDrawCGImage(Drawable d, GC gc, CGContextRef context,
 			    CGImageRef image, unsigned long imageForeground,
-			    unsigned long imageBackground, CGRect imageBounds,
-			    CGRect srcBounds, CGRect dstBounds);
+			    unsigned long imageBackground, CGRect dstBounds);
 MODULE_SCOPE int	TkMacOSXSetupDrawingContext(Drawable d, GC gc,
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXRestoreDrawingContext(
 			    TkMacOSXDrawingContext *dcPtr);
 MODULE_SCOPE void	TkMacOSXSetColorInContext(GC gc, unsigned long pixel,
 			    CGContextRef context);
+MODULE_SCOPE void       TkMacOSXRedrawViewIdleTask(void *clientData);
 #define TkMacOSXGetTkWindow(window) ((TkWindow *)Tk_MacOSXGetTkWindow(window))
 #define TkMacOSXGetNSWindowForDrawable(drawable) ((NSWindow *)Tk_MacOSXGetNSWindowForDrawable(drawable))
 #define TkMacOSXGetNSViewForDrawable(macWin) ((NSView *)Tk_MacOSXGetNSViewForDrawable((Drawable)(macWin)))
@@ -320,9 +320,6 @@ VISIBILITY_HIDDEN
 }
 @property int poolLock;
 @property int macOSVersion;
-@property Bool isDrawing;
-@property Bool needsToDraw;
-@property Bool isSigned;
 @property Bool tkLiveResizeEnded;
 
 /*
@@ -392,7 +389,7 @@ VISIBILITY_HIDDEN
 - (void) handleDoScriptEvent:          (NSAppleEventDescriptor *)event
 		   withReplyEvent:     (NSAppleEventDescriptor *)replyEvent;
 - (void)handleURLEvent:                (NSAppleEventDescriptor*)event
-	           withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
+		   withReplyEvent:     (NSAppleEventDescriptor*)replyEvent;
 @end
 
 VISIBILITY_HIDDEN
@@ -411,6 +408,7 @@ VISIBILITY_HIDDEN
 }
 @property Bool tkNeedsDisplay;
 @property NSRect tkDirtyRect;
+@property CGContextRef tkLayerBitmapContext;
 @end
 
 @interface TKContentView(TKKeyEvent)
@@ -423,6 +421,7 @@ VISIBILITY_HIDDEN
 - (void) clearTkDirtyRect;
 - (void) generateExposeEvents: (NSRect) rect;
 - (void) tkToolbarButton: (id) sender;
+- (void) resetTkLayerBitmapContext;
 @end
 
 @interface NSWindow(TKWm)
@@ -465,6 +464,14 @@ VISIBILITY_HIDDEN
 + (id)menuWithTitle:(NSString *)title submenus:(NSArray *)submenus;
 - (NSMenuItem *)itemWithSubmenu:(NSMenu *)submenu;
 - (NSMenuItem *)itemInSupermenu;
+@end
+
+// Need undocumented appearance: argument
+@interface NSMenu(TKMenu)
+- (BOOL)popUpMenuPositioningItem:(NSMenuItem *)item
+		      atLocation:(NSPoint)location
+			  inView:(NSView *)view
+		      appearance:(NSAppearance *)appearance;
 @end
 
 @interface NSMenuItem(TKUtils)

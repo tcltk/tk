@@ -126,8 +126,8 @@ TkSelGetSelection(
 	    ([[NSPasteboard generalPasteboard] changeCount] != changeCount);
 
     if (dispPtr && (haveExternalClip || dispPtr->clipboardActive)
-	        && selection == dispPtr->clipboardAtom
-	        && (target == XA_STRING || target == dispPtr->utf8Atom)) {
+	    && selection == dispPtr->clipboardAtom
+	    && (target == XA_STRING || target == dispPtr->utf8Atom)) {
 	NSString *string = nil;
 	NSPasteboard *pb = [NSPasteboard generalPasteboard];
 	NSString *type = [pb availableTypeFromArray:[NSArray arrayWithObject:
