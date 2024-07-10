@@ -1074,10 +1074,6 @@ typedef struct {
     size_t version;
 } TkObjType;
 
-#ifndef TCL_OBJTYPE_V0
-#   define TCL_OBJTYPE_V0 /* just empty */
-#endif
-
 MODULE_SCOPE const TkObjType tkBorderObjType;
 MODULE_SCOPE const TkObjType tkBitmapObjType;
 MODULE_SCOPE const TkObjType tkColorObjType;
@@ -1273,6 +1269,7 @@ MODULE_SCOPE void	TkpDrawFrameEx(Tk_Window tkwin, Drawable drawable,
 			    int borderWidth, int relief);
 MODULE_SCOPE void	TkpShowBusyWindow(TkBusy busy);
 MODULE_SCOPE void	TkpHideBusyWindow(TkBusy busy);
+MODULE_SCOPE Tcl_Size	TkLengthOne(Tcl_Obj *);
 MODULE_SCOPE void	TkpMakeTransparentWindowExist(Tk_Window tkwin,
 			    Window parent);
 MODULE_SCOPE void	TkpCreateBusy(Tk_FakeWin *winPtr, Tk_Window tkRef,
