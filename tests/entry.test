@@ -112,7 +112,7 @@ test entry-1.7 {configuration option: "borderwidth" for entry} -setup {
     .e cget -borderwidth
 } -cleanup {
     destroy .e
-} -result 1
+} -result 1.3
 test entry-1.8 {configuration option: "borderwidth" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e ; update idletasks
@@ -322,7 +322,7 @@ test entry-1.28 {configuration option: "highlightthickness" for entry} -setup {
     .e cget -highlightthickness
 } -cleanup {
     destroy .e
-} -result 0
+} -result -2
 test entry-1.29 {configuration option: "highlightthickness" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e ; update idletasks
@@ -362,7 +362,7 @@ test entry-1.32 {configuration option: "insertborderwidth" for entry} -setup {
     .e cget -insertborderwidth
 } -cleanup {
     destroy .e
-} -result 1
+} -result 1.3
 test entry-1.33 {configuration option: "insertborderwidth" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e ; update idletasks
@@ -515,7 +515,7 @@ test entry-1.47 {configuration option: "selectborderwidth" for entry} -setup {
     .e cget -selectborderwidth
 } -cleanup {
     destroy .e
-} -result 1
+} -result 1.3
 test entry-1.48 {configuration option: "selectborderwidth" for entry} -setup {
     entry .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
     pack .e ; update idletasks

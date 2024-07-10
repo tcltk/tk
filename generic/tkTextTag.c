@@ -363,8 +363,13 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidth < 0) {
-		tagPtr->borderWidth = 0;
+	    if (tagPtr->borderWidthPtr) {
+		if (tagPtr->borderWidth < 0) {
+		    tagPtr->borderWidth = 0;
+		    Tcl_DecrRefCount(tagPtr->borderWidthPtr);
+		    tagPtr->borderWidthPtr = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->borderWidthPtr);
+		}
 	    }
 	    if (tagPtr->spacing1 != INT_MIN) {
 		if (tagPtr->spacing1 < 0) {
