@@ -62,7 +62,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkMenuButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_MENUBUTTON_BORDER_WIDTH, offsetof(TkMenuButton, borderWidthPtr),
+	DEF_MENUBUTTON_BORDER_WIDTH, offsetof(TkMenuButton, borderWidthObj),
 	offsetof(TkMenuButton, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MENUBUTTON_CURSOR, TCL_INDEX_NONE, offsetof(TkMenuButton, cursor),
@@ -91,7 +91,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	offsetof(TkMenuButton, highlightColorPtr),	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_MENUBUTTON_HIGHLIGHT_WIDTH,
-	offsetof(TkMenuButton, highlightWidthPtr), offsetof(TkMenuButton, highlightWidth), 0, 0, 0},
+	offsetof(TkMenuButton, highlightWidthObj), offsetof(TkMenuButton, highlightWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_MENUBUTTON_IMAGE, TCL_INDEX_NONE, offsetof(TkMenuButton, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -104,10 +104,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_MENU, TCL_INDEX_NONE, offsetof(TkMenuButton, menuName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_MENUBUTTON_PADX, offsetof(TkMenuButton, padXPtr), offsetof(TkMenuButton, padX),
+	DEF_MENUBUTTON_PADX, offsetof(TkMenuButton, padXObj), offsetof(TkMenuButton, padX),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_MENUBUTTON_PADY, offsetof(TkMenuButton, padYPtr), offsetof(TkMenuButton, padY),
+	DEF_MENUBUTTON_PADY, offsetof(TkMenuButton, padYObj), offsetof(TkMenuButton, padY),
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MENUBUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkMenuButton, relief),
@@ -132,7 +132,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_WIDTH, TCL_INDEX_NONE, offsetof(TkMenuButton, widthString),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	DEF_MENUBUTTON_WRAP_LENGTH, offsetof(TkMenuButton, wrapLengthPtr), offsetof(TkMenuButton, wrapLength),
+	DEF_MENUBUTTON_WRAP_LENGTH, offsetof(TkMenuButton, wrapLengthObj), offsetof(TkMenuButton, wrapLength),
 	0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
@@ -282,11 +282,11 @@ Tk_MenubuttonObjCmd(
     mbPtr->cursor = NULL;
     mbPtr->takeFocus = NULL;
     mbPtr->flags = 0;
-    mbPtr->borderWidthPtr = NULL;
-    mbPtr->highlightWidthPtr = NULL;
-    mbPtr->padXPtr = NULL;
-    mbPtr->padYPtr = NULL;
-    mbPtr->wrapLengthPtr = NULL;
+    mbPtr->borderWidthObj = NULL;
+    mbPtr->highlightWidthObj = NULL;
+    mbPtr->padXObj = NULL;
+    mbPtr->padYObj = NULL;
+    mbPtr->wrapLengthObj = NULL;
 
     Tk_CreateEventHandler(mbPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
@@ -538,28 +538,28 @@ ConfigureMenuButton(
 
 	if (mbPtr->highlightWidth < 0) {
 	    mbPtr->highlightWidth = 0;
-		if (mbPtr->highlightWidthPtr) {
-		    Tcl_DecrRefCount(mbPtr->highlightWidthPtr);
+		if (mbPtr->highlightWidthObj) {
+		    Tcl_DecrRefCount(mbPtr->highlightWidthObj);
 		}
-		mbPtr->highlightWidthPtr = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->highlightWidthPtr);
+		mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->highlightWidthObj);
 	}
 
 	if (mbPtr->padX < 0) {
 	    mbPtr->padX = 0;
-		if (mbPtr->padXPtr) {
-		    Tcl_DecrRefCount(mbPtr->padXPtr);
+		if (mbPtr->padXObj) {
+		    Tcl_DecrRefCount(mbPtr->padXObj);
 		}
-		mbPtr->padXPtr = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->padXPtr);
+		mbPtr->padXObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->padXObj);
 	}
 	if (mbPtr->padY < 0) {
 	    mbPtr->padY = 0;
-		if (mbPtr->padYPtr) {
-		    Tcl_DecrRefCount(mbPtr->padYPtr);
+		if (mbPtr->padYObj) {
+		    Tcl_DecrRefCount(mbPtr->padYObj);
 		}
-		mbPtr->padYPtr = Tcl_NewIntObj(0);
-		Tcl_IncrRefCount(mbPtr->padYPtr);
+		mbPtr->padYObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->padYObj);
 	}
 
 	/*

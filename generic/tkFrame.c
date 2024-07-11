@@ -86,14 +86,12 @@ typedef struct {
 				 * windows this is NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
-    Tcl_Obj *padXPtr;		/* Value of -padx option: specifies how many
+    Tcl_Obj *padXObj;		/* Value of -padx option: specifies how many
 				 * pixels of extra space to leave on left and
 				 * right of child area. */
-    int padX;			/* Integer value corresponding to padXPtr. */
-    Tcl_Obj *padYPtr;		/* Value of -padx option: specifies how many
+    Tcl_Obj *padYObj;		/* Value of -padx option: specifies how many
 				 * pixels of extra space to leave above and
 				 * below child area. */
-    int padY;			/* Integer value corresponding to padYPtr. */
     Tcl_Obj *bgimgPtr;		/* Value of -backgroundimage option: specifies
 				 * image to display on window's background, or
 				 * NULL if none. */
@@ -101,13 +99,16 @@ typedef struct {
 				 * Tk_GetImage, or NULL if bgimgPtr is
 				 * NULL. */
     int tile;			/* Whether to tile the bgimg. */
-    Tcl_Obj *heightPtr;
-    Tcl_Obj *widthPtr;
-    Tcl_Obj *highlightWidthPtr;
-    Tcl_Obj *borderWidthPtr;
+    Tcl_Obj *heightObj;
+    Tcl_Obj *widthObj;
+    Tcl_Obj *highlightWidthObj;
+    Tcl_Obj *borderWidthObj;
 #ifndef TK_NO_DOUBLE_BUFFERING
     GC copyGC;			/* GC for copying when double-buffering. */
 #endif /* TK_NO_DOUBLE_BUFFERING */
+#ifdef BUILD_tk
+    int padX, padY;
+#endif
 } Frame;
 
 /*
@@ -205,7 +206,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_CURSOR, TCL_INDEX_NONE, offsetof(Frame, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_FRAME_HEIGHT, offsetof(Frame, heightPtr), offsetof(Frame, height), 0, 0, 0},
+	DEF_FRAME_HEIGHT, offsetof(Frame, heightObj), offsetof(Frame, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_FRAME_HIGHLIGHT_BG, TCL_INDEX_NONE,
 	offsetof(Frame, highlightBgColorPtr), 0, 0, 0},
@@ -213,13 +214,13 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Frame, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_FRAME_HIGHLIGHT_WIDTH, offsetof(Frame, highlightWidthPtr),
+	"HighlightThickness", DEF_FRAME_HIGHLIGHT_WIDTH, offsetof(Frame, highlightWidthObj),
 	offsetof(Frame, highlightWidth), 0, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_FRAME_PADX, offsetof(Frame, padXPtr),
+	DEF_FRAME_PADX, offsetof(Frame, padXObj),
 	offsetof(Frame, padX), 0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_FRAME_PADY, offsetof(Frame, padYPtr),
+	DEF_FRAME_PADY, offsetof(Frame, padYObj),
 	offsetof(Frame, padY), 0, 0, 0},
     {TK_OPTION_STRING, "-takefocus", "takeFocus", "TakeFocus",
 	DEF_FRAME_TAKE_FOCUS, TCL_INDEX_NONE, offsetof(Frame, takeFocus),
@@ -228,7 +229,7 @@ static const Tk_OptionSpec commonOptSpec[] = {
 	DEF_FRAME_VISUAL, TCL_INDEX_NONE, offsetof(Frame, visualName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-width", "width", "Width",
-	DEF_FRAME_WIDTH, offsetof(Frame, widthPtr), offsetof(Frame, width), 0, 0, 0},
+	DEF_FRAME_WIDTH, offsetof(Frame, widthObj), offsetof(Frame, width), 0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, 0, 0}
 };
 
@@ -241,7 +242,7 @@ static const Tk_OptionSpec frameOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthPtr), offsetof(Frame, borderWidth), 0, 0, 0},
+	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthObj), offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_FRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
@@ -261,7 +262,7 @@ static const Tk_OptionSpec toplevelOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bgimg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-backgroundimage", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthPtr), offsetof(Frame, borderWidth), 0, 0, 0},
+	DEF_FRAME_BORDER_WIDTH, offsetof(Frame, borderWidthObj), offsetof(Frame, borderWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_TOPLEVEL_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
     {TK_OPTION_STRING, "-menu", "menu", "Menu",
@@ -285,7 +286,7 @@ static const Tk_OptionSpec labelframeOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bd", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-borderwidth", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_LABELFRAME_BORDER_WIDTH, offsetof(Frame, borderWidthPtr), offsetof(Frame, borderWidth),
+	DEF_LABELFRAME_BORDER_WIDTH, offsetof(Frame, borderWidthObj), offsetof(Frame, borderWidth),
 	0, 0, 0},
     {TK_OPTION_STRING, "-class", "class", "Class",
 	DEF_LABELFRAME_CLASS, TCL_INDEX_NONE, offsetof(Frame, className), 0, 0, 0},
@@ -999,27 +1000,27 @@ ConfigureFrame(
 
     if (framePtr->highlightWidth < 0) {
 	framePtr->highlightWidth = 0;
-	if (framePtr->highlightWidthPtr) {
-	    Tcl_DecrRefCount(framePtr->highlightWidthPtr);
+	if (framePtr->highlightWidthObj) {
+	    Tcl_DecrRefCount(framePtr->highlightWidthObj);
 	}
-	framePtr->highlightWidthPtr = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->highlightWidthPtr);
+	framePtr->highlightWidthObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->highlightWidthObj);
     }
     if (framePtr->padX < 0) {
 	framePtr->padX = 0;
-	if (framePtr->padXPtr) {
-	    Tcl_DecrRefCount(framePtr->padXPtr);
+	if (framePtr->padXObj) {
+	    Tcl_DecrRefCount(framePtr->padXObj);
 	}
-	framePtr->padXPtr = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->padXPtr);
+	framePtr->padXObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->padXObj);
     }
     if (framePtr->padY < 0) {
 	framePtr->padY = 0;
-	if (framePtr->padYPtr) {
-	    Tcl_DecrRefCount(framePtr->padYPtr);
+	if (framePtr->padYObj) {
+	    Tcl_DecrRefCount(framePtr->padYObj);
 	}
-	framePtr->padYPtr = Tcl_NewIntObj(0);
-	Tcl_IncrRefCount(framePtr->padYPtr);
+	framePtr->padYObj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(framePtr->padYObj);
     }
 
     /*
