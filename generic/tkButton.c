@@ -1315,7 +1315,24 @@ ConfigureButton(
 	Tk_FreeSavedOptions(&savedOptions);
     }
 
-    /*
+	if (butPtr->width < 0) {
+	    butPtr->width = 0;
+	    if (butPtr->widthPtr) {
+		Tcl_DecrRefCount(butPtr->widthPtr);
+	    }
+	    butPtr->widthPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->widthPtr);
+	}
+	if (butPtr->height < 0) {
+	    butPtr->height = 0;
+	    if (butPtr->heightPtr) {
+		Tcl_DecrRefCount(butPtr->heightPtr);
+	    }
+	    butPtr->heightPtr = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(butPtr->heightPtr);
+	}
+
+	/*
      * Reestablish the variable traces, if they're needed.
      */
 
