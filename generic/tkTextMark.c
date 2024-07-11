@@ -301,7 +301,7 @@ TkTextSetMark(
 
 	if (markPtr == textPtr->insertMarkPtr) {
 	    TkTextIndex index, index2;
-            int nblines;
+	    int nblines;
 
 	    TkTextMarkSegToIndex(textPtr, textPtr->insertMarkPtr, &index);
 	    TkTextIndexForwChars(NULL, &index, 1, &index2, COUNT_INDICES);
@@ -313,12 +313,12 @@ TkTextSetMark(
 
 	    TkTextChanged(NULL, textPtr, &index, &index2);
 
-            /*
-             * The number of lines in the widget is zero if and only if it is
-             * a partial peer with -startline == -endline, i.e. an empty
-             * peer. In this case the mark shall be set exactly at the given
-             * index, and not one character backwards (bug 3487407).
-             */
+	    /*
+	     * The number of lines in the widget is zero if and only if it is
+	     * a partial peer with -startline == -endline, i.e. an empty
+	     * peer. In this case the mark shall be set exactly at the given
+	     * index, and not one character backwards (bug 3487407).
+	     */
 
 	    nblines = TkBTreeNumLines(textPtr->sharedTextPtr->tree, textPtr);
 	    if ((TkBTreeLinesTo(textPtr, indexPtr->linePtr) == nblines)
@@ -436,7 +436,7 @@ TkTextMarkNameToIndex(
     TkTextSegment *segPtr;
 
     if (textPtr == NULL) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     if (!strcmp(name, "insert")) {
@@ -749,7 +749,7 @@ MarkCheckProc(
      */
 
     if (markPtr->body.mark.textPtr->insertMarkPtr == markPtr) {
-        return;
+	return;
     }
     if (markPtr->body.mark.textPtr->currentMarkPtr == markPtr) {
 	return;
@@ -933,16 +933,16 @@ MarkFindPrev(
 		seg2Ptr = seg2Ptr->nextPtr) {
 	    if (seg2Ptr->typePtr == &tkTextRightMarkType ||
 		    seg2Ptr->typePtr == &tkTextLeftMarkType) {
-	        if (seg2Ptr->body.mark.hPtr == NULL) {
-                    if (seg2Ptr != textPtr->currentMarkPtr &&
-                            seg2Ptr != textPtr->insertMarkPtr) {
-	                /*
-                         * This is an insert or current mark from a
-                         * peer of textPtr.
-                         */
-                        continue;
-                    }
-	        }
+		if (seg2Ptr->body.mark.hPtr == NULL) {
+		    if (seg2Ptr != textPtr->currentMarkPtr &&
+			    seg2Ptr != textPtr->insertMarkPtr) {
+			/*
+			 * This is an insert or current mark from a
+			 * peer of textPtr.
+			 */
+			continue;
+		    }
+		}
 		prevPtr = seg2Ptr;
 	    }
 	}
