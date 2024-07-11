@@ -154,7 +154,7 @@ static int TkpDrawingIsDisabled(Tk_Window tkwin) { return 0; }
 
 #define LOG(toVar,what) \
     if (OK_TO_LOG) \
-        Tcl_SetVar2(textPtr->interp, toVar, NULL, what, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
+	Tcl_SetVar2(textPtr->interp, toVar, NULL, what, TCL_GLOBAL_ONLY|TCL_APPEND_VALUE|TCL_LIST_ELEMENT)
 #define CLEAR(var) \
     if (OK_TO_LOG) \
 	Tcl_SetVar2(interp, var, NULL, "", TCL_GLOBAL_ONLY)
@@ -6355,14 +6355,14 @@ DisplayDLine(
 
     if (xIndent > 0 && sValuePtr->lMarginColor != NULL) {
 	int pad = textPtr->padX ? textPtr->padX + 1 : 0;
-        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, textPtr->padX, y,
-                xIndent + dInfoPtr->x - dInfoPtr->curXPixelOffset - pad,
+	Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->lMarginColor, textPtr->padX, y,
+		xIndent + dInfoPtr->x - dInfoPtr->curXPixelOffset - pad,
 		dlPtr->height, 0, TK_RELIEF_FLAT);
     }
     if (rMargin > 0 && sValuePtr->rMarginColor != NULL) {
-        Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->rMarginColor,
-                dInfoPtr->maxX - rMargin + dInfoPtr->curXPixelOffset,
-                y, rMargin, dlPtr->height, 0, TK_RELIEF_FLAT);
+	Tk_Fill3DRectangle(textPtr->tkwin, pixmap, sValuePtr->rMarginColor,
+		dInfoPtr->maxX - rMargin + dInfoPtr->curXPixelOffset,
+		y, rMargin, dlPtr->height, 0, TK_RELIEF_FLAT);
     }
 
     yBase = y + dlPtr->spaceAbove;
@@ -6414,22 +6414,22 @@ DisplayDLine(
 		x = -chunkPtr->width;
 	    }
 
-            /*
-             * Refcount gymnastics here to prevent the resource from being released
-             * in case the displayProc destroys the widget.
-             */
+	    /*
+	     * Refcount gymnastics here to prevent the resource from being released
+	     * in case the displayProc destroys the widget.
+	     */
 
-            textPtr->refCount += 1;
+	    textPtr->refCount += 1;
 	    chunkPtr->layoutProcs->displayProc(textPtr, chunkPtr, x, yBase, height,
 		    baseline, display, pixmap, screenY);
-            textPtr->refCount -= 1;
+	    textPtr->refCount -= 1;
 
 	    if (TkTextReleaseIfDestroyed(textPtr)) {
 		/*
-	         * The displayProc invoked a binding that caused the widget
-	         * to be deleted. Don't do anything.
-	         */
-	        return;
+		 * The displayProc invoked a binding that caused the widget
+		 * to be deleted. Don't do anything.
+		 */
+		return;
 	    }
 
 	    if (dInfoPtr->dLinesInvalidated) {
@@ -6688,15 +6688,15 @@ DisplayLineBackground(
 		rightX = leftX + indent + 32767;
 	    }
 
-            /*
-             * Prevent the borders from leaking on adjacent characters,
-             * which would happen for too large border width.
-             */
+	    /*
+	     * Prevent the borders from leaking on adjacent characters,
+	     * which would happen for too large border width.
+	     */
 
-            borderWidth = sValuePtr->borderWidth;
-            if (leftX + sValuePtr->borderWidth > rightX) {
-                borderWidth = rightX - leftX;
-            }
+	    borderWidth = sValuePtr->borderWidth;
+	    if (leftX + sValuePtr->borderWidth > rightX) {
+		borderWidth = rightX - leftX;
+	    }
 
 	    XFillRectangle(display, pixmap, chunkPtr->stylePtr->bgGC,
 		    leftX + xOffset + indent, y, rightX - leftX - indent, dlPtr->height);
@@ -6799,10 +6799,10 @@ DisplayLineBackground(
 
 	matchRight = nextPtr2 && SameBackground(nextPtr2->stylePtr, chunkPtr->stylePtr);
 	if (matchLeft && !matchRight) {
-            borderWidth = sValuePtr->borderWidth;
-            if (rightX2 - borderWidth < leftX) {
-                borderWidth = rightX2 - leftX;
-            }
+	    borderWidth = sValuePtr->borderWidth;
+	    if (rightX2 - borderWidth < leftX) {
+		borderWidth = rightX2 - leftX;
+	    }
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
 			rightX2 - borderWidth + xOffset, y, borderWidth,
@@ -6812,10 +6812,10 @@ DisplayLineBackground(
 	    leftXIn = 0;
 	} else if (!matchLeft && matchRight && sValuePtr->relief != TK_RELIEF_FLAT) {
 	    int indent = (leftX == 0) ? xIndent : 0;
-            borderWidth = sValuePtr->borderWidth;
-            if (rightX2 + borderWidth > rightX) {
-                borderWidth = rightX - rightX2;
-            }
+	    borderWidth = sValuePtr->borderWidth;
+	    if (rightX2 + borderWidth > rightX) {
+		borderWidth = rightX - rightX2;
+	    }
 	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border, rightX2 + xOffset,
 		    y, borderWidth, sValuePtr->borderWidth, 1, sValuePtr->relief);
 	    Tk_3DHorizontalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
@@ -6907,10 +6907,10 @@ DisplayLineBackground(
 
 	matchRight = nextPtr2 && SameBackground(nextPtr2->stylePtr, chunkPtr->stylePtr);
 	if (matchLeft && !matchRight) {
-            borderWidth = sValuePtr->borderWidth;
-            if (rightX2 - borderWidth < leftX) {
-                borderWidth = rightX2 - leftX;
-            }
+	    borderWidth = sValuePtr->borderWidth;
+	    if (rightX2 - borderWidth < leftX) {
+		borderWidth = rightX2 - leftX;
+	    }
 	    if (sValuePtr->relief != TK_RELIEF_FLAT) {
 		Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
 			rightX2 - borderWidth + xOffset,
@@ -6922,10 +6922,10 @@ DisplayLineBackground(
 	    leftXIn = 1;
 	} else if (!matchLeft && matchRight && sValuePtr->relief != TK_RELIEF_FLAT) {
 	    int indent = (leftX == 0) ? xIndent : 0;
-            borderWidth = sValuePtr->borderWidth;
-            if (rightX2 + borderWidth > rightX) {
-                borderWidth = rightX - rightX2;
-            }
+	    borderWidth = sValuePtr->borderWidth;
+	    if (rightX2 + borderWidth > rightX) {
+		borderWidth = rightX - rightX2;
+	    }
 	    Tk_3DVerticalBevel(textPtr->tkwin, pixmap, sValuePtr->border,
 		    rightX2 + xOffset, y + dlPtr->height - sValuePtr->borderWidth,
 		    borderWidth, sValuePtr->borderWidth, 1, sValuePtr->relief);
@@ -8473,7 +8473,7 @@ UpdateOneLine(
 	 * as intended.
 	 */
 
-        height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes);
+	height = CalculateDisplayLineHeight(textPtr, indexPtr, &bytes);
 	atEnd = TkrTextIndexForwBytes(textPtr, indexPtr, bytes, indexPtr) == 1
 		|| TkTextIndexIsEndOfText(indexPtr);
 
@@ -9958,9 +9958,9 @@ TkTextSetYView(
 	textPtr->topIndex = *indexPtr;
 	TkTextIndexMakePersistent(&textPtr->topIndex);
 	TkTextIndexSetPeer(&textPtr->topIndex, textPtr);
-        if (!IsStartOfNotMergedLine(indexPtr)) {
-            TkTextFindDisplayLineStartEnd(textPtr, &textPtr->topIndex, DISP_LINE_START);
-        }
+	if (!IsStartOfNotMergedLine(indexPtr)) {
+	    TkTextFindDisplayLineStartEnd(textPtr, &textPtr->topIndex, DISP_LINE_START);
+	}
 	dInfoPtr->newTopPixelOffset = pickPlace;
 	goto scheduleUpdate;
     }
@@ -10673,25 +10673,25 @@ TkTextSeeCmd(
     }
 
     if (GetBbox(textPtr, dlPtr, &index, &x, &y, &width, &height, NULL, NULL)) {
-        delta = x - dInfoPtr->curXPixelOffset;
-        oneThird = lineWidth/3;
-        if (delta < 0) {
-            if (delta < -oneThird) {
-                dInfoPtr->newXPixelOffset = x - lineWidth/2;
-            } else {
-                dInfoPtr->newXPixelOffset += delta;
-            }
-        } else {
-            delta -= lineWidth - width;
-            if (delta <= 0) {
-                return TCL_OK;
-            }
-            if (delta > oneThird) {
-                dInfoPtr->newXPixelOffset = x - lineWidth/2;
-            } else {
-                dInfoPtr->newXPixelOffset += delta;
-            }
-        }
+	delta = x - dInfoPtr->curXPixelOffset;
+	oneThird = lineWidth/3;
+	if (delta < 0) {
+	    if (delta < -oneThird) {
+		dInfoPtr->newXPixelOffset = x - lineWidth/2;
+	    } else {
+		dInfoPtr->newXPixelOffset += delta;
+	    }
+	} else {
+	    delta -= lineWidth - width;
+	    if (delta <= 0) {
+		return TCL_OK;
+	    }
+	    if (delta > oneThird) {
+		dInfoPtr->newXPixelOffset = x - lineWidth/2;
+	    } else {
+		dInfoPtr->newXPixelOffset += delta;
+	    }
+	}
     }
 
     dInfoPtr->flags |= DINFO_OUT_OF_DATE;
@@ -11790,58 +11790,58 @@ FindDLine(
      */
 
     while (TkTextIndexCompare(&dlPtr->index, indexPtr) < 0) {
-        lastDlPtr = dlPtr;
-        dlPtr = dlPtr->nextPtr;
-        if (!dlPtr) {
-            TkTextIndex index2;
-            /*
-             * We're past the last display line, either because the desired
-             * index lies past the visible text, or because the desired index
-             * is on the last display line showing the last logical line.
-             */
-            index2 = lastDlPtr->index;
-            TkrTextIndexForwBytes(textPtr, &index2, lastDlPtr->byteCount, &index2);
-            if (TkTextIndexCompare(&index2, indexPtr) > 0) {
-                /*
-                 * The desired index is on the last display line, hence return this display line.
-                 */
-                dlPtr = lastDlPtr;
-                break;
-            } else {
-                /*
-                 * The desired index is past the visible text. There is no display line
+	lastDlPtr = dlPtr;
+	dlPtr = dlPtr->nextPtr;
+	if (!dlPtr) {
+	    TkTextIndex index2;
+	    /*
+	     * We're past the last display line, either because the desired
+	     * index lies past the visible text, or because the desired index
+	     * is on the last display line showing the last logical line.
+	     */
+	    index2 = lastDlPtr->index;
+	    TkrTextIndexForwBytes(textPtr, &index2, lastDlPtr->byteCount, &index2);
+	    if (TkTextIndexCompare(&index2, indexPtr) > 0) {
+		/*
+		 * The desired index is on the last display line, hence return this display line.
+		 */
+		dlPtr = lastDlPtr;
+		break;
+	    } else {
+		/*
+		 * The desired index is past the visible text. There is no display line
 		 * displaying something at the desired index, hence return NULL.
-                 */
-                return NULL;
-            }
-        }
-        if (TkTextIndexCompare(&dlPtr->index, indexPtr) > 0) {
-            /*
-             * If we're here then we would normally expect that:
-             *   lastDlPtr->index <= indexPtr < dlPtr->index
-             * i.e. we have found the searched display line being dlPtr.
-             * However it is possible that some DLines were unlinked
-             * previously, leading to a situation where going through
-             * the list of display lines skips display lines that did
-             * exist just a moment ago.
-             */
+		 */
+		return NULL;
+	    }
+	}
+	if (TkTextIndexCompare(&dlPtr->index, indexPtr) > 0) {
+	    /*
+	     * If we're here then we would normally expect that:
+	     *   lastDlPtr->index <= indexPtr < dlPtr->index
+	     * i.e. we have found the searched display line being dlPtr.
+	     * However it is possible that some DLines were unlinked
+	     * previously, leading to a situation where going through
+	     * the list of display lines skips display lines that did
+	     * exist just a moment ago.
+	     */
 
 	    TkTextIndex index;
-            TkrTextIndexForwBytes(textPtr, &lastDlPtr->index, lastDlPtr->byteCount, &index);
-            if (TkTextIndexCompare(&index, indexPtr) > 0) {
-                /*
-                 * Confirmed: lastDlPtr->index <= indexPtr < dlPtr->index
-                 */
-                dlPtr = lastDlPtr;
-            } else {
-                /*
-                 * The last (rightmost) index shown by dlPtrPrev is still before the desired
+	    TkrTextIndexForwBytes(textPtr, &lastDlPtr->index, lastDlPtr->byteCount, &index);
+	    if (TkTextIndexCompare(&index, indexPtr) > 0) {
+		/*
+		 * Confirmed: lastDlPtr->index <= indexPtr < dlPtr->index
+		 */
+		dlPtr = lastDlPtr;
+	    } else {
+		/*
+		 * The last (rightmost) index shown by dlPtrPrev is still before the desired
 		 * index. This may be because there was previously a display line between
 		 * dlPtrPrev and dlPtr and this display line has been unlinked.
-                 */
-            }
-            break;
-        }
+		 */
+	    }
+	    break;
+	}
     }
 
     return dlPtr;
