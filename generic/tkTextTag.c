@@ -440,7 +440,9 @@ TkTextTagCmd(
 		    || (tagPtr->tabStringPtr != NULL)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
-		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
 		tagPtr->affectsDisplay = 1;
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
