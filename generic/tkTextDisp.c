@@ -867,8 +867,8 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthPtr != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0')
+	if ((tagPtr->borderWidthObj != NULL)
+		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    styleValues.borderWidth = tagPtr->borderWidth;
 	    borderWidthPrio = tagPtr->priority;
@@ -985,8 +985,8 @@ GetStyle(
 	    styleValues.elide = tagPtr->elide > 0;
 	    elidePrio = tagPtr->priority;
 	}
-	if ((tagPtr->wrapMode != TEXT_WRAPMODE_NULL)
-		&& (tagPtr->priority > wrapPrio)) {
+	if (((tagPtr->wrapMode == TEXT_WRAPMODE_CHAR) || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		|| (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) && (tagPtr->priority > wrapPrio)) {
 	    styleValues.wrapMode = tagPtr->wrapMode;
 	    wrapPrio = tagPtr->priority;
 	}
@@ -5256,12 +5256,12 @@ TkTextRelayoutWindow(
      * it.
      */
 
-    if (textPtr->highlightWidthPtr) {
+    if (textPtr->highlightWidthObj) {
 	if (textPtr->highlightWidth < 0) {
 	    textPtr->highlightWidth = 0;
-	    Tcl_DecrRefCount(textPtr->highlightWidthPtr);
-	    textPtr->highlightWidthPtr = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(textPtr->highlightWidthPtr);
+	    Tcl_DecrRefCount(textPtr->highlightWidthObj);
+	    textPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(textPtr->highlightWidthObj);
 	}
     }
     dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
