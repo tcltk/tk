@@ -260,7 +260,7 @@ static const Tk_OptionSpec tkMenuConfigSpecs[] = {
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
 	DEF_MENU_BORDER_WIDTH,
-	offsetof(TkMenu, borderWidthPtr), TCL_INDEX_NONE, 0, NULL, 0},
+	offsetof(TkMenu, borderWidthObj), TCL_INDEX_NONE, 0, NULL, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MENU_CURSOR,
 	offsetof(TkMenu, cursorPtr), TCL_INDEX_NONE, TK_OPTION_NULL_OK, NULL, 0},
@@ -3039,7 +3039,7 @@ GetIndexFromCoords(
     TkRecomputeMenu(menuPtr);
     p = string + 1;
     Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
-	    menuPtr->borderWidthPtr, &borderwidth);
+	    menuPtr->borderWidthObj, &borderwidth);
     rest = strchr(p, ',');
     if (rest) {
 	Tcl_DString ds;

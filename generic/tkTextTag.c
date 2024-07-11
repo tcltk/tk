@@ -22,7 +22,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BITMAP, "-bgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
-	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
+	NULL, offsetof(TkTextTag, borderWidthObj), offsetof(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elide),
@@ -363,12 +363,12 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidthPtr) {
+	    if (tagPtr->borderWidthObj) {
 		if (tagPtr->borderWidth < 0) {
 		    tagPtr->borderWidth = 0;
-		    Tcl_DecrRefCount(tagPtr->borderWidthPtr);
-		    tagPtr->borderWidthPtr = Tcl_NewIntObj(0);
-		    Tcl_IncrRefCount(tagPtr->borderWidthPtr);
+		    Tcl_DecrRefCount(tagPtr->borderWidthObj);
+		    tagPtr->borderWidthObj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->borderWidthObj);
 		}
 	    }
 	    if (tagPtr->spacing1 != INT_MIN) {
@@ -422,7 +422,7 @@ TkTextTagCmd(
 		    textPtr->selBorder = tagPtr->selBorder;
 		}
 		textPtr->selBorderWidth = tagPtr->borderWidth;
-		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
+		textPtr->selBorderWidthObj = tagPtr->borderWidthObj;
 		if (tagPtr->selFgColor == NULL) {
 		    textPtr->selFgColorPtr = tagPtr->fgColor;
 		} else {
@@ -445,7 +445,9 @@ TkTextTagCmd(
 		    || (tagPtr->tabStringPtr != NULL)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_TABULAR)
 		    || (tagPtr->tabStyle == TK_TEXT_TABSTYLE_WORDPROCESSOR)
-		    || (tagPtr->wrapMode != TEXT_WRAPMODE_NULL)) {
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_CHAR)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_NONE)
+		    || (tagPtr->wrapMode == TEXT_WRAPMODE_WORD)) {
 		tagPtr->affectsDisplay = 1;
 		tagPtr->affectsDisplayGeometry = 1;
 	    }
@@ -945,7 +947,7 @@ TkTextCreateTag(
     tagPtr->priority = textPtr->sharedTextPtr->numTags;
     tagPtr->border = NULL;
     tagPtr->borderWidth = 0;
-    tagPtr->borderWidthPtr = NULL;
+    tagPtr->borderWidthObj = NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;

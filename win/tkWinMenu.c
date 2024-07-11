@@ -1598,7 +1598,7 @@ GetMenuIndicatorGeometry(
 	int borderWidth;
 
 	Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
-		menuPtr->borderWidthPtr, &borderWidth);
+		menuPtr->borderWidthObj, &borderWidth);
 	*widthPtr = indicatorDimensions[1] - borderWidth;
 
 	/*
@@ -1842,7 +1842,7 @@ DrawMenuEntryIndicator(
 	    rect.top = y;
 	    rect.bottom = y + mePtr->height;
 	    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
-		    menuPtr->borderWidthPtr, &borderWidth);
+		    menuPtr->borderWidthObj, &borderWidth);
 	    Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
 		    menuPtr->activeBorderWidthPtr, &activeBorderWidth);
 	    rect.left = borderWidth + activeBorderWidth + x;
@@ -2988,7 +2988,7 @@ TkpComputeStandardMenuGeometry(
     }
 
     Tk_GetPixelsFromObj(menuPtr->interp, menuPtr->tkwin,
-	    menuPtr->borderWidthPtr, &borderWidth);
+	    menuPtr->borderWidthObj, &borderWidth);
     x = y = borderWidth;
     indicatorSpace = labelWidth = accelWidth = 0;
     windowHeight = 0;
