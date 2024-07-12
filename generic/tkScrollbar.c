@@ -490,10 +490,12 @@ ConfigureScrollbar(
     if (scrollPtr->highlightWidth < 0) {
 	scrollPtr->highlightWidth = 0;
     }
+    if (scrollPtr->borderWidth < 0) {
+	scrollPtr->borderWidth = 0;
+    }
     if (scrollPtr->elementBorderWidth < 0) {
 	scrollPtr->elementBorderWidth = INT_MIN;
     }
-
     /*
      * Configure platform specific options.
      */
