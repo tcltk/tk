@@ -619,7 +619,7 @@ ComputeArcParametersFromHeight(
      */
 
     if (arcPtr->height == 0)
-        return;
+	return;
 
     /*
      * Calculate the chord length, return early if it is too small.
@@ -629,8 +629,8 @@ ComputeArcParametersFromHeight(
 	    arcPtr->startPoint[0] - arcPtr->endPoint[0]);
 
     if (chordLen < DBL_EPSILON) {
-        arcPtr->start = arcPtr->extent = arcPtr->height = 0;
-        return;
+	arcPtr->start = arcPtr->extent = arcPtr->height = 0;
+	return;
     }
 
     chordDir[0] = (arcPtr->endPoint[0] - arcPtr->startPoint[0]) / chordLen;

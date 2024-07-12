@@ -964,7 +964,7 @@ TtkWinTheme_Init(
     parentPtr = Ttk_GetTheme(interp, "alt");
     themePtr = Ttk_CreateTheme(interp, "winnative", parentPtr);
     if (!themePtr) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     Ttk_RegisterElementSpec(themePtr, "border", &BorderElementSpec, NULL);

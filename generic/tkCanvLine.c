@@ -485,7 +485,7 @@ ConfigureLine(
 
     tkwin = Tk_CanvasTkwin(canvas);
     if (TCL_OK != Tk_ConfigureWidget(interp, tkwin, configSpecs, objc,
-	    (const char **) objv, (char *) linePtr, flags|TK_CONFIG_OBJS)) {
+	    (const char **)objv, (char *)linePtr, flags|TK_CONFIG_OBJS)) {
 	return TCL_ERROR;
     }
 
@@ -704,10 +704,10 @@ ComputeLineBbox(
 	width = 1.0;
     }
     if (linePtr->arrow != ARROWS_NONE) {
-	if (linePtr->arrow != ARROWS_LAST) {
+	if (linePtr->arrow != ARROWS_LAST && linePtr->firstArrowPtr) {
 	    TkIncludePoint((Tk_Item *) linePtr, linePtr->firstArrowPtr);
 	}
-	if (linePtr->arrow != ARROWS_FIRST) {
+	if (linePtr->arrow != ARROWS_FIRST && linePtr->lastArrowPtr) {
 	    TkIncludePoint((Tk_Item *) linePtr, linePtr->lastArrowPtr);
 	}
     }
@@ -1018,7 +1018,7 @@ LineInsert(
 	newCoordPtr[i+objc] = linePtr->coordPtr[i];
     }
     if (linePtr->coordPtr) {
-        ckfree(linePtr->coordPtr);
+	ckfree(linePtr->coordPtr);
     }
     linePtr->coordPtr = newCoordPtr;
     length += objc ;
