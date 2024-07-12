@@ -122,12 +122,12 @@ WndProc(HWND hwnd, UINT msg, WPARAM wp, LPARAM lp)
 
     case WM_THEMECHANGED:
 	/*
-         * Reset the application theme.
-         * On windows, it is possible to sign in as a second user, change
-         * the theme to 'winnative' (by setting the ui to 'best performance'),
-         * which is a machine-wide change, and then sign back on to the original user.
-         * Ttk_UseTheme needs to be executed again in order to process the fallback
-         * from vista/xpnative to winnative.
+	 * Reset the application theme.
+	 * On windows, it is possible to sign in as a second user, change
+	 * the theme to 'winnative' (by setting the ui to 'best performance'),
+	 * which is a machine-wide change, and then sign back on to the original user.
+	 * Ttk_UseTheme needs to be executed again in order to process the fallback
+	 * from vista/xpnative to winnative.
 	 */
 
 	theme = Ttk_GetCurrentTheme(interp);

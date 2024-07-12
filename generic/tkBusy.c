@@ -770,7 +770,7 @@ HoldBusy(
 	TkpHideBusyWindow(busyPtr);
     }
     if (result == TCL_OK) {
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
     }
     return result;
 }
@@ -806,7 +806,7 @@ Tk_BusyObjCmd(
     int index, result = TCL_OK;
     static const char *const optionStrings[] = {
 	"busywindow", "cget", "configure", "current", "forget", "hold",
-        "status", NULL
+	"status", NULL
     };
     enum options {
 	BUSY_BUSYWINDOW, BUSY_CGET, BUSY_CONFIGURE, BUSY_CURRENT, BUSY_FORGET,
@@ -843,10 +843,10 @@ Tk_BusyObjCmd(
 	busyPtr = GetBusy(interp, busyTablePtr, objv[2]);
 	if (busyPtr == NULL) {
 	    Tcl_ResetResult(interp);
-            return TCL_OK;
+	    return TCL_OK;
 	}
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
-        return TCL_OK;
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(Tk_PathName(busyPtr->tkBusy), TCL_INDEX_NONE));
+	return TCL_OK;
 
     case BUSY_CGET:
 	if (objc != 4) {
