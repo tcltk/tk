@@ -363,22 +363,40 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidth < 0) {
-		tagPtr->borderWidth = 0;
+	    if (tagPtr->borderWidth != INT_MIN) {
+		if (tagPtr->borderWidth < 0) {
+		    tagPtr->borderWidth = INT_MIN;
+		    if (tagPtr->borderWidthPtr) {
+		    	Tcl_DecrRefCount(tagPtr->borderWidthPtr);
+		    	tagPtr->borderWidthPtr = NULL;
+		    }
+		}
 	    }
 	    if (tagPtr->spacing1 != INT_MIN) {
 		if (tagPtr->spacing1 < 0) {
-		    tagPtr->spacing1 = 0;
+		    tagPtr->spacing1 = INT_MIN;
+		    if (tagPtr->spacing1Obj) {
+		    	Tcl_DecrRefCount(tagPtr->spacing1Obj);
+		    	tagPtr->spacing1Obj = NULL;
+		    }
 		}
 	    }
 	    if (tagPtr->spacing2 != INT_MIN) {
 		if (tagPtr->spacing2 < 0) {
-		    tagPtr->spacing2 = 0;
+		    tagPtr->spacing2 = INT_MIN;
+		    if (tagPtr->spacing2Obj) {
+		    	Tcl_DecrRefCount(tagPtr->spacing2Obj);
+		    	tagPtr->spacing2Obj = NULL;
+		    }
 		}
 	    }
 	    if (tagPtr->spacing3 != INT_MIN) {
 		if (tagPtr->spacing3 < 0) {
-		    tagPtr->spacing3 = 0;
+		    tagPtr->spacing3 = INT_MIN;
+		    if (tagPtr->spacing3Obj) {
+		    	Tcl_DecrRefCount(tagPtr->spacing3Obj);
+		    	tagPtr->spacing3Obj = NULL;
+		    }
 		}
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
