@@ -1829,10 +1829,10 @@ WmForgetCmd(
 		~(TK_TOP_HIERARCHY|TK_TOP_LEVEL|TK_HAS_WRAPPER|TK_WIN_MANAGED);
 	RemapWindows(winPtr, winPtr->parentPtr);
 
-        /*
-         * Make sure wm no longer manages this window
-         */
-        Tk_ManageGeometry(frameWin, NULL, NULL);
+	/*
+	 * Make sure wm no longer manages this window
+	 */
+	Tk_ManageGeometry(frameWin, NULL, NULL);
 
 	/*
 	 * Flags (above) must be cleared before calling TkMapTopFrame (below).
@@ -2492,7 +2492,7 @@ WmIconphotoCmd(
 	if (photo == NULL) {
 	    ckfree(iconPropertyData);
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-	        "failed to create an iconphoto with image \"%s\"",
+		"failed to create an iconphoto with image \"%s\"",
 		Tcl_GetString(objv[i])));
 	    Tcl_SetErrorCode(interp, "TK", "WM", "ICONPHOTO", "IMAGE", NULL);
 	    return TCL_ERROR;
@@ -5847,9 +5847,9 @@ static int PointInWindow(
 {
     XWindowChanges changes = wmPtr->winPtr->changes;
     return (x >= changes.x &&
-            x < changes.x + changes.width &&
-            y >= changes.y - wmPtr->menuHeight &&
-            y < changes.y + changes.height);
+	    x < changes.x + changes.width &&
+	    y >= changes.y - wmPtr->menuHeight &&
+	    y < changes.y + changes.height);
 }
 
 Tk_Window
@@ -5922,38 +5922,38 @@ Tk_CoordsToWindow(
 	}
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
-            if (wmPtr->winPtr->mainPtr == NULL) {
-                continue;
-            }
+	    if (wmPtr->winPtr->mainPtr == NULL) {
+	        continue;
+	    }
 	    if (child == wmPtr->reparent) {
-                if (PointInWindow(x, y, wmPtr)) {
-                    goto gotToplevel;
-                } else {
+	        if (PointInWindow(x, y, wmPtr)) {
+	            goto gotToplevel;
+	        } else {
 
-                    /*
-                     * Return NULL if the point is in the title bar or border.
-                     */
+	            /*
+	             * Return NULL if the point is in the title bar or border.
+	             */
 
-                    return NULL;
-                }
+	            return NULL;
+	        }
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
 		    goto gotToplevel;
 		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
-                           Tk_GetOtherWindow((Tk_Window)wmPtr->winPtr) == NULL) {
+	                   Tk_GetOtherWindow((Tk_Window)wmPtr->winPtr) == NULL) {
 
-                    /*
-                     * This toplevel is embedded in a window belonging to
-                     * a different application.
-                     */
+	            /*
+	             * This toplevel is embedded in a window belonging to
+	             * a different application.
+	             */
 
-                    int rx, ry;
-                    Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
-                    childX -= rx;
-                    childY -= ry;
-                    goto gotToplevel;
-                }
+	            int rx, ry;
+	            Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
+	            childX -= rx;
+	            childY -= ry;
+	            goto gotToplevel;
+	        }
 	    } else if (child == wmPtr->winPtr->window) {
 		goto gotToplevel;
 	    }
@@ -6050,11 +6050,11 @@ Tk_CoordsToWindow(
 	    childY = y;
 	    goto gotToplevel;
 	} else {
-            winPtr = nextPtr;
-        }
+	    winPtr = nextPtr;
+	}
     }
     if (winPtr->mainPtr != ((TkWindow *) tkwin)->mainPtr) {
-        return NULL;
+	return NULL;
     }
     return (Tk_Window) winPtr;
 }
