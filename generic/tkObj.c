@@ -108,9 +108,16 @@ static const TkObjType pixelObjType = {
     DupPixelInternalRep,	/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
+    TCL_OBJTYPE_V1(TkLengthOne)},
     0
 };
+
+Tcl_Size
+TkLengthOne(
+    TCL_UNUSED(Tcl_Obj *))
+{
+    return 1;
+}
 
 /*
  * The following structure defines the implementation of the "pixel" Tcl
@@ -124,7 +131,7 @@ static const TkObjType mmObjType = {
     DupMMInternalRep,		/* dupIntRepProc */
     UpdateStringOfMM,		/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
+    TCL_OBJTYPE_V1(TkLengthOne)},
     0
 };
 

@@ -309,7 +309,7 @@ RegOpen(
 	XDeleteProperty(dispPtr->display,
 		RootWindow(dispPtr->display, 0),
 		dispPtr->registryProperty);
-        XSync(dispPtr->display, False);
+	XSync(dispPtr->display, False);
     }
 
     Tk_DeleteErrorHandler(handler);
@@ -523,7 +523,7 @@ RegClose(
     Tk_ErrorHandler handler;
 
     handler = Tk_CreateErrorHandler(regPtr->dispPtr->display, -1, -1, -1,
-            NULL, NULL);
+	    NULL, NULL);
 
     if (regPtr->modified) {
 	if (!regPtr->locked && !localData.sendDebug) {
@@ -1990,14 +1990,14 @@ TkpTestsendCmd(
 	return TCL_ERROR;
     }
     if (index == TESTSEND_BOGUS) {
-        handler = Tk_CreateErrorHandler(winPtr->dispPtr->display, -1, -1, -1,
-                NULL, NULL);
+	handler = Tk_CreateErrorHandler(winPtr->dispPtr->display, -1, -1, -1,
+		NULL, NULL);
 	XChangeProperty(winPtr->dispPtr->display,
 		RootWindow(winPtr->dispPtr->display, 0),
 		winPtr->dispPtr->registryProperty, XA_INTEGER, 32,
 		PropModeReplace,
 		(unsigned char *) "This is bogus information", 6);
-        Tk_DeleteErrorHandler(handler);
+	Tk_DeleteErrorHandler(handler);
     } else if (index == TESTSEND_PROP) {
 	int result, actualFormat;
 	unsigned long length, bytesAfter;
@@ -2036,10 +2036,10 @@ TkpTestsendCmd(
 		XFree(property);
 	    }
 	} else if (Tcl_GetString(objv[4])[0] == 0) {
-            handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
-                    -1, -1, -1, NULL, NULL);
+	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+		    -1, -1, -1, NULL, NULL);
 	    XDeleteProperty(winPtr->dispPtr->display, w, propName);
-            Tk_DeleteErrorHandler(handler);
+	    Tk_DeleteErrorHandler(handler);
 	} else {
 	    Tcl_DString tmp;
 
@@ -2050,12 +2050,12 @@ TkpTestsendCmd(
 		    *p = 0;
 		}
 	    }
-            handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
-                    -1, -1, -1, NULL, NULL);
+	    handler = Tk_CreateErrorHandler(winPtr->dispPtr->display,
+		    -1, -1, -1, NULL, NULL);
 	    XChangeProperty(winPtr->dispPtr->display, w, propName, XA_STRING,
 		    8, PropModeReplace, (unsigned char*)Tcl_DStringValue(&tmp),
 		    p-Tcl_DStringValue(&tmp));
-            Tk_DeleteErrorHandler(handler);
+	    Tk_DeleteErrorHandler(handler);
 	    Tcl_DStringFree(&tmp);
 	}
     } else if (index == TESTSEND_SERIAL) {
