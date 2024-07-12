@@ -45,8 +45,8 @@ static int		GetIndex(Tcl_Interp *interp, TkSharedText *sharedPtr,
 			    TkText *textPtr, const char *string,
 			    TkTextIndex *indexPtr, int *canCachePtr);
 static int              IndexCountBytesOrdered(const TkText *textPtr,
-                            const TkTextIndex *indexPtr1,
-                            const TkTextIndex *indexPtr2);
+			    const TkTextIndex *indexPtr1,
+			    const TkTextIndex *indexPtr2);
 
 /*
  * The "textindex" Tcl_Obj definition:
@@ -1379,7 +1379,7 @@ ForwBack(
 	    } else {
 		TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, &xOffset);
 		while (count-- > 0) {
-                    TkTextIndex indexPtr2;
+		    TkTextIndex indexPtr2;
 
 		    /*
 		     * Go to the beginning of the line, then backward one
@@ -1390,20 +1390,20 @@ ForwBack(
 		    TkTextIndexBackChars(textPtr, indexPtr, 1, &indexPtr2,
 			    COUNT_DISPLAY_INDICES);
 
-                    /*
-                     * If we couldn't go to the previous line, then we wanted
-                       to go before the start of the text: arrange for returning
-                       the first index of the first display line.
-                     */
+		    /*
+		     * If we couldn't go to the previous line, then we wanted
+		       to go before the start of the text: arrange for returning
+		       the first index of the first display line.
+		     */
 
-                    if (!TkTextIndexCmp(indexPtr, &indexPtr2)) {
-                        xOffset = 0;
-                        break;
-                    }
-                    *indexPtr = indexPtr2;
+		    if (!TkTextIndexCmp(indexPtr, &indexPtr2)) {
+			xOffset = 0;
+			break;
+		    }
+		    *indexPtr = indexPtr2;
 		}
 	    }
-            TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
+	    TkTextFindDisplayLineEnd(textPtr, indexPtr, 0, NULL);
 
 	    /*
 	     * This call assumes indexPtr is the beginning of a display line
@@ -1749,7 +1749,7 @@ IndexCountBytesOrdered(
     TkTextLine *linePtr;
 
     if (indexPtr1->linePtr == indexPtr2->linePtr) {
-        return indexPtr2->byteIndex - indexPtr1->byteIndex;
+	return indexPtr2->byteIndex - indexPtr1->byteIndex;
     }
 
     /*
@@ -1763,19 +1763,19 @@ IndexCountBytesOrdered(
     segPtr1 = TkTextIndexToSeg(indexPtr1, &offset);
     byteCount = -offset;
     for (segPtr = segPtr1; segPtr != NULL; segPtr = segPtr->nextPtr) {
-        byteCount += segPtr->size;
+	byteCount += segPtr->size;
     }
 
     linePtr = TkBTreeNextLine(textPtr, indexPtr1->linePtr);
     while (linePtr != indexPtr2->linePtr) {
 	for (segPtr = linePtr->segPtr; segPtr != NULL;
-                segPtr = segPtr->nextPtr) {
-            byteCount += segPtr->size;
-        }
-        linePtr = TkBTreeNextLine(textPtr, linePtr);
-        if (linePtr == NULL) {
-            Tcl_Panic("TextIndexCountBytesOrdered ran out of lines");
-        }
+		segPtr = segPtr->nextPtr) {
+	    byteCount += segPtr->size;
+	}
+	linePtr = TkBTreeNextLine(textPtr, linePtr);
+	if (linePtr == NULL) {
+	    Tcl_Panic("TextIndexCountBytesOrdered ran out of lines");
+	}
     }
 
     byteCount += indexPtr2->byteIndex;
