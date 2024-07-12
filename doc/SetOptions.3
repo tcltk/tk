@@ -530,7 +530,7 @@ free, and restore saved copies of the type and creating a structure
 pointing to those procedures:
 .CS
 typedef struct {
-    char *name;
+    const char *\fname\fR;
     Tk_CustomOptionSetProc *\fIsetProc\fR;
     Tk_CustomOptionGetProc *\fIgetProc\fR;
     Tk_CustomOptionRestoreProc *\fIrestoreProc\fR;
