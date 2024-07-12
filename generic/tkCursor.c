@@ -65,7 +65,7 @@ const TkObjType tkCursorObjType = {
     DupCursorObjProc,		/* dupIntRepProc */
     NULL,			/* updateStringProc */
     NULL,			/* setFromAnyProc */
-    TCL_OBJTYPE_V0},
+    TCL_OBJTYPE_V1(TkLengthOne)},
     0
 };
 

@@ -384,7 +384,7 @@ typedef struct TkTextTag {
     int lMargin2;		/* Left margin for second and later display lines
 				 * of each text line, in pixels. INT_MIN means option not specified. */
     Tk_3DBorder lMarginColor;	/* Used for drawing background in left margins.
-                                 * This is used for both lmargin1 and lmargin2.
+				 * This is used for both lmargin1 and lmargin2.
 				 * NULL means no value specified here. */
 #if TK_MAJOR_VERSION > 8
     Tcl_Obj *offsetObj;		/* -offset option. NULL means option not specified. */
@@ -402,7 +402,7 @@ typedef struct TkTextTag {
     int overstrike;		/* > 0 means draw horizontal line through
 				 * middle of text. -1 means not specified. */
     XColor *overstrikeColor;    /* Color for the overstrike. NULL means same
-                                 * color as foreground. */
+				 * color as foreground. */
 #if TK_MAJOR_VERSION > 8
     Tcl_Obj *rMarginObj;	/* -rmargin option object. NULL
 				 * means option not specified. */
@@ -461,7 +461,7 @@ typedef struct TkTextTag {
     int underline;		/* > 0 means draw underline underneath
 				 * text. -1 means not specified. */
     XColor *underlineColor;     /* Color for the underline. NULL means same
-                                 * color as foreground. */
+				 * color as foreground. */
     TkWrapMode wrapMode;	/* How to handle wrap-around for this tag.
 				 * Must be TEXT_WRAPMODE_CHAR, TEXT_WRAPMODE_WORD,
 				 * TEXT_WRAPMODE_NONE, or TEXT_WRAPMODE_NULL to
@@ -647,7 +647,7 @@ typedef struct TkSharedText {
     struct TkText *peers;
 
     Tcl_Size undoMarkId;             /* Counts undo marks temporarily used during
-                                   undo and redo operations. */
+				   undo and redo operations. */
 } TkSharedText;
 
 /*
@@ -860,7 +860,7 @@ typedef struct TkText {
     int autoSeparators;		/* Non-zero means the separators will be
 				 * inserted automatically. */
     Tcl_Obj *afterSyncCmd;	/* Command to be executed when lines are up to
-                                 * date */
+				 * date */
 } TkText;
 
 /*
