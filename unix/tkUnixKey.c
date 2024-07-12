@@ -160,7 +160,7 @@ TkpGetString(
 	Tcl_DStringSetLength(&buf, TCL_DSTRING_STATIC_SIZE-1);
 	len = XmbLookupString(winPtr->inputContext, &eventPtr->xkey,
 		Tcl_DStringValue(&buf), Tcl_DStringLength(&buf),
-                &kePtr->keysym, &status);
+		&kePtr->keysym, &status);
 
 	/*
 	 * If the buffer wasn't big enough, grow the buffer and try again.
@@ -309,7 +309,7 @@ TkpGetKeySym(
      */
 
     if (eventPtr->xkey.keycode > 0xff) {
-        return NoSymbol;
+	return NoSymbol;
     }
 
     /*

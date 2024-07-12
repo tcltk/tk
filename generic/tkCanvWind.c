@@ -803,7 +803,7 @@ WinItemToPostscript(
     Tk_Window tkwin = winItemPtr->tkwin;
 
     if (prepass || winItemPtr->tkwin == NULL) {
-        return TCL_OK;
+	return TCL_OK;
     }
 
     width = Tk_Width(tkwin);
