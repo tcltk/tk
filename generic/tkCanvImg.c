@@ -722,7 +722,7 @@ ImageToPostscript(
 	 * Image item without actual image specified.
 	 */
 
-        return TCL_OK;
+	return TCL_OK;
     }
     Tk_SizeOfImage(image, &width, &height);
 
