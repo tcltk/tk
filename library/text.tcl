@@ -469,12 +469,12 @@ bind Text <Shift-Option-MouseWheel> {
     tk::MouseWheel %W x [tk::ScaleNum %D] -1.2 pixels
 }
 bind Text <TouchpadScroll> {
-    lassign [tk::PreciseScrollDeltas %D] tk::Priv::deltaX tk::Priv::deltaY
-    if {$tk::Priv::deltaX != 0} {
-	%W xview scroll [tk::ScaleNum [expr {-$tk::Priv::deltaX}]] pixels
+    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+    if {$tk::Priv(deltaX) != 0} {
+	%W xview scroll [tk::ScaleNum [expr {-$tk::Priv(deltaX)}]] pixels
     }
-    if {$tk::Priv::deltaY != 0} {
-	%W yview scroll [tk::ScaleNum [expr {-$tk::Priv::deltaY}]] pixels
+    if {$tk::Priv(deltaY) != 0} {
+	%W yview scroll [tk::ScaleNum [expr {-$tk::Priv(deltaY)}]] pixels
     }
 }
 
