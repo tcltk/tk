@@ -145,12 +145,12 @@ bind Scrollbar <Shift-Option-MouseWheel> {
     tk::ScrollByUnits %W hv %D -12.0
 }
 bind Scrollbar <TouchpadScroll> {
-    lassign [tk::PreciseScrollDeltas %D] tk::Priv::deltaX tk::Priv::deltaY
-    if {$tk::Priv::deltaX != 0 && [%W cget -orient] eq "horizontal"} {
-	tk::ScrollbarScrollByPixels %W h $tk::Priv::deltaX
+    lassign [tk::PreciseScrollDeltas %D] tk::Priv(deltaX) tk::Priv(deltaY)
+    if {$tk::Priv(deltaX) != 0 && [%W cget -orient] eq "horizontal"} {
+	tk::ScrollbarScrollByPixels %W h $tk::Priv(deltaX)
     }
-    if {$tk::Priv::deltaY != 0 && [%W cget -orient] eq "vertical"} {
-	tk::ScrollbarScrollByPixels %W v $tk::Priv::deltaY
+    if {$tk::Priv(deltaY) != 0 && [%W cget -orient] eq "vertical"} {
+	tk::ScrollbarScrollByPixels %W v $tk::Priv(deltaY)
     }
 }
 
