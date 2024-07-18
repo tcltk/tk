@@ -982,7 +982,7 @@ MenuWidgetObjCmd(
  *
  * Side effects:
  *	Commands may get excecuted; variables may get set; sub-menus may get
- *	posted.
+ *	posted, the passed menu may be destroyed.
  *
  *----------------------------------------------------------------------
  */
@@ -991,6 +991,9 @@ int
 TkInvokeMenu(
     Tcl_Interp *interp,		/* The interp that the menu lives in. */
     TkMenu *menuPtr,		/* The menu we are invoking. */
+				/* Must be protected by Tcl_preserve
+				 * against freeing by the caller
+				 */
     int index)			/* The zero based index of the item we are
     				 * invoking. */
 {
@@ -1005,11 +1008,6 @@ TkInvokeMenu(
 	goto done;
     }
 
-    /*
-     * Tk Bug 2d3a81c0: menu may be freed in callback, but menu item is
-     * preserved. As menu is required to delete menu item later, it segfaults.
-     */
-    Tcl_Preserve(menuPtr);
     Tcl_Preserve(mePtr);
     if (mePtr->type == TEAROFF_ENTRY) {
 	Tcl_DString ds;
@@ -1067,7 +1065,6 @@ TkInvokeMenu(
 	Tcl_DecrRefCount(commandPtr);
     }
     Tcl_Release(mePtr);
-    Tcl_Release(menuPtr);
 
   done:
     return result;
