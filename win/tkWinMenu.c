@@ -1240,10 +1240,6 @@ TkWinHandleMenuEvent(
 
 	    interp = menuPtr->interp;
 	    Tcl_Preserve(interp);
-	    /*
-	     * Tk Bug 2d3a81c0: menu may be freed in callback, but menu item is
-	     * preserved. As menu is required to delete menu item later, it segfaults.
-	     */
 	    Tcl_Preserve(menuPtr);
 	    code = TkInvokeMenu(interp, menuPtr, mePtr->index);
 	    if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
