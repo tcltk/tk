@@ -284,7 +284,7 @@ GetPixelsFromObjEx(
     double d;
     PixelRep *pixelPtr;
     static const double bias[] = {
-	1.0,	10.0,	25.4,	25.4 / 72.0
+	1.0L,	10.0L,	25.4L,	3.527777777777777777L /*25.4 / 72.0*/
     };
 
     if (objPtr->typePtr != &pixelObjType.objType) {
