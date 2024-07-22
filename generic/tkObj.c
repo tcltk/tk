@@ -613,7 +613,7 @@ Tk_GetMMFromObj(
     double d;
     MMRep *mmPtr;
     static const double bias[] = {
-	10.0,	25.4,	1.0,	0.35278 /*25.4 / 72.0*/
+	10.0,	25.4,	1.0,	0.352777777777777777 /*25.4 / 72.0*/
     };
 
     if (objPtr->typePtr != &mmObjType.objType) {
