@@ -1012,7 +1012,7 @@ MenuWidgetObjCmd(
  *
  * Side effects:
  *	Commands may get excecuted; variables may get set; sub-menus may get
- *	posted.
+ *	posted, the passed menu may be destroyed.
  *
  *----------------------------------------------------------------------
  */
@@ -1021,8 +1021,12 @@ int
 TkInvokeMenu(
     Tcl_Interp *interp,		/* The interp that the menu lives in. */
     TkMenu *menuPtr,		/* The menu we are invoking. */
-    Tcl_Size index)			/* The zero based index of the item we are
-    				 * invoking. */
+				/* Must be protected by Tcl_Preserve
+				 * against freeing by the caller.
+				 * Tk Bug [2d3a81c0].
+				 */
+    Tcl_Size index)		/* The zero based index of the item we are
+				 * invoking. */
 {
     int result = TCL_OK;
     TkMenuEntry *mePtr;
