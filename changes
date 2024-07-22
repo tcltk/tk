@@ -8184,3 +8184,5 @@ Tk Cocoa 2.0: More drawing internals refinements (culler,walzer)
 2024-02-08 (bug)[57b821] see test textIndex-22.16 (vogel)
 
 - Released 8.6.14, Feb 28, 2024 - https://core.tcl-lang.org/tk/ for details
+
+2024-07-22 (bug)[2d3a81] fix segfault on menubutton destroy (MS-Win only)
