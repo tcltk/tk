@@ -841,7 +841,13 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     deleteWindows
     bind . <Enter> $EnterBind
 } -result {.}
-test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
+
+# This test fails sporadically when run on the macOS CI runner. It does
+# not seem to fail on real computers.  It is not needed since the same
+# thing is tested by 9.13.  So it is simpler to constrain it as notAqua.
+test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} \
+-constraints { notAqua} \
+-setup {
     set iconified false
     if {[winfo ismapped .]} {
 	wm iconify .
