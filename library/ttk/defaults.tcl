@@ -115,7 +115,8 @@ namespace eval ttk::theme::default {
 	ttk::style configure Heading -font TkHeadingFont -relief raised
 	ttk::style configure Treeview \
 	    -background $colors(-window) \
-	    -foreground $colors(-text)
+	    -foreground $colors(-text) \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
 				selected $colors(-selectbg)] \
