@@ -1421,7 +1421,9 @@ deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t1 ; update
+    raiseDelay
     toplevel .t2 ; update
+    raiseDelay
     wm iconify .t1
     raiseDelay
     wm stackorder .
