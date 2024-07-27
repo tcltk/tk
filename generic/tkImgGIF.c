@@ -111,7 +111,7 @@ typedef struct {
  * serializing in the GIF format.
  */
 
-typedef int (WriteBytesFunc) (ClientData clientData, const char *bytes,
+typedef int (WriteBytesFunc) (void *clientData, const char *bytes,
 			    int byteCount);
 
 /*
@@ -135,7 +135,7 @@ static int		FileWriteGIF(Tcl_Interp *interp, const char *filename,
 			    Tcl_Obj *format, Tk_PhotoImageBlock *blockPtr);
 static int		StringWriteGIF(Tcl_Interp *interp, Tcl_Obj *format,
 			    Tk_PhotoImageBlock *blockPtr);
-static int		CommonWriteGIF(Tcl_Interp *interp, ClientData clientData,
+static int		CommonWriteGIF(Tcl_Interp *interp, void *clientData,
 			    WriteBytesFunc *writeProc, Tcl_Obj *format,
 			    Tk_PhotoImageBlock *blockPtr);
 
@@ -280,7 +280,7 @@ typedef struct {
      */
 
     int initialBits;
-    ClientData destination;
+    void *destination;
     WriteBytesFunc *writeProc;
 
     int clearCode;
@@ -308,7 +308,7 @@ typedef struct {
 
 static int		ColorNumber(GifWriterState *statePtr,
 			    int red, int green, int blue);
-static void		Compress(int initBits, ClientData handle,
+static void		Compress(int initBits, void *handle,
 			    WriteBytesFunc *writeProc, ifunptr readValue,
 			    GifWriterState *statePtr);
 static int		IsNewColor(GifWriterState *statePtr,
@@ -351,7 +351,7 @@ FileMatchGIF(
     int *widthPtr, int *heightPtr,
 				/* The dimensions of the image are returned
 				 * here if the file is a valid raw GIF file. */
-    Tcl_Interp *interp)		/* not used */
+    TCL_UNUSED(Tcl_Interp *))
 {
     GIFImageConfig gifConf;
 
@@ -466,7 +466,13 @@ FileReadGIF(
      */
 
     if (Fread(gifConfPtr, buf, 1, 3, chan) != 3) {
-	return TCL_OK;
+	/*
+	 * Bug [865af0148c]: 3 bytes should be there, but data ended before
+	 */
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
+		"GIF file truncated", -1));
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "TRUNCATED", NULL);
+	return TCL_ERROR;
     }
     bitPixel = 2 << (buf[0] & 0x07);
 
@@ -597,7 +603,7 @@ FileReadGIF(
 		    goto error;
 		}
 		nBytes = fileWidth * fileHeight * 3;
-		trashBuffer = ckalloc(nBytes);
+		trashBuffer = (unsigned char *)ckalloc(nBytes);
 		if (trashBuffer) {
 		    memset(trashBuffer, 0, nBytes);
 		}
@@ -700,7 +706,7 @@ FileReadGIF(
 	    goto error;
 	}
 	nBytes = block.pitch * imageHeight;
-	pixelPtr = ckalloc(nBytes);
+	pixelPtr = (unsigned char*)ckalloc(nBytes);
 	if (pixelPtr) {
 	    memset(pixelPtr, 0, nBytes);
 	}
@@ -1044,7 +1050,8 @@ ReadImage(
     Tcl_Channel chan,
     int len, int rows,
     unsigned char cmap[MAXCOLORMAPSIZE][4],
-    int srcX, int srcY,
+    TCL_UNUSED(int),
+    TCL_UNUSED(int),
     int interlace,
     int transparent)
 {
@@ -1191,24 +1198,24 @@ ReadImage(
 		}
 		firstCode = append[code];
 
-	        /*
-	         * Push the head of the code onto the stack.
-	         */
+		/*
+		 * Push the head of the code onto the stack.
+		 */
 
-	        *top++ = firstCode;
+		*top++ = firstCode;
 
-                if (maxCode < (1 << MAX_LWZ_BITS)) {
+		if (maxCode < (1 << MAX_LWZ_BITS)) {
 		    /*
 		     * If there's still room in our codes table, add a new entry.
 		     * Otherwise don't, and keep using the current table.
-                     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
-                     * specification.
+		     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
+		     * specification.
 		     */
 
 		    prefix[maxCode] = oldCode;
 		    append[maxCode] = firstCode;
 		    maxCode++;
-                }
+		}
 
 		/*
 		 * maxCode tells us the maximum code value we can accept. If
@@ -1596,20 +1603,20 @@ Fread(
     if (gifConfPtr->fromData == INLINE_DATA_BINARY) {
 	MFile *handle = (MFile *) chan;
 
-	if (handle->length <= 0 || (size_t) handle->length < hunk*count) {
+	if ((handle->length <= 0) || ((size_t)handle->length < hunk * count)) {
 	    return -1;
 	}
-	memcpy(dst, handle->data, (size_t) (hunk * count));
+	memcpy(dst, handle->data, hunk * count);
 	handle->data += hunk * count;
 	handle->length -= hunk * count;
-	return (int)(hunk * count);
+	return hunk * count;
     }
 
     /*
      * Otherwise we've got a real file to read.
      */
 
-    return Tcl_Read(chan, (char *) dst, (int) (hunk * count));
+    return Tcl_Read(chan, (char *) dst, hunk * count);
 }
 
 /*
@@ -1654,8 +1661,8 @@ FileWriteGIF(
     if (!chan) {
 	return TCL_ERROR;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-translation",
-	    "binary") != TCL_OK) {
+    if (Tcl_SetChannelOption(interp, chan, "-translation", "binary")
+	    != TCL_OK) {
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
@@ -1690,22 +1697,22 @@ StringWriteGIF(
 
 static int
 WriteToChannel(
-    ClientData clientData,
+    void *clientData,
     const char *bytes,
     int byteCount)
 {
-    Tcl_Channel handle = clientData;
+    Tcl_Channel handle = (Tcl_Channel)clientData;
 
     return Tcl_Write(handle, bytes, byteCount);
 }
 
 static int
 WriteToByteArray(
-    ClientData clientData,
+    void *clientData,
     const char *bytes,
     int byteCount)
 {
-    Tcl_Obj *objPtr = clientData;
+    Tcl_Obj *objPtr = (Tcl_Obj *)clientData;
     Tcl_Obj *tmpObj = Tcl_NewByteArrayObj((unsigned char *) bytes, byteCount);
 
     Tcl_IncrRefCount(tmpObj);
@@ -1717,7 +1724,7 @@ WriteToByteArray(
 static int
 CommonWriteGIF(
     Tcl_Interp *interp,
-    ClientData handle,
+    void *handle,
     WriteBytesFunc *writeProc,
     Tcl_Obj *format,
     Tk_PhotoImageBlock *blockPtr)
@@ -1973,7 +1980,7 @@ ReadValue(
 static void
 Compress(
     int initialBits,
-    ClientData handle,
+    void *handle,
     WriteBytesFunc *writeProc,
     ifunptr readValue,
     GifWriterState *statePtr)

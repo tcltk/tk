@@ -198,7 +198,7 @@ GetPixelsFromObjEx(
     double d;
     PixelRep *pixelPtr;
     static const double bias[] = {
-	1.0,	10.0,	25.4,	0.35278 /*25.4 / 72.0*/
+	1.0,	10.0,	25.4,	0.35277777777777775 /*25.4 / 72.0*/
     };
 
     if (objPtr->typePtr != &pixelObjType) {
@@ -549,7 +549,7 @@ Tk_GetMMFromObj(
     double d;
     MMRep *mmPtr;
     static const double bias[] = {
-	10.0,	25.4,	1.0,	0.35278 /*25.4 / 72.0*/
+	10.0,	25.4,	1.0,	0.35277777777777775 /*25.4 / 72.0*/
     };
 
     if (objPtr->typePtr != &mmObjType) {

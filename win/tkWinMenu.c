@@ -1240,11 +1240,13 @@ TkWinHandleMenuEvent(
 
 	    interp = menuPtr->interp;
 	    Tcl_Preserve(interp);
+	    Tcl_Preserve(menuPtr);
 	    code = TkInvokeMenu(interp, menuPtr, mePtr->index);
 	    if (code != TCL_OK && code != TCL_CONTINUE && code != TCL_BREAK) {
 		Tcl_AddErrorInfo(interp, "\n    (menu invoke)");
 		Tcl_BackgroundException(interp, code);
 	    }
+	    Tcl_Release(menuPtr);
 	    Tcl_Release(interp);
 	    *plResult = 0;
 	    returnResult = 1;
