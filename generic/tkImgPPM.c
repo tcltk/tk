@@ -145,7 +145,8 @@ FileReadPPM(
 				 * image being read. */
 {
     int fileWidth, fileHeight, maxIntensity;
-    int nLines, nBytes, h, type, count, bytesPerChannel = 1;
+    int nLines, h, type, bytesPerChannel = 1;
+    int nBytes, count;
     unsigned char *pixelPtr;
     Tk_PhotoImageBlock block;
 
@@ -303,11 +304,6 @@ FileWritePPM(
 	Tcl_Close(NULL, chan);
 	return TCL_ERROR;
     }
-    if (Tcl_SetChannelOption(interp, chan, "-encoding", "binary")
-	    != TCL_OK) {
-	Tcl_Close(NULL, chan);
-	return TCL_ERROR;
-    }
 
     snprintf(header, sizeof(header), "P6\n%d %d\n255\n", blockPtr->width, blockPtr->height);
     Tcl_Write(chan, header, -1);
@@ -326,7 +322,7 @@ FileWritePPM(
 	for (h = blockPtr->height; h > 0; h--) {
 	    pixelPtr = pixLinePtr;
 	    for (w = blockPtr->width; w > 0; w--) {
-		if (    Tcl_Write(chan,(char *)&pixelPtr[0], 1) == -1 ||
+		if (Tcl_Write(chan,(char *)&pixelPtr[0], 1) == -1 ||
 			Tcl_Write(chan,(char *)&pixelPtr[greenOffset],1) == -1 ||
 			Tcl_Write(chan,(char *)&pixelPtr[blueOffset],1) == -1) {
 		    goto writeerror;
@@ -765,7 +761,8 @@ ReadPPMStringHeader(
 {
 #define BUFFER_SIZE 1000
     char buffer[BUFFER_SIZE], c;
-    int i, numFields, dataSize, type = 0;
+    int i, numFields, type = 0;
+    int dataSize;
     unsigned char *dataBuffer;
 
     dataBuffer = Tcl_GetByteArrayFromObj(dataPtr, &dataSize);
