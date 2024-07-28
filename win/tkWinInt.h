@@ -191,26 +191,34 @@ MODULE_SCOPE void		TkWinSetupSystemFonts(TkMainInfo *mainPtr);
  * The following is implemented in tkWinWm and used by tkWinEmbed.c
  */
 
-MODULE_SCOPE void		TkpWinToplevelWithDraw(TkWindow *winPtr);
-MODULE_SCOPE void		TkpWinToplevelIconify(TkWindow *winPtr);
-MODULE_SCOPE void		TkpWinToplevelDeiconify(TkWindow *winPtr);
-MODULE_SCOPE long		TkpWinToplevelIsControlledByWm(TkWindow *winPtr);
-MODULE_SCOPE long		TkpWinToplevelMove(TkWindow *winPtr, int x, int y);
-MODULE_SCOPE long		TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
+MODULE_SCOPE void	TkpWinToplevelWithDraw(TkWindow *winPtr);
+MODULE_SCOPE void	TkpWinToplevelIconify(TkWindow *winPtr);
+MODULE_SCOPE void	TkpWinToplevelDeiconify(TkWindow *winPtr);
+MODULE_SCOPE long	TkpWinToplevelIsControlledByWm(TkWindow *winPtr);
+MODULE_SCOPE long	TkpWinToplevelMove(TkWindow *winPtr, int x, int y);
+MODULE_SCOPE long	TkpWinToplevelOverrideRedirect(TkWindow *winPtr,
 			    int reqValue);
-MODULE_SCOPE void		TkpWinToplevelDetachWindow(TkWindow *winPtr);
-MODULE_SCOPE int		TkpWmGetState(TkWindow *winPtr);
+MODULE_SCOPE void	TkpWinToplevelDetachWindow(TkWindow *winPtr);
+MODULE_SCOPE int	TkpWmGetState(TkWindow *winPtr);
 
 /*
  * The following is implemented in tkWinPointer.c and also used in tkWinWindow.c
  */
 
-MODULE_SCOPE void		TkSetCursorPos(int x, int y);
+MODULE_SCOPE void	TkSetCursorPos(int x, int y);
+
+/*
+ * The following is implemented in tkWinDraw.c and used in tkUtil.c
+ */
+
+MODULE_SCOPE  void	TkWinDrawDottedRect (Display *disp, Drawable d,
+			    unsigned long pixel, int x, int y,
+			    int width, int height);
 
 /*
  * Common routines used in Windows implementation
  */
-MODULE_SCOPE Tcl_Obj *	        TkWin32ErrorObj(HRESULT hrError);
+MODULE_SCOPE Tcl_Obj *	TkWin32ErrorObj(HRESULT hrError);
 
 
 /*
