@@ -372,24 +372,31 @@ static void DrawFocusRing(
     Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, colorObj);
-    unsigned long mask = 0UL;
-    XGCValues gcvalues;
+    XGCValues gcValues;
     GC gc;
+    Display *disp = Tk_Display(tkwin);
 
-    gcvalues.foreground = color->pixel;
-    gcvalues.line_width = thickness < 1 ? 1 : thickness;
-    if (solid) {
-	gcvalues.line_style = LineSolid;
-	mask = GCForeground | GCLineStyle | GCLineWidth;
-    } else {
-	gcvalues.line_style = LineOnOffDash;
-	gcvalues.dashes = 1;
-	gcvalues.dash_offset = 1;
-	mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    if (thickness < 1 && solid) {
+	thickness = 1;
     }
 
-    gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
+    gcValues.foreground = color->pixel;
+    gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
+
+    if (solid) {
+	XRectangle rects[4] = {
+	    {b.x, b.y, b.width, thickness},				/* N */
+	    {b.x, b.y + b.height - thickness, b.width, thickness},	/* S */
+	    {b.x, b.y + thickness, thickness, b.height - 2*thickness},	/* W */
+	    {b.x + b.width - thickness, b.y + thickness,		/* E */
+	     thickness, b.height - 2*thickness}
+	};
+
+	XFillRectangles(disp, d, gc, rects, 4);
+    } else {
+	TkDrawDottedRect(disp, d, gc, b.x, b.y, b.width, b.height);
+    }
+
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 
