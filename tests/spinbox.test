@@ -1229,7 +1229,8 @@ test spinbox-3.23 {SpinboxWidgetCmd procedure, "delete" widget command} -setup {
 } -cleanup {
     destroy .e
 } -result 0123457890
-test spinbox-3.24 {SpinboxWidgetCmd procedure, "delete" widget command} -setup {
+# Constrained by XQuartzKnownBug because [36e379c01b] (crash in XLoadQueryFont) kicks in.
+test spinbox-3.24 {SpinboxWidgetCmd procedure, "delete" widget command} -constraints XQuartzKnownBug -setup {
     spinbox .e
     pack .e
     update
@@ -1347,7 +1348,8 @@ test spinbox-3.34 {SpinboxWidgetCmd procedure, "index" widget command} -setup {
 } -cleanup {
     destroy .e
 } -returnCodes {ok} -match glob -result {*}
-test spinbox-3.35 {SpinboxWidgetCmd procedure, "index" widget command} -setup {
+# Constrained by XQuartzKnownBug because [36e379c01b] (crash in XLoadQueryFont) kicks in.
+test spinbox-3.35 {SpinboxWidgetCmd procedure, "index" widget command} -constraints XQuartzKnownBug -setup {
     spinbox .e
     pack .e
     update
