@@ -1165,7 +1165,7 @@ GenerateXEvent(
 		event.key.nbytes = 0;
 		event.x.xkey.state = state;
 		event.x.xany.serial = scrollCounter++;
-		event.x.xkey.keycode = (unsigned int) delta;
+		event.x.xkey.keycode = (unsigned int) (delta & 0xffff);
 	    } else {
 		event.x.type = MouseWheelEvent;
 		event.x.xany.send_event = -1;
