@@ -830,7 +830,7 @@ if {[tk windowingsystem] eq "x11"} {
 	    lappend printargs -P $printer
 	    # open temp file
 	    set fd [file tempfile fname tk_print]
-	    chan configure $fd -encoding binary -translation binary
+	    chan configure $fd -translation binary
 	    chan puts $fd $data
 	    chan close $fd
 	    # add -r to automatically delete temp files
