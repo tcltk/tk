@@ -1526,8 +1526,8 @@ TkWinDrawDottedRect(
     SelectObject(dc, GetStockObject(NULL_BRUSH));
 
     if (widthMod2 == 0 && heightMod2 == 0) {
-	MoveToEx(dc, x+1, y,  NULL);	LineTo(dc, x2, y);	/* N */
-	MoveToEx(dc, x+2, y2, NULL);	LineTo(dc, x2, y2+1);	/* S */
+	MoveToEx(dc, x+1, y,  NULL);	LineTo(dc, x2,   y);	/* N */
+	MoveToEx(dc, x+2, y2, NULL);	LineTo(dc, x2+1, y2);	/* S */
 	MoveToEx(dc, x,  y+2, NULL);	LineTo(dc, x,  y2+1);	/* W */
 	MoveToEx(dc, x2, y+1, NULL);	LineTo(dc, x2, y2);	/* E */
     } else {
