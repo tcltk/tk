@@ -211,12 +211,13 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
-		Toolbutton.padding -children {
-		    Toolbutton.label
+		Toolbutton.focus -children {
+		    Toolbutton.padding -children {
+			Toolbutton.label
+		    }
 		}
 	    }
 	}
-
 	ttk::style configure Toolbutton \
 	    -padding 1.5p -relief flat
 	ttk::style map Toolbutton -relief \
