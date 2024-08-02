@@ -134,12 +134,13 @@ namespace eval ttk::theme::default {
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
-		Toolbutton.padding -children {
-		    Toolbutton.label
+		Toolbutton.focus -children {
+		    Toolbutton.padding -children {
+			Toolbutton.label
+		    }
 		}
 	    }
 	}
-
 	ttk::style configure Toolbutton \
 	    -padding 2 -relief flat
 	ttk::style map Toolbutton -relief \
