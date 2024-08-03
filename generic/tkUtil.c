@@ -23,7 +23,7 @@
  */
 
 const TkObjType tkStateKeyObjType = {
-    {"statekey",			/* name */
+    {"statekey",		/* name */
     NULL,			/* freeIntRepProc */
     NULL,			/* dupIntRepProc */
     NULL,			/* updateStringProc */
@@ -617,6 +617,70 @@ Tk_DrawFocusHighlight(
 				 * for double buffering). */
 {
     TkDrawInsetFocusHighlight(tkwin, gc, width, drawable, 0);
+}
+
+/*
+ *----------------------------------------------------------------------
+ *
+ * TkDrawDottedRect --
+ *
+ *	This function draws a dotted rectangle, used as focus ring of Ttk
+ *	widgets and for rendering the active element of a listbox.
+ *
+ * Results:
+ *	None.
+ *
+ * Side effects:
+ *	A dotted rectangle is drawn in the specified Drawable.  On the
+ *	windowing systems x11 and aqua the GC components line_style,
+ *	line_width, dashes, and dash_offset are modified as needed.
+ *
+ *----------------------------------------------------------------------
+ */
+
+void
+TkDrawDottedRect(
+    Display *disp,		/* Display containing the dotted rectangle. */
+    Drawable d,			/* Where to draw the rectangle (typically a
+				 * pixmap for double buffering). */
+    GC gc,			/* Graphics context to use for drawing the
+				 * rectangle. */
+    int x, int y,		/* Coordinates of the top-left corner. */
+    int width, int height)	/* Width & height, _including the border_. */
+{
+#ifdef _WIN32
+    TkWinDrawDottedRect(disp, d, gc->foreground, x, y, width, height);
+
+#else
+    XGCValues gcValues;
+    int widthMod2 = width % 2, heightMod2 = height % 2;
+    int x2 = x + width - 1, y2 = y + height - 1;
+
+    gcValues.line_style = LineOnOffDash;
+    gcValues.line_width = 1;
+    gcValues.dashes = 1;
+#ifdef MAC_OSX_TK
+    gcValues.dash_offset = 1;
+#else
+    gcValues.dash_offset = 0;
+#endif
+    XChangeGC(disp, gc, GCLineStyle | GCLineWidth | GCDashList | GCDashOffset,
+	    &gcValues);
+
+    if (widthMod2 == 0 && heightMod2 == 0) {
+	XDrawLine(disp, d, gc, x+1, y,  x2-1, y);	/* N */
+	XDrawLine(disp, d, gc, x+2, y2, x2,   y2);	/* S */
+	XDrawLine(disp, d, gc, x,  y+2, x,  y2);	/* W */
+	XDrawLine(disp, d, gc, x2, y+1, x2, y2-1);	/* E */
+    } else {
+	int dx = 1 - widthMod2, dy = 1 - heightMod2;
+
+	XDrawLine(disp, d, gc, x+1, y,  x2-dx, y);	/* N */
+	XDrawLine(disp, d, gc, x+1, y2, x2-dx, y2);	/* S */
+	XDrawLine(disp, d, gc, x,  y+1, x,  y2-dy);	/* W */
+	XDrawLine(disp, d, gc, x2, y+1, x2, y2-dy);	/* E */
+    }
+#endif
 }
 
 /*
