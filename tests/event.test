@@ -51,17 +51,17 @@ proc _keypress_lookup {char} {
     global keypress_lookup
 
     if {! [info exists keypress_lookup]} {
-        _init_keypress_lookup
+	_init_keypress_lookup
     }
 
     if {$char == ""} {
-        error "empty char"
+	error "empty char"
     }
 
     if {[info exists keypress_lookup($char)]} {
-        return $keypress_lookup($char)
+	return $keypress_lookup($char)
     } else {
-        return $char
+	return $char
     }
 }
 
@@ -76,12 +76,12 @@ proc _keypress {win key} {
     # the focus if the mouse is moved around.
 
     if {[focus] != $win} {
-        focus -force $win
+	focus -force $win
     }
     event generate $win <Key-$keysym>
     _pause 50
     if {[focus] != $win} {
-        focus -force $win
+	focus -force $win
     }
     event generate $win <KeyRelease-$keysym>
     _pause 50
@@ -91,7 +91,7 @@ proc _keypress {win key} {
 
 proc _keypress_string {win string} {
     foreach letter [split $string ""] {
-        _keypress $win $letter
+	_keypress $win $letter
     }
 }
 
@@ -101,7 +101,7 @@ proc _pause {{msecs 1000}} {
     global _pause
 
     if {! [info exists _pause(number)]} {
-        set _pause(number) 0
+	set _pause(number) 0
     }
 
     set num [incr _pause(number)]
@@ -117,7 +117,7 @@ proc _pause {{msecs 1000}} {
 proc _text_ind_to_x_y {text ind} {
     set bbox [$text bbox $ind]
     if {[llength $bbox] != 4} {
-        error "got bbox \{$bbox\} from $text, index $ind"
+	error "got bbox \{$bbox\} from $text, index $ind"
     }
     foreach {x1 y1 width height} $bbox break
     set middle_y [expr {$y1 + ($height / 2)}]
@@ -128,10 +128,10 @@ proc _text_ind_to_x_y {text ind} {
 
 proc _get_selection {widget} {
     if {[string compare $widget [selection own]] != 0} {
-        return ""
+	return ""
     }
     if {[catch {selection get} sel]} {
-        return ""
+	return ""
     }
     return $sel
 }
@@ -209,7 +209,7 @@ test event-2.2(keypress) {type into entry widget and then delete some text} -set
     deleteWindows
 } -result {MEL}
 test event-2.3(keypress) {type into entry widget, triple click, hit Delete key,
-        and then type some more} -setup {
+	and then type some more} -setup {
     deleteWindows
 } -body {
     set t [toplevel .t]
@@ -222,10 +222,10 @@ test event-2.3(keypress) {type into entry widget, triple click, hit Delete key,
 
     event generate $e <Enter>
     for {set i 0} {$i < 3} {incr i} {
-        _pause 100
-        event generate $e <Button-1>
-        _pause 100
-        event generate $e <ButtonRelease-1>
+	_pause 100
+	event generate $e <Button-1>
+	_pause 100
+	event generate $e <ButtonRelease-1>
     }
 
     _keypress $e Delete
@@ -265,6 +265,7 @@ test event-2.5(keypress) {type into text widget and then delete some text} -setu
 test event-2.6(keypress) {type into text widget, triple click,
     hit Delete key, and then type some more} -setup {
 	deleteWindows
+	update idletasks
 } -body {
     set t [toplevel .t]
     set e [text $t.e]
@@ -276,10 +277,10 @@ test event-2.6(keypress) {type into text widget, triple click,
 
     event generate $e <Enter>
     for {set i 0} {$i < 3} {incr i} {
-        _pause 100
-        event generate $e <Button-1>
-        _pause 100
-        event generate $e <ButtonRelease-1>
+	_pause 100
+	event generate $e <Button-1>
+	_pause 100
+	event generate $e <ButtonRelease-1>
     }
 
     _keypress $e Delete
@@ -318,10 +319,10 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     set current $anchor
     while {[$e compare $current <= $selend]} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
-        event generate $e <B1-Motion> -x $current_x -y $current_y
-        set current [$e index [list $current + 1 char]]
-        _pause 50
+	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+	event generate $e <B1-Motion> -x $current_x -y $current_y
+	set current [$e index [list $current + 1 char]]
+	_pause 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
@@ -338,10 +339,10 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     event generate $e <Button-1> -x $current_x -y $current_y
 
     while {[$e compare $current >= [list $anchor - 4 char]]} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
-        event generate $e <B1-Motion> -x $current_x -y $current_y
-        set current [$e index [list $current - 1 char]]
-        _pause 50
+	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+	event generate $e <B1-Motion> -x $current_x -y $current_y
+	set current [$e index [list $current - 1 char]]
+	_pause 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
@@ -385,10 +386,10 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
 
     set current $anchor
     while {$current <= $selend} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
-        event generate $e <B1-Motion> -x $current_x -y $current_y
-        incr current
-        _pause 50
+	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+	event generate $e <B1-Motion> -x $current_x -y $current_y
+	incr current
+	_pause 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
@@ -405,10 +406,10 @@ test event-3.1(click-drag) {click and drag in a text widget, this tests
     event generate $e <Button-1> -x $current_x -y $current_y
 
     while {$current >= ($anchor - 4)} {
-        foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
-        event generate $e <B1-Motion> -x $current_x -y $current_y
-        incr current -1
-        _pause 50
+	foreach {current_x current_y} [_text_ind_to_x_y $e $current] break
+	event generate $e <B1-Motion> -x $current_x -y $current_y
+	incr current -1
+	_pause 50
     }
 
     event generate $e <ButtonRelease-1> -x $current_x -y $current_y
@@ -567,7 +568,7 @@ test event-4.2(double-click-drag) {click down, click up, click down again,
 } -result {select 11 7 select 4 { select} {Word select} 2}
 
 test event-5.1(triple-click-drag) {Triple click and drag across lines in a
-        text widget, this should extend the selection to the new line} -setup {
+	text widget, this should extend the selection to the new line} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
@@ -624,12 +625,12 @@ test event-5.1(triple-click-drag) {Triple click and drag across lines in a
 } -cleanup {
     deleteWindows
 } -result [list "LINE THREE\n" "LINE TWO\nLINE THREE\n" \
-        "LINE ONE\nLINE TWO\nLINE THREE\n"]
+	"LINE ONE\nLINE TWO\nLINE THREE\n"]
 
 test event-6.1(button-state) {button press in a window that is then
-        destroyed, when the mouse is moved into another window it
-        should not generate a <B1-motion> event since the mouse
-        was not pressed down in that window} -setup {
+	destroyed, when the mouse is moved into another window it
+	should not generate a <B1-motion> event since the mouse
+	was not pressed down in that window} -setup {
 	deleteWindows
 } -body {
     set t [toplevel .t]
@@ -781,8 +782,8 @@ test event-7.2(double-click) {A double click on a lone character
 } -result {4 A 4 A}
 
 test event-8 {event generate with keysyms corresponding to
-              multi-byte virtual keycodes - bug
-              e36963bfe8df9f5e528134707a91b9c0051de723} -constraints nonPortable -setup {
+	      multi-byte virtual keycodes - bug
+	      e36963bfe8df9f5e528134707a91b9c0051de723} -constraints nonPortable -setup {
     deleteWindows
     set res [list ]
 } -body {
@@ -804,12 +805,12 @@ test event-8 {event generate with keysyms corresponding to
     # running the test does not have a keyboard with a
     # diaeresis key.
     if {[expr {[lindex $res 3] ne "??"}]} {
-        # keyboard has a physical diaeresis key and bug is fixed
-        return "OK"
+	# keyboard has a physical diaeresis key and bug is fixed
+	return "OK"
     } else  {
-        return "Test failed, unless the keyboard tied to the system \
-                on which this test is run does NOT have a diaeresis \
-                physical key - in this case, test is actually void."
+	return "Test failed, unless the keyboard tied to the system \
+		on which this test is run does NOT have a diaeresis \
+		physical key - in this case, test is actually void."
     }
 } -cleanup {
     deleteWindows
@@ -823,9 +824,8 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     _pause 200
     toplevel .top2 -width 200 -height 200
     wm geometry .top2 +[expr {[winfo rootx .]+50}]+[expr {[winfo rooty .]+50}]
-    update idletasks
+    _pause 200
     wm deiconify .top2
-    update idletasks
     raise .top2
     _pause 400
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
@@ -833,7 +833,6 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
     bind . <Enter> {lappend res %W}
     set res [list ]
     destroy .top2
-    update idletasks
     _pause 200
     set res
 } -cleanup {
@@ -843,9 +842,9 @@ test event-9.1 {enter . window by destroying a toplevel - bug b1d115fa60} -setup
 test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60} -setup {
     set iconified false
     if {[winfo ismapped .]} {
-        wm iconify .
-        update
-        set iconified true
+	wm iconify .
+	update
+	set iconified true
     }
 } -body {
     toplevel .top1
@@ -853,10 +852,10 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
     wm deiconify .top1
     _pause 200
     toplevel .top2 -width 200 -height 200
+    _pause 200
     wm geometry .top2 +[expr {[winfo rootx .top1]+50}]+[expr {[winfo rooty .top1]+50}]
     _pause 200
     wm deiconify .top2
-    update idletasks
     raise .top2
     _pause 400
     event generate .top2 <Motion> -warp 1 -x 50 -y 50
@@ -869,8 +868,8 @@ test event-9.2 {enter toplevel window by destroying a toplevel - bug b1d115fa60}
 } -cleanup {
     deleteWindows ; # destroy all children of ".", this already includes .top1
     if {$iconified} {
-        wm deiconify .
-        update
+	wm deiconify .
+	update
     }
 } -result {.top1}
 
