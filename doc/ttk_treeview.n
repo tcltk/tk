@@ -66,12 +66,15 @@ Note that
 the requested width is determined from the sum of the column widths.
 .OP \-selectmode selectMode SelectMode
 Controls how the built-in class bindings manage the selection.
-One of \fBextended\fR, \fBbrowse\fR, or \fBnone\fR.
+One of \fBnone\fR, \fBbrowse\fR, \fBextended\fR, or \fBmultiple\fR.
 .RS
 .PP
-If set to \fBextended\fR (the default), multiple items may be selected.
+If set to \fBnone\fR, then the selection can not be changed.
 If \fBbrowse\fR, only a single item will be selected at a time.
-If \fBnone\fR, the selection will not be changed.
+If \fBextended\fR (the default), a single item may be selected. Multiple items
+can be selected by using the Control (individual) and Shift (range) keys.
+If \fBmultiple\fR, multiple items can be individually selected without changing
+the selection state of other items.
 .PP
 Note that application code and tag bindings can set the selection
 however they wish, regardless of the value of \fB\-selectmode\fR.
@@ -502,7 +505,7 @@ Adds the specified \fItag\fR to each of the listed \fIitems\fR.
 If \fItag\fR is already present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .TP
-\fIpathName \fBtag bind \fItagName \fR?\fIsequence\fR? ?\fIscript\fR?
+\fIpathName \fBtag bind \fItagName\fR ?\fIsequence\fR? ?\fIscript\fR?
 .
 Add a Tk binding script for the event sequence \fIsequence\fR
 to the tag \fItagName\fR.  When an X event is delivered to an item,

@@ -512,7 +512,7 @@ typedef struct {
 #define SCROLLCMD_CHANGED	(USER_MASK<<2)
 #define SHOW_CHANGED 		(USER_MASK<<3)
 
-static const char *const SelectModeStrings[] = { "none", "browse", "extended", NULL };
+static const char *const SelectModeStrings[] = { "none", "browse", "extended", "multiple", NULL };
 static const char *const SelectTypeStrings[] = { "item", "cell", NULL };
 
 static const Tk_OptionSpec TreeviewOptionSpecs[] = {
@@ -2319,7 +2319,7 @@ static void DrawItem(
 
 	if (column->selected) {
 	    displayItemUsed = &displayItemSel;
- 	    stateCell |= TTK_STATE_SELECTED;
+	    stateCell |= TTK_STATE_SELECTED;
 	}
 
 	if (column->tagset) {
@@ -3197,7 +3197,7 @@ static int TreeviewInsertCommand(
 	interp, newItem, tv->tree.itemOptionTable, tv->core.tkwin);
     newItem->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     if (ConfigureItem(interp, tv, newItem, objc, objv) != TCL_OK) {
-    	Tcl_DeleteHashEntry(entryPtr);
+	Tcl_DeleteHashEntry(entryPtr);
 	FreeItem(newItem);
 	return TCL_ERROR;
     }
@@ -3624,7 +3624,7 @@ static int TreeviewSelectionCommand(
     }
 
     if (objc != 4) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
 	return TCL_ERROR;
     }
 
@@ -3852,7 +3852,7 @@ static int TreeviewCellSelectionCommand(
     }
 
     if (objc < 4 || objc > 5) {
-    	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle arg...?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle arg...?");
 	return TCL_ERROR;
     }
 
@@ -3946,7 +3946,7 @@ static int TreeviewTagBindCommand(
     Ttk_Tag tag;
 
     if (objc < 4 || objc > 6) {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?script?");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?sequence? ?script?");
 	return TCL_ERROR;
     }
 
@@ -4080,7 +4080,7 @@ static int TreeviewTagHasCommand(
 	    Tcl_NewBooleanObj(Ttk_TagSetContains(item->tagset, tag)));
 	return TCL_OK;
     } else {
-    	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
+	Tcl_WrongNumArgs(interp, 3, objv, "tagName ?item?");
 	return TCL_ERROR;
     }
 }
@@ -4142,7 +4142,7 @@ static int TreeviewCtagHasCommand(
 	Tcl_SetObjResult(interp, Tcl_NewWideIntObj(result));
 	return TCL_OK;
     } else {
-    	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cell?");
+	Tcl_WrongNumArgs(interp, 4, objv, "tagName ?cell?");
 	return TCL_ERROR;
     }
 }
