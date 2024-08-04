@@ -2614,6 +2614,33 @@ static int TreeviewHasChildrenCommand(
     return TCL_OK;
 }
 
+/* + $tv size $item --
+ * 	Return count of immediate children associated with $item
+ */
+static int TreeviewSizeCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item;
+    Tcl_WideInt count = 0;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	return TCL_ERROR;
+    }
+    item = FindItem(interp, tv, objv[2]);
+    if (!item) {
+	return TCL_ERROR;
+    }
+
+    for (item = item->children; item; item = item->next) {
+	count++;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
+
+    return TCL_OK;
+}
+
 /* + $tv parent $item --
  * 	Return the item ID of $item's parent.
  */
@@ -3647,8 +3674,8 @@ static int TreeviewSelectionCommand(
 
     if (objc != 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
-	return TCL_ERROR;
-    }
+	    return TCL_ERROR;
+	}
 
     if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
 	    sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
@@ -4448,6 +4475,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "see", 		TreeviewSeeCommand,0 },
     { "selection",	TreeviewSelectionCommand,0 },
     { "set",  		TreeviewSetCommand,0 },
+    { "size",  		TreeviewSizeCommand,0 },
     { "state",  	TtkWidgetStateCommand,0 },
     { "style",		TtkWidgetStyleCommand,0 },
     { "tag",    	0,TreeviewTagCommands },

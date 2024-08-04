@@ -492,6 +492,11 @@ With two arguments, returns the current value of the specified \fIcolumn\fR.
 With three arguments, sets the value of column \fIcolumn\fR
 in item \fIitem\fR to the specified \fIvalue\fR.
 See also \fBCOLUMN IDENTIFIERS\fR.
+.\" METHOD: size
+.TP
+\fIpathname \fBsize \fIitem\fR
+.
+Returns the number of children belonging to \fIitem\fR.
 .\" METHOD: tag
 .TP
 \fIpathName \fBtag \fIargs...\fR
