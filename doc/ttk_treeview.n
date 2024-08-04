@@ -474,6 +474,10 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add \fIitemList\fR to the selection.
 .TP
+\fIpathname \fBselection clear\fR
+.
+Remove all items from selection.
+.TP
 \fIpathname \fBselection remove \fIitemList\fR
 .
 Remove \fIitemList\fR from the selection.
