@@ -23,7 +23,27 @@ namespace eval ttk::treeview {
 
     set State(cellAnchor)	{}
     set State(cellAnchorOp)	"set"
+
+    # Copy the layouts from Treeview to CheckTreeview
+    foreach _from {Treeview Item Cell Heading Row Separator}  {
+	set _to [expr {$_from ne "Treeview" ? "CheckTreeview.$_from" : "CheckTreeview"}]
+	ttk::style layout $_to [ttk::style layout $_from]
+	ttk::style configure $_to {*}[ttk::style configure $_from]
+	ttk::style map $_to {*}[ttk::style map $_from]
+    }
+    unset _from _to
+
+    # Create CheckTreeview Item
+    ttk::style layout CheckTreeview.Item {
+	Treeitem.padding -sticky nswe -children {
+	    Treeitem.indicator -side left -sticky {}
+	    Checkbutton.indicator -side left -sticky {}
+	    Treeitem.image -side left -sticky {}
+	    Treeitem.text -side left -sticky {}
+	}
+    }
 }
+
 
 ### Widget bindings.
 #
@@ -134,7 +154,7 @@ proc ttk::treeview::Keynav {w dir} {
 	    set cell [list $focus $colAnchor]
 	    SelectOp $w $focus $cell choose
 	} else {
-	    SelectOp $w $focus "" choose
+	    SelectOp $w $focus "" move
 	}
     }
 }

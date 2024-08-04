@@ -698,6 +698,11 @@ to determine the affected item or items.
 '\" Not yet:
 '\" In Tk 8.5, the affected item is also passed as the \fB\-detail\fR field
 '\" of the virtual event.
+.SH "STANDARD STYLES"
+.PP
+\fBTtk::treeview\fR widgets support the \fBChecktreeview\fR style in all
+standard themes. This style adds a checkbutton after the open/close indicator
+and before the item image to better indicate which items are selected.
 .SH "STYLING OPTIONS"
 .PP
 The class name for a \fBttk::treeview\fP is \fBTreeview\fP.
