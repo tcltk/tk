@@ -288,6 +288,11 @@ If \fIitem\fR is specified, sets the focus item to \fIitem\fR.
 Otherwise, returns the current focus item, or \fB{}\fR if there is none.
 .\" Need: way to clear the focus item.  {} works for this...
 .\"
+.\" METHOD: haschildren
+.TP
+\fIpathname \fBhaschildren \fIitem\fR
+.
+Returns 1 if \fIitem\fR has children, 0 if not.
 .\" METHOD: heading
 .TP
 \fIpathname \fBheading \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?

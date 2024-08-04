@@ -2592,6 +2592,28 @@ static int TreeviewChildrenCommand(
     return TCL_OK;
 }
 
+/* + $tv haschildren $item --
+ * 	Return boolean for whether item has children or not
+ */
+static int TreeviewHasChildrenCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	return TCL_ERROR;
+    }
+    item = FindItem(interp, tv, objv[2]);
+    if (!item) {
+	return TCL_ERROR;
+    }
+
+    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(item->children));
+    return TCL_OK;
+}
+
 /* + $tv parent $item --
  * 	Return the item ID of $item's parent.
  */
@@ -4412,6 +4434,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "drop",   	TreeviewDropCommand,0 },
     { "exists", 	TreeviewExistsCommand,0 },
     { "focus", 		TreeviewFocusCommand,0 },
+    { "haschildren",	TreeviewHasChildrenCommand,0 },
     { "heading", 	TreeviewHeadingCommand,0 },
     { "identify",  	TreeviewIdentifyCommand,0 },
     { "index",  	TreeviewIndexCommand,0 },
