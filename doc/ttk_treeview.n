@@ -478,6 +478,10 @@ Add \fIitemList\fR to the selection.
 .
 Remove \fIitemList\fR from the selection.
 .TP
+\fIpathname \fBselection size\fR
+.
+Return the number of selected items.
+.TP
 \fIpathname \fBselection toggle \fIitemList\fR
 .
 Toggle the selection state of each item in \fIitemList\fR.

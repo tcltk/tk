@@ -3652,15 +3652,15 @@ static int TreeviewSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     enum {
-	SELECTION_SET, SELECTION_ADD, SELECTION_REMOVE, SELECTION_TOGGLE
+	SELECTION_SET, SELECTION_ADD, SELECTION_REMOVE, SELECTION_TOGGLE, SELECTION_SIZE
     };
     static const char *const selopStrings[] = {
-	"set", "add", "remove", "toggle", NULL
+	"set", "add", "remove", "toggle", "size", NULL
     };
 
     Treeview *tv = (Treeview *)recordPtr;
-    int selop, i, selChange = 0;
-    TreeItem *item, **items;
+    int selop = 0, i, selChange = 0;
+    TreeItem *item, **items = NULL;
 
     if (objc == 2) {
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
@@ -3670,25 +3670,29 @@ static int TreeviewSelectionCommand(
 	}
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
-    }
-
-    if (objc != 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|toggle items?");
+    } else if (objc > 2) {
+	if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
+		sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
 	    return TCL_ERROR;
 	}
+    }
 
-    if (Tcl_GetIndexFromObjStruct(interp, objv[2], selopStrings,
-	    sizeof(char *), "selection operation", 0, &selop) != TCL_OK) {
+    if (objc < 3 || objc > 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|remove|set|size|toggle? ?items?");
+	return TCL_ERROR;
+    } else if (objc == 3 && selop != SELECTION_SIZE) {
+	Tcl_WrongNumArgs(interp, 2, objv, "add|remove|set|toggle items");
 	return TCL_ERROR;
     }
 
-    items = GetItemListFromObj(interp, tv, objv[3]);
-    if (!items) {
-	return TCL_ERROR;
+    if (selop != SELECTION_SIZE) {
+	items = GetItemListFromObj(interp, tv, objv[3]);
+	if (!items) {
+	    return TCL_ERROR;
+	}
     }
 
-    switch (selop)
-    {
+    switch (selop) {
 	case SELECTION_SET:
 	    /* Clear */
 	    for (item=tv->tree.root; item; item = NextPreorder(item)) {
@@ -3697,6 +3701,7 @@ static int TreeviewSelectionCommand(
 		    selChange = 1;
 		}
 	    }
+	    /* Select */
 	    for (i=0; items[i]; ++i) {
 		items[i]->state |= TTK_STATE_SELECTED;
 		selChange = 1;
@@ -3724,9 +3729,20 @@ static int TreeviewSelectionCommand(
 		selChange = 1;
 	    }
 	    break;
+	case SELECTION_SIZE:
+	    Tcl_WideInt count = 0;
+	    for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
+		if (item->state & TTK_STATE_SELECTED) {
+		    count++;
+		}
+	    }
+	    Tcl_SetObjResult(interp, Tcl_NewWideIntObj(count));
+	    break;
     }
 
-    ckfree(items);
+    if (selop != SELECTION_SIZE) {
+	ckfree(items);
+    }
     if (selChange) {
 	Tk_SendVirtualEvent(tv->core.tkwin, "TreeviewSelect", NULL);
     }
