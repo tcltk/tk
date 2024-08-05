@@ -468,7 +468,8 @@ FileReadGIF(
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "no value given for \"%s\" option",
 		    Tcl_GetString(objv[i])));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "OPT_VALUE", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "OPT_VALUE",
+		    (char *) NULL);
 	    return TCL_ERROR;
 	}
 	if (Tcl_GetIntFromObj(interp, objv[++i], &index) != TCL_OK) {
@@ -483,13 +484,15 @@ FileReadGIF(
     if (!ReadGIFHeader(gifConfPtr, chan, &fileWidth, &fileHeight)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"couldn't read GIF header from file \"%s\"", fileName));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "HEADER", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "HEADER",
+		(char *) NULL);
 	return TCL_ERROR;
     }
     if ((fileWidth <= 0) || (fileHeight <= 0)) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		"GIF image file \"%s\" has dimension(s) <= 0", fileName));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BOGUS_SIZE", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BOGUS_SIZE",
+		(char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -503,7 +506,8 @@ FileReadGIF(
 	 */
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"GIF file truncated", -1));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "TRUNCATED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "TRUNCATED",
+		(char *) NULL);
 	return TCL_ERROR;
     }
     bitPixel = 2 << (buf[0] & 0x07);
@@ -512,7 +516,8 @@ FileReadGIF(
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "error reading color map", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP",
+		    (char *) NULL);
 	    return TCL_ERROR;
 	}
     }
@@ -557,7 +562,8 @@ FileReadGIF(
 	case GIF_TERMINATOR:
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "no image data for this index", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "NO_DATA", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "NO_DATA",
+		    (char *) NULL);
 	    goto error;
 
 	case GIF_EXTENSION:
@@ -575,7 +581,7 @@ FileReadGIF(
 		Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			"error reading extension in GIF image", TCL_INDEX_NONE));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "BAD_EXT",
-			NULL);
+			(char *) NULL);
 		goto error;
 	    }
 	    continue;
@@ -585,7 +591,7 @@ FileReadGIF(
 			"couldn't read left/top/width/height in GIF image",
 			-1));
 		Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "DIMENSIONS",
-			NULL);
+			(char *) NULL);
 		goto error;
 	    }
 	    break;
@@ -616,7 +622,7 @@ FileReadGIF(
 		    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 			    "error reading color map", TCL_INDEX_NONE));
 		    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF",
-			    "COLOR_MAP", NULL);
+			    "COLOR_MAP", (char *) NULL);
 		    goto error;
 		}
 	    }
@@ -678,7 +684,8 @@ FileReadGIF(
 	if (!ReadColorMap(gifConfPtr, chan, bitPixel, colorMap)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		    "error reading color map", TCL_INDEX_NONE));
-	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP", NULL);
+	    Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLOR_MAP",
+		    (char *) NULL);
 	    goto error;
 	}
     }
@@ -1341,7 +1348,8 @@ ReadImage(
 
     if (initialCodeSize > MAX_LWZ_BITS) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("malformed image", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "MALFORMED", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "MALFORMED",
+		(char *) NULL);
 	return TCL_ERROR;
     }
 
@@ -2038,7 +2046,8 @@ CommonWriteGIF(
     SaveMap(&state, blockPtr);
     if (state.num >= MAXCOLORMAPSIZE) {
 	Tcl_SetObjResult(interp, Tcl_NewStringObj("too many colors", TCL_INDEX_NONE));
-	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLORFUL", NULL);
+	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "COLORFUL",
+		(char *) NULL);
 	return TCL_ERROR;
     }
     if (state.num<2) {
