@@ -230,15 +230,15 @@ The variable \fBtcl_prompt2\fR is used in a similar way when
 a newline is typed but the current command is not yet complete;
 if \fBtcl_prompt2\fR is not set then no prompt is output for
 incomplete commands.
-.SH ZIPVFS
+.SH "ZIPFS VIRTUAL FILE SYSTEM"
 .PP
 When a zipfile is concatenated to the end of \fBwish\fR, on startup
 the contents of the zip archive will be mounted under a virtual file
 system (VFS). The root of that VFS can be retrieved using the
 \fBzipfs root\fR command. The zip archive is mounted under the \fBapp\fR
 directory within the VFS. If a file named \fBmain.tcl\fR is present in the top
-level directory of the zip archive, it will be sourced instead of the
-shell's normal command line handing. If a top level directory \fBtk_library\fR is
+level directory of the zip archive, it will be sourced instead of
+wish's normal command line handing. If a top level directory \fBtk_library\fR is
 present in the zip archive, it will become the directory loaded as
 env(TK_LIBRARY).
 .PP
