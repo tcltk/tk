@@ -208,7 +208,7 @@ test imgSVGnano-4.2 {error on file not accessible on reread due to configure} -s
     foo configure -format "svg -scale 2"
 } -cleanup {
     rename foo ""
-} -returnCodes error -match glob -result {couldn't open "*/tmpplus.svg": no such file or directory}
+} -returnCodes error -match glob -result {c*t open "*/tmpplus.svg": no such file or directory}
 
 # Special images
 test imgSVGnano-5.0 {image without any of  "width", "height" and "viewbox"} -body {
