@@ -1388,7 +1388,7 @@ ScaleVarProc(
 	    TCL_GLOBAL_ONLY);
     result = Tcl_GetDoubleFromObj(interp, valuePtr, &value);
     if (result != TCL_OK) {
-	resultStr = "can't assign non-numeric value to scale variable";
+	resultStr = "cannot assign a non-numeric value to a scale variable";
 	ScaleSetVariable(scalePtr);
     } else {
 	scalePtr->value = TkRoundValueToResolution(scalePtr, value);
