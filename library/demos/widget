@@ -142,7 +142,7 @@ if {[tk windowingsystem] ne "aqua"} {
 	    -command {tkAboutDialog} -accelerator [mc "<F1>"]
     bind . <F1> {tkAboutDialog}
     .menuBar.file add sep
-    if {[string match win* [tk windowingsystem]]} {
+    if {[tk windowingsystem] eq "win32"} {
 	# Windows doesn't usually have a Meta key
 	::tk::AmpMenuArgs .menuBar.file add command -label [mc "&Quit"] \
 		-command {exit} -accelerator [mc "Ctrl+Q"]
