@@ -239,8 +239,7 @@ system (VFS). The root of that VFS can be retrieved using the
 directory within the VFS. If a file named \fBmain.tcl\fR is present in the top
 level directory of the zip archive, it will be sourced instead of
 wish's normal command line handing. If a top level directory \fBtk_library\fR is
-present in the zip archive, it will become the directory loaded as
-env(TK_LIBRARY).
+present in the zip archive, it will become the directory loaded as $tk_library.
 .PP
 Only one zipfile can be concatenated to the end of executable image
 (tclsh, or wish). However, if multiple zipfiles are
