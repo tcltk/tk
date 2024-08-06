@@ -610,7 +610,7 @@ static Ttk_Theme LookupTheme(
     entryPtr = Tcl_FindHashEntry(&pkgPtr->themeTable, name);
     if (!entryPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"theme \"%s\" doesn't exist", name));
+		"theme \"%s\" does not exist", name));
 	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", name, NULL);
 	return NULL;
     }

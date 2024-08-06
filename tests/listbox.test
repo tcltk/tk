@@ -1485,8 +1485,8 @@ test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} -se
     list [.l2 get 0 end] [.l2 cget -listvar] $foo $result
 } -cleanup {
     destroy .l2
-} -result [list [list a b c d] foo [list a b c d] \
-	{can't set "::zoo::bar::foo": parent namespace doesn't exist}]
+} -match glob -result [list [list a b c d] foo [list a b c d] \
+	{can*t set "::zoo::bar::foo": parent namespace does*t exist}]
 
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
@@ -1687,8 +1687,8 @@ test listbox-6.15 {InsertEls procedure, lost namespaced listvar} -body {
     list [.l2 get 0 end] [.l2 cget -listvar] $result
 } -cleanup {
     destroy .l2
-} -result [list [list a b c e f] ::test::foo \
-	{can't read "::test::foo": no such variable}]
+} -match glob -result [list [list a b c e f] ::test::foo \
+	{can*t read "::test::foo": no such variable}]
 
 
 test listbox-7.1 {DeleteEls procedure} -body {
@@ -2703,7 +2703,7 @@ test listbox-21.11 {ListboxListVarProc, bad list} -setup {
     set result
 } -cleanup {
     destroy .l
-} -result {can't set "x": invalid listvar value}
+} -match glob -result {can*t set "x": invalid listvar value}
 test listbox-21.12 {ListboxListVarProc, cleanup item attributes} -setup {
     destroy .l
 } -body {

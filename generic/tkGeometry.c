@@ -333,8 +333,8 @@ TkSetGeometryContainer(
     if (winPtr->geomMgrName != NULL) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "cannot use geometry manager %s inside %s because"
-		    " %s is already managing it's content windows",
+		    "cannot use geometry manager \"%s\" inside \"%s\":"
+		    " %s is already managing its content windows",
 		    name, Tk_PathName(tkwin), winPtr->geomMgrName));
 	    Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "FIGHT", (char *)NULL);
 	}
