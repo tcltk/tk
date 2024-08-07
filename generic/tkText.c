@@ -1462,8 +1462,8 @@ TextWidgetObjCmd(
 		    deleteInsertOffset = insertLength;
 		}
 
-                indexFromLine = TkBTreeLinesTo(textPtr, indexFromPtr->linePtr);
-                indexFromByteOffset = indexFromPtr->byteIndex;
+		indexFromLine = TkBTreeLinesTo(textPtr, indexFromPtr->linePtr);
+		indexFromByteOffset = indexFromPtr->byteIndex;
 
 		result = TextReplaceCmd(textPtr, interp, indexFromPtr,
 			indexToPtr, objc, objv, 0);
@@ -1473,11 +1473,11 @@ TextWidgetObjCmd(
 		     * Move the insertion position to the correct place.
 		     */
 
-                    TkTextIndex indexTmp;
+		    TkTextIndex indexTmp;
 
-                    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, indexFromLine,
-                            indexFromByteOffset, &indexTmp);
-                    TkTextIndexForwChars(NULL, &indexTmp,
+		    TkTextMakeByteIndex(textPtr->sharedTextPtr->tree, textPtr, indexFromLine,
+			    indexFromByteOffset, &indexTmp);
+		    TkTextIndexForwChars(NULL, &indexTmp,
 			    deleteInsertOffset, &index, COUNT_INDICES);
 		    TkBTreeUnlinkSegment(textPtr->insertMarkPtr,
 			    textPtr->insertMarkPtr->body.mark.linePtr);
@@ -2720,9 +2720,9 @@ InsertChars(
      */
 
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ; tPtr = tPtr->next) {
-        if (TkBTreeCharTagged(indexPtr, tPtr->selTagPtr)) {
-            TkTextSelectionEvent(tPtr);
-        }
+	if (TkBTreeCharTagged(indexPtr, tPtr->selTagPtr)) {
+	    TkTextSelectionEvent(tPtr);
+	}
 	tPtr->abortSelections = 1;
     }
 
@@ -2860,9 +2860,9 @@ TextPushUndoAction(
     Tcl_ListObjAppendElement(NULL, markGravityRUndoMarkCmdObj,
 	    Tcl_NewStringObj(rMarkName, TCL_INDEX_NONE));
     Tcl_ListObjAppendElement(NULL, markGravityLUndoMarkCmdObj,
-            Tcl_NewStringObj("left", 4));
+	    Tcl_NewStringObj("left", 4));
     Tcl_ListObjAppendElement(NULL, markGravityRUndoMarkCmdObj,
-            Tcl_NewStringObj("right", 5));
+	    Tcl_NewStringObj("right", 5));
 
     /*
      * Note: we don't wish to use textPtr->widgetCmd in these callbacks
@@ -3187,7 +3187,7 @@ DeleteIndexRange(
 
     for (i=0, hPtr=Tcl_FirstHashEntry(&sharedTextPtr->tagTable, &search);
 	    hPtr != NULL; i++, hPtr = Tcl_NextHashEntry(&search)) {
-        TkBTreeTag(&index1, &index2, (TkTextTag *)Tcl_GetHashValue(hPtr), 0);
+	TkBTreeTag(&index1, &index2, (TkTextTag *)Tcl_GetHashValue(hPtr), 0);
     }
 
     /*
@@ -3197,7 +3197,7 @@ DeleteIndexRange(
 
     for (tPtr = sharedTextPtr->peers; tPtr != NULL ;
 	    tPtr = tPtr->next) {
-        if (TkBTreeTag(&index1, &index2, tPtr->selTagPtr, 0)) {
+	if (TkBTreeTag(&index1, &index2, tPtr->selTagPtr, 0)) {
 	    /*
 	     * Send an event that the selection changed. This is
 	     * equivalent to:
@@ -3206,7 +3206,7 @@ DeleteIndexRange(
 
 	    TkTextSelectionEvent(textPtr);
 	    tPtr->abortSelections = 1;
-        }
+	}
     }
 
     /*
@@ -5121,13 +5121,13 @@ TextEditUndo(
      */
 
     cmdObj = Tcl_ObjPrintf("::tk::TextUndoRedoProcessMarks %s",
-            Tk_PathName(textPtr->tkwin));
+	    Tk_PathName(textPtr->tkwin));
     Tcl_IncrRefCount(cmdObj);
     code = Tcl_EvalObjEx(textPtr->interp, cmdObj, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
-        Tcl_AddErrorInfo(textPtr->interp,
-                "\n    (on undoing)");
-        Tcl_BackgroundException(textPtr->interp, code);
+	Tcl_AddErrorInfo(textPtr->interp,
+		"\n    (on undoing)");
+	Tcl_BackgroundException(textPtr->interp, code);
     }
     Tcl_DecrRefCount(cmdObj);
 
@@ -5187,13 +5187,13 @@ TextEditRedo(
      */
 
     cmdObj = Tcl_ObjPrintf("::tk::TextUndoRedoProcessMarks %s",
-            Tk_PathName(textPtr->tkwin));
+	    Tk_PathName(textPtr->tkwin));
     Tcl_IncrRefCount(cmdObj);
     code = Tcl_EvalObjEx(textPtr->interp, cmdObj, TCL_EVAL_GLOBAL);
     if (code != TCL_OK) {
-        Tcl_AddErrorInfo(textPtr->interp,
-                "\n    (on undoing)");
-        Tcl_BackgroundException(textPtr->interp, code);
+	Tcl_AddErrorInfo(textPtr->interp,
+		"\n    (on undoing)");
+	Tcl_BackgroundException(textPtr->interp, code);
     }
     Tcl_DecrRefCount(cmdObj);
 
@@ -6133,13 +6133,13 @@ SearchCore(
 			    break;
 			} else {
 			    alreadySearchOffset -= (matchLength ? matchLength : 1);
-                            if (alreadySearchOffset < 0) {
-                                break;
-                            }
+			    if (alreadySearchOffset < 0) {
+				break;
+			    }
 			}
 		    } else {
-                        firstOffset = matchLength ? p - startOfLine + matchLength
-                                                  : p - startOfLine + (Tcl_Size)1;
+			firstOffset = matchLength ? p - startOfLine + matchLength
+						  : p - startOfLine + (Tcl_Size)1;
 			if (firstOffset >= lastOffset) {
 			    /*
 			     * Now, we have to be careful not to find

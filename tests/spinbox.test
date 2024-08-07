@@ -336,7 +336,7 @@ test spinbox-1.27 {configuration option: "font" for spinbox} -setup {
     .e configure -font {}
 } -cleanup {
     destroy .e
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test spinbox-1.28 {configuration option: "foreground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \

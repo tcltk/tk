@@ -929,11 +929,11 @@ ReadOneByte(
 {
     unsigned char buf[2];
     if (Fread(gifConfPtr, buf, 1, 1, chan) != 1) {
-        /*
-         * Premature end of image.
-         */
+	/*
+	 * Premature end of image.
+	 */
 
-        Tcl_SetObjResult(interp, Tcl_NewStringObj(
+	Tcl_SetObjResult(interp, Tcl_NewStringObj(
 		"premature end of image data", TCL_INDEX_NONE));
 	Tcl_SetErrorCode(interp, "TK", "IMAGE", "GIF", "PREMATURE_END", NULL);
 	return -1;
@@ -1218,7 +1218,7 @@ DoExtension(
 	break;
     case 0xfe:			/* Comment Extension */
 	strcpy(extensionStreamName,"comment");
-        /* copy the extension data below */
+	/* copy the extension data below */
 	break;
     }
     /* Add extension to dict */
@@ -1468,24 +1468,24 @@ ReadImage(
 		}
 		firstCode = append[code];
 
-	        /*
-	         * Push the head of the code onto the stack.
-	         */
+		/*
+		 * Push the head of the code onto the stack.
+		 */
 
-	        *top++ = firstCode;
+		*top++ = firstCode;
 
-                if (maxCode < (1 << MAX_LWZ_BITS)) {
+		if (maxCode < (1 << MAX_LWZ_BITS)) {
 		    /*
 		     * If there's still room in our codes table, add a new entry.
 		     * Otherwise don't, and keep using the current table.
-                     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
-                     * specification.
+		     * See DEFERRED CLEAR CODE IN LZW COMPRESSION in the GIF89a
+		     * specification.
 		     */
 
 		    prefix[maxCode] = oldCode;
 		    append[maxCode] = firstCode;
 		    maxCode++;
-                }
+		}
 
 		/*
 		 * maxCode tells us the maximum code value we can accept. If
@@ -1867,7 +1867,7 @@ Fread(
     Tcl_Channel chan)
 {
     if (hunk < 0 || count < 0) {
-        return -1;
+	return -1;
     }
 
     if (gifConfPtr->fromData == INLINE_DATA_BASE64) {

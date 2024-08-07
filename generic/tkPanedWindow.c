@@ -798,7 +798,7 @@ ConfigurePanes(
 		 */
 
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't add %s to itself", arg));
+			"cannot add %s to itself", arg));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "SELF", (char *)NULL);
 		return TCL_ERROR;
 	    } else if (Tk_IsTopLevel(tkwin)) {
@@ -807,7 +807,7 @@ ConfigurePanes(
 		 */
 
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-			"can't add toplevel %s to %s", arg,
+			"cannot add toplevel %s to %s", arg,
 			Tk_PathName(pwPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "TOPLEVEL", (char *)NULL);
 		return TCL_ERROR;
@@ -824,7 +824,7 @@ ConfigurePanes(
 		    }
 		    if (Tk_IsTopLevel(ancestor)) {
 			Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-				"can't add %s to %s", arg,
+				"cannot add %s to %s", arg,
 				Tk_PathName(pwPtr->tkwin)));
 			Tcl_SetErrorCode(interp, "TK", "GEOMETRY",
 				"HIERARCHY", (char *)NULL);

@@ -365,7 +365,7 @@ test imgPhoto-4.12 {ImgPhotoCmd procedure: copy option} -setup {
     photo1 copy blah
 } -returnCodes error -cleanup {
     image delete photo1
-} -result {image "blah" doesn't exist or is not a photo image}
+} -result {image "blah" does not exist or is not a photo image}
 test imgPhoto-4.13 {ImgPhotoCmd procedure: copy option} -setup {
     image create photo photo1
     image create photo photo2
@@ -1431,7 +1431,7 @@ test imgPhoto-8.3 {ImgPhotoDelete procedure, name cleanup} -body {
     photo1 copy photo2
 } -returnCodes error -cleanup {
     imageCleanup
-} -result {image "photo2" doesn't exist or is not a photo image}
+} -result {image "photo2" does not exist or is not a photo image}
 
 test imgPhoto-9.1 {ImgPhotoCmdDeletedProc procedure} -body {
     image create photo photo2 -file $teapotPhotoFile
@@ -1488,7 +1488,7 @@ test imgPhoto-11.1 {Tk_FindPhoto} -setup {
     photo1 copy i1
 } -cleanup {
     imageCleanup
-} -returnCodes error -result {image "i1" doesn't exist or is not a photo image}
+} -returnCodes error -result {image "i1" does not exist or is not a photo image}
 
 test imgPhoto-12.1 {Tk_PhotoPutZoomedBlock} -body {
     image create photo p3 -file $teapotPhotoFile

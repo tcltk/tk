@@ -376,7 +376,7 @@ test frame-2.8 {toplevel configuration options} -constraints win -setup {
     .t configure -use 0x44022
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {window "0x44022" doesn't exist}
+} -returnCodes error -result {window "0x44022" does not exist}
 test frame-2.9 {toplevel configuration options} -constraints win -setup {
     deleteWindows
 } -body {
@@ -1509,7 +1509,7 @@ test frame-15.2 {TIP 262: frame background images} -setup {
     .f configure -backgroundimage gorp
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {image "gorp" doesn't exist}
+} -result {image "gorp" does not exist}
 test frame-15.3 {TIP 262: frame background images} -setup {
     deleteWindows
     image create photo gorp -width 10 -height 10
@@ -1689,7 +1689,7 @@ test frame-15.9 {TIP 262: toplevel background images} -setup {
     .t configure -backgroundimage gorp
 } -returnCodes error -cleanup {
     deleteWindows
-} -result {image "gorp" doesn't exist}
+} -result {image "gorp" does not exist}
 test frame-15.10 {TIP 262: toplevel background images} -setup {
     deleteWindows
     image create photo gorp -width 10 -height 10

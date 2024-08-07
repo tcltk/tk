@@ -190,7 +190,7 @@ test message-1.18 {configuration option: "font"} -setup {
     .m configure -font {}
 } -cleanup {
     destroy .m
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test message-1.19 {configuration option: "-foreground"} -setup {
     message .m -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}

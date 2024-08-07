@@ -254,7 +254,7 @@ typedef struct {
 static const Tk_OptionSpec LabelframeOptionSpecs[] = {
     {TK_OPTION_STRING, "-labelanchor", "labelAnchor", "LabelAnchor",
 	"nw", offsetof(Labelframe, label.labelAnchorObj),TCL_INDEX_NONE,
-        0,0,GEOMETRY_CHANGED},
+	0,0,GEOMETRY_CHANGED},
     {TK_OPTION_STRING, "-text", "text", "Text", "",
 	offsetof(Labelframe,label.textObj), TCL_INDEX_NONE,
 	0,0,GEOMETRY_CHANGED },

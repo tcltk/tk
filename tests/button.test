@@ -1020,7 +1020,7 @@ test button-1.104 {configuration option: "activebackground" for label} -setup {
     .l configure -font {}
 } -cleanup {
     destroy .l
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.105 {configuration option: "font" for button} -setup {
     button .b -borderwidth 2 -highlightthickness 2
     pack .b
@@ -1039,7 +1039,7 @@ test button-1.106 {configuration option: "activebackground" for button} -setup {
     .b configure -font {}
 } -cleanup {
     destroy .b
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.107 {configuration option: "font" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2
     pack .c
@@ -1058,7 +1058,7 @@ test button-1.108 {configuration option: "activebackground" for checkbutton} -se
     .c configure -font {}
 } -cleanup {
     destroy .c
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test button-1.109 {configuration option: "font" for radiobutton} -setup {
     radiobutton .r -borderwidth 2 -highlightthickness 2
     pack .r
@@ -1077,7 +1077,7 @@ test button-1.110 {configuration option: "activebackground" for radiobutton} -se
     .r configure -font {}
 } -cleanup {
     destroy .r
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 
 test button-1.111 {configuration option: "foreground" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -1486,7 +1486,7 @@ test button-1.152 {configuration option: "image" for label} -setup {
     .l configure -image bogus
 } -cleanup {
     destroy .l
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.153 {configuration option: "image" for button} -constraints {
     testImageType
 } -setup {
@@ -1509,7 +1509,7 @@ test button-1.154 {configuration option: "image" for button} -setup {
     .b configure -image bogus
 } -cleanup {
     destroy .b
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.155 {configuration option: "image" for checkbutton} -constraints {
     testImageType
 } -setup {
@@ -1532,7 +1532,7 @@ test button-1.156 {configuration option: "image" for checkbutton} -setup {
     .c configure -image bogus
 } -cleanup {
     destroy .c
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.157 {configuration option: "image" for radiobutton} -constraints {
     testImageType
 } -setup {
@@ -1555,7 +1555,7 @@ test button-1.158 {configuration option: "image" for radiobutton} -setup {
     .r configure -image bogus
 } -cleanup {
     destroy .r
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-1.159 {configuration option: "indicatoron" for checkbutton} -setup {
     checkbutton .c -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2124,7 +2124,7 @@ test button-1.216 {configuration option: "selectimage" for checkbutton} -setup {
     .c configure -selectimage bogus
 } -cleanup {
     destroy .c
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.217 {configuration option: "selectimage" for radiobutton} -constraints {
     testImageType
 } -setup {
@@ -2147,7 +2147,7 @@ test button-1.218 {configuration option: "selectimage" for radiobutton} -setup {
     .r configure -selectimage bogus
 } -cleanup {
     destroy .r
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-1.219 {configuration option: "state" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -2371,7 +2371,7 @@ test button-1.240 {configuration option: "tristateimage" for checkbutton} -setup
     .c configure -tristateimage bogus
 } -cleanup {
     destroy .c
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test button-1.241 {configuration option: "tristateimage" for radiobutton} -constraints {
     testImageType
 } -setup {
@@ -2394,7 +2394,7 @@ test button-1.242 {configuration option: "tristateimage" for radiobutton} -setup
     .r configure -tristateimage bogus
 } -cleanup {
     destroy .r
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-1.243 {configuration option: "underline" for label} -setup {
     label .l -borderwidth 2 -highlightthickness 2 -font {Helvetica -12 bold}
@@ -3326,7 +3326,7 @@ test button-5.11 {ConfigureButton - bad image name} -body {
     button .b -image bogus
 } -cleanup {
     destroy .b
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 
 test button-5.12 {ConfigureButton - setting variable from current text value} -setup {
     unset -nocomplain x

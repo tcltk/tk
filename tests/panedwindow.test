@@ -4572,7 +4572,7 @@ test panedwindow-23.1 {ConfigurePanes, can't add panedwindow to itself} -setup {
     .p add .p
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't add .p to itself}
+} -returnCodes error -result {cannot add .p to itself}
 test panedwindow-23.2 {ConfigurePanes, bad window throws error} -setup {
     deleteWindows
 } -body {
@@ -4863,7 +4863,7 @@ test panedwindow-23.24 {ConfigurePanes, panedwindow cannot manage toplevels} -se
     .p add .t
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't add toplevel .t to .p}
+} -returnCodes error -result {cannot add toplevel .t to .p}
 test panedwindow-23.25 {ConfigurePanes, restrict possible panes} -setup {
     deleteWindows
 } -body {
@@ -4873,7 +4873,7 @@ test panedwindow-23.25 {ConfigurePanes, restrict possible panes} -setup {
    .p add .f.b
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't add .f.b to .p}
+} -returnCodes error -result {cannot add .f.b to .p}
 test panedwindow-23.26 {ConfigurePanes, restrict possible panes} -setup {
     deleteWindows
 } -body {

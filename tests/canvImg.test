@@ -44,7 +44,7 @@ test canvImg-1.4 {options for image items} -body {
     .c create image 50 50 -image unknown -tags i1
 } -cleanup {
     .c delete all
-} -returnCodes error -result {image "unknown" doesn't exist}
+} -returnCodes error -result {image "unknown" does not exist}
 test canvImg-1.5 {options for image items} -constraints testImageType -setup {
     image create test foo
 	.c delete all
@@ -195,7 +195,7 @@ test canvImg-4.3 {ConfiugreImage procedure} -constraints testImageType -setup {
 } -cleanup {
 	.c delete all
 	image delete foo foo2
-} -returnCodes error -result {image "lousy" doesn't exist}
+} -returnCodes error -result {image "lousy" does not exist}
 
 
 test canvImg-5.1 {DeleteImage procedure} -constraints testImageType -setup {
