@@ -189,7 +189,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
-	    -indent 15p
+	    -indent 15p \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
