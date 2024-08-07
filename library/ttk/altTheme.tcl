@@ -100,7 +100,8 @@ namespace eval ttk::theme::alt {
 	ttk::style configure Item \
 	    -indicatormargins {1.5p 1.5p 3p 1.5p}
 	ttk::style configure Treeview -background $colors(-window) \
-	    -stripedbackground $colors(-alternate) -indent 15p
+	    -stripedbackground $colors(-alternate) -indent 15p \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
