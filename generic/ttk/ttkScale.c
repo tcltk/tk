@@ -75,7 +75,7 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 
     {TK_OPTION_STRING, "-state", "state", "State",
 	"normal", offsetof(Scale,scale.stateObj), TCL_INDEX_NONE,
-        0, 0, STATE_CHANGED},
+	0, 0, STATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)

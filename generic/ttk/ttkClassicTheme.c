@@ -840,10 +840,10 @@ TTK_LAYOUT("TEntry",
 /* "classic" combobox, includes highlight border */
 TTK_LAYOUT("TCombobox",
     TTK_GROUP("Combobox.highlight", TTK_FILL_BOTH,
-        TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
+	TTK_GROUP("Combobox.field", TTK_FILL_BOTH,
 	    TTK_NODE("Combobox.downarrow", TTK_PACK_RIGHT|TTK_FILL_Y)
 	    TTK_GROUP("Combobox.padding", TTK_FILL_BOTH,
-	        TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
+		TTK_NODE("Combobox.textarea", TTK_FILL_BOTH)))))
 
 /* "classic" spinbox, includes highlight border */
 TTK_LAYOUT("TSpinbox",
