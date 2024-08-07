@@ -296,7 +296,7 @@ test entry-8.2 "Unset linked variable by deleting namespace" -body {
     namespace delete ::test
     .e insert end "baz"		;# <== error here
     list [.e cget -textvariable] [.e get] [set foo]
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result {can*t set "::test::foo": parent namespace does*t exist} -match glob
 # '-result [list ::test::foo "baz" "baz"]' would also be sensible,
 # but Tcl namespaces don't work that way.
 
