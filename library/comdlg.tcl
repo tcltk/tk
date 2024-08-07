@@ -149,7 +149,7 @@ proc ::tk::FocusGroup_BindIn {t w cmd} {
     variable ::tk::Priv
     if {![info exists Priv(fg,$t)]} {
 	return -code error -errorcode [list TK LOOKUP FOCUS_GROUP $t] \
-	    "focus group \"$t\" doesn't exist"
+	    "focus group \"$t\" does not exist"
     }
     set FocusIn($t,$w) $cmd
 }
@@ -166,7 +166,7 @@ proc ::tk::FocusGroup_BindOut {t w cmd} {
     variable ::tk::Priv
     if {![info exists Priv(fg,$t)]} {
 	return -code error -errorcode [list TK LOOKUP FOCUS_GROUP $t] \
-	    "focus group \"$t\" doesn't exist"
+	    "focus group \"$t\" does not exist"
     }
     set FocusOut($t,$w) $cmd
 }
