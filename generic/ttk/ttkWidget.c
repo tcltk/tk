@@ -797,7 +797,7 @@ int TtkWidgetStyleCommand(
     }
 
     Tcl_SetObjResult(interp, Tcl_NewStringObj(
-            Ttk_StyleName(Ttk_LayoutStyle(corePtr->layout)), -1));
+	    Ttk_StyleName(Ttk_LayoutStyle(corePtr->layout)), -1));
 
     return TCL_OK;
 }

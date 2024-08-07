@@ -258,9 +258,9 @@ static const Ttk_ElementSpec TextElementSpec = {
 static int cTextSetup(TextElement *text, Tk_Window tkwin)
 {
     if (*Tcl_GetString(text->textObj) == '\0') {
-        return 0;
+	return 0;
     } else {
-        return TextSetup(text, tkwin);
+	return TextSetup(text, tkwin);
     }
 }
 

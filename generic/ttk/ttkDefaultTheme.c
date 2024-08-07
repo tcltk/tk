@@ -1040,7 +1040,7 @@ typedef struct {
 
 static const Ttk_ElementOptionSpec ThumbElementOptions[] = {
     { "-width", TK_OPTION_PIXELS, offsetof(ThumbElement,sizeObj),
-        STRINGIFY(SCROLLBAR_WIDTH) },
+	STRINGIFY(SCROLLBAR_WIDTH) },
     { "-background", TK_OPTION_BORDER, offsetof(ThumbElement,borderObj),
 	DEFAULT_BACKGROUND },
     { "-bordercolor", TK_OPTION_COLOR, offsetof(ThumbElement,borderColorObj),

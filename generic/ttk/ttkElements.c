@@ -712,7 +712,7 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorbackground", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,backgroundObj), "#ffffff" },
     { "-indicatorforeground", TK_OPTION_COLOR,
-        offsetof(IndicatorElement,foregroundObj), "#ffffff" },
+	offsetof(IndicatorElement,foregroundObj), "#ffffff" },
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,borderColorObj), "#888888" },
     { "-indicatormargin", TK_OPTION_STRING,
@@ -739,7 +739,7 @@ static void ColorToStr(
     const XColor *colorPtr, char *colorStr)     /* in the format "RRGGBB" */
 {
     snprintf(colorStr, 7, "%02x%02x%02x",
-             colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void ImageChanged(               /* to be passed to Tk_GetImage() */
@@ -1244,7 +1244,7 @@ static void TroughElementDraw(
 	} else {
 	    b.x += (b.width - grooveWidth) / 2;
 	    b.width = grooveWidth;
-        }
+	}
 
 	/*
 	 * Save the data of the trough's inner box for later
