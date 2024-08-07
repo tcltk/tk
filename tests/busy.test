@@ -4,7 +4,7 @@
 # commands. Sourcing this file runs the tests and generates output for errors.
 # No output means no errors were found.
 #
-# Copyright (c) 1998-2000 by Jos Decoster. All rights reserved.
+# Copyright (c) 1998-2000 Jos Decoster. All rights reserved.
 
 package require tcltest 2.2
 tcltest::configure {*}$argv
@@ -77,7 +77,7 @@ test busy-2.8 {tk busy hold non existing window} -body {
 test busy-2.9 {tk busy hold (shortcut) non existing window} -body {
     tk busy .f
     update
-} -returnCodes {error} -result {bad window path name ".f"}
+} -returnCodes error -result {bad window path name ".f"}
 test busy-2.10 {tk busy hold root window with cursor} -body {
     tk busy hold . -cursor arrow
     update

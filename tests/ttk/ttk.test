@@ -209,8 +209,8 @@ test ttk-2.8 "bug 3223850: button state disabled during click" -setup {
     pack [ttk::button .b -command {set ::ttk28 failed}]
     update
 } -body {
-    bind .b <ButtonPress-1> {after 0 {.b configure -state disabled}}
-    after 1 {event generate .b <ButtonPress-1>}
+    bind .b <Button-1> {after 0 {.b configure -state disabled}}
+    after 1 {event generate .b <Button-1>}
     after 50 {event generate .b <ButtonRelease-1>}
     set aid [after 100 {set ::ttk28 [.b instate {disabled !pressed}]}]
     vwait ::ttk28
@@ -248,7 +248,7 @@ test ttk-3.2 "Propagate errors from variable traces" -body {
     .cb invoke
 } -cleanup {
     unset ::A ; destroy .cb
-} -returnCodes error -result {can't set "A": failure}
+} -returnCodes error -match glob -result {can*t set "A": failure}
 
 test ttk-3.3 "Constructor failure with cursor" -body {
     ttk::button .b -cursor bottom_right_corner -style BadStyle
@@ -388,12 +388,12 @@ test ttk-8.4 "ImageChanged" -body {
 
 test ttk-9.1 "Traces on nonexistant namespaces" -body {
     ttk::checkbutton .tcb -variable foo::bar
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result "*parent namespace does*t exist" -match glob
 
 test ttk-9.2 "Traces on nonexistant namespaces II" -body {
     ttk::checkbutton .tcb -variable X
     .tcb configure -variable foo::bar
-} -returnCodes error -result "*parent namespace doesn't exist*" -match glob
+} -returnCodes error -result "*parent namespace does*t exist" -match glob
 
 test ttk-9.3 "Restore saved options on configure error" -body {
     .tcb cget -variable
@@ -582,17 +582,17 @@ test ttk-13.5 "Custom layouts -- missing element definition" -body {
 
 test ttk-14.1 "-variable in nonexistant namespace" -body {
     ttk::checkbutton .tw -variable ::nsn::foo
-} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
+} -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-14.2 "-textvariable in nonexistant namespace" -body {
     ttk::label .tw -textvariable ::nsn::foo
-} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
+} -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-14.3 "-textvariable in nonexistant namespace" -body {
     ttk::entry .tw -textvariable ::nsn::foo
-} -returnCodes error -result {can't trace *: parent namespace doesn't exist} \
+} -returnCodes error -result {can*t trace "::nsn::foo": parent namespace does*t exist} \
   -match glob -cleanup { destroy .tw }
 
 test ttk-15.1 {Bug 3062331} -setup {

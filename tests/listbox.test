@@ -3,7 +3,7 @@
 #
 # Copyright (c) 1993-1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -1485,8 +1485,8 @@ test listbox-4.19 {ConfigureListbox, no listvar -> bad non-existent listvar} -se
     list [.l2 get 0 end] [.l2 cget -listvar] $foo $result
 } -cleanup {
     destroy .l2
-} -result [list [list a b c d] foo [list a b c d] \
-	{can't set "::zoo::bar::foo": parent namespace doesn't exist}]
+} -match glob -result [list [list a b c d] foo [list a b c d] \
+	{can*t set "::zoo::bar::foo": parent namespace does*t exist}]
 
 
 # No tests for DisplayListbox:  I don't know how to test this procedure.
