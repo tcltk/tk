@@ -815,12 +815,13 @@ XGetImage(
     TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
-    NSBitmapImageRep* bitmapRep = nil;
-    NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
+    NSBitmapImageRep* bitmapRep = nil;
+    NSBitmapFormat bitmap_fmt = 0;
     char *bitmap = NULL;
     int depth = 32, offset = 0, bitmap_pad = 0;
-    unsigned int bytes_per_row, size, row, n, m;
+    NSInteger bytes_per_row, samples_per_pixel, size;
+    unsigned int row, n, m;
 
     if (format == ZPixmap) {
 	CGImageRef cgImage;
@@ -841,10 +842,27 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
+	samples_per_pixel = [bitmapRep samplesPerPixel];
+#if 0
+	fprintf(stderr, "XGetImage:\n"
+		"  bitmsp_fmt = %ld\n"
+		"  samples_per_pixel = %ld\n"
+		"  width = %u\n"
+		"  height = %u\n"
+		"  bytes_per_row = %ld\n"
+		"  size = %ld\n",
+		bitmap_fmt, samples_per_pixel, width, height, bytes_per_row, size);
+#endif
+	/*
+	 * Image data with all pixels having alpha value 255 may be reported
+	 * as 3 samples per pixel, even though each row has 4*width pixels and
+	 * the pixels are stored in the default ARGB32 format.
+	 */
+
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
-	    || [bitmapRep samplesPerPixel] != 4
+	    || samples_per_pixel < 3
+	    || samples_per_pixel > 4
 	    || [bitmapRep isPlanar] != 0
-	    || bytes_per_row < 4 * width
 	    || size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    [bitmapRep release];
@@ -874,6 +892,7 @@ XGetImage(
 		}
 	    }
 	}
+
 	imagePtr = XCreateImage(display, NULL, depth, format, offset,
 		(char*) bitmap, width, height,
 		bitmap_pad, bytes_per_row);
