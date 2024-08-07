@@ -15,10 +15,6 @@
 #include "default.h"
 #include "tkInt.h"
 
-#ifdef _WIN32
-#include "tkWinInt.h"
-#endif
-
 typedef struct {
     Tk_OptionTable listboxOptionTable;
 				/* Table defining configuration options
@@ -1831,6 +1827,7 @@ DisplayListbox(
 {
     Listbox *listPtr = clientData;
     Tk_Window tkwin = listPtr->tkwin;
+    Display *disp = listPtr->display;
     GC gc;
     int i, limit, x, y, prevSelected, freeGC, stringLen;
     Tk_FontMetrics fm;
@@ -1885,7 +1882,7 @@ DisplayListbox(
      * screen).
      */
 
-    pixmap = Tk_GetPixmap(listPtr->display, Tk_WindowId(tkwin),
+    pixmap = Tk_GetPixmap(disp, Tk_WindowId(tkwin),
 	    Tk_Width(tkwin), Tk_Height(tkwin), Tk_Depth(tkwin));
 #else
     pixmap = Tk_WindowId(tkwin);
@@ -1915,7 +1912,7 @@ DisplayListbox(
 	int width = Tk_Width(tkwin);	/* zeroth approx to silence warning */
 
 	x = listPtr->inset;
-	y = ((i - listPtr->topIndex) * listPtr->lineHeight) + listPtr->inset;
+	y = (i - listPtr->topIndex) * listPtr->lineHeight + listPtr->inset;
 	gc = listPtr->textGC;
 	freeGC = 0;
 
@@ -2082,7 +2079,7 @@ DisplayListbox(
                     - listPtr->xOffset + GetMaxOffset(listPtr)/2;
         }
 
-        Tk_DrawChars(listPtr->display, pixmap, gc, listPtr->tkfont,
+        Tk_DrawChars(disp, pixmap, gc, listPtr->tkfont,
 		stringRep, stringLen, x, y);
 
 	/*
@@ -2095,71 +2092,34 @@ DisplayListbox(
 		 * Underline the text.
 		 */
 
-		Tk_UnderlineChars(listPtr->display, pixmap, gc,
-			listPtr->tkfont, stringRep, x, y, 0, stringLen);
+		Tk_UnderlineChars(disp, pixmap, gc, listPtr->tkfont,
+			stringRep, x, y, 0, stringLen);
 	    } else if (listPtr->activeStyle == ACTIVE_STYLE_DOTBOX) {
-#ifdef _WIN32
-		/*
-		 * This provides for exact default look and feel on Windows.
-		 */
-
-		TkWinDCState state;
-		HDC dc;
-		RECT rect;
-
-		dc = TkWinGetDrawableDC(listPtr->display, pixmap, &state);
-		rect.left = listPtr->inset;
-		rect.top = ((i - listPtr->topIndex) * listPtr->lineHeight)
-			+ listPtr->inset;
-		rect.right = rect.left + width;
-		rect.bottom = rect.top + listPtr->lineHeight;
-		DrawFocusRect(dc, &rect);
-		TkWinReleaseDrawableDC(pixmap, dc, &state);
-#else /* !_WIN32 */
 		/*
 		 * Draw a dotted box around the text.
 		 */
 
 		x = listPtr->inset;
-		y = ((i - listPtr->topIndex) * listPtr->lineHeight)
+		y = (i - listPtr->topIndex) * listPtr->lineHeight
 			+ listPtr->inset;
-		width = Tk_Width(tkwin) - 2*listPtr->inset - 1;
+		width = Tk_Width(tkwin) - 2*listPtr->inset;
 
-		gcValues.line_style = LineOnOffDash;
-		gcValues.line_width = listPtr->selBorderWidth;
-		if (gcValues.line_width <= 0) {
-		    gcValues.line_width  = 1;
-		}
-		gcValues.dash_offset = 0;
-		gcValues.dashes = 1;
+		TkDrawDottedRect(disp, pixmap, gc, x, y,
+			width, listPtr->lineHeight);
 
-		/*
-		 * You would think the XSetDashes was necessary, but it
-		 * appears that the default dotting for just saying we want
-		 * dashes appears to work correctly.
-		 static char dashList[] = { 1 };
-		 static int dashLen = sizeof(dashList);
-		 XSetDashes(listPtr->display, gc, 0, dashList, dashLen);
-		 */
-
-		mask = GCLineWidth | GCLineStyle | GCDashList | GCDashOffset;
-		XChangeGC(listPtr->display, gc, mask, &gcValues);
-		XDrawRectangle(listPtr->display, pixmap, gc, x, y,
-			(unsigned) width, (unsigned) listPtr->lineHeight - 1);
 		if (!freeGC) {
 		    /*
 		     * Don't bother changing if it is about to be freed.
 		     */
 
 		    gcValues.line_style = LineSolid;
-		    XChangeGC(listPtr->display, gc, GCLineStyle, &gcValues);
+		    XChangeGC(disp, gc, GCLineStyle, &gcValues);
 		}
-#endif /* _WIN32 */
 	    }
 	}
 
 	if (freeGC) {
-	    Tk_FreeGC(listPtr->display, gc);
+	    Tk_FreeGC(disp, gc);
 	}
     }
 
@@ -2187,10 +2147,9 @@ DisplayListbox(
 	}
     }
 #ifndef TK_NO_DOUBLE_BUFFERING
-    XCopyArea(listPtr->display, pixmap, Tk_WindowId(tkwin),
-	    listPtr->textGC, 0, 0, (unsigned) Tk_Width(tkwin),
-	    (unsigned) Tk_Height(tkwin), 0, 0);
-    Tk_FreePixmap(listPtr->display, pixmap);
+    XCopyArea(disp, pixmap, Tk_WindowId(tkwin), listPtr->textGC, 0, 0,
+	    (unsigned) Tk_Width(tkwin), (unsigned) Tk_Height(tkwin), 0, 0);
+    Tk_FreePixmap(disp, pixmap);
 #endif /* TK_NO_DOUBLE_BUFFERING */
 }
 

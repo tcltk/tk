@@ -3,7 +3,7 @@
 #
 # Copyright (c) 1994 The Regents of the University of California.
 # Copyright (c) 1994-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -60,7 +60,7 @@ test spinbox-1.2 {configuration option: "activebackground" for spinbox} -setup {
     .e configure -activebackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.3 {configuration option: "background"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -82,7 +82,7 @@ test spinbox-1.4 {configuration option: "background" for spinbox} -setup {
     .e configure -background non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.5 {configuration option: "bd"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -104,7 +104,7 @@ test spinbox-1.6 {configuration option: "bd" for spinbox} -setup {
     .e configure -bd badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes error -result {bad screen distance "badValue"}
 
 test spinbox-1.7 {configuration option: "bg"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -126,7 +126,7 @@ test spinbox-1.8 {configuration option: "bg" for spinbox} -setup {
     .e configure -bg non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.9 {configuration option: "borderwidth"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -148,7 +148,7 @@ test spinbox-1.10 {configuration option: "borderwidth" for spinbox} -setup {
     .e configure -borderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes error -result {bad screen distance "badValue"}
 
 test spinbox-1.11 {configuration option: "buttonbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -170,7 +170,7 @@ test spinbox-1.12 {configuration option: "buttonbackground" for spinbox} -setup 
     .e configure -buttonbackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.13 {configuration option: "buttoncursor"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -192,7 +192,7 @@ test spinbox-1.14 {configuration option: "buttoncursor" for spinbox} -setup {
     .e configure -buttoncursor badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 
 test spinbox-1.15 {configuration option: "command"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -226,7 +226,7 @@ test spinbox-1.17 {configuration option: "cursor" for spinbox} -setup {
     .e configure -cursor badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad cursor spec "badValue"}
+} -returnCodes error -result {bad cursor spec "badValue"}
 
 test spinbox-1.18 {configuration option: "disabledbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -248,7 +248,7 @@ test spinbox-1.19 {configuration option: "disabledbackground" for spinbox} -setu
     .e configure -disabledbackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.20 {configuration option: "disabledforeground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -270,7 +270,7 @@ test spinbox-1.21 {configuration option: "disabledforeground" for spinbox} -setu
     .e configure -disabledforeground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.22 {configuration option: "exportselection"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -292,7 +292,7 @@ test spinbox-1.23 {configuration option: "exportselection" for spinbox} -setup {
     .e configure -exportselection xyzzy
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected boolean value but got "xyzzy"}
+} -returnCodes error -result {expected boolean value but got "xyzzy"}
 
 test spinbox-1.24 {configuration option: "fg"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -314,7 +314,7 @@ test spinbox-1.25 {configuration option: "fg" for spinbox} -setup {
     .e configure -fg bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.26 {configuration option: "font"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -336,7 +336,7 @@ test spinbox-1.27 {configuration option: "font" for spinbox} -setup {
     .e configure -font {}
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {font "" doesn't exist}
+} -returnCodes error -result {font "" doesn't exist}
 
 test spinbox-1.28 {configuration option: "foreground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -358,7 +358,7 @@ test spinbox-1.29 {configuration option: "foreground" for spinbox} -setup {
     .e configure -foreground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.30 {configuration option: "format"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -380,7 +380,7 @@ test spinbox-1.31 {configuration option: "format" for spinbox} -setup {
     .e configure -format %d
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad spinbox format specifier "%d"}
+} -returnCodes error -result {bad spinbox format specifier "%d"}
 
 test spinbox-1.32 {configuration option: "from"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -402,7 +402,7 @@ test spinbox-1.33 {configuration option: "from" for spinbox} -setup {
     .e configure -from bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected floating-point number but got "bogus"}
+} -returnCodes error -result {expected floating-point number but got "bogus"}
 
 test spinbox-1.34 {configuration option: "highlightbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -424,7 +424,7 @@ test spinbox-1.35 {configuration option: "highlightbackground" for spinbox} -set
     .e configure -highlightbackground ugly
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "ugly"}
+} -returnCodes error -result {unknown color name "ugly"}
 
 test spinbox-1.36 {configuration option: "highlightcolor"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -446,7 +446,7 @@ test spinbox-1.37 {configuration option: "highlightcolor" for spinbox} -setup {
     .e configure -highlightcolor bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.38 {configuration option: "highlightthickness"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -468,7 +468,7 @@ test spinbox-1.39 {configuration option: "highlightthickness" for spinbox} -setu
     .e configure -highlightthickness bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "bogus"}
+} -returnCodes error -result {bad screen distance "bogus"}
 
 test spinbox-1.40 {configuration option: "highlightthickness"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -502,7 +502,7 @@ test spinbox-1.42 {configuration option: "increment" for spinbox} -setup {
     .e configure -increment bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected floating-point number but got "bogus"}
+} -returnCodes error -result {expected floating-point number but got "bogus"}
 
 test spinbox-1.43 {configuration option: "insertbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -524,7 +524,7 @@ test spinbox-1.44 {configuration option: "insertbackground" for spinbox} -setup 
     .e configure -insertbackground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.45 {configuration option: "insertborderwidth"} -setup {
         spinbox .e -borderwidth 2 -insertwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -546,7 +546,7 @@ test spinbox-1.46 {configuration option: "insertborderwidth" for spinbox} -setup
     .e configure -insertborderwidth 2.6x
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "2.6x"}
+} -returnCodes error -result {bad screen distance "2.6x"}
 
 test spinbox-1.47 {configuration option: "insertofftime"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -568,7 +568,7 @@ test spinbox-1.48 {configuration option: "insertofftime" for spinbox} -setup {
     .e configure -insertofftime 3.2
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3.2"}
+} -returnCodes error -result {expected integer but got "3.2"}
 
 test spinbox-1.49 {configuration option: "insertontime"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -590,7 +590,7 @@ test spinbox-1.50 {configuration option: "insertontime" for spinbox} -setup {
     .e configure -insertontime 3.2
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3.2"}
+} -returnCodes error -result {expected integer but got "3.2"}
 
 test spinbox-1.51 {configuration option: "invalidcommand"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -636,7 +636,7 @@ test spinbox-1.54 {configuration option: "justify" for spinbox} -setup {
     .e configure -justify bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad justification "bogus": must be left, right, or center}
+} -returnCodes error -result {bad justification "bogus": must be left, right, or center}
 
 test spinbox-1.55 {configuration option: "readonlybackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -658,7 +658,7 @@ test spinbox-1.56 {configuration option: "readonlybackground" for spinbox} -setu
     .e configure -readonlybackground non-existent
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "non-existent"}
+} -returnCodes error -result {unknown color name "non-existent"}
 
 test spinbox-1.57 {configuration option: "relief"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -680,7 +680,7 @@ test spinbox-1.58 {configuration option: "relief" for spinbox} -setup {
     .e configure -relief 1.5
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
+} -returnCodes error -result {bad relief "1.5": must be flat, groove, raised, ridge, solid, or sunken}
 
 test spinbox-1.59 {configuration option: "repeatdelay"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -702,7 +702,7 @@ test spinbox-1.60 {configuration option: "repeatdelay" for spinbox} -setup {
     .e configure -repeatdelay 3p
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test spinbox-1.61 {configuration option: "repeatinterval"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -724,7 +724,7 @@ test spinbox-1.62 {configuration option: "repeatinterval" for spinbox} -setup {
     .e configure -repeatinterval 3p
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test spinbox-1.63 {configuration option: "selectbackground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -746,7 +746,7 @@ test spinbox-1.64 {configuration option: "selectbackground" for spinbox} -setup 
     .e configure -selectbackground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.65 {configuration option: "selectborderwidth"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -768,7 +768,7 @@ test spinbox-1.66 {configuration option: "selectborderwidth" for spinbox} -setup
     .e configure -selectborderwidth badValue
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad screen distance "badValue"}
+} -returnCodes error -result {bad screen distance "badValue"}
 
 test spinbox-1.67 {configuration option: "selectforeground"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -790,7 +790,7 @@ test spinbox-1.68 {configuration option: "selectforeground" for spinbox} -setup 
     .e configure -selectforeground bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {unknown color name "bogus"}
+} -returnCodes error -result {unknown color name "bogus"}
 
 test spinbox-1.69 {configuration option: "state"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -812,7 +812,7 @@ test spinbox-1.70 {configuration option: "state" for spinbox} -setup {
     .e configure -state bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad state "bogus": must be disabled, normal, or readonly}
+} -returnCodes error -result {bad state "bogus": must be disabled, normal, or readonly}
 
 test spinbox-1.71 {configuration option: "takefocus"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -858,7 +858,7 @@ test spinbox-1.74 {configuration option: "to" for spinbox} -setup {
     .e configure -to bogus
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected floating-point number but got "bogus"}
+} -returnCodes error -result {expected floating-point number but got "bogus"}
 
 test spinbox-1.75 {configuration option: "validate"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -880,7 +880,7 @@ test spinbox-1.76 {configuration option: "validate" for spinbox} -setup {
     .e configure -validate "bogus"
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {bad validate "bogus": must be all, key, focus, focusin, focusout, or none}
+} -returnCodes error -result {bad validate "bogus": must be all, key, focus, focusin, focusout, or none}
 
 test spinbox-1.77 {configuration option: "validatecommand"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -914,7 +914,7 @@ test spinbox-1.79 {configuration option: "values" for spinbox} -setup {
     .e configure -values {bad {}list}
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {list element in braces followed by "list" instead of space}
+} -returnCodes error -result {list element in braces followed by "list" instead of space}
 
 test spinbox-1.80 {configuration option: "validatecommand"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -948,7 +948,7 @@ test spinbox-1.82 {configuration option: "width" for spinbox} -setup {
     .e configure -width 3p
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected integer but got "3p"}
+} -returnCodes error -result {expected integer but got "3p"}
 
 test spinbox-1.83 {configuration option: "wrap"} -setup {
         spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -970,7 +970,7 @@ test spinbox-1.84 {configuration option: "wrap" for spinbox} -setup {
     .e configure -wrap xyzzy
 } -cleanup {
     destroy .e
-} -returnCodes {error} -result {expected boolean value but got "xyzzy"}
+} -returnCodes error -result {expected boolean value but got "xyzzy"}
 
 test spinbox-1.85 {configuration option: "xscrollcommand"} -setup {
     spinbox .e -borderwidth 2 -highlightthickness 2 -font {Helvetica -12} \
@@ -3694,19 +3694,19 @@ test spinbox-20.5 {spinbox config, -format specifier} -body {
     .e config -format %2e-1f
 } -cleanup {
     destroy .e
-}  -returnCodes {error} -result {bad spinbox format specifier "%2e-1f"}
+}  -returnCodes error -result {bad spinbox format specifier "%2e-1f"}
 test spinbox-20.6 {spinbox config, -format specifier} -body {
     spinbox .e
     .e config -format 2.2
 } -cleanup {
     destroy .e
-}  -returnCodes {error} -result {bad spinbox format specifier "2.2"}
+}  -returnCodes error -result {bad spinbox format specifier "2.2"}
 test spinbox-20.7 {spinbox config, -format specifier} -body {
     spinbox .e
     .e config -format %2.-2f
 } -cleanup {
     destroy .e
-}  -returnCodes {error} -result {bad spinbox format specifier "%2.-2f"}
+}  -returnCodes error -result {bad spinbox format specifier "%2.-2f"}
 test spinbox-20.8 {spinbox config, -format specifier} -body {
     spinbox .e
     .e config -format %-2.02f
@@ -3862,10 +3862,10 @@ test spinbox-24.1 {error in trace proc attached to the textvariable} -setup {
     list $result1 $result2 $result3 $result4
 } -cleanup {
     destroy .s
-} -result [list {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!} \
-    {can't set "myvar": Intentional error here!}]
+} -match glob -result [list {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!} \
+    {can*t set "myvar": Intentional error here!}]
 
 test spinbox-25.1 {textvariable lives in a non-existing namespace} -setup {
     destroy .s
@@ -3874,7 +3874,7 @@ test spinbox-25.1 {textvariable lives in a non-existing namespace} -setup {
     set result1
 } -cleanup {
     destroy .s
-} -result {can't trace "thisnsdoesntexist::myvar": parent namespace doesn't exist}
+} -match glob -result {can*t trace "thisnsdoesntexist::myvar": parent namespace does*t exist}
 test spinbox-25.3 {Bugs [2a32225cd1] and [9fa3e08243]} -setup {
     destroy .s
     pack [spinbox .s]

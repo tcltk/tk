@@ -3,7 +3,7 @@
 # fashion for Tcl tests.
 #
 # Copyright (c) 1996-1997 Sun Microsystems, Inc.
-# Copyright (c) 1998-1999 by Scriptics Corporation.
+# Copyright (c) 1998-1999 Scriptics Corporation.
 # All rights reserved.
 
 package require tcltest 2.2
@@ -95,22 +95,22 @@ test canvasText-1.19 {configuration options: bounding of "angle"} -body {
 
 test canvText-2.1 {CreateText procedure: args} -body {
     .c create text
-} -returnCodes {error} -result {wrong # args: should be ".c create text coords ?arg ...?"}
+} -returnCodes error -result {wrong # args: should be ".c create text coords ?arg ...?"}
 test canvText-2.2 {CreateText procedure: args} -body {
     .c create text xyz 0
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes error -result {bad screen distance "xyz"}
 test canvText-2.3 {CreateText procedure: args} -body {
     .c create text 0 xyz
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes error -result {bad screen distance "xyz"}
 test canvText-2.4 {CreateText procedure: args} -body {
     .c create text 0 0 -xyz xyz
 } -cleanup {
     .c delete all
-} -returnCodes {error} -result {unknown option "-xyz"}
+} -returnCodes error -result {unknown option "-xyz"}
 test canvText-2.5 {CreateText procedure} -body {
     .c create text 0 0 -tags x
     .c coords x
@@ -133,14 +133,14 @@ test canvText-3.2 {TextCoords procedure} -setup {
     .c coords test xyz 0
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes error -result {bad screen distance "xyz"}
 test canvText-3.3 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
     .c coords test 0 xyz
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {bad screen distance "xyz"}
+} -returnCodes error -result {bad screen distance "xyz"}
 test canvText-3.4 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
@@ -159,14 +159,14 @@ test canvText-3.5 {TextCoords procedure} -setup {
     .c coords test 10
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {wrong # coordinates: expected 2, got 1}
+} -returnCodes error -result {wrong # coordinates: expected 2, got 1}
 test canvText-3.6 {TextCoords procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
     .c coords test 10 10 10
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {wrong # coordinates: expected 0 or 2, got 3}
+} -returnCodes error -result {wrong # coordinates: expected 0 or 2, got 3}
 
 
 test canvText-4.1 {ConfigureText procedure} -setup {
@@ -175,7 +175,7 @@ test canvText-4.1 {ConfigureText procedure} -setup {
     .c itemconfig test -fill xyz
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {unknown color name "xyz"}
+} -returnCodes error -result {unknown color name "xyz"}
 test canvText-4.2 {ConfigureText procedure} -setup {
     .c create text 20 20 -tag test
 } -body {
@@ -636,7 +636,7 @@ test canvText-9.8 {TextInsert procedure: selectFirst > selectLast: deselect} -bo
     .c select to test 8
     .c dchars test 3 10
     .c index test sel.first
-} -returnCodes {error} -result {selection isn't in item}
+} -returnCodes error -result {selection isn't in item}
 test canvText-9.9 {TextInsert procedure: selectFirst <= selectLast} -body {
     .c itemconfig test -text "abcdefghijk"
     .c select from test 4
@@ -766,7 +766,7 @@ test canvText-14.2 {GetTextIndex procedure: select error} -setup {
     .c index test sel.first
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {selection isn't in item}
+} -returnCodes error -result {selection isn't in item}
 test canvText-14.3 {GetTextIndex procedure: select error} -setup {
     .c create text 0 0 -tag test
     focus .c
@@ -776,7 +776,7 @@ test canvText-14.3 {GetTextIndex procedure: select error} -setup {
     .c index test sel.last
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {selection isn't in item}
+} -returnCodes error -result {selection isn't in item}
 test canvText-14.4 {GetTextIndex procedure: select error} -setup {
     .c create text 0 0 -tag test
     focus .c
@@ -786,7 +786,7 @@ test canvText-14.4 {GetTextIndex procedure: select error} -setup {
     .c index test sel.
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {bad index "sel."}
+} -returnCodes error -result {bad index "sel."}
 test canvText-14.5 {GetTextIndex procedure: bad int or unknown index} -setup {
     .c create text 0 0 -tag test
     focus .c
@@ -795,7 +795,7 @@ test canvText-14.5 {GetTextIndex procedure: bad int or unknown index} -setup {
     .c index test xyz
 } -cleanup {
     .c delete test
-} -returnCodes {error} -result {bad index "xyz"}
+} -returnCodes error -result {bad index "xyz"}
 test canvText-14.6 {select clear errors} -setup {
     .c create text 0 0 -tag test
 } -body {
