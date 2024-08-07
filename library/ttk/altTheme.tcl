@@ -93,7 +93,8 @@ namespace eval ttk::theme::alt {
 
 	# Treeview:
 	ttk::style configure Heading -font TkHeadingFont -relief raised
-	ttk::style configure Treeview -background $colors(-window)
+	ttk::style configure Treeview -background $colors(-window) \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::style map Treeview \
 	    -background [list disabled $colors(-frame)\
 				selected $colors(-selectbg)] \
