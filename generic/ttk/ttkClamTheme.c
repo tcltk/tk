@@ -1202,7 +1202,7 @@ TtkClamTheme_Init(Tcl_Interp *interp)
     Ttk_Theme theme = Ttk_CreateTheme(interp, "clam", 0);
 
     if (!theme) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     Ttk_RegisterElement(interp, theme, "border",

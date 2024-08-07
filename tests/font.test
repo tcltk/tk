@@ -97,7 +97,7 @@ test font-2.1 {TkFontPkgFree} -setup {
     lappend x [foo eval {catch {font families} msg; set msg}]
 } -cleanup {
     interp delete foo
-} -result {{named font "wiggles" doesn't exist} {can't invoke "font" command: application has been destroyed}}
+} -result {{named font "wiggles" does not exist} {cannot invoke "font" command: application has been destroyed}}
 
 
 test font-3.1 {font command: general} -body {
@@ -133,7 +133,7 @@ test font-4.6 {font command: actual: arguments} -body {
 test font-4.7 {font command: actual: arguments} -constraints noExceed -body {
     # (tkfont == NULL)
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-4.8 {font command: actual: all attributes} -body {
     # not (objc > 3) so objPtr = NULL
     lindex [font actual {-family times}] 0
@@ -173,7 +173,7 @@ test font-5.1 {font command: configure} -body {
 test font-5.2 {font command: configure: non-existent font} -body {
     # (namedHashPtr == NULL)
     font configure xyz
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-5.3 {font command: configure: "deleted" font} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -187,7 +187,7 @@ test font-5.3 {font command: configure: "deleted" font} -setup {
     font configure xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-5.4 {font command: configure: get all options} -setup {
     catch {font delete xyz}
 } -body {
@@ -330,7 +330,7 @@ test font-7.4 {font command: delete: non-existent} -setup {
 } -body {
     # (namedHashPtr == NULL)
     font delete xyz
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-7.5 {font command: delete: mark for later deletion} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -345,7 +345,7 @@ test font-7.5 {font command: delete: mark for later deletion} -setup {
     font configure xyz
 } -cleanup {
     destroy .t.f
-} -returnCodes error -result {named font "xyz" doesn't exist}
+} -returnCodes error -result {named font "xyz" does not exist}
 test font-7.6 {font command: delete: mark for later deletion} -setup {
     destroy .t.f
     catch {font delete xyz}
@@ -405,7 +405,7 @@ test font-9.3 {font command: measure: arguments} -body {
 test font-9.4 {font command: measure: arguments} -constraints noExceed -body {
     # (tkfont == NULL)
     font measure "\{xyz" abc
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-9.5 {font command: measure} -body {
     # Tk_TextWidth()
     expr {[font measure $fixed "abcdefg"] == [font measure $fixed "a"]*7 }
@@ -443,7 +443,7 @@ test font-10.5 {font command: metrics: arguments} -body {
 test font-10.6 {font command: metrics: bad font} -constraints noExceed -body {
     # (tkfont == NULL)
     font metrics "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-10.7 {font command: metrics: get all metrics} -setup {
     catch {unset a}
 } -body {
@@ -707,7 +707,7 @@ test font-15.9 {Tk_AllocFontFromObj procedure: get attribute font} -setup {
 test font-15.10 {Tk_AllocFontFromObj procedure: no match} -constraints noExceed -body {
     # (ParseFontNameObj() != TCL_OK)
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-15.11 {Tk_AllocFontFromObj procedure: get attribute font} -body {
     # not (ParseFontNameObj() != TCL_OK)
     lindex [font actual {plan 9}] 0
@@ -2254,10 +2254,10 @@ test font-38.6 {ParseFontNameObj procedure: begins with *} -body {
 } -result [font actual {times 0} -family]
 test font-38.7 {ParseFontNameObj procedure: arguments} -constraints noExceed -body {
     font actual "\{xyz"
-} -returnCodes error -result "font \"{xyz\" doesn't exist"
+} -returnCodes error -result "font \"{xyz\" does not exist"
 test font-38.8 {ParseFontNameObj procedure: arguments} -constraints noExceed -body {
     font actual ""
-} -returnCodes error -result {font "" doesn't exist}
+} -returnCodes error -result {font "" does not exist}
 test font-38.9 {ParseFontNameObj procedure: arguments} -body {
     font actual {times 20 xyz xyz}
 } -returnCodes error -result {unknown font style "xyz"}

@@ -126,13 +126,13 @@ TkGetCursorByName(
 	 *	-cursor @/winnt/cursors/globe.ani
 	 *	-cursor @C:/Winnt/cursors/E_arrow.cur
 	 *	-cursor {@C:/Program\ Files/Cursors/bart.ani}
-	 *      -cursor {{@C:/Program Files/Cursors/bart.ani}}
+	 *	-cursor {{@C:/Program Files/Cursors/bart.ani}}
 	 *	-cursor [list @[file join "C:/Program Files" Cursors bart.ani]]
 	 */
 
 	if (Tcl_IsSafe(interp)) {
 	    Tcl_SetObjResult(interp, Tcl_NewStringObj(
-		    "can't get cursor from a file in a safe interpreter", TCL_INDEX_NONE));
+		    "cannot get cursor from a file in a safe interpreter", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(interp, "TK", "SAFE", "CURSOR_FILE", NULL);
 	    ckfree(argv);
 	    ckfree(cursorPtr);
