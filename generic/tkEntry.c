@@ -1190,11 +1190,14 @@ ConfigureEntry(
 	}
 	Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
 
-	if (entryPtr->insertWidth <= 0) {
-	    entryPtr->insertWidth = 2;
+	if (entryPtr->insertWidth < 0) {
+	    entryPtr->insertWidth = 0;
 	}
-	if (entryPtr->insertBorderWidth > entryPtr->insertWidth/2) {
-	    entryPtr->insertBorderWidth = entryPtr->insertWidth/2;
+	if (entryPtr->insertBorderWidth < 0) {
+	    entryPtr->insertBorderWidth = 0;
+	}
+	if (entryPtr->highlightWidth < 0) {
+	    entryPtr->highlightWidth = 0;
 	}
 
 	if (entryPtr->type == TK_SPINBOX) {
@@ -1316,9 +1319,6 @@ ConfigureEntry(
 
 	Tk_SetInternalBorder(entryPtr->tkwin,
 		entryPtr->borderWidth + entryPtr->highlightWidth);
-	if (entryPtr->highlightWidth < 0) {
-	    entryPtr->highlightWidth = 0;
-	}
 	entryPtr->inset = entryPtr->highlightWidth
 		+ entryPtr->borderWidth + XPAD;
 	break;
@@ -1746,7 +1746,7 @@ DisplayEntry(
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
 	cursorX += entryPtr->layoutX;
-	cursorX -= (entryPtr->insertWidth == 1) ? 1 : (entryPtr->insertWidth)/2;
+	cursorX -= (entryPtr->insertWidth <= 1) ? 1 : (entryPtr->insertWidth)/2;
 	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
 		fm.ascent + fm.descent);
 	if ((entryPtr->insertPos >= entryPtr->leftIndex) && cursorX < xBound) {
