@@ -1751,9 +1751,14 @@ DisplayEntry(
 		fm.ascent + fm.descent);
 	if ((entryPtr->insertPos >= entryPtr->leftIndex) && cursorX < xBound) {
 	    if (entryPtr->flags & CURSOR_ON) {
+		/* Take minimum of given insertBorderWidth and insertWidth/2 */
+		int insertBorderWidth = entryPtr->insertWidth/2;
+		if (entryPtr->insertBorderWidth < insertBorderWidth) {
+		    insertBorderWidth = entryPtr->insertBorderWidth;
+		}
 		Tk_Fill3DRectangle(tkwin, pixmap, entryPtr->insertBorder,
 			cursorX, baseY - fm.ascent, entryPtr->insertWidth,
-			fm.ascent + fm.descent, entryPtr->insertBorderWidth,
+			fm.ascent + fm.descent, insertBorderWidth,
 			TK_RELIEF_RAISED);
 	    } else if (entryPtr->insertBorder == entryPtr->selBorder) {
 		Tk_Fill3DRectangle(tkwin, pixmap, border, cursorX,
