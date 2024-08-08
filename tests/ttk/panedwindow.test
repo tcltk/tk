@@ -135,11 +135,11 @@ test panedwindow-3.0 "configure pane" -body {
 
 test panedwindow-3.1 "configure pane -- errors" -body {
     .pw pane 1 -weight -4
-} -returnCodes error -match glob -result "-weight must be nonnegative"
+} -returnCodes error -match glob -result "-weight must be non-negative"
 
 test panedwindow-3.2 "add pane -- errors" -body {
     .pw add [ttk::label .pw.l] -weight -1
-} -returnCodes error -match glob -result "-weight must be nonnegative"
+} -returnCodes error -match glob -result "-weight must be non-negative"
 
 
 test panedwindow-3.end "cleanup" -body { destroy .pw }
