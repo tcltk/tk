@@ -272,8 +272,8 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	DEF_ENTRY_PLACEHOLDER, TCL_INDEX_NONE, offsetof(Entry, placeholderString),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_COLOR, "-placeholderforeground", "placeholderForeground",
-        "PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
-        offsetof(Entry, placeholderColorPtr), 0, 0, 0},
+	"PlaceholderForeground", DEF_ENTRY_PLACEHOLDERFG, TCL_INDEX_NONE,
+	offsetof(Entry, placeholderColorPtr), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_ENTRY_RELIEF, TCL_INDEX_NONE, offsetof(Entry, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-readonlybackground", "readonlyBackground",
@@ -698,9 +698,9 @@ EntryWidgetObjCmd(
 	}
 	if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
 	    code = DeleteChars(entryPtr, first, last - first);
-            if (code != TCL_OK) {
-                goto error;
-            }
+	    if (code != TCL_OK) {
+		goto error;
+	    }
 	}
 	break;
     }
@@ -754,9 +754,9 @@ EntryWidgetObjCmd(
 	}
 	if (entryPtr->state == STATE_NORMAL) {
 	    code = InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
-            if (code != TCL_OK) {
-                goto error;
-            }
+	    if (code != TCL_OK) {
+		goto error;
+	    }
 	}
 	break;
     }
@@ -1190,24 +1190,27 @@ ConfigureEntry(
 	}
 	Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
 
-	if (entryPtr->insertWidth <= 0) {
-	    entryPtr->insertWidth = 2;
+	if (entryPtr->insertWidth < 0) {
+	    entryPtr->insertWidth = 0;
 	}
-	if (entryPtr->insertBorderWidth > entryPtr->insertWidth/2) {
-	    entryPtr->insertBorderWidth = entryPtr->insertWidth/2;
+	if (entryPtr->insertBorderWidth < 0) {
+	    entryPtr->insertBorderWidth = 0;
+	}
+	if (entryPtr->highlightWidth < 0) {
+	    entryPtr->highlightWidth = 0;
 	}
 
 	if (entryPtr->type == TK_SPINBOX) {
 	    if (sbPtr->fromValue > sbPtr->toValue) {
-                /*
-                 * Swap -from and -to values.
-                 */
+		/*
+		 * Swap -from and -to values.
+		 */
 
-                double tmpFromTo = sbPtr->fromValue;
+		double tmpFromTo = sbPtr->fromValue;
 
-                sbPtr->fromValue = sbPtr->toValue;
-                sbPtr->toValue = tmpFromTo;
-            }
+		sbPtr->fromValue = sbPtr->toValue;
+		sbPtr->toValue = tmpFromTo;
+	    }
 
 	    if (sbPtr->reqFormat && (oldFormat != sbPtr->reqFormat)) {
 		/*
@@ -1316,9 +1319,6 @@ ConfigureEntry(
 
 	Tk_SetInternalBorder(entryPtr->tkwin,
 		entryPtr->borderWidth + entryPtr->highlightWidth);
-	if (entryPtr->highlightWidth < 0) {
-	    entryPtr->highlightWidth = 0;
-	}
 	entryPtr->inset = entryPtr->highlightWidth
 		+ entryPtr->borderWidth + XPAD;
 	break;
@@ -1338,15 +1338,15 @@ ConfigureEntry(
 	value = Tcl_GetVar2(interp, entryPtr->textVarName, NULL, TCL_GLOBAL_ONLY);
 	if (value == NULL) {
 
-            /*
-             * Since any trace on the textvariable was eliminated above,
-             * the only possible reason for EntryValueChanged to return
-             * an error is that the textvariable lives in a namespace
-             * that does not (yet) exist. Indeed, namespaces are not
-             * automatically created as needed. Don't trap this error
-             * here, better do it below when attempting to trace the
-             * variable.
-             */
+	    /*
+	     * Since any trace on the textvariable was eliminated above,
+	     * the only possible reason for EntryValueChanged to return
+	     * an error is that the textvariable lives in a namespace
+	     * that does not (yet) exist. Indeed, namespaces are not
+	     * automatically created as needed. Don't trap this error
+	     * here, better do it below when attempting to trace the
+	     * variable.
+	     */
 
 	    EntryValueChanged(entryPtr, NULL);
 	} else {
@@ -1367,12 +1367,12 @@ ConfigureEntry(
 
 	    Tcl_ListObjIndex(interp, sbPtr->listObj, 0, &objPtr);
 
-            /*
+	    /*
 	     * No check for error return here as well, because any possible
 	     * error will be trapped below when attempting tracing.
 	     */
 
-            EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
+	    EntryValueChanged(entryPtr, Tcl_GetString(objPtr));
 	} else if ((sbPtr->valueStr == NULL)
 		&& !DOUBLES_EQ(sbPtr->fromValue, sbPtr->toValue)
 		&& (!DOUBLES_EQ(sbPtr->fromValue, oldFrom)
@@ -1415,10 +1415,10 @@ ConfigureEntry(
 	code = Tcl_TraceVar2(interp, entryPtr->textVarName,
 		NULL, TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		EntryTextVarProc, entryPtr);
-        if (code != TCL_OK) {
-            return TCL_ERROR;
-        }
-        entryPtr->flags |= ENTRY_VAR_TRACED;
+	if (code != TCL_OK) {
+	    return TCL_ERROR;
+	}
+	entryPtr->flags |= ENTRY_VAR_TRACED;
     }
 
     EntryWorldChanged(entryPtr);
@@ -1524,7 +1524,7 @@ EntryWorldChanged(
     if (entryPtr->selFgColorPtr != NULL) {
 	gcValues.foreground = entryPtr->selFgColorPtr->pixel;
     } else {
-        gcValues.foreground = colorPtr->pixel;
+	gcValues.foreground = colorPtr->pixel;
     }
     gcValues.font = Tk_FontId(entryPtr->tkfont);
     mask = GCForeground | GCFont;
@@ -1746,7 +1746,7 @@ DisplayEntry(
 	Tk_CharBbox(entryPtr->textLayout, entryPtr->insertPos, &cursorX, NULL,
 		NULL, NULL);
 	cursorX += entryPtr->layoutX;
-	cursorX -= (entryPtr->insertWidth == 1) ? 1 : (entryPtr->insertWidth)/2;
+	cursorX -= (entryPtr->insertWidth <= 1) ? 1 : (entryPtr->insertWidth)/2;
 	Tk_SetCaretPos(entryPtr->tkwin, cursorX, baseY - fm.ascent,
 		fm.ascent + fm.descent);
 	if ((entryPtr->insertPos >= entryPtr->leftIndex) && cursorX < xBound) {
@@ -1765,19 +1765,19 @@ DisplayEntry(
 
     if ((entryPtr->numChars == 0) && (entryPtr->placeholderChars != 0)) {
 
-        /*
-         * Draw the placeholder text.
-         */
+	/*
+	 * Draw the placeholder text.
+	 */
 
-        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
+	Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->placeholderGC,
 	    entryPtr->placeholderLayout, entryPtr->placeholderX, entryPtr->layoutY,
 	    entryPtr->placeholderLeftIndex, entryPtr->placeholderChars);
 
     } else {
 
-        if (showSelection && (entryPtr->state != STATE_DISABLED)
-	        && (entryPtr->selTextGC != entryPtr->textGC)
-	        && (entryPtr->selectFirst < entryPtr->selectLast)) {
+	if (showSelection && (entryPtr->state != STATE_DISABLED)
+		&& (entryPtr->selTextGC != entryPtr->textGC)
+		&& (entryPtr->selectFirst < entryPtr->selectLast)) {
 
 	    /*
 	     * Draw the selected and unselected portions separately.
@@ -1786,33 +1786,33 @@ DisplayEntry(
 	    Tcl_Size selFirst;
 
 	    if (entryPtr->selectFirst < entryPtr->leftIndex) {
-	        selFirst = entryPtr->leftIndex;
+		selFirst = entryPtr->leftIndex;
 	    } else {
-	        selFirst = entryPtr->selectFirst;
+		selFirst = entryPtr->selectFirst;
 	    }
 	    if (entryPtr->leftIndex < selFirst) {
-	        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
-		        entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-		        entryPtr->leftIndex, selFirst);
+		Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+			entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+			entryPtr->leftIndex, selFirst);
 	    }
 	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->selTextGC,
 		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 		    selFirst, entryPtr->selectLast);
 	    if (entryPtr->selectLast < entryPtr->numChars) {
-	        Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
-		        entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
-		        entryPtr->selectLast, entryPtr->numChars);
+		Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
+			entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
+			entryPtr->selectLast, entryPtr->numChars);
 	    }
-        } else {
+	} else {
 
-            /*
-             * Draw the entire visible text
-             */
+	    /*
+	     * Draw the entire visible text
+	     */
 
 	    Tk_DrawTextLayout(entryPtr->display, pixmap, entryPtr->textGC,
 		    entryPtr->textLayout, entryPtr->layoutX, entryPtr->layoutY,
 		    entryPtr->leftIndex, entryPtr->numChars);
-        }
+	}
     }
 
     if (entryPtr->type == TK_SPINBOX) {
@@ -2019,22 +2019,22 @@ EntryComputeGeometry(
 
     Tk_FreeTextLayout(entryPtr->placeholderLayout);
     if (entryPtr->placeholderString) {
-        entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
-        entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
-	        entryPtr->placeholderString, entryPtr->placeholderChars, 0,
-	        entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, NULL);
+	entryPtr->placeholderChars = strlen(entryPtr->placeholderString);
+	entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+		entryPtr->placeholderString, entryPtr->placeholderChars, 0,
+		entryPtr->justify, TK_IGNORE_NEWLINES, &totalLength, NULL);
 	overflow = totalLength -
-	        (Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
+		(Tk_Width(entryPtr->tkwin) - 2*entryPtr->inset - entryPtr->xWidth);
 	if (overflow <= 0) {
 	    entryPtr->placeholderLeftIndex = 0;
 	    if (entryPtr->justify == TK_JUSTIFY_LEFT) {
 		entryPtr->placeholderX = entryPtr->inset;
 	    } else if (entryPtr->justify == TK_JUSTIFY_RIGHT) {
 		entryPtr->placeholderX = Tk_Width(entryPtr->tkwin) - entryPtr->inset
-		        - entryPtr->xWidth - totalLength;
+			- entryPtr->xWidth - totalLength;
 	    } else {
 		entryPtr->placeholderX = (Tk_Width(entryPtr->tkwin)
-		        - entryPtr->xWidth - totalLength)/2;
+			- entryPtr->xWidth - totalLength)/2;
 	    }
     	} else {
 
@@ -2055,12 +2055,12 @@ EntryComputeGeometry(
 	    Tk_CharBbox(entryPtr->placeholderLayout, entryPtr->placeholderLeftIndex, &rightX,
 		NULL, NULL, NULL);
 	    entryPtr->placeholderX = entryPtr->inset -rightX;
-        }
+	}
     } else {
-        entryPtr->placeholderChars = 0;
-        entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
-	        entryPtr->placeholderString, 0, 0,
-	        entryPtr->justify, TK_IGNORE_NEWLINES, NULL, NULL);
+	entryPtr->placeholderChars = 0;
+	entryPtr->placeholderLayout = Tk_ComputeTextLayout(entryPtr->tkfont,
+		entryPtr->placeholderString, 0, 0,
+		entryPtr->justify, TK_IGNORE_NEWLINES, NULL, NULL);
 	entryPtr->placeholderX = entryPtr->inset;
     }
 
@@ -2413,7 +2413,7 @@ EntryValueChanged(
      */
 
     if ((entryPtr->textVarName != NULL) && (newValue == NULL)) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
     return TCL_OK;
 }
@@ -3261,34 +3261,34 @@ EntryTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
-            void *probe = NULL;
+	if (!Tcl_InterpDeleted(interp) && entryPtr->textVarName) {
+	    void *probe = NULL;
 
-            do {
-                probe = Tcl_VarTraceInfo(interp,
-                        entryPtr->textVarName,
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        EntryTextVarProc, probe);
-                if (probe == entryPtr) {
-                    break;
-                }
-            } while (probe);
-            if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * textVarName, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
-                return NULL;
-            }
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			entryPtr->textVarName,
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			EntryTextVarProc, probe);
+		if (probe == entryPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * textVarName, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
 	    Tcl_SetVar2(interp, entryPtr->textVarName, NULL,
 		    entryPtr->string, TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, entryPtr->textVarName, NULL,
 		    TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
 		    EntryTextVarProc, clientData);
 	    entryPtr->flags |= ENTRY_VAR_TRACED;
-        }
+	}
 	return NULL;
     }
 
@@ -3402,9 +3402,9 @@ EntryValidateChange(
 
     if (entryPtr->validateCmd == NULL ||
 	entryPtr->validate == VALIDATE_NONE) {
-        if (entryPtr->flags & VALIDATING) {
-            entryPtr->flags |= VALIDATE_ABORT;
-        }
+	if (entryPtr->flags & VALIDATING) {
+	    entryPtr->flags |= VALIDATE_ABORT;
+	}
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
@@ -3416,7 +3416,7 @@ EntryValidateChange(
 
     if (entryPtr->flags & VALIDATING) {
 	entryPtr->validate = VALIDATE_NONE;
-        entryPtr->flags |= VALIDATE_ABORT;
+	entryPtr->flags |= VALIDATE_ABORT;
 	return (varValidate ? TCL_ERROR : TCL_OK);
     }
 
@@ -3932,9 +3932,9 @@ SpinboxWidgetObjCmd(
 	}
 	if ((last >= first) && (entryPtr->state == STATE_NORMAL)) {
 	    code = DeleteChars(entryPtr, first, last - first);
-            if (code != TCL_OK) {
-                goto error;
-            }
+	    if (code != TCL_OK) {
+		goto error;
+	    }
 	}
 	break;
     }
@@ -4007,9 +4007,9 @@ SpinboxWidgetObjCmd(
 	}
 	if (entryPtr->state == STATE_NORMAL) {
 	    code = InsertChars(entryPtr, index, Tcl_GetString(objv[3]));
-            if (code != TCL_OK) {
-                goto error;
-            }
+	    if (code != TCL_OK) {
+		goto error;
+	    }
 	}
 	break;
     }
@@ -4229,9 +4229,9 @@ SpinboxWidgetObjCmd(
 	}
 	if (objc == 3) {
 	    code = EntryValueChanged(entryPtr, Tcl_GetString(objv[2]));
-            if (code != TCL_OK) {
-                goto error;
-            }
+	    if (code != TCL_OK) {
+		goto error;
+	    }
 	}
 	Tcl_SetObjResult(interp, Tcl_NewStringObj(entryPtr->string, TCL_INDEX_NONE));
 	break;
@@ -4505,7 +4505,7 @@ SpinboxInvoke(
 	}
     }
     if (code != TCL_OK) {
-        return TCL_ERROR;
+	return TCL_ERROR;
     }
 
     if (sbPtr->command != NULL) {
