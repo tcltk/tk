@@ -1405,6 +1405,7 @@ readCleanup:
 
 	}
 	Tcl_Panic("unexpected fallthrough");
+	break;
     }
 
     case PHOTO_WRITE: {
