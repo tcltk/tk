@@ -50,7 +50,7 @@ test menuDraw-4.2 {TkMenuEntryFreeDrawOptions} -setup {
 } -body {
     menu .m1
     .m1 add checkbutton -label "This is a test." -font "Courier 12" \
-        -activeforeground red -background green -selectcolor purple
+	-activeforeground red -background green -selectcolor purple
     destroy .m1
 } -result {}
 
@@ -683,9 +683,9 @@ test menuDraw-17.1 {AdjustMenuCoords - menubar} -constraints unix -setup {
     .m2 add command -label foo
     . configure -menu .m1
     foreach w [winfo children .] {
-        if {[$w cget -type] == "menubar"} {
-            break
-        }
+	if {[$w cget -type] == "menubar"} {
+	    break
+	}
     }
     list [$w postcascade 0] [. configure -menu ""]
 } -cleanup {

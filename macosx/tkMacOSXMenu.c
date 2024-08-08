@@ -971,8 +971,8 @@ TkpPostMenu(
     inPostMenu = true;
     result = TkPreprocessMenu(menuPtr);
     if (result != TCL_OK) {
-        inPostMenu = false;
-        return result;
+	inPostMenu = false;
+	return result;
     }
     if (itemIndex >= numItems) {
     	itemIndex = numItems - 1;
