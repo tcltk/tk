@@ -434,16 +434,16 @@ XDrawLines(
 	    }
 	}
 
-        /*
-         * In the case of closed polylines, the first and last points are the
-         * same. We want miter or bevel join be rendered also at this point,
-         * this needs telling CoreGraphics that the path is closed.
-         */
+	/*
+	 * In the case of closed polylines, the first and last points are the
+	 * same. We want miter or bevel join be rendered also at this point,
+	 * this needs telling CoreGraphics that the path is closed.
+	 */
 
-        if ((points[0].x == points[npoints-1].x) &&
-                (points[0].y == points[npoints-1].y)) {
-            CGContextClosePath(dc.context);
-        }
+	if ((points[0].x == points[npoints-1].x) &&
+		(points[0].y == points[npoints-1].y)) {
+	    CGContextClosePath(dc.context);
+	}
 	CGContextStrokePath(dc.context);
     }
     TkMacOSXRestoreDrawingContext(&dc);
@@ -1524,10 +1524,13 @@ TkMacOSXGetClipRgn(
     }
 
     if (macDraw->drawRgn) {
+	// The drawRgn is the visRgn intersected with a rectangle which
+	// may be smaller than the widget bounds.
 	clipRgn = HIShapeCreateCopy(macDraw->drawRgn);
     } else if (macDraw->visRgn) {
 	clipRgn = HIShapeCreateCopy(macDraw->visRgn);
     }
+    // A NULL clipRgn does not allow any drawing at all.
     return clipRgn;
 }
 
@@ -1537,7 +1540,9 @@ TkMacOSXGetClipRgn(
  * Tk_ClipDrawableToRect --
  *
  *	Clip all drawing into the drawable d to the given rectangle. If width
- *	or height are negative, reset to no clipping.
+ *	or height are negative, reset to no clipping. This is called by the
+ *      Text widget to display each DLine, and by the Canvas widget when it
+ *      is updating a sub rectangle in the canvas.
  *
  * Results:
  *	None.
@@ -1566,7 +1571,10 @@ Tk_ClipDrawableToRect(
 		width, height);
 	HIShapeRef drawRgn = HIShapeCreateWithRect(&clipRect);
 
-	if (macDraw->winPtr && macDraw->flags & TK_CLIP_INVALID) {
+	// When drawing a Text widget we can reuse the
+	// clipping region for different DLines, so we don't want to
+	// update unless necessary.
+	if (macDraw->winPtr && (macDraw->flags & TK_CLIP_INVALID)) {
 	    TkMacOSXUpdateClipRgn(macDraw->winPtr);
 	}
 	if (macDraw->visRgn) {
@@ -1657,7 +1665,7 @@ TkMacOSXMakeStippleMap(
  *
  *	On the Macintosh, this puts a 1 pixel border in the bgGC color between
  *	the widget and the focus ring, except in the case where highlightWidth
- *	is 1, in which case the border is left out.
+ *	is 0 or 1, in which case the border is left out.
  *
  *	For proper Mac L&F, use highlightWidth of 3.
  *
@@ -1672,19 +1680,19 @@ TkMacOSXMakeStippleMap(
  */
 
 void
-Tk_DrawHighlightBorder (
+Tk_DrawHighlightBorder(
     Tk_Window tkwin,
     GC fgGC,
     GC bgGC,
     int highlightWidth,
     Drawable drawable)
 {
-    if (highlightWidth == 1) {
-	TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth, drawable, 0);
+    if (highlightWidth <= 1) {
+	TkDrawInsetFocusHighlight(tkwin, fgGC, 1, drawable, 0);
     } else {
-	TkDrawInsetFocusHighlight (tkwin, bgGC, highlightWidth, drawable, 0);
+	TkDrawInsetFocusHighlight(tkwin, bgGC, highlightWidth, drawable, 0);
 	if (fgGC != bgGC) {
-	    TkDrawInsetFocusHighlight (tkwin, fgGC, highlightWidth - 1,
+	    TkDrawInsetFocusHighlight(tkwin, fgGC, highlightWidth - 1,
 		    drawable, 0);
 	}
     }
