@@ -81,7 +81,7 @@ typedef struct {
     Tk_3DBorder readonlyBorder;	/* Used for drawing border around whole window
 				 * in readonly state, plus used for
 				 * background. */
-    int borderWidth;		/* Width of 3-D border around window. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_Cursor cursor;		/* Current cursor for window, or NULL. */
     int exportSelection;	/* Non-zero means tie internal entry selection
 				 * to X selection. */
@@ -91,23 +91,23 @@ typedef struct {
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
     XColor *highlightColorPtr;	/* Color for drawing traversal highlight. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     Tk_3DBorder insertBorder;	/* Used to draw vertical bar for insertion
 				 * cursor. */
-    int insertBorderWidth;	/* Width of 3-D border around insert cursor. */
+    Tcl_Obj *insertBorderWidthObj;	/* Width of 3-D border around insert cursor. */
     int insertOffTime;		/* Number of milliseconds cursor should spend
 				 * in "off" state for each blink. */
     int insertOnTime;		/* Number of milliseconds cursor should spend
 				 * in "on" state for each blink. */
-    int insertWidth;		/* Total width of insert cursor. */
+    Tcl_Obj *insertWidthObj;	/* Total width of insert cursor. */
     Tk_Justify justify;		/* Justification to use for text within
 				 * window. */
     int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
     Tk_3DBorder selBorder;	/* Border and background for selected
 				 * characters. */
-    int selBorderWidth;		/* Width of border around selection. */
+    Tcl_Obj *selBorderWidthObj;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected text. */
     int state;			/* Normal or disabled. Entry is read-only when
 				 * disabled. */
@@ -186,6 +186,13 @@ typedef struct {
 				 * commands. Malloc'ed. */
     char *invalidCmd;		/* Command called when a validation returns 0
 				 * (successfully fails), defaults to {}. */
+#ifdef BUILD_tk
+    int borderWidth;
+    int highlightWidth;
+    int insertWidth;
+    int insertBorderWidth;
+    int selBorderWidth;
+#endif
 } Entry;
 
 /*

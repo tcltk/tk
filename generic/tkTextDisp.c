@@ -867,8 +867,8 @@ GetStyle(
 	    styleValues.border = border;
 	    borderPrio = tagPtr->priority;
 	}
-	if ((tagPtr->borderWidthPtr != NULL)
-		&& (Tcl_GetString(tagPtr->borderWidthPtr)[0] != '\0')
+	if ((tagPtr->borderWidthObj != NULL)
+		&& (Tcl_GetString(tagPtr->borderWidthObj)[0] != '\0')
 		&& (tagPtr->priority > borderWidthPrio)) {
 	    styleValues.borderWidth = tagPtr->borderWidth;
 	    borderWidthPrio = tagPtr->priority;
@@ -5256,8 +5256,13 @@ TkTextRelayoutWindow(
      * it.
      */
 
-    if (textPtr->highlightWidth < 0) {
-	textPtr->highlightWidth = 0;
+    if (textPtr->highlightWidthObj) {
+	if (textPtr->highlightWidth < 0) {
+	    textPtr->highlightWidth = 0;
+	    Tcl_DecrRefCount(textPtr->highlightWidthObj);
+	    textPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(textPtr->highlightWidthObj);
+	}
     }
     dInfoPtr->x = textPtr->highlightWidth + textPtr->borderWidth
 	    + textPtr->padX;

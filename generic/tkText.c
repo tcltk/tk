@@ -120,7 +120,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	"BlockCursor", DEF_TEXT_BLOCK_CURSOR, TCL_INDEX_NONE,
 	offsetof(TkText, insertCursorType), 0, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_TEXT_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(TkText, borderWidth),
+	DEF_TEXT_BORDER_WIDTH, offsetof(TkText, borderWidthObj), offsetof(TkText, borderWidth),
 	0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_TEXT_CURSOR, TCL_INDEX_NONE, offsetof(TkText, cursor),
@@ -140,7 +140,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_FG, TCL_INDEX_NONE, offsetof(TkText, fgColor), 0,
 	0, 0},
     {TK_OPTION_PIXELS, "-height", "height", "Height",
-	DEF_TEXT_HEIGHT, TCL_INDEX_NONE, offsetof(TkText, height), 0, 0, 0},
+	DEF_TEXT_HEIGHT, offsetof(TkText, heightObj), offsetof(TkText, height), 0, 0, 0},
     {TK_OPTION_COLOR, "-highlightbackground", "highlightBackground",
 	"HighlightBackground", DEF_TEXT_HIGHLIGHT_BG,
 	TCL_INDEX_NONE, offsetof(TkText, highlightBgColorPtr),
@@ -149,7 +149,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_HIGHLIGHT, TCL_INDEX_NONE, offsetof(TkText, highlightColorPtr),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_TEXT_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	"HighlightThickness", DEF_TEXT_HIGHLIGHT_WIDTH, offsetof(TkText, highlightWidthObj),
 	offsetof(TkText, highlightWidth), 0, 0, TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_BORDER, "-inactiveselectbackground","inactiveSelectBackground",
 	"Foreground",
@@ -161,7 +161,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	TCL_INDEX_NONE, offsetof(TkText, insertBorder),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
-	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, TCL_INDEX_NONE,
+	"BorderWidth", DEF_TEXT_INSERT_BD_COLOR, offsetof(TkText, insertBorderWidthObj),
 	offsetof(TkText, insertBorderWidth), 0,
 	DEF_TEXT_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
@@ -175,16 +175,16 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_TEXT_INSERT_UNFOCUSSED, TCL_INDEX_NONE, offsetof(TkText, insertUnfocussed),
 	TK_OPTION_ENUM_VAR, insertUnfocussedStrings, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_TEXT_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(TkText, insertWidth),
+	DEF_TEXT_INSERT_WIDTH, offsetof(TkText, insertWidthObj), offsetof(TkText, insertWidth),
 	0, 0, 0},
     {TK_OPTION_INT, "-maxundo", "maxUndo", "MaxUndo",
 	DEF_TEXT_MAX_UNDO, TCL_INDEX_NONE, offsetof(TkText, maxUndo),
 	TK_OPTION_DONT_SET_DEFAULT, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_TEXT_PADX, TCL_INDEX_NONE, offsetof(TkText, padX), 0, 0,
+	DEF_TEXT_PADX, offsetof(TkText, padXObj), offsetof(TkText, padX), 0, 0,
 	TK_TEXT_LINE_GEOMETRY},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_TEXT_PADY, TCL_INDEX_NONE, offsetof(TkText, padY), 0, 0, 0},
+	DEF_TEXT_PADY, offsetof(TkText, padYObj), offsetof(TkText, padY), 0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_TEXT_RELIEF, TCL_INDEX_NONE, offsetof(TkText, relief), 0, 0, 0},
     {TK_OPTION_BORDER, "-selectbackground", "selectBackground", "Foreground",
@@ -192,8 +192,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	0, DEF_TEXT_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
 	"BorderWidth", DEF_TEXT_SELECT_BD_COLOR,
-	offsetof(TkText, selBorderWidthPtr),
-	offsetof(TkText, selBorderWidth),
+	offsetof(TkText, selBorderWidthObj), offsetof(TkText, selBorderWidth),
 	TK_OPTION_NULL_OK, DEF_TEXT_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	DEF_TEXT_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(TkText, selFgColorPtr),
@@ -201,14 +200,14 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_BOOLEAN, "-setgrid", "setGrid", "SetGrid",
 	DEF_TEXT_SET_GRID, TCL_INDEX_NONE, offsetof(TkText, setGrid), 0, 0, 0},
     {TK_OPTION_PIXELS, "-spacing1", "spacing1", "Spacing",
-	DEF_TEXT_SPACING1, TCL_INDEX_NONE, offsetof(TkText, spacing1),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	DEF_TEXT_SPACING1, offsetof(TkText, spacing1Obj), offsetof(TkText, spacing1),
+	0, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_PIXELS, "-spacing2", "spacing2", "Spacing",
-	DEF_TEXT_SPACING2, TCL_INDEX_NONE, offsetof(TkText, spacing2),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	DEF_TEXT_SPACING2, offsetof(TkText, spacing2Obj), offsetof(TkText, spacing2),
+	0, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_PIXELS, "-spacing3", "spacing3", "Spacing",
-	DEF_TEXT_SPACING3, TCL_INDEX_NONE, offsetof(TkText, spacing3),
-	0, 0 , TK_TEXT_LINE_GEOMETRY },
+	DEF_TEXT_SPACING3, offsetof(TkText, spacing3Obj), offsetof(TkText, spacing3),
+	0, 0, TK_TEXT_LINE_GEOMETRY },
     {TK_OPTION_CUSTOM, "-startline", NULL, NULL,
 	 NULL, TCL_INDEX_NONE, offsetof(TkText, start), TK_OPTION_NULL_OK,
 	 &lineOption, TK_TEXT_LINE_RANGE},
@@ -604,7 +603,7 @@ CreateWidget(
     textPtr->selBorder = NULL;
     textPtr->inactiveSelBorder = NULL;
     textPtr->selBorderWidth = 0;
-    textPtr->selBorderWidthPtr = NULL;
+    textPtr->selBorderWidthObj = NULL;
     textPtr->selFgColorPtr = NULL;
 
     /*
@@ -2206,12 +2205,27 @@ ConfigureText(
 
     if (textPtr->spacing1 < 0) {
 	textPtr->spacing1 = 0;
+	if (textPtr->spacing1Obj) {
+	    Tcl_DecrRefCount(textPtr->spacing1Obj);
+	}
+	textPtr->spacing1Obj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->spacing1Obj);
     }
     if (textPtr->spacing2 < 0) {
 	textPtr->spacing2 = 0;
+	if (textPtr->spacing2Obj) {
+	    Tcl_DecrRefCount(textPtr->spacing2Obj);
+	}
+	textPtr->spacing2Obj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->spacing2Obj);
     }
     if (textPtr->spacing3 < 0) {
 	textPtr->spacing3 = 0;
+	if (textPtr->spacing3Obj) {
+	    Tcl_DecrRefCount(textPtr->spacing3Obj);
+	}
+	textPtr->spacing3Obj = Tcl_NewIntObj(0);
+	Tcl_IncrRefCount(textPtr->spacing3Obj);
     }
 
     /*
@@ -2244,8 +2258,8 @@ ConfigureText(
     } else {
 	textPtr->selTagPtr->selBorder = textPtr->selBorder;
     }
-    if (textPtr->selTagPtr->borderWidthPtr != textPtr->selBorderWidthPtr) {
-	textPtr->selTagPtr->borderWidthPtr = textPtr->selBorderWidthPtr;
+    if (textPtr->selTagPtr->borderWidthObj != textPtr->selBorderWidthObj) {
+	textPtr->selTagPtr->borderWidthObj = textPtr->selBorderWidthObj;
 	textPtr->selTagPtr->borderWidth = textPtr->selBorderWidth;
     }
     if (textPtr->selTagPtr->selFgColor == NULL) {
@@ -2476,7 +2490,7 @@ TextEventProc(
 	}
     } else if (eventPtr->type == DestroyNotify) {
 	/*
-	 * NOTE: we must zero out selBorder, selBorderWidthPtr and
+	 * NOTE: we must zero out selBorder, selBorderWidthObj and
 	 * selFgColorPtr: they are duplicates of information in the "sel" tag,
 	 * which will be freed up when we delete all tags. Hence we don't want
 	 * the automatic config options freeing process to delete them as
@@ -2484,7 +2498,7 @@ TextEventProc(
 	 */
 
 	textPtr->selBorder = NULL;
-	textPtr->selBorderWidthPtr = NULL;
+	textPtr->selBorderWidthObj = NULL;
 	textPtr->selBorderWidth = 0;
 	textPtr->selFgColorPtr = NULL;
 	if (textPtr->setGrid) {

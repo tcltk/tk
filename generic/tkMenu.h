@@ -279,7 +279,7 @@ typedef struct TkMenu {
 
     Tcl_Obj *borderPtr;		/* Structure used to draw 3-D border and
 				 * background for menu. */
-    Tcl_Obj *borderWidthPtr;	/* Width of border around whole menu. */
+    Tcl_Obj *borderWidthObj;	/* Width of border around whole menu. */
     Tcl_Obj *activeBorderPtr;	/* Used to draw background and border for
 				 * active element (if any). */
     Tcl_Obj *activeBorderWidthPtr;
