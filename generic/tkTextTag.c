@@ -22,7 +22,7 @@ static const Tk_OptionSpec tagOptionSpecs[] = {
     {TK_OPTION_BITMAP, "-bgstipple", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, bgStipple), TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", NULL, NULL,
-	NULL, offsetof(TkTextTag, borderWidthPtr), offsetof(TkTextTag, borderWidth),
+	NULL, offsetof(TkTextTag, borderWidthObj), offsetof(TkTextTag, borderWidth),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_BOOLEAN, "-elide", NULL, NULL,
 	NULL, TCL_INDEX_NONE, offsetof(TkTextTag, elide),
@@ -363,22 +363,36 @@ TkTextTagCmd(
 	     * from "unspecified").
 	     */
 
-	    if (tagPtr->borderWidth < 0) {
-		tagPtr->borderWidth = 0;
+	    if (tagPtr->borderWidthObj) {
+		if (tagPtr->borderWidth < 0) {
+		    tagPtr->borderWidth = 0;
+		    Tcl_DecrRefCount(tagPtr->borderWidthObj);
+		    tagPtr->borderWidthObj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->borderWidthObj);
+		}
 	    }
-	    if (tagPtr->spacing1 != INT_MIN) {
+	    if (tagPtr->spacing1Obj) {
 		if (tagPtr->spacing1 < 0) {
 		    tagPtr->spacing1 = 0;
+		    Tcl_DecrRefCount(tagPtr->spacing1Obj);
+		    tagPtr->spacing1Obj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->spacing1Obj);
 		}
 	    }
-	    if (tagPtr->spacing2 != INT_MIN) {
+	    if (tagPtr->spacing2Obj) {
 		if (tagPtr->spacing2 < 0) {
 		    tagPtr->spacing2 = 0;
+		    Tcl_DecrRefCount(tagPtr->spacing2Obj);
+		    tagPtr->spacing2Obj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->spacing2Obj);
 		}
 	    }
-	    if (tagPtr->spacing3 != INT_MIN) {
+	    if (tagPtr->spacing3Obj) {
 		if (tagPtr->spacing3 < 0) {
 		    tagPtr->spacing3 = 0;
+		    Tcl_DecrRefCount(tagPtr->spacing3Obj);
+		    tagPtr->spacing3Obj = Tcl_NewIntObj(0);
+		    Tcl_IncrRefCount(tagPtr->spacing3Obj);
 		}
 	    }
 	    if (tagPtr->tabArrayPtr != NULL) {
@@ -417,7 +431,7 @@ TkTextTagCmd(
 		    textPtr->selBorder = tagPtr->selBorder;
 		}
 		textPtr->selBorderWidth = tagPtr->borderWidth;
-		textPtr->selBorderWidthPtr = tagPtr->borderWidthPtr;
+		textPtr->selBorderWidthObj = tagPtr->borderWidthObj;
 		if (tagPtr->selFgColor == NULL) {
 		    textPtr->selFgColorPtr = tagPtr->fgColor;
 		} else {
@@ -942,7 +956,7 @@ TkTextCreateTag(
     tagPtr->priority = textPtr->sharedTextPtr->numTags;
     tagPtr->border = NULL;
     tagPtr->borderWidth = 0;
-    tagPtr->borderWidthPtr = NULL;
+    tagPtr->borderWidthObj = NULL;
     tagPtr->relief = TK_RELIEF_NULL;
     tagPtr->bgStipple = None;
     tagPtr->fgColor = NULL;

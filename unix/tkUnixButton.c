@@ -533,10 +533,10 @@ TkpDisplayButton(
     imageWidth = width;
     imageHeight = height;
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
 
@@ -893,10 +893,10 @@ TkpComputeButtonGeometry(
     int haveImage = 0, haveText = 0;
     Tk_FontMetrics fm;
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &butPtr->padY);
 
     butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
 
