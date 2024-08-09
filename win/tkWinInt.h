@@ -230,9 +230,8 @@ MODULE_SCOPE  int	Winprint_Init(Tcl_Interp* interp);
  * The following is implemented in tkWinDraw.c and used in tkUtil.c
  */
 
-MODULE_SCOPE  void	TkWinDrawDottedRect (Display *disp, Drawable d,
-			    unsigned long pixel, int x, int y,
-			    int width, int height);
+MODULE_SCOPE  void	TkWinDrawDottedRect(Display *disp, Drawable d,
+			    long pixel, int x, int y, int width, int height);
 
 /*
  * Common routines used in Windows implementation
