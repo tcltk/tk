@@ -325,7 +325,6 @@ TkpDisplayButton(
     int y, relief;
     Tk_Window tkwin = butPtr->tkwin;
     int width = 0, height = 0, haveImage = 0, haveText = 0, drawRing = 0;
-    RECT rect;
     int defaultWidth;		/* Width of default ring. */
     int offset;			/* 0 means this is a label widget. 1 means it
 				 * is a flavor of button, so we offset the
@@ -633,10 +632,11 @@ TkpDisplayButton(
 
     if (drawRing && butPtr->flags & GOT_FOCUS && butPtr->type != TYPE_LABEL) {
 	if (butPtr->type == TYPE_BUTTON || !butPtr->indicatorOn) {
-	    int offset = butPtr->borderWidth + 1 + defaultWidth;
+	    int dottedWidth = butPtr->borderWidth + 1 + defaultWidth;
 	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
-		    offset, offset,
-		    Tk_Width(tkwin) - 2*offset, Tk_Height(tkwin) - 2*offset);
+		    dottedWidth, dottedWidth,
+		    Tk_Width(tkwin) - 2*dottedWidth,
+		    Tk_Height(tkwin) - 2*dottedWidth);
 	} else {
 	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
 		    x-1 + textXOffset, y-1 + textYOffset,
