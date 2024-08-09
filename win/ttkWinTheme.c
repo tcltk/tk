@@ -477,7 +477,7 @@ static void FillFocusElementDraw(
 	FillFocusElement *focus = (FillFocusElement *)elementRecord;
 	XColor *fillColor = Tk_GetColorFromObj(tkwin, focus->fillColorObj);
 	GC gc = Tk_GCForColor(fillColor, d);
-	XFillRectangle(Tk_Display(tkwin), d, gc, b.x ,b.y, b.width, b.height);
+	XFillRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width, b.height);
 
 	TkWinDrawDottedRect(Tk_Display(tkwin), d, -1, b.x, b.y,
 	    b.width, b.height);
