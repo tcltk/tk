@@ -1523,7 +1523,7 @@ TkWinDrawDottedRect(
     dc = TkWinGetDrawableDC(disp, d, &state);
 
     lb.lbStyle = BS_SOLID;
-    lb.lbColor = pixel < 0 ? : RGB(0, 0, 0) : (COLORREF)pixel;
+    lb.lbColor = pixel < 0 ? RGB(0, 0, 0) : (COLORREF)pixel;
     lb.lbHatch = 0;
 
     if (pixel < 0) {
