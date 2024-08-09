@@ -436,14 +436,14 @@ declare 124 aqua {
 }
 declare 135 {deprecated {renamed to Tk_DrawHighlightBorder}} {
     void TkpDrawHighlightBorder(Tk_Window tkwin, GC fgGC, GC bgGC,
-        int highlightWidth, Drawable drawable)
+	    int highlightWidth, Drawable drawable)
 }
 declare 136 {
     void TkSetFocusWin(TkWindow *winPtr, int force)
 }
 declare 137 {
     void TkpSetKeycodeAndState(Tk_Window tkwin, KeySym keySym,
-            XEvent *eventPtr)
+	    XEvent *eventPtr)
 }
 declare 138 {
     KeySym TkpGetKeySym(TkDisplay *dispPtr, XEvent *eventPtr)
@@ -646,7 +646,7 @@ declare 186 {
 # Debugging / testing functions for photo images
 declare 187 {
     int TkDebugPhotoStringMatchDef(Tcl_Interp *inter, Tcl_Obj *data,
-            Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
+	    Tcl_Obj *formatString, int *widthPtr, int *heightPtr)
 }
 
 
@@ -1345,7 +1345,7 @@ declare 81 win {
 }
 declare 82 win {
     Status XParseColor(Display *display, Colormap map,
-          _Xconst char *spec, XColor *colorPtr)
+	    _Xconst char *spec, XColor *colorPtr)
 }
 declare 83 win {
     GC XCreateGC(Display *display, Drawable d,
@@ -1771,7 +1771,7 @@ declare 57 macosx {
 }
 declare 58 macosx {
     Status XParseColor(Display *display, Colormap map,
-          _Xconst char *spec, XColor *colorPtr)
+	    _Xconst char *spec, XColor *colorPtr)
 }
 declare 59 macosx {
     GC XCreateGC(Display *display, Drawable d,
