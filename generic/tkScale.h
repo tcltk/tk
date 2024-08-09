@@ -53,9 +53,9 @@ typedef struct TkScale {
 				 * available for this widget. */
     enum orient orient;		/* Orientation for window (vertical or
 				 * horizontal). */
-    int width;			/* Desired narrow dimension of scale, in
+    Tcl_Obj *widthObj;		/* Desired narrow dimension of scale, in
 				 * pixels. */
-    int length;			/* Desired long dimension of scale, in
+    Tcl_Obj *lengthObj;	/* Desired long dimension of scale, in
 				 * pixels. */
     double value;		/* Current value of scale. */
     Tcl_Obj *varNamePtr;	/* Name of variable or NULL. If non-NULL,
@@ -96,7 +96,7 @@ typedef struct TkScale {
      * Information used when displaying widget:
      */
 
-    int borderWidth;		/* Width of 3-D border around window. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     Tk_3DBorder bgBorder;	/* Used for drawing slider and other
 				 * background areas. */
     Tk_3DBorder activeBorder;	/* For drawing the slider when active. */
@@ -110,7 +110,7 @@ typedef struct TkScale {
     GC textGC;			/* GC for drawing text in normal mode. */
     int relief;			/* Indicates whether window as a whole is
 				 * raised, sunken, or flat. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     Tk_3DBorder highlightBorder;/* Value of -highlightbackground option:
@@ -123,7 +123,7 @@ typedef struct TkScale {
 				 * Indicates how much interior stuff must be
 				 * offset from outside edges to leave room for
 				 * borders. */
-    int sliderLength;		/* Length of slider, measured in pixels along
+    Tcl_Obj *sliderLengthObj;	/* Length of slider, measured in pixels along
 				 * long dimension of scale. */
     int showValue;		/* Non-zero means to display the scale value
 				 * below or to the left of the slider; zero
