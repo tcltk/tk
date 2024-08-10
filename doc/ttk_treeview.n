@@ -478,6 +478,11 @@ Add \fIitemList\fR to the selection.
 .
 Remove all items from selection.
 .TP
+\fIpathname \fBselection includes \fIitemList\fR
+.
+Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
+not included in the selection.
+.TP
 \fIpathname \fBselection remove \fIitemList\fR
 .
 Remove \fIitemList\fR from the selection.

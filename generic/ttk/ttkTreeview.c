@@ -3652,10 +3652,11 @@ static int TreeviewSelectionCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     enum {
-	SELECTION_SET, SELECTION_ADD, SELECTION_REMOVE, SELECTION_TOGGLE, SELECTION_CLEAR, SELECTION_SIZE
+	SELECTION_SET, SELECTION_ADD, SELECTION_REMOVE, SELECTION_TOGGLE, SELECTION_CLEAR,
+	SELECTION_INCLUDES, SELECTION_SIZE
     };
     static const char *const selopStrings[] = {
-	"set", "add", "remove", "toggle", "clear", "size", NULL
+	"set", "add", "remove", "toggle", "clear", "includes", "size", NULL
     };
 
     Treeview *tv = (Treeview *)recordPtr;
@@ -3678,10 +3679,10 @@ static int TreeviewSelectionCommand(
     }
 
     if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?add|clear|remove|set|size|toggle? ?items?");
+	Tcl_WrongNumArgs(interp, 2, objv, "?add|clear|includes|remove|set|size|toggle? ?items?");
 	return TCL_ERROR;
     } else if (objc == 3 && selop != SELECTION_CLEAR && selop != SELECTION_SIZE) {
-	Tcl_WrongNumArgs(interp, 2, objv, "add|remove|set|toggle items");
+	Tcl_WrongNumArgs(interp, 2, objv, "add|includes|remove|set|toggle items");
 	return TCL_ERROR;
     }
 
@@ -3739,6 +3740,16 @@ static int TreeviewSelectionCommand(
 		    selChange = 1;
 		}
 	    }
+	    break;
+	case SELECTION_INCLUDES:
+	    int result = 1;
+	    for (i=0; items[i]; ++i) {
+		if (!(items[i]->state & TTK_STATE_SELECTED)) {
+		    result = 0;
+		    break;
+		}
+	    }
+	    Tcl_SetObjResult(interp, Tcl_NewBooleanObj(i > 0 ? result : 0));
 	    break;
 	case SELECTION_SIZE:
 	    Tcl_WideInt count = 0;
