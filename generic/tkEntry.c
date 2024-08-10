@@ -290,7 +290,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	DEF_ENTRY_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Entry, selBorder),
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, offsetof(Entry, selBorderWidth),
+	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, offsetof(Entry, selBorderWidthObj),
 	offsetof(Entry, selBorderWidth),
 	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
@@ -1190,11 +1190,17 @@ ConfigureEntry(
 	}
 	Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
 
-	if (entryPtr->insertWidth < 0) {
-	    entryPtr->insertWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->insertWidthObj);
-	    entryPtr->insertWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->insertWidthObj);
+	if (entryPtr->borderWidth < 0) {
+	    entryPtr->borderWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->borderWidthObj);
+	    entryPtr->borderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->borderWidthObj);
+	}
+	if (entryPtr->highlightWidth < 0) {
+	    entryPtr->highlightWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->highlightWidthObj);
+	    entryPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->highlightWidthObj);
 	}
 	if (entryPtr->insertBorderWidth < 0) {
 	    entryPtr->insertBorderWidth = 0;
@@ -1202,11 +1208,17 @@ ConfigureEntry(
 	    entryPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(entryPtr->insertBorderWidthObj);
 	}
-	if (entryPtr->highlightWidth < 0) {
-	    entryPtr->highlightWidth = 0;
-	    Tcl_DecrRefCount(entryPtr->highlightWidthObj);
-	    entryPtr->highlightWidthObj = Tcl_NewIntObj(0);
-	    Tcl_IncrRefCount(entryPtr->highlightWidthObj);
+	if (entryPtr->insertWidth < 0) {
+	    entryPtr->insertWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->insertWidthObj);
+	    entryPtr->insertWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->insertWidthObj);
+	}
+	if (entryPtr->selBorderWidth < 0) {
+	    entryPtr->selBorderWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->selBorderWidthObj);
+	    entryPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->selBorderWidthObj);
 	}
 
 	if (entryPtr->type == TK_SPINBOX) {
