@@ -1000,25 +1000,19 @@ ConfigureFrame(
 
     if (framePtr->highlightWidth < 0) {
 	framePtr->highlightWidth = 0;
-	if (framePtr->highlightWidthObj) {
-	    Tcl_DecrRefCount(framePtr->highlightWidthObj);
-	}
+	Tcl_DecrRefCount(framePtr->highlightWidthObj);
 	framePtr->highlightWidthObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(framePtr->highlightWidthObj);
     }
     if (framePtr->padX < 0) {
 	framePtr->padX = 0;
-	if (framePtr->padXObj) {
-	    Tcl_DecrRefCount(framePtr->padXObj);
-	}
+	Tcl_DecrRefCount(framePtr->padXObj);
 	framePtr->padXObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(framePtr->padXObj);
     }
     if (framePtr->padY < 0) {
 	framePtr->padY = 0;
-	if (framePtr->padYObj) {
-	    Tcl_DecrRefCount(framePtr->padYObj);
-	}
+	Tcl_DecrRefCount(framePtr->padYObj);
 	framePtr->padYObj = Tcl_NewIntObj(0);
 	Tcl_IncrRefCount(framePtr->padYObj);
     }
