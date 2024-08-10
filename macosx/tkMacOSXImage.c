@@ -674,8 +674,6 @@ CreateCGImageFromDrawableRect(
 	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
 	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
-	result = CGImageCreateWithImageInRect(cg_image, rect);
-	CGImageRelease(cg_image);
 	if (force_1x_scale && (scaleFactor != 1.0)) {
 	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
 	    // create context, keeping original image properties
@@ -688,15 +686,21 @@ CreateCGImageFromDrawableRect(
 		    CGImageGetAlphaInfo(cg_image));
 	    CGColorSpaceRelease(colorspace);
 	    if (cg_context) {
-		// draw image to context (resizing it)
+		// Extract the subimage in the specified rectangle. 
+		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect); 
+		// Draw the subimage in our context (resizing it to fit).
 		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
-			cg_image);
-		// extract resulting image from context
+			subimage);
+		// We will return the image we just drew.
 		result = CGBitmapContextCreateImage(cg_context);
 		CGContextRelease(cg_context);
+		CGImageRelease(subimage);
 	    }
-	    CGImageRelease(cg_image);
+	} else {
+	    // No resizing is needed.  Just return the subimage
+	    result = CGImageCreateWithImageInRect(cg_image, rect);
 	}
+	CGImageRelease(cg_image);
     }
     return result;
 }
