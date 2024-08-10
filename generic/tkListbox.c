@@ -1597,13 +1597,23 @@ ConfigureListbox(
 
 	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
 
+	if (listPtr->borderWidth < 0) {
+	    listPtr->borderWidth = 0;
+		Tcl_DecrRefCount(listPtr->borderWidthObj);
+		listPtr->borderWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(listPtr->borderWidthObj);
+	}
 	if (listPtr->highlightWidth < 0) {
 	    listPtr->highlightWidth = 0;
-		if (listPtr->highlightWidthObj) {
-		    Tcl_DecrRefCount(listPtr->highlightWidthObj);
-		}
+		Tcl_DecrRefCount(listPtr->highlightWidthObj);
 		listPtr->highlightWidthObj = Tcl_NewIntObj(0);
 		Tcl_IncrRefCount(listPtr->highlightWidthObj);
+	}
+	if (listPtr->selBorderWidth < 0) {
+	    listPtr->selBorderWidth = 0;
+		Tcl_DecrRefCount(listPtr->selBorderWidthObj);
+		listPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(listPtr->selBorderWidthObj);
 	}
 	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
 
