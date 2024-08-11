@@ -199,9 +199,9 @@ typedef void (Ttk_CleanupProc)(void *clientData);
 enum TTKStyleVersion2 { TK_STYLE_VERSION_2 = 2 };
 
 typedef void (Ttk_ElementSizeProc)(void *clientData, void *elementRecord,
-        Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding*);
+	Tk_Window tkwin, int *widthPtr, int *heightPtr, Ttk_Padding*);
 typedef void (Ttk_ElementDrawProc)(void *clientData, void *elementRecord,
-        Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
+	Tk_Window tkwin, Drawable d, Ttk_Box b, Ttk_State state);
 
 typedef struct Ttk_ElementOptionSpec
 {
