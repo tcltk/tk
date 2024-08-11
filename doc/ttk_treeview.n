@@ -468,15 +468,11 @@ Otherwise, \fIselop\fR is one of the following:
 .TP
 \fIpathname \fBselection set \fIitemList\fR
 .
-\fIitemList\fR becomes the new selection.
+\fIitemList\fR becomes the new selection. Use empty set {} to clear selection.
 .TP
 \fIpathname \fBselection add \fIitemList\fR
 .
 Add \fIitemList\fR to the selection.
-.TP
-\fIpathname \fBselection clear\fR
-.
-Remove all items from selection.
 .TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
