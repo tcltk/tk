@@ -1099,41 +1099,31 @@ ConfigureButton(
 	}
 	if (butPtr->wrapLength < 0) {
 	    butPtr->wrapLength = 0;
-	    if (butPtr->wrapLengthObj) {
-		Tcl_DecrRefCount(butPtr->wrapLengthObj);
-	    }
+	    Tcl_DecrRefCount(butPtr->wrapLengthObj);
 	    butPtr->wrapLengthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->wrapLengthObj);
 	}
 	if (butPtr->borderWidth < 0) {
 	    butPtr->borderWidth = 0;
-	    if (butPtr->borderWidthObj) {
-		Tcl_DecrRefCount(butPtr->borderWidthObj);
-	    }
+	    Tcl_DecrRefCount(butPtr->borderWidthObj);
 	    butPtr->borderWidthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->borderWidthObj);
 	}
 	if (butPtr->highlightWidth < 0) {
 	    butPtr->highlightWidth = 0;
-	    if (butPtr->highlightWidthObj) {
-		Tcl_DecrRefCount(butPtr->highlightWidthObj);
-	    }
+	    Tcl_DecrRefCount(butPtr->highlightWidthObj);
 	    butPtr->highlightWidthObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->highlightWidthObj);
 	}
 	if (butPtr->padX < 0) {
 	    butPtr->padX = 0;
-	    if (butPtr->padXObj) {
-		Tcl_DecrRefCount(butPtr->padXObj);
-	    }
+	    Tcl_DecrRefCount(butPtr->padXObj);
 	    butPtr->padXObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->padXObj);
 	}
 	if (butPtr->padY < 0) {
 	    butPtr->padY = 0;
-	    if (butPtr->padYObj) {
-		Tcl_DecrRefCount(butPtr->padYObj);
-	    }
+	    Tcl_DecrRefCount(butPtr->padYObj);
 	    butPtr->padYObj = Tcl_NewIntObj(0);
 	    Tcl_IncrRefCount(butPtr->padYObj);
 	}

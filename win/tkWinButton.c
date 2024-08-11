@@ -856,7 +856,8 @@ TkpDisplayButton(
 	    int dottedWidth = butPtr->borderWidth + 1 + defaultWidth;
 	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
 		    dottedWidth, dottedWidth,
-		    Tk_Width(tkwin) - 2*dottedWidth, Tk_Height(tkwin) - 2*dottedWidth);
+		    Tk_Width(tkwin) - 2*dottedWidth,
+		    Tk_Height(tkwin) - 2*dottedWidth);
 	} else {
 	    TkWinDrawDottedRect(butPtr->display, pixmap, gc->foreground,
 		    x-1 + textXOffset, y-1 + textYOffset,
