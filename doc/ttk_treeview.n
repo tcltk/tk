@@ -255,6 +255,11 @@ Use \fIpathname fBcolumn #0\fR to configure the tree column.
 Deletes each of the items in \fIitemList\fR and all of their descendants.
 The root item may not be deleted.
 See also: \fBdetach\fR.
+.\" METHOD: depth
+.TP
+\fIpathname \fBdepth \fIitem\fR
+.
+Returns the number of levels between \fIitem\fR and the root item.
 .\" METHOD: detach
 .TP
 \fIpathname \fBdetach \fIitemList\fR

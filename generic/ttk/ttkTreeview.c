@@ -2669,6 +2669,33 @@ static int TreeviewParentCommand(
     return TCL_OK;
 }
 
+/* + $tv depth $item --
+ * 	Return the number of levels between item and root.
+ */
+static int TreeviewDepthCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item;
+    int depth = 1;
+
+    if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	return TCL_ERROR;
+    }
+    item = FindItem(interp, tv, objv[2]);
+    if (!item) {
+	return TCL_ERROR;
+    }
+
+    while (item->parent) {
+	depth++;
+	item = item->parent;
+    }
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(depth));
+    return TCL_OK;
+}
+
 /* + $tv next $item
  * 	Return the ID of $item's next sibling.
  */
@@ -4484,6 +4511,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "column", 	TreeviewColumnCommand,0 },
     { "configure",	TtkWidgetConfigureCommand,0 },
     { "delete", 	TreeviewDeleteCommand,0 },
+    { "depth",		TreeviewDepthCommand,0 },
     { "detach", 	TreeviewDetachCommand,0 },
     { "detached", 	TreeviewDetachedCommand,0 },
     { "drag",   	TreeviewDragCommand,0 },
