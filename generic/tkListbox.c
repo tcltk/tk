@@ -57,9 +57,9 @@ typedef struct {
 
     Tk_3DBorder normalBorder;	/* Used for drawing border around whole
 				 * window, plus used for background. */
-    int borderWidth;		/* Width of 3-D border around window. */
+    Tcl_Obj *borderWidthObj;	/* Width of 3-D border around window. */
     int relief;			/* 3-D effect: TK_RELIEF_RAISED, etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
+    Tcl_Obj *highlightWidthObj;		/* Width in pixels of highlight to draw around
 				 * widget when it has the focus. <= 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;
@@ -77,7 +77,7 @@ typedef struct {
     GC textGC;			/* For drawing normal text. */
     Tk_3DBorder selBorder;	/* Borders and backgrounds for selected
 				 * elements. */
-    int selBorderWidth;		/* Width of border around selection. */
+    Tcl_Obj *selBorderWidthObj;	/* Width of border around selection. */
     XColor *selFgColorPtr;	/* Foreground color for selected elements. */
     GC selTextGC;		/* For drawing selected text. */
     int width;			/* Desired width of window, in characters. */
@@ -163,6 +163,9 @@ typedef struct {
     int flags;			/* Various flag bits: see below for
 				 * definitions. */
     Tk_Justify justify;         /* Justification. */
+#ifdef BUILD_tk
+    int borderWidth, selBorderWidth, highlightWidth;
+#endif
 } Listbox;
 
 /*
@@ -241,7 +244,7 @@ static const Tk_OptionSpec optionSpecs[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	 NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	 DEF_LISTBOX_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Listbox, borderWidth),
+	 DEF_LISTBOX_BORDER_WIDTH, offsetof(Listbox, borderWidthObj), offsetof(Listbox, borderWidth),
 	 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	 DEF_LISTBOX_CURSOR, TCL_INDEX_NONE, offsetof(Listbox, cursor),
@@ -267,7 +270,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Listbox, highlightColorPtr),
 	 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	 "HighlightThickness", DEF_LISTBOX_HIGHLIGHT_WIDTH, offsetof(Listbox, highlightWidthObj),
 	 offsetof(Listbox, highlightWidth), 0, 0, 0},
     {TK_OPTION_JUSTIFY, "-justify", "justify", "Justify",
 	DEF_LISTBOX_JUSTIFY, TCL_INDEX_NONE, offsetof(Listbox, justify), TK_OPTION_ENUM_VAR, 0, 0},
@@ -277,7 +280,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	 DEF_LISTBOX_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selBorder),
 	 0, DEF_LISTBOX_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	 "BorderWidth", DEF_LISTBOX_SELECT_BD, TCL_INDEX_NONE,
+	 "BorderWidth", DEF_LISTBOX_SELECT_BD, offsetof(Listbox, selBorderWidthObj),
 	 offsetof(Listbox, selBorderWidth), 0, 0, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
 	 DEF_LISTBOX_SELECT_FG_COLOR, TCL_INDEX_NONE, offsetof(Listbox, selFgColorPtr),
@@ -1594,8 +1597,23 @@ ConfigureListbox(
 
 	Tk_SetBackgroundFromBorder(listPtr->tkwin, listPtr->normalBorder);
 
+	if (listPtr->borderWidth < 0) {
+	    listPtr->borderWidth = 0;
+		Tcl_DecrRefCount(listPtr->borderWidthObj);
+		listPtr->borderWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(listPtr->borderWidthObj);
+	}
 	if (listPtr->highlightWidth < 0) {
 	    listPtr->highlightWidth = 0;
+		Tcl_DecrRefCount(listPtr->highlightWidthObj);
+		listPtr->highlightWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(listPtr->highlightWidthObj);
+	}
+	if (listPtr->selBorderWidth < 0) {
+	    listPtr->selBorderWidth = 0;
+		Tcl_DecrRefCount(listPtr->selBorderWidthObj);
+		listPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(listPtr->selBorderWidthObj);
 	}
 	listPtr->inset = listPtr->highlightWidth + listPtr->borderWidth;
 
