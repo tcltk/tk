@@ -89,10 +89,10 @@ typedef struct {
     Tk_3DBorder activeBorder;	/* Structure used to draw 3-D border and
 				 * background when window is active. NULL
 				 * means no such border exists. */
-    int borderWidth;		/* Width of border. */
+    Tcl_Obj *borderWidthObj;	/* Width of border. */
     int relief;			/* 3-d effect: TK_RELIEF_RAISED, etc. */
-    int highlightWidth;		/* Width in pixels of highlight to draw around
-				 * widget when it has the focus. <= 0 means
+    Tcl_Obj *highlightWidthObj;	/* Width in pixels of highlight to draw around
+				 * widget when it has the focus. 0 means
 				 * don't draw a highlight. */
     XColor *highlightBgColorPtr;/* Color for drawing traversal highlight area
 				 * when highlight is off. */
@@ -129,10 +129,10 @@ typedef struct {
 				 * size of the text string or bitmap is
 				 * ignored in computing desired window
 				 * size. */
-    int wrapLength;		/* Line length (in pixels) at which to wrap
-				 * onto next line. <= 0 means don't wrap
+    Tcl_Obj *wrapLengthObj;	/* Line length (in pixels) at which to wrap
+				 * onto next line. 0 means don't wrap
 				 * except at newlines. */
-    int padX, padY;		/* Extra space around text or bitmap (pixels
+    Tcl_Obj *padXObj, *padYObj;	/* Extra space around text or bitmap (pixels
 				 * on each side). */
     Tk_Anchor anchor;		/* Where text/bitmap should be displayed
 				 * inside window region. */
@@ -176,6 +176,13 @@ typedef struct {
 				 * scripts. Malloc'ed, but may be NULL. */
     int flags;			/* Various flags; see below for
 				 * definitions. */
+#ifdef BUILD_tk
+    int borderWidth;
+    int highlightWidth;
+    int padX;
+    int padY;
+    int wrapLength;
+#endif
 } TkMenuButton;
 
 /*

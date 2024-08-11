@@ -633,7 +633,7 @@ DisplayMenu(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+    Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 	    &borderWidth);
     border = Tk_Get3DBorderFromObj(menuPtr->tkwin, menuPtr->borderPtr);
 
@@ -989,7 +989,7 @@ AdjustMenuCoords(
     } else {
 	int borderWidth, activeBorderWidth;
 
-	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthPtr,
+	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin, menuPtr->borderWidthObj,
 		&borderWidth);
 	Tk_GetPixelsFromObj(NULL, menuPtr->tkwin,
 		menuPtr->activeBorderWidthPtr, &activeBorderWidth);
