@@ -74,7 +74,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_ENTRY_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Entry, borderWidth), 0, 0, 0},
+	DEF_ENTRY_BORDER_WIDTH, offsetof(Entry, borderWidthObj), offsetof(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_ENTRY_CURSOR, TCL_INDEX_NONE, offsetof(Entry, cursor),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -100,12 +100,12 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_ENTRY_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Entry, highlightColorPtr), 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, offsetof(Entry, highlightWidthObj),
 	offsetof(Entry, highlightWidth), 0, 0, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_ENTRY_INSERT_BG, TCL_INDEX_NONE, offsetof(Entry, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
-	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
+	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, offsetof(Entry, insertBorderWidthObj),
 	offsetof(Entry, insertBorderWidth), 0,
 	DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
@@ -114,7 +114,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
     {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
 	DEF_ENTRY_INSERT_ON_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOnTime), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_ENTRY_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(Entry, insertWidth), 0, 0, 0},
+	DEF_ENTRY_INSERT_WIDTH, offsetof(Entry, insertWidthObj), offsetof(Entry, insertWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
 	DEF_ENTRY_INVALIDCMD, TCL_INDEX_NONE, offsetof(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -138,7 +138,7 @@ static const Tk_OptionSpec entryOptSpec[] = {
 	DEF_ENTRY_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Entry, selBorder),
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, TCL_INDEX_NONE,
+	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, offsetof(Entry, selBorderWidthObj),
 	offsetof(Entry, selBorderWidth),
 	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
@@ -200,7 +200,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_SYNONYM, "-bg", NULL, NULL,
 	NULL, 0, TCL_INDEX_NONE, 0, "-background", 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_ENTRY_BORDER_WIDTH, TCL_INDEX_NONE, offsetof(Entry, borderWidth), 0, 0, 0},
+	DEF_ENTRY_BORDER_WIDTH, offsetof(Entry, borderWidthObj), offsetof(Entry, borderWidth), 0, 0, 0},
     {TK_OPTION_BORDER, "-buttonbackground", "buttonBackground", "Background",
 	DEF_BUTTON_BG_COLOR, TCL_INDEX_NONE, offsetof(Spinbox, buttonBorder),
 	0, DEF_BUTTON_BG_MONO, 0},
@@ -244,14 +244,14 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_COLOR, "-highlightcolor", "highlightColor", "HighlightColor",
 	DEF_ENTRY_HIGHLIGHT, TCL_INDEX_NONE, offsetof(Entry, highlightColorPtr), 0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
-	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, TCL_INDEX_NONE,
+	"HighlightThickness", DEF_ENTRY_HIGHLIGHT_WIDTH, offsetof(Entry, highlightWidthObj),
 	offsetof(Entry, highlightWidth), 0, 0, 0},
     {TK_OPTION_DOUBLE, "-increment", "increment", "Increment",
 	DEF_SPINBOX_INCREMENT, TCL_INDEX_NONE, offsetof(Spinbox, increment), 0, 0, 0},
     {TK_OPTION_BORDER, "-insertbackground", "insertBackground", "Foreground",
 	DEF_ENTRY_INSERT_BG, TCL_INDEX_NONE, offsetof(Entry, insertBorder), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertborderwidth", "insertBorderWidth",
-	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, TCL_INDEX_NONE,
+	"BorderWidth", DEF_ENTRY_INSERT_BD_COLOR, offsetof(Entry, insertBorderWidthObj),
 	offsetof(Entry, insertBorderWidth), 0,
 	DEF_ENTRY_INSERT_BD_MONO, 0},
     {TK_OPTION_INT, "-insertofftime", "insertOffTime", "OffTime",
@@ -260,7 +260,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
     {TK_OPTION_INT, "-insertontime", "insertOnTime", "OnTime",
 	DEF_ENTRY_INSERT_ON_TIME, TCL_INDEX_NONE, offsetof(Entry, insertOnTime), 0, 0, 0},
     {TK_OPTION_PIXELS, "-insertwidth", "insertWidth", "InsertWidth",
-	DEF_ENTRY_INSERT_WIDTH, TCL_INDEX_NONE, offsetof(Entry, insertWidth), 0, 0, 0},
+	DEF_ENTRY_INSERT_WIDTH, offsetof(Entry, insertWidthObj), offsetof(Entry, insertWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-invalidcommand", "invalidCommand", "InvalidCommand",
 	DEF_ENTRY_INVALIDCMD, TCL_INDEX_NONE, offsetof(Entry, invalidCmd),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -290,7 +290,7 @@ static const Tk_OptionSpec sbOptSpec[] = {
 	DEF_ENTRY_SELECT_COLOR, TCL_INDEX_NONE, offsetof(Entry, selBorder),
 	0, DEF_ENTRY_SELECT_MONO, 0},
     {TK_OPTION_PIXELS, "-selectborderwidth", "selectBorderWidth",
-	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, TCL_INDEX_NONE,
+	"BorderWidth", DEF_ENTRY_SELECT_BD_COLOR, offsetof(Entry, selBorderWidthObj),
 	offsetof(Entry, selBorderWidth),
 	0, DEF_ENTRY_SELECT_BD_MONO, 0},
     {TK_OPTION_COLOR, "-selectforeground", "selectForeground", "Background",
@@ -1190,14 +1190,35 @@ ConfigureEntry(
 	}
 	Tk_SetBackgroundFromBorder(entryPtr->tkwin, border);
 
-	if (entryPtr->insertWidth < 0) {
-	    entryPtr->insertWidth = 0;
-	}
-	if (entryPtr->insertBorderWidth < 0) {
-	    entryPtr->insertBorderWidth = 0;
+	if (entryPtr->borderWidth < 0) {
+	    entryPtr->borderWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->borderWidthObj);
+	    entryPtr->borderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->borderWidthObj);
 	}
 	if (entryPtr->highlightWidth < 0) {
 	    entryPtr->highlightWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->highlightWidthObj);
+	    entryPtr->highlightWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->highlightWidthObj);
+	}
+	if (entryPtr->insertBorderWidth < 0) {
+	    entryPtr->insertBorderWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->insertBorderWidthObj);
+	    entryPtr->insertBorderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->insertBorderWidthObj);
+	}
+	if (entryPtr->insertWidth < 0) {
+	    entryPtr->insertWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->insertWidthObj);
+	    entryPtr->insertWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->insertWidthObj);
+	}
+	if (entryPtr->selBorderWidth < 0) {
+	    entryPtr->selBorderWidth = 0;
+	    Tcl_DecrRefCount(entryPtr->selBorderWidthObj);
+	    entryPtr->selBorderWidthObj = Tcl_NewIntObj(0);
+	    Tcl_IncrRefCount(entryPtr->selBorderWidthObj);
 	}
 
 	if (entryPtr->type == TK_SPINBOX) {
