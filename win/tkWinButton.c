@@ -564,10 +564,10 @@ TkpDisplayButton(
 	return;
     }
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &butPtr->padY);
 
     border = butPtr->normalBorder;
     if ((butPtr->state == STATE_DISABLED) && (butPtr->disabledFg != NULL)) {
@@ -998,8 +998,8 @@ TkpComputeButtonGeometry(
     ThreadSpecificData *tsdPtr = (ThreadSpecificData *)
 	    Tcl_GetThreadData(&dataKey, sizeof(ThreadSpecificData));
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
 
     butPtr->inset = butPtr->highlightWidth + butPtr->borderWidth;
     butPtr->indicatorSpace = 0;
@@ -1193,8 +1193,8 @@ TkpComputeButtonGeometry(
      * because otherwise it is not really a compound button.
      */
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &butPtr->padY);
 
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) {
 	switch ((enum compound) butPtr->compound) {

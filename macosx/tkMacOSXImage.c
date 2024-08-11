@@ -686,8 +686,8 @@ CreateCGImageFromDrawableRect(
 		    CGImageGetAlphaInfo(cg_image));
 	    CGColorSpaceRelease(colorspace);
 	    if (cg_context) {
-		// Extract the subimage in the specified rectangle. 
-		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect); 
+		// Extract the subimage in the specified rectangle.
+		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect);
 		// Draw the subimage in our context (resizing it to fit).
 		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
 			subimage);
