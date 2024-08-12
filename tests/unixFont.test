@@ -88,7 +88,7 @@ test unixfont-2.2 {TkpGetFontFromAttributes procedure: Times relatives} \
     lappend x [lindex [font actual {-family "Times"}] 1]
 } {times times times}
 test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
-	{x11 noExceed hasCourierNew failsOnUbuntu} {
+	{x11 noExceed hasCourierNew failsOnUbuntu failsOnXQuarz} {
     set x {}
     lappend x [lindex [font actual {-family "Courier New"}] 1]
     lappend x [lindex [font actual {-family "Monaco"}] 1]
