@@ -95,7 +95,7 @@ test unixfont-2.3 {TkpGetFontFromAttributes procedure: Courier relatives} \
     lappend x [lindex [font actual {-family "Courier"}] 1]
 } {courier courier courier}
 test unixfont-2.4 {TkpGetFontFromAttributes procedure: Helvetica relatives} \
-	{x11 noExceed hasArial failsOnUbuntu} {
+	{x11 noExceed hasArial failsOnUbuntu failsOnXQuarz} {
     set x {}
     lappend x [lindex [font actual {-family "Arial"}] 1]
     lappend x [lindex [font actual {-family "Geneva"}] 1]
