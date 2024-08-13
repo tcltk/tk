@@ -98,14 +98,14 @@ proc ttk::treeview::Keynav {w dir} {
 	    if {[set up [$w prev $focus]] eq ""} {
 	        set focus [$w parent $focus]
 	    } else {
-		while {[$w item $up -open] && [llength [$w children $up]]} {
+		while {[$w item $up -open] && [$w haschildren $up]} {
 		    set up [lindex [$w children $up] end]
 		}
 		set focus $up
 	    }
 	}
 	down {
-	    if {[$w item $focus -open] && [llength [$w children $focus]]} {
+	    if {[$w item $focus -open] && [$w haschildren $focus]} {
 	        set focus [lindex [$w children $focus] 0]
 	    } else {
 		set up $focus
@@ -124,7 +124,7 @@ proc ttk::treeview::Keynav {w dir} {
 		    incr colNo -1
 		    set colAnchor "#$colNo"
 		}
-	    } elseif {[$w item $focus -open] && [llength [$w children $focus]]} {
+	    } elseif {[$w item $focus -open] && [$w haschildren $focus]} {
 	    	CloseItem $w $focus
 	    } else {
 	    	set focus [$w parent $focus]
@@ -143,8 +143,8 @@ proc ttk::treeview::Keynav {w dir} {
 		    incr colNo
 		    set colAnchor "#$colNo"
 		}
-	    } else {
-		OpenItem $w $focus
+	    } elseif {![$w item $focus -open] && [$w haschildren $focus]} {
+	    	OpenItem $w $focus
 	    }
 	}
     }
@@ -489,7 +489,7 @@ proc ttk::treeview::CloseItem {w item} {
 proc ttk::treeview::Toggle {w item} {
     # don't allow toggling on indicators that
     # are not present in front of leaf items
-    if {[$w children $item] == {}} {
+    if {![$w haschildren $item]} {
 	return
     }
     # not a leaf, toggle!
