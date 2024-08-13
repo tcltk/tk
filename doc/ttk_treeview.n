@@ -724,9 +724,12 @@ to determine the affected item or items.
 '\" of the virtual event.
 .SH "STANDARD STYLES"
 .PP
-\fBTtk::treeview\fR widgets support the \fBChecktreeview\fR style in all
+\fBTtk::treeview\fR widgets support the \fBCheckTreeview\fR style in all
 standard themes. This style adds a checkbutton after the open/close indicator
-and before the item image to better indicate which items are selected.
+and before the item image to better show which items are selected. Combine
+this style with the \fB\-selectmode multiple\fR option to create a check list
+widget where the user can easily select multiple entries without the need to
+use the keyboard.
 .SH "STYLING OPTIONS"
 .PP
 The class name for a \fBttk::treeview\fP is \fBTreeview\fP.
