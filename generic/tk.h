@@ -54,7 +54,7 @@ extern "C" {
  * library/tk.tcl	(1 LOC patch)
  * unix/configure.ac	(2 LOC Major, 2 LOC minor, 1 LOC patch)
  * win/configure.ac	(as above)
- * README		(sections 0 and 1)
+ * README.md		(sections 0 and 1)
  * macosx/Tk-Common.xcconfig (not patchlevel) 1 LOC
  * win/README		(not patchlevel)
  * unix/README		(not patchlevel)
@@ -71,10 +71,10 @@ extern "C" {
 #if TK_MAJOR_VERSION == 9
 #   define TK_MINOR_VERSION	0
 #   define TK_RELEASE_LEVEL	TCL_BETA_RELEASE
-#   define TK_RELEASE_SERIAL	3
+#   define TK_RELEASE_SERIAL	4
 
 #   define TK_VERSION		"9.0"
-#   define TK_PATCH_LEVEL		"9.0b3"
+#   define TK_PATCH_LEVEL		"9.0b4"
 #endif /* TK_MAJOR_VERSION */
 
 /*
