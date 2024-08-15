@@ -35,7 +35,7 @@
 #undef STATIC_BUILD
 #include "tk.h"
 #include "tkPort.h"
-#if TCL_MAJOR_VERSION < 9 && TCL_MINOR_VERSION < 7
+#if (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION) && (TCL_MINOR_VERSION < 7)
 #   define Tcl_LibraryInitProc Tcl_PackageInitProc
 #   define Tcl_StaticLibrary Tcl_StaticPackage
 #endif
@@ -107,7 +107,7 @@ main(
 {
 #ifdef TK_LOCAL_MAIN_HOOK
     TK_LOCAL_MAIN_HOOK(&argc, &argv);
-#elif (TCL_MAJOR_VERSION > 8) || (TCL_MINOR_VERSION > 6)
+#elif TCL_MAJOR_VERSION > 8 || !defined(TCL_MINOR_VERSION) || TCL_MINOR_VERSION > 6
     /* This doesn't work with Tcl 8.6 */
     TclZipfs_AppHook(&argc, &argv);
 #endif
