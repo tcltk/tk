@@ -2861,6 +2861,9 @@ static int TreeviewSeeCommand(
 	}
     }
 
+    /* Update the scroll information, if necessary */
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
+
     /* Make sure item is visible:
      */
     rowNumber = RowNumber(tv, item);
