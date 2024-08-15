@@ -1617,7 +1617,7 @@ static Ttk_Layout TreeviewGetLayout(
 static void TreeviewDoLayout(void *clientData)
 {
     Treeview *tv = (Treeview *)clientData;
-    int totalRows, visibleRows;
+    int visibleRows;
 
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
     tv->tree.treeArea = Ttk_ClientRegion(tv->core.layout, "treearea");
@@ -1637,21 +1637,11 @@ static void TreeviewDoLayout(void *clientData)
     }
 
     tv->tree.root->state |= TTK_STATE_OPEN;
-    totalRows = CountRows(tv->tree.root) - 1;
     visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight;
-    if (tv->tree.treeArea.height % tv->tree.rowHeight) {
-        /* When the treeview height doesn't correspond to an exact number
-         * of rows, the visible row count must be incremented to draw a
-         * partial row at the bottom. The total row count must also be
-         * incremented to be able to scroll all the way to the bottom.
-         */
-        visibleRows++;
-        totalRows++;
-    }
     TtkScrolled(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first,
 	    tv->tree.yscroll.first + visibleRows,
-	    totalRows);
+	    CountRows(tv->tree.root) - 1);
 }
 
 /* + TreeviewSize --
@@ -1847,7 +1837,7 @@ static int DrawSubtree(
 static int DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
-    while (item && row < tv->tree.yscroll.last) {
+    while (item && row <= tv->tree.yscroll.last) {
         row = DrawSubtree(tv, item, d, depth, row);
 	item = item->next;
     }
