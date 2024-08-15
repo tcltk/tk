@@ -1743,6 +1743,11 @@ static void DrawCells(
 	return;
     }
 
+    /* Make sure that the cells won't overlap the border's bottom edge */
+    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+    }
+
     Tcl_ListObjGetElements(NULL, item->valuesObj, &nValues, &values);
     for (i = 0; i < tv->tree.nColumns; ++i) {
 	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
@@ -1772,6 +1777,12 @@ static void DrawItem(
     int rowHeight = tv->tree.rowHeight;
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
+
+    /* Make sure that the item won't overlap the border's bottom edge:
+     */
+    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+    }
 
     if (row % 2) state |= TTK_STATE_ALTERNATE;
 
@@ -3405,6 +3416,7 @@ static void TreeitemIndicatorSize(
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the arrow. */
 
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
