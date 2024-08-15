@@ -1330,7 +1330,7 @@ MODULE_SCOPE void	TkpCopyRegion(TkRegion dst, TkRegion src);
 # define c_class class
 #endif
 
-#if defined(_WIN32) && !defined(STATIC_BUILD) && TCL_MAJOR_VERSION < 9
+#if defined(_WIN32) && !defined(STATIC_BUILD) && (TCL_MAJOR_VERSION < 9) && defined(TCL_MINOR_VERSION)
 #   define tcl_CreateFileHandler reserved9
 #endif
 
