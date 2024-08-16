@@ -1617,7 +1617,7 @@ static Ttk_Layout TreeviewGetLayout(
 static void TreeviewDoLayout(void *clientData)
 {
     Treeview *tv = (Treeview *)clientData;
-    int totalRows, visibleRows;
+    int visibleRows;
 
     Ttk_PlaceLayout(tv->core.layout,tv->core.state,Ttk_WinBox(tv->core.tkwin));
     tv->tree.treeArea = Ttk_ClientRegion(tv->core.layout, "treearea");
@@ -1637,21 +1637,11 @@ static void TreeviewDoLayout(void *clientData)
     }
 
     tv->tree.root->state |= TTK_STATE_OPEN;
-    totalRows = CountRows(tv->tree.root) - 1;
     visibleRows = tv->tree.treeArea.height / tv->tree.rowHeight;
-    if (tv->tree.treeArea.height % tv->tree.rowHeight) {
-        /* When the treeview height doesn't correspond to an exact number
-         * of rows, the visible row count must be incremented to draw a
-         * partial row at the bottom. The total row count must also be
-         * incremented to be able to scroll all the way to the bottom.
-         */
-        visibleRows++;
-        totalRows++;
-    }
     TtkScrolled(tv->tree.yscrollHandle,
 	    tv->tree.yscroll.first,
 	    tv->tree.yscroll.first + visibleRows,
-	    totalRows);
+	    CountRows(tv->tree.root) - 1);
 }
 
 /* + TreeviewSize --
@@ -1743,6 +1733,11 @@ static void DrawCells(
 	return;
     }
 
+    /* Make sure that the cells won't overlap the border's bottom edge */
+    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+    }
+
     Tcl_ListObjGetElements(NULL, item->valuesObj, &nValues, &values);
     for (i = 0; i < tv->tree.nColumns; ++i) {
 	tv->tree.columns[i].data = (i < nValues) ? values[i] : 0;
@@ -1773,6 +1768,12 @@ static void DrawItem(
     int x = tv->tree.treeArea.x - tv->tree.xscroll.first;
     int y = tv->tree.treeArea.y + rowHeight * (row - tv->tree.yscroll.first);
 
+    /* Make sure that the item won't overlap the border's bottom edge:
+     */
+    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+    }
+
     if (row % 2) state |= TTK_STATE_ALTERNATE;
 
     PrepareItem(tv, item, &displayItem);
@@ -1780,7 +1781,13 @@ static void DrawItem(
     /* Draw row background:
      */
     {
-	Ttk_Box rowBox = Ttk_MakeBox(x, y, TreeWidth(tv), rowHeight);
+	int itemWidth = TreeWidth(tv);
+	/* Make sure that the background won't overlap the border's right edge:
+	 */
+	if (itemWidth > tv->tree.treeArea.width) {
+	    itemWidth = tv->tree.treeArea.width;
+	}
+	Ttk_Box rowBox = Ttk_MakeBox(x, y, itemWidth, rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -1836,7 +1843,7 @@ static int DrawSubtree(
 static int DrawForest(
     Treeview *tv, TreeItem *item, Drawable d, int depth, int row)
 {
-    while (item && row < tv->tree.yscroll.last) {
+    while (item && row <= tv->tree.yscroll.last) {
         row = DrawSubtree(tv, item, d, depth, row);
 	item = item->next;
     }
@@ -2860,6 +2867,9 @@ static int TreeviewSeeCommand(
 	}
     }
 
+    /* Update the scroll information, if necessary */
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
+
     /* Make sure item is visible:
      */
     rowNumber = RowNumber(tv, item);
@@ -3405,6 +3415,7 @@ static void TreeitemIndicatorSize(
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the arrow. */
 
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);

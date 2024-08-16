@@ -145,9 +145,9 @@ static void TextDraw(TextElement *text, Tk_Window tkwin, Drawable d, Ttk_Box b)
     b = Ttk_AnchorBox(b, text->width, text->height, anchor);
 
     /*
-     * Clip text if it's too wide:
+     * Clip text if it's too wide or too high:
      */
-    if (b.width < text->width) {
+    if (b.width < text->width || b.height < text->height) {
 	XRectangle rect;
 
 	clipRegion = TkCreateRegion();
