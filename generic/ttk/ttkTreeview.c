@@ -1781,7 +1781,13 @@ static void DrawItem(
     /* Draw row background:
      */
     {
-	Ttk_Box rowBox = Ttk_MakeBox(x, y, TreeWidth(tv), rowHeight);
+	int itemWidth = TreeWidth(tv);
+	/* Make sure that the background won't overlap the border's right edge:
+	 */
+	if (itemWidth > tv->tree.treeArea.width) {
+	    itemWidth = tv->tree.treeArea.width;
+	}
+	Ttk_Box rowBox = Ttk_MakeBox(x, y, itemWidth, rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
