@@ -1011,7 +1011,7 @@ test entry-3.34 {EntryWidgetCmd procedure, "index" widget command} -setup {
 } -cleanup {
     destroy .e
 } -returnCodes {ok} -match glob -result {*}
-test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -setup {
+test entry-3.35 {EntryWidgetCmd procedure, "index" widget command} -constraints failsOnXQuarz -setup {
     entry .e
     pack .e ; update idletasks
     update

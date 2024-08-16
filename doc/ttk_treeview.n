@@ -164,6 +164,8 @@ The rectangle defined is removed from the cell selection.
 \fIpathname \fBcellselection toggle \fIcellList\fR
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
+If the element is partially visible, the result gives the full area of the
+element, including any parts that are not visible.
 .TP
 \fIpathname \fBcellselection toggle \fIfirstCell lastCell\fR
 .
