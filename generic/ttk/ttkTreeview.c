@@ -1973,15 +1973,6 @@ static void TreeviewDoLayout(void *clientData)
     first = tv->tree.yscroll.first;
     last = tv->tree.yscroll.first + visibleRows - tv->tree.titleRows;
     total = tv->tree.totalRows - tv->tree.titleRows;
-    if (tv->tree.treeArea.height % tv->tree.rowHeight) {
-	/* When the treeview height doesn't correspond to an exact number
-	 * of rows, the last row count must be incremented to draw a
-	 * partial row at the bottom. The total row count must also be
-	 * incremented to be able to scroll all the way to the bottom.
-	 */
-	last++;
-	total++;
-    }
     TtkScrolled(tv->tree.yscrollHandle, first, last, total);
 }
 
@@ -2186,6 +2177,11 @@ static void DrawCells(
 	xPad = tv->tree.colSeparatorWidth/2;
     }
 
+    /* Make sure that the cells won't overlap the border's bottom edge */
+    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+    }
+
     /* An Item's image should not propagate to a Cell.
        A Cell's image can only be set by cell tags. */
     displayItemCell = *displayItem;
@@ -2273,13 +2269,25 @@ static void DrawItem(
     int dispRow = DisplayRow(item->rowPos, tv);
     int y = tv->tree.treeArea.y + tv->tree.rowHeight * dispRow;
 
+    /* Make sure that the item won't overlap the border's bottom edge:
+     */
+    if (y + rowHeight > tv->tree.treeArea.y + tv->tree.treeArea.height) {
+	rowHeight = tv->tree.treeArea.y + tv->tree.treeArea.height - y;
+    }
+
     PrepareItem(tv, item, &displayItem, state);
     PrepareItem(tv, item, &displayItemSel, state | TTK_STATE_SELECTED);
 
     /* Draw row background:
      */
     {
-	Ttk_Box rowBox = Ttk_MakeBox(x, y, TreeWidth(tv), rowHeight);
+	int itemWidth = TreeWidth(tv);
+	/* Make sure that the background won't overlap the border's right edge:
+	 */
+	if (itemWidth > tv->tree.treeArea.width) {
+	    itemWidth = tv->tree.treeArea.width;
+	}
+	Ttk_Box rowBox = Ttk_MakeBox(x, y, itemWidth, rowHeight);
 	DisplayLayout(tv->tree.rowLayout, &displayItem, state, rowBox, d);
     }
 
@@ -3488,6 +3496,9 @@ static int TreeviewSeeCommand(
 	UpdatePositionTree(tv);
     }
 
+    /* Update the scroll information, if necessary */
+    TtkUpdateScrollInfo(tv->tree.yscrollHandle);
+
     /* Make sure item is visible:
      */
     if (item->rowPos < tv->tree.titleRows) {
@@ -4523,6 +4534,7 @@ static void TreeitemIndicatorSize(
 
     Ttk_GetPaddingFromObj(NULL, tkwin, indicator->marginsObj, &margins);
     Tk_GetPixelsFromObj(NULL, tkwin, indicator->sizeObj, &size);
+    if (size % 2 == 0) --size;	/* An odd size is better for the arrow. */
 
     *widthPtr = size + Ttk_PaddingWidth(margins);
     *heightPtr = size + Ttk_PaddingHeight(margins);
