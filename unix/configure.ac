@@ -649,10 +649,10 @@ if test "$FRAMEWORK_BUILD" = "1" ; then
     if test ${TCL_MAJOR_VERSION} = 8 ; then
 	TK_LIB_FILE="Tk"
     else
-	TK_LIB_FILE="Tk"
+	TK_LIB_FILE="tcl9Tk"
     fi
     TK_LIB_FILE_TCL8="Tk"
-    TK_LIB_FILE_TCL9="Tk"
+    TK_LIB_FILE_TCL9="tcl9Tk"
     TK_LIB_FLAG="-framework Tk"
     TK_BUILD_LIB_SPEC="-F`pwd | sed -e 's/ /\\\\ /g'` -framework Tk"
     TK_LIB_SPEC="-F${libdir} -framework Tk"
