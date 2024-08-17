@@ -186,6 +186,12 @@ Items in the old child list not present in the new child list
 are detached from the tree.
 None of the items in \fInewchildren\fR may be an ancestor
 of \fIitem\fR.
+.\" METHOD: collapse
+.TP
+\fIpathname \fBcollapse\fR ?\fI\-recurse\fR? \fIitem\fR
+.
+Set open state for \fIitem\fR to closed. Same as [\fIpathname \fBitem \fIitem \fB\-open 0\fR].
+With \fI\-recurse\fR option, will also close all sub child items.
 .\" METHOD: column
 .TP
 \fIpathname \fBcolumn \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
@@ -284,6 +290,12 @@ detached.
 .
 Returns 1 if the specified \fIitem\fR is present in the tree,
 0 otherwise.
+.\" METHOD: expand
+.TP
+\fIpathname \fBexpand\fR ?\fI\-recurse\fR? \fIitem\fR
+.
+Set open state for \fIitem\fR to open. Same as [\fIpathname \fBitem \fIitem \fB\-open 1\fR].
+With \fI\-recurse\fR option, will also open all sub child items.
 .\" METHOD: focus
 .TP
 \fIpathname \fBfocus \fR?\fIitem\fR?
