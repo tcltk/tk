@@ -320,7 +320,7 @@ test unixSelect-1.12 {TkSelGetSelection procedure: INCR i18n text, utf-8} -const
 } -result [string repeat x 3999]\u00fc[string repeat x 4000]
 
 test unixSelect-1.13 {TkSelGetSelection procedure: simple i18n text, utf-8} -constraints {
-    x11
+    x11 failsOnXQuarz
 } -setup {
     destroy .e
     setupbg
@@ -336,7 +336,7 @@ test unixSelect-1.13 {TkSelGetSelection procedure: simple i18n text, utf-8} -con
 } -result 5
 
 test unixSelect-1.14 {TkSelGetSelection procedure: simple i18n text, utf-8} -constraints {
-    x11
+    x11 failsOnXQuarz
 } -setup {
     setupbg
 } -body {
