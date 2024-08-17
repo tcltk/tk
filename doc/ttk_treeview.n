@@ -361,16 +361,16 @@ A data cell.
 .TP
 \fIpathname \fBidentify item \fIx y\fR
 .
-Returns the item ID of the item at position \fIy\fR.
+Returns the identifier of the item at position \fIx,y\fR.
 .TP
 \fIpathname \fBidentify column \fIx y\fR
 .
-Returns the display column identifier of the cell at position \fIx\fR.
+Returns the display column identifier of the cell at position \fIx,y\fR.
 The tree column has ID \fB#0\fR.
 .TP
 \fIpathname \fBidentify cell \fIx y\fR
 .
-Returns the cell identifier of the cell at position \fIx y\fR.
+Returns the cell identifier of the cell at position \fIx,y\fR.
 A cell identifier is a list of item ID and column ID.
 .TP
 \fIpathname \fBidentify element \fIx y\fR
@@ -388,19 +388,19 @@ and data columns.
 .TP
 \fIpathname \fBindex \fIitem\fR
 .
-Returns the integer index of \fIitem\fR within its parent's list of children.
+Returns the numeric index of \fIitem\fR within its parent's list of children.
 .TP
 \fIpathname \fBindex \fIitem index\fR
 .
-Returns the item ID of the item at \fIindex\fR within \fIitem\fR's list of
+Returns the identifier of the item at \fIindex\fR within \fIitem\fR's list of
 children where \fIindex\fR can be \fBfirst\fR, \fBlast\fR, \fBend\fR, or a
-numerical index starting from 0.
+numeric index starting from 0.
 .\" METHOD: insert
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR
 .
 Creates a new item.
-\fIparent\fR is the item ID of the parent item,
+\fIparent\fR is the identifier of the parent item,
 or the empty string \fB{}\fR
 to create a new top-level item.
 \fIindex\fR is an integer, or the value \fBend\fR, specifying where in the
@@ -409,12 +409,12 @@ If \fIindex\fR is negative or zero,
 the new node is inserted at the beginning;
 if \fIindex\fR is greater than or equal to the current number of children,
 it is inserted at the end.
-If \fB\-id\fR is specified, it is used as the item identifier;
+If \fB\-id\fR is specified, it is used as the identifier of the item;
 \fIid\fR must not already exist in the tree.
 Otherwise, a new unique identifier is generated.
 .RS
 .PP
-\fIpathname \fBinsert\fR returns the item identifier of the
+\fIpathname \fBinsert\fR returns the identifier of the
 newly created item.
 See \fBITEM OPTIONS\fR for the list of available options.
 .RE
