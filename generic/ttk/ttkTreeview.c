@@ -2625,22 +2625,22 @@ static int TreeviewHasChildrenCommand(
 /*
  * Recursively count elements
  */
-int TreeviewCountRecursive(TreeItem *item, int recursive) {
+int TreeviewCountRecursive(TreeItem *item, int recurse) {
     int count = 0;
 
     for (item = item->children; item; item = item->next) {
 	count++;
-	if (recursive && item->children) {
-	    count += TreeviewCountRecursive(item, recursive);
+	if (recurse && item->children) {
+	    count += TreeviewCountRecursive(item, recurse);
 	}
     }
     return count;
 }
 
 
-/* + $tv size ?-recursive? $item --
+/* + $tv size ?-recurse? $item --
  * 	Return count of immediate children associated with $item or
- *	with -recursive, all sub children.
+ *	with -recurse, all sub children.
  */
 static int TreeviewSizeCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
@@ -2651,7 +2651,7 @@ static int TreeviewSizeCommand(
     int option = -1;
 
     static const char *const sizeStrings[] = {
-	"-recursive", NULL
+	"-recurse", "-recursive", NULL
     };
 
     if (objc == 4) {
@@ -2660,7 +2660,7 @@ static int TreeviewSizeCommand(
 	    return TCL_ERROR;
 	}
     } else if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?-recursive? item");
+	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? item");
 	return TCL_ERROR;
     }
     item = FindItem(interp, tv, objv[objc-1]);
