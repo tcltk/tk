@@ -2670,14 +2670,13 @@ static int TreeviewParentCommand(
 }
 
 /* + $tv depth $item --
- * 	Return the number of levels between item and root.
+ * 	Return the number of levels between item and root where root would be 0.
  */
 static int TreeviewDepthCommand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
 {
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
-    int depth = 1;
 
     if (objc != 3) {
 	Tcl_WrongNumArgs(interp, 2, objv, "item");
@@ -2688,11 +2687,7 @@ static int TreeviewDepthCommand(
 	return TCL_ERROR;
     }
 
-    while (item->parent) {
-	depth++;
-	item = item->parent;
-    }
-    Tcl_SetObjResult(interp, Tcl_NewIntObj(depth));
+    Tcl_SetObjResult(interp, Tcl_NewIntObj(ItemDepth(item)+1));
     return TCL_OK;
 }
 
