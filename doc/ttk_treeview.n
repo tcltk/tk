@@ -167,6 +167,8 @@ The rectangle defined is removed from the cell selection.
 \fIpathname \fBcellselection toggle \fIcellList\fR
 .
 Toggle the cell selection state of each cell in \fIcellList\fR.
+If the element is partially visible, the result gives the full area of the
+element, including any parts that are not visible.
 .TP
 \fIpathname \fBcellselection toggle \fIfirstCell lastCell\fR
 .
@@ -178,15 +180,12 @@ Toggle the cell selection state of each cell in the rectangle defined.
 .
 If \fInewchildren\fR is not specified,
 returns the list of children belonging to \fIitem\fR.
-.RS
-.PP
 If \fInewchildren\fR is specified, replaces \fIitem\fR's child list
 with \fInewchildren\fR.
 Items in the old child list not present in the new child list
 are detached from the tree.
 None of the items in \fInewchildren\fR may be an ancestor
 of \fIitem\fR.
-.RE
 .\" METHOD: column
 .TP
 \fIpathname \fBcolumn \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
