@@ -328,6 +328,13 @@ A script to evaluate when the heading label is pressed.
 .PP
 Use \fIpathname heading #0\fR to configure the tree column heading.
 .RE
+.\" METHOD: identifier
+.TP
+\fIpathname \fBidentifier \fIitem \fIindex\fR
+.
+Returns the identifier of the item at \fIindex\fR within \fIitem\fR's list of
+children where \fIindex\fR can be \fBfirst\fR, \fBlast\fR, \fBend\fR, or a
+numeric index starting from 0.
 .\" METHOD: identify
 .TP
 \fIpathname \fBidentify \fIcomponent x y\fR

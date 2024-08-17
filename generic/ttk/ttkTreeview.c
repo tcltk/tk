@@ -4588,6 +4588,7 @@ static const Ttk_Ensemble TreeviewCommands[] = {
     { "haschildren",	TreeviewHasChildrenCommand,0 },
     { "heading", 	TreeviewHeadingCommand,0 },
     { "identify",  	TreeviewIdentifyCommand,0 },
+    { "identifier",  	TreeviewIdentifierCommand,0 },
     { "index",  	TreeviewIndexCommand,0 },
     { "insert", 	TreeviewInsertCommand,0 },
     { "instate",	TtkWidgetInstateCommand,0 },
