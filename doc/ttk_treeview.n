@@ -389,6 +389,12 @@ and data columns.
 \fIpathname \fBindex \fIitem\fR
 .
 Returns the integer index of \fIitem\fR within its parent's list of children.
+.TP
+\fIpathname \fBindex \fIitem index\fR
+.
+Returns the item ID of the item at \fIindex\fR within \fIitem\fR's list of
+children where \fIindex\fR can be \fBfirst\fR, \fBlast\fR, \fBend\fR, or a
+numerical index starting from 0.
 .\" METHOD: insert
 .TP
 \fIpathname \fBinsert \fIparent index\fR ?\fB\-id \fIid\fR? \fIoptions...\fR

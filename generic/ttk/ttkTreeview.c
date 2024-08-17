@@ -2741,6 +2741,68 @@ static int TreeviewPrevCommand(
     return TCL_OK;
 }
 
+/* + $tv index $item index --
+ * 	Return the id of the item at index in parent $item.
+ */
+static int TreeviewIdentifierCommand(
+    void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[])
+{
+    Treeview *tv = (Treeview *)recordPtr;
+    TreeItem *item;
+    int fn;
+    Tcl_Size index = 0;
+
+    enum {index_end, index_first, index_last};
+    static const char *const indexStrings[] = {
+	"end", "first", "last", NULL
+    };
+
+    if (objc != 4) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item index");
+	return TCL_ERROR;
+    }
+    item = FindItem(interp, tv, objv[2]);
+    if (!item) {
+	return TCL_ERROR;
+    }
+
+    if (Tcl_GetIndexFromObjStruct(NULL, objv[3], indexStrings, sizeof(char *),
+	    "index", 0, &fn) == TCL_OK) {
+	if (fn == index_first) {
+	    if (item->children) {
+		Tcl_SetObjResult(interp, ItemID(tv, item->children));
+	    }
+	} else {
+	    item = item->children;
+	    if (item) {
+		while (item->next) {
+		    item = item->next;
+		}
+		Tcl_SetObjResult(interp, ItemID(tv, item));
+	    }
+	}
+
+    } else if (Tcl_GetSizeIntFromObj(NULL, objv[3], &index) == TCL_OK) {
+	item = item->children;
+	if (item) {
+	    while (item->next && index > 0) {
+		index--;
+		item = item->next;
+	    }
+	    if (index == 0) {
+		Tcl_SetObjResult(interp, ItemID(tv, item));
+	    }
+	}
+	
+    } else {
+	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
+	    "bad index \"%s\": must be first, last, end, or an index",
+	    Tcl_GetString(objv[3])));
+	return TCL_ERROR;
+    }
+    return TCL_OK;
+}
+
 /* + $tv index $item --
  * 	Return the index of $item within its parent.
  */
@@ -2751,8 +2813,10 @@ static int TreeviewIndexCommand(
     TreeItem *item;
     Tcl_Size index = 0;
 
-    if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item");
+    if (objc == 4) {
+	return TreeviewIdentifierCommand(recordPtr, interp,objc, objv);
+    } else if (objc != 3) {
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?index?");
 	return TCL_ERROR;
     }
     item = FindItem(interp, tv, objv[2]);
