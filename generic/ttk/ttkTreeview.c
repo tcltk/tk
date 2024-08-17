@@ -2773,11 +2773,8 @@ static int TreeviewIdentifierCommand(
 		Tcl_SetObjResult(interp, ItemID(tv, item->children));
 	    }
 	} else {
-	    item = item->children;
+	    item = EndPosition(tv, item);
 	    if (item) {
-		while (item->next) {
-		    item = item->next;
-		}
 		Tcl_SetObjResult(interp, ItemID(tv, item));
 	    }
 	}
