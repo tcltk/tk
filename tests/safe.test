@@ -40,7 +40,7 @@ if {[package vsatisfies [package provide Tcl] 8.6.7-]} {
     lappend hidden_cmds tcl:encoding:dirs
 }
 if {[package vsatisfies [package provide Tcl] 8.7-]} {
-    lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir tcl:file:home tcl:file:tildeexpand
+    lappend hidden_cmds file tcl:encoding:system tcl:file:tempdir tcl:file:home tcl:file:tildeexpand zipfs
     foreach cmd {
 	cmdtype nameofexecutable
     } {lappend hidden_cmds tcl:info:$cmd}
@@ -48,7 +48,7 @@ if {[package vsatisfies [package provide Tcl] 8.7-]} {
 	autopurge list purge status
     } {lappend hidden_cmds tcl:process:$cmd}
     foreach cmd {
-	lmkimg lmkzip mkimg mkkey mkzip mount  mount_data unmount
+	canonical exists info list lmkimg lmkzip mkimg mkkey mkzip mount mountdata root unmount
     } {lappend hidden_cmds tcl:zipfs:$cmd}
 }
 foreach cmd {
