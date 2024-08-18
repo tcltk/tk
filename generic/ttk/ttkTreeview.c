@@ -3324,29 +3324,41 @@ static int TreeviewCollapseExpand(
     TreeItem **items;
     int option = -1, changed = 0;
     Tcl_Obj *openObj;
+    Tcl_Size i = 0;
 
     static const char *const optionStrings[] = { "-recurse", "-recursive", NULL };
 
-    if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
-	    sizeof(char *), "option", TCL_EXACT, &option) != TCL_OK) {
-	return TCL_ERROR;
-    } else if (objc < 3 || objc > 4) {
+    if (objc < 3 || objc > 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
 	return TCL_ERROR;
     }
 
-    /* Get items */
-    items = GetItemListFromObj(interp, tv, objv[objc-1]);
+    if (objc == 4 && Tcl_GetIndexFromObjStruct(interp, objv[2], optionStrings,
+	    sizeof(char *), "option", TCL_EXACT, &option) != TCL_OK) {
+	return TCL_ERROR;
+    }
+
+    /* Get items with special work-around for only root item {} */
+    if (Tcl_ListObjLength(interp, objv[objc-1], &i) == TCL_OK && i == 0) {
+	Tcl_Obj *listObj = Tcl_NewListObj(0, 0);
+	Tcl_ListObjAppendElement(interp, listObj, Tcl_NewStringObj("",-1));
+	Tcl_IncrRefCount(listObj);
+	items = GetItemListFromObj(interp, tv, listObj);
+	Tcl_DecrRefCount(listObj);
+    } else {
+	items = GetItemListFromObj(interp, tv, objv[objc-1]);
+    }
+
     if (!items) {
 	return TCL_ERROR;
     }
 
-    /* Cache open boolean object */
+    /* Cache boolean object */
     openObj = Tcl_NewBooleanObj(open);
     Tcl_IncrRefCount(openObj);
 
     /* Do expand/collapse for each item */
-    for (Tcl_Size i = 0; items[i]; ++i) {
+    for (i = 0; items[i]; ++i) {
 	changed |= TreeviewOpenRecursive(items[i], open, openObj, objc == 4);
     }
 

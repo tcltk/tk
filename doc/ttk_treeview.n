@@ -192,7 +192,7 @@ of \fIitem\fR.
 .
 Sets all of the items in \fIitemList\fR to closed state. Same as
 [\fIpathname \fBitem \fIitem \fB\-open 0\fR]. With \fI\-recurse\fR option,
-will also close all of their descendants.
+will also close all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: column
 .TP
 \fIpathname \fBcolumn \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
@@ -297,7 +297,7 @@ Returns 1 if the specified \fIitem\fR is present in the tree,
 .
 Set all of the items in \fIitemList\fR to open state. Same as
 [\fIpathname \fBitem \fIitem \fB\-open 1\fR]. With \fI\-recurse\fR option,
-will also open all of their descendants.
+will also open all of their descendants. Use \fB{}\fR for root item.
 .\" METHOD: focus
 .TP
 \fIpathname \fBfocus \fR?\fIitem\fR?
