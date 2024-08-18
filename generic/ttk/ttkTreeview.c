@@ -3292,7 +3292,7 @@ static int TreeviewSetCommand(
  * Recursively set items open state
  */
 int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurse) {
-    int updated = 0;
+    int changed = 0;
 
     if (open && !(item->state & TTK_STATE_OPEN) && item->children) {
 	/* open */
@@ -3302,7 +3302,7 @@ int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurs
 	item->openObj = openObj;
 	Tcl_IncrRefCount(item->openObj);
 	item->state |= TTK_STATE_OPEN;
-	updated = 1;
+	changed = 1;
 
     } else if (!open && (item->state & TTK_STATE_OPEN)) {
 	/* close */
@@ -3312,26 +3312,26 @@ int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurs
 	item->openObj = openObj;
 	Tcl_IncrRefCount(item->openObj);
 	item->state &= ~TTK_STATE_OPEN;
-	updated = 1;
+	changed = 1;
     }
 
     if (recurse && item->children) {
 	for (item = item->children; item; item = item->next) {
-	    updated |= TreeviewOpenRecursive(item, open, openObj, recurse);
+	    changed |= TreeviewOpenRecursive(item, open, openObj, recurse);
 	}
     }
-    return updated;
+    return changed;
 }
 
-/* + $tv collapse|expand ?-recurse? $item --
+/* + $tv collapse|expand ?-recurse? $items --
  * 	Collapse/expand item and with -recurse all child items
  */
 static int TreeviewCollapseExpand(
     void *recordPtr, Tcl_Interp *interp, Tcl_Size objc, Tcl_Obj *const objv[], int open)
 {
     Treeview *tv = (Treeview *)recordPtr;
-    TreeItem *item;
-    int option = -1;
+    TreeItem **items;
+    int option = -1, changed = 0;
     Tcl_Obj *openObj;
 
     static const char *const optionStrings[] = { "-recurse", "-recursive", NULL };
@@ -3340,25 +3340,36 @@ static int TreeviewCollapseExpand(
 	    sizeof(char *), "option", TCL_EXACT, &option) != TCL_OK) {
 	return TCL_ERROR;
     } else if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? item");
-	return TCL_ERROR;
-    }
-    item = FindItem(interp, tv, objv[objc-1]);
-    if (!item) {
+	Tcl_WrongNumArgs(interp, 2, objv, "?-recurse? items");
 	return TCL_ERROR;
     }
 
+    /* Get items */
+    items = GetItemListFromObj(interp, tv, objv[objc-1]);
+    if (!items) {
+	return TCL_ERROR;
+    }
+
+    /* Cache open boolean object */
     openObj = Tcl_NewBooleanObj(open);
     Tcl_IncrRefCount(openObj);
-    if (TreeviewOpenRecursive(item, open, openObj, objc == 4)) {
+
+    /* Do expand/collapse for each item */
+    for (Tcl_Size i = 0; items[i]; ++i) {
+	changed |= TreeviewOpenRecursive(items[i], open, openObj, objc == 4);
+    }
+
+    /* Update widget if any changes were made */
+    if (changed) {
 	tv->tree.rowPosNeedsUpdate = 1;
 	TtkRedisplayWidget(&tv->core);
     }
     Tcl_DecrRefCount(openObj);
+    ckfree(items);
     return TCL_OK;
 }
 
-/* + $tv collapse ?-recurse? $item --
+/* + $tv collapse ?-recurse? $items --
  * 	Collapse item and with -recurse all child items
  */
 static int TreeviewCollapseCommand(
@@ -3367,7 +3378,7 @@ static int TreeviewCollapseCommand(
     return TreeviewCollapseExpand(recordPtr, interp, objc, objv, 0);
 }
 
-/* + $tv expand ?-recurse? $item --
+/* + $tv expand ?-recurse? $items --
  * 	Expand item and with -recurse all child items
  */
 static int TreeviewExpandCommand(

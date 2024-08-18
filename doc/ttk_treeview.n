@@ -188,10 +188,11 @@ None of the items in \fInewchildren\fR may be an ancestor
 of \fIitem\fR.
 .\" METHOD: collapse
 .TP
-\fIpathname \fBcollapse\fR ?\fI\-recurse\fR? \fIitem\fR
+\fIpathname \fBcollapse\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
-Set open state for \fIitem\fR to closed. Same as [\fIpathname \fBitem \fIitem \fB\-open 0\fR].
-With \fI\-recurse\fR option, will also close all sub child items.
+Sets all of the items in \fIitemList\fR to closed state. Same as
+[\fIpathname \fBitem \fIitem \fB\-open 0\fR]. With \fI\-recurse\fR option,
+will also close all of their descendants.
 .\" METHOD: column
 .TP
 \fIpathname \fBcolumn \fIcolumn\fR ?\fI\-option \fR?\fIvalue \-option value...\fR?
@@ -292,10 +293,11 @@ Returns 1 if the specified \fIitem\fR is present in the tree,
 0 otherwise.
 .\" METHOD: expand
 .TP
-\fIpathname \fBexpand\fR ?\fI\-recurse\fR? \fIitem\fR
+\fIpathname \fBexpand\fR ?\fI\-recurse\fR? \fIitemList\fR
 .
-Set open state for \fIitem\fR to open. Same as [\fIpathname \fBitem \fIitem \fB\-open 1\fR].
-With \fI\-recurse\fR option, will also open all sub child items.
+Set all of the items in \fIitemList\fR to open state. Same as
+[\fIpathname \fBitem \fIitem \fB\-open 1\fR]. With \fI\-recurse\fR option,
+will also open all of their descendants.
 .\" METHOD: focus
 .TP
 \fIpathname \fBfocus \fR?\fIitem\fR?
