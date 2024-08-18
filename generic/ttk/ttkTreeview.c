@@ -49,6 +49,7 @@ struct TreeItemRec {
      * Options and instance data:
      */
     Ttk_State 	state;
+    Tcl_Obj	*idObj;
     Tcl_Obj	*textObj;
     Tcl_Obj	*imageObj;
     Tcl_Obj	*valuesObj;
@@ -119,6 +120,7 @@ static TreeItem *NewItem(void)
     item->parent = item->children = item->next = item->prev = NULL;
 
     item->state = 0ul;
+    item->idObj = NULL;
     item->textObj = NULL;
     item->imageObj = NULL;
     item->valuesObj = NULL;
@@ -143,6 +145,7 @@ static TreeItem *NewItem(void)
 static void FreeItem(TreeItem *item)
 {
     Tcl_Size i;
+    if (item->idObj) { Tcl_DecrRefCount(item->idObj); }
     if (item->textObj) { Tcl_DecrRefCount(item->textObj); }
     if (item->imageObj) { Tcl_DecrRefCount(item->imageObj); }
     if (item->valuesObj) { Tcl_DecrRefCount(item->valuesObj); }
@@ -758,15 +761,6 @@ static TreeItem **GetItemListFromObj(
 static const char *ItemName(Treeview *tv, TreeItem *item)
 {
     return (const char *)Tcl_GetHashKey(&tv->tree.items, item->entryPtr);
-}
-
-/* + ItemID --
- * 	Returns a fresh Tcl_Obj * (refcount 0) holding the
- * 	item identifier of the specified item.
- */
-static Tcl_Obj *ItemID(Treeview *tv, TreeItem *item)
-{
-    return Tcl_NewStringObj(ItemName(tv, item), -1);
 }
 
 /*------------------------------------------------------------------------
@@ -2541,7 +2535,7 @@ static int TreeviewChildrenCommand(
     if (objc == 3) {
 	result = Tcl_NewListObj(0,0);
 	for (item = item->children; item; item = item->next) {
-	    Tcl_ListObjAppendElement(interp, result, ItemID(tv, item));
+	    Tcl_ListObjAppendElement(interp, result, item->idObj);
 	}
 	Tcl_SetObjResult(interp, result);
     } else {
@@ -2687,12 +2681,9 @@ static int TreeviewParentCommand(
 	return TCL_ERROR;
     }
 
-    if (item->parent) {
-	Tcl_SetObjResult(interp, ItemID(tv, item->parent));
-    } else {
-	/* This is the root item.  @@@ Return an error? */
-	Tcl_ResetResult(interp);
-    }
+    if (item->parent && (item->parent)->idObj) {
+	Tcl_SetObjResult(interp, (item->parent)->idObj);
+    } /* This is the root item.  Leave interp-result empty */
 
     return TCL_OK;
 }
@@ -2738,7 +2729,7 @@ static int TreeviewNextCommand(
     }
 
     if (item->next) {
-	Tcl_SetObjResult(interp, ItemID(tv, item->next));
+	Tcl_SetObjResult(interp, (item->next)->idObj);
     } /* else -- leave interp-result empty */
 
     return TCL_OK;
@@ -2763,7 +2754,7 @@ static int TreeviewPrevCommand(
     }
 
     if (item->prev) {
-	Tcl_SetObjResult(interp, ItemID(tv, item->prev));
+	Tcl_SetObjResult(interp, (item->prev)->idObj);
     } /* else -- leave interp-result empty */
 
     return TCL_OK;
@@ -2798,12 +2789,12 @@ static int TreeviewIdentifierCommand(
 	    "index", 0, &fn) == TCL_OK) {
 	if (fn == index_first) {
 	    if (item->children) {
-		Tcl_SetObjResult(interp, ItemID(tv, item->children));
+		Tcl_SetObjResult(interp, (item->children)->idObj);
 	    }
 	} else {
 	    item = EndPosition(tv, item);
 	    if (item) {
-		Tcl_SetObjResult(interp, ItemID(tv, item));
+		Tcl_SetObjResult(interp, item->idObj);
 	    }
 	}
 
@@ -2815,7 +2806,7 @@ static int TreeviewIdentifierCommand(
 		item = item->next;
 	    }
 	    if (index == 0) {
-		Tcl_SetObjResult(interp, ItemID(tv, item));
+		Tcl_SetObjResult(interp, item->idObj);
 	    }
 	}
 
@@ -2983,7 +2974,7 @@ done:
     result = Tcl_NewListObj(0,0);
     Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj(what, -1));
     if (item)
-	Tcl_ListObjAppendElement(NULL, result, ItemID(tv, item));
+	Tcl_ListObjAppendElement(NULL, result, item->idObj);
     if (detail)
 	Tcl_ListObjAppendElement(NULL, result, Tcl_NewStringObj(detail, -1));
 
@@ -3042,7 +3033,7 @@ static int TreeviewIdentifyCommand(
 	case I_ITEM :
 	case I_ROW :
 	    if (item) {
-		Tcl_SetObjResult(interp, ItemID(tv, item));
+		Tcl_SetObjResult(interp, item->idObj);
 	    }
 	    break;
 
@@ -3055,7 +3046,7 @@ static int TreeviewIdentifyCommand(
 	case I_CELL :
 	    if (item && colno >= 0) {
 		Tcl_Obj *elem[2];
-		elem[0] = ItemID(tv, item);
+		elem[0] = item->idObj;
 		elem[1] = Tcl_ObjPrintf("#%" TCL_SIZE_MODIFIER "d", colno);
 		Tcl_SetObjResult(interp, Tcl_NewListObj(2, elem));
 	    }
@@ -3401,6 +3392,7 @@ static int TreeviewInsertCommand(
     TreeItem *parent, *sibling, *newItem;
     Tcl_HashEntry *entryPtr;
     int isNew;
+    Tcl_Obj *idObj;
 
     if (objc < 4) {
 	Tcl_WrongNumArgs(interp, 2, objv, "parent index ?-id id? -options...");
@@ -3439,6 +3431,7 @@ static int TreeviewInsertCommand(
 	    Tcl_SetErrorCode(interp, "TTK", "TREE", "ITEM_EXISTS", NULL);
 	    return TCL_ERROR;
 	}
+	idObj = objv[1];
 	objc -= 2; objv += 2;
     } else {
 	char idbuf[16];
@@ -3447,13 +3440,15 @@ static int TreeviewInsertCommand(
 	    snprintf(idbuf, sizeof(idbuf), "I%03X", tv->tree.serial);
 	    entryPtr = Tcl_CreateHashEntry(&tv->tree.items, idbuf, &isNew);
 	} while (!isNew);
+	idObj = Tcl_NewStringObj(idbuf,-1);
     }
 
     /* Create and configure new item:
      */
     newItem = NewItem();
-    Tk_InitOptions(
-	interp, newItem, tv->tree.itemOptionTable, tv->core.tkwin);
+    Tk_InitOptions(interp, newItem, tv->tree.itemOptionTable, tv->core.tkwin);
+    newItem->idObj = idObj;
+    Tcl_IncrRefCount(newItem->idObj);
     newItem->tagset = Ttk_GetTagSetFromObj(NULL, tv->tree.tagTable, NULL);
     if (ConfigureItem(interp, tv, newItem, objc, objv) != TCL_OK) {
 	Tcl_DeleteHashEntry(entryPtr);
@@ -3469,7 +3464,7 @@ static int TreeviewInsertCommand(
     tv->tree.rowPosNeedsUpdate = 1;
     TtkRedisplayWidget(&tv->core);
 
-    Tcl_SetObjResult(interp, ItemID(tv, newItem));
+    Tcl_SetObjResult(interp, newItem->idObj);
     return TCL_OK;
 }
 
@@ -3539,7 +3534,7 @@ static int TreeviewDetachedCommand(
 	    item = (TreeItem *)Tcl_GetHashValue(entryPtr);
 	    entryPtr = Tcl_NextHashEntry(&search);
 	    if (IsDetached(tv, item)) {
-		Tcl_ListObjAppendElement(NULL, objPtr, ItemID(tv, item));
+		Tcl_ListObjAppendElement(NULL, objPtr, item->idObj);
 	    }
 	}
 	Tcl_SetObjResult(interp, objPtr);
@@ -3843,7 +3838,7 @@ static int TreeviewFocusCommand(
 
     if (objc == 2) {
 	if (tv->tree.focus) {
-	    Tcl_SetObjResult(interp, ItemID(tv, tv->tree.focus));
+	    Tcl_SetObjResult(interp, (tv->tree.focus)->idObj);
 	}
 	return TCL_OK;
     } else if (objc == 3) {
@@ -3881,7 +3876,7 @@ static int TreeviewSelectionCommand(
 	Tcl_Obj *result = Tcl_NewListObj(0,0);
 	for (item = tv->tree.root->children; item; item = NextPreorder(item)) {
 	    if (item->state & TTK_STATE_SELECTED)
-		Tcl_ListObjAppendElement(NULL, result, ItemID(tv, item));
+		Tcl_ListObjAppendElement(NULL, result, item->idObj);
 	}
 	Tcl_SetObjResult(interp, result);
 	return TCL_OK;
@@ -4133,7 +4128,7 @@ static int TreeviewCellSelectionCommand(
 		elemc = n;
 		for (i = 0; i < elemc; ++i) {
 		    Tcl_Obj *elem[2];
-		    elem[0] = ItemID(tv, item);
+		    elem[0] = item->idObj;
 		    elem[1] = elemv[i];
 		    Tcl_ListObjAppendElement(NULL, result,
 			    Tcl_NewListObj(2, elem));
@@ -4356,7 +4351,7 @@ static int TreeviewTagHasCommand(
 
 	while (item) {
 	    if (Ttk_TagSetContains(item->tagset, tag)) {
-		Tcl_ListObjAppendElement(NULL, result, ItemID(tv, item));
+		Tcl_ListObjAppendElement(NULL, result, item->idObj);
 	    }
 	    item = NextPreorder(item);
 	}
@@ -4397,7 +4392,7 @@ static int TreeviewCtagHasCommand(
 		if (item->cellTagSets[i] != NULL) {
 		    if (Ttk_TagSetContains(item->cellTagSets[i], tag)) {
 			Tcl_Obj *elem[2];
-			elem[0] = ItemID(tv, item);
+			elem[0] = item->idObj;
 			if (i == 0) {
 			    elem[1] = tv->tree.column0.idObj;
 			} else {
