@@ -504,6 +504,11 @@ Otherwise, \fIselop\fR is one of the following:
 .
 Add \fIitemList\fR to the selection.
 .TP
+\fIpathname \fBselection has \fIitemList\fR
+.
+Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
+not included in the selection.
+.TP
 \fIpathname \fBselection includes \fIitemList\fR
 .
 Returns 1 if selection includes all items in \fIitemList\fR or 0 if any are
