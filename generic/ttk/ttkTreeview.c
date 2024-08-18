@@ -3291,29 +3291,33 @@ static int TreeviewSetCommand(
 /*
  * Recursively set items open state
  */
-int TreeviewOpenRecursive(TreeItem *item, int open, int recurse) {
+int TreeviewOpenRecursive(TreeItem *item, int open, Tcl_Obj *openObj, int recurse) {
     int updated = 0;
 
-    if (open && !(item->state & TTK_STATE_OPEN)) {
+    if (open && !(item->state & TTK_STATE_OPEN) && item->children) {
 	/* open */
-	Tcl_DecrRefCount(item->openObj);
-	item->openObj = Tcl_NewBooleanObj(open);
+	if (item->openObj) {
+	    Tcl_DecrRefCount(item->openObj);
+	}
+	item->openObj = openObj;
 	Tcl_IncrRefCount(item->openObj);
 	item->state |= TTK_STATE_OPEN;
 	updated = 1;
 
     } else if (!open && (item->state & TTK_STATE_OPEN)) {
 	/* close */
-	Tcl_DecrRefCount(item->openObj);
-	item->openObj = Tcl_NewBooleanObj(open);
+	if (item->openObj) {
+	    Tcl_DecrRefCount(item->openObj);
+	}
+	item->openObj = openObj;
 	Tcl_IncrRefCount(item->openObj);
 	item->state &= ~TTK_STATE_OPEN;
 	updated = 1;
     }
-	
+
     if (recurse && item->children) {
 	for (item = item->children; item; item = item->next) {
-	    updated |= TreeviewOpenRecursive(item, open, recurse);
+	    updated |= TreeviewOpenRecursive(item, open, openObj, recurse);
 	}
     }
     return updated;
@@ -3328,6 +3332,7 @@ static int TreeviewCollapseExpand(
     Treeview *tv = (Treeview *)recordPtr;
     TreeItem *item;
     int option = -1;
+    Tcl_Obj *openObj;
 
     static const char *const optionStrings[] = { "-recurse", "-recursive", NULL };
 
@@ -3343,10 +3348,13 @@ static int TreeviewCollapseExpand(
 	return TCL_ERROR;
     }
 
-    if (TreeviewOpenRecursive(item, open, objc == 4)) {
+    openObj = Tcl_NewBooleanObj(open);
+    Tcl_IncrRefCount(openObj);
+    if (TreeviewOpenRecursive(item, open, openObj, objc == 4)) {
 	tv->tree.rowPosNeedsUpdate = 1;
 	TtkRedisplayWidget(&tv->core);
     }
+    Tcl_DecrRefCount(openObj);
     return TCL_OK;
 }
 
