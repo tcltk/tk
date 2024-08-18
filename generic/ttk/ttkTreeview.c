@@ -2858,7 +2858,7 @@ static int TreeviewIndexCommand(
     return TCL_OK;
 }
 
-/* + $tv exists $itemid --
+/* + $tv exists $item --
  * 	Test if the specified item id is present in the tree.
  */
 static int TreeviewExistsCommand(
@@ -2868,7 +2868,7 @@ static int TreeviewExistsCommand(
     Tcl_HashEntry *entryPtr;
 
     if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "itemid");
+	Tcl_WrongNumArgs(interp, 2, objv, "item");
 	return TCL_ERROR;
     }
 
@@ -2877,7 +2877,7 @@ static int TreeviewExistsCommand(
     return TCL_OK;
 }
 
-/* + $tv bbox $itemid ?$column? --
+/* + $tv bbox $item ?$column? --
  * 	Return bounding box [x y width height] of specified item.
  */
 static int TreeviewBBoxCommand(
@@ -2889,7 +2889,7 @@ static int TreeviewBBoxCommand(
     Ttk_Box bbox;
 
     if (objc < 3 || objc > 4) {
-	Tcl_WrongNumArgs(interp, 2, objv, "itemid ?column");
+	Tcl_WrongNumArgs(interp, 2, objv, "item ?column");
 	return TCL_ERROR;
     }
 
@@ -2913,9 +2913,9 @@ static int TreeviewBBoxCommand(
  *
  * Returns: one of
  * 	heading #n
- * 	cell itemid #n
- * 	item itemid element
- * 	row itemid
+ * 	cell item #n
+ * 	item item element
+ * 	row item
  */
 static int TreeviewHorribleIdentify(
     Tcl_Interp *interp,
@@ -3473,7 +3473,7 @@ static int TreeviewDetachCommand(
     Tcl_Size i;
 
     if (objc != 3) {
-	Tcl_WrongNumArgs(interp, 2, objv, "item");
+	Tcl_WrongNumArgs(interp, 2, objv, "items");
 	return TCL_ERROR;
     }
     if (!(items = GetItemListFromObj(interp, tv, objv[2]))) {

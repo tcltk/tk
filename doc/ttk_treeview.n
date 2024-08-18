@@ -300,10 +300,9 @@ With \fI\-recurse\fR option, will also open all sub child items.
 .TP
 \fIpathname \fBfocus \fR?\fIitem\fR?
 .
-If \fIitem\fR is specified, sets the focus item to \fIitem\fR.
-Otherwise, returns the current focus item, or \fB{}\fR if there is none.
-.\" Need: way to clear the focus item.  {} works for this...
-.\"
+If \fIitem\fR is specified, sets the focus item to \fIitem\fR. Use \fB{}\fR to
+clear focus item. Without \fIitem\fR, returns the current focus item, or
+\fB{}\fR if there is none.
 .\" METHOD: haschildren
 .TP
 \fIpathname \fBhaschildren \fIitem\fR
@@ -548,9 +547,9 @@ over item tags when drawing.
 The following subcommands are supported:
 .RS
 .TP
-\fIpathName \fBtag add \fItag items\fR
+\fIpathName \fBtag add \fItag itemList\fR
 .
-Adds the specified \fItag\fR to each of the listed \fIitems\fR.
+Adds the tag \fItag\fR to each of the items in \fIitemList\fR.
 If \fItag\fR is already present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .TP
@@ -629,10 +628,10 @@ the specified tag.
 .
 Returns a list of all tags used by the widget.
 .TP
-\fIpathName \fBtag remove \fItag\fR ?\fIitems\fR?
+\fIpathName \fBtag remove \fItag\fR ?\fIitemList\fR?
 .
-Removes the specified \fItag\fR from each of the listed \fIitems\fR.
-If \fIitems\fR is omitted, removes \fItag\fR from each item in the tree.
+Removes the tag \fItag\fR from each of the items in \fIitemList\fR. If
+\fIitemList\fR is omitted, removes \fItag\fR from all of the items in the tree.
 If \fItag\fR is not present for a particular item,
 then the \fB\-tags\fR for that item are unchanged.
 .RE
