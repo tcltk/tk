@@ -549,7 +549,7 @@ int Ttk_Maintainable(Tcl_Interp *interp, Tk_Window window, Tk_Window container)
     return 1;
 
 badWindow:
-    Tcl_SetObjResult(interp, Tcl_ObjPrintf("can't add %s as content of %s",
+    Tcl_SetObjResult(interp, Tcl_ObjPrintf("cannot add \"%s\" as content of \"%s\"",
 	    Tk_PathName(window), Tk_PathName(container)));
     Tcl_SetErrorCode(interp, "TTK", "GEOMETRY", "MAINTAINABLE", NULL);
     return 0;

@@ -674,8 +674,6 @@ CreateCGImageFromDrawableRect(
 	CGRect rect = CGRectMake(x + mac_drawable->xOff, y + mac_drawable->yOff,
 				 width, height);
 	rect = CGRectApplyAffineTransform(rect, CGAffineTransformMakeScale(scaleFactor, scaleFactor));
-	result = CGImageCreateWithImageInRect(cg_image, rect);
-	CGImageRelease(cg_image);
 	if (force_1x_scale && (scaleFactor != 1.0)) {
 	    // See https://web.archive.org/web/20200219030756/http://blog.foundry376.com/2008/07/scaling-a-cgimage/#comment-200
 	    // create context, keeping original image properties
@@ -688,15 +686,21 @@ CreateCGImageFromDrawableRect(
 		    CGImageGetAlphaInfo(cg_image));
 	    CGColorSpaceRelease(colorspace);
 	    if (cg_context) {
-		// draw image to context (resizing it)
+		// Extract the subimage in the specified rectangle.
+		CGImageRef subimage = CGImageCreateWithImageInRect(cg_image, rect);
+		// Draw the subimage in our context (resizing it to fit).
 		CGContextDrawImage(cg_context, CGRectMake(0, 0, width, height),
-			cg_image);
-		// extract resulting image from context
+			subimage);
+		// We will return the image we just drew.
 		result = CGBitmapContextCreateImage(cg_context);
 		CGContextRelease(cg_context);
+		CGImageRelease(subimage);
 	    }
-	    CGImageRelease(cg_image);
+	} else {
+	    // No resizing is needed.  Just return the subimage
+	    result = CGImageCreateWithImageInRect(cg_image, rect);
 	}
+	CGImageRelease(cg_image);
     }
     return result;
 }
@@ -815,12 +819,13 @@ XGetImage(
     TCL_UNUSED(unsigned long),  /* plane_mask */
     int format)
 {
-    NSBitmapImageRep* bitmapRep = nil;
-    NSUInteger bitmap_fmt = 0;
     XImage* imagePtr = NULL;
+    NSBitmapImageRep* bitmapRep = nil;
+    NSBitmapFormat bitmap_fmt = 0;
     char *bitmap = NULL;
     int depth = 32, offset = 0, bitmap_pad = 0;
-    unsigned int bytes_per_row, size, row, n, m;
+    NSInteger bytes_per_row, samples_per_pixel, size;
+    unsigned int row, n, m;
 
     if (format == ZPixmap) {
 	CGImageRef cgImage;
@@ -841,10 +846,27 @@ XGetImage(
 	bitmap_fmt = [bitmapRep bitmapFormat];
 	size = [bitmapRep bytesPerPlane];
 	bytes_per_row = [bitmapRep bytesPerRow];
+	samples_per_pixel = [bitmapRep samplesPerPixel];
+#if 0
+	fprintf(stderr, "XGetImage:\n"
+		"  bitmsp_fmt = %ld\n"
+		"  samples_per_pixel = %ld\n"
+		"  width = %u\n"
+		"  height = %u\n"
+		"  bytes_per_row = %ld\n"
+		"  size = %ld\n",
+		bitmap_fmt, samples_per_pixel, width, height, bytes_per_row, size);
+#endif
+	/*
+	 * Image data with all pixels having alpha value 255 may be reported
+	 * as 3 samples per pixel, even though each row has 4*width pixels and
+	 * the pixels are stored in the default ARGB32 format.
+	 */
+
 	if ((bitmap_fmt != 0 && bitmap_fmt != NSAlphaFirstBitmapFormat)
-	    || [bitmapRep samplesPerPixel] != 4
+	    || samples_per_pixel < 3
+	    || samples_per_pixel > 4
 	    || [bitmapRep isPlanar] != 0
-	    || bytes_per_row < 4 * width
 	    || size != bytes_per_row * height) {
 	    TkMacOSXDbgMsg("XGetImage: Unrecognized bitmap format");
 	    [bitmapRep release];
@@ -874,6 +896,7 @@ XGetImage(
 		}
 	    }
 	}
+
 	imagePtr = XCreateImage(display, NULL, depth, format, offset,
 		(char*) bitmap, width, height,
 		bitmap_pad, bytes_per_row);

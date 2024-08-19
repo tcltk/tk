@@ -3341,9 +3341,9 @@ ConfigureContent(
     	}
 
 	if (contentPtr->containerPtr != NULL && contentPtr->containerPtr != containerPtr) {
-            if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
-                Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
-            }
+	    if (contentPtr->containerPtr->tkwin != Tk_Parent(contentPtr->tkwin)) {
+		Tk_UnmaintainGeometry(contentPtr->tkwin, contentPtr->containerPtr->tkwin);
+	    }
 	    Unlink(contentPtr);
 	    contentPtr->containerPtr = NULL;
 	}
@@ -3385,7 +3385,7 @@ ConfigureContent(
 	    if (container == (TkWindow *)content) {
 		Tcl_SetObjResult(interp, Tcl_ObjPrintf(
 		    "can't put \"%s\" inside \"%s\": would cause management loop",
-	            Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
+		    Tcl_GetString(objv[j]), Tk_PathName(containerPtr->tkwin)));
 		Tcl_SetErrorCode(interp, "TK", "GEOMETRY", "LOOP", NULL);
 		Unlink(contentPtr);
 		return TCL_ERROR;

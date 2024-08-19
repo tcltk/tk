@@ -11,13 +11,13 @@ test labelframe-2.1 "Can't use indirect descendant as labelwidget" -body {
     ttk::frame .lf.t
     ttk::checkbutton .lf.t.cb
     .lf configure -labelwidget .lf.t.cb
-} -returnCodes error -result "can't *" -match glob \
+} -returnCodes error -result {cannot add ".lf.t.cb" as content of ".lf"} \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.2 "Can't use toplevel as labelwidget" -body {
     toplevel .lf.t
     .lf configure -labelwidget .lf.t
-} -returnCodes error -result "can't *" -match glob \
+} -returnCodes error -result {cannot add ".lf.t" as content of ".lf"} \
   -cleanup { destroy .lf.t } ;
 
 test labelframe-2.3 "Can't use non-windows as -labelwidget" -body {

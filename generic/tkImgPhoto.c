@@ -613,7 +613,7 @@ ImgPhotoCmd(
 	srcHandle = Tk_FindPhoto(interp, Tcl_GetString(options.name));
 	if (srcHandle == NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "image \"%s\" doesn't exist or is not a photo image",
+		    "image \"%s\" does not exist or is not a photo image",
 		    Tcl_GetString(options.name)));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "PHOTO",
 		    Tcl_GetString(options.name), (char *)NULL);
@@ -1347,6 +1347,7 @@ readCleanup:
 
 	}
 	Tcl_Panic("unexpected fallthrough");
+	break;
     }
 
     case PHOTO_WRITE: {

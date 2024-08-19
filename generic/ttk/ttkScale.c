@@ -75,7 +75,7 @@ static const Tk_OptionSpec ScaleOptionSpecs[] =
 
     {TK_OPTION_STRING, "-state", "state", "State",
 	"normal", offsetof(Scale,scale.stateObj), TCL_INDEX_NONE,
-        0, 0, STATE_CHANGED},
+	0, 0, STATE_CHANGED},
 
     WIDGET_TAKEFOCUS_TRUE,
     WIDGET_INHERIT_OPTIONS(ttkCoreOptionSpecs)
@@ -508,13 +508,17 @@ static const WidgetSpec ScaleWidgetSpec =
 };
 
 TTK_BEGIN_LAYOUT(VerticalScaleLayout)
-    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP) )
+    TTK_GROUP("Vertical.Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Vertical.Scale.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Vertical.Scale.trough", TTK_FILL_BOTH,
+		TTK_NODE("Vertical.Scale.slider", TTK_PACK_TOP))))
 TTK_END_LAYOUT
 
 TTK_BEGIN_LAYOUT(HorizontalScaleLayout)
-    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
-	TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT) )
+    TTK_GROUP("Horizontal.Scale.focus", TTK_FILL_BOTH,
+	TTK_GROUP("Horizontal.Scale.padding", TTK_FILL_BOTH,
+	    TTK_GROUP("Horizontal.Scale.trough", TTK_FILL_BOTH,
+		TTK_NODE("Horizontal.Scale.slider", TTK_PACK_LEFT))))
 TTK_END_LAYOUT
 
 /*

@@ -269,7 +269,7 @@ ImgBmapConfigureModel(
 	    || (modelPtr->maskDataString != NULL)) {
 	if (modelPtr->data == NULL) {
 	    Tcl_SetObjResult(modelPtr->interp, Tcl_NewStringObj(
-		    "can't have mask without bitmap", TCL_INDEX_NONE));
+		    "cannot have a mask without a bitmap", TCL_INDEX_NONE));
 	    Tcl_SetErrorCode(modelPtr->interp, "TK", "IMAGE", "BITMAP",
 		    "NO_BITMAP", NULL);
 	    return TCL_ERROR;

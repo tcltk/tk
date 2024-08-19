@@ -291,9 +291,9 @@ test window-2.12 {Test for ticket [9b6065d1fd] - restore Tcl [update] command} -
     removeFile script
     list $error $msg
 } -result {0 {waiting
-ringing the bell -> can't invoke "bell" command: application has been destroyed
+ringing the bell -> cannot invoke "bell" command: application has been destroyed
 done waiting
-bell -> can't invoke "bell" command: application has been destroyed
+bell -> cannot invoke "bell" command: application has been destroyed
 update -> }}
 
 

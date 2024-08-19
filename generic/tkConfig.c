@@ -2119,7 +2119,7 @@ GetObjectForOption(
 	internalPtr = (char *)recordPtr + optionPtr->specPtr->internalOffset;
 	switch (optionPtr->specPtr->type) {
 	case TK_OPTION_BOOLEAN: {
-	    int value;
+	    int value = -1;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);
@@ -2137,7 +2137,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_INT: {
-	    Tcl_WideInt value;
+	    Tcl_WideInt value = LLONG_MIN;
 	    int nullOK = (optionPtr->specPtr->flags & (TK_OPTION_NULL_OK|TCL_NULL_OK|1));
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TYPE_MASK) {
@@ -2244,7 +2244,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_RELIEF: {
-	    int value;
+	    int value = TK_RELIEF_NULL;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = *((signed char *)internalPtr);
@@ -2271,7 +2271,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_JUSTIFY: {
-	    Tk_Justify value;
+	    Tk_Justify value = TK_JUSTIFY_NULL;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = (Tk_Justify)*((signed char *)internalPtr);
@@ -2289,7 +2289,7 @@ GetObjectForOption(
 	    break;
 	}
 	case TK_OPTION_ANCHOR: {
-	    Tk_Anchor value;
+	    Tk_Anchor value = TK_ANCHOR_NULL;
 	    if (optionPtr->specPtr->flags & TYPE_MASK) {
 		if ((optionPtr->specPtr->flags & TYPE_MASK) == TK_OPTION_VAR(char)) {
 		    value = (Tk_Anchor)*((signed char *)internalPtr);

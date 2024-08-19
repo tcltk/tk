@@ -98,7 +98,7 @@ test menubutton-1.15 {configuration options} -body {
     .mb cget -borderwidth
 } -cleanup {
     .mb configure -borderwidth [lindex [.mb configure -borderwidth] 3]
-} -result 1
+} -result 1.3
 test menubutton-1.16 {configuration options} -body {
     .mb configure -borderwidth badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
@@ -207,7 +207,7 @@ test menubutton-1.37 {configuration options} -setup {
     .mb configure -image bogus
 } -cleanup {
     .mb configure -image [lindex [.mb configure -image] 3]
-} -returnCodes error -result {image "bogus" doesn't exist}
+} -returnCodes error -result {image "bogus" does not exist}
 test menubutton-1.38 {configuration options} -body {
     .mb configure -indicatoron yes
     .mb cget -indicatoron

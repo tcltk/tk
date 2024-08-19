@@ -287,7 +287,7 @@ TrayIconObjectCmd(
 	    return TCL_ERROR;
 	}
 	optionValue = Tk_GetOptionValue(interp,(char*)icon,
-	        icon->options,objv[2],icon->tkwin);
+		icon->options,objv[2],icon->tkwin);
 	if (optionValue) {
 	    Tcl_SetObjResult(interp,optionValue);
 	    return TCL_OK;
@@ -323,11 +323,11 @@ TrayIconObjectCmd(
     case XWC_BBOX:
 	if (icon->drawingWin) {
 	    XGetWindowAttributes(Tk_Display(icon->drawingWin),
-	            TKU_XID(icon->drawingWin), &xwa);
+		    TKU_XID(icon->drawingWin), &xwa);
 
 	    XTranslateCoordinates(Tk_Display(icon->drawingWin),
-	            TKU_XID(icon->drawingWin), xwa.root, 0,0,
-	            &icon->x, &icon->y, &bogus);
+		    TKU_XID(icon->drawingWin), xwa.root, 0,0,
+		    &icon->x, &icon->y, &bogus);
 	    bbox[0] = icon->x;
 	    bbox[1] = icon->y;
 	    bbox[2] = bbox[0] + icon->width - 1;
@@ -541,14 +541,14 @@ CheckArgbVisual(
 
     TKU_NO_BAD_WINDOW_BEGIN(Tk_Display(icon->tkwin))
 	XGetWindowProperty(Tk_Display(icon->tkwin),
-	        icon->trayManager,
-	        icon->a_NET_SYSTEM_TRAY_VISUAL,
-	        /* offset */ 0,
-	        /* length */ 1,
-	        /* delete */ False,
-	        /* type */ XA_VISUALID,
-	        &retType, &retFormat, &retNitems,
-	        &retBytesAfter, &retProp);
+		icon->trayManager,
+		icon->a_NET_SYSTEM_TRAY_VISUAL,
+		/* offset */ 0,
+		/* length */ 1,
+		/* delete */ False,
+		/* type */ XA_VISUALID,
+		&retType, &retFormat, &retNitems,
+		&retBytesAfter, &retProp);
     TKU_NO_BAD_WINDOW_END
     if (retType == XA_VISUALID &&
 	    retNitems == 1 &&
@@ -557,7 +557,7 @@ CheckArgbVisual(
 	snprintf(numeric,256,"%ld",*(long*)retProp);
 	XFree(retProp);
 	match = Tk_GetVisual(icon->interp, icon->tkwin,
-	        numeric, &depth, &cmap);
+		numeric, &depth, &cmap);
     }
     if (match&& depth == 32 &&
 	    match->red_mask == 0xFF0000UL &&
@@ -606,12 +606,12 @@ CreateTrayIconWindow(
     if (tkwin) {
 	Tk_SetClass(icon->drawingWin,icon->classString);
 	Tk_CreateEventHandler(icon->drawingWin,ExposureMask|StructureNotifyMask|
-	        ButtonPressMask|ButtonReleaseMask|
-	        EnterWindowMask|LeaveWindowMask|PointerMotionMask,
-	        TrayIconEvent, icon);
+		ButtonPressMask|ButtonReleaseMask|
+		EnterWindowMask|LeaveWindowMask|PointerMotionMask,
+		TrayIconEvent, icon);
 	if(icon->bestVisual) {
 	    Tk_SetWindowVisual(icon->drawingWin,icon->bestVisual,
-	            32,icon->bestColormap);
+		    32,icon->bestColormap);
 	    icon->flags |= ICON_FLAG_ARGB32;
 	    Tk_SetWindowBackground(tkwin, 0);
 	} else {
@@ -898,7 +898,7 @@ DisplayIcon(
 	     */
 	    if (icon->offscreenPixmap == None) {
 		icon->offscreenPixmap = Tk_GetPixmap(Tk_Display(icon->drawingWin),
-	                Tk_WindowId(icon->drawingWin), w, h, 32);
+			Tk_WindowId(icon->drawingWin), w, h, 32);
 	    }
 	    if (!icon->photo) {
 		icon->photo = Tk_FindPhoto(icon->interp, icon->imageString);
@@ -907,12 +907,12 @@ DisplayIcon(
 		Tcl_InterpState saved
 			= Tcl_SaveInterpState(icon->interp, TCL_OK);
 		icon->imageVisualInstance = Tk_GetImage(icon->interp,icon->drawingWin,
-	                icon->imageString, IgnoreImageChange, NULL);
+			icon->imageString, IgnoreImageChange, NULL);
 		Tcl_RestoreInterpState(icon->interp,saved);
 	    }
 	    if (icon->photo && !icon->offscreenImage) {
 		icon->offscreenImage = XGetImage(Tk_Display(icon->drawingWin),
-	                icon->offscreenPixmap, 0, 0, w, h, AllPlanes, ZPixmap);
+			icon->offscreenPixmap, 0, 0, w, h, AllPlanes, ZPixmap);
 	    }
 	    if (icon->offscreenGC == None) {
 		XGCValues gcv;
@@ -921,7 +921,7 @@ DisplayIcon(
 		gcv.foreground = 0;
 		gcv.background = 0;
 		icon->offscreenGC = Tk_GetGC(icon->drawingWin,
-	                GCFunction|GCPlaneMask|GCForeground|GCBackground, &gcv);
+			GCFunction|GCPlaneMask|GCForeground|GCBackground, &gcv);
 	    }
 	    if (icon->flags & ICON_FLAG_DIRTY_EDGES) {
 		XClearWindow(Tk_Display(icon->drawingWin), TKU_XID(icon->drawingWin));
@@ -967,16 +967,16 @@ DisplayIcon(
 			0,0,w,h);
 		if (icon->imageVisualInstance) {
 		    Tk_RedrawImage(icon->imageVisualInstance,
-	                    0,0,w,h,
-	                    icon->offscreenPixmap,
-	                    0,0);
+			    0,0,w,h,
+			    icon->offscreenPixmap,
+			    0,0);
 		}
 	    }
 	    XCopyArea(Tk_Display(icon->drawingWin),
-	            icon->offscreenPixmap,
-	            TKU_XID(icon->drawingWin),
-	            icon->offscreenGC,
-	            imgx,imgy,outw,outh,outx,outy);
+		    icon->offscreenPixmap,
+		    TKU_XID(icon->drawingWin),
+		    icon->offscreenGC,
+		    imgx,imgy,outw,outh,outx,outy);
 	} else {
 	    /* Non-argb redraw: clear window and draw an image over it.
 	       For photos it gives a correct alpha blending with a parent
@@ -984,10 +984,10 @@ DisplayIcon(
 	       work with lxpanel fancy backgrounds).
 	    */
 	    XClearWindow(Tk_Display(icon->drawingWin),
-	            TKU_XID(icon->drawingWin));
+		    TKU_XID(icon->drawingWin));
 	    if (icon->image && icon->visible) {
 		Tk_RedrawImage(icon->image,imgx,imgy,outw,outh,
-	                TKU_XID(icon->drawingWin), outx, outy);
+			TKU_XID(icon->drawingWin), outx, outy);
 	    }
 	}
     }
@@ -1086,7 +1086,7 @@ TrayIconWrapperEvent(
 	       to check for reparent-to-root is to ask for this root
 	       first */
 	    XGetWindowAttributes(ev->xreparent.display,
-	            ev->xreparent.window, &attr);
+		    ev->xreparent.window, &attr);
 	    if (attr.root == ev->xreparent.parent) {
 		/* upon reparent to root, */
 		if (icon->drawingWin) {
@@ -1340,7 +1340,7 @@ CancelBalloon(
     ev.xclient.data.l[2]  =msgid;
     TKU_NO_BAD_WINDOW_BEGIN(Tk_Display(icon->tkwin))
 	XSendEvent(dpy, icon->myManager , True,
-	        StructureNotifyMask|SubstructureNotifyMask, &ev);
+		StructureNotifyMask|SubstructureNotifyMask, &ev);
     TKU_NO_BAD_WINDOW_END
 }
 
@@ -1501,7 +1501,7 @@ TrayIconConfigureMethod(
 
     if (objc <= 1 && !(addflags & ICON_CONF_FIRST_TIME)) {
 	Tcl_Obj* info = Tk_GetOptionInfo(interp, (char*)icon, icon->options,
-	        objc? objv[0] : NULL, icon->tkwin);
+		objc? objv[0] : NULL, icon->tkwin);
 	if (info) {
 	    Tcl_SetObjResult(interp,info);
 	    return TCL_OK;
@@ -1519,7 +1519,7 @@ TrayIconConfigureMethod(
     if (mask & ICON_CONF_IMAGE) {
 	if (icon->imageString) {
 	    newImage = Tk_GetImage(interp, icon->tkwin, icon->imageString,
-	            TrayIconImageChanged, icon);
+		    TrayIconImageChanged, icon);
 	    if (!newImage) {
 		Tk_RestoreSavedOptions(&saved);
 		return TCL_ERROR; /* msg by Tk_GetImage */
@@ -1653,7 +1653,7 @@ TrayIconCreateCmd(
 
     if (objc>3) {
 	if (TrayIconConfigureMethod(icon, interp, objc-2, objv+2,
-	        ICON_CONF_XEMBED|ICON_CONF_IMAGE|ICON_CONF_FIRST_TIME) != TCL_OK) {
+		ICON_CONF_XEMBED|ICON_CONF_IMAGE|ICON_CONF_FIRST_TIME) != TCL_OK) {
 	    goto handleErrors;
 	}
     }

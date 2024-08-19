@@ -222,12 +222,12 @@ ScrollbarWidgetObjCmd(
     int result = TCL_OK, cmdIndex, length;
     Tcl_Size len;
     static const char *const commandNames[] = {
-        "activate", "cget", "configure", "delta", "fraction",
-        "get", "identify", "set", NULL
+	"activate", "cget", "configure", "delta", "fraction",
+	"get", "identify", "set", NULL
     };
     enum command {
-        COMMAND_ACTIVATE, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELTA,
-        COMMAND_FRACTION, COMMAND_GET, COMMAND_IDENTIFY, COMMAND_SET
+	COMMAND_ACTIVATE, COMMAND_CGET, COMMAND_CONFIGURE, COMMAND_DELTA,
+	COMMAND_FRACTION, COMMAND_GET, COMMAND_IDENTIFY, COMMAND_SET
     };
 
     if (objc < 2) {
@@ -483,17 +483,19 @@ ConfigureScrollbar(
      */
 
     if (scrollPtr->command != NULL) {
-        scrollPtr->commandSize = (int) strlen(scrollPtr->command);
+	scrollPtr->commandSize = (int) strlen(scrollPtr->command);
     } else {
 	scrollPtr->commandSize = 0;
     }
     if (scrollPtr->highlightWidth < 0) {
 	scrollPtr->highlightWidth = 0;
     }
+    if (scrollPtr->borderWidth < 0) {
+	scrollPtr->borderWidth = 0;
+    }
     if (scrollPtr->elementBorderWidth < 0) {
 	scrollPtr->elementBorderWidth = INT_MIN;
     }
-
     /*
      * Configure platform specific options.
      */
