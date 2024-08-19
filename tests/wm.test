@@ -1016,7 +1016,7 @@ test wm-iconphoto-1.4 {usage} -returnCodes error -body {
 } -result {wrong # args: should be "wm iconphoto window ?-default? image1 ?image2 ...?"}
 test wm-iconphoto-1.5.1 {usage} -constraints aquaOrWin32 -returnCodes error -body {
     wm iconphoto . -default [image create photo -file {}]
-} -match {glob} -result {failed to create an iconphoto with image *}
+} -match glob -result {failed to create an iconphoto with image *}
 test wm-iconphoto-1.5.2 {usage} -constraints x11 -body {
     wm iconphoto . -default [image create photo -file {}]
 } -result {}
@@ -1563,7 +1563,9 @@ deleteWindows
 
 test wm-stackorder-3.1 {unmapped toplevel} -constraints {failsOnUbuntu failsOnXQuarz} -body {
     toplevel .t1 ; update
+    raiseDelay
     toplevel .t2 ; update
+    raiseDelay
     wm iconify .t1
     raiseDelay
     wm stackorder .

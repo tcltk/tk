@@ -247,6 +247,7 @@ static void FieldElementDraw(
 	    int x1 = b.x, x2 = b.x + b.width - 1;
 	    int y1 = b.y, y2 = b.y + b.height - 1;
 	    int w = WIN32_XDRAWLINE_HACK;
+	    GC bgGC;
 
 	    /*
 	     * Draw the outer rounded rectangle
@@ -265,7 +266,7 @@ static void FieldElementDraw(
 	    /*
 	     * Fill the inner rectangle
 	     */
-	    GC bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
+	    bgGC = Tk_3DBorderGC(tkwin, border, TK_3D_FLAT_GC);
 	    XFillRectangle(disp, d, bgGC, b.x+1, b.y+1, b.width-2, b.height-2);
 	} else {
 	    /*
@@ -371,33 +372,40 @@ static void DrawFocusRing(
     Ttk_Box b)
 {
     XColor *color = Tk_GetColorFromObj(tkwin, colorObj);
-    unsigned long mask = 0UL;
-    XGCValues gcvalues;
+    XGCValues gcValues;
     GC gc;
+    Display *disp = Tk_Display(tkwin);
 
-    gcvalues.foreground = color->pixel;
-    gcvalues.line_width = thickness < 1 ? 1 : thickness;
-    if (solid) {
-	gcvalues.line_style = LineSolid;
-	mask = GCForeground | GCLineStyle | GCLineWidth;
-    } else {
-	gcvalues.line_style = LineOnOffDash;
-	gcvalues.dashes = 1;
-	gcvalues.dash_offset = 1;
-	mask = GCForeground | GCLineStyle | GCDashList | GCDashOffset | GCLineWidth;
+    if (thickness < 1 && solid) {
+	thickness = 1;
     }
 
-    gc = Tk_GetGC(tkwin, mask, &gcvalues);
-    XDrawRectangle(Tk_Display(tkwin), d, gc, b.x, b.y, b.width-1, b.height-1);
+    gcValues.foreground = color->pixel;
+    gc = Tk_GetGC(tkwin, GCForeground, &gcValues);
+
+    if (solid) {
+	XRectangle rects[4] = {
+	    {b.x, b.y, b.width, thickness},				/* N */
+	    {b.x, b.y + b.height - thickness, b.width, thickness},	/* S */
+	    {b.x, b.y + thickness, thickness, b.height - 2*thickness},	/* W */
+	    {b.x + b.width - thickness, b.y + thickness,		/* E */
+	     thickness, b.height - 2*thickness}
+	};
+
+	XFillRectangles(disp, d, gc, rects, 4);
+    } else {
+	TkDrawDottedRect(disp, d, gc, b.x, b.y, b.width, b.height);
+    }
+
     Tk_FreeGC(Tk_Display(tkwin), gc);
 }
 
 static const Ttk_ElementOptionSpec FocusElementOptions[] = {
-    { "-focuscolor",TK_OPTION_COLOR,
+    { "-focuscolor", TK_OPTION_COLOR,
 	offsetof(FocusElement,focusColorObj), "black" },
-    { "-focusthickness",TK_OPTION_PIXELS,
+    { "-focusthickness", TK_OPTION_PIXELS,
 	offsetof(FocusElement,focusThicknessObj), "1" },
-    { "-focussolid",TK_OPTION_BOOLEAN,
+    { "-focussolid", TK_OPTION_BOOLEAN,
 	offsetof(FocusElement,focusSolidObj), "0" },
     { NULL, TK_OPTION_BOOLEAN, 0, NULL }
 };
@@ -704,7 +712,7 @@ static const Ttk_ElementOptionSpec IndicatorElementOptions[] = {
     { "-indicatorbackground", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,backgroundObj), "#ffffff" },
     { "-indicatorforeground", TK_OPTION_COLOR,
-        offsetof(IndicatorElement,foregroundObj), "#ffffff" },
+	offsetof(IndicatorElement,foregroundObj), "#ffffff" },
     { "-bordercolor", TK_OPTION_COLOR,
 	offsetof(IndicatorElement,borderColorObj), "#888888" },
     { "-indicatormargin", TK_OPTION_STRING,
@@ -731,7 +739,7 @@ static void ColorToStr(
     const XColor *colorPtr, char *colorStr)     /* in the format "RRGGBB" */
 {
     snprintf(colorStr, 7, "%02x%02x%02x",
-             colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
+	     colorPtr->red >> 8, colorPtr->green >> 8, colorPtr->blue >> 8);
 }
 
 static void ImageChanged(               /* to be passed to Tk_GetImage() */
@@ -1236,7 +1244,7 @@ static void TroughElementDraw(
 	} else {
 	    b.x += (b.width - grooveWidth) / 2;
 	    b.width = grooveWidth;
-        }
+	}
 
 	/*
 	 * Save the data of the trough's inner box for later

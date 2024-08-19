@@ -49,7 +49,7 @@ test panedwindow-1.7 {configuration options: -borderwidth (good)} -body {
     list [lindex [.p configure -borderwidth] 4] [.p cget -borderwidth]
 } -cleanup {
     .p configure -borderwidth [lindex [.p configure -borderwidth] 3]
-} -result {1 1}
+} -result {1.3 1.3}
 test panedwindow-1.8 {configuration options: -borderwidth (bad)} -body {
     .p configure -borderwidth badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
@@ -148,7 +148,7 @@ test panedwindow-1.29 {configuration options: -sashpad (good)} -body {
     list [lindex [.p configure -sashpad] 4] [.p cget -sashpad]
 } -cleanup {
     .p configure -sashpad [lindex [.p configure -sashpad] 3]
-} -result {1 1}
+} -result {1.3 1.3}
 test panedwindow-1.30 {configuration options: -sashpad (bad)} -body {
     .p configure -sashpad badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
@@ -245,7 +245,7 @@ test panedwindow-1.49 {configuration options: -padx (good)} -body {
         [.p panecget .b -padx]
 } -cleanup {
     .p paneconfig .b -padx [lindex [.p paneconfig .b -padx] 3]
-} -result {1 1}
+} -result {1.3 1.3}
 test panedwindow-1.50 {configuration options: -padx (bad)} -body {
     .p paneconfigure .b -padx badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
@@ -255,7 +255,7 @@ test panedwindow-1.51 {configuration options: -pady (good)} -body {
         [.p panecget .b -pady]
 } -cleanup {
     .p paneconfig .b -pady [lindex [.p paneconfig .b -pady] 3]
-} -result {1 1}
+} -result {1.3 1.3}
 test panedwindow-1.52 {configuration options: -pady (bad)} -body {
     .p paneconfigure .b -pady badValue
 } -returnCodes error -result {expected screen distance but got "badValue"}
@@ -4572,7 +4572,7 @@ test panedwindow-23.1 {ConfigurePanes, can't add panedwindow to itself} -setup {
     .p add .p
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't add .p to itself}
+} -returnCodes error -result {cannot add .p to itself}
 test panedwindow-23.2 {ConfigurePanes, bad window throws error} -setup {
     deleteWindows
 } -body {
@@ -4863,7 +4863,7 @@ test panedwindow-23.24 {ConfigurePanes, panedwindow cannot manage toplevels} -se
     .p add .t
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't add toplevel .t to .p}
+} -returnCodes error -result {cannot add toplevel .t to .p}
 test panedwindow-23.25 {ConfigurePanes, restrict possible panes} -setup {
     deleteWindows
 } -body {
@@ -4873,7 +4873,7 @@ test panedwindow-23.25 {ConfigurePanes, restrict possible panes} -setup {
    .p add .f.b
 } -cleanup {
     deleteWindows
-} -returnCodes error -result {can't add .f.b to .p}
+} -returnCodes error -result {cannot add .f.b to .p}
 test panedwindow-23.26 {ConfigurePanes, restrict possible panes} -setup {
     deleteWindows
 } -body {

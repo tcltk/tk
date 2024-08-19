@@ -194,7 +194,7 @@ TkpDisplayButton(
     }
     pixmap = (Pixmap) Tk_WindowId(tkwin);
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
 
     if (TkMacOSXComputeButtonDrawParams(butPtr, dpPtr)) {
 	macButtonPtr->useTkText = 0;
@@ -315,8 +315,8 @@ TkpComputeButtonGeometry(
 	haveImage = 1;
     }
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYPtr, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padXObj, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->padYObj, &butPtr->padY);
 
     if (haveImage == 0 || butPtr->compound != COMPOUND_NONE) {
 	Tk_FreeTextLayout(butPtr->textLayout);
@@ -389,8 +389,8 @@ TkpComputeButtonGeometry(
      * Now figure out the size of the border decorations for the button.
      */
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
 
     butPtr->inset = butPtr->borderWidth + butPtr->highlightWidth;
 
@@ -477,10 +477,10 @@ DrawButtonImageAndText(
 	pressed = 1;
     }
 
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXPtr, &butPtr->padX);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYPtr, &butPtr->padY);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padXObj, &butPtr->padX);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->padYObj, &butPtr->padY);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
 
     haveText = (butPtr->textWidth != 0 && butPtr->textHeight != 0);
     if (butPtr->compound != COMPOUND_NONE && haveImage && haveText) { /* Image and Text */
@@ -958,8 +958,8 @@ TkMacOSXComputeButtonParams(
 {
     MacButton *mbPtr = (MacButton *) butPtr;
 
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthPtr, &butPtr->borderWidth);
-    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthPtr, &butPtr->highlightWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->borderWidthObj, &butPtr->borderWidth);
+    Tk_GetPixelsFromObj(NULL, butPtr->tkwin, butPtr->highlightWidthObj, &butPtr->highlightWidth);
 
     if (butPtr->borderWidth <= 2) {
 	*btnkind = kThemeSmallBevelButton;

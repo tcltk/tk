@@ -2463,6 +2463,14 @@ TkpWmGetState(
 
 static void CheckForPointer(TkWindow *winPtr)
 {
+    if (winPtr == NULL || winPtr->mainPtr == NULL) {
+	/*
+	 * Bug [d233f01e2a] - clipboard clean up after main window destroyed
+	 * Nothing to do.
+	 */
+	return;
+    }
+
     POINT mouse;
     int x, y;
     unsigned int state = TkWinGetModifierState();

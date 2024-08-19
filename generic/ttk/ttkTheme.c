@@ -237,7 +237,7 @@ NewElementClass(const char *name, const Ttk_ElementSpec *specPtr, void *clientDa
     elementClass->defaultValues = (Tcl_Obj **)
 	ckalloc(elementClass->nResources * sizeof(Tcl_Obj *) + 1);
     for (i=0; i < elementClass->nResources; ++i) {
-        const char *defaultValue = specPtr->options[i].defaultValue;
+	const char *defaultValue = specPtr->options[i].defaultValue;
 	if (defaultValue) {
 	    elementClass->defaultValues[i] = Tcl_NewStringObj(defaultValue,-1);
 	    Tcl_IncrRefCount(elementClass->defaultValues[i]);
@@ -610,7 +610,7 @@ static Ttk_Theme LookupTheme(
     entryPtr = Tcl_FindHashEntry(&pkgPtr->themeTable, name);
     if (!entryPtr) {
 	Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		"theme \"%s\" doesn't exist", name));
+		"theme \"%s\" does not exist", name));
 	Tcl_SetErrorCode(interp, "TTK", "LOOKUP", "THEME", name, NULL);
 	return NULL;
     }
@@ -1635,17 +1635,17 @@ static int StyleThemeStylesCmd(
     Ttk_Theme themePtr;
 
     if (objc < 3 || objc > 4) {
-        Tcl_WrongNumArgs(interp, 3, objv, "?theme?");
-        return TCL_ERROR;
+	Tcl_WrongNumArgs(interp, 3, objv, "?theme?");
+	return TCL_ERROR;
     }
 
     if (objc == 3) {
-        themePtr = Ttk_GetCurrentTheme(interp);
+	themePtr = Ttk_GetCurrentTheme(interp);
     } else {
-        themePtr = Ttk_GetTheme(interp, Tcl_GetString(objv[3]));
+	themePtr = Ttk_GetTheme(interp, Tcl_GetString(objv[3]));
     }
     if (!themePtr)
-        return TCL_ERROR;
+	return TCL_ERROR;
 
     return TtkEnumerateHashTable(interp, &themePtr->styleTable);
 }

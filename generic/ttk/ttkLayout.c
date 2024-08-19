@@ -710,8 +710,8 @@ Ttk_LayoutTemplate Ttk_ParseLayoutTemplate(Tcl_Interp *interp, Tcl_Obj *objPtr)
 	if (childSpec) {
 	    tail->child = Ttk_ParseLayoutTemplate(interp, childSpec);
 	    if (!tail->child) {
-                Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid -children value"));
-                Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", NULL);
+		Tcl_SetObjResult(interp, Tcl_ObjPrintf("Invalid -children value"));
+		Tcl_SetErrorCode(interp, "TTK", "VALUE", "CHILDREN", NULL);
 		goto error;
 	    }
 	}

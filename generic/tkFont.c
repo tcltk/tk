@@ -633,7 +633,7 @@ Tk_FontObjCmd(
     	}
     	if ((namedHashPtr == NULL) || nfPtr->deletePending) {
     	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-    		    "named font \"%s\" doesn't exist", string));
+    		    "named font \"%s\" does not exist", string));
     	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
     	    return TCL_ERROR;
     	}
@@ -1028,7 +1028,7 @@ TkDeleteNamedFont(
     if (namedHashPtr == NULL) {
 	if (interp) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "named font \"%s\" doesn't exist", name));
+		    "named font \"%s\" does not exist", name));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", name, NULL);
 	}
 	return TCL_ERROR;
@@ -3204,8 +3204,8 @@ TkIntersectAngledTextLayout(
 		PointInQuadrilateral(cx, cy, rx[1], ry[1]) &&
 		PointInQuadrilateral(cx, cy, rx[2], ry[2]) &&
 		PointInQuadrilateral(cx, cy, rx[3], ry[3])) {
-            return 0;
-        }
+	    return 0;
+	}
     }
 
     /*
@@ -3743,7 +3743,7 @@ ParseFontNameObj(
 	    || (objc < 1)) {
 	if (interp != NULL) {
 	    Tcl_SetObjResult(interp, Tcl_ObjPrintf(
-		    "font \"%s\" doesn't exist", string));
+		    "font \"%s\" does not exist", string));
 	    Tcl_SetErrorCode(interp, "TK", "LOOKUP", "FONT", string, NULL);
 	}
 	return TCL_ERROR;

@@ -22,17 +22,17 @@ test systray-1 {systray icon creation, all options} -setup {
 
 test systray-2 {systray create, argument checking} -body {
     tk systray create
-} -returnCodes {error} -result {missing required option "-image"}
+} -returnCodes error -result {missing required option "-image"}
 
 test systray-3 {systray create, argument checking} -body {
     tk systray create -text Hell
-} -returnCodes {error} -result {missing required option "-image"}
+} -returnCodes error -result {missing required option "-image"}
 
 test systray-4 {systray create, argument checking} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
 } -body {
     tk systray create -image _book -gorp invalidOption
-} -returnCodes {error} -result {unknown option "-gorp": must be -image, -text, -button1 or -button3}
+} -returnCodes error -result {unknown option "-gorp": must be -image, -text, -button1 or -button3}
 
 test systray-5 {systray icon creation, only required option present} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -94,13 +94,13 @@ test systray-10 {configure non-existing systray icon} -setup {
     catch {tk systray destroy}
 } -body {
     tk systray configure
-} -returnCodes {error} -result {systray not created}
+} -returnCodes error -result {systray not created}
 
 test systray-11 {destroy non-existing systray icon} -setup {
     catch {tk systray destroy}
 } -body {
     tk systray destroy
-} -returnCodes {error} -result {systray not created}
+} -returnCodes error -result {systray not created}
 
 test systray-12 {destroy systray icon works} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -118,7 +118,7 @@ test systray-13 {systray icon creation, attempt to create more than one in an in
 } -cleanup {
     tk systray destroy
     image delete _book
-} -returnCodes {error} -result {only one system tray icon supported per interpeter}
+} -returnCodes error -result {only one system tray icon supported per interpeter}
 
 test systray-14 {systray icon creation, create one per interp, visibiliy checks} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -143,7 +143,7 @@ test systray-14 {systray icon creation, create one per interp, visibiliy checks}
     tk systray destroy
     image delete _book
     interp delete second
-} -returnCodes {error} -result {image "_book" doesn't exist}
+} -returnCodes error -result {image "_book" does not exist}
 
 test systray-15 {systray icon creation, create one per interp} -setup {
     image create photo _book -data R0lGODlhDwAPAKIAAP//////AP8AAMDAwICAgAAAAAAAAAAAACwAAAAADwAPAAADSQhA2u5ksPeKABKSCaya29d4WKgERFF0l1IMQCAKatvBJ0OTdzzXI1xMB3TBZAvATtB6NSLKleXi3OBoLqrVgc0yv+DVSEUuFxIAOw==
@@ -227,7 +227,7 @@ test sysnotify-2.1 {system notification stems from a systray icon on Windows} -c
     catch {tk systray destroy}
 } -body {
     tk sysnotify {Alert} {This is an alert}
-} -returnCodes {error} -result {must create a system tray icon with the "tk systray" command first}
+} -returnCodes error -result {must create a system tray icon with the "tk systray" command first}
 test sysnotify-2.2 {system notification is not linked to any systray icon on X11 or aqua} -constraints {
     nonwin
 } -setup {

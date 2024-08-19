@@ -62,7 +62,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_BITMAP, TCL_INDEX_NONE, offsetof(TkMenuButton, bitmap),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-borderwidth", "borderWidth", "BorderWidth",
-	DEF_MENUBUTTON_BORDER_WIDTH, TCL_INDEX_NONE,
+	DEF_MENUBUTTON_BORDER_WIDTH, offsetof(TkMenuButton, borderWidthObj),
 	offsetof(TkMenuButton, borderWidth), 0, 0, 0},
     {TK_OPTION_CURSOR, "-cursor", "cursor", "Cursor",
 	DEF_MENUBUTTON_CURSOR, TCL_INDEX_NONE, offsetof(TkMenuButton, cursor),
@@ -91,7 +91,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	offsetof(TkMenuButton, highlightColorPtr),	0, 0, 0},
     {TK_OPTION_PIXELS, "-highlightthickness", "highlightThickness",
 	"HighlightThickness", DEF_MENUBUTTON_HIGHLIGHT_WIDTH,
-	TCL_INDEX_NONE, offsetof(TkMenuButton, highlightWidth), 0, 0, 0},
+	offsetof(TkMenuButton, highlightWidthObj), offsetof(TkMenuButton, highlightWidth), 0, 0, 0},
     {TK_OPTION_STRING, "-image", "image", "Image",
 	DEF_MENUBUTTON_IMAGE, TCL_INDEX_NONE, offsetof(TkMenuButton, imageString),
 	TK_OPTION_NULL_OK, 0, 0},
@@ -104,10 +104,10 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_MENU, TCL_INDEX_NONE, offsetof(TkMenuButton, menuName),
 	TK_OPTION_NULL_OK, 0, 0},
     {TK_OPTION_PIXELS, "-padx", "padX", "Pad",
-	DEF_MENUBUTTON_PADX, TCL_INDEX_NONE, offsetof(TkMenuButton, padX),
+	DEF_MENUBUTTON_PADX, offsetof(TkMenuButton, padXObj), offsetof(TkMenuButton, padX),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-pady", "padY", "Pad",
-	DEF_MENUBUTTON_PADY, TCL_INDEX_NONE, offsetof(TkMenuButton, padY),
+	DEF_MENUBUTTON_PADY, offsetof(TkMenuButton, padYObj), offsetof(TkMenuButton, padY),
 	0, 0, 0},
     {TK_OPTION_RELIEF, "-relief", "relief", "Relief",
 	DEF_MENUBUTTON_RELIEF, TCL_INDEX_NONE, offsetof(TkMenuButton, relief),
@@ -132,7 +132,7 @@ static const Tk_OptionSpec optionSpecs[] = {
 	DEF_MENUBUTTON_WIDTH, TCL_INDEX_NONE, offsetof(TkMenuButton, widthString),
 	0, 0, 0},
     {TK_OPTION_PIXELS, "-wraplength", "wrapLength", "WrapLength",
-	DEF_MENUBUTTON_WRAP_LENGTH, TCL_INDEX_NONE, offsetof(TkMenuButton, wrapLength),
+	DEF_MENUBUTTON_WRAP_LENGTH, offsetof(TkMenuButton, wrapLengthObj), offsetof(TkMenuButton, wrapLength),
 	0, 0, 0},
     {TK_OPTION_END, NULL, NULL, NULL, NULL, 0, 0, 0, NULL, 0}
 };
@@ -282,6 +282,11 @@ Tk_MenubuttonObjCmd(
     mbPtr->cursor = NULL;
     mbPtr->takeFocus = NULL;
     mbPtr->flags = 0;
+    mbPtr->borderWidthObj = NULL;
+    mbPtr->highlightWidthObj = NULL;
+    mbPtr->padXObj = NULL;
+    mbPtr->padYObj = NULL;
+    mbPtr->wrapLengthObj = NULL;
 
     Tk_CreateEventHandler(mbPtr->tkwin,
 	    ExposureMask|StructureNotifyMask|FocusChangeMask,
@@ -533,13 +538,28 @@ ConfigureMenuButton(
 
 	if (mbPtr->highlightWidth < 0) {
 	    mbPtr->highlightWidth = 0;
+		if (mbPtr->highlightWidthObj) {
+		    Tcl_DecrRefCount(mbPtr->highlightWidthObj);
+		}
+		mbPtr->highlightWidthObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->highlightWidthObj);
 	}
 
 	if (mbPtr->padX < 0) {
 	    mbPtr->padX = 0;
+		if (mbPtr->padXObj) {
+		    Tcl_DecrRefCount(mbPtr->padXObj);
+		}
+		mbPtr->padXObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->padXObj);
 	}
 	if (mbPtr->padY < 0) {
 	    mbPtr->padY = 0;
+		if (mbPtr->padYObj) {
+		    Tcl_DecrRefCount(mbPtr->padYObj);
+		}
+		mbPtr->padYObj = Tcl_NewIntObj(0);
+		Tcl_IncrRefCount(mbPtr->padYObj);
 	}
 
 	/*
@@ -867,27 +887,27 @@ MenuButtonTextVarProc(
      */
 
     if (flags & TCL_TRACE_UNSETS) {
-        if (!Tcl_InterpDeleted(interp) && mbPtr->textVarName) {
-            void *probe = NULL;
+	if (!Tcl_InterpDeleted(interp) && mbPtr->textVarName) {
+	    void *probe = NULL;
 
-            do {
-                probe = Tcl_VarTraceInfo(interp,
-                        mbPtr->textVarName,
-                        TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
-                        MenuButtonTextVarProc, probe);
-                if (probe == (void *)mbPtr) {
-                    break;
-                }
-            } while (probe);
-            if (probe) {
-                /*
-                 * We were able to fetch the unset trace for our
-                 * textVarName, which means it is not unset and not
-                 * the cause of this unset trace. Instead some outdated
-                 * former variable must be, and we should ignore it.
-                 */
-                return NULL;
-            }
+	    do {
+		probe = Tcl_VarTraceInfo(interp,
+			mbPtr->textVarName,
+			TCL_GLOBAL_ONLY|TCL_TRACE_WRITES|TCL_TRACE_UNSETS,
+			MenuButtonTextVarProc, probe);
+		if (probe == (void *)mbPtr) {
+		    break;
+		}
+	    } while (probe);
+	    if (probe) {
+		/*
+		 * We were able to fetch the unset trace for our
+		 * textVarName, which means it is not unset and not
+		 * the cause of this unset trace. Instead some outdated
+		 * former variable must be, and we should ignore it.
+		 */
+		return NULL;
+	    }
 	    Tcl_SetVar2(interp, mbPtr->textVarName, NULL, mbPtr->text,
 		    TCL_GLOBAL_ONLY);
 	    Tcl_TraceVar2(interp, mbPtr->textVarName, NULL,

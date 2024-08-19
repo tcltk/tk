@@ -5923,37 +5923,37 @@ Tk_CoordsToWindow(
 	for (wmPtr = (WmInfo *) dispPtr->firstWmPtr; wmPtr != NULL;
 		wmPtr = wmPtr->nextPtr) {
 	    if (wmPtr->winPtr->mainPtr == NULL) {
-	        continue;
+		continue;
 	    }
 	    if (child == wmPtr->reparent) {
-	        if (PointInWindow(x, y, wmPtr)) {
-	            goto gotToplevel;
-	        } else {
+		if (PointInWindow(x, y, wmPtr)) {
+		    goto gotToplevel;
+		} else {
 
-	            /*
-	             * Return NULL if the point is in the title bar or border.
-	             */
+		    /*
+		     * Return NULL if the point is in the title bar or border.
+		     */
 
-	            return NULL;
-	        }
+		    return NULL;
+		}
 	    }
 	    if (wmPtr->wrapperPtr != NULL) {
 		if (child == wmPtr->wrapperPtr->window) {
 		    goto gotToplevel;
 		} else if (wmPtr->winPtr->flags & TK_EMBEDDED &&
-	                   Tk_GetOtherWindow((Tk_Window)wmPtr->winPtr) == NULL) {
+			   Tk_GetOtherWindow((Tk_Window)wmPtr->winPtr) == NULL) {
 
-	            /*
-	             * This toplevel is embedded in a window belonging to
-	             * a different application.
-	             */
+		    /*
+		     * This toplevel is embedded in a window belonging to
+		     * a different application.
+		     */
 
-	            int rx, ry;
-	            Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
-	            childX -= rx;
-	            childY -= ry;
-	            goto gotToplevel;
-	        }
+		    int rx, ry;
+		    Tk_GetRootCoords((Tk_Window) wmPtr->winPtr, &rx, &ry);
+		    childX -= rx;
+		    childY -= ry;
+		    goto gotToplevel;
+		}
 	    } else if (child == wmPtr->winPtr->window) {
 		goto gotToplevel;
 	    }

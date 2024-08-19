@@ -189,7 +189,8 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	    -stripedbackground $colors(-alternate) \
 	    -fieldbackground $colors(-window) \
 	    -foreground $colors(-text) \
-	    -indent 15p
+	    -indent 15p \
+	    -focuswidth 1 -focuscolor $colors(-selectbg)
 	ttk::setTreeviewRowHeight
 	ttk::style configure Treeview.Separator \
 	    -background $colors(-alternate)
@@ -211,12 +212,13 @@ proc ttk::theme::default::reconfigureDefaultTheme {} {
 	#
 	ttk::style layout Toolbutton {
 	    Toolbutton.border -children {
-		Toolbutton.padding -children {
-		    Toolbutton.label
+		Toolbutton.focus -children {
+		    Toolbutton.padding -children {
+			Toolbutton.label
+		    }
 		}
 	    }
 	}
-
 	ttk::style configure Toolbutton \
 	    -padding 1.5p -relief flat
 	ttk::style map Toolbutton -relief \

@@ -83,7 +83,7 @@ test busy-2.8 {tk busy hold non existing window} -body {
 test busy-2.9 {tk busy hold (shortcut) non existing window} -body {
     tk busy .f
     update
-} -returnCodes {error} -result {bad window path name ".f"}
+} -returnCodes error -result {bad window path name ".f"}
 test busy-2.10 {tk busy hold root window with cursor} -body {
     set res [tk busy hold . -cursor arrow]
     update
@@ -138,7 +138,7 @@ test busy-3.4 {tk busy cget non-busy window} -setup {
     tk busy cget .f -cursor
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't find busy window ".f"}
+} -returnCodes error -result {cannot find busy window ".f"}
 test busy-3.5 {tk busy cget invalid option} -setup {
     pack [frame .f]
     tk busy hold .f
@@ -194,7 +194,7 @@ test busy-4.3 {tk busy configure non-busy window} -setup {
     tk busy configure .f
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't find busy window ".f"}
+} -returnCodes error -result {cannot find busy window ".f"}
 
 test busy-4.4 {tk busy configure} -constraints {nonwin} -setup {
     pack [frame .f]
@@ -332,7 +332,7 @@ test busy-5.3 {tk busy forget non busy window} -setup {
     tk busy forget .f
 } -cleanup {
     destroy .f
-} -returnCodes error -result {can't find busy window ".f"}
+} -returnCodes error -result {cannot find busy window ".f"}
 test busy-5.4 {tk busy forget window} -setup {
     pack [frame .f]
     tk busy hold .f
